@@ -116,10 +116,12 @@ La forme `when flag>N` teste sans muter.
 ```ebnf
 context = positive_context | negative_context ;
 
-positive_context = "(" , symbol+ , ")" ;            (* contexte positif *)
-negative_context = "#" , "(" , symbol+ , ")"         (* négatif sur groupe *)
-                 | "#" , symbol                      (* négatif sur un seul symbole *)
+positive_context = "(" , context_sym+ , ")" ;        (* contexte positif *)
+negative_context = "#" , "(" , context_sym+ , ")"    (* négatif sur groupe *)
+                 | "#" , context_sym                  (* négatif sur un seul symbole *)
                  | "#" , "?" ;                       (* boundary — pas de symbole ici *)
+
+context_sym      = symbol | "{" | "}" | "," ;        (* symboles + braces pour méta-grammaires *)
 ```
 
 Les contextes peuvent apparaître avant le LHS (contexte gauche), après le RHS
@@ -133,7 +135,8 @@ lhs = lhs_element+ ;
 lhs_element = symbol
             | variable
             | wildcard
-            | context ;
+            | context
+            | "{" | "}" | "," ;                    (* méta-grammaires : braces comme terminaux *)
 ```
 
 ### `rhs`

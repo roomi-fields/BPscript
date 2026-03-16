@@ -181,7 +181,7 @@ Exemples :
 ## Éléments LHS
 
 ```
-LhsElement = Symbol | Variable | Wildcard | Context
+LhsElement = Symbol | Variable | Wildcard | Context | RawBrace
 ```
 
 ---
