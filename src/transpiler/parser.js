@@ -433,6 +433,12 @@ function parse(tokens) {
       advance();
       positive = false;
 
+      // #? (boundary — no symbol at this position)
+      if (at(T.QUESTION)) {
+        advance();
+        return { type: 'Context', positive: false, symbols: ['?'] };
+      }
+
       // #symbol (single) or #(group)
       if (at(T.LPAREN)) {
         advance();
@@ -613,6 +619,16 @@ function parse(tokens) {
       throw new ParseError('Expected symbol after ~', tok);
     }
 
+    // Standalone ! → out-time object (no primary symbol)
+    if (at(T.BANG)) {
+      advance();
+      if (at(T.IDENT)) {
+        const name = advance().value;
+        return { type: 'OutTimeObject', name };
+      }
+      throw new ParseError('Expected symbol after !', current());
+    }
+
     // Trigger in <!
     if (at(T.TRIGGER_IN)) {
       return parseTriggerIn();
@@ -767,6 +783,8 @@ function parse(tokens) {
       while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
         const t = current();
         if (t.type === T.INT || t.type === T.FLOAT || t.type === T.IDENT) {
+          // Preserve spaces between words: "MIDI send Continue"
+          if (arg.length > 0 && t.type === T.IDENT && /[a-zA-Z]$/.test(arg)) arg += ' ';
           arg += advance().value;
         } else if (t.type === T.EQUALS) {
           arg += advance().value;

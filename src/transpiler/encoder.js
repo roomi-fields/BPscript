@@ -446,6 +446,9 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (el.value === '{' && el.polySpeed) return `{${el.polySpeed},`;
       return el.value;
 
+    case 'OutTimeObject':
+      return `<<${el.name}>>`;
+
     case 'BacktickStandalone':
     case 'BacktickInline':
       // Backticks → encoded as terminal for BP3 (dispatcher handles at runtime)
