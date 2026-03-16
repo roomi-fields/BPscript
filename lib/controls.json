@@ -55,6 +55,16 @@
       "range": [-8192, 8191],
       "description": "Pitch bend MIDI"
     },
+    "pitchrange": {
+      "bp3": "_pitchrange",
+      "args": ["cents"],
+      "description": "Plage de pitch bend en cents (définit l'étendue de pitchbend)."
+    },
+    "pitchcont": {
+      "bp3": "_pitchcont",
+      "args": [],
+      "description": "Active l'interpolation continue de pitch bend."
+    },
     "pressure": {
       "bp3": "_pressure",
       "args": ["value"],

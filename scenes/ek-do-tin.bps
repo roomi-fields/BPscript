@@ -1,0 +1,21 @@
+// ek-do-tin.bps — Tihai de Kathak (ek do tin char panch che sat at)
+// Traduit de bp3-engine/library/tabla/ek-do-tin/grammar.gr
+//
+// Démontre les contrôles de performance sur les sound objects.
+// Pitch bend continu avec templates (transpositions successives du tihai).
+// Terminaux : bols de tabla (ek, do, tin, char, panch, che, sat, at)
+
+@core
+@+
+@mm:88
+@striated
+
+// --- Sous-grammaire 1 [mode:ord] ---
+
+S -> pitchrange(200) $Tihai transpose(-2) &Tihai pitchcont pitchbend(-200) transpose(-2) &Tihai pitchbend(200) [mode:ord]
+
+Tihai -> {Huit}[speed:2] {Six}[speed:2] {Cinq}[speed:2] {Quatre}[speed:2] - {- - ek - - do - - tin - - -}[speed:3]
+Huit -> ek do tin char panch che sat at
+Six -> ek do tin char panch che
+Cinq -> ek do tin char panch
+Quatre -> ek do tin char

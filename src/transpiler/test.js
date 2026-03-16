@@ -150,6 +150,24 @@ try {
   // Test 21: visser3 (transposition non-terminals, period, polymetric grouping)
   testFull('visser3', loadScene('visser3.bps'));
 
+  // Test 22: livecode2 (solfège français, ratios fractionnaires complexes)
+  testFull('livecode2', loadScene('livecode2.bps'));
+
+  // Test 23: visser5 (rndvel, rotate, keyxpand)
+  testFull('visser5', loadScene('visser5.bps'));
+
+  // Test 24: csound (volumecont, ins)
+  testFull('csound', loadScene('csound.bps'));
+
+  // Test 25: ek-do-tin (templates, pitchrange, pitchcont, pitchbend, tabla bols)
+  testFull('ek-do-tin', loadScene('ek-do-tin.bps'));
+
+  // Test 26: destru (template groupes ${}, &{}, destru, LEFT, LIN)
+  testFull('destru', loadScene('destru.bps'));
+
+  // Test 27: asymmetric (multi-guard, flags nus, goto, K-params)
+  testFull('asymmetric', loadScene('asymmetric.bps'));
+
 } catch (err) {
   console.error('TEST ERROR:', err.message);
   console.error(err.stack);

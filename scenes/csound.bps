@@ -1,0 +1,12 @@
+// csound.bps — Test Csound avec volume continu
+// Traduit de bp3-engine/library/examples/csound/grammar.gr
+//
+// 2 règles avec poids décroissants — après 2 items, la grammaire s'arrête.
+// Volume continu de 127→0 et 0→127 (crescendo/decrescendo).
+
+@core
+@+
+@western:midi
+
+S -> ins(3) volumecont volume(127) A4 G4 C5 A5 A4 G4 C5 A5 volume(0) [mode:random, weight:1-1]
+S -> ins(3) volumecont volume(0) A4 G4 C5 A5 A4 G4 C5 A5 volume(127) [weight:1-1]
