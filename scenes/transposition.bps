@@ -1,0 +1,25 @@
+// transposition.bps — transpositions imbriquées par Harm Visser (1997)
+// Traduit de bp3-engine/library/examples/transposition/grammar.gr
+//
+// Polymétrie imbriquée avec transpositions progressives (+2, +4, +6)
+// et répétition contrôlée par flag numtimes
+
+@core
+@+
+@western:midi
+
+// --- Sous-grammaire 1 [mode:random] ---
+
+S -> A!numtimes=5 [mode:random]
+A -> {E1, A#1 F#1} {transpose(2) D}
+B -> {transpose(2) A}
+C -> {transpose(4) B}
+when numtimes-1 D -> - {transpose(6) C {B}[speed:1]} {C}[speed:1] repeat(4)
+
+-----
+
+// --- Sous-grammaire 2 [mode:sub1] ---
+// Résout les non-terminaux Tr en contrôles _transpose
+// et efface D restant
+
+D -> lambda [mode:sub1]

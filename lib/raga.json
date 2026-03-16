@@ -1,0 +1,20 @@
+{
+  "name": "raga",
+  "description": "Indian raga notation — sargam with octave markers",
+  "version": "0.1.0",
+  "symbols": {
+    "sa": { "type": "gate", "degree": 1 },
+    "re": { "type": "gate", "degree": 2 },
+    "ga": { "type": "gate", "degree": 3 },
+    "ma": { "type": "gate", "degree": 4 },
+    "pa": { "type": "gate", "degree": 5 },
+    "dha": { "type": "gate", "degree": 6 },
+    "ni": { "type": "gate", "degree": 7 }
+  },
+  "generator": {
+    "pattern": "{note}{octave}",
+    "notes": ["sa", "re", "ga", "ma", "pa", "dha", "ni"],
+    "octaves": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "description": "sa6 = sa octave 6, re6 = re octave 6, etc. Le compilateur résout via le generator."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "core",
+  "description": "BPscript core — silences, prolongation, contrôles moteur",
+  "version": "0.1.0",
+  "symbols": {
+    "lambda": {
+      "type": "special",
+      "bp3": "lambda",
+      "description": "Symbole vide — supprime le non-terminal. Utilisé pour effacer un symbole de la dérivation."
+    }
+  },
+  "settings": {
+    "on_fail": {
+      "type": "directive",
+      "values": ["skip", "retry", "fallback"],
+      "default": "skip",
+      "description": "Gestion d'échec de dérivation"
+    }
+  }
+}

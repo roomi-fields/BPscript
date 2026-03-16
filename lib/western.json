@@ -1,0 +1,41 @@
+{
+  "name": "western",
+  "description": "Western chromatic notation — 10 octaves, C0 to B9",
+  "version": "0.1.0",
+  "symbols": {
+    "C0": { "type": "gate", "midi": 12 },
+    "C#0": { "type": "gate", "midi": 13 },
+    "Db0": { "type": "gate", "midi": 13 },
+    "D0": { "type": "gate", "midi": 14 },
+    "D#0": { "type": "gate", "midi": 15 },
+    "Eb0": { "type": "gate", "midi": 15 },
+    "E0": { "type": "gate", "midi": 16 },
+    "F0": { "type": "gate", "midi": 17 },
+    "F#0": { "type": "gate", "midi": 18 },
+    "Gb0": { "type": "gate", "midi": 18 },
+    "G0": { "type": "gate", "midi": 19 },
+    "G#0": { "type": "gate", "midi": 20 },
+    "Ab0": { "type": "gate", "midi": 21 },
+    "A0": { "type": "gate", "midi": 21 },
+    "A#0": { "type": "gate", "midi": 22 },
+    "Bb0": { "type": "gate", "midi": 22 },
+    "B0": { "type": "gate", "midi": 23 }
+  },
+  "generator": {
+    "pattern": "{note}{accidental}{octave}",
+    "notes": ["C", "D", "E", "F", "G", "A", "B"],
+    "accidentals": ["", "#", "b"],
+    "octaves": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "midi_formula": "(octave + 1) * 12 + semitone",
+    "semitones": {
+      "C": 0, "C#": 1, "Db": 1,
+      "D": 2, "D#": 3, "Eb": 3,
+      "E": 4,
+      "F": 5, "F#": 6, "Gb": 6,
+      "G": 7, "G#": 8, "Ab": 8,
+      "A": 9, "A#": 10, "Bb": 10,
+      "B": 11
+    },
+    "description": "Les symboles sont générés dynamiquement par le compilateur. Seul l'octave 0 est listé explicitement comme exemple. Le compilateur utilise la formule pour résoudre n'importe quel C0-B9."
+  }
+}

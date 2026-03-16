@@ -1,0 +1,142 @@
+{
+  "name": "+",
+  "description": "BPscript performance controls — compile to BP3 _ prefixed commands",
+  "version": "0.1.0",
+  "controls": {
+    "tempo": {
+      "bp3": "_tempo",
+      "args": ["ratio"],
+      "description": "Multiplicateur de tempo relatif"
+    },
+    "mm": {
+      "bp3": "_mm",
+      "args": ["bpm"],
+      "description": "Marquage métronomique absolu (BPM)"
+    },
+    "vel": {
+      "bp3": "_vel",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Vélocité MIDI (état, affecte tout ce qui suit)"
+    },
+    "chan": {
+      "bp3": "_chan",
+      "args": ["channel"],
+      "range": [1, 16],
+      "description": "Canal MIDI (état, affecte tout ce qui suit)"
+    },
+    "staccato": {
+      "bp3": "_staccato",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Staccato — raccourcit la durée des notes"
+    },
+    "legato": {
+      "bp3": "_legato",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Legato — prolonge la durée des notes"
+    },
+    "pan": {
+      "bp3": "_pan",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Panoramique MIDI"
+    },
+    "mod": {
+      "bp3": "_mod",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Modulation MIDI (CC1)"
+    },
+    "pitchbend": {
+      "bp3": "_pitchbend",
+      "args": ["value"],
+      "range": [-8192, 8191],
+      "description": "Pitch bend MIDI"
+    },
+    "pressure": {
+      "bp3": "_pressure",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Channel pressure MIDI"
+    },
+    "ins": {
+      "bp3": "_ins",
+      "args": ["program"],
+      "range": [1, 128],
+      "description": "Program change MIDI"
+    },
+    "transpose": {
+      "bp3": "_transpose",
+      "args": ["semitones"],
+      "description": "Transposition en demi-tons"
+    },
+    "striated": {
+      "bp3": "_striated",
+      "args": [],
+      "description": "Bascule en temps strié"
+    },
+    "smooth": {
+      "bp3": "_smooth",
+      "args": [],
+      "description": "Bascule en temps lisse"
+    },
+    "repeat": {
+      "bp3": "_repeat",
+      "args": ["expr"],
+      "description": "Répétition contrôlée. expr = K-paramètre ou K-paramètre=valeur."
+    },
+    "failed": {
+      "bp3": "_failed",
+      "args": ["subgrammar", "rule"],
+      "description": "Saut en cas d'échec de dérivation."
+    },
+    "stop": {
+      "bp3": "_stop",
+      "args": [],
+      "description": "Arrête la dérivation."
+    },
+    "goto": {
+      "bp3": "_goto",
+      "args": ["subgrammar", "rule"],
+      "description": "Saut vers une sous-grammaire et règle spécifiques. Usage bas niveau — préférer on_fail quand possible."
+    },
+    "scale": {
+      "bp3": "_scale",
+      "args": ["name", "root"],
+      "description": "Active une gamme nommée avec une note de référence. root=0 pour pas de transposition."
+    },
+    "volume": {
+      "bp3": "_volume",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Volume MIDI (CC7)"
+    },
+    "volumecont": {
+      "bp3": "_volumecont",
+      "args": [],
+      "description": "Active l'interpolation continue de volume entre les points _volume()."
+    },
+    "rotate": {
+      "bp3": "_rotate",
+      "args": ["semitones"],
+      "description": "Rotation de pitch — décale cycliquement les notes dans l'espace des hauteurs."
+    },
+    "keyxpand": {
+      "bp3": "_keyxpand",
+      "args": ["note", "direction"],
+      "description": "Expansion/contraction de clavier autour d'une note pivot. direction: 1=expand, -1=contract."
+    },
+    "velcont": {
+      "bp3": "_velcont",
+      "args": [],
+      "description": "Active l'interpolation continue de vélocité entre les points _vel()."
+    },
+    "retro": {
+      "bp3": "_retro",
+      "args": [],
+      "description": "Rétrograde — inverse l'ordre des éléments dans le contexte polymétrique."
+    }
+  }
+}

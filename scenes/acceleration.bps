@@ -1,0 +1,39 @@
+// acceleration.bps — "sawtooth rhythm" par Harm Visser (1997)
+// Traduit de bp3-engine/library/experimental/acceleration/grammar.gr
+//
+// Dérivation récursive : chaque règle ajoute une note au début,
+// le . (period notation) maintient les proportions de durée égale.
+// Le résultat est un accelerando structurel — de plus en plus de notes
+// dans le même espace de temps.
+
+@core
+@+
+@western:midi
+
+// Settings globaux
+@tempo:80
+@meter:3/4
+@transpose:12
+
+// Sous-grammaire 1 — structure principale [mode:ord]
+// Les vel() croissants créent un crescendo progressif
+S -> vel(60) A B vel(65) C D vel(70) E F vel(75) G vel(77) H vel(80) I vel(85) J vel(87) K vel(90) L [mode:ord]
+
+// Dérivation récursive avec period notation
+// A → E2 .          (1 note + period)
+// B → D2 A          (D2 puis A, qui se re-dérive en E2 .)
+// C → B2 B          (B2 puis B, qui contient D2 A, qui contient E2 .)
+// ... chaque lettre ajoute une note au début de la chaîne
+
+A -> E2 .
+B -> D2 A
+C -> B2 B
+D -> G2 C
+E -> F#2 D
+F -> A#2 E
+G -> C2 F
+H -> G#2 G
+I -> A2 H
+J -> D#2 I
+K -> C#2 J
+L -> F2 K

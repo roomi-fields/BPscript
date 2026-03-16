@@ -1,0 +1,20 @@
+// all-items.bps — Produce all items (test templates)
+// Traduit de bp3-engine/library/examples/all-items/grammar.gr
+
+@core
+@+
+
+gate a:midi
+gate b:midi
+
+// --- Sous-grammaire 1 [mode:random] ---
+
+S -> $X X &X [mode:random]
+S -> X X
+
+-----
+
+// --- Sous-grammaire 2 [mode:random, destru] ---
+
+X -> a [mode:random, destru]
+X -> b

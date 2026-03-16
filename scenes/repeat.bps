@@ -1,0 +1,28 @@
+// repeat.bps — test des répétitions _repeat et poids <1-1>
+// Traduit de bp3-engine/library/examples/repeat/grammar.gr
+//
+// Crée une chaîne a...b...c... avec un nombre égal de chaque.
+// Le nombre est fixé par K1 (paramètre interactif).
+// Les poids <1-1> font que les règles de répétition sont vues une seule fois.
+// Les règles sans RHS (X -->) effacent le non-terminal (production epsilon).
+
+@core
+@+
+
+// Terminaux
+gate a:midi
+gate b:midi
+gate c:midi
+
+// Non-terminaux : S, X, Y, Z
+
+// --- Sous-grammaire 1 [mode:ord] ---
+// ORD : les règles d'effacement ne sont vues qu'après les règles de répétition
+
+S -> X Y Z [mode:ord]
+X -> a X repeat(K1=3) [weight:1-1]
+Y -> b Y repeat(K1) [weight:1-1]
+Z -> c Z repeat(K1) [weight:1-1]
+X ->
+Y ->
+Z ->
