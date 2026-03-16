@@ -33,6 +33,10 @@ const SCENE_MAP = {
   'all-items':        'examples/all-items/grammar.gr',
   'one-scale':        'examples/one-scale/grammar.gr',
   'visser-shapes':    'experimental/visser-shapes/grammar.gr',
+  'major-minor':      'examples/major-minor/grammar.gr',
+  'tunings':          'examples/tunings/grammar.gr',
+  'vina3':            'tabla/vina3/grammar.gr',
+  'visser-waves':     'experimental/visser-waves/grammar.gr',
 };
 
 /**

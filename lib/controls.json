@@ -5,59 +5,100 @@
   "controls": {
     "tempo": {
       "bp3": "_tempo",
-      "args": ["ratio"],
+      "args": [
+        "ratio"
+      ],
       "description": "Multiplicateur de tempo relatif"
     },
     "mm": {
       "bp3": "_mm",
-      "args": ["bpm"],
+      "args": [
+        "bpm"
+      ],
       "description": "Marquage métronomique absolu (BPM)"
     },
     "vel": {
       "bp3": "_vel",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Vélocité MIDI (état, affecte tout ce qui suit)"
     },
     "chan": {
       "bp3": "_chan",
-      "args": ["channel"],
-      "range": [1, 16],
+      "args": [
+        "channel"
+      ],
+      "range": [
+        1,
+        16
+      ],
       "description": "Canal MIDI (état, affecte tout ce qui suit)"
     },
     "staccato": {
       "bp3": "_staccato",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Staccato — raccourcit la durée des notes"
     },
     "legato": {
       "bp3": "_legato",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Legato — prolonge la durée des notes"
     },
     "pan": {
       "bp3": "_pan",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Panoramique MIDI"
     },
     "mod": {
       "bp3": "_mod",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Modulation MIDI (CC1)"
     },
     "pitchbend": {
       "bp3": "_pitchbend",
-      "args": ["value"],
-      "range": [-8192, 8191],
+      "args": [
+        "value"
+      ],
+      "range": [
+        -8192,
+        8191
+      ],
       "description": "Pitch bend MIDI"
     },
     "pitchrange": {
       "bp3": "_pitchrange",
-      "args": ["cents"],
+      "args": [
+        "cents"
+      ],
       "description": "Plage de pitch bend en cents (définit l'étendue de pitchbend)."
     },
     "pitchcont": {
@@ -67,19 +108,31 @@
     },
     "pressure": {
       "bp3": "_pressure",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Channel pressure MIDI"
     },
     "ins": {
       "bp3": "_ins",
-      "args": ["program"],
-      "range": [1, 128],
+      "args": [
+        "program"
+      ],
+      "range": [
+        1,
+        128
+      ],
       "description": "Program change MIDI"
     },
     "transpose": {
       "bp3": "_transpose",
-      "args": ["semitones"],
+      "args": [
+        "semitones"
+      ],
       "description": "Transposition en demi-tons"
     },
     "striated": {
@@ -94,12 +147,17 @@
     },
     "repeat": {
       "bp3": "_repeat",
-      "args": ["expr"],
+      "args": [
+        "expr"
+      ],
       "description": "Répétition contrôlée. expr = K-paramètre ou K-paramètre=valeur."
     },
     "failed": {
       "bp3": "_failed",
-      "args": ["subgrammar", "rule"],
+      "args": [
+        "subgrammar",
+        "rule"
+      ],
       "description": "Saut en cas d'échec de dérivation."
     },
     "stop": {
@@ -109,18 +167,29 @@
     },
     "goto": {
       "bp3": "_goto",
-      "args": ["subgrammar", "rule"],
+      "args": [
+        "subgrammar",
+        "rule"
+      ],
       "description": "Saut vers une sous-grammaire et règle spécifiques. Usage bas niveau — préférer on_fail quand possible."
     },
     "scale": {
       "bp3": "_scale",
-      "args": ["name", "root"],
+      "args": [
+        "name",
+        "root"
+      ],
       "description": "Active une gamme nommée avec une note de référence. root=0 pour pas de transposition."
     },
     "volume": {
       "bp3": "_volume",
-      "args": ["value"],
-      "range": [0, 127],
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
       "description": "Volume MIDI (CC7)"
     },
     "volumecont": {
@@ -130,12 +199,17 @@
     },
     "rotate": {
       "bp3": "_rotate",
-      "args": ["semitones"],
+      "args": [
+        "semitones"
+      ],
       "description": "Rotation de pitch — décale cycliquement les notes dans l'espace des hauteurs."
     },
     "keyxpand": {
       "bp3": "_keyxpand",
-      "args": ["note", "direction"],
+      "args": [
+        "note",
+        "direction"
+      ],
       "description": "Expansion/contraction de clavier autour d'une note pivot. direction: 1=expand, -1=contract."
     },
     "velcont": {
@@ -150,33 +224,59 @@
     },
     "rndvel": {
       "bp3": "_rndvel",
-      "args": ["range"],
+      "args": [
+        "range"
+      ],
       "description": "Vélocité aléatoire — ajoute une variation aléatoire ±range à la vélocité courante."
     },
     "value": {
       "bp3": "_value",
-      "args": ["param", "amount"],
+      "args": [
+        "param",
+        "amount"
+      ],
       "description": "Valeur d'un paramètre continu de sound object (Csound/MIDI CC)."
     },
     "fixed": {
       "bp3": "_fixed",
-      "args": ["param", "amount"],
+      "args": [
+        "param",
+        "amount"
+      ],
       "description": "Valeur fixe d'un paramètre de sound object (pas d'interpolation)."
     },
     "cont": {
       "bp3": "_cont",
-      "args": ["param"],
+      "args": [
+        "param"
+      ],
       "description": "Active le mode continu pour un paramètre de sound object."
     },
     "script": {
       "bp3": "_script",
-      "args": ["command"],
+      "args": [
+        "command"
+      ],
       "description": "Commande script BP3 (MIDI program change, etc.)."
     },
     "pitchfixed": {
       "bp3": "_pitchfixed",
       "args": [],
       "description": "Désactive le mode continu de pitch bend."
+    },
+    "switchon": {
+      "bp3": "_switchon",
+      "args": [
+        "channel"
+      ],
+      "description": "Active un canal MIDI switch."
+    },
+    "switchoff": {
+      "bp3": "_switchoff",
+      "args": [
+        "channel"
+      ],
+      "description": "Désactive un canal MIDI switch."
     }
   }
 }

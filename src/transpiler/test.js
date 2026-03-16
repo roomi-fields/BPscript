@@ -168,6 +168,18 @@ try {
   // Test 27: asymmetric (multi-guard, flags nus, goto, K-params)
   testFull('asymmetric', loadScene('asymmetric.bps'));
 
+  // Test 28: major-minor (scales Cmaj/Cmin, polymetric ratios)
+  testFull('major-minor', loadScene('major-minor.bps'));
+
+  // Test 29: tunings (temperaments, retro, diatonic/altered scales)
+  testFull('tunings', loadScene('tunings.bps'));
+
+  // Test 30: vina3 (gamakas, flags, wildcards, pitchbend, slide controls)
+  testFull('vina3', loadScene('vina3.bps'));
+
+  // Test 31: visser-waves (unbalanced braces, embedding pattern, keyxpand, velcont)
+  testFull('visser-waves', loadScene('visser-waves.bps'));
+
 } catch (err) {
   console.error('TEST ERROR:', err.message);
   console.error(err.stack);

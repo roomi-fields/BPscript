@@ -112,7 +112,8 @@ function parse(tokens) {
           value = Number(`${negative ? '-' : ''}${num}`);
         }
       } else if (at(T.FLOAT)) {
-        value = Number(advance().value);
+        const raw = advance().value;
+        value = raw;  // Preserve raw float string for exact BP3 output (e.g. 60.0000)
       } else if (at(T.IDENT)) {
         // Could be runtime or string value
         const v = advance().value;
