@@ -491,6 +491,18 @@ function parse(tokens) {
       // Stop at [ unless it's a tempo operator on the previous element
       if (at(T.LBRACKET) && !isTempoOpQualifier()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
+      // Unbalanced } or , at top level — embedding pattern
+      if (at(T.RBRACE)) {
+        elements.push({ type: 'RawBrace', value: '}' });
+        advance();
+        continue;
+      }
+      if (at(T.COMMA)) {
+        elements.push({ type: 'RawBrace', value: ',' });
+        advance();
+        continue;
+      }
+
       const el = parseRhsElement();
       if (!el) break;
 
@@ -548,10 +560,16 @@ function parse(tokens) {
       return { type: 'Period' };
     }
 
-    // Polymetric { ... }
+    // Polymetric { ... } or unbalanced brace (embedding pattern)
     if (at(T.LBRACE)) {
-      return parsePolymetric();
+      if (hasMatchingBrace()) {
+        return parsePolymetric();
+      }
+      // Unbalanced { — emit as raw token for BP3 embedding patterns
+      advance();
+      return { type: 'RawBrace', value: '{' };
     }
+
 
     // Variable |x|
     if (at(T.PIPE)) {
@@ -790,6 +808,37 @@ function parse(tokens) {
     }
 
     return { type: 'SimultaneousGroup', primary, secondaries };
+  }
+
+  function hasMatchingBrace() {
+    // Lookahead: is there a } that matches this { within the SAME rule?
+    // A new rule starts after NEWLINE(s) when we see: IDENT ARROW or WHEN
+    let depth = 0;
+    let j = pos;
+    let afterNewline = false;
+    while (j < tokens.length) {
+      const t = tokens[j].type;
+      if (t === T.LBRACE) depth++;
+      if (t === T.RBRACE) { depth--; if (depth === 0) return true; }
+      if (t === T.EOF || t === T.SEPARATOR) return false;
+      // After a newline, check if next non-newline token starts a new rule
+      if (t === T.NEWLINE) { afterNewline = true; j++; continue; }
+      if (afterNewline) {
+        // New rule starts with: IDENT/WHEN/LAMBDA at line start (outside braces)
+        if (t === T.WHEN || t === T.LAMBDA) return false;
+        if (t === T.IDENT) {
+          // Look ahead for arrow
+          let k = j + 1;
+          while (k < tokens.length && tokens[k].type === T.IDENT) k++;
+          if (k < tokens.length && (tokens[k].type === T.ARROW_R || tokens[k].type === T.ARROW_L || tokens[k].type === T.ARROW_BI)) {
+            return false; // New rule detected
+          }
+        }
+      }
+      afterNewline = false;
+      j++;
+    }
+    return false;
   }
 
   function parsePolymetric() {

@@ -436,7 +436,8 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     case 'Context':
       return encodeContext(el);
 
-    // FlagMutation no longer in RHS — flags are in Rule.flags via []
+    case 'RawBrace':
+      return el.value;  // { or } as-is for BP3 embedding patterns
 
     case 'BacktickStandalone':
     case 'BacktickInline':
