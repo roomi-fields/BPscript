@@ -918,6 +918,42 @@ S <> $mel(tempo:120) &mel(tempo:80)
 
 // Templates sur un groupe — ${...} et &{...}
 S -> ${$X S &X} &{$X S &X}    // capture et rejoue un groupe entier
+
+// Substitution — replay avec transformation des terminaux
+S -> $X &X[sub:mineur]         // rejoue X en substituant selon la table "mineur"
+```
+
+### Substitution (`[sub:table]`) — homomorphismes BP3
+
+BP3 appelle cela des "homomorphismes" — une transformation qui préserve la
+structure temporelle (rythme, durées) mais remplace les terminaux selon une
+table de correspondance. C'est une transposition généralisée (pas juste +N
+demi-tons, mais n'importe quel mapping terminal → terminal).
+
+En BPscript, les tables de substitution sont dans `lib/sub.json`, chargées
+par `@sub`. Le qualifier `[sub:nom]` sur un template slave `&` applique la
+substitution nommée :
+
+```
+@sub
+
+// Table "dhati" : frappes résonnantes → frappes sèches (tabla)
+// dha→ta, ge→ke, dhee→tee (défini dans lib/sub.json)
+$N14 &N14[sub:dhati]       // capture N14, rejoue en substituant
+```
+
+Pas de substitution "par défaut" — on nomme toujours explicitement la table.
+Le `*` anonyme de BP3 est remplacé par un nom. Si on substitue, on dit avec quoi.
+
+La librairie `lib/sub.json` :
+```json
+{
+  "name": "sub",
+  "tables": {
+    "dhati": { "dha": "ta", "ge": "ke", "dhee": "tee", "na": "na" },
+    "mineur": { "C": "Eb", "E": "Gb", "G": "Bb" }
+  }
+}
 ```
 
 `$` et `&` ne dépendent pas de la position par rapport à `->` :
