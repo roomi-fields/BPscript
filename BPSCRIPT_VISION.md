@@ -467,6 +467,10 @@ Sa!ramp(brightness,0,255)    // gate:sc + cv:python (hérite durée de Sa)
 Règles :
 - **Avant `!`** : le primaire — doit occuper du temps (gate, cv, silence)
 - **Après `!`** : secondaires — se déclenchent au même instant
+- **`!` standalone** (sans primaire) : **out-time object** — déclenché hors-temps,
+  sans occuper de durée. Compilé en `<<symbol>>` pour BP3.
+  Ex: `Y -> !f` → `Y --> <<f>>`. Utilisé quand un non-terminal se résout
+  en pur déclenchement (percussion, lumière, événement ponctuel).
   - **trigger** → zéro durée
   - **gate** → hérite de la durée du primaire
   - **cv** → hérite de la durée du primaire

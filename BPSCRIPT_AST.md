@@ -191,10 +191,10 @@ LhsElement = Symbol | Variable | Wildcard | Context
 ```
 RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
            | Period | NumericDuration | Polymetric | Control
-           | SimultaneousGroup | TriggerIn | Variable | Wildcard
-           | TemplateMaster | TemplateSlave
+           | SimultaneousGroup | OutTimeObject | TriggerIn | Variable | Wildcard
+           | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup
            | TieStart | TieContinue | TieEnd
-           | NilString | BacktickStandalone | Context | FlagMutation
+           | NilString | BacktickStandalone | Context | RawBrace
 ```
 
 **Priorité de parsing pour les IDENT suivis de `(`** :
@@ -292,6 +292,15 @@ Exemples :
 TriggerIn { type: "TriggerIn", name: string, qualifiers: Qualifier[] }
 ```
 
+### `OutTimeObject`
+
+```
+OutTimeObject { type: "OutTimeObject", name: string }
+```
+
+`!f` standalone (sans primaire) → `<<f>>` en BP3. Objet hors-temps déclenché
+sans occuper de durée dans la séquence.
+
 ### `Variable`
 
 ```
@@ -350,7 +359,21 @@ BacktickOrphan { type: "BacktickOrphan", tag: string, code: string, line: number
 Context { type: "Context", positive: boolean, symbols: string[] }
 ```
 
-`#X` (un seul symbole) et `#(X Y)` (groupe) sont les deux formes du contexte négatif.
+`#X` (un seul symbole), `#(X Y)` (groupe), `#?` (boundary) sont les trois formes du contexte négatif.
+
+### `RawBrace`
+
+```
+RawBrace {
+  type: "RawBrace"
+  value: "{" | "}" | ","            // brace brute pour embedding patterns
+  polySpeed: number | string | null  // annoté par le 2-pass depuis }[speed:N]
+  qualifiers: Qualifier[] | null     // [speed:N] sur } (source du polySpeed)
+}
+```
+
+Émis quand `{`, `}`, `,` sont non-balancés dans une règle (embedding pattern).
+Le 2-pass `annotateUnbalancedBraces` propage `[speed:N]` du `}` vers le `{` correspondant.
 
 ### `FlagExpr`
 

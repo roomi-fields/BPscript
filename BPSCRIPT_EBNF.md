@@ -118,7 +118,8 @@ context = positive_context | negative_context ;
 
 positive_context = "(" , symbol+ , ")" ;            (* contexte positif *)
 negative_context = "#" , "(" , symbol+ , ")"         (* négatif sur groupe *)
-                 | "#" , symbol ;                    (* négatif sur un seul symbole *)
+                 | "#" , symbol                      (* négatif sur un seul symbole *)
+                 | "#" , "?" ;                       (* boundary — pas de symbole ici *)
 ```
 
 Les contextes peuvent apparaître avant le LHS (contexte gauche), après le RHS
@@ -269,11 +270,13 @@ sim_target   = symbol                                (* trigger : !dha *)
              ;
 ```
 
-`!` est **exclusivement temporel** — il déclenche des symboles au même instant
-que le primaire. Le primaire définit la durée :
-- trigger → zéro durée
-- gate → hérite la durée du primaire
-- cv → hérite la durée du primaire
+`!` est **exclusivement temporel** — il déclenche des symboles.
+
+Deux usages :
+- **Attaché** à un primaire (`Sa!dha`) : le primaire définit la durée, le secondaire
+  se déclenche au même instant. Compilé en `Sa <<dha>>`.
+- **Standalone** (`!f`) : out-time object — déclenché hors-temps, sans durée.
+  Compilé en `<<f>>`. Utilisé quand un non-terminal se résout en pur trigger.
 
 Chaînable : `Sa!dha!spotlight`.
 
@@ -477,6 +480,8 @@ lambda   → chaîne vide (efface le non-terminal)
 | `&{A S B}` | `(:A S B)` | template slave (groupe) |
 | `~` | `&` | liaison |
 | `#X` | `#X` | contexte négatif (identique) |
+| `#?` | `#?` | boundary — pas de symbole (identique) |
+| `!f` (standalone) | `<<f>>` | out-time object |
 | `-` | `-` | silence (identique) |
 | `_` | `_` | prolongation (identique) |
 | `.` | `.` | period (identique) |
