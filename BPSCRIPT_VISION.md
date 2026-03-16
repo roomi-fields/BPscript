@@ -1966,23 +1966,20 @@ Deux usages distincts :
   sur le LHS et dans les contextes `#({)`. La grammaire construit des
   polymétriques par réécriture textuelle.
 
-### Time signatures inline non portées
+### Time signatures inline
 
 BP3 supporte des **time signatures inline** dans le flux : `4+4/6` signifie
-"cycle de 8 beats (4+4) subdivisé en 6". C'est une notation atomique — le `+`
-est un opérateur arithmétique sur les beats, le `/6` applique la subdivision.
+"cycle de 8 beats (4+4) subdivisé en 6". La notation suit le pattern
+`INT { "+" INT } "/" INT` (numérateurs additionnés, séparateur, dénominateur).
 
-BPscript ne porte pas cette notation :
-- `+` est un opérateur de flag (incrément), pas d'arithmétique de beats
-- `4+4/6` serait tokenisé en 5 tokens séparés (`4` `+` `4` `/` `6`)
-  qui ne se recombinent pas en time signature
+En BPscript, les time signatures s'expriment via le qualifier `[meter:]` :
 
-Les grammaires BP3 qui utilisent des time signatures inline (dhin, ruwet)
-les remplacent par des non-terminaux (`meter8`, `meter16`) dans la traduction.
-Ces non-terminaux ne sont pas résolus — la time signature doit être ajoutée
-manuellement dans le BP3 final ou exprimée via `@meter` (global uniquement).
+```
+S <> S96 [meter:4+4/6]              // cycle 8 beats / 6 subdivisions
+S <> S192 [meter:4+4+4+4/6]         // cycle 16 beats / 6 subdivisions
+S -> P1 P2 P3 [meter:4+4+4+4+4+4/4] // cycle 24 beats / 4 subdivisions
+```
 
-**Évolution possible** : ajouter une syntaxe de time signature inline,
-par exemple `[meter:4+4/6]` comme qualifier de règle, ou un contrôle
-`meter(4+4/6)`. Cela nécessiterait un mini-parser d'expressions arithmétiques
-dans les arguments de qualifiers/contrôles.
+Cohérent avec `@meter:3/4` (global) — même clé, portée locale via `[]`.
+Le parser accepte les expressions `INT+INT+.../INT` comme valeurs composites
+dans les qualifiers. L'encoder émet la time signature avant le RHS en BP3.
