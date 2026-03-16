@@ -180,6 +180,12 @@ try {
   // Test 31: visser-waves (unbalanced braces, embedding pattern, keyxpand, velcont)
   testFull('visser-waves', loadScene('visser-waves.bps'));
 
+  // Test 32: 765432 (polyrhythmic Cronos piece, undetermined rests, D-50 MIDI)
+  testFull('765432', loadScene('765432.bps'));
+
+  // Test 33: shapes-rhythm (Cronos dance, time patterns, press, modcont, D-50)
+  testFull('shapes-rhythm', loadScene('shapes-rhythm.bps'));
+
 } catch (err) {
   console.error('TEST ERROR:', err.message);
   console.error(err.stack);
