@@ -267,7 +267,7 @@ function parse(tokens) {
     return t === T.WHEN || t === T.IDENT || t === T.HASH ||
            t === T.LPAREN || t === T.QUESTION || t === T.PIPE ||
            t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA ||
-           t === T.REST || t === T.DOLLAR;
+           t === T.REST || t === T.DOLLAR || t === T.RPAREN;
   }
 
   // ============================================================
@@ -498,8 +498,8 @@ function parse(tokens) {
         // - (silence) as terminal on LHS
         advance();
         elements.push({ type: 'Rest' });
-      } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) {
-        // Raw structural chars on LHS (meta-grammars like koto3)
+      } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA, T.RPAREN)) {
+        // Raw structural chars on LHS (meta-grammars: koto3, dhin)
         elements.push({ type: 'RawBrace', value: advance().value });
       } else {
         break;
@@ -538,6 +538,11 @@ function parse(tokens) {
       if (at(T.COMMA)) {
         elements.push({ type: 'RawBrace', value: ',' });
         advance();
+        continue;
+      }
+      // Raw tokens: + ) for time signatures and meta-grammars
+      if (at(T.PLUS) || at(T.RPAREN)) {
+        elements.push({ type: 'RawBrace', value: advance().value });
         continue;
       }
 
