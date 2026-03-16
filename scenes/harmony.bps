@@ -9,7 +9,7 @@
 // _scale(Cmaj, A4) = activer Cmaj à partir de A4
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] ---

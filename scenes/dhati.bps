@@ -15,7 +15,7 @@
 // NOTE : INIT: Play I46 (BP3 performance init, pas encore en BPscript)
 
 @core
-@+
+@controls
 @mm:15
 
 // Terminaux — bols de tabla

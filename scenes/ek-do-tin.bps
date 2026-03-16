@@ -6,7 +6,7 @@
 // Terminaux : bols de tabla (ek, do, tin, char, panch, che, sat, at)
 
 @core
-@+
+@controls
 @mm:88
 @striated
 

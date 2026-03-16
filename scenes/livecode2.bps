@@ -6,7 +6,7 @@
 // et solfège français (do, re, mi, fa, sol, la, si, reb, sol#, sib)
 
 @core
-@+
+@controls
 
 // Solfège français — une seule règle, 2 voix principales (chan 3 et 4)
 

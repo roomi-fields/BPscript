@@ -2,7 +2,7 @@
 // Traduit de bp3-engine/library/examples/all-items/grammar.gr
 
 @core
-@+
+@controls
 
 gate a:midi
 gate b:midi

@@ -6,7 +6,7 @@
 // Sous-grammaire 2: résolution en notes indiennes
 
 @core
-@+
+@controls
 @raga:midi
 @mm:60
 @striated

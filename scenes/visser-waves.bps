@@ -5,7 +5,7 @@
 // {5, A B {3, A B {2, A B C D} C D} C D}
 
 @core
-@+
+@controls
 @western:midi
 @mm:60.0000
 @striated

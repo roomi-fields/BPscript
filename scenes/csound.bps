@@ -5,7 +5,7 @@
 // Volume continu de 127→0 et 0→127 (crescendo/decrescendo).
 
 @core
-@+
+@controls
 @western:midi
 
 S -> ins(3) volumecont volume(127) A4 G4 C5 A5 A4 G4 C5 A5 volume(0) [mode:random, weight:1-1]

@@ -8,7 +8,7 @@
 // Essayer cette grammaire en temps strié et en temps lisse.
 
 @core
-@+
+@controls
 @western:midi
 @mm:120
 

@@ -7,7 +7,7 @@
 // deviennent beat3 et beat2 en BPscript.
 
 @core
-@+
+@controls
 
 gate beat3:midi
 gate beat2:midi

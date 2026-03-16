@@ -5,7 +5,7 @@
 // repos indéterminé (...), et liaisons (ties ~ / ~).
 
 @core
-@+
+@controls
 @western:midi
 @mm:60
 @striated

@@ -7,7 +7,7 @@
 // dans le même espace de temps.
 
 @core
-@+
+@controls
 @western:midi
 
 // Settings globaux

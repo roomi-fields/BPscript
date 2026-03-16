@@ -16,7 +16,7 @@
 // BP3 TIMEPATTERNS: t1 = 88/60  t2 = 88/80  t3 = 1/1
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] — Structure principale ---

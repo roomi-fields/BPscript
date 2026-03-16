@@ -7,7 +7,7 @@
 // 3. Résolution des symboles de transposition en contrôles
 
 @core
-@+
+@controls
 @western:midi
 @mm:120
 

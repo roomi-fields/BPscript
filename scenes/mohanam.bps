@@ -8,7 +8,7 @@
 // Utiliser un son de flûte avec un patch sensible à la vélocité
 
 @core
-@+
+@controls
 @raga:midi
 
 // Settings

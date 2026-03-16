@@ -10,7 +10,7 @@
 // This method is obsolete now that octave numbers are handled.
 
 @core
-@+
+@controls
 @raga:midi
 
 // ============================================================

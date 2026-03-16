@@ -4,7 +4,7 @@
 // Polymétrie imbriquée progressive avec volume dynamique
 
 @core
-@+
+@controls
 @western:midi
 @mm:60
 @striated

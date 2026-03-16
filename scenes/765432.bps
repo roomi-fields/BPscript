@@ -8,7 +8,7 @@
 // The last subgrammar could be replaced with "-gl.D50"
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] ---

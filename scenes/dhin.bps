@@ -10,7 +10,7 @@
 //   Les terminaux sont des bols de tabla (dhin, dha, dhagena, tirakita...)
 
 @core
-@+
+@controls
 
 // --- Sous-grammaire 1 [mode:random] — structure ---
 

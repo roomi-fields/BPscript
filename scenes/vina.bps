@@ -7,7 +7,7 @@
 // Terminaux : notes indiennes (sa3, pa3, ni3, sa4)
 
 @core
-@+
+@controls
 @raga:midi
 
 // --- Sous-grammaire 1 [mode:random] — structure ---

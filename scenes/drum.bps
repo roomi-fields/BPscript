@@ -2,7 +2,7 @@
 // Traduit de bp3-engine/library/examples/drum/grammar.gr
 
 @core
-@+
+@controls
 @western:midi
 
 // Contrôles globaux

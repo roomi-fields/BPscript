@@ -2,7 +2,7 @@
 // Traduit de bp3-engine/library/tabla/vina2/grammar.gr
 
 @core
-@+
+@controls
 @raga:midi
 
 // --- Sous-grammaire 1 [mode:random] — structure ---

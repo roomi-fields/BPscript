@@ -5,7 +5,7 @@
 // Rotations, expansions clavier, transpositions, vélocité aléatoire.
 
 @core
-@+
+@controls
 @western:midi
 @mm:60
 @striated

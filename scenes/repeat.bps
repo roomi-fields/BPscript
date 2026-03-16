@@ -7,7 +7,7 @@
 // Les règles sans RHS (X -->) effacent le non-terminal (production epsilon).
 
 @core
-@+
+@controls
 
 // Terminaux
 gate a:midi

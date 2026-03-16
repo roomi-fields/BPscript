@@ -5,7 +5,7 @@
 // Polymétrie avec taalam (mesure de temps)
 
 @core
-@+
+@controls
 @raga:midi
 @mm:60
 

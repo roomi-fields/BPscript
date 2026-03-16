@@ -6,7 +6,7 @@
 // silence initial sur la troisième.
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] ---

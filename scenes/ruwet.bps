@@ -7,7 +7,7 @@
 // (BPscript ne supporte pas encore [sub:]).
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] --- structure thematique

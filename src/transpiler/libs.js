@@ -13,19 +13,16 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LIB_DIR = join(__dirname, '../../lib');
 
-// Only special case: @+ can't be a filename
-const SPECIAL = { '+': 'controls' };
-
 // Cache loaded libs
 const cache = {};
 
 function loadLib(name) {
   if (cache[name]) return cache[name];
-  const fileName = SPECIAL[name] || name;
 
   // Try lib/<name>.json
+  // @xxx → lib/xxx.json
   try {
-    const data = JSON.parse(readFileSync(join(LIB_DIR, fileName + '.json'), 'utf-8'));
+    const data = JSON.parse(readFileSync(join(LIB_DIR, name + '.json'), 'utf-8'));
     cache[name] = data;
     return data;
   } catch {}

@@ -5,7 +5,7 @@
 // Contrôles nouveaux : rotate(), keyxpand(), velcont
 
 @core
-@+
+@controls
 @western:midi
 @mm:60
 @striated

@@ -6,7 +6,7 @@
 // résultat structurel (A A ... A) mais avec des variations de tempo.
 
 @core
-@+
+@controls
 @western:midi
 
 // Settings

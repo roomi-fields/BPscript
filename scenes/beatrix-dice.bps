@@ -6,7 +6,7 @@
 // 158 mesures terminales (T1-T176), 16 sections de sélection par dés
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] — structure ---

@@ -2,7 +2,7 @@
 // Traduit de bp3-engine/library/examples/tunings/grammar.gr
 
 @core
-@+
+@controls
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] ---
