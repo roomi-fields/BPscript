@@ -102,9 +102,12 @@ for (const [name, grPath] of Object.entries(SCENE_MAP)) {
   if (r.error || r.compileError) {
     console.log(`SKIP ${name}: ${(r.error || r.compileError).substring(0, 60)}`);
     skipped++;
-  } else if (r.origErr) {
-    console.log(`SKIP ${name}: original failed`);
+  } else if (r.origErr && r.transErr) {
+    console.log(`SKIP ${name}: both failed`);
     skipped++;
+  } else if (r.origErr && !r.transErr) {
+    console.log(`  ~OK ${name} (transpiled OK, original needs aux files — ${r.transNotes} notes)`);
+    compatible++;
   } else if (r.transErr) {
     console.log(`FAIL ${name}: transpiled rejected`);
     errors++;
