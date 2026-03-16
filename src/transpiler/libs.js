@@ -16,25 +16,41 @@ const LIB_DIR = join(__dirname, '../../lib');
 const LIB_FILES = {
   'core': 'core.json',
   '+': 'controls.json',
-  'western': 'western.json',
-  'raga': 'raga.json',
   'settings': 'settings.json',
+  'sub': 'sub.json',
 };
 
 // Cache loaded libs
 const cache = {};
 
+// Cache for alphabets.json (loaded once)
+let alphabetsData = null;
+function getAlphabets() {
+  if (!alphabetsData) {
+    try { alphabetsData = JSON.parse(readFileSync(join(LIB_DIR, 'alphabets.json'), 'utf-8')); }
+    catch { alphabetsData = { alphabets: {} }; }
+  }
+  return alphabetsData;
+}
+
 function loadLib(name) {
   if (cache[name]) return cache[name];
+  // Check direct file mapping first
   const file = LIB_FILES[name];
-  if (!file) return null;
-  try {
-    const data = JSON.parse(readFileSync(join(LIB_DIR, file), 'utf-8'));
-    cache[name] = data;
-    return data;
-  } catch {
-    return null;
+  if (file) {
+    try {
+      const data = JSON.parse(readFileSync(join(LIB_DIR, file), 'utf-8'));
+      cache[name] = data;
+      return data;
+    } catch { return null; }
   }
+  // Check alphabets.json for alphabet names (@western, @raga, @EkDoTin, etc.)
+  const alpha = getAlphabets().alphabets?.[name];
+  if (alpha) {
+    cache[name] = alpha;
+    return alpha;
+  }
+  return null;
 }
 
 /**
