@@ -309,6 +309,8 @@ function encodeContext(ctx) {
 function encodeLhs(elements) {
   return elements.map(el => {
     if (el.type === 'Symbol') return el.name;
+    if (el.type === 'Prolongation') return '_';
+    if (el.type === 'Rest') return '-';
     if (el.type === 'Variable') return `|${el.name}|`;
     if (el.type === 'Wildcard') return el.index != null ? `?${el.index}` : '?';
     if (el.type === 'Context') return encodeContext(el);

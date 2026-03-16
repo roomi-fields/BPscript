@@ -489,6 +489,14 @@ function parse(tokens) {
         elements.push(parseWildcard());
       } else if (at(T.HASH)) {
         elements.push(parseContext());
+      } else if (at(T.PROLONG)) {
+        // _ (prolongation) as terminal on LHS — e.g. Oc3 _ -> _ Oc3
+        advance();
+        elements.push({ type: 'Prolongation' });
+      } else if (at(T.REST)) {
+        // - (silence) as terminal on LHS
+        advance();
+        elements.push({ type: 'Rest' });
       } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) {
         // Raw structural chars on LHS (meta-grammars like koto3)
         elements.push({ type: 'RawBrace', value: advance().value });
