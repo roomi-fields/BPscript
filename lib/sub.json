@@ -1,0 +1,218 @@
+{
+  "name": "sub",
+  "description": "Substitution tables from BP3 homomorphisms",
+  "tables": {
+    "Ruwet": {
+      "m1": {
+        "la4": "sib4"
+      },
+      "m2": {
+        "la4": "sol4"
+      },
+      "mineur": {
+        "fa4": "re4",
+        "la4": "fa4"
+      }
+    },
+    "abc": {
+      "default": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'",
+        "e": "e'",
+        "f": "f'",
+        "g": "g'",
+        "h": "h'",
+        "i": "i'",
+        "j": "j'",
+        "k": "k'",
+        "l": "l'",
+        "m": "m'",
+        "n": "n'",
+        "o": "o'",
+        "p": "p'",
+        "q": "q'",
+        "r": "r'",
+        "s": "s'",
+        "t": "t'",
+        "u": "u'",
+        "v": "v'",
+        "w": "w'",
+        "x": "x'",
+        "y": "y'",
+        "z": "z'"
+      },
+      "TR": {
+        "a": "b",
+        "b": "c",
+        "c": "d"
+      }
+    },
+    "abc1": {
+      "chik": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'"
+      },
+      "e": {
+        "f": "f'",
+        "g": "g'"
+      }
+    },
+    "abc2": {
+      "default": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'",
+        "e": "e'",
+        "f": "f'",
+        "g": "g'",
+        "h": "h'",
+        "i": "i'",
+        "j": "j'",
+        "k": "k'",
+        "l": "l'",
+        "m": "m'",
+        "n": "n'",
+        "o": "o'",
+        "p": "p'",
+        "q": "q'",
+        "r": "r'",
+        "s": "s'",
+        "t": "t'",
+        "u": "u'",
+        "v": "v'",
+        "w": "w'",
+        "x": "x'",
+        "y": "y'",
+        "z": "z'"
+      }
+    },
+    "abc3": {
+      "default": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'",
+        "e": "e'",
+        "f": "f'",
+        "g": "g'",
+        "h": "h'",
+        "i": "i'",
+        "j": "j'",
+        "k": "k'",
+        "l": "l'",
+        "m": "m'",
+        "n": "n'",
+        "o": "o'",
+        "p": "p'",
+        "q": "q'",
+        "r": "r'",
+        "s": "s'",
+        "t": "t'",
+        "u": "u'",
+        "v": "v'",
+        "w": "w'",
+        "x": "x'",
+        "y": "y'",
+        "z": "z'"
+      },
+      "TR": {
+        "a": "b",
+        "b": "c",
+        "c": "d"
+      }
+    },
+    "checkhomo": {
+      "default": {
+        "a": "a'",
+        "b": "b'"
+      },
+      "H": {
+        "a": "c"
+      },
+      "TR": {
+        "a'": "b'"
+      }
+    },
+    "cloches1": {
+      "TR": {
+        "do3": "mib3",
+        "sol3": "si4",
+        "re3": "mi4",
+        "mi3": "re4"
+      }
+    },
+    "dhadhatite": {
+      "default": {
+        "dha": "ta",
+        "ti": "ti",
+        "te": "te",
+        "na": "na",
+        "dhee": "tee",
+        "tr": "tr"
+      }
+    },
+    "dhati": {
+      "default": {
+        "dha": "ta",
+        "ti": "ti",
+        "ge": "ke",
+        "na": "na",
+        "dhee": "tee",
+        "tr": "tr",
+        "kt": "kt"
+      }
+    },
+    "dhin--": {
+      "default": {
+        "dha": "ta",
+        "ta": "ta",
+        "ti": "ti",
+        "ra": "ra",
+        "na": "na",
+        "ki": "ki",
+        "dhee": "tee",
+        "ne": "ne",
+        "ge": "ke",
+        "ka": "ka",
+        "dhin": "tin"
+      }
+    },
+    "tabla": {
+      "default": {
+        "dha": "ta",
+        "dhin": "tin",
+        "dhee": "tee",
+        "ge": "ke"
+      }
+    },
+    "transposition": {
+      "TR": {
+        "C3": "B3",
+        "B3": "C3",
+        "F4": "C6"
+      }
+    },
+    "trial.mohanam": {
+      "trn": {
+        "sa6": "ga6",
+        "re6": "pa6",
+        "ga6": "dha6",
+        "pa6": "sa7",
+        "dha6": "re7",
+        "sa7": "ga7"
+      }
+    },
+    "tryhomomorphism": {
+      "default": {
+        "a": "b",
+        "do4": "re4",
+        "c": "fa4"
+      }
+    }
+  }
+}
