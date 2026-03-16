@@ -294,7 +294,12 @@ function encodeGuard(guard) {
 function encodeContext(ctx) {
   const prefix = ctx.positive ? '' : '#';
   if (ctx.symbols.length === 1) {
-    return `${prefix}${ctx.symbols[0]}`;
+    const sym = ctx.symbols[0];
+    // Force parentheses for non-IDENT symbols: #({) #(}) #(,)
+    if (sym === '{' || sym === '}' || sym === ',') {
+      return `${prefix}(${sym})`;
+    }
+    return `${prefix}${sym}`;
   }
   return `${prefix}(${ctx.symbols.join(' ')})`;
 }
@@ -307,6 +312,7 @@ function encodeLhs(elements) {
     if (el.type === 'Variable') return `|${el.name}|`;
     if (el.type === 'Wildcard') return el.index != null ? `?${el.index}` : '?';
     if (el.type === 'Context') return encodeContext(el);
+    if (el.type === 'RawBrace') return el.value;
     return el.name || '?';
   }).join(' ');
 }
@@ -390,7 +396,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       const voiceStrs = el.voices.map(v => v.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' '));
       // Check for speed qualifier → ratio prefix (polymetric ratio)
       const speed = getQualValue(el.qualifiers, 'speed');
-      let inner = voiceStrs.join(', ');
+      let inner = voiceStrs.join(',');
       if (speed !== null) {
         inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
       }

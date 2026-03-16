@@ -2,11 +2,7 @@
 // Traduit de bp3-engine/library/experimental/koto3/grammar.gr
 //
 // Méta-grammaire : les règles SUB construisent dynamiquement des polymétriques.
-// Non-terminaux intermédiaires :
-//   PO5/PO3 = polymetric open avec ratio → {5, / {3,
-//   PC = polymetric close → }
-//   VS = voice separator → ,
-// Résolus en braces brutes par la sous-grammaire 4 (SUB1).
+// Les { } , apparaissent comme terminaux bruts sur le LHS et dans les contextes.
 
 @core
 @+
@@ -30,17 +26,15 @@ X -> b
 Y -> Y [mode:sub]
 #? ?1 -> #? ?1
 ?1 #? -> ?1 #?
-PO5 -> PO5
-PO3 -> PO3
-PC -> PC
-VS -> VS
+} -> }
+, -> ,
 a -> a [weight:5]
 a b a -> a a [weight:30]
-#(PO5) #(PO3) a b a -> PO5 a c b VS f f f - f PC [weight:100]
+#({) a b a -> {a c b, f f f - f}[speed:5] [weight:100]
 b -> b [weight:5]
-#(PO5) #(PO3) b a b #(PC) -> b b [weight:30]
-#(PO5) #(PO3) b a b -> PO3 b a b c b a VS f a f PC [weight:100]
-#(PO5) #(PO3) #a b #(PC) -> #a c b [weight:100-10]
+#({) b a b #(}) -> b b [weight:30]
+#({) b a b -> {b a b c b a, f a f}[speed:3] [weight:100]
+#({) #a b #(}) -> #a c b [weight:100-10]
 c c c -> c a c
 c a c -> b a b
 ?1 ?1 ?2 ?3 ?4 ?4 -> ?2 ?3 [weight:50]
@@ -58,13 +52,3 @@ Silence -> - - - - - [weight:50]
 Silence -> - - - - [weight:15]
 Silence -> - - - [weight:8]
 Silence -> - - [weight:8]
-
------
-
-// --- Sous-grammaire 4 [mode:sub1] — résolution des braces ---
-// PO5 → {5, (open with ratio 5), PO3 → {3, (ratio 3)
-
-PO5 -> { 5 ,
-PO3 -> { 3 ,
-PC -> }
-VS -> ,

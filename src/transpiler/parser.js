@@ -261,11 +261,11 @@ function parse(tokens) {
   }
 
   function isRuleStart() {
-    // A rule starts with: when | IDENT | # | ( | ? | |
+    // A rule starts with: when | IDENT | # | ( | ? | | | { | } | , (meta-grammars)
     const t = current().type;
     return t === T.WHEN || t === T.IDENT || t === T.HASH ||
            t === T.LPAREN || t === T.QUESTION || t === T.PIPE ||
-           t === T.LAMBDA;
+           t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA;
   }
 
   // ============================================================
@@ -439,26 +439,35 @@ function parse(tokens) {
         return { type: 'Context', positive: false, symbols: ['?'] };
       }
 
-      // #symbol (single) or #(group)
+      // #symbol (single) or #(group) — group can contain {, }, ,
       if (at(T.LPAREN)) {
         advance();
         const symbols = [];
         while (!at(T.RPAREN) && !atEnd()) {
-          symbols.push(expect(T.IDENT).value);
+          if (at(T.IDENT)) symbols.push(advance().value);
+          else if (at(T.LBRACE)) { symbols.push(advance().value); }
+          else if (at(T.RBRACE)) { symbols.push(advance().value); }
+          else if (at(T.COMMA)) { symbols.push(advance().value); }
+          else break;
         }
         expect(T.RPAREN);
         return { type: 'Context', positive: false, symbols };
+      } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) {
+        // #{ or #} or #, — single structural char as negative context
+        return { type: 'Context', positive: false, symbols: [advance().value] };
       } else {
         const sym = expect(T.IDENT).value;
         return { type: 'Context', positive: false, symbols: [sym] };
       }
     }
 
-    // Positive context: (A B)
+    // Positive context: (A B) — can contain {, }, ,
     expect(T.LPAREN);
     const symbols = [];
     while (!at(T.RPAREN) && !atEnd()) {
-      symbols.push(expect(T.IDENT).value);
+      if (at(T.IDENT)) symbols.push(advance().value);
+      else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) symbols.push(advance().value);
+      else break;
     }
     expect(T.RPAREN);
     return { type: 'Context', positive: true, symbols };
@@ -479,6 +488,9 @@ function parse(tokens) {
         elements.push(parseWildcard());
       } else if (at(T.HASH)) {
         elements.push(parseContext());
+      } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) {
+        // Raw structural chars on LHS (meta-grammars like koto3)
+        elements.push({ type: 'RawBrace', value: advance().value });
       } else {
         break;
       }
@@ -498,6 +510,8 @@ function parse(tokens) {
       if (at(T.LBRACKET) && !isTempoOpQualifier()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
+      // But stop if } or , starts a new rule (followed by ->)
+      if (atAny(T.RBRACE, T.COMMA) && isNewRuleAhead()) break;
       if (at(T.RBRACE)) {
         advance();
         const rawBrace = { type: 'RawBrace', value: '}' };
@@ -529,6 +543,21 @@ function parse(tokens) {
       elements.push(el);
     }
     return elements;
+  }
+
+  function isNewRuleAhead() {
+    // Check if } or , at start of a NEW LINE is a new rule (} -> })
+    // Only true if preceded by a NEWLINE (not inline like F2 B3})
+    if (pos > 0 && tokens[pos - 1].type !== T.NEWLINE) return false;
+    // Look for arrow after the } or ,
+    let j = pos + 1;
+    while (j < tokens.length) {
+      const t = tokens[j].type;
+      if (t === T.ARROW_R || t === T.ARROW_L || t === T.ARROW_BI) return true;
+      if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR) return false;
+      j++;
+    }
+    return false;
   }
 
   function isTempoOpQualifier() {
