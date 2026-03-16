@@ -1965,3 +1965,24 @@ Deux usages distincts :
 - **Méta-grammaire** (koto3) : `{`, `}`, `,` comme terminaux matchables
   sur le LHS et dans les contextes `#({)`. La grammaire construit des
   polymétriques par réécriture textuelle.
+
+### Time signatures inline non portées
+
+BP3 supporte des **time signatures inline** dans le flux : `4+4/6` signifie
+"cycle de 8 beats (4+4) subdivisé en 6". C'est une notation atomique — le `+`
+est un opérateur arithmétique sur les beats, le `/6` applique la subdivision.
+
+BPscript ne porte pas cette notation :
+- `+` est un opérateur de flag (incrément), pas d'arithmétique de beats
+- `4+4/6` serait tokenisé en 5 tokens séparés (`4` `+` `4` `/` `6`)
+  qui ne se recombinent pas en time signature
+
+Les grammaires BP3 qui utilisent des time signatures inline (dhin, ruwet)
+les remplacent par des non-terminaux (`meter8`, `meter16`) dans la traduction.
+Ces non-terminaux ne sont pas résolus — la time signature doit être ajoutée
+manuellement dans le BP3 final ou exprimée via `@meter` (global uniquement).
+
+**Évolution possible** : ajouter une syntaxe de time signature inline,
+par exemple `[meter:4+4/6]` comme qualifier de règle, ou un contrôle
+`meter(4+4/6)`. Cela nécessiterait un mini-parser d'expressions arithmétiques
+dans les arguments de qualifiers/contrôles.
