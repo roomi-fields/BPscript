@@ -46,12 +46,12 @@ const SCENE_MAP = {
   'asymmetric':       'experimental/asymmetric/grammar.gr',
 };
 
-// Load BP3 WASM module (must set cwd to dist/ for bp3.data)
-const origCwd = process.cwd();
+// Load BP3 WASM module — bp3.js changes cwd internally, restore after
+const savedCwd = process.cwd();
 process.chdir(DIST_DIR);
 const BP3Module = require(join(DIST_DIR, 'bp3.js'));
 const bp3 = await BP3Module();
-process.chdir(origCwd);
+process.chdir(savedCwd);
 
 const bp3_init = bp3.cwrap('bp3_init', 'number', []);
 const bp3_load_settings = bp3.cwrap('bp3_load_settings', 'number', ['string']);

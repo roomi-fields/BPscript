@@ -152,6 +152,31 @@
       "bp3": "_rndvel",
       "args": ["range"],
       "description": "Vélocité aléatoire — ajoute une variation aléatoire ±range à la vélocité courante."
+    },
+    "value": {
+      "bp3": "_value",
+      "args": ["param", "amount"],
+      "description": "Valeur d'un paramètre continu de sound object (Csound/MIDI CC)."
+    },
+    "fixed": {
+      "bp3": "_fixed",
+      "args": ["param", "amount"],
+      "description": "Valeur fixe d'un paramètre de sound object (pas d'interpolation)."
+    },
+    "cont": {
+      "bp3": "_cont",
+      "args": ["param"],
+      "description": "Active le mode continu pour un paramètre de sound object."
+    },
+    "script": {
+      "bp3": "_script",
+      "args": ["command"],
+      "description": "Commande script BP3 (MIDI program change, etc.)."
+    },
+    "pitchfixed": {
+      "bp3": "_pitchfixed",
+      "args": [],
+      "description": "Désactive le mode continu de pitch bend."
     }
   }
 }
