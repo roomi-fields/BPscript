@@ -262,11 +262,12 @@ function parse(tokens) {
   }
 
   function isRuleStart() {
-    // A rule starts with: when | IDENT | # | ( | ? | | | { | } | , (meta-grammars)
+    // A rule starts with: when | IDENT | # | ( | ? | | | { | } | , | - | $ (meta-grammars, context)
     const t = current().type;
     return t === T.WHEN || t === T.IDENT || t === T.HASH ||
            t === T.LPAREN || t === T.QUESTION || t === T.PIPE ||
-           t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA;
+           t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA ||
+           t === T.REST || t === T.DOLLAR;
   }
 
   // ============================================================
@@ -821,8 +822,8 @@ function parse(tokens) {
       while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
         const t = current();
         if (t.type === T.INT || t.type === T.FLOAT || t.type === T.IDENT) {
-          // Preserve spaces between words: "MIDI send Continue"
-          if (arg.length > 0 && t.type === T.IDENT && /[a-zA-Z]$/.test(arg)) arg += ' ';
+          // Preserve spaces between words: "MIDI send Continue", "wait for do#2 channel 1"
+          if (arg.length > 0 && /[a-zA-Z0-9#]$/.test(arg) && (t.type === T.IDENT || t.type === T.INT || t.type === T.FLOAT)) arg += ' ';
           arg += advance().value;
         } else if (t.type === T.EQUALS) {
           arg += advance().value;
