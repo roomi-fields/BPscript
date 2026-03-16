@@ -1895,3 +1895,30 @@ Raisons :
 Les grammaires BP3 qui utilisent des quoted symbols sont **renommées** dans la
 traduction (ex: `'1'` → `d1`, `'2'` → `d2`). Le mapping est documenté dans
 les commentaires de chaque scène.
+
+### Méta-grammaires (réécriture structurelle) non portées
+
+BP3 est un **système de réécriture de chaînes** — tout est texte, y compris
+les délimiteurs structurels. Certaines grammaires de Bernard exploitent cela
+pour **construire dynamiquement** des polymétriques via la réécriture :
+
+```
+// BP3: koto3 — un automate cellulaire qui injecte des {} dans le flux
+#({) a b a --> {5,a c b,f f f - f}    // génère un polymetric par réécriture
+} --> }                                 // { et } sont des terminaux !
+, --> ,                                 // , aussi !
+```
+
+La grammaire écrit des `{`, `,`, `}` dans la séquence comme des caractères.
+BP3 les interprète comme des polymétriques dans une seconde passe. C'est une
+**méta-grammaire** — une grammaire qui écrit des grammaires.
+
+BPscript est un **langage structuré** — `{`, `}`, `,` ont une sémantique fixe
+au parsing. La structure est dans l'AST, pas dans le texte. On ne peut pas
+"écrire" un `{` dans le flux et espérer qu'il devienne un polymetric plus tard.
+
+C'est un **choix de design assumé** : BPscript préfère la clarté structurelle
+à la puissance méta-textuelle. Les grammaires qui construisent dynamiquement
+leurs propres structures (koto3, certaines règles de dhati) ne sont pas
+portables en BPscript. Pour ce type de méta-programmation, utiliser BP3
+directement ou un backtick qui génère du BP3.
