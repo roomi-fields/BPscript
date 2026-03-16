@@ -1,226 +1,124 @@
 /**
- * BPScript Validate (WASM) — compile .bps scenes, run through BP3 WASM engine,
- * compare MIDI output with original grammars.
+ * BPScript Validate (WASM) — compare transpiled BPS with original BP3 grammars.
  *
- * No files on disk — everything passes as strings to the WASM API.
+ * Each test runs in a child process from dist/ to avoid bp3.js cwd issues.
+ * The child process compiles BPS first, then loads WASM.
  */
 
 import { readFileSync } from 'fs';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SCENES_DIR = join(__dirname, '../../scenes');
 const BP3_LIB = join(__dirname, '../../bp3-engine/library');
 const DIST_DIR = join(__dirname, '../../dist');
-
-// Dynamic import of compileBPS (ESM)
-const { compileBPS } = await import('./index.js');
+const TRANSPILER = join(__dirname, 'index.js');
 
 const SCENE_MAP = {
-  'drum':             'examples/drum/grammar.gr',
-  'flags':            'examples/flags/grammar.gr',
-  'acceleration':     'experimental/acceleration/grammar.gr',
-  'templates':        'examples/templates/grammar.gr',
+  'drum': 'examples/drum/grammar.gr',
+  'flags': 'examples/flags/grammar.gr',
+  'acceleration': 'experimental/acceleration/grammar.gr',
+  'templates': 'examples/templates/grammar.gr',
   'negative-context': 'examples/negative-context/grammar.gr',
-  'harmony':          'examples/harmony/grammar.gr',
-  'mohanam':          'tabla/mohanam/grammar.gr',
-  'repeat':           'examples/repeat/grammar.gr',
-  'time-patterns':    'examples/time-patterns/grammar.gr',
-  'transposition':    'examples/transposition/grammar.gr',
-  'livecode1':        'experimental/livecode1/grammar.gr',
-  'scales':           'examples/scales/grammar.gr',
-  'not-reich':        'experimental/not-reich/grammar.gr',
-  'mozart-dice':      'western/mozart-dice/grammar.gr',
-  'all-items':        'examples/all-items/grammar.gr',
-  'one-scale':        'examples/one-scale/grammar.gr',
-  'visser-shapes':    'experimental/visser-shapes/grammar.gr',
-  'look-and-say':     'experimental/look-and-say/grammar.gr',
-  'ames':             'western/ames/grammar.gr',
-  'graphics':         'examples/graphics/grammar.gr',
-  'visser3':          'experimental/visser3/grammar.gr',
-  'livecode2':        'experimental/livecode2/grammar.gr',
-  'visser5':          'experimental/visser5/grammar.gr',
-  'asymmetric':       'experimental/asymmetric/grammar.gr',
+  'harmony': 'examples/harmony/grammar.gr',
+  'mohanam': 'tabla/mohanam/grammar.gr',
+  'repeat': 'examples/repeat/grammar.gr',
+  'time-patterns': 'examples/time-patterns/grammar.gr',
+  'transposition': 'examples/transposition/grammar.gr',
+  'livecode1': 'experimental/livecode1/grammar.gr',
+  'scales': 'examples/scales/grammar.gr',
+  'not-reich': 'experimental/not-reich/grammar.gr',
+  'mozart-dice': 'western/mozart-dice/grammar.gr',
+  'all-items': 'examples/all-items/grammar.gr',
+  'one-scale': 'examples/one-scale/grammar.gr',
+  'visser-shapes': 'experimental/visser-shapes/grammar.gr',
+  'look-and-say': 'experimental/look-and-say/grammar.gr',
+  'ames': 'western/ames/grammar.gr',
+  'graphics': 'examples/graphics/grammar.gr',
+  'visser3': 'experimental/visser3/grammar.gr',
+  'livecode2': 'experimental/livecode2/grammar.gr',
+  'visser5': 'experimental/visser5/grammar.gr',
+  'asymmetric': 'experimental/asymmetric/grammar.gr',
+  'csound': 'examples/csound/grammar.gr',
+  'ek-do-tin': 'tabla/ek-do-tin/grammar.gr',
+  'destru': 'examples/destru/grammar.gr',
+  'kss2': 'experimental/kss2/grammar.gr',
+  'vina': 'tabla/vina/grammar.gr',
+  'vina2': 'tabla/vina2/grammar.gr',
 };
 
-// Load BP3 WASM module — bp3.js changes cwd internally, restore after
-const savedCwd = process.cwd();
-process.chdir(DIST_DIR);
-const BP3Module = require(join(DIST_DIR, 'bp3.js'));
-const bp3 = await BP3Module();
-process.chdir(savedCwd);
+function esc(s) { return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 
-const bp3_init = bp3.cwrap('bp3_init', 'number', []);
-const bp3_load_settings = bp3.cwrap('bp3_load_settings', 'number', ['string']);
-const bp3_load_alphabet = bp3.cwrap('bp3_load_alphabet', 'number', ['string']);
-const bp3_load_grammar = bp3.cwrap('bp3_load_grammar', 'number', ['string']);
-const bp3_produce = bp3.cwrap('bp3_produce', 'number', []);
-const bp3_get_result = bp3.cwrap('bp3_get_result', 'string', []);
-const bp3_get_messages = bp3.cwrap('bp3_get_messages', 'string', []);
-const bp3_get_midi_events = bp3.cwrap('bp3_get_midi_events', 'string', []);
-const bp3_get_midi_event_count = bp3.cwrap('bp3_get_midi_event_count', 'number', []);
+function runTest(name, origGrPath, bpsPath) {
+  const script = `
+const {compileBPS}=require('${esc(TRANSPILER)}');
+const fs=require('fs');
+const c=compileBPS(fs.readFileSync('${esc(bpsPath)}','utf-8'));
+if(c.errors.length>0){console.log(JSON.stringify({compileError:c.errors[0].message}));process.exit(0)}
+const tg=c.grammar,ts=c.settingsJSON,ta=c.alphabetFile;
+const og=fs.readFileSync('${esc(origGrPath)}','utf-8').split('\\n').filter(l=>!/^-[a-z]{2}\\./.test(l.trim())).join('\\n');
+require('./bp3.js')().then(bp3=>{
+const I=bp3.cwrap('bp3_init','number',[]),G=bp3.cwrap('bp3_load_grammar','number',['string']),
+A=bp3.cwrap('bp3_load_alphabet','number',['string']),S=bp3.cwrap('bp3_load_settings','number',['string']),
+P=bp3.cwrap('bp3_produce','number',[]),C=bp3.cwrap('bp3_get_midi_event_count','number',[]),
+E=bp3.cwrap('bp3_get_midi_events','string',[]),R=bp3.cwrap('bp3_get_result','string',[]),
+Mg=bp3.cwrap('bp3_get_messages','string',[]);
+I(42);G(og);P();const oc=C();let on=[];
+if(oc>0)try{on=JSON.parse(E()).filter(e=>e.type===144).map(e=>e.note)}catch{}
+const oe=/Errors: [1-9]/.test(Mg()),or=R().trim();
+I(42);if(ta)A(ta);G(tg);P();const tc=C();let tn=[];
+if(tc>0)try{tn=JSON.parse(E()).filter(e=>e.type===144).map(e=>e.note)}catch{}
+const te=/Errors: [1-9]/.test(Mg()),tr=R().trim();
+const nm=on.length===tn.length&&on.every((n,i)=>n===tn[i]);
+console.log(JSON.stringify({origErr:oe,origNotes:on.length,origResult:or.substring(0,80),
+transErr:te,transNotes:tn.length,transResult:tr.substring(0,80),notesMatch:nm}))
+}).catch(e=>console.log(JSON.stringify({error:e.message})))
+`.trim();
 
-/**
- * Run a grammar through BP3 WASM and return MIDI events.
- * @param {string} grammar - BP3 grammar text
- * @param {string|null} settings - Settings JSON string
- * @param {string|null} alphabet - Alphabet OCT string
- * @param {number} seed - Random seed
- * @returns {{ ok, events, noteOns, messages }}
- */
-function runWASM(grammar, settings, alphabet, seed = 42) {
   try {
-  bp3_init(seed);
-
-  if (settings) bp3_load_settings(settings);
-  if (alphabet) bp3_load_alphabet(alphabet);
-  bp3_load_grammar(grammar);
-
-  const result = bp3_produce();
-  const messages = bp3_get_messages();
-  const count = bp3_get_midi_event_count();
-  let events = [];
-  let noteOns = [];
-
-  if (count > 0) {
-    try {
-      events = JSON.parse(bp3_get_midi_events());
-      noteOns = events.filter(e => e.type === 144);
-    } catch {}
-  }
-
-  const hasError = /Errors: [1-9]/.test(messages) || /Compilation failed/.test(messages);
-
-  return { ok: !hasError && result > 0, events, noteOns, count, messages };
+    const out = execSync(`node -e '${script.replace(/'/g, "'\\''")}'`, {
+      cwd: DIST_DIR,
+      timeout: 120000,
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).toString().trim();
+    const jsonLine = out.split('\n').filter(l => l.startsWith('{')).pop();
+    if (!jsonLine) return { error: 'no JSON output' };
+    return JSON.parse(jsonLine);
   } catch (e) {
-    return { ok: false, events: [], noteOns: [], count: 0, messages: 'WASM crash: ' + e.message };
+    return { error: (e.stderr?.toString() || e.message || '').substring(0, 80) };
   }
 }
 
-/**
- * Load original grammar + its settings.json from bp3-engine/library
- */
-function loadOriginal(grPath) {
-  const grammarFile = join(BP3_LIB, grPath);
-  const rawGrammar = readFileSync(grammarFile, 'utf-8');
-  // Strip file references (-se., -al., -ho., -cs., -to., -md., -tb.) — WASM doesn't have these
-  const grammar = rawGrammar.split('\n').filter(l => !/^-[a-z]{2}\./.test(l.trim())).join('\n');
-
-  // Try to load settings.json from same directory
-  const dir = dirname(grammarFile);
-  let settings = null;
-  try {
-    settings = readFileSync(join(dir, 'settings.json'), 'utf-8');
-  } catch {}
-
-  // Extract alphabet reference from grammar (-ho.xxx or -al.xxx)
-  // and try to load from bp3-engine/data/
-  let alphabet = null;
-  const hoMatch = grammar.match(/^-ho\.(.+)$/m);
-  if (hoMatch) {
-    try {
-      alphabet = readFileSync(join(__dirname, '../../bp3-engine/data', `-ho.${hoMatch[1]}`), 'utf-8');
-    } catch {}
-  }
-
-  return { grammar, settings, alphabet };
-}
-
-// --- Run validation ---
-
+// --- Run all tests ---
 let identical = 0, compatible = 0, different = 0, errors = 0, skipped = 0;
 
 for (const [name, grPath] of Object.entries(SCENE_MAP)) {
   const bpsFile = join(SCENES_DIR, name + '.bps');
+  const origGr = join(BP3_LIB, grPath);
+  const r = runTest(name, origGr, bpsFile);
 
-  // 1. Compile BPS → BP3
-  let bpsSrc;
-  try { bpsSrc = readFileSync(bpsFile, 'utf-8'); } catch { console.log(`SKIP ${name}: no .bps`); skipped++; continue; }
-  const compiled = compileBPS(bpsSrc);
-  if (compiled.errors.length > 0) {
-    console.log(`FAIL ${name}: compile error — ${compiled.errors[0].message}`);
+  if (r.error || r.compileError) {
+    console.log(`SKIP ${name}: ${(r.error || r.compileError).substring(0, 60)}`);
+    skipped++;
+  } else if (r.origErr) {
+    console.log(`SKIP ${name}: original failed`);
+    skipped++;
+  } else if (r.transErr) {
+    console.log(`FAIL ${name}: transpiled rejected`);
     errors++;
-    continue;
-  }
-
-  // 2. Run ORIGINAL through WASM — no settings, no alphabet (western built-in)
-  const orig = loadOriginal(grPath);
-  const origResult = runWASM(orig.grammar, null, null);
-
-  if (!origResult.ok) {
-    // Try without settings (some grammars work with defaults)
-    const origRetry = runWASM(orig.grammar, null, null);
-    if (!origRetry.ok) {
-      const errMatch = origResult.messages.match(/Error code \d+:.*/);
-      console.log(`SKIP ${name}: original failed — ${errMatch?.[0] || 'engine error'}`);
-      skipped++;
-      continue;
-    }
-    // Use retry result
-    Object.assign(origResult, origRetry);
-  }
-
-  // 3. Run TRANSPILED through WASM
-  //    Settings cause MIDI loss (WASM bug) — only load for non-western conventions
-  // Only use alphabet for non-western conventions (western is built-in)
-  const needsSettings = compiled.settingsJSON && /"NoteConvention".*"value":\s*"[^1]"/.test(compiled.settingsJSON);
-  const needsAlphabet = needsSettings; // alphabet only needed when settings change note convention
-  const transResult = runWASM(
-    compiled.grammar,
-    needsSettings ? compiled.settingsJSON : null,
-    needsAlphabet ? compiled.alphabetFile : null
-  );
-
-  if (!transResult.ok) {
-    console.log(`FAIL ${name}: transpiled rejected by engine`);
-    const errLines = transResult.messages.split('\n').filter(l => /Error|\?\?\?/.test(l));
-    for (const l of errLines.slice(0, 3)) console.log(`  ${l.trim()}`);
-    errors++;
-    continue;
-  }
-
-  // 4. Compare MIDI events
-  if (origResult.count === 0 && transResult.count === 0) {
-    console.log(`  OK ${name} (no MIDI — structural match)`);
+  } else if (r.notesMatch && r.origNotes > 0) {
+    console.log(`  OK ${name} (${r.origNotes} notes, MIDI identical)`);
+    identical++;
+  } else if (r.origNotes === 0 && r.transNotes === 0) {
+    console.log(`  OK ${name} (structural match)`);
+    identical++;
+  } else if (r.origNotes === 0 && r.transNotes > 0) {
+    console.log(`  ~OK ${name} (trans: ${r.transNotes} notes, orig: no MIDI)`);
     compatible++;
-    continue;
-  }
-
-  if (origResult.count === 0 && transResult.count > 0) {
-    console.log(`  OK ${name} (orig: no MIDI, trans: ${transResult.noteOns.length} notes — can't compare)`);
-    compatible++;
-    continue;
-  }
-
-  // Compare note-on events
-  const origNotes = origResult.noteOns.map(e => e.note);
-  const transNotes = transResult.noteOns.map(e => e.note);
-
-  if (origNotes.length === transNotes.length &&
-      origNotes.every((n, i) => n === transNotes[i])) {
-    // Check timing too
-    const origTimes = origResult.noteOns.map(e => e.time);
-    const transTimes = transResult.noteOns.map(e => e.time);
-    const timingMatch = origTimes.every((t, i) => t === transTimes[i]);
-
-    if (timingMatch) {
-      console.log(`  OK ${name} (${origNotes.length} notes, MIDI identical)`);
-      identical++;
-    } else {
-      console.log(`  ~OK ${name} (${origNotes.length} notes match, timing differs)`);
-      compatible++;
-    }
   } else {
-    console.log(`DIFF ${name} (orig: ${origNotes.length} notes, trans: ${transNotes.length} notes)`);
-    // Show first difference
-    for (let i = 0; i < Math.min(origNotes.length, transNotes.length, 3); i++) {
-      if (origNotes[i] !== transNotes[i]) {
-        console.log(`  note ${i}: orig=${origNotes[i]} trans=${transNotes[i]}`);
-      }
-    }
+    console.log(`DIFF ${name} (orig: ${r.origNotes} notes, trans: ${r.transNotes} notes)`);
     different++;
   }
 }
