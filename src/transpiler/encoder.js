@@ -111,7 +111,12 @@ function encode(ast) {
       lines.push(subPreamble.join(' '));
     }
 
-    // Rules
+    // Pass 1: match unbalanced { and } across rules to propagate [speed:N]
+    // When }[speed:N] closes a polymetric opened by { in another rule,
+    // the ratio N must be emitted after { in BP3 output.
+    annotateUnbalancedBraces(sub.rules);
+
+    // Pass 2: encode rules
     for (let ri = 0; ri < sub.rules.length; ri++) {
       const rule = sub.rules[ri];
       const ruleNum = ri + 1;
@@ -437,7 +442,9 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return encodeContext(el);
 
     case 'RawBrace':
-      return el.value;  // { or } as-is for BP3 embedding patterns
+      // Embedding: { with polySpeed from matched }[speed:N] → {N,
+      if (el.value === '{' && el.polySpeed) return `{${el.polySpeed},`;
+      return el.value;
 
     case 'BacktickStandalone':
     case 'BacktickInline':
@@ -453,6 +460,45 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     default:
       return `/* unknown: ${el.type} */`;
   }
+}
+
+// --- Unbalanced brace annotation (2-pass for embedding patterns) ---
+
+function annotateUnbalancedBraces(rules) {
+  // Collect all RawBrace elements across rules in order
+  const openStack = [];  // stack of { RawBrace elements
+
+  for (const rule of rules) {
+    for (const el of rule.rhs) {
+      if (el.type === 'RawBrace' && el.value === '{') {
+        openStack.push(el);
+      } else if (el.type === 'RawBrace' && el.value === '}') {
+        // Check for [speed:N] qualifier on this }
+        if (el.tempoOp || el.qualifiers) {
+          const speed = el.tempoOp ? null : getQualValueFromElement(el, 'speed');
+          if (speed !== null && openStack.length > 0) {
+            // Annotate the matching { with this speed
+            const matchingOpen = openStack.pop();
+            matchingOpen.polySpeed = speed;
+          } else {
+            if (openStack.length > 0) openStack.pop();
+          }
+        } else {
+          if (openStack.length > 0) openStack.pop();
+        }
+      }
+    }
+  }
+}
+
+function getQualValueFromElement(el, key) {
+  if (!el.qualifiers) return null;
+  for (const q of el.qualifiers) {
+    for (const p of q.pairs) {
+      if (p.key === key) return p.value;
+    }
+  }
+  return null;
 }
 
 // --- Qualifier helpers ---

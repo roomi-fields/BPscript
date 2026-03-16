@@ -493,8 +493,16 @@ function parse(tokens) {
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
       if (at(T.RBRACE)) {
-        elements.push({ type: 'RawBrace', value: '}' });
         advance();
+        const rawBrace = { type: 'RawBrace', value: '}' };
+        // Check for [speed:N] qualifier on closing brace
+        if (at(T.LBRACKET) && isPolymetricQualifier()) {
+          rawBrace.qualifiers = [];
+          while (at(T.LBRACKET) && isPolymetricQualifier()) {
+            rawBrace.qualifiers.push(parseQualifier());
+          }
+        }
+        elements.push(rawBrace);
         continue;
       }
       if (at(T.COMMA)) {
