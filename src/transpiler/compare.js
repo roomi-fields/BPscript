@@ -37,6 +37,7 @@ const SCENE_MAP = {
   'tunings':          'examples/tunings/grammar.gr',
   'vina3':            'tabla/vina3/grammar.gr',
   'visser-waves':     'experimental/visser-waves/grammar.gr',
+  'alan-dice':        'western/alan-dice/grammar.gr',
 };
 
 /**
