@@ -11,9 +11,7 @@
 @western:midi
 
 // --- Sous-grammaire 1 [mode:ord] --- structure thematique
-// TODO: time signature 4+4+4+4+4+4/4 — BPscript needs time signature support
-
-S -> P1 P2 P3 [mode:ord]
+S -> P1 P2 P3 [mode:ord, meter:4+4+4+4+4+4/4]
 P1 -> A8 B"8 C8 B'8
 P2 -> A8 B8 C8 B8
 P3 -> C'8 B'8 C'8 B'8

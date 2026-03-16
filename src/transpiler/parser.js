@@ -1095,8 +1095,20 @@ function parse(tokens) {
       let value, decrement = null;
       if (at(T.INT)) {
         const num = advance().value;
+        // Check for time signature: meter:4+4/6, meter:4+4+4+4/6
+        if (at(T.PLUS) && peek(1).type === T.INT) {
+          let sig = num;
+          while (at(T.PLUS) && peek(1).type === T.INT) {
+            sig += advance().value; // +
+            sig += advance().value; // INT
+          }
+          if (at(T.SLASH) && peek(1).type === T.INT) {
+            sig += advance().value; // /
+            sig += advance().value; // INT
+          }
+          value = sig;
         // Check for ratio: speed:1/2
-        if (at(T.SLASH) && peek(1).type === T.INT) {
+        } else if (at(T.SLASH) && peek(1).type === T.INT) {
           advance();
           const denom = advance().value;
           value = `${num}/${denom}`;

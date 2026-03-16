@@ -14,12 +14,8 @@
 
 // --- Sous-grammaire 1 [mode:random] — structure ---
 
-// NOTE: 4+4/6 et 4+4+4+4/6 sont des time signatures BP3 inline.
-// En BPscript, le + dans une expression numérique n'est pas encore supporté
-// nativement. On utilise des non-terminaux meter8/meter16 résolus par SUB1.
-// Le résultat BP3 sera: meter8 --> 4+4/6 (passé tel quel à BP3 via raw tokens).
-S <> meter8 S96 [mode:random, weight:0]
-S <> meter16 S192 [weight:5]
+S <> S96 [mode:random, weight:0, meter:4+4/6]
+S <> S192 [weight:5, meter:4+4+4+4/6]
 
 -----
 
@@ -113,8 +109,3 @@ F'24 <> tage tirakita gena - dhagena dhati ge gena ka teene teena kena [weight:0
 F48 <> dhin - - dhagena dha - - dhagena dhati ge gena ka dheene dheena gena tage tirakita dhin - - dhagena dhati ge gena ka teene teena kena [weight:5]
 F48 <> dhin - - dhagena dha - - dhagena dhati ge gena ka dheene dheena gena tage tirakita gena - dhagena dhati ge gena ka teene teena kena [weight:0]
 
-// NOTE: Les time signatures 4+4/6 et 4+4+4+4/6 sont des notations atomiques
-// de BP3 non décomposables en tokens BPscript. meter8 et meter16 restent des
-// non-terminaux. Pour une exécution complète, il faudrait les résoudre
-// manuellement dans le BP3 final ou ajouter le support des time signatures
-// inline à BPscript.

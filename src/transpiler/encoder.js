@@ -161,8 +161,12 @@ function encode(ast) {
       // Arrow
       parts.push(ARROW_MAP[rule.arrow] || '-->');
 
+      // Inline meter [meter:4+4/6] → emitted before RHS
+      const meter = getQualValue(rule.qualifiers, 'meter');
+
       // RHS — inject global controls as prefix of first rule in first subgrammar
       let rhsStr = encodeRhs(rule.rhs, output.alphabet, CONTROL_MAP);
+      if (meter) rhsStr = `${meter} ${rhsStr}`;
       if (si === 0 && ri === 0 && rhsPrefix.length > 0) {
         rhsStr = rhsPrefix.join(' ') + (rhsStr ? ' ' + rhsStr : '');
       }
