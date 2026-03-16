@@ -13,7 +13,7 @@
 
 // --- Sous-grammaire 1 [mode:random] — transformations structurelles ---
 
-S -> {transpose(-7) X Y X X Y Y X}[/5] [mode:random]
+S -> X Y X X Y Y X [/5, transpose:-7, mode:random]
 X Y -> Y X [weight:20-4]
 X Y -> X Y Y X [weight:10-2]
 Y X -> X Y [weight:20-4]

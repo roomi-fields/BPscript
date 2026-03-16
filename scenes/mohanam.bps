@@ -49,9 +49,9 @@ when Ideas-2 I -> B A [weight:50]
 // ============================================================
 
 // when flag = test pur (pas de mutation), [flag-1] = mutation dans le RHS
-when Ideas>0 A -> I [NumR-1] [weight:100]
-when Ideas>0 B -> I [NumR-1] [weight:100]
-when Ideas>0 I -> I goto(2,1) [weight:1]
+when Ideas A -> I [NumR-1] [weight:100]
+when Ideas B -> I [NumR-1] [weight:100]
+when Ideas I -> I goto(2,1) [weight:1]
 
 -----
 

@@ -161,12 +161,31 @@ function encode(ast) {
       // Arrow
       parts.push(ARROW_MAP[rule.arrow] || '-->');
 
-      // Inline meter [meter:4+4/6] → emitted before RHS
+      // Collect rule-level qualifiers that emit as RHS prefix
+      const rhsPrefixParts = [];
+
+      // Inline meter [meter:4+4/6]
       const meter = getQualValue(rule.qualifiers, 'meter');
+      if (meter) rhsPrefixParts.push(meter);
+
+      // Tempo operator on rule [/5]
+      const ruleTempoOp = getTempoOp(rule.qualifiers);
+      if (ruleTempoOp) rhsPrefixParts.push(ruleTempoOp);
+
+      // Controls as rule qualifiers [transpose:-7, vel:80, chan:1]
+      for (const q of rule.qualifiers) {
+        for (const p of q.pairs) {
+          if (CONTROL_MAP[p.key]) {
+            const bp3Name = CONTROL_MAP[p.key];
+            if (p.value === true) rhsPrefixParts.push(bp3Name);
+            else rhsPrefixParts.push(`${bp3Name}(${p.value})`);
+          }
+        }
+      }
 
       // RHS — inject global controls as prefix of first rule in first subgrammar
       let rhsStr = encodeRhs(rule.rhs, output.alphabet, CONTROL_MAP);
-      if (meter) rhsStr = `${meter} ${rhsStr}`;
+      if (rhsPrefixParts.length > 0) rhsStr = rhsPrefixParts.join(' ') + ' ' + rhsStr;
       if (si === 0 && ri === 0 && rhsPrefix.length > 0) {
         rhsStr = rhsPrefix.join(' ') + (rhsStr ? ' ' + rhsStr : '');
       }
@@ -281,10 +300,12 @@ function generateAlphabetFile(libCtx, directives) {
 
 function encodeGuard(guard) {
   if (guard.mutates) {
-    // when Ideas-1 → /Ideas-1/
     return `/${guard.flag}${guard.operator}${guard.value}/`;
   }
-  // when phase==1 → /phase=1/ (BP3 uses = for both test and assign based on position)
+  // Bare flag test: when Ideas → /Ideas/
+  if (guard.operator === null) {
+    return `/${guard.flag}/`;
+  }
   const op = guard.operator === '==' ? '=' :
              guard.operator === '!=' ? '≠' :
              guard.operator === '>=' ? '≥' :

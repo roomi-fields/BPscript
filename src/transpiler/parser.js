@@ -394,7 +394,10 @@ function parse(tokens) {
     else if (at(T.LT)) { op = '<'; advance(); }
     else if (at(T.GTE)) { op = '>='; advance(); }
     else if (at(T.LTE)) { op = '<='; advance(); }
-    else throw new ParseError(`Expected comparison operator after flag name`, current());
+    else {
+      // Bare flag test: when Ideas → /Ideas/ (non-zero test)
+      return { type: 'Guard', flag, operator: null, value: null, mutates: false };
+    }
 
     let value;
     if (at(T.INT)) value = Number(advance().value);
@@ -576,10 +579,15 @@ function parse(tokens) {
   }
 
   function isTempoOpQualifier() {
-    // Lookahead: [ followed by /, \, *, ** = tempo operator
+    // Lookahead: [/N] or [*N] — pure tempo op on element (not mixed [/5, mode:random])
     if (!at(T.LBRACKET)) return false;
     const next = peek(1).type;
-    return next === T.SLASH || next === T.BACKSLASH || next === T.STAR || next === T.DOUBLESTAR;
+    if (!(next === T.SLASH || next === T.BACKSLASH || next === T.STAR || next === T.DOUBLESTAR)) return false;
+    // Check it's pure (followed by number then ] or /number then ])
+    let j = pos + 2; // after [ and operator
+    if (next === T.DOUBLESTAR) j++; // ** is 2 tokens
+    while (j < tokens.length && (tokens[j].type === T.INT || tokens[j].type === T.FLOAT || tokens[j].type === T.SLASH)) j++;
+    return j < tokens.length && tokens[j].type === T.RBRACKET; // ] immediately after number = pure
   }
 
   function parseRhsElement() {
@@ -1078,8 +1086,50 @@ function parse(tokens) {
       } else {
         throw new ParseError('Expected number after tempo operator', current());
       }
+      // If followed by , → mixed qualifier [/5, mode:random, transpose:-7]
+      const tempoOp = { type: 'TempoOp', operator, value };
+      if (at(T.COMMA)) {
+        advance(); // skip ,
+        // Parse remaining pairs
+        const pairs = [];
+        while (!at(T.RBRACKET) && !atEnd()) {
+          const key = expect(T.IDENT).value;
+          if (!at(T.COLON)) {
+            pairs.push({ type: 'QualPair', key, value: true, decrement: null });
+            if (at(T.COMMA)) advance();
+            continue;
+          }
+          expect(T.COLON);
+          let pval, decrement = null;
+          if (at(T.INT)) {
+            const num = advance().value;
+            if (at(T.PLUS) && peek(1).type === T.INT) {
+              let sig = num;
+              while (at(T.PLUS) && peek(1).type === T.INT) { sig += advance().value; sig += advance().value; }
+              if (at(T.SLASH) && peek(1).type === T.INT) { sig += advance().value; sig += advance().value; }
+              pval = sig;
+            } else if (at(T.SLASH) && peek(1).type === T.INT) {
+              advance(); pval = `${num}/${advance().value}`;
+            } else {
+              pval = Number(num);
+              if (at(T.REST) && peek(1).type === T.INT) { advance(); decrement = Number(advance().value); }
+            }
+          } else if (at(T.REST)) {
+            // Negative number: transpose:-7
+            const sign = advance().value;
+            pval = sign + (at(T.INT) ? advance().value : '');
+          } else if (at(T.IDENT)) {
+            pval = advance().value;
+            if (at(T.EQUALS) && peek(1).type === T.INT) { advance(); pval = `${pval}=${advance().value}`; }
+          }
+          pairs.push({ type: 'QualPair', key, value: pval, decrement });
+          if (at(T.COMMA)) advance();
+        }
+        expect(T.RBRACKET);
+        return { type: 'Qualifier', pairs, tempoOp };
+      }
       expect(T.RBRACKET);
-      return { type: 'Qualifier', pairs: [], tempoOp: { type: 'TempoOp', operator, value } };
+      return { type: 'Qualifier', pairs: [], tempoOp };
     }
 
     const pairs = [];
