@@ -387,7 +387,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       const speed = getQualValue(el.qualifiers, 'speed');
       let inner = voiceStrs.join(', ');
       if (speed !== null) {
-        inner = `${speed}, ${inner}`;
+        inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
       }
       let result = `{${inner}}`;
       // Check for tempo operator → prefix before braces
