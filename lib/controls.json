@@ -277,6 +277,27 @@
         "channel"
       ],
       "description": "Désactive un canal MIDI switch."
+    },
+    "press": {
+      "bp3": "_press",
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
+      "description": "Channel pressure MIDI"
+    },
+    "presscont": {
+      "bp3": "_presscont",
+      "args": [],
+      "description": "Active l'interpolation continue de channel pressure."
+    },
+    "modcont": {
+      "bp3": "_modcont",
+      "args": [],
+      "description": "Active l'interpolation continue de modulation (CC1)."
     }
   }
 }

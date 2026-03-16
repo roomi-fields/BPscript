@@ -823,14 +823,21 @@ function parse(tokens) {
         const t = current();
         if (t.type === T.INT || t.type === T.FLOAT || t.type === T.IDENT) {
           // Preserve spaces between words: "MIDI send Continue", "wait for do#2 channel 1"
-          if (arg.length > 0 && /[a-zA-Z0-9#]$/.test(arg) && (t.type === T.IDENT || t.type === T.INT || t.type === T.FLOAT)) arg += ' ';
+          // But NOT after # (so "#98" stays together)
+          if (arg.length > 0 && !/[#=]$/.test(arg) && /[a-zA-Z0-9]$/.test(arg) && (t.type === T.IDENT || t.type === T.INT || t.type === T.FLOAT)) arg += ' ';
           arg += advance().value;
         } else if (t.type === T.EQUALS) {
-          arg += advance().value;
+          // Add spaces around = for readability: "controller #98 = 0"
+          if (arg.length > 0) arg += ' ';
+          arg += advance().value + ' ';
         } else if (t.type === T.SLASH) {
           arg += advance().value;
         } else if (t.type === T.REST) {
           // negative number in control args
+          arg += advance().value;
+        } else if (t.type === T.HASH) {
+          // Allow # in control args: "MIDI controller #98 = 0"
+          if (arg.length > 0 && /[a-zA-Z0-9]$/.test(arg)) arg += ' ';
           arg += advance().value;
         } else {
           break;
