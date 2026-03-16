@@ -137,8 +137,12 @@ function encode(ast) {
       }
 
       // Guard → flags on LHS
+      // Guards (single or array)
       if (rule.guard) {
-        parts.push(encodeGuard(rule.guard));
+        const guardList = Array.isArray(rule.guard) ? rule.guard : [rule.guard];
+        for (const g of guardList) {
+          parts.push(encodeGuard(g));
+        }
       }
 
       // Contexts
@@ -158,6 +162,17 @@ function encode(ast) {
         rhsStr = rhsPrefix.join(' ') + (rhsStr ? ' ' + rhsStr : '');
       }
       parts.push(rhsStr);
+
+      // RHS flags [phase=2, Atrans, K1] → /phase=2/ /Atrans/ /K1/
+      if (rule.flags && rule.flags.length > 0) {
+        for (const f of rule.flags) {
+          if (f.operator) {
+            parts.push(`/${f.flag}${f.operator}${f.value}/`);
+          } else {
+            parts.push(`/${f.flag}/`);
+          }
+        }
+      }
 
       lines.push(parts.join(' '));
     }
@@ -350,13 +365,10 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     }
 
     case 'SimultaneousGroup': {
-      // Sa!dha!phase=2 → Sa <<dha>> /phase=2/
+      // Sa!dha → Sa <<dha>> (! is exclusively temporal now)
       const parts = [encodeRhsElement(el.primary, alphabet, controlMap)];
       for (const sec of el.secondaries) {
-        if (sec.type === 'FlagMutation') {
-          parts.push(encodeFlagMutation(sec));
-        } else if (sec.type === 'Symbol') {
-          // Out-time object in BP3: <<symbol>>
+        if (sec.type === 'Symbol') {
           parts.push(`<<${sec.name}>>`);
         } else if (sec.type === 'SymbolCall') {
           parts.push(`<<${encodeRhsElement(sec, alphabet, controlMap)}>>`);
@@ -402,6 +414,16 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return `(:${el.name}${args})`;
     }
 
+    case 'TemplateMasterGroup': {
+      const inner = el.elements.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
+      return `(=${inner})`;
+    }
+
+    case 'TemplateSlaveGroup': {
+      const inner = el.elements.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
+      return `(:${inner})`;
+    }
+
     case 'TieStart':
       return `${el.symbol}&`;
 
@@ -414,8 +436,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     case 'Context':
       return encodeContext(el);
 
-    case 'FlagMutation':
-      return encodeFlagMutation(el);
+    // FlagMutation no longer in RHS — flags are in Rule.flags via []
 
     case 'BacktickStandalone':
     case 'BacktickInline':
@@ -431,10 +452,6 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     default:
       return `/* unknown: ${el.type} */`;
   }
-}
-
-function encodeFlagMutation(fm) {
-  return `/${fm.flag}${fm.operator}${fm.value}/`;
 }
 
 // --- Qualifier helpers ---

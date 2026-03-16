@@ -138,6 +138,18 @@ try {
   // Test 17: visser-shapes (rotate, keyxpand, velcont, float tempo)
   testFull('visser-shapes', loadScene('visser-shapes.bps'));
 
+  // Test 18: look-and-say (quoted symbols, SUB mode, scan:left, flags)
+  testFull('look-and-say', loadScene('look-and-say.bps'));
+
+  // Test 19: ames (undetermined rest, ties, nested polymetric ratios)
+  testFull('ames', loadScene('ames.bps'));
+
+  // Test 20: graphics (legato, staccato inline)
+  testFull('graphics', loadScene('graphics.bps'));
+
+  // Test 21: visser3 (transposition non-terminals, period, polymetric grouping)
+  testFull('visser3', loadScene('visser3.bps'));
+
 } catch (err) {
   console.error('TEST ERROR:', err.message);
   console.error(err.stack);

@@ -1,0 +1,60 @@
+// asymmetric.bps — Rythmes asymétriques africains
+// Traduit de bp3-engine/library/experimental/asymmetric/grammar.gr
+// Ref: Marc Chemillier, "Les Mathématiques naturelles" (Odile Jacob, 2007 p. 127)
+//
+// Cycle de 24 beats avec transformations a/b construisant des patterns asymétriques.
+// Les terminaux '3' et '2' de BP3 (quoted symbols = durées de beats)
+// deviennent beat3 et beat2 en BPscript.
+
+@core
+@+
+
+gate beat3:midi
+gate beat2:midi
+
+// --- Sous-grammaire 1 [mode:random] — initialisation ---
+
+S -> Head U V [Reverse=0, beats=24, K1] [mode:random]
+
+-----
+
+// --- Sous-grammaire 2 [mode:random] — choix du nombre de B (impair) ---
+
+Head -> Head goto(3,0) [B=3, A=3] [mode:random, weight:3]
+Head -> Head goto(3,0) [B=9, A=1] [weight:1]
+
+-----
+
+// --- Sous-grammaire 3 [mode:random] — choix d'une transformation ---
+
+when K1-1 when A>0 Head -> Head a [Atrans, A-1, K2, K3] [mode:random]
+when K1-1 when B>0 Head -> Head b [Btrans, B-1, K4]
+
+-----
+
+// --- Sous-grammaire 4 [mode:ord] — transformation a ---
+
+when K2-1 when Atrans>0 U -> beat3 U [mode:ord]
+when K3-1 when Atrans-1 V -> beat3 V
+
+-----
+
+// --- Sous-grammaire 5 [mode:ord] — transformation b ---
+
+when K4-1 when Btrans-1 when Reverse==1 U -> beat2 U [Reverse=0] [mode:ord]
+when K4-1 when Btrans-1 when Reverse==0 V -> beat2 V [Reverse=1]
+
+-----
+
+// --- Sous-grammaire 6 [mode:random] — reboucler si transformations restantes ---
+
+when A>=1 Head -> Head goto(3,0) [K1] [mode:random]
+when B>=1 Head -> Head goto(3,0) [K1]
+
+-----
+
+// --- Sous-grammaire 7 [mode:random] — effacement des variables ---
+
+U -> [mode:random]
+V ->
+Head ->

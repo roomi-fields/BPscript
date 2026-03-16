@@ -118,12 +118,13 @@ Subgrammar {
 ```
 Rule {
   type: "Rule"
-  guard: Guard | null
+  guard: Guard | Guard[] | null    // un ou plusieurs when (AND)
   contexts: Context[]
   lhs: LhsElement[]
   arrow: "->" | "<-" | "<>"
   rhs: RhsElement[]
-  qualifiers: Qualifier[]
+  flags: FlagExpr[]                // [phase=2, Atrans] dans le RHS
+  qualifiers: Qualifier[]          // [mode:random, scan:left] en fin de règle
   line: number
 }
 ```
@@ -274,13 +275,16 @@ Le compilateur traduit les underscores en espaces dans les args de `_scale()`.
 SimultaneousGroup {
   type: "SimultaneousGroup"
   primary: Symbol | SymbolCall | Rest | NilString
-  secondaries: (Symbol | SymbolCall | FlagMutation)[]
+  secondaries: (Symbol | SymbolCall)[]
 }
 ```
 
+`!` est exclusivement temporel — pas de FlagMutation dans les secondaries.
+Les flags vont dans les qualifiers de la Rule (via `[]`).
+
 Exemples :
-- `Sa!dha!phase=2` -> `{ primary: Symbol("Sa"), secondaries: [Symbol("dha"), FlagMutation("phase","=",2)] }`
-- `lambda!Num_a=20` -> `{ primary: NilString, secondaries: [FlagMutation("Num_a","=",20)] }`
+- `Sa!dha [phase=2]` -> `{ primary: Symbol("Sa"), secondaries: [Symbol("dha")] }` + rule flag `[phase=2]`
+- `lambda [Num_a=20, Num_b=0]` -> `NilString` + rule flags
 
 ### `TriggerIn`
 
@@ -300,16 +304,20 @@ Variable { type: "Variable", name: string }
 Wildcard { type: "Wildcard", index: number | null }
 ```
 
-### `TemplateMaster`
+### `TemplateMaster` / `TemplateMasterGroup`
 
 ```
 TemplateMaster { type: "TemplateMaster", name: string, args: Arg[] | null }
+TemplateMasterGroup { type: "TemplateMasterGroup", elements: RhsElement[] }
 ```
 
-### `TemplateSlave`
+`$X` → TemplateMaster. `${$X S &X}` → TemplateMasterGroup (contenu récursif).
+
+### `TemplateSlave` / `TemplateSlaveGroup`
 
 ```
 TemplateSlave { type: "TemplateSlave", name: string, args: Arg[] | null }
+TemplateSlaveGroup { type: "TemplateSlaveGroup", elements: RhsElement[] }
 ```
 
 ### `TieStart` / `TieContinue` / `TieEnd`
@@ -344,10 +352,15 @@ Context { type: "Context", positive: boolean, symbols: string[] }
 
 `#X` (un seul symbole) et `#(X Y)` (groupe) sont les deux formes du contexte négatif.
 
-### `FlagMutation`
+### `FlagExpr`
 
 ```
-FlagMutation { type: "FlagMutation", flag: string, operator: "=" | "+" | "-", value: number | string }
+FlagExpr {
+  type: "FlagExpr"
+  flag: string
+  operator: "=" | "+" | "-" | null  // null = flag nu [Atrans]
+  value: number | string | null     // null = flag nu
+}
 ```
 
 ### `Literal`

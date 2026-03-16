@@ -137,6 +137,11 @@
       "bp3": "_retro",
       "args": [],
       "description": "Rétrograde — inverse l'ordre des éléments dans le contexte polymétrique."
+    },
+    "rndvel": {
+      "bp3": "_rndvel",
+      "args": ["range"],
+      "description": "Vélocité aléatoire — ajoute une variation aléatoire ±range à la vélocité courante."
     }
   }
 }

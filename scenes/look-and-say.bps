@@ -1,0 +1,30 @@
+// look-and-say.bps — Look-and-Say sequence (Conway)
+// Traduit de bp3-engine/library/experimental/look-and-say/grammar.gr
+//
+// En BP3 les terminaux sont des quoted symbols '1' '2' '3'.
+// En BPscript on utilise d1 d2 d3 (les nombres nus sont des durées).
+// L'ordre des règles SUB est préservé de l'original.
+
+@core
+
+gate d1:midi
+gate d2:midi
+gate d3:midi
+
+// --- Sous-grammaire 1 [mode:ord] — initialisation ---
+
+S -> d1 [steps=100] [mode:ord]
+
+-----
+
+// --- Sous-grammaire 2 [mode:sub, scan:left] ---
+// Ordre identique à l'original (règles courtes d'abord)
+
+when steps-1 d1 -> d1 d1 [mode:sub, scan:left]
+when steps-1 d1 d1 -> d2 d1 [scan:left]
+when steps-1 d1 d1 d1 -> d3 d1 [scan:left]
+when steps-1 d2 -> d1 d2 [scan:left]
+when steps-1 d2 d2 -> d2 d2 [scan:left]
+when steps-1 d1 d1 d1 -> d3 d1 [scan:left]
+when steps-1 d1 d1 d1 d2 d2 d1 -> d3 d1 d2 d2 d1 d1 [scan:left]
+when steps-1 d1 d2 d1 d1 -> d1 d1 d1 d2 d2 d1 [scan:left]

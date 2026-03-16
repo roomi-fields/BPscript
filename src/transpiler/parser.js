@@ -277,10 +277,12 @@ function parse(tokens) {
     let guard = null;
     const contexts = [];
 
-    // Guard: when ...
-    if (at(T.WHEN)) {
-      guard = parseGuard();
+    // Guards: when ... (multiple allowed, AND'd together)
+    const guards = [];
+    while (at(T.WHEN)) {
+      guards.push(parseGuard());
     }
+    guard = guards.length > 0 ? guards : null;
 
     // Contexts before LHS: (A B) or #(A B) or #A
     while (at(T.HASH) || (at(T.LPAREN) && isContextLookahead())) {
@@ -300,13 +302,66 @@ function parse(tokens) {
     // RHS
     const rhs = parseRhsElements();
 
-    // Qualifiers
+    // Qualifiers and RHS flags — both use []
     const qualifiers = [];
+    const flags = [];
     while (at(T.LBRACKET)) {
-      qualifiers.push(parseQualifier());
+      if (isFlagBracket()) {
+        flags.push(...parseFlagBracket());
+      } else {
+        qualifiers.push(parseQualifier());
+      }
     }
 
-    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, qualifiers, line: tok.line };
+    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, line: tok.line };
+  }
+
+  // ============================================================
+  // RHS Flags [X=N, Y, Z+1]
+  // ============================================================
+
+  function isFlagBracket() {
+    // Lookahead: [ followed by IDENT then = + - , ] (NOT IDENT:value which is a qualifier)
+    if (!at(T.LBRACKET)) return false;
+    const t1 = peek(1);
+    const t2 = peek(2);
+    if (t1.type !== T.IDENT) return false;
+    // If IDENT followed by : → qualifier, not flag
+    if (t2.type === T.COLON) return false;
+    // If IDENT followed by = + - ] , → flag
+    if (t2.type === T.EQUALS || t2.type === T.PLUS || t2.type === T.REST ||
+        t2.type === T.RBRACKET || t2.type === T.COMMA) return true;
+    return false;
+  }
+
+  function parseFlagBracket() {
+    expect(T.LBRACKET);
+    const flags = [];
+    while (!at(T.RBRACKET) && !atEnd()) {
+      const flag = expect(T.IDENT).value;
+      let operator = null, value = null;
+      if (at(T.EQUALS)) {
+        operator = '='; advance();
+        if (at(T.INT)) value = Number(advance().value);
+        else if (at(T.IDENT)) value = advance().value;
+        else throw new ParseError('Expected flag value', current());
+      } else if (at(T.PLUS)) {
+        operator = '+'; advance();
+        if (at(T.INT)) value = Number(advance().value);
+        else if (at(T.IDENT)) value = advance().value;
+        else throw new ParseError('Expected flag value', current());
+      } else if (at(T.REST)) {
+        operator = '-'; advance();
+        if (at(T.INT)) value = Number(advance().value);
+        else if (at(T.IDENT)) value = advance().value;
+        else throw new ParseError('Expected flag value', current());
+      }
+      // else: bare flag [Atrans] → operator=null, value=null
+      flags.push({ type: 'FlagExpr', flag, operator, value });
+      if (at(T.COMMA)) advance();
+    }
+    expect(T.RBRACKET);
+    return flags;
   }
 
   // ============================================================
@@ -719,22 +774,7 @@ function parse(tokens) {
     while (at(T.BANG)) {
       advance(); // !
 
-      // Flag mutation: !phase=2, !count+1, !count-1
-      if (at(T.IDENT) && (peek(1).type === T.EQUALS || peek(1).type === T.PLUS || peek(1).type === T.REST)) {
-        const flag = advance().value;
-        let op;
-        if (at(T.EQUALS)) { op = '='; advance(); }
-        else if (at(T.PLUS)) { op = '+'; advance(); }
-        else if (at(T.REST)) { op = '-'; advance(); }
-        let value;
-        if (at(T.INT)) value = Number(advance().value);
-        else if (at(T.IDENT)) value = advance().value;
-        else throw new ParseError('Expected flag value', current());
-        secondaries.push({ type: 'FlagMutation', flag, operator: op, value });
-        continue;
-      }
-
-      // Symbol or symbol call: !dha, !dha(vel:120)
+      // ! is exclusively temporal — only symbols/symbol calls
       if (at(T.IDENT)) {
         const name = advance().value;
         if (at(T.LPAREN)) {
@@ -746,7 +786,7 @@ function parse(tokens) {
         continue;
       }
 
-      throw new ParseError('Expected symbol or flag mutation after !', current());
+      throw new ParseError('Expected symbol after !', current());
     }
 
     return { type: 'SimultaneousGroup', primary, secondaries };
@@ -806,6 +846,21 @@ function parse(tokens) {
 
   function parseTemplateMaster() {
     expect(T.DOLLAR);
+
+    // Template group: ${...} → (= ...)
+    if (at(T.LBRACE)) {
+      advance();
+      const elements = [];
+      while (!at(T.RBRACE) && !atEnd()) {
+        if (at(T.NEWLINE)) { advance(); continue; }
+        const el = parseRhsElement();
+        if (el) elements.push(el);
+        else break;
+      }
+      expect(T.RBRACE);
+      return { type: 'TemplateMasterGroup', elements };
+    }
+
     const name = expect(T.IDENT).value;
     let args = null;
     if (at(T.LPAREN)) {
@@ -830,6 +885,21 @@ function parse(tokens) {
 
   function parseTemplateSlave() {
     expect(T.AMPERSAND);
+
+    // Template group: &{...} → (: ...)
+    if (at(T.LBRACE)) {
+      advance();
+      const elements = [];
+      while (!at(T.RBRACE) && !atEnd()) {
+        if (at(T.NEWLINE)) { advance(); continue; }
+        const el = parseRhsElement();
+        if (el) elements.push(el);
+        else break;
+      }
+      expect(T.RBRACE);
+      return { type: 'TemplateSlaveGroup', elements };
+    }
+
     const name = expect(T.IDENT).value;
     let args = null;
     if (at(T.LPAREN)) {

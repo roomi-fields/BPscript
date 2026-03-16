@@ -31,7 +31,7 @@ S -> Sa Re Ga Pa
 when phase==1 S -> { Sa!dha Re!ti, -!spotlight _ }
 
 // Complexe — templates, captures, homomorphismes, multi-runtime
-|x| (A) x!dha!phase+1 B -> x!ti $mel &mel [mode:random]
+|x| (A) x!dha B -> x!ti $mel &mel [mode:random, phase+1]
 ```
 
 Les symboles ne se mémorisent pas — ils se **lisent**. `->` est une flèche.
@@ -101,16 +101,16 @@ Pas d'ambiguïté entre `.` et `...` : ce sont des caractères différents de `-
 <              test inférieur (dans when)
 >=             test supérieur ou égal (dans when)
 <=             test inférieur ou égal (dans when)
-+              incrément (dans !flag)
++              incrément (dans [flag])
 ```
 
-Les opérateurs n'existent que dans le contexte des flags (`when` et `!mutation`).
+Les opérateurs n'existent que dans le contexte des flags (`when` sur le LHS et `[mutation]` sur le RHS).
 L'assignation `=` réutilise un symbole structurel existant.
-Le décrément `-` et l'incrément `+` n'existent que dans le contexte `!flag`.
+Le décrément `-` et l'incrément `+` n'existent que dans le contexte des flags.
 
 Deux portées, deux symboles :
 - `@` = **global** : environnement, imports, configuration du système
-- `[]` = **local** : qualification structurelle sur un groupe `{}` ou une règle
+- `[]` = **local** : instructions moteur BP3 — qualifiers, flags, opérateurs temporels
 
 Les nombres (`0.7`, `120`, `5ms`) sont des symboles opaques comme les autres —
 le langage ne connaît pas leur sémantique, c'est le récepteur qui les interprète.
@@ -459,7 +459,7 @@ Tout ce qui suit `!` se déclenche **au même instant**.
 
 Sa!dha                       // gate:sc + trigger:sc
 Sa!visual_glow               // gate:sc + gate:processing (hérite durée de Sa)
-Sa!dha!spotlight!phase=2     // gate + trigger + trigger + mutation de flag
+Sa!dha!spotlight [phase=2]   // gate + triggers + flag (! = temporel, [] = état)
 -!dha                        // silence + trigger
 Sa!ramp(brightness,0,255)    // gate:sc + cv:python (hérite durée de Sa)
 ```
@@ -741,20 +741,21 @@ C'est cohérent : les deux sont des **événements zéro-durée** attachés
 à un point dans le flux temporel.
 
 ```
-when phase==1 S -> Sa Re Ga!phase=2 Pa     // joue Ga, puis passe phase à 2
-S -> A B!count+1 C                          // incrémente count après B
-S -> A!tension-1 B                          // décrémente tension après A
-when phase==2 S -> Ga!phase=1 Re Sa        // joue Ga, reset phase à 1
+when phase==1 S -> Sa Re Ga [phase=2] Pa     // joue Ga, puis passe phase à 2
+S -> A B [count+1] C                          // incrémente count après B
+S -> A [tension-1] B                          // décrémente tension après A
+when phase==2 S -> Ga [phase=1] Re Sa        // joue Ga, reset phase à 1
 ```
 
 Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter)
 
-Le parser distingue facilement trigger et flag :
-- `Sa!dha` → après `!` : un symbole → trigger
-- `Sa!phase=2` → après `!` : `nom=valeur` → mutation de flag
+La distinction est syntaxique — pas d'ambiguïté :
+- `!dha` → `!` suivi d'un symbole → trigger temporel
+- `[phase=2]` → `[]` → mutation de flag (état moteur)
+- `[Atrans]` → `[]` flag nu → flag set/ref
 
 Les flags peuvent aussi référencer d'autres flags :
-- `!flag1=flag2` → copier la valeur d'un autre flag
+- `[flag1=flag2]` → copier la valeur d'un autre flag
 - `when flag1==flag2` → comparer deux flags
 
 ### Exemple : raga en 3 phases
@@ -769,10 +770,10 @@ when phase==2 S -> jor S
 when phase==3 S -> jhala
 
 // L'ālāp explore lentement, puis bascule
-alap -> Sa _ Re _ Ga _!phase=2
+alap -> Sa _ Re _ Ga _ [phase=2]
 
 // Le jor accélère, puis bascule
-jor -> {Sa Re Ga Pa}[speed:2]!phase=3
+jor -> {Sa Re Ga Pa}[speed:2] [phase=3]
 
 // Le jhālā conclut
 jhala -> {Sa Re Ga Pa Dha Ni Sa}[speed:4]
@@ -781,9 +782,9 @@ jhala -> {Sa Re Ga Pa Dha Ni Sa}[speed:4]
 ### Exemple : compteur cyclique
 
 ```
-when count==0 A -> Sa Re!count+1
-when count==1 A -> Ga Pa!count+1
-when count==2 A -> Dha Ni!count=0    // reset → boucle
+when count==0 A -> Sa Re [count+1]
+when count==1 A -> Ga Pa [count+1]
+when count==2 A -> Dha Ni [count=0]    // reset → boucle
 
 // 3 dérivations de A donnent 3 résultats différents, puis ça recommence
 ```
@@ -793,7 +794,7 @@ on écrit des règles qui ne s'activent que dans certains états, et on fait
 évoluer ces états pendant la dérivation. C'est plus puissant que du hasard pur
 (`[mode:random]`) — ça permet de construire des **parcours compositionnels**.
 
-Le compilateur traduit `when X==N` → `/X=N/` (condition BP3) et `!X=N` → `/X=N/` (assignation BP3).
+Le compilateur traduit `when X==N` → `/X=N/` (condition BP3) et `[X=N]` → `/X=N/` (assignation BP3).
 
 ## Liaisons `~` — deux usages distincts
 
@@ -911,8 +912,8 @@ S <> $mel &mel
 // Template avec transformation de paramètres
 S <> $mel(tempo:120) &mel(tempo:80)
 
-// Templates imbriqués (à valider avec des exemples réels)
-// X <> C $A($B A &B A) D &A($B A &B A)
+// Templates sur un groupe — ${...} et &{...}
+S -> ${$X S &X} &{$X S &X}    // capture et rejoue un groupe entier
 ```
 
 `$` et `&` ne dépendent pas de la position par rapport à `->` :
@@ -1412,7 +1413,7 @@ melodie -> Sa _ Re `sc: Synth(\grain, [freq:880, dens:100])` _ _ Ga Pa
 
 // Tidal reçoit ses patterns, démarrés/arrêtés par BP3
 rythme -> `tidal: d1 $ pat # speed 1` _ _ _
-          `tidal: d1 $ pat # speed 2` _ _ _!phase=2
+          `tidal: d1 $ pat # speed 2` _ _ _ [phase=2]
           `tidal: d1 $ silence`
 
 // Python pilote les lumières
@@ -1751,7 +1752,7 @@ Encoder
   │  4. Traduit #() → contextes négatifs BP3
   │  5. Traduit |x| → variables d'homomorphisme BP3
   │  6. Traduit when X==N → /X=N/ (condition BP3)
-  │  7. Traduit !X=N → /X=N/ (assignation BP3)
+  │  7. Traduit [X=N] → /X=N/ (assignation BP3)
   │  8. Traduit ~ → & (notes liées BP3)
   │  9. Passe - (silence) et . (period) tels quels vers BP3
   │  10. Traduit [on_fail:...] → _goto/_failed
@@ -1879,3 +1880,18 @@ Certains terminaux n'ont pas de mapping MIDI (lumières DMX, triggers OSC,
 "undefined variables" — il dérive la grammaire mais ne produit pas de MIDI.
 La séquence horodatée est correcte, le dispatcher route vers les bons runtimes.
 C'est suffisant pour l'architecture actuelle.
+
+### Quoted symbols non portés
+
+BP3 supporte les **quoted symbols** (`'1'`, `'texte'`) pour utiliser des
+caractères spéciaux ou des nombres comme terminaux. BPscript **ne porte pas**
+cette syntaxe — les terminaux sont toujours des identifiants (`letter { letter | digit | _ | # }`).
+
+Raisons :
+- Les nombres nus dans le flux BPscript sont des **durées numériques**, pas des terminaux
+- Les mots réservés de BPscript (`gate`, `trigger`, `cv`, `when`, `lambda`) sont peu nombreux et rarement en conflit
+- Les quoted symbols ajoutent de la complexité syntaxique pour un usage rare
+
+Les grammaires BP3 qui utilisent des quoted symbols sont **renommées** dans la
+traduction (ex: `'1'` → `d1`, `'2'` → `d2`). Le mapping est documenté dans
+les commentaires de chaque scène.

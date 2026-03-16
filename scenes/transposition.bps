@@ -10,7 +10,7 @@
 
 // --- Sous-grammaire 1 [mode:random] ---
 
-S -> A!numtimes=5 [mode:random]
+S -> A [numtimes=5] [mode:random]
 A -> {E1, A#1 F#1} {transpose(2) D}
 B -> {transpose(2) A}
 C -> {transpose(4) B}

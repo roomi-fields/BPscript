@@ -266,18 +266,19 @@ simultaneous = "!" , sim_target ;
 
 sim_target   = symbol                                (* trigger : !dha *)
              | symbol_call                           (* trigger avec params : !dha(vel:120) *)
-             | flag_mutation                         (* mutation : !phase=2 *)
              ;
 ```
 
-`!` s'attache au symbole qui le précède (le primaire). Le primaire définit
-la durée. Les éléments après `!` se déclenchent au même instant :
+`!` est **exclusivement temporel** — il déclenche des symboles au même instant
+que le primaire. Le primaire définit la durée :
 - trigger → zéro durée
 - gate → hérite la durée du primaire
 - cv → hérite la durée du primaire
-- flag_mutation → zéro durée
 
-Chaînable : `Sa!dha!spotlight!phase=2`.
+Chaînable : `Sa!dha!spotlight`.
+
+Les mutations de flags ne passent plus par `!` — elles vont dans `[]`
+(voir § 4.13).
 
 ### 4.6 Trigger entrant (`<!`)
 
@@ -305,12 +306,16 @@ wildcard = "?" , [ INT ] ;
 ### 4.9 Templates
 
 ```ebnf
-template_master = "$" , IDENT , [ "(" , arg_list , ")" ] ;
-template_slave  = "&" , IDENT , [ "(" , arg_list , ")" ] ;
+template_master = "$" , IDENT , [ "(" , arg_list , ")" ]
+               | "$" , "{" , rhs_element+ , "}" ;          (* groupe : ${$X S &X} *)
+
+template_slave  = "&" , IDENT , [ "(" , arg_list , ")" ]
+               | "&" , "{" , rhs_element+ , "}" ;          (* groupe : &{$X S &X} *)
 ```
 
-`$X` = master (définit le motif), `&X` = slave (référence le motif).
-Compilé en `(=X)` / `(:X)` pour BP3.
+Sur un symbole : `$X` = master, `&X` = slave. Compilé en `(=X)` / `(:X)`.
+Sur un groupe : `${...}` / `&{...}`. Compilé en `(= ...)` / `(: ...)`.
+Les templates groupes peuvent contenir d'autres templates (imbrication).
 
 ### 4.10 Liaisons (~)
 
@@ -344,16 +349,29 @@ backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux, taggé *
 Backtick attaché à un symbole → runtime implicite (celui du symbole).
 Backtick dans le flux → tag obligatoire (`sc:`, `py:`, `tidal:`).
 
-### 4.13 Mutation de flag dans le RHS
+### 4.13 Flags dans le RHS (`[]`)
 
 ```ebnf
-flag_mutation = IDENT , MUTATE_ASSIGN , flag_rvalue ;
+rhs_flag = "[" , flag_expr , { "," , flag_expr } , "]" ;
+
+flag_expr = IDENT , MUTATE_ASSIGN , flag_rvalue     (* mutation : [phase=2] *)
+          | IDENT ;                                  (* flag set/ref : [Atrans], [K1] *)
 
 MUTATE_ASSIGN = "=" | "+" | "-" ;
 flag_rvalue   = INT | IDENT ;                        (* littéral ou autre flag *)
 ```
 
-Toujours attaché à `!` : `!phase=2`, `!count+1`, `!tension-1`.
+Les flags RHS utilisent `[]` — la même syntaxe que les qualifiers et opérateurs
+temporels. C'est cohérent : `[]` = instructions moteur BP3, `!` = temporel.
+
+Exemples :
+- `Sa!dha [phase=2]` → trigger dha + mutation flag (deux concepts séparés)
+- `Head [Atrans, A-1, K2, K3]` → 4 flags d'un coup
+- `lambda [Num_a=20, Num_b=0]` → efface le non-terminal + init flags
+
+Symétrie LHS/RHS :
+- `when phase==1 S -> ...` → test flag (LHS)
+- `S -> ... [phase=2]` → set flag (RHS)
 
 ---
 
@@ -384,6 +402,12 @@ blank_line  = (* ligne vide ou whitespace seul *) ;
 - `#` est autorisé dans les identifiants pour les altérations (C#4, F#2).
 - Les underscores `_` en début de nom sont réservés aux contrôles BP3 (`_vel`, `_tempo`).
   En BPscript, les contrôles n'ont pas de `_` — c'est un détail de compilation.
+
+**Quoted symbols** : BP3 supporte `'texte'` pour utiliser des caractères spéciaux
+ou des nombres comme terminaux (`'1'`, `'2'`). BPscript **n'a pas** de quoted symbols —
+les terminaux sont toujours des identifiants. Les grammaires BP3 qui utilisent des nombres
+comme terminaux doivent être renommées dans la traduction (ex: `'1'` → `d1`).
+Les nombres nus dans le flux BPscript sont des durées numériques, pas des terminaux.
 
 ---
 
@@ -447,8 +471,10 @@ lambda   → chaîne vide (efface le non-terminal)
 | `->` | `-->` | direction |
 | `<-` | `<--` | direction |
 | `<>` | `<->` | direction |
-| `$X` | `(=X)` | template master |
-| `&X` | `(:X)` | template slave |
+| `$X` | `(=X)` | template master (symbole) |
+| `&X` | `(:X)` | template slave (symbole) |
+| `${A S B}` | `(=A S B)` | template master (groupe) |
+| `&{A S B}` | `(:A S B)` | template slave (groupe) |
 | `~` | `&` | liaison |
 | `#X` | `#X` | contexte négatif (identique) |
 | `-` | `-` | silence (identique) |
@@ -457,7 +483,8 @@ lambda   → chaîne vide (efface le non-terminal)
 | `...` | `...` | repos indéterminé (identique) |
 | `when X==N` | `/X=N/` en LHS | condition flag |
 | `when X-N` | `/X-N/` en LHS | test + mutation |
-| `!X=N` | `/X=N/` en RHS | mutation flag |
+| `[X=N]` | `/X=N/` en RHS | mutation flag |
+| `[X]` | `/X/` en RHS | flag set/ref (nu) |
 | `vel(120)` | `_vel(120)` | contrôle @+ |
 | `goto(2,1)` | `_goto(2,1)` | contrôle @+ |
 | `[mode:random]` | `RND` en mode_line | mode du bloc |

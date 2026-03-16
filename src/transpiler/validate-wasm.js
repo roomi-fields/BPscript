@@ -37,6 +37,13 @@ const SCENE_MAP = {
   'all-items':        'examples/all-items/grammar.gr',
   'one-scale':        'examples/one-scale/grammar.gr',
   'visser-shapes':    'experimental/visser-shapes/grammar.gr',
+  'look-and-say':     'experimental/look-and-say/grammar.gr',
+  'ames':             'western/ames/grammar.gr',
+  'graphics':         'examples/graphics/grammar.gr',
+  'visser3':          'experimental/visser3/grammar.gr',
+  'livecode2':        'experimental/livecode2/grammar.gr',
+  'visser5':          'experimental/visser5/grammar.gr',
+  'asymmetric':       'experimental/asymmetric/grammar.gr',
 };
 
 // Load BP3 WASM module (must set cwd to dist/ for bp3.data)
@@ -98,7 +105,9 @@ function runWASM(grammar, settings, alphabet, seed = 42) {
  */
 function loadOriginal(grPath) {
   const grammarFile = join(BP3_LIB, grPath);
-  const grammar = readFileSync(grammarFile, 'utf-8');
+  const rawGrammar = readFileSync(grammarFile, 'utf-8');
+  // Strip file references (-se., -al., -ho., -cs., -to., -md., -tb.) — WASM doesn't have these
+  const grammar = rawGrammar.split('\n').filter(l => !/^-[a-z]{2}\./.test(l.trim())).join('\n');
 
   // Try to load settings.json from same directory
   const dir = dirname(grammarFile);
@@ -137,14 +146,13 @@ for (const [name, grPath] of Object.entries(SCENE_MAP)) {
     continue;
   }
 
-  // 2. Run ORIGINAL through WASM
-  //    Skip settings for now (WASM bug: settings kill MIDI output)
+  // 2. Run ORIGINAL through WASM — no settings, no alphabet (western built-in)
   const orig = loadOriginal(grPath);
-  const origResult = runWASM(orig.grammar, null, orig.alphabet);
+  const origResult = runWASM(orig.grammar, null, null);
 
   if (!origResult.ok) {
     // Try without settings (some grammars work with defaults)
-    const origRetry = runWASM(orig.grammar, null, orig.alphabet);
+    const origRetry = runWASM(orig.grammar, null, null);
     if (!origRetry.ok) {
       const errMatch = origResult.messages.match(/Error code \d+:.*/);
       console.log(`SKIP ${name}: original failed — ${errMatch?.[0] || 'engine error'}`);

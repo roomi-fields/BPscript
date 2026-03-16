@@ -11,7 +11,7 @@ gate b:midi
 
 // --- Sous-grammaire 1 : créer une chaîne de 20 'a' ---
 
-S -> X!Num_total=20
+S -> X [Num_total=20]
 when Num_total-1 X -> a X
 
 -----
@@ -19,10 +19,10 @@ when Num_total-1 X -> a X
 // --- Sous-grammaire 2 : initialiser les compteurs ---
 // X disparaît (lambda = symbole vide), on initialise Num_a et Num_b
 
-X -> lambda!Num_a=20!Num_b=0
+X -> lambda [Num_a=20, Num_b=0]
 
 -----
 
 // --- Sous-grammaire 3 : remplacer 'a' par 'b' jusqu'à l'équilibre ---
 
-when Num_a>Num_b a -> b!Num_b+1!Num_a-1
+when Num_a>Num_b a -> b [Num_b+1, Num_a-1]

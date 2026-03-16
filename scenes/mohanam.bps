@@ -20,7 +20,7 @@
 // Crée le symbole de départ I avec les compteurs
 // ============================================================
 
-S -> I!Ideas=20!Notes=32!NumR=1 [mode:random]
+S -> I [Ideas=20, Notes=32, NumR=1] [mode:random]
 
 -----
 
@@ -31,7 +31,7 @@ S -> I!Ideas=20!Notes=32!NumR=1 [mode:random]
 // ============================================================
 
 // Règle réservée au goto — poids 0, jamais sélectionnée aléatoirement
-I -> I!NumR+1 [weight:0]
+I -> I [NumR+1] [weight:0]
 
 // Idées avec répétition (R1...R2 = capturer et doubler)
 // when flag-N = décrémente ET teste > 0 (sémantique BP3 préservée)
@@ -48,9 +48,9 @@ when Ideas-2 I -> B A [weight:50]
 // La dernière règle utilise goto pour relancer la sous-grammaire 2
 // ============================================================
 
-// when flag = test pur (pas de mutation), !flag-1 = mutation dans le RHS
-when Ideas>0 A -> I!NumR-1 [weight:100]
-when Ideas>0 B -> I!NumR-1 [weight:100]
+// when flag = test pur (pas de mutation), [flag-1] = mutation dans le RHS
+when Ideas>0 A -> I [NumR-1] [weight:100]
+when Ideas>0 B -> I [NumR-1] [weight:100]
 when Ideas>0 I -> I goto(2,1) [weight:1]
 
 -----
