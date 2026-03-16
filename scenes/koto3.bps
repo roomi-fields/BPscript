@@ -1,0 +1,68 @@
+// koto3.bps — Automate cellulaire 1D, "musique turque" (Bernard Bel)
+// Traduit de bp3-engine/library/experimental/koto3/grammar.gr
+//
+// Méta-grammaire : les règles SUB construisent dynamiquement des polymétriques.
+// En BP3, { } , sont des caractères bruts dans le flux textuel.
+// En BPscript, on utilise des non-terminaux intermédiaires :
+//   PO = polymetric open → {
+//   PC = polymetric close → }
+//   VS = voice separator → ,
+// Résolus en braces brutes par la sous-grammaire 4 (SUB1).
+
+@core
+@+
+
+gate a:midi
+gate b:midi
+gate c:midi
+gate f:midi
+gate chik:midi
+
+// --- Sous-grammaire 1 [mode:random] — séquence initiale ---
+
+S -> vel(127) volume(40) X X X X Y X X X X Y X X X X [mode:random, weight:100]
+X -> a [weight:K9]
+X -> b
+
+-----
+
+// --- Sous-grammaire 2 [mode:sub] — automate cellulaire ---
+// Les règles réécrivent a/b en patterns avec polymétriques non-terminaux
+
+Y -> Y [mode:sub]
+a -> a [weight:5]
+a b a -> a a [weight:30]
+#(PO) a b a -> PO 5 VS a c b VS f f f - f PC [weight:100]
+b -> b [weight:5]
+#(PO) b a b #(PC) -> b b [weight:30]
+#(PO) b a b -> PO 3 VS b a b c b a VS f a f PC [weight:100]
+#(PO) #a b #(PC) -> #a c b [weight:100-10]
+c c c -> c a c
+c a c -> b a b
+?1 ?1 ?2 ?3 ?4 ?4 -> ?2 ?3 [weight:50]
+?1 ?1 ?1 -> ?1 [weight:K9]
+?1 ?1 -> ?1 [weight:K9]
+// Identité : préserver les braces non-terminaux pendant la réécriture
+PO -> PO
+PC -> PC
+VS -> VS
+
+-----
+
+// --- Sous-grammaire 3 [mode:random] — silences et out-time objects ---
+
+Y -> f [mode:random, weight:40]
+Y -> chik [weight:50]
+?1 -> ?1 Silence script(MIDI send Continue) [weight:1-1]
+Silence -> - - - - - [weight:50]
+Silence -> - - - - [weight:15]
+Silence -> - - - [weight:8]
+Silence -> - - [weight:8]
+
+-----
+
+// --- Sous-grammaire 4 [mode:sub1] — résolution des braces ---
+
+PO -> {
+PC -> }
+VS -> ,
