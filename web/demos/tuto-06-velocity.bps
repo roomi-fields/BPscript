@@ -1,0 +1,15 @@
+// Tutorial 6 — Velocity (dynamics)
+//
+// [vel:N] sets the volume/intensity (0-127).
+// It applies to all notes that follow until the next [vel].
+//
+// Try: change the values and listen to the difference.
+
+@core
+@controls
+@alphabet.western:browser
+
+S -> Soft Loud Soft
+
+Soft -> [vel:40]C4 E4 G4 E4
+Loud -> [vel:110]F4 A4 C5 A4

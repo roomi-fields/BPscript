@@ -34,7 +34,15 @@
     padding: 6px 16px; font-size: 0.75em; text-transform: uppercase;
     color: #e94560; font-weight: 600; letter-spacing: 0.5px;
     position: sticky; top: 0; background: #0d1b2a; z-index: 1;
+    cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px;
   }
+  .category-header:hover { color: #ff6b8a; }
+  .category-header .chevron {
+    display: inline-block; transition: transform 0.2s; font-size: 0.8em;
+  }
+  .category-header.collapsed .chevron { transform: rotate(-90deg); }
+  .category-items { overflow: hidden; }
+  .category-items.collapsed { display: none; }
   .grammar-item {
     padding: 8px 16px; cursor: pointer; font-size: 0.85em;
     border-left: 3px solid transparent; transition: all 0.15s;
@@ -185,21 +193,43 @@
 
   /* Libs panel */
   .libs-list {
-    width: 160px; min-width: 160px; border-right: 1px solid #0f3460;
-    overflow-y: auto; background: #0d1b2a;
+    width: 140px; min-width: 140px; border-right: 1px solid #0f3460;
+    overflow-y: auto; background: #0d1b2a; padding: 6px 0;
   }
   .libs-list .lib-item {
-    padding: 3px 10px; font-size: 0.85em; cursor: pointer;
-    border-left: 3px solid transparent; color: #888; line-height: 1.3;
+    padding: 5px 12px; font-size: 13px; cursor: pointer;
+    border-left: 3px solid transparent; color: #aaa;
   }
-  .libs-list .lib-item:hover { background: #16213e; color: #ccc; }
-  .libs-list .lib-item.active { border-left-color: #e94560; color: #e0e0e0; background: #16213e; }
-  .libs-list .lib-item .size { font-size: 0.75em; color: #555; }
+  .libs-list .lib-item:hover { background: #16213e; color: #e0e0e0; }
+  .libs-list .lib-item.active { border-left-color: #e94560; color: #fff; background: #16213e; }
+  .libs-list .lib-item .size { font-size: 10px; color: #666; margin-left: 4px; }
   .libs-detail {
-    flex: 1; overflow: auto; padding: 12px;
+    flex: 1; overflow: auto; padding: 12px 16px;
     font-family: 'Consolas', 'Courier New', monospace; font-size: 12px;
-    white-space: pre-wrap; color: #00ff88;
+    white-space: pre-wrap; color: #88ccaa; line-height: 1.5;
   }
+
+  /* Help panel */
+  .help-content h3 { color: #e94560; margin: 16px 0 8px 0; font-size: 14px; }
+  .help-content h3:first-child { margin-top: 0; }
+  .help-content h4 { color: #4a90d9; margin: 12px 0 4px 0; font-size: 13px; }
+  .help-content code {
+    background: #16213e; color: #00ff88; padding: 1px 5px; border-radius: 3px;
+    font-family: 'Consolas', monospace; font-size: 12px;
+  }
+  .help-content pre {
+    background: #0d1b2a; border: 1px solid #0f3460; border-radius: 4px;
+    padding: 8px 12px; margin: 6px 0; overflow-x: auto;
+    font-family: 'Consolas', monospace; font-size: 12px; color: #e0e0e0;
+    line-height: 1.5;
+  }
+  .help-content table { border-collapse: collapse; margin: 6px 0; width: 100%; }
+  .help-content th, .help-content td {
+    padding: 4px 10px; border: 1px solid #0f3460; font-size: 12px; text-align: left;
+  }
+  .help-content th { background: #16213e; color: #e94560; }
+  .help-content td code { background: none; padding: 0; }
+  .help-content .section { margin-bottom: 16px; }
 
   /* Resize handle */
   .resize-handle {
@@ -279,11 +309,13 @@ S -> C4 D4 E4 F4 G4</textarea>
         <div class="output-tab active" onclick="switchOutputTab('output')">Output</div>
         <div class="output-tab" id="messagesTab" onclick="switchOutputTab('messages')">Messages</div>
         <div class="output-tab" onclick="switchOutputTab('libs'); loadLibsPanel()">Libraries</div>
+        <div class="output-tab" onclick="switchOutputTab('help')">Help</div>
       </div>
       <div class="output-panels">
         <div class="output-panel active" id="outputContent">(not yet produced)</div>
         <div class="output-panel" id="messagesContent">(no messages)</div>
         <div class="output-panel" id="libsContent" style="display:flex;gap:0;padding:0;"></div>
+        <div class="output-panel" id="helpContent" style="padding:16px 24px;overflow-y:auto;color:#ccc;font-size:13px;line-height:1.6;"></div>
       </div>
     </div>
   </div>
@@ -326,8 +358,9 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['basics', 'generative', 'polymetric', 'raga', 'advanced'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'raga', 'advanced'];
   const categoryLabels = {
+    tutorial: 'Tutorial',
     basics: 'Basics',
     generative: 'Generative',
     polymetric: 'Polymetric',
@@ -343,7 +376,8 @@ function renderLibrary(items) {
   let html = '';
   categoryOrder.forEach(cat => {
     if (!groups[cat]) return;
-    html += `<div class="category-header">${categoryLabels[cat] || cat} (${groups[cat].length})</div>`;
+    html += `<div class="category-header" onclick="toggleCategory('${cat}')"><span class="chevron">&#9660;</span>${categoryLabels[cat] || cat} (${groups[cat].length})</div>`;
+    html += `<div class="category-items" data-cat="${cat}">`;
     groups[cat].forEach(item => {
       const activeClass = activeGrammar && activeGrammar.id === item.id ? ' active' : '';
       html += `<div class="grammar-item${activeClass}" onclick="loadFromLibrary('${item.id}')" data-id="${item.id}">
@@ -351,6 +385,7 @@ function renderLibrary(items) {
         ${item.description ? `<div class="meta">${escHtml(item.description.substring(0, 70))}${item.description.length > 70 ? '...' : ''}</div>` : ''}
       </div>`;
     });
+    html += `</div>`;
   });
 
   list.innerHTML = html;
@@ -368,6 +403,15 @@ function filterLibrary() {
     (item.description && item.description.toLowerCase().includes(q))
   );
   renderLibrary(filtered);
+}
+
+function toggleCategory(cat) {
+  const header = document.querySelector(`.category-header[onclick*="${cat}"]`);
+  const items = document.querySelector(`.category-items[data-cat="${cat}"]`);
+  if (header && items) {
+    header.classList.toggle('collapsed');
+    items.classList.toggle('collapsed');
+  }
 }
 
 async function loadFromLibrary(id) {
@@ -417,7 +461,7 @@ function switchEditorTab(tab) {
 
 function switchOutputTab(tab) {
   document.querySelectorAll('.output-tab').forEach((el, i) => {
-    const tabs = ['output', 'messages', 'libs'];
+    const tabs = ['output', 'messages', 'libs', 'help'];
     el.classList.toggle('active', tabs[i] === tab);
   });
   document.querySelectorAll('.output-panel').forEach(el => {
@@ -961,6 +1005,128 @@ function showLib(name) {
     detail.textContent = json;
   }
 }
+
+/* ---- Help content ---- */
+(function() {
+  document.getElementById('helpContent').innerHTML = `<div class="help-content">
+<h3>BPscript Quick Reference</h3>
+<div class="section">
+BPscript is a meta-sequencer language. You write rules that describe how musical structures
+are rewritten, and the engine produces sequences from them.
+</div>
+
+<h3>Directives (@)</h3>
+<div class="section">
+Directives configure the compilation environment.
+<pre>@core                      // load core library
+@controls                  // load control definitions
+@alphabet.western:browser  // load western note alphabet for browser playback
+@alphabet.raga:browser     // load Indian sargam alphabet
+@mm:120                    // metronome: 120 BPM (default: 60)</pre>
+</div>
+
+<h3>Rules</h3>
+<div class="section">
+A rule rewrites a symbol into a sequence.
+<pre>S -> C4 D4 E4              // S becomes C4 D4 E4
+S -> A B                   // S becomes A B (then A and B get rewritten)</pre>
+The start symbol is always <code>S</code>.
+</div>
+
+<h4>Modes</h4>
+<div class="section">
+<table>
+<tr><th>Syntax</th><th>BP3 mode</th><th>Meaning</th></tr>
+<tr><td><code>[mode:ord]</code></td><td>ORD</td><td>Rules applied in order (default)</td></tr>
+<tr><td><code>[mode:random]</code></td><td>RND</td><td>Random rule selection</td></tr>
+<tr><td><code>[mode:sub1]</code></td><td>SUB1</td><td>Single substitution pass</td></tr>
+<tr><td><code>[mode:lin]</code></td><td>LIN</td><td>Leftmost derivation</td></tr>
+</table>
+</div>
+
+<h3>Notes & Symbols</h3>
+<div class="section">
+<table>
+<tr><th>Symbol</th><th>Meaning</th></tr>
+<tr><td><code>C4 D#5 Eb3</code></td><td>Western notes (with @alphabet.western)</td></tr>
+<tr><td><code>sa6 re6 ga6</code></td><td>Indian sargam (with @alphabet.raga)</td></tr>
+<tr><td><code>-</code></td><td>Silence (same duration as a note)</td></tr>
+<tr><td><code>_</code></td><td>Prolongation (extends previous note)</td></tr>
+<tr><td><code>~</code></td><td>Tie (legato between two notes): <code>C4~C4</code></td></tr>
+<tr><td><code>!</code></td><td>Simultaneous: <code>C4!E4!G4</code> = chord</td></tr>
+</table>
+</div>
+
+<h3>Controls [ ]</h3>
+<div class="section">
+Controls modify playback parameters. They can appear as rule qualifiers or inline.
+<pre>[vel:80]C4 D4          // velocity 80 before C4
+C4[vel:80]             // velocity 80 after C4
+S -> Phrase [vel:90]   // velocity 90 for entire rule</pre>
+<table>
+<tr><th>Control</th><th>Meaning</th></tr>
+<tr><td><code>[vel:N]</code></td><td>Velocity (0-127)</td></tr>
+<tr><td><code>[chan:N]</code></td><td>MIDI channel (1-16)</td></tr>
+<tr><td><code>[ins:N]</code></td><td>Instrument/program</td></tr>
+<tr><td><code>[transpose:N]</code></td><td>Transposition in semitones</td></tr>
+<tr><td><code>[speed:N]</code></td><td>Tempo ratio for a group</td></tr>
+<tr><td><code>[mode:X]</code></td><td>Derivation mode</td></tr>
+<tr><td><code>[weight:N]</code></td><td>Rule weight for random selection</td></tr>
+</table>
+</div>
+
+<h3>Polymétrie { }</h3>
+<div class="section">
+Curly braces create polymetric groups. Voices are separated by commas and
+stretched to fit the same total duration.
+<pre>S -> {C4 D4 E4, F4 G4}        // 3 notes vs 2 notes, same duration
+S -> {A B, C D E, F G H I}    // 3 voices: 2, 3, 4 notes</pre>
+</div>
+
+<h3>Sub-grammars</h3>
+<div class="section">
+Use <code>-----</code> to separate sub-grammars. Each can have its own mode.
+Rules are applied sub-grammar by sub-grammar in order.
+<pre>S -> A B [mode:ord]
+-----
+A -> C4 D4 [mode:random]
+A -> E4 F4
+-----
+B -> G4 A4 [mode:ord]</pre>
+</div>
+
+<h3>Flags & Guards</h3>
+<div class="section">
+Flags are variables that control rule selection.
+<pre>S -> Phrase [count=4]         // initialize flag count to 4
+when count-1 Phrase -> C4 D4 Phrase  // decrement and test > 0
+Phrase -> C5 _ _              // when count reaches 0</pre>
+<table>
+<tr><th>Syntax</th><th>Meaning</th></tr>
+<tr><td><code>when X==N</code></td><td>Test flag X equals N</td></tr>
+<tr><td><code>when X-1</code></td><td>Decrement X, test > 0</td></tr>
+<tr><td><code>[X=N]</code></td><td>Set flag X to N (in RHS)</td></tr>
+</table>
+</div>
+
+<h3>Backticks</h3>
+<div class="section">
+Embed code for external runtimes. The dispatcher routes backtick
+tokens to the corresponding eval transport (requires bridge).
+<pre>SC_Part -> \`sc: Synth(\\\\default, [\\\\freq, 440])\`
+PY_Part -> \`py: print("hello from python")\`</pre>
+</div>
+
+<h3>Playback</h3>
+<div class="section">
+<b>Produce</b> — compile BPscript and run through BP3 engine<br>
+<b>Play</b> — play the produced sequence once<br>
+<b>Loop</b> — play in a loop; with <i>re-derive</i> checked, each cycle is a new derivation (different in random mode)<br>
+<b>Stop</b> — stop playback<br>
+<b>Live</b> — auto-compile on edit; in loop mode, changes apply at the next cycle
+</div>
+</div>`;
+})();
 
 /* ---- Resize handle ---- */
 (function() {

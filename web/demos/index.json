@@ -1,5 +1,75 @@
 [
   {
+    "id": "tuto-01",
+    "title": "1. First Note",
+    "category": "tutorial",
+    "description": "Your very first BPscript program",
+    "file": "tuto-01-first-note.bps"
+  },
+  {
+    "id": "tuto-02",
+    "title": "2. Sequence",
+    "category": "tutorial",
+    "description": "A melody: multiple notes in order",
+    "file": "tuto-02-sequence.bps"
+  },
+  {
+    "id": "tuto-03",
+    "title": "3. Silence & Prolongation",
+    "category": "tutorial",
+    "description": "Rests (-) and held notes (_)",
+    "file": "tuto-03-silence-prolong.bps"
+  },
+  {
+    "id": "tuto-04",
+    "title": "4. Tempo",
+    "category": "tutorial",
+    "description": "Change speed with @mm",
+    "file": "tuto-04-tempo.bps"
+  },
+  {
+    "id": "tuto-05",
+    "title": "5. Rewriting",
+    "category": "tutorial",
+    "description": "Rules rewrite symbols into phrases",
+    "file": "tuto-05-rewriting.bps"
+  },
+  {
+    "id": "tuto-06",
+    "title": "6. Velocity",
+    "category": "tutorial",
+    "description": "Dynamics with [vel:N]",
+    "file": "tuto-06-velocity.bps"
+  },
+  {
+    "id": "tuto-07",
+    "title": "7. Random",
+    "category": "tutorial",
+    "description": "Random rule selection with weights",
+    "file": "tuto-07-random.bps"
+  },
+  {
+    "id": "tuto-08",
+    "title": "8. Polymetry",
+    "category": "tutorial",
+    "description": "Multiple voices with {,} syntax",
+    "file": "tuto-08-polymetry.bps"
+  },
+  {
+    "id": "tuto-09",
+    "title": "9. Sub-grammars",
+    "category": "tutorial",
+    "description": "Separate structure from material with -----",
+    "file": "tuto-09-subgrammars.bps"
+  },
+  {
+    "id": "tuto-10",
+    "title": "10. Flags",
+    "category": "tutorial",
+    "description": "Controlled repetition with flags and guards",
+    "file": "tuto-10-flags.bps"
+  },
+  {
     "id": "scale",
     "title": "Scale",
     "category": "basics",
