@@ -10,7 +10,7 @@
 
 // --- Sous-grammaire 1 [mode:random] — génération de structure ---
 
-S -> ${$X S &X} &{$X S &X} [mode:random, weight:2-1]
+S -> $ {$X S &X} & {$X S &X} [mode:random, weight:2-1]
 X -> Y [weight:2-1]
 X -> Y S Z [weight:2-1]
 X -> Z [weight:2-1]

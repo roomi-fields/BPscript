@@ -15,7 +15,7 @@ gate chik:midi
 
 // --- Sous-grammaire 1 [mode:random] — séquence initiale ---
 
-S -> vel(127) volume(40) X X X X Y X X X X Y X X X X [mode:random, weight:100]
+S -> X X X X Y X X X X Y X X X X [mode:random, weight:100, vel:127, volume:40]
 X -> a [weight:K9]
 X -> b
 
@@ -30,10 +30,10 @@ Y -> Y [mode:sub]
 , -> ,
 a -> a [weight:5]
 a b a -> a a [weight:30]
-#({) a b a -> {a c b, f f f - f}[speed:5] [weight:100]
+#({) a b a -> {a c b,f f f - f} [speed:5] [weight:100]
 b -> b [weight:5]
 #({) b a b #(}) -> b b [weight:30]
-#({) b a b -> {b a b c b a, f a f}[speed:3] [weight:100]
+#({) b a b -> {b a b c b a,f a f} [speed:3] [weight:100]
 #({) #a b #(}) -> #a c b [weight:100-10]
 c c c -> c a c
 c a c -> b a b

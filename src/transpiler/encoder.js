@@ -352,11 +352,37 @@ function encodeRhs(elements, alphabet, controlMap) {
 
 function encodeRhsElement(el, alphabet, controlMap) {
   const raw = encodeRhsElementInner(el, alphabet, controlMap);
+  let result = raw;
   // Apply tempo operator prefix if present: A[/2] → /2 A
   if (el.tempoOp) {
-    return `${el.tempoOp.operator}${el.tempoOp.value} ${raw}`;
+    result = `${el.tempoOp.operator}${el.tempoOp.value} ${result}`;
   }
-  return raw;
+  // Apply per-element control qualifiers
+  // PREFIX [vel:60]A → _vel(60) A (control before element)
+  // SUFFIX A[vel:60] → A _vel(60) (control after element)
+  if (el.controlQualifiers && el.controlQualifiers.length > 0) {
+    const prefixCtrls = [];
+    const suffixCtrls = [];
+    for (const q of el.controlQualifiers) {
+      const ctrls = [];
+      for (const p of q.pairs) {
+        if (controlMap[p.key]) {
+          const bp3Name = controlMap[p.key];
+          if (p.value === true) ctrls.push(bp3Name);
+          else ctrls.push(`${bp3Name}(${p.value})`);
+        }
+      }
+      // el.controlPrefix marks the first qualifier as prefix
+      if (el.controlPrefix && q === el.controlQualifiers[0]) {
+        prefixCtrls.push(...ctrls);
+      } else {
+        suffixCtrls.push(...ctrls);
+      }
+    }
+    if (prefixCtrls.length > 0) result = prefixCtrls.join(' ') + ' ' + result;
+    if (suffixCtrls.length > 0) result = result + ' ' + suffixCtrls.join(' ');
+  }
+  return result;
 }
 
 function encodeRhsElementInner(el, alphabet, controlMap) {

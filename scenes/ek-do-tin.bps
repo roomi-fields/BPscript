@@ -12,9 +12,9 @@
 
 // --- Sous-grammaire 1 [mode:ord] ---
 
-S -> pitchrange(200) $Tihai transpose(-2) &Tihai pitchcont pitchbend(-200) transpose(-2) &Tihai pitchbend(200) [mode:ord]
+S -> $Tihai[transpose:-2] &Tihai[pitchcont, pitchbend:-200, transpose:-2] &Tihai[pitchbend:200] [mode:ord, pitchrange:200]
 
-Tihai -> {Huit}[speed:2] {Six}[speed:2] {Cinq}[speed:2] {Quatre}[speed:2] - {- - ek - - do - - tin - - -}[speed:3]
+Tihai -> {Huit} [speed:2] {Six}[speed:2] {Cinq}[speed:2] {Quatre}[speed:2] - {- - ek - - do - - tin - - -}[speed:3]
 Huit -> ek do tin char panch che sat at
 Six -> ek do tin char panch che
 Cinq -> ek do tin char panch

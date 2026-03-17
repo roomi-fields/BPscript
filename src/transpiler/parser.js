@@ -519,8 +519,8 @@ function parse(tokens) {
     const elements = [];
     let safety = 0;
     while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT, T.WHEN, T.GATE, T.TRIGGER, T.CV)) {
-      // Stop at [ unless it's a tempo operator on the previous element
-      if (at(T.LBRACKET) && !isTempoOpQualifier()) break;
+      // Stop at [ unless it's a tempo operator or per-element control qualifier
+      if (at(T.LBRACKET) && !isTempoOpQualifier() && !isPerElementQualifier()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
       // But stop if } or , starts a new rule (followed by ->)
@@ -549,13 +549,36 @@ function parse(tokens) {
         continue;
       }
 
-      const el = parseRhsElement();
-      if (!el) break;
+      // PREFIX control qualifier: [vel:60]A (collé, no space before next element)
+      // Collected and attached to the NEXT element
+      let prefixQuals = null;
+      if (at(T.LBRACKET) && isPerElementQualifier()) {
+        prefixQuals = parseQualifier();
+      }
 
-      // Check for tempo operator qualifier on this element: A[/2]
+      const el = parseRhsElement();
+      if (!el) {
+        // Prefix without element — shouldn't happen but be safe
+        break;
+      }
+
+      // Attach prefix qualifiers (from [vel:60]A)
+      if (prefixQuals) {
+        el.controlQualifiers = el.controlQualifiers || [];
+        el.controlQualifiers.unshift(prefixQuals);
+        el.controlPrefix = true; // mark as prefix for encoder
+      }
+
+      // SUFFIX tempo operator: A[/2]
       if (at(T.LBRACKET) && isTempoOpQualifier()) {
         const qual = parseQualifier();
         el.tempoOp = qual.tempoOp;
+      }
+
+      // SUFFIX control qualifier: A[vel:60] (collé, applies AFTER element)
+      if (at(T.LBRACKET) && isPerElementQualifier()) {
+        el.controlQualifiers = el.controlQualifiers || [];
+        el.controlQualifiers.push(parseQualifier());
       }
 
       elements.push(el);
@@ -588,6 +611,15 @@ function parse(tokens) {
     if (next === T.DOUBLESTAR) j++; // ** is 2 tokens
     while (j < tokens.length && (tokens[j].type === T.INT || tokens[j].type === T.FLOAT || tokens[j].type === T.SLASH)) j++;
     return j < tokens.length && tokens[j].type === T.RBRACKET; // ] immediately after number = pure
+  }
+
+  function isPerElementQualifier() {
+    // [IDENT:...] where IDENT is a known control name = per-element qualifier
+    // Used for both prefix [vel:60]A and suffix A[vel:60]
+    if (!at(T.LBRACKET)) return false;
+    const nextTok = peek(1);
+    if (nextTok.type !== T.IDENT) return false;
+    return libCtx.controlNames.has(nextTok.value);
   }
 
   function parseRhsElement() {
@@ -939,9 +971,21 @@ function parse(tokens) {
         continue;
       }
       if (at(T.NEWLINE)) { advance(); continue; }
+      // Stop at [ inside polymetric if it's NOT a per-element qualifier
+      if (at(T.LBRACKET) && !isPerElementQualifier() && !isTempoOpQualifier()) break;
       const el = parseRhsElement();
-      if (el) currentVoice.push(el);
-      else break;
+      if (!el) break;
+      // Check for tempo operator qualifier on this element inside polymetric
+      if (at(T.LBRACKET) && isTempoOpQualifier()) {
+        const qual = parseQualifier();
+        el.tempoOp = qual.tempoOp;
+      }
+      // Check for per-element control qualifier inside polymetric
+      if (at(T.LBRACKET) && isPerElementQualifier()) {
+        el.controlQualifiers = el.controlQualifiers || [];
+        el.controlQualifiers.push(parseQualifier());
+      }
+      currentVoice.push(el);
     }
     if (currentVoice.length > 0) voices.push(currentVoice);
     expect(T.RBRACE);
@@ -1172,6 +1216,10 @@ function parse(tokens) {
         }
       } else if (at(T.FLOAT)) {
         value = Number(advance().value);
+      } else if (at(T.REST)) {
+        // Negative number: transpose:-12
+        const sign = advance().value;
+        value = sign + (at(T.INT) ? advance().value : '');
       } else if (at(T.IDENT)) {
         value = advance().value;
         // Check for K-param assignment: weight:K1=3

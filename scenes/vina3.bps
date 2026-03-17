@@ -11,28 +11,28 @@
 
 // --- Sous-grammaire 1 [mode:random] — structure ---
 
-S -> ins(Vina) scale(just_intonation,0) volume(40) {Taalam4 Taalam4, Pallavi Pallavi} volumecont volume(64) Taalam volume(0) - [mode:random]
+S -> scale(just_intonation,0)[volume:40] {Taalam4 Taalam4,Pallavi Pallavi}[volumecont, volume:64] Taalam[volume:0] - [mode:random, ins:Vina]
 
-Pallavi -> {Maa Yaa Tii . Ta {Sva Ruu Pi}[speed:2] . {Ni}[speed:2] {Nan Nu}[speed:1] . Bro {Va Ve}[speed:2] }
+Pallavi -> {Maa Yaa Tii . Ta {Sva Ruu Pi}[speed:2] . {Ni}[speed:2] {Nan Nu}[speed:1] . Bro {Va Ve}[speed:2]}
 
 Maa -> C3
 Yaa -> LongSpuritam C3 Slide1
-Tii -> {StartSlidePull C3 Slide1 _ _ Slide1 Pull0 _ Slide4 . Pull1 _ Pull0 _ . Pull0 _ Pull1 - StopSlidePull}[speed:1]
+Tii -> {StartSlidePull C3 Slide1 _ _ Slide1 Pull0 _ Slide4 . Pull1 _ Pull0 _ . Pull0 _ Pull1 - StopSlidePull} [speed:1]
 Ta -> F3
-Sva -> {G3}[speed:3]
-Ruu -> {StartSlidePull G3 SlideBack2 _ SlideBack3 . Pull0 _ Pull1 - - - StopSlidePull}[speed:3]
-Pi -> {F3}[speed:2]
+Sva -> {G3} [speed:3]
+Ruu -> {StartSlidePull G3 SlideBack2 _ SlideBack3 . Pull0 _ Pull1 - - - StopSlidePull} [speed:3]
+Pi -> {F3} [speed:2]
 Ni -> G3
 
 Nan -> G3
-Nu -> {StartPull Pull1 G3 Pull0 _ Pull1 - StopPull}[speed:1]
+Nu -> {StartPull Pull1 G3 Pull0 _ Pull1 - StopPull} [speed:1]
 
-Bro -> {GamakaHold F3 Pull2}[speed:1] [pullVa]
+Bro -> {GamakaHold F3 Pull2} [speed:1] [pullVa]
 when slideVa==1 Va -> StartSlide G3 SlideBack2 StopSlide
 when pullVa==1 Va -> StartPull Pull2 F3 Pull0 StopPull
 
-Ve -> {Ve1 Ve2 Ve3}[speed:3]
-Ve1 -> {GamakaOscil E3 Pull1}[speed:5]
+Ve -> {Ve1 Ve2 Ve3} [speed:3]
+Ve1 -> {GamakaOscil E3 Pull1} [speed:5]
 Ve2 -> StartSlide C#3 SlideBack1 _ StopSlide
 Ve3 -> StartPull B2 Pull1 StopPull
 
@@ -41,15 +41,15 @@ Ve3 -> StartPull B2 Pull1 StopPull
 // --- Sous-grammaire 2 [mode:random] — taalam ---
 
 Taalam4 -> Taalam Taalam Taalam Taalam [mode:random]
-Taalam -> {C3, G3, C4}[speed:3]
+Taalam -> {C3,G3,C4} [speed:3]
 
 -----
 
 // --- Sous-grammaire 3 [mode:sub1] — structures intermédiaires ---
 
-LongSpuritam ?1 ?2 -> {StartSlide ?1 _ Slide0 _ ?2 _}[speed:1] [mode:sub1]
+LongSpuritam ?1 ?2 -> {StartSlide ?1 _ Slide0 _ ?2 _} [speed:1] [mode:sub1]
 GamakaOscil ?1 ?2 -> {StartPull ?1 ?2 _ Pull0 _ ?2 _ Pull0 _ ?2 StopPull}
-GamakaHold ?1 ?2 -> {StartPull ?1 ?2 _ _ _ StopPull}[speed:1]
+GamakaHold ?1 ?2 -> {StartPull ?1 ?2 _ _ _ StopPull} [speed:1]
 
 -----
 
@@ -74,7 +74,7 @@ Slide1 -> value(slide,101)
 Slide2 -> value(slide,201)
 Slide4 -> value(slide,401)
 
-StartSlide -> cont(slide) value(slide,0)
+StartSlide -> value(slide,0) [cont:slide]
 StopSlide -> fixed(slide)
 StartPull -> pitchcont pitchrange(500) pitchbend(0)
 StopPull -> pitchfixed

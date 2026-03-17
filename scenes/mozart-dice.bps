@@ -271,161 +271,161 @@ B8 -> T8 [weight:K11]
 
 // --- Sous-grammaire 18 [mode:sub1] — terminaux (mesures de Mozart) ---
 
-T1 -> {fa3 re3 sol3, fa5 re5 sol5} [mode:sub1]
-T2 -> {{si2, sol3}[speed:2] -, la4 {fa#4 sol4 si4 sol5}[speed:2]}
-T3 -> {{do3, mi3}[speed:2] -, sol5 do5 mi5}
-T4 -> {{sol2 si2}[speed:1] sol3 si2, sol5 re5 _}
-T5 -> {sol2 {sol3 fa3 mi3 re3}[speed:2], {sol4, si4, re5, sol5}[speed:2] -}
-T'5 -> {sol2 {si3 sol3 fa#3 mi3}[speed:2], {sol4, si4, re5, sol5}[speed:2] -}
-T6 -> {{do3, mi3}[speed:2] -, sol4 do5 mi5}
-T7 -> {{do3, sol3}[speed:2] -, mi5 do5 mi5 sol5 do6 sol5}
-T8 -> {do3 sol2 do2, do5 _ -}
-T9 -> {sol3 _ sol2, {do5, mi5} {si4, re5} -}
-T10 -> {sol3 _ -, si4 la4 si4 do5 re5 si4}
-T11 -> {do3 re3 re2, mi5 do5 si4 la4 sol4 fa#4}
-T12 -> {do3 do3 do3, {mi4 mi4 mi4}, {do5 do5 do5}}
-T13 -> {{mi3, sol3}[speed:2] -, do5 sol4 mi4}
-T15 -> {{do3, sol3}[speed:2] {do3, mi3}, mi5 {sol5 mi5}[speed:1] do5}
-T16 -> {{re3, fa#3}[speed:2] {do3, fa#3}, la5 fa#5 re5}
-T17 -> {{mi3, sol3}[speed:2] -, do5 sol4 do5 mi5 sol4 do5}
-T18 -> {{do3, mi3}[speed:2] {do3, sol3}, sol4 do5 mi5}
-T19 -> {{do3, sol3}[speed:2] {do3, mi3}, {mi5 do5}[speed:1] mi5 sol5}
-T20 -> {si2 _ -, sol5 {si5 re6}[speed:1] re5}
-T21 -> {do3 re3 re2, do5 mi5 sol5 re5 la4 fa#5}
-T22 -> {do3 _ -, mi5 do5 sol4}
-T23 -> {{fa3 mi3 re3 mi3 fa3 sol3}[speed:3], fa5 mi5 re5 mi5 fa5 sol5}
-T25 -> {re3 _ do3, re4 fa#4 la4 re5 fa#5 la5}
-T26 -> {{do3 mi3 sol3 mi3 do4 do3}[speed:3], {do5, mi5} {do5, mi5} {do5, mi5}}
-T27 -> {{sol3, si3}[speed:2] -, fa5 mi5 fa5 re5 do5 si4}
-T28 -> {{do3, la3}[speed:2] -, fa#5 re5 la4 la5 fa#5 re5}
-T29 -> {sol3 _ sol2, {si4 re5 sol5 re5}[speed:2] si4}
-T31 -> {{do3, sol3}[speed:2] {do3, sol3}, {mi5 do5}[speed:1] sol4 mi5}
-T32 -> {{do3, mi3}[speed:2] -, sol4 do5 mi5}
-T34 -> {sol3 _ -, {mi5 do5 re5 si4}[speed:2] sol4}
-T35 -> {{re3, fa#3}[speed:2] {do3, la3}, la4 re5 fa#5}
-T36 -> {do3 re3 re2, la4 mi5 re5 sol5 fa#5 la5}
-T37 -> {{si2, re3}[speed:2] -, {sol5 si5 sol5 re5}[speed:2] si4}
-T38 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], do5 sol4 mi5}
-T39 -> {{si2 re3 sol3 re3 si2 sol2}[speed:3], sol5 sol4 sol4}
-T40 -> {{do3, mi3}[speed:2] -, do5 si4 do5 mi5 sol4 do5}
-T41 -> {{do3, mi3}[speed:2] -, {do5 si4 do5 mi5}[speed:2] sol4}
-T42 -> {sol2 _ -, si4 do5 re5 si4 la4 sol4}
-T43 -> {{do3, mi3}[speed:2] -, sol5 {fa5 mi5 re5 do5}[speed:2]}
-T44 -> {fa3 _ sol3, la4 {fa5 re5 la4 si4}[speed:2]}
-T45 -> {{mi3, sol3}[speed:2] -, do5 si4 do5 sol4 mi4 do4}
-T46 -> {{si2, re3}[speed:2] -, sol5 {si5 sol5 re5 si4}[speed:2]}
-T47 -> {{si2, re3}[speed:2] -, sol5 {sol5 re5}[speed:1] si5}
-T48 -> {{do3, sol3}[speed:2] {do3, mi3}, mi5 {do5 mi5 sol5 do6}[speed:2]}
-T49 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], mi5 do5 sol4}
-T50 -> {{mi3, sol3}[speed:2] -, do5 {mi5 do5}[speed:1] sol4}
-T51 -> {{do3, mi3}[speed:2] -, do5 sol4 mi5 do5 sol5 mi5}
-T52 -> {fa3 _ sol3, re5 do#5 re5 fa5 sol4 si4}
-T53 -> {do3 _ -, {do5, mi5} {do5 re5, mi5 fa5}[speed:1] {mi5, sol5}}
-T54 -> {do3 do3 do3, {mi4, do5} {mi4, do5} {mi4, do5}}
-T55 -> {{si2, re3}[speed:2] -, sol5 si5 re5}
-T56 -> {{sol2, sol3}[speed:2] sol3, {re5 si4}[speed:1] sol4 -}
-T57 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], mi5 do5 sol4}
-T58 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], sol5 mi5 do5}
-T59 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], sol5 do5 mi5}
-T60 -> {{do3, mi3}[speed:2] -, sol5 {fa5 mi5 re5 do5}[speed:2]}
-T61 -> {{mi3, sol3}[speed:2] -, do5 {mi5 do5}[speed:1] sol5}
-T62 -> {do3 re3 re2, mi5 do5 si4 sol4 la4 fa#4}
-T63 -> {do3 _ -, {mi5 do5 si4 do5}[speed:2] sol4}
-T64 -> {{do3, sol3}[speed:2] {do3, sol3}, mi5 sol5 do6 sol5 mi5 do5}
-T65 -> {{re3 fa#3}[speed:2] -, {re5 la4}[speed:1] re5 fa#5}
-T66 -> {{re3, la3} {re3, fa#3} {do3, re3}, fa#5 la5 fa#5}
-T67 -> {{do3, mi3}[speed:2] {mi3, sol3}, do5 si4 do5 mi5 sol4 do5}
-T68 -> {si2 _ -, sol5 {si5 sol5 re5 sol5}[speed:2]}
-T69 -> {{do3, mi3}[speed:2] -, sol5 mi5 do5}
-T70 -> {re3 _ do3, fa#5 {la5 fa#5 re5 fa#5}[speed:2]}
-T71 -> {{si2, re3}[speed:2] {si2, re3}, {sol5 si5 re6 si5}[speed:2] sol5}
-T72 -> {fa3 _ sol3, fa5 mi5 re5 do5 si4 re5}
-T73 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], sol5 mi5 do5}
-T74 -> {{do3, mi3}[speed:2] -, do6 si5 do6 sol5 mi5 do5}
-T75 -> {do3 do3 do3, {re5, fa#5} {re5, fa#5} {re5, fa#5}}
-T76 -> {{do3, mi3}[speed:2] {do3, sol3}, do6 si5 do6 sol5 mi5 do5}
-T77 -> {{si2, re3}[speed:2] {si2, sol3}, {sol5 si5}[speed:1] sol5 re5}
-T78 -> {do3 _ do2, do5 do4 -}
-T80 -> {do3 _ -, re5 la4 fa#5}
-T82 -> {{si2, sol3}[speed:2] {si2, re3}, {re5 si4}[speed:1] sol4 sol5}
-T84 -> {{do3, mi3}[speed:2] -, do5 sol4 mi5 do5 sol5 mi5}
-T85 -> {{mi3, sol3}[speed:2] -, do5 mi5 sol4}
-T86 -> {{si2, sol3}[speed:2] -, re5 {re5 sol5}[speed:1] si5}
-T87 -> {{do3, mi3}[speed:2] {do3, sol3}, sol5 do5 mi5}
-T88 -> {{si2, re3}[speed:2] {si2, re3}, sol5 re5 sol5 si5 sol5 re5}
-T89 -> {{fa3 mi3}[speed:1] re3 sol3, {fa5 mi5}[speed:1] re5 sol5}
-T90 -> {{do3, la3}[speed:2] {do3, la3}, fa#5 la5 re6 la5 fa#5 la5}
-T92 -> {{sol2, sol3}[speed:2] sol3, {si4, re5} {sol5 si5}[speed:1] re5}
-T95 -> {{do3, mi3}[speed:2] -, sol5 mi5 do5}
-T96 -> {do3 _ -, mi5 do5 sol4}
-T97 -> {{si2, re3}[speed:2] {si2, sol3}, sol5 fa#5 sol5 re5 si4 sol4}
-T98 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], do5 sol4 mi5}
-T99 -> {{do3, la3}[speed:2] {do3, la3}, fa#5 la5 re5}
-T101 -> {{do3, sol3}[speed:2] {do3, mi3}, mi5 re5 mi5 sol5 do6 sol5}
-T102 -> {{do3, la3}[speed:2] {do3, la3}, {fa#5 re5}[speed:1] la4 fa#5}
-T103 -> {{mi3, sol3}[speed:2] -, {do5 mi5 do5 sol4}[speed:2] mi4}
-T104 -> {do3 _ -, mi5 re5 mi5 sol5 do6 sol5}
-T105 -> {do3 _ -, fa#5 {la5 fa#5 re5 fa#5}[speed:2]}
-T106 -> {do3 re3 re2, la4 {re5 do5 si4 la4}[speed:2]}
-T108 -> {{do3, sol3}[speed:2] {do3, mi3}, mi5 sol5 do6}
-T109 -> {{fa3, la3}[speed:2] {sol3, re4}, re5 fa5 re5 fa5 si4 re5}
-T110 -> {do3 re3 re2, si4 la4 la4 sol4 sol4 fa#4, re5 do5 do5 si4 si4 la4}
-T112 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], mi5 do5 sol4}
-T113 -> {{sol3, si3}[speed:2] -, fa5 re5 si4}
-T114 -> {sol3 sol3 sol3, {si4, re5} {si4, re5} {si4, re5}}
-T115 -> {{do3, mi3}[speed:2] -, do5 sol4 mi5 do5 sol5 mi5}
-T116 -> {fa3 _ sol3, re5 fa5 la5 fa5 re5 si4}
-T117 -> {{re3, fa#3}[speed:2] -, re5 la4 re5 fa#5 la5 fa#5}
-T118 -> {do3 re3 re2, mi5 la5 sol5 si5 fa#5 la5}
-T119 -> {{do3, mi3}[speed:2] -, mi5 do5 sol5 mi5 do6 sol5}
-T120 -> {{re3, fa#3}[speed:2] {do3, fa#3}, re6 {la5 fa#5 re5 la4}[speed:2]}
-T121 -> {{si2, sol3}[speed:2] -, sol5 {si5 sol5}[speed:1] re5}
-T122 -> {{si2, re3} {si2, re3} {si2, re3}, {sol5 fa#5 sol5 si5}[speed:2] re5}
-T124 -> {do3 do3 do3, {mi4, do5} {mi4, do5} {mi4, do5}}
-T125 -> {sol3 sol2 -, {sol5 mi5 re5 si4}[speed:2] sol4}
-T126 -> {mi3 _ {mi3 do3}[speed:1], do5 sol4 do5 mi5 sol5 {do5, mi5}}
-T128 -> {sol2 _ -, si4 re5 sol5}
-T129 -> {{si2, re3} {si2, re3} {si2, sol3}, {la5 sol5 fa#5 sol5}[speed:2] re5}
-T130 -> {do3 do3 do3, mi4 mi4 mi4, do5 do5 do5}
-T132 -> {sol3 sol2 -, {do5, mi5} {si4 sol4, re5 si4}[speed:1] sol4}
-T133 -> {{si2, sol3}[speed:2] -, re5 {sol5 re5 si4 re5}[speed:2]}
-T134 -> {do3 re3 re2, la4 mi5 {si4, re5} {la4, do5} {sol4, si4} {fa#4, la4}}
-T135 -> {{do3, re3} {do3, re3} {do3, re3}, fa#5 {fa#5 re5}[speed:1] la5}
-T136 -> {{do3, mi3}[speed:2] -, do6 si5 do6 sol5 mi5 do5}
-T137 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], do5 sol4 mi5}
-T138 -> {{re2 re3 do#3 re3 do3 re3}[speed:3], {la4, re5, fa#5} fa#5 _}
-T139 -> {si2 _ -, {sol5 si5 sol5 si5}[speed:2] re5}
-T140 -> {{do3, fa#3} {do3, fa#3} {do3, la3}, la4 {la4 re5}[speed:1] fa#5}
-T141 -> {{si2, sol3}[speed:2] sol2, re5 mi5 fa5 re5 do5 si4}
-T142 -> {{do3, mi3}[speed:2] -, do5 sol4 mi5}
-T143 -> {{si2, re3}[speed:2] {si2, re3}, sol5 {re5 si4}[speed:1] sol4}
-T144 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], sol5 do5 mi5}
-T145 -> {fa3 _ sol3, re5 fa5 la4 re5 si4 re5}
-T146 -> {do3 do3 do3, {fa#4, re5} {re5, fa#5} {fa#5, la5}}
-T147 -> {do3 re3 re2, mi5 do6 si5 sol5 la5 fa#5}
-T148 -> {{do3, mi3}[speed:2] -, do6 si5 do6 sol5 mi5 do5}
-T149 -> {fa3 _ sol3, {fa5 re5}[speed:1] la4 si4}
-T150 -> {{do3 si2 do3 re3 mi3 fa#3}[speed:3], {sol4, do5, mi5} mi5 _}
-T152 -> {{do3, mi3}[speed:2] -, sol5 {fa5 mi5 re5 do5}[speed:2]}
-T153 -> {do3 _ -, re5 la4 fa#5 re5 la5 fa#5}
-T154 -> {do3 _ -, re5 do#5 re5 fa#5 la5 fa#5}
-T155 -> {{si2, re3}[speed:2] -, sol5 si5 sol5 re5 si4 sol4}
-T156 -> {{mi3, sol3}[speed:2] -, {do5 sol4 mi5 do5}[speed:2] sol5}
-T157 -> {do3 _ -, mi5 re5 mi5 sol5 do6 sol5}
-T158 -> {sol2 _ -, si4 {re5 si4 la4 sol4}[speed:2]}
-T159 -> {do3 re3 re2, mi5 sol5 re5 do5 si4 la4}
-T160 -> {{do3, mi3}[speed:2] {do3, mi3}, do5 si4 do5 mi5 sol4 do5}
-T161 -> {do3 do3 do3, {fa#4, re5} {fa#4, re5} {fa#4, re5}}
-T162 -> {{do3, sol3}[speed:2] {do3, mi3}, mi5 re5 mi5 sol5 do6 sol5}
-T163 -> {{si2, re3}[speed:2] -, sol5 fa#5 sol5 re5 si4 sol4}
-T164 -> {{sol3 fa#3 sol3 re3 si2 sol3}[speed:3], re5 sol4 _}
-T165 -> {si2 _ -, re5 si4 sol4}
-T166 -> {{sol3, si3}[speed:2] -, {re5 si5 sol5 re5}[speed:2] si4}
-T167 -> {{do3, mi3}[speed:2] -, do5 {do5 re5}[speed:1] mi5}
-T168 -> {{do3, mi3}[speed:2] {mi3, sol3}, sol5 {fa5 mi5 re5 do5}[speed:2]}
-T169 -> {do3 re3 re3, mi5 sol5 re5 sol5 la4 fa#5}
-T171 -> {{sol2, sol3}[speed:2] {si2, sol3}, si4 do5 re5 mi5 fa5 re5}
-T173 -> {fa3 _ sol3, {fa5 la5}[speed:1] la4 {si4 re5}[speed:1]}
-T174 -> {{{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1] {{do3, mi3} sol3 _}[speed:1], sol4 do5 mi5}
-T175 -> {sol3 sol2 -, {mi5 do5 si4 re5}[speed:2] sol5}
-T176 -> {{si2, re3}[speed:2] {si2, re3}, la5 sol5 si5 sol5 re5 sol5}
+T1 -> {fa3 re3 sol3,fa5 re5 sol5} [mode:sub1]
+T2 -> {{si2,sol3}[speed:2] -,la4 {fa#4 sol4 si4 sol5}[speed:2]}
+T3 -> {{do3,mi3}[speed:2] -,sol5 do5 mi5}
+T4 -> {{sol2 si2}[speed:1] sol3 si2,sol5 re5 _}
+T5 -> {sol2 {sol3 fa3 mi3 re3}[speed:2],{sol4,si4,re5,sol5}[speed:2] -}
+T'5 -> {sol2 {si3 sol3 fa#3 mi3}[speed:2],{sol4,si4,re5,sol5}[speed:2] -}
+T6 -> {{do3,mi3}[speed:2] -,sol4 do5 mi5}
+T7 -> {{do3,sol3}[speed:2] -,mi5 do5 mi5 sol5 do6 sol5}
+T8 -> {do3 sol2 do2,do5 _ -}
+T9 -> {sol3 _ sol2,{do5,mi5} {si4,re5} -}
+T10 -> {sol3 _ -,si4 la4 si4 do5 re5 si4}
+T11 -> {do3 re3 re2,mi5 do5 si4 la4 sol4 fa#4}
+T12 -> {do3 do3 do3,{mi4 mi4 mi4},{do5 do5 do5}}
+T13 -> {{mi3,sol3}[speed:2] -,do5 sol4 mi4}
+T15 -> {{do3,sol3}[speed:2] {do3,mi3},mi5 {sol5 mi5}[speed:1] do5}
+T16 -> {{re3,fa#3}[speed:2] {do3,fa#3},la5 fa#5 re5}
+T17 -> {{mi3,sol3}[speed:2] -,do5 sol4 do5 mi5 sol4 do5}
+T18 -> {{do3,mi3}[speed:2] {do3,sol3},sol4 do5 mi5}
+T19 -> {{do3,sol3}[speed:2] {do3,mi3},{mi5 do5}[speed:1] mi5 sol5}
+T20 -> {si2 _ -,sol5 {si5 re6}[speed:1] re5}
+T21 -> {do3 re3 re2,do5 mi5 sol5 re5 la4 fa#5}
+T22 -> {do3 _ -,mi5 do5 sol4}
+T23 -> {{fa3 mi3 re3 mi3 fa3 sol3}[speed:3],fa5 mi5 re5 mi5 fa5 sol5}
+T25 -> {re3 _ do3,re4 fa#4 la4 re5 fa#5 la5}
+T26 -> {{do3 mi3 sol3 mi3 do4 do3}[speed:3],{do5,mi5} {do5,mi5} {do5,mi5}}
+T27 -> {{sol3,si3}[speed:2] -,fa5 mi5 fa5 re5 do5 si4}
+T28 -> {{do3,la3}[speed:2] -,fa#5 re5 la4 la5 fa#5 re5}
+T29 -> {sol3 _ sol2,{si4 re5 sol5 re5}[speed:2] si4}
+T31 -> {{do3,sol3}[speed:2] {do3,sol3},{mi5 do5}[speed:1] sol4 mi5}
+T32 -> {{do3,mi3}[speed:2] -,sol4 do5 mi5}
+T34 -> {sol3 _ -,{mi5 do5 re5 si4}[speed:2] sol4}
+T35 -> {{re3,fa#3}[speed:2] {do3,la3},la4 re5 fa#5}
+T36 -> {do3 re3 re2,la4 mi5 re5 sol5 fa#5 la5}
+T37 -> {{si2,re3}[speed:2] -,{sol5 si5 sol5 re5}[speed:2] si4}
+T38 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],do5 sol4 mi5}
+T39 -> {{si2 re3 sol3 re3 si2 sol2}[speed:3],sol5 sol4 sol4}
+T40 -> {{do3,mi3}[speed:2] -,do5 si4 do5 mi5 sol4 do5}
+T41 -> {{do3,mi3}[speed:2] -,{do5 si4 do5 mi5}[speed:2] sol4}
+T42 -> {sol2 _ -,si4 do5 re5 si4 la4 sol4}
+T43 -> {{do3,mi3}[speed:2] -,sol5 {fa5 mi5 re5 do5}[speed:2]}
+T44 -> {fa3 _ sol3,la4 {fa5 re5 la4 si4}[speed:2]}
+T45 -> {{mi3,sol3}[speed:2] -,do5 si4 do5 sol4 mi4 do4}
+T46 -> {{si2,re3}[speed:2] -,sol5 {si5 sol5 re5 si4}[speed:2]}
+T47 -> {{si2,re3}[speed:2] -,sol5 {sol5 re5}[speed:1] si5}
+T48 -> {{do3,sol3}[speed:2] {do3,mi3},mi5 {do5 mi5 sol5 do6}[speed:2]}
+T49 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],mi5 do5 sol4}
+T50 -> {{mi3,sol3}[speed:2] -,do5 {mi5 do5}[speed:1] sol4}
+T51 -> {{do3,mi3}[speed:2] -,do5 sol4 mi5 do5 sol5 mi5}
+T52 -> {fa3 _ sol3,re5 do#5 re5 fa5 sol4 si4}
+T53 -> {do3 _ -,{do5,mi5} {do5 re5,mi5 fa5}[speed:1] {mi5,sol5}}
+T54 -> {do3 do3 do3,{mi4,do5} {mi4,do5} {mi4,do5}}
+T55 -> {{si2,re3}[speed:2] -,sol5 si5 re5}
+T56 -> {{sol2,sol3}[speed:2] sol3,{re5 si4}[speed:1] sol4 -}
+T57 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],mi5 do5 sol4}
+T58 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],sol5 mi5 do5}
+T59 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],sol5 do5 mi5}
+T60 -> {{do3,mi3}[speed:2] -,sol5 {fa5 mi5 re5 do5}[speed:2]}
+T61 -> {{mi3,sol3}[speed:2] -,do5 {mi5 do5}[speed:1] sol5}
+T62 -> {do3 re3 re2,mi5 do5 si4 sol4 la4 fa#4}
+T63 -> {do3 _ -,{mi5 do5 si4 do5}[speed:2] sol4}
+T64 -> {{do3,sol3}[speed:2] {do3,sol3},mi5 sol5 do6 sol5 mi5 do5}
+T65 -> {{re3 fa#3}[speed:2] -,{re5 la4}[speed:1] re5 fa#5}
+T66 -> {{re3,la3} {re3,fa#3} {do3,re3},fa#5 la5 fa#5}
+T67 -> {{do3,mi3}[speed:2] {mi3,sol3},do5 si4 do5 mi5 sol4 do5}
+T68 -> {si2 _ -,sol5 {si5 sol5 re5 sol5}[speed:2]}
+T69 -> {{do3,mi3}[speed:2] -,sol5 mi5 do5}
+T70 -> {re3 _ do3,fa#5 {la5 fa#5 re5 fa#5}[speed:2]}
+T71 -> {{si2,re3}[speed:2] {si2,re3},{sol5 si5 re6 si5}[speed:2] sol5}
+T72 -> {fa3 _ sol3,fa5 mi5 re5 do5 si4 re5}
+T73 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],sol5 mi5 do5}
+T74 -> {{do3,mi3}[speed:2] -,do6 si5 do6 sol5 mi5 do5}
+T75 -> {do3 do3 do3,{re5,fa#5} {re5,fa#5} {re5,fa#5}}
+T76 -> {{do3,mi3}[speed:2] {do3,sol3},do6 si5 do6 sol5 mi5 do5}
+T77 -> {{si2,re3}[speed:2] {si2,sol3},{sol5 si5}[speed:1] sol5 re5}
+T78 -> {do3 _ do2,do5 do4 -}
+T80 -> {do3 _ -,re5 la4 fa#5}
+T82 -> {{si2,sol3}[speed:2] {si2,re3},{re5 si4}[speed:1] sol4 sol5}
+T84 -> {{do3,mi3}[speed:2] -,do5 sol4 mi5 do5 sol5 mi5}
+T85 -> {{mi3,sol3}[speed:2] -,do5 mi5 sol4}
+T86 -> {{si2,sol3}[speed:2] -,re5 {re5 sol5}[speed:1] si5}
+T87 -> {{do3,mi3}[speed:2] {do3,sol3},sol5 do5 mi5}
+T88 -> {{si2,re3}[speed:2] {si2,re3},sol5 re5 sol5 si5 sol5 re5}
+T89 -> {{fa3 mi3}[speed:1] re3 sol3,{fa5 mi5}[speed:1] re5 sol5}
+T90 -> {{do3,la3}[speed:2] {do3,la3},fa#5 la5 re6 la5 fa#5 la5}
+T92 -> {{sol2,sol3}[speed:2] sol3,{si4,re5} {sol5 si5}[speed:1] re5}
+T95 -> {{do3,mi3}[speed:2] -,sol5 mi5 do5}
+T96 -> {do3 _ -,mi5 do5 sol4}
+T97 -> {{si2,re3}[speed:2] {si2,sol3},sol5 fa#5 sol5 re5 si4 sol4}
+T98 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],do5 sol4 mi5}
+T99 -> {{do3,la3}[speed:2] {do3,la3},fa#5 la5 re5}
+T101 -> {{do3,sol3}[speed:2] {do3,mi3},mi5 re5 mi5 sol5 do6 sol5}
+T102 -> {{do3,la3}[speed:2] {do3,la3},{fa#5 re5}[speed:1] la4 fa#5}
+T103 -> {{mi3,sol3}[speed:2] -,{do5 mi5 do5 sol4}[speed:2] mi4}
+T104 -> {do3 _ -,mi5 re5 mi5 sol5 do6 sol5}
+T105 -> {do3 _ -,fa#5 {la5 fa#5 re5 fa#5}[speed:2]}
+T106 -> {do3 re3 re2,la4 {re5 do5 si4 la4}[speed:2]}
+T108 -> {{do3,sol3}[speed:2] {do3,mi3},mi5 sol5 do6}
+T109 -> {{fa3,la3}[speed:2] {sol3,re4},re5 fa5 re5 fa5 si4 re5}
+T110 -> {do3 re3 re2,si4 la4 la4 sol4 sol4 fa#4,re5 do5 do5 si4 si4 la4}
+T112 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],mi5 do5 sol4}
+T113 -> {{sol3,si3}[speed:2] -,fa5 re5 si4}
+T114 -> {sol3 sol3 sol3,{si4,re5} {si4,re5} {si4,re5}}
+T115 -> {{do3,mi3}[speed:2] -,do5 sol4 mi5 do5 sol5 mi5}
+T116 -> {fa3 _ sol3,re5 fa5 la5 fa5 re5 si4}
+T117 -> {{re3,fa#3}[speed:2] -,re5 la4 re5 fa#5 la5 fa#5}
+T118 -> {do3 re3 re2,mi5 la5 sol5 si5 fa#5 la5}
+T119 -> {{do3,mi3}[speed:2] -,mi5 do5 sol5 mi5 do6 sol5}
+T120 -> {{re3,fa#3}[speed:2] {do3,fa#3},re6 {la5 fa#5 re5 la4}[speed:2]}
+T121 -> {{si2,sol3}[speed:2] -,sol5 {si5 sol5}[speed:1] re5}
+T122 -> {{si2,re3} {si2,re3} {si2,re3},{sol5 fa#5 sol5 si5}[speed:2] re5}
+T124 -> {do3 do3 do3,{mi4,do5} {mi4,do5} {mi4,do5}}
+T125 -> {sol3 sol2 -,{sol5 mi5 re5 si4}[speed:2] sol4}
+T126 -> {mi3 _ {mi3 do3}[speed:1],do5 sol4 do5 mi5 sol5 {do5,mi5}}
+T128 -> {sol2 _ -,si4 re5 sol5}
+T129 -> {{si2,re3} {si2,re3} {si2,sol3},{la5 sol5 fa#5 sol5}[speed:2] re5}
+T130 -> {do3 do3 do3,mi4 mi4 mi4,do5 do5 do5}
+T132 -> {sol3 sol2 -,{do5,mi5} {si4 sol4,re5 si4}[speed:1] sol4}
+T133 -> {{si2,sol3}[speed:2] -,re5 {sol5 re5 si4 re5}[speed:2]}
+T134 -> {do3 re3 re2,la4 mi5 {si4,re5} {la4,do5} {sol4,si4} {fa#4,la4}}
+T135 -> {{do3,re3} {do3,re3} {do3,re3},fa#5 {fa#5 re5}[speed:1] la5}
+T136 -> {{do3,mi3}[speed:2] -,do6 si5 do6 sol5 mi5 do5}
+T137 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],do5 sol4 mi5}
+T138 -> {{re2 re3 do#3 re3 do3 re3}[speed:3],{la4,re5,fa#5} fa#5 _}
+T139 -> {si2 _ -,{sol5 si5 sol5 si5}[speed:2] re5}
+T140 -> {{do3,fa#3} {do3,fa#3} {do3,la3},la4 {la4 re5}[speed:1] fa#5}
+T141 -> {{si2,sol3}[speed:2] sol2,re5 mi5 fa5 re5 do5 si4}
+T142 -> {{do3,mi3}[speed:2] -,do5 sol4 mi5}
+T143 -> {{si2,re3}[speed:2] {si2,re3},sol5 {re5 si4}[speed:1] sol4}
+T144 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],sol5 do5 mi5}
+T145 -> {fa3 _ sol3,re5 fa5 la4 re5 si4 re5}
+T146 -> {do3 do3 do3,{fa#4,re5} {re5,fa#5} {fa#5,la5}}
+T147 -> {do3 re3 re2,mi5 do6 si5 sol5 la5 fa#5}
+T148 -> {{do3,mi3}[speed:2] -,do6 si5 do6 sol5 mi5 do5}
+T149 -> {fa3 _ sol3,{fa5 re5}[speed:1] la4 si4}
+T150 -> {{do3 si2 do3 re3 mi3 fa#3}[speed:3],{sol4,do5,mi5} mi5 _}
+T152 -> {{do3,mi3}[speed:2] -,sol5 {fa5 mi5 re5 do5}[speed:2]}
+T153 -> {do3 _ -,re5 la4 fa#5 re5 la5 fa#5}
+T154 -> {do3 _ -,re5 do#5 re5 fa#5 la5 fa#5}
+T155 -> {{si2,re3}[speed:2] -,sol5 si5 sol5 re5 si4 sol4}
+T156 -> {{mi3,sol3}[speed:2] -,{do5 sol4 mi5 do5}[speed:2] sol5}
+T157 -> {do3 _ -,mi5 re5 mi5 sol5 do6 sol5}
+T158 -> {sol2 _ -,si4 {re5 si4 la4 sol4}[speed:2]}
+T159 -> {do3 re3 re2,mi5 sol5 re5 do5 si4 la4}
+T160 -> {{do3,mi3}[speed:2] {do3,mi3},do5 si4 do5 mi5 sol4 do5}
+T161 -> {do3 do3 do3,{fa#4,re5} {fa#4,re5} {fa#4,re5}}
+T162 -> {{do3,sol3}[speed:2] {do3,mi3},mi5 re5 mi5 sol5 do6 sol5}
+T163 -> {{si2,re3}[speed:2] -,sol5 fa#5 sol5 re5 si4 sol4}
+T164 -> {{sol3 fa#3 sol3 re3 si2 sol3}[speed:3],re5 sol4 _}
+T165 -> {si2 _ -,re5 si4 sol4}
+T166 -> {{sol3,si3}[speed:2] -,{re5 si5 sol5 re5}[speed:2] si4}
+T167 -> {{do3,mi3}[speed:2] -,do5 {do5 re5}[speed:1] mi5}
+T168 -> {{do3,mi3}[speed:2] {mi3,sol3},sol5 {fa5 mi5 re5 do5}[speed:2]}
+T169 -> {do3 re3 re3,mi5 sol5 re5 sol5 la4 fa#5}
+T171 -> {{sol2,sol3}[speed:2] {si2,sol3},si4 do5 re5 mi5 fa5 re5}
+T173 -> {fa3 _ sol3,{fa5 la5}[speed:1] la4 {si4 re5}[speed:1]}
+T174 -> {{{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1] {{do3,mi3} sol3 _}[speed:1],sol4 do5 mi5}
+T175 -> {sol3 sol2 -,{mi5 do5 si4 re5}[speed:2] sol5}
+T176 -> {{si2,re3}[speed:2] {si2,re3},la5 sol5 si5 sol5 re5 sol5}

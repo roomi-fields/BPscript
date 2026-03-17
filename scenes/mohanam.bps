@@ -143,9 +143,9 @@ R2 -> lambda
 // ============================================================
 
 // Effets via captures — macros d'expression
-Str ?1 -> vel(110) ?1 vel(64) [mode:random]
-Step3Up ?1 ?2 ?3 -> vel(80) ?1 vel(95) ?2 vel(110) ?3 vel(64)
-Step3Dn ?1 ?2 ?3 -> vel(110) ?1 vel(95) ?2 vel(80) ?3 vel(64)
+Str ?1 -> ?1[vel:64] [mode:random, vel:110]
+Step3Up ?1 ?2 ?3 -> ?1[vel:95] ?2[vel:110] ?3[vel:64] [vel:80]
+Step3Dn ?1 ?2 ?3 -> ?1[vel:95] ?2[vel:80] ?3[vel:64] [vel:110]
 
 // Patterns ascendants (P = phrases montantes)
 P41 -> sa6 re6 ga6 pa6

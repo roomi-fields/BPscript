@@ -20,7 +20,7 @@ B"8 -> |c"4| |f4|
 B8 -> |c4| |f4|
 B'8 -> |c'4| |f4|
 C8 -> |d4| |e4|
-C'8 -> ${|e4|} &{|e4|}
+C'8 -> $ {|e4|} & {|e4|}
 
 -----
 
@@ -89,9 +89,9 @@ C'8 -> ${|e4|} &{|e4|}
 
 |z31| -> sib4 la4
 |z32| -> sol4 la4
-|z311| -> sib4 {la4 la4}[speed:1]
+|z311| -> sib4 {la4 la4} [speed:1]
 
-|o| -> sib4 {la4 sol4}[speed:1] [weight:3]
+|o| -> sib4 {la4 sol4} [speed:1] [weight:3]
 |o| |miny| -> |o1| |miny| [weight:1]
 |o| |miny| -> |o2| |miny| [weight:1]
 // NOTE: BP3 has right-context here: |o| (|z13|) --> |o3|
@@ -102,25 +102,25 @@ C'8 -> ${|e4|} &{|e4|}
 
 // --- Sous-grammaire 4 [mode:ord] --- variantes niveau 2
 
-|x1| -> {fa4 la4}[speed:1] do5 [mode:ord]
-|x2| -> fa4 {la4 do5}[speed:1]
-|x3| -> {fa4 sol4 la4 do5}[speed:2]
-|x4| -> {fa4 la4 sib4 do5}[speed:2]
+|x1| -> {fa4 la4} [speed:1] do5 [mode:ord]
+|x2| -> fa4 {la4 do5} [speed:1]
+|x3| -> {fa4 sol4 la4 do5} [speed:2]
+|x4| -> {fa4 la4 sib4 do5} [speed:2]
 
-|y1| -> fa4 {sol4 la4}[speed:1]
+|y1| -> fa4 {sol4 la4} [speed:1]
 |y2| -> {fa4 sol4}[speed:1] la4
-|y3| -> fa4 {la4 sib4}[speed:1]
-|y4| -> {fa4 sol4 la4 sib4}[speed:2]
-|y5| -> {fa4 la4 sol4 la4}[speed:2]
-|y6| -> {fa4 sol4 sib4 la4}[speed:2]
-|y7| -> {fa4 la4 sib4 la4}[speed:2]
-|y8| -> {fa4 sol4 fa4 la4}[speed:2]
+|y3| -> fa4 {la4 sib4} [speed:1]
+|y4| -> {fa4 sol4 la4 sib4} [speed:2]
+|y5| -> {fa4 la4 sol4 la4} [speed:2]
+|y6| -> {fa4 sol4 sib4 la4} [speed:2]
+|y7| -> {fa4 la4 sib4 la4} [speed:2]
+|y8| -> {fa4 sol4 fa4 la4} [speed:2]
 
 |w1| -> {la4 sib4}[speed:1] do5
-|w2| -> la4 {sib4 do5}[speed:1]
-|w3| -> {la4 sib4 do5 sib4}[speed:2]
-|w4| -> {la4 sol4 la4 do5}[speed:2]
-|w5| -> {la4 sib4 la4 do5}[speed:2]
+|w2| -> la4 {sib4 do5} [speed:1]
+|w3| -> {la4 sib4 do5 sib4} [speed:2]
+|w4| -> {la4 sol4 la4 do5} [speed:2]
+|w5| -> {la4 sib4 la4 do5} [speed:2]
 
 |z11| -> {fa4 mi4}[speed:1] fa4
 |z12| -> {fa4 sol4}[speed:1] fa4
@@ -128,30 +128,30 @@ C'8 -> ${|e4|} &{|e4|}
 |z14| -> mi4 fa4
 
 |z31| -> sib4 la4
-|z311| -> sib4 {la4 la4}[speed:1]
+|z311| -> sib4 {la4 la4} [speed:1]
 |z32| -> sol4 la4
-|z321| -> sol4 {la4 la4}[speed:1]
+|z321| -> sol4 {la4 la4} [speed:1]
 |z33| -> {la4 sol4}[speed:1] la4
 |z34| -> {la4 sib4}[speed:1] la4
-|z35| -> {la4 sol4 sib4 la4}[speed:2]
-|z36| -> {sib4 la4 sol4 la4}[speed:2]
+|z35| -> {la4 sol4 sib4 la4} [speed:2]
+|z36| -> {sib4 la4 sol4 la4} [speed:2]
 
 |z51| -> re5 do5
-|z511| -> re5 {do5 do5}[speed:1]
+|z511| -> re5 {do5 do5} [speed:1]
 |z52| -> sib4 do5
-|z521| -> sib4 {do5 do5}[speed:1]
+|z521| -> sib4 {do5 do5} [speed:1]
 |z53| -> {do5 sib4}[speed:1] do5
 |z54| -> {do5 re5}[speed:1] do5
-|z55| -> {do5 sib4 re5 do5}[speed:2]
-|z56| -> {re5 do5 sib4 do5}[speed:2]
-|z57| -> {do5 re5 do5 sib4}[speed:2]
+|z55| -> {do5 sib4 re5 do5} [speed:2]
+|z56| -> {re5 do5 sib4 do5} [speed:2]
+|z57| -> {do5 re5 do5 sib4} [speed:2]
 
-|o1| -> {do5 sib4 la4 sol4}[speed:2]
-|o2| -> {sib4 sib4 la4 sol4}[speed:2]
-|o3| -> {sib4 do5 sib4 la4}[speed:2]
+|o1| -> {do5 sib4 la4 sol4} [speed:2]
+|o2| -> {sib4 sib4 la4 sol4} [speed:2]
+|o3| -> {sib4 do5 sib4 la4} [speed:2]
 
 // Homomorphisme: mineur (= |y|) — pas applique, BPscript n'a pas [sub:] encore
-|miny| -> ${|y|}
+|miny| -> $ {|y|}
 
 -----
 

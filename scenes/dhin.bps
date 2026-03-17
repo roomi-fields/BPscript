@@ -23,14 +23,14 @@ S <> S192 [weight:5, meter:4+4+4+4/6]
 // NOTE: *(: X) = homomorphisme. Traduit comme &X (replay sans substitution).
 // L'implémentation de [sub:dhin] appliquera la substitution dha→ta, ge→ke, etc.
 
-S192 <> ${F48} ${V24} F'24 &{F48} &{V24} F24 [mode:random, weight:5]
-S96 <> ${V24} F'24 &{V24} F24 [weight:0]
-V24 <> ${V12} &{V12} [weight:0]
-V24 <> ${V12} &{V12} [weight:1]
+S192 <> $ {F48} $ {V24} F'24 & {F48} & {V24} F24 [mode:random, weight:5]
+S96 <> $ {V24} F'24 & {V24} F24 [weight:0]
+V24 <> $ {V12} & {V12} [weight:0]
+V24 <> $ {V12} & {V12} [weight:1]
 V24 <> Q24 [weight:0]
 V24 <> V12 V12 [weight:0]
 V24 <> B24 [weight:4]
-V12 <> ${B6} &{B6} [weight:0]
+V12 <> $ {B6} & {B6} [weight:0]
 V12 <> B12 [weight:1]
 
 -----

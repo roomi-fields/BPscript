@@ -55,6 +55,6 @@ when B>=1 Head -> Head goto(3,0) [K1]
 
 // --- Sous-grammaire 7 [mode:random] — effacement des variables ---
 
-U -> [mode:random]
+U ->  [mode:random]
 V ->
 Head ->

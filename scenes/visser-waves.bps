@@ -12,63 +12,63 @@
 
 // --- Sous-grammaire 1 [mode:ord] — structure et imbedding ---
 
-S -> tempo(0.8) Waves [mode:ord]
+S -> Waves [mode:ord, tempo:0.8]
 
-Waves -> Frase1 1 Frase1 Frase2 1/2 {retro transpose(12) Frase1} {rotate(2) transpose(1) Frase2} {transpose(-13) Frase3} 1/4 {transpose(-1) Frase1} Frase4 {retro transpose(-1) Frase1} {rotate(3) transpose(-11) Frase4} 1 Frase1 {keyxpand(C4,-1) Frase1} 1/2 {keyxpand(B3,-1) vel(40) M19, M24}[speed:2] 1/2 {keyxpand(A#3,-1) vel(40) M19, M24}[speed:2] 1/4 Frase5 {keyxpand(B3,-1) transpose(-1) Frase5} {keyxpand(C4,-1) Frase1} 1/2 {keyxpand(B3,-1) vel(40) M19, M24}[speed:2] 1/2 {keyxpand(A#3,-1) vel(40) M19, M24}[speed:2] 1 Frase6 1 Frase6 F1 B3 1 {vel(50) F1 B3} 2 {vel(40) F1}[speed:6]
+Waves -> Frase1 1 Frase1 Frase2 1/2 {Frase1[retro, transpose:12]} {Frase2[rotate:2, transpose:1]} {Frase3[transpose:-13]} 1/4 {Frase1[transpose:-1]} Frase4 {Frase1[retro, transpose:-1]} {Frase4[rotate:3, transpose:-11]} 1 Frase1 {keyxpand(C4,-1) Frase1} 1/2 {keyxpand(B3,-1)[vel:40] M19,M24} [speed:2] 1/2 {keyxpand(A#3,-1) vel(40) M19, M24}[speed:2] 1/4 Frase5 {keyxpand(B3,-1) transpose(-1) Frase5} {keyxpand(C4,-1) Frase1} 1/2 {keyxpand(B3,-1) vel(40) M19, M24}[speed:2] 1/2 {keyxpand(A#3,-1) vel(40) M19, M24}[speed:2] 1 Frase6 1 Frase6 F1 B3 1 {vel(50) F1 B3} 2 {vel(40) F1}[speed:6]
 
-Frase1 -> legato(100) {velcont vel(50) M1 M2 M3 M4 vel(60) M5 M6 vel(50)}
-Frase2 -> legato(100) {velcont vel(50) transpose(2) M7 M8 vel(60) M9 M10 M11 M12 vel(50)}
-Frase3 -> legato(100) {velcont vel(50) transpose(2) M13 M14 M15 vel(60) M16 M17 M18 vel(50)}
-Frase4 -> legato(100) {velcont vel(50) transpose(2) M19 M20 M21 M22 vel(60) M23 M24 vel(50)}
-Frase5 -> legato(100) {velcont vel(50) transpose(2) M25 vel(60) M26 M27 M28 M29 M30 vel(50)}
-Frase6 -> legato(100) {velcont vel(50) transpose(2) M31 vel(60) M32 M33 M34 M35 M36 M37 M38 vel(50)}
+Frase1 -> {M1[velcont, vel:50] M2 M3 M4[vel:60] M5 M6[vel:50]} [legato:100]
+Frase2 -> {M7[velcont, vel:50, transpose:2] M8[vel:60] M9 M10 M11 M12[vel:50]} [legato:100]
+Frase3 -> {M13[velcont, vel:50, transpose:2] M14 M15[vel:60] M16 M17 M18[vel:50]} [legato:100]
+Frase4 -> {M19[velcont, vel:50, transpose:2] M20 M21 M22[vel:60] M23 M24[vel:50]} [legato:100]
+Frase5 -> {M25[vel:60, velcont, vel:50, transpose:2] M26 M27 M28 M29 M30[vel:50]} [legato:100]
+Frase6 -> {M31[vel:60, velcont, vel:50, transpose:2] M32 M33 M34 M35 M36 M37 M38[vel:50]} [legato:100]
 
 // Group 1: M1 opens {5, — M6 closes }
 M1 -> { C3 F#3
-M2 -> { transpose(13) C3 F#3
-M3 -> { transpose(1) C3 F#3
-M4 -> F2 B3 }[speed:3]
-M5 -> F2 B3 }[speed:3]
-M6 -> F1 B3 }[speed:5]
+M2 -> { C3 F#3 [transpose:13]
+M3 -> { C3 F#3 [transpose:1]
+M4 -> F2 B3 } [speed:3]
+M5 -> F2 B3 } [speed:3]
+M6 -> F1 B3 } [speed:5]
 
 // Group 2: M7 opens {5, — M12 closes }
-M7 -> { vel(60) C3 F#3
-M8 -> { transpose(13) C3 F#3
-M9 -> { transpose(1) C3 {M8 M10} F#3
-M10 -> F2 B3 }[speed:3]
-M11 -> F2 B3 }[speed:3]
-M12 -> F1 B3 }[speed:5]
+M7 -> { C3 F#3 [vel:60]
+M8 -> { C3 F#3 [transpose:13]
+M9 -> { C3 {M8 M10} F#3 [transpose:1]
+M10 -> F2 B3 } [speed:3]
+M11 -> F2 B3 } [speed:3]
+M12 -> F1 B3 } [speed:5]
 
 // Group 3: M13 opens {5, — M18 closes }
-M13 -> { vel(60) C3 F#3
-M14 -> { transpose(13) C3 {transpose(1) M13 M17} F#3
-M15 -> { transpose(1) C3 {M14 M16} F#3
-M16 -> F2 B3 }[speed:5]
-M17 -> F2 B3 }[speed:5]
-M18 -> F4 B3 }[speed:5]
+M13 -> { C3 F#3 [vel:60]
+M14 -> { C3 {M13[transpose:1] M17} F#3 [transpose:13]
+M15 -> { C3 {M14 M16} F#3 [transpose:1]
+M16 -> F2 B3 } [speed:5]
+M17 -> F2 B3 } [speed:5]
+M18 -> F4 B3 } [speed:5]
 
 // Group 4: M19 opens {9, — M24 closes }
 M19 -> { C3 F#3
-M20 -> { transpose(13) C3 {transpose(1) M13 M17} F#3
-M21 -> { transpose(1) C3 {M14 M16} F#3
-M22 -> F2 {transpose(-11) M1 M2 M3 M4 M5 M6}[speed:18] B3 }[speed:9]
-M23 -> F2 B3 }[speed:9]
-M24 -> F1 B3 }[speed:9]
+M20 -> { C3 {M13[transpose:1] M17} F#3 [transpose:13]
+M21 -> { C3 {M14 M16} F#3 [transpose:1]
+M22 -> F2 {M1[transpose:-11] M2 M3 M4 M5 M6} [speed:18] B3 }[speed:9]
+M23 -> F2 B3 } [speed:9]
+M24 -> F1 B3 } [speed:9]
 
 // Group 5: M25 opens {15, — M30 closes }
-M25 -> { vel(60) C3 F#3
-M26 -> { transpose(13) C3 {transpose(1) M1 M5} F#3
-M27 -> { transpose(1) C3 {M2 M4} F#3
-M28 -> F2 {transpose(-11) M1 {transpose(-11) M1 M5 M1 M5 M3 M6}[speed:30] M2 M3 M4 M5 M6}[speed:30] B3 }[speed:15]
-M29 -> F2 B3 }[speed:15]
-M30 -> F1 B3 }[speed:15]
+M25 -> { C3 F#3 [vel:60]
+M26 -> { C3 {M1[transpose:1] M5} F#3 [transpose:13]
+M27 -> { C3 {M2 M4} F#3 [transpose:1]
+M28 -> F2[transpose:-11] { M1 {M1[transpose:-11] M5 M1 M5 M3 M6} [speed:30] M2 M3 M4 M5 M6}[speed:30] B3 }[speed:15]
+M29 -> F2 B3 } [speed:15]
+M30 -> F1 B3 } [speed:15]
 
 // Group 6: M31 opens {6, — M38 closes }
 M31 -> { C3 F#3
-M32 -> { transpose(13) C3 F#3
-M33 -> { transpose(1) C3 F#3
-M34 -> { transpose(1) C3 F#3
-M35 -> F2 B3 }[speed:5]
-M36 -> F2 B3 }[speed:5]
-M37 -> F1 B3 }[speed:5]
-M38 -> F1 B3 }[speed:6]
+M32 -> { C3 F#3 [transpose:13]
+M33 -> { C3 F#3 [transpose:1]
+M34 -> { C3 F#3 [transpose:1]
+M35 -> F2 B3 } [speed:5]
+M36 -> F2 B3 } [speed:5]
+M37 -> F1 B3 } [speed:5]
+M38 -> F1 B3 } [speed:6]

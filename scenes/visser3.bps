@@ -32,14 +32,14 @@ M11 -> K
 
 A -> C3 [mode:ord]
 B -> {Tr11 A}
-C -> {Tr5 {A, B}}
+C -> {Tr5 {A,B}}
 D -> {Tr1 A C}
-E -> {Tr7 {A -, D -}}
+E -> {Tr7 {A -,D -}}
 F -> {Tr6 A E D}
 G -> {Tr11 {A B C D . E F E D C B A}}
 H -> {TrN11 {G F E D C B A}}
 I -> {Tr11 G}
-J -> {G F, Tr5 G F}
+J -> {G F,Tr5 G F}
 K -> {TrN11 B C D}
 
 -----

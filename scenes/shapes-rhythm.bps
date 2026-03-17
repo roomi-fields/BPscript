@@ -23,25 +23,25 @@
 
 S -> Route script(Beep) Part1 Gap12 Part2 Gap23 Part3 Gap34 Part4 Gap45 Part5 Gap56 Part6 Gap67 Part7 Gap78 Part8 Gap89 Part9 [mode:ord]
 
-Part1 -> script(Tick cycle OFF) Route - vel(127) script(Tick cycle ON) script(Reset tick cycle) {Tp1 Tp1 Tp1 Tp1 Tp1 Tp1 Tp1 Tp1,P1} {Tp1,Accord5,sol4 15}
-Part2 -> Sablier vel(127) {Tp2 Tp2 Tp2 Tp2 Tp2,P2} {Tp3,Dha1 15}
-Part3 -> Maison vel(35) {Tp3 Tp3 Tp3 Tp3,P3} vel(45) {Tp3,Dha5}
-Part4 -> Toit vel(127) {Tp3 Tp3 Tp3 Tp3 Tp3 Tp3,P4}
-Part5 -> Drapeau vel(70) {Tp3 Tp3 Tp3 Tp3,P5} {Tp3,Chhe 15}
-Part6 -> CerfVolant vel(127) {Tp3 Tp3 Tp3 Tp3,P6} {Tp3,Tin ---}
-Part7 -> Guimbarde vel(127) {Tp3 Tp3 Tp3 Tp3,P7} PedalOn {Tp3,Dha4 15}
-Part8 -> Hippocampe vel(90) {Tp3 Tp3 Tp3,P8} {Tp3,la5 31}
-Part9 -> VaisseauVolant vel(90) {Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 t3 t3 t3 t3,P9}
+Part1 -> script(Tick cycle OFF) Route -[vel:127] script(Tick cycle ON) script(Reset tick cycle) {Tp1 Tp1 Tp1 Tp1 Tp1 Tp1 Tp1 Tp1,P1} {Tp1,Accord5,sol4 15}
+Part2 -> Sablier[vel:127] {Tp2 Tp2 Tp2 Tp2 Tp2,P2} {Tp3,Dha1 15}
+Part3 -> Maison[vel:35] {Tp3 Tp3 Tp3 Tp3,P3}[vel:45] {Tp3,Dha5}
+Part4 -> Toit[vel:127] {Tp3 Tp3 Tp3 Tp3 Tp3 Tp3,P4}
+Part5 -> Drapeau[vel:70] {Tp3 Tp3 Tp3 Tp3,P5} {Tp3,Chhe 15}
+Part6 -> CerfVolant[vel:127] {Tp3 Tp3 Tp3 Tp3,P6} {Tp3,Tin ---}
+Part7 -> Guimbarde[vel:127] {Tp3 Tp3 Tp3 Tp3,P7} PedalOn {Tp3,Dha4 15}
+Part8 -> Hippocampe[vel:90] {Tp3 Tp3 Tp3,P8} {Tp3,la5 31}
+Part9 -> VaisseauVolant[vel:90] {Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 Tp3 t3 t3 t3 t3,P9}
 
-Gap12 -> vel(80) Conque {Tp2,- pitchbend(0) pitchcont mod(0) modcont si3_____ mod(16383) pitchbend(8192) Sablier -} mod(0)
-Gap23 -> Maison {Tp3,16,vel(2) velcont - fa3 _ _ mi3 fa#3 fa3 mi3 sol3 fa3 sol#3 do3 _ _ _ _ vel(40)}
-Gap34 -> Toit vel(100) {Tp3,- sol#2 sol#2 sol#2}
-Gap45 -> Toit vel(100) {Tp3 Tp3,- sol2 - sol2 sol2 - sol2 Drapeau -}
+Gap12 -> Conque {Tp2,-[pitchbend:0, pitchcont, mod:0, modcont] si3_____[mod:16383, pitchbend:8192] Sablier -}[mod:0] [vel:80]
+Gap23 -> Maison {Tp3,16,-[vel:2, velcont] fa3 _ _ mi3 fa#3 fa3 mi3 sol3 fa3 sol#3 do3 _ _ _ _[vel:40]}
+Gap34 -> Toit[vel:100] {Tp3,- sol#2 sol#2 sol#2}
+Gap45 -> Toit[vel:100] {Tp3 Tp3,- sol2 - sol2 sol2 - sol2 Drapeau -}
 // NOTE: BP3 original uses [{...}] out-time synchronization bracket
-Gap56 -> CerfVolant vel(60) {Tp3,- {6,do4,- do5} -} {Tp3,PedalOn vel(50) velcont do2 sol#2 fa#2 do#3 PedalOff - vel(90)}
-Gap67 -> Guimbarde {Tp3,{vel(40) do3___,vel(40) velcont -fa3 fa3_ vel(60),---fa2}}
+Gap56 -> CerfVolant[vel:60] {Tp3,- {6,do4,- do5} -} {Tp3,PedalOn[vel:50, velcont] do2 sol#2 fa#2 do#3 PedalOff -[vel:90]}
+Gap67 -> Guimbarde {Tp3,{do3___[vel:40],-fa3[vel:40, velcont] fa3_[vel:60],---fa2}}
 Gap78 -> {Tp3,7 PedalOff -}
-Gap89 -> vel(110) Michiko {Tp3,- PedalOn press(0) presscont pitchbend(8192) pitchcont re5______ press(127) pitchbend(12000) - PedalOff} pitchbend(8192) press(0)
+Gap89 -> Michiko {Tp3,- PedalOn[press:0, presscont, pitchbend:8192, pitchcont] re5______[press:127, pitchbend:12000] - PedalOff}[pitchbend:8192, press:0] [vel:110]
 
 -----
 
@@ -118,13 +118,13 @@ Gap8 -> la5 - - - - -
 
 // --- Sous-grammaire 10 [mode:sub1] — Part 9 (progressive layering) ---
 
-P9 -> {M1 M1 M1 M1 M2 M2 M2 M2 M2 M2 M2 M2 M3 M3 M3 M3 M3 M3 M3 M3 M4 M4 M4 M4 M4 M4 M4 M4 M5 M5 M5 M5 M5 M5 M5 M5 M6 M6 M6 M6 M6 M6 M6 M6,vel(10) {re3,mi3,fa3}} [mode:sub1]
+P9 -> {M1 M1 M1 M1 M2 M2 M2 M2 M2 M2 M2 M2 M3 M3 M3 M3 M3 M3 M3 M3 M4 M4 M4 M4 M4 M4 M4 M4 M5 M5 M5 M5 M5 M5 M5 M5 M6 M6 M6 M6 M6 M6 M6 M6,{re3,mi3,fa3}[vel:10]} [mode:sub1]
 M1 -> Smriti
 M2 -> {Smriti,Olivier}
 M3 -> {Smriti,Olivier,Vijayshree}
 M4 -> {Smriti,Olivier,Vijayshree,Arindam}
 M5 -> {Smriti,Olivier,Vijayshree,Arindam,Somenath}
-M6 -> {Smriti,Olivier,Vijayshree,Arindam,Somenath,vel(127) Suresh}
+M6 -> {Smriti,Olivier,Vijayshree,Arindam,Somenath,Suresh[vel:127]}
 
 -----
 
@@ -192,7 +192,7 @@ Chhe -> BigTik
 // --- Sous-grammaire 15 [mode:sub1] — Terminal sound objects ---
 // Typical cases where _staccato() should be used
 
-Dha1 -> {1,{si3,si4}---} [mode:sub1]
+Dha1 -> {1,{si3,si4} ---} [mode:sub1]
 Su -> do6---
 Sm -> fa5---
 Ol -> mi6---
@@ -201,10 +201,10 @@ Vi -> re6-
 Ar -> mi5---
 An -> fa6---
 Dha4 -> {fa2,do4}
-Tick32 -> vel(40) do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3
+Tick32 -> do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 do3 [vel:40]
 Tik -> do7
 Tik2 -> {do5,do6}
-Tik3 -> {vel(15) sol6,vel(110) do7}
+Tik3 -> {sol6[vel:15],do7[vel:110]}
 BigTik -> {do6,do8}
 BigTik2 -> {fa3,fa4}
 

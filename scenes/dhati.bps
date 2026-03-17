@@ -94,7 +94,7 @@ S -> cycle16_4 {16,Qaida} [mode:rnd, weight:0]
 S -> cycle16_4 {16,Lahra,Qaida}
 S <- Qaida
 // BP3: Qaida <-> (=+ S64 ;) — homomorphisme (* omis)
-Qaida <> ${plus S64 fin} [weight:1]
+Qaida <> $ {plus S64 fin} [weight:1]
 
 -----
 
@@ -110,30 +110,30 @@ S48 <> M40 O8 [weight:100]
 S50 <> M18 plus S32 [weight:500]
 S50 <> M34 plus S16 [weight:100]
 // BP3: S50 <-> M18 + * (=+ N14 ) O18 — homomorphisme (* omis)
-S50 <> M18 plus ${plus N14} O18 [weight:100]
+S50 <> M18 plus $ {plus N14} O18 [weight:100]
 S16 <> O16 [weight:100]
 // BP3: S50 <-> V10 A'8-2 * (= N18 +) + O16 — homomorphisme (* omis)
-S50 <> V10 A'8_2 ${N18 plus} plus O16 [weight:100]
+S50 <> V10 A'8_2 $ {N18 plus} plus O16 [weight:100]
 // BP3: S50 <-> M20 * (= N14 +) + O16 — homomorphisme (* omis)
-S50 <> M20 ${N14 plus} plus O16 [weight:100]
+S50 <> M20 $ {N14 plus} plus O16 [weight:100]
 S52 <> V28 A8_2 O18 [weight:100]
 S52 <> M20 plus S32 [weight:100]
 S40 <> M8 plus S32 [weight:100]
 // BP3: S32 <-> * (=+ N16 +) + S16 — homomorphisme (* omis)
-S32 <> ${plus N16 plus} plus S16 [weight:40]
+S32 <> $ {plus N16 plus} plus S16 [weight:40]
 // BP3: S32 <-> * (={8,+ V12} A8 +) + O16 — homomorphisme (* omis)
-S32 <> ${{8,plus V12} A8 plus} plus O16 [weight:100]
+S32 <> $ {{8,plus V12} A8 plus} plus O16 [weight:100]
 // BP3: S32 <-> * (={8,+ A16} V8 +) + O16 — homomorphisme (* omis)
-S32 <> ${{8,plus A16} V8 plus} plus O16 [weight:100]
+S32 <> $ {{8,plus A16} V8 plus} plus O16 [weight:100]
 // BP3: S32 <-> * (={16,+ V24 +}) + O16 — homomorphisme (* omis)
-S32 <> ${{16,plus V24 plus}} plus O16 [weight:100]
+S32 <> $ {{16,plus V24 plus}} plus O16 [weight:100]
 // BP3: S32 <-> * (={16,+ N'16 + A16 +}) + O16 — homomorphisme (* omis)
-S32 <> ${{16,plus N'16 plus A16 plus}} plus O16 [weight:100]
+S32 <> $ {{16,plus N'16 plus A16 plus}} plus O16 [weight:100]
 // BP3: S32 <-> * (=+ N14 ) O18 — homomorphisme (* omis)
-S32 <> ${plus N14} O18 [weight:40]
+S32 <> $ {plus N14} O18 [weight:40]
 S34 <> O34 [weight:100]
 // BP3: S34 <-> * (= N18 +) + S16 — homomorphisme (* omis)
-S34 <> ${N18 plus} plus S16 [weight:100]
+S34 <> $ {N18 plus} plus S16 [weight:100]
 S16 <> {16,plus A16 O16 fin} [weight:5]
 
 -----
