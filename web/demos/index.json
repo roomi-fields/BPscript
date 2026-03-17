@@ -1,0 +1,121 @@
+[
+  {
+    "id": "scale",
+    "title": "Scale",
+    "category": "basics",
+    "description": "Gamme ascendante et descendante",
+    "file": "scale.bps"
+  },
+  {
+    "id": "arpeggio",
+    "title": "Arpeggio",
+    "category": "basics",
+    "description": "Accords arpégés avec contrôle de vélocité",
+    "file": "arpeggio.bps"
+  },
+  {
+    "id": "crescendo",
+    "title": "Crescendo",
+    "category": "basics",
+    "description": "Dynamique progressive crescendo/decrescendo",
+    "file": "crescendo.bps"
+  },
+  {
+    "id": "silence-rhythm",
+    "title": "Silence Rhythm",
+    "category": "basics",
+    "description": "Le silence comme élément structurant",
+    "file": "silence-rhythm.bps"
+  },
+  {
+    "id": "tied-notes",
+    "title": "Tied Notes",
+    "category": "basics",
+    "description": "Legato et liaisons avec ~",
+    "file": "tied-notes.bps"
+  },
+  {
+    "id": "simultaneous",
+    "title": "Simultaneous",
+    "category": "basics",
+    "description": "Accords avec ! (événements simultanés)",
+    "file": "simultaneous.bps"
+  },
+  {
+    "id": "speed-tempo",
+    "title": "Speed & Tempo",
+    "category": "basics",
+    "description": "Accélération et ralentissement avec [speed:N]",
+    "file": "speed-tempo.bps"
+  },
+  {
+    "id": "random-melody",
+    "title": "Random Melody",
+    "category": "generative",
+    "description": "Choix aléatoire de motifs avec poids",
+    "file": "random-melody.bps"
+  },
+  {
+    "id": "substitution",
+    "title": "Substitution",
+    "category": "generative",
+    "description": "Réécriture en chaîne, multi-sous-grammaires",
+    "file": "substitution.bps"
+  },
+  {
+    "id": "flags-counter",
+    "title": "Flags Counter",
+    "category": "generative",
+    "description": "Guards, mutations de flags, compteurs",
+    "file": "flags-counter.bps"
+  },
+  {
+    "id": "poly-two-voices",
+    "title": "Two Voices",
+    "category": "polymetric",
+    "description": "Polymétrie simple : deux voix",
+    "file": "poly-two-voices.bps"
+  },
+  {
+    "id": "poly-three",
+    "title": "Three Layers",
+    "category": "polymetric",
+    "description": "Trois voix polymétriques superposées",
+    "file": "poly-three.bps"
+  },
+  {
+    "id": "polymetric-rhythm",
+    "title": "3 vs 4 vs 5",
+    "category": "polymetric",
+    "description": "Polyrythmie 3 contre 4 contre 5",
+    "file": "polymetric-rhythm.bps"
+  },
+  {
+    "id": "canon",
+    "title": "Canon",
+    "category": "polymetric",
+    "description": "Motif en canon avec décalage temporel",
+    "file": "canon.bps"
+  },
+  {
+    "id": "raga-pentatonic",
+    "title": "Raga Mohanam",
+    "category": "raga",
+    "description": "Pentatonique en sargam (sa re ga pa dha)",
+    "file": "raga-pentatonic.bps"
+  },
+  {
+    "id": "raga-alap",
+    "title": "Raga Alap",
+    "category": "raga",
+    "description": "Exploration lente avec variations aléatoires",
+    "file": "raga-alap.bps"
+  },
+  {
+    "id": "backtick-sketch",
+    "title": "Backtick Sketch",
+    "category": "advanced",
+    "description": "Code embarqué SuperCollider (nécessite bridge)",
+    "file": "backtick-sketch.bps"
+  }
+]

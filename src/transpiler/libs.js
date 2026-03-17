@@ -5,25 +5,79 @@
  * Convention: @file → lib/file.json
  *             @file.key → lib/file.json → entry "key"
  *             @file.key:runtime → load + bind to runtime
+ *
+ * Browser-compatible: use registerLib() / registerAll() to pre-load libs.
+ * Node.js fallback: readFileSync if no registry entry found.
  */
 
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+// Registry: pre-loaded libs (browser or Node pre-registration)
+const registry = {};
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const LIB_DIR = join(__dirname, '../../lib');
-
-// Cache loaded libs
+// Cache loaded libs (from filesystem or registry)
 const cache = {};
+
+/**
+ * Register a single lib by name (e.g. "controls" → contents of lib/controls.json).
+ */
+function registerLib(name, data) {
+  registry[name] = data;
+  cache[name] = data;  // also populate cache
+}
+
+/**
+ * Register multiple libs at once.
+ * @param {Object} libs - { name: data, ... }
+ */
+function registerAll(libs) {
+  for (const [name, data] of Object.entries(libs)) {
+    registerLib(name, data);
+  }
+}
+
+/**
+ * Clear all registered libs and cache (for testing).
+ */
+function clearRegistry() {
+  for (const k of Object.keys(registry)) delete registry[k];
+  for (const k of Object.keys(cache)) delete cache[k];
+}
+
+// Node.js filesystem fallback (only available in Node)
+let _readFileSync = null;
+let _LIB_DIR = null;
+
+try {
+  // Dynamic import of Node.js modules — will fail silently in browser
+  const fs = await import('fs');
+  const url = await import('url');
+  const path = await import('path');
+  _readFileSync = fs.readFileSync;
+  const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+  _LIB_DIR = path.join(__dirname, '../../lib');
+} catch {
+  // Browser environment — no filesystem access, registry only
+}
+
+const LIB_DIR = _LIB_DIR;
 
 function loadJsonFile(name) {
   if (cache[name]) return cache[name];
-  try {
-    const data = JSON.parse(readFileSync(join(LIB_DIR, name + '.json'), 'utf-8'));
-    cache[name] = data;
-    return data;
-  } catch {}
+
+  // Try registry first
+  if (registry[name]) {
+    cache[name] = registry[name];
+    return registry[name];
+  }
+
+  // Node.js filesystem fallback
+  if (_readFileSync && _LIB_DIR) {
+    try {
+      const data = JSON.parse(_readFileSync(_LIB_DIR + '/' + name + '.json', 'utf-8'));
+      cache[name] = data;
+      return data;
+    } catch {}
+  }
+
   return null;
 }
 
@@ -96,4 +150,4 @@ function loadLibsFromDirectives(directives) {
   return ctx;
 }
 
-export { loadLib, loadLibsFromDirectives, LIB_DIR };
+export { loadLib, loadLibsFromDirectives, registerLib, registerAll, clearRegistry, LIB_DIR };

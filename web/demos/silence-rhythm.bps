@@ -1,0 +1,10 @@
+// Silence Rhythm — motif rythmique avec silences
+
+@core
+@controls
+@alphabet.western:browser
+
+S -> Pattern Pattern Pattern Coda [mode:ord]
+
+Pattern -> [vel:100]C4 - E4 - [vel:80]G4 C5 - -
+Coda -> [vel:110]C5 _ _ _

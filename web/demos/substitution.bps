@@ -1,0 +1,16 @@
+// Substitution — réécriture en chaîne
+
+@core
+@controls
+@alphabet.western:browser
+
+// Structure
+S -> Phrase1 Phrase2 [mode:ord]
+
+-----
+
+// Expansion
+Phrase1 -> [vel:90]C4 D4 E4 F4 [mode:random]
+Phrase1 -> [vel:80]E4 F4 G4 A4
+Phrase2 -> [vel:100]G4 F4 E4 D4 C4 _ _
+Phrase2 -> [vel:70]A4 G4 F4 E4 D4 C4 _

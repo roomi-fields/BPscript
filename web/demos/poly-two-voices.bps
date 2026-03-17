@@ -1,0 +1,7 @@
+// Two Voices — polymétrie simple
+
+@core
+@controls
+@alphabet.western:browser
+
+S -> {[vel:90]C4 E4 G4 C5, [vel:60]C3 G3 C3 G3 C3 G3} [mode:ord]

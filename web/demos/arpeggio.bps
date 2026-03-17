@@ -1,0 +1,12 @@
+// Arpeggio — accords arpégés avec vélocité
+
+@core
+@controls
+@alphabet.western:browser
+
+S -> Arp1 Arp2 Arp3 Final [mode:ord]
+
+Arp1 -> [vel:100]C4 E4 G4 C5 [vel:70]G4 E4 C4 -
+Arp2 -> [vel:100]D4 F#4 A4 D5 [vel:70]A4 F#4 D4 -
+Arp3 -> [vel:100]E4 G#4 B4 E5 [vel:70]B4 G#4 E4 -
+Final -> [vel:110]C4 E4 G4 C5 _ _ _

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bol Processor 3 — Web</title>
+<title>BPscript</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; }
@@ -121,8 +121,45 @@
     white-space: pre-wrap;
   }
   .output-panel.active { display: block; }
-  #outputContent { color: #00ff88; }
+  #outputContent { color: #00ff88; overflow-x: auto; }
   #messagesContent { color: #ffaa00; }
+
+  /* Timeline visualization */
+  .timeline { padding: 8px 12px; }
+  .tl-voice { margin-bottom: 6px; }
+  .tl-voice-label {
+    font-size: 10px; color: #666; font-family: 'Consolas', monospace;
+    padding: 0 0 2px 0;
+  }
+  .tl-track {
+    display: flex; height: 26px; border-radius: 3px; overflow: hidden;
+  }
+  .tl-block {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: 'Consolas', monospace;
+    color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    padding: 0 3px; min-width: 1px; border-right: 1px solid rgba(0,0,0,0.15);
+  }
+  .tl-block.note-a { background: #e94560; }
+  .tl-block.note-b { background: #c73a52; }
+  .tl-block.gap { background: transparent; }
+  .tl-ctrl-lane {
+    display: flex; height: 14px; position: relative;
+  }
+  .tl-ctrl-mark {
+    position: absolute; font-size: 9px; color: #4a90d9;
+    font-family: 'Consolas', monospace; white-space: nowrap;
+    border-left: 1px solid #4a90d9; padding-left: 3px;
+    top: 0; height: 100%;
+  }
+  .timeline-axis {
+    display: flex; height: 14px; margin-top: 4px;
+    position: relative; font-size: 9px; color: #555;
+  }
+  .timeline-axis .tick {
+    position: absolute; border-left: 1px solid #333;
+    padding-left: 3px; height: 100%;
+  }
 
   /* Description bar */
   .desc-bar {
@@ -138,6 +175,32 @@
   ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #1a4a80; }
 
+  /* Live mode indicator */
+  button.live-active { background: #00ff88; color: #1a1a2e; font-weight: bold; }
+  .live-indicator {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #00ff88; margin-right: 6px; animation: pulse 1s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  /* Libs panel */
+  .libs-list {
+    width: 160px; min-width: 160px; border-right: 1px solid #0f3460;
+    overflow-y: auto; background: #0d1b2a;
+  }
+  .libs-list .lib-item {
+    padding: 3px 10px; font-size: 0.85em; cursor: pointer;
+    border-left: 3px solid transparent; color: #888; line-height: 1.3;
+  }
+  .libs-list .lib-item:hover { background: #16213e; color: #ccc; }
+  .libs-list .lib-item.active { border-left-color: #e94560; color: #e0e0e0; background: #16213e; }
+  .libs-list .lib-item .size { font-size: 0.75em; color: #555; }
+  .libs-detail {
+    flex: 1; overflow: auto; padding: 12px;
+    font-family: 'Consolas', 'Courier New', monospace; font-size: 12px;
+    white-space: pre-wrap; color: #00ff88;
+  }
+
   /* Resize handle */
   .resize-handle {
     height: 4px; background: #0f3460; cursor: ns-resize;
@@ -150,8 +213,8 @@
   <!-- Sidebar: Grammar Library -->
   <div class="sidebar">
     <div class="sidebar-header">
-      <h2>Grammar Library</h2>
-      <input type="text" id="searchInput" placeholder="Search grammars..." oninput="filterLibrary()">
+      <h2>Demos</h2>
+      <input type="text" id="searchInput" placeholder="Search demos..." oninput="filterLibrary()">
     </div>
     <div class="library-list" id="libraryList">
       <div style="padding: 16px; color: #666; font-size: 0.85em;">Loading library...</div>
@@ -161,15 +224,20 @@
   <!-- Main Content -->
   <div class="main">
     <div class="top-bar">
-      <h1>Bol Processor 3</h1>
+      <h1>BPscript</h1>
       <div class="spacer"></div>
       <span id="status">Loading WASM module...</span>
     </div>
 
     <div class="toolbar">
       <button id="produceBtn" onclick="produce()" disabled>Produce</button>
-      <button id="playBtn" class="secondary" onclick="playMidi()" disabled>Play</button>
-      <button id="stopBtn" class="secondary" onclick="stopPlayback()" style="display:none;">Stop</button>
+      <button id="playBtn" class="secondary" onclick="playOnce()" disabled>Play</button>
+      <button id="loopBtn" class="secondary" onclick="playLoop()" disabled>Loop</button>
+      <button id="stopBtn" class="secondary" onclick="stopPlayback()" disabled>Stop</button>
+      <label style="display:flex;align-items:center;gap:4px;font-size:0.8em;color:#888;cursor:pointer;">
+        <input type="checkbox" id="rederiveChk" checked> re-derive
+      </label>
+      <button id="liveBtn" class="secondary" onclick="toggleLive()" disabled>Live</button>
       <button id="initBtn" class="secondary" onclick="reinit()" disabled>Re-init</button>
       <button class="secondary" onclick="clearEditor()">Clear</button>
     </div>
@@ -180,9 +248,7 @@
       <!-- Editor tabs -->
       <div class="editor-tabs">
         <div class="editor-tab active" onclick="switchEditorTab('bpscript')">BPscript</div>
-        <div class="editor-tab" onclick="switchEditorTab('grammar')">Grammar</div>
-        <div class="editor-tab" onclick="switchEditorTab('alphabet')">Alphabet</div>
-        <div class="editor-tab" onclick="switchEditorTab('settings')">Settings</div>
+        <div class="editor-tab" onclick="switchEditorTab('grammar')">Grammar (BP3)</div>
       </div>
       <div class="editor-panels">
         <div class="editor-panel active" id="panel-bpscript">
@@ -212,10 +278,12 @@ S -> C4 D4 E4 F4 G4</textarea>
       <div class="output-tabs">
         <div class="output-tab active" onclick="switchOutputTab('output')">Output</div>
         <div class="output-tab" id="messagesTab" onclick="switchOutputTab('messages')">Messages</div>
+        <div class="output-tab" onclick="switchOutputTab('libs'); loadLibsPanel()">Libraries</div>
       </div>
       <div class="output-panels">
         <div class="output-panel active" id="outputContent">(not yet produced)</div>
         <div class="output-panel" id="messagesContent">(no messages)</div>
+        <div class="output-panel" id="libsContent" style="display:flex;gap:0;padding:0;"></div>
       </div>
     </div>
   </div>
@@ -226,23 +294,26 @@ S -> C4 D4 E4 F4 G4</textarea>
 let bp3 = null;
 let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_load_settings, bp3_produce, bp3_get_result, bp3_get_messages;
 let bp3_get_midi_events, bp3_get_midi_event_count;
+let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params;
 let libraryData = [];
 let activeGrammar = null;
 let engineReady = false;
 let lastMidiEvents = null;
+let lastTimedTokens = null;
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
+let dispatcher = null;
 
 /* ---- Library ---- */
 async function loadLibrary() {
   try {
-    const resp = await fetch('../bp3-engine/library/index.json');
+    const resp = await fetch('demos/index.json');
     libraryData = await resp.json();
     renderLibrary(libraryData);
   } catch(e) {
     document.getElementById('libraryList').innerHTML =
-      '<div style="padding:16px;color:#ff6b6b;font-size:0.85em;">Failed to load library: ' + e.message + '</div>';
+      '<div style="padding:16px;color:#ff6b6b;font-size:0.85em;">Failed to load demos: ' + e.message + '</div>';
   }
 }
 
@@ -255,12 +326,13 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tabla', 'western', 'experimental', 'examples'];
+  const categoryOrder = ['basics', 'generative', 'polymetric', 'raga', 'advanced'];
   const categoryLabels = {
-    tabla: 'Tabla / Indian',
-    western: 'Western / Classical',
-    experimental: 'Experimental',
-    examples: 'Examples / Tutorial'
+    basics: 'Basics',
+    generative: 'Generative',
+    polymetric: 'Polymetric',
+    raga: 'Raga / Indian',
+    advanced: 'Advanced'
   };
 
   items.forEach(item => {
@@ -275,8 +347,8 @@ function renderLibrary(items) {
     groups[cat].forEach(item => {
       const activeClass = activeGrammar && activeGrammar.id === item.id ? ' active' : '';
       html += `<div class="grammar-item${activeClass}" onclick="loadFromLibrary('${item.id}')" data-id="${item.id}">
-        <div class="title">${escHtml(item.title)} <span class="mode-badge">${item.mode}</span></div>
-        ${item.description ? `<div class="meta">${escHtml(item.description.substring(0, 60))}${item.description.length > 60 ? '...' : ''}</div>` : ''}
+        <div class="title">${escHtml(item.title)}</div>
+        ${item.description ? `<div class="meta">${escHtml(item.description.substring(0, 70))}${item.description.length > 70 ? '...' : ''}</div>` : ''}
       </div>`;
     });
   });
@@ -293,7 +365,6 @@ function filterLibrary() {
   const filtered = libraryData.filter(item =>
     item.title.toLowerCase().includes(q) ||
     item.category.toLowerCase().includes(q) ||
-    item.mode.toLowerCase().includes(q) ||
     (item.description && item.description.toLowerCase().includes(q))
   );
   renderLibrary(filtered);
@@ -313,35 +384,19 @@ async function loadFromLibrary(id) {
   // Show description bar
   const descBar = document.getElementById('descBar');
   descBar.style.display = 'block';
-  descBar.innerHTML = `<strong>${escHtml(item.title)}</strong> — ${item.mode} — ${item.category}${item.description ? ' — ' + escHtml(item.description) : ''}`;
+  descBar.innerHTML = `<strong>${escHtml(item.title)}</strong> — ${item.category}${item.description ? ' — ' + escHtml(item.description) : ''}`;
 
-  // Load files
+  // Load BPS source file
   try {
-    // Grammar (always present)
-    const grResp = await fetch('../bp3-engine/library/' + item.files.grammar);
-    document.getElementById('grammar').value = await grResp.text();
+    const resp = await fetch('demos/' + item.file);
+    const bpsSource = await resp.text();
 
-    // Alphabet (optional)
-    if (item.files.alphabet) {
-      const alResp = await fetch('../bp3-engine/library/' + item.files.alphabet);
-      document.getElementById('alphabet').value = await alResp.text();
-    } else {
-      document.getElementById('alphabet').value = '';
-    }
-
-    // Settings (optional)
-    if (item.files.settings) {
-      const seResp = await fetch('../bp3-engine/library/' + item.files.settings);
-      document.getElementById('settings').value = await seResp.text();
-    } else {
-      document.getElementById('settings').value = '';
-    }
-
-    // Clear BPscript when loading from library (use raw BP3 grammar)
-    document.getElementById('bpscript').value = '';
-    // Make grammar editable when loaded from library
-    document.getElementById('grammar').removeAttribute('readonly');
-    switchEditorTab('grammar');
+    document.getElementById('bpscript').value = bpsSource;
+    document.getElementById('grammar').value = '';
+    document.getElementById('alphabet').value = '';
+    document.getElementById('settings').value = '';
+    document.getElementById('grammar').setAttribute('readonly', '');
+    switchEditorTab('bpscript');
 
     setStatus(`Loaded: ${item.title}`);
   } catch(e) {
@@ -362,7 +417,7 @@ function switchEditorTab(tab) {
 
 function switchOutputTab(tab) {
   document.querySelectorAll('.output-tab').forEach((el, i) => {
-    const tabs = ['output', 'messages'];
+    const tabs = ['output', 'messages', 'libs'];
     el.classList.toggle('active', tabs[i] === tab);
   });
   document.querySelectorAll('.output-panel').forEach(el => {
@@ -374,7 +429,7 @@ function switchOutputTab(tab) {
 async function loadModule() {
   try {
     const Module = await BP3Module({
-      locateFile: (path) => '../bp3-engine/build/' + path
+      locateFile: (path) => '../dist/' + path
     });
     bp3 = Module;
     bp3_init = Module.cwrap('bp3_init', 'number', []);
@@ -386,6 +441,9 @@ async function loadModule() {
     bp3_get_messages = Module.cwrap('bp3_get_messages', 'string', []);
     bp3_get_midi_events = Module.cwrap('bp3_get_midi_events', 'string', []);
     bp3_get_midi_event_count = Module.cwrap('bp3_get_midi_event_count', 'number', []);
+    bp3_get_timed_tokens = Module.cwrap('bp3_get_timed_tokens', 'string', []);
+    bp3_get_timed_token_count = Module.cwrap('bp3_get_timed_token_count', 'number', []);
+    bp3_load_settings_params = Module.cwrap('bp3_load_settings_params', 'number', ['number','number','number','number','number','number']);
 
     setStatus('Module loaded. Initializing...');
     initEngine();
@@ -402,9 +460,22 @@ function initEngine() {
     setStatus('Ready.');
     document.getElementById('produceBtn').disabled = false;
     document.getElementById('initBtn').disabled = false;
+    document.getElementById('liveBtn').disabled = false;
   } else {
     setStatus('Init failed (code ' + r + ')');
   }
+}
+
+function reseed() {
+  // New random seed before each produce so random mode gives different results
+  // Detect noteConvention from alphabet content (sa = Indian, else English)
+  const alphabet = document.getElementById('alphabet').value;
+  const noteConv = alphabet.includes('sa0') || alphabet.includes('sa1') ? 2 : 0;
+  bp3_load_settings_params(noteConv, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
+  // Reload grammar+alphabet since load_settings_params invalidates compilation
+  const grammar = document.getElementById('grammar').value;
+  if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
+  if (grammar.trim()) bp3_load_grammar(grammar.trim());
 }
 
 function reinit() {
@@ -431,7 +502,10 @@ function produce() {
       // Fill grammar/alphabet/settings from compilation result
       document.getElementById('grammar').value = compiled.grammar;
       if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
-      if (compiled.warnings.length > 0) {
+      // Settings disabled for now — BP3 defaults work correctly,
+      // our settingsJSON breaks text output formatting
+      // if (compiled.settings) document.getElementById('settings').value = compiled.settings;
+      if (compiled.warnings && compiled.warnings.length > 0) {
         console.log('BPscript warnings:', compiled.warnings);
       }
     } catch(e) {
@@ -476,12 +550,12 @@ function produce() {
       bp3_load_grammar(grammar);
 
       // Produce
+      reseed();
       const result = bp3_produce();
 
       const output = bp3_get_result();
       const messages = bp3_get_messages();
 
-      document.getElementById('outputContent').textContent = output || '(empty output)';
       document.getElementById('messagesContent').textContent = messages || '(no messages)';
 
       // Highlight messages tab if there are errors
@@ -492,25 +566,26 @@ function produce() {
         msgTab.classList.remove('has-errors');
       }
 
-      // Capture MIDI events
-      const midiCount = bp3_get_midi_event_count();
+      // Capture timed tokens (primary) and MIDI events (fallback)
+      lastTimedTokens = null;
       lastMidiEvents = null;
+      const tokenCount = bp3_get_timed_token_count();
+      if (tokenCount > 0) {
+        try {
+          lastTimedTokens = JSON.parse(bp3_get_timed_tokens());
+        } catch(e2) { console.warn('Token parse error:', e2); }
+      }
+      const midiCount = bp3_get_midi_event_count();
       if (midiCount > 0) {
         try {
           lastMidiEvents = JSON.parse(bp3_get_midi_events());
         } catch(e2) { console.warn('MIDI parse error:', e2); }
       }
 
-      const playBtn = document.getElementById('playBtn');
-      if (lastMidiEvents && lastMidiEvents.length > 0) {
-        playBtn.disabled = false;
-        playBtn.title = `${lastMidiEvents.length} MIDI events`;
-      } else {
-        playBtn.disabled = true;
-        playBtn.title = '';
-      }
+      updateTransportButtons();
+      renderTimeline(lastTimedTokens);
 
-      const midiInfo = midiCount > 0 ? ` | ${midiCount} MIDI events` : '';
+      const midiInfo = tokenCount > 0 ? ` | ${tokenCount} tokens` : (midiCount > 0 ? ` | ${midiCount} MIDI events` : '');
       const statusText = result === 1 ? 'Done (OK)' + midiInfo
                        : result === 0 ? 'Done (MISSED — no output)'
                        : `Done (code ${result})`;
@@ -548,214 +623,91 @@ function escHtml(str) {
   return div.innerHTML;
 }
 
-/* ---- Csound / Web Audio Synth ---- */
-let csoundInstance = null;
-let csoundReady = false;
-let useCsound = true; // true = Csound, false = Web Audio fallback
+/* ---- Playback via Dispatcher ---- */
 
-// Default Csound orchestra — clean subtractive synth
-const DEFAULT_ORC = `
-sr = 44100
-ksmps = 32
-nchnls = 2
-0dbfs = 1
-
-; Instrument 1: Subtractive synth with filter envelope
-instr 1
-  ifreq = p4
-  iamp = p5
-  idur = p3
-
-  ; Amplitude envelope (ADSR)
-  iatt = 0.02
-  idec = 0.1
-  isus = 0.7
-  irel = min(0.15, idur * 0.3)
-  aenv madsr iatt, idec, isus, irel
-
-  ; Two detuned sawtooth oscillators
-  a1 vco2 iamp, ifreq
-  a2 vco2 iamp * 0.7, ifreq * 1.003
-
-  ; Low-pass filter with envelope
-  kfilt expseg 4000, idur * 0.3, 1500, idur * 0.7, 800
-  afilt moogladder a1 + a2, kfilt, 0.3
-
-  ; Slight reverb send
-  aout = afilt * aenv * 0.5
-  outs aout, aout
-endin
-
-; Instrument 2: Soft pad (sine + triangle)
-instr 2
-  ifreq = p4
-  iamp = p5
-  idur = p3
-
-  iatt = 0.08
-  irel = min(0.3, idur * 0.4)
-  aenv madsr iatt, 0.2, 0.8, irel
-
-  a1 oscili iamp, ifreq
-  a2 vco2 iamp * 0.4, ifreq, 12 ; triangle
-
-  aout = (a1 + a2) * aenv * 0.4
-  outs aout, aout
-endin
-`;
-
-function midiToFreq(note) {
-  return 440 * Math.pow(2, (note - 69) / 12);
-}
-
-async function initCsound() {
-  if (csoundInstance) return true;
-  if (!window.CsoundFactory) {
-    console.warn('CsoundFactory not loaded, falling back to Web Audio');
-    useCsound = false;
-    return false;
-  }
-  try {
-    setStatus('Initializing Csound...');
-    csoundInstance = await window.CsoundFactory();
-    if (!csoundInstance) {
-      useCsound = false;
-      return false;
-    }
-    await csoundInstance.setOption('-m0'); // suppress messages
-    await csoundInstance.setOption('-d');  // no displays
-    csoundReady = true;
-    return true;
-  } catch(e) {
-    console.error('Csound init failed:', e);
-    useCsound = false;
-    return false;
-  }
-}
-
-async function playMidi() {
-  if (!lastMidiEvents || lastMidiEvents.length === 0) return;
-  await stopPlayback();
-
-  isPlaying = true;
-  document.getElementById('playBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = '';
-
-  // Group NoteOn/NoteOff
-  const noteOns = lastMidiEvents.filter(e => e.type === 144 && e.velocity > 0);
-  const noteOffs = lastMidiEvents.filter(e => e.type === 128 || (e.type === 144 && e.velocity === 0));
-  const minTime = Math.min(...lastMidiEvents.map(e => e.time));
-  const maxTime = Math.max(...lastMidiEvents.map(e => e.time));
-  const totalDurSec = (maxTime - minTime) / 1000 + 1.5;
-
-  // Build note list with durations
-  const notes = noteOns.map(on => {
-    const off = noteOffs.find(o => o.note === on.note && o.time > on.time);
-    return {
-      startSec: (on.time - minTime) / 1000,
-      durSec: off ? (off.time - on.time) / 1000 : 1.0,
-      note: on.note,
-      velocity: on.velocity / 127,
-      channel: on.channel
-    };
-  });
-
-  // Try Csound first
-  if (useCsound && await initCsound()) {
-    await playCsound(notes, totalDurSec);
-  } else {
-    playWebAudio(notes, totalDurSec);
-  }
-
-  setStatus(`Playing ${notes.length} notes (${totalDurSec.toFixed(1)}s) via ${useCsound && csoundReady ? 'Csound' : 'Web Audio'}...`);
-}
-
-async function playCsound(notes, totalDurSec) {
-  try {
-    // Build a complete CSD with the score embedded
-    let score = '';
-    notes.forEach(n => {
-      const freq = midiToFreq(n.note);
-      const amp = n.velocity * 0.8;
-      const instr = n.channel <= 1 ? 1 : 2; // channel 1 = synth, others = pad
-      score += `i ${instr} ${n.startSec.toFixed(4)} ${n.durSec.toFixed(4)} ${freq.toFixed(4)} ${amp.toFixed(4)}\n`;
-    });
-    score += `e ${totalDurSec.toFixed(2)}\n`;
-
-    const csd = `<CsoundSynthesizer>
-<CsOptions>
--odac -m0 -d
-</CsOptions>
-<CsInstruments>
-${DEFAULT_ORC}
-</CsInstruments>
-<CsScore>
-${score}
-</CsScore>
-</CsoundSynthesizer>`;
-
-    await csoundInstance.stop();
-    await csoundInstance.compileCsdText(csd);
-    await csoundInstance.start();
-
-    // Auto-stop
-    setTimeout(async () => {
-      if (isPlaying) await stopPlayback();
-    }, totalDurSec * 1000 + 500);
-
-  } catch(e) {
-    console.error('Csound playback error:', e);
-    // Fallback to Web Audio
-    useCsound = false;
-    playWebAudio(notes, totalDurSec);
-  }
-}
-
-function playWebAudio(notes, totalDurSec) {
+async function ensureDispatcher() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+  if (!dispatcher) {
+    const { Dispatcher } = await import('../src/dispatcher/dispatcher.js');
+    const { WebAudioTransport } = await import('../src/dispatcher/transports/webaudio.js');
+    dispatcher = new Dispatcher(audioCtx);
+    dispatcher.addTransport('default', new WebAudioTransport(audioCtx));
+  }
+}
 
-  const now = audioCtx.currentTime + 0.1;
-  notes.forEach(n => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = midiToFreq(n.note);
+function updateTransportButtons() {
+  const hasTokens = lastTimedTokens && lastTimedTokens.some(t => !t.token.startsWith('_') && t.token !== '-' && t.token !== '_' && t.end > t.start);
+  document.getElementById('playBtn').disabled = isPlaying || !hasTokens;
+  document.getElementById('loopBtn').disabled = isPlaying || !hasTokens;
+  document.getElementById('stopBtn').disabled = !isPlaying;
+}
 
-    const attackTime = 0.02;
-    const releaseTime = Math.min(0.1, n.durSec * 0.2);
-    const sustainLevel = n.velocity * 0.3;
+function onPlayEnd() {
+  isPlaying = false;
+  updateTransportButtons();
+  setStatus('Ready.');
+}
 
-    gain.gain.setValueAtTime(0, now + n.startSec);
-    gain.gain.linearRampToValueAtTime(sustainLevel, now + n.startSec + attackTime);
-    gain.gain.setValueAtTime(sustainLevel, now + n.startSec + n.durSec - releaseTime);
-    gain.gain.linearRampToValueAtTime(0, now + n.startSec + n.durSec);
+// Play once — sequence plays and stops
+async function playOnce() {
+  if (!lastTimedTokens) return;
+  await stopPlayback();
+  await ensureDispatcher();
+  isPlaying = true;
+  updateTransportButtons();
 
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now + n.startSec);
-    osc.stop(now + n.startSec + n.durSec + 0.01);
-    scheduledNodes.push({ osc, gain });
-  });
+  dispatcher.load(lastTimedTokens);
+  dispatcher.start(onPlayEnd);
 
-  setTimeout(() => {
-    if (isPlaying) stopPlayback();
-  }, totalDurSec * 1000 + 200);
+  setStatus(`Play: ${dispatcher.events.length} tokens (${dispatcher.duration.toFixed(1)}s)`);
+}
+
+// Loop — sequence loops, with or without re-derive
+async function playLoop() {
+  if (!lastTimedTokens) return;
+  await stopPlayback();
+  await ensureDispatcher();
+  isPlaying = true;
+  updateTransportButtons();
+
+  dispatcher.load(lastTimedTokens);
+
+  const useReDerive = document.getElementById('rederiveChk').checked;
+  let reDerive = null;
+  if (useReDerive) {
+    reDerive = function() {
+      reseed(); bp3_produce();
+      document.getElementById('messagesContent').textContent = bp3_get_messages() || '(no messages)';
+      const tc = bp3_get_timed_token_count();
+      if (tc > 0) {
+        try {
+          const tokens = JSON.parse(bp3_get_timed_tokens());
+          renderTimeline(tokens);
+          return tokens;
+        } catch {}
+      }
+      return null;
+    };
+  }
+
+  dispatcher.start(onPlayEnd, { loop: true, reDerive });
+
+  const mode = useReDerive ? 'Loop+re-derive' : 'Loop';
+  setStatus(`${mode}: ${dispatcher.events.length} tokens (${dispatcher.duration.toFixed(1)}s/cycle)`);
 }
 
 async function stopPlayback() {
   isPlaying = false;
-  document.getElementById('playBtn').style.display = '';
-  document.getElementById('stopBtn').style.display = 'none';
+  updateTransportButtons();
 
-  // Stop Csound
-  if (csoundInstance) {
-    try { await csoundInstance.stop(); } catch(e) {}
+  if (dispatcher) {
+    dispatcher.stop();
   }
 
-  // Stop Web Audio nodes
+  // Also stop legacy nodes if any
   if (audioCtx) {
     scheduledNodes.forEach(({ osc, gain }) => {
       try {
@@ -767,6 +719,247 @@ async function stopPlayback() {
   }
   scheduledNodes = [];
   setStatus('Ready.');
+}
+
+/* ---- Live Coding ---- */
+let liveMode = false;
+let liveTimer = null;
+
+function toggleLive() {
+  liveMode = !liveMode;
+  const btn = document.getElementById('liveBtn');
+  if (liveMode) {
+    btn.classList.add('live-active');
+    btn.innerHTML = '<span class="live-indicator"></span>Live';
+    // Auto-compile on BPscript changes (debounced 300ms)
+    const bpscriptEl = document.getElementById('bpscript');
+    bpscriptEl.addEventListener('input', liveInputHandler);
+    setStatus('Live mode ON — editing will auto-compile and hot-swap');
+  } else {
+    btn.classList.remove('live-active');
+    btn.textContent = 'Live';
+    document.getElementById('bpscript').removeEventListener('input', liveInputHandler);
+    if (liveTimer) { clearTimeout(liveTimer); liveTimer = null; }
+    setStatus('Live mode OFF');
+  }
+}
+
+function liveInputHandler() {
+  if (liveTimer) clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => liveCompileAndSwap(), 300);
+}
+
+async function liveCompileAndSwap() {
+  if (!engineReady || !window._compileBPScript) return;
+
+  const source = document.getElementById('bpscript').value.trim();
+  if (!source) return;
+
+  try {
+    const compiled = window._compileBPScript(source);
+    if (compiled.errors.length > 0) return;  // don't hot-swap on errors
+
+    document.getElementById('grammar').value = compiled.grammar;
+    if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
+    if (compiled.settings) document.getElementById('settings').value = compiled.settings;
+
+    if (compiled.alphabet) bp3_load_alphabet(compiled.alphabet);
+    bp3_load_grammar(compiled.grammar);
+
+    if (isPlaying && dispatcher) {
+      // Playing: don't produce now — reDerive will do it at next cycle.
+      // But we can show the grammar update in the status.
+      setStatus('Live: updated — next cycle');
+    } else {
+      // Not playing: produce to refresh output/messages/tokens
+      reseed(); bp3_produce();
+      document.getElementById('messagesContent').textContent = bp3_get_messages() || '(no messages)';
+      const tc = bp3_get_timed_token_count();
+      if (tc > 0) {
+        try { lastTimedTokens = JSON.parse(bp3_get_timed_tokens()); } catch {}
+      }
+      updateTransportButtons();
+      renderTimeline(lastTimedTokens);
+      setStatus(`Live: ${tc} tokens`);
+    }
+  } catch {}
+}
+
+/* ---- Timeline visualization ---- */
+function renderTimeline(tokens) {
+  const panel = document.getElementById('outputContent');
+  if (!tokens || tokens.length === 0) {
+    panel.textContent = '(no tokens)';
+    return;
+  }
+
+  // Tag each note with its preceding controls from the original token stream
+  const taggedNotes = [];
+  let pendingControls = [];
+  for (const t of tokens) {
+    if (t.token.startsWith('_') && t.token !== '_') {
+      pendingControls.push(t);
+    } else if (!t.token.startsWith('_') && t.token !== '_' && t.token !== '-' && t.end > t.start) {
+      taggedNotes.push({ ...t, controls: pendingControls });
+      pendingControls = [];
+    }
+  }
+  if (taggedNotes.length === 0) { panel.textContent = '(no playable notes)'; return; }
+
+  const totalMs = Math.max(...taggedNotes.map(t => t.end));
+
+  // Group notes into voices (non-overlapping)
+  const voices = [];
+  for (const t of taggedNotes) {
+    let placed = false;
+    for (const voice of voices) {
+      const last = voice[voice.length - 1];
+      if (t.start >= last.end - 1) {
+        voice.push(t);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) voices.push([t]);
+  }
+
+  // Extract controls per voice from tagged notes
+  const voiceControls = voices.map(voice => {
+    const ctrls = [];
+    for (const n of voice) {
+      if (n.controls) ctrls.push(...n.controls);
+    }
+    return ctrls;
+  });
+
+  let html = '<div class="timeline">';
+
+  for (let vi = 0; vi < voices.length; vi++) {
+    const voice = voices[vi];
+    const ctrls = voiceControls[vi];
+
+    html += '<div class="tl-voice">';
+    if (voices.length > 1) {
+      html += `<div class="tl-voice-label">voice ${vi + 1}</div>`;
+    }
+
+    // Note track
+    html += '<div class="tl-track">';
+    let noteIdx = 0;
+    let prevEnd = 0;
+    for (const t of voice) {
+      // Gap
+      if (t.start > prevEnd) {
+        const gapPct = ((t.start - prevEnd) / totalMs) * 100;
+        html += `<div class="tl-block gap" style="flex:${gapPct};"></div>`;
+      }
+      const pct = ((t.end - t.start) / totalMs) * 100;
+      const cls = noteIdx % 2 === 0 ? 'note-a' : 'note-b';
+      html += `<div class="tl-block ${cls}" style="flex:${pct};" title="${t.token}: ${t.start}-${t.end}ms">${t.token}</div>`;
+      noteIdx++;
+      prevEnd = t.end;
+    }
+    html += '</div>';
+
+    // Control lane (below the track)
+    if (ctrls.length > 0) {
+      html += '<div class="tl-ctrl-lane">';
+      for (const c of ctrls) {
+        const leftPct = (c.start / totalMs) * 100;
+        // Format as BPscript: _vel(80) → [vel:80]
+        const bps = c.token.replace(/^_(\w+)\((.+)\)$/, '[$1:$2]');
+        html += `<div class="tl-ctrl-mark" style="left:${leftPct}%;" title="${c.token} @ ${c.start}ms">${bps}</div>`;
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  // Time axis
+  html += '<div class="timeline-axis">';
+  const tickInterval = totalMs <= 2000 ? 500 : totalMs <= 5000 ? 1000 : totalMs <= 15000 ? 2000 : 5000;
+  for (let ms = 0; ms <= totalMs; ms += tickInterval) {
+    const pct = (ms / totalMs) * 100;
+    const label = (ms / 1000).toFixed(1) + 's';
+    html += `<div class="tick" style="left:${pct}%;">${label}</div>`;
+  }
+  html += '</div></div>';
+
+  panel.innerHTML = html;
+}
+
+/* ---- Libraries panel ---- */
+let libsLoaded = false;
+let libsData = {};
+
+async function loadLibsPanel() {
+  if (libsLoaded) return;
+  const libNames = ['core', 'controls', 'alphabet', 'routing', 'sub', 'settings', 'tuning'];
+  const panel = document.getElementById('libsContent');
+
+  for (const name of libNames) {
+    try {
+      const resp = await fetch(`../lib/${name}.json`);
+      if (resp.ok) libsData[name] = await resp.json();
+    } catch {}
+  }
+  libsLoaded = true;
+  renderLibsPanel();
+}
+
+function renderLibsPanel() {
+  const panel = document.getElementById('libsContent');
+  const names = Object.keys(libsData);
+
+  let listHtml = '';
+  for (const name of names) {
+    const size = JSON.stringify(libsData[name]).length;
+    const sizeStr = size > 1024 ? (size / 1024).toFixed(0) + 'KB' : size + 'B';
+    listHtml += `<div class="lib-item" onclick="showLib('${name}')" data-lib="${name}">
+      ${name} <span class="size">${sizeStr}</span>
+    </div>`;
+  }
+
+  panel.innerHTML = `<div class="libs-list">${listHtml}</div><div class="libs-detail" id="libDetail">(select a library)</div>`;
+
+  if (names.length > 0) showLib(names[0]);
+}
+
+function showLib(name) {
+  document.querySelectorAll('.lib-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.lib === name);
+  });
+
+  const data = libsData[name];
+  const detail = document.getElementById('libDetail');
+  if (!data) { detail.textContent = '(not found)'; return; }
+
+  // Format: show structure with keys, not full dump for large files
+  const json = JSON.stringify(data, null, 2);
+  if (json.length > 50000) {
+    // Large file (tuning): show summary
+    const keys = Object.keys(data);
+    let summary = `// ${name}.json — ${(json.length / 1024).toFixed(0)}KB\n// Keys: ${keys.join(', ')}\n\n`;
+    for (const key of keys) {
+      const val = data[key];
+      if (typeof val === 'object' && val !== null) {
+        const subkeys = Object.keys(val);
+        summary += `"${key}": { ${subkeys.length} entries }\n`;
+        subkeys.slice(0, 5).forEach(sk => {
+          const sv = JSON.stringify(val[sk]).substring(0, 80);
+          summary += `  "${sk}": ${sv}${sv.length >= 80 ? '...' : ''}\n`;
+        });
+        if (subkeys.length > 5) summary += `  ... (${subkeys.length - 5} more)\n`;
+        summary += '\n';
+      } else {
+        summary += `"${key}": ${JSON.stringify(val)}\n`;
+      }
+    }
+    detail.textContent = summary;
+  } else {
+    detail.textContent = json;
+  }
 }
 
 /* ---- Resize handle ---- */
@@ -798,24 +991,36 @@ async function stopPlayback() {
 loadLibrary();
 </script>
 <script type="module">
-  // Load BPscript compiler
-  import { compileBPScript } from '../src/bpscript/bpscript.js';
-  window._compileBPScript = compileBPScript;
-  console.log('BPscript compiler loaded');
-</script>
-<script src="../bp3-engine/build/bp3.js"></script>
-<script>
-  // Load Csound asynchronously — non-blocking, with fallback to Web Audio
-  (async function() {
+  // Load new BPscript transpiler + libs
+  import { compileBPS } from '../src/transpiler/index.js';
+  import { registerAll } from '../src/transpiler/libs.js';
+
+  // Fetch all lib/*.json and register them for browser use
+  const libNames = ['alphabet', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template'];
+  const libs = {};
+  await Promise.all(libNames.map(async (name) => {
     try {
-      const mod = await import("https://cdn.jsdelivr.net/npm/@csound/browser@6.18.7/dist/csound.esm.js");
-      window.CsoundFactory = mod.Csound || mod.default;
-      console.log('Csound loaded successfully');
-    } catch(e) {
-      console.warn('Csound failed to load, using Web Audio fallback:', e.message);
-      window.CsoundFactory = null;
-    }
-  })();
+      const resp = await fetch(`../lib/${name}.json`);
+      if (resp.ok) libs[name] = await resp.json();
+    } catch(e) { console.warn(`Failed to load lib/${name}.json:`, e.message); }
+  }));
+  registerAll(libs);
+
+  // Adapter: compileBPS → same interface as old compileBPScript
+  window._compileBPScript = function(source) {
+    const result = compileBPS(source);
+    return {
+      grammar: result.grammar || '',
+      alphabet: result.alphabetFile || '',
+      settings: result.settingsJSON || '',
+      errors: result.errors || [],
+      warnings: []
+    };
+  };
+  console.log(`BPscript transpiler loaded (${Object.keys(libs).length} libs)`);
+</script>
+<script src="../dist/bp3.js"></script>
+<script>
   loadModule();
 </script>
 </body>

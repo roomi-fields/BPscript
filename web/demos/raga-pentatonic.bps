@@ -1,0 +1,12 @@
+// Raga Mohanam — pentatonique ascendant/descendant
+// Démo : alphabet raga (sargam), prolongation, silence
+
+@core
+@controls
+@alphabet.raga:browser
+
+S -> Aroha Avaroha Phrase
+
+Aroha -> sa6 re6 ga6 pa6 dha6
+Avaroha -> dha6 pa6 ga6 re6 sa6
+Phrase -> ga6 _ pa6 dha6 - sa7 dha6 pa6 _ ga6 re6 sa6 _ _

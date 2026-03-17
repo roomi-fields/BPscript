@@ -890,7 +890,10 @@
           8,
           9
         ],
-        "description": "sa6 = sa octave 6, re6 = re octave 6, etc. Le compilateur résout via le generator."
+        "description": "sa6 = sa octave 6, re6 = re octave 6, etc. Le compilateur résout via le generator.",
+        "semitones": {
+          "sa": 0, "re": 2, "ga": 4, "ma": 5, "pa": 7, "dha": 9, "ni": 11
+        }
       },
       "noteConvention": 2
     }

@@ -1,0 +1,34 @@
+// Raga Alap — exploration lente avec variations aléatoires
+// Démo : mode random, poids, alphabet raga
+
+@core
+@controls
+@alphabet.raga:browser
+@mm:40
+
+S -> Intro Develop Develop Climax [mode:ord]
+
+-----
+
+// Exploration basse
+Intro -> sa5 _ re5 _ ga5 _ re5 sa5 _ _ [mode:random, weight:50]
+Intro -> sa5 _ _ re5 ga5 _ _ _
+
+-----
+
+// Développement
+Develop -> Ascend Descend [mode:random]
+Develop -> Descend Ascend
+
+Ascend -> ga5 pa5 _ dha5 [mode:random, weight:40]
+Ascend -> re5 ga5 pa5 _
+Ascend -> pa5 _ dha5 sa6
+
+Descend -> dha5 pa5 ga5 _ [mode:random, weight:40]
+Descend -> sa6 dha5 _ pa5
+Descend -> pa5 ga5 re5 sa5
+
+-----
+
+// Point culminant
+Climax -> [vel:110]sa6 _ _ dha5 pa5 _ ga5 re5 sa5 _ _ _ [mode:ord]

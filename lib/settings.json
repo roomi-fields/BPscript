@@ -21,7 +21,7 @@
     "ShowPianoRoll": {"name": "Show piano roll", "value": "0", "boolean": "1"},
     "GraphicScaleP": {"name": "Graphic scale P", "value": "0", "boolean": "0"},
     "GraphicScaleQ": {"name": "Graphic scale Q", "value": "0", "boolean": "0"},
-    "DisplayItems": {"name": "Display items", "value": "0", "boolean": "1"},
+    "DisplayItems": {"name": "Display items", "value": "1", "boolean": "1"},
     "DisplayProduce": {"name": "Display produce", "value": "0", "boolean": "1"},
     "SplitTimeObjects": {"name": "Split time objects", "value": "0", "boolean": "1"},
     "SplitVariables": {"name": "Split variables", "value": "0", "boolean": "1"},
