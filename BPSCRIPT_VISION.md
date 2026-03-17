@@ -1177,12 +1177,13 @@ BPscript sépare les préoccupations en 5 couches déclaratives + un runtime.
 
 | #   | Couche          | Où                | Rôle                                              |
 | --- | --------------- | ----------------- | ------------------------------------------------- |
-| 1   | **Définition**  | `.bp`             | déclarer des types, créer des macros              |
-| 2   | **Composition** | `.bp`             | structurer dans le temps (dérivation, polymétrie) |
-| 3   | **Librairie**   | `lib/*.json`      | noms → types + identités musicales abstraites     |
-| 4   | **Tempérament** | `tuning/*.json`   | degrés → fréquences (ratios, Hz)                  |
-| 5   | **Routage**     | `*.routing.json`  | quel événement → quel adaptateur                  |
-|     | **Runtime**     | Python, SC, JS... | adaptateurs parallèles, chacun gère ses symboles  |
+| 1   | **Définition**  | `.bps`            | déclarer des types, créer des macros              |
+| 2   | **Composition** | `.bps`            | structurer dans le temps (dérivation, polymétrie) |
+| 3   | **Librairie**   | `lib/alphabet.json` | noms → types + degrés (`@alphabet.raga:sc`)     |
+| 4   | **Tempérament** | `lib/tuning.json` | degrés → fréquences (`@tuning.just_intonation:raga`) |
+| 5   | **Routage**     | `routing.json`    | quel symbole → quel transport (OSC/MIDI)          |
+|     | **Transport**   | OSC, MIDI, Web Audio | protocoles universels (bundles horodatés)       |
+|     | **REPL**        | sclang, Python... | sessions code pour les backticks                  |
 
 Les 5 couches sont déclaratives et indépendantes.
 Le runtime est catégoriquement différent — c'est du code, pas de la donnée.
@@ -1279,25 +1280,101 @@ Aucune information de sortie.
 }
 ```
 
-### 4. Tempérament — les fréquences (`tuning/shruti.json`)
+### 4. Tempérament — les fréquences (`lib/tuning.json`)
 
 Traduit les degrés en fréquences. Pas de noms de notes, pas de MIDI.
+Le tuning est lié à un **alphabet** via la directive `@tuning.nom:alphabet`.
 
-```json
+```bps
+@alphabet.raga:sc
+@alphabet.western:midi
+@tuning.just_intonation:raga           // 7 ratios → 7 degrés raga
+@tuning.equal_temperament:western      // 12 ratios → 12 degrés western
+```
+
+La résolution complète :
+
+```
+sa4 (BPscript)
+  → alphabet.raga → degree 1 (sa)
+  → tuning.just_intonation:raga → ratio 1/1
+  → baseHz × ratio × octave → 261.63 Hz
+  → MIDI note 60 + pitchbend (si micro-tonal)
+  → transport OSC ou MIDI
+```
+
+**Contrainte de compatibilité** : le tuning doit avoir le même nombre de degrés
+que l'alphabet. Un tuning 7 degrés ne fonctionne pas avec un alphabet 12 degrés.
+Le compilateur vérifie cette compatibilité à la compilation.
+
+**Formats de tuning** dans `lib/tuning.json` :
+
+```jsonc
 {
-  "name": "shruti",
-  "base_hz": 261.63,
-  "ratios": {
-    "1": "1/1",
-    "2": "9/8",
-    "3": "5/4",
-    "4": "4/3",
-    "5": "3/2",
-    "6": "5/3",
-    "7": "15/8"
+  "scales": {
+    // Simple : ratios fixes (fractions exactes ou décimaux)
+    "just_intonation": {
+      "degrees": 7,
+      "octaveRatio": 2,
+      "ratios": ["1/1", "9/8", "5/4", "4/3", "3/2", "5/3", "15/8"],
+      "description": "Traditional scale with simple integer ratios"
+    },
+
+    // 12 degrés, tempérament égal
+    "equal_temperament": {
+      "degrees": 12,
+      "octaveRatio": 2,
+      "ratios": [1, 1.0595, 1.1225, 1.1892, 1.2599, 1.3348,
+                 1.4142, 1.4983, 1.5874, 1.6818, 1.7818, 1.8877]
+    },
+
+    // Bohlen-Pierce : octave = 3:1 (pas 2:1), 13 degrés
+    "bohlen_pierce": {
+      "degrees": 13,
+      "octaveRatio": 3,
+      "ratios": ["1/1", "27/25", "25/21", "9/7", "7/5", "75/49",
+                 "5/3", "9/5", "49/25", "15/7", "7/3", "63/25", "25/9"]
+    },
+
+    // Raga avec direction : aroha ≠ avaroha
+    "bhairav": {
+      "degrees": 7,
+      "octaveRatio": 2,
+      "ascending":  ["1/1", "256/243", "5/4", "4/3", "3/2", "128/81", "15/8"],
+      "descending": ["1/1", "9/8",     "5/4", "4/3", "3/2", "27/16",  "15/8"]
+    },
+
+    // Makam : composé de tétracordes (fragments)
+    "rast": {
+      "degrees": 7,
+      "octaveRatio": 2,
+      "compose": ["cargah", "rast_tetrachord"],
+      "direction": "both"
+    },
+
+    // Fragment composable (tétracorde)
+    "cargah": {
+      "fragment": true,
+      "ratios": ["1/1", "9/8", "5/4", "4/3"]
+    }
   }
 }
 ```
+
+**Principes** :
+- **`degrees`** : nombre de degrés par intervalle de base — doit matcher l'alphabet
+- **`octaveRatio`** : ratio de l'intervalle de base (2 = octave, 3 = Bohlen-Pierce)
+- **`ratios`** : fractions exactes ou décimaux — le cas courant
+- **`ascending`/`descending`** : deux séries si la direction compte (ragas, certains makam)
+- **`compose`** : assemblage de fragments nommés (tétracordes turcs, jins arabes)
+- **`fragment: true`** : bloc composable, pas une gamme complète
+
+Un alphabet peut aussi spécifier des notes ascendantes-only ou descendantes-only
+dans ses symboles — indépendamment du tuning.
+
+La librairie `lib/tuning.json` contient 162 gammes converties des fichiers
+`-to.*` de Bernard Bel (Bach, Mozart, just intonation, meantone, shruti,
+murcchana, Bohlen-Pierce, etc.).
 
 ### 5. Routage (`morceau.routing.json`)
 
@@ -1612,46 +1689,53 @@ sans polluer la syntaxe structurelle.
 ### Vue d'ensemble
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  ┌──────────┐    ┌───────────┐    ┌──────────────────────┐  │
-│  │ Éditeur  │    │Compilateur│    │   Moteur BP3 WASM    │  │
-│  │ (.bp)    │───→│ BPscript  │───→│                      │  │
-│  │          │    │           │    │ Dérivation            │  │
-│  └──────────┘    │ Type-check│    │ Polymétrie            │  │
-│                  │ Expansion │    │ Ordonnancement        │  │
-│  ┌──────────┐    │ Encodage  │    │                      │  │
-│  │Librairies│───→│           │    └──────────┬───────────┘  │
-│  │ (JSON)   │    └───────────┘               │              │
-│  └──────────┘                                │              │
-│                                              ▼              │
-│  ┌──────────┐                     ┌──────────────────────┐  │
-│  │Tempéra-  │                     │ Séquence horodatée   │  │
-│  │ment(JSON)│                     │ (terminaux + temps)  │  │
-│  └──────────┘                     └──────────┬───────────┘  │
-│                                              │              │
-│  ┌──────────┐                     ┌──────────▼───────────┐  │
-│  │ Routage  │────────────────────→│     Dispatcher       │  │
-│  │ (JSON)   │                     │ route par symbole/   │  │
-│  └──────────┘                     │ type vers adaptateurs│  │
-│                                   └──┬──────┬──────┬─────┘  │
-│                                      │      │      │        │
-└──────────────────────────────────────┼──────┼──────┼────────┘
-                                       │      │      │
-                    ┌──────────────────┐│      │      │┌──────────────┐
-                    │  Adaptateur SC   │◄      │      ►│ Adaptateur   │
-                    │  (SCLang)        │       │       │ Python       │
-                    │  traduit tempér. │       │       │ traduit temp.│
-                    │  évalue backticks│       │       │ évalue backt.│
-                    │  → scsynth      │       │       │ → DMX, OSC   │
-                    └──────────────────┘       │       └──────────────┘
-                                              │
-                                   ┌──────────▼───────────┐
-                                   │  Adaptateur MIDI     │
-                                   │  traduit tempérament │
-                                   │  → hardware MIDI     │
-                                   └──────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│  ┌──────────┐    ┌───────────┐    ┌──────────────────────┐   │
+│  │ Éditeur  │───→│Compilateur│───→│   Moteur BP3 WASM    │   │
+│  │ Web      │    │ BPscript  │    │   Dérivation         │   │
+│  └──────────┘    └─────┬─────┘    └──────────┬───────────┘   │
+│                        │                     │               │
+│  ┌──────────┐          │                     ▼               │
+│  │ Libs     │──────────┘          ┌──────────────────────┐   │
+│  │ (JSON)   │                     │ Séquence horodatée   │   │
+│  └──────────┘                     │ terminaux + backticks │   │
+│                                   └──────────┬───────────┘   │
+│  ┌──────────┐                                │               │
+│  │ Routage  │                     ┌──────────▼───────────┐   │
+│  │ (JSON)   │────────────────────→│     Dispatcher       │   │
+│  └──────────┘                     │     (clock + route)  │   │
+│                                   └──┬───────────────┬───┘   │
+│                                      │               │       │
+└──────────────────────────────────────┼───────────────┼───────┘
+                                       │               │
+                          Terminaux typés        Backticks taggés
+                          (data horodaté)        (code à évaluer)
+                               │                       │
+                    ┌──────────▼──────────┐   ┌────────▼─────────┐
+                    │    Transports       │   │  Adaptateurs REPL │
+                    │                     │   │                   │
+                    │  ┌─────┐  ┌──────┐  │   │ ┌──────┐ ┌─────┐ │
+                    │  │ OSC │  │ MIDI │  │   │ │sclang│ │ py  │ │
+                    │  └──┬──┘  └──┬───┘  │   │ └──┬───┘ └──┬──┘ │
+                    │     │        │      │   │    │        │    │
+                    └─────┼────────┼──────┘   └────┼────────┼────┘
+                          │        │               │        │
+                    ┌─────▼──┐ ┌───▼───┐     ┌─────▼──┐ ┌───▼───┐
+                    │scsynth │ │ DAW   │     │scsynth │ │ DMX   │
+                    │Process.│ │ HW    │     │(eval)  │ │ OSC   │
+                    │Python  │ │ synth │     │Tidal   │ │ etc.  │
+                    └────────┘ └───────┘     └────────┘ └───────┘
 ```
+
+Deux flux distincts, une seule timeline :
+- **Terminaux** → transports universels (OSC bundles, MIDI). Pas d'adaptateur custom.
+  Le routage dit quel symbole va vers quelle adresse OSC/MIDI.
+- **Backticks** → adaptateurs REPL (sessions code). Un REPL par langage.
+  Le tag (`` `sc:` ``, `` `py:` ``) dit quel REPL évalue le code.
+
+Un fichier sans backticks ne démarre aucun REPL — le dispatcher est un pur
+séquenceur OSC/MIDI.
 
 ### Composants
 
@@ -1675,26 +1759,45 @@ sans polluer la syntaxe structurelle.
 - Gestion des flags, captures, templates, homomorphismes
 - Produit une séquence de terminaux horodatés
 
-**Dispatcher** (JS, nouveau composant central) — Route et résout :
-- Décode les terminaux opaques (convention de nommage → type + runtime + paramètres)
-- Route chaque événement vers le(s) runtime(s) concerné(s) selon le binding
-- Pour les backticks-paramètres : envoie au runtime, récupère la valeur, résout
-- Pour les CV : discrétise ou délègue selon le type de paramètre (voir CV ci-dessous)
-- Un même point temporel (`!`) peut être dispatché à plusieurs runtimes
-- Gère le scheduling temps réel (horloge de playback)
+**Dispatcher** (JS, composant central) — Horloge + routage :
+- Parcourt la séquence horodatée avec un clock temps réel
+- À chaque instant T, dispatche deux types d'événements :
+  1. **Terminaux** → transport (OSC/MIDI) selon le routage
+  2. **Backticks** → adaptateur REPL selon le tag/runtime du symbole
+- Gère les bundles OSC pour la simultanéité (`!` = même timestamp)
+- Gère le hot-swap pour le live coding (quantized/immediate/queued)
 
-**Runtimes** — Sessions persistantes (REPL), un par langage cible :
-- Chaque runtime est une session vivante (sclang, ghci+Tidal, Python, etc.)
-- Reçoit les événements structurés horodatés
-- Évalue les backticks dans son propre langage et scope
-- Traduit le tempérament dans son format natif (SC: `Tuning`, MIDI: note+bend)
-- Produit la sortie concrète (audio, MIDI, DMX, etc.)
-- Plusieurs runtimes tournent en parallèle
+**Transports** — Protocoles de sortie pour les terminaux :
+- **OSC** : bundles horodatés (atomicité, timestamp exact). Cible principale.
+  SC (scsynth), Processing, Python (pyliblo), TouchDesigner, Max/MSP...
+  tout ce qui parle OSC reçoit les terminaux sans adaptateur custom.
+- **MIDI** : note-on/off, CC, program change. Pour hardware et DAWs.
+- **Web Audio** : API navigateur directe. Pour le son dans le browser.
+
+Les transports sont **universels** — ils ne connaissent pas SC ni Python.
+Le `routing.json` dit quel symbole va vers quel transport + adresse.
+
+**Adaptateurs REPL** — Sessions code pour les backticks :
+- Chaque adaptateur est une session REPL vivante (sclang, ghci, Python, etc.)
+- Reçoit du **code** à évaluer, pas des événements structurés
+- Trois moments d'exécution :
+  1. **Init** : backticks orphelins top-level — exécutés avant la dérivation
+     `` `sc: SynthDef(\grain, {...}).add` ``
+  2. **Playback** : backticks dans le flux — exécutés au temps T
+     `` `sc: i = i + 1` ``
+  3. **Résolution** : backticks-paramètres — évalués pour obtenir une valeur
+     `` Sa(vel:`rrand(40,127)`) `` → le REPL SC évalue et retourne 87
 - L'interface est universelle (~100 lignes par langage) :
-  - `connect()` — ouvrir la session
+  - `connect()` — ouvrir la session REPL
   - `eval(code, time)` — envoyer du code au temps T
   - `getValue(expr)` — évaluer et retourner une valeur
   - `close()` — fermer la session
+
+**Distinction fondamentale** :
+- Un fichier **sans backticks** n'a besoin que des transports (OSC/MIDI).
+  Aucun adaptateur REPL nécessaire. Le dispatcher est un pur séquenceur.
+- Un fichier **avec backticks** a besoin des adaptateurs REPL en plus.
+  Le backtick est une fenêtre vers un langage, pas une commande de transport.
 
 ### Interfaces entre composants
 
@@ -1736,55 +1839,76 @@ Chaque événement contient le terminal opaque, le temps de début et la durée.
 Les backticks sont encodés comme des terminaux spéciaux dans la grammaire BP3.
 Le moteur les traite comme n'importe quel terminal — il ne les évalue pas.
 
-**Interface 3 : Dispatcher → Runtimes** (à créer)
+**Interface 3a : Dispatcher → Transports** (à créer)
 
-Format : messages structurés envoyés aux sessions REPL. C'est le composant
-central à concevoir. Chaque message contient :
+Le dispatcher envoie des **données structurées** aux transports.
+Les transports sont universels — ils ne connaissent pas les runtimes.
 
 ```js
+// OSC bundle (atomicité garantie pour les événements simultanés)
 {
-  type: "event",           // event | eval | getValue
-  runtime: "sc",           // quel runtime reçoit
-  symbol: "Sa",            // le symbole BPscript
-  temporalType: "gate",    // gate | trigger | cv
-  params: { vel: 120 },    // paramètres littéraux (déjà résolus)
-  backticks: { vel: "rrand(40,127)" },  // paramètres backtick (à évaluer)
-  start: 0,                // ms depuis le début
-  duration: 1000,          // ms (0 pour triggers)
+  transport: "osc",
+  address: "/instrument/sa",     // depuis routing.json
+  timestamp: 1000,               // ms
+  args: {
+    type: "gate",                // gate | trigger | cv
+    note: 60,                    // MIDI note (depuis alphabet + tempérament)
+    vel: 120,                    // paramètre
+    duration: 500                // ms (0 pour triggers)
+  }
+}
+
+// MIDI message
+{
+  transport: "midi",
+  channel: 1,
+  type: "noteOn",               // noteOn | noteOff | cc | programChange
+  note: 60,
+  velocity: 120,
+  timestamp: 1000
 }
 ```
 
-Pour les backticks standalone :
-```js
-{
-  type: "eval",
-  runtime: "sc",
-  code: "i = i + 1",
-  time: 1000
-}
-```
+**Interface 3b : Dispatcher → Adaptateurs REPL** (à créer)
 
-Pour les backticks-paramètres (le dispatcher attend la réponse) :
+Le dispatcher envoie du **code** aux sessions REPL. Trois cas :
+
 ```js
-// Dispatcher envoie :
+// 1. Init — backtick orphelin (avant le playback)
+{ type: "eval", runtime: "sc", code: "SynthDef(\\grain, {...}).add", time: -1 }
+
+// 2. Playback — backtick dans le flux (au temps T)
+{ type: "eval", runtime: "sc", code: "i = i + 1", time: 1000 }
+
+// 3. Résolution — backtick-paramètre (le dispatcher attend la réponse)
 { type: "getValue", runtime: "sc", expr: "rrand(40,127)" }
-// Runtime répond :
-{ value: 87 }
-// Dispatcher résout et envoie l'event avec vel: 87
+// Réponse : { value: 87 }
+// Le dispatcher injecte vel=87 dans le message OSC/MIDI
 ```
 
 ### Flux d'exécution
 
 ```
-1. Compilation : .bp → grammaire BP3 (avec backticks encodés comme terminaux)
-2. Dérivation : BP3 → séquence horodatée (terminaux + backticks opaques)
-3. Playback en temps réel :
+0. Init : backticks orphelins → eval dans les REPLs (setup)
+
+1. Compilation : .bps → grammaire BP3 (backticks encodés comme terminaux opaques)
+
+2. Dérivation : BP3 → séquence horodatée (terminaux + backticks, tous opaques pour BP3)
+
+3. Playback (boucle du dispatcher) :
    │
-   │  à chaque temps T, le dispatcher :
-   │  ├→ décode le terminal (type + runtime + params + backticks)
-   │  ├→ backticks-paramètres : getValue → runtime évalue → résout
-   │  ├→ événement résolu → envoie au(x) runtime(s) concerné(s)
-   │  └→ backticks-standalone : eval → runtime exécute (side effect)
+   │  à chaque temps T :
+   │  ├→ terminal typé → routing.json → transport OSC/MIDI (bundle horodaté)
+   │  ├→ backtick standalone → tag → REPL.eval(code, T)
+   │  └→ backtick-paramètre → tag → REPL.getValue(expr) → résout → transport
+   │
+   │  Les événements simultanés (!) sont groupés dans un bundle OSC
+   │  (atomicité : le récepteur les reçoit ensemble)
+
+4. Live coding (hot-swap) :
+   │  L'utilisateur modifie le .bps → recompile → re-dérive
+   │  Le dispatcher remplace la séquence au prochain point de quantification
+   │  Les REPLs restent vivants (état préservé), les flags BP3 repartent de zéro
 ```
 
 ### CV — choix de design (à trancher)
