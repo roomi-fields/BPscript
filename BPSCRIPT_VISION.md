@@ -1376,57 +1376,88 @@ La librairie `lib/tuning.json` contient 162 gammes converties des fichiers
 `-to.*` de Bernard Bel (Bach, Mozart, just intonation, meantone, shruti,
 murcchana, Bohlen-Pierce, etc.).
 
-### 5. Routage (`morceau.routing.json`)
+### 5. Routage (`lib/routing.json`)
 
-Déclare quel événement va vers quel adaptateur. Le routage est par symbole
-ou par type — pas par voix. Une même voix peut contenir des événements
-destinés à différents adaptateurs.
+Configure les **connexions** vers l'extérieur. Deux types de canaux :
+- **Transports** : protocoles pour envoyer les terminaux (OSC, MIDI, Web Audio)
+- **Evals** : sessions pour évaluer les backticks (sclang, Python, ghci)
 
-```json
+Le routage est par **environnement** (studio, live, browser) et se charge via
+`@routing.studio`. Les connexions sont par **alphabet** — la scène lie chaque
+alphabet à une clé de connexion via `:`.
+
+```bps
+@routing.studio
+@alphabet.raga:sc                          // transport=sc, eval=sc
+@alphabet.western:midi                     // transport=midi, eval=midi
+@alphabet.raga(transport=sc, eval=python)  // transport ≠ eval (explicite)
+```
+
+Deux formes, pas de mélange :
+- **`:clé`** — transport et eval identiques (cas courant)
+- **`(transport=x, eval=y)`** — transport et eval différents (les deux obligatoires)
+
+```jsonc
+// lib/routing.json
 {
-  "adapters": {
-    "sc": { "type": "supercollider", "host": "localhost:57110" },
-    "midi": { "type": "midi", "device": "IAC Driver" },
-    "dmx": { "type": "dmx", "universe": 1 }
+  "studio": {
+    "transports": {
+      "sc":   { "type": "osc",  "host": "127.0.0.1", "port": 57110 },
+      "midi": { "type": "midi", "device": "IAC Driver", "channel": 1 },
+      "dmx":  { "type": "osc",  "host": "127.0.0.1", "port": 9000 }
+    },
+    "evals": {
+      "sc":     { "type": "sclang", "host": "127.0.0.1", "port": 57120 },
+      "python": { "type": "exec",   "command": "python3" },
+      "tidal":  { "type": "ghci",   "host": "127.0.0.1", "port": 6010 }
+    }
   },
-  "routes": {
-    "gate.note": "sc",
-    "trigger.percussion": "midi",
-    "trigger.light": "dmx"
+  "live": {
+    "transports": {
+      "sc":   { "type": "osc",  "host": "192.168.1.10", "port": 57110 },
+      "midi": { "type": "midi", "device": "USB MIDI", "channel": 1 }
+    },
+    "evals": {
+      "sc": { "type": "sclang", "host": "192.168.1.10", "port": 57120 }
+    }
   },
-  "tuning": "shruti"
+  "browser": {
+    "transports": {
+      "browser": { "type": "webaudio" }
+    },
+    "evals": {}
+  }
 }
 ```
 
-Le routage indique aussi le tempérament à utiliser. Chaque adaptateur
-le traduit dans le format natif de sa cible (SC : `Tuning`, MIDI : note + pitch bend,
-Csound : Hz dans le score).
+Le routage ne sait rien de la musique. Il ne connaît que des clés de connexion
+(`sc`, `midi`, `python`) et comment les joindre. C'est la scène qui associe
+chaque alphabet à une clé via `@alphabet.raga:sc`.
 
-### Runtime — les adaptateurs
+### Transports et evals — deux canaux distincts
 
-Le runtime n'est pas une couche déclarative. C'est du **code** — un ou plusieurs
-adaptateurs qui tournent en parallèle, chacun dans le langage de sa cible.
+Les transports et les evals sont fondamentalement différents :
 
-Chaque adaptateur :
-- Reçoit les événements structurés horodatés qui lui sont destinés
-- Traduit le tempérament dans le format natif de sa cible
-- Évalue les backticks attachés à ses symboles (dans son propre langage)
-- Produit la sortie concrète (audio, MIDI, DMX, etc.)
+- **Transport** (OSC/MIDI) = envoyer des **données** horodatées.
+  `Sa` à T=1000ms → bundle OSC `{/instrument/sa, freq=261.63}` → scsynth.
+  Universel, pas de session, pas d'état.
+
+- **Eval** (sclang/Python) = envoyer du **code** à évaluer.
+  `` `sc: SynthDef(\grain, {...}).add` `` → sclang.evaluate(code).
+  Session persistante, état (variables), scope par runtime.
+
+Un fichier **sans backticks** n'utilise que les transports — aucun eval nécessaire.
+Un fichier **avec backticks** utilise les deux.
 
 ```
-@core
-@supercollider                    // runtime SC disponible
-@python                           // runtime Python disponible
-@alphabet.raga:supercollider               // les notes du raga → SC
-@lights:trigger.python            // les triggers lumière → Python
+@routing.studio
+@alphabet.raga:sc              // terminaux raga → OSC port 57110 (scsynth)
+                               // backticks `sc:` → sclang port 57120
 
-S -> Sa!dha Re!spotlight Ga Pa
-//   ^^      ^^^^^^^^^^^
-//   SC      Python (spotlight est un trigger.light → dmx via Python)
+S -> Sa Re `sc: i = i + 1` Ga
+//   ^^^^    ^^^^^^^^^^^^^^  ^^
+//   OSC     sclang eval     OSC
 ```
-
-Un fichier **sans backticks** fonctionne avec n'importe quel adaptateur.
-Un fichier **avec backticks** lie chaque backtick au runtime de son symbole.
 
 #### Backticks et multi-runtime
 

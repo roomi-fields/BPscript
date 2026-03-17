@@ -1,0 +1,33 @@
+{
+  "studio": {
+    "transports": {
+      "sc": { "type": "osc", "host": "127.0.0.1", "port": 57110, "addressPattern": "/instrument/{symbol}" },
+      "midi": { "type": "midi", "device": "IAC Driver", "channel": 1 },
+      "dmx": { "type": "osc", "host": "127.0.0.1", "port": 9000, "addressPattern": "/dmx/{symbol}" }
+    },
+    "evals": {
+      "sc": { "type": "sclang", "host": "127.0.0.1", "port": 57120 },
+      "python": { "type": "exec", "command": "python3" },
+      "tidal": { "type": "ghci", "host": "127.0.0.1", "port": 6010 }
+    }
+  },
+  "live": {
+    "transports": {
+      "sc": { "type": "osc", "host": "192.168.1.10", "port": 57110, "addressPattern": "/instrument/{symbol}" },
+      "midi": { "type": "midi", "device": "USB MIDI", "channel": 1 }
+    },
+    "evals": {
+      "sc": { "type": "sclang", "host": "192.168.1.10", "port": 57120 }
+    }
+  },
+  "browser": {
+    "transports": {
+      "browser": { "type": "webaudio" }
+    },
+    "evals": {}
+  },
+  "defaults": {
+    "baseHz": 440,
+    "timeout": 5000
+  }
+}

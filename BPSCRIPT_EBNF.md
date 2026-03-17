@@ -29,11 +29,15 @@ directive = "@" , directive_body ;
 
 directive_body = IDENT                              (* @core, @controls *)
                | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
-               | IDENT , ":" , IDENT                (* @core:midi — runtime binding *)
-               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + runtime *)
+               | IDENT , ":" , IDENT                (* @routing:studio — binding simple *)
+               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + binding *)
+               | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
-               | IDENT , "(" , alias_list , ")"     (* @western(A:La) — résolution conflit *)
+               | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
                ;
+
+param_pairs = param_pair , { "," , param_pair } ;
+param_pair  = IDENT , "=" , IDENT ;               (* transport=sc, eval=python *)
 
 alias_list = alias , { "," , alias } ;
 alias      = IDENT , ":" , IDENT ;
