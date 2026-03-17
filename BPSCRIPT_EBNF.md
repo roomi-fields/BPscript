@@ -507,23 +507,26 @@ timeout  → limite de temps sur <!
 ### Clés réservées de `@`
 
 ```
-core                → librairie noyau (lambda, on_fail)
-controls            → contrôles performance (vel, tempo, transpose, etc.)
-alphabet.western    → alphabet western (C, D, E...) depuis lib/alphabets.json
-alphabet.raga       → alphabet raga (sa, re, ga...) depuis lib/alphabets.json
-sub.dhati           → table de substitution depuis lib/sub.json
-hooks               → macros d'interaction
-tempo          → tempo global
-meter          → métrique globale
-mm             → marquage métronomique
-striated       → temps strié
-smooth         → temps lisse
-transpose      → transposition globale
-chan            → canal MIDI global
-vel            → vélocité globale
-ins            → programme MIDI global
-min_tempo      → contrainte tempo minimum
-max_tempo      → contrainte tempo maximum
+core                           → librairie noyau (lambda, on_fail)
+controls                       → contrôles performance (vel, tempo, transpose, etc.)
+alphabet.KEY:BINDING           → alphabet KEY depuis lib/alphabet.json, lié à BINDING
+alphabet.KEY(transport=X, eval=Y) → transport ≠ eval (forme explicite)
+tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à ALPHABET
+sub.KEY                        → table de substitution depuis lib/sub.json
+routing.KEY                    → config connexion KEY depuis lib/routing.json
+hooks                          → macros d'interaction
+tempo                          → tempo global
+meter                          → métrique globale
+mm                             → marquage métronomique
+baseHz                         → diapason (défaut 440)
+striated                       → temps strié
+smooth                         → temps lisse
+transpose                      → transposition globale
+chan                            → canal MIDI global
+vel                            → vélocité globale
+ins                            → programme MIDI global
+min_tempo                      → contrainte tempo minimum
+max_tempo                      → contrainte tempo maximum
 ```
 
 ### Mots réservés (4)

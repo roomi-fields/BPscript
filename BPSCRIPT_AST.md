@@ -36,12 +36,19 @@ Scene {
 ```
 Directive {
   type: "Directive"
-  name: string                    // "core", "controls", "alphabet", "sub", "tempo"...
-  subkey: string | null           // "western", "raga", "dhati"... (après le .)
-  runtime: string | null          // "midi", "supercollider", "python"...
+  name: string                    // "core", "controls", "alphabet", "tuning", "routing"...
+  subkey: string | null           // "western", "just_intonation", "studio"... (après le .)
+  binding: string | null          // clé de connexion après : ("sc", "midi", "raga"...)
+  params: Param[] | null          // forme explicite (transport=sc, eval=python)
   value: string | number | null   // 120, "7/8", -24...
   aliases: Alias[] | null         // résolution de conflits
   line: number
+}
+
+Param {
+  type: "Param"
+  key: string                     // "transport", "eval"
+  value: string                   // "sc", "python", "midi"
 }
 
 Alias {
@@ -51,18 +58,29 @@ Alias {
 }
 ```
 
-Le champ `subkey` permet d'accéder à une entrée spécifique dans un fichier JSON.
-La convention est stricte : `@file` → `lib/file.json`, `@file.key` → `lib/file.json` → clé `key`.
+Convention stricte : `@file` → `lib/file.json`, `@file.key` → `lib/file.json` → clé `key`.
+
+Le champ `binding` reçoit la valeur après `:`. Sa sémantique dépend de la directive :
+- `@alphabet.raga:sc` → binding = clé de connexion (transport + eval)
+- `@tuning.just_intonation:raga` → binding = alphabet cible
+- `@routing.studio` → pas de binding (chargement simple)
+
+La forme `(transport=x, eval=y)` est mutuellement exclusive avec `:` :
+- `:sc` = sucre pour `(transport=sc, eval=sc)`
+- `(transport=sc, eval=python)` = les deux spécifiés quand ils diffèrent
 
 Exemples :
-- `@core` -> `{ name:"core", subkey:null, runtime:null, value:null }`
-- `@controls` -> `{ name:"controls", subkey:null, runtime:null, value:null }`
-- `@alphabet.western:midi` -> `{ name:"alphabet", subkey:"western", runtime:"midi", value:null }`
-- `@alphabet.raga:supercollider` -> `{ name:"alphabet", subkey:"raga", runtime:"supercollider", value:null }`
-- `@sub.dhati` -> `{ name:"sub", subkey:"dhati", runtime:null, value:null }`
-- `@tempo:120` -> `{ name:"tempo", subkey:null, runtime:null, value:120 }`
-- `@meter:3/4` -> `{ name:"meter", subkey:null, runtime:null, value:"3/4" }`
-- `@transpose:-24` -> `{ name:"transpose", subkey:null, runtime:null, value:-24 }`
+- `@core` -> `{ name:"core", subkey:null, binding:null }`
+- `@controls` -> `{ name:"controls", subkey:null, binding:null }`
+- `@routing.studio` -> `{ name:"routing", subkey:"studio", binding:null }`
+- `@alphabet.western:midi` -> `{ name:"alphabet", subkey:"western", binding:"midi" }`
+- `@alphabet.raga:sc` -> `{ name:"alphabet", subkey:"raga", binding:"sc" }`
+- `@alphabet.raga(transport=sc, eval=python)` -> `{ name:"alphabet", subkey:"raga", params:[{key:"transport", value:"sc"}, {key:"eval", value:"python"}] }`
+- `@tuning.just_intonation:raga` -> `{ name:"tuning", subkey:"just_intonation", binding:"raga" }`
+- `@tuning.equal_temperament:western` -> `{ name:"tuning", subkey:"equal_temperament", binding:"western" }`
+- `@sub.dhati` -> `{ name:"sub", subkey:"dhati", binding:null }`
+- `@tempo:120` -> `{ name:"tempo", subkey:null, value:120 }`
+- `@baseHz:440` -> `{ name:"baseHz", subkey:null, value:440 }`
 - `@alphabet.western(A:La)` -> `{ name:"alphabet", subkey:"western", aliases:[{from:"A", to:"La"}] }`
 
 ---
