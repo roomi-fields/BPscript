@@ -3,7 +3,7 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 @mm:60
 @striated
 

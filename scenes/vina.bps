@@ -8,7 +8,7 @@
 
 @core
 @controls
-@raga:midi
+@alphabet.raga:midi
 
 // --- Sous-grammaire 1 [mode:random] — structure ---
 
@@ -37,7 +37,7 @@ Slide0 -> value(slide,0)
 Slide1 -> value(slide,101)
 Slide5 -> value(slide,501)
 Slide7 -> value(slide,701)
-StartSlide -> value(slide,0) [cont:slide]
+StartSlide -> cont(slide) value(slide,0)
 StopSlide -> fixed(slide)
 StartPull -> pitchcont pitchrange(500) pitchbend(0)
 StopPull -> pitchfixed

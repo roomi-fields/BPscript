@@ -7,7 +7,7 @@
 
 @core
 @controls
-@raga:midi
+@alphabet.raga:midi
 @mm:60
 @striated
 

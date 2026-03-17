@@ -6,31 +6,31 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 @mm:60
 @striated
 
 // --- Sous-grammaire 1 [mode:ord] — structure ---
 
-S -> {Melos1 Melos2 Melos3} [mode:ord, vel:80, rndvel:20]
+S -> [vel:80, rndvel:20]{Melos1 Melos2 Melos3} [mode:ord]
 Melos1 -> {Mel1 Mel2 Mel3}
-Melos2 -> {Melos1} [transpose:11]
-Melos3 -> {Melos1 - Melos2} [transpose:5]
+Melos2 -> [transpose:11]{Melos1}
+Melos3 -> [transpose:5]{Melos1 - Melos2}
 
 -----
 
 // --- Sous-grammaire 2 [mode:ord] — phrases ---
 
 Mel1 -> {M1 - - - - - . M2 - - M3 M4 - - M5} [mode:ord]
-Mel2 -> {Mel1} [transpose:-11]
-Mel3 -> {Mel1 - Mel2} [transpose:6, rotate:-1]
+Mel2 -> [transpose:-11]{Mel1}
+Mel3 -> [transpose:6, rotate:-1]{Mel1 - Mel2}
 
 -----
 
 // --- Sous-grammaire 3 [mode:ord] — matériaux ---
 
-M1 -> {C3 - . D4 F#3 keyxpand(B3,-1) C3 - D3 F#2} [mode:ord]
-M2 -> {{M1}[transpose:2]}
-M3 -> {{M1 M2},{keyxpand(C3,-1) M1}} [transpose:-6, rotate:-2]
-M4 -> {C3 D4 F#3 keyxpand(B3,-1) C3 D3 F#2}
-M5 -> {keyxpand(B4,-1) {M4,M1[vel:100]}} {M2,M3}
+M1 -> {C3 - . D4 F#3 [keyxpand: B3 -1]C3 - D3 F#2} [mode:ord]
+M2 -> {[transpose:2]{M1}}
+M3 -> [transpose:-6, rotate:-2]{{M1 M2},{[keyxpand: C3 -1]M1}}
+M4 -> {C3 D4 F#3 [keyxpand: B3 -1]C3 D3 F#2}
+M5 -> {[keyxpand: B4 -1]{M4,[vel:100]M1}} {M2,M3}

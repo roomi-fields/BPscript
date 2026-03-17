@@ -77,7 +77,34 @@ const KEYWORDS = {
   'lambda': T.LAMBDA,
 };
 
-function tokenize(source) {
+/**
+ * Pre-scan: collect all LHS identifiers (non-terminals) that contain '-'.
+ * These need to be tokenized as single IDENT tokens.
+ * BP3 allows '-' in non-terminal names but not in terminals (Bernard Bel convention).
+ */
+function prescanHyphenatedNonTerminals(source) {
+  const ids = new Set();
+  // Match LHS symbols before arrows: word-word -> or word-word <-
+  // Also handle multi-symbol LHS: contextual rules with multiple symbols before ->
+  const arrowRe = /^.*?(?:->|<-|<>)/gm;
+  let m;
+  while ((m = arrowRe.exec(source)) !== null) {
+    const lhs = m[0].replace(/->|<-|<>/, '').trim();
+    // Extract identifiers containing '-' from the LHS
+    // Match sequences of alphanumeric/_ chars joined by hyphens: Tr-11, my-var-3
+    const identRe = /[a-zA-Z][a-zA-Z0-9_#'"]*(?:-[a-zA-Z0-9_#'"]+)+/g;
+    let im;
+    while ((im = identRe.exec(lhs)) !== null) {
+      ids.add(im[0]);
+    }
+  }
+  return ids;
+}
+
+function tokenize(source, opts = {}) {
+  // Collect hyphenated non-terminals from LHS pre-scan
+  const hyphenatedIds = opts.hyphenatedIds || prescanHyphenatedNonTerminals(source);
+
   const tokens = [];
   let i = 0;
   let line = 1;
@@ -212,6 +239,30 @@ function tokenize(source) {
         peek() === "'" || peek() === '"'   // allow ' and " in identifiers like A', B", F'24
       )) {
         id += advance();
+      }
+      // Check for hyphenated non-terminal: Tr-11, my-var
+      // Consume '-' and following chars if the result is a known LHS identifier
+      if (peek() === '-' && hyphenatedIds.size > 0) {
+        let candidate = id;
+        let savedI = i, savedLine = line, savedCol = col;
+        while (peek() === '-') {
+          candidate += advance(); // consume -
+          while (i < source.length && (
+            (peek() >= 'a' && peek() <= 'z') ||
+            (peek() >= 'A' && peek() <= 'Z') ||
+            (peek() >= '0' && peek() <= '9') ||
+            peek() === '_' || peek() === '#' ||
+            peek() === "'" || peek() === '"'
+          )) {
+            candidate += advance();
+          }
+        }
+        if (hyphenatedIds.has(candidate)) {
+          id = candidate; // accept the hyphenated form
+        } else {
+          // rollback — not a known non-terminal
+          i = savedI; line = savedLine; col = savedCol;
+        }
       }
       // Check keywords
       if (KEYWORDS[id]) {

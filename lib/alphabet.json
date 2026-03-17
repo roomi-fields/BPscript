@@ -95,7 +95,8 @@
           "si5",
           "si6"
         ]
-      ]
+      ],
+      "noteConvention": 1
     },
     "Ruwet": {
       "terminals": [
@@ -833,7 +834,8 @@
           "B": 11
         },
         "description": "Les symboles sont générés dynamiquement par le compilateur. Seul l'octave 0 est listé explicitement comme exemple. Le compilateur utilise la formule pour résoudre n'importe quel C0-B9."
-      }
+      },
+      "noteConvention": 0
     },
     "raga": {
       "symbols": {
@@ -889,7 +891,8 @@
           9
         ],
         "description": "sa6 = sa octave 6, re6 = re octave 6, etc. Le compilateur résout via le generator."
-      }
+      },
+      "noteConvention": 2
     }
   }
 }

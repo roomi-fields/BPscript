@@ -141,7 +141,7 @@ par le compilateur :
 | ---------------- | --------------------------------------- | ---------------------------------------------- | ----------------------------- |
 | **Non-terminal** | implicite (apparaît en LHS d'une règle) | variable de grammaire, se réécrit et disparaît | S, I, A, B, R1, P4            |
 | **Terminal**     | explicite (type + runtime)              | symbole de sortie, atteint un runtime          | sa6:gate:midi, dha:trigger:sc |
-| **Contrôle**     | via `@+` / `@hooks`                     | commande moteur, zéro durée                    | vel(120), tempo(2), goto(2,1) |
+| **Contrôle**     | via `@controls` / `@hooks`                     | commande moteur, zéro durée                    | vel(120), tempo(2), goto(2,1) |
 
 Les non-terminaux sont des **symboles purement BPS** : ils n'existent que
 pendant la dérivation, n'ont ni type temporel ni runtime. Ils se réécrivent
@@ -171,7 +171,7 @@ trigger flash:python             // flash est un trigger, géré par Python
 cv ramp:sc                       // ramp est un cv, géré par SuperCollider
 
 // Déclaration par import (en bloc)
-@raga:supercollider              // tous les symboles du raga → gate/trigger:sc
+@alphabet.raga:supercollider              // tous les symboles du raga → gate/trigger:sc
 @lights:python                   // tous les symboles de lights → trigger:python
 ```
 
@@ -227,7 +227,7 @@ Les librairies déclarent les défauts des symboles qu'elles fournissent.
 Le compositeur surcharge ponctuellement. Le runtime reçoit le résultat.
 
 ```
-// @raga:supercollider définit Sa avec vel:80 par défaut
+// @alphabet.raga:supercollider définit Sa avec vel:80 par défaut
 
 Sa                               // vel:80 (défaut hérité de la lib)
 Sa(vel:120)                      // vel:120 (surcharge littérale)
@@ -387,6 +387,83 @@ meter              signature rythmique (@meter:7/8, @meter:4/4)
 
 Toute autre clé dans `[]` est passée comme métadonnée opaque au runtime.
 
+## Qualificateurs de contrôle — `[vel:80]A` et `A[vel:80]`
+
+Les contrôles BP3 (`vel`, `tempo`, `transpose`, `ins`, `chan`, `volume`, etc.) sont
+des commandes **zéro-durée** — ils modifient l'état du séquenceur sans occuper de temps.
+Ils ne peuvent donc **pas** être des éléments autonomes dans le RHS (règle absolue :
+chaque élément séparé par des espaces dans le RHS doit occuper un espace temporel).
+
+Les contrôles s'attachent à un élément via `[]`, en **préfixe** ou **suffixe** :
+
+```
+// Préfixe (recommandé) — le contrôle s'applique AVANT l'élément
+[vel:80]A B C                    // vel change juste avant A
+[ins:3, volumecont, volume:127]A4  // 3 contrôles avant A4
+
+// Suffixe — le contrôle s'applique APRÈS l'élément
+A[vel:80] B C                    // vel change juste après A (avant B)
+A4[volume:0]                     // volume mis à 0 après A4
+```
+
+### Analogie `++i` / `i++` (C)
+
+La distinction préfixe/suffixe est analogue au pré/post-incrément en C :
+- `[vel:80]A` = `++i` → l'effet précède l'évaluation (vel change, puis A joue)
+- `A[vel:80]` = `i++` → l'évaluation précède l'effet (A joue, puis vel change)
+
+### Compilation vers BP3
+
+```
+// BPscript                              → BP3
+[vel:80]A B C                            → _vel(80) A B C
+A[vel:80] B C                            → A _vel(80) B C
+[ins:3, volumecont, volume:127]A4        → _ins(3) _volumecont _volume(127) A4
+A4[volume:0]                             → A4 _volume(0)
+```
+
+### Collé vs espacé
+
+La distinction est syntaxique :
+- `[vel:80]A` (collé) → qualificateur **d'élément** (contrôle sur A)
+- `[mode:random] A` (espace) → qualificateur **de règle** (mode de la sous-grammaire)
+
+Le parser distingue par la clé : si c'est un nom de contrôle connu
+(défini dans `lib/controls.json`), c'est un qualificateur d'élément.
+Sinon (`mode`, `weight`, `scan`, `on_fail`, etc.), c'est un qualificateur de règle.
+
+### Valeur brute (modèle CSS)
+
+Tout ce qui suit le `:` jusqu'au prochain `,` ou `]` est la valeur brute.
+Le contrôle l'interprète — BPscript ne parse pas. Les espaces séparent les
+arguments et sont convertis en `,` pour BP3 (sauf `script` qui les préserve).
+
+```
+[vel: 80]A                       // 1 arg → _vel(80) A
+[keyxpand: B3 -1]C3             // 2 args → _keyxpand(B3,-1) C3
+[scale: just_intonation C4]D    // underscore → espace → _scale(just intonation,C4) D
+[value: slide 0]H               // 2 args → _value(slide,0) H
+[script: MIDI send Continue]A   // espaces préservés → _script(MIDI send Continue) A
+[volumecont]A4                   // flag nu → _volumecont A4
+[transpose: -7]X Y              // valeur négative → _transpose(-7) X Y
+```
+
+Pas de cas spécial pour 1 vs N arguments — c'est la même syntaxe.
+`[vel: 80]` et `[keyxpand: B3 -1]` suivent la même règle.
+
+### Exception — contrôles autonomes (résolution pure)
+
+Quand un non-terminal se résout **entièrement** en contrôles (pas d'élément temporel),
+les contrôles peuvent apparaître comme éléments RHS autonomes :
+
+```
+Pull0 -> pitchbend(0)                               // → _pitchbend(0)
+StartPull -> pitchcont pitchrange(500) pitchbend(0)  // → _pitchcont _pitchrange(500) _pitchbend(0)
+```
+
+C'est le seul cas où des éléments zéro-durée sont tolérés dans le RHS sans `[]`.
+Ce pattern existe dans les grammaires à couches (vina, vina2, vina3).
+
 ## Backticks — code natif dans le flux
 
 Les backticks délimitent du code opaque pour BPscript. Le compilateur ne parse pas,
@@ -401,7 +478,7 @@ et le runtime évalue.
 ```
 @supercollider
 @python
-@raga:supercollider
+@alphabet.raga:supercollider
 
 // Orphelins — tag obligatoire (pas attachés à un symbole)
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
@@ -483,7 +560,7 @@ SC, Python, Processing, DMX — sans utiliser la polymétrie.
 ```
 @supercollider
 @python
-@raga:supercollider
+@alphabet.raga:supercollider
 @lights:trigger.python
 
 // Un seul point temporel, trois runtimes
@@ -563,7 +640,7 @@ ou tout autre protocole — le langage ne le sait pas.
 ### `@hooks` — interaction temps réel simplifiée
 
 Le mécanisme `<!` est puissant mais bas niveau. La librairie `@hooks` fournit
-des macros intuitives qui cachent la plomberie — comme `@+` le fait pour
+des macros intuitives qui cachent la plomberie — comme `@controls` le fait pour
 les contrôles moteur.
 
 ```
@@ -635,7 +712,7 @@ avec une sémantique temporelle distincte :
 | `...`   | **repos indéterminé** | calculée par le moteur      | le moteur trouve la durée optimale       |
 
 ```
-@raga
+@alphabet.raga
 
 // Silence explicite : 4 positions, la 3e est vide
 S -> Sa Re - Ga
@@ -738,11 +815,10 @@ Opérateurs de test+mutation : `+` (incrémente et teste > 0), `-` (décrémente
 Ce n'est pas du branchement (if/else) — c'est une garde, comme dans les
 L-systems paramétriques ou les clauses Erlang.
 
-### `!` — mutation d'état dans le RHS
+### `[]` — mutation d'état dans le RHS
 
-La mutation de flag utilise `!`, le même opérateur que les triggers.
-C'est cohérent : les deux sont des **événements zéro-durée** attachés
-à un point dans le flux temporel.
+La mutation de flag utilise `[]` — cohérent avec les qualificateurs et
+les opérateurs temporels. `[]` = instructions moteur BP3, `!` = temporel.
 
 ```
 when phase==1 S -> Sa Re Ga [phase=2] Pa     // joue Ga, puis passe phase à 2
@@ -765,7 +841,7 @@ Les flags peuvent aussi référencer d'autres flags :
 ### Exemple : raga en 3 phases
 
 ```
-@raga
+@alphabet.raga
 @tempo:60
 
 // Gardes : chaque phase a ses propres règles
@@ -808,7 +884,7 @@ Deux usages, deux complexités — mais une seule syntaxe :
 ### Liaison mélodique (legato/slur)
 
 Les notes se chevauchent légèrement pour un phrasé fluide.
-En BPscript, c'est un contrôle `@+` — pas besoin de `~` :
+En BPscript, c'est un contrôle `@controls` — pas besoin de `~` :
 
 ```
 legato(20) Sa Re Ga      // 20% de prolongation sur chaque note
@@ -1024,44 +1100,57 @@ Les librairies sont liées à un runtime à l'import.
 
 ```
 @core                            // on_fail, contrôles moteur
-@+                               // tempo(), vel(), pan(), mm(), striated(), smooth()
+@controls                        // vel, tempo, transpose, ins, chan...
 @hooks                           // wait(), wait_all(), wait_timeout(), speed_ctrl()...
-@raga:supercollider              // Sa, Re, Ga... (gate:sc), dha, ti... (trigger:sc)
-@western:supercollider           // C, D, E, F, G, A, B (gate:sc)
+@alphabet.western:supercollider  // C, D, E, F, G, A, B (gate:sc)
+@alphabet.raga:supercollider     // Sa, Re, Ga... (gate:sc), dha, ti... (trigger:sc)
+@alphabet.tabla:python           // tabla bols → Python
+@sub.dhati                       // table de substitution dhati
 @lights:python                   // spotlight, strobe, fade... (trigger:python)
 @patterns                        // macros agnostiques : fast(), slow(), rev(), euclid()
 ```
 
-`@patterns` n'a pas de runtime — ce sont des macros (réécriture textuelle).
-`@core`, `@+` et `@hooks` sont des contrôles moteur BP3, pas des objets runtime.
+**Convention stricte** : le nom de la directive = le nom du fichier JSON dans `lib/`.
+Le `.` accède à une entrée spécifique dans le fichier :
+- `@alphabet.western` → `lib/alphabet.json` → clé `"western"`
+- `@sub.dhati` → `lib/sub.json` → clé `"dhati"`
+- `@core` → `lib/core.json` (fichier entier)
 
-`@+` fournit les contrôles de performance avec des noms propres.
-Le compositeur écrit `tempo(2)`, le compilateur produit `_tempo(2)` pour BP3.
+Pas de magie, pas de fallback. Plusieurs alphabets mixables dans une même scène,
+chacun lié à son propre runtime — c'est le cœur du méta-ordonnanceur multi-runtime.
+
+`@patterns` n'a pas de runtime — ce sont des macros (réécriture textuelle).
+`@core`, `@controls` et `@hooks` sont des contrôles moteur BP3, pas des objets runtime.
+
+`@controls` fournit les contrôles de performance (vel, tempo, transpose, ins, etc.).
+Les contrôles s'attachent à un élément RHS via `[]` en préfixe ou suffixe :
+`[tempo:2]A` (avant A) ou `A[tempo:2]` (après A).
+Le compilateur produit `_tempo(2) A` ou `A _tempo(2)` pour BP3.
 Le `_` est un détail d'implémentation, invisible dans le source BPscript.
 
 **Distinction tempo vs métronome :**
-- `tempo(2)` = multiplicateur relatif (double la vitesse courante)
-- `mm(120)` = marquage métronomique absolu (120 BPM)
-- `striated()` / `smooth()` = bascule entre temps strié et temps lisse
+- `[tempo:2]` = multiplicateur relatif (double la vitesse courante)
+- `@mm:120` = marquage métronomique absolu (120 BPM)
+- `@striated` / `@smooth` = bascule entre temps strié et temps lisse
 
 Ce sont trois niveaux distincts du contrôle temporel (cf. B12).
 
 Une librairie déclare les types et le runtime de ses symboles.
-Quand on importe `@raga:supercollider`, `Sa` est un `gate:sc` et `dha` est
+Quand on importe `@alphabet.raga:supercollider`, `Sa` est un `gate:sc` et `dha` est
 un `trigger:sc` — le compositeur n'a pas besoin de le redéclarer.
 
 ```
-@raga:supercollider
+@alphabet.raga:supercollider
 
-// Sa est gate:sc, dha est trigger:sc — déclarés par @raga
+// Sa est gate:sc, dha est trigger:sc — déclarés par @alphabet.raga
 S -> Sa Re Ga Pa              // 4 gates (occupent du temps, gérés par SC)
 S -> Sa!dha Re!dha Ga!dha     // gates + triggers (même runtime : SC)
 ```
 
 La même librairie peut être liée à un runtime différent :
 ```
-@raga:csound                  // même vocabulaire, Csound au lieu de SC
-@raga:midi                    // même vocabulaire, MIDI direct
+@alphabet.raga:csound                  // même vocabulaire, Csound au lieu de SC
+@alphabet.raga:midi                    // même vocabulaire, MIDI direct
 ```
 
 Les librairies définissent des **noms** et des **identités**, pas des formats de sortie.
@@ -1073,13 +1162,13 @@ Si deux librairies définissent le même symbole, le compilateur produit une err
 et demande une résolution explicite :
 
 ```
-@raga               // définit A (degree 6 = Dha)
-@western            // définit A (note la)
-// ❌ Erreur : symbole 'A' défini dans @raga et @western
+@alphabet.raga               // définit A (degree 6 = Dha)
+@alphabet.western            // définit A (note la)
+// ❌ Erreur : symbole 'A' défini dans @alphabet.raga et @alphabet.western
 
 // Résolution : alias explicite
-@raga
-@western(A:La)       // renomme A de @western en La
+@alphabet.raga
+@alphabet.western(A:La)       // renomme A de @alphabet.western en La
 ```
 
 ## Les 5 couches + runtime (MusicOSI)
@@ -1106,7 +1195,7 @@ Déclarer le double contrat (type temporel + runtime) et des macros.
 @core
 @supercollider
 @python
-@raga:supercollider               // notes → SC
+@alphabet.raga:supercollider               // notes → SC
 @lights:python                    // lumières → Python
 
 // Runtime : définir les sons et comportements natifs
@@ -1127,7 +1216,7 @@ Les runtimes sont déclarés, le compositeur se concentre sur la structure.
 @core
 @supercollider
 @python
-@raga:supercollider
+@alphabet.raga:supercollider
 @lights:python
 @tempo:120
 
@@ -1251,7 +1340,7 @@ Chaque adaptateur :
 @core
 @supercollider                    // runtime SC disponible
 @python                           // runtime Python disponible
-@raga:supercollider               // les notes du raga → SC
+@alphabet.raga:supercollider               // les notes du raga → SC
 @lights:trigger.python            // les triggers lumière → Python
 
 S -> Sa!dha Re!spotlight Ga Pa
@@ -1436,7 +1525,7 @@ Les backticks connectent les deux dans un seul fichier.
 @supercollider
 @tidal
 @python
-@raga:supercollider
+@alphabet.raga:supercollider
 @lights:trigger.python
 
 // Initialisation — chaque runtime prépare ses objets
@@ -1774,7 +1863,7 @@ Parser ──→ AST
   ▼
 Type-checker
   │  - vérifie le double contrat : type temporel (gate/trigger/cv) + runtime
-  │  - résout les imports (@raga:sc, @lights:python)
+  │  - résout les imports (@alphabet.raga:sc, @lights:python)
   │  - détecte les conflits de noms entre librairies
   │  - valide les ! (primaire doit occuper du temps)
   │  - rejette les symboles non déclarés
@@ -1797,7 +1886,7 @@ Encoder
   │  9. Passe - (silence) et . (period) tels quels vers BP3
   │  10. Traduit [on_fail:...] → _goto/_failed
   │  11. Traduit [speed:N] → /N, *N, etc.
-  │  12. Traduit @+ controls → _tempo(), _vel(), etc.
+  │  12. Traduit [vel:80]A → _vel(80) A, A[vel:80] → A _vel(80) (contrôles)
   │
   ▼
 Grammaire BP3 + alphabet + settings
@@ -1893,7 +1982,7 @@ est statique — impossible d'ajouter de nouvelles conventions sans modifier
 et recompiler le moteur.
 
 Dans l'architecture BPscript, les conventions de notes sont des **librairies JSON**
-(`@western`, `@raga`, et à terme `@solfege`, `@tabla`, ou toute convention
+(`@alphabet.western`, `@alphabet.raga`, et à terme `@solfege`, `@tabla`, ou toute convention
 définie par l'utilisateur). L'encoder génère l'alphabet (format OCT) et les
 settings (NoteConvention) pour que le moteur BP3 reconnaisse les terminaux.
 

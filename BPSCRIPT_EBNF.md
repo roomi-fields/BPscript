@@ -1,6 +1,6 @@
 # BPscript — Grammaire EBNF
 
-Version 0.3 — dérivée de BPSCRIPT_VISION.md et validée par 17 traductions de scènes BP3.
+Version 0.6 — dérivée de BPSCRIPT_VISION.md et validée par 44 traductions de scènes BP3.
 
 Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 `[ ]` optionnel, `{ }` répétition 0+, `+` répétition 1+, `"..."` littéral,
@@ -27,9 +27,10 @@ scene       = { directive | declaration | macro | backtick_orphan
 ```ebnf
 directive = "@" , directive_body ;
 
-directive_body = IDENT                              (* @core, @supercollider *)
-               | "+"                                (* @+ — contrôles performance *)
-               | IDENT , ":" , IDENT                (* @raga:supercollider *)
+directive_body = IDENT                              (* @core, @controls *)
+               | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
+               | IDENT , ":" , IDENT                (* @core:midi — runtime binding *)
+               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + runtime *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
                | IDENT , "(" , alias_list , ")"     (* @western(A:La) — résolution conflit *)
                ;
@@ -96,10 +97,11 @@ ARROW = "->" | "<-" | "<>" ;
 ### `guard`
 
 ```ebnf
-guard = "when" , guard_expr ;
+guard = "when" , guard_expr , { guard_expr } ;     (* multi-guard = AND *)
 
 guard_expr = IDENT , COMPARE_OP , flag_value      (* test pur *)
            | IDENT , MUTATE_OP , INT               (* test + mutation atomique *)
+           | IDENT                                  (* bare flag : non-zéro test *)
            ;
 
 COMPARE_OP = "==" | "!=" | ">" | "<" | ">=" | "<=" ;
@@ -110,6 +112,7 @@ flag_value = INT | IDENT ;                          (* littéral ou autre flag *
 
 La forme `when flag-N` décrémente ET teste > 0 atomiquement (sémantique BP3).
 La forme `when flag>N` teste sans muter.
+La forme `when Ideas` (bare flag) teste que le flag est non-zéro → `/Ideas/` en BP3.
 
 ### `context`
 
@@ -193,24 +196,89 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 ## Couche 4 — Éléments RHS
 
 ```ebnf
-rhs_element = symbol
-            | symbol_call
-            | rest | prolongation | undetermined_rest
-            | period
-            | numeric_duration
-            | polymetric
-            | control
-            | simultaneous
-            | trigger_in
-            | variable
-            | wildcard
-            | template_master | template_slave
-            | tie_start | tie_continue | tie_end
-            | nil_string
-            | backtick_standalone
-            | context
-            | flag_mutation ;
+rhs_element = [ control_qualifier ] , element_core , [ control_qualifier ] ;
+
+element_core = symbol
+             | symbol_call
+             | rest | prolongation | undetermined_rest
+             | period
+             | numeric_duration
+             | polymetric
+             | simultaneous
+             | out_time_object
+             | trigger_in
+             | variable
+             | wildcard
+             | template_master | template_slave
+             | tie_start | tie_continue | tie_end
+             | nil_string
+             | backtick_standalone
+             | context
+             | raw_brace
+             | flag_bracket ;
 ```
+
+### 4.0 Qualificateurs de contrôle par élément
+
+```ebnf
+control_qualifier = "[" , control_pair , { "," , control_pair } , "]" ;
+
+control_pair = CONTROL_KEY , ":" , raw_value          (* clé: valeur brute *)
+             | CONTROL_KEY ;                          (* flag nu : [volumecont] *)
+
+CONTROL_KEY  = (* nom présent dans lib/controls.json : vel, tempo, ins,
+                  chan, transpose, volume, volumecont, pitchbend, keyxpand,
+                  scale, value, script, etc. *) ;
+
+raw_value    = (* tout texte jusqu'au prochain "," ou "]" *) ;
+```
+
+Les qualificateurs de contrôle s'attachent à un élément RHS individuel (pas à la règle).
+Ils compilent en `_name(value)` pour BP3 — des commandes zéro-durée.
+
+**Valeur brute (modèle CSS)** : tout ce qui suit le `:` jusqu'au prochain `,` ou `]`
+est la valeur, interprétée par le contrôle. Les espaces séparent les arguments et sont
+convertis en `,` pour BP3. Les underscores dans les noms de gamme sont convertis en espaces.
+
+```
+[vel: 80]              → _vel(80)              // 1 argument
+[keyxpand: B3 -1]      → _keyxpand(B3,-1)      // 2 arguments (espaces → virgules)
+[scale: just_intonation C4] → _scale(just intonation,C4)  // underscore → espace
+[script: MIDI send Continue] → _script(MIDI send Continue) // espaces préservés
+```
+
+**Position — préfixe ou suffixe** (analogie `++i` / `i++` en C) :
+
+- **Préfixe** (recommandé) : `[vel:80]A` — le contrôle s'applique **avant** `A`.
+  Le changement est actif au moment où `A` est joué.
+  Compilé en : `_vel(80) A`
+
+- **Suffixe** : `A[vel:80]` — le contrôle s'applique **après** `A`.
+  Le changement prend effet pour les éléments suivants.
+  Compilé en : `A _vel(80)`
+
+- **Collé vs espacé** : `[vel:80]A` (collé) = qualificateur sur `A`.
+  `[vel:80] A` (espace) = qualificateur sur la règle (interdit pour les contrôles,
+  seuls `mode`, `weight`, `scan`, `on_fail`, etc. sont des qualificateurs de règle).
+
+- **Distinction `[]` contrôle vs `[]` règle** : le parser distingue par la clé.
+  Si la clé est un nom de contrôle connu (via lib/controls.json) → qualificateur d'élément.
+  Sinon → qualificateur de règle ou flag.
+
+**Exception — contrôles autonomes dans le RHS** : quand un non-terminal se résout
+en purs contrôles (aucun élément temporel), les contrôles peuvent apparaître comme
+éléments RHS autonomes. C'est le seul cas où des éléments zéro-durée sont tolérés
+dans le RHS sans être attachés via `[]`.
+
+```ebnf
+(* Résolution d'un non-terminal en contrôle pur *)
+Pull0 -> pitchbend(0)                                (* → _pitchbend(0) *)
+StartPull -> pitchcont pitchrange(500) pitchbend(0)   (* → _pitchcont _pitchrange(500) _pitchbend(0) *)
+```
+
+Ce pattern existe dans les grammaires à couches (vina, vina2, vina3) où les
+non-terminaux intermédiaires occupent du temps dans la couche supérieure et se
+résolvent en instructions moteur dans la couche inférieure.
 
 ### 4.1 Symboles
 
@@ -247,23 +315,7 @@ voice      = rhs_element+ ;
 Le ratio de tempo BP3 (`{2, voix1, voix2}`) s'exprime via `[speed:N]` :
 `{voix1, voix2}[speed:2]`.
 
-### 4.4 Contrôles (@+)
-
-```ebnf
-control = CONTROL_NAME , [ "(" , args , ")" ] ;
-
-CONTROL_NAME = "vel" | "tempo" | "mm" | "ins" | "chan"
-             | "staccato" | "legato" | "pan" | "mod"
-             | "transpose" | "pitchbend" | "pressure"
-             | "striated" | "smooth" | "goto" | "scale"
-             | IDENT ;                               (* extensible *)
-
-args = arg_value , { "," , arg_value } ;
-```
-
-Les contrôles compilent en `_name(args)` pour BP3. Zéro durée.
-
-### 4.5 Simultanéité (`!`)
+### 4.4 Simultanéité (`!`)
 
 ```ebnf
 simultaneous = "!" , sim_target ;
@@ -284,7 +336,16 @@ Deux usages :
 Chaînable : `Sa!dha!spotlight`.
 
 Les mutations de flags ne passent plus par `!` — elles vont dans `[]`
-(voir § 4.13).
+(voir § 4.12).
+
+### 4.5 Out-time object (`!` standalone)
+
+```ebnf
+out_time_object = "!" , IDENT ;                      (* !f → <<f>> en BP3 *)
+```
+
+Objet hors-temps : déclenché sans occuper de durée dans la séquence.
+Utilisé quand un non-terminal se résout en pur déclenchement.
 
 ### 4.6 Trigger entrant (`<!`)
 
@@ -341,24 +402,10 @@ nil_string = "lambda" ;
 
 Efface le non-terminal (production ε).
 
-`lambda` peut être suivi de `!` pour attacher des mutations de flag :
-`lambda!Num_a=20!Num_b=0` — efface le non-terminal ET mute des flags.
-Dans ce cas, le parser produit un `SimultaneousGroup` avec `NilString` comme primaire.
-
-### 4.12 Backticks
+### 4.12 Flags dans le RHS (`[]`)
 
 ```ebnf
-backtick_inline     = "`" , CODE , "`" ;             (* dans un paramètre *)
-backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux, taggé *)
-```
-
-Backtick attaché à un symbole → runtime implicite (celui du symbole).
-Backtick dans le flux → tag obligatoire (`sc:`, `py:`, `tidal:`).
-
-### 4.13 Flags dans le RHS (`[]`)
-
-```ebnf
-rhs_flag = "[" , flag_expr , { "," , flag_expr } , "]" ;
+flag_bracket = "[" , flag_expr , { "," , flag_expr } , "]" ;
 
 flag_expr = IDENT , MUTATE_ASSIGN , flag_rvalue     (* mutation : [phase=2] *)
           | IDENT ;                                  (* flag set/ref : [Atrans], [K1] *)
@@ -379,12 +426,38 @@ Symétrie LHS/RHS :
 - `when phase==1 S -> ...` → test flag (LHS)
 - `S -> ... [phase=2]` → set flag (RHS)
 
+### 4.13 Backticks
+
+```ebnf
+backtick_inline     = "`" , CODE , "`" ;             (* dans un paramètre *)
+backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux, taggé *)
+```
+
+Backtick attaché à un symbole → runtime implicite (celui du symbole).
+Backtick dans le flux → tag obligatoire (`sc:`, `py:`, `tidal:`).
+
+### 4.14 Raw braces (méta-grammaires)
+
+```ebnf
+raw_brace = "{" | "}" | "," ;                        (* braces non balancées *)
+```
+
+Utilisé quand `{`, `}`, `,` apparaissent comme terminaux bruts dans le RHS
+(embedding patterns, méta-grammaires). Le parser les émet comme `RawBrace`
+quand ils ne forment pas un polymetric balancé dans la même règle.
+
 ---
 
 ## Couche 5 — Lexèmes
 
 ```ebnf
-IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' } ;
+IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' }
+            | letter , { letter | digit | "_" | "#" | "'" | '"' } , "-" , { letter | digit | "_" | "#" | "'" | '"' | "-" } ;
+              (* Le tiret "-" est autorisé dans les non-terminaux : Tr-11, my-var.
+                 Résolu par pré-scan : le tokenizer collecte les LHS du fichier
+                 et reconnaît les identifiants avec "-" qui apparaissent en LHS.
+                 Convention héritée de BP3 (Bernard Bel) : "-" autorisé dans les
+                 noms de variables, interdit dans les terminaux. *)
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 value       = INT | FLOAT | IDENT | INT , "/" , INT ;
@@ -401,13 +474,6 @@ blank_line  = (* ligne vide ou whitespace seul *) ;
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
 - Les underscores dans les noms sont autorisés (ex: `just_intonation`).
   Le compilateur traduit `_` → espace dans les arguments de `_scale()` pour BP3.
-
-**Contraintes lexicales** :
-- `-` (tiret) n'est JAMAIS autorisé dans un identifiant. `dhin--` = `dhin` + silence + silence.
-  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms (`CompileGrammar.c:1200-1203`).
-- `#` est autorisé dans les identifiants pour les altérations (C#4, F#2).
-- Les underscores `_` en début de nom sont réservés aux contrôles BP3 (`_vel`, `_tempo`).
-  En BPscript, les contrôles n'ont pas de `_` — c'est un détail de compilation.
 
 **Quoted symbols** : BP3 supporte `'texte'` pour utiliser des caractères spéciaux
 ou des nombres comme terminaux (`'1'`, `'2'`). BPscript **n'a pas** de quoted symbols —
@@ -437,9 +503,12 @@ timeout  → limite de temps sur <!
 ### Clés réservées de `@`
 
 ```
-core           → librairie noyau (lambda, on_fail)
-+              → contrôles performance
-hooks          → macros d'interaction
+core                → librairie noyau (lambda, on_fail)
+controls            → contrôles performance (vel, tempo, transpose, etc.)
+alphabet.western    → alphabet western (C, D, E...) depuis lib/alphabets.json
+alphabet.raga       → alphabet raga (sa, re, ga...) depuis lib/alphabets.json
+sub.dhati           → table de substitution depuis lib/sub.json
+hooks               → macros d'interaction
 tempo          → tempo global
 meter          → métrique globale
 mm             → marquage métronomique
@@ -493,8 +562,9 @@ lambda   → chaîne vide (efface le non-terminal)
 | `when X-N` | `/X-N/` en LHS | test + mutation |
 | `[X=N]` | `/X=N/` en RHS | mutation flag |
 | `[X]` | `/X/` en RHS | flag set/ref (nu) |
-| `vel(120)` | `_vel(120)` | contrôle @+ |
-| `goto(2,1)` | `_goto(2,1)` | contrôle @+ |
+| `[vel:120]A` | `_vel(120) A` | contrôle préfixe (avant A) |
+| `A[vel:120]` | `A _vel(120)` | contrôle suffixe (après A) |
+| `[ins:3, volumecont, volume:127]A` | `_ins(3) _volumecont _volume(127) A` | multi-contrôle préfixe |
 | `[mode:random]` | `RND` en mode_line | mode du bloc |
 | `[scan:left]` | `LEFT` dans la règle | mode dérivation |
 | `[weight:50-12]` | `<50-12>` | poids décroissant |
@@ -509,10 +579,14 @@ lambda   → chaîne vide (efface le non-terminal)
 | `-----` | `-----` | séparateur (identique) |
 | `lambda` | `lambda` | chaîne vide (identique) |
 | `<!sync1` | `<<W1>>` | sync tag |
-| `scale(just_intonation,C4)` | `_scale(just intonation,C4)` | `_` → espace dans args scale |
-| `repeat(K1=3)` | `_repeat(K1=3)` | contrôle @+ avec K-param |
+| `[scale: just_intonation C4]A` | `_scale(just intonation,C4) A` | valeur brute (espaces→virgules, `_`→espace) |
+| `[keyxpand: B3 -1]C3` | `_keyxpand(B3,-1) C3` | valeur brute multi-args |
+| `[script: MIDI send Continue]A` | `_script(MIDI send Continue) A` | espaces préservés (script) |
+| `[value: slide 0]H` | `_value(slide,0) H` | valeur brute 2 args |
 | `X ->` (RHS vide) | `X -->` | production epsilon (sans lambda) |
-| `transpose(-3)` | `_transpose(-3)` | valeur négative |
+| `[transpose: -3]A` | `_transpose(-3) A` | valeur négative en préfixe |
+| `when Ideas` | `/Ideas/` | bare flag (test non-zéro) |
+| `[meter:4+4/6]` | `4+4/6` avant RHS | time signature inline |
 
 **Contraintes lexicales** :
 - `-` (tiret) n'est JAMAIS autorisé dans un identifiant. `dhin--` = `dhin` + silence + silence.

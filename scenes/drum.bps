@@ -3,16 +3,12 @@
 
 @core
 @controls
-@western:midi
-
-// Contrôles globaux
-@chan:1
-@vel:120
+@alphabet.western:midi
 
 // Trois voix : kick (C8), snare (C7), hihat (E7)
 // Chaque voix a des durées différentes → polymétrie naturelle
 S -> {
-  C8[staccato:96] - - -,
-  -[staccato:96] C7 C7 C7,
-  E7[staccato:92] E7 E7 E7 E7 E7 E7 E7
+  [chan:1, vel:120, staccato:96]C8 - - -,
+  [chan:1, vel:120, staccato:96]- C7 C7 C7,
+  [chan:1, vel:120, staccato:92]E7 E7 E7 E7 E7 E7 E7 E7
 }

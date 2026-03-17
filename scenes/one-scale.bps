@@ -10,7 +10,7 @@
 // --- Sous-grammaire 1 [mode:ord] ---
 
 S -> C4 A4 G4 [mode:ord, weight:0]
-S -> scale(just_intonation,Cj4) Cj4 Aj4 Gj4 [weight:0]
-S -> scale(just_intonation,Aj4) Cj4 Aj4 Gj4 [weight:0]
-S -> scale(0,0) C4 A4 G4 [weight:0]
-S -> scale(just_intonation,Cj4) Cj4 Aj4 Gj4 D4 F4 E4 [weight:1]
+S -> [scale: just_intonation Cj4]Cj4 Aj4 Gj4 [weight:0]
+S -> [scale: just_intonation Aj4]Cj4 Aj4 Gj4 [weight:0]
+S -> [scale: 0 0]C4 A4 G4 [weight:0]
+S -> [scale: just_intonation Cj4]Cj4 Aj4 Gj4 D4 F4 E4 [weight:1]

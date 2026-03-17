@@ -8,7 +8,7 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 
 // --- Sous-grammaire 1 [mode:ord] --- structure thematique
 S -> P1 P2 P3 [mode:ord, meter:4+4+4+4+4+4/4]

@@ -6,7 +6,7 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 
 S -> A4 G4 C5 A5 A4 G4 C5 A5[volume:0] [mode:random, weight:1-1, ins:3, volumecont, volume:127]
 S -> A4 G4 C5 A5 A4 G4 C5 A5[volume:127] [weight:1-1, ins:3, volumecont, volume:0]

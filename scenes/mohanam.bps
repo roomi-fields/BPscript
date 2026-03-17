@@ -9,7 +9,7 @@
 
 @core
 @controls
-@raga:midi
+@alphabet.raga:midi
 
 // Settings
 @ins:3
@@ -48,9 +48,9 @@ when Ideas-2 I -> B A [weight:50]
 // La dernière règle utilise goto pour relancer la sous-grammaire 2
 // ============================================================
 
-// when flag = test pur (pas de mutation), [flag-1] = mutation dans le RHS
-when Ideas A -> I [NumR-1] [weight:100]
-when Ideas B -> I [NumR-1] [weight:100]
+// when flag = test pur (bare flag = non-zéro), when NumR-1 = test+mutation
+when Ideas when NumR-1 A -> I [weight:100, mode:random]
+when Ideas when NumR-1 B -> I [weight:100]
 when Ideas I -> I goto(2,1) [weight:1]
 
 -----
@@ -144,8 +144,8 @@ R2 -> lambda
 
 // Effets via captures — macros d'expression
 Str ?1 -> ?1[vel:64] [mode:random, vel:110]
-Step3Up ?1 ?2 ?3 -> ?1[vel:95] ?2[vel:110] ?3[vel:64] [vel:80]
-Step3Dn ?1 ?2 ?3 -> ?1[vel:95] ?2[vel:80] ?3[vel:64] [vel:110]
+Step3Up ?1 ?2 ?3 -> [vel:80]?1 [vel:95]?2 [vel:110]?3[vel:64]
+Step3Dn ?1 ?2 ?3 -> [vel:110]?1 [vel:95]?2 [vel:80]?3[vel:64]
 
 // Patterns ascendants (P = phrases montantes)
 P41 -> sa6 re6 ga6 pa6

@@ -3,12 +3,12 @@
 
 @core
 @controls
-@raga:midi
+@alphabet.raga:midi
 
 // --- Sous-grammaire 1 [mode:random] — structure ---
 
 S -> Sri Ga Na Naa Da [mode:random, weight:0]
-S -> {sa4 _ _,-[pitchbend:500, pitchcont, pitchrange:500, pitchbend:0]}
+S -> {sa4 _ _,[pitchcont, pitchrange: 500, pitchbend: 0]- pitchbend(500)}
 Sri -> {StartSlide StartPull sa3 _ Pull0 Slide0 _ Pull2 Slide5 _ Pull0 _ Pull2 _ Pull0 Slide5 _ Slide7 _ _ _ _ _ StopSlide StopPull} [speed:2]
 Ga -> {LightGamaka pa3} [speed:1]
 Na -> {sa4} [speed:1]
@@ -33,7 +33,7 @@ Slide0 -> value(slide,0)
 Slide1 -> value(slide,101)
 Slide5 -> value(slide,501)
 Slide7 -> value(slide,701)
-StartSlide -> value(slide,0) [cont:slide]
+StartSlide -> cont(slide) value(slide,0)
 StopSlide -> fixed(slide)
 StartPull -> pitchcont pitchrange(500) pitchbend(0)
 StopPull -> pitchfixed

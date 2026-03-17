@@ -7,7 +7,7 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 
 // Settings
 @mm:60

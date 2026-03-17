@@ -1,6 +1,6 @@
 # BPscript — AST (Abstract Syntax Tree)
 
-Version 0.4 — dérivé de BPSCRIPT_EBNF.md, validé par 17 scènes transpilées.
+Version 0.7 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transpilées.
 
 ---
 
@@ -36,8 +36,9 @@ Scene {
 ```
 Directive {
   type: "Directive"
-  name: string                    // "core", "+", "raga", "tempo", "meter"...
-  runtime: string | null          // "supercollider", "midi", "python"...
+  name: string                    // "core", "controls", "alphabet", "sub", "tempo"...
+  subkey: string | null           // "western", "raga", "dhati"... (après le .)
+  runtime: string | null          // "midi", "supercollider", "python"...
   value: string | number | null   // 120, "7/8", -24...
   aliases: Alias[] | null         // résolution de conflits
   line: number
@@ -50,18 +51,19 @@ Alias {
 }
 ```
 
-Note : `name` peut être `"+"` pour la directive `@+` (contrôles performance).
-Les valeurs négatives sont supportées (`@transpose:-24`).
-Les ratios sont stockés comme string (`"3/4"`, `"7/8"`).
+Le champ `subkey` permet d'accéder à une entrée spécifique dans un fichier JSON.
+La convention est stricte : `@file` → `lib/file.json`, `@file.key` → `lib/file.json` → clé `key`.
 
 Exemples :
-- `@+` -> `{ name:"+", runtime:null, value:null }`
-- `@core` -> `{ name:"core", runtime:null, value:null }`
-- `@raga:supercollider` -> `{ name:"raga", runtime:"supercollider", value:null }`
-- `@tempo:120` -> `{ name:"tempo", runtime:null, value:120 }`
-- `@meter:3/4` -> `{ name:"meter", runtime:null, value:"3/4" }`
-- `@transpose:-24` -> `{ name:"transpose", runtime:null, value:-24 }`
-- `@western(A:La)` -> `{ name:"western", aliases:[{from:"A", to:"La"}] }`
+- `@core` -> `{ name:"core", subkey:null, runtime:null, value:null }`
+- `@controls` -> `{ name:"controls", subkey:null, runtime:null, value:null }`
+- `@alphabet.western:midi` -> `{ name:"alphabet", subkey:"western", runtime:"midi", value:null }`
+- `@alphabet.raga:supercollider` -> `{ name:"alphabet", subkey:"raga", runtime:"supercollider", value:null }`
+- `@sub.dhati` -> `{ name:"sub", subkey:"dhati", runtime:null, value:null }`
+- `@tempo:120` -> `{ name:"tempo", subkey:null, runtime:null, value:120 }`
+- `@meter:3/4` -> `{ name:"meter", subkey:null, runtime:null, value:"3/4" }`
+- `@transpose:-24` -> `{ name:"transpose", subkey:null, runtime:null, value:-24 }`
+- `@alphabet.western(A:La)` -> `{ name:"alphabet", subkey:"western", aliases:[{from:"A", to:"La"}] }`
 
 ---
 
@@ -135,8 +137,8 @@ Rule {
 Guard {
   type: "Guard"
   flag: string
-  operator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-"
-  value: number | string
+  operator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | null
+  value: number | string | null
   mutates: boolean
 }
 ```
@@ -144,6 +146,7 @@ Guard {
 Exemples :
 - `when phase==1` -> `{ flag:"phase", operator:"==", value:1, mutates:false }`
 - `when Ideas-1` -> `{ flag:"Ideas", operator:"-", value:1, mutates:true }`
+- `when Ideas` (bare flag) -> `{ flag:"Ideas", operator:null, value:null, mutates:false }`
 
 ### `Qualifier`
 
@@ -190,16 +193,35 @@ LhsElement = Symbol | Variable | Wildcard | Context | RawBrace
 
 ```
 RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
-           | Period | NumericDuration | Polymetric | Control
+           | Period | NumericDuration | Polymetric
            | SimultaneousGroup | OutTimeObject | TriggerIn | Variable | Wildcard
            | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup
            | TieStart | TieContinue | TieEnd
            | NilString | BacktickStandalone | Context | RawBrace
 ```
 
-**Priorité de parsing pour les IDENT suivis de `(`** :
-1. Si le nom est un contrôle connu (`vel`, `tempo`, `goto`...) -> `Control`
-2. Sinon -> `SymbolCall`
+### Qualificateurs de contrôle par élément
+
+Tout `RhsElement` peut porter des qualificateurs de contrôle (préfixe et/ou suffixe) :
+
+```
+RhsElement {
+  ...                                    // propriétés spécifiques au type
+  controlQualifiers: Qualifier[] | null  // qualificateurs de contrôle attachés
+  controlPrefix: boolean | null          // true si le premier qualifier est un préfixe
+}
+```
+
+- `[vel:80]A` (préfixe) : `controlQualifiers: [{vel:80}]`, `controlPrefix: true`
+- `A[vel:80]` (suffixe) : `controlQualifiers: [{vel:80}]`, `controlPrefix: false/null`
+- `[ins:3, volumecont, volume:127]A[volume:0]` : deux qualifiers, le premier en préfixe
+
+La distinction préfixe/suffixe est analogue à `++i`/`i++` en C :
+- **Préfixe** = le contrôle s'applique avant l'élément → compilé en `_vel(80) A`
+- **Suffixe** = le contrôle s'applique après l'élément → compilé en `A _vel(80)`
+
+Le parser distingue les qualificateurs de contrôle (clé dans `lib/controls.json`)
+des qualificateurs de règle (`mode`, `weight`, `scan`, etc.).
 
 ### `Symbol`
 
@@ -259,15 +281,6 @@ Les autres qualifiers (`weight`, `mode`, `scan`, `on_fail`) après `}` appartien
 à la **règle**, pas au bloc polymétrique. Le parser utilise un lookahead sur la clé.
 
 `{A}[speed:2]` -> `{2, A}` en BP3. Ratios fractionnaires : `{A}[speed:1/2]` -> `{1/2, A}`.
-
-### `Control`
-
-```
-Control { type: "Control", name: string, args: string[] }
-```
-
-Args composites acceptés : `"K1=3"`, `"1/2"`, `"-24"`, `"just_intonation"`.
-Le compilateur traduit les underscores en espaces dans les args de `_scale()`.
 
 ### `SimultaneousGroup`
 
@@ -343,7 +356,7 @@ TieEnd { type: "TieEnd", symbol: string }
 NilString { type: "NilString" }
 ```
 
-Peut être le primaire d'un `SimultaneousGroup` : `lambda!flag=N`.
+Peut porter des flags via `Rule.flags` : `lambda [Num_a=20, Num_b=0]`.
 
 ### `BacktickInline` / `BacktickStandalone` / `BacktickOrphan`
 

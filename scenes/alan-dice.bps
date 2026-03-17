@@ -9,7 +9,7 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 
 // --- Sous-grammaire 1 [mode:ord] — structure ---
 

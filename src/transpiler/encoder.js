@@ -369,7 +369,16 @@ function encodeRhsElement(el, alphabet, controlMap) {
         if (controlMap[p.key]) {
           const bp3Name = controlMap[p.key];
           if (p.value === true) ctrls.push(bp3Name);
-          else ctrls.push(`${bp3Name}(${p.value})`);
+          else {
+            let bp3Val = String(p.value);
+            // Convert spaces to commas for BP3 args (CSS model: "B3 -1" → "B3,-1")
+            // But preserve spaces in _script args: "MIDI send Continue" stays as-is
+            if (bp3Name !== '_script') bp3Val = bp3Val.replace(/ +/g, ',');
+            // _scale: underscores → spaces AFTER comma conversion
+            // (just_intonation,C4 → just intonation,C4)
+            if (bp3Name === '_scale') bp3Val = bp3Val.replace(/_/g, ' ');
+            ctrls.push(`${bp3Name}(${bp3Val})`);
+          }
         }
       }
       // el.controlPrefix marks the first qualifier as prefix

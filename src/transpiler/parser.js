@@ -84,12 +84,17 @@ function parse(tokens) {
   function parseDirective() {
     const tok = expect(T.AT);
     // @+ is a special case — PLUS token instead of IDENT
-    let name;
+    let name, subkey = null;
     if (at(T.PLUS)) {
       advance();
       name = '+';
     } else {
       name = expect(T.IDENT).value;
+    }
+    // @alphabet.western — dot accessor for subkey within a lib
+    if (at(T.PERIOD)) {
+      advance();
+      subkey = expect(T.IDENT).value;
     }
     let runtime = null, value = null, aliases = null;
 
@@ -152,7 +157,7 @@ function parse(tokens) {
       expect(T.RPAREN);
     }
 
-    return { type: 'Directive', name, runtime, value, aliases, line: tok.line };
+    return { type: 'Directive', name, subkey, runtime, value, aliases, line: tok.line };
   }
 
   // ============================================================
@@ -971,16 +976,27 @@ function parse(tokens) {
         continue;
       }
       if (at(T.NEWLINE)) { advance(); continue; }
-      // Stop at [ inside polymetric if it's NOT a per-element qualifier
+      // Stop at [ inside polymetric if it's NOT a per-element qualifier or tempo op
       if (at(T.LBRACKET) && !isPerElementQualifier() && !isTempoOpQualifier()) break;
+      // PREFIX control qualifier inside polymetric: [vel:60]A
+      let prefixQuals = null;
+      if (at(T.LBRACKET) && isPerElementQualifier()) {
+        prefixQuals = parseQualifier();
+      }
       const el = parseRhsElement();
       if (!el) break;
+      // Attach prefix qualifiers
+      if (prefixQuals) {
+        el.controlQualifiers = el.controlQualifiers || [];
+        el.controlQualifiers.unshift(prefixQuals);
+        el.controlPrefix = true;
+      }
       // Check for tempo operator qualifier on this element inside polymetric
       if (at(T.LBRACKET) && isTempoOpQualifier()) {
         const qual = parseQualifier();
         el.tempoOp = qual.tempoOp;
       }
-      // Check for per-element control qualifier inside polymetric
+      // SUFFIX control qualifier inside polymetric: A[vel:60]
       if (at(T.LBRACKET) && isPerElementQualifier()) {
         el.controlQualifiers = el.controlQualifiers || [];
         el.controlQualifiers.push(parseQualifier());
@@ -1179,13 +1195,40 @@ function parse(tokens) {
     const pairs = [];
     while (!at(T.RBRACKET) && !atEnd()) {
       const key = expect(T.IDENT).value;
-      // Bare key without value: [destru], [striated]
+      // Bare key without value: [destru], [striated], [volumecont]
       if (!at(T.COLON)) {
         pairs.push({ type: 'QualPair', key, value: true, decrement: null });
         if (at(T.COMMA)) advance();
         continue;
       }
       expect(T.COLON);
+
+      // --- Control qualifier with raw value (CSS model) ---
+      // For known controls, consume everything after : until , or ] as raw value.
+      // Spaces are preserved: [keyxpand: B3 -1] → value = "B3 -1"
+      // Encoder converts spaces to commas for BP3: _keyxpand(B3,-1)
+      if (libCtx.controlNames.has(key)) {
+        let rawValue = '';
+        while (!at(T.COMMA) && !at(T.RBRACKET) && !atEnd()) {
+          const t = current();
+          if (rawValue.length > 0 && t.type !== T.RPAREN) {
+            const lastChar = rawValue[rawValue.length - 1];
+            if (lastChar !== '(' && t.type !== T.LPAREN) {
+              // No space after - (negative number: -7)
+              // No space around / (ratio: 11/5)
+              const isSlash = t.type === T.SLASH || lastChar === '/';
+              if (lastChar !== '-' && !isSlash) rawValue += ' ';
+            }
+          }
+          rawValue += advance().value;
+        }
+        rawValue = rawValue.trim();
+        pairs.push({ type: 'QualPair', key, value: rawValue || true, decrement: null });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
+
+      // --- Standard qualifier value parsing (mode, weight, speed, etc.) ---
       let value, decrement = null;
       if (at(T.INT)) {
         const num = advance().value;

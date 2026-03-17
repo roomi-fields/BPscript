@@ -2,8 +2,9 @@
  * BPScript Library Loader
  *
  * Loads lib/*.json files based on @ directives in the source.
- * Convention: @xxx → lib/xxx.json (except @+ → lib/controls.json)
- * Alphabets: if no lib/<name>.json exists, looks in lib/alphabets.json
+ * Convention: @file → lib/file.json
+ *             @file.key → lib/file.json → entry "key"
+ *             @file.key:runtime → load + bind to runtime
  */
 
 import { readFileSync } from 'fs';
@@ -16,30 +17,36 @@ const LIB_DIR = join(__dirname, '../../lib');
 // Cache loaded libs
 const cache = {};
 
-function loadLib(name) {
+function loadJsonFile(name) {
   if (cache[name]) return cache[name];
-
-  // Try lib/<name>.json
-  // @xxx → lib/xxx.json
   try {
     const data = JSON.parse(readFileSync(join(LIB_DIR, name + '.json'), 'utf-8'));
     cache[name] = data;
     return data;
   } catch {}
-
-  // Fallback: try as entry in lib/alphabets.json
-  try {
-    if (!cache._alphabets) {
-      cache._alphabets = JSON.parse(readFileSync(join(LIB_DIR, 'alphabets.json'), 'utf-8'));
-    }
-    const alpha = cache._alphabets.alphabets?.[name];
-    if (alpha) {
-      cache[name] = alpha;
-      return alpha;
-    }
-  } catch {}
-
   return null;
+}
+
+/**
+ * Load a lib by name, with optional subkey.
+ * @file → lib/file.json (whole file)
+ * @file.subkey → lib/file.json → entry from the top-level collection
+ *
+ * For alphabets.json: the collection key is "alphabets"
+ * For sub.json: the collection key is "tables"
+ * Generic fallback: tries the subkey directly on the root object
+ */
+function loadLib(name, subkey) {
+  if (subkey) {
+    const file = loadJsonFile(name);
+    if (!file) return null;
+    // Look for subkey in known collection fields, or directly on root
+    const entry = file.alphabets?.[subkey] || file.tables?.[subkey] || file[subkey];
+    return entry || null;
+  }
+
+  // No subkey — load the whole file
+  return loadJsonFile(name);
 }
 
 /**
@@ -61,9 +68,10 @@ function loadLibsFromDirectives(directives) {
   if (settingsLib) ctx._libs['settings'] = settingsLib;
 
   for (const dir of directives) {
-    const lib = loadLib(dir.name);
+    const lib = loadLib(dir.name, dir.subkey);
     if (!lib) continue;
-    ctx._libs[dir.name] = lib;
+    const libKey = dir.subkey ? `${dir.name}.${dir.subkey}` : dir.name;
+    ctx._libs[libKey] = lib;
 
     // Merge controls
     if (lib.controls) {

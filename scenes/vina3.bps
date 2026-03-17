@@ -6,12 +6,12 @@
 
 @core
 @controls
-@raga:midi
+@alphabet.raga:midi
 @mm:60
 
 // --- Sous-grammaire 1 [mode:random] — structure ---
 
-S -> scale(just_intonation,0)[volume:40] {Taalam4 Taalam4,Pallavi Pallavi}[volumecont, volume:64] Taalam[volume:0] - [mode:random, ins:Vina]
+S -> [ins: Vina, scale: just_intonation 0, volume: 40]{Taalam4 Taalam4,Pallavi Pallavi} [volumecont, volume: 64]Taalam [volume: 0]- [mode:random]
 
 Pallavi -> {Maa Yaa Tii . Ta {Sva Ruu Pi}[speed:2] . {Ni}[speed:2] {Nan Nu}[speed:1] . Bro {Va Ve}[speed:2]}
 
@@ -74,7 +74,7 @@ Slide1 -> value(slide,101)
 Slide2 -> value(slide,201)
 Slide4 -> value(slide,401)
 
-StartSlide -> value(slide,0) [cont:slide]
+StartSlide -> cont(slide) value(slide,0)
 StopSlide -> fixed(slide)
 StartPull -> pitchcont pitchrange(500) pitchbend(0)
 StopPull -> pitchfixed

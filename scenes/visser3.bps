@@ -8,7 +8,7 @@
 
 @core
 @controls
-@western:midi
+@alphabet.western:midi
 @mm:120
 
 // --- Sous-grammaire 1 [mode:ord] — structure ---
@@ -37,10 +37,10 @@ D -> {Tr1 A C}
 E -> {Tr7 {A -,D -}}
 F -> {Tr6 A E D}
 G -> {Tr11 {A B C D . E F E D C B A}}
-H -> {TrN11 {G F E D C B A}}
+H -> {Tr-11 {G F E D C B A}}
 I -> {Tr11 G}
 J -> {G F,Tr5 G F}
-K -> {TrN11 B C D}
+K -> {Tr-11 B C D}
 
 -----
 
@@ -51,4 +51,4 @@ Tr5 -> transpose(5) vel(80)
 Tr1 -> transpose(1) vel(70)
 Tr7 -> transpose(7) vel(60)
 Tr6 -> transpose(6) vel(70)
-TrN11 -> transpose(-11) vel(90)
+Tr-11 -> transpose(-11) vel(90)
