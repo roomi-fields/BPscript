@@ -31,7 +31,11 @@ export class Dispatcher {
     this._reDerive = null;    // function that returns new timed tokens
 
     // Control state — updated by control tokens during playback
-    this.controlState = { vel: 64, chan: 1 };
+    this.controlState = {
+      vel: 64, chan: 1, pan: 0,
+      wave: 'triangle', attack: 20, release: 100,
+      detune: 0, filter: 0, filterQ: 1,
+    };
   }
 
   /**
@@ -146,8 +150,8 @@ export class Dispatcher {
             token: evt.token,
             startSec: this._loopOffset + evt.startSec,
             durSec: evt.durSec,
+            ...this.controlState,
             velocity: this.controlState.vel / 127,
-            channel: this.controlState.chan,
           }, absTime);
         }
       }
@@ -199,12 +203,22 @@ export class Dispatcher {
     this._cursor = 0;
   }
 
-  /** Parse and apply a control token like _vel(80), _chan(2) */
+  /** Parse and apply a control token like _vel(80), _chan(2), _wave(saw) */
   _applyControl(token) {
     const m = token.match(/^_(\w+)\((.+)\)$/);
     if (!m) return;
     const [, name, value] = m;
-    if (name === 'vel') this.controlState.vel = parseInt(value) || 64;
-    if (name === 'chan') this.controlState.chan = parseInt(value) || 1;
+    const cs = this.controlState;
+    switch (name) {
+      case 'vel': cs.vel = parseInt(value) || 64; break;
+      case 'chan': cs.chan = parseInt(value) || 1; break;
+      case 'pan': cs.pan = parseInt(value) || 0; break;
+      case 'wave': cs.wave = value; break;
+      case 'attack': cs.attack = parseFloat(value) || 20; break;
+      case 'release': cs.release = parseFloat(value) || 100; break;
+      case 'detune': cs.detune = parseFloat(value) || 0; break;
+      case 'filter': cs.filter = parseFloat(value) || 0; break;
+      case 'filterQ': cs.filterQ = parseFloat(value) || 1; break;
+    }
   }
 }

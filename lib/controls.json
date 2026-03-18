@@ -298,6 +298,48 @@
       "bp3": "_modcont",
       "args": [],
       "description": "Active l'interpolation continue de modulation (CC1)."
+    },
+    "wave": {
+      "bp3": "_wave",
+      "args": ["type"],
+      "values": ["sine", "triangle", "square", "sawtooth"],
+      "description": "Forme d'onde de l'oscillateur (Web Audio). Défaut: triangle.",
+      "transport": "webaudio"
+    },
+    "attack": {
+      "bp3": "_attack",
+      "args": ["ms"],
+      "range": [1, 5000],
+      "description": "Temps d'attaque de l'enveloppe en ms. Défaut: 20ms.",
+      "transport": "webaudio"
+    },
+    "release": {
+      "bp3": "_release",
+      "args": ["ms"],
+      "range": [1, 5000],
+      "description": "Temps de relâchement de l'enveloppe en ms. Défaut: 100ms.",
+      "transport": "webaudio"
+    },
+    "detune": {
+      "bp3": "_detune",
+      "args": ["cents"],
+      "range": [-1200, 1200],
+      "description": "Désaccordage en cents (Web Audio). 100 cents = 1 demi-ton.",
+      "transport": "webaudio"
+    },
+    "filter": {
+      "bp3": "_filter",
+      "args": ["freq"],
+      "range": [20, 20000],
+      "description": "Fréquence de coupure du filtre passe-bas en Hz. 0 = pas de filtre.",
+      "transport": "webaudio"
+    },
+    "filterQ": {
+      "bp3": "_filterQ",
+      "args": ["value"],
+      "range": [0, 30],
+      "description": "Résonance (Q) du filtre. Défaut: 1.",
+      "transport": "webaudio"
     }
   }
 }

@@ -1,0 +1,13 @@
+// Stereo Pan — panoramique gauche/droite
+// Démo : [pan:N] positionne le son (-100=gauche, 0=centre, 100=droite)
+
+@core
+@controls
+@alphabet.western:browser
+
+S -> Left Center Right Sweep
+
+Left -> [pan:-80, vel:90] C4 D4 E4
+Center -> [pan:0, vel:90] F4 G4 A4
+Right -> [pan:80, vel:90] B4 C5 B4
+Sweep -> [pan:-100] C4 [pan:-50] D4 [pan:0] E4 [pan:50] F4 [pan:100] G4

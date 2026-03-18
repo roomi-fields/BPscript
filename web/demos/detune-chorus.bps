@@ -1,0 +1,10 @@
+// Detune Chorus — effet de chorus par désaccordage
+// Démo : [detune:N] en cents (100 cents = 1 demi-ton)
+// Deux voix légèrement désaccordées créent un chorus
+
+@core
+@controls
+@alphabet.western:browser
+@mm:50
+
+S -> {[wave:sawtooth, vel:70, detune:0] C3 _ E3 _ G3 _ C4 _, [wave:sawtooth, vel:70, detune:12] C3 _ E3 _ G3 _ C4 _}

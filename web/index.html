@@ -404,8 +404,21 @@ S -&gt; Phrase [vel:90]   // velocity 90 for entire rule</pre>
                 <tr><td><code>[ins:N]</code></td><td>Instrument/program</td></tr>
                 <tr><td><code>[transpose:N]</code></td><td>Transposition in semitones</td></tr>
                 <tr><td><code>[speed:N]</code></td><td>Tempo ratio for a group</td></tr>
-                <tr><td><code>[mode:X]</code></td><td>Derivation mode</td></tr>
                 <tr><td><code>[weight:N]</code></td><td>Rule weight for random selection</td></tr>
+              </table>
+            </div>
+            <h4>Web Audio primitives</h4>
+            <div class="section">
+              These controls are interpreted by the browser audio transport.
+              <table>
+                <tr><th>Control</th><th>Meaning</th></tr>
+                <tr><td><code>[wave:X]</code></td><td>Oscillator type: sine, triangle, square, sawtooth</td></tr>
+                <tr><td><code>[pan:N]</code></td><td>Stereo panning (-100=left, 0=center, 100=right)</td></tr>
+                <tr><td><code>[attack:N]</code></td><td>Attack time in ms (default: 20)</td></tr>
+                <tr><td><code>[release:N]</code></td><td>Release time in ms (default: 100)</td></tr>
+                <tr><td><code>[detune:N]</code></td><td>Pitch detune in cents (100 = 1 semitone)</td></tr>
+                <tr><td><code>[filter:N]</code></td><td>Lowpass filter cutoff in Hz (0 = off)</td></tr>
+                <tr><td><code>[filterQ:N]</code></td><td>Filter resonance (default: 1)</td></tr>
               </table>
             </div>
             <h3>Polymetry { }</h3>
@@ -417,9 +430,9 @@ S -&gt; {A B, C D E, F G H I}    // 3 voices: 2, 3, 4 notes</pre>
             </div>
             <h3>Sub-grammars</h3>
             <div class="section">
-              Use <code>-----</code> to separate sub-grammars. Each can have its own mode.
-              Rules are applied sub-grammar by sub-grammar in order.
-<pre>S -&gt; A B [mode:ord]
+              Use <code>-----</code> to separate sub-grammars. Each block is applied
+              sequentially until exhausted, then the next block takes over.
+<pre>S -&gt; A B
 -----
 A -&gt; C4 D4 [mode:random]
 A -&gt; E4 F4</pre>
@@ -507,12 +520,13 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'raga', 'advanced'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'raga', 'advanced'];
   const categoryLabels = {
     tutorial: 'Tutorial',
     basics: 'Basics',
     generative: 'Generative',
     polymetric: 'Polymetric',
+    synthesis: 'Synthesis',
     raga: 'Raga / Indian',
     advanced: 'Advanced'
   };

@@ -182,6 +182,41 @@
     "file": "raga-alap.bps"
   },
   {
+    "id": "synth-waves",
+    "title": "Synth Waves",
+    "category": "synthesis",
+    "description": "Formes d'onde : sine, triangle, square, sawtooth",
+    "file": "synth-waves.bps"
+  },
+  {
+    "id": "stereo-pan",
+    "title": "Stereo Pan",
+    "category": "synthesis",
+    "description": "Panoramique gauche/droite avec [pan:N]",
+    "file": "stereo-pan.bps"
+  },
+  {
+    "id": "filter-sweep",
+    "title": "Filter Sweep",
+    "category": "synthesis",
+    "description": "Filtre passe-bas progressif avec résonance",
+    "file": "filter-sweep.bps"
+  },
+  {
+    "id": "envelope",
+    "title": "Envelope",
+    "category": "synthesis",
+    "description": "Attaque et relâchement : percussif vs pad",
+    "file": "envelope.bps"
+  },
+  {
+    "id": "detune-chorus",
+    "title": "Detune Chorus",
+    "category": "synthesis",
+    "description": "Effet chorus par désaccordage de deux voix",
+    "file": "detune-chorus.bps"
+  },
+  {
     "id": "backtick-sketch",
     "title": "Backtick Sketch",
     "category": "advanced",
