@@ -222,5 +222,26 @@
     "category": "advanced",
     "description": "Code embarqué SuperCollider (nécessite bridge)",
     "file": "backtick-sketch.bps"
+  },
+  {
+    "id": "cv-adsr",
+    "title": "CV: Acid Bass",
+    "category": "cv",
+    "description": "Filtre résonant TB-303 avec enveloppe ADSR",
+    "file": "cv-adsr.bps"
+  },
+  {
+    "id": "cv-lfo",
+    "title": "CV: Spatial Arp",
+    "category": "cv",
+    "description": "Arpèges en mouvement stéréo (LFO pan)",
+    "file": "cv-lfo.bps"
+  },
+  {
+    "id": "cv-backtick",
+    "title": "CV: Wobble Bass",
+    "category": "cv",
+    "description": "Modulation de filtre dubstep (courbe JS custom)",
+    "file": "cv-backtick.bps"
   }
 ]

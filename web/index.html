@@ -146,19 +146,26 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-family: 'Consolas', monospace;
     color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    padding: 0 3px; min-width: 1px; border-right: 1px solid rgba(0,0,0,0.15);
+    padding: 0; min-width: 0; flex-basis: 0; border-right: 1px solid rgba(0,0,0,0.15);
   }
   .tl-block.note-a { background: #e94560; }
   .tl-block.note-b { background: #c73a52; }
   .tl-block.gap { background: transparent; }
   .tl-ctrl-lane {
-    display: flex; height: 14px; position: relative;
+    position: relative; display: flex; flex-direction: column;
+    gap: 1px; padding-top: 1px;
+  }
+  .tl-ctrl-row {
+    position: relative; height: 14px;
   }
   .tl-ctrl-mark {
     position: absolute; font-size: 9px; color: #4a90d9;
     font-family: 'Consolas', monospace; white-space: nowrap;
     border-left: 1px solid #4a90d9; padding-left: 3px;
     top: 0; height: 100%;
+  }
+  .tl-ctrl-mark.cv-mark {
+    color: #e9a845; border-left-color: #e9a845;
   }
   .timeline-axis {
     display: flex; height: 14px; margin-top: 4px;
@@ -488,13 +495,14 @@ PY_Part -&gt; &#96;py: print("hello from python")&#96;</pre>
 let bp3 = null;
 let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_load_settings, bp3_produce, bp3_get_result, bp3_get_messages;
 let bp3_get_midi_events, bp3_get_midi_event_count;
-let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params;
+let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params, bp3_set_object_duration;
 let libraryData = [];
 let activeGrammar = null;
 let engineReady = false;
 let lastMidiEvents = null;
 let lastTimedTokens = null;
 let lastControlTable = null;
+let lastCVTable = null;
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
@@ -521,13 +529,14 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'raga', 'advanced'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'raga', 'advanced'];
   const categoryLabels = {
     tutorial: 'Tutorial',
     basics: 'Basics',
     generative: 'Generative',
     polymetric: 'Polymetric',
     synthesis: 'Synthesis',
+    cv: 'CV / Signal',
     raga: 'Raga / Indian',
     advanced: 'Advanced'
   };
@@ -651,6 +660,7 @@ async function loadModule() {
     bp3_get_timed_tokens = Module.cwrap('bp3_get_timed_tokens', 'string', []);
     bp3_get_timed_token_count = Module.cwrap('bp3_get_timed_token_count', 'number', []);
     bp3_load_settings_params = Module.cwrap('bp3_load_settings_params', 'number', ['number','number','number','number','number','number']);
+    bp3_set_object_duration = Module.cwrap('bp3_set_object_duration', 'number', ['string', 'number']);
 
     setStatus('Module loaded. Initializing...');
     initEngine();
@@ -679,10 +689,26 @@ function reseed() {
   const alphabet = document.getElementById('alphabet').value;
   const noteConv = alphabet.includes('sa0') || alphabet.includes('sa1') ? 2 : 0;
   bp3_load_settings_params(noteConv, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
-  // Reload grammar+alphabet since load_settings_params invalidates compilation
+  // Order: loadAlphabet → setObjectDuration → loadGrammar (before produce)
   const grammar = document.getElementById('grammar').value;
   if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
+  registerTerminalDurations();
   if (grammar.trim()) bp3_load_grammar(grammar.trim());
+}
+
+/** Register ALL terminal durations in BP3 (between loadAlphabet and loadGrammar).
+ *  All terminals get the same reference duration — BP3 dilates proportionally. */
+function registerTerminalDurations() {
+  if (!bp3_set_object_duration) return;
+  // Get alphabet from textarea — each line (except comments) is a terminal
+  const alphabet = document.getElementById('alphabet').value;
+  if (!alphabet) return;
+  window._cvDebug = '';
+  for (const line of alphabet.split('\n')) {
+    const name = line.trim();
+    if (!name || name.startsWith('//')) continue;
+    bp3_set_object_duration(name, 1000);
+  }
 }
 
 function reinit() {
@@ -710,6 +736,7 @@ function produce() {
       document.getElementById('grammar').value = compiled.grammar;
       if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
       lastControlTable = compiled.controlTable || null;
+      lastCVTable = compiled.cvTable || null;
       // Settings disabled for now — BP3 defaults work correctly,
       // our settingsJSON breaks text output formatting
       // if (compiled.settings) document.getElementById('settings').value = compiled.settings;
@@ -749,15 +776,7 @@ function produce() {
         }
       }
 
-      // Load alphabet if present
-      if (alphabet.trim()) {
-        bp3_load_alphabet(alphabet.trim());
-      }
-
-      // Load grammar (resets CompiledGr)
-      bp3_load_grammar(grammar);
-
-      // Produce
+      // reseed handles: loadAlphabet → setObjectDuration → loadGrammar
       reseed();
       const result = bp3_produce();
 
@@ -868,6 +887,7 @@ async function playOnce() {
   updateTransportButtons();
 
   dispatcher.setControlTable(lastControlTable);
+  dispatcher.setCVTable(lastCVTable);
   dispatcher.load(lastTimedTokens);
   dispatcher.start(onPlayEnd);
 
@@ -883,6 +903,7 @@ async function playLoop() {
   updateTransportButtons();
 
   dispatcher.setControlTable(lastControlTable);
+  dispatcher.setCVTable(lastCVTable);
   dispatcher.load(lastTimedTokens);
 
   const useReDerive = document.getElementById('rederiveChk').checked;
@@ -974,14 +995,12 @@ async function liveCompileAndSwap() {
     if (compiled.settings) document.getElementById('settings').value = compiled.settings;
 
     if (compiled.alphabet) bp3_load_alphabet(compiled.alphabet);
+    registerTerminalDurations();
     bp3_load_grammar(compiled.grammar);
 
     if (isPlaying && dispatcher) {
-      // Playing: don't produce now — reDerive will do it at next cycle.
-      // But we can show the grammar update in the status.
       setStatus('Live: updated — next cycle');
     } else {
-      // Not playing: produce to refresh output/messages/tokens
       reseed(); bp3_produce();
       document.getElementById('messagesContent').textContent = bp3_get_messages() || '(no messages)';
       const tc = bp3_get_timed_token_count();
@@ -996,6 +1015,73 @@ async function liveCompileAndSwap() {
 }
 
 /* ---- Timeline visualization ---- */
+/** Resolve _script(CTN/CVN) to readable BPscript labels */
+function resolveScriptLabel(token) {
+  const m = token.match(/^_script\((\w+)\)$/);
+  if (!m) {
+    // Direct control: _vel(80) → [vel:80]
+    return token.replace(/^_(\w+)\((.+)\)$/, '[$1:$2]');
+  }
+  const id = m[1];
+  // CT → control table lookup
+  if (id.startsWith('CT') && lastControlTable) {
+    const entry = lastControlTable.find(e => e.id === id);
+    if (entry) {
+      const pairs = Object.entries(entry.assignments).map(([k, v]) => `${k}:${v}`);
+      return `[${pairs.join(', ')}]`;
+    }
+  }
+  // CV → cv table lookup
+  if (id.startsWith('CV') && lastCVTable) {
+    const entry = lastCVTable.find(e => e.id === id);
+    if (entry) {
+      if (entry.objectType === 'backtick') {
+        return `cv:${entry.name}(\`...\`)`;
+      }
+      const argStr = Object.entries(entry.args).map(([k, v]) => `${k}:${v}`).join(', ');
+      return `cv:${entry.lib}.${entry.objectType}(${argStr})`;
+    }
+  }
+  return `[${id}]`;
+}
+
+function renderCVTrack(cvTokensList, totalMs) {
+  // cvTokensList: single token or array of tokens for the same CV name
+  const list = Array.isArray(cvTokensList) ? cvTokensList : [cvTokensList];
+  const first = list[0];
+  const cvDef = lastCVTable ? lastCVTable.find(e => e.name === first.token) : null;
+  const typeName = cvDef
+    ? (cvDef.objectType === 'backtick' ? '`...`' : `${cvDef.lib}.${cvDef.objectType}`)
+    : '';
+  const targetLabel = cvDef ? ` → ${cvDef.target}` : '';
+
+  let h = '<div class="tl-voice">';
+  h += `<div class="tl-voice-label" style="color:#e9a845;">cv: ${first.token}${targetLabel}</div>`;
+  h += '<div class="tl-track">';
+
+  // Render all CV blocks sequentially with gaps between them
+  let prevEnd = 0;
+  for (let i = 0; i < list.length; i++) {
+    const cvt = list[i];
+    if (cvt.start > prevEnd) {
+      const gapPct = ((cvt.start - prevEnd) / totalMs) * 100;
+      h += `<div class="tl-block gap" style="flex:${gapPct};"></div>`;
+    }
+    const cvEnd = cvt.end > cvt.start ? cvt.end : totalMs;
+    const pct = ((cvEnd - cvt.start) / totalMs) * 100;
+    const label = typeName ? `${first.token} = ${typeName}` : first.token;
+    const cls = i % 2 === 0 ? 'background:#3d2e10;' : 'background:#4a3a15;';
+    h += `<div class="tl-block" style="flex:${pct}; ${cls} border:1px solid #e9a845; color:#e9a845; font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 4px;" title="${label} (${cvt.start}-${cvEnd}ms)">${label}</div>`;
+    prevEnd = cvEnd;
+  }
+  if (prevEnd < totalMs) {
+    const tailPct = ((totalMs - prevEnd) / totalMs) * 100;
+    h += `<div class="tl-block gap" style="flex:${tailPct};"></div>`;
+  }
+  h += '</div></div>';
+  return h;
+}
+
 function renderTimeline(tokens) {
   const panel = document.getElementById('outputContent');
   if (!tokens || tokens.length === 0) {
@@ -1003,20 +1089,33 @@ function renderTimeline(tokens) {
     return;
   }
 
+  // Build set of CV instance names for detection
+  const cvNames = new Set();
+  if (lastCVTable) for (const cv of lastCVTable) cvNames.add(cv.name);
+
   // Tag each note with its preceding controls from the original token stream
+  // Also extract CV tokens (name matches cvTable) into separate cvTracks
   const taggedNotes = [];
+  const cvTokens = [];  // { token, start, end, controls }
   let pendingControls = [];
   for (const t of tokens) {
     if (t.token.startsWith('_') && t.token !== '_') {
       pendingControls.push(t);
+    } else if (cvNames.has(t.token)) {
+      // CV token — extract to separate track (even if 0 duration from BP3)
+      const dur = t.end > t.start ? t.end - t.start : 0;
+      cvTokens.push({ ...t, controls: pendingControls, cvDur: dur });
+      pendingControls = [];
     } else if (!t.token.startsWith('_') && t.token !== '_' && t.token !== '-' && t.end > t.start) {
       taggedNotes.push({ ...t, controls: pendingControls });
       pendingControls = [];
     }
   }
-  if (taggedNotes.length === 0) { panel.textContent = '(no playable notes)'; return; }
+  if (taggedNotes.length === 0 && cvTokens.length === 0) { panel.textContent = '(no playable notes)'; return; }
 
-  const totalMs = Math.max(...taggedNotes.map(t => t.end));
+  // Total duration from ALL tokens (including rests/silences/CV)
+  const totalMs = tokens.length > 0 ? Math.max(...tokens.map(t => t.end)) : 0;
+  if (totalMs === 0) { panel.textContent = '(no playable notes)'; return; }
 
   // Group notes into voices (non-overlapping)
   const voices = [];
@@ -1042,6 +1141,39 @@ function renderTimeline(tokens) {
     return ctrls;
   });
 
+  // Match CV tracks to their target voice
+  // Strategy: find the voice with most temporal overlap with CV tokens
+  const cvByVoice = {};  // voiceIndex → [cvToken, ...]
+  const matchedCVs = new Set();
+  if (cvTokens.length > 0) {
+    // Group cvTokens by name
+    const cvGroups = {};
+    for (const cvt of cvTokens) {
+      if (!cvGroups[cvt.token]) cvGroups[cvt.token] = [];
+      cvGroups[cvt.token].push(cvt);
+    }
+    // For each CV group, find the voice with most overlap
+    for (const [cvName, group] of Object.entries(cvGroups)) {
+      const cvStart = Math.min(...group.map(g => g.start));
+      const cvEnd = Math.max(...group.map(g => g.end > g.start ? g.end : totalMs));
+      let bestVoice = 0, bestOverlap = 0;
+      for (let vi = 0; vi < voices.length; vi++) {
+        let overlap = 0;
+        for (const n of voices[vi]) {
+          const os = Math.max(n.start, cvStart);
+          const oe = Math.min(n.end, cvEnd);
+          if (oe > os) overlap += oe - os;
+        }
+        if (overlap > bestOverlap) { bestOverlap = overlap; bestVoice = vi; }
+      }
+      if (!cvByVoice[bestVoice]) cvByVoice[bestVoice] = [];
+      for (const cvt of group) {
+        cvByVoice[bestVoice].push(cvt);
+        matchedCVs.add(cvt);
+      }
+    }
+  }
+
   let html = '<div class="timeline">';
 
   for (let vi = 0; vi < voices.length; vi++) {
@@ -1049,7 +1181,7 @@ function renderTimeline(tokens) {
     const ctrls = voiceControls[vi];
 
     html += '<div class="tl-voice">';
-    if (voices.length > 1) {
+    if (voices.length > 1 || cvTokens.length > 0) {
       html += `<div class="tl-voice-label">voice ${vi + 1}</div>`;
     }
 
@@ -1071,19 +1203,59 @@ function renderTimeline(tokens) {
     }
     html += '</div>';
 
-    // Control lane (below the track)
+    // Control lane (below the track) — flex-based, same layout as notes
     if (ctrls.length > 0) {
-      html += '<div class="tl-ctrl-lane">';
-      for (const c of ctrls) {
-        const leftPct = (c.start / totalMs) * 100;
-        // Format as BPscript: _vel(80) → [vel:80]
-        const bps = c.token.replace(/^_(\w+)\((.+)\)$/, '[$1:$2]');
-        html += `<div class="tl-ctrl-mark" style="left:${leftPct}%;" title="${c.token} @ ${c.start}ms">${bps}</div>`;
+      // Sort controls by start time
+      const sortedCtrls = [...ctrls].sort((a, b) => a.start - b.start);
+      // Deduplicate by start time (show one label per position)
+      const uniqueCtrls = [];
+      let lastStart = -1;
+      for (const c of sortedCtrls) {
+        if (c.start !== lastStart) {
+          uniqueCtrls.push({ start: c.start, labels: [] });
+          lastStart = c.start;
+        }
+        uniqueCtrls[uniqueCtrls.length - 1].labels.push(resolveScriptLabel(c.token));
       }
-      html += '</div>';
+      html += '<div class="tl-ctrl-lane"><div class="tl-ctrl-row" style="display:flex;">';
+      let ctrlPrevEnd = 0;
+      for (const g of uniqueCtrls) {
+        if (g.start > ctrlPrevEnd) {
+          const gapPct = ((g.start - ctrlPrevEnd) / totalMs) * 100;
+          html += `<div style="flex:${gapPct};"></div>`;
+        }
+        const label = g.labels.join(', ');
+        html += `<div class="tl-ctrl-mark" style="position:relative; left:0; flex:0 0 auto;" title="${label}">${label}</div>`;
+        ctrlPrevEnd = g.start;
+      }
+      html += '</div></div>';
     }
 
     html += '</div>';
+
+    // CV tracks attached to this voice — rendered right below, grouped by CV name
+    if (cvByVoice[vi]) {
+      const byName = {};
+      for (const cvt of cvByVoice[vi]) {
+        if (!byName[cvt.token]) byName[cvt.token] = [];
+        byName[cvt.token].push(cvt);
+      }
+      for (const group of Object.values(byName)) {
+        html += renderCVTrack(group, totalMs);
+      }
+    }
+  }
+
+  // Unmatched CV tracks (fallback — shouldn't happen normally)
+  const unmatchedByName = {};
+  for (const cvt of cvTokens) {
+    if (!matchedCVs.has(cvt)) {
+      if (!unmatchedByName[cvt.token]) unmatchedByName[cvt.token] = [];
+      unmatchedByName[cvt.token].push(cvt);
+    }
+  }
+  for (const group of Object.values(unmatchedByName)) {
+    html += renderCVTrack(group, totalMs);
   }
 
   // Time axis
@@ -1210,7 +1382,7 @@ loadLibrary();
   import { registerAll } from '../src/transpiler/libs.js';
 
   // Fetch all lib/*.json and register them for browser use
-  const libNames = ['alphabet', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template'];
+  const libNames = ['alphabet', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template', 'filter'];
   const libs = {};
   await Promise.all(libNames.map(async (name) => {
     try {
@@ -1228,6 +1400,7 @@ loadLibrary();
       alphabet: result.alphabetFile || '',
       settings: result.settingsJSON || '',
       controlTable: result.controlTable || [],
+      cvTable: result.cvTable || [],
       errors: result.errors || [],
       warnings: []
     };

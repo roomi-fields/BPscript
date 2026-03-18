@@ -114,6 +114,7 @@ function loadLibsFromDirectives(directives) {
     controlNames: new Set(),
     noArgControls: new Set(),
     symbols: {},        // name → { type, ... }
+    cvObjects: {},      // "lib.type" → def (e.g. "filter.adsr" → { parameters, ... })
     _libs: {},          // directive name → raw lib data (for generator access)
   };
 
@@ -143,6 +144,14 @@ function loadLibsFromDirectives(directives) {
     if (lib.symbols) {
       for (const [name, def] of Object.entries(lib.symbols)) {
         ctx.symbols[name] = def;
+      }
+    }
+
+    // Merge CV objects (lib.type === "cv")
+    if (lib.type === 'cv' && lib.objects) {
+      const libName = lib.name || dir.name;
+      for (const [objName, def] of Object.entries(lib.objects)) {
+        ctx.cvObjects[`${libName}.${objName}`] = def;
       }
     }
   }

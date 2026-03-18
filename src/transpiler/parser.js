@@ -44,6 +44,7 @@ function parse(tokens) {
       declarations: [],
       macros: [],
       backticks: [],
+      cvInstances: [],
       subgrammars: [],
     };
 
@@ -51,7 +52,7 @@ function parse(tokens) {
 
     // Parse header: directives, declarations, macros, backticks
     let initialMode = null;
-    while (!atEnd() && !isRuleStart() && !at(T.SEPARATOR)) {
+    while (!atEnd() && !at(T.SEPARATOR)) {
       skipNewlines();
       if (atEnd()) break;
 
@@ -67,10 +68,14 @@ function parse(tokens) {
         scene.declarations.push(parseDeclaration());
       } else if (at(T.BACKTICK)) {
         scene.backticks.push(parseBacktickOrphan());
+      } else if (at(T.IDENT) && isLookaheadCVInstance()) {
+        scene.cvInstances.push(parseCVInstance());
       } else if (at(T.IDENT) && isLookaheadMacro()) {
         scene.macros.push(parseMacro());
-      } else {
+      } else if (isRuleStart()) {
         break; // Start of rules
+      } else {
+        break;
       }
       skipNewlines();
     }
@@ -165,6 +170,98 @@ function parse(tokens) {
     }
 
     return { type: 'Directive', name, subkey, runtime, value, aliases, line: tok.line };
+  }
+
+  // ============================================================
+  // CV Instances — env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
+  // ============================================================
+
+  function isLookaheadCVInstance() {
+    // IDENT LPAREN ... RPAREN EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
+    let j = pos;
+    if (tokens[j]?.type !== T.IDENT) return false;
+    j++;
+    if (tokens[j]?.type !== T.LPAREN) return false;
+    // Skip until matching RPAREN
+    let depth = 1;
+    j++;
+    while (j < tokens.length && depth > 0) {
+      if (tokens[j].type === T.LPAREN) depth++;
+      else if (tokens[j].type === T.RPAREN) depth--;
+      j++;
+    }
+    if (tokens[j]?.type !== T.EQUALS) return false;
+    j++;
+    // Skip newlines
+    while (tokens[j]?.type === T.NEWLINE) j++;
+    // Backtick form: name(target, transport) = `...`
+    if (tokens[j]?.type === T.BACKTICK) return true;
+    // Lib form: IDENT PERIOD IDENT LPAREN
+    if (tokens[j]?.type === T.IDENT &&
+        tokens[j+1]?.type === T.PERIOD &&
+        tokens[j+2]?.type === T.IDENT &&
+        tokens[j+3]?.type === T.LPAREN) return true;
+    return false;
+  }
+
+  function parseCVInstance() {
+    const tok = current();
+    const name = expect(T.IDENT).value;
+
+    // (target, transport)
+    expect(T.LPAREN);
+    const target = expect(T.IDENT).value;
+    expect(T.COMMA);
+    const transport = expect(T.IDENT).value;
+    expect(T.RPAREN);
+
+    expect(T.EQUALS);
+    skipNewlines();
+
+    // RHS: backtick or lib.objectType(args...)
+    if (at(T.BACKTICK)) {
+      const code = advance().value;
+      return {
+        type: 'CVInstance', name, target, transport,
+        lib: null, objectType: 'backtick', args: [], namedArgs: {},
+        code, line: tok.line
+      };
+    }
+
+    // lib.objectType(args...)
+    const lib = expect(T.IDENT).value;
+    expect(T.PERIOD);
+    const objectType = expect(T.IDENT).value;
+    expect(T.LPAREN);
+
+    const args = [];
+    const namedArgs = {};
+    while (!at(T.RPAREN) && !atEnd()) {
+      // Check for named arg: key:value
+      if (at(T.IDENT) && peek(1).type === T.COLON) {
+        const key = advance().value;
+        advance(); // :
+        const val = at(T.IDENT) ? advance().value :
+                    at(T.INT) ? Number(advance().value) :
+                    at(T.FLOAT) ? Number(advance().value) :
+                    advance().value;
+        namedArgs[key] = val;
+      } else {
+        // Positional arg
+        const val = at(T.INT) ? Number(advance().value) :
+                    at(T.FLOAT) ? Number(advance().value) :
+                    at(T.IDENT) ? advance().value :
+                    advance().value;
+        args.push(val);
+      }
+      if (at(T.COMMA)) advance();
+    }
+    expect(T.RPAREN);
+
+    return {
+      type: 'CVInstance', name, target, transport,
+      lib, objectType, args, namedArgs, line: tok.line
+    };
   }
 
   // ============================================================

@@ -36,6 +36,10 @@ export class Dispatcher {
       wave: 'triangle', attack: 20, release: 100,
       detune: 0, filter: 0, filterQ: 1,
     };
+
+    // CV state
+    this._cvTable = {};    // CV0 → { name, target, transport, lib, objectType, args, code }
+    this._cvNames = {};    // CV instance name → CV id
   }
 
   /**
@@ -54,6 +58,21 @@ export class Dispatcher {
     if (controlTable) {
       for (const entry of controlTable) {
         this._controlTable[entry.id] = entry.assignments;
+      }
+    }
+  }
+
+  /**
+   * Set the CV table (from transpiler output).
+   * Maps CV0, CV1... to their definitions.
+   */
+  setCVTable(cvTable) {
+    this._cvTable = {};
+    this._cvNames = {};
+    if (cvTable) {
+      for (const entry of cvTable) {
+        this._cvTable[entry.id] = entry;
+        this._cvNames[entry.name] = entry.id;
       }
     }
   }
@@ -79,9 +98,14 @@ export class Dispatcher {
       startSec: t.start / 1000,
       durSec: Math.max(0, (t.end - t.start)) / 1000,
       isControl: t.token.startsWith('_'),
+      isCV: !!this._cvNames[t.token],
       isSilence: t.token === '-',
       isProlongation: t.token === '_',
-    })).sort((a, b) => a.startSec - b.startSec);
+    })).sort((a, b) => {
+      if (a.startSec !== b.startSec) return a.startSec - b.startSec;
+      const pri = (e) => e.isControl ? 0 : e.isCV ? 1 : 2;
+      return pri(a) - pri(b);
+    });
 
     this._cursor = 0;
     this._loopOffset = 0;
@@ -158,6 +182,22 @@ export class Dispatcher {
 
       if (evt.isControl) {
         this._applyControl(evt.token);
+      } else if (evt.isCV) {
+        // CV token — create the audio bus before notes at this time
+        const cvId = this._cvNames[evt.token];
+        const cvDef = this._cvTable[cvId];
+        if (cvDef) {
+          const transport = this.transports[cvDef.transport]
+            || this.transports['default']
+            || Object.values(this.transports)[0];
+
+          if (transport && transport.sendCV) {
+            transport.sendCV({
+              ...cvDef,
+              durSec: evt.durSec > 0 ? evt.durSec : this.duration,
+            }, absTime);
+          }
+        }
       } else if (!evt.isSilence && !evt.isProlongation && evt.durSec > 0) {
         const transport = this.transports['default']
           || Object.values(this.transports)[0];
@@ -211,9 +251,14 @@ export class Dispatcher {
           startSec: t.start / 1000,
           durSec: Math.max(0, (t.end - t.start)) / 1000,
           isControl: t.token.startsWith('_'),
+          isCV: !!this._cvNames[t.token],
           isSilence: t.token === '-',
           isProlongation: t.token === '_',
-        })).sort((a, b) => a.startSec - b.startSec);
+        })).sort((a, b) => {
+          if (a.startSec !== b.startSec) return a.startSec - b.startSec;
+          const pri = (e) => e.isControl ? 0 : e.isCV ? 1 : 2;
+          return pri(a) - pri(b);
+        });
       }
     }
 
