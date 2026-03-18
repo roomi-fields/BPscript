@@ -278,7 +278,7 @@
     <div class="editor-area">
       <!-- Editor tabs -->
       <div class="editor-tabs">
-        <div class="editor-tab active" onclick="switchEditorTab('bpscript')">BPscript</div>
+        <div class="editor-tab active" onclick="switchEditorTab('bpscript')">Scene</div>
         <div class="editor-tab" onclick="switchEditorTab('grammar')">Grammar (BP3)</div>
       </div>
       <div class="editor-panels">
@@ -316,7 +316,114 @@ S -> C4 D4 E4 F4 G4</textarea>
         <div class="output-panel active" id="outputContent">(not yet produced)</div>
         <div class="output-panel" id="messagesContent">(no messages)</div>
         <div class="output-panel" id="libsContent" style="display:flex;gap:0;padding:0;"></div>
-        <div class="output-panel" id="helpContent" style="padding:16px 24px;overflow-y:auto;color:#ccc;font-size:13px;line-height:1.6;"></div>
+        <div class="output-panel" id="helpContent" style="padding:16px 24px;overflow-y:auto;color:#ccc;font-size:13px;line-height:1.6;">
+          <div class="help-content">
+            <h3>BPscript Quick Reference</h3>
+            <div class="section">
+              BPscript is a meta-sequencer language. You write rules that describe how musical structures
+              are rewritten, and the engine produces sequences from them.
+            </div>
+            <h3>Directives (@)</h3>
+            <div class="section">
+              Directives configure the compilation environment.
+<pre>@core                      // load core library
+@controls                  // load control definitions
+@alphabet.western:browser  // load western note alphabet
+@alphabet.raga:browser     // load Indian sargam alphabet
+@mm:120                    // metronome: 120 BPM (default: 60)</pre>
+            </div>
+            <h3>Rules</h3>
+            <div class="section">
+              A rule rewrites a symbol into a sequence.
+<pre>S -&gt; C4 D4 E4              // S becomes C4 D4 E4
+S -&gt; A B                   // S becomes A B (then A and B get rewritten)</pre>
+              The start symbol is always <code>S</code>.
+            </div>
+            <h4>Modes</h4>
+            <div class="section">
+              <table>
+                <tr><th>Syntax</th><th>BP3 mode</th><th>Meaning</th></tr>
+                <tr><td><code>[mode:ord]</code></td><td>ORD</td><td>Rules applied in order (default)</td></tr>
+                <tr><td><code>[mode:random]</code></td><td>RND</td><td>Random rule selection</td></tr>
+                <tr><td><code>[mode:sub1]</code></td><td>SUB1</td><td>Single substitution pass</td></tr>
+                <tr><td><code>[mode:lin]</code></td><td>LIN</td><td>Leftmost derivation</td></tr>
+              </table>
+            </div>
+            <h3>Notes &amp; Symbols</h3>
+            <div class="section">
+              <table>
+                <tr><th>Symbol</th><th>Meaning</th></tr>
+                <tr><td><code>C4 D#5 Eb3</code></td><td>Western notes (with @alphabet.western)</td></tr>
+                <tr><td><code>sa6 re6 ga6</code></td><td>Indian sargam (with @alphabet.raga)</td></tr>
+                <tr><td><code>-</code></td><td>Silence (same duration as a note)</td></tr>
+                <tr><td><code>_</code></td><td>Prolongation (extends previous note)</td></tr>
+                <tr><td><code>~</code></td><td>Tie (legato between two notes): <code>C4~C4</code></td></tr>
+                <tr><td><code>!</code></td><td>Simultaneous: <code>C4!E4!G4</code> = chord</td></tr>
+              </table>
+            </div>
+            <h3>Controls [ ]</h3>
+            <div class="section">
+              Controls modify playback parameters. They can appear as rule qualifiers or inline.
+<pre>[vel:80]C4 D4          // velocity 80 before C4
+C4[vel:80]             // velocity 80 after C4
+S -&gt; Phrase [vel:90]   // velocity 90 for entire rule</pre>
+              <table>
+                <tr><th>Control</th><th>Meaning</th></tr>
+                <tr><td><code>[vel:N]</code></td><td>Velocity (0-127)</td></tr>
+                <tr><td><code>[chan:N]</code></td><td>MIDI channel (1-16)</td></tr>
+                <tr><td><code>[ins:N]</code></td><td>Instrument/program</td></tr>
+                <tr><td><code>[transpose:N]</code></td><td>Transposition in semitones</td></tr>
+                <tr><td><code>[speed:N]</code></td><td>Tempo ratio for a group</td></tr>
+                <tr><td><code>[mode:X]</code></td><td>Derivation mode</td></tr>
+                <tr><td><code>[weight:N]</code></td><td>Rule weight for random selection</td></tr>
+              </table>
+            </div>
+            <h3>Polymetry { }</h3>
+            <div class="section">
+              Curly braces create polymetric groups. Voices are separated by commas and
+              stretched to fit the same total duration.
+<pre>S -&gt; {C4 D4 E4, F4 G4}        // 3 notes vs 2 notes
+S -&gt; {A B, C D E, F G H I}    // 3 voices: 2, 3, 4 notes</pre>
+            </div>
+            <h3>Sub-grammars</h3>
+            <div class="section">
+              Use <code>-----</code> to separate sub-grammars. Each can have its own mode.
+              Rules are applied sub-grammar by sub-grammar in order.
+<pre>S -&gt; A B [mode:ord]
+-----
+A -&gt; C4 D4 [mode:random]
+A -&gt; E4 F4</pre>
+            </div>
+            <h3>Flags &amp; Guards</h3>
+            <div class="section">
+              Flags are variables that control rule selection.
+<pre>S -&gt; Phrase [count=4]         // initialize flag
+when count-1 Phrase -&gt; C4 D4 Phrase  // decrement &amp; test
+Phrase -&gt; C5 _ _              // fallback when count=0</pre>
+              <table>
+                <tr><th>Syntax</th><th>Meaning</th></tr>
+                <tr><td><code>when X==N</code></td><td>Test flag X equals N</td></tr>
+                <tr><td><code>when X-1</code></td><td>Decrement X, test &gt; 0</td></tr>
+                <tr><td><code>[X=N]</code></td><td>Set flag X to N (in RHS)</td></tr>
+              </table>
+            </div>
+            <h3>Backticks</h3>
+            <div class="section">
+              Embed code for external runtimes. The dispatcher routes backtick
+              tokens to the corresponding eval transport (requires bridge).
+<pre>SC_Part -&gt; &#96;sc: Synth(\default, [\freq, 440])&#96;
+PY_Part -&gt; &#96;py: print("hello from python")&#96;</pre>
+            </div>
+            <h3>Playback</h3>
+            <div class="section">
+              <b>Produce</b> — compile BPscript and run through BP3 engine<br>
+              <b>Play</b> — play the produced sequence once<br>
+              <b>Loop</b> — play in a loop; with <i>re-derive</i> checked, each cycle is a new derivation<br>
+              <b>Stop</b> — stop playback<br>
+              <b>Live</b> — auto-compile on edit; in loop mode, changes apply at the next cycle
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1004,128 +1111,6 @@ function showLib(name) {
     detail.textContent = json;
   }
 }
-
-/* ---- Help content ---- */
-(function() {
-  document.getElementById('helpContent').innerHTML = `<div class="help-content">
-<h3>BPscript Quick Reference</h3>
-<div class="section">
-BPscript is a meta-sequencer language. You write rules that describe how musical structures
-are rewritten, and the engine produces sequences from them.
-</div>
-
-<h3>Directives (@)</h3>
-<div class="section">
-Directives configure the compilation environment.
-<pre>@core                      // load core library
-@controls                  // load control definitions
-@alphabet.western:browser  // load western note alphabet for browser playback
-@alphabet.raga:browser     // load Indian sargam alphabet
-@mm:120                    // metronome: 120 BPM (default: 60)</pre>
-</div>
-
-<h3>Rules</h3>
-<div class="section">
-A rule rewrites a symbol into a sequence.
-<pre>S -> C4 D4 E4              // S becomes C4 D4 E4
-S -> A B                   // S becomes A B (then A and B get rewritten)</pre>
-The start symbol is always <code>S</code>.
-</div>
-
-<h4>Modes</h4>
-<div class="section">
-<table>
-<tr><th>Syntax</th><th>BP3 mode</th><th>Meaning</th></tr>
-<tr><td><code>[mode:ord]</code></td><td>ORD</td><td>Rules applied in order (default)</td></tr>
-<tr><td><code>[mode:random]</code></td><td>RND</td><td>Random rule selection</td></tr>
-<tr><td><code>[mode:sub1]</code></td><td>SUB1</td><td>Single substitution pass</td></tr>
-<tr><td><code>[mode:lin]</code></td><td>LIN</td><td>Leftmost derivation</td></tr>
-</table>
-</div>
-
-<h3>Notes & Symbols</h3>
-<div class="section">
-<table>
-<tr><th>Symbol</th><th>Meaning</th></tr>
-<tr><td><code>C4 D#5 Eb3</code></td><td>Western notes (with @alphabet.western)</td></tr>
-<tr><td><code>sa6 re6 ga6</code></td><td>Indian sargam (with @alphabet.raga)</td></tr>
-<tr><td><code>-</code></td><td>Silence (same duration as a note)</td></tr>
-<tr><td><code>_</code></td><td>Prolongation (extends previous note)</td></tr>
-<tr><td><code>~</code></td><td>Tie (legato between two notes): <code>C4~C4</code></td></tr>
-<tr><td><code>!</code></td><td>Simultaneous: <code>C4!E4!G4</code> = chord</td></tr>
-</table>
-</div>
-
-<h3>Controls [ ]</h3>
-<div class="section">
-Controls modify playback parameters. They can appear as rule qualifiers or inline.
-<pre>[vel:80]C4 D4          // velocity 80 before C4
-C4[vel:80]             // velocity 80 after C4
-S -> Phrase [vel:90]   // velocity 90 for entire rule</pre>
-<table>
-<tr><th>Control</th><th>Meaning</th></tr>
-<tr><td><code>[vel:N]</code></td><td>Velocity (0-127)</td></tr>
-<tr><td><code>[chan:N]</code></td><td>MIDI channel (1-16)</td></tr>
-<tr><td><code>[ins:N]</code></td><td>Instrument/program</td></tr>
-<tr><td><code>[transpose:N]</code></td><td>Transposition in semitones</td></tr>
-<tr><td><code>[speed:N]</code></td><td>Tempo ratio for a group</td></tr>
-<tr><td><code>[mode:X]</code></td><td>Derivation mode</td></tr>
-<tr><td><code>[weight:N]</code></td><td>Rule weight for random selection</td></tr>
-</table>
-</div>
-
-<h3>Polymétrie { }</h3>
-<div class="section">
-Curly braces create polymetric groups. Voices are separated by commas and
-stretched to fit the same total duration.
-<pre>S -> {C4 D4 E4, F4 G4}        // 3 notes vs 2 notes, same duration
-S -> {A B, C D E, F G H I}    // 3 voices: 2, 3, 4 notes</pre>
-</div>
-
-<h3>Sub-grammars</h3>
-<div class="section">
-Use <code>-----</code> to separate sub-grammars. Each can have its own mode.
-Rules are applied sub-grammar by sub-grammar in order.
-<pre>S -> A B [mode:ord]
------
-A -> C4 D4 [mode:random]
-A -> E4 F4
------
-B -> G4 A4 [mode:ord]</pre>
-</div>
-
-<h3>Flags & Guards</h3>
-<div class="section">
-Flags are variables that control rule selection.
-<pre>S -> Phrase [count=4]         // initialize flag count to 4
-when count-1 Phrase -> C4 D4 Phrase  // decrement and test > 0
-Phrase -> C5 _ _              // when count reaches 0</pre>
-<table>
-<tr><th>Syntax</th><th>Meaning</th></tr>
-<tr><td><code>when X==N</code></td><td>Test flag X equals N</td></tr>
-<tr><td><code>when X-1</code></td><td>Decrement X, test > 0</td></tr>
-<tr><td><code>[X=N]</code></td><td>Set flag X to N (in RHS)</td></tr>
-</table>
-</div>
-
-<h3>Backticks</h3>
-<div class="section">
-Embed code for external runtimes. The dispatcher routes backtick
-tokens to the corresponding eval transport (requires bridge).
-<pre>SC_Part -&gt; &grave;sc: Synth(\\default, [\\freq, 440])&grave;
-PY_Part -&gt; &grave;py: print("hello from python")&grave;</pre>
-</div>
-
-<h3>Playback</h3>
-<div class="section">
-<b>Produce</b> — compile BPscript and run through BP3 engine<br>
-<b>Play</b> — play the produced sequence once<br>
-<b>Loop</b> — play in a loop; with <i>re-derive</i> checked, each cycle is a new derivation (different in random mode)<br>
-<b>Stop</b> — stop playback<br>
-<b>Live</b> — auto-compile on edit; in loop mode, changes apply at the next cycle
-</div>
-</div>`;
-})();
 
 /* ---- Resize handle ---- */
 (function() {
