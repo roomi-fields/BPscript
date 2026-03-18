@@ -377,8 +377,8 @@ function renderLibrary(items) {
   let html = '';
   categoryOrder.forEach(cat => {
     if (!groups[cat]) return;
-    html += `<div class="category-header" onclick="toggleCategory('${cat}')"><span class="chevron">&#9660;</span>${categoryLabels[cat] || cat} (${groups[cat].length})</div>`;
-    html += `<div class="category-items" data-cat="${cat}">`;
+    html += `<div class="category-header collapsed" onclick="toggleCategory('${cat}')"><span class="chevron">&#9660;</span>${categoryLabels[cat] || cat} (${groups[cat].length})</div>`;
+    html += `<div class="category-items collapsed" data-cat="${cat}">`;
     groups[cat].forEach(item => {
       const activeClass = activeGrammar && activeGrammar.id === item.id ? ' active' : '';
       html += `<div class="grammar-item${activeClass}" onclick="loadFromLibrary('${item.id}')" data-id="${item.id}">
