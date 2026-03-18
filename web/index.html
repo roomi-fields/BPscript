@@ -306,10 +306,10 @@ S -> C4 D4 E4 F4 G4</textarea>
     <div class="resize-handle" id="resizeHandle"></div>
     <div class="output-area" id="outputArea">
       <div class="output-tabs">
-        <div class="output-tab active" onclick="switchOutputTab('output')">Output</div>
-        <div class="output-tab" id="messagesTab" onclick="switchOutputTab('messages')">Messages</div>
-        <div class="output-tab" onclick="switchOutputTab('libs'); loadLibsPanel()">Libraries</div>
-        <div class="output-tab" onclick="switchOutputTab('help')">Help</div>
+        <div class="output-tab active" data-tab="output" onclick="switchOutputTab('output')">Output</div>
+        <div class="output-tab" data-tab="messages" id="messagesTab" onclick="switchOutputTab('messages')">Messages</div>
+        <div class="output-tab" data-tab="libs" onclick="switchOutputTab('libs'); loadLibsPanel()">Libraries</div>
+        <div class="output-tab" data-tab="help" onclick="switchOutputTab('help')">Help</div>
       </div>
       <div class="output-panels">
         <div class="output-panel active" id="outputContent">(not yet produced)</div>
@@ -567,9 +567,8 @@ function switchEditorTab(tab) {
 }
 
 function switchOutputTab(tab) {
-  const tabNames = ['output', 'messages', 'libs', 'help'];
-  document.querySelectorAll('.output-tab').forEach((el, i) => {
-    el.classList.toggle('active', tabNames[i] === tab);
+  document.querySelectorAll('.output-tab[data-tab]').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
   });
   document.querySelectorAll('.output-panel').forEach(el => {
     el.classList.toggle('active', el.id === tab + 'Content');
