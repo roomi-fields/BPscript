@@ -353,14 +353,28 @@ S -> C4 D4 E4 F4 G4</textarea>
 S -&gt; A B                   // S becomes A B (then A and B get rewritten)</pre>
               The start symbol is always <code>S</code>.
             </div>
-            <h4>Modes</h4>
+            <h4>Derivation type (per sub-grammar)</h4>
             <div class="section">
+              Applied to the entire sub-grammar block. Set on the first rule of the block.
               <table>
-                <tr><th>Syntax</th><th>BP3 mode</th><th>Meaning</th></tr>
+                <tr><th>Syntax</th><th>BP3</th><th>Meaning</th></tr>
                 <tr><td><code>[mode:ord]</code></td><td>ORD</td><td>Rules applied in order (default)</td></tr>
                 <tr><td><code>[mode:random]</code></td><td>RND</td><td>Random rule selection</td></tr>
                 <tr><td><code>[mode:sub1]</code></td><td>SUB1</td><td>Single substitution pass</td></tr>
                 <tr><td><code>[mode:lin]</code></td><td>LIN</td><td>Leftmost derivation</td></tr>
+                <tr><td><code>[mode:tem]</code></td><td>TEM</td><td>Template matching</td></tr>
+                <tr><td><code>[mode:poslong]</code></td><td>POSLONG</td><td>Longest match first</td></tr>
+                <tr><td><code>[mode:sub]</code></td><td>SUB</td><td>Substitution</td></tr>
+              </table>
+            </div>
+            <h4>Scan direction (per rule)</h4>
+            <div class="section">
+              Controls which direction BP3 scans for rule matches. Can differ per rule within a block.
+              <table>
+                <tr><th>Syntax</th><th>BP3</th><th>Meaning</th></tr>
+                <tr><td><code>[scan:left]</code></td><td>LEFT</td><td>Scan left to right (default)</td></tr>
+                <tr><td><code>[scan:right]</code></td><td>RIGHT</td><td>Scan right to left</td></tr>
+                <tr><td><code>[scan:rnd]</code></td><td>RND</td><td>Random scan position</td></tr>
               </table>
             </div>
             <h3>Notes &amp; Symbols</h3>
