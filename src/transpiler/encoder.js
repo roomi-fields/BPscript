@@ -71,11 +71,10 @@ function encode(ast) {
     } else if (dir.name === 'tempo' && dir.value) {
       // @tempo → goes to settings file, not grammar
     } else if (CONTROL_MAP[dir.name] && dir.value != null) {
-      // Controls as global directives → CT token
+      // Controls as global directives → _script(CTN) for BP3
       const ctName = `CT${_ctIndex++}`;
       output.controlTable.push({ id: ctName, assignments: { [dir.name]: dir.value } });
-      output.alphabet.add(ctName);
-      rhsPrefix.push(ctName);
+      rhsPrefix.push(`_script(${ctName})`);
     }
   }
 
@@ -186,8 +185,7 @@ function encode(ast) {
       if (Object.keys(ruleAssignments).length > 0) {
         const ctName = `CT${_ctIndex++}`;
         output.controlTable.push({ id: ctName, assignments: ruleAssignments });
-        output.alphabet.add(ctName);
-        rhsPrefixParts.push(ctName);
+        rhsPrefixParts.push(`_script(${ctName})`);
       }
 
       // RHS — inject global controls as prefix of first rule in first subgrammar
@@ -384,14 +382,13 @@ function encodeRhsElement(el, alphabet, controlMap) {
         }
       }
       if (Object.keys(assignments).length > 0) {
-        // Create a control token: CT0, CT1, etc.
         const ctName = `CT${_ctIndex++}`;
         _output.controlTable.push({ id: ctName, assignments });
-        alphabet.add(ctName);
+        const scriptToken = `_script(${ctName})`;
         if (el.controlPrefix && q === el.controlQualifiers[0]) {
-          prefixTokens.push(ctName);
+          prefixTokens.push(scriptToken);
         } else {
-          suffixTokens.push(ctName);
+          suffixTokens.push(scriptToken);
         }
       }
     }
@@ -445,8 +442,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       }
       const ctName = `CT${_ctIndex++}`;
       _output.controlTable.push({ id: ctName, assignments });
-      alphabet.add(ctName);
-      return ctName;
+      return `_script(${ctName})`;
     }
 
     case 'SimultaneousGroup': {

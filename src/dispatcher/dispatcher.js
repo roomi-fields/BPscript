@@ -78,7 +78,7 @@ export class Dispatcher {
       token: t.token,
       startSec: t.start / 1000,
       durSec: Math.max(0, (t.end - t.start)) / 1000,
-      isControl: t.token.startsWith('CT') || t.token.startsWith('_'),
+      isControl: t.token.startsWith('_'),
       isSilence: t.token === '-',
       isProlongation: t.token === '_',
     })).sort((a, b) => a.startSec - b.startSec);
@@ -220,11 +220,15 @@ export class Dispatcher {
     this._cursor = 0;
   }
 
-  /** Apply a control token — look up CT table or parse legacy _xxx() */
+  /** Apply a control token — _script(CTN) → look up table, or _xxx(value) */
   _applyControl(token) {
-    // CT tokens: look up control table
-    if (token.startsWith('CT') && this._controlTable) {
-      const assignments = this._controlTable[token];
+    const m = token.match(/^_(\w+)\((.+)\)$/);
+    if (!m) return;
+    const [, name, value] = m;
+
+    // _script(CTN) → look up control table
+    if (name === 'script' && value.startsWith('CT') && this._controlTable) {
+      const assignments = this._controlTable[value];
       if (assignments) {
         for (const [key, val] of Object.entries(assignments)) {
           this._setControl(key, val);
@@ -232,9 +236,9 @@ export class Dispatcher {
       }
       return;
     }
-    // Legacy _xxx(value) format
-    const m = token.match(/^_(\w+)\((.+)\)$/);
-    if (m) this._setControl(m[1], m[2]);
+
+    // Direct BP3 control: _vel(80), _chan(2), etc.
+    this._setControl(name, value);
   }
 
   _setControl(name, value) {
