@@ -14,7 +14,8 @@
 // En BPscript on utilise des underscores : [scale: just_intonation 69]
 // Le compilateur traduit en _scale(just intonation,69) pour BP3.
 
-S -> [scale: piano dop4]fap3 [scale: just_intonation 69]C4 rep4 [mode:ord, weight:0]
+@mode:ord
+S -> [scale: piano dop4]fap3 [scale: just_intonation 69]C4 rep4 [weight:0]
 
 S -> [scale: just_intonation 69]C4 D4 E4 {C4,E4,G4,C5} {C4,E4,G4,C5}[speed:2] F4 A4 G4 C5 {C4,F4,D4,C5}[speed:2] {C4,F4,D4,C5}[speed:3] [weight:0]
 

@@ -27,7 +27,8 @@ Y Y -> Y X Y X [weight:3-1]
 
 // --- Sous-grammaire 2 [mode:random] — résolution en notes ---
 
-X -> sa6 re6 [mode:random, weight:8-2]
+@mode:random
+X -> sa6 re6 [weight:8-2]
 X -> re6 ga6 [weight:8-2]
 X Y -> ga6 pa6 dha6 X X [weight:8-1]
 X X -> sa7 dha6 pa6 [weight:8-1]

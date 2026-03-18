@@ -15,7 +15,8 @@ gate chik:midi
 
 // --- Sous-grammaire 1 [mode:random] — séquence initiale ---
 
-S -> X X X X Y X X X X Y X X X X [mode:random, weight:100, vel:127, volume:40]
+@mode:random
+S -> X X X X Y X X X X Y X X X X [weight:100, vel:127, volume:40]
 X -> a [weight:K9]
 X -> b
 
@@ -23,7 +24,8 @@ X -> b
 
 // --- Sous-grammaire 2 [mode:sub] — automate cellulaire ---
 
-Y -> Y [mode:sub]
+@mode:sub
+Y -> Y
 #? ?1 -> #? ?1
 ?1 #? -> ?1 #?
 } -> }
@@ -45,7 +47,8 @@ c a c -> b a b
 
 // --- Sous-grammaire 3 [mode:random] — silences et out-time objects ---
 
-Y -> !f [mode:random, weight:40]
+@mode:random
+Y -> !f [weight:40]
 Y -> !chik [weight:50]
 ? #? -> ? Silence script(MIDI send Continue) #? [weight:1-1]
 Silence -> - - - - - [weight:50]

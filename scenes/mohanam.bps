@@ -20,7 +20,8 @@
 // Crée le symbole de départ I avec les compteurs
 // ============================================================
 
-S -> I [Ideas=20, Notes=32, NumR=1] [mode:random]
+@mode:random
+S -> I [Ideas=20, Notes=32, NumR=1]
 
 -----
 
@@ -60,7 +61,8 @@ when Ideas I -> I goto(2,1) [weight:1]
 // Supprime les I restants
 // ============================================================
 
-I -> lambda [mode:sub1]
+@mode:sub1
+I -> lambda
 
 -----
 
@@ -85,7 +87,8 @@ when Notes-2 B -> Q2 [weight:50-10]
 // R1...R2 encadre un motif, les captures ?1 ?2... le dupliquent
 // ============================================================
 
-R1 ?1 R2 -> ?1 ?1 [mode:random]
+@mode:random
+R1 ?1 R2 -> ?1 ?1
 R1 ?1 ?2 R2 -> ?1 ?2 ?1 ?2
 R1 ?1 ?2 ?3 R2 -> ?1 ?2 ?3 ?1 ?2 ?3
 R1 ?1 ?2 ?3 ?4 R2 -> ?1 ?2 ?3 ?4 ?1 ?2 ?3 ?4
@@ -98,7 +101,8 @@ R1 ?1 ?2 ?3 ?4 ?5 R2 -> ?1 ?2 ?3 ?4 ?5 ?1 ?2 ?3 ?4 ?5
 // P4/P3/P2 et Q4/Q3/Q2 se déclinent en variantes numérotées
 // ============================================================
 
-P4 -> P41 [mode:random]
+@mode:random
+P4 -> P41
 P4 -> P42
 P4 -> P43
 P4 -> P44
@@ -129,7 +133,8 @@ Q2 -> Q23
 // Sous-grammaire 8 — Nettoyage des marqueurs [mode:random]
 // ============================================================
 
-R1 -> lambda [mode:random]
+@mode:random
+R1 -> lambda
 R2 -> lambda
 
 -----
@@ -143,7 +148,8 @@ R2 -> lambda
 // ============================================================
 
 // Effets via captures — macros d'expression
-Str ?1 -> ?1[vel:64] [mode:random, vel:110]
+@mode:random
+Str ?1 -> ?1[vel:64] [vel:110]
 Step3Up ?1 ?2 ?3 -> [vel:80]?1 [vel:95]?2 [vel:110]?3[vel:64]
 Step3Dn ?1 ?2 ?3 -> [vel:110]?1 [vel:95]?2 [vel:80]?3[vel:64]
 

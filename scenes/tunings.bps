@@ -7,7 +7,8 @@
 
 // --- Sous-grammaire 1 [mode:ord] ---
 
-S -> [tempo:2, scale: bach_temperament 0]Up_Down [mode:ord]
+@mode:ord
+S -> [tempo:2, scale: bach_temperament 0]Up_Down
 S -> [tempo:2, scale: pure_minor-third_meantone 0]Up_Down
 S -> [tempo:2, scale: meantone_classic 0]Up_Down
 S -> [tempo:2]Up_Down

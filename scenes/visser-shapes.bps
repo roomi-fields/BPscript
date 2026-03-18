@@ -12,14 +12,16 @@
 
 // --- Sous-grammaire 1 [mode:ord] — structure ---
 
-S -> [staccato:50]Shapes [mode:ord]
+@mode:ord
+S -> [staccato:50]Shapes
 Shapes -> Part1 {[rotate:20, transpose:2]Part1} Part2 Part3 {[tempo:0.7]Part3} Part4
 
 -----
 
 // --- Sous-grammaire 2 [mode:ord] — parties ---
 
-Part1 -> {M1 Trill1 M2 Trill2 Int1 Int2 Trill3 Int3 1/4} [mode:ord]
+@mode:ord
+Part1 -> {M1 Trill1 M2 Trill2 Int1 Int2 Trill3 Int3 1/4}
 Part2 -> {M3 M4 M5 1/4 Trill4 1/4 Trill4 Trill4 1/4 Trill5 M6 1/4 Trill6 Trill7 Trill8 1/4 Trill9 Trill10 1/4 M5 M4 M3 M6 {[rotate:6, transpose:23]M6} 1/4 Int3 Int2 [rotate:23]Int1 Part1} Trill3
 Part3 -> {1 {M3,M4} 2,[transpose:12]Trill1}[transpose:-11] {1 {M3,M4} 2,[transpose:12]Trill1}
 Part4 -> {Trill12,Trill11} {Trill10,Trill1} {Trill9 Trill10,Trill2} {[transpose:11]{M3,Trill2}} {M3,[transpose:12]Trill3} {Trill10,Trill1} {Trill9 Trill10,Trill2} {[tempo:2/3]Trill10} {M3,M4} {[tempo:1/2]Trill10} 1/4 [transpose:12]Trill9
@@ -28,7 +30,8 @@ Part4 -> {Trill12,Trill11} {Trill10,Trill1} {Trill9 Trill10,Trill2} {[transpose:
 
 // --- Sous-grammaire 3 [mode:ord] — matériaux ---
 
-M1 -> {[velcont, vel:40, transpose:12, tempo:7]C0 C2 C4 C6 [vel:60, tempo:6]Bb4 G3 F2 B2 [vel:80, tempo:8]G3 A2 B1 F#1 G2 A3 C#4 E3 [vel:40, tempo:6]G2 Bb1 C#1 [tempo:5]G0 G#1 A2 A3 Bb4[vel:90]} [mode:ord]
+@mode:ord
+M1 -> {[velcont, vel:40, transpose:12, tempo:7]C0 C2 C4 C6 [vel:60, tempo:6]Bb4 G3 F2 B2 [vel:80, tempo:8]G3 A2 B1 F#1 G2 A3 C#4 E3 [vel:40, tempo:6]G2 Bb1 C#1 [tempo:5]G0 G#1 A2 A3 Bb4[vel:90]}
 M2 -> {[keyxpand: C4 -1]M1}
 M3 -> {[velcont, vel:40, transpose:12, tempo:7]C0 C2 {C4,C6} [vel:100, tempo:6]Bb4 G3 F2 {B2,G3} [vel:80, tempo:8]A2 B1 F#1 G2 A3 C#4 {E3,G2} [vel:50, tempo:6]Bb1 C#1 [tempo:5]G0 G#1 A2 {A3,Bb4}[vel:70]}
 M4 -> {[tempo:0.7, rotate:5, transpose:3]M3}

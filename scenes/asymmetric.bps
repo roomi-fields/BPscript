@@ -14,47 +14,54 @@ gate beat2:midi
 
 // --- Sous-grammaire 1 [mode:random] — initialisation ---
 
-S -> Head U V [Reverse=0, beats=24, K1] [mode:random]
+@mode:random
+S -> Head U V [Reverse=0, beats=24, K1]
 
 -----
 
 // --- Sous-grammaire 2 [mode:random] — choix du nombre de B (impair) ---
 
-Head -> Head goto(3,0) [B=3, A=3] [mode:random, weight:3]
+@mode:random
+Head -> Head goto(3,0) [B=3, A=3] [weight:3]
 Head -> Head goto(3,0) [B=9, A=1] [weight:1]
 
 -----
 
 // --- Sous-grammaire 3 [mode:random] — choix d'une transformation ---
 
-when K1-1 when A>0 Head -> Head a [Atrans, A-1, K2, K3] [mode:random]
+@mode:random
+when K1-1 when A>0 Head -> Head a [Atrans, A-1, K2, K3]
 when K1-1 when B>0 Head -> Head b [Btrans, B-1, K4]
 
 -----
 
 // --- Sous-grammaire 4 [mode:ord] — transformation a ---
 
-when K2-1 when Atrans>0 U -> beat3 U [mode:ord]
+@mode:ord
+when K2-1 when Atrans>0 U -> beat3 U
 when K3-1 when Atrans-1 V -> beat3 V
 
 -----
 
 // --- Sous-grammaire 5 [mode:ord] — transformation b ---
 
-when K4-1 when Btrans-1 when Reverse==1 U -> beat2 U [Reverse=0] [mode:ord]
+@mode:ord
+when K4-1 when Btrans-1 when Reverse==1 U -> beat2 U [Reverse=0]
 when K4-1 when Btrans-1 when Reverse==0 V -> beat2 V [Reverse=1]
 
 -----
 
 // --- Sous-grammaire 6 [mode:random] — reboucler si transformations restantes ---
 
-when A>=1 Head -> Head goto(3,0) [K1] [mode:random]
+@mode:random
+when A>=1 Head -> Head goto(3,0) [K1]
 when B>=1 Head -> Head goto(3,0) [K1]
 
 -----
 
 // --- Sous-grammaire 7 [mode:random] — effacement des variables ---
 
-U ->  [mode:random]
+@mode:random
+U ->
 V ->
 Head ->

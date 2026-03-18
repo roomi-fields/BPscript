@@ -11,13 +11,15 @@
 
 // --- Sous-grammaire 1 [mode:random] ---
 
-S -> [chan:1, vel:50, volumecont, volume:80]A' B' C' [mode:random]
+@mode:random
+S -> [chan:1, vel:50, volumecont, volume:80]A' B' C'
 
 -----
 
 // --- Sous-grammaire 2 [mode:random] ---
 
-A' -> A A A A A A A A [mode:random]
+@mode:random
+A' -> A A A A A A A A
 B' -> B B B" B" C C D D D D E E E E
 C' -> C C C D E E E E C D C D E E E E C C C B" B" B A A[volume:80] A A A[volume:0]
 

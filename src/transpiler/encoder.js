@@ -77,18 +77,10 @@ function encode(ast) {
     const sub = ast.subgrammars[si];
     const blockNum = sub.index;
 
-    // Determine mode: from @mode directive on subgrammar, or from [mode:X] on first rule (legacy), or default ORD
+    // Determine mode from @mode directive on subgrammar, or default ORD
     let mode = 'ORD';
     if (sub.mode && MODE_MAP[sub.mode]) {
       mode = MODE_MAP[sub.mode];
-    } else if (sub.rules.length > 0 && sub.rules[0].qualifiers.length > 0) {
-      for (const q of sub.rules[0].qualifiers) {
-        for (const p of q.pairs) {
-          if (p.key === 'mode' && MODE_MAP[p.value]) {
-            mode = MODE_MAP[p.value];
-          }
-        }
-      }
     }
 
     // Mode line

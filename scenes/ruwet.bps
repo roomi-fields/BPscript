@@ -11,7 +11,8 @@
 @alphabet.western:midi
 
 // --- Sous-grammaire 1 [mode:ord] --- structure thematique
-S -> P1 P2 P3 [mode:ord, meter:4+4+4+4+4+4/4]
+@mode:ord
+S -> P1 P2 P3 [meter:4+4+4+4+4+4/4]
 P1 -> A8 B"8 C8 B'8
 P2 -> A8 B8 C8 B8
 P3 -> C'8 B'8 C'8 B'8
@@ -26,7 +27,8 @@ C'8 -> $ {|e4|} & {|e4|}
 
 // --- Sous-grammaire 2 [mode:lin] --- decomposition des cellules
 
-|a4| -> |x| |z31| [mode:lin]
+@mode:lin
+|a4| -> |x| |z31|
 |b4| -> |y| |z5|
 |c4| -> |w| |z31|
 |c"4| -> |w| |z311|
@@ -39,7 +41,8 @@ C'8 -> $ {|e4|} & {|e4|}
 
 // --- Sous-grammaire 3 [mode:lin] --- variantes niveau 1
 
-|x| -> fa4 do5 [mode:lin, weight:4]
+@mode:lin
+|x| -> fa4 do5 [weight:4]
 |x| -> |x1| [weight:1]
 |x| -> |x2| [weight:1]
 |x| -> |x3| [weight:1]
@@ -102,7 +105,8 @@ C'8 -> $ {|e4|} & {|e4|}
 
 // --- Sous-grammaire 4 [mode:ord] --- variantes niveau 2
 
-|x1| -> {fa4 la4} [speed:1] do5 [mode:ord]
+@mode:ord
+|x1| -> {fa4 la4} [speed:1] do5
 |x2| -> fa4 {la4 do5} [speed:1]
 |x3| -> {fa4 sol4 la4 do5} [speed:2]
 |x4| -> {fa4 la4 sib4 do5} [speed:2]
@@ -157,4 +161,5 @@ C'8 -> $ {|e4|} & {|e4|}
 
 // --- Sous-grammaire 5 [mode:ord] --- resolution finale
 
-|y| -> fa4 la4 [mode:ord]
+@mode:ord
+|y| -> fa4 la4

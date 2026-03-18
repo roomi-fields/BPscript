@@ -11,7 +11,8 @@
 
 // --- Sous-grammaire 1 [mode:random] ---
 
-S -> A [numtimes=5] [mode:random]
+@mode:random
+S -> A [numtimes=5]
 A -> {E1,A#1 F#1} {Tr2 D}
 B -> {Tr2 A}
 C -> {Tr4 B}
@@ -21,7 +22,8 @@ when numtimes-1 D -> - {Tr6 C {B}[speed:1]} {C}[speed:1] repeat(4)
 
 // --- Sous-grammaire 2 [mode:sub1] — résolution transpositions ---
 
-Tr2 -> transpose(2) [mode:sub1]
+@mode:sub1
+Tr2 -> transpose(2)
 Tr4 -> transpose(4)
 Tr6 -> transpose(6)
 D -> lambda

@@ -22,7 +22,8 @@
 // Terminaux time patterns : t1, t2, t3, t4 (ratios de durée)
 // Terminaux notes : C4, D4, E4, F4, A4, B4, C5, E5
 
-S -> {t1 t2,Part1 Part2} [speed:10] [mode:random]
+@mode:random
+S -> {t1 t2,Part1 Part2} [speed:10]
 Part1 -> {t1 t3 t4,C4 D4 E4 F4 - A4}
 Part2 -> {t3 t1,B4 C5 _ E5}
 

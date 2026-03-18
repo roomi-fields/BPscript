@@ -13,14 +13,16 @@ gate d3:midi
 
 // --- Sous-grammaire 1 [mode:ord] — initialisation ---
 
-S -> d1 [steps=100] [mode:ord]
+@mode:ord
+S -> d1 [steps=100]
 
 -----
 
 // --- Sous-grammaire 2 [mode:sub, scan:left] ---
 // Ordre identique à l'original (règles courtes d'abord)
 
-when steps-1 d1 -> d1 d1 [mode:sub, scan:left]
+@mode:sub
+when steps-1 d1 -> d1 d1 [scan:left]
 when steps-1 d1 d1 -> d2 d1 [scan:left]
 when steps-1 d1 d1 d1 -> d3 d1 [scan:left]
 when steps-1 d2 -> d1 d2 [scan:left]

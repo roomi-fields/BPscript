@@ -19,7 +19,8 @@ gate c:midi
 // --- Sous-grammaire 1 [mode:ord] ---
 // ORD : les règles d'effacement ne sont vues qu'après les règles de répétition
 
-S -> X Y Z [mode:ord]
+@mode:ord
+S -> X Y Z
 X -> a X repeat(K1=3) [weight:1-1]
 Y -> b Y repeat(K1) [weight:1-1]
 Z -> c Z repeat(K1) [weight:1-1]

@@ -90,7 +90,8 @@ gate mi4do4:midi
 // BP3: S --> 4+4+4+4/4 {16,Qaida}
 // cycle16_4 = non-terminal pour la structure rythmique 4+4+4+4/4
 
-S -> cycle16_4 {16,Qaida} [mode:rnd, weight:0]
+@mode:rnd
+S -> cycle16_4 {16,Qaida} [weight:0]
 S -> cycle16_4 {16,Lahra,Qaida}
 S <- Qaida
 // BP3: Qaida <-> (=+ S64 ;) — homomorphisme (* omis)
@@ -281,5 +282,6 @@ plus A'16 <- plus dhatidhagenadhatrktdhatidhageteenakena
 // --- Sous-grammaire 7 [mode:lin] — Lahra (mélodie) ---
 // Les sound objects sont des chaînes concaténées (pas de séparateur de bols)
 
-Lahra -> do5_do5do5 do5_do5do5 si4_si4do5 la4_la4si4 lab4_lab4_ la4_si4mi5 do5_si4do5 la4_lab4la4 [mode:lin]
+@mode:lin
+Lahra -> do5_do5do5 do5_do5do5 si4_si4do5 la4_la4si4 lab4_lab4_ la4_si4mi5 do5_si4do5 la4_lab4la4
 Lahra -> do5do5do5do5 si4la4si4do5 si4la4fa4 {1,mi4do4} mi4fa4la4si4

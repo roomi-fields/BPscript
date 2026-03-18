@@ -13,7 +13,8 @@
 
 // --- Sous-grammaire 1 [mode:ord] — structure ---
 
-S -> M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 [mode:ord]
+@mode:ord
+S -> M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11
 M1 -> A -
 M2 -> B - M1
 M3 -> C - M2
@@ -30,7 +31,8 @@ M11 -> K
 
 // --- Sous-grammaire 2 [mode:ord] — motifs avec transpositions ---
 
-A -> C3 [mode:ord]
+@mode:ord
+A -> C3
 B -> {Tr11 A}
 C -> {Tr5 {A,B}}
 D -> {Tr1 A C}
@@ -46,7 +48,8 @@ K -> {Tr-11 B C D}
 
 // --- Sous-grammaire 3 [mode:ord] — résolution des transpositions ---
 
-Tr11 -> transpose(11) vel(90) [mode:ord]
+@mode:ord
+Tr11 -> transpose(11) vel(90)
 Tr5 -> transpose(5) vel(80)
 Tr1 -> transpose(1) vel(70)
 Tr7 -> transpose(7) vel(60)

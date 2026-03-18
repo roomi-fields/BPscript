@@ -12,7 +12,8 @@
 
 // --- Sous-grammaire 1 [mode:ord] — structure et imbedding ---
 
-S -> [tempo:0.8]Waves [mode:ord]
+@mode:ord
+S -> [tempo:0.8]Waves
 
 Waves -> Frase1 1 Frase1 Frase2 1/2 {[retro, transpose:12]Frase1} {[rotate:2, transpose:1]Frase2} {[transpose:-13]Frase3} 1/4 {[transpose:-1]Frase1} Frase4 {[retro, transpose:-1]Frase1} {[rotate:3, transpose:-11]Frase4} 1 Frase1 {[keyxpand: C4 -1]Frase1} 1/2 {[keyxpand: B3 -1, vel:40]M19,M24}[speed:2] 1/2 {[keyxpand: A#3 -1, vel:40]M19,M24}[speed:2] 1/4 Frase5 {[keyxpand: B3 -1, transpose:-1]Frase5} {[keyxpand: C4 -1]Frase1} 1/2 {[keyxpand: B3 -1, vel:40]M19,M24}[speed:2] 1/2 {[keyxpand: A#3 -1, vel:40]M19,M24}[speed:2] 1 Frase6 1 Frase6 F1 B3 1 {[vel:50]F1 B3} 2 {[vel:40]F1}[speed:6]
 

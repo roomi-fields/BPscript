@@ -18,7 +18,8 @@
 // --- Sous-grammaire 1 [mode:random] ---
 
 // Règle 1 : crée la séquence initiale + flag
-S -> A A2 A3 A1 A A [times=5] [mode:random]
+@mode:random
+S -> A A2 A3 A1 A A [times=5]
 
 // Règle 2 : tant que times > 0, déplace les A devant les marqueurs
 // #A1 #A2 #A3 = contexte négatif triple : A A pas précédé de A1, A2, A3

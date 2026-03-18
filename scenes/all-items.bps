@@ -9,12 +9,14 @@ gate b:midi
 
 // --- Sous-grammaire 1 [mode:random] ---
 
-S -> $X X &X [mode:random]
+@mode:random
+S -> $X X &X
 S -> X X
 
 -----
 
 // --- Sous-grammaire 2 [mode:random, destru] ---
 
-X -> a [mode:random, destru]
+@mode:random
+X -> a [destru]
 X -> b
