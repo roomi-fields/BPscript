@@ -129,6 +129,7 @@
     white-space: pre-wrap;
   }
   .output-panel.active { display: block; }
+  #libsContent.active { display: flex !important; }
   #outputContent { color: #00ff88; overflow-x: auto; }
   #messagesContent { color: #ffaa00; }
 
@@ -460,9 +461,9 @@ function switchEditorTab(tab) {
 }
 
 function switchOutputTab(tab) {
+  const tabNames = ['output', 'messages', 'libs', 'help'];
   document.querySelectorAll('.output-tab').forEach((el, i) => {
-    const tabs = ['output', 'messages', 'libs', 'help'];
-    el.classList.toggle('active', tabs[i] === tab);
+    el.classList.toggle('active', tabNames[i] === tab);
   });
   document.querySelectorAll('.output-panel').forEach(el => {
     el.classList.toggle('active', el.id === tab + 'Content');
@@ -960,9 +961,7 @@ function renderLibsPanel() {
   for (const name of names) {
     const size = JSON.stringify(libsData[name]).length;
     const sizeStr = size > 1024 ? (size / 1024).toFixed(0) + 'KB' : size + 'B';
-    listHtml += `<div class="lib-item" onclick="showLib('${name}')" data-lib="${name}">
-      ${name} <span class="size">${sizeStr}</span>
-    </div>`;
+    listHtml += `<div class="lib-item" onclick="showLib('${name}')" data-lib="${name}">${name} <span class="size">${sizeStr}</span></div>`;
   }
 
   panel.innerHTML = `<div class="libs-list">${listHtml}</div><div class="libs-detail" id="libDetail">(select a library)</div>`;
