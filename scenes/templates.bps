@@ -16,10 +16,11 @@
 // Non-terminaux : S, A
 // Terminal : C4 (gate:midi via @western)
 
-// --- Sous-grammaire 1 — templates bidirectionnels [mode:random] ---
+// --- Sous-grammaire 1 — templates bidirectionnels @mode:random ---
 
+@mode:random
 // Règle 1 : A A avec scale 1/2 sur le dernier A (*1/2 en BP3)
-S <> A A A [*1/2] [mode:random]
+S <> A A A [*1/2]
 
 // Règle 2 : A A avec tempo doublé sur le dernier A
 S <> A A[tempo:2] A
@@ -38,6 +39,7 @@ S <> A . A A . A A A . A
 
 -----
 
-// --- Sous-grammaire 2 — résolution terminale [mode:random] ---
+// --- Sous-grammaire 2 — résolution terminale @mode:random ---
 
-A <> C4 [mode:random]
+@mode:random
+A <> C4

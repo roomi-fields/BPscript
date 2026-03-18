@@ -16,7 +16,7 @@ gate c:midi
 
 // Non-terminaux : S, X, Y, Z
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 // ORD : les règles d'effacement ne sont vues qu'après les règles de répétition
 
 @mode:ord

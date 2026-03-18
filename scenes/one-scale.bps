@@ -7,7 +7,7 @@
 @core
 @controls
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
 S -> C4 A4 G4 [weight:0]

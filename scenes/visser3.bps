@@ -11,7 +11,7 @@
 @alphabet.western:midi
 @mm:120
 
-// --- Sous-grammaire 1 [mode:ord] — structure ---
+// --- Sous-grammaire 1 @mode:ord — structure ---
 
 @mode:ord
 S -> M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11
@@ -29,7 +29,7 @@ M11 -> K
 
 -----
 
-// --- Sous-grammaire 2 [mode:ord] — motifs avec transpositions ---
+// --- Sous-grammaire 2 @mode:ord — motifs avec transpositions ---
 
 @mode:ord
 A -> C3
@@ -46,7 +46,7 @@ K -> {Tr-11 B C D}
 
 -----
 
-// --- Sous-grammaire 3 [mode:ord] — résolution des transpositions ---
+// --- Sous-grammaire 3 @mode:ord — résolution des transpositions ---
 
 @mode:ord
 Tr11 -> transpose(11) vel(90)

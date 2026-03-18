@@ -10,7 +10,7 @@
 @mm:60
 @striated
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
 S -> {PA,... PB}

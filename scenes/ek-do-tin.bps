@@ -10,7 +10,7 @@
 @mm:88
 @striated
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
 S -> $Tihai[transpose:-2] &Tihai[pitchcont, pitchbend:-200, transpose:-2] &Tihai[pitchbend:200] [pitchrange:200]

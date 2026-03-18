@@ -10,7 +10,7 @@
 @mm:60
 @striated
 
-// --- Sous-grammaire 1 [mode:ord] — structure ---
+// --- Sous-grammaire 1 @mode:ord — structure ---
 
 @mode:ord
 S -> [vel:80, rndvel:20]{Melos1 Melos2 Melos3}
@@ -20,7 +20,7 @@ Melos3 -> [transpose:5]{Melos1 - Melos2}
 
 -----
 
-// --- Sous-grammaire 2 [mode:ord] — phrases ---
+// --- Sous-grammaire 2 @mode:ord — phrases ---
 
 @mode:ord
 Mel1 -> {M1 - - - - - . M2 - - M3 M4 - - M5}
@@ -29,7 +29,7 @@ Mel3 -> [transpose:6, rotate:-1]{Mel1 - Mel2}
 
 -----
 
-// --- Sous-grammaire 3 [mode:ord] — matériaux ---
+// --- Sous-grammaire 3 @mode:ord — matériaux ---
 
 @mode:ord
 M1 -> {C3 - . D4 F#3 [keyxpand: B3 -1]C3 - D3 F#2}

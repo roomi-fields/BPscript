@@ -8,7 +8,7 @@
 @core
 @controls
 
-// --- Sous-grammaire 1 [mode:random] — génération de structure ---
+// --- Sous-grammaire 1 @mode:random — génération de structure ---
 
 @mode:random
 S -> $ {$X S &X} & {$X S &X} [weight:2-1]
@@ -18,14 +18,14 @@ X -> Z [weight:2-1]
 
 -----
 
-// --- Sous-grammaire 2 [mode:ord, scan:left] — effacement de S ---
+// --- Sous-grammaire 2 @mode:ord, [scan:left] — effacement de S ---
 
 @mode:ord
 S -> lambda [scan:left]
 
 -----
 
-// --- Sous-grammaire 3 [mode:lin, destru] — réécriture destructive ---
+// --- Sous-grammaire 3 @mode:lin, destru — réécriture destructive ---
 
 @mode:lin
 X X -> abca [destru]

@@ -5,7 +5,7 @@
 @controls
 @alphabet.raga:midi
 
-// --- Sous-grammaire 1 [mode:random] — structure ---
+// --- Sous-grammaire 1 @mode:random — structure ---
 
 @mode:random
 S -> Sri Ga Na Naa Da [weight:0]
@@ -18,7 +18,7 @@ Da -> {LightGamaka sa4} [speed:1]
 
 -----
 
-// --- Sous-grammaire 2 [mode:sub1] — structures intermédiaires ---
+// --- Sous-grammaire 2 @mode:sub1 — structures intermédiaires ---
 
 @mode:sub1
 LightGamaka ?1 -> StartPull ?1 _ _ Pull0 _ Pull1 _ Pull0 _ _ _ Pull1 StopPull
@@ -26,7 +26,7 @@ Spurita ?1 -> StartSlide ?1 Slide1 _ _ _ _ _ _ _ Slide1 StopSlide
 
 -----
 
-// --- Sous-grammaire 3 [mode:sub1] — résolution en contrôles ---
+// --- Sous-grammaire 3 @mode:sub1 — résolution en contrôles ---
 
 @mode:sub1
 Pull0 -> pitchbend(0)

@@ -5,7 +5,7 @@
 @controls
 @alphabet.western:midi
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
 S -> [tempo:2, scale: bach_temperament 0]Up_Down

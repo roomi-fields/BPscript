@@ -14,7 +14,7 @@
 @alphabet.raga:midi
 
 // ============================================================
-// Sous-grammaire 1 — Structure [mode:ord]
+// Sous-grammaire 1 — Structure @mode:ord
 // ============================================================
 
 @mode:ord
@@ -24,7 +24,7 @@ Finale -> Theme30 NiSaNiA95 NiSaNiB24 NiSaNiB24 NiSaNiC34 Morai49 Theme32 G _ _ 
 -----
 
 // ============================================================
-// Sous-grammaire 2 — Variations [mode:random]
+// Sous-grammaire 2 — Variations @mode:random
 // ============================================================
 
 @mode:random
@@ -43,7 +43,7 @@ V8 -> Oc4 R S Oc4 N P G R S R
 -----
 
 // ============================================================
-// Sous-grammaire 3 — Patterns fixes [mode:ord]
+// Sous-grammaire 3 — Patterns fixes @mode:ord
 // ============================================================
 
 @mode:ord
@@ -68,7 +68,7 @@ B32 -> Oc4 G _ P _ N _ Oc5 R _ G _ Oc4 G P N Oc5 R G S Oc4 G P N Oc5 R G S Oc4 G
 -----
 
 // ============================================================
-// Sous-grammaire 4 — Résolution d'octaves [mode:ord]
+// Sous-grammaire 4 — Résolution d'octaves @mode:ord
 // ============================================================
 
 @mode:ord
@@ -103,7 +103,7 @@ Oc5 Oc3 -> Oc3
 -----
 
 // ============================================================
-// Sous-grammaire 5 — Nettoyage [mode:ord]
+// Sous-grammaire 5 — Nettoyage @mode:ord
 // Efface les variables d'octave restantes
 // ============================================================
 

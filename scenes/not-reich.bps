@@ -9,14 +9,14 @@
 @mm:60
 @striated
 
-// --- Sous-grammaire 1 [mode:random] ---
+// --- Sous-grammaire 1 @mode:random ---
 
 @mode:random
 S -> [chan:1, vel:50, volumecont, volume:80]A' B' C'
 
 -----
 
-// --- Sous-grammaire 2 [mode:random] ---
+// --- Sous-grammaire 2 @mode:random ---
 
 @mode:random
 A' -> A A A A A A A A

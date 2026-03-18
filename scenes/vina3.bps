@@ -9,7 +9,7 @@
 @alphabet.raga:midi
 @mm:60
 
-// --- Sous-grammaire 1 [mode:random] — structure ---
+// --- Sous-grammaire 1 @mode:random — structure ---
 
 @mode:random
 S -> [ins: Vina, scale: just_intonation 0, volume: 40]{Taalam4 Taalam4,Pallavi Pallavi} [volumecont, volume: 64]Taalam [volume: 0]-
@@ -29,8 +29,8 @@ Nan -> G3
 Nu -> {StartPull Pull1 G3 Pull0 _ Pull1 - StopPull} [speed:1]
 
 Bro -> {GamakaHold F3 Pull2} [speed:1] [pullVa]
-when slideVa==1 Va -> StartSlide G3 SlideBack2 StopSlide
-when pullVa==1 Va -> StartPull Pull2 F3 Pull0 StopPull
+[slideVa==1] Va -> StartSlide G3 SlideBack2 StopSlide
+[pullVa==1] Va -> StartPull Pull2 F3 Pull0 StopPull
 
 Ve -> {Ve1 Ve2 Ve3} [speed:3]
 Ve1 -> {GamakaOscil E3 Pull1} [speed:5]
@@ -39,7 +39,7 @@ Ve3 -> StartPull B2 Pull1 StopPull
 
 -----
 
-// --- Sous-grammaire 2 [mode:random] — taalam ---
+// --- Sous-grammaire 2 @mode:random — taalam ---
 
 @mode:random
 Taalam4 -> Taalam Taalam Taalam Taalam
@@ -47,7 +47,7 @@ Taalam -> {C3,G3,C4} [speed:3]
 
 -----
 
-// --- Sous-grammaire 3 [mode:sub1] — structures intermédiaires ---
+// --- Sous-grammaire 3 @mode:sub1 — structures intermédiaires ---
 
 @mode:sub1
 LongSpuritam ?1 ?2 -> {StartSlide ?1 _ Slide0 _ ?2 _} [speed:1]
@@ -56,7 +56,7 @@ GamakaHold ?1 ?2 -> {StartPull ?1 ?2 _ _ _ StopPull} [speed:1]
 
 -----
 
-// --- Sous-grammaire 4 [mode:sub1] ---
+// --- Sous-grammaire 4 @mode:sub1 ---
 
 @mode:sub1
 StartSlidePull -> StartSlide StartPull
@@ -64,7 +64,7 @@ StopSlidePull -> StopSlide StopPull
 
 -----
 
-// --- Sous-grammaire 5 [mode:sub1] — contrôles bas niveau ---
+// --- Sous-grammaire 5 @mode:sub1 — contrôles bas niveau ---
 
 @mode:sub1
 Pull0 -> pitchbend(0)

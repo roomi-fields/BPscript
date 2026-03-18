@@ -12,7 +12,7 @@
 @controls
 @alphabet.western:midi
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 
 // Règle 1 : test des gammes avec notes chromatiques
 // Cmaj_c/Cmin_c = gamme majeure/mineure depuis C

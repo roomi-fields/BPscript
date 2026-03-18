@@ -9,7 +9,7 @@
 @controls
 @alphabet.western:midi
 
-// --- Sous-grammaire 1 [mode:ord] — structure ---
+// --- Sous-grammaire 1 @mode:ord — structure ---
 
 @mode:ord
 S -> script(Wait for do#3 channel 2)[vel:80] A B[vel:0] do#2
@@ -18,7 +18,7 @@ B -> B1 B2 B3 B4 B5 B6 B7 B8 B1 B2 B3 B4 B5 B6 B7 B8
 
 -----
 
-// --- Sous-grammaire 2 [mode:lin] — A1 (dés) ---
+// --- Sous-grammaire 2 @mode:lin — A1 (dés) ---
 
 @mode:lin
 A1 -> T96 [weight:K1=1]
@@ -35,7 +35,7 @@ A1 -> T54 [weight:K11=1]
 
 -----
 
-// --- Sous-grammaire 3 [mode:lin] — A2 ---
+// --- Sous-grammaire 3 @mode:lin — A2 ---
 
 @mode:lin
 A2 -> T22 [weight:K1]
@@ -52,7 +52,7 @@ A2 -> T130 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 4 [mode:lin] — A3 ---
+// --- Sous-grammaire 4 @mode:lin — A3 ---
 
 @mode:lin
 A3 -> T141 [weight:K1]
@@ -69,7 +69,7 @@ A3 -> T10 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 5 [mode:lin] — A4 ---
+// --- Sous-grammaire 5 @mode:lin — A4 ---
 
 @mode:lin
 A4 -> T41 [weight:K1]
@@ -86,7 +86,7 @@ A4 -> T103 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 6 [mode:lin] — A5 ---
+// --- Sous-grammaire 6 @mode:lin — A5 ---
 
 @mode:lin
 A5 -> T105 [weight:K1]
@@ -103,7 +103,7 @@ A5 -> T28 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 7 [mode:lin] — A6 ---
+// --- Sous-grammaire 7 @mode:lin — A6 ---
 
 @mode:lin
 A6 -> T122 [weight:K1]
@@ -120,7 +120,7 @@ A6 -> T37 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 8 [mode:lin] — A7 ---
+// --- Sous-grammaire 8 @mode:lin — A7 ---
 
 @mode:lin
 A7 -> T11 [weight:K1]
@@ -137,7 +137,7 @@ A7 -> T106 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 9 [mode:lin] — A8 ---
+// --- Sous-grammaire 9 @mode:lin — A8 ---
 
 @mode:lin
 A8 -> T5
@@ -145,7 +145,7 @@ A'8 -> T'5
 
 -----
 
-// --- Sous-grammaire 10 [mode:lin] — B1 ---
+// --- Sous-grammaire 10 @mode:lin — B1 ---
 
 @mode:lin
 B1 -> T70 [weight:K1]
@@ -162,7 +162,7 @@ B1 -> T35 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 11 [mode:lin] — B2 ---
+// --- Sous-grammaire 11 @mode:lin — B2 ---
 
 @mode:lin
 B2 -> T121 [weight:K1]
@@ -179,7 +179,7 @@ B2 -> T20 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 12 [mode:lin] — B3 ---
+// --- Sous-grammaire 12 @mode:lin — B3 ---
 
 @mode:lin
 B3 -> T26 [weight:K1]
@@ -196,7 +196,7 @@ B3 -> T108 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 13 [mode:lin] — B4 ---
+// --- Sous-grammaire 13 @mode:lin — B4 ---
 
 @mode:lin
 B4 -> T9 [weight:K1]
@@ -213,7 +213,7 @@ B4 -> T92 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 14 [mode:lin] — B5 ---
+// --- Sous-grammaire 14 @mode:lin — B5 ---
 
 @mode:lin
 B5 -> T112 [weight:K1]
@@ -230,7 +230,7 @@ B5 -> T12 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 15 [mode:lin] — B6 ---
+// --- Sous-grammaire 15 @mode:lin — B6 ---
 
 @mode:lin
 B6 -> T49 [weight:K1]
@@ -247,7 +247,7 @@ B6 -> T124 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 16 [mode:lin] — B7 ---
+// --- Sous-grammaire 16 @mode:lin — B7 ---
 
 @mode:lin
 B7 -> T109 [weight:K1]
@@ -264,7 +264,7 @@ B7 -> T44 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 17 [mode:lin] — B8 ---
+// --- Sous-grammaire 17 @mode:lin — B8 ---
 
 @mode:lin
 B8 -> T8 [weight:K1]
@@ -281,7 +281,7 @@ B8 -> T8 [weight:K11]
 
 -----
 
-// --- Sous-grammaire 18 [mode:sub1] — terminaux (mesures de Beatrix) ---
+// --- Sous-grammaire 18 @mode:sub1 — terminaux (mesures de Beatrix) ---
 
 @mode:sub1
 T1 -> {fa3 re3 sol3,fa5 re5 sol5}

@@ -13,7 +13,7 @@ gate c:midi
 gate f:midi
 gate chik:midi
 
-// --- Sous-grammaire 1 [mode:random] — séquence initiale ---
+// --- Sous-grammaire 1 @mode:random — séquence initiale ---
 
 @mode:random
 S -> X X X X Y X X X X Y X X X X [weight:100, vel:127, volume:40]
@@ -22,7 +22,7 @@ X -> b
 
 -----
 
-// --- Sous-grammaire 2 [mode:sub] — automate cellulaire ---
+// --- Sous-grammaire 2 @mode:sub — automate cellulaire ---
 
 @mode:sub
 Y -> Y
@@ -45,7 +45,7 @@ c a c -> b a b
 
 -----
 
-// --- Sous-grammaire 3 [mode:random] — silences et out-time objects ---
+// --- Sous-grammaire 3 @mode:random — silences et out-time objects ---
 
 @mode:random
 Y -> !f [weight:40]

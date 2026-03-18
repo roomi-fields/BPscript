@@ -11,7 +11,7 @@
 @controls
 @alphabet.western:midi
 
-// --- Sous-grammaire 1 [mode:ord] ---
+// --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
 S -> Internal C47 Part1 Canon C46[vel:90] Part2
@@ -20,7 +20,7 @@ Part2 -> {Suresh2,Smriti2 ...,Olivier2 ...,Vijayshree2 ...,Arindam2 ...,Andreine
 
 -----
 
-// --- Sous-grammaire 2 [mode:ord] ---
+// --- Sous-grammaire 2 @mode:ord ---
 
 @mode:ord
 Suresh1 -> SuMov7x7 SuSil7x7 SuMov6x7 SuSil6x7 SuMov5x7 SuSil5x7 SuMov4x7 SuSil4x7 SuMov3x7 SuSil3x7 SuMov2x7 SuSil2x7 SuMov1x7 SuSil1x7
@@ -32,7 +32,7 @@ Andreine1 -> AnMov2x2 AnSil2x2 AnMov1x2 AnSil1x2
 
 -----
 
-// --- Sous-grammaire 3 [mode:ord] ---
+// --- Sous-grammaire 3 @mode:ord ---
 
 @mode:ord
 Suresh2 -> SuMov7x7 SuMov6x6 SuMov5x5 SuMov4x4 SuMov3x3 SuMov2x2 SuMov1x1
@@ -44,7 +44,7 @@ Andreine2 -> AnMov2x2 AnMov1x1
 
 -----
 
-// --- Sous-grammaire 4 [mode:ord] — Suresh cycles x7 and descending ---
+// --- Sous-grammaire 4 @mode:ord — Suresh cycles x7 and descending ---
 
 @mode:ord
 SuMov1x7 -> SuCycle7
@@ -77,7 +77,7 @@ SuSil6x6 -> SuMov6x6
 
 -----
 
-// --- Sous-grammaire 5 [mode:ord] — Smriti cycles ---
+// --- Sous-grammaire 5 @mode:ord — Smriti cycles ---
 
 @mode:ord
 SmMov1x6 -> SmCycle6
@@ -106,7 +106,7 @@ SmSil5x5 -> SmMov5x5
 
 -----
 
-// --- Sous-grammaire 6 [mode:ord] — Olivier cycles ---
+// --- Sous-grammaire 6 @mode:ord — Olivier cycles ---
 
 @mode:ord
 OlMov1x5 -> OlCycle5
@@ -131,7 +131,7 @@ OlSil4x4 -> OlMov4x4
 
 -----
 
-// --- Sous-grammaire 7 [mode:ord] — Vijayshree cycles ---
+// --- Sous-grammaire 7 @mode:ord — Vijayshree cycles ---
 
 @mode:ord
 ViMov1x4 -> ViCycle4
@@ -152,7 +152,7 @@ ViSil3x3 -> ViMov3x3
 
 -----
 
-// --- Sous-grammaire 8 [mode:ord] — Arindam cycles ---
+// --- Sous-grammaire 8 @mode:ord — Arindam cycles ---
 
 @mode:ord
 ArMov1x3 -> ArCycle3
@@ -169,7 +169,7 @@ ArSil2x2 -> ArMov2x2
 
 -----
 
-// --- Sous-grammaire 9 [mode:ord] — Andreine cycles ---
+// --- Sous-grammaire 9 @mode:ord — Andreine cycles ---
 
 @mode:ord
 AnMov1x2 -> AnCycle2
@@ -182,7 +182,7 @@ AnSil1x1 -> AnMov1x1
 
 -----
 
-// --- Sous-grammaire 10 [mode:ord] — Canon ---
+// --- Sous-grammaire 10 @mode:ord — Canon ---
 
 @mode:ord
 Canon -> Twist Walk Stretch Bend Jump Turn
@@ -195,7 +195,7 @@ Turn -> Walk
 
 -----
 
-// --- Sous-grammaire 11 [mode:sub1] — Cycle definitions ---
+// --- Sous-grammaire 11 @mode:sub1 — Cycle definitions ---
 
 @mode:sub1
 SuCycle7 -> Su Tik Tik Tik Tik Tik Tik
@@ -228,7 +228,7 @@ AnCycle1 -> An
 
 -----
 
-// --- Sous-grammaire 12 [mode:sub1] — Notes (simultaneous with 1) ---
+// --- Sous-grammaire 12 @mode:sub1 — Notes (simultaneous with 1) ---
 
 @mode:sub1
 Su -> {1,do4-}
@@ -242,7 +242,7 @@ Tik -> {1,do7-}
 
 -----
 
-// --- Sous-grammaire 13 [mode:ord] — D-50 MIDI setup ---
+// --- Sous-grammaire 13 @mode:ord — D-50 MIDI setup ---
 
 @mode:ord
 Internal -> script(MIDI program 1) script(MIDI controller #98 = 0 channel 1)

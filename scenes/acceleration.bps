@@ -15,7 +15,7 @@
 @meter:3/4
 @transpose:12
 
-// Sous-grammaire 1 — structure principale [mode:ord]
+// Sous-grammaire 1 — structure principale @mode:ord
 // Les vel() croissants créent un crescendo progressif
 @mode:ord
 S -> A B[vel:65] C D[vel:70] E F[vel:75] G[vel:77] H[vel:80] I[vel:85] J[vel:87] K[vel:90] L [vel:60]
