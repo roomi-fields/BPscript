@@ -6,4 +6,11 @@
 @alphabet.western:browser
 @mm:80
 
-S -> [wave:sawtooth, vel:80] [detune:0] C3 E3 G3 [detune:15] C3 E3 G3 [detune:30] C3 E3 G3 [detune:50] C3 E3 G3 [detune:100] C3 E3 G3 [detune:0] C3 _ _
+S -> D0 D15 D30 D50 D100 End
+
+D0 -> [wave:sawtooth, vel:80, detune:0] C3 E3 G3
+D15 -> [detune:15] C3 E3 G3
+D30 -> [detune:30] C3 E3 G3
+D50 -> [detune:50] C3 E3 G3
+D100 -> [detune:100] C3 E3 G3
+End -> [detune:0] C3 _ _
