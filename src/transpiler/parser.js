@@ -286,12 +286,28 @@ function parse(tokens) {
   }
 
   function isRuleStart() {
-    // A rule starts with: when | IDENT | # | ( | ? | | | { | } | , | - | $ (meta-grammars, context)
+    // A rule starts with: [guard] | when (legacy) | IDENT | # | ( | ? | | | { | } | , | - | $
     const t = current().type;
     return t === T.WHEN || t === T.IDENT || t === T.HASH ||
            t === T.LPAREN || t === T.QUESTION || t === T.PIPE ||
            t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA ||
-           t === T.REST || t === T.DOLLAR || t === T.RPAREN;
+           t === T.REST || t === T.DOLLAR || t === T.RPAREN ||
+           (t === T.LBRACKET && isGuardBracket());
+  }
+
+  // Lookahead to distinguish guard [count-1] from qualifier [vel:80]
+  // Guard: [IDENT op value] where op is -/+/==/!=/>/</>=/<=
+  // Qualifier: [key:value, ...] — has a colon
+  function isGuardBracket() {
+    let i = 1;
+    // Look for colon before ] — if found, it's a qualifier not a guard
+    while (pos + i < tokens.length) {
+      const t = tokens[pos + i].type;
+      if (t === T.RBRACKET || t === T.NEWLINE || t === T.EOF) break;
+      if (t === T.COLON) return false; // qualifier
+      i++;
+    }
+    return true; // no colon found → guard
   }
 
   // ============================================================
@@ -303,9 +319,9 @@ function parse(tokens) {
     let guard = null;
     const contexts = [];
 
-    // Guards: when ... (multiple allowed, AND'd together)
+    // Guards: [flag-1] or when flag-1 (legacy) — multiple allowed, AND'd
     const guards = [];
-    while (at(T.WHEN)) {
+    while (at(T.WHEN) || (at(T.LBRACKET) && isGuardBracket())) {
       guards.push(parseGuard());
     }
     guard = guards.length > 0 ? guards : null;
@@ -395,40 +411,54 @@ function parse(tokens) {
   // ============================================================
 
   function parseGuard() {
-    expect(T.WHEN);
+    // Two syntaxes: [flag-1] (new) or when flag-1 (legacy)
+    let bracketed = false;
+    if (at(T.LBRACKET)) {
+      advance(); // consume [
+      bracketed = true;
+    } else {
+      expect(T.WHEN); // legacy
+    }
+
     const flag = expect(T.IDENT).value;
 
-    // Test+mutation: when Ideas-1, when count+1
+    let result;
+
+    // Test+mutation: count-1, count+1
     if (at(T.REST)) { // - (REST token doubles as minus)
       advance();
       const val = Number(expect(T.INT).value);
-      return { type: 'Guard', flag, operator: '-', value: val, mutates: true };
-    }
-    if (at(T.PLUS)) {
+      result = { type: 'Guard', flag, operator: '-', value: val, mutates: true };
+    } else if (at(T.PLUS)) {
       advance();
       const val = Number(expect(T.INT).value);
-      return { type: 'Guard', flag, operator: '+', value: val, mutates: true };
+      result = { type: 'Guard', flag, operator: '+', value: val, mutates: true };
+    } else {
+      // Test pure: phase==1, count>3
+      let op;
+      if (at(T.EQ)) { op = '=='; advance(); }
+      else if (at(T.NEQ)) { op = '!='; advance(); }
+      else if (at(T.GT)) { op = '>'; advance(); }
+      else if (at(T.LT)) { op = '<'; advance(); }
+      else if (at(T.GTE)) { op = '>='; advance(); }
+      else if (at(T.LTE)) { op = '<='; advance(); }
+      else {
+        // Bare flag test: [Ideas] or when Ideas → non-zero test
+        result = { type: 'Guard', flag, operator: null, value: null, mutates: false };
+        if (bracketed) expect(T.RBRACKET);
+        return result;
+      }
+
+      let value;
+      if (at(T.INT)) value = Number(advance().value);
+      else if (at(T.IDENT)) value = advance().value;
+      else throw new ParseError(`Expected value after operator`, current());
+
+      result = { type: 'Guard', flag, operator: op, value, mutates: false };
     }
 
-    // Test pure: when phase==1, when count>3
-    let op;
-    if (at(T.EQ)) { op = '=='; advance(); }
-    else if (at(T.NEQ)) { op = '!='; advance(); }
-    else if (at(T.GT)) { op = '>'; advance(); }
-    else if (at(T.LT)) { op = '<'; advance(); }
-    else if (at(T.GTE)) { op = '>='; advance(); }
-    else if (at(T.LTE)) { op = '<='; advance(); }
-    else {
-      // Bare flag test: when Ideas → /Ideas/ (non-zero test)
-      return { type: 'Guard', flag, operator: null, value: null, mutates: false };
-    }
-
-    let value;
-    if (at(T.INT)) value = Number(advance().value);
-    else if (at(T.IDENT)) value = advance().value;
-    else throw new ParseError(`Expected value after operator`, current());
-
-    return { type: 'Guard', flag, operator: op, value, mutates: false };
+    if (bracketed) expect(T.RBRACKET);
+    return result;
   }
 
   // ============================================================

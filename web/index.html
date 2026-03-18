@@ -426,15 +426,26 @@ A -&gt; E4 F4</pre>
             </div>
             <h3>Flags &amp; Guards</h3>
             <div class="section">
-              Flags are variables that control rule selection.
-<pre>S -&gt; Phrase [count=4]         // initialize flag
-when count-1 Phrase -&gt; C4 D4 Phrase  // decrement &amp; test
-Phrase -&gt; C5 _ _              // fallback when count=0</pre>
+              Flags are integer variables that control which rules can fire.
+              <br><br>
+              <b>Set a flag</b> (in RHS, after -&gt;):
+<pre>S -&gt; Loop [count=4]           // set count to 4</pre>
+              <b>Guard a rule</b> (before LHS, in []):
+<pre>[count-1] Loop -&gt; C4 D4 Loop  // decrement count, fire only if count &gt; 0
+[count==0] Loop -&gt; C5 _ _     // fire only if count equals 0</pre>
               <table>
-                <tr><th>Syntax</th><th>Meaning</th></tr>
-                <tr><td><code>when X==N</code></td><td>Test flag X equals N</td></tr>
-                <tr><td><code>when X-1</code></td><td>Decrement X, test &gt; 0</td></tr>
-                <tr><td><code>[X=N]</code></td><td>Set flag X to N (in RHS)</td></tr>
+                <tr><th>Guard syntax</th><th>Meaning</th></tr>
+                <tr><td><code>[X-1]</code></td><td>Decrement X by 1, fire only if X &gt; 0</td></tr>
+                <tr><td><code>[X+1]</code></td><td>Increment X by 1, fire only if X &gt; 0</td></tr>
+                <tr><td><code>[X==N]</code></td><td>Fire only if X equals N</td></tr>
+                <tr><td><code>[X!=N]</code></td><td>Fire only if X not equals N</td></tr>
+                <tr><td><code>[X&gt;N]</code></td><td>Fire only if X greater than N</td></tr>
+                <tr><td><code>[X]</code></td><td>Fire only if X is non-zero</td></tr>
+              </table>
+              <table>
+                <tr><th>RHS syntax</th><th>Meaning</th></tr>
+                <tr><td><code>[X=N]</code></td><td>Set flag X to N</td></tr>
+                <tr><td><code>[X+1]</code></td><td>Increment flag X</td></tr>
               </table>
             </div>
             <h3>Backticks</h3>
