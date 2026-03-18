@@ -128,7 +128,7 @@
     font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;
   }
   .output-panel.active { display: block; }
-  #libsContent.active { display: flex !important; }
+  #libsContent.active { display: flex !important; gap: 0; padding: 0; }
   #outputContent { color: #00ff88; overflow-x: auto; white-space: pre-wrap; }
   #messagesContent { color: #ffaa00; white-space: pre-wrap; }
 
@@ -314,7 +314,7 @@ S -> C4 D4 E4 F4 G4</textarea>
       <div class="output-panels">
         <div class="output-panel active" id="outputContent">(not yet produced)</div>
         <div class="output-panel" id="messagesContent">(no messages)</div>
-        <div class="output-panel" id="libsContent" style="display:flex;gap:0;padding:0;"></div>
+        <div class="output-panel" id="libsContent"></div>
         <div class="output-panel" id="helpContent" style="padding:16px 24px;overflow-y:auto;color:#ccc;font-size:13px;line-height:1.6;">
           <div class="help-content">
             <h3>BPscript Quick Reference</h3>
