@@ -413,7 +413,7 @@ S -&gt; Phrase [vel:90]   // velocity 90 for entire rule</pre>
               <table>
                 <tr><th>Control</th><th>Meaning</th></tr>
                 <tr><td><code>[wave:X]</code></td><td>Oscillator type: sine, triangle, square, sawtooth</td></tr>
-                <tr><td><code>[pan:N]</code></td><td>Stereo panning (-100=left, 0=center, 100=right)</td></tr>
+                <tr><td><code>[pan:N]</code></td><td>Stereo panning (0=left, 64=center, 127=right)</td></tr>
                 <tr><td><code>[attack:N]</code></td><td>Attack time in ms (default: 20)</td></tr>
                 <tr><td><code>[release:N]</code></td><td>Release time in ms (default: 100)</td></tr>
                 <tr><td><code>[detune:N]</code></td><td>Pitch detune in cents (100 = 1 semitone)</td></tr>
@@ -494,6 +494,7 @@ let activeGrammar = null;
 let engineReady = false;
 let lastMidiEvents = null;
 let lastTimedTokens = null;
+let lastControlTable = null;
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
@@ -705,9 +706,10 @@ function produce() {
         switchOutputTab('messages');
         return;
       }
-      // Fill grammar/alphabet/settings from compilation result
+      // Fill grammar/alphabet from compilation result + store control table
       document.getElementById('grammar').value = compiled.grammar;
       if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
+      lastControlTable = compiled.controlTable || null;
       // Settings disabled for now — BP3 defaults work correctly,
       // our settingsJSON breaks text output formatting
       // if (compiled.settings) document.getElementById('settings').value = compiled.settings;
@@ -865,6 +867,7 @@ async function playOnce() {
   isPlaying = true;
   updateTransportButtons();
 
+  dispatcher.setControlTable(lastControlTable);
   dispatcher.load(lastTimedTokens);
   dispatcher.start(onPlayEnd);
 
@@ -879,6 +882,7 @@ async function playLoop() {
   isPlaying = true;
   updateTransportButtons();
 
+  dispatcher.setControlTable(lastControlTable);
   dispatcher.load(lastTimedTokens);
 
   const useReDerive = document.getElementById('rederiveChk').checked;
@@ -1223,6 +1227,7 @@ loadLibrary();
       grammar: result.grammar || '',
       alphabet: result.alphabetFile || '',
       settings: result.settingsJSON || '',
+      controlTable: result.controlTable || [],
       errors: result.errors || [],
       warnings: []
     };

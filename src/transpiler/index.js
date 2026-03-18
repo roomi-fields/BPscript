@@ -26,6 +26,7 @@ function compileBPS(source) {
     result.settings = encoded.settings;
     result.alphabetFile = encoded.alphabetFile;
     result.settingsJSON = encoded.settingsJSON;
+    result.controlTable = encoded.controlTable;
 
   } catch (err) {
     if (err instanceof ParseError) {

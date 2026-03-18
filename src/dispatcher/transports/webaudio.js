@@ -50,7 +50,7 @@ export class WebAudioTransport {
     const attackSec = (event.attack || 20) / 1000;
     const releaseSec = Math.min((event.release || 100) / 1000, dur * 0.4);
     const detune = event.detune || 0;
-    const panValue = (event.pan || 0) / 100; // -1 to 1
+    const panValue = ((event.pan || 64) - 64) / 64; // MIDI 0-127 → -1 to 1
     const filterFreq = event.filter || 0;
     const filterQ = event.filterQ || 1;
 

@@ -24,8 +24,14 @@ const ARROW_MAP = {
   '->': '-->', '<-': '<--', '<>': '<->',
 };
 
+// Module-level state for control token generation (reset per encode() call)
+let _output = null;
+let _ctIndex = 0;
+
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [] };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [] };
+  _output = output;
+  _ctIndex = 0;
   const lines = [];
 
   // Load control map from libs based on @ directives
@@ -64,10 +70,12 @@ function encode(ast) {
       preamble.push('_smooth');
     } else if (dir.name === 'tempo' && dir.value) {
       // @tempo → goes to settings file, not grammar
-    } else if (['vel', 'chan', 'ins', 'transpose'].includes(dir.name) && dir.value != null) {
-      // These controls are NOT valid BP3 preamble — inject as RHS prefix
-      const bp3Name = CONTROL_MAP[dir.name] || `_${dir.name}`;
-      rhsPrefix.push(`${bp3Name}(${dir.value})`);
+    } else if (CONTROL_MAP[dir.name] && dir.value != null) {
+      // Controls as global directives → CT token
+      const ctName = `CT${_ctIndex++}`;
+      output.controlTable.push({ id: ctName, assignments: { [dir.name]: dir.value } });
+      output.alphabet.add(ctName);
+      rhsPrefix.push(ctName);
     }
   }
 
@@ -166,15 +174,20 @@ function encode(ast) {
       const ruleTempoOp = getTempoOp(rule.qualifiers);
       if (ruleTempoOp) rhsPrefixParts.push(ruleTempoOp);
 
-      // Controls as rule qualifiers [transpose:-7, vel:80, chan:1]
+      // Controls as rule qualifiers [transpose:-7, vel:80, chan:1] → CT tokens
+      const ruleAssignments = {};
       for (const q of rule.qualifiers) {
         for (const p of q.pairs) {
           if (CONTROL_MAP[p.key]) {
-            const bp3Name = CONTROL_MAP[p.key];
-            if (p.value === true) rhsPrefixParts.push(bp3Name);
-            else rhsPrefixParts.push(`${bp3Name}(${p.value})`);
+            ruleAssignments[p.key] = p.value;
           }
         }
+      }
+      if (Object.keys(ruleAssignments).length > 0) {
+        const ctName = `CT${_ctIndex++}`;
+        output.controlTable.push({ id: ctName, assignments: ruleAssignments });
+        output.alphabet.add(ctName);
+        rhsPrefixParts.push(ctName);
       }
 
       // RHS — inject global controls as prefix of first rule in first subgrammar
@@ -360,35 +373,30 @@ function encodeRhsElement(el, alphabet, controlMap) {
   // PREFIX [vel:60]A → _vel(60) A (control before element)
   // SUFFIX A[vel:60] → A _vel(60) (control after element)
   if (el.controlQualifiers && el.controlQualifiers.length > 0) {
-    const prefixCtrls = [];
-    const suffixCtrls = [];
+    const prefixTokens = [];
+    const suffixTokens = [];
     for (const q of el.controlQualifiers) {
-      const ctrls = [];
+      // Collect all assignments from this qualifier bracket
+      const assignments = {};
       for (const p of q.pairs) {
         if (controlMap[p.key]) {
-          const bp3Name = controlMap[p.key];
-          if (p.value === true) ctrls.push(bp3Name);
-          else {
-            let bp3Val = String(p.value);
-            // Convert spaces to commas for BP3 args (CSS model: "B3 -1" → "B3,-1")
-            // But preserve spaces in _script args: "MIDI send Continue" stays as-is
-            if (bp3Name !== '_script') bp3Val = bp3Val.replace(/ +/g, ',');
-            // _scale: underscores → spaces AFTER comma conversion
-            // (just_intonation,C4 → just intonation,C4)
-            if (bp3Name === '_scale') bp3Val = bp3Val.replace(/_/g, ' ');
-            ctrls.push(`${bp3Name}(${bp3Val})`);
-          }
+          assignments[p.key] = p.value;
         }
       }
-      // el.controlPrefix marks the first qualifier as prefix
-      if (el.controlPrefix && q === el.controlQualifiers[0]) {
-        prefixCtrls.push(...ctrls);
-      } else {
-        suffixCtrls.push(...ctrls);
+      if (Object.keys(assignments).length > 0) {
+        // Create a control token: CT0, CT1, etc.
+        const ctName = `CT${_ctIndex++}`;
+        _output.controlTable.push({ id: ctName, assignments });
+        alphabet.add(ctName);
+        if (el.controlPrefix && q === el.controlQualifiers[0]) {
+          prefixTokens.push(ctName);
+        } else {
+          suffixTokens.push(ctName);
+        }
       }
     }
-    if (prefixCtrls.length > 0) result = prefixCtrls.join(' ') + ' ' + result;
-    if (suffixCtrls.length > 0) result = result + ' ' + suffixCtrls.join(' ');
+    if (prefixTokens.length > 0) result = prefixTokens.join(' ') + ' ' + result;
+    if (suffixTokens.length > 0) result = result + ' ' + suffixTokens.join(' ');
   }
   return result;
 }
@@ -429,11 +437,16 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return 'lambda';
 
     case 'Control': {
-      const bp3Name = controlMap[el.name] || `_${el.name}`;
-      if (el.args.length === 0) return bp3Name;
-      // For _scale, replace underscores with spaces in name args (just_intonation → just intonation)
-      const encodedArgs = el.args.map(a => typeof a === 'string' ? a.replace(/_/g, ' ') : a);
-      return `${bp3Name}(${encodedArgs.join(',')})`;
+      const assignments = {};
+      if (el.args.length === 0) {
+        assignments[el.name] = true;
+      } else {
+        assignments[el.name] = el.args.map(a => typeof a === 'string' ? a.replace(/_/g, ' ') : a).join(',');
+      }
+      const ctName = `CT${_ctIndex++}`;
+      _output.controlTable.push({ id: ctName, assignments });
+      alphabet.add(ctName);
+      return ctName;
     }
 
     case 'SimultaneousGroup': {

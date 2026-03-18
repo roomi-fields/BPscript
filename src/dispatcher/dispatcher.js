@@ -32,7 +32,7 @@ export class Dispatcher {
 
     // Control state — updated by control tokens during playback
     this.controlState = {
-      vel: 64, chan: 1, pan: 0,
+      vel: 64, chan: 1, pan: 64,
       wave: 'triangle', attack: 20, release: 100,
       detune: 0, filter: 0, filterQ: 1,
     };
@@ -46,6 +46,19 @@ export class Dispatcher {
   }
 
   /**
+   * Set the control table (from transpiler output).
+   * Maps CT0, CT1... to their assignments.
+   */
+  setControlTable(controlTable) {
+    this._controlTable = {};
+    if (controlTable) {
+      for (const entry of controlTable) {
+        this._controlTable[entry.id] = entry.assignments;
+      }
+    }
+  }
+
+  /**
    * Load timed tokens from bp3_get_timed_tokens().
    * Each token: { token: "C4", start: 0, end: 1000 }
    */
@@ -55,13 +68,17 @@ export class Dispatcher {
       return;
     }
 
-    this.controlState = { vel: 64, chan: 1 };
+    this.controlState = {
+      vel: 64, chan: 1, pan: 64,
+      wave: 'triangle', attack: 20, release: 100,
+      detune: 0, filter: 0, filterQ: 1,
+    };
 
     this.events = timedTokens.map(t => ({
       token: t.token,
       startSec: t.start / 1000,
       durSec: Math.max(0, (t.end - t.start)) / 1000,
-      isControl: t.token.startsWith('_'),
+      isControl: t.token.startsWith('CT') || t.token.startsWith('_'),
       isSilence: t.token === '-',
       isProlongation: t.token === '_',
     })).sort((a, b) => a.startSec - b.startSec);
@@ -203,22 +220,40 @@ export class Dispatcher {
     this._cursor = 0;
   }
 
-  /** Parse and apply a control token like _vel(80), _chan(2), _wave(saw) */
+  /** Apply a control token — look up CT table or parse legacy _xxx() */
   _applyControl(token) {
+    // CT tokens: look up control table
+    if (token.startsWith('CT') && this._controlTable) {
+      const assignments = this._controlTable[token];
+      if (assignments) {
+        for (const [key, val] of Object.entries(assignments)) {
+          this._setControl(key, val);
+        }
+      }
+      return;
+    }
+    // Legacy _xxx(value) format
     const m = token.match(/^_(\w+)\((.+)\)$/);
-    if (!m) return;
-    const [, name, value] = m;
+    if (m) this._setControl(m[1], m[2]);
+  }
+
+  _setControl(name, value) {
     const cs = this.controlState;
+    const v = typeof value === 'number' ? value : parseFloat(value);
     switch (name) {
-      case 'vel': cs.vel = parseInt(value) || 64; break;
-      case 'chan': cs.chan = parseInt(value) || 1; break;
-      case 'pan': cs.pan = parseInt(value) || 0; break;
-      case 'wave': cs.wave = value; break;
-      case 'attack': cs.attack = parseFloat(value) || 20; break;
-      case 'release': cs.release = parseFloat(value) || 100; break;
-      case 'detune': cs.detune = parseFloat(value) || 0; break;
-      case 'filter': cs.filter = parseFloat(value) || 0; break;
-      case 'filterQ': cs.filterQ = parseFloat(value) || 1; break;
+      case 'vel': cs.vel = v || 64; break;
+      case 'chan': cs.chan = v || 1; break;
+      case 'pan': cs.pan = v || 64; break;
+      case 'wave': cs.wave = String(value); break;
+      case 'attack': cs.attack = v || 20; break;
+      case 'release': cs.release = v || 100; break;
+      case 'detune': cs.detune = v || 0; break;
+      case 'filter': cs.filter = v || 0; break;
+      case 'filterQ': cs.filterQ = v || 1; break;
+      case 'transpose': cs.transpose = v || 0; break;
+      case 'ins': cs.ins = v || 0; break;
+      case 'staccato': cs.staccato = v || 0; break;
+      case 'legato': cs.legato = v || 0; break;
     }
   }
 }
