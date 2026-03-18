@@ -126,12 +126,11 @@
   .output-panel {
     display: none; height: 100%; overflow: auto; padding: 12px 20px;
     font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;
-    white-space: pre-wrap;
   }
   .output-panel.active { display: block; }
   #libsContent.active { display: flex !important; }
-  #outputContent { color: #00ff88; overflow-x: auto; }
-  #messagesContent { color: #ffaa00; }
+  #outputContent { color: #00ff88; overflow-x: auto; white-space: pre-wrap; }
+  #messagesContent { color: #ffaa00; white-space: pre-wrap; }
 
   /* Timeline visualization */
   .timeline { padding: 8px 12px; }
