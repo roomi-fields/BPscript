@@ -1,16 +1,9 @@
-// Detune Chorus — effet de désaccordage
+// Detune — désaccordage progressif
 // Démo : [detune:N] en cents (100 cents = 1 demi-ton)
-// Comparer sans et avec détune
 
 @core
 @controls
 @alphabet.western:browser
-@mm:50
+@mm:80
 
-S -> Normal Detuned
-
-// Sans détune
-Normal -> [wave:sawtooth, vel:70] C3 _ E3 _ G3 _ C4 _
-
-// Avec détune (50 cents = quart de ton)
-Detuned -> [wave:sawtooth, vel:70, detune:50] C3 _ E3 _ G3 _ C4 _
+S -> [wave:sawtooth, vel:80] [detune:0] C3 E3 G3 [detune:15] C3 E3 G3 [detune:30] C3 E3 G3 [detune:50] C3 E3 G3 [detune:100] C3 E3 G3 [detune:0] C3 _ _
