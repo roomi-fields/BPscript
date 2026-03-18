@@ -204,10 +204,25 @@
   .libs-list .lib-item.active { border-left-color: #e94560; color: #fff; background: #16213e; }
   .libs-list .lib-item .size { font-size: 10px; color: #666; margin-left: 4px; }
   .libs-detail {
-    flex: 1; overflow: auto; padding: 12px 16px;
+    flex: 1; overflow: auto; padding: 8px 12px;
     font-family: 'Consolas', 'Courier New', monospace; font-size: 12px;
-    white-space: pre-wrap; color: #88ccaa; line-height: 1.5;
+    color: #88ccaa; line-height: 1.4;
   }
+  .lib-key {
+    cursor: pointer; padding: 3px 0; color: #ccc; user-select: none;
+  }
+  .lib-key:hover { color: #fff; }
+  .lib-key .chevron { display: inline-block; transition: transform 0.15s; font-size: 0.8em; }
+  .lib-key.collapsed .chevron { transform: rotate(-90deg); }
+  .lib-key b { color: #e94560; }
+  .lib-sub { padding-left: 16px; }
+  .lib-val { padding-left: 16px; }
+  .lib-val.collapsed { display: none; }
+  .lib-val pre {
+    margin: 2px 0; padding: 4px 8px; background: #0a1220; border-radius: 3px;
+    font-size: 11px; white-space: pre-wrap; color: #88ccaa; max-height: 200px; overflow: auto;
+  }
+  .lib-leaf { padding: 1px 0 1px 16px; font-size: 12px; color: #aaa; }
 
   /* Help panel */
   .help-content h3 { color: #e94560; margin: 16px 0 8px 0; font-size: 14px; }
@@ -1081,33 +1096,39 @@ function showLib(name) {
 
   const data = libsData[name];
   const detail = document.getElementById('libDetail');
-  if (!data) { detail.textContent = '(not found)'; return; }
+  if (!data) { detail.innerHTML = '(not found)'; return; }
 
-  // Format: show structure with keys, not full dump for large files
-  const json = JSON.stringify(data, null, 2);
-  if (json.length > 50000) {
-    // Large file (tuning): show summary
-    const keys = Object.keys(data);
-    let summary = `// ${name}.json — ${(json.length / 1024).toFixed(0)}KB\n// Keys: ${keys.join(', ')}\n\n`;
-    for (const key of keys) {
-      const val = data[key];
-      if (typeof val === 'object' && val !== null) {
-        const subkeys = Object.keys(val);
-        summary += `"${key}": { ${subkeys.length} entries }\n`;
-        subkeys.slice(0, 5).forEach(sk => {
-          const sv = JSON.stringify(val[sk]).substring(0, 80);
-          summary += `  "${sk}": ${sv}${sv.length >= 80 ? '...' : ''}\n`;
-        });
-        if (subkeys.length > 5) summary += `  ... (${subkeys.length - 5} more)\n`;
-        summary += '\n';
-      } else {
-        summary += `"${key}": ${JSON.stringify(val)}\n`;
+  let html = '';
+  for (const [key, val] of Object.entries(data)) {
+    if (typeof val === 'object' && val !== null) {
+      const count = Array.isArray(val) ? val.length : Object.keys(val).length;
+      const id = 'lib_' + name + '_' + key;
+      html += `<div class="lib-key" onclick="document.getElementById('${id}').classList.toggle('collapsed');this.classList.toggle('collapsed')">`;
+      html += `<span class="chevron">&#9660;</span> <b>${escHtml(key)}</b> <span style="color:#666">(${count})</span></div>`;
+      html += `<div class="lib-val collapsed" id="${id}">`;
+      // Show entries
+      const entries = Array.isArray(val) ? val.map((v,i) => [i, v]) : Object.entries(val);
+      for (const [sk, sv] of entries) {
+        const svStr = JSON.stringify(sv);
+        if (typeof sv === 'object' && sv !== null) {
+          const subId = id + '_' + sk;
+          html += `<div class="lib-key lib-sub" onclick="event.stopPropagation();document.getElementById('${subId}').classList.toggle('collapsed');this.classList.toggle('collapsed')">`;
+          html += `<span class="chevron">&#9660;</span> ${escHtml(String(sk))}</div>`;
+          html += `<div class="lib-val collapsed" id="${subId}"><pre>${escHtml(JSON.stringify(sv, null, 2))}</pre></div>`;
+        } else {
+          html += `<div class="lib-leaf"><span style="color:#4a90d9">${escHtml(String(sk))}</span>: ${escHtml(svStr)}</div>`;
+        }
+        if (entries.indexOf(entries.find(e => e[0] === sk)) > 200) {
+          html += `<div class="lib-leaf" style="color:#666">... ${entries.length - 200} more</div>`;
+          break;
+        }
       }
+      html += `</div>`;
+    } else {
+      html += `<div class="lib-leaf"><b>${escHtml(key)}</b>: ${escHtml(JSON.stringify(val))}</div>`;
     }
-    detail.textContent = summary;
-  } else {
-    detail.textContent = json;
   }
+  detail.innerHTML = html;
 }
 
 /* ---- Resize handle ---- */
