@@ -4,7 +4,7 @@
 @controls
 @alphabet.western:browser
 
-S -> Arp1 Arp2 Arp3 Final [mode:ord]
+S -> Arp1 Arp2 Arp3 Final
 
 Arp1 -> [vel:100]C4 E4 G4 C5 [vel:70]G4 E4 C4 -
 Arp2 -> [vel:100]D4 F#4 A4 D5 [vel:70]A4 F#4 D4 -

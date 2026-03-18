@@ -50,12 +50,19 @@ function parse(tokens) {
     skipNewlines();
 
     // Parse header: directives, declarations, macros, backticks
+    let initialMode = null;
     while (!atEnd() && !isRuleStart() && !at(T.SEPARATOR)) {
       skipNewlines();
       if (atEnd()) break;
 
       if (at(T.AT)) {
-        scene.directives.push(parseDirective());
+        const dir = parseDirective();
+        if (dir.name === 'mode' && dir.runtime) {
+          // @mode:X is a block directive, not a lib directive
+          initialMode = dir.runtime;
+        } else {
+          scene.directives.push(dir);
+        }
       } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
         scene.declarations.push(parseDeclaration());
       } else if (at(T.BACKTICK)) {
@@ -72,7 +79,7 @@ function parse(tokens) {
     libCtx = loadLibsFromDirectives(scene.directives);
 
     // Parse subgrammars
-    scene.subgrammars = parseSubgrammars();
+    scene.subgrammars = parseSubgrammars(initialMode);
 
     return scene;
   }
@@ -227,15 +234,27 @@ function parse(tokens) {
   // Couche 2 — Subgrammars
   // ============================================================
 
-  function parseSubgrammars() {
+  function parseSubgrammars(initialMode) {
     const subs = [];
     let index = 1;
     let safety = 0;
+    let currentMode = initialMode || null;  // inherits across sub-grammars until overridden
 
     while (!atEnd()) {
       if (++safety > 200) throw new ParseError('Subgrammar parse loop safety limit', current());
       skipNewlines();
       if (atEnd()) break;
+
+      // Parse @mode:X directive at the start of a sub-grammar block
+      let blockMode = currentMode;
+      while (at(T.AT)) {
+        const dir = parseDirective();
+        if (dir.name === 'mode' && dir.runtime) {
+          blockMode = dir.runtime;  // @mode:random → runtime='random'
+          currentMode = blockMode;  // persists to following blocks
+        }
+        skipNewlines();
+      }
 
       const rules = [];
       let ruleSafety = 0;
@@ -252,7 +271,7 @@ function parse(tokens) {
       }
 
       if (rules.length > 0) {
-        subs.push({ type: 'Subgrammar', index: index++, rules });
+        subs.push({ type: 'Subgrammar', index: index++, rules, mode: blockMode });
       } else {
         break; // No rules found → stop parsing subgrammars
       }

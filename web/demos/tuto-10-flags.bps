@@ -1,8 +1,8 @@
 // Tutorial 10 — Flags and guards
 //
 // Flags are variables that control which rules fire.
-//   [count=4]     → set flag "count" to 4
-//   when count-1  → decrement count, fire only if count > 0
+//   [count=4]     -> set flag "count" to 4
+//   when count-1  -> decrement count, fire only if count > 0
 //
 // This creates controlled repetition:
 // the rule fires 4 times, then falls through to the default.
@@ -15,6 +15,7 @@ S -> Loop [count=4]
 
 -----
 
-when count-1 Loop -> C4 D4 E4 F4 Loop [mode:random]
+@mode:random
+when count-1 Loop -> C4 D4 E4 F4 Loop
 when count-1 Loop -> E4 F4 G4 A4 Loop
 Loop -> C5 _ _ _

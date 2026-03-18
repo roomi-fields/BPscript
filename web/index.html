@@ -344,7 +344,8 @@ S -> C4 D4 E4 F4 G4</textarea>
 @controls                  // load control definitions
 @alphabet.western:browser  // load western note alphabet
 @alphabet.raga:browser     // load Indian sargam alphabet
-@mm:120                    // metronome: 120 BPM (default: 60)</pre>
+@mm:120                    // metronome: 120 BPM (default: 60)
+@mode:random               // derivation type for sub-grammar block</pre>
             </div>
             <h3>Rules</h3>
             <div class="section">
@@ -355,7 +356,8 @@ S -&gt; A B                   // S becomes A B (then A and B get rewritten)</pre
             </div>
             <h4>Derivation type (per sub-grammar)</h4>
             <div class="section">
-              Applied to the entire sub-grammar block. Set on the first rule of the block.
+              Applied to the entire sub-grammar block. Set with <code>@mode:X</code> before the rules.
+              Persists to following blocks until overridden.
               <table>
                 <tr><th>Syntax</th><th>BP3</th><th>Meaning</th></tr>
                 <tr><td><code>[mode:ord]</code></td><td>ORD</td><td>Rules applied in order (default)</td></tr>

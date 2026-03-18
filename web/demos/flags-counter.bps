@@ -1,5 +1,4 @@
 // Flags Counter — guards et mutations de flags
-// Démo : when, flags, compteurs, goto
 
 @core
 @controls
@@ -11,8 +10,8 @@ S -> Phrase [count=4]
 -----
 
 // Chaque passage décrémente le compteur
-// Quand count > 0, on produit et on boucle
-when count-1 Phrase -> C4 E4 G4 Phrase [mode:random, weight:50]
+@mode:random
+when count-1 Phrase -> C4 E4 G4 Phrase [weight:50]
 when count-1 Phrase -> D4 F4 A4 Phrase [weight:30]
 when count-1 Phrase -> E4 G4 B4 Phrase
 

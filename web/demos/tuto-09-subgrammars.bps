@@ -5,21 +5,23 @@
 // Sub-grammar 1 builds the structure.
 // Sub-grammar 2 fills in the details.
 //
-// This is how BPscript separates structure from material.
+// @mode:X sets the derivation type for a sub-grammar block.
+// It persists until overridden.
 
 @core
 @controls
 @alphabet.western:browser
 
-// Sub-grammar 1: structure
+// Sub-grammar 1: structure (ORD by default)
 S -> A B A
 
 -----
 
 // Sub-grammar 2: material (random choice for each A and B)
-A -> C4 D4 E4 F4 [mode:random]
+@mode:random
+A -> C4 D4 E4 F4
 A -> E4 F4 G4 A4
 A -> G4 A4 B4 C5
 
-B -> G4 F4 E4 D4 C4 _ [mode:random]
+B -> G4 F4 E4 D4 C4 _
 B -> C5 B4 A4 G4 F4 E4
