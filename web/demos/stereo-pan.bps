@@ -5,9 +5,9 @@
 @controls
 @alphabet.western:browser
 
-S -> Left Center Right Sweep
+S -> PanL PanC PanR Sweep
 
-Left -> [pan:10, vel:90] C4 D4 E4
-Center -> [pan:64, vel:90] F4 G4 A4
-Right -> [pan:120, vel:90] B4 C5 B4
+PanL -> [pan:10, vel:90] C4 D4 E4
+PanC -> [pan:64, vel:90] F4 G4 A4
+PanR -> [pan:120, vel:90] B4 C5 B4
 Sweep -> [pan:0] C4 [pan:32] D4 [pan:64] E4 [pan:96] F4 [pan:127] G4
