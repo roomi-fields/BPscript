@@ -166,18 +166,18 @@ Exemples :
 - `when Ideas-1` -> `{ flag:"Ideas", operator:"-", value:1, mutates:true }`
 - `when Ideas` (bare flag) -> `{ flag:"Ideas", operator:null, value:null, mutates:false }`
 
-### `Qualifier`
+### `EngineQualifier` — instructions moteur BP3
 
 ```
-Qualifier {
-  type: "Qualifier"
+EngineQualifier {
+  type: "EngineQualifier"
   pairs: QualPair[]
   tempoOp: TempoOp | null          // [/2], [*3] etc. — mutuellement exclusif avec pairs
 }
 
 QualPair {
   type: "QualPair"
-  key: string
+  key: string                      // ENGINE_KEY : mode, scan, weight, tempo, scale...
   value: string | number | boolean // "random", 50, "1/2", "K1=3", true (clé nue)
   decrement: number | null         // pour weight:50-12
 }
@@ -189,13 +189,34 @@ TempoOp {
 }
 ```
 
-Un `Qualifier` contient soit des `pairs` (clé:valeur), soit un `tempoOp` (opérateur
-temporel), jamais les deux. `[/2]` → `{ pairs:[], tempoOp:{ operator:"/", value:2 } }`.
-
 Exemples :
-- `A[/2]` → compilé en `/2 A` (speed = 2)
-- `{A B}[\3]` → compilé en `\3 A B` (speed = 1/3)
-- `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique, pas un TempoOp)
+- `[mode:random]` → `{ pairs:[{key:"mode", value:"random"}] }`
+- `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `/2 A`
+- `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique)
+
+### `RuntimeQualifier` — paramètres runtime
+
+```
+RuntimeQualifier {
+  type: "RuntimeQualifier"
+  pairs: RuntimePair[]
+  scope: "symbol" | "rule" | "group"  // déduit par le parser selon la position
+}
+
+RuntimePair {
+  type: "RuntimePair"
+  key: string                      // RUNTIME_KEY : vel, wave, filter, filterQ, pan...
+  value: string | number | Backtick // 120, "sawtooth", `rrand(40,127)`
+}
+```
+
+Compilation : chaque `RuntimeQualifier` est compilé en `_script(CTn)`. Pour les
+portées règle et groupe, le transpileur émet une paire start/end :
+- `Sa(vel:120)` → `_script(CT0) Sa` (portée symbole)
+- `(vel:100) C2 C2` → `_script(CT1) C2 C2` (portée règle)
+- `{A B}(filter:lp)` → `{_script(CT2_start) A B _script(CT2_end)}` (portée groupe)
+
+Le transpileur maintient une table de mapping `CTn → { scope, params }` passée au dispatcher.
 
 ---
 
@@ -218,28 +239,28 @@ RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
            | NilString | BacktickStandalone | Context | RawBrace
 ```
 
-### Qualificateurs de contrôle par élément
+### Qualificateurs par élément
 
-Tout `RhsElement` peut porter des qualificateurs de contrôle (préfixe et/ou suffixe) :
+Tout `RhsElement` peut porter des qualificateurs moteur `[]` et/ou runtime `()`,
+en préfixe et/ou suffixe :
 
 ```
 RhsElement {
-  ...                                    // propriétés spécifiques au type
-  controlQualifiers: Qualifier[] | null  // qualificateurs de contrôle attachés
-  controlPrefix: boolean | null          // true si le premier qualifier est un préfixe
+  ...                                            // propriétés spécifiques au type
+  engineQualifiers: EngineQualifier[] | null     // qualificateurs moteur BP3
+  runtimeQualifiers: RuntimeQualifier[] | null   // qualificateurs runtime
+  qualifierPrefix: boolean | null                // true si le premier qualifier est un préfixe
 }
 ```
 
-- `[vel:80]A` (préfixe) : `controlQualifiers: [{vel:80}]`, `controlPrefix: true`
-- `A[vel:80]` (suffixe) : `controlQualifiers: [{vel:80}]`, `controlPrefix: false/null`
-- `[ins:3, volumecont, volume:127]A[volume:0]` : deux qualifiers, le premier en préfixe
+Exemples :
+- `[tempo:2]A` (moteur, préfixe) : `engineQualifiers: [{tempo:2}]`, `qualifierPrefix: true`
+- `A(vel:80)` (runtime, suffixe) : `runtimeQualifiers: [{vel:80}]`, `qualifierPrefix: false`
+- `(vel:100)[/2]A` (les deux, préfixe) : runtime + engine, `qualifierPrefix: true`
 
 La distinction préfixe/suffixe est analogue à `++i`/`i++` en C :
-- **Préfixe** = le contrôle s'applique avant l'élément → compilé en `_vel(80) A`
-- **Suffixe** = le contrôle s'applique après l'élément → compilé en `A _vel(80)`
-
-Le parser distingue les qualificateurs de contrôle (clé dans `lib/controls.json`)
-des qualificateurs de règle (`mode`, `weight`, `scan`, etc.).
+- **Préfixe** = le qualificateur s'applique avant l'élément
+- **Suffixe** = le qualificateur s'applique après l'élément
 
 ### `Symbol`
 

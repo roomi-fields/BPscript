@@ -274,7 +274,7 @@ Les parenthèses ont quatre fonctions selon le contexte :
 ```
 // 1. Paramètre runtime — sur un symbole, une règle ou un groupe
 Sa(vel:120)                      // symbole : vel envoyé au runtime quand Sa joue
-(vel:100) C2 C2 - C2             // règle : vel pour toute la phrase
+C2 C2 - C2 (vel:100)             // règle : vel pour toute la phrase
 {A B}(filter:lp, cutoff:4000)    // groupe : filter pour tout le groupe
 
 // 2. Déclaration — avec un type devant
@@ -289,7 +289,7 @@ note(Sa, vel:120)
 
 La règle de désambiguïsation est positionnelle :
 - `symbole(` dans une expression = paramètre runtime ou appel
-- `(` en début de RHS, avant les symboles = paramètre runtime de portée règle
+- `(` en fin de RHS = paramètre runtime de portée règle
 - `{}(` après un groupe = paramètre runtime de portée groupe
 - `type nom(` = déclaration
 - `(` en tête de règle, avant le LHS et `->` = contexte
@@ -372,7 +372,7 @@ Quatre portées, deux destinataires, deux syntaxes :
 | **règle**   | `[clé:valeur]`   | moteur BP3      | `[mode:random]`   |
 | **symbole** | `[clé:valeur]`   | moteur BP3      | `A[/2]`           |
 | **groupe**  | `{}(clé:valeur)` | runtime cible   | `{A B}(vel:100)`  |
-| **règle**   | `(clé:valeur)`   | runtime cible   | `(vel:100) C2 C2` |
+| **règle**   | `(clé:valeur)`   | runtime cible   | `C2 C2 (vel:100)` |
 | **symbole** | `(clé:valeur)`   | runtime cible   | `Sa(vel:120)`     |
 
 `[]` et `()` ont des rôles distincts et des portées symétriques :
@@ -383,7 +383,7 @@ Les deux supportent les mêmes portées : symbole, règle, groupe.
 - `A[/2]` → divise la vitesse de A (moteur BP3)
 - `Sa(vel:120)` → envoie vel=120 au runtime quand Sa joue
 - `[mode:random]` → mode de la sous-grammaire (moteur BP3)
-- `(vel:100) C2 C2` → vel=100 pour toute la phrase (runtime)
+- `C2 C2 (vel:100)` → vel=100 pour toute la phrase (runtime)
 - `{A B}[/2]` → divise la vitesse du groupe (moteur BP3)
 - `{A B}(vel:100)` → vel=100 pour tout le groupe (runtime)
 
@@ -466,8 +466,8 @@ Sa(vel:120)                      // vel envoyé au runtime quand Sa joue
 C2(wave:sawtooth, filterQ:8)     // paramètres de synthèse
 
 // Portée règle — en début de RHS
-Bass -> (vel:100) C2 C2 - C2     // vel pour toute la phrase
-Bass -> (vel:100) C2 C2 (vel:70) C2 C2  // vel change en cours de phrase
+Bass -> C2 C2 - C2 (vel:100)     // vel pour toute la phrase
+Bass -> (vel:100) C2 C2 (vel:70) C2 C2  // vel change au milieu de la phrase
 
 // Portée groupe — après le groupe
 {A B C}(filter:lp, cutoff:4000)  // filtre sur tout le groupe
@@ -481,7 +481,7 @@ transmet sans interpréter. Le transpileur maintient une table de mapping :
 ```
 // BPscript                              → BP3
 Sa(vel:120)                              → _script(CT0) Sa
-(vel:100) C2 C2 - C2                     → _script(CT1) C2 C2 - C2
+Sa(vel:120)                              → _script(CT0) Sa
 {A B}(filter:lp)                         → {_script(CT2_start) A B _script(CT2_end)}
 
 // Table de mapping (côté JS) :

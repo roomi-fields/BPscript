@@ -11,13 +11,14 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 ## Couche 1 — Structure globale
 
 ```ebnf
-scene       = { directive | declaration | macro | backtick_orphan
+scene       = { directive | declaration | cv_instance | macro | backtick_orphan
               | comment | blank_line }
               , subgrammar+ ;
 ```
 
 - `directive` — imports et configuration globale (`@...`)
 - `declaration` — déclaration de terminal (type + runtime)
+- `cv_instance` — instanciation d'objet CV/signal
 - `macro` — définition de macro (réécriture textuelle)
 - `backtick_orphan` — code externe taggé au top-level
 - `subgrammar` — bloc de règles, au moins un requis
@@ -31,8 +32,9 @@ directive_body = IDENT                              (* @core, @controls *)
                | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
                | IDENT , ":" , IDENT                (* @routing:studio — binding simple *)
                | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + binding *)
-               | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) *)
+               | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) — not yet implemented *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
+               | "+"                                (* @+ — append to previous subgrammar *)
                | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
                ;
 
@@ -50,6 +52,14 @@ declaration = TYPE , IDENT , ":" , RUNTIME ;
 
 TYPE    = "gate" | "trigger" | "cv" ;
 RUNTIME = IDENT ;                          (* sc, midi, python, tidal, etc. *)
+```
+
+### `cv_instance`
+
+```ebnf
+cv_instance = IDENT , "(" , IDENT , "," , IDENT , ")" , "=" , cv_rhs ;
+cv_rhs = IDENT , "." , IDENT , "(" , arg_list , ")"    (* lib.type(args) *)
+       | backtick_inline ;                               (* `js: code` *)
 ```
 
 ### `macro`
@@ -85,7 +95,9 @@ subgrammar = rule+ , [ separator ] ;
 separator  = "-----" , { "-" } ;           (* 5+ tirets, sépare les sous-grammaires *)
 ```
 
-Les règles d'une même sous-grammaire partagent le mode déclaré via `[mode:...]`.
+Les règles d'une même sous-grammaire partagent le mode déclaré via `@mode:...`.
+Le mode est défini par une directive `@mode:X` (ex: `@mode:random`, `@mode:ord`) qui s'applique
+à la sous-grammaire qui suit, jusqu'au prochain séparateur `-----`.
 Le séparateur `-----` marque la frontière entre sous-grammaires.
 
 ---
@@ -101,7 +113,7 @@ ARROW = "->" | "<-" | "<>" ;
 ### `guard`
 
 ```ebnf
-guard = "when" , guard_expr , { guard_expr } ;     (* multi-guard = AND *)
+guard = "[" , guard_expr , "]" , { "[" , guard_expr , "]" } ;     (* multi-guard = AND *)
 
 guard_expr = IDENT , COMPARE_OP , flag_value      (* test pur *)
            | IDENT , MUTATE_OP , INT               (* test + mutation atomique *)
@@ -114,9 +126,9 @@ MUTATE_OP  = "+" | "-" ;
 flag_value = INT | IDENT ;                          (* littéral ou autre flag *)
 ```
 
-La forme `when flag-N` décrémente ET teste > 0 atomiquement (sémantique BP3).
-La forme `when flag>N` teste sans muter.
-La forme `when Ideas` (bare flag) teste que le flag est non-zéro → `/Ideas/` en BP3.
+La forme `[flag-N]` décrémente ET teste > 0 atomiquement (sémantique BP3).
+La forme `[flag>N]` teste sans muter.
+La forme `[Ideas]` (bare flag) teste que le flag est non-zéro → `/Ideas/` en BP3.
 
 ### `context`
 
@@ -154,28 +166,14 @@ rhs = rhs_element* ;                               (* peut être vide via lambda
 
 ### `qualifier`
 
+Le `qualifier` en fin de règle est un `engine_qualifier` (moteur BP3 uniquement).
+Les paramètres runtime utilisent `()` — voir section 4.0.
+
 ```ebnf
-qualifier = "[" , qual_pair , { "," , qual_pair } , "]"
-          | "[" , tempo_op , "]" ;                    (* opérateur temporel : [/2], [*3] *)
-
-qual_pair = QUAL_KEY , ":" , qual_value
-          | QUAL_KEY ;                                (* clé nue = flag booléen : [destru] *)
-
-tempo_op  = "/" , number                              (* speed = N → /N *)
-          | "\" , number                              (* speed = 1/N → \N *)
-          | "*" , number                              (* scale = N → *N *)
-          | "**" , number ;                           (* scale = 1/N → **N *)
-
-QUAL_KEY  = "mode" | "scan" | "speed"
-          | "weight" | "on_fail" | "tempo" | "meter"
-          | IDENT ;                                 (* clé libre → passée au runtime *)
-
-qual_value = value
-           | value , "-" , value                    (* poids décroissant : 50-12 *)
-           | IDENT , "=" , INT                      (* K-param : K1=3 *)
-           | IDENT , "(" , args , ")"               (* on_fail: fallback(B) *)
-           ;
+qualifier = engine_qualifier ;
 ```
+
+Définition complète de `engine_qualifier` et `runtime_qualifier` en section 4.0.
 
 Syntaxe double acceptée : `[weight:3, scan:left]` ou `[weight:3] [scan:left]`.
 
@@ -202,6 +200,8 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 ```ebnf
 rhs_element = [ control_qualifier ] , element_core , [ control_qualifier ] ;
 
+control_qualifier = engine_qualifier | runtime_qualifier ;
+
 element_core = symbol
              | symbol_call
              | rest | prolongation | undetermined_rest
@@ -222,52 +222,68 @@ element_core = symbol
              | flag_bracket ;
 ```
 
-### 4.0 Qualificateurs de contrôle par élément
+### 4.0 Qualificateurs — `[]` engine vs `()` runtime
+
+Deux syntaxes selon la destination :
+
+| Syntaxe | Destination | Exemples |
+|---------|-------------|----------|
+| `[]` | Moteur BP3 | `[mode:random]`, `[weight:50]`, `A[/2]`, `[scale:just C4]` |
+| `()` | Runtime/dispatcher | `(vel:80)`, `(wave:sawtooth)`, `(filter:300, filterQ:5)` |
+
+#### `[]` — Qualificateurs moteur (engine)
 
 ```ebnf
-control_qualifier = "[" , control_pair , { "," , control_pair } , "]" ;
+engine_qualifier = "[" , engine_pair , { "," , engine_pair } , "]"
+                 | "[" , tempo_op , "]" ;
 
-control_pair = CONTROL_KEY , ":" , raw_value          (* clé: valeur brute *)
-             | CONTROL_KEY ;                          (* flag nu : [volumecont] *)
+engine_pair = ENGINE_KEY , ":" , raw_value
+            | ENGINE_KEY ;                              (* flag nu : [destru] *)
 
-CONTROL_KEY  = (* nom présent dans lib/controls.json : vel, tempo, ins,
-                  chan, transpose, volume, volumecont, pitchbend, keyxpand,
-                  scale, value, script, etc. *) ;
+ENGINE_KEY  = "mode" | "scan" | "speed" | "weight" | "on_fail"
+            | "tempo" | "meter" | "scale" | "retro" | "rotate"
+            | "keyxpand" | "repeat" | "failed" | "stop" | "goto"
+            | "striated" | "smooth" ;
 
-raw_value    = (* tout texte jusqu'au prochain "," ou "]" *) ;
+raw_value   = (* tout texte jusqu'au prochain "," ou "]" *) ;
 ```
 
-Les qualificateurs de contrôle s'attachent à un élément RHS individuel (pas à la règle).
-Ils compilent en `_name(value)` pour BP3 — des commandes zéro-durée.
-
-**Valeur brute (modèle CSS)** : tout ce qui suit le `:` jusqu'au prochain `,` ou `]`
-est la valeur, interprétée par le contrôle. Les espaces séparent les arguments et sont
-convertis en `,` pour BP3. Les underscores dans les noms de gamme sont convertis en espaces.
-
 ```
-[vel: 80]              → _vel(80)              // 1 argument
-[keyxpand: B3 -1]      → _keyxpand(B3,-1)      // 2 arguments (espaces → virgules)
-[scale: just_intonation C4] → _scale(just intonation,C4)  // underscore → espace
-[script: MIDI send Continue] → _script(MIDI send Continue) // espaces préservés
+[mode:random]          → RND en mode de sous-grammaire
+[weight:50]            → <50>
+A[/2]                  → /2 A
+[scale: just_intonation C4] → _scale(just intonation,C4)
 ```
 
-**Position — préfixe ou suffixe** (analogie `++i` / `i++` en C) :
+#### `()` — Qualificateurs runtime
 
-- **Préfixe** (recommandé) : `[vel:80]A` — le contrôle s'applique **avant** `A`.
-  Le changement est actif au moment où `A` est joué.
-  Compilé en : `_vel(80) A`
+```ebnf
+runtime_qualifier = "(" , runtime_pair , { "," , runtime_pair } , ")" ;
 
-- **Suffixe** : `A[vel:80]` — le contrôle s'applique **après** `A`.
-  Le changement prend effet pour les éléments suivants.
-  Compilé en : `A _vel(80)`
+runtime_pair = RUNTIME_KEY , ":" , value ;
 
-- **Collé vs espacé** : `[vel:80]A` (collé) = qualificateur sur `A`.
-  `[vel:80] A` (espace) = qualificateur sur la règle (interdit pour les contrôles,
-  seuls `mode`, `weight`, `scan`, `on_fail`, etc. sont des qualificateurs de règle).
+RUNTIME_KEY  = (* nom présent dans lib/controls.json section "runtime" :
+                  vel, chan, pan, wave, attack, release, detune,
+                  filter, filterQ, transpose, ins, staccato, legato,
+                  mod, pitchbend, volume, etc. *) ;
+```
 
-- **Distinction `[]` contrôle vs `[]` règle** : le parser distingue par la clé.
-  Si la clé est un nom de contrôle connu (via lib/controls.json) → qualificateur d'élément.
-  Sinon → qualificateur de règle ou flag.
+Compilé en `_script(CTn)` pour BP3 — le dispatcher interprète au playback.
+
+```
+(vel:80)               → _script(CT0) avec {vel: 80}
+(wave:sawtooth, vel:100, filterQ:8) → _script(CT0) avec {wave:"sawtooth", vel:100, filterQ:8}
+```
+
+#### Position — préfixe ou suffixe
+
+- **Préfixe** : `(vel:80) A` — le contrôle s'applique **avant** `A`.
+  Compilé en : `_script(CT0) A`
+
+- **Suffixe** : `A(vel:80)` — le contrôle s'applique **après** `A`.
+  Compilé en : `A _script(CT0)`
+
+Les deux syntaxes `[]` et `()` supportent préfixe et suffixe.
 
 **Exception — contrôles autonomes dans le RHS** : quand un non-terminal se résout
 en purs contrôles (aucun élément temporel), les contrôles peuvent apparaître comme
@@ -275,9 +291,9 @@ en purs contrôles (aucun élément temporel), les contrôles peuvent apparaîtr
 dans le RHS sans être attachés via `[]`.
 
 ```ebnf
-(* Résolution d'un non-terminal en contrôle pur *)
-Pull0 -> pitchbend(0)                                (* → _pitchbend(0) *)
-StartPull -> pitchcont pitchrange(500) pitchbend(0)   (* → _pitchcont _pitchrange(500) _pitchbend(0) *)
+(* Résolution d'un non-terminal en contrôle runtime pur *)
+Pull0 -> (pitchbend:0)                                          (* → _script(CTn) *)
+StartPull -> (pitchcont) (pitchrange:500) (pitchbend:0)          (* → _script(CT0) _script(CT1) _script(CT2) *)
 ```
 
 Ce pattern existe dans les grammaires à couches (vina, vina2, vina3) où les
@@ -311,7 +327,8 @@ numeric_duration  = INT | INT , "/" , INT ;           (* silence de durée ratio
 ### 4.3 Polymétrie
 
 ```ebnf
-polymetric = "{" , voice , { "," , voice } , "}" , [ qualifier ] ;
+polymetric = "{" , voice , { "," , voice } , "}"
+             , [ engine_qualifier ] , [ runtime_qualifier ] ;
 
 voice      = rhs_element+ ;
 ```
@@ -358,7 +375,8 @@ trigger_in = "<!" , IDENT , [ qualifier ] ;
 ```
 
 Point de synchronisation — attend un signal externe.
-Chaînable : `<!sync1<!sync2`. Qualifiable : `<!sync1[timeout:5000]`.
+Chaînable : `<!sync1<!sync2`. Qualifiable : `<!sync1[timeout:5000]` (* not yet implemented *).
+`<!` can also be attached to a symbol: `Sa<!sync1` produces a combined SymbolWithTriggerIn node.
 
 ### 4.7 Variables (homomorphismes)
 
@@ -401,7 +419,7 @@ Compilé en `&` pour BP3. Le moteur gère le matching à travers la polymétrie.
 ### 4.11 Chaîne vide
 
 ```ebnf
-nil_string = "lambda" ;
+nil_string = "lambda" ;                    (* internal — users typically write an empty RHS: S -> *)
 ```
 
 Efface le non-terminal (production ε).
@@ -427,7 +445,7 @@ Exemples :
 - `lambda [Num_a=20, Num_b=0]` → efface le non-terminal + init flags
 
 Symétrie LHS/RHS :
-- `when phase==1 S -> ...` → test flag (LHS)
+- `[phase==1] S -> ...` → test flag (guard)
 - `S -> ... [phase=2]` → set flag (RHS)
 
 ### 4.13 Backticks
@@ -439,6 +457,7 @@ backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux, taggé *
 
 Backtick attaché à un symbole → runtime implicite (celui du symbole).
 Backtick dans le flux → tag obligatoire (`sc:`, `py:`, `tidal:`).
+Currently only JS backticks (`js:`) are implemented. SC/Python/Tidal tags are architecture targets.
 
 ### 4.14 Raw braces (méta-grammaires)
 
@@ -450,6 +469,9 @@ Utilisé quand `{`, `}`, `,` apparaissent comme terminaux bruts dans le RHS
 (embedding patterns, méta-grammaires). Le parser les émet comme `RawBrace`
 quand ils ne forment pas un polymetric balancé dans la même règle.
 
+**Cross-rule braces** : les accolades peuvent être déséquilibrées à travers plusieurs
+règles avec propagation du `[speed:N]` de la `}` fermante vers la `{` ouvrante correspondante.
+
 ---
 
 ## Couche 5 — Lexèmes
@@ -457,14 +479,14 @@ quand ils ne forment pas un polymetric balancé dans la même règle.
 ```ebnf
 IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' }
             | letter , { letter | digit | "_" | "#" | "'" | '"' } , "-" , { letter | digit | "_" | "#" | "'" | '"' | "-" } ;
-              (* Le tiret "-" est autorisé dans les non-terminaux : Tr-11, my-var.
-                 Résolu par pré-scan : le tokenizer collecte les LHS du fichier
-                 et reconnaît les identifiants avec "-" qui apparaissent en LHS.
-                 Convention héritée de BP3 (Bernard Bel) : "-" autorisé dans les
-                 noms de variables, interdit dans les terminaux. *)
+              (* The second form (with "-") applies ONLY to non-terminal identifiers
+                 (LHS symbols like Tr-11, my-var). "-" is NEVER allowed in terminal names.
+                 Resolved by pre-scan: the tokenizer collects LHS symbols from the file
+                 and recognizes identifiers with "-" that appear in LHS position.
+                 Convention inherited from BP3 (Bernard Bel). *)
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
-value       = INT | FLOAT | IDENT | INT , "/" , INT ;
+value       = [ "-" ] , INT | FLOAT | IDENT | INT , "/" , INT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
 TEXT        = (* tout caractère jusqu'à fin de ligne *) ;
 letter      = "a"-"z" | "A"-"Z" ;
@@ -473,11 +495,14 @@ blank_line  = (* ligne vide ou whitespace seul *) ;
 ```
 
 **Contraintes lexicales** :
-- `-` (tiret) n'est JAMAIS autorisé dans un identifiant. `dhin--` = `dhin` + silence + silence.
-  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms (`CompileGrammar.c:1200-1203`).
+- `-` (tiret) est autorisé dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`, `my-var`),
+  mais JAMAIS dans les terminaux. `dhin--` = `dhin` + silence + silence.
+  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms de terminaux (`CompileGrammar.c:1200-1203`).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
+  Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
 - Les underscores dans les noms sont autorisés (ex: `just_intonation`).
   Le compilateur traduit `_` → espace dans les arguments de `_scale()` pour BP3.
+  Known limitation: `_` in terminal names is rejected by BP3's alphabet parser. This is a blocker for the planned `Sa_v`/`Sa_^` octave convention.
 
 **Quoted symbols** : BP3 supporte `'texte'` pour utiliser des caractères spéciaux
 ou des nombres comme terminaux (`'1'`, `'2'`). BPscript **n'a pas** de quoted symbols —
@@ -498,10 +523,10 @@ speed    → ratio de tempo polymétrique ({v1, v2}[speed:2] → {2, v1, v2})
 /N \N    → opérateurs speed BP3 (A[/2] → /2 A, A[\2] → \2 A)
 *N **N   → opérateurs scale BP3 (A[*3] → *3 A, A[**3] → **3 A)
 weight   → poids de la règle
-on_fail  → gestion d'échec (skip, retry(N), fallback(X))
+on_fail  → gestion d'échec (skip, retry(N), fallback(X)) (* not yet implemented *)
 tempo    → tempo local
 meter    → signature rythmique
-timeout  → limite de temps sur <!
+timeout  → limite de temps sur <! (* not yet implemented *)
 ```
 
 ### Clés réservées de `@`
@@ -514,28 +539,30 @@ alphabet.KEY(transport=X, eval=Y) → transport ≠ eval (forme explicite)
 tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à ALPHABET
 sub.KEY                        → table de substitution depuis lib/sub.json
 routing.KEY                    → config connexion KEY depuis lib/routing.json
-hooks                          → macros d'interaction
+hooks                          → macros d'interaction (* not yet implemented *)
 tempo                          → tempo global
 meter                          → métrique globale
 mm                             → marquage métronomique
-baseHz                         → diapason (défaut 440)
+baseHz                         → diapason (défaut 440) (* not yet implemented — current implementation uses @tuning:442 *)
 striated                       → temps strié
 smooth                         → temps lisse
 transpose                      → transposition globale
 chan                            → canal MIDI global
 vel                            → vélocité globale
 ins                            → programme MIDI global
-min_tempo                      → contrainte tempo minimum
-max_tempo                      → contrainte tempo maximum
+tuning:SCALE                   → temperament from tuning.json (e.g. @tuning:Cmaj)
+tuning:N                       → reference pitch in Hz (e.g. @tuning:442)
+filter                         → CV/signal objects library
+min_tempo                      → contrainte tempo minimum (* not yet implemented *)
+max_tempo                      → contrainte tempo maximum (* not yet implemented *)
 ```
 
-### Mots réservés (4)
+### Mots réservés (3)
 
 ```
 gate     → type temporel : occupe du temps, valeur constante
 trigger  → type temporel : instant, zéro durée
 cv       → type temporel : occupe du temps, valeur continue
-when     → garde conditionnelle sur une règle
 ```
 
 ### Symbole réservé (1)
@@ -565,14 +592,14 @@ lambda   → chaîne vide (efface le non-terminal)
 | `_` | `_` | prolongation (identique) |
 | `.` | `.` | period (identique) |
 | `...` | `...` | repos indéterminé (identique) |
-| `when X==N` | `/X=N/` en LHS | condition flag |
-| `when X-N` | `/X-N/` en LHS | test + mutation |
+| `[X==N]` | `/X=N/` en LHS | guard condition flag |
+| `[X-N]` | `/X-N/` en LHS | guard test + mutation |
 | `[X=N]` | `/X=N/` en RHS | mutation flag |
 | `[X]` | `/X/` en RHS | flag set/ref (nu) |
-| `[vel:120]A` | `_vel(120) A` | contrôle préfixe (avant A) |
-| `A[vel:120]` | `A _vel(120)` | contrôle suffixe (après A) |
-| `[ins:3, volumecont, volume:127]A` | `_ins(3) _volumecont _volume(127) A` | multi-contrôle préfixe |
-| `[mode:random]` | `RND` en mode_line | mode du bloc |
+| `(vel:120) A` | `_script(CT0) A` | runtime préfixe (avant A) |
+| `A(vel:120)` | `A _script(CT0)` | runtime suffixe (après A) |
+| `(ins:3, volume:127) A` | `_script(CT0) A` | multi-runtime préfixe |
+| `@mode:random` | `RND` en mode_line | mode du bloc |
 | `[scan:left]` | `LEFT` dans la règle | mode dérivation |
 | `[weight:50-12]` | `<50-12>` | poids décroissant |
 | `[weight:K1=1]` | `<K1=1>` | K-param avec initialisation |
@@ -591,13 +618,16 @@ lambda   → chaîne vide (efface le non-terminal)
 | `[script: MIDI send Continue]A` | `_script(MIDI send Continue) A` | espaces préservés (script) |
 | `[value: slide 0]H` | `_value(slide,0) H` | valeur brute 2 args |
 | `X ->` (RHS vide) | `X -->` | production epsilon (sans lambda) |
-| `[transpose: -3]A` | `_transpose(-3) A` | valeur négative en préfixe |
-| `when Ideas` | `/Ideas/` | bare flag (test non-zéro) |
+| `(transpose:-3) A` | `_script(CT0) A` | runtime valeur négative |
+| `[Ideas]` (guard) | `/Ideas/` | bare flag guard (test non-zéro) |
 | `[meter:4+4/6]` | `4+4/6` avant RHS | time signature inline |
 
 **Contraintes lexicales** :
-- `-` (tiret) n'est JAMAIS autorisé dans un identifiant. `dhin--` = `dhin` + silence + silence.
-  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms (`CompileGrammar.c:1200-1203`).
+- `-` (tiret) est autorisé dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`, `my-var`),
+  mais JAMAIS dans les terminaux. `dhin--` = `dhin` + silence + silence.
+  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms de terminaux (`CompileGrammar.c:1200-1203`).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
+  Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
 - Les underscores dans les noms sont autorisés (ex: `just_intonation`).
   Le compilateur traduit `_` → espace dans les arguments de `_scale()` pour BP3.
+  Known limitation: `_` in terminal names is rejected by BP3's alphabet parser. This is a blocker for the planned `Sa_v`/`Sa_^` octave convention.
