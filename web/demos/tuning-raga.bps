@@ -1,0 +1,14 @@
+// Tuning: Raga Mohanam (pentatonic) in sargam notation
+// NOTE: en attente — BP3 ne supporte pas encore les noms sargam
+// avec modificateurs d'octave. Voir BACKLOG.md
+
+@core
+@controls
+@alphabet.western:browser
+@mm:80
+
+S -> Aroh Avroh Ending
+
+Aroh -> [wave:triangle, vel:90] C4 D4 E4 G4 A4
+Avroh -> A4 G4 E4 D4 C4
+Ending -> [vel:70] C3 _ _ _

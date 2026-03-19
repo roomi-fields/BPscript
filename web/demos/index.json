@@ -243,5 +243,33 @@
     "category": "cv",
     "description": "Modulation de filtre dubstep (courbe JS custom)",
     "file": "cv-backtick.bps"
+  },
+  {
+    "id": "tuning-equal",
+    "title": "12-TET Chromatic",
+    "category": "tuning",
+    "description": "Gamme chromatique en tempérament égal (A=440)",
+    "file": "tuning-equal.bps"
+  },
+  {
+    "id": "tuning-just",
+    "title": "Just Intonation",
+    "category": "tuning",
+    "description": "Accords en intonation juste (Cmaj) — tierces et quintes pures",
+    "file": "tuning-just.bps"
+  },
+  {
+    "id": "tuning-raga",
+    "title": "Raga Sargam",
+    "category": "tuning",
+    "description": "Pentatonique en notation sargam (sa re ga pa dha)",
+    "file": "tuning-raga.bps"
+  },
+  {
+    "id": "tuning-ref442",
+    "title": "A=442 Hz",
+    "category": "tuning",
+    "description": "Référence orchestrale européenne (442 Hz)",
+    "file": "tuning-ref442.bps"
   }
 ]

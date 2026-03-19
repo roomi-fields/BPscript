@@ -330,12 +330,14 @@ S -> C4 D4 E4 F4 G4</textarea>
       <div class="output-tabs">
         <div class="output-tab active" data-tab="output" onclick="switchOutputTab('output')">Output</div>
         <div class="output-tab" data-tab="messages" id="messagesTab" onclick="switchOutputTab('messages')">Messages</div>
+        <div class="output-tab" data-tab="debug" onclick="switchOutputTab('debug')">Debug</div>
         <div class="output-tab" data-tab="libs" onclick="switchOutputTab('libs'); loadLibsPanel()">Libraries</div>
         <div class="output-tab" data-tab="help" onclick="switchOutputTab('help')">Help</div>
       </div>
       <div class="output-panels">
         <div class="output-panel active" id="outputContent">(not yet produced)</div>
         <div class="output-panel" id="messagesContent">(no messages)</div>
+        <div class="output-panel" id="debugContent" style="color:#8be9fd; font-size:12px; white-space:pre; font-family:'Consolas',monospace;">(no debug info)</div>
         <div class="output-panel" id="libsContent"></div>
         <div class="output-panel" id="helpContent" style="padding:16px 24px;overflow-y:auto;color:#ccc;font-size:13px;line-height:1.6;">
           <div class="help-content">
@@ -503,6 +505,7 @@ let lastMidiEvents = null;
 let lastTimedTokens = null;
 let lastControlTable = null;
 let lastCVTable = null;
+let lastDirectives = [];
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
@@ -529,7 +532,7 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'raga', 'advanced'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'raga', 'advanced'];
   const categoryLabels = {
     tutorial: 'Tutorial',
     basics: 'Basics',
@@ -537,6 +540,7 @@ function renderLibrary(items) {
     polymetric: 'Polymetric',
     synthesis: 'Synthesis',
     cv: 'CV / Signal',
+    tuning: 'Tuning',
     raga: 'Raga / Indian',
     advanced: 'Advanced'
   };
@@ -684,15 +688,14 @@ function initEngine() {
 }
 
 function reseed() {
-  // New random seed before each produce so random mode gives different results
-  // Detect noteConvention from alphabet content (sa = Indian, else English)
+  // Full init before each cycle: init → loadAlphabet → setObjectDuration → loadGrammar
+  bp3_init();
   const alphabet = document.getElementById('alphabet').value;
   const noteConv = alphabet.includes('sa0') || alphabet.includes('sa1') ? 2 : 0;
   bp3_load_settings_params(noteConv, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
-  // Order: loadAlphabet → setObjectDuration → loadGrammar (before produce)
-  const grammar = document.getElementById('grammar').value;
   if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
   registerTerminalDurations();
+  const grammar = document.getElementById('grammar').value;
   if (grammar.trim()) bp3_load_grammar(grammar.trim());
 }
 
@@ -737,6 +740,7 @@ function produce() {
       if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
       lastControlTable = compiled.controlTable || null;
       lastCVTable = compiled.cvTable || null;
+      lastDirectives = compiled.directives || [];
       // Settings disabled for now — BP3 defaults work correctly,
       // our settingsJSON breaks text output formatting
       // if (compiled.settings) document.getElementById('settings').value = compiled.settings;
@@ -811,6 +815,7 @@ function produce() {
 
       updateTransportButtons();
       renderTimeline(lastTimedTokens);
+      updateDebugPanel(grammar, alphabet);
 
       const midiInfo = tokenCount > 0 ? ` | ${tokenCount} tokens` : (midiCount > 0 ? ` | ${midiCount} MIDI events` : '');
       const statusText = result === 1 ? 'Done (OK)' + midiInfo
@@ -850,6 +855,124 @@ function escHtml(str) {
   return div.innerHTML;
 }
 
+/* ---- Debug Panel ---- */
+
+function updateDebugPanel(grammar, alphabet) {
+  const lines = [];
+
+  // 1. Grammar sent to BP3
+  lines.push('=== GRAMMAR → BP3 ===');
+  lines.push(grammar || '(empty)');
+  lines.push('');
+
+  // 2. Alphabet sent to BP3
+  lines.push('=== ALPHABET → BP3 ===');
+  lines.push(alphabet || '(empty)');
+  lines.push('');
+
+  // 3. Timed tokens from BP3
+  lines.push('=== TIMED TOKENS (BP3 output) ===');
+  if (lastTimedTokens && lastTimedTokens.length > 0) {
+    lines.push('token\t\tstart\tend\tdur(ms)');
+    lines.push('─'.repeat(50));
+    for (const t of lastTimedTokens) {
+      const dur = t.end - t.start;
+      const name = t.token.padEnd(16);
+      lines.push(`${name}${t.start}\t${t.end}\t${dur}`);
+    }
+  } else {
+    lines.push('(no tokens)');
+  }
+  lines.push('');
+
+  // 4. Resolver routing: token → frequency
+  lines.push('=== ROUTING: token → frequency ===');
+  if (lastTimedTokens) {
+    // Build semitone map from directives for debug display
+    const libs = window._loadedLibs;
+    let semitones = null;
+    for (const dir of (lastDirectives || [])) {
+      if (dir.name === 'alphabet' && dir.subkey && libs?.alphabet?.alphabets?.[dir.subkey]) {
+        const gen = libs.alphabet.alphabets[dir.subkey].generator;
+        if (gen?.semitones) {
+          semitones = gen.semitones;
+        } else if (gen?.notes) {
+          const ds = [0, 2, 4, 5, 7, 9, 11];
+          semitones = {};
+          gen.notes.forEach((n, i) => { semitones[n] = ds[i % 7]; });
+        }
+      }
+    }
+    // Fallback to western
+    if (!semitones) {
+      semitones = { C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11 };
+    }
+
+    const seen = new Set();
+    for (const t of lastTimedTokens) {
+      if (seen.has(t.token)) continue;
+      seen.add(t.token);
+      if (t.token.startsWith('_') || t.token === '-' || t.token === '_') continue;
+
+      let route = t.token.padEnd(12);
+
+      // Parse token: western or generic
+      const wm = t.token.match(/^([A-Ga-g][#b]?)(\d+)$/);
+      const gm = t.token.match(/^([a-zA-Z]+)(\d+)$/);
+      const parsed = wm ? { name: wm[1], oct: parseInt(wm[2]) }
+                   : gm ? { name: gm[1], oct: parseInt(gm[2]) }
+                   : null;
+
+      if (parsed && semitones[parsed.name] != null) {
+        const semi = semitones[parsed.name];
+        const midi = (parsed.oct + 1) * 12 + semi;
+        const freq = 440 * Math.pow(2, (midi - 69) / 12);
+        route += `→ ${parsed.name}(semi=${semi}) → midi=${midi} → ${freq.toFixed(2)} Hz`;
+      } else if (parsed) {
+        route += `→ "${parsed.name}" not in semitones → NO SOUND`;
+      } else {
+        route += `→ not a note (CV or unknown)`;
+      }
+
+      lines.push(route);
+    }
+  }
+  lines.push('');
+
+  // 5. Control table
+  if (lastControlTable && lastControlTable.length > 0) {
+    lines.push('=== CONTROL TABLE ===');
+    for (const ct of lastControlTable) {
+      lines.push(`${ct.id}: ${JSON.stringify(ct.assignments)}`);
+    }
+    lines.push('');
+  }
+
+  // 6. CV table
+  if (lastCVTable && lastCVTable.length > 0) {
+    lines.push('=== CV TABLE ===');
+    for (const cv of lastCVTable) {
+      const args = cv.args ? Object.entries(cv.args).map(([k,v]) => `${k}:${v}`).join(', ') : '';
+      lines.push(`${cv.id}: ${cv.name}(${cv.target}, ${cv.transport}) = ${cv.lib || 'backtick'}.${cv.objectType}(${args})`);
+    }
+    lines.push('');
+  }
+
+  // 7. Directives
+  if (lastDirectives && lastDirectives.length > 0) {
+    lines.push('=== DIRECTIVES ===');
+    for (const d of lastDirectives) {
+      let s = `@${d.name}`;
+      if (d.subkey) s += `.${d.subkey}`;
+      if (d.runtime) s += `:${d.runtime}`;
+      if (d.value != null) s += `:${d.value}`;
+      lines.push(s);
+    }
+  }
+
+  document.getElementById('debugContent').textContent = lines.join('\n');
+}
+
 /* ---- Playback via Dispatcher ---- */
 
 async function ensureDispatcher() {
@@ -860,8 +983,12 @@ async function ensureDispatcher() {
   if (!dispatcher) {
     const { Dispatcher } = await import('../src/dispatcher/dispatcher.js');
     const { WebAudioTransport } = await import('../src/dispatcher/transports/webaudio.js');
+    const { Resolver } = await import('../src/dispatcher/resolver.js');
+
+    const resolver = new Resolver();
     dispatcher = new Dispatcher(audioCtx);
-    dispatcher.addTransport('default', new WebAudioTransport(audioCtx));
+    dispatcher.addTransport('default', new WebAudioTransport(audioCtx, { resolver }));
+    dispatcher._resolver = resolver;
   }
 }
 
@@ -870,6 +997,63 @@ function updateTransportButtons() {
   document.getElementById('playBtn').disabled = isPlaying || !hasTokens;
   document.getElementById('loopBtn').disabled = isPlaying || !hasTokens;
   document.getElementById('stopBtn').disabled = !isPlaying;
+}
+
+/** Update the resolver from current directives (@tuning, @alphabet) */
+function updateResolver() {
+  if (!dispatcher?._resolver) return;
+  const resolver = dispatcher._resolver;
+  const libs = window._loadedLibs;
+  if (!libs) return;
+
+  // Set alphabet (note system)
+  for (const dir of lastDirectives) {
+    if (dir.name === 'alphabet' && dir.subkey) {
+      const entry = libs.alphabet?.alphabets?.[dir.subkey];
+      if (entry) resolver.setAlphabet(entry);
+    }
+  }
+
+  // Set tuning / reference
+  for (const dir of lastDirectives) {
+    if (dir.name === 'tuning') {
+      if (dir.runtime && libs.tuning?.scales?.[dir.runtime]) {
+        resolver.setTuning(libs.tuning.scales[dir.runtime]);
+      } else if (dir.value) {
+        resolver.setReference(Number(dir.value));
+      }
+    }
+  }
+}
+
+/** Append resolver state to Debug panel on Play */
+function appendResolverDebug() {
+  const el = document.getElementById('debugContent');
+  if (!el || !dispatcher?._resolver) return;
+  const r = dispatcher._resolver;
+  const lines = ['\n=== RESOLVER STATE (at Play) ==='];
+  lines.push(`baseHz: ${r.baseHz}`);
+  lines.push(`semitones: ${JSON.stringify(r.semitones)}`);
+  lines.push(`ratios: ${r.ratios ? 'custom tuning' : 'none (12-TET)'}`);
+
+  // Test resolve for each unique note token
+  if (lastTimedTokens) {
+    lines.push('');
+    lines.push('Live resolve:');
+    const seen = new Set();
+    for (const t of lastTimedTokens) {
+      if (seen.has(t.token) || t.token.startsWith('_') || t.token === '-') continue;
+      seen.add(t.token);
+      const res = r.resolve(t.token);
+      if (res) {
+        lines.push(`  ${t.token} → ${res.frequency.toFixed(2)} Hz (midi ${res.midiNote})`);
+      } else {
+        lines.push(`  ${t.token} → NULL (no sound)`);
+      }
+    }
+  }
+
+  el.textContent += lines.join('\n');
 }
 
 function onPlayEnd() {
@@ -888,6 +1072,8 @@ async function playOnce() {
 
   dispatcher.setControlTable(lastControlTable);
   dispatcher.setCVTable(lastCVTable);
+  updateResolver();
+  appendResolverDebug();
   dispatcher.load(lastTimedTokens);
   dispatcher.start(onPlayEnd);
 
@@ -904,6 +1090,7 @@ async function playLoop() {
 
   dispatcher.setControlTable(lastControlTable);
   dispatcher.setCVTable(lastCVTable);
+  updateResolver();
   dispatcher.load(lastTimedTokens);
 
   const useReDerive = document.getElementById('rederiveChk').checked;
@@ -1382,7 +1569,7 @@ loadLibrary();
   import { registerAll } from '../src/transpiler/libs.js';
 
   // Fetch all lib/*.json and register them for browser use
-  const libNames = ['alphabet', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template', 'filter'];
+  const libNames = ['alphabet', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template', 'filter', 'tuning'];
   const libs = {};
   await Promise.all(libNames.map(async (name) => {
     try {
@@ -1391,6 +1578,7 @@ loadLibrary();
     } catch(e) { console.warn(`Failed to load lib/${name}.json:`, e.message); }
   }));
   registerAll(libs);
+  window._loadedLibs = libs;
 
   // Adapter: compileBPS → same interface as old compileBPScript
   window._compileBPScript = function(source) {

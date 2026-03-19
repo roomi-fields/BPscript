@@ -1,0 +1,10 @@
+// Tuning: Reference pitch A4 = 442 Hz
+// European orchestral standard — slightly sharper than 440
+
+@core
+@controls
+@alphabet.western:browser
+@tuning:442
+@mm:90
+
+S -> [wave:sine, vel:85] A4 _ E4 A4 _ E5 A5 _ _ _
