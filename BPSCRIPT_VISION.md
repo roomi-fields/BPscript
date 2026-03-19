@@ -11,14 +11,14 @@ Les symboles sont des noms avec un double contrat :
 - **Type temporel** : comment ils se comportent dans le temps (gate, trigger, cv)
 - **Runtime** : qui les manipule (sc, tidal, python, midi...)
 
-Le langage connaît quatre mots et ne fait qu'une chose : ordonner dans le temps.
+Le langage connaît trois mots et ne fait qu'une chose : ordonner dans le temps.
 
 ## Le langage : dense, pas simple
 
 BPscript n'est pas un langage simple — c'est un langage **dense**. Il hérite
 de 30 ans de recherche formelle sur les structures temporelles (Bernard Bel, BP3).
 
-4 mots réservés, 24 symboles, 7 opérateurs — le vocabulaire est petit mais la
+3 mots réservés, 24 symboles, 7 opérateurs — le vocabulaire est petit mais la
 combinatoire est riche. Comme les échecs : 6 types de pièces, complexité infinie.
 
 Le langage va du trivial au très complexe :
@@ -28,7 +28,7 @@ Le langage va du trivial au très complexe :
 S -> Sa Re Ga Pa
 
 // Intermédiaire — polymétrie avec triggers et flags
-when phase==1 S -> { Sa!dha Re!ti, -!spotlight _ }
+[phase==1] S -> { Sa!dha Re!ti, -!spotlight _ }
 
 // Complexe — templates, captures, homomorphismes, multi-runtime
 |x| (A) x!dha B -> x!ti $mel &mel [mode:random, phase+1]
@@ -42,21 +42,20 @@ La vraie promesse : un compositeur peut commencer avec `S -> Sa Re Ga` et
 découvrir progressivement la polymétrie, les flags, les captures, les backticks.
 Chaque feature est optionnelle — la complexité est **additive**, pas imposée.
 
-## Inventaire du langage : 4 mots, 24 symboles, 7 opérateurs
+## Inventaire du langage : 3 mots, 24 symboles, 7 opérateurs
 
-### Quatre mots réservés
+### Trois mots réservés
 
 | Mot         | Rôle  | Sens                                      |
 | ----------- | ----- | ----------------------------------------- |
 | **gate**    | type  | occupe du temps, valeur constante         |
 | **trigger** | type  | instant, zéro durée, impulsion ponctuelle |
 | **cv**      | type  | occupe du temps, valeur varie continûment |
-| **when**    | garde | condition d'activation d'une règle (flag) |
 
 Les trois types sont inspirés de l'eurorack et définissent le **rapport au temps** de chaque symbole.
 Le compilateur sait ce qui occupe du temps et ce qui n'en occupe pas.
 Le compositeur le voit aussi — les types sont explicites à la définition.
-`when` est la garde conditionnelle — elle active ou désactive une règle selon l'état des flags.
+Les gardes conditionnelles utilisent `[]` — la même syntaxe que les qualificateurs.
 
 ### Vingt-quatre symboles structurels
 
@@ -64,7 +63,7 @@ Le compositeur le voit aussi — les types sont explicites à la définition.
 @              environnement (imports, config globale)
 -> <- <>       dérivation + direction (BP3 : --> <-- <->)
 { , }          polymétrie, groupement temporel, état interne de définition
-( )            définition, appel, contexte
+( )            paramètre runtime (portées : symbole, règle, groupe), définition, appel, contexte
 :              paire clé:valeur, binding runtime (gate Sa:sc)
 =              définition de macro (+ assignation dans les flags)
 [ ]            qualificateur local (sur un groupe ou une règle)
@@ -95,28 +94,29 @@ Pas d'ambiguïté entre `.` et `...` : ce sont des caractères différents de `-
 ### Sept opérateurs de flags
 
 ```
-==             test d'égalité (dans when)
-!=             test d'inégalité (dans when)
->              test supérieur (dans when)
-<              test inférieur (dans when)
->=             test supérieur ou égal (dans when)
-<=             test inférieur ou égal (dans when)
+==             test d'égalité (dans [guard])
+!=             test d'inégalité (dans [guard])
+>              test supérieur (dans [guard])
+<              test inférieur (dans [guard])
+>=             test supérieur ou égal (dans [guard])
+<=             test inférieur ou égal (dans [guard])
 +              incrément (dans [flag])
 ```
 
-Les opérateurs n'existent que dans le contexte des flags (`when` sur le LHS et `[mutation]` sur le RHS).
+Les opérateurs n'existent que dans le contexte des flags (`[guard]` avant le LHS et `[mutation]` dans le RHS).
 L'assignation `=` réutilise un symbole structurel existant.
 Le décrément `-` et l'incrément `+` n'existent que dans le contexte des flags.
 
-Deux portées, deux symboles :
+Trois portées de métadonnées, trois symboles :
 - `@` = **global** : environnement, imports, configuration du système
-- `[]` = **local** : instructions moteur BP3 — qualifiers, flags, opérateurs temporels
+- `[]` = **local moteur** : instructions BP3 — modes, flags, opérateurs temporels
+- `()` = **local runtime** : paramètres transportés au runtime cible (vel, filter, wave...)
 
 Les nombres (`0.7`, `120`, `5ms`) sont des symboles opaques comme les autres —
 le langage ne connaît pas leur sémantique, c'est le récepteur qui les interprète.
 
 **Pas de `for`, pas de `while`, pas de branchement.** BPscript décrit des structures
-dans le temps. `when` est une garde déclarative (la règle existe ou non), pas du
+dans le temps. `[guard]` est une garde déclarative (la règle existe ou non), pas du
 branchement impératif. Toute logique algorithmique, traitement de signal ou chaînage
 passe par le code externe (backticks) ou par le bridge.
 
@@ -141,7 +141,7 @@ par le compilateur :
 | ---------------- | --------------------------------------- | ---------------------------------------------- | ----------------------------- |
 | **Non-terminal** | implicite (apparaît en LHS d'une règle) | variable de grammaire, se réécrit et disparaît | S, I, A, B, R1, P4            |
 | **Terminal**     | explicite (type + runtime)              | symbole de sortie, atteint un runtime          | sa6:gate:midi, dha:trigger:sc |
-| **Contrôle**     | via `@controls` / `@hooks`                     | commande moteur, zéro durée                    | vel(120), tempo(2), goto(2,1) |
+| **Contrôle**     | via `@controls` / `@hooks`                     | commande moteur BP3, zéro durée                | [tempo:2], [mode:random], [/2] |
 
 Les non-terminaux sont des **symboles purement BPS** : ils n'existent que
 pendant la dérivation, n'ont ni type temporel ni runtime. Ils se réécrivent
@@ -249,7 +249,7 @@ cv lfo:sc(rate, depth)
 S -> A B C D E F [tempo: ramp(100, 140)]
 
 // Un crescendo
-S -> A B C D [vel: ramp(40, 127)]
+S -> A B C D (vel: ramp(40, 127))
 ```
 
 | Runtime    | Comment il résout les CV                               |
@@ -267,24 +267,31 @@ La résolution du CV dépend de **qui a besoin des valeurs intermédiaires** :
 
 Voir la section "CV — choix de design" dans l'architecture pour les détails.
 
-## Les parenthèses `()` — trois rôles, zéro ambiguïté
+## Les parenthèses `()` — quatre rôles, zéro ambiguïté
 
-Les parenthèses ont trois fonctions selon le contexte :
+Les parenthèses ont quatre fonctions selon le contexte :
 
 ```
-// 1. Déclaration — avec un type devant
+// 1. Paramètre runtime — sur un symbole, une règle ou un groupe
+Sa(vel:120)                      // symbole : vel envoyé au runtime quand Sa joue
+(vel:100) C2 C2 - C2             // règle : vel pour toute la phrase
+{A B}(filter:lp, cutoff:4000)    // groupe : filter pour tout le groupe
+
+// 2. Déclaration — avec un type devant
 gate note(pitch, vel:80) { ... }
 
-// 2. Appel — après un symbole dans une expression
+// 3. Appel — après un symbole dans une expression
 note(Sa, vel:120)
 
-// 3. Contexte — condition d'application d'une règle
+// 4. Contexte — condition d'application d'une règle
 (A B) C -> D E           // C se réécrit en D E seulement si précédé de A B
 ```
 
 La règle de désambiguïsation est positionnelle :
+- `symbole(` dans une expression = paramètre runtime ou appel
+- `(` en début de RHS, avant les symboles = paramètre runtime de portée règle
+- `{}(` après un groupe = paramètre runtime de portée groupe
 - `type nom(` = déclaration
-- `symbole(` dans une expression = appel
 - `(` en tête de règle, avant le LHS et `->` = contexte
 
 Le **groupement** n'est pas un rôle de `()`. C'est `{}` qui fait le groupement,
@@ -356,19 +363,29 @@ S -> A B C [weight:5-2]               // poids décroissant (5, puis 4, 3, 2)
 {A B C}[speed:2]                      // vitesse doublée sur le groupe
 ```
 
-Quatre portées pour les métadonnées, deux syntaxes :
+Quatre portées, deux destinataires, deux syntaxes :
 
-| Portée      | Syntaxe          | Destinataire    | Exemple          |
-| ----------- | ---------------- | --------------- | ---------------- |
-| **globale** | `@clé:valeur`    | settings moteur | `@tempo:120`     |
-| **groupe**  | `{}[clé:valeur]` | moteur BP3      | `{A B}[/2]`      |
-| **règle**   | `[clé:valeur]`   | moteur BP3      | `[mode:random]`  |
-| **symbole** | `[clé:valeur]`   | moteur BP3      | `A[/2]`          |
-| **symbole** | `(clé:valeur)`   | runtime cible   | `Sa(vel:120)`    |
+| Portée      | Syntaxe          | Destinataire    | Exemple           |
+| ----------- | ---------------- | --------------- | ----------------- |
+| **globale** | `@clé:valeur`    | settings moteur | `@tempo:120`      |
+| **groupe**  | `{}[clé:valeur]` | moteur BP3      | `{A B}[/2]`       |
+| **règle**   | `[clé:valeur]`   | moteur BP3      | `[mode:random]`   |
+| **symbole** | `[clé:valeur]`   | moteur BP3      | `A[/2]`           |
+| **groupe**  | `{}(clé:valeur)` | runtime cible   | `{A B}(vel:100)`  |
+| **règle**   | `(clé:valeur)`   | runtime cible   | `(vel:100) C2 C2` |
+| **symbole** | `(clé:valeur)`   | runtime cible   | `Sa(vel:120)`     |
 
-`[]` et `()` sur un symbole ont des rôles distincts :
-- `Sa(vel:120)` → paramètre transporté au **runtime** (le runtime interprète)
-- `A[/2]` → instruction pour le **moteur BP3** (le compilateur traduit en `/2 A`)
+`[]` et `()` ont des rôles distincts et des portées symétriques :
+- `[]` → instruction pour le **moteur BP3** (le compilateur traduit en commandes BP3)
+- `()` → paramètre transporté au **runtime cible** (le dispatcher interprète)
+
+Les deux supportent les mêmes portées : symbole, règle, groupe.
+- `A[/2]` → divise la vitesse de A (moteur BP3)
+- `Sa(vel:120)` → envoie vel=120 au runtime quand Sa joue
+- `[mode:random]` → mode de la sous-grammaire (moteur BP3)
+- `(vel:100) C2 C2` → vel=100 pour toute la phrase (runtime)
+- `{A B}[/2]` → divise la vitesse du groupe (moteur BP3)
+- `{A B}(vel:100)` → vel=100 pour tout le groupe (runtime)
 
 ### Clés réservées de `[]`
 
@@ -385,84 +402,122 @@ tempo              tempo local ou global (@tempo:120)
 meter              signature rythmique (@meter:7/8, @meter:4/4)
 ```
 
-Toute autre clé dans `[]` est passée comme métadonnée opaque au runtime.
+Toute clé non réservée dans `[]` est une erreur de compilation. Pour les paramètres
+destinés au runtime (vel, filter, wave...), utiliser `()` à la place.
 
-## Qualificateurs de contrôle — `[vel:80]A` et `A[vel:80]`
+## `[]` moteur vs `()` runtime — deux destinataires, mêmes portées
 
-Les contrôles BP3 (`vel`, `tempo`, `transpose`, `ins`, `chan`, `volume`, etc.) sont
-des commandes **zéro-durée** — ils modifient l'état du séquenceur sans occuper de temps.
-Ils ne peuvent donc **pas** être des éléments autonomes dans le RHS (règle absolue :
-chaque élément séparé par des espaces dans le RHS doit occuper un espace temporel).
+### `[]` — instructions moteur BP3
 
-Les contrôles s'attachent à un élément via `[]`, en **préfixe** ou **suffixe** :
+Les qualificateurs `[]` sont des commandes pour le **moteur BP3**. Le compilateur
+les traduit en instructions BP3 (`_tempo()`, `_scale()`, mode de sous-grammaire, etc.).
+Ils sont résolus **pendant** la dérivation et le calcul temporel — ils n'existent
+plus dans la sortie.
 
 ```
-// Préfixe (recommandé) — le contrôle s'applique AVANT l'élément
-[vel:80]A B C                    // vel change juste avant A
-[ins:3, volumecont, volume:127]A4  // 3 contrôles avant A4
+// Portée symbole — collé à l'élément
+A[/2] B C                       // divise la vitesse de A
+[tempo:2]A B C                  // double le tempo à partir de A
 
-// Suffixe — le contrôle s'applique APRÈS l'élément
-A[vel:80] B C                    // vel change juste après A (avant B)
-A4[volume:0]                     // volume mis à 0 après A4
+// Portée règle — en début de règle, avec espace
+[mode:random] S -> A B C        // mode de la sous-grammaire
+[weight:50] Bass -> C2 C2 C3    // poids de la règle
+
+// Portée groupe — après le groupe
+{A B C}[/2]                     // vitesse du groupe divisée
 ```
 
-### Analogie `++i` / `i++` (C)
+**Préfixe vs suffixe** (analogue `++i` / `i++` en C) :
+- `[tempo:2]A` → l'effet précède l'élément (tempo change, puis A joue)
+- `A[tempo:2]` → l'élément précède l'effet (A joue, puis tempo change)
 
-La distinction préfixe/suffixe est analogue au pré/post-incrément en C :
-- `[vel:80]A` = `++i` → l'effet précède l'évaluation (vel change, puis A joue)
-- `A[vel:80]` = `i++` → l'évaluation précède l'effet (A joue, puis vel change)
+### Clés réservées de `[]`
 
-### Compilation vers BP3
+```
+/N   \N   *N   **N    opérateurs temporels BP3 (voir § Opérateurs temporels)
+mode               mode du bloc (random, ord, sub1, lin, tem, poslong)
+scan               sens du parcours par règle (left, right, rnd) — défaut : rnd
+weight             poids de la règle pour la sélection
+on_fail            gestion d'échec (skip, retry(N), fallback(X))
+tempo              tempo local ou global (@tempo:120)
+meter              signature rythmique (@meter:7/8, @meter:4/4)
+scale              gamme microtonale
+```
+
+### Compilation de `[]` vers BP3
 
 ```
 // BPscript                              → BP3
-[vel:80]A B C                            → _vel(80) A B C
-A[vel:80] B C                            → A _vel(80) B C
-[ins:3, volumecont, volume:127]A4        → _ins(3) _volumecont _volume(127) A4
-A4[volume:0]                             → A4 _volume(0)
+[tempo:2]A B C                           → _tempo(2) A B C
+A[/2] B C                                → /2 A B C
+[scale: just_intonation C4]D             → _scale(just intonation,C4) D
+[mode:random] S -> A B C                 → RND  gram#N[M] S --> A B C
 ```
 
-### Collé vs espacé
+### `()` — paramètres runtime
 
-La distinction est syntaxique :
-- `[vel:80]A` (collé) → qualificateur **d'élément** (contrôle sur A)
-- `[mode:random] A` (espace) → qualificateur **de règle** (mode de la sous-grammaire)
+Les paramètres `()` sont des données transportées vers le **runtime cible** (Web Audio,
+SuperCollider, MIDI externe, OSC, DMX...). BPscript ne les interprète pas — il les
+transmet. C'est le dispatcher JS qui les route.
 
-Le parser distingue par la clé : si c'est un nom de contrôle connu
-(défini dans `lib/controls.json`), c'est un qualificateur d'élément.
-Sinon (`mode`, `weight`, `scan`, `on_fail`, etc.), c'est un qualificateur de règle.
+```
+// Portée symbole — collé à l'élément
+Sa(vel:120)                      // vel envoyé au runtime quand Sa joue
+C2(wave:sawtooth, filterQ:8)     // paramètres de synthèse
+
+// Portée règle — en début de RHS
+Bass -> (vel:100) C2 C2 - C2     // vel pour toute la phrase
+Bass -> (vel:100) C2 C2 (vel:70) C2 C2  // vel change en cours de phrase
+
+// Portée groupe — après le groupe
+{A B C}(filter:lp, cutoff:4000)  // filtre sur tout le groupe
+```
+
+### Compilation de `()` vers BP3
+
+Les `()` runtime sont compilés en `_script(CTn)` — des contrôles opaques que BP3
+transmet sans interpréter. Le transpileur maintient une table de mapping :
+
+```
+// BPscript                              → BP3
+Sa(vel:120)                              → _script(CT0) Sa
+(vel:100) C2 C2 - C2                     → _script(CT1) C2 C2 - C2
+{A B}(filter:lp)                         → {_script(CT2_start) A B _script(CT2_end)}
+
+// Table de mapping (côté JS) :
+// CT0 → { scope: 'symbol', params: { vel: 120 } }
+// CT1 → { scope: 'rule', params: { vel: 100 } }
+// CT2_start/end → { scope: 'group', params: { filter: 'lp' } }
+```
+
+Le dispatcher combine les timestamps des timed tokens avec la table de mapping
+pour savoir quand appliquer chaque paramètre et combien de temps il dure.
 
 ### Valeur brute (modèle CSS)
 
-Tout ce qui suit le `:` jusqu'au prochain `,` ou `]` est la valeur brute.
-Le contrôle l'interprète — BPscript ne parse pas. Les espaces séparent les
-arguments et sont convertis en `,` pour BP3 (sauf `script` qui les préserve).
+Pour `[]` et `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou délimiteur
+est la valeur brute. Le destinataire (moteur ou runtime) l'interprète — BPscript
+ne parse pas.
 
 ```
-[vel: 80]A                       // 1 arg → _vel(80) A
-[keyxpand: B3 -1]C3             // 2 args → _keyxpand(B3,-1) C3
-[scale: just_intonation C4]D    // underscore → espace → _scale(just intonation,C4) D
-[value: slide 0]H               // 2 args → _value(slide,0) H
-[script: MIDI send Continue]A   // espaces préservés → _script(MIDI send Continue) A
-[volumecont]A4                   // flag nu → _volumecont A4
-[transpose: -7]X Y              // valeur négative → _transpose(-7) X Y
+Sa(vel:120)                      // runtime reçoit vel=120
+[tempo:2]A                       // moteur reçoit tempo=2
+C2(wave:sawtooth, filterQ:8)     // runtime reçoit 2 paramètres
 ```
-
-Pas de cas spécial pour 1 vs N arguments — c'est la même syntaxe.
-`[vel: 80]` et `[keyxpand: B3 -1]` suivent la même règle.
 
 ### Exception — contrôles autonomes (résolution pure)
 
-Quand un non-terminal se résout **entièrement** en contrôles (pas d'élément temporel),
-les contrôles peuvent apparaître comme éléments RHS autonomes :
+Quand un non-terminal se résout **entièrement** en contrôles runtime
+(pas d'élément temporel), les contrôles peuvent apparaître comme éléments
+RHS autonomes :
 
 ```
-Pull0 -> pitchbend(0)                               // → _pitchbend(0)
-StartPull -> pitchcont pitchrange(500) pitchbend(0)  // → _pitchcont _pitchrange(500) _pitchbend(0)
+Pull0 -> (pitchbend:0)                                    // → _script(CTn)
+StartPull -> (pitchcont) (pitchrange:500) (pitchbend:0)    // → _script(CT0) _script(CT1) _script(CT2)
 ```
 
-C'est le seul cas où des éléments zéro-durée sont tolérés dans le RHS sans `[]`.
-Ce pattern existe dans les grammaires à couches (vina, vina2, vina3).
+C'est le seul cas où des éléments zéro-durée sont tolérés dans le RHS sans être
+attachés à un symbole. Ce pattern existe dans les grammaires à couches (vina, vina2, vina3).
 
 ## Backticks — code natif dans le flux
 
@@ -785,25 +840,26 @@ Les espaces autour de `,` et `.` sont optionnels (le tokenizer les ignore).
 Les flags sont des variables entières globales qui conditionnent l'application
 des règles et permettent de modifier l'état pendant la dérivation.
 
-### `when` — garde conditionnelle (test ou test+mutation)
+### `[guard]` — garde conditionnelle (test ou test+mutation)
 
-`when` a deux formes, fidèles à la sémantique de BP3 :
+Les gardes utilisent `[]` — la même syntaxe que les qualificateurs. Deux formes,
+fidèles à la sémantique de BP3 :
 
 **Test pur** (opérateur de comparaison) :
 ```
-when phase==1 S -> Sa Re Ga Pa       // active si phase vaut 1
-when count>3  A -> B C               // active si count > 3
-when tension!=0 A -> B C             // active si tension ≠ 0
+[phase==1] S -> Sa Re Ga Pa       // active si phase vaut 1
+[count>3]  A -> B C               // active si count > 3
+[tension!=0] A -> B C             // active si tension ≠ 0
 ```
 
 **Test + mutation** (opérateur arithmétique) :
 ```
-when Ideas-1 I -> R1 A R2           // décrémente Ideas, active si > 0 après
-when Notes-4 A -> P4                // décrémente Notes de 4, active si > 0
-when NumR+1 I -> I                  // incrémente NumR (toujours > 0 → toujours actif)
+[Ideas-1] I -> R1 A R2           // décrémente Ideas, active si > 0 après
+[Notes-4] A -> P4                // décrémente Notes de 4, active si > 0
+[NumR+1] I -> I                  // incrémente NumR (toujours > 0 → toujours actif)
 ```
 
-La forme `when flag-N` est **atomique** : elle décrémente ET teste au moment
+La forme `[flag-N]` est **atomique** : elle décrémente ET teste au moment
 de la **sélection** de la règle — pas à la production. C'est la sémantique
 exacte de BP3 (`/flag-N/` en position gauche). Le compilateur traduit
 directement en `/flag-N/` pour BP3.
@@ -811,7 +867,7 @@ directement en `/flag-N/` pour BP3.
 Opérateurs de test : `==`, `!=`, `>`, `<`, `>=`, `<=`
 Opérateurs de test+mutation : `+` (incrémente et teste > 0), `-` (décrémente et teste > 0)
 
-`when` est déclaratif : la règle **existe** quand la condition est vraie.
+La garde est déclarative : la règle **existe** quand la condition est vraie.
 Ce n'est pas du branchement (if/else) — c'est une garde, comme dans les
 L-systems paramétriques ou les clauses Erlang.
 
@@ -821,10 +877,10 @@ La mutation de flag utilise `[]` — cohérent avec les qualificateurs et
 les opérateurs temporels. `[]` = instructions moteur BP3, `!` = temporel.
 
 ```
-when phase==1 S -> Sa Re Ga [phase=2] Pa     // joue Ga, puis passe phase à 2
+[phase==1] S -> Sa Re Ga [phase=2] Pa     // joue Ga, puis passe phase à 2
 S -> A B [count+1] C                          // incrémente count après B
 S -> A [tension-1] B                          // décrémente tension après A
-when phase==2 S -> Ga [phase=1] Re Sa        // joue Ga, reset phase à 1
+[phase==2] S -> Ga [phase=1] Re Sa        // joue Ga, reset phase à 1
 ```
 
 Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter)
@@ -836,7 +892,7 @@ La distinction est syntaxique — pas d'ambiguïté :
 
 Les flags peuvent aussi référencer d'autres flags :
 - `[flag1=flag2]` → copier la valeur d'un autre flag
-- `when flag1==flag2` → comparer deux flags
+- `[flag1==flag2]` → comparer deux flags (guard)
 
 ### Exemple : raga en 3 phases
 
@@ -845,9 +901,9 @@ Les flags peuvent aussi référencer d'autres flags :
 @tempo:60
 
 // Gardes : chaque phase a ses propres règles
-when phase==1 S -> alap S
-when phase==2 S -> jor S
-when phase==3 S -> jhala
+[phase==1] S -> alap S
+[phase==2] S -> jor S
+[phase==3] S -> jhala
 
 // L'ālāp explore lentement, puis bascule
 alap -> Sa _ Re _ Ga _ [phase=2]
@@ -862,9 +918,9 @@ jhala -> {Sa Re Ga Pa Dha Ni Sa}[speed:4]
 ### Exemple : compteur cyclique
 
 ```
-when count==0 A -> Sa Re [count+1]
-when count==1 A -> Ga Pa [count+1]
-when count==2 A -> Dha Ni [count=0]    // reset → boucle
+[count==0] A -> Sa Re [count+1]
+[count==1] A -> Ga Pa [count+1]
+[count==2] A -> Dha Ni [count=0]    // reset → boucle
 
 // 3 dérivations de A donnent 3 résultats différents, puis ça recommence
 ```
@@ -874,7 +930,7 @@ on écrit des règles qui ne s'activent que dans certains états, et on fait
 évoluer ces états pendant la dérivation. C'est plus puissant que du hasard pur
 (`[mode:random]`) — ça permet de construire des **parcours compositionnels**.
 
-Le compilateur traduit `when X==N` → `/X=N/` (condition BP3) et `[X=N]` → `/X=N/` (assignation BP3).
+Le compilateur traduit `[X==N]` → `/X=N/` (condition BP3) et `[X=N]` → `/X=N/` (assignation BP3).
 
 ## Liaisons `~` — deux usages distincts
 
@@ -1642,8 +1698,8 @@ Les backticks connectent les deux dans un seul fichier.
 `py: import dmx; d = dmx.open()`
 
 // Structure temporelle — BP3 orchestre tout
-when phase==1 S -> { intro, rythme }
-when phase==2 S -> { melodie, rythme, lumieres }
+[phase==1] S -> { intro, rythme }
+[phase==2] S -> { melodie, rythme, lumieres }
 
 // SC reçoit les gates et les synthés
 melodie -> Sa _ Re `sc: Synth(\grain, [freq:880, dens:100])` _ _ Ga Pa
@@ -2035,13 +2091,13 @@ Encoder
   │  3. Traduit $/& → (=X)/(:X) (templates BP3)
   │  4. Traduit #() → contextes négatifs BP3
   │  5. Traduit |x| → variables d'homomorphisme BP3
-  │  6. Traduit when X==N → /X=N/ (condition BP3)
+  │  6. Traduit [X==N] → /X=N/ (condition BP3)
   │  7. Traduit [X=N] → /X=N/ (assignation BP3)
   │  8. Traduit ~ → & (notes liées BP3)
   │  9. Passe - (silence) et . (period) tels quels vers BP3
   │  10. Traduit [on_fail:...] → _goto/_failed
   │  11. Traduit [speed:N] → /N, *N, etc.
-  │  12. Traduit [vel:80]A → _vel(80) A, A[vel:80] → A _vel(80) (contrôles)
+  │  12. Traduit (vel:80)A → _script(CTn) A, portées règle/groupe → paires start/end
   │
   ▼
 Grammaire BP3 + alphabet + settings
@@ -2173,7 +2229,7 @@ cette syntaxe — les terminaux sont toujours des identifiants (`letter { letter
 
 Raisons :
 - Les nombres nus dans le flux BPscript sont des **durées numériques**, pas des terminaux
-- Les mots réservés de BPscript (`gate`, `trigger`, `cv`, `when`, `lambda`) sont peu nombreux et rarement en conflit
+- Les mots réservés de BPscript (`gate`, `trigger`, `cv`, `lambda`) sont peu nombreux et rarement en conflit
 - Les quoted symbols ajoutent de la complexité syntaxique pour un usage rare
 
 Les grammaires BP3 qui utilisent des quoted symbols sont **renommées** dans la
