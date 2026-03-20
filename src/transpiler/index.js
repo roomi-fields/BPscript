@@ -28,6 +28,7 @@ function compileBPS(source) {
     result.settingsJSON = encoded.settingsJSON;
     result.controlTable = encoded.controlTable;
     result.cvTable = encoded.cvTable;
+    result.prototypesFile = encoded.prototypesFile;
     result.directives = ast.directives;
 
   } catch (err) {

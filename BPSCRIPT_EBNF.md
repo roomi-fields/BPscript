@@ -615,8 +615,8 @@ lambda   → chaîne vide (efface le non-terminal)
 | `<!sync1` | `<<W1>>` | sync tag |
 | `[scale: just_intonation C4]A` | `_scale(just intonation,C4) A` | valeur brute (espaces→virgules, `_`→espace) |
 | `[keyxpand: B3 -1]C3` | `_keyxpand(B3,-1) C3` | valeur brute multi-args |
-| `[script: MIDI send Continue]A` | `_script(MIDI send Continue) A` | espaces préservés (script) |
-| `[value: slide 0]H` | `_value(slide,0) H` | valeur brute 2 args |
+| `A(script: MIDI send Continue)` | `A _script(MIDI send Continue)` | espaces préservés (script) |
+| `H(value: slide 0)` | `H _value(slide,0)` | valeur brute 2 args |
 | `X ->` (RHS vide) | `X -->` | production epsilon (sans lambda) |
 | `(transpose:-3) A` | `_script(CT0) A` | runtime valeur négative |
 | `[Ideas]` (guard) | `/Ideas/` | bare flag guard (test non-zéro) |

@@ -36,6 +36,7 @@ export class Dispatcher {
       wave: 'triangle', attack: 20, release: 100,
       detune: 0, filter: 0, filterQ: 1,
     };
+    this._controlStack = []; // for scoped () controls with start/end pairs
 
     // CV state
     this._cvTable = {};    // CV0 → { name, target, transport, lib, objectType, args, code }
@@ -55,9 +56,13 @@ export class Dispatcher {
    */
   setControlTable(controlTable) {
     this._controlTable = {};
+    this._controlScopes = {};
     if (controlTable) {
       for (const entry of controlTable) {
         this._controlTable[entry.id] = entry.assignments;
+        if (entry.scope) {
+          this._controlScopes[entry.id] = { scope: entry.scope, restores: entry.restores };
+        }
       }
     }
   }
@@ -203,8 +208,10 @@ export class Dispatcher {
           || Object.values(this.transports)[0];
 
         if (transport) {
+          // Strip 'bol' prefix added by encoder for BP3 compatibility
+          const token = evt.token.startsWith('bol') ? evt.token.slice(3) : evt.token;
           transport.send({
-            token: evt.token,
+            token,
             startSec: this._loopOffset + evt.startSec,
             durSec: evt.durSec,
             ...this.controlState,
@@ -273,6 +280,21 @@ export class Dispatcher {
 
     // _script(CTN) → look up control table
     if (name === 'script' && value.startsWith('CT') && this._controlTable) {
+      const scopeInfo = this._controlScopes?.[value];
+
+      // Scoped end: restore previous state
+      if (scopeInfo?.scope === 'end') {
+        if (this._controlStack.length > 0) {
+          this.controlState = this._controlStack.pop();
+        }
+        return;
+      }
+
+      // Scoped start: push current state before applying
+      if (scopeInfo?.scope === 'start') {
+        this._controlStack.push({ ...this.controlState });
+      }
+
       const assignments = this._controlTable[value];
       if (assignments) {
         for (const [key, val] of Object.entries(assignments)) {

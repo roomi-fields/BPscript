@@ -383,16 +383,16 @@ function parse(tokens) {
   }
 
   function isRuleStart() {
-    // A rule starts with: [guard] | when (legacy) | IDENT | # | ( | ? | | | { | } | , | - | $
+    // A rule starts with: [guard] | IDENT | # | ( | ? | | | { | } | , | - | $
     const t = current().type;
-    return t === T.WHEN || t === T.IDENT || t === T.HASH ||
+    return t === T.IDENT || t === T.HASH ||
            t === T.LPAREN || t === T.QUESTION || t === T.PIPE ||
            t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA ||
            t === T.REST || t === T.DOLLAR || t === T.RPAREN ||
            (t === T.LBRACKET && isGuardBracket());
   }
 
-  // Lookahead to distinguish guard [count-1] from qualifier [vel:80]
+  // Lookahead to distinguish guard [count-1] from engine qualifier [speed:2]
   // Guard: [IDENT op value] where op is -/+/==/!=/>/</>=/<=
   // Qualifier: [key:value, ...] — has a colon
   function isGuardBracket() {
@@ -416,9 +416,9 @@ function parse(tokens) {
     let guard = null;
     const contexts = [];
 
-    // Guards: [flag-1] or when flag-1 (legacy) — multiple allowed, AND'd
+    // Guards: [flag-1] — multiple allowed, AND'd
     const guards = [];
-    while (at(T.WHEN) || (at(T.LBRACKET) && isGuardBracket())) {
+    while (at(T.LBRACKET) && isGuardBracket()) {
       guards.push(parseGuard());
     }
     guard = guards.length > 0 ? guards : null;
@@ -441,6 +441,12 @@ function parse(tokens) {
     // RHS
     const rhs = parseRhsElements();
 
+    // Runtime qualifier suffix on rule: S -> C2 C2 (vel:100)
+    let runtimeQualifier = null;
+    if (isRuntimeQualifier()) {
+      runtimeQualifier = parseRuntimeQualifier();
+    }
+
     // Qualifiers and RHS flags — both use []
     const qualifiers = [];
     const flags = [];
@@ -452,7 +458,7 @@ function parse(tokens) {
       }
     }
 
-    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, line: tok.line };
+    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, runtimeQualifier, line: tok.line };
   }
 
   // ============================================================
@@ -508,14 +514,8 @@ function parse(tokens) {
   // ============================================================
 
   function parseGuard() {
-    // Two syntaxes: [flag-1] (new) or when flag-1 (legacy)
-    let bracketed = false;
-    if (at(T.LBRACKET)) {
-      advance(); // consume [
-      bracketed = true;
-    } else {
-      expect(T.WHEN); // legacy
-    }
+    // Guard syntax: [flag-1], [phase==1], [Ideas]
+    advance(); // consume [
 
     const flag = expect(T.IDENT).value;
 
@@ -540,9 +540,9 @@ function parse(tokens) {
       else if (at(T.GTE)) { op = '>='; advance(); }
       else if (at(T.LTE)) { op = '<='; advance(); }
       else {
-        // Bare flag test: [Ideas] or when Ideas → non-zero test
+        // Bare flag test: [Ideas] → non-zero test
         result = { type: 'Guard', flag, operator: null, value: null, mutates: false };
-        if (bracketed) expect(T.RBRACKET);
+        expect(T.RBRACKET);
         return result;
       }
 
@@ -554,7 +554,7 @@ function parse(tokens) {
       result = { type: 'Guard', flag, operator: op, value, mutates: false };
     }
 
-    if (bracketed) expect(T.RBRACKET);
+    expect(T.RBRACKET);
     return result;
   }
 
@@ -669,9 +669,11 @@ function parse(tokens) {
   function parseRhsElements() {
     const elements = [];
     let safety = 0;
-    while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT, T.WHEN, T.GATE, T.TRIGGER, T.CV)) {
+    while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT, T.GATE, T.TRIGGER, T.CV)) {
       // Stop at [ unless it's a tempo operator or per-element control qualifier
       if (at(T.LBRACKET) && !isTempoOpQualifier() && !isPerElementQualifier()) break;
+      // Stop at ( if it's a rule-scope runtime qualifier at end of RHS
+      if (isRuntimeQualifier() && isEndOfRhs()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
       // But stop if } or , starts a new rule (followed by ->)
@@ -700,8 +702,7 @@ function parse(tokens) {
         continue;
       }
 
-      // PREFIX control qualifier: [vel:60]A (collé, no space before next element)
-      // Collected and attached to the NEXT element
+      // PREFIX engine qualifier: [tempo:2]A (engine [] only, no () prefix)
       let prefixQuals = null;
       if (at(T.LBRACKET) && isPerElementQualifier()) {
         prefixQuals = parseQualifier();
@@ -713,7 +714,7 @@ function parse(tokens) {
         break;
       }
 
-      // Attach prefix qualifiers (from [vel:60]A)
+      // Attach prefix qualifiers (from engine [tempo:2]A)
       if (prefixQuals) {
         el.controlQualifiers = el.controlQualifiers || [];
         el.controlQualifiers.unshift(prefixQuals);
@@ -726,10 +727,14 @@ function parse(tokens) {
         el.tempoOp = qual.tempoOp;
       }
 
-      // SUFFIX control qualifier: A[vel:60] (collé, applies AFTER element)
+      // SUFFIX qualifier: A[speed:2] (engine) or A(vel:60) (runtime)
+      // But NOT if () is at end of RHS — that's a rule-scope qualifier
       if (at(T.LBRACKET) && isPerElementQualifier()) {
         el.controlQualifiers = el.controlQualifiers || [];
         el.controlQualifiers.push(parseQualifier());
+      } else if (isRuntimeQualifier() && !isEndOfRhs()) {
+        el.controlQualifiers = el.controlQualifiers || [];
+        el.controlQualifiers.push(parseRuntimeQualifier());
       }
 
       elements.push(el);
@@ -764,9 +769,66 @@ function parse(tokens) {
     return j < tokens.length && tokens[j].type === T.RBRACKET; // ] immediately after number = pure
   }
 
+  function isEndOfRhs() {
+    // Check if after the () there's nothing more in this RHS
+    // (next non-whitespace is NEWLINE, [, EOF, SEPARATOR, or RBRACE)
+    // Scan past the () to see what follows
+    let j = pos;
+    if (tokens[j]?.type !== T.LPAREN) return false;
+    let depth = 1;
+    j++;
+    while (j < tokens.length && depth > 0) {
+      if (tokens[j].type === T.LPAREN) depth++;
+      else if (tokens[j].type === T.RPAREN) depth--;
+      j++;
+    }
+    // After ), what's next?
+    while (j < tokens.length && tokens[j].type === T.NEWLINE) j++;
+    const nextType = tokens[j]?.type;
+    return !nextType || nextType === T.EOF || nextType === T.SEPARATOR ||
+           nextType === T.LBRACKET || nextType === T.NEWLINE;
+  }
+
+  function isRuntimeQualifier() {
+    // (IDENT:...) where IDENT is a known control name = runtime qualifier
+    if (!at(T.LPAREN)) return false;
+    const nextTok = peek(1);
+    if (nextTok.type !== T.IDENT) return false;
+    // Must be followed by : to distinguish from context (A B) or other uses
+    const afterName = peek(2);
+    if (afterName.type !== T.COLON) return false;
+    return libCtx.controlNames.has(nextTok.value);
+  }
+
+  function parseRuntimeQualifier() {
+    // (vel:80, wave:sawtooth) → runtime qualifier AST
+    expect(T.LPAREN);
+    const pairs = [];
+    while (!at(T.RPAREN) && !atEnd()) {
+      const key = expect(T.IDENT).value;
+      expect(T.COLON);
+      // Raw value: everything until , or )
+      let val;
+      if (at(T.REST)) { // negative number
+        advance();
+        val = -Number(expect(T.INT).value);
+      } else if (at(T.INT)) {
+        val = Number(advance().value);
+      } else if (at(T.FLOAT)) {
+        val = Number(advance().value);
+      } else {
+        val = advance().value;
+      }
+      pairs.push({ key, value: val });
+      if (at(T.COMMA)) advance();
+    }
+    expect(T.RPAREN);
+    return { type: 'Qualifier', pairs, position: 'element' };
+  }
+
   function isPerElementQualifier() {
     // [IDENT:...] where IDENT is a known control name = per-element qualifier
-    // Used for both prefix [vel:60]A and suffix A[vel:60]
+    // Used for engine qualifier [speed:2]A or A[weight:50]
     if (!at(T.LBRACKET)) return false;
     const nextTok = peek(1);
     if (nextTok.type !== T.IDENT) return false;
@@ -915,7 +977,19 @@ function parse(tokens) {
         return { type: 'Control', name, args: [] };
       }
 
-      // Symbol call: Sa(vel:120)
+      // Runtime qualifier suffix: D4(vel:70) — check before symbol call
+      // But NOT if () is at end of RHS (that's a rule-scope qualifier)
+      if (isRuntimeQualifier()) {
+        if (isEndOfRhs()) {
+          // Leave () for parseRule — return bare symbol
+          return { type: 'Symbol', name, line: tok.line };
+        }
+        const el = { type: 'Symbol', name, line: tok.line };
+        el.controlQualifiers = [parseRuntimeQualifier()];
+        return el;
+      }
+
+      // Symbol call: Sa(custom_param:120) — only if NOT a known runtime control
       if (at(T.LPAREN) && !isContextLookahead()) {
         return parseSymbolCall(name, tok);
       }
@@ -1080,7 +1154,7 @@ function parse(tokens) {
 
   function hasMatchingBrace() {
     // Lookahead: is there a } that matches this { within the SAME rule?
-    // A new rule starts after NEWLINE(s) when we see: IDENT ARROW or WHEN
+    // A new rule starts after NEWLINE(s) when we see: IDENT ARROW
     let depth = 0;
     let j = pos;
     let afterNewline = false;
@@ -1092,8 +1166,8 @@ function parse(tokens) {
       // After a newline, check if next non-newline token starts a new rule
       if (t === T.NEWLINE) { afterNewline = true; j++; continue; }
       if (afterNewline) {
-        // New rule starts with: IDENT/WHEN/LAMBDA at line start (outside braces)
-        if (t === T.WHEN || t === T.LAMBDA) return false;
+        // New rule starts with: IDENT/LAMBDA at line start (outside braces)
+        if (t === T.LAMBDA) return false;
         if (t === T.IDENT) {
           // Look ahead for arrow
           let k = j + 1;
@@ -1124,7 +1198,7 @@ function parse(tokens) {
       if (at(T.NEWLINE)) { advance(); continue; }
       // Stop at [ inside polymetric if it's NOT a per-element qualifier or tempo op
       if (at(T.LBRACKET) && !isPerElementQualifier() && !isTempoOpQualifier()) break;
-      // PREFIX control qualifier inside polymetric: [vel:60]A
+      // PREFIX engine qualifier inside polymetric: [tempo:2]A
       let prefixQuals = null;
       if (at(T.LBRACKET) && isPerElementQualifier()) {
         prefixQuals = parseQualifier();
@@ -1142,23 +1216,32 @@ function parse(tokens) {
         const qual = parseQualifier();
         el.tempoOp = qual.tempoOp;
       }
-      // SUFFIX control qualifier inside polymetric: A[vel:60]
+      // SUFFIX qualifier in polymetric: A[speed:2] or A(vel:60)
       if (at(T.LBRACKET) && isPerElementQualifier()) {
         el.controlQualifiers = el.controlQualifiers || [];
         el.controlQualifiers.push(parseQualifier());
+      } else if (isRuntimeQualifier()) {
+        el.controlQualifiers = el.controlQualifiers || [];
+        el.controlQualifiers.push(parseRuntimeQualifier());
       }
       currentVoice.push(el);
     }
     if (currentVoice.length > 0) voices.push(currentVoice);
     expect(T.RBRACE);
 
-    // Qualifiers after } — only take polymetric-specific ones (speed, scale)
+    // Qualifiers after } — engine [] and runtime ()
     const qualifiers = [];
     while (at(T.LBRACKET) && isPolymetricQualifier()) {
       qualifiers.push(parseQualifier());
     }
 
-    return { type: 'Polymetric', voices, qualifiers };
+    // Runtime qualifier on group: {}(vel:100)
+    let runtimeQualifier = null;
+    if (isRuntimeQualifier()) {
+      runtimeQualifier = parseRuntimeQualifier();
+    }
+
+    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier };
   }
 
   function isPolymetricQualifier() {

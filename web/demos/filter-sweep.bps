@@ -1,5 +1,5 @@
 // Filter Sweep — filtre passe-bas progressif
-// Démo : [filter:N] = fréquence de coupure, [filterQ:N] = résonance
+// Démo : (filter:N) = fréquence de coupure, (filterQ:N) = résonance
 // Commence sombre (filtre bas) et s'ouvre progressivement
 
 @core
@@ -8,7 +8,7 @@
 
 S -> Dark Medium Bright Open
 
-Dark -> [wave:sawtooth, filter:300, filterQ:5, vel:90] C3 E3 G3 C4
-Medium -> [filter:800] C3 E3 G3 C4
-Bright -> [filter:2000] C3 E3 G3 C4
-Open -> [filter:8000, filterQ:1] C3 E3 G3 C4 _ _
+Dark -> C3 E3 G3 C4 (wave:sawtooth, filter:300, filterQ:5, vel:90)
+Medium -> C3 E3 G3 C4 (filter:800)
+Bright -> C3 E3 G3 C4 (filter:2000)
+Open -> C3 E3 G3 C4 _ _ (filter:8000, filterQ:1)

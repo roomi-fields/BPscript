@@ -12,7 +12,7 @@
 // --- Sous-grammaire 1 @mode:random — structure ---
 
 @mode:random
-S -> [ins: Vina, scale: just_intonation 0, volume: 40]{Taalam4 Taalam4,Pallavi Pallavi} [volumecont, volume: 64]Taalam [volume: 0]-
+S -> [scale: just_intonation 0] {Taalam4 Taalam4,Pallavi Pallavi}(volumecont, volume: 64) Taalam(volume: 0) - (ins: Vina, volume: 40)
 
 Pallavi -> {Maa Yaa Tii . Ta {Sva Ruu Pi}[speed:2] . {Ni}[speed:2] {Nan Nu}[speed:1] . Bro {Va Ve}[speed:2]}
 

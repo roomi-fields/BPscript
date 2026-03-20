@@ -1,7 +1,7 @@
 // Tutorial 6 — Velocity (dynamics)
 //
-// [vel:N] sets the volume/intensity (0-127).
-// It applies to all notes that follow until the next [vel].
+// (vel:N) sets the volume/intensity (0-127).
+// As a rule suffix, it wraps the whole rule (start/end pair).
 //
 // Try: change the values and listen to the difference.
 
@@ -11,5 +11,5 @@
 
 S -> Soft Loud Soft
 
-Soft -> [vel:40]C4 E4 G4 E4
-Loud -> [vel:110]F4 A4 C5 A4
+Soft -> C4 E4 G4 E4 (vel:40)
+Loud -> F4 A4 C5 A4 (vel:110)

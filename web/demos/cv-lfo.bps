@@ -10,13 +10,13 @@
 
 sweep(Arp, browser) = filter.lfo(0.4, 0.9, shape:sine)
 
-S -> {[vel:60, wave:triangle] G2 _ _ _ G2 _ _ _, Arp Arp, sweep}
+S -> {G2 _ _ _ G2 _ _ _ (vel:60, wave:triangle), Arp Arp, sweep}
 
 -----
 
 @mode:random
 
-Arp -> [wave:sine, vel:75, attack:5, release:200] G4 B4 D5 G5 [weight:40]
-Arp -> [wave:sine, vel:75, attack:5, release:200] D4 G4 B4 D5
-Arp -> [wave:sine, vel:75, attack:5, release:200] B3 D4 G4 B4 [weight:30]
-Arp -> [wave:sine, vel:75, attack:5, release:200] G4 D5 B4 G5
+Arp -> G4 B4 D5 G5 (wave:sine, vel:75, attack:5, release:200) [weight:40]
+Arp -> D4 G4 B4 D5 (wave:sine, vel:75, attack:5, release:200)
+Arp -> B3 D4 G4 B4 (wave:sine, vel:75, attack:5, release:200) [weight:30]
+Arp -> G4 D5 B4 G5 (wave:sine, vel:75, attack:5, release:200)

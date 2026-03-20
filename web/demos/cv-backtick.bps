@@ -14,6 +14,6 @@ S -> {Bass Bass, wobble wobble}
 
 @mode:random
 
-Bass -> [wave:sawtooth, vel:110, filterQ:6] C2 _ _ C2 _ _ C2 _ [weight:50]
-Bass -> [wave:sawtooth, vel:110, filterQ:6] C2 _ Eb2 _ C2 _ _ -
-Bass -> [wave:sawtooth, vel:110, filterQ:6] C2 _ _ _ _ _ _ - [weight:30]
+Bass -> C2 _ _ C2 _ _ C2 _ (wave:sawtooth, vel:110, filterQ:6) [weight:50]
+Bass -> C2 _ Eb2 _ C2 _ _ - (wave:sawtooth, vel:110, filterQ:6)
+Bass -> C2 _ _ _ _ _ _ - (wave:sawtooth, vel:110, filterQ:6) [weight:30]

@@ -4,6 +4,6 @@
 @controls
 @alphabet.western:browser
 
-S -> {[vel:90]Motif Motif, - - [vel:70]Motif Motif}
+S -> {Motif Motif (vel:90), - - Motif Motif (vel:70)}
 
 Motif -> C4 E4 G4 E4 F4 D4 C4 -

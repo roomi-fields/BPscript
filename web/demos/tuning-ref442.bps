@@ -7,4 +7,4 @@
 @tuning:442
 @mm:90
 
-S -> [wave:sine, vel:85] A4 _ E4 A4 _ E5 A5 _ _ _
+S -> A4 _ E4 A4 _ E5 A5 _ _ _ (wave:sine, vel:85)

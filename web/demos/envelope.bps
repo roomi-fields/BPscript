@@ -1,5 +1,5 @@
 // Envelope — attaque et relâchement
-// Démo : [attack:N] et [release:N] en millisecondes
+// Démo : (attack:N) et (release:N) en millisecondes
 // Courte attaque = percussif, longue attaque = pad
 
 @core
@@ -10,7 +10,7 @@
 S -> Perc Pad Perc Pad
 
 // Percussif : attaque rapide, release court
-Perc -> [attack:5, release:50, wave:square, vel:100] C4 E4 G4 C5
+Perc -> C4 E4 G4 C5 (attack:5, release:50, wave:square, vel:100)
 
 // Pad : attaque lente, release long
-Pad -> [attack:500, release:800, wave:sine, vel:70] C4 E4 G4 C5
+Pad -> C4 E4 G4 C5 (attack:500, release:800, wave:sine, vel:70)

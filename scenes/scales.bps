@@ -25,7 +25,7 @@ S -> C4 G4 A4 [scale: just_intonation A4]C4 G4 A4 [scale: piano A4]C4 G4 A4 [wei
 
 S -> C4 E4 A4 {C4,E4,G4,C5}[speed:8] {C4,Eb4,G4,C5}[speed:8] - [scale: piano C4]C4 E4 A4 {C4,E4,G4,C5}[speed:8] {C4,Eb4,G4,C5}[speed:8] - [scale: just_intonation C4]C4 E4 A4 {C4,E4,G4,C5}[speed:8] {C4,Eb4,G4,C5}[speed:8] [weight:1]
 
-S -> Version3 [weight:0, tempo:2, legato:20]
+S -> Version3 (legato:20) [weight:0, tempo:2]
 Version1 -> [scale: just_intonation A4]Phrase - - [scale: 0 A4]Phrase
 Version2 -> Phrase - - [scale: piano A4]Phrase
 Version3 -> [scale: meantone1 A4]Phrase - - [scale: just_intonation A4]Phrase
@@ -36,7 +36,7 @@ Phrase -> {Cmajor} {Aminor} {Fmajor} {Gseventh} {Cmajor}
 Cmajor -> {C4 _ _ _,- E4 _ _,- - G4 _,- - - C5} {E4 _ _ _,- G4 _ _,- - C5 _}
 Cminor -> {C4 _ _ _,- Eb4 _ _,- - G4 _,- - - C5} {Eb4 _ _ _,- G4 _ _,- - C5 _}
 Cseventh -> {C4 _ _ _,- E4 _ _,- - Bb4 _,- - - C5} {E4 _ _ _,- Bb4 _ _,- - C5 _}
-Aminor -> Cminor [transpose:-3]
-Fmajor -> Cmajor [transpose:-7]
-Gmajor -> Cmajor [transpose:-5]
-Gseventh -> Cseventh [transpose:-5]
+Aminor -> Cminor (transpose:-3)
+Fmajor -> Cmajor (transpose:-7)
+Gmajor -> Cmajor (transpose:-5)
+Gseventh -> Cseventh (transpose:-5)

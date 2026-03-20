@@ -38,7 +38,7 @@
     "id": "tuto-06",
     "title": "6. Velocity",
     "category": "tutorial",
-    "description": "Dynamics with [vel:N]",
+    "description": "Dynamics with (vel:N)",
     "file": "tuto-06-velocity.bps"
   },
   {
@@ -192,7 +192,7 @@
     "id": "stereo-pan",
     "title": "Stereo Pan",
     "category": "synthesis",
-    "description": "Panoramique gauche/droite avec [pan:N]",
+    "description": "Panoramique gauche/droite avec (pan:N)",
     "file": "stereo-pan.bps"
   },
   {

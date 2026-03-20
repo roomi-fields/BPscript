@@ -7,7 +7,7 @@
 @mm:90
 
 S -> {
-  [vel:100]C4 C4 C4,
-  [vel:70]E4 E4 E4 E4,
-  [vel:50]G4 G4 G4 G4 G4
+  C4 C4 C4 (vel:100),
+  E4 E4 E4 E4 (vel:70),
+  G4 G4 G4 G4 G4 (vel:50)
 }

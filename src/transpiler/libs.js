@@ -128,13 +128,19 @@ function loadLibsFromDirectives(directives) {
     const libKey = dir.subkey ? `${dir.name}.${dir.subkey}` : dir.name;
     ctx._libs[libKey] = lib;
 
-    // Merge controls
-    if (lib.controls) {
-      for (const [name, def] of Object.entries(lib.controls)) {
+    // Merge controls — support both old format (controls:{}) and new (engine:{}, runtime:{})
+    const controlSources = [];
+    if (lib.controls) controlSources.push(lib.controls);
+    if (lib.engine) controlSources.push(lib.engine);
+    if (lib.runtime) controlSources.push(lib.runtime);
+    for (const source of controlSources) {
+      for (const [name, def] of Object.entries(source)) {
+        if (name === '_comment') continue;
         ctx.controls[name] = def;
-        ctx.controlMap[name] = def.bp3;
+        // All controls use _script(CTn) mechanism — bp3 field optional
+        ctx.controlMap[name] = def.bp3 || `_${name}`;
         ctx.controlNames.add(name);
-        if (def.args.length === 0) {
+        if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
         }
       }

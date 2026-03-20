@@ -9,6 +9,6 @@
 
 S -> Chord1 Chord2 Chord3
 
-Chord1 -> [wave:sine, vel:80] C4 E4 G4 C5 _ _
+Chord1 -> C4 E4 G4 C5 _ _ (wave:sine, vel:80)
 Chord2 -> D4 F#4 A4 D5 _ _
 Chord3 -> C4 E4 G4 C5 _ _ _ _

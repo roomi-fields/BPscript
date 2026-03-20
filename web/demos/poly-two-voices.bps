@@ -4,4 +4,4 @@
 @controls
 @alphabet.western:browser
 
-S -> {[vel:90]C4 E4 G4 C5, [vel:60]C3 G3 C3 G3 C3 G3}
+S -> {C4 E4 G4 C5 (vel:90), C3 G3 C3 G3 C3 G3 (vel:60)}

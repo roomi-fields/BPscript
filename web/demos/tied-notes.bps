@@ -6,4 +6,4 @@
 @alphabet.western:browser
 @mm:80
 
-S -> [vel:90]C4 D4 E4~E4 F4 G4 A4~A4~A4 G4 F4 E4 D4 C4 _ _
+S -> C4 D4 E4~E4 F4 G4 A4~A4~A4 G4 F4 E4 D4 C4 _ _ (vel:90)

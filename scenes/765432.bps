@@ -14,7 +14,7 @@
 // --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
-S -> Internal C47 Part1 Canon C46[vel:90] Part2
+S -> Internal C47 Part1 Canon C46(vel:90) Part2
 Part1 -> {Suresh1,... Smriti1,... Olivier1,... Vijayshree1,... Arindam1,... Andreine1}
 Part2 -> {Suresh2,Smriti2 ...,Olivier2 ...,Vijayshree2 ...,Arindam2 ...,Andreine2 ...}
 

@@ -400,34 +400,31 @@ S -&gt; A B                   // S becomes A B (then A and B get rewritten)</pre
                 <tr><td><code>!</code></td><td>Simultaneous: <code>C4!E4!G4</code> = chord</td></tr>
               </table>
             </div>
-            <h3>Controls [ ]</h3>
+            <h3>Engine [ ] vs Runtime ( )</h3>
             <div class="section">
-              Controls modify playback parameters. They can appear as rule qualifiers or inline.
-<pre>[vel:80]C4 D4          // velocity 80 before C4
-C4[vel:80]             // velocity 80 after C4
-S -&gt; Phrase [vel:90]   // velocity 90 for entire rule</pre>
+              <code>[]</code> = BP3 engine instructions. <code>()</code> = runtime/dispatcher controls.
+<pre>(vel:80) C4 D4         // velocity 80 (runtime)
+C4(vel:80)             // velocity 80 after C4
+{A B}(vel:100) C D     // vel:100 scoped to group, restored after
+[mode:random]          // engine: random rule selection
+[weight:50]            // engine: rule weight</pre>
               <table>
-                <tr><th>Control</th><th>Meaning</th></tr>
-                <tr><td><code>[vel:N]</code></td><td>Velocity (0-127)</td></tr>
-                <tr><td><code>[chan:N]</code></td><td>MIDI channel (1-16)</td></tr>
-                <tr><td><code>[ins:N]</code></td><td>Instrument/program</td></tr>
-                <tr><td><code>[transpose:N]</code></td><td>Transposition in semitones</td></tr>
+                <tr><th colspan="2">Engine [] — BP3 instructions</th></tr>
                 <tr><td><code>[speed:N]</code></td><td>Tempo ratio for a group</td></tr>
                 <tr><td><code>[weight:N]</code></td><td>Rule weight for random selection</td></tr>
-              </table>
-            </div>
-            <h4>Web Audio primitives</h4>
-            <div class="section">
-              These controls are interpreted by the browser audio transport.
-              <table>
-                <tr><th>Control</th><th>Meaning</th></tr>
-                <tr><td><code>[wave:X]</code></td><td>Oscillator type: sine, triangle, square, sawtooth</td></tr>
-                <tr><td><code>[pan:N]</code></td><td>Stereo panning (0=left, 64=center, 127=right)</td></tr>
-                <tr><td><code>[attack:N]</code></td><td>Attack time in ms (default: 20)</td></tr>
-                <tr><td><code>[release:N]</code></td><td>Release time in ms (default: 100)</td></tr>
-                <tr><td><code>[detune:N]</code></td><td>Pitch detune in cents (100 = 1 semitone)</td></tr>
-                <tr><td><code>[filter:N]</code></td><td>Lowpass filter cutoff in Hz (0 = off)</td></tr>
-                <tr><td><code>[filterQ:N]</code></td><td>Filter resonance (default: 1)</td></tr>
+                <tr><td><code>[mode:X]</code></td><td>Derivation mode (random, ord, lin...)</td></tr>
+                <tr><th colspan="2">Runtime () — dispatcher controls</th></tr>
+                <tr><td><code>(vel:N)</code></td><td>Velocity (0-127)</td></tr>
+                <tr><td><code>(chan:N)</code></td><td>MIDI channel (1-16)</td></tr>
+                <tr><td><code>(ins:N)</code></td><td>Instrument/program</td></tr>
+                <tr><td><code>(transpose:N)</code></td><td>Transposition in semitones</td></tr>
+                <tr><td><code>(wave:X)</code></td><td>Oscillator: sine, triangle, square, sawtooth</td></tr>
+                <tr><td><code>(pan:N)</code></td><td>Stereo panning (0=left, 64=center, 127=right)</td></tr>
+                <tr><td><code>(attack:N)</code></td><td>Attack time in ms (default: 20)</td></tr>
+                <tr><td><code>(release:N)</code></td><td>Release time in ms (default: 100)</td></tr>
+                <tr><td><code>(detune:N)</code></td><td>Pitch detune in cents (100 = 1 semitone)</td></tr>
+                <tr><td><code>(filter:N)</code></td><td>Lowpass filter cutoff Hz (0 = off)</td></tr>
+                <tr><td><code>(filterQ:N)</code></td><td>Filter resonance (default: 1)</td></tr>
               </table>
             </div>
             <h3>Polymetry { }</h3>
@@ -497,7 +494,7 @@ PY_Part -&gt; &#96;py: print("hello from python")&#96;</pre>
 let bp3 = null;
 let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_load_settings, bp3_produce, bp3_get_result, bp3_get_messages;
 let bp3_get_midi_events, bp3_get_midi_event_count;
-let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params, bp3_set_object_duration;
+let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params, bp3_load_prototypes;
 let libraryData = [];
 let activeGrammar = null;
 let engineReady = false;
@@ -505,6 +502,7 @@ let lastMidiEvents = null;
 let lastTimedTokens = null;
 let lastControlTable = null;
 let lastCVTable = null;
+let lastPrototypesFile = null;
 let lastDirectives = [];
 let audioCtx = null;
 let isPlaying = false;
@@ -664,7 +662,7 @@ async function loadModule() {
     bp3_get_timed_tokens = Module.cwrap('bp3_get_timed_tokens', 'string', []);
     bp3_get_timed_token_count = Module.cwrap('bp3_get_timed_token_count', 'number', []);
     bp3_load_settings_params = Module.cwrap('bp3_load_settings_params', 'number', ['number','number','number','number','number','number']);
-    bp3_set_object_duration = Module.cwrap('bp3_set_object_duration', 'number', ['string', 'number']);
+    bp3_load_prototypes = Module.cwrap('bp3_load_prototypes', 'number', ['string']);
 
     setStatus('Module loaded. Initializing...');
     initEngine();
@@ -691,27 +689,17 @@ function reseed() {
   // Full init before each cycle: init → loadAlphabet → setObjectDuration → loadGrammar
   bp3_init();
   const alphabet = document.getElementById('alphabet').value;
-  const noteConv = alphabet.includes('sa0') || alphabet.includes('sa1') ? 2 : 0;
-  bp3_load_settings_params(noteConv, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
-  if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
-  registerTerminalDurations();
   const grammar = document.getElementById('grammar').value;
-  if (grammar.trim()) bp3_load_grammar(grammar.trim());
-}
-
-/** Register ALL terminal durations in BP3 (between loadAlphabet and loadGrammar).
- *  All terminals get the same reference duration — BP3 dilates proportionally. */
-function registerTerminalDurations() {
-  if (!bp3_set_object_duration) return;
-  // Get alphabet from textarea — each line (except comments) is a terminal
-  const alphabet = document.getElementById('alphabet').value;
-  if (!alphabet) return;
-  window._cvDebug = '';
-  for (const line of alphabet.split('\n')) {
-    const name = line.trim();
-    if (!name || name.startsWith('//')) continue;
-    bp3_set_object_duration(name, 1000);
+  bp3_load_settings_params(0, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
+  // Order: loadAlphabet → loadPrototypes → loadGrammar
+  if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
+  if (lastPrototypesFile && bp3_load_prototypes) {
+    const r = bp3_load_prototypes(lastPrototypesFile);
+    if (r !== 0) {
+      document.getElementById('messagesContent').textContent = 'loadPrototypes error: ' + r;
+    }
   }
+  if (grammar.trim()) bp3_load_grammar(grammar.trim());
 }
 
 function reinit() {
@@ -740,6 +728,7 @@ function produce() {
       if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
       lastControlTable = compiled.controlTable || null;
       lastCVTable = compiled.cvTable || null;
+      lastPrototypesFile = compiled.prototypesFile || null;
       lastDirectives = compiled.directives || [];
       // Settings disabled for now — BP3 defaults work correctly,
       // our settingsJSON breaks text output formatting
@@ -877,7 +866,8 @@ function updateDebugPanel(grammar, alphabet) {
     lines.push('─'.repeat(50));
     for (const t of lastTimedTokens) {
       const dur = t.end - t.start;
-      const name = t.token.padEnd(16);
+      const displayName = t.token.startsWith('bol') ? t.token.slice(3) : t.token;
+      const name = displayName.padEnd(16);
       lines.push(`${name}${t.start}\t${t.end}\t${dur}`);
     }
   } else {
@@ -914,11 +904,13 @@ function updateDebugPanel(grammar, alphabet) {
       seen.add(t.token);
       if (t.token.startsWith('_') || t.token === '-' || t.token === '_') continue;
 
-      let route = t.token.padEnd(12);
+      // Strip 'bol' prefix for display and routing
+      const tok = t.token.startsWith('bol') ? t.token.slice(3) : t.token;
+      let route = tok.padEnd(12);
 
       // Parse token: western or generic
-      const wm = t.token.match(/^([A-Ga-g][#b]?)(\d+)$/);
-      const gm = t.token.match(/^([a-zA-Z]+)(\d+)$/);
+      const wm = tok.match(/^([A-Ga-g][#b]?)(\d+)$/);
+      const gm = tok.match(/^([a-zA-Z]+)(\d+)$/);
       const parsed = wm ? { name: wm[1], oct: parseInt(wm[2]) }
                    : gm ? { name: gm[1], oct: parseInt(gm[2]) }
                    : null;
@@ -1042,13 +1034,14 @@ function appendResolverDebug() {
     lines.push('Live resolve:');
     const seen = new Set();
     for (const t of lastTimedTokens) {
-      if (seen.has(t.token) || t.token.startsWith('_') || t.token === '-') continue;
-      seen.add(t.token);
-      const res = r.resolve(t.token);
+      const tok = t.token.startsWith('bol') ? t.token.slice(3) : t.token;
+      if (seen.has(tok) || tok.startsWith('_') || tok === '-') continue;
+      seen.add(tok);
+      const res = r.resolve(tok);
       if (res) {
-        lines.push(`  ${t.token} → ${res.frequency.toFixed(2)} Hz (midi ${res.midiNote})`);
+        lines.push(`  ${tok} → ${res.frequency.toFixed(2)} Hz (midi ${res.midiNote})`);
       } else {
-        lines.push(`  ${t.token} → NULL (no sound)`);
+        lines.push(`  ${tok} → NULL (no sound)`);
       }
     }
   }
@@ -1181,9 +1174,10 @@ async function liveCompileAndSwap() {
     if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
     if (compiled.settings) document.getElementById('settings').value = compiled.settings;
 
-    if (compiled.alphabet) bp3_load_alphabet(compiled.alphabet);
-    registerTerminalDurations();
-    bp3_load_grammar(compiled.grammar);
+    lastControlTable = compiled.controlTable || null;
+    lastCVTable = compiled.cvTable || null;
+    lastPrototypesFile = compiled.prototypesFile || null;
+    lastDirectives = compiled.directives || [];
 
     if (isPlaying && dispatcher) {
       setStatus('Live: updated — next cycle');
@@ -1206,8 +1200,8 @@ async function liveCompileAndSwap() {
 function resolveScriptLabel(token) {
   const m = token.match(/^_script\((\w+)\)$/);
   if (!m) {
-    // Direct control: _vel(80) → [vel:80]
-    return token.replace(/^_(\w+)\((.+)\)$/, '[$1:$2]');
+    // Direct control: _vel(80) → (vel:80)
+    return token.replace(/^_(\w+)\((.+)\)$/, '($1:$2)');
   }
   const id = m[1];
   // CT → control table lookup
@@ -1275,6 +1269,12 @@ function renderTimeline(tokens) {
     panel.textContent = '(no tokens)';
     return;
   }
+
+  // Strip 'bol' prefix from tokens for display (added by encoder for BP3 compat)
+  tokens = tokens.map(t => ({
+    ...t,
+    token: t.token.startsWith('bol') ? t.token.slice(3) : t.token
+  }));
 
   // Build set of CV instance names for detection
   const cvNames = new Set();
@@ -1589,6 +1589,7 @@ loadLibrary();
       settings: result.settingsJSON || '',
       controlTable: result.controlTable || [],
       cvTable: result.cvTable || [],
+      prototypesFile: result.prototypesFile || '',
       errors: result.errors || [],
       warnings: []
     };

@@ -37,7 +37,7 @@ function testParser(name, source) {
   for (const sub of ast.subgrammars) {
     console.log(`  Subgrammar ${sub.index}: ${sub.rules.length} rules`);
     for (const rule of sub.rules) {
-      const guard = rule.guard ? `when ${rule.guard.flag}${rule.guard.operator}${rule.guard.value}` : '';
+      const guard = rule.guard ? `[${rule.guard.map(g => `${g.flag}${g.operator || ''}${g.value || ''}`).join(', ')}]` : '';
       const lhs = rule.lhs.map(e => e.name || e.type).join(' ');
       const rhsTypes = rule.rhs.map(e => e.type).join(', ');
       console.log(`    ${guard} ${lhs} ${rule.arrow} [${rhsTypes}]`);

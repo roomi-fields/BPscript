@@ -12,7 +12,7 @@ Le mapping note → fréquence est en dur (Western 12-TET, A=440).
 
 ### Transpose dispatcher
 La suppression de OCT a supprimé `_trns` interne de BP3.
-- `[transpose:N]` existe dans BPscript mais pas implémenté côté audio
+- `(transpose:N)` existe dans BPscript mais pas implémenté côté audio
 - Le resolver doit transposer dans le tempérament actif
 - Support transposition par intervalle (pas seulement demi-tons)
 

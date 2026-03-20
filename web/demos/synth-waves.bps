@@ -1,5 +1,5 @@
 // Synth Waves — formes d'onde
-// Démo : [wave:X] change le timbre de l'oscillateur
+// Démo : (wave:X) change le timbre de l'oscillateur
 // sine = doux, triangle = moyen, square = creux, sawtooth = riche
 
 @core
@@ -8,7 +8,7 @@
 
 S -> Sine Tri Square Saw
 
-Sine -> [wave:sine, vel:80] C4 E4 G4 C5
-Tri -> [wave:triangle, vel:80] C4 E4 G4 C5
-Square -> [wave:square, vel:60] C4 E4 G4 C5
-Saw -> [wave:sawtooth, vel:60] C4 E4 G4 C5
+Sine -> C4 E4 G4 C5 (wave:sine, vel:80)
+Tri -> C4 E4 G4 C5 (wave:triangle, vel:80)
+Square -> C4 E4 G4 C5 (wave:square, vel:60)
+Saw -> C4 E4 G4 C5 (wave:sawtooth, vel:60)

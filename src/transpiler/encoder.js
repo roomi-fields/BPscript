@@ -7,6 +7,7 @@
  */
 
 import { loadLibsFromDirectives } from './libs.js';
+import { generatePrototypes } from './prototypes.js';
 
 // Maps BPS mode names to BP3 mode names
 const MODE_MAP = {
@@ -23,6 +24,17 @@ const SCAN_MAP = {
 const ARROW_MAP = {
   '->': '-->', '<-': '<--', '<>': '<->',
 };
+
+/**
+ * BP3 recognizes note patterns (1-2 letters + digit) as MIDI keys internally.
+ * Prefix with 'bol' to force custom bol treatment (3+ letters before digit).
+ * The dispatcher strips 'bol' to recover the original name.
+ */
+const NOTE_PATTERN = /^[A-Ga-g][#b]?\d+$/;
+function toBp3Terminal(name) {
+  if (NOTE_PATTERN.test(name)) return 'bol' + name;
+  return name;
+}
 
 // Module-level state for control token generation (reset per encode() call)
 let _output = null;
@@ -225,7 +237,7 @@ function encode(ast) {
       const ruleTempoOp = getTempoOp(rule.qualifiers);
       if (ruleTempoOp) rhsPrefixParts.push(ruleTempoOp);
 
-      // Controls as rule qualifiers [transpose:-7, vel:80, chan:1] → CT tokens
+      // Controls as rule qualifiers (transpose:-7, vel:80, chan:1) → CT tokens
       const ruleAssignments = {};
       for (const q of rule.qualifiers) {
         for (const p of q.pairs) {
@@ -246,6 +258,25 @@ function encode(ast) {
       if (si === 0 && ri === 0 && rhsPrefix.length > 0) {
         rhsStr = rhsPrefix.join(' ') + (rhsStr ? ' ' + rhsStr : '');
       }
+
+      // Runtime qualifier on rule (suffix): S -> C2 C2 (vel:100)
+      // Wraps the RHS with _script(CTn_start) ... _script(CTn_end)
+      if (rule.runtimeQualifier) {
+        const assignments = {};
+        for (const p of rule.runtimeQualifier.pairs) {
+          if (CONTROL_MAP[p.key]) {
+            assignments[p.key] = p.value;
+          }
+        }
+        if (Object.keys(assignments).length > 0) {
+          const ctStart = `CT${_ctIndex++}`;
+          const ctEnd = `CT${_ctIndex++}`;
+          output.controlTable.push({ id: ctStart, assignments, scope: 'start' });
+          output.controlTable.push({ id: ctEnd, assignments: {}, scope: 'end', restores: ctStart });
+          rhsStr = `_script(${ctStart}) ${rhsStr} _script(${ctEnd})`;
+        }
+      }
+
       parts.push(rhsStr);
 
       // RHS flags [phase=2, Atrans, K1] → /phase=2/ /Atrans/ /K1/
@@ -275,6 +306,9 @@ function encode(ast) {
 
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);
+
+  // Generate -so. prototype file for all terminals
+  output.prototypesFile = generatePrototypes(Array.from(output.alphabet));
 
   return output;
 }
@@ -328,7 +362,7 @@ function encodeGuard(guard) {
   if (guard.mutates) {
     return `/${guard.flag}${guard.operator}${guard.value}/`;
   }
-  // Bare flag test: when Ideas → /Ideas/
+  // Bare flag test: [Ideas] → /Ideas/
   if (guard.operator === null) {
     return `/${guard.flag}/`;
   }
@@ -384,8 +418,8 @@ function encodeRhsElement(el, alphabet, controlMap) {
     result = `${el.tempoOp.operator}${el.tempoOp.value} ${result}`;
   }
   // Apply per-element control qualifiers
-  // PREFIX [vel:60]A → _vel(60) A (control before element)
-  // SUFFIX A[vel:60] → A _vel(60) (control after element)
+  // SUFFIX A(vel:60) → A _script(CTn) (runtime control after element)
+  // PREFIX [tempo:2]A → engine qualifier before element
   if (el.controlQualifiers && el.controlQualifiers.length > 0) {
     const prefixTokens = [];
     const suffixTokens = [];
@@ -419,7 +453,9 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     case 'Symbol':
       // Add terminal symbols to alphabet (not non-terminals like S, Bass, Phrase1)
       if (!_nonTerminals.has(el.name)) {
-        alphabet.add(el.name);
+        const bp3Name = toBp3Terminal(el.name);
+        alphabet.add(bp3Name);
+        return bp3Name;
       }
       return el.name;
 
@@ -495,6 +531,22 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       const tempoOp = getTempoOp(el.qualifiers);
       if (tempoOp) {
         result = `${tempoOp} ${result}`;
+      }
+      // Runtime qualifier on group: {A B}(vel:100) → _script(CTn) {A B} _script(CTn_end)
+      if (el.runtimeQualifier) {
+        const assignments = {};
+        for (const p of el.runtimeQualifier.pairs) {
+          if (controlMap[p.key]) {
+            assignments[p.key] = p.value;
+          }
+        }
+        if (Object.keys(assignments).length > 0) {
+          const ctStart = `CT${_ctIndex++}`;
+          const ctEnd = `CT${_ctIndex++}`;
+          _output.controlTable.push({ id: ctStart, assignments, scope: 'start' });
+          _output.controlTable.push({ id: ctEnd, assignments: {}, scope: 'end', restores: ctStart });
+          result = `_script(${ctStart}) ${result} _script(${ctEnd})`;
+        }
       }
       return result;
     }

@@ -138,7 +138,7 @@ env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
 
 S -> {Phrase1, env1 -}
 
-Phrase1 -> [wave:sawtooth, filter:2000] C3 E3 G3 C4
+Phrase1 -> C3 E3 G3 C4 (wave:sawtooth, filter:2000)
 ```
 
 ### LFO sur pan

@@ -16,6 +16,6 @@ S -> {Bass Bass Bass Bass, env1 env1 env1 env1}
 
 @mode:random
 
-Bass -> [wave:sawtooth, vel:100, filterQ:8] C2 C2 C3 C2 - C2 Eb2 C2 [weight:50]
-Bass -> [wave:sawtooth, vel:100, filterQ:8] C2 - Eb2 F2 F#2 F2 Eb2 - [weight:30]
-Bass -> [wave:sawtooth, vel:100, filterQ:8] C2 C2 C2 - G2 - Eb2 C2
+Bass -> C2 C2 C3 C2 - C2 Eb2 C2 (wave:sawtooth, vel:100, filterQ:8) [weight:50]
+Bass -> C2 - Eb2 F2 F#2 F2 Eb2 - (wave:sawtooth, vel:100, filterQ:8) [weight:30]
+Bass -> C2 C2 C2 - G2 - Eb2 C2 (wave:sawtooth, vel:100, filterQ:8)

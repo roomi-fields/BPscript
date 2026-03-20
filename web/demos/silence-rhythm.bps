@@ -6,5 +6,5 @@
 
 S -> Pattern Pattern Pattern Coda
 
-Pattern -> [vel:100]C4 - E4 - [vel:80]G4 C5 - -
-Coda -> [vel:110]C5 _ _ _
+Pattern -> C4 - E4 -(vel:80) G4 C5 - - (vel:100)
+Coda -> C5 _ _ _ (vel:110)
