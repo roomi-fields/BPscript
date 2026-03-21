@@ -49,11 +49,10 @@ const T = Object.freeze({
   LTE:          'LTE',         // <=
   PLUS:         'PLUS',        // +
 
-  // Keywords (4 + 1)
+  // Keywords (3 + 1)
   GATE:         'GATE',        // gate
   TRIGGER:      'TRIGGER',     // trigger
   CV:           'CV',          // cv
-  WHEN:         'WHEN',        // when
   LAMBDA:       'LAMBDA',      // lambda
 
   // Literals
@@ -73,7 +72,6 @@ const KEYWORDS = {
   'gate': T.GATE,
   'trigger': T.TRIGGER,
   'cv': T.CV,
-  'when': T.WHEN,
   'lambda': T.LAMBDA,
 };
 

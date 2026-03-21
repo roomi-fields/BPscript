@@ -20,6 +20,7 @@ Version 0.7 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transp
 Scene {
   type: "Scene"
   directives: Directive[]
+  actors: ActorDirective[]
   declarations: Declaration[]
   macros: Macro[]
   backticks: BacktickOrphan[]
@@ -85,6 +86,39 @@ Exemples :
 
 ---
 
+## Acteurs
+
+### `ActorDirective`
+
+```
+ActorDirective {
+  type: "ActorDirective"
+  name: string                    // "sitar", "tabla", "lights"
+  properties: {
+    alphabet: string              // référence vers alphabets.json ("sargam", "western")
+    tuning: string | null         // référence vers tunings.json (null = pas de pitch)
+    octaves: string | null        // référence vers octaves.json (null = défaut du tuning)
+    transport: TransportRef       // clé de transport
+    eval: string | null           // clé d'eval pour backticks (null = même que transport)
+  }
+  line: number
+}
+
+TransportRef {
+  type: "TransportRef"
+  key: string                     // "webaudio", "midi", "osc", "dmx"
+  params: { [key: string]: any }  // { ch: 10 }, { port: 57110 }, {}
+}
+```
+
+Exemples :
+- `@actor sitar  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio`
+  → `{ name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", octaves:"saptak", transport:{key:"webaudio", params:{}}, eval:null } }`
+- `@actor tabla  alphabet:tabla_bols  transport:midi(ch:10)`
+  → `{ name:"tabla", properties:{ alphabet:"tabla_bols", tuning:null, octaves:null, transport:{key:"midi", params:{ch:10}}, eval:null } }`
+
+---
+
 ## Déclarations
 
 ### `Declaration`
@@ -94,10 +128,14 @@ Declaration {
   type: "Declaration"
   temporalType: "gate" | "trigger" | "cv"
   name: string
-  runtime: string
+  actor: string                   // nom de l'acteur (remplace "runtime" quand @actor est utilisé)
+  runtime: string | null          // legacy : runtime direct (quand pas de @actor)
   line: number
 }
 ```
+
+Avec `@actor` : `gate Sa:sitar` → `{ temporalType:"gate", name:"Sa", actor:"sitar", runtime:null }`.
+Legacy : `gate Sa:sc` → `{ temporalType:"gate", name:"Sa", actor:null, runtime:"sc" }`.
 
 ---
 
@@ -265,13 +303,17 @@ La distinction préfixe/suffixe est analogue à `++i`/`i++` en C :
 ### `Symbol`
 
 ```
-Symbol { type: "Symbol", name: string, line: number }
+Symbol { type: "Symbol", name: string, actor: string | null, line: number }
 ```
+
+Le champ `actor` est rempli par le `:acteur` explicite (`Sa:sitar`), ou par la
+phase de résolution implicite (quand un seul acteur contient ce symbole). `null`
+pour les non-terminaux (qui n'ont pas d'acteur).
 
 ### `SymbolCall`
 
 ```
-SymbolCall { type: "SymbolCall", name: string, args: Arg[], line: number }
+SymbolCall { type: "SymbolCall", name: string, actor: string | null, args: Arg[], line: number }
 Arg { type: "Arg", key: string | null, value: Literal | BacktickInline }
 ```
 
@@ -458,8 +500,19 @@ Literal { type: "Literal", value: number | string }
 
 ```
 Source (.bps) -> Tokenizer -> Parser -> AST (Scene)
-  -> Type-checker -> Macro-expander -> Encoder -> BP3 grammar -> WASM engine
+  -> Actor resolver (charge JSON, expand symboles, conflits)
+  -> Type-checker -> Macro-expander -> Encoder -> BP3 grammar + terminalActorMap -> WASM engine
 ```
+
+La phase **Actor resolver** entre le parser et le type-checker :
+1. Collecte les `ActorDirective` de la Scene
+2. Charge `alphabets.json`, `tunings.json`, `octaves.json`, `temperaments.json` par acteur
+3. Importe les symboles de chaque alphabet dans la symbolTable
+4. Détecte les conflits inter-acteurs (même symbole, acteurs différents)
+5. Résout les `Symbol.actor = null` par lookup implicite (un seul acteur candidat)
+
+L'encoder émet en parallèle une `terminalActorMap` (terminal BP3 → acteur)
+utilisée par le dispatcher au runtime.
 
 ---
 

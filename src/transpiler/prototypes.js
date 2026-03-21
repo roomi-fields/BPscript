@@ -9,6 +9,22 @@
  */
 
 /**
+ * Generate ALL possible western note terminals (bolC0-bolB9 + accidentals).
+ * Called once at startup to pre-populate BP3's prototype table.
+ */
+export function allWesternTerminals() {
+  const notes = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+  const octaves = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const terminals = [];
+  for (const note of notes) {
+    for (const oct of octaves) {
+      terminals.push(`bol${note}${oct}`);
+    }
+  }
+  return terminals;
+}
+
+/**
  * Generate a -so. prototype file for a list of terminal names.
  * @param {string[]} terminals - terminal names (e.g. ['bolC4', 'bolD4', 'env1'])
  * @param {number} [duration=1000] - reference duration in ms

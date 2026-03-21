@@ -790,36 +790,46 @@ function parse(tokens) {
   }
 
   function isRuntimeQualifier() {
-    // (IDENT:...) where IDENT is a known control name = runtime qualifier
+    // (IDENT:...) or (IDENT,...) or (IDENT) where IDENT is a known control name
     if (!at(T.LPAREN)) return false;
     const nextTok = peek(1);
     if (nextTok.type !== T.IDENT) return false;
-    // Must be followed by : to distinguish from context (A B) or other uses
+    if (!libCtx.controlNames.has(nextTok.value)) return false;
+    // Known control followed by : , or ) = runtime qualifier
     const afterName = peek(2);
-    if (afterName.type !== T.COLON) return false;
-    return libCtx.controlNames.has(nextTok.value);
+    return afterName.type === T.COLON || afterName.type === T.COMMA || afterName.type === T.RPAREN;
   }
 
   function parseRuntimeQualifier() {
-    // (vel:80, wave:sawtooth) → runtime qualifier AST
+    // (vel:80, wave:sawtooth, velcont) → runtime qualifier AST
     expect(T.LPAREN);
     const pairs = [];
     while (!at(T.RPAREN) && !atEnd()) {
       const key = expect(T.IDENT).value;
-      expect(T.COLON);
-      // Raw value: everything until , or )
-      let val;
-      if (at(T.REST)) { // negative number
+      if (at(T.COLON)) {
         advance();
-        val = -Number(expect(T.INT).value);
-      } else if (at(T.INT)) {
-        val = Number(advance().value);
-      } else if (at(T.FLOAT)) {
-        val = Number(advance().value);
+        // Raw value: everything until , or )
+        let val;
+        if (at(T.REST)) { // negative number
+          advance();
+          val = -Number(expect(T.INT).value);
+        } else if (at(T.INT)) {
+          val = Number(advance().value);
+        } else if (at(T.FLOAT)) {
+          val = Number(advance().value);
+        } else {
+          // String value — collect until , or )
+          let parts = [];
+          while (!at(T.COMMA) && !at(T.RPAREN) && !atEnd()) {
+            parts.push(advance().value);
+          }
+          val = parts.join(' ');
+        }
+        pairs.push({ key, value: val });
       } else {
-        val = advance().value;
+        // Bare key (no-arg control like velcont, pitchcont)
+        pairs.push({ key, value: true });
       }
-      pairs.push({ key, value: val });
       if (at(T.COMMA)) advance();
     }
     expect(T.RPAREN);

@@ -7,7 +7,6 @@
  */
 
 import { loadLibsFromDirectives } from './libs.js';
-import { generatePrototypes } from './prototypes.js';
 
 // Maps BPS mode names to BP3 mode names
 const MODE_MAP = {
@@ -24,17 +23,6 @@ const SCAN_MAP = {
 const ARROW_MAP = {
   '->': '-->', '<-': '<--', '<>': '<->',
 };
-
-/**
- * BP3 recognizes note patterns (1-2 letters + digit) as MIDI keys internally.
- * Prefix with 'bol' to force custom bol treatment (3+ letters before digit).
- * The dispatcher strips 'bol' to recover the original name.
- */
-const NOTE_PATTERN = /^[A-Ga-g][#b]?\d+$/;
-function toBp3Terminal(name) {
-  if (NOTE_PATTERN.test(name)) return 'bol' + name;
-  return name;
-}
 
 // Module-level state for control token generation (reset per encode() call)
 let _output = null;
@@ -307,9 +295,6 @@ function encode(ast) {
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);
 
-  // Generate -so. prototype file for all terminals
-  output.prototypesFile = generatePrototypes(Array.from(output.alphabet));
-
   return output;
 }
 
@@ -453,9 +438,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     case 'Symbol':
       // Add terminal symbols to alphabet (not non-terminals like S, Bass, Phrase1)
       if (!_nonTerminals.has(el.name)) {
-        const bp3Name = toBp3Terminal(el.name);
-        alphabet.add(bp3Name);
-        return bp3Name;
+        alphabet.add(el.name);
       }
       return el.name;
 

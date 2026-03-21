@@ -1,0 +1,67 @@
+{
+  "_comment": [
+    "Octave/register naming conventions for BPscript.",
+    "Each convention defines how register (octave) is expressed relative to a note name.",
+    "",
+    "Fields:",
+    "  position  — 'prefix' or 'suffix' (where the register marker goes)",
+    "  separator — string between note and register marker (empty = concatenated)",
+    "  registers — ordered list from lowest to highest, '' = no marker (default register)",
+    "  default   — index in registers[] for the 'home' register",
+    "",
+    "NOT INCLUDED due to BPscript syntax conflicts:",
+    "  - Helmholtz (C, c, c', c'') — uses case distinction, too fragile",
+    "  - Lilypond (c,, c, c c' c'') — comma ',' conflicts with polymetry separator",
+    "  - Jianpu/Chinese cipher (dots above/below) — '.' conflicts with period notation",
+    "  For these conventions, 'arrows' (_v/_^) is proposed as a compatible substitute."
+  ],
+
+  "western": {
+    "position": "suffix",
+    "separator": "",
+    "registers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    "default": 4
+  },
+
+  "arrows": {
+    "position": "suffix",
+    "separator": "_",
+    "registers": ["vv", "v", "", "^", "^^"],
+    "default": 2
+  },
+
+  "saptak": {
+    "position": "prefix",
+    "separator": " ",
+    "registers": ["mandra", "madhya", "taar"],
+    "default": 1
+  },
+
+  "turkish": {
+    "position": "prefix",
+    "separator": " ",
+    "registers": ["", "tiz"],
+    "default": 0
+  },
+
+  "gamelan": {
+    "position": "prefix",
+    "separator": " ",
+    "registers": ["ageng", "tengah", "alit"],
+    "default": 1
+  },
+
+  "shakuhachi": {
+    "position": "prefix",
+    "separator": " ",
+    "registers": ["otsu", "kan", "daikan"],
+    "default": 0
+  },
+
+  "korean": {
+    "position": "prefix",
+    "separator": " ",
+    "registers": ["tak", "jung", "cheong"],
+    "default": 1
+  }
+}

@@ -11,9 +11,12 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 ## Couche 1 — Structure globale
 
 ```ebnf
-scene       = { directive | declaration | cv_instance | macro | backtick_orphan
-              | comment | blank_line }
+scene       = { directive | actor_directive | declaration | cv_instance | macro
+              | backtick_orphan | comment | blank_line }
               , subgrammar+ ;
+
+actor_directive = "@" , "actor" , IDENT , actor_props+ ;
+
 ```
 
 - `directive` — imports et configuration globale (`@...`)
@@ -36,7 +39,13 @@ directive_body = IDENT                              (* @core, @controls *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
                | "+"                                (* @+ — append to previous subgrammar *)
                | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
+               | "actor" , IDENT , actor_props+     (* @actor sitar alphabet:sargam ... *)
                ;
+
+actor_props = IDENT , ":" , actor_value ;
+actor_value = IDENT                                 (* alphabet:sargam *)
+            | IDENT , "(" , param_pairs , ")" ;     (* transport:midi(ch:10) *)
+
 
 param_pairs = param_pair , { "," , param_pair } ;
 param_pair  = IDENT , "=" , IDENT ;               (* transport=sc, eval=python *)
@@ -48,11 +57,15 @@ alias      = IDENT , ":" , IDENT ;
 ### `declaration`
 
 ```ebnf
-declaration = TYPE , IDENT , ":" , RUNTIME ;
+declaration = TYPE , IDENT , ":" , ACTOR_OR_RUNTIME ;
 
-TYPE    = "gate" | "trigger" | "cv" ;
-RUNTIME = IDENT ;                          (* sc, midi, python, tidal, etc. *)
+TYPE              = "gate" | "trigger" | "cv" ;
+ACTOR_OR_RUNTIME  = IDENT ;               (* acteur name (preferred) ou legacy runtime name *)
 ```
+
+Avec `@actor`, le `:` après un symbole référence un **acteur** (pas un runtime) :
+`gate Sa:sitar` → Sa est un gate appartenant à l'acteur `sitar`.
+Legacy : `gate Sa:sc` reste supporté (résolu comme acteur implicite si pas de `@actor`).
 
 ### `cv_instance`
 
@@ -303,8 +316,8 @@ résolvent en instructions moteur dans la couche inférieure.
 ### 4.1 Symboles
 
 ```ebnf
-symbol      = IDENT ;                               (* terminal ou non-terminal *)
-symbol_call = IDENT , "(" , arg_list , ")" ;         (* appel avec paramètres *)
+symbol      = IDENT , [ ":" , IDENT ] ;              (* terminal ou non-terminal, optionnel :acteur *)
+symbol_call = IDENT , [ ":" , IDENT ] , "(" , arg_list , ")" ;  (* appel avec paramètres, optionnel :acteur *)
 
 arg_list    = arg , { "," , arg } ;
 arg         = [ IDENT , ":" ] , arg_value ;           (* positionnel ou nommé *)
@@ -532,6 +545,7 @@ timeout  → limite de temps sur <! (* not yet implemented *)
 ### Clés réservées de `@`
 
 ```
+actor NAME props...            → déclare un acteur (binding alphabet+tuning+octaves+transport)
 core                           → librairie noyau (lambda, on_fail)
 controls                       → contrôles performance (vel, tempo, transpose, etc.)
 alphabet.KEY:BINDING           → alphabet KEY depuis lib/alphabet.json, lié à BINDING

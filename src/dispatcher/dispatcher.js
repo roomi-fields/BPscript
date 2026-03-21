@@ -208,8 +208,7 @@ export class Dispatcher {
           || Object.values(this.transports)[0];
 
         if (transport) {
-          // Strip 'bol' prefix added by encoder for BP3 compatibility
-          const token = evt.token.startsWith('bol') ? evt.token.slice(3) : evt.token;
+          const token = evt.token;
           transport.send({
             token,
             startSec: this._loopOffset + evt.startSec,

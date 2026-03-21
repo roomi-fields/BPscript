@@ -33,7 +33,13 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - `lib/` — JSON libraries (controls, alphabet, tuning, filter, routing, etc.)
 - `web/index.html` — BPscript web interface (BPscript tab auto-compiles to Grammar tab)
 - `dist/` — BP3 WASM build (bp3.js, bp3.wasm, bp3.data)
-- `BPSCRIPT_VISION.md` — Full design document (authoritative)
+- `docs/` — Design documents
+  - `BPSCRIPT_VISION.md` — Language specification (authoritative)
+  - `BPSCRIPT_EBNF.md` — Formal grammar (EBNF)
+  - `BPSCRIPT_AST.md` — AST node definitions
+  - `DESIGN_ARCHITECTURE.md` — Technical architecture (pipeline, actors, transports, REPL)
+  - `DESIGN_ACTOR.md` — Actor concept (binding alphabet+tuning+octaves+transport)
+  - `DESIGN_PITCH.md` — Pitch resolution (5 layers: alphabet, octaves, temperament, tuning, resolver)
 
 ### Build & Test
 ```bash

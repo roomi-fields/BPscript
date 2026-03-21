@@ -494,7 +494,7 @@ PY_Part -&gt; &#96;py: print("hello from python")&#96;</pre>
 let bp3 = null;
 let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_load_settings, bp3_produce, bp3_get_result, bp3_get_messages;
 let bp3_get_midi_events, bp3_get_midi_event_count;
-let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params, bp3_load_prototypes;
+let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params;
 let libraryData = [];
 let activeGrammar = null;
 let engineReady = false;
@@ -502,7 +502,6 @@ let lastMidiEvents = null;
 let lastTimedTokens = null;
 let lastControlTable = null;
 let lastCVTable = null;
-let lastPrototypesFile = null;
 let lastDirectives = [];
 let audioCtx = null;
 let isPlaying = false;
@@ -662,7 +661,6 @@ async function loadModule() {
     bp3_get_timed_tokens = Module.cwrap('bp3_get_timed_tokens', 'string', []);
     bp3_get_timed_token_count = Module.cwrap('bp3_get_timed_token_count', 'number', []);
     bp3_load_settings_params = Module.cwrap('bp3_load_settings_params', 'number', ['number','number','number','number','number','number']);
-    bp3_load_prototypes = Module.cwrap('bp3_load_prototypes', 'number', ['string']);
 
     setStatus('Module loaded. Initializing...');
     initEngine();
@@ -674,31 +672,25 @@ async function loadModule() {
 
 function initEngine() {
   const r = bp3_init();
-  if (r === 0) {
-    engineReady = true;
-    setStatus('Ready.');
-    document.getElementById('produceBtn').disabled = false;
-    document.getElementById('initBtn').disabled = false;
-    document.getElementById('liveBtn').disabled = false;
-  } else {
+  if (r !== 0) {
     setStatus('Init failed (code ' + r + ')');
+    return;
   }
+  engineReady = true;
+  setStatus('Ready.');
+  document.getElementById('produceBtn').disabled = false;
+  document.getElementById('initBtn').disabled = false;
+  document.getElementById('liveBtn').disabled = false;
 }
 
 function reseed() {
-  // Full init before each cycle: init → loadAlphabet → setObjectDuration → loadGrammar
+  // Full init each cycle: bp3_init → loadAlphabet → loadGrammar → produce
+  // Silent sound objects (Bernard's fix) make this work without prototypes
   bp3_init();
   const alphabet = document.getElementById('alphabet').value;
   const grammar = document.getElementById('grammar').value;
   bp3_load_settings_params(0, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
-  // Order: loadAlphabet → loadPrototypes → loadGrammar
   if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
-  if (lastPrototypesFile && bp3_load_prototypes) {
-    const r = bp3_load_prototypes(lastPrototypesFile);
-    if (r !== 0) {
-      document.getElementById('messagesContent').textContent = 'loadPrototypes error: ' + r;
-    }
-  }
   if (grammar.trim()) bp3_load_grammar(grammar.trim());
 }
 
@@ -728,7 +720,6 @@ function produce() {
       if (compiled.alphabet) document.getElementById('alphabet').value = compiled.alphabet;
       lastControlTable = compiled.controlTable || null;
       lastCVTable = compiled.cvTable || null;
-      lastPrototypesFile = compiled.prototypesFile || null;
       lastDirectives = compiled.directives || [];
       // Settings disabled for now — BP3 defaults work correctly,
       // our settingsJSON breaks text output formatting
@@ -761,15 +752,7 @@ function produce() {
 
   setTimeout(() => {
     try {
-      // Load settings FIRST (for NoteConvention etc.)
-      if (settings.trim()) {
-        const seResult = bp3_load_settings(settings.trim());
-        if (seResult !== 0) {
-          console.warn('Settings load returned:', seResult);
-        }
-      }
-
-      // reseed handles: loadAlphabet → setObjectDuration → loadGrammar
+      // reseed handles: init (first time) + loadAlphabet → loadPrototypes → loadGrammar
       reseed();
       const result = bp3_produce();
 
@@ -849,6 +832,11 @@ function escHtml(str) {
 function updateDebugPanel(grammar, alphabet) {
   const lines = [];
 
+  // 0. BP3 API results
+  lines.push('=== BP3 API ===');
+  lines.push('silent sound objects (no prototypes needed)');
+  lines.push('');
+
   // 1. Grammar sent to BP3
   lines.push('=== GRAMMAR → BP3 ===');
   lines.push(grammar || '(empty)');
@@ -866,7 +854,7 @@ function updateDebugPanel(grammar, alphabet) {
     lines.push('─'.repeat(50));
     for (const t of lastTimedTokens) {
       const dur = t.end - t.start;
-      const displayName = t.token.startsWith('bol') ? t.token.slice(3) : t.token;
+      const displayName = t.token;
       const name = displayName.padEnd(16);
       lines.push(`${name}${t.start}\t${t.end}\t${dur}`);
     }
@@ -905,7 +893,7 @@ function updateDebugPanel(grammar, alphabet) {
       if (t.token.startsWith('_') || t.token === '-' || t.token === '_') continue;
 
       // Strip 'bol' prefix for display and routing
-      const tok = t.token.startsWith('bol') ? t.token.slice(3) : t.token;
+      const tok = t.token;
       let route = tok.padEnd(12);
 
       // Parse token: western or generic
@@ -977,8 +965,8 @@ async function ensureDispatcher() {
     const { WebAudioTransport } = await import('../src/dispatcher/transports/webaudio.js');
     const { Resolver } = await import('../src/dispatcher/resolver.js');
 
-    const resolver = new Resolver();
     dispatcher = new Dispatcher(audioCtx);
+    const resolver = _createResolver();
     dispatcher.addTransport('default', new WebAudioTransport(audioCtx, { resolver }));
     dispatcher._resolver = resolver;
   }
@@ -991,30 +979,68 @@ function updateTransportButtons() {
   document.getElementById('stopBtn').disabled = !isPlaying;
 }
 
-/** Update the resolver from current directives (@tuning, @alphabet) */
-function updateResolver() {
-  if (!dispatcher?._resolver) return;
-  const resolver = dispatcher._resolver;
-  const libs = window._loadedLibs;
-  if (!libs) return;
+/**
+ * Create a Resolver from the new 5-layer JSON files.
+ * Falls back to legacy format if new files aren't loaded.
+ */
+function _createResolver() {
+  const { Resolver } = window._resolverModule || {};
+  if (!Resolver) return new (window._LegacyResolver || Object)();
 
-  // Set alphabet (note system)
-  for (const dir of lastDirectives) {
-    if (dir.name === 'alphabet' && dir.subkey) {
-      const entry = libs.alphabet?.alphabets?.[dir.subkey];
-      if (entry) resolver.setAlphabet(entry);
-    }
+  // Gather config from directives
+  let alphabetKey = 'western', tuningKey = 'western_12TET', octavesKey = 'western';
+  let referenceHz = null;
+
+  for (const dir of (lastDirectives || [])) {
+    if (dir.name === 'alphabet' && dir.subkey) alphabetKey = dir.subkey;
+    if (dir.name === 'tuning' && dir.runtime) tuningKey = dir.runtime;
+    if (dir.name === 'tuning' && dir.value) referenceHz = Number(dir.value);
+    if (dir.name === 'octaves' && dir.subkey) octavesKey = dir.subkey;
   }
 
-  // Set tuning / reference
-  for (const dir of lastDirectives) {
-    if (dir.name === 'tuning') {
-      if (dir.runtime && libs.tuning?.scales?.[dir.runtime]) {
-        resolver.setTuning(libs.tuning.scales[dir.runtime]);
-      } else if (dir.value) {
-        resolver.setReference(Number(dir.value));
-      }
-    }
+  // Load from new JSON libs
+  const alphabets = window._libAlphabets;
+  const octaves = window._libOctaves;
+  const tunings = window._libTunings;
+  const temperaments = window._libTemperaments;
+
+  if (!alphabets || !tunings || !temperaments) {
+    // Fallback: return a basic resolver
+    return new Resolver({});
+  }
+
+  const alphabetData = alphabets[alphabetKey];
+  const octavesData = octaves?.[octavesKey];
+  const tuningData = tunings[tuningKey];
+  const tempName = tuningData?.temperament;
+  const tempData = tempName ? temperaments[tempName] : null;
+
+  const config = {
+    alphabet: alphabetData || { notes: ['C','D','E','F','G','A','B'], alterations: ['b','','#'] },
+    octaves: octavesData || octaves?.['western'],
+    tuning: tuningData || tunings['western_12TET'],
+    temperament: tempData
+  };
+
+  // Override reference Hz if specified
+  if (referenceHz && config.tuning) {
+    config.tuning = { ...config.tuning, baseHz: referenceHz };
+  }
+
+  return new Resolver(config);
+}
+
+/** Update the resolver from current directives (@tuning, @alphabet, @octaves) */
+function updateResolver() {
+  if (!dispatcher) return;
+
+  const resolver = _createResolver();
+  dispatcher._resolver = resolver;
+
+  // Update the default transport's resolver
+  const transport = dispatcher.transports['default'];
+  if (transport) {
+    transport.resolver = resolver;
   }
 }
 
@@ -1034,7 +1060,7 @@ function appendResolverDebug() {
     lines.push('Live resolve:');
     const seen = new Set();
     for (const t of lastTimedTokens) {
-      const tok = t.token.startsWith('bol') ? t.token.slice(3) : t.token;
+      const tok = t.token;
       if (seen.has(tok) || tok.startsWith('_') || tok === '-') continue;
       seen.add(tok);
       const res = r.resolve(tok);
@@ -1090,7 +1116,8 @@ async function playLoop() {
   let reDerive = null;
   if (useReDerive) {
     reDerive = function() {
-      reseed(); bp3_produce();
+      bp3_load_settings_params(0, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
+      bp3_produce();
       document.getElementById('messagesContent').textContent = bp3_get_messages() || '(no messages)';
       const tc = bp3_get_timed_token_count();
       if (tc > 0) {
@@ -1176,7 +1203,6 @@ async function liveCompileAndSwap() {
 
     lastControlTable = compiled.controlTable || null;
     lastCVTable = compiled.cvTable || null;
-    lastPrototypesFile = compiled.prototypesFile || null;
     lastDirectives = compiled.directives || [];
 
     if (isPlaying && dispatcher) {
@@ -1269,12 +1295,6 @@ function renderTimeline(tokens) {
     panel.textContent = '(no tokens)';
     return;
   }
-
-  // Strip 'bol' prefix from tokens for display (added by encoder for BP3 compat)
-  tokens = tokens.map(t => ({
-    ...t,
-    token: t.token.startsWith('bol') ? t.token.slice(3) : t.token
-  }));
 
   // Build set of CV instance names for detection
   const cvNames = new Set();
@@ -1390,11 +1410,10 @@ function renderTimeline(tokens) {
     }
     html += '</div>';
 
-    // Control lane (below the track) — flex-based, same layout as notes
+    // Control lane (below the track) — absolute positioning based on timestamps
     if (ctrls.length > 0) {
-      // Sort controls by start time
+      // Sort and deduplicate by start time
       const sortedCtrls = [...ctrls].sort((a, b) => a.start - b.start);
-      // Deduplicate by start time (show one label per position)
       const uniqueCtrls = [];
       let lastStart = -1;
       for (const c of sortedCtrls) {
@@ -1404,16 +1423,11 @@ function renderTimeline(tokens) {
         }
         uniqueCtrls[uniqueCtrls.length - 1].labels.push(resolveScriptLabel(c.token));
       }
-      html += '<div class="tl-ctrl-lane"><div class="tl-ctrl-row" style="display:flex;">';
-      let ctrlPrevEnd = 0;
+      html += '<div class="tl-ctrl-lane"><div class="tl-ctrl-row">';
       for (const g of uniqueCtrls) {
-        if (g.start > ctrlPrevEnd) {
-          const gapPct = ((g.start - ctrlPrevEnd) / totalMs) * 100;
-          html += `<div style="flex:${gapPct};"></div>`;
-        }
+        const leftPct = (g.start / totalMs) * 100;
         const label = g.labels.join(', ');
-        html += `<div class="tl-ctrl-mark" style="position:relative; left:0; flex:0 0 auto;" title="${label}">${label}</div>`;
-        ctrlPrevEnd = g.start;
+        html += `<div class="tl-ctrl-mark" style="left:${leftPct}%;" title="${label}">${label}</div>`;
       }
       html += '</div></div>';
     }
@@ -1580,6 +1594,22 @@ loadLibrary();
   registerAll(libs);
   window._loadedLibs = libs;
 
+  // Load new 5-layer pitch JSON files
+  const pitchLibNames = ['alphabets', 'octaves', 'tunings', 'temperaments'];
+  await Promise.all(pitchLibNames.map(async (name) => {
+    try {
+      const resp = await fetch(`../lib/${name}.json`);
+      if (resp.ok) {
+        const data = await resp.json();
+        window['_lib' + name.charAt(0).toUpperCase() + name.slice(1)] = data;
+      }
+    } catch(e) { console.warn(`Failed to load lib/${name}.json:`, e.message); }
+  }));
+
+  // Store Resolver module reference for _createResolver()
+  const resolverModule = await import('../src/dispatcher/resolver.js');
+  window._resolverModule = resolverModule;
+
   // Adapter: compileBPS → same interface as old compileBPScript
   window._compileBPScript = function(source) {
     const result = compileBPS(source);
@@ -1589,7 +1619,6 @@ loadLibrary();
       settings: result.settingsJSON || '',
       controlTable: result.controlTable || [],
       cvTable: result.cvTable || [],
-      prototypesFile: result.prototypesFile || '',
       errors: result.errors || [],
       warnings: []
     };
