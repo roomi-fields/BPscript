@@ -1005,9 +1005,9 @@ function _createResolver() {
   }
 
   // Auto-detect default tuning from alphabet (first tuning that references this alphabet)
-  const tunings = window._libTunings;
-  if (!tuningKey && tunings) {
-    for (const [k, v] of Object.entries(tunings)) {
+  const tuningsLib = window._libTunings;
+  if (!tuningKey && tuningsLib) {
+    for (const [k, v] of Object.entries(tuningsLib)) {
       if (k.startsWith('_')) continue;
       if (v.alphabet === alphabetKey) { tuningKey = k; break; }
     }
