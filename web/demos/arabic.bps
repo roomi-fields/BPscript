@@ -1,0 +1,15 @@
+// Arabic Maqam — quarter-tone system
+// 7 notes: do re mi fa sol la si (same names as solfège, different tuning)
+// Maqam Rast — characteristic Arab scale
+
+@core
+@controls
+@alphabet.arabic:browser
+@tuning:maqam_rast
+@mm:70
+
+S -> Ascend Descend End
+
+Ascend -> do re mi fa sol la si (wave:sine, vel:85)
+Descend -> si la sol fa mi re do (vel:70)
+End -> do _ _ _ _ (vel:60)

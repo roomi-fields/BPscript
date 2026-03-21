@@ -271,5 +271,47 @@
     "category": "tuning",
     "description": "Référence orchestrale européenne (442 Hz)",
     "file": "tuning-ref442.bps"
+  },
+  {
+    "id": "solfege",
+    "title": "Solfège",
+    "category": "world",
+    "description": "Notation française : do re mi fa sol la si",
+    "file": "solfege.bps"
+  },
+  {
+    "id": "arabic",
+    "title": "Maqam Rast",
+    "category": "world",
+    "description": "Gamme arabe avec quarts de ton (maqam rast)",
+    "file": "arabic.bps"
+  },
+  {
+    "id": "gamelan",
+    "title": "Gamelan Slendro",
+    "category": "world",
+    "description": "Pentatonique javanais à octave étirée",
+    "file": "gamelan.bps"
+  },
+  {
+    "id": "pelog",
+    "title": "Gamelan Pelog",
+    "category": "world",
+    "description": "Heptatonique javanais à intervalles inégaux",
+    "file": "pelog.bps"
+  },
+  {
+    "id": "shakuhachi",
+    "title": "Shakuhachi",
+    "category": "world",
+    "description": "Flûte de bambou japonaise (ro tsu re chi ri)",
+    "file": "shakuhachi.bps"
+  },
+  {
+    "id": "bohlen-pierce",
+    "title": "Bohlen-Pierce",
+    "category": "world",
+    "description": "Échelle non-octaviante (tritave 3:1, 13 notes)",
+    "file": "bohlen-pierce.bps"
   }
 ]

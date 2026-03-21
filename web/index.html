@@ -529,7 +529,7 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'raga', 'advanced'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'world', 'raga', 'advanced'];
   const categoryLabels = {
     tutorial: 'Tutorial',
     basics: 'Basics',
@@ -538,6 +538,7 @@ function renderLibrary(items) {
     synthesis: 'Synthesis',
     cv: 'CV / Signal',
     tuning: 'Tuning',
+    world: 'World Scales',
     raga: 'Raga / Indian',
     advanced: 'Advanced'
   };
@@ -988,27 +989,38 @@ function _createResolver() {
   if (!Resolver) return new (window._LegacyResolver || Object)();
 
   // Gather config from directives
-  let alphabetKey = 'western', tuningKey = 'western_12TET', octavesKey = 'western';
+  let alphabetKey = 'western', tuningKey = null, octavesKey = null;
   let referenceHz = null;
 
-  // Map old alphabet names to new JSON keys
-  const alphabetKeyMap = { raga: 'sargam', western: 'western' };
+  // Map old/legacy alphabet names to new JSON keys
+  const alphabetKeyMap = { raga: 'sargam' };
 
   for (const dir of (lastDirectives || [])) {
     if (dir.name === 'alphabet' && dir.subkey) {
       alphabetKey = alphabetKeyMap[dir.subkey] || dir.subkey;
-      // Auto-select matching tuning and octaves
-      if (alphabetKey === 'sargam') {
-        tuningKey = 'sargam_12TET';
-        octavesKey = 'arrows';
-      }
     }
     if (dir.name === 'tuning' && dir.runtime) tuningKey = dir.runtime;
     if (dir.name === 'tuning' && dir.value) referenceHz = Number(dir.value);
     if (dir.name === 'octaves' && dir.subkey) octavesKey = dir.subkey;
   }
 
-  console.log('[resolver] keys:', alphabetKey, tuningKey, octavesKey, 'directives:', lastDirectives?.length);
+  // Auto-detect default tuning from alphabet (first tuning that references this alphabet)
+  const tunings = window._libTunings;
+  if (!tuningKey && tunings) {
+    for (const [k, v] of Object.entries(tunings)) {
+      if (k.startsWith('_')) continue;
+      if (v.alphabet === alphabetKey) { tuningKey = k; break; }
+    }
+  }
+  tuningKey = tuningKey || 'western_12TET';
+
+  // Auto-detect octaves from tuning or alphabet defaults
+  const octaveDefaults = {
+    western: 'western', sargam: 'arrows', solfege: 'western', arabic: 'western',
+    turkish: 'western', gamelan_pelog: 'gamelan', gamelan_slendro: 'gamelan',
+    shakuhachi: 'western', bohlen_pierce: 'western'
+  };
+  octavesKey = octavesKey || octaveDefaults[alphabetKey] || 'western';
 
   // Load from new JSON libs
   const alphabets = window._libAlphabets;

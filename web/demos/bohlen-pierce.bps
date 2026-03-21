@@ -1,0 +1,13 @@
+// Bohlen-Pierce — 13 notes per tritave (ratio 3:1 instead of 2:1)
+// Non-octave scale, unique harmonic structure
+
+@core
+@controls
+@alphabet.bohlen_pierce:browser
+@mm:80
+
+S -> Up Down End
+
+Up -> C D E F G H J (wave:triangle, vel:80)
+Down -> J H G F E D C (vel:70)
+End -> C _ _ _ (vel:60)
