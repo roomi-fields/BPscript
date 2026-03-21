@@ -29,8 +29,11 @@ export class Resolver {
     this.alterations = config.alphabet?.alterations || [];
     this._noteSet = new Set(this.notes);
 
-    // Octaves
+    // Octaves — use tuning's baseRegister as default if available
     this.octaveConfig = config.octaves || { position: 'suffix', separator: '', registers: ['0','1','2','3','4','5','6','7','8','9'], default: 4 };
+    if (config.tuning?.baseRegister != null) {
+      this.octaveConfig = { ...this.octaveConfig, default: config.tuning.baseRegister };
+    }
 
     // Tuning
     this.degrees = config.tuning?.degrees || null;
