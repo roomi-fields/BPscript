@@ -991,12 +991,24 @@ function _createResolver() {
   let alphabetKey = 'western', tuningKey = 'western_12TET', octavesKey = 'western';
   let referenceHz = null;
 
+  // Map old alphabet names to new JSON keys
+  const alphabetKeyMap = { raga: 'sargam', western: 'western' };
+
   for (const dir of (lastDirectives || [])) {
-    if (dir.name === 'alphabet' && dir.subkey) alphabetKey = dir.subkey;
+    if (dir.name === 'alphabet' && dir.subkey) {
+      alphabetKey = alphabetKeyMap[dir.subkey] || dir.subkey;
+      // Auto-select matching tuning and octaves
+      if (alphabetKey === 'sargam') {
+        tuningKey = 'sargam_12TET';
+        octavesKey = 'arrows';
+      }
+    }
     if (dir.name === 'tuning' && dir.runtime) tuningKey = dir.runtime;
     if (dir.name === 'tuning' && dir.value) referenceHz = Number(dir.value);
     if (dir.name === 'octaves' && dir.subkey) octavesKey = dir.subkey;
   }
+
+  console.log('[resolver] keys:', alphabetKey, tuningKey, octavesKey, 'directives:', lastDirectives?.length);
 
   // Load from new JSON libs
   const alphabets = window._libAlphabets;
@@ -1050,9 +1062,14 @@ function appendResolverDebug() {
   if (!el || !dispatcher?._resolver) return;
   const r = dispatcher._resolver;
   const lines = ['\n=== RESOLVER STATE (at Play) ==='];
+  lines.push(`type: ${r.constructor?.name || typeof r}`);
   lines.push(`baseHz: ${r.baseHz}`);
-  lines.push(`semitones: ${JSON.stringify(r.semitones)}`);
-  lines.push(`ratios: ${r.ratios ? 'custom tuning' : 'none (12-TET)'}`);
+  lines.push(`notes: ${JSON.stringify(r.notes)}`);
+  lines.push(`alterations: ${JSON.stringify(r.alterations)}`);
+  lines.push(`temperament: ${r.temperament ? (r._isParametric ? 'parametric' : 'table') : 'none'}`);
+  lines.push(`octaveConfig: ${JSON.stringify(r.octaveConfig?.position)} regs=${r.octaveConfig?.registers?.length}`);
+  lines.push(`libs loaded: alphabets=${!!window._libAlphabets} octaves=${!!window._libOctaves} tunings=${!!window._libTunings} temperaments=${!!window._libTemperaments}`);
+  lines.push(`directives: ${lastDirectives?.map(d => '@' + d.name + (d.subkey ? '.' + d.subkey : '') + (d.runtime ? ':' + d.runtime : '')).join(', ') || 'none'}`);
 
   // Test resolve for each unique note token
   if (lastTimedTokens) {
@@ -1065,7 +1082,7 @@ function appendResolverDebug() {
       seen.add(tok);
       const res = r.resolve(tok);
       if (res) {
-        lines.push(`  ${tok} → ${res.frequency.toFixed(2)} Hz (midi ${res.midiNote})`);
+        lines.push(`  ${tok} → ${res.frequency.toFixed(2)} Hz (${res.noteName} reg=${res.register})`);
       } else {
         lines.push(`  ${tok} → NULL (no sound)`);
       }
@@ -1619,6 +1636,7 @@ loadLibrary();
       settings: result.settingsJSON || '',
       controlTable: result.controlTable || [],
       cvTable: result.cvTable || [],
+      directives: result.directives || [],
       errors: result.errors || [],
       warnings: []
     };

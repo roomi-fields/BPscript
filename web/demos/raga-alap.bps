@@ -1,4 +1,4 @@
-// Raga Alap — exploration lente avec variations aléatoires
+// Raga Alap — slow exploration with random variations
 
 @core
 @controls
@@ -9,27 +9,27 @@ S -> Intro Develop Develop Climax
 
 -----
 
-// Exploration basse
+// Low exploration
 @mode:random
-Intro -> sa5 _ re5 _ ga5 _ re5 sa5 _ _ [weight:50]
-Intro -> sa5 _ _ re5 ga5 _ _ _
+Intro -> sa _ re _ ga _ re sa _ _ [weight:50]
+Intro -> sa _ _ re ga _ _ _
 
 -----
 
-// Développement
+// Development
 @mode:random
 Develop -> Ascend Descend
 Develop -> Descend Ascend
 
-Ascend -> ga5 pa5 _ dha5 [weight:40]
-Ascend -> re5 ga5 pa5 _
-Ascend -> pa5 _ dha5 sa6
+Ascend -> ga pa _ dha [weight:40]
+Ascend -> re ga pa _
+Ascend -> pa _ dha ni
 
-Descend -> dha5 pa5 ga5 _ [weight:40]
-Descend -> sa6 dha5 _ pa5
-Descend -> pa5 ga5 re5 sa5
+Descend -> dha pa ga _ [weight:40]
+Descend -> ni dha _ pa
+Descend -> pa ga re sa
 
 -----
 
-// Point culminant
-Climax -> sa6 _ _ dha5 pa5 _ ga5 re5 sa5 _ _ _ (vel:110)
+// Climax
+Climax -> ni _ _ dha pa _ ga re sa _ _ _ (vel:110)

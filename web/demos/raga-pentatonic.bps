@@ -1,5 +1,5 @@
-// Raga Mohanam — pentatonique ascendant/descendant
-// Démo : alphabet raga (sargam), prolongation, silence
+// Raga Mohanam — pentatonic ascending/descending
+// sa re ga pa dha — sargam notation
 
 @core
 @controls
@@ -7,6 +7,6 @@
 
 S -> Aroha Avaroha Phrase
 
-Aroha -> sa6 re6 ga6 pa6 dha6
-Avaroha -> dha6 pa6 ga6 re6 sa6
-Phrase -> ga6 _ pa6 dha6 - sa7 dha6 pa6 _ ga6 re6 sa6 _ _
+Aroha -> sa re ga pa dha (wave:sine, vel:85)
+Avaroha -> dha pa ga re sa
+Phrase -> ga _ pa dha - sa dha pa _ ga re sa _ _ (vel:70)
