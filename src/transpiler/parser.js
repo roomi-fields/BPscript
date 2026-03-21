@@ -1296,7 +1296,8 @@ function parse(tokens) {
 
     const name = expect(T.IDENT).value;
     let args = null;
-    if (at(T.LPAREN)) {
+    // Parse () as template params ONLY if not a runtime qualifier
+    if (at(T.LPAREN) && !isRuntimeQualifier()) {
       args = [];
       advance();
       while (!at(T.RPAREN) && !atEnd()) {
@@ -1335,7 +1336,8 @@ function parse(tokens) {
 
     const name = expect(T.IDENT).value;
     let args = null;
-    if (at(T.LPAREN)) {
+    // Parse () as template params ONLY if not a runtime qualifier
+    if (at(T.LPAREN) && !isRuntimeQualifier()) {
       args = [];
       advance();
       while (!at(T.RPAREN) && !atEnd()) {
