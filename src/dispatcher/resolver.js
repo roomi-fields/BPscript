@@ -100,15 +100,39 @@ export class Resolver {
   }
 
   /**
-   * Resolve a token to frequency.
-   * @param {string} token - e.g. "C4", "Sa_^", "ga_komal", "D#5"
+   * Resolve a token to frequency or sound parameters.
+   * @param {string} token - e.g. "C4", "Sa_^", "ga_komal", "D#5", "dhin"
    * @param {string} [direction] - 'ascending' or 'descending' (for directional tunings)
-   * @returns {{ frequency: number, noteName: string, alteration: string|null, register: number } | null}
+   * @returns {{ frequency: number, noteName: string, alteration: string|null, register: number } | { layers: Array } | { freq: number, ... } | null}
    */
   resolve(token, direction) {
     const cacheKey = direction ? token + ':' + direction : token;
     if (this._cache[cacheKey]) return this._cache[cacheKey];
 
+    // Try 5-layer pitch resolution
+    const pitched = this._resolvePitch(token, direction);
+    if (pitched) {
+      this._cache[cacheKey] = pitched;
+      return pitched;
+    }
+
+    // Fallback: sounds resolver (percussion, samples, etc.)
+    if (this.soundsResolver) {
+      const sounds = this.soundsResolver.resolve(token);
+      if (sounds) {
+        this._cache[cacheKey] = sounds;
+        return sounds;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * 5-layer pitch resolution: register → note → degree → step → frequency.
+   * @returns {{ frequency: number, noteName: string, alteration: string|null, register: number } | null}
+   */
+  _resolvePitch(token, direction) {
     // Step 1: Parse register (octave convention)
     const parsed = this._parseRegister(token);
     if (!parsed) return null;
@@ -145,14 +169,12 @@ export class Resolver {
 
     if (frequency == null || isNaN(frequency)) return null;
 
-    const result = {
+    return {
       frequency: Math.round(frequency * 100) / 100,
       noteName,
       alteration,
       register,
     };
-    this._cache[cacheKey] = result;
-    return result;
   }
 
   /**

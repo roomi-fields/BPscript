@@ -63,5 +63,12 @@
     "notes": ["C", "Db", "D", "E", "F", "Gb", "G", "H", "Jb", "J", "A", "Bb", "B"],
     "alterations": [],
     "_note": "BP uses its own letter naming. No standard alteration system."
+  },
+
+  "tabla": {
+    "description": "Tabla bols — percussion syllables (no pitch)",
+    "notes": ["dhin", "dha", "ge", "ghe", "ka", "ke", "na", "ta", "ti", "tin", "tun", "dhagena", "tirakita", "dheene", "dheena", "teene", "teena", "gena", "kena", "tage", "dhati", "dhage", "trkt", "kt", "tidha", "dhati_bol", "teenake", "dheenage", "dhatrkt", "trktdha", "teenakena", "dheenagena", "ek", "do", "char", "panch", "che", "sat", "at"],
+    "alterations": [],
+    "_note": "Percussion alphabet — no pitch resolution. Sound params come from sounds/tabla_perc.json."
   }
 }

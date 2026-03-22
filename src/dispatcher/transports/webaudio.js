@@ -33,14 +33,28 @@ export class WebAudioTransport {
    * @param {number} absTime - absolute AudioContext time
    */
   send(event, absTime) {
-    // Resolve token to frequency via resolver (handles all alphabets)
-    let freq = null;
+    // Resolve token via resolver (handles pitched + sounds)
+    let resolved = null;
     if (this.resolver) {
-      const resolved = this.resolver.resolve(event.token);
-      if (resolved) freq = resolved.frequency;
+      resolved = this.resolver.resolve(event.token);
     }
-    if (freq === null || freq <= 0) {
-      // Unknown terminal: percussive synthesis (tabla bols, drum names, etc.)
+
+    // Layers → multi-voice percussion (e.g. dhin = bayan + dayan)
+    if (resolved && resolved.layers) {
+      this._sendLayers(event, resolved, absTime);
+      return;
+    }
+
+    // Pitched → oscillator
+    const freq = resolved?.frequency;
+    if (freq > 0) {
+      // fall through to oscillator code below
+    } else if (resolved && resolved.freq) {
+      // Sounds-based percussion (single layer, e.g. ka = bayan_muted)
+      this._sendPercussion(event, absTime, resolved);
+      return;
+    } else {
+      // Hash fallback for truly unknown terminals
       this._sendPercussion(event, absTime);
       return;
     }
@@ -279,38 +293,66 @@ export class WebAudioTransport {
   }
 
   /**
-   * Percussive synthesis for unknown terminals (tabla bols, drums, etc.)
-   * Each unique name gets distinct percussion timbre via hash.
-   * Uses noise burst + pitched component with fast envelope.
+   * Multi-layer percussion: play each layer simultaneously.
+   * Used for composite bols like dhin (bayan_open + dayan_ring).
    */
-  _sendPercussion(event, absTime) {
+  _sendLayers(event, resolved, absTime) {
+    for (const layer of resolved.layers) {
+      this._sendPercussion(event, absTime, layer);
+    }
+  }
+
+  /**
+   * Percussive synthesis with explicit params or hash fallback.
+   * @param {Object} event - { token, velocity, ... }
+   * @param {number} absTime - absolute AudioContext time
+   * @param {Object} [params] - { freq, brightness, decay, noise, pitch_drop } from sounds resolver
+   */
+  _sendPercussion(event, absTime, params) {
     const token = event.token;
     const velocity = event.velocity || 0.5;
 
-    // Hash the name for stable, distinct parameters
-    let hash = 0;
-    for (let i = 0; i < token.length; i++) {
-      hash = ((hash << 5) - hash + token.charCodeAt(i)) | 0;
-    }
-    hash = ((hash % 1000) + 1000) % 1000;
+    let basePitch, brightness, decaySec, noiseAmount, pitchDrop;
 
-    // Derive percussion parameters from hash
-    const basePitch = 60 + (hash % 30);             // 60-90 Hz range
-    const brightness = 800 + (hash % 4000);          // noise filter 800-4800 Hz
-    const decaySec = 0.05 + (hash % 200) / 1000;     // 50-250ms decay
-    const noiseAmount = 0.3 + (hash % 7) / 10;       // 0.3-1.0 noise vs tone
-    const pitchDrop = 0.5 + (hash % 5) / 10;         // pitch drops 50-100%
+    if (params && params.freq) {
+      // Sounds-based: use explicit params
+      basePitch = params.freq;
+      brightness = params.brightness || 2000;
+      decaySec = (params.decay || 150) / 1000;
+      noiseAmount = params.noise != null ? params.noise : 0.3;
+      pitchDrop = params.pitch_drop != null ? params.pitch_drop : 0.5;
+    } else {
+      // Hash fallback for unknown terminals
+      let hash = 0;
+      for (let i = 0; i < token.length; i++) {
+        hash = ((hash << 5) - hash + token.charCodeAt(i)) | 0;
+      }
+      hash = ((hash % 1000) + 1000) % 1000;
+
+      basePitch = 60 + (hash % 30);
+      brightness = 800 + (hash % 4000);
+      decaySec = 0.05 + (hash % 200) / 1000;
+      noiseAmount = 0.3 + (hash % 7) / 10;
+      pitchDrop = 0.5 + (hash % 5) / 10;
+    }
+
+    // Determine output destination: CV bus if active, else audioCtx.destination
+    const dest = (this._cvBus && absTime < this._cvBus.endTime)
+      ? this._cvBus.node
+      : this.audioCtx.destination;
 
     // 1. Pitched component (sine oscillator with pitch drop)
     const osc = this.audioCtx.createOscillator();
     const oscGain = this.audioCtx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(basePitch * 4, absTime);
-    osc.frequency.exponentialRampToValueAtTime(basePitch * pitchDrop, absTime + decaySec);
+    osc.frequency.exponentialRampToValueAtTime(
+      Math.max(1, basePitch * pitchDrop), absTime + decaySec
+    );
     oscGain.gain.setValueAtTime(velocity * (1 - noiseAmount) * 0.5, absTime);
     oscGain.gain.exponentialRampToValueAtTime(0.001, absTime + decaySec);
     osc.connect(oscGain);
-    oscGain.connect(this.audioCtx.destination);
+    oscGain.connect(dest);
     osc.start(absTime);
     osc.stop(absTime + decaySec + 0.01);
 
@@ -332,7 +374,7 @@ export class WebAudioTransport {
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.audioCtx.destination);
+    noiseGain.connect(dest);
     noise.start(absTime);
     noise.stop(absTime + decaySec + 0.01);
 

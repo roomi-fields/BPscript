@@ -1,4 +1,0 @@
-[submodule "bp3-engine"]
-	path = bp3-engine
-	url = https://github.com/roomi-fields/bp3-engine.git
-	branch = wasm

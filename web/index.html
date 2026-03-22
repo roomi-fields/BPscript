@@ -1242,7 +1242,31 @@ function _createResolver() {
     config.tuning = { ...config.tuning, baseHz: referenceHz };
   }
 
-  return new Resolver(config);
+  const resolver = new Resolver(config);
+
+  // Attach SoundsResolver if applicable
+  const { SoundsResolver } = window._soundsResolverModule || {};
+  if (SoundsResolver && window._libSounds) {
+    // Explicit @sounds directive
+    let soundsKey = null;
+    for (const dir of (lastDirectives || [])) {
+      if (dir.name === 'sounds' && (dir.runtime || dir.subkey)) {
+        soundsKey = dir.runtime || dir.subkey;
+      }
+    }
+
+    // Auto-detect from alphabet
+    if (!soundsKey) {
+      const soundsAutoMap = { tabla: 'tabla_perc' };
+      soundsKey = soundsAutoMap[alphabetKey] || null;
+    }
+
+    if (soundsKey && window._libSounds[soundsKey]) {
+      resolver.soundsResolver = new SoundsResolver(window._libSounds[soundsKey]);
+    }
+  }
+
+  return resolver;
 }
 
 /** Update the resolver from current directives (@tuning, @alphabet, @octaves) */
@@ -1272,6 +1296,7 @@ function appendResolverDebug() {
   lines.push(`temperament: ${r.temperament ? (r._isParametric ? 'parametric' : 'table') : 'none'}`);
   lines.push(`octaveConfig: ${JSON.stringify(r.octaveConfig?.position)} regs=${r.octaveConfig?.registers?.length}`);
   lines.push(`libs loaded: alphabets=${!!window._libAlphabets} octaves=${!!window._libOctaves} tunings=${!!window._libTunings} temperaments=${!!window._libTemperaments}`);
+  lines.push(`sounds: ${r.soundsResolver ? 'yes (' + Object.keys(r.soundsResolver.byTerminal).length + ' terminals)' : 'none'}`);
   lines.push(`directives: ${lastDirectives?.map(d => '@' + d.name + (d.subkey ? '.' + d.subkey : '') + (d.runtime ? ':' + d.runtime : '')).join(', ') || 'none'}`);
 
   // Test resolve for each unique note token
@@ -1285,9 +1310,16 @@ function appendResolverDebug() {
       seen.add(tok);
       const res = r.resolve(tok);
       if (res) {
-        lines.push(`  ${tok} → ${res.frequency.toFixed(2)} Hz (${res.noteName} reg=${res.register})`);
+        if (res.frequency) {
+          lines.push(`  ${tok} → ${res.frequency.toFixed(2)} Hz (${res.noteName} reg=${res.register})`);
+        } else if (res.layers) {
+          const layerInfo = res.layers.map(l => `${l.freq}Hz`).join('+');
+          lines.push(`  ${tok} → sounds:layers [${layerInfo}]`);
+        } else if (res.freq) {
+          lines.push(`  ${tok} → sounds:${res.freq}Hz decay=${res.decay}ms`);
+        }
       } else {
-        lines.push(`  ${tok} → NULL (no sound)`);
+        lines.push(`  ${tok} → hash fallback`);
       }
     }
   }
@@ -1826,9 +1858,21 @@ loadLibrary();
     } catch(e) { console.warn(`Failed to load lib/${name}.json:`, e.message); }
   }));
 
-  // Store Resolver module reference for _createResolver()
+  // Load sounds JSON files
+  const soundsLibNames = ['tabla_perc'];
+  window._libSounds = {};
+  await Promise.all(soundsLibNames.map(async (name) => {
+    try {
+      const resp = await fetch(`../lib/sounds/${name}.json`);
+      if (resp.ok) window._libSounds[name] = await resp.json();
+    } catch(e) { console.warn(`Failed to load lib/sounds/${name}.json:`, e.message); }
+  }));
+
+  // Store Resolver + SoundsResolver module references
   const resolverModule = await import('../src/dispatcher/resolver.js');
   window._resolverModule = resolverModule;
+  const soundsModule = await import('../src/dispatcher/soundsResolver.js');
+  window._soundsResolverModule = soundsModule;
 
   // Adapter: compileBPS → same interface as old compileBPScript
   window._compileBPScript = function(source) {

@@ -1,0 +1,92 @@
+# Makefile.emscripten — Build BP3 as WebAssembly via Emscripten
+#
+# Usage:
+#   source /path/to/emsdk/emsdk_env.sh
+#   make -f Makefile.emscripten
+
+CC = emcc
+
+# Source directories
+BP3_SRC = csrc/bp3
+WASM_SRC = csrc/wasm
+
+# Compiler flags
+CFLAGS = -O2 \
+	-fno-common \
+	-include $(WASM_SRC)/bp3_wasm_platform.h \
+	-D__BP3_WASM__=1 \
+	-I$(BP3_SRC) \
+	-Wno-implicit-function-declaration \
+	-Wno-int-conversion \
+	-Wno-incompatible-pointer-types
+
+# Linker flags
+LDFLAGS = \
+	-s EXPORTED_FUNCTIONS='["_bp3_init","_bp3_load_grammar","_bp3_load_alphabet","_bp3_load_settings","_bp3_load_settings_params","_bp3_load_tonality","_bp3_load_csound_resources","_bp3_produce","_bp3_get_result","_bp3_get_messages","_bp3_get_midi_events","_bp3_get_midi_event_count","_bp3_get_timed_tokens","_bp3_get_timed_token_count","_malloc","_free","_emscripten_stack_get_base","_emscripten_stack_get_end"]' \
+	-s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","UTF8ToString","FS"]' \
+	-s ALLOW_MEMORY_GROWTH=1 \
+	-s INITIAL_MEMORY=67108864 \
+	-s STACK_SIZE=33554432 \
+	-s MODULARIZE=1 \
+	-s EXPORT_NAME='BP3Module' \
+	-s FILESYSTEM=1 \
+	--preload-file $(WASM_SRC)/console_strings.json@/console_strings.json \
+	-lm
+
+# BP3 core sources
+BP3_SRCS = \
+	$(BP3_SRC)/ConsoleMain.c \
+	$(BP3_SRC)/ConsoleMemory.c \
+	$(BP3_SRC)/ConsoleMessages.c \
+	$(BP3_SRC)/ConsoleStubs.c \
+	$(BP3_SRC)/CompileGrammar.c \
+	$(BP3_SRC)/CompileProcs.c \
+	$(BP3_SRC)/ProduceItems.c \
+	$(BP3_SRC)/Compute.c \
+	$(BP3_SRC)/Inits.c \
+	$(BP3_SRC)/Misc.c \
+	$(BP3_SRC)/Strings.c \
+	$(BP3_SRC)/CTextHandles.c \
+	$(BP3_SRC)/cJSON.c \
+	$(BP3_SRC)/Encode.c \
+	$(BP3_SRC)/Polymetric.c \
+	$(BP3_SRC)/FillPhaseDiagram.c \
+	$(BP3_SRC)/GetRelease.c \
+	$(BP3_SRC)/DisplayArg.c \
+	$(BP3_SRC)/DisplayThings.c \
+	$(BP3_SRC)/SetObjectFeatures.c \
+	$(BP3_SRC)/TimeSetFunctions.c \
+	$(BP3_SRC)/TimeSet.c \
+	$(BP3_SRC)/Tonality.c \
+	$(BP3_SRC)/Arithmetic.c \
+	$(BP3_SRC)/Automata.c \
+	$(BP3_SRC)/Zouleb.c \
+	$(BP3_SRC)/Interface2.c \
+	$(BP3_SRC)/SaveLoads1.c \
+	$(BP3_SRC)/SaveLoads3.c \
+	$(BP3_SRC)/SoundObjects2.c \
+	$(BP3_SRC)/SoundObjects3.c
+
+# WASM-specific sources
+WASM_SRCS = \
+	$(WASM_SRC)/bp3_wasm_stubs.c \
+	$(WASM_SRC)/bp3_api.c
+
+ALL_SRCS = $(BP3_SRCS) $(WASM_SRCS)
+
+# Output
+BUILD_DIR = build
+TARGET = $(BUILD_DIR)/bp3.js
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(TARGET): $(ALL_SRCS) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(ALL_SRCS) -o $(TARGET) $(LDFLAGS)
+
+clean:
+	rm -rf $(BUILD_DIR)
