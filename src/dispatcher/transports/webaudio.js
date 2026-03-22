@@ -33,21 +33,17 @@ export class WebAudioTransport {
    * @param {number} absTime - absolute AudioContext time
    */
   send(event, absTime) {
-    // Resolve token to frequency
+    // Resolve token to frequency via resolver (handles all alphabets)
     let freq = null;
     if (this.resolver) {
       const resolved = this.resolver.resolve(event.token);
       if (resolved) freq = resolved.frequency;
     }
-    if (freq === null) {
-      freq = this._tokenToFreq(event.token);
-    }
-    if (freq === null) {
+    if (freq === null || freq <= 0) {
       // Unknown terminal: percussive synthesis (tabla bols, drum names, etc.)
       this._sendPercussion(event, absTime);
       return;
     }
-    if (freq <= 0) return;
 
     const dur = Math.max(0.05, event.durSec);
     const velocity = event.velocity || 0.5;
@@ -280,19 +276,6 @@ export class WebAudioTransport {
       } catch {}
     }
     this._nodes = [];
-  }
-
-  /** Fallback: parse Western note name to frequency */
-  _tokenToFreq(token) {
-    const m = token.match(/^([A-Ga-g])([#b]?)(\d+)$/);
-    if (!m) return null;
-    const noteMap = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-    const base = noteMap[m[1].toUpperCase()];
-    if (base == null) return null;
-    const acc = m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0;
-    const oct = parseInt(m[3]);
-    const midi = (oct + 1) * 12 + base + acc;
-    return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
   /**
