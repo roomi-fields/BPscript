@@ -42,6 +42,10 @@ export class WebAudioTransport {
     if (freq === null) {
       freq = this._tokenToFreq(event.token);
     }
+    if (freq === null) {
+      // Fallback: hash-based frequency for unknown terminals (tabla bols, etc.)
+      freq = this._hashToFreq(event.token);
+    }
     if (freq === null || freq <= 0) return;
 
     const dur = Math.max(0.05, event.durSec);
@@ -287,6 +291,19 @@ export class WebAudioTransport {
     const acc = m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0;
     const oct = parseInt(m[3]);
     const midi = (oct + 1) * 12 + base + acc;
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  /** Hash-based fallback: map any terminal name to a distinct audible frequency.
+   *  Range: C3 (130 Hz) to C6 (1047 Hz). Each unique name gets a stable pitch. */
+  _hashToFreq(token) {
+    if (!token || token.length === 0) return null;
+    let hash = 0;
+    for (let i = 0; i < token.length; i++) {
+      hash = ((hash << 5) - hash + token.charCodeAt(i)) | 0;
+    }
+    // Map hash to MIDI range 48-84 (C3 to C6)
+    const midi = 48 + (((hash % 37) + 37) % 37);
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 }

@@ -1,0 +1,310 @@
+[
+  {
+    "id": "dhati",
+    "title": "Dhati",
+    "category": "indian",
+    "description": "Qa'ida de tabla (dhati)",
+    "file": "dhati.bps"
+  },
+  {
+    "id": "dhin",
+    "title": "Dhin",
+    "category": "indian",
+    "description": "Qa'ida pour tabla (BP1 \u2192 BP3)",
+    "file": "dhin.bps"
+  },
+  {
+    "id": "ek-do-tin",
+    "title": "Ek Do Tin",
+    "category": "indian",
+    "description": "Tihai de Kathak (ek do tin char panch che sat at)",
+    "file": "ek-do-tin.bps"
+  },
+  {
+    "id": "mohanam",
+    "title": "Mohanam",
+    "category": "indian",
+    "description": "Composition par Kumar S. Subramanian, Juin 1995",
+    "file": "mohanam.bps"
+  },
+  {
+    "id": "nadaka",
+    "title": "Nadaka",
+    "category": "indian",
+    "description": "Improvisation in modern Carnatic style",
+    "file": "nadaka.bps"
+  },
+  {
+    "id": "vina",
+    "title": "Vina",
+    "category": "indian",
+    "description": "Gitam \"Sri Gananaada\" en raga Malahari (premier cycle)",
+    "file": "vina.bps"
+  },
+  {
+    "id": "vina2",
+    "title": "Vina 2",
+    "category": "indian",
+    "description": "Gitam \"Sri Gananaada\" (variante avec pitch bend polym\u00e9trique)",
+    "file": "vina2.bps"
+  },
+  {
+    "id": "vina3",
+    "title": "Vina 3",
+    "category": "indian",
+    "description": "Pallavi of \"Maayaatiita Svaruupini\" in raga mayamaalavagaula",
+    "file": "vina3.bps"
+  },
+  {
+    "id": "765432",
+    "title": "765432",
+    "category": "composition",
+    "description": "Polyrhythmic piece for Cronos dance production",
+    "file": "765432.bps"
+  },
+  {
+    "id": "acceleration",
+    "title": "Acceleration",
+    "category": "composition",
+    "description": "\"sawtooth rhythm\" par Harm Visser (1997)",
+    "file": "acceleration.bps"
+  },
+  {
+    "id": "not-reich",
+    "title": "Not Reich",
+    "category": "composition",
+    "description": "phasing (style Steve Reich) par Thierry Montaudon (1997)",
+    "file": "not-reich.bps"
+  },
+  {
+    "id": "shapes-rhythm",
+    "title": "Shapes Rhythm",
+    "category": "composition",
+    "description": "\"ShapesInRhythm\" for Cronos dance production",
+    "file": "shapes-rhythm.bps"
+  },
+  {
+    "id": "koto3",
+    "title": "Koto 3",
+    "category": "composition",
+    "description": "Automate cellulaire 1D, \"musique turque\" (Bernard Bel)",
+    "file": "koto3.bps"
+  },
+  {
+    "id": "kss2",
+    "title": "KSS 2",
+    "category": "composition",
+    "description": "Composition de Kumar S. Subramanian (juin 1995)",
+    "file": "kss2.bps"
+  },
+  {
+    "id": "visser-shapes",
+    "title": "Visser Shapes",
+    "category": "composition",
+    "description": "Harm Visser \"Shapes\" (1998)",
+    "file": "visser-shapes.bps"
+  },
+  {
+    "id": "visser-waves",
+    "title": "Visser Waves",
+    "category": "composition",
+    "description": "Harm Visser \"Waves\" (1998)",
+    "file": "visser-waves.bps"
+  },
+  {
+    "id": "visser3",
+    "title": "Visser 3",
+    "category": "composition",
+    "description": "Harm Visser, structure avec transpositions et v\u00e9locit\u00e9",
+    "file": "visser3.bps"
+  },
+  {
+    "id": "visser5",
+    "title": "Visser 5",
+    "category": "composition",
+    "description": "Harm Visser (April 1998)",
+    "file": "visser5.bps"
+  },
+  {
+    "id": "watch",
+    "title": "Watch",
+    "category": "composition",
+    "description": "Oscar Peterson, Watch What Happens",
+    "file": "watch.bps"
+  },
+  {
+    "id": "ruwet",
+    "title": "Ruwet",
+    "category": "composition",
+    "description": "Theme and variation (Nicolas Ruwet analysis)",
+    "file": "ruwet.bps"
+  },
+  {
+    "id": "ames",
+    "title": "Ames",
+    "category": "composition",
+    "description": "Charles Ames, accord avec polym\u00e9trie et liaisons",
+    "file": "ames.bps"
+  },
+  {
+    "id": "alan-dice",
+    "title": "Alan Dice",
+    "category": "dice",
+    "description": "Alan's musical dice game",
+    "file": "alan-dice.bps"
+  },
+  {
+    "id": "beatrix-dice",
+    "title": "Beatrix Dice",
+    "category": "dice",
+    "description": "Jeu de d\u00e9s musical de Beatrix",
+    "file": "beatrix-dice.bps"
+  },
+  {
+    "id": "mozart-dice",
+    "title": "Mozart Dice",
+    "category": "dice",
+    "description": "Jeu de d\u00e9s musical de Mozart",
+    "file": "mozart-dice.bps"
+  },
+  {
+    "id": "all-items",
+    "title": "All Items",
+    "category": "test",
+    "description": "Produce all items (test templates)",
+    "file": "all-items.bps"
+  },
+  {
+    "id": "asymmetric",
+    "title": "Asymmetric",
+    "category": "test",
+    "description": "Rythmes asym\u00e9triques africains",
+    "file": "asymmetric.bps"
+  },
+  {
+    "id": "csound",
+    "title": "Csound",
+    "category": "test",
+    "description": "Test Csound avec volume continu",
+    "file": "csound.bps"
+  },
+  {
+    "id": "destru",
+    "title": "Destru",
+    "category": "test",
+    "description": "Test de la r\u00e9\u00e9criture destructive",
+    "file": "destru.bps"
+  },
+  {
+    "id": "flags",
+    "title": "Flags",
+    "category": "test",
+    "description": "test du syst\u00e8me de flags",
+    "file": "flags.bps"
+  },
+  {
+    "id": "graphics",
+    "title": "Graphics",
+    "category": "test",
+    "description": "test des contr\u00f4les inline (legato, staccato)",
+    "file": "graphics.bps"
+  },
+  {
+    "id": "harmony",
+    "title": "Harmony",
+    "category": "test",
+    "description": "test des accords et gammes",
+    "file": "harmony.bps"
+  },
+  {
+    "id": "look-and-say",
+    "title": "Look and Say",
+    "category": "test",
+    "description": "Look-and-Say sequence (Conway)",
+    "file": "look-and-say.bps"
+  },
+  {
+    "id": "major-minor",
+    "title": "Major Minor",
+    "category": "test",
+    "description": "Major vs Minor chords comparison",
+    "file": "major-minor.bps"
+  },
+  {
+    "id": "negative-context",
+    "title": "Negative Context",
+    "category": "test",
+    "description": "test des contextes n\u00e9gatifs #",
+    "file": "negative-context.bps"
+  },
+  {
+    "id": "one-scale",
+    "title": "One Scale",
+    "category": "test",
+    "description": "Test gammes et just intonation",
+    "file": "one-scale.bps"
+  },
+  {
+    "id": "repeat",
+    "title": "Repeat",
+    "category": "test",
+    "description": "test des r\u00e9p\u00e9titions _repeat et poids <1-1>",
+    "file": "repeat.bps"
+  },
+  {
+    "id": "scales",
+    "title": "Scales",
+    "category": "test",
+    "description": "test des gammes et accords",
+    "file": "scales.bps"
+  },
+  {
+    "id": "templates",
+    "title": "Templates",
+    "category": "test",
+    "description": "test des templates $/ &",
+    "file": "templates.bps"
+  },
+  {
+    "id": "time-patterns",
+    "title": "Time Patterns",
+    "category": "test",
+    "description": "test des time patterns (smooth time)",
+    "file": "time-patterns.bps"
+  },
+  {
+    "id": "transposition",
+    "title": "Transposition",
+    "category": "test",
+    "description": "transpositions imbriqu\u00e9es par Harm Visser (1997)",
+    "file": "transposition.bps"
+  },
+  {
+    "id": "tunings",
+    "title": "Tunings",
+    "category": "test",
+    "description": "Tuning systems comparison",
+    "file": "tunings.bps"
+  },
+  {
+    "id": "livecode1",
+    "title": "Livecode 1",
+    "category": "test",
+    "description": "test de live coding dense",
+    "file": "livecode1.bps"
+  },
+  {
+    "id": "livecode2",
+    "title": "Livecode 2",
+    "category": "test",
+    "description": "Live coding dense, solf\u00e8ge fran\u00e7ais",
+    "file": "livecode2.bps"
+  },
+  {
+    "id": "drum",
+    "title": "Drum",
+    "category": "test",
+    "description": "pattern de batterie en 3 voix polym\u00e9triques",
+    "file": "drum.bps"
+  }
+]

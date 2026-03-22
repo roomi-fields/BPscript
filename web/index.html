@@ -253,6 +253,38 @@
   .help-content td code { background: none; padding: 0; }
   .help-content .section { margin-bottom: 16px; }
 
+  /* Source tabs */
+  .source-tabs {
+    display: flex; gap: 4px; margin-bottom: 8px;
+  }
+  .source-tab {
+    flex: 1; padding: 4px 8px; text-align: center; font-size: 0.75em;
+    text-transform: uppercase; cursor: pointer; border-radius: 3px;
+    background: #1a1a2e; color: #666; border: 1px solid #0f3460;
+  }
+  .source-tab.active {
+    background: #e94560; color: #fff; border-color: #e94560;
+  }
+  .sidebar-actions {
+    display: flex; gap: 4px; margin-top: 8px;
+  }
+  .sidebar-actions button {
+    flex: 1; padding: 4px 6px; font-size: 0.7em; cursor: pointer;
+    background: #1a1a2e; color: #aaa; border: 1px solid #0f3460;
+    border-radius: 3px;
+  }
+  .sidebar-actions button:hover {
+    background: #0f3460; color: #fff;
+  }
+
+  /* Delete button for user scenes */
+  .delete-btn {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    color: #666; cursor: pointer; font-size: 1.1em;
+  }
+  .delete-btn:hover { color: #e94560; }
+  .grammar-item { position: relative; }
+
   /* Resize handle */
   .resize-handle {
     height: 4px; background: #0f3460; cursor: ns-resize;
@@ -265,12 +297,23 @@
   <!-- Sidebar: Grammar Library -->
   <div class="sidebar">
     <div class="sidebar-header">
-      <h2>Demos</h2>
-      <input type="text" id="searchInput" placeholder="Search demos..." oninput="filterLibrary()">
+      <div class="source-tabs">
+        <div class="source-tab active" data-source="demos" onclick="switchSource('demos')">Demos</div>
+        <div class="source-tab" data-source="bernard" onclick="switchSource('bernard')">Bernard</div>
+        <div class="source-tab" data-source="user" onclick="switchSource('user')">My Library</div>
+      </div>
+      <input type="text" id="searchInput" placeholder="Search..." oninput="filterLibrary()">
+      <div class="sidebar-actions">
+        <button onclick="newScene()" title="New empty scene">+ New</button>
+        <button onclick="saveScene()" title="Save current to My Library">Save</button>
+        <button onclick="uploadScene()" title="Import .bps file">Upload</button>
+        <button onclick="downloadScene()" title="Download current as .bps">Download</button>
+      </div>
     </div>
     <div class="library-list" id="libraryList">
       <div style="padding: 16px; color: #666; font-size: 0.85em;">Loading library...</div>
     </div>
+    <input type="file" id="fileUpload" accept=".bps,.bp" style="display:none" onchange="handleUpload(event)">
   </div>
 
   <!-- Main Content -->
@@ -496,6 +539,9 @@ let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_load_settings, bp3_produc
 let bp3_get_midi_events, bp3_get_midi_event_count;
 let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params;
 let libraryData = [];
+let demosData = [];
+let bernardData = [];
+let currentSource = 'demos';
 let activeGrammar = null;
 let engineReady = false;
 let lastMidiEvents = null;
@@ -511,13 +557,124 @@ let dispatcher = null;
 /* ---- Library ---- */
 async function loadLibrary() {
   try {
-    const resp = await fetch('demos/index.json');
-    libraryData = await resp.json();
+    // Load demos
+    const dResp = await fetch('demos/index.json');
+    demosData = await dResp.json();
+
+    // Load Bernard scenes
+    try {
+      const bResp = await fetch('scenes-index.json');
+      bernardData = await bResp.json();
+    } catch(e) { bernardData = []; }
+
+    // Show demos by default
+    libraryData = demosData;
     renderLibrary(libraryData);
   } catch(e) {
     document.getElementById('libraryList').innerHTML =
-      '<div style="padding:16px;color:#ff6b6b;font-size:0.85em;">Failed to load demos: ' + e.message + '</div>';
+      '<div style="padding:16px;color:#ff6b6b;font-size:0.85em;">Failed to load library: ' + e.message + '</div>';
   }
+}
+
+function switchSource(source) {
+  currentSource = source;
+  document.querySelectorAll('.source-tab').forEach(el =>
+    el.classList.toggle('active', el.dataset.source === source)
+  );
+
+  if (source === 'demos') {
+    libraryData = demosData;
+  } else if (source === 'bernard') {
+    libraryData = bernardData;
+  } else if (source === 'user') {
+    libraryData = getUserLibrary();
+  }
+
+  renderLibrary(libraryData);
+}
+
+function getUserLibrary() {
+  const lib = JSON.parse(localStorage.getItem('bpscript_user_library') || '[]');
+  return lib.map(s => ({
+    id: s.id,
+    title: s.title,
+    category: 'user',
+    description: s.description || '',
+    file: null
+  }));
+}
+
+function saveScene() {
+  const source = document.getElementById('bpscript').value.trim();
+  if (!source) { alert('Nothing to save'); return; }
+
+  const title = prompt('Scene name:', activeGrammar?.title || 'Untitled');
+  if (!title) return;
+
+  const lib = JSON.parse(localStorage.getItem('bpscript_user_library') || '[]');
+  const id = 'user_' + Date.now();
+  const firstLine = source.split('\n').find(l => l.startsWith('//'))?.replace(/^\/\/\s*/, '') || '';
+
+  lib.push({ id, title, description: firstLine, source, date: new Date().toISOString() });
+  localStorage.setItem('bpscript_user_library', JSON.stringify(lib));
+
+  if (currentSource === 'user') {
+    libraryData = getUserLibrary();
+    renderLibrary(libraryData);
+  }
+  setStatus('Saved: ' + title);
+}
+
+function newScene() {
+  document.getElementById('bpscript').value = '// New scene\n\n@core\n@controls\n@alphabet.western:browser\n\nS -> C4 D4 E4 F4\n';
+  document.getElementById('grammar').value = '';
+  document.getElementById('alphabet').value = '';
+  switchEditorTab('bpscript');
+  activeGrammar = null;
+  setStatus('New scene');
+}
+
+function uploadScene() {
+  document.getElementById('fileUpload').click();
+}
+
+function handleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('bpscript').value = e.target.result;
+    document.getElementById('grammar').value = '';
+    document.getElementById('alphabet').value = '';
+    switchEditorTab('bpscript');
+    activeGrammar = { id: file.name, title: file.name.replace('.bps',''), category: 'upload' };
+    setStatus('Uploaded: ' + file.name);
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function downloadScene() {
+  const source = document.getElementById('bpscript').value;
+  if (!source.trim()) { alert('Nothing to download'); return; }
+
+  const title = activeGrammar?.title || 'scene';
+  const blob = new Blob([source], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = title.replace(/[^a-zA-Z0-9-_]/g, '-') + '.bps';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function deleteUserScene(id) {
+  if (!confirm('Delete this scene?')) return;
+  const lib = JSON.parse(localStorage.getItem('bpscript_user_library') || '[]');
+  const updated = lib.filter(s => s.id !== id);
+  localStorage.setItem('bpscript_user_library', JSON.stringify(updated));
+  libraryData = getUserLibrary();
+  renderLibrary(libraryData);
 }
 
 function renderLibrary(items) {
@@ -529,7 +686,7 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'world', 'raga', 'advanced'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'world', 'raga', 'advanced', 'indian', 'composition', 'dice', 'test', 'user'];
   const categoryLabels = {
     tutorial: 'Tutorial',
     basics: 'Basics',
@@ -540,7 +697,12 @@ function renderLibrary(items) {
     tuning: 'Tuning',
     world: 'World Scales',
     raga: 'Raga / Indian',
-    advanced: 'Advanced'
+    advanced: 'Advanced',
+    indian: 'Indian Classical',
+    composition: 'Composition',
+    dice: 'Dice Games',
+    test: 'Test / Technical',
+    user: 'My Scenes'
   };
 
   items.forEach(item => {
@@ -555,9 +717,11 @@ function renderLibrary(items) {
     html += `<div class="category-items collapsed" data-cat="${cat}">`;
     groups[cat].forEach(item => {
       const activeClass = activeGrammar && activeGrammar.id === item.id ? ' active' : '';
+      const deleteBtn = currentSource === 'user' ? `<span class="delete-btn" onclick="event.stopPropagation(); deleteUserScene('${item.id}')" title="Delete">&times;</span>` : '';
       html += `<div class="grammar-item${activeClass}" onclick="loadFromLibrary('${item.id}')" data-id="${item.id}">
         <div class="title">${escHtml(item.title)}</div>
         ${item.description ? `<div class="meta">${escHtml(item.description.substring(0, 70))}${item.description.length > 70 ? '...' : ''}</div>` : ''}
+        ${deleteBtn}
       </div>`;
     });
     html += `</div>`;
@@ -607,7 +771,30 @@ async function loadFromLibrary(id) {
 
   // Load BPS source file
   try {
-    const resp = await fetch('demos/' + item.file);
+    if (currentSource === 'user') {
+      // User scenes stored in localStorage
+      const userLib = JSON.parse(localStorage.getItem('bpscript_user_library') || '[]');
+      const scene = userLib.find(s => s.id === item.id);
+      if (scene) {
+        document.getElementById('bpscript').value = scene.source;
+        document.getElementById('grammar').value = '';
+        document.getElementById('alphabet').value = '';
+        document.getElementById('settings').value = '';
+        document.getElementById('grammar').setAttribute('readonly', '');
+        switchEditorTab('bpscript');
+        setStatus(`Loaded: ${item.title}`);
+        return;
+      }
+    }
+
+    let url;
+    if (currentSource === 'bernard') {
+      url = '../scenes/' + item.file;
+    } else {
+      url = 'demos/' + item.file;
+    }
+
+    const resp = await fetch(url);
     const bpsSource = await resp.text();
 
     document.getElementById('bpscript').value = bpsSource;
@@ -910,9 +1097,13 @@ function updateDebugPanel(grammar, alphabet) {
         const freq = 440 * Math.pow(2, (midi - 69) / 12);
         route += `→ ${parsed.name}(semi=${semi}) → midi=${midi} → ${freq.toFixed(2)} Hz`;
       } else if (parsed) {
-        route += `→ "${parsed.name}" not in semitones → NO SOUND`;
+        route += `→ "${parsed.name}" not in alphabet → hash fallback`;
       } else {
-        route += `→ not a note (CV or unknown)`;
+        let hash = 0;
+        for (let i = 0; i < t.token.length; i++) hash = ((hash << 5) - hash + t.token.charCodeAt(i)) | 0;
+        const midi = 48 + (((hash % 37) + 37) % 37);
+        const freq = 440 * Math.pow(2, (midi - 69) / 12);
+        route += `→ hash fallback → midi=${midi} → ${freq.toFixed(1)} Hz`;
       }
 
       lines.push(route);
