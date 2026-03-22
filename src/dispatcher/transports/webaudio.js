@@ -43,10 +43,11 @@ export class WebAudioTransport {
       freq = this._tokenToFreq(event.token);
     }
     if (freq === null) {
-      // Fallback: hash-based frequency for unknown terminals (tabla bols, etc.)
-      freq = this._hashToFreq(event.token);
+      // Unknown terminal: percussive synthesis (tabla bols, drum names, etc.)
+      this._sendPercussion(event, absTime);
+      return;
     }
-    if (freq === null || freq <= 0) return;
+    if (freq <= 0) return;
 
     const dur = Math.max(0.05, event.durSec);
     const velocity = event.velocity || 0.5;
@@ -294,16 +295,64 @@ export class WebAudioTransport {
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  /** Hash-based fallback: map any terminal name to a distinct audible frequency.
-   *  Range: C3 (130 Hz) to C6 (1047 Hz). Each unique name gets a stable pitch. */
-  _hashToFreq(token) {
-    if (!token || token.length === 0) return null;
+  /**
+   * Percussive synthesis for unknown terminals (tabla bols, drums, etc.)
+   * Each unique name gets distinct percussion timbre via hash.
+   * Uses noise burst + pitched component with fast envelope.
+   */
+  _sendPercussion(event, absTime) {
+    const token = event.token;
+    const velocity = event.velocity || 0.5;
+
+    // Hash the name for stable, distinct parameters
     let hash = 0;
     for (let i = 0; i < token.length; i++) {
       hash = ((hash << 5) - hash + token.charCodeAt(i)) | 0;
     }
-    // Map hash to MIDI range 48-84 (C3 to C6)
-    const midi = 48 + (((hash % 37) + 37) % 37);
-    return 440 * Math.pow(2, (midi - 69) / 12);
+    hash = ((hash % 1000) + 1000) % 1000;
+
+    // Derive percussion parameters from hash
+    const basePitch = 60 + (hash % 30);             // 60-90 Hz range
+    const brightness = 800 + (hash % 4000);          // noise filter 800-4800 Hz
+    const decaySec = 0.05 + (hash % 200) / 1000;     // 50-250ms decay
+    const noiseAmount = 0.3 + (hash % 7) / 10;       // 0.3-1.0 noise vs tone
+    const pitchDrop = 0.5 + (hash % 5) / 10;         // pitch drops 50-100%
+
+    // 1. Pitched component (sine oscillator with pitch drop)
+    const osc = this.audioCtx.createOscillator();
+    const oscGain = this.audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(basePitch * 4, absTime);
+    osc.frequency.exponentialRampToValueAtTime(basePitch * pitchDrop, absTime + decaySec);
+    oscGain.gain.setValueAtTime(velocity * (1 - noiseAmount) * 0.5, absTime);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, absTime + decaySec);
+    osc.connect(oscGain);
+    oscGain.connect(this.audioCtx.destination);
+    osc.start(absTime);
+    osc.stop(absTime + decaySec + 0.01);
+
+    // 2. Noise component (filtered white noise burst)
+    const bufferSize = this.audioCtx.sampleRate * decaySec;
+    const noiseBuffer = this.audioCtx.createBuffer(1, Math.max(1, bufferSize), this.audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+    const noise = this.audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const noiseFilter = this.audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = brightness;
+    noiseFilter.Q.value = 1.5;
+    const noiseGain = this.audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(velocity * noiseAmount * 0.4, absTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, absTime + decaySec * 0.7);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.audioCtx.destination);
+    noise.start(absTime);
+    noise.stop(absTime + decaySec + 0.01);
+
+    this._nodes.push({ osc, gain: oscGain }, { node: noiseFilter, gain: noiseGain });
   }
 }
