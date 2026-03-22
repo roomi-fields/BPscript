@@ -20,9 +20,10 @@ Version 0.7 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transp
 Scene {
   type: "Scene"
   directives: Directive[]
-  actors: ActorDirective[]
+  actors: ActorDirective[]           // @actor directives (design target, not yet parsed)
   declarations: Declaration[]
   macros: Macro[]
+  cvInstances: CVInstance[]
   backticks: BacktickOrphan[]
   subgrammars: Subgrammar[]
 }
@@ -96,9 +97,9 @@ ActorDirective {
   name: string                    // "sitar", "tabla", "lights"
   properties: {
     alphabet: string              // référence vers alphabets.json ("sargam", "western")
-    tuning: string | null         // référence vers tunings.json (null = pas de pitch)
-    octaves: string | null        // référence vers octaves.json (null = défaut du tuning)
-    transport: TransportRef       // clé de transport
+    scale: string | null          // gamme/degrés → pitch via tempérament (null = pas de pitch)
+    sounds: string | null         // définitions per-terminal: timbre, percussions, samples (null = défaut transport)
+    transport: TransportRef       // destination de rendu
     eval: string | null           // clé d'eval pour backticks (null = même que transport)
   }
   line: number
@@ -112,10 +113,14 @@ TransportRef {
 ```
 
 Exemples :
-- `@actor sitar  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio`
-  → `{ name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", octaves:"saptak", transport:{key:"webaudio", params:{}}, eval:null } }`
-- `@actor tabla  alphabet:tabla_bols  transport:midi(ch:10)`
-  → `{ name:"tabla", properties:{ alphabet:"tabla_bols", tuning:null, octaves:null, transport:{key:"midi", params:{ch:10}}, eval:null } }`
+- `@actor sitar  alphabet:sargam  scale:sargam_22shruti  transport:webaudio`
+  -> `{ name:"sitar", properties:{ alphabet:"sargam", scale:"sargam_22shruti", sounds:null, transport:{key:"webaudio", params:{}}, eval:null } }`
+- `@actor tabla  alphabet:tabla  sounds:tabla_perc  transport:webaudio`
+  -> `{ name:"tabla", properties:{ alphabet:"tabla", scale:null, sounds:"tabla_perc", transport:{key:"webaudio", params:{}}, eval:null } }`
+- `@actor piano  alphabet:western  scale:western_12TET  sounds:piano_timbre  transport:webaudio`
+  -> `{ name:"piano", properties:{ alphabet:"western", scale:"western_12TET", sounds:"piano_timbre", transport:{key:"webaudio", params:{}}, eval:null } }`
+- `@actor drums  alphabet:tabla  sounds:tabla_gm  transport:midi(ch:10)`
+  -> `{ name:"drums", properties:{ alphabet:"tabla", scale:null, sounds:"tabla_gm", transport:{key:"midi", params:{ch:10}}, eval:null } }`
 
 ---
 
@@ -155,6 +160,35 @@ Macro {
 
 ---
 
+## CV Instances
+
+### `CVInstance`
+
+```
+CVInstance {
+  type: "CVInstance"
+  name: string                      // nom de l'instance ("env1", "lfo1")
+  target: string                    // paramètre ciblé ("filter", "pan", "gain")
+  transport: string                 // runtime cible ("sc", "webaudio")
+  lib: string | null                // lib source ("filter", null pour backtick)
+  objectType: string                // type d'objet ("adsr", "lfo", "ramp", "backtick")
+  args: (number | string)[]         // arguments positionnels
+  namedArgs: { [key: string]: any } // arguments nommés (attack:10, rate:4)
+  code: string | null               // code backtick (si objectType == "backtick")
+  line: number
+}
+```
+
+Exemples :
+- `env1(filter, sc) = filter.adsr(10, 100, 0.7, 200)`
+  -> `{ name:"env1", target:"filter", transport:"sc", lib:"filter", objectType:"adsr", args:[10, 100, 0.7, 200], namedArgs:{} }`
+- `lfo1(pan, webaudio) = filter.lfo(rate:4, depth:50)`
+  -> `{ name:"lfo1", target:"pan", transport:"webaudio", lib:"filter", objectType:"lfo", args:[], namedArgs:{rate:4, depth:50} }`
+- `` mod1(gain, sc) = `js: new Float32Array(...)` ``
+  -> `{ name:"mod1", target:"gain", transport:"sc", lib:null, objectType:"backtick", args:[], namedArgs:{}, code:"js: new Float32Array(...)" }`
+
+---
+
 ## Sous-grammaires
 
 ### `Subgrammar`
@@ -176,13 +210,14 @@ Subgrammar {
 ```
 Rule {
   type: "Rule"
-  guard: Guard | Guard[] | null    // un ou plusieurs when (AND)
+  guard: Guard | Guard[] | null    // un ou plusieurs guards (AND)
   contexts: Context[]
   lhs: LhsElement[]
   arrow: "->" | "<-" | "<>"
   rhs: RhsElement[]
   flags: FlagExpr[]                // [phase=2, Atrans] dans le RHS
-  qualifiers: Qualifier[]          // [mode:random, scan:left] en fin de règle
+  qualifiers: Qualifier[]          // [mode:random, scan:left] en fin de règle (engine [])
+  runtimeQualifier: RuntimeQualifier | null  // suffixe () sur la règle : S -> C4 D4 (vel:80)
   line: number
 }
 ```
@@ -200,9 +235,9 @@ Guard {
 ```
 
 Exemples :
-- `when phase==1` -> `{ flag:"phase", operator:"==", value:1, mutates:false }`
-- `when Ideas-1` -> `{ flag:"Ideas", operator:"-", value:1, mutates:true }`
-- `when Ideas` (bare flag) -> `{ flag:"Ideas", operator:null, value:null, mutates:false }`
+- `[phase==1]` -> `{ flag:"phase", operator:"==", value:1, mutates:false }`
+- `[Ideas-1]` -> `{ flag:"Ideas", operator:"-", value:1, mutates:true }`
+- `[Ideas]` (bare flag) -> `{ flag:"Ideas", operator:null, value:null, mutates:false }`
 
 ### `EngineQualifier` — instructions moteur BP3
 
@@ -248,11 +283,10 @@ RuntimePair {
 }
 ```
 
-Compilation : chaque `RuntimeQualifier` est compilé en `_script(CTn)`. Pour les
-portées règle et groupe, le transpileur émet une paire start/end :
-- `Sa(vel:120)` → `_script(CT0) Sa` (portée symbole)
-- `(vel:100) C2 C2` → `_script(CT1) C2 C2` (portée règle)
-- `{A B}(filter:lp)` → `{_script(CT2_start) A B _script(CT2_end)}` (portée groupe)
+`()` est **toujours suffixe** (jamais en préfixe). La portée est déduite de la position :
+- **symbole** : `Sa(vel:120)` → `Sa _script(CT0)` — attaché au `Symbol` node
+- **règle** : `S -> C4 D4 (vel:80)` → `_script(CT1) C4 D4` — dans `Rule.runtimeQualifier`
+- **groupe** : `{A B}(filter:lp)` → `{_script(CT2_start) A B _script(CT2_end)}` — dans `Polymetric.runtimeQualifier`
 
 Le transpileur maintient une table de mapping `CTn → { scope, params }` passée au dispatcher.
 
@@ -279,26 +313,24 @@ RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
 
 ### Qualificateurs par élément
 
-Tout `RhsElement` peut porter des qualificateurs moteur `[]` et/ou runtime `()`,
-en préfixe et/ou suffixe :
+Tout `RhsElement` peut porter des qualificateurs moteur `[]` (préfixe ou suffixe)
+et/ou runtime `()` (suffixe uniquement) :
 
 ```
 RhsElement {
   ...                                            // propriétés spécifiques au type
-  engineQualifiers: EngineQualifier[] | null     // qualificateurs moteur BP3
-  runtimeQualifiers: RuntimeQualifier[] | null   // qualificateurs runtime
-  qualifierPrefix: boolean | null                // true si le premier qualifier est un préfixe
+  controlQualifiers: (EngineQualifier | RuntimeQualifier)[] | null
+  controlPrefix: boolean | null                  // true si le premier qualifier est un préfixe (engine [] uniquement)
+  tempoOp: TempoOp | null                        // suffixe [/2], [*3] etc.
 }
 ```
 
 Exemples :
-- `[tempo:2]A` (moteur, préfixe) : `engineQualifiers: [{tempo:2}]`, `qualifierPrefix: true`
-- `A(vel:80)` (runtime, suffixe) : `runtimeQualifiers: [{vel:80}]`, `qualifierPrefix: false`
-- `(vel:100)[/2]A` (les deux, préfixe) : runtime + engine, `qualifierPrefix: true`
+- `[tempo:2]A` (moteur, préfixe) : `controlQualifiers: [{tempo:2}]`, `controlPrefix: true`
+- `A(vel:80)` (runtime, suffixe) : `controlQualifiers: [{vel:80}]`, `controlPrefix: null`
+- `A[/2]` (opérateur temporel, suffixe) : `tempoOp: { operator:"/", value:2 }`
 
-La distinction préfixe/suffixe est analogue à `++i`/`i++` en C :
-- **Préfixe** = le qualificateur s'applique avant l'élément
-- **Suffixe** = le qualificateur s'applique après l'élément
+`[]` supporte préfixe et suffixe. `()` est toujours suffixe sur l'element.
 
 ### `Symbol`
 
@@ -353,7 +385,8 @@ NumericDuration { type: "NumericDuration", numerator: number, denominator: numbe
 Polymetric {
   type: "Polymetric"
   voices: RhsElement[][]
-  qualifiers: Qualifier[]          // speed et scale uniquement
+  qualifiers: Qualifier[]                    // speed et scale uniquement (engine [])
+  runtimeQualifier: RuntimeQualifier | null  // suffixe () sur le groupe : {A B}(vel:100)
 }
 ```
 
@@ -500,25 +533,25 @@ Literal { type: "Literal", value: number | string }
 
 ```
 Source (.bps) -> Tokenizer -> Parser -> AST (Scene)
-  -> Actor resolver (charge JSON, expand symboles, conflits)
-  -> Type-checker -> Macro-expander -> Encoder -> BP3 grammar + terminalActorMap -> WASM engine
+  -> Actor resolver (charge JSON, expand symboles, conflits)  (* design target *)
+  -> Macro-expander -> Encoder -> BP3 grammar + terminalActorMap -> WASM engine
 ```
 
-La phase **Actor resolver** entre le parser et le type-checker :
+La phase **Actor resolver** (design target, pas encore implémentée) entre le parser et l'encoder :
 1. Collecte les `ActorDirective` de la Scene
-2. Charge `alphabets.json`, `tunings.json`, `octaves.json`, `temperaments.json` par acteur
+2. Charge `alphabets.json`, `scales.json`, `sounds/`, `temperaments.json` par acteur
 3. Importe les symboles de chaque alphabet dans la symbolTable
 4. Détecte les conflits inter-acteurs (même symbole, acteurs différents)
 5. Résout les `Symbol.actor = null` par lookup implicite (un seul acteur candidat)
 
-L'encoder émet en parallèle une `terminalActorMap` (terminal BP3 → acteur)
+L'encoder émet en parallèle une `terminalActorMap` (terminal BP3 -> acteur)
 utilisée par le dispatcher au runtime.
 
 ---
 
 ## Exemple
 
-Source : `when phase==1 S -> Sa!dha Re [mode:random]`
+Source : `[phase==1] S -> Sa!dha Re [mode:random]`
 
 ```json
 {
@@ -537,7 +570,8 @@ Source : `when phase==1 S -> Sa!dha Re [mode:random]`
           "secondaries": [{ "type": "Symbol", "name": "dha" }] },
         { "type": "Symbol", "name": "Re" }
       ],
-      "qualifiers": [{ "pairs": [{ "key": "mode", "value": "random" }] }]
+      "qualifiers": [{ "pairs": [{ "key": "mode", "value": "random" }] }],
+      "runtimeQualifier": null
     }]
   }]
 }

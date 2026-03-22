@@ -1,5 +1,8 @@
 # Pitch Architecture — 5 Couches
 
+> Voir aussi : [DESIGN_ACTOR.md](DESIGN_ACTOR.md) pour le binding acteur (un resolver par acteur),
+> [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) pour le pipeline compile/runtime.
+
 ## Vue d'ensemble
 
 La résolution d'un symbole BPscript en fréquence traverse 5 couches indépendantes :

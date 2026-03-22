@@ -1,5 +1,8 @@
 # REPL Adapters — Architecture des backticks
 
+> Voir aussi : [DESIGN_LANGUAGE.md](DESIGN_LANGUAGE.md) pour la syntaxe des backticks dans le langage,
+> [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) pour le pipeline transports vs REPL adapters.
+
 ## Vue d'ensemble
 
 Les backticks permettent d'exécuter du code dans des runtimes externes

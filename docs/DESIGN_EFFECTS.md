@@ -1,5 +1,8 @@
 # Effets et signal processing — pas de patching dans BPscript
 
+> Voir aussi : [DESIGN_CV.md](DESIGN_CV.md) pour les objets CV,
+> [DESIGN_REPL.md](DESIGN_REPL.md) pour les backticks qui configurent le graphe audio.
+
 ## Principe
 
 BPscript ne gère pas le graphe audio. Le **runtime** (SuperCollider, WebAudio, etc.)

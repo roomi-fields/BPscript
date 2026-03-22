@@ -46,6 +46,14 @@ actor_props = IDENT , ":" , actor_value ;
 actor_value = IDENT                                 (* alphabet:sargam *)
             | IDENT , "(" , param_pairs , ")" ;     (* transport:midi(ch:10) *)
 
+(* Propriétés connues d'un acteur :
+   alphabet   — vocabulaire de symboles (requis)
+   scale      — gamme/degrés → pitch via tempérament (si pitched)
+   sounds     — définitions per-terminal: timbre, percussions, samples (si non-pitched ou timbre spécifique)
+   transport  — destination de rendu (requis)
+   eval       — runtime pour backticks (si différent de transport)
+*)
+
 
 param_pairs = param_pair , { "," , param_pair } ;
 param_pair  = IDENT , "=" , IDENT ;               (* transport=sc, eval=python *)
@@ -118,10 +126,14 @@ Le séparateur `-----` marque la frontière entre sous-grammaires.
 ## Couche 3 — Règles
 
 ```ebnf
-rule = [ guard ] , { context } , lhs , ARROW , rhs , { qualifier } ;
+rule = [ guard ] , { context } , lhs , ARROW , rhs
+       , [ runtime_qualifier ] , { qualifier } ;
 
 ARROW = "->" | "<-" | "<>" ;
 ```
+
+Le `runtime_qualifier` suffixe optionnel sur la règle (ex: `S -> C4 D4 E4 (vel:80)`)
+s'applique à toute la portée de la règle.
 
 ### `guard`
 
@@ -211,9 +223,10 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 ## Couche 4 — Éléments RHS
 
 ```ebnf
-rhs_element = [ control_qualifier ] , element_core , [ control_qualifier ] ;
+rhs_element = [ engine_qualifier ] , element_core , [ suffix_qualifier ] ;
 
-control_qualifier = engine_qualifier | runtime_qualifier ;
+suffix_qualifier = engine_qualifier | runtime_qualifier ;
+(* [] supporte préfixe et suffixe ; () est TOUJOURS suffixe *)
 
 element_core = symbol
              | symbol_call
@@ -288,20 +301,29 @@ Compilé en `_script(CTn)` pour BP3 — le dispatcher interprète au playback.
 (wave:sawtooth, vel:100, filterQ:8) → _script(CT0) avec {wave:"sawtooth", vel:100, filterQ:8}
 ```
 
-#### Position — préfixe ou suffixe
+#### Position — `()` est TOUJOURS suffixe
 
-- **Préfixe** : `(vel:80) A` — le contrôle s'applique **avant** `A`.
-  Compilé en : `_script(CT0) A`
+`()` est **exclusivement suffixe** — jamais en préfixe. Le contrôle s'applique
+à l'élément qui le précède.
 
-- **Suffixe** : `A(vel:80)` — le contrôle s'applique **après** `A`.
-  Compilé en : `A _script(CT0)`
+Trois portées :
 
-Les deux syntaxes `[]` et `()` supportent préfixe et suffixe.
+- **Symbole** : `C4(vel:80)` — le contrôle s'applique au symbole `C4`.
+  Compilé en : `C4 _script(CT0)`
+
+- **Règle** : `S -> C4 D4 E4 (vel:80)` — le contrôle s'applique à toute la règle.
+  Compilé en : `_script(CT0) C4 D4 E4`
+
+- **Groupe** : `{A B}(vel:100)` — le contrôle s'applique au groupe polymétrique.
+  Compilé en : `{_script(CT0_start) A B _script(CT0_end)}`
+
+`[]` supporte préfixe et suffixe (`[tempo:2]A` et `A[/2]`).
+`()` ne supporte que le suffixe.
 
 **Exception — contrôles autonomes dans le RHS** : quand un non-terminal se résout
 en purs contrôles (aucun élément temporel), les contrôles peuvent apparaître comme
 éléments RHS autonomes. C'est le seul cas où des éléments zéro-durée sont tolérés
-dans le RHS sans être attachés via `[]`.
+dans le RHS sans être attachés à un symbole.
 
 ```ebnf
 (* Résolution d'un non-terminal en contrôle runtime pur *)
@@ -545,7 +567,7 @@ timeout  → limite de temps sur <! (* not yet implemented *)
 ### Clés réservées de `@`
 
 ```
-actor NAME props...            → déclare un acteur (binding alphabet+tuning+octaves+transport)
+actor NAME props...            → déclare un acteur (binding alphabet+scale+sounds+transport)
 core                           → librairie noyau (lambda, on_fail)
 controls                       → contrôles performance (vel, tempo, transpose, etc.)
 alphabet.KEY:BINDING           → alphabet KEY depuis lib/alphabet.json, lié à BINDING
@@ -610,9 +632,9 @@ lambda   → chaîne vide (efface le non-terminal)
 | `[X-N]` | `/X-N/` en LHS | guard test + mutation |
 | `[X=N]` | `/X=N/` en RHS | mutation flag |
 | `[X]` | `/X/` en RHS | flag set/ref (nu) |
-| `(vel:120) A` | `_script(CT0) A` | runtime préfixe (avant A) |
-| `A(vel:120)` | `A _script(CT0)` | runtime suffixe (après A) |
-| `(ins:3, volume:127) A` | `_script(CT0) A` | multi-runtime préfixe |
+| `C4(vel:120)` | `C4 _script(CT0)` | runtime suffixe (symbole) |
+| `S -> C4 D4 E4 (vel:80)` | `_script(CT0) C4 D4 E4` | runtime suffixe (règle) |
+| `{A B}(vel:100)` | `{_script(CT0_s) A B _script(CT0_e)}` | runtime suffixe (groupe) |
 | `@mode:random` | `RND` en mode_line | mode du bloc |
 | `[scan:left]` | `LEFT` dans la règle | mode dérivation |
 | `[weight:50-12]` | `<50-12>` | poids décroissant |
@@ -632,7 +654,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `A(script: MIDI send Continue)` | `A _script(MIDI send Continue)` | espaces préservés (script) |
 | `H(value: slide 0)` | `H _value(slide,0)` | valeur brute 2 args |
 | `X ->` (RHS vide) | `X -->` | production epsilon (sans lambda) |
-| `(transpose:-3) A` | `_script(CT0) A` | runtime valeur négative |
+| `A(transpose:-3)` | `A _script(CT0)` | runtime valeur négative |
 | `[Ideas]` (guard) | `/Ideas/` | bare flag guard (test non-zéro) |
 | `[meter:4+4/6]` | `4+4/6` avant RHS | time signature inline |
 

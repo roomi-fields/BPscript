@@ -16,7 +16,7 @@ seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 │                                                                   │
 │  Source .bps                                                      │
 │       ↓                                                           │
-│  Tokenizer → Parser → Type-checker → Macro-expander → Encoder    │
+│  Tokenizer → Parser → Macro-expander → Encoder                   │
 │       ↑                                                           │
 │  ┌────┴──────────────────────────┐                                │
 │  │  Data files (lib/)            │                                │
@@ -169,24 +169,11 @@ Source .bps
    │  Produit : AST (Program → Directives, Rules, Definitions, Macros)
    │
   ▼
-3. Actor resolver
-   │  Lit : directives @actor dans l'AST
-   │  Produit : table acteur → {alphabet, tuning, octaves, transport}
-   │  Vérifie : conflits de noms inter-acteurs
-   │
-  ▼
-4. Type-checker
-   │  Vérifie : double contrat (type temporel + acteur) pour chaque symbole
-   │  Vérifie : primaire de ! occupe du temps
-   │  Vérifie : symboles non déclarés
-   │
-  ▼
-5. Macro-expander
+3. Macro-expander
    │  Expansion textuelle pure (agnostique types/acteurs)
-   │  Le typage est vérifié APRÈS expansion
    │
   ▼
-6. Encoder
+4. Encoder
    │  Lit : alphabets.json + octaves.json
    │  Traduit : BPscript → BP3
    │    - Noms de notes → noms BP3-safe (bol prefix)
@@ -202,7 +189,7 @@ Source .bps
    │  Produit : grammaire BP3 + alphabet plat + settings
    │
   ▼
-7. Prototype generator
+5. Prototype generator
    │  Lit : alphabets.json + octaves.json
    │  Produit : fichier -so. (NoteOn/NoteOff pour chaque terminal)
    │
@@ -510,6 +497,13 @@ Anciens fichiers préservés pour compatibilité BP3 :
 
 ## Documents de design liés
 
+- [BPSCRIPT_VISION.md](BPSCRIPT_VISION.md) — Vue d'ensemble du projet
+- [DESIGN_LANGUAGE.md](DESIGN_LANGUAGE.md) — Spécification du langage (syntaxe, types, symboles, opérateurs)
+- [DESIGN_GRAMMAR.md](DESIGN_GRAMMAR.md) — Mapping BPscript → BP3 (règles, modes, sous-grammaires)
 - [DESIGN_PITCH.md](DESIGN_PITCH.md) — Architecture 5 couches pitch : alphabet, octaves, temperament, tuning, resolver
 - [DESIGN_ACTOR.md](DESIGN_ACTOR.md) — Concept d'acteur : binding alphabet + tuning + octaves + transport
-- [BPSCRIPT_VISION.md](BPSCRIPT_VISION.md) — Spécification du langage (syntaxe, types, symboles, opérateurs)
+- [DESIGN_CV.md](DESIGN_CV.md) — CV / signal objects
+- [DESIGN_REPL.md](DESIGN_REPL.md) — Architecture des backticks et REPL adapters
+- [DESIGN_EFFECTS.md](DESIGN_EFFECTS.md) — Effets et signal processing
+- [DESIGN_SOUNDS.md](DESIGN_SOUNDS.md) — Système sounds (spec < CT < CV cascading)
+- [DESIGN_INTERFACES_BP3.md](DESIGN_INTERFACES_BP3.md) — Interface WASM BP3 (in/out)

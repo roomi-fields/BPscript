@@ -1,5 +1,8 @@
 # Actor — Unité de binding dans BPscript
 
+> Voir aussi : [DESIGN_PITCH.md](DESIGN_PITCH.md) pour le resolver pitch par acteur,
+> [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) pour le pipeline compile/runtime.
+
 ## Le problème
 
 Une scène BPscript peut contenir plusieurs instruments qui partagent le même
@@ -187,7 +190,7 @@ Les symboles qualifiés par `:actor` produisent un `Symbol` avec un champ `actor
 
 ### Actor resolver (phase de compilation)
 
-Après le parsing, une phase dédiée **avant** le type-checker :
+Après le parsing, une phase dédiée :
 
 1. **Collecte** : parcourir les `ActorDirective` → construire la table des acteurs
 2. **Chargement** : pour chaque acteur, charger alphabet, tuning, octaves depuis les JSON

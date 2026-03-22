@@ -2,6 +2,9 @@
 
 ## Date: 2026-03-18
 
+> Voir aussi : [DESIGN_LANGUAGE.md](DESIGN_LANGUAGE.md) pour le type `cv` dans le système de types,
+> [DESIGN_SOUNDS.md](DESIGN_SOUNDS.md) pour le cascading spec < CT < CV.
+
 ## Concept
 
 Les CV (Control Voltage) sont des **objets temporels** dans BPscript qui produisent des courbes de valeurs continues. Ils s'appliquent à un signal d'entrée pour produire un signal de sortie, comme dans un synthé modulaire.
