@@ -15,6 +15,55 @@
 long wasm_last_kmax = 0;
 
 /* ============================================================
+ * glibc-compatible rand()/srand() — TYPE_3 nonlinear additive feedback
+ *
+ * Musl (emscripten default) uses a simple LCG that produces completely
+ * different sequences from glibc for the same seed.  This causes BP3
+ * grammars with weighted-random rule selection (SUB with multiple
+ * candidates) to diverge from native output.
+ *
+ * This implementation matches glibc's default random() generator
+ * (TYPE_3, degree 31) so that WASM and native produce identical
+ * results for the same seed.
+ * ============================================================ */
+
+#define GLIBC_DEG  31
+#define GLIBC_SEP  3
+
+static int32_t glibc_state[GLIBC_DEG + 1];
+static int glibc_fptr = GLIBC_SEP;
+static int glibc_rptr = 0;
+
+void srand(unsigned int seed) {
+    glibc_state[0] = (int32_t)seed;
+    for (int i = 1; i < GLIBC_DEG; i++) {
+        int32_t val = (16807LL * glibc_state[i - 1]) % 2147483647;
+        if (val < 0) val += 2147483647;
+        glibc_state[i] = val;
+    }
+    glibc_fptr = GLIBC_SEP;
+    glibc_rptr = 0;
+    /* Warm up the generator (matches glibc's __srandom_r) */
+    for (int i = 0; i < 310; i++) rand();
+}
+
+int rand(void) {
+    int32_t val;
+    glibc_state[glibc_fptr] += glibc_state[glibc_rptr];
+    val = (glibc_state[glibc_fptr] >> 1) & 0x7fffffff;
+    glibc_fptr++;
+    if (glibc_fptr >= GLIBC_DEG) {
+        glibc_fptr = 0;
+        glibc_rptr++;
+    } else {
+        glibc_rptr++;
+        if (glibc_rptr >= GLIBC_DEG)
+            glibc_rptr = 0;
+    }
+    return (int)val;
+}
+
+/* ============================================================
  * MIDIdriver.c stubs
  * ============================================================ */
 
@@ -166,6 +215,13 @@ int ExpandSelection(int w) {
     return OK;
 }
 
+int ChangedProtoType(int j) {
+    /* Stub: in native, updates UI when a prototype changes.
+       In WASM, nothing to do — no UI to update. */
+    BP_NOT_USED(j);
+    return OK;
+}
+
 int PlayBuffer(tokenbyte ***pp_buff, int onlypianoroll) {
     int r;
     int savedPanic;
@@ -256,6 +312,36 @@ int PlayBuffer1(tokenbyte ***pp_buff, int onlypianoroll) {
                     dbg, (long)(*p_MIDIsize)[dbg], (long)(*p_Dur)[dbg]);
         }
     }
+
+    /* Guard: check for T4 (unresolved variable) tokens in the expanded buffer.
+       FillPhaseDiagram (called by TimeSet) converts T4 tokens to silent
+       sound-objects (code added 2026-03-20 in Bernard's FillPhaseDiagram.c:622).
+       This conversion can corrupt the phase diagram when combined with
+       polymetric expressions + _legato/_staccato, causing SetTimeObjects
+       to crash with memory access out of bounds.
+       This happens when NoteConvention mismatches the grammar (e.g. French
+       convention with English note names like C4, D4 — not recognized as
+       notes, stored as T4 variables).
+       Must scan AFTER PolyMake since polymetric expansion changes the buffer. */
+    {
+        long expanded_len = MyGetHandleSize((Handle)*pp_buff) / sizeof(tokenbyte);
+        long scan;
+        int has_vars = FALSE;
+        for(scan = 0; scan < expanded_len; scan += 2) {
+            if((**pp_buff)[scan] == 4) { /* T4 = unresolved variable */
+                has_vars = TRUE;
+                break;
+            }
+        }
+        if(has_vars) {
+            emscripten_log(EM_LOG_CONSOLE,
+                "PlayBuffer1: buffer contains T4 (variable) tokens — "
+                "skipping TimeSet to avoid FillPhaseDiagram crash");
+            result = OK;
+            goto SORTIR;
+        }
+    }
+
     /* TimeSet: compute start/end times for all sound objects */
     SetTimeOn = TRUE; nmax = 0;
     result = TimeSet(pp_buff, &kmax, &tmin, &tmax, &maxseq, &nmax, p_imaxseq, maxseqapprox);

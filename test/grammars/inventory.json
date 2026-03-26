@@ -1,0 +1,1591 @@
+[
+  {
+    "name": "PP",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [],
+    "lines": 15,
+    "status": "TODO"
+  },
+  {
+    "name": "checkBT",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [],
+    "lines": 2,
+    "status": "TODO"
+  },
+  {
+    "name": "checkHomo",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [],
+    "lines": 8,
+    "status": "TODO"
+  },
+  {
+    "name": "checkhomo2",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [],
+    "lines": 13,
+    "status": "TODO"
+  },
+  {
+    "name": "gramgene2",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 24,
+    "status": "TODO"
+  },
+  {
+    "name": "keys",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [],
+    "lines": 6,
+    "status": "TODO"
+  },
+  {
+    "name": "tryTicks",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 6,
+    "status": "TODO"
+  },
+  {
+    "name": "tryflags2",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 13,
+    "status": "TODO"
+  },
+  {
+    "name": "tryflags3",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 20,
+    "status": "TODO"
+  },
+  {
+    "name": "tryflags3.html",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 27,
+    "status": "TODO"
+  },
+  {
+    "name": "tryhomomorphism",
+    "score": 0,
+    "rules": 0,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 13,
+    "status": "TODO"
+  },
+  {
+    "name": "blurb",
+    "score": 1,
+    "rules": 1,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 7,
+    "status": "TODO"
+  },
+  {
+    "name": "doeslittle",
+    "score": 1,
+    "rules": 0,
+    "polys": 1,
+    "subs": 0,
+    "features": [
+      "poly:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 11,
+    "status": "TODO"
+  },
+  {
+    "name": "drum",
+    "score": 1,
+    "rules": 0,
+    "polys": 1,
+    "subs": 0,
+    "features": [
+      "poly:1"
+    ],
+    "aux": [],
+    "lines": 3,
+    "status": "TODO"
+  },
+  {
+    "name": "tryCsound",
+    "score": 2,
+    "rules": 2,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 11,
+    "status": "TODO"
+  },
+  {
+    "name": "tryGraphics",
+    "score": 2,
+    "rules": 1,
+    "polys": 1,
+    "subs": 0,
+    "features": [
+      "poly:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 8,
+    "status": "TODO"
+  },
+  {
+    "name": "tryMIDIfile",
+    "score": 2,
+    "rules": 2,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 9,
+    "status": "TODO"
+  },
+  {
+    "name": "checkVolChan",
+    "score": 3,
+    "rules": 0,
+    "polys": 3,
+    "subs": 0,
+    "features": [
+      "poly:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 73,
+    "status": "TODO"
+  },
+  {
+    "name": "checkVolMasterSlave",
+    "score": 3,
+    "rules": 2,
+    "polys": 1,
+    "subs": 0,
+    "features": [
+      "poly:1"
+    ],
+    "aux": [],
+    "lines": 7,
+    "status": "TODO"
+  },
+  {
+    "name": "checkcontext",
+    "score": 3,
+    "rules": 0,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [],
+    "lines": 24,
+    "status": "TODO"
+  },
+  {
+    "name": "tryConsoleMaxTime",
+    "score": 3,
+    "rules": 3,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 14,
+    "status": "TODO"
+  },
+  {
+    "name": "tryLIN",
+    "score": 3,
+    "rules": 0,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 19,
+    "status": "TODO"
+  },
+  {
+    "name": "tryObjects",
+    "score": 3,
+    "rules": 2,
+    "polys": 1,
+    "subs": 0,
+    "features": [
+      "poly:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 7,
+    "status": "TODO"
+  },
+  {
+    "name": "checkNegativeContext",
+    "score": 5,
+    "rules": 5,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 16,
+    "status": "TODO"
+  },
+  {
+    "name": "gramgene1",
+    "score": 6,
+    "rules": 0,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 30,
+    "status": "TODO"
+  },
+  {
+    "name": "koto1",
+    "score": 6,
+    "rules": 0,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 31,
+    "status": "TODO"
+  },
+  {
+    "name": "koto2",
+    "score": 6,
+    "rules": 0,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 30,
+    "status": "TODO"
+  },
+  {
+    "name": "simpletemplates",
+    "score": 6,
+    "rules": 0,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 16,
+    "status": "TODO"
+  },
+  {
+    "name": "tryKeyMap",
+    "score": 6,
+    "rules": 6,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 53,
+    "status": "TODO"
+  },
+  {
+    "name": "tryTimePatterns",
+    "score": 6,
+    "rules": 3,
+    "polys": 3,
+    "subs": 0,
+    "features": [
+      "poly:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 16,
+    "status": "TODO"
+  },
+  {
+    "name": "Rajeev",
+    "score": 7,
+    "rules": 0,
+    "polys": 7,
+    "subs": 0,
+    "features": [
+      "poly:7"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 47,
+    "status": "TODO"
+  },
+  {
+    "name": "tryAllItems0",
+    "score": 7,
+    "rules": 4,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "lines": 19,
+    "status": "TODO"
+  },
+  {
+    "name": "transposition1",
+    "score": 8,
+    "rules": 6,
+    "polys": 2,
+    "subs": 0,
+    "features": [
+      "poly:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 24,
+    "status": "TODO"
+  },
+  {
+    "name": "bells",
+    "score": 9,
+    "rules": 0,
+    "polys": 0,
+    "subs": 3,
+    "features": [
+      "sub:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 53,
+    "status": "TODO"
+  },
+  {
+    "name": "cloches1",
+    "score": 9,
+    "rules": 0,
+    "polys": 0,
+    "subs": 3,
+    "features": [
+      "sub:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 79,
+    "status": "TODO"
+  },
+  {
+    "name": "tryRotate",
+    "score": 9,
+    "rules": 4,
+    "polys": 2,
+    "subs": 1,
+    "features": [
+      "poly:2",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 14,
+    "status": "TODO"
+  },
+  {
+    "name": "trytemplates2",
+    "score": 9,
+    "rules": 0,
+    "polys": 0,
+    "subs": 3,
+    "features": [
+      "sub:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 21,
+    "status": "TODO"
+  },
+  {
+    "name": "a",
+    "score": 10,
+    "rules": 7,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [],
+    "lines": 17,
+    "status": "TODO"
+  },
+  {
+    "name": "a.html",
+    "score": 10,
+    "rules": 10,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [],
+    "lines": 16,
+    "status": "TODO"
+  },
+  {
+    "name": "tryFlags",
+    "score": 10,
+    "rules": 4,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2"
+    ],
+    "aux": [],
+    "lines": 20,
+    "status": "TODO"
+  },
+  {
+    "name": "tryOneScale",
+    "score": 10,
+    "rules": 5,
+    "polys": 0,
+    "subs": 0,
+    "features": [
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 14,
+    "status": "TODO"
+  },
+  {
+    "name": "12345678",
+    "score": 11,
+    "rules": 6,
+    "polys": 5,
+    "subs": 0,
+    "features": [
+      "poly:5"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "lines": 19,
+    "status": "TODO"
+  },
+  {
+    "name": "tryPatternGrammar",
+    "score": 11,
+    "rules": 8,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "lines": 17,
+    "status": "TODO"
+  },
+  {
+    "name": "checkSUB",
+    "score": 12,
+    "rules": 0,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4"
+    ],
+    "aux": [],
+    "lines": 49,
+    "status": "TODO"
+  },
+  {
+    "name": "checkSUB.new",
+    "score": 12,
+    "rules": 0,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4"
+    ],
+    "aux": [],
+    "lines": 49,
+    "status": "TODO"
+  },
+  {
+    "name": "dhadhatite1",
+    "score": 12,
+    "rules": 0,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 72,
+    "status": "TODO"
+  },
+  {
+    "name": "dhati2",
+    "score": 12,
+    "rules": 0,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 40,
+    "status": "TODO"
+  },
+  {
+    "name": "dhati3",
+    "score": 12,
+    "rules": 0,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 39,
+    "status": "TODO"
+  },
+  {
+    "name": "look-and-say",
+    "score": 12,
+    "rules": 9,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 25,
+    "status": "TODO"
+  },
+  {
+    "name": "tryShruti",
+    "score": 12,
+    "rules": 4,
+    "polys": 3,
+    "subs": 0,
+    "features": [
+      "poly:3",
+      "_scale"
+    ],
+    "aux": [
+      "se",
+      "to"
+    ],
+    "lines": 12,
+    "status": "TODO"
+  },
+  {
+    "name": "trySrand",
+    "score": 12,
+    "rules": 6,
+    "polys": 6,
+    "subs": 0,
+    "features": [
+      "poly:6"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 20,
+    "status": "TODO"
+  },
+  {
+    "name": "tryrepeat",
+    "score": 12,
+    "rules": 7,
+    "polys": 0,
+    "subs": 0,
+    "features": [
+      "_goto",
+      "_repeat"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 21,
+    "status": "TODO"
+  },
+  {
+    "name": "acceleration",
+    "score": 13,
+    "rules": 13,
+    "polys": 0,
+    "subs": 0,
+    "features": [],
+    "aux": [
+      "se"
+    ],
+    "lines": 28,
+    "status": "TODO"
+  },
+  {
+    "name": "checkSUB1",
+    "score": 13,
+    "rules": 10,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 22,
+    "status": "TODO"
+  },
+  {
+    "name": "livecode1",
+    "score": 13,
+    "rules": 0,
+    "polys": 13,
+    "subs": 0,
+    "features": [
+      "poly:13"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 9,
+    "status": "TODO"
+  },
+  {
+    "name": "tryGOTO",
+    "score": 14,
+    "rules": 0,
+    "polys": 0,
+    "subs": 3,
+    "features": [
+      "sub:3",
+      "_goto",
+      "_repeat"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 31,
+    "status": "TODO"
+  },
+  {
+    "name": "tryTunings",
+    "score": 14,
+    "rules": 0,
+    "polys": 9,
+    "subs": 0,
+    "features": [
+      "poly:9",
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 36,
+    "status": "TODO"
+  },
+  {
+    "name": "tryCsoundObjects",
+    "score": 15,
+    "rules": 13,
+    "polys": 2,
+    "subs": 0,
+    "features": [
+      "poly:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 68,
+    "status": "TODO"
+  },
+  {
+    "name": "tryTranspose",
+    "score": 15,
+    "rules": 8,
+    "polys": 4,
+    "subs": 1,
+    "features": [
+      "poly:4",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 22,
+    "status": "TODO"
+  },
+  {
+    "name": "checktemplates",
+    "score": 16,
+    "rules": 7,
+    "polys": 0,
+    "subs": 3,
+    "features": [
+      "sub:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 25,
+    "status": "TODO"
+  },
+  {
+    "name": "tryDESTRU",
+    "score": 16,
+    "rules": 10,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "lines": 23,
+    "status": "TODO"
+  },
+  {
+    "name": "tryKeyXpand",
+    "score": 16,
+    "rules": 6,
+    "polys": 7,
+    "subs": 1,
+    "features": [
+      "poly:7",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 30,
+    "status": "TODO"
+  },
+  {
+    "name": "Ames",
+    "score": 17,
+    "rules": 8,
+    "polys": 9,
+    "subs": 0,
+    "features": [
+      "poly:9"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 20,
+    "status": "TODO"
+  },
+  {
+    "name": "check&",
+    "score": 17,
+    "rules": 7,
+    "polys": 10,
+    "subs": 0,
+    "features": [
+      "poly:10"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 14,
+    "status": "TODO"
+  },
+  {
+    "name": "Djinns",
+    "score": 18,
+    "rules": 0,
+    "polys": 9,
+    "subs": 3,
+    "features": [
+      "poly:9",
+      "sub:3"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 44,
+    "status": "TODO"
+  },
+  {
+    "name": "dhadhatite",
+    "score": 18,
+    "rules": 0,
+    "polys": 0,
+    "subs": 6,
+    "features": [
+      "sub:6"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 92,
+    "status": "TODO"
+  },
+  {
+    "name": "livecode2",
+    "score": 19,
+    "rules": 0,
+    "polys": 19,
+    "subs": 0,
+    "features": [
+      "poly:19"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 9,
+    "status": "TODO"
+  },
+  {
+    "name": "tryAllItems",
+    "score": 20,
+    "rules": 9,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2",
+      "_goto",
+      "_repeat"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 20,
+    "status": "TODO"
+  },
+  {
+    "name": "tryAllItems1",
+    "score": 20,
+    "rules": 9,
+    "polys": 0,
+    "subs": 2,
+    "features": [
+      "sub:2",
+      "_goto",
+      "_repeat"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 21,
+    "status": "TODO"
+  },
+  {
+    "name": "MyMelody",
+    "score": 21,
+    "rules": 0,
+    "polys": 18,
+    "subs": 1,
+    "features": [
+      "poly:18",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 34,
+    "status": "TODO"
+  },
+  {
+    "name": "NotReich",
+    "score": 21,
+    "rules": 10,
+    "polys": 8,
+    "subs": 1,
+    "features": [
+      "poly:8",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 24,
+    "status": "TODO"
+  },
+  {
+    "name": "transposition3",
+    "score": 21,
+    "rules": 9,
+    "polys": 7,
+    "subs": 1,
+    "features": [
+      "poly:7",
+      "sub:1",
+      "_repeat"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 20,
+    "status": "TODO"
+  },
+  {
+    "name": "tryMajorMinor",
+    "score": 27,
+    "rules": 0,
+    "polys": 22,
+    "subs": 0,
+    "features": [
+      "poly:22",
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 17,
+    "status": "TODO"
+  },
+  {
+    "name": "tryHarmony",
+    "score": 28,
+    "rules": 12,
+    "polys": 11,
+    "subs": 0,
+    "features": [
+      "poly:11",
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 22,
+    "status": "TODO"
+  },
+  {
+    "name": "kss2",
+    "score": 29,
+    "rules": 26,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 39,
+    "status": "TODO"
+  },
+  {
+    "name": "trytemplates",
+    "score": 30,
+    "rules": 15,
+    "polys": 0,
+    "subs": 5,
+    "features": [
+      "sub:5"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 48,
+    "status": "TODO"
+  },
+  {
+    "name": "vina",
+    "score": 30,
+    "rules": 19,
+    "polys": 5,
+    "subs": 2,
+    "features": [
+      "poly:5",
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 46,
+    "status": "TODO"
+  },
+  {
+    "name": "vina2",
+    "score": 32,
+    "rules": 20,
+    "polys": 6,
+    "subs": 2,
+    "features": [
+      "poly:6",
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 47,
+    "status": "TODO"
+  },
+  {
+    "name": "Visser5",
+    "score": 35,
+    "rules": 12,
+    "polys": 17,
+    "subs": 2,
+    "features": [
+      "poly:17",
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 26,
+    "status": "TODO"
+  },
+  {
+    "name": "asymmetric1",
+    "score": 35,
+    "rules": 14,
+    "polys": 0,
+    "subs": 6,
+    "features": [
+      "sub:6",
+      "_goto"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "lines": 65,
+    "status": "TODO"
+  },
+  {
+    "name": "checkrests",
+    "score": 37,
+    "rules": 0,
+    "polys": 37,
+    "subs": 0,
+    "features": [
+      "poly:37"
+    ],
+    "aux": [],
+    "lines": 17,
+    "status": "TODO"
+  },
+  {
+    "name": "koto3",
+    "score": 39,
+    "rules": 27,
+    "polys": 6,
+    "subs": 2,
+    "features": [
+      "poly:6",
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 56,
+    "status": "TODO"
+  },
+  {
+    "name": "checkAllCsound",
+    "score": 40,
+    "rules": 34,
+    "polys": 6,
+    "subs": 0,
+    "features": [
+      "poly:6"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 77,
+    "status": "TODO"
+  },
+  {
+    "name": "765432",
+    "score": 45,
+    "rules": 0,
+    "polys": 9,
+    "subs": 12,
+    "features": [
+      "poly:9",
+      "sub:12"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 203,
+    "status": "TODO"
+  },
+  {
+    "name": "Nadaka-1er-essai",
+    "score": 46,
+    "rules": 43,
+    "polys": 0,
+    "subs": 1,
+    "features": [
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 55,
+    "status": "TODO"
+  },
+  {
+    "name": "polyphony1",
+    "score": 48,
+    "rules": 0,
+    "polys": 48,
+    "subs": 0,
+    "features": [
+      "poly:48"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 47,
+    "status": "TODO"
+  },
+  {
+    "name": "Visser3",
+    "score": 49,
+    "rules": 29,
+    "polys": 14,
+    "subs": 2,
+    "features": [
+      "poly:14",
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 52,
+    "status": "TODO"
+  },
+  {
+    "name": "tryScales",
+    "score": 52,
+    "rules": 17,
+    "polys": 30,
+    "subs": 0,
+    "features": [
+      "poly:30",
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 28,
+    "status": "TODO"
+  },
+  {
+    "name": "trySerial",
+    "score": 59,
+    "rules": 36,
+    "polys": 20,
+    "subs": 1,
+    "features": [
+      "poly:20",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 58,
+    "status": "TODO"
+  },
+  {
+    "name": "Nadaka1",
+    "score": 65,
+    "rules": 53,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 107,
+    "status": "TODO"
+  },
+  {
+    "name": "dhin1",
+    "score": 65,
+    "rules": 44,
+    "polys": 0,
+    "subs": 7,
+    "features": [
+      "sub:7"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 80,
+    "status": "TODO"
+  },
+  {
+    "name": "Nadaka",
+    "score": 70,
+    "rules": 53,
+    "polys": 0,
+    "subs": 4,
+    "features": [
+      "sub:4",
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 100,
+    "status": "TODO"
+  },
+  {
+    "name": "Visser.Shapes",
+    "score": 77,
+    "rules": 27,
+    "polys": 44,
+    "subs": 2,
+    "features": [
+      "poly:44",
+      "sub:2"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 45,
+    "status": "TODO"
+  },
+  {
+    "name": "vina3",
+    "score": 79,
+    "rules": 42,
+    "polys": 20,
+    "subs": 4,
+    "features": [
+      "poly:20",
+      "sub:4",
+      "_scale"
+    ],
+    "aux": [
+      "se",
+      "to"
+    ],
+    "lines": 87,
+    "status": "TODO"
+  },
+  {
+    "name": "dhin--",
+    "score": 90,
+    "rules": 72,
+    "polys": 0,
+    "subs": 6,
+    "features": [
+      "sub:6"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 114,
+    "status": "TODO"
+  },
+  {
+    "name": "tryRagas",
+    "score": 94,
+    "rules": 0,
+    "polys": 89,
+    "subs": 0,
+    "features": [
+      "poly:89",
+      "_scale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 38,
+    "status": "TODO"
+  },
+  {
+    "name": "Visser.Waves",
+    "score": 99,
+    "rules": 46,
+    "polys": 53,
+    "subs": 0,
+    "features": [
+      "poly:53"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 73,
+    "status": "TODO"
+  },
+  {
+    "name": "trial.mohanam",
+    "score": 108,
+    "rules": 81,
+    "polys": 0,
+    "subs": 8,
+    "features": [
+      "sub:8",
+      "_goto"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 133,
+    "status": "TODO"
+  },
+  {
+    "name": "Ruwet",
+    "score": 159,
+    "rules": 110,
+    "polys": 37,
+    "subs": 4,
+    "features": [
+      "poly:37",
+      "sub:4"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 143,
+    "status": "TODO"
+  },
+  {
+    "name": "dhati",
+    "score": 172,
+    "rules": 142,
+    "polys": 12,
+    "subs": 6,
+    "features": [
+      "poly:12",
+      "sub:6"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 171,
+    "status": "TODO"
+  },
+  {
+    "name": "ShapesInRhythm",
+    "score": 301,
+    "rules": 146,
+    "polys": 104,
+    "subs": 17,
+    "features": [
+      "poly:104",
+      "sub:17"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 210,
+    "status": "TODO"
+  },
+  {
+    "name": "Alarm",
+    "score": 500,
+    "rules": 0,
+    "polys": 449,
+    "subs": 17,
+    "features": [
+      "poly:449",
+      "sub:17"
+    ],
+    "aux": [],
+    "lines": 370,
+    "status": "TODO"
+  },
+  {
+    "name": "Mozartexpression",
+    "score": 509,
+    "rules": 0,
+    "polys": 452,
+    "subs": 19,
+    "features": [
+      "poly:452",
+      "sub:19"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 387,
+    "status": "TODO"
+  },
+  {
+    "name": "Alan",
+    "score": 826,
+    "rules": 328,
+    "polys": 447,
+    "subs": 17,
+    "features": [
+      "poly:447",
+      "sub:17"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 373,
+    "status": "TODO"
+  },
+  {
+    "name": "Beatrix",
+    "score": 826,
+    "rules": 328,
+    "polys": 447,
+    "subs": 17,
+    "features": [
+      "poly:447",
+      "sub:17"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 372,
+    "status": "TODO"
+  },
+  {
+    "name": "Mozart",
+    "score": 838,
+    "rules": 335,
+    "polys": 447,
+    "subs": 17,
+    "features": [
+      "poly:447",
+      "sub:17",
+      "_scale"
+    ],
+    "aux": [
+      "se",
+      "to"
+    ],
+    "lines": 394,
+    "status": "TODO"
+  },
+  {
+    "name": "Watch_What_Happens",
+    "score": 2203,
+    "rules": 0,
+    "polys": 2200,
+    "subs": 1,
+    "features": [
+      "poly:2200",
+      "sub:1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "lines": 128,
+    "status": "TODO"
+  }
+]

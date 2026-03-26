@@ -13,6 +13,10 @@
 #include "-BP3.h"
 #include "-BP3decl.h"
 
+/* Debug: expose trace_compute toggle for SUB loop investigation */
+extern int trace_compute;
+extern int trace_weights;
+
 /* Forward declarations for ConsoleMain.c functions */
 extern void ConsoleInit(BPConsoleOpts* opts);
 extern void ConsoleMessagesInit(void);
@@ -259,7 +263,11 @@ int bp3_load_settings_params(int noteConvention, int quantize, int timeRes,
 
     if(seed > 0) {
         Seed = (unsigned)(((long)seed) % 32768L);
-        ReseedOrShuffle(seed);
+        /* Use srand(Seed) directly, matching native's ResetRandom().
+           ReseedOrShuffle(seed) computes (Seed+seed)%32768 which gives
+           a different effective seed (e.g. seed=1 → srand(2) instead of srand(1)). */
+        srand(Seed);
+        UsedRandom = FALSE;
     }
 
     if(maxTime > 0) MaxConsoleTime = (long)maxTime;
@@ -284,6 +292,54 @@ int bp3_load_tonality(const char* content) {
     int r = LoadTonality();
     remove("/tmp_tonality.txt");
     return (r == OK) ? 0 : -3;
+}
+
+/* bp3_provision_file: write any file content to the Emscripten virtual filesystem.
+   This is the generic mechanism for providing auxiliary files that the engine
+   resolves internally during compilation and production:
+   - "-mi.xxx" (MIDI prototypes, referenced from -ho. files)
+   - "-or.xxx" (orchestra definitions)
+   - "-tb.xxx" (time base patterns)
+   - "-in.xxx" (interactive MIDI)
+   - "-gl.xxx" (glossary)
+   - Any other file the engine might try to fopen()
+
+   The filename should match exactly what the grammar/alphabet references
+   (e.g. "-mi.dhati" for a grammar referencing -ho.dhati which contains "-mi.dhati").
+   Files are written to the root of the Emscripten filesystem "/".
+
+   Call this BEFORE bp3_load_grammar() so files are available during compilation.
+   Returns 0 on success, -1 if empty, -2 if write fails. */
+EMSCRIPTEN_KEEPALIVE
+int bp3_provision_file(const char* filename, const char* content) {
+    if(!filename || !content) return -1;
+    char path[512];
+    /* Write to root "/" so fopen("filename") or fopen("/filename") both find it */
+    snprintf(path, sizeof(path), "/%s", filename);
+    FILE* f = fopen(path, "w");
+    if(!f) return -2;
+    fputs(content, f);
+    fclose(f);
+    emscripten_log(EM_LOG_CONSOLE, "bp3_provision_file: wrote %d bytes to %s",
+                   (int)strlen(content), path);
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int bp3_load_object_prototypes(const char* content) {
+    if(!content || content[0] == '\0') return -1;
+    /* Write -mi. content to virtual filesystem, then call LoadObjectPrototypes.
+       This loads MIDI prototypes for sound objects (durations, channels, velocities)
+       which are referenced by -ho. alphabet files. Without this, sound objects
+       get default 1-beat duration and timings are uniform/wrong. */
+    FILE* f = fopen("/tmp_prototypes.txt", "w");
+    if(!f) return -2;
+    fputs(content, f);
+    fclose(f);
+    strcpy(FileName[iObjects], "/tmp_prototypes.txt");
+    int r = LoadObjectPrototypes(0, 1);
+    remove("/tmp_prototypes.txt");
+    return (r == OK) ? 0 : (r == MISSED) ? -4 : -3;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -600,4 +656,41 @@ int bp3_get_timed_token_count(void) {
         count++;
     }
     return count;
+}
+
+/* ---- Debug API for SUB loop investigation ---- */
+
+EMSCRIPTEN_KEEPALIVE
+void bp3_set_trace(int compute, int weights) {
+    trace_compute = compute;
+    trace_weights = weights;
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* bp3_get_flag_state(void) {
+    /* Dump current flag values for debugging K-param issues */
+    static char flagbuf[4096];
+    int pos = 0;
+    pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, "{\"Jflag\":%d,\"Flagthere\":%d,\"Varweight\":%d",
+                    Jflag, Flagthere, Varweight);
+    if(Jflag > 0 && p_Flag != NULL) {
+        pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, ",\"flags\":[");
+        for(int i = 1; i <= Jflag && i < 20; i++) {
+            if(i > 1) flagbuf[pos++] = ',';
+            pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, "%ld", (long)(*p_Flag)[i]);
+        }
+        pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, "]");
+    }
+    if(Jflag > 0 && p_Flagname != NULL) {
+        pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, ",\"names\":[");
+        for(int i = 1; i <= Jflag && i < 20; i++) {
+            if(i > 1) flagbuf[pos++] = ',';
+            const char *name = ((*p_Flagname)[i] != NULL && *((*p_Flagname)[i]) != NULL)
+                               ? *((*p_Flagname)[i]) : "?";
+            pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, "\"%s\"", name);
+        }
+        pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, "]");
+    }
+    pos += snprintf(flagbuf + pos, sizeof(flagbuf) - pos, "}");
+    return flagbuf;
 }
