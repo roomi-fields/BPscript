@@ -230,9 +230,11 @@ int bp3_load_alphabet(const char* text) {
     return 0;
 }
 
-/* bp3_load_settings: kept for backward compatibility but should not be used.
-   LoadSettings() expects Bernard's -se format, not arbitrary JSON.
-   Use bp3_load_settings_params() instead. */
+/* bp3_load_settings: load settings from Bernard's JSON format.
+   Parses the full -se.xxx JSON (84+ parameters) via cJSON in LoadSettings().
+   Works with JSON files from Bernard's PHP interface (starting with '{').
+   Does NOT work with old text-format -se files (BP2 legacy starting with '//').
+   For minimal settings (6 params), use bp3_load_settings_params() instead. */
 EMSCRIPTEN_KEEPALIVE
 int bp3_load_settings(const char* json_content) {
     if(!json_content || json_content[0] == '\0') return -1;
