@@ -344,6 +344,15 @@ int PlayBuffer1(tokenbyte ***pp_buff, int onlypianoroll) {
         }
     }
 
+    /* Remember where this item's events start (for dedup within this item only) */
+    long eventCountAtItemStart = eventCount;
+
+    /* Match native MakeSound behavior: increment ItemNumber when writing MIDI.
+       In native, MakeSound.c:130 does ItemNumber++ when MIDIfileOn=TRUE.
+       This is IN ADDITION to the ItemNumber++ in ProduceItems.c:283 (Improvize loop).
+       Without this, the WASM Improvize loop runs 2x more items than native. */
+    if(WriteMIDIfile && !rtMIDI) ItemNumber++;
+
     /* TimeSet: compute start/end times for all sound objects */
     SetTimeOn = TRUE; nmax = 0;
     result = TimeSet(pp_buff, &kmax, &tmin, &tmax, &maxseq, &nmax, p_imaxseq, maxseqapprox);
@@ -387,6 +396,23 @@ int PlayBuffer1(tokenbyte ***pp_buff, int onlypianoroll) {
             if(vel > 127) vel = 127;
             if(chan < 1) chan = 1;
             if(chan > 16) chan = 16;
+
+            /* Deduplicate: skip if same note+time+channel already emitted.
+               p_Instance contains entries for ALL polymetric sequences (nmax).
+               The same note at the same time appears once per sequence.
+               Native MakeSound iterates differently and emits each note once. */
+            {
+                int dup = FALSE;
+                long ec;
+                for(ec = eventCountAtItemStart; ec < eventCount; ec++) {
+                    if((eventStack[ec].status & 0xF0) == NoteOn
+                       && eventStack[ec].time == startMs
+                       && eventStack[ec].data1 == (unsigned char)midiKey) {
+                        dup = TRUE; break;
+                    }
+                }
+                if(dup) continue;
+            }
 
             /* NoteOn event */
             if(eventCount < eventCountMax) {
