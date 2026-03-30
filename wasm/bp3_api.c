@@ -163,7 +163,7 @@ int bp3_init(void) {
     emscripten_log(EM_LOG_CONSOLE, "bp3_init: Inits() OK");
 
     TraceMemory = FALSE;
-    MaxMIDIMessages = 1000L;
+    MaxMIDIMessages = 50000L;  /* 1000 was too small for complex grammars (765432=1646 events, NotReich=1160) */
     eventStack = (MIDI_Event*)malloc(MaxMIDIMessages * sizeof(MIDI_Event));
     if(eventStack == NULL) {
         return -2;
@@ -255,6 +255,17 @@ int bp3_load_settings(const char* json_content) {
    seed: random seed (0 = don't change)
    maxTime: max computation time in seconds (0 = no limit)
 */
+/* bp3_set_seed: set random seed without touching any other settings.
+   Use after bp3_load_settings() to override the seed for reproducibility. */
+EMSCRIPTEN_KEEPALIVE
+void bp3_set_seed(int seed) {
+    if(seed > 0) {
+        Seed = (unsigned)(((long)seed) % 32768L);
+        srand(Seed);
+        UsedRandom = FALSE;
+    }
+}
+
 EMSCRIPTEN_KEEPALIVE
 int bp3_load_settings_params(int noteConvention, int quantize, int timeRes,
                               int natureOfTime, int seed, int maxTime) {
@@ -374,9 +385,9 @@ int bp3_produce(void) {
     NumberMessages = 0;
     eventCount = 0;  /* Clear MIDI events from previous production */
 
-    /* Disable Improvize mode in WASM — no real-time MIDI available.
-       Without this, Improvize grammars loop 20+ items then return ABORT. */
-    Improvize = FALSE;
+    /* Improvize mode: let the engine loop up to MaxItemsProduce items.
+       In non-rtMIDI mode (WASM), ProduceItems loops and returns ABORT
+       when MaxItemsProduce is reached — this is normal, not an error. */
 
     /* Redirect stdout to /dev/null during production to avoid JS stack overflow.
        Every printf/fprintf(stdout) in BP3's C code triggers a WASM→JS syscall (fd_write).
@@ -425,7 +436,7 @@ const char* bp3_get_messages(void) {
 
 /* ---- MIDI event extraction ---- */
 
-#define MIDI_JSON_BUF_SIZE (512 * 1024)
+#define MIDI_JSON_BUF_SIZE (4 * 1024 * 1024)  /* 4MB for up to 50K events */
 static char midi_json_buffer[MIDI_JSON_BUF_SIZE];
 
 EMSCRIPTEN_KEEPALIVE

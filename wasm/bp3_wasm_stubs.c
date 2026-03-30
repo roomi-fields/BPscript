@@ -248,8 +248,10 @@ int PlayBuffer(tokenbyte ***pp_buff, int onlypianoroll) {
     r = PlayBuffer1(pp_buff, onlypianoroll);
     if(!PlaySelectionOn && ItemNumber > INT_MAX) ItemNumber = 1L;
 
-    /* In WASM, never let MIDI extraction failure abort text production */
-    if(r == ABORT || r == EXIT) {
+    /* In WASM non-Improvize mode, don't let MIDI extraction failure abort
+       text production. But in Improvize mode, ABORT from PlayBuffer is the
+       normal signal to stop the loop — propagate it. */
+    if(!Improvize && (r == ABORT || r == EXIT)) {
         Panic = savedPanic;
         r = OK;
     }
