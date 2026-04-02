@@ -548,9 +548,31 @@ Plus décommentage du guard dans `SaveLoads1.c:704`.
 
 ---
 
+## 31. `bp3_random.c/.h` — RNG portable MSVC
+
+**Problème :** `rand()`/`srand()` de glibc (Linux) et MSVC (Windows) produisent des séquences complètement différentes pour le même seed. 6 grammaires avec sélection aléatoire (SUB, RND) divergeaient entre bp.exe et bp3.
+
+**Solution :** Nouveau fichier `bp3_random.c` + `bp3_random.h` implémentant le LCG MSVC :
+```c
+void bp3_srand(unsigned int seed) { bp3_rng_state = seed; }
+int bp3_rand(void) {
+    bp3_rng_state = bp3_rng_state * 214013 + 2531011;
+    return (bp3_rng_state >> 16) & 0x7fff;
+}
+#define BP3_RAND_MAX 32767
+```
+
+**Fichiers modifiés :** Tous les appels `rand()` → `bp3_rand()`, `srand()` → `bp3_srand()`, `RAND_MAX` → `BP3_RAND_MAX` dans : `Misc.c`, `Compute.c`, `Zouleb.c`, `SetObjectFeatures.c`, `MakeSound.c`, `ScriptUtils.c`. Include via `-BP3.h`.
+
+**Suggestion pour Bernard :** Intégrer `bp3_random.c`/`.h` et les remplacements dans `source/BP3/`. Cela garantit que bp.exe Windows et bp3 Linux/WASM produisent exactement les mêmes séquences aléatoires pour le même seed. Le LCG MSVC est trivial et portable sur toutes les plateformes.
+
+**Résultat :** Score S0=S1 : **26/30 EXACT** (était ~18/30). Les 3 grammaires purement RNG-dépendantes (destru, kss2, asymmetric) sont passées de DIFF → EXACT.
+
+---
+
 ## Notes pour référence (mise à jour)
 
 - Build natif testé : v3.3.19 (gcc Linux, Apr 2 2026) — sources = branche wasm + Bernard post-v3.3.18 (2026-03-31)
 - Build WASM : même sources, compilées avec Emscripten
-- **Parité S1=S2 : 24/35 grammaires EXACT** (18 MIDI + 6 TEXT), seed=1
+- **Score S0=S1 : 26/30 EXACT** — bp3 Linux aligne sur bp.exe Windows (RNG MSVC portable)
 - Les 6 anciennes NOTES_DIFF (alan-dice, beatrix-dice, mozart-dice, livecode1, mohanam, ruwet) sont maintenant IDENTICAL — confirmé que c'était le moteur qui avait changé, pas un bug WASM
