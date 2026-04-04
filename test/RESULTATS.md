@@ -1,71 +1,89 @@
-# Résultats des tests — Pipeline S1→S2→S3→S4
+# Résultats des tests — Pipeline S0→S1→S2→S3→S4
 
-Généré automatiquement par `runner.cjs`. Ne pas éditer à la main.
+Dernière mise à jour : 2026-04-04
+Build : v3.3.18-wasm.18 / v3.3.19 (natif)
 
-Dernière mise à jour : 2026-04-02T13:19
+## Stages
 
-| Grammaire | Specificity | S1 | S2 | S1=S2 | S3 | S2=S3 | S4 | S3=S4 | Notes |
-|-----------|-------------|----|----|-------|-------|-------|-------|-------|-------|
-| 12345678 | - | PASS | PASS | NOT_COMPARABLE | PASS | DIFF | ? | - | _transpose dans la grammaire — natif applique la transpos... |
-| 765432 | - | PASS | PASS | PASS | PASS | PASS | FAIL | - | Pitch 823/823 identique ✅. Timing 3x: natif 500ms vs WASM... |
-| Ames | - | PASS | PASS | PASS | PASS | PASS | FAIL | - | S1=S2 ✅ pitch exact (11/11), enharmonic notation diff (A#... |
-| MyMelody | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | S1≠S2: 0/67 pitch match. Vrai diff (RND + notation + timi... |
-| NotReich | S1≠S2 | PASS | PASS | DIFF | PASS | PASS | TODO | - | 580 MIDI: pitch 580/580 ✅, 15 timing diffs ±41ms (arrondi... |
-| Visser3 | - | PASS | PASS | PASS | PASS | DIFF | ? | - | S1↔S2 MIDI: count 401≠232 (WASM misses some events). Pitc... |
-| Visser5 | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | S1↔S2 MIDI: count 1112≠1088. _transpose applied to MIDI b... |
-| acceleration | - | PASS | PASS | PASS | PASS | PASS | FAIL | - | S1↔S2 MIDI: 78 count ✅, pitch 0/78 (native transposes MID... |
-| alan-dice | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| all-items | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| all-items1 | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| asymmetric | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| asymmetric1 | S1≠S2 | PASS | PASS | DIFF | FAIL | - | ? | - | 15 tokens text (a b 2 3 structural symbols). |
-| beatrix-dice | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| bells | - | PASS | PASS | PASS | PASS | DIFF | ? | - | S2 produit 0 MIDI events. Les tokens sont produits mais p... |
-| blurb | - | PASS | PASS | NOT_COMPARABLE | PASS | DIFF | ? | - | Dépend de -cs.tryCsound. Pas comparable S1↔S2. |
-| check& | - | PASS | PASS | NOT_COMPARABLE | PASS | NOT_COMPARABLE | TODO | - | Pitchbend + long ties crash WASM. Pas comparable. |
-| checkNegativeContext | no MIDI | PASS | PASS | NOT_COMPARABLE | PASS | SKIP | ? | - | Grammaire structurelle. Pas de MIDI. S1 text capture trac... |
-| checkVolChan | - | PASS | PASS | NOT_COMPARABLE | PASS | NOT_COMPARABLE | TODO | - | Grammaire interactive (-in.abc1). S2=0 tokens. |
-| checktemplates | S1≠S2 | PASS | PASS | DIFF | PASS | PASS | FAIL | - | 7 tokens identical. RND now produces same result on nativ... |
-| destru | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| dhadhatite1 | - | PASS | PASS | NOT_COMPARABLE | PASS | DIFF | ? | - | Tabla bols via -ho.dhadhatite. Pas de MIDI. S1 text erreu... |
-| dhati | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| dhin | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| dhin1 | no MIDI | PASS | PASS | NOT_COMPARABLE | PASS | SKIP | ? | - | Tabla bols via -ho.dhati. Pas de MIDI. S1 text erreur par... |
-| doeslittle | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | S1=24 MIDI (FIELDSIZE=1000, natif produit 3 items), S2=7 ... |
-| drum | S1 fail | FAIL | ? | - | ? | - | ? | - | S1=S2 ✅ pitch exact (12/12), sort_exact after sort by (st... |
-| ek-do-tin | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| flags | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| gramgene1 | - | PASS | PASS | NOT_COMPARABLE | FAIL | - | ? | - | Meta-grammaire. S1 text parsing incomplet. |
-| graphics | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| harmony | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| koto3 | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| kss2 | - | PASS | PASS | PASS | PASS | DIFF | ? | - | S2 produit 0 MIDI events. Les tokens sont produits mais p... |
-| livecode1 | - | PASS | PASS | PASS | PASS | PASS | FAIL | - | Pitch 100% identique (multiset sort). Timing diffs = arro... |
-| livecode2 | S1≠S2 | PASS | PASS | DIFF | PASS | PASS | FAIL | - | Pitch 100% identique (multiset sort). Timing diffs = arro... |
-| look-and-say | - | PASS | PASS | PASS | PASS | PASS | FAIL | - | 13 tokens both sides but different sequence (9/13 names d... |
-| mohanam | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| mozart-dice | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| nadaka | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| negative-context | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| not-reich | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| one-scale | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| repeat | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| ruwet | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| simpletemplates | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | 6 tokens identical. RND+TEMPLATES, same seed produces sam... |
-| templates | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| time-patterns | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| transposition1 | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | S1↔S2 MIDI: 75 count ✅, timing 75/75 exact ✅, pitch 30/75... |
-| transposition3 | no MIDI | PASS | PASS | NOT_COMPARABLE | PASS | DIFF | ? | - | Bug moteur BP3 originel: overflow durées PolyExpand (endt... |
-| tryAllItems | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | 2 tokens identical (C5 D3). _goto, _failed, _repeat, K-pa... |
-| tryAllItems0 | - | PASS | PASS | NOT_COMPARABLE | PASS | PASS | FAIL | - | AllItems=1 + text-only. S1 capture dérivations intermédia... |
-| tryAllItems1 | - | PASS | PASS | NOT_COMPARABLE | PASS | PASS | FAIL | - | AllItems=1 + text-only. Validé manuellement (items unique... |
-| tryDESTRU | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | 20 tokens identical. _destru destructures abca→a b c a vi... |
-| tryGraphics | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | S1=S2 ✅ pitch exact (6/6) |
-| tryMIDIfile | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | 8 tokens identical. RND with weights <1-1>, _volume as ru... |
-| tryPatternGrammar | - | PASS | PASS | PASS | PASS | PASS | FAIL | - | 312/312 names identical ✅. AllItems text comparison. |
-| tryRotate | S1≠S2 | PASS | PASS | DIFF | PASS | DIFF | ? | - | 65 tokens identical. RND + _rotate(K1=2) + K-param cumula... |
-| tryTimePatterns | no -tb | PASS | PASS | PASS | PASS | NOT_COMPARABLE | TODO | - | 8 MIDI events: pitch 8/8 ✅, 8 timing diffs ±1ms (arrondi) |
-| visser-shapes | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
-| visser-waves | - | PASS | PASS | SKIP | PASS | SKIP | FAIL | - |  |
+| Stage | Source | Comparaison | Description |
+|-------|--------|-------------|-------------|
+| S0 | bp.exe (Windows PHP) | Référence | Production MIDI/TEXT de référence |
+| S1 | bp3 (Linux natif GCC) | S0 vs S1 | Même moteur, autre plateforme |
+| S2 | bp3.wasm (WASM) | S1 vs S2 | MIDI events depuis PlayBuffer1 + p_Instance |
+| S3 | bp3.wasm (WASM) | S2 vs S3 | Timed tokens depuis p_Instance (MIDI) ou getResult (TEXT) |
+| S4 | bp3.wasm (WASM) | S3 vs S4 | Comme S3 mais avec silent.al (bols opaques, pas de MIDI) |
 
-**0 complets | 61 partiels | 0 bloqués | 0 skippés | 61 testés / 107 total**
+## Scores globaux
+
+| Comparaison | EXACT | TIMING | CONTENT | COUNT | MISSING | Total |
+|-------------|-------|--------|---------|-------|---------|-------|
+| **S0 vs S1** | 33 | 3 | 0 | 0 | 0 | 36 |
+| **S1 vs S2** | 24 | 12 | 0 | 1 | 0 | 37 |
+| **S2 vs S3** | 30 | 4 | 3 | 0 | 0 | 37 |
+| **S3 vs S4** | 34 | 1 | 0 | 2 | 0 | 37 |
+
+## Issues ouvertes (côté Bernard)
+
+| # | Titre | Grammaires impactées | Stage | Impact |
+|---|-------|---------------------|-------|--------|
+| #32 | FillPhaseDiagram — dérive triolets (arrondi GCC vs clang) | not-reich | S1≠S2 | TIMING ±109ms fin de pièce |
+| #33 | MakeSound — NoteOff retardé par scheduling séquentiel | visser5, visser-waves, watch | S1≠S2, S2≠S3 | TIMING ±670ms |
+| #35 | TimeSet — starttime +10ms avec settings Visser | acceleration, visser3, visser-shapes | S1≠S2 | TIMING +10ms constant |
+| #36 | Production TEXT sans séparateurs quand alphabet chargé | negative-context | S3≠S4 | COUNT (tokens concaténés) |
+
+## Issues connues (côté WASM, non corrigeables)
+
+| Issue | Grammaires | Stage | Explication |
+|-------|-----------|-------|-------------|
+| MPC microtonalité | tryShruti | S1≠S2 (+1 note), S3≠S4 (0 tokens) | PlayBuffer1 ne reproduit pas exactement MPC. BP3 refuse `_` dans alphabet. |
+| Homomorphisme + silent.al | ruwet | S3≠S4 TIMING | Les bols dans l'alphabet changent la dérivation de l'homomorphisme |
+
+## Détail par grammaire (37 actives)
+
+| Grammaire | Mode | S0=S1 | S1=S2 | S2=S3 | S3=S4 | Notes |
+|-----------|------|-------|-------|-------|-------|-------|
+| 765432 | midi | EXACT | TIMING≤1ms | EXACT | EXACT | Within tolerance (arrondi tick→ms) |
+| acceleration | midi | EXACT | TIMING+10ms | EXACT | EXACT | #35 : +10ms offset settings Visser |
+| alan-dice | midi | EXACT | TIMING≤3ms | TIMING | EXACT | Multi-item, within tolerance. S2≠S3 = #33 timing accumulation |
+| all-items | text | EXACT | EXACT | EXACT | EXACT | |
+| all-items1 | text | EXACT | EXACT | EXACT | EXACT | |
+| ames | midi | EXACT | EXACT | EXACT | EXACT | |
+| asymmetric | text | EXACT | EXACT | EXACT | EXACT | |
+| beatrix-dice | midi | EXACT | TIMING≤3ms | TIMING | EXACT | Multi-item, within tolerance. S2≠S3 = #33 timing accumulation |
+| bells | midi | EXACT | EXACT | EXACT | EXACT | |
+| destru | text | EXACT | EXACT | EXACT | EXACT | |
+| drum | midi | EXACT | TIMING≤1ms | EXACT | EXACT | Within tolerance |
+| ek-do-tin | text | EXACT | EXACT | EXACT | EXACT | |
+| flags | text | EXACT | EXACT | EXACT | EXACT | |
+| graphics | midi | EXACT | EXACT | EXACT | EXACT | |
+| harmony | midi | EXACT | EXACT | EXACT | EXACT | |
+| koto3 | text | EXACT | EXACT | EXACT | EXACT | |
+| kss2 | midi | EXACT | EXACT | EXACT | EXACT | |
+| livecode1 | midi | EXACT | EXACT | EXACT | EXACT | Multi-item (Improvize) |
+| look-and-say | text | EXACT | EXACT | EXACT | EXACT | |
+| mozart-dice | midi | EXACT | TIMING≤2ms | EXACT | EXACT | Multi-item, within tolerance |
+| negative-context | text | EXACT | EXACT | EXACT | **COUNT** | #36 : TEXT concat avec alphabet chargé |
+| not-reich | midi | EXACT | TIMING±109ms | EXACT | EXACT | #32 : FillPhaseDiagram dérive triolets GCC |
+| one-scale | midi | EXACT | EXACT | EXACT | EXACT | _scale(just intonation) |
+| repeat | text | EXACT | EXACT | EXACT | EXACT | |
+| ruwet | midi | EXACT | EXACT | EXACT | **TIMING** | Homomorphisme -ho.Ruwet : bols dans alphabet changent dérivation |
+| templates | text | EXACT | EXACT | EXACT | EXACT | 36635 tokens |
+| time-patterns | text | TIMING | EXACT | EXACT | EXACT | S0≠S1 pré-existant |
+| tryAllItems0 | text | EXACT | EXACT | EXACT | EXACT | |
+| tryCsoundObjects | text | EXACT | EXACT | EXACT | EXACT | |
+| tryShruti | midi | EXACT | **COUNT+1** | CONTENT | **COUNT=0** | MPC : +1 note S2. BP3 refuse `_` dans alphabet → S4=0 |
+| vina | midi | EXACT | EXACT | EXACT | EXACT | Convention indienne |
+| vina2 | text | EXACT | EXACT | EXACT | EXACT | |
+| visser3 | midi | EXACT | TIMING+10ms | EXACT | EXACT | #35 : +10ms offset settings Visser |
+| visser5 | midi | EXACT | TIMING±146ms | CONTENT | EXACT | #33 : NoteOff scheduling. S2≠S3 = ordre notes différent |
+| visser-shapes | midi | EXACT | TIMING+10ms | CONTENT | EXACT | #35 + quelques notes octave edge en S2≠S3 |
+| visser-waves | midi | TIMING | TIMING±50ms | TIMING | EXACT | #33 + S0≠S1 pré-existant |
+| watch | midi | TIMING | TIMING±670ms | TIMING | EXACT | #33 : scheduling séquentiel. S0≠S1 pré-existant |
+
+## Légende
+
+- **EXACT** : résultats identiques (ou within tolerance ≤3ms delta)
+- **TIMING** : mêmes notes, timings différents (avec cause identifiée)
+- **CONTENT** : notes ou noms différents
+- **COUNT** : nombre de tokens différent
+- **#N** : référence FEEDBACK_BERNARD.md
