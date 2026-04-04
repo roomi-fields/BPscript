@@ -1,0 +1,59 @@
+// bells.bps — Change ringing (cloches) par Harm Visser
+// Traduit de bp3-engine/test-data/-gr.bells
+// Permutations canoniques de 4 notes avec contextes négatifs de groupe
+
+@core
+@controls
+@alphabet.solfege
+
+// --- Sous-grammaire 1 : choix de la permutation initiale ---
+@mode:random
+
+S -> ![/4] Tune
+Tune -> Canonic New B A D C X1234 End
+Tune -> Canonic New B A C D X12 End
+Tune -> Canonic New A C B D X23 End
+Tune -> Canonic New A B D C X34 End
+
+-----
+
+// --- Sous-grammaire 2 LIN : permutations successives ---
+@mode:lin
+
+A B C D ?1 End -> A B C D [weight:inf]
+
+#(?1 ?3 ?2 ?4) ?1 ?2 ?3 ?4 X1234 -> ?1 ?2 ?3 ?4 New ?1 ?3 ?2 ?4 X23
+#(?2 ?1 ?4 ?3) ?1 ?2 ?3 ?4 X23 -> ?1 ?2 ?3 ?4 New ?2 ?1 ?4 ?3 X1234
+#(?1 ?2 ?4 ?3) ?1 ?2 ?3 ?4 X12 -> ?1 ?2 ?3 ?4 New ?1 ?2 ?4 ?3 X34
+#(?2 ?1 ?4 ?3) ?1 ?2 ?3 ?4 X12 -> ?1 ?2 ?3 ?4 New ?2 ?1 ?4 ?3 X1234
+#(?2 ?1 ?4 ?3) ?1 ?2 ?3 ?4 X34 -> ?1 ?2 ?3 ?4 New ?2 ?1 ?4 ?3 X1234
+#(?2 ?1 ?3 ?4) ?1 ?2 ?3 ?4 X34 -> ?1 ?2 ?3 ?4 New ?2 ?1 ?3 ?4 X12
+#(?2 ?1 ?3 ?4) ?1 ?2 ?3 ?4 X1234 -> ?1 ?2 ?3 ?4 New ?2 ?1 ?3 ?4 X12
+#(?1 ?2 ?4 ?3) ?1 ?2 ?3 ?4 X1234 -> ?1 ?2 ?3 ?4 New ?1 ?2 ?4 ?3 X34
+
+-----
+
+// --- Sous-grammaire 3 ORD : nettoyage (LEFT) ---
+@mode:ord
+
+X12 -> lambda [scan:left]
+X34 -> lambda [scan:left]
+X23 -> lambda [scan:left]
+X1234 -> lambda [scan:left]
+End -> lambda [scan:left]
+New -> lambda [scan:left]
+Canonic -> A B C D [scan:left]
+
+-----
+
+// --- Sous-grammaire 4 ORD : substitution finale en notes ---
+@mode:ord
+
+A B -> do3 B
+A #B -> do4 #B
+B -> sol3
+B -> sol4
+C -> re4
+C -> re5
+D A -> mi4 A
+D #A -> mi5 #A

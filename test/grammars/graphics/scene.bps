@@ -1,0 +1,15 @@
+// graphics.bps — test des contrôles inline (legato, staccato)
+// Traduit de BP3 grammar format
+//
+// Trois voix simultanées avec contrôles d'articulation différents :
+// legato(20) sur la première, staccato(10) sur la deuxième,
+// silence initial sur la troisième.
+
+@core
+@controls
+@alphabet.western:midi
+
+// --- Sous-grammaire 1 @mode:ord ---
+
+@mode:ord
+S -> {C4 D4 E4(legato:20), F#5 G3(staccato:10), - G4}

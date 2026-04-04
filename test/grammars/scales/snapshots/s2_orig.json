@@ -1,0 +1,15 @@
+{
+  "source": "-gr.tryScales",
+  "stage": "S2",
+  "settings": [
+    0,
+    10,
+    10,
+    1,
+    1,
+    60
+  ],
+  "tokens": [],
+  "midi": [],
+  "date": "2026-04-01"
+}

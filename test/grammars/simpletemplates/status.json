@@ -1,0 +1,15 @@
+{
+  "grammar": "simpletemplates",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "exact",
+  "s1_note": "6 notes. Old header V.2.6 stripped automatically.",
+  "s1_vs_s2_note": "6 tokens identical. RND+TEMPLATES, same seed produces same result.",
+  "s3_vs_s4_note": "6 tokens identical. Templates <> + @templates now supported."
+}

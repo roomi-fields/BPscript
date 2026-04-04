@@ -1,0 +1,37 @@
+{
+  "source": "-gr.vina2",
+  "stage": "S2",
+  "mode": "text",
+  "settings": [
+    2,
+    10,
+    10,
+    1,
+    1,
+    60
+  ],
+  "tokens": [
+    [
+      "{sa4"
+    ],
+    [
+      "_"
+    ],
+    [
+      "_,_pitchcont"
+    ],
+    [
+      "_pitchrange(500)"
+    ],
+    [
+      "_pitchbend(0)"
+    ],
+    [
+      "-"
+    ],
+    [
+      "_pitchbend(500)}"
+    ]
+  ],
+  "date": "2026-04-04"
+}

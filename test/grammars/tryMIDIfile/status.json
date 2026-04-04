@@ -1,0 +1,13 @@
+{
+  "grammar": "tryMIDIfile",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "exact",
+  "s1_vs_s2_note": "8 tokens identical. RND with weights <1-1>, _volume as runtime control."
+}

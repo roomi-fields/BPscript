@@ -1,0 +1,17 @@
+{
+  "grammar": "livecode2",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "PASS",
+  "s4": "FAIL",
+  "s3_s4_mode": "skip",
+  "s1_note": "S1 OOM: natif produit 40MB stdout (48 voix polymétriques) → OOM kill. Ni MIDI ni texte ne finissent. S2 fonctionne (29 tokens).",
+  "s1_vs_s2_note": "Pitch 100% identique (multiset sort). Timing diffs = arrondi MIDI ticks→ms.",
+  "s3_vs_s4_note": "29 tokens both sides. All names match. Timings ±26ms (brace spacing in transpiled polymetry). Question for Bernard.",
+  "s2_vs_s3_note": "Enharmonic differences: reb5 vs do#5, sib1 vs la#1. Same pitches, different names."
+}

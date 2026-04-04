@@ -1,0 +1,31 @@
+{
+  "source": "-gr.12345678",
+  "stage": "S2",
+  "settings": [
+    0,
+    30,
+    10,
+    1,
+    1,
+    3600
+  ],
+  "tokens": [
+    [
+      "(={2,ek do tin char panch che sat at}{2,ek do tin char panch che}{2,ek do tin char panch}{2,ek do tin char} -{3,- - ek - - do - - tin - - -})",
+      0,
+      0
+    ],
+    [
+      "(:{2,ek do tin char panch che sat at}{2,ek do tin char panch che}{2,ek do tin char panch}{2,ek do tin char} -{3,- - ek - - do - - tin - - -})",
+      0,
+      0
+    ],
+    [
+      "(:{2,ek do tin char panch che sat at}{2,ek do tin char panch che}{2,ek do tin char panch}{2,ek do tin char} -{3,- - ek - - do - - tin - - -})",
+      0,
+      0
+    ]
+  ],
+  "midi": [],
+  "date": "2026-04-02"
+}

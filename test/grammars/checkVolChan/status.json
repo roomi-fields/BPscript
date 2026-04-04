@@ -1,0 +1,18 @@
+{
+  "grammar": "checkVolChan",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "PASS",
+  "s2_s3_mode": "skip",
+  "s2_vs_s3": "NOT_COMPARABLE",
+  "s4": "TODO",
+  "s3_s4_mode": "skip",
+  "s1_note": "Grammaire BP2 (1994). Dépendances manquantes: -se.checkVolChan, -in.abc1.",
+  "s2_note": "S2=0 tokens (grammaire interactive, attend -in.abc1).",
+  "s3_note": "S3=26 tokens. Fonctionne sans interaction, _chan/_vol/_cresc migrés _script(CTn).",
+  "s2_vs_s3_note": "S2=0 tokens (interactive), S3=26 tokens. Pas comparable.",
+  "s1_vs_s2_note": "Grammaire interactive (-in.abc1). S2=0 tokens."
+}

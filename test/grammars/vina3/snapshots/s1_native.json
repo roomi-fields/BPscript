@@ -1,0 +1,78 @@
+{
+  "source": "-gr.vina3",
+  "stage": "S1",
+  "tokens": [
+    [
+      "Loading"
+    ],
+    [
+      "tonality:"
+    ],
+    [
+      "/mnt/d/Claude/bp3-engine/test-data/-to.Vina"
+    ],
+    [
+      "2"
+    ],
+    [
+      "tonal"
+    ],
+    [
+      "scale(s)"
+    ],
+    [
+      "found"
+    ],
+    [
+      "???"
+    ],
+    [
+      "gram#1[1]"
+    ],
+    [
+      "S"
+    ],
+    [
+      "-->"
+    ],
+    [
+      "_ins(Vina)"
+    ],
+    [
+      "_scale(just"
+    ],
+    [
+      "intonation,0)"
+    ],
+    [
+      "_volume(40)"
+    ],
+    [
+      "{Taalam4"
+    ],
+    [
+      "Taalam4,"
+    ],
+    [
+      "Pallavi"
+    ],
+    [
+      "Pallavi}"
+    ],
+    [
+      "_volumecont"
+    ],
+    [
+      "_volume(64)"
+    ],
+    [
+      "Taalam"
+    ],
+    [
+      "_volume(0)"
+    ]
+  ],
+  "midi": [],
+  "mode": "text",
+  "date": "2026-04-01"
+}

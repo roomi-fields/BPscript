@@ -1,0 +1,17 @@
+{
+  "grammar": "look-and-say",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "names_only",
+  "s1_vs_s2": "PASS",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "PASS",
+  "s4": "FAIL",
+  "s3_s4_mode": "skip",
+  "s1_note": "13 sound-objects native but 0 MIDI notes (text terminals).",
+  "s1_vs_s2_note": "13 tokens both sides but different sequence (9/13 names differ). K-param steps works now but SUB rule application order differs.",
+  "s3_vs_s4_note": "Names intentionally different: silent.gr uses Bernard originals, BPS uses d1/d2/d3. Timings identical.",
+  "s1_mode": "text"
+}

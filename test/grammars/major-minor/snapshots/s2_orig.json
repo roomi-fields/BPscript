@@ -1,0 +1,15 @@
+{
+  "source": "-gr.tryMajorMinor",
+  "stage": "S2",
+  "settings": [
+    0,
+    10,
+    10,
+    1,
+    1,
+    15
+  ],
+  "tokens": [],
+  "midi": [],
+  "date": "2026-04-01"
+}

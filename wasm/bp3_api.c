@@ -179,7 +179,10 @@ int bp3_init(void) {
     TimeSettingTime = (time_t)0L;
     time(&ProductionStartTime);
 
-    /* Enable MIDI event generation path so PlayBuffer gets called */
+    /* Always TRUE in WASM: enables PlayBuffer path which handles both
+       MIDI extraction (musical grammars) and TimeSet (timed tokens).
+       For text-only grammars, PlayBuffer runs but produces 0 MIDI events
+       naturally (no T25 objects). bp3_set_write_midi() can override. */
     WriteMIDIfile = TRUE;
 
     /* Reset production state */
@@ -255,6 +258,15 @@ int bp3_load_settings(const char* json_content) {
    seed: random seed (0 = don't change)
    maxTime: max computation time in seconds (0 = no limit)
 */
+/* bp3_set_write_midi: enable/disable MIDI output (PlayBuffer path).
+   Must be called AFTER bp3_load_alphabet() for musical grammars.
+   Only enable for grammars with musical notes (English/French/Indian).
+   Text-only grammars (look-and-say, gramgene) must NOT enable this. */
+EMSCRIPTEN_KEEPALIVE
+void bp3_set_write_midi(int enable) {
+    WriteMIDIfile = enable ? TRUE : FALSE;
+}
+
 /* bp3_set_seed: set random seed without touching any other settings.
    Use after bp3_load_settings() to override the seed for reproducibility. */
 EMSCRIPTEN_KEEPALIVE

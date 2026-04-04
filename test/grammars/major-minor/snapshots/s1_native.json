@@ -1,0 +1,15 @@
+{
+  "source": "-gr.tryMajorMinor",
+  "stage": "S1",
+  "tokens": [
+    [
+      "{2,C3,E3,G3,C4}{2,C3,D#3,G3,C4}{2,C3,E3,G3,C4}"
+    ],
+    [
+      "-{2,C3,E3,G3,C4}{2,C3,D#3,G3,C4}{2,C3,E3,G3,C4}"
+    ]
+  ],
+  "midi": [],
+  "mode": "text",
+  "date": "2026-04-01"
+}

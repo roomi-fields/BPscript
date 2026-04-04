@@ -1,0 +1,20 @@
+// tryPatternGrammar.bps — Kathak Chakkardar pattern with _destru
+// Traduit de bp3-engine/test-data/-gr.tryPatternGrammar
+
+@core
+@controls
+@test_alphabets.abc
+
+@mode:ord
+S -> Chakkardar
+Chakkardar -> $Tihai $G &Tihai &G &Tihai
+Tihai -> $A $B &A &B &A
+
+-----
+
+@mode:random(destru)
+G -> g
+G ->
+A -> a
+B -> b
+B ->

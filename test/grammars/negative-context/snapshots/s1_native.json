@@ -1,0 +1,26 @@
+{
+  "source": "-gr.checkNegativeContext",
+  "stage": "S1",
+  "mode": "text",
+  "tokens": [
+    [
+      "A"
+    ],
+    [
+      "A"
+    ],
+    [
+      "A"
+    ],
+    [
+      "A2"
+    ],
+    [
+      "A3"
+    ],
+    [
+      "A1"
+    ]
+  ],
+  "date": "2026-04-04"
+}

@@ -1,0 +1,20 @@
+{
+  "source": "scenes/destru.bps",
+  "stage": "S4",
+  "settings": [
+    0,
+    10,
+    10,
+    1,
+    1,
+    60
+  ],
+  "tokens": [
+    [
+      "c",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-03-30"
+}

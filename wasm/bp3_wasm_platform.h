@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <emscripten.h>
 
 /* Provide the platform-specific types that -BP3.h defines inside
    its #if defined(_WIN64) || defined(__linux__) block (lines 934-949).

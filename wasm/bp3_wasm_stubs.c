@@ -294,7 +294,8 @@ int PlayBuffer1(tokenbyte ***pp_buff, int onlypianoroll) {
     }
 
     /* Allocate event space */
-    emscripten_log(EM_LOG_CONSOLE, "PlayBuffer1: calling MakeEventSpace...");
+    emscripten_log(EM_LOG_CONSOLE, "PlayBuffer1: calling MakeEventSpace... Maxevent=%ld Maxconc=%ld Jbol=%ld",
+        (long)Maxevent, (long)Maxconc, (long)Jbol);
     if((result = MakeEventSpace(&p_imaxseq)) != OK) {
         emscripten_log(EM_LOG_CONSOLE, "PlayBuffer1: MakeEventSpace FAILED");
         result = OK; goto SORTIR;

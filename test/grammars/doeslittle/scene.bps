@@ -1,0 +1,11 @@
+// doeslittle.bps — A very simple grammar that does almost nothing
+// Traduit de bp3-engine/test-data/-gr.doeslittle (Bernard, 1998)
+// Encoding fix: ¥ → . (old Mac)
+
+@core
+@alphabet.western:midi
+
+@mode:random
+S -> C3 . C4 . D4 C4 F#3 . A3 . C4
+S -> G2 C3 _ B2 C3
+S -> {C4 D4 E4 F4, G4 D4 C5} -

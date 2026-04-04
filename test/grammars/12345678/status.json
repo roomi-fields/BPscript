@@ -1,0 +1,17 @@
+{
+  "grammar": "12345678",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "skip",
+  "bpsScene": "ek-do-tin",
+  "s1_note": "Native pitchbend error: _pitchbend(200) out of range despite _pitchrange(200). Bug Bernard #7.",
+  "s2_note": "52 tokens, timings aberrants — requires -so.EkDoTin not loadable in WASM.",
+  "s3_vs_s4_note": "78 tokens identical. Tabla bols with flat alphabet.",
+  "s1_vs_s2_note": "_transpose dans la grammaire — natif applique la transposition aux noms, WASM non. Non comparable S1↔S2."
+}

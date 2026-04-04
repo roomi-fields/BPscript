@@ -1,0 +1,36 @@
+{
+  "source": "-gr.check&",
+  "stage": "S1",
+  "tokens": [
+    [
+      "_pitchrange(200)"
+    ],
+    [
+      "_pitchbend(-200)"
+    ],
+    [
+      "_pitchcont"
+    ],
+    [
+      "do4"
+    ],
+    [
+      "_&{&do4"
+    ],
+    [
+      "_&,sol4"
+    ],
+    [
+      "_}"
+    ],
+    [
+      "&do4"
+    ],
+    [
+      "_pitchbend(200)"
+    ]
+  ],
+  "midi": [],
+  "mode": "text",
+  "date": "2026-04-01"
+}

@@ -1,0 +1,14 @@
+{
+  "source": "-gr.tryCsoundObjects",
+  "stage": "S1",
+  "mode": "text",
+  "tokens": [
+    [
+      "{a,b}"
+    ],
+    [
+      "c"
+    ]
+  ],
+  "date": "2026-04-04"
+}

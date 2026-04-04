@@ -1,0 +1,69 @@
+{
+  "source": "-gr.blurb",
+  "stage": "S1",
+  "tokens": [
+    [
+      "???"
+    ],
+    [
+      "gram#1[1]"
+    ],
+    [
+      "S"
+    ],
+    [
+      "-->"
+    ],
+    [
+      "_cont(blurb)"
+    ],
+    [
+      "_value(blurb,123.42)"
+    ],
+    [
+      "_ins(Harpsichord)"
+    ],
+    [
+      "C4"
+    ],
+    [
+      "D4"
+    ],
+    [
+      "_ins(Flute)"
+    ],
+    [
+      "E4"
+    ],
+    [
+      "F4"
+    ],
+    [
+      "_value(blurb,-211)"
+    ],
+    [
+      "_step(blurb)"
+    ],
+    [
+      "G4"
+    ],
+    [
+      "A4"
+    ],
+    [
+      "_value(blurb,-34)"
+    ],
+    [
+      "_fixed(blurb)"
+    ],
+    [
+      "B4"
+    ],
+    [
+      "C5"
+    ]
+  ],
+  "midi": [],
+  "mode": "text",
+  "date": "2026-04-01"
+}

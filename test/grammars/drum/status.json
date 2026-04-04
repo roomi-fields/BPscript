@@ -1,0 +1,9 @@
+{
+  "grammar": "drum",
+  "date": "2026-04-02",
+  "s1": "FAIL",
+  "s1_s2_mode": "midi",
+  "s2_s3_mode": "timing",
+  "s3_s4_mode": "exact",
+  "s1_vs_s2_note": "S1=S2 ✅ pitch exact (12/12), sort_exact after sort by (start,pitch)"
+}

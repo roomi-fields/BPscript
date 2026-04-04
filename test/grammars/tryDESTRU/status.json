@@ -1,0 +1,15 @@
+{
+  "grammar": "tryDESTRU",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "names_only",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "exact",
+  "bpsScene": "destru",
+  "s1_note": "24 sound-objects. No MIDI (custom sound objects). Text: c b b c...",
+  "s3_vs_s4_note": "20 tokens identical. _destru destructures abca→a b c a via alphabet abc."
+}

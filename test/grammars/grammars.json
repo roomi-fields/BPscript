@@ -1,0 +1,1612 @@
+{
+  "765432": {
+    "bernard": "765432",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:9",
+      "sub:12"
+    ],
+    "lines": 203,
+    "note": "823 MIDI notes. French solfege, 12 subgrammars.",
+    "php_ref": {
+      "midi_notes": 823,
+      "note_convention": "french",
+      "settings": "-se.765432",
+      "alphabet": null
+    }
+  },
+  "PP": {
+    "bernard": "PP",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [],
+    "lines": 15
+  },
+  "checkBT": {
+    "bernard": "checkBT",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [],
+    "lines": 2
+  },
+  "checkHomo": {
+    "bernard": "checkHomo",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [],
+    "lines": 8
+  },
+  "checkhomo2": {
+    "bernard": "checkhomo2",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [],
+    "lines": 13
+  },
+  "gramgene2": {
+    "bernard": "gramgene2",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 24
+  },
+  "keys": {
+    "bernard": "keys",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [],
+    "lines": 6
+  },
+  "tryTicks": {
+    "bernard": "tryTicks",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 6
+  },
+  "tryflags2": {
+    "bernard": "tryflags2",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 13
+  },
+  "tryflags3": {
+    "bernard": "tryflags3",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 20
+  },
+  "tryflags3.html": {
+    "bernard": "tryflags3.html",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 27
+  },
+  "tryhomomorphism": {
+    "bernard": "tryhomomorphism",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 13
+  },
+  "blurb": {
+    "bernard": "blurb",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 7
+  },
+  "doeslittle": {
+    "bernard": "doeslittle",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:1"
+    ],
+    "lines": 11
+  },
+  "drum": {
+    "bernard": "drum",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [],
+    "features": [
+      "poly:1"
+    ],
+    "lines": 3,
+    "php_ref": {
+      "midi_notes": 12,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null
+    }
+  },
+  "csound": {
+    "bernard": "tryCsound",
+    "status": "excluded",
+    "reason": "S1 native bug: ResetWeights=0 in original settings → after 2 items, weights drop to zero, infinite loop. MaxItemsProduce doesn't stop an unproductive derivation. Native hangs.",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 11,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 2
+  },
+  "graphics": {
+    "bernard": "tryGraphics",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:1"
+    ],
+    "lines": 8,
+    "php_ref": {
+      "midi_notes": 6,
+      "note_convention": "english",
+      "settings": "-se.tryGraphics",
+      "alphabet": null
+    }
+  },
+  "tryMIDIfile": {
+    "bernard": "tryMIDIfile",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 9
+  },
+  "checkVolChan": {
+    "bernard": "checkVolChan",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:3"
+    ],
+    "lines": 73
+  },
+  "checkVolMasterSlave": {
+    "bernard": "checkVolMasterSlave",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "poly:1"
+    ],
+    "lines": 7
+  },
+  "checkcontext": {
+    "bernard": "checkcontext",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 24
+  },
+  "tryConsoleMaxTime": {
+    "bernard": "tryConsoleMaxTime",
+    "status": "excluded",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 14,
+    "production_mode": "text",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryConsoleMaxTime",
+      "alphabet": null
+    },
+    "note": "Timeout test: produces error message, not real production",
+    "reason": "Timeout test grammar. No production output — expected behavior."
+  },
+  "tryLIN": {
+    "bernard": "tryLIN",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 19
+  },
+  "tryObjects": {
+    "bernard": "tryObjects",
+    "status": "excluded",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "poly:1"
+    ],
+    "lines": 7,
+    "production_mode": "text",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc1"
+    },
+    "s1_args": [
+      "-se",
+      "-se.koto3",
+      "-al",
+      "-ho.abc1"
+    ],
+    "reason": "S0 PHP produces no output. Needs -ho.abc1 loaded as alphabet via PHP interface."
+  },
+  "negative-context": {
+    "bernard": "checkNegativeContext",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 16,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.checkNegativeContext",
+      "alphabet": null
+    }
+  },
+  "gramgene1": {
+    "bernard": "gramgene1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:2"
+    ],
+    "lines": 30
+  },
+  "koto1": {
+    "bernard": "koto1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:2"
+    ],
+    "lines": 31
+  },
+  "koto2": {
+    "bernard": "koto2",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:2"
+    ],
+    "lines": 30
+  },
+  "simpletemplates": {
+    "bernard": "simpletemplates",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:2"
+    ],
+    "lines": 16
+  },
+  "tryKeyMap": {
+    "bernard": "tryKeyMap",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 53
+  },
+  "time-patterns": {
+    "bernard": "tryTimePatterns",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:3"
+    ],
+    "lines": 16,
+    "php_ref": {
+      "midi_notes": 8,
+      "note_convention": "english",
+      "settings": "-se.tryTimePatterns",
+      "alphabet": null
+    }
+  },
+  "Rajeev": {
+    "bernard": "Rajeev",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:7"
+    ],
+    "lines": 47
+  },
+  "tryAllItems0": {
+    "bernard": "tryAllItems0",
+    "status": "active",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 19,
+    "production_mode": "text",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryAllItems0",
+      "alphabet": "-al.abc"
+    },
+    "s1_args": [
+      "-so",
+      "-so.abc"
+    ]
+  },
+  "transposition1": {
+    "bernard": "transposition1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:2"
+    ],
+    "lines": 24
+  },
+  "bells": {
+    "bernard": "bells",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:3"
+    ],
+    "lines": 53,
+    "note": "Requires -ho.cloches1 (with -mi). Complex: wildcards, infinite weight, negative contexts. Skip temporaire."
+  },
+  "cloches1": {
+    "bernard": "cloches1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:3"
+    ],
+    "lines": 79
+  },
+  "tryRotate": {
+    "bernard": "tryRotate",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:2",
+      "sub:1"
+    ],
+    "lines": 14
+  },
+  "trytemplates2": {
+    "bernard": "trytemplates2",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:3"
+    ],
+    "lines": 21
+  },
+  "a": {
+    "bernard": "a",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 17
+  },
+  "a.html": {
+    "bernard": "a.html",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [],
+    "lines": 16
+  },
+  "flags": {
+    "bernard": "tryFlags",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "al"
+    ],
+    "features": [
+      "sub:2"
+    ],
+    "lines": 20,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": "-al.abc"
+    },
+    "s1_args": [
+      "-so",
+      "-so.abc"
+    ]
+  },
+  "one-scale": {
+    "bernard": "tryOneScale",
+    "status": "active",
+    "php_ref": {
+      "midi_notes": 6,
+      "note_convention": "english",
+      "settings": "-se.tryOneScale",
+      "alphabet": null,
+      "tonality": "-to.tryOneScale"
+    },
+    "production_mode": "midi",
+    "s1_args": [
+      "-se",
+      "-se.tryOneScale",
+      "-to",
+      "-to.tryOneScale"
+    ],
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "_scale"
+    ],
+    "lines": 14,
+    "note": "Uses _scale(). Header says -cs but engine needs -to for tonality.",
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 3
+  },
+  "ek-do-tin": {
+    "bernard": "12345678",
+    "status": "active",
+    "production_mode": "text",
+    "s1_args": [
+      "-se",
+      "-se.EkDoTin",
+      "-al",
+      "-al.EkDoTin",
+      "--indian",
+      "-so",
+      "-so.EkDoTin"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "poly:5"
+    ],
+    "lines": 19,
+    "note": "Indian bols (ek, do, tin...). Needs --indian + explicit -se/-al (header refs EkDoTin, not 12345678).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.EkDoTin",
+      "alphabet": "-al.EkDoTin"
+    }
+  },
+  "tryPatternGrammar": {
+    "bernard": "tryPatternGrammar",
+    "status": "to_be_tested",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 17
+  },
+  "checkSUB": {
+    "bernard": "checkSUB",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "sub:4"
+    ],
+    "lines": 49
+  },
+  "checkSUB.new": {
+    "bernard": "checkSUB.new",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "sub:4"
+    ],
+    "lines": 49
+  },
+  "dhadhatite1": {
+    "bernard": "dhadhatite1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:4"
+    ],
+    "lines": 72
+  },
+  "dhati2": {
+    "bernard": "dhati2",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:4"
+    ],
+    "lines": 40
+  },
+  "dhati3": {
+    "bernard": "dhati3",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:4"
+    ],
+    "lines": 39
+  },
+  "look-and-say": {
+    "bernard": "look-and-say",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 25,
+    "note": "13 sound-objects native but 0 MIDI notes (text terminals).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.look-and-say",
+      "alphabet": null
+    }
+  },
+  "tryShruti": {
+    "bernard": "tryShruti",
+    "status": "active",
+    "production_mode": "midi",
+    "s1_args": [
+      "-se",
+      "-se.tryShruti",
+      "-to",
+      "-to.tryShruti"
+    ],
+    "php_ref": {
+      "midi_notes": 79,
+      "note_convention": "indian",
+      "settings": "-se.tryShruti",
+      "alphabet": null,
+      "tonality": "-to.tryShruti"
+    },
+    "aux": [
+      "se",
+      "to"
+    ],
+    "features": [
+      "poly:3",
+      "_scale"
+    ],
+    "lines": 12,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 3
+  },
+  "trySrand": {
+    "bernard": "trySrand",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:6"
+    ],
+    "lines": 20
+  },
+  "repeat": {
+    "bernard": "tryrepeat",
+    "status": "active",
+    "production_mode": "text",
+    "s1_args": [
+      "-al",
+      "-ho.abc",
+      "-so",
+      "-so.abc"
+    ],
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "_goto",
+      "_repeat"
+    ],
+    "lines": 21,
+    "note": "Homomorphism grammar (a,b,c). Needs -ho.abc as alphabet.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.tryrepeat",
+      "alphabet": "-al.abc"
+    }
+  },
+  "acceleration": {
+    "bernard": "acceleration",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [],
+    "lines": 28,
+    "note": "78 MIDI notes. _transpose(12) + _vel(60..90) recursive acceleration.",
+    "php_ref": {
+      "midi_notes": 78,
+      "note_convention": "english",
+      "settings": "-se.Visser2",
+      "alphabet": null
+    }
+  },
+  "checkSUB1": {
+    "bernard": "checkSUB1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 22
+  },
+  "livecode1": {
+    "bernard": "livecode1",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:13"
+    ],
+    "lines": 9,
+    "php_ref": {
+      "midi_notes": 540,
+      "note_convention": "english",
+      "settings": "-se.livecode1",
+      "alphabet": null
+    }
+  },
+  "tryGOTO": {
+    "bernard": "tryGOTO",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:3",
+      "_goto",
+      "_repeat"
+    ],
+    "lines": 31
+  },
+  "tunings": {
+    "bernard": "tryTunings",
+    "status": "excluded",
+    "reason": "BP2 format + old settings, needs -cs. tonality. S1=raw text, S2=0.",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:9",
+      "_scale"
+    ],
+    "lines": 36,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 4
+  },
+  "tryCsoundObjects": {
+    "bernard": "tryCsoundObjects",
+    "status": "active",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "poly:2"
+    ],
+    "lines": 68,
+    "production_mode": "text",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryCsoundObjects",
+      "alphabet": "-al.tryCsoundObjects"
+    },
+    "s1_args": []
+  },
+  "transposition": {
+    "bernard": "tryTranspose",
+    "status": "excluded",
+    "reason": "BP2 format grammar doesn't compile (same error as scales). S1=error text, S2=0.",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:4",
+      "sub:1"
+    ],
+    "lines": 22
+  },
+  "templates": {
+    "bernard": "checktemplates",
+    "status": "active",
+    "production_mode": "text",
+    "s1_args": [
+      "-se",
+      "-se.checktemplates"
+    ],
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:3"
+    ],
+    "lines": 25,
+    "note": "RND+templates. Should produce MIDI but 0 notes in test — needs debug.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.checktemplates",
+      "alphabet": null
+    }
+  },
+  "destru": {
+    "bernard": "tryDESTRU",
+    "status": "active",
+    "production_mode": "text",
+    "s1_args": [
+      "-se",
+      "-se.tryDESTRU",
+      "-al",
+      "-al.abc",
+      "-so",
+      "-so.abc"
+    ],
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "sub:2"
+    ],
+    "lines": 23,
+    "note": "LIN _destru grammar. Terminals abca/abc/cba/cbbc need -al.abc to be recognized.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.tryDESTRU",
+      "alphabet": "-al.abc"
+    }
+  },
+  "tryKeyXpand": {
+    "bernard": "tryKeyXpand",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:7",
+      "sub:1"
+    ],
+    "lines": 30
+  },
+  "ames": {
+    "bernard": "Ames",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:9"
+    ],
+    "lines": 20,
+    "php_ref": {
+      "midi_notes": 11,
+      "note_convention": "english",
+      "settings": "-se.Ames",
+      "alphabet": null
+    }
+  },
+  "check&": {
+    "bernard": "check&",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:10"
+    ],
+    "lines": 14
+  },
+  "Djinns": {
+    "bernard": "Djinns",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:9",
+      "sub:3"
+    ],
+    "lines": 44
+  },
+  "dhadhatite": {
+    "bernard": "dhadhatite",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:6"
+    ],
+    "lines": 92
+  },
+  "livecode2": {
+    "bernard": "livecode2",
+    "status": "excluded",
+    "reason": "S1 native timeout (>120s). Improvize mode loops indefinitely despite MaxItemsProduce=10.",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:19"
+    ],
+    "lines": 9,
+    "php_status": "CRASH"
+  },
+  "all-items": {
+    "bernard": "tryAllItems",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:2",
+      "_goto",
+      "_repeat"
+    ],
+    "lines": 20,
+    "note": "AllItems grammar, produces note names as text",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryAllItems",
+      "alphabet": null
+    }
+  },
+  "all-items1": {
+    "bernard": "tryAllItems1",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:2",
+      "_goto",
+      "_repeat"
+    ],
+    "lines": 21,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryAllItems1",
+      "alphabet": null
+    }
+  },
+  "MyMelody": {
+    "bernard": "MyMelody",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:18",
+      "sub:1"
+    ],
+    "lines": 34
+  },
+  "not-reich": {
+    "bernard": "NotReich",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:8",
+      "sub:1"
+    ],
+    "lines": 24,
+    "php_ref": {
+      "midi_notes": 580,
+      "note_convention": "english",
+      "settings": "-se.NotReich",
+      "alphabet": null
+    }
+  },
+  "transposition3": {
+    "bernard": "transposition3",
+    "status": "excluded",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:7",
+      "sub:1",
+      "_repeat"
+    ],
+    "lines": 20,
+    "production_mode": "text",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.transposition3",
+      "alphabet": null
+    },
+    "reason": "Pas de S0 PHP valide (1 seul token S). Fichier grammaire en une seule ligne, hors protocole."
+  },
+  "major-minor": {
+    "bernard": "tryMajorMinor",
+    "status": "excluded",
+    "reason": "Needs -cs.Mozart tonality, grammar doesn't compile without it. S1=error messages, S2=0.",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:22",
+      "_scale"
+    ],
+    "lines": 17,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 3
+  },
+  "harmony": {
+    "bernard": "tryHarmony",
+    "status": "active",
+    "php_ref": {
+      "midi_notes": 20,
+      "note_convention": "english",
+      "settings": "-se.tryHarmony",
+      "alphabet": null,
+      "tonality": "-to.tryHarmony"
+    },
+    "production_mode": "midi",
+    "s1_args": [
+      "-se",
+      "-se.tryHarmony",
+      "-to",
+      "-to.tryHarmony"
+    ],
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:11",
+      "_scale"
+    ],
+    "lines": 22,
+    "note": "Uses _scale(). Header says -cs but engine needs -to for tonality.",
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 6
+  },
+  "kss2": {
+    "bernard": "kss2",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 39,
+    "note": "78 MIDI notes (Indian notation, _transpose(-7) applied by native).",
+    "php_ref": {
+      "midi_notes": 94,
+      "note_convention": "indian",
+      "settings": "-se.kss",
+      "alphabet": null
+    }
+  },
+  "trytemplates": {
+    "bernard": "trytemplates",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:5"
+    ],
+    "lines": 48
+  },
+  "vina": {
+    "bernard": "vina",
+    "status": "active",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:5",
+      "sub:2"
+    ],
+    "lines": 46,
+    "note": "Fixed: NoTracePath guard. 6 MIDI notes.",
+    "production_mode": "midi",
+    "s1_args": [
+      "-se",
+      "-se.Vina"
+    ],
+    "php_ref": {
+      "midi_notes": 5,
+      "note_convention": "indian",
+      "settings": "-se.Vina",
+      "alphabet": null
+    }
+  },
+  "vina2": {
+    "bernard": "vina2",
+    "status": "active",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:6",
+      "sub:2"
+    ],
+    "lines": 47,
+    "note": "Fixed: NoTracePath guard. Text output.",
+    "production_mode": "text",
+    "s1_args": [
+      "-se",
+      "-se.Vina"
+    ],
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "indian",
+      "settings": "-se.Vina",
+      "alphabet": null
+    }
+  },
+  "visser5": {
+    "bernard": "Visser5",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:17",
+      "sub:2"
+    ],
+    "lines": 26,
+    "note": "1112 MIDI notes. _transpose/_rotate/_keyxpand. 14s.",
+    "php_ref": {
+      "midi_notes": 1112,
+      "note_convention": "english",
+      "settings": "-se.Visser5",
+      "alphabet": null
+    }
+  },
+  "asymmetric": {
+    "bernard": "asymmetric1",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "sub:6",
+      "_goto"
+    ],
+    "lines": 65,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.asymmetric1",
+      "alphabet": "-al.asymmetric1"
+    }
+  },
+  "checkrests": {
+    "bernard": "checkrests",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "poly:37"
+    ],
+    "lines": 17
+  },
+  "koto3": {
+    "bernard": "koto3",
+    "status": "active",
+    "production_mode": "text",
+    "s1_args": [
+      "-se",
+      "-se.koto3",
+      "-al",
+      "-ho.abc1",
+      "-so",
+      "-so.abc1"
+    ],
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:6",
+      "sub:2"
+    ],
+    "lines": 56,
+    "note": "Bug moteur #32: channel 125 corruption après 15 tokens. S0=266, S1=15.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc1"
+    }
+  },
+  "checkAllCsound": {
+    "bernard": "checkAllCsound",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:6"
+    ],
+    "lines": 77,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 30
+  },
+  "Nadaka-1er-essai": {
+    "bernard": "Nadaka-1er-essai",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:1"
+    ],
+    "lines": 55
+  },
+  "polyphony1": {
+    "bernard": "polyphony1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:48"
+    ],
+    "lines": 47
+  },
+  "visser3": {
+    "bernard": "Visser3",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:14",
+      "sub:2"
+    ],
+    "lines": 52,
+    "note": "401 MIDI notes. _transpose(11/5/1/7/6/-11) + _vel. Single note C3 transposed.",
+    "php_ref": {
+      "midi_notes": 401,
+      "note_convention": "english",
+      "settings": "-se.Visser3",
+      "alphabet": null
+    }
+  },
+  "scales": {
+    "bernard": "tryScales",
+    "status": "excluded",
+    "reason": "BP2 format grammar doesn't compile (Variable must start with uppercase). S1=error text, S2=0.",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:30",
+      "_scale"
+    ],
+    "lines": 28,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 8
+  },
+  "trySerial": {
+    "bernard": "trySerial",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:20",
+      "sub:1"
+    ],
+    "lines": 58
+  },
+  "Nadaka1": {
+    "bernard": "Nadaka1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:4"
+    ],
+    "lines": 107
+  },
+  "dhin1": {
+    "bernard": "dhin1",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:7"
+    ],
+    "lines": 80
+  },
+  "nadaka": {
+    "bernard": "Nadaka",
+    "status": "excluded",
+    "reason": "S1 OK mais S0 KO (compile fail PHP — settings -se.hamsad). Sortie de l'échantillon de test pour l'instant.",
+    "production_mode": "midi",
+    "s1_args": [
+      "-to",
+      "-to.Nadaka",
+      "-cs",
+      "-cs.Nadaka",
+      "--indian"
+    ],
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:4",
+      "_scale"
+    ],
+    "lines": 100,
+    "note": "Tonality not referenced in grammar header. Indian notation (sa/ga).",
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 1
+  },
+  "visser-shapes": {
+    "bernard": "Visser.Shapes",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:44",
+      "sub:2"
+    ],
+    "lines": 45,
+    "php_ref": {
+      "midi_notes": 2085,
+      "note_convention": "english",
+      "settings": "-se.Visser.Shapes",
+      "alphabet": null
+    }
+  },
+  "vina3": {
+    "bernard": "vina3",
+    "status": "excluded",
+    "reason": "S1 native bug: loading -cs.Vina causes total hang of native engine. Without -cs, terminates immediately with 'instrument Vina not found'. With -cs, blocks forever, no output.",
+    "aux": [
+      "se",
+      "to"
+    ],
+    "features": [
+      "poly:20",
+      "sub:4",
+      "_scale"
+    ],
+    "lines": 87,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 1
+  },
+  "dhin": {
+    "bernard": "dhin--",
+    "status": "excluded",
+    "reason": "S1 OK mais S0 KO (compile fail PHP — 22 erreurs, bols indiens). Sortie de l'échantillon de test pour l'instant.",
+    "production_mode": "text",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:6"
+    ],
+    "lines": 114,
+    "s1_args": [
+      "-al",
+      "-ho.dhin--"
+    ],
+    "note": "Polymetric tabla. Output includes ratio notation (4+4+4+4/6) and silences (.) — this is the expected text format.",
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 22
+  },
+  "tryRagas": {
+    "bernard": "tryRagas",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:89",
+      "_scale"
+    ],
+    "lines": 38,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 8
+  },
+  "visser-waves": {
+    "bernard": "Visser.Waves",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:53"
+    ],
+    "lines": 73,
+    "php_ref": {
+      "midi_notes": 365,
+      "note_convention": "english",
+      "settings": "-se.Visser.Waves",
+      "alphabet": null
+    }
+  },
+  "mohanam": {
+    "bernard": "trial.mohanam",
+    "status": "excluded",
+    "reason": "S1 OK mais S0 KO (compile fail PHP — dépendance -cs.trial.mohanam). Sortie de l'échantillon de test pour l'instant.",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "sub:8",
+      "_goto"
+    ],
+    "lines": 133,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 1
+  },
+  "ruwet": {
+    "bernard": "Ruwet",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "poly:37",
+      "sub:4"
+    ],
+    "lines": 143,
+    "php_ref": {
+      "midi_notes": 2528,
+      "note_convention": "french",
+      "settings": "-se.Ruwet",
+      "alphabet": "-al.Ruwet"
+    }
+  },
+  "dhati": {
+    "bernard": "dhati",
+    "status": "excluded",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:12",
+      "sub:6"
+    ],
+    "lines": 171,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 1,
+    "reason": "COMPILE_FAIL en PHP et S1 avec settings JSON officiels. Erreur: I46 This item cannot be played."
+  },
+  "shapes-rhythm": {
+    "bernard": "ShapesInRhythm",
+    "status": "excluded",
+    "reason": "S1 native timeout (>120s). Known S1_FAIL — engine loops indefinitely.",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:104",
+      "sub:17"
+    ],
+    "lines": 210,
+    "php_status": "CRASH"
+  },
+  "Alarm": {
+    "bernard": "Alarm",
+    "status": "to_be_tested",
+    "aux": [],
+    "features": [
+      "poly:449",
+      "sub:17"
+    ],
+    "lines": 370
+  },
+  "Mozartexpression": {
+    "bernard": "Mozartexpression",
+    "status": "to_be_tested",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:452",
+      "sub:19"
+    ],
+    "lines": 387
+  },
+  "alan-dice": {
+    "bernard": "Alan",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:447",
+      "sub:17"
+    ],
+    "lines": 373,
+    "php_ref": {
+      "midi_notes": 5049,
+      "note_convention": "french",
+      "settings": "-se.Alan",
+      "alphabet": null
+    }
+  },
+  "beatrix-dice": {
+    "bernard": "Beatrix",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:447",
+      "sub:17"
+    ],
+    "lines": 372,
+    "php_ref": {
+      "midi_notes": 5049,
+      "note_convention": "french",
+      "settings": "-se.Beatrix",
+      "alphabet": null
+    }
+  },
+  "mozart-dice": {
+    "bernard": "Mozart",
+    "status": "active",
+    "php_ref": {
+      "midi_notes": 10113,
+      "note_convention": "french",
+      "settings": "-se.Mozart",
+      "alphabet": null,
+      "tonality": "-to.Mozart"
+    },
+    "production_mode": "midi",
+    "aux": [
+      "se",
+      "to"
+    ],
+    "features": [
+      "poly:447",
+      "sub:17",
+      "_scale"
+    ],
+    "lines": 394,
+    "php_status": "COMPILE_FAIL",
+    "php_errors": 4
+  },
+  "watch": {
+    "bernard": "Watch_What_Happens",
+    "status": "active",
+    "aux": [
+      "se"
+    ],
+    "features": [
+      "poly:2200",
+      "sub:1"
+    ],
+    "lines": 128,
+    "note": "Fixed: NoTracePath guard. 2106 MIDI notes, ~81s.",
+    "production_mode": "midi",
+    "s1_args": [
+      "-se",
+      "-se.Watch_What_Happens"
+    ],
+    "php_ref": {
+      "midi_notes": 2105,
+      "note_convention": "english",
+      "settings": "-se.Watch_What_Happens",
+      "alphabet": null
+    }
+  },
+  "_comment": {
+    "status": "excluded"
+  }
+}

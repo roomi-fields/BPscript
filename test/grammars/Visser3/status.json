@@ -1,0 +1,15 @@
+{
+  "grammar": "visser3",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "PASS",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "skip",
+  "s1_note": "401 MIDI notes. _transpose(11/5/1/7/6/-11) + _vel. Single note C3 transposed.",
+  "s1_vs_s2_note": "S1↔S2 MIDI: count 401≠232 (WASM misses some events). Pitch and timing differ (native transposes MIDI).",
+  "s2_vs_s3_note": "401/401 names ✅, 401/401 timings ✅. _transpose/_vel migré → _script(CTn)."
+}

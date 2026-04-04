@@ -1,0 +1,16 @@
+{
+  "grammar": "tryAllItems1",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "PASS",
+  "s4": "FAIL",
+  "s3_s4_mode": "exact",
+  "s1_vs_s2_note": "AllItems=1 + text-only. Validé manuellement (items uniques identiques).",
+  "s4_note": "No BPS scene. Same grammar as tryAllItems with different K-param init.",
+  "bpsScene": "all-items1"
+}

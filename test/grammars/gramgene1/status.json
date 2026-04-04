@@ -1,0 +1,14 @@
+{
+  "grammar": "gramgene1",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "FAIL",
+  "s1_note": "5 tokens text (parser captures noise). INIT: stripped. Metagrammar generates grammars as text output.",
+  "s2_note": "33 tokens. Quoted terminals as sound objects.",
+  "s1_vs_s2_note": "Meta-grammaire. S1 text parsing incomplet.",
+  "s3_note": "Crash without -ho.gramgene. Quoted terminals need homomorphism. Cannot convert to silent objects.",
+  "s2_s3_mode": "skip"
+}

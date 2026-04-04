@@ -1,0 +1,14 @@
+{
+  "grammar": "tryGraphics",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "skip",
+  "s1_vs_s2_note": "S1=S2 ✅ pitch exact (6/6)",
+  "s3_vs_s4_note": "staccato/legato end times differ (engine in S3, not applied in S4 transpiled)"
+}

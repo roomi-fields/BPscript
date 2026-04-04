@@ -1,0 +1,16 @@
+{
+  "grammar": "checkNegativeContext",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "SKIP",
+  "s3_s4_mode": "exact",
+  "bpsScene": "negative-context",
+  "s1_note": "3 MIDI notes (A1,A2,A3). 6 tokens in text output (A,A,A,A2,A3,A1). MIDI misses A and B (no octave).",
+  "s1_vs_s2_note": "Grammaire structurelle. Pas de MIDI. S1 text capture trace dérivation.",
+  "s3_vs_s4_note": "6 tokens identical. Terminals declared as gate in BPS scene."
+}

@@ -1,0 +1,15 @@
+{
+  "grammar": "transposition1",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "skip",
+  "s1_note": "75 MIDI notes. _transpose(0/11/5) applied by native engine.",
+  "s1_vs_s2_note": "S1↔S2 MIDI: 75 count ✅, timing 75/75 exact ✅, pitch 30/75 (native transposes MIDI pitches, WASM doesn't).",
+  "s2_vs_s3_note": "75/75 names ✅, 75/75 timings ✅. _transpose migré → _script(CTn)."
+}

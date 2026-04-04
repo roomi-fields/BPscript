@@ -1,0 +1,17 @@
+{
+  "grammar": "kss2",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "PASS",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "skip",
+  "s1_note": "78 MIDI notes (Indian notation, _transpose(-7) applied by native).",
+  "s2_note": "86 tokens (Indian notation, _transpose not applied). Includes /5 ratio and X non-terminal in output — filter issue.",
+  "s1_vs_s2_note": "S2 produit 0 MIDI events. Les tokens sont produits mais pas convertis en MIDI.",
+  "s2_vs_s3_note": "86 vs 85 tokens. _transpose(-7) changes pitch resolution affecting RND pattern matching.",
+  "s3_vs_s4_note": "Same _transpose issue propagated through transpiler."
+}

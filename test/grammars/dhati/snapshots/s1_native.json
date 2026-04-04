@@ -1,0 +1,9 @@
+{
+  "source": "-gr.dhati",
+  "stage": "S1",
+  "mode": "midi",
+  "tokens": [],
+  "midi": [],
+  "error": "No MIDI output produced",
+  "date": "2026-04-02"
+}

@@ -1,0 +1,14 @@
+{
+  "grammar": "livecode1",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "PASS",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "PASS",
+  "s4": "FAIL",
+  "s3_s4_mode": "exact",
+  "s1_vs_s2_note": "Pitch 100% identique (multiset sort). Timing diffs = arrondi MIDI ticks→ms."
+}

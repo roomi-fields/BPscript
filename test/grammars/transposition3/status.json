@@ -1,0 +1,17 @@
+{
+  "grammar": "transposition3",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "exact",
+  "s1_note": "Bug moteur BP3 originel: overflow durées dans PolyExpand (endtime=2^32+1). Grammaire récursive profonde RND+SUB1+_repeat+/numtimes/. BP2 settings converties (CR fix + NoteConvention override). Pas de MIDI produit.",
+  "s2_note": "58 tokens MIDI via WASM.",
+  "s3_note": "58 tokens, _transpose(2/4/6) via SUB1 → _script(CTn).",
+  "s3_vs_s4_note": "58/58 names+timings ✅.",
+  "s1_vs_s2_note": "Bug moteur BP3 originel: overflow durées PolyExpand (endtime=2^32+1). S1=0 MIDI, S2=58. NOT_COMPARABLE."
+}

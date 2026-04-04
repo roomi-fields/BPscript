@@ -1,0 +1,13 @@
+{
+  "grammar": "asymmetric1",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "names_only",
+  "s1_vs_s2": "DIFF",
+  "s3": "FAIL",
+  "s1_note": "15 tokens text (a b 2 3 structural symbols).",
+  "s2_note": "15 tokens, names match S1.",
+  "s3_note": "WASM memory access out of bounds. Complex grammar (6 subgrammars, _goto, flags).",
+  "s2_s3_mode": "skip"
+}

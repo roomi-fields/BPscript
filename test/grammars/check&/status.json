@@ -1,0 +1,18 @@
+{
+  "grammar": "check&",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "NOT_COMPARABLE",
+  "s3": "PASS",
+  "s2_s3_mode": "skip",
+  "s2_vs_s3": "NOT_COMPARABLE",
+  "s4": "TODO",
+  "s3_s4_mode": "skip",
+  "s1_note": "11 tokens text (French, ties &, _rest, _pitchbend). Rules 1-6 OK.",
+  "s2_note": "Rule 7 crashes: _pitchbend + long ties → 203 tokens all '?' or empty. Rules 1-6 produce 3-6 tokens.",
+  "s3_note": "S3=2 tokens. Ties & et prolongations _ ne fonctionnent pas en NoteConvention=0 (opaque terminals, pas de résolution note).",
+  "s2_vs_s3_note": "S2=203 (crash overflow), S3=2 (ties broken in NC=0). Pas comparable.",
+  "s1_vs_s2_note": "Pitchbend + long ties crash WASM. Pas comparable."
+}

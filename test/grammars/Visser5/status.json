@@ -1,0 +1,15 @@
+{
+  "grammar": "visser5",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "exact",
+  "s1_note": "1112 MIDI notes. _transpose/_rotate/_keyxpand. 14s.",
+  "s1_vs_s2_note": "S1↔S2 MIDI: count 1112≠1088. _transpose applied to MIDI by native only. _rotate/_keyxpand structural diff.",
+  "s2_vs_s3_note": "1152/1152 names ✅, 1152/1152 timings ✅. _transpose → _script(CTn), _rotate/_keyxpand left native."
+}

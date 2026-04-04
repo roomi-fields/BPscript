@@ -1,0 +1,18 @@
+{
+  "grammar": "tryTimePatterns",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "PASS",
+  "s3": "PASS",
+  "s2_s3_mode": "skip",
+  "s2_vs_s3": "NOT_COMPARABLE",
+  "s4": "TODO",
+  "s3_s4_mode": "skip",
+  "s1_note": "8 MIDI notes with correct timings.",
+  "s2_note": "15 tokens — time patterns (t1-t4) from -tb file unresolved as ? tokens.",
+  "s3_note": "S3=1 token. TIMEPATTERNS block requires -tb file not loadable in WASM. Engine can't resolve time structure.",
+  "s2_vs_s3_note": "S2=15 tokens (with ?), S3=1 token. -tb dependency blocks comparison.",
+  "s1_vs_s2_note": "8 MIDI events: pitch 8/8 ✅, 8 timing diffs ±1ms (arrondi)"
+}

@@ -1,0 +1,14 @@
+{
+  "source": "-gr.checkrests",
+  "stage": "S2",
+  "settings": [
+    1,
+    10,
+    10,
+    1,
+    1,
+    60
+  ],
+  "tokens": [],
+  "date": "2026-03-26"
+}

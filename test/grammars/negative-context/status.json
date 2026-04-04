@@ -1,0 +1,13 @@
+{
+  "grammar": "negative-context",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "skip",
+  "s1_vs_s2": "SKIP",
+  "s3": "PASS",
+  "s2_s3_mode": "skip",
+  "s2_vs_s3": "SKIP",
+  "s4": "FAIL",
+  "s1_mode": "text"
+}

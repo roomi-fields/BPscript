@@ -1,0 +1,17 @@
+{
+  "grammar": "765432",
+  "date": "2026-04-02",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "PASS",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "PASS",
+  "s4": "FAIL",
+  "s3_s4_mode": "exact",
+  "s1_note": "823 MIDI notes. French solfege, 12 subgrammars.",
+  "s1_vs_s2_note": "Pitch 823/823 identique ✅. Timing 3x: natif 500ms vs WASM 166ms. Pclock=1 Qclock=3 interprété différemment par les 2 moteurs.",
+  "s3_vs_s4_note": "823 tokens identical. Fixed: @alphabet.solfege generates exact terminals (do4, mi5...).",
+  "s2_vs_s3_note": "_transpose() modifie les noms de notes avec NC=1 mais pas avec NC=0 (silent objects). Diff attendue."
+}

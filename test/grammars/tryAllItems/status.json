@@ -1,0 +1,15 @@
+{
+  "grammar": "tryAllItems",
+  "date": "2026-04-01",
+  "s1": "PASS",
+  "s2": "PASS",
+  "s1_s2_mode": "midi",
+  "s1_vs_s2": "DIFF",
+  "s3": "PASS",
+  "s2_s3_mode": "timing",
+  "s2_vs_s3": "DIFF",
+  "s3_s4_mode": "exact",
+  "bpsScene": "all-items",
+  "s1_vs_s2_note": "2 tokens identical (C5 D3). _goto, _failed, _repeat, K-params.",
+  "s3_vs_s4_note": "Transpiler errors: [goto:3,1] multi-arg not supported, [Choice==1] guard syntax issues. Scene needs transpiler fixes."
+}

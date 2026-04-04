@@ -1,0 +1,32 @@
+{
+  "source": "-gr.tryConsoleMaxTime",
+  "stage": "S1",
+  "mode": "text",
+  "tokens": [
+    [
+      "=>"
+    ],
+    [
+      "Calculation"
+    ],
+    [
+      "overflow"
+    ],
+    [
+      "(10000"
+    ],
+    [
+      "derivations):"
+    ],
+    [
+      "task"
+    ],
+    [
+      "abandoned."
+    ],
+    [
+      "Loop?"
+    ]
+  ],
+  "date": "2026-04-02"
+}
