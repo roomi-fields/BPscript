@@ -50,6 +50,8 @@ function parseMidiNote(name) {
     if (semi === undefined) return null;
     if (m[2] === '#') semi++;
     else if (m[2] === 'b') semi--;
+    // French octave convention varies by grammar (do3 can mean C3 or C4).
+    // Use +1 here; mismatch resolved by MIDI key comparison below.
     return { midi: (parseInt(m[3]) + 1) * 12 + semi };
   }
 
@@ -60,6 +62,12 @@ function parseMidiNote(name) {
     if (m[2] === '#') semi++;
     else if (m[2] === 'b') semi--;
     return { midi: (parseInt(m[3]) + 1) * 12 + semi };
+  }
+
+  // Raw MIDI key: <60> → MIDI 60
+  m = name.match(/^<(\d+)>$/);
+  if (m) {
+    return { midi: parseInt(m[1]) };
   }
 
   return null;
@@ -112,18 +120,26 @@ for (const name of names) {
     return tok !== '-' && tok !== '&' && tok !== '.' && !tok.startsWith('_');
   });
 
-  // Normalize S3 token names
-  const s3norm = s3filtered.map(t => ({ name: normalizeToken(t[0]), start: t[1], end: t[2] }));
+  // Normalize S3 token names and extract MIDI keys
+  const s3norm = s3filtered.map(t => {
+    const parsed = parseMidiNote(t[0]);
+    return { name: parsed ? midiToCanonical(parsed.midi) : (t[0] || '').replace(/^'(.*)'$/, '$1'),
+             midi: parsed ? parsed.midi : -1, start: t[1], end: t[2] };
+  });
 
   if (mode === 'midi') {
     // S2 has [noteName, start, end], S3 has timed tokens normalized to same format
-    const s2norm = s2t.map(t => ({ name: t[0], start: t[1], end: t[2] }));
+    // Compare by MIDI key (not name) to handle octave convention differences
+    const s2norm = s2t.map(t => {
+      const parsed = parseMidiNote(t[0]);
+      return { name: t[0], midi: parsed ? parsed.midi : -1, start: t[1], end: t[2] };
+    });
 
-    // Sort both by time then name
+    // Sort both by time then MIDI key
     const sortFn = (a, b) => {
       const da = (a.start || 0) - (b.start || 0);
       if (Math.abs(da) > TIME_TOLERANCE_MS) return da;
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.midi || 0) - (b.midi || 0);
     };
     s2norm.sort(sortFn);
     s3norm.sort(sortFn);
@@ -133,16 +149,28 @@ for (const name of names) {
       continue;
     }
 
+    // Detect octave offset: PrintThisNote may use a different octave convention
+    // than MIDI standard. Find the constant offset from the first matching note.
+    let midiOffset = 0;
+    if (s2norm.length > 0 && s2norm[0].midi >= 0 && s3norm[0].midi >= 0) {
+      const diff = s2norm[0].midi - s3norm[0].midi;
+      // Only apply if it's an exact multiple of 12 (octave shift)
+      if (diff !== 0 && diff % 12 === 0) midiOffset = diff;
+    }
+
     let exactMatch = true;
     let timingDiffs = 0;
     let maxTimingDiff = 0;
     let contentDiffs = [];
 
     for (let i = 0; i < s2norm.length; i++) {
-      const n2 = s2norm[i].name;
-      const n3 = s3norm[i].name;
+      // Compare by MIDI key when both are available, applying detected octave offset
+      const s3midi = s3norm[i].midi >= 0 ? s3norm[i].midi + midiOffset : -1;
+      const midiMatch = (s2norm[i].midi >= 0 && s3midi >= 0)
+        ? s2norm[i].midi === s3midi
+        : s2norm[i].name === s3norm[i].name;
 
-      if (n2 !== n3) {
+      if (!midiMatch) {
         contentDiffs.push({ idx: i, s2: s2norm[i], s3: s3norm[i] });
         exactMatch = false;
         if (contentDiffs.length >= 5) break;

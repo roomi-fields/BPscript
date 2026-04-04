@@ -706,10 +706,32 @@ L'avantage du callback : MakeSound n'a pas besoin de connaître le format de sor
 
 ---
 
+## 35. TimeSet — starttime +10ms sur certaines grammaires avec settings Visser
+
+**Grammaires :** acceleration (-se.Visser2), visser3 (-se.Visser3), visser-shapes (-se.Visser.Shapes), seed=1
+
+**Symptôme :** `p_Instance[2].starttime = 10` au lieu de 0 pour la première note. Tous les événements sont décalés de +10ms constant. Les grammaires sans fichier settings (drum, kss2, bells) ont starttime=0.
+
+**Comparaison S1 vs S2 :**
+```
+S1 (natif) : E3  start=0    end=750    (après FormatMIDIstream zerostart)
+S2 (WASM)  : E3  start=10   end=760    (p_Instance.starttime brut)
+```
+
+**Analyse :** TimeSet calcule starttime=10 (pas 0) pour ces grammaires. Le pipeline natif corrige via FormatMIDIstream(zerostart=TRUE) qui soustrait le temps du premier byte MIDI. Le WASM lit p_Instance directement sans cette normalisation.
+
+Une normalisation zerostart côté WASM a été tentée (wasm.14) puis retirée (wasm.15) car elle détruisait les silences initiaux légitimes (ames: 666ms → 0ms). Le problème est que le zerostart natif soustrait le premier byte MIDI (souvent un ControlChange au temps MIDIsetUpTime), pas le premier NoteOn.
+
+**Question pour Bernard :** Pourquoi TimeSet produit starttime=10 (et pas 0) spécifiquement avec les settings Visser ? Y a-t-il un paramètre dans ces settings qui introduit ce décalage initial ? La correction devrait-elle être dans TimeSet (starttime=0) ou est-ce un comportement voulu ?
+
+**Impact :** 3 grammaires sur 37, +10ms constant (inaudible), toutes les notes affectées de la même façon.
+
+---
+
 ## Notes pour référence (mise à jour)
 
 - Build natif testé : v3.3.19 (gcc Linux, Apr 2 2026) — sources = branche wasm + Bernard post-v3.3.18 (2026-03-31)
 - Build WASM : même sources, compilées avec Emscripten
 - **Score S0=S1 : 30/33 EXACT, 2 TIMING, 1 COUNT** — bp3 Linux aligne sur bp.exe Windows (RNG MSVC portable + NoTracePath)
-- **Score S1=S2 : 27/37 EXACT, 5 TIMING within tolerance (≤3ms), 4 TIMING vrais (#32 + #33), 1 COUNT** — build v3.3.18-wasm.15
+- **Score S1=S2 : 24/37 EXACT, 8 TIMING within tolerance (≤3ms), 4 TIMING vrais (#32 + #33), 3 TIMING +10ms (#35), 1 COUNT (tryShruti MPC)** — build v3.3.18-wasm.17
 - Les 6 anciennes NOTES_DIFF (alan-dice, beatrix-dice, mozart-dice, livecode1, mohanam, ruwet) sont maintenant IDENTICAL — confirmé que c'était le moteur qui avait changé, pas un bug WASM
