@@ -1,14 +1,7 @@
 {
-  "source": "silent.gr",
-  "stage": "S3",
-  "settings": [
-    0,
-    50,
-    10,
-    1,
-    1,
-    3600
-  ],
+  "source": "original.gr+silent.al",
+  "stage": "S4",
+  "mode": "midi",
   "tokens": [
     [
       "C4",
@@ -2911,5 +2904,5 @@
       85000
     ]
   ],
-  "date": "2026-04-02"
+  "date": "2026-04-04"
 }

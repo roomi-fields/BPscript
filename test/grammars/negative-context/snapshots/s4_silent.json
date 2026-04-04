@@ -1,14 +1,7 @@
 {
-  "source": "silent.gr",
-  "stage": "S3",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    10
-  ],
+  "source": "original.gr+silent.al",
+  "stage": "S4",
+  "mode": "text",
   "tokens": [
     [
       "AAAA2A3A1",
@@ -16,5 +9,5 @@
       0
     ]
   ],
-  "date": "2026-04-02"
+  "date": "2026-04-04"
 }

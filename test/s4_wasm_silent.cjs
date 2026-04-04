@@ -1,10 +1,17 @@
 #!/usr/bin/env node
 /**
- * S3: Run silent sound objects grammar on WASM engine.
- * Requires silent.gr + silent.al in the grammar directory.
+ * S4: Run original Bernard grammar with silent (flat) alphabet on WASM.
  *
- * Usage: node s3_wasm_silent.cjs drum
- * Output: test/grammars/drum/snapshots/s3_silent.json
+ * S4 = S2 pipeline + silent.al loaded instead of the grammar's own alphabet.
+ * This validates that the engine produces correct timed tokens when terminals
+ * are opaque bols (no MIDI prototypes) instead of simple notes (j >= 16384).
+ *
+ * Requires: test/grammars/{name}/silent.al
+ * Uses: same grammar, settings, aux files as S2 (original.gr)
+ *
+ * Output: test/grammars/{name}/snapshots/s4_silent.json (timed tokens)
+ *
+ * Usage: node s4_wasm_silent.cjs drum --bin <version>
  */
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -17,77 +24,54 @@ const name = _args[0];
 if (!name) { console.error('Usage: node s4_wasm_silent.cjs <grammar> --bin <version>'); process.exit(1); }
 const binTag = requireBinTag();
 
+const DIR = path.join(__dirname, 'grammars', name);
+const silentAl = path.join(DIR, 'silent.al');
+if (!fs.existsSync(silentAl)) { console.error(`Not found: ${silentAl}`); process.exit(1); }
+
+// Step 1: Run S2 pipeline (generates S2+S3 snapshots and leaves temp files)
+try {
+  execSync(`node ${path.join(__dirname, 's2_wasm_orig.cjs')} ${name} --bin ${binTag}`, {
+    timeout: 60000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe']
+  });
+} catch(e) {
+  console.error(`S4 FAIL (S2 step): ${(e.stderr || e.message || '').substring(0, 120)}`);
+  process.exit(1);
+}
+
+// Step 2: Re-run WASM with same grammar but silent.al alphabet override
+const DIST = _resolveDist(binTag);
+const TMP = `/tmp/_s2_${name}`;
 const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
-const DIST = _resolveDist(binTag);
-const DIR = path.join(__dirname, 'grammars', name);
 
-const silentGr = path.join(DIR, 'silent.gr');
-const silentAl = path.join(DIR, 'silent.al');
-if (!fs.existsSync(silentGr)) { console.error(`Not found: ${silentGr}`); process.exit(1); }
+// Read the silent alphabet
+const silentAlContent = fs.readFileSync(silentAl, 'utf-8');
 
-// Read settings from S2 snapshot (reuse same params)
-const s2Snap = path.join(DIR, 'snapshots', 's2_orig.json');
-let sp = [0, 10, 10, 1, 1, 60];
-if (fs.existsSync(s2Snap)) {
-  try { sp = JSON.parse(fs.readFileSync(s2Snap, 'utf-8')).settings || sp; } catch(e) {}
-}
-// S3 ALWAYS uses NoteConvention=0 (silent sound objects, opaque terminals)
-sp[0] = 0;
+// Overwrite the alphabet temp file with silent.al
+fs.writeFileSync(`${TMP}_al.txt`, silentAlContent);
 
-// Tonality and settings: read from grammar header or infer
-const GRAMMARS = require('./grammars/grammars.json');
-const grName = GRAMMARS[name]?.bernard || name;
-let toContent = '';
-let seJsonContent = '';
-if (grName) {
-  const grFile = path.join(TD, `-gr.${grName}`);
-  if (fs.existsSync(grFile)) {
-    const gr = fs.readFileSync(grFile, 'utf-8');
-    const toMatch = gr.match(/-to\.(\S+)/);
-    const csMatch = gr.match(/-cs\.(\S+)/);
-    const seMatch = gr.match(/-se\.(\S+)/);
-    if (toMatch) { const f = path.join(TD, `-to.${toMatch[1]}`); if (fs.existsSync(f)) toContent = fs.readFileSync(f, 'utf-8'); }
-    if (!toContent) {
-      for (const c of [grName, seMatch?.[1], csMatch?.[1]].filter(Boolean)) {
-        const f = path.join(TD, `-to.${c}`); if (fs.existsSync(f)) { toContent = fs.readFileSync(f, 'utf-8'); break; }
-      }
-    }
-    // Load full JSON settings (same as S2)
-    if (seMatch) {
-      const f = path.join(TD, `-se.${seMatch[1]}`);
-      if (fs.existsSync(f)) {
-        const c = fs.readFileSync(f, 'utf-8');
-        if (c.trim().startsWith('{')) seJsonContent = c;
-      }
-    }
+// Provision -ho. file if grammar references one (needed for homomorphism resolution)
+const grContent = fs.readFileSync(`${TMP}_gr.txt`, 'utf-8');
+const hoMatch = grContent.match(/-ho\.(\S+)/);
+let hoProvision = '';
+if (hoMatch) {
+  const hoFile = path.join(TD, `-ho.${hoMatch[1]}`);
+  if (fs.existsSync(hoFile)) {
+    const hoContent = fs.readFileSync(hoFile, 'utf-8');
+    fs.writeFileSync(`${TMP}_ho.txt`, hoContent);
+    hoProvision = `prov('-ho.${hoMatch[1]}',fs.readFileSync(TMP+'_ho.txt','utf-8'));`;
   }
 }
 
-// Write temp files and run WASM
-const grContent = fs.readFileSync(silentGr, 'utf-8');
-const alContent = fs.existsSync(silentAl) ? fs.readFileSync(silentAl, 'utf-8') : '';
-fs.writeFileSync('/tmp/_s3_gr.txt', grContent);
-fs.writeFileSync('/tmp/_s3_al.txt', alContent);
-fs.writeFileSync('/tmp/_s3_to.txt', toContent);
-// Override WASM-critical settings in the JSON before loading
-if (seJsonContent.trim()) {
-  try {
-    const seObj = JSON.parse(seJsonContent);
-    // DisplayItems must be 1 for WASM to produce output (Bernard's PHP settings have 0)
-    if (seObj.DisplayItems) seObj.DisplayItems.value = '1';
-    // NoteConvention must be 0 for S3 (silent sound objects)
-    if (seObj.NoteConvention) seObj.NoteConvention.value = '0';
-    // Force MaxItemsProduce=10 for reproducible comparison
-    seObj.MaxItemsProduce = {name: "Max items to produce", value: "10"};
-    seJsonContent = JSON.stringify(seObj);
-  } catch(e) {}
-}
-fs.writeFileSync('/tmp/_s3_se.txt', seJsonContent);
+const GRAMMARS = require('./grammars/grammars.json');
+const gramDef = GRAMMARS[name];
+const s1Mode = gramDef?.production_mode || 'midi';
+const useTextMode = s1Mode === 'text';
 
 const wasmScript = `
 var fs=require('fs');
+var TMP='${TMP}';
 process.chdir('${DIST.replace(/\\/g,'/')}');
 console.log=function(){};
 require('${path.join(DIST,'bp3.js').replace(/\\/g,'/')}')().then(function(M){
@@ -99,35 +83,62 @@ require('${path.join(DIST,'bp3.js').replace(/\\/g,'/')}')().then(function(M){
   var loadTo=M.cwrap('bp3_load_tonality','number',['string']);
   var produce=M.cwrap('bp3_produce','number',[]);
   var getTT=M.cwrap('bp3_get_timed_tokens','string',[]);
+  var getResult=M.cwrap('bp3_get_result','string',[]);
+  var setWriteMidi=M.cwrap('bp3_set_write_midi','void',['number']);
+  var prov=M.cwrap('bp3_provision_file','number',['string','string']);
+  var loadProto=M.cwrap('bp3_load_object_prototypes','number',['string']);
   init();
-  var seJson=fs.readFileSync('/tmp/_s3_se.txt','utf-8');if(seJson.trim())loadSettings(seJson);
+  var seJson=fs.readFileSync(TMP+'_se.txt','utf-8');
+  if(seJson.trim())loadSettings(seJson);
+  if(${useTextMode ? 'true' : 'false'})setWriteMidi(0);
+  // Load SILENT alphabet (the key difference from S2)
+  var al=fs.readFileSync(TMP+'_al.txt','utf-8');if(al.trim())loadAl(al);
+  // Provision -ho. file for homomorphism grammars
+  ${hoProvision}
+  var miFiles=fs.readdirSync('/tmp').filter(function(f){return f.startsWith('_s2_${name}_mi_');});
+  miFiles.forEach(function(f){var n='-mi.'+f.replace('_s2_${name}_mi_','').replace('.txt','');prov(n,fs.readFileSync('/tmp/'+f,'utf-8'));});
+  var so=fs.readFileSync(TMP+'_so.txt','utf-8');if(so.trim())loadProto(so);
+  var to=fs.readFileSync(TMP+'_to.txt','utf-8');if(to.trim())loadTo(to);
+  loadGr(fs.readFileSync(TMP+'_gr.txt','utf-8'));
   setSeed(1);
-  var al=fs.readFileSync('/tmp/_s3_al.txt','utf-8');if(al.trim())loadAl(al);
-  var to=fs.readFileSync('/tmp/_s3_to.txt','utf-8');if(to.trim())loadTo(to);
-  loadGr(fs.readFileSync('/tmp/_s3_gr.txt','utf-8'));
   var r=produce();
-  var raw=JSON.parse(getTT());
-  var filtered=raw.filter(function(t){return t.token!=='-'&&t.token!=='&'&&t.token!=='.'&&!t.token.startsWith('_');});
-  var tokens=filtered.map(function(t){return[t.token,t.start,t.end];});
-  process.stdout.write(JSON.stringify({r:r,tokens:tokens})+'\\n');
+  // Timed tokens
+  var timed;
+  if(${useTextMode ? 'true' : 'false'}){
+    var txt=getResult();
+    var lines=txt.split('\\n').filter(function(l){return l.trim();});
+    var textTokens=[];
+    for(var i=0;i<lines.length;i++){
+      var names=lines[i].trim().split(/\\s+/).filter(function(t){return t;});
+      for(var j=0;j<names.length;j++){var n=names[j].replace(/^'(.*)'$/,'$1');textTokens.push([n]);}
+    }
+    timed=textTokens.map(function(t){return[t[0],0,0];});
+  } else {
+    var timedRaw=JSON.parse(getTT());
+    timed=timedRaw.map(function(t){return[t.token,t.start,t.end];});
+  }
+  require('fs').writeFileSync(TMP+'_s4_result.json',JSON.stringify({r:r,timed:timed}));
+  process.stdout.write('OK\\n');
   process.exit(0);
-}).catch(function(e){process.stdout.write(JSON.stringify({error:e.message.substring(0,80)})+'\\n');process.exit(0);});
-setTimeout(function(){process.stdout.write(JSON.stringify({error:'TIMEOUT'})+'\\n');process.exit(0);},55000);
+}).catch(function(e){require('fs').writeFileSync(TMP+'_s4_result.json',JSON.stringify({error:e.message.substring(0,80)}));process.stdout.write('OK\\n');process.exit(0);});
+setTimeout(function(){require('fs').writeFileSync(TMP+'_s4_result.json',JSON.stringify({error:'TIMEOUT'}));process.stdout.write('OK\\n');process.exit(0);},55000);
 `;
 
-fs.writeFileSync('/tmp/_s3_wasm.cjs', wasmScript);
+fs.writeFileSync(`${TMP}_s4_wasm.cjs`, wasmScript);
 try {
-  const out = execSync('node /tmp/_s3_wasm.cjs', { timeout: 60000, encoding: 'utf-8', stdio: ['pipe','pipe','pipe'] });
-  const line = out.trim().split('\n').filter(l => l.startsWith('{')).pop();
-  const result = line ? JSON.parse(line) : { error: 'no output' };
-  if (result.error) { console.error(`S3 FAIL: ${result.error}`); process.exit(1); }
+  execSync(`node ${TMP}_s4_wasm.cjs`, { timeout: 60000, encoding: 'utf-8', stdio: ['pipe','pipe','pipe'] });
+  const resultJson = fs.readFileSync(`${TMP}_s4_result.json`, 'utf-8');
+  const result = JSON.parse(resultJson);
+  if (result.error) { console.error(`S4 FAIL: ${result.error}`); process.exit(1); }
 
   const snapDir = path.join(DIR, 'snapshots');
   if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
-  const snap = { source: 'silent.gr', stage: 'S3', settings: sp, tokens: result.tokens, date: new Date().toISOString().substring(0, 10) };
-  fs.writeFileSync(path.join(snapDir, 's3_silent.json'), JSON.stringify(snap, null, 2));
-  console.log(`S3 OK: ${result.tokens.length} tokens → ${name}/snapshots/s3_silent.json`);
+  const today = new Date().toISOString().substring(0, 10);
+  const snap = { source: 'original.gr+silent.al', stage: 'S4', mode: s1Mode,
+    tokens: result.timed, date: today };
+  fs.writeFileSync(path.join(snapDir, 's4_silent.json'), JSON.stringify(snap, null, 2));
+  console.log(`S4 OK: ${result.timed.length} tokens → ${name}/snapshots/s4_silent.json`);
 } catch (e) {
-  console.error(`S3 FAIL: ${(e.stderr || e.message || '').substring(0, 80)}`);
+  console.error(`S4 FAIL: ${(e.stderr || e.message || '').substring(0, 120)}`);
   process.exit(1);
 }
