@@ -539,6 +539,7 @@ let bp3 = null;
 let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_produce, bp3_get_result, bp3_get_messages;
 let bp3_get_midi_events, bp3_get_midi_event_count;
 let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params;
+let bp3_load_tonality;
 let libraryData = [];
 let demosData = [];
 let bernardData = [];
@@ -550,6 +551,7 @@ let lastTimedTokens = null;
 let lastControlTable = null;
 let lastCVTable = null;
 let lastDirectives = [];
+let lastTonality = null;  // tonality file content for bp3_load_tonality
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
@@ -877,6 +879,7 @@ async function loadModule() {
     bp3_get_timed_tokens = Module.cwrap('bp3_get_timed_tokens', 'string', []);
     bp3_get_timed_token_count = Module.cwrap('bp3_get_timed_token_count', 'number', []);
     bp3_load_settings_params = Module.cwrap('bp3_load_settings_params', 'number', ['number','number','number','number','number','number']);
+    bp3_load_tonality = Module.cwrap('bp3_load_tonality', 'number', ['string']);
 
     setStatus('Module loaded. Initializing...');
     initEngine();
@@ -927,6 +930,7 @@ function reseed() {
   const grammar = document.getElementById('grammar').value;
   loadSettings();
   if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
+  if (lastTonality) bp3_load_tonality(lastTonality);
   if (grammar.trim()) bp3_load_grammar(grammar.trim());
 }
 
@@ -935,7 +939,7 @@ function reinit() {
   setTimeout(() => initEngine(), 10);
 }
 
-function produce() {
+async function produce() {
   if (!engineReady) return;
 
   // If BPscript tab has content, compile it first
@@ -960,6 +964,20 @@ function produce() {
       if (compiled.settings) document.getElementById('settings').value = compiled.settings;
       if (compiled.warnings && compiled.warnings.length > 0) {
         console.log('BPscript warnings:', compiled.warnings);
+      }
+
+      // Load tonality file if @tonality.xxx directive present
+      lastTonality = null;
+      const toDir = lastDirectives.find(d => d.name === 'tonality');
+      if (toDir && toDir.subkey) {
+        try {
+          const resp = await fetch(`../lib/tonality/${toDir.subkey}.to`);
+          if (resp.ok) {
+            lastTonality = await resp.text();
+          } else {
+            console.warn(`Tonality file not found: lib/tonality/${toDir.subkey}.to`);
+          }
+        } catch(e) { console.warn('Tonality load error:', e.message); }
       }
     } catch(e) {
       setStatus('BPscript error: ' + e.message);
@@ -1185,6 +1203,9 @@ async function ensureDispatcher() {
       }
       dispatcher.setControlDefaults(defaults);
     }
+
+    // Provide tuning/temperament data for runtime scale() changes
+    dispatcher.setTuningData(window._libTunings, window._libTemperaments);
 
     const resolver = _createResolver();
     dispatcher.addTransport('default', new WebAudioTransport(audioCtx, { resolver }));

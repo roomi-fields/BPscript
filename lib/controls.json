@@ -59,11 +59,6 @@
       "args": [],
       "description": "Rétrograde — inverse l'ordre des éléments dans le contexte polymétrique."
     },
-    "rotate": {
-      "bp3": "_rotate",
-      "args": ["steps"],
-      "description": "Rotation cyclique — réordonne les chunks de la séquence avant dérivation (structurel)."
-    },
     "staccato": {
       "bp3": "_staccato",
       "args": ["value"],
@@ -240,14 +235,22 @@
       "description": "Résonance (Q) du filtre (Web Audio)",
       "transport": "webaudio"
     },
-    "keyxpand": {
-      "args": ["pivot", "direction"],
-      "description": "Expansion/contraction d'intervalles autour d'une note pivot",
+    "scale": {
+      "args": ["name", "blockkey"],
+      "default": "0,0",
+      "description": "Échelle microtonale — nom + note de base. scale(0,0) = retour tempérament égal.",
       "transport": "dispatcher"
     },
-    "scale": {
-      "args": ["name", "root"],
-      "description": "Gamme/tempérament — routé dispatcher (WASM ne supporte pas _scale)",
+    "rotate": {
+      "args": ["degrees"],
+      "default": 0,
+      "description": "Rotation cyclique — décale de N degrés dans l'alphabet (diatonique). rotate(2) : C→E, D→F, etc.",
+      "transport": "dispatcher"
+    },
+    "keyxpand": {
+      "args": ["pivot", "factor"],
+      "default": "0,1",
+      "description": "Expansion/contraction d'intervalles autour d'un pivot. factor=2 double, factor=-1 inverse, factor=0.5 contracte.",
       "transport": "dispatcher"
     }
   }

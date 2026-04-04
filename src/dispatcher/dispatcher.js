@@ -58,6 +58,16 @@ export class Dispatcher {
   }
 
   /**
+   * Set tuning/temperament data for runtime scale() lookup.
+   * @param {Object} tunings - full tunings.json content
+   * @param {Object} temperaments - full temperaments.json content
+   */
+  setTuningData(tunings, temperaments) {
+    this._tunings = tunings || {};
+    this._temperaments = temperaments || {};
+  }
+
+  /**
    * Set the control table (from transpiler output).
    * Maps CT0, CT1... to their assignments.
    */
@@ -211,10 +221,23 @@ export class Dispatcher {
           || Object.values(this.transports)[0];
 
         if (transport) {
-          // Symbolic transpose: shift token on the grid before sending
+          // Symbolic pitch operations: keyxpand → rotate (degree) → transpose (grid)
           let token = evt.token;
-          if (this.controlState.transpose && this._resolver) {
-            token = this._resolver.transposeToken(token, this.controlState.transpose);
+          if (this._resolver) {
+            if (this.controlState.keyxpand && this.controlState.keyxpand !== '0,1') {
+              const parts = String(this.controlState.keyxpand).split(',');
+              const pivot = parts[0]?.trim();
+              const factor = parseFloat(parts[1]);
+              if (pivot && !isNaN(factor)) {
+                token = this._resolver.keyxpandToken(token, pivot, factor);
+              }
+            }
+            if (this.controlState.rotate) {
+              token = this._resolver.rotateToken(token, this.controlState.rotate);
+            }
+            if (this.controlState.transpose) {
+              token = this._resolver.transposeToken(token, this.controlState.transpose);
+            }
           }
           transport.send({
             token,
@@ -291,7 +314,14 @@ export class Dispatcher {
       // Scoped end: restore previous state
       if (scopeInfo?.scope === 'end') {
         if (this._controlStack.length > 0) {
-          this.controlState = this._controlStack.pop();
+          const prev = this._controlStack.pop();
+          // If scale changed, re-apply the restored scale
+          if (prev.scale !== this.controlState.scale) {
+            this.controlState = prev;
+            this._applyScale(String(prev.scale || '0,0'));
+          } else {
+            this.controlState = prev;
+          }
         }
         return;
       }
@@ -318,5 +348,42 @@ export class Dispatcher {
     // String values (e.g. wave type) stored as-is, numeric values parsed
     const v = parseFloat(value);
     this.controlState[name] = isNaN(v) ? String(value) : v;
+
+    // scale() — reconfigure resolver tuning in real-time
+    if (name === 'scale') {
+      this._applyScale(String(value));
+    }
+  }
+
+  /** Apply a scale change to the resolver. */
+  _applyScale(value) {
+    if (!this._resolver) return;
+
+    // scale(0,0) → reset to initial tuning
+    if (value === '0,0' || value === '0') {
+      this._resolver.resetScale();
+      return;
+    }
+
+    // Parse "tuningName,blockkey" or "tuningName"
+    const parts = value.split(',');
+    const tuningName = parts[0]?.trim();
+    const blockkey = parts[1]?.trim() || null;
+
+    if (!tuningName || !this._tunings) return;
+
+    // Lookup tuning in tunings.json
+    const tuning = this._tunings[tuningName];
+    if (!tuning) {
+      console.warn(`[dispatcher] scale: unknown tuning "${tuningName}"`);
+      return;
+    }
+
+    // Lookup associated temperament in temperaments.json
+    const temperament = tuning.temperament && this._temperaments
+      ? this._temperaments[tuning.temperament]
+      : null;
+
+    this._resolver.reconfigure(tuning, temperament, blockkey);
   }
 }

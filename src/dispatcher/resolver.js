@@ -79,6 +79,73 @@ export class Resolver {
     // Transpose: build reverse lookup table (step → [{note, alt}])
     this._divisions = this.temperament?.divisions || null;
     this._stepToNames = this._buildStepTable();
+
+    // Save initial config for scale(0,0) reset
+    this._initialTuning = config.tuning || null;
+    this._initialTemperament = config.temperament || null;
+  }
+
+  /**
+   * Reconfigure tuning + temperament at runtime (for scale() control).
+   * Alphabet and octaves are preserved — only pitch mapping changes.
+   * @param {Object} tuning - from tunings.json entry
+   * @param {Object} temperament - from temperaments.json entry
+   * @param {string} [blockkey] - override baseNote (e.g. "C4" → baseNote="C", baseRegister=4)
+   */
+  reconfigure(tuning, temperament, blockkey) {
+    // Parse blockkey if provided: "C4" → note=C, register=4
+    if (blockkey && blockkey !== '0') {
+      const parsed = this._parseRegister(blockkey);
+      if (parsed) {
+        const { noteName, register } = this._parseNoteAlteration(parsed.body, parsed.register);
+        if (noteName) {
+          tuning = { ...tuning, baseNote: noteName, baseRegister: register };
+        }
+      }
+    }
+
+    // Re-apply tuning
+    this.degrees = tuning?.degrees || null;
+    this.ascending = tuning?.ascending || null;
+    this.descending = tuning?.descending || null;
+    this.alterationRatios = {};
+    if (tuning?.alterations) {
+      for (const [k, v] of Object.entries(tuning.alterations)) {
+        this.alterationRatios[k] = normalizeRatio(v);
+      }
+    }
+    this.baseHz = tuning?.baseHz || 440;
+    this.baseNote = tuning?.baseNote || 'A';
+    this.baseRegister = tuning?.baseRegister ?? 4;
+
+    // Re-apply temperament
+    this.temperament = temperament || null;
+    this._isParametric = this.temperament?.type === 'parametric';
+
+    if (this.temperament && !this._isParametric && this.temperament.ratios) {
+      this._ratios = normalizeRatios(this.temperament.ratios);
+      this._periodRatio = this.temperament.period_ratio || 2;
+    } else if (this._isParametric) {
+      this._period = this.temperament.period || 1200;
+      this._generator = this.temperament.generator || 700;
+      this._mapping = this.temperament.mapping || null;
+    }
+
+    // Recompute derived values
+    this._baseNoteIndex = this.notes.indexOf(this.baseNote);
+    this._baseDegreeStep = this._getStep(this._baseNoteIndex);
+    this._divisions = this.temperament?.divisions || null;
+    this._stepToNames = this._buildStepTable();
+    this._cache = {};
+  }
+
+  /**
+   * Reset to initial tuning (scale(0,0)).
+   */
+  resetScale() {
+    if (this._initialTuning || this._initialTemperament) {
+      this.reconfigure(this._initialTuning, this._initialTemperament);
+    }
   }
 
   /**
@@ -234,6 +301,101 @@ export class Resolver {
     }
 
     return body;
+  }
+
+  /**
+   * Rotate a token by N degrees in the alphabet (diatonic shift).
+   * Unlike transposeToken (grid shift), this shifts by position in notes[].
+   * rotate(2) on C in [C,D,E,F,G,A,B] → E. Alteration is preserved.
+   * Register wraps: rotate(1) on B4 → C5.
+   *
+   * @param {string} token - e.g. "C4", "D#5"
+   * @param {number} N - signed degree count
+   * @returns {string} rotated token, or original if not rotatable
+   */
+  rotateToken(token, N) {
+    if (!N || this.notes.length === 0) return token;
+
+    const parsed = this._parseRegister(token);
+    if (!parsed) return token;
+    const { noteName, alteration, register } = this._parseNoteAlteration(parsed.body, parsed.register);
+    if (noteName == null) return token;
+
+    const idx = this.notes.indexOf(noteName);
+    if (idx < 0) return token;
+
+    const len = this.notes.length;
+    const rawIdx = idx + N;
+    const newIdx = ((rawIdx % len) + len) % len;
+    const registerDelta = Math.floor(rawIdx / len) - Math.floor(idx / len);
+
+    const newNote = this.notes[newIdx];
+    return this._buildToken(newNote, alteration, register + registerDelta);
+  }
+
+  /**
+   * Expand/contract intervals around a pivot note.
+   * Formula: newStep = pivotStep + round((currentStep - pivotStep) × factor)
+   * factor=2 doubles intervals, factor=-1 inverts, factor=0.5 contracts.
+   * Wraps into [0, divisions) with register adjustment.
+   *
+   * @param {string} token - e.g. "C4", "D#5"
+   * @param {string} pivot - pivot note token e.g. "G4", "sa_4"
+   * @param {number} factor - multiplication factor
+   * @returns {string} expanded token, or original if not expandable
+   */
+  keyxpandToken(token, pivot, factor) {
+    if (factor === 1 || !this._divisions || this._stepToNames.size === 0) return token;
+
+    // Parse current token → step
+    const parsed = this._parseRegister(token);
+    if (!parsed) return token;
+    const { noteName, alteration, register } = this._parseNoteAlteration(parsed.body, parsed.register);
+    if (noteName == null) return token;
+
+    const degreeIndex = this.notes.indexOf(noteName);
+    if (degreeIndex < 0) return token;
+    const degs = this.degrees || this.ascending;
+    if (!degs || degreeIndex >= degs.length) return token;
+    const altOffset = (alteration && this.alterationSteps[alteration]) || 0;
+    const currentStep = degs[degreeIndex] + altOffset + register * this._divisions;
+
+    // Parse pivot → step
+    const pivotParsed = this._parseRegister(pivot);
+    if (!pivotParsed) return token;
+    const pivotNote = this._parseNoteAlteration(pivotParsed.body, pivotParsed.register);
+    if (pivotNote.noteName == null) return token;
+    const pivotDegIdx = this.notes.indexOf(pivotNote.noteName);
+    if (pivotDegIdx < 0 || pivotDegIdx >= degs.length) return token;
+    const pivotAltOff = (pivotNote.alteration && this.alterationSteps[pivotNote.alteration]) || 0;
+    const pivotStep = degs[pivotDegIdx] + pivotAltOff + pivotNote.register * this._divisions;
+
+    // Apply expansion: newStep = pivot + round((current - pivot) * factor)
+    const rawNewStep = pivotStep + Math.round((currentStep - pivotStep) * factor);
+    const newStep = ((rawNewStep % this._divisions) + this._divisions) % this._divisions;
+    const newRegister = Math.floor(rawNewStep / this._divisions);
+
+    // Reverse lookup
+    const candidates = this._stepToNames.get(newStep);
+    if (!candidates || candidates.length === 0) return token;
+
+    // Prefer natural, then smallest alteration
+    let best = candidates[0];
+    for (const c of candidates) {
+      if (!c.alt || c.alt === '') { best = c; break; }
+    }
+    if (best.alt && best.alt !== '') {
+      const dir = rawNewStep >= pivotStep ? 1 : -1;
+      const sorted = candidates
+        .filter(c => {
+          const s = this.alterationSteps[c.alt] || 0;
+          return dir > 0 ? s > 0 : s < 0;
+        })
+        .sort((a, b) => Math.abs(this.alterationSteps[a.alt] || 0) - Math.abs(this.alterationSteps[b.alt] || 0));
+      if (sorted.length) best = sorted[0];
+    }
+
+    return this._buildToken(best.note, best.alt, newRegister);
   }
 
   /**
