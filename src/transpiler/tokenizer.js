@@ -117,8 +117,11 @@ function tokenize(source, opts = {}) {
   function match(str) {
     return source.substring(i, i + str.length) === str;
   }
+  let _spaceBefore = true;  // track whitespace before current token (start of line = true)
+
   function emit(type, value) {
-    tokens.push({ type, value, line, col: col - (value ? value.length : 0) });
+    tokens.push({ type, value, line, col: col - (value ? value.length : 0), spaceBefore: _spaceBefore });
+    _spaceBefore = false;  // reset after emit
   }
 
   while (i < source.length) {
@@ -128,6 +131,7 @@ function tokenize(source, opts = {}) {
 
     // Whitespace (not newlines)
     if (ch === ' ' || ch === '\t' || ch === '\r') {
+      _spaceBefore = true;
       advance();
       continue;
     }
@@ -136,6 +140,7 @@ function tokenize(source, opts = {}) {
     if (ch === '\n') {
       advance();
       emit(T.NEWLINE, '\n');
+      _spaceBefore = true;  // start of new line
       continue;
     }
 
@@ -238,11 +243,15 @@ function tokenize(source, opts = {}) {
       )) {
         id += advance();
       }
-      // Check for hyphenated non-terminal: Tr-11, my-var
-      // Consume '-' and following chars if the result is a known LHS identifier
-      if (peek() === '-' && hyphenatedIds.size > 0) {
+      // Check for hyphenated identifier:
+      // 1. Hyphenated non-terminal (pre-scanned): Tr-11, my-var
+      // 2. Trailing hyphen on any identifier: do4-, mi4- (BP3 convention)
+      //    Rule: `-` immediately after an ident (no space) = part of the name
+      //    But `-` after space = REST (silence)
+      if (peek() === '-') {
         let candidate = id;
         let savedI = i, savedLine = line, savedCol = col;
+        // Try consuming hyphen(s) and following chars for hyphenated non-terminals
         while (peek() === '-') {
           candidate += advance(); // consume -
           while (i < source.length && (
@@ -256,10 +265,16 @@ function tokenize(source, opts = {}) {
           }
         }
         if (hyphenatedIds.has(candidate)) {
-          id = candidate; // accept the hyphenated form
+          id = candidate; // accept the hyphenated non-terminal form
         } else {
           // rollback — not a known non-terminal
           i = savedI; line = savedLine; col = savedCol;
+          // Check for trailing hyphen: ident immediately followed by `-`
+          // where `-` is NOT followed by `>` (arrow) and NOT part of a separator
+          if (peek() === '-' && peek(1) !== '>' && peek(1) !== '-') {
+            // Trailing hyphen — consume it as part of the identifier
+            id += advance();
+          }
         }
       }
       // Check keywords

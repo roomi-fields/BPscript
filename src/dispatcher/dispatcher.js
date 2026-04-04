@@ -31,11 +31,8 @@ export class Dispatcher {
     this._reDerive = null;    // function that returns new timed tokens
 
     // Control state — updated by control tokens during playback
-    this.controlState = {
-      vel: 64, chan: 1, pan: 64,
-      wave: 'triangle', attack: 20, release: 100,
-      detune: 0, filter: 0, filterQ: 1,
-    };
+    this._controlDefaults = {};  // set via setControlDefaults()
+    this.controlState = {};
     this._controlStack = []; // for scoped () controls with start/end pairs
 
     // CV state
@@ -48,6 +45,16 @@ export class Dispatcher {
    */
   addTransport(name, transport) {
     this.transports[name] = transport;
+  }
+
+  /**
+   * Set control defaults from controls.json runtime section.
+   * Called once at init. The dispatcher uses these to reset controlState.
+   * @param {Object} defaults - { vel: 64, chan: 1, wave: "triangle", ... }
+   */
+  setControlDefaults(defaults) {
+    this._controlDefaults = { ...defaults };
+    this.controlState = { ...defaults };
   }
 
   /**
@@ -92,11 +99,7 @@ export class Dispatcher {
       return;
     }
 
-    this.controlState = {
-      vel: 64, chan: 1, pan: 64,
-      wave: 'triangle', attack: 20, release: 100,
-      detune: 0, filter: 0, filterQ: 1,
-    };
+    this.controlState = { ...this._controlDefaults };
 
     this.events = timedTokens.map(t => ({
       token: t.token,
@@ -140,7 +143,7 @@ export class Dispatcher {
     this._loopOffset = 0;
     this.loop = loop;
     this._reDerive = reDerive;
-    this.controlState = { vel: 64, chan: 1 };
+    this.controlState = { ...this._controlDefaults };
 
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
@@ -208,7 +211,11 @@ export class Dispatcher {
           || Object.values(this.transports)[0];
 
         if (transport) {
-          const token = evt.token;
+          // Symbolic transpose: shift token on the grid before sending
+          let token = evt.token;
+          if (this.controlState.transpose && this._resolver) {
+            token = this._resolver.transposeToken(token, this.controlState.transpose);
+          }
           transport.send({
             token,
             startSec: this._loopOffset + evt.startSec,
@@ -245,7 +252,7 @@ export class Dispatcher {
   /** Start the next loop cycle */
   _nextCycle() {
     this._loopOffset += this.duration;
-    this.controlState = { vel: 64, chan: 1 };
+    this.controlState = { ...this._controlDefaults };
 
     // Re-derive: call bp3_produce again for a new sequence
     if (this._reDerive) {
@@ -308,22 +315,8 @@ export class Dispatcher {
   }
 
   _setControl(name, value) {
-    const cs = this.controlState;
-    const v = typeof value === 'number' ? value : parseFloat(value);
-    switch (name) {
-      case 'vel': cs.vel = v || 64; break;
-      case 'chan': cs.chan = v || 1; break;
-      case 'pan': cs.pan = v || 64; break;
-      case 'wave': cs.wave = String(value); break;
-      case 'attack': cs.attack = v || 20; break;
-      case 'release': cs.release = v || 100; break;
-      case 'detune': cs.detune = v || 0; break;
-      case 'filter': cs.filter = v || 0; break;
-      case 'filterQ': cs.filterQ = v || 1; break;
-      case 'transpose': cs.transpose = v || 0; break;
-      case 'ins': cs.ins = v || 0; break;
-      case 'staccato': cs.staccato = v || 0; break;
-      case 'legato': cs.legato = v || 0; break;
-    }
+    // String values (e.g. wave type) stored as-is, numeric values parsed
+    const v = parseFloat(value);
+    this.controlState[name] = isNaN(v) ? String(value) : v;
   }
 }

@@ -48,6 +48,12 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
   - `DESIGN_REPL.md` — REPL adapters and backtick architecture
   - `DESIGN_INTERFACES_BP3.md` — BP3 WASM interface (in/out specification)
 
+### Changelogs moteur (OBLIGATOIRE)
+Après toute modification dans `bp3-engine/csrc/`:
+- `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
+- `csrc/wasm/` (portage WASM) → mettre à jour `bp3-engine/CHANGELOG_WASM.md`
+- Nouveau bug/issue identifié → ajouter dans `test/grammars/FEEDBACK_BERNARD.md`
+
 ### Build & Test
 ```bash
 cd bp3-engine
@@ -73,6 +79,24 @@ Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + f
 - Flags: `[X==N]` → `/X=N/` (guard), `[X=N]` → `/X=N/` (mutation)
 - Flat alphabet: no OCT, all terminals as custom bols. Notes prefixed `bol` (C4→bolC4) for BP3 compat.
 - Block separator: `-----` between subgrammars with different modes
+
+### Sessions parallèles — Rôles par nom de session
+
+Si tu es lancé avec un nom de session (`-n`), lis immédiatement les fichiers mémoire correspondants pour récupérer tout le contexte accumulé.
+
+**Session `moteur-wasm`** — Moteur BP3 WASM, tests e2e, conformité scènes
+- Lis : `memory/session_2026_03_22.md`, `memory/session_2026_03_22b.md`, `memory/bpweb_engine.md`
+- Focus : bugs moteur, pipeline WASM (bp3_api.c, stubs), test_wasm_all.js, CONFORMITY.md, aux files
+
+**Session `transpileur`** — Parser, encoder, resolver, sounds
+- Lis : `memory/session_2026_03_22.md`, `memory/session_2026_03_17.md`, `memory/session_2026_03_17b.md`
+- Focus : tokenizer.js, parser.js, encoder.js, resolver.js, soundsResolver.js, lib/*.json, test/
+
+**Session `architecture`** — Design langage, pitch, acteurs, REPL, effets
+- Lis : `memory/session_2026_03_21.md`, `memory/session_2026_03_18.md`, `memory/design_actor.md`, `memory/design_pitch_architecture.md`
+- Focus : docs/DESIGN_*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json, concepts acteurs/REPL/effets
+
+Après lecture des fichiers mémoire, fais un résumé de ce que tu sais pour confirmer que tu as le contexte.
 
 ### RTFM — Indexed Knowledge Base
 

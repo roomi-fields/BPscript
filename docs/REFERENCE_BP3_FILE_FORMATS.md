@@ -65,18 +65,36 @@ gram#2[2] B --> e f
 
 ---
 
-### `-al.` — Alphabet
+### `-al.` — Alphabet + Homomorphisms
 
-Defines the terminal symbols available to the grammar.
+Defines both the terminal symbols AND the homomorphism mappings.
+Historically, homomorphisms were in separate `-ho.` files; now they are
+in the `-al.` file alongside the alphabet.
 
 **Structure:**
 ```
 -al.abc
-a b c d e f g
+*
+a --> a' --> a''
+b --> b'
+c
 ```
 
-Simple space-separated list of terminal names. Notes use the active convention
-(English: `C4 D4 E4`, French: `do3 re3 mi3`, Indian: `Sa Re Ga`).
+- First line after the prefix: the **homomorphism name** (`*` in this case)
+- Lines with `-->`: **cyclic mapping chains** — applying the homomorphism once
+  advances each terminal one step in the chain (`a` → `a'` → `a''`)
+- Lines without `-->`: simple terminals (no mapping, identity under the homomorphism)
+
+**Homomorphism behavior (confirmed by Bernard Bel, March 2026):**
+- Homomorphisms are applied **at display time** (`SearchOrigin()` in `DisplayArg.c`),
+  not during derivation
+- Slaves `(:X)` contain **pointers** to the master `(=X)`, not transformed copies
+- Homomorphisms do NOT influence rule selection or temporal structure
+- Two identical grammars with/without a homomorphism produce the **same temporal sequence**;
+  only terminal names change
+- Homomorphisms **stack**: `* *` = apply twice, `* * *` = three times
+- Cycles: `a --> a' --> a'' --> a` means applying 3 times returns to start
+- A terminal absent from the mapping table is unchanged (identity)
 
 **Note convention:** Set in the grammar or settings. Default is English.
 The French convention uses `do3` = middle C (MIDI 60), not `do4`.

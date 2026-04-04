@@ -186,14 +186,25 @@ C4~ D4 E4 ~C4                 -> bolC4& bolD4 bolE4 &bolC4
 ?1 A ?1 -> ?1 B ?1             -> ?1 A ?1 --> ?1 B ?1
 ```
 
-### Templates
+### Templates et transcriptions (homomorphismes)
 
-`$` -> `(=X)` et `&` -> `(:X)` :
+`$` → `(=X)` et `&` → `(:X)`. Les noms de transcription entre master et slave
+sont émis entre `(=X)` et `(:X)` dans la grammaire BP3.
+
 ```
-// BPscript                    -> BP3
-S <> $mel &mel                 -> S <-> (=mel) (:mel)
-$N14 &N14[sub:dhati]           -> (=N14) (:N14)*dhati
+// BPscript                              -> BP3
+S <> $mel &mel                           -> S <-> (=mel) (:mel)
+S -> $X tabla_stroke &X                  -> S --> (=X) tabla_stroke (:X)
+S -> $X * &X                             -> S --> (=X) * (:X)
+S -> $X * TR &X                          -> S --> (=X) * TR (:X)
+Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 ```
+
+**Étiquetage** : le fichier -ho. généré contient des étiquettes (`N@terminal`)
+au lieu de vraies résolutions. BP3 applique `Image()` normalement et émet les
+étiquettes dans les timed tokens. Le REPL résout les étiquettes post-dérivation.
+
+> Voir [DESIGN_HOMOMORPHISM_LABELING.md](DESIGN_HOMOMORPHISM_LABELING.md) pour le mécanisme complet.
 
 ### Contextes
 

@@ -16,7 +16,7 @@ import { normalizeRatio, normalizeRatios } from './ratios.js';
 export class Resolver {
   /**
    * @param {Object} config
-   * @param {Object} config.alphabet    - from alphabets.json: { notes: [], alterations: [] }
+   * @param {Object} config.alphabet    - from alphabets.json: { notes: [], alterations: { name: stepOffset, ... } }
    * @param {Object} config.octaves     - from octaves.json: { position, separator, registers, default }
    * @param {Object} config.tuning      - from tunings.json: { temperament, degrees, alterations, baseHz, baseNote, baseRegister }
    * @param {Object} config.temperament - from temperaments.json: { type?, period_ratio|period, divisions|generator, ratios|mapping }
@@ -26,7 +26,16 @@ export class Resolver {
 
     // Alphabet
     this.notes = config.alphabet?.notes || [];
-    this.alterations = config.alphabet?.alterations || [];
+    // Alphabet alterations: object { name: stepOffset } or legacy array
+    const rawAlts = config.alphabet?.alterations || {};
+    if (Array.isArray(rawAlts)) {
+      // Legacy array format — convert to names list
+      this.alterations = rawAlts;
+      this.alterationSteps = {};
+    } else {
+      this.alterations = Object.keys(rawAlts);
+      this.alterationSteps = rawAlts;  // { "#": 1, "b": -1, ... }
+    }
     this._noteSet = new Set(this.notes);
 
     // Octaves — use tuning's baseRegister as default if available
@@ -66,6 +75,41 @@ export class Resolver {
     // Compute base note offset for frequency calculation
     this._baseNoteIndex = this.notes.indexOf(this.baseNote);
     this._baseDegreeStep = this._getStep(this._baseNoteIndex);
+
+    // Transpose: build reverse lookup table (step → [{note, alt}])
+    this._divisions = this.temperament?.divisions || null;
+    this._stepToNames = this._buildStepTable();
+  }
+
+  /**
+   * Build reverse lookup: step → [{ note, alt }] for all note+alteration combos.
+   * Used by transposeToken() to find a name for a target step.
+   */
+  _buildStepTable() {
+    const table = new Map();
+    const degs = this.degrees || this.ascending;
+    if (!degs || !this._divisions) return table;
+
+    for (let i = 0; i < this.notes.length; i++) {
+      if (i >= degs.length) break;
+      const baseStep = degs[i];
+      const entries = this.alterationSteps || {};
+
+      for (const [altName, altOffset] of Object.entries(entries)) {
+        const step = ((baseStep + altOffset) % this._divisions + this._divisions) % this._divisions;
+        if (!table.has(step)) table.set(step, []);
+        table.get(step).push({ note: this.notes[i], alt: altName || null });
+      }
+
+      // Also add the bare note (no alteration) if "" is not in alterationSteps
+      if (!('' in entries)) {
+        const step = ((baseStep) % this._divisions + this._divisions) % this._divisions;
+        if (!table.has(step)) table.set(step, []);
+        table.get(step).push({ note: this.notes[i], alt: null });
+      }
+    }
+
+    return table;
   }
 
   /**
@@ -97,6 +141,99 @@ export class Resolver {
   setReference(hz) {
     this.baseHz = hz;
     this._cache = {};
+  }
+
+  /**
+   * Transpose a token by N steps on the temperament grid.
+   * Pre-resolver operation: returns a new token string, does NOT resolve to frequency.
+   *
+   * Algorithm:
+   *   1. Parse token → note + alteration + register
+   *   2. Forward: step = degrees[noteIdx] + alterationSteps[alt]
+   *   3. newStep = (step + N) % divisions
+   *   4. Reverse lookup: find note+alt for newStep
+   *   5. Reconstruct token with original register (±1 if wrap)
+   *
+   * @param {string} token - e.g. "C4", "D#5", "ga_komal"
+   * @param {number} N - signed step count (positive = up, negative = down)
+   * @returns {string} transposed token, or original if not transposable
+   */
+  transposeToken(token, N) {
+    if (!N || !this._divisions || this._stepToNames.size === 0) return token;
+
+    // Step 1: Parse
+    const parsed = this._parseRegister(token);
+    if (!parsed) return token;
+    const { noteName, alteration, register } = this._parseNoteAlteration(parsed.body, parsed.register);
+    if (noteName == null) return token;  // percussion or unrecognized — pass through
+
+    // Step 2: Forward — current step on the grid
+    const degreeIndex = this.notes.indexOf(noteName);
+    if (degreeIndex < 0) return token;
+    const degs = this.degrees || this.ascending;
+    if (!degs || degreeIndex >= degs.length) return token;
+    const altOffset = (alteration && this.alterationSteps[alteration]) || 0;
+    const currentStep = degs[degreeIndex] + altOffset;
+
+    // Step 3: New step (with wrap tracking for register adjustment)
+    const rawNewStep = currentStep + N;
+    const newStep = ((rawNewStep % this._divisions) + this._divisions) % this._divisions;
+    const registerDelta = Math.floor(rawNewStep / this._divisions) - Math.floor(currentStep / this._divisions);
+
+    // Step 4: Reverse lookup
+    const candidates = this._stepToNames.get(newStep);
+    if (!candidates || candidates.length === 0) return token;
+
+    // Choose: prefer sharp (N>0) or flat (N<0), or natural
+    let best = candidates[0];
+    for (const c of candidates) {
+      if (!c.alt || c.alt === '') { best = c; break; }  // natural note = best
+    }
+    if (best.alt && best.alt !== '') {
+      // No natural found — prefer smallest alteration in the right direction (# over ##, b over bb)
+      const sorted = candidates
+        .filter(c => {
+          const s = this.alterationSteps[c.alt] || 0;
+          return N > 0 ? s > 0 : s < 0;
+        })
+        .sort((a, b) => Math.abs(this.alterationSteps[a.alt] || 0) - Math.abs(this.alterationSteps[b.alt] || 0));
+      if (sorted.length) best = sorted[0];
+    }
+
+    // Step 5: Reconstruct token
+    const newRegister = register + registerDelta;
+    return this._buildToken(best.note, best.alt, newRegister);
+  }
+
+  /**
+   * Reconstruct a token string from note + alteration + register.
+   * Inverse of _parseRegister + _parseNoteAlteration.
+   */
+  _buildToken(noteName, alteration, register) {
+    // Build note+alteration part
+    let body = noteName;
+    if (alteration && alteration !== '') {
+      // Use separator _ for multi-char alterations (komal, tivra), direct for single-char (#, b)
+      if (alteration.length > 1) {
+        body = noteName + '_' + alteration;
+      } else {
+        body = noteName + alteration;
+      }
+    }
+
+    // Add register using octave convention
+    const oct = this.octaveConfig;
+    const regs = oct.registers || [];
+    if (register >= 0 && register < regs.length && regs[register] !== '') {
+      const sep = oct.separator || '';
+      if (oct.position === 'suffix') {
+        return body + sep + regs[register];
+      } else if (oct.position === 'prefix') {
+        return regs[register] + sep + body;
+      }
+    }
+
+    return body;
   }
 
   /**

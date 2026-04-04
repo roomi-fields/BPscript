@@ -6,7 +6,7 @@
  * Controls loaded from lib/controls.json — single source of truth.
  */
 
-import { loadLibsFromDirectives } from './libs.js';
+import { loadLibsFromDirectives, loadLib } from './libs.js';
 
 // Maps BPS mode names to BP3 mode names
 const MODE_MAP = {
@@ -30,6 +30,7 @@ let _ctIndex = 0;
 let _cvIndex = 0;
 let _cvNames = {};  // CV instance name → cvTable index mapping
 let _nonTerminals = new Set();
+let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 
 function encode(ast) {
   const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [] };
@@ -42,6 +43,7 @@ function encode(ast) {
   // Load control map from libs based on @ directives
   const libCtx = loadLibsFromDirectives(ast.directives);
   const CONTROL_MAP = libCtx.controlMap;
+  _bp3Native = libCtx.bp3NativeControls;
 
   // Build CV table from cvInstances
   if (ast.cvInstances) {
@@ -80,12 +82,29 @@ function encode(ast) {
     }
   }
 
+  // Build alphabet from DECLARATIONS (gate/trigger/cv) and loaded alphabets — never inferred
+  // BP3 reserved words must never appear in the alphabet (Error code 54)
+  const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
+  // 1. Explicit declarations: gate a:midi, trigger x:sc, cv lfo:webaudio
+  if (ast.declarations) {
+    for (const decl of ast.declarations) {
+      if (!BP3_RESERVED.has(decl.name)) output.alphabet.add(decl.name);
+    }
+  }
+  // 2. Loaded alphabet libraries: @alphabet.western:midi → symbols from lib
+  for (const [name, def] of Object.entries(libCtx.symbols)) {
+    if (!BP3_RESERVED.has(name)) output.alphabet.add(name);
+  }
+
   // Collect all non-terminals (symbols that appear as LHS of rules)
+  // Exception: in SUB/SUB1 mode, LHS symbols are also terminals (substitution
+  // rules replace patterns, and remaining symbols must be in the alphabet)
   _nonTerminals = new Set();
   for (const sub of ast.subgrammars) {
+    const isSub = sub.mode === 'sub' || sub.mode === 'sub1';
     for (const rule of sub.rules) {
       for (const el of rule.lhs) {
-        if (el.type === 'Symbol') _nonTerminals.add(el.name);
+        if (el.type === 'Symbol' && !isSub) _nonTerminals.add(el.name);
       }
     }
   }
@@ -105,28 +124,26 @@ function encode(ast) {
   // Alphabet is loaded via bp3_load_alphabet() — NOT via -ho reference in grammar.
   // The grammar stays clean, the runtime layer handles alphabet loading.
 
-  // Global preamble from directives
-  // BP3 only accepts certain items as preamble (between mode line and rules):
-  // _mm(), _striated, _smooth — everything else must be inline in RHS
-  const PREAMBLE_OK = new Set(['mm', 'striated', 'smooth']);
-
-  const preamble = [];    // Valid BP3 preamble items
+  // Global preamble and RHS prefix from @ directives
+  const subgrammarCtrl = libCtx.subgrammarControls;  // Map: name → { bp3, args }
+  const preamble = [];    // Valid BP3 preamble items (subgrammar directives)
   const rhsPrefix = [];   // Controls injected at start of first rule's RHS
 
   for (const dir of ast.directives) {
-    if (dir.name === 'mm' && dir.value != null) {
-      preamble.push(`_mm(${dir.value})`);
-    } else if (dir.name === 'striated') {
-      preamble.push('_striated');
-    } else if (dir.name === 'smooth') {
-      preamble.push('_smooth');
+    if (subgrammarCtrl.has(dir.name)) {
+      // Subgrammar directive used as global (@striated, @smooth, @mm:60)
+      const def = subgrammarCtrl.get(dir.name);
+      preamble.push(dir.value != null ? `${def.bp3}(${dir.value})` : def.bp3);
     } else if (dir.name === 'tempo' && dir.value) {
       // @tempo → goes to settings file, not grammar
     } else if (CONTROL_MAP[dir.name] && dir.value != null) {
-      // Controls as global directives → _script(CTN) for BP3
-      const ctName = `CT${_ctIndex++}`;
-      output.controlTable.push({ id: ctName, assignments: { [dir.name]: dir.value } });
-      rhsPrefix.push(`_script(${ctName})`);
+      if (_bp3Native.has(dir.name)) {
+        rhsPrefix.push(formatNativeValue(CONTROL_MAP[dir.name], dir.value));
+      } else {
+        const ctName = `CT${_ctIndex++}`;
+        output.controlTable.push({ id: ctName, assignments: { [dir.name]: dir.value } });
+        rhsPrefix.push(`_script(${ctName})`);
+      }
     }
   }
 
@@ -145,17 +162,15 @@ function encode(ast) {
     // Mode line
     lines.push(mode);
 
-    // Preamble: global (first subgrammar) + per-subgrammar qualifiers
+    // Preamble: global (first subgrammar) + per-subgrammar modifiers from @mode:X(modifiers)
     const subPreamble = si === 0 ? [...preamble] : [];
 
-    // Collect preamble qualifiers from first rule: destru, striated, smooth
-    const PREAMBLE_QUALS = ['destru', 'striated', 'smooth'];
-    if (sub.rules.length > 0) {
-      for (const q of sub.rules[0].qualifiers) {
-        for (const p of q.pairs) {
-          if (PREAMBLE_QUALS.includes(p.key) && p.value === true) {
-            subPreamble.push(`_${p.key}`);
-          }
+    // Modifiers from @mode:X(destru, mm:60, striated)
+    if (sub.modifiers) {
+      for (const mod of sub.modifiers) {
+        const def = subgrammarCtrl.get(mod.name);
+        if (def) {
+          subPreamble.push(mod.value === true ? def.bp3 : `${def.bp3}(${mod.value})`);
         }
       }
     }
@@ -180,11 +195,15 @@ function encode(ast) {
       // Weight
       const weight = getQualValue(rule.qualifiers, 'weight');
       if (weight !== null) {
-        const decrement = getQualDecrement(rule.qualifiers, 'weight');
-        if (decrement !== null) {
-          parts.push(`<${weight}-${decrement}>`);
+        if (weight === 'inf') {
+          parts.push('<inf>');
         } else {
-          parts.push(`<${weight}>`);
+          const decrement = getQualDecrement(rule.qualifiers, 'weight');
+          if (decrement !== null) {
+            parts.push(`<${weight}-${decrement}>`);
+          } else {
+            parts.push(`<${weight}>`);
+          }
         }
       }
 
@@ -225,19 +244,24 @@ function encode(ast) {
       const ruleTempoOp = getTempoOp(rule.qualifiers);
       if (ruleTempoOp) rhsPrefixParts.push(ruleTempoOp);
 
-      // Controls as rule qualifiers (transpose:-7, vel:80, chan:1) → CT tokens
-      const ruleAssignments = {};
+      // Controls as rule qualifiers — always suffix (written after RHS in BPscript)
+      const ruleNativeSuffix = [];
+      const ruleRuntimeAssignments = {};
       for (const q of rule.qualifiers) {
         for (const p of q.pairs) {
           if (CONTROL_MAP[p.key]) {
-            ruleAssignments[p.key] = p.value;
+            if (_bp3Native.has(p.key)) {
+              ruleNativeSuffix.push(formatNativeValue(CONTROL_MAP[p.key], p.value));
+            } else {
+              ruleRuntimeAssignments[p.key] = p.value;
+            }
           }
         }
       }
-      if (Object.keys(ruleAssignments).length > 0) {
+      if (Object.keys(ruleRuntimeAssignments).length > 0) {
         const ctName = `CT${_ctIndex++}`;
-        output.controlTable.push({ id: ctName, assignments: ruleAssignments });
-        rhsPrefixParts.push(`_script(${ctName})`);
+        output.controlTable.push({ id: ctName, assignments: ruleRuntimeAssignments });
+        ruleNativeSuffix.push(`_script(${ctName})`);
       }
 
       // RHS — inject global controls as prefix of first rule in first subgrammar
@@ -247,25 +271,44 @@ function encode(ast) {
         rhsStr = rhsPrefix.join(' ') + (rhsStr ? ' ' + rhsStr : '');
       }
 
-      // Runtime qualifier on rule (suffix): S -> C2 C2 (vel:100)
-      // Wraps the RHS with _script(CTn_start) ... _script(CTn_end)
+      // Runtime qualifier on rule: S -> C2 C2 (vel:100)
+      // Emits start/end pair: _script(CT0) ... _script(CT0_e)
       if (rule.runtimeQualifier) {
-        const assignments = {};
+        const rqNative = [];
+        const rqRuntime = {};
         for (const p of rule.runtimeQualifier.pairs) {
           if (CONTROL_MAP[p.key]) {
-            assignments[p.key] = p.value;
+            if (_bp3Native.has(p.key)) {
+              rqNative.push(formatNativeValue(CONTROL_MAP[p.key], p.value));
+            } else {
+              rqRuntime[p.key] = p.value;
+            }
           }
         }
-        if (Object.keys(assignments).length > 0) {
-          const ctStart = `CT${_ctIndex++}`;
-          const ctEnd = `CT${_ctIndex++}`;
-          output.controlTable.push({ id: ctStart, assignments, scope: 'start' });
-          output.controlTable.push({ id: ctEnd, assignments: {}, scope: 'end', restores: ctStart });
-          rhsStr = `_script(${ctStart}) ${rhsStr} _script(${ctEnd})`;
+        const rqPrefix = [...rqNative];
+        let rqSuffix = null;
+        if (Object.keys(rqRuntime).length > 0) {
+          const ctName = `CT${_ctIndex++}`;
+          const ctEndName = `${ctName}_e`;
+          output.controlTable.push({ id: ctName, assignments: rqRuntime, scope: 'start' });
+          output.controlTable.push({ id: ctEndName, assignments: {}, scope: 'end' });
+          rqPrefix.push(`_script(${ctName})`);
+          rqSuffix = `_script(${ctEndName})`;
+        }
+        if (rqPrefix.length > 0) {
+          rhsStr = rqPrefix.join(' ') + ' ' + rhsStr;
+        }
+        if (rqSuffix) {
+          rhsStr = rhsStr + ' ' + rqSuffix;
         }
       }
 
       parts.push(rhsStr);
+
+      // Engine controls that go after RHS (goto, failed, repeat, stop)
+      if (ruleNativeSuffix.length > 0) {
+        parts.push(...ruleNativeSuffix);
+      }
 
       // RHS flags [phase=2, Atrans, K1] → /phase=2/ /Atrans/ /K1/
       if (rule.flags && rule.flags.length > 0) {
@@ -285,6 +328,16 @@ function encode(ast) {
     if (si < ast.subgrammars.length - 1) {
       lines.push('------------');
     }
+  }
+
+  // Optional TEMPLATES: section
+  if (ast.templates && ast.templates.length > 0) {
+    lines.push('TEMPLATES:');
+    for (const entry of ast.templates) {
+      const body = encodeTemplateBody(entry.body);
+      lines.push(`[${entry.index}] ${entry.scale} ${body}`);
+    }
+    lines.push('------------');
   }
 
   output.grammar = lines.join('\n');
@@ -311,18 +364,49 @@ function generateSettingsJSON(libCtx, directives) {
     settings[k] = { ...v };
   }
 
-  // Apply overrides from @ directives
+  // NoteConvention is ALWAYS 0 — all terminals are silent sound objects
+  const directiveMap = settingsLib.directive_map || {};
+
+  // Apply overrides from @ directives (in order — last wins)
   for (const dir of directives) {
-    // NoteConvention from alphabet library
-    if (settingsLib.note_conventions?.[dir.name] != null) {
-      settings.NoteConvention.value = String(settingsLib.note_conventions[dir.name]);
+    // @settings.name — load a settings file and merge (same format as BP3 -se. JSON)
+    if (dir.name === 'settings' && dir.subkey) {
+      const settingsFile = loadLib('settings', dir.subkey) || loadLib(dir.subkey);
+      if (settingsFile) {
+        for (const [k, v] of Object.entries(settingsFile)) {
+          if (k.startsWith('_') || k === 'name' || k === 'description' || k === 'version') continue;
+          if (typeof v === 'object' && v.value != null) {
+            settings[k] = { ...v };
+          }
+        }
+      }
     }
-    // @striated / @smooth
-    if (dir.name === 'striated') settings.Nature_of_time.value = '1';
-    if (dir.name === 'smooth') settings.Nature_of_time.value = '0';
-    // @vel:N
-    if (dir.name === 'vel' && dir.value != null) settings.DeftVelocity.value = String(dir.value);
+    const mapping = directiveMap[dir.name];
+    if (mapping) {
+      for (const [settingKey, settingVal] of Object.entries(mapping)) {
+        if (settings[settingKey]) {
+          settings[settingKey].value = settingVal === '@value' ? String(dir.value) : settingVal;
+        }
+      }
+    }
   }
+
+  // Subgrammar modifiers that affect settings (striated/smooth from @mode:X(...))
+  for (const dir of directives) {
+    if (dir.modifiers) {
+      for (const mod of dir.modifiers) {
+        if (mod.name === 'striated') settings.Nature_of_time.value = '1';
+        if (mod.name === 'smooth') settings.Nature_of_time.value = '0';
+        if (mod.name === 'mm' && mod.value !== true) {
+          // mm affects Pclock/Qclock — handled separately
+        }
+      }
+    }
+  }
+
+  // WASM invariants — always forced, never overridden by directives or settings files
+  settings.NoteConvention.value = '0';   // always silent sound objects
+  settings.DisplayItems.value = '1';     // always produce output
 
   return JSON.stringify(settings);
 }
@@ -333,11 +417,51 @@ function generateSettingsJSON(libCtx, directives) {
  * BP3 treats them as opaque names; the dispatcher does the sound mapping.
  */
 function generateAlphabetFile(libCtx, directives, customTerminals) {
-  if (!customTerminals || customTerminals.size === 0) return null;
+  if ((!customTerminals || customTerminals.size === 0) &&
+      Object.keys(libCtx.transcriptions).length === 0) return null;
+
   const lines = ['// Generated by BPScript'];
+
+  const hasTranscriptions = Object.keys(libCtx.transcriptions).length > 0;
+
+  // Collect all sections from all transcriptions
+  const allSections = {};  // sectionName → { from: to, ... }
+  for (const [, table] of Object.entries(libCtx.transcriptions)) {
+    if (table.sections) {
+      // Multi-sections: { "*": {...}, "TR": {...} }
+      for (const [secName, mappings] of Object.entries(table.sections)) {
+        allSections[secName] = { ...(allSections[secName] || {}), ...mappings };
+      }
+    } else if (table.mappings) {
+      // Single section → implicit *
+      allSections['*'] = { ...(allSections['*'] || {}), ...table.mappings };
+    }
+  }
+
+  // Emit default section (*) with terminals + mappings
+  if (hasTranscriptions || Object.keys(allSections).length > 0) {
+    lines.push('*');
+  }
   for (const t of customTerminals) {
     lines.push(t);
   }
+  // Add default section mappings if any
+  if (allSections['*']) {
+    for (const [from, to] of Object.entries(allSections['*'])) {
+      lines.push(`${from} --> ${to}`);
+    }
+  }
+
+  // Emit named sections
+  for (const [secName, mappings] of Object.entries(allSections)) {
+    if (secName === '*') continue;  // already emitted above
+    lines.push('-----');
+    lines.push(secName);
+    for (const [from, to] of Object.entries(mappings)) {
+      lines.push(`${from} --> ${to}`);
+    }
+  }
+
   return lines.join('\n');
 }
 
@@ -398,48 +522,50 @@ function encodeRhs(elements, alphabet, controlMap) {
 function encodeRhsElement(el, alphabet, controlMap) {
   const raw = encodeRhsElementInner(el, alphabet, controlMap);
   let result = raw;
-  // Apply tempo operator prefix if present: A[/2] → /2 A
+  // Legacy el.tempoOp from polymetric parser
   if (el.tempoOp) {
     result = `${el.tempoOp.operator}${el.tempoOp.value} ${result}`;
   }
-  // Apply per-element control qualifiers
-  // SUFFIX A(vel:60) → A _script(CTn) (runtime control after element)
-  // PREFIX [tempo:2]A → engine qualifier before element
-  if (el.controlQualifiers && el.controlQualifiers.length > 0) {
-    const prefixTokens = [];
-    const suffixTokens = [];
-    for (const q of el.controlQualifiers) {
-      // Collect all assignments from this qualifier bracket
-      const assignments = {};
-      for (const p of q.pairs) {
-        if (controlMap[p.key]) {
-          assignments[p.key] = p.value;
-        }
-      }
-      if (Object.keys(assignments).length > 0) {
-        const ctName = `CT${_ctIndex++}`;
-        _output.controlTable.push({ id: ctName, assignments });
-        const scriptToken = `_script(${ctName})`;
-        if (el.controlPrefix && q === el.controlQualifiers[0]) {
-          prefixTokens.push(scriptToken);
-        } else {
-          suffixTokens.push(scriptToken);
-        }
+
+  // SUFFIX qualifiers: A[weight:50], A(vel:80) — always after the element
+  // [] and () are ALWAYS suffix in BPscript. Use ![] or !() for free positioning.
+  const suffixTokens = [];
+  if (el.suffixQualifiers) {
+    for (const q of el.suffixQualifiers) {
+      encodeQualifierTokens(q, controlMap, suffixTokens);
+    }
+  }
+
+  if (suffixTokens.length > 0) result = result + ' ' + suffixTokens.join(' ');
+  return result;
+}
+
+// Encode a single qualifier into tokens (engine native or runtime _script)
+function encodeQualifierTokens(q, controlMap, tokens) {
+  if (q.tempoOp) {
+    tokens.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
+  }
+  const runtimeAssignments = {};
+  for (const p of (q.pairs || [])) {
+    if (controlMap[p.key]) {
+      if (_bp3Native.has(p.key)) {
+        tokens.push(formatNativeValue(controlMap[p.key], p.value));
+      } else {
+        runtimeAssignments[p.key] = p.value;
       }
     }
-    if (prefixTokens.length > 0) result = prefixTokens.join(' ') + ' ' + result;
-    if (suffixTokens.length > 0) result = result + ' ' + suffixTokens.join(' ');
   }
-  return result;
+  if (Object.keys(runtimeAssignments).length > 0) {
+    const ctName = `CT${_ctIndex++}`;
+    _output.controlTable.push({ id: ctName, assignments: runtimeAssignments });
+    tokens.push(`_script(${ctName})`);
+  }
 }
 
 function encodeRhsElementInner(el, alphabet, controlMap) {
   switch (el.type) {
     case 'Symbol':
-      // Add terminal symbols to alphabet (not non-terminals like S, Bass, Phrase1)
-      if (!_nonTerminals.has(el.name)) {
-        alphabet.add(el.name);
-      }
+      // Alphabet is built from declarations and loaded libs — no inference
       return el.name;
 
     case 'SymbolCall': {
@@ -461,7 +587,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return '_';
 
     case 'UndeterminedRest':
-      return '...';
+      return '_rest';
 
     case 'Period':
       return '.';
@@ -473,6 +599,14 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return 'lambda';
 
     case 'Control': {
+      if (_bp3Native.has(el.name)) {
+        // Engine control → BP3 native format
+        const bp3Name = controlMap[el.name] || `_${el.name}`;
+        if (el.args.length === 0) return bp3Name;
+        const argStr = el.args.map(a => typeof a === 'string' ? a.replace(/_/g, ' ') : a).join(',');
+        return `${bp3Name}(${argStr})`;
+      }
+      // Runtime control → _script(CTn)
       const assignments = {};
       if (el.args.length === 0) {
         assignments[el.name] = true;
@@ -502,7 +636,9 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return `<<W${el.name}>>`;
 
     case 'Polymetric': {
-      const voiceStrs = el.voices.map(v => v.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' '));
+      const voiceStrs = el.voices.map(v => {
+        return v.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
+      });
       // Check for speed qualifier → ratio prefix (polymetric ratio)
       const speed = getQualValue(el.qualifiers, 'speed');
       let inner = voiceStrs.join(',');
@@ -515,20 +651,34 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (tempoOp) {
         result = `${tempoOp} ${result}`;
       }
-      // Runtime qualifier on group: {A B}(vel:100) → _script(CTn) {A B} _script(CTn_end)
+      // Runtime qualifier on group: {A B}(vel:100) → _script(CTn) {A B} _script(CTn_e)
       if (el.runtimeQualifier) {
-        const assignments = {};
+        const gNative = [];
+        const gRuntime = {};
         for (const p of el.runtimeQualifier.pairs) {
           if (controlMap[p.key]) {
-            assignments[p.key] = p.value;
+            if (_bp3Native.has(p.key)) {
+              gNative.push(formatNativeValue(controlMap[p.key], p.value));
+            } else {
+              gRuntime[p.key] = p.value;
+            }
           }
         }
-        if (Object.keys(assignments).length > 0) {
-          const ctStart = `CT${_ctIndex++}`;
-          const ctEnd = `CT${_ctIndex++}`;
-          _output.controlTable.push({ id: ctStart, assignments, scope: 'start' });
-          _output.controlTable.push({ id: ctEnd, assignments: {}, scope: 'end', restores: ctStart });
-          result = `_script(${ctStart}) ${result} _script(${ctEnd})`;
+        const grpPrefix = [...gNative];
+        let grpSuffix = null;
+        if (Object.keys(gRuntime).length > 0) {
+          const ctName = `CT${_ctIndex++}`;
+          const ctEndName = `${ctName}_e`;
+          _output.controlTable.push({ id: ctName, assignments: gRuntime, scope: 'start' });
+          _output.controlTable.push({ id: ctEndName, assignments: {}, scope: 'end' });
+          grpPrefix.push(`_script(${ctName})`);
+          grpSuffix = `_script(${ctEndName})`;
+        }
+        if (grpPrefix.length > 0) {
+          result = grpPrefix.join(' ') + ' ' + result;
+        }
+        if (grpSuffix) {
+          result = result + ' ' + grpSuffix;
         }
       }
       return result;
@@ -580,6 +730,44 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
     case 'OutTimeObject':
       return `<<${el.name}>>`;
 
+    case 'InstantControl': {
+      const q = el.qualifier;
+      const parts = [];
+
+      if (q.type === 'Qualifier') {
+        // Engine qualifier: ![retro] → _retro, ![rotate:2] → _rotate(2)
+        if (q.tempoOp) {
+          parts.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
+        }
+        for (const p of q.pairs) {
+          if (controlMap[p.key] && _bp3Native.has(p.key)) {
+            parts.push(formatNativeValue(controlMap[p.key], p.value));
+          }
+        }
+      }
+
+      if (q.type === 'RuntimeQualifier') {
+        // Separate engine native from runtime — same as per-element logic
+        const runtimeAssignments = {};
+        for (const p of q.pairs) {
+          if (controlMap[p.key]) {
+            if (_bp3Native.has(p.key)) {
+              parts.push(formatNativeValue(controlMap[p.key], p.value));
+            } else {
+              runtimeAssignments[p.key] = p.value;
+            }
+          }
+        }
+        if (Object.keys(runtimeAssignments).length > 0) {
+          const ctName = `CT${_ctIndex++}`;
+          _output.controlTable.push({ id: ctName, assignments: runtimeAssignments });
+          parts.push(`_script(${ctName})`);
+        }
+      }
+
+      return parts.join(' ');
+    }
+
     case 'BacktickStandalone':
     case 'BacktickInline': {
       // Backticks → encoded as terminal for BP3 (dispatcher handles at runtime)
@@ -627,6 +815,31 @@ function annotateUnbalancedBraces(rules) {
       }
     }
   }
+}
+
+// Format a native engine control value for BP3: spaces → commas, _→space
+function formatNativeValue(bp3Name, value) {
+  if (value === true) return bp3Name;
+  const str = String(value).replace(/\s+/g, ',');
+  return `${bp3Name}(${str})`;
+}
+
+// Encode template body: ? → _, ($N ...) → (@N ...)
+function encodeTemplateBody(elements) {
+  return elements.map(el => {
+    switch (el.type) {
+      case 'TemplateWildcard':
+        return '_'.repeat(el.count);
+      case 'TemplatePeriod':
+        return '.';
+      case 'TemplateBracket': {
+        const inner = el.body.length > 0 ? encodeTemplateBody(el.body) : '';
+        return `(@${el.index} ${inner})`;
+      }
+      default:
+        return '';
+    }
+  }).join('');
 }
 
 function getQualValueFromElement(el, key) {

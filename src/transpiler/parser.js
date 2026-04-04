@@ -52,6 +52,7 @@ function parse(tokens) {
 
     // Parse header: directives, declarations, macros, backticks
     let initialMode = null;
+    let initialModifiers = null;
     while (!atEnd() && !at(T.SEPARATOR)) {
       skipNewlines();
       if (atEnd()) break;
@@ -61,6 +62,7 @@ function parse(tokens) {
         if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
           initialMode = dir.runtime;
+          initialModifiers = dir.modifiers || null;
         } else {
           scene.directives.push(dir);
         }
@@ -84,7 +86,14 @@ function parse(tokens) {
     libCtx = loadLibsFromDirectives(scene.directives);
 
     // Parse subgrammars
-    scene.subgrammars = parseSubgrammars(initialMode);
+    scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
+
+    // Parse optional @templates section
+    skipNewlines();
+    scene.templates = null;
+    if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'templates') {
+      scene.templates = parseTemplateSection();
+    }
 
     return scene;
   }
@@ -155,7 +164,25 @@ function parse(tokens) {
       }
     }
 
-    if (at(T.LPAREN)) {
+    // Mode modifiers: @mode:random(destru, smooth, mm:60)
+    let modifiers = null;
+    if (name === 'mode' && at(T.LPAREN)) {
+      advance();
+      modifiers = [];
+      while (!at(T.RPAREN) && !atEnd()) {
+        const modName = expect(T.IDENT).value;
+        let modValue = true;
+        if (at(T.COLON)) {
+          advance();
+          if (at(T.INT)) modValue = Number(advance().value);
+          else if (at(T.FLOAT)) modValue = Number(advance().value);
+          else if (at(T.IDENT)) modValue = advance().value;
+        }
+        modifiers.push({ name: modName, value: modValue });
+        if (at(T.COMMA)) advance();
+      }
+      expect(T.RPAREN);
+    } else if (at(T.LPAREN)) {
       // Alias resolution: @western(A:La)
       advance();
       aliases = [];
@@ -169,7 +196,7 @@ function parse(tokens) {
       expect(T.RPAREN);
     }
 
-    return { type: 'Directive', name, subkey, runtime, value, aliases, line: tok.line };
+    return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };
   }
 
   // ============================================================
@@ -331,24 +358,30 @@ function parse(tokens) {
   // Couche 2 — Subgrammars
   // ============================================================
 
-  function parseSubgrammars(initialMode) {
+  function parseSubgrammars(initialMode, initialModifiers) {
     const subs = [];
     let index = 1;
     let safety = 0;
-    let currentMode = initialMode || null;  // inherits across sub-grammars until overridden
+    let currentMode = initialMode || null;
+    let currentModifiers = initialModifiers || null;
 
     while (!atEnd()) {
       if (++safety > 200) throw new ParseError('Subgrammar parse loop safety limit', current());
       skipNewlines();
       if (atEnd()) break;
 
-      // Parse @mode:X directive at the start of a sub-grammar block
+      // Parse @mode:X(modifiers) directive at the start of a sub-grammar block
+      // Stop if @templates — that's a separate section after all subgrammars
       let blockMode = currentMode;
+      let blockModifiers = currentModifiers;
       while (at(T.AT)) {
+        if (peek(1).type === T.IDENT && peek(1).value === 'templates') break;
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
           blockMode = dir.runtime;  // @mode:random → runtime='random'
           currentMode = blockMode;  // persists to following blocks
+          blockModifiers = dir.modifiers || null;
+          currentModifiers = blockModifiers;
         }
         skipNewlines();
       }
@@ -368,7 +401,7 @@ function parse(tokens) {
       }
 
       if (rules.length > 0) {
-        subs.push({ type: 'Subgrammar', index: index++, rules, mode: blockMode });
+        subs.push({ type: 'Subgrammar', index: index++, rules, mode: blockMode, modifiers: blockModifiers });
       } else {
         break; // No rules found → stop parsing subgrammars
       }
@@ -380,6 +413,79 @@ function parse(tokens) {
     }
 
     return subs;
+  }
+
+  // ============================================================
+  // Templates section
+  // ============================================================
+
+  function parseTemplateSection() {
+    expect(T.AT);       // @
+    expect(T.IDENT);    // templates
+    skipNewlines();
+
+    const entries = [];
+    while (!atEnd()) {
+      skipNewlines();
+      if (atEnd()) break;
+      if (!at(T.LBRACKET)) break;
+
+      // [N] scale body
+      expect(T.LBRACKET);
+      const index = Number(expect(T.INT).value);
+      expect(T.RBRACKET);
+
+      // Scale factor: /N or *N/N
+      let scale;
+      if (at(T.SLASH)) {
+        advance();
+        scale = '/' + expect(T.INT).value;
+      } else if (at(T.STAR)) {
+        advance();
+        const num = expect(T.INT).value;
+        expect(T.SLASH);
+        const denom = expect(T.INT).value;
+        scale = '*' + num + '/' + denom;
+      } else {
+        scale = '/1';  // default
+      }
+
+      // Template body — until newline/EOF
+      const body = parseTemplateBody();
+      entries.push({ type: 'TemplateEntry', index, scale, body });
+      skipNewlines();
+    }
+    return entries;
+  }
+
+  function parseTemplateBody() {
+    const elements = [];
+    while (!atAny(T.NEWLINE, T.EOF, T.RPAREN)) {
+      // Wildcard: ? or ????
+      if (at(T.QUESTION)) {
+        let count = 0;
+        while (at(T.QUESTION)) { advance(); count++; }
+        elements.push({ type: 'TemplateWildcard', count });
+      }
+      // Period
+      else if (at(T.PERIOD)) {
+        advance();
+        elements.push({ type: 'TemplatePeriod' });
+      }
+      // Bracket: ($N body)
+      else if (at(T.LPAREN)) {
+        advance();
+        expect(T.DOLLAR);
+        const idx = Number(expect(T.INT).value);
+        const body = parseTemplateBody();  // recursive — stops at RPAREN
+        expect(T.RPAREN);
+        elements.push({ type: 'TemplateBracket', index: idx, body });
+      }
+      else {
+        break;
+      }
+    }
+    return elements;
   }
 
   function isRuleStart() {
@@ -476,6 +582,10 @@ function parse(tokens) {
     // If IDENT followed by = + - ] , → flag
     if (t2.type === T.EQUALS || t2.type === T.PLUS || t2.type === T.REST ||
         t2.type === T.RBRACKET || t2.type === T.COMMA) return true;
+    // Trailing-dash absorbed by tokenizer: [times-1] → IDENT("times-") INT(1)
+    // Detect IDENT ending with "-" followed by INT → flag mutation
+    if (t1.value.endsWith('-') && t2.type === T.INT) return true;
+    if (t1.value.endsWith('+') && t2.type === T.INT) return true;
     return false;
   }
 
@@ -483,9 +593,19 @@ function parse(tokens) {
     expect(T.LBRACKET);
     const flags = [];
     while (!at(T.RBRACKET) && !atEnd()) {
-      const flag = expect(T.IDENT).value;
+      let rawFlag = expect(T.IDENT).value;
       let operator = null, value = null;
-      if (at(T.EQUALS)) {
+      // Trailing-dash absorbed by tokenizer: [times-1] → IDENT("times-") INT(1)
+      // Detect IDENT ending with "-" or "+" and split off the operator
+      if (rawFlag.endsWith('-') && at(T.INT)) {
+        operator = '-';
+        rawFlag = rawFlag.slice(0, -1);
+        value = Number(advance().value);
+      } else if (rawFlag.endsWith('+') && at(T.INT)) {
+        operator = '+';
+        rawFlag = rawFlag.slice(0, -1);
+        value = Number(advance().value);
+      } else if (at(T.EQUALS)) {
         operator = '='; advance();
         if (at(T.INT)) value = Number(advance().value);
         else if (at(T.IDENT)) value = advance().value;
@@ -502,7 +622,7 @@ function parse(tokens) {
         else throw new ParseError('Expected flag value', current());
       }
       // else: bare flag [Atrans] → operator=null, value=null
-      flags.push({ type: 'FlagExpr', flag, operator, value });
+      flags.push({ type: 'FlagExpr', flag: rawFlag, operator, value });
       if (at(T.COMMA)) advance();
     }
     expect(T.RBRACKET);
@@ -517,12 +637,21 @@ function parse(tokens) {
     // Guard syntax: [flag-1], [phase==1], [Ideas]
     advance(); // consume [
 
-    const flag = expect(T.IDENT).value;
+    let flag = expect(T.IDENT).value;
 
     let result;
 
+    // Trailing-dash absorbed by tokenizer: [times-1] → IDENT("times-") INT(1)
+    if (flag.endsWith('-') && at(T.INT)) {
+      const val = Number(advance().value);
+      flag = flag.slice(0, -1);
+      result = { type: 'Guard', flag, operator: '-', value: val, mutates: true };
+    } else if (flag.endsWith('+') && at(T.INT)) {
+      const val = Number(advance().value);
+      flag = flag.slice(0, -1);
+      result = { type: 'Guard', flag, operator: '+', value: val, mutates: true };
     // Test+mutation: count-1, count+1
-    if (at(T.REST)) { // - (REST token doubles as minus)
+    } else if (at(T.REST)) { // - (REST token doubles as minus)
       advance();
       const val = Number(expect(T.INT).value);
       result = { type: 'Guard', flag, operator: '-', value: val, mutates: true };
@@ -595,12 +724,18 @@ function parse(tokens) {
         return { type: 'Context', positive: false, symbols: ['?'] };
       }
 
-      // #symbol (single) or #(group) — group can contain {, }, ,
+      // #symbol (single) or #(group) — group can contain {, }, , and wildcards ?N
       if (at(T.LPAREN)) {
         advance();
         const symbols = [];
         while (!at(T.RPAREN) && !atEnd()) {
           if (at(T.IDENT)) symbols.push(advance().value);
+          else if (at(T.QUESTION)) {
+            advance();
+            // ?N wildcard in context
+            if (at(T.INT)) symbols.push('?' + advance().value);
+            else symbols.push('?');
+          }
           else if (at(T.LBRACE)) { symbols.push(advance().value); }
           else if (at(T.RBRACE)) { symbols.push(advance().value); }
           else if (at(T.COMMA)) { symbols.push(advance().value); }
@@ -617,11 +752,16 @@ function parse(tokens) {
       }
     }
 
-    // Positive context: (A B) — can contain {, }, ,
+    // Positive context: (A B) — can contain {, }, , and wildcards ?N
     expect(T.LPAREN);
     const symbols = [];
     while (!at(T.RPAREN) && !atEnd()) {
       if (at(T.IDENT)) symbols.push(advance().value);
+      else if (at(T.QUESTION)) {
+        advance();
+        if (at(T.INT)) symbols.push('?' + advance().value);
+        else symbols.push('?');
+      }
       else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) symbols.push(advance().value);
       else break;
     }
@@ -670,21 +810,20 @@ function parse(tokens) {
     const elements = [];
     let safety = 0;
     while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT, T.GATE, T.TRIGGER, T.CV)) {
-      // Stop at [ unless it's a tempo operator or per-element control qualifier
-      if (at(T.LBRACKET) && !isTempoOpQualifier() && !isPerElementQualifier()) break;
-      // Stop at ( if it's a rule-scope runtime qualifier at end of RHS
-      if (isRuntimeQualifier() && isEndOfRhs()) break;
+      // [] or () with SPACE before → not attached to previous element → end of RHS
+      // (rule-level qualifiers/flags handled by parseRule after this returns)
+      if (at(T.LBRACKET) && current().spaceBefore) break;
+      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifier()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
-      // But stop if } or , starts a new rule (followed by ->)
       if (atAny(T.RBRACE, T.COMMA) && isNewRuleAhead()) break;
       if (at(T.RBRACE)) {
         advance();
         const rawBrace = { type: 'RawBrace', value: '}' };
-        // Check for [speed:N] qualifier on closing brace
-        if (at(T.LBRACKET) && isPolymetricQualifier()) {
+        // Suffix qualifier on closing brace: }[speed:N] (no space)
+        if (at(T.LBRACKET) && !current().spaceBefore && isPolymetricQualifier()) {
           rawBrace.qualifiers = [];
-          while (at(T.LBRACKET) && isPolymetricQualifier()) {
+          while (at(T.LBRACKET) && !current().spaceBefore && isPolymetricQualifier()) {
             rawBrace.qualifiers.push(parseQualifier());
           }
         }
@@ -702,39 +841,19 @@ function parse(tokens) {
         continue;
       }
 
-      // PREFIX engine qualifier: [tempo:2]A (engine [] only, no () prefix)
-      let prefixQuals = null;
-      if (at(T.LBRACKET) && isPerElementQualifier()) {
-        prefixQuals = parseQualifier();
-      }
-
       const el = parseRhsElement();
-      if (!el) {
-        // Prefix without element — shouldn't happen but be safe
-        break;
-      }
+      if (!el) break;
 
-      // Attach prefix qualifiers (from engine [tempo:2]A)
-      if (prefixQuals) {
-        el.controlQualifiers = el.controlQualifiers || [];
-        el.controlQualifiers.unshift(prefixQuals);
-        el.controlPrefix = true; // mark as prefix for encoder
-      }
-
-      // SUFFIX tempo operator: A[/2]
-      if (at(T.LBRACKET) && isTempoOpQualifier()) {
-        const qual = parseQualifier();
-        el.tempoOp = qual.tempoOp;
-      }
-
-      // SUFFIX qualifier: A[speed:2] (engine) or A(vel:60) (runtime)
-      // But NOT if () is at end of RHS — that's a rule-scope qualifier
-      if (at(T.LBRACKET) && isPerElementQualifier()) {
-        el.controlQualifiers = el.controlQualifiers || [];
-        el.controlQualifiers.push(parseQualifier());
-      } else if (isRuntimeQualifier() && !isEndOfRhs()) {
-        el.controlQualifiers = el.controlQualifiers || [];
-        el.controlQualifiers.push(parseRuntimeQualifier());
+      // SUFFIX qualifiers: A[X] or A(X) — no space before [ or (
+      // [] and () are ALWAYS suffix (attached to the element that precedes them)
+      while ((at(T.LBRACKET) && !current().spaceBefore) ||
+             (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier())) {
+        el.suffixQualifiers = el.suffixQualifiers || [];
+        if (at(T.LBRACKET)) {
+          el.suffixQualifiers.push(parseQualifier());
+        } else {
+          el.suffixQualifiers.push(parseRuntimeQualifier());
+        }
       }
 
       elements.push(el);
@@ -768,6 +887,8 @@ function parse(tokens) {
     while (j < tokens.length && (tokens[j].type === T.INT || tokens[j].type === T.FLOAT || tokens[j].type === T.SLASH)) j++;
     return j < tokens.length && tokens[j].type === T.RBRACKET; // ] immediately after number = pure
   }
+
+
 
   function isEndOfRhs() {
     // Check if after the () there's nothing more in this RHS
@@ -833,12 +954,12 @@ function parse(tokens) {
       if (at(T.COMMA)) advance();
     }
     expect(T.RPAREN);
-    return { type: 'Qualifier', pairs, position: 'element' };
+    return { type: 'RuntimeQualifier', pairs };
   }
 
   function isPerElementQualifier() {
-    // [IDENT:...] where IDENT is a known control name = per-element qualifier
-    // Used for engine qualifier [speed:2]A or A[weight:50]
+    // [IDENT:...] or [IDENT] where IDENT is a known control name = per-element qualifier
+    // Used for engine qualifier [speed:2]A or A[weight:50] or {[retro] A}
     if (!at(T.LBRACKET)) return false;
     const nextTok = peek(1);
     if (nextTok.type !== T.IDENT) return false;
@@ -926,14 +1047,23 @@ function parse(tokens) {
       throw new ParseError('Expected symbol after ~', tok);
     }
 
-    // Standalone ! → out-time object (no primary symbol)
+    // Standalone ! → out-time object, instant control, or simultaneous
     if (at(T.BANG)) {
       advance();
+      // !(...) → instant runtime control
+      if (isRuntimeQualifier()) {
+        return { type: 'InstantControl', qualifier: parseRuntimeQualifier() };
+      }
+      // ![...] → instant engine control
+      if (at(T.LBRACKET)) {
+        return { type: 'InstantControl', qualifier: parseQualifier() };
+      }
+      // !symbol → out-time object
       if (at(T.IDENT)) {
         const name = advance().value;
         return { type: 'OutTimeObject', name };
       }
-      throw new ParseError('Expected symbol after !', current());
+      throw new ParseError('Expected symbol, (...) or [...] after !', current());
     }
 
     // Trigger in <!
@@ -987,25 +1117,22 @@ function parse(tokens) {
         return { type: 'Control', name, args: [] };
       }
 
-      // Runtime qualifier suffix: D4(vel:70) — check before symbol call
-      // But NOT if () is at end of RHS (that's a rule-scope qualifier)
-      if (isRuntimeQualifier()) {
-        if (isEndOfRhs()) {
-          // Leave () for parseRule — return bare symbol
-          return { type: 'Symbol', name, line: tok.line };
-        }
-        const el = { type: 'Symbol', name, line: tok.line };
-        el.controlQualifiers = [parseRuntimeQualifier()];
-        return el;
+      // Runtime qualifier suffix: D4(vel:70) — no space = attached to symbol
+      // Let parseRhsElements handle suffix attachment via spaceBefore
+      // But we must check here to avoid confusing with symbol call
+      if (isRuntimeQualifier() && !current().spaceBefore) {
+        // Return bare symbol — suffix will be attached by parseRhsElements
+        return { type: 'Symbol', name, line: tok.line };
       }
 
-      // Symbol call: Sa(custom_param:120) — only if NOT a known runtime control
-      if (at(T.LPAREN) && !isContextLookahead()) {
+      // Symbol call: Sa(custom_param:120) — only if collé (no space) and NOT a known runtime control
+      if (at(T.LPAREN) && !current().spaceBefore && !isContextLookahead()) {
         return parseSymbolCall(name, tok);
       }
 
       // Simultaneous: Sa!dha!phase=2
-      if (at(T.BANG)) {
+      // But NOT !() or ![] — those are standalone InstantControls for the next iteration
+      if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
         return parseSimultaneousGroup(name, tok);
       }
 
@@ -1206,33 +1333,21 @@ function parse(tokens) {
         continue;
       }
       if (at(T.NEWLINE)) { advance(); continue; }
-      // Stop at [ inside polymetric if it's NOT a per-element qualifier or tempo op
-      if (at(T.LBRACKET) && !isPerElementQualifier() && !isTempoOpQualifier()) break;
-      // PREFIX engine qualifier inside polymetric: [tempo:2]A
-      let prefixQuals = null;
-      if (at(T.LBRACKET) && isPerElementQualifier()) {
-        prefixQuals = parseQualifier();
-      }
+      // [] with space before inside polymetric → break (not attached to element)
+      if (at(T.LBRACKET) && current().spaceBefore) break;
+
       const el = parseRhsElement();
       if (!el) break;
-      // Attach prefix qualifiers
-      if (prefixQuals) {
-        el.controlQualifiers = el.controlQualifiers || [];
-        el.controlQualifiers.unshift(prefixQuals);
-        el.controlPrefix = true;
-      }
-      // Check for tempo operator qualifier on this element inside polymetric
-      if (at(T.LBRACKET) && isTempoOpQualifier()) {
-        const qual = parseQualifier();
-        el.tempoOp = qual.tempoOp;
-      }
-      // SUFFIX qualifier in polymetric: A[speed:2] or A(vel:60)
-      if (at(T.LBRACKET) && isPerElementQualifier()) {
-        el.controlQualifiers = el.controlQualifiers || [];
-        el.controlQualifiers.push(parseQualifier());
-      } else if (isRuntimeQualifier()) {
-        el.controlQualifiers = el.controlQualifiers || [];
-        el.controlQualifiers.push(parseRuntimeQualifier());
+
+      // SUFFIX qualifiers: A[X] or A(X) — no space before [ or (
+      while ((at(T.LBRACKET) && !current().spaceBefore) ||
+             (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier())) {
+        el.suffixQualifiers = el.suffixQualifiers || [];
+        if (at(T.LBRACKET)) {
+          el.suffixQualifiers.push(parseQualifier());
+        } else {
+          el.suffixQualifiers.push(parseRuntimeQualifier());
+        }
       }
       currentVoice.push(el);
     }
@@ -1445,20 +1560,28 @@ function parse(tokens) {
       expect(T.COLON);
 
       // --- Control qualifier with raw value (CSS model) ---
-      // For known controls, consume everything after : until , or ] as raw value.
+      // For known controls, consume everything after : until ] as raw value.
+      // Commas between arguments are part of the value: [goto:3,1] → "3,1"
+      // Commas before a new key (IDENT:) separate qualifier pairs: [goto:3,1, scan:left]
       // Spaces are preserved: [keyxpand: B3 -1] → value = "B3 -1"
       // Encoder converts spaces to commas for BP3: _keyxpand(B3,-1)
       if (libCtx.controlNames.has(key)) {
         let rawValue = '';
-        while (!at(T.COMMA) && !at(T.RBRACKET) && !atEnd()) {
+        while (!at(T.RBRACKET) && !atEnd()) {
+          // Stop at , if followed by IDENT: (next qualifier pair)
+          if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COLON) break;
+          // Stop at , if followed by bare IDENT ] (next bare key qualifier)
+          if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.RBRACKET) break;
           const t = current();
-          if (rawValue.length > 0 && t.type !== T.RPAREN) {
+          if (rawValue.length > 0 && t.type !== T.RPAREN && t.type !== T.COMMA) {
             const lastChar = rawValue[rawValue.length - 1];
-            if (lastChar !== '(' && t.type !== T.LPAREN) {
+            if (lastChar !== '(' && t.type !== T.LPAREN && lastChar !== ',') {
               // No space after - (negative number: -7)
               // No space around / (ratio: 11/5)
+              // No space around = (K-param: K1=2)
               const isSlash = t.type === T.SLASH || lastChar === '/';
-              if (lastChar !== '-' && !isSlash) rawValue += ' ';
+              const isEquals = t.type === T.EQUALS || lastChar === '=';
+              if (lastChar !== '-' && !isSlash && !isEquals) rawValue += ' ';
             }
           }
           rawValue += advance().value;

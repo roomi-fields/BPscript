@@ -458,18 +458,15 @@ Les 5 couches sont consommées à **deux moments** par **deux modules** différe
 │  Source BPscript                                            │
 │       ↓                                                     │
 │  Tokenizer  ← octaves.json (parse registres dans tokens)   │
-│       ↓        alphabets.json (reconnaître notes valides)   │
-│  Parser     ← alphabets.json (type gate pour les notes)    │
+│       ↓        alphabet.json (reconnaître notes valides)    │
+│  Parser     ← alphabet.json (type gate pour les notes)     │
 │       ↓                                                     │
-│  Encoder    ← alphabets.json + octaves.json                │
-│       │        → génère noms BP3-safe (bol prefix)          │
+│  Encoder    ← alphabet.json + octaves.json                 │
 │       │        → émet terminaux dans la grammaire           │
+│       │        → génère alphabet plat (notes × alt × oct)   │
 │       ↓                                                     │
-│  Prototypes ← alphabets.json + octaves.json                │
-│                → génère fichier -so. pour tous les          │
-│                  terminaux possibles (notes × registres)    │
-│                                                             │
-│  Output: grammaire BP3 + alphabet plat + prototypes -so.    │
+│  Output: grammaire BP3 + alphabet plat + settingsJSON       │
+│          + controlTable + cvTable                            │
 └─────────────────────────────────────────────────────────────┘
                           ↓
                     BP3 WASM engine
@@ -480,12 +477,10 @@ Les 5 couches sont consommées à **deux moments** par **deux modules** différe
 ┌─────────────────────────────────────────────────────────────┐
 │  RUNTIME (dispatcher)                                       │
 │                                                             │
-│  Timed token "bolC_^4" (nom BP3-safe)                      │
-│       ↓                                                     │
-│  Dispatcher  → strip "bol" prefix → "C_^4"                 │
+│  Timed token "C#4" (silent sound object)                    │
 │       ↓                                                     │
 │  Resolver    ← octaves.json   (parse registre)              │
-│              ← alphabets.json (parse note + altération)     │
+│              ← alphabet.json  (parse note + altération)     │
 │              ← tunings.json   (degree → step, altération)   │
 │              ← temperaments.json (step → ratio)             │
 │       ↓                                                     │
@@ -498,7 +493,7 @@ Les 5 couches sont consommées à **deux moments** par **deux modules** différe
 ### Chargement et configuration
 
 ```
-@alphabet:western        → charge alphabets.json["western"]
+@alphabet.western        → charge alphabet.json["western"]
 @octaves:arrows          → charge octaves.json["arrows"]
 @tuning:western_just     → charge tunings.json["western_just"]
                             → charge automatiquement temperaments.json["just_5limit"]

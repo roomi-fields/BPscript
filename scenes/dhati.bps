@@ -8,14 +8,15 @@
 //   BP3 `+` (continuation) → `plus` (IDENT, car + est opérateur en BPscript)
 //   BP3 `;` (fin de séquence) → `fin` (IDENT, car ; n'est pas un token BPscript)
 //   BP3 `*` (homomorphisme/wildcard) → `star` (IDENT, car * est STAR token)
-//   BP3 `X-N` (durée ajustée) → `X_N` (car - est REST token en BPscript)
-//   BP3 `4+4+4+4/4` (structure rythmique) → `cycle16_4` (non-terminal)
+//   BP3 `X-N` (durée ajustée) → `XmN` (car - est REST et _ est prolongation)
+//   BP3 `4+4+4+4/4` (structure rythmique) → `cycle16x4` (non-terminal)
 // NOTE : `* (= ...)` (homomorphisme sur template) n'est pas encore implémenté.
 //   Les templates sont traduits avec $ mais l'opérateur * est omis avec commentaire.
 // NOTE : INIT: Play I46 (BP3 performance init, pas encore en BPscript)
 
 @core
 @controls
+@sounds:tabla_perc
 @mm:15
 
 // Terminaux — bols de tabla
@@ -26,13 +27,14 @@ gate dha:midi
 gate trkt:midi
 gate dheena:midi
 gate teena:midi
-gate dhati_bol:midi
+gate dhati:midi
 gate gena:midi
 gate dhage:midi
 gate tidha:midi
 gate na:midi
 gate ge:midi
 gate kt:midi
+gate ke:midi
 gate ti:midi
 gate ta:midi
 gate dhagena:midi
@@ -67,32 +69,29 @@ gate nati:midi
 gate tidhagena:midi
 gate dhagedheena:midi
 gate tidhatrkt:midi
-gate dhatidhagenadhatrktdhatidhage:midi
-gate dhatidhagenadhatrktdhatidhagedheena:midi
-gate dhatidhagenadhatrktdhatidhageteena:midi
-gate dhatidhagenadhatrktdhatidhagedheenagena:midi
-gate dhatidhagenadhatrktdhatidhageteenakena:midi
-// Lahra terminals (western solfege)
-gate do5_do5do5:midi
-gate si4_si4do5:midi
-gate la4_la4si4:midi
-gate lab4_lab4_:midi
-gate la4_si4mi5:midi
-gate do5_si4do5:midi
-gate la4_lab4la4:midi
-gate do5do5do5do5:midi
-gate si4la4si4do5:midi
-gate mi4fa4la4si4:midi
-gate si4la4fa4:midi
-gate mi4do4:midi
+// Cadences longues : séquences de bols (pas de terminaux atomiques)
+// BP3 les concatène sans espaces, BPscript les sépare
+// Lahra terminals (solfège notes — resolved by note convention, not as compound bols)
+gate do5:midi
+gate si4:midi
+gate la4:midi
+gate lab4:midi
+gate mi5:midi
+gate mi4:midi
+gate fa4:midi
+gate sol4:midi
+gate la5:midi
+gate si5:midi
+gate fa3:midi
+gate do4:midi
 
 // --- Sous-grammaire 1 @mode:rnd — structure initiale ---
 // BP3: S --> 4+4+4+4/4 {16,Qaida}
-// cycle16_4 = non-terminal pour la structure rythmique 4+4+4+4/4
+// cycle16x4 = non-terminal pour la structure rythmique 4+4+4+4/4
 
 @mode:rnd
-S -> cycle16_4 {16,Qaida} [weight:0]
-S -> cycle16_4 {16,Lahra,Qaida}
+S -> {16,Qaida} [weight:0, meter:4+4+4+4/4]
+S -> {16,Lahra,Qaida} [meter:4+4+4+4/4]
 S <- Qaida
 // BP3: Qaida <-> (=+ S64 ;) — homomorphisme (* omis)
 Qaida <> $ {plus S64 fin} [weight:1]
@@ -115,10 +114,10 @@ S50 <> M34 plus S16 [weight:100]
 S50 <> M18 plus $ {plus N14} O18 [weight:100]
 S16 <> O16 [weight:100]
 // BP3: S50 <-> V10 A'8-2 * (= N18 +) + O16 — homomorphisme (* omis)
-S50 <> V10 A'8_2 $ {N18 plus} plus O16 [weight:100]
+S50 <> V10 A'8m2 $ {N18 plus} plus O16 [weight:100]
 // BP3: S50 <-> M20 * (= N14 +) + O16 — homomorphisme (* omis)
 S50 <> M20 $ {N14 plus} plus O16 [weight:100]
-S52 <> V28 A8_2 O18 [weight:100]
+S52 <> V28 A8m2 O18 [weight:100]
 S52 <> M20 plus S32 [weight:100]
 S40 <> M8 plus S32 [weight:100]
 // BP3: S32 <-> * (=+ N16 +) + S16 — homomorphisme (* omis)
@@ -151,25 +150,25 @@ N18 <- V18 [weight:100]
 // BP3: (=+ L16 <-> (=+ A16 — scope template (= omis)
 plus L16 <- plus A16 [weight:100]
 plus L16 <- plus V16 [weight:100]
-plus L14 <- plus V10 A'6_2 [weight:100]
-M14 <- A'16_2 [weight:100]
-plus L14 <- plus A16_2 [weight:100]
-plus L14 <- plus A'16_2 [weight:100]
-plus L12 <- plus A16_4 [weight:100]
+plus L14 <- plus V10 A'6m2 [weight:100]
+M14 <- A'16m2 [weight:100]
+plus L14 <- plus A16m2 [weight:100]
+plus L14 <- plus A'16m2 [weight:100]
+plus L12 <- plus A16m4 [weight:100]
 plus L24 <- plus V24 [weight:100]
 // BP3: + M16 + * <-> + V10 A'6 + * — `star` = * (wildcard/homomorphisme)
 plus M16 plus star <- plus V10 A'6 plus star [weight:100]
 plus M16 <- plus A'16 [weight:100]
 M8 plus star <- A'8 plus star [weight:100]
 M16 plus star <- V8 A'8 plus star [weight:100]
-M14 <- V8 A'8_2 [weight:100]
+M14 <- V8 A'8m2 [weight:100]
 M18 plus star <- V10 A'8 plus star [weight:100]
 M18 plus star <- V18 plus star [weight:100]
 M34 plus <- V28 A'6 plus [weight:100]
 M34 plus <- V26 A'8 plus [weight:100]
 M20 plus star <- V12 A'8 plus star [weight:100]
 M20 <- V20 [weight:100]
-M40 <- V8 A'8_2 V26 [weight:100]
+M40 <- V8 A'8m2 V26 [weight:100]
 // BP3: * (={16,+ N'16 <-> * (={16,+ V16 — template polymetric scope
 // BPscript: pas de $ sur LHS, templates omis, contenu direct
 N'16 <- V16 [weight:100]
@@ -179,10 +178,10 @@ N16 plus <- V8 A8 plus [weight:100]
 N16 plus <- V10 C6 plus [weight:100]
 // BP3: * (=+ N16 <-> * (=+ A16 — scope template
 N16 <- A16 [weight:100]
-M14 <- V8 A8_2 [weight:100]
+M14 <- V8 A8m2 [weight:100]
 // BP3: * (=+ N14 <-> * (=+ V8 A8-2 — scope template
-N14 <- V8 A8_2 [weight:100]
-N14 <- A16_2 [weight:100]
+N14 <- V8 A8m2 [weight:100]
+N14 <- A16m2 [weight:100]
 N14 plus <- V6 A8 plus [weight:100]
 O8 fin <- A8 fin [weight:100]
 O34 fin <- V26 A8 fin [weight:100]
@@ -217,7 +216,7 @@ V <> dha [weight:100]
 V V <> trkt [weight:100]
 V V <> dheena [weight:100]
 V V <> teena [weight:100]
-V V <> dhati_bol [weight:100]
+V V <> dhati [weight:100]
 V V <> gena [weight:100]
 V V <> dhage [weight:100]
 plus V V <> plus tidha [weight:100]
@@ -263,24 +262,24 @@ V V V V V V V V A'8 <> dhatrktdhatidhatrkt A'8 [weight:100]
 // --- Sous-grammaire 6 @mode:ord — encodage des cadences (LEFT) ---
 
 @mode:ord
-plus ? ? ? ? ? ? ? ? ? ? A'6_2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
-plus ? ? ? ? ? ? ? ? ? ? C6_2 <- plus ? ? ? ? ? ? ? ? ? ? dhagedheena
-plus ? ? ? ? ? ? ? ? ? ? A'6_2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
-plus ? ? ? ? ? ? ? ? A8_2 <- plus ? ? ? ? ? ? ? ? dhatidhagedheena
-A8_2 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin <- dhatidhagedheena ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin
-plus ? ? ? ? ? ? ? ? A'8_2 <- plus ? ? ? ? ? ? ? ? dhatidhageteena
-plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? A'8_2 <- plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? dhatidhageteena
+plus ? ? ? ? ? ? ? ? ? ? A'6m2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
+plus ? ? ? ? ? ? ? ? ? ? C6m2 <- plus ? ? ? ? ? ? ? ? ? ? dhagedheena
+plus ? ? ? ? ? ? ? ? ? ? A'6m2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
+plus ? ? ? ? ? ? ? ? A8m2 <- plus ? ? ? ? ? ? ? ? dhatidhagedheena
+A8m2 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin <- dhatidhagedheena ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin
+plus ? ? ? ? ? ? ? ? A'8m2 <- plus ? ? ? ? ? ? ? ? dhatidhageteena
+plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? A'8m2 <- plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? dhatidhageteena
 A'6 plus <- dhageteenakena plus
 A'8 plus <- dhatidhageteenakena plus
 A4 plus <- dheenagena plus
 C6 plus <- dhagedheenagena plus
 A8 plus <- dhatidhagedheenagena plus
 A8 fin <- dhatidhagedheenagena fin
-plus A16_4 <- plus dhatidhagenadhatrktdhatidhage
-plus A16_2 <- plus dhatidhagenadhatrktdhatidhagedheena
-plus A'16_2 #ke <- plus dhatidhagenadhatrktdhatidhageteena #ke
-plus A16 <- plus dhatidhagenadhatrktdhatidhagedheenagena
-plus A'16 <- plus dhatidhagenadhatrktdhatidhageteenakena
+plus A16m4 <- plus dhati dhagena dhatrkt dhati dhage
+plus A16m2 <- plus dhati dhagena dhatrkt dhati dhage dheena
+plus A'16m2 #ke <- plus dhati dhagena dhatrkt dhati dhage teena #ke
+plus A16 <- plus dhati dhagena dhatrkt dhati dhage dheenagena
+plus A'16 <- plus dhati dhagena dhatrkt dhati dhage teenakena
 
 -----
 
@@ -288,5 +287,5 @@ plus A'16 <- plus dhatidhagenadhatrktdhatidhageteenakena
 // Les sound objects sont des chaînes concaténées (pas de séparateur de bols)
 
 @mode:lin
-Lahra -> do5_do5do5 do5_do5do5 si4_si4do5 la4_la4si4 lab4_lab4_ la4_si4mi5 do5_si4do5 la4_lab4la4
-Lahra -> do5do5do5do5 si4la4si4do5 si4la4fa4 {1,mi4do4} mi4fa4la4si4
+Lahra -> do5 _ do5 do5 do5 _ do5 do5 si4 _ si4 do5 la4 _ la4 si4 lab4 _ lab4 _ la4 _ si4 mi5 do5 _ si4 do5 la4 _ lab4 la4
+Lahra -> do5 do5 do5 do5 si4 la4 si4 do5 si4 la4 fa4 {1,mi4 do4} mi4 fa4 la4 si4

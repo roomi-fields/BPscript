@@ -9,6 +9,7 @@
 @core
 @controls
 @alphabet.raga:midi
+@octaves:western
 
 // --- Sous-grammaire 1 @mode:random — structure ---
 

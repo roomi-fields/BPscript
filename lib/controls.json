@@ -3,27 +3,36 @@
   "description": "BPscript controls — engine [] and runtime () separated",
   "version": "0.2.0",
 
+  "subgrammar": {
+    "_comment": "@mode:X(modifier) syntax — emitted as BP3 preamble between mode line and rules",
+    "destru": {
+      "bp3": "_destru",
+      "args": [],
+      "description": "Déstructure les terminaux composés en fonction de l'alphabet"
+    },
+    "striated": {
+      "bp3": "_striated",
+      "args": [],
+      "description": "Temps strié (pulsé)"
+    },
+    "smooth": {
+      "bp3": "_smooth",
+      "args": [],
+      "description": "Temps lisse (non pulsé)"
+    },
+    "mm": {
+      "bp3": "_mm",
+      "args": ["bpm"],
+      "description": "Marquage métronomique absolu (BPM)"
+    }
+  },
+
   "engine": {
     "_comment": "[] syntax — translated directly to BP3 instructions by the transpiler",
     "tempo": {
       "bp3": "_tempo",
       "args": ["ratio"],
       "description": "Multiplicateur de tempo relatif"
-    },
-    "mm": {
-      "bp3": "_mm",
-      "args": ["bpm"],
-      "description": "Marquage métronomique absolu (BPM)"
-    },
-    "striated": {
-      "bp3": "_striated",
-      "args": [],
-      "description": "Bascule en temps strié"
-    },
-    "smooth": {
-      "bp3": "_smooth",
-      "args": [],
-      "description": "Bascule en temps lisse"
     },
     "repeat": {
       "bp3": "_repeat",
@@ -45,11 +54,6 @@
       "args": ["subgrammar", "rule"],
       "description": "Saut vers une sous-grammaire et règle spécifiques."
     },
-    "scale": {
-      "bp3": "_scale",
-      "args": ["name", "root"],
-      "description": "Active une gamme nommée avec une note de référence."
-    },
     "retro": {
       "bp3": "_retro",
       "args": [],
@@ -57,13 +61,20 @@
     },
     "rotate": {
       "bp3": "_rotate",
-      "args": ["semitones"],
-      "description": "Rotation de pitch — décale cycliquement les notes."
+      "args": ["steps"],
+      "description": "Rotation cyclique — réordonne les chunks de la séquence avant dérivation (structurel)."
     },
-    "keyxpand": {
-      "bp3": "_keyxpand",
-      "args": ["note", "direction"],
-      "description": "Expansion/contraction de clavier autour d'une note pivot."
+    "staccato": {
+      "bp3": "_staccato",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Staccato — raccourcit la durée des notes (affecte la structure temporelle)"
+    },
+    "legato": {
+      "bp3": "_legato",
+      "args": ["value"],
+      "range": [0, 127],
+      "description": "Legato — prolonge la durée des notes (affecte la structure temporelle)"
     }
   },
 
@@ -72,49 +83,48 @@
     "vel": {
       "args": ["value"],
       "range": [0, 127],
+      "default": 64,
       "description": "Vélocité (0-127)"
     },
     "chan": {
       "args": ["channel"],
       "range": [1, 16],
+      "default": 1,
       "description": "Canal MIDI"
     },
     "pan": {
       "args": ["value"],
       "range": [0, 127],
+      "default": 64,
       "description": "Panoramique (0=gauche, 64=centre, 127=droite)"
     },
     "transpose": {
-      "args": ["semitones"],
-      "description": "Transposition en demi-tons"
+      "args": ["steps"],
+      "default": 0,
+      "description": "Transposition — grid shift de N steps dans le tempérament",
+      "transport": "dispatcher"
     },
     "ins": {
       "args": ["program"],
       "range": [1, 128],
+      "default": 0,
       "description": "Program change MIDI"
-    },
-    "staccato": {
-      "args": ["value"],
-      "range": [0, 127],
-      "description": "Staccato — raccourcit la durée des notes"
-    },
-    "legato": {
-      "args": ["value"],
-      "range": [0, 127],
-      "description": "Legato — prolonge la durée des notes"
     },
     "mod": {
       "args": ["value"],
       "range": [0, 127],
+      "default": 0,
       "description": "Modulation MIDI (CC1)"
     },
     "pitchbend": {
       "args": ["value"],
       "range": [-8192, 8191],
+      "default": 0,
       "description": "Pitch bend MIDI"
     },
     "pitchrange": {
       "args": ["cents"],
+      "default": 200,
       "description": "Plage de pitch bend en cents"
     },
     "pitchcont": {
@@ -128,11 +138,13 @@
     "pressure": {
       "args": ["value"],
       "range": [0, 127],
+      "default": 0,
       "description": "Channel pressure MIDI"
     },
     "press": {
       "args": ["value"],
       "range": [0, 127],
+      "default": 0,
       "description": "Channel pressure MIDI (alias)"
     },
     "presscont": {
@@ -142,6 +154,7 @@
     "volume": {
       "args": ["value"],
       "range": [0, 127],
+      "default": 100,
       "description": "Volume MIDI (CC7)"
     },
     "volumecont": {
@@ -154,6 +167,7 @@
     },
     "rndvel": {
       "args": ["range"],
+      "default": 0,
       "description": "Vélocité aléatoire ±range"
     },
     "modcont": {
@@ -187,38 +201,54 @@
     "wave": {
       "args": ["type"],
       "values": ["sine", "triangle", "square", "sawtooth"],
+      "default": "triangle",
       "description": "Forme d'onde oscillateur (Web Audio)",
       "transport": "webaudio"
     },
     "attack": {
       "args": ["ms"],
       "range": [1, 5000],
+      "default": 20,
       "description": "Attaque enveloppe en ms (Web Audio)",
       "transport": "webaudio"
     },
     "release": {
       "args": ["ms"],
       "range": [1, 5000],
+      "default": 100,
       "description": "Relâchement enveloppe en ms (Web Audio)",
       "transport": "webaudio"
     },
     "detune": {
       "args": ["cents"],
       "range": [-1200, 1200],
+      "default": 0,
       "description": "Désaccordage en cents (Web Audio)",
       "transport": "webaudio"
     },
     "filter": {
       "args": ["freq"],
       "range": [20, 20000],
+      "default": 0,
       "description": "Fréquence de coupure filtre passe-bas Hz (Web Audio)",
       "transport": "webaudio"
     },
     "filterQ": {
       "args": ["value"],
       "range": [0, 30],
+      "default": 1,
       "description": "Résonance (Q) du filtre (Web Audio)",
       "transport": "webaudio"
+    },
+    "keyxpand": {
+      "args": ["pivot", "direction"],
+      "description": "Expansion/contraction d'intervalles autour d'une note pivot",
+      "transport": "dispatcher"
+    },
+    "scale": {
+      "args": ["name", "root"],
+      "description": "Gamme/tempérament — routé dispatcher (WASM ne supporte pas _scale)",
+      "transport": "dispatcher"
     }
   }
 }

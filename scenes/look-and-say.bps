@@ -6,10 +6,7 @@
 // L'ordre des règles SUB est préservé de l'original.
 
 @core
-
-gate d1:midi
-gate d2:midi
-gate d3:midi
+@test_alphabets.conway
 
 // --- Sous-grammaire 1 @mode:ord — initialisation ---
 

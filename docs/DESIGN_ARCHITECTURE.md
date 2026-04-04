@@ -194,7 +194,7 @@ Source .bps
    │  Produit : fichier -so. (NoteOn/NoteOff pour chaque terminal)
    │
   ▼
-Output : grammaire BP3 texte + alphabet + prototypes + settings + controlTable
+Output : grammaire BP3 texte + alphabet + prototypes + settings + controlTable + transcriptionTable
 ```
 
 ### Ce que BP3 voit
@@ -208,13 +208,38 @@ horodatée de ces noms opaques.
 
 ## Pipeline runtime
 
+### REPL — résolution des étiquettes (post-dérivation)
+
+Avant le dispatcher, une couche REPL résout les étiquettes d'homomorphisme
+émises par le moteur. C'est la première brique de la couche de transformation
+par acteur.
+
+> Voir [DESIGN_HOMOMORPHISM_LABELING.md](DESIGN_HOMOMORPHISM_LABELING.md) pour le design complet.
+
+```
+Timed tokens (sortie BP3, avec étiquettes N%xxx)
+  │
+  ▼
+Pour chaque token :
+  │
+  ├─ Si le token matche /^\d+@/ :
+  │     Extraire index + terminal_original
+  │     Consulter transcriptionTable[index] → résolution
+  │     Remplacer le token par le terminal résolu
+  │
+  └─ Sinon : token inchangé
+  │
+  ▼
+Timed tokens (noms résolus) → Dispatcher
+```
+
 ### Dispatcher
 
 Le dispatcher est la boucle centrale du runtime. Il reçoit la séquence
-horodatée de BP3 et orchestre les acteurs.
+horodatée (après résolution REPL) et orchestre les acteurs.
 
 ```
-Séquence horodatée (timed tokens)
+Séquence horodatée (timed tokens, noms résolus)
   │
   ▼
 Pour chaque token à l'instant T :
@@ -226,13 +251,20 @@ Pour chaque token à l'instant T :
   │     │  via une table terminal → actor (émise pendant la compilation)
   │     └→ actor = terminalActorMap[terminal]
   │
-  ├─ 3. Résoudre le pitch (si l'acteur a un tuning)
-  │     │  actor.resolver.resolve(token)
-  │     └→ { frequency, register, noteName, alteration }
-  │
-  ├─ 4. Résoudre les contrôles (controlTable)
+  ├─ 3. Résoudre les contrôles (controlTable)
   │     │  Si le token a des _script(CTn), consulter la controlTable
-  │     └→ { vel, pan, wave, filter... }
+  │     └→ controlState = { vel, pan, wave, filter, transpose, scale... }
+  │
+  ├─ 4. Résoudre le pitch (si l'acteur a un tuning)
+  │     │  Le resolver tient compte du controlState (transpose, scale)
+  │     │  actor.resolver.resolve(token, controlState)
+  │     └→ { frequency, register, noteName, alteration }
+  │     │
+  │     │  Transpose : 3 opérations possibles (cf. STUDY_TRANSPOSE.md)
+  │     │  - tonic:freq    → modifier baseHz du resolver
+  │     │  - degree:N      → décaler de N degrés dans la gamme active
+  │     │  - transpose:N   → grid shift de N steps dans le tempérament
+  │     │  Le calcul dépend du tuning/tempérament de l'acteur.
   │
   ├─ 5. Router vers le transport de l'acteur
   │     │  actor.transport.send({
@@ -242,6 +274,59 @@ Pour chaque token à l'instant T :
   │
   └─ 6. Si backtick → eval via l'actor.eval (ou tag pour orphelins)
 ```
+
+### Transposition — chemin complet
+
+La transposition est un contrôle runtime (`_script(CTn)`), pas une opération
+moteur. C'est une **opération symbolique sur l'alphabet**, pas un calcul de
+fréquence. Elle remplace un symbole par un autre avant la résolution pitch.
+
+**Principe** : transpose ne connaît ni les tempéraments ni les fréquences.
+Elle décale de N positions dans l'alphabet de l'acteur. Le resolver résout
+ensuite le nouveau symbole normalement à travers les 5 couches.
+
+```
+BPscript :  C(transpose:2) D E
+
+Encodeur :  _script(CT0) C D E
+            controlTable[0] = { type:"transpose", value:2 }
+
+BP3 émet :  _script(CT0)(t=0) C(t=0) D(t=1000) E(t=2000)
+               │
+               ▼
+Dispatcher étape 3 (contrôles) :
+  CT0 → controlState.transpose = 2
+
+Dispatcher étape 4 (remapping symbolique, pré-resolver) :
+  alphabet = [C, D, E, F, G, A, B]
+  "C" → index=0, newIndex=(0+2)%7=2 → "E"
+  "D" → index=1, newIndex=(1+2)%7=3 → "F"
+  "E" → index=2, newIndex=(2+2)%7=4 → "G"
+
+Dispatcher étape 5 (pitch) :
+  resolver.resolve("E") → fréquence via tuning + tempérament
+  resolver.resolve("F") → idem
+  resolver.resolve("G") → idem
+```
+
+Cette approche est **universelle** : elle fonctionne dans n'importe quel
+alphabet (western, sargam, maqam, gamelan) et n'importe quel tempérament,
+car le resolver gère la complexité fréquentielle, pas transpose.
+
+**3 opérations** (cf. [STUDY_TRANSPOSE.md](STUDY_TRANSPOSE.md)) :
+
+| Opération | controlState | Niveau | Effet |
+|-----------|-------------|--------|-------|
+| `(transpose:N)` | `transpose: N` | Alphabet (symboles) | Décale de N positions dans `alphabet.notes` |
+| `(degree:N)` | `degree: N` | Gamme (degrés) | Décale de N degrés dans la gamme active |
+| `(tonic:freq)` | `tonic: freq` | Fréquence (référence) | Change `baseHz` temporairement |
+
+Seul `transpose` est une opération pré-resolver (remapping symbolique).
+`degree` et `tonic` modifient le contexte du resolver lui-même.
+
+> **Court terme** : seul `transpose:N` est implémenté.
+> C'est un décalage d'index dans l'alphabet, avec wrap-around modulo
+> la taille de l'alphabet. Le registre (octave) est préservé.
 
 ### Resolver par acteur
 
@@ -257,14 +342,18 @@ class Resolver {
     this._cache = {};
   }
 
-  resolve(token) {
-    // 1. Parse registre (via octaves config)
-    // 2. Parse note + altération (via alphabet)
-    // 3. Lookup degree (position dans alphabet.notes)
-    // 4. Lookup step = tuning.degrees[degree]
-    // 5. Lookup ratio = temperament.ratios[step]
-    // 6. Apply alteration ratio
-    // 7. freq = baseHz × period_ratio^(Δregister) × ratio × alteration
+  resolve(token, controlState = {}) {
+    // 1. Remapping symbolique pré-resolver (transpose)
+    //    Si controlState.transpose → décaler l'index dans alphabet.notes
+    //    token = alphabet.notes[(indexOf(token) + N) % alphabet.length]
+    //    Le registre est préservé (parsé avant le remapping)
+    // 2. Parse registre (via octaves config)
+    // 3. Parse note + altération (via alphabet)
+    // 4. Lookup degree (position dans alphabet.notes)
+    // 5. Lookup step = tuning.degrees[degree]
+    // 6. Lookup ratio = temperament.ratios[step]
+    // 7. Apply alteration ratio
+    // 8. freq = baseHz × period_ratio^(Δregister) × ratio × alteration
     return { frequency, register, noteName, alteration };
   }
 }
@@ -384,19 +473,28 @@ Grammaire BP3 texte (format -gr.) + alphabet plat + prototypes -so. + settings
 
 Le compilateur produit ce format natif BP3. Inchangé.
 
-### Interface 2 : BP3 WASM → Dispatcher (existe)
+### Interface 2 : BP3 WASM → REPL → Dispatcher (existe + étiquetage)
 
 ```js
+// Sortie BP3 (avec étiquettes homomorphisme)
 [
   { terminal: "bolSa",      start: 0,    duration: 1000 },
-  { terminal: "bolRe",      start: 1000, duration: 1000 },
+  { terminal: "1%dha",      start: 1000, duration: 1000 },  // étiquette REPL
+  { terminal: "_script(CT0)", start: 0,  duration: 0    },
+  ...
+]
+
+// Après résolution REPL
+[
+  { terminal: "bolSa",      start: 0,    duration: 1000 },
+  { terminal: "ta",          start: 1000, duration: 1000 },  // résolu
   { terminal: "_script(CT0)", start: 0,  duration: 0    },
   ...
 ]
 ```
 
-Tableau d'événements horodatés. Les backticks sont encodés comme terminaux
-spéciaux. Les `_script(CTn)` sont des contrôles opaques.
+Tableau d'événements horodatés. Les étiquettes `N%xxx` sont résolues par le
+REPL avant le dispatcher. Les `_script(CTn)` sont des contrôles opaques.
 
 ### Interface 3 : Dispatcher → Transport (à adapter)
 
@@ -506,4 +604,6 @@ Anciens fichiers préservés pour compatibilité BP3 :
 - [DESIGN_REPL.md](DESIGN_REPL.md) — Architecture des backticks et REPL adapters
 - [DESIGN_EFFECTS.md](DESIGN_EFFECTS.md) — Effets et signal processing
 - [DESIGN_SOUNDS.md](DESIGN_SOUNDS.md) — Système sounds (spec < CT < CV cascading)
+- [DESIGN_HOMOMORPHISM_LABELING.md](DESIGN_HOMOMORPHISM_LABELING.md) — Homomorphismes par étiquetage (REPL)
+- [DESIGN_TEMPORAL_DEFORMATION.md](DESIGN_TEMPORAL_DEFORMATION.md) — Déformation temporelle en temps réel (constraint solver)
 - [DESIGN_INTERFACES_BP3.md](DESIGN_INTERFACES_BP3.md) — Interface WASM BP3 (in/out)

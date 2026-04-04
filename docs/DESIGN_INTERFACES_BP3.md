@@ -164,7 +164,12 @@ Dérive la grammaire, résout la polymétrie, calcule les timestamps. Les résul
 
 ## Sorties
 
-### 1. Timed tokens — `bp3_get_timed_tokens()` ⭐ sortie principale
+### 1. Timed tokens — `bp3_get_timed_tokens()` ⭐ sortie principale (feuilles)
+
+> **Note** : cette sortie est une liste plate — l'arbre structurel (polymétrie,
+> proportions, contraintes) n'est pas exposé. Voir
+> [DESIGN_TEMPORAL_DEFORMATION.md](DESIGN_TEMPORAL_DEFORMATION.md) pour la vision
+> d'une sortie `bp3_get_structure_tree()` complémentaire.
 
 ```javascript
 const getTimedTokens = bp3.cwrap('bp3_get_timed_tokens', 'string', []);

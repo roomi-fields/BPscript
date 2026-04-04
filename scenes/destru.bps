@@ -1,12 +1,12 @@
 // destru.bps — Test de la réécriture destructive
 // Traduit de bp3-engine/library/examples/destru/grammar.gr
 //
-// Templates imbriquées sur groupes, poids décroissants, LEFT scan, lambda, destru.
-// Terminaux: abca, abc, cba, cbbc (mots opaques, pas des notes)
-// BP3: (= (= X) S (:X)) → BPS: ${$X S &X}
+// _destru déstructure les terminaux composés (abca → a b c a)
+// en fonction de l'alphabet single-char {a, b, c}
 
 @core
 @controls
+@test_alphabets.abc:midi
 
 // --- Sous-grammaire 1 @mode:random — génération de structure ---
 
@@ -25,10 +25,10 @@ S -> lambda [scan:left]
 
 -----
 
-// --- Sous-grammaire 3 @mode:lin, destru — réécriture destructive ---
+// --- Sous-grammaire 3 @mode:lin(destru) — réécriture destructive ---
 
-@mode:lin
-X X -> abca [destru]
+@mode:lin(destru)
+X X -> abca
 Z Y -> abc
 Y Z -> cba
 Y Y -> cbbc

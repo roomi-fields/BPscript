@@ -30,6 +30,11 @@ function compileBPS(source) {
     result.cvTable = encoded.cvTable;
     result.directives = ast.directives;
 
+    // Propagate encoder errors (e.g. BOLSIZE violations)
+    if (encoded.errors?.length) {
+      result.errors.push(...encoded.errors.map(e => typeof e === 'string' ? { message: e } : e));
+    }
+
   } catch (err) {
     if (err instanceof ParseError) {
       result.errors.push({ message: err.message, line: err.token?.line, col: err.token?.col });

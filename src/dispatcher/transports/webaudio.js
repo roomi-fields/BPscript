@@ -54,8 +54,8 @@ export class WebAudioTransport {
       this._sendPercussion(event, absTime, resolved);
       return;
     } else {
-      // Hash fallback for truly unknown terminals
-      this._sendPercussion(event, absTime);
+      // Unresolved terminal — error, not silent fallback
+      console.warn(`[webaudio] unresolved terminal: "${event.token}" — no pitch, no sounds`);
       return;
     }
 
@@ -303,38 +303,19 @@ export class WebAudioTransport {
   }
 
   /**
-   * Percussive synthesis with explicit params or hash fallback.
+   * Percussive synthesis with explicit sound params.
    * @param {Object} event - { token, velocity, ... }
    * @param {number} absTime - absolute AudioContext time
-   * @param {Object} [params] - { freq, brightness, decay, noise, pitch_drop } from sounds resolver
+   * @param {Object} params - { freq, brightness, decay, noise, pitch_drop } from sounds resolver
    */
   _sendPercussion(event, absTime, params) {
-    const token = event.token;
     const velocity = event.velocity || 0.5;
 
-    let basePitch, brightness, decaySec, noiseAmount, pitchDrop;
-
-    if (params && params.freq) {
-      // Sounds-based: use explicit params
-      basePitch = params.freq;
-      brightness = params.brightness || 2000;
-      decaySec = (params.decay || 150) / 1000;
-      noiseAmount = params.noise != null ? params.noise : 0.3;
-      pitchDrop = params.pitch_drop != null ? params.pitch_drop : 0.5;
-    } else {
-      // Hash fallback for unknown terminals
-      let hash = 0;
-      for (let i = 0; i < token.length; i++) {
-        hash = ((hash << 5) - hash + token.charCodeAt(i)) | 0;
-      }
-      hash = ((hash % 1000) + 1000) % 1000;
-
-      basePitch = 60 + (hash % 30);
-      brightness = 800 + (hash % 4000);
-      decaySec = 0.05 + (hash % 200) / 1000;
-      noiseAmount = 0.3 + (hash % 7) / 10;
-      pitchDrop = 0.5 + (hash % 5) / 10;
-    }
+    const basePitch = params.freq;
+    const brightness = params.brightness || 2000;
+    const decaySec = (params.decay || 150) / 1000;
+    const noiseAmount = params.noise != null ? params.noise : 0.3;
+    const pitchDrop = params.pitch_drop != null ? params.pitch_drop : 0.5;
 
     // Determine output destination: CV bus if active, else audioCtx.destination
     const dest = (this._cvBus && absTime < this._cvBus.endTime)

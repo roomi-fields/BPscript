@@ -201,11 +201,10 @@ assert('ka → _sendPercussion called once', percCalls.length === 1);
 assert('ka has explicit params', percCalls[0].hasParams === true);
 assert('ka freq=80 (bayan_muted)', percCalls[0].params.freq === 80);
 
-// Send unknown bol → hash fallback
+// Send unknown bol → no sound, no crash (console.warn)
 percCalls.length = 0;
 transport.send({ token: 'xyz_unknown', velocity: 0.5, durSec: 0.2 }, 1.0);
-assert('unknown → _sendPercussion called once', percCalls.length === 1);
-assert('unknown → no explicit params (hash)', percCalls[0].hasParams === false);
+assert('unknown → _sendPercussion NOT called (no fallback)', percCalls.length === 0);
 
 // ── 4. WebAudioTransport pitched (non-regression) ──────────
 
@@ -291,6 +290,142 @@ for (const bol of ['dhin', 'dha', 'ge', 'na', 'ka', 'ta', 'ti']) {
   assert(`resolve("${bol}") ≠ null`, res != null);
   assert(`resolve("${bol}") has layers`, Array.isArray(res?.layers));
 }
+
+// ── 7. BP3 constraints: BOLSIZE validation ─────────────────
+
+section('BP3 BOLSIZE validation');
+
+const BP3_BOLSIZE = 30;
+
+// ALL scenes must have terminals ≤ 30 chars
+import { readdirSync } from 'fs';
+const allScenes = readdirSync('scenes').filter(f => f.endsWith('.bps'));
+for (const scene of allScenes) {
+  const src = readFileSync('scenes/' + scene, 'utf8');
+  const r = compileBPS(src);
+  const bols = r.alphabetFile ? r.alphabetFile.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//')) : [];
+  const over = bols.filter(b => b.length > BP3_BOLSIZE);
+  assert(`${scene}: compile OK`, r.errors.length === 0);
+  assert(`${scene}: no terminal > ${BP3_BOLSIZE} chars`, over.length === 0);
+  if (over.length) over.forEach(b => console.log(`    ${b} (${b.length})`));
+}
+
+// A scene with a long terminal MUST produce an error
+const badScene = compileBPS(`
+@core
+gate dhatidhagenadhatrktdhatidhagedheenagena:midi
+S -> dhatidhagenadhatrktdhatidhagedheenagena
+`);
+assert('long terminal → compile error', badScene.errors.length > 0);
+assert('error mentions BOLSIZE', badScene.errors.some(e => e.message.includes('BOLSIZE') || e.message.includes('exceeds')));
+
+// ── 8. Browser simulation: _createResolver() logic ─────────
+
+section('Browser _createResolver() simulation');
+
+// Replicate exactly what web/index.html _createResolver() does:
+// 1. Read directives from compiled scene
+// 2. Pick alphabetKey, tuningKey, soundsKey
+// 3. Build resolver
+// 4. Attach soundsResolver if applicable
+
+function simulateCreateResolver(directives, libSounds) {
+  const alphabetKeyMap = { raga: 'sargam' };
+  let alphabetKey = 'western';
+  let tuningKey = null;
+  let soundsKey = null;
+
+  for (const dir of (directives || [])) {
+    if (dir.name === 'alphabet' && dir.subkey) {
+      alphabetKey = alphabetKeyMap[dir.subkey] || dir.subkey;
+    }
+    if (dir.name === 'tuning' && dir.runtime) tuningKey = dir.runtime;
+    if (dir.name === 'sounds' && (dir.runtime || dir.subkey)) {
+      soundsKey = dir.runtime || dir.subkey;
+    }
+  }
+
+  // Auto-detect tuning
+  if (!tuningKey) {
+    for (const [k, v] of Object.entries(tunings)) {
+      if (k.startsWith('_')) continue;
+      if (v.alphabet === alphabetKey) { tuningKey = k; break; }
+    }
+  }
+  tuningKey = tuningKey || 'western_12TET';
+
+  const alphabetData = alphabets[alphabetKey];
+  const tuningData = tunings[tuningKey];
+  const tempName = tuningData?.temperament;
+  const tempData = tempName ? temperaments[tempName] : null;
+
+  const resolver = new Resolver({
+    alphabet: alphabetData || alphabets.western,
+    tuning: tuningData,
+    temperament: tempData,
+  });
+
+  // Auto-detect sounds from alphabet
+  if (!soundsKey) {
+    const soundsAutoMap = { tabla: 'tabla_perc' };
+    soundsKey = soundsAutoMap[alphabetKey] || null;
+  }
+
+  if (soundsKey && libSounds[soundsKey]) {
+    resolver.soundsResolver = new SoundsResolver(libSounds[soundsKey]);
+  }
+
+  return resolver;
+}
+
+const libSounds = { tabla_perc: tablaPerc };
+
+// Case A: Scene dhin.bps — has @core @controls, NO @alphabet, NO @sounds
+const dhinResult = compileBPS(readFileSync('scenes/dhin.bps', 'utf8'));
+const dhinResolver = simulateCreateResolver(dhinResult.directives, libSounds);
+const dhinResolve = dhinResolver.resolve('dhin');
+console.log(`  dhin.bps directives: ${dhinResult.directives.map(d => '@' + d.name).join(', ')}`);
+console.log(`  dhin.bps resolve("dhin") = ${dhinResolve ? 'FOUND' : 'NULL'}`);
+assert('dhin.bps: dhin resolves (not NULL)', dhinResolve != null);
+
+// Case B: Scene with explicit @sounds:tabla_perc
+const withSoundsResult = compileBPS(`
+@core
+@controls
+@sounds:tabla_perc
+@mm:120
+S -> dhin - dha ge
+`);
+const withSoundsResolver = simulateCreateResolver(withSoundsResult.directives, libSounds);
+const withSoundsResolve = withSoundsResolver.resolve('dhin');
+console.log(`  @sounds scene resolve("dhin") = ${withSoundsResolve ? 'FOUND' : 'NULL'}`);
+assert('@sounds:tabla_perc: dhin resolves', withSoundsResolve != null);
+
+// Case C: Scene with @alphabet:tabla (auto-detect)
+const withAlphabetResult = compileBPS(`
+@core
+@controls
+@alphabet.tabla
+@mm:120
+S -> dhin - dha ge
+`);
+const withAlphabetResolver = simulateCreateResolver(withAlphabetResult.directives, libSounds);
+const withAlphabetResolve = withAlphabetResolver.resolve('dhin');
+console.log(`  @alphabet.tabla resolve("dhin") = ${withAlphabetResolve ? 'FOUND' : 'NULL'}`);
+assert('@alphabet:tabla: dhin resolves (auto-detect)', withAlphabetResolve != null);
+
+// Case D: Western scene — pitched should still work
+const westernResult = compileBPS(`
+@core
+@controls
+@alphabet.western:midi
+@mm:120
+S -> C4 D4 E4
+`);
+const westernSimResolver = simulateCreateResolver(westernResult.directives, libSounds);
+const c4Resolve = westernSimResolver.resolve('C4');
+console.log(`  western resolve("C4") = ${c4Resolve?.frequency || 'NULL'} Hz`);
+assert('western C4 still pitched', c4Resolve?.frequency > 260);
 
 // ── Results ────────────────────────────────────────────────
 

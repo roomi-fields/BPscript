@@ -329,6 +329,7 @@
       <button id="playBtn" class="secondary" onclick="playOnce()" disabled>Play</button>
       <button id="loopBtn" class="secondary" onclick="playLoop()" disabled>Loop</button>
       <button id="stopBtn" class="secondary" onclick="stopPlayback()" disabled>Stop</button>
+      <button id="compareBtn" class="secondary" onclick="compareWithOriginal()" disabled>Compare</button>
       <label style="display:flex;align-items:center;gap:4px;font-size:0.8em;color:#888;cursor:pointer;">
         <input type="checkbox" id="rederiveChk" checked> re-derive
       </label>
@@ -535,7 +536,7 @@ PY_Part -&gt; &#96;py: print("hello from python")&#96;</pre>
 <script>
 /* ---- State ---- */
 let bp3 = null;
-let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_load_settings, bp3_produce, bp3_get_result, bp3_get_messages;
+let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_produce, bp3_get_result, bp3_get_messages;
 let bp3_get_midi_events, bp3_get_midi_event_count;
 let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_load_settings_params;
 let libraryData = [];
@@ -553,6 +554,32 @@ let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
 let dispatcher = null;
+let currentSceneId = null;
+
+// Map scene ID → original BP3 grammar path
+const ORIGINAL_GRAMMAR_MAP = {
+  'drum': 'examples/drum/grammar.gr', 'flags': 'examples/flags/grammar.gr',
+  'acceleration': 'experimental/acceleration/grammar.gr', 'templates': 'examples/templates/grammar.gr',
+  'negative-context': 'examples/negative-context/grammar.gr', 'harmony': 'examples/harmony/grammar.gr',
+  'mohanam': 'tabla/mohanam/grammar.gr', 'repeat': 'examples/repeat/grammar.gr',
+  'time-patterns': 'examples/time-patterns/grammar.gr', 'transposition': 'examples/transposition/grammar.gr',
+  'livecode1': 'experimental/livecode1/grammar.gr', 'scales': 'examples/scales/grammar.gr',
+  'not-reich': 'experimental/not-reich/grammar.gr', 'mozart-dice': 'western/mozart-dice/grammar.gr',
+  'all-items': 'examples/all-items/grammar.gr', 'one-scale': 'examples/one-scale/grammar.gr',
+  'visser-shapes': 'experimental/visser-shapes/grammar.gr', 'look-and-say': 'experimental/look-and-say/grammar.gr',
+  'ames': 'western/ames/grammar.gr', 'graphics': 'examples/graphics/grammar.gr',
+  'visser3': 'experimental/visser3/grammar.gr', 'livecode2': 'experimental/livecode2/grammar.gr',
+  'visser5': 'experimental/visser5/grammar.gr', 'asymmetric': 'experimental/asymmetric/grammar.gr',
+  'csound': 'examples/csound/grammar.gr', 'ek-do-tin': 'tabla/ek-do-tin/grammar.gr',
+  'destru': 'examples/destru/grammar.gr', 'kss2': 'experimental/kss2/grammar.gr',
+  'vina': 'tabla/vina/grammar.gr', 'vina2': 'tabla/vina2/grammar.gr', 'vina3': 'tabla/vina3/grammar.gr',
+  'dhin': 'tabla/dhin/grammar.gr', 'dhati': 'tabla/dhati/grammar.gr', 'nadaka': 'tabla/nadaka/grammar.gr',
+  '765432': 'experimental/765432/grammar.gr', 'shapes-rhythm': 'experimental/shapes-rhythm/grammar.gr',
+  'visser-waves': 'experimental/visser-waves/grammar.gr', 'koto3': 'experimental/koto3/grammar.gr',
+  'major-minor': 'examples/major-minor/grammar.gr', 'tunings': 'examples/tunings/grammar.gr',
+  'alan-dice': 'western/alan-dice/grammar.gr', 'beatrix-dice': 'western/beatrix-dice/grammar.gr',
+  'ruwet': 'western/ruwet/grammar.gr', 'watch': 'western/watch/grammar.gr',
+};
 
 /* ---- Library ---- */
 async function loadLibrary() {
@@ -804,6 +831,8 @@ async function loadFromLibrary(id) {
     document.getElementById('grammar').setAttribute('readonly', '');
     switchEditorTab('bpscript');
 
+    currentSceneId = item.id;
+    document.getElementById('compareBtn').disabled = !ORIGINAL_GRAMMAR_MAP[item.id];
     setStatus(`Loaded: ${item.title}`);
   } catch(e) {
     setStatus('Error loading: ' + e.message);
@@ -840,7 +869,6 @@ async function loadModule() {
     bp3_init = Module.cwrap('bp3_init', 'number', []);
     bp3_load_grammar = Module.cwrap('bp3_load_grammar', 'number', ['string']);
     bp3_load_alphabet = Module.cwrap('bp3_load_alphabet', 'number', ['string']);
-    bp3_load_settings = Module.cwrap('bp3_load_settings', 'number', ['string']);
     bp3_produce = Module.cwrap('bp3_produce', 'number', []);
     bp3_get_result = Module.cwrap('bp3_get_result', 'string', []);
     bp3_get_messages = Module.cwrap('bp3_get_messages', 'string', []);
@@ -856,6 +884,26 @@ async function loadModule() {
     setStatus('WASM load error: ' + e.message);
     console.error(e);
   }
+}
+
+/** Parse settings textarea JSON and call bp3_load_settings_params with extracted values */
+function loadSettings() {
+  const raw = document.getElementById('settings').value.trim();
+  let noteConv = 0, quantize = 10, timeRes = 10, nature = 1, maxTime = 60;
+  if (raw) {
+    try {
+      const s = JSON.parse(raw);
+      noteConv = parseInt(s.NoteConvention?.value) || 0;
+      quantize = parseInt(s.Quantization?.value) || 10;
+      timeRes  = parseInt(s.Time_res?.value) || 10;
+      nature   = parseInt(s.Nature_of_time?.value) || 1;
+      maxTime  = parseInt(s.MaxConsoleTime?.value) || 60;
+    } catch(e) {
+      console.warn('Settings parse error, using defaults:', e.message);
+    }
+  }
+  const seed = Math.floor(Math.random() * 32000) + 1;
+  bp3_load_settings_params(noteConv, quantize, timeRes, nature, seed, maxTime);
 }
 
 function initEngine() {
@@ -877,7 +925,7 @@ function reseed() {
   bp3_init();
   const alphabet = document.getElementById('alphabet').value;
   const grammar = document.getElementById('grammar').value;
-  bp3_load_settings_params(0, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
+  loadSettings();
   if (alphabet.trim()) bp3_load_alphabet(alphabet.trim());
   if (grammar.trim()) bp3_load_grammar(grammar.trim());
 }
@@ -909,9 +957,7 @@ function produce() {
       lastControlTable = compiled.controlTable || null;
       lastCVTable = compiled.cvTable || null;
       lastDirectives = compiled.directives || [];
-      // Settings disabled for now — BP3 defaults work correctly,
-      // our settingsJSON breaks text output formatting
-      // if (compiled.settings) document.getElementById('settings').value = compiled.settings;
+      if (compiled.settings) document.getElementById('settings').value = compiled.settings;
       if (compiled.warnings && compiled.warnings.length > 0) {
         console.log('BPscript warnings:', compiled.warnings);
       }
@@ -1051,59 +1097,29 @@ function updateDebugPanel(grammar, alphabet) {
   }
   lines.push('');
 
-  // 4. Resolver routing: token → frequency
-  lines.push('=== ROUTING: token → frequency ===');
-  if (lastTimedTokens) {
-    // Build semitone map from directives for debug display
-    const libs = window._loadedLibs;
-    let semitones = null;
-    for (const dir of (lastDirectives || [])) {
-      if (dir.name === 'alphabet' && dir.subkey && libs?.alphabet?.alphabets?.[dir.subkey]) {
-        const gen = libs.alphabet.alphabets[dir.subkey].generator;
-        if (gen?.semitones) {
-          semitones = gen.semitones;
-        } else if (gen?.notes) {
-          const ds = [0, 2, 4, 5, 7, 9, 11];
-          semitones = {};
-          gen.notes.forEach((n, i) => { semitones[n] = ds[i % 7]; });
-        }
-      }
-    }
-    // Fallback to western
-    if (!semitones) {
-      semitones = { C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11 };
-    }
-
+  // 4. Resolver routing: token → actual resolver result
+  lines.push('=== ROUTING: token → resolver ===');
+  const r = _createResolver();
+  if (lastTimedTokens && r) {
     const seen = new Set();
     for (const t of lastTimedTokens) {
       if (seen.has(t.token)) continue;
       seen.add(t.token);
       if (t.token.startsWith('_') || t.token === '-' || t.token === '_') continue;
 
-      // Strip 'bol' prefix for display and routing
       const tok = t.token;
       let route = tok.padEnd(12);
+      const res = r.resolve(tok);
 
-      // Parse token: western or generic
-      const wm = tok.match(/^([A-Ga-g][#b]?)(\d+)$/);
-      const gm = tok.match(/^([a-zA-Z]+)(\d+)$/);
-      const parsed = wm ? { name: wm[1], oct: parseInt(wm[2]) }
-                   : gm ? { name: gm[1], oct: parseInt(gm[2]) }
-                   : null;
-
-      if (parsed && semitones[parsed.name] != null) {
-        const semi = semitones[parsed.name];
-        const midi = (parsed.oct + 1) * 12 + semi;
-        const freq = 440 * Math.pow(2, (midi - 69) / 12);
-        route += `→ ${parsed.name}(semi=${semi}) → midi=${midi} → ${freq.toFixed(2)} Hz`;
-      } else if (parsed) {
-        route += `→ "${parsed.name}" not in alphabet → hash fallback`;
+      if (res && res.frequency) {
+        route += `→ ${res.frequency.toFixed(2)} Hz (${res.noteName} reg=${res.register})`;
+      } else if (res && res.layers) {
+        const info = res.layers.map(l => `${l.freq}Hz`).join('+');
+        route += `→ sounds [${info}]`;
+      } else if (res && res.freq) {
+        route += `→ sounds ${res.freq}Hz decay=${res.decay}ms`;
       } else {
-        let hash = 0;
-        for (let i = 0; i < t.token.length; i++) hash = ((hash << 5) - hash + t.token.charCodeAt(i)) | 0;
-        const midi = 48 + (((hash % 37) + 37) % 37);
-        const freq = 440 * Math.pow(2, (midi - 69) / 12);
-        route += `→ hash fallback → midi=${midi} → ${freq.toFixed(1)} Hz`;
+        route += `→ ERROR: unresolved`;
       }
 
       lines.push(route);
@@ -1158,6 +1174,18 @@ async function ensureDispatcher() {
     const { Resolver } = await import('../src/dispatcher/resolver.js');
 
     dispatcher = new Dispatcher(audioCtx);
+
+    // Extract runtime control defaults from controls.json
+    const controlsLib = window._loadedLibs?.controls;
+    if (controlsLib?.runtime) {
+      const defaults = {};
+      for (const [name, def] of Object.entries(controlsLib.runtime)) {
+        if (name === '_comment') continue;
+        if (def.default != null) defaults[name] = def.default;
+      }
+      dispatcher.setControlDefaults(defaults);
+    }
+
     const resolver = _createResolver();
     dispatcher.addTransport('default', new WebAudioTransport(audioCtx, { resolver }));
     dispatcher._resolver = resolver;
@@ -1319,7 +1347,7 @@ function appendResolverDebug() {
           lines.push(`  ${tok} → sounds:${res.freq}Hz decay=${res.decay}ms`);
         }
       } else {
-        lines.push(`  ${tok} → hash fallback`);
+        lines.push(`  ${tok} → ERROR: unresolved terminal`);
       }
     }
   }
@@ -1368,7 +1396,7 @@ async function playLoop() {
   let reDerive = null;
   if (useReDerive) {
     reDerive = function() {
-      bp3_load_settings_params(0, 10, 10, 1, Math.floor(Math.random() * 32000) + 1, 60);
+      loadSettings();
       bp3_produce();
       document.getElementById('messagesContent').textContent = bp3_get_messages() || '(no messages)';
       const tc = bp3_get_timed_token_count();
@@ -1387,6 +1415,109 @@ async function playLoop() {
 
   const mode = useReDerive ? 'Loop+re-derive' : 'Loop';
   setStatus(`${mode}: ${dispatcher.events.length} tokens (${dispatcher.duration.toFixed(1)}s/cycle)`);
+}
+
+async function compareWithOriginal() {
+  if (!currentSceneId || !ORIGINAL_GRAMMAR_MAP[currentSceneId]) {
+    setStatus('No original grammar available for this scene');
+    return;
+  }
+
+  const origPath = `../dist/library/${ORIGINAL_GRAMMAR_MAP[currentSceneId]}`;
+  setStatus('Loading original grammar...');
+
+  try {
+    const resp = await fetch(origPath);
+    if (!resp.ok) { setStatus('Original grammar not found: ' + origPath); return; }
+    const origGrammar = (await resp.text())
+      .split('\n').filter(l => !/^-[a-z]{2}\./.test(l.trim()) && !/^\[/.test(l.trim()) && !/^INIT:/.test(l.trim())).join('\n');
+
+    // Produce from original
+    bp3_init(42);
+    loadSettings();
+    bp3_load_grammar(origGrammar);
+    bp3_produce();
+    const origResult = bp3_get_result().trim();
+    const origMessages = bp3_get_messages();
+    const origTC = bp3_get_timed_token_count();
+    let origTokens = [];
+    try { origTokens = JSON.parse(bp3_get_timed_tokens()); } catch {}
+
+    // Produce from transpiled (current)
+    const bpsSource = document.getElementById('bpscript').value;
+    const compiled = window._compileBPScript(bpsSource);
+    bp3_init(42);
+    loadSettings();
+    if (compiled.alphabet) bp3_load_alphabet(compiled.alphabet);
+    bp3_load_grammar(compiled.grammar);
+    bp3_produce();
+    const transResult = bp3_get_result().trim();
+    const transTC = bp3_get_timed_token_count();
+    let transTokens = [];
+    try { transTokens = JSON.parse(bp3_get_timed_tokens()); } catch {}
+
+    // Compare terminals
+    const origTerminals = new Set(origTokens.map(t => t.token).filter(t => !t.startsWith('_') && t !== '-'));
+    const transTerminals = new Set(transTokens.map(t => t.token).filter(t => !t.startsWith('_') && t !== '-'));
+    const onlyOrig = [...origTerminals].filter(t => !transTerminals.has(t));
+    const onlyTrans = [...transTerminals].filter(t => !origTerminals.has(t));
+    const common = [...origTerminals].filter(t => transTerminals.has(t));
+
+    // Verdict
+    const match = onlyOrig.length === 0 && onlyTrans.length === 0 ? 'EXACT MATCH' :
+                  onlyOrig.length === 0 ? 'SUPERSET (transpiled has extra)' :
+                  onlyTrans.length === 0 ? 'SUBSET (original has extra)' : 'DIFFERENT';
+
+    // Render both timelines in Output tab
+    const panel = document.getElementById('outputContent');
+    let html = '';
+
+    // Header
+    html += `<div style="padding:8px 0;color:#ccc;font-size:13px;border-bottom:1px solid #444;margin-bottom:8px;">`;
+    html += `<strong>COMPARE: ${currentSceneId}</strong> — <span style="color:${match==='EXACT MATCH'?'#00ff88':match==='DIFFERENT'?'#ff6b6b':'#ffaa00'}">${match}</span><br>`;
+    html += `Original: ${origTC} tokens, ${origTerminals.size} terminals — `;
+    html += `Transpiled: ${transTC} tokens, ${transTerminals.size} terminals`;
+    if (onlyOrig.length) html += `<br><span style="color:#ff6b6b">Only in original: ${onlyOrig.join(', ')}</span>`;
+    if (onlyTrans.length) html += `<br><span style="color:#ffaa00">Only in transpiled: ${onlyTrans.join(', ')}</span>`;
+    html += `</div>`;
+
+    // Original timeline
+    html += `<div style="color:#8be9fd;font-size:11px;padding:4px 0;">ORIGINAL (${origPath.split('/').pop()})</div>`;
+    html += buildCompareTimeline(origTokens, origResult);
+
+    // Separator
+    html += `<div style="border-top:2px solid #555;margin:12px 0;"></div>`;
+
+    // Transpiled timeline
+    html += `<div style="color:#50fa7b;font-size:11px;padding:4px 0;">TRANSPILED (BPscript)</div>`;
+    html += buildCompareTimeline(transTokens, transResult);
+
+    panel.innerHTML = html;
+
+    // Append comparison analysis to Debug tab (don't erase existing content)
+    const dbgEl = document.getElementById('debugContent');
+    const dbgLines = [];
+    dbgLines.push('');
+    dbgLines.push(`=== COMPARE: ${currentSceneId} — ${match} ===`);
+    dbgLines.push(`Original: ${origTC} tokens, ${origTerminals.size} terminals`);
+    dbgLines.push(`Transpiled: ${transTC} tokens, ${transTerminals.size} terminals`);
+    dbgLines.push(`Common (${common.length}): ${common.join(', ')}`);
+    if (onlyOrig.length) dbgLines.push(`Only in original (${onlyOrig.length}): ${onlyOrig.join(', ')}`);
+    if (onlyTrans.length) dbgLines.push(`Only in transpiled (${onlyTrans.length}): ${onlyTrans.join(', ')}`);
+    dbgLines.push('');
+    dbgLines.push('─── ORIGINAL OUTPUT ───');
+    dbgLines.push(origResult);
+    dbgLines.push('');
+    dbgLines.push('─── TRANSPILED OUTPUT ───');
+    dbgLines.push(transResult);
+    dbgEl.textContent += dbgLines.join('\n');
+    dbgEl.scrollTop = dbgEl.scrollHeight;
+
+    setStatus(`Compare: ${match} (orig: ${origTC} tokens, trans: ${transTC} tokens)`);
+
+  } catch(e) {
+    setStatus('Compare error: ' + e.message);
+  }
 }
 
 async function stopPlayback() {
@@ -1539,6 +1670,55 @@ function renderCVTrack(cvTokensList, totalMs) {
   }
   h += '</div></div>';
   return h;
+}
+
+/** Build a mini timeline HTML for compare view (no controls, no CV) */
+function buildCompareTimeline(tokens, textResult) {
+  if (!tokens || tokens.length === 0) {
+    return `<div style="color:#666;padding:8px;">No tokens — text: ${(textResult || '').substring(0, 200)}</div>`;
+  }
+  const notes = tokens.filter(t => !t.token.startsWith('_') && t.token !== '-' && t.token !== '_' && t.end > t.start);
+  if (notes.length === 0) {
+    return `<div style="color:#666;padding:8px;">No playable notes — text: ${(textResult || '').substring(0, 200)}</div>`;
+  }
+  const totalMs = Math.max(...tokens.map(t => t.end));
+  if (totalMs === 0) return '<div style="color:#666;">Duration = 0</div>';
+
+  // Simple single-track timeline
+  let html = '<div class="timeline">';
+  // Group into voices
+  const voices = [];
+  for (const t of notes) {
+    let placed = false;
+    for (const voice of voices) {
+      if (t.start >= voice[voice.length - 1].end - 1) { voice.push(t); placed = true; break; }
+    }
+    if (!placed) voices.push([t]);
+  }
+  for (let vi = 0; vi < voices.length; vi++) {
+    html += '<div class="tl-voice">';
+    if (voices.length > 1) html += `<div class="tl-voice-label">voice ${vi+1}</div>`;
+    html += '<div class="tl-track">';
+    let prevEnd = 0;
+    let ni = 0;
+    for (const t of voices[vi]) {
+      if (t.start > prevEnd) {
+        html += `<div class="tl-block gap" style="flex:${((t.start-prevEnd)/totalMs)*100};"></div>`;
+      }
+      const cls = ni % 2 === 0 ? 'note-a' : 'note-b';
+      html += `<div class="tl-block ${cls}" style="flex:${((t.end-t.start)/totalMs)*100};" title="${t.token}: ${t.start}-${t.end}ms">${t.token}</div>`;
+      ni++; prevEnd = t.end;
+    }
+    html += '</div></div>';
+  }
+  // Time axis
+  html += '<div class="timeline-axis">';
+  const tick = totalMs <= 2000 ? 500 : totalMs <= 5000 ? 1000 : totalMs <= 15000 ? 2000 : 5000;
+  for (let ms = 0; ms <= totalMs; ms += tick) {
+    html += `<div class="tick" style="left:${(ms/totalMs)*100}%;">${(ms/1000).toFixed(1)}s</div>`;
+  }
+  html += '</div></div>';
+  return html;
 }
 
 function renderTimeline(tokens) {

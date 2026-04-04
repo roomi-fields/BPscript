@@ -13,7 +13,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 ```ebnf
 scene       = { directive | actor_directive | declaration | cv_instance | macro
               | backtick_orphan | comment | blank_line }
-              , subgrammar+ ;
+              , subgrammar+ , [ template_section ] ;
 
 actor_directive = "@" , "actor" , IDENT , actor_props+ ;
 
@@ -116,10 +116,95 @@ subgrammar = rule+ , [ separator ] ;
 separator  = "-----" , { "-" } ;           (* 5+ tirets, sépare les sous-grammaires *)
 ```
 
+### Directive de mode
+
+```ebnf
+mode_directive = "@" , "mode" , ":" , MODE_VALUE , [ "(" , mode_modifier , { "," , mode_modifier } , ")" ] ;
+
+MODE_VALUE     = "random" | "ord" | "sub" | "sub1" | "lin" | "tem" | "poslong" ;
+
+mode_modifier  = SUBGRAMMAR_KEY                       (* flag : destru, striated, smooth *)
+               | SUBGRAMMAR_KEY , ":" , value ;        (* avec valeur : mm:60 *)
+
+SUBGRAMMAR_KEY = (* clés de la section "subgrammar" de controls.json :
+                   destru, striated, smooth, mm *) ;
+```
+
 Les règles d'une même sous-grammaire partagent le mode déclaré via `@mode:...`.
 Le mode est défini par une directive `@mode:X` (ex: `@mode:random`, `@mode:ord`) qui s'applique
 à la sous-grammaire qui suit, jusqu'au prochain séparateur `-----`.
 Le séparateur `-----` marque la frontière entre sous-grammaires.
+
+Les **modificateurs de mode** entre `()` sont des directives de sous-grammaire émises
+en preamble BP3 (entre la ligne mode et les règles). Ils sont déclarés dans la section
+`subgrammar` de `controls.json`.
+
+Exemples :
+- `@mode:lin(destru)` → `LIN` + `_destru` en preamble
+- `@mode:random(striated, mm:60)` → `RND` + `_striated _mm(60)` en preamble
+- `@mode:ord(smooth)` → `ORD` + `_smooth` en preamble
+
+Les mêmes directives peuvent aussi apparaître en global avec `@` (`@striated`, `@mm:60`),
+auquel cas elles s'appliquent au preamble de la première sous-grammaire.
+
+**Mode SUB/SUB1** : en mode substitution, les symboles en LHS sont aussi des terminaux.
+Les règles SUB remplacent des patterns dans la séquence ; ce qui reste après toutes les
+itérations doit être dans l'alphabet pour être joué. Le transpileur inclut donc les symboles
+LHS des sous-grammaires SUB/SUB1 dans l'alphabet (contrairement aux modes ORD/RND où
+les symboles LHS sont des non-terminaux).
+
+### Section templates (optionnelle)
+
+```ebnf
+template_section = "@" , "templates" , NEWLINE , template_entry+ ;
+
+template_entry   = "[" , INT , "]" , scale_factor , template_body ;
+
+scale_factor     = "/" , INT                        (* /1, /2 — ratio d'échelle *)
+                 | "*" , INT , "/" , INT ;           (* *1/2 — forme explicite *)
+
+template_body    = template_element+ ;
+
+template_element = "?"                              (* wildcard : un terminal *)
+                 | "?" , { "?" }                    (* wildcards compacts : ???? = ? ? ? ? *)
+                 | "."                              (* period — séparateur de fragments *)
+                 | "(" , "$" , INT , template_body , ")"   (* bracket master : ($0 ???) *)
+                 | "(" , "$" , INT , ")"            (* bracket master vide : ($1 ) *)
+                 ;
+```
+
+Les templates décrivent la **structure temporelle** des items produits par les règles
+template (`<>`). Chaque `?` représente un slot terminal (sound object).
+
+La section `@templates` est **optionnelle** :
+- Si absente, BP3 génère les templates automatiquement pendant la production
+- Si présente, BP3 utilise les templates spécifiées pour le matching en mode analyse
+- En mode `@mode:tem`, les templates servent de contraintes structurelles
+
+Exemples :
+```bpscript
+@templates
+[1] /1 ???????                    // 7 terminaux en séquence
+[2] /1 ?????????                  // 9 terminaux
+[3] /1 ($0 ???)($1 )              // structure récursive : master(3 slots) + slave(vide)
+```
+
+Traduction BP3 :
+```
+TEMPLATES:
+[1] *1/1 _______
+[2] *1/1 _________
+[3] *1/1 (@0 ___)(@1 )
+```
+
+| BPscript | BP3 | Notes |
+|----------|-----|-------|
+| `?` | `_` | wildcard terminal (un slot) |
+| `????` | `____` | wildcards compacts (4 slots) |
+| `.` | `.` | period (identique) |
+| `($0 ???)` | `(@0 ___)` | bracket master ($ = master en BPscript) |
+| `($1 )` | `(@1 )` | bracket slave vide |
+| `/1` | `*1/1` | facteur d'échelle |
 
 ---
 
@@ -165,7 +250,7 @@ negative_context = "#" , "(" , context_sym+ , ")"    (* négatif sur groupe *)
                  | "#" , context_sym                  (* négatif sur un seul symbole *)
                  | "#" , "?" ;                       (* boundary — pas de symbole ici *)
 
-context_sym      = symbol | "{" | "}" | "," ;        (* symboles + braces pour méta-grammaires *)
+context_sym      = symbol | wildcard | "{" | "}" | "," ;  (* symboles, wildcards ?N, braces *)
 ```
 
 Les contextes peuvent apparaître avant le LHS (contexte gauche), après le RHS
@@ -214,6 +299,10 @@ du conteneur `{}`, distincte des opérateurs temporels.
 la valeur courante. Utilisé en mode LIN pour les distributions probabilistes (ex: jeu de dés
 de Mozart, avec K1-K11 simulant 2 dés en cloche 1,2,3,4,5,6,5,4,3,2,1).
 
+**Poids infini** : `[weight:inf]` — priorité absolue. La règle est toujours choisie
+quand elle matche. Compilé en `<inf>` pour BP3. Utilisé en mode LIN pour forcer
+une substitution.
+
 **Clés nues (flags)** : `[destru]` sans `:value` = flag booléen (`true`).
 Compilé en preamble de la sous-grammaire (`_destru` entre la ligne mode et les règles).
 Clés nues reconnues : `destru`, `striated`, `smooth`.
@@ -223,10 +312,13 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 ## Couche 4 — Éléments RHS
 
 ```ebnf
-rhs_element = [ engine_qualifier ] , element_core , [ suffix_qualifier ] ;
+rhs_element = [ prefix_qualifier ] , element_core , [ suffix_qualifier ] ;
+
+prefix_qualifier = engine_qualifier ;
+(* [] collé à droite de l'élément : [/2]A — déterminé par absence d'espace après ] *)
 
 suffix_qualifier = engine_qualifier | runtime_qualifier ;
-(* [] supporte préfixe et suffixe ; () est TOUJOURS suffixe *)
+(* [] ou () collé à gauche de l'élément : A[weight:50], A(vel:80) — déterminé par absence d'espace avant [ ou ( *)
 
 element_core = symbol
              | symbol_call
@@ -279,7 +371,14 @@ raw_value   = (* tout texte jusqu'au prochain "," ou "]" *) ;
 [weight:50]            → <50>
 A[/2]                  → /2 A
 [scale: just_intonation C4] → _scale(just intonation,C4)
+[retro]                → _retro (clé nue = sans parenthèses)
+[rotate:2]             → _rotate(2) (clé avec valeur = avec parenthèses)
 ```
+
+**Contrôles engine sans argument** : quand une clé engine est utilisée nue (`[retro]`,
+`[destru]`), la valeur interne est `true`. L'encodeur émet le nom BP3 **sans parenthèses**
+(`_retro`, `_destru`). Quand une valeur est fournie (`[rotate:2]`), l'encodeur émet
+avec parenthèses (`_rotate(2)`).
 
 #### `()` — Qualificateurs runtime
 
@@ -301,34 +400,48 @@ Compilé en `_script(CTn)` pour BP3 — le dispatcher interprète au playback.
 (wave:sawtooth, vel:100, filterQ:8) → _script(CT0) avec {wave:"sawtooth", vel:100, filterQ:8}
 ```
 
-#### Position — `()` est TOUJOURS suffixe
+#### Position — règles d'espacement
 
-`()` est **exclusivement suffixe** — jamais en préfixe. Le contrôle s'applique
-à l'élément qui le précède.
+L'**espace** (ou son absence) détermine si un qualificateur est un **préfixe** ou
+un **suffixe**. C'est la règle fondamentale de positionnement en BPscript :
 
-Trois portées :
+| Syntaxe | Espacement | Interprétation |
+|---------|------------|----------------|
+| `A[X]` | collé à gauche | suffixe de A |
+| `[X]A` | collé à droite | préfixe de A |
+| `A [X]B` | espace à gauche, collé à droite | préfixe de B |
+| `A[X] B` | collé à gauche, espace à droite | suffixe de A |
+| `A [X] B` | espace des deux côtés | **erreur** — utiliser `A ![X] B` |
+| `A[X]B` | collé des deux côtés | **erreur** — ambigu |
 
-- **Symbole** : `C4(vel:80)` — le contrôle s'applique au symbole `C4`.
-  Compilé en : `C4 _script(CT0)`
+Mêmes règles pour `()` — mais `()` est **toujours suffixe** (collé à gauche) :
 
-- **Règle** : `S -> C4 D4 E4 (vel:80)` — le contrôle s'applique à toute la règle.
+| Syntaxe | Interprétation |
+|---------|----------------|
+| `A(vel:80)` | suffixe de A ✅ |
+| `(vel:80) A` | **erreur** — utiliser `!(vel:80) A` |
+| `A (vel:80)` | suffixe de A si fin de règle/voix, sinon **erreur** |
+
+Pour positionner un contrôle **librement dans le flux** (entre deux éléments),
+utiliser `!()` ou `![]` :
+- `A !(vel:80) B` → `A _script(CT0) B` — contrôle instantané positionné entre A et B
+- `{![retro] A B}` → `{_retro A B}` — contrôle engine en tête de voix
+- `{!(chan:1) C8 - - -, !(chan:2) - C7}` → `{_script(CT0) C8 - - -, _script(CT1) - C7}`
+
+Deux portées pour les suffixes de règle :
+
+- **Règle** : `S -> C4 D4 E4 (vel:80)` — `()` en fin de RHS, s'applique à toute la règle.
   Compilé en : `_script(CT0) C4 D4 E4`
 
-- **Groupe** : `{A B}(vel:100)` — le contrôle s'applique au groupe polymétrique.
-  Compilé en : `{_script(CT0_start) A B _script(CT0_end)}`
+- **Groupe** : `{A B}(vel:100)` — `()` collé au `}`, s'applique au groupe.
+  Compilé en : `_script(CT0) {A B}`
 
-`[]` supporte préfixe et suffixe (`[tempo:2]A` et `A[/2]`).
-`()` ne supporte que le suffixe.
+**Contrôles instantanés dans le RHS** : quand un non-terminal se résout en purs
+contrôles (aucun élément temporel), utiliser `!()` pour les positionner dans le flux :
 
-**Exception — contrôles autonomes dans le RHS** : quand un non-terminal se résout
-en purs contrôles (aucun élément temporel), les contrôles peuvent apparaître comme
-éléments RHS autonomes. C'est le seul cas où des éléments zéro-durée sont tolérés
-dans le RHS sans être attachés à un symbole.
-
-```ebnf
-(* Résolution d'un non-terminal en contrôle runtime pur *)
-Pull0 -> (pitchbend:0)                                          (* → _script(CTn) *)
-StartPull -> (pitchcont) (pitchrange:500) (pitchbend:0)          (* → _script(CT0) _script(CT1) _script(CT2) *)
+```bpscript
+Pull0 -> !(pitchbend:0)                                          // → _script(CTn)
+StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)        // → _script(CT0) _script(CT1) _script(CT2)
 ```
 
 Ce pattern existe dans les grammaires à couches (vina, vina2, vina3) où les
@@ -351,13 +464,19 @@ arg_value   = value | backtick_inline ;
 ```ebnf
 rest              = "-" ;                            (* silence déterminé *)
 prolongation      = "_" ;                            (* étend l'événement précédent *)
-undetermined_rest = "..." ;                          (* durée calculée par le moteur *)
+undetermined_rest = "..." ;                          (* durée calculée par le moteur — compilé en _rest *)
 period            = "." ;                            (* séparateur de fragments égaux *)
 numeric_duration  = INT | INT , "/" , INT ;           (* silence de durée rationnelle *)
 ```
 
 `numeric_duration` : un nombre nu dans le flux = silence de durée rationnelle.
 **À confirmer avec Bernard** : différence exacte entre `-` et `1`.
+
+`undetermined_rest` : `...` en BPscript est compilé en `_rest` pour BP3 (commande built-in,
+token `T0, 17` dans `Encode.c`). Utilisé dans les voix polymétriques — le moteur calcule
+la durée donnant l'expression la plus simple. **Attention** : trois points littéraux `...`
+en BP3 seraient interprétés comme trois periods (`.` = `T0, 7`), pas comme un repos
+indéterminé. Le caractère historique `…` (U+2026) a été abandonné en 2022 (compat UTF-8).
 
 ### 4.3 Polymétrie
 
@@ -368,31 +487,50 @@ polymetric = "{" , voice , { "," , voice } , "}"
 voice      = rhs_element+ ;
 ```
 
+Les contrôles à l'intérieur d'une voix se positionnent avec `!()` et `![]` :
+`{!(chan:1, vel:120) C8 - - -, !(chan:1, vel:100) - C7 C7 C7}`.
+La position dans le source = la position dans la sortie BP3.
+
 Le ratio de tempo BP3 (`{2, voix1, voix2}`) s'exprime via `[speed:N]` :
 `{voix1, voix2}[speed:2]`.
 
-### 4.4 Simultanéité (`!`)
+### 4.4 Instantanéité (`!`)
 
 ```ebnf
-simultaneous = "!" , sim_target ;
+instant = "!" , instant_target ;
 
-sim_target   = symbol                                (* trigger : !dha *)
-             | symbol_call                           (* trigger avec params : !dha(vel:120) *)
-             ;
+instant_target = symbol                              (* trigger : !dha → <<dha>> *)
+               | symbol_call                         (* trigger avec params : !dha(vel:120) *)
+               | runtime_qualifier                   (* contrôle runtime : !(transpose:2) → _script(CTn) *)
+               | engine_qualifier                    (* contrôle engine : ![retro] → _retro *)
+               ;
 ```
 
-`!` est **exclusivement temporel** — il déclenche des symboles.
+`!` marque un événement **instantané** (zéro durée) dans le flux temporel.
 
-Deux usages :
+Trois usages :
+
 - **Attaché** à un primaire (`Sa!dha`) : le primaire définit la durée, le secondaire
   se déclenche au même instant. Compilé en `Sa <<dha>>`.
-- **Standalone** (`!f`) : out-time object — déclenché hors-temps, sans durée.
-  Compilé en `<<f>>`. Utilisé quand un non-terminal se résout en pur trigger.
+- **Standalone symbole** (`!f`) : out-time object — déclenché hors-temps, sans durée.
+  Compilé en `<<f>>`.
+- **Standalone contrôle** (`!(transpose:2)`, `![retro]`) : instruction instantanée
+  positionnée dans le flux. La position dans la séquence détermine le moment d'application.
+  Compilé en `_script(CTn)` ou `_retro` etc.
 
 Chaînable : `Sa!dha!spotlight`.
 
-Les mutations de flags ne passent plus par `!` — elles vont dans `[]`
-(voir § 4.12).
+Exemples avec contrôles :
+```
+{!(transpose:2) D}        → {_script(CT0) D}       // préfixe dans la voix
+{D !(transpose:2)}        → {D _script(CT0)}       // suffixe dans la voix
+{![retro] A B}             → {_retro A B}           // engine prefix
+Sa !(vel:80) Re            → Sa _script(CT0) Re     // entre deux symboles
+```
+
+Ceci remplace le mécanisme de "portée voix" : au lieu de transformer silencieusement
+un suffixe en préfixe, l'utilisateur positionne explicitement le contrôle dans le flux
+avec `!`. La position BPscript = la position BP3.
 
 ### 4.5 Out-time object (`!` standalone)
 
@@ -402,6 +540,10 @@ out_time_object = "!" , IDENT ;                      (* !f → <<f>> en BP3 *)
 
 Objet hors-temps : déclenché sans occuper de durée dans la séquence.
 Utilisé quand un non-terminal se résout en pur déclenchement.
+
+Note : `!symbol` et `!(control)` / `![control]` sont tous des formes de `!` standalone.
+La distinction est que `!symbol` produit un out-time object `<<symbol>>` tandis que
+`!(key:value)` et `![key]` produisent des tokens de contrôle (`_script(CTn)`, `_retro`, etc.).
 
 ### 4.6 Trigger entrant (`<!`)
 
@@ -440,6 +582,18 @@ template_slave  = "&" , IDENT , [ "(" , arg_list , ")" ]
 Sur un symbole : `$X` = master, `&X` = slave. Compilé en `(=X)` / `(:X)`.
 Sur un groupe : `${...}` / `&{...}`. Compilé en `(= ...)` / `(: ...)`.
 Les templates groupes peuvent contenir d'autres templates (imbrication).
+
+**Transcription (homomorphisme)** : un nom de transcription entre `$X` et `&X`
+applique la transformation au slave :
+
+```bpscript
+S -> $X tabla_stroke &X          // applique tabla_stroke au pattern capturé
+S -> $X * &X                     // applique la transcription par défaut (*)
+```
+
+Compilé en : `S --> (= X) tabla_stroke (: X)`.
+Le nom doit correspondre à une section dans l'alphabetFile, chargée via `@transcription.xxx`.
+Plusieurs transcriptions peuvent être chaînées : `$X * TR &X` → `(= X) * TR (: X)`.
 
 ### 4.10 Liaisons (~)
 
@@ -511,11 +665,29 @@ règles avec propagation du `[speed:N]` de la `}` fermante vers la `{` ouvrante 
 
 ## Couche 5 — Lexèmes
 
+### Espacement (significatif)
+
+L'espace est **significatif** pour déterminer l'attachement des qualificateurs `[]` et `()`.
+Le tokenizer annote chaque token avec un flag `spaceBefore` (booléen) indiquant si un ou
+plusieurs espaces/tabulations précèdent le token.
+
+Règles d'attachement :
+- Token `[` ou `(` **sans espace avant** → collé à l'élément précédent (suffixe)
+- Token suivant `]` ou `)` **sans espace avant** → collé au qualifier (préfixe)
+- `[` et `]` avec espace des deux côtés → qualifier flottant (erreur, utiliser `![]`)
+- `[` et `]` sans espace des deux côtés → ambigu (erreur)
+
+Le tokenizer n'élimine pas les espaces — il les consomme mais enregistre leur présence.
+
 ```ebnf
-IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' }
+IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' } , [ "-" ]
             | letter , { letter | digit | "_" | "#" | "'" | '"' } , "-" , { letter | digit | "_" | "#" | "'" | '"' | "-" } ;
-              (* The second form (with "-") applies ONLY to non-terminal identifiers
-                 (LHS symbols like Tr-11, my-var). "-" is NEVER allowed in terminal names.
+              (* First form: standard identifier, optionally with a single trailing "-".
+                 A trailing "-" (no space before it) is part of the identifier name (e.g. do4-, mi4-).
+                 A "-" after whitespace is a REST (silence).
+                 This is consistent with BP3 where do4- is a single bol name.
+                 Second form (with "-" followed by more chars) applies to non-terminal identifiers
+                 (LHS symbols like Tr-11, my-var).
                  Resolved by pre-scan: the tokenizer collects LHS symbols from the file
                  and recognizes identifiers with "-" that appear in LHS position.
                  Convention inherited from BP3 (Bernard Bel). *)
@@ -530,9 +702,16 @@ blank_line  = (* ligne vide ou whitespace seul *) ;
 ```
 
 **Contraintes lexicales** :
-- `-` (tiret) est autorisé dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`, `my-var`),
-  mais JAMAIS dans les terminaux. `dhin--` = `dhin` + silence + silence.
-  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms de terminaux (`CompileGrammar.c:1200-1203`).
+- `-` (tiret) en position **trailing** (immédiatement après un identifiant, sans espace) fait partie
+  du nom : `do4-` = un seul terminal. `do4 -` = terminal `do4` + silence.
+  `dhin--` = terminal `dhin` + silence + silence (le deuxième `-` empêche l'absorption du premier).
+  Cohérent avec BP3 où `do4-` est un nom de bol valide.
+  **Exception dans `[]`** : à l'intérieur d'un bracket, `[times-1]` est une mutation de flag
+  (décrémenter `times` de 1), pas un identifiant `times-` suivi de `1`. Le parser détecte
+  le pattern IDENT-avec-trailing-dash + INT et le décompose en flag + opérateur + valeur.
+  Ceci s'applique aux guards (`[times-1]` en LHS) et aux flags RHS (`[times-1]` en RHS).
+- `-` (tiret) en position **interne** (entre deux parties alphanumériques) est autorisé
+  dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`, `my-var`).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
   Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
 - Les underscores dans les noms sont autorisés (ex: `just_intonation`).
@@ -564,6 +743,20 @@ meter    → signature rythmique
 timeout  → limite de temps sur <! (* not yet implemented *)
 ```
 
+### Modificateurs de mode (sous-grammaire)
+
+Déclarés dans `controls.json` section `subgrammar`. Émis en preamble BP3.
+
+```
+destru   → déstructure les terminaux composés selon l'alphabet (_destru)
+striated → temps strié / pulsé (_striated)
+smooth   → temps lisse / non pulsé (_smooth)
+mm:N     → marquage métronomique en BPM (_mm(N))
+```
+
+Utilisables comme modificateurs de `@mode` : `@mode:lin(destru)`, `@mode:random(striated, mm:60)`.
+Ou en global : `@striated`, `@mm:60` (appliqué au preamble de la première sous-grammaire).
+
 ### Clés réservées de `@`
 
 ```
@@ -576,12 +769,11 @@ tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à AL
 sub.KEY                        → table de substitution depuis lib/sub.json
 routing.KEY                    → config connexion KEY depuis lib/routing.json
 hooks                          → macros d'interaction (* not yet implemented *)
+templates                      → section templates (? = wildcard, ($N) = bracket marker)
+mode:VALUE(modifiers)          → mode de sous-grammaire avec modificateurs optionnels
 tempo                          → tempo global
 meter                          → métrique globale
-mm                             → marquage métronomique
 baseHz                         → diapason (défaut 440) (* not yet implemented — current implementation uses @tuning:442 *)
-striated                       → temps strié
-smooth                         → temps lisse
 transpose                      → transposition globale
 chan                            → canal MIDI global
 vel                            → vélocité globale
@@ -620,6 +812,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `&X` | `(:X)` | template slave (symbole) |
 | `${A S B}` | `(=A S B)` | template master (groupe) |
 | `&{A S B}` | `(:A S B)` | template slave (groupe) |
+| `$X tabla_stroke &X` | `(=X) tabla_stroke (:X)` | transcription entre master et slave |
 | `~` | `&` | liaison |
 | `#X` | `#X` | contexte négatif (identique) |
 | `#?` | `#?` | boundary — pas de symbole (identique) |
@@ -627,19 +820,24 @@ lambda   → chaîne vide (efface le non-terminal)
 | `-` | `-` | silence (identique) |
 | `_` | `_` | prolongation (identique) |
 | `.` | `.` | period (identique) |
-| `...` | `...` | repos indéterminé (identique) |
+| `...` | `_rest` | repos indéterminé |
 | `[X==N]` | `/X=N/` en LHS | guard condition flag |
 | `[X-N]` | `/X-N/` en LHS | guard test + mutation |
 | `[X=N]` | `/X=N/` en RHS | mutation flag |
 | `[X]` | `/X/` en RHS | flag set/ref (nu) |
 | `C4(vel:120)` | `C4 _script(CT0)` | runtime suffixe (symbole) |
 | `S -> C4 D4 E4 (vel:80)` | `_script(CT0) C4 D4 E4` | runtime suffixe (règle) |
-| `{A B}(vel:100)` | `{_script(CT0_s) A B _script(CT0_e)}` | runtime suffixe (groupe) |
+| `{!(vel:80) A B, !(vel:60) C D}` | `{_script(CT0) A B, _script(CT1) C D}` | contrôle instantané dans voix |
+| `{A B !(vel:80), C D !(vel:60)}` | `{A B _script(CT0), C D _script(CT1)}` | contrôle instantané fin de voix |
+| `!(transpose:2)` | `_script(CTn)` | contrôle runtime instantané |
+| `![retro]` | `_retro` | contrôle engine instantané |
+| `{A B}(vel:100)` | `_script(CT0_s) {A B} _script(CT0_e)` | runtime suffixe (groupe) |
 | `@mode:random` | `RND` en mode_line | mode du bloc |
 | `[scan:left]` | `LEFT` dans la règle | mode dérivation |
 | `[weight:50-12]` | `<50-12>` | poids décroissant |
 | `[weight:K1=1]` | `<K1=1>` | K-param avec initialisation |
 | `[weight:K1]` | `<K1>` | K-param (réf. valeur courante) |
+| `[weight:inf]` | `<inf>` | poids infini (priorité absolue) |
 | `[destru]` | `_destru` en preamble | flag de sous-grammaire |
 | `A[/2]` | `/2 A` | opérateur speed (vitesse = 2) |
 | `A[\2]` | `\2 A` | opérateur speed inverse (vitesse = 1/2) |
@@ -657,11 +855,19 @@ lambda   → chaîne vide (efface le non-terminal)
 | `A(transpose:-3)` | `A _script(CT0)` | runtime valeur négative |
 | `[Ideas]` (guard) | `/Ideas/` | bare flag guard (test non-zéro) |
 | `[meter:4+4/6]` | `4+4/6` avant RHS | time signature inline |
+| `@templates` | `TEMPLATES:` | section templates (optionnelle) |
+| `?` (dans template) | `_` | wildcard terminal (un slot) |
+| `????` (dans template) | `____` | wildcards compacts (4 slots) |
+| `($0 ???)` (dans template) | `(@0 ___)` | bracket master ($ → @) |
+| `/1` (dans template) | `*1/1` | facteur d'échelle |
 
 **Contraintes lexicales** :
-- `-` (tiret) est autorisé dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`, `my-var`),
-  mais JAMAIS dans les terminaux. `dhin--` = `dhin` + silence + silence.
-  Confirmé par le code BP3 : `GetBol()` rejette `-` dans les noms de terminaux (`CompileGrammar.c:1200-1203`).
+- `-` (tiret) en position **trailing** (immédiatement après un identifiant, sans espace) fait partie
+  du nom : `do4-` = un seul terminal. `do4 -` = terminal `do4` + silence.
+  `dhin--` = terminal `dhin` + silence + silence. Cohérent avec BP3.
+  **Exception dans `[]`** : `[times-1]` = mutation flag, pas identifiant `times-` + `1`.
+- `-` (tiret) en position **interne** est autorisé dans les non-terminaux (LHS) via pré-scan
+  (ex: `Tr-11`, `my-var`).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
   Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
 - Les underscores dans les noms sont autorisés (ex: `just_intonation`).

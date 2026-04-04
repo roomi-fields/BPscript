@@ -38,7 +38,7 @@
     "trkt": { "layers": ["dayan_sharp"], "override": { "decay": 30, "noise": 0.9 } },
     "kt": { "layers": ["dayan_sharp"], "override": { "decay": 20, "noise": 0.9 } },
     "tidha": { "layers": ["dayan_light", "bayan_open"], "override": { "decay": 80 } },
-    "dhati_bol": { "layers": ["bayan_open", "dayan_light"], "override": { "decay": 100 } },
+    "dhati": { "layers": ["bayan_open", "dayan_light"], "override": { "decay": 100 } },
     "teenake": { "layers": ["dayan_ring", "dayan_sharp"], "override": { "decay": 80 } },
     "dheenage": { "layers": ["bayan_open", "dayan_ring"], "override": { "decay": 80 } },
     "dhatrkt": { "layers": ["bayan_open", "dayan_sharp"], "override": { "decay": 60 } },

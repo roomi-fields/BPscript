@@ -7,7 +7,8 @@
 
 @core
 @controls
+@alphabet.solfege:midi
 
 // Solfège français — une seule règle, 2 voix principales (chan 3 et 4)
 
-S -> {[tempo:41/30]{ re4 {fa1 fa2}[speed:17/120] 17/1920 {la2}[speed:119/1920] {do3 re3 fa3}[speed:17/80] 103/40, 57/40 {la3}[speed:17/240] 601/240, 359/240 4, 359/240 {do4 re4}[speed:17/120] 17/1920 {fa4}[speed:119/1920] {la4 do5 re5}[speed:17/80] 499/240, 461/240 {fa5}[speed:17/240] reb5 {la3 sol#3}[speed:1] 1/120, 479/120 1/120, {re3,sol3,la3} - - {- fa3}[speed:1]}[speed:1319/240] (vel:64, chan:3), {la2 - {- la0}[speed:1] reb3,{sib1,fa2} 2 {sol2,la2}}[speed:4] (vel:64, chan:4)}
+S -> {![tempo:41/30] { re4 {fa1 fa2}[speed:17/120] 17/1920 {la2}[speed:119/1920] {do3 re3 fa3}[speed:17/80] 103/40, 57/40 {la3}[speed:17/240] 601/240, 359/240 4, 359/240 {do4 re4}[speed:17/120] 17/1920 {fa4}[speed:119/1920] {la4 do5 re5}[speed:17/80] 499/240, 461/240 {fa5}[speed:17/240] reb5 {la3 sol#3}[speed:1] 1/120, 479/120 1/120, {re3,sol3,la3} - - {- fa3}[speed:1]}[speed:1319/240] !(vel:64, chan:3), {la2 - {- la0}[speed:1] reb3,{sib1,fa2} 2 {sol2,la2}}[speed:4] !(vel:64, chan:4)}

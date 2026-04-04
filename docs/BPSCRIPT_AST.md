@@ -26,6 +26,7 @@ Scene {
   cvInstances: CVInstance[]
   backticks: BacktickOrphan[]
   subgrammars: Subgrammar[]
+  templates: TemplateEntry[] | null    // section @templates (optionnelle)
 }
 ```
 
@@ -38,12 +39,14 @@ Scene {
 ```
 Directive {
   type: "Directive"
-  name: string                    // "core", "controls", "alphabet", "tuning", "routing"...
+  name: string                    // "core", "controls", "alphabet", "tuning", "routing", "mode"...
   subkey: string | null           // "western", "just_intonation", "studio"... (après le .)
   binding: string | null          // clé de connexion après : ("sc", "midi", "raga"...)
+  runtime: string | null          // pour @mode:X — la valeur du mode ("random", "lin", etc.)
   params: Param[] | null          // forme explicite (transport=sc, eval=python)
   value: string | number | null   // 120, "7/8", -24...
   aliases: Alias[] | null         // résolution de conflits
+  modifiers: ModeModifier[] | null // pour @mode:X(destru, mm:60) — modificateurs de sous-grammaire
   line: number
 }
 
@@ -198,8 +201,64 @@ Subgrammar {
   type: "Subgrammar"
   rules: Rule[]
   index: number
+  mode: string | null              // "random", "ord", "sub", "sub1", "lin", "tem", "poslong"
+  modifiers: ModeModifier[] | null // directives de sous-grammaire depuis @mode:X(modifiers)
+}
+
+ModeModifier {
+  name: string                     // clé de controls.json section "subgrammar" : destru, striated, smooth, mm
+  value: number | string | true    // true = flag sans valeur, number = mm:60
 }
 ```
+
+Exemples :
+- `@mode:lin(destru)` → `{ mode:"lin", modifiers:[{ name:"destru", value:true }] }`
+- `@mode:random(striated, mm:60)` → `{ mode:"random", modifiers:[{ name:"striated", value:true }, { name:"mm", value:60 }] }`
+
+L'encoder émet les modifiers en preamble BP3 (ligne séparée entre le mode et les règles).
+Les clés sont déclarées dans `controls.json` section `subgrammar` avec leur nom BP3
+(`destru` → `_destru`, `mm` → `_mm`).
+
+**Mode SUB/SUB1** : en mode substitution, les symboles LHS sont aussi des terminaux
+(ils restent dans la séquence après les itérations et doivent être dans l'alphabet).
+L'encoder ne les exclut pas de l'alphabet, contrairement aux modes ORD/RND où les
+symboles LHS sont des non-terminaux.
+
+### `TemplateEntry`
+
+```
+TemplateEntry {
+  type: "TemplateEntry"
+  index: number                    // [1], [2], [3]...
+  scale: string                    // "/1", "/2", "*1/2" — facteur d'échelle
+  body: TemplateElement[]
+}
+
+TemplateElement = TemplateWildcard | TemplatePeriod | TemplateBracket
+
+TemplateWildcard {
+  type: "TemplateWildcard"
+  count: number                    // ???? → count=4, ? → count=1
+}
+
+TemplatePeriod {
+  type: "TemplatePeriod"
+}
+
+TemplateBracket {
+  type: "TemplateBracket"
+  index: number                    // ($0 ...) → index=0
+  body: TemplateElement[]          // contenu du bracket (peut être vide)
+}
+```
+
+Exemples :
+- `[1] /1 ???????` → `{ index:1, scale:"/1", body:[{ type:"TemplateWildcard", count:7 }] }`
+- `[3] /1 ($0 ???)($1 )` → `{ index:3, scale:"/1", body:[{ type:"TemplateBracket", index:0, body:[{type:"TemplateWildcard", count:3}] }, { type:"TemplateBracket", index:1, body:[] }] }`
+
+La section `@templates` est optionnelle. Si absente, `Scene.templates` est `null` et BP3
+génère les templates automatiquement. Si présente, l'encoder émet la section `TEMPLATES:`
+dans la grammaire BP3 avec `_` au lieu de `?` et `@N` au lieu de `$N`.
 
 ---
 
@@ -239,6 +298,11 @@ Exemples :
 - `[Ideas-1]` -> `{ flag:"Ideas", operator:"-", value:1, mutates:true }`
 - `[Ideas]` (bare flag) -> `{ flag:"Ideas", operator:null, value:null, mutates:false }`
 
+**Note lexicale** : le tokenizer absorbe le `-` trailing dans l'identifiant (`times-` → un
+seul token IDENT). Le parser détecte le pattern `IDENT-trailing-dash + INT` dans les guards
+et les flags, et décompose en `flag` + `operator` + `value`. `[times-1]` produit donc bien
+`{ flag:"times", operator:"-", value:1 }` et non `{ flag:"times-", ... }`.
+
 ### `EngineQualifier` — instructions moteur BP3
 
 ```
@@ -251,9 +315,10 @@ EngineQualifier {
 QualPair {
   type: "QualPair"
   key: string                      // ENGINE_KEY : mode, scan, weight, tempo, scale...
-  value: string | number | boolean // "random", 50, "1/2", "K1=3", true (clé nue)
+  value: string | number | boolean // "random", 50, "1/2", "K1=3", "inf", true (clé nue)
   decrement: number | null         // pour weight:50-12
 }
+// value = "inf" pour [weight:inf] → poids infini (compilé en <°> pour BP3)
 
 TempoOp {
   type: "TempoOp"
@@ -264,8 +329,16 @@ TempoOp {
 
 Exemples :
 - `[mode:random]` → `{ pairs:[{key:"mode", value:"random"}] }`
+- `[retro]` → `{ pairs:[{key:"retro", value:true}] }` → compilé en `_retro` (sans parenthèses)
+- `[rotate:2]` → `{ pairs:[{key:"rotate", value:2}] }` → compilé en `_rotate(2)`
 - `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `/2 A`
 - `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique)
+- `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
+
+**Clés nues** : quand `value === true` (clé sans `:valeur`), l'encodeur émet le nom BP3
+sans parenthèses (`_retro`). Quand une valeur est fournie, avec parenthèses (`_rotate(2)`).
+
+**Poids infini** : `value === "inf"` → compilé en `<inf>` (priorité absolue en BP3).
 
 ### `RuntimeQualifier` — paramètres runtime
 
@@ -286,7 +359,8 @@ RuntimePair {
 `()` est **toujours suffixe** (jamais en préfixe). La portée est déduite de la position :
 - **symbole** : `Sa(vel:120)` → `Sa _script(CT0)` — attaché au `Symbol` node
 - **règle** : `S -> C4 D4 (vel:80)` → `_script(CT1) C4 D4` — dans `Rule.runtimeQualifier`
-- **groupe** : `{A B}(filter:lp)` → `{_script(CT2_start) A B _script(CT2_end)}` — dans `Polymetric.runtimeQualifier`
+- **instantané** : `{!(chan:1) C8 -, !(chan:2) C7 C7}` → `{_script(CT2) C8 -, _script(CT3) C7 C7}` — via `InstantControl` dans le flux
+- **groupe** : `{A B}(filter:lp)` → `_script(CT4_start) {A B} _script(CT4_end)` — dans `Polymetric.runtimeQualifier`
 
 Le transpileur maintient une table de mapping `CTn → { scope, params }` passée au dispatcher.
 
@@ -305,7 +379,8 @@ LhsElement = Symbol | Variable | Wildcard | Context | RawBrace
 ```
 RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
            | Period | NumericDuration | Polymetric
-           | SimultaneousGroup | OutTimeObject | TriggerIn | Variable | Wildcard
+           | SimultaneousGroup | OutTimeObject | InstantControl | TriggerIn
+           | Variable | Wildcard
            | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup
            | TieStart | TieContinue | TieEnd
            | NilString | BacktickStandalone | Context | RawBrace
@@ -314,23 +389,27 @@ RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
 ### Qualificateurs par élément
 
 Tout `RhsElement` peut porter des qualificateurs moteur `[]` (préfixe ou suffixe)
-et/ou runtime `()` (suffixe uniquement) :
+et/ou runtime `()` (suffixe uniquement). La position est déterminée par l'**espacement** :
 
 ```
 RhsElement {
   ...                                            // propriétés spécifiques au type
-  controlQualifiers: (EngineQualifier | RuntimeQualifier)[] | null
-  controlPrefix: boolean | null                  // true si le premier qualifier est un préfixe (engine [] uniquement)
-  tempoOp: TempoOp | null                        // suffixe [/2], [*3] etc.
+  prefixQualifiers: EngineQualifier[] | null     // [] collé à droite : [/2]A, [retro]A
+  suffixQualifiers: (EngineQualifier | RuntimeQualifier)[] | null  // [] ou () collé à gauche : A[weight:50], A(vel:80)
 }
 ```
 
-Exemples :
-- `[tempo:2]A` (moteur, préfixe) : `controlQualifiers: [{tempo:2}]`, `controlPrefix: true`
-- `A(vel:80)` (runtime, suffixe) : `controlQualifiers: [{vel:80}]`, `controlPrefix: null`
-- `A[/2]` (opérateur temporel, suffixe) : `tempoOp: { operator:"/", value:2 }`
+La distinction préfixe/suffixe est déterminée par le **tokenizer** via le champ
+`spaceBefore` sur chaque token. Le parser utilise cette information pour router
+le qualificateur dans `prefixQualifiers` ou `suffixQualifiers`.
 
-`[]` supporte préfixe et suffixe. `()` est toujours suffixe sur l'element.
+Exemples :
+- `[/2]A` (préfixe, collé à A) : `prefixQualifiers: [{ tempoOp: {"/", 2} }]`
+- `A[weight:50]` (suffixe, collé à A) : `suffixQualifiers: [{ weight: 50 }]`
+- `A(vel:80)` (runtime suffixe) : `suffixQualifiers: [{ vel: 80 }]`
+- `A [X] B` → **erreur** : qualifier flottant, utiliser `A ![X] B`
+
+`[]` supporte préfixe et suffixe. `()` est toujours suffixe.
 
 ### `Symbol`
 
@@ -367,6 +446,11 @@ Prolongation { type: "Prolongation" }
 UndeterminedRest { type: "UndeterminedRest" }
 ```
 
+Compilé en `_rest` (commande BP3 built-in, encodée `T0, 17` dans `Encode.c`).
+**Pas en `...`** — trois points seraient interprétés comme trois periods (`T0, 7` × 3).
+Le caractère historique `…` (Unicode U+2026) a été abandonné par Bernard en 2022
+pour des raisons de compatibilité UTF-8/HTML. `_rest` est la notation recommandée.
+
 ### `Period`
 
 ```
@@ -384,11 +468,19 @@ NumericDuration { type: "NumericDuration", numerator: number, denominator: numbe
 ```
 Polymetric {
   type: "Polymetric"
-  voices: RhsElement[][]
+  voices: Voice[]
   qualifiers: Qualifier[]                    // speed et scale uniquement (engine [])
   runtimeQualifier: RuntimeQualifier | null  // suffixe () sur le groupe : {A B}(vel:100)
 }
+
+Voice {
+  elements: RhsElement[]
+}
 ```
+
+Les contrôles à l'intérieur d'une voix se positionnent avec `!()` et `![]` comme
+éléments instantanés dans le flux. Pas de portée voix implicite — la position dans
+le source = la position dans la sortie BP3.
 
 **Contrainte** : seuls `speed` et `scale` sont des qualifiers de polymétrie.
 Les autres qualifiers (`weight`, `mode`, `scan`, `on_fail`) après `}` appartiennent
@@ -428,6 +520,24 @@ OutTimeObject { type: "OutTimeObject", name: string }
 `!f` standalone (sans primaire) → `<<f>>` en BP3. Objet hors-temps déclenché
 sans occuper de durée dans la séquence.
 
+### `InstantControl`
+
+```
+InstantControl {
+  type: "InstantControl"
+  qualifier: RuntimeQualifier | EngineQualifier   // le contrôle à appliquer
+}
+```
+
+`!(vel:80)` → `_script(CTn)` en BP3. `![retro]` → `_retro` en BP3.
+Événement instantané (zéro durée) positionné explicitement dans le flux temporel.
+La position dans le source BPscript = la position dans la sortie BP3.
+
+Exemples :
+- `{!(chan:1) C8 - - -}` → `{_script(CT0) C8 - - -}`
+- `{C8 - - - !(chan:1)}` → `{C8 - - - _script(CT0)}`
+- `![retro] A B` → `_retro A B`
+
 ### `Variable`
 
 ```
@@ -452,9 +562,18 @@ TemplateMasterGroup { type: "TemplateMasterGroup", elements: RhsElement[] }
 ### `TemplateSlave` / `TemplateSlaveGroup`
 
 ```
-TemplateSlave { type: "TemplateSlave", name: string, args: Arg[] | null }
-TemplateSlaveGroup { type: "TemplateSlaveGroup", elements: RhsElement[] }
+TemplateSlave { type: "TemplateSlave", name: string, args: Arg[] | null, transcriptions: string[] | null }
+TemplateSlaveGroup { type: "TemplateSlaveGroup", elements: RhsElement[], transcriptions: string[] | null }
 ```
+
+Le champ `transcriptions` contient les noms de transcription entre le master et le slave :
+- `$X tabla_stroke &X` → `transcriptions: ["tabla_stroke"]`
+- `$X * TR &X` → `transcriptions: ["*", "TR"]`
+- `$X &X` (sans transcription) → `transcriptions: null`
+
+Le parser collecte les identifiants entre le `$X` et le `&X` correspondant.
+L'encoder utilise ces noms pour émettre les labels dans la grammaire BP3 et
+pour construire le fichier -ho. avec les étiquettes appropriées.
 
 ### `TieStart` / `TieContinue` / `TieEnd`
 
@@ -487,6 +606,8 @@ Context { type: "Context", positive: boolean, symbols: string[] }
 ```
 
 `#X` (un seul symbole), `#(X Y)` (groupe), `#?` (boundary) sont les trois formes du contexte négatif.
+Les wildcards `?N` sont acceptés dans les groupes : `#(?1 ?3 ?2 ?4)` → `symbols: ["?1","?3","?2","?4"]`.
+Utilisé dans les grammaires LIN pour les patterns de permutation (ex: change ringing).
 
 ### `RawBrace`
 
@@ -513,6 +634,9 @@ FlagExpr {
 }
 ```
 
+Même note lexicale que `Guard` : `[times-1]` → `{ flag:"times", operator:"-", value:1 }`
+(le parser décompose le trailing-dash absorbé par le tokenizer).
+
 ### `Literal`
 
 ```
@@ -523,7 +647,10 @@ Literal { type: "Literal", value: number | string }
 
 ## Contraintes lexicales
 
-- `-` n'est JAMAIS autorisé dans un identifiant (`dhin--` = `dhin` + silence + silence)
+- `-` trailing (sans espace avant) fait partie de l'identifiant : `do4-` = un seul terminal.
+  `do4 -` = terminal `do4` + silence. `dhin--` = terminal `dhin` + silence + silence.
+  **Exception dans `[]`** : `[times-1]` = mutation flag (`times` − 1), pas identifiant `times-`.
+- `-` interne autorisé dans les non-terminaux LHS via pré-scan (`Tr-11`, `my-var`)
 - `#` est autorisé dans les identifiants pour les altérations (C#4, F#2)
 - Les underscores sont autorisés dans les noms (`just_intonation`)
 

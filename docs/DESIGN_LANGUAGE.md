@@ -234,6 +234,7 @@ A[/2] B C                       // divise la vitesse de A
 // Portee regle -- en fin de regle
 S -> A B C [mode:random]        // mode de la sous-grammaire
 Bass -> C2 C2 C3 [weight:50]    // poids de la regle
+X X -> abca [weight:inf]        // poids infini (priorite absolue)
 
 // Portee groupe -- apres le groupe
 {A B C}[/2]                     // vitesse du groupe divisee
@@ -248,7 +249,7 @@ et les traduit en instructions BP3. Elles font partie du langage, pas d'une libr
 /N   \N   *N   **N    operateurs temporels BP3
 mode               mode du bloc (random, ord, sub1, lin, tem, poslong)
 scan               sens du parcours par regle (left, right, rnd) -- defaut : rnd
-weight             poids de la regle pour la selection
+weight             poids de la regle (entier, K-param, ou inf pour priorite absolue)
 speed              ratio de tempo sur un groupe polymetrique
 on_fail            gestion d'echec (skip, retry(N), fallback(X))
 tempo              tempo local ou global (@tempo:120)

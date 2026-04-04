@@ -1,22 +1,24 @@
-// all-items.bps — Produce all items (test templates)
-// Traduit de bp3-engine/library/examples/all-items/grammar.gr
+// all-items.bps — Test _goto, _failed, _repeat, K-params
+// Traduit de bp3-engine/test-data/-gr.tryAllItems (Bernard)
 
 @core
 @controls
-
-gate a:midi
-gate b:midi
-
-// --- Sous-grammaire 1 @mode:random ---
+@alphabet.western:midi
 
 @mode:random
-S -> $X X &X
-S -> X X
+S -> X Y [Flag=2] [Choice=1]
 
 -----
 
-// --- Sous-grammaire 2 @mode:random, destru ---
-
 @mode:random
-X -> a [destru]
-X -> b
+[Choice==1] [Flag-1] X -> C1 X
+[Choice==2] X -> C2 X [repeat:1]
+[Choice==3] X -> C3 X [weight:100-50]
+X -> C4 [goto:3,1]
+Y -> D3
+X -> T
+
+-----
+
+T -> C5 [failed:3,2]
+Y -> D6
