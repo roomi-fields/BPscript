@@ -635,6 +635,30 @@ Le temps MIDI du NoteOff est `t0 + t1` (ligne 1435), où `t1` a été avancé pa
 
 ---
 
+## 36. Production TEXT sans séparateurs quand un alphabet est chargé
+
+**Grammaire :** `-gr.checkNegativeContext`, production mode TEXT
+
+**Symptôme :** Sans alphabet chargé, `getResult()` retourne les terminaux séparés par des espaces :
+```
+A A A A2 A3 A1
+```
+
+Avec un alphabet chargé (contenant les mêmes terminaux `A`, `A1`, `A2`, `A3`), `getResult()` retourne tout concaténé :
+```
+AAAA2A3A1
+```
+
+**Contexte :** Nous testons les "silent sound objects" — un alphabet plat où les terminaux sont déclarés comme bols sans contenu MIDI. Pour les grammaires MIDI, ça fonctionne parfaitement (34/37 EXACT). Pour les TEXT, le chargement de l'alphabet change le formatage de la production texte.
+
+**Paramètres testés :** `SplitTimeObjects=1` et `SplitVariables=1` ne changent rien au comportement.
+
+**Question pour Bernard :** Est-ce qu'il y a un paramètre ou mécanisme pour forcer la séparation des terminaux dans la production texte quand un alphabet est chargé ? Ou est-ce que le comportement (concaténation sans espaces) est voulu pour les bols déclarés en alphabet ?
+
+**Impact :** 1 grammaire TEXT sur 37 (negative-context). Les grammaires MIDI ne sont pas affectées.
+
+---
+
 ## 34. Proposition : production de timed tokens structurés par le moteur BP3
 
 ### Contexte
