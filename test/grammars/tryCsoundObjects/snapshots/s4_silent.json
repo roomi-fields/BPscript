@@ -1,0 +1,18 @@
+{
+  "source": "original.gr+silent.al",
+  "stage": "S4",
+  "mode": "text",
+  "tokens": [
+    [
+      "{a,b}",
+      0,
+      0
+    ],
+    [
+      "c",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-04-04"
+}

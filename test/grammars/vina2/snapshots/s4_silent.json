@@ -1,0 +1,43 @@
+{
+  "source": "original.gr+silent.al",
+  "stage": "S4",
+  "mode": "text",
+  "tokens": [
+    [
+      "{sa4",
+      0,
+      0
+    ],
+    [
+      "_",
+      0,
+      0
+    ],
+    [
+      "_,_pitchcont",
+      0,
+      0
+    ],
+    [
+      "_pitchrange(500)",
+      0,
+      0
+    ],
+    [
+      "_pitchbend(0)",
+      0,
+      0
+    ],
+    [
+      "-",
+      0,
+      0
+    ],
+    [
+      "_pitchbend(500)}",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-04-04"
+}
