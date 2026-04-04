@@ -3,37 +3,52 @@
   "stage": "S5",
   "mode": "text",
   "compile": {
-    "grammarLines": 8,
-    "alphabetSize": 23
+    "grammarLines": 10,
+    "alphabetSize": 3
   },
   "tokens": [
     [
-      "A",
+      "a",
       0,
       0
     ],
     [
-      "A",
+      "a",
       0,
       0
     ],
     [
-      "A",
+      "a",
       0,
       0
     ],
     [
-      "A2",
+      "b",
       0,
       0
     ],
     [
-      "A3",
+      "b",
       0,
       0
     ],
     [
-      "A1",
+      "b",
+      0,
+      0
+    ],
+    [
+      "c",
+      0,
+      0
+    ],
+    [
+      "c",
+      0,
+      0
+    ],
+    [
+      "c",
       0,
       0
     ]

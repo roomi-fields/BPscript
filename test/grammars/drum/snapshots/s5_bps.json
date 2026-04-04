@@ -1,14 +1,11 @@
 {
-  "source": "scenes/drum.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    60
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "midi",
+  "compile": {
+    "grammarLines": 4,
+    "alphabetSize": 350
+  },
   "tokens": [
     [
       "C8",
@@ -71,5 +68,5 @@
       3540
     ]
   ],
-  "date": "2026-03-30"
+  "date": "2026-04-04"
 }

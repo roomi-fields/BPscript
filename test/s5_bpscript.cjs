@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 /**
- * S4: Compile BPscript scene and run on WASM engine.
+ * S5: Compile BPscript scene → BP3 grammar → run on WASM → timed tokens.
  *
- * Usage: node s4_bpscript.cjs drum
- * Output: test/grammars/drum/snapshots/s4_bps.json
+ * Pipeline: scene.bps → transpiler(compileBPS) → grammar + alphabet + settings → WASM → timed tokens
+ * Comparison: S5 vs S4 (same terminal names, same engine, different grammar source)
+ *
+ * scene.bps are in test/grammars/{name}/scene.bps
+ *
+ * Output: test/grammars/{name}/snapshots/s5_bps.json
+ *
+ * Usage: node s5_bpscript.cjs drum --bin <version>
  */
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -17,55 +23,55 @@ if (!name) { console.error('Usage: node s5_bpscript.cjs <grammar> --bin <version
 const binTag = requireBinTag();
 
 const ROOT = path.resolve(__dirname, '..');
-const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const DIST = _resolveDist(binTag);
-const SCENES = path.resolve(ROOT, 'scenes');
 const DIR = path.join(__dirname, 'grammars', name);
+const TMP = `/tmp/_s5_${name}`;
 
-const bpsFile = path.join(SCENES, `${name}.bps`);
-if (!fs.existsSync(bpsFile)) { console.error(`Not found: ${bpsFile}`); process.exit(1); }
+// Find scene.bps (in grammar dir or scenes/)
+const bpsFile = fs.existsSync(path.join(DIR, 'scene.bps'))
+  ? path.join(DIR, 'scene.bps')
+  : path.join(ROOT, 'scenes', `${name}.bps`);
+if (!fs.existsSync(bpsFile)) { console.error(`Not found: scene.bps for ${name}`); process.exit(1); }
 
-// Read settings from S2 snapshot (reuse same params)
-// Look for S2 snapshot — try scene name dir first, then check map for grammar name
 const GRAMMARS = require('./grammars/grammars.json');
-const grName = GRAMMARS[name]?.bernard || name;
-const s2Snap = fs.existsSync(path.join(__dirname, 'grammars', name, 'snapshots', 's2_orig.json'))
-  ? path.join(__dirname, 'grammars', name, 'snapshots', 's2_orig.json')
-  : path.join(__dirname, 'grammars', grName, 'snapshots', 's2_orig.json');
-let sp = [0, 10, 10, 1, 1, 60];
-if (fs.existsSync(s2Snap)) {
-  try { sp = JSON.parse(fs.readFileSync(s2Snap, 'utf-8')).settings || sp; } catch(e) {}
-}
-// S4 ALWAYS uses NoteConvention=0 (silent sound objects, opaque terminals)
-sp[0] = 0;
+const gramDef = GRAMMARS[name];
+const s1Mode = gramDef?.production_mode || 'midi';
+const useTextMode = s1Mode === 'text';
 
-// Compile BPscript
+// Step 1: Compile BPscript via ESM wrapper (transpiler uses ES modules)
+const compileScript = `
+import { compileBPS } from '${path.join(ROOT, 'src/transpiler/index.js').replace(/\\/g, '/')}';
+import { readFileSync, writeFileSync } from 'fs';
+const source = readFileSync('${bpsFile.replace(/\\/g, '/')}', 'utf8');
+const r = compileBPS(source);
+writeFileSync('${TMP}_gr.txt', r.grammar || '');
+writeFileSync('${TMP}_al.txt', r.alphabetFile || (Array.isArray(r.alphabet) ? r.alphabet.join('\\n') : '') || '');
+writeFileSync('${TMP}_se.txt', r.settingsJSON || '');
+const info = { errors: r.errors || [], grammarLines: (r.grammar || '').split('\\n').length, alphabetSize: (r.alphabet || []).length };
+writeFileSync('${TMP}_compile.json', JSON.stringify(info));
+`;
+fs.writeFileSync(`${TMP}_compile.mjs`, compileScript);
+
 try {
-  execSync(
-    `node --input-type=module -e "import{compileBPS}from'./src/transpiler/index.js';import{readFileSync,writeFileSync}from'fs';const r=compileBPS(readFileSync('${bpsFile.replace(/\\/g,'\\\\')}','utf8'));writeFileSync('/tmp/_s4_gr.txt',r.grammar||'');writeFileSync('/tmp/_s4_al.txt',r.alphabetFile||(Array.isArray(r.alphabet)?r.alphabet.join('\\n'):'')||'');writeFileSync('/tmp/_s4_se.txt',r.settingsJSON||'');if(r.errors&&r.errors.length){process.stderr.write(r.errors[0].message);process.exit(1);}"`,
-    { cwd: ROOT, timeout: 10000, encoding: 'utf-8', stdio: ['pipe','pipe','pipe'] }
-  );
+  execSync(`node ${TMP}_compile.mjs`, { cwd: ROOT, timeout: 10000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
 } catch (e) {
-  console.error(`S4 COMPILE FAIL: ${(e.stderr || e.message || '').substring(0, 80)}`);
+  console.error(`S5 COMPILE FAIL: ${(e.stderr || e.message || '').substring(0, 120)}`);
   process.exit(1);
 }
 
-// Override MaxItemsProduce in S4 settings for reproducible comparison
-try {
-  const seRaw = fs.readFileSync('/tmp/_s4_se.txt', 'utf-8');
-  if (seRaw.trim()) {
-    const seObj = JSON.parse(seRaw);
-    seObj.MaxItemsProduce = {name: "Max items to produce", value: "10"};
-    fs.writeFileSync('/tmp/_s4_se.txt', JSON.stringify(seObj));
-  }
-} catch(e) {}
+const compileInfo = JSON.parse(fs.readFileSync(`${TMP}_compile.json`, 'utf-8'));
+if (compileInfo.errors.length > 0) {
+  console.error(`S5 COMPILE ERRORS: ${compileInfo.errors.map(e => e.message).join('; ')}`);
+  process.exit(1);
+}
 
-// Run WASM
+// Step 2: Run WASM with compiled grammar
 const wasmScript = `
 var fs=require('fs');
-process.chdir('${DIST.replace(/\\/g,'/')}');
+var TMP='${TMP}';
+process.chdir('${DIST.replace(/\\/g, '/')}');
 console.log=function(){};
-require('${path.join(DIST,'bp3.js').replace(/\\/g,'/')}')().then(function(M){
+require('${path.join(DIST, 'bp3.js').replace(/\\/g, '/')}')().then(function(M){
   var init=M.cwrap('bp3_init','number',[]);
   var loadGr=M.cwrap('bp3_load_grammar','number',['string']);
   var loadAl=M.cwrap('bp3_load_alphabet','number',['string']);
@@ -73,34 +79,53 @@ require('${path.join(DIST,'bp3.js').replace(/\\/g,'/')}')().then(function(M){
   var setSeed=M.cwrap('bp3_set_seed','void',['number']);
   var produce=M.cwrap('bp3_produce','number',[]);
   var getTT=M.cwrap('bp3_get_timed_tokens','string',[]);
+  var getResult=M.cwrap('bp3_get_result','string',[]);
+  var setWriteMidi=M.cwrap('bp3_set_write_midi','void',['number']);
   init();
-  var seJson=fs.readFileSync('/tmp/_s4_se.txt','utf-8');if(seJson.trim())loadSettings(seJson);
+  var seJson=fs.readFileSync(TMP+'_se.txt','utf-8');
+  if(seJson.trim())loadSettings(seJson);
+  if(${useTextMode ? 'true' : 'false'})setWriteMidi(0);
   setSeed(1);
-  var al=fs.readFileSync('/tmp/_s4_al.txt','utf-8');if(al.trim())loadAl(al);
-  loadGr(fs.readFileSync('/tmp/_s4_gr.txt','utf-8'));
+  var al=fs.readFileSync(TMP+'_al.txt','utf-8');if(al.trim())loadAl(al);
+  loadGr(fs.readFileSync(TMP+'_gr.txt','utf-8'));
   var r=produce();
-  var raw=JSON.parse(getTT());
-  var filtered=raw.filter(function(t){return t.token!=='-'&&t.token!=='&'&&t.token!=='.'&&!t.token.startsWith('_');});
-  var tokens=filtered.map(function(t){return[t.token,t.start,t.end];});
-  process.stdout.write(JSON.stringify({r:r,tokens:tokens})+'\\n');
+  var timed;
+  if(${useTextMode ? 'true' : 'false'}){
+    var txt=getResult();
+    var lines=txt.split('\\n').filter(function(l){return l.trim();});
+    var textTokens=[];
+    for(var i=0;i<lines.length;i++){
+      var names=lines[i].trim().split(/\\s+/).filter(function(t){return t;});
+      for(var j=0;j<names.length;j++){var n=names[j].replace(/^'(.*)'$/,'$1');textTokens.push([n]);}
+    }
+    timed=textTokens.map(function(t){return[t[0],0,0];});
+  } else {
+    var timedRaw=JSON.parse(getTT());
+    timed=timedRaw.map(function(t){return[t.token,t.start,t.end];});
+  }
+  require('fs').writeFileSync(TMP+'_result.json',JSON.stringify({r:r,timed:timed}));
+  process.stdout.write('OK\\n');
   process.exit(0);
-}).catch(function(e){process.stdout.write(JSON.stringify({error:e.message.substring(0,80)})+'\\n');process.exit(0);});
-setTimeout(function(){process.stdout.write(JSON.stringify({error:'TIMEOUT'})+'\\n');process.exit(0);},55000);
+}).catch(function(e){require('fs').writeFileSync(TMP+'_result.json',JSON.stringify({error:e.message.substring(0,80)}));process.stdout.write('OK\\n');process.exit(0);});
+setTimeout(function(){require('fs').writeFileSync(TMP+'_result.json',JSON.stringify({error:'TIMEOUT'}));process.stdout.write('OK\\n');process.exit(0);},55000);
 `;
 
-fs.writeFileSync('/tmp/_s4_wasm.cjs', wasmScript);
+fs.writeFileSync(`${TMP}_wasm.cjs`, wasmScript);
 try {
-  const out = execSync('node /tmp/_s4_wasm.cjs', { timeout: 60000, encoding: 'utf-8', stdio: ['pipe','pipe','pipe'] });
-  const line = out.trim().split('\n').filter(l => l.startsWith('{')).pop();
-  const result = line ? JSON.parse(line) : { error: 'no output' };
-  if (result.error) { console.error(`S4 FAIL: ${result.error}`); process.exit(1); }
+  execSync(`node ${TMP}_wasm.cjs`, { timeout: 60000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+  const resultJson = fs.readFileSync(`${TMP}_result.json`, 'utf-8');
+  const result = JSON.parse(resultJson);
+  if (result.error) { console.error(`S5 WASM FAIL: ${result.error}`); process.exit(1); }
 
   const snapDir = path.join(DIR, 'snapshots');
   if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
-  const snap = { source: `scenes/${name}.bps`, stage: 'S4', settings: sp, tokens: result.tokens, date: new Date().toISOString().substring(0, 10) };
-  fs.writeFileSync(path.join(snapDir, 's4_bps.json'), JSON.stringify(snap, null, 2));
-  console.log(`S4 OK: ${result.tokens.length} tokens → ${name}/snapshots/s4_bps.json`);
+  const today = new Date().toISOString().substring(0, 10);
+  const snap = { source: `scene.bps`, stage: 'S5', mode: s1Mode,
+    compile: { grammarLines: compileInfo.grammarLines, alphabetSize: compileInfo.alphabetSize },
+    tokens: result.timed, date: today };
+  fs.writeFileSync(path.join(snapDir, 's5_bps.json'), JSON.stringify(snap, null, 2));
+  console.log(`S5 OK: ${result.timed.length} tokens → ${name}/snapshots/s5_bps.json`);
 } catch (e) {
-  console.error(`S4 FAIL: ${(e.stderr || e.message || '').substring(0, 80)}`);
+  console.error(`S5 WASM FAIL: ${(e.stderr || e.message || '').substring(0, 120)}`);
   process.exit(1);
 }

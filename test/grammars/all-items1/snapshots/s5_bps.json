@@ -1,14 +1,11 @@
 {
-  "source": "scenes/all-items1.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    60
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "text",
+  "compile": {
+    "grammarLines": 16,
+    "alphabetSize": 350
+  },
   "tokens": [
     [
       "C3",
@@ -681,5 +678,5 @@
       0
     ]
   ],
-  "date": "2026-03-30"
+  "date": "2026-04-04"
 }

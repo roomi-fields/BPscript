@@ -1,14 +1,11 @@
 {
-  "source": "scenes/ek-do-tin.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    30,
-    10,
-    1,
-    1,
-    3600
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "text",
+  "compile": {
+    "grammarLines": 10,
+    "alphabetSize": 0
+  },
   "tokens": [],
-  "date": "2026-03-30"
+  "date": "2026-04-04"
 }

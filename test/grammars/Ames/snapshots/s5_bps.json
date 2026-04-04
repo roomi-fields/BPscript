@@ -1,14 +1,11 @@
 {
-  "source": "scenes/Ames.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    15
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "midi",
+  "compile": {
+    "grammarLines": 12,
+    "alphabetSize": 350
+  },
   "tokens": [
     [
       "F#3",
@@ -66,5 +63,5 @@
       6000
     ]
   ],
-  "date": "2026-03-30"
+  "date": "2026-04-04"
 }

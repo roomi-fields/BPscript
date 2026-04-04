@@ -3,7 +3,7 @@
   "stage": "S5",
   "mode": "midi",
   "compile": {
-    "grammarLines": 38,
+    "grammarLines": 121,
     "alphabetSize": 350
   },
   "tokens": [],

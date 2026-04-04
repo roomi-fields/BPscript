@@ -1,20 +1,37 @@
 {
-  "source": "scenes/look-and-say.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    60
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "text",
+  "compile": {
+    "grammarLines": 14,
+    "alphabetSize": 3
+  },
   "tokens": [
     [
       "d3",
       0,
       0
+    ],
+    [
+      "d1",
+      0,
+      0
+    ],
+    [
+      "d1",
+      0,
+      0
+    ],
+    [
+      "d1",
+      0,
+      0
+    ],
+    [
+      "d1",
+      0,
+      0
     ]
   ],
-  "date": "2026-03-30"
+  "date": "2026-04-04"
 }

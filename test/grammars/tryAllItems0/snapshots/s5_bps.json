@@ -1,25 +1,27 @@
 {
-  "source": "scenes/tryAllItems0.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    60
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "text",
+  "compile": {
+    "grammarLines": 10,
+    "alphabetSize": 26
+  },
   "tokens": [
     [
-      "b",
+      "a",
       0,
-      1000
+      0
     ],
     [
       "b",
-      1000,
-      2000
+      0,
+      0
+    ],
+    [
+      "a",
+      0,
+      0
     ]
   ],
-  "date": "2026-03-30"
+  "date": "2026-04-04"
 }
