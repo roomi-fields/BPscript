@@ -320,8 +320,15 @@ require('${path.join(DIST,'bp3.js').replace(/\\/g,'/')}')().then(function(M){
     }
   }
   // Timed tokens (for S3)
-  var timedRaw=JSON.parse(getTT());
-  var timed=timedRaw.map(function(t){return[t.token,t.start,t.end];});
+  // Text grammars: use getResult() text tokens (p_Instance misses structural markers like /2)
+  // MIDI grammars: use bp3_get_timed_tokens() (p_Instance has full timing)
+  var timed;
+  if(${useTextMode ? 'true' : 'false'}){
+    timed=textTokens.map(function(t){return[t[0],0,0];});
+  } else {
+    var timedRaw=JSON.parse(getTT());
+    timed=timedRaw.map(function(t){return[t.token,t.start,t.end];});
+  }
   // MIDI events (for midi mode S2)
   var midiRaw=JSON.parse(getMidi());
   var pending={};

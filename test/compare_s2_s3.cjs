@@ -113,12 +113,16 @@ for (const name of names) {
   const mode = def.production_mode || s2.mode || 'midi';
   const s2t = s2.tokens || [];
 
-  // Filter S3 timed tokens: remove control tokens and silences
+  // Filter S3 timed tokens: for MIDI, remove control tokens and silences
+  // (p_Instance includes _vel/_chan/silence entries not in MIDI events).
+  // For TEXT, S3 now uses getResult() same as S2 — no filtering needed.
   const s3raw = s3.tokens || [];
-  const s3filtered = s3raw.filter(t => {
-    const tok = t[0] || '';
-    return tok !== '-' && tok !== '&' && tok !== '.' && !tok.startsWith('_');
-  });
+  const s3filtered = (mode === 'midi')
+    ? s3raw.filter(t => {
+        const tok = t[0] || '';
+        return tok !== '-' && tok !== '&' && tok !== '.' && !tok.startsWith('_');
+      })
+    : s3raw;
 
   // Normalize S3 token names and extract MIDI keys
   const s3norm = s3filtered.map(t => {
