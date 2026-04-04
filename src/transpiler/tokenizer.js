@@ -87,7 +87,8 @@ function prescanHyphenatedNonTerminals(source) {
   const arrowRe = /^.*?(?:->|<-|<>)/gm;
   let m;
   while ((m = arrowRe.exec(source)) !== null) {
-    const lhs = m[0].replace(/->|<-|<>/, '').trim();
+    // Strip guard brackets [..] before scanning — K1-1 inside guards is NOT a non-terminal
+    const lhs = m[0].replace(/->|<-|<>/, '').replace(/\[[^\]]*\]/g, '').trim();
     // Extract identifiers containing '-' from the LHS
     // Match sequences of alphanumeric/_ chars joined by hyphens: Tr-11, my-var-3
     const identRe = /[a-zA-Z][a-zA-Z0-9_#'"]*(?:-[a-zA-Z0-9_#'"]+)+/g;

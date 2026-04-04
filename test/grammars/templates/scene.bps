@@ -8,6 +8,7 @@
 @core
 @controls
 @alphabet.western:midi
+@allitems
 
 // Settings
 @mm:60

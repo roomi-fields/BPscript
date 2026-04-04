@@ -47,6 +47,7 @@ Directive {
   value: string | number | null   // 120, "7/8", -24...
   aliases: Alias[] | null         // résolution de conflits
   modifiers: ModeModifier[] | null // pour @mode:X(destru, mm:60) — modificateurs de sous-grammaire
+  timePatterns: TimePattern[] | null // pour @timepatterns: t1=1/1, t2=3/2
   line: number
 }
 
@@ -60,6 +61,11 @@ Alias {
   type: "Alias"
   from: string
   to: string
+}
+
+TimePattern {
+  name: string                    // "t1", "t2" — nom du time pattern
+  ratio: string                   // "1/1", "3/2" — ratio de durée
 }
 ```
 
@@ -87,6 +93,9 @@ Exemples :
 - `@tempo:120` -> `{ name:"tempo", subkey:null, value:120 }`
 - `@baseHz:440` -> `{ name:"baseHz", subkey:null, value:440 }`
 - `@alphabet.western(A:La)` -> `{ name:"alphabet", subkey:"western", aliases:[{from:"A", to:"La"}] }`
+- `@improvize` -> `{ name:"improvize" }` — active Improvize=1 dans les settings BP3
+- `@allitems` -> `{ name:"allitems" }` — active AllItems=1 dans les settings BP3
+- `@timepatterns: t1=1/1, t2=3/2` -> `{ name:"timepatterns", timePatterns:[{name:"t1", ratio:"1/1"}, {name:"t2", ratio:"3/2"}] }`
 
 ---
 

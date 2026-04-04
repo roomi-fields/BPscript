@@ -13,19 +13,9 @@
 @mm:120
 
 // Time patterns — ratios de durée nommés
-// NOTE: la section TIMEPATTERNS: de BP3 n'a pas d'équivalent direct en BPscript.
-// Pour l'instant, on les passe comme terminaux opaques et la section TIMEPATTERNS:
-// est générée séparément.
-// TODO: trouver une syntaxe BPscript pour déclarer les time patterns.
-
-// Non-terminaux : S, Part1, Part2
-// Terminaux time patterns : t1, t2, t3, t4 (ratios de durée)
-// Terminaux notes : C4, D4, E4, F4, A4, B4, C5, E5
+@timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
 
 @mode:random
 S -> {t1 t2,Part1 Part2} [speed:10]
 Part1 -> {t1 t3 t4,C4 D4 E4 F4 - A4}
 Part2 -> {t3 t1,B4 C5 _ E5}
-
-// TIMEPATTERNS (pour référence — à passer au moteur BP3):
-// t1=1/1 t2=3/2 t3=4/3 t4=1/2

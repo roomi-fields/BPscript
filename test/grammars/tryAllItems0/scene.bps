@@ -4,6 +4,7 @@
 @core
 @controls
 @test_alphabets.abc
+@allitems
 
 @mode:random
 S -> $X X &X

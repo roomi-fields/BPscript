@@ -752,6 +752,26 @@ Une normalisation zerostart côté WASM a été tentée (wasm.14) puis retirée 
 
 ---
 
+## 37. NoteConvention=0 — enharmonie normalisée en dièses malgré bols opaques
+
+**Grammaires :** Ames (`Bb4` → `A#4`), harmony (`Db4` → `C#4`, `Eb4` → `D#4`)
+
+**Symptôme :** Avec `NoteConvention=0` et un alphabet plat (bols opaques), le moteur normalise les terminaux à bémol vers leur enharmonique en dièse dans la sortie `getResult()` / timed tokens. Le terminal dans la grammaire ET dans l'alphabet est bien `Bb4`, mais la sortie du moteur le remplace par `A#4`.
+
+**Comparaison S4 vs S5 (même moteur WASM, même alphabet) :**
+```
+S4 (original.gr + silent.al + -se.tryHarmony) : ... Db4 Db4 Db4 ... Bb4 ...
+S5 (transpiled.gr + same al + settings min.)  : ... C#4 C#4 C#4 ... A#4 ...
+```
+
+**Analyse :** Le moteur reconnaît les noms de terminaux qui ressemblent à des notes occidentales (lettre + altération + octave) et les normalise en dièses, même quand `NoteConvention=0`. En S4 les settings originaux (`-se.tryHarmony`) et la tonalité (`-to.tryHarmony`) contiennent probablement un paramètre qui préserve le spelling. En S5, ces fichiers auxiliaires ne sont pas disponibles.
+
+**Question pour Bernard :** Avec `NoteConvention=0`, les terminaux de l'alphabet devraient-ils être traités comme des chaînes opaques (sans interprétation musicale) ? Ou y a-t-il un setting / fichier tonalité qui contrôle la préservation du spelling des bémols ?
+
+**Impact :** 2 grammaires sur 37. Seul le nom du terminal change, pas le pitch MIDI.
+
+---
+
 ## Notes pour référence (mise à jour)
 
 - Build natif testé : v3.3.19 (gcc Linux, Apr 2 2026) — sources = branche wasm + Bernard post-v3.3.18 (2026-03-31)

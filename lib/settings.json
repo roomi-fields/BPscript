@@ -51,7 +51,9 @@
     "Seed": {"name": "Random seed", "value": "0", "boolean": "0"}
   },
   "directive_map": {
+    "improvize":  { "Improvize": "1" },
     "allitems":   { "AllItems": "1", "Improvize": "0" },
+    "all_items":  { "AllItems": "1", "Improvize": "0" },
     "maxitems":   { "MaxItemsProduce": "@value" },
     "quantize":   { "Quantization": "@value" },
     "seed":       { "Seed": "@value" },

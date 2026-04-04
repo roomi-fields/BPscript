@@ -95,6 +95,12 @@ function encode(ast) {
   for (const [name, def] of Object.entries(libCtx.symbols)) {
     if (!BP3_RESERVED.has(name)) output.alphabet.add(name);
   }
+  // 3. Time pattern names from @timepatterns directive
+  for (const dir of ast.directives) {
+    if (dir.timePatterns) {
+      for (const p of dir.timePatterns) output.alphabet.add(p.name);
+    }
+  }
 
   // Collect all non-terminals (symbols that appear as LHS of rules)
   // Exception: in SUB/SUB1 mode, LHS symbols are also terminals (substitution
@@ -310,11 +316,11 @@ function encode(ast) {
         parts.push(...ruleNativeSuffix);
       }
 
-      // RHS flags [phase=2, Atrans, K1] → /phase=2/ /Atrans/ /K1/
+      // RHS flags [phase=2, Atrans, K1] → /phase = 2/ /Atrans/ /K1/
       if (rule.flags && rule.flags.length > 0) {
         for (const f of rule.flags) {
           if (f.operator) {
-            parts.push(`/${f.flag}${f.operator}${f.value}/`);
+            parts.push(`/${f.flag} ${f.operator} ${f.value}/`);
           } else {
             parts.push(`/${f.flag}/`);
           }
@@ -338,6 +344,15 @@ function encode(ast) {
       lines.push(`[${entry.index}] ${entry.scale} ${body}`);
     }
     lines.push('------------');
+  }
+
+  // Optional TIMEPATTERNS: section from @timepatterns directive
+  for (const dir of ast.directives) {
+    if (dir.timePatterns && dir.timePatterns.length > 0) {
+      lines.push('TIMEPATTERNS:');
+      const patternStrs = dir.timePatterns.map(p => `${p.name} = ${p.ratio}`);
+      lines.push(patternStrs.join('  '));
+    }
   }
 
   output.grammar = lines.join('\n');
@@ -469,18 +484,15 @@ function generateAlphabetFile(libCtx, directives, customTerminals) {
 
 function encodeGuard(guard) {
   if (guard.mutates) {
-    return `/${guard.flag}${guard.operator}${guard.value}/`;
+    return `/${guard.flag} ${guard.operator} ${guard.value}/`;
   }
   // Bare flag test: [Ideas] → /Ideas/
   if (guard.operator === null) {
     return `/${guard.flag}/`;
   }
   const op = guard.operator === '==' ? '=' :
-             guard.operator === '!=' ? '≠' :
-             guard.operator === '>=' ? '≥' :
-             guard.operator === '<=' ? '≤' :
              guard.operator;
-  return `/${guard.flag}${op}${guard.value}/`;
+  return `/${guard.flag} ${op} ${guard.value}/`;
 }
 
 // --- Context encoding ---
@@ -603,7 +615,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         // Engine control → BP3 native format
         const bp3Name = controlMap[el.name] || `_${el.name}`;
         if (el.args.length === 0) return bp3Name;
-        const argStr = el.args.map(a => typeof a === 'string' ? a.replace(/_/g, ' ') : a).join(',');
+        const argStr = el.args.join(',');
         return `${bp3Name}(${argStr})`;
       }
       // Runtime control → _script(CTn)
@@ -611,7 +623,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (el.args.length === 0) {
         assignments[el.name] = true;
       } else {
-        assignments[el.name] = el.args.map(a => typeof a === 'string' ? a.replace(/_/g, ' ') : a).join(',');
+        assignments[el.name] = el.args.join(',');
       }
       const ctName = `CT${_ctIndex++}`;
       _output.controlTable.push({ id: ctName, assignments });

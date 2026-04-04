@@ -38,7 +38,7 @@ Head -> Head goto(3,0) [B=9, A=1] [weight:1]
 // --- Sous-grammaire 4 @mode:ord — transformation a ---
 
 @mode:ord
-[K2-1] [Atrans>0] U -> beat3 U
+[K2-1] [Atrans] U -> beat3 U
 [K3-1] [Atrans-1] V -> beat3 V
 
 -----

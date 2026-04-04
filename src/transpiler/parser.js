@@ -119,6 +119,23 @@ function parse(tokens) {
     }
     let runtime = null, value = null, aliases = null;
 
+    // @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
+    if (name === 'timepatterns' && at(T.COLON)) {
+      advance();
+      const patterns = [];
+      while (at(T.IDENT)) {
+        const patName = advance().value;
+        expect(T.EQUALS);
+        const num = expect(T.INT).value;
+        expect(T.SLASH);
+        const denom = expect(T.INT).value;
+        patterns.push({ name: patName, ratio: `${num}/${denom}` });
+        if (at(T.COMMA)) advance();
+      }
+      return { type: 'Directive', name, subkey, runtime: null, value: null, aliases: null,
+               modifiers: null, timePatterns: patterns, line: tok.line };
+    }
+
     if (at(T.COLON)) {
       advance();
       // Handle negative values: @transpose:-24
@@ -929,22 +946,48 @@ function parse(tokens) {
       const key = expect(T.IDENT).value;
       if (at(T.COLON)) {
         advance();
-        // Raw value: everything until , or )
+        // Raw value: everything until next key:value pair or )
+        // Commas between args of the same control (e.g. keyxpand:G4,2)
+        // are part of the value, not separator for next pair.
+        // A comma is a pair separator only if followed by IDENT COLON.
         let val;
         if (at(T.REST)) { // negative number
           advance();
           val = -Number(expect(T.INT).value);
-        } else if (at(T.INT)) {
-          val = Number(advance().value);
-        } else if (at(T.FLOAT)) {
+        } else if (at(T.INT) || at(T.FLOAT)) {
           val = Number(advance().value);
         } else {
-          // String value — collect until , or )
+          // String value — collect until next pair (IDENT:) or )
           let parts = [];
-          while (!at(T.COMMA) && !at(T.RPAREN) && !atEnd()) {
+          while (!at(T.RPAREN) && !atEnd()) {
+            // Stop at , only if followed by IDENT: (next qualifier pair)
+            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COLON) break;
+            // Stop at , if followed by bare IDENT ) — but only if IDENT is a known control
+            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.RPAREN
+                && libCtx.controlNames.has(peek(1).value)) break;
+            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COMMA
+                && libCtx.controlNames.has(peek(1).value)) break;
             parts.push(advance().value);
           }
-          val = parts.join(' ');
+          val = parts.join('');
+        }
+        // If comma follows and next token is NOT IDENT: → multi-arg value, keep collecting
+        while (at(T.COMMA) && !(peek(1).type === T.IDENT && peek(2).type === T.COLON)
+                           && !(peek(1).type === T.IDENT && peek(2).type === T.RPAREN && libCtx.controlNames.has(peek(1).value))
+                           && !(peek(1).type === T.IDENT && peek(2).type === T.COMMA && libCtx.controlNames.has(peek(1).value))
+                           && !at(T.RPAREN) && !atEnd()) {
+          advance(); // skip comma
+          val = String(val) + ',';
+          if (at(T.REST)) {
+            advance();
+            val += '-' + (at(T.INT) ? advance().value : '');
+          } else if (at(T.INT) || at(T.FLOAT)) {
+            val += advance().value;
+          } else {
+            while (!at(T.COMMA) && !at(T.RPAREN) && !atEnd()) {
+              val += advance().value;
+            }
+          }
         }
         pairs.push({ key, value: val });
       } else {

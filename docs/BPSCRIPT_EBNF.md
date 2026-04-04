@@ -40,7 +40,10 @@ directive_body = IDENT                              (* @core, @controls *)
                | "+"                                (* @+ — append to previous subgrammar *)
                | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
                | "actor" , IDENT , actor_props+     (* @actor sitar alphabet:sargam ... *)
+               | "timepatterns" , ":" , tp_pair , { "," , tp_pair }  (* @timepatterns: t1=1/1, t2=3/2 *)
                ;
+
+tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/dénominateur *)
 
 actor_props = IDENT , ":" , actor_value ;
 actor_value = IDENT                                 (* alphabet:sargam *)
