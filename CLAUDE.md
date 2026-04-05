@@ -52,16 +52,20 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 Après toute modification dans `bp3-engine/csrc/`:
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
 - `csrc/wasm/` (portage WASM) → mettre à jour `bp3-engine/CHANGELOG_WASM.md`
-- Nouveau bug/issue identifié → ajouter dans `test/grammars/FEEDBACK_BERNARD.md`
+- Nouveau bug/issue identifié → ajouter dans `test/FEEDBACK_BERNARD.md`
 
 ### Build & Test
 ```bash
+# OBLIGATOIRE : utiliser build.sh, JAMAIS make directement ni cp manuellement
 cd bp3-engine
 source /mnt/d/Claude/emsdk/emsdk_env.sh
-make -f Makefile.emscripten
+./build.sh all                                    # compile 3 targets (linux, windows, wasm)
+./build.sh all --archive --version=v3.3.19-wasm.2 # compile + archive
 cd ..
-python3 -m http.server 8080
-# Open http://localhost:8080/web/index.html
+
+# Tests de non-régression (36 grammaires actives)
+node test/test_all.cjs --bin last     # S1 + S2/S3 + comparaisons
+# Voir test/README.md pour les détails des stages S0→S5
 ```
 
 ### BPscript Compilation Pipeline
