@@ -1,0 +1,5 @@
+{
+  "AllItems": {"name": "Produce all items", "value": "1", "boolean": "1"},
+  "MaxItemsProduce": {"name": "Max items to produce", "value": "50", "boolean": "0"},
+  "Quantization": {"name": "Quantization", "value": "5", "unit": "ms", "boolean": "0"}
+}

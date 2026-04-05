@@ -1,0 +1,53 @@
+{
+  "_comment": [
+    "BPscript transcription tables — named symbol-to-symbol mappings.",
+    "Used with $/$& template patterns in grammars.",
+    "Two formats:",
+    "  'mappings': { from: to } — single section (implicit *)",
+    "  'sections': { name: { from: to } } — multi-sections nommées",
+    "Applied by BP3 engine during derivation via (=NAME) / (:NAME) patterns."
+  ],
+
+  "tabla_stroke": {
+    "description": "Tabla open→closed stroke mapping (qa'ida)",
+    "mappings": {
+      "dha": "ta",
+      "dhin": "tin",
+      "ge": "ke",
+      "ghe": "khe",
+      "dhagena": "takena",
+      "dheene": "teene",
+      "dheena": "teena"
+    }
+  },
+
+  "ruwet_mineur": {
+    "description": "Ruwet — transformation thème majeur → mineur",
+    "mappings": {
+      "fa4": "re4",
+      "la4": "fa4",
+      "sol4": "mi4"
+    }
+  },
+
+  "checkhomo": {
+    "description": "Test homomorphism — 3 sections (*, H, TR)",
+    "sections": {
+      "*": {
+        "a": "a'",
+        "a'": "a\"",
+        "b": "b'",
+        "b'": "b"
+      },
+      "H": {
+        "a": "c",
+        "c": "c'",
+        "c'": "a\""
+      },
+      "TR": {
+        "a'": "b'",
+        "b'": "b"
+      }
+    }
+  }
+}

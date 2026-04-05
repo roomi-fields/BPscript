@@ -1,0 +1,626 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-234-g0593ef95e8-fm-20260210.001-g0593ef95) with LMTPA;
+	 Tue, 17 Feb 2026 17:51:51 -0500
+X-Cyrus-Session-Id: slotpi15m92-1771368711-1492465-2-18205904448285981708
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 500 (none)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, HTML_MESSAGE 0.001, ME_SENDERREP_NEUTRAL 0.001,
+  MIME_QP_LONG_LINE 0.001, RCVD_IN_DNSWL_NONE -0.0001,
+  RCVD_IN_MSPIKE_H2 0.001, SPF_HELO_NONE 0.001, SPF_PASS -0.001,
+  LANGUAGES fr, BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.128.48', Host='mail-wm1-f48.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8', html='utf-8'
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-01 ([10.202.2.200])
+  by phl-compute-07.internal (LMTPProxy); Tue, 17 Feb 2026 17:51:51 -0500
+Received: from phl-mx-01.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id 2BBE611200C4
+	for <romain@liance.art>; Tue, 17 Feb 2026 17:51:51 -0500 (EST)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-01.messagingengine.com (Authentication Milter) with ESMTP
+    id EB836BC0F63.CB2F111200BB;
+    Tue, 17 Feb 2026 17:51:51 -0500
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm3; t=
+    1771368711; b=n7hY0y9Q2Ff+Mu6U6tay/Oz7XhSfviqapCNpXiEwX++OxlS1x1
+    jhxXKtKRVsqrPT9rWdCj5B4/nf1di2+ePCxGKEfunAPqYs2iLqBZXP2IhSFSifi8
+    7o3dO6L7nspcj0rGCRK3aoX/8KLWDS48qbMvCLIp4DHhxiC3RQb34Q73agxWq17R
+    qSr1/hHRGDqbzDTWYJqJWFCj/RVuTbLuKA7l5JlSpJRehzvHUJS6lyC7H7OGSqah
+    bAyrk5g8WHDu14oqr7p6HArk0VoxOoYCul8hal3hZqz0nlRRgPJYkZedbguhTtvF
+    qMPrRimOeark1Y+4YFUAL9lOBkm3Q4RYFFEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type; s=
+    fm3; t=1771368711; bh=DwKG/MWsNNijVZlKHs95eEqib58/BSFuVO7SIwJCvI
+    Q=; b=AxCn7O1NioK8wNAbpTHyP533f3EXk7t0xTUyPPsiTb3aXVMa43s4db7E7r
+    SW2Co0MZ3JvZp3bVw2/pNvdl331qkSOA3iR8Rw8stYoWuT2XWcjpqfYLOpkA3mkO
+    wYjXXQ95Pxbyvi5oa0BJdGW3f4t/K9AG6C5p3Z4/5RaspWnW7Z/z26GX96ZEmN0H
+    oGOxKO3zRESmYnHA6YJlv68exmhOYKeKFaCwhuf8BfNROR6W/j6byQxmAL7uROoG
+    EcqJW1/dV+nhBVu0rAUxMuH9qCr7wDiGrfwpv7/iPeaj4DIvoVDSNxwqbmUubszl
+    EoXPRd9Bv9p3vc09CGRV3leDdYZQ==
+ARC-Authentication-Results: i=1; phl-mx-01.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f48.google.com
+    policy.ptr=mail-wm1-f48.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=ghBahCEt header.a=rsa-sha256
+    header.s=20230601;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.48 (mail-wm1-f48.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wm1-f48.google.com
+X-ME-Authentication-Results: phl-mx-01.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-01.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f48.google.com
+      policy.ptr=mail-wm1-f48.google.com
+Authentication-Results: phl-mx-01.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-01.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-01.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=ghBahCEt header.a=rsa-sha256
+      header.s=20230601;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.48 (mail-wm1-f48.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wm1-f48.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvvddutdduucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgesrgdtreertderjeenucfhrhhomhepfdeuvghrnhgr
+    rhguuceuvghlfdcuoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqeenucggtffrrg
+    htthgvrhhnpedufeetteehgfeviefggfejtedujeevfeelieethedtkeeufeduudeljeef
+    jeeghfenucfkphepvddtledrkeehrdduvdekrdegkedpvdgrtddumegtsgdutgemkedurg
+    elmeeltgdttdemrgguheehmegrjeegfeemgegruddumegsjeduvdenucevlhhushhtvghr
+    ufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvtdelrdekhedruddvkedrgeekpdhhvg
+    hlohepmhgrihhlqdifmhduqdhfgeekrdhgohhoghhlvgdrtghomhdpmhgrihhlfhhrohhm
+    peeosggvrhhnrghrsggvlhesghhmrghilhdrtghomheqpdhnsggprhgtphhtthhopedupd
+    hrtghpthhtohepoehrohhmrghinheslhhirghntggvrdgrrhhtqe
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:B_GUaRW2au5xwwtinHyC_Awj_IftQ10fxUKZ9sjpWVTnLy47LAFQ-A>
+X-ME-Received: <xmx:B_GUaTNm3_k-r9jq178OfVVq3_Wf3QZnWJmLy5qAKjCxk3VKQsAmOA>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.128.48 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-01.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wm1-f48.google.com;
+    client-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-01.messagingengine.com (Postfix) with ESMTPS id CB2F111200BB
+	for <romain@liance.art>; Tue, 17 Feb 2026 17:51:50 -0500 (EST)
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4807068eacbso36401855e9.2
+        for <romain@liance.art>; Tue, 17 Feb 2026 14:51:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771368708; x=1771973508; darn=liance.art;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=DwKG/MWsNNijVZlKHs95eEqib58/BSFuVO7SIwJCvIQ=;
+        b=ghBahCEtxUxfElSaVEdnXRsvBiD2J1PtepHU9ANPqRZZ+ImlaOS9cx7fSAba3Mmnia
+         JhIloLeDvf5sjiDpXoWV6D7xngm332rZuogwdgSq44TKn2N2OlM4pBojNWCIjhRx6hwE
+         rCdjSznOusEntVNUqRwKRoBfOfdKXSdHzjjWTIeXd8tKfU/wALO3PzoFFW9SRYQsDpX0
+         ZMEUQSHdoECwY+CfKbmFKJk6Ip2ZXHRsXfiNp80mqjm+dBnwLKHI2UI+tFBSdcV5/LIF
+         gzLDADDY1V4XbuDJ7uha3bQRGyWag0M6OtJbeY9SXaLc2RsX6oIeuCmtCoGJwqPC8N9k
+         tlRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771368708; x=1771973508;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=DwKG/MWsNNijVZlKHs95eEqib58/BSFuVO7SIwJCvIQ=;
+        b=ftAEtY2FWaUpuurP+oywORyyYjkke2+VJA9hpTCh1dgT1fLsmYsIFKdNXKHFCqIc4b
+         knEPpD1a9GBhV7udjLMAQ2nDP6bWxpNgTYnoUCe+aeJE6iE2gj/tOiFQQ32kzfBU1D4s
+         tdWtFlvDHzkabZ877esFXmBVw8n7sQexDtWTeJwZ9WIHHaDDOfnT29xGyQiLjZuXOJCC
+         kfGRo7Hqn6GfJH9w2v6gyzV2aE0nfaXGPN0n/EnSRwKHb9Szi0x+3gZy4mOraWqVnTpp
+         73tZ+E4amce7RChMm8UWsOBFDhtF8tUhVXaLihsNY3Ol4oNENTFbulr/xUpxKz3/Gw9v
+         Syiw==
+X-Gm-Message-State: AOJu0Yy0cOJVCzKTb5U2DDZUFhq1IC9zvju820Es2z9xa9pRFlL5KFBF
+	F1si+8H1hGwl3zegPsvHPO1Sm9PLcefPbVY2YAG4+itYsy0CsD2d/RoEsFxllg==
+X-Gm-Gg: AZuq6aJIh+1GcuOoC8M0WXSBjTQIaXhGD8tkSyH4xdnEhu6Ys9El/geHO0XO3vuqI7Y
+	8p63car/eZJWqoOt3h3kdfJbLrXIgkSLLiChuacx9nv7OHYPCUyyqVggzx/3BxXUTXriJ7hKX9g
+	2g9zg9Nq7L20ur+v6jbVHTlWxUvedyoo+WID/BtuNIBmVgZfrAXVHzfO5bglsC076GGL/mOaS7J
+	VVaosfd5RxQs0Ss5vwXB261qWQELawdwuFPwz7W626pWQ9AZhoqDIE7HP1jqpOKhxoLVumIJtxg
+	Y5mGm1pyDR82G7PI4C7cTKpZaW5Dslq27J6YwAngpey7v94lNDhxtADg5Orm0xWjHTL+pQL6Fbr
+	Z4zP3q9RFsp5GZZXPt1uPslqp9BBoV6Sa7uWFbj3F5/+UI2lBPsru8KeVB9H9eORSgYVeYTU5hH
+	HmTE0LiWG9lO7l7ziUnj5VO/Ami6KGztbiVhP9HmMnwKquyPdtAGg1EFIdWnTpGhSV7vosgcdjr
+	ej1tOvkAnpVxUHrhtVUdikh
+X-Received: by 2002:a05:600c:35cd:b0:479:3a86:dc1c with SMTP id 5b1f17b1804b1-48398aefd55mr1398695e9.36.1771368708303;
+        Tue, 17 Feb 2026 14:51:48 -0800 (PST)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:ad55:a743:4a11:b712? ([2a01:cb1c:81a9:9c00:ad55:a743:4a11:b712])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4834d8334a8sm575441755e9.12.2026.02.17.14.51.47
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 17 Feb 2026 14:51:47 -0800 (PST)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9ration-r?=
+ =?utf-8?q?econnaissance=20=3a=20sept=20dimensions=22?=
+Date: Tue, 17 Feb 2026 22:51:46 +0000
+Message-Id: <em613b5c23-5df4-4ae8-ae8f-902b525c477d@gmail.com>
+In-Reply-To: <34eb8e38-0a26-4971-9a9a-f9551996fcf1@app.fastmail.com>
+References: <34eb8e38-0a26-4971-9a9a-f9551996fcf1@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eM_Client/10.4.4195.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="------=_MBFB554278-CB38-4FD4-9A2F-DCF477BCD250"
+
+--------=_MBFB554278-CB38-4FD4-9A2F-DCF477BCD250
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Bonsoir Romain,
+
+J=E2=80=99ai commenc=C3=A9 =C3=A0 lire=E2=80=A6 C=E2=80=99est remarquable d=
+ans la clart=C3=A9 de l=E2=80=99expos=C3=A9. Et=20
+=C3=A7a me ram=C3=A8ne 36 ans en arri=C3=A8re quand j=E2=80=99essayais de f=
+ormaliser=20
+l=E2=80=99inf=C3=A9rence grammaticale =C3=A0 la lumi=C3=A8re de Gould , Adl=
+er et autres que=20
+j=E2=80=99ai oubli=C3=A9s. Pas facile d=E2=80=99y revenir, mais le voyage m=
+=E2=80=99int=C3=A9resse.  Je=20
+t=E2=80=99en =C3=A9crirai plus les jours qui viennent.
+
+Aujourd=E2=80=99hui j=E2=80=99ai pass=C3=A9 quelques heures =C3=A0 r=C3=A9g=
+ler les derniers probl=C3=A8mes=20
+de mon site. Install=C3=A9 smtp.gmail.com que j=E2=80=99ai pu valider (gr=
+=C3=A2ce =C3=A0=20
+ChatGPT). Corrig=C3=A9 quelques liens dans la base de donn=C3=A9es et les w=
+idgets.=20
+J=E2=80=99ai h=C3=A2te de revenir =C3=A0 la musicologie et=E2=80=A6 aux lan=
+gages formels ! Mais je=20
+doute de pouvoir apporter quelque chose d=E2=80=99original =C3=A0 un expos=
+=C3=A9 th=C3=A9orique=20
+d=E2=80=99un tel niveau.
+
+A +
+
+Bernard
+
+
+------ Original Message ------
+From "Romain Peyrichou" <romain@liance.art>
+To "Bernard Bel" <bernarbel@gmail.com>
+Date 17/02/2026 17:40:51
+Subject Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance : sept =
+dimensions"
+
+>Bonjour Bernard,
+>
+>Suite aux travaux entrepris sur le formalisme de BP3 et BP2SC, et suite=20
+>=C3=A0 toutes les questions que =C3=A7a m'a fait me poser, j'ai identifi=
+=C3=A9 un=20
+>certain nombre de sujets qui sembleraient m=C3=A9riter la r=C3=A9daction=
+=20
+>d'articles.
+>Certains articles du blog (L0, L11, L13, et pas mal de B je dois dire)=20
+>m'ont donn=C3=A9 envie de structurer un papier sur l'asym=C3=A9trie=20
+>g=C3=A9n=C3=A9ration-reconnaissance, ce qui visiblement n'avait pas =C3=A9=
+t=C3=A9 encore=20
+>fait.
+>
+>Si tu veux bien j'aimerai bien ton regard sur ce draft.
+>
+>Mon id=C3=A9e est de produire un premier papier g=C3=A9n=C3=A9raliste sur=
+ le sujet=20
+>orient=C3=A9 th=C3=A9orie du langage et de poursuivre sur un autre traitan=
+t=20
+>sp=C3=A9cifiquement du domaine musical, dans lequel on pourrait utiliser d=
+es=20
+>exemples du domaine dont BP. Il introduit =C3=A9galement une 8eme asym=C3=
+=A9trie=20
+>sp=C3=A9cifique a la musique.
+>Si jamais =C3=A7a suscite ton int=C3=A9r=C3=AAt on pourrait co=C3=A9crire=
+ cet autre papier.
+>
+>Voici un r=C3=A9sum=C3=A9 de tout =C3=A7a =C3=A9crit par mon cher Claude C=
+ode:
+>
+>## De quoi il s'agit
+>
+>Le papier identifie 7 dimensions selon lesquelles la g=C3=A9n=C3=A9ration=
+ et la=20
+>reconnaissance divergent :
+>
+>1. **Complexit=C3=A9 computationnelle** =E2=80=94 la g=C3=A9n=C3=A9ration=
+ est O(n) pour tout=20
+>niveau de Chomsky, tandis que le parsing cro=C3=AEt de O(n) =C3=A0=20
+>l'ind=C3=A9cidabilit=C3=A9
+>2. **D=C3=A9terminisme** =E2=80=94 la g=C3=A9n=C3=A9ration peut =C3=AAtre=
+ d=C3=A9terministe, le parsing=20
+>est fondamentalement non-d=C3=A9terministe
+>3. **Directionnalit=C3=A9** =E2=80=94 la g=C3=A9n=C3=A9ration est toujours =
+top-down, le=20
+>parsing a un degr=C3=A9 de libert=C3=A9 (LL, LR, Earley...)
+>4. **Information** =E2=80=94 le g=C3=A9n=C3=A9rateur conna=C3=AEt la sourc=
+e, le parser inf=C3=A8re=20
+>depuis la surface (lien Shannon)
+>5. **Non-injectivit=C3=A9** =E2=80=94 un chemin de d=C3=A9rivation =E2=86=
+=92 une cha=C3=AEne, mais une=20
+>cha=C3=AEne =E2=86=92 plusieurs arbres (Parikh 1966)
+>6. **Inf=C3=A9rence grammaticale** =E2=80=94 la troisi=C3=A8me direction,=
+ born=C3=A9e par Gold=20
+>(1967)
+>7. **Temporalit=C3=A9** =E2=80=94 le g=C3=A9n=C3=A9rateur cr=C3=A9e le fut=
+ur (surprisal =3D 0), le=20
+>parser pr=C3=A9dit sous incertitude (surprisal > 0)
+>
+>La th=C3=A8se centrale : la caract=C3=A9risation "la g=C3=A9n=C3=A9ration=
+ est facile, le=20
+>parsing est difficile" est trompeuse. La vraie asym=C3=A9trie est=20
+>*structurelle* =E2=80=94 le parsing est toujours contraint tandis que la=
+=20
+>g=C3=A9n=C3=A9ration ne l'est pas n=C3=A9cessairement.
+>
+>**Constat de d=C3=A9part** : aucun survey n'a trait=C3=A9 cette asym=C3=A9=
+trie comme=20
+>sujet central. Les 7 dimensions existent dans la litt=C3=A9rature mais n'o=
+nt=20
+>jamais =C3=A9t=C3=A9 rassembl=C3=A9es.
+>
+>## Ce que c'est et ce que ce n'est pas
+>
+>- C'est un papier **CS theory / langages formels**, ind=C3=A9pendant du=20
+>domaine musical
+>- Il n'y a **aucune mention** de BP3, ni de musique dans le corps du=20
+>texte
+>- La musique n'appara=C3=AEt qu'en =C2=A76.4 comme "laboratoire id=C3=A9al=
+" pour=20
+>instancier les dimensions
+>- Un **article compagnon** (Paper 9=CE=B2) est pr=C3=A9vu pour appliquer c=
+e cadre=20
+>aux grammaires musicales =E2=80=94 c'est l=C3=A0 que BP3, GTTM, IDyOM, et=
+ la=20
+>tripartition de Nattiez interviendraien
+>
+>## Pourquoi j'ai besoin de ton regard
+>
+>**les formalisations math=C3=A9matiques sont ma synth=C3=A8se**, pas des f=
+ormules=20
+>tir=C3=A9es d'articles existants. Les r=C3=A9sultats sous-jacents sont =C3=
+=A9tablis=20
+>(Chomsky, Gold, Parikh, Shannon, etc.), mais la mise en formules est la=20
+>mienne. Concr=C3=A8tement :
+>
+>### Points solides (citations directes)
+>- Les complexit=C3=A9s O(n), O(n=C2=B3), PSPACE-complet =E2=86=92 Hopcroft =
+& Ullman, Aho=20
+>et al.
+>- Les nombres de Catalan pour l'ambigu=C3=AFt=C3=A9 =E2=86=92 Jurafsky & M=
+artin
+>- Le th=C3=A9or=C3=A8me de Gold (1967) sur l'impossibilit=C3=A9 d'inf=C3=
+=A9rence
+>- Le th=C3=A9or=C3=A8me de Parikh (1966) sur l'ambigu=C3=AFt=C3=A9 intrins=
+=C3=A8que
+>- La surprisal =E2=86=92 Hale (2001), Levy (2008)
+>
+>### Points =C3=A0 v=C3=A9rifier (mes formulations)
+>- =C2=A74.1 : la fonction T_parse(G, n) pr=C3=A9sent=C3=A9e comme un "case=
+s" sur k =E2=80=94=20
+>c'est ma pr=C3=A9sentation, pas une formule existante
+>- =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =CE=A3* et parse: G =C3=97 =CE=A3* =
+=E2=86=92 2^T =E2=80=94 mes d=C3=A9finitions=20
+>fonctionnelles
+>- =C2=A74.3 : parse_=CE=B4(G, w) avec =CE=B4 comme param=C3=A8tre de strat=
+=C3=A9gie =E2=80=94 ma=20
+>notation
+>- =C2=A74.5 : l'argument sur l'injectivit=C3=A9 de gen vs. non-injectivit=
+=C3=A9 de=20
+>parse
+>- =C2=A74.7 : le lien entre surprisal et asym=C3=A9trie temporelle =E2=80=
+=94 mon=20
+>interpr=C3=A9tation de Hale/Levy
+>
+>## **Mes quesiotns**
+>
+>1. **G=C3=A9n=C3=A9ral** : Est-ce que ces formulations te semblent=20
+>math=C3=A9matiquement correctes et d=C3=A9fendables devant un reviewer CS=
+ ?
+>
+>2. **D3 (directionnalit=C3=A9)** : J'affirme que la g=C3=A9n=C3=A9ration e=
+st=20
+>"intrins=C3=A8quement top-down". BP1 avait le parsing en "context-sensitiv=
+e=20
+>right mode derivation" =E2=80=94 est-ce que la direction de BP1 remet en=
+=20
+>question cette affirmation ?
+>
+>3. **D6 (inf=C3=A9rence)** : Ta vision ANAL+QAVAID+TEMP (inf=C3=A9rer des=
+=20
+>grammaires depuis des exemples) =E2=80=94 est-ce que =C3=A7a correspond=
+ =C3=A0 ce que je=20
+>d=C3=A9cris comme la "troisi=C3=A8me direction" ?
+>
+>4. **Le split en 2 articles** : Le premier est volontairement=20
+>domain-independent. Le second ajouterait une 8=C3=A8me dimension =E2=80=94=
+=20
+>l'**asym=C3=A9trie musicale** (composition vs. analyse, le pi=C3=A8ge=20
+>terminologique GTTM qui est nomm=C3=A9 "generative" mais fondamentalement=
+=20
+>analytique, BP3 comme cas unique de bidirectionnalit=C3=A9, tripartition d=
+e=20
+>Nattiez) =E2=80=94 et instancierait les 7 autres sur BP3, GTTM, IDyOM. Est=
+-ce=20
+>que cette strat=C3=A9gie de split te semble judicieuse ?
+>
+>## Le fichier
+>
+>Je t'envoie la version fran=C3=A7aise (traduction de lecture). La version=
+=20
+>soumise sera en anglais. C'est un premier brouillon =E2=80=94 tout est=20
+>modifiable.
+>
+>Merci d'avance pour ton regard,
+>Romain
+>
+>---
+>
+>*P.S. : Le travail avec Claude a =C3=A9t=C3=A9 essentiel pour structurer c=
+e=20
+>papier.
+--------=_MBFB554278-CB38-4FD4-9A2F-DCF477BCD250
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><title></title><style id=3D"css_styles" type=3D"text/css"><!--b=
+lockquote.cite { margin-left: 5px; margin-right: 0px; padding-left: 10px; p=
+adding-right:0px; border-left: 1px solid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}
+--></style></head><body style=3D"overflow-wrap: break-word; -webkit-nbsp-mo=
+de: space; line-break: after-white-space;"><div>Bonsoir Romain,</div><div><=
+br /></div><div>J=E2=80=99ai commenc=C3=A9 =C3=A0 lire=E2=80=A6 C=E2=80=99e=
+st remarquable dans la clart=C3=A9 de l=E2=80=99expos=C3=A9. Et =C3=A7a me=
+ ram=C3=A8ne 36 ans en arri=C3=A8re quand j=E2=80=99essayais de formaliser l=
+=E2=80=99inf=C3=A9rence grammaticale =C3=A0 la lumi=C3=A8re de Gould , Adle=
+r et autres que j=E2=80=99ai oubli=C3=A9s. Pas facile d=E2=80=99y revenir,=
+ mais le voyage m=E2=80=99int=C3=A9resse. =C2=A0Je t=E2=80=99en =C3=A9crirai =
+plus les jours qui viennent.</div><div><br /></div><div>Aujourd=E2=80=99hu=
+i j=E2=80=99ai pass=C3=A9 quelques heures =C3=A0 r=C3=A9gler les derniers p=
+robl=C3=A8mes de mon site. Install=C3=A9 smtp.gmail.com que j=E2=80=99ai pu =
+valider (gr=C3=A2ce =C3=A0 ChatGPT). Corrig=C3=A9 quelques liens dans la b=
+ase de donn=C3=A9es et les widgets. J=E2=80=99ai h=C3=A2te de revenir =C3=
+=A0 la musicologie et=E2=80=A6 aux langages formels ! Mais je doute de pouv=
+oir apporter quelque chose d=E2=80=99original =C3=A0 un expos=C3=A9 th=C3=
+=A9orique d=E2=80=99un tel niveau.</div><div><br /></div><div>A +</div><div=
+><br /></div><div>Bernard</div>
+<div><br /></div>
+<div x-em-replyforwardheader=3D""><br /></div>
+<div>
+<div>------ Original Message ------</div>
+<div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.art">romai=
+n@liance.art</a>&gt;</div>
+<div>To "Bernard Bel" &lt;<a href=3D"mailto:bernarbel@gmail.com">bernarbel@=
+gmail.com</a>&gt;</div>
+<div>Date 17/02/2026 17:40:51</div>
+<div>Subject Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance : =
+sept dimensions"</div></div><div x-em-quote=3D""><br /></div>
+<div id=3D"x055b634a1c6c4f6"><blockquote cite=3D"34eb8e38-0a26-4971-9a9a-f9=
+551996fcf1@app.fastmail.com" type=3D"cite" class=3D"cite2">
+<div>Bonjour Bernard,</div><div><br /></div><div>Suite aux travaux entrepri=
+s sur le formalisme de BP3 et BP2SC, et suite =C3=A0 toutes les questions q=
+ue =C3=A7a m'a fait me poser, j'ai identifi=C3=A9 un certain nombre de suje=
+ts qui sembleraient m=C3=A9riter la r=C3=A9daction d'articles.</div><div>Ce=
+rtains articles du blog (L0, L11, L13, et pas mal de B je dois dire) m'ont=
+ donn=C3=A9 envie de structurer un papier sur l'asym=C3=A9trie g=C3=A9n=C3=
+=A9ration-reconnaissance, ce qui visiblement n'avait pas =C3=A9t=C3=A9 enco=
+re fait.</div><div><br /></div><div>Si tu veux bien j'aimerai bien ton rega=
+rd sur ce draft.</div><div><br /></div><div>Mon id=C3=A9e est de produire u=
+n premier papier g=C3=A9n=C3=A9raliste sur le sujet orient=C3=A9 th=C3=A9or=
+ie du langage et de poursuivre sur un autre traitant sp=C3=A9cifiquement du =
+domaine musical, dans lequel on pourrait utiliser des exemples du domaine=
+ dont BP. Il introduit =C3=A9galement une 8eme asym=C3=A9trie sp=C3=A9cifiqu=
+e a la musique.</div><div>Si jamais =C3=A7a suscite ton int=C3=A9r=C3=AAt o=
+n pourrait co=C3=A9crire cet autre papier.</div><div><br /></div><div>Voici =
+un r=C3=A9sum=C3=A9 de tout =C3=A7a =C3=A9crit par mon cher Claude Code:</=
+div><div><br /></div><div><span class=3D"color" style=3D"color:rgb(86, 156, =
+214);"><b>## De quoi il s'agit</b></span></div><div><br /></div><div><span =
+class=3D"color" style=3D"color:rgb(204, 204, 204);">Le papier identifie </=
+span><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>7 dimensio=
+ns</b></span><span class=3D"color" style=3D"color:rgb(204, 204, 204);">=C2=
+=A0selon lesquelles la g=C3=A9n=C3=A9ration et la reconnaissance divergent=
+ :</span></div><div><br /></div><div><span class=3D"color" style=3D"color:rg=
+b(103, 150, 230);">1.</span><span class=3D"color" style=3D"color:rgb(204, 2=
+04, 204);"> </span><span class=3D"color" style=3D"color:rgb(86, 156, 214);"=
+><b>**Complexit=C3=A9 computationnelle**</b></span><span class=3D"color" st=
+yle=3D"color:rgb(204, 204, 204);"> =E2=80=94 la g=C3=A9n=C3=A9ration est O(=
+n) pour tout niveau de Chomsky, tandis que le parsing cro=C3=AEt de O(n)=
+ =C3=A0 l'ind=C3=A9cidabilit=C3=A9</span></div><div><span class=3D"color" styl=
+e=3D"color:rgb(103, 150, 230);">2.</span><span class=3D"color" style=3D"col=
+or:rgb(204, 204, 204);"> </span><span class=3D"color" style=3D"color:rgb(86=
+, 156, 214);"><b>**D=C3=A9terminisme**</b></span><span class=3D"color" styl=
+e=3D"color:rgb(204, 204, 204);"> =E2=80=94 la g=C3=A9n=C3=A9ration peut =C3=
+=AAtre d=C3=A9terministe, le parsing est fondamentalement non-d=C3=A9termin=
+iste</span></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 23=
+0);">3.</span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> </=
+span><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**Directio=
+nnalit=C3=A9**</b></span><span class=3D"color" style=3D"color:rgb(204, 204, =
+204);"> =E2=80=94 la g=C3=A9n=C3=A9ration est toujours top-down, le parsin=
+g a un degr=C3=A9 de libert=C3=A9 (LL, LR, Earley...)</span></div><div><spa=
+n class=3D"color" style=3D"color:rgb(103, 150, 230);">4.</span><span class=
+=3D"color" style=3D"color:rgb(204, 204, 204);"> </span><span class=3D"color=
+" style=3D"color:rgb(86, 156, 214);"><b>**Information**</b></span><span cla=
+ss=3D"color" style=3D"color:rgb(204, 204, 204);"> =E2=80=94 le g=C3=A9n=C3=
+=A9rateur conna=C3=AEt la source, le parser inf=C3=A8re depuis la surface (=
+lien Shannon)</span></div><div><span class=3D"color" style=3D"color:rgb(103=
+, 150, 230);">5.</span><span class=3D"color" style=3D"color:rgb(204, 204, 2=
+04);"> </span><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>*=
+*Non-injectivit=C3=A9**</b></span><span class=3D"color" style=3D"color:rgb(=
+204, 204, 204);"> =E2=80=94 un chemin de d=C3=A9rivation =E2=86=92 une cha=
+=C3=AEne, mais une cha=C3=AEne =E2=86=92 plusieurs arbres (Parikh 1966)</sp=
+an></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 230);">6.<=
+/span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> </span><sp=
+an class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**Inf=C3=A9rence g=
+rammaticale**</b></span><span class=3D"color" style=3D"color:rgb(204, 204,=
+ 204);"> =E2=80=94 la troisi=C3=A8me direction, born=C3=A9e par Gold (1967)<=
+/span></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 230);">=
+7.</span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> </span>=
+<span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**Temporalit=C3=
+=A9**</b></span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> =
+=E2=80=94 le g=C3=A9n=C3=A9rateur cr=C3=A9e le futur (surprisal =3D 0), le =
+parser pr=C3=A9dit sous incertitude (surprisal &gt; 0)</span></div><div><b=
+r /></div><div><span class=3D"color" style=3D"color:rgb(204, 204, 204);">La =
+th=C3=A8se centrale : la caract=C3=A9risation "la g=C3=A9n=C3=A9ration est =
+facile, le parsing est difficile" est trompeuse. La vraie asym=C3=A9trie e=
+st </span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"><i>*str=
+ucturelle*</i></span><span class=3D"color" style=3D"color:rgb(204, 204, 204=
+);"> =E2=80=94 le parsing est toujours contraint tandis que la g=C3=A9n=C3=
+=A9ration ne l'est pas n=C3=A9cessairement.</span></div><div><br /></div><d=
+iv><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**Constat de =
+d=C3=A9part**</b></span><span class=3D"color" style=3D"color:rgb(204, 204, =
+204);"> : aucun survey n'a trait=C3=A9 cette asym=C3=A9trie comme sujet ce=
+ntral. Les 7 dimensions existent dans la litt=C3=A9rature mais n'ont jamais =
+=C3=A9t=C3=A9 rassembl=C3=A9es.</span></div><div><br /></div><div><span cl=
+ass=3D"color" style=3D"color:rgb(86, 156, 214);"><b>## Ce que c'est et ce q=
+ue ce n'est pas</b></span></div><div><br /></div><div><span class=3D"color" =
+style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"color" style=3D=
+"color:rgb(204, 204, 204);"> C'est un papier </span><span class=3D"color" s=
+tyle=3D"color:rgb(86, 156, 214);"><b>**CS theory / langages formels**</b></=
+span><span class=3D"color" style=3D"color:rgb(204, 204, 204);">, ind=C3=A9p=
+endant du domaine musical</span></div><div><span class=3D"color" style=3D"c=
+olor:rgb(103, 150, 230);">-</span><span class=3D"color" style=3D"color:rgb(=
+204, 204, 204);"> Il n'y a </span><span class=3D"color" style=3D"color:rgb(=
+86, 156, 214);"><b>**aucune mention**</b></span><span class=3D"color" style=
+=3D"color:rgb(204, 204, 204);"> de BP3, ni de musique dans le corps du text=
+e</span></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 230);=
+">-</span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> La mus=
+ique n'appara=C3=AEt qu'en =C2=A76.4 comme "laboratoire id=C3=A9al" pour in=
+stancier les dimensions</span></div><div><span class=3D"color" style=3D"col=
+or:rgb(103, 150, 230);">-</span><span class=3D"color" style=3D"color:rgb(20=
+4, 204, 204);"> Un </span><span class=3D"color" style=3D"color:rgb(86, 156, =
+214);"><b>**article compagnon**</b></span><span class=3D"color" style=3D"c=
+olor:rgb(204, 204, 204);"> (Paper 9=CE=B2) est pr=C3=A9vu pour appliquer ce =
+cadre aux grammaires musicales =E2=80=94 c'est l=C3=A0 que BP3, GTTM, IDyO=
+M, et la tripartition de Nattiez interviendraien</span></div><div><br /></d=
+iv><div><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>## Pour=
+quoi j'ai besoin de ton regard</b></span></div><div><br /></div><div><span=
+ class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**les formalisations=
+ math=C3=A9matiques sont ma synth=C3=A8se**</b></span><span class=3D"color"=
+ style=3D"color:rgb(204, 204, 204);">, pas des formules tir=C3=A9es d'articl=
+es existants. Les r=C3=A9sultats sous-jacents sont =C3=A9tablis (Chomsky, G=
+old, Parikh, Shannon, etc.), mais la mise en formules est la mienne. Concr=
+=C3=A8tement :</span></div><div><br /></div><div><span class=3D"color" styl=
+e=3D"color:rgb(86, 156, 214);"><b>### Points solides (citations directes)</=
+b></span></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 230)=
+;">-</span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> Les c=
+omplexit=C3=A9s O(n), O(n=C2=B3), PSPACE-complet =E2=86=92 Hopcroft &amp; U=
+llman, Aho et al.</span></div><div><span class=3D"color" style=3D"color:rgb=
+(103, 150, 230);">-</span><span class=3D"color" style=3D"color:rgb(204, 204=
+, 204);"> Les nombres de Catalan pour l'ambigu=C3=AFt=C3=A9 =E2=86=92 Juraf=
+sky &amp; Martin</span></div><div><span class=3D"color" style=3D"color:rgb(=
+103, 150, 230);">-</span><span class=3D"color" style=3D"color:rgb(204, 204, =
+204);"> Le th=C3=A9or=C3=A8me de Gold (1967) sur l'impossibilit=C3=A9 d'in=
+f=C3=A9rence</span></div><div><span class=3D"color" style=3D"color:rgb(103, =
+150, 230);">-</span><span class=3D"color" style=3D"color:rgb(204, 204, 204=
+);"> Le th=C3=A9or=C3=A8me de Parikh (1966) sur l'ambigu=C3=AFt=C3=A9 intri=
+ns=C3=A8que</span></div><div><span class=3D"color" style=3D"color:rgb(103,=
+ 150, 230);">-</span><span class=3D"color" style=3D"color:rgb(204, 204, 204)=
+;"> La surprisal =E2=86=92 Hale (2001), Levy (2008)</span></div><div><br />=
+</div><div><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>###=
+ Points =C3=A0 v=C3=A9rifier (mes formulations)</b></span></div><div><span c=
+lass=3D"color" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"c=
+olor" style=3D"color:rgb(204, 204, 204);"> =C2=A74.1 : la fonction T_parse(=
+G, n) pr=C3=A9sent=C3=A9e comme un "cases" sur k =E2=80=94 c'est ma pr=C3=
+=A9sentation, pas une formule existante</span></div><div><span class=3D"col=
+or" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"color" style=
+=3D"color:rgb(204, 204, 204);"> =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =CE=
+=A3* et parse: G =C3=97 =CE=A3* =E2=86=92 2^T =E2=80=94 mes d=C3=A9finition=
+s fonctionnelles</span></div><div><span class=3D"color" style=3D"color:rgb(=
+103, 150, 230);">-</span><span class=3D"color" style=3D"color:rgb(204, 204, =
+204);"> =C2=A74.3 : parse_=CE=B4(G, w) avec =CE=B4 comme param=C3=A8tre de =
+strat=C3=A9gie =E2=80=94 ma notation</span></div><div><span class=3D"color=
+" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"color" style=
+=3D"color:rgb(204, 204, 204);"> =C2=A74.5 : l'argument sur l'injectivit=C3=
+=A9 de gen vs. non-injectivit=C3=A9 de parse</span></div><div><span class=
+=3D"color" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"color=
+" style=3D"color:rgb(204, 204, 204);"> =C2=A74.7 : le lien entre surprisal=
+ et asym=C3=A9trie temporelle =E2=80=94 mon interpr=C3=A9tation de Hale/Levy=
+</span></div><div><br /></div><div><span class=3D"color" style=3D"color:rgb=
+(86, 156, 214);"><b>## **Mes quesiotns**</b></span></div><div><br /></div><=
+div><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>1. **G=C3=
+=A9n=C3=A9ral**=C2=A0</b></span><span class=3D"color" style=3D"color:rgb(20=
+4, 204, 204);">: Est-ce que ces formulations te semblent math=C3=A9matiquem=
+ent correctes et d=C3=A9fendables devant un reviewer CS ?</span></div><div>=
+<br /></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 230);">=
+2.</span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> </span>=
+<span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**D3 (direction=
+nalit=C3=A9)**</b></span><span class=3D"color" style=3D"color:rgb(204, 204, =
+204);"> : J'affirme que la g=C3=A9n=C3=A9ration est "intrins=C3=A8quement=
+ top-down". BP1 avait le parsing en "context-sensitive right mode derivation=
+" =E2=80=94 est-ce que la direction de BP1 remet en question cette affirmat=
+ion ?</span></div><div><br /></div><div><span class=3D"color" style=3D"colo=
+r:rgb(103, 150, 230);">3.</span><span class=3D"color" style=3D"color:rgb(20=
+4, 204, 204);"> </span><span class=3D"color" style=3D"color:rgb(86, 156, 21=
+4);"><b>**D6 (inf=C3=A9rence)**</b></span><span class=3D"color" style=3D"co=
+lor:rgb(204, 204, 204);"> : Ta vision ANAL+QAVAID+TEMP (inf=C3=A9rer des gr=
+ammaires depuis des exemples) =E2=80=94 est-ce que =C3=A7a correspond =C3=
+=A0 ce que je d=C3=A9cris comme la "troisi=C3=A8me direction" ?</span></div=
+><div><br /></div><div><span class=3D"color" style=3D"color:rgb(103, 150, 2=
+30);">4.</span><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> <=
+/span><span class=3D"color" style=3D"color:rgb(86, 156, 214);"><b>**Le spli=
+t en 2 articles**</b></span><span class=3D"color" style=3D"color:rgb(204, 2=
+04, 204);"> : Le premier est volontairement domain-independent. Le second a=
+jouterait une 8=C3=A8me dimension =E2=80=94 l'</span><span class=3D"color"=
+ style=3D"color:rgb(86, 156, 214);"><b>**asym=C3=A9trie musicale**</b></span=
+><span class=3D"color" style=3D"color:rgb(204, 204, 204);"> (composition vs=
+. analyse, le pi=C3=A8ge terminologique GTTM qui est nomm=C3=A9 "generative=
+" mais fondamentalement analytique, BP3 comme cas unique de bidirectionnali=
+t=C3=A9, tripartition de Nattiez) =E2=80=94 et instancierait les 7 autres s=
+ur BP3, GTTM, IDyOM. Est-ce que cette strat=C3=A9gie de split te semble jud=
+icieuse ?</span></div><div><br /></div><div><span class=3D"color" style=3D"=
+color:rgb(86, 156, 214);"><b>## Le fichier</b></span></div><div><br /></div=
+><div><span class=3D"color" style=3D"color:rgb(204, 204, 204);">Je t'envoie =
+la version fran=C3=A7aise (traduction de lecture). La version soumise sera =
+en anglais. C'est un premier brouillon =E2=80=94 tout est modifiable.</spa=
+n></div><div><br /></div><div><span class=3D"color" style=3D"color:rgb(204, =
+204, 204);">Merci d'avance pour ton regard,</span></div><div><span class=
+=3D"color" style=3D"color:rgb(204, 204, 204);">Romain</span></div><div><br=
+ /></div><div><span class=3D"color" style=3D"color:rgb(204, 204, 204);">---<=
+/span></div><div><br /></div><div><span class=3D"color" style=3D"color:rgb(=
+204, 204, 204);"><i>*P.S. : Le travail avec Claude a =C3=A9t=C3=A9 essentie=
+l pour structurer ce papier.</i></span></div></blockquote></div>
+</body></html>
+--------=_MBFB554278-CB38-4FD4-9A2F-DCF477BCD250--
+

@@ -7,9 +7,10 @@
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { encode } from './encoder.js';
+import { generatePrototypes } from './prototypes.js';
 
 function compileBPS(source) {
-  const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, ast: null, errors: [] };
+  const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [] };
 
   try {
     // 1. Tokenize
@@ -29,6 +30,11 @@ function compileBPS(source) {
     result.controlTable = encoded.controlTable;
     result.cvTable = encoded.cvTable;
     result.directives = ast.directives;
+
+    // 4. Generate prototypes (-so. file) for all declared terminals
+    if (result.alphabet.length > 0) {
+      result.prototypesFile = generatePrototypes(result.alphabet);
+    }
 
     // Propagate encoder errors (e.g. BOLSIZE violations)
     if (encoded.errors?.length) {

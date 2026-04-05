@@ -1,0 +1,1945 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-342-ga586d3c39-fm-20260310.001-ga586d3c3) with LMTPA;
+	 Sat, 28 Mar 2026 10:45:09 -0400
+X-Cyrus-Session-Id: slotpi15m92-1774709109-2588781-2-17262295531935991518
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 1000 (email)
+X-Spam-score: 0.0
+X-Spam-hits: FORGED_GMAIL_RCVD 1, FREEMAIL_FROM 0.001, HTML_MESSAGE 0.001,
+  ME_SC_SENDERREP -100, ME_SENDERREP_ALLOW -4, MIME_QP_LONG_LINE 0.001,
+  RCVD_IN_DNSWL_NONE -0.0001, RCVD_IN_MSPIKE_H2 0.001,
+  SHORTCIRCUIT -0.0001, SPF_HELO_NONE 0.001, SPF_PASS -0.001,
+  T_FREEMAIL_DOC_PDF 0.01, LANGUAGES en, BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.221.41', Host='mail-wr1-f41.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8', html='utf-8'
+X-Attached: SUB_derivation.pdf
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-04 ([10.202.2.203])
+  by phl-compute-07.internal (LMTPProxy); Sat, 28 Mar 2026 10:45:09 -0400
+Received: from phl-mx-04.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id 0835D13800D2
+	for <romain@liance.art>; Sat, 28 Mar 2026 10:45:09 -0400 (EDT)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-04.messagingengine.com (Authentication Milter) with ESMTP
+    id DBE32F7676F.89BA913800AD;
+    Sat, 28 Mar 2026 10:45:09 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1774709109; b=tkpyWw2R9lifJbbCZ0B9d7A5kqN2fSw1/rdtxzgh1TZGt2bTw9
+    2QclR6eKAter5fJbGG+/BLWN84V+FsczJzTqDn73g9riDY0/FUgIB+0WKQiXwMFz
+    pnULR0JTHsiipV7p9cxHsdIvPxO6u9e5/SUTHDvDlMc5QRnVQesgfQq0ZVWBN1L3
+    BMtwr4zLdqhRdK31eahxfbDOkJ2BSz/53+2Hys9+V+BrBDu00CrvsiUCwoirHJ1B
+    X9hg9Yiy/tRV+N9qiTiC+kpqgikHJ7irTofZ4Kvkh3kdu9FemrMWRqjo2+e28URT
+    VeO0sh/ndJu0Ap2I5NqrLr1oeXbBV1ahMzlw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id:reply-to
+    :mime-version:content-type; s=fm1; t=1774709109; bh=IUuSWRS7e2CO
+    WzFPgcvLDt9Zi+ajfizgCqR5KK3k8Lg=; b=WPrFizGjoPCnJBR5PM6J5R26PivX
+    4oZA5f/5qWscbWrx5vYAYXxqyfYBhpJOB/z5wE1UsyH+4Y3hH90ZaiJE78RaIiHJ
+    WADO/n04ExtMNuAvqZiTHNsL3364PxNL7qoIu4XVBTGsGccZ7DKA55nZ46u9Z8U4
+    tMLerFFB1c5K42ZJMzHnb7d0yYEOP5nnxtuOvr5EwKqtjck2DI17Q/PA+lCOiHUr
+    Z70vkbbxoXUEuLiIE5tImwEruZzZeM/0FuXTZ9pflzEKtRIB2jCeUZlxtT7+lAkQ
+    Tu+1r+mze/nnb1ipRS2FDALsN1ith0+QCi+kuDEM7CmAtDnH4E1D/ojD4A==
+ARC-Authentication-Results: i=1; phl-mx-04.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wr1-f41.google.com
+    policy.ptr=mail-wr1-f41.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=UVDDkDzV header.a=rsa-sha256
+    header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.221.41 (mail-wr1-f41.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wr1-f41.google.com
+X-ME-Authentication-Results: phl-mx-04.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-04.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wr1-f41.google.com
+      policy.ptr=mail-wr1-f41.google.com
+Authentication-Results: phl-mx-04.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-04.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-04.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=UVDDkDzV header.a=rsa-sha256
+      header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.221.41 (mail-wr1-f41.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wr1-f41.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffeefgeegucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfhrfgggtgesmhdtreertderjeenucfhrhhomhepfdeuvghrnhgrrhgu
+    uceuvghlfdcuoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqeenucggtffrrghtth
+    gvrhhnpeduudegkeeukeeftdfhkeeufeduheeuvdeitdefueevvdelleefgeevhedvjedt
+    ieenucfkphepvddtledrkeehrddvvddurdeguddpvdgrtddumegtsgdutgemkedurgelme
+    eltgdttdemrggtgeelmegtiegtkeemvdhffegrmeehfeefleenucevlhhushhtvghrufhi
+    iigvpedtnecurfgrrhgrmhepihhnvghtpedvtdelrdekhedrvddvuddrgedupdhhvghloh
+    epmhgrihhlqdifrhduqdhfgedurdhgohhoghhlvgdrtghomhdpmhgrihhlfhhrohhmpeeo
+    sggvrhhnrghrsggvlhesghhmrghilhdrtghomheqpdhnsggprhgtphhtthhopedupdhrtg
+    hpthhtohepoehrohhmrghinheslhhirghntggvrdgrrhhtqe
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:dOnHaROeiGgmldZ_uoQ0z9Kwqt11GvBq8SDk6uXJa4itmVeG1k_k3g>
+X-ME-Received: <xmx:dOnHaZ44YYLF1Tm19hNMJIId-hxdbmTWhQFVe-IqP7jZasCcQ7InaQ>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.221.41 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-04.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wr1-f41.google.com;
+    client-ip=209.85.221.41
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-04.messagingengine.com (Postfix) with ESMTPS id 89BA913800AD
+	for <romain@liance.art>; Sat, 28 Mar 2026 10:45:08 -0400 (EDT)
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-43b95e5b3afso1674964f8f.3
+        for <romain@liance.art>; Sat, 28 Mar 2026 07:45:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774709106; x=1775313906; darn=liance.art;
+        h=mime-version:user-agent:reply-to:message-id:date:subject:to:from
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IUuSWRS7e2COWzFPgcvLDt9Zi+ajfizgCqR5KK3k8Lg=;
+        b=UVDDkDzVmlG26FDi2od5aEN4eEC74WtTOtwDhI8RVrxnPN55mPCWkXTARoxQ5wo+Jn
+         009iv7P4M6cTcNmFBLKgDBYCnMbX3dKEVqCLeQ6+iNl/qLWn80rN2CiNVMGMOPGNczvm
+         4OAsqaQIqKKI9W8PLmuEU67CT8R6PPYYWoZkIfIIlGlb6MfJ4OmGB+BQTe/d310/jtmu
+         OSb/TYKut9/g69H34icwqluqO/mHge8UY4HPb+lw2b/7amVUjhoSI6RUz4iPxPQLeAde
+         9Rye47cUxJy730wzrQsij4Jd0d8MVbGtiI08VvgAsbNvbZlQC+rtGmIBTOFB3cvkICcM
+         UvHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774709106; x=1775313906;
+        h=mime-version:user-agent:reply-to:message-id:date:subject:to:from
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=IUuSWRS7e2COWzFPgcvLDt9Zi+ajfizgCqR5KK3k8Lg=;
+        b=svJhVUAn9kzQznd2T6hWVU6/AKVqxu4cOybQR1ojVRlIjMZvGD8lC4AdUbgT1LOO/s
+         TvgG30IPFUqnI8Cr8pgDjkUzGQkYd3lgz2Fi/GI8WNx3oibMGl/Vsdui+EX79Meoaz59
+         /fmI6kpJZmdNz7hh5Izopx9YAVBthV/LxzAYHmXHO0B8YTOqkaUQurvFtxkg3OgwVZ/F
+         63JUdOEYvcfYo32EdsIF9JXduL07wpCaf67BcNJnbYTNluHWSBcGw3tZBHOCNEyLdgNM
+         UKZdFG3e+dAQoBFMfIW3H89QWe6bRI5gttAowLd323aQFhIHhjRSUknQhYjZoGunchbS
+         L/bw==
+X-Gm-Message-State: AOJu0YzjnUBLg2flE9bSeQLzxapEWIoMPpr0q1O74nrETlyBvv6hQUCo
+	3u5u2gISlQj6N0QwvaP4tfOx4Hm956vq4ePDCG4d/bjeN61Jrsr2jERRtg4Sxw==
+X-Gm-Gg: ATEYQzzN4fTQf4uHK4dK7XzJHXtvK3LhM/7GFn/0xbGKGTaF7K5T18Sa4ebL/zXtJ/E
+	2UZ6dCuBacPyyFPXJnKXPv2dctEMF4i23SB6AiKIaHSA6tvkdxeTuOCrQr04a1uehCJedwPHWMj
+	NR7uyxShWWkGDtlrLJIVjPjAJg8rU9kjb24tnXZAOp72lf5JStlMT+wYeLdezRW58PW4h+FuI2I
+	p7M/ap2v3AAtQDRB8ZvfvLoj9TDhMt5K/QB6YCIfY6JAaR8JMV6QqqZ0BmdLCifmZPS9TuBe5MX
+	l2paFxA//jzGzGTivCIMUkhGK4e9sS9PlkSFS8944Qy12E0oG80AFVVvrH8lVLB/varnKCYiiRS
+	IjNuGagWKnSs5v5FSo2DoL8hV3dfFEt0rtykmflXotFut0L+F3kAxJYZODf5G5a4sYEZV8gM8CX
+	xkQeuDtkpq9BrRmyzALVOCL4iXp9GZn6g2wAAhDsxs+MtJgjTZDugJxskqebadszfZ3cp5z4/wY
+	mAe7fuGCTk8J617XntGHiANLusEo2ED3NA=
+X-Received: by 2002:a5d:584b:0:b0:43b:492c:8349 with SMTP id ffacd0b85a97d-43b9e98140cmr10686776f8f.3.1774709105581;
+        Sat, 28 Mar 2026 07:45:05 -0700 (PDT)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:ac49:c6c8:2f3a:5339? ([2a01:cb1c:81a9:9c00:ac49:c6c8:2f3a:5339])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43cf21e29b1sm5362502f8f.8.2026.03.28.07.45.04
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 28 Mar 2026 07:45:04 -0700 (PDT)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=5b2=5d=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9r?=
+ =?utf-8?q?ation-reconnaissance=20=3a=20sept=20dimensions=22?=
+Date: Sat, 28 Mar 2026 14:45:04 +0000
+Message-Id: <em88bdd5b4-f419-43db-a539-008abe423b98@gmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="------=_MB7945B5FE-BE8F-4F8F-8F93-A3F6A295C8CD"
+
+--------=_MB7945B5FE-BE8F-4F8F-8F93-A3F6A295C8CD
+Content-Type: multipart/alternative;
+ boundary="------=_MBA85A669A-0E61-4605-99FB-766A470C837E"
+
+--------=_MBA85A669A-0E61-4605-99FB-766A470C837E
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+J=E2=80=99ai ajout=C3=A9 la d=C3=A9finition des poids de r=C3=A8gles dans B=
+P3-help :
+
+### Rule weight
+=E2=80=A2 Each rule may be assigned a weight in the range 0..32767. These a=
+re=20
+used when there are multiple rules in the "RND", "LIN", "SUB" or "SUB1=E2=
+=80=9D=20
+grammars.
+=E2=80=A2 The weight value is indicated between angle brackets, e.g. <43>.=
+ The=20
+default weight is 127. A rule with a weight of 0 is inactive.
+=E2=80=A2 The probability of selecting a rule is the ratio of its weight to =
+the=20
+sum of the weights of the eligible rules (whose left argument is found=20
+in the work string).
+=E2=80=A2 Weights in the range 0..127 can be set using MIDI controllers and=
+=20
+parameters K1, K2, etc.
+=E2=80=A2 Weights can be infinite and are notated as <inf>. A rule with an=
+=20
+infinite weight will always be included in the selected rules if its=20
+left argument is found in the work string.
+=E2=80=A2 Weights can be dynamically controlled: any rule can be given a=20
+positive or negative weight increment each time it is applied. For=20
+example, a rule with a weight of <100-30> will have successive weights=20
+of 100, 70, 40, 10 and 0 and therefore cannot be applied more than four=20
+times in the same production.
+
+Un d=C3=A9tail important est que pour calculer la probabilit=C3=A9 d=E2=80=
+=99une r=C3=A8gle il=20
+faut diviser son poids par la somme des poids des r=C3=A8gles CANDIDATES, q=
+ui=20
+n=E2=80=99est donc pas n=C3=A9cessairement la somme des poids dans la sous-=
+grammaire.=20
+=C3=87a se passe =C3=A0 la  ligne 1307 dans =E2=80=9CCompute.c=E2=80=9D. Do=
+nc la probabilit=C3=A9 peut=20
+changer m=C3=AAme si le poids est statique.
+
+Par exemple, dans cette grammaire :
+
+ORD
+S --> A B C
+=E2=80=94=E2=80=94
+RND
+<1> A --> a a
+<1> B --> b b
+<1> C --> c c
+
+la probabilit=C3=A9 de la r=C3=A8gle choisie =C3=A9tait de 1/3 puis 1/2 pui=
+s 1/1.
+
+=E2=80=94=E2=80=94
+
+Je reviens sur SUB et sur cet exemple :
+
+SUB
+gram#1[1] S --> A B B A B B A
+gram#1[2] A B --> a B
+gram#1[3] B A --> B b
+gram#1[4] B B A --> B e A
+gram#1[5] B B --> f B
+
+dont voici la trace :
+
+[Step #1] Selected: gram#2[1] S --> A B B A B B A
+[Step #2] Selected: gram#1[2] A B --> a B
+[Step #3] Selected: gram#1[5] B B --> f B
+[Step #4] Selected: gram#1[4] B B A --> B e A
+
+Rule already selected: gram#1[2] A B --> a B
+[Step #5] Selected: gram#1[2] A B --> a B
+
+Rule already selected: gram#1[5] B B --> f B
+[Step #6] Selected: gram#1[5] B B --> f B
+
+Rule already selected: gram#1[4] B B A --> B e A
+[Step #7] Selected: gram#1[4] B B A --> B e A
+
+[Step #8] Selected: gram#1[3] B A --> B b
+
+R=C3=A9sultat =3D a f e a f e b
+
+Tout se passe comme si toutes les r=C3=A8gles candidates =C3=A9taient appli=
+qu=C3=A9es=20
+en m=C3=AAme temps. En r=C3=A9alit=C3=A9, elles sont lues dans l=E2=80=99or=
+dre (l=E2=80=99ordre =C3=A9tant=20
+arbitraire) et choisies dans l=E2=80=99ordre croissant de la position de=20
+d=C3=A9rivation de gauche =C3=A0 droite. C=E2=80=99est pourquoi la r=C3=A8g=
+le [5] est appliqu=C3=A9e=20
+avant la r=C3=A8gle [4].
+
+Voir le dessin en PJ qui illustre les =C3=A9tapes de d=C3=A9rivation.
+
+Je le comprends intuitivement mais je ne saisis plus bien la logique=20
+dans FindCandidateRules() de =E2=80=9CCompute.c=E2=80=9D.
+
+Je vais r=C3=A9=C3=A9tudier SUB1.
+
+--------=_MBA85A669A-0E61-4605-99FB-766A470C837E
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><style id=3D"css_styles">blockquote.cite { margin-left: 5px; ma=
+rgin-right: 0px; padding-left: 10px; padding-right:0px; border-left: 1px so=
+lid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}</style><title></title><style type=3D"text/css"><!--=
+--></style><style id=3D"css_styles" type=3D"text/css"><!--blockquote.cite { =
+margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right:0px=
+; border-left: 1px solid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}
+--></style></head><body style=3D""><div style=3D"">J=E2=80=99ai ajout=C3=A9 =
+la d=C3=A9finition des poids de r=C3=A8gles dans BP3-help :</div><div styl=
+e=3D""><br /></div><div style=3D"">### Rule weight</div><div style=3D"">=E2=
+=80=A2 Each rule may be assigned a weight in the range 0..32767. These are=
+ used when there are multiple rules in the "RND", "LIN", "SUB" or "SUB1=E2=
+=80=9D grammars.</div><div style=3D"">=E2=80=A2 The weight value is indicat=
+ed between angle brackets, e.g. &lt;43&gt;. The default weight is 127. A ru=
+le with a weight of 0 is inactive.</div><div style=3D"">=E2=80=A2 The proba=
+bility of selecting a rule is the ratio of its weight to the sum of the wei=
+ghts of the eligible rules (whose left argument is found in the work string=
+).</div><div style=3D"">=E2=80=A2 Weights in the range 0..127 can be set us=
+ing MIDI controllers and parameters K1, K2, etc.</div><div style=3D"">=E2=
+=80=A2 Weights can be infinite and are notated as &lt;inf&gt;. A rule with=
+ an infinite weight will always be included in the selected rules if its lef=
+t argument is found in the work string.</div><div style=3D"">=E2=80=A2 Weig=
+hts can be dynamically controlled: any rule can be given a positive or nega=
+tive weight increment each time it is applied. For example, a rule with a w=
+eight of &lt;100-30&gt;=C2=A0will have successive weights of 100, 70, 40, 1=
+0 and 0 and therefore cannot be applied more than four times in the same pr=
+oduction.</div><div style=3D""><br /></div><div style=3D"">Un d=C3=A9tail i=
+mportant est que pour calculer la probabilit=C3=A9 d=E2=80=99une r=C3=A8gle =
+il faut diviser son poids par la somme des poids des r=C3=A8gles CANDIDATE=
+S, qui n=E2=80=99est donc pas n=C3=A9cessairement la somme des poids dans l=
+a sous-grammaire. =C3=87a se passe =C3=A0 la =C2=A0ligne 1307 dans =E2=80=
+=9CCompute.c=E2=80=9D. Donc la probabilit=C3=A9 peut changer m=C3=AAme si l=
+e poids est statique.</div><div style=3D""><br /></div><div style=3D"">Par=
+ exemple, dans cette grammaire :</div><div style=3D""><br /></div><div style=
+=3D"">ORD</div><div style=3D"">S --&gt;=C2=A0A B C</div><div style=3D"">=E2=
+=80=94=E2=80=94</div><div style=3D"">RND</div><div style=3D"">&lt;1&gt;=C2=
+=A0A --&gt;=C2=A0a a</div><div style=3D"">&lt;1&gt;=C2=A0B --&gt;=C2=A0b b<=
+/div><div style=3D"">&lt;1&gt;=C2=A0C --&gt;=C2=A0c c</div><div style=3D"">=
+<br /></div><div style=3D"">la probabilit=C3=A9 de la r=C3=A8gle choisie=
+ =C3=A9tait de 1/3 puis 1/2 puis 1/1.</div><div style=3D""><br /></div><div st=
+yle=3D"">=E2=80=94=E2=80=94</div><div style=3D""><br /></div><div style=3D"=
+">Je reviens sur SUB et sur cet exemple :</div><div style=3D""><br /></div>=
+<div style=3D"">SUB</div><div style=3D"">gram#1[1] S --&gt;=C2=A0A B B A B=
+ B A</div><div style=3D"">gram#1[2] A B --&gt;=C2=A0a B</div><div style=3D""=
+>gram#1[3] B A --&gt;=C2=A0B b</div><div style=3D"">gram#1[4] B B A --&gt;=
+=C2=A0B e A</div><div style=3D"">gram#1[5] B B --&gt;=C2=A0f B</div><div st=
+yle=3D""><br /></div><div style=3D"">dont voici la trace :</div><div style=
+=3D""><br /></div><div style=3D"">[Step #1] Selected: gram#2[1] S --&gt;=C2=
+=A0A B B A B B A</div><div style=3D"">[Step #2] Selected: gram#1[2] A B --&=
+gt;=C2=A0a B</div><div style=3D"">[Step #3] Selected: gram#1[5] B B --&gt;=
+=C2=A0f B</div><div style=3D"">[Step #4] Selected: gram#1[4] B B A --&gt;=
+=C2=A0B e A</div><div style=3D""><br /></div><div style=3D"">Rule already s=
+elected: gram#1[2] A B --&gt;=C2=A0a B</div><div style=3D"">[Step #5] Selec=
+ted: gram#1[2] A B --&gt;=C2=A0a B</div><div style=3D""><br /></div><div st=
+yle=3D"">Rule already selected: gram#1[5] B B --&gt;=C2=A0f B</div><div sty=
+le=3D"">[Step #6] Selected: gram#1[5] B B --&gt;=C2=A0f B</div><div style=
+=3D""><br /></div><div style=3D"">Rule already selected: gram#1[4] B B A --=
+&gt;=C2=A0B e A</div><div style=3D"">[Step #7] Selected: gram#1[4] B B A --=
+&gt;=C2=A0B e A</div><div style=3D""><br /></div><div style=3D"">[Step #8]=
+ Selected: gram#1[3] B A --&gt;=C2=A0B b</div><div style=3D""><br /></div><d=
+iv style=3D"">R=C3=A9sultat =3D a f e a f e b</div><div style=3D""><br /></=
+div><div style=3D"">Tout se passe comme si toutes les r=C3=A8gles candidate=
+s =C3=A9taient appliqu=C3=A9es en m=C3=AAme temps. En r=C3=A9alit=C3=A9, el=
+les sont lues dans l=E2=80=99ordre (l=E2=80=99ordre =C3=A9tant arbitraire)=
+ et choisies dans l=E2=80=99ordre croissant de la position de d=C3=A9rivatio=
+n de gauche =C3=A0 droite. C=E2=80=99est pourquoi la r=C3=A8gle [5] est app=
+liqu=C3=A9e avant la r=C3=A8gle [4].</div><div style=3D""><br /></div><div=
+ style=3D"">Voir le dessin en PJ qui illustre les =C3=A9tapes de d=C3=A9riva=
+tion.</div><div style=3D""><br /></div><div style=3D"">Je le comprends intu=
+itivement mais je ne saisis plus bien la logique dans FindCandidateRules()=
+ de =E2=80=9CCompute.c=E2=80=9D.</div><div style=3D""><br /></div><div style=
+=3D"">Je vais r=C3=A9=C3=A9tudier SUB1.</div><div style=3D""><br /></div>
+</body></html>
+--------=_MBA85A669A-0E61-4605-99FB-766A470C837E--
+
+--------=_MB7945B5FE-BE8F-4F8F-8F93-A3F6A295C8CD
+Content-Type: application/pdf; name=SUB_derivation.pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=SUB_derivation.pdf
+
+JVBERi0xLjQKJbC4upUKMyAwIG9iago8PC9QYXJlbnQgNCAwIFIvTWVkaWFCb3hbMCAwIDU5NSA4
+NDFdL0NvbnRlbnRzIDUgMCBSL1Jlc291cmNlcyA2IDAgUi9UeXBlL1BhZ2U+PgplbmRvYmoKNSAw
+IG9iago8PC9MZW5ndGggNyAwIFIvRmlsdGVyL0ZsYXRlRGVjb2RlPj4Kc3RyZWFtCnicK+QytTTV
+MzJQMNAzgBIWJoZ6psgCyblc+p65hgou+VyBXADsdwm/CmVuZHN0cmVhbQplbmRvYmoKNyAwIG9i
+ago0MQplbmRvYmoKOSAwIG9iago8PC9UeXBlL1hPYmplY3QvU3VidHlwZS9JbWFnZS9XaWR0aCAx
+OTg0L0hlaWdodCAyODA1L0NvbG9yU3BhY2UvRGV2aWNlR3JheS9CaXRzUGVyQ29tcG9uZW50IDgv
+TGVuZ3RoIDggMCBSL0ZpbHRlci9EQ1REZWNvZGU+PgpzdHJlYW0K/9j/4AAQSkZJRgABAQEA8ADw
+AAD/2wBDABYPEBMQDhYTEhMYFxYaIDYjIB4eIEIvMic2TkVSUU1FTEpWYXxpVlx1XUpMbJNtdYCE
+i4yLVGiZo5eHonyIi4b/wAALCAr1B8ABAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcI
+CQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAk
+M2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqD
+hIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl
+5ufo6erx8vP09fb3+Pn6/9oACAEBAAA/ANYeGtNB/wBU3/fVMk8N2GQwiZh3G6nL4c0txkRN/wB9
+dKd/wjWmf88W/wC+qP8AhGtN/wCeLf8AfVH/AAjWmf8APFv++jS/8I7py9ITzwcnNJ/wjemf88W/
+76NL/wAI1pn/ADxb/vo0f8I3pn/PE/8AfRpf+Eb0z/ngf++jSf8ACOaZ2gP/AH0aP+Eb0z/ngf8A
+vo0v/CN6Z/z7/wDjxo/4RvTP+fc/99Gk/wCEc0z/AJ9//HjSjw5pg/5d/wDx40f8I7ph/wCXf/x4
+0f8ACOaZ/wA+/wD48aP+Ec0v/n3/APHjR/wjml/8+/8A48aP+Ec0z/n2/wDHjS/8I5pf/Pt/48aP
++Ed0z/n2H/fRo/4R3S/+fYf99Gj/AIRzS/8An2H/AH0aP+Ed0v8A59h/30aP+Ed0v/n1H5mj/hHd
+L/59R+Zo/wCEd0v/AJ9R+Zpf+Ee0v/n1X8zQfD2ln/l1X8zSf8I7pf8Az6r+Zpf+Ed0v/n1X8zR/
+wj2l/wDPqv5mj/hHtL/59V/M0f8ACPaX/wA+i/maP+Ee0v8A59F/M0p0DTD/AMuifrR/wj+l/wDP
+ov5mj/hH9L/59E/M0f8ACP6X/wA+ifmaP+Ef0v8A59E/M0f2Bpf/AD6J+Zo/sDS/+fRP1pf7A0v/
+AJ9E/Wj+wNL/AOfRP1pP7A0v/n0T9aX+wdM/59E/Wj+wdM/584/1o/sHTP8Anzj/AFpf7C0z/nzj
+/Wk/sHTP+fOP9aX+wtM/584/1o/sLTP+fOOj+wtM/wCfOOj+wtM/584/1o/sLTP+fOOj+w9M/wCf
+OOj+w9M/5846P7D0z/nzi/Kl/sPTP+fOL8qX+xtO/wCfSP8AKj+xtO/59I/yo/sbTv8An0j/ACpf
+7H0//n0j/Kj+x9P/AOfSP8qP7I08nP2SP8qP7I0//n0i/Kj+yNP/AOfSL8qX+ybD/n0i/Kj+yNP/
+AOfSL8qP7I0//n0i/Kj+yNP/AOfSL8qP7JsP+fSL/vmj+ybD/n0i/wC+aP7KsP8An0i/75pf7KsP
++fSL/vmj+yrD/n0i/wC+aT+ybD/n0h/75o/snT/+fOH/AL4FH9k6f/z5w/8AfIo/srT/APnzh/74
+FH9k6f8A8+cP/fIo/smw/wCfOH/vgUv9lWH/AD6Q/wDfAo/sqw/584f++BR/Zdh/z5w/98Cj+y7D
+/n0h/wC+BS/2ZY/8+kP/AHwKP7Msf+fSH/vgUf2ZY/8APpD/AN8Cj+zLH/n0h/74FH9m2P8Az6Q/
+98Cj+zbL/n0h/wC+BS/2bZf8+kP/AHwKP7Osv+fSH/vgUf2dZf8APpD/AN8Cj+zrL/n1h/74FH9n
+2f8Az6w/98Cj+z7P/n1h/wC+BS/2fZ/8+sP/AHwKPsFn/wA+sP8A3wKPsFp/z6w/98Cj7Baf8+sP
+/fAo+w2n/PrD/wB8Cl+w2n/PtD/3wKPsVr/z7Q/98Cj7Fa/8+0P/AHwKPsVr/wA+0X/fAo+x2v8A
+z7xf98Cl+x23/PvF/wB8Ck+xWv8Az7Q/98Cl+x23/PvF/wB8Cj7Jbf8APvF/3wKPsdt/z7xf98Cj
+7Jbf8+8X/fAo+yW3/PvF/wB8Cl+yW/8Az7xf98Cj7Lb/APPCL/vgUfZoP+eEX/fAo+y2/wDzwi/7
+4FH2aD/njH/3wKPs0H/PCL/vgUfZoP8AnhH/AN8Cl+zQf88Y/wDvgUfZoP8AnjH/AN8ij7PD/wA8
+Y/8AvkUfZ4f+eMf/AHyKPs8P/PGP/vkUfZ4f+eMf/fIo8iH/AJ5R/wDfIo+zw/8APKP/AL5FHkRf
+88k/75FL5EX/ADyT/vkUeRF/zyT/AL5FHkRf88k/75FHkxf880/75FHlR/8APNP++RR5Uf8AzzT/
+AL5FHlR/880/75FHkx/880/IUvlR/wBxfyo8qP8AuL+VHlR/3F/Kjyo/7i/lR5af3F/Kjy0/uL+V
+Hlp/cX8qPLT+4v5UbE/ur+VLsX+6Pyo2L/dH5UbF/uj8qNq/3R+VG0eg/Kjav90flRtX+6Pyo2j0
+H5UbR6D8qNo9BRgegowPQUFQeoFJsXOdo/KnYFGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKTmlpK
+KWiiiiiiikpaKSlopKWkpaSiiiiiiilopKKKKKKKKKKKKKSlopKKWio2Qqd69e49aerBhkU6ikxS
+4ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooopNwzjvS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUlFFAGKKKKKKKKKSnUUVHjY2R0PWpKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKCcCkByKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikopaSiiloopCM0gODg/hTqKKKKK
+KKKKKKKKKKKM0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUZoooooooooooooooooooooooozRRRRRRTWPBxSqMCloooooooooooooooooo
+oooooooooooooooopKKWiiikIzQCehpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKS
+iiiiiimuABmnL0FLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUtFFJmlpO9LRRRRRRRRRRRRR
+RRRRRRRRRRRRRRQKKM0UnNLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUtFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJS0UUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlLRSUUUHpx1pjjgZPNPXpS0UUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhNN3HNOzS0UUUUUUUi96WiiiiiiiiikpaKK
+KKKKKKKKKKKKKKKKKKTnPtS0UUUUUUUUUUlGaCQOtIWo3ZopQaDQDRS0UUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlFFFLSUYooxS0UUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUlFHNNbDcHqKfRRRRRRRRRRRRRRRRRRRRRRmjNFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFNIFKKWiiiiiiikFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSU
+UUUUUUYo6U00uKMUYoAp2KQAClooNJRS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUHPam4
+zTqKKKKKKKKKKKKKKKKKKKKKTvRS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmBS0UUUUUU
+UUgpaKM0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlFFFFFFFFFGaOtGKMUUtFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNcZXrj6UL0FOoooooxzRRRRRRRRRRRRRRRRSYpaKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKQUtFIQG6jNLRSUtFFFFFFFJS0UUUUUUUUUU
+UUUUUUUUUlFGKKKKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikPS
+lHSiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikOe1L9aKKKKKKKKKKKKKKKK
+KKKQUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFIxwKAcilooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooopBS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmaWiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiimuOlKDxS0UUUUUUUUUUUU
+UUUUUUEgDJOBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSCloooooooooo
+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
+pV6OJIlCxqFHtT6KKKKKKKKK5i7lXS9XM0WGRuoBrWtw+ox+ZI48o9FFXookhQKi4FPooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopBS0UUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUh5pADmnUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiisXUR9ou5hxiKI8+9Z9rGTd2TDjj+tdVRQSAMmkByM0tFFFFFFFFIyK
+4wyhh7iqraZZM2426Z9uKa+kWT/8sQPocVA2hQY/dyyIfXOajEWrWvyRusydiaije+nuwZod4h7D
+pmrvmaiwLCFFH90nmlW4vXUAW4DdyTSCHUGO4yqvtSCwuZOZbo5/2amj0+JTlyZD6tVpUVBhVAHt
+S0UUUUUUUUUVleIN32IYHG7mr1i4ks4WB/gFT0UUUVQvdJt7vLbQkn94VjvBqWktmJi8We3IrQtf
+EFvIn78GN+4xkVbTVLR+koH1GKzdU8ppFurOXEq9dvQ1bsdZgmgzM4SRfvA1YOpW2zcr59h1qBtS
+lc4hgJ/3j/hQLe+nO6Wbyx/dXipU0yLOZCXb1NWY4Y4h8ige9SUUUUUUUUUUyWVIl3OcVV82a8BE
+amJP7zdTR/Zdu0BikUOT/EetZunTjS7uS1nJCsflPat8EEAg5Boooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooppbjmlXpS0UUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiimuNy8Ej3FYJlUy3pbkEEZzUekIXuod3RVyBXSUUUUUUUUUUUUUUUUVFczCGIt36D3NJaxGK
+IBuWb5mPvU1FMmVmhdUOGIwDUFgkkURimbcwPWrVFFFFFFFFFFFFVdShWeykVuwyKg0IYsAO244r
+Rooooooqu9jau25reMn120h0+1Ix5K4pVsbZRgRLioptJs5uTCAfVeKrPoip81vIVYcgN0oi1GW1
+fyr2Ir6OBxV1NQtXxiVfxqwrKwypBHqKWiiiiiiiioJ7uKD7xJPooyahEt1cHCIIU9W61LFaIjbm
+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
+FVtQXdaOOvHFOsmLWsZPXFT0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUGgUCiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiigUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUVk2w8rV5F/vA1rUUUUUU
+UUUVT1WRo7JtvVjipLGMR2kYBzkZqxRRRRRRRRRRRRTXyEbHXFZ2isD5wwd27k1p0UUUUUUUUUUV
+m63DvgWQD5kNXLOXzrWN85JHNTUUUUUUUUU2QkRsR1ArM0IfJO+eWetWiiiiiiiiormMyQMo64qv
+pchaAqeqHFXaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKDQ
+elNWnUUUUUUZoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBrOsh519NLjgHArRoooooooooqC+j
+EtrIp9M0zTXZ7NC30q1RRRRRRRRRRRRRWbpp2XdzF2BzWlRRRRRRRRRRRUdxH5sDp6iqOiv+7kiI
+IKt0NaVFFFFFFFFB6GsrSDtuLqMfdDZxWrRRRRRRRRSdc1Q07KXM6dic1oUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhPagEEnFLRRRRRRRRRRRRRRRSUtFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAooooooooooooooooooooooooo
+oooooooooooooooooooopshxGx9BVLS8LCzHAyauSypEm92wKSCdZ03JnAOOakoooooooqpqjlLN
+tpwWIFSWKqlpGF6YzU9FFFFFFFFFFFFFZcP7vWWGfvA1qUUUUUUUUUUUUVlwN5WsyR4wHFalFFFF
+FFFFB6VkaSxW9ukb72a16KKKKKBRRRWY4+yamGydkorToooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooopCcU3g85pUGBTqKKKKKKKKKKKKKQk5GB9aKWiiiiiiiiii
+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
+UUUUUUmaWiiiiiiiiiiiiiiiiiiiiikpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKytXSbz7d1OIVPz
+e1aUMgliV1OQRWBqkm64aMN8rZJ/CtPRY9lkGwBvOav0UUUUUUUVWv2xDj1NTxALGoHQCnUUUUUU
+UUUUUhAIIPes7Tz5V1JAeg6VpUUUUUUUUUUUUUUUUVUiG6/kbHAHWrdFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFHeiiiiiiiiiiiiiiiiimtjIp1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFJS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUVHPEs0TI3Q1lWNw1revbSZCNyM9jWXdy+fcMIzk52jH
+vXSafbG1tEiLFiByas0UUUUUUUVT1LmFU7s1WoxhFB7CnUUUUUUUUUUUVmXOYNUjfHyvjNadFFFF
+FFFFFFFFFFFIx2qSewqrp3zRNJ3Zqt0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUzJP3h0NPoooooooooooooooooooooooooooooooooooopKKWiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiszWrIzw+bGMSJ3HpWVols012rsv3DknFdRRRRRRRRRRVK/JEkP8AvVdooooooooo
+ooorOvx5l3boOxya0aKKKKKKKKKKKKKKKgviRaSY9KLFQtpHgdRmp6KKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKYwyMYp4oooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooHSiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiimpEkediBc8nAp1FFFFFFFFFUr75poV96ujpRRRRR
+RRRRRRRVEfNqh7gLmr1FFFFFFFFFFFFFFFUtWk2WnXGTirNvjyI8dNoqSiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigjIpPSloooooooooooooooooooooooooooooooooo
+opKKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigdKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKM0mR60tFFFFFUr/wCR45Bz2q4pyAaWiiii
+iiiiiiiqlou6WWbuxxVuiiiiiiiiiiiiiiiqWrRCS0JJxtOamsm3WsZznjrU9FFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIBiloooooooooooooooooooooooooooooooo
+opM84paKSjBpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKB0oooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooopCQBkkVlX2oSySNb2a5cfef0qr/Ze
+ohfOS5bzOuCTVrTtUaST7NdDZMOM+taopaKKKpaj1iHvVxfuiloooooooooopGOATUNnzET6k1PR
+RRRRRRRRRRRRRRVbUVLWUoHpUOjtmzC5ztNX6KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKQnHegHNLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSd6WikozS0UUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUCiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiijNFFFFFFFUdXbbp0xC7iF4qv4f2vYLIeXJwT3rUZgqknoKwZsanqUfkLtEZ+Z
+8e9b46UtFFFU9RU7FcdVNWYjujU+op9FFFFFFFFFFRXR227n2pLQYt0+lTUUUUUUUUUUUUUUUUjA
+EEHoaz9NG2WZR90GtGiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikprC
+nKMCloooooooooooooooooooooooooooooooopO9LRRSYpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+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
+/iPNWwMDHpS0UUUUUUUUUA5FFFFFFFFUR82qcdAtXqKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKPrRRRRRRRRRRRQelAoooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFVr05CL3ZsVYAwAPSlooooooooooqmuZb/ADjhBVyiiiii
+iiiiiiiiiiiiiqcI2375HarlFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FAoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooqm3z3wU845+lXKKKKKKKKKKKCcAmqenMJPOkBzl8Vcooooooooooooooooooqpb/Pdy
+t6cVbooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooFFFFFFFFFFFFJS0UU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUVUtf3k8sh
++lW6z7jUJVn8u3h8zHU1Ytbh5siSFo2Hr0NWKKKKKKKKiuTiB8elRabGEtRg53HJq1RRRRRRRRRR
+RRRRRRRQelVLLl5m9Wq3RRRRRRRRRRRRRRRRRRRRRRRQaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKBR
+RRRRRRRRRRRRRQKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKOlFFFFFFFFFFFF
+FFFFFFIrq33SDj0oPQ1U0/OZPTNGp3f2W3+X77/KopulW7wwM0n3nOauqoX6nrS0UUUUUUVXvWIt
+mA6nipLdNkCL6CpKKKKKKKKKKKKKKKKKKZLkRNj0qGwGLcHuTk1Zoooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooo70UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlFLRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQKKKKKKKKKKKKTFLSUZpaKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK5+dp9KvXlKkwMcjBrQsdUivYn2n51HINS2B
+UQt9eaoXEq6jqEaQgssZ5PatocUUUUUUUUUVV1DOxP8Aeq0OgoooooooooooooooooopkxxE30qO
+yXbbip6KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKM0meaWiiiiiiii
+jNFFFFFFFFFFFFFFFFFFFFFFFFJS0lFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTJokn
+jMcihlNctNZXGk3vnIpKZOPQj3qVbue9Bt7dSu8/Ma3rGzSzgCLgt/E3qas0UUUUUUUUVVveseem
+6rQooooooooooooooooooqG8cJbsT3pbYbYEHtUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFIAM0tFFFFFFFFFFB6cdaam7HzkE+1OoooooooooooooooooooooopKDS
+0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCiiiiiiiiiiiiikopaKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKRlDDDAEHsaiitIIX3xxhWxjIqaiiiiiiii
+iiq2oYEAY9iKnj/1a/SnUUUUUUUUUUUUUUUUUVWvhmD8anT7i/SnUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUgpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSkp1F
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAoooooooooooooopKKWiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiqt/zGq+rVZUYUD2paKKKKKK
+KKKKKKKKKKKq6gfkQepqyv3R9KWiiiiiiiiiiigkAZJwKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKSgDFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUlOoooooooooooooooooooo
+ooooooooooooooHSiiiiiiiiiiiiiikoooopaKKKKKKKKKKKKKKKKKSloooooooooooooooooooo
+ooooooooooooooooooooooooooopKM0Zpc0UUUUVVvsbY/XdxVodKKKKKKKKKKKKKKKKKKKq3vPl
+qOparVFFFFFFFFFFFFIyhlKsMg0oGBgUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUD
+gUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlFFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQO
+lFFFFFFFFFFFFFFFJRRzS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUlFIT71G1xCn3pFH406OVJV3IwYeoNPopaKKKrXJBniQ9zmrNFFFFFFFFFFFFFFFFF
+FVbofvofrVqiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiikopKdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQOlFFFFFFF
+FFFFFFFFFFJRRS0UUUUUUUUUUUUUUUUUUUUUUUUUZ5ooooooooooooooopKKXNFFFFFFFFFFFFFQ
+3FzHbR75WCj3rNGvxljiF9o71qQTJPEsiHKsKkoopKgu7lLWIu/4D1rLKX182ZJPs8LdB3NWY9Dt
+lGSWY+uaoyrLo94rqzPC/UE9K3o2DoGHQjNOopaKKrH95eg9kFWaKKKKKKKKKKKKKKKKKKrT/Ncx
+L6c1Zooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooopKKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiig0inIpaKKKKKKKKKK
+KKKKKKKTFFFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUYpaKKKKKKKKKKKKxdQ/0z
+VorfgqgyQe9aUltCLZ41RVXaegqpoRJtWHOA2BWnRRSGssbZ7qSaTlIuFWmW1019fYAKLHyVNa1Y
++vOknlQLzIW6DtWtAmyFF9ABT6WiiiqtvzdSkdBVqiiiiiiiiiiiiiiiiiiq0/8Ax9Q+1WaKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKSilooooooooooooooooooooooooooooooooooHSiiiiiiiiiiiiiiiiiiiiikpa
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSiilooopKKWiiiiiiiiiiiiikNZFiEbU5HZsynOPYVqTg
+mBwOpU4qtpCbLJQRgknNXaKQ0jfdJrnJbryEC8hnZiavaDHiB53+87dfaprvUgg2WymWQnHA4FLZ
+af5chuJzvmb9Kv0UUUtMlbbGx9BUFgP3bMTyzVaooozRmjNFFFFFFFFFFFFFVpztuYz61Zoooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooHSiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiikpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKB0ooooooooooooooooooooooo
+opMUUUtFFFFFFFFFFFFFFFFFFFFFFFFFFJRRS0UUUUUUUUUUUUUUUUUUU1mVQSSABWfpzo887BlP
+PBq+XQD7w/OnKAAMUtFBGajmOyF29FJrj5ZTcK88nb5VFaNtFfS2iogMcWOnc1Msepwp+7jTHbA6
+UR6zPbOEvoSB6gVswTJcRCSNtynoakoooqK5YLCxPpTLJdluoxU9LRSUtFFFFFFFFFFFFFFVLhQ1
+5D7VboooooooooooooooooooooooooooooooooooooooooooooooooooooooooJxTS69iM04dKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSilooooooooooooooooooooooooooooooooooFFFFFF
+FFFFFFFFFFFFFFFFFFFFFJS0UUUUUUUUUUUUUUUUUUUUUUUUUUUlFFLRRRRRRRRRRRRRRRRWdcau
+kN0YBE7EcEimzPqFwcQqsSH+I1EujTPkz3Tv7ZNV7DTle4dQ5VY+DjvWn/ZkW3AZhVmCIwpt3lh2
+zUlFFI3Q1yLxbdUMB5UyZxXWKgCgelOAxWfqk9kIik5DN2A5NV9BSVC52ssJ5XPrWzRRRVa+P7tR
+6mp0XaoHoKdRRRRRRRRRRRRRRRRRRVaXC3cZPerNFFFFFFFFFFGR0ooooooooooooooooooooooo
+oooooooooooooooooooooopDyOaQIo5AFOoooooooooooooooooooooooooooooooooooopKWiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikJ5paKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKMUUUUUUUUUUUUUUUUUU3y03bti7vXFOorOs+NQmwDg/41o0UUUVHcMyQsyLuY
+DgVzPmyLeGdos88nGSK1ItVml+WG1dj6sadNDf3MYRmVM9QvapLTR7e3be/7x/VulaGMDAooooqr
+cfvLiKPsDk1aoooooooooooooooooooqrN813GvpzVqiiiiiiiiijrRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRSE4GaUHIooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooxRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRWdIsttqCyIheOTg47Vo0UUUUUzyY858tc/SnbVxgDH0p
+aKKKKKKrRgteO3YDFWaKKKKKKKKKKKKKKKKKKKqOR9vQe1W6KKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKQA5
+yTx6UtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFI5whPoKgssmIuerGrFFFFFFF
+FFFFFFFFFFFFFVgB9u5HOM1ZooooooopGzjAPNLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRSE4FKOlFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFAoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooqK5OITzjPFOhXZEq+gp9FFFFFFFFFFFFFFFFFFFVYzvvW
+OOFGKtUUUUUUUc0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUjDilooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopB0paKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKr3PzvHH6nJqxRRRRRRRRRRRRRRRRRRRRVa2H7+X61Zooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJS0UU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUDpRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRVdMtdseyjFWKKKQk9hQM0tFFFF
+FFFFFFFFFFB4BqtZcq792arNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFIelKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKB0ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooopGO1SfSobQZRn7sc1PRRRRRRRRRRRRRRRRRRRTJW2xk0y0TZDj1Oa
+moozzRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSMM0tFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFJS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUg6UtFFFFFFFFFFF
+FFFFFFFFFFFFFFHeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiobptsDU63XbAg9qkoooooooooooooooooooqvfPsgx3JxUsIxEo9qfRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSMcUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooqrfZKoo7tVocCiiiiii
+iiiiiiiiiiiiiiq151j44zVkdKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKDRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRQKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKM0UUUUUUUUUUUUUUUUUUUUUUUUUUUUmaW
+iiiiiiiiiiiiiiiiiiiiiiiiiqtwR9piB9c1aooooooooooooooooooooqtOPMuY07DmrNFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIRS0UUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiikIoANLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRVWX57
+2MY+6M1aooooooooooooooooooooqoCXvvYCrdFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFI3SlFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJS0UUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUZoqqhzfP7CrVFFFFFFFFFFFFFFFFFFFFVYBm6lNW
+qKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKRulAGBS0UUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUlLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUtFFFFFFFFFFFFFFFFFFF
+FYPiG6eOeGNJCvc44q5p11IH+z3BBbaGVs/eFTwc3cpq3UE15BB/rJVB9M1MCCAR0NLRRRRRRRRR
+RRRRRRRQelVbQfPIferVFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFIelLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFAoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooNJS0UU
+UUUUUUUUUUUUUUUUUUVi+IbQSCKf+6cN9KTVdv2e3niz8hGGHpV20k8y6cg/wg0zVb3yVEEZPmPx
+x2qG30OLAklZmY4OK1wAAAOgooooooooooooooooooPSqtkcmQ9t3FWqKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKRjS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+lFFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRUc8aywujdCKy4JFGlTg/MEzS
+aNMrkncSdvUii0T7bqslx/BGcDPrWzRRRRRRRRRRRRRRRRRRSN90/Sq9j91z71Zooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooprnoKdRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRSUUUlOoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooopCfSlooooooooooooooooooooooooooooooooopGGVI9RWRp5
+Xz5rV0G05yDVW9mNpdG2tlHzDaMdq2dPtRaWyp/F1Y+9WaKKKKKKKKKKKKKKKKKKbIcRsfaorPHk
+5HrU9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFITgZqNSWfmpaKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKSiiijFJTqKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKTJpKUUtFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFZ2oWTtIJ7c7X74/nUGk2X+kSzz/NJnrWxRRRRRRRRRRRRRRRRRRRTJSBExPpUd
+ku2Ae5qeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiignio48liccV
+JRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUUUUUUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIaMUtFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFAAHSiiiiiiiiiiiiiiiiiiiioLw4gPuakiGIlHtT6KKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSiiii
+ikp1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooq
+te/dUHuasKMKBS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUcdK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSiiiiiiloooooooooooooooooooooooooooooooooNFFF
+FFFFFFFFFFJRRRRRRRRRRRS0UUUUUUUUUUUUUUUUUUUUUnNLRRRRSUtFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFJk7sDp3paKKKKKKKKKKKKKKCcAk9qyRr9v5rIUYADgnv+FT2WrQXcnljKP2Vu9X6KKK
+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
+UUUd6KKKKKKKKKKKKKKKKKSjGKXNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFVpPlu0I/i
+FWaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKQ8UtFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFJSUuKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikNFJRmlopaKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKrT/8fUR7CrNFVL29FthQMsR1PanWDTPCXmOSx4GOgqzRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQOlFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFJRRRS0UZooooooooooooooooooooooooooooooooopMUmKKOlLmkpc0tFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFHSiiq1wd00YHUHmrNQ3FwsIAJ+Y9BVCCL7dcGU58pTx7mtUAAYHQUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhPtzQOnNLRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRSUUUtFFFFJ0OaWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikxRikxRiloozRS0UUUUU
+UUUUUUUUUUUUUUUUUUUUVn61DLLaZiJyhyQO9R6Jf/aYTFIf3kfH1FalVxze/Randgilj0FYgEmo
+3TqGIX+I+g9K2o41iQIgwoGBTqKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKMUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlFFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRSUE4o/CiiilzRRRRRRRRRRRRRRRRRRRRRRRRRQRkYrm760lsLzz4SQM5B7fStnTr+O+h3
+KcOvDL6U+If6S2TkgVS1O5LuLeNsE9TV2ytktrcIo68knqTViiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikNA60t
+FFFFFFFFFJk5pRzRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUYoxS0UUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlJvGcUUUUuaM0tFFFFFFFFFFFFFFFFFFF
+FFFMmiWaNo3GQRXMCCfS9RLjcEB69mFaB1NYkmnZuWGEX3o0iwaR/tdzyTyoP862qKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKBRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRSClxQBRRRRRRRRRRRiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikoxRRRSUUc0uaM0tFFFFFF
+FFFFFFFFFFFFFFNkjSVSrqGHvWO+ig3oOMxZz1rZUBQABgCloooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooopCM0tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFBooooooooooooooooooozziiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikoopKXFJRmilpc0UUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmaWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ijHOaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKDSUUU
+UlFFFGaXNLmiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiik5paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSlFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFJRRRiikooozSg0ZpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSiiikxRiiijNLmjNLRRRRRR
+RRRRRRRRRVTU5pYbNmgIEnanadLJNZxvMpV8c571Zooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIxOMDqaAMClooopKKKTFGKKKXNGaWio1mVpWjHVetPd1R
+SzsFA7ms6XWELFLWMzN6jpUum3j3ayeYgVkbHFXaKKKKKKzNckKwxov3mcVoQqViUHrin0UUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhOKWiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiikLANjvS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+lFJRRRRmlzWBqWoS2F+fJUMJMdexqzHYT3mJL2bK9QidKnvmh0+wcxqqHG1cDvS6LAYbFSw+Z/mO
+av0UUUUUVjawc6hZr/tf1rZooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oopDS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU0qc5pRS0UUlLRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUUYpMUUhGRWJr0ISCIgYIfrWmLhLe3RpXA+UVlZk1m8B
+5FtGfzrdV0UBQRx2p4IPQ0UUUUUVjRA3mtF2+7D0rZoooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJS0UUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhpMVieJCxjhRMZZupqJdJurkBpp
+MnHBJ4H4Vah0mZECG6YL6KMU/wDsSLBPmybvXNVpDcaRMrGR5Lc9Qe1bUMqyxrIpyrDIqSiiimuw
+RCx6AZrn7HVba1mnMobe7Z+Udqvrrtqe0n/fNTQ6taTOEDlWbpuGKu0UUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhzniloooooooooooooooooooooooooooooooooooopKW
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiisjxBzFCBjcX4
+rTiGI1HtTsUVl67Mi2oiPLueBV2wiMNpEh6hasUtFFUNakMenSEdelV9K023e0jlmiVnbnmtQRRg
+YEagfSqGsWsX2UyiNQykcgY4q9bsHt42ByCo5qSiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiikPrS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlLRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSMQqknoBmsO9lXUpoBB0VuQeCOa2wAA
+BQSFGSQKoXeqRxfJDiSQ9AKis9Pkmn+1XvzN/CnpWriiloorE8RSNmCIZKk5I9aS411Io0S2TJHB
+DDGKki1e5nj3R22fcc1FONT1H90UEUR6n1rYtYBbW6RA52jGaloooooooooooooooooooooooooo
+oooooooooooooooooooooooooopDg8UtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJS0UUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUVQuNIgmk8xcxt/s0n9
+mNji5lz2JamrpLN/rrmRx6Zq1b2UFv8AcQZ9T1qxRRRRRTJIY5ceYitjpkdKYbS3JyYIyfXaKkji
+SJdsaKo9AMU6iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikNLRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRQaKKKKKDRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUtFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBoFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJS0U
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUHpQKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKSlooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopKWiiiiiiiiiiii
+iig0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSZopaSilooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopKWiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikozS0UUUUUUUUUUUUUUUUUm
+KKKKKM0tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGecUUUUUneloooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooyKKKKK
+KKKKKKKKKKKKKKKKKQtg4paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKSilooooooooooooooooopKKKKKKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+kpaKKKTvS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlLRSMCRwcUtFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFIVBoC46UtFFFFFFFJzmlooooooooooooooooooooooooooo
+ooooooooooooooooooooopMGlooooooooooooooooooooooooooooopKWiiiiiiiiiiiiiiiiiii
+ikoooopaTNLmiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiik/ipaKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKDRRRRRRRmiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiimsmWDZ6U6iiiiiiiiii
+iiiiiiiiiiiiiikpaKKKKKKKKKKKKKKKKKSilpKKKKKKKKKKWiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiikGCaWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikpaKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKb1paKM0tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFH
+NFFFFFFFIRjkdaUcikPXFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+SUUUUUUUUUUUUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIxI4HU0o6c0UUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUU0A7iScj0p1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBppyaKKMn0paTJF
+OByKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKTB7GgDFL
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSUUUUUUUtJRS0UUUUU
+UUUUUUUUUUUUUUUUUUUUUUUjHAJpFB6k06iiiiiiiiiiiiikyM4zzS0UUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhOKTr3o5oozSZxRnNGTSqRTqKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKSilooooooooooooooooooooooopKKKKWkpaKKKKKKKKKKKKKKKKKKKKKKKKYxP
+SnjpRRRRRRRRRRRRRRTXQNg5wR0Ip1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFGaKKKQ8miikIpCDSd6UijFC9elPoooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopKKWiiiiiiiiii
+iiiiiiiiiiiiiiiiiikoozS0UUUUUUUUUUUUUUUUUUUUUUUUx+1OU5UGlooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooopAOaWiikoo5pKKBS0hHvQOtOooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooqNw7EAcDuakAwMUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUlFIeKbyTTuRRnNHNKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijHNFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFITSZpCc0CijFGD2p4oooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooopOtLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRSZpaSk4owDzijFGDRiinAUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmeaWii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikIoHSloooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooPSm0UUAetLS0lLRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRSUUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNU5
+J9KdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSN0
+pKMUtLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRSHkUKABxS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUjdKaBTqMUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBGaBRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQelNzzS0tFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFIKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiig9KMUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUgPNLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSE4p
+aKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKDyKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKM0UU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUg5NLRRRRRRRmiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiimGVA+0tg0+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiikK5PNLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRQenFIo4paKKKKKRgSMA4pscZTOTmn0UUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUGiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiimNEjOHKgsO9PoooooooooooooooooooooooooooooooooooooooooooooooooooooooopM0u
+aKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKRsAc0
+AilooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooNFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFJRRSg0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUmPWgYxxS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUGiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiikoFLRRRRRRRRRRRRRRRRRRRRRRRRSMwXGaWiiiiiiiiiikpaKSlzRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQelAooooooooooooooo
+oopM8niloooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooopKKKMUtFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJRR1paKKKK
+KKKKKKKKKKKKKKKKKSlooooooooooooooooooooopKKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiikoopaKKKKKKKKKKKKKKKKKKKKSlooooooooooooooooooooooooopKWiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikAPrS0UUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlFFFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRSN0oHSlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFJRRS0UUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUxlJcelPooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFJRS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUneloooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooPSiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKTjd15paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKQsARQPeloooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooznpRRRRRRRRRRRRRRRRRTScMKdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTM5PPJ7U+iiiiiiiii
+iiiiiiiiiikJAHNKDkUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUjDcMU2OMRggGn0UUUUUUU
+UUUUUUUUUnBJpQKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKD0oooooooooooooooooooopD6Um0KOBS5paKKKKKKKKKKKKKKKKKCcU3AbqKdRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSMcDOM0oORRRRR
+nnpRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSDqTS0UUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUGiiiiiiiiiiiiiii
+iiiiijFJiloooooooooooooooooopMZpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKRaWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiig9KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKSiiloooooooooooooooooo
+ooooooooooooooooooooooooooooooooooopCcA0ifdp1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFI5wpNIrqw4NOooooooooooooooooooooooooo
+ooooopKWikzRmlpKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijI9aCcUZ96KKKKKKKKM0UUUUUUhN
+JuFLmlooooooooooooooooopM0UtFFFJRSGkyaWlpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKCcDmoXmVvlUjNSJnbzTqKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKCMjBqu1mhOQ7j6GgWgH/LWT86UWo/56P8AnS/Zh/z0f86P
+s/8A01f86Ps3/TR/zpPs5/56v+dH2Yf89H/Ol+zf9NH/ADpPs3/TV/zo+zf9NJPzpfsw/wCej/nQ
+LfH/AC0f86Ps4znzH/Ol+zj++/50eQP77/nS+Sv95vzo8lf7zfnR5I/vN+dHkr6t+dHkr/eb86PJ
+H99/zo8hfVvzo8hf7zfnSeQP77/nR5A/vv8AnR5A/vv+dHkD++/50n2cZz5j/nS/Zx/ff86Ps6/3
+n/Oj7OP77/nSfZx/ff8AOj7OP77/AJ0v2cf89H/Ok+zr/ff86X7Ov95/zpPsy/3n/wC+qX7Ov99/
+zo+zj++//fVH2cf89H/OjyB/ff8AOj7Ov95/zo+zr/ef86Ps6/33/wC+qT7OP77/APfVH2ZP7z/9
+9GgWyjoz/wDfVO8hfVvzpDAp/if/AL6pptV/vyD/AIFSfZP+m0n/AH1TTZ/9N5f++qabEn/lvJ/3
+1QNPx/y2k/76pP7PI6TSc/7VH2Bv+e8n/fVH2B+1xJ+dJ9gf/n4k/Oj7A/8Az8SfnR9gk/5+JPzo
+/s9/+fiT86P7Pb/n4k/Oj+z3/wCfh/zpP7Ob/nu/50f2e/8Az8SfnR/Zz9riT86X+z373En50o0/
+1nk/76pwsFH/AC1k/wC+qd9iX/npJ/31SCwiDbiWz9alFtGP7x+ppfIj/u/rR5EfofzpptYz3Yf8
+CNMNkh/jf/vo002AP/LWT/vqm/2d6TSfnR/Z5/57yfnR/Z5/57yfnSf2cf8AnvJ+dH9nH/nvJ/31
+S/2cf+e8n/fVH9nf9NpP++qP7P8A+m0n/fVL/Z4/57Sf99Uf2eP+esn/AH1SiwX/AJ6yf99U77Cn
+9+T/AL6o+wp/fk/76NJ9hT/npJ/31R9iH/PWT/vqj7EP+esn/fVL9iHaWT/vqj7H/wBNpP8Avqj7
+GP8AnrL/AN9Uhsv+m0n/AH1SGxJ/5byfnTfsB/57yf8AfVH9nn/nvJ/31Sf2d/03k/Ol/s8/895P
+zpfsHrNJ/wB9U4WWP+W0v/fVL9iX/nrL/wB9GlFoB/y0k/76p32Ze7yH/gVH2ZP7z/8AfRoNqp/j
+fH+9Tfsi9pHH/AqabIf89pP++qT7D/03l/76pfsR/wCe8v8A31R9j/6bSfnR9j/6bSfnSi09ZpD/
+AMCpRaKP+Wkn/fVL9lX+/J/31R9kTs7j/gRpDaD/AJ6Sf99Un2Mf89ZP++qPsf8A02l/76pPsjdr
+iX86X7I563En50fZH/5+JfzoFq3/AD3l/wC+qX7Kf+e0v/fVL9mP/PaT86Psx/57SfnSfZW/57yf
+nR9kJ6zSfnSfZD/z2l/76oNmT/y3l/76pv2OT/n5k/Oj7HJ/z8yfnR9km7XMn50GzkPJuZPzo+xP
+/wA/Mn50fY5R0uZPzo+xyf8APzJ+dH2N/wDn4k/Oj7JL2uZPzo+yS/8APzJ+dH2SUdLmT86Pskn/
+AD8yfnR9klHS5k/Oj7JKP+XmT86X7JL/AM/Mn50fZJf+fmT86Pskn/PzJ+dH2R/+fiT86Pskn/Pz
+J+dH2WTvcSfnS/ZG/wCfiX86Psr/APPxJ+dH2V/+fiT86Psr/wDPxJ+dH2Vv+e8v50fZW/57y/nR
+9kb/AJ7yfnR9lf8A5+JPzo+zP/z8SfnS/Zn/AOe8n50n2Vv+fiX86X7K3/PeT86Psz/895Pzo+zP
+/wA95Pzpfs7f895Pzo+zH/ntJ/31S/Z/+msn/fVH2c/89ZPzpPs5/wCesn50G1B6yOR7mnxwpH0F
+SUUUUUUUmTS0UUUUUUUUUUUUUUUUUUUUUUc59qKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKO9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKOaKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRQckcHFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFB6cUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUDPfFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIScjiloooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooopgfLldp+tPooooooooooooooooooooooooooo
+oooooooooooooooooooNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FNKktnccegp1FFFFFFFFFFFFFFFFFFFHeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiigkDqcUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUjEjoM0tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAGBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRnmiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiig0wKwOc0+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iikGT1paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKO9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBOKKKKKKKKKKKKKKKKKKKT
+AzmlooooooooooooooooooooooooooooooooooooooooooooooJAGT0oBBGR0ooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooo60AYGBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTXdY1LOQFHUmlBDAEHIPeloo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooxzmiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiioL22+1QGLdtz3p9tF5ECRZztGM1JRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQaKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKO9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKDRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTS6g4JpwORmiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiim+WN26nUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU10EibWy
+B7GnDgYooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooopASTyMUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIwyCB
+xUccYjHU88nNS0lLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSEUUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKOl
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAz3ooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooo70UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUdKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKM0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUVHPOlvE0j5wPQZNEMvnxhwrK
+D2Yc0/aM5xzS0UUUUUUUUUUUUZ5ooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooIB6jNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGfaiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiikwexpR70UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU0qSw54p1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFIpzngjnvS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhzjiloooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooop
+Oc9eKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikyAcUtFFFFFFFFFFFFFFFFFFFFFFFBIHWiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiimsgYgntTqKKKKKKKKK
+KKKKKKKKKKKKKKQqGHIzQAFGBS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhGTnJpaKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KQnFLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTd3z7cH606ii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiig9Djg02MMFw5yfWnUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUDmiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ikxQOKWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikZ
+ggyTSg5AOCPrRRRRRRRRRRRRRRRRRRRRRSBg3Slooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooxRRRSDPrS0UUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUU1WzkEYIp1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIFCjApa
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKDnHHNAooooooooooooooo
+oooooooooooo70UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUGmq4bOKdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQRkYNIFCjAFLRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTXba
+pI69qgsZppoi0yhTnjFWaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKaFIct
+uJBHTsKdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQRkYNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFMid3zvTb
+g8U+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiignAzRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRzRRRRRRRRRRRR3oooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo5oooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo6
+UUUUUUUUUhz2paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKAACfeiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFHOfaiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijnNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIDkZFLRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRQRmgDAoIooooooooooooooooooooooooooooooooooooooooooooooooo
+IBoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooA560UUUUUUUUUUUUUUUUUUUUUUU1m2jOKdRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQAB070UUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmPmzmlooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooprLu/iI+lNJkj5xvHtwadHIsi5U5/pTqKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKTnPtS0UUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUE4HNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFQyxHd5kXD/o1OhmEq5HDDgg9qkooooooooooooooooooooooooooooooooooooooooooo
+ooooooopu75yuPxp1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFQTxsredEPnHUf3hUs
+UiyoHXoadRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRiiiiiiiiiiiiiiiii
+iiiiiiiiiiikZgoyTgUKwZQVOQaWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiikJIPTNLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRVZx9ml8wf6tz8w9D61ZHNFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFIyh1Kno
+aRECKFHQU6iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijIFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFIyhlKkZBqG3Yoxhc8r90+oqeiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiop0JAdPv
+pyPf2qRGDoGHQ0tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRIPLkKfwtyKlooooooooooooooooooooopqljncMc8U
+6iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiikVcUtFFFFFFFFFFFFFFIxwKigeRi29cDPFTUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUU2QZXI6jkU4HIBoooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooopCcUtFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFBzRRRRRRRRRRRRRRRRRRRRRRRRRRRRSKMZHbtS0UUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUGiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigEHpRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRSA5paQHPalooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+pBnPtS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUEZFIBjv
+S0UUUUUUUUUUUUUUUc59qKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKM84ooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooooooooooopMjOKWiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiijIooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+70UUUUUUUUUUUUUUUUUUUUUUUUUZoooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooopFUKSR3paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKMUUUUUUUUUUUUUUUUUUUUUUUUUUYoooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooopGYL1paKKKKKKKKKKKKKKKKKKKKKKKKKB70UUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhGaUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmOc0UtIM45paKKKKKKKKKKQ
+gHrSgYooooooooopBnvS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUmKWiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijnP
+SiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikJPpS0U
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUjMFGScCgHIzS0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUgO4ZGfxpaKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKQEEZBpaKKKKKKKKKKKKK
+KKKKKKKKQHPrS0UUUUUUUUUUUUUUH2ooooooooooooooooooooooooooooooooooooprLuI9BTqK
+KKKKKKKKAc0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUd6KKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKa6l1xnGaEUIoUdqdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQenFIucfMQT7UtFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA4ooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooJpAQelLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRQKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKQDHQUtFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFH40UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUE4ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooGe9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGM0UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUA5oooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ooooooooopM0tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNVQucd6dRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSYpaKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKMjOKKKKKOc0UUUUUUUUUUUUUUUUUUUUUUUUUUhJ9KUHNFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFIzBRycUtFFFFFFFFFFAOaKKKKKKKKKKKKKMUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUHpTUzjmnUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+UUUUUUUUUUUUUUUUUUUUUUUUUh9qWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigACiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikLBce9LRRRRRRRRR
+RRRRRRRRRRRRSFsHFLRRRRRSYOSc8elLRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRSHOOKFzjmloooooooooopCcdBmloopCATmlooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopv
+OadRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRQAB0ooooooooooooooooooooooooo
+oooooooooooooooooooooooooooooooooopCcUtFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFMklWMZamrcxscZqXNGaKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKQgE5paKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKSlooooooooxzmiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+iiiiiiq09sZDkGmRWzI+4gH2q4OlGM9aKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKSlooooooooooopM84paKKKKKKKKKKSiloopN3zYpaKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKM84ooooooooooooooooooooooooooooooooooooooooooooooopKKWiiiikoFFLRRRSAUtFFJ
+3pajmTemNxH0p44ApaSiiiiv/9kKZW5kc3RyZWFtCmVuZG9iago4IDAgb2JqCjg1ODgwCmVuZG9i
+agoxMCAwIG9iagpbL1BERiAvSW1hZ2VCXQplbmRvYmoKNiAwIG9iago8PC9Qcm9jU2V0IDEwIDAg
+Ui9YT2JqZWN0PDwvSW0xIDkgMCBSPj4+PgplbmRvYmoKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cv
+UGFnZXMgMTEgMCBSL01ldGFkYXRhIDEyIDAgUj4+CmVuZG9iagoxMSAwIG9iago8PC9UeXBlL1Bh
+Z2VzL0tpZHNbNCAwIFJdL0NvdW50IDE+PgplbmRvYmoKNCAwIG9iago8PC9UeXBlL1BhZ2VzL0tp
+ZHNbMyAwIFJdL0NvdW50IDEvUGFyZW50IDExIDAgUj4+CmVuZG9iagoxMiAwIG9iago8PC9UeXBl
+L01ldGFkYXRhL1N1YnR5cGUvWE1ML0xlbmd0aCAxMyAwIFI+PgpzdHJlYW0KPD94cGFja2V0IGJl
+Z2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxu
+czp4PSJhZG9iZTpuczptZXRhLyI+Cgk8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMu
+b3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgoJCTxyZGY6RGVzY3JpcHRpb24gcmRmOmFi
+b3V0PSIiIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyI+CgkJCTx4bXA6
+Q3JlYXRlRGF0ZT4yMDI2LTAzLTI4VDE1OjI0OjM2KzAxOjAwPC94bXA6Q3JlYXRlRGF0ZT4KCQkJ
+PHhtcDpNb2RpZnlEYXRlPjIwMjYtMDMtMjhUMTU6MjQ6MzYrMDE6MDA8L3htcDpNb2RpZnlEYXRl
+PgoJCTwvcmRmOkRlc2NyaXB0aW9uPgoJCTxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHht
+bG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIj4KCQkJPHhtcE1NOkRv
+Y3VtZW50SUQ+dXVpZDowOTFGODIzRC0yMkNELTQyOUUtOUMxNy1CQUY4Njk1NDI0NEI8L3htcE1N
+OkRvY3VtZW50SUQ+CgkJCTx4bXBNTTpJbnN0YW5jZUlEPnV1aWQ6Mjg1MkExQ0YtNTE1Ny00NkJB
+LUI5Q0YtRDgwMjY2RkVBNDU4PC94bXBNTTpJbnN0YW5jZUlEPgoJCTwvcmRmOkRlc2NyaXB0aW9u
+PgoJCTxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnBkZj0iaHR0cDovL25zLmFk
+b2JlLmNvbS9wZGYvMS4zLyI+CgkJCTxwZGY6UHJvZHVjZXI+RXBzb24gU2NhbiAyPC9wZGY6UHJv
+ZHVjZXI+CgkJPC9yZGY6RGVzY3JpcHRpb24+CgkJPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9
+IiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj4KCQkJPGRjOmZv
+cm1hdD5hcHBsaWNhdGlvbi9wZGY8L2RjOmZvcm1hdD4KCQk8L3JkZjpEZXNjcmlwdGlvbj4KCTwv
+cmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgCiAgICAgICAgCiAgICAgICAgCiAgICAgICAg
+CiAgICAgICAgCiAgICAgICAgCiAgICAgICAgCiAgICAgICAgCjw/eHBhY2tldCBlbmQ9InIiPz4K
+ZW5kc3RyZWFtCmVuZG9iagoxMyAwIG9iagoxMDM3CmVuZG9iagoyIDAgb2JqCjw8L1Byb2R1Y2Vy
+KEVwc29uIFNjYW4gMikvQ3JlYXRpb25EYXRlKEQ6MjAyNjAzMjgxNTI0MzYrMDEnMDAnKS9Nb2RE
+YXRlKEQ6MjAyNjAzMjgxNTI0MzYrMDEnMDAnKT4+CmVuZG9iagp4cmVmCjAgMTQKMDAwMDAwMDAw
+MCA2NTUzNSBmIAowMDAwMDg2Mzg4IDAwMDAwIG4gCjAwMDAwODc3MDQgMDAwMDAgbiAKMDAwMDAw
+MDAxNSAwMDAwMCBuIAowMDAwMDg2NTAyIDAwMDAwIG4gCjAwMDAwMDAxMTEgMDAwMDAgbiAKMDAw
+MDA4NjMzMSAwMDAwMCBuIAowMDAwMDAwMjIyIDAwMDAwIG4gCjAwMDAwODYyNzkgMDAwMDAgbiAK
+MDAwMDAwMDI0MCAwMDAwMCBuIAowMDAwMDg2MzAwIDAwMDAwIG4gCjAwMDAwODY0NTAgMDAwMDAg
+biAKMDAwMDA4NjU2NyAwMDAwMCBuIAowMDAwMDg3NjgzIDAwMDAwIG4gCnRyYWlsZXIKPDwvUm9v
+dCAxIDAgUi9JbmZvIDIgMCBSL0lEWzxGRjU4RUU2MDBCQzVCNzZBNDFBRDExM0MxQjg4ODlERD4g
+PEZGNThFRTYwMEJDNUI3NkE0MUFEMTEzQzFCODg4OUREPl0vU2l6ZSAxND4+CnN0YXJ0eHJlZgo4
+NzgxOAolJUVPRgo=
+--------=_MB7945B5FE-BE8F-4F8F-8F93-A3F6A295C8CD--
+

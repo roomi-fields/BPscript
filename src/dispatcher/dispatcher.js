@@ -349,6 +349,16 @@ export class Dispatcher {
     const v = parseFloat(value);
     this.controlState[name] = isNaN(v) ? String(value) : v;
 
+    // Paired flags: xxxcont/xxxfixed toggle continuous mode
+    if (name.endsWith('cont')) {
+      this.controlState[name] = true;
+    } else if (name.endsWith('fixed')) {
+      // pitchfixed → disable pitchcont, pressfixed → disable presscont, etc.
+      const contName = name.replace(/fixed$/, 'cont');
+      this.controlState[contName] = false;
+      delete this.controlState[name]; // pitchfixed itself is not needed
+    }
+
     // scale() — reconfigure resolver tuning in real-time
     if (name === 'scale') {
       this._applyScale(String(value));

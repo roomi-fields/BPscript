@@ -1,0 +1,1645 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-256-gb3d75c9898-fm-20260216.001-gb3d75c98) with LMTPA;
+	 Sat, 28 Feb 2026 12:03:23 -0500
+X-Cyrus-Session-Id: slotpi15m92-1772298203-2084955-2-2354164076274453755
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 500 (none)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, HTML_MESSAGE 0.001, ME_SENDERREP_NEUTRAL 0.001,
+  MIME_QP_LONG_LINE 0.001, RCVD_IN_DNSWL_NONE -0.0001,
+  RCVD_IN_MSPIKE_H2 0.001, SPF_HELO_NONE 0.001, SPF_PASS -0.001,
+  LANGUAGES fr, BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.221.47', Host='mail-wr1-f47.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8', html='utf-8'
+X-Attached: pattern-grammars-fr.docx.zip
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-07 ([10.202.2.206])
+  by phl-compute-07.internal (LMTPProxy); Sat, 28 Feb 2026 12:03:23 -0500
+Received: from phl-mx-07.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id D959120E017E
+	for <romain@liance.art>; Sat, 28 Feb 2026 12:03:22 -0500 (EST)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-07.messagingengine.com (Authentication Milter) with ESMTP
+    id 9867D71782B.681DB20E018C;
+    Sat, 28 Feb 2026 12:03:22 -0500
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1772298202; b=5tx1E65MM5oJX0F/X9mGXXVpRKOpK7+Q0rSDdp2/pGFn60qsHK
+    4FA4YcZJc/kL8u0mHZyuelKvdUwoQhauy5nJnJ+4UAfHJCUVV4SbMOLoIPL0mixO
+    j8hHazfwhDY/fNikXfkRp1cxQjop5otxg443TzbUq1MbSD+PtAWjTFPuqDwXl0Mh
+    4v0tl2wUH59mez1nh0ghhDSNkfjkOlcvI+coOUOoYYka1jnRbSCRr3aKrsb57ObQ
+    /UA9Z3PqHVpF3cP33Q2N4T54+1AJxt/VbRa1uBCLfNxLT3kubfBH9SCAe815golc
+    IPHOuMlyvT4Jd43U6x7hJqsjpfDgnZ5GMZ+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type; s=
+    fm1; t=1772298202; bh=aXMgocr+3xVsZSUjd9E/GNrCcXLivcJtA4md9NU9km
+    w=; b=KTo9DI1x2uPx3YAbRCVpkgQPZ+MdHySpe97keXhrOsiMAlP52A1ucC/4SG
+    WYNxuHBmiUMEE+uNFICAr9ASTdaL9bOPZQUuQTHGNq5y4G/qreI2sBOipWJV1oJp
+    PXYJNfiPF/8ZdOLIvFq2/LblhWJzgE8dlCuuWz2bgR/T+dbYUit3A6eSzl9fCJPJ
+    xMZWMnqcbRLigEpCemwiQBurt/uT/QUWrFepZQSMmptArtu3NGhMffJY3IXLDlwn
+    mkaY9PetU+YrCVEZEfQeQ9YU7pwkc0O7XMrecwjBO7Ve6tTGx0bpjeZ4HAzbzjpM
+    mm2iIYnlZPv7AjmM/+/Vo4fZQFIw==
+ARC-Authentication-Results: i=1; phl-mx-07.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wr1-f47.google.com
+    policy.ptr=mail-wr1-f47.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=aEfnlWfS header.a=rsa-sha256
+    header.s=20230601;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.221.47 (mail-wr1-f47.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wr1-f47.google.com
+X-ME-Authentication-Results: phl-mx-07.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-07.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wr1-f47.google.com
+      policy.ptr=mail-wr1-f47.google.com
+Authentication-Results: phl-mx-07.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-07.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-07.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=aEfnlWfS header.a=rsa-sha256
+      header.s=20230601;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.221.47 (mail-wr1-f47.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wr1-f47.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvhedvgeefucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgesmhdtreertderjeenucfhrhhomhepfdeuvghrnhgr
+    rhguuceuvghlfdcuoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqeenucggtffrrg
+    htthgvrhhnpeevuefhgfefteehhfetleeuiedvhfduteevieeuudelgeeljedtkeevffdu
+    heekveenucffohhmrghinhephhgrlhdrshgtihgvnhgtvgenucfkphepvddtledrkeehrd
+    dvvddurdegjedpvdgrtddumegtsgdutgemkedurgelmeeltgdttdemfhehfedtmeguudef
+    tdemvgelsgegmeelgeeftgenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepih
+    hnvghtpedvtdelrdekhedrvddvuddrgeejpdhhvghlohepmhgrihhlqdifrhduqdhfgeej
+    rdhgohhoghhlvgdrtghomhdpmhgrihhlfhhrohhmpeeosggvrhhnrghrsggvlhesghhmrg
+    hilhdrtghomheqpdhnsggprhgtphhtthhopedupdhrtghpthhtohepoehrohhmrghinhes
+    lhhirghntggvrdgrrhhtqe
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:2h-jaS7SUq7duoZbO-PmX61FHvvoQvAQFWiBUW1mUnNoDRCkBt2lmQ>
+X-ME-Received: <xmx:2h-jaX7cPBknLJZw-IALT4hu7Px0Zo62VhNGOeGJoTe0Hw0lvtP2bw>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.221.47 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-07.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wr1-f47.google.com;
+    client-ip=209.85.221.47
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-07.messagingengine.com (Postfix) with ESMTPS id 681DB20E018C
+	for <romain@liance.art>; Sat, 28 Feb 2026 12:03:22 -0500 (EST)
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-4398913af88so2696965f8f.2
+        for <romain@liance.art>; Sat, 28 Feb 2026 09:03:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772298200; x=1772903000; darn=liance.art;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=aXMgocr+3xVsZSUjd9E/GNrCcXLivcJtA4md9NU9kmw=;
+        b=aEfnlWfSJ6QVecynOzSkk9+Q03v0aRxqnWS/BMLQhHQPyc3Ij49pf+VNn6CbSkEcSx
+         oQHkesu3tDLQpHOJN5nGhTt/cpStnU7S2QmgmB15PTv/lSp0tA/TYD0jYPsguQJpHcl+
+         ClUHtsuWDpwQ2XieM2O5P1Jma7Mso0NALXVw/oo4csMqEisz7nzICenbsNh3v1xTlHP1
+         aV+Gp1G+Bpvyw5S0zw0567LJrdP9hHlquIgWRLB22kI0wqjE1XiuXpOYrBTpkZHnte9H
+         FzZplueAqynYQT3kT9sq6jZex0+lU0IUVYDoksbRbdva8/2/T5W1LMcVbAfyO0ossXqm
+         e+mQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772298200; x=1772903000;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=aXMgocr+3xVsZSUjd9E/GNrCcXLivcJtA4md9NU9kmw=;
+        b=Yohr81fpAikn56h89Vw1qD5Bbpf8UntTHhujYN0WQWmDJCApIWyIl2AVOjcZUFETpZ
+         PBsMgXt3/RMVhqobQaHdImrqVPGAsjuQ69i+MiEFcqJ7lp00uGMxFq5kQO9DHz9C+cbE
+         z7pThs6nMGQjS0Dd49P6o/Py1P9c0LiLWs9QwcojnuS2RMqPu8fpBOitEGckOq1OSdff
+         csAcYCb8yat6PHDxX7sP45guHkOhfWe70DeWT3WoAKcDNauLAA0meTnGtGPCLE1LtDF+
+         m3CzfeO5MoU8A9M2KuJDNrYfDJioSzhLuuOy57o0myVQCFGLxR9bi47CoFMo/RQxGTcu
+         LQ4w==
+X-Gm-Message-State: AOJu0YzRz7qJo1+7dSM3+eAWjxUDf4Q9ReiCNW6a3RrkWp8O9URk8A92
+	0HAv4h3j+J5JLd+7x5VjMO5L6R3KLLc9u4zMwuly+wi2HAnuHoxMP/7xemtCsw==
+X-Gm-Gg: ATEYQzyekP2OBCqoofVP+uH51N92uE2bXRlnyZG7gfmClJaK1jj63HubluZMH8zrFWr
+	pw2PdXUwahNaSbcv+dnR/4pulPlACqSJeb3l8IP3GbfZiCOfM1Fr1ROtrrgQBgLUX5gevYTW4Fh
+	BlfQIx5AEvbAYesH+EBqBD4ryWqs+Nmehma9a66yuDzo9yQ1Ubjo05UxM8DL+GKxCrQDCLc9YuN
+	u9pnaPbCtD0ptqyhD6D6tfXg7MxexRwvUSQf7Fo55os3RA2Q8oGxJQ6vPxLM49PAsMjHJSy1id1
+	80NYp1GPE4Eu+r8lwp5WruTA36k3zJOPhRICbefrSrXD+He5PDSTPZw5oPTOKvjyQXK0RgymhQe
+	RLVSqXo1Exo+5OjUcZx1a/I4L2XxMPq9cOetON/uoMoMSWhtQoZaRderHw5ZwESlGGsj0IUgpXv
+	021HtuhFk0qDj/EQYAoOZ1gGNi/S9w18Pv1mM9YENbBbbnv17JFnVCKFT8CUrcCUvh3GuNsvKuC
+	bKpPxneb+mP/0aoJEBR/w9r
+X-Received: by 2002:a05:600c:5308:b0:47a:814c:eea1 with SMTP id 5b1f17b1804b1-483c9bde0f0mr115194685e9.35.1772298199372;
+        Sat, 28 Feb 2026 09:03:19 -0800 (PST)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:f530:d130:e9b4:943c? ([2a01:cb1c:81a9:9c00:f530:d130:e9b4:943c])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-483bfb2c5a8sm131789965e9.0.2026.02.28.09.03.16
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 28 Feb 2026 09:03:17 -0800 (PST)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=5b2=5d=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9r?=
+ =?utf-8?q?ation-reconnaissance=20=3a=20sept=20dimensions=22?=
+Date: Sat, 28 Feb 2026 17:03:16 +0000
+Message-Id: <emd0730ed2-50a8-4ab4-9374-70c0cf0dfbd0@gmail.com>
+In-Reply-To: <ae74ea03-b502-44fe-8d62-41f05394d375@app.fastmail.com>
+References: <34eb8e38-0a26-4971-9a9a-f9551996fcf1@app.fastmail.com>
+ <em613b5c23-5df4-4ae8-ae8f-902b525c477d@gmail.com>
+ <37c2a339-7a41-4116-82a1-9d1b5214bbe5@app.fastmail.com>
+ <a60d0dbb-de27-40f3-814e-84f547c180f7@app.fastmail.com>
+ <emd253c916-006d-4545-85c8-3c17953d967c@gmail.com>
+ <ae74ea03-b502-44fe-8d62-41f05394d375@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="------=_MB16ADC148-5188-4507-A279-368581E40C18"
+
+--------=_MB16ADC148-5188-4507-A279-368581E40C18
+Content-Type: multipart/alternative;
+ boundary="------=_MBAAE4935C-D8E3-4F2A-BC7E-E31E53E0297B"
+
+--------=_MBAAE4935C-D8E3-4F2A-BC7E-E31E53E0297B
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Bonjour Romain,
+
+Voici un d=C3=A9but de r=C3=A9ponse. J=E2=80=99ai tr=C3=A8s peu travaill=C3=
+=A9 sur les grammaires de=20
+forme (pattern grammars) car elles n=E2=80=99ont =C3=A9t=C3=A9 utilis=C3=A9=
+es que dans le=20
+travail sur le tabla, donc dans BP1 bien qu=E2=80=99elles soient aussi=20
+impl=C3=A9ment=C3=A9es dans BP2/BP3. Or les patterns sont importants dans t=
+ous les=20
+genres musicaux qui utilisent la r=C3=A9p=C3=A9tition pour renforcer un eff=
+et ou=20
+cr=C3=A9er une fausse attente.
+
+Donc, m=C3=AAme si je les ai d=C3=A9crits dans nos premiers articles emprun=
+tant=20
+tous leurs exemples au tabla, il me para=C3=AEt important, dans une approch=
+e=20
+plus th=C3=A9orique du moteur d=E2=80=99inf=C3=A9rences BP, de les document=
+er avec des=20
+symboles simples mais non rattach=C3=A9s =C3=A0 un style musical. C=E2=80=
+=99est la raison=20
+de cet article que je vais probablement traduire et publier dans les=20
+tutoriels.
+
+Il n=E2=80=99y a pas de difficult=C3=A9 sp=C3=A9cifique =C3=A0 BP3 pour imp=
+l=C3=A9menter le modus=20
+tollens de BP1, ni l=E2=80=99apprentissage des poids =C3=A0 partir d'exempl=
+es. C=E2=80=99est=20
+simplement que Jim avait cess=C3=A9 le travail sur le terrain quand BP2 a =
+=C3=A9t=C3=A9=20
+cr=C3=A9=C3=A9, et je n=E2=80=99ai pas eu de demande par la suite. Mais je=
+ vais y=20
+travailler.
+
+En v=C3=A9rifiant les grammaires d=C3=A9crites dans cet article, j=E2=80=99=
+ai d=C3=A9couvert=20
+des bugs dans BP3 lorsqu=E2=80=99on veut en sortie du =E2=80=9CBP data=E2=
+=80=9D et non du son.=20
+J=E2=80=99ai commenc=C3=A9 =C3=A0 les corriger et je vais publier une versi=
+on 3.3.13.
+
+C=E2=80=99est un tout petit pas en avant !
+
+Bernard
+
+
+------ Original Message ------
+From "Romain Peyrichou" <romain@liance.art>
+To "Bernard Bel" <bernarbel@gmail.com>
+Date 25/02/2026 09:22:14
+Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance :=
+ sept=20
+dimensions"
+
+>Merci beaucoup Bernard pour ces infos.
+>Je te fais faire de la sp=C3=A9l=C3=A9ologie ;)
+>
+>Alors, je te joins la proposition de cadre de l'interview :D
+>
+>Et je comprends bien qu'avec tout ce que je produis, =C3=A7a soit assez=20
+>chronophage. Sens toi libre de ne pas tout lire :D
+>
+>@+
+>
+>Mar 24 f=C3=A9vr 2026, =C3=A0 09:32, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>Bonjour Romain,
+>>
+>>Je viens d=E2=80=99=C3=A9crire =C3=A0 Shlomo pour lui demander de souteni=
+r ton=20
+>>inscription =C3=A0 arXiv, en lui donnant quelques d=C3=A9tails sur ton pa=
+rcours=20
+>>et tes travaux actuels.
+>>
+>>Je suis all=C3=A9 faire un tour sur ma th=C3=A8se (en 1990,=20
+>>https://theses.hal.science/tel-00009692v1) pour faire le  point sur=20
+>>les bases th=C3=A9oriques. Un peu effray=C3=A9 par les r=C3=A9f=C3=A9renc=
+es =C3=A0 des=20
+>>publications que je n=E2=80=99ai  plus utilis=C3=A9es par la suite, ni m=
+=C3=AAme gard=C3=A9es=20
+>>sous la main =E2=80=94 je me souviens de la montagne de papiers =C3=A0 je=
+ter le=20
+>>jour o=C3=B9 j=E2=80=99ai quitt=C3=A9 le laboratoire ! Il est vrai qu=E2=
+=80=99avec l=E2=80=99archivage=20
+>>num=C3=A9rique la plupart pourraient =C3=AAtre r=C3=A9cup=C3=A9r=C3=A9es, =
+mais c=E2=80=99est surtout la=20
+>>m=C3=A9moire qui me fait d=C3=A9faut=E2=80=A6
+>>
+>>Lire tes articles est donc un refresher course mais il me prend=20
+>>beaucoup de temps. Donc je comprends  l=E2=80=99int=C3=A9r=C3=AAt d=E2=80=
+=99illustrer ton propos=20
+>>par des exemples musicaux dans des =E2=80=9Cgrammaires musicales=E2=80=9D=
+, mais la=20
+>>d=C3=A9marche m=E2=80=99est encore peu famili=C3=A8re. Effectivement, un=
+ draft de=20
+>>structure serait bienvenu !
+>>
+>>D=E2=80=99apr=C3=A8s mon archive, le =E2=80=9CAdler" cit=C3=A9 dans mes p=
+ublications =C3=A9tait un=20
+>>ethnomusicologue qui travaillait avec Ellis dans les ann=C3=A9es 1980, et=
+=20
+>>qui avait inspir=C3=A9 notre approche de musicologie =E2=80=9Cdialectique=
+=E2=80=9D=20
+>>mat=C3=A9rialis=C3=A9e dans le sch=C3=A9ma expert-analyste-machine du tra=
+vail sur le=20
+>>terrain avec BP1. J=E2=80=99avais =C3=A9crit : "L'originalit=C3=A9 de not=
+re d=C3=A9marche a=20
+>>consist=C3=A9 =C3=A0 introduire l'ordinateur comme un partenaire actif da=
+ns la=20
+>>phase d'acquisition des connaissances, donnant de ce fait plus=20
+>>d'importance aux mod=C3=A8les g=C3=A9n=C3=A9ratifs, cens=C3=A9s expliquer =
+la comp=C3=A9tence,=20
+>>qu'aux mod=C3=A8les analytiques qui se contentent de l=E2=80=99illustrer.=
+=E2=80=9D
+>>
+>>Je vais continuer la lecture et t=E2=80=99envoyer des commentaires ou des=
+=20
+>>questions quand elles viennent. J=E2=80=99ai =C3=A9t=C3=A9 mobilis=C3=A9=
+ ces derniers jours=20
+>>par la mise en place de proc=C3=A9dures d=E2=80=99automatisation (avec Ma=
+ke) dont=20
+>>Tansen avait besoin pour g=C3=A9rer des inscriptions aux stages d=E2=80=
+=99Andr=C3=A9ine=E2=80=A6
+>>
+>>A +
+>>Bernard
+>>
+>>
+>>------ Original Message ------
+>>From "Romain Peyrichou" <romain@liance.art>
+>>To "Bernard Bel" <bernarbel@gmail.com>
+>>Date 24/02/2026 08:00:23
+>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance=
+ : sept=20
+>>dimensions"
+>>
+>>>Re, Bernard,
+>>>
+>>>J'aimerai publier ce premier papier sur arXiv, je vois que tu n'y es=20
+>>>pas inscrit, et ils demandent un endorsement, est ce que tu pourrais=20
+>>>me mettre en contact avec Shlomo Dubnov ?
+>>>Il pourrait me parrainer dans la bonne cat=C3=A9gorie.
+>>>
+>>>Merci
+>>>
+>>>Mar 24 f=C3=A9vr 2026, =C3=A0 07:13, Romain Peyrichou a =C3=A9crit=E2=80=
+=AF:
+>>>>Hello Bernard,
+>>>>
+>>>>J'ai fais un petit d=C3=A9tour la semaine derni=C3=A8re pour investigue=
+r un=20
+>>>>sujet qui donnera peut =C3=AAtre des fruits du cot=C3=A9 de la recherch=
+e IA=20
+>>>>(pour la premi=C3=A8re fois, il semblerait que j'ai produit un composan=
+t=20
+>>>>qui am=C3=A9liore significativement la qualit=C3=A9 de recherche de Cla=
+ude=20
+>>>>Code).
+>>>>Bref je me suis remis sur ce papier que j'ai soumis hier soir dans=20
+>>>>la version que je te joins =C3=A0 Computational Linguistics... on verra=
+=20
+>>>>bien les retours, je croise les doigts.
+>>>>Comme tu le sais, ce papier traite l'asym=C3=A9trie de mani=C3=A8re=20
+>>>>domain-independent. Il n'y a plus que 6 dimensions, j'en ai=20
+>>>>finalement fusionn=C3=A9 2 qui =C3=A9taient assez proches: d=C3=A9termi=
+nisme et=20
+>>>>ambigu=C3=AFt=C3=A9, qui =C3=A9taient finalement le m=C3=AAme ph=C3=A9n=
+om=C3=A8ne regard=C3=A9 de deux=20
+>>>>points de vue diff=C3=A9rents.
+>>>>
+>>>>Mon id=C3=A9e est de publier maintenant un "companion paper" qui=20
+>>>>instancierait ce cadre sur les grammaires musicales.
+>>>>D'une part dans sa dimension th=C3=A9orique: comment se manifestent ces=
+=20
+>>>>dimensions dans la musique, et est-ce qu'il n'y en aurait pas=20
+>>>>d'autres (je pense =C3=A0 la tripartition de Nattiez=20
+>>>>(po=C3=AF=C3=A9tique/neutre/esth=C3=A9sique) que je verrai bien comme u=
+ne dimension=20
+>>>>suppl=C3=A9mentaire, mais peut =C3=AAtre qu'en y r=C3=A9fl=C3=A9chissan=
+t =C3=A7a ouvrira sur=20
+>>>>un nouveau regard sur le langage et la formalisation: est ce un =C3=A9t=
+at=20
+>>>>fini, un sujet d=C3=A9termin=C3=A9, ou un sujet en =C3=A9volution/mutat=
+ion)
+>>>>Et d'autre part, lui fournir un ancrage dans le r=C3=A9el, a travers=20
+>>>>diff=C3=A9rents syst=C3=A8mes existants =E2=80=94 notamment GTTM, IDyOM=
+, et bien s=C3=BBr=20
+>>>>BP3.
+>>>>
+>>>>Ton expertise serait pr=C3=A9cieuse sur plusieurs points:
+>>>>- BP3 comme cas unique de bidirectionnalit=C3=A9 en grammaires musicale=
+s
+>>>>- L'exp=C3=A9rience QAVAID
+>>>>- Les aspects temporels (smooth time, _tempo()) qui illustrent D6 de=20
+>>>>mani=C3=A8re concr=C3=A8te
+>>>>- Les pistes que tu as mentionn=C3=A9es autour de Gould et Adler
+>>>>- Et plus largement, les exemples musicaux cross-culturels
+>>>>
+>>>>Si je veux r=C3=A9sumer, je pense que ce papier pourrait utiliser tes=
+=20
+>>>>=C3=A9tudes pour illustrer une grande partie de ce cadre th=C3=A9orique=
+.
+>>>>
+>>>>Qu'en dis-tu?
+>>>>
+>>>>Si t'es ok, je peux te soumettre un draft de structure envisag=C3=A9e,=
+=20
+>>>>avec des points en r=C3=A9flexion, des questions sur des choix que tu a=
+s=20
+>>>>fait, difficult=C3=A9s rencontr=C3=A9es =C3=A0 travers BP1, 2 et 3.
+>>>>
+>>>>@+
+>>>>Romain
+>>>>
+>>>>
+>>>>
+>>>>Mar 17 f=C3=A9vr 2026, =C3=A0 23:51, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>>>>Bonsoir Romain,
+>>>>>
+>>>>>J=E2=80=99ai commenc=C3=A9 =C3=A0 lire=E2=80=A6 C=E2=80=99est remarqua=
+ble dans la clart=C3=A9 de l=E2=80=99expos=C3=A9.=20
+>>>>>Et =C3=A7a me ram=C3=A8ne 36 ans en arri=C3=A8re quand j=E2=80=99essay=
+ais de formaliser=20
+>>>>>l=E2=80=99inf=C3=A9rence grammaticale =C3=A0 la lumi=C3=A8re de Gould=
+ , Adler et autres=20
+>>>>>que j=E2=80=99ai oubli=C3=A9s. Pas facile d=E2=80=99y revenir, mais le =
+voyage=20
+>>>>>m=E2=80=99int=C3=A9resse.  Je t=E2=80=99en =C3=A9crirai plus les jours =
+qui viennent.
+>>>>>
+>>>>>Aujourd=E2=80=99hui j=E2=80=99ai pass=C3=A9 quelques heures =C3=A0 r=
+=C3=A9gler les derniers=20
+>>>>>probl=C3=A8mes de mon site. Install=C3=A9 smtp.gmail.com que j=E2=80=
+=99ai pu valider=20
+>>>>>(gr=C3=A2ce =C3=A0 ChatGPT). Corrig=C3=A9 quelques liens dans la base=
+ de donn=C3=A9es=20
+>>>>>et les widgets. J=E2=80=99ai h=C3=A2te de revenir =C3=A0 la musicologi=
+e et=E2=80=A6 aux=20
+>>>>>langages formels ! Mais je doute de pouvoir apporter quelque chose=20
+>>>>>d=E2=80=99original =C3=A0 un expos=C3=A9 th=C3=A9orique d=E2=80=99un t=
+el niveau.
+>>>>>
+>>>>>A +
+>>>>>
+>>>>>Bernard
+>>>>>
+>>>>>
+>>>>>------ Original Message ------
+>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>Date 17/02/2026 17:40:51
+>>>>>Subject Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance : =
+sept=20
+>>>>>dimensions"
+>>>>>
+>>>>>>Bonjour Bernard,
+>>>>>>
+>>>>>>Suite aux travaux entrepris sur le formalisme de BP3 et BP2SC, et=20
+>>>>>>suite =C3=A0 toutes les questions que =C3=A7a m'a fait me poser, j'ai=
+=20
+>>>>>>identifi=C3=A9 un certain nombre de sujets qui sembleraient m=C3=A9ri=
+ter la=20
+>>>>>>r=C3=A9daction d'articles.
+>>>>>>Certains articles du blog (L0, L11, L13, et pas mal de B je dois=20
+>>>>>>dire) m'ont donn=C3=A9 envie de structurer un papier sur l'asym=C3=A9=
+trie=20
+>>>>>>g=C3=A9n=C3=A9ration-reconnaissance, ce qui visiblement n'avait pas =
+=C3=A9t=C3=A9=20
+>>>>>>encore fait.
+>>>>>>
+>>>>>>Si tu veux bien j'aimerai bien ton regard sur ce draft.
+>>>>>>
+>>>>>>Mon id=C3=A9e est de produire un premier papier g=C3=A9n=C3=A9raliste =
+sur le=20
+>>>>>>sujet orient=C3=A9 th=C3=A9orie du langage et de poursuivre sur un au=
+tre=20
+>>>>>>traitant sp=C3=A9cifiquement du domaine musical, dans lequel on=20
+>>>>>>pourrait utiliser des exemples du domaine dont BP. Il introduit=20
+>>>>>>=C3=A9galement une 8eme asym=C3=A9trie sp=C3=A9cifique a la musique.
+>>>>>>Si jamais =C3=A7a suscite ton int=C3=A9r=C3=AAt on pourrait co=C3=A9c=
+rire cet autre=20
+>>>>>>papier.
+>>>>>>
+>>>>>>Voici un r=C3=A9sum=C3=A9 de tout =C3=A7a =C3=A9crit par mon cher Cla=
+ude Code:
+>>>>>>
+>>>>>>## De quoi il s'agit
+>>>>>>
+>>>>>>Le papier identifie 7 dimensions selon lesquelles la g=C3=A9n=C3=A9ra=
+tion et=20
+>>>>>>la reconnaissance divergent :
+>>>>>>
+>>>>>>1. **Complexit=C3=A9 computationnelle** =E2=80=94 la g=C3=A9n=C3=A9ra=
+tion est O(n) pour=20
+>>>>>>tout niveau de Chomsky, tandis que le parsing cro=C3=AEt de O(n) =C3=
+=A0=20
+>>>>>>l'ind=C3=A9cidabilit=C3=A9
+>>>>>>2. **D=C3=A9terminisme** =E2=80=94 la g=C3=A9n=C3=A9ration peut =C3=
+=AAtre d=C3=A9terministe, le=20
+>>>>>>parsing est fondamentalement non-d=C3=A9terministe
+>>>>>>3. **Directionnalit=C3=A9** =E2=80=94 la g=C3=A9n=C3=A9ration est tou=
+jours top-down, le=20
+>>>>>>parsing a un degr=C3=A9 de libert=C3=A9 (LL, LR, Earley...)
+>>>>>>4. **Information** =E2=80=94 le g=C3=A9n=C3=A9rateur conna=C3=AEt la=
+ source, le parser=20
+>>>>>>inf=C3=A8re depuis la surface (lien Shannon)
+>>>>>>5. **Non-injectivit=C3=A9** =E2=80=94 un chemin de d=C3=A9rivation=
+ =E2=86=92 une cha=C3=AEne,=20
+>>>>>>mais une cha=C3=AEne =E2=86=92 plusieurs arbres (Parikh 1966)
+>>>>>>6. **Inf=C3=A9rence grammaticale** =E2=80=94 la troisi=C3=A8me direct=
+ion, born=C3=A9e par=20
+>>>>>>Gold (1967)
+>>>>>>7. **Temporalit=C3=A9** =E2=80=94 le g=C3=A9n=C3=A9rateur cr=C3=A9e l=
+e futur (surprisal =3D 0),=20
+>>>>>>le parser pr=C3=A9dit sous incertitude (surprisal > 0)
+>>>>>>
+>>>>>>La th=C3=A8se centrale : la caract=C3=A9risation "la g=C3=A9n=C3=A9ra=
+tion est facile,=20
+>>>>>>le parsing est difficile" est trompeuse. La vraie asym=C3=A9trie est=
+=20
+>>>>>>*structurelle* =E2=80=94 le parsing est toujours contraint tandis que =
+la=20
+>>>>>>g=C3=A9n=C3=A9ration ne l'est pas n=C3=A9cessairement.
+>>>>>>
+>>>>>>**Constat de d=C3=A9part** : aucun survey n'a trait=C3=A9 cette asym=
+=C3=A9trie=20
+>>>>>>comme sujet central. Les 7 dimensions existent dans la litt=C3=A9ratu=
+re=20
+>>>>>>mais n'ont jamais =C3=A9t=C3=A9 rassembl=C3=A9es.
+>>>>>>
+>>>>>>## Ce que c'est et ce que ce n'est pas
+>>>>>>
+>>>>>>- C'est un papier **CS theory / langages formels**, ind=C3=A9pendant=
+ du=20
+>>>>>>domaine musical
+>>>>>>- Il n'y a **aucune mention** de BP3, ni de musique dans le corps=20
+>>>>>>du texte
+>>>>>>- La musique n'appara=C3=AEt qu'en =C2=A76.4 comme "laboratoire id=C3=
+=A9al" pour=20
+>>>>>>instancier les dimensions
+>>>>>>- Un **article compagnon** (Paper 9=CE=B2) est pr=C3=A9vu pour appliq=
+uer ce=20
+>>>>>>cadre aux grammaires musicales =E2=80=94 c'est l=C3=A0 que BP3, GTTM, =
+IDyOM, et=20
+>>>>>>la tripartition de Nattiez interviendraien
+>>>>>>
+>>>>>>## Pourquoi j'ai besoin de ton regard
+>>>>>>
+>>>>>>**les formalisations math=C3=A9matiques sont ma synth=C3=A8se**, pas=
+ des=20
+>>>>>>formules tir=C3=A9es d'articles existants. Les r=C3=A9sultats sous-ja=
+cents=20
+>>>>>>sont =C3=A9tablis (Chomsky, Gold, Parikh, Shannon, etc.), mais la mis=
+e=20
+>>>>>>en formules est la mienne. Concr=C3=A8tement :
+>>>>>>
+>>>>>>### Points solides (citations directes)
+>>>>>>- Les complexit=C3=A9s O(n), O(n=C2=B3), PSPACE-complet =E2=86=92 Hop=
+croft & Ullman,=20
+>>>>>>Aho et al.
+>>>>>>- Les nombres de Catalan pour l'ambigu=C3=AFt=C3=A9 =E2=86=92 Jurafsk=
+y & Martin
+>>>>>>- Le th=C3=A9or=C3=A8me de Gold (1967) sur l'impossibilit=C3=A9 d'inf=
+=C3=A9rence
+>>>>>>- Le th=C3=A9or=C3=A8me de Parikh (1966) sur l'ambigu=C3=AFt=C3=A9 in=
+trins=C3=A8que
+>>>>>>- La surprisal =E2=86=92 Hale (2001), Levy (2008)
+>>>>>>
+>>>>>>### Points =C3=A0 v=C3=A9rifier (mes formulations)
+>>>>>>- =C2=A74.1 : la fonction T_parse(G, n) pr=C3=A9sent=C3=A9e comme un=
+ "cases" sur=20
+>>>>>>k =E2=80=94 c'est ma pr=C3=A9sentation, pas une formule existante
+>>>>>>- =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =CE=A3* et parse: G =C3=97=
+ =CE=A3* =E2=86=92 2^T =E2=80=94 mes d=C3=A9finitions=20
+>>>>>>fonctionnelles
+>>>>>>- =C2=A74.3 : parse_=CE=B4(G, w) avec =CE=B4 comme param=C3=A8tre de=
+ strat=C3=A9gie =E2=80=94 ma=20
+>>>>>>notation
+>>>>>>- =C2=A74.5 : l'argument sur l'injectivit=C3=A9 de gen vs. non-inject=
+ivit=C3=A9=20
+>>>>>>de parse
+>>>>>>- =C2=A74.7 : le lien entre surprisal et asym=C3=A9trie temporelle=
+ =E2=80=94 mon=20
+>>>>>>interpr=C3=A9tation de Hale/Levy
+>>>>>>
+>>>>>>## **Mes quesiotns**
+>>>>>>
+>>>>>>1. **G=C3=A9n=C3=A9ral** : Est-ce que ces formulations te semblent=20
+>>>>>>math=C3=A9matiquement correctes et d=C3=A9fendables devant un reviewe=
+r CS ?
+>>>>>>
+>>>>>>2. **D3 (directionnalit=C3=A9)** : J'affirme que la g=C3=A9n=C3=A9rat=
+ion est=20
+>>>>>>"intrins=C3=A8quement top-down". BP1 avait le parsing en=20
+>>>>>>"context-sensitive right mode derivation" =E2=80=94 est-ce que la=20
+>>>>>>direction de BP1 remet en question cette affirmation ?
+>>>>>>
+>>>>>>3. **D6 (inf=C3=A9rence)** : Ta vision ANAL+QAVAID+TEMP (inf=C3=A9rer =
+des=20
+>>>>>>grammaires depuis des exemples) =E2=80=94 est-ce que =C3=A7a correspo=
+nd =C3=A0 ce=20
+>>>>>>que je d=C3=A9cris comme la "troisi=C3=A8me direction" ?
+>>>>>>
+>>>>>>4. **Le split en 2 articles** : Le premier est volontairement=20
+>>>>>>domain-independent. Le second ajouterait une 8=C3=A8me dimension =E2=
+=80=94=20
+>>>>>>l'**asym=C3=A9trie musicale** (composition vs. analyse, le pi=C3=A8ge=
+=20
+>>>>>>terminologique GTTM qui est nomm=C3=A9 "generative" mais=20
+>>>>>>fondamentalement analytique, BP3 comme cas unique de=20
+>>>>>>bidirectionnalit=C3=A9, tripartition de Nattiez) =E2=80=94 et instanc=
+ierait les=20
+>>>>>>7 autres sur BP3, GTTM, IDyOM. Est-ce que cette strat=C3=A9gie de spl=
+it=20
+>>>>>>te semble judicieuse ?
+>>>>>>
+>>>>>>## Le fichier
+>>>>>>
+>>>>>>Je t'envoie la version fran=C3=A7aise (traduction de lecture). La=20
+>>>>>>version soumise sera en anglais. C'est un premier brouillon =E2=80=94 =
+tout=20
+>>>>>>est modifiable.
+>>>>>>
+>>>>>>Merci d'avance pour ton regard,
+>>>>>>Romain
+>>>>>>
+>>>>>>---
+>>>>>>
+>>>>>>*P.S. : Le travail avec Claude a =C3=A9t=C3=A9 essentiel pour structu=
+rer ce=20
+>>>>>>papier.
+>>>>
+>>>>
+>>>>Pi=C3=A8ces jointes:
+>>>>peyrichou_generation_recognition_asymmetry_2026.pdf
+>>>
+>
+--------=_MBAAE4935C-D8E3-4F2A-BC7E-E31E53E0297B
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><title></title><style type=3D"text/css"><!--#x62a3364d1a3946c #=
+qt #qt-x073605192e5c465 #qt-qt #qt-qt-qt blockquote.qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x62a3364d1a3946c #qt #qt-x073605192e5c465 #qt-qt #qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x62a3364d1a3946c #qt blockquote.qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x62a3364d1a3946c #qt blockquote.qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x62a3364d1a3946c #qt
+{font-family: Palatino; font-size: 10.5pt;}
+--></style><style id=3D"css_styles" type=3D"text/css"><!--blockquote.cite { =
+margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right:0px=
+; border-left: 1px solid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}
+--></style></head><body style=3D"overflow-wrap: break-word; -webkit-nbsp-mo=
+de: space; line-break: after-white-space;"><div>Bonjour Romain,</div><div><=
+br /></div><div>Voici un d=C3=A9but de r=C3=A9ponse. J=E2=80=99ai tr=C3=A8s =
+peu travaill=C3=A9 sur les grammaires de forme (<i>pattern grammars</i>) c=
+ar elles n=E2=80=99ont =C3=A9t=C3=A9 utilis=C3=A9es que dans le travail sur =
+le tabla, donc dans BP1 bien qu=E2=80=99elles soient aussi impl=C3=A9ment=
+=C3=A9es dans BP2/BP3. Or les patterns sont importants dans tous les genres =
+musicaux qui utilisent la r=C3=A9p=C3=A9tition pour renforcer un effet ou=
+ cr=C3=A9er une fausse attente.</div><div><br /></div><div>Donc, m=C3=AAme s=
+i je les ai d=C3=A9crits dans nos premiers articles empruntant tous leurs e=
+xemples au tabla, il me para=C3=AEt important, dans une approche plus th=C3=
+=A9orique du moteur d=E2=80=99inf=C3=A9rences BP, de les documenter avec de=
+s symboles simples mais non rattach=C3=A9s =C3=A0 un style musical. C=E2=80=
+=99est la raison de cet article que je vais probablement traduire et publie=
+r dans les tutoriels.</div><div><br /></div><div>Il n=E2=80=99y a pas de di=
+fficult=C3=A9 sp=C3=A9cifique =C3=A0 BP3 pour impl=C3=A9menter le <i>modus=
+ tollens</i> de BP1, ni l=E2=80=99apprentissage des poids =C3=A0 partir d'ex=
+emples. C=E2=80=99est simplement que Jim avait cess=C3=A9 le travail sur le =
+terrain quand BP2 a =C3=A9t=C3=A9 cr=C3=A9=C3=A9, et je n=E2=80=99ai pas e=
+u de demande par la suite. Mais je vais y travailler.</div><div><br /></div=
+><div>En v=C3=A9rifiant les grammaires d=C3=A9crites dans cet article, j=E2=
+=80=99ai d=C3=A9couvert des bugs dans BP3 lorsqu=E2=80=99on veut en sortie=
+ du =E2=80=9CBP data=E2=80=9D et non du son. J=E2=80=99ai commenc=C3=A9 =C3=
+=A0 les corriger et je vais publier une version 3.3.13.</div><div><br /></d=
+iv><div>C=E2=80=99est un tout petit pas en avant !</div><div><br /></div><d=
+iv>Bernard</div>
+<div><br /></div>
+<div x-em-replyforwardheader=3D""><br /></div>
+<div>
+<div>------ Original Message ------</div>
+<div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.art">romai=
+n@liance.art</a>&gt;</div>
+<div>To "Bernard Bel" &lt;<a href=3D"mailto:bernarbel@gmail.com">bernarbel@=
+gmail.com</a>&gt;</div>
+<div>Date 25/02/2026 09:22:14</div>
+<div>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissan=
+ce : sept dimensions"</div></div><div x-em-quote=3D""><br /></div>
+<div id=3D"x62a3364d1a3946c"><blockquote cite=3D"ae74ea03-b502-44fe-8d62-41=
+f05394d375@app.fastmail.com" type=3D"cite" class=3D"cite2">
+<div>Merci beaucoup Bernard pour ces infos.</div><div>Je te fais faire de l=
+a sp=C3=A9l=C3=A9ologie ;)</div><div><br /></div><div>Alors, je te joins la =
+proposition de cadre de l'interview :D</div><div><br /></div><div>Et je co=
+mprends bien qu'avec tout ce que je produis, =C3=A7a soit assez chronophage=
+. Sens toi libre de ne pas tout lire :D</div><div><br /></div><div>@+</div>=
+<div><br /></div><div>Mar 24 f=C3=A9vr 2026, =C3=A0 09:32, Bernard Bel a=
+ =C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt" style=3D"overfl=
+ow-wrap:break-word;" class=3D"cite"><div>Bonjour Romain,</div><div><br /></=
+div><div>Je viens d=E2=80=99=C3=A9crire =C3=A0 Shlomo pour lui demander de=
+ soutenir ton inscription =C3=A0 arXiv, en lui donnant quelques d=C3=A9tails =
+sur ton parcours et tes travaux actuels.</div><div><br /></div><div>Je sui=
+s all=C3=A9 faire un tour sur ma th=C3=A8se (en 1990,=C2=A0<a href=3D"https=
+://theses.hal.science/tel-00009692v1" style=3D"font-size:10.5pt;">https://t=
+heses.hal.science/tel-00009692v1</a>) pour faire le =C2=A0point sur les bas=
+es th=C3=A9oriques. Un peu effray=C3=A9 par les r=C3=A9f=C3=A9rences =C3=A0 =
+des publications que je n=E2=80=99ai =C2=A0plus utilis=C3=A9es par la suit=
+e, ni m=C3=AAme gard=C3=A9es sous la main =E2=80=94 je me souviens de la mo=
+ntagne de papiers =C3=A0 jeter le jour o=C3=B9 j=E2=80=99ai quitt=C3=A9 le=
+ laboratoire ! Il est vrai qu=E2=80=99avec l=E2=80=99archivage num=C3=A9riqu=
+e la plupart pourraient =C3=AAtre r=C3=A9cup=C3=A9r=C3=A9es, mais c=E2=80=
+=99est surtout la m=C3=A9moire qui me fait d=C3=A9faut=E2=80=A6</div><div><=
+br /></div><div>Lire tes articles est donc un <i>refresher course</i> mais=
+ il me prend beaucoup de temps. Donc je comprends =C2=A0l=E2=80=99int=C3=A9r=
+=C3=AAt d=E2=80=99illustrer ton propos par des exemples musicaux dans des =
+=E2=80=9Cgrammaires musicales=E2=80=9D, mais la d=C3=A9marche m=E2=80=99es=
+t encore peu famili=C3=A8re. Effectivement, un draft de structure serait bi=
+envenu !</div><div><br /></div><div>D=E2=80=99apr=C3=A8s mon archive, le=
+ =E2=80=9CAdler" cit=C3=A9 dans mes publications =C3=A9tait un ethnomusicologu=
+e qui travaillait avec Ellis dans les ann=C3=A9es 1980, et qui avait inspir=
+=C3=A9 notre approche de musicologie =E2=80=9Cdialectique=E2=80=9D mat=C3=
+=A9rialis=C3=A9e dans le sch=C3=A9ma expert-analyste-machine du travail sur =
+le terrain avec BP1. J=E2=80=99avais =C3=A9crit : <i>"L'originalit=C3=A9 d=
+e notre d=C3=A9marche a consist=C3=A9 =C3=A0 introduire=C2=A0<span>l'ordina=
+teur comme un partenaire actif dans la phase d'acquisition des connaissance=
+s,=C2=A0</span><span>donnant de ce fait plus d'importance aux mod=C3=A8les=
+ g=C3=A9n=C3=A9ratifs, cens=C3=A9s expliquer la=C2=A0</span><span>comp=C3=A9=
+tence, qu'aux mod=C3=A8les analytiques qui se contentent de l=E2=80=99illus=
+trer.</span>=E2=80=9D</i></div><div><span></span><br /></div><div>Je vais c=
+ontinuer la lecture et t=E2=80=99envoyer des commentaires ou des questions=
+ quand elles viennent. J=E2=80=99ai =C3=A9t=C3=A9 mobilis=C3=A9 ces derniers =
+jours par la mise en place de proc=C3=A9dures d=E2=80=99automatisation (av=
+ec <i>Make</i>) dont Tansen avait besoin pour g=C3=A9rer des inscriptions a=
+ux stages d=E2=80=99Andr=C3=A9ine=E2=80=A6</div><div><br /></div><div>A +</=
+div><div>Bernard</div><div><br /></div><div><br /></div><div><div>------ Or=
+iginal Message ------</div><div>From "Romain Peyrichou" &lt;<a href=3D"mail=
+to:romain@liance.art">romain@liance.art</a>&gt;</div><div>To "Bernard Bel"=
+ &lt;<a href=3D"mailto:bernarbel@gmail.com">bernarbel@gmail.com</a>&gt;</div=
+><div>Date 24/02/2026 08:00:23</div><div>Subject Re: Papier "L'asym=C3=A9tr=
+ie g=C3=A9n=C3=A9ration-reconnaissance : sept dimensions"</div></div><div><=
+br /></div><div id=3D"qt-x073605192e5c465"><blockquote cite=3D"a60d0dbb-de2=
+7-40f3-814e-84f547c180f7@app.fastmail.com" type=3D"cite" class=3D"qt-cite2"=
+><div>Re, Bernard,</div><div><br /></div><div>J'aimerai publier ce premier=
+ papier sur arXiv, je vois que tu n'y es pas inscrit, et ils demandent un en=
+dorsement, est ce que tu pourrais me mettre en contact avec Shlomo Dubnov ?=
+</div><div>Il pourrait me parrainer dans la bonne cat=C3=A9gorie.</div><div=
+><br /></div><div>Merci</div><div><br /></div><div>Mar 24 f=C3=A9vr 2026, =
+=C3=A0 07:13, Romain Peyrichou a =C3=A9crit=E2=80=AF:</div><blockquote typ=
+e=3D"cite" id=3D"qt-qt" style=3D"" class=3D"qt-cite"><div>Hello Bernard,</d=
+iv><div><br /></div><div>J'ai fais un petit d=C3=A9tour la semaine derni=C3=
+=A8re pour investiguer un sujet qui donnera peut =C3=AAtre des fruits du co=
+t=C3=A9 de la recherche IA (pour la premi=C3=A8re fois, il semblerait que j=
+'ai produit un composant qui am=C3=A9liore significativement la qualit=C3=
+=A9 de recherche de Claude Code).</div><div>Bref je me suis remis sur ce pa=
+pier que j'ai soumis hier soir dans la version que je te joins =C3=A0 Compu=
+tational Linguistics... on verra bien les retours, je croise les doigts.</d=
+iv><div>Comme tu le sais, ce papier traite l'asym=C3=A9trie de mani=C3=A8re =
+domain-independent. Il n'y a plus que 6 dimensions, j'en ai finalement fus=
+ionn=C3=A9 2 qui =C3=A9taient assez proches: d=C3=A9terminisme et ambigu=C3=
+=AFt=C3=A9, qui =C3=A9taient finalement le m=C3=AAme ph=C3=A9nom=C3=A8ne re=
+gard=C3=A9 de deux points de vue diff=C3=A9rents.</div><div><br /></div><di=
+v>Mon id=C3=A9e est de publier maintenant un "companion paper" qui instanci=
+erait ce cadre sur les grammaires musicales.</div><div>D'une part dans sa d=
+imension th=C3=A9orique: comment se manifestent ces dimensions dans la musi=
+que, et est-ce qu'il n'y en aurait pas d'autres (je pense =C3=A0 la tripart=
+ition de Nattiez (po=C3=AF=C3=A9tique/neutre/esth=C3=A9sique) que je verrai =
+bien comme une dimension suppl=C3=A9mentaire, mais peut =C3=AAtre qu'en y=
+ r=C3=A9fl=C3=A9chissant =C3=A7a ouvrira sur un nouveau regard sur le langag=
+e et la formalisation: est ce un =C3=A9tat fini, un sujet d=C3=A9termin=C3=
+=A9, ou un sujet en =C3=A9volution/mutation)</div><div>Et d'autre part, lui =
+fournir un ancrage dans le r=C3=A9el, a travers diff=C3=A9rents syst=C3=A8=
+mes existants =E2=80=94 notamment GTTM, IDyOM, et bien s=C3=BBr BP3.</div><=
+div><br /></div><div>Ton expertise serait pr=C3=A9cieuse sur plusieurs poin=
+ts:</div><div>- BP3 comme cas unique de bidirectionnalit=C3=A9 en grammaire=
+s musicales</div><div>- L'exp=C3=A9rience QAVAID</div><div>- Les aspects te=
+mporels (smooth time, _tempo()) qui illustrent D6 de mani=C3=A8re concr=C3=
+=A8te</div><div>- Les pistes que tu as mentionn=C3=A9es autour de Gould et=
+ Adler</div><div>- Et plus largement, les exemples musicaux cross-culturels<=
+/div><div><br /></div><div>Si je veux r=C3=A9sumer, je pense que ce papier=
+ pourrait utiliser tes =C3=A9tudes pour illustrer une grande partie de ce ca=
+dre th=C3=A9orique.</div><div><br /></div><div>Qu'en dis-tu?</div><div><br=
+ /></div><div>Si t'es ok, je peux te soumettre un draft de structure envisag=
+=C3=A9e, avec des points en r=C3=A9flexion, des questions sur des choix que =
+tu as fait, difficult=C3=A9s rencontr=C3=A9es =C3=A0 travers BP1, 2 et 3.<=
+/div><div><br /></div><div>@+</div><div>Romain</div><div><br /></div><div><=
+br /></div><div><br /></div><div>Mar 17 f=C3=A9vr 2026, =C3=A0 23:51, Berna=
+rd Bel a =C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt-qt-qt=
+" style=3D"overflow-wrap:break-word;" class=3D"qt-cite"><div>Bonsoir Romain=
+,</div><div><br /></div><div>J=E2=80=99ai commenc=C3=A9 =C3=A0 lire=E2=80=
+=A6 C=E2=80=99est remarquable dans la clart=C3=A9 de l=E2=80=99expos=C3=A9. =
+Et =C3=A7a me ram=C3=A8ne 36 ans en arri=C3=A8re quand j=E2=80=99essayais=
+ de formaliser l=E2=80=99inf=C3=A9rence grammaticale =C3=A0 la lumi=C3=A8re=
+ de Gould , Adler et autres que j=E2=80=99ai oubli=C3=A9s. Pas facile d=E2=
+=80=99y revenir, mais le voyage m=E2=80=99int=C3=A9resse. =C2=A0Je t=E2=80=
+=99en =C3=A9crirai plus les jours qui viennent.</div><div><br /></div><div>=
+Aujourd=E2=80=99hui j=E2=80=99ai pass=C3=A9 quelques heures =C3=A0 r=C3=A9g=
+ler les derniers probl=C3=A8mes de mon site. Install=C3=A9 smtp.gmail.com q=
+ue j=E2=80=99ai pu valider (gr=C3=A2ce =C3=A0 ChatGPT). Corrig=C3=A9 quelqu=
+es liens dans la base de donn=C3=A9es et les widgets. J=E2=80=99ai h=C3=A2t=
+e de revenir =C3=A0 la musicologie et=E2=80=A6 aux langages formels ! Mais=
+ je doute de pouvoir apporter quelque chose d=E2=80=99original =C3=A0 un exp=
+os=C3=A9 th=C3=A9orique d=E2=80=99un tel niveau.</div><div><br /></div><div=
+>A +</div><div><br /></div><div>Bernard</div><div><br /></div><div><br /></=
+div><div><div>------ Original Message ------</div><div>From "Romain Peyrich=
+ou" &lt;<a href=3D"mailto:romain@liance.art">romain@liance.art</a>&gt;</div=
+><div>To "Bernard Bel" &lt;<a href=3D"mailto:bernarbel@gmail.com">bernarbel=
+@gmail.com</a>&gt;</div><div>Date 17/02/2026 17:40:51</div><div>Subject Pap=
+ier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance : sept dimensions=
+"</div></div><div><br /></div><div id=3D"qt-qt-qt-x055b634a1c6c4f6"><blockq=
+uote cite=3D"34eb8e38-0a26-4971-9a9a-f9551996fcf1@app.fastmail.com" type=3D=
+"cite" class=3D"qt-qt-qt-cite2"><div>Bonjour Bernard,</div><div><br /></div=
+><div>Suite aux travaux entrepris sur le formalisme de BP3 et BP2SC, et sui=
+te =C3=A0 toutes les questions que =C3=A7a m'a fait me poser, j'ai identifi=
+=C3=A9 un certain nombre de sujets qui sembleraient m=C3=A9riter la r=C3=A9=
+daction d'articles.</div><div>Certains articles du blog (L0, L11, L13, et p=
+as mal de B je dois dire) m'ont donn=C3=A9 envie de structurer un papier su=
+r l'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance, ce qui visiblement=
+ n'avait pas =C3=A9t=C3=A9 encore fait.</div><div><br /></div><div>Si tu veu=
+x bien j'aimerai bien ton regard sur ce draft.</div><div><br /></div><div>M=
+on id=C3=A9e est de produire un premier papier g=C3=A9n=C3=A9raliste sur le =
+sujet orient=C3=A9 th=C3=A9orie du langage et de poursuivre sur un autre t=
+raitant sp=C3=A9cifiquement du domaine musical, dans lequel on pourrait uti=
+liser des exemples du domaine dont BP. Il introduit =C3=A9galement une 8eme =
+asym=C3=A9trie sp=C3=A9cifique a la musique.</div><div>Si jamais =C3=A7a s=
+uscite ton int=C3=A9r=C3=AAt on pourrait co=C3=A9crire cet autre papier.</d=
+iv><div><br /></div><div>Voici un r=C3=A9sum=C3=A9 de tout =C3=A7a =C3=A9cr=
+it par mon cher Claude Code:</div><div><br /></div><div><span class=3D"qt-q=
+t-qt-color" style=3D"color:rgb(86, 156, 214);"><b>## De quoi il s'agit</b><=
+/span></div><div><br /></div><div><span class=3D"qt-qt-qt-color" style=3D"c=
+olor:rgb(204, 204, 204);">Le papier identifie </span><span class=3D"qt-qt-q=
+t-color" style=3D"color:rgb(86, 156, 214);"><b>7 dimensions</b></span><span =
+class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);">=C2=A0selon l=
+esquelles la g=C3=A9n=C3=A9ration et la reconnaissance divergent :</span></=
+div><div><br /></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb=
+(103, 150, 230);">1.</span><span class=3D"qt-qt-qt-color" style=3D"color:rg=
+b(204, 204, 204);"> </span><span class=3D"qt-qt-qt-color" style=3D"color:rg=
+b(86, 156, 214);"><b>**Complexit=C3=A9 computationnelle**</b></span><span c=
+lass=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =E2=80=94 la g=
+=C3=A9n=C3=A9ration est O(n) pour tout niveau de Chomsky, tandis que le par=
+sing cro=C3=AEt de O(n) =C3=A0 l'ind=C3=A9cidabilit=C3=A9</span></div><div>=
+<span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">2.</span=
+><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </span=
+><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>**D=
+=C3=A9terminisme**</b></span><span class=3D"qt-qt-qt-color" style=3D"color:=
+rgb(204, 204, 204);"> =E2=80=94 la g=C3=A9n=C3=A9ration peut =C3=AAtre d=C3=
+=A9terministe, le parsing est fondamentalement non-d=C3=A9terministe</span>=
+</div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230)=
+;">3.</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204=
+);"> </span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214)=
+;"><b>**Directionnalit=C3=A9**</b></span><span class=3D"qt-qt-qt-color" sty=
+le=3D"color:rgb(204, 204, 204);"> =E2=80=94 la g=C3=A9n=C3=A9ration est tou=
+jours top-down, le parsing a un degr=C3=A9 de libert=C3=A9 (LL, LR, Earley.=
+..)</span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, =
+150, 230);">4.</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204=
+, 204, 204);"> </span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, =
+156, 214);"><b>**Information**</b></span><span class=3D"qt-qt-qt-color" st=
+yle=3D"color:rgb(204, 204, 204);"> =E2=80=94 le g=C3=A9n=C3=A9rateur conna=
+=C3=AEt la source, le parser inf=C3=A8re depuis la surface (lien Shannon)</=
+span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, =
+230);">5.</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204=
+, 204);"> </span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, =
+214);"><b>**Non-injectivit=C3=A9**</b></span><span class=3D"qt-qt-qt-color=
+" style=3D"color:rgb(204, 204, 204);"> =E2=80=94 un chemin de d=C3=A9rivati=
+on =E2=86=92 une cha=C3=AEne, mais une cha=C3=AEne =E2=86=92 plusieurs arbr=
+es (Parikh 1966)</span></div><div><span class=3D"qt-qt-qt-color" style=3D"c=
+olor:rgb(103, 150, 230);">6.</span><span class=3D"qt-qt-qt-color" style=3D"=
+color:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-color" style=3D"=
+color:rgb(86, 156, 214);"><b>**Inf=C3=A9rence grammaticale**</b></span><spa=
+n class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =E2=80=94 l=
+a troisi=C3=A8me direction, born=C3=A9e par Gold (1967)</span></div><div><s=
+pan class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">7.</span><=
+span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </span><=
+span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>**Tempo=
+ralit=C3=A9**</b></span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(2=
+04, 204, 204);"> =E2=80=94 le g=C3=A9n=C3=A9rateur cr=C3=A9e le futur (surp=
+risal =3D 0), le parser pr=C3=A9dit sous incertitude (surprisal &gt; 0)</sp=
+an></div><div><br /></div><div><span class=3D"qt-qt-qt-color" style=3D"colo=
+r:rgb(204, 204, 204);">La th=C3=A8se centrale : la caract=C3=A9risation "la =
+g=C3=A9n=C3=A9ration est facile, le parsing est difficile" est trompeuse.=
+ La vraie asym=C3=A9trie est </span><span class=3D"qt-qt-qt-color" style=3D"=
+color:rgb(204, 204, 204);"><i>*structurelle*</i></span><span class=3D"qt-qt=
+-qt-color" style=3D"color:rgb(204, 204, 204);"> =E2=80=94 le parsing est to=
+ujours contraint tandis que la g=C3=A9n=C3=A9ration ne l'est pas n=C3=A9ces=
+sairement.</span></div><div><br /></div><div><span class=3D"qt-qt-qt-color" =
+style=3D"color:rgb(86, 156, 214);"><b>**Constat de d=C3=A9part**</b></span=
+><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> : aucu=
+n survey n'a trait=C3=A9 cette asym=C3=A9trie comme sujet central. Les 7 di=
+mensions existent dans la litt=C3=A9rature mais n'ont jamais =C3=A9t=C3=A9=
+ rassembl=C3=A9es.</span></div><div><br /></div><div><span class=3D"qt-qt-qt=
+-color" style=3D"color:rgb(86, 156, 214);"><b>## Ce que c'est et ce que ce=
+ n'est pas</b></span></div><div><br /></div><div><span class=3D"qt-qt-qt-col=
+or" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-col=
+or" style=3D"color:rgb(204, 204, 204);"> C'est un papier </span><span class=
+=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>**CS theory / lan=
+gages formels**</b></span><span class=3D"qt-qt-qt-color" style=3D"color:rgb=
+(204, 204, 204);">, ind=C3=A9pendant du domaine musical</span></div><div><s=
+pan class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</span><s=
+pan class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> Il n'y a=
+ </span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b=
+>**aucune mention**</b></span><span class=3D"qt-qt-qt-color" style=3D"color=
+:rgb(204, 204, 204);"> de BP3, ni de musique dans le corps du texte</span><=
+/div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);=
+">-</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);=
+"> La musique n'appara=C3=AEt qu'en =C2=A76.4 comme "laboratoire id=C3=A9al=
+" pour instancier les dimensions</span></div><div><span class=3D"qt-qt-qt-c=
+olor" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-c=
+olor" style=3D"color:rgb(204, 204, 204);"> Un </span><span class=3D"qt-qt-q=
+t-color" style=3D"color:rgb(86, 156, 214);"><b>**article compagnon**</b></s=
+pan><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> (Pa=
+per 9=CE=B2) est pr=C3=A9vu pour appliquer ce cadre aux grammaires musicale=
+s =E2=80=94 c'est l=C3=A0 que BP3, GTTM, IDyOM, et la tripartition de Natti=
+ez interviendraien</span></div><div><br /></div><div><span class=3D"qt-qt-q=
+t-color" style=3D"color:rgb(86, 156, 214);"><b>## Pourquoi j'ai besoin de t=
+on regard</b></span></div><div><br /></div><div><span class=3D"qt-qt-qt-col=
+or" style=3D"color:rgb(86, 156, 214);"><b>**les formalisations math=C3=A9ma=
+tiques sont ma synth=C3=A8se**</b></span><span class=3D"qt-qt-qt-color" sty=
+le=3D"color:rgb(204, 204, 204);">, pas des formules tir=C3=A9es d'articles=
+ existants. Les r=C3=A9sultats sous-jacents sont =C3=A9tablis (Chomsky, Gold=
+, Parikh, Shannon, etc.), mais la mise en formules est la mienne. Concr=C3=
+=A8tement :</span></div><div><br /></div><div><span class=3D"qt-qt-qt-color=
+" style=3D"color:rgb(86, 156, 214);"><b>### Points solides (citations direc=
+tes)</b></span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb=
+(103, 150, 230);">-</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb=
+(204, 204, 204);"> Les complexit=C3=A9s O(n), O(n=C2=B3), PSPACE-complet=
+ =E2=86=92 Hopcroft &amp; Ullman, Aho et al.</span></div><div><span class=3D"q=
+t-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"q=
+t-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> Les nombres de Catalan=
+ pour l'ambigu=C3=AFt=C3=A9 =E2=86=92 Jurafsky &amp; Martin</span></div><div=
+><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</span=
+><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> Le th=
+=C3=A9or=C3=A8me de Gold (1967) sur l'impossibilit=C3=A9 d'inf=C3=A9rence</=
+span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, =
+230);">-</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, =
+204);"> Le th=C3=A9or=C3=A8me de Parikh (1966) sur l'ambigu=C3=AFt=C3=A9 i=
+ntrins=C3=A8que</span></div><div><span class=3D"qt-qt-qt-color" style=3D"co=
+lor:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-color" style=3D"co=
+lor:rgb(204, 204, 204);"> La surprisal =E2=86=92 Hale (2001), Levy (2008)</=
+span></div><div><br /></div><div><span class=3D"qt-qt-qt-color" style=3D"co=
+lor:rgb(86, 156, 214);"><b>### Points =C3=A0 v=C3=A9rifier (mes formulation=
+s)</b></span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(1=
+03, 150, 230);">-</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(2=
+04, 204, 204);"> =C2=A74.1 : la fonction T_parse(G, n) pr=C3=A9sent=C3=A9e=
+ comme un "cases" sur k =E2=80=94 c'est ma pr=C3=A9sentation, pas une formul=
+e existante</span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:=
+rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-color" style=3D"color:=
+rgb(204, 204, 204);"> =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =CE=A3* et pars=
+e: G =C3=97 =CE=A3* =E2=86=92 2^T =E2=80=94 mes d=C3=A9finitions fonctionne=
+lles</span></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103=
+, 150, 230);">-</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204=
+, 204, 204);"> =C2=A74.3 : parse_=CE=B4(G, w) avec =CE=B4 comme param=C3=A8=
+tre de strat=C3=A9gie =E2=80=94 ma notation</span></div><div><span class=3D=
+"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D=
+"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =C2=A74.5 : l'argumen=
+t sur l'injectivit=C3=A9 de gen vs. non-injectivit=C3=A9 de parse</span></d=
+iv><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">=
+-</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =
+=C2=A74.7 : le lien entre surprisal et asym=C3=A9trie temporelle =E2=80=94 =
+mon interpr=C3=A9tation de Hale/Levy</span></div><div><br /></div><div><sp=
+an class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>## **Mes=
+ quesiotns**</b></span></div><div><br /></div><div><span class=3D"qt-qt-qt-c=
+olor" style=3D"color:rgb(86, 156, 214);"><b>1. **G=C3=A9n=C3=A9ral**=C2=A0<=
+/b></span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);=
+">: Est-ce que ces formulations te semblent math=C3=A9matiquement correctes =
+et d=C3=A9fendables devant un reviewer CS ?</span></div><div><br /></div><=
+div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">2.</=
+span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </=
+span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>*=
+*D3 (directionnalit=C3=A9)**</b></span><span class=3D"qt-qt-qt-color" style=
+=3D"color:rgb(204, 204, 204);"> : J'affirme que la g=C3=A9n=C3=A9ration est =
+"intrins=C3=A8quement top-down". BP1 avait le parsing en "context-sensitiv=
+e right mode derivation" =E2=80=94 est-ce que la direction de BP1 remet en=
+ question cette affirmation ?</span></div><div><br /></div><div><span class=
+=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">3.</span><span clas=
+s=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </span><span clas=
+s=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>**D6 (inf=C3=A9r=
+ence)**</b></span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 20=
+4, 204);"> : Ta vision ANAL+QAVAID+TEMP (inf=C3=A9rer des grammaires depuis =
+des exemples) =E2=80=94 est-ce que =C3=A7a correspond =C3=A0 ce que je d=
+=C3=A9cris comme la "troisi=C3=A8me direction" ?</span></div><div><br /></d=
+iv><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">=
+4.</span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"=
+> </span><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);">=
+<b>**Le split en 2 articles**</b></span><span class=3D"qt-qt-qt-color" styl=
+e=3D"color:rgb(204, 204, 204);"> : Le premier est volontairement domain-ind=
+ependent. Le second ajouterait une 8=C3=A8me dimension =E2=80=94 l'</span><=
+span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>**asym=
+=C3=A9trie musicale**</b></span><span class=3D"qt-qt-qt-color" style=3D"col=
+or:rgb(204, 204, 204);"> (composition vs. analyse, le pi=C3=A8ge terminolog=
+ique GTTM qui est nomm=C3=A9 "generative" mais fondamentalement analytique, =
+BP3 comme cas unique de bidirectionnalit=C3=A9, tripartition de Nattiez) =
+=E2=80=94 et instancierait les 7 autres sur BP3, GTTM, IDyOM. Est-ce que c=
+ette strat=C3=A9gie de split te semble judicieuse ?</span></div><div><br />=
+</div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);=
+"><b>## Le fichier</b></span></div><div><br /></div><div><span class=3D"qt-=
+qt-qt-color" style=3D"color:rgb(204, 204, 204);">Je t'envoie la version fra=
+n=C3=A7aise (traduction de lecture). La version soumise sera en anglais. C'=
+est un premier brouillon =E2=80=94 tout est modifiable.</span></div><div><b=
+r /></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204,=
+ 204);">Merci d'avance pour ton regard,</span></div><div><span class=3D"qt-q=
+t-qt-color" style=3D"color:rgb(204, 204, 204);">Romain</span></div><div><br =
+/></div><div><span class=3D"qt-qt-qt-color" style=3D"color:rgb(204, 204, 2=
+04);">---</span></div><div><br /></div><div><span class=3D"qt-qt-qt-color"=
+ style=3D"color:rgb(204, 204, 204);"><i>*P.S. : Le travail avec Claude a =C3=
+=A9t=C3=A9 essentiel pour structurer ce papier.</i></span></div></blockquot=
+e></div></blockquote><div><br /></div><div><br /></div><div><b>Pi=C3=A8ces=
+ jointes:</b></div><ul><li>peyrichou_generation_recognition_asymmetry_2026.p=
+df</li></ul></blockquote><div><br /></div></blockquote></div></blockquote><=
+div><br /></div></blockquote></div>
+</body></html>
+--------=_MBAAE4935C-D8E3-4F2A-BC7E-E31E53E0297B--
+
+--------=_MB16ADC148-5188-4507-A279-368581E40C18
+Content-Type: application/zip; name=pattern-grammars-fr.docx.zip
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=pattern-grammars-fr.docx.zip
+
+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
+--------=_MB16ADC148-5188-4507-A279-368581E40C18--
+

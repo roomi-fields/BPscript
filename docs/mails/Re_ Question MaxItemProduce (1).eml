@@ -1,0 +1,225 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-342-ga586d3c39-fm-20260310.001-ga586d3c3) with LMTPA;
+	 Mon, 30 Mar 2026 11:14:36 -0400
+X-Cyrus-Session-Id: slotpi15m92-1774883676-3290317-2-5657458560267572446
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 1000 (email)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, ME_SC_SENDERREP -100, ME_SENDERREP_ALLOW -4,
+  RCVD_IN_DNSWL_NONE -0.0001, RCVD_IN_MSPIKE_H2 -0.01,
+  SHORTCIRCUIT -0.0001, SPF_HELO_NONE 0.001, SPF_PASS -0.001, LANGUAGES fr,
+  BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.128.48', Host='mail-wm1-f48.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: plain='utf-8'
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-06 ([10.202.2.205])
+  by phl-compute-07.internal (LMTPProxy); Mon, 30 Mar 2026 11:14:36 -0400
+Received: from phl-mx-06.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id A3511552009C
+	for <romain@liance.art>; Mon, 30 Mar 2026 11:14:35 -0400 (EDT)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-06.messagingengine.com (Authentication Milter) with ESMTP
+    id 43BC7C7131D.6A49755200DA;
+    Mon, 30 Mar 2026 11:14:35 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1774883675; b=gcOeI4WAE0fLFDGinZlKiOPMbNAErVHH/NZws5ljOgoRPjWNDh
+    rZSoW1HkBZQz3R2QLtjlTvv7vIDt9POXS6azKiC0EQ8326SqotbNI5d7CVDAKbDw
+    pW2HA2fogSNnn1K3LEMS9n9DUTGKhPuOYxJIvgEtx+E9ozPLIGZOM5a8rm5nth8W
+    x/tEpFDg6KD5h4JZ7BNElp+hkOeiezKftEhRDy23VXpWp8mQGySQXQW+bL8BNkek
+    UVxOqxvwe78f749JhJ4yd1BiAAiUEOhW3wd5pT+BkzC9xBYVtOpQtB00b8AC3nds
+    HJY5QLzve3Ga14/r2WCDVbIDa2qyvYvxlocQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type
+    :content-transfer-encoding; s=fm1; t=1774883675; bh=Y3eP/bhpkIEH
+    CVdLjYrFN5WG1LhsJMd2b9g5eZKicBo=; b=dvWc+fN9xOhpNZBFHoSJN3VeEq4+
+    JoHf6ci7XXuSF2G3+nLAdK9bED3QJmsVZkONtdb9wgK6vO5VUs8vsI6g8NtncDiC
+    hhcExsLiRsNvWZkGwbgFglFlwAUFkphCGgTxK089UAOh0JkTBSsanSL0szgwpZ2D
+    5nQueS1oBdBx2lyuforYuacBlPn55tWHxcMtMwm0gGY/6JXc/jtxS4xrjrHS1BTG
+    pPJoOJ5+9H9eXwWfR6I6rA6vLgnagM1Yoi9pDH0msbblcIx+159YPtl0QDkL8J3K
+    keL9HHs8d5qr1DjZevNCzRJy6MNym8rLQpPGecLmqnYMsHVGY3sDHitYYg==
+ARC-Authentication-Results: i=1; phl-mx-06.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f48.google.com
+    policy.ptr=mail-wm1-f48.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=SFFAjcOE header.a=rsa-sha256
+    header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.48 (mail-wm1-f48.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wm1-f48.google.com
+X-ME-Authentication-Results: phl-mx-06.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-06.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f48.google.com
+      policy.ptr=mail-wm1-f48.google.com
+Authentication-Results: phl-mx-06.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-06.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-06.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=SFFAjcOE header.a=rsa-sha256
+      header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.48 (mail-wm1-f48.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wm1-f48.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffeelfeduucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgfgsehtqhertddtreejnecuhfhrohhmpedfuegvrhhn
+    rghrugcuuegvlhdfuceosggvrhhnrghrsggvlhesghhmrghilhdrtghomheqnecuggftrf
+    grthhtvghrnhepfffghfelgeejheetuddujeetgfevfeelteekgeetleefleduudehgfej
+    ueetgeeinecukfhppedvtdelrdekhedruddvkedrgeekpddvrgdtudemtggsudgtmeekud
+    grleemlegttddtmegugegrmeeiiegrsgemsgeffegtmegrfeefleenucevlhhushhtvghr
+    ufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvtdelrdekhedruddvkedrgeekpdhhvg
+    hlohepmhgrihhlqdifmhduqdhfgeekrdhgohhoghhlvgdrtghomhdpmhgrihhlfhhrohhm
+    peeosggvrhhnrghrsggvlhesghhmrghilhdrtghomheqpdhnsggprhgtphhtthhopedupd
+    hrtghpthhtohepoehrohhmrghinheslhhirghntggvrdgrrhhtqe
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:W5PKaay5CudQaHe5m7_TT_u5z5MrUbwQEfQoAXsSvHEIsulYRJJCLQ>
+X-ME-Received: <xmx:W5PKaXHotdXtJWcWzopEz39urjeFf9fQRx10tHC4JWqbKNzrb5Zd4g>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.128.48 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-06.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wm1-f48.google.com;
+    client-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-06.messagingengine.com (Postfix) with ESMTPS id 6A49755200DA
+	for <romain@liance.art>; Mon, 30 Mar 2026 11:14:35 -0400 (EDT)
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4873ce69ba9so11328835e9.2
+        for <romain@liance.art>; Mon, 30 Mar 2026 08:14:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774883673; x=1775488473; darn=liance.art;
+        h=content-transfer-encoding:mime-version:user-agent:reply-to
+         :references:in-reply-to:message-id:date:subject:to:from:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Y3eP/bhpkIEHCVdLjYrFN5WG1LhsJMd2b9g5eZKicBo=;
+        b=SFFAjcOEWFu5EfGE950NLo8jcESXt/d0Zta5WpIw5MbH0cCJ0XyeH+ullW4p2rZRo+
+         xHAjNwg624i5L/s9gabBmqsgLdjxCMtQUyXQsSMwBKJLD2K4SIC92+QEPTnKrCSYFBGf
+         O233B0GKNr/AEwbcPIsEUDwXVh2f6Qp7nn0Rtd9kjpr77tAJ8RzL5c6GZwV1/PmpWsQ2
+         wPPocN/mkWyyLZtYfju9EG4kj9bqpQoWs7KiCStfMbd2dvAAcPwaglmUA45KvQOe+IaH
+         DsyM8uNw7NTsXcM2cBWdw1jyBABaBAGUOg7T0R6oB/9bj5A4qGaP7iywjv4gocOOIg0D
+         EJxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774883673; x=1775488473;
+        h=content-transfer-encoding:mime-version:user-agent:reply-to
+         :references:in-reply-to:message-id:date:subject:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Y3eP/bhpkIEHCVdLjYrFN5WG1LhsJMd2b9g5eZKicBo=;
+        b=mwt07hzcx9tBDHH2OHmrt4MzjpYJGYwlmF7YlTTbQ0YpL8KI/C0MXZH5p4llLUl+Hf
+         CxEiRMg024KnqWZfTXwsLKT3+v+C96cfMCGxfydSv9qp2JfxqccYdOJc9HZxDpHZjrSq
+         OsBpdC84xnS5qrIGb2fs6N3LNU+WlEGs2OvJyFLYdpjw8FGcOmMzhBHi2YajH8jQTjzV
+         Z5/YLKfyrzE5sqby7vGQyw42xmsMRLf2SfUljXttWnG28Rb0cxhmEb/n30DhXLDjB/x8
+         Z3oQ7WHvsMqJwJWRKwwO+Frt3mlN0Rm93y90mMSA1+YHfu9kii8aMLZWdILkl7x4eiUL
+         vwdA==
+X-Gm-Message-State: AOJu0Ywas5YFefFH0i9F67UTlKs469UP6+2He3q3qouLt1lhIOZdHDIb
+	go0AY1v2BZCxgFUHqLSWoHJ0qXPze1WKepXNnIy6VsD0OOrNfD9CGBMnWNIN0w==
+X-Gm-Gg: ATEYQzzLf/Ys+CtLF2LaSEyDMamqefNB38uVAA8n+Y6eGWNuRPL969RsP77Tg3vofG+
+	o6gw6jRTMDPcJAy5dw/kXonlRCD9ltoMUMf+iXuJajyy+/1tFgiynmFTaJE13JlsGXjbdR6I5U6
+	9Z8d2/eiAF/hzm6Nkd5l8i1uQP6Miz6PDs+/Vqeu0HtKTkDZvF0khGek58CEAzaA7STNOy30kj+
+	3OCLokm8zsNlfzqIKZR2O4uLSUl5mMGrJzwZJHplBsIUCgREFDyx3Osq9hxCI3bt3XcHbX79a8a
+	N2drJrFCHY5nSoXbrdw8BeyC5sOFgKVCbocq3dvCQwVnZS1bHAdTtzAT1Oj9tBQwCEY47cH48pt
+	rsqXnIIkiUBT3kqT4AdAiHVM61zcs9aE1vfgHA9FJYTXQLFKZ7yn26FSUrVLSH3vLeeZ66QuhQi
+	OW7fX3AzqR4KIZo/bbZQKc1u8VsEePBxI028aRxrErBYCK2i7WyM5k6CwCABzx8yhYjwMBu9NWY
+	iD0vQfiO90XfUT4AFmSdg==
+X-Received: by 2002:a05:600c:a108:b0:485:4388:348b with SMTP id 5b1f17b1804b1-48727c81d77mr178891305e9.0.1774883672314;
+        Mon, 30 Mar 2026 08:14:32 -0700 (PDT)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:d4a:66ab:b33c:a339? ([2a01:cb1c:81a9:9c00:d4a:66ab:b33c:a339])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722d40741sm300151195e9.13.2026.03.30.08.14.31
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 30 Mar 2026 08:14:31 -0700 (PDT)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: Re: Question MaxItemProduce
+Date: Mon, 30 Mar 2026 15:14:31 +0000
+Message-Id: <em59d66be8-4b22-47e8-af1c-9f6742f29adb@gmail.com>
+In-Reply-To: <8a641f07-561a-4c9e-914d-0d8fb692eaa7@app.fastmail.com>
+References: <8a641f07-561a-4c9e-914d-0d8fb692eaa7@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Bonjour Romain,
+
+Je vais regarder ce probl=C3=A8me. Je me souviens d=E2=80=99avoir bataill=
+=C3=A9 sur=20
+=E2=80=9CItemNumber=E2=80=9D car dans une grammaire SUB avec l=E2=80=99opti=
+on =E2=80=9CPlay each=20
+substitution=E2=80=9D on a besoin de l=E2=80=99incr=C3=A9menter sur chaque=
+ substitution,=20
+sachant qu=E2=80=99il ne l=E2=80=99a pas =C3=A9t=C3=A9 dans =E2=80=9CProduc=
+eItems.c=E2=80=9D. J=E2=80=99avais laiss=C3=A9 =C3=A7a de=20
+c=C3=B4t=C3=A9 !
+
+
+------ Original Message ------
+From "Romain Peyrichou" <romain@liance.art>
+To "Bernard Bel" <bernarbel@gmail.com>
+Date 30/03/2026 17:06:21
+Subject Question MaxItemProduce
+
+>Bonjour Bernard,
+>
+>J'ai pas encore eu le temps de me pencher sur tes derniers mails.
+>Enfin, je les ai bien lus mais pas encore int=C3=A9gr=C3=A9s...
+>
+>J'aimerai d'abord "terminer" la structure de test que je t'ai d=C3=A9crite=
+=20
+>semaine derni=C3=A8re et qui a encore un certain nombre de bugs/diff=C3=A9=
+rences=20
+>de productions, etc... qui me permet de mettre en =C3=A9vidence, souvent d=
+es=20
+>probl=C3=A8mes dans le portage WASM et les stubs cod=C3=A9s, ou dans le=20
+>transpiler BPscript ou le langage lui m=C3=AAme.
+>
+>Bref, je suis confront=C3=A9 a une nouvelle diff=C3=A9rence en mode Improv=
+ize=20
+>(non rtMIDI), ItemNumber est incr=C3=A9ment=C3=A9 deux fois par item
+>- une fois dans ProduceItems.c:283 (boucle Improvize)
+>- une fois dans MakeSound.c:130 (quand MIDIfileOn)
+>
+>Du coup avec MaxItemsProduce=3D20, le check ItemNumber > MaxItemsProduce=
+=20
+>(ProduceItems.c:200) est atteint apr=C3=A8s ~10 items MIDI au lieu de 20.
+>
+>Est-ce voulu (MaxItemsProduce compte les "pas" et pas les items) ou=20
+>est-ce que le ItemNumber++ dans MakeSound ne devrait pas =C3=AAtre l=C3=A0 =
+en=20
+>mode Improvize ?
+>
+>Merci

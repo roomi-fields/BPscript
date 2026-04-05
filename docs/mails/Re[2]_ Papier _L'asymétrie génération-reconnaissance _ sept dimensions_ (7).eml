@@ -1,0 +1,3242 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-342-ga586d3c39-fm-20260310.001-ga586d3c3) with LMTPA;
+	 Thu, 26 Mar 2026 13:25:50 -0400
+X-Cyrus-Session-Id: slotpi15m92-1774545950-1709116-2-15306384003205480787
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 1000 (email)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, ME_SC_SENDERREP -100, ME_SENDERREP_ALLOW -4,
+  RCVD_IN_DNSWL_NONE -0.0001, RCVD_IN_MSPIKE_H2 0.001,
+  SHORTCIRCUIT -0.0001, SPF_HELO_NONE 0.001, SPF_PASS -0.001, LANGUAGES fr,
+  BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.128.52', Host='mail-wm1-f52.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8'
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-06 ([10.202.2.205])
+  by phl-compute-07.internal (LMTPProxy); Thu, 26 Mar 2026 13:25:50 -0400
+Received: from phl-mx-06.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id CFE525520113
+	for <romain@liance.art>; Thu, 26 Mar 2026 13:25:48 -0400 (EDT)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-06.messagingengine.com (Authentication Milter) with ESMTP
+    id D86640E791B.531C655200B3;
+    Thu, 26 Mar 2026 13:25:48 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1774545948; b=3LeQJ2dkxL0DjLE0zeMC/TQJtDRyBhugWP/tRYMGxd4TUks4Gf
+    TqZqWVHrQwZy0GeQ4fhLbXzlQP037jG6ZI75nY4n3ky5HC1LNcDv1UXQYScTdkhQ
+    ZnJQ8ase29mioK8chcEiolxBeVYGMrqHVPAhnhOhY/SjHFduxZ5pKu+Mp/Iae6R+
+    zxpzbuIw5L8w536w9YBGs8c5RR5ltPXrmsMFEwc185Kzx8Ov6rc1ubmNAHM7WOd6
+    TKDK2/5oqy30zSHwGhaOf/PBd+4zDfjJEBc0HPoIaFVjaa1OIvmfuP57+QQyPGvd
+    egbDr0HIEaVA34c566WX9kFa53E+n6GcziVQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type
+    :content-transfer-encoding; s=fm1; t=1774545948; bh=3n4xQRI9I5cC
+    a9llaRhne8QLG4Ns2K8Edcndcm/JlU4=; b=0fNX7+cPjZV/H3F0tqRJsiMyiEHz
+    XMm/D9CP3w8iqP2hFqhOnZlM0FtWlk1gSI0u4OlsQW5CkI+T0xCcdW10dLFcE3/t
+    6Xk+BwFKFn8UR5yV9OyDsZ7vub/iT7svu/Ei+hl7kdbOJmzocYwxmYKygxqvpMsP
+    +zEVh162azylYywIOC02aAOuFpf/9Qy8xy0O30iwzxrKMHaFykforuGmlpvchJrp
+    hx3tfjU0CJL+RV8ftjsr3TrlOLYT0CBF7OAIFw5SwjLJ1OqlZuZF5sq5ptiDJV0y
+    GvGoHasAGuWqdyXiWaU5WXcFCwBO8bg/RpraVGuiVnrZ4KufQIvhBFfKlQ==
+ARC-Authentication-Results: i=1; phl-mx-06.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f52.google.com
+    policy.ptr=mail-wm1-f52.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=Nxu7Lzwd header.a=rsa-sha256
+    header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.52 (mail-wm1-f52.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wm1-f52.google.com
+X-ME-Authentication-Results: phl-mx-06.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-06.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f52.google.com
+      policy.ptr=mail-wm1-f52.google.com
+Authentication-Results: phl-mx-06.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-06.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-06.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=Nxu7Lzwd header.a=rsa-sha256
+      header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.52 (mail-wm1-f52.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wm1-f52.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefvdejleejucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgfgsehtqhertddtreejnecuhfhrohhmpedfuegvrhhn
+    rghrugcuuegvlhdfuceosggvrhhnrghrsggvlhesghhmrghilhdrtghomheqnecuggftrf
+    grthhtvghrnhepheetueeuhfegtefgveejueekleekhffhtddvveejleehgeffhefgueel
+    veevtedunecuffhomhgrihhnpehrohhomhhiqdhfihgvlhgushdrtghomhdpsgholhhprh
+    hotggvshhsohhrrdhorhhgpdhgihhthhhusgdrtghomhdpfigrshhmpghpohhrthdrmhgu
+    pdhmughpihdrtghomhenucfkphepvddtledrkeehrdduvdekrdehvddpvdgrtddumegtsg
+    dutgemkedurgelmeeltgdttdemfeekfegtmeejfhhfmeguiehffeemjedvrgegnecuvehl
+    uhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddtledrkeehrdduvdekrd
+    ehvddphhgvlhhopehmrghilhdqfihmuddqfhehvddrghhoohhglhgvrdgtohhmpdhmrghi
+    lhhfrhhomhepoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqedpnhgspghrtghpth
+    htohepuddprhgtphhtthhopeeorhhomhgrihhnsehlihgrnhgtvgdrrghrtheq
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:HGzFaWconfZtVAR4R0KTYJcb9WDC_1h5Ji7Mg_LBpvkeKPYxxAoaFA>
+X-ME-Received: <xmx:HGzFaeSlnYm5DJsEYuOc0jAuNrpFDQXL_X22DKi28gWskM1otw8qmw>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.128.52 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-06.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wm1-f52.google.com;
+    client-ip=209.85.128.52
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-06.messagingengine.com (Postfix) with ESMTPS id 531C655200B3
+	for <romain@liance.art>; Thu, 26 Mar 2026 13:25:48 -0400 (EDT)
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4852c9b4158so10346205e9.0
+        for <romain@liance.art>; Thu, 26 Mar 2026 10:25:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774545946; x=1775150746; darn=liance.art;
+        h=content-transfer-encoding:mime-version:user-agent:reply-to
+         :references:in-reply-to:message-id:date:subject:to:from:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3n4xQRI9I5cCa9llaRhne8QLG4Ns2K8Edcndcm/JlU4=;
+        b=Nxu7LzwddeYR4yMLjhsCj0o9fAJeJJAid5WiBSX6Qv4Sh1jpQYH/eKFBmBMo3AJDNj
+         N0mouRoChTUcoyhaoF+BfnQrdDGtajCpaekkTdipeldAoJqb2zTBJ+xRsQkM6OdmpUjL
+         X4lULnPxW3yxg4jdNJWjmKshy4De46y9gI/SQdOpLbC0Vu6S9Db8flDS0FH5Z7QYGRRO
+         /ZAcanhNKYXweTjc2OMNgsfcFUvjvSLRZ3QABH4WBuSJcULGwj7sLUTiKQpkCzXGH9bf
+         2BR1Zs68YCJSBK8hmm49Zu3cp8HobSgygSJggJL9urKqjxHl+OeW/WesoCKF9BafTdXZ
+         MEhg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774545946; x=1775150746;
+        h=content-transfer-encoding:mime-version:user-agent:reply-to
+         :references:in-reply-to:message-id:date:subject:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3n4xQRI9I5cCa9llaRhne8QLG4Ns2K8Edcndcm/JlU4=;
+        b=m0GVDV54yrCMMCiq1pWefiBoNIoxc5hLcPtK0AGlseSGrHgax/J67d+1+VLMKdk60X
+         G8JGcONXHXuwfiG848HUIE10Da0TX2/wn+5G2gyHS/O6L9LLpe7JYBOKnXGRiMI8aIDg
+         fIFGEt48eUIMculrZUf8fOna7Zm/l6grk346NKI85ic+tbiQ2IyfPdNta+0g1IHTG4b+
+         h+6TnGj2R7cVsttB4ZEHw0HDfbKi6IX8x0ZMxEEh4zJzcdryLaY0fdR5aLqs8teCqwEO
+         vT4kodd3fon8HZG+4v16TqsofF7zhqIVGQFF/LlTGAZJrCELPrzn2aoqubkaX4DvVT/k
+         WObQ==
+X-Gm-Message-State: AOJu0Yx08JLAn+lZDvGH7Kt0XBrlarpHPNlipy6/mXKNNLkj7LFZuZw4
+	sj4vxcd/RjYipbG6R9RYqrBQOA8U5k8IgTEOfF/1Up9kt/pTnuIPQ473nZqWHA==
+X-Gm-Gg: ATEYQzz4M2kh1YYMU7lZQdd2N+LHQMRBfvliXSldHxipi2MAhXCuC+htcvkDPaOgo07
+	ChOuzhF6F24+GHKIkHS4vIG+c/uwBubFF3myw7O4dMyk3osuIwYq4NQQ6UFA51VIeqmLfBjqmKm
+	5fw34FAXWyfvgQ9rdeTYDBFml+rQ+muqgYUijZhvr3T6FWDHIwdmcrRu9FCu2zY9knMu2nlMII4
+	GRZTrDzTjmRCNgSHtoQUOlacP1HVTcCM+RgO0ETep3XWTjDWm5R+PBKLWkUV4ZbmwlRuMwSJ3nF
+	PThu0FAKyGxKeV9PZuwg8L1Glt+A205mcPO073m9PUf602fx3/omY32OulYpaNbA62Q4hU7/OXT
+	NUQtUQVauCRi8Z26omhipbmK1MH63lpiD/DaUU+ZwtVKKXLEjkjGoS5z1thfomoW11UhA6A5/1w
+	f/z+FkJ6tuWLxEs6DTv7Ii61KlqBALYwgVzSx8I3gv++Guwvcxm/XgdiLABJF0yylRNewFFi91D
+	W69fc5ed3NJpJ3DqFWYqw==
+X-Received: by 2002:a05:600c:a402:b0:485:303b:c50a with SMTP id 5b1f17b1804b1-48715fef22dmr95294685e9.13.1774545944732;
+        Thu, 26 Mar 2026 10:25:44 -0700 (PDT)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:383c:7ff:d6f3:72a4? ([2a01:cb1c:81a9:9c00:383c:7ff:d6f3:72a4])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722c65989sm78355425e9.2.2026.03.26.10.25.43
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 26 Mar 2026 10:25:43 -0700 (PDT)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=5b2=5d=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9r?=
+ =?utf-8?q?ation-reconnaissance=20=3a=20sept=20dimensions=22?=
+Date: Thu, 26 Mar 2026 17:25:43 +0000
+Message-Id: <em54b146ef-4319-4d24-96e7-fe599e9112c6@gmail.com>
+In-Reply-To: <3df2adaf-6334-4126-8026-e73ca55ff0e5@app.fastmail.com>
+References: <emef80250a-fa01-449c-bea4-f81936ada97f@gmail.com>
+ <3df2adaf-6334-4126-8026-e73ca55ff0e5@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Pour "-gr.Nadaka-1er-essai=E2=80=9D (avril 2006) il semble que cette gramma=
+ire=20
+n=E2=80=99=C3=A9tait pas compl=C3=A8te car lesA8 ne sont pas d=C3=A9finis. =
+=C3=87a ressemble =C3=A0 une=20
+construction=E2=80=9Dmarkovienne=E2=80=9D et l=E2=80=99id=C3=A9e a probable=
+ment =C3=A9t=C3=A9 abandonn=C3=A9e.  Je=20
+remqrqque qu=E2=80=99il y avait des poids infinis dans la plupart des r=C3=
+=A8gles qui=20
+=C3=A9taient not=C3=A9s =E2=80=9C<=E2=88=9E>=E2=80=9D mais ce symbole n=E2=
+=80=99est plus accept=C3=A9. Donc on va=20
+adopter <inf> comme tu l=E2=80=99as sugg=C3=A9r=C3=A9. =C3=87a fait des ann=
+=C3=A9es que je n=E2=80=99ai pas=20
+repens=C3=A9 aux poids infinis !
+
+Je veux bien r=C3=A9cup=C3=A9rer ton =E2=80=9CCompile.c=E2=80=9D pour g=C3=
+=A9rer les =E2=80=9C<inf>=E2=80=9D.
+
+------
+
+>Sinon, je suis tomb=C3=A9 sur ce qui semble =C3=AAtre un "code mort": <=C2=
+=B0>
+>
+>Le symbole =C2=B0 (poids infini BP2) ne fonctionne plus en UTF-8 =E2=80=94=
+=20
+>GetArgument() teste c =3D=3D -80 (byte Latin-1) mais UTF-8 encode =C2=B0 e=
+n 2=20
+>octets. J'ai ajout=C3=A9 <inf> comme syntaxe alternative dans CompileProcs=
+.c=20
+>et converti les 4 grammaires de test-data (Nadaka-1er-essai, bells,=20
+>cloches1, tryflags3).
+>Si =C3=A7a t'int=C3=A9resse je peux t"envoyer le code ou faire un pull req=
+uest=20
+>sur GitHuib
+>
+>J'ai aussi une question sur -gr.Nadaka-1er-essai
+>Il semble que A8 ne soit d=C3=A9fini par aucune r=C3=A8gle et j'ai pas r=
+=C3=A9ussi a=20
+>comprendre comment =C3=A7a pouvait marcher.
+>Est ce que la grammaire est fausse/incompl=C3=A8te ou est ce qu'il y a un=
+=20
+>"truc" qui m'=C3=A9chappe?
+>
+>
+>Bon, les tests sur le moteur WASM (beaucoup plus lent pour l'instant=20
+>que le moteur C) et sur BPscript progressent bien...
+>Tous ces tests m'am=C3=A8nent a faire beaucoup de corrections de ce qui=20
+>semblait marcher sur ces cas simples et de voir des tas d'aspects de=20
+>ton langage qui m'avaient =C3=A9chapp=C3=A9.
+>
+>
+>
+>Mer 25 mars 2026, =C3=A0 17:43, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>Je continue l=E2=80=99=C3=A9tude de :
+>>https://roomi-fields.com/en/articles/derivation-rules-bp3-modes/
+>>
+>>La d=C3=A9finition de SUB est incorrecte, et l=E2=80=99exemple sans int=
+=C3=A9r=C3=AAt. La=20
+>>bonne d=C3=A9finition est :
+>>"SUB" grammars perform simultaneous rewriting of symbols in the work=20
+>>string.
+>>
+>>Voir https://bolprocessor.org/misc/docs/  =E2=80=94> 4. A short glance at =
+the=20
+>>theoretical model =E2=80=94> Substitutions
+>>
+>>C=E2=80=99est une =E2=80=9Cparallel derivation=E2=80=9D.  Exemple sur cet=
+te page :
+>>
+>>SUB
+>>gram#1[1] S --> A B B A B B A
+>>gram#1[2] A B --> a B
+>>gram#1[3] B A --> B b
+>>gram#1[4] B B A --> B e A
+>>gram#1[5] B B --> f B
+>>
+>>et voici la trace :
+>>
+>>[Step #1] Selected: gram#2[1] S --> A B B A B B A
+>>[Step #2] Selected: gram#1[2] A B --> a B
+>>[Step #3] Selected: gram#1[5] B B --> f B
+>>[Step #4] Selected: gram#1[4] B B A --> B e A
+>>
+>>Rule already selected: gram#1[2] A B --> a B
+>>[Step #5] Selected: gram#1[2] A B --> a B
+>>
+>>Rule already selected: gram#1[5] B B --> f B
+>>[Step #6] Selected: gram#1[5] B B --> f B
+>>
+>>Rule already selected: gram#1[4] B B A --> B e A
+>>[Step #7] Selected: gram#1[4] B B A --> B e A
+>>
+>>[Step #8] Selected: gram#1[3] B A --> B b
+>>
+>>R=C3=A9sultat =3D a f e a f e b
+>>
+>>En r=C3=A9alit=C3=A9, tout se passe comme si toutes les r=C3=A8gles candi=
+dates=20
+>>=C3=A9taient appliqu=C3=A9es en m=C3=AAme temps.
+>>
+>>=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>
+>>SUB1 pas encore correct. La grammaire
+>>
+>>SUB1
+>>gram#1[1] S --> A - A - A
+>>gram#1[2] A --> a b
+>>gram#1[3] A --> c d e
+>>gram#1[4] A --> f g
+>>
+>>produira toujours ab - ab - ab
+>>
+>>car les r=C3=A8gles sont prises dans l=E2=80=99ordre et appliqu=C3=A9es e=
+n position=20
+>>LEFT.
+>>
+>>Un exemple qui peut =C3=AAtre montr=C3=A9 :
+>>
+>>SUB1
+>>gram#1[1] S --> A A A A B B B B
+>>gram#1[2] A B --> c d e
+>>gram#1[3] A A --> a b
+>>gram#1[4] B B --> f g
+>>
+>>qui donnera toujours (d=C3=A9terministe) :
+>>
+>>S
+>>[Step #1] Selected: gram#1[1] <127:127> LEFT S --> A A A A B B B B
+>>[Step #2] Selected: gram#1[2] <127:127> LEFT A B --> c d e
+>>[Step #3] Selected: gram#1[3] <127:127> LEFT A A --> a b
+>>[Step #4] Selected: gram#1[4] <127:127> LEFT B B --> f g
+>>
+>>a b A c d e f g B
+>>
+>>et le r=C3=A9sultat est diff=C3=A9rent si l'on change l=E2=80=99ordre des =
+r=C3=A8gles.
+>>
+>>
+>>------ Original Message ------
+>>From "Romain Peyrichou" <romain@liance.art>
+>>To "Bernard Bel" <bernarbel@gmail.com>
+>>Date 24/03/2026 13:46:24
+>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance=
+ : sept=20
+>>dimensions"
+>>
+>>>Merci Bernard pour cette relecture et corrections.
+>>>
+>>>Tout est normalement corrig=C3=A9 par Claude, (je n'ai pas encore relu,=
+ je=20
+>>>suis a 100% sur le transpiler l=C3=A0)
+>>>Il y avait en effet des erreurs manifestes de r=C3=A9dactions d'une part=
+=20
+>>>et d'autres que j'ai laiss=C3=A9 passer par ignorance.
+>>>
+>>>
+>>>Lun 23 mars 2026, =C3=A0 19:44, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>>>https://roomi-fields.com/en/articles/b3-derivation-rules/
+>>>>
+>>>>Dans les r=C3=A8gles de d=C3=A9rivation que tu as document=C3=A9es, je=
+ vois=20
+>>>>quelques probl=C3=A8mes :
+>>>>
+>>>>1) Le mode LIN n=E2=80=99a rien =C3=A0 voir avec une d=C3=A9rivation cy=
+clique.=20
+>>>>D=C3=A9finition (selon BP3 help) :
+>>>>A "subgrammar" using (context-sensitive) leftmost derivation in=20
+>>>>"production", and (context-sensitive) rightmost derivation in=20
+>>>>analysis.
+>>>>
+>>>>En fait, tout est d=C3=A9crit dans :
+>>>>https://bolprocessor.org/misc/docs/
+>>>>(voir la page =E2=80=9CBP2 grammars=E2=80=9D)
+>>>>-- "RND" mode: rules are applied in a random order. (Default mode)
+>>>>-- "LIN" mode: candidate rule chosen randomly among rules yielding a=20
+>>>>leftmost derivation.
+>>>>-- "ORD" mode: candidate rules are applied in the order in which=20
+>>>>they appear in the grammar.
+>>>>-- "SUB" mode: same as "RND", but all occurrences of the selected=20
+>>>>rule's left argument in the work string are rewritten=20
+>>>>simultaneously. In this mode, for instance, p-substitutions and=20
+>>>>other kinds of automatic (infinite) sequences may be generated.=20
+>>>>These derivations stop either when a predefined buffer length has=20
+>>>>been reached, or the weights of all candidate rules are null as the=20
+>>>>result of having been dynamically decremented during computation.
+>>>>-- "SUB1" mode: same as "SUB", but only one rewriting of variables=20
+>>>>will be allowed. This mode is much faster than "SUB" and may be used=20
+>>>>when it is certain that the first substitution yields only terminal=20
+>>>>symbols.
+>>>>
+>>>>2) Je ne comprends pas pourquoi tu as chang=C3=A9 la notation, ex.=20
+>>>>=E2=80=9C-mo.LIN=E2=80=9D au lieu de =E2=80=9CLIN=E2=80=9D
+>>>>
+>>>>3) Les exemples empruntant le vocabulaire du tabla sont mal choisis,=20
+>>>>et musicalement incorrects pour la plupart. Il vaudrait mieux=20
+>>>>utiliser un alphabet =E2=80=9Cneutre=E2=80=9D de terminaux comme a, b,=
+ c=E2=80=A6
+>>>>
+>>>>Par exemple, le tihai n=E2=80=99est pas un cas d=E2=80=99utilisation de =
+SUB, sauf si=20
+>>>>on le r=C3=A9duit =C3=A0 une liste simple de phrases pr=C3=A9compos=C3=
+=A9es. Il utilise=20
+>>>>une grammaire et les r=C3=A9p=C3=A9tions sont r=C3=A9alis=C3=A9es par d=
+es expressions=20
+>>>>parenth=C3=A9s=C3=A9es, exemple :
+>>>>(=3D A)(=3D Gap)(: A)(: Gap)(: A)
+>>>>
+>>>>Remarque : dans la grammaire =E2=80=9C-gr.dhadhatite", on utilise des=
+=20
+>>>>symboles =E2=80=98+=E2=80=99 qui n=E2=80=99ont aucun usage sonore mais=
+ qui servent comme=20
+>>>>contextes afin de positionner certains motifs dans les templates.=20
+>>>>C=E2=80=99est utile quand on fait l=E2=80=99analyse de mani=C3=A8re d=
+=C3=A9terministe (=C3=A0=20
+>>>>suivre)=E2=80=A6
+>>>>
+>>>>
+>>>>------ Original Message ------
+>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>Date 22/03/2026 19:04:22
+>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissanc=
+e : sept=20
+>>>>dimensions"
+>>>>
+>>>>>Je te remercie je pointe maintenant dessus.
+>>>>>
+>>>>>https://roomi-fields.com/en/articles/b3-derivation-rules/ (le nom=20
+>>>>>en anglais a chang=C3=A9)
+>>>>>
+>>>>>
+>>>>>Je suis entrain de travailler sr BPscript, et pour valider que tout=20
+>>>>>fonctionne je m'y prends de la fa=C3=A7on suivante.
+>>>>>j'ai r=C3=A9cup=C3=A9r=C3=A9 toutes les grammaires trouv=C3=A9es dans=
+ ton github dans:
+>>>>>- bolprocessor/bolprocessor branche data/ =E2=80=94 les anciens fichie=
+rs=20
+>>>>>(format BP2.9.8, 2020)
+>>>>>- bolprocessor/bp3-ctests =E2=80=94 les fichiers de test r=C3=A9cents=
+ (format=20
+>>>>>BP3, 2024-2025)
+>>>>>Puis:
+>>>>>1) Je tente de les faire fonctionner dans BP3 en c (avec conversion=20
+>>>>>des fichiers plats en json pour les anciens)
+>>>>>2) Je tente de les faire fonctionner avec le BP3 WASM et je compare=20
+>>>>>les sorties (MIDI pour le C original quand il produit du MIDI vs=20
+>>>>>timed tokens pour le WASM)
+>>>>>3) Je tente enfin de les traduire en sc=C3=A8nes BPscript et je compar=
+e=20
+>>>>>=C3=A9galement
+>>>>>
+>>>>>Bon je te cache pas que en tout, parmi les 107 grammaires que j'en=20
+>>>>>ai 3 qui arrivent jusqu'au bout... avec tout un tas d'erreurs et de=20
+>>>>>usecases diff=C3=A9rents, c'est un sacr=C3=A9 bazard, rien que de stru=
+cturer=20
+>>>>>touts ces tests, corriger le transpiler, etc...
+>>>>>
+>>>>>Bref.
+>>>>>Est-ce que tu verrais une fa=C3=A7on plus pertinente de m'y prendre?
+>>>>>Est-ce que tu as des proc=C3=A9dures de test-validation de ton cot=C3=
+=A9=20
+>>>>>et/ou des grammaires de test d=C3=A9di=C3=A9es?
+>>>>>
+>>>>>
+>>>>>Merci,
+>>>>>Romain
+>>>>>
+>>>>>
+>>>>>Sam 21 mars 2026, =C3=A0 21:50, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>>>>>Voil=C3=A0, publi=C3=A9 sous v3.3.15
+>>>>>>
+>>>>>>
+>>>>>>------ Original Message ------
+>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>Date 21/03/2026 21:05:49
+>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissa=
+nce : sept=20
+>>>>>>dimensions"
+>>>>>>
+>>>>>>>Les voil=C3=A0.
+>>>>>>>Et fais moi signe quand tu aura publi=C3=A9 tout =C3=A7a sur Git com=
+me =C3=A7a=20
+>>>>>>>je pourrais supprimer mon fork et lier BPweb et BPscript=20
+>>>>>>>directemeent a ton repo
+>>>>>>>
+>>>>>>>
+>>>>>>>Sam 21 mars 2026, =C3=A0 21:03, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>>>>>>>Bizarrement, mes fichiers ConsoleMessages.c et ProduceItems.c=20
+>>>>>>>>sont ancien et ne contiennent pas #ifdef __BP3_WASM__
+>>>>>>>>Il faut que tu me les renvoies.
+>>>>>>>>
+>>>>>>>>C=E2=80=99est super pour le fonctionnement !
+>>>>>>>>
+>>>>>>>>Je vais essayer snprintf.
+>>>>>>>>
+>>>>>>>>------ Original Message ------
+>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>Date 21/03/2026 19:43:58
+>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnais=
+sance : sept=20
+>>>>>>>>dimensions"
+>>>>>>>>
+>>>>>>>>>Un grand grand merci a toi!!!
+>>>>>>>>>
+>>>>>>>>>Ca semble =C3=AAtre un refacto signifiant.
+>>>>>>>>>C'est parfait ! Les silent sound objects fonctionnent=20
+>>>>>>>>>exactement comme il faut.
+>>>>>>>>>J'ai int=C3=A9gr=C3=A9 tes fichiers, tout compile en WASM et tous=
+ tes=20
+>>>>>>>>>exemples passent a part z& &z comme pr=C3=A9vu, ce qui n'est pas=
+=20
+>>>>>>>>>dramatique pour moi.
+>>>>>>>>>
+>>>>>>>>>`Truc` appara=C3=AEt dans la sortie avec une dur=C3=A9e de 1000ms
+>>>>>>>>>J'ai test=C3=A9 les noms qui posaient probl=C3=A8me avant (`C4`, `=
+sa4`,=20
+>>>>>>>>>`re4`, `do3`) directement dans l'alphabet sans pr=C3=A9fixe, nicke=
+l.
+>>>>>>>>>5 cycles avec `bp3_init()` entre chaque =E2=86=92 tous passent. Pl=
+us de=20
+>>>>>>>>>bug de re-init.
+>>>>>>>>>
+>>>>>>>>>Deux fichiers manquants dans ton envoi
+>>>>>>>>>Tes fichiers modifi=C3=A9s n'incluaient pas `ConsoleMessages.c` ni=
+=20
+>>>>>>>>>`ProduceItems.c` =E2=80=94 les deux qui avaient des `#ifdef=20
+>>>>>>>>>__BP3_WASM__` dans la v3.3.14. J'ai remis les guards de mon=20
+>>>>>>>>>c=C3=B4t=C3=A9, mais il faudrait que tu les int=C3=A8gres aussi da=
+ns ta=20
+>>>>>>>>>branche `graphics-for-BP3`.
+>>>>>>>>>
+>>>>>>>>>- ConsoleMessages.c =E2=80=94 `gOutDestinations` mis =C3=A0 NULL e=
+n WASM=20
+>>>>>>>>>(sinon chaque `vfprintf(stdout)` traverse WASM=E2=86=92JS et explo=
+se le=20
+>>>>>>>>>stack JS en r=C3=A9cursion profonde)
+>>>>>>>>>- ProduceItems.c =E2=80=94 `expand =3D FALSE` dans `PrintResult()` =
+en=20
+>>>>>>>>>WASM (le 2e `PolyMake` pour l'expansion textuelle cause un=20
+>>>>>>>>>stack overflow sur les grammaires complexes type Visser3)
+>>>>>>>>>
+>>>>>>>>>Pour cJSON
+>>>>>>>>>J'ai regard=C3=A9 et =C3=A7a a l'air bon en rempla=C3=A7ant les `s=
+printf` par=20
+>>>>>>>>>`snprintf` dans `cJSON.c`  (m=C3=AAme avec la derni=C3=A8re versio=
+n de la=20
+>>>>>>>>>lib 1.7.19)
+>>>>>>>>>
+>>>>>>>>>// Avant
+>>>>>>>>>sprintf((char*)number_buffer, "%1.15g", d);
+>>>>>>>>>// Apr=C3=A8s
+>>>>>>>>>snprintf((char*)number_buffer, sizeof(number_buffer), "%1.15g",=20
+>>>>>>>>>d);
+>>>>>>>>>
+>>>>>>>>>Vraiment merci pour ton travail.
+>>>>>>>>>Je vais pouvoir m'amuser!! :)
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>Sam 21 mars 2026, =C3=A0 18:13, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>>>>>>>>>Bonjour Romain,
+>>>>>>>>>>
+>>>>>>>>>>Enfin pr=C3=AAt !
+>>>>>>>>>>
+>>>>>>>>>>Je t=E2=80=99envoie les fichiers source modifi=C3=A9s car je ne p=
+ublie pas=20
+>>>>>>>>>>imm=C3=A9diatement cette version. Elle fonctionne avec les exempl=
+es=20
+>>>>>>>>>>ci-dessous, mais la compilation avec " -fsanitize=3Daddress=E2=80=
+=9D=20
+>>>>>>>>>>m=E2=80=99envoie des signalements :
+>>>>>>>>>>
+>>>>>>>>>>'sprintf' has been explicitly marked deprecated here
+>>>>>>>>>>
+>>>>>>>>>>et apparemment tous se trouvent dans cJSON.c qui daterait de=20
+>>>>>>>>>>2017=E2=80=A6  Il me semble qu=E2=80=99on pourrait trouver mieux. =
+J=E2=80=99ai=20
+>>>>>>>>>>t=C3=A9l=C3=A9charg=C3=A9 cJSON-1.7.19 depuis=20
+>>>>>>>>>>https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19 mais=20
+>>>>>>>>>>j=E2=80=99obtiens un fichier similaire, et il semble que le probl=
+=C3=A8me=20
+>>>>>>>>>>appara=C3=AEt dans stdio.h.  Bref, je n=E2=80=99ose pas essayer u=
+ne mise =C3=A0=20
+>>>>>>>>>>jour, mais il faudra y penser.
+>>>>>>>>>>
+>>>>>>>>>>J=E2=80=99ai cr=C3=A9=C3=A9 une page Data avec tous les examples=
+ qui=20
+>>>>>>>>>>fonctionnent sauf le dernier. C=E2=80=99est tr=C3=A8s difficile d=
+e faire=20
+>>>>>>>>>>une prolongation sur une variable m=C3=AAme une fois convertie en=
+=20
+>>>>>>>>>>sound-object silencieux. Je sais pourquoi, et y rem=C3=A9dier=20
+>>>>>>>>>>serait compliqu=C3=A9 (mais jamais impossible).
+>>>>>>>>>>
+>>>>>>>>>>Dans ces exemples, a, y, z sont d=C3=A9finis dans -al.abc, mais y=
+=20
+>>>>>>>>>>et z n=E2=80=99existent pas dans -so.abc. Ils sont donc convertis =
+en=20
+>>>>>>>>>>silent sound-objects, ce qui veut dire qu=E2=80=99ils n=E2=80=99o=
+nt aucun code=20
+>>>>>>>>>>MIDi ni Csound, mais ils ont une m=C3=A9trique (1 unit=C3=A9 =3D=
+ 1000ms),=20
+>>>>>>>>>>un pivot au d=C3=A9but, ils sont relocatable et peuvent =C3=AAtre=
+=20
+>>>>>>>>>>recouverts mais pas tronqu=C3=A9s. Leurs pre-roll et post-roll so=
+nt=20
+>>>>>>>>>>nuls.
+>>>>>>>>>>Tous les param=C3=A8tres apparaissent dans la fonction
+>>>>>>>>>>int CreateSilentSoundObject(int p) de FillPhaseDiagam.c
+>>>>>>>>>>
+>>>>>>>>>>Je mets en PJ l=E2=80=99image bpda.html cr=C3=A9=C3=A9e par:
+>>>>>>>>>>a <<a>> _tempo(2) z <<y>> a <<a>> C4
+>>>>>>>>>>
+>>>>>>>>>>Les silent sound-objects apparaissent h=C3=A2chur=C3=A9s. Bien en=
+tendu,=20
+>>>>>>>>>>ils ne seront pas =E2=80=9Csilencieux=E2=80=9D dans ton impl=C3=
+=A9mentation !
+>>>>>>>>>>
+>>>>>>>>>>-al.abc
+>>>>>>>>>>-so.abc
+>>>>>>>>>>
+>>>>>>>>>>z
+>>>>>>>>>>
+>>>>>>>>>>a z a C4
+>>>>>>>>>>
+>>>>>>>>>>a <<z>> a
+>>>>>>>>>>
+>>>>>>>>>>a <<a>> _tempo(2) z <<y>> a <<a>> C4
+>>>>>>>>>>
+>>>>>>>>>>a Truc a
+>>>>>>>>>>
+>>>>>>>>>>{a Truc a, z C4}
+>>>>>>>>>>
+>>>>>>>>>>a <<Truc>> z a
+>>>>>>>>>>
+>>>>>>>>>>D4 z& a &z
+>>>>>>>>>>
+>>>>>>>>>>Truc& a &Truc // doesn't work
+>>>>>>>>>>
+>>>>>>>>>>Voil=C3=A0 pour le moment !
+>>>>>>>>>>
+>>>>>>>>>>Bernard
+>>>>>>>>>>
+>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>Date 21/03/2026 11:15:10
+>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconna=
+issance :=20
+>>>>>>>>>>sept dimensions"
+>>>>>>>>>>
+>>>>>>>>>>>G=C3=A9nial
+>>>>>>>>>>>J'ai tent=C3=A9 de faire =C3=A7a avec les objets sonores hier, a =
+partir=20
+>>>>>>>>>>>des infos que tu m'as donn=C3=A9, j'ai un peu progress=C3=A9 mai=
+s =C3=A7a=20
+>>>>>>>>>>>reste gal=C3=A8re.
+>>>>>>>>>>>Je suis pr=C3=AAt =C3=A0 tester =C3=A7a d=C3=A8s que c'est publi=
+=C3=A9! :)
+>>>>>>>>>>>
+>>>>>>>>>>>
+>>>>>>>>>>>Sam 21 mars 2026, =C3=A0 10:15, Bernard Bel a =C3=A9crit=E2=80=
+=AF:
+>>>>>>>>>>>>J=E2=80=99ai presque fini, encore des d=C3=A9tails =C3=A0 v=C3=
+=A9rifier=E2=80=A6
+>>>>>>>>>>>>
+>>>>>>>>>>>>A pr=C3=A9sent, les terminaux qui ne sont pas d=C3=A9finis comm=
+e=20
+>>>>>>>>>>>>sound-objets dans =E2=80=9C-so.=E2=80=9D sont cr=C3=A9=C3=A9s c=
+omme des =E2=80=9Csilent=20
+>>>>>>>>>>>>sound-objects=E2=80=9D qui ont tous les param=C3=A8tres d=E2=80=
+=99un sound-object=20
+>>>>>>>>>>>>mais pas de code MIDI ni Csound.
+>>>>>>>>>>>>
+>>>>>>>>>>>>Les variables sont converties en =E2=80=9Csilent sound-objects=
+=E2=80=9D.=20
+>>>>>>>>>>>>C=E2=80=99est =C3=A7a qui est plus compliqu=C3=A9 mais donne un =
+r=C3=A9sultat=20
+>>>>>>>>>>>>homog=C3=A8ne en sortie.
+>>>>>>>>>>>>
+>>>>>>>>>>>>Tous peuvent aussi =C3=AAtre en out-time.
+>>>>>>>>>>>>
+>>>>>>>>>>>>
+>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>Date 19/03/2026 23:06:32
+>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-recon=
+naissance :=20
+>>>>>>>>>>>>sept dimensions"
+>>>>>>>>>>>>
+>>>>>>>>>>>>>Au cas o=C3=B9 =C3=A7a ne serait pas clair, il faut que je pui=
+sse=20
+>>>>>>>>>>>>>seter la dur=C3=A9e si je veux, en fait, tous les aspects=20
+>>>>>>>>>>>>>temporels doivent =C3=AAtre identiques a une note normale.
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>Jeu 19 mars 2026, =C3=A0 22:54, Romain Peyrichou a =C3=A9crit=
+=E2=80=AF:
+>>>>>>>>>>>>>>Oui, c'est exactement =C3=A7a. Un terminal d=C3=A9clar=C3=A9=
+ dans=20
+>>>>>>>>>>>>>>l'alphabet, sans fichier -so., qui soit g=C3=A9r=C3=A9 exacte=
+ment=20
+>>>>>>>>>>>>>>comme une une note simple avec les m=C3=AAmes param=C3=A8tres =
+par=20
+>>>>>>>>>>>>>>d=C3=A9faut (dur=C3=A9e 1000ms =C3=A0 60 BPM).
+>>>>>>>>>>>>>>Et je n'utiliserai que 2 types d'objets:
+>>>>>>>>>>>>>>   - Sound objects minimaux (dur=C3=A9e > 0) : tout ce qui=20
+>>>>>>>>>>>>>>occupe du temps (gate, cv, silence)
+>>>>>>>>>>>>>>   - Out-time objects (dur=C3=A9e 0) : les trigs !, compil=C3=
+=A9s en=20
+>>>>>>>>>>>>>><<symbol>> par BP3
+>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>Avec =C3=A7a je peux faire tout ce que je veux.
+>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>Jeu 19 mars 2026, =C3=A0 22:19, Bernard Bel a =C3=A9crit=E2=
+=80=AF:
+>>>>>>>>>>>>>>>Superbe !
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>J=E2=80=99ai int=C3=A9gr=C3=A9 ces corrections et publi=C3=
+=A9 v3.3.14 :
+>>>>>>>>>>>>>>>https://github.com/bolprocessor/bolprocessor/tree/graphics-f=
+or-BP3
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>Fonctionne sur toutes les plateformes.
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>Je vais travailler sur les sound-objects =E2=80=9Cminimaux=
+=E2=80=9D, puis=20
+>>>>>>>>>>>>>>>sur un format json qui faciliterait la lecture de =E2=80=9C-=
+so.=E2=80=9D
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>Si je comprends bien, tu aurais besoin de ces=20
+>>>>>>>>>>>>>>>sound-objects sans prototypes pour les terminaux=20
+>>>>>>>>>>>>>>>(d=C3=A9clar=C3=A9s dans "-al.=E2=80=9D) mais non reli=C3=A9=
+s =C3=A0 un =E2=80=9C-so.=E2=80=9D=20
+>>>>>>>>>>>>>>>Sachant que le m=C3=A9tronome par d=C3=A9faut est =C3=A0 60=
+ bpm, la=20
+>>>>>>>>>>>>>>>dur=C3=A9e p_Dur par d=C3=A9faut serait 1000 ms. En fait, le=
+s=20
+>>>>>>>>>>>>>>>param=C3=A8tres par d=C3=A9faut doivent =C3=AAtre ceux des s=
+imple notes.=20
+>>>>>>>>>>>>>>>Je regarde =C3=A7a demain=E2=80=A6
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>Date 19/03/2026 18:42:12
+>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-re=
+connaissance=20
+>>>>>>>>>>>>>>>: sept dimensions"
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>Ab ben voil=C3=A0! :)
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>Le chargement de prototypes fonctionne en WASM
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>Ton retour m'a permsi d 'identifier mon bug  : la=20
+>>>>>>>>>>>>>>>>fonction `MIDItoPrototype()` (dans `MIDIstuff.c`, que je=20
+>>>>>>>>>>>>>>>>n'inclus pas dans le build WASM) =C3=A9tait stubb=C3=A9e=
+ =C3=A0 `return=20
+>>>>>>>>>>>>>>>>MISSED`. Du coup `LoadObjectPrototypes()` =C3=A9chouait=20
+>>>>>>>>>>>>>>>>syst=C3=A9matiquement puisqu'il fait `if(MIDItoPrototype(..=
+.)=20
+>>>>>>>>>>>>>>>>!=3D OK) goto ERR`.
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>J'ai impl=C3=A9ment=C3=A9 une version simplifi=C3=A9e de=20
+>>>>>>>>>>>>>>>>`MIDItoPrototype` dans les stubs WASM (copie des donn=C3=A9=
+es=20
+>>>>>>>>>>>>>>>>MIDI, calcul de `p_Dur` depuis le dernier timestamp, set=20
+>>>>>>>>>>>>>>>>de `p_MIDIsize` et `p_Type`). R=C3=A9sultat : le chargement=
+=20
+>>>>>>>>>>>>>>>>de vrais fichiers `-so.` fonctionne maintenant. Test=C3=A9=
+=20
+>>>>>>>>>>>>>>>>avec `-so.dhati` et ton `-so.abc` : les prototypes se=20
+>>>>>>>>>>>>>>>>chargent, les timings dans `p_Instance` sont corrects.
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>J'ai ajout=C3=A9 `bp3_load_prototypes(content)` dans l'API=
+=20
+>>>>>>>>>>>>>>>>WASM =E2=80=94 m=C3=AAme pattern que `bp3_load_settings` :=
+ le contenu=20
+>>>>>>>>>>>>>>>>du fichier `-so.` est pass=C3=A9 en string, les tags `<HTML=
+>`=20
+>>>>>>>>>>>>>>>>de l'interface PHP sont stripp=C3=A9s, et=20
+>>>>>>>>>>>>>>>>`LoadObjectPrototypes()` est appel=C3=A9.
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>Je t'envoie en PJ les 6 fichiers modifi=C3=A9s (avec les=20
+>>>>>>>>>>>>>>>>`#ifdef __BP3_WASM__`). Ils remplacent directement les=20
+>>>>>>>>>>>>>>>>fichiers correspondants dans `source/BP3/` sans affecter=20
+>>>>>>>>>>>>>>>>la compilation Mac/Windows/Linux.
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>Pour mon cas d'usage, =C3=A7a marche mais c'est complexe=20
+>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9rer les -so =C3=A0 la vol=C3=A9e et le format =
+est complexe.
+>>>>>>>>>>>>>>>>C'est sur que si tu fais des sound objects sans=20
+>>>>>>>>>>>>>>>>prototype =C3=A7a sera bien plus simple et robuste pour moi=
+.
+>>>>>>>>>>>>>>>>Si tu m'indiques quelles structures initialiser=20
+>>>>>>>>>>>>>>>>(`p_Dur`, `p_MIDIsize`, `p_Type`, autre chose ?), je=20
+>>>>>>>>>>>>>>>>peux aussi le faire c=C3=B4t=C3=A9 WASM.
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>L'autre piste serait la pr=C3=A9servation des variables=20
+>>>>>>>>>>>>>>>>non-remplac=C3=A9es que tu avais =C3=A9voqu=C3=A9e, =C3=A7a =
+r=C3=A9soudrait aussi=20
+>>>>>>>>>>>>>>>>mon probl=C3=A8me..
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>@+
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>Jeu 19 mars 2026, =C3=A0 18:07, Bernard Bel a =C3=A9crit=E2=
+=80=AF:
+>>>>>>>>>>>>>>>>>Wow, je suis rassur=C3=A9 au sujet de la branche=20
+>>>>>>>>>>>>>>>>>"graphics-for-BP3=E2=80=9D !
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>Le plus simple serait en effet de m=E2=80=99envoyer les=20
+>>>>>>>>>>>>>>>>>fichiers modifi=C3=A9s. Je les essaie en local puis je les=
+=20
+>>>>>>>>>>>>>>>>>mets sur gitHub de BP3.
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>Je vais travailler sur cette question de sound-object=20
+>>>>>>>>>>>>>>>>>sans prototype. Le =E2=80=9C-so.abc=E2=80=9D est en PJ.  L=
+a d=C3=A9finition=20
+>>>>>>>>>>>>>>>>>de =E2=80=98a=E2=80=99 commence =C3=A0 la ligne <HTML>a</H=
+TML>. Les MIDI=20
+>>>>>>>>>>>>>>>>>codes sont :
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>0 (ch 1) NoteOn 60 72
+>>>>>>>>>>>>>>>>>28 (ch 1) Channel pressure 0
+>>>>>>>>>>>>>>>>>444 (ch 1) Channel pressure 0
+>>>>>>>>>>>>>>>>>536 (ch 1) NoteOn 62 76
+>>>>>>>>>>>>>>>>>550 (ch 1) NoteOff 60 0
+>>>>>>>>>>>>>>>>>589 (ch 1) Channel pressure 0
+>>>>>>>>>>>>>>>>>655 (ch 1) Channel pressure 1
+>>>>>>>>>>>>>>>>>707 (ch 1) Channel pressure 2
+>>>>>>>>>>>>>>>>>885 (ch 1) Channel pressure 3
+>>>>>>>>>>>>>>>>>979 (ch 1) Channel pressure 2
+>>>>>>>>>>>>>>>>>984 (ch 1) Channel pressure 0
+>>>>>>>>>>>>>>>>>989 (ch 1) Channel pressure 0
+>>>>>>>>>>>>>>>>>999 (ch 1) NoteOff 62 0
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>soit en time-stamped :
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>30
+>>>>>>>>>>>>>>>>>144
+>>>>>>>>>>>>>>>>>60
+>>>>>>>>>>>>>>>>>72
+>>>>>>>>>>>>>>>>>7376
+>>>>>>>>>>>>>>>>>7168
+>>>>>>>>>>>>>>>>>113872
+>>>>>>>>>>>>>>>>>113664
+>>>>>>>>>>>>>>>>>137360
+>>>>>>>>>>>>>>>>>137278
+>>>>>>>>>>>>>>>>>137292
+>>>>>>>>>>>>>>>>>140944
+>>>>>>>>>>>>>>>>>140860
+>>>>>>>>>>>>>>>>>140800
+>>>>>>>>>>>>>>>>>150992
+>>>>>>>>>>>>>>>>>150784
+>>>>>>>>>>>>>>>>>167888
+>>>>>>>>>>>>>>>>>167681
+>>>>>>>>>>>>>>>>>181200
+>>>>>>>>>>>>>>>>>180994
+>>>>>>>>>>>>>>>>>226768
+>>>>>>>>>>>>>>>>>226563
+>>>>>>>>>>>>>>>>>250832
+>>>>>>>>>>>>>>>>>250626
+>>>>>>>>>>>>>>>>>252112
+>>>>>>>>>>>>>>>>>251904
+>>>>>>>>>>>>>>>>>253392
+>>>>>>>>>>>>>>>>>253184
+>>>>>>>>>>>>>>>>>255888
+>>>>>>>>>>>>>>>>>255806
+>>>>>>>>>>>>>>>>>255744
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>Et je regarde aussi la pr=C3=A9servation des variables.
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>Date 19/03/2026 17:53:25
+>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept dimensions"
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Merci pour ta r=C3=A9ponse d=C3=A9taill=C3=A9e, c'est tr=
+=C3=A8s =C3=A9clairant.
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Rebase sur graphics-for-BP3
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Bonne nouvelle : j'ai rebas=C3=A9 le portage WASM sur ta=
+=20
+>>>>>>>>>>>>>>>>>>branche `graphics-for-BP3`. tu avais fait le m=C3=AAme=20
+>>>>>>>>>>>>>>>>>>m=C3=A9nage que moi. Sur les 14 fichiers cl=C3=A9s du mot=
+eur=20
+>>>>>>>>>>>>>>>>>>j'ai 1 ligne de diff=C3=A9rence entre ma copie et tes=20
+>>>>>>>>>>>>>>>>>>sources.
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>La branche `wasm` sur mon fork pointe maintenant sur=20
+>>>>>>>>>>>>>>>>>>`graphics-for-BP3` :
+>>>>>>>>>>>>>>>>>>https://github.com/roomi-fields/bp3-engine/tree/wasm
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Mes modifications =E2=80=94 pr=C3=AAtes =C3=A0 merger
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Mes 6 modifications sont toutes conditionn=C3=A9es par=20
+>>>>>>>>>>>>>>>>>>`#ifdef __BP3_WASM__` =E2=80=94 elles n'affectent pas la=
+=20
+>>>>>>>>>>>>>>>>>>compilation Mac/Windows/Linux. Je peut te fournir les=20
+>>>>>>>>>>>>>>>>>>fichiers modifi=C3=A9s pour que tu les v=C3=A9rifies et l=
+es=20
+>>>>>>>>>>>>>>>>>>int=C3=A8gres dans `graphics-for-BP3`. Les voici en r=C3=
+=A9sum=C3=A9=20
+>>>>>>>>>>>>>>>>>>:
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>1. **ConsoleMain.c** =E2=80=94 `main()` wrapp=C3=A9 dans=
+ `#ifndef=20
+>>>>>>>>>>>>>>>>>>__BP3_WASM__`
+>>>>>>>>>>>>>>>>>>2. **ConsoleMessages.c** =E2=80=94 `gOutDestinations` mis =
+=C3=A0=20
+>>>>>>>>>>>>>>>>>>NULL en WASM + les `vfprintf(stdout)` directs guard=C3=A9=
+s.=20
+>>>>>>>>>>>>>>>>>>Chaque `vfprintf` en WASM traverse la fronti=C3=A8re=20
+>>>>>>>>>>>>>>>>>>WASM/JS et, avec la r=C3=A9cursion de Compute.c, =C3=A7a=
+ explose=20
+>>>>>>>>>>>>>>>>>>le stack JavaScript.
+>>>>>>>>>>>>>>>>>>3. **ProduceItems.c** =E2=80=94 `expand =3D FALSE` dans=
+=20
+>>>>>>>>>>>>>>>>>>`PrintResult()` en WASM (le 2e `PolyMake` pour=20
+>>>>>>>>>>>>>>>>>>l'expansion textuelle cause un stack overflow sur les=20
+>>>>>>>>>>>>>>>>>>grammaires complexes)
+>>>>>>>>>>>>>>>>>>4. **CompileProcs.c** =E2=80=94 condition `_scale()` adap=
+t=C3=A9e=20
+>>>>>>>>>>>>>>>>>>(on a `WriteMIDIfile=3DTRUE` mais pas de Csound natif)
+>>>>>>>>>>>>>>>>>>5. **Encode.c** =E2=80=94 m=C3=AAme adaptation pour l'enc=
+odage T44
+>>>>>>>>>>>>>>>>>>6. **Misc.c** =E2=80=94 `mysleep()` no-op en WASM (ni=20
+>>>>>>>>>>>>>>>>>>`_WIN64`, ni `__APPLE__`, ni `__linux__` ne sont=20
+>>>>>>>>>>>>>>>>>>d=C3=A9finis)
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Il y a aussi un guard sur=20
+>>>>>>>>>>>>>>>>>>`enable_raw_mode()`/`disable_raw_mode()` dans=20
+>>>>>>>>>>>>>>>>>>`ConsoleMain.c` (les `termios` ne sont pas disponibles=20
+>>>>>>>>>>>>>>>>>>en WASM m=C3=AAme si les headers existent).
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Je peux t'envoyer les fichiers directement si tu=20
+>>>>>>>>>>>>>>>>>>pr=C3=A9f=C3=A8res, ou tu peux les prendre depuis notre b=
+ranche=20
+>>>>>>>>>>>>>>>>>>`wasm` dans `csrc/bp3/`.
+>>>>>>>>>>>>>>>>>>Et si tu as besoin d'y int=C3=A9grer d'autres=20
+>>>>>>>>>>>>>>>>>>environnements, je peux t'aider =C3=A0 =C3=A7a.
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Sound objects et dilationratio
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Super pour le test avec `a _tempo(2) a`
+>>>>>>>>>>>>>>>>>>De mon c=C3=B4t=C3=A9, j'ai essay=C3=A9 de simuler des so=
+und objects=20
+>>>>>>>>>>>>>>>>>>sans passer par les fichiers prototypes (`-so.xxx`),=20
+>>>>>>>>>>>>>>>>>>en allouant un `pp_MIDIcode[j]` minimal (2 =C3=A9v=C3=A9n=
+ements=20
+>>>>>>>>>>>>>>>>>>NoteOn/NoteOff) et en settant `p_Dur[j]` et=20
+>>>>>>>>>>>>>>>>>>`p_MIDIsize[j]` directement. =C3=87a fonctionne pour les=
+ ~5=20
+>>>>>>>>>>>>>>>>>>premiers terminaux, mais au-del=C3=A0,=20
+>>>>>>>>>>>>>>>>>>`FillPhaseDiagram`/`TimeSet` donne une dur=C3=A9e 0 malgr=
+=C3=A9=20
+>>>>>>>>>>>>>>>>>>des valeurs correctes v=C3=A9rifi=C3=A9es juste avant `Ti=
+meSet`.
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Il me manque probablement une initialisation que=20
+>>>>>>>>>>>>>>>>>>`LoadObjectPrototypes()` fait normalement. Est-ce que=20
+>>>>>>>>>>>>>>>>>>tu pourrais m'envoyer le fichier `-so.` que tu as=20
+>>>>>>>>>>>>>>>>>>utilis=C3=A9 pour ton test (le `a` avec dur=C3=A9e 1000ms=
+) pour=20
+>>>>>>>>>>>>>>>>>>voir la diff=C3=A9rence?
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Passage -mi. =E2=86=92 -so. et format JSON
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Not=C3=A9 pour le renommage `-mi.` =E2=86=92 `-so.`. L'id=
+=C3=A9e de=20
+>>>>>>>>>>>>>>>>>>passer en JSON =C3=A7a sera plus simple pour moi aussi.
+>>>>>>>>>>>>>>>>>>En fait, mon cas d'usage id=C3=A9al serait tr=C3=A8s simp=
+le : un=20
+>>>>>>>>>>>>>>>>>>terminal avec juste un nom et une dur=C3=A9e de r=C3=A9f=
+=C3=A9rence.
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Syntaxe : silences, fractions, variables
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Merci pour les clarifications :
+>>>>>>>>>>>>>>>>>>- `- =3D 1` et les fractions `3/4`, `0/4` =E2=80=94 c'est =
+tr=C3=A8s=20
+>>>>>>>>>>>>>>>>>>utile pour le transpileur.
+>>>>>>>>>>>>>>>>>>- L'id=C3=A9e de conserver les variables non-remplac=C3=
+=A9es au=20
+>>>>>>>>>>>>>>>>>>lieu de les effacer est exactement ce dont j'aurait=20
+>>>>>>>>>>>>>>>>>>besoin. Si une variable `Truc` peut =C3=AAtre transmise e=
+n=20
+>>>>>>>>>>>>>>>>>>aval comme un =C3=A9v=C3=A9nement symbolique, =C3=A7a ser=
+ait parfait.
+>>>>>>>>>>>>>>>>>>- La syntaxe des variables (`\ - _ # @ % $ " '`=20
+>>>>>>>>>>>>>>>>>>accept=C3=A9s) est plus riche que ce que j'avait identifi=
+=C3=A9,=20
+>>>>>>>>>>>>>>>>>>et =C3=A7a va m'arranger merci.
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Sous-grammaires
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Tu as raison, je m'en suis rendu compte ce matin, j'ai=20
+>>>>>>>>>>>>>>>>>>commenc=C3=A9 a modifier l'article en local
+>>>>>>>>>>>>>>>>>>Merci encore pour ton aide !
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>Jeu 19 mars 2026, =C3=A0 16:31, Bernard Bel a =C3=A9crit=
+=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>Bonjour Romain,
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>J=E2=80=99ai =C3=A9t=C3=A9 paresseux ces derniers jours, =
+trop occup=C3=A9 =C3=A0=20
+>>>>>>>>>>>>>>>>>>>suivre l=E2=80=99actualit=C3=A9 internationale et munici=
+pale=E2=80=A6 Il=20
+>>>>>>>>>>>>>>>>>>>faut que je remette les mains dans le cambouis du=20
+>>>>>>>>>>>>>>>>>>>code BP3 ! Je regarde ce que tu proposes et ce qui=20
+>>>>>>>>>>>>>>>>>>>est d=C3=A9crit sur la doc technique BP3 WASM Port.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Si je comprends bien, il serait possible de modifier=20
+>>>>>>>>>>>>>>>>>>>les fichiers de source/BP3/ pour que le compilation=20
+>>>>>>>>>>>>>>>>>>>se fasse aussi bien dans les 3 versions syst=C3=A8me de=
+ la=20
+>>>>>>>>>>>>>>>>>>>console et dans WASM. D=E2=80=99o=C3=B9 l=E2=80=99utilis=
+ation de=20
+>>>>>>>>>>>>>>>>>>>=E2=80=9C__BP3_WASM__=E2=80=9D.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Mais je suis un peu surpris de voir l'ancien code BP2=20
+>>>>>>>>>>>>>>>>>>>resurgir sur =20
+>>>>>>>>>>>>>>>>>>>https://github.com/roomi-fields/bp3-engine/tree/wasm/sou=
+rce/BP2/=20
+>>>>>>>>>>>>>>>>>>>alors que tout le code BP3 se trouve maintenant dans=20
+>>>>>>>>>>>>>>>>>>>la branche =E2=80=9Cgraphics-for-BP3=E2=80=9D. C=E2=80=
+=99est la branche dans=20
+>>>>>>>>>>>>>>>>>>>laquelle je travaille depuis qu=E2=80=99Anthony Kozar a=
+=20
+>>>>>>>>>>>>>>>>>>>quitt=C3=A9 le projet. Son id=C3=A9e, =C3=A0 l=E2=80=99=
+=C3=A9poque, =C3=A9tait=20
+>>>>>>>>>>>>>>>>>>>d=E2=80=99essayer de maintenir la version BP2 (pour les=
+ vieux=20
+>>>>>>>>>>>>>>>>>>>Mac) en m=C3=AAme temps qu=E2=80=99on d=C3=A9veloppait l=
+a console. Mais=20
+>>>>>>>>>>>>>>>>>>>=C3=A7a donnait un code trop confus, et j=E2=80=99ai don=
+c=20
+>>>>>>>>>>>>>>>>>>>graduellement (mais pas totalement) effac=C3=A9 le code=
+=20
+>>>>>>>>>>>>>>>>>>>qui servait, entre autres, =C3=A0 g=C3=A9rer des menus s=
+ur=20
+>>>>>>>>>>>>>>>>>>>l=E2=80=99interface graphique du Mac. J=E2=80=99aurais d=
+=C3=BB faire un=20
+>>>>>>>>>>>>>>>>>>>=E2=80=9Cmerge=E2=80=9D de cette branche vers le =E2=80=
+=9Cmain=E2=80=9D, mais je =20
+>>>>>>>>>>>>>>>>>>>n=E2=80=99ai aucune confiance en mes interactions avec=
+=20
+>>>>>>>>>>>>>>>>>>>GitHub, donc j=E2=80=99en suis rest=C3=A9 =C3=A0 cette b=
+ranche=20
+>>>>>>>>>>>>>>>>>>>=E2=80=9Cgraphics-for-BP3=E2=80=9D qui est celle choisie =
+par les=20
+>>>>>>>>>>>>>>>>>>>scripts d=E2=80=99installation.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Je voudrais donc =C3=AAtre s=C3=BBr que ce que tu utilis=
+es pour=20
+>>>>>>>>>>>>>>>>>>>cr=C3=A9er le moteur BP3 WASM est bien le plus r=C3=A9ce=
+nt code=20
+>>>>>>>>>>>>>>>>>>>:
+>>>>>>>>>>>>>>>>>>>https://github.com/bolprocessor/bolprocessor/tree/graphi=
+cs-for-BP3
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Ce qui m=E2=80=99a mis la puce =C3=A0 l=E2=80=99oreille=
+ est que tu parles=20
+>>>>>>>>>>>>>>>>>>>de fichiers =E2=80=9C-mi.=E2=80=9D alors que le pr=C3=A9=
+fixe actuel est=20
+>>>>>>>>>>>>>>>>>>>devenu =E2=80=9C-so.=E2=80=9D sans que le format ait cha=
+ng=C3=A9. Ceci=20
+>>>>>>>>>>>>>>>>>>>afin de ne plus tout focaliser sur MIDI. D=C3=A9j=C3=A0, =
+ce=20
+>>>>>>>>>>>>>>>>>>>format devra =C3=AAtre r=C3=A9vis=C3=A9 car il utilise l=
+a vieille=20
+>>>>>>>>>>>>>>>>>>>m=C3=A9thode d=E2=80=99empiler des donn=C3=A9es dans un=
+ fichier texte=20
+>>>>>>>>>>>>>>>>>>>non structur=C3=A9. Il faut que je le reprenne pour=20
+>>>>>>>>>>>>>>>>>>>utiliser du json, ce  qui permettra de d=C3=A9finir chaq=
+ue=20
+>>>>>>>>>>>>>>>>>>>objet sonore dans un fichier s=C3=A9par=C3=A9. Le probl=
+=C3=A8me est=20
+>>>>>>>>>>>>>>>>>>>que la console appelle un fichier unique =E2=80=9C-so.=
+=E2=80=9D pour=20
+>>>>>>>>>>>>>>>>>>>lire les param=C3=A8tres de tous les objets sonores, y=
+=20
+>>>>>>>>>>>>>>>>>>>compris leurs codes MIDI et/ou Csound.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Je comprends dans ton message (et sur la doc=20
+>>>>>>>>>>>>>>>>>>>technique) qu=E2=80=99il y a des points d=E2=80=99incomp=
+atibilit=C3=A9 =C3=A0=20
+>>>>>>>>>>>>>>>>>>>r=C3=A9soudre avant de rendre automatique cette=20
+>>>>>>>>>>>>>>>>>>>compilation multi-usages. Et je suppose qu=E2=80=99une f=
+ois=20
+>>>>>>>>>>>>>>>>>>>ces points r=C3=A9solus tu pourrais me fournir les=20
+>>>>>>>>>>>>>>>>>>>fichiers source corrig=C3=A9s afin que je v=C3=A9rifie l=
+eur=20
+>>>>>>>>>>>>>>>>>>>fonctionnement dans l=E2=80=99utilisation=20
+>>>>>>>>>>>>>>>>>>>MacOS/Windows/Linux, et que je les transf=C3=A8re sur=20
+>>>>>>>>>>>>>>>>>>>GitHub pour les autres utilisateurs. Bien entendu, je=20
+>>>>>>>>>>>>>>>>>>>peux aussi faire les modifications vu que tu les=20
+>>>>>>>>>>>>>>>>>>>documentes.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Je vais donc =C3=A9tudier ces points pr=C3=A9cis. Voici=
+ juste=20
+>>>>>>>>>>>>>>>>>>>quelques r=C3=A9ponses rapides.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Point 4 : Les sound-objects existaient avant=20
+>>>>>>>>>>>>>>>>>>>l=E2=80=99impl=C3=A9mentation de _tempo(). On envoie au=
+=20
+>>>>>>>>>>>>>>>>>>>sound-object un dilation ratio (variable =E2=80=98alpha' =
+dans=20
+>>>>>>>>>>>>>>>>>>>MakeSound.c) qu=E2=80=99il peut accepter (OK rescale) ou=
+=20
+>>>>>>>>>>>>>>>>>>>g=C3=A9rer conditionnellement : Expand at will, Compress=
+=20
+>>>>>>>>>>>>>>>>>>>at will, Never Rescale, Dilation ratio range from xxx=20
+>>>>>>>>>>>>>>>>>>>to yyy %. Il peut  aussi envoyer le dilation ratio =C3=
+=A0=20
+>>>>>>>>>>>>>>>>>>>un controller MIDI x sur le canal y. Il faut que je=20
+>>>>>>>>>>>>>>>>>>>voie si on pourrait g=C3=A9rer la dilatation avec _tempo=
+()=20
+>>>>>>>>>>>>>>>>>>>au lieu de dilation ratio. Un sound object avec=20
+>>>>>>>>>>>>>>>>>>>"p_Dur=3D1000=E2=80=9D devrait durer 500 ms s=E2=80=99il =
+re=C3=A7oit un=20
+>>>>>>>>>>>>>>>>>>>alpha =3D 0.5, sauf s=E2=80=99il est "Never Rescale". (I=
+l faut=20
+>>>>>>>>>>>>>>>>>>>que je v=C3=A9rifie cette anomalie que tu signales.)
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Je  peux modifier sans souci les proc=C3=A9dures sur les=
+=20
+>>>>>>>>>>>>>>>>>>>sound-objects car il y a tr=C3=A8s peu d=E2=80=99exemple=
+s qui les=20
+>>>>>>>>>>>>>>>>>>>utilisent. L=E2=80=99id=C3=A9e n=E2=80=99a pas s=C3=A9du=
+it les utilisateurs,=20
+>>>>>>>>>>>>>>>>>>>apparemment, alors qu=E2=80=99elle ouvre sur un monde so=
+nore=20
+>>>>>>>>>>>>>>>>>>>bien plus vaste que les simple notes.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Du c=C3=B4t=C3=A9 de la syntaxe : =E2=80=9C-=E2=80=9C es=
+t strictement=20
+>>>>>>>>>>>>>>>>>>>=C3=A9quivalent =C3=A0 =E2=80=9C1=E2=80=9D, c=E2=80=99es=
+t simplement une repr=C3=A9sentation=20
+>>>>>>>>>>>>>>>>>>>plus intuitive des silences. Donc =E2=80=9C- - - 3/4=E2=
+=80=9D =3D =E2=80=9C3=20
+>>>>>>>>>>>>>>>>>>>3/4=E2=80=9D =3D =E2=80=9C15/4=E2=80=9D.  Toutes les fra=
+ctions d=E2=80=99entiers=20
+>>>>>>>>>>>>>>>>>>>positifs sont admises. M=C3=AAme =E2=80=9C0/4=E2=80=9D q=
+ui serait=20
+>>>>>>>>>>>>>>>>>>>interpr=C3=A9t=C3=A9 comme un objet absent, mais peut se=
+rvir de=20
+>>>>>>>>>>>>>>>>>>>marqueur dans des r=C3=A9=C3=A9critures.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>De m=C3=AAme, les variables qui ne sont pas replac=C3=A9=
+es par=20
+>>>>>>>>>>>>>>>>>>>des cha=C3=AEnes de terminaux en fin de r=C3=A9=C3=A9cri=
+ture sont=20
+>>>>>>>>>>>>>>>>>>>effac=C3=A9es. =C3=87a, par contre, je peux le modifier=
+ de =20
+>>>>>>>>>>>>>>>>>>>sorte que ce qu=E2=80=99elles repr=C3=A9sentent soit tra=
+it=C3=A9 en=20
+>>>>>>>>>>>>>>>>>>>aval. Et si une variable inutilis=C3=A9e =E2=80=9CTruc=
+=E2=80=9D doit=20
+>>>>>>>>>>>>>>>>>>>vraiment =C3=AAtre effac=C3=A9e, il suffit de mettre une=
+=20
+>>>>>>>>>>>>>>>>>>>derni=C3=A8re r=C3=A8gle :
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Truc =E2=80=94> lamda
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>(sachant que =E2=80=9Clambda=E2=80=9D est un mot r=C3=A9=
+serv=C3=A9 =C3=A0 une cha=C3=AEne=20
+>>>>>>>>>>>>>>>>>>>vide.)
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Syntaxe des variables (cf complete BP3 help file) :
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>BP3 recognizes strings starting with an uppercase=20
+>>>>>>>>>>>>>>>>>>>character as "variables" in grammars
+>>>>>>>>>>>>>>>>>>>     or in its glossary. It creates a variable if it=20
+>>>>>>>>>>>>>>>>>>>is not already there, so be careful
+>>>>>>>>>>>>>>>>>>>     with spelling mistakes.
+>>>>>>>>>>>>>>>>>>>=E2=80=A2 You may however start a variable with a lower-=
+case=20
+>>>>>>>>>>>>>>>>>>>character provided that you write
+>>>>>>>>>>>>>>>>>>>     it between |vertical bars|.
+>>>>>>>>>>>>>>>>>>>=E2=80=A2 Variable names may be of any length and may co=
+ntain=20
+>>>>>>>>>>>>>>>>>>>any character (standard or
+>>>>>>>>>>>>>>>>>>>     extended), digit, or punctuation symbol in the=20
+>>>>>>>>>>>>>>>>>>>set: \ - _ # @ % $ " % =E2=80=98
+>>>>>>>>>>>>>>>>>>>=E2=80=A2 Examples of well-formed variables:
+>>>>>>>>>>>>>>>>>>>       MyNewTrick  Good_enough  |behind_the_bars| =20
+>>>>>>>>>>>>>>>>>>>X67$-J  Big@mac  The"new=E2=80=9Dthing
+>>>>>>>>>>>>>>>>>>>       It's_there    De_No=C3=ABl_=C3=A0_P=C3=A2ques
+>>>>>>>>>>>>>>>>>>>       Peter-Piper-pick'd-a-pick-of-pickl'd-pepper
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>=C3=87a aussi, =C3=A7a peut =C3=AAtre modifi=C3=A9 si n=
+=C3=A9cessaire.
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Pour les autres points, je vais regarder en priorit=C3=
+=A9=E2=80=A6
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>Un point qui me trotte dans la t=C3=AAte : je ne suis pa=
+s=20
+>>>>>>>>>>>>>>>>>>>s=C3=BBr que tu aies formalis=C3=A9 le mod=C3=A8le de=20
+>>>>>>>>>>>>>>>>>>>transformational grammars, =C3=A0 savoir que chaque=20
+>>>>>>>>>>>>>>>>>>>=E2=80=9Cgrammaire=E2=80=9D BP est une suite de subgramm=
+ars, et qu=E2=80=99on=20
+>>>>>>>>>>>>>>>>>>>passe de l=E2=80=99une =C3=A0 l=E2=80=99autre quand plus =
+aucune r=C3=A8gle=20
+>>>>>>>>>>>>>>>>>>>n=E2=80=99est candidate. Je n=E2=80=99en vois pas de men=
+tion sur la=20
+>>>>>>>>>>>>>>>>>>>page=20
+>>>>>>>>>>>>>>>>>>>https://roomi-fields.com/en/articles/derivation-rules-mo=
+des-bp3/
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>Date 19/03/2026 13:10:19
+>>>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept dimensions"
+>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Salut Bernard,
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>J'ai avanc=C3=A9 le travail sur BPscript.
+>>>>>>>>>>>>>>>>>>>>D=C3=A9mo dispo ici: https://roomi-fields.com/bpscript/
+>>>>>>>>>>>>>>>>>>>>D=C3=A9tails de l'archi propos=C3=A9e :=20
+>>>>>>>>>>>>>>>>>>>>https://roomi-fields.com/articles/bpscript-sous-le-capo=
+t-architecture/
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Voici un lien vers le document qui explique le=20
+>>>>>>>>>>>>>>>>>>>>portage du moteur BP3 en WASM:
+>>>>>>>>>>>>>>>>>>>>https://github.com/roomi-fields/bp3-engine/blob/wasm/WA=
+SM_PORT.md
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Les modifications au code C sont minimes =E2=80=94 6 bl=
+ocs=20
+>>>>>>>>>>>>>>>>>>>>`#ifdef __BP3_WASM__` pour d=C3=A9sactiver les parties=
+=20
+>>>>>>>>>>>>>>>>>>>>Mac/GUI et adapter quelques chemins. Le code m=C3=A9tie=
+r=20
+>>>>>>>>>>>>>>>>>>>>(grammaires, d=C3=A9rivation, polym=C3=A9trie, TimeSet) =
+est=20
+>>>>>>>>>>>>>>>>>>>>identique.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Comme tu le sais, l'id=C3=A9e de BPscript est d'utilise=
+r=20
+>>>>>>>>>>>>>>>>>>>>BP3 uniquement pour d=C3=A9river la grammaire, r=C3=A9s=
+oudre=20
+>>>>>>>>>>>>>>>>>>>>la polym=C3=A9trie, calculer les timestamps. Tout le=20
+>>>>>>>>>>>>>>>>>>>>reste =E2=80=94 son, MIDI, Csound, audio =E2=80=94 est=
+ g=C3=A9r=C3=A9 =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>l'ext=C3=A9rieur par JavaScript (Web Audio, MIDI extern=
+e,=20
+>>>>>>>>>>>>>>>>>>>>OSC vers SuperCollider, etc.).
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Concr=C3=A8tement, on a besoin de r=C3=A9cup=C3=A9rer u=
+ne liste de=20
+>>>>>>>>>>>>>>>>>>>>terminaux horodat=C3=A9s :
+>>>>>>>>>>>>>>>>>>>>```
+>>>>>>>>>>>>>>>>>>>>[
+>>>>>>>>>>>>>>>>>>>>   {"token": "C4", "start": 0, "end": 500},
+>>>>>>>>>>>>>>>>>>>>   {"token": "env1", "start": 0, "end": 500},
+>>>>>>>>>>>>>>>>>>>>   {"token": "D4", "start": 500, "end": 1000},
+>>>>>>>>>>>>>>>>>>>>   ...
+>>>>>>>>>>>>>>>>>>>>]
+>>>>>>>>>>>>>>>>>>>>```
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Les terminaux sont des noms symboliques =E2=80=94 c'est =
+le=20
+>>>>>>>>>>>>>>>>>>>>dispatcher JavaScript qui d=C3=A9cide quoi en faire (no=
+te=20
+>>>>>>>>>>>>>>>>>>>>MIDI, enveloppe ADSR, commande DMX, message OSC...).=20
+>>>>>>>>>>>>>>>>>>>>BP3 n'a pas besoin de savoir ce que les noms=20
+>>>>>>>>>>>>>>>>>>>>signifient.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>O=C3=B9 on est bloqu=C3=A9s
+>>>>>>>>>>>>>>>>>>>>De ma compr=C3=A9hension, pour que BP3 calcule des=20
+>>>>>>>>>>>>>>>>>>>>timestamps, un terminal doit passer par=20
+>>>>>>>>>>>>>>>>>>>>`FillPhaseDiagram` =E2=86=92 `TimeSet`. Mais=20
+>>>>>>>>>>>>>>>>>>>>`FillPhaseDiagram` (ligne 630 de FillPhaseDiagram.c)=20
+>>>>>>>>>>>>>>>>>>>>convertit en silence tout terminal qui n'est ni une=20
+>>>>>>>>>>>>>>>>>>>>note reconnue (T25) ni un sound object avec=20
+>>>>>>>>>>>>>>>>>>>>prototype MIDI (`p_MIDIsize[j] > 0`).
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>On s'est retrouv=C3=A9s coinc=C3=A9s dans 5 impasses :
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>1. Alphabet standard (OCT) =E2=80=94 les notes sont=20
+>>>>>>>>>>>>>>>>>>>>reconnues et horodat=C3=A9es, mais `Encode()` matche le=
+s=20
+>>>>>>>>>>>>>>>>>>>>noms de notes de toutes les conventions=20
+>>>>>>>>>>>>>>>>>>>>simultan=C3=A9ment (English + French + Indian), m=C3=AA=
+me=20
+>>>>>>>>>>>>>>>>>>>>quand `NoteConvention` est sett=C3=A9. Un terminal `re4=
+`=20
+>>>>>>>>>>>>>>>>>>>>est toujours captur=C3=A9 comme note indienne. Et les=
+=20
+>>>>>>>>>>>>>>>>>>>>terminaux custom (enveloppes, drums) m=C3=A9lang=C3=A9s =
+dans=20
+>>>>>>>>>>>>>>>>>>>>le m=C3=AAme alphabet ont dur=C3=A9e 0.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>2. Sound objects simul=C3=A9s =E2=80=94 on a essay=C3=
+=A9 d'allouer un=20
+>>>>>>>>>>>>>>>>>>>>`pp_MIDIcode[j]` minimal (2 =C3=A9v=C3=A9nements=20
+>>>>>>>>>>>>>>>>>>>>NoteOn/NoteOff) pour simuler un prototype. =C3=87a marc=
+he=20
+>>>>>>>>>>>>>>>>>>>>pour ~5 terminaux, mais au-del=C3=A0,=20
+>>>>>>>>>>>>>>>>>>>>`FillPhaseDiagram`/`TimeSet` donne dur=C3=A9e 0 malgr=
+=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>`p_MIDIsize[j] =3D 2` et `p_Dur[j] =3D 1000` v=C3=A9rif=
+i=C3=A9s=20
+>>>>>>>>>>>>>>>>>>>>juste avant l'appel =C3=A0 `TimeSet`. Il manque=20
+>>>>>>>>>>>>>>>>>>>>probablement une initialisation que=20
+>>>>>>>>>>>>>>>>>>>>`LoadObjectPrototypes()` fait.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>3. Alphabet custom =E2=80=94 des noms comme `Kick`, `en=
+v1`,=20
+>>>>>>>>>>>>>>>>>>>>`drone` ne sont reconnus ni comme notes ni comme=20
+>>>>>>>>>>>>>>>>>>>>sound objects =E2=86=92 `FillPhaseDiagram` les traite c=
+omme=20
+>>>>>>>>>>>>>>>>>>>>des silences =E2=86=92 pas de timestamps.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>4. Dur=C3=A9e absolue vs tempo =E2=80=94 les notes (T25=
+)=20
+>>>>>>>>>>>>>>>>>>>>re=C3=A7oivent `prodtempo` (proportionnel au tempo). Le=
+s=20
+>>>>>>>>>>>>>>>>>>>>sound objects re=C3=A7oivent `p_Dur` en millisecondes=
+=20
+>>>>>>>>>>>>>>>>>>>>absolues. =C3=80 120 BPM, une note dure 500ms mais un=
+=20
+>>>>>>>>>>>>>>>>>>>>sound object avec `p_Dur=3D1000` dure 1000ms =E2=80=94=
+ il ne=20
+>>>>>>>>>>>>>>>>>>>>suit pas le tempo.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>5. Vrais prototypes =E2=80=94 le format des fichiers=20
+>>>>>>>>>>>>>>>>>>>>`-mi.xxx` est trop complexe pour =C3=AAtre g=C3=A9n=C3=
+=A9r=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>programmatiquement (568 lignes par terminal dans=20
+>>>>>>>>>>>>>>>>>>>>`-mi.abc`).
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Ce qu'on aimerait savoir
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>1. Quel est le bon m=C3=A9canisme pour qu'un terminal=
+=20
+>>>>>>>>>>>>>>>>>>>>custom occupe du temps sans =C3=AAtre une note ni un=20
+>>>>>>>>>>>>>>>>>>>>instrument Csound ? Est-ce qu'il existe un chemin=20
+>>>>>>>>>>>>>>>>>>>>plus simple que les prototypes `-mi.xxx` =E2=80=94 par=
+=20
+>>>>>>>>>>>>>>>>>>>>exemple un flag, ou une convention d'alphabet ?
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>2. Pourquoi `FillPhaseDiagram` donne dur=C3=A9e 0 =C3=
+=A0=20
+>>>>>>>>>>>>>>>>>>>>certains indices quand `p_MIDIsize[j] > 0` et=20
+>>>>>>>>>>>>>>>>>>>>`p_Dur[j] > 0` ? (=C3=A7a marche pour les 5 premiers, p=
+as=20
+>>>>>>>>>>>>>>>>>>>>au-del=C3=A0)
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>3. Est-ce que `Encode()` matche intentionnellement=20
+>>>>>>>>>>>>>>>>>>>>toutes les conventions de notes simultan=C3=A9ment ? Si=
+=20
+>>>>>>>>>>>>>>>>>>>>oui, comment emp=C3=AAcher un terminal custom d'=C3=AAt=
+re=20
+>>>>>>>>>>>>>>>>>>>>interpr=C3=A9t=C3=A9 comme une note ?
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>4. Comment donner une dur=C3=A9e relative au tempo (com=
+me=20
+>>>>>>>>>>>>>>>>>>>>`prodtempo`) =C3=A0 un sound object, plut=C3=B4t qu'une =
+dur=C3=A9e=20
+>>>>>>>>>>>>>>>>>>>>absolue ?
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Observations sur le code
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>En travaillant sur le portage, on a not=C3=A9 quelques=
+=20
+>>>>>>>>>>>>>>>>>>>>choses qui pourraient t'int=C3=A9resser :
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>- **`ResizeObjectSpace()` dans GetRelease.c** : le=20
+>>>>>>>>>>>>>>>>>>>>bloc de reset des prototypes (lignes ~1109-1131)=20
+>>>>>>>>>>>>>>>>>>>>n'est jamais ex=C3=A9cut=C3=A9 (`reset =3D 0; if(reset) =
+{ ...=20
+>>>>>>>>>>>>>>>>>>>>}`). C'est intentionnel ?
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>- **`BPPrintMessage()` dans ConsoleMessages.c** :=20
+>>>>>>>>>>>>>>>>>>>>les canaux `odError` et `odInfo` =C3=A9crivent=20
+>>>>>>>>>>>>>>>>>>>>directement sur `stdout` au lieu de passer par=20
+>>>>>>>>>>>>>>>>>>>>`gOutDestinations[]` (les lignes=20
+>>>>>>>>>>>>>>>>>>>>`vfprintf(gOutDestinations[...])` sont comment=C3=A9es)=
+.=20
+>>>>>>>>>>>>>>>>>>>>=C3=87a emp=C3=AAche la redirection de ces canaux.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Ce qui fonctionne bien
+>>>>>>>>>>>>>>>>>>>>Le portage WASM est solide pour tout le reste :
+>>>>>>>>>>>>>>>>>>>>- 44 grammaires test=C3=A9es
+>>>>>>>>>>>>>>>>>>>>- Polym=C3=A9trie, d=C3=A9rivation, modes (ORD, RND, SU=
+B1,=20
+>>>>>>>>>>>>>>>>>>>>LIN) =E2=80=94 tout correct
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Syntaxe BP3
+>>>>>>>>>>>>>>>>>>>>Bon, =C3=A7a c'=C3=A9tait pour le moteur, j'aurais auss=
+i=20
+>>>>>>>>>>>>>>>>>>>>besoin de tes lumi=C3=A8res sur des aspects syntaxiques=
+.
+>>>>>>>>>>>>>>>>>>>>- Quelle est la diff=C3=A9rence entre - (silence) et un=
+=20
+>>>>>>>>>>>>>>>>>>>>nombre nu comme 1 dans une s=C3=A9quence (cf. la=20
+>>>>>>>>>>>>>>>>>>>>grammaire checktemplates, r=C3=A8gle 4 : S <-> A A 1 3/=
+2=20
+>>>>>>>>>>>>>>>>>>>>A)
+>>>>>>>>>>>>>>>>>>>>- Si on veut utiliser l'apostrophe dans les noms=20
+>>>>>>>>>>>>>>>>>>>>(F'24, A', T'5) =E2=80=94 quelles sont les r=C3=A8gles=
+ exactes ?
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Paper
+>>>>>>>>>>>>>>>>>>>>Pour la publication, j'ai lu le call de Special=20
+>>>>>>>>>>>>>>>>>>>>issue d'Entropy en d=C3=A9tail =E2=80=94 c'est pertinen=
+t pour nos=20
+>>>>>>>>>>>>>>>>>>>>travaux. Les th=C3=A8mes "information dynamics in=20
+>>>>>>>>>>>>>>>>>>>>generative models (music, language, symbolic=20
+>>>>>>>>>>>>>>>>>>>>sequences)", "surprisal shaping" et "directed=20
+>>>>>>>>>>>>>>>>>>>>information" correspondent presque mot pour mot =C3=A0=
+ ce=20
+>>>>>>>>>>>>>>>>>>>>que je d=C3=A9veloppe dans Paper que je viens de propos=
+er=20
+>>>>>>>>>>>>>>>>>>>>=C3=A0 Information and Computation   (D4 Information, D=
+6=20
+>>>>>>>>>>>>>>>>>>>>Temporality).
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Proposition de co-publication
+>>>>>>>>>>>>>>>>>>>>J'ai une id=C3=A9e de paper qui collerait parfaitement=
+ au=20
+>>>>>>>>>>>>>>>>>>>>scope ET qui nous impliquerait tous les deux=20
+>>>>>>>>>>>>>>>>>>>>naturellement. Le constat : personne n'a jamais=20
+>>>>>>>>>>>>>>>>>>>>mesur=C3=A9 empiriquement le surprisal des deux c=C3=B4=
+t=C3=A9s =E2=80=94=20
+>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration ET reconnaissance =E2=80=94 sur la =
+m=C3=AAme grammaire=20
+>>>>>>>>>>>>>>>>>>>>formelle. Les travaux existants (IDyOM/Pearce,=20
+>>>>>>>>>>>>>>>>>>>>Dubnov) ne mesurent que le c=C3=B4t=C3=A9 auditeur. BP3 =
+est le=20
+>>>>>>>>>>>>>>>>>>>>seul syst=C3=A8me musical o=C3=B9 cette comparaison est=
+=20
+>>>>>>>>>>>>>>>>>>>>possible, gr=C3=A2ce aux modes PROD et ANAL sur le m=C3=
+=AAme=20
+>>>>>>>>>>>>>>>>>>>>fichier de grammaire.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>L'id=C3=A9e concr=C3=A8te :
+>>>>>>>>>>>>>>>>>>>>- D=C3=A9finir deux mesures : le surprisal g=C3=A9n=C3=
+=A9ratif=20
+>>>>>>>>>>>>>>>>>>>>S_gen (le co=C3=BBt informationnel de chaque choix de=
+=20
+>>>>>>>>>>>>>>>>>>>>r=C3=A8gle en PROD) et le surprisal analytique S_rec (l=
+e=20
+>>>>>>>>>>>>>>>>>>>>co=C3=BBt de chaque =C3=A9tape d'acceptation en ANAL)
+>>>>>>>>>>>>>>>>>>>>- Instrumenter BP3 pour logger les choix de r=C3=A8gles=
+=20
+>>>>>>>>>>>>>>>>>>>>et calculer ces mesures sur des grammaires r=C3=A9elles=
+=20
+>>>>>>>>>>>>>>>>>>>>(qa'idas, par exemple)
+>>>>>>>>>>>>>>>>>>>>- Montrer que l'asym=C3=A9trie =CE=94S =3D S_rec - S_ge=
+n est=20
+>>>>>>>>>>>>>>>>>>>>consistamment positive (la reconnaissance est=20
+>>>>>>>>>>>>>>>>>>>>informationnellement plus co=C3=BBteuse que la=20
+>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration)
+>>>>>>>>>>>>>>>>>>>>- Montrer que le cycle PROD=E2=86=92ANAL=E2=86=92re-PRO=
+D r=C3=A9duit=20
+>>>>>>>>>>>>>>>>>>>>cette asym=C3=A9trie au fil des it=C3=A9rations=20
+>>>>>>>>>>>>>>>>>>>>(l'apprentissage des poids "r=C3=A9gularise" la=20
+>>>>>>>>>>>>>>>>>>>>grammaire)
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Je pourrais m'occuper du cadre th=C3=A9orique=20
+>>>>>>>>>>>>>>>>>>>>(formalismes, lien avec papre pr=C3=A9c=C3=A9dent, r=C3=
+=A9daction,=20
+>>>>>>>>>>>>>>>>>>>>biblio), et toi de l'instrumentation du moteur=20
+>>>>>>>>>>>>>>>>>>>>(logging des choix de r=C3=A8gles dans le code C) et du=
+=20
+>>>>>>>>>>>>>>>>>>>>corpus de grammaires. Le paper serait le volet=20
+>>>>>>>>>>>>>>>>>>>>exp=C3=A9rimental qui manque =C3=A0 mon paper pr=C3=A9c=
+=C3=A9dent =E2=80=94 des=20
+>>>>>>>>>>>>>>>>>>>>mesures concr=C3=A8tes, pas juste de la th=C3=A9orie.
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Par-contre, ils demandent 2600 CHF d'APC pour la=20
+>>>>>>>>>>>>>>>>>>>>publication en open access. c'est hors budget pour=20
+>>>>>>>>>>>>>>>>>>>>moi. Est-ce que ton ancien labo pourrait=20
+>>>>>>>>>>>>>>>>>>>>=C3=A9ventuellement couvrir ces frais, ou est-ce que=20
+>>>>>>>>>>>>>>>>>>>>Shlomo, en tant que guest editor, pourrait appuyer=20
+>>>>>>>>>>>>>>>>>>>>une demande de waiver?
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Bien sur toutes les remarques et les feedbacks sur=20
+>>>>>>>>>>>>>>>>>>>>ma proposition sont les bienvenues.
+>>>>>>>>>>>>>>>>>>>>Merci pour ton aide !
+>>>>>>>>>>>>>>>>>>>>Romain
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>Sam 14 mars 2026, =C3=A0 17:57, Romain Peyrichou a=20
+>>>>>>>>>>>>>>>>>>>>=C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>Ok, en effet, j'avais pas saisi tout =C3=A7a.
+>>>>>>>>>>>>>>>>>>>>>Je suis vraiment impressionn=C3=A9 par l'envergure de=
+=20
+>>>>>>>>>>>>>>>>>>>>>ton travail.
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>Donc j'int=C3=A8gre les notes li=C3=A9es et spatialeme=
+nt=20
+>>>>>>>>>>>>>>>>>>>>>disjointes, tu n'as pas besoin d'int=C3=A9grer ~ a la=
+=20
+>>>>>>>>>>>>>>>>>>>>>place de &, c'est une simple traduction, mais je te=20
+>>>>>>>>>>>>>>>>>>>>>remercie.
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>De mon cot=C3=A9 j'ai commenc=C3=A9 =C3=A0 "faire" tra=
+duire les=20
+>>>>>>>>>>>>>>>>>>>>>grammaires BP3 de test que j'ai en BPScript pour=20
+>>>>>>>>>>>>>>>>>>>>>mettre a l'=C3=A9preuve la capacit=C3=A9 d'expression.=
+.. et=20
+>>>>>>>>>>>>>>>>>>>>>je d=C3=A9couvre un nouveau truc a presque chaque=20
+>>>>>>>>>>>>>>>>>>>>>exemple...
+>>>>>>>>>>>>>>>>>>>>>D'ailleurs j'ai une question pour toi en esp=C3=A9rant=
+=20
+>>>>>>>>>>>>>>>>>>>>>que tu n'aies pas d=C3=A9j=C3=A0 =C3=A9voqu=C3=A9 le s=
+ujet: quelle est=20
+>>>>>>>>>>>>>>>>>>>>>la diff=C3=A9rence entre - et 1 dans une s=C3=A9quence =
+?=20
+>>>>>>>>>>>>>>>>>>>>>Est-ce que A - B et A 1 B produisent le m=C3=AAme=20
+>>>>>>>>>>>>>>>>>>>>>r=C3=A9sultat temporel ?"
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>Pour la topologie, je ne m'aventurerai pas a=20
+>>>>>>>>>>>>>>>>>>>>>toucher a ton travail sur le sujet.
+>>>>>>>>>>>>>>>>>>>>>La strat=C3=A9gie que j'envisage pour l'instant est la=
+=20
+>>>>>>>>>>>>>>>>>>>>>suivante : BPscript produit une grammaire, BP3 la=20
+>>>>>>>>>>>>>>>>>>>>>d=C3=A9rive ET fait le time-setting, puis sort la=20
+>>>>>>>>>>>>>>>>>>>>>s=C3=A9quence horodat=C3=A9e. On ne refait pas ce trav=
+ail.
+>>>>>>>>>>>>>>>>>>>>>Donc, on ne demande pas a la couche son de=20
+>>>>>>>>>>>>>>>>>>>>>comprendre (ni de manipuler les contraintes=20
+>>>>>>>>>>>>>>>>>>>>>topologiques. Elles restent dans le moteur BP3. Les=20
+>>>>>>>>>>>>>>>>>>>>>runtimes re=C3=A7oivent des =C3=A9v=C3=A9nements avec=
+ des dates et=20
+>>>>>>>>>>>>>>>>>>>>>dur=C3=A9es d=C3=A9j=C3=A0 calcul=C3=A9es par le time-=
+setting de BP3.
+>>>>>>>>>>>>>>>>>>>>>Dans ma logique, si on voulait pouvoir interagir=20
+>>>>>>>>>>>>>>>>>>>>>depuis la couche son ou script vers la couche=20
+>>>>>>>>>>>>>>>>>>>>>topologique alors on peut le faire via le trigger.
+>>>>>>>>>>>>>>>>>>>>>Si j'y arrive, mon but serait de :
+>>>>>>>>>>>>>>>>>>>>>- laisser =C3=A0 BP toute la logique temporelle=20
+>>>>>>>>>>>>>>>>>>>>>(orchestration / s=C3=A9quenceur structurel) et qu'il=
+=20
+>>>>>>>>>>>>>>>>>>>>>joue le r=C3=B4le de chef d'orchestre en pilotant des=
+=20
+>>>>>>>>>>>>>>>>>>>>>=C3=A9v=C3=A8nements dans tout et n'importe quoi.
+>>>>>>>>>>>>>>>>>>>>>- invoquer les diff=C3=A9rents runtimes dans leurs=20
+>>>>>>>>>>>>>>>>>>>>>contextes/langages natifs
+>>>>>>>>>>>>>>>>>>>>>- avoir BPScript pour exprimer tout =C3=A7a de fa=C3=
+=A7on=20
+>>>>>>>>>>>>>>>>>>>>>simple et intuitive (plus j'avance et moins =C3=A7a me=
+=20
+>>>>>>>>>>>>>>>>>>>>>parait simple lol)
+>>>>>>>>>>>>>>>>>>>>>Et pour l'instant, m=C3=AAme si quelques fois y'a des=
+=20
+>>>>>>>>>>>>>>>>>>>>>trucs dont je ne comprends pas totalement le sens=20
+>>>>>>>>>>>>>>>>>>>>>ou d'autres que je me dis que je pourrais peut =C3=AAt=
+re=20
+>>>>>>>>>>>>>>>>>>>>>faire autrement, mon id=C3=A9e est de garder BP3 tel=
+=20
+>>>>>>>>>>>>>>>>>>>>>quel et que le BPScript s'y adapte car je me dis=20
+>>>>>>>>>>>>>>>>>>>>>que tu as eu de tr=C3=A8s bonnes raisons de faire tout=
+=20
+>>>>>>>>>>>>>>>>>>>>>ce que tu as fait.
+>>>>>>>>>>>>>>>>>>>>>Par-contre, je comprends que tu as int=C3=A9gr=C3=A9=
+=20
+>>>>>>>>>>>>>>>>>>>>>=C3=A9norm=C3=A9ment d'=C3=A9l=C3=A9ments ce qui donne =
+un programme=20
+>>>>>>>>>>>>>>>>>>>>>assez costaud... et mon id=C3=A9e est de ne pas utilis=
+er=20
+>>>>>>>>>>>>>>>>>>>>>BP3 pour tout ce qui n'est pas li=C3=A9 =C3=A0 l'organ=
+isation=20
+>>>>>>>>>>>>>>>>>>>>>temporelle... ce qui pourrait peut =C3=AAtre donner=20
+>>>>>>>>>>>>>>>>>>>>>lieu, plus tard, si jamais j'arrive a faire ce que=20
+>>>>>>>>>>>>>>>>>>>>>j'imagine, a pouvoir d=C3=A9velopp=C3=A9 un moteur BP=
+ un peu=20
+>>>>>>>>>>>>>>>>>>>>>all=C3=A9g=C3=A9 d'=C3=A9l=C3=A9ments repouss=C3=A9s =
+=C3=A0 l'ext=C3=A9rieur.
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>Merci pour la clarification des origines, je=20
+>>>>>>>>>>>>>>>>>>>>>corrige aussi.
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>Et merci pour l'appel a communication, je vais=20
+>>>>>>>>>>>>>>>>>>>>>regarder si j'ai un draft sur un sujet appropri=C3=A9=
+ et=20
+>>>>>>>>>>>>>>>>>>>>>je te tiens au courant.
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>Pour arXiv, j'ai demand=C3=A9 a plusieurs personnes qu=
+e=20
+>>>>>>>>>>>>>>>>>>>>>je citais et Maziar Kanani m'a coopt=C3=A9 dans la bon=
+ne=20
+>>>>>>>>>>>>>>>>>>>>>section ce qui m'a permis de publier le draft.
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>Sam 14 mars 2026, =C3=A0 14:37, Bernard Bel a =C3=A9cr=
+it=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>Bonjour Romain,
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Je profite d=E2=80=99une pause pour lire plus en d=C3=
+=A9tail ta=20
+>>>>>>>>>>>>>>>>>>>>>>plus r=C3=A9cente version de BPscript.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>La notion de =E2=80=9Cnote li=C3=A9e=E2=80=9D (~) n=
+=E2=80=99est pas claire. En=20
+>>>>>>>>>>>>>>>>>>>>>>musique occidentale, la note li=C3=A9e sert soit =C3=
+=A0=20
+>>>>>>>>>>>>>>>>>>>>>>prolonger la dur=C3=A9e d=E2=80=99une note (liaison d=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>prolongation), soit =C3=A0 lier plusieurs notes pour=
+ un=20
+>>>>>>>>>>>>>>>>>>>>>>phras=C3=A9 fluide (liaison m=C3=A9lodique). Or ce n=
+=E2=80=99est pas=20
+>>>>>>>>>>>>>>>>>>>>>>le m=C3=AAme traitement en informatique.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Pour lier plusieurs notes successives (liaison=20
+>>>>>>>>>>>>>>>>>>>>>>m=C3=A9lodique, slur) il suffit d'augmenter un peu=20
+>>>>>>>>>>>>>>>>>>>>>>leurs dur=C3=A9es afin que le NoteOff arrive apr=C3=
+=A8s le=20
+>>>>>>>>>>>>>>>>>>>>>>NoteOn de la note suivante. Quand BP3 doit le=20
+>>>>>>>>>>>>>>>>>>>>>>faire pour traduire une partition MusicXML, il=20
+>>>>>>>>>>>>>>>>>>>>>>ins=C3=A8re des instructions _legato(x) avec un x qui=
+,=20
+>>>>>>>>>>>>>>>>>>>>>>par d=C3=A9faut, vaut 20, soit 20% de prolongation.=
+=20
+>>>>>>>>>>>>>>>>>>>>>>Voir=20
+>>>>>>>>>>>>>>>>>>>>>>https://bolprocessor.org/importing-musicxml/#slurs
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Par contre les notes li=C3=A9es en prolongation sont=
+=20
+>>>>>>>>>>>>>>>>>>>>>>plus compliqu=C3=A9es, car elles peuvent =C3=AAtre s=
+=C3=A9par=C3=A9es=20
+>>>>>>>>>>>>>>>>>>>>>>par d=E2=80=99autres =C3=A9v=C3=A9nements.  Exemple :
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>C4& D4 E4 &C4& F4 &C4
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Et ici on utilise =E2=80=98&=E2=80=99 apr=C3=A8s/avan=
+t la note pour=20
+>>>>>>>>>>>>>>>>>>>>>>indiquer les points de suture. La structure se=20
+>>>>>>>>>>>>>>>>>>>>>>traduit par un NoteOn C4 au d=C3=A9but et un NoteOff=
+ C4=20
+>>>>>>>>>>>>>>>>>>>>>>=C3=A0 la fin.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>J=E2=80=99ai trait=C3=A9 ce sujet sur=20
+>>>>>>>>>>>>>>>>>>>>>>https://bolprocessor.org/tied-notes/ en pr=C3=A9cisan=
+t=20
+>>>>>>>>>>>>>>>>>>>>>>qu=E2=80=99on devrait plut=C3=B4t parler de =E2=80=9C=
+tied=20
+>>>>>>>>>>>>>>>>>>>>>>sound-objects=E2=80=9D car les notes ne sont que des=
+ cas=20
+>>>>>>>>>>>>>>>>>>>>>>particuliers. C=E2=80=99est un peu compliqu=C3=A9 =C3=
+=A0 programmer=20
+>>>>>>>>>>>>>>>>>>>>>>: une fois qu=E2=80=99on a vu =E2=80=9CC4&=E2=80=9D,=
+ aller chercher le=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=9C&C4=E2=80=9D le plus proche en temps symboli=
+que, =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>travers des formules polym=C3=A9triques. D=E2=80=99au=
+tant plus=20
+>>>>>>>>>>>>>>>>>>>>>>que dans les partitions MusicXML il y a=20
+>>>>>>>>>>>>>>>>>>>>>>fr=C3=A9quemment des erreurs que les interpr=C3=A8tes=
+=20
+>>>>>>>>>>>>>>>>>>>>>>humains corrigent  spontan=C3=A9ment. Dans BP3, si=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=9C&C4=E2=80=9D n=E2=80=99est pas trouv=C3=A9 (=
+=C3=A0 une date ult=C3=A9rieure) on=20
+>>>>>>>>>>>>>>>>>>>>>>abandonne la liaison. C=E2=80=99est mieux que de gard=
+er=20
+>>>>>>>>>>>>>>>>>>>>>>une touche du piano enfonc=C3=A9e jusqu=E2=80=99=C3=
+=A0 la fin du=20
+>>>>>>>>>>>>>>>>>>>>>>morceau !
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>=C3=80 mon avis, =E2=80=98~=E2=80=99 pourrait remplac=
+er =E2=80=98&=E2=80=99 dans les=20
+>>>>>>>>>>>>>>>>>>>>>>objets sonores li=C3=A9s, et donc on =C3=A9crirait 'C=
+4~=E2=80=99,=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=98~C4~=E2=80=99, =E2=80=98~C4=E2=80=99 par exe=
+mple. Je peux m=C3=AAme le mettre=20
+>>>>>>>>>>>>>>>>>>>>>>dans le moteur d=E2=80=99inf=C3=A9rences comme forme=
+=20
+>>>>>>>>>>>>>>>>>>>>>>alternative du =E2=80=98&=E2=80=99 qui =C3=A9voquait=
+ la concat=C3=A9nation.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>L=E2=80=99autre probl=C3=A8me, que tu connais d=C3=A9=
+j=C3=A0, est=20
+>>>>>>>>>>>>>>>>>>>>>>l=E2=80=99absence de formalisme g=C3=A9n=C3=A9ral pou=
+r les objets=20
+>>>>>>>>>>>>>>>>>>>>>>sonores. Certes, on peut consid=C3=A9rer qu=E2=80=99i=
+l suffit=20
+>>>>>>>>>>>>>>>>>>>>>>de les d=C3=A9signer, de leur donner une date et un=
+=20
+>>>>>>>>>>>>>>>>>>>>>>coefficient de dilatation, pour qu=E2=80=99ils soient=
+=20
+>>>>>>>>>>>>>>>>>>>>>>trait=C3=A9s dans la couche =E2=80=9Cson=E2=80=9D (SC =
+par exemple).=20
+>>>>>>>>>>>>>>>>>>>>>>Autrement dit, que les contraintes m=C3=A9triques=20
+>>>>>>>>>>>>>>>>>>>>>>(dilatation maximale/minimale) soient g=C3=A9r=C3=A9e=
+s par=20
+>>>>>>>>>>>>>>>>>>>>>>cette couche. Mais dans BP2/BP3 on g=C3=A8re d=E2=80=
+=99autres=20
+>>>>>>>>>>>>>>>>>>>>>>contraintes que j=E2=80=99ai d=C3=A9sign=C3=A9es comm=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=9Ctopologiques" (voir le chapitre IX de ma th=
+=C3=A8se en=20
+>>>>>>>>>>>>>>>>>>>>>>PJ, ou=20
+>>>>>>>>>>>>>>>>>>>>>>https://bolprocessor.org/time-setting-of-sound-object=
+s/)=20
+>>>>>>>>>>>>>>>>>>>>>>et qui d=C3=A9terminent un d=C3=A9calage temporel (e.=
+g.=20
+>>>>>>>>>>>>>>>>>>>>>>alignment du pivot), la continuit=C3=A9 forc=C3=A9e,=
+ la=20
+>>>>>>>>>>>>>>>>>>>>>>troncature =C3=A9ventuelle, la prolongation=20
+>>>>>>>>>>>>>>>>>>>>>>(preroll/postroll), avec en sortie la date et le=20
+>>>>>>>>>>>>>>>>>>>>>>coefficient de dilatation, et un effet de tout=20
+>>>>>>>>>>>>>>>>>>>>>>objet sur les autres objets dans la m=C3=AAme s=C3=A9=
+quence.=20
+>>>>>>>>>>>>>>>>>>>>>>L=E2=80=99algorithme de =E2=80=9Ctime-setting" est le =
+seul o=C3=B9 j=E2=80=99ai=20
+>>>>>>>>>>>>>>>>>>>>>>utilis=C3=A9 du backtracking, influenc=C3=A9 par Prol=
+og.=20
+>>>>>>>>>>>>>>>>>>>>>>Donc il faudrait que la couche =E2=80=9Cson=E2=80=9D=
+ soit capable=20
+>>>>>>>>>>>>>>>>>>>>>>de g=C3=A9rer cet algorithme.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Dans BP3 on ne s=E2=80=99aper=C3=A7oit pas que l'algo=
+rithme est=20
+>>>>>>>>>>>>>>>>>>>>>>appel=C3=A9 m=C3=AAme si la structure ne contient que =
+des=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=9Csimple notes=E2=80=9D qui n=E2=80=99aboutiro=
+nt =C3=A0 aucune=20
+>>>>>>>>>>>>>>>>>>>>>>correction de date ou de coefficient de=20
+>>>>>>>>>>>>>>>>>>>>>>dilatation. Mais le processus est utilis=C3=A9 dans=
+=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=9C-gr.koto3=E2=80=9D et il produit un r=C3=A9s=
+ultat plus=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=9Cswingu=C3=A9=E2=80=9D=20
+>>>>>>>>>>>>>>>>>>>>>>(https://bolprocessor.org/interactive-improvisation/)=
+=20
+>>>>>>>>>>>>>>>>>>>>>>=E2=80=94 amusant, cet exemple avec un synth=C3=A9 D5=
+0 avait=20
+>>>>>>>>>>>>>>>>>>>>>>suscit=C3=A9 l=E2=80=99admiration du compositeur et t=
+h=C3=A9oricien=20
+>>>>>>>>>>>>>>>>>>>>>>Otto Laske.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Un dernier point pour le moment : le BP3 n=E2=80=99a=
+ pas=20
+>>>>>>>>>>>>>>>>>>>>>>pour origine la musique indienne, m=C3=AAme si=20
+>>>>>>>>>>>>>>>>>>>>>>historiquement il a d=E2=80=99abord =C3=A9t=C3=A9 uti=
+lis=C3=A9 pour=20
+>>>>>>>>>>>>>>>>>>>>>>formaliser la rythmique des percussions indiennes.=20
+>>>>>>>>>>>>>>>>>>>>>>Je dirais plut=C3=B4t qu=E2=80=99il s=E2=80=99inspire =
+de certains=20
+>>>>>>>>>>>>>>>>>>>>>>aspects de la musique du nord de l=E2=80=99Inde. Il n=
+=E2=80=99y a=20
+>>>>>>>>>>>>>>>>>>>>>>par exemple aucune r=C3=A9f=C3=A9rence =C3=A0 la noti=
+on de =E2=80=9Craga=E2=80=9D=20
+>>>>>>>>>>>>>>>>>>>>>>qui est centrale =C3=A0 la musique m=C3=A9lodique. Po=
+ur=20
+>>>>>>>>>>>>>>>>>>>>>>pr=C3=A9dire l=E2=80=99intonation d=E2=80=99un raga o=
+n se sert de=20
+>>>>>>>>>>>>>>>>>>>>>>notions h=C3=A9rit=C3=A9es de la musique baroque euro=
+p=C3=A9enne=20
+>>>>>>>>>>>>>>>>>>>>>>telles que th=C3=A9oris=C3=A9es par Pierre-Yves Assel=
+in.
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Shlomo Dubnov m=E2=80=99a signal=C3=A9 cet appel =C3=
+=A0=20
+>>>>>>>>>>>>>>>>>>>>>>communications :
+>>>>>>>>>>>>>>>>>>>>>>https://www.mdpi.com/journal/entropy/special_issues/N=
+O4LYB1ZA6
+>>>>>>>>>>>>>>>>>>>>>>Je ne sais pas si =C3=A7a pourrait s=E2=80=99inscrire =
+dans le=20
+>>>>>>>>>>>>>>>>>>>>>>prolongement de tes travaux, mais vu que c=E2=80=99es=
+t=20
+>>>>>>>>>>>>>>>>>>>>>>pour le 15 septembre on a le temps d=E2=80=99y penser=
+. Il=20
+>>>>>>>>>>>>>>>>>>>>>>n=E2=80=99avait pas r=C3=A9pondu mon mail concernant=
+ le=20
+>>>>>>>>>>>>>>>>>>>>>>parrainage pour ArXiv, est-ce qu=E2=80=99il l=E2=80=
+=99a fait ou tu=20
+>>>>>>>>>>>>>>>>>>>>>>t=E2=80=99es d=C3=A9brouill=C3=A9 par d=E2=80=99autre=
+s moyens ?
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Comme je dis =C3=A0 Andr=C3=A9ine, on a soutenu une b=
+onne=20
+>>>>>>>>>>>>>>>>>>>>>>liste pour le village, faudra pas oublier d=E2=80=99a=
+ller=20
+>>>>>>>>>>>>>>>>>>>>>>voter demain !
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>>>>Date 13/03/2026 22:59:14
+>>>>>>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept dimensions=
+"
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>Eh bien d=C3=A9j=C3=A0 je te remercie, en effet j'ai=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>compl=C3=A8tement zapp=C3=A9 les .
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>Et merci pour ces retours qui m'ont permis de=20
+>>>>>>>>>>>>>>>>>>>>>>>pousser ma r=C3=A9flexion sur certains aspects et de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>faire pas mal de modifications substantielles=20
+>>>>>>>>>>>>>>>>>>>>>>>(m=C3=AAme si c'est surement pas encore fini).
+>>>>>>>>>>>>>>>>>>>>>>>Dont les plus importantes sont:
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>  Double d=C3=A9claration : type temporel + runtime
+>>>>>>>>>>>>>>>>>>>>>>>Chaque symbole doit d=C3=A9clarer deux choses=20
+>>>>>>>>>>>>>>>>>>>>>>>orthogonales avant d'=C3=AAtre utilis=C3=A9 : son=20
+>>>>>>>>>>>>>>>>>>>>>>>comportement dans le temps (gate/trigger/cv) et=20
+>>>>>>>>>>>>>>>>>>>>>>>quel langage le g=C3=A8re (sc/tidal/python/midi).
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>Param=C3=A8tres opaques pour BPscript
+>>>>>>>>>>>>>>>>>>>>>>>BPscript ne comprend pas vel, freq, attack =E2=80=94 =
+ce=20
+>>>>>>>>>>>>>>>>>>>>>>>sont des concepts du runtime. BPscript transporte=20
+>>>>>>>>>>>>>>>>>>>>>>>les param=C3=A8tres tels quels vers le runtime qui l=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>interpr=C3=A8te. Un litt=C3=A9ral (vel:120) est tran=
+sport=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>sans =C3=A9valuation. Un backtick=20
+>>>>>>>>>>>>>>>>>>>>>>>(vel:`rrand(40,127)`) est envoy=C3=A9 au runtime du=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>symbole pour =C3=A9valuation.
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>Sessions runtime persistantes (REPL)
+>>>>>>>>>>>>>>>>>>>>>>>Le "bridge" monolithique qui r=C3=A9solvait tout est=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>remplac=C3=A9 par des sessions persistantes =E2=80=
+=94 une par=20
+>>>>>>>>>>>>>>>>>>>>>>>langage (sclang, ghci+Tidal, Python). Chaque=20
+>>>>>>>>>>>>>>>>>>>>>>>session est un REPL vivant avec son propre scope=20
+>>>>>>>>>>>>>>>>>>>>>>>de variables. Interface universelle : connect(),=20
+>>>>>>>>>>>>>>>>>>>>>>>eval(code, time), getValue(expr), close(). ~100=20
+>>>>>>>>>>>>>>>>>>>>>>>lignes par langage. Les variables persistent=20
+>>>>>>>>>>>>>>>>>>>>>>>entre les backticks du m=C3=AAme runtime naturelleme=
+nt=20
+>>>>>>>>>>>>>>>>>>>>>>>(m=C3=AAme session). Pas d'=C3=A9tat partag=C3=A9 en=
+tre runtimes=20
+>>>>>>>>>>>>>>>>>>>>>>>=E2=80=94 coordination par flags BPscript ou trigger=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>!/<!.
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>BPscript =3D m=C3=A9ta-ordonnanceur
+>>>>>>>>>>>>>>>>>>>>>>>La vision fondatrice : transformer BP3 (langage=20
+>>>>>>>>>>>>>>>>>>>>>>>de polym=C3=A9tries complexes bas=C3=A9 sur la musiq=
+ue=20
+>>>>>>>>>>>>>>>>>>>>>>>indienne) en ordonnanceur complexe agnostique =E2=80=
+=94=20
+>>>>>>>>>>>>>>>>>>>>>>>un s=C3=A9quenceur d'un genre nouveau. BP3 sait QUAN=
+D,=20
+>>>>>>>>>>>>>>>>>>>>>>>les runtimes savent QUOI, les backticks=20
+>>>>>>>>>>>>>>>>>>>>>>>connectent les deux. Un seul fichier .bp=20
+>>>>>>>>>>>>>>>>>>>>>>>orchestre SC (son), Tidal (patterns), Python=20
+>>>>>>>>>>>>>>>>>>>>>>>(lumi=C3=A8res/DMX), MIDI (hardware), eurorack  =20
+>>>>>>>>>>>>>>>>>>>>>>>(gate/CV), robots, vid=C3=A9o =E2=80=94 tout ce qui=
+ a besoin=20
+>>>>>>>>>>>>>>>>>>>>>>>d'=C3=AAtre orchestr=C3=A9 dans le temps. Live-codab=
+le : on=20
+>>>>>>>>>>>>>>>>>>>>>>>modifie la structure, les sessions runtime=20
+>>>>>>>>>>>>>>>>>>>>>>>restent vivantes.
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>Au cas o=C3=B9 il te prendrais l'envie de lire le do=
+c=20
+>>>>>>>>>>>>>>>>>>>>>>>plus qu'ne diagonale je te renvois la derni=C3=A8re=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>version car le pr=C3=A9c=C3=A9dent est obsol=C3=A8te=
+.
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>@+
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>Ven 13 mars 2026, =C3=A0 19:41, Bernard Bel a =C3=A9=
+crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>Bonsoir Romain,
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>J=E2=80=99ai jet=C3=A9 un =C5=93il en diagonale car =
+je dois aider=20
+>>>>>>>>>>>>>>>>>>>>>>>>=C3=A0 la tenue de la maison pour accueillir 7=20
+>>>>>>>>>>>>>>>>>>>>>>>>apprentis de la Manufacture=E2=80=A6
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Ce n=E2=80=99est pas g=C3=AAnant d=E2=80=99adopter=
+ des symboles=20
+>>>>>>>>>>>>>>>>>>>>>>>>diff=C3=A9rents s=E2=80=99il est possible, sans amb=
+igu=C3=AFt=C3=A9, de=20
+>>>>>>>>>>>>>>>>>>>>>>>>traduire une notation dans l=E2=80=99autre.
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Par contre, je vois un probl=C3=A8me avec la notati=
+on=20
+>>>>>>>>>>>>>>>>>>>>>>>>polym=C3=A9trique. La forme {A, B, C=E2=80=A6} est=
+ identique=20
+>>>>>>>>>>>>>>>>>>>>>>>>=C3=A0 BP3, mais je ne vois pas la =E2=80=9Cperiod=
+ notation=E2=80=9D,=20
+>>>>>>>>>>>>>>>>>>>>>>>>exemple {A . B . C=E2=80=A6} qui est une s=C3=A9que=
+nce dont=20
+>>>>>>>>>>>>>>>>>>>>>>>>les fragments ont des dur=C3=A9es symboliques =C3=
+=A9gales.=20
+>>>>>>>>>>>>>>>>>>>>>>>>Les deux formes utilisent le m=C3=AAme algorithme=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>pour l=E2=80=99expansion, et peuvent =C3=AAtre comb=
+in=C3=A9es. En=20
+>>>>>>>>>>>>>>>>>>>>>>>>BP3 on supprime m=C3=AAme les {} s=E2=80=99il y a u=
+ne seule=20
+>>>>>>>>>>>>>>>>>>>>>>>>s=C3=A9quence. Voir par exemple -gr.acceleration :
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[1] S --> _transpose(12) _vel(60) A B=20
+>>>>>>>>>>>>>>>>>>>>>>>>_vel(65) C D _vel(70) E F _vel(75) G _vel(77) H=20
+>>>>>>>>>>>>>>>>>>>>>>>>_vel(80) I _vel(85) J _vel(87) K _vel(90) L
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[2] A --> E2 .
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[3] B --> D2 A
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[4] C --> B2 B
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[5] D --> G2 C
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[6] E --> F#2 D
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[7] F --> A#2 E
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[8] G --> C2 F
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[9] H --> G#2 G
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[10] I --> A2 H
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[11] J --> D#2 I
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[12] K --> C#2 J
+>>>>>>>>>>>>>>>>>>>>>>>>gram#1[13] L --> F2 K
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>qui produit :
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>_transpose(12) _vel(60) E2 . D2 E2 . _vel(65) B2=20
+>>>>>>>>>>>>>>>>>>>>>>>>D2 E2 . G2 B2 D2 E2 . _vel(70) F#2 G2 B2 D2 E2 .=20
+>>>>>>>>>>>>>>>>>>>>>>>>Bb2 F#2 G2 B2 D2 E2 . _vel(75) C2 Bb2 F#2 G2 B2=20
+>>>>>>>>>>>>>>>>>>>>>>>>D2 E2 . _vel(77) G#2 C2 Bb2 F#2 G2 B2 D2 E2 .=20
+>>>>>>>>>>>>>>>>>>>>>>>>_vel(80) A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 .=20
+>>>>>>>>>>>>>>>>>>>>>>>>_vel(85) Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 .=20
+>>>>>>>>>>>>>>>>>>>>>>>>_vel(87) C#2 Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 .=20
+>>>>>>>>>>>>>>>>>>>>>>>>_vel(90) F2 C#2 Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2=20
+>>>>>>>>>>>>>>>>>>>>>>>>E2 .
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Sur l=E2=80=99interface PHP je fais afficher le =E2=
+=80=98.=E2=80=99=20
+>>>>>>>>>>>>>>>>>>>>>>>>comme un =E2=80=98=E2=80=A2=E2=80=99 mais la consol=
+e le convertit en =E2=80=98.=E2=80=99=20
+>>>>>>>>>>>>>>>>>>>>>>>>=C3=A0 cause d=E2=80=99un probl=C3=A8me de gestion=
+ UTF8.
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>C=E2=80=99est pour cette raison que j=E2=80=99ai co=
+nserv=C3=A9 le =E2=80=98-=E2=80=98=20
+>>>>>>>>>>>>>>>>>>>>>>>>pour d=C3=A9signer un silence d=E2=80=99une unit=C3=
+=A9.
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Pour les silences ind=C3=A9termin=C3=A9s, j=E2=80=
+=99utilise =E2=80=98=E2=80=A6=E2=80=99=20
+>>>>>>>>>>>>>>>>>>>>>>>>dans l=E2=80=99interface, autrement dit un seul=20
+>>>>>>>>>>>>>>>>>>>>>>>>caract=C3=A8re converti en =E2=80=98_rest=E2=80=99=
+ dans la console=20
+>>>>>>>>>>>>>>>>>>>>>>>>pour la m=C3=AAme raison. C=E2=80=99est probl=C3=A9=
+matique si tu=20
+>>>>>>>>>>>>>>>>>>>>>>>>utilises =E2=80=98.=E2=80=99 pour un silence d=E2=
+=80=99une unit=C3=A9 et=20
+>>>>>>>>>>>>>>>>>>>>>>>>=E2=80=98...=E2=80=99 pour un silence ind=C3=A9term=
+in=C3=A9. Comment=20
+>>>>>>>>>>>>>>>>>>>>>>>>traduire =E2=80=99- - -' ?
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>J=E2=80=99ai saut=C3=A9 =C3=A0 la fin de ton docume=
+nt pour voir le=20
+>>>>>>>>>>>>>>>>>>>>>>>>probl=C3=A8me des paliers discrets. Oui, on=20
+>>>>>>>>>>>>>>>>>>>>>>>>souhaiterait avoir des variations continues, ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>qui est d=C3=A9j=C3=A0 le cas pour pitch, pressure,=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>volume, panoramic et modulation puisqu'en MIDI=20
+>>>>>>>>>>>>>>>>>>>>>>>>on peut g=C3=A9n=C3=A9rer un flot de messages =C3=
+=A0 raison de=20
+>>>>>>>>>>>>>>>>>>>>>>>>50 par seconde. Mais c=E2=80=99est lourd comme solu=
+tion.=20
+>>>>>>>>>>>>>>>>>>>>>>>>Avec Csound c=E2=80=99est nettement plus =C3=A9l=C3=
+=A9gant puisque=20
+>>>>>>>>>>>>>>>>>>>>>>>>BP3 fabrique une table et donne seulement les=20
+>>>>>>>>>>>>>>>>>>>>>>>>valeurs d=E2=80=99entr=C3=A9e et de sortie.
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>En fait la difficult=C3=A9 est d'adopter une=20
+>>>>>>>>>>>>>>>>>>>>>>>>repr=C3=A9sentation qui puisse se mat=C3=A9rialiser =
+aussi=20
+>>>>>>>>>>>>>>>>>>>>>>>>bien en MIDI, Csound, et autres environnements=20
+>>>>>>>>>>>>>>>>>>>>>>>>via OSC. (D=E2=80=99ailleurs, OSC permettrait de fa=
+ire=20
+>>>>>>>>>>>>>>>>>>>>>>>>du Csound en temps r=C3=A9el, =C3=A7a fait partie d=
+e mes=20
+>>>>>>>>>>>>>>>>>>>>>>>>projets/souhaits).
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Pour le pattern matching de groupes de symboles=20
+>>>>>>>>>>>>>>>>>>>>>>>>il faudrait que je revoie l=E2=80=99excellent bouqu=
+in de=20
+>>>>>>>>>>>>>>>>>>>>>>>>Maxime Crochemore qui traite des algorithmes de=20
+>>>>>>>>>>>>>>>>>>>>>>>>cha=C3=AEnes=E2=80=A6
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Bon, il faut que j=E2=80=99y aille !
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>>>>>>Date 13/03/2026 18:47:51
+>>>>>>>>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept dimensio=
+ns"
+>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>Salut Bernard,
+>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>J'ai un peu lev=C3=A9 le pied des municipales hier=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>et aujourd'hui et du coup, j'ai pu poursuivre=20
+>>>>>>>>>>>>>>>>>>>>>>>>>le travail sur BPscript qui finalement a force=20
+>>>>>>>>>>>>>>>>>>>>>>>>>de (oh mais j'ai pas int=C3=A9gr=C3=A9 =C3=A7a...) =
+est devenu=20
+>>>>>>>>>>>>>>>>>>>>>>>>>moins simple qu'initialement, mais garde quand=20
+>>>>>>>>>>>>>>>>>>>>>>>>>m=C3=AAme des principes de design qui me semble=20
+>>>>>>>>>>>>>>>>>>>>>>>>>pertinents pour une int=C3=A9gration avec d'autres=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>outils/langages.
+>>>>>>>>>>>>>>>>>>>>>>>>>J'ai l'impression de commencer a tenir=20
+>>>>>>>>>>>>>>>>>>>>>>>>>quelque-chose de sympa.
+>>>>>>>>>>>>>>>>>>>>>>>>>Bon j'ai fais des choix un peu diff=C3=A9rents des=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>tiens pour certains symboles du langage, c'est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>discutable il n'y a pas de choix parfait...=20
+>>>>>>>>>>>>>>>>>>>>>>>>>j'ai essay=C3=A9 de reprendre au maximum des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>conventions de langages de programmation et de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>tenter une lisibilit=C3=A9 claire.
+>>>>>>>>>>>>>>>>>>>>>>>>>J'ai notamment fais un choix de design (qui=20
+>>>>>>>>>>>>>>>>>>>>>>>>>m'est personnellement plus agr=C3=A9able), c'est q=
+ue=20
+>>>>>>>>>>>>>>>>>>>>>>>>>visuellement, dans une r=C3=A8gle de d=C3=A9rivati=
+on si=20
+>>>>>>>>>>>>>>>>>>>>>>>>>il y a un espace entre deux mots ces mots ont=20
+>>>>>>>>>>>>>>>>>>>>>>>>>une dur=C3=A9e, donc un =C3=A9v=C3=A8nement (trigg=
+er)=20
+>>>>>>>>>>>>>>>>>>>>>>>>>s'exprime par un ! comm=C3=A9 au mot pr=C3=A9c=C3=
+=A9dent.
+>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>Bref, le fichier de description commence a =C3=AAt=
+re=20
+>>>>>>>>>>>>>>>>>>>>>>>>>assez cons=C3=A9quent, mais je crois que j'ai=20
+>>>>>>>>>>>>>>>>>>>>>>>>>int=C3=A9gr=C3=A9 tous les =C3=A9l=C3=A9ments de B=
+P3 que je connais=20
+>>>>>>>>>>>>>>>>>>>>>>>>>(j'ai pas dit tous lol)
+>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>@+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>Mer 11 mars 2026, =C3=A0 21:52, Romain Peyrichou a=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>Salut Bernard,
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Tr=C3=A8s content que =C3=A7a t'int=C3=A9resse. E=
+t fascinant=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>que tu travailles justement sur le parsing =E2=80=
+=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>on converge par des chemins diff=C3=A9rents.
+>>>>>>>>>>>>>>>>>>>>>>>>>>Sur le parsing au-del=C3=A0 des qa'idas. C'est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>exactement le probl=C3=A8me que j'aborde dans le=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>paper sur l'asym=C3=A9trie (celui que tu as lu).=
+ La=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>dimension D3 (directionality) pose la question=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>: pourquoi la bidirectionnalit=C3=A9, disponible=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>depuis 50 ans en NLP (DCG, Grammatical=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>Framework), n'a presque jamais =C3=A9t=C3=A9 tran=
+sf=C3=A9r=C3=A9e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>aux langages musicaux ? BP2 est un des rares=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>contre-exemples. Si tu arrives =C3=A0 le restaure=
+r=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>dans BP3, c'est un r=C3=A9sultat qui m=C3=A9riter=
+ait=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>d'=C3=AAtre document=C3=A9 formellement. On pourr=
+ait en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>parler pour un article commun si =C3=A7a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>t'int=C3=A9resse.
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>D'ailleurs, le paper a =C3=A9t=C3=A9 desk-reject=
+ de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>Computational Linguistics (trop th=C3=A9orique po=
+ur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>eux, pas assez NLP), je l'ai resoumis =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>Information and Computation. et d=C3=A9pos=C3=A9=
+ sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>arXiv.
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Sur WebAssembly. Oui, c'est exactement la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>solution au probl=C3=A8me PHP Desktop. Le moteur=
+ C=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>de BP3 est compil=C3=A9 en WASM via Emscripten et=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>tourne directement dans le navigateur =E2=80=94=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>Chrome, Firefox, Safari, n'importe quel OS,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>rien =C3=A0 installer. Pas de serveur, pas de PHP=
+,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>pas de d=C3=A9pendance. L'utilisateur ouvre une=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>page web et BP3 tourne. C'est ce qui fait=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>fonctionner =20
+>>>>>>>>>>>>>>>>>>>>>>>>>>https://roomi-fields.com/bol-processor/=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>aujourd'hui.
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Pour la console BP3 sous Linux, rien ne change=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>=E2=80=94 la compilation native reste la plus=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>performante. WASM est compl=C3=A9mentaire : il re=
+nd=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>BP3 accessible sans installation, au prix=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>d'une performance l=C3=A9g=C3=A8rement inf=C3=A9r=
+ieure (mais=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>largement suffisante pour la d=C3=A9rivation et l=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>temps r=C3=A9el).
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Sur les sorties MIDI et le "binding vers le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>monde r=C3=A9el". C'est le c=C5=93ur de l'archite=
+cture=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>BPscript. Le moteur BP3 (en WASM) d=C3=A9rive la=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>structure et produit des =C3=A9v=C3=A9nements typ=
+=C3=A9s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>(gate, trigger, CV) avec leurs param=C3=A8tres. C=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9v=C3=A9nements sont ensuite rout=C3=A9s ver=
+s les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>sorties :
+>>>>>>>>>>>>>>>>>>>>>>>>>>- Web MIDI API =E2=80=94 support=C3=A9e nativemen=
+t par=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>Chrome/Edge. BPscript peut envoyer du MIDI=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>directement aux instruments hardware branch=C3=A9=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>en USB, sans bridge, sans latence r=C3=A9seau.=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>C'est la solution au probl=C3=A8me que tu=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>mentionnes.
+>>>>>>>>>>>>>>>>>>>>>>>>>>- OSC via WebSocket =E2=80=94 un petit bridge (~5=
+0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>lignes) connecte le navigateur =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>SuperCollider, Csound, ou n'importe quelle=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>application OSC sur la machine locale. C'est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>par l=C3=A0 que passe le live coding hybride :=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>BPscript g=C3=A9n=C3=A8re la structure, SC produi=
+t le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>son.
+>>>>>>>>>>>>>>>>>>>>>>>>>>- Web Audio / Csound WASM =E2=80=94 pour du son=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>directement dans le navigateur, sans=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>application externe. Utile pour la d=C3=A9mo et=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>l'enseignement.
+>>>>>>>>>>>>>>>>>>>>>>>>>>- Fichiers =E2=80=94 export MIDI, Csound score, e=
+tc.=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>pour le travail offline.
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Le point cl=C3=A9 : le compositeur n'a pas besoin=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>de savoir quel routage est actif. Il =C3=A9crit s=
+a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>grammaire, quelqu'un d'autre (ou un preset)=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>configure les sorties. C'est la s=C3=A9paration=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>composition/ex=C3=A9cution.
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Je t'envoie en pi=C3=A8ce jointe la description=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>compl=C3=A8te du projet (BPSCRIPT_VISION.md).=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>N'h=C3=A9site pas =C3=A0 me dire ce qui te semble=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>pertinent ou probl=C3=A9matique =E2=80=94 surtout =
+les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9cueils que tu as rencontr=C3=A9s avec les s=
+orties=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>temps r=C3=A9el dans BP2/BP3.
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>@+
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Mer 11 mars 2026, =C3=A0 14:34, Bernard Bel a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Bonjour Romain,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>J=E2=80=99ai aussi =C3=A9t=C3=A9 pris par divers=
+es t=C3=A2ches, y=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>compris le soutien d=E2=80=99une liste, qu=E2=80=
+=99on=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>pourrait appeler =E2=80=9Ccitoyenne=E2=80=9D, de =
+gens actifs=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>sur la commune et motiv=C3=A9s par le =E2=80=9Cc=
+ollectif=E2=80=9D.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Occup=C3=A9 aussi =C3=A0 essayer de formaliser=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>l=E2=80=99approche de l=E2=80=99analyse/parsing=
+ telle qu=E2=80=99elle=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>fonctionnait encore dans BP2, et que je=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>n=E2=80=99avais pas impl=C3=A9ment=C3=A9e dans B=
+P3. D=E2=80=99une part=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>en raison d=E2=80=99une difficult=C3=A9 d=E2=80=
+=99interface=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>(l=E2=80=99h=C3=A9bergement dans un navigateur)=
+ et d=E2=80=99autre=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>part parce qu=E2=80=99il n=E2=80=99y avait plus=
+ aucune=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>demande : l=E2=80=99id=C3=A9e du parsing =C3=A9t=
+ait essentielle=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>lorsque Jim travaillait sur le tabla, dans=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>son approche =E2=80=9Csyst=C3=A8me expert=E2=80=
+=9D, mais sa port=C3=A9e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>ne d=C3=A9passait pas le formalisme du qa=E2=80=
+=99ida. =C3=80=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>pr=C3=A9sent, je sais comment g=C3=A9rer le prob=
+l=C3=A8me=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>d=E2=80=99interface car je l=E2=80=99ai r=C3=A9s=
+olu pour la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>minimisation=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>(https://bolprocessor.org/minimising-a-polymetri=
+c-structure/),=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>mais je r=C3=A9fl=C3=A9chis =C3=A0 la mani=C3=A8=
+re de poser le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>probl=C3=A8me dans un cadre plus large que celui=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>des grammaires structur=C3=A9es comme celles des=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>qa=E2=80=99idas. =C3=87a avance lentement=E2=80=
+=A6
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Ce que tu as commenc=C3=A9 =C3=A0 faire sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>https://roomi-fields.com/bol-processor/ est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>ce dont r=C3=AAvait Anthony Kozar, mais d=E2=80=
+=99un point=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>de vue plus g=C3=A9n=C3=A9raliste et interconnec=
+t=C3=A9 :=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>live coding, etc. C=E2=80=99est superbe que cett=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>impl=C3=A9mentation compile directement le code=
+ de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>la console BP3, ce qui autorisera des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>corrections et extensions de toutes les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>versions.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Je ne connaissais pas WebAssembly. Je me=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>demande si ce serait un moyen de contourner=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>l=E2=80=99utilisation de PHP Desktop qui fonctio=
+nne=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>tr=C3=A8s bien sous MacOS mais pas sous Windows.=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>(Sachant que le compilation de la console=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>sous Linux est facile et indispensable.) Dans=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>ce domaine, j=E2=80=99ai clairement 10 ans de re=
+tard=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>! Sinon plus=E2=80=A6
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>J=E2=80=99=C3=A9tais dubitatif sur ce que voulai=
+t faire=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Anthony avec sa version =E2=80=9Cen ligne=E2=80=
+=9D. Parmi les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>limites que j=E2=80=99y voyais, l=E2=80=99imposs=
+ibilit=C3=A9, dans=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>l=E2=80=99=C3=A9tat du projet, de g=C3=A9rer des=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>entr=C3=A9es/sorties MIDI, et les limites des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>connexions si on cr=C3=A9ait des fichiers sonore=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>avec Csound. Mais je devine (m=C3=AAme si ce n=
+=E2=80=99est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>pas bien clair) que dans ce que tu pr=C3=A9pares=
+,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>il y aurait un retour de donn=C3=A9es vers=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>SuperCollider ou autres applications=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>fonctionnant sur l=E2=80=99ordinateur client =E2=
+=80=94 c=E2=80=99est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>ce que je comprends du binding vers le monde=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9el.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Oui, je veux bien essayer d=E2=80=99y voir plus=
+ clair=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>si tu m=E2=80=99envoies une description du proje=
+t.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>C=E2=80=99est encore =E2=80=9Cchaud=E2=80=9D cet=
+te semaine car nous=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>pr=C3=A9parons l=E2=80=99atelier Yukido qui se t=
+iendra =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>la maison pendant le week-end.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Date 11/03/2026 12:12:26
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept dimen=
+sions"
+>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Salut Bernard,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bon, depuis quelques semaines j'ai un peu=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>ralenti cot=C3=A9 musicologie... j'ai un peu=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>travaill=C3=A9 a l'am=C3=A9lioration de Claude=
+ Code, a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>ma sant=C3=A9 et depuis 10 jours a la campagne=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>d'une liste de d=C3=A9mocratie citoyenne pour l=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>municipales.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Ce matin, j'ai pris une petite pause sur la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>campagne et je suis revenu sur des travaux=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>en cours.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'ai eu envie de porter BP3 sur un serveur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>web, d'abord pour mon usage personnel pour=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>me simplifier l'usage et l'installation.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je voulais te partager mes r=C3=A9flexion n=C3=
+=A9e de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>ce travail.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'ai compil=C3=A9 le moteur C de BP3 en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>WebAssembly via Emscripten pour le faire=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>tourner directement dans un navigateur. =C3=87a=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>avance bien : le moteur de d=C3=A9rivation=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>fonctionne, la polym=C3=A9trie est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>op=C3=A9rationnelle, la r=C3=A9solution tempore=
+lle=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>(PolyMake, TimeSet) produit des r=C3=A9sultats=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>corrects, et on passe 48 des 52 grammaires=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>de test. Ton code compile et tourne=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>pratiquement tel quel.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Si tu es curieux, il est accessible ici:=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>https://roomi-fields.com/bol-processor/
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Il me semble qu'on a d=C3=A9j=C3=A0 un peu =C3=
+=A9chang=C3=A9 sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>ce sujet, et que  je t'ai partag=C3=A9 que je=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>voyais BP3 comme un ordonanceur de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>structures temporelles... un s=C3=A9quenceux=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>complexe.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Il d=C3=A9rive des s=C3=A9quences de symboles d=
+ans le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>temps, avec une capacit=C3=A9 unique =C3=A0 exp=
+rimer=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>la polym=C3=A9trie, les proportions et la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9cursion. Que ces symboles soient des not=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>de musique est un cas d'application, pas=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'essence du syst=C3=A8me. Ce qui est renforc=
+=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>par ton int=C3=A9gration des objets musicaux, i=
+l=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>me semble.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Cette observation m'a conduit vers l'id=C3=A9e=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>d'un langage, que j'appelle provisoirement=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>BPscript, qui s'inscrirait dans le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>prolongement direct de ton travail tout en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>le rendant plus accessible. Voici les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>grandes lignes :
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Ton moteur reste le coeur. Rien n'est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9=C3=A9crit. Les 7 modes de d=C3=A9rivati=
+on, les 3=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>directions, la polym=C3=A9trie =E2=80=94 tout e=
+st=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>pr=C3=A9serv=C3=A9. BPscript est une couche syn=
+taxique=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>par-dessus, pas un remplacement.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Un langage minimal. BPscript ne comporte que=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>9 symboles syntaxiques et aucun mot r=C3=A9serv=
+=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>@           directive syst=C3=A8me (import de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>librairies)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>-> <- <>    d=C3=A9rivation + direction
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>{ , }       polym=C3=A9trie
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>( )         arguments
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>:           param=C3=A8tre (cl=C3=A9: valeur)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>=3D           d=C3=A9finition
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>[ ]         options (mode de d=C3=A9rivation)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Tout le vocabulaire =E2=80=94 notes, instrument=
+s,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>gammes, comportements =E2=80=94 vient de librai=
+ries=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>import=C3=A9es. Le langage lui-m=C3=AAme ne sai=
+t pas=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>ce qu'est une note.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Trois types de signaux inspir=C3=A9s du modulai=
+re=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>eurorack : Gate (=C3=A9v=C3=A9nement avec dur=
+=C3=A9e),=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Trigger (d=C3=A9clenchement ponctuel), CV (vale=
+ur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>continue). =C3=87a formalise ce que BP3 fait d=
+=C3=A9j=C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>implicitement avec les notes (gate), les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>changements de param=C3=A8tres comme `_vel()`=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>(trigger), et les contr=C3=B4les continus comme=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>`_pitchbend` (CV).
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>S=C3=A9paration en trois couches :
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>- D=C3=A9finition : le vocabulaire =E2=80=94 de=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>comportements nomm=C3=A9s, param=C3=A9tr=C3=A9s=
+,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9utilisables (comme du CSS)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Composition : la structure temporelle =E2=80=
+=94 le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>coeur BP, d=C3=A9rivation et polym=C3=A9trie
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Ex=C3=A9cution : le binding vers le monde r=
+=C3=A9el=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>=E2=80=94 SuperCollider, MIDI, Web Audio,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>lumi=C3=A8res...
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>La m=C3=AAme composition peut =C3=AAtre interpr=
+=C3=A9t=C3=A9e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>par des contextes d'ex=C3=A9cution diff=C3=A9re=
+nts,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>exactement comme une page HTML est rendue=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>diff=C3=A9remment par diff=C3=A9rents navigateu=
+rs.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Pas de logique dans le langage. C'est un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>choix d=C3=A9lib=C3=A9r=C3=A9. BP3 avait d=C3=
+=BB int=C3=A9grer=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>progressivement des contr=C3=B4les de flux, des=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>variables, des flags =E2=80=94 complexifiant la=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>syntaxe. BPscript refuse cette voie : toute=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>logique conditionnelle ou traitement de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>signal est =C3=A9crit dans un vrai langage de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>programmation (SuperCollider, Python,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>JavaScript) et expos=C3=A9 =C3=A0 BPscript sous =
+forme=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>de noms simples via les librairies. Le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>compositeur =C3=A9crit `wobble(C4, mood: dark)`=
+.=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Le d=C3=A9veloppeur qui a cr=C3=A9=C3=A9 la lib=
+rairie a mis=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>les `if` et les boucles dedans.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Ouverture au live coding. Les trois couches=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9tant ind=C3=A9pendantes, on peut modifier =
+en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>temps r=C3=A9el la d=C3=A9finition (le timbre c=
+hange),=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>la composition (la structure change) ou=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'ex=C3=A9cution (la destination change). La=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>communication avec SuperCollider se fait=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>naturellement par OSC.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Au-del=C3=A0 de la musique. Puisque BP ordonnan=
+ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>des symboles dans le temps sans savoir ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>qu'ils repr=C3=A9sentent, BPscript peut piloter=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>du son, de la lumi=C3=A8re, de la vid=C3=A9o, d=
+e la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>robotique =E2=80=94 n'importe quel processus=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>temporel. Il suffit d'importer la librairie=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>correspondante.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'aimerais beaucoup avoir ton regard sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>cette d=C3=A9marche. Est-ce que =C3=A7a te semb=
+le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>faire sens ? Y a-t-il des aspects du moteur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>BP3 que tu estimes sous-exploit=C3=A9s et qui=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>pourraient enrichir cette vision ? Des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9cueils que tu as rencontr=C3=A9s et que j=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>devrais anticiper ?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Si =C3=A7a t'int=C3=A9resse j'ai une descriptio=
+n un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>peu plus d=C3=A9taill=C3=A9e sur laquelle je r=
+=C3=A9fl=C3=A9chis=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>encore avant de lancer le d=C3=A9veloppement qu=
+i=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>n'est en r=C3=A9alit=C3=A9 pas tr=C3=A8s compli=
+qu=C3=A9, le plus=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>dur =C3=A9tant le transpiler BPscript vers BP3,=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>quasi tout le reste sera de la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9utilisation/r=C3=A9=C3=A9critures de ce=
+ que tu as=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=C3=A9j=C3=A0 fait et un peu de ce qui a =C3=
+=A9t=C3=A9 fait=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>dans SuperCollider aussi.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=80 bient=C3=B4t,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Romain
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Sam 28 f=C3=A9vr 2026, =C3=A0 20:12, Romain Pey=
+richou=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>a =C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Merci beaucoup Bernard je vais lire et=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>int=C3=A9grer soigneusement tout =C3=A7a.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Pour ma part, j'ai repris le travail sur le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formalisme BP3 mais j'avoue que c'est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>aride, c'est pas ce que je pr=C3=A9f=C3=A8re.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'aurais aussi quelques questions sur le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sujet mais c'est pas press=C3=A9, je ne vais p=
+as=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>te flooder. J'ai de quoi faire par=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ailleurs.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je vais d=C3=A9j=C3=A0 avancer avec =C3=A7a de=
+main tout en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>poursuivant les tests cot=C3=A9 IA. A force de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>travailler avec claude code, j'ai d=C3=A9velop=
+p=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>un composant pour am=C3=A9liorer ses capacit=
+=C3=A9s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>de recherche qui semblent avoir des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9sultats significatifs... et si semblera=
+it=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>que personne n'ait d=C3=A9j=C3=A0 fait =C3=A7a =
+sous cet=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>angle la, alors je suis parti pour faire=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>des mesures benchmark=C3=A9es A/B et =C3=A9cri=
+re un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>papier sur ce sujet aussi... :)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je te tiens au courant.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Romain
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Sam 28 f=C3=A9vr 2026, =C3=A0 18:03, Bernard B=
+el a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bonjour Romain,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Voici un d=C3=A9but de r=C3=A9ponse. J=E2=80=
+=99ai tr=C3=A8s peu=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>travaill=C3=A9 sur les grammaires de forme=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(pattern grammars) car elles n=E2=80=99ont=
+ =C3=A9t=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>utilis=C3=A9es que dans le travail sur le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>tabla, donc dans BP1 bien qu=E2=80=99elles so=
+ient=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>aussi impl=C3=A9ment=C3=A9es dans BP2/BP3. Or =
+les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>patterns sont importants dans tous les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>genres musicaux qui utilisent la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9p=C3=A9tition pour renforcer un effet=
+ ou=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cr=C3=A9er une fausse attente.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Donc, m=C3=AAme si je les ai d=C3=A9crits dan=
+s nos=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>premiers articles empruntant tous leurs=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>exemples au tabla, il me para=C3=AEt importan=
+t,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dans une approche plus th=C3=A9orique du mote=
+ur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=E2=80=99inf=C3=A9rences BP, de les document=
+er avec=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>des symboles simples mais non rattach=C3=A9s =
+=C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>un style musical. C=E2=80=99est la raison de=
+ cet=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>article que je vais probablement traduire=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>et publier dans les tutoriels.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Il n=E2=80=99y a pas de difficult=C3=A9 sp=C3=
+=A9cifique =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BP3 pour impl=C3=A9menter le modus tollens de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BP1, ni l=E2=80=99apprentissage des poids =C3=
+=A0 partir=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d'exemples. C=E2=80=99est simplement que Jim=
+ avait=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cess=C3=A9 le travail sur le terrain quand BP=
+2=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>a =C3=A9t=C3=A9 cr=C3=A9=C3=A9, et je n=E2=80=
+=99ai pas eu de demande=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>par la suite. Mais je vais y travailler.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>En v=C3=A9rifiant les grammaires d=C3=A9crite=
+s dans=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cet article, j=E2=80=99ai d=C3=A9couvert des=
+ bugs dans=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BP3 lorsqu=E2=80=99on veut en sortie du =E2=
+=80=9CBP data=E2=80=9D=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>et non du son. J=E2=80=99ai commenc=C3=A9 =C3=
+=A0 les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>corriger et je vais publier une version=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3.3.13.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>C=E2=80=99est un tout petit pas en avant !
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou"=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><romain@liance.art>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Date 25/02/2026 09:22:14
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dimensions"
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Merci beaucoup Bernard pour ces infos.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je te fais faire de la sp=C3=A9l=C3=A9ologie =
+;)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Alors, je te joins la proposition de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cadre de l'interview :D
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Et je comprends bien qu'avec tout ce que=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>je produis, =C3=A7a soit assez chronophage.=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Sens toi libre de ne pas tout lire :D
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>@+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Mar 24 f=C3=A9vr 2026, =C3=A0 09:32, Bernard =
+Bel a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bonjour Romain,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je viens d=E2=80=99=C3=A9crire =C3=A0 Shlom=
+o pour lui=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>demander de soutenir ton inscription =C3=A0=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>arXiv, en lui donnant quelques d=C3=A9tails=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sur ton parcours et tes travaux actuels.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je suis all=C3=A9 faire un tour sur ma th=
+=C3=A8se=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(en 1990,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>https://theses.hal.science/tel-00009692v1)=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pour faire le  point sur les bases=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>th=C3=A9oriques. Un peu effray=C3=A9 par le=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9f=C3=A9rences =C3=A0 des publication=
+s que je=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>n=E2=80=99ai  plus utilis=C3=A9es par la su=
+ite, ni=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>m=C3=AAme gard=C3=A9es sous la main =E2=80=
+=94 je me=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>souviens de la montagne de papiers =C3=A0=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>jeter le jour o=C3=B9 j=E2=80=99ai quitt=C3=
+=A9 le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>laboratoire ! Il est vrai qu=E2=80=99avec=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l=E2=80=99archivage num=C3=A9rique la plupa=
+rt=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pourraient =C3=AAtre r=C3=A9cup=C3=A9r=C3=
+=A9es, mais c=E2=80=99est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>surtout la m=C3=A9moire qui me fait d=C3=A9=
+faut=E2=80=A6
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Lire tes articles est donc un refresher=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>course mais il me prend beaucoup de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>temps. Donc je comprends  l=E2=80=99int=C3=
+=A9r=C3=AAt=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=E2=80=99illustrer ton propos par des exem=
+ples=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>musicaux dans des =E2=80=9Cgrammaires=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>musicales=E2=80=9D, mais la d=C3=A9marche m=
+=E2=80=99est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>encore peu famili=C3=A8re. Effectivement, u=
+n=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>draft de structure serait bienvenu !
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>D=E2=80=99apr=C3=A8s mon archive, le =E2=80=
+=9CAdler" cit=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dans mes publications =C3=A9tait un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ethnomusicologue qui travaillait avec=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Ellis dans les ann=C3=A9es 1980, et qui ava=
+it=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>inspir=C3=A9 notre approche de musicologie=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=E2=80=9Cdialectique=E2=80=9D mat=C3=A9rial=
+is=C3=A9e dans le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sch=C3=A9ma expert-analyste-machine du=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>travail sur le terrain avec BP1. J=E2=80=99=
+avais=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9crit : "L'originalit=C3=A9 de notre d=
+=C3=A9marche=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>a consist=C3=A9 =C3=A0 introduire l'ordinat=
+eur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>comme un partenaire actif dans la phase=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d'acquisition des connaissances, donnant=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>de ce fait plus d'importance aux mod=C3=A8l=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ratifs, cens=C3=A9s expliquer =
+la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>comp=C3=A9tence, qu'aux mod=C3=A8les analyt=
+iques=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>qui se contentent de l=E2=80=99illustrer.=
+=E2=80=9D
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je vais continuer la lecture et=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>t=E2=80=99envoyer des commentaires ou des=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>questions quand elles viennent. J=E2=80=99a=
+i =C3=A9t=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>mobilis=C3=A9 ces derniers jours par la mis=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>en place de proc=C3=A9dures d=E2=80=99autom=
+atisation=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(avec Make) dont Tansen avait besoin=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pour g=C3=A9rer des inscriptions aux stages=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=E2=80=99Andr=C3=A9ine=E2=80=A6
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou"=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><romain@liance.art>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Date 24/02/2026 08:00:23
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : sept=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dimensions"
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Re, Bernard,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'aimerai publier ce premier papier sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>arXiv, je vois que tu n'y es pas=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>inscrit, et ils demandent un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>endorsement, est ce que tu pourrais me=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>mettre en contact avec Shlomo Dubnov ?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Il pourrait me parrainer dans la bonne=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cat=C3=A9gorie.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Merci
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Mar 24 f=C3=A9vr 2026, =C3=A0 07:13, Romai=
+n=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Peyrichou a =C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Hello Bernard,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'ai fais un petit d=C3=A9tour la semaine=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>derni=C3=A8re pour investiguer un sujet q=
+ui=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>donnera peut =C3=AAtre des fruits du cot=
+=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>de la recherche IA (pour la premi=C3=A8re=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>fois, il semblerait que j'ai produit=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>un composant qui am=C3=A9liore=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>significativement la qualit=C3=A9 de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>recherche de Claude Code).
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bref je me suis remis sur ce papier=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>que j'ai soumis hier soir dans la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>version que je te joins =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Computational Linguistics... on verra=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>bien les retours, je croise les=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>doigts.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Comme tu le sais, ce papier traite=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'asym=C3=A9trie de mani=C3=A8re=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>domain-independent. Il n'y a plus que=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>6 dimensions, j'en ai finalement=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>fusionn=C3=A9 2 qui =C3=A9taient assez pr=
+oches:=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=C3=A9terminisme et ambigu=C3=AFt=C3=A9, =
+qui =C3=A9taient=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>finalement le m=C3=AAme ph=C3=A9nom=C3=A8=
+ne regard=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>de deux points de vue diff=C3=A9rents.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Mon id=C3=A9e est de publier maintenant u=
+n=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"companion paper" qui instancierait ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cadre sur les grammaires musicales.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>D'une part dans sa dimension=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>th=C3=A9orique: comment se manifestent ce=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dimensions dans la musique, et est-ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>qu'il n'y en aurait pas d'autres (je=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pense =C3=A0 la tripartition de Nattiez=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(po=C3=AF=C3=A9tique/neutre/esth=C3=A9siq=
+ue) que je=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>verrai bien comme une dimension=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>suppl=C3=A9mentaire, mais peut =C3=AAtre=
+ qu'en y=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9fl=C3=A9chissant =C3=A7a ouvrira s=
+ur un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>nouveau regard sur le langage et la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formalisation: est ce un =C3=A9tat fini,=
+ un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sujet d=C3=A9termin=C3=A9, ou un sujet en=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A9volution/mutation)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Et d'autre part, lui fournir un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ancrage dans le r=C3=A9el, a travers=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>diff=C3=A9rents syst=C3=A8mes existants =
+=E2=80=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>notamment GTTM, IDyOM, et bien s=C3=BBr=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BP3.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Ton expertise serait pr=C3=A9cieuse sur=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>plusieurs points:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- BP3 comme cas unique de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>bidirectionnalit=C3=A9 en grammaires=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>musicales
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- L'exp=C3=A9rience QAVAID
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Les aspects temporels (smooth time,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>_tempo()) qui illustrent D6 de mani=C3=A8=
+re=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>concr=C3=A8te
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Les pistes que tu as mentionn=C3=A9es=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>autour de Gould et Adler
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Et plus largement, les exemples=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>musicaux cross-culturels
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Si je veux r=C3=A9sumer, je pense que ce=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>papier pourrait utiliser tes =C3=A9tudes=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pour illustrer une grande partie de ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cadre th=C3=A9orique.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Qu'en dis-tu?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Si t'es ok, je peux te soumettre un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>draft de structure envisag=C3=A9e, avec d=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>points en r=C3=A9flexion, des questions s=
+ur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>des choix que tu as fait, difficult=C3=A9=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>rencontr=C3=A9es =C3=A0 travers BP1, 2 et =
+3.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>@+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Romain
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Mar 17 f=C3=A9vr 2026, =C3=A0 23:51, Bern=
+ard Bel=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>a =C3=A9crit=E2=80=AF:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bonsoir Romain,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>J=E2=80=99ai commenc=C3=A9 =C3=A0 lire=
+=E2=80=A6 C=E2=80=99est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>remarquable dans la clart=C3=A9 de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l=E2=80=99expos=C3=A9. Et =C3=A7a me ram=
+=C3=A8ne 36 ans en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>arri=C3=A8re quand j=E2=80=99essayais de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formaliser l=E2=80=99inf=C3=A9rence gram=
+maticale =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>la lumi=C3=A8re de Gould , Adler et autr=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>que j=E2=80=99ai oubli=C3=A9s. Pas facil=
+e d=E2=80=99y=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>revenir, mais le voyage m=E2=80=99int=C3=
+=A9resse. =20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je t=E2=80=99en =C3=A9crirai plus les jo=
+urs qui=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>viennent.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Aujourd=E2=80=99hui j=E2=80=99ai pass=C3=
+=A9 quelques=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>heures =C3=A0 r=C3=A9gler les derniers=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>probl=C3=A8mes de mon site. Install=C3=
+=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>smtp.gmail.com que j=E2=80=99ai pu valid=
+er=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(gr=C3=A2ce =C3=A0 ChatGPT). Corrig=C3=
+=A9 quelques=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>liens dans la base de donn=C3=A9es et le=
+s=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>widgets. J=E2=80=99ai h=C3=A2te de reven=
+ir =C3=A0 la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>musicologie et=E2=80=A6 aux langages for=
+mels=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>! Mais je doute de pouvoir apporter=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>quelque chose d=E2=80=99original =C3=A0=
+ un expos=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>th=C3=A9orique d=E2=80=99un tel niveau.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>A +
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bernard
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>From "Romain Peyrichou"=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><romain@liance.art>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>To "Bernard Bel"=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><bernarbel@gmail.com>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Date 17/02/2026 17:40:51
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Subject Papier "L'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance : se=
+pt=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dimensions"
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Bonjour Bernard,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Suite aux travaux entrepris sur le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formalisme de BP3 et BP2SC, et suite=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=A0 toutes les questions que =C3=A7a =
+m'a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>fait me poser, j'ai identifi=C3=A9 un=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>certain nombre de sujets qui=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sembleraient m=C3=A9riter la r=C3=A9dac=
+tion=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d'articles.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Certains articles du blog (L0, L11,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>L13, et pas mal de B je dois dire)=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>m'ont donn=C3=A9 envie de structurer un=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>papier sur l'asym=C3=A9trie=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration-reconnaissance, ce =
+qui=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>visiblement n'avait pas =C3=A9t=C3=A9 e=
+ncore=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>fait.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Si tu veux bien j'aimerai bien ton=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>regard sur ce draft.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Mon id=C3=A9e est de produire un premie=
+r=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>papier g=C3=A9n=C3=A9raliste sur le suj=
+et=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>orient=C3=A9 th=C3=A9orie du langage et =
+de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>poursuivre sur un autre traitant=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sp=C3=A9cifiquement du domaine musical,=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dans lequel on pourrait utiliser des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>exemples du domaine dont BP. Il=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>introduit =C3=A9galement une 8eme=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>asym=C3=A9trie sp=C3=A9cifique a la mus=
+ique.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Si jamais =C3=A7a suscite ton int=C3=A9=
+r=C3=AAt on=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pourrait co=C3=A9crire cet autre papier=
+.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Voici un r=C3=A9sum=C3=A9 de tout =C3=
+=A7a =C3=A9crit par=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>mon cher Claude Code:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>## De quoi il s'agit
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Le papier identifie 7 dimensions=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>selon lesquelles la g=C3=A9n=C3=A9ratio=
+n et la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>reconnaissance divergent :
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1. **Complexit=C3=A9 computationnelle** =
+=E2=80=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>la g=C3=A9n=C3=A9ration est O(n) pour t=
+out=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>niveau de Chomsky, tandis que le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>parsing cro=C3=AEt de O(n) =C3=A0=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'ind=C3=A9cidabilit=C3=A9
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2. **D=C3=A9terminisme** =E2=80=94 la g=
+=C3=A9n=C3=A9ration=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>peut =C3=AAtre d=C3=A9terministe, le pa=
+rsing=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>est fondamentalement=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>non-d=C3=A9terministe
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3. **Directionnalit=C3=A9** =E2=80=94 l=
+a=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration est toujours top-d=
+own, le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>parsing a un degr=C3=A9 de libert=C3=A9 =
+(LL,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>LR, Earley...)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4. **Information** =E2=80=94 le g=C3=A9=
+n=C3=A9rateur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>conna=C3=AEt la source, le parser inf=
+=C3=A8re=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>depuis la surface (lien Shannon)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>5. **Non-injectivit=C3=A9** =E2=80=94 u=
+n chemin=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>de d=C3=A9rivation =E2=86=92 une cha=C3=
+=AEne, mais une=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cha=C3=AEne =E2=86=92 plusieurs arbres=
+ (Parikh=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1966)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>6. **Inf=C3=A9rence grammaticale** =E2=
+=80=94 la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>troisi=C3=A8me direction, born=C3=A9e p=
+ar Gold=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(1967)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>7. **Temporalit=C3=A9** =E2=80=94 le g=
+=C3=A9n=C3=A9rateur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cr=C3=A9e le futur (surprisal =3D 0), l=
+e=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>parser pr=C3=A9dit sous incertitude=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(surprisal > 0)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>La th=C3=A8se centrale : la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>caract=C3=A9risation "la g=C3=A9n=C3=A9=
+ration est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>facile, le parsing est difficile"=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>est trompeuse. La vraie asym=C3=A9trie=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>est *structurelle* =E2=80=94 le parsing =
+est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>toujours contraint tandis que la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>g=C3=A9n=C3=A9ration ne l'est pas=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>n=C3=A9cessairement.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>**Constat de d=C3=A9part** : aucun surv=
+ey=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>n'a trait=C3=A9 cette asym=C3=A9trie co=
+mme=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sujet central. Les 7 dimensions=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>existent dans la litt=C3=A9rature mais=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>n'ont jamais =C3=A9t=C3=A9 rassembl=C3=
+=A9es.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>## Ce que c'est et ce que ce n'est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pas
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- C'est un papier **CS theory /=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>langages formels**, ind=C3=A9pendant du=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>domaine musical
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Il n'y a **aucune mention** de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BP3, ni de musique dans le corps du=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>texte
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- La musique n'appara=C3=AEt qu'en =C2=
+=A76.4=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>comme "laboratoire id=C3=A9al" pour=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>instancier les dimensions
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Un **article compagnon** (Paper=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>9=CE=B2) est pr=C3=A9vu pour appliquer=
+ ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cadre aux grammaires musicales =E2=80=
+=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>c'est l=C3=A0 que BP3, GTTM, IDyOM, et=
+ la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>tripartition de Nattiez=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>interviendraien
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>## Pourquoi j'ai besoin de ton=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>regard
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>**les formalisations math=C3=A9matiques=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>sont ma synth=C3=A8se**, pas des formul=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>tir=C3=A9es d'articles existants. Les=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>r=C3=A9sultats sous-jacents sont =C3=A9=
+tablis=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(Chomsky, Gold, Parikh, Shannon,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>etc.), mais la mise en formules est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>la mienne. Concr=C3=A8tement :
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>### Points solides (citations=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>directes)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Les complexit=C3=A9s O(n), O(n=C2=B3)=
+,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>PSPACE-complet =E2=86=92 Hopcroft & Ull=
+man,=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Aho et al.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Les nombres de Catalan pour=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'ambigu=C3=AFt=C3=A9 =E2=86=92 Jurafsk=
+y & Martin
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Le th=C3=A9or=C3=A8me de Gold (1967)=
+ sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'impossibilit=C3=A9 d'inf=C3=A9rence
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- Le th=C3=A9or=C3=A8me de Parikh (1966=
+) sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'ambigu=C3=AFt=C3=A9 intrins=C3=A8que
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- La surprisal =E2=86=92 Hale (2001), L=
+evy=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(2008)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>### Points =C3=A0 v=C3=A9rifier (mes=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formulations)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- =C2=A74.1 : la fonction T_parse(G, n)=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pr=C3=A9sent=C3=A9e comme un "cases" su=
+r k =E2=80=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>c'est ma pr=C3=A9sentation, pas une=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formule existante
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =
+=CE=A3* et parse: G=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>=C3=97 =CE=A3* =E2=86=92 2^T =E2=80=94=
+ mes d=C3=A9finitions=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>fonctionnelles
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- =C2=A74.3 : parse_=CE=B4(G, w) avec =
+=CE=B4 comme=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>param=C3=A8tre de strat=C3=A9gie =E2=80=
+=94 ma notation
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- =C2=A74.5 : l'argument sur=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'injectivit=C3=A9 de gen vs.=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>non-injectivit=C3=A9 de parse
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>- =C2=A74.7 : le lien entre surprisal e=
+t=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>asym=C3=A9trie temporelle =E2=80=94 mon=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>interpr=C3=A9tation de Hale/Levy
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>## **Mes quesiotns**
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1. **G=C3=A9n=C3=A9ral** : Est-ce que c=
+es=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>formulations te semblent=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>math=C3=A9matiquement correctes et=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=C3=A9fendables devant un reviewer CS=
+ ?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2. **D3 (directionnalit=C3=A9)** :=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>J'affirme que la g=C3=A9n=C3=A9ration e=
+st=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"intrins=C3=A8quement top-down". BP1=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>avait le parsing en=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"context-sensitive right mode=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>derivation" =E2=80=94 est-ce que la=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>direction de BP1 remet en question=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>cette affirmation ?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3. **D6 (inf=C3=A9rence)** : Ta vision=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ANAL+QAVAID+TEMP (inf=C3=A9rer des=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>grammaires depuis des exemples) =E2=80=
+=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>est-ce que =C3=A7a correspond =C3=A0 ce =
+que je=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>d=C3=A9cris comme la "troisi=C3=A8me=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>direction" ?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4. **Le split en 2 articles** : Le=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>premier est volontairement=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>domain-independent. Le second=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>ajouterait une 8=C3=A8me dimension =E2=
+=80=94=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>l'**asym=C3=A9trie musicale**=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(composition vs. analyse, le pi=C3=A8ge=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>terminologique GTTM qui est nomm=C3=A9=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"generative" mais fondamentalement=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>analytique, BP3 comme cas unique de=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>bidirectionnalit=C3=A9, tripartition de=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Nattiez) =E2=80=94 et instancierait les =
+7=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>autres sur BP3, GTTM, IDyOM. Est-ce=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>que cette strat=C3=A9gie de split te=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>semble judicieuse ?
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>## Le fichier
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Je t'envoie la version fran=C3=A7aise=
+=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>(traduction de lecture). La version=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>soumise sera en anglais. C'est un=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>premier brouillon =E2=80=94 tout est=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>modifiable.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Merci d'avance pour ton regard,
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Romain
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>---
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*P.S. : Le travail avec Claude a =C3=A9=
+t=C3=A9=20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>essentiel pour structurer ce papier.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>peyrichou_generation_recognition_asymmetr=
+y_2026.pdf
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>pattern-grammars-fr.docx.zip
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>>>>>>>>>>>>>>>>>BPSCRIPT_VISION.md
+>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>>>>>>>>>>>>>9.PDF
+>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>>>>>>>>-so.abc
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>FillPhaseDiagram.cPolymetric.cEncode.cSaveLoads1.cCompileGrammar.=
+cGetRelease.c-BP3.proto.h-BP3main.hSetObjectFeatures.cMakeSound.cTimeSet.cG=
+raphic.cTimeSetFunctions.cInits.cPlayThings.cSoundObjects2.c-BP3.hbpda.html
+>>>>>>>>>
+>>>>>>>
+>>>>>
+>>>
+>

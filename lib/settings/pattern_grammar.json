@@ -1,0 +1,5 @@
+{
+  "AllItems": {"name": "Produce all items", "value": "1", "boolean": "1"},
+  "MaxItemsProduce": {"name": "Max items to produce", "value": "20", "boolean": "0"},
+  "AllowRandomize": {"name": "Allow randomize", "value": "1", "boolean": "1"}
+}

@@ -1,0 +1,8 @@
+// tryGraphics.bps — Polymetry with legato and staccato
+// Traduit de bp3-engine/test-data/-gr.tryGraphics (Bernard)
+
+@core
+@controls
+@alphabet.western:midi
+
+S -> {C4 D4 E4(legato:20), F#5 G3(staccato:10), - G4}

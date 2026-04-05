@@ -1,0 +1,1959 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-342-ga586d3c39-fm-20260310.001-ga586d3c3) with LMTPA;
+	 Fri, 13 Mar 2026 14:41:55 -0400
+X-Cyrus-Session-Id: slotpi15m92-1773427315-1155349-2-18343708424701659193
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 500 (none)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, HTML_MESSAGE 0.001, ME_SENDERREP_NEUTRAL 0.001,
+  MIME_QP_LONG_LINE 0.001, RCVD_IN_DNSWL_NONE -0.0001,
+  RCVD_IN_MSPIKE_H2 0.001, SPF_HELO_NONE 0.001, SPF_PASS -0.001,
+  LANGUAGES fr, BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.128.54', Host='mail-wm1-f54.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8', html='utf-8'
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-05 ([10.202.2.204])
+  by phl-compute-07.internal (LMTPProxy); Fri, 13 Mar 2026 14:41:55 -0400
+Received: from phl-mx-05.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id 9320A5D200CE
+	for <romain@liance.art>; Fri, 13 Mar 2026 14:41:53 -0400 (EDT)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-05.messagingengine.com (Authentication Milter) with ESMTP
+    id 9912DE4288D.1F33D5D200AC;
+    Fri, 13 Mar 2026 14:41:53 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1773427313; b=BYsNocqbymm5adv43FYBpDH9yyga0tkF9pNcxi/dpHZJTiadpc
+    tJXfnYSGblPhYusaheLzqRz11eNCbaAmOioTXCvLUOyPfFtjUMV9WjIxbcRvD34P
+    gmgZAJ/2H1B9iMdkjmY4RAALlofLBZbB5gYzJo1prz0KI7qBD8QgRukwpyRUEBgr
+    X11JiBkfmRGekEbI0XtOrcjzNc/em/5sM0NZlc2NX669117isRxWhzoE5lMqU0+H
+    PMlX7S+CUgzaYTOqM93zdsXxDJXUGEh7y7LfTE6Ye4StSxOte2iKmeHppKgnminC
+    sgvDAunJ64Zk+9YGi5r7ZiZFKibQWLYyD8Wg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type; s=
+    fm1; t=1773427313; bh=oHbDc9pBg5tPbHNb0+zthr8SMPYFspkDgzIQZCiQT8
+    Q=; b=pb3R9I29mlhZaPtx6jvT50z2JtdmpCB0Sh72rV0f8jBIwrrKIkzGAgWDGt
+    T4vYnx2XznXHZDfZMUoNaPBcdrnZ9axOJNJtOsCrUXPm+sXRogFo+ilx/LYSm8N0
+    pDLkAXfWwwX0/QWeRYbxwhdS9TAhYUu2UTKAjHQ8bTq8//h7vfmRAr03VZJL3sKN
+    /2uigN5Bkl7x8aHdStuulD0GMbCOId7Mgy7aLlTb7g5EwbbNirODmqsljKYOAnIu
+    ehRoXaymtOmmKoiDZYBqxWqphRcOgpjlqPHHWeGcc0Cx5ZYc4h8+4II3Lh5mSptV
+    q9r/my0GxSx2mv68UPQpZdBwQGOA==
+ARC-Authentication-Results: i=1; phl-mx-05.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f54.google.com
+    policy.ptr=mail-wm1-f54.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=GK8Z2HrI header.a=rsa-sha256
+    header.s=20230601;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.54 (mail-wm1-f54.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wm1-f54.google.com
+X-ME-Authentication-Results: phl-mx-05.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-05.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f54.google.com
+      policy.ptr=mail-wm1-f54.google.com
+Authentication-Results: phl-mx-05.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-05.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-05.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=GK8Z2HrI header.a=rsa-sha256
+      header.s=20230601;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.54 (mail-wm1-f54.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wm1-f54.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvledtgeduucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgesrgdtreertderjeenucfhrhhomhepfdeuvghrnhgr
+    rhguuceuvghlfdcuoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqeenucggtffrrg
+    htthgvrhhnpedtudfhteehteefheejkeelgeetveeileeiueduuefhgfettdetgeeugfei
+    geevleenucffohhmrghinheprhhoohhmihdqfhhivghlughsrdgtohhmpdgsohhlphhroh
+    gtvghsshhorhdrohhrghdphhgrlhdrshgtihgvnhgtvgenucfkphepvddtledrkeehrddu
+    vdekrdehgedpvdgrtddumegtsgdutgemkedurgelmeeltgdttdemudgusgemugdtuddume
+    grfhgujeemheehkeeknecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgv
+    thepvddtledrkeehrdduvdekrdehgedphhgvlhhopehmrghilhdqfihmuddqfhehgedrgh
+    hoohhglhgvrdgtohhmpdhmrghilhhfrhhomhepoegsvghrnhgrrhgsvghlsehgmhgrihhl
+    rdgtohhmqedpnhgspghrtghpthhtohepuddprhgtphhtthhopeeorhhomhgrihhnsehlih
+    grnhgtvgdrrghrtheq
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:cVq0aRlHL5vymPzqrhvgNN8ZWbtuM38L5zDAmbQgTF4x9Oh6xC3UMA>
+X-ME-Received: <xmx:cVq0aZ0tgkcR4h4hIs6ZX_PQijCvlQEPCVeEHUAJIPf5K0lUZTuMdw>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.128.54 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-05.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wm1-f54.google.com;
+    client-ip=209.85.128.54
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-05.messagingengine.com (Postfix) with ESMTPS id 1F33D5D200AC
+	for <romain@liance.art>; Fri, 13 Mar 2026 14:41:53 -0400 (EDT)
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-48535a0ef86so20885665e9.1
+        for <romain@liance.art>; Fri, 13 Mar 2026 11:41:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773427311; x=1774032111; darn=liance.art;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=oHbDc9pBg5tPbHNb0+zthr8SMPYFspkDgzIQZCiQT8Q=;
+        b=GK8Z2HrIOhpKbkPu/N4nqU7bZ9fuMktcbCMIOWToypDE5mUi0NIAXr2wa0gb4xTWdW
+         WQMWEFlF3pA+5Ylv0j372QioF+vuTs9cEGqz9St44f8+DeUQnnhfzdiDdEbe7n7qg4sP
+         i+ZC8nf7oLJJip5A0dz1hDmOzIFTmnqNVghxO2d5rbCYVXSLVcpgmf01XWG2QF7qc/Qc
+         tQmzkD/j6AavaKFgDrS95q/AwLn4tjQu/7BXO8B6D/GzFXC1WoteqxRTEIv7egYaTJWX
+         2OMgbilKevn+CQ8jMJy/LX9n0Cyv2+qV3iYcBmdAy1sxyzn0w1/dkHYFOxDSo62DkKOE
+         dy6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773427311; x=1774032111;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=oHbDc9pBg5tPbHNb0+zthr8SMPYFspkDgzIQZCiQT8Q=;
+        b=d50cY3KPRzreeySlWDq52XRnLoxwcxmS5KLoD6QIEZl/vc6/u3lPL2YJkktjqQ/cOG
+         C1G8YZkGfZtJYThkUCWSDVEOLfrwV2wOQTb0xcP0Fbtwov4fE3mkWupRdG86yJiG17cy
+         pbGhkfE3QkYwmgohJ3TmLz0bl/3HjOedZup9AWWplL70ujXXUazeazvzI8Z4fQvAtzT6
+         jZfhHApTXwxilgIv9oKIuC2DC4ywqUVsdibsyH8l5dsq9gfSaG+ddGxnJKzhlL/CEIK2
+         /W7anDKuTLYn5a9ZmqnanLlIfe4o9qT/+aqJP3AseDwQRvUIp8WIJo68G1CSdYnHkvug
+         AYkw==
+X-Gm-Message-State: AOJu0YzyvR7G5ajouAut3xgkN5NvkOCRb9o4mvQUaoxLZE0rfZTUyCUz
+	5kmnlLIDWB3BubmwGNpRpnaUlQ5wuuBgU1HBJODu7TPbyyQPwm+icz9RBkvB3Q==
+X-Gm-Gg: ATEYQzzkH0oBznsOzMtk7HRywtV+L+PhqpU9C5iiFUyfMzpBN6P5nbyZJXhV9zsLFZ+
+	MY2N/vPQUxq5MIrL8NkSnvDKzfrsUn44qpg/6pa+wG1mtr48l5KrzFAwIAR1WLznM4Vgdr1846i
+	aHFXYo4m0Jl5Ony9lcYUcs2xWGAN5D7a5Q8hTNB7h78Q+4TXbNn9t/+RI0NMFCoaP/kOj6Rpjv8
+	AH194IWkGc5M6ZK8jbZTOX90VESd2runRw1XJQEwttGahxjZGdSu3D6rmKo09UDdQ/h6jDaXqNd
+	HX/Bv2KjbmB3+yJ6R6/Jc1DpOcdFfbQ5f0VGR5rs5eKcWwlPcEUaY9yQo61Un5i4c7/s70wtD+m
+	4j95BEASIPDNeLHG68DUOXdAnqcmBlvDG8XBb9AMcLROYuCaTYp0vSqNmKOuuftwS0adnD1BT2E
+	z5XxLHhJRzMlJAHZsieaRyLTWqYVHWZWfuOMg+gSVJBqljRfswA1S6hZkCKf/5Wbb3tP53809MY
+	rTFav3s5wqt+HmMt/yAJg==
+X-Received: by 2002:a05:600c:1f8b:b0:485:3c66:e21d with SMTP id 5b1f17b1804b1-485566d2fa1mr77778925e9.2.1773427310207;
+        Fri, 13 Mar 2026 11:41:50 -0700 (PDT)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:1db:d011:afd7:5588? ([2a01:cb1c:81a9:9c00:1db:d011:afd7:5588])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-485419c2930sm538850235e9.0.2026.03.13.11.41.49
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 13 Mar 2026 11:41:49 -0700 (PDT)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=5b2=5d=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9r?=
+ =?utf-8?q?ation-reconnaissance=20=3a=20sept=20dimensions=22?=
+Date: Fri, 13 Mar 2026 18:41:48 +0000
+Message-Id: <em8a689fc6-30ba-4bb7-93af-f7fcca20d1b9@gmail.com>
+In-Reply-To: <738aa4bd-6ee2-4984-bffe-fb455beded7e@app.fastmail.com>
+References: <34eb8e38-0a26-4971-9a9a-f9551996fcf1@app.fastmail.com>
+ <em613b5c23-5df4-4ae8-ae8f-902b525c477d@gmail.com>
+ <37c2a339-7a41-4116-82a1-9d1b5214bbe5@app.fastmail.com>
+ <a60d0dbb-de27-40f3-814e-84f547c180f7@app.fastmail.com>
+ <emd253c916-006d-4545-85c8-3c17953d967c@gmail.com>
+ <ae74ea03-b502-44fe-8d62-41f05394d375@app.fastmail.com>
+ <emd0730ed2-50a8-4ab4-9374-70c0cf0dfbd0@gmail.com>
+ <98f228b5-8c29-4a01-a0d2-b25acb92ed8b@app.fastmail.com>
+ <48596f32-bdc7-49cf-80ba-e140d489ce08@app.fastmail.com>
+ <embc8f42db-25e2-4011-8cdf-88584e4df499@gmail.com>
+ <56e800c4-3a8b-41e7-853a-fe777427d3fc@app.fastmail.com>
+ <738aa4bd-6ee2-4984-bffe-fb455beded7e@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="------=_MB574111B2-3C8B-4BEA-A20A-02F94D1AA624"
+
+--------=_MB574111B2-3C8B-4BEA-A20A-02F94D1AA624
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Bonsoir Romain,
+
+J=E2=80=99ai jet=C3=A9 un =C5=93il en diagonale car je dois aider =C3=A0 la =
+tenue de la maison=20
+pour accueillir 7 apprentis de la Manufacture=E2=80=A6
+
+Ce n=E2=80=99est pas g=C3=AAnant d=E2=80=99adopter des symboles diff=C3=A9r=
+ents s=E2=80=99il est possible,=20
+sans ambigu=C3=AFt=C3=A9, de traduire une notation dans l=E2=80=99autre.
+
+Par contre, je vois un probl=C3=A8me avec la notation polym=C3=A9trique. La =
+forme=20
+{A, B, C=E2=80=A6} est identique =C3=A0 BP3, mais je ne vois pas la =E2=80=
+=9Cperiod=20
+notation=E2=80=9D, exemple {A . B . C=E2=80=A6} qui est une s=C3=A9quence d=
+ont les fragments=20
+ont des dur=C3=A9es symboliques =C3=A9gales. Les deux formes utilisent le m=
+=C3=AAme=20
+algorithme pour l=E2=80=99expansion, et peuvent =C3=AAtre combin=C3=A9es. E=
+n BP3 on=20
+supprime m=C3=AAme les {} s=E2=80=99il y a une seule s=C3=A9quence. Voir pa=
+r exemple=20
+-gr.acceleration :
+
+gram#1[1] S --> _transpose(12) _vel(60) A B _vel(65) C D _vel(70) E F=20
+_vel(75) G _vel(77) H _vel(80) I _vel(85) J _vel(87) K _vel(90) L
+
+gram#1[2] A --> E2 .
+gram#1[3] B --> D2 A
+gram#1[4] C --> B2 B
+gram#1[5] D --> G2 C
+gram#1[6] E --> F#2 D
+gram#1[7] F --> A#2 E
+gram#1[8] G --> C2 F
+gram#1[9] H --> G#2 G
+gram#1[10] I --> A2 H
+gram#1[11] J --> D#2 I
+gram#1[12] K --> C#2 J
+gram#1[13] L --> F2 K
+
+qui produit :
+
+_transpose(12) _vel(60) E2 . D2 E2 . _vel(65) B2 D2 E2 . G2 B2 D2 E2 .=20
+_vel(70) F#2 G2 B2 D2 E2 . Bb2 F#2 G2 B2 D2 E2 . _vel(75) C2 Bb2 F#2 G2=20
+B2 D2 E2 . _vel(77) G#2 C2 Bb2 F#2 G2 B2 D2 E2 . _vel(80) A2 G#2 C2 Bb2=20
+F#2 G2 B2 D2 E2 . _vel(85) Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 . _vel(87)=20
+C#2 Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 . _vel(90) F2 C#2 Eb2 A2 G#2 C2=20
+Bb2 F#2 G2 B2 D2 E2 .
+
+Sur l=E2=80=99interface PHP je fais afficher le =E2=80=98.=E2=80=99 comme u=
+n =E2=80=98=E2=80=A2=E2=80=99 mais la console=20
+le convertit en =E2=80=98.=E2=80=99 =C3=A0 cause d=E2=80=99un probl=C3=A8me =
+de gestion UTF8.
+
+C=E2=80=99est pour cette raison que j=E2=80=99ai conserv=C3=A9 le =E2=80=98=
+-=E2=80=98 pour d=C3=A9signer un=20
+silence d=E2=80=99une unit=C3=A9.
+
+Pour les silences ind=C3=A9termin=C3=A9s, j=E2=80=99utilise =E2=80=98=E2=80=
+=A6=E2=80=99 dans l=E2=80=99interface,=20
+autrement dit un seul caract=C3=A8re converti en =E2=80=98_rest=E2=80=99 da=
+ns la console pour=20
+la m=C3=AAme raison. C=E2=80=99est probl=C3=A9matique si tu utilises =E2=80=
+=98.=E2=80=99 pour un silence=20
+d=E2=80=99une unit=C3=A9 et =E2=80=98...=E2=80=99 pour un silence ind=C3=A9=
+termin=C3=A9. Comment traduire =E2=80=99- -=20
+-' ?
+
+J=E2=80=99ai saut=C3=A9 =C3=A0 la fin de ton document pour voir le probl=C3=
+=A8me des paliers=20
+discrets. Oui, on souhaiterait avoir des variations continues, ce qui=20
+est d=C3=A9j=C3=A0 le cas pour pitch, pressure, volume, panoramic et modula=
+tion=20
+puisqu'en MIDI on peut g=C3=A9n=C3=A9rer un flot de messages =C3=A0 raison=
+ de 50 par=20
+seconde. Mais c=E2=80=99est lourd comme solution. Avec Csound c=E2=80=99est =
+nettement=20
+plus =C3=A9l=C3=A9gant puisque BP3 fabrique une table et donne seulement le=
+s=20
+valeurs d=E2=80=99entr=C3=A9e et de sortie.
+
+En fait la difficult=C3=A9 est d'adopter une repr=C3=A9sentation qui puisse =
+se=20
+mat=C3=A9rialiser aussi bien en MIDI, Csound, et autres environnements via=
+=20
+OSC. (D=E2=80=99ailleurs, OSC permettrait de faire du Csound en temps r=C3=
+=A9el, =C3=A7a=20
+fait partie de mes projets/souhaits).
+
+Pour le pattern matching de groupes de symboles il faudrait que je=20
+revoie l=E2=80=99excellent bouquin de Maxime Crochemore qui traite des=20
+algorithmes de cha=C3=AEnes=E2=80=A6
+
+Bon, il faut que j=E2=80=99y aille !
+
+A +
+
+Bernard
+
+
+------ Original Message ------
+From "Romain Peyrichou" <romain@liance.art>
+To "Bernard Bel" <bernarbel@gmail.com>
+Date 13/03/2026 18:47:51
+Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance :=
+ sept=20
+dimensions"
+
+>Salut Bernard,
+>
+>J'ai un peu lev=C3=A9 le pied des municipales hier et aujourd'hui et du=20
+>coup, j'ai pu poursuivre le travail sur BPscript qui finalement a force=20
+>de (oh mais j'ai pas int=C3=A9gr=C3=A9 =C3=A7a...) est devenu moins simple=
+=20
+>qu'initialement, mais garde quand m=C3=AAme des principes de design qui me=
+=20
+>semble pertinents pour une int=C3=A9gration avec d'autres outils/langages.
+>J'ai l'impression de commencer a tenir quelque-chose de sympa.
+>Bon j'ai fais des choix un peu diff=C3=A9rents des tiens pour certains=20
+>symboles du langage, c'est discutable il n'y a pas de choix parfait...=20
+>j'ai essay=C3=A9 de reprendre au maximum des conventions de langages de=20
+>programmation et de tenter une lisibilit=C3=A9 claire.
+>J'ai notamment fais un choix de design (qui m'est personnellement plus=20
+>agr=C3=A9able), c'est que visuellement, dans une r=C3=A8gle de d=C3=A9riva=
+tion si il y=20
+>a un espace entre deux mots ces mots ont une dur=C3=A9e, donc un =C3=A9v=
+=C3=A8nement=20
+>(trigger) s'exprime par un ! comm=C3=A9 au mot pr=C3=A9c=C3=A9dent.
+>
+>Bref, le fichier de description commence a =C3=AAtre assez cons=C3=A9quent=
+, mais=20
+>je crois que j'ai int=C3=A9gr=C3=A9 tous les =C3=A9l=C3=A9ments de BP3 que =
+je connais (j'ai=20
+>pas dit tous lol)
+>
+>@+
+>
+>
+>Mer 11 mars 2026, =C3=A0 21:52, Romain Peyrichou a =C3=A9crit=E2=80=AF:
+>>Salut Bernard,
+>>
+>>Tr=C3=A8s content que =C3=A7a t'int=C3=A9resse. Et fascinant que tu trava=
+illes=20
+>>justement sur le parsing =E2=80=94 on converge par des chemins diff=C3=A9=
+rents.
+>>Sur le parsing au-del=C3=A0 des qa'idas. C'est exactement le probl=C3=A8m=
+e que=20
+>>j'aborde dans le paper sur l'asym=C3=A9trie (celui que tu as lu). La=20
+>>dimension D3 (directionality) pose la question : pourquoi la=20
+>>bidirectionnalit=C3=A9, disponible depuis 50 ans en NLP (DCG, Grammatical=
+=20
+>>Framework), n'a presque jamais =C3=A9t=C3=A9 transf=C3=A9r=C3=A9e aux lan=
+gages musicaux ?=20
+>>BP2 est un des rares contre-exemples. Si tu arrives =C3=A0 le restaurer=
+=20
+>>dans BP3, c'est un r=C3=A9sultat qui m=C3=A9riterait d'=C3=AAtre document=
+=C3=A9=20
+>>formellement. On pourrait en parler pour un article commun si =C3=A7a=20
+>>t'int=C3=A9resse.
+>>
+>>D'ailleurs, le paper a =C3=A9t=C3=A9 desk-reject de Computational Linguis=
+tics=20
+>>(trop th=C3=A9orique pour eux, pas assez NLP), je l'ai resoumis =C3=A0=20
+>>Information and Computation. et d=C3=A9pos=C3=A9 sur arXiv.
+>>
+>>Sur WebAssembly. Oui, c'est exactement la solution au probl=C3=A8me PHP=
+=20
+>>Desktop. Le moteur C de BP3 est compil=C3=A9 en WASM via Emscripten et=20
+>>tourne directement dans le navigateur =E2=80=94 Chrome, Firefox, Safari,=
+=20
+>>n'importe quel OS, rien =C3=A0 installer. Pas de serveur, pas de PHP, pas=
+=20
+>>de d=C3=A9pendance. L'utilisateur ouvre une page web et BP3 tourne. C'est=
+=20
+>>ce qui fait fonctionner  https://roomi-fields.com/bol-processor/=20
+>>aujourd'hui.
+>>
+>>Pour la console BP3 sous Linux, rien ne change =E2=80=94 la compilation n=
+ative=20
+>>reste la plus performante. WASM est compl=C3=A9mentaire : il rend BP3=20
+>>accessible sans installation, au prix d'une performance l=C3=A9g=C3=A8rem=
+ent=20
+>>inf=C3=A9rieure (mais largement suffisante pour la d=C3=A9rivation et le=
+ temps=20
+>>r=C3=A9el).
+>>
+>>Sur les sorties MIDI et le "binding vers le monde r=C3=A9el". C'est le c=
+=C5=93ur=20
+>>de l'architecture BPscript. Le moteur BP3 (en WASM) d=C3=A9rive la=20
+>>structure et produit des =C3=A9v=C3=A9nements typ=C3=A9s (gate, trigger,=
+ CV) avec=20
+>>leurs param=C3=A8tres. Ces =C3=A9v=C3=A9nements sont ensuite rout=C3=A9s=
+ vers les sorties=20
+>>:
+>>- Web MIDI API =E2=80=94 support=C3=A9e nativement par Chrome/Edge. BPscr=
+ipt peut=20
+>>envoyer du MIDI directement aux instruments hardware branch=C3=A9s en USB=
+,=20
+>>sans bridge, sans latence r=C3=A9seau. C'est la solution au probl=C3=A8me =
+que tu=20
+>>mentionnes.
+>>- OSC via WebSocket =E2=80=94 un petit bridge (~50 lignes) connecte le=20
+>>navigateur =C3=A0 SuperCollider, Csound, ou n'importe quelle application=
+=20
+>>OSC sur la machine locale. C'est par l=C3=A0 que passe le live coding=20
+>>hybride : BPscript g=C3=A9n=C3=A8re la structure, SC produit le son.
+>>- Web Audio / Csound WASM =E2=80=94 pour du son directement dans le=20
+>>navigateur, sans application externe. Utile pour la d=C3=A9mo et=20
+>>l'enseignement.
+>>- Fichiers =E2=80=94 export MIDI, Csound score, etc. pour le travail offl=
+ine.
+>>
+>>Le point cl=C3=A9 : le compositeur n'a pas besoin de savoir quel routage=
+=20
+>>est actif. Il =C3=A9crit sa grammaire, quelqu'un d'autre (ou un preset)=
+=20
+>>configure les sorties. C'est la s=C3=A9paration composition/ex=C3=A9cutio=
+n.
+>>
+>>Je t'envoie en pi=C3=A8ce jointe la description compl=C3=A8te du projet=
+=20
+>>(BPSCRIPT_VISION.md). N'h=C3=A9site pas =C3=A0 me dire ce qui te semble=
+=20
+>>pertinent ou probl=C3=A9matique =E2=80=94 surtout les =C3=A9cueils que tu =
+as rencontr=C3=A9s=20
+>>avec les sorties temps r=C3=A9el dans BP2/BP3.
+>>
+>>@+
+>>
+>>Mer 11 mars 2026, =C3=A0 14:34, Bernard Bel a =C3=A9crit=E2=80=AF:
+>>>Bonjour Romain,
+>>>
+>>>J=E2=80=99ai aussi =C3=A9t=C3=A9 pris par diverses t=C3=A2ches, y compri=
+s le soutien d=E2=80=99une=20
+>>>liste, qu=E2=80=99on pourrait appeler =E2=80=9Ccitoyenne=E2=80=9D, de ge=
+ns actifs sur la=20
+>>>commune et motiv=C3=A9s par le =E2=80=9Ccollectif=E2=80=9D.
+>>>
+>>>Occup=C3=A9 aussi =C3=A0 essayer de formaliser l=E2=80=99approche de l=
+=E2=80=99analyse/parsing=20
+>>>telle qu=E2=80=99elle fonctionnait encore dans BP2, et que je n=E2=80=99=
+avais pas=20
+>>>impl=C3=A9ment=C3=A9e dans BP3. D=E2=80=99une part en raison d=E2=80=99u=
+ne difficult=C3=A9=20
+>>>d=E2=80=99interface (l=E2=80=99h=C3=A9bergement dans un navigateur) et d=
+=E2=80=99autre part parce=20
+>>>qu=E2=80=99il n=E2=80=99y avait plus aucune demande : l=E2=80=99id=C3=A9=
+e du parsing =C3=A9tait=20
+>>>essentielle lorsque Jim travaillait sur le tabla, dans son approche=20
+>>>=E2=80=9Csyst=C3=A8me expert=E2=80=9D, mais sa port=C3=A9e ne d=C3=A9pas=
+sait pas le formalisme du=20
+>>>qa=E2=80=99ida. =C3=80 pr=C3=A9sent, je sais comment g=C3=A9rer le probl=
+=C3=A8me d=E2=80=99interface car=20
+>>>je l=E2=80=99ai r=C3=A9solu pour la minimisation=20
+>>>(https://bolprocessor.org/minimising-a-polymetric-structure/), mais=20
+>>>je r=C3=A9fl=C3=A9chis =C3=A0 la mani=C3=A8re de poser le probl=C3=A8me=
+ dans un cadre plus=20
+>>>large que celui des grammaires structur=C3=A9es comme celles des qa=E2=
+=80=99idas.=20
+>>>=C3=87a avance lentement=E2=80=A6
+>>>
+>>>Ce que tu as commenc=C3=A9 =C3=A0 faire sur=20
+>>>https://roomi-fields.com/bol-processor/ est ce dont r=C3=AAvait Anthony=
+=20
+>>>Kozar, mais d=E2=80=99un point de vue plus g=C3=A9n=C3=A9raliste et inte=
+rconnect=C3=A9 :=20
+>>>live coding, etc. C=E2=80=99est superbe que cette impl=C3=A9mentation co=
+mpile=20
+>>>directement le code de la console BP3, ce qui autorisera des=20
+>>>corrections et extensions de toutes les versions.
+>>>
+>>>Je ne connaissais pas WebAssembly. Je me demande si ce serait un=20
+>>>moyen de contourner l=E2=80=99utilisation de PHP Desktop qui fonctionne=
+ tr=C3=A8s=20
+>>>bien sous MacOS mais pas sous Windows. (Sachant que le compilation de=20
+>>>la console sous Linux est facile et indispensable.) Dans ce domaine,=20
+>>>j=E2=80=99ai clairement 10 ans de retard ! Sinon plus=E2=80=A6
+>>>
+>>>J=E2=80=99=C3=A9tais dubitatif sur ce que voulait faire Anthony avec sa=
+ version=20
+>>>=E2=80=9Cen ligne=E2=80=9D. Parmi les limites que j=E2=80=99y voyais, l=
+=E2=80=99impossibilit=C3=A9, dans=20
+>>>l=E2=80=99=C3=A9tat du projet, de g=C3=A9rer des entr=C3=A9es/sorties MI=
+DI, et les limites=20
+>>>des connexions si on cr=C3=A9ait des fichiers sonores avec Csound. Mais=
+ je=20
+>>>devine (m=C3=AAme si ce n=E2=80=99est pas bien clair) que dans ce que tu =
+pr=C3=A9pares,=20
+>>>il y aurait un retour de donn=C3=A9es vers SuperCollider ou autres=20
+>>>applications fonctionnant sur l=E2=80=99ordinateur client =E2=80=94 c=E2=
+=80=99est ce que je=20
+>>>comprends du binding vers le monde r=C3=A9el.
+>>>
+>>>Oui, je veux bien essayer d=E2=80=99y voir plus clair si tu m=E2=80=99en=
+voies une=20
+>>>description du projet.
+>>>
+>>>C=E2=80=99est encore =E2=80=9Cchaud=E2=80=9D cette semaine car nous pr=
+=C3=A9parons l=E2=80=99atelier=20
+>>>Yukido qui se tiendra =C3=A0 la maison pendant le week-end.
+>>>
+>>>A +
+>>>
+>>>Bernard
+>>>
+>>>
+>>>------ Original Message ------
+>>>From "Romain Peyrichou" <romain@liance.art>
+>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>Date 11/03/2026 12:12:26
+>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance =
+: sept=20
+>>>dimensions"
+>>>
+>>>>Salut Bernard,
+>>>>
+>>>>Bon, depuis quelques semaines j'ai un peu ralenti cot=C3=A9=20
+>>>>musicologie... j'ai un peu travaill=C3=A9 a l'am=C3=A9lioration de Clau=
+de=20
+>>>>Code, a ma sant=C3=A9 et depuis 10 jours a la campagne d'une liste de=
+=20
+>>>>d=C3=A9mocratie citoyenne pour les municipales.
+>>>>Ce matin, j'ai pris une petite pause sur la campagne et je suis=20
+>>>>revenu sur des travaux en cours.
+>>>>
+>>>>J'ai eu envie de porter BP3 sur un serveur web, d'abord pour mon=20
+>>>>usage personnel pour me simplifier l'usage et l'installation.
+>>>>Je voulais te partager mes r=C3=A9flexion n=C3=A9e de ce travail.
+>>>>
+>>>>J'ai compil=C3=A9 le moteur C de BP3 en WebAssembly via Emscripten pour=
+=20
+>>>>le faire tourner directement dans un navigateur. =C3=87a avance bien :=
+ le=20
+>>>>moteur de d=C3=A9rivation fonctionne, la polym=C3=A9trie est op=C3=A9ra=
+tionnelle,=20
+>>>>la r=C3=A9solution temporelle (PolyMake, TimeSet) produit des r=C3=A9su=
+ltats=20
+>>>>corrects, et on passe 48 des 52 grammaires de test. Ton code compile=20
+>>>>et tourne pratiquement tel quel.
+>>>>Si tu es curieux, il est accessible ici:=20
+>>>>https://roomi-fields.com/bol-processor/
+>>>>
+>>>>Il me semble qu'on a d=C3=A9j=C3=A0 un peu =C3=A9chang=C3=A9 sur ce suj=
+et, et que  je=20
+>>>>t'ai partag=C3=A9 que je voyais BP3 comme un ordonanceur de structures=
+=20
+>>>>temporelles... un s=C3=A9quenceux complexe.
+>>>>Il d=C3=A9rive des s=C3=A9quences de symboles dans le temps, avec une c=
+apacit=C3=A9=20
+>>>>unique =C3=A0 exprimer la polym=C3=A9trie, les proportions et la r=C3=
+=A9cursion.=20
+>>>>Que ces symboles soient des notes de musique est un cas=20
+>>>>d'application, pas l'essence du syst=C3=A8me. Ce qui est renforc=C3=A9=
+ par ton=20
+>>>>int=C3=A9gration des objets musicaux, il me semble.
+>>>>
+>>>>Cette observation m'a conduit vers l'id=C3=A9e d'un langage, que=20
+>>>>j'appelle provisoirement BPscript, qui s'inscrirait dans le=20
+>>>>prolongement direct de ton travail tout en le rendant plus=20
+>>>>accessible. Voici les grandes lignes :
+>>>>
+>>>>Ton moteur reste le coeur. Rien n'est r=C3=A9=C3=A9crit. Les 7 modes de=
+=20
+>>>>d=C3=A9rivation, les 3 directions, la polym=C3=A9trie =E2=80=94 tout es=
+t pr=C3=A9serv=C3=A9.=20
+>>>>BPscript est une couche syntaxique par-dessus, pas un remplacement.
+>>>>
+>>>>Un langage minimal. BPscript ne comporte que 9 symboles syntaxiques=20
+>>>>et aucun mot r=C3=A9serv=C3=A9 :
+>>>>
+>>>>@           directive syst=C3=A8me (import de librairies)
+>>>>-> <- <>    d=C3=A9rivation + direction
+>>>>{ , }       polym=C3=A9trie
+>>>>( )         arguments
+>>>>:           param=C3=A8tre (cl=C3=A9: valeur)
+>>>>=3D           d=C3=A9finition
+>>>>[ ]         options (mode de d=C3=A9rivation)
+>>>>
+>>>>Tout le vocabulaire =E2=80=94 notes, instruments, gammes, comportements =
+=E2=80=94=20
+>>>>vient de librairies import=C3=A9es. Le langage lui-m=C3=AAme ne sait pa=
+s ce=20
+>>>>qu'est une note.
+>>>>
+>>>>Trois types de signaux inspir=C3=A9s du modulaire eurorack : Gate=20
+>>>>(=C3=A9v=C3=A9nement avec dur=C3=A9e), Trigger (d=C3=A9clenchement ponc=
+tuel), CV (valeur=20
+>>>>continue). =C3=87a formalise ce que BP3 fait d=C3=A9j=C3=A0 impliciteme=
+nt avec les=20
+>>>>notes (gate), les changements de param=C3=A8tres comme `_vel()`=20
+>>>>(trigger), et les contr=C3=B4les continus comme `_pitchbend` (CV).
+>>>>
+>>>>S=C3=A9paration en trois couches :
+>>>>- D=C3=A9finition : le vocabulaire =E2=80=94 des comportements nomm=C3=
+=A9s,=20
+>>>>param=C3=A9tr=C3=A9s, r=C3=A9utilisables (comme du CSS)
+>>>>- Composition : la structure temporelle =E2=80=94 le coeur BP, d=C3=A9r=
+ivation et=20
+>>>>polym=C3=A9trie
+>>>>- Ex=C3=A9cution : le binding vers le monde r=C3=A9el =E2=80=94 SuperCo=
+llider, MIDI,=20
+>>>>Web Audio, lumi=C3=A8res...
+>>>>
+>>>>La m=C3=AAme composition peut =C3=AAtre interpr=C3=A9t=C3=A9e par des c=
+ontextes=20
+>>>>d'ex=C3=A9cution diff=C3=A9rents, exactement comme une page HTML est re=
+ndue=20
+>>>>diff=C3=A9remment par diff=C3=A9rents navigateurs.
+>>>>
+>>>>Pas de logique dans le langage. C'est un choix d=C3=A9lib=C3=A9r=C3=A9. =
+BP3 avait=20
+>>>>d=C3=BB int=C3=A9grer progressivement des contr=C3=B4les de flux, des v=
+ariables,=20
+>>>>des flags =E2=80=94 complexifiant la syntaxe. BPscript refuse cette voi=
+e :=20
+>>>>toute logique conditionnelle ou traitement de signal est =C3=A9crit dan=
+s=20
+>>>>un vrai langage de programmation (SuperCollider, Python, JavaScript)=20
+>>>>et expos=C3=A9 =C3=A0 BPscript sous forme de noms simples via les libra=
+iries.=20
+>>>>Le compositeur =C3=A9crit `wobble(C4, mood: dark)`. Le d=C3=A9veloppeur =
+qui a=20
+>>>>cr=C3=A9=C3=A9 la librairie a mis les `if` et les boucles dedans.
+>>>>
+>>>>Ouverture au live coding. Les trois couches =C3=A9tant ind=C3=A9pendant=
+es, on=20
+>>>>peut modifier en temps r=C3=A9el la d=C3=A9finition (le timbre change), =
+la=20
+>>>>composition (la structure change) ou l'ex=C3=A9cution (la destination=
+=20
+>>>>change). La communication avec SuperCollider se fait naturellement=20
+>>>>par OSC.
+>>>>
+>>>>Au-del=C3=A0 de la musique. Puisque BP ordonnance des symboles dans le=
+=20
+>>>>temps sans savoir ce qu'ils repr=C3=A9sentent, BPscript peut piloter du=
+=20
+>>>>son, de la lumi=C3=A8re, de la vid=C3=A9o, de la robotique =E2=80=94 n'=
+importe quel=20
+>>>>processus temporel. Il suffit d'importer la librairie=20
+>>>>correspondante.
+>>>>
+>>>>J'aimerais beaucoup avoir ton regard sur cette d=C3=A9marche. Est-ce qu=
+e=20
+>>>>=C3=A7a te semble faire sens ? Y a-t-il des aspects du moteur BP3 que t=
+u=20
+>>>>estimes sous-exploit=C3=A9s et qui pourraient enrichir cette vision ? D=
+es=20
+>>>>=C3=A9cueils que tu as rencontr=C3=A9s et que je devrais anticiper ?
+>>>>Si =C3=A7a t'int=C3=A9resse j'ai une description un peu plus d=C3=A9tai=
+ll=C3=A9e sur=20
+>>>>laquelle je r=C3=A9fl=C3=A9chis encore avant de lancer le d=C3=A9velopp=
+ement qui=20
+>>>>n'est en r=C3=A9alit=C3=A9 pas tr=C3=A8s compliqu=C3=A9, le plus dur=
+ =C3=A9tant le transpiler=20
+>>>>BPscript vers BP3, quasi tout le reste sera de la=20
+>>>>r=C3=A9utilisation/r=C3=A9=C3=A9critures de ce que tu as d=C3=A9j=C3=A0 =
+fait et un peu de ce=20
+>>>>qui a =C3=A9t=C3=A9 fait dans SuperCollider aussi.
+>>>>
+>>>>=C3=80 bient=C3=B4t,
+>>>>
+>>>>Romain
+>>>>
+>>>>Sam 28 f=C3=A9vr 2026, =C3=A0 20:12, Romain Peyrichou a =C3=A9crit=E2=
+=80=AF:
+>>>>>Merci beaucoup Bernard je vais lire et int=C3=A9grer soigneusement tou=
+t=20
+>>>>>=C3=A7a.
+>>>>>
+>>>>>Pour ma part, j'ai repris le travail sur le formalisme BP3 mais=20
+>>>>>j'avoue que c'est aride, c'est pas ce que je pr=C3=A9f=C3=A8re.
+>>>>>J'aurais aussi quelques questions sur le sujet mais c'est pas=20
+>>>>>press=C3=A9, je ne vais pas te flooder. J'ai de quoi faire par ailleur=
+s.
+>>>>>
+>>>>>Je vais d=C3=A9j=C3=A0 avancer avec =C3=A7a demain tout en poursuivant =
+les tests=20
+>>>>>cot=C3=A9 IA. A force de travailler avec claude code, j'ai d=C3=A9velo=
+pp=C3=A9 un=20
+>>>>>composant pour am=C3=A9liorer ses capacit=C3=A9s de recherche qui semb=
+lent=20
+>>>>>avoir des r=C3=A9sultats significatifs... et si semblerait que personn=
+e=20
+>>>>>n'ait d=C3=A9j=C3=A0 fait =C3=A7a sous cet angle la, alors je suis par=
+ti pour=20
+>>>>>faire des mesures benchmark=C3=A9es A/B et =C3=A9crire un papier sur c=
+e sujet=20
+>>>>>aussi... :)
+>>>>>
+>>>>>Je te tiens au courant.
+>>>>>
+>>>>>Romain
+>>>>>
+>>>>>
+>>>>>Sam 28 f=C3=A9vr 2026, =C3=A0 18:03, Bernard Bel a =C3=A9crit=E2=80=AF=
+:
+>>>>>>Bonjour Romain,
+>>>>>>
+>>>>>>Voici un d=C3=A9but de r=C3=A9ponse. J=E2=80=99ai tr=C3=A8s peu trava=
+ill=C3=A9 sur les=20
+>>>>>>grammaires de forme (pattern grammars) car elles n=E2=80=99ont =C3=A9=
+t=C3=A9=20
+>>>>>>utilis=C3=A9es que dans le travail sur le tabla, donc dans BP1 bien=
+=20
+>>>>>>qu=E2=80=99elles soient aussi impl=C3=A9ment=C3=A9es dans BP2/BP3. Or =
+les patterns=20
+>>>>>>sont importants dans tous les genres musicaux qui utilisent la=20
+>>>>>>r=C3=A9p=C3=A9tition pour renforcer un effet ou cr=C3=A9er une fausse =
+attente.
+>>>>>>
+>>>>>>Donc, m=C3=AAme si je les ai d=C3=A9crits dans nos premiers articles=
+=20
+>>>>>>empruntant tous leurs exemples au tabla, il me para=C3=AEt important,=
+=20
+>>>>>>dans une approche plus th=C3=A9orique du moteur d=E2=80=99inf=C3=A9re=
+nces BP, de les=20
+>>>>>>documenter avec des symboles simples mais non rattach=C3=A9s =C3=A0 u=
+n style=20
+>>>>>>musical. C=E2=80=99est la raison de cet article que je vais probablem=
+ent=20
+>>>>>>traduire et publier dans les tutoriels.
+>>>>>>
+>>>>>>Il n=E2=80=99y a pas de difficult=C3=A9 sp=C3=A9cifique =C3=A0 BP3 po=
+ur impl=C3=A9menter le=20
+>>>>>>modus tollens de BP1, ni l=E2=80=99apprentissage des poids =C3=A0 par=
+tir=20
+>>>>>>d'exemples. C=E2=80=99est simplement que Jim avait cess=C3=A9 le trav=
+ail sur le=20
+>>>>>>terrain quand BP2 a =C3=A9t=C3=A9 cr=C3=A9=C3=A9, et je n=E2=80=99ai=
+ pas eu de demande par la=20
+>>>>>>suite. Mais je vais y travailler.
+>>>>>>
+>>>>>>En v=C3=A9rifiant les grammaires d=C3=A9crites dans cet article, j=E2=
+=80=99ai=20
+>>>>>>d=C3=A9couvert des bugs dans BP3 lorsqu=E2=80=99on veut en sortie du =
+=E2=80=9CBP data=E2=80=9D=20
+>>>>>>et non du son. J=E2=80=99ai commenc=C3=A9 =C3=A0 les corriger et je v=
+ais publier une=20
+>>>>>>version 3.3.13.
+>>>>>>
+>>>>>>C=E2=80=99est un tout petit pas en avant !
+>>>>>>
+>>>>>>Bernard
+>>>>>>
+>>>>>>
+>>>>>>------ Original Message ------
+>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>Date 25/02/2026 09:22:14
+>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissa=
+nce : sept=20
+>>>>>>dimensions"
+>>>>>>
+>>>>>>>Merci beaucoup Bernard pour ces infos.
+>>>>>>>Je te fais faire de la sp=C3=A9l=C3=A9ologie ;)
+>>>>>>>
+>>>>>>>Alors, je te joins la proposition de cadre de l'interview :D
+>>>>>>>
+>>>>>>>Et je comprends bien qu'avec tout ce que je produis, =C3=A7a soit=20
+>>>>>>>assez chronophage. Sens toi libre de ne pas tout lire :D
+>>>>>>>
+>>>>>>>@+
+>>>>>>>
+>>>>>>>Mar 24 f=C3=A9vr 2026, =C3=A0 09:32, Bernard Bel a =C3=A9crit=E2=80=
+=AF:
+>>>>>>>>Bonjour Romain,
+>>>>>>>>
+>>>>>>>>Je viens d=E2=80=99=C3=A9crire =C3=A0 Shlomo pour lui demander de s=
+outenir ton=20
+>>>>>>>>inscription =C3=A0 arXiv, en lui donnant quelques d=C3=A9tails sur=
+ ton=20
+>>>>>>>>parcours et tes travaux actuels.
+>>>>>>>>
+>>>>>>>>Je suis all=C3=A9 faire un tour sur ma th=C3=A8se (en 1990,=20
+>>>>>>>>https://theses.hal.science/tel-00009692v1) pour faire le  point=20
+>>>>>>>>sur les bases th=C3=A9oriques. Un peu effray=C3=A9 par les r=C3=A9f=
+=C3=A9rences =C3=A0=20
+>>>>>>>>des publications que je n=E2=80=99ai  plus utilis=C3=A9es par la su=
+ite, ni=20
+>>>>>>>>m=C3=AAme gard=C3=A9es sous la main =E2=80=94 je me souviens de la=
+ montagne de=20
+>>>>>>>>papiers =C3=A0 jeter le jour o=C3=B9 j=E2=80=99ai quitt=C3=A9 le la=
+boratoire ! Il est=20
+>>>>>>>>vrai qu=E2=80=99avec l=E2=80=99archivage num=C3=A9rique la plupart=
+ pourraient =C3=AAtre=20
+>>>>>>>>r=C3=A9cup=C3=A9r=C3=A9es, mais c=E2=80=99est surtout la m=C3=A9moi=
+re qui me fait d=C3=A9faut=E2=80=A6
+>>>>>>>>
+>>>>>>>>Lire tes articles est donc un refresher course mais il me prend=20
+>>>>>>>>beaucoup de temps. Donc je comprends  l=E2=80=99int=C3=A9r=C3=AAt d=
+=E2=80=99illustrer ton=20
+>>>>>>>>propos par des exemples musicaux dans des =E2=80=9Cgrammaires=20
+>>>>>>>>musicales=E2=80=9D, mais la d=C3=A9marche m=E2=80=99est encore peu=
+ famili=C3=A8re.=20
+>>>>>>>>Effectivement, un draft de structure serait bienvenu !
+>>>>>>>>
+>>>>>>>>D=E2=80=99apr=C3=A8s mon archive, le =E2=80=9CAdler" cit=C3=A9 dans =
+mes publications =C3=A9tait=20
+>>>>>>>>un ethnomusicologue qui travaillait avec Ellis dans les ann=C3=A9es=
+=20
+>>>>>>>>1980, et qui avait inspir=C3=A9 notre approche de musicologie=20
+>>>>>>>>=E2=80=9Cdialectique=E2=80=9D mat=C3=A9rialis=C3=A9e dans le sch=C3=
+=A9ma=20
+>>>>>>>>expert-analyste-machine du travail sur le terrain avec BP1.=20
+>>>>>>>>J=E2=80=99avais =C3=A9crit : "L'originalit=C3=A9 de notre d=C3=A9ma=
+rche a consist=C3=A9 =C3=A0=20
+>>>>>>>>introduire l'ordinateur comme un partenaire actif dans la phase=20
+>>>>>>>>d'acquisition des connaissances, donnant de ce fait plus=20
+>>>>>>>>d'importance aux mod=C3=A8les g=C3=A9n=C3=A9ratifs, cens=C3=A9s exp=
+liquer la=20
+>>>>>>>>comp=C3=A9tence, qu'aux mod=C3=A8les analytiques qui se contentent=
+ de=20
+>>>>>>>>l=E2=80=99illustrer.=E2=80=9D
+>>>>>>>>
+>>>>>>>>Je vais continuer la lecture et t=E2=80=99envoyer des commentaires=
+ ou=20
+>>>>>>>>des questions quand elles viennent. J=E2=80=99ai =C3=A9t=C3=A9 mobi=
+lis=C3=A9 ces=20
+>>>>>>>>derniers jours par la mise en place de proc=C3=A9dures=20
+>>>>>>>>d=E2=80=99automatisation (avec Make) dont Tansen avait besoin pour=
+ g=C3=A9rer=20
+>>>>>>>>des inscriptions aux stages d=E2=80=99Andr=C3=A9ine=E2=80=A6
+>>>>>>>>
+>>>>>>>>A +
+>>>>>>>>Bernard
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>------ Original Message ------
+>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>Date 24/02/2026 08:00:23
+>>>>>>>>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnais=
+sance : sept=20
+>>>>>>>>dimensions"
+>>>>>>>>
+>>>>>>>>>Re, Bernard,
+>>>>>>>>>
+>>>>>>>>>J'aimerai publier ce premier papier sur arXiv, je vois que tu=20
+>>>>>>>>>n'y es pas inscrit, et ils demandent un endorsement, est ce que=20
+>>>>>>>>>tu pourrais me mettre en contact avec Shlomo Dubnov ?
+>>>>>>>>>Il pourrait me parrainer dans la bonne cat=C3=A9gorie.
+>>>>>>>>>
+>>>>>>>>>Merci
+>>>>>>>>>
+>>>>>>>>>Mar 24 f=C3=A9vr 2026, =C3=A0 07:13, Romain Peyrichou a =C3=A9crit=
+=E2=80=AF:
+>>>>>>>>>>Hello Bernard,
+>>>>>>>>>>
+>>>>>>>>>>J'ai fais un petit d=C3=A9tour la semaine derni=C3=A8re pour inve=
+stiguer=20
+>>>>>>>>>>un sujet qui donnera peut =C3=AAtre des fruits du cot=C3=A9 de la=
+=20
+>>>>>>>>>>recherche IA (pour la premi=C3=A8re fois, il semblerait que j'ai=
+=20
+>>>>>>>>>>produit un composant qui am=C3=A9liore significativement la quali=
+t=C3=A9=20
+>>>>>>>>>>de recherche de Claude Code).
+>>>>>>>>>>Bref je me suis remis sur ce papier que j'ai soumis hier soir=20
+>>>>>>>>>>dans la version que je te joins =C3=A0 Computational Linguistics.=
+..=20
+>>>>>>>>>>on verra bien les retours, je croise les doigts.
+>>>>>>>>>>Comme tu le sais, ce papier traite l'asym=C3=A9trie de mani=C3=A8=
+re=20
+>>>>>>>>>>domain-independent. Il n'y a plus que 6 dimensions, j'en ai=20
+>>>>>>>>>>finalement fusionn=C3=A9 2 qui =C3=A9taient assez proches: d=C3=
+=A9terminisme=20
+>>>>>>>>>>et ambigu=C3=AFt=C3=A9, qui =C3=A9taient finalement le m=C3=AAme=
+ ph=C3=A9nom=C3=A8ne regard=C3=A9=20
+>>>>>>>>>>de deux points de vue diff=C3=A9rents.
+>>>>>>>>>>
+>>>>>>>>>>Mon id=C3=A9e est de publier maintenant un "companion paper" qui=
+=20
+>>>>>>>>>>instancierait ce cadre sur les grammaires musicales.
+>>>>>>>>>>D'une part dans sa dimension th=C3=A9orique: comment se manifeste=
+nt=20
+>>>>>>>>>>ces dimensions dans la musique, et est-ce qu'il n'y en aurait=20
+>>>>>>>>>>pas d'autres (je pense =C3=A0 la tripartition de Nattiez=20
+>>>>>>>>>>(po=C3=AF=C3=A9tique/neutre/esth=C3=A9sique) que je verrai bien c=
+omme une=20
+>>>>>>>>>>dimension suppl=C3=A9mentaire, mais peut =C3=AAtre qu'en y r=C3=
+=A9fl=C3=A9chissant=20
+>>>>>>>>>>=C3=A7a ouvrira sur un nouveau regard sur le langage et la=20
+>>>>>>>>>>formalisation: est ce un =C3=A9tat fini, un sujet d=C3=A9termin=
+=C3=A9, ou un=20
+>>>>>>>>>>sujet en =C3=A9volution/mutation)
+>>>>>>>>>>Et d'autre part, lui fournir un ancrage dans le r=C3=A9el, a=20
+>>>>>>>>>>travers diff=C3=A9rents syst=C3=A8mes existants =E2=80=94 notamme=
+nt GTTM, IDyOM,=20
+>>>>>>>>>>et bien s=C3=BBr BP3.
+>>>>>>>>>>
+>>>>>>>>>>Ton expertise serait pr=C3=A9cieuse sur plusieurs points:
+>>>>>>>>>>- BP3 comme cas unique de bidirectionnalit=C3=A9 en grammaires=20
+>>>>>>>>>>musicales
+>>>>>>>>>>- L'exp=C3=A9rience QAVAID
+>>>>>>>>>>- Les aspects temporels (smooth time, _tempo()) qui illustrent=20
+>>>>>>>>>>D6 de mani=C3=A8re concr=C3=A8te
+>>>>>>>>>>- Les pistes que tu as mentionn=C3=A9es autour de Gould et Adler
+>>>>>>>>>>- Et plus largement, les exemples musicaux cross-culturels
+>>>>>>>>>>
+>>>>>>>>>>Si je veux r=C3=A9sumer, je pense que ce papier pourrait utiliser=
+=20
+>>>>>>>>>>tes =C3=A9tudes pour illustrer une grande partie de ce cadre=20
+>>>>>>>>>>th=C3=A9orique.
+>>>>>>>>>>
+>>>>>>>>>>Qu'en dis-tu?
+>>>>>>>>>>
+>>>>>>>>>>Si t'es ok, je peux te soumettre un draft de structure=20
+>>>>>>>>>>envisag=C3=A9e, avec des points en r=C3=A9flexion, des questions=
+ sur des=20
+>>>>>>>>>>choix que tu as fait, difficult=C3=A9s rencontr=C3=A9es =C3=A0 tr=
+avers BP1, 2=20
+>>>>>>>>>>et 3.
+>>>>>>>>>>
+>>>>>>>>>>@+
+>>>>>>>>>>Romain
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>Mar 17 f=C3=A9vr 2026, =C3=A0 23:51, Bernard Bel a =C3=A9crit=E2=
+=80=AF:
+>>>>>>>>>>>Bonsoir Romain,
+>>>>>>>>>>>
+>>>>>>>>>>>J=E2=80=99ai commenc=C3=A9 =C3=A0 lire=E2=80=A6 C=E2=80=99est re=
+marquable dans la clart=C3=A9 de=20
+>>>>>>>>>>>l=E2=80=99expos=C3=A9. Et =C3=A7a me ram=C3=A8ne 36 ans en arri=
+=C3=A8re quand j=E2=80=99essayais=20
+>>>>>>>>>>>de formaliser l=E2=80=99inf=C3=A9rence grammaticale =C3=A0 la lu=
+mi=C3=A8re de Gould=20
+>>>>>>>>>>>, Adler et autres que j=E2=80=99ai oubli=C3=A9s. Pas facile d=E2=
+=80=99y revenir,=20
+>>>>>>>>>>>mais le voyage m=E2=80=99int=C3=A9resse.  Je t=E2=80=99en =C3=A9=
+crirai plus les jours=20
+>>>>>>>>>>>qui viennent.
+>>>>>>>>>>>
+>>>>>>>>>>>Aujourd=E2=80=99hui j=E2=80=99ai pass=C3=A9 quelques heures =C3=
+=A0 r=C3=A9gler les derniers=20
+>>>>>>>>>>>probl=C3=A8mes de mon site. Install=C3=A9 smtp.gmail.com que j=
+=E2=80=99ai pu=20
+>>>>>>>>>>>valider (gr=C3=A2ce =C3=A0 ChatGPT). Corrig=C3=A9 quelques liens =
+dans la=20
+>>>>>>>>>>>base de donn=C3=A9es et les widgets. J=E2=80=99ai h=C3=A2te de r=
+evenir =C3=A0 la=20
+>>>>>>>>>>>musicologie et=E2=80=A6 aux langages formels ! Mais je doute de=
+=20
+>>>>>>>>>>>pouvoir apporter quelque chose d=E2=80=99original =C3=A0 un expo=
+s=C3=A9=20
+>>>>>>>>>>>th=C3=A9orique d=E2=80=99un tel niveau.
+>>>>>>>>>>>
+>>>>>>>>>>>A +
+>>>>>>>>>>>
+>>>>>>>>>>>Bernard
+>>>>>>>>>>>
+>>>>>>>>>>>
+>>>>>>>>>>>------ Original Message ------
+>>>>>>>>>>>From "Romain Peyrichou" <romain@liance.art>
+>>>>>>>>>>>To "Bernard Bel" <bernarbel@gmail.com>
+>>>>>>>>>>>Date 17/02/2026 17:40:51
+>>>>>>>>>>>Subject Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaiss=
+ance : sept=20
+>>>>>>>>>>>dimensions"
+>>>>>>>>>>>
+>>>>>>>>>>>>Bonjour Bernard,
+>>>>>>>>>>>>
+>>>>>>>>>>>>Suite aux travaux entrepris sur le formalisme de BP3 et=20
+>>>>>>>>>>>>BP2SC, et suite =C3=A0 toutes les questions que =C3=A7a m'a fai=
+t me=20
+>>>>>>>>>>>>poser, j'ai identifi=C3=A9 un certain nombre de sujets qui=20
+>>>>>>>>>>>>sembleraient m=C3=A9riter la r=C3=A9daction d'articles.
+>>>>>>>>>>>>Certains articles du blog (L0, L11, L13, et pas mal de B je=20
+>>>>>>>>>>>>dois dire) m'ont donn=C3=A9 envie de structurer un papier sur=
+=20
+>>>>>>>>>>>>l'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance, ce qui vi=
+siblement=20
+>>>>>>>>>>>>n'avait pas =C3=A9t=C3=A9 encore fait.
+>>>>>>>>>>>>
+>>>>>>>>>>>>Si tu veux bien j'aimerai bien ton regard sur ce draft.
+>>>>>>>>>>>>
+>>>>>>>>>>>>Mon id=C3=A9e est de produire un premier papier g=C3=A9n=C3=A9r=
+aliste sur=20
+>>>>>>>>>>>>le sujet orient=C3=A9 th=C3=A9orie du langage et de poursuivre=
+ sur un=20
+>>>>>>>>>>>>autre traitant sp=C3=A9cifiquement du domaine musical, dans=20
+>>>>>>>>>>>>lequel on pourrait utiliser des exemples du domaine dont BP.=20
+>>>>>>>>>>>>Il introduit =C3=A9galement une 8eme asym=C3=A9trie sp=C3=A9cif=
+ique a la=20
+>>>>>>>>>>>>musique.
+>>>>>>>>>>>>Si jamais =C3=A7a suscite ton int=C3=A9r=C3=AAt on pourrait co=
+=C3=A9crire cet=20
+>>>>>>>>>>>>autre papier.
+>>>>>>>>>>>>
+>>>>>>>>>>>>Voici un r=C3=A9sum=C3=A9 de tout =C3=A7a =C3=A9crit par mon ch=
+er Claude Code:
+>>>>>>>>>>>>
+>>>>>>>>>>>>## De quoi il s'agit
+>>>>>>>>>>>>
+>>>>>>>>>>>>Le papier identifie 7 dimensions selon lesquelles la=20
+>>>>>>>>>>>>g=C3=A9n=C3=A9ration et la reconnaissance divergent :
+>>>>>>>>>>>>
+>>>>>>>>>>>>1. **Complexit=C3=A9 computationnelle** =E2=80=94 la g=C3=A9n=
+=C3=A9ration est O(n)=20
+>>>>>>>>>>>>pour tout niveau de Chomsky, tandis que le parsing cro=C3=AEt d=
+e=20
+>>>>>>>>>>>>O(n) =C3=A0 l'ind=C3=A9cidabilit=C3=A9
+>>>>>>>>>>>>2. **D=C3=A9terminisme** =E2=80=94 la g=C3=A9n=C3=A9ration peut =
+=C3=AAtre d=C3=A9terministe,=20
+>>>>>>>>>>>>le parsing est fondamentalement non-d=C3=A9terministe
+>>>>>>>>>>>>3. **Directionnalit=C3=A9** =E2=80=94 la g=C3=A9n=C3=A9ration e=
+st toujours=20
+>>>>>>>>>>>>top-down, le parsing a un degr=C3=A9 de libert=C3=A9 (LL, LR,=
+=20
+>>>>>>>>>>>>Earley...)
+>>>>>>>>>>>>4. **Information** =E2=80=94 le g=C3=A9n=C3=A9rateur conna=C3=
+=AEt la source, le=20
+>>>>>>>>>>>>parser inf=C3=A8re depuis la surface (lien Shannon)
+>>>>>>>>>>>>5. **Non-injectivit=C3=A9** =E2=80=94 un chemin de d=C3=A9rivat=
+ion =E2=86=92 une=20
+>>>>>>>>>>>>cha=C3=AEne, mais une cha=C3=AEne =E2=86=92 plusieurs arbres (P=
+arikh 1966)
+>>>>>>>>>>>>6. **Inf=C3=A9rence grammaticale** =E2=80=94 la troisi=C3=A8me=
+ direction,=20
+>>>>>>>>>>>>born=C3=A9e par Gold (1967)
+>>>>>>>>>>>>7. **Temporalit=C3=A9** =E2=80=94 le g=C3=A9n=C3=A9rateur cr=C3=
+=A9e le futur (surprisal=20
+>>>>>>>>>>>>=3D 0), le parser pr=C3=A9dit sous incertitude (surprisal > 0)
+>>>>>>>>>>>>
+>>>>>>>>>>>>La th=C3=A8se centrale : la caract=C3=A9risation "la g=C3=A9n=
+=C3=A9ration est=20
+>>>>>>>>>>>>facile, le parsing est difficile" est trompeuse. La vraie=20
+>>>>>>>>>>>>asym=C3=A9trie est *structurelle* =E2=80=94 le parsing est touj=
+ours=20
+>>>>>>>>>>>>contraint tandis que la g=C3=A9n=C3=A9ration ne l'est pas=20
+>>>>>>>>>>>>n=C3=A9cessairement.
+>>>>>>>>>>>>
+>>>>>>>>>>>>**Constat de d=C3=A9part** : aucun survey n'a trait=C3=A9 cette=
+=20
+>>>>>>>>>>>>asym=C3=A9trie comme sujet central. Les 7 dimensions existent=
+=20
+>>>>>>>>>>>>dans la litt=C3=A9rature mais n'ont jamais =C3=A9t=C3=A9 rassem=
+bl=C3=A9es.
+>>>>>>>>>>>>
+>>>>>>>>>>>>## Ce que c'est et ce que ce n'est pas
+>>>>>>>>>>>>
+>>>>>>>>>>>>- C'est un papier **CS theory / langages formels**,=20
+>>>>>>>>>>>>ind=C3=A9pendant du domaine musical
+>>>>>>>>>>>>- Il n'y a **aucune mention** de BP3, ni de musique dans le=20
+>>>>>>>>>>>>corps du texte
+>>>>>>>>>>>>- La musique n'appara=C3=AEt qu'en =C2=A76.4 comme "laboratoire =
+id=C3=A9al"=20
+>>>>>>>>>>>>pour instancier les dimensions
+>>>>>>>>>>>>- Un **article compagnon** (Paper 9=CE=B2) est pr=C3=A9vu pour=
+=20
+>>>>>>>>>>>>appliquer ce cadre aux grammaires musicales =E2=80=94 c'est l=
+=C3=A0 que=20
+>>>>>>>>>>>>BP3, GTTM, IDyOM, et la tripartition de Nattiez=20
+>>>>>>>>>>>>interviendraien
+>>>>>>>>>>>>
+>>>>>>>>>>>>## Pourquoi j'ai besoin de ton regard
+>>>>>>>>>>>>
+>>>>>>>>>>>>**les formalisations math=C3=A9matiques sont ma synth=C3=A8se**=
+, pas=20
+>>>>>>>>>>>>des formules tir=C3=A9es d'articles existants. Les r=C3=A9sulta=
+ts=20
+>>>>>>>>>>>>sous-jacents sont =C3=A9tablis (Chomsky, Gold, Parikh, Shannon,=
+=20
+>>>>>>>>>>>>etc.), mais la mise en formules est la mienne. Concr=C3=A8temen=
+t=20
+>>>>>>>>>>>>:
+>>>>>>>>>>>>
+>>>>>>>>>>>>### Points solides (citations directes)
+>>>>>>>>>>>>- Les complexit=C3=A9s O(n), O(n=C2=B3), PSPACE-complet =E2=86=
+=92 Hopcroft &=20
+>>>>>>>>>>>>Ullman, Aho et al.
+>>>>>>>>>>>>- Les nombres de Catalan pour l'ambigu=C3=AFt=C3=A9 =E2=86=92 J=
+urafsky &=20
+>>>>>>>>>>>>Martin
+>>>>>>>>>>>>- Le th=C3=A9or=C3=A8me de Gold (1967) sur l'impossibilit=C3=A9 =
+d'inf=C3=A9rence
+>>>>>>>>>>>>- Le th=C3=A9or=C3=A8me de Parikh (1966) sur l'ambigu=C3=AFt=C3=
+=A9 intrins=C3=A8que
+>>>>>>>>>>>>- La surprisal =E2=86=92 Hale (2001), Levy (2008)
+>>>>>>>>>>>>
+>>>>>>>>>>>>### Points =C3=A0 v=C3=A9rifier (mes formulations)
+>>>>>>>>>>>>- =C2=A74.1 : la fonction T_parse(G, n) pr=C3=A9sent=C3=A9e com=
+me un=20
+>>>>>>>>>>>>"cases" sur k =E2=80=94 c'est ma pr=C3=A9sentation, pas une for=
+mule=20
+>>>>>>>>>>>>existante
+>>>>>>>>>>>>- =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =CE=A3* et parse: G =C3=
+=97 =CE=A3* =E2=86=92 2^T =E2=80=94 mes=20
+>>>>>>>>>>>>d=C3=A9finitions fonctionnelles
+>>>>>>>>>>>>- =C2=A74.3 : parse_=CE=B4(G, w) avec =CE=B4 comme param=C3=A8t=
+re de strat=C3=A9gie =E2=80=94=20
+>>>>>>>>>>>>ma notation
+>>>>>>>>>>>>- =C2=A74.5 : l'argument sur l'injectivit=C3=A9 de gen vs.=20
+>>>>>>>>>>>>non-injectivit=C3=A9 de parse
+>>>>>>>>>>>>- =C2=A74.7 : le lien entre surprisal et asym=C3=A9trie tempore=
+lle =E2=80=94=20
+>>>>>>>>>>>>mon interpr=C3=A9tation de Hale/Levy
+>>>>>>>>>>>>
+>>>>>>>>>>>>## **Mes quesiotns**
+>>>>>>>>>>>>
+>>>>>>>>>>>>1. **G=C3=A9n=C3=A9ral** : Est-ce que ces formulations te sembl=
+ent=20
+>>>>>>>>>>>>math=C3=A9matiquement correctes et d=C3=A9fendables devant un r=
+eviewer=20
+>>>>>>>>>>>>CS ?
+>>>>>>>>>>>>
+>>>>>>>>>>>>2. **D3 (directionnalit=C3=A9)** : J'affirme que la g=C3=A9n=C3=
+=A9ration=20
+>>>>>>>>>>>>est "intrins=C3=A8quement top-down". BP1 avait le parsing en=20
+>>>>>>>>>>>>"context-sensitive right mode derivation" =E2=80=94 est-ce que=
+ la=20
+>>>>>>>>>>>>direction de BP1 remet en question cette affirmation ?
+>>>>>>>>>>>>
+>>>>>>>>>>>>3. **D6 (inf=C3=A9rence)** : Ta vision ANAL+QAVAID+TEMP (inf=C3=
+=A9rer=20
+>>>>>>>>>>>>des grammaires depuis des exemples) =E2=80=94 est-ce que =C3=A7=
+a=20
+>>>>>>>>>>>>correspond =C3=A0 ce que je d=C3=A9cris comme la "troisi=C3=A8m=
+e direction"=20
+>>>>>>>>>>>>?
+>>>>>>>>>>>>
+>>>>>>>>>>>>4. **Le split en 2 articles** : Le premier est=20
+>>>>>>>>>>>>volontairement domain-independent. Le second ajouterait une=20
+>>>>>>>>>>>>8=C3=A8me dimension =E2=80=94 l'**asym=C3=A9trie musicale** (co=
+mposition vs.=20
+>>>>>>>>>>>>analyse, le pi=C3=A8ge terminologique GTTM qui est nomm=C3=A9=
+=20
+>>>>>>>>>>>>"generative" mais fondamentalement analytique, BP3 comme cas=20
+>>>>>>>>>>>>unique de bidirectionnalit=C3=A9, tripartition de Nattiez) =E2=
+=80=94 et=20
+>>>>>>>>>>>>instancierait les 7 autres sur BP3, GTTM, IDyOM. Est-ce que=20
+>>>>>>>>>>>>cette strat=C3=A9gie de split te semble judicieuse ?
+>>>>>>>>>>>>
+>>>>>>>>>>>>## Le fichier
+>>>>>>>>>>>>
+>>>>>>>>>>>>Je t'envoie la version fran=C3=A7aise (traduction de lecture).=
+ La=20
+>>>>>>>>>>>>version soumise sera en anglais. C'est un premier brouillon=20
+>>>>>>>>>>>>=E2=80=94 tout est modifiable.
+>>>>>>>>>>>>
+>>>>>>>>>>>>Merci d'avance pour ton regard,
+>>>>>>>>>>>>Romain
+>>>>>>>>>>>>
+>>>>>>>>>>>>---
+>>>>>>>>>>>>
+>>>>>>>>>>>>*P.S. : Le travail avec Claude a =C3=A9t=C3=A9 essentiel pour=
+=20
+>>>>>>>>>>>>structurer ce papier.
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>Pi=C3=A8ces jointes:
+>>>>>>>>>>peyrichou_generation_recognition_asymmetry_2026.pdf
+>>>>>>>>>
+>>>>>>>
+>>>>>>
+>>>>>>Pi=C3=A8ces jointes:
+>>>>>>pattern-grammars-fr.docx.zip
+>>>>>
+>>>>
+>>
+>>
+>>Pi=C3=A8ces jointes:
+>>BPSCRIPT_VISION.md
+>
+--------=_MB574111B2-3C8B-4BEA-A20A-02F94D1AA624
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><title></title><style type=3D"text/css"><!--#xe431a0edccde470 #=
+qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt #qt-qt-qt-qt-x62a3=
+364d1a3946c #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-x073605192e5c465 #qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt =
+#qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-x073605192e5=
+c465 #qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt =
+#qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-ci=
+te
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt =
+#qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-ci=
+te2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt =
+#qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt =
+blockquote.qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt =
+blockquote.qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#xe431a0edccde470 #qt #qt-qt #qt-qt-xec8ba0327c73443 #qt-qt-qt #qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#xe431a0edccde470 #qt #qt-qt blockquote.qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#xe431a0edccde470 #qt #qt-qt blockquote.qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#xe431a0edccde470 #qt #qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+--></style><style id=3D"css_styles" type=3D"text/css"><!--blockquote.cite { =
+margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right:0px=
+; border-left: 1px solid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}
+--></style></head><body style=3D"overflow-wrap: break-word; -webkit-nbsp-mo=
+de: space; line-break: after-white-space;"><div>Bonsoir Romain,</div><div><=
+br /></div><div>J=E2=80=99ai jet=C3=A9 un =C5=93il en diagonale car je dois =
+aider =C3=A0 la tenue de la maison pour accueillir 7 apprentis de la Manuf=
+acture=E2=80=A6</div><div><br /></div><div>Ce n=E2=80=99est pas g=C3=AAnant =
+d=E2=80=99adopter des symboles diff=C3=A9rents s=E2=80=99il est possible,=
+ sans ambigu=C3=AFt=C3=A9, de traduire une notation dans l=E2=80=99autre.</d=
+iv><div><br /></div><div>Par contre, je vois un probl=C3=A8me avec la notat=
+ion polym=C3=A9trique. La forme {A, B, C=E2=80=A6} est identique =C3=A0 BP3=
+, mais je ne vois pas la =E2=80=9Cperiod notation=E2=80=9D, exemple {A . B=
+ . C=E2=80=A6} qui est une s=C3=A9quence dont les fragments ont des dur=C3=
+=A9es symboliques =C3=A9gales. Les deux formes utilisent le m=C3=AAme algor=
+ithme pour l=E2=80=99expansion, et peuvent =C3=AAtre combin=C3=A9es. En BP3 =
+on supprime m=C3=AAme les {} s=E2=80=99il y a une seule s=C3=A9quence. Voi=
+r par exemple -gr.acceleration :</div><div><br /></div><div>gram#1[1] S --&=
+gt;=C2=A0_transpose(12) _vel(60) A B _vel(65) C D _vel(70) E F _vel(75) G _=
+vel(77) H _vel(80) I _vel(85) J _vel(87) K _vel(90) L</div><div><br /></div=
+><div>gram#1[2] A --&gt;=C2=A0E2 .</div><div>gram#1[3] B --&gt;=C2=A0D2 A</=
+div><div>gram#1[4] C --&gt;=C2=A0B2 B</div><div>gram#1[5] D --&gt;=C2=A0G2=
+ C</div><div>gram#1[6] E --&gt;=C2=A0F#2 D</div><div>gram#1[7] F --&gt;=C2=
+=A0A#2 E</div><div>gram#1[8] G --&gt;=C2=A0C2 F</div><div>gram#1[9] H --&gt=
+;=C2=A0G#2 G</div><div>gram#1[10] I --&gt;=C2=A0A2 H</div><div>gram#1[11] J =
+--&gt;=C2=A0D#2 I</div><div>gram#1[12] K --&gt;=C2=A0C#2 J</div><div>gram#=
+1[13] L --&gt;=C2=A0F2 K</div><div><br /></div><div>qui produit :</div><div=
+><br /></div><div>_transpose(12) _vel(60) E2 . D2 E2 . _vel(65) B2 D2 E2 .=
+ G2 B2 D2 E2 . _vel(70) F#2 G2 B2 D2 E2 . Bb2 F#2 G2 B2 D2 E2 . _vel(75) C2=
+ Bb2 F#2 G2 B2 D2 E2 . _vel(77) G#2 C2 Bb2 F#2 G2 B2 D2 E2 . _vel(80) A2 G#2 =
+C2 Bb2 F#2 G2 B2 D2 E2 . _vel(85) Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 . _vel=
+(87) C#2 Eb2 A2 G#2 C2 Bb2 F#2 G2 B2 D2 E2 . _vel(90) F2 C#2 Eb2 A2 G#2 C2=
+ Bb2 F#2 G2 B2 D2 E2 .</div><div><br /></div><div>Sur l=E2=80=99interface PH=
+P je fais afficher le =E2=80=98.=E2=80=99 comme un =E2=80=98=E2=80=A2=E2=80=
+=99 mais la console le convertit en =E2=80=98.=E2=80=99 =C3=A0 cause d=E2=
+=80=99un probl=C3=A8me de gestion UTF8.</div><div><br /></div><div>C=E2=80=
+=99est pour cette raison que j=E2=80=99ai conserv=C3=A9 le =E2=80=98-=E2=80=
+=98 pour d=C3=A9signer un silence d=E2=80=99une unit=C3=A9.</div><div><br /=
+></div><div>Pour les silences ind=C3=A9termin=C3=A9s, j=E2=80=99utilise =E2=
+=80=98=E2=80=A6=E2=80=99 dans l=E2=80=99interface, autrement dit un seul ca=
+ract=C3=A8re converti en =E2=80=98_rest=E2=80=99 dans la console pour la m=
+=C3=AAme raison. C=E2=80=99est probl=C3=A9matique si tu utilises =E2=80=98.=
+=E2=80=99 pour un silence d=E2=80=99une unit=C3=A9 et =E2=80=98...=E2=80=99 =
+pour un silence ind=C3=A9termin=C3=A9. Comment traduire =E2=80=99- - -' ?<=
+/div><div><br /></div><div>J=E2=80=99ai saut=C3=A9 =C3=A0 la fin de ton doc=
+ument pour voir le probl=C3=A8me des paliers discrets. Oui, on souhaiterait =
+avoir des variations continues, ce qui est d=C3=A9j=C3=A0 le cas pour pitc=
+h, pressure, volume, panoramic et modulation puisqu'en MIDI on peut g=C3=A9=
+n=C3=A9rer un flot de messages =C3=A0 raison de 50 par seconde. Mais c=E2=
+=80=99est lourd comme solution. Avec Csound c=E2=80=99est nettement plus=
+ =C3=A9l=C3=A9gant puisque BP3 fabrique une table et donne seulement les valeu=
+rs d=E2=80=99entr=C3=A9e et de sortie.</div><div><br /></div><div>En fait l=
+a difficult=C3=A9 est d'adopter une repr=C3=A9sentation qui puisse se mat=
+=C3=A9rialiser aussi bien en MIDI, Csound, et autres environnements via OSC=
+. (D=E2=80=99ailleurs, OSC permettrait de faire du Csound en temps r=C3=A9e=
+l, =C3=A7a fait partie de mes projets/souhaits).</div><div><br /></div><div=
+>Pour le pattern matching de groupes de symboles il faudrait que je revoie=
+ l=E2=80=99excellent bouquin de Maxime Crochemore qui traite des algorithmes =
+de cha=C3=AEnes=E2=80=A6</div><div><br /></div><div>Bon, il faut que j=E2=
+=80=99y aille !</div><div><br /></div><div>A +</div><div><br /></div><div>B=
+ernard</div>
+<div><br /></div>
+<div x-em-replyforwardheader=3D""><br /></div>
+<div>
+<div>------ Original Message ------</div>
+<div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.art">romai=
+n@liance.art</a>&gt;</div>
+<div>To "Bernard Bel" &lt;<a href=3D"mailto:bernarbel@gmail.com">bernarbel@=
+gmail.com</a>&gt;</div>
+<div>Date 13/03/2026 18:47:51</div>
+<div>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissan=
+ce : sept dimensions"</div></div><div x-em-quote=3D""><br /></div>
+<div id=3D"xe431a0edccde470"><blockquote cite=3D"738aa4bd-6ee2-4984-bffe-fb=
+455beded7e@app.fastmail.com" type=3D"cite" class=3D"cite2">
+<div>Salut Bernard,</div><div><br /></div><div>J'ai un peu lev=C3=A9 le pie=
+d des municipales hier et aujourd'hui et du coup, j'ai pu poursuivre le tra=
+vail sur BPscript qui finalement a force de (oh mais j'ai pas int=C3=A9gr=
+=C3=A9 =C3=A7a...) est devenu moins simple qu'initialement, mais garde quan=
+d m=C3=AAme des principes de design qui me semble pertinents pour une int=
+=C3=A9gration avec d'autres outils/langages.</div><div>J'ai l'impression de =
+commencer a tenir quelque-chose de sympa.</div><div>Bon j'ai fais des choi=
+x un peu diff=C3=A9rents des tiens pour certains symboles du langage, c'est =
+discutable il n'y a pas de choix parfait... j'ai essay=C3=A9 de reprendre=
+ au maximum des conventions de langages de programmation et de tenter une li=
+sibilit=C3=A9 claire.</div><div>J'ai notamment fais un choix de design (qui =
+m'est personnellement plus agr=C3=A9able), c'est que visuellement, dans un=
+e r=C3=A8gle de d=C3=A9rivation si il y a un espace entre deux mots ces mot=
+s ont une dur=C3=A9e, donc un =C3=A9v=C3=A8nement (trigger) s'exprime par u=
+n ! comm=C3=A9 au mot pr=C3=A9c=C3=A9dent.</div><div><br /></div><div>Bref, =
+le fichier de description commence a =C3=AAtre assez cons=C3=A9quent, mais =
+je crois que j'ai int=C3=A9gr=C3=A9 tous les =C3=A9l=C3=A9ments de BP3 que =
+je connais (j'ai pas dit tous lol)</div><div><br /></div><div>@+</div><div=
+><br /></div><div><br /></div><div>Mer 11 mars 2026, =C3=A0 21:52, Romain P=
+eyrichou a =C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt" st=
+yle=3D"" class=3D"cite"><div>Salut Bernard,</div><div><br /></div><div>Tr=
+=C3=A8s content que =C3=A7a t'int=C3=A9resse. Et fascinant que tu travaille=
+s justement sur le parsing =E2=80=94 on converge par des chemins diff=C3=A9=
+rents.</div><div>Sur le parsing au-del=C3=A0 des qa'idas. C'est exactement=
+ le probl=C3=A8me que j'aborde dans le paper sur l'asym=C3=A9trie (celui que =
+tu as lu). La dimension D3 (directionality) pose la question : pourquoi la =
+bidirectionnalit=C3=A9, disponible depuis 50 ans en NLP (DCG, Grammatical=
+ Framework), n'a presque jamais =C3=A9t=C3=A9 transf=C3=A9r=C3=A9e aux langa=
+ges musicaux ? BP2 est un des rares contre-exemples. Si tu arrives =C3=A0 l=
+e restaurer dans BP3, c'est un r=C3=A9sultat qui m=C3=A9riterait d'=C3=AAtr=
+e document=C3=A9 formellement. On pourrait en parler pour un article commun =
+si =C3=A7a t'int=C3=A9resse.</div><div><br /></div><div>D'ailleurs, le pap=
+er a =C3=A9t=C3=A9 desk-reject de Computational Linguistics (trop th=C3=A9o=
+rique pour eux, pas assez NLP), je l'ai resoumis =C3=A0 Information and Com=
+putation. et d=C3=A9pos=C3=A9 sur arXiv.</div><div><br /></div><div>Sur Web=
+Assembly. Oui, c'est exactement la solution au probl=C3=A8me PHP Desktop. L=
+e moteur C de BP3 est compil=C3=A9 en WASM via Emscripten et tourne directe=
+ment dans le navigateur =E2=80=94 Chrome, Firefox, Safari, n'importe quel O=
+S, rien =C3=A0 installer. Pas de serveur, pas de PHP, pas de d=C3=A9pendanc=
+e. L'utilisateur ouvre une page web et BP3 tourne. C'est ce qui fait foncti=
+onner=C2=A0 <a href=3D"https://roomi-fields.com/bol-processor/">https://roo=
+mi-fields.com/bol-processor/</a> aujourd'hui.</div><div><br /></div><div>Po=
+ur la console BP3 sous Linux, rien ne change =E2=80=94 la compilation nativ=
+e reste la plus performante. WASM est compl=C3=A9mentaire : il rend BP3 acc=
+essible sans installation, au prix d'une performance l=C3=A9g=C3=A8rement i=
+nf=C3=A9rieure (mais largement suffisante pour la d=C3=A9rivation et le tem=
+ps r=C3=A9el).</div><div><br /></div><div>Sur les sorties MIDI et le "bindi=
+ng vers le monde r=C3=A9el". C'est le c=C5=93ur de l'architecture BPscript. =
+Le moteur BP3 (en WASM) d=C3=A9rive la structure et produit des =C3=A9v=C3=
+=A9nements typ=C3=A9s (gate, trigger, CV) avec leurs param=C3=A8tres. Ces =
+=C3=A9v=C3=A9nements sont ensuite rout=C3=A9s vers les sorties :</div><div=
+>- Web MIDI API =E2=80=94 support=C3=A9e nativement par Chrome/Edge. BPscri=
+pt peut envoyer du MIDI directement aux instruments hardware branch=C3=A9s=
+ en USB, sans bridge, sans latence r=C3=A9seau. C'est la solution au probl=
+=C3=A8me que tu mentionnes.</div><div>- OSC via WebSocket =E2=80=94 un peti=
+t bridge (~50 lignes) connecte le navigateur =C3=A0 SuperCollider, Csound,=
+ ou n'importe quelle application OSC sur la machine locale. C'est par l=C3=
+=A0 que passe le live coding hybride : BPscript g=C3=A9n=C3=A8re la structu=
+re, SC produit le son.</div><div>- Web Audio / Csound WASM =E2=80=94 pour d=
+u son directement dans le navigateur, sans application externe. Utile pour=
+ la d=C3=A9mo et l'enseignement.</div><div>- Fichiers =E2=80=94 export MIDI, =
+Csound score, etc. pour le travail offline.</div><div><br /></div><div>Le=
+ point cl=C3=A9 : le compositeur n'a pas besoin de savoir quel routage est a=
+ctif. Il =C3=A9crit sa grammaire, quelqu'un d'autre (ou un preset) configur=
+e les sorties. C'est la s=C3=A9paration composition/ex=C3=A9cution.</div><d=
+iv><br /></div><div>Je t'envoie en pi=C3=A8ce jointe la description compl=
+=C3=A8te du projet (BPSCRIPT_VISION.md). N'h=C3=A9site pas =C3=A0 me dire c=
+e qui te semble pertinent ou probl=C3=A9matique =E2=80=94 surtout les =C3=
+=A9cueils que tu as rencontr=C3=A9s avec les sorties temps r=C3=A9el dans B=
+P2/BP3.</div><div><br /></div><div>@+</div><div><br /></div><div>Mer 11 mar=
+s 2026, =C3=A0 14:34, Bernard Bel a =C3=A9crit=E2=80=AF:</div><blockquote t=
+ype=3D"cite" id=3D"qt-qt" style=3D"overflow-wrap:break-word;" class=3D"cite=
+"><div>Bonjour Romain,</div><div><br /></div><div>J=E2=80=99ai aussi =C3=A9=
+t=C3=A9 pris par diverses t=C3=A2ches, y compris le soutien d=E2=80=99une l=
+iste, qu=E2=80=99on pourrait appeler =E2=80=9Ccitoyenne=E2=80=9D, de gens a=
+ctifs sur la commune et motiv=C3=A9s par le =E2=80=9Ccollectif=E2=80=9D.</d=
+iv><div><br /></div><div>Occup=C3=A9 aussi =C3=A0 essayer de formaliser l=
+=E2=80=99approche de l=E2=80=99analyse/<i>parsing</i> telle qu=E2=80=99elle =
+fonctionnait encore dans BP2, et que je n=E2=80=99avais pas impl=C3=A9ment=
+=C3=A9e dans BP3. D=E2=80=99une part en raison d=E2=80=99une difficult=C3=
+=A9 d=E2=80=99interface (l=E2=80=99h=C3=A9bergement dans un navigateur) et=
+ d=E2=80=99autre part parce qu=E2=80=99il n=E2=80=99y avait plus aucune dema=
+nde : l=E2=80=99id=C3=A9e du <i>parsing</i> =C3=A9tait essentielle lorsque=
+ Jim travaillait sur le tabla, dans son approche =E2=80=9Csyst=C3=A8me exper=
+t=E2=80=9D, mais sa port=C3=A9e ne d=C3=A9passait pas le formalisme du qa=
+=E2=80=99ida. =C3=80 pr=C3=A9sent, je sais comment g=C3=A9rer le probl=C3=
+=A8me d=E2=80=99interface car je l=E2=80=99ai r=C3=A9solu pour la minimisat=
+ion (<a href=3D"https://bolprocessor.org/minimising-a-polymetric-structure/=
+" style=3D"font-size:10.5pt;">https://bolprocessor.org/minimising-a-polymet=
+ric-structure/</a>), mais je r=C3=A9fl=C3=A9chis =C3=A0 la mani=C3=A8re de=
+ poser le probl=C3=A8me dans un cadre plus large que celui des grammaires st=
+ructur=C3=A9es comme celles des qa=E2=80=99idas. =C3=87a avance lentement=
+=E2=80=A6</div><div><br /></div><div>Ce que tu as commenc=C3=A9 =C3=A0 fair=
+e sur=C2=A0<a href=3D"https://roomi-fields.com/bol-processor/" style=3D"fon=
+t-size:10.5pt;" class=3D"qt-qt-__cef_visited">https://roomi-fields.com/bol-=
+processor/</a>=C2=A0est ce dont r=C3=AAvait Anthony Kozar, mais d=E2=80=99u=
+n point de vue plus g=C3=A9n=C3=A9raliste et interconnect=C3=A9 : <i>live c=
+oding</i>, etc. C=E2=80=99est superbe que cette impl=C3=A9mentation compile =
+directement le code de la console BP3, ce qui autorisera des corrections e=
+t extensions de toutes les versions.</div><div><br /></div><div>Je ne conna=
+issais pas WebAssembly. Je me demande si ce serait un moyen de contourner l=
+=E2=80=99utilisation de PHP Desktop qui fonctionne tr=C3=A8s bien sous MacO=
+S mais pas sous Windows. (Sachant que le compilation de la console sous Lin=
+ux est facile et indispensable.) Dans ce domaine, j=E2=80=99ai clairement 1=
+0 ans de retard ! Sinon plus=E2=80=A6</div><div><br /></div><div>J=E2=80=99=
+=C3=A9tais dubitatif sur ce que voulait faire Anthony avec sa version =E2=
+=80=9Cen ligne=E2=80=9D. Parmi les limites que j=E2=80=99y voyais, l=E2=80=
+=99impossibilit=C3=A9, dans l=E2=80=99=C3=A9tat du projet, de g=C3=A9rer de=
+s entr=C3=A9es/sorties MIDI, et les limites des connexions si on cr=C3=A9ai=
+t des fichiers sonores avec Csound. Mais je devine (m=C3=AAme si ce n=E2=80=
+=99est pas bien clair) que dans ce que tu pr=C3=A9pares, il y aurait un ret=
+our de donn=C3=A9es vers SuperCollider ou autres applications fonctionnant=
+ sur l=E2=80=99ordinateur client =E2=80=94 c=E2=80=99est ce que je comprends =
+du=C2=A0<i>binding</i> vers le<i> monde r=C3=A9el</i>.</div><div><br /></d=
+iv><div>Oui, je veux bien essayer d=E2=80=99y voir plus clair si tu m=E2=80=
+=99envoies une description du projet.</div><div><br /></div><div>C=E2=80=99=
+est encore =E2=80=9Cchaud=E2=80=9D cette semaine car nous pr=C3=A9parons l=
+=E2=80=99atelier Yukido qui se tiendra =C3=A0 la maison pendant le week-end=
+.</div><div><br /></div><div>A +</div><div><br /></div><div>Bernard</div><d=
+iv><br /></div><div><br /></div><div><div>------ Original Message ------</d=
+iv><div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.art">ro=
+main@liance.art</a>&gt;</div><div>To "Bernard Bel" &lt;<a href=3D"mailto:be=
+rnarbel@gmail.com">bernarbel@gmail.com</a>&gt;</div><div>Date 11/03/2026 12=
+:12:26</div><div>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-=
+reconnaissance : sept dimensions"</div></div><div><br /></div><div id=3D"qt=
+-qt-xec8ba0327c73443"><blockquote cite=3D"48596f32-bdc7-49cf-80ba-e140d489c=
+e08@app.fastmail.com" type=3D"cite" class=3D"qt-qt-cite2"><div><span class=
+=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">Salut Bernard,</span><=
+/div><div><br /></div><div>Bon, depuis quelques semaines j'ai un peu ralent=
+i cot=C3=A9 musicologie... j'ai un peu travaill=C3=A9 a l'am=C3=A9lioration =
+de Claude Code, a ma sant=C3=A9 et depuis 10 jours a la campagne d'une lis=
+te de d=C3=A9mocratie citoyenne pour les municipales.</div><div>Ce matin, j=
+'ai pris une petite pause sur la campagne et je suis revenu sur des travaux =
+en cours.</div><div><br /></div><div><span class=3D"qt-qt-color" style=3D"=
+color:rgb(204, 204, 204);">J'ai eu envie de porter BP3 sur un serveur web,=
+ d'abord pour mon usage personnel pour me simplifier l'usage et l'installati=
+on.</span></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(204, 20=
+4, 204);">Je voulais te partager mes r=C3=A9flexion n=C3=A9e de ce travail.=
+</span></div><div><br /></div><div><span class=3D"qt-qt-color" style=3D"col=
+or:rgb(204, 204, 204);">J'ai compil=C3=A9 le moteur C de BP3 en WebAssembly =
+via Emscripten pour le faire tourner directement dans un navigateur. =C3=
+=87a avance bien : le moteur de d=C3=A9rivation fonctionne, la polym=C3=A9t=
+rie est op=C3=A9rationnelle, la r=C3=A9solution temporelle (PolyMake, TimeS=
+et) produit des r=C3=A9sultats corrects, et on passe 48 des 52 grammaires d=
+e test. Ton code compile et tourne pratiquement tel quel.</span></div><div>=
+Si tu es curieux, il est accessible ici:=C2=A0<a href=3D"https://roomi-fiel=
+ds.com/bol-processor/" class=3D"qt-qt-__cef_visited">https://roomi-fields.c=
+om/bol-processor/</a></div><div><br /></div><div><span class=3D"qt-qt-color=
+" style=3D"color:rgb(204, 204, 204);">Il me semble qu'on a d=C3=A9j=C3=A0 u=
+n peu =C3=A9chang=C3=A9 sur ce sujet, et que =C2=A0je t'ai partag=C3=A9 que =
+je voyais BP3 comme un ordonanceur de structures temporelles... un s=C3=A9=
+quenceux complexe.</span></div><div><span class=3D"qt-qt-color" style=3D"co=
+lor:rgb(204, 204, 204);">Il d=C3=A9rive des s=C3=A9quences de symboles dans =
+le temps, avec une capacit=C3=A9 unique =C3=A0 exprimer la polym=C3=A9trie=
+, les proportions et la r=C3=A9cursion. Que ces symboles soient des notes d=
+e musique est un cas d'application, pas l'essence du syst=C3=A8me. Ce qui e=
+st renforc=C3=A9 par ton int=C3=A9gration des objets musicaux, il me semble=
+.</span></div><div><br /></div><div><span class=3D"qt-qt-color" style=3D"co=
+lor:rgb(204, 204, 204);">Cette observation m'a conduit vers l'id=C3=A9e d'u=
+n langage, que j'appelle provisoirement </span><span class=3D"qt-qt-color"=
+ style=3D"color:rgb(86, 156, 214);"><b>BPscript</b></span><span class=3D"qt-=
+qt-color" style=3D"color:rgb(204, 204, 204);">, qui s'inscrirait dans le pr=
+olongement direct de ton travail tout en le rendant plus accessible. Voici=
+ les grandes lignes :</span></div><div><br /></div><div><span class=3D"qt-qt=
+-color" style=3D"color:rgb(86, 156, 214);"><b>Ton moteur reste le coeur.</b=
+></span><span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">=C2=
+=A0Rien n'est r=C3=A9=C3=A9crit. Les 7 modes de d=C3=A9rivation, les 3 dire=
+ctions, la polym=C3=A9trie =E2=80=94 tout est pr=C3=A9serv=C3=A9. BPscript=
+ est une couche syntaxique par-dessus, pas un remplacement.</span></div><div=
+><br /></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(86, 156, 2=
+14);"><b>Un langage minimal.</b></span><span class=3D"qt-qt-color" style=3D=
+"color:rgb(204, 204, 204);">=C2=A0BPscript ne comporte que 9 symboles synta=
+xiques et aucun mot r=C3=A9serv=C3=A9 :</span></div><div><br /></div><div><=
+span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">@ =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 directive syst=C3=A8me (import de librairies)</spa=
+n></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);=
+">-&gt; &lt;- &lt;&gt; =C2=A0 =C2=A0d=C3=A9rivation + direction</span></div=
+><div><span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">{ , } =
+=C2=A0 =C2=A0 =C2=A0 polym=C3=A9trie</span></div><div><span class=3D"qt-qt=
+-color" style=3D"color:rgb(204, 204, 204);">( ) =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+arguments</span></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(=
+204, 204, 204);">: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 param=C3=A8tre (cl=C3=
+=A9: valeur)</span></div><div><span class=3D"qt-qt-color" style=3D"color:rg=
+b(204, 204, 204);">=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 d=C3=A9finition</=
+span></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 20=
+4);">[ ] =C2=A0 =C2=A0 =C2=A0 =C2=A0 options (mode de d=C3=A9rivation)</spa=
+n></div><div><br /></div><div><span class=3D"qt-qt-color" style=3D"color:rg=
+b(204, 204, 204);">Tout le vocabulaire =E2=80=94 notes, instruments, gammes=
+, comportements =E2=80=94 vient de librairies import=C3=A9es. Le langage lu=
+i-m=C3=AAme ne sait pas ce qu'est une note.</span></div><div><br /></div><d=
+iv><span class=3D"qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>Trois=
+ types de signaux</b></span><span class=3D"qt-qt-color" style=3D"color:rgb(2=
+04, 204, 204);">=C2=A0inspir=C3=A9s du modulaire eurorack : Gate (=C3=A9v=
+=C3=A9nement avec dur=C3=A9e), Trigger (d=C3=A9clenchement ponctuel), CV (v=
+aleur continue). =C3=87a formalise ce que BP3 fait d=C3=A9j=C3=A0 implicite=
+ment avec les notes (gate), les changements de param=C3=A8tres comme </span=
+><span class=3D"qt-qt-color" style=3D"color:rgb(206, 145, 120);">`_vel()`</=
+span><span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);"> (trig=
+ger), et les contr=C3=B4les continus comme </span><span class=3D"qt-qt-colo=
+r" style=3D"color:rgb(206, 145, 120);">`_pitchbend`</span><span class=3D"qt=
+-qt-color" style=3D"color:rgb(204, 204, 204);"> (CV).</span></div><div><br=
+ /></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(86, 156, 214);"=
+><b>S=C3=A9paration en trois couches=C2=A0</b></span><span class=3D"qt-qt-c=
+olor" style=3D"color:rgb(204, 204, 204);">:</span></div><div><span class=3D=
+"qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt=
+-qt-color" style=3D"color:rgb(204, 204, 204);"> </span><span class=3D"qt-qt=
+-color" style=3D"color:rgb(86, 156, 214);"><b>D=C3=A9finition</b></span><sp=
+an class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">=C2=A0: le voc=
+abulaire =E2=80=94 des comportements nomm=C3=A9s, param=C3=A9tr=C3=A9s, r=
+=C3=A9utilisables (comme du CSS)</span></div><div><span class=3D"qt-qt-colo=
+r" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-color"=
+ style=3D"color:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-color" sty=
+le=3D"color:rgb(86, 156, 214);"><b>Composition</b></span><span class=3D"qt-=
+qt-color" style=3D"color:rgb(204, 204, 204);">=C2=A0: la structure temporel=
+le =E2=80=94 le coeur BP, d=C3=A9rivation et polym=C3=A9trie</span></div><d=
+iv><span class=3D"qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</span>=
+<span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </span><sp=
+an class=3D"qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>Ex=C3=A9cuti=
+on</b></span><span class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);=
+">=C2=A0: le binding vers le monde r=C3=A9el =E2=80=94 SuperCollider, MIDI, =
+Web Audio, lumi=C3=A8res...</span></div><div><br /></div><div><span class=
+=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">La m=C3=AAme compositi=
+on peut =C3=AAtre interpr=C3=A9t=C3=A9e par des contextes d'ex=C3=A9cution=
+ diff=C3=A9rents, exactement comme une page HTML est rendue diff=C3=A9remmen=
+t par diff=C3=A9rents navigateurs.</span></div><div><br /></div><div><span=
+ class=3D"qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>Pas de logique=
+ dans le langage.</b></span><span class=3D"qt-qt-color" style=3D"color:rgb(2=
+04, 204, 204);">=C2=A0C'est un choix d=C3=A9lib=C3=A9r=C3=A9. BP3 avait d=
+=C3=BB int=C3=A9grer progressivement des contr=C3=B4les de flux, des variab=
+les, des flags =E2=80=94 complexifiant la syntaxe. BPscript refuse cette vo=
+ie : toute logique conditionnelle ou traitement de signal est =C3=A9crit da=
+ns un vrai langage de programmation (SuperCollider, Python, JavaScript) et=
+ expos=C3=A9 =C3=A0 BPscript sous forme de noms simples via les librairies.=
+ Le compositeur =C3=A9crit </span><span class=3D"qt-qt-color" style=3D"color=
+:rgb(206, 145, 120);">`wobble(C4, mood: dark)`</span><span class=3D"qt-qt-c=
+olor" style=3D"color:rgb(204, 204, 204);">. Le d=C3=A9veloppeur qui a cr=C3=
+=A9=C3=A9 la librairie a mis les </span><span class=3D"qt-qt-color" style=
+=3D"color:rgb(206, 145, 120);">`if`</span><span class=3D"qt-qt-color" style=
+=3D"color:rgb(204, 204, 204);"> et les boucles dedans.</span></div><div><br =
+/></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(86, 156, 214);=
+"><b>Ouverture au live coding.</b></span><span class=3D"qt-qt-color" style=
+=3D"color:rgb(204, 204, 204);">=C2=A0Les trois couches =C3=A9tant ind=C3=A9=
+pendantes, on peut modifier en temps r=C3=A9el la d=C3=A9finition (le timbr=
+e change), la composition (la structure change) ou l'ex=C3=A9cution (la des=
+tination change). La communication avec SuperCollider se fait naturellement =
+par OSC.</span></div><div><br /></div><div><span class=3D"qt-qt-color" sty=
+le=3D"color:rgb(86, 156, 214);"><b>Au-del=C3=A0 de la musique.</b></span><s=
+pan class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">=C2=A0Puisque =
+BP ordonnance des symboles dans le temps sans savoir ce qu'ils repr=C3=A9s=
+entent, BPscript peut piloter du son, de la lumi=C3=A8re, de la vid=C3=A9o, =
+de la robotique =E2=80=94 n'importe quel processus temporel. Il suffit d'i=
+mporter la librairie correspondante.</span></div><div><br /></div><div><spa=
+n class=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">J'aimerais beau=
+coup avoir ton regard sur cette d=C3=A9marche. Est-ce que =C3=A7a te semble =
+faire sens ? Y a-t-il des aspects du moteur BP3 que tu estimes sous-exploi=
+t=C3=A9s et qui pourraient enrichir cette vision ? Des =C3=A9cueils que tu=
+ as rencontr=C3=A9s et que je devrais anticiper ?</span></div><div>Si =C3=A7=
+a t'int=C3=A9resse j'ai une description un peu plus d=C3=A9taill=C3=A9e sur =
+laquelle je r=C3=A9fl=C3=A9chis encore avant de lancer le d=C3=A9veloppeme=
+nt qui n'est en r=C3=A9alit=C3=A9 pas tr=C3=A8s compliqu=C3=A9, le plus dur =
+=C3=A9tant le transpiler BPscript vers BP3, quasi tout le reste sera de la =
+r=C3=A9utilisation/r=C3=A9=C3=A9critures de ce que tu as d=C3=A9j=C3=A0 fa=
+it et un peu de ce qui a =C3=A9t=C3=A9 fait dans SuperCollider aussi.</div>=
+<div><br /></div><div><span class=3D"qt-qt-color" style=3D"color:rgb(204, 2=
+04, 204);">=C3=80 bient=C3=B4t,</span></div><div><br /></div><div><span cla=
+ss=3D"qt-qt-color" style=3D"color:rgb(204, 204, 204);">Romain</span></div><=
+div><br /></div><div>Sam 28 f=C3=A9vr 2026, =C3=A0 20:12, Romain Peyrichou=
+ a =C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt-qt-qt" style=
+=3D"" class=3D"qt-qt-cite"><div>Merci beaucoup Bernard je vais lire et int=
+=C3=A9grer soigneusement tout =C3=A7a.</div><div><br /></div><div>Pour ma p=
+art, j'ai repris le travail sur le formalisme BP3 mais j'avoue que c'est ar=
+ide, c'est pas ce que je pr=C3=A9f=C3=A8re.</div><div>J'aurais aussi quelqu=
+es questions sur le sujet mais c'est pas press=C3=A9, je ne vais pas te flo=
+oder. J'ai de quoi faire par ailleurs.</div><div><br /></div><div>Je vais d=
+=C3=A9j=C3=A0 avancer avec =C3=A7a demain tout en poursuivant les tests cot=
+=C3=A9 IA. A force de travailler avec claude code, j'ai d=C3=A9velopp=C3=A9 =
+un composant pour am=C3=A9liorer ses capacit=C3=A9s de recherche qui sembl=
+ent avoir des r=C3=A9sultats significatifs... et si semblerait que personne =
+n'ait d=C3=A9j=C3=A0 fait =C3=A7a sous cet angle la, alors je suis parti p=
+our faire des mesures benchmark=C3=A9es A/B et =C3=A9crire un papier sur ce =
+sujet aussi... :)</div><div><br /></div><div>Je te tiens au courant.</div>=
+<div><br /></div><div>Romain</div><div><br /></div><div><br /></div><div>Sa=
+m 28 f=C3=A9vr 2026, =C3=A0 18:03, Bernard Bel a =C3=A9crit=E2=80=AF:</div>=
+<blockquote type=3D"cite" id=3D"qt-qt-qt-qt" style=3D"overflow-wrap:break-w=
+ord;" class=3D"qt-qt-cite"><div>Bonjour Romain,</div><div><br /></div><div>=
+Voici un d=C3=A9but de r=C3=A9ponse. J=E2=80=99ai tr=C3=A8s peu travaill=C3=
+=A9 sur les grammaires de forme (<i>pattern grammars</i>) car elles n=E2=80=
+=99ont =C3=A9t=C3=A9 utilis=C3=A9es que dans le travail sur le tabla, donc=
+ dans BP1 bien qu=E2=80=99elles soient aussi impl=C3=A9ment=C3=A9es dans BP2=
+/BP3. Or les patterns sont importants dans tous les genres musicaux qui uti=
+lisent la r=C3=A9p=C3=A9tition pour renforcer un effet ou cr=C3=A9er une fa=
+usse attente.</div><div><br /></div><div>Donc, m=C3=AAme si je les ai d=C3=
+=A9crits dans nos premiers articles empruntant tous leurs exemples au tabla=
+, il me para=C3=AEt important, dans une approche plus th=C3=A9orique du mot=
+eur d=E2=80=99inf=C3=A9rences BP, de les documenter avec des symboles simpl=
+es mais non rattach=C3=A9s =C3=A0 un style musical. C=E2=80=99est la raison =
+de cet article que je vais probablement traduire et publier dans les tutor=
+iels.</div><div><br /></div><div>Il n=E2=80=99y a pas de difficult=C3=A9 sp=
+=C3=A9cifique =C3=A0 BP3 pour impl=C3=A9menter le <i>modus tollens</i> de B=
+P1, ni l=E2=80=99apprentissage des poids =C3=A0 partir d'exemples. C=E2=80=
+=99est simplement que Jim avait cess=C3=A9 le travail sur le terrain quand=
+ BP2 a =C3=A9t=C3=A9 cr=C3=A9=C3=A9, et je n=E2=80=99ai pas eu de demande pa=
+r la suite. Mais je vais y travailler.</div><div><br /></div><div>En v=C3=
+=A9rifiant les grammaires d=C3=A9crites dans cet article, j=E2=80=99ai d=C3=
+=A9couvert des bugs dans BP3 lorsqu=E2=80=99on veut en sortie du =E2=80=9CB=
+P data=E2=80=9D et non du son. J=E2=80=99ai commenc=C3=A9 =C3=A0 les corrig=
+er et je vais publier une version 3.3.13.</div><div><br /></div><div>C=E2=
+=80=99est un tout petit pas en avant !</div><div><br /></div><div>Bernard</=
+div><div><br /></div><div><br /></div><div><div>------ Original Message ---=
+---</div><div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.a=
+rt">romain@liance.art</a>&gt;</div><div>To "Bernard Bel" &lt;<a href=3D"mai=
+lto:bernarbel@gmail.com">bernarbel@gmail.com</a>&gt;</div><div>Date 25/02/2=
+026 09:22:14</div><div>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9r=
+ation-reconnaissance : sept dimensions"</div></div><div><br /></div><div id=
+=3D"qt-qt-qt-qt-x62a3364d1a3946c"><blockquote cite=3D"ae74ea03-b502-44fe-8d=
+62-41f05394d375@app.fastmail.com" type=3D"cite" class=3D"qt-qt-qt-qt-cite2"=
+><div>Merci beaucoup Bernard pour ces infos.</div><div>Je te fais faire de=
+ la sp=C3=A9l=C3=A9ologie ;)</div><div><br /></div><div>Alors, je te joins l=
+a proposition de cadre de l'interview :D</div><div><br /></div><div>Et je c=
+omprends bien qu'avec tout ce que je produis, =C3=A7a soit assez chronophag=
+e. Sens toi libre de ne pas tout lire :D</div><div><br /></div><div>@+</div=
+><div><br /></div><div>Mar 24 f=C3=A9vr 2026, =C3=A0 09:32, Bernard Bel a =
+=C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt-qt-qt-qt-qt"=
+ style=3D"overflow-wrap:break-word;" class=3D"qt-qt-qt-qt-cite"><div>Bonjour =
+Romain,</div><div><br /></div><div>Je viens d=E2=80=99=C3=A9crire =C3=A0 S=
+hlomo pour lui demander de soutenir ton inscription =C3=A0 arXiv, en lui do=
+nnant quelques d=C3=A9tails sur ton parcours et tes travaux actuels.</div><=
+div><br /></div><div>Je suis all=C3=A9 faire un tour sur ma th=C3=A8se (en=
+ 1990,=C2=A0<a href=3D"https://theses.hal.science/tel-00009692v1" style=3D"f=
+ont-size:10.5pt;">https://theses.hal.science/tel-00009692v1</a>) pour faire =
+le =C2=A0point sur les bases th=C3=A9oriques. Un peu effray=C3=A9 par les=
+ r=C3=A9f=C3=A9rences =C3=A0 des publications que je n=E2=80=99ai =C2=A0plus =
+utilis=C3=A9es par la suite, ni m=C3=AAme gard=C3=A9es sous la main =E2=80=
+=94 je me souviens de la montagne de papiers =C3=A0 jeter le jour o=C3=B9 j=
+=E2=80=99ai quitt=C3=A9 le laboratoire ! Il est vrai qu=E2=80=99avec l=E2=
+=80=99archivage num=C3=A9rique la plupart pourraient =C3=AAtre r=C3=A9cup=
+=C3=A9r=C3=A9es, mais c=E2=80=99est surtout la m=C3=A9moire qui me fait d=
+=C3=A9faut=E2=80=A6</div><div><br /></div><div>Lire tes articles est donc u=
+n <i>refresher course</i> mais il me prend beaucoup de temps. Donc je compr=
+ends =C2=A0l=E2=80=99int=C3=A9r=C3=AAt d=E2=80=99illustrer ton propos par d=
+es exemples musicaux dans des =E2=80=9Cgrammaires musicales=E2=80=9D, mais=
+ la d=C3=A9marche m=E2=80=99est encore peu famili=C3=A8re. Effectivement, un =
+draft de structure serait bienvenu !</div><div><br /></div><div>D=E2=80=99=
+apr=C3=A8s mon archive, le =E2=80=9CAdler" cit=C3=A9 dans mes publications =
+=C3=A9tait un ethnomusicologue qui travaillait avec Ellis dans les ann=C3=
+=A9es 1980, et qui avait inspir=C3=A9 notre approche de musicologie =E2=80=
+=9Cdialectique=E2=80=9D mat=C3=A9rialis=C3=A9e dans le sch=C3=A9ma expert-a=
+nalyste-machine du travail sur le terrain avec BP1. J=E2=80=99avais =C3=A9c=
+rit : <i>"L'originalit=C3=A9 de notre d=C3=A9marche a consist=C3=A9 =C3=A0=
+ introduire=C2=A0<span>l'ordinateur comme un partenaire actif dans la phase=
+ d'acquisition des connaissances,=C2=A0</span><span>donnant de ce fait plus=
+ d'importance aux mod=C3=A8les g=C3=A9n=C3=A9ratifs, cens=C3=A9s expliquer l=
+a=C2=A0</span><span>comp=C3=A9tence, qu'aux mod=C3=A8les analytiques qui se =
+contentent de l=E2=80=99illustrer.</span>=E2=80=9D</i></div><div><span></s=
+pan><br /></div><div>Je vais continuer la lecture et t=E2=80=99envoyer des=
+ commentaires ou des questions quand elles viennent. J=E2=80=99ai =C3=A9t=C3=
+=A9 mobilis=C3=A9 ces derniers jours par la mise en place de proc=C3=A9dure=
+s d=E2=80=99automatisation (avec <i>Make</i>) dont Tansen avait besoin pour =
+g=C3=A9rer des inscriptions aux stages d=E2=80=99Andr=C3=A9ine=E2=80=A6</d=
+iv><div><br /></div><div>A +</div><div>Bernard</div><div><br /></div><div><=
+br /></div><div><div>------ Original Message ------</div><div>From "Romain=
+ Peyrichou" &lt;<a href=3D"mailto:romain@liance.art">romain@liance.art</a>&g=
+t;</div><div>To "Bernard Bel" &lt;<a href=3D"mailto:bernarbel@gmail.com">be=
+rnarbel@gmail.com</a>&gt;</div><div>Date 24/02/2026 08:00:23</div><div>Subj=
+ect Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance : sept =
+dimensions"</div></div><div><br /></div><div id=3D"qt-qt-qt-qt-qt-x0736051=
+92e5c465"><blockquote cite=3D"a60d0dbb-de27-40f3-814e-84f547c180f7@app.fast=
+mail.com" type=3D"cite" class=3D"qt-qt-qt-qt-qt-cite2"><div>Re, Bernard,</d=
+iv><div><br /></div><div>J'aimerai publier ce premier papier sur arXiv, je=
+ vois que tu n'y es pas inscrit, et ils demandent un endorsement, est ce que =
+tu pourrais me mettre en contact avec Shlomo Dubnov ?</div><div>Il pourrai=
+t me parrainer dans la bonne cat=C3=A9gorie.</div><div><br /></div><div>Mer=
+ci</div><div><br /></div><div>Mar 24 f=C3=A9vr 2026, =C3=A0 07:13, Romain P=
+eyrichou a =C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt-qt-=
+qt-qt-qt-qt" style=3D"" class=3D"qt-qt-qt-qt-qt-cite"><div>Hello Bernard,</=
+div><div><br /></div><div>J'ai fais un petit d=C3=A9tour la semaine derni=
+=C3=A8re pour investiguer un sujet qui donnera peut =C3=AAtre des fruits du =
+cot=C3=A9 de la recherche IA (pour la premi=C3=A8re fois, il semblerait qu=
+e j'ai produit un composant qui am=C3=A9liore significativement la qualit=
+=C3=A9 de recherche de Claude Code).</div><div>Bref je me suis remis sur ce =
+papier que j'ai soumis hier soir dans la version que je te joins =C3=A0 Co=
+mputational Linguistics... on verra bien les retours, je croise les doigts.=
+</div><div>Comme tu le sais, ce papier traite l'asym=C3=A9trie de mani=C3=
+=A8re domain-independent. Il n'y a plus que 6 dimensions, j'en ai finalemen=
+t fusionn=C3=A9 2 qui =C3=A9taient assez proches: d=C3=A9terminisme et ambi=
+gu=C3=AFt=C3=A9, qui =C3=A9taient finalement le m=C3=AAme ph=C3=A9nom=C3=A8=
+ne regard=C3=A9 de deux points de vue diff=C3=A9rents.</div><div><br /></di=
+v><div>Mon id=C3=A9e est de publier maintenant un "companion paper" qui ins=
+tancierait ce cadre sur les grammaires musicales.</div><div>D'une part dans =
+sa dimension th=C3=A9orique: comment se manifestent ces dimensions dans la =
+musique, et est-ce qu'il n'y en aurait pas d'autres (je pense =C3=A0 la tr=
+ipartition de Nattiez (po=C3=AF=C3=A9tique/neutre/esth=C3=A9sique) que je v=
+errai bien comme une dimension suppl=C3=A9mentaire, mais peut =C3=AAtre qu'=
+en y r=C3=A9fl=C3=A9chissant =C3=A7a ouvrira sur un nouveau regard sur le l=
+angage et la formalisation: est ce un =C3=A9tat fini, un sujet d=C3=A9termi=
+n=C3=A9, ou un sujet en =C3=A9volution/mutation)</div><div>Et d'autre part, =
+lui fournir un ancrage dans le r=C3=A9el, a travers diff=C3=A9rents syst=
+=C3=A8mes existants =E2=80=94 notamment GTTM, IDyOM, et bien s=C3=BBr BP3.<=
+/div><div><br /></div><div>Ton expertise serait pr=C3=A9cieuse sur plusieur=
+s points:</div><div>- BP3 comme cas unique de bidirectionnalit=C3=A9 en gra=
+mmaires musicales</div><div>- L'exp=C3=A9rience QAVAID</div><div>- Les aspe=
+cts temporels (smooth time, _tempo()) qui illustrent D6 de mani=C3=A8re con=
+cr=C3=A8te</div><div>- Les pistes que tu as mentionn=C3=A9es autour de Goul=
+d et Adler</div><div>- Et plus largement, les exemples musicaux cross-cultu=
+rels</div><div><br /></div><div>Si je veux r=C3=A9sumer, je pense que ce pa=
+pier pourrait utiliser tes =C3=A9tudes pour illustrer une grande partie de=
+ ce cadre th=C3=A9orique.</div><div><br /></div><div>Qu'en dis-tu?</div><div=
+><br /></div><div>Si t'es ok, je peux te soumettre un draft de structure en=
+visag=C3=A9e, avec des points en r=C3=A9flexion, des questions sur des choi=
+x que tu as fait, difficult=C3=A9s rencontr=C3=A9es =C3=A0 travers BP1, 2 e=
+t 3.</div><div><br /></div><div>@+</div><div>Romain</div><div><br /></div><=
+div><br /></div><div><br /></div><div>Mar 17 f=C3=A9vr 2026, =C3=A0 23:51,=
+ Bernard Bel a =C3=A9crit=E2=80=AF:</div><blockquote type=3D"cite" id=3D"qt-=
+qt-qt-qt-qt-qt-qt" style=3D"overflow-wrap:break-word;" class=3D"qt-qt-qt-qt=
+-qt-cite"><div>Bonsoir Romain,</div><div><br /></div><div>J=E2=80=99ai comm=
+enc=C3=A9 =C3=A0 lire=E2=80=A6 C=E2=80=99est remarquable dans la clart=C3=
+=A9 de l=E2=80=99expos=C3=A9. Et =C3=A7a me ram=C3=A8ne 36 ans en arri=C3=
+=A8re quand j=E2=80=99essayais de formaliser l=E2=80=99inf=C3=A9rence gramm=
+aticale =C3=A0 la lumi=C3=A8re de Gould , Adler et autres que j=E2=80=99ai=
+ oubli=C3=A9s. Pas facile d=E2=80=99y revenir, mais le voyage m=E2=80=99int=
+=C3=A9resse. =C2=A0Je t=E2=80=99en =C3=A9crirai plus les jours qui viennent=
+.</div><div><br /></div><div>Aujourd=E2=80=99hui j=E2=80=99ai pass=C3=A9 qu=
+elques heures =C3=A0 r=C3=A9gler les derniers probl=C3=A8mes de mon site. I=
+nstall=C3=A9 smtp.gmail.com que j=E2=80=99ai pu valider (gr=C3=A2ce =C3=A0=
+ ChatGPT). Corrig=C3=A9 quelques liens dans la base de donn=C3=A9es et les w=
+idgets. J=E2=80=99ai h=C3=A2te de revenir =C3=A0 la musicologie et=E2=80=A6 =
+aux langages formels ! Mais je doute de pouvoir apporter quelque chose d=
+=E2=80=99original =C3=A0 un expos=C3=A9 th=C3=A9orique d=E2=80=99un tel niv=
+eau.</div><div><br /></div><div>A +</div><div><br /></div><div>Bernard</div=
+><div><br /></div><div><br /></div><div><div>------ Original Message ------=
+</div><div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.art"=
+>romain@liance.art</a>&gt;</div><div>To "Bernard Bel" &lt;<a href=3D"mailto=
+:bernarbel@gmail.com">bernarbel@gmail.com</a>&gt;</div><div>Date 17/02/2026 =
+17:40:51</div><div>Subject Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-r=
+econnaissance : sept dimensions"</div></div><div><br /></div><div id=3D"qt-=
+qt-qt-qt-qt-qt-qt-x055b634a1c6c4f6"><blockquote cite=3D"34eb8e38-0a26-4971-=
+9a9a-f9551996fcf1@app.fastmail.com" type=3D"cite" class=3D"qt-qt-qt-qt-qt-q=
+t-qt-cite2"><div>Bonjour Bernard,</div><div><br /></div><div>Suite aux trav=
+aux entrepris sur le formalisme de BP3 et BP2SC, et suite =C3=A0 toutes les =
+questions que =C3=A7a m'a fait me poser, j'ai identifi=C3=A9 un certain no=
+mbre de sujets qui sembleraient m=C3=A9riter la r=C3=A9daction d'articles.<=
+/div><div>Certains articles du blog (L0, L11, L13, et pas mal de B je dois=
+ dire) m'ont donn=C3=A9 envie de structurer un papier sur l'asym=C3=A9trie g=
+=C3=A9n=C3=A9ration-reconnaissance, ce qui visiblement n'avait pas =C3=A9t=
+=C3=A9 encore fait.</div><div><br /></div><div>Si tu veux bien j'aimerai bi=
+en ton regard sur ce draft.</div><div><br /></div><div>Mon id=C3=A9e est de =
+produire un premier papier g=C3=A9n=C3=A9raliste sur le sujet orient=C3=A9 =
+th=C3=A9orie du langage et de poursuivre sur un autre traitant sp=C3=A9cif=
+iquement du domaine musical, dans lequel on pourrait utiliser des exemples=
+ du domaine dont BP. Il introduit =C3=A9galement une 8eme asym=C3=A9trie sp=
+=C3=A9cifique a la musique.</div><div>Si jamais =C3=A7a suscite ton int=C3=
+=A9r=C3=AAt on pourrait co=C3=A9crire cet autre papier.</div><div><br /></d=
+iv><div>Voici un r=C3=A9sum=C3=A9 de tout =C3=A7a =C3=A9crit par mon cher C=
+laude Code:</div><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-=
+color" style=3D"color:rgb(86, 156, 214);"><b>## De quoi il s'agit</b></span=
+></div><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" sty=
+le=3D"color:rgb(204, 204, 204);">Le papier identifie </span><span class=3D"=
+qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>7 dimensi=
+ons</b></span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb=
+(204, 204, 204);">=C2=A0selon lesquelles la g=C3=A9n=C3=A9ration et la reco=
+nnaissance divergent :</span></div><div><br /></div><div><span class=3D"qt-=
+qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">1.</span><span =
+class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);">=
+ </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 15=
+6, 214);"><b>**Complexit=C3=A9 computationnelle**</b></span><span class=3D"=
+qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =E2=80=94=
+ la g=C3=A9n=C3=A9ration est O(n) pour tout niveau de Chomsky, tandis que le =
+parsing cro=C3=AEt de O(n) =C3=A0 l'ind=C3=A9cidabilit=C3=A9</span></div><=
+div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, =
+230);">2.</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:=
+rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" sty=
+le=3D"color:rgb(86, 156, 214);"><b>**D=C3=A9terminisme**</b></span><span cl=
+ass=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =E2=
+=80=94 la g=C3=A9n=C3=A9ration peut =C3=AAtre d=C3=A9terministe, le parsing =
+est fondamentalement non-d=C3=A9terministe</span></div><div><span class=3D=
+"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">3.</span><=
+span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204)=
+;"> </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86=
+, 156, 214);"><b>**Directionnalit=C3=A9**</b></span><span class=3D"qt-qt-qt=
+-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =E2=80=94 la g=C3=
+=A9n=C3=A9ration est toujours top-down, le parsing a un degr=C3=A9 de liber=
+t=C3=A9 (LL, LR, Earley...)</span></div><div><span class=3D"qt-qt-qt-qt-qt-=
+qt-qt-color" style=3D"color:rgb(103, 150, 230);">4.</span><span class=3D"qt=
+-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </span><span =
+class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b=
+>**Information**</b></span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=
+=3D"color:rgb(204, 204, 204);"> =E2=80=94 le g=C3=A9n=C3=A9rateur conna=C3=
+=AEt la source, le parser inf=C3=A8re depuis la surface (lien Shannon)</spa=
+n></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(=
+103, 150, 230);">5.</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=
+=3D"color:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-=
+color" style=3D"color:rgb(86, 156, 214);"><b>**Non-injectivit=C3=A9**</b></=
+span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204=
+, 204);"> =E2=80=94 un chemin de d=C3=A9rivation =E2=86=92 une cha=C3=AEne, =
+mais une cha=C3=AEne =E2=86=92 plusieurs arbres (Parikh 1966)</span></div>=
+<div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150=
+, 230);">6.</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color=
+:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" st=
+yle=3D"color:rgb(86, 156, 214);"><b>**Inf=C3=A9rence grammaticale**</b></sp=
+an><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204,=
+ 204);"> =E2=80=94 la troisi=C3=A8me direction, born=C3=A9e par Gold (1967)<=
+/span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:=
+rgb(103, 150, 230);">7.</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" st=
+yle=3D"color:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-qt-qt-qt-=
+qt-color" style=3D"color:rgb(86, 156, 214);"><b>**Temporalit=C3=A9**</b></s=
+pan><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, =
+204);"> =E2=80=94 le g=C3=A9n=C3=A9rateur cr=C3=A9e le futur (surprisal=
+ =3D 0), le parser pr=C3=A9dit sous incertitude (surprisal &gt; 0)</span></div=
+><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"=
+color:rgb(204, 204, 204);">La th=C3=A8se centrale : la caract=C3=A9risation =
+"la g=C3=A9n=C3=A9ration est facile, le parsing est difficile" est trompeu=
+se. La vraie asym=C3=A9trie est </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-=
+color" style=3D"color:rgb(204, 204, 204);"><i>*structurelle*</i></span><spa=
+n class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =
+=E2=80=94 le parsing est toujours contraint tandis que la g=C3=A9n=C3=A9ra=
+tion ne l'est pas n=C3=A9cessairement.</span></div><div><br /></div><div><s=
+pan class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"=
+><b>**Constat de d=C3=A9part**</b></span><span class=3D"qt-qt-qt-qt-qt-qt-q=
+t-color" style=3D"color:rgb(204, 204, 204);"> : aucun survey n'a trait=C3=
+=A9 cette asym=C3=A9trie comme sujet central. Les 7 dimensions existent dan=
+s la litt=C3=A9rature mais n'ont jamais =C3=A9t=C3=A9 rassembl=C3=A9es.</sp=
+an></div><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" s=
+tyle=3D"color:rgb(86, 156, 214);"><b>## Ce que c'est et ce que ce n'est pas=
+</b></span></div><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-=
+color" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-=
+qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> C'est un papier </s=
+pan><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156,=
+ 214);"><b>**CS theory / langages formels**</b></span><span class=3D"qt-qt-q=
+t-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);">, ind=C3=A9pendant =
+du domaine musical</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-co=
+lor" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-qt=
+-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> Il n'y a </span><span =
+class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b=
+>**aucune mention**</b></span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" st=
+yle=3D"color:rgb(204, 204, 204);"> de BP3, ni de musique dans le corps du t=
+exte</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"c=
+olor:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color=
+" style=3D"color:rgb(204, 204, 204);"> La musique n'appara=C3=AEt qu'en =C2=
+=A76.4 comme "laboratoire id=C3=A9al" pour instancier les dimensions</span>=
+</div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(10=
+3, 150, 230);">-</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"=
+color:rgb(204, 204, 204);"> Un </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-c=
+olor" style=3D"color:rgb(86, 156, 214);"><b>**article compagnon**</b></span=
+><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 20=
+4);"> (Paper 9=CE=B2) est pr=C3=A9vu pour appliquer ce cadre aux grammaires =
+musicales =E2=80=94 c'est l=C3=A0 que BP3, GTTM, IDyOM, et la tripartition =
+de Nattiez interviendraien</span></div><div><br /></div><div><span class=
+=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>## Po=
+urquoi j'ai besoin de ton regard</b></span></div><div><br /></div><div><spa=
+n class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><=
+b>**les formalisations math=C3=A9matiques sont ma synth=C3=A8se**</b></span=
+><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 20=
+4);">, pas des formules tir=C3=A9es d'articles existants. Les r=C3=A9sultat=
+s sous-jacents sont =C3=A9tablis (Chomsky, Gold, Parikh, Shannon, etc.), ma=
+is la mise en formules est la mienne. Concr=C3=A8tement :</span></div><div>=
+<br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:=
+rgb(86, 156, 214);"><b>### Points solides (citations directes)</b></span></=
+div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, =
+150, 230);">-</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"co=
+lor:rgb(204, 204, 204);"> Les complexit=C3=A9s O(n), O(n=C2=B3), PSPACE-com=
+plet =E2=86=92 Hopcroft &amp; Ullman, Aho et al.</span></div><div><span cla=
+ss=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</sp=
+an><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204,=
+ 204);"> Les nombres de Catalan pour l'ambigu=C3=AFt=C3=A9 =E2=86=92 Jurafsk=
+y &amp; Martin</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color"=
+ style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-qt-qt-q=
+t-qt-color" style=3D"color:rgb(204, 204, 204);"> Le th=C3=A9or=C3=A8me de G=
+old (1967) sur l'impossibilit=C3=A9 d'inf=C3=A9rence</span></div><div><span =
+class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-=
+</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 2=
+04, 204);"> Le th=C3=A9or=C3=A8me de Parikh (1966) sur l'ambigu=C3=AFt=C3=
+=A9 intrins=C3=A8que</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-c=
+olor" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-q=
+t-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> La surprisal =E2=86=
+=92 Hale (2001), Levy (2008)</span></div><div><br /></div><div><span class=
+=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 214);"><b>### P=
+oints =C3=A0 v=C3=A9rifier (mes formulations)</b></span></div><div><span cl=
+ass=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">-</s=
+pan><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, =
+204);"> =C2=A74.1 : la fonction T_parse(G, n) pr=C3=A9sent=C3=A9e comme un =
+"cases" sur k =E2=80=94 c'est ma pr=C3=A9sentation, pas une formule exista=
+nte</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"co=
+lor:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" =
+style=3D"color:rgb(204, 204, 204);"> =C2=A74.2 : gen: G =C3=97 D =E2=86=92 =
+=CE=A3* et parse: G =C3=97 =CE=A3* =E2=86=92 2^T =E2=80=94 mes d=C3=A9fini=
+tions fonctionnelles</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-c=
+olor" style=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-q=
+t-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> =C2=A74.3 : parse_=
+=CE=B4(G, w) avec =CE=B4 comme param=C3=A8tre de strat=C3=A9gie =E2=80=94 m=
+a notation</span></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" styl=
+e=3D"color:rgb(103, 150, 230);">-</span><span class=3D"qt-qt-qt-qt-qt-qt-qt=
+-color" style=3D"color:rgb(204, 204, 204);"> =C2=A74.5 : l'argument sur l'i=
+njectivit=C3=A9 de gen vs. non-injectivit=C3=A9 de parse</span></div><div><=
+span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230)=
+;">-</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(20=
+4, 204, 204);"> =C2=A74.7 : le lien entre surprisal et asym=C3=A9trie tempo=
+relle =E2=80=94 mon interpr=C3=A9tation de Hale/Levy</span></div><div><br /=
+></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(8=
+6, 156, 214);"><b>## **Mes quesiotns**</b></span></div><div><br /></div><di=
+v><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, 21=
+4);"><b>1. **G=C3=A9n=C3=A9ral**=C2=A0</b></span><span class=3D"qt-qt-qt-qt=
+-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);">: Est-ce que ces formu=
+lations te semblent math=C3=A9matiquement correctes et d=C3=A9fendables dev=
+ant un reviewer CS ?</span></div><div><br /></div><div><span class=3D"qt-qt=
+-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150, 230);">2.</span><span c=
+lass=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> </=
+span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156, =
+214);"><b>**D3 (directionnalit=C3=A9)**</b></span><span class=3D"qt-qt-qt-=
+qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);"> : J'affirme que la=
+ g=C3=A9n=C3=A9ration est "intrins=C3=A8quement top-down". BP1 avait le pars=
+ing en "context-sensitive right mode derivation" =E2=80=94 est-ce que la di=
+rection de BP1 remet en question cette affirmation ?</span></div><div><br /=
+></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(1=
+03, 150, 230);">3.</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=
+=3D"color:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-=
+color" style=3D"color:rgb(86, 156, 214);"><b>**D6 (inf=C3=A9rence)**</b></s=
+pan><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, =
+204);"> : Ta vision ANAL+QAVAID+TEMP (inf=C3=A9rer des grammaires depuis d=
+es exemples) =E2=80=94 est-ce que =C3=A7a correspond =C3=A0 ce que je d=C3=
+=A9cris comme la "troisi=C3=A8me direction" ?</span></div><div><br /></div>=
+<div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(103, 150=
+, 230);">4.</span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color=
+:rgb(204, 204, 204);"> </span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" st=
+yle=3D"color:rgb(86, 156, 214);"><b>**Le split en 2 articles**</b></span><s=
+pan class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);=
+"> : Le premier est volontairement domain-independent. Le second ajouterait =
+une 8=C3=A8me dimension =E2=80=94 l'</span><span class=3D"qt-qt-qt-qt-qt-q=
+t-qt-color" style=3D"color:rgb(86, 156, 214);"><b>**asym=C3=A9trie musicale=
+**</b></span><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(=
+204, 204, 204);"> (composition vs. analyse, le pi=C3=A8ge terminologique GT=
+TM qui est nomm=C3=A9 "generative" mais fondamentalement analytique, BP3 co=
+mme cas unique de bidirectionnalit=C3=A9, tripartition de Nattiez) =E2=80=
+=94 et instancierait les 7 autres sur BP3, GTTM, IDyOM. Est-ce que cette st=
+rat=C3=A9gie de split te semble judicieuse ?</span></div><div><br /></div><=
+div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(86, 156,=
+ 214);"><b>## Le fichier</b></span></div><div><br /></div><div><span class=
+=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);">Je t'en=
+voie la version fran=C3=A7aise (traduction de lecture). La version soumise=
+ sera en anglais. C'est un premier brouillon =E2=80=94 tout est modifiable.<=
+/span></div><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color=
+" style=3D"color:rgb(204, 204, 204);">Merci d'avance pour ton regard,</span=
+></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(2=
+04, 204, 204);">Romain</span></div><div><br /></div><div><span class=3D"qt-=
+qt-qt-qt-qt-qt-qt-color" style=3D"color:rgb(204, 204, 204);">---</span></di=
+v><div><br /></div><div><span class=3D"qt-qt-qt-qt-qt-qt-qt-color" style=3D=
+"color:rgb(204, 204, 204);"><i>*P.S. : Le travail avec Claude a =C3=A9t=C3=
+=A9 essentiel pour structurer ce papier.</i></span></div></blockquote></div=
+></blockquote><div><br /></div><div><br /></div><div><b>Pi=C3=A8ces jointes=
+:</b></div><ul><li>peyrichou_generation_recognition_asymmetry_2026.pdf</li>=
+</ul></blockquote><div><br /></div></blockquote></div></blockquote><div><br =
+/></div></blockquote></div><div><br /></div><div><b>Pi=C3=A8ces jointes:</=
+b></div><ul><li>pattern-grammars-fr.docx.zip</li></ul></blockquote><div><br =
+/></div></blockquote><div><br /></div></blockquote></div></blockquote><div=
+><br /></div><div><br /></div><div><b>Pi=C3=A8ces jointes:</b></div><ul><li=
+>BPSCRIPT_VISION.md</li></ul></blockquote><div><br /></div></blockquote></d=
+iv>
+</body></html>
+--------=_MB574111B2-3C8B-4BEA-A20A-02F94D1AA624--
+

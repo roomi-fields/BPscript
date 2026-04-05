@@ -1,0 +1,1010 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-342-ga586d3c39-fm-20260310.001-ga586d3c3) with LMTPA;
+	 Thu, 26 Mar 2026 09:13:14 -0400
+X-Cyrus-Session-Id: slotpi15m92-1774530794-613817-2-1832354143728929771
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 1000 (email)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, HTML_MESSAGE 0.001, ME_SC_SENDERREP -100,
+  ME_SENDERREP_ALLOW -4, RCVD_IN_DNSWL_NONE -0.0001,
+  RCVD_IN_MSPIKE_H2 0.001, SHORTCIRCUIT -0.0001, SPF_HELO_NONE 0.001,
+  SPF_PASS -0.001, LANGUAGES fr, BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.221.46', Host='mail-wr1-f46.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8', html='utf-8'
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-01 ([10.202.2.200])
+  by phl-compute-07.internal (LMTPProxy); Thu, 26 Mar 2026 09:13:14 -0400
+Received: from phl-mx-01.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id DC2A111200EF
+	for <romain@liance.art>; Thu, 26 Mar 2026 09:13:13 -0400 (EDT)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-01.messagingengine.com (Authentication Milter) with ESMTP
+    id A0DC869A7DC.7886111200D5;
+    Thu, 26 Mar 2026 09:13:13 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1774530793; b=mAs4Cl8fVfFe05tzbl5ucTc1nd2j0GYmbeMfYmQl71Ka9zc4O7
+    5p/2iAeN/iK1dZKzeoIVDW8uZl5BL7SiLPSIu/3mOzMsJvZwzbb4t3I3H6EhcVfD
+    f7MQ+IwM4Ofx7xgL0c8JSbGGDHUUCJ40Jtb36N4a7GNvQa/dkW3IeikZBPN8Mg2v
+    qvCgffzEKpfQ8kWcfnhYmV92Y9OfaXCfOQXcplN03HrzufluxNqO2MwdQA3mVHw1
+    7yX+lJkDpRS2yCBwbLNVYyXDwSQVZaMzKEot4NDu2/vyWgFH9BAaWBV5tyiuHgmN
+    BaOwAsOch5jTnTE4drgTj49sUMO83ahloiPg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type; s=
+    fm1; t=1774530793; bh=/mAJz9L6Oz9i1K3RARdeiF/1FnMuHY2kifUBOF3jdq
+    U=; b=4L/3ZdQfy91193mVzEKROEl3VmmpGN/bx2y/ipVDpowOF3peOvlHyMgv5A
+    l5mgCiQ/A80vSXj0SeyKcxFv2bpp00hwAbF0Nj6cBb0aRNYTJitqsAWOmIC1XpVT
+    XjIZCC57MStIkfXgMrrjNpSzB5zVcPWAkRrrT96yAtUqJrsAqvvg9/vqYPuJphdv
+    ugvDCKw9apkTxOEaDO/qulqLu+zQG1qNZATk/rlZbIuf7VhMDJwYYlCFfjx5GFdA
+    2NELrGi9FY8l/MQPuYrt559Hhxv0oPUetpe/jzHU5TxEHPzPywHrgiriHbzbDWz9
+    AJFTF5/0EcsqThXdanzbstjPPWOA==
+ARC-Authentication-Results: i=1; phl-mx-01.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wr1-f46.google.com
+    policy.ptr=mail-wr1-f46.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=FSbA9HKM header.a=rsa-sha256
+    header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.221.46 (mail-wr1-f46.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wr1-f46.google.com
+X-ME-Authentication-Results: phl-mx-01.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-01.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wr1-f46.google.com
+      policy.ptr=mail-wr1-f46.google.com
+Authentication-Results: phl-mx-01.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-01.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-01.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=FSbA9HKM header.a=rsa-sha256
+      header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.221.46 (mail-wr1-f46.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wr1-f46.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefvdejgeejucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgesrgdtreertderjeenucfhrhhomhepfdeuvghrnhgr
+    rhguuceuvghlfdcuoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqeenucggtffrrg
+    htthgvrhhnpedufeetteehgfeviefggfejtedujeevfeelieethedtkeeufeduudeljeef
+    jeeghfenucfkphepvddtledrkeehrddvvddurdegiedpvdgrtddumegtsgdutgemkedurg
+    elmeeltgdttdemfeekfegtmeejfhhfmeguiehffeemjedvrgegnecuvehluhhsthgvrhfu
+    ihiivgeptdenucfrrghrrghmpehinhgvthepvddtledrkeehrddvvddurdegiedphhgvlh
+    hopehmrghilhdqfihruddqfhegiedrghhoohhglhgvrdgtohhmpdhmrghilhhfrhhomhep
+    oegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqedpnhgspghrtghpthhtohepuddprh
+    gtphhtthhopeeorhhomhgrihhnsehlihgrnhgtvgdrrghrtheq
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:6TDFaQki6qHi4ltt5aBWIz5woOA5s370P4qrWvtaIMYZKS2uU5OO3w>
+X-ME-Received: <xmx:6TDFadd-XcsebwrR1nCuCozY5QLZpYEfWNGsEETpTq-95XRVKfrLzg>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.221.46 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-01.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wr1-f46.google.com;
+    client-ip=209.85.221.46
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-01.messagingengine.com (Postfix) with ESMTPS id 7886111200D5
+	for <romain@liance.art>; Thu, 26 Mar 2026 09:13:13 -0400 (EDT)
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-439cd6b09f8so604790f8f.3
+        for <romain@liance.art>; Thu, 26 Mar 2026 06:13:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774530791; x=1775135591; darn=liance.art;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/mAJz9L6Oz9i1K3RARdeiF/1FnMuHY2kifUBOF3jdqU=;
+        b=FSbA9HKMwJJJh8IuJriHV4HSIQNR4pCKs6rcX16yJpuakcz98KBQyUa5yHmrcZxwWn
+         x/CMCKRZU8Ypp8f9iEQONkm4sVrM7YZ6jRxWdbnUiYXHJtMYhrozsibwlZz2W63+rR5i
+         ok/Voqeo6G0jMmYW6OFFdfXW9avhe1AjGl9nqGtO2bYC+9eiAEHhZsLBHyqU8iDpCSXm
+         v1Uc80upCVjTLIih3X851E4mcjCl6gigfMKNrIkF++Rwb5Wd3Kb/SJUivIs/KxBibzuJ
+         xunkSbjPMHlpMvk1osiXUDfAhI4aEVCaPo3NHDk0RRjml83ylvbU3JVbSmoABa8oztDQ
+         AKxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774530791; x=1775135591;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=/mAJz9L6Oz9i1K3RARdeiF/1FnMuHY2kifUBOF3jdqU=;
+        b=HsgfmIWNX54SDxhJ5bJjQeUznUAt1BHETd7BSSkswhTYWECvDQrbdTUvheMSgr80LE
+         fy7sToxz81sK4/8qWmcrw/Uae9uvL/jRcWDxylFSdftfrXiNeDchXdF6u4OFVmM/hmta
+         IQDWeHUgXaohyppF0hrrXU9HmHzgaHbtnZpojEjRKfMD7t0rKDSTQtjHBCdpAVOd5oj8
+         yhafYFyR+GAc6MRNlqaKGwkQnpW4m6+Y4X9gc5WrJm0/jBqO8b5brX23pJMqoCMP4Rcu
+         jxGfuozCcsW/WX4LwsypPaBSHqmqM4tRCQZN1zY6lSBmkfatcC49OEX9NWkWYg1gGDDC
+         V3fQ==
+X-Gm-Message-State: AOJu0YzeZoRtl6ImcBDn6Prn5VOnzxmz5H1lLtUw+BpzJi9r1GqtnyvL
+	ZluqBZSkb0UXBKaS+LleaYsiSVwdZZLQ2liOKwz54uTqJPnK3fZq82sCCz1kdw==
+X-Gm-Gg: ATEYQzzBKVHuESYY8myGdht5Mw8pw9St3qoglI2YHNp2spAC/tYRGlu1aW51Jdz2uM1
+	iwRCFwVKoSlZwFC1ml6sBRMJvIRbP/o6NR+4V1iqEG1DA/xodoZ6VqlEbBy7MABNzdURGfoR4lH
+	PZwuIUdMGLz8O+Q781Nf/RfcTZcknN6DYUtJny0cM28wOrPYCCgTkhiTjkv1vElT6/gnskSBmn3
+	5leYEG4redWP9N4Zd7ORLwboAanZqDs5mKubMzPgG58COhDpfLvUkDNCZ+Akn09thtuQvnzbIFS
+	F0URLvDgDqgBYfnH/xmMEBMbP3ONU87VTUSO4gAElsQ3ybnKzfiZoD+LA+asjmg6ClC0JJV9h6z
+	xJ1TPgvWBfoZgzfK8Zm88fliBn0ojtVxYSRH9cVJbtKbZhcr++mRc3y5JJfPVfaG5jJTU6lUg1i
+	8BYEn9gWbutAXpIBu7fTshyDsWaVSnsrgGIKddYdhzOjG6u2pGrZ2+q/W9tHF3d332AQjoQw+7C
+	TsLBQDYB88vOCfRIwv7pg==
+X-Received: by 2002:a05:6000:2502:b0:43b:6345:8d72 with SMTP id ffacd0b85a97d-43b889aebabmr10841615f8f.12.1774530790450;
+        Thu, 26 Mar 2026 06:13:10 -0700 (PDT)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:383c:7ff:d6f3:72a4? ([2a01:cb1c:81a9:9c00:383c:7ff:d6f3:72a4])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b9192e305sm8613370f8f.8.2026.03.26.06.13.09
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 26 Mar 2026 06:13:09 -0700 (PDT)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=5b2=5d=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9r?=
+ =?utf-8?q?ation-reconnaissance=20=3a=20sept=20dimensions=22?=
+Date: Thu, 26 Mar 2026 13:13:08 +0000
+Message-Id: <eme3ab10fa-71dc-4edf-8f53-3acb3401d39d@gmail.com>
+In-Reply-To: <3df2adaf-6334-4126-8026-e73ca55ff0e5@app.fastmail.com>
+References: <emef80250a-fa01-449c-bea4-f81936ada97f@gmail.com>
+ <3df2adaf-6334-4126-8026-e73ca55ff0e5@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="------=_MBF23B6D77-C259-4A5E-A617-3CBE7613EE9E"
+
+--------=_MBF23B6D77-C259-4A5E-A617-3CBE7613EE9E
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Pour SUB et SUB1, je vais encore regarder, en analysant le code C, car=20
+je ne suis pas s=C3=BBr de tous les d=C3=A9tails.
+
+Tu as raison :
+Deux grammaires identiques =E2=80=94 l'une avec un homomorphisme de=20
+transposition, l'autre sans =E2=80=94 produisent la m=C3=AAme s=C3=A9quence =
+temporelle.=20
+Seuls les noms des terminaux changent.
+
+Voici quelques examples simples d=E2=80=99application d=E2=80=99homomorphis=
+mes.
+
+L=E2=80=99alphabet -al.abc :
+
+*
+a --> a=E2=80=99 --> a=E2=80=99'
+b -->  b=E2=80=99
+c
+
+La grammaire :
+
+ORD
+S --> a * (=3D a') * * (=3D a) * (=3D a') * b (=3D a c)
+-----
+_destru [dans la sous-grammaire suivante]
+[Cette sous-grammaire est vide par ailleurs.]
+
+Cette grammaire produit :
+a a' a'' a'' b a=E2=80=99 c
+
+ou :
+a *(=3D a') * *(=3D a'') *(=3D a'') * b (=3D a=E2=80=99 c)
+
+sans =E2=80=9C_destru=E2=80=9D.
+
+Cet exemple montre que :
+1) L=E2=80=99homomorphisme * est appliqu=C3=A9 au contenu de l=E2=80=99expr=
+ession parenth=C3=A9s=C3=A9e=20
+qui le suit
+2) C=E2=80=99est bien un homomorphisme, autrement dit l=E2=80=99image de=
+ =E2=80=98c=E2=80=99 est=20
+lui-m=C3=AAme puisqu=E2=80=99il n=E2=80=99y a pas de r=C3=A8gle le concerna=
+nt
+3) Les homomorphismes peuvent s=E2=80=99empiler ou se combiner, par exemple =
+=E2=80=9C*=20
+*=E2=80=9D ici
+4) Un mapping dans un homomorphisme peut =C3=AAtre cyclique, par exemple :
+
+*
+a =E2=80=94> a=E2=80=99 =E2=80=94> a=E2=80=99=E2=80=99 =E2=80=94> a
+
+La r=C3=A8gle :
+S --> a * (=3D a) ** (=3D a) *** (=3D a) **** (=3D a)
+
+produira :
+a a' a'' a a'
+
+
+Voyons maintenant une grammaire qui r=C3=A9=C3=A9crit des variables :
+
+ORD
+S --> (=3D A) * (: A) ** (: A) * B (=3D A C)
+A =E2=80=94> a
+B =E2=80=94> b
+C =E2=80=94> c
+=E2=80=94=E2=80=94
+_destru
+
+Elle produit :
+a a' a'' b a' c
+
+ou :
+(=3D a) *(: a') * *(: a'') * b(=3D a=E2=80=99 c)
+
+sans =E2=80=9C_destru"
+
+Le fonctionnement est le m=C3=AAme qu=E2=80=99avec des terminaux.
+Mais il manque l=E2=80=99=C3=A9quivalent de * (=3D a=E2=80=99)
+
+En fait c=E2=80=99est : * (=3D * (=3D A))
+et la grammaire devient :
+
+ORD
+S --> (=3D A) * (: A) ** (: A) * (=3D * (=3D A)) * B (=3D A C)
+A =E2=80=94> a
+B =E2=80=94> b
+C =E2=80=94> c
+=E2=80=94=E2=80=94
+_destru
+
+produit bien :
+a a' a'' a'' b a=E2=80=99 c
+
+ou :
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D a'')) * b(=3D a=E2=80=99 c)
+
+sans =E2=80=9C_destru=E2=80=9D
+
+Fonctionnement :
+
+1) Lors de la compilation, un graphe des homomorphismes est construit =C3=
+=A0=20
+la lecture de =E2=80=9C-al.=E2=80=9D
+2) Les symboles (ou mots) d=C3=A9signant les homomorphismes (token T5) sont=
+=20
+g=C3=A9r=C3=A9s comme les terminaux (token T3) dans les d=C3=A9rivations
+3) Les terminaux sont remplac=C3=A9s par leurs images s=E2=80=99ils sont so=
+umis =C3=A0 des=20
+homomorphismes, mais ce remplacement est r=C3=A9alis=C3=A9 =C3=A0 la fin de =
+la=20
+production, pour l=E2=80=99affichage =E2=80=94 fonction SearchOrigin() dans =
+DisplayArg.c=20
+=E2=80=94 contrairement =C3=A0 ce qui s'affiche dans la trace de la pr=C3=
+=A9c=C3=A9dente=20
+production :
+
+[Step #1] Selected: gram#1[2] S --> (=3D A) *(: A) * *(: A) *(=3D *(=3D A)) =
+*=20
+B(=3D A C)
+(=3D A) *(: A) * *(: A) *(=3D *(=3D A)) * B(=3D A C)
+[Step #2] Selected: gram#1[3] A =E2=80=94> a
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D A)) * B(=3D A C)
+[Step #3] Selected: gram#1[3] A =E2=80=94> a
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D a'')) * B(=3D A C)
+[Step #4] Selected: gram#1[3] A =E2=80=94> a
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D a'')) * B(=3D a=E2=80=99 C)
+[Step #5] Selected: gram#1[4] B =E2=80=94> b
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D a'')) * b(=3D a=E2=80=99 C)
+[Step #6] Selected: gram#1[5] C =E2=80=94> c
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D a'')) * b(=3D a=E2=80=99 c)
+
+Dans *(: a=E2=80=99)  il faut comprendre que la parenth=C3=A8se (esclave) c=
+ontient=20
+=E2=80=9Ca=E2=80=9D et non =E2=80=9Ca=E2=80=99=E2=80=9D. Ou plut=C3=B4t, el=
+le contient un pointeur vers =E2=80=9Ca=E2=80=9D qui est=20
+dans la parenth=C3=A8se ma=C3=AEtre (=3D a).
+
+Donc les homomorphismes ne jouent aucun r=C3=B4le dans les choix de r=C3=A8=
+gles ni=20
+dans la structure temporelle, etc.
+Bien s=C3=BBr, un terminal comme =E2=80=9Ca=E2=80=99=E2=80=9D peut appara=
+=C3=AEtre dans l=E2=80=99argument gauche=20
+d=E2=80=99une r=C3=A8gle, par exemple :
+a' --> (=3D B) (: B)
+
+mais le moteur d=E2=80=99inf=C3=A9rence traite =E2=80=9Ca=E2=80=99=E2=80=9D =
+comme un simple terminal, sans=20
+tenir compte du fait qu=E2=80=99il est aussi l=E2=80=99image de =E2=80=9Ca=
+=E2=80=9D via l=E2=80=99homomorphisme=20
+=E2=80=9C*=E2=80=9D.
+
+Ce qui peut pr=C3=AAter =C3=A0 confusion est que le fichier =E2=80=9C-al.=
+=E2=80=9D contient =C3=A0 la=20
+fois la liste des terminaux (l=E2=80=99alphabet) et les mappings des=20
+homomorphismes. C=E2=80=99est pour =C3=A7a qu=E2=80=99autrefois j=E2=80=99u=
+tilisais le pr=C3=A9fixe =E2=80=9C-ho.=E2=80=9D
+
+Je regarde la suite (poids infini etc.) et je ferai un autre message.
+
+Mais tu peux m=E2=80=99envoyer le CompileProcs.c modifi=C3=A9. (Je ne suis=
+ pas =C3=A0=20
+l=E2=80=99aise avec les commandes git !)
+
+
+------ Original Message ------
+From "Romain Peyrichou" <romain@liance.art>
+To "Bernard Bel" <bernarbel@gmail.com>
+Date 26/03/2026 08:56:21
+Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance :=
+ sept=20
+dimensions"
+
+>Merci pour ta revue, je vais corriger =C3=A7a.
+>
+>J'avait une incompr=C3=A9hension manifeste de SUB et SUB1 (que je n'ai pas=
+=20
+>encore regard=C3=A9 avec attention)
+>et aussi des erreurs corrig=C3=A9es dans la VF de l'article non propag=C3=
+=A9es a=20
+>la VE... probl=C3=A8me de pipeline de publication pfff...
+>
+>Ce matin, je m'int=C3=A9ressais aux homomorphismes:
+>Voici ma compr=C3=A9hension de leur fonctionnement, issue de l'analyse du=
+=20
+>code source. Peux-tu confirmer/infirmer ?
+>
+>Les homomorphismes sont un renommage de terminaux appliqu=C3=A9 =C3=A0 la=
+=20
+>compilation des r=C3=A8gles (Encode/Recode), pas pendant la d=C3=A9rivatio=
+n=20
+>(Compute). Ils ne peuvent pas influencer le choix des r=C3=A8gles, les=20
+>poids, ni la structure temporelle.
+>
+>Deux grammaires identiques =E2=80=94 l'une avec un homomorphisme de=20
+>transposition, l'autre sans =E2=80=94 produisent la m=C3=AAme s=C3=A9quenc=
+e temporelle.=20
+>Seuls les noms des terminaux changent.
+>
+>Pipeline tel qu'on le comprend
+>1. CompileAlphabet parse le -ho., construit les tables p_Image[h][j]
+>2. Encode tokenise chaque r=C3=A8gle, les labels d'homomorphismes devienne=
+nt=20
+>des tokens T5
+>3. Recode/Reference utilise Image() pour transformer les terminaux du=20
+>master quand on compare avec un slave (=3DX)...(:X)
+>4. Compute d=C3=A9rive sans voir les homomorphismes =E2=80=94 ils ont d=C3=
+=A9j=C3=A0 =C3=A9t=C3=A9=20
+>r=C3=A9solus
+>
+>Sinon, je suis tomb=C3=A9 sur ce qui semble =C3=AAtre un "code mort": <=C2=
+=B0>
+>
+>Le symbole =C2=B0 (poids infini BP2) ne fonctionne plus en UTF-8 =E2=80=94=
+=20
+>GetArgument() teste c =3D=3D -80 (byte Latin-1) mais UTF-8 encode =C2=B0 e=
+n 2=20
+>octets. J'ai ajout=C3=A9 <inf> comme syntaxe alternative dans CompileProcs=
+.c=20
+>et converti les 4 grammaires de test-data (Nadaka-1er-essai, bells,=20
+>cloches1, tryflags3).
+>Si =C3=A7a t'int=C3=A9resse je peux t"envoyer le code ou faire un pull req=
+uest=20
+>sur GitHuib
+>
+>J'ai aussi une question sur -gr.Nadaka-1er-essai
+>Il semble que A8 ne soit d=C3=A9fini par aucune r=C3=A8gle et j'ai pas r=
+=C3=A9ussi a=20
+>comprendre comment =C3=A7a pouvait marcher.
+>Est ce que la grammaire est fausse/incompl=C3=A8te ou est ce qu'il y a un=
+=20
+>"truc" qui m'=C3=A9chappe?
+>
+>
+>Bon, les tests sur le moteur WASM (beaucoup plus lent pour l'instant=20
+>que le moteur C) et sur BPscript progressent bien...
+>Tous ces tests m'am=C3=A8nent a faire beaucoup de corrections de ce qui=20
+>semblait marcher sur ces cas simples et de voir des tas d'aspects de=20
+>ton langage qui m'avaient =C3=A9chapp=C3=A9.
+--------=_MBF23B6D77-C259-4A5E-A617-3CBE7613EE9E
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><title></title><style type=3D"text/css"><!--#x60f09671f0a44e6 #=
+qt blockquote.qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt blockquote.qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-x073605192e5c465 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-x073605192e5c465 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-x62a3364d1a3946c #qt-qt-=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt b=
+lockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt b=
+lockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xec8ba0327c73443 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-qt-qt-qt-qt-xe431a0edccde470 #qt-qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.=
+qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt=
+-qt-qt-x33aa1a238a86402 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-qt-q=
+t-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+#qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-xd7cede3b08344e1 #qt-qt-qt-qt-qt-qt-qt-qt-q=
+t-qt-qt #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+blockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt =
+blockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ #qt-qt-qt-qt-qt-qt-qt-qt-qt-x1764238c8b43499 #qt-qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ blockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt=
+ blockquote.qt-qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt #qt-qt-qt-qt-qt-qt-qt-qt-x37ca9094dbdf457 #qt-qt-qt-qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt blockquote.qt-qt-qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt blockquote.qt-qt-qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt #qt=
+-qt-qt-qt-qt-qt-x400d3c276b864e0 #qt-qt-qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-qt-q=
+t-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt blo=
+ckquote.qt-qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt blo=
+ckquote.qt-qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt #qt-qt-qt-qt-qt-xd82486effc8b488 #qt-qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt blockquote.qt-qt-qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt #qt-qt-qt-qt-xa99953502b96=
+439 #qt-qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt blockquote.qt-qt-qt-qt-cit=
+e
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt blockquote.qt-qt-qt-qt-cit=
+e2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt #qt-qt-qt-xa2c49a6e82504c3 #qt-qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt blockquote.qt-qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt blockquote.qt-qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt #qt-qt-x13718855076748c #=
+qt-qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt blockquote.qt-qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt blockquote.qt-qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt #qt-xf97e50ff33064bf #qt-qt
+{font-family: Palatino; font-size: 10.5pt;}
+#x60f09671f0a44e6 #qt blockquote.qt-cite
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204);}
+#x60f09671f0a44e6 #qt blockquote.qt-cite2
+{margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right: 0p=
+x; border-left-width: 1px; border-left-style: solid; border-left-color: rgb=
+(204, 204, 204); margin-top: 3px; padding-top: 0px;}
+#x60f09671f0a44e6 #qt
+{font-family: Palatino; font-size: 10.5pt;}
+--></style><style id=3D"css_styles" type=3D"text/css"><!--blockquote.cite { =
+margin-left: 5px; margin-right: 0px; padding-left: 10px; padding-right:0px=
+; border-left: 1px solid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}
+--></style></head><body style=3D"overflow-wrap: break-word; -webkit-nbsp-mo=
+de: space; line-break: after-white-space;"><div>Pour SUB et SUB1, je vais e=
+ncore regarder, en analysant le code C, car je ne suis pas s=C3=BBr de tous =
+les d=C3=A9tails.</div><div><br /></div><div>Tu as raison :</div><div><i>D=
+eux grammaires identiques =E2=80=94 l'une avec un homomorphisme de transpos=
+ition, l'autre sans =E2=80=94 produisent la m=C3=AAme s=C3=A9quence tempore=
+lle. Seuls les noms des terminaux changent.</i></div><div><br /></div><div>=
+Voici quelques examples simples d=E2=80=99application d=E2=80=99homomorphis=
+mes.</div><div><br /></div><div>L=E2=80=99alphabet -al.abc :</div><div><br=
+ /></div><div>*</div><div>a --&gt; a=E2=80=99 --&gt; a=E2=80=99'</div><div>b =
+--&gt; =C2=A0b=E2=80=99</div><div>c</div>
+<div><br /></div><div>La grammaire :</div><div><br /></div><div>ORD</div><d=
+iv>S --&gt; a * (=3D a') * * (=3D a) * (=3D a') * b (=3D a c)</div><div>---=
+--=C2=A0</div><div>_destru [dans la sous-grammaire suivante]</div><div>[Cet=
+te sous-grammaire est vide par ailleurs.]</div><div><br /></div><div>Cette=
+ grammaire produit :</div><div>a a' a'' a'' b a=E2=80=99 c</div><div><br /><=
+/div><div>ou :</div><div>a *(=3D a') * *(=3D a'') *(=3D a'') * b (=3D a=E2=
+=80=99 c)</div><div><br /></div><div>sans =E2=80=9C_destru=E2=80=9D.</div><=
+div><br /></div><div>Cet exemple montre que :</div><div>1) L=E2=80=99homomo=
+rphisme * est appliqu=C3=A9 au contenu de l=E2=80=99expression parenth=C3=
+=A9s=C3=A9e qui le suit</div><div>2) C=E2=80=99est bien un homomorphisme, a=
+utrement dit l=E2=80=99image de =E2=80=98c=E2=80=99 est lui-m=C3=AAme puisq=
+u=E2=80=99il n=E2=80=99y a pas de r=C3=A8gle le concernant</div><div>3) Les =
+homomorphismes peuvent s=E2=80=99empiler ou se combiner, par exemple =E2=
+=80=9C* *=E2=80=9D ici</div><div>4) Un mapping dans un homomorphisme peut =
+=C3=AAtre <b>cyclique</b>, par exemple :</div><div><br /></div><div>*</div=
+><div>a =E2=80=94&gt; a=E2=80=99 =E2=80=94&gt; a=E2=80=99=E2=80=99 =E2=80=
+=94&gt; a</div><div><br /></div><div style=3D"">La r=C3=A8gle :</div><div s=
+tyle=3D"">S --&gt;=C2=A0a * (=3D a) ** (=3D a) *** (=3D a) **** (=3D a)</di=
+v><div style=3D""><br /></div><div style=3D"">produira :</div><div style=3D=
+"">a a' a'' a a'</div><div style=3D""><br /></div><div style=3D""><br /></d=
+iv><div>Voyons maintenant une grammaire qui r=C3=A9=C3=A9crit des variables =
+:</div><div><br /></div><div>ORD</div><div>S --&gt;=C2=A0(=3D A) * (: A) *=
+* (: A) * B (=3D A C)</div><div>A =E2=80=94&gt;=C2=A0a</div><div>B =E2=80=
+=94&gt;=C2=A0b</div><div>C =E2=80=94&gt;=C2=A0c</div><div>=E2=80=94=E2=80=
+=94</div><div><span>_destru=C2=A0</span></div><div><span><br /></span></div=
+><div><span>Elle produit :</span></div><div><span>a a' a'' b a' c</span></d=
+iv><div><span><br /></span></div><div><span>ou :</span></div><div><span>(=
+=3D a) *(: a') * *(: a'') * b(=3D a=E2=80=99=C2=A0c)</span></div><div><span=
+><br /></span></div><div><span>sans =E2=80=9C_destru"</span></div><div><spa=
+n><br /></span></div><div><span>Le fonctionnement est le m=C3=AAme qu=E2=80=
+=99avec des terminaux.</span></div><div><span>Mais il manque l=E2=80=99=C3=
+=A9quivalent de * (=3D a=E2=80=99)</span></div><div><span><br /></span></di=
+v><div><span>En fait c=E2=80=99est : * (=3D * (=3D A))</span></div><div><sp=
+an>et la grammaire devient :</span></div><div><br /></div><div>ORD</div><di=
+v>S --&gt;=C2=A0(=3D A) * (: A) ** (: A) * (=3D * (=3D A)) * B (=3D A C)</d=
+iv><div>A =E2=80=94&gt;=C2=A0a</div><div>B =E2=80=94&gt;=C2=A0b</div><div>C =
+=E2=80=94&gt;=C2=A0c</div><div>=E2=80=94=E2=80=94</div><div>_destru</div><=
+div><br /></div><div>produit bien :</div><div>a a' a'' a'' b a=E2=80=99 c</=
+div><div><br /></div><div>ou :</div><div>(=3D a) *(: a') * *(: a'') *(=3D *=
+(=3D a'')) * b(=3D a=E2=80=99 c)</div><div><br /></div><div>sans =E2=80=9C_=
+destru=E2=80=9D</div><div><br /></div><div>Fonctionnement :</div><div><br /=
+></div><div>1) Lors de la compilation, un graphe des homomorphismes est con=
+struit =C3=A0 la lecture de =E2=80=9C-al.=E2=80=9D</div><div>2) Les symbole=
+s (ou mots) d=C3=A9signant les homomorphismes (token T5) sont g=C3=A9r=C3=
+=A9s comme les terminaux (token T3) dans les d=C3=A9rivations</div><div>3)=
+ Les terminaux sont remplac=C3=A9s par leurs images s=E2=80=99ils sont soumi=
+s =C3=A0 des homomorphismes, mais ce remplacement est r=C3=A9alis=C3=A9 =C3=
+=A0 la fin de la production, pour l=E2=80=99affichage =E2=80=94 fonction Se=
+archOrigin() dans DisplayArg.c =E2=80=94 contrairement =C3=A0 ce qui s'affi=
+che dans la trace de la pr=C3=A9c=C3=A9dente production :</div><div><br /><=
+/div><div>[Step #1] Selected: gram#1[2]  S --&gt;=C2=A0(=3D A) *(: A) * *(: =
+A) *(=3D *(=3D A)) * B(=3D A C)</div><div>(=3D A) *(: A) * *(: A) *(=3D *(=
+=3D A)) * B(=3D A C)</div><div>[Step #2] Selected: gram#1[3]  A =E2=80=94&g=
+t;=C2=A0a</div><div>(=3D a) *(: a') * *(: a'') *(=3D *(=3D A)) * B(=3D A C)=
+</div><div>[Step #3] Selected: gram#1[3]  A =E2=80=94&gt;=C2=A0a</div><div>=
+(=3D a) *(: a') * *(: a'') *(=3D *(=3D a'')) * B(=3D A C)</div><div>[Step #=
+4] Selected: gram#1[3]  A =E2=80=94&gt;=C2=A0a</div><div>(=3D a) *(: a') *=
+ *(: a'') *(=3D *(=3D a'')) * B(=3D a=E2=80=99 C)</div><div>[Step #5] Select=
+ed: gram#1[4]  B =E2=80=94&gt;=C2=A0b</div><div>(=3D a) *(: a') * *(: a'')=
+ *(=3D *(=3D a'')) * b(=3D a=E2=80=99 C)</div><div>[Step #6] Selected: gram#=
+1[5]  C =E2=80=94&gt;=C2=A0c</div><div>(=3D a) *(: a') * *(: a'') *(=3D *(=
+=3D a'')) * b(=3D a=E2=80=99 c)</div><div><br /></div><div style=3D"">Dans=
+ *(: a=E2=80=99) =C2=A0il faut comprendre que la parenth=C3=A8se (esclave) c=
+ontient =E2=80=9Ca=E2=80=9D et non =E2=80=9Ca=E2=80=99=E2=80=9D. Ou plut=C3=
+=B4t, elle contient un <b>pointeur</b> vers =E2=80=9Ca=E2=80=9D qui est dan=
+s la parenth=C3=A8se ma=C3=AEtre (=3D a).</div><div><br /></div><div>Donc <=
+b>les homomorphismes ne jouent aucun r=C3=B4le dans les choix de r=C3=A8gle=
+s ni dans la structure temporelle, etc</b>.</div><div>Bien s=C3=BBr, un ter=
+minal comme =E2=80=9Ca=E2=80=99=E2=80=9D peut appara=C3=AEtre dans l=E2=80=
+=99argument gauche d=E2=80=99une r=C3=A8gle, par exemple :</div><div>a' --&=
+gt;=C2=A0(=3D B) (: B)</div><div><br /></div><div>mais le moteur d=E2=80=99=
+inf=C3=A9rence traite =E2=80=9Ca=E2=80=99=E2=80=9D comme un simple terminal=
+, sans tenir compte du fait qu=E2=80=99il est aussi l=E2=80=99image de =E2=
+=80=9Ca=E2=80=9D via l=E2=80=99homomorphisme =E2=80=9C*=E2=80=9D.</div><div=
+><br /></div><div>Ce qui peut pr=C3=AAter =C3=A0 confusion est que le fichi=
+er =E2=80=9C-al.=E2=80=9D contient =C3=A0 la fois la liste des terminaux (l=
+=E2=80=99alphabet) et les mappings des homomorphismes. C=E2=80=99est pour =
+=C3=A7a qu=E2=80=99autrefois j=E2=80=99utilisais le pr=C3=A9fixe =E2=80=9C=
+-ho.=E2=80=9D=C2=A0</div><div><br /></div><div>Je regarde la suite (poids i=
+nfini etc.) et je ferai un autre message.</div><div><br /></div><div>Mais t=
+u peux m=E2=80=99envoyer le <i>CompileProcs.c</i> modifi=C3=A9. (Je ne suis =
+pas =C3=A0 l=E2=80=99aise avec les commandes git !)</div><div><br /></div>
+<div x-em-replyforwardheader=3D""><br /></div>
+<div>
+<div>------ Original Message ------</div>
+<div>From "Romain Peyrichou" &lt;<a href=3D"mailto:romain@liance.art">romai=
+n@liance.art</a>&gt;</div>
+<div>To "Bernard Bel" &lt;<a href=3D"mailto:bernarbel@gmail.com">bernarbel@=
+gmail.com</a>&gt;</div>
+<div>Date 26/03/2026 08:56:21</div>
+<div>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissan=
+ce : sept dimensions"</div></div><div x-em-quote=3D""><br /></div>
+<div id=3D"x60f09671f0a44e6"><blockquote cite=3D"3df2adaf-6334-4126-8026-e7=
+3ca55ff0e5@app.fastmail.com" type=3D"cite" class=3D"cite2">
+<div>Merci pour ta revue, je vais corriger =C3=A7a.</div><div><br /></div><=
+div>J'avait une incompr=C3=A9hension manifeste de SUB et SUB1 (que je n'ai=
+ pas encore regard=C3=A9 avec attention)</div><div>et aussi des erreurs corr=
+ig=C3=A9es dans la VF de l'article non propag=C3=A9es a la VE... probl=C3=
+=A8me de pipeline de publication pfff...</div><div><br /></div><div>Ce mati=
+n, je m'int=C3=A9ressais aux homomorphismes:</div><div>Voici ma compr=C3=A9=
+hension de leur fonctionnement, issue de l'analyse du code source. Peux-tu=
+ confirmer/infirmer ?</div><div><br /></div><div>Les homomorphismes sont un=
+ renommage de terminaux appliqu=C3=A9 =C3=A0 la compilation des r=C3=A8gles=
+ (Encode/Recode), pas pendant la d=C3=A9rivation (Compute). Ils ne peuvent p=
+as influencer le choix des r=C3=A8gles, les poids, ni la structure temporel=
+le.=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div><br /></div><div>Deux grammaires i=
+dentiques =E2=80=94 l'une avec un homomorphisme de transposition, l'autre s=
+ans =E2=80=94 produisent la m=C3=AAme s=C3=A9quence temporelle. Seuls les n=
+oms des terminaux changent.</div><div><br /></div><div>Pipeline tel qu'on l=
+e comprend</div><div>1. CompileAlphabet parse le -ho., construit les tables =
+p_Image[h][j]</div><div>2. Encode tokenise chaque r=C3=A8gle, les labels d=
+'homomorphismes deviennent des tokens T5</div><div>3. Recode/Reference util=
+ise Image() pour transformer les terminaux du master quand on compare avec=
+ un slave (=3DX)...(:X)</div><div>4. Compute d=C3=A9rive sans voir les homom=
+orphismes =E2=80=94 ils ont d=C3=A9j=C3=A0 =C3=A9t=C3=A9 r=C3=A9solus</div>=
+<div><br /></div><div>Sinon, je suis tomb=C3=A9 sur ce qui semble =C3=AAtre =
+un "code mort": &lt;=C2=B0&gt;</div><div><br /></div><div>Le symbole =C2=
+=B0 (poids infini BP2) ne fonctionne plus en UTF-8 =E2=80=94 GetArgument()=
+ teste c =3D=3D -80 (byte Latin-1) mais UTF-8 encode =C2=B0 en 2 octets. J'a=
+i ajout=C3=A9 &lt;inf&gt; comme syntaxe alternative dans CompileProcs.c et=
+ converti les 4 grammaires de test-data (Nadaka-1er-essai, bells, cloches1,=
+ tryflags3).</div><div>Si =C3=A7a t'int=C3=A9resse je peux t"envoyer le code =
+ou faire un pull request sur GitHuib</div><div><br /></div><div>J'ai aussi =
+une question sur=C2=A0<span class=3D"color" style=3D"color:rgb(206, 145, 1=
+20);"><b>-gr.Nadaka-1er-essai<br /></b></span>Il semble que A8 ne soit d=C3=
+=A9fini par aucune r=C3=A8gle et j'ai pas r=C3=A9ussi a comprendre comment =
+=C3=A7a pouvait marcher.</div><div>Est ce que la grammaire est fausse/inco=
+mpl=C3=A8te ou est ce qu'il y a un "truc" qui m'=C3=A9chappe?</div><div><br =
+/></div><div><br /></div><div>Bon, les tests sur le moteur WASM (beaucoup=
+ plus lent pour l'instant que le moteur C) et sur BPscript progressent bien.=
+..=C2=A0</div><div>Tous ces tests m'am=C3=A8nent a faire beaucoup de correc=
+tions de ce qui semblait marcher sur ces cas simples et de voir des tas d'a=
+spects de ton langage qui m'avaient =C3=A9chapp=C3=A9.</div></blockquote></=
+div>
+</body></html>
+--------=_MBF23B6D77-C259-4A5E-A617-3CBE7613EE9E--
+

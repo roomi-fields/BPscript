@@ -1,0 +1,35 @@
+{
+  "_comment": "Alphabets spécifiques aux grammaires de test de Bernard. Référencés par @alphabet.test:<name> dans les scènes BPscript.",
+
+  "abc": {
+    "description": "Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)",
+    "notes": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+    "alterations": [],
+    "_note": "With _destru, compound terminals like 'abca' are destructured into 'a b c a'.",
+    "_source": "-al.abc / -ho.abc in bp3-engine/test-data/"
+  },
+
+  "conway": {
+    "description": "Conway look-and-say sequence digits",
+    "notes": ["d1", "d2", "d3"],
+    "alterations": [],
+    "_note": "d1='1', d2='2', d3='3'. Bare numbers are durations in BPscript.",
+    "_source": "-gr.look-and-say"
+  },
+
+  "kathak_count": {
+    "description": "Kathak counting bols (ek-do-tin)",
+    "notes": ["ek", "do", "tin", "char", "panch", "che", "sat", "at", "nau", "das", "gyara", "bara", "tera", "chauda", "pandra", "sola"],
+    "alterations": [],
+    "_note": "Subset of tabla bols used for counting patterns.",
+    "_source": "-al.EkDoTin in bp3-engine/test-data/"
+  },
+
+  "structural": {
+    "description": "Opaque structural symbols for grammar tests (no pitch, no sound)",
+    "notes": ["A", "A1", "A2", "A3", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "S1", "S2", "T", "X", "Y", "Z"],
+    "alterations": [],
+    "_note": "Used by checkNegativeContext, tryAllItems, and other structural grammar tests from Bernard.",
+    "_source": "Various test grammars in bp3-engine/test-data/"
+  }
+}

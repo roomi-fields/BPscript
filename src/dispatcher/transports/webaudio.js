@@ -69,13 +69,28 @@ export class WebAudioTransport {
     const filterFreq = event.filter || 0;
     const filterQ = event.filterQ || 1;
 
+    // Pitch bend → additional detune in cents
+    const pitchbend = event.pitchbend || 0;
+    const pitchrange = event.pitchrange || 200; // cents
+    const pitchbendCents = (pitchbend / 8192) * pitchrange;
+    const totalDetune = detune + pitchbendCents;
+
     // Build audio graph: osc → [filter] → gain → [panner] → destination
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
 
     osc.type = wave;
     osc.frequency.value = freq;
-    if (detune !== 0) osc.detune.value = detune;
+    if (totalDetune !== 0) {
+      if (event.pitchcont && this._prevDetune !== undefined) {
+        // Continuous mode: ramp from previous detune to current
+        osc.detune.setValueAtTime(this._prevDetune, absTime);
+        osc.detune.linearRampToValueAtTime(totalDetune, absTime + dur);
+      } else {
+        osc.detune.value = totalDetune;
+      }
+    }
+    this._prevDetune = totalDetune;
 
     // Envelope
     const sustainLevel = velocity * 0.4;

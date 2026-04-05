@@ -30,6 +30,7 @@ let _ctIndex = 0;
 let _cvIndex = 0;
 let _cvNames = {};  // CV instance name → cvTable index mapping
 let _nonTerminals = new Set();
+let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 
 function encode(ast) {
@@ -38,6 +39,7 @@ function encode(ast) {
   _ctIndex = 0;
   _cvIndex = 0;
   _cvNames = {};
+  _usedTerminals = new Set();
   const lines = [];
 
   // Load control map from libs based on @ directives
@@ -159,14 +161,14 @@ function encode(ast) {
     const sub = ast.subgrammars[si];
     const blockNum = sub.index;
 
-    // Determine mode from @mode directive on subgrammar, or default ORD
-    let mode = 'ORD';
+    // Determine mode from @mode directive on subgrammar (null = no mode line emitted)
+    let mode = null;
     if (sub.mode && MODE_MAP[sub.mode]) {
       mode = MODE_MAP[sub.mode];
     }
 
-    // Mode line
-    lines.push(mode);
+    // Mode line (only emit if explicitly set via @mode directive)
+    if (mode) lines.push(mode);
 
     // Preamble: global (first subgrammar) + per-subgrammar modifiers from @mode:X(modifiers)
     const subPreamble = si === 0 ? [...preamble] : [];
@@ -362,6 +364,9 @@ function encode(ast) {
 
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);
+
+  // Terminals actually used in the grammar (for prototype generation)
+  output.usedTerminals = _usedTerminals;
 
   return output;
 }
@@ -578,6 +583,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
   switch (el.type) {
     case 'Symbol':
       // Alphabet is built from declarations and loaded libs — no inference
+      if (!_nonTerminals.has(el.name)) _usedTerminals.add(el.name);
       return el.name;
 
     case 'SymbolCall': {

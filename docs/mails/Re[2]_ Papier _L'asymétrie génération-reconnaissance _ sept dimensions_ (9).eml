@@ -1,0 +1,542 @@
+Return-Path: <bernarbel@gmail.com>
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	 by slotpi15m92 (Cyrus 3.13.1-342-ga586d3c39-fm-20260310.001-ga586d3c3) with LMTPA;
+	 Thu, 26 Mar 2026 17:35:00 -0400
+X-Cyrus-Session-Id: slotpi15m92-1774560900-2602440-2-9023356781997027807
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address bernarbel@gmail.com in From header is in addressbook");
+ in-addressbook; 3541d158-0bd7-4efc-9151-b7ba123ed7b4 ("Sauvegarde
+ automatique")
+X-Spam-sender-reputation: 1000 (email)
+X-Spam-score: 0.0
+X-Spam-hits: FREEMAIL_FROM 0.001, HTML_MESSAGE 0.001, ME_SC_SENDERREP -100,
+  ME_SENDERREP_ALLOW -4, RCVD_IN_DNSWL_NONE -0.0001,
+  RCVD_IN_MSPIKE_H2 0.001, SHORTCIRCUIT -0.0001, SPF_HELO_NONE 0.001,
+  SPF_PASS -0.001, LANGUAGES fr, BAYES_USED none, SA_VERSION 4.0.1
+X-Spam-source: IP='209.85.128.45', Host='mail-wm1-f45.google.com', Country='US',
+  FromHeader='com', MailFrom='com'
+X-Spam-charsets: subject='utf-8', plain='utf-8', html='utf-8'
+X-Resolved-to: romain@liance.art
+X-Delivered-to: romain@liance.art
+X-Mail-from: bernarbel@gmail.com
+Received: from phl-mx-02 ([10.202.2.201])
+  by phl-compute-07.internal (LMTPProxy); Thu, 26 Mar 2026 17:35:00 -0400
+Received: from phl-mx-02.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.phl.internal (Postfix) with ESMTP id 3F0D830A0168
+	for <romain@liance.art>; Thu, 26 Mar 2026 17:35:00 -0400 (EDT)
+Received: from mailmx.phl.internal (localhost [127.0.0.1])
+    by phl-mx-02.messagingengine.com (Authentication Milter) with ESMTP
+    id B96893AC5F8.DEA0030A0100;
+    Thu, 26 Mar 2026 17:35:00 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1774560900; b=qv0Dbm0RAaHqfBcgV8P5pqO0rY+Txdg4GaX+saNbu3D+CBvJZn
+    q+Z3opXUVGca6UkRfHzCst9xklPYlOtZ9J6nXSeCmD8ksNmqVQ4+HbsfIR8m8YCG
+    RdQo6CEyCuE9UpAaNjaUqm9k/rMlGBUd2DOQ4dV1yJJ0wBwLgGwwtgiFSKAJKEOD
+    h4/mTBjrjE8SBr/20II4/ZJYK1qcGZdptrCvvuI8zBkxNmiJTWaKMTQHBF5dX9zn
+    vSZwhjhyNjuWb2SwXrUjUL1KZRZt+2qBKVuGIYMA/HznzU57mGg7C/jt9jOELdft
+    Ze7t9eEgXB3e4pgRdxB58g+mTTZnaFI8Og5g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=from:to:subject:date:message-id
+    :in-reply-to:references:reply-to:mime-version:content-type; s=
+    fm1; t=1774560900; bh=M25s4bhhsNHK2GqAnHsbkjtDeygV9apg6YQuo+1QoQ
+    o=; b=iYzEyaoMGRVHfOli6dVUIEr942Wr4OLRrdMjtcp4CCFlgm9CU0/wI2sAcD
+    FI074oLltItm3tRyDjpJtTHg3yapTljCXXgGxEmoHPoFMdI3VUAArpSceeLmV37E
+    c8+hjPRr18eBYk0zgp9E/v7axi77ioudng5f/Sc72R49qENY5QDlDHozmATZv/Op
+    WaM3okDlCo9AqN0h9+Onxr/Di3s0yQieagx0dB62QlvyK36vbXwMTiGAZrb36MII
+    2shDAWUrTRJWPUEeaeKx5XM8p2lrv0AXLkVG6lhpJzRc29vFJy/NVGQfLAaGk8Zk
+    wdCP41ByTlRWoKFsbBJK8mnbCm7g==
+ARC-Authentication-Results: i=1; phl-mx-02.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f45.google.com
+    policy.ptr=mail-wm1-f45.google.com;
+    bimi=skipped (DMARC Policy is not at enforcement);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+    header.i=@gmail.com header.b=GGbhjRYY header.a=rsa-sha256
+    header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+    policy.published-subdomain-policy=quarantine
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+    header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.45 (mail-wm1-f45.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+    smtp.helo=mail-wm1-f45.google.com
+X-ME-Authentication-Results: phl-mx-02.messagingengine.com;
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=-100 state=0
+Authentication-Results: phl-mx-02.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail-wm1-f45.google.com
+      policy.ptr=mail-wm1-f45.google.com
+Authentication-Results: phl-mx-02.messagingengine.com;
+    bimi=skipped (DMARC Policy is not at enforcement)
+Authentication-Results: phl-mx-02.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: phl-mx-02.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=gmail.com
+      header.i=@gmail.com header.b=GGbhjRYY header.a=rsa-sha256
+      header.s=20251104;
+    dmarc=pass policy.published-domain-policy=none
+      policy.published-subdomain-policy=quarantine
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=none,sp=quarantine,d=none,d.eval=none) policy.policy-from=p
+      header.from=gmail.com;
+    iprev=pass smtp.remote-ip=209.85.128.45 (mail-wm1-f45.google.com);
+    spf=pass smtp.mailfrom=bernarbel@gmail.com
+      smtp.helo=mail-wm1-f45.google.com
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefvdekgeejucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvufffkfgjfhhrfgggtgesrgdtreertderjeenucfhrhhomhepfdeuvghrnhgr
+    rhguuceuvghlfdcuoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqeenucggtffrrg
+    htthgvrhhnpefgffdvhfefudevjeefjefghffgjeehheejgefgheeugfefhfekjedvveff
+    vdfgueenucffohhmrghinhepudekrdhjvgenucfkphepvddtledrkeehrdduvdekrdeghe
+    dpvdgrtddumegtsgdutgemkedurgelmeeltgdttdemfeekfegtmeejfhhfmeguiehffeem
+    jedvrgegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddtle
+    drkeehrdduvdekrdeghedphhgvlhhopehmrghilhdqfihmuddqfheghedrghhoohhglhgv
+    rdgtohhmpdhmrghilhhfrhhomhepoegsvghrnhgrrhgsvghlsehgmhgrihhlrdgtohhmqe
+    dpnhgspghrtghpthhtohepuddprhgtphhtthhopeeorhhomhgrihhnsehlihgrnhgtvgdr
+    rghrtheq
+X-ME-VSScore: -100
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:hKbFaXR_dmCJ6DxZL23pAhjcNqlIOMLy3VIva6Yg8HaZbEnhQ0TG5g>
+X-ME-Received: <xmx:hKbFaS4scpOdeVDcMp4k4Ud36TV2-0GeEpQ-LC0ETpf1CuaupApiHA>
+Received-SPF: pass
+    (gmail.com ... _spf.google.com: 209.85.128.45 is authorized to use 'bernarbel@gmail.com' in 'mfrom' identity (mechanism 'ip4:209.85.128.0/17' matched))
+    receiver=phl-mx-02.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="bernarbel@gmail.com";
+    helo=mail-wm1-f45.google.com;
+    client-ip=209.85.128.45
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by phl-mx-02.messagingengine.com (Postfix) with ESMTPS id DEA0030A0100
+	for <romain@liance.art>; Thu, 26 Mar 2026 17:34:59 -0400 (EDT)
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-48540d21f7dso16088535e9.0
+        for <romain@liance.art>; Thu, 26 Mar 2026 14:34:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774560897; x=1775165697; darn=liance.art;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=M25s4bhhsNHK2GqAnHsbkjtDeygV9apg6YQuo+1QoQo=;
+        b=GGbhjRYYhWAz1vC/74xik8d2fis6il4wsGsJWnFBXmL0xPNCWFXKfJo0h0+lqH6UTv
+         MQKR/omAq6rs2IWoTgLwoLuT7CD9X8vVOKBq18L1fBpGEOspB/ME++m+xUIIa8vl60JV
+         bsjvd3cKNna3QTCa3L1LtZX/c76nn9DEGUX0x6jOd1WEP/xB9f3vaFI9RLwN8/CJ1rBW
+         tn3yNY47XXXIynzMqMk9FG+P1qBlFFL+HUTQoAoZyGp8/zINIKf0hdd7EtJSIFAJ+73e
+         1IP6CzSCpgRkANIvP2N/57fJZdV5DffOup8zi8zFCChaZJnzzRdgCcRvoXK3p99L3MrD
+         5IGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774560897; x=1775165697;
+        h=mime-version:user-agent:reply-to:references:in-reply-to:message-id
+         :date:subject:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=M25s4bhhsNHK2GqAnHsbkjtDeygV9apg6YQuo+1QoQo=;
+        b=aCsxLVcsjsyupwj31Fzba1T8UoG9bwihd7o16f4SBLCpuht3qkkQW4TXZRKgEAwODE
+         4FwQoPTQq/Q47KP0FYiGkPLPkJdU9C7bfV36LXuyRgYNUSNF8ks0x287PEHNcvCHxjF1
+         rMpgQOMUG4K6/CIZq4nD24d6yTyYd9A5czKnQPeunyTdoCkbnvcA59ZBYQ4pp+wYT2hz
+         Hdx4dH6v3DxXIY/xsiyn0VqeDU6touVP/3dIOXu+A2WZQllMQytys3Km1bfbZ1F4g+QL
+         4I0A4lXzKZZ8yXoq47pcvZj8QM+V1xNB834lkEZhAFe6wxQ9ynMYvKidl4wAWRDKe1nt
+         iATQ==
+X-Gm-Message-State: AOJu0YxeSff7/AZshP5voH/YBnK7ce5489V0eJg8Kt5Ou77MzgGey2N9
+	oLKuo2fFO71tpMkuPXSJJmLpXVuoEItRQ8DBePgaBQMArcGeAotfhXKRE8s9dg==
+X-Gm-Gg: ATEYQzwxVIRnujLQDUrcTeo5DtHRjPgn7+zkYN9H2+vanfDk4NZttQswGUFYlC02ojE
+	ofmMgk4cCYTcBfAuigl5orhUQifMM+qpXxGwnTmy4LoMbcFS+TaiJNaDJDYxsLRFGkrxlPyCAxj
+	jsAf0rDnZxhGvOgVNFffwjQhDD9nS/bq1xZOP91IF8hCaZmkeGM1MKSzMCjcQS2QTViJFYRY4XN
+	gFRZSJh7035uRkiETEliXGUDDs+l08JYBll3TfVrfll6Z9/58zzrENMsVngnOLBLDYZo9RY9sSk
+	/UuTMhmkkKoBQOYI6udxhpiEwh7cPfdcP2Ggv0zpgbjAz4yZWmR6Vs70CAzzVr4e20DB2v+T4Xq
+	nGy5c/S9PrA5bZ6bbP9Rfwb6U7Ldux8FYUiUa/JuEBw87hatteO5joT8jaXma7wtm3qPr9US3WM
+	TVZ+Ejz1BF8APDQCSEE3cRP91KE3qovSbF5m1ye93eAIsB8JLd0hcFlLIDn6fFQ64Uij93mwHQS
+	a62v5AIPdL/XnVLlQAsGw==
+X-Received: by 2002:a05:600c:1d15:b0:483:703e:4ad9 with SMTP id 5b1f17b1804b1-48727ee9b10mr3354595e9.19.1774560897297;
+        Thu, 26 Mar 2026 14:34:57 -0700 (PDT)
+Received: from ?IPv6:2a01:cb1c:81a9:9c00:383c:7ff:d6f3:72a4? ([2a01:cb1c:81a9:9c00:383c:7ff:d6f3:72a4])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48725eaedbesm5045055e9.5.2026.03.26.14.34.56
+        for <romain@liance.art>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 26 Mar 2026 14:34:56 -0700 (PDT)
+From: "Bernard Bel" <bernarbel@gmail.com>
+To: "Romain Peyrichou" <romain@liance.art>
+Subject: =?utf-8?q?Re=5b2=5d=3a=20Papier=20=22L=27asym=c3=a9trie=20g=c3=a9n=c3=a9r?=
+ =?utf-8?q?ation-reconnaissance=20=3a=20sept=20dimensions=22?=
+Date: Thu, 26 Mar 2026 21:34:55 +0000
+Message-Id: <em09f84b5d-9d19-44fd-af11-aeca160038c9@gmail.com>
+In-Reply-To: <47014048-f35e-4294-b57b-c2a938937a53@app.fastmail.com>
+References: <emef80250a-fa01-449c-bea4-f81936ada97f@gmail.com>
+ <3df2adaf-6334-4126-8026-e73ca55ff0e5@app.fastmail.com>
+ <em54b146ef-4319-4d24-96e7-fe599e9112c6@gmail.com>
+ <47014048-f35e-4294-b57b-c2a938937a53@app.fastmail.com>
+Reply-To: "Bernard Bel" <bernarbel@gmail.com>
+User-Agent: eMClient/10.4.0.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="------=_MBD09FE7F8-235C-4114-98F9-A55DA2AE9185"
+
+--------=_MBD09FE7F8-235C-4114-98F9-A55DA2AE9185
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Bonjour Romain,
+
+J=E2=80=99ai int=C3=A9gr=C3=A9 toutes tes modifications et publi=C3=A9 la v=
+ersion v3.3.18.
+
+Je vois comment fonctionne PolyExpand() non r=C3=A9cursif. =C3=87a me rappe=
+lle des=20
+souvenirs tr=C3=A8s anciens, jusqu=E2=80=99=C3=A0 ce que je devienne addict =
+de r=C3=A9cursivit=C3=A9=20
+sous l=E2=80=99emprise de Prolog !
+
+Visiblement on n=E2=80=99occupe pas plus de m=C3=A9moire et la vitesse a m=
+=C3=AAme=20
+augment=C3=A9 d=E2=80=99environ 14% sur  "-da.Beethoven-fugue-b-flat-major" =
+qui est=20
+la pi=C3=A8ce la plus volumineuse.
+
+Quand tu testes les grammaires  -gr.tryAllItems0 et -gr.tryAllItems1, je=20
+suppose que tu le fais sur de  la production en mode texte avec l=E2=80=99o=
+ption=20
+Produce all items.
+
+=E2=80=9C-gr.tryAllItems1=E2=80=9D donne par exemple :
+
+C3 C3 C4 D6
+C3 C3 C4 D3
+C3 C3 C5 D3
+C3 C3 C5 D6
+C3 C4 D6
+C3 C4 D3
+C3 C5 D3
+C3 C5 D6
+C4 D6
+C4 D3
+C5 D3
+C5 D6
+
+
+------ Original Message ------
+From "Romain Peyrichou" <romain@liance.art>
+To "Bernard Bel" <bernarbel@gmail.com>
+Date 26/03/2026 18:47:35
+Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissance :=
+ sept=20
+dimensions"
+
+>Je te r=C3=A9ponds vite fait, il faut que je commence =C3=A0 pr=C3=A9parer =
+mes valises=20
+>pour le stage de ce WE avec Andr=C3=A9ine :D
+>
+>Une part de moi resterait bien l=C3=A0 =C3=A0 travailler sur le sujet, je=
+=20
+>commence a avoir un truc qui marche bien :)
+>
+>Bref voici les fichiers modifi=C3=A9s.
+>
+>   CompileProcs.c =E2=80=94 12 lignes chang=C3=A9es autour de la ligne 357 =
+:
+>   // AVANT (1 ligne) :
+>   if(!control && (mode =3D=3D 1) && (c =3D=3D -80)) {  /* -80 is '=C2=B0' =
+*/
+>
+>   // APR=C3=88S (accepte 'inf' OU le byte Latin-1 =C2=B0) :
+>   if(!control && (mode =3D=3D 1) && (c =3D=3D 'i' || c =3D=3D -80)) {
+>       if(c =3D=3D 'i' && *((*qq)+1) =3D=3D 'n' && *((*qq)+2) =3D=3D 'f')=
+ {
+>           (*qq) +=3D 3;
+>       } else if(c =3D=3D -80) {
+>           (*qq)++;
+>       } else goto NOT_INF;
+>       ...
+>   NOT_INF: ;
+>
+>   Polymetric.c =E2=80=94 ~200 lignes de diff (ajout de la struct _PolyFra=
+me,=20
+>PUSH/POP autour de l'appel r=C3=A9cursif, labels _POLY_ENTRY et=20
+>_POLY_AFTER_CHILD). Le corps de PolyExpand (~1150 lignes de
+>    logique) est inchang=C3=A9.
+>
+>
+>Pour la "non regression" ce que je peux te dire c'est que je fais mes=20
+>tests en local sur mon PC en 4 =C3=A9tapes:
+>1: Grammaire BP3 lue par le moteur C original appel=C3=A9 en ligne de=20
+>commande --> MIDI ou texte si pas de midi
+>2: Moteur WASM idem
+>3: Moteur WASM avec utilisation des silent soundobjects : production=20
+>timed tokens ou texte
+>4: Scene BPscript transpil=C3=A9e envoy=C3=A9e au 3
+>
+>Et je compare ce qui est g=C3=A9n=C3=A9r=C3=A9 (d'o=C3=B9 l'int=C3=A9r=C3=
+=AAt de pouvoir initialiser=20
+>le seed random ce qui me permet de comparer m=C3=AAme quand il y a des=20
+>randoms)
+>
+>Et donc, pour toutes les grammaires test=C3=A9es les productions sont=20
+>identiques.
+>Pour l'instant les grammaires que j'arrive a tester sont: 12345678,=20
+>765432, Ames, MyMelody, NotReich, Visser5, acceleration, asymmetric1,=20
+>bells, blurb, check&, checkNegativeContext, checktemplates,=20
+>dhadhatite1, dhin1, doeslittle, drum, gramgene1, kss2, livecode1,=20
+>livecode2, look-and-say, simpletemplates, transposition1,=20
+>transposition3, tryAllItems, tryAllItems0, tryAllItems1, tryDESTRU,=20
+>tryGraphics, tryMIDIfile, tryPatternGrammar, tryRotate
+>
+--------=_MBD09FE7F8-235C-4114-98F9-A55DA2AE9185
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head>
+
+<style id=3D"css_styles" type=3D"text/css"><!--blockquote.cite { margin-lef=
+t: 5px; margin-right: 0px; padding-left: 10px; padding-right:0px; border-le=
+ft: 1px solid #cccccc }
+blockquote.cite2 {margin-left: 5px; margin-right: 0px; padding-left: 10px;=
+ padding-right:0px; border-left: 1px solid #cccccc; margin-top: 3px; padding=
+-top: 0px; }
+a img { border: 0px; }
+li[style=3D'text-align: center;'], li[style=3D'text-align: center; '], li[s=
+tyle=3D'text-align: right;'], li[style=3D'text-align: right; '] {  list-sty=
+le-position: inside;}
+body { font-family: Palatino; font-size: 10.5pt; }
+.quote { margin-left: 1em; margin-right: 1em; border-left: 5px #ebebeb soli=
+d; padding-left: 0.3em; }
+a.em-mention[href] { text-decoration: none; color: inherit; border-radius:=
+ 3px; padding-left: 2px; padding-right: 2px; background-color: #e2e2e2; }
+._em_placeholder {color: gray; border-bottom: 1px dotted lightblue;} ._em_p=
+laceholder:before{color:gray; content: '{{ ';} ._em_placeholder:after{color=
+:gray; content: ' }}';}
+--></style></head><body class=3D"plain" style=3D"overflow-wrap: break-word; =
+-webkit-nbsp-mode: space; line-break: after-white-space;"><div>Bonjour Rom=
+ain,</div><div><br /></div><div>J=E2=80=99ai int=C3=A9gr=C3=A9 toutes tes m=
+odifications et publi=C3=A9 la version v3.3.18.</div><div><br /></div><div>=
+Je vois comment fonctionne PolyExpand() non r=C3=A9cursif. =C3=87a me rappe=
+lle des souvenirs tr=C3=A8s anciens, jusqu=E2=80=99=C3=A0 ce que je devienn=
+e addict de r=C3=A9cursivit=C3=A9 sous l=E2=80=99emprise de Prolog !</div><=
+div><br /></div><div>Visiblement on n=E2=80=99occupe pas plus de m=C3=A9moi=
+re et la vitesse a m=C3=AAme augment=C3=A9 d=E2=80=99environ 14% sur =C2=A0=
+"-da.Beethoven-fugue-b-flat-major" qui est la pi=C3=A8ce la plus volumineus=
+e.</div><div><br /></div><div>Quand tu testes les grammaires =C2=A0-gr.tryA=
+llItems0 et -gr.tryAllItems1, je suppose que tu le fais sur de =C2=A0la pro=
+duction en mode texte avec l=E2=80=99option <i>Produce all items</i>.=C2=A0=
+</div><div><br /></div><div>=E2=80=9C-gr.tryAllItems1=E2=80=9D donne par ex=
+emple :</div><div><br /></div><div>C3 C3 C4 D6</div><div>C3 C3 C4 D3</div><=
+div>C3 C3 C5 D3</div><div>C3 C3 C5 D6</div><div>C3 C4 D6</div><div>C3 C4 D3=
+</div><div>C3 C5 D3</div><div>C3 C5 D6</div><div>C4 D6</div><div>C4 D3</div=
+><div>C5 D3</div><div>C5 D6</div>
+<div><br /></div>
+<div><br /></div>
+<div>
+<div>------ Original Message ------</div>
+<div>From "Romain Peyrichou" &lt;romain@liance.art&gt;</div>
+<div>To "Bernard Bel" &lt;bernarbel@gmail.com&gt;</div>
+<div>Date 26/03/2026 18:47:35</div>
+<div>Subject Re: Papier "L'asym=C3=A9trie g=C3=A9n=C3=A9ration-reconnaissan=
+ce : sept dimensions"</div></div><div><br /></div>
+<div id=3D"xbb38f086ce3f4f7"><blockquote type=3D"cite" class=3D"cite2">
+<div>Je te r=C3=A9ponds vite fait, il faut que je commence =C3=A0 pr=C3=A9p=
+arer mes valises pour le stage de ce WE avec Andr=C3=A9ine :D</div><div><br =
+/></div><div>Une part de moi resterait bien l=C3=A0 =C3=A0 travailler sur=
+ le sujet, je commence a avoir un truc qui marche bien :)</div><div><br /></=
+div><div>Bref voici les fichiers modifi=C3=A9s.</div><div><br /></div><div>=
+=C2=A0 CompileProcs.c =E2=80=94 12 lignes chang=C3=A9es autour de la ligne=
+ 357 :=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+</div><div>=C2=A0 // AVANT (1 ligne) :</div><div>=C2=A0 if(!control &amp;&a=
+mp; (mode =3D=3D 1) &amp;&amp; (c =3D=3D -80)) {=C2=A0 /* -80 is '=C2=B0' *=
+/=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><di=
+v>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div>=C2=A0=
+ // APR=C3=88S (accepte 'inf' OU le byte Latin-1 =C2=B0) :=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div>=C2=A0 if(=
+!control &amp;&amp; (mode =3D=3D 1) &amp;&amp; (c =3D=3D 'i' || c =3D=3D -8=
+0)) {=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if(=
+c =3D=3D 'i' &amp;&amp; *((*qq)+1) =3D=3D 'n' &amp;&amp; *((*qq)+2) =3D=3D=
+ 'f') {=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+</div><div>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 (*qq) +=
+=3D 3;=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0</div><div>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else if(c =
+=3D=3D -80) {=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div>=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 (*qq)++;=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0</div><div>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else goto NOT_IN=
+F;=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div>=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ...=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div>=C2=A0=
+ NOT_INF: ;=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0</div><div>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</d=
+iv><div>=C2=A0 Polymetric.c =E2=80=94 ~200 lignes de diff (ajout de la stru=
+ct _PolyFrame, PUSH/POP autour de l'appel r=C3=A9cursif, labels _POLY_ENTRY =
+et _POLY_AFTER_CHILD). Le corps de PolyExpand (~1150 lignes de</div><div>=
+=C2=A0=C2=A0 logique) est inchang=C3=A9.=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</div><div><br /></div><div><br /></div><d=
+iv>Pour la "non regression" ce que je peux te dire c'est que je fais mes te=
+sts en local sur mon PC en 4 =C3=A9tapes:</div><div>1: Grammaire BP3 lue pa=
+r le moteur C original appel=C3=A9 en ligne de commande --&gt; MIDI ou text=
+e si pas de midi</div><div>2: Moteur WASM idem</div><div>3: Moteur WASM ave=
+c utilisation des silent soundobjects : production timed tokens ou texte</d=
+iv><div>4: Scene BPscript transpil=C3=A9e envoy=C3=A9e au 3</div><div><br /=
+></div><div>Et je compare ce qui est g=C3=A9n=C3=A9r=C3=A9 (d'o=C3=B9 l'int=
+=C3=A9r=C3=AAt de pouvoir initialiser le seed random ce qui me permet de co=
+mparer m=C3=AAme quand il y a des randoms)</div><div><br /></div><div>Et do=
+nc, pour toutes les grammaires test=C3=A9es les productions sont identiques=
+.</div><div>Pour l'instant les grammaires que j'arrive a tester sont:=C2=A0=
+12345678, 765432, Ames, MyMelody, NotReich, Visser5, acceleration, asymmetr=
+ic1, bells, blurb, check&amp;, checkNegativeContext, checktemplates, dhadha=
+tite1, dhin1, doeslittle, drum, gramgene1, kss2, livecode1, livecode2, look=
+-and-say, simpletemplates, transposition1, transposition3, tryAllItems, try=
+AllItems0, tryAllItems1, tryDESTRU, tryGraphics, tryMIDIfile, tryPatternGra=
+mmar, tryRotate<br /></div><div><br /></div></blockquote></div>
+</body></html>
+--------=_MBD09FE7F8-235C-4114-98F9-A55DA2AE9185--
+
