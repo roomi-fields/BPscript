@@ -1,5 +1,4 @@
 build/
-dist/bp3.wasm
-dist/bp3.data
-dist/bp3.js
 node_modules/
+*.log
+.rtfm/
