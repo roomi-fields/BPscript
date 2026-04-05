@@ -8,13 +8,15 @@
 
 @core
 @controls
+@improvize
 
 gate beat3:midi
 gate beat2:midi
+gate a:midi
+gate b:midi
 
-// --- Sous-grammaire 1 @mode:random — initialisation ---
+// --- Sous-grammaire 1 — initialisation (pas de mode = default ORD) ---
 
-@mode:random
 S -> Head U V [Reverse=0, beats=24, K1]
 
 -----

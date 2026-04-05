@@ -316,11 +316,11 @@ function encode(ast) {
         parts.push(...ruleNativeSuffix);
       }
 
-      // RHS flags [phase=2, Atrans, K1] → /phase = 2/ /Atrans/ /K1/
+      // RHS flags [phase=2, Atrans, K1] → /phase=2/ /Atrans/ /K1/
       if (rule.flags && rule.flags.length > 0) {
         for (const f of rule.flags) {
           if (f.operator) {
-            parts.push(`/${f.flag} ${f.operator} ${f.value}/`);
+            parts.push(`/${f.flag}${f.operator}${f.value}/`);
           } else {
             parts.push(`/${f.flag}/`);
           }
@@ -484,7 +484,7 @@ function generateAlphabetFile(libCtx, directives, customTerminals) {
 
 function encodeGuard(guard) {
   if (guard.mutates) {
-    return `/${guard.flag} ${guard.operator} ${guard.value}/`;
+    return `/${guard.flag}${guard.operator}${guard.value}/`;
   }
   // Bare flag test: [Ideas] → /Ideas/
   if (guard.operator === null) {
@@ -492,7 +492,7 @@ function encodeGuard(guard) {
   }
   const op = guard.operator === '==' ? '=' :
              guard.operator;
-  return `/${guard.flag} ${op} ${guard.value}/`;
+  return `/${guard.flag}${op}${guard.value}/`;
 }
 
 // --- Context encoding ---
