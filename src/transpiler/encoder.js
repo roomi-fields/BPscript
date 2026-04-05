@@ -751,10 +751,20 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         if (q.tempoOp) {
           parts.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
         }
+        const runtimeAssignments = {};
         for (const p of q.pairs) {
-          if (controlMap[p.key] && _bp3Native.has(p.key)) {
-            parts.push(formatNativeValue(controlMap[p.key], p.value));
+          if (controlMap[p.key]) {
+            if (_bp3Native.has(p.key)) {
+              parts.push(formatNativeValue(controlMap[p.key], p.value));
+            } else {
+              runtimeAssignments[p.key] = p.value;
+            }
           }
+        }
+        if (Object.keys(runtimeAssignments).length > 0) {
+          const ctName = `CT${_ctIndex++}`;
+          _output.controlTable.push({ id: ctName, assignments: runtimeAssignments });
+          parts.push(`_script(${ctName})`);
         }
       }
 

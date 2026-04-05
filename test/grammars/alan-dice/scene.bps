@@ -10,6 +10,7 @@
 @core
 @controls
 @alphabet.solfege:midi
+@allitems
 
 // --- Sous-grammaire 1 @mode:ord — structure ---
 

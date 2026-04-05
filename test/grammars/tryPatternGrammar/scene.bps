@@ -3,6 +3,7 @@
 
 @core
 @controls
+@allitems
 @test_alphabets.abc
 
 @mode:ord
