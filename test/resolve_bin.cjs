@@ -10,7 +10,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const BP3_DIR = path.resolve(__dirname, '..', '..', 'bp3-engine');
+// Look for bp3-engine: submodule first (BPscript/bp3-engine/), then sibling (../bp3-engine/)
+const submodule = path.resolve(__dirname, '..', 'bp3-engine');
+const sibling = path.resolve(__dirname, '..', '..', 'bp3-engine');
+const BP3_DIR = fs.existsSync(path.join(submodule, 'builds')) ? submodule : sibling;
 const BUILDS_DIR = path.resolve(BP3_DIR, 'builds');
 const LAST_FILE = path.resolve(BUILDS_DIR, 'LAST');
 
