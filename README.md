@@ -9,15 +9,18 @@ Orchestrates SuperCollider, TidalCycles, Python, MIDI, DMX in a single file.
 git clone --recursive https://github.com/roomi-fields/BPscript.git
 cd BPscript
 
-# Build the engine (requires Emscripten + GCC + mingw)
-cd bp3-engine
-source /path/to/emsdk/emsdk_env.sh
-./build.sh wasm
-cd ..
-
-# Run
+# L'interface web fonctionne directement (dist/ contient les binaires WASM)
 python3 -m http.server 8080
 # Open http://localhost:8080/web/index.html
+
+# Pour recompiler le moteur (requires Emscripten + GCC + mingw)
+cd bp3-engine
+source /path/to/emsdk/emsdk_env.sh
+./build.sh all --archive --version=v3.3.19-wasm.1
+cd ..
+
+# Lancer les tests de non-régression
+node test/test_all.cjs --bin last
 ```
 
 ## Structure
@@ -46,6 +49,8 @@ Source .bps → Tokenizer → Parser (AST) → Encoder → BP3 grammar + alphabe
 ```
 
 ## Test
+
+Prérequis : avoir compilé le moteur avec `./build.sh all --archive` (voir Setup).
 
 Les tests comparent la production du moteur BP3 à travers 6 stages :
 
