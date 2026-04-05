@@ -51,6 +51,7 @@ const silentAlContent = fs.readFileSync(silentAl, 'utf-8');
 // Overwrite the alphabet temp file with silent.al
 fs.writeFileSync(`${TMP}_al.txt`, silentAlContent);
 
+
 // Provision -ho. file if grammar references one (needed for homomorphism resolution)
 const grContent = fs.readFileSync(`${TMP}_gr.txt`, 'utf-8');
 const hoMatch = grContent.match(/-ho\.(\S+)/);

@@ -7,9 +7,17 @@
 
 @core
 @controls
-@sounds:tabla_perc
 @mm:88
 @striated
+
+gate ek:midi
+gate do:midi
+gate tin:midi
+gate char:midi
+gate panch:midi
+gate che:midi
+gate sat:midi
+gate at:midi
 
 // --- Sous-grammaire 1 @mode:ord ---
 

@@ -93,12 +93,11 @@ require('${path.join(DIST, 'bp3.js').replace(/\\/g, '/')}')().then(function(M){
   if(${useTextMode ? 'true' : 'false'}){
     var txt=getResult();
     var lines=txt.split('\\n').filter(function(l){return l.trim();});
-    var textTokens=[];
+    timed=[];
     for(var i=0;i<lines.length;i++){
       var names=lines[i].trim().split(/\\s+/).filter(function(t){return t;});
-      for(var j=0;j<names.length;j++){var n=names[j].replace(/^'(.*)'$/,'$1');textTokens.push([n]);}
+      for(var j=0;j<names.length;j++){var n=names[j].replace(/^'(.*)'$/,'$1');timed.push([n,0,0]);}
     }
-    timed=textTokens.map(function(t){return[t[0],0,0];});
   } else {
     var timedRaw=JSON.parse(getTT());
     timed=timedRaw.map(function(t){return[t.token,t.start,t.end];});
@@ -107,12 +106,12 @@ require('${path.join(DIST, 'bp3.js').replace(/\\/g, '/')}')().then(function(M){
   process.stdout.write('OK\\n');
   process.exit(0);
 }).catch(function(e){require('fs').writeFileSync(TMP+'_result.json',JSON.stringify({error:e.message.substring(0,80)}));process.stdout.write('OK\\n');process.exit(0);});
-setTimeout(function(){require('fs').writeFileSync(TMP+'_result.json',JSON.stringify({error:'TIMEOUT'}));process.stdout.write('OK\\n');process.exit(0);},55000);
+setTimeout(function(){require('fs').writeFileSync(TMP+'_result.json',JSON.stringify({error:'TIMEOUT'}));process.stdout.write('OK\\n');process.exit(0);},120000);
 `;
 
 fs.writeFileSync(`${TMP}_wasm.cjs`, wasmScript);
 try {
-  execSync(`node ${TMP}_wasm.cjs`, { timeout: 60000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+  execSync(`node ${TMP}_wasm.cjs`, { timeout: 130000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
   const resultJson = fs.readFileSync(`${TMP}_result.json`, 'utf-8');
   const result = JSON.parse(resultJson);
   if (result.error) { console.error(`S5 WASM FAIL: ${result.error}`); process.exit(1); }

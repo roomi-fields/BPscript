@@ -1,14 +1,11 @@
 {
-  "source": "scenes/tryMIDIfile.bps",
-  "stage": "S4",
-  "settings": [
-    0,
-    10,
-    10,
-    1,
-    1,
-    60
-  ],
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "midi",
+  "compile": {
+    "grammarLines": 5,
+    "alphabetSize": 350
+  },
   "tokens": [
     [
       "A4",
@@ -51,5 +48,5 @@
       8000
     ]
   ],
-  "date": "2026-03-30"
+  "date": "2026-04-05"
 }

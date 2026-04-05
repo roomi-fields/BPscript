@@ -1,0 +1,11 @@
+{
+  "source": "scene.bps",
+  "stage": "S5",
+  "mode": "text",
+  "compile": {
+    "grammarLines": 83,
+    "alphabetSize": 0
+  },
+  "tokens": [],
+  "date": "2026-04-05"
+}
