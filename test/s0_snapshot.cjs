@@ -98,7 +98,11 @@ function processGrammar(name) {
   }
   args.push('-gr', `${CTESTS}/-gr.${grName}`);
   if (ref.alphabet) args.push('-al', `${CTESTS}/${ref.alphabet}`);
-  if (ref.tonality) args.push('-to', `${CTESTS}/${ref.tonality}`);
+  if (ref.tonality) {
+    const toCtests = `${CTESTS}/${ref.tonality}`;
+    const toRes = `tonality_resources/${ref.tonality}`;
+    args.push('-to', fs.existsSync(path.join(BP_EXE_DIR, toRes)) ? toRes : toCtests);
+  }
   args.push('--seed', '1');
 
   if (s1Mode === 'midi') {
