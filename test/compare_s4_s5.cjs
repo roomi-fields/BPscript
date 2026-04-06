@@ -66,7 +66,12 @@ function splitStructure(tokens) {
 // (S4 is in structural order from engine, S5 is in temporal order from dispatcher)
 const timSort = (a, b) => a[1] - b[1] || a[2] - b[2] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
 const s4sorted = [...s4.tokens].sort(timSort);
-const s5sorted = [...s5.tokens].sort(timSort);
+// Filter S5 tokens to only terminals declared in the scene's alphabet
+const s5alphabet = s5.alphabet ? new Set(s5.alphabet) : null;
+const s5filtered = s5alphabet
+  ? s5.tokens.filter(t => s5alphabet.has(t[0]))
+  : s5.tokens;
+const s5sorted = [...s5filtered].sort(timSort);
 const s4raw = splitStructure(s4sorted.map(t => t[0]));
 const s5raw = splitStructure(s5sorted.map(t => t[0]));
 

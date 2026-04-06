@@ -6,6 +6,11 @@
     "grammarLines": 10,
     "alphabetSize": 3
   },
+  "alphabet": [
+    "a",
+    "b",
+    "c"
+  ],
   "tokens": [
     [
       "a",

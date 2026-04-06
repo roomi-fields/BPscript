@@ -6,6 +6,12 @@
     "grammarLines": 28,
     "alphabetSize": 4
   },
+  "alphabet": [
+    "beat3",
+    "beat2",
+    "a",
+    "b"
+  ],
   "tokens": [
     [
       "b",

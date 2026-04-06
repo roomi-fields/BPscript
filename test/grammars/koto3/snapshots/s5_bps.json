@@ -6,6 +6,13 @@
     "grammarLines": 34,
     "alphabetSize": 5
   },
+  "alphabet": [
+    "a",
+    "b",
+    "c",
+    "f",
+    "chik"
+  ],
   "tokens": [
     [
       "_script(CT0){5,a",

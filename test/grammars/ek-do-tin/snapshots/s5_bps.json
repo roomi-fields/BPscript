@@ -6,6 +6,16 @@
     "grammarLines": 10,
     "alphabetSize": 8
   },
+  "alphabet": [
+    "ek",
+    "do",
+    "tin",
+    "char",
+    "panch",
+    "che",
+    "sat",
+    "at"
+  ],
   "tokens": [
     [
       "_script(CT3)(={2,ek",

@@ -48,6 +48,7 @@ writeFileSync('${TMP}_gr.txt', r.grammar || '');
 writeFileSync('${TMP}_al.txt', r.alphabetFile || (Array.isArray(r.alphabet) ? r.alphabet.join('\\n') : '') || '');
 writeFileSync('${TMP}_se.txt', r.settingsJSON || '');
 writeFileSync('${TMP}_ct.json', JSON.stringify(r.controlTable || {}));
+writeFileSync('${TMP}_alphabet.json', JSON.stringify(r.alphabet || []));
 // Extract alphabet directive for resolver config
 const alphDir = (r.directives || []).find(d => d.name === 'alphabet');
 const info = { errors: r.errors || [], grammarLines: (r.grammar || '').split('\\n').length, alphabetSize: (r.alphabet || []).length,
@@ -183,8 +184,10 @@ writeFileSync('${TMP}_resolved.json', JSON.stringify(resolved));
   const snapDir = path.join(DIR, 'snapshots');
   if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
   const today = new Date().toISOString().substring(0, 10);
+  const alphabet = JSON.parse(fs.readFileSync(`${TMP}_alphabet.json`, 'utf-8'));
   const snap = { source: `scene.bps`, stage: 'S5', mode: s1Mode,
     compile: { grammarLines: compileInfo.grammarLines, alphabetSize: compileInfo.alphabetSize },
+    alphabet: alphabet,
     tokens: finalTokens, date: today };
   fs.writeFileSync(path.join(snapDir, 's5_bps.json'), JSON.stringify(snap, null, 2));
   console.log(`S5 OK: ${finalTokens.length} tokens → ${name}/snapshots/s5_bps.json`);

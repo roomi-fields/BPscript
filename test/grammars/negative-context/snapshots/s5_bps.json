@@ -6,6 +6,31 @@
     "grammarLines": 8,
     "alphabetSize": 23
   },
+  "alphabet": [
+    "A",
+    "A1",
+    "A2",
+    "A3",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "S1",
+    "S2",
+    "T",
+    "X",
+    "Y",
+    "Z"
+  ],
   "tokens": [
     [
       "A",
