@@ -1,24 +1,27 @@
 #!/usr/bin/env node
 /**
- * test_all.cjs — Run S1 + S2/S3 generation and comparisons in one shot.
+ * test_all.cjs — Run S1 + S2/S3 + S4 + S5 generation and comparisons.
  *
  * Optimizations vs running scripts individually:
  *   1. S1 (native) runs in parallel batches (N concurrent bp3 processes)
  *   2. S2/S3 (WASM) runs in parallel batches (N concurrent node processes)
- *   3. Comparisons run at the end (fast, ~1.4s each)
+ *   3. S4 (WASM + silent.al) runs in parallel batches
+ *   4. S5 (transpiler + WASM) runs in parallel batches
+ *   5. Comparisons run at the end (fast, ~1.4s each)
  *
  * WASM note: bp3_init() does NOT fully reset state between grammars,
  * so each grammar runs in its own process (no in-process batching).
  * The speedup comes from parallelism, not from sharing WASM init.
  *
  * Usage:
- *   node test/test_all.cjs              Run all active grammars
- *   node test/test_all.cjs --s1         Only regenerate S1
- *   node test/test_all.cjs --s2         Only regenerate S2/S3
- *   node test/test_all.cjs --compare    Only run comparisons (no regen)
- *   node test/test_all.cjs --jobs=8     Set parallelism (default: 6)
- *   node test/test_all.cjs --bin=v3.3.18-wasm.1  Use specific engine version
- *   node test/test_all.cjs drum harmony Run only named grammars
+ *   node test/test_all.cjs --bin last         Run all stages (S1+S2/S3+S4+S5)
+ *   node test/test_all.cjs --bin last --s1    Only regenerate S1
+ *   node test/test_all.cjs --bin last --s2    Only regenerate S2/S3
+ *   node test/test_all.cjs --bin last --s4    Only regenerate S4
+ *   node test/test_all.cjs --bin last --s5    Only regenerate S5
+ *   node test/test_all.cjs --bin last --compare  Only run comparisons (no regen)
+ *   node test/test_all.cjs --bin last --jobs=8   Set parallelism (default: 6)
+ *   node test/test_all.cjs --bin last drum harmony  Run only named grammars
  */
 const { execFile } = require('child_process');
 const fs = require('fs');
@@ -33,13 +36,16 @@ const GRAMMARS = require('./grammars/grammars.json');
 // ---- CLI parsing ----
 const args = process.argv.slice(2);
 let JOBS = 6;
-let onlyS1 = false, onlyS2 = false, onlyCompare = false;
+const selectedStages = new Set();
+let onlyCompare = false;
 const namedGrammars = [];
 
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
-  if (a === '--s1') onlyS1 = true;
-  else if (a === '--s2') onlyS2 = true;
+  if (a === '--s1') selectedStages.add('s1');
+  else if (a === '--s2') selectedStages.add('s2');
+  else if (a === '--s4') selectedStages.add('s4');
+  else if (a === '--s5') selectedStages.add('s5');
   else if (a === '--compare') onlyCompare = true;
   else if (a.startsWith('--jobs=')) JOBS = parseInt(a.split('=')[1]) || 6;
   else if (a === '--bin') i++; // skip value, handled by requireBinTag
@@ -51,9 +57,13 @@ for (let i = 0; i < args.length; i++) {
 const binTag = requireBinTag();
 const binArgs = ['--bin', binTag];
 
-const doS1 = !onlyS2 && !onlyCompare;
-const doS2 = !onlyS1 && !onlyCompare;
-const doCompare = !onlyS1 && !onlyS2 || onlyCompare;
+// If no stage explicitly selected, run all
+const runAll = selectedStages.size === 0 && !onlyCompare;
+const doS1 = runAll || selectedStages.has('s1');
+const doS2 = runAll || selectedStages.has('s2');
+const doS4 = runAll || selectedStages.has('s4');
+const doS5 = runAll || selectedStages.has('s5');
+const doCompare = runAll || onlyCompare;
 
 // ---- Grammar list ----
 const activeNames = namedGrammars.length > 0
@@ -142,20 +152,59 @@ async function main() {
     console.log(`  S2: ${s2ok} OK, ${s2fail} FAIL — ${(s2Time/1000).toFixed(1)}s\n`);
   }
 
+  // ---- S4: WASM + silent.al ----
+  if (doS4) {
+    console.log(`--- S4: WASM+silent.al (${activeNames.length} grammars, ${JOBS} parallel) ---`);
+    const s4Start = Date.now();
+    const s4Tasks = activeNames.map(name => ({
+      name, script: 's4_wasm_silent.cjs', stage: 'S4', timeout: 60000
+    }));
+    const s4Results = await runParallel(s4Tasks, JOBS);
+    const s4Time = Date.now() - s4Start;
+
+    let s4ok = 0, s4fail = 0, s4skip = 0;
+    for (const r of s4Results) {
+      if (r.ok) { s4ok++; }
+      else if (/SKIP|no silent/.test(r.stderr + r.stdout)) { s4skip++; }
+      else { s4fail++; console.log(`  FAIL S4 ${r.name}: ${r.stderr.substring(0, 80)}`); }
+    }
+    console.log(`  S4: ${s4ok} OK, ${s4fail} FAIL${s4skip ? `, ${s4skip} SKIP` : ''} — ${(s4Time/1000).toFixed(1)}s\n`);
+  }
+
+  // ---- S5: BPscript transpiler ----
+  if (doS5) {
+    console.log(`--- S5: BPscript transpiler (${activeNames.length} grammars, ${JOBS} parallel) ---`);
+    const s5Start = Date.now();
+    const s5Tasks = activeNames.map(name => ({
+      name, script: 's5_bpscript.cjs', stage: 'S5', timeout: 60000
+    }));
+    const s5Results = await runParallel(s5Tasks, JOBS);
+    const s5Time = Date.now() - s5Start;
+
+    let s5ok = 0, s5fail = 0, s5skip = 0;
+    for (const r of s5Results) {
+      if (r.ok) { s5ok++; }
+      else if (/SKIP|no .bps/.test(r.stderr + r.stdout)) { s5skip++; }
+      else { s5fail++; console.log(`  FAIL S5 ${r.name}: ${r.stderr.substring(0, 80)}`); }
+    }
+    console.log(`  S5: ${s5ok} OK, ${s5fail} FAIL${s5skip ? `, ${s5skip} SKIP` : ''} — ${(s5Time/1000).toFixed(1)}s\n`);
+  }
+
   // ---- Comparisons ----
   if (doCompare) {
     console.log('--- Comparisons ---');
 
-    // S1 vs S2
     const cmpStart1 = Date.now();
     const { execSync } = require('child_process');
+
+    // S1 vs S2
     try {
       const out = execSync(`node ${path.join(DIR, 'compare_s1_s2.cjs')}`, {
         encoding: 'utf-8', timeout: 30000
       });
-      // Extract summary line
       const summary = out.split('\n').filter(l => /Compared:|Exact|Timing|Content|Count|Missing/.test(l));
-      for (const l of summary) console.log('  ' + l.trim());
+      console.log('  S1 vs S2:');
+      for (const l of summary) console.log('    ' + l.trim());
     } catch(e) {
       console.log('  compare_s1_s2 failed');
     }
@@ -166,11 +215,47 @@ async function main() {
         encoding: 'utf-8', timeout: 30000
       });
       const summary = out.split('\n').filter(l => /Compared:|Exact|Timing|Content|Count|Missing/.test(l));
-      console.log('');
-      for (const l of summary) console.log('  ' + l.trim());
+      console.log('  S2 vs S3:');
+      for (const l of summary) console.log('    ' + l.trim());
     } catch(e) {
       console.log('  compare_s2_s3 failed');
     }
+
+    // S3 vs S4
+    try {
+      const out = execSync(`node ${path.join(DIR, 'compare_s3_s4.cjs')}`, {
+        encoding: 'utf-8', timeout: 30000
+      });
+      const summary = out.split('\n').filter(l => /Compared:|Exact|Timing|Content|Count|Missing/.test(l));
+      console.log('  S3 vs S4:');
+      for (const l of summary) console.log('    ' + l.trim());
+    } catch(e) {
+      console.log('  compare_s3_s4 failed');
+    }
+
+    // S4 vs S5
+    try {
+      // compare_s4_s5 expects a grammar name, run for each
+      let s45exact = 0, s45diff = 0, s45skip = 0, s45total = 0;
+      for (const name of activeNames) {
+        try {
+          const out = execSync(`node ${path.join(DIR, 'compare_s4_s5.cjs')} ${name}`, {
+            encoding: 'utf-8', timeout: 10000
+          });
+          s45total++;
+          if (/EXACT|OK/.test(out)) s45exact++;
+          else s45diff++;
+        } catch(e) {
+          const msg = (e.stderr || e.stdout || e.message || '').toString();
+          if (/SKIP|missing|no .bps|Not found/.test(msg)) s45skip++;
+          else { s45diff++; s45total++; }
+        }
+      }
+      console.log(`  S4 vs S5: ${s45exact}/${s45total} EXACT, ${s45diff} DIFF, ${s45skip} SKIP`);
+    } catch(e) {
+      console.log('  compare_s4_s5 failed');
+    }
+
     console.log(`  Comparisons: ${((Date.now()-cmpStart1)/1000).toFixed(1)}s`);
   }
 

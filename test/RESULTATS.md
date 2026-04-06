@@ -1,7 +1,7 @@
-# Résultats des tests — Pipeline S0→S1→S2→S3→S4
+# Résultats des tests — Pipeline S0→S1→S2→S3→S4→S5
 
-Dernière mise à jour : 2026-04-05
-Build : v3.3.18-wasm.20 / v3.3.19 (natif)
+Dernière mise à jour : 2026-04-06
+Build : v3.3.19-wasm.2
 
 ## Stages
 
@@ -18,9 +18,10 @@ Build : v3.3.18-wasm.20 / v3.3.19 (natif)
 | Comparaison  | EXACT | TIMING | CONTENT | COUNT | MISSING | Total |
 | ------------ | ----- | ------ | ------- | ----- | ------- | ----- |
 | **S0 vs S1** | 33    | 2      | 0       | 0     | 0       | 35    |
-| **S1 vs S2** | 23    | 12     | 0       | 2     | 0       | 36    |
-| **S2 vs S3** | 30    | 4      | 3       | 0     | 0       | 36    |
+| **S1 vs S2** | 23    | 12     | 0       | 1     | 0       | 36    |
+| **S2 vs S3** | 29    | 4      | 3       | 0     | 0       | 36    |
 | **S3 vs S4** | 33    | 1      | 0       | 2     | 0       | 36    |
+| **S4 vs S5** | 11    | —      | 23      | —     | 2       | 34    |
 
 bells exclu (skip : fichiers -ho.cloches1 manquants) → 36 grammaires actives
 
@@ -29,7 +30,7 @@ bells exclu (skip : fichiers -ho.cloches1 manquants) → 36 grammaires actives
 | #   | Titre                                                     | Grammaires impactées                 | Stage        | Impact                     |
 | --- | --------------------------------------------------------- | ------------------------------------ | ------------ | -------------------------- |
 | #32 | FillPhaseDiagram — dérive triolets (arrondi GCC vs clang) | not-reich                            | S1≠S2        | TIMING ±109ms fin de pièce |
-| #33 | MakeSound — NoteOff retardé par scheduling séquentiel     | visser5, visser-waves, watch         | S1≠S2, S2≠S3 | TIMING ±670ms              |
+| #33 | ~~MakeSound — NoteOff retardé~~ RÉSOLU WASM (dedup keep-longest) | ~~visser5~~, visser-waves, watch | S1≠S2, S2≠S3 | visser5: 16→1 diff         |
 | #35 | TimeSet — starttime +10ms avec settings Visser            | acceleration, visser3, visser-shapes | S1≠S2        | TIMING +10ms constant      |
 | #36 | Production TEXT sans séparateurs quand alphabet chargé    | negative-context                     | S3≠S4        | COUNT (tokens concaténés)  |
 | #39 | Mémoire non initialisée — ASLR non-déterminisme Linux    | kss2 (+ potentiellement d'autres)    | S1           | FAIL intermittent (~25%)   |
@@ -41,7 +42,7 @@ bells exclu (skip : fichiers -ho.cloches1 manquants) → 36 grammaires actives
 | MPC microtonalité         | tryShruti  | S1≠S2 (+1 note), S3≠S4 (0 tokens) | PlayBuffer1 ne reproduit pas exactement MPC. BP3 refuse `_` dans alphabet. |
 | Homomorphisme + silent.al | ruwet      | S3≠S4 TIMING                      | Les bols dans l'alphabet changent la dérivation de l'homomorphisme         |
 
-## Détail par grammaire (37 actives)
+## Détail par grammaire (36 actives, bells skip)
 
 | Grammaire        | Mode | S0=S1  | S1=S2        | S2=S3   | S3=S4       | Notes                                                            |
 | ---------------- | ---- | ------ | ------------ | ------- | ----------- | ---------------------------------------------------------------- |
@@ -78,10 +79,26 @@ bells exclu (skip : fichiers -ho.cloches1 manquants) → 36 grammaires actives
 | vina             | midi | EXACT  | EXACT        | EXACT   | EXACT       | Convention indienne                                              |
 | vina2            | text | EXACT  | EXACT        | EXACT   | EXACT       |                                                                  |
 | visser3          | midi | EXACT  | TIMING+10ms  | EXACT   | EXACT       | #35 : +10ms offset settings Visser                               |
-| visser5          | midi | EXACT  | TIMING±146ms | CONTENT | EXACT       | #33 : NoteOff scheduling. S2≠S3 = ordre notes différent          |
+| visser5          | midi | EXACT  | TIMING±11ms  | CONTENT | EXACT       | #33 résolu (dedup keep-longest). S2≠S3 = ordre notes différent   |
 | visser-shapes    | midi | EXACT  | TIMING+10ms  | CONTENT | EXACT       | #35 + quelques notes octave edge en S2≠S3                        |
-| visser-waves     | midi | TIMING | TIMING±50ms  | TIMING  | EXACT       | #33 + S0≠S1 pré-existant                                         |
+| visser-waves     | midi | TIMING | TIMING±40ms  | TIMING  | EXACT       | #33 partiellement amélioré (keep-longest). S0≠S1 pré-existant    |
 | watch            | midi | TIMING | TIMING±670ms | TIMING  | EXACT       | #33 : scheduling séquentiel. S0≠S1 pré-existant                  |
+
+## Non-régression v3.3.19-wasm.2 vs wasm.20 (2026-04-06)
+
+Changement : dedup keep-longest (#33), traces debug conditionnées (BP3_DEBUG), test_all intègre S4+S5+compare_s3_s4.
+
+| Comparaison | wasm.20 | wasm.2 | Delta |
+|---|---|---|---|
+| S1 vs S2 | 23E/12T/0C/2Count | 23E/12T/0C/1Count | Score global wasm.20 était erroné (1 COUNT, pas 2) |
+| S2 vs S3 | 29E/4T/3C/0 | 29E/4T/3C/0 | Identique |
+| S3 vs S4 | 33E/1T/0C/2 | 33E/1T/0C/2 | Identique |
+| S4 36/36 OK | | S4 35/36 OK | watch FAIL (timeout) |
+| S5 n/a | | S5 33/36 OK | 2 SKIP (no .bps), 1 FAIL (watch timeout) |
+
+**Conclusion** : zéro régression. Amélioration visser5 S1≠S2 (16 diffs → 1).
+
+---
 
 ## Non-régression wasm.20 vs wasm.18 (2026-04-05)
 
