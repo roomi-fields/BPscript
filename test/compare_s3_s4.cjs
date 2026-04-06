@@ -23,11 +23,12 @@ const names = arg
   ? [arg]
   : Object.entries(GRAMMARS).filter(([k, v]) => v.status === 'active').map(([k]) => k);
 
-const results = { exact: [], timing: [], content: [], count: [], missing: [] };
+const results = { exact: [], timing: [], content: [], count: [], missing: [], skipped: [] };
 
 for (const name of names) {
   const def = GRAMMARS[name];
   if (!def || def.status !== 'active') continue;
+  if (def.s3s4_skip) { results.skipped.push({ name, reason: def.s3s4_skip }); continue; }
 
   const s3Path = path.join(__dirname, 'grammars', name, 'snapshots', 's3_timed.json');
   const s4Path = path.join(__dirname, 'grammars', name, 'snapshots', 's4_silent.json');
@@ -141,6 +142,13 @@ if (results.missing.length) {
   }
 }
 
+if (results.skipped.length) {
+  console.log('\n=== SKIPPED (s3s4_skip) ===');
+  for (const r of results.skipped) {
+    console.log(`  --  ${r.name.padEnd(22)} ${r.reason.substring(0, 80)}`);
+  }
+}
+
 // Summary
 const total = results.exact.length + results.timing.length + results.content.length + results.count.length;
 console.log(`\n=== SUMMARY S3 vs S4 ===`);
@@ -150,3 +158,4 @@ console.log(`  Timing diff:  ${results.timing.length}`);
 console.log(`  Content diff: ${results.content.length}`);
 console.log(`  Count diff:   ${results.count.length}`);
 console.log(`  Missing:      ${results.missing.length}`);
+console.log(`  Skipped:      ${results.skipped.length}`);

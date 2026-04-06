@@ -1452,6 +1452,7 @@
     "bernard": "Ruwet",
     "status": "active",
     "production_mode": "midi",
+    "s3s4_skip": "silent.al adds 173 bols (vs Jbol=2 with original -al.Ruwet), changes Maxevent allocation, alters Improvize item production (+250ms drift per phrase boundary)",
     "aux": [
       "se",
       "al"
