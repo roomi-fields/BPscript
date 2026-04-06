@@ -255,7 +255,7 @@ if (s1Mode === 'midi') {
   // Run native BP3 — stdout to /dev/null, capture stderr for errors
   let stderrOutput = '';
   try {
-    execSync(`setarch x86_64 -R "${BP3}" ${midiArgs.join(' ')}`, {
+    execSync(`"${BP3}" ${midiArgs.join(' ')}`, {
       cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe']
     });
   } catch (e) {
@@ -324,7 +324,7 @@ else if (s1Mode === 'text') {
   let rawOutput = '';
   try {
     const fd = fs.openSync(tmpText, 'w');
-    execSync(`setarch x86_64 -R "${BP3}" ${textArgs.join(' ')}`, {
+    execSync(`"${BP3}" ${textArgs.join(' ')}`, {
       cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', fd, 'pipe']
     });
     fs.closeSync(fd);
