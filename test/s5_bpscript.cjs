@@ -47,7 +47,11 @@ const r = compileBPS(source);
 writeFileSync('${TMP}_gr.txt', r.grammar || '');
 writeFileSync('${TMP}_al.txt', r.alphabetFile || (Array.isArray(r.alphabet) ? r.alphabet.join('\\n') : '') || '');
 writeFileSync('${TMP}_se.txt', r.settingsJSON || '');
-const info = { errors: r.errors || [], grammarLines: (r.grammar || '').split('\\n').length, alphabetSize: (r.alphabet || []).length };
+writeFileSync('${TMP}_ct.json', JSON.stringify(r.controlTable || {}));
+// Extract alphabet directive for resolver config
+const alphDir = (r.directives || []).find(d => d.name === 'alphabet');
+const info = { errors: r.errors || [], grammarLines: (r.grammar || '').split('\\n').length, alphabetSize: (r.alphabet || []).length,
+  alphabetName: alphDir?.subkey || null };
 writeFileSync('${TMP}_compile.json', JSON.stringify(info));
 `;
 fs.writeFileSync(`${TMP}_compile.mjs`, compileScript);
@@ -81,11 +85,13 @@ require('${path.join(DIST, 'bp3.js').replace(/\\/g, '/')}')().then(function(M){
   var getTT=M.cwrap('bp3_get_timed_tokens','string',[]);
   var getResult=M.cwrap('bp3_get_result','string',[]);
   var setWriteMidi=M.cwrap('bp3_set_write_midi','void',['number']);
+  var setVerbose=M.cwrap('bp3_set_timed_tokens_verbose','void',['number']);
   init();
   var seJson=fs.readFileSync(TMP+'_se.txt','utf-8');
   if(seJson.trim())loadSettings(seJson);
   if(${useTextMode ? 'true' : 'false'})setWriteMidi(0);
   setSeed(1);
+  setVerbose(1);
   var al=fs.readFileSync(TMP+'_al.txt','utf-8');if(al.trim())loadAl(al);
   loadGr(fs.readFileSync(TMP+'_gr.txt','utf-8'));
   var r=produce();
@@ -116,14 +122,72 @@ try {
   const result = JSON.parse(resultJson);
   if (result.error) { console.error(`S5 WASM FAIL: ${result.error}`); process.exit(1); }
 
+  // Step 3: Pass timed tokens through dispatcher resolveTokens() for control resolution
+  const controlTable = JSON.parse(fs.readFileSync(`${TMP}_ct.json`, 'utf-8'));
+
+  let finalTokens = result.timed;
+  if (!useTextMode) {
+    // Build timed token objects for dispatcher.load()
+    const timedForDispatcher = result.timed.map(t => ({ token: t[0], start: t[1], end: t[2] }));
+
+    const alphabetName = compileInfo.alphabetName || 'western';
+    const resolveScript = `
+import { Dispatcher } from '${path.join(ROOT, 'src/dispatcher/dispatcher.js').replace(/\\/g, '/')}';
+import { Resolver } from '${path.join(ROOT, 'src/dispatcher/resolver.js').replace(/\\/g, '/')}';
+import { readFileSync, writeFileSync } from 'fs';
+
+const timedTokens = JSON.parse(readFileSync('${TMP}_timed_for_dispatch.json', 'utf-8'));
+const controlTable = JSON.parse(readFileSync('${TMP}_ct.json', 'utf-8'));
+
+// Load libs for resolver config
+const LIB = '${path.join(ROOT, 'lib').replace(/\\/g, '/')}';
+const alphabets = JSON.parse(readFileSync(LIB + '/alphabet.json', 'utf-8'));
+const octaves = JSON.parse(readFileSync(LIB + '/octaves.json', 'utf-8'));
+const tunings = JSON.parse(readFileSync(LIB + '/tunings.json', 'utf-8'));
+const temperaments = JSON.parse(readFileSync(LIB + '/temperaments.json', 'utf-8'));
+
+const alphName = '${alphabetName}';
+const alph = alphabets[alphName];
+const octConfig = alph?.octaves ? octaves[alph.octaves] : octaves.western;
+// Find matching tuning (alphabetName_12TET or first matching)
+const tuningKey = alphName + '_12TET';
+const tuning = tunings[tuningKey] || Object.values(tunings).find(t => t.alphabet === alphName) || tunings.western_12TET;
+const temp = temperaments[tuning.temperament];
+
+const resolver = new Resolver({ alphabet: alph, octaves: octConfig, tuning, temperament: temp });
+
+// Minimal AudioContext mock (resolveTokens doesn't use audio)
+const mockCtx = { currentTime: 0, state: 'suspended', resume() {} };
+const d = new Dispatcher(mockCtx);
+d._resolver = resolver;
+d.setControlTable(controlTable);
+d.load(timedTokens);
+const resolved = d.resolveTokens();
+
+writeFileSync('${TMP}_resolved.json', JSON.stringify(resolved));
+`;
+    fs.writeFileSync(`${TMP}_timed_for_dispatch.json`, JSON.stringify(timedForDispatcher));
+    fs.writeFileSync(`${TMP}_resolve.mjs`, resolveScript);
+
+    try {
+      execSync(`node ${TMP}_resolve.mjs`, { cwd: ROOT, timeout: 10000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+      const resolved = JSON.parse(fs.readFileSync(`${TMP}_resolved.json`, 'utf-8'));
+      finalTokens = resolved.map(t => [t.token, t.start, t.end]);
+    } catch (e) {
+      // If dispatcher fails, fall back to raw tokens (non-fatal)
+      const errMsg = (e.stderr || e.message || '').substring(0, 200);
+      console.error(`S5 DISPATCH WARN: ${errMsg} (using raw tokens)`);
+    }
+  }
+
   const snapDir = path.join(DIR, 'snapshots');
   if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
   const today = new Date().toISOString().substring(0, 10);
   const snap = { source: `scene.bps`, stage: 'S5', mode: s1Mode,
     compile: { grammarLines: compileInfo.grammarLines, alphabetSize: compileInfo.alphabetSize },
-    tokens: result.timed, date: today };
+    tokens: finalTokens, date: today };
   fs.writeFileSync(path.join(snapDir, 's5_bps.json'), JSON.stringify(snap, null, 2));
-  console.log(`S5 OK: ${result.timed.length} tokens → ${name}/snapshots/s5_bps.json`);
+  console.log(`S5 OK: ${finalTokens.length} tokens → ${name}/snapshots/s5_bps.json`);
 } catch (e) {
   console.error(`S5 WASM FAIL: ${(e.stderr || e.message || '').substring(0, 120)}`);
   process.exit(1);

@@ -62,8 +62,13 @@ function splitStructure(tokens) {
   return out;
 }
 
-const s4raw = splitStructure(s4.tokens.map(t => t[0]));
-const s5raw = splitStructure(s5.tokens.map(t => t[0]));
+// Sort both sides by time for temporal comparison
+// (S4 is in structural order from engine, S5 is in temporal order from dispatcher)
+const timSort = (a, b) => a[1] - b[1] || a[2] - b[2] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+const s4sorted = [...s4.tokens].sort(timSort);
+const s5sorted = [...s5.tokens].sort(timSort);
+const s4raw = splitStructure(s4sorted.map(t => t[0]));
+const s5raw = splitStructure(s5sorted.map(t => t[0]));
 
 const s4terms = s4raw.filter(t => !isNonTerminal(t));
 const s5terms = s5raw.filter(t => !isNonTerminal(t));

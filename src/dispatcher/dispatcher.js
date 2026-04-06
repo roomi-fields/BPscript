@@ -396,4 +396,63 @@ export class Dispatcher {
 
     this._resolver.reconfigure(tuning, temperament, blockkey);
   }
+
+  /**
+   * Dry-run: resolve all loaded events through the control pipeline
+   * without audio playback. Requires load() to have been called first.
+   * Returns tokens with controls applied (transpose, keyxpand, rotate).
+   * Output is in temporal order (same as load() sorting).
+   *
+   * @param {Object} [options]
+   * @param {boolean} [options.verbose=false] - include control tokens in output
+   * @returns {Array<{token: string, start: number, end: number}>}
+   */
+  resolveTokens({ verbose = false } = {}) {
+    const resolved = [];
+    this.controlState = { ...this._controlDefaults };
+    this._controlStack = [];
+
+    for (const evt of this.events) {
+      if (evt.isControl) {
+        this._applyControl(evt.token);
+        if (verbose) {
+          resolved.push({
+            token: evt.token,
+            start: Math.round(evt.startSec * 1000),
+            end: Math.round((evt.startSec + evt.durSec) * 1000),
+          });
+        }
+        continue;
+      }
+
+      if (evt.isSilence || evt.isProlongation) continue;
+
+      // Symbolic pitch operations: keyxpand → rotate → transpose
+      let token = evt.token;
+      if (this._resolver) {
+        if (this.controlState.keyxpand && this.controlState.keyxpand !== '0,1') {
+          const parts = String(this.controlState.keyxpand).split(',');
+          const pivot = parts[0]?.trim();
+          const factor = parseFloat(parts[1]);
+          if (pivot && !isNaN(factor)) {
+            token = this._resolver.keyxpandToken(token, pivot, factor);
+          }
+        }
+        if (this.controlState.rotate) {
+          token = this._resolver.rotateToken(token, this.controlState.rotate);
+        }
+        if (this.controlState.transpose) {
+          token = this._resolver.transposeToken(token, this.controlState.transpose);
+        }
+      }
+
+      resolved.push({
+        token,
+        start: Math.round(evt.startSec * 1000),
+        end: Math.round((evt.startSec + evt.durSec) * 1000),
+      });
+    }
+
+    return resolved;
+  }
 }
