@@ -37,8 +37,6 @@ const T = Object.freeze({
 
   // Tempo operators (in [] qualifiers)
   STAR:         'STAR',        // *
-  DOUBLESTAR:   'DOUBLESTAR',  // **
-  BACKSLASH:    'BACKSLASH',   // \
 
   // Flag operators (7)
   EQ:           'EQ',          // ==
@@ -196,10 +194,8 @@ function tokenize(source, opts = {}) {
 
     if (ch === '!' && peek(1) === '=') { advance(); advance(); emit(T.NEQ, '!='); continue; }
 
-    // Tempo operators: ** before * (greedy)
-    if (ch === '*' && peek(1) === '*') { advance(); advance(); emit(T.DOUBLESTAR, '**'); continue; }
+    // Tempo operator: * (multiply duration)
     if (ch === '*') { advance(); emit(T.STAR, '*'); continue; }
-    if (ch === '\\') { advance(); emit(T.BACKSLASH, '\\'); continue; }
 
     // Single-char symbols
     const singles = {

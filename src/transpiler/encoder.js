@@ -541,18 +541,18 @@ function encodeRhsElement(el, alphabet, controlMap) {
   let result = raw;
   // Legacy el.tempoOp from polymetric parser
   if (el.tempoOp) {
-    result = `${el.tempoOp.operator}${el.tempoOp.value} ${result}`;
+    result = `${tempoOpToBP3(el.tempoOp)} ${result}`;
   }
 
   // SUFFIX qualifiers: A[weight:50], A(vel:80) — always after the element
   // [] and () are ALWAYS suffix in BPscript. Use ![] or !() for free positioning.
-  // Exception: tempoOp (/N, \N) are BP3 PREFIX operators → prepend to result
+  // Exception: tempoOp (/N, *N) are BP3 PREFIX operators → prepend to result
   const prefixTokens = [];
   const suffixTokens = [];
   if (el.suffixQualifiers) {
     for (const q of el.suffixQualifiers) {
       if (q.tempoOp) {
-        prefixTokens.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
+        prefixTokens.push(tempoOpToBP3(q.tempoOp));
       }
       encodeQualifierTokens(q, controlMap, suffixTokens);
     }
@@ -759,7 +759,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (q.type === 'Qualifier') {
         // Engine qualifier: ![retro] → _retro, ![rotate:2] → _rotate(2)
         if (q.tempoOp) {
-          parts.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
+          parts.push(tempoOpToBP3(q.tempoOp));
         }
         const runtimeAssignments = {};
         for (const p of q.pairs) {
@@ -904,9 +904,16 @@ function getQualDecrement(qualifiers, key) {
   return null;
 }
 
+// BPscript * → BP3 \ (multiply duration = slow down)
+// BPscript / → BP3 / (divide duration = speed up)
+function tempoOpToBP3(op) {
+  const bp3op = op.operator === '*' ? '\\' : op.operator;
+  return `${bp3op}${op.value}`;
+}
+
 function getTempoOp(qualifiers) {
   for (const q of qualifiers) {
-    if (q.tempoOp) return `${q.tempoOp.operator}${q.tempoOp.value}`;
+    if (q.tempoOp) return tempoOpToBP3(q.tempoOp);
   }
   return null;
 }

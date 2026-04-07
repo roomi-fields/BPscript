@@ -358,6 +358,10 @@ Deux syntaxes selon la destination :
 engine_qualifier = "[" , engine_pair , { "," , engine_pair } , "]"
                  | "[" , tempo_op , "]" ;
 
+tempo_op = ( "/" | "*" ) , ( INT | INT , "/" , INT ) ;
+           (* [/2] = diviser durée, [*3] = multiplier durée *)
+           (* [/2] → BP3 /2, [*2] → BP3 \2 *)
+
 engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
 
@@ -737,8 +741,8 @@ Les nombres nus dans le flux BPscript sont des durées numériques, pas des term
 mode     → MODE du bloc (random, ord, sub1, lin, tem, poslong)
 scan     → sens du parcours par règle (left, right, rnd) — défaut : rnd
 speed    → ratio de tempo polymétrique ({v1, v2}[speed:2] → {2, v1, v2})
-/N \N    → opérateurs speed BP3 (A[/2] → /2 A, A[\2] → \2 A)
-*N **N   → opérateurs scale BP3 (A[*3] → *3 A, A[**3] → **3 A)
+/N       → diviser durée (A[/2] → durée ÷ 2, compilé en /2 A)
+*N       → multiplier durée (A[*2] → durée × 2, compilé en \2 A)
 weight   → poids de la règle
 on_fail  → gestion d'échec (skip, retry(N), fallback(X)) (* not yet implemented *)
 tempo    → tempo local
@@ -848,10 +852,8 @@ lambda   → chaîne vide (efface le non-terminal)
 | `[weight:K1]` | `<K1>` | K-param (réf. valeur courante) |
 | `[weight:inf]` | `<inf>` | poids infini (priorité absolue) |
 | `[destru]` | `_destru` en preamble | flag de sous-grammaire |
-| `A[/2]` | `/2 A` | opérateur speed (vitesse = 2) |
-| `A[\2]` | `\2 A` | opérateur speed inverse (vitesse = 1/2) |
-| `A[*3]` | `*3 A` | opérateur scale (échelle = 3) |
-| `A[**3]` | `**3 A` | opérateur scale inverse (échelle = 1/3) |
+| `A[/2]` | `/2 A` | diviser durée par 2 (plus court) |
+| `A[*2]` | `\2 A` | multiplier durée par 2 (plus long) |
 | `{v1, v2}[speed:2]` | `{2, v1, v2}` | ratio polymétrique (≠ opérateur) |
 | `-----` | `-----` | séparateur (identique) |
 | `lambda` | `lambda` | chaîne vide (identique) |

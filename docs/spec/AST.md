@@ -331,7 +331,7 @@ QualPair {
 
 TempoOp {
   type: "TempoOp"
-  operator: "/" | "\" | "*" | "**" // opérateur BP3
+  operator: "/" | "*"             // / = diviser durée, * = multiplier durée
   value: number                    // A[/2] → { operator:"/", value:2 }
 }
 ```
@@ -341,6 +341,7 @@ Exemples :
 - `[retro]` → `{ pairs:[{key:"retro", value:true}] }` → compilé en `_retro` (sans parenthèses)
 - `[rotate:2]` → `{ pairs:[{key:"rotate", value:2}] }` → compilé en `_rotate(2)`
 - `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `/2 A`
+- `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `\2 A`
 - `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique)
 - `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
 

@@ -897,10 +897,9 @@ function parse(tokens) {
     // Lookahead: [/N] or [*N] — pure tempo op on element (not mixed [/5, mode:random])
     if (!at(T.LBRACKET)) return false;
     const next = peek(1).type;
-    if (!(next === T.SLASH || next === T.BACKSLASH || next === T.STAR || next === T.DOUBLESTAR)) return false;
+    if (!(next === T.SLASH || next === T.STAR)) return false;
     // Check it's pure (followed by number then ] or /number then ])
     let j = pos + 2; // after [ and operator
-    if (next === T.DOUBLESTAR) j++; // ** is 2 tokens
     while (j < tokens.length && (tokens[j].type === T.INT || tokens[j].type === T.FLOAT || tokens[j].type === T.SLASH)) j++;
     return j < tokens.length && tokens[j].type === T.RBRACKET; // ] immediately after number = pure
   }
@@ -1535,12 +1534,10 @@ function parse(tokens) {
     expect(T.LBRACKET);
 
     // Check for tempo operator: [/2], [\2], [*3], [**3]
-    if (atAny(T.SLASH, T.BACKSLASH, T.STAR, T.DOUBLESTAR)) {
+    if (atAny(T.SLASH, T.STAR)) {
       let operator;
-      if (at(T.DOUBLESTAR)) { operator = '**'; advance(); }
-      else if (at(T.STAR)) { operator = '*'; advance(); }
+      if (at(T.STAR)) { operator = '*'; advance(); }
       else if (at(T.SLASH)) { operator = '/'; advance(); }
-      else if (at(T.BACKSLASH)) { operator = '\\'; advance(); }
       let value;
       if (at(T.INT)) {
         value = Number(advance().value);
