@@ -546,22 +546,26 @@ function encodeRhsElement(el, alphabet, controlMap) {
 
   // SUFFIX qualifiers: A[weight:50], A(vel:80) — always after the element
   // [] and () are ALWAYS suffix in BPscript. Use ![] or !() for free positioning.
+  // Exception: tempoOp (/N, \N) are BP3 PREFIX operators → prepend to result
+  const prefixTokens = [];
   const suffixTokens = [];
   if (el.suffixQualifiers) {
     for (const q of el.suffixQualifiers) {
+      if (q.tempoOp) {
+        prefixTokens.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
+      }
       encodeQualifierTokens(q, controlMap, suffixTokens);
     }
   }
 
+  if (prefixTokens.length > 0) result = prefixTokens.join(' ') + ' ' + result;
   if (suffixTokens.length > 0) result = result + ' ' + suffixTokens.join(' ');
   return result;
 }
 
 // Encode a single qualifier into tokens (engine native or runtime _script)
+// Note: tempoOp (/N, \N) is handled as PREFIX in encodeRhsElement, not here
 function encodeQualifierTokens(q, controlMap, tokens) {
-  if (q.tempoOp) {
-    tokens.push(`${q.tempoOp.operator}${q.tempoOp.value}`);
-  }
   const runtimeAssignments = {};
   for (const p of (q.pairs || [])) {
     if (controlMap[p.key]) {
