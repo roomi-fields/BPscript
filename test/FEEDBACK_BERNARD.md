@@ -1,71 +1,89 @@
 # Feedback pour Bernard — Moteur BP3
 
-Points ouverts identifiés pendant les tests systématiques des 37 grammaires actives.
+Points ouverts identifiés pendant les tests systématiques des 36 grammaires actives.
 Les points résolus (#1-#31, #34, #37) sont tracés dans `bp3-engine/CHANGELOG_ENGINE.md`.
 
-Dernière mise à jour : 2026-04-05
-Build : v3.3.18-wasm.20
+Dernière mise à jour : 2026-04-06
+Build : v3.3.19-wasm.8
 
 ---
 
-## 32. FillPhaseDiagram — bifurcation triolets NotReich (GCC vs clang)
+## 32. WriteMIDIbyte — drift cumulatif timestamps MIDI par ControlChange interpolés (NotReich)
 
 **Grammaire :** `-gr.NotReich` (Thierry Montaudon, 1997), seed=1, `_mm(60) _striated`
 
-**Symptôme :** 580 notes identiques entre GCC et clang pour les tokens 0–564 (0s→82s). À partir du token 565, divergence brutale : les timestamps GCC dérivent de -7ms à -109ms par rapport à clang.
+**Symptôme :** 580 notes. Tokens 0-564 (0s-82s) identiques entre natif et WASM. Token 565+ : timestamps natif (GCC et mingw) dérivent de +7ms a +109ms par rapport au WASM.
 
-Les valeurs clang sont des multiples exacts de 333ms (triolets à 60 bpm). Les valeurs GCC dérivent :
 ```
-clang :  F3 82333   G3 82666   C4 84000   F3 84333   G3 84666
-GCC :    F3 82340   G3 82707   C4 84075   F3 84408   G3 84775
+WASM :   F3 82333   G3 82666   C4 84000   F3 84333   G3 84666
+Natif :  F3 82340   G3 82707   C4 84075   F3 84408   G3 84775
 ```
 
-**Analyse :** Ce n'est PAS un arrondi cumulatif (sinon ça dériverait dès le début). C'est une **bifurcation** — un test conditionnel (`tempo > tempomax`, `toofast`, ou similaire) qui bascule différemment à t=82s entre GCC et clang à cause d'une valeur flottante à la limite.
+**Root cause (GDB) :** Le calcul temporel est correct (TimeSet, FillPhaseDiagram, Calculate_alpha, Fix -- tous verifies, valeurs propres). Le probleme est dans la serialisation du flux MIDI dans `WriteMIDIbyte()` (MIDIfiles.c).
 
-Testé : `round(prodtempo)` → aucun effet. `-mfpmath=sse` → aucun effet (GCC x86_64 utilise déjà SSE).
+La rampe `_volume(80)` vers `_volume(0)` dans C' genere des ControlChange (byte 176) interpoles par pas de 20ms. Ces CC **depassent** le timestamp du NoteOn suivant :
 
-**Compilateurs :** gcc 13.3.0 (Ubuntu), mingw-gcc 13 (Windows cross), emcc/clang (WASM). Tous avec `-O2 -fno-common`.
+```
+CC volume  time=83020  delta=20   (OK)
+CC volume  time=83040  delta=20   (OK -- mais depasse le prochain NoteOn)
+NoteOn F3  time=83033  --> temps RECULE de 7ms
+```
 
-**Confirmé :** S0 (bp.exe mingw) = S1 (bp3 gcc). S2 (WASM clang) a les valeurs "justes".
+`WriteMIDIbyte()` ligne 344 corrige le recul :
+```c
+if(time < OldMIDIfileTime) OldMIDIfileTime = time;
+```
+Le NoteOn est ecrit avec delta=0 (place au tick du dernier CC = 83040 au lieu de 83033). Puis `OldMIDIfileTime` recule a 83033. Le delta perdu (7ms) s'accumule a chaque cycle de la polyrythmie (+34ms par beat).
 
-**Quantization :** 50ms dans les settings. Question de Bernard : le problème apparaît-il sans quantisation ? Non testé.
+**Deux corrections possibles :**
 
-**Impact :** 15 notes sur 580, timing uniquement, fin de pièce.
+**Fix A -- Empecher le drift cumulatif (1 ligne, MIDIfiles.c:344) :**
+```c
+// Avant :
+if(time < OldMIDIfileTime) OldMIDIfileTime = time;
+// Apres :
+if(time < OldMIDIfileTime) time = OldMIDIfileTime;
+```
+Le NoteOn est place au tick du dernier CC (erreur max ~20ms ponctuelle, non cumulative). Le timeline continue sans drift.
+
+**Fix B -- Borner les CC interpoles (MakeSound.c, root cause) :**
+Dans la boucle d'interpolation volume/panoramic de `MakeSound()`, borner le timestamp de chaque CC pour ne pas depasser le `t1` du prochain NoteOn. Les events restent ordonnes chronologiquement, aucune erreur residuelle.
+
+**Impact :** 15 notes sur 580, fin de piece uniquement (quand la rampe `_volume()` est active).
 
 ---
 
-## 33. MakeSound — NoteOff retardé par le scheduling séquentiel (Visser5, Visser-Waves)
+## 33. ~~MakeSound — NoteOff retardé~~ → RÉSOLU (WASM dedup keep-longest)
 
-**Grammaires :** `-gr.Visser5` (16 notes affectées / 1112), `-gr.Visser-Waves` (2 / 365), seed=1
+**Grammaires :** `-gr.Visser5` (16→1 diff / 1112), `-gr.Visser-Waves` (4 / 365), seed=1
 
-**Symptôme :** Le MIDI natif produit des durées plus longues que `p_Instance.endtime - starttime` pour certaines notes dans des structures polymétriques. L'excès varie de +20ms à +146ms. La note est systématiquement prolongée jusqu'au `endtime` de la note suivante (i+1) dans la séquence.
+**Root cause :** Instances polymétriques du même pitch commençant au même moment (nseq différents). En natif, `p_keyon[channel][note]` compte les NoteOn actifs et n'émet le NoteOff qu'au dernier release → garde toujours la durée la plus longue. En WASM, le dedup par (midiKey, startMs) gardait la première instance rencontrée (la plus courte).
 
-Exemple concret (Visser5, i=12) :
+Exemple (Visser5, D6 MIDI 86) :
 ```
-i=12  D6   p_Instance: [10688 - 10969]  dur=281ms
-i=13  Bb6  p_Instance: [10969 - 11104]  dur=135ms
-
-WASM :  D6 NoteOff à 10969ms  (= p_Instance.endtime, exact)
-Natif : D6 NoteOff à 11104ms  (= endtime de Bb6, +135ms)
+p_Instance[14] obj=16434 start=10698 end=10979 dur=281 nseq=0  ← courte
+p_Instance[20] obj=16434 start=10698 end=11114 dur=416 nseq=1  ← longue
 ```
 
-**Analyse :** Le scheduling séquentiel de MakeSound (boucle while t1 <= t2, traitement par deadline) sort AVANT d'émettre le NoteOff quand une autre instance doit être initialisée. Le NoteOff est émis au prochain passage, à un temps qui correspond au `endtime` de l'instance suivante.
+**Fix appliqué (v3.3.19-wasm.2) :** Dans `bp3_wasm_stubs.c` PlayBuffer1, quand un doublon (midiKey, startMs) est détecté, au lieu de simplement le skip, on met à jour le NoteOff de l'événement déjà émis si le doublon a une durée plus longue. Array `dedupNoteOff[]` tracke l'index du NoteOff dans eventStack.
 
-**Lien Bernard :** https://bolprocessor.org/control-noteon-noteoff/ — le mécanisme de superposition NoteOn/NoteOff décrit pourrait être en cause.
-
-**Impact :** 18 notes sur ~1500 (1.2%), durées S1 > S2 de 20 à 146ms.
+**Résultat :** visser5 passe de 16 TIMING_DIFF à 1 (±11ms, tick rounding).
 
 ---
 
-## 35. TimeSet — starttime +10ms sur certaines grammaires avec settings Visser
+## 35. ~~TimeSet — starttime +10ms~~ → RÉSOLU WASM (Kpress quantization offset)
 
 **Grammaires :** acceleration (-se.Visser2), visser3 (-se.Visser3), visser-shapes (-se.Visser.Shapes), seed=1
 
-**Symptôme :** `p_Instance[2].starttime = 10` au lieu de 0 pour la première note. Tous les événements décalés de +10ms constant. Les grammaires sans settings n'ont pas ce décalage.
+**Root cause :** Quand Kpress ≥ 2 (quantization active sur grammaires complexes), la compensation d'arrondis dans TimeSet.c ligne 195 (`if(jn > 0) T[jn-1] = T[jn]`) écrase T[0] (=0ms) avec T[1] (=premier quantum, ici 10ms). Cela décale tout le tableau T[] d'un quantum. Le natif corrige via `FormatMIDIstream(zerostart=TRUE)`.
 
-Le natif corrige via `FormatMIDIstream(zerostart=TRUE)`. Le WASM lit `p_Instance` directement.
+Kpress est un indicateur qui détermine si la grammaire nécessite une compression temporelle en fonction de la quantization demandée et de la complexité polymmétrique (Ratio). Kpress=1 → pas de compression. Kpress > 2 → compression active → bug T[0].
 
-**Impact :** 3 grammaires sur 36, +10ms constant (inaudible).
+**Fix appliqué (v3.3.19-wasm.3) :** Dans PlayBuffer1, quand Kpress ≥ 2, on scanne le min starttime de p_Instance et on le stocke dans `wasm_kpress_offset`. Ce quantum est soustrait de tous les timestamps dans PlayBuffer1 (MIDI) et bp3_get_timed_tokens (S3/S4).
+
+**Résultat :** acceleration, visser3, visser-shapes passent de TIMING+10ms à EXACT MATCH.
+
+**Note pour Bernard :** La compensation `T[jn-1] = T[jn]` quand `jn > 0` crée une cascade qui décale tout T[] d'un quantum. `if(jn > 1)` éviterait l'écrasement de T[0] sans toucher les autres positions. À discuter.
 
 ---
 
@@ -89,23 +107,60 @@ Le natif corrige via `FormatMIDIstream(zerostart=TRUE)`. Le WASM lit `p_Instance
 
 **Réponse de Bernard :** Proposé de créer un token **T47** qui remplacerait les T4 au lieu de les convertir en T3. Le T47 serait traité comme un T3 dans tout le pipeline mais garderait la distinction.
 
-**Status :** En attente d'implémentation par Bernard. Si le T47 est visible dans le buffer au moment de FillPhaseDiagram, c'est suffisant pour marquer l'objet côté WASM.
+**Status :** RÉSOLU. Bernard a implémenté T47 dans FillPhaseDiagram.c, SetObjectFeatures.c, DisplayArg.c (v3.3.19). Côté WASM (wasm.4), on scanne `pp_buff` pour les tags T47 après PolyMake et on construit `wasm_is_sso[]` pour distinguer SSO des non-terminaux résiduels dans `bp3_get_timed_tokens()`.
 
-**Impact :** Bloquant pour S5 (timed tokens en mode silent sound objects).
+**Impact :** Non-reg 36/36. Aucune grammaire de test actuelle ne produit de T47 — validation end-to-end à faire avec une scène BPscript dédiée.
 
 ---
 
-## 39. Mémoire non initialisée — non-déterminisme ASLR sur bp3 Linux (kss2)
+## 39. ~~Mémoire non initialisée ASLR~~ → RÉSOLU (p_DefaultChannel non initialisé)
 
-**Build :** v3.3.18-wasm.20
+**Grammaires affectées :** kss2 (RND, STRIATED, `-se.kss`), look-and-say (SUB, STRIATED, `-se.look-and-say`)
 
-**Symptôme :** bp3 Linux produit des résultats non-déterministes sur kss2 (~25% d'échec), malgré seed fixe. Désactiver ASLR (`setarch x86_64 -R`) rend le binaire 100% déterministe.
+**Symptôme :** bp3 Linux produit des résultats non-déterministes (~30-40% de crash), malgré seed fixe.
+Message d'erreur : `'X' has channel 64. Should be 1..16` (ou 32, 96 — valeurs aléatoires).
+Désactiver ASLR (`setarch x86_64 -R`) rendait le binaire 100% déterministe.
 
-**Systèmes non affectés :** WASM (mémoire linéaire fixe), bp.exe Windows.
+**Root cause :** `p_DefaultChannel` est non initialisé à deux endroits dans `GetRelease.c` :
 
-**Piste :** Variable non initialisée dans Compute.c, CompileGrammar.c, ou GiveSpace. Analyse Valgrind/ASan recommandée.
+1. **`MakeSoundObjectSpace()`** (première allocation, ~ligne 935) : la boucle `for(j=2; j < jmax; j++)` n'initialise que `p_MIDIsize` et `p_CsoundSize`. `p_DefaultChannel[j]` n'est pas mis à 0. La boucle complète d'initialisation (lignes 940-979) ne couvre que j=0 et j=1.
 
-**Workaround :** `setarch x86_64 -R` dans s1_native.cjs.
+2. **`ResizeObjectSpace()`** (~ligne 1099) : `MySetHandleSize` agrandit le buffer `p_DefaultChannel`, mais les nouveaux octets (issus de `realloc`) ne sont pas initialisés. La boucle d'init (ligne 1143) commence à `j = Jbol`, or `Jbol` est **déjà mis à jour** quand on arrive dans `ResizeObjectSpace` → la boucle fait 0 itérations sur les nouveaux slots. De plus, cette boucle était conditionnée par `Nature_of_time == SMOOTH` (ajouté 2024-07-25), excluant toutes les grammaires STRIATED.
+
+Avec ASLR actif, `realloc` retourne des adresses variables → les octets non initialisés ont des valeurs aléatoires (32, 64, 96...). `SetObjectFeatures.c:244` lit `p_DefaultChannel[j] > 0` → assigne channel=64 → erreur `Should be 1..16`.
+
+**Fix (3 points dans `GetRelease.c`) :**
+
+**Point 1 — `MakeSoundObjectSpace()`, boucle j=2..jmax (~ligne 936) :**
+```c
+for(j=2; j < jmax; j++) {
+    (*p_MIDIsize)[j] = (*p_CsoundSize)[j] = ZERO;
+    (*p_DefaultChannel)[j] = 0;  // AJOUT: était non initialisé
+}
+```
+
+**Point 2 — `ResizeObjectSpace()`, après MySetHandleSize de p_DefaultChannel (~ligne 1099) :**
+```c
+MySetHandleSize((Handle*)&p_DefaultChannel,(Size)maxsounds*sizeof(char));
+/* AJOUT: zero-fill après resize — les nouveaux octets de realloc sont
+   non initialisés. Safe car les valeurs légitimes sont chargées après
+   par LoadObjectPrototypes. */
+if(p_DefaultChannel != NULL && *p_DefaultChannel != NULL)
+    memset(*p_DefaultChannel, 0, (size_t)maxsounds * sizeof(char));
+```
+
+**Point 3 — `ResizeObjectSpace()`, condition de la boucle d'init (~ligne 1142) :**
+```c
+// AVANT:
+if(Jbol < maxsounds && Nature_of_time == SMOOTH) {
+// APRÈS:
+if(Jbol < maxsounds) {
+```
+La condition `SMOOTH` empêchait l'init pour les grammaires STRIATED. L'init des propriétés de base doit s'exécuter pour toutes les grammaires.
+
+**Validation :** kss2 et look-and-say : 50/50 runs déterministes sans `setarch -R`.
+S0 (bp.exe Windows) : 32/36 OK (les 4 FAIL sont pré-existants, non liés au fix).
+S1 (bp3 Linux) : 36/36 OK. Scores comparaison identiques.
 
 ---
 
@@ -171,9 +226,90 @@ if(NoTracePath) {
 
 ---
 
+## 42. FillPhaseDiagram — Plot(ANYWHERE) écrase les sentinelles -1
+
+**Grammaire :** `-gr.Visser.Shapes` avec 26+ tags `_script(CT N)`, seed=1, `_mm(60) _striated`
+
+**Besoin :** BPscript émet des `_script(CT N)` dans la grammaire BP3 pour marquer les positions temporelles
+des contrôles runtime (vel, pan, wave, etc.). Ces tags sont des marqueurs sans durée qui doivent traverser
+le moteur sans affecter la production — le dispatcher les intercepte en sortie. Plus une scène BPscript
+est riche en contrôles, plus il y a de tags `_script()` dans la grammaire.
+
+**Symptôme :** Segfault en natif, timestamps=0 en WASM (crash silencieux). Se manifeste quand le diagramme
+de phase est assez dense — dans visser-shapes à partir de 26 tags `_script(CT N)` uniques, car M3 (utilisé
+dans Part2/Part3/Part4) devient complet et l'expansion polymétrique crée un diagramme de 242 lignes.
+
+**Root cause (GDB) :** `Plot(ANYWHERE)` dans `FillPhaseDiagram.c` cherche un slot libre sur toutes les
+séquences avec :
+```c
+oldk = (*((*p_seq)[nseq]))[iplot];
+if(oldk > 1) continue;
+```
+
+Le terminateur de séquence `-1` satisfait `oldk <= 1` → `ANYWHERE` le traite comme un slot libre et
+l'écrase par un objet `_script()`. Sans terminateur, la boucle dans `Calculate_alpha()`
+(SetObjectFeatures.c:975) :
+```c
+while((*((*p_Seq)[nseq]))[++inext] == 0);
+```
+dépasse le buffer (pas de `-1` pour arrêter) → segfault.
+
+Confirmé par GDB : breakpoint `FillPhaseDiagram.c:1996 if oldk == -1` s'active, objet 2101 écrit
+par-dessus le `-1` de la séquence 1 à position 19317.
+
+**Fix (`csrc/bp3/FillPhaseDiagram.c`, ligne 1995) :**
+```c
+// AVANT :
+if(oldk > 1) continue;
+// APRÈS :
+if(oldk > 1 || oldk == -1) continue; /* Don't overwrite end-of-sequence sentinel */
+```
+
+**Validation :** visser-shapes passe de segfault (natif) / timestamps=0 (WASM) à 2115 sound-objects /
+1954 tokens avec timestamps valides. Non-régression S1=36/36, S2=36/36, S3=S4=35/35.
+
+---
+
+## 43. ScriptUtils — commande CT pour `_script(CT N)` passthrough
+
+**Besoin :** Le transpileur BPscript émet `_script(CT N)` (avec espace) pour marquer les positions des
+contrôles runtime dans la structure temporelle. Ces tags doivent être acceptés par le moteur comme des
+commandes valides (no-op) pour que :
+1. Le natif ne refuse pas la production (`Script aborted on: CT 0`)
+2. Le moteur traite CT comme un élément légitime de la structure (pas un symbole inconnu)
+
+**Contexte :** `ExecScriptLine()` matche l'argument de `_script()` contre la table `ScriptCommand`
+(135 entrées chargées depuis `console_strings.json`). Les commandes ont le format
+`"<id> <keyword> [<params>]"`. Un `_script(CT 0)` cherche le mot-clé "CT" suivi du paramètre "0".
+Sans entrée dans la table → "Script aborted" en natif, stub OK en WASM.
+
+Note : l'original de Bernard utilise `_script(CT0)` (sans espace), qui n'est matché par aucune entrée
+de la table (traité comme un seul mot "CT0") — ça fonctionne uniquement parce que le WASM stubbe tout.
+Le format avec espace est nécessaire pour un matching correct.
+
+**Fix (2 fichiers) :**
+
+**1. `csrc/wasm/console_strings.json` — ajout en fin de tableau `ScriptCommand` :**
+```json
+"193 CT _any_"
+```
+Le `_any_` est un wildcard dans le parseur de commandes : matche n'importe quel paramètre après "CT".
+
+**2. `csrc/bp3/ScriptUtils.c` — ajout dans le switch de `DoScript()` :**
+```c
+case 193:	/* CT (control tag) — dispatcher passthrough, no engine action */
+    break;
+```
+
+**Validation :** visser-shapes en natif avec 61 tags `_script(CT N)` : `Errors: 0`, 2115 sound-objects.
+
+---
+
 ## Notes pour référence
 
-- Build v3.3.18-wasm.20 (2026-04-05) — sources = Bernard v3.3.19 (cf9d788) + nos 3 fixes (#40a, #40b, #40c)
-- Non-reg wasm.20 vs wasm.18 : S0→S4 = 0 régression
+- Build v3.3.19-wasm.8 (2026-04-06) — sources = Bernard v3.3.19 (cf9d788) + fixes #39, #42, #43 + patches #40a-c
+- Non-reg wasm.8 : S1=36/36, S2=36/36, S3=S4=35/35, S4vsS5=16/31 EXACT
 - 36 grammaires actives (bells skip — fichiers -ho.cloches1 manquants)
-- Points ouverts : #32, #33, #35, #36, #38, #39, #40
+- Points ouverts : #32, #36, #40
+- Résolu moteur : #39 (p_DefaultChannel), #42 (sentinel -1), #43 (CT catchall) — fixes à intégrer par Bernard
+- Résolu WASM : #33 (dedup keep-longest, wasm.2), #35 (Kpress offset, wasm.3), #38 (T47 SSO, wasm.4)

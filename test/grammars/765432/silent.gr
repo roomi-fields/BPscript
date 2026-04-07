@@ -1,7 +1,7 @@
 // Bol Processor BP3
 // Generated from BPScript
 ORD
-gram#1[1] S --> Internal C47 Part1 Canon C46 _script(CT0) Part2
+gram#1[1] S --> Internal C47 Part1 Canon C46 _script(CT 0) Part2
 gram#1[2] Part1 --> {Suresh1,_rest Smriti1,_rest Olivier1,_rest Vijayshree1,_rest Arindam1,_rest Andreine1}
 gram#1[3] Part2 --> {Suresh2,Smriti2 _rest,Olivier2 _rest,Vijayshree2 _rest,Arindam2 _rest,Andreine2 _rest}
 ------------
@@ -177,8 +177,8 @@ gram#12[6] An --> {1,sol5-}
 gram#12[7] Tik --> {1,do7-}
 ------------
 ORD
-gram#13[1] Internal --> _script(CT1) _script(CT2)
-gram#13[2] C46 --> _script(CT3)
-gram#13[3] C47 --> _script(CT4)
-gram#13[4] PedalOn --> _script(CT5)
-gram#13[5] PedalOff --> _script(CT6)
+gram#13[1] Internal --> _script(CT 1) _script(CT 2)
+gram#13[2] C46 --> _script(CT 3)
+gram#13[3] C47 --> _script(CT 4)
+gram#13[4] PedalOn --> _script(CT 5)
+gram#13[5] PedalOff --> _script(CT 6)

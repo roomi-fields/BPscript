@@ -4,7 +4,7 @@
 // -cs.tryCsound not loadable in WASM
 
 RND
-gram#1[1] S --> _script(CT0) _script(CT1) _script(CT2) C4 D4 _script(CT3) E4 F4 _script(CT4) _script(CT5) G4 A4 _script(CT6) _script(CT7) B4 C5
+gram#1[1] S --> _script(CT 0) _script(CT 1) _script(CT 2) C4 D4 _script(CT 3) E4 F4 _script(CT 4) _script(CT 5) G4 A4 _script(CT 6) _script(CT 7) B4 C5
 
 // controlTable:
 // CT0 = {cont: "blurb"}

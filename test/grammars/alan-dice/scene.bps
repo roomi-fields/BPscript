@@ -8,6 +8,7 @@
 // Section B: 8 mesures (B8 identique sauf K2)
 
 @core
+@qclock:11
 @controls
 @alphabet.solfege:midi
 @improvize

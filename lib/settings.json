@@ -55,12 +55,14 @@
     "allitems":   { "AllItems": "1", "Improvize": "0" },
     "all_items":  { "AllItems": "1", "Improvize": "0" },
     "maxitems":   { "MaxItemsProduce": "@value" },
-    "quantize":   { "Quantization": "@value" },
-    "seed":       { "Seed": "@value" },
-    "vel":        { "DeftVelocity": "@value" },
-    "pan":        { "DeftPanoramic": "@value" },
-    "volume":     { "DeftVolume": "@value" },
-    "a4":         { "A4freq": "@value" },
-    "timeres":    { "Time_res": "@value" }
+    "quantize":      { "Quantization": "@value" },
+    "quantization":  { "Quantization": "@value" },
+    "qclock":        { "Qclock": "@value" },
+    "seed":          { "Seed": "@value" },
+    "vel":           { "DeftVelocity": "@value" },
+    "pan":           { "DeftPanoramic": "@value" },
+    "volume":        { "DeftVolume": "@value" },
+    "a4":            { "A4freq": "@value" },
+    "timeres":       { "Time_res": "@value" }
   }
 }

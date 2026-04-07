@@ -4,6 +4,7 @@
 @core
 @controls
 @allitems
+@maxitems:500
 @test_alphabets.structural
 
 @mode:random

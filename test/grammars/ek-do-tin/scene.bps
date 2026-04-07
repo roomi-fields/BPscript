@@ -9,6 +9,9 @@
 @controls
 @mm:88
 @striated
+@maxitems:0
+@quantization:30
+@qclock:22
 
 gate ek:midi
 gate do:midi

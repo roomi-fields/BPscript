@@ -8,6 +8,8 @@
 // The last subgrammar could be replaced with "-gl.D50"
 
 @core
+@quantization:50
+@qclock:3
 @controls
 @alphabet.solfege:midi
 

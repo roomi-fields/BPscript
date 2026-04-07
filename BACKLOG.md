@@ -1,36 +1,37 @@
 # BPscript — Backlog
 
-Dernière mise à jour : 2026-04-05
+Dernière mise à jour : 2026-04-06
+Build : v3.3.19-wasm.8
+S4 vs S5 : 16/29 EXACT, 13 DIFF, 7 SKIP, 2 MISSING
 
 ## Moteur BP3 — Investigation
 
-### #32 Bifurcation FillPhaseDiagram (GCC vs clang)
-NotReich : tokens identiques 0–564, divergence brutale à t=82s. Pas un arrondi cumulatif — un branchement conditionnel qui bascule différemment. `round(prodtempo)` et `-mfpmath=sse` sans effet.
-**À faire :** Instrumenter tempo/toofast/speed/scale autour du token 565, comparer traces GCC vs WASM.
+### #32 WriteMIDIbyte drift CC interpolés (NotReich)
+Root cause trouvée : CC volume interpolés dépassent le timestamp du NoteOn suivant, `OldMIDIfileTime` recule, delta perdu s'accumule. Deux fixes proposés (MIDIfiles.c ou MakeSound.c).
+**Status :** En attente décision Bernard (Fix A vs Fix B).
 
-### #33 NoteOff scheduling séquentiel (MakeSound)
-Visser5/Visser-Waves : NoteOff retardé jusqu'au endtime de la note suivante. Scheduling séquentiel de MakeSound.
-**À faire :** Créer une grammaire minimale qui reproduit le problème. Investiguer le mécanisme p_keyon/SendToDriver.
+### ~~#36~~ Production TEXT sans séparateurs — RÉSOLU
+Non reproductible sur wasm.8. `getResult()` retourne les terminaux séparés avec et sans alphabet.
 
-### #35 Offset +10ms settings Visser
-TimeSet produit starttime=10 au lieu de 0 avec les settings Visser. Le natif corrige via FormatMIDIstream zerostart.
-**À faire :** Identifier quel paramètre settings cause le décalage. Reproduire le zerostart WASM sans casser les silences initiaux.
-
-### #39 ASLR / mémoire non initialisée (kss2)
-Workaround `setarch -R` appliqué.
-**À faire :** Compiler avec `-fsanitize=address` ou Valgrind pour localiser la variable.
-
-### #38 Terminal distinction (T47)
-Bernard propose T47 au lieu de T4→T3. En attente de son implémentation.
-**À faire :** Adapter `bp3_get_timed_tokens()` quand T47 sera disponible.
+### Résolus
+- ~~#33~~ NoteOff retardé → dedup keep-longest WASM (wasm.2)
+- ~~#35~~ Offset +10ms → Kpress offset WASM (wasm.3)
+- ~~#38~~ T47 → Bernard implémenté v3.3.19, WASM adapté (wasm.4)
+- ~~#39~~ ASLR p_DefaultChannel → GetRelease.c 3 points (wasm.5)
+- ~~#42~~ Plot(ANYWHERE) écrase sentinelles -1 → FillPhaseDiagram.c (wasm.8)
+- ~~#43~~ CT catchall `_script(CT N)` → ScriptUtils.c + console_strings.json (wasm.8)
 
 ## Transpileur S5
+
+### COUNT diffs S4 vs S5 (11 grammaires)
+Cause à investiguer. Le pipeline S5 passe par le dispatcher (resolveTokens) qui applique transpose/rotate/etc.
+Les seuls contrôles qui causent un diff attendu sont ceux avec traitement audio webaudio (wave, filter, etc.) — non testables au niveau tokens.
 
 ### Bugs restants
 - `_goto` : position dans la grammaire incorrect
 - `mode` : gram#1 toujours LIN, devrait respecter @mode
 - Terminaux numériques purs (ex: `1`, `2`) confondus avec des vitesses
-- 3 contrôles runtime non implémentés
+- Settings non fidèlement portés depuis les -se. de Bernard
 
 Détail dans `memory/backlog_s5_transpiler.md`.
 

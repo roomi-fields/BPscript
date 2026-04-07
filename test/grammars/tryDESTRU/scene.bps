@@ -7,6 +7,7 @@
 @core
 @controls
 @test_alphabets.abc:midi
+@qclock:2
 
 // --- Sous-grammaire 1 @mode:random — génération de structure ---
 

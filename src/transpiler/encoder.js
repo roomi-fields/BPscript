@@ -148,7 +148,7 @@ function encode(ast) {
       if (_bp3Native.has(dir.name)) {
         rhsPrefix.push(formatNativeValue(CONTROL_MAP[dir.name], dir.value));
       } else {
-        const ctName = `CT${_ctIndex++}`;
+        const ctName = `CT ${_ctIndex++}`;
         output.controlTable.push({ id: ctName, assignments: { [dir.name]: dir.value } });
         rhsPrefix.push(`_script(${ctName})`);
       }
@@ -267,7 +267,7 @@ function encode(ast) {
         }
       }
       if (Object.keys(ruleRuntimeAssignments).length > 0) {
-        const ctName = `CT${_ctIndex++}`;
+        const ctName = `CT ${_ctIndex++}`;
         output.controlTable.push({ id: ctName, assignments: ruleRuntimeAssignments });
         ruleNativeSuffix.push(`_script(${ctName})`);
       }
@@ -296,7 +296,7 @@ function encode(ast) {
         const rqPrefix = [...rqNative];
         let rqSuffix = null;
         if (Object.keys(rqRuntime).length > 0) {
-          const ctName = `CT${_ctIndex++}`;
+          const ctName = `CT ${_ctIndex++}`;
           const ctEndName = `${ctName}_e`;
           output.controlTable.push({ id: ctName, assignments: rqRuntime, scope: 'start' });
           output.controlTable.push({ id: ctEndName, assignments: {}, scope: 'end' });
@@ -573,7 +573,7 @@ function encodeQualifierTokens(q, controlMap, tokens) {
     }
   }
   if (Object.keys(runtimeAssignments).length > 0) {
-    const ctName = `CT${_ctIndex++}`;
+    const ctName = `CT ${_ctIndex++}`;
     _output.controlTable.push({ id: ctName, assignments: runtimeAssignments });
     tokens.push(`_script(${ctName})`);
   }
@@ -631,7 +631,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       } else {
         assignments[el.name] = el.args.join(',');
       }
-      const ctName = `CT${_ctIndex++}`;
+      const ctName = `CT ${_ctIndex++}`;
       _output.controlTable.push({ id: ctName, assignments });
       return `_script(${ctName})`;
     }
@@ -685,7 +685,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         const grpPrefix = [...gNative];
         let grpSuffix = null;
         if (Object.keys(gRuntime).length > 0) {
-          const ctName = `CT${_ctIndex++}`;
+          const ctName = `CT ${_ctIndex++}`;
           const ctEndName = `${ctName}_e`;
           _output.controlTable.push({ id: ctName, assignments: gRuntime, scope: 'start' });
           _output.controlTable.push({ id: ctEndName, assignments: {}, scope: 'end' });
@@ -768,7 +768,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
           }
         }
         if (Object.keys(runtimeAssignments).length > 0) {
-          const ctName = `CT${_ctIndex++}`;
+          const ctName = `CT ${_ctIndex++}`;
           _output.controlTable.push({ id: ctName, assignments: runtimeAssignments });
           parts.push(`_script(${ctName})`);
         }
@@ -787,7 +787,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
           }
         }
         if (Object.keys(runtimeAssignments).length > 0) {
-          const ctName = `CT${_ctIndex++}`;
+          const ctName = `CT ${_ctIndex++}`;
           _output.controlTable.push({ id: ctName, assignments: runtimeAssignments });
           parts.push(`_script(${ctName})`);
         }

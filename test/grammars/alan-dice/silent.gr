@@ -1,7 +1,7 @@
 // Bol Processor BP3
 // Generated from BPScript
 ORD
-gram#1[1] S --> _script(CT0) A B _script(CT1) do#4 _script(CT2)
+gram#1[1] S --> _script(CT 0) A B _script(CT 1) do#4 _script(CT 2)
 gram#1[2] A --> A1 A2 A3 A4 A5 A6 A7 A8 A1 A2 A3 A4 A5 A6 A7 A'8
 gram#1[3] B --> B1 B2 B3 B4 B5 B6 B7 B8 B1 B2 B3 B4 B5 B6 B7 B8
 ------------

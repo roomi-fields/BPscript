@@ -6,6 +6,8 @@
 
 @core
 @controls
+@improvize
+@qclock:20
 
 gate a:midi
 gate b:midi

@@ -8,6 +8,7 @@
 
 @core
 @controls
+@qclock:2
 @alphabet.western:midi
 @mm:120
 

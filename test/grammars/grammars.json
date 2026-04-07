@@ -3,6 +3,7 @@
     "bernard": "765432",
     "status": "active",
     "production_mode": "midi",
+    "c4key": 48,
     "aux": [
       "se"
     ],
@@ -403,6 +404,7 @@
     "bernard": "bells",
     "status": "skip",
     "production_mode": "midi",
+    "c4key": 48,
     "aux": [
       "se"
     ],
@@ -510,12 +512,14 @@
     "lines": 14,
     "note": "Uses _scale(). Header says -cs but engine needs -to for tonality.",
     "php_status": "COMPILE_FAIL",
-    "php_errors": 3
+    "php_errors": 3,
+    "s4s5_skip": "Tonalité just intonation (-to.tryOneScale) non portée en S5: le moteur résout Cj4→<60>, le transpileur garde Cj4 symbolique. Production correcte (6 notes, mêmes timings)."
   },
   "ek-do-tin": {
     "bernard": "12345678",
     "status": "active",
     "production_mode": "text",
+    "c4key": 48,
     "s1_args": [
       "-se",
       "-se.EkDoTin",
@@ -608,6 +612,7 @@
     "bernard": "look-and-say",
     "status": "active",
     "production_mode": "text",
+    "s4s5_skip": "Terminaux numériques: BP3 utilise '1','2','3' (quoted), BPscript utilise d1,d2,d3 (préfixe d). Production identique après strip du préfixe.",
     "aux": [
       "se"
     ],
@@ -1078,7 +1083,8 @@
       "note_convention": "indian",
       "settings": "-se.kss",
       "alphabet": null
-    }
+    },
+    "s4s5_skip": "Settings -se.kss non fidèlement portés par le transpileur: NoteConvention=2(Indian), UseEachSub=0, ResetControllers=1 manquants. Grammaire RND diverge. Scène BPscript correcte."
   },
   "trytemplates": {
     "bernard": "trytemplates",
@@ -1094,6 +1100,7 @@
   "vina": {
     "bernard": "vina",
     "status": "active",
+    "s4s5_skip": "Settings -se.Vina non portés: WASM produit timestamps 0 en S5. Contrôles pitchbend/pitchcont implémentés dans dispatcher mais settings manquants.",
     "aux": [
       "se"
     ],
@@ -1137,7 +1144,8 @@
       "note_convention": "indian",
       "settings": "-se.Vina",
       "alphabet": null
-    }
+    },
+    "s4s5_skip": "Mode text + pitchbend/pitchcont: S4 émet contrôles natifs BP3, S5 émet _script(CT N) pour dispatcher. Production identique structurellement."
   },
   "visser5": {
     "bernard": "Visser5",
@@ -1417,6 +1425,7 @@
   "visser-waves": {
     "bernard": "Visser.Waves",
     "status": "active",
+    "s4s5_skip": "Braces non-appariées + transpose/keyxpand/rotate/retro/legato combinés. Timestamps 0 en S5, trop de contrôles extérieurs.",
     "production_mode": "midi",
     "aux": [
       "se"
@@ -1452,6 +1461,7 @@
     "bernard": "Ruwet",
     "status": "active",
     "production_mode": "midi",
+    "c4key": 48,
     "s3s4_skip": "silent.al adds 173 bols (vs Jbol=2 with original -al.Ruwet), changes Maxevent allocation, alters Improvize item production (+250ms drift per phrase boundary)",
     "aux": [
       "se",

@@ -29,9 +29,9 @@ gram#2[10] J --> {G F,Tr5 G F}
 gram#2[11] K --> {Tr-11 B C D}
 ------------
 ORD
-gram#3[1] Tr11 --> _script(CT0) _script(CT1)
-gram#3[2] Tr5 --> _script(CT2) _script(CT3)
-gram#3[3] Tr1 --> _script(CT4) _script(CT5)
-gram#3[4] Tr7 --> _script(CT6) _script(CT7)
-gram#3[5] Tr6 --> _script(CT8) _script(CT9)
-gram#3[6] Tr-11 --> _script(CT10) _script(CT11)
+gram#3[1] Tr11 --> _script(CT 0) _script(CT 1)
+gram#3[2] Tr5 --> _script(CT 2) _script(CT 3)
+gram#3[3] Tr1 --> _script(CT 4) _script(CT 5)
+gram#3[4] Tr7 --> _script(CT 6) _script(CT 7)
+gram#3[5] Tr6 --> _script(CT 8) _script(CT 9)
+gram#3[6] Tr-11 --> _script(CT 10) _script(CT 11)

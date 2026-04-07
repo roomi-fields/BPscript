@@ -8,6 +8,8 @@
 
 @core
 @controls
+@improvize
+@quantization:50
 @alphabet.solfege:midi
 
 // --- Sous-grammaire 1 @mode:ord --- structure thematique
