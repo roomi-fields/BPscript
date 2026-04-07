@@ -1393,6 +1393,14 @@ function parse(tokens) {
         }
       }
       currentVoice.push(el);
+
+      // EBNF §4.2: "A (vel:80)" with space = suffix of A if end of voice
+      // Attach spaced () as suffix of last element when at end of voice (, or })
+      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifier() && currentVoice.length > 0) {
+        const lastEl = currentVoice[currentVoice.length - 1];
+        lastEl.suffixQualifiers = lastEl.suffixQualifiers || [];
+        lastEl.suffixQualifiers.push(parseRuntimeQualifier());
+      }
     }
     if (currentVoice.length > 0) voices.push(currentVoice);
     expect(T.RBRACE);
