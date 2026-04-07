@@ -1,0 +1,124 @@
+{
+  "description": "BPscript documentation index — point d'entrée pour agents et humains",
+  "updated": "2026-04-07",
+
+  "spec": {
+    "description": "Le langage tel qu'il EST — spécifications normatives",
+    "files": {
+      "LANGUAGE.md": {
+        "content": "Spécification complète du langage BPscript",
+        "sections": ["vision", "3 mots / 24 symboles / 7 opérateurs", "types temporels (gate/trigger/cv)", "double déclaration", "[] moteur vs () runtime", "backticks", "flags", "templates", "captures", "homomorphismes", "compilation vers BP3"],
+        "use_when": "comprendre la syntaxe, vérifier une construction, coder tokenizer/parser/encoder"
+      },
+      "EBNF.md": {
+        "content": "Grammaire formelle ISO 14977",
+        "use_when": "valider la syntaxe, coder le parser, vérifier un edge case"
+      },
+      "AST.md": {
+        "content": "Nœuds AST (Scene, Directive, Rule, CVInstance, Macro, Polymetry...)",
+        "use_when": "coder des transformations AST, comprendre la sortie du parser"
+      }
+    }
+  },
+
+  "design": {
+    "description": "COMMENT c'est construit — architecture et design technique",
+    "files": {
+      "ARCHITECTURE.md": {
+        "content": "Pipeline complet source → tokenizer → parser → encoder → WASM → dispatcher → transports",
+        "sections": ["pipeline compile", "dispatcher", "control table", "CV table", "live coding", "hot-swap", "acteurs"],
+        "use_when": "vue d'ensemble du système, comprendre le flux de données"
+      },
+      "PITCH.md": {
+        "content": "Résolution pitch 6 couches",
+        "sections": ["Layer 0 Actor (binding)", "Layer 1 Alphabet", "Layer 2 Octaves", "Layer 3 Temperament", "Layer 4 Tuning", "Layer 5 Resolver", "annexe transposition"],
+        "use_when": "comprendre token→fréquence, coder le resolver, ajouter un alphabet/tuning"
+      },
+      "SOUNDS.md": {
+        "content": "Résolution terminaux unifiée, résolution par transport",
+        "sections": ["3 échelles (spec < CT < CV)", "formats JSON (table, template, paramétrique, par registre, samples)", "résolution par transport (WebAudio/MIDI/OSC)", "dégradation gracieuse", "implémentation (ActorRegistry, SoundsResolver)"],
+        "use_when": "ajouter un instrument, comprendre cascading, coder un transport"
+      },
+      "CV.md": {
+        "content": "Objets CV temporels : ADSR, LFO, ramp, routage par cible",
+        "use_when": "ajouter un type de CV, comprendre le routage modulation"
+      },
+      "EFFECTS.md": {
+        "content": "Effets et signal processing — pas de patching dans BPscript",
+        "use_when": "comprendre la frontière BPscript/runtime pour les effets"
+      },
+      "TEMPORAL_DEFORMATION.md": {
+        "content": "Constraint solver pour déformation temporelle en temps réel",
+        "sections": ["structure tree (arbre polymétrique)", "3 modes (span fixe, proportions fixes, contrainte relâchée)", "sources de contrôle (potards, MIDI CC, CV, drag)", "pipeline complet"],
+        "use_when": "coder le constraint solver, comprendre la déformation live"
+      },
+      "HOMOMORPHISMS.md": {
+        "content": "Étiquetage post-dérivation et résolution REPL",
+        "sections": ["format {section}.{depth}%{terminal}", "résolution REPL", "stacking", "instructions agent transpileur", "instructions agent WASM"],
+        "use_when": "coder les homomorphismes, comprendre le labeling"
+      },
+      "REPL.md": {
+        "content": "Architecture backticks et REPL adapters",
+        "sections": ["3 types backtick (orphelin, inline, standalone)", "adapters (SC, Tidal, Python)", "sessions", "timing"],
+        "use_when": "coder un adapter REPL, comprendre l'exécution des backticks"
+      },
+      "INTERFACES_BP3.md": {
+        "content": "API WASM BP3 complète",
+        "sections": ["fonctions d'entrée (load grammar/alphabet/settings/tonality)", "fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events)", "verbose levels 0/1/2"],
+        "use_when": "appeler le moteur WASM, comprendre les formats in/out"
+      }
+    }
+  },
+
+  "plan": {
+    "description": "Ce qu'on VA faire — roadmaps",
+    "files": {
+      "UI_WEB.md": {
+        "content": "Roadmap UI web interactive",
+        "sections": ["Phase 1 contrôles interactifs (sliders runtime)", "Phase 2 Web MIDI", "Phase 3 timeline Canvas (structure tree + constraint solver + drag)", "Phase 4 mapping contrôleurs → structure"],
+        "use_when": "planifier le dev UI, comprendre les priorités et dépendances"
+      },
+      "EDITOR.md": {
+        "content": "Design éditeur CodeMirror 6",
+        "sections": ["syntax highlighting", "autocomplétion", "inline widgets", "Lezer parser"],
+        "use_when": "coder l'éditeur, ajouter de la coloration syntaxique"
+      }
+    }
+  },
+
+  "reference": {
+    "description": "Guides techniques — COMMENT utiliser",
+    "files": {
+      "WASM_HOWTO.md": {
+        "content": "Build et usage WASM (Emscripten SDK, build.sh, API JS)",
+        "use_when": "builder le moteur, debugger WASM"
+      },
+      "NATIVE_HOWTO.md": {
+        "content": "Build natif Linux (GCC, options CLI, tests S0/S1)",
+        "use_when": "compiler bp3 natif, lancer les tests de référence"
+      },
+      "BP3_FILE_FORMATS.md": {
+        "content": "Formats fichiers BP3 : -gr., -al., -ho., -se., -so., -to., -tb., -cs., -gl.",
+        "use_when": "comprendre un fichier BP3, générer un fichier auxiliaire"
+      },
+      "HO_FORMAT.md": {
+        "content": "Format détaillé -ho. (38 fichiers d'exemple analysés)",
+        "use_when": "coder la génération de fichiers -ho."
+      }
+    }
+  },
+
+  "issues": {
+    "description": "Problèmes ouverts",
+    "files": {
+      "POLYMAKE_STACK.md": {
+        "content": "Stack overflow polymétrie imbriquée 5+ niveaux (not-reich)",
+        "status": "non résolu, workaround actif"
+      },
+      "RNG_PORTABLE.md": {
+        "content": "RNG non portable MSVC vs glibc (6 grammaires S0≠S1)",
+        "status": "spec prête, implémentation pending"
+      }
+    }
+  }
+}

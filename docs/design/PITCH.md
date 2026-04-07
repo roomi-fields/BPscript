@@ -1,25 +1,318 @@
-# Pitch Architecture — 5 Couches
+# Pitch Resolution — Actor, Alphabet, Tuning, Temperament, Resolver
 
-> Voir aussi : [DESIGN_ACTOR.md](DESIGN_ACTOR.md) pour le binding acteur (un resolver par acteur),
-> [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) pour le pipeline compile/runtime.
+> Voir aussi : [ARCHITECTURE.md](ARCHITECTURE.md) pour le pipeline compile/runtime,
+> [SOUNDS.md](SOUNDS.md) pour le cascade spec < CT < CV,
+> [CV.md](CV.md) pour les objets signal (ADSR, LFO, ramp).
 
 ## Vue d'ensemble
 
-La résolution d'un symbole BPscript en fréquence traverse 5 couches indépendantes :
+La résolution d'un symbole BPscript en fréquence traverse **6 couches** indépendantes :
 
 ```
-alphabet  →  noms + altérations (culturel)
-octaves   →  convention de registre (notation)
-temperament → grille d'intervalles (mathématique)
-tuning    →  gamme concrète = alphabet + temperament + référence
-resolver  →  token → fréquence (runtime)
+actor       →  contexte de binding (qui joue quoi, où)
+alphabet    →  noms + altérations (culturel)
+octaves     →  convention de registre (notation)
+temperament →  grille d'intervalles (mathématique)
+tuning      →  gamme concrète = alphabet + temperament + référence
+resolver    →  token → fréquence (runtime)
 ```
 
 Chaque couche a une seule responsabilité. Zéro redondance entre les fichiers.
 
 ---
 
-## 1. Alphabet (`lib/alphabet.json`)
+## Layer 0. Actor — Unité de binding
+
+### Le problème
+
+Une scène BPscript peut contenir plusieurs instruments qui partagent le même
+alphabet. Deux sitaristes jouent les mêmes notes (sargam) mais :
+- vont vers des sorties différentes (MIDI ch1 vs ch3, ou WebAudio vs OSC)
+- peuvent utiliser des tunings différents (22 shruti vs 12-TET)
+- peuvent avoir des conventions d'octave différentes
+
+L'alphabet seul ne suffit pas comme unité de résolution — il manque le **contexte**.
+
+### L'acteur
+
+L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
+
+```
+@actor sitar1  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio
+@actor sitar2  alphabet:sargam  tuning:sargam_12TET     octaves:saptak  transport:midi(ch:3)
+@actor tabla   alphabet:tabla_bols  transport:midi(ch:10)
+@actor lights  alphabet:dmx_fixtures  transport:dmx
+```
+
+Un acteur = **alphabet + tuning + octaves + transport**. C'est le contexte complet
+de résolution d'un symbole.
+
+### Syntaxe de la directive `@actor`
+
+```
+@actor <nom>  <clé:valeur>  <clé:valeur>  ...
+```
+
+Clés disponibles :
+
+| Clé | Obligatoire | Valeur | Exemple |
+|-----|-------------|--------|---------|
+| `alphabet` | oui | référence vers `alphabets.json` | `alphabet:sargam` |
+| `tuning` | non | référence vers `tunings.json` | `tuning:sargam_22shruti` |
+| `octaves` | non | référence vers `octaves.json` | `octaves:saptak` |
+| `transport` | oui | clé de transport (+params optionnels) | `transport:midi(ch:3)` |
+| `eval` | non | clé d'eval pour les backticks | `eval:sclang` |
+
+Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
+Si `octaves` est omis → convention par défaut du tuning ou `western` si pas de tuning.
+Si `eval` est omis → même valeur que `transport` (cas courant).
+
+### Utilisation dans les règles
+
+Le `:` après un symbole référence l'acteur :
+
+```
+gate Sa:sitar1       // Sa résolu via sitar1 (sargam + 22shruti + webaudio)
+gate Sa:sitar2       // même note, autre acteur (sargam + 12TET + midi ch3)
+trigger tin:tabla    // tin résolu via tabla (bols + midi ch10)
+trigger spot:lights  // spot résolu via lights (dmx)
+```
+
+### Import en bloc
+
+Un `@actor` avec un alphabet importe tous les symboles de cet alphabet,
+liés à cet acteur :
+
+```
+@actor sitar1  alphabet:sargam  tuning:sargam_22shruti  transport:webaudio
+
+// Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
+// automatiquement déclarés comme gate:sitar1
+// Pas besoin de "gate Sa:sitar1" pour chaque note
+```
+
+Surcharge individuelle possible :
+```
+trigger dha:sitar1   // override : dha est un trigger, pas un gate
+```
+
+### Resolver par acteur
+
+Chaque acteur a son propre contexte de résolution. Le resolver n'est plus
+un singleton global — c'est une instance par acteur.
+
+```
+┌─────────────────────────────────────────────┐
+│  Actor "sitar1"                             │
+│                                             │
+│  alphabet  : sargam (sa, re, ga...)         │
+│  octaves   : saptak (mandra, madhya, taar)  │
+│  tuning    : sargam_22shruti                │
+│  temperament: 22shruti (auto via tuning)    │
+│  transport : webaudio                       │
+│                                             │
+│  Resolver: token → freq                     │
+│  "Sa_^" → parse → sa, taar → freq           │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│  Actor "sitar2"                             │
+│                                             │
+│  alphabet  : sargam (même noms)             │
+│  octaves   : saptak (même convention)       │
+│  tuning    : sargam_12TET (autre tuning!)   │
+│  temperament: 12TET                         │
+│  transport : midi(ch:3)                     │
+│                                             │
+│  Resolver: token → freq (résultat différent)│
+│  "Sa_^" → parse → sa, taar → freq           │
+└─────────────────────────────────────────────┘
+```
+
+Même symbole `Sa`, même octave, fréquences différentes — parce que le tuning
+(et donc le tempérament) est différent.
+
+### Conflits de noms
+
+Deux acteurs peuvent partager le même alphabet (sitar1 et sitar2 utilisent
+tous les deux sargam). Les symboles sont distingués par le `:actor` :
+
+```
+// Pas de conflit — le :actor désambiguïse
+Sa:sitar1    // résolu via sitar1
+Sa:sitar2    // résolu via sitar2
+```
+
+Si un symbole est utilisé **sans** `:actor`, le compilateur cherche un
+acteur non ambigu. Si plusieurs acteurs contiennent ce symbole → erreur :
+
+```
+@actor sitar1  alphabet:sargam  ...
+@actor sitar2  alphabet:sargam  ...
+
+Sa Re Ga Pa    // ❌ Erreur : 'Sa' est dans sitar1 et sitar2 — préciser l'acteur
+Sa:sitar1 Re:sitar1 Ga:sitar1 Pa:sitar1   // ✓ OK
+```
+
+Si un seul acteur contient le symbole → résolution implicite :
+
+```
+@actor sitar1  alphabet:sargam  ...
+@actor tabla   alphabet:tabla_bols  ...
+
+Sa Re Ga Pa    // ✓ OK — seul sitar1 a ces symboles
+tin ta ke      // ✓ OK — seul tabla a ces symboles
+```
+
+### Compilation — comment l'acteur traverse le pipeline
+
+#### Tokenizer
+
+Le tokenizer reconnaît `@actor` comme une directive. Le reste de la ligne
+est parsé comme des paires `clé:valeur` séparées par des espaces.
+
+```
+@actor sitar  alphabet:sargam  tuning:sargam_22shruti  transport:webaudio
+│      │      │                │                        │
+DIRECTIVE      IDENT            PAIR                     PAIR
+       NAME
+```
+
+Le tokenizer reconnaît aussi `:actor` sur les symboles comme un qualifier :
+```
+Sa:sitar
+│  │
+IDENT ACTOR_QUALIFIER
+```
+
+#### Parser — node AST
+
+Le parser produit un node `ActorDirective` :
+
+```js
+{
+  type: 'ActorDirective',
+  name: 'sitar',
+  properties: {
+    alphabet: 'sargam',
+    tuning: 'sargam_22shruti',
+    octaves: 'saptak',
+    transport: { key: 'webaudio', params: {} }
+  },
+  line: 3
+}
+```
+
+Les symboles qualifiés par `:actor` produisent un `Symbol` avec un champ `actor` :
+```js
+{ type: 'Symbol', name: 'Sa', actor: 'sitar', line: 12 }
+```
+
+#### Actor resolver (phase de compilation)
+
+Après le parsing, une phase dédiée :
+
+1. **Collecte** : parcourir les `ActorDirective` → construire la table des acteurs
+2. **Chargement** : pour chaque acteur, charger alphabet, tuning, octaves depuis les JSON
+3. **Expansion** : chaque acteur importe les symboles de son alphabet avec leurs types
+4. **Vérification conflits** : si un symbole apparaît dans 2+ acteurs sans `:actor` explicite → erreur
+5. **Résolution implicite** : si un `Symbol` n'a pas de champ `actor`, chercher l'unique acteur qui le contient
+
+#### Encoder — aplatissement pour BP3
+
+BP3 ne connaît pas les acteurs. L'encoder **aplatit** :
+
+```
+Source BPscript :
+  Sa:sitar Re:sitar tin:tabla
+
+Grammaire BP3 :
+  bolSa bolRe boltin
+
+terminalActorMap (émise en parallèle, pour le dispatcher) :
+  { "bolSa": "sitar", "bolRe": "sitar", "boltin": "tabla" }
+```
+
+Le `terminalActorMap` est un dictionnaire `terminal BP3 → nom d'acteur`.
+Il est produit par l'encoder et transmis au dispatcher avec la grammaire.
+
+BP3 voit des noms opaques. Le dispatcher utilise le map pour retrouver
+l'acteur et donc le resolver + transport approprié.
+
+#### Prototypes
+
+Le prototype generator utilise les acteurs pour savoir quels terminaux générer :
+- Pour chaque acteur qui a un tuning → générer les terminaux `bol` + notes × registres
+- Pour les acteurs sans tuning (percussions, DMX) → générer les terminaux simples
+
+### Relation avec les concepts existants
+
+#### Remplacement de `@alphabet.X:runtime`
+
+L'ancienne syntaxe :
+```
+@alphabet.raga:supercollider
+@alphabet.western:midi
+```
+
+Devient :
+```
+@actor melodie  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:osc(port:57110)  eval:sclang
+@actor keys     alphabet:western  tuning:western_12TET  octaves:western  transport:midi(ch:1)
+```
+
+Plus verbeux mais plus explicite — chaque dimension est nommée.
+
+#### Raccourci pour les cas simples
+
+Si un seul acteur suffit et qu'on veut rester concis :
+
+```
+@actor default  alphabet:western  tuning:western_12TET  transport:webaudio
+```
+
+Ou une syntaxe courte possible (à discuter) :
+```
+@actor default  western  12TET  webaudio
+```
+
+#### Backticks et acteurs
+
+Les backticks attachés à un symbole utilisent l'`eval` de l'acteur du symbole :
+
+```
+@actor mel  alphabet:sargam  transport:osc  eval:sclang
+
+Sa(vel:`rrand(40,127)`)   // Sa est dans mel → eval = sclang → SC évalue
+```
+
+Les backticks orphelins gardent le tag obligatoire :
+```
+`sc: SynthDef(\grain, {...}).add`   // tag explicite, pas d'acteur
+```
+
+### Exemple complet
+
+```
+// Acteurs
+@actor sitar   alphabet:sargam       tuning:sargam_22shruti  octaves:saptak  transport:osc(port:57110) eval:sclang
+@actor tabla   alphabet:tabla_bols   transport:midi(ch:10)
+@actor lights  alphabet:dmx_cues     transport:dmx
+
+// Inits
+`sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
+
+// Composition — les acteurs résolvent automatiquement
+S -> { melodie, rythme, eclairage }
+
+melodie -> Sa Re Ga(vel:120) Pa      // → sitar (seul à avoir sa, re, ga, pa)
+rythme  -> tin ta ke dha             // → tabla (seul à avoir tin, ta, ke, dha)
+eclairage -> -!spot _ _ -!fade       // → lights (seul à avoir spot, fade)
+```
+
+---
+
+## Layer 1. Alphabet (`lib/alphabet.json`)
 
 Définit une **séquence ordonnée de noms de notes** et les **altérations** disponibles.
 L'alphabet est purement nominal — il ne contient aucune information de fréquence,
@@ -48,7 +341,7 @@ aucun MIDI, aucun ratio.
 
 ---
 
-## 2. Octaves (`lib/octaves.json`)
+## Layer 2. Octaves (`lib/octaves.json`)
 
 Définit comment les **registres** (octaves) sont nommés. Convention paramétrique
 supportant préfixe, suffixe, et séparateurs variables.
@@ -76,7 +369,7 @@ Lilypond (`,` conflit polymétrie), Jianpu (`.` conflit période), Helmholtz (ca
 
 ---
 
-## 3. Tempérament (`lib/temperaments.json`)
+## Layer 3. Tempérament (`lib/temperaments.json`)
 
 Définit la **grille mathématique** des intervalles. Un tempérament est indépendant
 de toute gamme ou alphabet — c'est une division de l'espace des fréquences.
@@ -208,7 +501,7 @@ Seule la valeur du generator change.
 
 ---
 
-## 4. Tuning (`lib/tuning.json`)
+## Layer 4. Tuning (`lib/tuning.json`)
 
 Une **gamme concrète** qui associe un alphabet à un tempérament avec une référence pitch.
 C'est la couche qui fait le pont entre les noms (culturels) et les positions (mathématiques).
@@ -356,11 +649,11 @@ Le generator peut varier en temps réel via CV.
 
 ---
 
-## 5. Resolver (`src/dispatcher/resolver.js`)
+## Layer 5. Resolver (`src/dispatcher/resolver.js`)
 
-Le resolver n'est pas un singleton global — il est **instancié par acteur**.
+Le resolver est **instancié par acteur** (voir Layer 0 ci-dessus).
 Chaque acteur (`@actor`) porte son propre contexte de résolution
-(alphabet + octaves + tuning + tempérament). Voir [DESIGN_ACTOR.md](DESIGN_ACTOR.md).
+(alphabet + octaves + tuning + tempérament).
 
 Lit les 4 fichiers et résout un token BPscript en fréquence.
 
@@ -449,7 +742,7 @@ selon `temperament.type` (`"table"` ou `"parametric"`).
 
 ### Deux phases, deux consommateurs
 
-Les 5 couches sont consommées à **deux moments** par **deux modules** différents :
+Les 6 couches sont consommées à **deux moments** par **deux modules** différents :
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -570,6 +863,70 @@ Transport:  oscillator.frequency = 284.44 at t=1500ms for 200ms
 | `src/dispatcher/resolver.js`   | Réécrire : lire les 4 fichiers, formule générique                                                  |
 | `src/transpiler/prototypes.js` | Ne plus hardcoder `bolC0-bolB9`, lire alphabet + octaves                                           |
 | `src/transpiler/encoder.js`    | Adapter le `bol` prefix dynamiquement                                                              |
+
+---
+
+## Annexe — Transposition across temperaments
+
+### Résumé
+
+La transposition chromatique (`transpose:N` en demi-tons) ne fonctionne correctement que dans les tempéraments égaux. Dans tous les autres systèmes (just intonation, shruti, maqam, gamelan), elle déforme les intervalles. Il faut 3 opérations distinctes, pas une seule.
+
+### Le problème mathématique
+
+En 12-TET, chaque demi-ton = 2^(1/12). Décaler de N steps préserve tous les intervalles car la grille est uniforme. Dans tout autre tempérament, les steps sont inégaux → le décalage change les intervalles.
+
+**Exemple** : gamme de Do majeur en intonation juste (C=1, D=9/8, E=5/4, F=4/3, G=3/2, A=5/3, B=15/8). "Transposer" en Ré majeur en décalant chaque ratio de 9/8 → la tierce majeure Ré-Fa# devient 81:64 (408¢, pythagoricien) au lieu de 5:4 (386¢, juste). Le comma syntonique (81/80 ≈ 21.5¢) apparaît.
+
+### 4 opérations distinctes
+
+| Opération | Préserve | Fonctionne dans | Usage |
+|-----------|----------|-----------------|-------|
+| **Tonic shift** — changer la fréquence de référence | Tous les intervalles (ratios invariants) | Tout | Changer Sa en raga, qarar en maqam, tonique en western |
+| **Degree shift** — décaler de N degrés dans la gamme | Le contour mélodique | Tout (intervalles changent) | "Joue cette phrase en partant du 5ème degré" |
+| **Grid shift** — décaler de N steps dans le tempérament | Les intervalles exacts | Tempéraments égaux uniquement | Transposition chromatique classique |
+| **Freq ratio** — multiplier toutes les fréquences par R | Tous les intervalles | Synthèse/CV uniquement | Pitch shift continu, notes quittent la grille |
+
+### Ce que font les traditions
+
+#### Inde (22 shruti)
+Changer Sa = tonic shift. Le raga est défini par des ratios depuis Sa → tout se re-dérive. Pas de "transposition" au sens western. Chaque raga est une entité unique définie par ses intervalles relatifs à Sa, ses phrases caractéristiques (pakad) et son esthétique (rasa). Changer Sa change la hauteur absolue, pas le raga.
+
+Les shrutis ne forment pas une grille uniforme → grid shift impossible. Sur l'harmonium (12-TET), la subtilité des shrutis est perdue — c'est un problème connu et critiqué par les puristes.
+
+#### Arabe (maqam)
+Changer le qarar (fondamentale). Les "quarts de ton" ne sont pas exactement 50¢ — ils varient par tradition régionale (Égypte ≈ 150¢, Syrie ≈ 170¢, Turquie = comma holdrien). Le système turc à 53 commas (53-TET) permet une transposition exacte et approche très bien l'intonation juste.
+
+La modulation entre maqamat est l'art de recombiner des ajnas (tétracordes) sur différentes toniques — pas une transposition mais un changement de cadre modal.
+
+#### Gamelan
+Pas de transposition au sens occidental. Chaque set de gamelan a son propre accordage unique. L'"octave" est étirée (1210-1230¢). On change de pathet (cadre modal), pas de tonalité. La structure (contour mélodique, rythme) transfère entre gamelans, pas le son exact.
+
+#### Baroque (pré-tempérament égal)
+Transposition limitée aux "bonnes tonalités" du tempérament. En meantone 1/4 comma : 0-3 dièses/bémols OK, au-delà la quinte du loup apparaît. Les tempéraments bien-tempérés (Werckmeister, Kirnberger) rendent toutes les tonalités jouables mais chacune a une couleur distincte — c'est le propos du Clavier bien tempéré de Bach.
+
+#### Bohlen-Pierce
+Transposition exacte car c'est un tempérament égal (13 notes par tritave 3:1). Mais transposer entre BP et un système à octave est impossible — les cadres d'intervalles sont incompatibles.
+
+### Recommandation pour BPscript
+
+#### Court terme (non prioritaire)
+Le `(transpose:N)` actuel n'est pas implémenté côté audio. Laisser en backlog.
+
+#### Moyen terme — 3 opérations
+1. **`(tonic:freq)` ou `(tonic:ratio)`** — changer la référence du resolver. Universel. Correspond au changement de Sa/qarar/tonique.
+2. **`(degree:N)`** — transposition diatonique. Universel mais change les intervalles.
+3. **`(transpose:N)`** — grid shift en steps du tempérament. Émettre un warning si le tempérament n'est pas égal.
+
+#### L'insight clé
+Le **tonic shift + table de ratios invariante** est l'opération universelle. C'est ce que font toutes les traditions : définir les intervalles par rapport à une référence mobile. Le "problème" de la transposition dans les tempéraments non-égaux est un problème d'**instruments à hauteur fixe**, pas de théorie musicale. Les voix, les cordes et la synthèse électronique peuvent tous transposer par tonic shift sans perte.
+
+### Sources
+- Barbour, J.M. "Tuning and Temperament: A Historical Survey" (1951)
+- Touma, H.H. "The Music of the Arabs" (1996)
+- Jairazbhoy, N.A. "The Rags of North Indian Music" (1971)
+- Milne, Sethares, Plamondon. "Tuning Continua and Keyboard Layouts" (2007) — Dynamic Tonality
+- Erlich, Paul. "A Middle Path" (2006) — regular temperament theory
 
 ---
 

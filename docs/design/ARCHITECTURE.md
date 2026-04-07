@@ -178,7 +178,7 @@ Source .bps
    │  Traduit : BPscript → BP3
    │    - Noms de notes → noms BP3-safe (bol prefix)
    │    - [] qualifiers → instructions BP3 (/N, _tempo, mode, etc.)
-   │    - () runtime → _script(CTn) start/end
+   │    - () runtime → _script(CT n) start/end
    │    - Guards [X==N] → /X=N/
    │    - Flags [X=N] → /X=N/
    │    - Captures ?n → métavariables BP3
@@ -252,7 +252,7 @@ Pour chaque token à l'instant T :
   │     └→ actor = terminalActorMap[terminal]
   │
   ├─ 3. Résoudre les contrôles (controlTable)
-  │     │  Si le token a des _script(CTn), consulter la controlTable
+  │     │  Si le token a des _script(CT n), consulter la controlTable
   │     └→ controlState = { vel, pan, wave, filter, transpose, scale... }
   │
   ├─ 4. Résoudre le pitch (si l'acteur a un tuning)
@@ -277,7 +277,7 @@ Pour chaque token à l'instant T :
 
 ### Transposition — chemin complet
 
-La transposition est un contrôle runtime (`_script(CTn)`), pas une opération
+La transposition est un contrôle runtime (`_script(CT n)`), pas une opération
 moteur. C'est une **opération symbolique sur l'alphabet**, pas un calcul de
 fréquence. Elle remplace un symbole par un autre avant la résolution pitch.
 
@@ -288,10 +288,10 @@ ensuite le nouveau symbole normalement à travers les 5 couches.
 ```
 BPscript :  C(transpose:2) D E
 
-Encodeur :  _script(CT0) C D E
+Encodeur :  _script(CT 0) C D E
             controlTable[0] = { type:"transpose", value:2 }
 
-BP3 émet :  _script(CT0)(t=0) C(t=0) D(t=1000) E(t=2000)
+BP3 émet :  _script(CT 0)(t=0) C(t=0) D(t=1000) E(t=2000)
                │
                ▼
 Dispatcher étape 3 (contrôles) :
@@ -480,7 +480,7 @@ Le compilateur produit ce format natif BP3. Inchangé.
 [
   { terminal: "bolSa",      start: 0,    duration: 1000 },
   { terminal: "1%dha",      start: 1000, duration: 1000 },  // étiquette REPL
-  { terminal: "_script(CT0)", start: 0,  duration: 0    },
+  { terminal: "_script(CT 0)", start: 0,  duration: 0    },
   ...
 ]
 
@@ -488,13 +488,13 @@ Le compilateur produit ce format natif BP3. Inchangé.
 [
   { terminal: "bolSa",      start: 0,    duration: 1000 },
   { terminal: "ta",          start: 1000, duration: 1000 },  // résolu
-  { terminal: "_script(CT0)", start: 0,  duration: 0    },
+  { terminal: "_script(CT 0)", start: 0,  duration: 0    },
   ...
 ]
 ```
 
 Tableau d'événements horodatés. Les étiquettes `N%xxx` sont résolues par le
-REPL avant le dispatcher. Les `_script(CTn)` sont des contrôles opaques.
+REPL avant le dispatcher. Les `_script(CT n)` sont des contrôles opaques.
 
 ### Interface 3 : Dispatcher → Transport (à adapter)
 

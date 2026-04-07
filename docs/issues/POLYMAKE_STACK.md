@@ -1,7 +1,7 @@
 # WASM Issue — PolyMake stack overflow sur polymetries imbriquees
 
-Date: 2026-03-24
-Statut: non resolu, documente pour reference
+Date: 2026-03-24 (maj 2026-04-07)
+Statut: non resolu — workaround en place (texte sans timings)
 
 ## Symptome
 

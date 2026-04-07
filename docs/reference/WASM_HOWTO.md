@@ -26,18 +26,15 @@ Artefacts de build : `dist/bp3.js` + `dist/bp3.wasm` + `dist/bp3.data`
 # Prerequis : Emscripten SDK
 source /mnt/d/Claude/emsdk/emsdk_env.sh
 
-# Build WASM depuis les sources BP3
-cd /mnt/d/Claude/BPscript
-make -f wasm/Makefile.emscripten \
-  BP3_SRC=/mnt/d/Claude/bp3-engine/csrc/bp3 \
-  WASM_SRC=wasm \
-  BUILD_DIR=dist \
-  clean all
+# OBLIGATOIRE : utiliser build.sh, JAMAIS make directement
+cd bp3-engine
+./build.sh all                                    # compile 3 targets (linux, windows, wasm)
+./build.sh wasm                                   # compile WASM uniquement
+./build.sh all --archive --version=v3.3.19-wasm.9 # compile + archive versionnee
 
-# Build natif (pour comparaison)
-cd /mnt/d/Claude/bp3-engine
-make clean && make
-# Produit: bp3 (Linux ELF)
+# Artefacts : dist/bp3.js + dist/bp3.wasm + dist/bp3.data
+# Archives : bp3-engine/builds/{version}/
+# Derniere version : bp3-engine/builds/LAST
 ```
 
 ---
@@ -213,9 +210,60 @@ var getResult = M.cwrap('bp3_get_result', 'string', []);
 var text = getResult(); // "C4 D4 E4\n"
 ```
 
+#### `bp3_set_timed_tokens_verbose(v) → void`
+Controle le niveau de detail des timed tokens.
+
+| Niveau | Contenu |
+|--------|---------|
+| 0 (defaut) | Sounding tokens uniquement (notes, terminaux) |
+| 1 | + controles (`_vel`, `_tempo`, `_script`...) + silences (`-`) |
+| 2 | + marqueurs structurels (`{`, `}`, `,`) avec timing polymétrique |
+
+```javascript
+var setVerbose = M.cwrap('bp3_set_timed_tokens_verbose', 'void', ['number']);
+setVerbose(2); // avant produce()
+```
+
+**verbose=2 — Structure polymetrique** :
+
+Les marqueurs `{`, `}`, `,` sont emis comme des pseudo-tokens avec le timing
+du groupe polymetrique :
+
+| Token | start | end |
+|-------|-------|-----|
+| `{` | start du premier enfant | end du dernier enfant |
+| `,` | start de la voix suivante | end du parent `{` |
+| `}` | = `{` start | = `{` end |
+
+Exemple : `{C4 -,E4 G4,A5}` → `_mm(60) _striated`
+```json
+[
+  {"token":"{", "start":0, "end":2000},
+  {"token":"C4","start":0, "end":1000},
+  {"token":"-", "start":1000,"end":2000},
+  {"token":",", "start":0, "end":2000},
+  {"token":"E4","start":0, "end":1000},
+  {"token":"G4","start":1000,"end":2000},
+  {"token":",", "start":0, "end":2000},
+  {"token":"A5","start":0, "end":2000},
+  {"token":"}", "start":0, "end":2000}
+]
+```
+
+Le JS peut reconstruire l'arbre : profondeur `{`/`}` = hierarchie, `,` = separateur de voix.
+
+#### `bp3_set_write_midi(enable) → void`
+Active/desactive la sortie MIDI. Desactiver pour les grammaires textuelles.
+
+```javascript
+var setWriteMidi = M.cwrap('bp3_set_write_midi', 'void', ['number']);
+setWriteMidi(0); // desactiver MIDI pour grammaires TEXT
+```
+
 #### `bp3_get_timed_tokens() → string`
 Retourne un JSON avec les tokens et leurs timings (start/end en ms).
 Correle le texte de sortie avec les donnees de p_Instance (TimeSet).
+Le contenu depend du niveau verbose (voir `bp3_set_timed_tokens_verbose`).
 
 ```javascript
 var getTT = M.cwrap('bp3_get_timed_tokens', 'string', []);
@@ -232,6 +280,7 @@ Filtrage recommande :
 ```javascript
 var sounding = tokens.filter(t =>
   t.token !== '-' && t.token !== '&' && !t.token.startsWith('_')
+  && t.token !== '{' && t.token !== '}' && t.token !== ','
 );
 ```
 

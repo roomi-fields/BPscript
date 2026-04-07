@@ -33,20 +33,32 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - `lib/` — JSON libraries (controls, alphabet, tuning, filter, routing, etc.)
 - `web/index.html` — BPscript web interface (BPscript tab auto-compiles to Grammar tab)
 - `dist/` — BP3 WASM build (bp3.js, bp3.wasm, bp3.data)
-- `docs/` — Design documents
-  - `BPSCRIPT_VISION.md` — Project overview and document index
-  - `DESIGN_LANGUAGE.md` — Language specification (symbols, types, declarations, macros, flags, templates)
-  - `DESIGN_GRAMMAR.md` — BPscript → BP3 grammar mapping (rules, modes, subgrammars)
-  - `BPSCRIPT_EBNF.md` — Formal grammar (EBNF)
-  - `BPSCRIPT_AST.md` — AST node definitions
-  - `DESIGN_ARCHITECTURE.md` — Technical architecture (pipeline, actors, transports, REPL)
-  - `DESIGN_ACTOR.md` — Actor concept (binding alphabet+tuning+octaves+transport)
-  - `DESIGN_PITCH.md` — Pitch resolution (5 layers: alphabet, octaves, temperament, tuning, resolver)
-  - `DESIGN_CV.md` — CV/signal objects (ADSR, LFO, ramp)
-  - `DESIGN_SOUNDS.md` — Sounds system (spec < CT < CV cascading)
-  - `DESIGN_EFFECTS.md` — Effects and signal processing
-  - `DESIGN_REPL.md` — REPL adapters and backtick architecture
-  - `DESIGN_INTERFACES_BP3.md` — BP3 WASM interface (in/out specification)
+- `docs/` — Documentation (5 dossiers par type)
+  - `spec/` — Spécifications normatives du langage
+    - `LANGUAGE.md` — Spécification complète (vision + langage + compilation BP3)
+    - `EBNF.md` — Grammaire formelle (EBNF)
+    - `AST.md` — Nœuds AST
+  - `design/` — Architecture et design technique
+    - `ARCHITECTURE.md` — Pipeline compile/runtime, dispatcher, transports
+    - `PITCH.md` — Résolution pitch 6 couches (actor → alphabet → octaves → temperament → tuning → resolver)
+    - `SOUNDS.md` — Résolution terminaux unifiée (spec < CT < CV cascading)
+    - `CV.md` — CV/signal objects (ADSR, LFO, ramp)
+    - `EFFECTS.md` — Effets et signal processing
+    - `HOMOMORPHISMS.md` — Étiquetage post-dérivation
+    - `REPL.md` — REPL adapters et backticks
+    - `INTERFACES_BP3.md` — Interface WASM BP3 (in/out)
+    - `TEMPORAL_DEFORMATION.md` — Constraint solver, déformation temps réel
+  - `plan/` — Roadmaps
+    - `UI_WEB.md` — Plan UI web (contrôles, MIDI, timeline, mapping)
+    - `EDITOR.md` — Design éditeur CodeMirror
+  - `reference/` — Guides techniques
+    - `WASM_HOWTO.md` — Build et usage WASM
+    - `NATIVE_HOWTO.md` — Build et usage natif
+    - `BP3_FILE_FORMATS.md` — Formats fichiers BP3
+    - `HO_FORMAT.md` — Format homomorphismes
+  - `issues/` — Problèmes ouverts
+    - `POLYMAKE_STACK.md` — Stack overflow polymétrie imbriquée
+    - `RNG_PORTABLE.md` — Portabilité RNG MSVC/glibc
 
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/`:
@@ -81,7 +93,7 @@ Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + f
 - Silence: `-` in both BPscript and BP3
 - Tied notes: `~` in BPscript → `&` in BP3
 - Flags: `[X==N]` → `/X=N/` (guard), `[X=N]` → `/X=N/` (mutation)
-- Flat alphabet: no OCT, all terminals as custom bols. Notes prefixed `bol` (C4→bolC4) for BP3 compat.
+- Flat alphabet: no OCT, all terminals as silent sound objects (C4, sa6, etc.) for BP3 compat.
 - Block separator: `-----` between subgrammars with different modes
 
 ### Sessions parallèles — Rôles par nom de session

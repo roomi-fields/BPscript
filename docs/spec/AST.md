@@ -366,12 +366,12 @@ RuntimePair {
 ```
 
 `()` est **toujours suffixe** (jamais en préfixe). La portée est déduite de la position :
-- **symbole** : `Sa(vel:120)` → `Sa _script(CT0)` — attaché au `Symbol` node
-- **règle** : `S -> C4 D4 (vel:80)` → `_script(CT1) C4 D4` — dans `Rule.runtimeQualifier`
-- **instantané** : `{!(chan:1) C8 -, !(chan:2) C7 C7}` → `{_script(CT2) C8 -, _script(CT3) C7 C7}` — via `InstantControl` dans le flux
-- **groupe** : `{A B}(filter:lp)` → `_script(CT4_start) {A B} _script(CT4_end)` — dans `Polymetric.runtimeQualifier`
+- **symbole** : `Sa(vel:120)` → `Sa _script(CT 0)` — attaché au `Symbol` node
+- **règle** : `S -> C4 D4 (vel:80)` → `_script(CT 1) C4 D4` — dans `Rule.runtimeQualifier`
+- **instantané** : `{!(chan:1) C8 -, !(chan:2) C7 C7}` → `{_script(CT 2) C8 -, _script(CT 3) C7 C7}` — via `InstantControl` dans le flux
+- **groupe** : `{A B}(filter:lp)` → `_script(CT 4_start) {A B} _script(CT 4_end)` — dans `Polymetric.runtimeQualifier`
 
-Le transpileur maintient une table de mapping `CTn → { scope, params }` passée au dispatcher.
+Le transpileur maintient une table de mapping `CT n → { scope, params }` passée au dispatcher.
 
 ---
 
@@ -538,13 +538,13 @@ InstantControl {
 }
 ```
 
-`!(vel:80)` → `_script(CTn)` en BP3. `![retro]` → `_retro` en BP3.
+`!(vel:80)` → `_script(CT n)` en BP3. `![retro]` → `_retro` en BP3.
 Événement instantané (zéro durée) positionné explicitement dans le flux temporel.
 La position dans le source BPscript = la position dans la sortie BP3.
 
 Exemples :
-- `{!(chan:1) C8 - - -}` → `{_script(CT0) C8 - - -}`
-- `{C8 - - - !(chan:1)}` → `{C8 - - - _script(CT0)}`
+- `{!(chan:1) C8 - - -}` → `{_script(CT 0) C8 - - -}`
+- `{C8 - - - !(chan:1)}` → `{C8 - - - _script(CT 0)}`
 - `![retro] A B` → `_retro A B`
 
 ### `Variable`

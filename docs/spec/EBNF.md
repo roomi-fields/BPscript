@@ -396,11 +396,11 @@ RUNTIME_KEY  = (* nom présent dans lib/controls.json section "runtime" :
                   mod, pitchbend, volume, etc. *) ;
 ```
 
-Compilé en `_script(CTn)` pour BP3 — le dispatcher interprète au playback.
+Compilé en `_script(CT n)` pour BP3 — le dispatcher interprète au playback.
 
 ```
-(vel:80)               → _script(CT0) avec {vel: 80}
-(wave:sawtooth, vel:100, filterQ:8) → _script(CT0) avec {wave:"sawtooth", vel:100, filterQ:8}
+(vel:80)               → _script(CT 0) avec {vel: 80}
+(wave:sawtooth, vel:100, filterQ:8) → _script(CT 0) avec {wave:"sawtooth", vel:100, filterQ:8}
 ```
 
 #### Position — règles d'espacement
@@ -427,24 +427,24 @@ Mêmes règles pour `()` — mais `()` est **toujours suffixe** (collé à gauch
 
 Pour positionner un contrôle **librement dans le flux** (entre deux éléments),
 utiliser `!()` ou `![]` :
-- `A !(vel:80) B` → `A _script(CT0) B` — contrôle instantané positionné entre A et B
+- `A !(vel:80) B` → `A _script(CT 0) B` — contrôle instantané positionné entre A et B
 - `{![retro] A B}` → `{_retro A B}` — contrôle engine en tête de voix
-- `{!(chan:1) C8 - - -, !(chan:2) - C7}` → `{_script(CT0) C8 - - -, _script(CT1) - C7}`
+- `{!(chan:1) C8 - - -, !(chan:2) - C7}` → `{_script(CT 0) C8 - - -, _script(CT 1) - C7}`
 
 Deux portées pour les suffixes de règle :
 
 - **Règle** : `S -> C4 D4 E4 (vel:80)` — `()` en fin de RHS, s'applique à toute la règle.
-  Compilé en : `_script(CT0) C4 D4 E4`
+  Compilé en : `_script(CT 0) C4 D4 E4`
 
 - **Groupe** : `{A B}(vel:100)` — `()` collé au `}`, s'applique au groupe.
-  Compilé en : `_script(CT0) {A B}`
+  Compilé en : `_script(CT 0) {A B}`
 
 **Contrôles instantanés dans le RHS** : quand un non-terminal se résout en purs
 contrôles (aucun élément temporel), utiliser `!()` pour les positionner dans le flux :
 
 ```bpscript
-Pull0 -> !(pitchbend:0)                                          // → _script(CTn)
-StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)        // → _script(CT0) _script(CT1) _script(CT2)
+Pull0 -> !(pitchbend:0)                                          // → _script(CT n)
+StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)        // → _script(CT 0) _script(CT 1) _script(CT 2)
 ```
 
 Ce pattern existe dans les grammaires à couches (vina, vina2, vina3) où les
@@ -504,7 +504,7 @@ instant = "!" , instant_target ;
 
 instant_target = symbol                              (* trigger : !dha → <<dha>> *)
                | symbol_call                         (* trigger avec params : !dha(vel:120) *)
-               | runtime_qualifier                   (* contrôle runtime : !(transpose:2) → _script(CTn) *)
+               | runtime_qualifier                   (* contrôle runtime : !(transpose:2) → _script(CT n) *)
                | engine_qualifier                    (* contrôle engine : ![retro] → _retro *)
                ;
 ```
@@ -519,16 +519,16 @@ Trois usages :
   Compilé en `<<f>>`.
 - **Standalone contrôle** (`!(transpose:2)`, `![retro]`) : instruction instantanée
   positionnée dans le flux. La position dans la séquence détermine le moment d'application.
-  Compilé en `_script(CTn)` ou `_retro` etc.
+  Compilé en `_script(CT n)` ou `_retro` etc.
 
 Chaînable : `Sa!dha!spotlight`.
 
 Exemples avec contrôles :
 ```
-{!(transpose:2) D}        → {_script(CT0) D}       // préfixe dans la voix
-{D !(transpose:2)}        → {D _script(CT0)}       // suffixe dans la voix
+{!(transpose:2) D}        → {_script(CT 0) D}       // préfixe dans la voix
+{D !(transpose:2)}        → {D _script(CT 0)}       // suffixe dans la voix
 {![retro] A B}             → {_retro A B}           // engine prefix
-Sa !(vel:80) Re            → Sa _script(CT0) Re     // entre deux symboles
+Sa !(vel:80) Re            → Sa _script(CT 0) Re     // entre deux symboles
 ```
 
 Ceci remplace le mécanisme de "portée voix" : au lieu de transformer silencieusement
@@ -546,7 +546,7 @@ Utilisé quand un non-terminal se résout en pur déclenchement.
 
 Note : `!symbol` et `!(control)` / `![control]` sont tous des formes de `!` standalone.
 La distinction est que `!symbol` produit un out-time object `<<symbol>>` tandis que
-`!(key:value)` et `![key]` produisent des tokens de contrôle (`_script(CTn)`, `_retro`, etc.).
+`!(key:value)` et `![key]` produisent des tokens de contrôle (`_script(CT n)`, `_retro`, etc.).
 
 ### 4.6 Trigger entrant (`<!`)
 
@@ -781,6 +781,12 @@ transpose                      → transposition globale
 chan                            → canal MIDI global
 vel                            → vélocité globale
 ins                            → programme MIDI global
+improvize                      → mode improvisation continue (Improvize=1)
+allitems                       → produire tous les items (AllItems=1)
+maxitems:N                     → nombre max d'items produits (0 = illimité)
+quantize:N / quantization:N    → quantization en ms (défaut 10)
+qclock:N                       → Qclock (dénominateur période métronome)
+seed:N                         → graine RNG (0 = aléatoire)
 tuning:SCALE                   → temperament from tuning.json (e.g. @tuning:Cmaj)
 tuning:N                       → reference pitch in Hz (e.g. @tuning:442)
 filter                         → CV/signal objects library
@@ -828,13 +834,13 @@ lambda   → chaîne vide (efface le non-terminal)
 | `[X-N]` | `/X-N/` en LHS | guard test + mutation |
 | `[X=N]` | `/X=N/` en RHS | mutation flag |
 | `[X]` | `/X/` en RHS | flag set/ref (nu) |
-| `C4(vel:120)` | `C4 _script(CT0)` | runtime suffixe (symbole) |
-| `S -> C4 D4 E4 (vel:80)` | `_script(CT0) C4 D4 E4` | runtime suffixe (règle) |
-| `{!(vel:80) A B, !(vel:60) C D}` | `{_script(CT0) A B, _script(CT1) C D}` | contrôle instantané dans voix |
-| `{A B !(vel:80), C D !(vel:60)}` | `{A B _script(CT0), C D _script(CT1)}` | contrôle instantané fin de voix |
-| `!(transpose:2)` | `_script(CTn)` | contrôle runtime instantané |
+| `C4(vel:120)` | `C4 _script(CT 0)` | runtime suffixe (symbole) |
+| `S -> C4 D4 E4 (vel:80)` | `_script(CT 0) C4 D4 E4` | runtime suffixe (règle) |
+| `{!(vel:80) A B, !(vel:60) C D}` | `{_script(CT 0) A B, _script(CT 1) C D}` | contrôle instantané dans voix |
+| `{A B !(vel:80), C D !(vel:60)}` | `{A B _script(CT 0), C D _script(CT 1)}` | contrôle instantané fin de voix |
+| `!(transpose:2)` | `_script(CT n)` | contrôle runtime instantané |
 | `![retro]` | `_retro` | contrôle engine instantané |
-| `{A B}(vel:100)` | `_script(CT0_s) {A B} _script(CT0_e)` | runtime suffixe (groupe) |
+| `{A B}(vel:100)` | `_script(CT 0_s) {A B} _script(CT 0_e)` | runtime suffixe (groupe) |
 | `@mode:random` | `RND` en mode_line | mode du bloc |
 | `[scan:left]` | `LEFT` dans la règle | mode dérivation |
 | `[weight:50-12]` | `<50-12>` | poids décroissant |
@@ -855,7 +861,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `A(script: MIDI send Continue)` | `A _script(MIDI send Continue)` | espaces préservés (script) |
 | `H(value: slide 0)` | `H _value(slide,0)` | valeur brute 2 args |
 | `X ->` (RHS vide) | `X -->` | production epsilon (sans lambda) |
-| `A(transpose:-3)` | `A _script(CT0)` | runtime valeur négative |
+| `A(transpose:-3)` | `A _script(CT 0)` | runtime valeur négative |
 | `[Ideas]` (guard) | `/Ideas/` | bare flag guard (test non-zéro) |
 | `[meter:4+4/6]` | `4+4/6` avant RHS | time signature inline |
 | `@templates` | `TEMPLATES:` | section templates (optionnelle) |

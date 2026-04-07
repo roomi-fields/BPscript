@@ -93,7 +93,7 @@ gram#N[M] LHS --> RHS
 - Prolongation : `_` (étend le terminal précédent)
 - Fractions : `3/4` (= silence de durée 3/4 beat)
 - Polymétrie : `{voix1, voix2}`
-- Contrôles BP3 : `_tempo(2)`, `_mm(120)`, `_scale(...)`, `_script(CTn)`
+- Contrôles BP3 : `_tempo(2)`, `_mm(120)`, `_scale(...)`, `_script(CT n)`
 - Out-time objects : `<<symbol>>` (durée 0, hors-temps)
 
 **Contrôles traduits par le transpileur** :
@@ -104,7 +104,7 @@ gram#N[M] LHS --> RHS
 | `[weight:50]` | `<50>` |
 | `[/2]` | `/2` (opérateur temporel) |
 | `@tempo:120` ou `@mm:120` | `_mm(120)` |
-| `(vel:100)` | `_script(CTn)` (passé au dispatcher) |
+| `(vel:100)` | `_script(CT n)` (passé au dispatcher) |
 
 ### 4. Settings — `bp3_load_settings(json)` ou `bp3_load_settings_params(...)`
 
@@ -179,7 +179,7 @@ const tokens = JSON.parse(getTimedTokens());
 **Format JSON** :
 ```json
 [
-  {"token": "_script(CT0)", "start": 0,    "end": 0},
+  {"token": "_script(CT 0)", "start": 0,    "end": 0},
   {"token": "C4",           "start": 0,    "end": 1000},
   {"token": "-",            "start": 1000, "end": 2000},
   {"token": "D4",           "start": 2000, "end": 3000},
@@ -193,7 +193,7 @@ const tokens = JSON.parse(getTimedTokens());
 |------|-------------------|---------|
 | Terminal (note, CV, drum) | `start < end` (durée = beat) | `C4:0-1000` |
 | Silence | `start < end` (durée du gap) | `-:1000-2000` |
-| Contrôle (`_script`, `_tempo`) | `start == end` (instantané) | `_script(CT0):0-0` |
+| Contrôle (`_script`, `_tempo`) | `start == end` (instantané) | `_script(CT 0):0-0` |
 | Out-time object (`<<x>>`) | `start == end` | `?:0-0` |
 | Variable préservée | `start < end` (durée = beat) | `Truc:0-1000` |
 
@@ -204,7 +204,7 @@ const tokens = JSON.parse(getTimedTokens());
 
 **Silences** : détectés comme des gaps temporels entre deux objets consécutifs. Les doubles silences (`- -`) sont fusionnés en un seul gap.
 
-**Contrôles `_script(CTn)`** : le transpileur maintient une table de mapping `CTn → { scope, params }`. Le dispatcher combine les timestamps avec cette table.
+**Contrôles `_script(CT n)`** : le transpileur maintient une table de mapping `CT n → { scope, params }`. Le dispatcher combine les timestamps avec cette table.
 
 ### 2. Texte — `bp3_get_result()`
 

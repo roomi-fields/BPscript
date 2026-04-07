@@ -171,7 +171,7 @@ Scène chargée
   │
   └─ 5. Playback (boucle dispatcher)
         │
-        │  Token "bolSa" + _script(CT0) {vel: `rrand(40,127)`}
+        │  Token "bolSa" + _script(CT 0) {vel: `rrand(40,127)`}
         │    → getValue("rrand(40,127)") via session sclang
         │    → timeout 100ms
         │    → response "87"
