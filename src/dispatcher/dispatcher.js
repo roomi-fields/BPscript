@@ -35,6 +35,9 @@ export class Dispatcher {
     this.controlState = {};
     this._controlStack = []; // for scoped () controls with start/end pairs
 
+    // Transport routing: symbol name → transport name (e.g. 'Sa' → 'midi')
+    this._transportMap = {};  // set via setTransportMap()
+
     // CV state
     this._cvTable = {};    // CV0 → { name, target, transport, lib, objectType, args, code }
     this._cvNames = {};    // CV instance name → CV id
@@ -45,6 +48,15 @@ export class Dispatcher {
    */
   addTransport(name, transport) {
     this.transports[name] = transport;
+  }
+
+  /**
+   * Set transport routing map: symbol → transport name.
+   * Symbols not in the map use the 'default' transport.
+   * @param {Object} map - { 'Sa': 'midi', 'Re': 'midi', ... }
+   */
+  setTransportMap(map) {
+    this._transportMap = map || {};
   }
 
   /**
@@ -217,7 +229,10 @@ export class Dispatcher {
           }
         }
       } else if (!evt.isSilence && !evt.isProlongation && evt.durSec > 0) {
-        const transport = this.transports['default']
+        // Route to transport: check transportMap first, then fall back to 'default'
+        const mappedName = this._transportMap[evt.token];
+        const transport = (mappedName && this.transports[mappedName])
+          || this.transports['default']
           || Object.values(this.transports)[0];
 
         if (transport) {

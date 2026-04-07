@@ -473,6 +473,8 @@ export class Resolver {
       noteName,
       alteration,
       register,
+      step,
+      degreeIndex,
     };
   }
 
