@@ -541,25 +541,30 @@ function encodeRhsElement(el, alphabet, controlMap) {
   let result = raw;
   // Legacy el.tempoOp from polymetric parser
   if (el.tempoOp) {
-    result = `${tempoOpToBP3(el.tempoOp)} ${result}`;
+    const pair = tempoOpToPair(el.tempoOp);
+    result = `${pair.enter} ${result} ${pair.exit}`;
   }
 
   // SUFFIX qualifiers: A[weight:50], A(vel:80) — always after the element
   // [] and () are ALWAYS suffix in BPscript. Use ![] or !() for free positioning.
-  // Exception: tempoOp (/N, *N) are BP3 PREFIX operators → prepend to result
-  const prefixTokens = [];
+  // tempoOp (/N, *N) → _tempo(x/y) bracket: enter before, exit after
+  const enterTokens = [];
+  const exitTokens = [];
   const suffixTokens = [];
   if (el.suffixQualifiers) {
     for (const q of el.suffixQualifiers) {
       if (q.tempoOp) {
-        prefixTokens.push(tempoOpToBP3(q.tempoOp));
+        const pair = tempoOpToPair(q.tempoOp);
+        enterTokens.push(pair.enter);
+        exitTokens.push(pair.exit);
       }
       encodeQualifierTokens(q, controlMap, suffixTokens);
     }
   }
 
-  if (prefixTokens.length > 0) result = prefixTokens.join(' ') + ' ' + result;
+  if (enterTokens.length > 0) result = enterTokens.join(' ') + ' ' + result;
   if (suffixTokens.length > 0) result = result + ' ' + suffixTokens.join(' ');
+  if (exitTokens.length > 0) result = result + ' ' + exitTokens.join(' ');
   return result;
 }
 
@@ -668,10 +673,11 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
       }
       let result = `{${inner}}`;
-      // Check for tempo operator → prefix before braces
+      // Check for tempo operator → _tempo bracket around braces
       const tempoOp = getTempoOp(el.qualifiers);
       if (tempoOp) {
-        result = `${tempoOp} ${result}`;
+        const pair = tempoOpToPair(tempoOp);
+        result = `${pair.enter} ${result} ${pair.exit}`;
       }
       // Runtime qualifier on group: {A B}(vel:100) → _script(CTn) {A B} _script(CTn_e)
       if (el.runtimeQualifier) {
@@ -759,7 +765,8 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (q.type === 'Qualifier') {
         // Engine qualifier: ![retro] → _retro, ![rotate:2] → _rotate(2)
         if (q.tempoOp) {
-          parts.push(tempoOpToBP3(q.tempoOp));
+          // Instant control: free-standing tempo change in the flow (no bracket)
+          parts.push(tempoOpToBP3Enter(q.tempoOp));
         }
         const runtimeAssignments = {};
         for (const p of q.pairs) {
@@ -904,16 +911,54 @@ function getQualDecrement(qualifiers, key) {
   return null;
 }
 
-// BPscript * → BP3 \ (multiply duration = slow down)
-// BPscript / → BP3 / (divide duration = speed up)
-function tempoOpToBP3(op) {
-  const bp3op = op.operator === '*' ? '\\' : op.operator;
-  return `${bp3op}${op.value}`;
+// Convert a BPscript TempoOp to a _tempo(x/y) pair [enter, exit]
+// BPscript / = speed up (divide duration): [/2] → _tempo(2/1) ... _tempo(1/2)
+// BPscript * = slow down (multiply duration): [*2] → _tempo(1/2) ... _tempo(2/1)
+// Values: integer (2), fraction (3/2), decimal (1.5)
+// _tempo accepts decimals natively
+function tempoOpToPair(op) {
+  const v = op.value;
+  let num, den;
+  if (typeof v === 'string' && v.includes('/')) {
+    const parts = v.split('/');
+    num = Number(parts[0]);
+    den = Number(parts[1]);
+  } else {
+    num = Number(v);
+    den = 1;
+  }
+  // BP3 _tempo requires integer fractions — rationalize any floats
+  const r = _toIntFraction(num, den);
+  num = r[0]; den = r[1];
+  if (op.operator === '/') {
+    return { enter: `_tempo(${num}/${den})`, exit: `_tempo(${den}/${num})` };
+  } else {
+    return { enter: `_tempo(${den}/${num})`, exit: `_tempo(${num}/${den})` };
+  }
+}
+
+// Convert possibly-float num/den to [intNum, intDen]
+function _toIntFraction(num, den) {
+  if (Number.isInteger(num) && Number.isInteger(den)) return [num, den];
+  let scale = 1;
+  while (scale < 1e6 && (!Number.isInteger(Math.round(num * scale * 1e9) / 1e9) || !Number.isInteger(Math.round(den * scale * 1e9) / 1e9))) {
+    scale *= 10;
+  }
+  let n = Math.round(num * scale);
+  let d = Math.round(den * scale);
+  const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+  const g = gcd(Math.abs(n), Math.abs(d));
+  return [n / g, d / g];
+}
+
+// Legacy: for backward compat, still used for rule-level prefix (no reset needed)
+function tempoOpToBP3Enter(op) {
+  return tempoOpToPair(op).enter;
 }
 
 function getTempoOp(qualifiers) {
   for (const q of qualifiers) {
-    if (q.tempoOp) return tempoOpToBP3(q.tempoOp);
+    if (q.tempoOp) return q.tempoOp;
   }
   return null;
 }

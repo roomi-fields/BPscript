@@ -1044,10 +1044,21 @@ function parse(tokens) {
       return { type: 'Period' };
     }
 
+    // Labeled polymetric: label:{...}
+    if (at(T.IDENT) && peek(1).type === T.COLON && peek(2).type === T.LBRACE) {
+      const label = advance().value;  // consume IDENT
+      advance();                       // consume COLON
+      if (hasMatchingBrace()) {
+        return parsePolymetric(label);
+      }
+      // Unbalanced { after label: — emit label as symbol, colon was consumed
+      return { type: 'Symbol', name: label, line: tok.line };
+    }
+
     // Polymetric { ... } or unbalanced brace (embedding pattern)
     if (at(T.LBRACE)) {
       if (hasMatchingBrace()) {
-        return parsePolymetric();
+        return parsePolymetric(null);
       }
       // Unbalanced { — emit as raw token for BP3 embedding patterns
       advance();
@@ -1362,7 +1373,7 @@ function parse(tokens) {
     return false;
   }
 
-  function parsePolymetric() {
+  function parsePolymetric(label) {
     expect(T.LBRACE);
     const voices = [];
     let currentVoice = [];
@@ -1416,7 +1427,7 @@ function parse(tokens) {
       runtimeQualifier = parseRuntimeQualifier();
     }
 
-    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier };
+    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null };
   }
 
   function isPolymetricQualifier() {
@@ -1548,7 +1559,7 @@ function parse(tokens) {
       } else if (at(T.FLOAT)) {
         value = Number(advance().value);
       } else {
-        throw new ParseError('Expected number after tempo operator', current());
+        throw new ParseError('Expected number or fraction (e.g. /2, *3/2, /1.5) after tempo operator', current());
       }
       // If followed by , → mixed qualifier [/5, mode:random, transpose:-7]
       const tempoOp = { type: 'TempoOp', operator, value };

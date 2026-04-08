@@ -1,5 +1,12 @@
 [
   {
+    "id": "test-nested-poly",
+    "title": "Test Nested Poly",
+    "category": "test",
+    "description": "Polymétrie 3 voix — test sélection + constraint solver",
+    "file": "test-nested-poly.bps"
+  },
+  {
     "id": "tuto-01",
     "title": "1. First Note",
     "category": "tutorial",

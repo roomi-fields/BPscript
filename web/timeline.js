@@ -96,7 +96,8 @@ const CTRL_H = 16;
 const CV_H = 20;
 const RULER_H = 22;
 const MINIMAP_H = 18;
-const VOICE_GAP = 4;
+const VOICE_GAP = 6;
+const STRUCT_LANE_H = 14; // height per nesting level in structure indicator lane
 const BLOCK_RADIUS = 3;
 const EDGE_HANDLE_W = 4; // edge handle hit zone width (px)
 
@@ -117,12 +118,15 @@ export class Timeline {
     this.onSelect = options.onSelect || null;
     this.onSeek = options.onSeek || null;
     this.onResize = options.onResize || null;
+    this.onSelectGroup = options.onSelectGroup || null; // callback(groupIdx, group)
+    this.onResizeGroup = options.onResizeGroup || null; // callback(groupIdx, group)
 
     // Data
     this.voices = [];
     this.silences = [];     // [{start, end}] — explicit silence/rest gaps
     this.polyGroups = [];   // [{start, end, voiceCount}] — polymetric groups from { , }
     this._controlTable = null; // CT0 → [{key, value}]
+    this._maxPolyDepth = 0;
     this.totalMs = 0;
 
     // State
@@ -130,6 +134,16 @@ export class Timeline {
     this._selectedBlock = null;
     this._hoveredBlock = null;
     this._hoveredEdge = null;  // { voiceIdx, blockIdx, side: 'left'|'right' }
+    this._selectedGroup = -1;  // polyGroup index
+    this._hoveredGroup = -1;
+    this._hoveredGroupEdge = null; // { gi, side: 'left'|'right', segment? }
+    this._selectedSegment = null;
+    this._hoveredSegment = null;
+    this._isResizingGroup = false;
+    this._resizeGroupIdx = -1;
+    this._resizeGroupSide = null;
+    this._resizeGroupOrigStart = 0;
+    this._resizeGroupOrigEnd = 0;
     this._isDragging = false;
     this._dragStartX = 0;
     this._dragStartScroll = 0;
@@ -147,7 +161,7 @@ export class Timeline {
 
   // ============ Data loading ============
 
-  load(tokens, { cvTable = null, controlTable = null } = {}) {
+  load(tokens, { cvTable = null, controlTable = null, source = '' } = {}) {
     if (!tokens || tokens.length === 0) {
       this.voices = [];
       this.silences = [];
@@ -167,15 +181,16 @@ export class Timeline {
 
     // Parse structural markers { , } to detect polymetric groups
     let polyStack = []; // stack of {startMs, voiceIdx (count of , seen)}
+    let openCounter = 0;
     for (let ti = 0; ti < tokens.length; ti++) {
       const t = tokens[ti];
       if (t.token === '{') {
-        polyStack.push({ start: t.start, voices: 1 });
+        polyStack.push({ start: t.start, voices: 1, openOrder: openCounter++ });
       } else if (t.token === ',' && polyStack.length > 0) {
         polyStack[polyStack.length - 1].voices++;
       } else if (t.token === '}' && polyStack.length > 0) {
         const group = polyStack.pop();
-        polyGroups.push({ start: group.start, end: t.end, voiceCount: group.voices });
+        polyGroups.push({ start: group.start, end: t.end, voiceCount: group.voices, openOrder: group.openOrder });
       } else if (t.token.startsWith('_') && t.token !== '_') {
         t._srcIdx = ti;
         controls.push(t);
@@ -193,8 +208,24 @@ export class Timeline {
     this.totalMs = Math.max(...tokens.map(t => t.end), 1);
     this.range.totalMs = this.totalMs;
     this.silences = silences;
-    this.polyGroups = polyGroups;
     this._controlTable = controlTable;
+
+    // Tag each note with the polyGroup indices it belongs to (by token stream position)
+    // Track nesting depth for structure lane layout
+    const polyGroupRanges = []; // [{srcStart, srcEnd, voices, depth}]
+    {
+      let pStack = [];
+      for (let ti = 0; ti < tokens.length; ti++) {
+        const t = tokens[ti];
+        if (t.token === '{') pStack.push({ srcStart: ti, voices: 1, depth: pStack.length });
+        else if (t.token === ',' && pStack.length > 0) pStack[pStack.length - 1].voices++;
+        else if (t.token === '}' && pStack.length > 0) {
+          const pg = pStack.pop();
+          // Push in same order as polyGroups (close-order), alignment by index
+          polyGroupRanges.push({ srcStart: pg.srcStart, srcEnd: ti, voices: pg.voices, depth: pg.depth });
+        }
+      }
+    }
 
     // Group notes into non-overlapping voices
     const voiceNotes = [];
@@ -260,6 +291,128 @@ export class Timeline {
       color: VOICE_COLORS[i % VOICE_COLORS.length],
     }));
 
+    // Resolve polyGroup → voiceIndices using token stream positions
+    this.polyGroups = polyGroups.map((pg, pgi) => {
+      const pgr = polyGroupRanges[pgi];
+      if (!pgr) return pg;
+      // Find which voices have notes whose _srcIdx falls within this group's token range
+      const voiceIndices = new Set();
+      for (let vi = 0; vi < this.voices.length; vi++) {
+        for (const n of this.voices[vi].notes) {
+          if (n._srcIdx != null && n._srcIdx > pgr.srcStart && n._srcIdx < pgr.srcEnd) {
+            voiceIndices.add(vi);
+          }
+        }
+      }
+      // Also tag each note with its polyGroup index for constraint solver scoping
+      for (const vi of voiceIndices) {
+        for (const n of this.voices[vi].notes) {
+          if (n._srcIdx != null && n._srcIdx > pgr.srcStart && n._srcIdx < pgr.srcEnd) {
+            // Store the innermost (deepest) group for each note
+            if (n._polyGroupIdx == null || pgr.depth > (polyGroupRanges[n._polyGroupIdx]?.depth ?? -1)) {
+              n._polyGroupIdx = pgi;
+            }
+          }
+        }
+      }
+      return { ...pg, voiceIndices: [...voiceIndices], depth: pgr.depth };
+    });
+
+    // Extract structural names from BPscript source
+    this._structNames = { groupLabels: {}, ruleElements: [] };
+    if (source) {
+      // 1. Find explicit labels: "name:{" → label for each { by openOrder
+      const groupLabels = {};
+      let braceCount = 0;
+      for (let i = 0; i < source.length; i++) {
+        if (source[i] === '/' && source[i + 1] === '/') {
+          i = source.indexOf('\n', i); if (i < 0) break; continue;
+        }
+        if (source[i] === '{') {
+          const before = source.substring(Math.max(0, i - 40), i);
+          const match = before.match(/(\w+)\s*:\s*$/);
+          if (match) groupLabels[braceCount] = match[1];
+          braceCount++;
+        }
+      }
+      for (const pg of this.polyGroups) {
+        if (pg.openOrder != null && groupLabels[pg.openOrder]) {
+          pg.label = groupLabels[pg.openOrder];
+        }
+      }
+
+      // 2. Parse rule RHS elements to name segments and groups at depth 0.
+      // Find the top-level rule (first rule whose RHS contains {})
+      // Format: "LHS -> elem1 {voices} elem2 {voices} elem3"
+      const ruleElements = []; // [{type:'sym'|'group', name, openOrder}] in order
+      const lines = source.split('\n');
+      for (const line of lines) {
+        const ruleMatch = line.match(/^\s*(\w+)\s*->\s*(.+)$/);
+        if (!ruleMatch) continue;
+        const rhs = ruleMatch[2].trim();
+        // Check if this rule contains top-level braces
+        let hasTopBrace = false;
+        let d = 0;
+        for (const ch of rhs) {
+          if (ch === '{') { if (d === 0) hasTopBrace = true; d++; }
+          else if (ch === '}') d--;
+        }
+        if (!hasTopBrace) continue;
+
+        // Parse elements: symbols and {…} groups in order
+        let oi = 0, pos = 0;
+        while (pos < rhs.length) {
+          // Skip whitespace
+          while (pos < rhs.length && rhs[pos] === ' ') pos++;
+          if (pos >= rhs.length) break;
+
+          if (rhs[pos] === '{') {
+            // Find matching }
+            let depth = 0, start = pos;
+            while (pos < rhs.length) {
+              if (rhs[pos] === '{') depth++;
+              else if (rhs[pos] === '}') { depth--; if (depth === 0) { pos++; break; } }
+              pos++;
+            }
+            // Skip qualifiers after }
+            while (pos < rhs.length && (rhs[pos] === '[' || rhs[pos] === '(')) {
+              const close = rhs[pos] === '[' ? ']' : ')';
+              while (pos < rhs.length && rhs[pos] !== close) pos++;
+              if (pos < rhs.length) pos++;
+            }
+            ruleElements.push({ type: 'group', name: null, openOrder: oi++ });
+          } else if (rhs[pos] === '/' && rhs[pos + 1] === '/') {
+            break; // comment
+          } else {
+            // Symbol name (possibly with label: prefix before next {)
+            let name = '';
+            while (pos < rhs.length && rhs[pos] !== ' ' && rhs[pos] !== '{') {
+              name += rhs[pos]; pos++;
+            }
+            // Check if it's a label for the next group (name:)
+            if (name.endsWith(':') && pos < rhs.length && rhs[pos] === '{') {
+              // label for next group — skip, already handled above
+              continue;
+            }
+            if (name) ruleElements.push({ type: 'sym', name });
+          }
+        }
+        if (ruleElements.length > 0) break; // use first rule with braces
+      }
+      this._structNames.ruleElements = ruleElements;
+    }
+
+    // Build structSegments: siblings at each depth level.
+    // At depth 0: [gap, group, gap, group, gap, ...] spanning the full timeline.
+    // Inside each group at depth d: [gap, subgroup, gap, ...] spanning the group.
+    this.structSegments = this._buildStructSegments(polyGroupRanges, tokens);
+
+    // Calculate max nesting depth for structure lane height
+    this._maxPolyDepth = Math.max(
+      this.polyGroups.reduce((m, g) => Math.max(m, (g.depth || 0) + 1), 0),
+      this.structSegments.length > 0 ? 1 : 0
+    );
+
     this._selectedBlock = null;
     this._hoveredBlock = null;
     this._hoveredEdge = null;
@@ -289,7 +442,7 @@ export class Timeline {
   }
 
   _calcHeight() {
-    let h = RULER_H + MINIMAP_H;
+    let h = RULER_H + this._structLaneHeight() + MINIMAP_H;
     for (const v of this.voices) {
       h += TRACK_H + VOICE_GAP;
       if (v.controls.length > 0) h += CTRL_H;
@@ -319,14 +472,20 @@ export class Timeline {
     // Ruler
     this._drawRuler(ctx, w);
 
+    // Structure lane (above voices)
+    const structH = this._structLaneHeight();
+    if (structH > 0) {
+      this._drawStructLane(ctx, w, RULER_H, structH);
+    }
+
     // Voices
-    let y = RULER_H;
+    let y = RULER_H + structH;
     for (let vi = 0; vi < this.voices.length; vi++) {
       y = this._drawVoice(ctx, this.voices[vi], vi, y, w);
       y += VOICE_GAP;
     }
 
-    // Polymetric groups — brackets spanning voices
+    // Light tint on voices in polymetric groups
     this._drawPolyGroups(ctx, w);
 
     // Minimap
@@ -623,23 +782,311 @@ export class Timeline {
     return y;
   }
 
+  /**
+   * Compute Y position of each voice track (top edge).
+   * Returns array of {top, bottom} for each voice index.
+   */
+  /**
+   * Build structural segments: at each depth, identify gaps between polyGroups.
+   * These gaps represent non-polymetric siblings (e.g., Intro, Coda).
+   * Returns array of {start, end, depth, type:'gap', label, voiceIndices, srcStart, srcEnd}.
+   */
+  _buildStructSegments(polyGroupRanges, tokens) {
+    const segments = [];
+    if (this.polyGroups.length === 0) return segments;
+
+    // Group polyGroups by depth
+    const byDepth = {};
+    for (let gi = 0; gi < this.polyGroups.length; gi++) {
+      const d = this.polyGroups[gi].depth || 0;
+      if (!byDepth[d]) byDepth[d] = [];
+      byDepth[d].push(gi);
+    }
+
+    for (const [depthStr, groupIndices] of Object.entries(byDepth)) {
+      const depth = parseInt(depthStr);
+
+      // Determine the parent span for this depth
+      let parentStart, parentEnd, parentSrcStart, parentSrcEnd;
+      if (depth === 0) {
+        parentStart = 0;
+        parentEnd = this.totalMs;
+        parentSrcStart = 0;
+        parentSrcEnd = tokens.length - 1;
+      } else {
+        // Find the enclosing polyGroup at depth-1
+        // For each group at this depth, its parent is at depth-1 containing it
+        continue; // For now, only handle depth 0 — extend later
+      }
+
+      // Sort groups at this depth by start time
+      const sorted = groupIndices
+        .map(gi => ({ gi, g: this.polyGroups[gi] }))
+        .sort((a, b) => a.g.start - b.g.start);
+
+      // Build name list for gaps from parsed rule elements
+      const gapNames = (this._structNames?.ruleElements || [])
+        .filter(e => e.type === 'sym')
+        .map(e => e.name);
+      let gapIdx = 0;
+
+      // Build gaps between groups
+      let cursor = parentStart;
+      for (const { gi, g } of sorted) {
+        if (g.start - cursor > 5) { // meaningful gap (>5ms)
+          const vis = new Set();
+          for (let vi = 0; vi < this.voices.length; vi++) {
+            if (this.voices[vi].notes.some(n => n.start >= cursor && n.end <= g.start + 1)) {
+              vis.add(vi);
+            }
+          }
+
+          segments.push({
+            start: cursor,
+            end: g.start,
+            depth,
+            type: 'gap',
+            label: gapNames[gapIdx] || '...',
+            voiceIndices: [...vis],
+          });
+          gapIdx++;
+        }
+        cursor = g.end;
+      }
+      // Trailing gap after last group
+      if (parentEnd - cursor > 5) {
+        const vis = new Set();
+        let hasNotes = false;
+        for (let vi = 0; vi < this.voices.length; vi++) {
+          if (this.voices[vi].notes.some(n => n.start >= cursor && n.end <= parentEnd + 1)) {
+            vis.add(vi);
+            hasNotes = true;
+          }
+        }
+        if (hasNotes) {
+          segments.push({
+            start: cursor,
+            end: parentEnd,
+            depth,
+            type: 'gap',
+            label: gapNames[gapIdx] || '...',
+            voiceIndices: [...vis],
+          });
+        }
+      }
+    }
+    return segments;
+  }
+
+  _structLaneHeight() {
+    return (this._maxPolyDepth || 0) * STRUCT_LANE_H;
+  }
+
+  _voiceYPositions() {
+    const positions = [];
+    let y = RULER_H + this._structLaneHeight();
+    for (const v of this.voices) {
+      const top = y;
+      y += TRACK_H;
+      if (v.controls.length > 0) y += CTRL_H;
+      if (v.cv.length > 0) y += CV_H;
+      positions.push({ top, bottom: y });
+      y += VOICE_GAP;
+    }
+    return positions;
+  }
+
+  /**
+   * Draw structure indicators above voices: one line + chevron per polyGroup,
+   * stacked by nesting depth (depth 0 = closest to voices, higher = above).
+   */
+  /**
+   * Build a unified list of all structure items (polyGroups + gap segments)
+   * for rendering and hit testing in the struct lane.
+   * Each item: {start, end, depth, type: 'group'|'gap', label, itemIdx, groupIdx?}
+   */
+  _buildStructItems() {
+    const items = [];
+
+    // Add polyGroups
+    for (let gi = 0; gi < this.polyGroups.length; gi++) {
+      const g = this.polyGroups[gi];
+      items.push({
+        start: g.start, end: g.end,
+        depth: g.depth || 0,
+        type: 'group',
+        label: g.label || `{${g.voiceCount}}`,
+        groupIdx: gi,
+      });
+    }
+
+    // Add gap segments
+    for (const seg of this.structSegments) {
+      items.push({
+        start: seg.start, end: seg.end,
+        depth: seg.depth,
+        type: 'gap',
+        label: seg.label,
+        segment: seg,
+      });
+    }
+
+    return items;
+  }
+
+  _drawStructLane(ctx, w, laneTop, laneH) {
+    const items = this._buildStructItems();
+    if (items.length === 0) return;
+    const range = this.range;
+
+    const structColors = [
+      'rgba(0, 255, 136, 0.7)',
+      'rgba(74, 144, 217, 0.7)',
+      'rgba(233, 168, 69, 0.7)',
+      'rgba(199, 125, 186, 0.7)',
+      'rgba(233, 69, 96, 0.7)',
+      'rgba(69, 183, 209, 0.7)',
+    ];
+
+    // Background for structure lane
+    ctx.fillStyle = 'rgba(13, 27, 42, 0.6)';
+    ctx.fillRect(HEADER_W, laneTop, w - HEADER_W, laneH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(HEADER_W, laneTop + laneH);
+    ctx.lineTo(w, laneTop + laneH);
+    ctx.stroke();
+
+    // Header label
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '8px Consolas, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('struct', 4, laneTop + laneH / 2 + 3);
+
+    // Sort items: render in a stable order by depth then start
+    items.sort((a, b) => a.depth - b.depth || a.start - b.start);
+
+    // Pre-compute fixed extremities per depth
+    const extremes = {};
+    for (const it of items) {
+      const d = it.depth;
+      if (!extremes[d]) extremes[d] = { minStart: it.start, maxEnd: it.end };
+      extremes[d].minStart = Math.min(extremes[d].minStart, it.start);
+      extremes[d].maxEnd = Math.max(extremes[d].maxEnd, it.end);
+    }
+
+    // Assign a stable color index per item at each depth
+    const colorCounters = {};
+
+    for (const item of items) {
+      const depth = item.depth;
+      if (!(depth in colorCounters)) colorCounters[depth] = 0;
+      const ci = colorCounters[depth]++;
+
+      const rowY = laneTop + laneH - (depth + 1) * STRUCT_LANE_H + STRUCT_LANE_H / 2;
+
+      const x1 = HEADER_W + range.msToX(item.start);
+      const x2 = HEADER_W + range.msToX(item.end);
+      if (x2 < HEADER_W || x1 > w) continue;
+
+      const cx1 = Math.max(HEADER_W, x1);
+      const cx2 = Math.min(w, x2);
+      if (cx2 - cx1 < 4) continue;
+
+      // Selection/hover state — use groupIdx for groups, segment ref for gaps
+      const isSelectedGroup = item.type === 'group' && item.groupIdx === this._selectedGroup;
+      const isHoveredGroup = item.type === 'group' && item.groupIdx === this._hoveredGroup;
+      const isSelectedSeg = item.type === 'gap' && this._selectedSegment === item.segment;
+      const isHoveredSeg = item.type === 'gap' && this._hoveredSegment === item.segment;
+      const isSelected = isSelectedGroup || isSelectedSeg;
+      const isHovered = isHoveredGroup || isHoveredSeg;
+
+      const alpha = isSelected ? 1.0 : isHovered ? 0.85 : 0.7;
+      const color = structColors[ci % structColors.length].replace(/[\d.]+\)$/, alpha + ')');
+      const lineW = isSelected ? 2.5 : isHovered ? 2 : 1.5;
+
+      // Horizontal line
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineW;
+      ctx.beginPath();
+      ctx.moveTo(cx1, rowY);
+      ctx.lineTo(cx2, rowY);
+      ctx.stroke();
+
+      // Edge handles: chevron ▼ for internal edges, bar | for fixed extremities
+      const chevW = 5;
+      const chevH = 5;
+      const ext = extremes[depth];
+      const isLeftFixed = Math.abs(item.start - ext.minStart) < 2;
+      const isRightFixed = Math.abs(item.end - ext.maxEnd) < 2;
+      const hovEdge = this._hoveredGroupEdge;
+      const hovGi = item.type === 'group' ? item.groupIdx : -1;
+      const isLeftH = hovEdge && ((hovEdge.gi === hovGi && hovGi >= 0) || (hovEdge.segment === item.segment)) && hovEdge.side === 'left';
+      const isRightH = hovEdge && ((hovEdge.gi === hovGi && hovGi >= 0) || (hovEdge.segment === item.segment)) && hovEdge.side === 'right';
+
+      if (x1 >= HEADER_W) {
+        if (isLeftFixed) {
+          // Fixed bar — not draggable
+          ctx.strokeStyle = structColors[ci % structColors.length].replace(/[\d.]+\)$/, '0.4)');
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(cx1, rowY - chevH);
+          ctx.lineTo(cx1, rowY + chevH);
+          ctx.stroke();
+        } else {
+          // Draggable chevron ▼
+          ctx.fillStyle = structColors[ci % structColors.length].replace(/[\d.]+\)$/, (isLeftH ? 1.0 : alpha) + ')');
+          ctx.beginPath();
+          ctx.moveTo(cx1 - chevW, rowY - chevH);
+          ctx.lineTo(cx1 + chevW, rowY - chevH);
+          ctx.lineTo(cx1, rowY + chevH);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      if (x2 <= w) {
+        if (isRightFixed) {
+          // Fixed bar
+          ctx.strokeStyle = structColors[ci % structColors.length].replace(/[\d.]+\)$/, '0.4)');
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(cx2, rowY - chevH);
+          ctx.lineTo(cx2, rowY + chevH);
+          ctx.stroke();
+        } else {
+          // Draggable chevron ▼
+          ctx.fillStyle = structColors[ci % structColors.length].replace(/[\d.]+\)$/, (isRightH ? 1.0 : alpha) + ')');
+          ctx.beginPath();
+          ctx.moveTo(cx2 - chevW, rowY - chevH);
+          ctx.lineTo(cx2 + chevW, rowY - chevH);
+          ctx.lineTo(cx2, rowY + chevH);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Label at center
+      if (cx2 - cx1 > 25) {
+        ctx.fillStyle = color;
+        ctx.font = '8px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.label, (cx1 + cx2) / 2, rowY + 3);
+      }
+    }
+  }
+
+  /** Light background tint on voices belonging to polymetric groups */
   _drawPolyGroups(ctx, w) {
     if (this.polyGroups.length === 0) return;
     const range = this.range;
-    const tracksTop = RULER_H;
-    const tracksBottom = this._calcHeight() - MINIMAP_H - 4;
+    const voiceYs = this._voiceYPositions();
 
-    const polyColors = [
-      'rgba(0, 255, 136, 0.12)',
-      'rgba(74, 144, 217, 0.12)',
-      'rgba(233, 168, 69, 0.12)',
-      'rgba(199, 125, 186, 0.12)',
-    ];
-    const polyBorders = [
-      'rgba(0, 255, 136, 0.4)',
-      'rgba(74, 144, 217, 0.4)',
-      'rgba(233, 168, 69, 0.4)',
-      'rgba(199, 125, 186, 0.4)',
+    const polyTints = [
+      'rgba(0, 255, 136, ##)',
+      'rgba(74, 144, 217, ##)',
+      'rgba(233, 168, 69, ##)',
+      'rgba(199, 125, 186, ##)',
     ];
 
     for (let gi = 0; gi < this.polyGroups.length; gi++) {
@@ -647,49 +1094,29 @@ export class Timeline {
       const x1 = HEADER_W + range.msToX(g.start);
       const x2 = HEADER_W + range.msToX(g.end);
       if (x2 < HEADER_W || x1 > w) continue;
-
       const cx1 = Math.max(HEADER_W, x1);
       const cx2 = Math.min(w, x2);
       const cw = cx2 - cx1;
       if (cw < 2) continue;
 
-      const ci = gi % polyColors.length;
-
-      // Background fill
-      ctx.fillStyle = polyColors[ci];
-      ctx.fillRect(cx1, tracksTop, cw, tracksBottom - tracksTop);
-
-      // Left bracket
-      if (x1 >= HEADER_W) {
-        ctx.strokeStyle = polyBorders[ci];
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(cx1 + 4, tracksTop + 2);
-        ctx.lineTo(cx1, tracksTop + 2);
-        ctx.lineTo(cx1, tracksBottom - 2);
-        ctx.lineTo(cx1 + 4, tracksBottom - 2);
-        ctx.stroke();
+      // Scope to correct voices
+      const vis = g.voiceIndices || [];
+      let yTop = Infinity, yBottom = -Infinity;
+      for (const vi of vis) {
+        if (voiceYs[vi]) {
+          yTop = Math.min(yTop, voiceYs[vi].top);
+          yBottom = Math.max(yBottom, voiceYs[vi].bottom);
+        }
       }
+      if (yTop === Infinity) continue;
 
-      // Right bracket
-      if (x2 <= w) {
-        ctx.strokeStyle = polyBorders[ci];
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(cx2 - 4, tracksTop + 2);
-        ctx.lineTo(cx2, tracksTop + 2);
-        ctx.lineTo(cx2, tracksBottom - 2);
-        ctx.lineTo(cx2 - 4, tracksBottom - 2);
-        ctx.stroke();
-      }
+      const ci = gi % polyTints.length;
+      const isSelected = gi === this._selectedGroup;
+      const isHovered = gi === this._hoveredGroup;
+      const alpha = isSelected ? 0.15 : isHovered ? 0.10 : 0.05;
 
-      // Voice count label at top
-      if (cw > 30) {
-        ctx.fillStyle = polyBorders[ci];
-        ctx.font = '9px Consolas, monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`{${g.voiceCount}}`, cx1 + cw / 2, tracksTop + 10);
-      }
+      ctx.fillStyle = polyTints[ci].replace('##', alpha);
+      ctx.fillRect(cx1, yTop, cw, yBottom - yTop);
     }
   }
 
@@ -811,13 +1238,43 @@ export class Timeline {
         return;
       }
 
-      // Edge drag → resize block
+      // Structure lane: edge drag on any struct item (group or gap segment)
+      const structEdge = this._structEdgeHitTest(mx, my);
+      if (structEdge) {
+        this._initStructResize(structEdge);
+        this.canvas.style.cursor = 'col-resize';
+        e.preventDefault();
+        this.render();
+        return;
+      }
+
+      // Structure lane: click on body → select
+      const structHit = this._structHitTest(mx, my);
+      if (structHit) {
+        this._selectedBlock = null;
+        if (structHit.type === 'group') {
+          this._selectedGroup = structHit.gi;
+          this._selectedSegment = null;
+          if (this.onSelectGroup) {
+            this.onSelectGroup(structHit.gi, this.polyGroups[structHit.gi]);
+          }
+        } else {
+          this._selectedSegment = structHit.segment;
+          this._selectedGroup = -1;
+        }
+        this.render();
+        return;
+      }
+
+      // Edge drag → resize block with constraint solver
       const edge = this._edgeHitTest(mx, my);
       if (edge) {
         this._isResizing = true;
         this._resizeEdge = edge;
-        const n = this.voices[edge.voiceIdx].notes[edge.blockIdx];
+        const voice = this.voices[edge.voiceIdx];
+        const n = voice.notes[edge.blockIdx];
         this._resizeOrigMs = edge.side === 'left' ? n.start : n.end;
+        this._resizeOrigDurations = voice.notes.map(note => note.end - note.start);
         this.canvas.style.cursor = 'col-resize';
         e.preventDefault();
         return;
@@ -827,6 +1284,7 @@ export class Timeline {
       const hit = this._hitTest(mx, my);
       if (hit) {
         this._selectedBlock = hit;
+        this._selectedGroup = -1;
         if (this.onSelect) {
           const n = this.voices[hit.voiceIdx].notes[hit.blockIdx];
           this.onSelect(n, hit.voiceIdx, hit.blockIdx);
@@ -855,26 +1313,22 @@ export class Timeline {
     });
 
     this.canvas.addEventListener('mousemove', (e) => {
-      // Edge resize in progress
+      // Group resize in progress
+      if (this._isResizingGroup) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const newMs = Math.max(0, Math.min(this.totalMs, this.range.xToMs(mx - HEADER_W)));
+        this._solveGroupResize(newMs);
+        this.render();
+        return;
+      }
+
+      // Edge resize in progress — constraint solver
       if (this._isResizing && this._resizeEdge) {
         const rect = this.canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const newMs = Math.max(0, Math.min(this.totalMs, this.range.xToMs(mx - HEADER_W)));
-        const { voiceIdx, blockIdx, side } = this._resizeEdge;
-        const voice = this.voices[voiceIdx];
-        const n = voice.notes[blockIdx];
-
-        if (side === 'right') {
-          // Don't shrink past start + min, don't overlap next block
-          const minEnd = n.start + 10;
-          const maxEnd = blockIdx < voice.notes.length - 1 ? voice.notes[blockIdx + 1].start : this.totalMs;
-          n.end = Math.round(Math.max(minEnd, Math.min(maxEnd, newMs)));
-        } else {
-          // Don't grow past end - min, don't overlap previous block
-          const maxStart = n.end - 10;
-          const minStart = blockIdx > 0 ? voice.notes[blockIdx - 1].end : 0;
-          n.start = Math.round(Math.max(minStart, Math.min(maxStart, newMs)));
-        }
+        this._solveResize(newMs);
         this.render();
         return;
       }
@@ -891,17 +1345,46 @@ export class Timeline {
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
 
-      // Check edge hover
-      const edge = this._edgeHitTest(mx, my);
+      // Check struct edge hover (chevron handles)
+      const gEdge = this._structEdgeHitTest(mx, my);
+      const prevGroupEdge = this._hoveredGroupEdge;
+      this._hoveredGroupEdge = gEdge;
+
+      // Check struct body hover
+      const structHit = this._structHitTest(mx, my);
+      const gIdx = structHit?.type === 'group' ? structHit.gi : (gEdge?.gi >= 0 ? gEdge.gi : -1);
+      const prevGroup = this._hoveredGroup;
+      this._hoveredGroup = gIdx;
+      this._hoveredSegment = structHit?.type === 'gap' ? structHit.segment : null;
+
+      // Check edge hover (only if not on a struct item)
+      const inStructLane = gEdge || structHit;
+      const edge = inStructLane ? null : this._edgeHitTest(mx, my);
       const prevEdge = this._hoveredEdge;
       this._hoveredEdge = edge;
 
       // Check block hover
-      const hit = this._hitTest(mx, my);
+      const hit = inStructLane ? null : this._hitTest(mx, my);
       const prev = this._hoveredBlock;
       this._hoveredBlock = hit;
 
-      if (edge) {
+      if (gEdge) {
+        this.canvas.style.cursor = 'col-resize';
+        if (gEdge.gi >= 0) {
+          const g = this.polyGroups[gEdge.gi];
+          this.canvas.title = `Drag to resize {${g.voiceCount} voices}`;
+        } else if (gEdge.segment) {
+          this.canvas.title = `Drag to resize ${gEdge.segment.label}`;
+        }
+      } else if (structHit) {
+        this.canvas.style.cursor = 'pointer';
+        if (structHit.type === 'group') {
+          const g = this.polyGroups[structHit.gi];
+          this.canvas.title = `{${g.voiceCount} voices} ${g.start}–${g.end}ms`;
+        } else {
+          this.canvas.title = `${structHit.segment.label} ${structHit.segment.start}–${structHit.segment.end}ms`;
+        }
+      } else if (edge) {
         this.canvas.style.cursor = 'col-resize';
         const en = this.voices[edge.voiceIdx].notes[edge.blockIdx];
         this.canvas.title = `Drag to resize ${en.token} (${en.end - en.start}ms)`;
@@ -919,20 +1402,58 @@ export class Timeline {
       }
 
       if (hit?.voiceIdx !== prev?.voiceIdx || hit?.blockIdx !== prev?.blockIdx
-          || edge?.blockIdx !== prevEdge?.blockIdx || edge?.side !== prevEdge?.side) {
+          || edge?.blockIdx !== prevEdge?.blockIdx || edge?.side !== prevEdge?.side
+          || gIdx !== prevGroup
+          || gEdge?.gi !== prevGroupEdge?.gi || gEdge?.side !== prevGroupEdge?.side) {
         this.render();
       }
     });
 
     window.addEventListener('mouseup', () => {
+      // Group resize end
+      if (this._isResizingGroup) {
+        const gi = this._resizeGroupIdx;
+        this._isResizingGroup = false;
+        this.canvas.style.cursor = 'grab';
+        if (this.onResizeGroup && gi >= 0) {
+          const g = this.polyGroups[gi];
+          const origSpan = this._resizeGroupOrigEnd - this._resizeGroupOrigStart;
+          const newSpan = g.end - g.start;
+          const ratio = origSpan > 0 ? newSpan / origSpan : 1;
+          this.onResizeGroup(gi, { ...g, ratio });
+        }
+        this._resizeGroupOrigNotes = null;
+        this._resizeGroupOrigChildren = null;
+        this._resizeSiblings = null;
+        this._resizeOrigSegments = null;
+        this.render();
+        return;
+      }
+
       if (this._isResizing && this._resizeEdge) {
-        const { voiceIdx, blockIdx, side } = this._resizeEdge;
-        const n = this.voices[voiceIdx].notes[blockIdx];
+        const { voiceIdx, blockIdx } = this._resizeEdge;
+        const voice = this.voices[voiceIdx];
         this._isResizing = false;
         this.canvas.style.cursor = 'grab';
-        // Notify: block was resized
+        // Notify with scoped block timings + ratios
         if (this.onResize) {
-          this.onResize(voiceIdx, blockIdx, n.start, n.end);
+          const groupInfo = this._findGroupSiblings(voice, blockIdx);
+          const scopeIndices = groupInfo ? groupInfo.indices : voice.notes.map((_, i) => i);
+          const spanStart = groupInfo ? groupInfo.spanStart : this._findVoiceSpan(voice).start;
+          const spanEnd = groupInfo ? groupInfo.spanEnd : this._findVoiceSpan(voice).end;
+          const totalSpan = spanEnd - spanStart;
+          const equalShare = totalSpan / scopeIndices.length;
+          const resized = scopeIndices.map(i => {
+            const nn = voice.notes[i];
+            return {
+              token: nn.token,
+              start: nn.start,
+              end: nn.end,
+              srcIdx: nn._srcIdx,
+              ratio: (nn.end - nn.start) / equalShare,
+            };
+          });
+          this.onResize(voiceIdx, blockIdx, resized);
         }
         this._resizeEdge = null;
         this.render();
@@ -955,7 +1476,7 @@ export class Timeline {
   }
 
   _hitTest(mx, my) {
-    let y = RULER_H;
+    let y = RULER_H + this._structLaneHeight();
     for (let vi = 0; vi < this.voices.length; vi++) {
       const voice = this.voices[vi];
       if (my >= y && my < y + TRACK_H) {
@@ -977,7 +1498,7 @@ export class Timeline {
   }
 
   _edgeHitTest(mx, my) {
-    let y = RULER_H;
+    let y = RULER_H + this._structLaneHeight();
     for (let vi = 0; vi < this.voices.length; vi++) {
       const voice = this.voices[vi];
       if (my >= y && my < y + TRACK_H) {
@@ -999,6 +1520,373 @@ export class Timeline {
       y += VOICE_GAP;
     }
     return null;
+  }
+
+  /**
+   * Hit test in structure lane — returns {type:'group', gi} or {type:'gap', segment} or null.
+   */
+  _structHitTest(mx, my) {
+    const structH = this._structLaneHeight();
+    if (structH === 0) return null;
+    const laneTop = RULER_H;
+    if (my < laneTop || my > laneTop + structH || mx < HEADER_W) return null;
+
+    const items = this._buildStructItems();
+    for (const item of items) {
+      const depth = item.depth;
+      const rowY = laneTop + structH - (depth + 1) * STRUCT_LANE_H;
+      if (my < rowY || my > rowY + STRUCT_LANE_H) continue;
+      const x1 = HEADER_W + this.range.msToX(item.start);
+      const x2 = HEADER_W + this.range.msToX(item.end);
+      if (mx >= x1 && mx <= x2) {
+        return item.type === 'group'
+          ? { type: 'group', gi: item.groupIdx }
+          : { type: 'gap', segment: item.segment };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Hit test for structure lane edge handles.
+   * Returns {gi, side, segment?} or null.
+   */
+  _structEdgeHitTest(mx, my) {
+    const structH = this._structLaneHeight();
+    if (structH === 0) return null;
+    const laneTop = RULER_H;
+    if (my < laneTop || my > laneTop + structH || mx < HEADER_W) return null;
+
+    const hitZone = 10;
+    const items = this._buildStructItems();
+
+    // Pre-compute fixed extremities per depth (first start, last end)
+    const extremes = {}; // depth → {minStart, maxEnd}
+    for (const it of items) {
+      const d = it.depth;
+      if (!extremes[d]) extremes[d] = { minStart: it.start, maxEnd: it.end };
+      extremes[d].minStart = Math.min(extremes[d].minStart, it.start);
+      extremes[d].maxEnd = Math.max(extremes[d].maxEnd, it.end);
+    }
+
+    for (const item of items) {
+      const depth = item.depth;
+      const rowY = laneTop + structH - (depth + 1) * STRUCT_LANE_H;
+      if (my < rowY || my > rowY + STRUCT_LANE_H) continue;
+      const x1 = HEADER_W + this.range.msToX(item.start);
+      const x2 = HEADER_W + this.range.msToX(item.end);
+      const ext = extremes[depth];
+
+      // Left edge — skip if it's the absolute first start at this depth
+      if (Math.abs(mx - x1) <= hitZone && Math.abs(item.start - ext.minStart) > 1) {
+        return item.type === 'group'
+          ? { gi: item.groupIdx, side: 'left' }
+          : { gi: -1, side: 'left', segment: item.segment };
+      }
+      // Right edge — skip if it's the absolute last end at this depth
+      if (Math.abs(mx - x2) <= hitZone && Math.abs(item.end - ext.maxEnd) > 1) {
+        return item.type === 'group'
+          ? { gi: item.groupIdx, side: 'right' }
+          : { gi: -1, side: 'right', segment: item.segment };
+      }
+    }
+    return null;
+  }
+
+  // ============ Struct resize init ============
+
+  /**
+   * Initialize a structural resize. Collects all siblings at the same depth
+   * and stores their original positions for proportional redistribution.
+   * Works for both polyGroups and gap segments.
+   */
+  _initStructResize(structEdge) {
+    // Get the dragged item
+    const isGroup = structEdge.gi >= 0;
+    const draggedItem = isGroup
+      ? this.polyGroups[structEdge.gi]
+      : structEdge.segment;
+    if (!draggedItem) return;
+
+    const depth = isGroup ? (draggedItem.depth || 0) : draggedItem.depth;
+
+    this._isResizingGroup = true;
+    this._resizeGroupSide = structEdge.side;
+    this._resizeGroupIdx = isGroup ? structEdge.gi : -1;
+    this._resizeGroupOrigStart = draggedItem.start;
+    this._resizeGroupOrigEnd = draggedItem.end;
+    this._selectedGroup = isGroup ? structEdge.gi : -1;
+    this._selectedSegment = isGroup ? null : structEdge.segment;
+    this._selectedBlock = null;
+
+    // Collect ALL siblings at same depth — groups and segments
+    const items = this._buildStructItems().filter(it => it.depth === depth);
+    items.sort((a, b) => a.start - b.start);
+
+    // Build set of voice indices owned by groups at this depth
+    const groupVoicesAtDepth = new Set();
+    for (const it of items) {
+      if (it.type === 'group') {
+        const g = this.polyGroups[it.groupIdx];
+        for (const vi of (g.voiceIndices || [])) groupVoicesAtDepth.add(vi);
+      }
+    }
+
+    // Find the two adjacent siblings sharing the dragged boundary.
+    // Left edge of item[i] = boundary between item[i-1] and item[i].
+    // Right edge of item[i] = boundary between item[i] and item[i+1].
+    const draggedItemIdx = items.findIndex(it =>
+      (isGroup && it.type === 'group' && it.groupIdx === structEdge.gi)
+      || (!isGroup && it.type === 'gap' && it.segment === structEdge.segment)
+    );
+    let leftIdx, rightIdx;
+    if (structEdge.side === 'left') {
+      leftIdx = draggedItemIdx - 1;
+      rightIdx = draggedItemIdx;
+    } else {
+      leftIdx = draggedItemIdx;
+      rightIdx = draggedItemIdx + 1;
+    }
+    // Only keep the two affected siblings
+    const affectedItems = [];
+    if (leftIdx >= 0 && leftIdx < items.length) affectedItems.push(items[leftIdx]);
+    if (rightIdx >= 0 && rightIdx < items.length) affectedItems.push(items[rightIdx]);
+
+    // Store original siblings, pre-assign notes to each
+    this._resizeSiblings = affectedItems.map(it => {
+      const sib = {
+        start: it.start, end: it.end,
+        origStart: it.start, origEnd: it.end,
+        origDur: it.end - it.start,
+        type: it.type, groupIdx: it.groupIdx, segment: it.segment,
+        isDragged: (isGroup && it.type === 'group' && it.groupIdx === structEdge.gi)
+          || (!isGroup && it.type === 'gap' && it.segment === structEdge.segment),
+        notes: [], // [{vi, idx, origStart, dur}] — pre-assigned notes
+        childGroups: [], // [{idx, origStart, origEnd}]
+        childSegments: [], // [{segment, origStart, origEnd}]
+      };
+
+      // Assign notes:
+      // - Groups: only notes in the group's voiceIndices
+      // - Gaps: all notes that start within the gap's time range
+      //   (time range is enough since gaps don't overlap with groups)
+      const allowedVoices = it.type === 'group'
+        ? new Set(this.polyGroups[it.groupIdx].voiceIndices || [])
+        : null;
+
+      for (let vi = 0; vi < this.voices.length; vi++) {
+        if (allowedVoices && !allowedVoices.has(vi)) continue;
+
+        for (let ni = 0; ni < this.voices[vi].notes.length; ni++) {
+          const n = this.voices[vi].notes[ni];
+          if (n.start >= it.start - 1 && n.start < it.end) {
+            sib.notes.push({ vi, idx: ni, origStart: n.start, dur: n.end - n.start });
+          }
+        }
+      }
+
+      // Assign child polyGroups that start inside this sibling
+      for (let ci = 0; ci < this.polyGroups.length; ci++) {
+        const child = this.polyGroups[ci];
+        if ((child.depth || 0) > depth && child.start >= it.start - 1 && child.start < it.end) {
+          sib.childGroups.push({ idx: ci, origStart: child.start, origEnd: child.end });
+        }
+      }
+
+      // Assign child segments
+      for (const seg of this.structSegments) {
+        if (seg.depth > depth && seg.start >= it.start - 1 && seg.start < it.end) {
+          sib.childSegments.push({ segment: seg, origStart: seg.start, origEnd: seg.end });
+        }
+      }
+
+      return sib;
+    });
+  }
+
+  // ============ Constraint solver ============
+
+  /**
+   * Structural resize: drag a boundary between two adjacent siblings.
+   * The boundary moves to targetMs. Left sibling grows/shrinks on the right,
+   * right sibling grows/shrinks on the left. Everything else stays fixed.
+   */
+  _solveGroupResize(targetMs) {
+    const siblings = this._resizeSiblings;
+    if (!siblings || siblings.length < 2) return;
+
+    const left = siblings[0];
+    const right = siblings[1];
+    const minDur = 10;
+
+    // Clamp boundary
+    const boundary = Math.max(left.origStart + minDur, Math.min(right.origEnd - minDur, targetMs));
+
+    // Left sibling: start stays, end = boundary
+    left.start = left.origStart;
+    left.end = boundary;
+
+    // Right sibling: start = boundary, end stays
+    right.start = boundary;
+    right.end = right.origEnd;
+
+    // Update data from the new sibling positions using pre-assigned notes
+    for (const sib of siblings) {
+      const origDur = sib.origDur;
+      const newSibDur = sib.end - sib.start;
+      const sibScale = origDur > 0 ? newSibDur / origDur : 1;
+
+      // Update polyGroup bounds
+      if (sib.type === 'group' && sib.groupIdx != null) {
+        this.polyGroups[sib.groupIdx].start = sib.start;
+        this.polyGroups[sib.groupIdx].end = sib.end;
+      }
+
+      // Update gap segment bounds
+      if (sib.type === 'gap' && sib.segment) {
+        sib.segment.start = sib.start;
+        sib.segment.end = sib.end;
+      }
+
+      // Scale pre-assigned notes
+      for (const { vi, idx, origStart: nOs, dur: nDur } of sib.notes) {
+        const n = this.voices[vi].notes[idx];
+        if (!n) continue;
+        const relStart = origDur > 0 ? (nOs - sib.origStart) / origDur : 0;
+        n.start = Math.round(sib.start + relStart * newSibDur);
+        n.end = Math.round(n.start + Math.max(5, nDur * sibScale));
+      }
+
+      // Scale pre-assigned child polyGroups
+      for (const { idx, origStart: cOs, origEnd: cOe } of sib.childGroups) {
+        const child = this.polyGroups[idx];
+        const relS = origDur > 0 ? (cOs - sib.origStart) / origDur : 0;
+        const relE = origDur > 0 ? (cOe - sib.origStart) / origDur : 1;
+        child.start = Math.round(sib.start + relS * newSibDur);
+        child.end = Math.round(sib.start + relE * newSibDur);
+      }
+
+      // Scale pre-assigned child segments
+      for (const { segment: seg, origStart: sOs, origEnd: sOe } of sib.childSegments) {
+        const relS = origDur > 0 ? (sOs - sib.origStart) / origDur : 0;
+        const relE = origDur > 0 ? (sOe - sib.origStart) / origDur : 1;
+        seg.start = Math.round(sib.start + relS * newSibDur);
+        seg.end = Math.round(sib.start + relE * newSibDur);
+      }
+    }
+  }
+
+  /**
+   * Find the time span of a voice (first note start → last note end).
+   */
+  _findVoiceSpan(voice) {
+    if (voice.notes.length === 0) return { start: 0, end: 0 };
+    return {
+      start: voice.notes[0].start,
+      end: voice.notes[voice.notes.length - 1].end,
+    };
+  }
+
+  /**
+   * Constraint solver: when dragging a block edge, recalculate all siblings
+   * proportionally so the total span stays constant.
+   *
+   * Algorithm (Mode 1 — fixed span):
+   * 1. Calculate the new duration for the dragged block
+   * 2. The delta (change) is distributed uniformly among all OTHER blocks
+   * 3. Each sibling loses/gains the same proportion of the delta
+   * 4. Minimum block duration: 10ms
+   */
+  /**
+   * Find siblings: notes in the same innermost polyGroup as notes[blockIdx].
+   * Returns { indices, spanStart, spanEnd } or null if no group found (use full voice).
+   */
+  _findGroupSiblings(voice, blockIdx) {
+    const n = voice.notes[blockIdx];
+    const pgIdx = n._polyGroupIdx;
+    if (pgIdx == null) return null;
+
+    const g = this.polyGroups[pgIdx];
+    if (!g) return null;
+
+    // Find all notes in this voice that belong to the same group
+    const indices = [];
+    for (let i = 0; i < voice.notes.length; i++) {
+      if (voice.notes[i]._polyGroupIdx === pgIdx) {
+        indices.push(i);
+      }
+    }
+    if (indices.length <= 1) return null;
+    return { indices, spanStart: g.start, spanEnd: g.end };
+  }
+
+  _solveResize(targetMs) {
+    const { voiceIdx, blockIdx, side } = this._resizeEdge;
+    const voice = this.voices[voiceIdx];
+    const notes = voice.notes;
+    const n = notes[blockIdx];
+
+    // Determine scope: same polyGroup siblings, or full voice if no group
+    const groupInfo = this._findGroupSiblings(voice, blockIdx);
+    const scopeIndices = groupInfo ? groupInfo.indices : notes.map((_, i) => i);
+    const spanStart = groupInfo ? groupInfo.spanStart : this._findVoiceSpan(voice).start;
+    const spanEnd = groupInfo ? groupInfo.spanEnd : this._findVoiceSpan(voice).end;
+    const totalSpan = spanEnd - spanStart;
+
+    if (scopeIndices.length <= 1) return;
+
+    const minDur = Math.max(10, totalSpan * 0.02);
+
+    if (!this._resizeOrigDurations) return;
+
+    // New duration for the dragged block
+    let newDur;
+    if (side === 'right') {
+      newDur = targetMs - n.start;
+    } else {
+      newDur = n.end - targetMs;
+    }
+
+    // Clamp
+    const maxDur = totalSpan - (scopeIndices.length - 1) * minDur;
+    newDur = Math.max(minDur, Math.min(maxDur, newDur));
+
+    // Delta to distribute among siblings in scope
+    const origDur = this._resizeOrigDurations[blockIdx];
+    const delta = newDur - origDur;
+
+    let siblingTotalOrig = 0;
+    for (const i of scopeIndices) {
+      if (i !== blockIdx) siblingTotalOrig += this._resizeOrigDurations[i];
+    }
+    if (siblingTotalOrig <= 0) return;
+
+    // Calculate new durations only for notes in scope
+    const newDurations = new Map();
+    for (const i of scopeIndices) {
+      if (i === blockIdx) {
+        newDurations.set(i, newDur);
+      } else {
+        const share = this._resizeOrigDurations[i] / siblingTotalOrig;
+        newDurations.set(i, Math.max(minDur, this._resizeOrigDurations[i] - delta * share));
+      }
+    }
+
+    // Normalize scope to keep group span exact
+    let rawTotal = 0;
+    for (const d of newDurations.values()) rawTotal += d;
+    const scale = totalSpan / rawTotal;
+    for (const [i, d] of newDurations) newDurations.set(i, Math.round(d * scale));
+
+    // Apply: reposition notes in scope sequentially from spanStart
+    let cursor = spanStart;
+    for (const i of scopeIndices) {
+      notes[i].start = cursor;
+      notes[i].end = cursor + newDurations.get(i);
+      cursor += newDurations.get(i);
+    }
+    // Fix rounding
+    notes[scopeIndices[scopeIndices.length - 1]].end = spanEnd;
   }
 
   // ============ Helpers ============

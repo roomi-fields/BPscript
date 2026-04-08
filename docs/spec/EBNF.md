@@ -358,9 +358,11 @@ Deux syntaxes selon la destination :
 engine_qualifier = "[" , engine_pair , { "," , engine_pair } , "]"
                  | "[" , tempo_op , "]" ;
 
-tempo_op = ( "/" | "*" ) , ( INT | INT , "/" , INT ) ;
-           (* [/2] = diviser durée, [*3] = multiplier durée *)
-           (* [/2] → BP3 /2, [*2] → BP3 \2 *)
+tempo_op = ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT ) ;
+           (* / = plus rapide, * = plus lent *)
+           (* [/2] → _tempo(2/1) bracket, [*3/2] → _tempo(2/3) bracket *)
+           (* [*1.5] → _tempo(1/1.5) bracket *)
+           (* Portée déterminée par attachement : terminal, {}, ou règle *)
 
 engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
@@ -488,8 +490,10 @@ indéterminé. Le caractère historique `…` (U+2026) a été abandonné en 202
 ### 4.3 Polymétrie
 
 ```ebnf
-polymetric = "{" , voice , { "," , voice } , "}"
+polymetric = [ label , ":" ] , "{" , voice , { "," , voice } , "}"
              , [ engine_qualifier ] , [ runtime_qualifier ] ;
+
+label      = IDENT ;    (* étiquette UI, metadata pure — ignorée par l'encoder *)
 
 voice      = rhs_element+ ;
 ```
@@ -852,9 +856,12 @@ lambda   → chaîne vide (efface le non-terminal)
 | `[weight:K1]` | `<K1>` | K-param (réf. valeur courante) |
 | `[weight:inf]` | `<inf>` | poids infini (priorité absolue) |
 | `[destru]` | `_destru` en preamble | flag de sous-grammaire |
-| `A[/2]` | `/2 A` | diviser durée par 2 (plus court) |
-| `A[*2]` | `\2 A` | multiplier durée par 2 (plus long) |
-| `{v1, v2}[speed:2]` | `{2, v1, v2}` | ratio polymétrique (≠ opérateur) |
+| `A[/2]` | `_tempo(2/1) A _tempo(1/2)` | 2x plus rapide (bracket) |
+| `A[*2]` | `_tempo(1/2) A _tempo(2/1)` | 2x plus lent (bracket) |
+| `A[/3/2]` | `_tempo(3/2) A _tempo(2/3)` | 1.5x plus rapide (fraction) |
+| `{A B}[/2]` | `_tempo(2/1) {A B} _tempo(1/2)` | groupe 2x plus rapide |
+| `![/2]` | `_tempo(2/1)` | tempo séquentiel (pas de bracket) |
+| `{v1, v2}[speed:2]` | `{2, v1, v2}` | ratio polymétrique (≠ tempo) |
 | `-----` | `-----` | séparateur (identique) |
 | `lambda` | `lambda` | chaîne vide (identique) |
 | `<!sync1` | `<<W1>>` | sync tag |

@@ -331,8 +331,8 @@ QualPair {
 
 TempoOp {
   type: "TempoOp"
-  operator: "/" | "*"             // / = diviser durée, * = multiplier durée
-  value: number                    // A[/2] → { operator:"/", value:2 }
+  operator: "/" | "*"             // / = plus rapide, * = plus lent
+  value: number | string          // entier (2), décimal (1.5) ou fraction ("3/2")
 }
 ```
 
@@ -340,9 +340,12 @@ Exemples :
 - `[mode:random]` → `{ pairs:[{key:"mode", value:"random"}] }`
 - `[retro]` → `{ pairs:[{key:"retro", value:true}] }` → compilé en `_retro` (sans parenthèses)
 - `[rotate:2]` → `{ pairs:[{key:"rotate", value:2}] }` → compilé en `_rotate(2)`
-- `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `/2 A`
-- `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `\2 A`
-- `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique)
+- `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `_tempo(2/1) A _tempo(1/2)`
+- `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `_tempo(1/2) A _tempo(2/1)`
+- `A[/3/2]` → `{ tempoOp:{ operator:"/", value:"3/2" } }` → compilé en `_tempo(3/2) A _tempo(2/3)`
+- `{A B}[/2]` → bracket : `_tempo(2/1) {A B} _tempo(1/2)` (portée locale au groupe)
+- `![/2]` → `_tempo(2/1)` dans le flux (pas de bracket, portée séquentielle)
+- `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique, distinct du tempo)
 - `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
 
 **Clés nues** : quand `value === true` (clé sans `:valeur`), l'encodeur émet le nom BP3
@@ -481,6 +484,7 @@ Polymetric {
   voices: Voice[]
   qualifiers: Qualifier[]                    // speed et scale uniquement (engine [])
   runtimeQualifier: RuntimeQualifier | null  // suffixe () sur le groupe : {A B}(vel:100)
+  label: string | null                       // étiquette UI : couplet1:{A B, C D}
 }
 
 Voice {

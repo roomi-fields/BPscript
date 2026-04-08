@@ -305,11 +305,42 @@ case 193:	/* CT (control tag) — dispatcher passthrough, no engine action */
 
 ---
 
+## 44. Opérateurs `**N` — résultat incohérent sur toutes les plateformes
+
+**Grammaire minimale :**
+```
+ORD
+gram#1[1] S --> **2 C4 D4 E4 F4
+```
+Alphabet : C4, D4, E4, F4. Seed=1.
+
+**Symptôme :** `**N` (scale down, code T0/24) produit des résultats incohérents ou crashe selon la plateforme :
+
+| Plateforme | Résultat `**2 C4 D4 E4 F4` | Résultat `C4 D4 **2 E4 F4` |
+|---|---|---|
+| PHP/MAMP (bp.exe Windows) | 60000, 61000, 62000 — **C4 perdu, décalage 60s** | 0, 1000, 66000 — **3 tokens, E4 perdu** |
+| Linux natif (bp3 v3.3.19) | **hang infini** (killed par timeout) | 0, 1500, 3000, 4500 (≠ PHP) |
+| WASM (wasm.9) | 60000, 61000, 62000 — **identique PHP** | 0, 1500, 3000, 4500 — **identique Linux** |
+
+**Contexte :** Les 3 autres opérateurs temporels fonctionnent correctement :
+- `/N` (T0/11, speed up) : ✅ identique sur les 3 plateformes
+- `\N` (T0/25, speed down) : ✅ identique sur les 3 plateformes
+- `_tempo(x/y)` (T43) : ✅ identique sur les 3 plateformes
+- `*N` seul (T0/21, scale up) : no-op sur les 3 plateformes (normal — scaling seul sans speed ne change rien sur séquence plate)
+
+**Code concerné :** `Polymetric.c`, `SetObjectFeatures.c`, `FillPhaseDiagram.c` — le case 24 (`**`) pour la gestion du scaling inverse.
+
+**Note :** Le cas `*N` seul (no-op) est probablement le comportement attendu — `scaling` modifie le dénominateur du ratio tempo, il faut un `/N` ou `_tempo` pour que l'effet soit visible. En revanche `**2` ne devrait pas crasher ni décaler de 60 secondes.
+
+**Priorité :** Basse — `**N` semble très rarement utilisé. `/N`, `\N` et `_tempo(x/y)` couvrent tous les cas pratiques.
+
+---
+
 ## Notes pour référence
 
 - Build v3.3.19-wasm.8 (2026-04-06) — sources = Bernard v3.3.19 (cf9d788) + fixes #39, #42, #43 + patches #40a-c
 - Non-reg wasm.8 : S1=36/36, S2=36/36, S3=S4=35/35, S4vsS5=16/31 EXACT
 - 36 grammaires actives (bells skip — fichiers -ho.cloches1 manquants)
-- Points ouverts : #32, #36, #40
+- Points ouverts : #32, #36, #40, #44
 - Résolu moteur : #39 (p_DefaultChannel), #42 (sentinel -1), #43 (CT catchall) — fixes à intégrer par Bernard
 - Résolu WASM : #33 (dedup keep-longest, wasm.2), #35 (Kpress offset, wasm.3), #38 (T47 SSO, wasm.4)

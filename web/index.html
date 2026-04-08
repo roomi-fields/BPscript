@@ -2368,6 +2368,7 @@ async function stopPlayback() {
 /* ---- Live Coding ---- */
 let liveMode = false;
 let liveTimer = null;
+let _suppressLiveCompile = false; // prevent loop when timeline rewrites source
 
 function toggleLive() {
   liveMode = !liveMode;
@@ -2386,6 +2387,7 @@ function toggleLive() {
 }
 
 function liveInputHandler() {
+  if (_suppressLiveCompile) return;
   if (liveTimer) clearTimeout(liveTimer);
   liveTimer = setTimeout(() => liveCompileAndSwap(), 300);
 }
@@ -2554,6 +2556,377 @@ function tlFit() {
   window._timeline.render();
 }
 
+/**
+ * Rewrite BPscript source to inject [*ratio] qualifiers on resized tokens.
+ * If ratio ≈ 1.0 (within 2%), remove any existing [*N] qualifier.
+ * Otherwise inject [*N] with a clean fraction (e.g. *2, *1/2, *3/2).
+ */
+function rewriteSourceRatios(resizedBlocks) {
+  if (!window.getEditorSource || !window.setEditorSource) return;
+  if (!window._compileBPScript) return;
+  _suppressLiveCompile = true;
+  setTimeout(() => { _suppressLiveCompile = false; }, 100);
+
+  let source = getEditorSource();
+  const lines = source.split('\n');
+
+  // For each resized block, find its token in the source and add/update [*ratio]
+  // Process from end to start so positions don't shift
+  const edits = []; // [{line, col, oldLen, newText}]
+
+  for (const block of resizedBlocks) {
+    const ratio = block.ratio;
+    const token = block.token;
+
+    // Find the token in the source — search for it as a word boundary
+    // This is approximate; for now, match the Nth occurrence
+    let found = false;
+    for (let li = 0; li < lines.length; li++) {
+      const line = lines[li];
+      // Skip comments and directives
+      if (line.trim().startsWith('//') || line.trim().startsWith('@')) continue;
+
+      // Find token as a standalone word (not inside another token)
+      const re = new RegExp(`\\b${escapeRegex(token)}\\b(\\[\\*[\\d.]+\\])?`, 'g');
+      let m;
+      while ((m = re.exec(line)) !== null) {
+        // Check this hasn't been claimed by another block
+        const editKey = `${li}:${m.index}`;
+        if (edits.some(e => e.key === editKey)) continue;
+
+        // Found the token — decide what to inject
+        const existingQual = m[1] || ''; // e.g. "[*2]"
+        let replacement;
+        if (Math.abs(ratio - 1.0) < 0.02) {
+          // Ratio ≈ 1 — remove qualifier
+          replacement = token;
+        } else {
+          // Format ratio: prefer clean numbers
+          const ratioStr = cleanRatio(ratio);
+          replacement = `${token}[*${ratioStr}]`;
+        }
+
+        const fullMatch = m[0]; // e.g. "C4[*2]" or "C4"
+        if (replacement !== fullMatch) {
+          edits.push({
+            key: editKey,
+            lineIdx: li,
+            start: m.index,
+            end: m.index + fullMatch.length,
+            replacement,
+          });
+        }
+        found = true;
+        break; // take first unmatched occurrence
+      }
+      if (found) break;
+    }
+  }
+
+  if (edits.length === 0) return;
+
+  // Apply edits from end to start (so positions stay valid)
+  edits.sort((a, b) => b.lineIdx - a.lineIdx || b.start - a.start);
+  for (const edit of edits) {
+    const line = lines[edit.lineIdx];
+    lines[edit.lineIdx] = line.substring(0, edit.start) + edit.replacement + line.substring(edit.end);
+  }
+
+  const newSource = lines.join('\n');
+  if (newSource !== source) {
+    setEditorSource(newSource);
+  }
+}
+
+function cleanRatio(r) {
+  if (Math.abs(r - Math.round(r)) < 0.02) return String(Math.round(r));
+  // Clean decimal: max 2 decimal places, strip trailing zeros
+  return parseFloat(r.toFixed(2)).toString();
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Rewrite group ratio: adds or updates [*ratio] after the closing } of the group.
+ */
+function rewriteGroupRatio(groupIdx, ratio) {
+  _suppressLiveCompile = true;
+  setTimeout(() => { _suppressLiveCompile = false; }, 100);
+  const editor = window._bpsEditor;
+  const tl = window._timeline;
+  if (!editor || !tl) return;
+  const source = editor.state.doc.toString();
+
+  // Find the closing brace for this group using openOrder
+  const g = tl.polyGroups[groupIdx];
+  if (!g || g.openOrder == null) return;
+
+  // Scan source for all { } pairs and index by openOrder
+  const braceByOpen = {};
+  const stack = [];
+  let openIdx = 0;
+  for (let i = 0; i < source.length; i++) {
+    if (source[i] === '/' && source[i + 1] === '/') {
+      i = source.indexOf('\n', i);
+      if (i < 0) break;
+      continue;
+    }
+    if (source[i] === '{') {
+      stack.push({ from: i, to: -1, openOrder: openIdx++ });
+    } else if (source[i] === '}' && stack.length > 0) {
+      const opened = stack.pop();
+      opened.to = i;
+      braceByOpen[opened.openOrder] = opened;
+    }
+  }
+
+  const brace = braceByOpen[g.openOrder];
+  if (!brace) return;
+
+  const closingPos = brace.to; // position of }
+
+  // Check if there's already a [*...] or [/...] after the }
+  const after = source.substring(closingPos + 1, closingPos + 20);
+  const existingMatch = after.match(/^\[([*/])([^\]]+)\]/);
+
+  const ratioStr = cleanRatio(ratio);
+  let newSource;
+  if (Math.abs(ratio - 1) < 0.02) {
+    // Ratio ~1: remove qualifier if present
+    if (existingMatch) {
+      newSource = source.substring(0, closingPos + 1) + source.substring(closingPos + 1 + existingMatch[0].length);
+    } else {
+      return; // nothing to change
+    }
+  } else {
+    const qualifier = `[*${ratioStr}]`;
+    if (existingMatch) {
+      newSource = source.substring(0, closingPos + 1) + qualifier + source.substring(closingPos + 1 + existingMatch[0].length);
+    } else {
+      newSource = source.substring(0, closingPos + 1) + qualifier + source.substring(closingPos + 1);
+    }
+  }
+
+  editor.dispatch({
+    changes: { from: 0, to: source.length, insert: newSource },
+  });
+}
+
+/**
+ * Highlight a token in the BPscript editor (CodeMirror).
+ * Finds the token in the source, selects it, and scrolls to it.
+ */
+/**
+ * Highlight a polymetric group {…} in the BPscript editor.
+ * Finds matching braces by scanning source for { at start time.
+ */
+function highlightBracesInEditor(groupIdx, group) {
+  const editor = window._bpsEditor;
+  if (!editor) return;
+  const source = editor.state.doc.toString();
+
+  // Collect all { in source order (Nth opening brace = openOrder N)
+  const bracePositions = []; // bracePositions[openOrder] = {from, to}
+  const stack = [];
+  let openIdx = 0;
+  for (let i = 0; i < source.length; i++) {
+    // Skip comments
+    if (source[i] === '/' && source[i + 1] === '/') {
+      i = source.indexOf('\n', i);
+      if (i < 0) break;
+      continue;
+    }
+    if (source[i] === '{') {
+      stack.push({ from: i, to: -1, openOrder: openIdx++ });
+    } else if (source[i] === '}' && stack.length > 0) {
+      const opened = stack.pop();
+      opened.to = i + 1;
+      bracePositions[opened.openOrder] = opened;
+    }
+  }
+
+  // Use openOrder from the polyGroup to find the matching brace
+  const tl = window._timeline;
+  if (!tl) return;
+  const g = tl.polyGroups[groupIdx];
+  if (!g || g.openOrder == null) return;
+  const match = bracePositions[g.openOrder];
+  if (!match || match.to < 0) return;
+
+  // Switch to BPscript tab
+  const bpsTab = document.querySelector('.editor-tab[data-tab="bpscript"]');
+  if (bpsTab && !bpsTab.classList.contains('active')) bpsTab.click();
+
+  // Set cursor at opening brace
+  editor.dispatch({
+    selection: { anchor: match.from },
+    scrollIntoView: true,
+  });
+
+  // DOM overlay highlight on the entire {…} span
+  setTimeout(() => {
+    const from = editor.coordsAtPos(match.from);
+    const to = editor.coordsAtPos(match.to);
+    if (!from || !to) return;
+
+    const scroller = editor.scrollDOM;
+    const scrollRect = scroller.getBoundingClientRect();
+
+    let hl = document.getElementById('_bps-token-highlight');
+    if (!hl) {
+      hl = document.createElement('div');
+      hl.id = '_bps-token-highlight';
+      hl.style.cssText = 'position:absolute;pointer-events:none;z-index:50;border-radius:2px;transition:opacity 0.4s;';
+      scroller.style.position = 'relative';
+      scroller.appendChild(hl);
+    }
+
+    // If multi-line, just highlight from { to end of its line
+    const lineEnd = editor.coordsAtPos(source.indexOf('\n', match.from) || match.to);
+    const endCoord = (to.top === from.top) ? to : (lineEnd || to);
+
+    hl.style.left = (from.left - scrollRect.left + scroller.scrollLeft) + 'px';
+    hl.style.top = (from.top - scrollRect.top + scroller.scrollTop) + 'px';
+    hl.style.width = (endCoord.left - from.left) + 'px';
+    hl.style.height = (from.bottom - from.top) + 'px';
+    hl.style.background = 'rgba(0, 255, 136, 0.4)';
+    hl.style.boxShadow = '0 0 6px rgba(0, 255, 136, 0.5)';
+    hl.style.opacity = '1';
+
+    // Highlight the line
+    const domPos = editor.domAtPos(match.from);
+    let lineEl = domPos?.node;
+    while (lineEl && !lineEl.classList?.contains('cm-line')) {
+      lineEl = lineEl.parentElement;
+    }
+    if (lineEl) {
+      lineEl.style.transition = 'background 0.15s';
+      lineEl.style.background = 'rgba(0, 255, 136, 0.12)';
+      setTimeout(() => {
+        lineEl.style.background = '';
+        setTimeout(() => { lineEl.style.transition = ''; }, 200);
+      }, 2000);
+    }
+
+    setTimeout(() => { hl.style.opacity = '0'; }, 2000);
+  }, 30);
+}
+
+/**
+ * Highlight a token in the BPscript editor.
+ * Uses voiceIdx to find the right voice in polymetric structures (after Nth comma),
+ * and blockIdx to find the right occurrence within that voice.
+ */
+function highlightTokenInEditor(tokenName, voiceIdx, blockIdx) {
+  const editor = window._bpsEditor;
+  if (!editor) return;
+  const source = editor.state.doc.toString();
+
+  // Strategy: find all occurrences of tokenName in the source,
+  // then pick the one in the right polymetric voice section.
+  const re = new RegExp(`\\b${escapeRegex(tokenName)}\\b`, 'g');
+  const allMatches = [];
+  let m;
+  while ((m = re.exec(source)) !== null) {
+    // Skip matches inside comments or directives
+    const lineStart = source.lastIndexOf('\n', m.index) + 1;
+    const lineText = source.substring(lineStart, source.indexOf('\n', m.index) >>> 0 || source.length);
+    const trimmed = lineText.trimStart();
+    if (trimmed.startsWith('//') || trimmed.startsWith('@')) continue;
+    allMatches.push({ from: m.index, to: m.index + tokenName.length });
+  }
+
+  if (allMatches.length === 0) return;
+
+  // If multiple matches, try to find the one in the right polymetric voice.
+  // Count commas at brace depth=1 before each match to determine voice index.
+  let bestMatch = allMatches[0];
+  if (allMatches.length > 1 && voiceIdx != null) {
+    for (const match of allMatches) {
+      // Scan backwards from match position to find the enclosing { and count commas
+      let depth = 0;
+      let commas = 0;
+      let inPoly = false;
+      for (let i = match.from - 1; i >= 0; i--) {
+        const ch = source[i];
+        if (ch === '}') depth++;
+        else if (ch === '{') {
+          if (depth === 0) { inPoly = true; break; }
+          depth--;
+        }
+        else if (ch === ',' && depth === 0) commas++;
+      }
+      if (inPoly && commas === voiceIdx) {
+        // Right voice — now check if it's the right occurrence (blockIdx)
+        // Count how many times this token appears in this voice section before this match
+        bestMatch = match;
+        break;
+      }
+      if (!inPoly && voiceIdx === 0) {
+        // Not in polymetry — single voice, use first match
+        bestMatch = match;
+        break;
+      }
+    }
+  }
+
+  // Switch to BPscript tab
+  const bpsTab = document.querySelector('.editor-tab[data-tab="bpscript"]');
+  if (bpsTab && !bpsTab.classList.contains('active')) bpsTab.click();
+
+  // Scroll to the token without selecting (avoids match-highlight on all occurrences)
+  editor.dispatch({
+    selection: { anchor: bestMatch.from },
+    scrollIntoView: true,
+  });
+
+  // DOM overlay highlight on the exact token position
+  setTimeout(() => {
+    const from = editor.coordsAtPos(bestMatch.from);
+    const to = editor.coordsAtPos(bestMatch.to);
+    if (!from || !to) return;
+
+    const scroller = editor.scrollDOM;
+    const scrollRect = scroller.getBoundingClientRect();
+
+    let hl = document.getElementById('_bps-token-highlight');
+    if (!hl) {
+      hl = document.createElement('div');
+      hl.id = '_bps-token-highlight';
+      hl.style.cssText = 'position:absolute;pointer-events:none;z-index:50;border-radius:2px;transition:opacity 0.4s;';
+      scroller.style.position = 'relative';
+      scroller.appendChild(hl);
+    }
+    hl.style.left = (from.left - scrollRect.left + scroller.scrollLeft) + 'px';
+    hl.style.top = (from.top - scrollRect.top + scroller.scrollTop) + 'px';
+    hl.style.width = (to.left - from.left) + 'px';
+    hl.style.height = (from.bottom - from.top) + 'px';
+    hl.style.background = 'rgba(233, 69, 96, 0.5)';
+    hl.style.boxShadow = '0 0 6px rgba(233, 69, 96, 0.6)';
+    hl.style.opacity = '1';
+
+    // Highlight the line too
+    const domPos = editor.domAtPos(bestMatch.from);
+    let lineEl = domPos?.node;
+    while (lineEl && !lineEl.classList?.contains('cm-line')) {
+      lineEl = lineEl.parentElement;
+    }
+    if (lineEl) {
+      lineEl.style.transition = 'background 0.15s';
+      lineEl.style.background = 'rgba(233, 69, 96, 0.15)';
+      setTimeout(() => {
+        lineEl.style.background = '';
+        setTimeout(() => { lineEl.style.transition = ''; }, 200);
+      }, 2000);
+    }
+
+    // Fade out token overlay
+    setTimeout(() => { hl.style.opacity = '0'; }, 2000);
+  }, 30);
+}
+
 function renderTimeline(tokens) {
   const canvas = document.getElementById('timelineCanvas');
   const textDiv = document.getElementById('outputText');
@@ -2578,33 +2951,50 @@ function renderTimeline(tokens) {
       window._timeline = new Timeline(canvas, {
         onSelect(note, voiceIdx, blockIdx) {
           setStatus(`${note.token}: ${note.start}–${note.end}ms (${note.end - note.start}ms) — voice ${voiceIdx + 1}`);
+          // Highlight token in the BPscript editor
+          highlightTokenInEditor(note.token, voiceIdx, blockIdx);
         },
         onSeek(ms) {
           setStatus(`Seek: ${(ms / 1000).toFixed(2)}s`);
         },
-        onResize(voiceIdx, blockIdx, newStart, newEnd) {
+        onSelectGroup(groupIdx, group) {
+          setStatus(`{${group.voiceCount} voices} ${group.start}–${group.end}ms`);
+          highlightBracesInEditor(groupIdx, group);
+        },
+        onResizeGroup(groupIdx, groupInfo) {
+          rewriteGroupRatio(groupIdx, groupInfo.ratio);
+          setStatus(`{${groupInfo.voiceCount} voices} ratio *${cleanRatio(groupInfo.ratio)}`);
+        },
+        onResize(voiceIdx, blockIdx, resizedBlocks) {
           if (!lastTimedTokens) return;
-          const tl = window._timeline;
-          if (!tl) return;
-          const note = tl.voices[voiceIdx]?.notes[blockIdx];
-          if (!note) return;
-          // Update the source token using stored index
-          const srcIdx = note._srcIdx;
-          if (srcIdx != null && lastTimedTokens[srcIdx]) {
-            lastTimedTokens[srcIdx].start = newStart;
-            lastTimedTokens[srcIdx].end = newEnd;
+
+          // 1. Update all timed tokens with new timings
+          for (const b of resizedBlocks) {
+            if (b.srcIdx != null && lastTimedTokens[b.srcIdx]) {
+              lastTimedTokens[b.srcIdx].start = b.start;
+              lastTimedTokens[b.srcIdx].end = b.end;
+            }
           }
-          // Hot-reload into dispatcher if playing
+
+          // 2. Hot-reload into dispatcher if playing
           if (isPlaying && dispatcher) {
             dispatcher.load(lastTimedTokens);
           }
-          setStatus(`Resized ${note.token}: ${newStart}–${newEnd}ms (${newEnd - newStart}ms)`);
+
+          // 3. Rewrite BPscript source with [*ratio] qualifiers
+          rewriteSourceRatios(resizedBlocks);
+
+          const dragged = resizedBlocks[blockIdx];
+          const pct = Math.round(dragged.ratio * 100 / resizedBlocks.length * resizedBlocks.length);
+          setStatus(`${dragged.token}: ratio *${dragged.ratio.toFixed(2)} — ${dragged.end - dragged.start}ms`);
         },
       });
-      window._timeline.load(tokens, { cvTable: lastCVTable, controlTable: lastControlTable });
+      const src = window.getEditorSource ? getEditorSource() : '';
+      window._timeline.load(tokens, { cvTable: lastCVTable, controlTable: lastControlTable, source: src });
     });
   } else {
-    window._timeline.load(tokens, { cvTable: lastCVTable, controlTable: lastControlTable });
+    const src = window.getEditorSource ? getEditorSource() : '';
+    window._timeline.load(tokens, { cvTable: lastCVTable, controlTable: lastControlTable, source: src });
   }
 }
 
@@ -2843,7 +3233,7 @@ loadHelpReference();
     ".cm-activeLineGutter": { backgroundColor: "#16213e" },
     ".cm-activeLine": { backgroundColor: "#16213e44" },
     "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
-      backgroundColor: "#0f346066",
+      backgroundColor: "#e9456040",
     },
     ".cm-matchingBracket": {
       backgroundColor: "#0f346088",
@@ -3284,7 +3674,8 @@ S -> C4 D4 E4 F4 G4`,
         }),
         // Live coding: auto-compile on doc change when liveMode is on
         EditorView.updateListener.of(update => {
-          if (update.docChanged && typeof liveMode !== 'undefined' && liveMode) {
+          if (update.docChanged) {
+            // Always recompile + update timeline on source change
             if (typeof liveInputHandler === 'function') liveInputHandler();
           }
         }),
