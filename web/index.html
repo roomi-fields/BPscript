@@ -3602,6 +3602,7 @@ function renderTimeline(tokens) {
         },
         onResizeGroup(groupIdx, groupInfo) {
           rewriteGroupRatio(groupIdx, groupInfo.ratio);
+          produce();
           setStatus(`{${groupInfo.voiceCount} voices} ratio *${cleanRatio(groupInfo.ratio)}`);
         },
         onResize(voiceIdx, blockIdx, resizedBlocks) {
@@ -3623,8 +3624,10 @@ function renderTimeline(tokens) {
           // 3. Rewrite BPscript source with [*ratio] qualifiers
           rewriteSourceRatios(resizedBlocks);
 
+          // 4. Auto-recompile BPscript → BP3 grammar
+          produce();
+
           const dragged = resizedBlocks[blockIdx];
-          const pct = Math.round(dragged.ratio * 100 / resizedBlocks.length * resizedBlocks.length);
           setStatus(`${dragged.token}: ratio *${dragged.ratio.toFixed(2)} — ${dragged.end - dragged.start}ms`);
         },
       });
