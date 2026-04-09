@@ -1477,14 +1477,29 @@ function buildTransportMap(compiled) {
     }
   }
   // 2. Alphabet directives: @alphabet.western:midi → all symbols from that lib
+  //    Map every note+octave combination (C0..C9, D0..D9, etc.) to the transport
   if (compiled.directives) {
     for (const dir of compiled.directives) {
       if (dir.name === 'alphabet' && dir.runtime && dir.runtime !== 'webaudio') {
         const libName = dir.subkey;
         const lib = window._loadedLibs?.alphabets?.[libName];
         if (lib?.notes) {
-          for (const note of Object.keys(lib.notes)) {
+          const notes = Array.isArray(lib.notes) ? lib.notes : Object.keys(lib.notes);
+          for (const note of notes) {
             map[note] = dir.runtime;
+            // Map all octave variants (e.g. C0..C9)
+            for (let oct = 0; oct <= 9; oct++) {
+              map[note + oct] = dir.runtime;
+            }
+            // Map alteration variants too (e.g. C#4, Bb3)
+            if (lib.alterations) {
+              for (const alt of Object.keys(lib.alterations)) {
+                if (!alt) continue; // skip empty alteration
+                for (let oct = 0; oct <= 9; oct++) {
+                  map[note + alt + oct] = dir.runtime;
+                }
+              }
+            }
           }
         }
       }
@@ -3110,7 +3125,7 @@ loadHelpReference();
   import { registerAll } from '../src/transpiler/libs.js';
 
   // Fetch all lib/*.json and register them for browser use
-  const libNames = ['alphabet', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template', 'filter', 'tuning', 'octaves'];
+  const libNames = ['alphabets', 'controls', 'core', 'routing', 'settings', 'sub', 'bp3-settings-template', 'filter', 'tuning', 'octaves'];
   const libs = {};
   await Promise.all(libNames.map(async (name) => {
     try {
@@ -3363,7 +3378,7 @@ loadHelpReference();
     const before = context.matchBefore(/[A-Ga-g][#b]?\d?/);
     if (!before || before.from === context.pos) return null;
 
-    const alphabetLib = window._loadedLibs?.alphabet;
+    const alphabetLib = window._loadedLibs?.alphabets;
     if (!alphabetLib) return null;
 
     // Detect which alphabet is active by scanning directives

@@ -47,7 +47,7 @@ function wasmTest(name, origGrPath, bpsPath) {
   // Detect NoteConvention from @alphabet.xxx directive
   let noteConvention = 0; // default ENGLISH
   try {
-    const alphaJson = JSON.parse(readFileSync(join(LIB_DIR, 'alphabet.json'), 'utf-8'));
+    const alphaJson = JSON.parse(readFileSync(join(LIB_DIR, 'alphabets.json'), 'utf-8'));
     const bpsSrc = readFileSync(bpsPath, 'utf-8');
     const alphaMatch = bpsSrc.match(/@alphabet\.(\w+)/);
     if (alphaMatch && alphaJson.alphabets[alphaMatch[1]]?.noteConvention !== undefined) {

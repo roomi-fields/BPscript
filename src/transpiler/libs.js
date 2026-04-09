@@ -60,20 +60,25 @@ try {
 
 const LIB_DIR = _LIB_DIR;
 
-function loadJsonFile(name) {
-  if (cache[name]) return cache[name];
+// Canonical filenames (directive name → JSON file name)
+const fileAliases = { alphabet: 'alphabets' };
 
-  // Try registry first
-  if (registry[name]) {
-    cache[name] = registry[name];
-    return registry[name];
+function loadJsonFile(name) {
+  const canonical = fileAliases[name] || name;
+  if (cache[canonical]) return cache[canonical];
+
+  // Try registry first (canonical then original name)
+  const regData = registry[canonical] || registry[name];
+  if (regData) {
+    cache[canonical] = regData;
+    return regData;
   }
 
   // Node.js filesystem fallback
   if (_readFileSync && _LIB_DIR) {
     try {
-      const data = JSON.parse(_readFileSync(_LIB_DIR + '/' + name + '.json', 'utf-8'));
-      cache[name] = data;
+      const data = JSON.parse(_readFileSync(_LIB_DIR + '/' + canonical + '.json', 'utf-8'));
+      cache[canonical] = data;
       return data;
     } catch {}
   }

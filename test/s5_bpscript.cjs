@@ -142,7 +142,7 @@ const controlTable = JSON.parse(readFileSync('${TMP}_ct.json', 'utf-8'));
 
 // Load libs for resolver config
 const LIB = '${path.join(ROOT, 'lib').replace(/\\/g, '/')}';
-const alphabets = JSON.parse(readFileSync(LIB + '/alphabet.json', 'utf-8'));
+const alphabets = JSON.parse(readFileSync(LIB + '/alphabets.json', 'utf-8'));
 const octaves = JSON.parse(readFileSync(LIB + '/octaves.json', 'utf-8'));
 const tunings = JSON.parse(readFileSync(LIB + '/tunings.json', 'utf-8'));
 const temperaments = JSON.parse(readFileSync(LIB + '/temperaments.json', 'utf-8'));
