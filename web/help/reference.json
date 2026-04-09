@@ -1,0 +1,409 @@
+{
+  "_version": "1.0",
+  "_description": "BPscript complete reference — derived from BPSCRIPT_EBNF.md. Used for Help panel, hover tooltips, and autocompletion.",
+
+  "symbols": {
+    "@": {
+      "name": "Directive",
+      "category": "structure",
+      "syntax": "@ name[.subkey][:binding]",
+      "description": "Configures the compilation environment. Loads libraries, sets parameters, defines actors.",
+      "forms": [
+        { "syntax": "@core", "desc": "Load core library" },
+        { "syntax": "@controls", "desc": "Load control definitions (vel, pan, wave...)" },
+        { "syntax": "@alphabet.western:browser", "desc": "Load alphabet with transport binding" },
+        { "syntax": "@mm:120", "desc": "Set metronome to 120 BPM" },
+        { "syntax": "@mode:random", "desc": "Set derivation mode for next sub-grammar" },
+        { "syntax": "@tonality.just_C", "desc": "Load tonality/tuning file" },
+        { "syntax": "@octaves:western", "desc": "Set octave convention" },
+        { "syntax": "@transcription.tabla", "desc": "Load homomorphism table" },
+        { "syntax": "@timepatterns: t1=1/1, t2=3/2", "desc": "Define time patterns" },
+        { "syntax": "@+", "desc": "Append rules to previous sub-grammar" },
+        { "syntax": "@actor sitar alphabet:sargam transport:midi", "desc": "Define an actor" }
+      ],
+      "example": "@core\n@controls\n@alphabet.western:browser\n@mm:120"
+    },
+
+    "->": {
+      "name": "Rule (left to right)",
+      "category": "rules",
+      "syntax": "LHS -> RHS",
+      "description": "Production rule: the left-hand symbol is rewritten into the right-hand sequence. BP3 scans left to right.",
+      "bp3": "LHS --> RHS",
+      "example": "S -> C4 D4 E4 F4 G4"
+    },
+    "<-": {
+      "name": "Rule (right to left)",
+      "category": "rules",
+      "syntax": "LHS <- RHS",
+      "description": "Analysis rule: the right-hand sequence is reduced to the left-hand symbol. BP3 scans right to left.",
+      "bp3": "LHS <-- RHS",
+      "example": "S <- C4 D4 E4"
+    },
+    "<>": {
+      "name": "Rule (bidirectional)",
+      "category": "rules",
+      "syntax": "LHS <> RHS",
+      "description": "Bidirectional rule: used in both production and analysis. Can be applied in either direction.",
+      "bp3": "LHS <-> RHS",
+      "example": "S <> A B C"
+    },
+
+    "-": {
+      "name": "Silence (rest)",
+      "category": "time",
+      "syntax": "-",
+      "description": "A determined silence. Its duration is calculated from the temporal context (same as a note at that position).",
+      "bp3": "-",
+      "example": "S -> C4 - D4 - E4\n// C4, silence, D4, silence, E4"
+    },
+    "_": {
+      "name": "Prolongation",
+      "category": "time",
+      "syntax": "_",
+      "description": "Extends the duration of the previous note. The note plays for 2 time units instead of 1.",
+      "bp3": "_",
+      "example": "S -> C4 _ _ E4\n// C4 held for 3 units, then E4"
+    },
+    "...": {
+      "name": "Undetermined rest",
+      "category": "time",
+      "syntax": "...",
+      "description": "A rest whose duration is calculated by the engine to produce the simplest expression. Used in polymetric voices.",
+      "bp3": "_rest",
+      "example": "{C4 D4 E4, G4 ...}\n// engine calculates the rest duration"
+    },
+    ".": {
+      "name": "Period (fragment separator)",
+      "category": "time",
+      "syntax": ".",
+      "description": "Separates a sequence into equal-duration fragments. Each fragment between periods gets the same total duration.",
+      "bp3": ".",
+      "example": "S -> C4 D4 . E4 F4 G4\n// 2 notes in first half, 3 in second half"
+    },
+
+    "~": {
+      "name": "Tie (legato)",
+      "category": "time",
+      "syntax": "note~ / ~note~ / ~note",
+      "description": "Ties notes together for legato playback. Start with note~, continue with ~note~, end with ~note. No re-attack between tied notes.",
+      "bp3": "note& / &note& / &note",
+      "example": "S -> C4~ ~C4~ ~C4 E4\n// C4 held for 3 units (no re-attack), then E4"
+    },
+
+    "!": {
+      "name": "Simultaneous / Instant",
+      "category": "time",
+      "syntax": "symbol!symbol / !(control) / ![engine] / !symbol",
+      "description": "Marks an instantaneous event (zero duration). Multiple uses: chord (Sa!dha), instant control (!(vel:80)), out-time object (!symbol).",
+      "forms": [
+        { "syntax": "C4!E4!G4", "desc": "Chord: C4, E4, G4 triggered simultaneously" },
+        { "syntax": "!(vel:80)", "desc": "Instant control change positioned in the sequence" },
+        { "syntax": "![retro]", "desc": "Instant engine instruction" },
+        { "syntax": "!trigger_name", "desc": "Out-time object (zero duration trigger)" }
+      ],
+      "bp3": "<< >> for out-time, _script() for controls",
+      "example": "S -> C4!E4!G4 - D4!F#4!A4 -\n// Two chords with rests"
+    },
+
+    "<!": {
+      "name": "Trigger in (sync point)",
+      "category": "time",
+      "syntax": "<!name",
+      "description": "Synchronization point: waits for an external signal before continuing. Used for inter-process coordination.",
+      "example": "S -> C4 D4 <!sync1 E4 F4\n// waits for sync1 signal after D4"
+    },
+
+    "{,}": {
+      "name": "Polymetric group",
+      "category": "structure",
+      "syntax": "{ voice1, voice2 [, voice3...] }",
+      "description": "Multiple voices played simultaneously within the same time span. Each voice fills the entire duration independently. This is polymetry: 3 notes against 4 notes against 5 notes.",
+      "bp3": "{ voice1, voice2 }",
+      "example": "{C4 D4 E4, G4 A4}\n// 3 notes against 2 in same duration"
+    },
+
+    "[speed:N]": {
+      "name": "Speed ratio (polymetric)",
+      "category": "engine",
+      "syntax": "{v1, v2}[speed:N]",
+      "description": "Sets the tempo ratio for a polymetric group. speed:2 means the group plays at double speed.",
+      "bp3": "{N, v1, v2}",
+      "example": "{C4 D4 E4, G4 A4}[speed:2]\n// polymetric group at double speed"
+    },
+
+    "()": {
+      "name": "Runtime control",
+      "category": "runtime",
+      "syntax": "(key:value [, key:value]*)",
+      "description": "Runtime parameters interpreted by the dispatcher during playback. Controls sound, pitch, MIDI. Position determines scope: suffix on element, end of rule, or free with !().",
+      "bp3": "_script(CT N)",
+      "controls": {
+        "sound": ["vel", "pan", "wave", "attack", "release", "filter", "filterQ", "detune"],
+        "pitch": ["transpose", "rotate", "scale", "keyxpand"],
+        "midi": ["chan", "ins", "mod", "pitchbend", "pitchrange", "pressure", "volume"]
+      },
+      "example": "S -> C4(vel:100) D4(vel:60) E4\n// C4 loud, D4 soft, E4 default"
+    },
+
+    "[]": {
+      "name": "Engine instruction",
+      "category": "engine",
+      "syntax": "[key:value] or [temporal_op]",
+      "description": "BP3 engine instructions. Controls derivation, weights, tempo operators, flags. Distinct from () runtime controls.",
+      "forms": [
+        { "syntax": "[mode:random]", "desc": "Set derivation mode (on @mode directive)" },
+        { "syntax": "[weight:50]", "desc": "Rule weight for random selection", "bp3": "<50>" },
+        { "syntax": "[/2]", "desc": "Halve duration (tempo operator)", "bp3": "/2" },
+        { "syntax": "[\\2]", "desc": "Double duration (tempo operator)", "bp3": "\\2" },
+        { "syntax": "[*3]", "desc": "Multiply (accelerando)", "bp3": "*3" },
+        { "syntax": "[**3]", "desc": "Power multiply (strong accelerando)", "bp3": "**3" },
+        { "syntax": "[retro]", "desc": "Retrograde (reverse order)", "bp3": "_retro" },
+        { "syntax": "[staccato:80]", "desc": "Shorten note durations", "bp3": "_staccato(80)" },
+        { "syntax": "[repeat:K1]", "desc": "Controlled repetition with K-parameter" },
+        { "syntax": "[goto:3,1]", "desc": "Jump to sub-grammar 3, rule 1", "bp3": "_goto(3,1)" },
+        { "syntax": "[stop]", "desc": "Stop derivation", "bp3": "_stop" },
+        { "syntax": "[failed:2,1]", "desc": "Jump on derivation failure", "bp3": "_failed(2,1)" },
+        { "syntax": "[scan:left]", "desc": "Scan direction: left to right" },
+        { "syntax": "[scan:right]", "desc": "Scan direction: right to left" }
+      ],
+      "example": "@mode:random\nS -> A B [weight:70]\nS -> C D [weight:30]"
+    },
+
+    "`": {
+      "name": "Backtick (embedded code)",
+      "category": "advanced",
+      "syntax": "`code` or `tag: code`",
+      "description": "Embeds code for an external runtime. Inline backticks use the symbol's implicit runtime. Tagged backticks (sc:, py:, js:) specify the target explicitly.",
+      "forms": [
+        { "syntax": "`js: Math.random() * 127`", "desc": "JavaScript expression" },
+        { "syntax": "`sc: SinOsc.ar(440)`", "desc": "SuperCollider code (requires bridge)" },
+        { "syntax": "`py: import music21`", "desc": "Python code (requires bridge)" }
+      ],
+      "example": "// CV with JS backtick\n$lfo(freq,depth) = `js: Math.sin(t * freq) * depth`"
+    },
+
+    "|x|": {
+      "name": "Variable (homomorphism)",
+      "category": "advanced",
+      "syntax": "|name|",
+      "description": "Pattern variable for homomorphisms. Captures a symbol and applies a substitution table. Used for context-sensitive rewriting (Chomsky Type 1).",
+      "bp3": "|name|",
+      "example": "// Context-sensitive rule\n|o| |miny| -> |o1| |miny|"
+    },
+
+    "?": {
+      "name": "Wildcard",
+      "category": "advanced",
+      "syntax": "? or ?N",
+      "description": "Matches any single terminal. ?N captures with a numeric label for back-reference. Used in SUB/SUB1 mode patterns.",
+      "bp3": "?",
+      "example": "@mode:sub1\nA ?1 B -> A ?1 C\n// replace B after any symbol with C"
+    },
+
+    "$": {
+      "name": "Template master",
+      "category": "advanced",
+      "syntax": "$name or ${...}",
+      "description": "Master bracket in template mode. Marks the position of a pattern to be captured and transformed. Paired with & (slave).",
+      "bp3": "(=name) or (= ...)",
+      "example": "S -> $X tabla_stroke &X\n// capture pattern, apply tabla_stroke transcription"
+    },
+    "&": {
+      "name": "Template slave",
+      "category": "advanced",
+      "syntax": "&name or &{...}",
+      "description": "Slave bracket: receives the transformed version of the pattern captured by the corresponding $ master.",
+      "bp3": "(:name) or (: ...)",
+      "example": "S -> $X * &X\n// capture, apply default transcription, emit result"
+    },
+
+    "#": {
+      "name": "Negative context",
+      "category": "advanced",
+      "syntax": "#symbol or #(symbols)",
+      "description": "Negative context: the rule applies only when the specified symbol is NOT present at that position.",
+      "bp3": "same",
+      "example": "#(A B) S -> C D\n// S rewrites only if A B is NOT the left context"
+    },
+
+    "-----": {
+      "name": "Sub-grammar separator",
+      "category": "structure",
+      "syntax": "-----  (5 or more dashes)",
+      "description": "Separates sub-grammar blocks. Each block can have its own derivation mode (@mode). Rules in different blocks are processed sequentially.",
+      "example": "@mode:ord\nS -> A B\n\n-----\n\n@mode:random\nA -> C4 D4\nA -> E4 F4"
+    }
+  },
+
+  "keywords": {
+    "gate": {
+      "name": "Gate (temporal type)",
+      "category": "declarations",
+      "syntax": "gate name:actor",
+      "description": "Declares a symbol as a gate: it occupies time in the sequence. The most common type — notes, samples, any event with duration.",
+      "example": "gate Sa:sitar\ngate kick:drums"
+    },
+    "trigger": {
+      "name": "Trigger (temporal type)",
+      "category": "declarations",
+      "syntax": "trigger name:actor",
+      "description": "Declares a symbol as a trigger: instantaneous event, no duration. Used for percussive hits, MIDI events, signal triggers.",
+      "example": "trigger dha:tabla\ntrigger spotlight:dmx"
+    },
+    "cv": {
+      "name": "CV (temporal type)",
+      "category": "declarations",
+      "syntax": "cv name:actor",
+      "description": "Declares a symbol as a continuous value: a signal that modulates parameters over time (LFO, ADSR, ramp).",
+      "example": "cv lfo:synth\n$lfo = filter.lfo(rate:4, depth:0.5)"
+    },
+    "lambda": {
+      "name": "Lambda (empty string)",
+      "category": "rules",
+      "syntax": "S -> lambda  or  S ->",
+      "description": "Erases the non-terminal (epsilon production). The symbol disappears from the sequence. An empty RHS has the same effect.",
+      "bp3": "*",
+      "example": "// Probabilistic erasure\n@mode:random\nA -> C4 D4 [weight:80]\nA -> lambda [weight:20]"
+    }
+  },
+
+  "directives": {
+    "core": { "syntax": "@core", "desc": "Load core library (required)" },
+    "controls": { "syntax": "@controls", "desc": "Load control definitions — vel, pan, wave, attack, release, etc." },
+    "alphabet": {
+      "syntax": "@alphabet.name:transport",
+      "desc": "Load a note alphabet with transport binding",
+      "subkeys": {
+        "western": "C D E F G A B with #/b alterations and octave numbers",
+        "sargam": "sa re ga ma pa dha ni (Indian svaras)",
+        "solfege": "do re mi fa sol la si (French/Italian)",
+        "arabic": "Arabic maqam with quarter-tone alterations",
+        "turkish": "Turkish makam",
+        "abc": "a b c d e f g (ABC notation)",
+        "tabla": "Tabla bols: dha, dhin, tin, na, ke, ge..."
+      },
+      "transports": {
+        "browser": "Web Audio synthesis (built-in)",
+        "midi": "MIDI output (Web MIDI API)",
+        "sc": "SuperCollider (requires bridge)",
+        "python": "Python (requires bridge)"
+      }
+    },
+    "mode": {
+      "syntax": "@mode:value[(modifier)]",
+      "desc": "Set derivation mode for the next sub-grammar block",
+      "values": {
+        "ord": "Ordered — rules applied sequentially (default)",
+        "random": "Random — weighted random selection",
+        "lin": "Linear — cyclical wrap-around",
+        "sub": "Substitute — simultaneous replacement of all occurrences",
+        "sub1": "Substitute first — leftmost occurrence only",
+        "tem": "Template — structural matching",
+        "poslong": "Positional longest — longest match first"
+      },
+      "modifiers": {
+        "destru": "Destructure compound terminals based on alphabet",
+        "striated": "Pulsed/striated time",
+        "smooth": "Smooth/continuous time",
+        "mm:N": "Metronome marking in BPM"
+      }
+    },
+    "mm": { "syntax": "@mm:N", "desc": "Set metronome to N BPM (default: 60). Determines the absolute duration of one time unit." },
+    "tonality": { "syntax": "@tonality.name", "desc": "Load a tonality/tuning file for microtonal pitch resolution." },
+    "octaves": { "syntax": "@octaves:convention", "desc": "Set octave naming convention (western, saptak, etc.)" },
+    "transcription": { "syntax": "@transcription.name", "desc": "Load a homomorphism/substitution table for template-based rewriting." },
+    "timepatterns": { "syntax": "@timepatterns: name=num/den, ...", "desc": "Define named time patterns with rational durations." },
+    "actor": { "syntax": "@actor name key:value ...", "desc": "Define an actor: bundles alphabet + scale + transport + sounds into a named entity." },
+    "templates": { "syntax": "@templates", "desc": "Begin template section. Templates define structural constraints for TEM mode." }
+  },
+
+  "controls_runtime": {
+    "_comment": "() runtime controls — full list in controls.json, summary here for help",
+    "vel": { "syntax": "(vel:N)", "range": "0-127", "default": "64", "desc": "Velocity (loudness). 0=silent, 127=maximum." },
+    "pan": { "syntax": "(pan:N)", "range": "0-127", "default": "64", "desc": "Stereo position. 0=full left, 64=center, 127=full right." },
+    "wave": { "syntax": "(wave:type)", "values": "sine, triangle, square, sawtooth", "default": "triangle", "desc": "Oscillator waveform (Web Audio)." },
+    "attack": { "syntax": "(attack:N)", "range": "1-5000 ms", "default": "20", "desc": "Attack time of the amplitude envelope." },
+    "release": { "syntax": "(release:N)", "range": "1-5000 ms", "default": "100", "desc": "Release time of the amplitude envelope." },
+    "filter": { "syntax": "(filter:N)", "range": "20-20000 Hz", "default": "0 (off)", "desc": "Low-pass filter cutoff frequency." },
+    "filterQ": { "syntax": "(filterQ:N)", "range": "0-30", "default": "1", "desc": "Filter resonance (Q factor)." },
+    "detune": { "syntax": "(detune:N)", "range": "-1200 to 1200 cents", "default": "0", "desc": "Pitch detuning in cents." },
+    "transpose": { "syntax": "(transpose:N)", "desc": "Transpose by N steps in the current temperament grid." },
+    "rotate": { "syntax": "(rotate:N)", "desc": "Rotate the alphabet cyclically by N degrees. rotate(2): C->E, D->F..." },
+    "keyxpand": { "syntax": "(keyxpand:pivot,factor)", "desc": "Expand/contract intervals around a pivot. factor=2 doubles, -1 inverts, 0.5 contracts." },
+    "scale": { "syntax": "(scale:name,root)", "desc": "Change tuning scale in real-time. scale(0,0) returns to equal temperament." },
+    "chan": { "syntax": "(chan:N)", "range": "1-16", "default": "1", "desc": "MIDI channel." },
+    "ins": { "syntax": "(ins:N)", "range": "1-128", "desc": "MIDI program change (instrument)." },
+    "mod": { "syntax": "(mod:N)", "range": "0-127", "desc": "MIDI modulation wheel (CC1)." },
+    "pitchbend": { "syntax": "(pitchbend:N)", "range": "-8192 to 8191", "desc": "MIDI pitch bend." },
+    "volume": { "syntax": "(volume:N)", "range": "0-127", "default": "100", "desc": "MIDI volume (CC7)." }
+  },
+
+  "controls_engine": {
+    "_comment": "[] engine instructions — processed by BP3, not the dispatcher",
+    "mode": { "syntax": "[mode:X]", "desc": "Derivation mode (on @ directive only). Values: ord, random, lin, sub, sub1, tem, poslong." },
+    "weight": { "syntax": "[weight:N]", "desc": "Rule weight for random selection. Higher = more likely. [weight:inf] = always chosen.", "bp3": "<N>" },
+    "speed": { "syntax": "[speed:N]", "desc": "Tempo ratio for a polymetric group. {v1,v2}[speed:2] plays at double speed.", "bp3": "{N, v1, v2}" },
+    "scan": { "syntax": "[scan:left|right|rnd]", "desc": "Scan direction for rule matching. Default: depends on mode." },
+    "tempo_ops": {
+      "desc": "Temporal operators — modify duration of a symbol or group",
+      "ops": {
+        "[/N]": { "desc": "Divide duration by N (speed up)", "bp3": "/N", "example": "C4[/2] -> plays C4 in half the time" },
+        "[\\N]": { "desc": "Multiply duration by N (slow down)", "bp3": "\\N" },
+        "[*N]": { "desc": "Accelerando multiply", "bp3": "*N" },
+        "[**N]": { "desc": "Power accelerando", "bp3": "**N" }
+      }
+    },
+    "retro": { "syntax": "[retro]", "desc": "Reverse the order of elements.", "bp3": "_retro" },
+    "staccato": { "syntax": "[staccato:N]", "range": "0-127", "desc": "Shorten note durations (affects temporal structure).", "bp3": "_staccato(N)" },
+    "legato": { "syntax": "[legato:N]", "range": "0-127", "desc": "Lengthen note durations.", "bp3": "_legato(N)" },
+    "goto": { "syntax": "[goto:gram,rule]", "desc": "Jump to a specific sub-grammar and rule.", "bp3": "_goto(gram,rule)" },
+    "stop": { "syntax": "[stop]", "desc": "Stop the derivation.", "bp3": "_stop" },
+    "failed": { "syntax": "[failed:gram,rule]", "desc": "Jump on derivation failure.", "bp3": "_failed(gram,rule)" },
+    "repeat": { "syntax": "[repeat:K]", "desc": "Controlled repetition using a K-parameter.", "bp3": "_repeat(K)" },
+    "on_fail": { "syntax": "[on_fail:action]", "desc": "Action when rule application fails." }
+  },
+
+  "concepts": {
+    "rewriting": {
+      "title": "Rewriting rules",
+      "desc": "BPscript is a rewriting system. You write rules that transform symbols into sequences. The engine starts with S, applies rules until only terminal symbols (notes, rests) remain. This is how you build musical structure from the top down.",
+      "example": "S -> A B       // S becomes A then B\nA -> C4 D4 E4  // A becomes three notes\nB -> G4 F4     // B becomes two notes\n// Result: C4 D4 E4 G4 F4"
+    },
+    "polymetry": {
+      "title": "Polymetry",
+      "desc": "Multiple voices played in the same time span but with different numbers of events. {3 notes, 2 notes} means 3 against 2 in the same duration. This creates complex rhythmic relationships.",
+      "example": "{C4 D4 E4, G4 A4}\n// Voice 1: 3 notes\n// Voice 2: 2 notes\n// Both fit in the same total duration"
+    },
+    "flags": {
+      "title": "Flags and guards",
+      "desc": "Flags are integer variables that control rule selection. Guards [flag==value] test flags before applying a rule. Mutations [flag=value] modify flags in the RHS. This enables controlled repetition, form structure, and conditional logic.",
+      "example": "// Count to 3 then stop\n[count<3] S -> C4 [count+1] S\n[count==3] S -> G4"
+    },
+    "control_scoping": {
+      "title": "Control scoping: [] vs ()",
+      "desc": "Two separate systems:\n- [] = engine instructions processed by BP3 during derivation\n- () = runtime controls interpreted by the dispatcher during playback\n\nPosition matters: suffix (A[x]) = attached to A, prefix ([x]A) = before A, free (!(x)) = positioned in sequence.",
+      "example": "A[/2]           // engine: halve A's duration\nA(vel:80)       // runtime: play A at velocity 80\n!(transpose:2)  // free runtime control in sequence"
+    },
+    "sub_grammars": {
+      "title": "Sub-grammars",
+      "desc": "A scene can have multiple sub-grammar blocks separated by -----. Each block has its own derivation mode. Rules are processed block by block: block 1 rewrites first, then block 2 rewrites what remains, etc.",
+      "example": "@mode:ord\nS -> A B\n-----\n@mode:random\nA -> C4 D4\nA -> E4 F4\n-----\nB -> G4 A4"
+    },
+    "flat_alphabet": {
+      "title": "Flat alphabet (no OCT)",
+      "desc": "BPscript uses a flat alphabet: all note names (C4, D#5, sa6) are treated as opaque terminal symbols by BP3. The dispatcher resolves them to frequencies at playback time using the 5-layer pitch system (alphabet -> octaves -> temperament -> tuning -> resolver).",
+      "example": "// These are all terminal symbols for BP3:\n// C4, D#5, Eb3, sa6, dha7, do4"
+    }
+  },
+
+  "categories": {
+    "structure": { "label": "Structure", "color": "#e94560", "order": 1 },
+    "rules": { "label": "Rules", "color": "#ff6b8a", "order": 2 },
+    "time": { "label": "Time & Duration", "color": "#00ff88", "order": 3 },
+    "engine": { "label": "Engine []", "color": "#4a90d9", "order": 4 },
+    "runtime": { "label": "Runtime ()", "color": "#e9a845", "order": 5 },
+    "declarations": { "label": "Declarations", "color": "#c792ea", "order": 6 },
+    "advanced": { "label": "Advanced", "color": "#888", "order": 7 }
+  }
+}

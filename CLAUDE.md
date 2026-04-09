@@ -96,28 +96,55 @@ Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + f
 - Flat alphabet: no OCT, all terminals as silent sound objects (C4, sa6, etc.) for BP3 compat.
 - Block separator: `-----` between subgrammars with different modes
 
+### Mémoire sceptique
+
+La mémoire est un INDICE, pas un fait.
+- Avant d'agir sur un souvenir : ouvre le fichier, vérifie l'état réel.
+- Si conflit entre mémoire et code : le code fait foi.
+- 3 niveaux :
+  1. **Surface** : auto-memory (~/.claude/projects/.../memory/) — chargé automatiquement
+  2. **Thématique** : RTFM (`rtfm_search` → `rtfm_expand`) — chargé à la demande
+  3. **Archives** : `git log`, historique sessions — recherche profonde si besoin
+
+### Agents — Équipe de développement
+
+3 agents spécialisés dans `.claude/agents/` :
+- **dev** — Développeur TDD. Code, teste, log dans scratchpad.
+- **reviewer** — Review read-only. Classifie CRITICAL/IMPORTANT/MINOR.
+- **ops** — Build et archive. Activation manuelle, APPROVE requis.
+
+Communication inter-agents via `.claude/scratchpad/`. Chaque agent écrit ses résultats, le suivant les lit. Aucun contexte partagé directement.
+
+Délégation active obligatoire : donne fichier, ligne, action précise. JAMAIS "fixe le bug" ou "basé sur tes recherches".
+
+Pour les sous-agents de recherche ou tâches simples : utilise Haiku.
+
+### Sources brutes
+
+`raw/` contient les documents bruts (articles, PDFs, notes, clippings).
+Ne jamais modifier `raw/` automatiquement. C'est l'espace humain.
+Pour ingérer : `rtfm sync raw/ --corpus raw`
+
+### RTFM — Base de connaissances indexée
+
+Ce projet est indexé avec RTFM (MCP server `.mcp.json`).
+
+- Cherche dans RTFM (`rtfm_search`) AVANT Grep/Glob pour toute recherche exploratoire.
+- Utilise `rtfm_expand` pour lire les sections pertinentes avec numéros de ligne.
+- Ne lis jamais un fichier entier si RTFM peut cibler la section.
+- Après modification de fichiers, RTFM se re-synchronise automatiquement.
+
 ### Sessions parallèles — Rôles par nom de session
 
 Si tu es lancé avec un nom de session (`-n`), lis immédiatement les fichiers mémoire correspondants pour récupérer tout le contexte accumulé.
 
 **Session `moteur-wasm`** — Moteur BP3 WASM, tests e2e, conformité scènes
-- Lis : `memory/session_2026_03_22.md`, `memory/session_2026_03_22b.md`, `memory/bpweb_engine.md`
 - Focus : bugs moteur, pipeline WASM (bp3_api.c, stubs), test_wasm_all.js, CONFORMITY.md, aux files
 
 **Session `transpileur`** — Parser, encoder, resolver, sounds
-- Lis : `memory/session_2026_03_22.md`, `memory/session_2026_03_17.md`, `memory/session_2026_03_17b.md`
 - Focus : tokenizer.js, parser.js, encoder.js, resolver.js, soundsResolver.js, lib/*.json, test/
 
 **Session `architecture`** — Design langage, pitch, acteurs, REPL, effets
-- Lis : `memory/session_2026_03_21.md`, `memory/session_2026_03_18.md`, `memory/design_actor.md`, `memory/design_pitch_architecture.md`
 - Focus : docs/DESIGN_*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json, concepts acteurs/REPL/effets
 
 Après lecture des fichiers mémoire, fais un résumé de ce que tu sais pour confirmer que tu as le contexte.
-
-### RTFM — Indexed Knowledge Base
-
-This project has been indexed with RTFM.
-
-For any **exploratory search** (finding which files/modules/classes are relevant
-to a topic), use `rtfm_search` instead of Glob, find, ls, or broad Grep.
-Then use `rtfm_expand` to read easily most relevant files/sections.

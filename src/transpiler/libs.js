@@ -138,7 +138,27 @@ function loadLibsFromDirectives(directives) {
   const settingsLib = loadLib('settings');
   if (settingsLib) ctx._libs['settings'] = settingsLib;
 
+  // Built-in: cc() generic MIDI CC (always available)
+  ctx.controls['cc'] = { args: ['number', 'value'], range: [0, 127], description: 'Generic MIDI CC', transportGroup: 'midi' };
+  ctx.controlMap['cc'] = '_cc';
+  ctx.controlNames.add('cc');
+  ctx.dispatcherOnlyControls.add('cc');
+
   for (const dir of directives) {
+    // @cc directives: user-defined named CC mappings
+    if (dir.name === 'cc' && dir.ccMappings) {
+      for (const cc of dir.ccMappings) {
+        ctx.controls[cc.name] = {
+          args: ['value'], range: [0, 127], default: 0,
+          description: `User CC${cc.number}`, transportGroup: 'midi', ccNumber: cc.number
+        };
+        ctx.controlMap[cc.name] = `_${cc.name}`;
+        ctx.controlNames.add(cc.name);
+        ctx.dispatcherOnlyControls.add(cc.name);
+      }
+      continue;
+    }
+
     const lib = loadLib(dir.name, dir.subkey);
     if (!lib) continue;
     const libKey = dir.subkey ? `${dir.name}.${dir.subkey}` : dir.name;
@@ -153,10 +173,32 @@ function loadLibsFromDirectives(directives) {
     }
 
     // Merge controls — engine (BP3 native) and runtime (dispatcher)
+    // Runtime section may contain sub-groups (musical, midi, webaudio, dispatcher, generic)
     const controlSources = [];
     if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false });
     if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true });
-    if (lib.runtime) controlSources.push({ source: lib.runtime, isEngine: false });
+    if (lib.runtime) {
+      // Iterate sub-groups: each value that is an object with nested control defs
+      for (const [groupName, groupContent] of Object.entries(lib.runtime)) {
+        if (groupName === '_comment') continue;
+        if (typeof groupContent === 'object' && groupContent !== null && !Array.isArray(groupContent)) {
+          // Check if this is a sub-group (has nested objects with 'args' or 'description')
+          const hasNestedDefs = Object.values(groupContent).some(
+            v => typeof v === 'object' && v !== null && ('args' in v || 'description' in v)
+          );
+          if (hasNestedDefs) {
+            // Sub-group: iterate its controls, tag each with transportGroup
+            for (const [name, def] of Object.entries(groupContent)) {
+              if (name === '_comment') continue;
+              controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false });
+            }
+            continue;
+          }
+        }
+        // Flat control (backwards compat): treat as ungrouped runtime control
+        controlSources.push({ source: { [groupName]: groupContent }, isEngine: false });
+      }
+    }
     for (const { source, isEngine } of controlSources) {
       for (const [name, def] of Object.entries(source)) {
         if (name === '_comment') continue;

@@ -59,8 +59,9 @@ export class MidiTransport {
   /**
    * Schedule a note event.
    * Resolves token to MIDI note via frequency, with pitch bend for microtonal.
+   * Sends CC/Program Change/Pressure when controlState values change.
    *
-   * @param {Object} event - { token, velocity, durSec, chan, vel, pitchrange }
+   * @param {Object} event - { token, velocity, durSec, chan, vel, offvel, ins, mod, pan, volume, pressure, pitchbend, pitchrange, cc, ... }
    * @param {number} absTime - absolute AudioContext time
    */
   send(event, absTime) {
@@ -76,6 +77,7 @@ export class MidiTransport {
 
     const channel = ((event.chan || 1) - 1) & 0x0F;
     const vel = Math.min(127, Math.max(0, Math.round((event.velocity ?? 0.5) * 127)));
+    const offvel = Math.min(127, Math.max(0, event.offvel ?? 64));
 
     // Convert absTime to performance.now() timestamp
     const perfNow = performance.now();
@@ -83,30 +85,86 @@ export class MidiTransport {
     const offset = (absTime - audioNow) * 1000; // seconds → ms
     const timestamp = perfNow + Math.max(0, offset);
 
-    // Pitch bend for microtonal (> 1 cent deviation)
-    if (Math.abs(bendCents) > 1) {
+    // --- CC / Program Change / Pressure (send before NoteOn) ---
+    this._sendControlChanges(event, channel, timestamp);
+
+    // Pitch bend: explicit pitchbend from controlState, or microtonal auto-bend
+    if (event.pitchbend != null && event.pitchbend !== 0) {
+      // Explicit pitch bend from (pitchbend:N) — raw value -8192..+8191
+      const bendValue = Math.max(0, Math.min(16383, event.pitchbend + 8192));
+      this._output.send([0xE0 | channel, bendValue & 0x7F, (bendValue >> 7) & 0x7F], timestamp);
+    } else if (Math.abs(bendCents) > 1) {
+      // Microtonal auto-bend from temperament
       const pitchrange = event.pitchrange || 200; // cents, default ±1 tone
       const bendNorm = bendCents / pitchrange; // -1..+1
       const bendValue = Math.round(8192 + bendNorm * 8191);
       const bendClamped = Math.max(0, Math.min(16383, bendValue));
-      const lsb = bendClamped & 0x7F;
-      const msb = (bendClamped >> 7) & 0x7F;
-      this._output.send([0xE0 | channel, lsb, msb], timestamp);
+      this._output.send([0xE0 | channel, bendClamped & 0x7F, (bendClamped >> 7) & 0x7F], timestamp);
     }
 
     // NoteOn
     this._output.send([0x90 | channel, note, vel], timestamp);
 
-    // NoteOff
+    // NoteOff with offvel
     const offTime = timestamp + (event.durSec || 0.1) * 1000;
-    this._output.send([0x80 | channel, note, 0], offTime);
+    this._output.send([0x80 | channel, note, offvel], offTime);
 
     // Reset pitch bend after note (if it was bent)
-    if (Math.abs(bendCents) > 1) {
+    if ((event.pitchbend != null && event.pitchbend !== 0) || Math.abs(bendCents) > 1) {
       this._output.send([0xE0 | channel, 0x00, 0x40], offTime);
     }
 
     this._pendingNoteOffs.push({ note, channel, offTime });
+  }
+
+  /**
+   * Send CC, Program Change, and Pressure messages when values change.
+   * Tracks previous values to avoid redundant messages.
+   */
+  _sendControlChanges(event, channel, timestamp) {
+    if (!this._prevState) this._prevState = {};
+    const prev = this._prevState;
+
+    // Program Change (ins) — only when explicitly set (ins > 0)
+    if (event.ins > 0 && event.ins !== prev.ins) {
+      this._output.send([0xC0 | channel, (event.ins - 1) & 0x7F], timestamp);
+      prev.ins = event.ins;
+    }
+
+    // CC1 — Modulation (only send when explicitly changed from previous)
+    if (event.mod != null && prev.mod != null && event.mod !== prev.mod) {
+      this._output.send([0xB0 | channel, 1, event.mod & 0x7F], timestamp);
+    }
+    prev.mod = event.mod;
+
+    // CC10 — Pan
+    if (event.pan != null && prev.pan != null && event.pan !== prev.pan) {
+      this._output.send([0xB0 | channel, 10, event.pan & 0x7F], timestamp);
+    }
+    prev.pan = event.pan;
+
+    // CC7 — Volume
+    if (event.volume != null && prev.volume != null && event.volume !== prev.volume) {
+      this._output.send([0xB0 | channel, 7, event.volume & 0x7F], timestamp);
+    }
+    prev.volume = event.volume;
+
+    // Channel Pressure (aftertouch)
+    if (event.pressure != null && prev.pressure != null && event.pressure !== prev.pressure) {
+      this._output.send([0xD0 | channel, event.pressure & 0x7F], timestamp);
+    }
+    prev.pressure = event.pressure;
+
+    // Generic CC: cc = "N,V" (cc number, value)
+    if (event.cc != null && event.cc !== prev.cc) {
+      const parts = String(event.cc).split(',');
+      const ccNum = parseInt(parts[0]);
+      const ccVal = parseInt(parts[1]);
+      if (!isNaN(ccNum) && !isNaN(ccVal)) {
+        this._output.send([0xB0 | channel, ccNum & 0x7F, ccVal & 0x7F], timestamp);
+      }
+      prev.cc = event.cc;
+    }
   }
 
   /**

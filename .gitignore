@@ -2,6 +2,8 @@ build/
 node_modules/
 *.log
 .rtfm/
+.claude/scratchpad/
+raw/
 docs/mails/
 *.wasm18
 _test_*

@@ -785,6 +785,8 @@ let lastControlTable = null;
 let lastCVTable = null;
 let lastDirectives = [];
 let lastTransportMap = {};  // symbol → transport name (from declarations/directives)
+let lastActorTable = {};   // actorName → { alphabet, transport, symbols, ... }
+let lastTerminalActorMap = {};  // terminal → actorName
 let lastTonality = null;  // tonality file content for bp3_load_tonality
 let audioCtx = null;
 let isPlaying = false;
@@ -949,7 +951,7 @@ function renderLibrary(items) {
 
   // Group by category
   const groups = {};
-  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'world', 'raga', 'advanced', 'indian', 'composition', 'dice', 'test', 'user'];
+  const categoryOrder = ['tutorial', 'basics', 'generative', 'polymetric', 'synthesis', 'cv', 'tuning', 'world', 'raga', 'midi', 'advanced', 'indian', 'composition', 'dice', 'test', 'user'];
   const categoryLabels = {
     tutorial: 'Tutorial',
     basics: 'Basics',
@@ -960,6 +962,7 @@ function renderLibrary(items) {
     tuning: 'Tuning',
     world: 'World Scales',
     raga: 'Raga / Indian',
+    midi: 'MIDI',
     advanced: 'Advanced',
     indian: 'Indian Classical',
     composition: 'Composition',
@@ -1535,6 +1538,8 @@ async function produce() {
       lastCVTable = compiled.cvTable || null;
       lastDirectives = compiled.directives || [];
       lastTransportMap = buildTransportMap(compiled);
+      lastActorTable = compiled.actorTable || {};
+      lastTerminalActorMap = compiled.terminalActorMap || {};
       if (compiled.settings) document.getElementById('settings').value = compiled.settings;
       if (compiled.warnings && compiled.warnings.length > 0) {
         console.log('BPscript warnings:', compiled.warnings);
@@ -1773,13 +1778,27 @@ async function ensureDispatcher() {
 
     dispatcher = new Dispatcher(audioCtx);
 
-    // Extract runtime control defaults from controls.json
+    // Extract runtime control defaults from controls.json (supports sub-groups)
     const controlsLib = window._loadedLibs?.controls;
     if (controlsLib?.runtime) {
       const defaults = {};
-      for (const [name, def] of Object.entries(controlsLib.runtime)) {
-        if (name === '_comment') continue;
-        if (def.default != null) defaults[name] = def.default;
+      for (const [groupName, groupContent] of Object.entries(controlsLib.runtime)) {
+        if (groupName === '_comment') continue;
+        if (typeof groupContent === 'object' && groupContent !== null && !Array.isArray(groupContent)) {
+          // Check if sub-group (contains objects with 'args' or 'description')
+          const isGroup = Object.values(groupContent).some(
+            v => typeof v === 'object' && v !== null && ('args' in v || 'description' in v)
+          );
+          if (isGroup) {
+            for (const [name, def] of Object.entries(groupContent)) {
+              if (name === '_comment') continue;
+              if (def.default != null) defaults[name] = def.default;
+            }
+            continue;
+          }
+        }
+        // Flat control (backward compat)
+        if (groupContent?.default != null) defaults[groupName] = groupContent.default;
       }
       dispatcher.setControlDefaults(defaults);
     }
@@ -1795,6 +1814,11 @@ async function ensureDispatcher() {
     if (midiEnabled && midiTransport) {
       dispatcher.addTransport('midi', midiTransport);
     }
+  }
+
+  // Always refresh MIDI transport's audio time getter (audioCtx now guaranteed)
+  if (midiTransport && midiTransport.setAudioCtxTimeGetter) {
+    midiTransport.setAudioCtxTimeGetter(() => audioCtx.currentTime);
   }
 }
 
@@ -1892,14 +1916,18 @@ function refreshMidiPorts() {
   if (prevIn && inSel.querySelector(`option[value="${prevIn}"]`)) inSel.value = prevIn;
   inSel.style.display = midiAccess.inputs.size > 0 ? '' : 'none';
 
-  // Auto-select first output if none selected
-  if (!outSel.value && midiAccess.outputs.size > 0) {
+  // Restore saved port or auto-select first output
+  const savedPort = localStorage.getItem('bpscript_midi_out');
+  if (savedPort && outSel.querySelector(`option[value="${savedPort}"]`)) {
+    outSel.value = savedPort;
+    selectMidiOutput();
+  } else if (!outSel.value && midiAccess.outputs.size > 0) {
     outSel.selectedIndex = 1;
     selectMidiOutput();
   }
 }
 
-function selectMidiOutput() {
+async function selectMidiOutput() {
   const outSel = document.getElementById('midiOutSelect');
   const portId = outSel.value;
   if (!portId || !midiAccess) {
@@ -1911,45 +1939,11 @@ function selectMidiOutput() {
   const port = midiAccess.outputs.get(portId);
   if (!port) return;
 
-  // Create a lightweight MIDI transport using the raw port
-  midiTransport = {
-    _port: port,
-    _getAudioTime: () => audioCtx?.currentTime || 0,
-    send(event, absTime) {
-      const channel = ((event.chan || event.channel || 1) - 1) & 0x0F;
-      const vel = Math.min(127, Math.max(0, Math.round((event.velocity ?? 1) * 127)));
-
-      // Resolve token → MIDI note number via frequency
-      let note = 60;
-      if (dispatcher?._resolver) {
-        const res = dispatcher._resolver.resolve(event.token);
-        if (res?.frequency) {
-          note = Math.round(12 * Math.log2(res.frequency / 440) + 69);
-          note = Math.max(0, Math.min(127, note));
-        }
-      }
-
-      // Convert AudioContext time → performance.now() timestamp
-      const perfNow = performance.now();
-      const audioNow = this._getAudioTime();
-      const offset = (absTime - audioNow) * 1000;
-      const timestamp = perfNow + Math.max(0, offset);
-
-      this._port.send([0x90 | channel, note, vel], timestamp);
-      const offTime = timestamp + (event.durSec || 0.1) * 1000;
-      this._port.send([0x80 | channel, note, 0], offTime);
-    },
-    sendCC(cc, value, channel = 0) {
-      if (!this._port) return;
-      this._port.send([0xB0 | (channel & 0x0F), cc & 0x7F, value & 0x7F]);
-    },
-    close() {
-      // All notes off on all channels
-      for (let ch = 0; ch < 16; ch++) {
-        this._port.send([0xB0 | ch, 123, 0]);
-      }
-    }
-  };
+  // Use the full MidiTransport class (pitch bend microtonal, CC, Program Change, etc.)
+  const { MidiTransport } = await import('../src/dispatcher/transports/midi.js');
+  midiTransport = new MidiTransport({ resolver: dispatcher?._resolver });
+  midiTransport.setOutput(port);
+  midiTransport.setAudioCtxTimeGetter(() => audioCtx?.currentTime || 0);
 
   if (dispatcher) {
     dispatcher.addTransport('midi', midiTransport);
@@ -1957,6 +1951,9 @@ function selectMidiOutput() {
 
   console.log(`MIDI output: ${port.name}`);
   document.getElementById('midiStatus').textContent = port.name;
+
+  // Save port choice
+  try { localStorage.setItem('bpscript_midi_out', portId); } catch {}
 }
 
 let _midiInputPort = null;
@@ -2097,6 +2094,103 @@ function _createResolver() {
   return resolver;
 }
 
+/**
+ * Create a resolver configured for a specific actor.
+ * Uses the actor's alphabet/tuning instead of global directives.
+ */
+function _createResolverForActor(actorName, actorDef) {
+  const { Resolver } = window._resolverModule || {};
+  if (!Resolver) return null;
+
+  const alphabets = window._libAlphabets;
+  const octaves = window._libOctaves;
+  const tunings = window._libTunings;
+  const temperaments = window._libTemperaments;
+  if (!alphabets || !tunings || !temperaments) return null;
+
+  const alphabetKey = actorDef.alphabet;
+  const alphabetData = alphabets[alphabetKey];
+  if (!alphabetData) return null;
+
+  // Resolve octave convention from alphabet
+  const octavesKey = alphabetData.octaves || 'western';
+  const octavesData = octaves?.[octavesKey];
+
+  // Auto-detect tuning from alphabet (first tuning that references this alphabet)
+  let tuningKey = actorDef.scale || null;
+  if (!tuningKey) {
+    for (const [k, v] of Object.entries(tunings)) {
+      if (k.startsWith('_')) continue;
+      if (v.alphabet === alphabetKey) { tuningKey = k; break; }
+    }
+  }
+  tuningKey = tuningKey || 'western_12TET';
+
+  const tuningData = tunings[tuningKey];
+  const tempName = tuningData?.temperament;
+  const tempData = tempName ? temperaments[tempName] : null;
+
+  const resolver = new Resolver({
+    alphabet: alphabetData,
+    octaves: octavesData,
+    tuning: tuningData,
+    temperament: tempData,
+  });
+
+  // Attach SoundsResolver if applicable
+  const { SoundsResolver } = window._soundsResolverModule || {};
+  if (SoundsResolver && window._libSounds && actorDef.sounds) {
+    const soundsData = window._libSounds[actorDef.sounds];
+    if (soundsData) {
+      resolver.soundsResolver = new SoundsResolver(soundsData);
+    }
+  }
+
+  return resolver;
+}
+
+/**
+ * Set up actors on the dispatcher: resolvers + transports per actor.
+ * Called from playOnce/playLoop after ensureDispatcher.
+ */
+function _setupActors() {
+  if (!dispatcher) return;
+  const hasActors = Object.keys(lastActorTable).length > 0;
+  dispatcher.setActors(
+    hasActors ? lastActorTable : {},
+    hasActors ? lastTerminalActorMap : {}
+  );
+
+  if (!hasActors) return;
+
+  for (const [name, def] of Object.entries(lastActorTable)) {
+    // Create per-actor resolver
+    const resolver = _createResolverForActor(name, def);
+    if (resolver) {
+      dispatcher.setActorResolver(name, resolver);
+    }
+
+    // Map actor transport: use transport key from actor definition
+    const transportRef = def.transport;
+    if (transportRef && transportRef.key) {
+      dispatcher.setActorTransport(name, transportRef.key);
+
+      // Store transport params (ch, vel, etc.) in actor def for dispatch-time injection
+      if (transportRef.params) {
+        // Normalize: ch → chan (MIDI convention)
+        const params = { ...transportRef.params };
+        if (params.ch != null) { params.chan = params.ch; delete params.ch; }
+        def.transportParams = params;
+      }
+
+      // Ensure the transport exists (MIDI might need to be registered as 'midi')
+      if (transportRef.key === 'midi' && !dispatcher.transports['midi'] && midiEnabled && midiTransport) {
+        dispatcher.addTransport('midi', midiTransport);
+      }
+    }
+  }
+}
+
 /** Update the resolver from current directives (@tuning, @alphabet, @octaves) */
 function updateResolver() {
   if (!dispatcher) return;
@@ -2104,10 +2198,9 @@ function updateResolver() {
   const resolver = _createResolver();
   dispatcher._resolver = resolver;
 
-  // Update the default transport's resolver
-  const transport = dispatcher.transports['default'];
-  if (transport) {
-    transport.resolver = resolver;
+  // Update all transports' resolvers
+  for (const transport of Object.values(dispatcher.transports)) {
+    if (transport) transport.resolver = resolver;
   }
 }
 
@@ -2197,6 +2290,7 @@ async function playOnce() {
   dispatcher.setControlTable(lastControlTable);
   dispatcher.setCVTable(lastCVTable);
   dispatcher.setTransportMap(lastTransportMap);
+  _setupActors();
   updateResolver();
   appendResolverDebug();
   dispatcher.load(lastTimedTokens);
@@ -2219,6 +2313,7 @@ async function playLoop() {
   dispatcher.setControlTable(lastControlTable);
   dispatcher.setCVTable(lastCVTable);
   dispatcher.setTransportMap(lastTransportMap);
+  _setupActors();
   updateResolver();
   dispatcher.load(lastTimedTokens);
 

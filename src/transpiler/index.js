@@ -8,6 +8,7 @@ import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { encode } from './encoder.js';
 import { generatePrototypes } from './prototypes.js';
+import { resolveActors } from './actorResolver.js';
 
 function compileBPS(source) {
   const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [] };
@@ -20,6 +21,12 @@ function compileBPS(source) {
     const ast = parse(tokens);
     result.ast = ast;
 
+    // 2b. Resolve actors (between parser and encoder)
+    const actorResult = resolveActors(ast);
+    if (actorResult.errors.length > 0) {
+      result.errors.push(...actorResult.errors);
+    }
+
     // 3. Encode → BP3
     const encoded = encode(ast);
     result.grammar = encoded.grammar;
@@ -30,6 +37,8 @@ function compileBPS(source) {
     result.controlTable = encoded.controlTable;
     result.cvTable = encoded.cvTable;
     result.directives = ast.directives;
+    result.actorTable = actorResult.actorTable;
+    result.terminalActorMap = actorResult.terminalActorMap;
 
     // 4. Generate prototypes (-so. file) for all declared terminals
     if (result.alphabet.length > 0) {

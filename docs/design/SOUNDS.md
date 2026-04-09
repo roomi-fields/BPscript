@@ -398,27 +398,98 @@ Les CV sont des terminaux dont le `type` indique "modulateur, pas son". Le trans
 | `sample` | path | Référence fichier audio | — |
 | `layers` | array | Voix simultanées (composition) | — |
 
-### Clés de contrôle (controlState, via CT)
+### Contrôles runtime (controlState, via CT)
+
+Les contrôles `()` sont organisés en **sous-groupes par couche** dans `lib/controls.json`.
+Chaque sous-groupe définit un scope de transport — le dispatcher filtre les contrôles
+valides en fonction du transport de l'acteur cible.
+
+#### Musical (transport-agnostique)
+
+Chaque transport les interprète dans son propre protocole.
+
+| Clé | Type | Description | WebAudio | MIDI |
+|-----|------|-------------|----------|------|
+| `vel` | 0-127 | Vélocité | gain node | NoteOn velocity |
+| `pan` | 0-127 | Panoramique | StereoPanner | CC10 |
+| `offvel` | 0-127 | NoteOff velocity | — | NoteOff velocity (Osmose/MPE) |
+| `rndvel` | int | Vélocité aléatoire ±range | gain ± | vel ± |
+| `velcont` | flag | Interpolation continue vel | — | interp entre events |
+
+#### MIDI (transport MIDI uniquement)
 
 | Clé | Type | Description |
 |-----|------|-------------|
-| `vel` | 0-127 | Vélocité |
-| `pan` | 0-127 | Panoramique |
-| `wave` | string | Forme d'onde |
-| `attack` | ms | Temps d'attaque |
-| `release` | ms | Temps de relâchement |
-| `filter` | Hz | Cutoff filtre |
-| `filterQ` | float | Résonance filtre |
-| `detune` | cents | Désaccordage |
-| `transpose` | demi-tons | Transposition |
+| `chan` | 1-16 | Canal MIDI |
+| `ins` | 1-128 | Program Change |
+| `mod` | 0-127 | Modulation CC1 |
+| `pitchbend` | ±8192 | Pitch Bend |
+| `pitchrange` | cents | Plage de pitch bend |
+| `pressure` / `press` | 0-127 | Channel Pressure (aftertouch) |
+| `volume` | 0-127 | Volume CC7 |
+| `cc(N, val)` | 0-127 | CC générique par numéro |
+| `*cont` | flag | Interpolation continue (modcont, presscont, volumecont, pitchcont) |
 
-### Clés transport-spécifiques (ignorées par les autres)
+CC nommés : les CC universels (mod=CC1, volume=CC7, pan=CC10, sustain=CC64) sont
+pré-déclarés. L'utilisateur peut déclarer des CC supplémentaires via `@cc name:number`
+en en-tête de scène, ou dans un fichier de mapping JSON.
+
+#### Web Audio (transport webaudio uniquement)
+
+| Clé | Type | Description |
+|-----|------|-------------|
+| `wave` | string | Forme d'onde (sine, triangle, square, sawtooth) |
+| `attack` | ms | Temps d'attaque enveloppe |
+| `release` | ms | Temps de relâchement enveloppe |
+| `detune` | cents | Désaccordage |
+| `filter` | Hz | Cutoff filtre passe-bas |
+| `filterQ` | float | Résonance filtre |
+
+#### Dispatcher (résolu avant le transport)
+
+Transformations musicales appliquées par le dispatcher, indépendamment du transport.
+
+| Clé | Type | Description |
+|-----|------|-------------|
+| `transpose` | steps | Grid shift dans le tempérament |
+| `scale` | name, base | Échelle microtonale |
+| `rotate` | degrees | Rotation cyclique dans l'alphabet |
+| `keyxpand` | pivot, factor | Expansion/contraction d'intervalles |
+
+#### Generic (paramètres de sound objects)
+
+| Clé | Type | Description |
+|-----|------|-------------|
+| `value(param, amount)` | — | Valeur d'un paramètre continu |
+| `fixed(param, amount)` | — | Valeur fixe |
+| `cont(param)` | — | Active le mode continu |
+
+### Cascading des contrôles — 3 niveaux
+
+Les contrôles se résolvent par priorité croissante :
+
+| Niveau | Source | Exemple |
+|--------|--------|---------|
+| 1. Default | `controls.json` (valeur `default` du sous-groupe) | `vel: 64` |
+| 2. Acteur | `@actor X transport:midi(ch:3, vel:100)` | `vel: 100, ch: 3` |
+| 3. Séquence | `(vel:120)` inline dans le RHS | `vel: 120` |
+
+Le plus spécifique gagne. Un contrôle non-overridé conserve sa valeur du niveau précédent.
+
+### Validation par transport
+
+Quand un acteur est lié à un transport, seuls les contrôles des groupes suivants sont valides :
+- `musical` (toujours)
+- `dispatcher` (toujours)
+- `generic` (toujours)
+- Le groupe correspondant au transport (`midi`, `webaudio`, etc.)
+
+Un contrôle hors-scope (ex: `wave:saw` sur un acteur MIDI) génère un **warning**, pas une erreur.
+
+### Clés transport-spécifiques dans le dictionnaire résolu
 
 | Clé | Transport | Description |
 |-----|-----------|-------------|
-| `midi_note` | MIDI | Numéro de note |
-| `midi_channel` | MIDI | Canal |
-| `midi_program` | MIDI | Program Change |
 | `osc_address` | OSC | Adresse OSC |
 | `synth_def` | SC | Nom du SynthDef |
 

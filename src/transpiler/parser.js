@@ -41,6 +41,7 @@ function parse(tokens) {
     const scene = {
       type: 'Scene',
       directives: [],
+      actors: [],
       declarations: [],
       macros: [],
       backticks: [],
@@ -59,7 +60,9 @@ function parse(tokens) {
 
       if (at(T.AT)) {
         const dir = parseDirective();
-        if (dir.name === 'mode' && dir.runtime) {
+        if (dir.type === 'ActorDirective') {
+          scene.actors.push(dir);
+        } else if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
           initialMode = dir.runtime;
           initialModifiers = dir.modifiers || null;
@@ -84,6 +87,12 @@ function parse(tokens) {
 
     // Load libraries based on @ directives — determines known controls
     libCtx = loadLibsFromDirectives(scene.directives);
+
+    // Process actor directives — add to libCtx for dot notation lookup
+    libCtx.actors = {};
+    for (const actor of scene.actors) {
+      libCtx.actors[actor.name] = actor.properties;
+    }
 
     // Parse subgrammars
     scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
@@ -118,6 +127,57 @@ function parse(tokens) {
       subkey = expect(T.IDENT).value;
     }
     let runtime = null, value = null, aliases = null;
+
+    // @cc breath:2, expression:11 — named MIDI CC declarations
+    if (name === 'cc') {
+      if (at(T.COLON)) advance();  // optional colon: @cc: breath:2 or @cc breath:2
+      const ccMappings = [];
+      while (at(T.IDENT)) {
+        const ccName = advance().value;
+        expect(T.COLON);
+        const ccNumber = Number(expect(T.INT).value);
+        ccMappings.push({ name: ccName, number: ccNumber });
+        if (at(T.COMMA)) advance();
+      }
+      return { type: 'Directive', name, subkey, runtime: null, value: null, aliases: null,
+               modifiers: null, ccMappings, line: tok.line };
+    }
+
+    // @actor name key:value key:value ... — actor declaration
+    if (name === 'actor') {
+      const actorName = expect(T.IDENT).value;
+      const properties = {};
+      while (at(T.IDENT)) {
+        const propKey = advance().value;
+        expect(T.COLON);
+        if (at(T.IDENT)) {
+          const propValue = advance().value;
+          if (at(T.LPAREN)) {
+            // transport:midi(ch:3, vel:100) → TransportRef with params
+            advance();
+            const params = {};
+            while (!at(T.RPAREN) && !atEnd()) {
+              const paramKey = expect(T.IDENT).value;
+              expect(T.COLON);
+              const paramVal = at(T.INT) ? Number(advance().value)
+                             : at(T.FLOAT) ? Number(advance().value)
+                             : advance().value;
+              params[paramKey] = paramVal;
+              if (at(T.COMMA)) advance();
+            }
+            expect(T.RPAREN);
+            properties[propKey] = { type: 'TransportRef', key: propValue, params };
+          } else {
+            properties[propKey] = propValue;
+          }
+        } else if (at(T.INT)) {
+          properties[propKey] = Number(advance().value);
+        } else if (at(T.FLOAT)) {
+          properties[propKey] = Number(advance().value);
+        }
+      }
+      return { type: 'ActorDirective', name: actorName, properties, line: tok.line };
+    }
 
     // @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
     if (name === 'timepatterns' && at(T.COLON)) {
@@ -1153,6 +1213,15 @@ function parse(tokens) {
     // Identifier — could be Symbol, SymbolCall, Control, or TieStart
     if (at(T.IDENT)) {
       const name = advance().value;
+
+      // Actor dot notation: sitar.Sa → { type: 'Symbol', name: 'Sa', actor: 'sitar' }
+      // Only if first IDENT is a known actor and followed by .IDENT (no space before .)
+      if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT
+          && libCtx.actors && libCtx.actors[name]) {
+        advance(); // consume PERIOD
+        const terminal = advance().value;
+        return { type: 'Symbol', name: terminal, actor: name, line: tok.line };
+      }
 
       // Tie start: C4~
       if (at(T.TILDE)) {

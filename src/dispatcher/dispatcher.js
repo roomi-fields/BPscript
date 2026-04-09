@@ -38,6 +38,10 @@ export class Dispatcher {
     // Transport routing: symbol name → transport name (e.g. 'Sa' → 'midi')
     this._transportMap = {};  // set via setTransportMap()
 
+    // Actor system: per-actor resolver and transport
+    this._actors = {};              // actorName → { resolver, transportName, transport }
+    this._terminalActorMap = {};    // terminal → actorName
+
     // CV state
     this._cvTable = {};    // CV0 → { name, target, transport, lib, objectType, args, code }
     this._cvNames = {};    // CV instance name → CV id
@@ -57,6 +61,81 @@ export class Dispatcher {
    */
   setTransportMap(map) {
     this._transportMap = map || {};
+  }
+
+  /**
+   * Set actor system: terminal → actor mapping + actor definitions.
+   * Each actor can have its own resolver and transport.
+   * @param {Object} actorTable - { actorName → { alphabet, transport, ... } }
+   * @param {Object} terminalActorMap - { terminal → actorName }
+   */
+  setActors(actorTable, terminalActorMap) {
+    this._terminalActorMap = terminalActorMap || {};
+    this._actors = {};
+    if (actorTable) {
+      for (const [name, def] of Object.entries(actorTable)) {
+        this._actors[name] = {
+          resolver: null,
+          transportName: null,
+          transport: null,
+          def,
+        };
+      }
+    }
+  }
+
+  /**
+   * Set the resolver for a specific actor.
+   * @param {string} actorName
+   * @param {Resolver} resolver
+   */
+  setActorResolver(actorName, resolver) {
+    if (this._actors[actorName]) {
+      this._actors[actorName].resolver = resolver;
+    }
+  }
+
+  /**
+   * Set the transport for a specific actor.
+   * @param {string} actorName
+   * @param {string} transportName - key in this.transports
+   */
+  setActorTransport(actorName, transportName) {
+    if (this._actors[actorName]) {
+      this._actors[actorName].transportName = transportName;
+    }
+  }
+
+  /**
+   * Get the resolver for a given token (actor-specific or global fallback).
+   * @param {string} token
+   * @returns {Resolver|null}
+   */
+  _resolverForToken(token) {
+    const actorName = this._terminalActorMap[token];
+    if (actorName && this._actors[actorName]?.resolver) {
+      return this._actors[actorName].resolver;
+    }
+    return this._resolver || null;
+  }
+
+  /**
+   * Get the transport for a given token (actor-specific or global fallback).
+   * @param {string} token
+   * @returns {Transport|null}
+   */
+  _transportForToken(token) {
+    const actorName = this._terminalActorMap[token];
+    if (actorName && this._actors[actorName]?.transportName) {
+      const t = this.transports[this._actors[actorName].transportName];
+      if (t) return t;
+    }
+    // Global fallback: transportMap → 'default' → first available
+    const mappedName = this._transportMap[token];
+    return (mappedName && this.transports[mappedName])
+      || this.transports['default']
+      || Object.values(this.transports)[0]
+      || null;
   }
 
   /**
@@ -229,37 +308,40 @@ export class Dispatcher {
           }
         }
       } else if (!evt.isSilence && !evt.isProlongation && evt.durSec > 0) {
-        // Route to transport: check transportMap first, then fall back to 'default'
-        const mappedName = this._transportMap[evt.token];
-        const transport = (mappedName && this.transports[mappedName])
-          || this.transports['default']
-          || Object.values(this.transports)[0];
+        // Route to transport: actor-specific → transportMap → 'default'
+        const transport = this._transportForToken(evt.token);
 
         if (transport) {
           // Symbolic pitch operations: keyxpand → rotate (degree) → transpose (grid)
           let token = evt.token;
-          if (this._resolver) {
+          const resolver = this._resolverForToken(evt.token);
+          if (resolver) {
             if (this.controlState.keyxpand && this.controlState.keyxpand !== '0,1') {
               const parts = String(this.controlState.keyxpand).split(',');
               const pivot = parts[0]?.trim();
               const factor = parseFloat(parts[1]);
               if (pivot && !isNaN(factor)) {
-                token = this._resolver.keyxpandToken(token, pivot, factor);
+                token = resolver.keyxpandToken(token, pivot, factor);
               }
             }
             if (this.controlState.rotate) {
-              token = this._resolver.rotateToken(token, this.controlState.rotate);
+              token = resolver.rotateToken(token, this.controlState.rotate);
             }
             if (this.controlState.transpose) {
-              token = this._resolver.transposeToken(token, this.controlState.transpose);
+              token = resolver.transposeToken(token, this.controlState.transpose);
             }
           }
+          // Actor transport params (e.g. ch:10 from @actor drums ... transport:midi(ch:10))
+          const actorName = this._terminalActorMap[token] || this._terminalActorMap[evt.token];
+          const actorParams = actorName && this._actors[actorName]?.def?.transportParams || {};
+
           transport.send({
             token,
             startSec: this._loopOffset + evt.startSec,
             durSec: evt.durSec,
             ...this.controlState,
-            velocity: this.controlState.vel / 127,
+            ...actorParams,  // actor params override controlState (e.g. chan from ch:10)
+            velocity: (actorParams.vel ?? this.controlState.vel) / 127,
           }, absTime);
         }
       }
@@ -444,20 +526,21 @@ export class Dispatcher {
 
       // Symbolic pitch operations: keyxpand → rotate → transpose
       let token = evt.token;
-      if (this._resolver) {
+      const resolver = this._resolverForToken(evt.token);
+      if (resolver) {
         if (this.controlState.keyxpand && this.controlState.keyxpand !== '0,1') {
           const parts = String(this.controlState.keyxpand).split(',');
           const pivot = parts[0]?.trim();
           const factor = parseFloat(parts[1]);
           if (pivot && !isNaN(factor)) {
-            token = this._resolver.keyxpandToken(token, pivot, factor);
+            token = resolver.keyxpandToken(token, pivot, factor);
           }
         }
         if (this.controlState.rotate) {
-          token = this._resolver.rotateToken(token, this.controlState.rotate);
+          token = resolver.rotateToken(token, this.controlState.rotate);
         }
         if (this.controlState.transpose) {
-          token = this._resolver.transposeToken(token, this.controlState.transpose);
+          token = resolver.transposeToken(token, this.controlState.transpose);
         }
       }
 

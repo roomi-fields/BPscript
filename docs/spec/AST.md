@@ -151,7 +151,8 @@ Declaration {
 }
 ```
 
-Avec `@actor` : `gate Sa:sitar` → `{ temporalType:"gate", name:"Sa", actor:"sitar", runtime:null }`.
+Avec `@actor`, les symboles ne sont pas déclarés individuellement — l'acteur importe
+tout son alphabet. La qualification se fait dans les règles via dot notation (`sitar.Sa`).
 Legacy : `gate Sa:sc` → `{ temporalType:"gate", name:"Sa", actor:null, runtime:"sc" }`.
 
 ---
@@ -430,7 +431,7 @@ Exemples :
 Symbol { type: "Symbol", name: string, actor: string | null, line: number }
 ```
 
-Le champ `actor` est rempli par le `:acteur` explicite (`Sa:sitar`), ou par la
+Le champ `actor` est rempli par la dot notation explicite (`sitar.Sa`), ou par la
 phase de résolution implicite (quand un seul acteur contient ce symbole). `null`
 pour les non-terminaux (qui n'ont pas d'acteur).
 

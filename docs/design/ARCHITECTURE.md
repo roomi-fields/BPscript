@@ -102,10 +102,10 @@ Chaque acteur porte son propre contexte de résolution :
 
 **Actor = alphabet + tuning + octaves + transport + eval**
 
-Les symboles sont qualifiés par leur acteur via `:` :
+Les symboles sont qualifiés par leur acteur via dot notation dans les règles :
 ```
-gate Sa:sitar        // Sa résolu via sitar
-trigger tin:tabla    // tin résolu via tabla
+S -> sitar.Sa sitar.Re tabla.tin     // actor.terminal
+S -> Sa Re tin                       // résolution implicite si non ambigu
 ```
 
 Résolution implicite quand non ambigu (un seul acteur contient le symbole).

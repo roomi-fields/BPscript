@@ -320,5 +320,54 @@
     "category": "world",
     "description": "Échelle non-octaviante (tritave 3:1, 13 notes)",
     "file": "bohlen-pierce.bps"
+  },
+  {
+    "id": "midi-scale",
+    "title": "MIDI: Scale",
+    "category": "midi",
+    "description": "Gamme basique — test sortie MIDI",
+    "file": "midi-scale.bps"
+  },
+  {
+    "id": "midi-velocity",
+    "title": "MIDI: Velocity",
+    "category": "midi",
+    "description": "Crescendo/decrescendo via (vel:N)",
+    "file": "midi-velocity.bps"
+  },
+  {
+    "id": "midi-channels",
+    "title": "MIDI: Channels",
+    "category": "midi",
+    "description": "Notes réparties sur 3 canaux (chan:1/2/3)",
+    "file": "midi-channels.bps"
+  },
+  {
+    "id": "midi-controls",
+    "title": "MIDI: Controls",
+    "category": "midi",
+    "description": "Pan (CC10), modulation (CC1)",
+    "file": "midi-controls.bps"
+  },
+  {
+    "id": "midi-microtonal",
+    "title": "MIDI: Microtonal",
+    "category": "midi",
+    "description": "Pitch bend auto via intonation juste",
+    "file": "midi-microtonal.bps"
+  },
+  {
+    "id": "midi-dual-output",
+    "title": "MIDI: Dual Output",
+    "category": "midi",
+    "description": "Mélodie MIDI + basse WebAudio (gate par note)",
+    "file": "midi-dual-output.bps"
+  },
+  {
+    "id": "midi-actors",
+    "title": "MIDI: Actors",
+    "category": "midi",
+    "description": "Dual output via @actor — mélodie MIDI ch1, basse WebAudio",
+    "file": "midi-actors.bps"
   }
 ]

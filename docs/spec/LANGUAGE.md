@@ -95,7 +95,15 @@ Sa!dha!spotlight          // 3 runtimes au meme instant
 
 Un acteur lie alphabet + tuning + octaves + transport :
 ```
-@actor sitar  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio
+@actor sitar1  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio
+@actor sitar2  alphabet:sargam  tuning:sargam_12TET     transport:midi(ch:3)
+@actor tabla   alphabet:tabla_bols  transport:midi(ch:10)
+```
+
+Dans les regles, la dot notation `actor.terminal` qualifie un terminal par son acteur :
+```
+S -> sitar1.Sa sitar2.Sa tabla.tin    // acteur explicite
+S -> Sa Re tin                         // resolution implicite si non ambigu
 ```
 
 ### Sounds system -- cascading

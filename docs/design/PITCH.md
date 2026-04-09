@@ -69,14 +69,18 @@ Si `eval` est omis → même valeur que `transport` (cas courant).
 
 ### Utilisation dans les règles
 
-Le `:` après un symbole référence l'acteur :
+Le `.` (dot notation) préfixe un terminal par son acteur — comme un namespace :
 
 ```
-gate Sa:sitar1       // Sa résolu via sitar1 (sargam + 22shruti + webaudio)
-gate Sa:sitar2       // même note, autre acteur (sargam + 12TET + midi ch3)
-trigger tin:tabla    // tin résolu via tabla (bols + midi ch10)
-trigger spot:lights  // spot résolu via lights (dmx)
+sitar1.Sa            // Sa résolu via sitar1 (sargam + 22shruti + webaudio)
+sitar2.Sa            // même note, autre acteur (sargam + 12TET + midi ch3)
+tabla.tin            // tin résolu via tabla (bols + midi ch10)
+lights.spot          // spot résolu via lights (dmx)
 ```
+
+Convention : le conteneur précède le contenu (`actor.terminal`), cohérent avec
+la notation standard dans tous les langages (`module.symbol`, `namespace.class`)
+et avec BPscript lui-même (`@alphabet.western`, `@actor sitar alphabet:sargam`).
 
 ### Import en bloc
 
@@ -87,13 +91,13 @@ liés à cet acteur :
 @actor sitar1  alphabet:sargam  tuning:sargam_22shruti  transport:webaudio
 
 // Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
-// automatiquement déclarés comme gate:sitar1
-// Pas besoin de "gate Sa:sitar1" pour chaque note
+// automatiquement disponibles via sitar1.sa, sitar1.re, etc.
+// Si sitar1 est le seul acteur avec sargam, "sa" seul suffit (résolution implicite)
 ```
 
-Surcharge individuelle possible :
+Surcharge de type temporel possible :
 ```
-trigger dha:sitar1   // override : dha est un trigger, pas un gate
+trigger dha   // override : dha est un trigger, pas un gate (dans le contexte de son acteur)
 ```
 
 ### Resolver par acteur
@@ -135,15 +139,15 @@ Même symbole `Sa`, même octave, fréquences différentes — parce que le tuni
 ### Conflits de noms
 
 Deux acteurs peuvent partager le même alphabet (sitar1 et sitar2 utilisent
-tous les deux sargam). Les symboles sont distingués par le `:actor` :
+tous les deux sargam). Les symboles sont distingués par la dot notation `actor.terminal` :
 
 ```
-// Pas de conflit — le :actor désambiguïse
-Sa:sitar1    // résolu via sitar1
-Sa:sitar2    // résolu via sitar2
+// Pas de conflit — le préfixe acteur désambiguïse
+sitar1.Sa    // résolu via sitar1
+sitar2.Sa    // résolu via sitar2
 ```
 
-Si un symbole est utilisé **sans** `:actor`, le compilateur cherche un
+Si un symbole est utilisé **sans** préfixe acteur, le compilateur cherche un
 acteur non ambigu. Si plusieurs acteurs contiennent ce symbole → erreur :
 
 ```
@@ -151,7 +155,7 @@ acteur non ambigu. Si plusieurs acteurs contiennent ce symbole → erreur :
 @actor sitar2  alphabet:sargam  ...
 
 Sa Re Ga Pa    // ❌ Erreur : 'Sa' est dans sitar1 et sitar2 — préciser l'acteur
-Sa:sitar1 Re:sitar1 Ga:sitar1 Pa:sitar1   // ✓ OK
+sitar1.Sa sitar1.Re sitar1.Ga sitar1.Pa   // ✓ OK
 ```
 
 Si un seul acteur contient le symbole → résolution implicite :
@@ -178,11 +182,11 @@ DIRECTIVE      IDENT            PAIR                     PAIR
        NAME
 ```
 
-Le tokenizer reconnaît aussi `:actor` sur les symboles comme un qualifier :
+Le tokenizer reconnaît aussi `actor.terminal` (dot notation) comme un qualified symbol :
 ```
-Sa:sitar
-│  │
-IDENT ACTOR_QUALIFIER
+sitar.Sa
+│     │
+ACTOR IDENT
 ```
 
 #### Parser — node AST
@@ -203,7 +207,7 @@ Le parser produit un node `ActorDirective` :
 }
 ```
 
-Les symboles qualifiés par `:actor` produisent un `Symbol` avec un champ `actor` :
+Les symboles qualifiés par dot notation produisent un `Symbol` avec un champ `actor` :
 ```js
 { type: 'Symbol', name: 'Sa', actor: 'sitar', line: 12 }
 ```
@@ -224,7 +228,7 @@ BP3 ne connaît pas les acteurs. L'encoder **aplatit** :
 
 ```
 Source BPscript :
-  Sa:sitar Re:sitar tin:tabla
+  sitar.Sa sitar.Re tabla.tin
 
 Grammaire BP3 :
   bolSa bolRe boltin

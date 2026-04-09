@@ -74,9 +74,9 @@ TYPE              = "gate" | "trigger" | "cv" ;
 ACTOR_OR_RUNTIME  = IDENT ;               (* acteur name (preferred) ou legacy runtime name *)
 ```
 
-Avec `@actor`, le `:` après un symbole référence un **acteur** (pas un runtime) :
-`gate Sa:sitar` → Sa est un gate appartenant à l'acteur `sitar`.
-Legacy : `gate Sa:sc` reste supporté (résolu comme acteur implicite si pas de `@actor`).
+Avec `@actor`, les symboles sont qualifiés par dot notation dans les règles :
+`sitar.Sa` → le terminal `Sa` résolu via l'acteur `sitar`.
+La déclaration `gate Sa:sc` reste le format legacy (runtime direct, sans `@actor`).
 
 ### `cv_instance`
 
