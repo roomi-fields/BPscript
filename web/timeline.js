@@ -10,33 +10,33 @@
 // ============ Color palette ============
 
 const VOICE_COLORS = [
-  '#e94560', '#4a90d9', '#50c878', '#e9a845', '#c77dba',
-  '#45b7d1', '#f06292', '#aed581', '#ffb74d', '#90a4ae',
+  '#e05572', '#5b8dd9', '#3dc98a', '#d4994a', '#b07acc',
+  '#45b7d1', '#e87c9e', '#7ce8a8', '#e9a845', '#8e94a8',
 ];
 
 const COLORS = {
-  bg: '#0a0f1a',
-  trackBg: '#0d1b2a',
-  trackBorder: '#0f3460',
-  text: '#ccc',
-  textDim: '#666',
-  ruler: '#1a2740',
-  rulerText: '#555',
-  rulerLine: '#333',
-  cursor: '#00ff88',
-  cursorGlow: 'rgba(0, 255, 136, 0.15)',
-  selection: 'rgba(233, 69, 96, 0.3)',
-  selectionBorder: '#e94560',
-  gap: 'rgba(255,255,255,0.03)',
-  silence: 'rgba(255,255,255,0.06)',
-  controlMark: '#4a90d9',
-  cvMark: '#e9a845',
-  headerBg: '#0d1b2a',
-  headerBorder: '#0f3460',
-  edgeHandle: '#fff',
-  minimap: 'rgba(233, 69, 96, 0.4)',
-  minimapView: 'rgba(0, 255, 136, 0.25)',
-  minimapBg: '#0a0f1a',
+  bg: '#08090d',
+  trackBg: '#0c0e14',
+  trackBorder: '#1e2333',
+  text: '#c8ccd8',
+  textDim: '#505770',
+  ruler: '#11141c',
+  rulerText: '#505770',
+  rulerLine: '#1e2333',
+  cursor: '#7ce8a8',
+  cursorGlow: 'rgba(124, 232, 168, 0.12)',
+  selection: 'rgba(224, 85, 114, 0.25)',
+  selectionBorder: '#e05572',
+  gap: 'rgba(255,255,255,0.02)',
+  silence: 'rgba(255,255,255,0.04)',
+  controlMark: '#5b8dd9',
+  cvMark: '#d4994a',
+  headerBg: '#0c0e14',
+  headerBorder: '#1e2333',
+  edgeHandle: '#e8eaf0',
+  minimap: 'rgba(224, 85, 114, 0.35)',
+  minimapView: 'rgba(124, 232, 168, 0.2)',
+  minimapBg: '#08090d',
 };
 
 // ============ TimelineRange — time↔pixel conversion ============
@@ -1275,6 +1275,7 @@ export class Timeline {
         const n = voice.notes[edge.blockIdx];
         this._resizeOrigMs = edge.side === 'left' ? n.start : n.end;
         this._resizeOrigDurations = voice.notes.map(note => note.end - note.start);
+        this._resizeOrigPositions = voice.notes.map(note => ({ start: note.start, end: note.end }));
         this.canvas.style.cursor = 'col-resize';
         e.preventDefault();
         return;
@@ -1824,7 +1825,9 @@ export class Timeline {
     const { voiceIdx, blockIdx, side } = this._resizeEdge;
     const voice = this.voices[voiceIdx];
     const notes = voice.notes;
-    const n = notes[blockIdx];
+    const orig = this._resizeOrigPositions;
+
+    if (!orig || !this._resizeOrigDurations) return;
 
     // Determine scope: same polyGroup siblings, or full voice if no group
     const groupInfo = this._findGroupSiblings(voice, blockIdx);
@@ -1837,55 +1840,67 @@ export class Timeline {
 
     const minDur = Math.max(10, totalSpan * 0.02);
 
-    if (!this._resizeOrigDurations) return;
+    // Use ORIGINAL positions for calculating new duration
+    const origStart = orig[blockIdx].start;
+    const origEnd = orig[blockIdx].end;
+    const origDur = this._resizeOrigDurations[blockIdx];
 
-    // New duration for the dragged block
     let newDur;
     if (side === 'right') {
-      newDur = targetMs - n.start;
+      // Right edge moves, left edge anchored at original start
+      newDur = targetMs - origStart;
     } else {
-      newDur = n.end - targetMs;
+      // Left edge moves, right edge anchored at original end
+      newDur = origEnd - targetMs;
     }
 
     // Clamp
     const maxDur = totalSpan - (scopeIndices.length - 1) * minDur;
     newDur = Math.max(minDur, Math.min(maxDur, newDur));
 
-    // Delta to distribute among siblings in scope
-    const origDur = this._resizeOrigDurations[blockIdx];
     const delta = newDur - origDur;
 
-    let siblingTotalOrig = 0;
-    for (const i of scopeIndices) {
-      if (i !== blockIdx) siblingTotalOrig += this._resizeOrigDurations[i];
-    }
-    if (siblingTotalOrig <= 0) return;
+    // Determine which siblings absorb the delta
+    // Right drag: blocks AFTER the dragged one compress/expand
+    // Left drag: blocks BEFORE the dragged one compress/expand
+    const affectedIndices = side === 'right'
+      ? scopeIndices.filter(i => i > blockIdx)
+      : scopeIndices.filter(i => i < blockIdx);
 
-    // Calculate new durations only for notes in scope
+    let affectedTotalOrig = 0;
+    for (const i of affectedIndices) affectedTotalOrig += this._resizeOrigDurations[i];
+    if (affectedTotalOrig <= 0 && delta > 0) return;
+
+    // Calculate new durations
     const newDurations = new Map();
     for (const i of scopeIndices) {
       if (i === blockIdx) {
         newDurations.set(i, newDur);
-      } else {
-        const share = this._resizeOrigDurations[i] / siblingTotalOrig;
+      } else if (affectedIndices.includes(i)) {
+        // Absorb delta proportionally
+        const share = this._resizeOrigDurations[i] / affectedTotalOrig;
         newDurations.set(i, Math.max(minDur, this._resizeOrigDurations[i] - delta * share));
+      } else {
+        // Unaffected: keep original duration
+        newDurations.set(i, this._resizeOrigDurations[i]);
       }
     }
 
-    // Normalize scope to keep group span exact
+    // Normalize to keep total span exact
     let rawTotal = 0;
     for (const d of newDurations.values()) rawTotal += d;
     const scale = totalSpan / rawTotal;
     for (const [i, d] of newDurations) newDurations.set(i, Math.round(d * scale));
 
-    // Apply: reposition notes in scope sequentially from spanStart
+    // Apply sequentially from spanStart
     let cursor = spanStart;
     for (const i of scopeIndices) {
       notes[i].start = cursor;
       notes[i].end = cursor + newDurations.get(i);
       cursor += newDurations.get(i);
     }
-    // Fix rounding
+    // Fix rounding at boundaries
+    notes[scopeIndices[0]].start = spanStart;
     notes[scopeIndices[scopeIndices.length - 1]].end = spanEnd;
   }
 

@@ -186,6 +186,7 @@
   }
 
   .toolbar .t-btn.play-active { background: var(--accent-midi); color: var(--surface-0); }
+  .toolbar .t-btn.active { background: var(--accent-primary); color: white; }
   .toolbar .t-btn.live-active { background: var(--accent-midi); color: var(--surface-0); }
 
   /* Secondary toolbar buttons */
@@ -285,10 +286,11 @@
   /* ── Output area ── */
   .output-area {
     height: 35%; min-height: 100px; display: flex; flex-direction: column; overflow: hidden;
+    background: var(--surface-0);
   }
   .output-tabs {
-    display: flex; background: var(--surface-1); padding: 0 16px;
-    border-top: 1px solid var(--surface-5);
+    display: flex; background: var(--surface-1); padding: 0 12px;
+    border-top: 1px solid var(--surface-5); border-bottom: none;
   }
   .output-tab {
     padding: 6px 12px; font-size: 10px; font-weight: 500; cursor: pointer;
@@ -299,22 +301,32 @@
   .output-tab.active { color: var(--accent-value); border-bottom-color: var(--accent-value); }
   .output-tab.has-errors { color: var(--accent-primary); }
 
-  .output-panels { flex: 1; overflow: hidden; background: var(--surface-2); }
+  .output-panels { flex: 1; overflow: hidden; background: var(--surface-0); }
   .output-panel {
-    display: none; height: 100%; overflow: auto; padding: 12px 20px;
+    display: none; height: 100%; overflow: auto; padding: 8px 12px;
     font-family: var(--font-mono); font-size: 11px; color: var(--text-code);
   }
   .output-panel.active { display: block; }
   #libsContent.active { display: flex !important; gap: 0; padding: 0; }
-  #outputContent { color: var(--accent-value); overflow-x: auto; white-space: pre-wrap; }
+  #outputContent { color: var(--accent-value); overflow-x: auto; white-space: pre-wrap; padding: 0 !important; }
   #messagesContent { color: var(--accent-pitch); white-space: pre-wrap; }
 
-  #timelineToolbar { display: flex; gap: 4px; padding: 2px 0 4px 0; }
-  #timelineToolbar button {
-    background: var(--surface-4); color: var(--text-2); border: none; border-radius: var(--radius-sm);
-    padding: 2px 10px; font-size: 11px; cursor: pointer; min-width: 28px;
+  #timelineToolbar {
+    display: flex; gap: 1px;
+    position: absolute; top: 4px; left: 6px; z-index: 5;
+    background: var(--surface-0); border-radius: 3px; padding: 1px;
+    opacity: 0.5; transition: opacity var(--transition-fast);
   }
-  #timelineToolbar button:hover { background: var(--surface-5); color: var(--text-1); }
+  #timelineToolbar:hover { opacity: 1; }
+  #timelineToolbar button {
+    background: transparent; color: var(--text-3); border: none; border-radius: 2px;
+    padding: 2px 5px; font-size: 9px; cursor: pointer;
+    line-height: 1; display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  #timelineToolbar button:hover { background: var(--surface-3); color: var(--text-1); }
+  #timelineToolbar button svg { width: 10px; height: 10px; }
+  #outputContent { position: relative; }
 
   /* ── Description bar ── */
   .desc-bar {
@@ -686,14 +698,17 @@
           <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor"/></svg>
           Produce
         </button>
-        <button id="playBtn" class="t-btn" onclick="playOnce()" disabled title="Play once">
+        <button id="playBtn" class="t-btn" onclick="playStart()" disabled title="Play">
           <svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14" fill="currentColor"/></svg>
         </button>
-        <button id="loopBtn" class="t-btn" onclick="playLoop()" disabled title="Loop">
-          <svg viewBox="0 0 16 16"><path d="M12,3 L12,5 L14,4 Z M4,3 A5,5 0 0,0 4,11 L6,11 A3,3 0 0,1 6,5 L10,5 L10,3 Z M12,5 L12,11 A5,5 0 0,1 4,11 L4,13 A7,7 0 0,0 14,5 Z" fill="currentColor"/></svg>
+        <button id="pauseBtn" class="t-btn" onclick="togglePause()" disabled title="Pause" style="display:none;">
+          <svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="0.5" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="0.5" fill="currentColor"/></svg>
         </button>
         <button id="stopBtn" class="t-btn" onclick="stopPlayback()" disabled title="Stop">
           <svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button id="loopBtn" class="t-btn" onclick="toggleLoopMode()" title="Loop mode">
+          <svg viewBox="0 0 16 16"><path d="M13,5 L13,10 A4,4 0 0,1 5,10 L5,9 L3,11 L5,13 L5,12 A6,6 0 0,0 15,5 Z M3,11 L3,6 A4,4 0 0,1 11,6 L11,7 L13,5 L11,3 L11,4 A6,6 0 0,0 1,11 Z" fill="currentColor"/></svg>
         </button>
       </div>
 
@@ -759,15 +774,21 @@
       <div class="output-panels">
         <div class="output-panel active" id="outputContent" style="position:relative;">
           <div id="timelineToolbar" style="display:none;">
-            <button onclick="tlZoom(1.5)" title="Zoom in">+</button>
-            <button onclick="tlZoom(1/1.5)" title="Zoom out">−</button>
-            <button onclick="tlFit()" title="Fit to view">Fit</button>
+            <button onclick="tlZoom(1.5)" title="Zoom in">
+              <svg width="12" height="12" viewBox="0 0 12 12"><line x1="6" y1="2" x2="6" y2="10" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button onclick="tlZoom(1/1.5)" title="Zoom out">
+              <svg width="12" height="12" viewBox="0 0 12 12"><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button onclick="tlFit()" title="Fit to view">
+              <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="0.8" opacity="0.5"/></svg>
+            </button>
           </div>
           <canvas id="timelineCanvas" style="display:none;width:100%;"></canvas>
-          <div id="outputText">(not yet produced)</div>
+          <div id="outputText" style="padding:12px 16px; font-family:var(--font-mono); font-size:11px; color:var(--text-3);">(not yet produced)</div>
         </div>
         <div class="output-panel" id="messagesContent">(no messages)</div>
-        <div class="output-panel" id="debugContent" style="color:#8be9fd; font-size:12px; white-space:pre; font-family:'Consolas',monospace;">(no debug info)</div>
+        <div class="output-panel" id="debugContent" style="color:var(--accent-synth); white-space:pre;">(no debug info)</div>
         <div class="output-panel" id="libsContent"></div>
         <!-- controlsContent moved to right panel -->
         <div class="output-panel" id="helpContent" style="overflow-y:auto;color:#ccc;font-size:13px;line-height:1.6;">
@@ -957,6 +978,8 @@ let lastTerminalActorMap = {};  // terminal → actorName
 let lastTonality = null;  // tonality file content for bp3_load_tonality
 let audioCtx = null;
 let isPlaying = false;
+let isPaused = false;
+let loopMode = false;
 let scheduledNodes = [];
 let dispatcher = null;
 let currentSceneId = null;
@@ -2276,9 +2299,53 @@ async function ensureDispatcher() {
 
 function updateTransportButtons() {
   const hasTokens = lastTimedTokens && lastTimedTokens.some(t => !t.token.startsWith('_') && t.token !== '-' && t.token !== '_' && t.end > t.start);
-  document.getElementById('playBtn').disabled = isPlaying || !hasTokens;
-  document.getElementById('loopBtn').disabled = isPlaying || !hasTokens;
-  document.getElementById('stopBtn').disabled = !isPlaying;
+  const playBtn = document.getElementById('playBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const loopBtn = document.getElementById('loopBtn');
+
+  // Play visible when not playing, Pause visible when playing
+  if (isPlaying && !isPaused) {
+    playBtn.style.display = 'none';
+    pauseBtn.style.display = '';
+    pauseBtn.disabled = false;
+  } else {
+    playBtn.style.display = '';
+    playBtn.disabled = !hasTokens;
+    pauseBtn.style.display = 'none';
+  }
+
+  // Play button highlight when paused (blink-like)
+  if (isPaused) playBtn.classList.add('play-active'); else playBtn.classList.remove('play-active');
+
+  stopBtn.disabled = !isPlaying;
+  if (loopMode) loopBtn.classList.add('active'); else loopBtn.classList.remove('active');
+}
+
+function toggleLoopMode() {
+  loopMode = !loopMode;
+  updateTransportButtons();
+}
+
+function playStart() {
+  if (isPaused) { togglePause(); return; }
+  if (isPlaying) return;
+  if (loopMode) playLoop(); else playOnce();
+}
+
+async function togglePause() {
+  if (!isPlaying || !audioCtx) return;
+  if (isPaused) {
+    await audioCtx.resume();
+    isPaused = false;
+    _startCursorAnimation();
+  } else {
+    await audioCtx.suspend();
+    isPaused = true;
+    // Keep cursor visible but stop animation
+    if (_cursorFrame) { cancelAnimationFrame(_cursorFrame); _cursorFrame = 0; }
+  }
+  updateTransportButtons();
 }
 
 // ============ Web MIDI ============
@@ -2717,7 +2784,10 @@ function _startCursorAnimation() {
       _cursorFrame = 0;
       return;
     }
-    const ms = dispatcher.clock.now * 1000;
+    let ms = dispatcher.clock.now * 1000;
+    if (dispatcher.duration > 0 && dispatcher.loop) {
+      ms = ms % (dispatcher.duration * 1000);
+    }
     if (window._timeline) window._timeline.setCursor(ms);
     _cursorFrame = requestAnimationFrame(tick);
   }
@@ -2911,6 +2981,8 @@ async function compareWithOriginal() {
 
 async function stopPlayback() {
   isPlaying = false;
+  isPaused = false;
+  if (audioCtx?.state === 'suspended') audioCtx.resume();
   _stopCursorAnimation();
   updateTransportButtons();
 
@@ -3571,7 +3643,7 @@ let libsData = {};
 
 async function loadLibsPanel() {
   if (libsLoaded) return;
-  const libNames = ['core', 'controls', 'alphabet', 'routing', 'sub', 'settings', 'tuning'];
+  const libNames = ['core', 'controls', 'alphabets', 'routing', 'sub', 'settings', 'tuning'];
   const panel = document.getElementById('libsContent');
 
   for (const name of libNames) {
