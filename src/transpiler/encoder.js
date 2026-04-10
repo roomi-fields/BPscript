@@ -34,7 +34,7 @@ let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [] };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [] };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -82,6 +82,55 @@ function encode(ast) {
       // Add CV name to alphabet so BP3 treats it as a terminal with duration
       output.alphabet.add(cv.name);
     }
+  }
+
+  // Build scene table from @scene directives — scene names become terminals
+  const sceneNames = new Set();
+  if (ast.scenes) {
+    for (const sc of ast.scenes) {
+      output.sceneTable[sc.name] = { file: sc.file };
+      sceneNames.add(sc.name);
+      output.alphabet.add(sc.name);
+    }
+  }
+
+  // Build expose table from @expose directives
+  if (ast.exposes) {
+    for (const exp of ast.exposes) {
+      for (const flag of exp.flags) {
+        if (!output.exposeTable.includes(flag)) output.exposeTable.push(flag);
+      }
+    }
+  }
+
+  // Build map table from @map directives (I/O mappings: CC/OSC ↔ triggers/flags)
+  // Resolve named CC aliases and scoped endpoints
+  if (ast.maps) {
+    for (const m of ast.maps) {
+      const entry = { source: resolveMapEndpoint(m.source), arrow: m.arrow, target: resolveMapEndpoint(m.target) };
+      output.mapTable.push(entry);
+    }
+  }
+
+  function resolveMapEndpoint(ep) {
+    if (!ep) return ep;
+    // Resolve CC alias: @cc breath:2 + @map breath -> [x] → cc:2
+    if (ep.kind === 'alias') {
+      const def = libCtx.controls[ep.name];
+      if (def?.ccNumber != null) {
+        return { kind: 'cc', number: def.ccNumber, params: ep.params || null };
+      }
+      return ep;
+    }
+    // Resolve scoped: scene.X → sys command, actor.X → flag
+    if (ep.kind === 'scoped') {
+      if (sceneNames.has(ep.scope)) {
+        return { kind: 'sys', scene: ep.scope, command: ep.name };
+      }
+      // Assume actor-scoped flag
+      return { kind: 'flag', name: ep.name, actor: ep.scope };
+    }
+    return ep;
   }
 
   // Build alphabet from DECLARATIONS (gate/trigger/cv) and loaded alphabets — never inferred

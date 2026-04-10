@@ -44,7 +44,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp9a42l4hh.js
+// include: /tmp/tmpko_z4l3u.js
 if (!Module["expectedDataFileDownloads"]) Module["expectedDataFileDownloads"] = 0;
 
 Module["expectedDataFileDownloads"]++;
@@ -171,7 +171,7 @@ Module["expectedDataFileDownloads"]++;
   });
 })();
 
-// end include: /tmp/tmp9a42l4hh.js
+// end include: /tmp/tmpko_z4l3u.js
 var arguments_ = [];
 
 var thisProgram = "./this.program";
@@ -4021,7 +4021,7 @@ Module["FS_createLazyFile"] = FS_createLazyFile;
 // End JS library exports
 // end include: postlibrary.js
 // Imports from the Wasm binary.
-var _malloc, _free, _bp3_init, _bp3_load_grammar, _bp3_load_alphabet, _bp3_load_settings, _bp3_set_write_midi, _bp3_set_seed, _bp3_load_settings_params, _bp3_load_tonality, _bp3_provision_file, _bp3_load_object_prototypes, _bp3_load_csound_resources, _bp3_produce, _bp3_get_result, _bp3_get_messages, _bp3_get_midi_events, _bp3_get_midi_event_count, _bp3_set_timed_tokens_verbose, _bp3_get_timed_tokens, _bp3_get_timed_token_count, _bp3_set_trace, _bp3_get_flag_state, _emscripten_stack_get_end, _emscripten_stack_get_base, __emscripten_stack_restore, __emscripten_stack_alloc, _emscripten_stack_get_current, memory, __indirect_function_table, wasmMemory;
+var _malloc, _free, _bp3_init, _bp3_load_grammar, _bp3_load_alphabet, _bp3_load_settings, _bp3_set_write_midi, _bp3_set_seed, _bp3_load_settings_params, _bp3_load_tonality, _bp3_provision_file, _bp3_load_object_prototypes, _bp3_load_csound_resources, _bp3_produce, _bp3_get_result, _bp3_get_messages, _bp3_get_midi_events, _bp3_get_midi_event_count, _bp3_set_timed_tokens_verbose, _bp3_get_timed_tokens, _bp3_get_timed_token_count, _bp3_set_trace, _bp3_get_flag_state, _bp3_set_flag, _bp3_get_flag_names, _emscripten_stack_get_end, _emscripten_stack_get_base, __emscripten_stack_restore, __emscripten_stack_alloc, _emscripten_stack_get_current, memory, __indirect_function_table, wasmMemory;
 
 function assignWasmExports(wasmExports) {
   _malloc = Module["_malloc"] = wasmExports["malloc"];
@@ -4047,6 +4047,8 @@ function assignWasmExports(wasmExports) {
   _bp3_get_timed_token_count = Module["_bp3_get_timed_token_count"] = wasmExports["bp3_get_timed_token_count"];
   _bp3_set_trace = Module["_bp3_set_trace"] = wasmExports["bp3_set_trace"];
   _bp3_get_flag_state = Module["_bp3_get_flag_state"] = wasmExports["bp3_get_flag_state"];
+  _bp3_set_flag = Module["_bp3_set_flag"] = wasmExports["bp3_set_flag"];
+  _bp3_get_flag_names = Module["_bp3_get_flag_names"] = wasmExports["bp3_get_flag_names"];
   _emscripten_stack_get_end = Module["_emscripten_stack_get_end"] = wasmExports["emscripten_stack_get_end"];
   _emscripten_stack_get_base = Module["_emscripten_stack_get_base"] = wasmExports["emscripten_stack_get_base"];
   __emscripten_stack_restore = wasmExports["_emscripten_stack_restore"];

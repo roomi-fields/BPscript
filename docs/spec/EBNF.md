@@ -11,11 +11,30 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 ## Couche 1 — Structure globale
 
 ```ebnf
-scene       = { directive | actor_directive | declaration | cv_instance | macro
+scene       = { directive | actor_directive | scene_directive | expose_directive
+              | map_directive | cc_directive
+              | declaration | cv_instance | macro
               | backtick_orphan | comment | blank_line }
               , subgrammar+ , [ template_section ] ;
 
-actor_directive = "@" , "actor" , IDENT , actor_props+ ;
+actor_directive  = "@" , "actor" , IDENT , actor_props+ ;
+scene_directive  = "@" , "scene" , IDENT , STRING ;        (* @scene verse "verse.bps" *)
+expose_directive = "@" , "expose" , ( "[" , IDENT , "]" )+ ; (* @expose [intensity] [energy] *)
+cc_directive     = "@" , "cc" , [ ":" ] , cc_pair , { "," , cc_pair } ; (* @cc breath:2, expression:11 *)
+map_directive    = "@" , "map" , map_endpoint , map_arrow , map_endpoint ;
+
+cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
+map_arrow  = "->" | "<->" | "<-" ;
+map_endpoint = "cc" , ":" , INT , [ "(" , kv_pairs , ")" ]      (* cc:74, cc:1(min:0,max:100) *)
+             | "osc" , ":" , ( "/" , IDENT )+ , [ "(" , kv_pairs , ")" ] (* osc:/sc/ready *)
+             | "<!" , IDENT                                      (* <!trigger *)
+             | "[" , IDENT , "]"                                 (* [flag] *)
+             | "sys" , "." , IDENT                               (* sys.play — commande transport *)
+             | IDENT , "." , IDENT                               (* scene.command ou actor.flag *)
+             | IDENT ;                                           (* alias CC nommé *)
+
+kv_pairs = kv_pair , { "," , kv_pair } ;
+kv_pair  = IDENT , ":" , ( INT | FLOAT | IDENT ) ;
 
 ```
 
@@ -39,7 +58,11 @@ directive_body = IDENT                              (* @core, @controls *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
                | "+"                                (* @+ — append to previous subgrammar *)
                | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
-               | "actor" , IDENT , actor_props+     (* @actor sitar alphabet:sargam ... *)
+               | "actor" , IDENT , actor_props+     (* @actor sitar alphabet:sargam ... — voir actor_directive *)
+               | "scene" , IDENT , STRING           (* @scene verse "verse.bps" — voir scene_directive *)
+               | "expose" , ( "[" , IDENT , "]" )+  (* @expose [intensity] — voir expose_directive *)
+               | "cc" , [ ":" ] , cc_pair , { "," , cc_pair }  (* @cc breath:2 — voir cc_directive *)
+               | "map" , map_endpoint , map_arrow , map_endpoint  (* @map cc:1 -> [x] — voir map_directive *)
                | "timepatterns" , ":" , tp_pair , { "," , tp_pair }  (* @timepatterns: t1=1/1, t2=3/2 *)
                ;
 
@@ -704,6 +727,7 @@ IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' } , [ "-" ]
                  Convention inherited from BP3 (Bernard Bel). *)
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
+STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;   (* littéral chaîne, pour @scene *)
 value       = [ "-" ] , INT | FLOAT | IDENT | INT , "/" , INT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
 TEXT        = (* tout caractère jusqu'à fin de ligne *) ;

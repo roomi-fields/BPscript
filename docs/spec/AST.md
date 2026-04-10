@@ -20,7 +20,10 @@ Version 0.7 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transp
 Scene {
   type: "Scene"
   directives: Directive[]
-  actors: ActorDirective[]           // @actor directives (design target, not yet parsed)
+  actors: ActorDirective[]           // @actor directives
+  scenes: SceneDirective[]           // @scene directives (child scenes)
+  exposes: ExposeDirective[]         // @expose directives (flags visible au parent)
+  maps: MapDirective[]               // @map directives (I/O mappings CC/OSC ↔ flags/triggers)
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
@@ -133,6 +136,68 @@ Exemples :
   -> `{ name:"piano", properties:{ alphabet:"western", scale:"western_12TET", sounds:"piano_timbre", transport:{key:"webaudio", params:{}}, eval:null } }`
 - `@actor drums  alphabet:tabla  sounds:tabla_gm  transport:midi(ch:10)`
   -> `{ name:"drums", properties:{ alphabet:"tabla", scale:null, sounds:"tabla_gm", transport:{key:"midi", params:{ch:10}}, eval:null } }`
+
+### `SceneDirective`
+
+```
+SceneDirective {
+  type: "SceneDirective"
+  name: string                    // nom de la scène (devient un terminal)
+  file: string                    // chemin du fichier .bps
+  line: number
+}
+```
+
+Exemple : `@scene verse "verse.bps"` → `{ name:"verse", file:"verse.bps" }`
+
+### `ExposeDirective`
+
+```
+ExposeDirective {
+  type: "ExposeDirective"
+  flags: string[]                 // noms des flags rendus visibles au parent
+  line: number
+}
+```
+
+Exemple : `@expose [intensity]` → `{ flags:["intensity"] }`
+
+### `MapDirective`
+
+```
+MapDirective {
+  type: "MapDirective"
+  source: MapEndpoint
+  arrow: "->" | "<->" | "<-"
+  target: MapEndpoint
+  line: number
+}
+
+MapEndpoint = { kind: "cc", number: int, params: object | null }
+            | { kind: "osc", address: string, params: object | null }
+            | { kind: "flag", name: string }
+            | { kind: "trigger", name: string }
+            | { kind: "sys", scene: string | null, command: string }
+```
+
+Exemples :
+- `@map cc:1 -> [intensity]` → `{ source:{kind:"cc",number:1}, arrow:"->", target:{kind:"flag",name:"intensity"} }`
+- `@map [phase] -> cc:20` → `{ source:{kind:"flag",name:"phase"}, arrow:"->", target:{kind:"cc",number:20} }`
+- `@map cc:60 -> sys.play` → `{ source:{kind:"cc",number:60}, arrow:"->", target:{kind:"sys",scene:null,command:"play"} }`
+- `@map cc:60 -> verse.play` → `{ source:{kind:"cc",number:60}, arrow:"->", target:{kind:"sys",scene:"verse",command:"play"} }`
+
+### `CCDirective`
+
+```
+CCDirective {
+  type: "Directive"
+  name: "cc"
+  ccMappings: { name: string, number: int }[]
+  line: number
+}
+```
+
+Exemple : `@cc breath:2` → `{ name:"cc", ccMappings:[{name:"breath", number:2}] }`
 
 ---
 
@@ -675,19 +740,22 @@ Literal { type: "Literal", value: number | string }
 
 ```
 Source (.bps) -> Tokenizer -> Parser -> AST (Scene)
-  -> Actor resolver (charge JSON, expand symboles, conflits)  (* design target *)
-  -> Macro-expander -> Encoder -> BP3 grammar + terminalActorMap -> WASM engine
+  -> Actor resolver (charge JSON, expand symboles, conflits)
+  -> Encoder -> BP3 grammar + terminalActorMap + mapTable + sceneTable -> WASM engine
 ```
 
-La phase **Actor resolver** (design target, pas encore implémentée) entre le parser et l'encoder :
+La phase **Actor resolver** (`src/transpiler/actorResolver.js`) entre le parser et l'encoder :
 1. Collecte les `ActorDirective` de la Scene
-2. Charge `alphabets.json`, `scales.json`, `sounds/`, `temperaments.json` par acteur
-3. Importe les symboles de chaque alphabet dans la symbolTable
-4. Détecte les conflits inter-acteurs (même symbole, acteurs différents)
-5. Résout les `Symbol.actor = null` par lookup implicite (un seul acteur candidat)
+2. Charge `alphabets.json` par acteur via `loadLib()`, expand les terminaux (notes × altérations × registres)
+3. Construit un `symbolActorMap` : terminal → Set d'acteurs qui le contiennent
+4. Résout les déclarations `gate X:actorName` comme bindings acteur
+5. Walk récursif du RHS : résolution implicite (1 acteur → auto) ou erreur (ambiguïté)
 
-L'encoder émet en parallèle une `terminalActorMap` (terminal BP3 -> acteur)
-utilisée par le dispatcher au runtime.
+L'encoder émet en parallèle :
+- `terminalActorMap` (terminal BP3 → acteur) — pour le routing dispatcher
+- `mapTable` (I/O mappings CC/OSC ↔ flags/triggers) — pour le bus I/O dispatcher
+- `sceneTable` (nom → fichier .bps) — pour l'orchestration multi-scènes
+- `exposeTable` (flags exposés au parent) — pour le scoping inter-scènes
 
 ---
 

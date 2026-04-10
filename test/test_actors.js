@@ -332,6 +332,197 @@ S -> A B C`);
 assert('error for missing alphabet', r16.errors.some(e => e.message.includes('no alphabet')));
 
 // ══════════════════════════════════════════════════════════
+// 17. @map — CC input → trigger
+// ══════════════════════════════════════════════════════════
+
+section('@map: CC → trigger');
+
+const m1 = compileBPS(`@controls\n@map cc:64 -> <!sustain\nS -> A B C`);
+assert('no errors', m1.errors.length === 0);
+assert('1 map entry', m1.mapTable.length === 1);
+assert('source kind=cc', m1.mapTable[0].source.kind === 'cc');
+assert('source number=64', m1.mapTable[0].source.number === 64);
+assert('arrow="->"', m1.mapTable[0].arrow === '->');
+assert('target kind=trigger', m1.mapTable[0].target.kind === 'trigger');
+assert('target name=sustain', m1.mapTable[0].target.name === 'sustain');
+
+// ══════════════════════════════════════════════════════════
+// 18. @map — CC input → flag with params
+// ══════════════════════════════════════════════════════════
+
+section('@map: CC → flag (params)');
+
+const m2 = compileBPS(`@controls\n@map cc:1(min:0,max:100) -> [intensity]\nS -> A B C`);
+assert('no errors', m2.errors.length === 0);
+assert('source params.min=0', m2.mapTable[0].source.params.min === 0);
+assert('source params.max=100', m2.mapTable[0].source.params.max === 100);
+assert('target kind=flag', m2.mapTable[0].target.kind === 'flag');
+assert('target name=intensity', m2.mapTable[0].target.name === 'intensity');
+
+// ══════════════════════════════════════════════════════════
+// 19. @map — flag → CC output
+// ══════════════════════════════════════════════════════════
+
+section('@map: flag → CC output');
+
+const m3 = compileBPS(`@controls\n@map [phase] -> cc:20\nS -> A B C`);
+assert('source kind=flag', m3.mapTable[0].source.kind === 'flag');
+assert('target kind=cc', m3.mapTable[0].target.kind === 'cc');
+assert('target number=20', m3.mapTable[0].target.number === 20);
+
+// ══════════════════════════════════════════════════════════
+// 20. @map — OSC input → trigger
+// ══════════════════════════════════════════════════════════
+
+section('@map: OSC → trigger');
+
+const m4 = compileBPS(`@controls\n@map osc:/sc/ready -> <!sc_ready\nS -> A B C`);
+assert('source kind=osc', m4.mapTable[0].source.kind === 'osc');
+assert('source address=/sc/ready', m4.mapTable[0].source.address === '/sc/ready');
+assert('target kind=trigger', m4.mapTable[0].target.kind === 'trigger');
+
+// ══════════════════════════════════════════════════════════
+// 21. @map — bidirectional <->
+// ══════════════════════════════════════════════════════════
+
+section('@map: bidirectional <->');
+
+const m5 = compileBPS(`@controls\n@map cc:1 <-> [mod_depth]\nS -> A B C`);
+assert('no errors', m5.errors.length === 0);
+assert('arrow="<->"', m5.mapTable[0].arrow === '<->');
+
+// ══════════════════════════════════════════════════════════
+// 22. @map — named CC alias resolution
+// ══════════════════════════════════════════════════════════
+
+section('@map: named CC alias');
+
+const m6 = compileBPS(`@controls\n@cc breath:2\n@map breath -> [breath_int]\nS -> A B C`);
+assert('alias resolved to cc', m6.mapTable[0].source.kind === 'cc');
+assert('alias resolved number=2', m6.mapTable[0].source.number === 2);
+
+// ══════════════════════════════════════════════════════════
+// 23. @map — actor-scoped flag
+// ══════════════════════════════════════════════════════════
+
+section('@map: actor-scoped flag');
+
+const m7 = compileBPS(`@controls\n@map cc:1 -> sitar.intensity\nS -> A B C`);
+assert('target kind=flag', m7.mapTable[0].target.kind === 'flag');
+assert('target name=intensity', m7.mapTable[0].target.name === 'intensity');
+assert('target actor=sitar', m7.mapTable[0].target.actor === 'sitar');
+
+// ══════════════════════════════════════════════════════════
+// 24. @map — multiple mappings
+// ══════════════════════════════════════════════════════════
+
+section('@map: multiple');
+
+const m8 = compileBPS(`@controls
+@map cc:1 -> [intensity]
+@map [intensity] -> osc:/vis/intensity
+@map cc:64(threshold:64) -> <!sustain
+S -> A B C`);
+assert('3 map entries', m8.mapTable.length === 3);
+assert('no errors', m8.errors.length === 0);
+
+// ══════════════════════════════════════════════════════════
+// 25. @map — flag → OSC output
+// ══════════════════════════════════════════════════════════
+
+section('@map: flag → OSC');
+
+const m9 = compileBPS(`@controls\n@map [phase] -> osc:/bps/phase\nS -> A B C`);
+assert('source kind=flag', m9.mapTable[0].source.kind === 'flag');
+assert('target kind=osc', m9.mapTable[0].target.kind === 'osc');
+assert('target address=/bps/phase', m9.mapTable[0].target.address === '/bps/phase');
+
+// ══════════════════════════════════════════════════════════
+// 26. @scene directive
+// ══════════════════════════════════════════════════════════
+
+section('@scene directive');
+
+const sc1 = compileBPS(`@controls
+@scene verse "verse.bps"
+@scene chorus "scenes/chorus.bps"
+S -> verse chorus verse`);
+
+assert('no errors', sc1.errors.length === 0);
+assert('sceneTable has verse', !!sc1.sceneTable.verse);
+assert('verse file', sc1.sceneTable.verse.file === 'verse.bps');
+assert('chorus file', sc1.sceneTable.chorus.file === 'scenes/chorus.bps');
+assert('verse in alphabet', sc1.alphabet.includes('verse'));
+assert('chorus in alphabet', sc1.alphabet.includes('chorus'));
+assert('grammar correct', sc1.grammar.includes('S --> verse chorus verse'));
+
+// ══════════════════════════════════════════════════════════
+// 27. @expose directive
+// ══════════════════════════════════════════════════════════
+
+section('@expose directive');
+
+const sc2 = compileBPS(`@controls\n@expose [intensity] [energy]\nS -> A B C`);
+assert('no errors', sc2.errors.length === 0);
+assert('2 exposed flags', sc2.exposeTable.length === 2);
+assert('intensity exposed', sc2.exposeTable.includes('intensity'));
+assert('energy exposed', sc2.exposeTable.includes('energy'));
+
+// ══════════════════════════════════════════════════════════
+// 28. @map with sys commands
+// ══════════════════════════════════════════════════════════
+
+section('@map: sys commands');
+
+const sc3 = compileBPS(`@controls\n@map cc:60 -> sys.play\nS -> A B C`);
+assert('target kind=sys', sc3.mapTable[0].target.kind === 'sys');
+assert('target scene=null', sc3.mapTable[0].target.scene === null);
+assert('target command=play', sc3.mapTable[0].target.command === 'play');
+
+// sys.beat as source
+const sc4 = compileBPS(`@controls\n@map sys.beat -> osc:/vis/beat\nS -> A B C`);
+assert('source kind=sys', sc4.mapTable[0].source.kind === 'sys');
+assert('source command=beat', sc4.mapTable[0].source.command === 'beat');
+
+// ══════════════════════════════════════════════════════════
+// 29. @map with scene.command (resolved by encoder)
+// ══════════════════════════════════════════════════════════
+
+section('@map: scene.command resolved');
+
+const sc5 = compileBPS(`@controls
+@scene verse "verse.bps"
+@map cc:60 -> verse.play
+S -> verse`);
+assert('target kind=sys', sc5.mapTable[0].target.kind === 'sys');
+assert('target scene=verse', sc5.mapTable[0].target.scene === 'verse');
+assert('target command=play', sc5.mapTable[0].target.command === 'play');
+
+// Non-scene scope stays as flag
+const sc6 = compileBPS(`@controls
+@actor sitar alphabet:sargam transport:midi(ch:3)
+@map cc:1 -> sitar.intensity
+S -> A B C`);
+assert('actor scope → flag', sc6.mapTable[0].target.kind === 'flag');
+assert('flag actor=sitar', sc6.mapTable[0].target.actor === 'sitar');
+
+// ══════════════════════════════════════════════════════════
+// 30. Scenes in polymetric
+// ══════════════════════════════════════════════════════════
+
+section('Scenes in polymetric');
+
+const sc7 = compileBPS(`@controls
+@scene verse "verse.bps"
+@scene chorus "chorus.bps"
+@scene lights "lights.bps"
+S -> { verse, chorus, lights }`);
+
+assert('no errors', sc7.errors.length === 0);
+assert('3 scenes in alphabet', sc7.alphabet.includes('verse') && sc7.alphabet.includes('chorus') && sc7.alphabet.includes('lights'));
+assert('grammar has polymetric', sc7.grammar.includes('{verse,chorus,lights}'));
+
+// ══════════════════════════════════════════════════════════
 // Summary
 // ══════════════════════════════════════════════════════════
 

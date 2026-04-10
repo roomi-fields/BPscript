@@ -46,10 +46,12 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `EFFECTS.md` — Effets et signal processing
     - `HOMOMORPHISMS.md` — Étiquetage post-dérivation
     - `REPL.md` — REPL adapters et backticks
+    - `SCENES.md` — Hiérarchie de scènes, scoping flags, @scene/@expose/@map, sys
+    - `BP4_ENGINE_SPEC.md` — Spec moteur BP4 (AST direct, DerivationTree, streaming, live coding)
     - `INTERFACES_BP3.md` — Interface WASM BP3 (in/out)
     - `TEMPORAL_DEFORMATION.md` — Constraint solver, déformation temps réel
   - `plan/` — Roadmaps
-    - `UI_WEB.md` — Plan UI web (contrôles, MIDI, timeline, mapping)
+    - `UI_WEB.md` — Plan UI web v2.0 (3 niveaux, ~20 runtimes, bridge local, sync inter-scènes)
     - `EDITOR.md` — Design éditeur CodeMirror
   - `reference/` — Guides techniques
     - `WASM_HOWTO.md` — Build et usage WASM

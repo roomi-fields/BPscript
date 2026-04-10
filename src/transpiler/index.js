@@ -39,6 +39,9 @@ function compileBPS(source) {
     result.directives = ast.directives;
     result.actorTable = actorResult.actorTable;
     result.terminalActorMap = actorResult.terminalActorMap;
+    result.mapTable = encoded.mapTable;
+    result.sceneTable = encoded.sceneTable;
+    result.exposeTable = encoded.exposeTable;
 
     // 4. Generate prototypes (-so. file) for all declared terminals
     if (result.alphabet.length > 0) {

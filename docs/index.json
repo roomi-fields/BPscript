@@ -62,6 +62,16 @@
         "sections": ["3 types backtick (orphelin, inline, standalone)", "adapters (SC, Tidal, Python)", "sessions", "timing"],
         "use_when": "coder un adapter REPL, comprendre l'exécution des backticks"
       },
+      "SCENES.md": {
+        "content": "Hiérarchie de scènes, scoping des flags, communication inter-scènes",
+        "sections": ["@scene directive", "scoping (héritage top-down, @expose, isolation siblings)", "sys acteur auto-exposé", "fan-out CC/OSC", "cycles de feedback", "implémentation dispatcher multi-instances"],
+        "use_when": "coder la gestion multi-scènes, comprendre le scoping des flags, implémenter @scene/@expose/@map"
+      },
+      "BP4_ENGINE_SPEC.md": {
+        "content": "Spec moteur BP4 : instance isolée, AST direct, DerivationTree, streaming, live coding",
+        "sections": ["modèle d'instance", "cycle de vie", "format entrée (AST)", "format sortie (DerivationTree + TimedToken)", "algorithme dérivation (7 modes)", "polymétrie itérative", "FlagStore observable", "TriggerBus async", "re-dérivation incrémentale", "streaming", "multi-instance", "live coding ops", "déterminisme LCG", "gestion erreurs", "questions ouvertes", "priorité implémentation"],
+        "use_when": "implémenter BP4, comprendre l'architecture cible, planifier la migration depuis BP3"
+      },
       "INTERFACES_BP3.md": {
         "content": "API WASM BP3 complète",
         "sections": ["fonctions d'entrée (load grammar/alphabet/settings/tonality)", "fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events)", "verbose levels 0/1/2"],

@@ -20,6 +20,8 @@
 | [TEMPORAL_DEFORMATION.md](design/TEMPORAL_DEFORMATION.md) | Constraint solver : structure tree (arbre polymétrique avec proportions), 3 modes de déformation (span fixe, proportions fixes, contrainte relâchée), sources de contrôle (potards, MIDI CC, CV, drag) | Coder le constraint solver, comprendre la déformation temporelle live |
 | [HOMOMORPHISMS.md](design/HOMOMORPHISMS.md) | Étiquetage post-dérivation : format `{section}.{depth}%{terminal}`, résolution REPL, stacking. Instructions d'implémentation (agent transpileur + agent WASM) | Coder les homomorphismes, comprendre le labeling, briefer un agent |
 | [REPL.md](design/REPL.md) | Architecture backticks : 3 types (orphelin, inline, standalone), REPL adapters (SC, Tidal, Python), sessions, timing | Coder un adapter REPL, comprendre l'exécution des backticks |
+| [SCENES.md](design/SCENES.md) | Hiérarchie de scènes : @scene directive, scoping des flags (héritage top-down, @expose, isolation siblings), sys auto-exposé, fan-out CC/OSC, cycles de feedback, dispatcher multi-instances | Coder la gestion multi-scènes, comprendre le scoping, implémenter @scene/@expose/@map |
+| [BP4_ENGINE_SPEC.md](design/BP4_ENGINE_SPEC.md) | Spec moteur BP4 : instance isolée, AST direct, DerivationTree structuré, streaming, live coding, multi-instance, 7 modes de dérivation, FlagStore observable, TriggerBus async | Implémenter BP4, comprendre l'architecture cible, planifier la migration BP3→BP4 |
 | [INTERFACES_BP3.md](design/INTERFACES_BP3.md) | API WASM BP3 : fonctions d'entrée (load grammar/alphabet/settings/tonality), fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events), verbose levels | Appeler le moteur WASM, comprendre les formats in/out, ajouter une API |
 
 ## plan/ — Ce qu'on VA faire

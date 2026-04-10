@@ -106,6 +106,44 @@ S -> sitar1.Sa sitar2.Sa tabla.tin    // acteur explicite
 S -> Sa Re tin                         // resolution implicite si non ambigu
 ```
 
+### Scenes -- hierarchie et communication
+
+Une scene peut referencer d'autres scenes comme terminaux :
+```
+@scene verse "verse.bps"
+@scene chorus "chorus.bps"
+
+S -> { verse, chorus }         // polymetrie de scenes
+[mood==dark] S -> verse        // conditionnel
+```
+
+Les flags du parent sont visibles en lecture par les enfants (heritage top-down).
+Les enfants exposent explicitement les flags qu'ils veulent rendre visibles :
+```
+@expose [intensity]            // rend ce flag lisible par le parent
+```
+
+Le mapping `@map` connecte des I/O externes (CC, OSC) aux primitives du langage :
+```
+@map cc:1 -> [intensity]       // CC input -> flag
+@map cc:64 -> <!sustain        // CC input -> trigger
+@map [phase] -> cc:20          // flag -> CC output
+@map osc:/sc/ready -> <!ready  // OSC input -> trigger
+@map cc:60 -> sys.play         // CC -> commande transport
+@map cc:1 <-> [mod_depth]      // bidirectionnel
+```
+
+Cf. [SCENES.md](../design/SCENES.md) pour le modele complet (scoping, sys, encapsulation).
+
+### CC nommes
+
+```
+@cc breath:2                   // declare CC2 comme "breath"
+@cc expression:11              // declare CC11 comme "expression"
+Sa(breath:80)                  // utilisable par nom dans les qualifiers
+Sa(cc:74,80)                   // CC generique par numero
+```
+
 ### Sounds system -- cascading
 
 Les parametres se combinent par priorite : **spec** (defauts librairie) < **CT** (controles inline `()`) < **CV** (objets temporels continus).

@@ -42,6 +42,9 @@ function parse(tokens) {
       type: 'Scene',
       directives: [],
       actors: [],
+      scenes: [],
+      exposes: [],
+      maps: [],
       declarations: [],
       macros: [],
       backticks: [],
@@ -60,7 +63,13 @@ function parse(tokens) {
 
       if (at(T.AT)) {
         const dir = parseDirective();
-        if (dir.type === 'ActorDirective') {
+        if (dir.type === 'SceneDirective') {
+          scene.scenes.push(dir);
+        } else if (dir.type === 'ExposeDirective') {
+          scene.exposes.push(dir);
+        } else if (dir.type === 'MapDirective') {
+          scene.maps.push(dir);
+        } else if (dir.type === 'ActorDirective') {
           scene.actors.push(dir);
         } else if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
@@ -94,6 +103,13 @@ function parse(tokens) {
       libCtx.actors[actor.name] = actor.properties;
     }
 
+    // Process scene directives — scene names become known terminals
+    libCtx.sceneNames = new Set();
+    for (const sc of scene.scenes) {
+      libCtx.sceneNames.add(sc.name);
+      libCtx.symbols[sc.name] = { type: 'scene' };
+    }
+
     // Parse subgrammars
     scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
 
@@ -111,6 +127,78 @@ function parse(tokens) {
   // Directives
   // ============================================================
 
+  /**
+   * Parse a @map endpoint: cc:N, osc:/path, <!trigger, [flag], or named-cc alias.
+   * Returns { kind, ... } descriptor.
+   */
+  function parseMapEndpoint() {
+    // <!trigger
+    if (at(T.TRIGGER_IN)) {
+      advance();
+      const trigName = expect(T.IDENT).value;
+      return { kind: 'trigger', name: trigName };
+    }
+    // [flag] or actor.flag
+    if (at(T.LBRACKET)) {
+      advance();
+      const flagName = expect(T.IDENT).value;
+      expect(T.RBRACKET);
+      return { kind: 'flag', name: flagName };
+    }
+    // cc:N or cc:N(params) or osc:/path or osc:/path(params) or named-cc alias
+    if (at(T.IDENT)) {
+      const id = advance().value;
+      if (id === 'cc' && at(T.COLON)) {
+        advance();
+        const number = Number(expect(T.INT).value);
+        const params = at(T.LPAREN) ? parseMapParams() : null;
+        return { kind: 'cc', number, params };
+      }
+      if (id === 'osc' && at(T.COLON)) {
+        advance();
+        // OSC address: /path/segments — SLASH IDENT sequences
+        let address = '';
+        while (at(T.SLASH)) {
+          advance();
+          address += '/' + expect(T.IDENT).value;
+        }
+        const params = at(T.LPAREN) ? parseMapParams() : null;
+        return { kind: 'osc', address, params };
+      }
+      // sys.command, scene.command, or actor.flag
+      if (at(T.PERIOD) && peek(1).type === T.IDENT) {
+        advance();
+        const secondId = advance().value;
+        if (id === 'sys') {
+          // sys is reserved — always a system command
+          return { kind: 'sys', scene: null, command: secondId };
+        }
+        // Generic scoped reference — encoder resolves using scene/actor context
+        return { kind: 'scoped', scope: id, name: secondId };
+      }
+      // Named CC alias (e.g. "breath" from @cc breath:2)
+      return { kind: 'alias', name: id };
+    }
+    throw new ParseError('Expected cc:N, osc:/path, <!trigger, [flag] or alias in @map', current());
+  }
+
+  /** Parse optional (key:value, ...) params for @map endpoints */
+  function parseMapParams() {
+    expect(T.LPAREN);
+    const params = {};
+    while (!at(T.RPAREN) && !atEnd()) {
+      const key = expect(T.IDENT).value;
+      expect(T.COLON);
+      const val = at(T.INT) ? Number(advance().value)
+                : at(T.FLOAT) ? Number(advance().value)
+                : advance().value;
+      params[key] = val;
+      if (at(T.COMMA)) advance();
+    }
+    expect(T.RPAREN);
+    return params;
+  }
+
   function parseDirective() {
     const tok = expect(T.AT);
     // @+ is a special case — PLUS token instead of IDENT
@@ -127,6 +215,37 @@ function parse(tokens) {
       subkey = expect(T.IDENT).value;
     }
     let runtime = null, value = null, aliases = null;
+
+    // @scene verse "verse.bps" — child scene declaration
+    if (name === 'scene') {
+      const sceneName = expect(T.IDENT).value;
+      const file = expect(T.STRING).value;
+      return { type: 'SceneDirective', name: sceneName, file, line: tok.line };
+    }
+
+    // @expose [intensity] [energy] — expose flags to parent scene
+    if (name === 'expose') {
+      const flags = [];
+      while (at(T.LBRACKET)) {
+        advance();
+        flags.push(expect(T.IDENT).value);
+        expect(T.RBRACKET);
+      }
+      return { type: 'ExposeDirective', flags, line: tok.line };
+    }
+
+    // @map source -> target — I/O mapping (CC/OSC ↔ triggers/flags)
+    if (name === 'map') {
+      const source = parseMapEndpoint();
+      // Arrow: -> or <-> or <-
+      let arrow;
+      if (at(T.ARROW_R))      { arrow = '->'; advance(); }
+      else if (at(T.ARROW_BI)) { arrow = '<->'; advance(); }
+      else if (at(T.ARROW_L))  { arrow = '<-'; advance(); }
+      else throw new ParseError('Expected ->, <-> or <- in @map', current());
+      const target = parseMapEndpoint();
+      return { type: 'MapDirective', source, arrow, target, line: tok.line };
+    }
 
     // @cc breath:2, expression:11 — named MIDI CC declarations
     if (name === 'cc') {

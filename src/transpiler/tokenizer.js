@@ -57,6 +57,7 @@ const T = Object.freeze({
   INT:          'INT',         // 123
   FLOAT:        'FLOAT',       // 0.5  (only in params, not period)
   IDENT:        'IDENT',       // Sa, melodie, phase, etc.
+  STRING:       'STRING',      // "verse.bps" (quoted string)
   SLASH:        'SLASH',       // /  (for ratios like 3/2)
 
   // Structure
@@ -166,6 +167,16 @@ function tokenize(source, opts = {}) {
       continue;
     }
 
+    // Quoted string — "file.bps" (for @scene paths)
+    if (ch === '"') {
+      advance(); // opening "
+      let str = '';
+      while (i < source.length && peek() !== '"') str += advance();
+      if (i < source.length) advance(); // closing "
+      emit(T.STRING, str);
+      continue;
+    }
+
     // Backtick — read until closing backtick
     if (ch === '`') {
       advance(); // opening `
@@ -179,6 +190,7 @@ function tokenize(source, opts = {}) {
     // Multi-char operators
     if (ch === '<') {
       if (peek(1) === '!' ) { advance(); advance(); emit(T.TRIGGER_IN, '<!'); continue; }
+      if (peek(1) === '-' && peek(2) === '>') { advance(); advance(); advance(); emit(T.ARROW_BI, '<->'); continue; }
       if (peek(1) === '-') { advance(); advance(); emit(T.ARROW_L, '<-'); continue; }
       if (peek(1) === '>') { advance(); advance(); emit(T.ARROW_BI, '<>'); continue; }
       if (peek(1) === '=') { advance(); advance(); emit(T.LTE, '<='); continue; }
