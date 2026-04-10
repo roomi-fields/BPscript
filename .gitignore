@@ -7,3 +7,4 @@ raw/
 docs/mails/
 *.wasm18
 _test_*
+public/

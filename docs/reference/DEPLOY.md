@@ -2,85 +2,57 @@
 
 ## Overview
 
-BPscript web is a **static site** — no Node.js, no backend, no build step. Just a web server (nginx) serving files.
+BPscript web is a **static site** — no Node.js, no backend, no build step beyond assembling files.
 
-## File Structure
-
-The entry point is `web/index.html` but it loads resources from parent directories (`../src/`, `../lib/`, `../dist/`). The server must serve the **project root**, not just `web/`.
-
-```
-/var/www/bpscript/              <- nginx root
-├── web/index.html              <- entry point (URL: /web/)
-├── web/demos/*.bps             <- demo scenes
-├── web/timeline.js             <- Canvas timeline
-├── web/editor/                 <- CodeMirror 6 grammars
-├── web/help/reference.json     <- help panel data
-├── src/dispatcher/             <- loaded via ../src/
-├── src/transpiler/             <- loaded via ../src/
-├── lib/*.json                  <- controls, alphabets, tunings, etc.
-└── dist/bp3.js, bp3.wasm       <- WASM engine
-```
-
-## 1. Clone the repo
+## Build
 
 ```bash
-git clone https://github.com/roomi-fields/BPscript.git /var/www/bpscript
+./build-web.sh
 ```
 
-## 2. Nginx configuration
+Creates a self-contained `public/` directory with `index.html` at the root and all paths resolved as `./` (no `../` parent references).
 
+```
+public/
+├── index.html          <- entry point (serves at /)
+├── timeline.js
+├── editor/             <- CodeMirror 6 grammars
+├── help/               <- help panel data
+├── demos/*.bps         <- demo scenes
+├── src/dispatcher/     <- runtime dispatcher
+├── src/transpiler/     <- BPscript compiler
+├── lib/*.json          <- controls, alphabets, tunings
+└── dist/bp3.js, bp3.wasm  <- WASM engine
+```
+
+## Deploy to VPS (nginx)
+
+```bash
+# Build
+./build-web.sh
+
+# Upload
+rsync -av public/ user@vps:/var/www/bpscript/
+```
+
+Nginx config:
 ```nginx
 server {
-    listen 80;
+    listen 443 ssl;
     server_name bpscript.example.com;
     root /var/www/bpscript;
 
-    # Serve the full project tree
     location / {
         try_files $uri $uri/ =404;
     }
 
-    # WASM MIME type (required for BP3 engine)
     types {
         application/wasm wasm;
     }
-
-    # Redirect / to /web/
-    location = / {
-        return 301 /web/;
-    }
-
-    # No cache during development
-    add_header Cache-Control "no-cache";
 }
 ```
 
-## 3. HTTPS (required)
-
-Chrome blocks Web MIDI API and AudioContext on plain HTTP. HTTPS is mandatory.
-
-```bash
-certbot --nginx -d bpscript.example.com
-```
-
-## 4. Critical requirements
-
-| Requirement | Why |
-|-------------|-----|
-| MIME type `application/wasm` for `.wasm` files | BP3 engine won't load without it |
-| HTTPS | Web MIDI API and AudioContext require secure context |
-| Serve from project root, not `web/` | `index.html` loads `../src/`, `../lib/`, `../dist/` |
-| No build step | Files are served as-is (ES modules, no bundler) |
-
-## 5. Update
-
-```bash
-cd /var/www/bpscript && git pull
-```
-
-## 6. GitHub Pages (alternative)
-
-GitHub Pages can also serve the site. Use a GitHub Actions workflow that deploys from the root:
+## Deploy to GitHub Pages
 
 ```yaml
 # .github/workflows/pages.yml
@@ -99,22 +71,36 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Build
+        run: ./build-web.sh
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: 'public'
       - id: deployment
         uses: actions/deploy-pages@v4
 ```
 
-Access at: `https://roomi-fields.github.io/BPscript/web/`
+## Requirements
 
-## 7. Troubleshooting
+| Requirement | Why |
+|-------------|-----|
+| HTTPS | Web MIDI API and AudioContext require secure context |
+| MIME type `application/wasm` | BP3 WASM engine won't load without it |
+| No build tools needed | `build-web.sh` uses only cp/sed |
 
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| Blank page, console shows WASM error | Missing MIME type for `.wasm` | Add `application/wasm` to nginx types |
-| No sound, AudioContext suspended | HTTP instead of HTTPS | Enable HTTPS with certbot |
-| MIDI button does nothing | HTTP or unsupported browser | Use Chrome/Edge with HTTPS |
-| 404 on `../lib/*.json` | nginx root set to `web/` instead of project root | Set root to `/var/www/bpscript` |
-| Fonts don't load | CSP or network issue | DM Sans and IBM Plex Mono load from Google Fonts CDN |
+## Update
+
+```bash
+cd /path/to/BPscript && git pull && ./build-web.sh
+rsync -av public/ user@vps:/var/www/bpscript/
+```
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| Blank page, WASM error | Add `application/wasm` to nginx types |
+| No sound | Enable HTTPS (certbot) |
+| MIDI button does nothing | Use Chrome/Edge with HTTPS |
+| Module specifier error | Run `build-web.sh` — it fixes `../` to `./` |
