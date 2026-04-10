@@ -1029,6 +1029,7 @@ let lastTimedTokens = null;
 let lastControlTable = null;
 let lastMapTable = [];
 let lastSceneTable = {};       // { sceneName: { file, source, compiled, tokens } }
+let lastChildSceneResults = {};// { sceneName: { tokens, controlTable, duration } }
 let childSceneEditors = {};    // { sceneName: CodeMirror EditorView }
 let lastCVTable = null;
 let lastDirectives = [];
@@ -1339,6 +1340,18 @@ function switchEditorTab(tab) {
   document.querySelectorAll('.editor-panel').forEach(el => {
     el.classList.toggle('active', el.id === 'panel-' + tab);
   });
+
+  // Switch timeline to show tokens of the active scene
+  if (tab.startsWith('scene-')) {
+    const sceneName = tab.replace('scene-', '');
+    const sceneData = lastSceneTable[sceneName];
+    if (sceneData?.tokens) {
+      renderTimeline(sceneData.tokens);
+    }
+  } else if (tab === 'bpscript') {
+    // Back to parent timeline
+    if (lastTimedTokens) renderTimeline(lastTimedTokens);
+  }
 }
 
 /**
@@ -1412,6 +1425,11 @@ async function _compileChildScenes(sceneTable) {
   const results = {};
   if (!sceneTable || Object.keys(sceneTable).length === 0) return results;
 
+  // Save parent state
+  const parentGrammar = window.getGrammarSource ? getGrammarSource() : '';
+  const parentAlphabet = document.getElementById('alphabet')?.value || '';
+  const parentSettings = document.getElementById('settings')?.value || '';
+
   for (const [name, entry] of Object.entries(sceneTable)) {
     const source = _getChildSceneSource(name);
     if (!source.trim()) {
@@ -1426,19 +1444,14 @@ async function _compileChildScenes(sceneTable) {
       continue;
     }
 
-    // Save parent state, load child grammar into WASM, produce, capture tokens
-    const parentGrammar = document.getElementById('grammar-editor')?.cmView?.state?.doc?.toString() || '';
-    const parentAlphabet = document.getElementById('alphabet')?.value || '';
-    const parentSettings = document.getElementById('settings')?.value || '';
-
-    // Load child into WASM
+    // Re-init WASM, load child grammar, produce, capture tokens
+    bp3_init();
     bp3_load_grammar(compiled.grammar);
     if (compiled.alphabet) bp3_load_alphabet(compiled.alphabet);
     if (compiled.settings) bp3_load_settings_params(compiled.settings);
 
     const ok = bp3_produce();
     if (ok === 1) {
-      const count = bp3_get_timed_token_count();
       const tokensRaw = bp3_get_timed_tokens();
       let tokens = [];
       try { tokens = JSON.parse(tokensRaw); } catch {}
@@ -1448,15 +1461,21 @@ async function _compileChildScenes(sceneTable) {
         cvTable: compiled.cvTable || [],
         duration: tokens.length > 0 ? Math.max(...tokens.map(t => t.end)) : 0,
       };
+      // Store tokens in lastSceneTable for timeline
+      if (lastSceneTable[name]) lastSceneTable[name].tokens = tokens;
+      console.log(`[scene] ${name}: ${tokens.length} tokens, ${results[name].duration}ms`);
     } else {
       console.warn(`[scene] ${name}: produce failed`);
     }
-
-    // Restore parent grammar
-    bp3_load_grammar(parentGrammar);
-    if (parentAlphabet) bp3_load_alphabet(parentAlphabet);
-    if (parentSettings) bp3_load_settings_params(parentSettings);
   }
+
+  // Restore parent WASM state
+  bp3_init();
+  bp3_load_grammar(parentGrammar);
+  if (parentAlphabet) bp3_load_alphabet(parentAlphabet);
+  if (parentSettings) bp3_load_settings_params(parentSettings);
+  // Re-produce parent to restore timed tokens
+  bp3_produce();
 
   return results;
 }
@@ -2523,7 +2542,7 @@ async function produce() {
   if (_tb) _tb.style.display = 'none';
   document.getElementById('messagesContent').textContent = '';
 
-  setTimeout(() => {
+  setTimeout(async () => {
     try {
       // reseed handles: init (first time) + loadAlphabet → loadPrototypes → loadGrammar
       reseed();
@@ -2563,6 +2582,13 @@ async function produce() {
         try {
           dispatcher.syncFlagState(bp3_get_flag_state());
         } catch(e3) { console.warn('[produce] flag sync error:', e3); }
+      }
+
+      // Pre-compile child scenes (after parent tokens are captured)
+      if (Object.keys(lastSceneTable).length > 0) {
+        lastChildSceneResults = await _compileChildScenes(lastSceneTable);
+      } else {
+        lastChildSceneResults = {};
       }
 
       updateTransportButtons();
@@ -3395,13 +3421,8 @@ async function playOnce() {
   dispatcher.setTransportMap(lastTransportMap);
   _setupActors();
   if (dispatcher.setMapTable) dispatcher.setMapTable(lastMapTable);
-  // Pre-compile child scenes and pass to dispatcher
-  if (Object.keys(lastSceneTable).length > 0) {
-    const childResults = await _compileChildScenes(lastSceneTable);
-    dispatcher._childScenes = childResults;
-  } else {
-    dispatcher._childScenes = {};
-  }
+  // Pass pre-compiled child scenes to dispatcher
+  dispatcher._childScenes = lastChildSceneResults || {};
   updateResolver();
   appendResolverDebug();
   dispatcher.load(lastTimedTokens);
