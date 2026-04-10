@@ -369,5 +369,12 @@
     "category": "midi",
     "description": "Dual output via @actor — mélodie MIDI ch1, basse WebAudio",
     "file": "midi-actors.bps"
+  },
+  {
+    "id": "midi-map",
+    "title": "MIDI: Map",
+    "category": "midi",
+    "description": "CC input → flag via @map directive",
+    "file": "midi-map.bps"
   }
 ]

@@ -1,0 +1,12 @@
+// MIDI Map — test @map directive
+// CC1 (mod wheel) contrôle la vélocité via un flag
+// Le flag phase est émis en CC20 vers le synthé
+
+@core
+@controls
+@alphabet.western:midi
+
+// CC1 entrant → flag intensity (0-127)
+@map cc:1 -> [intensity]
+
+S -> C4(vel:40) D4(vel:60) E4(vel:80) F4(vel:100) G4(vel:80) A4(vel:60) B4(vel:40) C5(vel:100)

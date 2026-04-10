@@ -415,6 +415,8 @@
   .knob-center-val { fill: var(--text-1); font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-anchor: middle; dominant-baseline: central; }
   .knob-label { font-size: 10px; color: var(--text-3); font-weight: 400; text-align: center; white-space: nowrap; }
   .knob-group:hover .knob-label { color: var(--text-2); }
+  .knob-svg.grammar-driven .knob-value-arc { stroke: var(--accent-value) !important; transition: stroke 0.1s; }
+  .slider-input.grammar-driven { outline: 1px solid var(--accent-value); outline-offset: 1px; }
   .knob-cc-tag {
     font-size: 8px; font-family: var(--font-mono); font-weight: 500;
     padding: 1px 4px; border-radius: 2px;
@@ -450,6 +452,39 @@
   .dropdown-select:focus { border-color: var(--accent-primary); }
 
   /* MIDI Map */
+  /* Status bar (bottom) */
+  .status-bar {
+    height: 22px;
+    background: var(--surface-1);
+    border-top: 1px solid var(--surface-5);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-3);
+    gap: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .status-bar #status { white-space: nowrap; }
+  .status-bar #inspectorBar {
+    display: flex; align-items: center; gap: 10px; margin-left: auto;
+  }
+  .status-bar .insp-token { color: var(--accent-primary); font-weight: 500; }
+  .status-bar .insp-freq { color: var(--accent-synth); }
+  .status-bar .insp-midi { color: var(--accent-midi); }
+  .status-bar .insp-ctrl { color: var(--accent-pitch); }
+  .status-bar .insp-time { color: var(--text-3); }
+  .status-bar .insp-progress {
+    width: 50px; height: 3px; background: var(--surface-4);
+    border-radius: 2px; overflow: hidden;
+  }
+  .status-bar .insp-progress-fill {
+    height: 100%; background: var(--accent-value);
+    border-radius: 2px; transition: width 50ms linear;
+  }
+
   /* Scene controls tree */
   .scene-ctrl-group { margin-bottom: 8px; }
   .scene-ctrl-name {
@@ -702,10 +737,8 @@
 
   <!-- Main Content -->
   <div class="main">
-    <div class="top-bar">
+    <div class="top-bar" style="display:none;">
       <h1>BPscript</h1>
-      <div class="spacer"></div>
-      <span id="status">Loading WASM module...</span>
     </div>
 
     <div class="toolbar">
@@ -726,21 +759,18 @@
         <button id="loopBtn" class="t-btn" onclick="toggleLoopMode()" title="Loop mode">
           <svg viewBox="0 0 16 16"><path d="M13,5 L13,10 A4,4 0 0,1 5,10 L5,9 L3,11 L5,13 L5,12 A6,6 0 0,0 15,5 Z M3,11 L3,6 A4,4 0 0,1 11,6 L11,7 L13,5 L11,3 L11,4 A6,6 0 0,0 1,11 Z" fill="currentColor"/></svg>
         </button>
+        <button id="liveBtn" class="t-btn" onclick="toggleLive()" disabled title="Live coding — auto-compile on edit">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
+        </button>
+        <button id="rederiveBtn" class="t-btn" onclick="toggleRederive()" title="Re-derive — new sequence each loop cycle">
+          <svg viewBox="0 0 16 16"><path d="M4,2 L4,14 M8,4 L8,14 M12,2 L12,12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="4" cy="2" r="1.5" fill="currentColor"/><circle cx="8" cy="4" r="1.5" fill="currentColor"/><circle cx="12" cy="2" r="1.5" fill="currentColor"/></svg>
+        </button>
       </div>
 
-      <span id="status" style="margin-left:8px;">Loading...</span>
+      <!-- status moved to bottom bar -->
 
       <span class="spacer"></span>
-
-      <button id="liveBtn" class="tbtn" onclick="toggleLive()" disabled>Live</button>
-      <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-3);cursor:pointer;">
-        <input type="checkbox" id="rederiveChk" checked> re-derive
-      </label>
-      <span class="separator"></span>
-      <button id="compareBtn" class="tbtn" onclick="compareWithOriginal()" disabled>Compare</button>
-      <button id="initBtn" class="tbtn" onclick="reinit()" disabled>Re-init</button>
-      <button class="tbtn" onclick="clearEditor()">Clear</button>
-      <span class="separator"></span>
+      <input type="checkbox" id="rederiveChk" checked style="display:none;">
       <span class="midi-section">
         <button id="midiBtn" class="midi-indicator" onclick="toggleMidi()">
           <span class="midi-dot"></span>
@@ -750,6 +780,8 @@
         <select id="midiInSelect" style="display:none;max-width:120px;" onchange="selectMidiInput()"></select>
         <span id="midiStatus" style="font-size:10px;color:var(--text-3);"></span>
       </span>
+      <span class="separator"></span>
+      <button class="tbtn" onclick="toggleControlsPanel()" title="Toggle controls panel">Controls</button>
     </div>
 
     <div id="descBar" class="desc-bar" style="display:none;"></div>
@@ -956,6 +988,12 @@ PY_Part -&gt; &#96;py: print("hello from python")&#96;</pre>
         </div>
       </div>
     </div>
+
+    <!-- Status bar -->
+    <div id="statusBar" class="status-bar">
+      <span id="status">Loading...</span>
+      <span id="inspectorBar"></span>
+    </div>
   </div>
 
   <!-- ═══ RIGHT SIDEBAR: Controls Panel ═══ -->
@@ -977,6 +1015,7 @@ let bp3_init, bp3_load_grammar, bp3_load_alphabet, bp3_produce, bp3_get_result, 
 let bp3_get_midi_events, bp3_get_midi_event_count;
 let bp3_get_timed_tokens, bp3_get_timed_token_count, bp3_set_timed_tokens_verbose, bp3_load_settings_params;
 let bp3_load_tonality;
+let bp3_get_flag_state, bp3_set_flag, bp3_get_flag_names;
 let libraryData = [];
 let demosData = [];
 let bernardData = [];
@@ -986,6 +1025,7 @@ let engineReady = false;
 let lastMidiEvents = null;
 let lastTimedTokens = null;
 let lastControlTable = null;
+let lastMapTable = [];
 let lastCVTable = null;
 let lastDirectives = [];
 let lastTransportMap = {};  // symbol → transport name (from declarations/directives)
@@ -1229,6 +1269,9 @@ async function loadFromLibrary(id) {
   const item = libraryData.find(g => g.id === id);
   if (!item) return;
 
+  // Stop playback before loading new scene
+  if (isPlaying || isPaused) await stopPlayback();
+
   activeGrammar = item;
 
   // Update sidebar active state
@@ -1277,7 +1320,7 @@ async function loadFromLibrary(id) {
     switchEditorTab('bpscript');
 
     currentSceneId = item.id;
-    document.getElementById('compareBtn').disabled = !ORIGINAL_GRAMMAR_MAP[item.id];
+    if (document.getElementById('compareBtn')) document.getElementById('compareBtn').disabled = !ORIGINAL_GRAMMAR_MAP[item.id];
     setStatus(`Loaded: ${item.title}`);
   } catch(e) {
     setStatus('Error loading: ' + e.message);
@@ -1538,6 +1581,33 @@ function buildControlsPanel() {
     html += '</div></div>';
   }
 
+  // Flags section — BP3 K-parameters
+  if (dispatcher && dispatcher._flagNames && dispatcher._flagNames.length > 0) {
+    html += `<div class="ctrl-section collapsed" data-group="dispatcher">`;
+    html += `<div class="ctrl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">`;
+    html += `<span class="ctrl-section-title">Flags (${dispatcher._flagNames.length})</span>`;
+    html += `<span class="ctrl-section-chevron">&#9660;</span>`;
+    html += `</div><div class="ctrl-section-body">`;
+
+    for (const flagName of dispatcher._flagNames) {
+      const val = dispatcher.flagState[flagName] ?? 0;
+      // Check if this flag has a @map
+      const mapped = lastMapTable.find(m =>
+        (m.source.kind === 'flag' && m.source.name === flagName) ||
+        (m.target.kind === 'flag' && m.target.name === flagName)
+      );
+      const mapTag = mapped ? ` <span class="knob-cc-tag">${mapped.source.kind === 'cc' ? 'CC' + mapped.source.number : mapped.target.kind === 'cc' ? '→CC' + mapped.target.number : '⇄'}</span>` : '';
+
+      html += `<div class="slider-row">`;
+      html += `<span class="slider-label" title="BP3 flag">[${flagName}]${mapTag}</span>`;
+      html += `<div class="slider-track-wrap"><input type="number" class="flag-input" data-flag="${flagName}" value="${val}" style="width:50px;background:var(--surface-3);color:var(--text-1);border:1px solid var(--surface-5);border-radius:3px;padding:2px 6px;font-size:10px;font-family:var(--font-mono);text-align:center;"></div>`;
+      html += `<span class="slider-value" data-for="flag_${flagName}" style="color:var(--accent-pitch)">${val}</span>`;
+      html += `</div>`;
+    }
+
+    html += '</div></div>';
+  }
+
   // MIDI Map section
   html += `<div class="ctrl-section" data-group="midi">`;
   html += `<div class="ctrl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">`;
@@ -1651,6 +1721,17 @@ function buildControlsPanel() {
     });
 
     window.addEventListener('mouseup', () => { dragging = false; });
+  });
+
+  // Wire flag inputs
+  container.querySelectorAll('.flag-input[data-flag]').forEach(el => {
+    el.addEventListener('change', () => {
+      const name = el.dataset.flag;
+      const val = Number(el.value) || 0;
+      if (dispatcher) dispatcher._setFlag(name, val);
+      const valSpan = container.querySelector(`.slider-value[data-for="flag_${name}"]`);
+      if (valSpan) valSpan.textContent = val;
+    });
   });
 
   _renderMidiMappings();
@@ -2071,6 +2152,9 @@ async function loadModule() {
     bp3_set_timed_tokens_verbose = Module.cwrap('bp3_set_timed_tokens_verbose', null, ['number']);
     bp3_load_settings_params = Module.cwrap('bp3_load_settings_params', 'number', ['number','number','number','number','number','number']);
     bp3_load_tonality = Module.cwrap('bp3_load_tonality', 'number', ['string']);
+    bp3_get_flag_state = Module.cwrap('bp3_get_flag_state', 'string', []);
+    bp3_set_flag = Module.cwrap('bp3_set_flag', 'number', ['string', 'number']);
+    bp3_get_flag_names = Module.cwrap('bp3_get_flag_names', 'string', []);
 
     setStatus('Module loaded. Initializing...');
     initEngine();
@@ -2112,7 +2196,7 @@ function initEngine() {
   engineReady = true;
   setStatus('Ready.');
   document.getElementById('produceBtn').disabled = false;
-  document.getElementById('initBtn').disabled = false;
+  if (document.getElementById('initBtn')) document.getElementById('initBtn').disabled = false;
   document.getElementById('liveBtn').disabled = false;
 }
 
@@ -2219,6 +2303,7 @@ async function produce() {
       lastTransportMap = buildTransportMap(compiled);
       lastActorTable = compiled.actorTable || {};
       lastTerminalActorMap = compiled.terminalActorMap || {};
+      lastMapTable = compiled.mapTable || [];
       console.log('[scene-controls] compiled.ast:', compiled.ast ? 'present' : 'null', 'subgrammars:', compiled.ast?.subgrammars?.length);
       lastSceneControls = _extractSceneControls(compiled.ast);
       console.log('[scene-controls] extracted:', JSON.stringify(lastSceneControls));
@@ -2302,6 +2387,13 @@ async function produce() {
         try {
           lastMidiEvents = JSON.parse(bp3_get_midi_events());
         } catch(e2) { console.warn('MIDI parse error:', e2); }
+      }
+
+      // Sync BP3 flag state → dispatcher
+      if (dispatcher && bp3_get_flag_state) {
+        try {
+          dispatcher.syncFlagState(bp3_get_flag_state());
+        } catch(e3) { console.warn('[produce] flag sync error:', e3); }
       }
 
       updateTransportButtons();
@@ -2493,6 +2585,34 @@ async function ensureDispatcher() {
     dispatcher.addTransport('default', new WebAudioTransport(audioCtx, { resolver }));
     dispatcher._resolver = resolver;
 
+    // Wire BP3 flag API
+    if (bp3_set_flag) dispatcher._bp3SetFlag = bp3_set_flag;
+
+    // Feedback: update controls panel when grammar changes a control during playback
+    dispatcher.onControlChange = (name, value) => {
+      const container = document.getElementById('controlsContent');
+      if (!container) return;
+      // Update knob
+      const knob = container.querySelector(`.knob-svg[data-ctrl="${name}"]`);
+      if (knob) {
+        const min = Number(knob.dataset.min);
+        const max = Number(knob.dataset.max);
+        _updateKnob(knob, name, value, min, max);
+        knob.classList.add('grammar-driven');
+        setTimeout(() => knob.classList.remove('grammar-driven'), 300);
+        return;
+      }
+      // Update slider
+      const slider = container.querySelector(`.slider-input[data-ctrl="${name}"]`);
+      if (slider) {
+        slider.value = value;
+        slider.classList.add('grammar-driven');
+        setTimeout(() => slider.classList.remove('grammar-driven'), 300);
+      }
+      const valSpan = container.querySelector(`.slider-value[data-for="${name}"], .ctrl-val[data-for="${name}"]`);
+      if (valSpan) valSpan.textContent = typeof value === 'number' ? Math.round(value) : value;
+    };
+
     // Register MIDI transport if active
     if (midiEnabled && midiTransport) {
       dispatcher.addTransport('midi', midiTransport);
@@ -2527,11 +2647,28 @@ function updateTransportButtons() {
   if (isPaused) playBtn.classList.add('play-active'); else playBtn.classList.remove('play-active');
 
   stopBtn.disabled = !isPlaying;
+
+  // Toggle buttons: loop, live, rederive
   if (loopMode) loopBtn.classList.add('active'); else loopBtn.classList.remove('active');
+
+  const liveBtn = document.getElementById('liveBtn');
+  if (liveBtn?.classList.contains('live-active')) liveBtn.classList.add('active'); else if (liveBtn) liveBtn.classList.remove('active');
+
+  const rederiveBtn = document.getElementById('rederiveBtn');
+  const rederiveChk = document.getElementById('rederiveChk');
+  if (rederiveBtn && rederiveChk) {
+    if (rederiveChk.checked) rederiveBtn.classList.add('active'); else rederiveBtn.classList.remove('active');
+  }
 }
 
 function toggleLoopMode() {
   loopMode = !loopMode;
+  updateTransportButtons();
+}
+
+function toggleRederive() {
+  const chk = document.getElementById('rederiveChk');
+  chk.checked = !chk.checked;
   updateTransportButtons();
 }
 
@@ -2714,9 +2851,13 @@ function onMidiMessage(evt) {
   const ch = (status & 0x0F) + 1;
 
   if (type === 0xB0) {
-    // CC message — learn mode or apply mapping
+    // CC message — learn mode or apply CC mapping
     if (!_onMidiCCLearn(data1, data2)) {
       _applyMidiCC(data1, data2);
+    }
+    // Forward to dispatcher for @map processing
+    if (dispatcher?._onMidiInput) {
+      dispatcher._onMidiInput(evt);
     }
     window.dispatchEvent(new CustomEvent('midi-cc', { detail: { cc: data1, value: data2, channel: ch } }));
   } else if (type === 0x90 && data2 > 0) {
@@ -2986,20 +3127,78 @@ let _cursorFrame = 0;
 
 function _startCursorAnimation() {
   if (_cursorFrame) return;
+
   function tick() {
     if (!isPlaying || !dispatcher) {
       if (window._timeline) window._timeline.clearCursor();
+      const inspBar = document.getElementById('inspectorBar');
+      if (inspBar && !isPaused) inspBar.innerHTML = '';
       _cursorFrame = 0;
       return;
     }
     let ms = dispatcher.clock.now * 1000;
-    if (dispatcher.duration > 0 && dispatcher.loop) {
-      ms = ms % (dispatcher.duration * 1000);
+    const totalMs = dispatcher.duration * 1000;
+    if (totalMs > 0 && dispatcher.loop) {
+      ms = ms % totalMs;
     }
     if (window._timeline) window._timeline.setCursor(ms);
+    _updateInspector(ms, totalMs);
     _cursorFrame = requestAnimationFrame(tick);
   }
   _cursorFrame = requestAnimationFrame(tick);
+}
+
+function _updateInspector(ms, totalMs) {
+  const bar = document.getElementById('inspectorBar');
+  if (!bar || !lastTimedTokens) return;
+
+  // Find current token at this time position
+  let current = null;
+  for (const t of lastTimedTokens) {
+    if (t.start <= ms && t.end > ms && t.token !== '-' && t.token !== '_' && !t.token.startsWith('_')) {
+      current = t;
+    }
+  }
+
+  if (!current) {
+    bar.innerHTML = `<span class="insp-time">${(ms/1000).toFixed(1)}s / ${(totalMs/1000).toFixed(1)}s</span>`;
+    return;
+  }
+
+  // Resolve token info
+  let freqStr = '', midiStr = '';
+  if (dispatcher?._resolver) {
+    const res = dispatcher._resolver.resolve(current.token);
+    if (res?.frequency) {
+      freqStr = `${res.frequency.toFixed(1)} Hz`;
+      const midiNote = Math.round(12 * Math.log2(res.frequency / 440) + 69);
+      midiStr = `midi ${midiNote}`;
+    }
+  }
+
+  // Control state at this moment
+  const cs = dispatcher?.controlState || {};
+  const ctrlParts = [];
+  if (cs.vel != null && cs.vel !== 64) ctrlParts.push(`vel:${cs.vel}`);
+  if (cs.chan != null && cs.chan !== 1) ctrlParts.push(`ch:${cs.chan}`);
+  if (cs.pan != null && cs.pan !== 64) ctrlParts.push(`pan:${cs.pan}`);
+  if (cs.transpose) ctrlParts.push(`trns:${cs.transpose}`);
+
+  // Actor info
+  const actorName = lastTerminalActorMap?.[current.token] || '';
+  const actorStr = actorName ? ` <span style="color:var(--text-3)">(${actorName})</span>` : '';
+
+  const pct = totalMs > 0 ? (ms / totalMs * 100) : 0;
+  const durMs = current.end - current.start;
+
+  bar.innerHTML =
+    `<span class="insp-token">&#9654; ${current.token}</span>${actorStr}` +
+    (freqStr ? ` <span class="insp-freq">${freqStr}</span>` : '') +
+    (midiStr ? ` <span class="insp-midi">${midiStr}</span>` : '') +
+    (ctrlParts.length ? ` <span class="insp-ctrl">${ctrlParts.join(' ')}</span>` : '') +
+    ` <span style="color:var(--text-3)">${durMs}ms</span>` +
+    `<span class="insp-time">${(ms/1000).toFixed(1)}s / ${(totalMs/1000).toFixed(1)}s</span>` +
+    `<div class="insp-progress"><div class="insp-progress-fill" style="width:${pct.toFixed(1)}%"></div></div>`;
 }
 
 function _stopCursorAnimation() {
@@ -3026,6 +3225,7 @@ async function playOnce() {
   dispatcher.setCVTable(lastCVTable);
   dispatcher.setTransportMap(lastTransportMap);
   _setupActors();
+  if (dispatcher.setMapTable) dispatcher.setMapTable(lastMapTable);
   updateResolver();
   appendResolverDebug();
   dispatcher.load(lastTimedTokens);
@@ -3049,6 +3249,7 @@ async function playLoop() {
   dispatcher.setCVTable(lastCVTable);
   dispatcher.setTransportMap(lastTransportMap);
   _setupActors();
+  if (dispatcher.setMapTable) dispatcher.setMapTable(lastMapTable);
   updateResolver();
   dispatcher.load(lastTimedTokens);
 
@@ -3192,6 +3393,10 @@ async function stopPlayback() {
   isPaused = false;
   if (audioCtx?.state === 'suspended') audioCtx.resume();
   _stopCursorAnimation();
+  // Reset inspector and timeline cursor
+  const inspBar = document.getElementById('inspectorBar');
+  if (inspBar) inspBar.innerHTML = '';
+  if (window._timeline) window._timeline.clearCursor();
   updateTransportButtons();
 
   if (dispatcher) {
@@ -3222,12 +3427,11 @@ function toggleLive() {
   const btn = document.getElementById('liveBtn');
   if (liveMode) {
     btn.classList.add('live-active');
-    btn.innerHTML = '<span class="live-indicator"></span>Live';
-    // Live mode flag — CM6 update listener checks this (installed at init)
-    setStatus('Live mode ON — editing will auto-compile and hot-swap');
+    btn.classList.add('active');
+    setStatus('Live mode ON');
   } else {
     btn.classList.remove('live-active');
-    btn.textContent = 'Live';
+    btn.classList.remove('active');
     if (liveTimer) { clearTimeout(liveTimer); liveTimer = null; }
     setStatus('Live mode OFF');
   }
@@ -4013,6 +4217,7 @@ loadHelpReference();
       ast: result.ast || null,
       actorTable: result.actorTable || {},
       terminalActorMap: result.terminalActorMap || {},
+      mapTable: result.mapTable || [],
       errors: result.errors || [],
       warnings: []
     };

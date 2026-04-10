@@ -11,6 +11,7 @@
  */
 
 import { Clock } from './clock.js';
+import { MapEngine } from './map-engine.js';
 
 export class Dispatcher {
   /**
@@ -35,12 +36,29 @@ export class Dispatcher {
     this.controlState = {};
     this._controlStack = []; // for scoped () controls with start/end pairs
 
+    // Flag state — BP3 K-parameters (separate from runtime controlState)
+    this.flagState = {};       // { flagName: value } — synced from BP3 after produce
+    this._flagNames = [];      // ordered flag names from BP3
+
     // Transport routing: symbol name → transport name (e.g. 'Sa' → 'midi')
     this._transportMap = {};  // set via setTransportMap()
 
     // Actor system: per-actor resolver and transport
     this._actors = {};              // actorName → { resolver, transportName, transport }
     this._terminalActorMap = {};    // terminal → actorName
+
+    // I/O mapping via MapEngine
+    this._mapEngine = new MapEngine({
+      getFlagState: () => this.flagState,
+      setFlag: (name, value) => this._setFlag(name, value),
+      execSys: (scene, cmd, value) => this.execSysCommand(scene, cmd, value),
+      emitTrigger: (name, value) => this._emitTrigger(name, value),
+      emitCC: (cc, value, ch) => this._emitCC(cc, value),
+      emitOSC: (addr, value) => this._emitOSC(addr, value),
+    });
+
+    // Scene management (set externally by SceneManager)
+    this._sceneInstances = {};  // sceneName → { dispatcher, flagState, ... }
 
     // CV state
     this._cvTable = {};    // CV0 → { name, target, transport, lib, objectType, args, code }
@@ -246,6 +264,13 @@ export class Dispatcher {
     this._reDerive = reDerive;
     this.controlState = { ...this._controlDefaults };
 
+    // Wire beat/bar events → MapEngine
+    this.clock.setOnBeat((beat, bar) => {
+      this._mapEngine.routeFromSysEvent('beat', beat);
+      this._mapEngine.routeFromSysEvent('bar', bar);
+    });
+    if (this._tempo) this.clock.tempo = this._tempo;
+
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
     }
@@ -308,6 +333,13 @@ export class Dispatcher {
           }
         }
       } else if (!evt.isSilence && !evt.isProlongation && evt.durSec > 0) {
+        // Scene terminal — launch child scene instead of routing to transport
+        if (this._sceneManager && this._sceneManager.isSceneTerminal(evt.token)) {
+          this._sceneManager.startScene(evt.token, absTime, evt.durSec, this.flagState);
+          this._cursor++;
+          continue;
+        }
+
         // Route to transport: actor-specific → transportMap → 'default'
         const transport = this._transportForToken(evt.token);
 
@@ -460,6 +492,12 @@ export class Dispatcher {
     if (name === 'scale') {
       this._applyScale(String(value));
     }
+
+    // Route control changes through MapEngine (flag → CC/OSC/sys)
+    this._mapEngine.routeFromFlag(name, isNaN(v) ? 0 : v);
+
+    // Notify UI callback
+    if (this.onControlChange) this.onControlChange(name, this.controlState[name]);
   }
 
   /** Apply a scale change to the resolver. */
@@ -552,5 +590,225 @@ export class Dispatcher {
     }
 
     return resolved;
+  }
+
+  // ============ I/O Mapping (@map) ============
+
+  /**
+   * Set the I/O mapping table from @map directives.
+   * @param {Array} mapTable - [{ source, arrow, target }]
+   */
+  setMapTable(mapTable) {
+    this._mapEngine.load(mapTable);
+  }
+
+  /**
+   * Set the MIDI input port for receiving CC messages.
+   * @param {MIDIInput} midiInput
+   */
+  setMidiInput(midiInput) {
+    this._mapEngine.setMidiInput(midiInput);
+  }
+
+  /**
+   * Route an incoming OSC message through the map engine.
+   * Called by an external WebSocket/OSC bridge.
+   * @param {string} address - OSC address
+   * @param {number} value
+   */
+  routeOSC(address, value) {
+    this._mapEngine.routeFromOSC(address, value);
+  }
+
+  // ============ Flag State (BP3 K-parameters) ============
+
+  /**
+   * Sync flag state from BP3 after a produce() call.
+   * Reads bp3_get_flag_state() JSON and updates this.flagState.
+   * @param {string} flagStateJSON - JSON from bp3_get_flag_state()
+   */
+  syncFlagState(flagStateJSON) {
+    try {
+      const data = typeof flagStateJSON === 'string'
+        ? JSON.parse(flagStateJSON)
+        : flagStateJSON;
+
+      if (data.names && data.flags) {
+        const prev = { ...this.flagState };
+        this._flagNames = data.names;
+        this.flagState = {};
+        for (let i = 0; i < data.names.length; i++) {
+          const name = data.names[i];
+          const value = data.flags[i] ?? 0;
+          this.flagState[name] = value;
+
+          // Route changed flags through MapEngine
+          if (prev[name] !== value) {
+            this._mapEngine.routeFromFlag(name, value);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[dispatcher] syncFlagState parse error:', e.message);
+    }
+  }
+
+  /**
+   * Set a flag value (from MapEngine or external source).
+   * Updates flagState and routes through map entries.
+   * @param {string} name - flag name
+   * @param {number} value
+   */
+  _setFlag(name, value) {
+    const prev = this.flagState[name];
+    this.flagState[name] = value;
+    // Write to BP3 engine so next derivation sees the change
+    if (this._bp3SetFlag) {
+      this._bp3SetFlag(name, value);
+    }
+    if (prev !== value) {
+      this._mapEngine.routeFromFlag(name, value);
+    }
+  }
+
+  /**
+   * Emit a trigger event (fire-and-forget, traverses hierarchy).
+   * Triggers propagate: parent ↔ children, but NOT between siblings.
+   * @param {string} name - trigger name
+   * @param {number} [value=127]
+   */
+  _emitTrigger(name, value = 127) {
+    // Dispatch globally (external listeners, UI)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bpscript-trigger', {
+        detail: { name, value }
+      }));
+    }
+    // Route through MapEngine (trigger → CC/OSC/sys)
+    this._mapEngine.routeFromTrigger(name, value);
+
+    // Propagate to child scenes (parent → children)
+    for (const scene of Object.values(this._sceneInstances)) {
+      if (scene.dispatcher) {
+        scene.dispatcher._emitTrigger(name, value);
+      }
+    }
+  }
+
+  /**
+   * Poll exposed flags from child scenes.
+   * Called periodically or after child produce to sync parent's view of child state.
+   * Maps exposed child flags through parent's mapTable.
+   */
+  pollExposedFlags() {
+    if (!this._sceneManager) return;
+
+    for (const name of this._sceneManager.getSceneNames()) {
+      const exposed = this._sceneManager.getExposedFlags(name);
+      for (const [flagName, value] of Object.entries(exposed)) {
+        // Route as scoped flag: sceneName.flagName
+        this._mapEngine.routeFromFlag(`${name}.${flagName}`, value);
+      }
+    }
+  }
+
+  // ============ sys commands ============
+
+  /**
+   * Execute a sys command (play, stop, tempo, etc.).
+   * @param {string|null} scene - target scene name, null = this dispatcher
+   * @param {string} command - sys command name
+   * @param {*} [value] - optional value (e.g. tempo BPM)
+   */
+  execSysCommand(scene, command, value) {
+    // Scoped to a child scene
+    if (scene && this._sceneInstances[scene]) {
+      const child = this._sceneInstances[scene];
+      if (child.dispatcher) {
+        child.dispatcher.execSysCommand(null, command, value);
+      }
+      return;
+    }
+
+    switch (command) {
+      case 'play':
+        if (!this._running) this.start(this._onEnd, { loop: this.loop, reDerive: this._reDerive });
+        break;
+      case 'stop':
+        this.stop();
+        break;
+      case 'pause':
+        if (this._running) this.stop();
+        else this.start(this._onEnd, { loop: this.loop, reDerive: this._reDerive });
+        break;
+      case 'loop':
+        this.loop = !this.loop;
+        break;
+      case 'tempo':
+        // Value is BPM — update clock and store
+        if (value > 0) {
+          this._tempo = value;
+          this.clock.tempo = value;
+        }
+        break;
+      case 'produce':
+        if (this._reDerive) {
+          const newTokens = this._reDerive();
+          if (newTokens) this.load(newTokens);
+        }
+        break;
+      case 'panic':
+        this.stop();
+        for (const transport of Object.values(this.transports)) {
+          transport.close();
+        }
+        break;
+      default:
+        console.warn(`[dispatcher] unknown sys command: ${command}`);
+    }
+  }
+
+  /**
+   * Register a child scene instance (called by SceneManager).
+   * @param {string} name - scene terminal name
+   * @param {Object} instance - { dispatcher, flagState, exposeTable }
+   */
+  registerScene(name, instance) {
+    this._sceneInstances[name] = instance;
+  }
+
+  /**
+   * Set the scene manager for multi-scene support.
+   * @param {SceneManager} sceneManager
+   */
+  setSceneManager(sceneManager) {
+    this._sceneManager = sceneManager;
+  }
+
+  // ============ Output helpers ============
+
+  /**
+   * Emit a CC message via the MIDI output.
+   * @param {number} cc - CC number
+   * @param {number} value - 0-127
+   */
+  _emitCC(cc, value) {
+    const midi = this.transports['midi'];
+    if (midi?.sendCC) {
+      const channel = (this.controlState.chan || 1) - 1;
+      midi.sendCC(cc, Math.max(0, Math.min(127, Math.round(value))), channel);
+    }
+  }
+
+  /**
+   * Emit an OSC message via CustomEvent.
+   * A future WebSocket bridge can listen for these.
+   */
+  _emitOSC(address, value) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bpscript-osc', {
+        detail: { address, value }
+      }));
+    }
   }
 }
