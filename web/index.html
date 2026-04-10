@@ -450,6 +450,22 @@
   .dropdown-select:focus { border-color: var(--accent-primary); }
 
   /* MIDI Map */
+  /* Scene controls tree */
+  .scene-ctrl-group { margin-bottom: 8px; }
+  .scene-ctrl-name {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--accent-primary); margin-bottom: 4px;
+  }
+  .scene-ctrl-instance {
+    display: flex; align-items: center; gap: 6px; padding: 2px 0;
+  }
+  .scene-ctrl-scope {
+    font-size: 9px; font-family: var(--font-mono); color: var(--text-3);
+    min-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .scene-ctrl-scope:hover { color: var(--text-2); }
+
   .midi-learn-btn {
     width: 100%; padding: 6px 0; font-size: 10px; font-weight: 500;
     font-family: var(--font-ui); text-transform: uppercase; letter-spacing: 0.5px;
@@ -1317,6 +1333,87 @@ function _flattenRuntimeControls() {
 // Controls that render as knobs (small range, frequently tweaked)
 const KNOB_CONTROLS = new Set(['vel', 'pan', 'offvel', 'mod', 'volume', 'pressure', 'rndvel']);
 
+/**
+ * Extract all control instances from the AST.
+ * Returns: { controlName → [ { value, scope, target, line, col } ] }
+ *   scope: 'default' | 'terminal' | 'group' | 'rule'
+ *   target: terminal name, group label, or rule LHS
+ */
+function _extractSceneControls(ast) {
+  const instances = {};
+  if (!ast) return instances;
+
+  function addInstance(key, value, scope, target, line) {
+    if (!instances[key]) instances[key] = [];
+    instances[key].push({ value, scope, target, line });
+  }
+
+  // Walk rules in all subgrammars
+  const allRules = [];
+  if (ast.subgrammars) {
+    for (const sg of ast.subgrammars) {
+      if (sg.rules) allRules.push(...sg.rules);
+    }
+  }
+  if (ast.rules) allRules.push(...ast.rules);
+
+  for (const rule of allRules) {
+    const lhs = typeof rule.lhs === 'string' ? rule.lhs : Array.isArray(rule.lhs) ? rule.lhs.map(e => e.name || e.value || '?').join(' ') : (rule.lhs?.name || 'S');
+
+    // Rule-level runtime qualifier: S -> A B (vel:80)
+    if (rule.runtimeQualifier?.pairs) {
+      for (const p of rule.runtimeQualifier.pairs) {
+        addInstance(p.key, p.value, 'rule', lhs, rule.line);
+      }
+    }
+
+    // Walk RHS elements
+    if (rule.rhs) _walkElements(rule.rhs, lhs, rule.line);
+  }
+
+  function _walkElements(elements, ruleLhs, ruleLine) {
+    for (const el of elements) {
+      // Terminal with suffix qualifiers: C4(vel:100)
+      if (el.suffixQualifiers) {
+        for (const sq of el.suffixQualifiers) {
+          if (sq.type === 'RuntimeQualifier' && sq.pairs) {
+            const target = el.name || el.value || el.token || '?';
+            for (const p of sq.pairs) {
+              addInstance(p.key, p.value, 'terminal', target, el.line || ruleLine);
+            }
+          }
+        }
+      }
+
+      // Polymetric group: {A, B}(vel:80)
+      if (el.type === 'Polymetric') {
+        if (el.runtimeQualifier?.pairs) {
+          const target = el.label || '{...}';
+          for (const p of el.runtimeQualifier.pairs) {
+            addInstance(p.key, p.value, 'group', target, el.line || ruleLine);
+          }
+        }
+        // Recurse into voices
+        if (el.voices) {
+          for (const voice of el.voices) {
+            if (Array.isArray(voice)) _walkElements(voice, ruleLhs, ruleLine);
+          }
+        }
+      }
+
+      // Simultaneous events
+      if (el.type === 'Simultaneous') {
+        if (el.primary) _walkElements([el.primary], ruleLhs, ruleLine);
+        if (el.secondaries) _walkElements(el.secondaries, ruleLhs, ruleLine);
+      }
+    }
+  }
+
+  return instances;
+}
+
+let lastSceneControls = {}; // cached from last compilation
+
 function toggleControlsPanel() {
   const panel = document.getElementById('controlsPanel');
   if (panel) panel.classList.toggle('collapsed');
@@ -1405,6 +1502,42 @@ function buildControlsPanel() {
     html += '</div></div>';
   }
 
+  // Scene controls — all instances from the AST
+  const sceneEntries = Object.entries(lastSceneControls);
+  if (sceneEntries.length > 0) {
+    html += `<div class="ctrl-section collapsed" data-group="musical">`;
+    html += `<div class="ctrl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">`;
+    html += `<span class="ctrl-section-title">Scene</span>`;
+    html += `<span class="ctrl-section-chevron">&#9660;</span>`;
+    html += `</div><div class="ctrl-section-body">`;
+
+    for (const [ctrlName, instances] of sceneEntries) {
+      const def = allControls[ctrlName];
+      const range = def?.range || [0, 127];
+      const [min, max] = range;
+
+      html += `<div class="scene-ctrl-group">`;
+      html += `<div class="scene-ctrl-name">${ctrlName}</div>`;
+
+      for (let idx = 0; idx < instances.length; idx++) {
+        const inst = instances[idx];
+        const target = typeof inst.target === 'object' ? (inst.target.name || inst.target.lhs || JSON.stringify(inst.target)) : String(inst.target);
+        const scopeIcon = inst.scope === 'terminal' ? '&#9642;' : inst.scope === 'group' ? '&#9644;' : inst.scope === 'rule' ? '&#9654;' : '&#9675;';
+        const scopeLabel = inst.scope === 'terminal' ? target : inst.scope === 'group' ? `{${target}}` : inst.scope === 'rule' ? `${target} →` : 'default';
+        const val = inst.value;
+
+        html += `<div class="slider-row">`;
+        html += `<span class="slider-label" title="${inst.scope}: line ${inst.line}">${scopeIcon} ${scopeLabel}</span>`;
+        html += `<div class="slider-track-wrap"><input type="range" class="slider-input" data-scene-ctrl="${ctrlName}" data-scene-idx="${idx}" min="${min}" max="${max}" value="${val}"></div>`;
+        html += `<span class="slider-value" data-for="scene_${ctrlName}_${idx}">${val}</span>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+
+    html += '</div></div>';
+  }
+
   // MIDI Map section
   html += `<div class="ctrl-section" data-group="midi">`;
   html += `<div class="ctrl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">`;
@@ -1477,7 +1610,77 @@ function buildControlsPanel() {
     kxFactor.addEventListener('input', kxHandler);
   }
 
+  // Wire scene control sliders — edit source on change
+  container.querySelectorAll('[data-scene-ctrl]').forEach(el => {
+    el.addEventListener('input', () => {
+      const ctrlName = el.dataset.sceneCtrl;
+      const idx = Number(el.dataset.sceneIdx);
+      const newVal = Number(el.value);
+      const valSpan = container.querySelector(`.slider-value[data-for="scene_${ctrlName}_${idx}"]`);
+      if (valSpan) valSpan.textContent = newVal;
+      // Edit the BPscript source at the right position
+      _editSceneControl(ctrlName, idx, newVal);
+    });
+  });
+
+  // Wire scene knob drag
+  container.querySelectorAll('.knob-svg[data-ctrl^="scene_"]').forEach(svg => {
+    const key = svg.dataset.ctrl;
+    const min = Number(svg.dataset.min);
+    const max = Number(svg.dataset.max);
+    const parts = key.split('_'); // scene_vel_0
+    const ctrlName = parts[1];
+    const idx = Number(parts[2]);
+    let dragging = false, startY, startVal;
+
+    svg.addEventListener('mousedown', e => {
+      dragging = true;
+      startY = e.clientY;
+      startVal = Number(svg.querySelector('.knob-center-val').textContent);
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const dy = startY - e.clientY;
+      const sensitivity = e.shiftKey ? 0.1 : 1;
+      const range = max - min;
+      const newVal = Math.round(Math.max(min, Math.min(max, startVal + dy * sensitivity * range / 200)));
+      _updateKnob(svg, key, newVal, min, max);
+      _editSceneControl(ctrlName, idx, newVal);
+    });
+
+    window.addEventListener('mouseup', () => { dragging = false; });
+  });
+
   _renderMidiMappings();
+}
+
+/**
+ * Edit a control value in the BPscript source.
+ * Finds the Nth occurrence of (ctrlName:...) and replaces the value.
+ */
+function _editSceneControl(ctrlName, instanceIdx, newValue) {
+  const source = window.getEditorSource ? getEditorSource() : '';
+  if (!source) return;
+
+  // Find all (ctrlName:value) patterns in the source
+  const regex = new RegExp(`(\\((?:[^)]*,\\s*)?${ctrlName}\\s*:\\s*)(-?[\\d.]+)`, 'g');
+  let match;
+  let count = 0;
+  let result = source;
+
+  // Reset regex
+  const matches = [];
+  while ((match = regex.exec(source)) !== null) {
+    matches.push({ index: match.index, fullMatch: match[0], prefix: match[1], oldVal: match[2], end: match.index + match[0].length });
+  }
+
+  if (instanceIdx < matches.length) {
+    const m = matches[instanceIdx];
+    result = source.substring(0, m.index) + m.prefix + newValue + source.substring(m.end);
+    if (window.setEditorSource) setEditorSource(result);
+  }
 }
 
 function _updateKnob(svg, key, val, min, max) {
@@ -2015,6 +2218,10 @@ async function produce() {
       lastTransportMap = buildTransportMap(compiled);
       lastActorTable = compiled.actorTable || {};
       lastTerminalActorMap = compiled.terminalActorMap || {};
+      console.log('[scene-controls] compiled.ast:', compiled.ast ? 'present' : 'null', 'subgrammars:', compiled.ast?.subgrammars?.length);
+      lastSceneControls = _extractSceneControls(compiled.ast);
+      console.log('[scene-controls] extracted:', JSON.stringify(lastSceneControls));
+      buildControlsPanel();
       if (compiled.settings) document.getElementById('settings').value = compiled.settings;
       if (compiled.warnings && compiled.warnings.length > 0) {
         console.log('BPscript warnings:', compiled.warnings);
@@ -3802,6 +4009,9 @@ loadHelpReference();
       controlTable: result.controlTable || [],
       cvTable: result.cvTable || [],
       directives: result.directives || [],
+      ast: result.ast || null,
+      actorTable: result.actorTable || {},
+      terminalActorMap: result.terminalActorMap || {},
       errors: result.errors || [],
       warnings: []
     };
