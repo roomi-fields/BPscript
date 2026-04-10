@@ -376,5 +376,12 @@
     "category": "midi",
     "description": "CC input → flag via @map directive",
     "file": "midi-map.bps"
+  },
+  {
+    "id": "multi-scene",
+    "title": "Multi-Scene",
+    "category": "advanced",
+    "description": "Orchestre deux scènes enfants (melody + drums) via @scene",
+    "file": "multi-scene.bps"
   }
 ]

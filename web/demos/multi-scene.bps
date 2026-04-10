@@ -1,0 +1,11 @@
+// Multi-Scene — orchestre deux scènes enfants
+// Chaque terminal "melody" et "drums" déclenche la scène correspondante
+
+@core
+@controls
+@alphabet.western:browser
+
+@scene melody "scene-melody.bps"
+@scene drums "scene-drums.bps"
+
+S -> {melody, drums}
