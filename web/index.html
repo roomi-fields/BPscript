@@ -787,15 +787,17 @@
     <div id="descBar" class="desc-bar" style="display:none;"></div>
 
     <div class="editor-area">
-      <!-- Editor tabs -->
-      <div class="editor-tabs">
-        <div class="editor-tab active" onclick="switchEditorTab('bpscript')">Scene</div>
-        <div class="editor-tab" onclick="switchEditorTab('grammar')">Grammar (BP3)</div>
+      <!-- Editor tabs (dynamic — scene children inserted between Scene and Grammar) -->
+      <div class="editor-tabs" id="editorTabs">
+        <div class="editor-tab active" data-tab="bpscript" onclick="switchEditorTab('bpscript')">Scene</div>
+        <!-- child scene tabs inserted here by _updateSceneTabs() -->
+        <div class="editor-tab" data-tab="grammar" onclick="switchEditorTab('grammar')">Grammar</div>
       </div>
-      <div class="editor-panels">
+      <div class="editor-panels" id="editorPanels">
         <div class="editor-panel active" id="panel-bpscript">
           <div id="bpscript-editor"></div>
         </div>
+        <!-- child scene panels inserted here by _updateSceneTabs() -->
         <div class="editor-panel" id="panel-grammar">
           <div id="grammar-editor"></div>
         </div>
@@ -1026,6 +1028,8 @@ let lastMidiEvents = null;
 let lastTimedTokens = null;
 let lastControlTable = null;
 let lastMapTable = [];
+let lastSceneTable = {};       // { sceneName: { file, source, compiled, tokens } }
+let childSceneEditors = {};    // { sceneName: CodeMirror EditorView }
 let lastCVTable = null;
 let lastDirectives = [];
 let lastTransportMap = {};  // symbol → transport name (from declarations/directives)
@@ -1329,13 +1333,170 @@ async function loadFromLibrary(id) {
 
 /* ---- Editor Tabs ---- */
 function switchEditorTab(tab) {
-  document.querySelectorAll('.editor-tab').forEach((el, i) => {
-    const tabs = ['bpscript', 'grammar', 'alphabet', 'settings'];
-    el.classList.toggle('active', tabs[i] === tab);
+  document.querySelectorAll('.editor-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
   });
   document.querySelectorAll('.editor-panel').forEach(el => {
     el.classList.toggle('active', el.id === 'panel-' + tab);
   });
+}
+
+/**
+ * Update editor tabs when @scene directives are found.
+ * Adds a tab + panel for each child scene between Scene and Grammar.
+ */
+function _updateSceneTabs(sceneTable) {
+  const tabsContainer = document.getElementById('editorTabs');
+  const panelsContainer = document.getElementById('editorPanels');
+  if (!tabsContainer || !panelsContainer) return;
+
+  // Remove existing child scene tabs and panels
+  tabsContainer.querySelectorAll('.editor-tab[data-scene]').forEach(el => el.remove());
+  panelsContainer.querySelectorAll('.editor-panel[data-scene]').forEach(el => el.remove());
+
+  const sceneNames = Object.keys(sceneTable);
+  if (sceneNames.length === 0) return;
+
+  // Insert tabs before Grammar tab
+  const grammarTab = tabsContainer.querySelector('[data-tab="grammar"]');
+  const grammarPanel = panelsContainer.querySelector('#panel-grammar');
+
+  for (const name of sceneNames) {
+    // Tab
+    const tab = document.createElement('div');
+    tab.className = 'editor-tab';
+    tab.dataset.tab = 'scene-' + name;
+    tab.dataset.scene = name;
+    tab.textContent = name;
+    tab.onclick = () => switchEditorTab('scene-' + name);
+    tabsContainer.insertBefore(tab, grammarTab);
+
+    // Panel
+    const panel = document.createElement('div');
+    panel.className = 'editor-panel';
+    panel.id = 'panel-scene-' + name;
+    panel.dataset.scene = name;
+
+    // Textarea editor for child scene (CodeMirror later if needed)
+    const textarea = document.createElement('textarea');
+    textarea.spellcheck = false;
+    textarea.placeholder = `// ${name} — child scene\n// Edit here, will be compiled with Produce`;
+    textarea.style.cssText = 'flex:1;width:100%;font-family:var(--font-mono);font-size:13px;background:var(--surface-2);color:var(--text-code);border:none;padding:12px 20px;resize:none;outline:none;line-height:1.5;';
+    textarea.dataset.sceneName = name;
+
+    // Load source from file if available, or from lastSceneTable
+    const entry = lastSceneTable[name];
+    if (entry?.source) {
+      textarea.value = entry.source;
+    }
+
+    panel.appendChild(textarea);
+    panelsContainer.insertBefore(panel, grammarPanel);
+  }
+}
+
+/**
+ * Get the source code of a child scene from its editor tab.
+ */
+function _getChildSceneSource(name) {
+  const textarea = document.querySelector(`textarea[data-scene-name="${name}"]`);
+  return textarea?.value || '';
+}
+
+/**
+ * Pre-compile all child scenes sequentially using the single WASM instance.
+ * Save/restore parent grammar around each child compilation.
+ * Returns { sceneName: { tokens, controlTable, duration } }
+ */
+async function _compileChildScenes(sceneTable) {
+  const results = {};
+  if (!sceneTable || Object.keys(sceneTable).length === 0) return results;
+
+  for (const [name, entry] of Object.entries(sceneTable)) {
+    const source = _getChildSceneSource(name);
+    if (!source.trim()) {
+      console.warn(`[scene] ${name}: no source code`);
+      continue;
+    }
+
+    // Compile BPscript → BP3 grammar
+    const compiled = window._compileBPScript(source);
+    if (compiled.errors?.length) {
+      console.warn(`[scene] ${name}: compile errors:`, compiled.errors);
+      continue;
+    }
+
+    // Save parent state, load child grammar into WASM, produce, capture tokens
+    const parentGrammar = document.getElementById('grammar-editor')?.cmView?.state?.doc?.toString() || '';
+    const parentAlphabet = document.getElementById('alphabet')?.value || '';
+    const parentSettings = document.getElementById('settings')?.value || '';
+
+    // Load child into WASM
+    bp3_load_grammar(compiled.grammar);
+    if (compiled.alphabet) bp3_load_alphabet(compiled.alphabet);
+    if (compiled.settings) bp3_load_settings_params(compiled.settings);
+
+    const ok = bp3_produce();
+    if (ok === 1) {
+      const count = bp3_get_timed_token_count();
+      const tokensRaw = bp3_get_timed_tokens();
+      let tokens = [];
+      try { tokens = JSON.parse(tokensRaw); } catch {}
+      results[name] = {
+        tokens,
+        controlTable: compiled.controlTable || [],
+        cvTable: compiled.cvTable || [],
+        duration: tokens.length > 0 ? Math.max(...tokens.map(t => t.end)) : 0,
+      };
+    } else {
+      console.warn(`[scene] ${name}: produce failed`);
+    }
+
+    // Restore parent grammar
+    bp3_load_grammar(parentGrammar);
+    if (parentAlphabet) bp3_load_alphabet(parentAlphabet);
+    if (parentSettings) bp3_load_settings_params(parentSettings);
+  }
+
+  return results;
+}
+
+/**
+ * Load child scene files from demos/ or library.
+ */
+async function _loadChildSceneFiles(sceneTable) {
+  for (const [name, entry] of Object.entries(sceneTable)) {
+    if (lastSceneTable[name]?.source) continue; // already loaded
+
+    // Try to fetch from demos/
+    const file = entry.file;
+    try {
+      const resp = await fetch(`./demos/${file}`);
+      if (resp.ok) {
+        const source = await resp.text();
+        lastSceneTable[name] = { ...entry, source };
+        // Update textarea if tab exists
+        const textarea = document.querySelector(`textarea[data-scene-name="${name}"]`);
+        if (textarea && !textarea.value.trim()) textarea.value = source;
+        continue;
+      }
+    } catch {}
+
+    // Try parent-relative path
+    try {
+      const resp = await fetch(`../scenes/${file}`);
+      if (resp.ok) {
+        const source = await resp.text();
+        lastSceneTable[name] = { ...entry, source };
+        const textarea = document.querySelector(`textarea[data-scene-name="${name}"]`);
+        if (textarea && !textarea.value.trim()) textarea.value = source;
+        continue;
+      }
+    } catch {}
+
+    // Not found — user will need to paste source in the tab
+    if (!lastSceneTable[name]) lastSceneTable[name] = { ...entry, source: '' };
+  }
 }
 
 function switchOutputTab(tab) {
@@ -2304,10 +2465,18 @@ async function produce() {
       lastActorTable = compiled.actorTable || {};
       lastTerminalActorMap = compiled.terminalActorMap || {};
       lastMapTable = compiled.mapTable || [];
-      console.log('[scene-controls] compiled.ast:', compiled.ast ? 'present' : 'null', 'subgrammars:', compiled.ast?.subgrammars?.length);
       lastSceneControls = _extractSceneControls(compiled.ast);
-      console.log('[scene-controls] extracted:', JSON.stringify(lastSceneControls));
       buildControlsPanel();
+
+      // Handle @scene directives — create tabs + load child sources
+      const newSceneTable = compiled.sceneTable || {};
+      if (Object.keys(newSceneTable).length > 0) {
+        for (const [name, entry] of Object.entries(newSceneTable)) {
+          if (!lastSceneTable[name]) lastSceneTable[name] = { ...entry, source: '' };
+        }
+        _updateSceneTabs(newSceneTable);
+        await _loadChildSceneFiles(newSceneTable);
+      }
       if (compiled.settings) document.getElementById('settings').value = compiled.settings;
       if (compiled.warnings && compiled.warnings.length > 0) {
         console.log('BPscript warnings:', compiled.warnings);
@@ -3226,6 +3395,13 @@ async function playOnce() {
   dispatcher.setTransportMap(lastTransportMap);
   _setupActors();
   if (dispatcher.setMapTable) dispatcher.setMapTable(lastMapTable);
+  // Pre-compile child scenes and pass to dispatcher
+  if (Object.keys(lastSceneTable).length > 0) {
+    const childResults = await _compileChildScenes(lastSceneTable);
+    dispatcher._childScenes = childResults;
+  } else {
+    dispatcher._childScenes = {};
+  }
   updateResolver();
   appendResolverDebug();
   dispatcher.load(lastTimedTokens);
@@ -3250,6 +3426,12 @@ async function playLoop() {
   dispatcher.setTransportMap(lastTransportMap);
   _setupActors();
   if (dispatcher.setMapTable) dispatcher.setMapTable(lastMapTable);
+  if (Object.keys(lastSceneTable).length > 0) {
+    const childResults = await _compileChildScenes(lastSceneTable);
+    dispatcher._childScenes = childResults;
+  } else {
+    dispatcher._childScenes = {};
+  }
   updateResolver();
   dispatcher.load(lastTimedTokens);
 
@@ -4218,6 +4400,7 @@ loadHelpReference();
       actorTable: result.actorTable || {},
       terminalActorMap: result.terminalActorMap || {},
       mapTable: result.mapTable || [],
+      sceneTable: result.sceneTable || {},
       errors: result.errors || [],
       warnings: []
     };

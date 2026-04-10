@@ -340,6 +340,31 @@ export class Dispatcher {
           continue;
         }
 
+        // Pre-compiled child scene — play its tokens inline
+        if (this._childScenes && this._childScenes[evt.token]) {
+          const child = this._childScenes[evt.token];
+          const childDur = evt.durSec;
+          const timeScale = child.duration > 0 ? childDur / (child.duration / 1000) : 1;
+          for (const ct of child.tokens) {
+            if (ct.token.startsWith('_') || ct.token === '-' || ct.token === '_') continue;
+            const cAbsTime = absTime + (ct.start / 1000) * timeScale;
+            const cDur = ((ct.end - ct.start) / 1000) * timeScale;
+            if (cAbsTime > scheduleUntil) break;
+            const transport = this._transportForToken(ct.token);
+            if (transport) {
+              transport.send({
+                token: ct.token,
+                startSec: this._loopOffset + evt.startSec + (ct.start / 1000) * timeScale,
+                durSec: cDur,
+                ...this.controlState,
+                velocity: this.controlState.vel / 127,
+              }, cAbsTime);
+            }
+          }
+          this._cursor++;
+          continue;
+        }
+
         // Route to transport: actor-specific → transportMap → 'default'
         const transport = this._transportForToken(evt.token);
 
