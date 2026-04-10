@@ -1680,6 +1680,7 @@ function _editSceneControl(ctrlName, instanceIdx, newValue) {
     const m = matches[instanceIdx];
     result = source.substring(0, m.index) + m.prefix + newValue + source.substring(m.end);
     if (window.setEditorSource) setEditorSource(result);
+    produce();
   }
 }
 
