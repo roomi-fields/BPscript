@@ -1333,7 +1333,22 @@ async function loadFromLibrary(id) {
 }
 
 /* ---- Editor Tabs ---- */
+let _activeEditorTab = 'bpscript';
+
+function _renderActiveTimeline() {
+  if (_activeEditorTab.startsWith('scene-')) {
+    const sceneName = _activeEditorTab.replace('scene-', '');
+    const sceneData = lastSceneTable[sceneName];
+    if (sceneData?.tokens) {
+      renderTimeline(sceneData.tokens);
+      return;
+    }
+  }
+  if (lastTimedTokens) renderTimeline(lastTimedTokens);
+}
+
 function switchEditorTab(tab) {
+  _activeEditorTab = tab;
   document.querySelectorAll('.editor-tab').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === tab);
   });
@@ -1341,17 +1356,7 @@ function switchEditorTab(tab) {
     el.classList.toggle('active', el.id === 'panel-' + tab);
   });
 
-  // Switch timeline to show tokens of the active scene
-  if (tab.startsWith('scene-')) {
-    const sceneName = tab.replace('scene-', '');
-    const sceneData = lastSceneTable[sceneName];
-    if (sceneData?.tokens) {
-      renderTimeline(sceneData.tokens);
-    }
-  } else if (tab === 'bpscript') {
-    // Back to parent timeline
-    if (lastTimedTokens) renderTimeline(lastTimedTokens);
-  }
+  _renderActiveTimeline();
 }
 
 /**
@@ -2592,7 +2597,7 @@ async function produce() {
       }
 
       updateTransportButtons();
-      renderTimeline(lastTimedTokens);
+      _renderActiveTimeline();
       updateDebugPanel(grammar, alphabet);
 
       const midiInfo = tokenCount > 0 ? ` | ${tokenCount} tokens` : (midiCount > 0 ? ` | ${midiCount} MIDI events` : '');
@@ -3336,7 +3341,34 @@ function _startCursorAnimation() {
     if (totalMs > 0 && dispatcher.loop) {
       ms = ms % totalMs;
     }
-    if (window._timeline) window._timeline.setCursor(ms);
+    if (_activeEditorTab === 'bpscript') {
+      if (window._timeline) window._timeline.setCursor(ms);
+    } else if (_activeEditorTab.startsWith('scene-')) {
+      // Map parent time to child time
+      const sceneName = _activeEditorTab.replace('scene-', '');
+      const childData = lastChildSceneResults?.[sceneName];
+      if (childData && lastTimedTokens) {
+        // Find the parent terminal for this scene and its time window
+        const parentEvt = lastTimedTokens.find(t => t.token === sceneName && t.end > t.start);
+        if (parentEvt) {
+          const parentStartMs = parentEvt.start;
+          const parentDurMs = parentEvt.end - parentEvt.start;
+          const childDurMs = childData.duration || 1;
+          // Where are we in the parent's time window?
+          let parentLocalMs = ms - parentStartMs;
+          if (dispatcher.loop && parentDurMs > 0) {
+            parentLocalMs = ((parentLocalMs % parentDurMs) + parentDurMs) % parentDurMs;
+          }
+          // Scale to child time
+          const childMs = (parentLocalMs / parentDurMs) * childDurMs;
+          if (parentLocalMs >= 0 && parentLocalMs <= parentDurMs) {
+            if (window._timeline) window._timeline.setCursor(childMs);
+          } else {
+            if (window._timeline) window._timeline.clearCursor();
+          }
+        }
+      }
+    }
     _updateInspector(ms, totalMs);
     _cursorFrame = requestAnimationFrame(tick);
   }
@@ -3467,7 +3499,8 @@ async function playLoop() {
       if (tc > 0) {
         try {
           const tokens = JSON.parse(bp3_get_timed_tokens());
-          renderTimeline(tokens);
+          lastTimedTokens = tokens;
+          _renderActiveTimeline();
           return tokens;
         } catch {}
       }
@@ -3674,7 +3707,7 @@ async function liveCompileAndSwap() {
         try { lastTimedTokens = JSON.parse(bp3_get_timed_tokens()); } catch {}
       }
       updateTransportButtons();
-      renderTimeline(lastTimedTokens);
+      _renderActiveTimeline();
       setStatus(`Live: ${tc} tokens`);
     }
   } catch {}

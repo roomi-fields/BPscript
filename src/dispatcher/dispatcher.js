@@ -340,21 +340,22 @@ export class Dispatcher {
           continue;
         }
 
-        // Pre-compiled child scene — play its tokens inline
+        // Pre-compiled child scene — schedule ALL its tokens at once
         if (this._childScenes && this._childScenes[evt.token]) {
           const child = this._childScenes[evt.token];
-          const childDur = evt.durSec;
-          const timeScale = child.duration > 0 ? childDur / (child.duration / 1000) : 1;
+          const childDurSec = evt.durSec;
+          const childDurMs = child.duration || 1;
+          const timeScale = childDurSec / (childDurMs / 1000);
           for (const ct of child.tokens) {
             if (ct.token.startsWith('_') || ct.token === '-' || ct.token === '_') continue;
-            const cAbsTime = absTime + (ct.start / 1000) * timeScale;
-            const cDur = ((ct.end - ct.start) / 1000) * timeScale;
-            if (cAbsTime > scheduleUntil) break;
+            if (ct.end <= ct.start) continue;
+            const cAbsTime = absTime + (ct.start / childDurMs) * childDurSec;
+            const cDur = ((ct.end - ct.start) / childDurMs) * childDurSec;
             const transport = this._transportForToken(ct.token);
             if (transport) {
               transport.send({
                 token: ct.token,
-                startSec: this._loopOffset + evt.startSec + (ct.start / 1000) * timeScale,
+                startSec: this._loopOffset + evt.startSec + (ct.start / childDurMs) * childDurSec,
                 durSec: cDur,
                 ...this.controlState,
                 velocity: this.controlState.vel / 127,
