@@ -173,6 +173,15 @@ export class MapEngine {
   /**
    * Write a value to a target endpoint.
    */
+  /**
+   * Register a callback for structural changes (flag, proportion, control).
+   * Called on every _writeTarget — UI can refresh panels/timeline.
+   * @param {Function} callback - (target, value) => void
+   */
+  setOnStructuralChange(callback) {
+    this._onStructuralChange = callback;
+  }
+
   _writeTarget(target, value) {
     switch (target.kind) {
       case 'flag':
@@ -194,6 +203,11 @@ export class MapEngine {
       case 'osc':
         this._emitOSC(target.address, value);
         break;
+    }
+
+    // Notify UI of any structural change
+    if (this._onStructuralChange) {
+      this._onStructuralChange(target, value);
     }
   }
 

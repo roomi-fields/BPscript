@@ -2840,6 +2840,31 @@ async function ensureDispatcher() {
       if (valSpan) valSpan.textContent = typeof value === 'number' ? Math.round(value) : value;
     };
 
+    // Structural change callback — update UI when @map writes to a target
+    if (dispatcher._mapEngine) {
+      dispatcher._mapEngine.setOnStructuralChange((target, value) => {
+        const container = document.getElementById('controlsContent');
+        if (!container) return;
+
+        if (target.kind === 'flag') {
+          // Update flag input in Flags section
+          const flagInput = container.querySelector(`.flag-input[data-flag="${target.name}"]`);
+          if (flagInput) {
+            flagInput.value = Math.round(value);
+            flagInput.style.outline = '1px solid var(--accent-midi)';
+            setTimeout(() => flagInput.style.outline = '', 300);
+          }
+          const flagVal = container.querySelector(`.slider-value[data-for="flag_${target.name}"]`);
+          if (flagVal) flagVal.textContent = Math.round(value);
+        }
+
+        // Also update knobs/sliders if a control was changed
+        if (target.kind === 'flag' && dispatcher.onControlChange) {
+          dispatcher.onControlChange(target.name, value);
+        }
+      });
+    }
+
     // Register MIDI transport if active
     if (midiEnabled && midiTransport) {
       dispatcher.addTransport('midi', midiTransport);
