@@ -366,22 +366,11 @@ export class Dispatcher {
         }
 
         // Pre-compiled child scene — schedule ALL its tokens at once
+        // Rule: parent always controls the envelope. Child @duration is ignored.
         if (this._childScenes && this._childScenes[evt.token]) {
           const child = this._childScenes[evt.token];
           const childNaturalMs = child.duration || 1;
-
-          // Target duration: @duration from child if declared, else parent terminal duration
-          let childTargetSec;
-          if (child.metadata?.duration) {
-            const dur = child.metadata.duration;
-            if (dur.unit === 'b') {
-              childTargetSec = dur.amount * 60 / (this._tempo || 60);
-            } else {
-              childTargetSec = dur.amount;
-            }
-          } else {
-            childTargetSec = evt.durSec;
-          }
+          const childTargetSec = evt.durSec; // parent decides
 
           for (const ct of child.tokens) {
             if (ct.token.startsWith('_') || ct.token === '-' || ct.token === '_') continue;

@@ -1335,16 +1335,43 @@ async function loadFromLibrary(id) {
 /* ---- Editor Tabs ---- */
 let _activeEditorTab = 'bpscript';
 
+function _scaledTokens(tokens, durationObj) {
+  if (!durationObj || !tokens || tokens.length === 0) return tokens;
+  const naturalMs = Math.max(...tokens.map(t => t.end));
+  if (naturalMs <= 0) return tokens;
+
+  let targetMs;
+  if (durationObj.unit === 'b') {
+    const bpm = 60; // TODO: read from @mm directive
+    const mmDir = (lastDirectives || []).find(d => d.name === 'mm');
+    const tempo = mmDir?.value || 60;
+    targetMs = durationObj.amount * 60000 / tempo;
+  } else {
+    targetMs = durationObj.amount * 1000;
+  }
+
+  return tokens.map(t => ({
+    ...t,
+    start: (t.start / naturalMs) * targetMs,
+    end: (t.end / naturalMs) * targetMs,
+  }));
+}
+
 function _renderActiveTimeline() {
   if (_activeEditorTab.startsWith('scene-')) {
     const sceneName = _activeEditorTab.replace('scene-', '');
     const sceneData = lastSceneTable[sceneName];
     if (sceneData?.tokens) {
-      renderTimeline(sceneData.tokens);
+      const childResult = lastChildSceneResults?.[sceneName];
+      const dur = childResult?.metadata?.duration;
+      renderTimeline(_scaledTokens(sceneData.tokens, dur));
       return;
     }
   }
-  if (lastTimedTokens) renderTimeline(lastTimedTokens);
+  // Parent timeline — apply @duration if declared
+  const durationDir = (lastDirectives || []).find(d => d.name === 'duration');
+  const dur = durationDir?.value || null;
+  if (lastTimedTokens) renderTimeline(_scaledTokens(lastTimedTokens, dur));
 }
 
 function switchEditorTab(tab) {
