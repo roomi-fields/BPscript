@@ -378,6 +378,13 @@
     "file": "midi-map.bps"
   },
   {
+    "id": "cc-structure",
+    "title": "CC: Structure",
+    "category": "midi",
+    "description": "CC1 modifie le ratio d'un groupe polymétrique via @map",
+    "file": "cc-structure.bps"
+  },
+  {
     "id": "multi-scene",
     "title": "Multi-Scene",
     "category": "advanced",

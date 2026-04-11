@@ -2517,6 +2517,7 @@ async function produce() {
       lastTerminalActorMap = compiled.terminalActorMap || {};
       lastMapTable = compiled.mapTable || [];
       lastSceneControls = _extractSceneControls(compiled.ast);
+      window._lastCompiledAST = compiled.ast;
       buildControlsPanel();
 
       // Handle @scene directives — create tabs + load child sources
@@ -2844,9 +2845,26 @@ async function ensureDispatcher() {
     if (dispatcher._mapEngine) {
       dispatcher._mapEngine.setOnStructuralChange((target, value) => {
         const container = document.getElementById('controlsContent');
-        if (!container) return;
 
-        if (target.kind === 'flag') {
+        if (target.kind === 'flag' && target.name === 'ratio' && target.actor) {
+          // Structural property: actor is a polymetric group label
+          // Find the group by label in the timeline and modify its ratio
+          const tl = window._timeline;
+          if (tl && tl.polyGroups) {
+            const groupIdx = tl.polyGroups.findIndex(g => g.label === target.actor);
+            if (groupIdx >= 0) {
+              // CC 0-127 → ratio 0.25 to 4.0 (log scale, 64=1.0)
+              const ratio = value <= 64
+                ? 0.25 + (value / 64) * 0.75   // 0→0.25, 64→1.0
+                : 1.0 + ((value - 64) / 63) * 3.0; // 64→1.0, 127→4.0
+              rewriteGroupRatio(groupIdx, ratio);
+              produce();
+              return;
+            }
+          }
+        }
+
+        if (target.kind === 'flag' && container) {
           // Update flag input in Flags section
           const flagInput = container.querySelector(`.flag-input[data-flag="${target.name}"]`);
           if (flagInput) {
@@ -2856,11 +2874,11 @@ async function ensureDispatcher() {
           }
           const flagVal = container.querySelector(`.slider-value[data-for="flag_${target.name}"]`);
           if (flagVal) flagVal.textContent = Math.round(value);
-        }
 
-        // Also update knobs/sliders if a control was changed
-        if (target.kind === 'flag' && dispatcher.onControlChange) {
-          dispatcher.onControlChange(target.name, value);
+          // Also update knobs/sliders if a control was changed
+          if (dispatcher.onControlChange) {
+            dispatcher.onControlChange(target.name, value);
+          }
         }
       });
     }
@@ -4338,10 +4356,52 @@ function renderTimeline(tokens) {
       });
       const src = window.getEditorSource ? getEditorSource() : '';
       window._timeline.load(tokens, { cvTable: lastCVTable, controlTable: lastControlTable, source: src });
+    _injectPolyGroupLabels();
     });
   } else {
     const src = window.getEditorSource ? getEditorSource() : '';
     window._timeline.load(tokens, { cvTable: lastCVTable, controlTable: lastControlTable, source: src });
+    _injectPolyGroupLabels();
+  }
+}
+
+/**
+ * Inject polymetric group labels from the AST into the timeline's polyGroups.
+ * The timeline parses {,} markers from tokens but doesn't know the BPscript labels.
+ */
+function _injectPolyGroupLabels() {
+  const tl = window._timeline;
+  if (!tl || !tl.polyGroups) return;
+
+  // Extract labels from AST (in openOrder)
+  const labels = [];
+  function walkRhs(elements) {
+    for (const el of elements) {
+      if (el.type === 'Polymetric') {
+        labels.push(el.label || null);
+        if (el.voices) {
+          for (const voice of el.voices) {
+            if (Array.isArray(voice)) walkRhs(voice);
+          }
+        }
+      }
+    }
+  }
+
+  const ast = window._lastCompiledAST;
+  if (ast?.subgrammars) {
+    for (const sg of ast.subgrammars) {
+      for (const rule of sg.rules || []) {
+        if (rule.rhs) walkRhs(rule.rhs);
+      }
+    }
+  }
+
+  // Match by openOrder
+  for (let i = 0; i < tl.polyGroups.length && i < labels.length; i++) {
+    if (labels[i]) {
+      tl.polyGroups[i].label = labels[i];
+    }
   }
 }
 
