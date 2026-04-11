@@ -232,18 +232,18 @@ Le compositeur le voit aussi -- les types sont explicites a la definition.
 ### Vingt-quatre symboles structurels
 
 ```
-@              environnement (imports, config globale)
+@              declaration (header) + application (suffixe RHS : C4@kick)
 -> <- <>       derivation + direction (BP3 : --> <-- <->)
 { , }          polymetrie, groupement temporel, etat interne de definition
 ( )            parametre runtime (portees : symbole, regle, groupe), definition, appel, contexte
-:              paire cle:valeur, binding runtime (gate Sa:sc)
-=              definition de macro (+ assignation dans les flags)
+:              affectation/binding (Sa:sc, alphabet:sargam, cc:2)
+=              definition (@macro kick = ..., flags)
+.              sous-partie (alphabet.western, actor.terminal, kick.ratio) + period notation (A B . C D)
 [ ]            qualificateur local (sur un groupe ou une regle)
 ` `            code externe opaque (echappement vers le runtime)
 //             commentaire
 -              silence (occupe du temps, absence d'evenement)
 _              prolongation (etend l'evenement precedent)
-.              period notation (separateur de fragments de duree egale)
 ...            repos indetermine (duree calculee par le moteur)
 !              evenement zero-duree : trigger sortant ou mutation de flag
 <!             trigger entrant (on attend -- point de synchronisation)
@@ -254,6 +254,11 @@ $              template : definition de motif (groupe)
 ~              liaison d'objets sonores (C4~ = debut, ~C4 = fin, ~C4~ = continuation)
 | |            homomorphisme (variable liee dans une regle)
 ```
+
+Trois separateurs fondamentaux :
+- **espace** = separe le mot-cle du contenu dans les declarations
+- **`.`** = navigation dans une structure (sous-partie)
+- **`:`** = affectation/binding (lie une chose a une autre)
 
 Les symboles temporels (`-`, `_`, `.`, `...`) sont des symboles du langage,
 pas du vocabulaire de librairie -- le compilateur connait leur semantique.
@@ -871,23 +876,49 @@ trigger flash:python             // flash est instant, Python le gere
 cv ramp:sc                       // ramp varie continument, SC le gere
 ```
 
-### Macros -- reecriture agnostique
+### Macros, labels, alias — noms et transformations
 
-Les macros sont de la substitution textuelle pure. Elles ne connaissent
-ni les types ni les runtimes. Le typage est verifie apres expansion.
+Trois directives pour nommer des choses. La difference est fonctionnelle :
+
+| Directive | Ce qu'elle fait | Exemple |
+|-----------|----------------|---------|
+| `@macro` | Transformation nommee | `@macro kick = (vel:120)` |
+| `@label` | Nom structural pur | `@label groove` |
+| `@alias` | Nom pour un canal I/O | `@alias breath = cc:2` |
 
 ```
-accent(x) = x(vel:120)
-scene_a(x) = x!visual_glow!spotlight
-
-S -> accent(Sa) scene_a(Re) Ga
-// Apres expansion : Sa(vel:120) Re!visual_glow!spotlight Ga
+@macro kick = (vel:120)              // preset de controles
+@macro accent(x) = x(vel:120)       // transformation parametree
+@macro fast(x) = {x}[speed:2]       // transformation structurelle
+@alias breath = cc:2                 // canal MIDI nomme
+@alias intensity = osc:/sensor/1     // canal OSC nomme
+@label hat                           // nom structural pur
+@label groove                        // nom de groupe polymetrique
 ```
 
-Trois etapes, trois preoccupations, zero couplage :
-- **Macros** = reecriture syntaxique (agnostique)
-- **Types temporels** = gate/trigger/cv (verifies a la compilation)
-- **Binding runtime** = sc/python/tidal (resolu au dispatch)
+Application dans le RHS via `@` suffixe — colle a l'element, sans espace :
+
+```
+S -> C4@kick D4@hat E4@accent F4
+S -> {melody, drums}@groove
+```
+
+`C4@kick` = "C4, avec kick applique". Le `@` en suffixe passe implicitement
+l'element precedent comme argument (pour les macros parametrees).
+
+Les noms sont utilisables dans les `@map` pour le controle externe :
+
+```
+@map cc:1 -> kick.ratio             // controle le ratio de tous les @kick
+@map breath -> groove.ratio          // l'alias breath controle le groupe groove
+@map cc:2 -> kick.vel                // controle le vel des @kick
+```
+
+Plusieurs elements peuvent partager le meme nom (multicast) :
+
+```
+S -> C4@kick D4 E4@kick F4          // cc:1 modifie les 2 kicks en meme temps
+```
 
 ---
 
