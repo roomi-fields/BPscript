@@ -1362,9 +1362,8 @@ function _renderActiveTimeline() {
     const sceneName = _activeEditorTab.replace('scene-', '');
     const sceneData = lastSceneTable[sceneName];
     if (sceneData?.tokens) {
-      const childResult = lastChildSceneResults?.[sceneName];
-      const dur = childResult?.metadata?.duration;
-      renderTimeline(_scaledTokens(sceneData.tokens, dur));
+      // Child scenes: show natural timestamps (no @duration scaling — parent controls envelope)
+      renderTimeline(sceneData.tokens);
       return;
     }
   }
@@ -3376,8 +3375,10 @@ function _startCursorAnimation() {
       const sceneName = _activeEditorTab.replace('scene-', '');
       const childData = lastChildSceneResults?.[sceneName];
       if (childData && lastTimedTokens) {
-        // Find the parent terminal for this scene and its time window
-        const parentEvt = lastTimedTokens.find(t => t.token === sceneName && t.end > t.start);
+        // Use scaled parent tokens to find the correct time window
+        const durationDir = (lastDirectives || []).find(d => d.name === 'duration');
+        const scaledParent = _scaledTokens(lastTimedTokens, durationDir?.value || null);
+        const parentEvt = scaledParent.find(t => t.token === sceneName && t.end > t.start);
         if (parentEvt) {
           const parentStartMs = parentEvt.start;
           const parentDurMs = parentEvt.end - parentEvt.start;
