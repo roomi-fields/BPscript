@@ -47,7 +47,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `HOMOMORPHISMS.md` — Étiquetage post-dérivation
     - `REPL.md` — REPL adapters et backticks
     - `SCENES.md` — Hiérarchie de scènes, scoping flags, @scene/@expose/@map, sys
-    - `BP4_ENGINE_SPEC.md` — Spec moteur BP4 (AST direct, DerivationTree, streaming, live coding)
+    - `BPX_ENGINE_SPEC.md` — Spec moteur BPx (AST direct, DerivationTree float64, streaming, live coding)
     - `INTERFACES_BP3.md` — Interface WASM BP3 (in/out)
     - `TEMPORAL_DEFORMATION.md` — Constraint solver, déformation temps réel
   - `plan/` — Roadmaps

@@ -299,6 +299,22 @@ function parse(tokens) {
     }
 
     // @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
+    // @duration:16b or @duration:8s or @duration:4.5s — scene duration hint
+    if (name === 'duration' && at(T.COLON)) {
+      advance();
+      let amount;
+      if (at(T.INT)) amount = Number(advance().value);
+      else if (at(T.FLOAT)) amount = Number(advance().value);
+      else throw new ParseError('Expected number after @duration:', current());
+      // Unit: b (beats) or s (seconds), default b
+      let unit = 'b';
+      if (at(T.IDENT) && (current().value === 'b' || current().value === 's')) {
+        unit = advance().value;
+      }
+      return { type: 'Directive', name, subkey, runtime: null, value: { amount, unit },
+               aliases: null, modifiers: null, line: tok.line };
+    }
+
     if (name === 'timepatterns' && at(T.COLON)) {
       advance();
       const patterns = [];

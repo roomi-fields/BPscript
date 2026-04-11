@@ -34,7 +34,7 @@ let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [] };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -410,6 +410,13 @@ function encode(ast) {
 
   // Generate alphabet file content from loaded libraries + custom terminals
   output.alphabetFile = generateAlphabetFile(libCtx, ast.directives, output.alphabet);
+
+  // Collect @duration directive
+  for (const dir of (ast.directives || [])) {
+    if (dir.name === 'duration' && dir.value) {
+      output.duration = dir.value;
+    }
+  }
 
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);

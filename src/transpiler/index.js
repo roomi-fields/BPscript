@@ -42,6 +42,7 @@ function compileBPS(source) {
     result.mapTable = encoded.mapTable;
     result.sceneTable = encoded.sceneTable;
     result.exposeTable = encoded.exposeTable;
+    result.duration = encoded.duration;
 
     // 4. Generate prototypes (-so. file) for all declared terminals
     if (result.alphabet.length > 0) {

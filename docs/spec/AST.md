@@ -199,6 +199,25 @@ CCDirective {
 
 Exemple : `@cc breath:2` → `{ name:"cc", ccMappings:[{name:"breath", number:2}] }`
 
+### `DurationDirective`
+
+```
+DurationDirective {
+  type: "Directive"
+  name: "duration"
+  value: {
+    amount: number              // 16, 8, 4.5
+    unit: "b" | "s"             // b = beats, s = secondes (défaut: b)
+  }
+  line: number
+}
+```
+
+Exemple : `@duration:16b` → `{ name:"duration", value:{amount:16, unit:"b"} }`
+Exemple : `@duration:4.5s` → `{ name:"duration", value:{amount:4.5, unit:"s"} }`
+
+Le dispatcher rescale les timestamps proportionnellement pour que la séquence tienne dans la durée déclarée.
+
 ---
 
 ## Déclarations

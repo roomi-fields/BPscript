@@ -1,10 +1,18 @@
-# Plan d'action — UI Web BPscript
+# Plan d'action — Kanopi UI Web
 
-Version 2.0 — 9 avril 2026
+Version 2.1 — 10 avril 2026
+
+## Naming
+
+| Niveau | Nom | Role |
+|--------|-----|------|
+| **Produit/Framework** | **Kanopi** | Le DAW des live coders — UI, runtimes, bridge, timeline |
+| **Langage** | **BPscript** | Le meta-sequenceur — 3 mots, 24 symboles, descendant de BP3 |
+| **Moteur** | **BPx** | Le deriveur de grammaires — remplace BP3, JS pur, multi-instance |
 
 ## Vision
 
-BPscript = le DAW des live coders. L'interface unique ou tous les runtimes
+Kanopi = le DAW des live coders. L'interface unique ou tous les runtimes
 (SuperCollider, Tidal, Python, MIDI, WebAudio, DMX) cohabitent avec une clock
 commune, un editeur multi-langage, et une timeline interactive.
 

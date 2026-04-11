@@ -12,7 +12,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 
 ```ebnf
 scene       = { directive | actor_directive | scene_directive | expose_directive
-              | map_directive | cc_directive
+              | map_directive | cc_directive | duration_directive
               | declaration | cv_instance | macro
               | backtick_orphan | comment | blank_line }
               , subgrammar+ , [ template_section ] ;
@@ -21,6 +21,7 @@ actor_directive  = "@" , "actor" , IDENT , actor_props+ ;
 scene_directive  = "@" , "scene" , IDENT , STRING ;        (* @scene verse "verse.bps" *)
 expose_directive = "@" , "expose" , ( "[" , IDENT , "]" )+ ; (* @expose [intensity] [energy] *)
 cc_directive     = "@" , "cc" , [ ":" ] , cc_pair , { "," , cc_pair } ; (* @cc breath:2, expression:11 *)
+duration_directive = "@" , "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ] ; (* @duration:16b, @duration:4.5s *)
 map_directive    = "@" , "map" , map_endpoint , map_arrow , map_endpoint ;
 
 cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
@@ -63,6 +64,7 @@ directive_body = IDENT                              (* @core, @controls *)
                | "expose" , ( "[" , IDENT , "]" )+  (* @expose [intensity] — voir expose_directive *)
                | "cc" , [ ":" ] , cc_pair , { "," , cc_pair }  (* @cc breath:2 — voir cc_directive *)
                | "map" , map_endpoint , map_arrow , map_endpoint  (* @map cc:1 -> [x] — voir map_directive *)
+               | "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ]  (* @duration:16b — voir duration_directive *)
                | "timepatterns" , ":" , tp_pair , { "," , tp_pair }  (* @timepatterns: t1=1/1, t2=3/2 *)
                ;
 

@@ -21,13 +21,14 @@
 | [HOMOMORPHISMS.md](design/HOMOMORPHISMS.md) | Étiquetage post-dérivation : format `{section}.{depth}%{terminal}`, résolution REPL, stacking. Instructions d'implémentation (agent transpileur + agent WASM) | Coder les homomorphismes, comprendre le labeling, briefer un agent |
 | [REPL.md](design/REPL.md) | Architecture backticks : 3 types (orphelin, inline, standalone), REPL adapters (SC, Tidal, Python), sessions, timing | Coder un adapter REPL, comprendre l'exécution des backticks |
 | [SCENES.md](design/SCENES.md) | Hiérarchie de scènes : @scene directive, scoping des flags (héritage top-down, @expose, isolation siblings), sys auto-exposé, fan-out CC/OSC, cycles de feedback, dispatcher multi-instances | Coder la gestion multi-scènes, comprendre le scoping, implémenter @scene/@expose/@map |
-| [BP4_ENGINE_SPEC.md](design/BP4_ENGINE_SPEC.md) | Spec moteur BP4 : instance isolée, AST direct, DerivationTree structuré, streaming, live coding, multi-instance, 7 modes de dérivation, FlagStore observable, TriggerBus async | Implémenter BP4, comprendre l'architecture cible, planifier la migration BP3→BP4 |
+| [BPX_ENGINE_SPEC.md](design/BPX_ENGINE_SPEC.md) | Spec moteur BP4 : instance isolée, AST direct, DerivationTree structuré, streaming, live coding, multi-instance, 7 modes de dérivation, FlagStore observable, TriggerBus async | Implémenter BP4, comprendre l'architecture cible, planifier la migration BP3→BP4 |
 | [INTERFACES_BP3.md](design/INTERFACES_BP3.md) | API WASM BP3 : fonctions d'entrée (load grammar/alphabet/settings/tonality), fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events), verbose levels | Appeler le moteur WASM, comprendre les formats in/out, ajouter une API |
 
 ## plan/ — Ce qu'on VA faire
 
 | Document | Contenu | Quand le lire |
 |----------|---------|---------------|
+| [MARKET_STUDY.md](plan/MARKET_STUDY.md) | Étude de marché live coding exhaustive : ~20 outils analysés (forces/faiblesses), points de douleur utilisateurs, gaps écosystème, recherche académique 2020-2026, tendances marché, positionnement concurrentiel, recommandations stratégiques | Comprendre le marché, prioriser les features, préparer une publication ou un pitch |
 | [UI_WEB.md](plan/UI_WEB.md) | Roadmap UI web : Phase 1 contrôles interactifs (sliders runtime), Phase 2 Web MIDI, Phase 3 timeline Canvas (structure tree + constraint solver + drag), Phase 4 mapping contrôleurs → structure | Planifier le dev UI, savoir ce qui est prioritaire, comprendre les dépendances |
 | [EDITOR.md](plan/EDITOR.md) | Design éditeur CodeMirror 6 : syntax highlighting, autocomplétion, inline widgets, Lezer parser | Coder l'éditeur, ajouter de la coloration syntaxique |
 

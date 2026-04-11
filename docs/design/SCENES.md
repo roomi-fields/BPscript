@@ -241,6 +241,49 @@ C'est le modele bus MIDI : un seul cable, N recepteurs.
 
 ---
 
+## Duree et scoping temporel
+
+### @duration au niveau racine uniquement
+
+`@duration` ne s'applique qu'au conteneur le plus haut. A l'interieur,
+tout est en durees relatives (proportions polymetriques, speed, nombre de tokens).
+
+```bpscript
+// concert.bps — scene racine
+@mm:120
+@duration:32b
+
+@scene verse "verse.bps"     // verse a son propre @duration:8b et @mm:120
+@scene chorus "chorus.bps"   // chorus a @duration:16b
+
+S -> verse chorus            // 2 terminaux-scenes
+                              // proportions : 50/50 = 16b chacun
+                              // le @duration:8b de verse est IGNORE
+                              // le @duration:16b de chorus est IGNORE
+                              // le parent impose 32b total
+```
+
+### @duration et @mm de l'enfant : proprietes par defaut
+
+Quand `verse.bps` est jouee seule (dev, test, performance autonome),
+son `@duration:8b` et son `@mm:120` sont effectifs — elle dure 4 secondes.
+
+Quand elle est imbiquee dans un parent via `@scene`, le parent decide
+de son enveloppe. Le `@duration` et le `@mm` de l'enfant sont ignores.
+Ses proportions internes sont preservees — seule l'echelle change.
+
+### L'enfant est une boite noire temporelle
+
+Le parent ne sait pas combien de tokens contient l'enfant. Il sait :
+- Quelle proportion de la duree totale ce terminal occupe (via la grammaire)
+- Le `@duration` racine qui fixe l'enveloppe globale
+
+L'enfant ne sait pas combien de temps il dure en absolu. Il sait :
+- Ses proportions internes (polymetrie, speed, nombre de tokens)
+- Le dispatcher lui donnera son echelle au moment du scheduling
+
+---
+
 ## Cycles de feedback
 
 Risque : scene A mappe un flag vers B, B emet un trigger vers A qui

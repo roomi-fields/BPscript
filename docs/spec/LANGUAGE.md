@@ -135,6 +135,26 @@ Le mapping `@map` connecte des I/O externes (CC, OSC) aux primitives du langage 
 
 Cf. [SCENES.md](../design/SCENES.md) pour le modele complet (scoping, sys, encapsulation).
 
+### Duree explicite
+
+```
+@duration:16b                  // cette scene dure 16 beats (au tempo @mm courant)
+@duration:8s                   // cette scene dure 8 secondes
+```
+
+`@duration` separe trois preoccupations :
+- **Densite** = le contenu (combien de tokens, quelles proportions)
+- **Duree** = @duration (combien de beats/secondes cette scene occupe)
+- **Vitesse** = @mm (la clock, partagee avec le monde exterieur)
+
+Sans `@duration` : comportement implicite (duree = nombre de tokens × tempo).
+Avec `@duration` : scaling uniforme, proportions internes preservees.
+
+`@duration` ne s'applique qu'au **conteneur racine**. Quand une scene est
+imbiquee dans un parent via `@scene`, son `@duration` est ignore — le parent
+decide de l'enveloppe. Le `@duration` de l'enfant est effectif uniquement
+quand il est joue seul.
+
 ### CC nommes
 
 ```

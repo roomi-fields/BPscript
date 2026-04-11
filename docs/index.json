@@ -67,7 +67,7 @@
         "sections": ["@scene directive", "scoping (héritage top-down, @expose, isolation siblings)", "sys acteur auto-exposé", "fan-out CC/OSC", "cycles de feedback", "implémentation dispatcher multi-instances"],
         "use_when": "coder la gestion multi-scènes, comprendre le scoping des flags, implémenter @scene/@expose/@map"
       },
-      "BP4_ENGINE_SPEC.md": {
+      "BPX_ENGINE_SPEC.md": {
         "content": "Spec moteur BP4 : instance isolée, AST direct, DerivationTree, streaming, live coding",
         "sections": ["modèle d'instance", "cycle de vie", "format entrée (AST)", "format sortie (DerivationTree + TimedToken)", "algorithme dérivation (7 modes)", "polymétrie itérative", "FlagStore observable", "TriggerBus async", "re-dérivation incrémentale", "streaming", "multi-instance", "live coding ops", "déterminisme LCG", "gestion erreurs", "questions ouvertes", "priorité implémentation"],
         "use_when": "implémenter BP4, comprendre l'architecture cible, planifier la migration depuis BP3"
@@ -87,6 +87,10 @@
         "content": "Roadmap UI web interactive",
         "sections": ["Phase 1 contrôles interactifs (sliders runtime)", "Phase 2 Web MIDI", "Phase 3 timeline Canvas (structure tree + constraint solver + drag)", "Phase 4 mapping contrôleurs → structure"],
         "use_when": "planifier le dev UI, comprendre les priorités et dépendances"
+      },
+      "MARKET_STUDY.md": {
+        "content": "Étude de marché live coding : ~20 outils analysés, gaps, recherche académique, tendances, positionnement",
+        "use_when": "comprendre le marché, prioriser les features, préparer une publication ou un pitch"
       },
       "EDITOR.md": {
         "content": "Design éditeur CodeMirror 6",

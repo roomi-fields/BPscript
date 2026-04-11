@@ -65,11 +65,16 @@ export class SceneManager {
           continue;
         }
 
+        // Extract @duration metadata from compiled directives
+        const durationDir = (compiled.directives || []).find(d => d.name === 'duration');
+        const durationMeta = durationDir ? durationDir.value : null;
+
         // Create scene instance
         const instance = {
           name,
           file: filePath,
           compiled,
+          duration: durationMeta, // { amount, unit } or null
           dispatcher: null,      // created on first play
           wasmInstance: null,     // created on first play
           flagState: {},
@@ -161,8 +166,8 @@ export class SceneManager {
       dispatcher.syncFlagState(api.bp3_get_flag_state());
     } catch (e) { /* ignore */ }
 
-    // Load timed tokens and start
-    dispatcher.load(timedTokens);
+    // Load timed tokens with @duration scaling if declared
+    dispatcher.load(timedTokens, { duration: scene.duration || undefined });
     scene.running = true;
 
     dispatcher.start(
@@ -194,6 +199,22 @@ export class SceneManager {
     for (const name of Object.keys(this._scenes)) {
       this.stopScene(name);
     }
+  }
+
+  /**
+   * Get the declared @duration of a scene in seconds, or null if not declared.
+   * @param {string} name - scene name
+   * @param {number} [tempo=60] - current tempo for beat→seconds conversion
+   * @returns {number|null} - duration in seconds, or null
+   */
+  getSceneDuration(name, tempo = 60) {
+    const scene = this._scenes[name];
+    if (!scene?.duration) return null;
+
+    if (scene.duration.unit === 'b') {
+      return scene.duration.amount * 60 / (tempo || 60);
+    }
+    return scene.duration.amount;
   }
 
   /**
