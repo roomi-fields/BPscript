@@ -211,8 +211,10 @@ export class Dispatcher {
   /**
    * Load timed tokens from bp3_get_timed_tokens().
    * Each token: { token: "C4", start: 0, end: 1000 }
+   * @param {Array} timedTokens
+   * @param {Object} [metadata] - { duration: { amount, unit } } from @duration directive
    */
-  load(timedTokens) {
+  load(timedTokens, metadata = {}) {
     if (!timedTokens || timedTokens.length === 0) {
       this.events = [];
       return;
@@ -233,6 +235,27 @@ export class Dispatcher {
       const pri = (e) => e.isControl ? 0 : e.isCV ? 1 : 2;
       return pri(a) - pri(b);
     });
+
+    // @duration: scale all timestamps to fit declared duration
+    if (metadata.duration) {
+      const naturalDur = this.duration; // seconds, float64
+      if (naturalDur > 0) {
+        let targetDur;
+        if (metadata.duration.unit === 'b') {
+          // beats → seconds at current tempo
+          const bpm = this._tempo || 60;
+          targetDur = metadata.duration.amount * 60 / bpm;
+        } else {
+          // seconds directly
+          targetDur = metadata.duration.amount;
+        }
+        // Proportional rescale — each token independent, no error accumulation
+        for (const evt of this.events) {
+          evt.startSec = (evt.startSec / naturalDur) * targetDur;
+          evt.durSec = (evt.durSec / naturalDur) * targetDur;
+        }
+      }
+    }
 
     this._cursor = 0;
     this._loopOffset = 0;
@@ -335,7 +358,9 @@ export class Dispatcher {
       } else if (!evt.isSilence && !evt.isProlongation && evt.durSec > 0) {
         // Scene terminal — launch child scene instead of routing to transport
         if (this._sceneManager && this._sceneManager.isSceneTerminal(evt.token)) {
-          this._sceneManager.startScene(evt.token, absTime, evt.durSec, this.flagState);
+          // If child declares @duration, use its declared duration instead of parent's evt.durSec
+          const childDur = this._sceneManager.getSceneDuration(evt.token, this._tempo);
+          this._sceneManager.startScene(evt.token, absTime, childDur || evt.durSec, this.flagState);
           this._cursor++;
           continue;
         }
@@ -343,19 +368,34 @@ export class Dispatcher {
         // Pre-compiled child scene — schedule ALL its tokens at once
         if (this._childScenes && this._childScenes[evt.token]) {
           const child = this._childScenes[evt.token];
-          const childDurSec = evt.durSec;
-          const childDurMs = child.duration || 1;
-          const timeScale = childDurSec / (childDurMs / 1000);
+          const childNaturalMs = child.duration || 1;
+
+          // Target duration: @duration from child if declared, else parent terminal duration
+          let childTargetSec;
+          if (child.metadata?.duration) {
+            const dur = child.metadata.duration;
+            if (dur.unit === 'b') {
+              childTargetSec = dur.amount * 60 / (this._tempo || 60);
+            } else {
+              childTargetSec = dur.amount;
+            }
+          } else {
+            childTargetSec = evt.durSec;
+          }
+
           for (const ct of child.tokens) {
             if (ct.token.startsWith('_') || ct.token === '-' || ct.token === '_') continue;
             if (ct.end <= ct.start) continue;
-            const cAbsTime = absTime + (ct.start / childDurMs) * childDurSec;
-            const cDur = ((ct.end - ct.start) / childDurMs) * childDurSec;
+            // Proportional rescale
+            const cStartRel = ct.start / childNaturalMs;
+            const cDurRel = (ct.end - ct.start) / childNaturalMs;
+            const cAbsTime = absTime + cStartRel * childTargetSec;
+            const cDur = cDurRel * childTargetSec;
             const transport = this._transportForToken(ct.token);
             if (transport) {
               transport.send({
                 token: ct.token,
-                startSec: this._loopOffset + evt.startSec + (ct.start / childDurMs) * childDurSec,
+                startSec: this._loopOffset + evt.startSec + cStartRel * childTargetSec,
                 durSec: cDur,
                 ...this.controlState,
                 velocity: this.controlState.vel / 127,

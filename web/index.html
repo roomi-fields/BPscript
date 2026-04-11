@@ -1465,6 +1465,7 @@ async function _compileChildScenes(sceneTable) {
         controlTable: compiled.controlTable || [],
         cvTable: compiled.cvTable || [],
         duration: tokens.length > 0 ? Math.max(...tokens.map(t => t.end)) : 0,
+        metadata: { duration: compiled.duration || null },
       };
       // Store tokens in lastSceneTable for timeline
       if (lastSceneTable[name]) lastSceneTable[name].tokens = tokens;
@@ -3457,7 +3458,8 @@ async function playOnce() {
   dispatcher._childScenes = lastChildSceneResults || {};
   updateResolver();
   appendResolverDebug();
-  dispatcher.load(lastTimedTokens);
+  const durationDir = (lastDirectives || []).find(d => d.name === 'duration');
+  dispatcher.load(lastTimedTokens, { duration: durationDir?.value || undefined });
   dispatcher.start(onPlayEnd);
 
   const midiCount = Object.keys(lastTransportMap).length;
@@ -3486,7 +3488,8 @@ async function playLoop() {
     dispatcher._childScenes = {};
   }
   updateResolver();
-  dispatcher.load(lastTimedTokens);
+  const durationDir2 = (lastDirectives || []).find(d => d.name === 'duration');
+  dispatcher.load(lastTimedTokens, { duration: durationDir2?.value || undefined });
 
   const useReDerive = document.getElementById('rederiveChk').checked;
   let reDerive = null;
@@ -4266,7 +4269,8 @@ function renderTimeline(tokens) {
 
           // 2. Hot-reload into dispatcher if playing
           if (isPlaying && dispatcher) {
-            dispatcher.load(lastTimedTokens);
+            const durationDirHR = (lastDirectives || []).find(d => d.name === 'duration');
+            dispatcher.load(lastTimedTokens, { duration: durationDirHR?.value || undefined });
           }
 
           // 3. Rewrite BPscript source with [*ratio] qualifiers
@@ -4455,6 +4459,7 @@ loadHelpReference();
       terminalActorMap: result.terminalActorMap || {},
       mapTable: result.mapTable || [],
       sceneTable: result.sceneTable || {},
+      duration: result.duration || null,
       errors: result.errors || [],
       warnings: []
     };
