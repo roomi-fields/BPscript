@@ -1,9 +1,0 @@
-// Child scene: drums
-// Pattern rythmique joué quand le parent rencontre le terminal "drums"
-
-@core
-@controls
-@alphabet.western:browser
-@duration:8b
-
-S -> C2(vel:100) - C2(vel:60) - C2(vel:100) C2(vel:40) - C2(vel:80)

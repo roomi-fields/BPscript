@@ -8,3 +8,4 @@ docs/mails/
 *.wasm18
 _test_*
 public/
+_archive/

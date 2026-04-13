@@ -1,9 +1,0 @@
-// Child scene: melody
-// Joué quand le parent rencontre le terminal "melody"
-
-@core
-@controls
-@alphabet.western:browser
-@duration:8b
-
-S -> C4 E4 G4 C5 B4 G4 E4 C4
