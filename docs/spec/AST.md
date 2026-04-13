@@ -24,6 +24,8 @@ Scene {
   scenes: SceneDirective[]           // @scene directives (child scenes)
   exposes: ExposeDirective[]         // @expose directives (flags visible au parent)
   maps: MapDirective[]               // @map directives (I/O mappings CC/OSC ↔ flags/triggers)
+  aliases: AliasDirective[]          // @alias directives (named I/O endpoints)
+  labels: LabelDirective[]           // @label directives (label declarations)
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
@@ -218,6 +220,56 @@ Exemple : `@duration:4.5s` → `{ name:"duration", value:{amount:4.5, unit:"s"} 
 
 Le dispatcher rescale les timestamps proportionnellement pour que la séquence tienne dans la durée déclarée.
 
+### `MacroDirective`
+
+```
+MacroDirective {
+  type: "MacroDirective"
+  name: string                    // "kick", "accent", "fast"
+  params: string[]                // [] si sans paramètres, ["x"] si @macro accent(x)
+  body: RhsElement[]              // body parsé par parseRhsElements()
+  line: number
+}
+```
+
+Exemples :
+- `@macro kick = (vel:120)` → `{ name:"kick", params:[], body:[InstantControl(vel:120)] }`
+- `@macro accent(x) = x(vel:120)` → `{ name:"accent", params:["x"], body:[SymbolCall(x, vel:120)] }`
+
+### `AliasDirective`
+
+```
+AliasDirective {
+  type: "AliasDirective"
+  name: string                    // "breath", "sensor"
+  source: MapEndpoint             // { kind: "cc", number: 2 } ou { kind: "osc", address: "/sensor/1" }
+  line: number
+}
+```
+
+Exemple : `@alias breath = cc:2` → `{ name:"breath", source:{kind:"cc", number:2} }`
+
+### `LabelDirective`
+
+```
+LabelDirective {
+  type: "LabelDirective"
+  name: string                    // "groove", "hat"
+  line: number
+}
+```
+
+Exemple : `@label groove` → `{ name:"groove" }`
+
+### Label suffixe (`@`)
+
+Tout nœud RHS peut porter un champ optionnel `label: string` attaché par `@` sans espace :
+
+```
+C4@kick   → Symbol { name: "C4", label: "kick" }
+{A B}@groove → Polymetric { ..., label: "groove" }
+```
+
 ---
 
 ## Déclarations
@@ -237,7 +289,8 @@ Declaration {
 
 Avec `@actor`, les symboles ne sont pas déclarés individuellement — l'acteur importe
 tout son alphabet. La qualification se fait dans les règles via dot notation (`sitar.Sa`).
-Legacy : `gate Sa:sc` → `{ temporalType:"gate", name:"Sa", actor:null, runtime:"sc" }`.
+Format préféré : `@gate Sa:midi`. Format legacy (sans `@`) : `gate Sa:sc` — toujours supporté.
+Exemple : `@gate Sa:midi` → `{ temporalType:"gate", name:"Sa", runtime:"midi" }`.
 
 ---
 

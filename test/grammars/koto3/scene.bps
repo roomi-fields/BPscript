@@ -9,11 +9,11 @@
 @improvize
 @qclock:20
 
-gate a:midi
-gate b:midi
-gate c:midi
-gate f:midi
-gate chik:midi
+@gate a:midi
+@gate b:midi
+@gate c:midi
+@gate f:midi
+@gate chik:midi
 
 // --- Sous-grammaire 1 @mode:random — séquence initiale ---
 

@@ -13,6 +13,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 ```ebnf
 scene       = { directive | actor_directive | scene_directive | expose_directive
               | map_directive | cc_directive | duration_directive
+              | macro_directive | alias_directive | label_directive
               | declaration | cv_instance | macro
               | backtick_orphan | comment | blank_line }
               , subgrammar+ , [ template_section ] ;
@@ -22,6 +23,10 @@ scene_directive  = "@" , "scene" , IDENT , STRING ;        (* @scene verse "vers
 expose_directive = "@" , "expose" , ( "[" , IDENT , "]" )+ ; (* @expose [intensity] [energy] *)
 cc_directive     = "@" , "cc" , [ ":" ] , cc_pair , { "," , cc_pair } ; (* @cc breath:2, expression:11 *)
 duration_directive = "@" , "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ] ; (* @duration:16b, @duration:4.5s *)
+macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")" ]
+                 , "=" , rhs ;                 (* @macro kick = (vel:120), @macro accent(x) = x(vel:120) *)
+alias_directive  = "@" , "alias" , IDENT , "=" , map_endpoint ;  (* @alias breath = cc:2 *)
+label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
 map_directive    = "@" , "map" , map_endpoint , map_arrow , map_endpoint ;
 
 cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
@@ -93,15 +98,15 @@ alias      = IDENT , ":" , IDENT ;
 ### `declaration`
 
 ```ebnf
-declaration = TYPE , IDENT , ":" , ACTOR_OR_RUNTIME ;
+declaration = [ "@" ] , TYPE , IDENT , ":" , ACTOR_OR_RUNTIME ;
 
 TYPE              = "gate" | "trigger" | "cv" ;
 ACTOR_OR_RUNTIME  = IDENT ;               (* acteur name (preferred) ou legacy runtime name *)
 ```
 
+Format préféré : `@gate Sa:midi`. Format legacy (sans `@`) : `gate Sa:sc` — toujours supporté.
 Avec `@actor`, les symboles sont qualifiés par dot notation dans les règles :
 `sitar.Sa` → le terminal `Sa` résolu via l'acteur `sitar`.
-La déclaration `gate Sa:sc` reste le format legacy (runtime direct, sans `@actor`).
 
 ### `cv_instance`
 
@@ -340,7 +345,8 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 ## Couche 4 — Éléments RHS
 
 ```ebnf
-rhs_element = [ prefix_qualifier ] , element_core , [ suffix_qualifier ] ;
+rhs_element = [ prefix_qualifier ] , element_core , [ suffix_qualifier ] , [ "@" , IDENT ] ;
+(* Le @ suffixe attache un label à l'élément : C4@kick, {A B}@groove. Sans espace avant @. *)
 
 prefix_qualifier = engine_qualifier ;
 (* [] collé à droite de l'élément : [/2]A — déterminé par absence d'espace après ] *)

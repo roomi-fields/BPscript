@@ -10,10 +10,10 @@
 @controls
 @improvize
 
-gate beat3:midi
-gate beat2:midi
-gate a:midi
-gate b:midi
+@gate beat3:midi
+@gate beat2:midi
+@gate a:midi
+@gate b:midi
 
 // --- Sous-grammaire 1 — initialisation (pas de mode = default ORD) ---
 

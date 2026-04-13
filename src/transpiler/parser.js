@@ -45,6 +45,8 @@ function parse(tokens) {
       scenes: [],
       exposes: [],
       maps: [],
+      aliases: [],
+      labels: [],
       declarations: [],
       macros: [],
       backticks: [],
@@ -69,6 +71,15 @@ function parse(tokens) {
           scene.exposes.push(dir);
         } else if (dir.type === 'MapDirective') {
           scene.maps.push(dir);
+        } else if (dir.type === 'MacroDirective') {
+          scene.macros.push(dir);
+        } else if (dir.type === 'AliasDirective') {
+          scene.aliases.push(dir);
+        } else if (dir.type === 'LabelDirective') {
+          scene.labels.push(dir);
+        } else if (dir.type === 'Declaration') {
+          // @gate, @trigger, @cv — prefixed declarations
+          scene.declarations.push(dir);
         } else if (dir.type === 'ActorDirective') {
           scene.actors.push(dir);
         } else if (dir.name === 'mode' && dir.runtime) {
@@ -156,11 +167,12 @@ function parse(tokens) {
       }
       if (id === 'osc' && at(T.COLON)) {
         advance();
-        // OSC address: /path/segments — SLASH IDENT sequences
+        // OSC address: /path/segments — SLASH followed by IDENT or INT
         let address = '';
         while (at(T.SLASH)) {
           advance();
-          address += '/' + expect(T.IDENT).value;
+          const seg = at(T.IDENT) ? advance().value : at(T.INT) ? advance().value : '';
+          address += '/' + seg;
         }
         const params = at(T.LPAREN) ? parseMapParams() : null;
         return { kind: 'osc', address, params };
@@ -206,6 +218,9 @@ function parse(tokens) {
     if (at(T.PLUS)) {
       advance();
       name = '+';
+    } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
+      // @gate, @trigger, @cv — keywords used as directive names
+      name = advance().value;
     } else {
       name = expect(T.IDENT).value;
     }
@@ -232,6 +247,62 @@ function parse(tokens) {
         expect(T.RBRACKET);
       }
       return { type: 'ExposeDirective', flags, line: tok.line };
+    }
+
+    // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)
+    if (name === 'macro') {
+      const macroName = expect(T.IDENT).value;
+      const params = [];
+      // Params only if ( is followed by ) = (i.e. param list before =)
+      if (at(T.LPAREN) && !current().spaceBefore) {
+        // Lookahead: is there a ) then = ? If not, it's part of the body
+        let j = pos + 1, depth = 1;
+        while (j < tokens.length && depth > 0) {
+          if (tokens[j].type === T.LPAREN) depth++;
+          if (tokens[j].type === T.RPAREN) depth--;
+          j++;
+        }
+        if (tokens[j]?.type === T.EQUALS) {
+          advance(); // consume (
+          while (!at(T.RPAREN) && !atEnd()) {
+            params.push(expect(T.IDENT).value);
+            if (at(T.COMMA)) advance();
+          }
+          expect(T.RPAREN);
+        }
+      }
+      expect(T.EQUALS);
+      // Body: if it starts with ( and looks like key:value → standalone runtime qualifier
+      // parseRhsElements would reject floating () before libCtx is loaded, so handle directly
+      let body;
+      if (at(T.LPAREN) && peek(1).type === T.IDENT && peek(2).type === T.COLON) {
+        body = [{ type: 'InstantControl', qualifier: parseRuntimeQualifier() }];
+      } else {
+        body = parseRhsElements();
+      }
+      return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
+    }
+
+    // @alias breath = cc:2
+    if (name === 'alias') {
+      const aliasName = expect(T.IDENT).value;
+      expect(T.EQUALS);
+      const source = parseMapEndpoint();
+      return { type: 'AliasDirective', name: aliasName, source, line: tok.line };
+    }
+
+    // @label hat — named label for @ suffixe
+    if (name === 'label') {
+      const labelName = expect(T.IDENT).value;
+      return { type: 'LabelDirective', name: labelName, line: tok.line };
+    }
+
+    // @gate Sa:midi, @trigger dha:sc, @cv ramp:sc — prefixed declarations
+    if (name === 'gate' || name === 'trigger' || name === 'cv') {
+      const declName = expect(T.IDENT).value;
+      expect(T.COLON);
+      const runtime = expect(T.IDENT).value;
+      return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
     }
 
     // @map source -> target — I/O mapping (CC/OSC ↔ triggers/flags)
@@ -1066,6 +1137,12 @@ function parse(tokens) {
         } else {
           el.suffixQualifiers.push(parseRuntimeQualifier());
         }
+      }
+
+      // @ suffixe: C4@kick — label attachment (no space before @)
+      if (at(T.AT) && !current().spaceBefore) {
+        advance();
+        el.label = expect(T.IDENT).value;
       }
 
       elements.push(el);

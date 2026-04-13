@@ -34,7 +34,7 @@ let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [] };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -416,6 +416,17 @@ function encode(ast) {
     if (dir.name === 'duration' && dir.value) {
       output.duration = dir.value;
     }
+  }
+
+  // Collect macros, aliases, labels from AST
+  if (ast.macros) {
+    output.macroTable = ast.macros.map(m => ({ name: m.name, params: m.params || [], body: m.body }));
+  }
+  if (ast.aliases) {
+    output.aliasTable = ast.aliases.map(a => ({ name: a.name, source: a.source }));
+  }
+  if (ast.labels) {
+    output.labelTable = ast.labels.map(l => l.name);
   }
 
   // Generate settings JSON for BP3 WASM engine

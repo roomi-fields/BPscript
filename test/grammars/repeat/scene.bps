@@ -10,9 +10,9 @@
 @controls
 
 // Terminaux
-gate a:midi
-gate b:midi
-gate c:midi
+@gate a:midi
+@gate b:midi
+@gate c:midi
 
 // Non-terminaux : S, X, Y, Z
 

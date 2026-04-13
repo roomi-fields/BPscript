@@ -4,8 +4,8 @@
 @core
 
 // Terminaux
-gate a:midi
-gate b:midi
+@gate a:midi
+@gate b:midi
 
 // Non-terminaux : S, X (variables de grammaire, pas déclarés)
 
