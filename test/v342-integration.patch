@@ -1,0 +1,142 @@
+diff --git a/source/BP3/CompileGrammar.c b/source/BP3/CompileGrammar.c
+index 2343c77..e5c9aba 100644
+--- a/source/BP3/CompileGrammar.c
++++ b/source/BP3/CompileGrammar.c
+@@ -1972,20 +1972,12 @@ void copy_grammar(t_gram *dest, t_gram *src, int verbose) {
+                     leftarg_count += 2;
+                     if (m == TEND && p == TEND) break;
+                 	}
+-                // Allocate memory for the token array
+-                dest_rule->p_leftarg = (tokenbyte **)malloc(sizeof(tokenbyte *));
+-                if (!dest_rule->p_leftarg) {
+-                    if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for left arg tokens\n");
++                // Allocate as proper Handle (s_handle_priv) so MyGetHandleSize works
++                dest_rule->p_leftarg = (tokenbyte **)GiveSpace((Size)(leftarg_count * sizeof(tokenbyte)));
++                if (dest_rule->p_leftarg == NULL) {
++                    if(verbose) BPPrintMessage(0,odError, "=> GiveSpace failed for left arg tokens\n");
+                     return;
+                 	}
+-                *dest_rule->p_leftarg = (tokenbyte *)malloc(leftarg_count * sizeof(tokenbyte));
+-                if (!*dest_rule->p_leftarg) {
+-                    if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for left arg tokens\n");
+-                    free(dest_rule->p_leftarg);
+-                    dest_rule->p_leftarg = NULL;
+-                    return;
+-                	}
+-                // Copy the token array
+                 memcpy(*dest_rule->p_leftarg, *src_rule->p_leftarg, leftarg_count * sizeof(tokenbyte));
+ 				}
+ 			else dest_rule->p_leftarg = NULL;
+@@ -2000,20 +1992,12 @@ void copy_grammar(t_gram *dest, t_gram *src, int verbose) {
+                     rightarg_count += 2;
+                     if (m == TEND && p == TEND) break;
+                 	}
+-                // Allocate memory for the token array
+-                dest_rule->p_rightarg = (tokenbyte **)malloc(sizeof(tokenbyte *));
+-                if (!dest_rule->p_rightarg) {
+-                    if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for right arg tokens\n");
+-                    return;
+-                	}
+-                *dest_rule->p_rightarg = (tokenbyte *)malloc(rightarg_count * sizeof(tokenbyte));
+-                if (!*dest_rule->p_rightarg) {
+-                    if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for right arg tokens\n");
+-                    free(dest_rule->p_rightarg);
+-                    dest_rule->p_rightarg = NULL;
++                // Allocate as proper Handle (s_handle_priv) so MyGetHandleSize works
++                dest_rule->p_rightarg = (tokenbyte **)GiveSpace((Size)(rightarg_count * sizeof(tokenbyte)));
++                if (dest_rule->p_rightarg == NULL) {
++                    if(verbose) BPPrintMessage(0,odError, "=> GiveSpace failed for right arg tokens\n");
+                     return;
+                 	}
+-                // Copy the token array
+                 memcpy(*dest_rule->p_rightarg, *src_rule->p_rightarg, rightarg_count * sizeof(tokenbyte));
+ 				}
+ 			else dest_rule->p_rightarg = NULL;
+@@ -2047,26 +2031,17 @@ void copy_grammar(t_gram *dest, t_gram *src, int verbose) {
+                         arg_count += 2;
+                         if (m == TEND && p == TEND) break;
+                     	}
+-                    // Allocate memory for the token array
+-                    (*dest_rule->p_leftcontext)->p_arg = (tokenbyte **)malloc(sizeof(tokenbyte *));
+-                    if (!(*dest_rule->p_leftcontext)->p_arg) {
+-                        if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for left context args\n");
++                    // Allocate as proper Handle (s_handle_priv) so MyGetHandleSize works
++                    (*dest_rule->p_leftcontext)->p_arg = (tokenbyte **)GiveSpace((Size)(arg_count * sizeof(tokenbyte)));
++                    if ((*dest_rule->p_leftcontext)->p_arg == NULL) {
++                        if(verbose) BPPrintMessage(0,odError, "=> GiveSpace failed for left context arg tokens\n");
+                         return;
+                     	}
+-                    *(*dest_rule->p_leftcontext)->p_arg = (tokenbyte *)malloc(arg_count * sizeof(tokenbyte));
+-                    if (!*(*dest_rule->p_leftcontext)->p_arg) {
+-                        if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for left context arg tokens\n");
+-                        free((*dest_rule->p_leftcontext)->p_arg);
+-                        (*dest_rule->p_leftcontext)->p_arg = NULL;
++                    if ((*src_rule->p_leftcontext)->p_arg == NULL) {
++                        fprintf(stderr, "Error: p_arg is NULL!\n");
++                        if(verbose) BPPrintMessage(0,odError, "=> Error: igram = %d, irule = %d, p_arg is NULL!\n",igram,irul);
+                         return;
+-                   		}
+-               //     BPPrintMessage(1,odInfo,"Left context igram = %d, irule = %d, arg_count = %d sign = %d\n",igram,irul,arg_count,(*dest_rule->p_leftcontext)->sign);
+-                    // Copy the token array
+-					if ((*src_rule->p_leftcontext)->p_arg == NULL || (*dest_rule->p_leftcontext)->p_arg == NULL) {
+-						fprintf(stderr, "Error: p_arg is NULL!\n");
+-						if(verbose) BPPrintMessage(0,odError, "=> Error: igram = %d, irule = %d, p_arg is NULL!\n",igram,irul);
+-						return;
+-						}
++                        }
+                     memcpy(*(*dest_rule->p_leftcontext)->p_arg, *(*src_rule->p_leftcontext)->p_arg, arg_count * sizeof(tokenbyte));
+                 	} 
+ 				else (*dest_rule->p_leftcontext)->p_arg = NULL;
+@@ -2101,31 +2076,17 @@ void copy_grammar(t_gram *dest, t_gram *src, int verbose) {
+                         arg_count += 2;
+                         if (m == TEND && p == TEND) break;
+                     	}
+-                    // Allocate memory for the token array
+-                    (*dest_rule->p_rightcontext)->p_arg = (tokenbyte **)malloc(sizeof(tokenbyte *));
+-                    if (!(*dest_rule->p_rightcontext)->p_arg) {
+-                        if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for right context args\n");
++                    // Allocate as proper Handle (s_handle_priv) so MyGetHandleSize works
++                    (*dest_rule->p_rightcontext)->p_arg = (tokenbyte **)GiveSpace((Size)(arg_count * sizeof(tokenbyte)));
++                    if ((*dest_rule->p_rightcontext)->p_arg == NULL) {
++                        if(verbose) BPPrintMessage(0,odError, "=> GiveSpace failed for right context arg tokens\n");
+                         return;
+                     	}
+-                    *(*dest_rule->p_rightcontext)->p_arg = (tokenbyte *)malloc(arg_count * sizeof(tokenbyte));
+-                    if (!*(*dest_rule->p_rightcontext)->p_arg) {
+-                        if(verbose) BPPrintMessage(0,odError, "=> Memory allocation failed for right context arg tokens\n");
+-                        free((*dest_rule->p_rightcontext)->p_arg);
+-                        (*dest_rule->p_rightcontext)->p_arg = NULL;
++                    if ((*src_rule->p_rightcontext)->p_arg == NULL) {
++                        fprintf(stderr, "Error: p_arg is NULL!\n");
++                        if(verbose) BPPrintMessage(0,odError, "=> Error: igram = %d, irule = %d, p_arg is NULL!\n",igram,irul);
+                         return;
+-                    	}
+-               //     BPPrintMessage(1,odInfo,"Right context igram = %d, irule = %d, arg_count = %d sign = %d\n",igram,irul,arg_count,(*dest_rule->p_rightcontext)->sign);
+-				/*	printf("dest_rule->p_rightcontext: %p\n", (void *)dest_rule->p_rightcontext);
+-					printf("*dest_rule->p_rightcontext: %p\n", (void *)*dest_rule->p_rightcontext);
+-					printf("(*dest_rule->p_rightcontext)->p_arg: %p\n", (void *)(*dest_rule->p_rightcontext)->p_arg);
+-					printf("*(*dest_rule->p_rightcontext)->p_arg: %p\n", (void *)*(*dest_rule->p_rightcontext)->p_arg); */
+-
+-                    // Copy the token array
+-					if ((*src_rule->p_rightcontext)->p_arg == NULL || (*dest_rule->p_rightcontext)->p_arg == NULL) {
+-						fprintf(stderr, "Error: p_arg is NULL!\n");
+-						if(verbose) BPPrintMessage(0,odError, "=> Error: igram = %d, irule = %d, p_arg is NULL!\n",igram,irul);
+-						return;
+-						}
++                        }
+                     memcpy(*(*dest_rule->p_rightcontext)->p_arg, *(*src_rule->p_rightcontext)->p_arg, arg_count * sizeof(tokenbyte));
+                 	} 
+ 				else (*dest_rule->p_rightcontext)->p_arg = NULL;
+diff --git a/source/BP3/Compute.c b/source/BP3/Compute.c
+index 3f1d2eb..df2f0a0 100644
+--- a/source/BP3/Compute.c
++++ b/source/BP3/Compute.c
+@@ -800,7 +800,7 @@ int ComputeInGram(tokenbyte ***pp_a,t_gram *p_gram,int igram,int inrul,long *p_l
+ 						goto QUIT;
+ 						}
+ 					hastabs = FALSE; // 2026-04-12
+-					BPPrintMessage(1,odInfo,"@@@ PrintWorkString()\n");
++				//	BPPrintMessage(1,odInfo,"@@@ PrintWorkString()\n");
+ 					if((rep=PrintWorkString(datamode && hastabs,OutputWindow,hastabs,ifunc,pp_b)) != OK) {
+ 						BPPrintMessage(0,odError,"=> Error calling PrintWorkString(2) in Compute.c\n");
+ 						goto QUIT;

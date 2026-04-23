@@ -9,3 +9,5 @@ docs/mails/
 _test_*
 public/
 _archive/
+library.db
+*.db
