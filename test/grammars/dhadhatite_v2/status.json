@@ -1,0 +1,25 @@
+{
+  "production_mode": "text",
+  "transposition_status": "partial",
+  "source": "bp3-ctests/-gr.dhadhatite",
+  "date": "2026-04-26",
+  "notes": "6-subgrammar tabla qa'ida. Context markers (+/++), template brackets (=...)(: ...), <-- rule direction, and LHS time-signature not translated. gram#3 (V-chain) and gram#4 (leaf terminals) fully translated. gram#2 partially translated (template structure lost). gram#5 partially translated (context disambiguation lost). S5 result: 0 tokens — root cause: alphabet empty (bols are not in @alphabet.western; tabla bol alphabet not supported in BPscript yet), AND E32 is a dangling non-terminal (never expanded by any sub-grammar).",
+  "unsupported_features": [
+    "LHS time-signature annotation (4+4+4+4/4)",
+    "Inline template brackets (= ...) (: ...) in rule bodies",
+    "Context-depth token prefixes + and ++",
+    "Negative-context LHS marker #+",
+    "<-- rule direction with ordering constraint",
+    "TEMPLATES section (old BP3 bracket format)"
+  ],
+  "supported_features": [
+    "6 sub-grammars with correct mode directives (@mode:random, @mode:lin, @mode:ord)",
+    "Weights [weight:N] for all rules",
+    "<> bidirectional direction (approximation of BP3 <->)",
+    "V-chain non-terminals V2..V15 (gram#3)",
+    "Leaf terminal rules T1/T2 (gram#4)",
+    "Silence - in grammar",
+    "All 6 source bols + 2 fixed-pattern bols in silent.al",
+    "BOLSIZE check: longest terminal 22 chars < 30 limit"
+  ]
+}

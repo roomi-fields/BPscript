@@ -711,6 +711,14 @@
       "alphabet": null
     }
   },
+  "acceleration_v2": {
+    "bernard": "acceleration",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [],
+    "features": [],
+    "note": "from -gr.acceleration by Harm Visser, BPscript version with <weight> and <> bidirectional. Integrated 2026-04-26."
+  },
   "checkSUB1": {
     "bernard": "checkSUB1",
     "status": "to_be_tested",
@@ -1616,6 +1624,17 @@
       "settings": "-se.Watch_What_Happens",
       "alphabet": null
     }
+  },
+  "dhadhatite_v2": {
+    "bernard": "dhadhatite",
+    "status": "partial",
+    "production_mode": "text",
+    "aux": [],
+    "features": [
+      "sub:5"
+    ],
+    "lines": 90,
+    "note": "Partial BPscript transposition of -gr.dhadhatite. Context markers (+/++), template brackets, <-- rule and LHS time-signature not supported. gram#3 V-chain + gram#4 terminals fully translated. See UNSUPPORTED.md."
   },
   "_comment": {
     "status": "excluded"
