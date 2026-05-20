@@ -1,12 +1,12 @@
 ## BPscript — Meta-sequencer for Temporal Structure Composition
 
-3 reserved words, 24 symbols, 7 operators. Compiles to BP3 grammar format and runs via WASM.
+3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
 Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
 
 ### Language summary
 - **3 words**: `gate`, `trigger`, `cv` (temporal types)
 - **24 structural symbols**: `@`, `->`, `<-`, `<>`, `{}`, `,`, `()`, `:`, `=`, `[]`, ``` `` ```, `//`, `-`, `_`, `.`, `...`, `!`, `<!`, `#`, `?`, `$`, `&`, `~`, `|`
-- **7 flag operators**: `==`, `!=`, `>`, `<`, `>=`, `<=`, `+`
+- **9 flag operators**: comparison `==`, `!=`, `>`, `<`, `>=`, `<=` + calculation `+`, `-`, `=` (`-`/`=` are distinct operators that reuse glyphs also used as structural symbols)
 - **5 reserved qualifier keys**: `speed`, `scale`, `mode`, `weight`, `on_fail`
 - **Double declaration**: each symbol has temporal type + runtime binding (`gate Sa:sc`)
 - Silence: `-` in both BPscript and BP3

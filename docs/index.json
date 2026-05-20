@@ -7,7 +7,7 @@
     "files": {
       "LANGUAGE.md": {
         "content": "Spécification complète du langage BPscript",
-        "sections": ["vision", "3 mots / 24 symboles / 7 opérateurs", "types temporels (gate/trigger/cv)", "double déclaration", "[] moteur vs () runtime", "backticks", "flags", "templates", "captures", "homomorphismes", "compilation vers BP3"],
+        "sections": ["vision", "3 mots / 24 symboles / 9 opérateurs de flags", "types temporels (gate/trigger/cv)", "double déclaration", "[] moteur vs () runtime", "backticks", "flags", "templates", "captures", "homomorphismes", "compilation vers BP3"],
         "use_when": "comprendre la syntaxe, vérifier une construction, coder tokenizer/parser/encoder"
       },
       "EBNF.md": {

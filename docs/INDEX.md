@@ -4,7 +4,7 @@
 
 | Document | Contenu | Quand le lire |
 |----------|---------|---------------|
-| [LANGUAGE.md](spec/LANGUAGE.md) | Spécification complète : vision, 3 mots / 24 symboles / 7 opérateurs, types temporels (gate/trigger/cv), double déclaration, `[]` moteur vs `()` runtime, backticks, flags, templates, captures, homomorphismes, compilation vers BP3 | Comprendre la syntaxe BPscript, vérifier une construction du langage, coder le tokenizer/parser/encoder |
+| [LANGUAGE.md](spec/LANGUAGE.md) | Spécification complète : vision, 3 mots / 24 symboles / 9 opérateurs de flags, types temporels (gate/trigger/cv), double déclaration, `[]` moteur vs `()` runtime, backticks, flags, templates, captures, homomorphismes, compilation vers BP3 | Comprendre la syntaxe BPscript, vérifier une construction du langage, coder le tokenizer/parser/encoder |
 | [EBNF.md](spec/EBNF.md) | Grammaire formelle ISO 14977. Toutes les productions EBNF du langage | Valider la syntaxe, coder le parser, vérifier un edge case grammatical |
 | [AST.md](spec/AST.md) | Nœuds AST : Scene, Directive, Rule, CVInstance, Macro, Polymetry, etc. | Coder des transformations AST, comprendre la sortie du parser |
 

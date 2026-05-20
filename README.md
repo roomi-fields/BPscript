@@ -15,7 +15,7 @@ functions. TidalCycles cites it as an influence.
 That power has always been locked behind a dense, archaic syntax and a 1990s C codebase.
 **BPscript is the research effort to keep the formalism and modernize everything around it:**
 
-- **A readable, typed language** — 3 reserved words, 24 symbols, 7 operators. Typed temporal
+- **A readable, typed language** — 3 reserved words, 24 symbols, 9 flag operators. Typed temporal
   primitives (`gate`, `trigger`, `cv`), scenes, actors, declarative I/O mappings.
 - **Native code via backticks** — embed runtime-evaluated code (currently JS / Web Audio) alongside
   the temporal structure, in a single file.

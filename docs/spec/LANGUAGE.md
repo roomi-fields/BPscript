@@ -7,7 +7,7 @@
 - [Concepts cles](#concepts-cles)
 - [Philosophie de separation](#philosophie-de-separation)
 - [Le meta-ordonnanceur](#le-meta-ordonnanceur)
-- [Inventaire : 3 mots, 24 symboles, 7 operateurs](#inventaire--3-mots-24-symboles-7-operateurs)
+- [Inventaire : 3 mots, 24 symboles, 9 operateurs](#inventaire--3-mots-24-symboles-9-operateurs)
 - [Systeme de types -- double declaration](#systeme-de-types----double-declaration)
 - [Parametres -- opaques pour BPscript](#parametres----opaques-pour-bpscript)
 - [`[]` moteur vs `()` runtime](#-moteur-vs--runtime----deux-destinataires-memes-portees)
@@ -50,7 +50,7 @@ Le langage connait trois mots et ne fait qu'une chose : ordonner dans le temps.
 
 ## Le langage : dense, pas simple
 
-3 mots reserves, 24 symboles, 7 operateurs -- le vocabulaire est petit mais la
+3 mots reserves, 24 symboles, 9 operateurs de flags -- le vocabulaire est petit mais la
 combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
 ```
@@ -215,7 +215,7 @@ Le meta-ordonnanceur est agnostique de la cible :
 
 ---
 
-## Inventaire : 3 mots, 24 symboles, 7 operateurs
+## Inventaire : 3 mots, 24 symboles, 9 operateurs
 
 ### Trois mots reserves
 
@@ -268,21 +268,30 @@ Pas d'ambiguite entre `.` et `...` : ce sont des caracteres differents de `-`.
 - `...` = toujours 3 caracteres colles (repos indetermine)
 - `-` = silence, `- - -` = trois silences (tokens separes par des espaces)
 
-### Sept operateurs de flags
+### Neuf operateurs de flags
+
+Les operateurs de flags se repartissent en deux groupes : comparaison (tests, dans une `[guard]` avant le LHS) et calcul (mutations, dans `[...]` dans le RHS).
+
+Comparaison (6) :
 
 ```
-==             test d'egalite (dans [guard])
-!=             test d'inegalite (dans [guard])
->              test superieur (dans [guard])
-<              test inferieur (dans [guard])
->=             test superieur ou egal (dans [guard])
-<=             test inferieur ou egal (dans [guard])
-+              increment (dans [flag])
+==             test d'egalite
+!=             test d'inegalite
+>              test superieur
+<              test inferieur
+>=             test superieur ou egal
+<=             test inferieur ou egal
 ```
 
-Les operateurs n'existent que dans le contexte des flags (`[guard]` avant le LHS et `[mutation]` dans le RHS).
-L'assignation `=` reutilise un symbole structurel existant.
-Le decrement `-` et l'increment `+` n'existent que dans le contexte des flags.
+Calcul (3) :
+
+```
++              increment        [flag+1]
+-              decrement        [flag-1]
+=              assignation      [flag=valeur]
+```
+
+Soit neuf operateurs en tout. Le decrement `-` et l'assignation `=` reutilisent un glyphe employe ailleurs (`-` pour le silence, `=` pour la definition de macro), mais ce sont des operateurs distincts : l'inventaire des glyphes (les 24 symboles) et celui des operateurs sont independants. Tous n'ont de sens que dans le contexte des flags.
 
 ### Trois portees de metadonnees
 
