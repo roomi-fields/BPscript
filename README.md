@@ -4,21 +4,21 @@
 the formal music grammar system Bernard Bel and Jim Kippen have developed since 1981, originally
 to model North Indian tabla improvisation.
 
-BP3 is, to our knowledge, the only musical system that operates at the **mildly context-sensitive**
-level (the same class as Tree-Adjoining and Combinatory Categorial Grammars in linguistics) — more
-expressive than a context-free grammar, yet still tractable. It is also **bidirectional**: it can
-*generate* music and *recognize* whether a sequence belongs to a musical language. Forty years of
-work gave it weighted stochastic grammars, native polymetry, conditional flags, master/slave
-patterns, seven derivation modes, and dozens of performance-control functions. TidalCycles cites it
-as an influence.
+BP3 has an unusually wide range of formal power: depending on which mechanisms are active, its
+grammar spans context-free (Type 2) to context-sensitive (Type 1) and beyond — a tunable complexity
+rather than a fixed class. It is also **bidirectional**: it can *generate* music and *recognize*
+whether a sequence belongs to a musical language (PROD/ANAL modes), a reversibility rarely found in
+music systems. Forty years of work gave it weighted stochastic grammars, native polymetry,
+conditional flags, master/slave patterns, seven derivation modes, and dozens of performance-control
+functions. TidalCycles cites it as an influence.
 
 That power has always been locked behind a dense, archaic syntax and a 1990s C codebase.
 **BPscript is the research effort to keep the formalism and modernize everything around it:**
 
 - **A readable, typed language** — 3 reserved words, 24 symbols, 7 operators. Typed temporal
   primitives (`gate`, `trigger`, `cv`), scenes, actors, declarative I/O mappings.
-- **Multi-runtime orchestration** — drives SuperCollider, TidalCycles, Python, MIDI, DMX from a
-  single file via backticks.
+- **Native code via backticks** — embed runtime-evaluated code (currently JS / Web Audio) alongside
+  the temporal structure, in a single file.
 - **Compiles to BP3** — the transpiler emits native BP3 grammar, so 40 years of derivation
   expertise are reused, not reinvented. The engine runs in the browser via **WebAssembly**.
 - **An evolution path** — `BPx`, a next-generation reactive derivation engine designed to succeed
