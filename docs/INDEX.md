@@ -12,7 +12,7 @@
 
 | Document | Contenu | Quand le lire |
 |----------|---------|---------------|
-| [ARCHITECTURE.md](design/ARCHITECTURE.md) | Pipeline complet : source → tokenizer → parser → encoder → WASM → dispatcher → transports. Acteurs, control table, CV table, live coding, hot-swap | Vue d'ensemble du système, comprendre le flux de données de bout en bout |
+| [ARCHITECTURE.md](design/ARCHITECTURE.md) | Pipeline de compilation : source → tokenizer → parser → encoder → grammaire BP3 + alphabet + prototypes → moteur WASM → timed tokens. Acteurs, control table, CV table | Vue d'ensemble du système, comprendre le flux de données de bout en bout |
 | [PITCH.md](design/PITCH.md) | Résolution pitch 6 couches : Layer 0 Actor (binding) → Layer 1 Alphabet → Layer 2 Octaves → Layer 3 Temperament → Layer 4 Tuning → Layer 5 Resolver. Annexe transposition multi-tempéraments | Comprendre comment un token "C#4" devient une fréquence, coder le resolver, ajouter un alphabet/tuning |
 | [SOUNDS.md](design/SOUNDS.md) | Résolution terminaux unifiée : 3 échelles (spec < CT < CV), formats JSON (table, template, paramétrique, par registre, samples), résolution par transport (Web Audio/MIDI/OSC), dégradation gracieuse, implémentation (ActorRegistry, SoundsResolver) | Ajouter un instrument, comprendre le cascading spec/CT/CV, coder un transport |
 | [CV.md](design/CV.md) | Objets CV temporels : ADSR, LFO, ramp. Routage par cible, bus audio | Ajouter un type de CV, comprendre le routage modulation |
@@ -20,17 +20,10 @@
 | [TEMPORAL_DEFORMATION.md](design/TEMPORAL_DEFORMATION.md) | Constraint solver : structure tree (arbre polymétrique avec proportions), 3 modes de déformation (span fixe, proportions fixes, contrainte relâchée), sources de contrôle (potards, MIDI CC, CV, drag) | Coder le constraint solver, comprendre la déformation temporelle live |
 | [HOMOMORPHISMS.md](design/HOMOMORPHISMS.md) | Étiquetage post-dérivation : format `{section}.{depth}%{terminal}`, résolution REPL, stacking. Instructions d'implémentation (agent transpileur + agent WASM) | Coder les homomorphismes, comprendre le labeling, briefer un agent |
 | [REPL.md](design/REPL.md) | Architecture backticks : 3 types (orphelin, inline, standalone), REPL adapters (SC, Tidal, Python), sessions, timing | Coder un adapter REPL, comprendre l'exécution des backticks |
-| [SCENES.md](design/SCENES.md) | Hiérarchie de scènes : @scene directive, scoping des flags (héritage top-down, @expose, isolation siblings), sys auto-exposé, fan-out CC/OSC, cycles de feedback, dispatcher multi-instances | Coder la gestion multi-scènes, comprendre le scoping, implémenter @scene/@expose/@map |
-| [BPX_ENGINE_SPEC.md](design/BPX_ENGINE_SPEC.md) | Spec moteur BP4 : instance isolée, AST direct, DerivationTree structuré, streaming, live coding, multi-instance, 7 modes de dérivation, FlagStore observable, TriggerBus async | Implémenter BP4, comprendre l'architecture cible, planifier la migration BP3→BP4 |
+| [SCENES.md](design/SCENES.md) | Hiérarchie de scènes : @scene directive, scoping des flags (héritage top-down, @expose, isolation siblings), sys auto-exposé, fan-out CC/OSC, cycles de feedback | Comprendre le modèle multi-scènes, le scoping des flags, la sémantique @scene/@expose/@map |
+| [BPX_ENGINE_SPEC.md](design/BPX_ENGINE_SPEC.md) | Spec moteur BPx — **contrat externe** : instance isolée, AST direct, DerivationTree structuré, streaming, live coding, multi-instance, 7 modes de dérivation, FlagStore observable, TriggerBus async | Implémenter BPx, comprendre l'architecture cible, planifier la migration BP3→BPx |
+| [BPX_ARCHITECTURE.md](design/BPX_ARCHITECTURE.md) | Architecture **interne** du moteur BPx : découpage du code, structures de données, perfs en live coding | Coder le moteur BPx, comprendre l'organisation interne |
 | [INTERFACES_BP3.md](design/INTERFACES_BP3.md) | API WASM BP3 : fonctions d'entrée (load grammar/alphabet/settings/tonality), fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events), verbose levels | Appeler le moteur WASM, comprendre les formats in/out, ajouter une API |
-
-## plan/ — Ce qu'on VA faire
-
-| Document | Contenu | Quand le lire |
-|----------|---------|---------------|
-| [MARKET_STUDY.md](plan/MARKET_STUDY.md) | Étude de marché live coding exhaustive : ~20 outils analysés (forces/faiblesses), points de douleur utilisateurs, gaps écosystème, recherche académique 2020-2026, tendances marché, positionnement concurrentiel, recommandations stratégiques | Comprendre le marché, prioriser les features, préparer une publication ou un pitch |
-| [UI_WEB.md](plan/UI_WEB.md) | Roadmap UI web : Phase 1 contrôles interactifs (sliders runtime), Phase 2 Web MIDI, Phase 3 timeline Canvas (structure tree + constraint solver + drag), Phase 4 mapping contrôleurs → structure | Planifier le dev UI, savoir ce qui est prioritaire, comprendre les dépendances |
-| [EDITOR.md](plan/EDITOR.md) | Design éditeur CodeMirror 6 : syntax highlighting, autocomplétion, inline widgets, Lezer parser | Coder l'éditeur, ajouter de la coloration syntaxique |
 
 ## reference/ — Guides techniques
 
@@ -47,3 +40,4 @@
 |----------|---------|--------|
 | [POLYMAKE_STACK.md](issues/POLYMAKE_STACK.md) | Stack overflow sur polymétrie imbriquée 5+ niveaux (not-reich). Workaround : text only, pas de timing | Non résolu — workaround actif |
 | [RNG_PORTABLE.md](issues/RNG_PORTABLE.md) | RNG non portable MSVC vs glibc : 6 grammaires S0≠S1. Spec LCG écrite, implémentation pending | Spec prête, code à faire |
+| [TEMPO_OPS_WASM.md](issues/TEMPO_OPS_WASM.md) | Opérateurs tempo `/N`, `\N`, `_tempo()` : écarts comportementaux WASM vs natif (tests MIDI comparés) | Investigation en cours |

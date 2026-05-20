@@ -2,8 +2,8 @@
 
 ## Date: 2026-03-18
 
-> Voir aussi : [DESIGN_LANGUAGE.md](DESIGN_LANGUAGE.md) pour le type `cv` dans le système de types,
-> [DESIGN_SOUNDS.md](DESIGN_SOUNDS.md) pour le cascading spec < CT < CV.
+> Voir aussi : [DESIGN_LANGUAGE.md](../spec/LANGUAGE.md) pour le type `cv` dans le système de types,
+> [DESIGN_SOUNDS.md](SOUNDS.md) pour le cascading spec < CT < CV.
 
 ## Concept
 

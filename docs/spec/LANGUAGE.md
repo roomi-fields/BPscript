@@ -1246,7 +1246,7 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 au lieu de vraies resolutions. BP3 applique `Image()` normalement et emet les
 etiquettes dans les timed tokens. Le REPL resout les etiquettes post-derivation.
 
-> Voir [DESIGN_HOMOMORPHISM_LABELING.md](../DESIGN_HOMOMORPHISM_LABELING.md) pour le mecanisme complet.
+> Voir [DESIGN_HOMOMORPHISM_LABELING.md](../design/HOMOMORPHISMS.md) pour le mecanisme complet.
 
 ### Contextes
 
@@ -1335,7 +1335,7 @@ traduction (ex: `'1'` -> `d1`).
 #### Conventions de notes
 
 Le contournement actuel (flat alphabet + bol prefix + prototypes -so.) est
-documente dans [DESIGN_PITCH.md](../DESIGN_PITCH.md).
+documente dans [DESIGN_PITCH.md](../design/PITCH.md).
 L'architecture cible (alphabets parametriques, temperaments, tunings)
 rend obsolete le NoteConvention hardcode de BP3.
 
@@ -1347,6 +1347,6 @@ rend obsolete le NoteConvention hardcode de BP3.
 - [AST.md](AST.md) -- Structure de l'AST
 - [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) -- Interface WASM complete (in/out)
 - [ARCHITECTURE.md](../design/ARCHITECTURE.md) -- Architecture technique
-- [DESIGN_CV.md](../DESIGN_CV.md) -- CV / signal objects
-- [DESIGN_PITCH.md](../DESIGN_PITCH.md) -- Architecture 5 couches pitch
-- [DESIGN_HOMOMORPHISM_LABELING.md](../DESIGN_HOMOMORPHISM_LABELING.md) -- Etiquetage homomorphismes
+- [DESIGN_CV.md](../design/CV.md) -- CV / signal objects
+- [DESIGN_PITCH.md](../design/PITCH.md) -- Architecture 5 couches pitch
+- [DESIGN_HOMOMORPHISM_LABELING.md](../design/HOMOMORPHISMS.md) -- Etiquetage homomorphismes

@@ -1,6 +1,6 @@
 {
   "description": "BPscript documentation index — point d'entrée pour agents et humains",
-  "updated": "2026-04-07",
+  "updated": "2026-05-20",
 
   "spec": {
     "description": "Le langage tel qu'il EST — spécifications normatives",
@@ -25,8 +25,8 @@
     "description": "COMMENT c'est construit — architecture et design technique",
     "files": {
       "ARCHITECTURE.md": {
-        "content": "Pipeline complet source → tokenizer → parser → encoder → WASM → dispatcher → transports",
-        "sections": ["pipeline compile", "dispatcher", "control table", "CV table", "live coding", "hot-swap", "acteurs"],
+        "content": "Pipeline de compilation source → tokenizer → parser → encoder → grammaire BP3 + alphabet + prototypes → moteur WASM → timed tokens",
+        "sections": ["pipeline de compilation", "control table", "CV table", "acteurs", "interface WASM"],
         "use_when": "vue d'ensemble du système, comprendre le flux de données"
       },
       "PITCH.md": {
@@ -64,38 +64,23 @@
       },
       "SCENES.md": {
         "content": "Hiérarchie de scènes, scoping des flags, communication inter-scènes",
-        "sections": ["@scene directive", "scoping (héritage top-down, @expose, isolation siblings)", "sys acteur auto-exposé", "fan-out CC/OSC", "cycles de feedback", "implémentation dispatcher multi-instances"],
-        "use_when": "coder la gestion multi-scènes, comprendre le scoping des flags, implémenter @scene/@expose/@map"
+        "sections": ["@scene directive", "scoping (héritage top-down, @expose, isolation siblings)", "sys acteur auto-exposé", "fan-out CC/OSC", "cycles de feedback"],
+        "use_when": "comprendre le modèle multi-scènes, le scoping des flags, la sémantique @scene/@expose/@map"
       },
       "BPX_ENGINE_SPEC.md": {
         "content": "Spec moteur BP4 : instance isolée, AST direct, DerivationTree, streaming, live coding",
         "sections": ["modèle d'instance", "cycle de vie", "format entrée (AST)", "format sortie (DerivationTree + TimedToken)", "algorithme dérivation (7 modes)", "polymétrie itérative", "FlagStore observable", "TriggerBus async", "re-dérivation incrémentale", "streaming", "multi-instance", "live coding ops", "déterminisme LCG", "gestion erreurs", "questions ouvertes", "priorité implémentation"],
-        "use_when": "implémenter BP4, comprendre l'architecture cible, planifier la migration depuis BP3"
+        "use_when": "implémenter BPx (contrat externe), comprendre l'architecture cible, planifier la migration depuis BP3"
+      },
+      "BPX_ARCHITECTURE.md": {
+        "content": "Architecture interne du moteur BPx : découpage du code, structures de données, perfs en live coding",
+        "sections": ["organisation interne", "structures de données", "performances live coding"],
+        "use_when": "coder le moteur BPx, comprendre l'organisation interne (le contrat externe est dans BPX_ENGINE_SPEC.md)"
       },
       "INTERFACES_BP3.md": {
         "content": "API WASM BP3 complète",
         "sections": ["fonctions d'entrée (load grammar/alphabet/settings/tonality)", "fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events)", "verbose levels 0/1/2"],
         "use_when": "appeler le moteur WASM, comprendre les formats in/out"
-      }
-    }
-  },
-
-  "plan": {
-    "description": "Ce qu'on VA faire — roadmaps",
-    "files": {
-      "UI_WEB.md": {
-        "content": "Roadmap UI web interactive",
-        "sections": ["Phase 1 contrôles interactifs (sliders runtime)", "Phase 2 Web MIDI", "Phase 3 timeline Canvas (structure tree + constraint solver + drag)", "Phase 4 mapping contrôleurs → structure"],
-        "use_when": "planifier le dev UI, comprendre les priorités et dépendances"
-      },
-      "MARKET_STUDY.md": {
-        "content": "Étude de marché live coding : ~20 outils analysés, gaps, recherche académique, tendances, positionnement",
-        "use_when": "comprendre le marché, prioriser les features, préparer une publication ou un pitch"
-      },
-      "EDITOR.md": {
-        "content": "Design éditeur CodeMirror 6",
-        "sections": ["syntax highlighting", "autocomplétion", "inline widgets", "Lezer parser"],
-        "use_when": "coder l'éditeur, ajouter de la coloration syntaxique"
       }
     }
   },
@@ -132,6 +117,10 @@
       "RNG_PORTABLE.md": {
         "content": "RNG non portable MSVC vs glibc (6 grammaires S0≠S1)",
         "status": "spec prête, implémentation pending"
+      },
+      "TEMPO_OPS_WASM.md": {
+        "content": "Opérateurs tempo /N, \\N, _tempo() : écarts comportementaux WASM vs natif (tests MIDI comparés)",
+        "status": "investigation en cours"
       }
     }
   }

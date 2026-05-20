@@ -168,7 +168,7 @@ Dérive la grammaire, résout la polymétrie, calcule les timestamps. Les résul
 
 > **Note** : cette sortie est une liste plate — l'arbre structurel (polymétrie,
 > proportions, contraintes) n'est pas exposé. Voir
-> [DESIGN_TEMPORAL_DEFORMATION.md](DESIGN_TEMPORAL_DEFORMATION.md) pour la vision
+> [DESIGN_TEMPORAL_DEFORMATION.md](TEMPORAL_DEFORMATION.md) pour la vision
 > d'une sortie `bp3_get_structure_tree()` complémentaire.
 
 ```javascript

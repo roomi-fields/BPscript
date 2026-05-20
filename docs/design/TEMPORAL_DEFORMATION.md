@@ -347,10 +347,10 @@ L'option 2 est préférable (pas de changement moteur).
 
 Ce document décrit la vision de la déformation temporelle. Il s'appuie sur :
 
-- [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) — Pipeline compile/runtime
-- [DESIGN_HOMOMORPHISM_LABELING.md](DESIGN_HOMOMORPHISM_LABELING.md) — REPL (résolution contenu)
-- [DESIGN_INTERFACES_BP3.md](DESIGN_INTERFACES_BP3.md) — Sorties BP3 actuelles
-- [DESIGN_CV.md](DESIGN_CV.md) — CV objects (sources de contrôle continu)
+- [DESIGN_ARCHITECTURE.md](ARCHITECTURE.md) — Pipeline compile/runtime
+- [DESIGN_HOMOMORPHISM_LABELING.md](HOMOMORPHISMS.md) — REPL (résolution contenu)
+- [DESIGN_INTERFACES_BP3.md](INTERFACES_BP3.md) — Sorties BP3 actuelles
+- [DESIGN_CV.md](CV.md) — CV objects (sources de contrôle continu)
 
 Et il prépare les phases futures :
 

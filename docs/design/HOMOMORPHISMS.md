@@ -415,11 +415,11 @@ S -> $X * TR &X             →  S --> (= X) * TR (: X)
 ## Documents liés
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Pipeline compile/runtime
-- [DESIGN_GRAMMAR.md](../DESIGN_GRAMMAR.md) — Mapping BPscript → BP3
+- [DESIGN_GRAMMAR.md](../spec/LANGUAGE.md) — Mapping BPscript → BP3
 - [INTERFACES_BP3.md](INTERFACES_BP3.md) — Interface WASM
-- [REFERENCE_HO_FORMAT.md](../REFERENCE_HO_FORMAT.md) — Format fichiers -ho.
-- [BPSCRIPT_EBNF.md](../BPSCRIPT_EBNF.md) — Grammaire formelle (§4.9 Templates)
-- [BPSCRIPT_AST.md](../BPSCRIPT_AST.md) — AST (TemplateMaster/Slave)
+- [REFERENCE_HO_FORMAT.md](../reference/HO_FORMAT.md) — Format fichiers -ho.
+- [BPSCRIPT_EBNF.md](../spec/EBNF.md) — Grammaire formelle (§4.9 Templates)
+- [BPSCRIPT_AST.md](../spec/AST.md) — AST (TemplateMaster/Slave)
 
 ---
 ---
@@ -814,7 +814,7 @@ Scènes à valider : `checkhomo`, `dhati`, `ruwet`
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Pipeline compile/runtime
 - [INTERFACES_BP3.md](INTERFACES_BP3.md) — Interface WASM in/out
-- [REFERENCE_HO_FORMAT.md](../REFERENCE_HO_FORMAT.md) — Format fichier -ho. BP3
-- [BPSCRIPT_AST.md](../BPSCRIPT_AST.md) — AST (champ `transcriptions` sur TemplateSlave)
+- [REFERENCE_HO_FORMAT.md](../reference/HO_FORMAT.md) — Format fichier -ho. BP3
+- [BPSCRIPT_AST.md](../spec/AST.md) — AST (champ `transcriptions` sur TemplateSlave)
 - `lib/transcription.json` — Tables de transcription existantes
 - `wasm/bp3_api.c` — API WASM (ne pas modifier)

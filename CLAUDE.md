@@ -14,7 +14,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - Period notation: `.` = equal-duration fragment separator (same as BP3)
 - `!` = simultaneous event (any type: trigger, gate, cv, or flag mutation)
 - `[]` = engine instructions (BP3): guards, mode, weight, speed, tempo operators
-- `()` = runtime instructions (dispatcher): vel, pan, wave, attack, release, filter, etc.
+- `()` = runtime instructions: vel, pan, wave, attack, release, filter, etc. (encoded as `_script(CT)`, consumed by a downstream runtime)
 - Backticks: code evaluated by the symbol's runtime (implicit) or tagged (`sc:`, `py:`)
 
 ### Architecture
@@ -25,13 +25,10 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
   - `encoder.js` — AST → BP3 grammar text + flat alphabet + prototypes + settings
   - `prototypes.js` — Generates BP3 -so. prototype files for terminal durations
   - `index.js` — Facade: `compileBPS(source)` → `{ grammar, alphabetFile, prototypesFile, controlTable, cvTable, errors }`
+  - `actorResolver.js` — Resolves actors (alphabet/tuning/octaves bindings) between parser and encoder
   - `libs.js` — Library loader (JSON → controls, symbols, CV objects)
-- `src/dispatcher/` — Clock, routing, transports
-  - `dispatcher.js` — Event scheduling, control state, CV routing
-  - `resolver.js` — Note name → frequency (alphabet + tuning + temperament)
-  - `transports/webaudio.js` — Web Audio synthesis + CV buses
-- `lib/` — JSON libraries (controls, alphabet, tuning, filter, routing, etc.)
-- `web/index.html` — BPscript web interface (BPscript tab auto-compiles to Grammar tab)
+- `src/bpx/` — BPx engine stub (next-generation derivation engine, see BPX specs)
+- `lib/` — JSON libraries (controls, alphabets, tunings, filter, routing, etc.)
 - `dist/` — BP3 WASM build (bp3.js, bp3.wasm, bp3.data)
 - `docs/` — Documentation (5 dossiers par type)
   - `spec/` — Spécifications normatives du langage
@@ -39,7 +36,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `EBNF.md` — Grammaire formelle (EBNF)
     - `AST.md` — Nœuds AST
   - `design/` — Architecture et design technique
-    - `ARCHITECTURE.md` — Pipeline compile/runtime, dispatcher, transports
+    - `ARCHITECTURE.md` — Pipeline de compilation (source → AST → grammaire BP3) + interface WASM
     - `PITCH.md` — Résolution pitch 6 couches (actor → alphabet → octaves → temperament → tuning → resolver)
     - `SOUNDS.md` — Résolution terminaux unifiée (spec < CT < CV cascading)
     - `CV.md` — CV/signal objects (ADSR, LFO, ramp)
@@ -47,12 +44,10 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `HOMOMORPHISMS.md` — Étiquetage post-dérivation
     - `REPL.md` — REPL adapters et backticks
     - `SCENES.md` — Hiérarchie de scènes, scoping flags, @scene/@expose/@map, sys
-    - `BPX_ENGINE_SPEC.md` — Spec moteur BPx (AST direct, DerivationTree float64, streaming, live coding)
+    - `BPX_ENGINE_SPEC.md` — Spec moteur BPx : contrat externe (AST direct, DerivationTree, streaming, live coding)
+    - `BPX_ARCHITECTURE.md` — Architecture interne du moteur BPx (découpage code, perfs)
     - `INTERFACES_BP3.md` — Interface WASM BP3 (in/out)
     - `TEMPORAL_DEFORMATION.md` — Constraint solver, déformation temps réel
-  - `plan/` — Roadmaps
-    - `UI_WEB.md` — Plan UI web v2.0 (3 niveaux, ~20 runtimes, bridge local, sync inter-scènes)
-    - `EDITOR.md` — Design éditeur CodeMirror
   - `reference/` — Guides techniques
     - `WASM_HOWTO.md` — Build et usage WASM
     - `NATIVE_HOWTO.md` — Build et usage natif
@@ -61,6 +56,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
   - `issues/` — Problèmes ouverts
     - `POLYMAKE_STACK.md` — Stack overflow polymétrie imbriquée
     - `RNG_PORTABLE.md` — Portabilité RNG MSVC/glibc
+    - `TEMPO_OPS_WASM.md` — Opérateurs tempo `/N` `\N` `_tempo()` : écarts WASM vs natif
 
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/`:
@@ -74,7 +70,7 @@ Après toute modification dans `bp3-engine/csrc/`:
 cd bp3-engine
 source /mnt/d/Claude/emsdk/emsdk_env.sh
 ./build.sh all                                    # compile 3 targets (linux, windows, wasm)
-./build.sh all --archive --version=v3.3.19-wasm.2 # compile + archive
+./build.sh all --archive --version=v3.4.4-wasm.1  # compile + archive
 cd ..
 
 # Tests de non-régression (36 grammaires actives)
@@ -89,7 +85,7 @@ Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + f
 
 ### Key conventions
 - `[]` = engine (BP3): `[mode:random]`→RND, `[weight:50]`→`<50>`, `A[/2]`→`/2 A`, `{A B}[speed:2]`→`{2, A B}`
-- `()` = runtime (dispatcher): `(vel:80)`→`_script(CT0)`, `(wave:sawtooth)`→`_script(CT1)`
+- `()` = runtime: `(vel:80)`→`_script(CT0)`, `(wave:sawtooth)`→`_script(CT1)`
 - Direction: `->` (default L→R), `<-` (RIGHT→LEFT), `<>` (bidirectional)
 - BP3 rule format: `gram#blockNum[ruleNum] MODE LHS --> RHS`
 - Silence: `-` in both BPscript and BP3
@@ -143,10 +139,10 @@ Si tu es lancé avec un nom de session (`-n`), lis immédiatement les fichiers m
 **Session `moteur-wasm`** — Moteur BP3 WASM, tests e2e, conformité scènes
 - Focus : bugs moteur, pipeline WASM (bp3_api.c, stubs), test_wasm_all.js, CONFORMITY.md, aux files
 
-**Session `transpileur`** — Parser, encoder, resolver, sounds
-- Focus : tokenizer.js, parser.js, encoder.js, resolver.js, soundsResolver.js, lib/*.json, test/
+**Session `transpileur`** — Tokenizer, parser, encoder, acteurs, prototypes
+- Focus : tokenizer.js, parser.js, encoder.js, actorResolver.js, prototypes.js, libs.js, lib/*.json, test/
 
 **Session `architecture`** — Design langage, pitch, acteurs, REPL, effets
-- Focus : docs/DESIGN_*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json, concepts acteurs/REPL/effets
+- Focus : docs/design/*.md, docs/spec/*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json, concepts acteurs/REPL/effets
 
 Après lecture des fichiers mémoire, fais un résumé de ce que tu sais pour confirmer que tu as le contexte.

@@ -6,6 +6,12 @@ BPscript est un méta-ordonnanceur : il dérive des structures temporelles
 via le moteur BP3 (WASM) et orchestre des acteurs multi-runtime dans une
 seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 
+> **Périmètre de ce dépôt** : BPscript couvre la chaîne **compile time** (source → grammaire BP3)
+> et la dérivation par le moteur WASM, dont la sortie est une séquence de **timed tokens**.
+> Les sections **runtime** ci-dessous (dispatcher, transports, REPL adapters) décrivent le
+> **design de référence du consommateur aval** des timed tokens — leur implémentation vit
+> en dehors de ce dépôt. Elles sont conservées ici comme spécification du système complet.
+
 ---
 
 ## Vue d'ensemble
@@ -89,7 +95,7 @@ seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 
 ## L'Acteur — unité centrale de binding
 
-> Voir [DESIGN_ACTOR.md](DESIGN_ACTOR.md) pour le design complet.
+> Voir [PITCH.md](PITCH.md) (Layer 0 — Acteur) pour le design complet du binding acteur.
 
 L'acteur est le concept qui lie toutes les couches de données ensemble.
 Chaque acteur porte son propre contexte de résolution :
@@ -133,7 +139,7 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
 | —   | **Transport**   | runtime             | protocoles (OSC, MIDI...) | envoyer des données   | composition        |
 | —   | **REPL**        | runtime             | sessions code             | évaluer du code       | composition        |
 
-> Voir [DESIGN_PITCH.md](DESIGN_PITCH.md) pour l'architecture pitch (couches 3-6).
+> Voir [PITCH.md](PITCH.md) pour l'architecture pitch (couches 3-6).
 
 ### Qui charge quoi
 
@@ -214,7 +220,7 @@ Avant le dispatcher, une couche REPL résout les étiquettes d'homomorphisme
 émises par le moteur. C'est la première brique de la couche de transformation
 par acteur.
 
-> Voir [DESIGN_HOMOMORPHISM_LABELING.md](DESIGN_HOMOMORPHISM_LABELING.md) pour le design complet.
+> Voir [HOMOMORPHISMS.md](HOMOMORPHISMS.md) pour le design complet.
 
 ```
 Timed tokens (sortie BP3, avec étiquettes N%xxx)
@@ -260,7 +266,7 @@ Pour chaque token à l'instant T :
   │     │  actor.resolver.resolve(token, controlState)
   │     └→ { frequency, register, noteName, alteration }
   │     │
-  │     │  Transpose : 3 opérations possibles (cf. STUDY_TRANSPOSE.md)
+  │     │  Transpose : 3 opérations possibles (cf. PITCH.md, annexe transposition)
   │     │  - tonic:freq    → modifier baseHz du resolver
   │     │  - degree:N      → décaler de N degrés dans la gamme active
   │     │  - transpose:N   → grid shift de N steps dans le tempérament
@@ -313,7 +319,7 @@ Cette approche est **universelle** : elle fonctionne dans n'importe quel
 alphabet (western, sargam, maqam, gamelan) et n'importe quel tempérament,
 car le resolver gère la complexité fréquentielle, pas transpose.
 
-**3 opérations** (cf. [STUDY_TRANSPOSE.md](STUDY_TRANSPOSE.md)) :
+**3 opérations** (cf. [PITCH.md](PITCH.md), annexe transposition) :
 
 | Opération | controlState | Niveau | Effet |
 |-----------|-------------|--------|-------|
@@ -372,7 +378,7 @@ Où :
 - `step` : `tuning.degrees[indexOf(note dans alphabet)]`
 - `alteration_ratio` : ratio de l'altération (fraction, décimal ou cents → float)
 
-> Voir [DESIGN_PITCH.md](DESIGN_PITCH.md) pour les détails et exemples.
+> Voir [PITCH.md](PITCH.md) pour les détails et exemples.
 
 ---
 
@@ -587,23 +593,19 @@ Le langage ne connaît que `!nom` et `<!nom` — le transport est transparent.
 | `lib/sub.json`          | tables de substitution                   | encoder                              |
 | `lib/filter.json`       | CV objects (ADSR, LFO, ramp)             | encoder, dispatcher                  |
 
-Anciens fichiers préservés pour compatibilité BP3 :
-- `lib/alphabet.json` — format BP3 legacy (octaveChains, terminals)
+Ancien fichier préservé pour compatibilité BP3 :
 - `lib/tuning.json` — scales BP3 legacy (162 gammes Bernard Bel)
 
 ---
 
 ## Documents de design liés
 
-- [BPSCRIPT_VISION.md](BPSCRIPT_VISION.md) — Vue d'ensemble du projet
-- [DESIGN_LANGUAGE.md](DESIGN_LANGUAGE.md) — Spécification du langage (syntaxe, types, symboles, opérateurs)
-- [DESIGN_GRAMMAR.md](DESIGN_GRAMMAR.md) — Mapping BPscript → BP3 (règles, modes, sous-grammaires)
-- [DESIGN_PITCH.md](DESIGN_PITCH.md) — Architecture 5 couches pitch : alphabet, octaves, temperament, tuning, resolver
-- [DESIGN_ACTOR.md](DESIGN_ACTOR.md) — Concept d'acteur : binding alphabet + tuning + octaves + transport
-- [DESIGN_CV.md](DESIGN_CV.md) — CV / signal objects
-- [DESIGN_REPL.md](DESIGN_REPL.md) — Architecture des backticks et REPL adapters
-- [DESIGN_EFFECTS.md](DESIGN_EFFECTS.md) — Effets et signal processing
-- [DESIGN_SOUNDS.md](DESIGN_SOUNDS.md) — Système sounds (spec < CT < CV cascading)
-- [DESIGN_HOMOMORPHISM_LABELING.md](DESIGN_HOMOMORPHISM_LABELING.md) — Homomorphismes par étiquetage (REPL)
-- [DESIGN_TEMPORAL_DEFORMATION.md](DESIGN_TEMPORAL_DEFORMATION.md) — Déformation temporelle en temps réel (constraint solver)
-- [DESIGN_INTERFACES_BP3.md](DESIGN_INTERFACES_BP3.md) — Interface WASM BP3 (in/out)
+- [../spec/LANGUAGE.md](../spec/LANGUAGE.md) — Spécification du langage (vision, syntaxe, types, symboles, opérateurs, compilation BP3)
+- [PITCH.md](PITCH.md) — Architecture 6 couches pitch (acteur, alphabet, octaves, tempérament, tuning, resolver) + annexe transposition
+- [CV.md](CV.md) — CV / signal objects
+- [REPL.md](REPL.md) — Architecture des backticks et REPL adapters
+- [EFFECTS.md](EFFECTS.md) — Effets et signal processing
+- [SOUNDS.md](SOUNDS.md) — Système sounds (spec < CT < CV cascading)
+- [HOMOMORPHISMS.md](HOMOMORPHISMS.md) — Homomorphismes par étiquetage (REPL)
+- [TEMPORAL_DEFORMATION.md](TEMPORAL_DEFORMATION.md) — Déformation temporelle en temps réel (constraint solver)
+- [INTERFACES_BP3.md](INTERFACES_BP3.md) — Interface WASM BP3 (in/out)

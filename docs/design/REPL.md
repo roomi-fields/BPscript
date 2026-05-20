@@ -1,7 +1,7 @@
 # REPL Adapters — Architecture des backticks
 
-> Voir aussi : [DESIGN_LANGUAGE.md](DESIGN_LANGUAGE.md) pour la syntaxe des backticks dans le langage,
-> [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) pour le pipeline transports vs REPL adapters.
+> Voir aussi : [DESIGN_LANGUAGE.md](../spec/LANGUAGE.md) pour la syntaxe des backticks dans le langage,
+> [DESIGN_ARCHITECTURE.md](ARCHITECTURE.md) pour le pipeline transports vs REPL adapters.
 
 ## Vue d'ensemble
 

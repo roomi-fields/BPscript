@@ -1,7 +1,31 @@
-# BPscript — Meta-sequencer for Temporal Structure Composition
+# BPscript — A Modern Language for the Bol Processor
 
-3 reserved words, 24 symbols, 7 operators. Compiles to BP3 grammar format and runs via WebAssembly.
-Orchestrates SuperCollider, TidalCycles, Python, MIDI, DMX in a single file.
+**BPscript** is a research-driven composition language built on the **Bol Processor (BP3)** —
+the formal music grammar system Bernard Bel and Jim Kippen have developed since 1981, originally
+to model North Indian tabla improvisation.
+
+BP3 is, to our knowledge, the only musical system that operates at the **mildly context-sensitive**
+level (the same class as Tree-Adjoining and Combinatory Categorial Grammars in linguistics) — more
+expressive than a context-free grammar, yet still tractable. It is also **bidirectional**: it can
+*generate* music and *recognize* whether a sequence belongs to a musical language. Forty years of
+work gave it weighted stochastic grammars, native polymetry, conditional flags, master/slave
+patterns, seven derivation modes, and dozens of performance-control functions. TidalCycles cites it
+as an influence.
+
+That power has always been locked behind a dense, archaic syntax and a 1990s C codebase.
+**BPscript is the research effort to keep the formalism and modernize everything around it:**
+
+- **A readable, typed language** — 3 reserved words, 24 symbols, 7 operators. Typed temporal
+  primitives (`gate`, `trigger`, `cv`), scenes, actors, declarative I/O mappings.
+- **Multi-runtime orchestration** — drives SuperCollider, TidalCycles, Python, MIDI, DMX from a
+  single file via backticks.
+- **Compiles to BP3** — the transpiler emits native BP3 grammar, so 40 years of derivation
+  expertise are reused, not reinvented. The engine runs in the browser via **WebAssembly**.
+- **An evolution path** — `BPx`, a next-generation reactive derivation engine designed to succeed
+  BP3's batch C core (see `docs/design/BPX_ENGINE_SPEC.md`).
+
+> Try it online: **[roomi-fields.com/bpscript](https://roomi-fields.com/bpscript/)** — write BPscript,
+> compile to a BP3 grammar, and derive it in the browser.
 
 ## Setup
 
@@ -9,32 +33,27 @@ Orchestrates SuperCollider, TidalCycles, Python, MIDI, DMX in a single file.
 git clone --recursive https://github.com/roomi-fields/BPscript.git
 cd BPscript
 
-# L'interface web fonctionne directement (dist/ contient les binaires WASM)
-python3 -m http.server 8080
-# Open http://localhost:8080/web/index.html
-
-# Pour recompiler le moteur (requires Emscripten + GCC + mingw)
+# Recompile the engine (requires Emscripten + GCC + mingw)
 cd bp3-engine
 source /path/to/emsdk/emsdk_env.sh
-./build.sh all --archive --version=v3.3.19-wasm.1
+./build.sh all --archive --version=v3.4.4-wasm.1
 cd ..
 
-# Lancer les tests de non-régression
+# Run the regression tests
 node test/test_all.cjs --bin last
 ```
 
 ## Structure
 
 ```
-bp3-engine/          BP3 WASM engine (submodule roomi-fields/bp3-engine, branche wasm)
+bp3-engine/          BP3 WASM engine (submodule roomi-fields/bp3-engine, branch wasm)
 src/
   transpiler/        Tokenizer, parser, encoder (BPscript → BP3 grammar)
-  dispatcher/        Clock, routing, Web Audio synthesis, CV buses
-lib/                 JSON libraries (controls, alphabet, tuning, filter, routing)
-web/                 BPscript web interface
+  bpx/               BPx engine stub (next-generation derivation engine)
+lib/                 JSON libraries (controls, alphabets, tunings, filter, routing)
 dist/                BP3 WASM binaries (bp3.js, bp3.wasm, bp3.data)
-test/                Test infrastructure S0→S5 (36 grammaires de référence)
-docs/                Design documents
+test/                Test infrastructure S0→S5 (36 reference grammars)
+docs/                Specification, design, and reference documentation
 scenes/              Example .bps files
 ```
 
@@ -45,45 +64,52 @@ Source .bps → Tokenizer → Parser (AST) → Encoder → BP3 grammar + alphabe
                                                           ↓
                                               BP3 WASM engine (produce)
                                                           ↓
-                                              Timed tokens → Dispatcher → Audio
+                                                    Timed tokens
 ```
+
+The timed tokens are the language's output. A downstream runtime (scheduler, audio,
+MIDI/OSC) consumes them — out of scope for this repository.
 
 ## Test
 
-Prérequis : avoir compilé le moteur avec `./build.sh all --archive` (voir Setup).
+Prerequisite: build the engine with `./build.sh all --archive` (see Setup).
 
-Les tests comparent la production du moteur BP3 à travers 6 stages :
+The tests compare BP3 engine production across 6 stages:
 
 | Stage | Source | Description |
 |-------|--------|-------------|
-| S0 | bp.exe (Windows) | Référence PHP de Bernard |
-| S1 | bp3 (Linux natif) | Même moteur, autre plateforme |
-| S2 | bp3.wasm | MIDI events depuis le WASM |
-| S3 | bp3.wasm | Timed tokens depuis p_Instance |
-| S4 | bp3.wasm | Comme S3 avec silent sound objects |
-| S5 | transpiler + bp3.wasm | Pipeline BPscript complet |
+| S0 | bp.exe (Windows) | Bernard's PHP reference |
+| S1 | bp3 (native Linux) | Same engine, different platform |
+| S2 | bp3.wasm | MIDI events from WASM |
+| S3 | bp3.wasm | Timed tokens from p_Instance |
+| S4 | bp3.wasm | Like S3 with silent sound objects |
+| S5 | transpiler + bp3.wasm | Full BPscript pipeline |
 
 ```bash
-# Lancer tous les tests (nécessite --bin)
+# Run all tests (requires --bin)
 node test/test_all.cjs --bin last
 
-# Tester une grammaire spécifique
+# Test a specific grammar
 node test/s1_native.cjs drum --bin last
 node test/s4_wasm_silent.cjs drum --bin last
 
-# Le tag "last" lit builds/LAST dans bp3-engine
+# The "last" tag reads builds/LAST in bp3-engine
 ```
 
-Les 36 grammaires de référence sont dans `test/grammars/grammars.json`. Les snapshots de chaque stage sont dans `test/grammars/{name}/snapshots/`.
+The 36 reference grammars live in `test/grammars/grammars.json`. Each stage's snapshots
+are in `test/grammars/{name}/snapshots/`.
 
-Résultats détaillés : `test/RESULTATS.md`
-Points ouverts Bernard : `test/FEEDBACK_BERNARD.md`
+Detailed results: `test/RESULTATS.md`
+Open points with Bernard: `test/FEEDBACK_BERNARD.md`
 
 ## Documentation
 
-- `docs/BPSCRIPT_VISION.md` — Vue d'ensemble
-- `docs/DESIGN_LANGUAGE.md` — Spécification du langage
-- `docs/BPSCRIPT_EBNF.md` — Grammaire formelle
-- `docs/DESIGN_GRAMMAR.md` — Mapping BPscript → BP3
-- `docs/DESIGN_ARCHITECTURE.md` — Architecture technique
-- `BACKLOG.md` — Points ouverts et backlog
+Start with `docs/INDEX.md` (full index). Highlights:
+
+- `docs/spec/LANGUAGE.md` — complete language specification
+- `docs/spec/EBNF.md` — formal grammar (ISO 14977)
+- `docs/spec/AST.md` — AST node reference
+- `docs/design/ARCHITECTURE.md` — compilation pipeline
+- `docs/design/BPX_ENGINE_SPEC.md` — next-generation engine spec
+- `docs/reference/BP3_FILE_FORMATS.md` — BP3 auxiliary file formats
+- `BACKLOG.md` — open points and backlog

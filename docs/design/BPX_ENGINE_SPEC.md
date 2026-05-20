@@ -1,6 +1,6 @@
 # BPx Engine Specification
 
-> **BPx** = moteur de derivation reactif, coeur du framework **Kanopi** (by roomi-fields).
+> **BPx** = moteur de derivation reactif de nouvelle generation, successeur de BP3 pour BPscript.
 > Le langage reste **BPscript**. BPx remplace BP3 (C, singleton, batch) par une
 > architecture multi-instance, streaming, avec AST direct et arbre de derivation structure.
 >
@@ -1131,7 +1131,7 @@ live coding.
 
 ### Le DerivationTree est la source de verite unique
 
-Tout dans Kanopi converge vers le DerivationTree :
+Tout converge vers le DerivationTree :
 - Le moteur BPx le **produit** (derivation)
 - La timeline le **projette** (rendu visuel)
 - Le code texte le **projette** (serialisation)
@@ -1212,5 +1212,4 @@ Le structurel est discret pour le son, continu pour l'affichage.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Pipeline actuel (BP3) et futur (BP4)
 - [SCENES.md](SCENES.md) — Hierarchie de scenes, scoping, triggers
 - [TEMPORAL_DEFORMATION.md](TEMPORAL_DEFORMATION.md) — Constraint solver (consomme le DerivationTree)
-- [SOUNDS.md](SOUNDS.md) — Controls par sous-groupes (dispatcher consomme les RuntimeQualifiers)
-- [../plan/UI_WEB.md](../plan/UI_WEB.md) — Features UI bloquees par BP3 que BP4 debloque
+- [SOUNDS.md](SOUNDS.md) — Controls par sous-groupes (le runtime consomme les RuntimeQualifiers)

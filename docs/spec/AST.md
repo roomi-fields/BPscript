@@ -218,7 +218,7 @@ DurationDirective {
 Exemple : `@duration:16b` → `{ name:"duration", value:{amount:16, unit:"b"} }`
 Exemple : `@duration:4.5s` → `{ name:"duration", value:{amount:4.5, unit:"s"} }`
 
-Le dispatcher rescale les timestamps proportionnellement pour que la séquence tienne dans la durée déclarée.
+Le runtime aval rescale les timestamps proportionnellement pour que la séquence tienne dans la durée déclarée.
 
 ### `MacroDirective`
 
@@ -450,11 +450,11 @@ seul token IDENT). Le parser détecte le pattern `IDENT-trailing-dash + INT` dan
 et les flags, et décompose en `flag` + `operator` + `value`. `[times-1]` produit donc bien
 `{ flag:"times", operator:"-", value:1 }` et non `{ flag:"times-", ... }`.
 
-### `EngineQualifier` — instructions moteur BP3
+### `Qualifier` — instructions moteur BP3
 
 ```
-EngineQualifier {
-  type: "EngineQualifier"
+Qualifier {
+  type: "Qualifier"
   pairs: QualPair[]
   tempoOp: TempoOp | null          // [/2], [*3] etc. — mutuellement exclusif avec pairs
 }
@@ -496,16 +496,15 @@ sans parenthèses (`_retro`). Quand une valeur est fournie, avec parenthèses (`
 ```
 RuntimeQualifier {
   type: "RuntimeQualifier"
-  pairs: RuntimePair[]
-  scope: "symbol" | "rule" | "group"  // déduit par le parser selon la position
-}
-
-RuntimePair {
-  type: "RuntimePair"
-  key: string                      // RUNTIME_KEY : vel, wave, filter, filterQ, pan...
-  value: string | number | Backtick // 120, "sawtooth", `rrand(40,127)`
+  pairs: { key: string, value: string | number | boolean }[]
+  // key : RUNTIME_KEY (vel, wave, filter, filterQ, pan...)
+  // value : 120, "sawtooth", "rrand(40,127)" ; true pour une clé nue (velcont, pitchcont)
 }
 ```
+
+Les pairs runtime sont des objets nus `{ key, value }` (pas de champ `type`, contrairement aux
+`QualPair` du `Qualifier` moteur). La portée (symbole / règle / groupe / instantané) n'est **pas**
+stockée sur le nœud : elle est déduite de la position dans l'AST par l'encodeur.
 
 `()` est **toujours suffixe** (jamais en préfixe). La portée est déduite de la position :
 - **symbole** : `Sa(vel:120)` → `Sa _script(CT 0)` — attaché au `Symbol` node
@@ -513,7 +512,8 @@ RuntimePair {
 - **instantané** : `{!(chan:1) C8 -, !(chan:2) C7 C7}` → `{_script(CT 2) C8 -, _script(CT 3) C7 C7}` — via `InstantControl` dans le flux
 - **groupe** : `{A B}(filter:lp)` → `_script(CT 4_start) {A B} _script(CT 4_end)` — dans `Polymetric.runtimeQualifier`
 
-Le transpileur maintient une table de mapping `CT n → { scope, params }` passée au dispatcher.
+Le transpileur maintient une table de mapping `CT n → { scope, params }` (la control table)
+consommée par le runtime aval.
 
 ---
 
@@ -528,7 +528,7 @@ LhsElement = Symbol | Variable | Wildcard | Context | RawBrace
 ## Éléments RHS
 
 ```
-RhsElement = Symbol | SymbolCall | Rest | Prolongation | UndeterminedRest
+RhsElement = Symbol | SymbolCall | SymbolWithTriggerIn | Control | Rest | Prolongation | UndeterminedRest
            | Period | NumericDuration | Polymetric
            | SimultaneousGroup | OutTimeObject | InstantControl | TriggerIn
            | Variable | Wildcard
@@ -545,8 +545,8 @@ et/ou runtime `()` (suffixe uniquement). La position est déterminée par l'**es
 ```
 RhsElement {
   ...                                            // propriétés spécifiques au type
-  prefixQualifiers: EngineQualifier[] | null     // [] collé à droite : [/2]A, [retro]A
-  suffixQualifiers: (EngineQualifier | RuntimeQualifier)[] | null  // [] ou () collé à gauche : A[weight:50], A(vel:80)
+  prefixQualifiers: Qualifier[] | null     // [] collé à droite : [/2]A, [retro]A
+  suffixQualifiers: (Qualifier | RuntimeQualifier)[] | null  // [] ou () collé à gauche : A[weight:50], A(vel:80)
 }
 ```
 
@@ -578,6 +578,32 @@ pour les non-terminaux (qui n'ont pas d'acteur).
 SymbolCall { type: "SymbolCall", name: string, actor: string | null, args: Arg[], line: number }
 Arg { type: "Arg", key: string | null, value: Literal | BacktickInline }
 ```
+
+### `Control`
+
+```
+Control {
+  type: "Control"
+  name: string        // nom du contrôle : vel, tempo, goto, striated, smooth, destru, stop...
+  args: string[]      // fragments d'arguments bruts : ["120"], ["2","1"] ; [] pour un contrôle sans argument
+}
+```
+
+Forme parsée d'un contrôle BP3 écrit directement dans le flux : `vel(120)` → `{ name:"vel", args:["120"] }`,
+`goto(2,1)` → `{ name:"goto", args:["2","1"] }`, `striated` → `{ name:"striated", args:[] }`.
+Distinct de l'`InstantControl` (`!(...)`) et du `RuntimeQualifier` (`(...)` suffixe d'un symbole).
+
+### `SymbolWithTriggerIn`
+
+```
+SymbolWithTriggerIn {
+  type: "SymbolWithTriggerIn"
+  symbol: Symbol           // le symbole porteur
+  triggers: TriggerIn[]    // un ou plusieurs trigger-in attachés
+}
+```
+
+Émis pour `Sa<!sync1` : un symbole qui attend un trigger entrant (`<!`) avant de se déclencher.
 
 ### `Rest`
 
@@ -677,7 +703,7 @@ sans occuper de durée dans la séquence.
 ```
 InstantControl {
   type: "InstantControl"
-  qualifier: RuntimeQualifier | EngineQualifier   // le contrôle à appliquer
+  qualifier: RuntimeQualifier | Qualifier   // le contrôle à appliquer
 }
 ```
 
@@ -824,8 +850,8 @@ La phase **Actor resolver** (`src/transpiler/actorResolver.js`) entre le parser 
 5. Walk récursif du RHS : résolution implicite (1 acteur → auto) ou erreur (ambiguïté)
 
 L'encoder émet en parallèle :
-- `terminalActorMap` (terminal BP3 → acteur) — pour le routing dispatcher
-- `mapTable` (I/O mappings CC/OSC ↔ flags/triggers) — pour le bus I/O dispatcher
+- `terminalActorMap` (terminal BP3 → acteur) — pour le routing runtime
+- `mapTable` (I/O mappings CC/OSC ↔ flags/triggers) — pour le bus I/O runtime
 - `sceneTable` (nom → fichier .bps) — pour l'orchestration multi-scènes
 - `exposeTable` (flags exposés au parent) — pour le scoping inter-scènes
 
