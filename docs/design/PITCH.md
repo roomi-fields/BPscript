@@ -38,8 +38,8 @@ L'alphabet seul ne suffit pas comme unité de résolution — il manque le **con
 L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
 
 ```
-@actor sitar1  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio
-@actor sitar2  alphabet:sargam  tuning:sargam_12TET     octaves:saptak  transport:midi(ch:3)
+@actor sitar1  alphabet:sargam  scale:sargam_22shruti  octaves:saptak  transport:webaudio
+@actor sitar2  alphabet:sargam  scale:sargam_12TET     octaves:saptak  transport:midi(ch:3)
 @actor tabla   alphabet:tabla_bols  transport:midi(ch:10)
 @actor lights  alphabet:dmx_fixtures  transport:dmx
 ```
@@ -58,7 +58,7 @@ Clés disponibles :
 | Clé | Obligatoire | Valeur | Exemple |
 |-----|-------------|--------|---------|
 | `alphabet` | oui | référence vers `alphabets.json` | `alphabet:sargam` |
-| `tuning` | non | référence vers `tunings.json` | `tuning:sargam_22shruti` |
+| `scale` | non | référence vers `tunings.json` | `scale:sargam_22shruti` |
 | `octaves` | non | référence vers `octaves.json` | `octaves:saptak` |
 | `transport` | oui | clé de transport (+params optionnels) | `transport:midi(ch:3)` |
 | `eval` | non | clé d'eval pour les backticks | `eval:sclang` |
@@ -88,7 +88,7 @@ Un `@actor` avec un alphabet importe tous les symboles de cet alphabet,
 liés à cet acteur :
 
 ```
-@actor sitar1  alphabet:sargam  tuning:sargam_22shruti  transport:webaudio
+@actor sitar1  alphabet:sargam  scale:sargam_22shruti  transport:webaudio
 
 // Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
 // automatiquement disponibles via sitar1.sa, sitar1.re, etc.
@@ -176,7 +176,7 @@ Le tokenizer reconnaît `@actor` comme une directive. Le reste de la ligne
 est parsé comme des paires `clé:valeur` séparées par des espaces.
 
 ```
-@actor sitar  alphabet:sargam  tuning:sargam_22shruti  transport:webaudio
+@actor sitar  alphabet:sargam  scale:sargam_22shruti  transport:webaudio
 │      │      │                │                        │
 DIRECTIVE      IDENT            PAIR                     PAIR
        NAME
@@ -261,8 +261,8 @@ L'ancienne syntaxe :
 
 Devient :
 ```
-@actor melodie  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:osc(port:57110)  eval:sclang
-@actor keys     alphabet:western  tuning:western_12TET  octaves:western  transport:midi(ch:1)
+@actor melodie  alphabet:sargam  scale:sargam_22shruti  octaves:saptak  transport:osc(port:57110)  eval:sclang
+@actor keys     alphabet:western  scale:western_12TET  octaves:western  transport:midi(ch:1)
 ```
 
 Plus verbeux mais plus explicite — chaque dimension est nommée.
@@ -272,7 +272,7 @@ Plus verbeux mais plus explicite — chaque dimension est nommée.
 Si un seul acteur suffit et qu'on veut rester concis :
 
 ```
-@actor default  alphabet:western  tuning:western_12TET  transport:webaudio
+@actor default  alphabet:western  scale:western_12TET  transport:webaudio
 ```
 
 Ou une syntaxe courte possible (à discuter) :
@@ -299,7 +299,7 @@ Les backticks orphelins gardent le tag obligatoire :
 
 ```
 // Acteurs
-@actor sitar   alphabet:sargam       tuning:sargam_22shruti  octaves:saptak  transport:osc(port:57110) eval:sclang
+@actor sitar   alphabet:sargam       scale:sargam_22shruti  octaves:saptak  transport:osc(port:57110) eval:sclang
 @actor tabla   alphabet:tabla_bols   transport:midi(ch:10)
 @actor lights  alphabet:dmx_cues     transport:dmx
 
