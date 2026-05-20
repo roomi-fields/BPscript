@@ -539,28 +539,28 @@ RhsElement = Symbol | SymbolCall | SymbolWithTriggerIn | Control | Rest | Prolon
 
 ### Qualificateurs par élément
 
-Tout `RhsElement` peut porter des qualificateurs moteur `[]` (préfixe ou suffixe)
-et/ou runtime `()` (suffixe uniquement). La position est déterminée par l'**espacement** :
+Tout `RhsElement` peut porter des qualificateurs moteur `[]` et/ou runtime `()`,
+toujours en **suffixe** : collés à droite de l'élément (sans espace avant).
 
 ```
 RhsElement {
   ...                                            // propriétés spécifiques au type
-  prefixQualifiers: Qualifier[] | null     // [] collé à droite : [/2]A, [retro]A
-  suffixQualifiers: (Qualifier | RuntimeQualifier)[] | null  // [] ou () collé à gauche : A[weight:50], A(vel:80)
+  suffixQualifiers: (Qualifier | RuntimeQualifier)[] | null  // [] ou () collés à droite : A[weight:50], A(vel:80)
 }
 ```
 
-La distinction préfixe/suffixe est déterminée par le **tokenizer** via le champ
-`spaceBefore` sur chaque token. Le parser utilise cette information pour router
-le qualificateur dans `prefixQualifiers` ou `suffixQualifiers`.
+Le tokenizer marque chaque token avec `spaceBefore`. Un `[` ou `(` **sans** espace
+avant s'attache comme suffixe à l'élément précédent. Un `[` précédé d'un espace, en
+fin de règle, est un qualificateur de règle ; un `[` en tête de règle est une garde
+de flag (voir `Guard`). Le parser ne produit pas de qualificateur préfixe.
 
 Exemples :
-- `[/2]A` (préfixe, collé à A) : `prefixQualifiers: [{ tempoOp: {"/", 2} }]`
-- `A[weight:50]` (suffixe, collé à A) : `suffixQualifiers: [{ weight: 50 }]`
-- `A(vel:80)` (runtime suffixe) : `suffixQualifiers: [{ vel: 80 }]`
-- `A [X] B` → **erreur** : qualifier flottant, utiliser `A ![X] B`
+- `A[weight:50]` (collé à A) : `suffixQualifiers: [Qualifier{ pairs:[{key:"weight", value:50}] }]`
+- `A[/2]` (opérateur de durée, collé à A) : `suffixQualifiers: [Qualifier{ tempoOp:{operator:"/", value:2} }]`
+- `A(vel:80)` (runtime, collé à A) : `suffixQualifiers: [RuntimeQualifier{ pairs:[{key:"vel", value:80}] }]`
+- `A [X] B` → **erreur** : qualificateur flottant, utiliser `A ![X] B`
 
-`[]` supporte préfixe et suffixe. `()` est toujours suffixe.
+Sur le RHS, `[]` comme `()` sont toujours en suffixe.
 
 ### `Symbol`
 
