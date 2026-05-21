@@ -421,7 +421,7 @@ Rule {
   lhs: LhsElement[]
   arrow: "->" | "<-" | "<>"
   rhs: RhsElement[]
-  flags: FlagExpr[]                // [phase=2, Atrans] dans le RHS
+  flags: FlagExpr[]                // mutations collectées, émises en fin de règle : /phase=2/ /Atrans/
   qualifiers: Qualifier[]          // [mode:random, scan:left] en fin de règle (engine [])
   runtimeQualifier: RuntimeQualifier | null  // suffixe () sur la règle : S -> C4 D4 (vel:80)
   line: number

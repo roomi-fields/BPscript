@@ -840,11 +840,22 @@ Operateurs de test+mutation : `+` (incremente), `-` (decremente)
 
 La garde est declarative : la regle **existe** quand la condition est vraie.
 
-### `[]` -- mutation d'etat dans le RHS
+### `[]` -- mutation d'etat en fin de regle
 
 ```
-[phase==1] S -> Sa Re Ga [phase=2] Pa     // joue Ga, puis passe phase a 2
-S -> A B [count+1] C                      // incremente count apres B
+S -> A B [count-1]                        // mutation en fin de regle : count-1
+S -> A B [phase=1] [count=2]              // plusieurs mutations en fin de regle
+```
+
+Une mutation s'ecrit en suffixe, **en fin de regle**. Elle est **hors-temps** : appliquee
+au declenchement de la regle (pendant la derivation), pas a un point de la sequence
+jouee -- sa position ne porte aucun sens temporel. En BP3, elle devient un marqueur
+`/.../` place en fin de regle :
+
+```
+// BPscript                  -> BP3
+S -> A B [count-1]           -> S --> A B /count-1/
+S -> A B [phase=1] [count=2] -> S --> A B /phase=1/ /count=2/
 ```
 
 Operateurs de mutation : `=` (assigner), `+` (incrementer), `-` (decrementer)
