@@ -65,7 +65,7 @@ Clés disponibles :
 
 Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
 Si `octaves` est omis → convention par défaut du tuning ou `western` si pas de tuning.
-Si `eval` est omis → même valeur que `transport` (cas courant).
+Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne sont pas évalués.
 
 ### Utilisation dans les règles
 
@@ -528,17 +528,34 @@ C'est la couche qui fait le pont entre les noms (culturels) et les positions (ma
 
 - `temperament` : référence vers `temperaments.json`
 - `degrees` : quels steps de la grille du tempérament sont utilisés (dans l'ordre de l'alphabet)
-- `alterations` : modifications nommées en **ratios** (mêmes 3 formats)
+- `alterations` : modifications nommées, exprimées de **trois façons** (voir ci-dessous)
 - `baseHz` / `baseNote` / `baseRegister` : la note de référence
 
-### Altérations et enharmonie
+### Altérations — trois façons de chiffrer un décalage
 
-`C## = D` si et seulement si `degrees[C] + 2 == degrees[D]` dans le tempérament.
-- En 12-TET : `degrees[C]=0`, `#=+1 step`, `C##=2`, `degrees[D]=2` → **oui**
-- En just intonation : `C## = 1 × (25/24)² = 625/576`, `D = 9/8 = 648/576` → **non**
+Une altération (`#`, `b`, `komal`, `half_b`…) est un **décalage** appliqué au degré. Elle
+peut s'exprimer de trois façons, orthogonales et complètes :
 
-Les altérations sont des **ratios**, pas des offsets de steps. Ça permet la précision
-dans les systèmes non égaux.
+| Façon | Exemple | Nature | Quand |
+|---|---|---|---|
+| **ratio** | `"#": "25/24"` | rapport de fréquence (fraction ou décimal) | intonation juste, tout intervalle exact non tempéré |
+| **cents** | `"#": "100c"` | mesure logarithmique (1200 c = octave) | tempéraments égaux, microtonal mesuré (¼ ton = 50 c) |
+| **degrés** | `"#": "+1"` | N pas de la grille du tempérament (`ton = 2 degrés`) | grille régulière (chromatique / égale) |
+
+Un décalage est donc soit un **rapport exact** (ratio), soit une **mesure logarithmique**
+(cents), soit un **déplacement sur la grille** (degrés). Ces trois couvrent tous les cas :
+l'octave se ramène aux cents (1200 c), le ton et l'intervalle se ramènent aux degrés ou à un
+ratio. Le **ratio reste indispensable** pour les altérations justes non tempérées — `25/24`
+n'est ni un nombre entier de degrés ni une fraction propre d'octave dans une grille inégale.
+
+Le resolver normalise les trois en un ratio de fréquence au chargement (cents → `2^(c/1200)`,
+degrés → produit des ratios de la grille), comme pour les ratios du tempérament.
+
+### Enharmonie
+
+`C## = D` si et seulement si `degrees[C] + 2 == degrees[D]` dans le tempérament :
+- En 12-TET : `degrees[C]=0`, `#` = `+1` degré, `C##` = degré 2, `degrees[D]=2` → **oui** (enharmonie)
+- En intonation juste : `C## = 1 × (25/24)² = 625/576`, `D = 9/8 = 648/576` → **non** (pas d'enharmonie)
 
 ### Gammes composées (tétracordes / jins)
 
