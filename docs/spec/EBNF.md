@@ -84,7 +84,7 @@ actor_value = IDENT                                 (* alphabet:sargam *)
    scale      — gamme/degrés → pitch via tempérament (si pitched)
    sounds     — définitions per-terminal: timbre, percussions, samples (si non-pitched ou timbre spécifique)
    transport  — destination de rendu (requis)
-   eval       — runtime pour backticks (si différent de transport)
+   eval       — runtime pour backticks (si omis : aucun REPL, null)
 *)
 
 
@@ -345,11 +345,10 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 ## Couche 4 — Éléments RHS
 
 ```ebnf
-rhs_element = [ prefix_qualifier ] , element_core , [ suffix_qualifier ] , [ "@" , IDENT ] ;
+rhs_element = element_core , [ suffix_qualifier ] , [ "@" , IDENT ] ;
 (* Le @ suffixe attache un label à l'élément : C4@kick, {A B}@groove. Sans espace avant @. *)
-
-prefix_qualifier = engine_qualifier ;
-(* [] collé à droite de l'élément : [/2]A — déterminé par absence d'espace après ] *)
+(* Pas de qualificateur préfixe sur un élément : utiliser ![X] / !(X) pour positionner
+   une instruction avant un élément ou dans le flux. *)
 
 suffix_qualifier = engine_qualifier | runtime_qualifier ;
 (* [] ou () collé à gauche de l'élément : A[weight:50], A(vel:80) — déterminé par absence d'espace avant [ ou ( *)
@@ -442,19 +441,27 @@ Compilé en `_script(CT n)` pour BP3 — le dispatcher interprète au playback.
 
 #### Position — règles d'espacement
 
-L'**espace** (ou son absence) détermine si un qualificateur est un **préfixe** ou
-un **suffixe**. C'est la règle fondamentale de positionnement en BPscript :
+`[]` et `()` sont **toujours suffixes** sur un élément du RHS : ils se collent à
+gauche, à l'élément qui précède. Il n'y a **pas** de forme préfixe `[X]A` sur un
+élément (le parser la rejette). Pour placer une instruction *avant* un élément ou
+entre deux éléments, utiliser la forme instantanée `![X]` / `!(X)` (voir plus bas).
 
 | Syntaxe | Espacement | Interprétation |
 |---------|------------|----------------|
-| `A[X]` | collé à gauche | suffixe de A |
-| `[X]A` | collé à droite | préfixe de A |
-| `A [X]B` | espace à gauche, collé à droite | préfixe de B |
-| `A[X] B` | collé à gauche, espace à droite | suffixe de A |
+| `A[X]` | collé à gauche | suffixe de A ✅ |
+| `A[X] B` | collé à gauche, espace à droite | suffixe de A ✅ |
+| `[X]A` | collé à droite | **non supporté** — utiliser `![X] A` |
+| `A [X]B` | espace à gauche, collé à droite | **non supporté** — utiliser `A ![X] B` |
 | `A [X] B` | espace des deux côtés | **erreur** — utiliser `A ![X] B` |
 | `A[X]B` | collé des deux côtés | **erreur** — ambigu |
 
-Mêmes règles pour `()` — mais `()` est **toujours suffixe** (collé à gauche) :
+> Note design : la distinction préfixe/suffixe (façon `++i` / `i++`) avait été
+> envisagée, mais elle n'a de sens que pour les mutations de flag, et ce besoin
+> est déjà couvert plus explicitement par `![X]` (positionnement dans le flux).
+> BP3 n'a de toute façon pas de modèle où l'ordre préfixe/suffixe d'un élément
+> serait observable. `[]` reste donc suffixe seul.
+
+Mêmes règles pour `()` :
 
 | Syntaxe | Interprétation |
 |---------|----------------|
@@ -715,7 +722,8 @@ plusieurs espaces/tabulations précèdent le token.
 
 Règles d'attachement :
 - Token `[` ou `(` **sans espace avant** → collé à l'élément précédent (suffixe)
-- Token suivant `]` ou `)` **sans espace avant** → collé au qualifier (préfixe)
+- Un élément collé après `]` (forme `[X]A`) n'est **pas** un préfixe : non supporté
+  sur un élément du RHS (utiliser `![X] A`)
 - `[` et `]` avec espace des deux côtés → qualifier flottant (erreur, utiliser `![]`)
 - `[` et `]` sans espace des deux côtés → ambigu (erreur)
 
