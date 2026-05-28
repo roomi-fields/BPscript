@@ -645,16 +645,15 @@ NumericDuration { type: "NumericDuration", numerator: number, denominator: numbe
 ```
 Polymetric {
   type: "Polymetric"
-  voices: Voice[]
+  voices: RhsElement[][]                     // tableau de voix, chaque voix = séquence plate
   qualifiers: Qualifier[]                    // speed et scale uniquement (engine [])
   runtimeQualifier: RuntimeQualifier | null  // suffixe () sur le groupe : {A B}(vel:100)
   label: string | null                       // étiquette UI : couplet1:{A B, C D}
 }
-
-Voice {
-  elements: RhsElement[]
-}
 ```
+
+Une voix est une séquence plate d'éléments RHS (pas de nœud wrapper), conforme à
+EBNF.md `voice = rhs_element+`.
 
 Les contrôles à l'intérieur d'une voix se positionnent avec `!()` et `![]` comme
 éléments instantanés dans le flux. Pas de portée voix implicite — la position dans
