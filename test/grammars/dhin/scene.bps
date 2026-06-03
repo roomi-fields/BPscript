@@ -11,7 +11,7 @@
 
 @core
 @controls
-@sounds:tabla_perc
+@sound.tabla_perc
 
 // --- Sous-grammaire 1 @mode:random — structure ---
 

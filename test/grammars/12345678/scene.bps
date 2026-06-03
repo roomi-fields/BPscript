@@ -7,7 +7,7 @@
 
 @core
 @controls
-@sounds:tabla_perc
+@sound.tabla_perc
 @mm:88
 @striated
 
