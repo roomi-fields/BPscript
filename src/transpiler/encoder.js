@@ -39,7 +39,7 @@ let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _sta
 const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {} };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {}, ccAliases: {} };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -461,6 +461,14 @@ function encode(ast) {
   // We surface it as the `routingTable` sidecar, mirroring exposeTable/mapTable.
   output.routingTable = buildRoutingTable(libCtx, ast.directives);
 
+  // Z5 (#109) — Expose named MIDI CC aliases so the downstream orchestrator can
+  // resolve inbound CC by name at runtime (e.g. `cc:breath`). `@cc breath:2`
+  // (parser.js:357-370 → dir.ccMappings) is already resolved at compile time
+  // into mapTable (resolveMapEndpoint, this file: kind 'alias' → kind 'cc'),
+  // but BPx never receives the name→number table needed for live inbound CC.
+  // We surface it as the `ccAliases` sidecar, mirroring routingTable/labelIndex.
+  output.ccAliases = buildCcAliases(libCtx);
+
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);
 
@@ -524,6 +532,36 @@ function buildRoutingTable(libCtx, directives) {
     profiles,
     defaults,
   };
+}
+
+/**
+ * Z5 (#109) — Build the ccAliases sidecar: named MIDI CC → controller number.
+ *
+ * `@cc breath:2, expression:11` is parsed (parser.js:357-370) into
+ * `dir.ccMappings` and registered by libs.js (libs.js:157-166) as
+ * `ctx.controls[name] = { ..., ccNumber, transportGroup: 'midi' }`. The encoder
+ * already resolves a `@map breath -> [x]` endpoint through this table at compile
+ * time (resolveMapEndpoint, kind 'alias' → kind 'cc'), but the resulting BP3
+ * artefacts carry only the numeric CC. For live inbound control by name
+ * (e.g. `cc:breath`), the orchestrator needs the raw name → number table.
+ *
+ * Source of truth = libCtx.controls (the same table resolveMapEndpoint reads).
+ * We keep only entries that carry a concrete `ccNumber`, which is exactly the
+ * set produced from `@cc` directives — the built-in generic `cc` control has no
+ * `ccNumber`, so it is excluded.
+ *
+ * Shape: { "<name>": <number>, ... }. Empty object when no `@cc` was used.
+ * Additive: does not touch mapTable/controlTable/routingTable.
+ */
+function buildCcAliases(libCtx) {
+  const aliases = {};
+  const controls = libCtx?.controls || {};
+  for (const [name, def] of Object.entries(controls)) {
+    if (def && def.ccNumber != null) {
+      aliases[name] = def.ccNumber;
+    }
+  }
+  return aliases;
 }
 
 /**
