@@ -348,9 +348,20 @@ function encode(ast) {
       const meter = getQualValue(rule.qualifiers, 'meter');
       if (meter) rhsPrefixParts.push(meter);
 
-      // Tempo operator on rule [/5]
+      // Tempo / scale operator on rule, e.g. [/2] or [*1/2].
+      //
+      // Both surface in the AST as a `tempoOp` { operator, value }. They map
+      // to BP3's *inline* RHS operators, NOT to the `_tempo(...)` enter/exit
+      // bracket pair used for element-scoped [tempo:N] (see encodeRhsElement,
+      // line ~1112). Per Encode.c:
+      //   '*' → scale-up marker (Encode.c:102-117): `*1/2`, `*3`
+      //   '/' followed by a digit → tempo/speed marker (Encode.c:418-425): `/2`
+      // The native reference grammar -gr.checktemplates serialises these
+      // rule-head qualifiers as `S <-> A A *1/2 A` and `S <-> A A /2 A`, i.e.
+      // the bare `operator+value` token. Previously the raw tempoOp object was
+      // pushed unstringified → `[object Object]` in the output grammar.
       const ruleTempoOp = getTempoOp(rule.qualifiers);
-      if (ruleTempoOp) rhsPrefixParts.push(ruleTempoOp);
+      if (ruleTempoOp) rhsPrefixParts.push(tempoOpToInline(ruleTempoOp));
 
       // Controls as rule qualifiers — always suffix (written after RHS in BPscript)
       const ruleNativeSuffix = [];
@@ -1389,6 +1400,19 @@ function _toIntFraction(num, den) {
 // Legacy: for backward compat, still used for rule-level prefix (no reset needed)
 function tempoOpToBP3Enter(op) {
   return tempoOpToPair(op).enter;
+}
+
+// Serialise a rule-head tempo/scale operator to its bare inline BP3 token.
+//
+// BP3 reads these directly in Encode.c: `*` is the scale-up marker
+// (Encode.c:102, followed by the ratio, e.g. `*1/2`, `*3`); `/` followed by a
+// digit is the tempo/speed marker (Encode.c:418-425, e.g. `/2`, `/3/2`). The
+// value field is already the textual ratio (`"1/2"`) or an integer (`2`), so
+// we emit `operator + value` verbatim — matching the native -gr.checktemplates
+// grammar (`A A *1/2 A`, `A A /2 A`). This is distinct from tempoOpToPair,
+// which wraps an element in a `_tempo(x/y)` enter/exit pair for [tempo:N].
+function tempoOpToInline(op) {
+  return `${op.operator}${op.value}`;
 }
 
 function getTempoOp(qualifiers) {
