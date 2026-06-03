@@ -608,11 +608,46 @@ function encodeContext(ctx) {
   return `#(${ctx.symbols.join(' ')})`;
 }
 
+// --- Variable / non-terminal name encoding ---
+
+// BP3 requires every *variable* (non-terminal) to start with an uppercase
+// character or be wrapped in '|...|'. Encode.c:GetVar (lines 1227-1243):
+//   if(!isupper(c) && !bracket) { ... "Variable must start with uppercase
+//   character or '|'. Can't make sense of \"%s\"." ... return(ABORT); }
+// A bare lowercase token only survives compilation if it matches an alphabet
+// bol first (Encode.c:SEARCHTERMINAL, lines 888-918, runs before the variable
+// parser). Terminals are therefore left bare (they are seeded into the
+// alphabet); only non-terminals that start lowercase need the pipe wrap.
+//
+// Confirmed against a real BP3 grammar (test-data/-gr.Ruwet): lowercase
+// non-terminals are written `|a4|`, `|x|`, `|z31|` while terminals/notes
+// (`fa4`, `do5`, `la4`) stay bare.
+//
+// `start with an uppercase character` follows the C `isupper()` semantics:
+// only an uppercase ASCII letter as the first character keeps the token bare.
+//
+// A name that is ALSO an alphabet terminal (declared gate/trigger, lib symbol,
+// or seeded RHS terminal) is left bare even when it appears as an LHS: BP3
+// matches it at SEARCHTERMINAL (lines 888-918) before reaching the variable
+// parser, so it is a terminal, not a variable. This mirrors the original BP3
+// `flags` grammar where `a`/`b` are declared in the alphabet yet rewritten by
+// `a --> b`, and stay bare in the .gr.
+function encodeNonTerminalName(name) {
+  if (/^[A-Z]/.test(name)) return name;
+  if (_output && _output.alphabet && _output.alphabet.has(name)) return name;
+  return `|${name}|`;
+}
+
 // --- LHS encoding ---
 
 function encodeLhs(elements) {
   return elements.map(el => {
-    if (el.type === 'Symbol') return el.name;
+    // A Symbol on the LHS is a non-terminal — except in SUB/SUB1 mode where it
+    // is a terminal pattern (not collected into _nonTerminals, see encode()).
+    // Only wrap genuine non-terminals; terminals are alphabet bols.
+    if (el.type === 'Symbol') {
+      return _nonTerminals.has(el.name) ? encodeNonTerminalName(el.name) : el.name;
+    }
     if (el.type === 'Prolongation') return '_';
     if (el.type === 'Rest') return '-';
     if (el.type === 'Variable') return `|${el.name}|`;
@@ -693,8 +728,10 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (!_nonTerminals.has(el.name)) {
         if (!BP3_RESERVED.has(el.name)) alphabet.add(el.name);
         _usedTerminals.add(el.name);
+        return el.name;
       }
-      return el.name;
+      // Non-terminal reference: wrap if lowercase (BP3 GetVar rule).
+      return encodeNonTerminalName(el.name);
 
     case 'SymbolCall': {
       // Sa(vel:120), Hit(vel:80) → emit `_script(CT n) Sym _script(CT n_e)`
@@ -719,11 +756,14 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         _output.controlTable.push({ id: ctEndName, assignments: {}, scope: 'end' });
         tokens.push(`_script(${ctName})`);
       }
-      tokens.push(el.name);
-      // Non-terminal: rewrite rule applies. Terminal: must exist in alphabet.
+      // Non-terminal: rewrite rule applies (wrap if lowercase, BP3 GetVar
+      // rule). Terminal: must exist in alphabet, left bare.
       if (!_nonTerminals.has(el.name)) {
         if (!BP3_RESERVED.has(el.name)) alphabet.add(el.name);
         _usedTerminals.add(el.name);
+        tokens.push(el.name);
+      } else {
+        tokens.push(encodeNonTerminalName(el.name));
       }
       if (ctEndName) tokens.push(`_script(${ctEndName})`);
       return tokens.join(' ');
