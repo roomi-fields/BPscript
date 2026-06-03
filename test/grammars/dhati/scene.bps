@@ -8,7 +8,9 @@
 //   BP3 `+` (continuation) → `plus` (IDENT, car + est opérateur en BPscript)
 //   BP3 `;` (fin de séquence) → `fin` (IDENT, car ; n'est pas un token BPscript)
 //   BP3 `*` (homomorphisme/wildcard) → `star` (IDENT, car * est STAR token)
-//   BP3 `X-N` (durée ajustée) → `XmN` (car - est REST et _ est prolongation)
+//   BP3 `X-N` (variable de cadence, ex A8-2) : nom littéral à trait d'union,
+//   conservé tel quel (BP3 OkChar accepte '-' dans les noms de variables ;
+//   le tokenizer BPscript reconnaît les identifiants à trait d'union).
 //   BP3 `4+4+4+4/4` (structure rythmique) → `cycle16x4` (non-terminal)
 // NOTE : `* (= ...)` (homomorphisme sur template) n'est pas encore implémenté.
 //   Les templates sont traduits avec $ mais l'opérateur * est omis avec commentaire.
@@ -114,10 +116,10 @@ S50 <> M34 plus S16 [weight:100]
 S50 <> M18 plus $ {plus N14} O18 [weight:100]
 S16 <> O16 [weight:100]
 // BP3: S50 <-> V10 A'8-2 * (= N18 +) + O16 — homomorphisme (* omis)
-S50 <> V10 A'8m2 $ {N18 plus} plus O16 [weight:100]
+S50 <> V10 A'8-2 $ {N18 plus} plus O16 [weight:100]
 // BP3: S50 <-> M20 * (= N14 +) + O16 — homomorphisme (* omis)
 S50 <> M20 $ {N14 plus} plus O16 [weight:100]
-S52 <> V28 A8m2 O18 [weight:100]
+S52 <> V28 A8-2 O18 [weight:100]
 S52 <> M20 plus S32 [weight:100]
 S40 <> M8 plus S32 [weight:100]
 // BP3: S32 <-> * (=+ N16 +) + S16 — homomorphisme (* omis)
@@ -150,25 +152,25 @@ N18 <- V18 [weight:100]
 // BP3: (=+ L16 <-> (=+ A16 — scope template (= omis)
 plus L16 <- plus A16 [weight:100]
 plus L16 <- plus V16 [weight:100]
-plus L14 <- plus V10 A'6m2 [weight:100]
-M14 <- A'16m2 [weight:100]
-plus L14 <- plus A16m2 [weight:100]
-plus L14 <- plus A'16m2 [weight:100]
-plus L12 <- plus A16m4 [weight:100]
+plus L14 <- plus V10 A'6-2 [weight:100]
+M14 <- A'16-2 [weight:100]
+plus L14 <- plus A16-2 [weight:100]
+plus L14 <- plus A'16-2 [weight:100]
+plus L12 <- plus A16-4 [weight:100]
 plus L24 <- plus V24 [weight:100]
 // BP3: + M16 + * <-> + V10 A'6 + * — `star` = * (wildcard/homomorphisme)
 plus M16 plus star <- plus V10 A'6 plus star [weight:100]
 plus M16 <- plus A'16 [weight:100]
 M8 plus star <- A'8 plus star [weight:100]
 M16 plus star <- V8 A'8 plus star [weight:100]
-M14 <- V8 A'8m2 [weight:100]
+M14 <- V8 A'8-2 [weight:100]
 M18 plus star <- V10 A'8 plus star [weight:100]
 M18 plus star <- V18 plus star [weight:100]
 M34 plus <- V28 A'6 plus [weight:100]
 M34 plus <- V26 A'8 plus [weight:100]
 M20 plus star <- V12 A'8 plus star [weight:100]
 M20 <- V20 [weight:100]
-M40 <- V8 A'8m2 V26 [weight:100]
+M40 <- V8 A'8-2 V26 [weight:100]
 // BP3: * (={16,+ N'16 <-> * (={16,+ V16 — template polymetric scope
 // BPscript: pas de $ sur LHS, templates omis, contenu direct
 N'16 <- V16 [weight:100]
@@ -178,10 +180,10 @@ N16 plus <- V8 A8 plus [weight:100]
 N16 plus <- V10 C6 plus [weight:100]
 // BP3: * (=+ N16 <-> * (=+ A16 — scope template
 N16 <- A16 [weight:100]
-M14 <- V8 A8m2 [weight:100]
+M14 <- V8 A8-2 [weight:100]
 // BP3: * (=+ N14 <-> * (=+ V8 A8-2 — scope template
-N14 <- V8 A8m2 [weight:100]
-N14 <- A16m2 [weight:100]
+N14 <- V8 A8-2 [weight:100]
+N14 <- A16-2 [weight:100]
 N14 plus <- V6 A8 plus [weight:100]
 O8 fin <- A8 fin [weight:100]
 O34 fin <- V26 A8 fin [weight:100]
@@ -262,22 +264,22 @@ V V V V V V V V A'8 <> dhatrktdhatidhatrkt A'8 [weight:100]
 // --- Sous-grammaire 6 @mode:ord — encodage des cadences (LEFT) ---
 
 @mode:ord
-plus ? ? ? ? ? ? ? ? ? ? A'6m2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
-plus ? ? ? ? ? ? ? ? ? ? C6m2 <- plus ? ? ? ? ? ? ? ? ? ? dhagedheena
-plus ? ? ? ? ? ? ? ? ? ? A'6m2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
-plus ? ? ? ? ? ? ? ? A8m2 <- plus ? ? ? ? ? ? ? ? dhatidhagedheena
-A8m2 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin <- dhatidhagedheena ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin
-plus ? ? ? ? ? ? ? ? A'8m2 <- plus ? ? ? ? ? ? ? ? dhatidhageteena
-plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? A'8m2 <- plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? dhatidhageteena
+plus ? ? ? ? ? ? ? ? ? ? A'6-2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
+plus ? ? ? ? ? ? ? ? ? ? C6-2 <- plus ? ? ? ? ? ? ? ? ? ? dhagedheena
+plus ? ? ? ? ? ? ? ? ? ? A'6-2 <- plus ? ? ? ? ? ? ? ? ? ? dhageteena
+plus ? ? ? ? ? ? ? ? A8-2 <- plus ? ? ? ? ? ? ? ? dhatidhagedheena
+A8-2 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin <- dhatidhagedheena ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? fin
+plus ? ? ? ? ? ? ? ? A'8-2 <- plus ? ? ? ? ? ? ? ? dhatidhageteena
+plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? A'8-2 <- plus ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? dhatidhageteena
 A'6 plus <- dhageteenakena plus
 A'8 plus <- dhatidhageteenakena plus
 A4 plus <- dheenagena plus
 C6 plus <- dhagedheenagena plus
 A8 plus <- dhatidhagedheenagena plus
 A8 fin <- dhatidhagedheenagena fin
-plus A16m4 <- plus dhati dhagena dhatrkt dhati dhage
-plus A16m2 <- plus dhati dhagena dhatrkt dhati dhage dheena
-plus A'16m2 #ke <- plus dhati dhagena dhatrkt dhati dhage teena #ke
+plus A16-4 <- plus dhati dhagena dhatrkt dhati dhage
+plus A16-2 <- plus dhati dhagena dhatrkt dhati dhage dheena
+plus A'16-2 #ke <- plus dhati dhagena dhatrkt dhati dhage teena #ke
 plus A16 <- plus dhati dhagena dhatrkt dhati dhage dheenagena
 plus A'16 <- plus dhati dhagena dhatrkt dhati dhage teenakena
 
