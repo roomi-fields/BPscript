@@ -21,6 +21,9 @@
 - [Homomorphismes `|x|`](#homomorphismes-x----variables-liees)
 - [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
 - [Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes)
+- [Templates : regime catalogue (v0.8)](#templates---regime-catalogue-v08)
+- [Sons et cascade d'heritage (v0.8)](#sons-et-cascade-dheritage-v08)
+- [Conventions de notation v0.8 (. / : / *)](#conventions-de-notation-v08-----)
 - [Flags](#flags----variables-detat-et-composition-conditionnelle)
 - [Definitions et macros](#definitions-et-macros)
 - [Les librairies](#les-librairies)
@@ -93,11 +96,19 @@ Sa!dha!spotlight          // 3 runtimes au meme instant
 
 ### Acteur -- unite de binding
 
-Un acteur lie alphabet + tuning + octaves + transport :
+Un acteur lie alphabet + tuning + sound + transport (v0.8 — references via `.`) :
 ```
-@actor sitar1  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio
-@actor sitar2  alphabet:sargam  tuning:sargam_12TET     transport:midi(ch:3)
-@actor tabla   alphabet:tabla_bols  transport:midi(ch:10)
+@actor sitar1
+  alphabet.sargam
+  tuning.sargam_22shruti
+  transport.webaudio
+@actor sitar2
+  alphabet.sargam
+  tuning.sargam_12TET
+  transport.midi(ch:3)
+@actor tabla
+  alphabet.tabla_bols
+  transport.midi(ch:10)
 ```
 
 Dans les regles, la dot notation `actor.terminal` qualifie un terminal par son acteur :
@@ -168,6 +179,14 @@ Sa(cc:74,80)                   // CC generique par numero
 
 Les parametres se combinent par priorite : **spec** (defauts librairie) < **CT** (controles inline `()`) < **CV** (objets temporels continus).
 
+> Modele v0.8 : la cascade complete a 8 niveaux est decrite dans la section
+> [Sons et cascade d'heritage (v0.8)](#sons-et-cascade-dheritage-v08).
+> Le territoire `@sound` est purement declaratif ; les affectations vivent
+> dans les territoires d'origine (`@alphabet.X`, `@actor X`, ou inline).
+> La directive `@actor` utilise desormais `.` pour les references d'entites
+> (`alphabet.X`, `tuning.X`, `transport.X`, `sound.X`) -- cf.
+> `docs/design/v0.8-decisions-final.md`.
+
 ---
 
 ## Philosophie de separation
@@ -236,9 +255,9 @@ Le compositeur le voit aussi -- les types sont explicites a la definition.
 -> <- <>       derivation + direction (BP3 : --> <-- <->)
 { , }          polymetrie, groupement temporel, etat interne de definition
 ( )            parametre runtime (portees : symbole, regle, groupe), definition, appel, contexte
-:              affectation/binding (Sa:sc, alphabet:sargam, cc:2)
+:              affectation/binding (gate Sa:sc, *:sound.bell, cc:2)
 =              definition (@macro kick = ..., flags)
-.              sous-partie (alphabet.western, actor.terminal, kick.ratio) + period notation (A B . C D)
+.              reference a une entite (alphabet.western, sound.bell, transport.midi) + sous-partie (actor.terminal) + period notation (A B . C D)
 [ ]            qualificateur local (sur un groupe ou une regle)
 ` `            code externe opaque (echappement vers le runtime)
 //             commentaire
@@ -813,6 +832,227 @@ $N14 &N14[sub:dhati]       // capture N14, rejoue en substituant
 ```
 
 Le compilateur traduit `$` -> `(=X)` et `&` -> `(:X)` pour BP3.
+
+---
+
+## Templates : regime catalogue (v0.8)
+
+La section `@template` (singulier, ex-`@templates`) est un **catalogue** de
+patterns structurels.
+
+```bpscript
+@template
+[1] /1 ???????
+[2] /1 ?????????
+[3] /1 ($0 ???)($1 )
+```
+
+Trois faits structurants :
+
+1. **Singulier sans suffixe** -- la directive s'appelle `@template`, alignee
+   avec `@actor`, `@sound`, `@alphabet`. La v0.7 utilisait `@templates`.
+2. **Pas de variantes ni de bindings** -- aucun suffixe `.X` ou `:X` sur la
+   section.
+3. **Toujours en mode catalogue** -- la section est consommee par
+   `[mode:tem]` pour l'analyse inverse (modus tollens). Sa presence active
+   le regime catalogue ; son absence laisse BP3 generer ses templates a la
+   volee.
+
+Cote moteur, le regime catalogue correspond au regime B (catalogue
+post-derivation) decrit dans `BPx/backlog/m8-port-plan.md:103-117`. La spec
+externe ne charge aucun autre regime sur la section -- il est implicite.
+
+---
+
+## Sons et cascade d'heritage (v0.8)
+
+Un son BPscript decrit a la fois son **timbre** (sample, synth) et son
+**comportement temporel** (duree, alpha, cover/cont/trunc, pivot, periode).
+Pas de directive `@synth` separee -- la separation se fait dans les champs
+du prototype.
+
+### Territoires : un seul role chacun
+
+| Territoire | Role | Affectations a un sujet ? |
+|---|---|---|
+| `@sound` | declarer des prototypes (anonymes + nommes) | **non** |
+| `@alphabet.X` | declarer un alphabet | **oui** -- `*:sound.Y`, `Sa:sound.Z` |
+| `@actor X` | declarer un acteur | **oui** -- `*:sound.Y`, `Sa:sound.Z` |
+| RHS d'une regle | flux temporel | **oui** -- inline `Sa(sound.Y)` |
+
+Regle absolue : **une affectation se fait depuis le territoire d'origine du
+sujet**, jamais depuis `@sound`. Cela garde `@sound` purement declaratif.
+
+### Declarer des sons (`@sound`)
+
+```bpscript
+@sound
+  { dur:500, alphaMin:80, alphaMax:120 }   // entree anonyme = defaut herite
+  bell_short { sample:"bell.wav", dur:400 }
+  bell_long  { sample:"bell.wav", dur:1200, coverEnd:true }
+  drum_kick  { sample:"kick.wav", dur:200, breakTempo:true }
+```
+
+- Une entree **anonyme** (`{ ... }` sans nom) est un defaut de scene (niveau 2
+  de la cascade). Plusieurs entrees anonymes fusionnent dans l'ordre source.
+- Une entree **nommee** (`name { ... }`) est referencable ailleurs via
+  `sound.name`.
+
+Les ~33 proprietes d'un prototype son sont decrites dans
+`BPx/backlog/m4-symbol-config-audit.md` (~33 props -- capacites booleennes,
+bornes temporelles, duree, alpha, pivot, periode) et formalisees cote
+consommateur dans `BPx/src/types/soundConfig.ts:194-251`
+(`SoundConfigInput`). Les defauts moteur viennent de
+`ResetPrototype` (`bp3-engine/source/BP3/SoundObjects3.c:43-117`).
+
+Forme canonique des champs :
+
+- modes en string (`'absolute' | 'relative'` ; `'irrelevant'` pour `periodMode`)
+- `pivType` accepte string ou entier `1..7` (cf. `soundConfig.ts:76-86`)
+- booleens nus = `true` (`{ breakTempo }` == `{ breakTempo:true }`)
+
+### Charger une lib de sons
+
+`@sound.LIBNAME` charge `lib/sounds/LIBNAME.json`. Format :
+
+```json
+{
+  "defaults":   { "dur": 500, "alphaMin": 80 },
+  "named":      { "bell_short": { "sample": "bell.wav", "dur": 400 },
+                  "drum_kick":  { "sample": "kick.wav", "breakTempo": true } },
+  "by_terminal":{ "Sa": "drum_kick",
+                  "Re": { "sample": "re.wav" } }
+}
+```
+
+- `defaults` -> defaut anonyme de scene (niveau 2).
+- `named` -> sons nommes utilisables via `sound.NAME`.
+- `by_terminal` -> affectations injectees dans l'alphabet associe (niveau 4).
+  La valeur peut etre une reference nommee (string) ou un bloc inline.
+
+S'aligne sur le pattern existant `lib/sounds/tabla_perc.json`.
+
+### Affecter un son a un sujet
+
+Depuis un alphabet :
+
+```bpscript
+@alphabet.tabla
+  notes: Sa Re ga ma Pa dha ni
+  *:sound.bell_short                       // niveau 3 : defaut alphabet
+  Sa:sound.drum_kick                       // niveau 4 : Sa specifique
+  Re:sound.bell_long                       // niveau 4
+```
+
+Depuis un acteur :
+
+```bpscript
+@actor sitar
+  alphabet.tabla
+  tuning.equal_temperament:western
+  transport.midi(ch:10)
+  *:sound.bell_short                       // niveau 5 : defaut acteur
+  Sa:sound.drum_kick                       // niveau 6 : Sa pour cet acteur
+```
+
+Inline sur une occurrence dans une regle :
+
+```bpscript
+S -> Sa(sound.bell_short)                  // niveau 7 : override CT
+```
+
+### Cascade -- 8 niveaux
+
+Du moins specifique au plus specifique. Le moteur resout les proprietes d'un
+son joue par un acteur en fusionnant les niveaux **par propriete** (heritage
+fin, a la CSS).
+
+| # | Niveau | Source |
+|---|---|---|
+| 1 | Defaut moteur BP3 | constantes `ResetPrototype` (SoundObjects3.c:43-117) |
+| 2 | Defaut anonyme de scene | `@sound { ... }` (entree sans nom) |
+| 3 | Defaut alphabet | `@alphabet.X *:sound.NAME` |
+| 4 | Defaut note dans alphabet | `@alphabet.X Y:sound.NAME` |
+| 5 | Defaut acteur | `@actor X *:sound.NAME` (ou `sound.NAME` dans le bloc acteur) |
+| 6 | Defaut note d'acteur | `@actor X Y:sound.NAME` |
+| 7 | Inline sur occurrence | `Y(sound.NAME)` dans RHS |
+| 8 | (Reserve) override CV runtime | future v0.9+ |
+
+Chaque niveau peut soit pointer un son nomme (reference), soit donner un
+bloc de proprietes anonyme qui s'ajoute a la cascade.
+
+**Fusion par propriete** : pour chaque champ (`dur`, `alphaMin`, `sample`,
+`breakTempo`, ...), le niveau le plus eleve qui le specifie gagne. Les
+niveaux intermediaires qui ne specifient pas ce champ ne masquent pas les
+niveaux inferieurs -- c'est exactement le modele CSS.
+
+### Pattern `defaults / named / by_terminal`
+
+Le triplet defaults+named+by_terminal du format lib externe se retrouve dans
+la structure declarative :
+
+| Lib externe | Equivalent BPscript |
+|---|---|
+| `defaults: { ... }` | une entree anonyme dans `@sound` |
+| `named: { N: {...} }` | une entree nommee `N { ... }` dans `@sound` |
+| `by_terminal: { Y: ref }` | une affectation `Y:sound.ref` dans `@alphabet.X` |
+
+C'est la meme cascade, exprimee une fois en JSON externe, une fois en
+syntaxe BPscript.
+
+---
+
+## Conventions de notation v0.8 (`.` / `:` / `*`)
+
+### Tableau cristallise
+
+| Symbole | Sens | Exemple |
+|---|---|---|
+| `.` | reference a un element dans un namespace | `sound.bell_short`, `alphabet.tabla`, `transport.midi` |
+| `:` | affectation a un sujet | `Sa:sound.drum_kick`, `*:sound.bell_short` |
+| `*` | sujet = defaut (wildcard) | `*:sound.bell_short` |
+| `()` | parametres runtime (heritables) | `Sa(vel:80)`, `transport.midi(ch:10)` |
+| `[]` | instructions moteur (non heritees) | `[mode:tem]`, `[*1/2]` |
+| `@` | directive top-level | `@sound`, `@actor`, `@template`, `@alphabet` |
+
+### Regle dominante
+
+`.` = **pointer**, `:` = **lier**. Les deux ne se confondent jamais. Le `*`
+en position de sujet d'une affectation n'entre pas en conflit avec `[*N]`
+(entre crochets) ni avec l'homomorphisme futur `* (= X)` (cote droit d'une
+regle) -- contextes parser disjoints.
+
+### Harmonisation `@actor` -- migration v0.7 -> v0.8
+
+v0.7 :
+```
+@actor sitar alphabet:sargam tuning:sargam_22shruti transport:midi(ch:3, vel:100)
+```
+
+v0.8 :
+```
+@actor sitar
+  alphabet.sargam
+  tuning.sargam_22shruti
+  transport.midi(ch:3, vel:100)
+```
+
+Raison : `sargam`, `sargam_22shruti`, `midi` sont des references a des
+entites (libs / types de transport), pas des affectations. `.` est la
+notation canonique de la reference. Convention uniforme dans tout le
+langage.
+
+### Separation des territoires (resume)
+
+- **Declaratif** -- ce que l'on declare une fois et qui peut etre reutilise :
+  `@sound`, `@alphabet.X`, `@actor X`, `@template`.
+- **Affectations** -- ce qui lie un sujet a un comportement :
+  `*:sound.X`, `Y:sound.X`. Toujours **depuis le territoire d'origine du
+  sujet**, jamais depuis `@sound`.
+
+Cette separation evite l'erreur classique « ou est-ce que j'ai mis l'affectation
+de Sa ? » -- la reponse est toujours « dans l'alphabet ou l'acteur ou Sa est
+declare, ou inline sur la note ».
 
 ---
 

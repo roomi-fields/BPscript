@@ -1,6 +1,9 @@
 # BPscript — AST (Abstract Syntax Tree)
 
-Version 0.7 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transpilées.
+Version 0.8 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transpilées.
+v0.8 ajoute `soundPrototypes` + `soundAssignments`, renomme `templates` → `template`
+et bascule les bindings d'acteurs de `:` à `.` pour les références d'entités
+(cf. `docs/design/v0.8-decisions-final.md`).
 
 ---
 
@@ -31,7 +34,9 @@ Scene {
   cvInstances: CVInstance[]
   backticks: BacktickOrphan[]
   subgrammars: Subgrammar[]
-  templates: TemplateEntry[] | null    // section @templates (optionnelle)
+  template: TemplateEntry[] | null         // section @template (optionnelle, v0.8 ; ex-`templates`)
+  soundPrototypes: SoundPrototypeAST[] | null  // section @sound (déclaratif, v0.8)
+  soundAssignments: SoundAssignmentAST[] | null  // affectations sujet→son (v0.8)
 }
 ```
 
@@ -114,11 +119,12 @@ ActorDirective {
   name: string                    // "sitar", "tabla", "lights"
   properties: {
     alphabet: string              // référence vers alphabets.json ("sargam", "western")
-    scale: string | null          // gamme/degrés → pitch via tempérament (null = pas de pitch)
-    sounds: string | null         // définitions per-terminal: timbre, percussions, samples (null = défaut transport)
+    tuning: string | null         // tempérament/accordage ("sargam_22shruti", "equal_temperament")
+    sound: string | null          // son par défaut de l'acteur (référence dans soundPrototypes)
     transport: TransportRef       // destination de rendu
     eval: string | null           // clé d'eval pour backticks (null = même que transport)
   }
+  soundAssignments: SoundAssignmentAST[] | null  // *:sound.X, Sa:sound.Y, ... dans le bloc acteur
   line: number
 }
 
@@ -129,15 +135,189 @@ TransportRef {
 }
 ```
 
+**v0.8 — bindings d'entités via `.`** : les références à une entité nommée
+(`alphabet`, `tuning`, `transport`, `sound`) utilisent désormais `.` et non `:`.
+Le `:` reste réservé aux affectations de sujet (cf. `SoundAssignmentAST`).
+Les `actor_props` sont écrites une par ligne (ou séparées par espaces) dans le
+bloc qui suit `@actor NAME`.
+
+Exemples (v0.8) :
+
+```bpscript
+@actor sitar
+  alphabet.sargam
+  tuning.sargam_22shruti
+  transport.webaudio
+```
+→ `{ name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", sound:null, transport:{key:"webaudio", params:{}}, eval:null }, soundAssignments:null }`
+
+```bpscript
+@actor tabla
+  alphabet.tabla
+  transport.webaudio
+  *:sound.tabla_perc
+```
+→ `{ name:"tabla", properties:{ alphabet:"tabla", tuning:null, sound:null, transport:{key:"webaudio", params:{}}, eval:null }, soundAssignments:[{ subject:"*", target:{ kind:"named-ref", name:"tabla_perc" } }] }`
+
+```bpscript
+@actor drums
+  alphabet.tabla
+  transport.midi(ch:10)
+  *:sound.tabla_gm
+  Sa:sound.drum_kick
+```
+→ `{ name:"drums", properties:{ alphabet:"tabla", tuning:null, sound:null, transport:{key:"midi", params:{ch:10}}, eval:null }, soundAssignments:[{ subject:"*", target:{kind:"named-ref", name:"tabla_gm"} }, { subject:"Sa", target:{kind:"named-ref", name:"drum_kick"} }] }`
+
+**Champs v0.7 dépréciés** :
+- `scale` → renommé `tuning` (référence à `lib/tuning.json`).
+- `sounds` (pluriel, valeur string) → remplacé par `sound` (singulier, défaut acteur)
+  et par les `soundAssignments` pour les affectations note-à-son.
+
+**Compatibilité** : la v0.8 n'accepte plus la syntaxe `alphabet:X` (ni `tuning:`,
+`transport:`, `sounds:`). Le script de migration des 44 grammaires gère la
+transformation `:` → `.` (cf. `docs/design/v0.8-decisions-final.md` plan de migration).
+
+---
+
+## Sons (v0.8)
+
+La directive `@sound` est **déclarative uniquement** : elle déclare des
+prototypes anonymes (défauts de scène) ou nommés (`bell_short`, `drum_kick`,
+etc.). Les **affectations** (lier un sujet — note, alphabet, acteur — à un son)
+se font depuis le territoire d'origine du sujet, jamais depuis `@sound`. Cf.
+`docs/design/v0.8-decisions-final.md` §1-2.
+
+### `SoundPrototypeAST`
+
+```
+SoundPrototypeAST {
+  type: "SoundPrototype"
+  name: string | null              // null = entrée anonyme (défaut de scène),
+                                   // sinon nom du son (référence depuis ailleurs)
+  config: Partial<SoundConfigInput>  // propriétés du son (sample/synth/dur/alpha/...)
+  line: number
+}
+```
+
+Le champ `config` est une forme partielle. Toutes les clés sont optionnelles ;
+les manquantes héritent de la cascade (cf. `LANGUAGE.md` section « Sons et
+cascade d'héritage »). Le shape canonique de `SoundConfigInput` côté
+consommateur est défini dans `BPx/src/types/soundConfig.ts:194-251` (~33
+propriétés couvrant capacités booléennes, bornes temporelles, durée, alpha,
+pivot, période). Forme canonique : modes en string (`'absolute' | 'relative'`),
+`pivType` accepte string ou entier `1..7`, booléens nus = `true`.
+
+Origine des défauts moteur (niveau 1 de la cascade) :
+`bp3-engine/source/BP3/SoundObjects3.c:43-117` (`ResetPrototype`). Index BP3
+des propriétés : `bp3-engine/source/BP3/-BP3decl.h:185-200`.
+
 Exemples :
-- `@actor sitar  alphabet:sargam  scale:sargam_22shruti  transport:webaudio`
-  -> `{ name:"sitar", properties:{ alphabet:"sargam", scale:"sargam_22shruti", sounds:null, transport:{key:"webaudio", params:{}}, eval:null } }`
-- `@actor tabla  alphabet:tabla  sounds:tabla_perc  transport:webaudio`
-  -> `{ name:"tabla", properties:{ alphabet:"tabla", scale:null, sounds:"tabla_perc", transport:{key:"webaudio", params:{}}, eval:null } }`
-- `@actor piano  alphabet:western  scale:western_12TET  sounds:piano_timbre  transport:webaudio`
-  -> `{ name:"piano", properties:{ alphabet:"western", scale:"western_12TET", sounds:"piano_timbre", transport:{key:"webaudio", params:{}}, eval:null } }`
-- `@actor drums  alphabet:tabla  sounds:tabla_gm  transport:midi(ch:10)`
-  -> `{ name:"drums", properties:{ alphabet:"tabla", scale:null, sounds:"tabla_gm", transport:{key:"midi", params:{ch:10}}, eval:null } }`
+
+```bpscript
+@sound
+  { dur:500, alphaMin:80, alphaMax:120 }     // anonyme = défaut scène
+  bell_short { sample:"bell.wav", dur:400 }
+  bell_long  { sample:"bell.wav", dur:1200, coverEnd:true }
+  drum_kick  { sample:"kick.wav", dur:200, breakTempo:true }
+```
+→
+```
+[
+  { type:"SoundPrototype", name:null,         config:{ dur:500, alphaMin:80, alphaMax:120 } },
+  { type:"SoundPrototype", name:"bell_short", config:{ sample:"bell.wav", dur:400 } },
+  { type:"SoundPrototype", name:"bell_long",  config:{ sample:"bell.wav", dur:1200, coverEnd:true } },
+  { type:"SoundPrototype", name:"drum_kick",  config:{ sample:"kick.wav", dur:200, breakTempo:true } }
+]
+```
+
+Plusieurs entrées anonymes sont autorisées et fusionnent dans l'ordre source
+(défauts les plus tardifs gagnent, façon CSS).
+
+**Note timbre vs comportement** : un son décrit à la fois son timbre
+(`sample:`, `synth:`) et son comportement temporel (durée, alpha, cover/cont/
+trunc, pivot, période). Pas de directive `@synth` séparée. Les clés timbre
+(`sample`, `synth`, `samplerate`, etc.) sont opaques pour le moteur BPx —
+elles sont transmises au runtime cible (cf. `LANGUAGE.md`).
+
+### `SoundAssignmentAST`
+
+```
+SoundAssignmentAST {
+  type: "SoundAssignment"
+  scope: SoundScope                // qui possède cette affectation (alphabet ou acteur)
+  subject: string                  // nom de note (ex. "Sa") ou "*" (défaut wildcard)
+  target: SoundTarget
+  line: number
+}
+
+SoundScope =
+    { kind: "alphabet", name: string }   // affectation dans @alphabet.<name>
+  | { kind: "actor",    name: string }   // affectation dans @actor <name>
+
+SoundTarget =
+    { kind: "named-ref",   name: string }                       // sound.bell_short
+  | { kind: "inline-props", props: Partial<SoundConfigInput> }   // { dur:300 } (bloc anonyme)
+```
+
+Une `SoundAssignmentAST` apparaît dans **trois contextes** parents (le territoire
+d'origine du sujet) :
+
+| Contexte parent | Niveau cascade | Émis dans | `scope` |
+|---|---|---|---|
+| `@alphabet.X` (corps) | 3 (`*:`) ou 4 (`Y:`) | `Scene.soundAssignments` | `{ kind:"alphabet", name:"X" }` |
+| `@actor X` (corps) | 5 (`*:`) ou 6 (`Y:`) | `ActorDirective.soundAssignments` | `{ kind:"actor", name:"X" }` |
+| Inline sur occurrence dans une règle | 7 | `Symbol.suffixQualifiers` (via runtime qualifier `sound.NAME`) | — (pas une assignation, mais un suffixe d'élément) |
+
+Le champ `subject` :
+- `"*"` = wildcard sujet (défaut hérité par tous les sujets non explicitement
+  affectés dans le même territoire).
+- nom d'un terminal (ex. `"Sa"`, `"do4"`) = affectation à cette note dans le
+  scope parent.
+
+Le champ `target` :
+- `kind: "named-ref"` = pointe un son nommé déclaré dans `@sound` ou importé
+  via une lib externe.
+- `kind: "inline-props"` = bloc anonyme `{ dur:300, sample:"x.wav" }` qui
+  s'ajoute à la cascade comme couche de propriétés (sans nom global).
+
+Exemples :
+
+```bpscript
+@alphabet.tabla
+  notes: Sa Re ga ma Pa dha ni
+  *:sound.bell_short            // défaut alphabet
+  Sa:sound.drum_kick
+  Re:sound.bell_long
+```
+→ `Scene.soundAssignments` contient :
+```
+[
+  { type:"SoundAssignment", scope:{kind:"alphabet", name:"tabla"}, subject:"*",  target:{ kind:"named-ref", name:"bell_short" } },
+  { type:"SoundAssignment", scope:{kind:"alphabet", name:"tabla"}, subject:"Sa", target:{ kind:"named-ref", name:"drum_kick" } },
+  { type:"SoundAssignment", scope:{kind:"alphabet", name:"tabla"}, subject:"Re", target:{ kind:"named-ref", name:"bell_long" } }
+]
+```
+
+Note : le champ `scope` rend chaque affectation autonome (sans dépendance à sa
+position structurelle dans le doc) — un consommateur peut itérer sur la liste
+plate `Scene.soundAssignments` sans rejoindre via la position. Voir EBNF.md
+pour la grammaire `alphabet_section` étendue.
+
+### Cascade des sons — 8 niveaux (résumé)
+
+| # | Niveau | Source AST |
+|---|---|---|
+| 1 | défaut moteur BP3 | constantes `ResetPrototype` (SoundObjects3.c:43-117) — pas dans l'AST |
+| 2 | défaut anonyme de scène | `SoundPrototypeAST` avec `name:null` |
+| 3 | défaut alphabet | `SoundAssignmentAST` `scope:{kind:"alphabet"}` + `subject:"*"` |
+| 4 | défaut note dans alphabet | `SoundAssignmentAST` `scope:{kind:"alphabet"}` + `subject:"<note>"` |
+| 5 | défaut acteur | `SoundAssignmentAST` `scope:{kind:"actor"}` + `subject:"*"` (ou `ActorDirective.properties.sound`) |
+| 6 | défaut note d'acteur | `SoundAssignmentAST` `scope:{kind:"actor"}` + `subject:"<note>"` |
+| 7 | inline sur occurrence | `Symbol.suffixQualifiers` portant un `RuntimeQualifier` `sound:NAME` |
+| 8 | (réservé) override CV runtime | future v0.9+ |
+
+Sémantique détaillée et fusion par propriété : voir `LANGUAGE.md` section « Sons
+et cascade d'héritage ».
 
 ### `SceneDirective`
 
@@ -403,9 +583,16 @@ Exemples :
 - `[1] /1 ???????` → `{ index:1, scale:"/1", body:[{ type:"TemplateWildcard", count:7 }] }`
 - `[3] /1 ($0 ???)($1 )` → `{ index:3, scale:"/1", body:[{ type:"TemplateBracket", index:0, body:[{type:"TemplateWildcard", count:3}] }, { type:"TemplateBracket", index:1, body:[] }] }`
 
-La section `@templates` est optionnelle. Si absente, `Scene.templates` est `null` et BP3
-génère les templates automatiquement. Si présente, l'encoder émet la section `TEMPLATES:`
-dans la grammaire BP3 avec `_` au lieu de `?` et `@N` au lieu de `$N`.
+La section `@template` (v0.8 — singulier, ex-`@templates`) est optionnelle.
+Si absente, `Scene.template` est `null` et BP3 génère les templates
+automatiquement. Si présente, l'encoder émet la section `TEMPLATES:` dans la
+grammaire BP3 avec `_` au lieu de `?` et `@N` au lieu de `$N`.
+
+**Régime catalogue (v0.8)** : la section `@template` est **toujours** en mode
+catalogue (utilisée en `[mode:tem]` pour l'analyse inverse / modus tollens).
+Pas de suffixe de mode sur la section. Sémantique côté moteur : régime B
+(catalogue post-dérivation), cf. `BPx/backlog/m8-port-plan.md:103-117`. Voir
+`LANGUAGE.md` section « Templates : régime catalogue ».
 
 ---
 

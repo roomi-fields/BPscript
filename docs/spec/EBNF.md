@@ -1,6 +1,10 @@
 # BPscript — Grammaire EBNF
 
-Version 0.6 — dérivée de BPSCRIPT_VISION.md et validée par 44 traductions de scènes BP3.
+Version 0.8 — dérivée de BPSCRIPT_VISION.md et validée par 44 traductions de
+scènes BP3. v0.8 ajoute `sound_section`, `sound_assignment`, renomme
+`@templates` → `@template`, et étend `actor_decl` pour la notation `.` sur les
+références d'entités (`alphabet.X`, `tuning.X`, `transport.X`, `sound.X`). Cf.
+`docs/design/v0.8-decisions-final.md` pour les décisions verrouillées.
 
 Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 `[ ]` optionnel, `{ }` répétition 0+, `+` répétition 1+, `"..."` littéral,
@@ -14,11 +18,16 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 scene       = { directive | actor_directive | scene_directive | expose_directive
               | map_directive | cc_directive | duration_directive
               | macro_directive | alias_directive | label_directive
+              | sound_section
               | declaration | cv_instance | macro
               | backtick_orphan | comment | blank_line }
               , subgrammar+ , [ template_section ] ;
 
-actor_directive  = "@" , "actor" , IDENT , actor_props+ ;
+actor_directive  = "@" , "actor" , IDENT , actor_body ;
+
+(* v0.8 : les actor_props bascule de `:` à `.` pour les références d'entités
+   (alphabet, tuning, transport, sound). Les affectations à un sujet (note ou
+   *) utilisent toujours `:` (sound_assignment). Voir actor_body. *)
 scene_directive  = "@" , "scene" , IDENT , STRING ;        (* @scene verse "verse.bps" *)
 expose_directive = "@" , "expose" , ( "[" , IDENT , "]" )+ ; (* @expose [intensity] [energy] *)
 cc_directive     = "@" , "cc" , [ ":" ] , cc_pair , { "," , cc_pair } ; (* @cc breath:2, expression:11 *)
@@ -64,7 +73,11 @@ directive_body = IDENT                              (* @core, @controls *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
                | "+"                                (* @+ — append to previous subgrammar *)
                | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
-               | "actor" , IDENT , actor_props+     (* @actor sitar alphabet:sargam ... — voir actor_directive *)
+               | "actor" , IDENT , actor_body       (* @actor sitar alphabet.sargam ... — v0.8, voir actor_directive *)
+               | "sound" , [ "." , IDENT , [ ":" , IDENT ] ] , NEWLINE , sound_entry+
+                                                    (* @sound | @sound.libname — v0.8, voir sound_section *)
+               | "template" , NEWLINE , template_entry+
+                                                    (* @template — v0.8, voir template_section *)
                | "scene" , IDENT , STRING           (* @scene verse "verse.bps" — voir scene_directive *)
                | "expose" , ( "[" , IDENT , "]" )+  (* @expose [intensity] — voir expose_directive *)
                | "cc" , [ ":" ] , cc_pair , { "," , cc_pair }  (* @cc breath:2 — voir cc_directive *)
@@ -75,17 +88,23 @@ directive_body = IDENT                              (* @core, @controls *)
 
 tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/dénominateur *)
 
-actor_props = IDENT , ":" , actor_value ;
-actor_value = IDENT                                 (* alphabet:sargam *)
-            | IDENT , "(" , param_pairs , ")" ;     (* transport:midi(ch:10) *)
+actor_body  = { actor_prop | sound_assignment } ;
 
-(* Propriétés connues d'un acteur :
-   alphabet   — vocabulaire de symboles (requis)
-   scale      — gamme/degrés → pitch via tempérament (si pitched)
-   sounds     — définitions per-terminal: timbre, percussions, samples (si non-pitched ou timbre spécifique)
-   transport  — destination de rendu (requis)
-   eval       — runtime pour backticks (si omis : aucun REPL, null)
+actor_prop  = actor_entity_ref                      (* v0.8 : alphabet.X, tuning.X, transport.X(...), sound.X *)
+            | actor_eval_binding ;                  (* v0.8 : eval.X (référence à un eval runtime) *)
+
+actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] ;
+
+ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "transport" | "sound" ;
+(* alphabet — vocabulaire de symboles (requis)
+   tuning   — tempérament / accordage (renomme v0.7 `scale`)
+   transport — destination de rendu (requis ; les paramètres runtime entre () restent supportés : transport.midi(ch:10))
+   sound    — son par défaut de l'acteur (référence dans @sound).
+              Une référence sound.X ici équivaut sémantiquement à
+              `*:sound.X` mais s'écrit comme une entity_ref pour homogénéité.
 *)
+
+actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc ... *)
 
 
 param_pairs = param_pair , { "," , param_pair } ;
@@ -93,6 +112,98 @@ param_pair  = IDENT , "=" , IDENT ;               (* transport=sc, eval=python *
 
 alias_list = alias , { "," , alias } ;
 alias      = IDENT , ":" , IDENT ;
+```
+
+### `sound_section` (v0.8) — déclarations de sons
+
+```ebnf
+sound_section = "@" , "sound" , [ sound_section_lib ] , NEWLINE , sound_entry+ ;
+
+(* Forme `@sound.LIBNAME` : charge lib/sounds/LIBNAME.json (cf. § Format des
+   libs externes ci-dessous). Apporte au scope ses defaults, ses sons nommés
+   et ses affectations by_terminal. La section anonyme `@sound` (sans suffixe)
+   ouvre un bloc de déclarations locales. *)
+sound_section_lib = "." , IDENT , [ ":" , IDENT ] ;
+                                                  (* @sound.tabla_classical
+                                                     @sound.tabla_classical:simplified *)
+
+sound_entry = anonymous_prototype | named_prototype ;
+
+anonymous_prototype = "{" , prop_pairs , "}" ;     (* { dur:500, alphaMin:80 } *)
+named_prototype     = IDENT , "{" , prop_pairs , "}" ;
+                                                  (* bell_short { sample:"bell.wav", dur:400 } *)
+
+prop_pairs = prop_pair , { "," , prop_pair } ;
+
+prop_pair  = IDENT , ":" , prop_value             (* dur:400, sample:"bell.wav" *)
+           | IDENT ;                              (* booléen nu : `breakTempo` ≡ `breakTempo:true` *)
+
+prop_value = INT | FLOAT | STRING | IDENT
+           | INT , "/" , INT ;                    (* ratios pour pivot, période, etc. *)
+```
+
+Le territoire `@sound` est **uniquement déclaratif** : les affectations
+sujet→son se font depuis les territoires d'origine (`@alphabet.X`, `@actor X`,
+ou inline dans une règle), via `sound_assignment`. Cf.
+`docs/design/v0.8-decisions-final.md` §1-2.
+
+**Booléens nus** : `{ breakTempo, contBeg }` est sucre syntaxique pour
+`{ breakTempo:true, contBeg:true }`. Promotion au parse, pas d'impact AST.
+
+**Format des libs externes** : un fichier `lib/sounds/X.json` peut contenir
+trois sections (toutes optionnelles) :
+
+```json
+{
+  "defaults":   { "dur": 500, "alphaMin": 80 },
+  "named":      { "bell_short": { "sample": "bell.wav", "dur": 400 },
+                  "drum_kick":  { "sample": "kick.wav", "breakTempo": true } },
+  "by_terminal":{ "Sa": "drum_kick",
+                  "Re": { "sample": "re.wav" } }
+}
+```
+
+- `defaults` → un prototype anonyme injecté dans le scope (niveau 2 de la cascade).
+- `named` → un `SoundPrototypeAST` par entrée (référence par nom).
+- `by_terminal` → des `SoundAssignmentAST` injectées dans le scope alphabet
+  associé (`scope.kind = "alphabet"`). Chaque valeur peut être une référence
+  nommée (string) ou un bloc inline (object).
+
+### `sound_assignment` (v0.8) — affectation sujet → son
+
+```ebnf
+sound_assignment = subject , ":" , sound_target ;
+
+subject       = IDENT                              (* nom d'un terminal : Sa, do4, bell *)
+              | "*" ;                              (* défaut wildcard pour le scope courant *)
+
+sound_target  = "sound" , "." , IDENT              (* sound.bell_short — référence nommée *)
+              | "{" , prop_pairs , "}" ;           (* { dur:300, sample:"x.wav" } — bloc inline *)
+```
+
+Les `sound_assignment` apparaissent dans les territoires :
+
+- `alphabet_section` (bloc du `@alphabet.X`) → scope `alphabet:X`
+- `actor_body` (bloc du `@actor X`) → scope `actor:X`
+
+L'inline sur une occurrence (niveau 7 de la cascade) ne passe **pas** par
+`sound_assignment` : on utilise un `runtime_qualifier` sur l'élément du RHS,
+`Sa(sound.bell_short)`. Voir Couche 4 § Symboles.
+
+### `alphabet_section` (v0.8) — extension
+
+```ebnf
+alphabet_section = "@" , "alphabet" , "." , IDENT , [ ":" , IDENT ]
+                 , [ "(" , alias_list , ")" ]
+                 , [ NEWLINE , alphabet_body ] ;
+
+(* `:` après la notation pointée = variante : @alphabet.tabla:transport.
+   `(...)` = résolution de conflit (cf. Directive). *)
+
+alphabet_body = { alphabet_decl | sound_assignment | comment | blank_line } ;
+
+alphabet_decl = "notes" , ":" , IDENT , { IDENT } ;   (* notes: Sa Re Ga ... *)
+              (* + autres décl propres à l'alphabet, cf. lib/alphabet.json *)
 ```
 
 ### `declaration`
@@ -186,10 +297,14 @@ itérations doit être dans l'alphabet pour être joué. Le transpileur inclut d
 LHS des sous-grammaires SUB/SUB1 dans l'alphabet (contrairement aux modes ORD/RND où
 les symboles LHS sont des non-terminaux).
 
-### Section templates (optionnelle)
+### Section template (optionnelle, v0.8 — singulier, ex-`@templates`)
 
 ```ebnf
-template_section = "@" , "templates" , NEWLINE , template_entry+ ;
+template_section = "@" , "template" , NEWLINE , template_entry+ ;
+
+(* v0.8 : @templates → @template (singulier, alignement avec @actor, @sound,
+   @alphabet). Pas de suffixe de mode : la section est toujours en régime
+   catalogue (consommée par [mode:tem] pour l'analyse inverse). *)
 
 template_entry   = "[" , INT , "]" , scale_factor , template_body ;
 
@@ -209,14 +324,18 @@ template_element = "?"                              (* wildcard : un terminal *)
 Les templates décrivent la **structure temporelle** des items produits par les règles
 template (`<>`). Chaque `?` représente un slot terminal (sound object).
 
-La section `@templates` est **optionnelle** :
-- Si absente, BP3 génère les templates automatiquement pendant la production
-- Si présente, BP3 utilise les templates spécifiées pour le matching en mode analyse
-- En mode `@mode:tem`, les templates servent de contraintes structurelles
+La section `@template` est **optionnelle** :
+- Si absente, BP3 génère les templates automatiquement pendant la production.
+- Si présente, BP3 utilise les templates spécifiées pour le matching en mode
+  analyse.
+- En mode `@mode:tem`, les templates servent de contraintes structurelles.
+
+**Régime catalogue (v0.8)** : la section est toujours en mode catalogue —
+post-dérivation, consommée par `[mode:tem]`. Pas de variante avec suffixe.
 
 Exemples :
 ```bpscript
-@templates
+@template
 [1] /1 ???????                    // 7 terminaux en séquence
 [2] /1 ?????????                  // 9 terminaux
 [3] /1 ($0 ???)($1 )              // structure récursive : master(3 slots) + slave(vide)
@@ -811,16 +930,18 @@ Ou en global : `@striated`, `@mm:60` (appliqué au preamble de la première sous
 ### Clés réservées de `@`
 
 ```
-actor NAME props...            → déclare un acteur (binding alphabet+scale+sounds+transport)
+actor NAME props...            → déclare un acteur (binding alphabet.X + tuning.X + sound.X + transport.X(...) — v0.8)
 core                           → librairie noyau (lambda, on_fail)
 controls                       → contrôles performance (vel, tempo, transpose, etc.)
 alphabet.KEY:BINDING           → alphabet KEY depuis lib/alphabet.json, lié à BINDING
 alphabet.KEY(transport=X, eval=Y) → transport ≠ eval (forme explicite)
 tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à ALPHABET
+sound                          → bloc déclaratif de prototypes son (anonyme + nommés, v0.8)
+sound.LIBNAME                  → charge lib/sounds/LIBNAME.json (defaults + named + by_terminal, v0.8)
 sub.KEY                        → table de substitution depuis lib/sub.json
 routing.KEY                    → config connexion KEY depuis lib/routing.json
 hooks                          → macros d'interaction (* not yet implemented *)
-templates                      → section templates (? = wildcard, ($N) = bracket marker)
+template                       → section template singulier (? = wildcard, ($N) = bracket marker) — v0.8 (ex-`templates`)
 mode:VALUE(modifiers)          → mode de sous-grammaire avec modificateurs optionnels
 tempo                          → tempo global
 meter                          → métrique globale
@@ -913,7 +1034,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `A(transpose:-3)` | `A _script(CT 0)` | runtime valeur négative |
 | `[Ideas]` (guard) | `/Ideas/` | bare flag guard (test non-zéro) |
 | `[meter:4+4/6]` | `4+4/6` avant RHS | time signature inline |
-| `@templates` | `TEMPLATES:` | section templates (optionnelle) |
+| `@template` | `TEMPLATES:` | section template (optionnelle, v0.8 — singulier) |
 | `?` (dans template) | `_` | wildcard terminal (un slot) |
 | `????` (dans template) | `____` | wildcards compacts (4 slots) |
 | `($0 ???)` (dans template) | `(@0 ___)` | bracket master ($ → @) |
