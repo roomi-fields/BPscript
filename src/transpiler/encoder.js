@@ -783,6 +783,37 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
       }
       let result = `{${inner}}`;
+      // Check for scale qualifier → BP3 native `*N` / `**N` prefix.
+      //
+      // Ports BP3 textual scaling markers from Encode.c:102-117
+      // (`*` → T0/21 scale up, `**` → T0/24 scale down) and the consumer
+      // in Polymetric.c:229-244, 293-302 (`case 21 / case 24` update the
+      // `scaling` variable, distinct from `speed`/`_tempo`).
+      //
+      // BP3 convention (LANGUAGE.md:1235) places the marker BEFORE the
+      // group: `A[*3]` → `*3 A`, so `{C4,D4}[scale:2]` → `*2 {C4,D4}`.
+      // For N >= 1 we emit `*N` (scale up). For 0 < N < 1 we emit `**M`
+      // with M = 1/N (scale down, BP3 reciprocal form).
+      //
+      // Scale is semantically distinct from `[*N]` TempoOp (which the
+      // encoder translates to `_tempo(...)` enter/exit) — scale touches
+      // `scaling` directly in BP3, not the tempo ratio.
+      const scaleRaw = getQualValue(el.qualifiers, 'scale');
+      if (scaleRaw !== null) {
+        const sn = Number(scaleRaw);
+        if (Number.isFinite(sn) && sn > 0) {
+          if (sn >= 1) {
+            result = `*${sn} ${result}`;
+          } else {
+            // 0 < N < 1 → reciprocal form `**M` with M = 1/N (BP3 scale down)
+            const inv = 1 / sn;
+            result = `**${inv} ${result}`;
+          }
+        }
+      }
+      // NOTE: embedding case ({ in one rule, }[scale:N] in another) is not
+      // handled here — see annotateUnbalancedBraces / polySpeed for the
+      // speed analogue. Add a polyScale annotation if needed in the future.
       // Check for tempo operator → _tempo bracket around braces
       const tempoOp = getTempoOp(el.qualifiers);
       if (tempoOp) {
