@@ -33,6 +33,11 @@ let _nonTerminals = new Set();
 let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 
+// BP3 reserved words must never appear in the alphabet (Error code 54).
+// Module-scoped so both the alphabet-seeding pass in encode() and the RHS
+// terminal encoders (encodeRhsElementInner) share the same filter.
+const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
+
 function encode(ast) {
   const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [] };
   _output = output;
@@ -133,9 +138,8 @@ function encode(ast) {
     return ep;
   }
 
-  // Build alphabet from DECLARATIONS (gate/trigger/cv) and loaded alphabets — never inferred
-  // BP3 reserved words must never appear in the alphabet (Error code 54)
-  const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
+  // Build alphabet from DECLARATIONS (gate/trigger/cv), loaded alphabets, and
+  // bare RHS terminals — see BP3_RESERVED note at module scope.
   // 1. Explicit declarations: gate a:midi, trigger x:sc, cv lfo:webaudio
   if (ast.declarations) {
     for (const decl of ast.declarations) {
@@ -680,8 +684,16 @@ function encodeQualifierTokens(q, controlMap, tokens) {
 function encodeRhsElementInner(el, alphabet, controlMap) {
   switch (el.type) {
     case 'Symbol':
-      // Alphabet is built from declarations and loaded libs — no inference
-      if (!_nonTerminals.has(el.name)) _usedTerminals.add(el.name);
+      // BP3: every RHS token that is never rewritten (no LHS rule) is a bol of
+      // the alphabet (CompileGrammar.c, Encode/AddBolsInGrammar). A bare
+      // terminal must therefore be seeded into the output alphabet, exactly
+      // like the SymbolCall case below — otherwise libs are the only source of
+      // terminals and grammars whose terminals come purely from the RHS
+      // produce an empty alphabet (alphabetSize=0 → nothing to produce).
+      if (!_nonTerminals.has(el.name)) {
+        if (!BP3_RESERVED.has(el.name)) alphabet.add(el.name);
+        _usedTerminals.add(el.name);
+      }
       return el.name;
 
     case 'SymbolCall': {
@@ -710,7 +722,7 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       tokens.push(el.name);
       // Non-terminal: rewrite rule applies. Terminal: must exist in alphabet.
       if (!_nonTerminals.has(el.name)) {
-        alphabet.add(el.name);
+        if (!BP3_RESERVED.has(el.name)) alphabet.add(el.name);
         _usedTerminals.add(el.name);
       }
       if (ctEndName) tokens.push(`_script(${ctEndName})`);
