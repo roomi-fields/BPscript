@@ -152,6 +152,21 @@ function loadLibsFromDirectives(directives) {
   ctx.controlNames.add('sound');
   ctx.dispatcherOnlyControls.add('sound');
 
+  // Built-in subgrammar-level performance controls (always available, #146).
+  // BP3 engine treats _mm/_striated/_smooth as "performance controls" emitted
+  // on top of the first subgrammar — cf. CompileGrammar.c cases 13 (_mm),
+  // 14 (_striated), 15 (_smooth), and CompileProcs.c GetPerformanceControl.
+  // _destru is the destructuring directive. These are core engine instructions,
+  // not optional library controls, so they must be encodable even when no lib
+  // (e.g. @controls) is referenced. Without this seed, @mm/@striated/@smooth
+  // were silently dropped from the produced BP3 grammar unless @controls was
+  // loaded, breaking oracle reproducibility via compileBPS→wasm (#146 / Front #139).
+  // A loaded lib's `subgrammar` section may still override these defaults below.
+  ctx.subgrammarControls.set('mm', { bp3: '_mm', args: ['bpm'] });
+  ctx.subgrammarControls.set('striated', { bp3: '_striated', args: [] });
+  ctx.subgrammarControls.set('smooth', { bp3: '_smooth', args: [] });
+  ctx.subgrammarControls.set('destru', { bp3: '_destru', args: [] });
+
   for (const dir of directives) {
     // @cc directives: user-defined named CC mappings
     if (dir.name === 'cc' && dir.ccMappings) {
