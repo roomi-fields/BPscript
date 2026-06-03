@@ -340,6 +340,9 @@ function encode(ast) {
             } else {
               rqRuntime[p.key] = p.value;
             }
+          } else {
+            // Unknown key: pass through opaquely to the dispatcher.
+            rqRuntime[p.key] = p.value;
           }
         }
         const rqPrefix = [...rqNative];
@@ -562,24 +565,43 @@ function encodeGuard(guard) {
   if (guard.operator === null) {
     return `/${guard.flag}/`;
   }
+  // BP3 expects Unicode operators for compound comparisons (Encode.c:548-561).
+  // ASCII `>=`, `<=`, `!=` are parsed as single-char `>`, `<`, `=` → off-by-one bug.
   const op = guard.operator === '==' ? '=' :
+             guard.operator === '>=' ? '≥' :  // ≥
+             guard.operator === '<=' ? '≤' :  // ≤
+             guard.operator === '!=' ? '≠' :  // ≠
              guard.operator;
   return `/${guard.flag}${op}${guard.value}/`;
 }
 
 // --- Context encoding ---
 
+// BP3 natif distingue contexte vs symbole LHS uniquement par la présence des
+// parenthèses (cf. Encode.c:730-768 — `(` au début de l'argument gauche
+// déclenche GetContext, sinon les tokens sont encodés comme symboles LHS
+// consommés). On les préserve donc toujours pour les contextes positifs.
+//
+// Pour les contextes négatifs, BP3 accepte `#X` (un seul symbole, sans parens)
+// car le `#` préfixe lève déjà l'ambiguïté avec le LHS. On garde la forme
+// compacte `#X` pour un seul symbole IDENT (ainsi que `#?` boundary).
 function encodeContext(ctx) {
-  const prefix = ctx.positive ? '' : '#';
+  // Positive context: always wrap in parens — sans elles, BP3 traite les
+  // symboles comme du LHS consommé (Encode.c:730).
+  if (ctx.positive) {
+    return `(${ctx.symbols.join(' ')})`;
+  }
+  // Negative context (#) : forme compacte `#X` pour un seul symbole, sinon
+  // `#(X Y ...)`. Les caractères structurels (`{`, `}`, `,`) doivent rester
+  // entre parens même seuls : `#({)`, `#(})`, `#(,)`.
   if (ctx.symbols.length === 1) {
     const sym = ctx.symbols[0];
-    // Force parentheses for non-IDENT symbols: #({) #(}) #(,)
     if (sym === '{' || sym === '}' || sym === ',') {
-      return `${prefix}(${sym})`;
+      return `#(${sym})`;
     }
-    return `${prefix}${sym}`;
+    return `#${sym}`;
   }
-  return `${prefix}(${ctx.symbols.join(' ')})`;
+  return `#(${ctx.symbols.join(' ')})`;
 }
 
 // --- LHS encoding ---
@@ -663,15 +685,36 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       return el.name;
 
     case 'SymbolCall': {
-      // Sa(vel:120) → terminal opaque: Sa_vel~120
-      // For now, encode as BP3-compatible terminal
-      const paramParts = el.args.map(a => {
-        const val = a.value.type === 'Literal' ? a.value.value : `?`;
-        return a.key ? `${a.key}~${val}` : val;
-      });
-      const terminal = [el.name, ...paramParts].join('_');
-      alphabet.add(terminal);
-      return terminal;
+      // Sa(vel:120), Hit(vel:80) → emit `_script(CT n) Sym _script(CT n_e)`
+      // around the bare symbol. The dispatcher consumes the start/end pair as
+      // a contextual scope, and the bare Sym either matches a rule (Hit -> -)
+      // or stays as a terminal in the alphabet (C4). The legacy `Sym#key#val`
+      // encoding is rejected by BP3's grammar tokenizer (which splits on `#`
+      // and refuses non-uppercase fragments like `vel#80`).
+      const assignments = {};
+      for (const arg of el.args) {
+        if (!arg.key) continue;
+        const v = arg.value;
+        if (v.type === 'Literal') assignments[arg.key] = v.value;
+      }
+      const tokens = [];
+      let ctName = null;
+      let ctEndName = null;
+      if (Object.keys(assignments).length > 0) {
+        ctName = `CT ${_ctIndex++}`;
+        ctEndName = `${ctName}_e`;
+        _output.controlTable.push({ id: ctName, assignments, scope: 'start' });
+        _output.controlTable.push({ id: ctEndName, assignments: {}, scope: 'end' });
+        tokens.push(`_script(${ctName})`);
+      }
+      tokens.push(el.name);
+      // Non-terminal: rewrite rule applies. Terminal: must exist in alphabet.
+      if (!_nonTerminals.has(el.name)) {
+        alphabet.add(el.name);
+        _usedTerminals.add(el.name);
+      }
+      if (ctEndName) tokens.push(`_script(${ctEndName})`);
+      return tokens.join(' ');
     }
 
     case 'Rest':

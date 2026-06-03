@@ -1473,6 +1473,12 @@ function parse(tokens) {
         elements.push(parseWildcard());
       } else if (at(T.HASH)) {
         elements.push(parseContext());
+      } else if (at(T.LPAREN) && current().spaceBefore && isContextLookahead()) {
+        // Right positive context: `Sym (B) -> X`. `(` must have a space before
+        // (sinon c'est un runtime qualifier suffixe sur le LHS précédent : `C(vel:80)`).
+        // isContextLookahead() vérifie que le `(...)` est suivi de `->`/`<-`/`<>` (pas une
+        // déclaration ou un appel). Cf. spec EBNF.md `context` (Couche 3 § contexte droit).
+        elements.push(parseContext());
       } else if (at(T.PROLONG)) {
         // _ (prolongation) as terminal on LHS — e.g. Oc3 _ -> _ Oc3
         advance();
