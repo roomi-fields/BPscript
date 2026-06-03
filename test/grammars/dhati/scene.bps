@@ -4,16 +4,21 @@
 // Qa'ida transférée de BP1, modifiée avec des structures polymétriques.
 // 142 règles, 7 sous-grammaires. Terminaux : bols de tabla.
 //
-// CONVENTION DE RENOMMAGE :
-//   BP3 `+` (continuation) → `plus` (IDENT, car + est opérateur en BPscript)
-//   BP3 `;` (fin de séquence) → `fin` (IDENT, car ; n'est pas un token BPscript)
-//   BP3 `*` (homomorphisme/wildcard) → `star` (IDENT, car * est STAR token)
+// OPÉRATEURS BP3 (round-trip fidèle — transpileur les ré-émet en `+` `;` `*`) :
+//   `plus` → `+`   opérateur de jonction/continuation de structure
+//   `fin`  → `;`   terminateur de séquence (`;` est absent de la grammaire BPscript)
+//   `star` → `*`   marqueur d'homomorphisme / wildcard (le `*` nu de BP3)
+//   Ces trois identifiants sont des OPÉRATEURS, pas des bols : le transpileur
+//   les traduit en leur caractère BP3 et les exclut de l'alphabet (cf. encoder.js
+//   BP3_OPERATORS). Résultat aligné sur l'original Bernard `-gr.dhati`, p.ex.
+//   `+ M16 + * <-> + V10 A'6 + *` et `Qaida <-> (=+ S64 ;)`.
 //   BP3 `X-N` (variable de cadence, ex A8-2) : nom littéral à trait d'union,
 //   conservé tel quel (BP3 OkChar accepte '-' dans les noms de variables ;
 //   le tokenizer BPscript reconnaît les identifiants à trait d'union).
-//   BP3 `4+4+4+4/4` (structure rythmique) → `cycle16x4` (non-terminal)
-// NOTE : `* (= ...)` (homomorphisme sur template) n'est pas encore implémenté.
-//   Les templates sont traduits avec $ mais l'opérateur * est omis avec commentaire.
+//   BP3 `4+4+4+4/4` (structure rythmique) → conservée littéralement (RawBrace).
+// NOTE : `* (= ...)` — le marqueur `*` est désormais transcrit ; la RÉSOLUTION
+//   runtime de l'homomorphisme (table p_Homo/p_Image, BindSlaves) reste M9+ côté
+//   BPx (cf. recode.ts). La transcription/compilation, elle, est fidèle.
 // NOTE : INIT: Play I46 (BP3 performance init, pas encore en BPscript)
 
 @core

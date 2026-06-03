@@ -38,6 +38,24 @@ let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _sta
 // terminal encoders (encodeRhsElementInner) share the same filter.
 const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 
+// BP3 grammar operators that BPscript spells as plain identifiers because the
+// raw characters are unavailable or ambiguous in BPscript source:
+//   `plus` → `+`   continuation / structure-join operator
+//   `fin`  → `;`   sequence terminator (`;` is dropped by the BPscript tokenizer)
+//   `star` → `*`   homomorphism / wildcard marker (bare `*` outside `[ ]`)
+//
+// In BP3 these are tokenised by Encode.c (FindCode, Encode.c:1316-1338) into a
+// (T0, code) pair where the code is the index of the character in the global
+// `Code[]` table (BP3main.h:126): `Code[3]='+'`, `Code[5]=';'`, `Code[21]='*'`.
+// The `*` homomorphism marker shares index 21 with the scale operator `*N`
+// (Encode.c:108-109) — BP3 disambiguates purely by a following digit, so the
+// bare marker form is unambiguous on its own.
+//
+// These names are operators, NOT bols: they must never be seeded into the
+// alphabet (they would otherwise show up as terminals and break parity with the
+// original Bernard grammars, e.g. -gr.dhati `+ M16 + * <-> + V10 A'6 + *`).
+const BP3_OPERATORS = Object.freeze({ plus: '+', fin: ';', star: '*' });
+
 function encode(ast) {
   const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {}, ccAliases: {} };
   _output = output;
@@ -162,7 +180,12 @@ function encode(ast) {
   // 1. Explicit declarations: gate a:midi, trigger x:sc, cv lfo:webaudio
   if (ast.declarations) {
     for (const decl of ast.declarations) {
-      if (!BP3_RESERVED.has(decl.name)) output.alphabet.add(decl.name);
+      // BP3_OPERATORS (plus/fin/star) are grammar operators, not bols: a
+      // `@gate plus:midi` declaration in a ported Bernard grammar names the
+      // `+` operator, which must stay out of the alphabet.
+      if (!BP3_RESERVED.has(decl.name) && !(decl.name in BP3_OPERATORS)) {
+        output.alphabet.add(decl.name);
+      }
     }
   }
   // 2. Loaded alphabet libraries: @alphabet.western:midi → symbols from lib
@@ -184,7 +207,12 @@ function encode(ast) {
     const isSub = sub.mode === 'sub' || sub.mode === 'sub1';
     for (const rule of sub.rules) {
       for (const el of rule.lhs) {
-        if (el.type === 'Symbol' && !isSub) _nonTerminals.add(el.name);
+        // Operator identifiers (plus/star/fin) on a LHS are BP3 operators, not
+        // non-terminals (e.g. `+ M16 + * <-> ...` in -gr.dhati). Excluding them
+        // keeps them from being treated as rewritable variables.
+        if (el.type === 'Symbol' && !isSub && !(el.name in BP3_OPERATORS)) {
+          _nonTerminals.add(el.name);
+        }
       }
     }
   }
@@ -856,6 +884,7 @@ function encodeLhs(elements) {
     // is a terminal pattern (not collected into _nonTerminals, see encode()).
     // Only wrap genuine non-terminals; terminals are alphabet bols.
     if (el.type === 'Symbol') {
+      if (el.name in BP3_OPERATORS) return BP3_OPERATORS[el.name];  // + ; *
       return _nonTerminals.has(el.name) ? encodeNonTerminalName(el.name) : el.name;
     }
     if (el.type === 'Prolongation') return '_';
@@ -929,6 +958,9 @@ function encodeQualifierTokens(q, controlMap, tokens) {
 function encodeRhsElementInner(el, alphabet, controlMap) {
   switch (el.type) {
     case 'Symbol':
+      // BP3 grammar operators spelled as identifiers (plus/fin/star) emit their
+      // raw operator character (+ / ; / *) and are NOT alphabet terminals.
+      if (el.name in BP3_OPERATORS) return BP3_OPERATORS[el.name];
       // BP3: every RHS token that is never rewritten (no LHS rule) is a bol of
       // the alphabet (CompileGrammar.c, Encode/AddBolsInGrammar). A bare
       // terminal must therefore be seeded into the output alphabet, exactly

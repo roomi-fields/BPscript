@@ -1535,6 +1535,17 @@ function parse(tokens) {
         elements.push({ type: 'RawBrace', value: advance().value });
         continue;
       }
+      // Bare `*` in the RHS flow = BP3 homomorphism / wildcard marker
+      // (LANGUAGE.md:1500 `S -> $X * &X` → `S --> (=X) * (:X)`). This is the
+      // marker form, distinct from the `[*N]` scale qualifier (inside brackets,
+      // handled by isTempoOpQualifier) and from `*:sound.X` (assignment subject,
+      // parsed in the directive path, not here). BP3 tokenises a bare `*` as
+      // (T0, 21) via FindCode (Encode.c:1335). Emitted as a raw `*` token.
+      if (at(T.STAR)) {
+        advance();
+        elements.push({ type: 'RawBrace', value: '*' });
+        continue;
+      }
 
       const el = parseRhsElement();
       if (!el) break;
