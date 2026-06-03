@@ -97,7 +97,9 @@ function resolveActors(ast) {
     actorTable[name] = {
       alphabet: alphabetKey,
       scale: props.scale || null,
-      sounds: props.sounds || null,
+      // v0.8 : la clé canonique est `sound` (singulier) ; on lit aussi `sounds`
+      // pour rétrocompat avec les sorties de parseur antérieures.
+      sounds: props.sound || props.sounds || null,
       transport: props.transport || null,
       eval: props.eval || null,
       symbols: [...terminals],

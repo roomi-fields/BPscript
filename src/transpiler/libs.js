@@ -144,6 +144,14 @@ function loadLibsFromDirectives(directives) {
   ctx.controlNames.add('cc');
   ctx.dispatcherOnlyControls.add('cc');
 
+  // v0.8 — `sound` est une clé runtime_qualifier acceptée pour les overrides
+  // inline (niveau 7 de la cascade : `Sa(sound.bell_short)`). Sémantique : le
+  // dispatcher résout la référence pointée au playback. Décision PM 4.
+  ctx.controls['sound'] = { args: ['value'], description: 'Inline sound override (v0.8)', transportGroup: 'dispatcher' };
+  ctx.controlMap['sound'] = '_sound';
+  ctx.controlNames.add('sound');
+  ctx.dispatcherOnlyControls.add('sound');
+
   for (const dir of directives) {
     // @cc directives: user-defined named CC mappings
     if (dir.name === 'cc' && dir.ccMappings) {

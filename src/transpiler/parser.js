@@ -52,6 +52,9 @@ function parse(tokens) {
       backticks: [],
       cvInstances: [],
       subgrammars: [],
+      // v0.8 — sons (prototypes anonymes + nommés) et affectations sujet→son
+      soundPrototypes: null,
+      soundAssignments: null,
     };
 
     skipNewlines();
@@ -82,6 +85,33 @@ function parse(tokens) {
           scene.declarations.push(dir);
         } else if (dir.type === 'ActorDirective') {
           scene.actors.push(dir);
+          // v0.8: soundAssignments collectées dans le bloc @actor sont remontées
+          // top-level avec scope { kind:"actor", name:<actorName> }.
+          if (dir.soundAssignments && dir.soundAssignments.length > 0) {
+            scene.soundAssignments = scene.soundAssignments || [];
+            for (const sa of dir.soundAssignments) scene.soundAssignments.push(sa);
+            // décision PM : PAS de duplication ; on retire de l'ActorDirective
+            delete dir.soundAssignments;
+          }
+        } else if (dir.type === 'SoundSection') {
+          // v0.8 — @sound { ... } / @sound bell { ... } / @sound.libname[:variant]
+          scene.soundPrototypes = scene.soundPrototypes || [];
+          for (const p of dir.prototypes) scene.soundPrototypes.push(p);
+          // mémoriser la directive (utile pour lib externe ou variante)
+          if (dir.lib) {
+            scene.directives.push({
+              type: 'Directive', name: 'sound', subkey: dir.lib,
+              binding: dir.libVariant || null, runtime: null, value: null,
+              aliases: null, modifiers: null, line: dir.line,
+            });
+          }
+        } else if (dir.type === 'AlphabetSoundAssignments') {
+          // v0.8 — affectations sujet→son collectées dans un @alphabet.X.
+          // Le wrapper contient la Directive d'origine (à pousser comme d'hab)
+          // et les affectations (à pousser top-level dans soundAssignments).
+          scene.directives.push(dir.directive);
+          scene.soundAssignments = scene.soundAssignments || [];
+          for (const sa of dir.assignments) scene.soundAssignments.push(sa);
         } else if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
           initialMode = dir.runtime;
@@ -124,11 +154,17 @@ function parse(tokens) {
     // Parse subgrammars
     scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
 
-    // Parse optional @templates section
+    // Parse optional @template (v0.8 singular) or @templates (v0.7 plural) section.
+    // En v0.8, le champ AST canonique est `template` (singulier). On garde
+    // `templates` pour rétrocompat avec les consommateurs existants (encoder).
     skipNewlines();
+    scene.template = null;
     scene.templates = null;
-    if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'templates') {
-      scene.templates = parseTemplateSection();
+    if (at(T.AT) && peek(1).type === T.IDENT &&
+        (peek(1).value === 'template' || peek(1).value === 'templates')) {
+      const entries = parseTemplateSection();
+      scene.template = entries;
+      scene.templates = entries;  // alias rétrocompat — même tableau (pas de copie)
     }
 
     return scene;
@@ -333,40 +369,176 @@ function parse(tokens) {
                modifiers: null, ccMappings, line: tok.line };
     }
 
-    // @actor name key:value key:value ... — actor declaration
+    // @actor name <body>
+    //
+    // v0.8 (forme canonique) : références d'entités via `.`
+    //   @actor sitar
+    //     alphabet.sargam
+    //     tuning.sargam_22shruti
+    //     transport.midi(ch:3, vel:100)
+    //     eval.python
+    //     sound.bell_short            // équivaut à *:sound.bell_short
+    //     *:sound.bell_short          // affectation défaut
+    //     Sa:sound.drum_kick          // affectation note
+    //
+    // v0.7 (rétrocompat transitoire, accepté en silence) : références via `:`
+    //   @actor sitar alphabet:sargam tuning:sargam_22shruti transport:midi(ch:3)
+    //
+    // Les deux formes peuvent être mêlées sur la même ligne et le parseur
+    // bascule par token (le `*` ou un IDENT:sound.X = affectation, sinon
+    // entity_ref).
     if (name === 'actor') {
       const actorName = expect(T.IDENT).value;
       const properties = {};
-      while (at(T.IDENT)) {
-        const propKey = advance().value;
-        expect(T.COLON);
-        if (at(T.IDENT)) {
-          const propValue = advance().value;
-          if (at(T.LPAREN)) {
-            // transport:midi(ch:3, vel:100) → TransportRef with params
-            advance();
-            const params = {};
-            while (!at(T.RPAREN) && !atEnd()) {
-              const paramKey = expect(T.IDENT).value;
-              expect(T.COLON);
-              const paramVal = at(T.INT) ? Number(advance().value)
-                             : at(T.FLOAT) ? Number(advance().value)
-                             : advance().value;
-              params[paramKey] = paramVal;
-              if (at(T.COMMA)) advance();
-            }
-            expect(T.RPAREN);
-            properties[propKey] = { type: 'TransportRef', key: propValue, params };
-          } else {
-            properties[propKey] = propValue;
-          }
-        } else if (at(T.INT)) {
-          properties[propKey] = Number(advance().value);
-        } else if (at(T.FLOAT)) {
-          properties[propKey] = Number(advance().value);
+      const soundAssignments = [];
+
+      // Helper: parser les params d'un transport `(ch:3, vel:100)`
+      const parseRefParams = () => {
+        expect(T.LPAREN);
+        const params = {};
+        while (!at(T.RPAREN) && !atEnd()) {
+          const paramKey = expect(T.IDENT).value;
+          expect(T.COLON);
+          const paramVal = at(T.INT) ? Number(advance().value)
+                         : at(T.FLOAT) ? Number(advance().value)
+                         : advance().value;
+          params[paramKey] = paramVal;
+          if (at(T.COMMA)) advance();
         }
+        expect(T.RPAREN);
+        return params;
+      };
+
+      // Helper : enregistre une référence d'entité dans `properties`
+      // (alphabet, tuning, transport, sound, eval).
+      const setEntityRef = (key, value, params /* | null */) => {
+        if (key === 'transport') {
+          properties.transport = { type: 'TransportRef', key: value, params: params || {} };
+        } else if (key === 'sound') {
+          // sound.X dans @actor X = sucre pour *:sound.X (cf. EBNF v0.8 ligne 104).
+          // On enregistre la référence sur properties.sound (pour l'actorResolver)
+          // ET on émet une SoundAssignment scope=actor subject=*.
+          properties.sound = value;
+          soundAssignments.push({
+            type: 'SoundAssignment',
+            scope: { kind: 'actor', name: actorName },
+            subject: '*',
+            target: { kind: 'named-ref', name: value },
+            line: tok.line,
+          });
+        } else {
+          // alphabet, tuning, eval — référence simple
+          properties[key] = value;
+        }
+      };
+
+      // Boucle de body : actor_prop | sound_assignment | NEWLINE
+      while (!atEnd()) {
+        // Sauter les NEWLINEs / commentaires : autorisés en v0.8 multi-ligne
+        while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+
+        // Affectation `*:sound.X` (défaut acteur)
+        if (at(T.STAR) && peek(1).type === T.COLON) {
+          advance(); // *
+          advance(); // :
+          const target = parseSoundAssignmentTarget();
+          soundAssignments.push({
+            type: 'SoundAssignment',
+            scope: { kind: 'actor', name: actorName },
+            subject: '*',
+            target,
+            line: tok.line,
+          });
+          continue;
+        }
+
+        if (!at(T.IDENT)) break;
+
+        const key = current().value;
+        const next = peek(1).type;
+
+        // forme v0.8 : `alphabet.X`, `tuning.X`, `transport.X[(...)`, `sound.X`, `eval.X`
+        if (next === T.PERIOD && !peek(1).spaceBefore) {
+          // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
+          // symbole, début de règle).
+          const isEntityKey = key === 'alphabet' || key === 'tuning' ||
+                              key === 'transport' || key === 'sound' ||
+                              key === 'eval';
+          if (!isEntityKey) break;
+          advance();           // consume key IDENT
+          advance();           // consume PERIOD
+          const value = expect(T.IDENT).value;
+          let params = null;
+          if (at(T.LPAREN) && !current().spaceBefore) params = parseRefParams();
+          setEntityRef(key, value, params);
+          continue;
+        }
+
+        // forme v0.7 : `alphabet:X`, `tuning:X`, `transport:X(...)`, `sounds:X`
+        if (next === T.COLON && !peek(1).spaceBefore) {
+          // Affectation : `Sa:sound.X` ou `Sa:{ ... }`. Détection : le 3e token
+          // est IDENT "sound" PERIOD IDENT (affectation), ou LBRACE (inline).
+          const t3 = peek(2);
+          const t4 = peek(3);
+          const isSubjectSoundAssign =
+              (t3.type === T.IDENT && t3.value === 'sound' &&
+               t4.type === T.PERIOD)
+            || (t3.type === T.LBRACE);
+
+          if (isSubjectSoundAssign) {
+            // C'est `Sa:sound.X` ou `Sa:{...}` → SoundAssignment
+            const subject = advance().value; // Sa
+            advance(); // :
+            const target = parseSoundAssignmentTarget();
+            soundAssignments.push({
+              type: 'SoundAssignment',
+              scope: { kind: 'actor', name: actorName },
+              subject,
+              target,
+              line: tok.line,
+            });
+            continue;
+          }
+
+          // forme v0.7 entité — accepté en rétrocompat
+          advance();   // key
+          advance();   // :
+          if (at(T.IDENT)) {
+            const value = advance().value;
+            let params = null;
+            if (at(T.LPAREN) && !current().spaceBefore) params = parseRefParams();
+            // Renommage : v0.7 `sounds:` → propriété canonique `sound`
+            const canonicalKey = key === 'sounds' ? 'sound' : key;
+            setEntityRef(canonicalKey, value, params);
+            continue;
+          }
+          if (at(T.INT)) { properties[key] = Number(advance().value); continue; }
+          if (at(T.FLOAT)) { properties[key] = Number(advance().value); continue; }
+          break;
+        }
+
+        // Sortie : token inconnu (probable début de règle)
+        break;
       }
-      return { type: 'ActorDirective', name: actorName, properties, line: tok.line };
+      return {
+        type: 'ActorDirective',
+        name: actorName,
+        properties,
+        soundAssignments: soundAssignments.length > 0 ? soundAssignments : null,
+        line: tok.line,
+      };
+    }
+
+    // @sound [.libname[:variant]] [{ ... }|name { ... }]+ — bloc déclaratif (v0.8)
+    if (name === 'sound') {
+      // À ce point, `subkey` a déjà absorbé `.libname` si présent.
+      // Variante éventuelle après : `@sound.libname:variant`.
+      let libVariant = null;
+      if (subkey && at(T.COLON)) {
+        advance();
+        libVariant = expect(T.IDENT).value;
+      }
+      return parseSoundSection(tok.line, subkey, libVariant);
     }
 
     // @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
@@ -477,6 +649,80 @@ function parse(tokens) {
         if (at(T.COMMA)) advance();
       }
       expect(T.RPAREN);
+    }
+
+    // v0.8 — corps de `@alphabet.X` : peut contenir des `*:sound.X` et
+    // `Sa:sound.X` (sound_assignment) et le binding `notes: Sa Re ga ...`.
+    // EBNF Couche 1 § alphabet_section (étendu v0.8).
+    // Sortie : tableau d'AlphabetSoundAssignments si présents.
+    if (name === 'alphabet' && subkey) {
+      const assignments = [];
+      while (!atEnd()) {
+        while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+
+        // *:sound.X
+        if (at(T.STAR) && peek(1).type === T.COLON) {
+          const line = current().line;
+          advance(); advance(); // * :
+          const target = parseSoundAssignmentTarget();
+          assignments.push({
+            type: 'SoundAssignment',
+            scope: { kind: 'alphabet', name: subkey },
+            subject: '*',
+            target,
+            line,
+          });
+          continue;
+        }
+
+        // IDENT:sound.X (affectation par note) — distinguer d'un terminal LHS de règle.
+        // Heuristique : `IDENT:` n'est PAS une affectation sound si le 3e
+        // token n'est pas `sound` ou `{`. (Une règle commence par `IDENT IDENT* ARROW`,
+        // or aucun IDENT ne peut être suivi de COLON dans une LHS de règle.)
+        if (at(T.IDENT) && peek(1).type === T.COLON) {
+          const t3 = peek(2);
+          const t4 = peek(3);
+          const isSoundAssign =
+              (t3.type === T.IDENT && t3.value === 'sound' && t4.type === T.PERIOD)
+            || (t3.type === T.LBRACE);
+          if (isSoundAssign) {
+            const line = current().line;
+            const subject = advance().value;
+            advance(); // :
+            const target = parseSoundAssignmentTarget();
+            assignments.push({
+              type: 'SoundAssignment',
+              scope: { kind: 'alphabet', name: subkey },
+              subject,
+              target,
+              line,
+            });
+            continue;
+          }
+          // notes: Sa Re ga ma Pa dha ni — déclaration de notes (v0.8 EBNF).
+          // Pas porté en ce milestone (les notes sont calculées via lib JSON) :
+          // on consomme silencieusement la ligne pour ne pas casser le flow.
+          if (current().value === 'notes') {
+            advance(); advance(); // notes :
+            while (at(T.IDENT)) advance();
+            continue;
+          }
+        }
+
+        break;
+      }
+      const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };
+      if (assignments.length > 0) {
+        // On retourne un nœud composite : le caller détecte AlphabetSoundAssignments
+        // et l'ajoute à scene.soundAssignments tout en gardant la Directive.
+        return {
+          type: 'AlphabetSoundAssignments',
+          directive: dirNode,
+          assignments,
+          line: tok.line,
+        };
+      }
+      return dirNode;
     }
 
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };
@@ -638,6 +884,159 @@ function parse(tokens) {
   }
 
   // ============================================================
+  // v0.8 — Sons : prototypes et affectations
+  // ============================================================
+
+  /**
+   * Parse une liste de paires `key:value, key:value, key` (booléen nu).
+   * Suppose que `{` est déjà consommé ; consomme jusqu'à `}` inclus.
+   * Référence EBNF : Couche 1 § sound_section, `prop_pairs`.
+   */
+  function parsePropPairs() {
+    const props = {};
+    while (!at(T.RBRACE) && !atEnd()) {
+      if (at(T.NEWLINE) || at(T.COMMENT)) { advance(); continue; }
+      if (at(T.COMMA)) { advance(); continue; }
+      const key = expect(T.IDENT).value;
+      // Booléen nu : `{ breakTempo, contBeg }` ≡ `breakTempo:true, contBeg:true`
+      if (!at(T.COLON)) {
+        props[key] = true;
+        continue;
+      }
+      advance(); // :
+      // Valeur : INT, FLOAT, STRING, IDENT, ou INT/INT (ratio)
+      let val;
+      if (at(T.REST)) {
+        // valeur négative : `transpose:-12`
+        advance();
+        if (at(T.INT)) val = -Number(advance().value);
+        else if (at(T.FLOAT)) val = -Number(advance().value);
+        else throw new ParseError('Expected number after - in prop value', current());
+      } else if (at(T.INT)) {
+        const num = advance().value;
+        if (at(T.SLASH) && peek(1).type === T.INT) {
+          advance();
+          val = `${num}/${advance().value}`;
+        } else {
+          val = Number(num);
+        }
+      } else if (at(T.FLOAT)) {
+        val = Number(advance().value);
+      } else if (at(T.STRING)) {
+        val = advance().value;
+      } else if (at(T.IDENT)) {
+        const id = advance().value;
+        // Promotion canonique : booléens littéraux en string → booléen JS.
+        if (id === 'true') val = true;
+        else if (id === 'false') val = false;
+        else val = id;
+      } else {
+        throw new ParseError('Expected value (INT/FLOAT/STRING/IDENT) in prop pair', current());
+      }
+      props[key] = val;
+    }
+    return props;
+  }
+
+  /**
+   * Parse une cible d'affectation son : `sound.NAME` ou `{ props }`.
+   * Référence EBNF v0.8 § sound_assignment, sound_target.
+   */
+  function parseSoundAssignmentTarget() {
+    // Bloc inline anonyme : `Sa:{ dur:300 }`
+    if (at(T.LBRACE)) {
+      advance();
+      const props = parsePropPairs();
+      expect(T.RBRACE);
+      return { kind: 'inline-props', props };
+    }
+    // Référence nommée : `Sa:sound.bell_short` (v0.8 canonique).
+    // Rétrocompat v0.7 : on accepte aussi `Sa:NAME` nu (sucre = sound.NAME).
+    const first = expect(T.IDENT).value;
+    if (first === 'sound' && at(T.PERIOD)) {
+      advance();
+      const name = expect(T.IDENT).value;
+      return { kind: 'named-ref', name };
+    }
+    // Cas rétrocompat : `Sa:bell_short` (forme v0.7 sans namespace explicite).
+    return { kind: 'named-ref', name: first };
+  }
+
+  /**
+   * Parse la section `@sound` (ou `@sound.libname[:variant]`).
+   *
+   * Forme EBNF v0.8 :
+   *   sound_section = "@" "sound" [ "." IDENT [ ":" IDENT ] ] NEWLINE sound_entry+
+   *   sound_entry   = anonymous_prototype | named_prototype
+   *   anonymous_prototype = "{" prop_pairs "}"
+   *   named_prototype     = IDENT "{" prop_pairs "}"
+   *
+   * À l'entrée : tous les tokens jusqu'au `@sound` + subkey éventuel + variant
+   * éventuel ont été consommés. On parse maintenant le bloc d'entrées qui suit.
+   */
+  function parseSoundSection(line, lib, libVariant) {
+    const prototypes = [];
+
+    // Si lib spécifiée : `@sound.libname` charge une lib externe ; aucun
+    // bloc inline obligatoire. On accepte des entrées si elles existent
+    // (ex : surcharge locale après chargement).
+    // Sinon : bloc inline obligatoire (sons anonymes/nommés).
+
+    // Sauter le NEWLINE après `@sound` ou `@sound.lib`.
+    while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+
+    // Boucle d'entrées : tant qu'on voit `{` (anonyme) ou `IDENT {` (nommé).
+    while (!atEnd()) {
+      // Entrée anonyme : `{ ... }`
+      if (at(T.LBRACE)) {
+        advance();
+        const config = parsePropPairs();
+        expect(T.RBRACE);
+        prototypes.push({ type: 'SoundPrototype', name: null, config, line });
+        while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+        continue;
+      }
+      // Entrée nommée : `IDENT { ... }`
+      if (at(T.IDENT) && peek(1).type === T.LBRACE) {
+        const protoName = advance().value;
+        advance(); // {
+        const config = parsePropPairs();
+        expect(T.RBRACE);
+        prototypes.push({ type: 'SoundPrototype', name: protoName, config, line });
+        while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+        continue;
+      }
+      // Fin de bloc — token suivant n'appartient pas à @sound.
+      break;
+    }
+
+    return {
+      type: 'SoundSection',
+      lib: lib || null,
+      libVariant: libVariant || null,
+      prototypes,
+      line,
+    };
+  }
+
+  /**
+   * Parse une affectation `subject:sound_target` ou `*:sound_target`
+   * dans un corps d'alphabet ou d'acteur. Retourne le nœud
+   * SoundAssignmentAST sans champ `scope` (rempli par l'appelant).
+   *
+   * Le cas particulier `Sa:sound.X` est distingué d'un terminal `Sa` suivi
+   * d'une déclaration de type — l'appelant doit faire le lookahead.
+   */
+  function parseSoundAssignmentLocal(line) {
+    let subject;
+    if (at(T.STAR)) { advance(); subject = '*'; }
+    else subject = expect(T.IDENT).value;
+    expect(T.COLON);
+    const target = parseSoundAssignmentTarget();
+    return { type: 'SoundAssignment', subject, target, line };
+  }
+
+  // ============================================================
   // Couche 2 — Subgrammars
   // ============================================================
 
@@ -658,7 +1057,9 @@ function parse(tokens) {
       let blockMode = currentMode;
       let blockModifiers = currentModifiers;
       while (at(T.AT)) {
-        if (peek(1).type === T.IDENT && peek(1).value === 'templates') break;
+        // v0.8: la section template est en singulier ; v0.7 acceptée en alias.
+        if (peek(1).type === T.IDENT &&
+            (peek(1).value === 'template' || peek(1).value === 'templates')) break;
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
           blockMode = dir.runtime;  // @mode:random → runtime='random'
@@ -704,7 +1105,10 @@ function parse(tokens) {
 
   function parseTemplateSection() {
     expect(T.AT);       // @
-    expect(T.IDENT);    // templates
+    const kw = expect(T.IDENT);    // template (v0.8) ou templates (v0.7 alias)
+    if (kw.value !== 'template' && kw.value !== 'templates') {
+      throw new ParseError(`Expected 'template' or 'templates' after @`, kw);
+    }
     skipNewlines();
 
     const entries = [];
@@ -831,8 +1235,10 @@ function parse(tokens) {
     const rhs = parseRhsElements();
 
     // Runtime qualifier suffix on rule: S -> C2 C2 (vel:100)
+    // Loose check: accept opaque keys even when no @controls lib is loaded
+    // (EBNF couche 3 — rule = ... rhs , [ runtime_qualifier ]).
     let runtimeQualifier = null;
-    if (isRuntimeQualifier()) {
+    if (isRuntimeQualifierLoose()) {
       runtimeQualifier = parseRuntimeQualifier();
     }
 
@@ -1096,7 +1502,7 @@ function parse(tokens) {
       // [] or () with SPACE before → not attached to previous element → end of RHS
       // (rule-level qualifiers/flags handled by parseRule after this returns)
       if (at(T.LBRACKET) && current().spaceBefore) break;
-      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifier()) break;
+      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifierLoose()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
       if (atAny(T.RBRACE, T.COMMA) && isNewRuleAhead()) break;
@@ -1199,22 +1605,47 @@ function parse(tokens) {
   }
 
   function isRuntimeQualifier() {
-    // (IDENT:...) or (IDENT,...) or (IDENT) where IDENT is a known control name
+    // (IDENT:...) or (IDENT,...) or (IDENT) where IDENT is a known control name.
+    // v0.8 : on accepte aussi `(IDENT.IDENT)` (référence pointée, e.g.
+    // `(sound.bell_short)`) — décision PM 4, valeur runtime qualifier pointée.
     if (!at(T.LPAREN)) return false;
     const nextTok = peek(1);
     if (nextTok.type !== T.IDENT) return false;
     if (!libCtx.controlNames.has(nextTok.value)) return false;
-    // Known control followed by : , or ) = runtime qualifier
+    // Known control followed by : , ) or . (référence pointée v0.8) = runtime qualifier
     const afterName = peek(2);
-    return afterName.type === T.COLON || afterName.type === T.COMMA || afterName.type === T.RPAREN;
+    return afterName.type === T.COLON || afterName.type === T.COMMA ||
+           afterName.type === T.RPAREN || afterName.type === T.PERIOD;
+  }
+
+  function isRuntimeQualifierLoose() {
+    // Syntactic check: `(IDENT:value...)` regardless of whether IDENT is a
+    // known control. Used to detect rule-level / standalone runtime qualifiers
+    // that should be opaque (passed through to the dispatcher even when no
+    // @controls lib is loaded). The strict isRuntimeQualifier() is still used
+    // for collé suffix attachment so SymbolCall vs Symbol+suffix routing stays
+    // controlNames-driven.
+    if (!at(T.LPAREN)) return false;
+    if (peek(1).type !== T.IDENT) return false;
+    return peek(2).type === T.COLON;
   }
 
   function parseRuntimeQualifier() {
-    // (vel:80, wave:sawtooth, velcont) → runtime qualifier AST
+    // (vel:80, wave:sawtooth, velcont) → runtime qualifier AST.
+    // v0.8 : accepte aussi `(sound.NAME)` — référence pointée comme valeur ;
+    // équivalent sémantique à `(sound:NAME)` mais notation plus lisible.
     expect(T.LPAREN);
     const pairs = [];
     while (!at(T.RPAREN) && !atEnd()) {
       const key = expect(T.IDENT).value;
+      // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
+      if (at(T.PERIOD)) {
+        advance(); // .
+        const name = expect(T.IDENT).value;
+        pairs.push({ key, value: name });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
       if (at(T.COLON)) {
         advance();
         // Raw value: everything until next key:value pair or )
@@ -1233,6 +1664,10 @@ function parse(tokens) {
           while (!at(T.RPAREN) && !atEnd()) {
             // Stop at , only if followed by IDENT: (next qualifier pair)
             if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COLON) break;
+            // v0.8 : stop at , if followed by IDENT PERIOD IDENT (référence pointée
+            // = nouvelle pair, e.g. `, sound.bell`).
+            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.PERIOD
+                && libCtx.controlNames.has(peek(1).value)) break;
             // Stop at , if followed by bare IDENT ) — but only if IDENT is a known control
             if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.RPAREN
                 && libCtx.controlNames.has(peek(1).value)) break;
@@ -1244,6 +1679,7 @@ function parse(tokens) {
         }
         // If comma follows and next token is NOT IDENT: → multi-arg value, keep collecting
         while (at(T.COMMA) && !(peek(1).type === T.IDENT && peek(2).type === T.COLON)
+                           && !(peek(1).type === T.IDENT && peek(2).type === T.PERIOD && libCtx.controlNames.has(peek(1).value))
                            && !(peek(1).type === T.IDENT && peek(2).type === T.RPAREN && libCtx.controlNames.has(peek(1).value))
                            && !(peek(1).type === T.IDENT && peek(2).type === T.COMMA && libCtx.controlNames.has(peek(1).value))
                            && !at(T.RPAREN) && !atEnd()) {
