@@ -4,9 +4,99 @@
   "mode": "text",
   "compile": {
     "grammarLines": 60,
-    "alphabetSize": 0
+    "alphabetSize": 8
   },
-  "alphabet": [],
-  "tokens": [],
-  "date": "2026-04-26"
+  "alphabet": [
+    "dha",
+    "dhadha",
+    "tite",
+    "dheena",
+    "teena",
+    "dhadhateena",
+    "dhadhatitedhadhadheena",
+    "dhadhatitedhadhateena"
+  ],
+  "tokens": [
+    [
+      "dha",
+      0,
+      0
+    ],
+    [
+      "dhadha",
+      0,
+      0
+    ],
+    [
+      "tite",
+      0,
+      0
+    ],
+    [
+      "tite",
+      0,
+      0
+    ],
+    [
+      "dha",
+      0,
+      0
+    ],
+    [
+      "dhadhatitedhadhateena",
+      0,
+      0
+    ],
+    [
+      "dhadhatitedhadhadheena",
+      0,
+      0
+    ],
+    [
+      "dhadhatitedhadhateena",
+      0,
+      0
+    ],
+    [
+      "dha",
+      0,
+      0
+    ],
+    [
+      "tite",
+      0,
+      0
+    ],
+    [
+      "dhadha",
+      0,
+      0
+    ],
+    [
+      "dheena",
+      0,
+      0
+    ],
+    [
+      "dha",
+      0,
+      0
+    ],
+    [
+      "dhadhatitedhadhateena",
+      0,
+      0
+    ],
+    [
+      "dhadhatitedhadhadheena",
+      0,
+      0
+    ],
+    [
+      "dhadhatitedhadhadheena",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-06-03"
 }

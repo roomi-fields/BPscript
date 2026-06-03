@@ -4,9 +4,19 @@
   "mode": "midi",
   "compile": {
     "grammarLines": 8,
-    "alphabetSize": 0
+    "alphabetSize": 9
   },
-  "alphabet": [],
+  "alphabet": [
+    "C4",
+    "A4",
+    "G4",
+    "Cj4",
+    "Aj4",
+    "Gj4",
+    "D4",
+    "F4",
+    "E4"
+  ],
   "tokens": [
     [
       "_script(CT 3)",
@@ -44,5 +54,5 @@
       6000
     ]
   ],
-  "date": "2026-04-26"
+  "date": "2026-06-03"
 }
