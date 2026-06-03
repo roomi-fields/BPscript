@@ -46,6 +46,8 @@ function compileBPS(source) {
     result.macroTable = encoded.macroTable;
     result.aliasTable = encoded.aliasTable;
     result.labelTable = encoded.labelTable;
+    result.routingTable = encoded.routingTable;   // Z1 (#105): loaded @routing config
+    result.labelIndex = encoded.labelIndex;        // Z2 (#106): label → targeted RHS elements
 
     // 4. Generate prototypes (-so. file) for all declared terminals
     if (result.alphabet.length > 0) {

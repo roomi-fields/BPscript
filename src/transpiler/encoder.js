@@ -39,7 +39,7 @@ let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _sta
 const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [] };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {} };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -108,6 +108,18 @@ function encode(ast) {
     }
   }
 
+  // Z2 (#106) — Build the label → targeted-elements index BEFORE resolving @map
+  // endpoints, so a scoped endpoint like `kick.ratio` (LANGUAGE.md:1172) whose
+  // scope is a label resolves to a `label` target instead of being mistaken for
+  // an actor-scoped flag. The `@`-suffix labels on RHS elements (parser.js:1557)
+  // were parsed but never emitted; this index locates each labelled element.
+  output.labelIndex = buildLabelIndex(ast.subgrammars);
+
+  // Known label names = @label declarations + every @-suffix label found in the
+  // RHS (keys of the index just built).
+  const labelNames = new Set(Object.keys(output.labelIndex));
+  for (const l of (ast.labels || [])) labelNames.add(l.name);
+
   // Build map table from @map directives (I/O mappings: CC/OSC ↔ triggers/flags)
   // Resolve named CC aliases and scoped endpoints
   if (ast.maps) {
@@ -127,10 +139,17 @@ function encode(ast) {
       }
       return ep;
     }
-    // Resolve scoped: scene.X → sys command, actor.X → flag
+    // Resolve scoped: scene.X → sys command, label.X → label target, actor.X → flag
     if (ep.kind === 'scoped') {
       if (sceneNames.has(ep.scope)) {
         return { kind: 'sys', scene: ep.scope, command: ep.name };
+      }
+      // Z2 — label.param: @map cc:1 -> kick.ratio. `kick` is a known label, so
+      // the endpoint targets every element carrying that label; `param` is the
+      // controllable parameter (ratio, vel, ...). The concrete element list is
+      // available in output.labelIndex[label].
+      if (labelNames.has(ep.scope)) {
+        return { kind: 'label', label: ep.scope, param: ep.name };
       }
       // Assume actor-scoped flag
       return { kind: 'flag', name: ep.name, actor: ep.scope };
@@ -436,6 +455,12 @@ function encode(ast) {
     output.labelTable = ast.labels.map(l => l.name);
   }
 
+  // Z1 (#105) — Expose loaded @routing config so the downstream orchestrator
+  // can instantiate MIDI/OSC transports. libCtx._libs['routing.<profile>']
+  // (or 'routing' when no profile) is loaded by libs.js but was never consumed.
+  // We surface it as the `routingTable` sidecar, mirroring exposeTable/mapTable.
+  output.routingTable = buildRoutingTable(libCtx, ast.directives);
+
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);
 
@@ -443,6 +468,153 @@ function encode(ast) {
   output.usedTerminals = _usedTerminals;
 
   return output;
+}
+
+/**
+ * Z1 (#105) — Build the routingTable sidecar from a loaded @routing directive.
+ *
+ * libs.js stores the loaded routing data under `_libs['routing.<profile>']`
+ * (when the directive carries a subkey, e.g. @routing.studio) or `_libs['routing']`
+ * (bare @routing → whole file). The subkey form resolves to a single profile
+ * object ({ transports, evals }) via loadLib's collection lookup; the file-level
+ * `defaults` block is a sibling of the profiles, so we re-read the whole file to
+ * recover it. Returns null when no @routing directive was used.
+ *
+ * Shape:
+ *   {
+ *     profile: "studio" | null,            // selected profile (null for bare @routing)
+ *     transports: { <name>: { type, ... } },
+ *     evals:      { <name>: { type, ... } },
+ *     defaults:   { baseHz, timeout, ... } | null
+ *   }
+ *
+ * Additive: does not touch exposeTable/mapTable/aliasTable.
+ */
+function buildRoutingTable(libCtx, directives) {
+  const routingDir = (directives || []).find(d => d.name === 'routing');
+  if (!routingDir) return null;
+
+  const profile = routingDir.subkey || null;
+  const libKey = profile ? `routing.${profile}` : 'routing';
+  const loaded = libCtx._libs?.[libKey];
+  if (!loaded) return null;
+
+  // With a profile, `loaded` is the profile object { transports, evals }.
+  // Without one, `loaded` is the whole file; profiles live at the top level
+  // alongside `defaults`, so there is no single set of transports to expose —
+  // surface the raw file under `profiles` and the shared defaults.
+  if (profile) {
+    // Recover file-level defaults (sibling of the profile, dropped by the
+    // subkey lookup). loadLib('routing') returns the whole file.
+    const wholeFile = loadLib('routing');
+    const defaults = (wholeFile && typeof wholeFile === 'object') ? (wholeFile.defaults || null) : null;
+    return {
+      profile,
+      transports: loaded.transports || {},
+      evals: loaded.evals || {},
+      defaults,
+    };
+  }
+
+  // Bare @routing — no profile selected. Expose all profiles + defaults so the
+  // orchestrator can pick one at runtime.
+  const { defaults = null, ...profiles } = loaded;
+  return {
+    profile: null,
+    profiles,
+    defaults,
+  };
+}
+
+/**
+ * Z2 (#106) — Build the labelIndex sidecar: label name → list of targeted RHS
+ * elements, so @map endpoints like `kick.ratio` (LANGUAGE.md:1172) resolve to
+ * the concrete elements they control.
+ *
+ * The parser attaches `el.label` (a string) to any RHS node carrying an
+ * `@`-suffix (parser.js:1557). Labels can sit on nested elements (groups,
+ * polymetric voices, simultaneous secondaries), so we walk each rule's RHS
+ * tree. The same label may appear on several elements (multicast,
+ * LANGUAGE.md:1177-1181) — hence a list per label.
+ *
+ * Shape:
+ *   {
+ *     "<label>": [
+ *       {
+ *         subgrammar: number,   // subgrammar index (sub.index)
+ *         rule: number,         // 1-based rule number within the subgrammar
+ *         path: (number|string)[], // path into the RHS tree: top-level index
+ *                                  // then container keys ('primary','voices',i)
+ *         element: string,      // element type (Symbol, SymbolCall, Polymetric, ...)
+ *         symbol: string|null   // terminal/non-terminal name when applicable
+ *       }, ...
+ *     ]
+ *   }
+ *
+ * The `path` lets the downstream orchestrator address the exact element; the
+ * controllable parameter (e.g. `ratio`, `vel`) comes from the @map endpoint
+ * itself (target.name), not from here — this index only locates the targets.
+ *
+ * Additive: does not alter labelTable (which lists @label declarations only).
+ */
+function buildLabelIndex(subgrammars) {
+  const index = {};
+
+  const record = (label, loc) => {
+    if (!index[label]) index[label] = [];
+    index[label].push(loc);
+  };
+
+  const elementSymbol = (el) => {
+    if (el == null) return null;
+    if (typeof el.name === 'string') return el.name;
+    if (typeof el.symbol === 'string') return el.symbol;
+    return null;
+  };
+
+  // Recursively walk an RHS element and its children, recording any labels.
+  const walk = (el, ctx, path) => {
+    if (el == null || typeof el !== 'object') return;
+
+    if (el.label) {
+      record(el.label, {
+        subgrammar: ctx.subgrammar,
+        rule: ctx.rule,
+        path: [...path],
+        element: el.type || null,
+        symbol: elementSymbol(el),
+      });
+    }
+
+    // Descend into nested element containers (mirrors encodeRhsElementInner).
+    switch (el.type) {
+      case 'SimultaneousGroup':
+        walk(el.primary, ctx, [...path, 'primary']);
+        (el.secondaries || []).forEach((sec, i) => walk(sec, ctx, [...path, 'secondaries', i]));
+        break;
+      case 'Polymetric':
+        (el.voices || []).forEach((voice, vi) => {
+          (voice || []).forEach((e, ei) => walk(e, ctx, [...path, 'voices', vi, ei]));
+        });
+        break;
+      case 'TemplateMasterGroup':
+      case 'TemplateSlaveGroup':
+        (el.elements || []).forEach((e, i) => walk(e, ctx, [...path, 'elements', i]));
+        break;
+      default:
+        break;
+    }
+  };
+
+  for (const sub of (subgrammars || [])) {
+    for (let ri = 0; ri < sub.rules.length; ri++) {
+      const rule = sub.rules[ri];
+      const ctx = { subgrammar: sub.index, rule: ri + 1 };
+      (rule.rhs || []).forEach((el, i) => walk(el, ctx, [i]));
+    }
+  }
+
+  return index;
 }
 
 /**
