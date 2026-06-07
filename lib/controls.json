@@ -57,7 +57,26 @@
     "retro": {
       "bp3": "_retro",
       "args": [],
-      "description": "Retrograde — reverse element order in polymetric context."
+      "scope": "seq_prefix",
+      "description": "Retrograde — reverse element order in polymetric context. Emitted as prefix inside the group."
+    },
+    "shuffle": {
+      "bp3": "_rndseq",
+      "args": ["seed"],
+      "scope": "seq_prefix",
+      "description": "Shuffle — random reordering of sequence elements. Emitted as prefix inside the group. seed arg → _srand(N) prefix."
+    },
+    "order": {
+      "bp3": "_ordseq",
+      "args": [],
+      "scope": "seq_prefix",
+      "description": "Order — restore canonical order of sequence elements. Emitted as prefix inside the group."
+    },
+    "rotate": {
+      "bp3": "_rotate",
+      "args": ["degrees"],
+      "scope": "seq_prefix",
+      "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). Emitted as prefix inside the group. Distinct from runtime (rotate) which is a pitch transformation."
     },
     "staccato": {
       "bp3": "_staccato",

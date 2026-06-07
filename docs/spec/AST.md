@@ -665,6 +665,9 @@ Exemples :
 - `[mode:random]` → `{ pairs:[{key:"mode", value:"random"}] }`
 - `[retro]` → `{ pairs:[{key:"retro", value:true}] }` → compilé en `_retro` (sans parenthèses)
 - `[rotate:2]` → `{ pairs:[{key:"rotate", value:2}] }` → compilé en `_rotate(2)`
+- `[shuffle]` → `{ pairs:[{key:"shuffle", value:true}] }` → compilé en `_rndseq` (seq_prefix)
+- `[shuffle:42]` → `{ pairs:[{key:"shuffle", value:42}] }` → compilé en `_srand(42) _rndseq`
+- `[order]` → `{ pairs:[{key:"order", value:true}] }` → compilé en `_ordseq` (seq_prefix)
 - `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `_tempo(2/1) A _tempo(1/2)`
 - `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `_tempo(1/2) A _tempo(2/1)`
 - `A[/3/2]` → `{ tempoOp:{ operator:"/", value:"3/2" } }` → compilé en `_tempo(3/2) A _tempo(2/3)`
@@ -674,7 +677,18 @@ Exemples :
 - `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
 
 **Clés nues** : quand `value === true` (clé sans `:valeur`), l'encodeur émet le nom BP3
-sans parenthèses (`_retro`). Quand une valeur est fournie, avec parenthèses (`_rotate(2)`).
+sans parenthèses (`_retro`, `_rndseq`, `_ordseq`). Quand une valeur est fournie, avec
+parenthèses (`_rotate(2)`) ou avec préfixe graine (`_srand(42) _rndseq` pour `shuffle`).
+
+**Contrôles seq_prefix** (`scope:"seq_prefix"` dans controls.json) : `retro`, `shuffle`,
+`order`, `rotate`. Injectés en tête du groupe (inside `{}`) ou en tête de RHS (fin de règle).
+Portées :
+- `{a b c}[shuffle]` → `{_rndseq a b c}` (inside accolades, via `Polymetric.suffixQualifiers`)
+- `a b c [shuffle]` → `_rndseq a b c` (fin de règle, via `Rule.qualifiers`)
+
+**Distinction `[]` vs `()` pour `rotate`** : `[rotate:2]` (engine, `Qualifier`) compile en
+`_rotate(2)` BP3 (décalage cyclique temporel) ; `(rotate:2)` (runtime, `RuntimeQualifier`)
+compile en `_script(CT n)` via dispatcher (rotation diatonique, transformation pitch).
 
 **Poids infini** : `value === "inf"` → compilé en `<inf>` (priorité absolue en BP3).
 

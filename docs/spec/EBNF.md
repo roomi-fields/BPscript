@@ -517,7 +517,8 @@ engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
 
 ENGINE_KEY  = "mode" | "scan" | "speed" | "weight" | "on_fail"
-            | "tempo" | "meter" | "scale" | "retro" | "rotate"
+            | "tempo" | "meter" | "scale"
+            | "retro" | "shuffle" | "order" | "rotate"
             | "keyxpand" | "repeat" | "failed" | "stop" | "goto"
             | "striated" | "smooth" ;
 
@@ -531,12 +532,25 @@ A[/2]                  → /2 A
 [scale: just_intonation C4] → _scale(just intonation,C4)
 [retro]                → _retro (clé nue = sans parenthèses)
 [rotate:2]             → _rotate(2) (clé avec valeur = avec parenthèses)
+[shuffle]              → _rndseq (marqueur seq_prefix en tête de RHS ou de groupe)
+[shuffle:42]           → _srand(42) _rndseq (graine + shuffle)
+[order]                → _ordseq (restaure l'ordre canonique)
 ```
 
 **Contrôles engine sans argument** : quand une clé engine est utilisée nue (`[retro]`,
-`[destru]`), la valeur interne est `true`. L'encodeur émet le nom BP3 **sans parenthèses**
-(`_retro`, `_destru`). Quand une valeur est fournie (`[rotate:2]`), l'encodeur émet
-avec parenthèses (`_rotate(2)`).
+`[shuffle]`, `[order]`, `[destru]`), la valeur interne est `true`. L'encodeur émet le nom
+BP3 **sans parenthèses** (`_retro`, `_rndseq`, `_ordseq`, `_destru`). Quand une valeur est
+fournie (`[rotate:2]`), l'encodeur émet avec parenthèses (`_rotate(2)`).
+
+**Contrôles seq_prefix** (`scope:"seq_prefix"` dans controls.json) : `retro`, `shuffle`,
+`order`, `rotate`. Ces clés sont injectées **en tête** du groupe ou de la RHS :
+- Sur un groupe : `{a b c}[shuffle]` → `{_rndseq a b c}` (préfixe inside les accolades)
+- En fin de règle : `a b c [shuffle]` → `_rndseq a b c` (préfixe en tête de RHS)
+
+**Distinction `[]` vs `()` pour `rotate`** : `[rotate:2]` (engine) → `_rotate(2)` en BP3
+(décalage cyclique temporel) ; `(rotate:2)` (runtime) → `_script(CT n)` via dispatcher
+(rotation diatonique dans l'alphabet, transformation pitch). Ce sont deux opérations
+distinctes malgré le même nom de clé.
 
 #### `()` — Qualificateurs runtime
 

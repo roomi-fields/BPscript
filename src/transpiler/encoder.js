@@ -32,6 +32,8 @@ let _cvNames = {};  // CV instance name → cvTable index mapping
 let _nonTerminals = new Set();
 let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
+let _seqPrefix = new Set();  // engine controls with scope:seq_prefix (retro, shuffle, order, rotate)
+let _dualCtx = new Set();   // controls in both engine and runtime — () always routes to _script
 
 // BP3 reserved words must never appear in the alphabet (Error code 54).
 // Module-scoped so both the alphabet-seeding pass in encode() and the RHS
@@ -69,6 +71,8 @@ function encode(ast) {
   const libCtx = loadLibsFromDirectives(ast.directives);
   const CONTROL_MAP = libCtx.controlMap;
   _bp3Native = libCtx.bp3NativeControls;
+  _seqPrefix = libCtx.seqPrefixControls;
+  _dualCtx = libCtx.dualContextControls;
 
   // Build CV table from cvInstances
   if (ast.cvInstances) {
@@ -364,12 +368,17 @@ function encode(ast) {
       if (ruleTempoOp) rhsPrefixParts.push(tempoOpToInline(ruleTempoOp));
 
       // Controls as rule qualifiers — always suffix (written after RHS in BPscript)
+      // Exception: seq_prefix controls (shuffle, order, rotate, retro) → emitted as
+      // prefix of the entire RHS (portée suffixe canonique: marqueur en tête de RHS)
       const ruleNativeSuffix = [];
       const ruleRuntimeAssignments = {};
       for (const q of rule.qualifiers) {
         for (const p of q.pairs) {
           if (CONTROL_MAP[p.key]) {
-            if (_bp3Native.has(p.key)) {
+            if (_seqPrefix.has(p.key)) {
+              // seq_prefix on a rule: goes to head of RHS
+              rhsPrefixParts.push(formatSeqPrefixTokens(p.key, p.value, CONTROL_MAP));
+            } else if (_bp3Native.has(p.key)) {
               ruleNativeSuffix.push(formatNativeValue(CONTROL_MAP[p.key], p.value));
             } else {
               ruleRuntimeAssignments[p.key] = p.value;
@@ -392,18 +401,15 @@ function encode(ast) {
 
       // Runtime qualifier on rule: S -> C2 C2 (vel:100)
       // Emits start/end pair: _script(CT0) ... _script(CT0_e)
+      // Note: dual-context controls (in both engine and runtime) always route to _script in ().
       if (rule.runtimeQualifier) {
         const rqNative = [];
         const rqRuntime = {};
         for (const p of rule.runtimeQualifier.pairs) {
-          if (CONTROL_MAP[p.key]) {
-            if (_bp3Native.has(p.key)) {
-              rqNative.push(formatNativeValue(CONTROL_MAP[p.key], p.value));
-            } else {
-              rqRuntime[p.key] = p.value;
-            }
+          if (CONTROL_MAP[p.key] && _bp3Native.has(p.key) && !_dualCtx.has(p.key)) {
+            // Pure engine control used in () — preserve backward-compat BP3 native emit.
+            rqNative.push(formatNativeValue(CONTROL_MAP[p.key], p.value));
           } else {
-            // Unknown key: pass through opaquely to the dispatcher.
             rqRuntime[p.key] = p.value;
           }
         }
@@ -915,7 +921,33 @@ function encodeRhs(elements, alphabet, controlMap) {
 }
 
 function encodeRhsElement(el, alphabet, controlMap) {
-  const raw = encodeRhsElementInner(el, alphabet, controlMap);
+  // For Polymetric, seq_prefix qualifiers (retro, shuffle, order, rotate) must
+  // be injected INSIDE the group as a prefix, not emitted as external suffix.
+  // Collect them before calling encodeRhsElementInner so they can be threaded in.
+  let groupSeqPrefixTokens = null;
+  if (el.type === 'Polymetric' && el.suffixQualifiers && el.suffixQualifiers.length > 0) {
+    const seqParts = [];
+    const remaining = [];
+    for (const q of el.suffixQualifiers) {
+      let hadSeqPrefix = false;
+      if (q.pairs) {
+        for (const p of q.pairs) {
+          if (_seqPrefix.has(p.key)) {
+            seqParts.push(formatSeqPrefixTokens(p.key, p.value, controlMap));
+            hadSeqPrefix = true;
+          }
+        }
+      }
+      if (!hadSeqPrefix) remaining.push(q);
+    }
+    if (seqParts.length > 0) {
+      groupSeqPrefixTokens = seqParts.join(' ');
+      // Rebuild suffixQualifiers without seq_prefix entries for this call
+      el = { ...el, suffixQualifiers: remaining.length > 0 ? remaining : null };
+    }
+  }
+
+  const raw = encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens);
   let result = raw;
   // Legacy el.tempoOp from polymetric parser
   if (el.tempoOp) {
@@ -948,10 +980,20 @@ function encodeRhsElement(el, alphabet, controlMap) {
 
 // Encode a single qualifier into tokens (engine native or runtime _script)
 // Note: tempoOp (/N, \N) is handled as PREFIX in encodeRhsElement, not here
+// Note: dual-context controls (in both engine and runtime) always route to _script in ().
 function encodeQualifierTokens(q, controlMap, tokens) {
+  const isRuntime = q.type === 'RuntimeQualifier';
   const runtimeAssignments = {};
   for (const p of (q.pairs || [])) {
-    if (controlMap[p.key]) {
+    if (isRuntime) {
+      // () context: dual-context controls route to _script; pure engine controls preserve native.
+      if (controlMap[p.key] && _bp3Native.has(p.key) && !_dualCtx.has(p.key)) {
+        // Pure engine control in () — preserve backward-compat BP3 native emit.
+        tokens.push(formatNativeValue(controlMap[p.key], p.value));
+      } else {
+        runtimeAssignments[p.key] = p.value;
+      }
+    } else if (controlMap[p.key]) {
       if (_bp3Native.has(p.key)) {
         tokens.push(formatNativeValue(controlMap[p.key], p.value));
       } else {
@@ -966,7 +1008,7 @@ function encodeQualifierTokens(q, controlMap, tokens) {
   }
 }
 
-function encodeRhsElementInner(el, alphabet, controlMap) {
+function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
   switch (el.type) {
     case 'Symbol':
       // BP3 grammar operators spelled as identifiers (plus/fin/star) emit their
@@ -1087,6 +1129,12 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       if (speed !== null) {
         inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
       }
+      // seq_prefix qualifiers (retro, shuffle, order, rotate) — injected as prefix
+      // INSIDE the group: {_rndseq a b c d} instead of {a b c d} _rndseq.
+      // groupSeqPrefixTokens is passed from encodeRhsElement after extraction from suffixQualifiers.
+      if (groupSeqPrefixTokens) {
+        inner = `${groupSeqPrefixTokens} ${inner}`;
+      }
       let result = `{${inner}}`;
       // Check for scale qualifier → BP3 native `*N` / `**N` prefix.
       //
@@ -1126,16 +1174,16 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
         result = `${pair.enter} ${result} ${pair.exit}`;
       }
       // Runtime qualifier on group: {A B}(vel:100) → _script(CTn) {A B} _script(CTn_e)
+      // Note: dual-context controls (in both engine and runtime) always route to _script in ().
       if (el.runtimeQualifier) {
         const gNative = [];
         const gRuntime = {};
         for (const p of el.runtimeQualifier.pairs) {
-          if (controlMap[p.key]) {
-            if (_bp3Native.has(p.key)) {
-              gNative.push(formatNativeValue(controlMap[p.key], p.value));
-            } else {
-              gRuntime[p.key] = p.value;
-            }
+          if (controlMap[p.key] && _bp3Native.has(p.key) && !_dualCtx.has(p.key)) {
+            // Pure engine control used in () — preserve backward-compat BP3 native emit.
+            gNative.push(formatNativeValue(controlMap[p.key], p.value));
+          } else {
+            gRuntime[p.key] = p.value;
           }
         }
         const grpPrefix = [...gNative];
@@ -1232,15 +1280,14 @@ function encodeRhsElementInner(el, alphabet, controlMap) {
       }
 
       if (q.type === 'RuntimeQualifier') {
-        // Separate engine native from runtime — same as per-element logic
+        // () context: dual-context controls route to _script; pure engine controls preserve native.
         const runtimeAssignments = {};
         for (const p of q.pairs) {
-          if (controlMap[p.key]) {
-            if (_bp3Native.has(p.key)) {
-              parts.push(formatNativeValue(controlMap[p.key], p.value));
-            } else {
-              runtimeAssignments[p.key] = p.value;
-            }
+          if (controlMap[p.key] && _bp3Native.has(p.key) && !_dualCtx.has(p.key)) {
+            // Pure engine control — preserve backward-compat BP3 native emit.
+            parts.push(formatNativeValue(controlMap[p.key], p.value));
+          } else {
+            runtimeAssignments[p.key] = p.value;
           }
         }
         if (Object.keys(runtimeAssignments).length > 0) {
@@ -1307,6 +1354,26 @@ function formatNativeValue(bp3Name, value) {
   if (value === true) return bp3Name;
   const str = String(value).replace(/\s+/g, ',');
   return `${bp3Name}(${str})`;
+}
+
+/**
+ * Format a seq_prefix control as one or more BP3 tokens.
+ * Special case: shuffle with seed → "_srand(N) _rndseq"
+ * Other seq_prefix with value → "_name(value)"
+ * seq_prefix without value (true) → "_name"
+ */
+function formatSeqPrefixTokens(key, value, controlMap) {
+  const bp3Name = controlMap[key] || `_${key}`;
+  if (key === 'shuffle') {
+    // shuffle without seed (value === true): just _rndseq
+    if (value === true || value === null || value === undefined) {
+      return bp3Name;  // _rndseq
+    }
+    // shuffle with seed: _srand(N) _rndseq
+    return `_srand(${value}) ${bp3Name}`;
+  }
+  // Other seq_prefix controls
+  return formatNativeValue(bp3Name, value);
 }
 
 // Encode template body: ? → _, ($N ...) → (@N ...)

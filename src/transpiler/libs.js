@@ -123,7 +123,9 @@ function loadLibsFromDirectives(directives) {
     controlMap: {},     // name → bp3 name (e.g. "vel" → "_vel")
     controlNames: new Set(),
     bp3NativeControls: new Set(),  // controls BP3 understands natively (no "transport" field)
+    seqPrefixControls: new Set(),  // engine controls with scope:"seq_prefix" — emitted as prefix inside group/sequence
     dispatcherOnlyControls: new Set(),  // controls only the dispatcher understands (have "transport" field, e.g. webaudio)
+    dualContextControls: new Set(),  // controls that appear in BOTH engine and runtime — in () always route to _script
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
     symbols: {},        // name → { type, ... }
@@ -232,12 +234,24 @@ function loadLibsFromDirectives(directives) {
         // Runtime section = dispatcher (sound/performance: vel, chan, wave...)
         if (isEngine) {
           ctx.bp3NativeControls.add(name);
+          // scope:"seq_prefix" = serial tools emitted as prefix inside group/sequence
+          if (def.scope === 'seq_prefix') {
+            ctx.seqPrefixControls.add(name);
+          }
         } else {
           ctx.dispatcherOnlyControls.add(name);
         }
         if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
         }
+      }
+    }
+
+    // Compute dual-context controls: appear in both engine (bp3Native) and runtime (dispatcher)
+    // These must always route to _script when used in () RuntimeQualifier context.
+    for (const name of ctx.bp3NativeControls) {
+      if (ctx.dispatcherOnlyControls.has(name)) {
+        ctx.dualContextControls.add(name);
       }
     }
 

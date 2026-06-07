@@ -1260,6 +1260,12 @@ function parse(tokens) {
   // RHS Flags [X=N, Y, Z+1]
   // ============================================================
 
+  // Engine qualifier keys that may appear bare (without a value) in [key] brackets.
+  // These must NOT be treated as flags even when followed by ] with no colon.
+  const ENGINE_BARE_KEYS = new Set([
+    'retro', 'shuffle', 'order', 'stop', 'destru', 'striated', 'smooth',
+  ]);
+
   function isFlagBracket() {
     // Lookahead: [ followed by IDENT then = + - , ] (NOT IDENT:value which is a qualifier)
     if (!at(T.LBRACKET)) return false;
@@ -1268,6 +1274,8 @@ function parse(tokens) {
     if (t1.type !== T.IDENT) return false;
     // If IDENT followed by : → qualifier, not flag
     if (t2.type === T.COLON) return false;
+    // If the key is a known engine bare key → qualifier, not flag
+    if (ENGINE_BARE_KEYS.has(t1.value)) return false;
     // If IDENT followed by = + - ] , → flag
     if (t2.type === T.EQUALS || t2.type === T.PLUS || t2.type === T.REST ||
         t2.type === T.RBRACKET || t2.type === T.COMMA) return true;
