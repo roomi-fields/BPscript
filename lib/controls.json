@@ -89,6 +89,12 @@
       "args": ["value"],
       "range": [0, 127],
       "description": "Legato — extend note durations (affects temporal structure)"
+    },
+    "rndtime": {
+      "bp3": "_rndtime",
+      "args": ["amount"],
+      "range": [0, 32767],
+      "description": "Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder."
     }
   },
 

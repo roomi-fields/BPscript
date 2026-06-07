@@ -675,6 +675,13 @@ Exemples :
 - `![/2]` → `_tempo(2/1)` dans le flux (pas de bracket, portée séquentielle)
 - `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique, distinct du tempo)
 - `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
+- `[staccato:50]` → `{ pairs:[{key:"staccato", value:50}] }` → compilé en `_staccato(50)` (suffixe)
+- `[legato:80]` → `{ pairs:[{key:"legato", value:80}] }` → compilé en `_legato(80)` (suffixe)
+- `[rndtime:10]` → `{ pairs:[{key:"rndtime", value:10}] }` → compilé en `_rndtime(10)` (suffixe)
+  Portée : sur un élément (`A[rndtime:10]` → `A _rndtime(10)`) ou un groupe
+  (`{A B C D}[rndtime:20]` → `{A B C D} _rndtime(20)`). Pas de seq_prefix — contrôle
+  courant non-réordonnant, profil identique à staccato/legato (CompileProcs.c case 59,
+  plage 0..32767 ms, `p_Instance[k].randomtime`).
 
 **Clés nues** : quand `value === true` (clé sans `:valeur`), l'encodeur émet le nom BP3
 sans parenthèses (`_retro`, `_rndseq`, `_ordseq`). Quand une valeur est fournie, avec

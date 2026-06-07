@@ -520,7 +520,8 @@ ENGINE_KEY  = "mode" | "scan" | "speed" | "weight" | "on_fail"
             | "tempo" | "meter" | "scale"
             | "retro" | "shuffle" | "order" | "rotate"
             | "keyxpand" | "repeat" | "failed" | "stop" | "goto"
-            | "striated" | "smooth" ;
+            | "striated" | "smooth"
+            | "staccato" | "legato" | "rndtime" ;
 
 raw_value   = (* tout texte jusqu'au prochain "," ou "]" *) ;
 ```

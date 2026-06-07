@@ -472,8 +472,8 @@ function encode(ast) {
   for (const dir of ast.directives) {
     if (dir.timePatterns && dir.timePatterns.length > 0) {
       lines.push('TIMEPATTERNS:');
-      const patternStrs = dir.timePatterns.map(p => `${p.name} = ${p.ratio}`);
-      lines.push(patternStrs.join('  '));
+      const patternStrs = dir.timePatterns.map(p => `${p.name}=${p.ratio}`);
+      lines.push(patternStrs.join(' '));
     }
   }
 
