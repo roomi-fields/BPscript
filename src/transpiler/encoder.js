@@ -34,6 +34,9 @@ let _usedTerminals = new Set();  // terminals actually referenced in grammar RHS
 let _bp3Native = new Set();  // engine controls emitted as BP3 native (e.g. _staccato, _legato)
 let _seqPrefix = new Set();  // engine controls with scope:seq_prefix (retro, shuffle, order, rotate)
 let _dualCtx = new Set();   // controls in both engine and runtime — () always routes to _script
+// Time pattern names from @timepatterns — these are duration symbols, NOT sound terminals.
+// They must never be added to the sound alphabet (BP3 recognises them via TIMEPATTERNS: section).
+let _timePatternNames = new Set();
 
 // BP3 reserved words must never appear in the alphabet (Error code 54).
 // Module-scoped so both the alphabet-seeding pass in encode() and the RHS
@@ -65,6 +68,7 @@ function encode(ast) {
   _cvIndex = 0;
   _cvNames = {};
   _usedTerminals = new Set();
+  _timePatternNames = new Set();
   const lines = [];
 
   // Load control map from libs based on @ directives
@@ -179,6 +183,15 @@ function encode(ast) {
     return ep;
   }
 
+  // Collect time pattern names from @timepatterns — they are duration symbols,
+  // NOT sound terminals. Must be known before alphabet building so that
+  // encodeRhsElementInner can skip adding them to the alphabet.
+  for (const dir of ast.directives) {
+    if (dir.timePatterns) {
+      for (const p of dir.timePatterns) _timePatternNames.add(p.name);
+    }
+  }
+
   // Build alphabet from DECLARATIONS (gate/trigger/cv), loaded alphabets, and
   // bare RHS terminals — see BP3_RESERVED note at module scope.
   // 1. Explicit declarations: gate a:midi, trigger x:sc, cv lfo:webaudio
@@ -196,12 +209,8 @@ function encode(ast) {
   for (const [name, def] of Object.entries(libCtx.symbols)) {
     if (!BP3_RESERVED.has(name)) output.alphabet.add(name);
   }
-  // 3. Time pattern names from @timepatterns directive
-  for (const dir of ast.directives) {
-    if (dir.timePatterns) {
-      for (const p of dir.timePatterns) output.alphabet.add(p.name);
-    }
-  }
+  // NOTE: time pattern names are NOT added to the sound alphabet —
+  // they live solely in TIMEPATTERNS: section (collected in _timePatternNames above).
 
   // Collect all non-terminals (symbols that appear as LHS of rules)
   // Exception: in SUB/SUB1 mode, LHS symbols are also terminals (substitution
@@ -1014,6 +1023,10 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       // BP3 grammar operators spelled as identifiers (plus/fin/star) emit their
       // raw operator character (+ / ; / *) and are NOT alphabet terminals.
       if (el.name in BP3_OPERATORS) return BP3_OPERATORS[el.name];
+      // Time pattern names (t1, t2, …) are duration symbols, recognised by BP3
+      // via the TIMEPATTERNS: section — NOT via the sound alphabet.  Emit the
+      // name literally but do NOT add it to the alphabet.
+      if (_timePatternNames.has(el.name)) return el.name;
       // BP3: every RHS token that is never rewritten (no LHS rule) is a bol of
       // the alphabet (CompileGrammar.c, Encode/AddBolsInGrammar). A bare
       // terminal must therefore be seeded into the output alphabet, exactly
