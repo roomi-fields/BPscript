@@ -44,8 +44,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `HOMOMORPHISMS.md` — Étiquetage post-dérivation
     - `REPL.md` — REPL adapters et backticks
     - `SCENES.md` — Hiérarchie de scènes, scoping flags, @scene/@expose/@map, sys
-    - `BPX_ENGINE_SPEC.md` — Spec moteur BPx : contrat externe (AST direct, DerivationTree, streaming, live coding)
-    - `BPX_ARCHITECTURE.md` — Architecture interne du moteur BPx (découpage code, perfs)
+    - (Les docs du moteur BPx ont migré dans le dépôt BPx : `../BPx/docs/ARCHITECTURE.md` (principes/décisions), `../BPx/docs/ENGINE_SPEC.md` (contrat externe), `../BPx/docs/IMPLEMENTATION.md` (interne))
     - `INTERFACES_BP3.md` — Interface WASM BP3 (in/out)
     - `TEMPORAL_DEFORMATION.md` — Constraint solver, déformation temps réel
   - `reference/` — Guides techniques

@@ -21,8 +21,7 @@
 | [HOMOMORPHISMS.md](design/HOMOMORPHISMS.md) | Étiquetage post-dérivation : format `{section}.{depth}%{terminal}`, résolution REPL, stacking. Instructions d'implémentation (agent transpileur + agent WASM) | Coder les homomorphismes, comprendre le labeling, briefer un agent |
 | [REPL.md](design/REPL.md) | Architecture backticks : 3 types (orphelin, inline, standalone), REPL adapters (SC, Tidal, Python), sessions, timing | Coder un adapter REPL, comprendre l'exécution des backticks |
 | [SCENES.md](design/SCENES.md) | Hiérarchie de scènes : @scene directive, scoping des flags (héritage top-down, @expose, isolation siblings), sys auto-exposé, fan-out CC/OSC, cycles de feedback | Comprendre le modèle multi-scènes, le scoping des flags, la sémantique @scene/@expose/@map |
-| [BPX_ENGINE_SPEC.md](design/BPX_ENGINE_SPEC.md) | Spec moteur BPx — **contrat externe** : instance isolée, AST direct, DerivationTree structuré, streaming, live coding, multi-instance, 7 modes de dérivation, FlagStore observable, TriggerBus async | Implémenter BPx, comprendre l'architecture cible, planifier la migration BP3→BPx |
-| [BPX_ARCHITECTURE.md](design/BPX_ARCHITECTURE.md) | Architecture **interne** du moteur BPx : découpage du code, structures de données, perfs en live coding | Coder le moteur BPx, comprendre l'organisation interne |
+| Moteur BPx (docs migrées) | Les dossiers d'architecture, contrat externe et implémentation du moteur BPx vivent désormais dans le dépôt BPx : `../../BPx/docs/ARCHITECTURE.md`, `ENGINE_SPEC.md`, `IMPLEMENTATION.md` | Comprendre / coder le moteur BPx |
 | [INTERFACES_BP3.md](design/INTERFACES_BP3.md) | API WASM BP3 : fonctions d'entrée (load grammar/alphabet/settings/tonality), fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events), verbose levels | Appeler le moteur WASM, comprendre les formats in/out, ajouter une API |
 
 ## reference/ — Guides techniques

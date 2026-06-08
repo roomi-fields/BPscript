@@ -22,7 +22,7 @@ That power has always been locked behind a dense, archaic syntax and a 1990s C c
 - **Compiles to BP3** — the transpiler emits native BP3 grammar, so 40 years of derivation
   expertise are reused, not reinvented. The engine runs in the browser via **WebAssembly**.
 - **An evolution path** — `BPx`, a next-generation reactive derivation engine designed to succeed
-  BP3's batch C core (see `docs/design/BPX_ENGINE_SPEC.md`).
+  BP3's batch C core (see the `BPx` repository: `../BPx/docs/ARCHITECTURE.md`).
 
 > Try it online: **[roomi-fields.com/bpscript](https://roomi-fields.com/bpscript/)** — write BPscript,
 > compile to a BP3 grammar, and derive it in the browser.
@@ -110,6 +110,6 @@ Start with `docs/INDEX.md` (full index). Highlights:
 - `docs/spec/EBNF.md` — formal grammar (ISO 14977)
 - `docs/spec/AST.md` — AST node reference
 - `docs/design/ARCHITECTURE.md` — compilation pipeline
-- `docs/design/BPX_ENGINE_SPEC.md` — next-generation engine spec
+- `../BPx/docs/ARCHITECTURE.md` — next-generation BPx engine (separate repository)
 - `docs/reference/BP3_FILE_FORMATS.md` — BP3 auxiliary file formats
 - `BACKLOG.md` — open points and backlog

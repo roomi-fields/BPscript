@@ -67,15 +67,10 @@
         "sections": ["@scene directive", "scoping (héritage top-down, @expose, isolation siblings)", "sys acteur auto-exposé", "fan-out CC/OSC", "cycles de feedback"],
         "use_when": "comprendre le modèle multi-scènes, le scoping des flags, la sémantique @scene/@expose/@map"
       },
-      "BPX_ENGINE_SPEC.md": {
-        "content": "Spec moteur BP4 : instance isolée, AST direct, DerivationTree, streaming, live coding",
-        "sections": ["modèle d'instance", "cycle de vie", "format entrée (AST)", "format sortie (DerivationTree + TimedToken)", "algorithme dérivation (7 modes)", "polymétrie itérative", "FlagStore observable", "TriggerBus async", "re-dérivation incrémentale", "streaming", "multi-instance", "live coding ops", "déterminisme LCG", "gestion erreurs", "questions ouvertes", "priorité implémentation"],
-        "use_when": "implémenter BPx (contrat externe), comprendre l'architecture cible, planifier la migration depuis BP3"
-      },
-      "BPX_ARCHITECTURE.md": {
-        "content": "Architecture interne du moteur BPx : découpage du code, structures de données, perfs en live coding",
-        "sections": ["organisation interne", "structures de données", "performances live coding"],
-        "use_when": "coder le moteur BPx, comprendre l'organisation interne (le contrat externe est dans BPX_ENGINE_SPEC.md)"
+      "_moteur_bpx": {
+        "content": "Docs du moteur BPx migrées dans le dépôt BPx (../../BPx/docs/)",
+        "sections": ["ARCHITECTURE.md (principes/décisions)", "ENGINE_SPEC.md (contrat externe)", "IMPLEMENTATION.md (interne)"],
+        "use_when": "comprendre ou coder le moteur BPx"
       },
       "INTERFACES_BP3.md": {
         "content": "API WASM BP3 complète",

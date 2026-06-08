@@ -1,6 +1,6 @@
 # SCENES.md — Hiérarchie de scènes : modèle de communication
 
-> Référencé par [LANGUAGE.md](../spec/LANGUAGE.md) §Scenes, [BPX_ENGINE_SPEC.md](BPX_ENGINE_SPEC.md) §7-§8-§11, [BPX_ARCHITECTURE.md](BPX_ARCHITECTURE.md).
+> Référencé par [LANGUAGE.md](../spec/LANGUAGE.md) §Scenes et le contrat moteur [BPx ENGINE_SPEC.md](../../../BPx/docs/ENGINE_SPEC.md) §6 (FlagStore) / §7 (TriggerBus) / §10 (orchestration).
 >
 > Précise : cycle de vie des scènes, scoping des flags, propagation des triggers, sémantique de `@map`, commandes `sys`, orchestration multi-instance, hot-swap.
 
@@ -93,7 +93,7 @@ L'implémentation est libre :
 
 Tant que la sémantique observable est respectée, les deux sont équivalents pour BPscript.
 
-> **Point ouvert** : choix d'implémentation non arrêté. Trade-off entre simplicité v1 (parent chain) et portabilité Worker/Rust (event-based). À trancher avant d'écrire le FlagStore. Voir aussi §10 et `BPX_ENGINE_SPEC.md §7`.
+> **Point ouvert** : choix d'implémentation non arrêté. Trade-off entre simplicité v1 (parent chain) et portabilité Worker/Rust (event-based). À trancher avant d'écrire le FlagStore. Voir aussi §10 et `BPx ENGINE_SPEC.md §6` (FlagStore).
 
 ### 3.3 Écriture — locale uniquement
 
@@ -389,10 +389,10 @@ S -> Sa Re Ga Ma
 
 ## 10. Implications pour BPx
 
-- `BPX_ENGINE_SPEC.md §7` (FlagStore) : implémentation libre (parent chain in-memory ou event-based) tant que la sémantique observable §3.2 est respectée.
-- `BPX_ENGINE_SPEC.md §8` (TriggerBus) : bus local par session ; cross-session via `SceneOrchestrator` (hors BPx).
-- `BPX_ENGINE_SPEC.md §11` (SceneOrchestrator) : à compléter — détaillé dans ce doc, application-level.
-- `BPX_ARCHITECTURE.md` : multi-instance hors moteur, orchestrateur consomme l'API publique.
+- `BPx ENGINE_SPEC.md §6` (FlagStore) : implémentation libre (parent chain in-memory ou event-based) tant que la sémantique observable §3.2 est respectée.
+- `BPx ENGINE_SPEC.md §7` (TriggerBus) : bus local par session ; cross-session via `SceneOrchestrator` (hors BPx).
+- `BPx ENGINE_SPEC.md §10` (SceneOrchestrator) : à compléter — détaillé dans ce doc, application-level.
+- `BPx ARCHITECTURE.md` : multi-instance hors moteur, orchestrateur consomme l'API publique.
 
 ---
 
