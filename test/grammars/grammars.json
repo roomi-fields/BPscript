@@ -29,9 +29,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": null,
-      "alphabet": null,
-      "blocked": "starts with -ho.abc header, lowercase terminals (a,b,c), 10 errors"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc",
+      "blocked": "grammaire type-0 non terminante: 3/20 items sont terminaux (b b, a a), le reste contient des variables non résolues (X1, YA, YB); 0 notes MIDI"
     },
     "production_mode": "text"
   },
@@ -44,9 +44,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": null,
-      "alphabet": null,
-      "blocked": "starts with -ho.abc1 header, terminal \"a'\" not recognized"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc1",
+      "note": "No original settings; using -se.koto3 (JSON) as proxy. -al.abc1 provides a',b',c' terminals. Confirmed working: produces 'a\\' a\\' c\\' b' (4 tokens)."
     },
     "production_mode": "text"
   },
@@ -93,7 +93,7 @@
       "note_convention": "english",
       "settings": "-se.gramgene",
       "alphabet": null,
-      "blocked": "uses lowercase terminals (a,b,c) + INIT directive, not valid in BP3"
+      "blocked": "BP2 INIT: directive not supported by BP3 (\"Unable to make sense of 'INIT:'\"); also uses template (=X)(:X) patterns"
     },
     "production_mode": "text"
   },
@@ -106,9 +106,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": null,
+      "settings": "-se.koto3",
       "alphabet": null,
-      "blocked": "BP2 legacy (starts with -ho.keys), terminal \"k60\" not recognized by BP3"
+      "blocked": "terminaux k60/k62/k64/k65: alphabet custom avec préfixe \"k\" cause crash bp.exe v3.4.4 (exit 5); sans alphabet: \"Can't make sense of k60\""
     },
     "production_mode": "text"
   },
@@ -188,11 +188,10 @@
     "features": [],
     "lines": 13,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english",
-      "settings": "-se.tryhomomorphism",
-      "alphabet": null,
-      "blocked": "BP2 legacy (2 compile errors, French solfège notation incompatible)"
+      "midi_notes": 6,
+      "note_convention": "french",
+      "settings": "-se.765432",
+      "alphabet": "-al.abc"
     },
     "production_mode": "midi"
   },
@@ -288,7 +287,7 @@
     "features": [],
     "lines": 9,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 160,
       "note_convention": "english",
       "settings": "-se.asymmetric1",
       "alphabet": null,
@@ -342,9 +341,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": null,
-      "alphabet": null,
-      "blocked": "starts with -ho.abc header, lowercase terminals (d,e,f), 8 errors"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc",
+      "blocked": "boucle infinie: \"Calculation overflow (10000 derivations): task abandoned. Loop?\" — grammaire LIN avec règle de permutation sans convergence"
     },
     "production_mode": "text"
   },
@@ -442,7 +441,7 @@
       "note_convention": "english",
       "settings": "-se.gramgene",
       "alphabet": null,
-      "blocked": "uses lowercase terminals (a,b,c), not valid in BP3"
+      "blocked": "BP2 INIT: directive not supported by BP3 (\"Unable to make sense of 'INIT:'\"); lowercase terminals (a,b,c,d) secondary issue"
     },
     "production_mode": "text"
   },
@@ -459,9 +458,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.koto1",
-      "alphabet": null,
-      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc1",
+      "note": "Original -se.koto1 is BP2 format; using -se.koto3 (JSON) as proxy. -al.abc1 provides a,b,c terminals. Confirmed working: 21 text items with seed=1."
     },
     "production_mode": "text"
   },
@@ -478,9 +477,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.koto1",
-      "alphabet": null,
-      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc1",
+      "note": "Original -se.koto1 is BP2 format; using -se.koto3 (JSON) as proxy. -al.abc1 provides a,b,c terminals. Confirmed working: 20 text items with seed=1."
     },
     "production_mode": "text"
   },
@@ -595,7 +594,7 @@
     "lines": 24,
     "note": "Utilise _transpose() et |variables|. Aux réels: -se.transposition et -ho.transposition. BPx grammar. Divergences de hauteur attendues (hors-scope R2 transpose).",
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 75,
       "note_convention": "english",
       "settings": "-se.transposition3",
       "alphabet": null,
@@ -649,7 +648,7 @@
     ],
     "lines": 14,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 1300,
       "note_convention": "english",
       "settings": "-se.asymmetric1",
       "alphabet": null,
@@ -803,7 +802,7 @@
       "note_convention": "english",
       "settings": "-se.tryPatternGrammar",
       "alphabet": "-al.tryPatternGrammar",
-      "blocked": "lowercase terminals (g,c,a,t,n) not supported by BP3, 3 errors; produces 0 items even with --all"
+      "note": "Confirmed: 0 errors, 25 text production lines with -se.tryPatternGrammar + -al.tryPatternGrammar. Previous scan used wrong settings."
     },
     "production_mode": "text"
   },
@@ -873,12 +872,12 @@
     "lines": 40,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
-      "settings": "-se.dhati2",
-      "alphabet": null,
-      "blocked": "BP2 legacy (12 compile errors, format incompatible with BP3)"
+      "note_convention": "indian",
+      "settings": "-se.hamsad",
+      "alphabet": "-al.dhati",
+      "note": "Confirmed: 0 errors, 64 tabla tokens with -se.hamsad + -al.dhati. Previous scan used -ho.dhati (BP2 alphabet with header ':' causing alphabet compile error)."
     },
-    "production_mode": "midi"
+    "production_mode": "text"
   },
   "dhati3": {
     "bernard": "dhati3",
@@ -892,12 +891,12 @@
     "lines": 39,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
-      "settings": "-se.dhati2",
-      "alphabet": null,
-      "blocked": "BP2 legacy (11 compile errors, format incompatible with BP3)"
+      "note_convention": "indian",
+      "settings": "-se.hamsad",
+      "alphabet": "-al.dhati",
+      "note": "Confirmed: 0 errors, 64 tabla tokens with -se.hamsad + -al.dhati. Same fix as dhati2."
     },
-    "production_mode": "midi"
+    "production_mode": "text"
   },
   "look-and-say": {
     "bernard": "look-and-say",
@@ -961,11 +960,11 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.trySrand",
-      "alphabet": null,
-      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc"
     },
-    "production_mode": "midi"
+    "production_mode": "midi",
+    "note": "500 notes MIDI. Grammaire V.2.8.1 avec _srand/_randomize/_rndseq/_rndvel"
   },
   "repeat": {
     "bernard": "tryrepeat",
@@ -1038,11 +1037,11 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.checkSUB1",
-      "alphabet": null,
-      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc"
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "note": "20 tokens \"i j\" en mode texte (grammaire SUB1)"
   },
   "livecode1": {
     "bernard": "livecode1",
@@ -1231,11 +1230,10 @@
     ],
     "lines": 14,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english",
-      "settings": "-se.check&",
-      "alphabet": null,
-      "blocked": "French solfège with BP2 tie/rest syntax (do3_-,sol4&) incompatible with BP3"
+      "midi_notes": 4,
+      "note_convention": "french",
+      "settings": "-se.765432",
+      "alphabet": null
     },
     "production_mode": "midi"
   },
@@ -1274,7 +1272,7 @@
       "note_convention": "english",
       "settings": "-se.dhadhatite",
       "alphabet": null,
-      "blocked": "BP2 settings file (not JSON), French solfège syntax, 13 compile errors"
+      "blocked": "4 compile errors (Error code 15): compound bol terminals (tite, dhadha, dheena, dhadhatitedhadhadheena) absent from any available alphabet; gram#5 uses BP2 context markers (+,#) and <-- direction. Tested with -se.hamsad + -al.dhati."
     },
     "production_mode": "text"
   },
@@ -1347,11 +1345,10 @@
     "lines": 34,
     "note": "Aux réels: -se.MyMelody et -ho.Frenchnotes. Convention french (do/re/mi/sol).",
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 28,
       "note_convention": "french",
-      "settings": "-se.MyMelody",
-      "alphabet": null,
-      "blocked": "uses [...] as inline comments (BP2 syntax); BP3 interprets them as guards"
+      "settings": "-se.765432",
+      "alphabet": null
     }
   },
   "not-reich": {
@@ -1471,9 +1468,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.trytemplates",
-      "alphabet": null,
-      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+      "settings": "-se.koto3",
+      "alphabet": "-al.abc",
+      "blocked": "templates (=X)(:X) compilés sans erreur mais non résolus dans BP3 console: les items contiennent les expressions template littéralement non interprétées"
     },
     "production_mode": "text"
   },
@@ -1722,7 +1719,7 @@
       "note_convention": "english",
       "settings": "-se.trySerial",
       "alphabet": null,
-      "blocked": "corrupted encoding (Æ1), BP2 legacy chars in grammar"
+      "blocked": "BP2 serial operators (_rndseq, _ordseq) and time pattern markers (Æ1, Æ2, Æ3) not supported in BP3. Error code 46: incorrect time pattern name(s). Tested with -se.koto3 + -al.abc."
     },
     "production_mode": "text"
   },
@@ -1756,13 +1753,12 @@
       "sub:7"
     ],
     "lines": 80,
-    "note": "Bols talas (dhin--, dha--, dhagena...). Aux réels: -se.dhin-- et -ho.dhin-- (nom différent du -gr). BPx grammar.",
+    "note": "20 items de bols tabla en mode texte. Certains items contiennent des templates (=X)(:X) non résolus. V.2.9.1 avec -ho.dhin-- comme alphabet.",
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
       "settings": "-se.dhin--",
-      "alphabet": "-al.dhin--",
-      "blocked": "bidirectional rules (<->) with bol terminals (dhin--, dhagena...) incompatible with BP3 v3.4.x"
+      "alphabet": "-ho.dhin--"
     }
   },
   "nadaka": {
@@ -1856,10 +1852,8 @@
       "_scale"
     ],
     "lines": 38,
-    "php_status": "COMPILE_FAIL",
-    "php_errors": 8,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 42,
       "note_convention": "english",
       "settings": "-se.tryRagas",
       "alphabet": null,
@@ -2094,7 +2088,7 @@
       "note_convention": "english",
       "settings": "-se.dhadhatite",
       "alphabet": null,
-      "blocked": "same as dhadhatite, BP2 settings + syntax, 13 compile errors"
+      "blocked": "Points to same -gr.dhadhatite as dhadhatite entry. Blocked for the same reasons: 4 compile errors, compound bol terminals missing from alphabet."
     }
   },
   "_comment": {

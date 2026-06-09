@@ -121,7 +121,7 @@ function processGrammar(name) {
     } catch (e) {}
 
     let tokens = [], midiNotes = [];
-    if (fs.existsSync(midiFile) && fs.statSync(midiFile).size > 100) {
+    if (fs.existsSync(midiFile) && fs.statSync(midiFile).size > 50) {
       try {
         const out = execSync(`python3 "${PARSE_MIDI}" "${midiFile}"`, {
           encoding: 'utf-8', timeout: 10000
