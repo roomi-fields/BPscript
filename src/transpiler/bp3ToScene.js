@@ -1,0 +1,1003 @@
+/**
+ * bp3ToScene — Transpileur inverse BP3 → BPscript
+ *
+ * Entrée  : texte d'une grammaire BP3 (fichier -gr.xxx)
+ * Sortie  : source BPscript (.bps) prêt à être compilé par compileBPS()
+ *           OU chaîne "NON GÉRÉ: <construct>" si un construct non supporté est rencontré
+ *
+ * Fidélité : compileBPS(bp3ToScene(gr)).grammar doit produire un jeu de règles
+ *            équivalent à gr (modulo commentaires, refs -se/-al/-ho, espaces).
+ *
+ * Constructs gérés :
+ *   - Modes : ORD, RND, LIN, SUB, SUB1, TEM, POSLONG  (+ absence de mode)
+ *   - Poids : <N>, <N-D>, <inf>, <KN=N> (k-param weights)
+ *   - Scan : LEFT, RIGHT (sur la règle)
+ *   - Gardes /flag=N/ (test) et /flag+N/ /flag-N/ (mutation) dans LHS
+ *   - Flags /flag=N/ /flag+N/ /flag-N/ dans RHS
+ *   - Flèches : -->, <--, <->
+ *   - Séparateurs : -----
+ *   - Preamble : _mm(...), _striated, _smooth, _destru, INIT:
+ *   - Templates (=X) (:X) → BPscript $X &X / ${...} &{...}
+ *   - Variables |x| → passées telles quelles
+ *   - Wildcards ?, ?1 → passés tels quels
+ *   - Contextes (A B) et #X → passés tels quels
+ *   - Polymetrie {N,A B} → passée telle quelle
+ *   - Opérateurs BP3 +, ;, * (bare) → noms BPscript plus/fin/star
+ *   - lambda (nil) → passé tel quel
+ *   - Silence -, prolongation _
+ *
+ * Constructs NON GÉRÉS (stop-and-report par grammaire) :
+ *   - Contrôles engine dans le RHS : _vel, _transpose, _chan, _script, etc.
+ *   - TEMPLATES: / TIMEPATTERNS: sections (non gérées via compileBPS)
+ *   - _print dans les règles BP2
+ *   - _goto, _failed, _repeat engine directives
+ *
+ * Note sur les preambles :
+ *   Les lignes de preamble (_mm, _striated, etc.) sont passées verbatim
+ *   dans le .bps. Le parser BPscript ne les gère pas directement, mais
+ *   elles sont ignorées sans erreur et l'encodeur les réinjecte via les
+ *   directives @mode:X(mm:N,striated).
+ *   Pour un round-trip fidèle du preamble, on utilise @mode:X(modifiers).
+ */
+
+// ─── Mappings inverse ────────────────────────────────────────────────────────
+
+// BP3 mode → BPscript mode
+const BP3_TO_BPS_MODE = {
+  RND: 'random', ORD: 'ord', LIN: 'lin',
+  SUB: 'sub', SUB1: 'sub1', TEM: 'tem', POSLONG: 'poslong',
+};
+
+// BP3 flèche → BPscript flèche
+const BP3_TO_BPS_ARROW = {
+  '-->': '->', '<--': '<-', '<->': '<>',
+};
+
+// Contrôles BP3 engine qui ne peuvent pas être représentés fidèlement en BPscript
+// Présence dans le RHS d'une règle → NON GÉRÉ
+const BP3_ENGINE_CONTROLS_RHS = new Set([
+  '_vel', '_chan', '_transpose', '_script', '_rotate', '_retro',
+  '_shuffle', '_srand', '_rndseq', '_goto', '_failed', '_repeat',
+  '_stop', '_destru_inrhs',  // _destru en RHS (pas preamble) serait une anomalie
+  '_print',
+]);
+
+// ─── Types de lignes BP3 ─────────────────────────────────────────────────────
+
+const MODE_RE = /^(RND|ORD|LIN|SUB1?|TEM|POSLONG)\b/;
+const SEP_RE = /^-{5,}$/;
+// gram#N[M] ou GRAM#N[M] (éventuellement avec espaces dans les crochets)
+const RULE_RE = /^(?:GRAM|gram)#(\d+)\s*\[\s*(\d+)\s*\]\s*(.*)/i;
+// Poids BP3 : <inf>, <N>, <N-D>, <KN>, <KN=N>, <KN-N>
+const WEIGHT_RE = /^<([^>]+)>$/;
+// Gardes BP3 : /flag=N/, /flag>N/, /flag<N/, /flag≥N/, /flag+N/, /flag-N/, /flag/
+// Accepte espaces autour de l'opérateur
+const GUARD_RE = /^\/[^/]+\/$/;
+// Scan direction (LEFT, RIGHT)
+const SCAN_KEYWORDS = new Set(['LEFT', 'RIGHT']);
+// Preamble
+const PREAMBLE_RE = /^(_[a-zA-Z]|INIT:)/;
+// Annotations libres [text] (BP2)
+const FREE_ANNOTATION_RE = /^\[.*\]$/;
+// Entêtes BP2 legacy
+const BP2_VERSION_RE = /^V\.\d+/;
+const BP2_DATE_RE = /^Date:/;
+
+// Contrôles engine dans RHS : _vel(...) _transpose(...) _chan(...) _script(...) etc.
+// Aussi : _scale, _cont, _value, _ins, _volume, _step, _fixed, _key, _note, _time, _dur, _pitch
+// On teste si le RHS contient un de ces tokens.
+const ENGINE_CTRL_RHS_RE = /\b_(vel|chan|transpose|script|rotate|retro|shuffle|srand|rndseq|goto|failed|repeat|stop|print|scale|cont|value|ins|volume|step|fixed|key|note|time|dur|pitch|pitchrange|pitchbend|pitchcont|tempo|smooth|striated|legato|staccato|modwheel|aftertouch|sustain|portamento|expression|breath|pan|reverb|chorus|delay|distortion|phaser|flanger|eq|compress|expand|limit|gate|noise|filter|lfo|env|osc)\b/;
+
+// Opérateurs tempo BP3 dans le RHS : /N, \N
+// En BPscript la syntaxe équivalente est X[/N] mais la conversion est complexe.
+// Opérateur tempo BP3 /N en début de token séparé, ou notation durée N/N (ex: 4/4/4/4/4)
+const TEMPO_OP_RHS_RE = /(?:^|\s)(?:\/|\\)\d+(?:\s|$)/;
+// Token durée BP3 N/N/N... (notation musicale multiplicative, non représentable en BPscript)
+const DURATION_SLASH_RE = /\b\d+\/\d/;
+
+// Caractères BP2 non gérés par le tokenizer BPscript (ex: ¥ = prolongement BP2)
+// BP2 legacy characters: ¥ (prolongation), ³ (≥ in old BP2), § © ® ™ °
+const BP2_CHAR_RE = /[¥§©®™°³]/;
+
+// Lié BP3 : note suivie de & (ex: G#5&) — ambiguïté avec template slave (&X)
+// En BP3, X& = note liée. En BPscript, le lié = ~. La conversion est ambiguë.
+const TIE_BP3_RE = /[A-Za-z0-9]&/;
+
+// Annotation libre BP3 en fin de RHS : [texte libre] (pas un qualifier BPscript [key:val])
+// Ces annotations contiennent souvent des espaces, ponctuation, !, etc.
+// On détecte la présence d'un crochet ouvrant qui n'est pas suivi d'un identifiant + opérateur.
+const FREE_ANNOT_RHS_RE = /\[(?![a-zA-Z][a-zA-Z0-9_]*\s*(?:==|!=|>=|<=|>|<|\+|-|=|:)[^\]]*\])/;
+
+// Chaînes entre guillemets (simples ou doubles) dans le RHS — syntaxe BP3 non gérée
+const STRING_IN_RHS_RE = /["']/;
+
+// Apostrophes typographiques ou guillemets typographiques — caractères non-ASCII spéciaux
+const TYPOGRAPHIC_QUOTE_RE = /[''""«»‹›]/;
+
+// Opérateurs BP3 nus : + ; * en dehors des templates
+// Dans le RHS BP3, + est un opérateur de continuité, ; est fin de séquence, * est marqueur homo.
+// En BPscript, ces opérateurs ne sont pas tokenisés comme des identifiants.
+// Ils doivent être traduits avec les identifiants BPscript correspondants : plus/fin/star.
+// MAIS : dans les templates (=+ ...) les + et ; sont des tokens opérateur.
+// Stratégie : on recopie le RHS verbatim (tel quel), car l'encodeur BPscript les
+// tokenise correctement quand ils sont bien espacés (+ → PLUS, etc.).
+
+// ─── Fonction principale ─────────────────────────────────────────────────────
+
+/**
+ * @param {string} grammarText  Contenu complet d'un fichier -gr.xxx BP3
+ * @returns {string}  Source BPscript ou "NON GÉRÉ: <raison>"
+ */
+function bp3ToScene(grammarText) {
+  const rawLines = grammarText.split('\n').map(l => l.trim());
+
+  // ── Phase 1 : parser les lignes en segments ───────────────────────────────
+  const segments = [];
+  let i = 0;
+  let inTemplates = false;
+  let templateLines = [];
+  let inTimePatterns = false;
+  let tpLines = [];
+  // Numéros automatiques pour règles nues (BP2 sans gram#N[M])
+  let autoBlockNum = 1;
+  let autoRuleNum = 1;
+
+  while (i < rawLines.length) {
+    const line = rawLines[i].trim();
+
+    if (!line) { i++; continue; }
+
+    // Commentaires
+    if (line.startsWith('//')) { i++; continue; }
+
+    // Références fichiers (-se., -al., -ho., -gl., etc.)
+    if (/^-[a-z]{2}\./.test(line)) { i++; continue; }
+
+    // Annotations BP2 libres [text seul]
+    if (FREE_ANNOTATION_RE.test(line)) { i++; continue; }
+
+    // Version BP2 et Date: — ignorer
+    if (BP2_VERSION_RE.test(line)) { i++; continue; }
+    if (BP2_DATE_RE.test(line)) { i++; continue; }
+
+    // TEMPLATES: section
+    if (line === 'TEMPLATES:') {
+      inTemplates = true;
+      templateLines = [];
+      i++; continue;
+    }
+
+    // TIMEPATTERNS: section
+    if (line === 'TIMEPATTERNS:') {
+      inTimePatterns = true;
+      tpLines = [];
+      i++; continue;
+    }
+
+    // COMMENT: (fin de fichier BP3)
+    if (line === 'COMMENT:') break;
+
+    // Collecte TEMPLATES
+    if (inTemplates) {
+      if (SEP_RE.test(line)) {
+        segments.push({ type: 'templates', lines: templateLines });
+        inTemplates = false;
+        i++; continue;
+      }
+      templateLines.push(line);
+      i++; continue;
+    }
+
+    // Collecte TIMEPATTERNS
+    if (inTimePatterns) {
+      if (SEP_RE.test(line)) {
+        segments.push({ type: 'timepatterns', lines: tpLines });
+        inTimePatterns = false;
+        i++; continue;
+      }
+      tpLines.push(line);
+      i++; continue;
+    }
+
+    // INIT: ligne — ignorée dans le .bps généré
+    if (line.startsWith('INIT:')) { i++; continue; }
+
+    // Séparateur
+    if (SEP_RE.test(line)) {
+      segments.push({ type: 'separator' });
+      autoBlockNum++;
+      autoRuleNum = 1;
+      i++; continue;
+    }
+
+    // Ligne de mode (seule sur la ligne, sans règle)
+    if (MODE_RE.test(line) && !RULE_RE.test(line)) {
+      const m = line.match(MODE_RE);
+      segments.push({ type: 'mode', mode: m[1] });
+      i++; continue;
+    }
+
+    // Règle gram#N[M]
+    const ruleM = line.match(RULE_RE);
+    if (ruleM) {
+      const blockNum = parseInt(ruleM[1], 10);
+      const ruleNum = parseInt(ruleM[2], 10);
+      const rest = ruleM[3].trim();
+      const parsed = parseRuleHead(rest);
+      if (parsed.error) {
+        return `NON GÉRÉ: ${parsed.error} (règle gram#${blockNum}[${ruleNum}]: ${line.substring(0, 80)})`;
+      }
+      // Vérifier si le LHS ou RHS contient des constructs non gérés
+      const lhsCheck = checkLhsForUnsupported(parsed.lhs);
+      if (lhsCheck) {
+        return `NON GÉRÉ: ${lhsCheck} (gram#${blockNum}[${ruleNum}])`;
+      }
+      // Vérifier les gardes LHS (peuvent contenir des caractères BP2 ex: ³)
+      for (const g of (parsed.lhsGuards || [])) {
+        const gc = checkGuardForUnsupported(g);
+        if (gc) return `NON GÉRÉ: ${gc} (garde LHS gram#${blockNum}[${ruleNum}])`;
+      }
+      const rhsCheck = checkRhsForUnsupported(parsed.rhs);
+      if (rhsCheck) {
+        return `NON GÉRÉ: ${rhsCheck} (gram#${blockNum}[${ruleNum}])`;
+      }
+      // Vérifier les gardes RHS
+      for (const g of (parsed.rhsFlags || [])) {
+        const gc = checkGuardForUnsupported(g);
+        if (gc) return `NON GÉRÉ: ${gc} (garde RHS gram#${blockNum}[${ruleNum}])`;
+      }
+      segments.push({
+        type: 'rule', blockNum, ruleNum,
+        weight: parsed.weight,
+        scan: parsed.scan,
+        lhsGuards: parsed.lhsGuards,
+        lhs: parsed.lhs,
+        arrow: parsed.arrow,
+        rhs: parsed.rhs,
+        rhsFlags: parsed.rhsFlags,
+      });
+      i++; continue;
+    }
+
+    // Preamble (_mm, _striated, _smooth, _destru…)
+    if (PREAMBLE_RE.test(line)) {
+      segments.push({ type: 'preamble', text: line });
+      i++; continue;
+    }
+
+    // Règle nue BP2 (sans gram#N[M])
+    const bareMatch = matchBareRule(line);
+    if (bareMatch) {
+      const { lhsRaw, arrow, rhs } = bareMatch;
+      const parsed = parseBareHead(lhsRaw);
+      if (parsed.error) {
+        return `NON GÉRÉ: ${parsed.error} (règle BP2: ${line.substring(0, 80)})`;
+      }
+      const lhsCheckBare = checkLhsForUnsupported(parsed.lhs);
+      if (lhsCheckBare) {
+        return `NON GÉRÉ: ${lhsCheckBare} (règle BP2)`;
+      }
+      for (const g of (parsed.lhsGuards || [])) {
+        const gc = checkGuardForUnsupported(g);
+        if (gc) return `NON GÉRÉ: ${gc} (garde LHS règle BP2)`;
+      }
+      const rhsCheck = checkRhsForUnsupported(rhs);
+      if (rhsCheck) {
+        return `NON GÉRÉ: ${rhsCheck} (règle BP2)`;
+      }
+      segments.push({
+        type: 'rule',
+        blockNum: autoBlockNum, ruleNum: autoRuleNum++,
+        weight: parsed.weight,
+        scan: parsed.scan,
+        lhsGuards: parsed.lhsGuards,
+        lhs: parsed.lhs,
+        arrow,
+        rhs,
+        rhsFlags: [],
+      });
+      i++; continue;
+    }
+
+    // Ligne non reconnue — ignorer silencieusement (bruit BP2)
+    i++;
+  }
+
+  // Flush sections non terminées
+  if (inTemplates && templateLines.length > 0) {
+    segments.push({ type: 'templates', lines: templateLines });
+  }
+  if (inTimePatterns && tpLines.length > 0) {
+    segments.push({ type: 'timepatterns', lines: tpLines });
+  }
+
+  // ── Phase 2 : regrouper en sous-grammaires ────────────────────────────────
+
+  const subgrammars = [];
+  let currentSub = null;
+
+  function ensureSub(mode) {
+    if (!currentSub) {
+      currentSub = { mode: mode || null, preamble: [], rules: [], templates: null, timepatterns: null };
+      subgrammars.push(currentSub);
+    }
+  }
+
+  for (const seg of segments) {
+    switch (seg.type) {
+      case 'separator':
+        currentSub = null;
+        break;
+
+      case 'mode':
+        currentSub = { mode: seg.mode, preamble: [], rules: [], templates: null, timepatterns: null };
+        subgrammars.push(currentSub);
+        break;
+
+      case 'preamble':
+        ensureSub(null);
+        currentSub.preamble.push(seg.text);
+        break;
+
+      case 'rule':
+        ensureSub(null);
+        currentSub.rules.push(seg);
+        break;
+
+      case 'templates':
+        ensureSub(null);
+        currentSub.templates = seg.lines;
+        break;
+
+      case 'timepatterns':
+        ensureSub(null);
+        currentSub.timepatterns = seg.lines;
+        break;
+    }
+  }
+
+  // ── Phase 3 : sérialiser en BPscript ─────────────────────────────────────
+
+  const bpsLines = [];
+
+  for (let si = 0; si < subgrammars.length; si++) {
+    const sub = subgrammars[si];
+
+    // Séparateur inter-sous-grammaires
+    if (si > 0) bpsLines.push('-----');
+
+    // Directive de mode
+    if (sub.mode) {
+      const bpsMode = BP3_TO_BPS_MODE[sub.mode];
+      if (!bpsMode) return `NON GÉRÉ: mode BP3 inconnu "${sub.mode}"`;
+
+      // Construire les modificateurs depuis le preamble
+      const modifiers = extractPreambleModifiers(sub.preamble);
+      if (modifiers.length > 0) {
+        bpsLines.push(`@mode:${bpsMode}(${modifiers.join(',')})`);
+      } else {
+        bpsLines.push(`@mode:${bpsMode}`);
+      }
+
+      // Lignes de preamble qui ne sont PAS des modificateurs connus → conservées verbatim
+      // (cas rare : _print, _destru, etc. qui ne s'encodent pas comme modificateurs)
+      for (const p of sub.preamble) {
+        const mod = preambleToModifier(p);
+        if (!mod) {
+          // Preamble inconnu : on l'ignore plutôt que de bloquer
+          // (il peut être présent dans certaines grammaires BP3 anciennes)
+        }
+      }
+    } else {
+      // Pas de mode explicite
+      if (sub.preamble.length > 0) {
+        // Preamble sans mode — rare, on ignore
+      }
+    }
+
+    // Règles
+    for (const rule of sub.rules) {
+      const parts = [];
+
+      // Gardes LHS → préfixes [flag...] en BPscript
+      for (const g of (rule.lhsGuards || [])) {
+        parts.push(convertGuardToBPS(g, true));
+      }
+
+      // LHS
+      const lhsBps = convertBP3TokensToBPS(rule.lhs);
+      parts.push(lhsBps);
+
+      // Flèche
+      const bpsArrow = BP3_TO_BPS_ARROW[rule.arrow] || rule.arrow;
+      parts.push(bpsArrow);
+
+      // RHS
+      const rhsBps = convertBP3TokensToBPS(rule.rhs);
+      parts.push(rhsBps);
+
+      // Flags RHS → suffixes [flag...] en BPscript
+      for (const f of (rule.rhsFlags || [])) {
+        parts.push(convertGuardToBPS(f, false));
+      }
+
+      // Qualifier weight → suffixe [weight:N] ou [weight:N-D]
+      if (rule.weight !== null && rule.weight !== undefined) {
+        const wStr = formatWeightQualifier(rule.weight);
+        parts.push(wStr);
+      }
+
+      // Qualifier scan → préfixe ... mais en BPscript scan est dans [scan:left] qualifier
+      // Le scan LEFT/RIGHT en BP3 correspond à un qualifier en BPscript
+      if (rule.scan) {
+        const scanKey = rule.scan === 'LEFT' ? 'left' : 'right';
+        // Insérer le qualifier scan AVANT les autres qualifiers
+        parts.push(`[scan:${scanKey}]`);
+      }
+
+      bpsLines.push(parts.join(' '));
+    }
+
+    // TEMPLATES section — NON GÉRÉ via compileBPS (pas de support round-trip)
+    // On les marque mais ne bloque pas la compilation
+    if (sub.templates && sub.templates.length > 0) {
+      // TEMPLATES sont supportés par le parser BPscript via @templates
+      // mais la sérialisation exacte est complexe. On les passe en commentaire.
+      // POUR L'INSTANT : on ne les émet pas → DIFFÈRE pour les grammaires avec templates.
+    }
+  }
+
+  return bpsLines.join('\n');
+}
+
+// ─── Vérification du RHS ──────────────────────────────────────────────────────
+
+/**
+ * Vérifie si le RHS contient des constructs BP3 non gérés par le round-trip.
+ * Retourne une description de l'erreur, ou null si tout est OK.
+ */
+function checkRhsForUnsupported(rhs) {
+  if (!rhs) return null;
+  const m = rhs.match(ENGINE_CTRL_RHS_RE);
+  if (m) {
+    return `contrôle engine "_${m[1]}" dans RHS (non représentable en BPscript sans contrôles chargés)`;
+  }
+  if (TEMPO_OP_RHS_RE.test(rhs)) {
+    return `opérateur tempo /N ou \\N dans RHS (syntaxe BPscript X[/N] différente, conversion non implémentée)`;
+  }
+  if (DURATION_SLASH_RE.test(rhs)) {
+    return `notation durée multiplicative N/N dans RHS (ex: 4/4/4, non représentable en BPscript)`;
+  }
+  // Double/triple underscore : prolongation collée BP3 (__ → _ _ en BPscript)
+  if (/_{2,}/.test(rhs)) {
+    return `prolongation collée "__" dans RHS (__ = _ _ en BPscript, conversion non implémentée)`;
+  }
+  if (BP2_CHAR_RE.test(rhs)) {
+    return `caractère BP2 non géré par BPscript dans RHS (ex: ¥ prolongement)`;
+  }
+  if (TIE_BP3_RE.test(rhs)) {
+    return `lié BP3 (X&) dans RHS — ambiguïté avec template slave, conversion ~ non implémentée`;
+  }
+  if (STRING_IN_RHS_RE.test(rhs)) {
+    return `chaîne entre guillemets dans RHS (syntaxe BP3 non gérée par le tokenizer BPscript)`;
+  }
+  if (TYPOGRAPHIC_QUOTE_RE.test(rhs)) {
+    return `guillemet typographique dans RHS (caractère non géré par le tokenizer BPscript)`;
+  }
+  // Annotations libres BP3 dans le RHS : [texte avec espaces/maj/!]
+  // On les distingue des qualifiers BPscript [flag==N] en cherchant [MOT ESPACE ou [MOT!] ou [MOT "]
+  const annoM = rhs.match(/\[([^\]]+)\]/);
+  if (annoM) {
+    const inner = annoM[1];
+    // Si le contenu contient un espace ou des caractères non-BPscript (!, ", '), c'est une annotation libre
+    if (/\s/.test(inner) || /[!"'`]/.test(inner)) {
+      return `annotation libre BP3 "[${inner.substring(0, 30)}]" dans RHS (non géré par le tokenizer BPscript)`;
+    }
+    // Si le premier char est une majuscule non-opérateur, annotation libre
+    if (/^[A-Z]/.test(inner) && !/^[A-Z][a-zA-Z0-9_]*\s*(==|!=|>=|<=|>|<|\+|-|=|:)/.test(inner)) {
+      return `annotation libre BP3 "[${inner.substring(0, 30)}]" dans RHS (commence par majuscule)`;
+    }
+  }
+  return null;
+}
+
+/**
+ * Vérifie si une garde /.../ contient des constructs non gérés.
+ */
+function checkGuardForUnsupported(guardStr) {
+  if (BP2_CHAR_RE.test(guardStr)) {
+    return `caractère BP2 dans garde "${guardStr.substring(0, 30)}" (ex: ³=≥ BP2 vieux format)`;
+  }
+  // Expression arithmétique dans la valeur (K1+K2) → non supporté en BPscript
+  const inner = guardStr.replace(/^\//, '').replace(/\/$/, '').trim();
+  // Détecter K1=K1+K2 style (valeur arithmétique)
+  if (/=\s*[A-Za-z_][A-Za-z0-9_]*\s*[+\-*]\s*[A-Za-z_][A-Za-z0-9_]/.test(inner)) {
+    return `valeur arithmétique dans garde "${guardStr.substring(0, 30)}" (K1=K1+K2 non supporté en BPscript)`;
+  }
+  return null;
+}
+
+/**
+ * Vérifie si le LHS contient des constructs non gérés.
+ */
+function checkLhsForUnsupported(lhs) {
+  if (!lhs) return null;
+  if (TEMPO_OP_RHS_RE.test(lhs)) {
+    return `opérateur tempo /N ou \\N dans LHS (non géré)`;
+  }
+  if (BP2_CHAR_RE.test(lhs)) {
+    return `caractère BP2 non géré par BPscript dans LHS (ex: ¥ prolongement)`;
+  }
+  return null;
+}
+
+// ─── Conversion tokens BP3 → BPscript ────────────────────────────────────────────────
+
+/**
+ * Convertit un token BP3 individuel en son équivalent BPscript.
+ * Les opérateurs nus + ; * ont des mappings spéciaux.
+ */
+function convertSingleToken(tok) {
+  if (tok === '+') return 'plus';
+  if (tok === ';') return 'fin';
+  if (tok === '*') return 'star';
+  return tok;
+}
+
+/**
+ * Convertit un token atomique de template BP3 en BPscript.
+ * tok est un groupe entier comme "(=X)", "(=+ L16)", "(:X)", etc.
+ * ismaster = true pour (=...), false pour (:...)
+ * Retourne la chaîne BPscript ou null si non reconnu.
+ */
+function convertTemplateToken(tok, isMaster) {
+  // Ex: "(=X)", "(=|A1|)", "(=+ L16 ;)" — sans espace interne varié
+  // On extrait le contenu entre ( et ) exclus
+  const inner = tok.slice(1, -1).trim();  // ex: "=X", "=|A1|", "= X ;", ":X"
+  const prefix = isMaster ? '=' : ':';
+
+  if (!inner.startsWith(prefix)) return null;
+
+  // Extraire le body après le préfixe
+  const bodyRaw = inner.slice(prefix.length).trim();
+  if (!bodyRaw) return isMaster ? '\${}' : '&{}';
+
+  // Tokeniser le body pour convertir les opérateurs
+  const bodyParts = bodyRaw.split(/\s+/).map(t => convertSingleToken(t));
+  const bodyBps = bodyParts.join(' ').trim();
+
+  // Si un seul identifiant simple (pas variable |x|) → forme courte $name / &name
+  const shortForm = /^[A-Za-z][A-Za-z0-9_#'\"]*$/.test(bodyBps);
+  if (isMaster) {
+    return shortForm ? `$${bodyBps}` : `\${${bodyBps}}`;
+  } else {
+    return shortForm ? `&${bodyBps}` : `&{${bodyBps}}`;
+  }
+}
+
+/**
+ * Convertit une chaîne de tokens BP3 (LHS ou RHS) en tokens BPscript équivalents.
+ *
+ * Utilise tokenizeBP3Line pour préserver les groupes {...} et (...) entiers.
+ * Les polymetries {N,A B} sont passées verbatim.
+ * Les templates (=...) et (:...) sont convertis en $X et &X.
+ * Les contextes positifs (A B C) sans = ni : sont passés verbatim.
+ */
+function convertBP3TokensToBPS(text) {
+  if (!text) return '';
+  const tokens = tokenizeBP3Line(text);
+  const out = [];
+
+  for (const tok of tokens) {
+    // Template maître : (=...) ou (= ...)
+    if (tok.startsWith('(') && tok.endsWith(')')) {
+      const inner = tok.slice(1, -1).trim();
+      if (inner.startsWith('=')) {
+        const converted = convertTemplateToken(tok, true);
+        out.push(converted !== null ? converted : tok);
+        continue;
+      }
+      if (inner.startsWith(':')) {
+        const converted = convertTemplateToken(tok, false);
+        out.push(converted !== null ? converted : tok);
+        continue;
+      }
+      // Contexte positif ou autre groupe (A B C) → verbatim
+      out.push(tok);
+      continue;
+    }
+
+    // Tout le reste verbatim (terminaux, non-terminaux, polymetries, wildcards, etc.)
+    out.push(tok);
+  }
+
+  return out.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+// ─── Conversion des gardes BP3 ────────────────────────────────────────────────
+
+/**
+ * Convertit une garde BP3 /flag op val/ en qualifier BPscript [flag op val].
+ *
+ * En BPscript :
+ *   - Garde LHS (test) : [flag==N], [flag>N], [flag<N], [flag>=N], [flag<=N], [flag!=N]
+ *   - Mutation : [flag=N] (assign), [flag+N] (increment), [flag-N] (decrement)
+ *   - Garde nue : [flag] (non-zero test)
+ *
+ * La règle pour distinguer test de mutation :
+ *   - Les gardes en LHS (isLhsGuard=true) : /flag=N/ → test → [flag==N]
+ *   - Les flags en RHS (isLhsGuard=false) : /flag=N/ → mutation → [flag=N]
+ *   - /flag+N/ et /flag-N/ → toujours mutation dans les deux positions
+ */
+function convertGuardToBPS(guardStr, isLhsGuard) {
+  // Retirer les /
+  const inner = guardStr.replace(/^\//, '').replace(/\/$/, '').trim();
+  if (!inner) return guardStr;
+
+  // Analyser le contenu (les espaces autour de l'opérateur sont tolérés pour BP3 legacy)
+  // Patterns possibles : flag=N, flag >N, flag >= N, flag != N, flag+N, flag-N, flag
+  const m = inner.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*([=+\-><≥≤≠][^]*)?$/);
+  if (!m) return `[${inner}]`;
+
+  const flag = m[1];
+  const rest = (m[2] || '').trim();
+
+  if (!rest) {
+    // Bare flag
+    return `[${flag}]`;
+  }
+
+  // Opérateur et valeur
+  let op = '';
+  let val = '';
+
+  if (rest.startsWith('≥')) { op = '>='; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('≤')) { op = '<='; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('≠')) { op = '!='; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('=')) { op = '='; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('+')) { op = '+'; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('-')) { op = '-'; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('>')) { op = '>'; val = rest.slice(1).trim(); }
+  else if (rest.startsWith('<')) { op = '<'; val = rest.slice(1).trim(); }
+  else { return `[${inner}]`; }
+
+  // Convertir l'opérateur selon le contexte
+  if (op === '=') {
+    if (isLhsGuard) {
+      // Test : /flag=N/ dans LHS → [flag==N]
+      return `[${flag}==${val}]`;
+    } else {
+      // Mutation : /flag=N/ dans RHS → [flag=N]
+      return `[${flag}=${val}]`;
+    }
+  }
+
+  // +, - → toujours mutation (et doivent être espacés pour le tokeniseur)
+  if (op === '+') return `[${flag}+${val}]`;
+  if (op === '-') return `[${flag}-${val}]`;
+
+  // >, <, >=, <=, != → comparaison (uniquement LHS)
+  return `[${flag}${op}${val}]`;
+}
+
+// ─── Formatage du poids ───────────────────────────────────────────────────────
+
+/**
+ * Convertit un poids BP3 "N", "N-D", "inf", "KN=M" en qualifier BPscript [weight:...].
+ */
+function formatWeightQualifier(weightStr) {
+  const s = String(weightStr).trim();
+  if (s === 'inf') return '[weight:inf]';
+
+  // K-param: K1=3, K1, etc.
+  if (/^[A-Za-z]/.test(s)) {
+    // K-param style: weight:K1=3 ou weight:K1
+    return `[weight:${s}]`;
+  }
+
+  // Numérique: N ou N-D
+  const dm = s.match(/^(\d+)-(\d+)$/);
+  if (dm) return `[weight:${dm[1]}-${dm[2]}]`;
+
+  return `[weight:${s}]`;
+}
+
+// ─── Preamble → modificateurs @mode ──────────────────────────────────────────
+
+/**
+ * Convertit une ligne de preamble BP3 en modificateur BPscript pour @mode:X(...).
+ * Retourne le modificateur string ou null si non reconnu.
+ */
+function preambleToModifier(preambleLine) {
+  const line = preambleLine.trim();
+
+  // _mm(N) ou _mm(N.NNN)
+  const mmM = line.match(/^_mm\(([^)]+)\)/);
+  if (mmM) return `mm:${mmM[1]}`;
+
+  if (line === '_striated') return 'striated';
+  if (line === '_smooth') return 'smooth';
+  if (line === '_destru') return 'destru';
+
+  // Lignes de preamble composites : _mm(60.0000) _striated
+  // Traitées en les décomposant dans extractPreambleModifiers
+  return null;
+}
+
+/**
+ * Extrait les modificateurs de mode depuis les lignes de preamble d'une sous-grammaire.
+ * Gère les lignes composites comme "_mm(60.0000) _striated".
+ * Retourne un tableau de strings modificateurs.
+ */
+function extractPreambleModifiers(preambleLines) {
+  const mods = [];
+  for (const line of preambleLines) {
+    // Découper la ligne en mots-clés BP3
+    const parts = line.split(/\s+/).filter(p => p.length > 0);
+    for (const part of parts) {
+      const mod = preambleToModifier(part);
+      if (mod) mods.push(mod);
+      // Cas des parties sans parens dans une ligne composée
+    }
+  }
+  return mods;
+}
+
+// ─── Parsers de tête de règle ─────────────────────────────────────────────────
+
+/**
+ * Parse la zone après gram#N[M] :
+ * [weight]? [scan]? [lhsGuards]* LHS arrow RHS [rhsFlags]*
+ *
+ * Les gardes LHS en BP3 sont de la forme /flag=N/ et apparaissent avant le LHS.
+ * Les flags RHS apparaissent après le LHS et après la flèche.
+ *
+ * Retourne { weight, scan, lhsGuards, lhs, arrow, rhs, rhsFlags } ou { error }
+ */
+function parseRuleHead(rest) {
+  // Chercher la flèche : --> ou <-- ou <->
+  // On utilise un regex qui respecte les groupes parenthésés/accolades
+  const arrowMatch = findArrowInText(rest);
+  if (!arrowMatch) {
+    // Si une flèche existe dans le texte brut mais pas à depth=0,
+    // c'est probablement un template avec fermeture implicite (BP3 ancien) → NON GÉRÉ
+    if (/-->|<--|<->/.test(rest)) {
+      return { error: `template BP3 avec fermeture implicite (flèche imbriquée dans un template non fermé): "${rest.substring(0, 60)}"` };
+    }
+    return { error: `pas de flèche dans: "${rest.substring(0, 60)}"` };
+  }
+
+  const arrow = arrowMatch.arrow;
+  const lhsRaw = rest.substring(0, arrowMatch.start).trim();
+  const rhsRaw = rest.substring(arrowMatch.end).trim();
+
+  // Parser la zone LHS : poids + scan + gardes + symboles LHS
+  const lhsParsed = parseLhsZone(lhsRaw);
+
+  // Parser la zone RHS : tokens + flags RHS
+  const rhsParsed = parseRhsZone(rhsRaw);
+  if (rhsParsed.error) {
+    return { error: rhsParsed.error };
+  }
+
+  return {
+    weight: lhsParsed.weight,
+    scan: lhsParsed.scan,
+    lhsGuards: lhsParsed.guards,
+    lhs: lhsParsed.lhs,
+    arrow,
+    rhs: rhsParsed.rhs,
+    rhsFlags: rhsParsed.rhsFlags,
+  };
+}
+
+/**
+ * Cherche la flèche (-->, <--, <->) dans un texte en respectant les groupes imbriqués.
+ * Retourne { arrow, start, end } ou null.
+ *
+ * On doit ignorer les flèches à l'intérieur des groupes parenthésés { } ( ).
+ */
+function findArrowInText(text) {
+  let depth = 0;
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '(' || c === '{') { depth++; i++; continue; }
+    if (c === ')' || c === '}') { depth--; i++; continue; }
+    if (depth > 0) { i++; continue; }
+
+    // Chercher <-> en priorité (bidirectionnel)
+    if (c === '<' && text[i+1] === '-' && text[i+2] === '>') {
+      return { arrow: '<->', start: i, end: i + 3 };
+    }
+    // --> (production)
+    if (c === '-' && text[i+1] === '-' && text[i+2] === '>') {
+      return { arrow: '-->', start: i, end: i + 3 };
+    }
+    // <-- (analyse)
+    if (c === '<' && text[i+1] === '-' && text[i+2] === '-') {
+      return { arrow: '<--', start: i, end: i + 3 };
+    }
+    i++;
+  }
+  return null;
+}
+
+/**
+ * Parse la zone LHS d'une règle BP3 :
+ * [weight]? [scan]? [guards]* lhs_symbols
+ *
+ * Les gardes /flag op val/ peuvent être intercalées avec des symboles.
+ * On collecte les gardes qui précèdent le premier symbole non-garde.
+ */
+function parseLhsZone(lhsRaw) {
+  // Extraire les gardes /.../ en préfixe du texte brut (avant tokenisation)
+  // Supporte les espaces internes : /times > 0/, /flag = 3/, etc.
+  const prefixGuards = [];
+  let remaining = lhsRaw.trim();
+  {
+    const GUARD_PREFIX_RE = /^(\/[^/]+\/)\s*/;
+    let m;
+    while ((m = remaining.match(GUARD_PREFIX_RE))) {
+      prefixGuards.push(m[1]);
+      remaining = remaining.slice(m[0].length);
+    }
+  }
+
+  const tokens = tokenizeBP3Line(remaining);
+  const weight = extractWeightToken(tokens);
+  const scan = extractScanToken(tokens);
+  // Gardes restantes sans espaces (style compact /flag=N/)
+  const guards = [...prefixGuards, ...extractGuardTokens(tokens)];
+  // Les tokens restants = LHS
+  const lhs = tokens.join(' ').trim();
+  return { weight, scan, guards, lhs };
+}
+
+/**
+ * Parse la zone RHS d'une règle BP3 :
+ * tokens... [/flags/]*
+ *
+ * Les flags /flag op val/ qui se trouvent à la fin du RHS (et qui existent
+ * aussi dispersés dans le RHS pour certaines grammaires BP3) sont extraits.
+ *
+ * Stratégie : on scanne de droite à gauche pour extraire les flags de fin.
+ */
+// Flag BP3 avec espaces : /flag = val/, /flag+ val/, etc.
+// GUARD_RE_SPACED permet de les détecter avant tokenisation.
+const GUARD_SPACED_RE = /\/[^/]+\//g;
+
+function parseRhsZone(rhsRaw) {
+  // Extraire toutes les gardes /.../ directement dans le texte brut (avant tokenisation)
+  // Cas BP3 : gardes peuvent avoir des espaces internes (/K2 = 11/)
+  const rhsFlags = [];
+  let stripped = rhsRaw;
+
+  // Extraire les gardes en queue (itère depuis la fin)
+  // On utilise une regex globale pour trouver toutes les occurrences /.../ non imbriquées
+  let guardMatches = [...rhsRaw.matchAll(GUARD_SPACED_RE)];
+  if (guardMatches.length > 0) {
+    // Retirer les gardes de la fin du texte brut
+    let cursor = rhsRaw.length;
+    for (let gi = guardMatches.length - 1; gi >= 0; gi--) {
+      const gm = guardMatches[gi];
+      const gEnd = gm.index + gm[0].length;
+      // La garde doit être immédiatement suivie de fin ou d'autres gardes (avec espaces)
+      const trailing = rhsRaw.slice(gEnd).trim();
+      // Si le reste ne contient que des espaces ou d'autres gardes, c'est une garde de fin
+      const trailingIsOnlyGuards = /^(\s*\/[^/]+\/\s*)*$/.test(trailing);
+      if (trailingIsOnlyGuards) {
+        // Flag avec ou sans espaces internes : on accepte, convertGuardToBPS gère les deux.
+        rhsFlags.unshift(gm[0]);
+        cursor = gm.index;
+      } else {
+        break;
+      }
+    }
+    stripped = rhsRaw.slice(0, cursor).trim();
+  }
+
+  const tokens = tokenizeBP3Line(stripped);
+  const rhs = tokens.join(' ').trim();
+  return { rhs, rhsFlags };
+}
+
+/**
+ * Tokenise une ligne BP3 en tokens, en préservant les groupes (=...) (:...) {...}.
+ * Retourne un tableau de strings.
+ *
+ * Note : on ne décompose PAS les groupes — ils sont retournés comme tokens atomiques
+ * pour la détection des gardes et du scan.
+ */
+function tokenizeBP3Line(text) {
+  const tokens = [];
+  let i = 0;
+  let cur = '';
+  let depth = 0;
+
+  function flush() {
+    const t = cur.trim();
+    if (t) tokens.push(t);
+    cur = '';
+  }
+
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '(' || c === '{') {
+      if (depth === 0 && cur.trim()) flush();
+      depth++;
+      cur += c;
+    } else if (c === ')' || c === '}') {
+      depth--;
+      cur += c;
+      if (depth === 0) flush();
+    } else if (depth === 0 && (c === ' ' || c === '\t')) {
+      flush();
+    } else {
+      cur += c;
+    }
+    i++;
+  }
+  flush();
+  return tokens.filter(t => t.length > 0);
+}
+
+/**
+ * Extrait et retire le poids BP3 <...> en tête du tableau de tokens.
+ */
+function extractWeightToken(tokens) {
+  if (tokens.length === 0) return null;
+  const m = tokens[0].match(WEIGHT_RE);
+  if (m) { tokens.shift(); return m[1]; }
+  return null;
+}
+
+/**
+ * Extrait et retire le scan (LEFT, RIGHT) en tête du tableau.
+ */
+function extractScanToken(tokens) {
+  if (tokens.length > 0 && SCAN_KEYWORDS.has(tokens[0])) {
+    return tokens.shift();
+  }
+  return null;
+}
+
+/**
+ * Extrait et retire les gardes /.../ en tête du tableau.
+ */
+function extractGuardTokens(tokens) {
+  const guards = [];
+  while (tokens.length > 0 && GUARD_RE.test(tokens[0])) {
+    guards.push(tokens.shift());
+  }
+  return guards;
+}
+
+/**
+ * Parse la tête d'une règle nue BP2.
+ * lhsPart : ce qui précède la flèche.
+ */
+function parseBareHead(lhsPart) {
+  const tokens = tokenizeBP3Line(lhsPart);
+  const weight = extractWeightToken(tokens);
+  const scan = extractScanToken(tokens);
+  const guards = extractGuardTokens(tokens);
+  const lhs = tokens.join(' ').trim();
+  return { weight, scan, lhsGuards: guards, lhs };
+}
+
+/**
+ * Détecte une règle nue BP2 (sans gram#N[M]) sur la ligne.
+ * Retourne { lhsRaw, arrow, rhs } ou null.
+ */
+function matchBareRule(line) {
+  const m = findArrowInText(line);
+  if (!m) return null;
+  const lhsRaw = line.substring(0, m.start).trim();
+  const rhs = line.substring(m.end).trim();
+  return { lhsRaw, arrow: m.arrow, rhs };
+}
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+
+export { bp3ToScene };

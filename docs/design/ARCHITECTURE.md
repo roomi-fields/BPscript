@@ -22,7 +22,7 @@ seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 │                                                                   │
 │  Source .bps                                                      │
 │       ↓                                                           │
-│  Tokenizer → Parser → Macro-expander → Encoder                   │
+│  Tokenizer → Parser → Macro-expander → Encoder                    │
 │       ↑                                                           │
 │  ┌────┴──────────────────────────┐                                │
 │  │  Data files (lib/)            │                                │
@@ -321,11 +321,11 @@ car le resolver gère la complexité fréquentielle, pas transpose.
 
 **3 opérations** (cf. [PITCH.md](PITCH.md), annexe transposition) :
 
-| Opération | controlState | Niveau | Effet |
-|-----------|-------------|--------|-------|
-| `(transpose:N)` | `transpose: N` | Alphabet (symboles) | Décale de N positions dans `alphabet.notes` |
-| `(degree:N)` | `degree: N` | Gamme (degrés) | Décale de N degrés dans la gamme active |
-| `(tonic:freq)` | `tonic: freq` | Fréquence (référence) | Change `baseHz` temporairement |
+| Opération       | controlState   | Niveau                | Effet                                       |
+| --------------- | -------------- | --------------------- | ------------------------------------------- |
+| `(transpose:N)` | `transpose: N` | Alphabet (symboles)   | Décale de N positions dans `alphabet.notes` |
+| `(degree:N)`    | `degree: N`    | Gamme (degrés)        | Décale de N degrés dans la gamme active     |
+| `(tonic:freq)`  | `tonic: freq`  | Fréquence (référence) | Change `baseHz` temporairement              |
 
 Seul `transpose` est une opération pré-resolver (remapping symbolique).
 `degree` et `tonic` modifient le contexte du resolver lui-même.
