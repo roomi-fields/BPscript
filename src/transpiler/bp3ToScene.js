@@ -65,7 +65,8 @@ const BP3_ENGINE_CONTROLS_RHS = new Set([
 // ─── Types de lignes BP3 ─────────────────────────────────────────────────────
 
 const MODE_RE = /^(RND|ORD|LIN|SUB1?|TEM|POSLONG)\b/;
-const SEP_RE = /^-{5,}$/;
+// Séparateurs BP3 : minimum 4 tirets (certaines grammaires utilisent ----)
+const SEP_RE = /^-{4,}$/;
 // gram#N[M] ou GRAM#N[M] (éventuellement avec espaces dans les crochets)
 const RULE_RE = /^(?:GRAM|gram)#(\d+)\s*\[\s*(\d+)\s*\]\s*(.*)/i;
 // Poids BP3 : <inf>, <N>, <N-D>, <KN>, <KN=N>, <KN-N>
@@ -108,11 +109,16 @@ const TIE_BP3_RE = /[A-Za-z0-9]&/;
 // On détecte la présence d'un crochet ouvrant qui n'est pas suivi d'un identifiant + opérateur.
 const FREE_ANNOT_RHS_RE = /\[(?![a-zA-Z][a-zA-Z0-9_]*\s*(?:==|!=|>=|<=|>|<|\+|-|=|:)[^\]]*\])/;
 
-// Chaînes entre guillemets (simples ou doubles) dans le RHS — syntaxe BP3 non gérée
-const STRING_IN_RHS_RE = /["']/;
+// Chaînes entre guillemets doubles dans le RHS — syntaxe BP3 non gérée.
+// Note : les apostrophes simples ' font partie des identifiants BP3 (ex: A'8, a')
+// et ne doivent PAS déclencher ce check. Seuls les guillemets doubles " bloquent.
+const STRING_IN_RHS_RE = /"/;
 
-// Apostrophes typographiques ou guillemets typographiques — caractères non-ASCII spéciaux
-const TYPOGRAPHIC_QUOTE_RE = /[''""«»‹›]/;
+// Guillemets typographiques — caractères non-ASCII spéciaux uniquement.
+// Attention : l'apostrophe droite U+0027 (') est un caractère valide dans les identifiants BP3
+// (ex: a', A'8). Elle ne doit PAS être listée ici.
+// U+2018 ' U+2019 ' U+201C " U+201D " U+00AB « U+00BB » U+2039 ‹ U+203A ›
+const TYPOGRAPHIC_QUOTE_RE = /[‘’“”«»‹›]/;
 
 // Opérateurs BP3 nus : + ; * en dehors des templates
 // Dans le RHS BP3, + est un opérateur de continuité, ; est fin de séquence, * est marqueur homo.
@@ -268,7 +274,7 @@ function bp3ToScene(grammarText) {
     // Règle nue BP2 (sans gram#N[M])
     const bareMatch = matchBareRule(line);
     if (bareMatch) {
-      const { lhsRaw, arrow, rhs } = bareMatch;
+      const { lhsRaw, arrow, rhs: rhsRaw } = bareMatch;
       const parsed = parseBareHead(lhsRaw);
       if (parsed.error) {
         return `NON GÉRÉ: ${parsed.error} (règle BP2: ${line.substring(0, 80)})`;
@@ -281,7 +287,12 @@ function bp3ToScene(grammarText) {
         const gc = checkGuardForUnsupported(g);
         if (gc) return `NON GÉRÉ: ${gc} (garde LHS règle BP2)`;
       }
-      const rhsCheck = checkRhsForUnsupported(rhs);
+      // parseRhsZone effectue le strip des annotations libres + extraction des gardes
+      const rhsParsed = parseRhsZone(rhsRaw);
+      if (rhsParsed.error) {
+        return `NON GÉRÉ: ${rhsParsed.error} (règle BP2)`;
+      }
+      const rhsCheck = checkRhsForUnsupported(rhsParsed.rhs);
       if (rhsCheck) {
         return `NON GÉRÉ: ${rhsCheck} (règle BP2)`;
       }
@@ -293,8 +304,8 @@ function bp3ToScene(grammarText) {
         lhsGuards: parsed.lhsGuards,
         lhs: parsed.lhs,
         arrow,
-        rhs,
-        rhsFlags: [],
+        rhs: rhsParsed.rhs,
+        rhsFlags: rhsParsed.rhsFlags,
       });
       i++; continue;
     }
@@ -450,6 +461,29 @@ function bp3ToScene(grammarText) {
   return bpsLines.join('\n');
 }
 
+// ─── Utilitaires ─────────────────────────────────────────────────────────────
+
+/**
+ * Détecte si le RHS commence par un préfixe de mètre BP3 N+N/M ou N+N+N+N/M.
+ * Retourne le RHS sans le préfixe, ou le RHS intact si pas de préfixe.
+ * Ex: "4+4/6 S48" → "S48"  /  "4+4+4+4/4 A B C" → "A B C"
+ */
+function stripMeterPrefix(rhs) {
+  const m = rhs.match(/^(\d+(?:\+\d+)+\/\d+)\s+(.*)$/);
+  if (m) return m[2];
+  return rhs;
+}
+
+/**
+ * Extrait le préfixe de mètre BP3 N+N/M ou N+N+N+N/M en tête du RHS.
+ * Retourne { meter: "4+4/6", rest: "S48 ..." } ou null.
+ */
+function extractMeterPrefix(rhs) {
+  const m = rhs.match(/^(\d+(?:\+\d+)+\/\d+)\s+(.*)/);
+  if (m) return { meter: m[1], rest: m[2] };
+  return null;
+}
+
 // ─── Vérification du RHS ──────────────────────────────────────────────────────
 
 /**
@@ -465,38 +499,23 @@ function checkRhsForUnsupported(rhs) {
   if (TEMPO_OP_RHS_RE.test(rhs)) {
     return `opérateur tempo /N ou \\N dans RHS (syntaxe BPscript X[/N] différente, conversion non implémentée)`;
   }
-  if (DURATION_SLASH_RE.test(rhs)) {
-    return `notation durée multiplicative N/N dans RHS (ex: 4/4/4, non représentable en BPscript)`;
-  }
-  // Double/triple underscore : prolongation collée BP3 (__ → _ _ en BPscript)
-  if (/_{2,}/.test(rhs)) {
-    return `prolongation collée "__" dans RHS (__ = _ _ en BPscript, conversion non implémentée)`;
+  // DURATION_SLASH_RE : bloquer uniquement si ce n'est pas un préfixe de mètre N+N/M
+  // Les mètres N+N/M sont convertis en qualifier [meter:...] par convertBP3TokensToBPS.
+  // On teste après avoir retiré le préfixe de mètre éventuel.
+  {
+    const withoutMeter = stripMeterPrefix(rhs);
+    if (DURATION_SLASH_RE.test(withoutMeter)) {
+      return `notation durée multiplicative N/N dans RHS (ex: 4/4/4, non représentable en BPscript)`;
+    }
   }
   if (BP2_CHAR_RE.test(rhs)) {
     return `caractère BP2 non géré par BPscript dans RHS (ex: ¥ prolongement)`;
-  }
-  if (TIE_BP3_RE.test(rhs)) {
-    return `lié BP3 (X&) dans RHS — ambiguïté avec template slave, conversion ~ non implémentée`;
   }
   if (STRING_IN_RHS_RE.test(rhs)) {
     return `chaîne entre guillemets dans RHS (syntaxe BP3 non gérée par le tokenizer BPscript)`;
   }
   if (TYPOGRAPHIC_QUOTE_RE.test(rhs)) {
     return `guillemet typographique dans RHS (caractère non géré par le tokenizer BPscript)`;
-  }
-  // Annotations libres BP3 dans le RHS : [texte avec espaces/maj/!]
-  // On les distingue des qualifiers BPscript [flag==N] en cherchant [MOT ESPACE ou [MOT!] ou [MOT "]
-  const annoM = rhs.match(/\[([^\]]+)\]/);
-  if (annoM) {
-    const inner = annoM[1];
-    // Si le contenu contient un espace ou des caractères non-BPscript (!, ", '), c'est une annotation libre
-    if (/\s/.test(inner) || /[!"'`]/.test(inner)) {
-      return `annotation libre BP3 "[${inner.substring(0, 30)}]" dans RHS (non géré par le tokenizer BPscript)`;
-    }
-    // Si le premier char est une majuscule non-opérateur, annotation libre
-    if (/^[A-Z]/.test(inner) && !/^[A-Z][a-zA-Z0-9_]*\s*(==|!=|>=|<=|>|<|\+|-|=|:)/.test(inner)) {
-      return `annotation libre BP3 "[${inner.substring(0, 30)}]" dans RHS (commence par majuscule)`;
-    }
   }
   return null;
 }
@@ -582,9 +601,25 @@ function convertTemplateToken(tok, isMaster) {
  * Les polymetries {N,A B} sont passées verbatim.
  * Les templates (=...) et (:...) sont convertis en $X et &X.
  * Les contextes positifs (A B C) sans = ni : sont passés verbatim.
+ *
+ * Conversions supplémentaires :
+ *   - Préfixe de mètre N+N/M → qualifier [meter:N+N/M] en suffixe
+ *   - Token X& → X~ (lié avant) — distingué des templates (:X) car en tête
+ *   - Token &X → ~X (lié arrière) — distingué de (:X) par absence de parens
+ *   - Token __ (N underscores) → _ _ _ ... (N tokens séparés)
+ *   - Annotations libres [texte libre] → supprimées (extractSignificant les ignore aussi)
  */
 function convertBP3TokensToBPS(text) {
   if (!text) return '';
+
+  // ── Préfixe de mètre N+N/M ──────────────────────────────────────────────
+  let meterQualifier = null;
+  const meterInfo = extractMeterPrefix(text);
+  if (meterInfo) {
+    meterQualifier = `[meter:${meterInfo.meter}]`;
+    text = meterInfo.rest;
+  }
+
   const tokens = tokenizeBP3Line(text);
   const out = [];
 
@@ -607,9 +642,60 @@ function convertBP3TokensToBPS(text) {
       continue;
     }
 
+    // Annotation libre BP3 [texte libre] — strippée silencieusement
+    // Distinction : une annotation libre a des espaces ou des lettres majuscules seules
+    // sans opérateur qualifier. Les vrais qualifiers [flag==N] sont dans parseRhsZone.
+    // Ici les crochets restants (après extraction des gardes) sont des annotations.
+    if (tok.startsWith('[') && tok.endsWith(']')) {
+      const inner = tok.slice(1, -1);
+      // Si c'est un qualifier BPscript valide (flag op val) on le garde
+      const isQualifier = /^[a-zA-Z][a-zA-Z0-9_]*\s*(==|!=|>=|<=|>|<|\+|-|=|:)/.test(inner);
+      if (!isQualifier) {
+        // Annotation libre → supprimée
+        continue;
+      }
+      out.push(tok);
+      continue;
+    }
+
+    // Prolongation collée __ → _ _ _ ... (N underscores séparés)
+    // Cas 1 : token entièrement underscores : ____ → _ _ _ _
+    if (/^_{2,}$/.test(tok)) {
+      const count = tok.length;
+      for (let k = 0; k < count; k++) out.push('_');
+      continue;
+    }
+    // Cas 2 : token terminé par underscores : do3__ → do3 _ _
+    {
+      const umatch = tok.match(/^(.+?)(_{2,})$/);
+      if (umatch) {
+        out.push(umatch[1]);
+        const count = umatch[2].length;
+        for (let k = 0; k < count; k++) out.push('_');
+        continue;
+      }
+    }
+
+    // Lié BP3 X& (note liée vers l'avant) → X~ en BPscript
+    // Pattern : token se terminant par & (ex: do3& G#5& A'8&)
+    if (/^[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
+      out.push(tok.slice(0, -1) + '~');
+      continue;
+    }
+
+    // Lié BP3 &X (note liée vers l'arrière) → ~X en BPscript
+    // ATTENTION : &X standalone ≠ template slave (:X). On vérifie qu'il n'y a pas de parens.
+    if (/^&[A-Za-z0-9]/.test(tok) && !tok.startsWith('(:')) {
+      out.push('~' + tok.slice(1));
+      continue;
+    }
+
     // Tout le reste verbatim (terminaux, non-terminaux, polymetries, wildcards, etc.)
     out.push(tok);
   }
+
+  // Ajouter le qualifier de mètre en suffixe si présent
+  if (meterQualifier) out.push(meterQualifier);
 
   return out.join(' ').replace(/\s+/g, ' ').trim();
 }
@@ -868,10 +954,16 @@ function parseLhsZone(lhsRaw) {
 const GUARD_SPACED_RE = /\/[^/]+\//g;
 
 function parseRhsZone(rhsRaw) {
+  // Supprimer les annotations libres BP3 [texte libre] en fin de RHS.
+  // Ces annotations ont un contenu avec espaces et/ou majuscules sans opérateur qualifier.
+  // Exemple : "A B [Keep leftmost symbol]", "d #? [Append "d" at the end]"
+  // On distingue des qualifiers BPscript [key:val] en testant le contenu.
+  let rhsRawClean = rhsRaw.replace(/\s+\[[A-Z][^\]]*\]\s*$/g, '').trim();
+
   // Extraire toutes les gardes /.../ directement dans le texte brut (avant tokenisation)
   // Cas BP3 : gardes peuvent avoir des espaces internes (/K2 = 11/)
   const rhsFlags = [];
-  let stripped = rhsRaw;
+  let stripped = rhsRawClean;
 
   // Extraire les gardes en queue (itère depuis la fin)
   // On utilise une regex globale pour trouver toutes les occurrences /.../ non imbriquées

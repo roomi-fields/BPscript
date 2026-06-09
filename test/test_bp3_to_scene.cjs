@@ -52,6 +52,36 @@ function extractSignificant(text) {
     // Normaliser _mm(N.0000) → _mm(N) (même valeur musicale, formatage différent)
     raw = raw.replace(/_mm\((\d+)\.0+\)/g, '_mm($1)');
 
+    // Normaliser la casse GRAM# → gram# (BP3 old style vs compileBPS output)
+    raw = raw.replace(/^GRAM#/i, 'gram#');
+
+    // Normaliser les numéros de règle gram#N[M] → gram#N[*] (les numéros M peuvent varier)
+    // car BP3 original peut avoir des numéros non consécutifs (ex: gram#1[1], gram#1[3])
+    // tandis que compileBPS renuméroté consécutivement.
+    raw = raw.replace(/^(gram#\d+)\[\d+\]/, '$1[*]');
+
+    // Supprimer le préfixe gram#N[*] pour normaliser les règles BP2 (sans numéro de bloc)
+    // et les règles compilées (avec numéro de bloc). On garde uniquement le corps de règle.
+    raw = raw.replace(/^gram#\d+\[\*\]\s*/, '');
+
+    // Normaliser espaces internes des templates : (= X) → (=X), (: X) → (:X)
+    raw = raw.replace(/\(=\s+/g, '(=').replace(/\(:\s+/g, '(:');
+    // Normaliser espaces avant ) dans templates : (=X ) → (=X), (:X ) → (:X)
+    raw = raw.replace(/\s+\)/g, ')');
+    // Normaliser l'opérateur homo * collé à un template : *(... → * (...
+    raw = raw.replace(/\*\(/g, '* (');
+
+    // Normaliser les tokens adjacents sans espace : )(  → ) ( (templates collés en BP3)
+    raw = raw.replace(/\)\s*\(/g, ') (');
+
+    // Normaliser la notation de lié BP3 : X& Y → X &Y (forme canonique avec & préfixe)
+    raw = raw.replace(/([A-Za-z0-9'_#]+)&\s+/g, '$1 &');
+
+    // Normaliser les prolongations collées : do3__ → do3 _ _ (espace entre chaque token)
+    raw = raw.replace(/([A-Za-z0-9'#.]+)(_{2,})/g, (_, id, us) => {
+      return id + ' ' + us.split('').join(' ');
+    });
+
     // Supprimer les annotations libres en fin de ligne de mode
     if (/^(RND|ORD|LIN|SUB1?|TEM|POSLONG)(\s+\[.*)$/.test(raw)) {
       raw = raw.replace(/\s+\[.*$/, '');
@@ -65,7 +95,7 @@ function extractSignificant(text) {
 }
 
 function normalizeSeparator(line) {
-  if (/^-{5,}$/.test(line)) return '------------';
+  if (/^-{4,}$/.test(line)) return '------------';
   return line;
 }
 
@@ -198,9 +228,62 @@ async function main() {
       grammar: `RND\n_mm(60.0000) _striated\ngram#1[1] S --> A`,
       expectRules: ['RND', '_mm(60.0000) _striated', 'gram#1[1] S --> A'],
     },
+    // --- Constructs nouveaux ---
+
+    // Meter N+N/M dans le RHS — doit devenir [meter:N+N/M] qualifier suffixe
+    {
+      name: 'meter 4+4/6 en RHS',
+      grammar: `RND\ngram#1[1] S <-> 4+4/6 S48`,
+      expectRules: ['RND', 'gram#1[1] S <-> 4+4/6 S48'],
+    },
+    {
+      name: 'meter 4+4+4+4/4 en RHS',
+      grammar: `RND\nGRAM#1[1] S <-> 4+4+4+4/4 (=A16)(=V8)(=A8)`,
+      expectRules: ['RND', 'gram#1[1] S <-> 4+4+4+4/4 (=A16) (=V8) (=A8)'],
+    },
+
+    // Annotations libres [Keep ...] dans le RHS — doivent être strippées (pas NON GÉRÉ)
+    {
+      name: 'annotation libre [Keep leftmost] strippée',
+      grammar: `SUB\n#? ? --> #? ?  [Keep leftmost symbol]`,
+      expectRules: ['SUB', 'gram#1[1] #? ? --> #? ?'],
+    },
+    {
+      name: 'annotation libre [Append "d"] strippée',
+      grammar: `ORD\n<1-1> ? #? --> d #? [Append "d" at the end of the item]`,
+      expectRules: ['ORD', 'gram#1[1] <1-1> ? #? --> d #?'],
+    },
+
+    // Liens X& et &X — doivent devenir X~ et ~X
+    {
+      name: 'lié do3& → do3~',
+      grammar: `RND\ngram#1[1] S --> do3& re3 do3`,
+      expectRules: ['RND', 'gram#1[1] S --> do3& re3 do3'],
+    },
+    {
+      name: 'lié &do3 → ~do3',
+      grammar: `RND\ngram#1[1] S --> re3 &do3`,
+      expectRules: ['RND', 'gram#1[1] S --> re3 &do3'],
+    },
+
+    // Double underscore __ → _ _ (prolongation collée)
+    {
+      name: 'prolongation collée __ → _ _',
+      grammar: `RND\ngram#1[1] S --> do3__ mi3`,
+      expectRules: ['RND', 'gram#1[1] S --> do3 _ _ mi3'],
+    },
+
+    // Apostrophe dans identifiant a' (ne pas bloquer STRING_IN_RHS_RE)
+    {
+      name: "apostrophe dans identifiant a'",
+      grammar: `gram#1[1] S --> a' a' c' b`,
+      expectRules: [`gram#1[1] S --> a' a' c' b`],
+    },
+
     {
       name: 'opérateur _vel → NON GÉRÉ attendu',
-      // _vel() est un contrôle engine BP3 non représentable en BPscript → NON GÉRÉ correct.
+      // _vel() est un contrôle runtime BP3 sans round-trip fidèle (compileBPS → _script(CT))
+      // → NON GÉRÉ correct.
       grammar: `RND\ngram#1[1] X --> _vel(110) sa6`,
       expectNonGere: true,
     },
@@ -277,9 +360,25 @@ async function main() {
   // Tests round-trip sur 3 grammaires de référence
   // -------------------------------------------------------------------------
   const refGrammars = [
+    // Niveau 1 (baseline)
     '-gr.doeslittle',
     '-gr.transposition1',
     '-gr.dhati',
+    '-gr.koto1',
+    '-gr.koto2',
+    '-gr.checkBT',
+    '-gr.checkSUB1',
+    '-gr.tryhomomorphism',
+    // Niveau 2 — priorités [BPx]
+    '-gr.dhin1',
+    '-gr.dhati2',
+    '-gr.dhati3',
+    // Niveau 2 — autres
+    '-gr.check&',
+    '-gr.tryCsoundObjects',
+    '-gr.tryRagas',
+    '-gr.tryShruti',
+    '-gr.trySrand',
   ];
 
   console.log('\n=== Tests round-trip grammaires de référence ===\n');

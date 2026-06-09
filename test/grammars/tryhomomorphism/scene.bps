@@ -1,0 +1,3 @@
+@mode:random(mm:60.0000,striated)
+S -> a b c $X * &X
+X -> do4 c mi4 fa4
