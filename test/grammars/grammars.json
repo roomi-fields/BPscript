@@ -25,28 +25,60 @@
     "status": "to_be_tested",
     "aux": [],
     "features": [],
-    "lines": 15
+    "lines": 15,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "starts with -ho.abc header, lowercase terminals (a,b,c), 10 errors"
+    },
+    "production_mode": "text"
   },
   "checkBT": {
     "bernard": "checkBT",
     "status": "to_be_tested",
     "aux": [],
     "features": [],
-    "lines": 2
+    "lines": 2,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "starts with -ho.abc1 header, terminal \"a'\" not recognized"
+    },
+    "production_mode": "text"
   },
   "checkHomo": {
     "bernard": "checkHomo",
     "status": "to_be_tested",
     "aux": [],
     "features": [],
-    "lines": 8
+    "lines": 8,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.4 header), no -se reference in grammar"
+    },
+    "production_mode": "text"
   },
   "checkhomo2": {
     "bernard": "checkhomo2",
     "status": "to_be_tested",
     "aux": [],
     "features": [],
-    "lines": 13
+    "lines": 13,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.4 header), no -se reference in grammar"
+    },
+    "production_mode": "text"
   },
   "gramgene2": {
     "bernard": "gramgene2",
@@ -55,14 +87,30 @@
       "se"
     ],
     "features": [],
-    "lines": 24
+    "lines": 24,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.gramgene",
+      "alphabet": null,
+      "blocked": "uses lowercase terminals (a,b,c) + INIT directive, not valid in BP3"
+    },
+    "production_mode": "text"
   },
   "keys": {
     "bernard": "keys",
     "status": "to_be_tested",
     "aux": [],
     "features": [],
-    "lines": 6
+    "lines": 6,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy (starts with -ho.keys), terminal \"k60\" not recognized by BP3"
+    },
+    "production_mode": "text"
   },
   "tryTicks": {
     "bernard": "tryTicks",
@@ -71,7 +119,15 @@
       "se"
     ],
     "features": [],
-    "lines": 6
+    "lines": 6,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryTicks",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5.2 header), parser fails"
+    },
+    "production_mode": "midi"
   },
   "tryflags2": {
     "bernard": "tryflags2",
@@ -80,7 +136,15 @@
       "se"
     ],
     "features": [],
-    "lines": 13
+    "lines": 13,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryflags2",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5 header), parser fails"
+    },
+    "production_mode": "text"
   },
   "tryflags3": {
     "bernard": "tryflags3",
@@ -89,7 +153,15 @@
       "se"
     ],
     "features": [],
-    "lines": 20
+    "lines": 20,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryflags3",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (from -in.abc1 header line), -in not supported"
+    },
+    "production_mode": "text"
   },
   "tryflags3.html": {
     "bernard": "tryflags3.html",
@@ -98,7 +170,14 @@
       "se"
     ],
     "features": [],
-    "lines": 27
+    "lines": 27,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "HTML file, not a grammar"
+    }
   },
   "tryhomomorphism": {
     "bernard": "tryhomomorphism",
@@ -107,7 +186,15 @@
       "se"
     ],
     "features": [],
-    "lines": 13
+    "lines": 13,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryhomomorphism",
+      "alphabet": null,
+      "blocked": "BP2 legacy (2 compile errors, French solfège notation incompatible)"
+    },
+    "production_mode": "midi"
   },
   "blurb": {
     "bernard": "blurb",
@@ -116,18 +203,34 @@
       "se"
     ],
     "features": [],
-    "lines": 7
+    "lines": 7,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.blurb",
+      "alphabet": null,
+      "blocked": "BP2 legacy (1 compile error)"
+    },
+    "production_mode": "midi"
   },
   "doeslittle": {
     "bernard": "doeslittle",
     "status": "to_be_tested",
+    "production_mode": "midi",
     "aux": [
       "se"
     ],
     "features": [
       "poly:1"
     ],
-    "lines": 11
+    "lines": 11,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.doeslittle",
+      "alphabet": null,
+      "blocked": "uses ¥ (U+00A5) as tie marker (BP2), not recognized by BP3 v3.4.x"
+    }
   },
   "drum": {
     "bernard": "drum",
@@ -178,11 +281,19 @@
   "tryMIDIfile": {
     "bernard": "tryMIDIfile",
     "status": "to_be_tested",
+    "production_mode": "midi",
     "aux": [
       "se"
     ],
     "features": [],
-    "lines": 9
+    "lines": 9,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.asymmetric1",
+      "alphabet": null,
+      "note": "Original -se.tryMIDIfile is BP2 format; using -se.asymmetric1 as JSON substitute"
+    }
   },
   "checkVolChan": {
     "bernard": "checkVolChan",
@@ -193,7 +304,15 @@
     "features": [
       "poly:3"
     ],
-    "lines": 73
+    "lines": 73,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.checkVolChan",
+      "alphabet": null,
+      "blocked": "BP2 legacy (14 compile errors, -se.checkVolChan missing JSON format)"
+    },
+    "production_mode": "midi"
   },
   "checkVolMasterSlave": {
     "bernard": "checkVolMasterSlave",
@@ -202,7 +321,15 @@
     "features": [
       "poly:1"
     ],
-    "lines": 7
+    "lines": 7,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "uses -or.checkVolMasterSlave (unsupported), 2 compile errors"
+    },
+    "production_mode": "midi"
   },
   "checkcontext": {
     "bernard": "checkcontext",
@@ -211,7 +338,15 @@
     "features": [
       "sub:1"
     ],
-    "lines": 24
+    "lines": 24,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "starts with -ho.abc header, lowercase terminals (d,e,f), 8 errors"
+    },
+    "production_mode": "text"
   },
   "tryConsoleMaxTime": {
     "bernard": "tryConsoleMaxTime",
@@ -240,7 +375,15 @@
     "features": [
       "sub:1"
     ],
-    "lines": 19
+    "lines": 19,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryLIN",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5 header), parser fails"
+    },
+    "production_mode": "text"
   },
   "tryObjects": {
     "bernard": "tryObjects",
@@ -293,7 +436,15 @@
     "features": [
       "sub:2"
     ],
-    "lines": 30
+    "lines": 30,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.gramgene",
+      "alphabet": null,
+      "blocked": "uses lowercase terminals (a,b,c), not valid in BP3"
+    },
+    "production_mode": "text"
   },
   "koto1": {
     "bernard": "koto1",
@@ -304,7 +455,15 @@
     "features": [
       "sub:2"
     ],
-    "lines": 31
+    "lines": 31,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.koto1",
+      "alphabet": null,
+      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+    },
+    "production_mode": "text"
   },
   "koto2": {
     "bernard": "koto2",
@@ -315,18 +474,34 @@
     "features": [
       "sub:2"
     ],
-    "lines": 30
+    "lines": 30,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.koto1",
+      "alphabet": null,
+      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+    },
+    "production_mode": "text"
   },
   "simpletemplates": {
     "bernard": "simpletemplates",
     "status": "to_be_tested",
+    "production_mode": "midi",
     "aux": [
       "se"
     ],
     "features": [
       "sub:2"
     ],
-    "lines": 16
+    "lines": 16,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.simpletemplates",
+      "alphabet": null,
+      "blocked": "BP2 settings file (not JSON), not compatible with bp.exe v3.4.x"
+    }
   },
   "tryKeyMap": {
     "bernard": "tryKeyMap",
@@ -335,7 +510,15 @@
       "se"
     ],
     "features": [],
-    "lines": 53
+    "lines": 53,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryKeyMap",
+      "alphabet": null,
+      "blocked": "BP2 legacy (8 compile errors)"
+    },
+    "production_mode": "midi"
   },
   "time-patterns": {
     "bernard": "tryTimePatterns",
@@ -364,7 +547,15 @@
     "features": [
       "poly:7"
     ],
-    "lines": 47
+    "lines": 47,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.Rajeev",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5 header), parser fails"
+    },
+    "production_mode": "text"
   },
   "tryAllItems0": {
     "bernard": "tryAllItems0",
@@ -392,13 +583,24 @@
   "transposition1": {
     "bernard": "transposition1",
     "status": "to_be_tested",
+    "production_mode": "midi",
     "aux": [
-      "se"
+      "se",
+      "ho"
     ],
     "features": [
-      "poly:2"
+      "poly:2",
+      "_transpose"
     ],
-    "lines": 24
+    "lines": 24,
+    "note": "Utilise _transpose() et |variables|. Aux réels: -se.transposition et -ho.transposition. BPx grammar. Divergences de hauteur attendues (hors-scope R2 transpose).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.transposition3",
+      "alphabet": null,
+      "note": "Using -se.transposition3 (JSON) as proxy for -se.transposition (BP2 format, incompatible with BP3 v3.4.x parser)"
+    }
   },
   "bells": {
     "bernard": "bells",
@@ -423,19 +625,36 @@
     "features": [
       "sub:3"
     ],
-    "lines": 79
+    "lines": 79,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.cloches",
+      "alphabet": null,
+      "blocked": "uses -or.cloches (unsupported by BP3), 8 compile errors"
+    },
+    "production_mode": "midi"
   },
   "tryRotate": {
     "bernard": "tryRotate",
     "status": "to_be_tested",
+    "production_mode": "midi",
     "aux": [
       "se"
     ],
     "features": [
       "poly:2",
-      "sub:1"
+      "sub:1",
+      "_rotate"
     ],
-    "lines": 14
+    "lines": 14,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.asymmetric1",
+      "alphabet": null,
+      "note": "Original -se.tryRotate is BP2 format; using -se.asymmetric1 as JSON substitute"
+    }
   },
   "trytemplates2": {
     "bernard": "trytemplates2",
@@ -446,7 +665,15 @@
     "features": [
       "sub:3"
     ],
-    "lines": 21
+    "lines": 21,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.trytemplates2",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5.1 header), parser fails"
+    },
+    "production_mode": "text"
   },
   "a": {
     "bernard": "a",
@@ -455,14 +682,29 @@
     "features": [
       "sub:1"
     ],
-    "lines": 17
+    "lines": 17,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 flag syntax (/K1³100/) with non-ASCII char ³ (0xB3), compile errors"
+    },
+    "production_mode": "midi"
   },
   "a.html": {
     "bernard": "a.html",
     "status": "to_be_tested",
     "aux": [],
     "features": [],
-    "lines": 16
+    "lines": 16,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "HTML file, not a grammar"
+    }
   },
   "flags": {
     "bernard": "tryFlags",
@@ -555,7 +797,15 @@
     "features": [
       "sub:1"
     ],
-    "lines": 17
+    "lines": 17,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryPatternGrammar",
+      "alphabet": "-al.tryPatternGrammar",
+      "blocked": "lowercase terminals (g,c,a,t,n) not supported by BP3, 3 errors; produces 0 items even with --all"
+    },
+    "production_mode": "text"
   },
   "checkSUB": {
     "bernard": "checkSUB",
@@ -564,7 +814,15 @@
     "features": [
       "sub:4"
     ],
-    "lines": 49
+    "lines": 49,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.3 header), no -se"
+    },
+    "production_mode": "text"
   },
   "checkSUB.new": {
     "bernard": "checkSUB.new",
@@ -573,18 +831,35 @@
     "features": [
       "sub:4"
     ],
-    "lines": 49
+    "lines": 49,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.3 header), no -se"
+    },
+    "production_mode": "text"
   },
   "dhadhatite1": {
     "bernard": "dhadhatite1",
     "status": "to_be_tested",
+    "production_mode": "text",
     "aux": [
       "se"
     ],
     "features": [
       "sub:4"
     ],
-    "lines": 72
+    "lines": 72,
+    "note": "Bols talas (dha, tite, dhadha, dheena, teena). Aux réels: -se.dhadhatite et -ho.dhadhatite. BPx grammar.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.dhadhatite",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5 Date header), parser treats header as rules, fails"
+    }
   },
   "dhati2": {
     "bernard": "dhati2",
@@ -595,7 +870,15 @@
     "features": [
       "sub:4"
     ],
-    "lines": 40
+    "lines": 40,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.dhati2",
+      "alphabet": null,
+      "blocked": "BP2 legacy (12 compile errors, format incompatible with BP3)"
+    },
+    "production_mode": "midi"
   },
   "dhati3": {
     "bernard": "dhati3",
@@ -606,7 +889,15 @@
     "features": [
       "sub:4"
     ],
-    "lines": 39
+    "lines": 39,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.dhati2",
+      "alphabet": null,
+      "blocked": "BP2 legacy (11 compile errors, format incompatible with BP3)"
+    },
+    "production_mode": "midi"
   },
   "look-and-say": {
     "bernard": "look-and-say",
@@ -666,7 +957,15 @@
     "features": [
       "poly:6"
     ],
-    "lines": 20
+    "lines": 20,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.trySrand",
+      "alphabet": null,
+      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+    },
+    "production_mode": "midi"
   },
   "repeat": {
     "bernard": "tryrepeat",
@@ -717,7 +1016,14 @@
     "production_mode": "midi",
     "aux": [],
     "features": [],
-    "note": "from -gr.acceleration by Harm Visser, BPscript version with <weight> and <> bidirectional. Integrated 2026-04-26."
+    "note": "from -gr.acceleration by Harm Visser, BPscript version with <weight> and <> bidirectional. Integrated 2026-04-26.",
+    "php_ref": {
+      "midi_notes": 78,
+      "note_convention": "english",
+      "settings": "-se.Visser2",
+      "alphabet": null,
+      "note": "Uses same -gr.acceleration as 'acceleration' entry (same oracle)"
+    }
   },
   "checkSUB1": {
     "bernard": "checkSUB1",
@@ -728,7 +1034,15 @@
     "features": [
       "sub:1"
     ],
-    "lines": 22
+    "lines": 22,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.checkSUB1",
+      "alphabet": null,
+      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+    },
+    "production_mode": "text"
   },
   "livecode1": {
     "bernard": "livecode1",
@@ -759,7 +1073,15 @@
       "_goto",
       "_repeat"
     ],
-    "lines": 31
+    "lines": 31,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryGOTO",
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.5 header), parser fails"
+    },
+    "production_mode": "text"
   },
   "tunings": {
     "bernard": "tryTunings",
@@ -870,7 +1192,15 @@
       "poly:7",
       "sub:1"
     ],
-    "lines": 30
+    "lines": 30,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryKeyXpand",
+      "alphabet": null,
+      "blocked": "uses -or.allpianos (unsupported), 5 compile errors"
+    },
+    "production_mode": "midi"
   },
   "ames": {
     "bernard": "Ames",
@@ -899,7 +1229,15 @@
     "features": [
       "poly:10"
     ],
-    "lines": 14
+    "lines": 14,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.check&",
+      "alphabet": null,
+      "blocked": "French solfège with BP2 tie/rest syntax (do3_-,sol4&) incompatible with BP3"
+    },
+    "production_mode": "midi"
   },
   "Djinns": {
     "bernard": "Djinns",
@@ -911,7 +1249,15 @@
       "poly:9",
       "sub:3"
     ],
-    "lines": 44
+    "lines": 44,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.Djinns",
+      "alphabet": null,
+      "blocked": "uses -or.Djinns (unsupported) + French solfège (do2,sib5) incompatible with BP3"
+    },
+    "production_mode": "midi"
   },
   "dhadhatite": {
     "bernard": "dhadhatite",
@@ -922,7 +1268,15 @@
     "features": [
       "sub:6"
     ],
-    "lines": 92
+    "lines": 92,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.dhadhatite",
+      "alphabet": null,
+      "blocked": "BP2 settings file (not JSON), French solfège syntax, 13 compile errors"
+    },
+    "production_mode": "text"
   },
   "livecode2": {
     "bernard": "livecode2",
@@ -981,14 +1335,24 @@
   "MyMelody": {
     "bernard": "MyMelody",
     "status": "to_be_tested",
+    "production_mode": "midi",
     "aux": [
-      "se"
+      "se",
+      "ho"
     ],
     "features": [
       "poly:18",
       "sub:1"
     ],
-    "lines": 34
+    "lines": 34,
+    "note": "Aux réels: -se.MyMelody et -ho.Frenchnotes. Convention french (do/re/mi/sol).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.MyMelody",
+      "alphabet": null,
+      "blocked": "uses [...] as inline comments (BP2 syntax); BP3 interprets them as guards"
+    }
   },
   "not-reich": {
     "bernard": "NotReich",
@@ -1103,7 +1467,15 @@
     "features": [
       "sub:5"
     ],
-    "lines": 48
+    "lines": 48,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.trytemplates",
+      "alphabet": null,
+      "blocked": "lowercase terminals (a,b,c) not supported by BP3"
+    },
+    "production_mode": "text"
   },
   "vina": {
     "bernard": "vina",
@@ -1202,7 +1574,15 @@
     "features": [
       "poly:37"
     ],
-    "lines": 17
+    "lines": 17,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "French solfège (fa5}) with BP2 grouping syntax, 12 compile errors"
+    },
+    "production_mode": "midi"
   },
   "koto3": {
     "bernard": "koto3",
@@ -1243,7 +1623,15 @@
     ],
     "lines": 77,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 30
+    "php_errors": 30,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.checkAllCsound",
+      "alphabet": null,
+      "blocked": "uses _ins() (Csound-only operator), not supported by BP3 v3.4.4"
+    },
+    "production_mode": "midi"
   },
   "Nadaka-1er-essai": {
     "bernard": "Nadaka-1er-essai",
@@ -1254,7 +1642,15 @@
     "features": [
       "sub:1"
     ],
-    "lines": 55
+    "lines": 55,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.hamsad",
+      "alphabet": null,
+      "blocked": "compiles OK but produces 0 MIDI notes (undefined variable A8, no sound-objects)"
+    },
+    "production_mode": "midi"
   },
   "polyphony1": {
     "bernard": "polyphony1",
@@ -1265,7 +1661,15 @@
     "features": [
       "poly:48"
     ],
-    "lines": 47
+    "lines": 47,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.polyphony1",
+      "alphabet": null,
+      "blocked": "lowercase terminals (a,b,c), 44 compile errors"
+    },
+    "production_mode": "midi"
   },
   "visser3": {
     "bernard": "Visser3",
@@ -1312,7 +1716,15 @@
       "poly:20",
       "sub:1"
     ],
-    "lines": 58
+    "lines": 58,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.trySerial",
+      "alphabet": null,
+      "blocked": "corrupted encoding (Æ1), BP2 legacy chars in grammar"
+    },
+    "production_mode": "text"
   },
   "Nadaka1": {
     "bernard": "Nadaka1",
@@ -1323,18 +1735,35 @@
     "features": [
       "sub:4"
     ],
-    "lines": 107
+    "lines": 107,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy (18 compile errors, French solfège incompatible)"
+    },
+    "production_mode": "midi"
   },
   "dhin1": {
     "bernard": "dhin1",
     "status": "to_be_tested",
+    "production_mode": "text",
     "aux": [
       "se"
     ],
     "features": [
       "sub:7"
     ],
-    "lines": 80
+    "lines": 80,
+    "note": "Bols talas (dhin--, dha--, dhagena...). Aux réels: -se.dhin-- et -ho.dhin-- (nom différent du -gr). BPx grammar.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.dhin--",
+      "alphabet": "-al.dhin--",
+      "blocked": "bidirectional rules (<->) with bol terminals (dhin--, dhagena...) incompatible with BP3 v3.4.x"
+    }
   },
   "nadaka": {
     "bernard": "Nadaka",
@@ -1428,7 +1857,16 @@
     ],
     "lines": 38,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 8
+    "php_errors": 8,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryRagas",
+      "alphabet": null,
+      "csound": "-cs.raga",
+      "tonality": "-to.raga"
+    },
+    "production_mode": "midi"
   },
   "visser-waves": {
     "bernard": "Visser.Waves",
@@ -1525,7 +1963,15 @@
       "poly:449",
       "sub:17"
     ],
-    "lines": 370
+    "lines": 370,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": null,
+      "blocked": "BP2 legacy format (V.2.4 header), 164 compile errors"
+    },
+    "production_mode": "midi"
   },
   "Mozartexpression": {
     "bernard": "Mozartexpression",
@@ -1537,7 +1983,15 @@
       "poly:452",
       "sub:19"
     ],
-    "lines": 387
+    "lines": 387,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.Mozartexpression",
+      "alphabet": null,
+      "blocked": "corrupted encoding (Êt13 etc.), BP2 legacy chars in grammar"
+    },
+    "production_mode": "midi"
   },
   "alan-dice": {
     "bernard": "Alan",
@@ -1634,9 +2088,38 @@
       "sub:5"
     ],
     "lines": 90,
-    "note": "Partial BPscript transposition of -gr.dhadhatite. Context markers (+/++), template brackets, <-- rule and LHS time-signature not supported. gram#3 V-chain + gram#4 terminals fully translated. See UNSUPPORTED.md."
+    "note": "Partial BPscript transposition of -gr.dhadhatite. Context markers (+/++), template brackets, <-- rule and LHS time-signature not supported. gram#3 V-chain + gram#4 terminals fully translated. See UNSUPPORTED.md.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.dhadhatite",
+      "alphabet": null,
+      "blocked": "same as dhadhatite, BP2 settings + syntax, 13 compile errors"
+    }
   },
   "_comment": {
     "status": "excluded"
+  },
+  "tryAllItems1": {
+    "bernard": "tryAllItems1",
+    "status": "active",
+    "production_mode": "text",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [
+      "sub:2",
+      "_goto",
+      "_failed",
+      "_repeat"
+    ],
+    "lines": 16,
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": "-se.tryAllItems1",
+      "alphabet": null
+    }
   }
 }

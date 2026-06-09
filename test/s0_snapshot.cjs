@@ -77,6 +77,7 @@ function processGrammar(name) {
   const gramDef = GRAMMARS[name];
   if (!gramDef || gramDef.status === 'excluded') return null;
   if (!gramDef.php_ref) return null; // Not an S0 grammar
+  if (gramDef.php_ref.blocked) return null; // Incompatible with bp.exe v3.4.x
 
   const grName = gramDef.bernard || name;
   const s1Mode = gramDef.production_mode || 'midi';
@@ -103,6 +104,7 @@ function processGrammar(name) {
     const toRes = `tonality_resources/${ref.tonality}`;
     args.push('-to', fs.existsSync(path.join(BP_EXE_DIR, toRes)) ? toRes : toCtests);
   }
+  if (ref.csound) args.push('-cs', `${CTESTS}/${ref.csound}`);
   args.push('--seed', '1');
 
   if (s1Mode === 'midi') {
