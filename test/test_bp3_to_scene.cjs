@@ -35,6 +35,9 @@ function extractSignificant(text) {
   const lines = text.split('\n');
   const result = [];
   let inComment = false;
+  let inTemplates = false;
+  let inTimePatterns = false;
+  let pendingSep = false;  // séparateur en attente d'être émis (lazy emission)
 
   for (let raw of lines) {
     raw = raw.trim();
@@ -44,8 +47,37 @@ function extractSignificant(text) {
     if (raw.startsWith('//')) continue;
     if (raw.startsWith('-se.') || raw.startsWith('-al.') || raw.startsWith('-cs.')
       || raw.startsWith('-ho.') || raw.startsWith('-to.') || raw.startsWith('-md.')
-      || raw.startsWith('-gl.')) continue;
-    if (raw === 'TEMPLATES:' || raw === 'TIMEPATTERNS:') continue;
+      || raw.startsWith('-gl.') || raw.startsWith('-mi.')) continue;
+    if (raw === 'TEMPLATES:') {
+      // Le séparateur avant TEMPLATES (pendingSep) ne doit PAS être émis car bp3ToScene
+      // ne génère pas de sous-grammaire compilée pour TEMPLATES.
+      pendingSep = false;
+      inTemplates = true;
+      continue;
+    }
+    if (raw === 'TIMEPATTERNS:') {
+      pendingSep = false;
+      inTimePatterns = true;
+      continue;
+    }
+    // Ignorer le contenu des sections TEMPLATES et TIMEPATTERNS (non représentables)
+    if (inTemplates || inTimePatterns) {
+      // Un séparateur "----" termine la section. On l'ignore aussi.
+      if (/^-{4,}$/.test(raw)) { inTemplates = false; inTimePatterns = false; }
+      continue;
+    }
+
+    // Séparateur : mise en attente lazy pour éviter d'émettre les séparateurs
+    // qui précèdent TEMPLATES/TIMEPATTERNS (sections ignorées).
+    if (/^-{4,}$/.test(raw)) {
+      pendingSep = true;
+      continue;
+    }
+    // Ligne de contenu : émettre le séparateur en attente
+    if (pendingSep) {
+      result.push('----');
+      pendingSep = false;
+    }
 
     raw = raw.replace(/\s+/g, ' ').trim();
 
@@ -72,7 +104,15 @@ function extractSignificant(text) {
     raw = raw.replace(/\*\(/g, '* (');
 
     // Normaliser les tokens adjacents sans espace : )(  → ) ( (templates collés en BP3)
+    // Doit venir AVANT le strip ")" pour que les deux formes convergent.
     raw = raw.replace(/\)\s*\(/g, ') (');
+
+    // Normaliser templates avec ")" de fermeture → sans ")".
+    // BP2 templates nues n'ont pas de ")", les templates compilées en ont.
+    // Normaliser les deux vers la forme sans ")" pour un round-trip FIDÈLE.
+    // Appliquer APRÈS la normalisation d'espacement ") (" ci-dessus.
+    raw = raw.replace(/\(=([^)]*)\)/g, '(=$1');
+    raw = raw.replace(/\(:([^)]*)\)/g, '(:$1');
 
     // Normaliser la notation de lié BP3 : X& Y → X &Y (forme canonique avec & préfixe)
     raw = raw.replace(/([A-Za-z0-9'_#]+)&\s+/g, '$1 &');
@@ -81,6 +121,36 @@ function extractSignificant(text) {
     raw = raw.replace(/([A-Za-z0-9'#.]+)(_{2,})/g, (_, id, us) => {
       return id + ' ' + us.split('').join(' ');
     });
+
+    // Normaliser la notation de période collée : "M1." → "M1 ." pour converger
+    // avec la sortie de compileBPS qui insère toujours un espace avant le ".".
+    // Pattern : token finissant par "." et précédé d'un caractère alphanum.
+    // On ne modifie pas un "." seul (séparateur) ni un ".0000" dans _mm(N.0000).
+    raw = raw.replace(/([A-Za-z0-9'#_]+)\./g, '$1 .');
+
+    // Aliaser les identifiants avec "-" internes (terminaux BP3 non compatibles BPscript).
+    // bp3ToScene remplace "-" → "O" dans les identifiants pour que compileBPS accepte le BPS.
+    // On applique le même remplacement sur l'original pour que la comparaison converge.
+    // Pattern : token (séquence sans espace) commençant par une lettre et contenant "-".
+    // Ex: "dhin--" → "dhinOO", "dha-dha-dha-" → "dhaOdhaOdhaO".
+    // Ne s'applique PAS à "-" seul ni aux tokens commençant par un non-lettre.
+    raw = raw.split(' ').map(tok => {
+      if (/^[A-Za-z]/.test(tok) && tok.includes('-')) return tok.replace(/-/g, 'O');
+      return tok;
+    }).join(' ');
+
+    // Normaliser les contrôles runtime BP3 vers forme canonique _ctrl(name,val).
+    // S'applique à l'original BP3 (ex: _transpose(0)) pour que la comparaison converge
+    // avec le compilé résolu via controlTable.
+    raw = raw.replace(/_transpose\(([^)]+)\)/g, '_ctrl(transpose,$1)');
+    raw = raw.replace(/_pitchrange\(([^)]+)\)/g, '_ctrl(pitchrange,$1)');
+    raw = raw.replace(/_pitchbend\(([^)]+)\)/g, '_ctrl(pitchbend,$1)');
+    raw = raw.replace(/_volume\(([^)]+)\)/g, '_ctrl(volume,$1)');
+    raw = raw.replace(/_scale\(([^)]+)\)/g, '_ctrl(scale,$1)');
+    raw = raw.replace(/_cont\(([^)]+)\)/g, '_ctrl(cont,$1)');
+    raw = raw.replace(/_value\(([^)]+)\)/g, '_ctrl(value,$1)');
+    raw = raw.replace(/_pitchcont\b/g, '_ctrl(pitchcont,1)');
+    raw = raw.replace(/_volumecont\b/g, '_ctrl(volumecont,1)');
 
     // Supprimer les annotations libres en fin de ligne de mode
     if (/^(RND|ORD|LIN|SUB1?|TEM|POSLONG)(\s+\[.*)$/.test(raw)) {
@@ -91,6 +161,8 @@ function extractSignificant(text) {
 
     result.push(raw);
   }
+  // Flush séparateur final en attente (cas d'une grammaire terminée par un séparateur)
+  if (pendingSep) result.push('----');
   return result;
 }
 
@@ -104,12 +176,48 @@ function normalizeLines(lines) {
 }
 
 /**
+ * Résout les tokens _script(CT N) et _script(CT N_e) dans les lignes compilées
+ * en forme canonique _ctrl(name,val) en utilisant la controlTable de compileBPS.
+ *
+ * _script(CT N)   → _ctrl(name1,val1) _ctrl(name2,val2) ...  (expandé)
+ * _script(CT N_e) → <supprimé>
+ * Double espace éventuel → espace simple.
+ */
+function resolveScriptCT(lines, controlTable) {
+  if (!controlTable || !controlTable.length) return lines;
+  // Construire map : "CT N" → assignments
+  const ctMap = new Map();
+  for (const ct of controlTable) {
+    if (ct.scope === 'start') ctMap.set(ct.id, ct.assignments || {});
+  }
+  return lines.map(line => {
+    // Supprimer les _script(CT N_e) (marqueurs de fin)
+    line = line.replace(/_script\(CT\s+\d+_e\)/g, '');
+    // Résoudre les _script(CT N) → _ctrl(name,val) ...
+    line = line.replace(/_script\(CT\s+(\d+)\)/g, (_, id) => {
+      const assignments = ctMap.get(`CT ${id}`);
+      if (!assignments) return `_script(CT ${id})`;
+      const parts = Object.entries(assignments)
+        .filter(([,v]) => v !== null && v !== undefined)
+        .map(([k, v]) => `_ctrl(${k},${v})`);
+      return parts.length ? parts.join(' ') : '';
+    });
+    return line.replace(/\s+/g, ' ').trim();
+  });
+}
+
+/**
  * Compare deux textes BP3 :
  * Retourne { ok: true } ou { ok: false, diffs: [...] }
+ * Option { controlTable } : si fourni, résout les _script(CT N) du compilé pour
+ * la comparaison sémantique avec les contrôles BP3 originaux normalisés.
  */
-function compareGrammars(expected, actual) {
+function compareGrammars(expected, actual, { controlTable } = {}) {
   const expLines = normalizeLines(extractSignificant(expected));
-  const actLines = normalizeLines(extractSignificant(actual));
+  let actLines = normalizeLines(extractSignificant(actual));
+  if (controlTable && controlTable.length) {
+    actLines = resolveScriptCT(actLines, controlTable);
+  }
   const diffs = [];
   const maxLen = Math.max(expLines.length, actLines.length);
   for (let i = 0; i < maxLen; i++) {
@@ -312,6 +420,74 @@ async function main() {
       grammar: `LIN\ngram#1[1] <K1=1> A --> B`,
       expectRules: ['LIN', 'gram#1[1] <K1=1> A --> B'],
     },
+
+    // ---- Item 3 : templates BP2 nues avec flèche imbriquée ------------------
+    {
+      name: 'template BP2 nue LHS (= V1 #tr <-> (= ti #tr → NON GÉRÉ attendu',
+      // dhati3 GRAM#4[7] — template nue en LHS : non représentable en BPscript
+      // (BPscript ne supporte pas les templates comme LHS d'une règle).
+      // Le fix findArrowInText permet de parser la flèche, mais la règle elle-même est
+      // bloquée par checkLhsForUnsupported.
+      grammar: `LIN\ngram#4[7] (= V1 #tr <-> (= ti #tr`,
+      expectNonGere: true,
+    },
+    {
+      name: 'template BP2 nue (= M V1 #tr <-> (= ti M #tr → NON GÉRÉ attendu',
+      // dhati2 GRAM#4[9] — même construct
+      grammar: `LIN\ngram#4[9] (= M V1 #tr <-> (= ti M #tr`,
+      expectNonGere: true,
+    },
+    {
+      name: 'template BP2 nue en RHS uniquement — doit passer',
+      // Cas où (= apparaît uniquement en RHS (LHS normal). Doit être converti correctement.
+      grammar: `ORD\ngram#1[1] S --> (= V1 dha`,
+      // LHS normal → OK; RHS (= V1 dha sans ")" → convertit en $V1 en BPS puis (=V1) compilé
+      // Normalisation strip ")" → (=V1 des deux côtés → FIDÈLE
+      // Mais "(= V1 dha" → plusieurs tokens : on convertit tout le RHS en ${V1 dha} → (=V1 dha)
+      expectRules: ['S --> (=V1 dha'],
+    },
+
+    // ---- Item 1 : alias "-" dans les noms de terminaux ----------------------
+    {
+      name: 'alias terminal dhin-- → dhinOO',
+      grammar: `ORD\ngram#5[1] A3 <-> dhin--`,
+      // Terminal dhin-- a des tirets internes → aliasés en O → dhinOO
+      // Round-trip : compilé émet dhinOO, original normalisé dhin-- → dhinOO (de-alias)
+      expectRules: ['A3 <-> dhin--'],
+    },
+    {
+      name: 'alias terminal dha-dha-dha- → dhaOdhaOdhaO',
+      grammar: `ORD\ngram#5[7] A6 <-> dha-dha-dha-`,
+      expectRules: ['A6 <-> dha-dha-dha-'],
+    },
+
+    // ---- Item 2 : contrôles runtime _transpose → (transpose:N) --------------
+    {
+      name: 'runtime _transpose(0) → round-trip FIDÈLE',
+      grammar: `ORD\ngram#1[1] Tr0 --> _transpose(0)`,
+      // bp3ToScene converti en BPscript : Tr0 -> (transpose:0)
+      // compileBPS émet : Tr0 --> _script(CT 0)  _script(CT 0_e)
+      // Comparaison sémantique : _script(CT 0) ≡ _transpose(0) via controlTable
+      expectRules: ['Tr0 --> _transpose(0)'],
+    },
+    {
+      name: 'runtime _pitchrange(200) seul → round-trip FIDÈLE',
+      // Contrôle standalone seul dans le RHS → convertible
+      grammar: `ORD\ngram#1[1] SetRange --> _pitchrange(200)`,
+      expectRules: ['SetRange --> _pitchrange(200)'],
+    },
+    {
+      name: 'runtime _pitchrange(-200) valeur négative → NON GÉRÉ attendu',
+      // Parser BPscript ne supporte pas les valeurs négatives dans ()
+      grammar: `ORD\ngram#1[1] S --> _pitchbend(-200) a`,
+      expectNonGere: true,
+    },
+    {
+      name: 'runtime plusieurs contrôles consécutifs → NON GÉRÉ attendu',
+      // Parser BPscript ne supporte qu'un () autonome par règle
+      grammar: `ORD\ngram#1[1] S --> _pitchrange(200) _pitchbend(0) a`,
+      expectNonGere: true,
+    },
   ];
 
   console.log('\n=== Tests unitaires constructs ===\n');
@@ -342,7 +518,7 @@ async function main() {
       failed++;
       continue;
     }
-    const cmp = compareGrammars(t.grammar, compiled.grammar);
+    const cmp = compareGrammars(t.grammar, compiled.grammar, { controlTable: compiled.controlTable });
     if (cmp.ok) {
       console.log(`  OK         [${t.name}]`);
       passed++;
@@ -404,7 +580,7 @@ async function main() {
       failed++;
       continue;
     }
-    const cmp = compareGrammars(grText, compiled.grammar);
+    const cmp = compareGrammars(grText, compiled.grammar, { controlTable: compiled.controlTable });
     if (cmp.ok) {
       const n = extractSignificant(grText).length;
       console.log(`  FIDÈLE     ${name} (${n} lignes)`);

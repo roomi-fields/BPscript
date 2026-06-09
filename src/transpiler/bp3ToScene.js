@@ -84,10 +84,16 @@ const FREE_ANNOTATION_RE = /^\[.*\]$/;
 const BP2_VERSION_RE = /^V\.\d+/;
 const BP2_DATE_RE = /^Date:/;
 
-// Contrôles engine dans RHS : _vel(...) _transpose(...) _chan(...) _script(...) etc.
-// Aussi : _scale, _cont, _value, _ins, _volume, _step, _fixed, _key, _note, _time, _dur, _pitch
-// On teste si le RHS contient un de ces tokens.
-const ENGINE_CTRL_RHS_RE = /\b_(vel|chan|transpose|script|rotate|retro|shuffle|srand|rndseq|goto|failed|repeat|stop|print|scale|cont|value|ins|volume|step|fixed|key|note|time|dur|pitch|pitchrange|pitchbend|pitchcont|tempo|smooth|striated|legato|staccato|modwheel|aftertouch|sustain|portamento|expression|breath|pan|reverb|chorus|delay|distortion|phaser|flanger|eq|compress|expand|limit|gate|noise|filter|lfo|env|osc)\b/;
+// Contrôles engine dans RHS : _vel(...) _chan(...) _script(...) etc.
+// Ces contrôles NE SONT PAS convertibles en syntaxe BPscript → bloquent le round-trip.
+// Note : _transpose, _scale, _pitchrange, _pitchbend, _pitchcont, _volumecont, _volume,
+//        _cont, _value SONT convertibles (voir RUNTIME_CTRL_CONVERTIBLE_RE ci-dessous).
+const ENGINE_CTRL_RHS_RE = /\b_(vel|chan|script|rotate|retro|shuffle|srand|rndseq|goto|failed|repeat|stop|print|ins|step|fixed|key|note|time|dur|pitch|tempo|smooth|striated|legato|staccato|modwheel|aftertouch|sustain|portamento|expression|breath|pan|reverb|chorus|delay|distortion|phaser|flanger|eq|compress|expand|limit|gate|noise|filter|lfo|env|osc)\b/;
+
+// Contrôles runtime convertibles en syntaxe BPscript (ctrl:val).
+// Chaque token _xxx(args) ou _xxx (sans args) est converti en (xxx:args) ou (xxx:1).
+// La conversion est appliquée dans convertBP3TokensToBPS AVANT le test ENGINE_CTRL_RHS_RE.
+const RUNTIME_CTRL_CONVERTIBLE_RE = /^_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/;
 
 // Opérateurs tempo BP3 dans le RHS : /N, \N
 // En BPscript la syntaxe équivalente est X[/N] mais la conversion est complexe.
@@ -492,6 +498,43 @@ function extractMeterPrefix(rhs) {
  */
 function checkRhsForUnsupported(rhs) {
   if (!rhs) return null;
+  // Contrôles runtime convertibles : vérifier les conditions de conversion valide.
+  // Un contrôle convertible est valide si et seulement si :
+  //   1. Il est seul dans le RHS (contrôle autonome unique) : ex: Tr0 --> _transpose(0)
+  //   2. Ses arguments ne sont pas négatifs (valeurs -N bloquent le parser BPscript)
+  // Si ces conditions ne sont pas remplies → NON GÉRÉ (le BPS généré ne compilerait pas).
+  {
+    const matches = [...rhs.matchAll(/\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/g)];
+    if (matches.length > 0) {
+      // Valeur négative dans un argument : _pitchbend(-200) → NON GÉRÉ
+      if (/\b_(transpose|scale|pitchrange|pitchbend|volume|cont|value)\s*\(\s*-/.test(rhs)) {
+        const m2 = rhs.match(/\b_(transpose|scale|pitchrange|pitchbend|volume|cont|value)\s*\(\s*-/);
+        return `contrôle runtime "_${m2[1]}" avec valeur négative (non représentable en BPscript — parser rejecte les valeurs négatives dans ())`;
+      }
+      // Plusieurs contrôles convertibles → parser BPscript ne supporte pas les `()` autonomes multiples
+      if (matches.length > 1) {
+        return `plusieurs contrôles runtime consécutifs dans RHS (non représentable — le parser BPscript ne supporte qu'un () autonome par règle)`;
+      }
+      // Contrôle convertible + contenu musical dans la même règle :
+      // valide seulement si le contrôle est standalone (seul token non-espace)
+      // Détection simple : si après le contrôle il y a autre chose (pas juste espace)
+      // et si le contrôle est en TÊTE (précède d'autres tokens)
+      const ctrlMatch = rhs.match(/^(.*?)\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/);
+      if (ctrlMatch) {
+        const before = ctrlMatch[1].trim();
+        // Trouver ce qui suit le contrôle + ses args
+        const afterRe = new RegExp(`\\b_(${matches[0][1]})\\s*(?:\\([^)]*\\))?\\s*(.*)`);
+        const afterMatch = rhs.match(afterRe);
+        const after = afterMatch ? afterMatch[2].trim() : '';
+        // Si le contrôle n'est pas seul (avant ou après il y a des tokens musicaux)
+        if (before || after) {
+          // Contrôle en position mixte → NON GÉRÉ
+          return `contrôle runtime "_${matches[0][1]}" en position mixte dans RHS (non représentable — doit être seul ou en suffixe)`;
+        }
+      }
+      // Un seul contrôle seul → OK (sera converti par convertBP3TokensToBPS)
+    }
+  }
   const m = rhs.match(ENGINE_CTRL_RHS_RE);
   if (m) {
     return `contrôle engine "_${m[1]}" dans RHS (non représentable en BPscript sans contrôles chargés)`;
@@ -541,6 +584,12 @@ function checkGuardForUnsupported(guardStr) {
  */
 function checkLhsForUnsupported(lhs) {
   if (!lhs) return null;
+  // Template BP2 nue en LHS : "(= X Y Z" — non représentable en BPscript
+  // (les templates maîtres ne peuvent pas apparaître en LHS dans compileBPS)
+  const lhsTrimmed = lhs.trimStart();
+  if (lhsTrimmed.startsWith('(=') || lhsTrimmed.startsWith('(:')) {
+    return `template BP2 nue en LHS ("${lhs.substring(0, 30)}") — non représentable en BPscript (pas de template en position LHS)`;
+  }
   if (TEMPO_OP_RHS_RE.test(lhs)) {
     return `opérateur tempo /N ou \\N dans LHS (non géré)`;
   }
@@ -555,11 +604,32 @@ function checkLhsForUnsupported(lhs) {
 /**
  * Convertit un token BP3 individuel en son équivalent BPscript.
  * Les opérateurs nus + ; * ont des mappings spéciaux.
+ * Les identifiants avec "-" internes sont aliasés (ex: dhin-- → dhinOO).
  */
 function convertSingleToken(tok) {
   if (tok === '+') return 'plus';
   if (tok === ';') return 'fin';
   if (tok === '*') return 'star';
+  return aliasTerminalDashes(tok);
+}
+
+/**
+ * Aliase un token BP3 dont le nom contient des "-" internes.
+ * En BPscript, "-" est le symbole de silence — un identifiant contenant "-" serait
+ * tokenisé comme plusieurs tokens (ex: "dhin--" → "dhin" "-" "-").
+ * Convention : remplacer chaque "-" par "O" dans les noms d'identifiants.
+ * Ex: dhin-- → dhinOO, dha-dha-dha- → dhaOdhaOdhaO
+ *
+ * Ne s'applique QUE aux tokens commençant par une lettre (identifiants) et
+ * contenant au moins un "-".
+ *
+ * @param {string} tok  Token BP3 brut
+ * @returns {string}  Token aliasé (ou inchangé si pas de tirets)
+ */
+function aliasTerminalDashes(tok) {
+  if (/^[A-Za-z]/.test(tok) && tok.includes('-')) {
+    return tok.replace(/-/g, 'O');
+  }
   return tok;
 }
 
@@ -595,6 +665,40 @@ function convertTemplateToken(tok, isMaster) {
 }
 
 /**
+ * Convertit un token de contrôle runtime BP3 en syntaxe BPscript (ctrl:val).
+ *
+ * Formes supportées :
+ *   _transpose(N)   → (transpose:N)
+ *   _scale(a,b)     → (scale:a,b)
+ *   _pitchrange(N)  → (pitchrange:N)
+ *   _pitchbend(N)   → (pitchbend:N)   (N peut être +N ou -N)
+ *   _pitchcont      → (pitchcont:1)   (sans arguments)
+ *   _volumecont     → (volumecont:1)  (sans arguments)
+ *   _volume(N)      → (volume:N)
+ *   _cont(param)    → (cont:param)
+ *   _value(p,N)     → (value:p,N)
+ *
+ * Retourne null si le token n'est pas un contrôle runtime convertible.
+ */
+function convertRuntimeControlToBPS(tok) {
+  if (!RUNTIME_CTRL_CONVERTIBLE_RE.test(tok)) return null;
+  // Contrôles sans arguments
+  if (tok === '_pitchcont')  return '(pitchcont:1)';
+  if (tok === '_volumecont') return '(volumecont:1)';
+  // Contrôles avec arguments : _name(args)
+  const m = tok.match(/^_([a-z]+)\(([^)]*)\)$/);
+  if (!m) {
+    // Token _name sans "()" — traiter comme no-arg
+    const name = tok.replace(/^_/, '');
+    return `(${name}:1)`;
+  }
+  const name = m[1];
+  const args = m[2].trim();
+  if (!args) return `(${name}:0)`;
+  return `(${name}:${args})`;
+}
+
+/**
  * Convertit une chaîne de tokens BP3 (LHS ou RHS) en tokens BPscript équivalents.
  *
  * Utilise tokenizeBP3Line pour préserver les groupes {...} et (...) entiers.
@@ -612,6 +716,23 @@ function convertTemplateToken(tok, isMaster) {
 function convertBP3TokensToBPS(text) {
   if (!text) return '';
 
+  // ── Template nue BP2 : "(= X Y Z" ou "(: X Y Z" sans ")" de fermeture ──────
+  // Toute la zone est un seul template nue (maître ou esclave).
+  // On détecte : la chaîne commence par "(=" ou "(:" et ne contient pas de ")".
+  {
+    const trimmed = text.trimStart();
+    if ((trimmed.startsWith('(=') || trimmed.startsWith('(:')) && !trimmed.includes(')')) {
+      const isMaster = trimmed[1] === '=';
+      const body = trimmed.slice(2).trim();  // tout après "(=" ou "(:"
+      if (!body) return isMaster ? '${}'  : '&{}';
+      const bodyToks = body.split(/\s+/).map(convertSingleToken);
+      const bodyBps = bodyToks.join(' ');
+      const shortForm = /^[A-Za-z][A-Za-z0-9_#']*$/.test(bodyBps);
+      if (isMaster) return shortForm ? `$${bodyBps}` : `\${${bodyBps}}`;
+      else          return shortForm ? `&${bodyBps}` : `&{${bodyBps}}`;
+    }
+  }
+
   // ── Préfixe de mètre N+N/M ──────────────────────────────────────────────
   let meterQualifier = null;
   const meterInfo = extractMeterPrefix(text);
@@ -623,7 +744,27 @@ function convertBP3TokensToBPS(text) {
   const tokens = tokenizeBP3Line(text);
   const out = [];
 
-  for (const tok of tokens) {
+  for (let ti = 0; ti < tokens.length; ti++) {
+    const tok = tokens[ti];
+
+    // ── Contrôles runtime convertibles en (ctrl:val) ─────────────────────────
+    // BP3 tokenise _transpose(0) en deux tokens : "_transpose" et "(0)".
+    // On détecte le token _xxx et on fusionne avec le suivant si c'est (args).
+    if (RUNTIME_CTRL_CONVERTIBLE_RE.test(tok)) {
+      const nextTok = tokens[ti + 1];
+      let fullTok = tok;
+      if (nextTok && nextTok.startsWith('(') && nextTok.endsWith(')') && !nextTok.startsWith('(=') && !nextTok.startsWith('(:')) {
+        // Fusionner _name avec (args) → _name(args)
+        fullTok = tok + nextTok;
+        ti++;  // sauter le token d'args
+      }
+      const converted = convertRuntimeControlToBPS(fullTok);
+      if (converted !== null) {
+        out.push(converted);
+        continue;
+      }
+    }
+
     // Template maître : (=...) ou (= ...)
     if (tok.startsWith('(') && tok.endsWith(')')) {
       const inner = tok.slice(1, -1).trim();
@@ -669,7 +810,7 @@ function convertBP3TokensToBPS(text) {
     {
       const umatch = tok.match(/^(.+?)(_{2,})$/);
       if (umatch) {
-        out.push(umatch[1]);
+        out.push(aliasTerminalDashes(umatch[1]));
         const count = umatch[2].length;
         for (let k = 0; k < count; k++) out.push('_');
         continue;
@@ -679,19 +820,20 @@ function convertBP3TokensToBPS(text) {
     // Lié BP3 X& (note liée vers l'avant) → X~ en BPscript
     // Pattern : token se terminant par & (ex: do3& G#5& A'8&)
     if (/^[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
-      out.push(tok.slice(0, -1) + '~');
+      out.push(aliasTerminalDashes(tok.slice(0, -1)) + '~');
       continue;
     }
 
     // Lié BP3 &X (note liée vers l'arrière) → ~X en BPscript
     // ATTENTION : &X standalone ≠ template slave (:X). On vérifie qu'il n'y a pas de parens.
     if (/^&[A-Za-z0-9]/.test(tok) && !tok.startsWith('(:')) {
-      out.push('~' + tok.slice(1));
+      out.push('~' + aliasTerminalDashes(tok.slice(1)));
       continue;
     }
 
     // Tout le reste verbatim (terminaux, non-terminaux, polymetries, wildcards, etc.)
-    out.push(tok);
+    // Aliaser les identifiants avec "-" internes (ex: dhin-- → dhinOO)
+    out.push(aliasTerminalDashes(tok));
   }
 
   // Ajouter le qualifier de mètre en suffixe si présent
@@ -888,8 +1030,17 @@ function findArrowInText(text) {
   let i = 0;
   while (i < text.length) {
     const c = text[i];
-    if (c === '(' || c === '{') { depth++; i++; continue; }
+    if (c === '{') { depth++; i++; continue; }
     if (c === ')' || c === '}') { depth--; i++; continue; }
+    if (c === '(') {
+      // Templates BP2 nues "(= X Y Z" et "(: X Y Z" sans ")" de fermeture.
+      // Ces tokens ne constituent PAS un groupe imbriqué — ne pas incrémenter depth.
+      const next = text[i + 1];
+      if (next === '=' || next === ':') { i++; continue; }
+      depth++;
+      i++;
+      continue;
+    }
     if (depth > 0) { i++; continue; }
 
     // Chercher <-> en priorité (bidirectionnel)
