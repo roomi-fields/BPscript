@@ -1502,11 +1502,15 @@ S -> $X * TR &X                          -> S --> (=X) * TR (:X)
 Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 ```
 
-**Etiquetage** : le fichier -ho. genere contient des etiquettes (`N@terminal`)
-au lieu de vraies resolutions. BP3 applique `Image()` normalement et emet les
-etiquettes dans les timed tokens. Le REPL resout les etiquettes post-derivation.
+**Contrat BPx** : les paires source→cible sont portées dans `Scene.homomorphisms[]`
+(tableau de `HomomorphismDeclAST`). BPx consomme ce tableau post-dérivation via
+`rewriteHomomorphismMarkers` pour appliquer les transformations de terminaux.
 
-> Voir [DESIGN_HOMOMORPHISM_LABELING.md](../design/HOMOMORPHISMS.md) pour le mecanisme complet.
+> Voir [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) pour l'architecture complète.
+>
+> **AJOURNÉ (2026-06-10)** : l'approche étiquetage `N@terminal` dans le fichier -ho.
+> (où BP3 émet des étiquettes opaques et le REPL les résout post-dérivation) est ajournée.
+> L'approche retenue est `Scene.homomorphisms` + marqueurs inline (`star`, noms verbatim).
 
 ### Contextes
 

@@ -596,6 +596,148 @@ async function main() {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Tests -ho : parseHoFile + signature opts.hoText/opts.hoKey
+  // -------------------------------------------------------------------------
+  console.log('\n=== Tests -ho parsing ===\n');
+
+  // Contenu réel de -ho.tryhomomorphism
+  const HO_TRYHOMO = `V.2.5
+Date: Sat, Jun 17, 1995 -- 19:14
+-mi.abc
+*
+a --> b
+do4 --> re4
+c --> fa4 --> d
+sync a' b' c' d' e e' f f' g g' h h' i i' j j' k k' l l' m m' n n' o o' p p' q q' r r' s s' t t' u u' v v' w w' x x' y y' z z'  `;
+
+  const GR_TRYHOMO = `RND
+_mm(60.0000) _striated
+GRAM#1[1] S --> a b c (= X) * (: X)
+GRAM#1[3] X --> do4 c mi4 fa4`;
+
+  // Test 1 : signature étendue — résultat contient @transcription.tryhomomorphism
+  {
+    const result = bp3ToScene(GR_TRYHOMO, { hoText: HO_TRYHOMO, hoKey: 'tryhomomorphism' });
+    const ok = typeof result === 'object' && result.bps && result.bps.includes('@transcription.tryhomomorphism');
+    if (ok) {
+      console.log(`  OK         [ho-1: bps contient @transcription.tryhomomorphism]`);
+      passed++;
+    } else {
+      console.log(`  FAIL       [ho-1: bps contient @transcription.tryhomomorphism]`);
+      console.log(`    obtenu: ${JSON.stringify(result).substring(0, 200)}`);
+      failed++;
+    }
+  }
+
+  // Test 2 : transcriptionEntry.sections['*'] contient les 4 paires (chain c-->fa4-->d étendue)
+  {
+    const result = bp3ToScene(GR_TRYHOMO, { hoText: HO_TRYHOMO, hoKey: 'tryhomomorphism' });
+    const sec = result && result.transcriptionEntry && result.transcriptionEntry.sections && result.transcriptionEntry.sections['*'];
+    const expected = { a: 'b', do4: 're4', c: 'fa4', fa4: 'd' };
+    const ok = sec &&
+      sec['a'] === 'b' && sec['do4'] === 're4' &&
+      sec['c'] === 'fa4' && sec['fa4'] === 'd' &&
+      Object.keys(sec).length === 4;
+    if (ok) {
+      console.log(`  OK         [ho-2: transcriptionEntry.sections['*'] — 4 paires dont chaîne étendue]`);
+      passed++;
+    } else {
+      console.log(`  FAIL       [ho-2: transcriptionEntry.sections['*'] — 4 paires dont chaîne étendue]`);
+      console.log(`    obtenu sec: ${JSON.stringify(sec)}`);
+      failed++;
+    }
+  }
+
+  // Test 3 : compileBPS(bps).homomorphisms contient le noeud HomomorphismDeclAST
+  {
+    const result = bp3ToScene(GR_TRYHOMO, { hoText: HO_TRYHOMO, hoKey: 'tryhomomorphism' });
+    if (result && result.bps && !result.bps.startsWith('NON GÉRÉ:')) {
+      const compiled = compileBPS(result.bps);
+      const homos = compiled.homomorphisms || [];
+      const star = homos.find(h => h.name === '*');
+      const ok = star &&
+        star.type === 'Homomorphism' &&
+        star.pairs.some(([a, b]) => a === 'a' && b === 'b') &&
+        star.pairs.some(([a, b]) => a === 'do4' && b === 're4') &&
+        star.pairs.some(([a, b]) => a === 'c' && b === 'fa4') &&
+        star.pairs.some(([a, b]) => a === 'fa4' && b === 'd');
+      if (ok) {
+        console.log(`  OK         [ho-3: compileBPS(bps).homomorphisms — noeud '*' avec 4 paires]`);
+        passed++;
+      } else {
+        console.log(`  FAIL       [ho-3: compileBPS(bps).homomorphisms — noeud '*' avec 4 paires]`);
+        console.log(`    homos: ${JSON.stringify(homos)}`);
+        console.log(`    errors: ${JSON.stringify(compiled.errors)}`);
+        failed++;
+      }
+    } else {
+      console.log(`  FAIL       [ho-3: bps invalide ou NON GÉRÉ]`);
+      console.log(`    result: ${JSON.stringify(result).substring(0, 200)}`);
+      failed++;
+    }
+  }
+
+  // Test 4 : sans opts (rétrocompatibilité) — bp3ToScene retourne string (pas objet)
+  {
+    const result = bp3ToScene(GR_TRYHOMO);
+    const ok = typeof result === 'string';
+    if (ok) {
+      console.log(`  OK         [ho-4: sans opts → retourne string (rétrocompat)]`);
+      passed++;
+    } else {
+      console.log(`  FAIL       [ho-4: sans opts → retourne string (rétrocompat)]`);
+      console.log(`    typeof result: ${typeof result}`);
+      failed++;
+    }
+  }
+
+  // Test 5 : headers V.x / Date: / -mi. ignorés, sync ignoré, section label '*' extrait
+  {
+    const hoSimple = `V.2.0\nDate: Mon, Jan 1, 2000\n-mi.test\n*\nx --> y\nsync a b c`;
+    const result = bp3ToScene(`RND\ngram#1[1] S --> x y`, { hoText: hoSimple, hoKey: 'simple' });
+    const sec = result && result.transcriptionEntry && result.transcriptionEntry.sections && result.transcriptionEntry.sections['*'];
+    const ok = sec && sec['x'] === 'y' && Object.keys(sec).length === 1;
+    if (ok) {
+      console.log(`  OK         [ho-5: headers/sync ignorés, section '*' correcte]`);
+      passed++;
+    } else {
+      console.log(`  FAIL       [ho-5: headers/sync ignorés, section '*' correcte]`);
+      console.log(`    sec: ${JSON.stringify(sec)}, result: ${JSON.stringify(result).substring(0, 300)}`);
+      failed++;
+    }
+  }
+
+  // Test 6 : espaces de section ' * ' (cas -ho.dhin--) → clé '*'
+  {
+    const hoSpacedSection = `V.2.0\n * \nx --> y`;
+    const result = bp3ToScene(`RND\ngram#1[1] S --> x y`, { hoText: hoSpacedSection, hoKey: 'spaced' });
+    const sec = result && result.transcriptionEntry && result.transcriptionEntry.sections;
+    const ok = sec && sec['*'] && sec['*']['x'] === 'y';
+    if (ok) {
+      console.log(`  OK         [ho-6: label ' * ' (espaces) → clé '*']`);
+      passed++;
+    } else {
+      console.log(`  FAIL       [ho-6: label ' * ' (espaces) → clé '*']`);
+      console.log(`    sec: ${JSON.stringify(sec)}`);
+      failed++;
+    }
+  }
+
+  // Test 7 : libKey absent du bps résultat si pas de hoText
+  {
+    const result = bp3ToScene(GR_TRYHOMO);
+    const hasTranscription = result.includes('@transcription');
+    if (!hasTranscription) {
+      console.log(`  OK         [ho-7: sans hoText → pas de @transcription dans le bps]`);
+      passed++;
+    } else {
+      console.log(`  FAIL       [ho-7: sans hoText → pas de @transcription dans le bps]`);
+      console.log(`    result snippet: ${result.substring(0, 200)}`);
+      failed++;
+    }
+  }
+
   console.log(`\n--- Résultat unitaires+ref: ${passed} OK, ${failed} FAIL, ${unhandled} NON GÉRÉ ---\n`);
   if (failed > 0) process.exitCode = 1;
 }

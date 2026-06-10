@@ -37,6 +37,7 @@ Scene {
   template: TemplateEntry[] | null         // section @template (optionnelle, v0.8 ; ex-`templates`)
   soundPrototypes: SoundPrototypeAST[] | null  // section @sound (déclaratif, v0.8)
   soundAssignments: SoundAssignmentAST[] | null  // affectations sujet→son (v0.8)
+  homomorphisms: HomomorphismDeclAST[]    // contrat BPx (ajout 2026-06-10) — voir §HomomorphismDeclAST
 }
 ```
 
@@ -947,18 +948,15 @@ TemplateMasterGroup { type: "TemplateMasterGroup", elements: RhsElement[] }
 ### `TemplateSlave` / `TemplateSlaveGroup`
 
 ```
-TemplateSlave { type: "TemplateSlave", name: string, args: Arg[] | null, transcriptions: string[] | null }
-TemplateSlaveGroup { type: "TemplateSlaveGroup", elements: RhsElement[], transcriptions: string[] | null }
+TemplateSlave { type: "TemplateSlave", name: string, args: Arg[] | null }
+TemplateSlaveGroup { type: "TemplateSlaveGroup", elements: RhsElement[] }
 ```
 
-Le champ `transcriptions` contient les noms de transcription entre le master et le slave :
-- `$X tabla_stroke &X` → `transcriptions: ["tabla_stroke"]`
-- `$X * TR &X` → `transcriptions: ["*", "TR"]`
-- `$X &X` (sans transcription) → `transcriptions: null`
-
-Le parser collecte les identifiants entre le `$X` et le `&X` correspondant.
-L'encoder utilise ces noms pour émettre les labels dans la grammaire BP3 et
-pour construire le fichier -ho. avec les étiquettes appropriées.
+> **ABANDONNÉ (2026-06-10)** : le champ `transcriptions: string[] | null` prévu dans cette
+> version a été supprimé en faveur de l'approche `Scene.homomorphisms` + marqueurs inline
+> (`star`, `$X`, `&X`). Les noms de transcription entre master et slave sont conservés
+> verbatim dans le RHS BP3 ; BPx les consume via `rewriteHomomorphismMarkers`.
+> Le champ `transcriptions` N'EXISTE PAS dans l'implémentation courante du parser.
 
 ### `TieStart` / `TieContinue` / `TieEnd`
 
@@ -1027,6 +1025,27 @@ Même note lexicale que `Guard` : `[times-1]` → `{ flag:"times", operator:"-",
 ```
 Literal { type: "Literal", value: number | string }
 ```
+
+### `HomomorphismDeclAST`
+
+```
+HomomorphismDeclAST {
+  type: "Homomorphism"
+  name: string          // nom de la section (ex: "*", "m1", "mineur")
+  pairs: [string, string][]  // liste de paires [source, cible]
+  line?: number         // ligne source de la directive @transcription.xxx
+}
+```
+
+Attaché à `Scene.homomorphisms[]`. Produit par le parser depuis les directives
+`@transcription.<subkey>` et les entrées de `lib/transcription.json`.
+
+- Format `sections` : une entrée par section → `name` = clé de section
+- Format `mappings` : une seule entrée → `name` = subkey de la directive
+- Paires identité (a→a) conservées pour fidélité Bernard
+
+Contrat BPx (`ast.ts:150-157`) : BPx consomme ce tableau pour appliquer les
+transformations de terminaux post-dérivation via `rewriteHomomorphismMarkers`.
 
 ---
 

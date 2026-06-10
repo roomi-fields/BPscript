@@ -22,11 +22,74 @@
   },
 
   "ruwet_mineur": {
-    "description": "Ruwet — transformation thème majeur → mineur",
+    "_deprecated": "DÉPRÉCIÉ — utiliser @transcription.ruwet section mineur. La paire sol4→mi4 était infidèle à -ho.Ruwet et a été supprimée. Remplacé par ruwet (2026-06-10).",
+    "description": "Ruwet — transformation thème majeur → mineur (DÉPRÉCIÉ)",
     "mappings": {
       "fa4": "re4",
       "la4": "fa4",
       "sol4": "mi4"
+    }
+  },
+
+  "ruwet": {
+    "description": "Ruwet — 3 transformations mélodiques (fidèle à bp3-engine/test-data/-ho.Ruwet)",
+    "sections": {
+      "m1": {
+        "la4": "sib4"
+      },
+      "m2": {
+        "la4": "sol4"
+      },
+      "mineur": {
+        "fa4": "re4",
+        "la4": "fa4"
+      }
+    }
+  },
+
+  "dhati": {
+    "description": "Dhati — homomorphisme tabla (fidèle à -ho.dhati, section *, identités conservées)",
+    "sections": {
+      "*": {
+        "dha": "ta",
+        "ti": "ti",
+        "ge": "ke",
+        "na": "na",
+        "dhee": "tee",
+        "tr": "tr",
+        "kt": "kt"
+      }
+    }
+  },
+
+  "dhin": {
+    "description": "Dhin -- homomorphisme tabla (fidèle à -ho.dhin--, section *, identités conservées)",
+    "sections": {
+      "*": {
+        "dha": "ta",
+        "ta": "ta",
+        "ti": "ti",
+        "ra": "ra",
+        "na": "na",
+        "ki": "ki",
+        "dhee": "tee",
+        "ne": "ne",
+        "ge": "ke",
+        "ka": "ka",
+        "dhin": "tin"
+      }
+    }
+  },
+
+  "tryhomomorphism": {
+    "description": "Homomorphisme de test (fidèle à -ho.tryhomomorphism, chaîne c-->fa4-->d dépliée)",
+    "sections": {
+      "*": {
+        "a": "b",
+        "do4": "re4",
+        "c": "fa4",
+        "fa4": "d"
+      }
     }
   },
 

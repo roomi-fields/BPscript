@@ -49,6 +49,7 @@ function compileBPS(source) {
     result.routingTable = encoded.routingTable;   // Z1 (#105): loaded @routing config
     result.labelIndex = encoded.labelIndex;        // Z2 (#106): label → targeted RHS elements
     result.ccAliases = encoded.ccAliases;          // Z5 (#109): named MIDI CC → number (runtime inbound)
+    result.homomorphisms = encoded.homomorphisms;  // Contrat BPx: HomomorphismDeclAST[] (ast.ts:150-157)
 
     // 4. Generate prototypes (-so. file) for all declared terminals
     if (result.alphabet.length > 0) {
