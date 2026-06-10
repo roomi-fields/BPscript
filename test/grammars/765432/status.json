@@ -13,5 +13,7 @@
   "s1_note": "823 MIDI notes. French solfege, 12 subgrammars.",
   "s1_vs_s2_note": "Pitch 823/823 identique ✅. Timing 3x: natif 500ms vs WASM 166ms. Pclock=1 Qclock=3 interprété différemment par les 2 moteurs.",
   "s3_vs_s4_note": "823 tokens identical. Fixed: @alphabet.solfege generates exact terminals (do4, mi5...).",
-  "s2_vs_s3_note": "_transpose() modifie les noms de notes avec NC=1 mais pas avec NC=0 (silent objects). Diff attendue."
+  "s2_vs_s3_note": "_transpose() modifie les noms de notes avec NC=1 mais pas avec NC=0 (silent objects). Diff attendue.",
+  "s5": "FAIL",
+  "s5_note": "2026-06-10 (v3.4.5-wasm.1, idem natif) : 0 token. Moteur refuse la grammaire transpilée — erreur 15 x14 : terminal 'Su'/'Sm'/'Ol'/'Vi'/'Ar'/'An' de l'alphabet masque les variables Suresh1/2, Smriti1/2... ('Can't make sense of \"resh1\"'). L'ancienne sortie transpilée (alphabet avec collages do4-/mi4-) segfaulte v3.4.4 et v3.4.5 dans CompileAlphabet/ReleaseAlphabetSpace. Snapshot s5 1497 tokens (2026-04-26, v3.4.2-wasm.2) conservé comme dernier état valide ; non reproductible sur les moteurs disponibles."
 }

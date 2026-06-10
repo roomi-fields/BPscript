@@ -86,6 +86,7 @@ function processGrammar(name) {
   // Build bp.exe command using PHP ref params
   // Patch settings to disable traces (same as S1)
   let tmpSettings = null;
+  let tmpGrammarDir = null;
   const args = ['produce', '-e'];
   if (ref.settings) {
     tmpSettings = patchSettings(`${CTESTS}/${ref.settings}`);
@@ -97,7 +98,20 @@ function processGrammar(name) {
       args.push('-se', `${CTESTS}/${ref.settings}`);
     }
   }
-  args.push('-gr', `${CTESTS}/-gr.${grName}`);
+  // Normalize line endings (CR-only Mac files are read as a single line by bp.exe):
+  // write an LF-normalized temp copy and point bp.exe at it. Keeps the -gr. naming convention.
+  let grArg = `${CTESTS}/-gr.${grName}`;
+  const grAbs = path.join(BP_EXE_DIR, CTESTS, `-gr.${grName}`);
+  if (fs.existsSync(grAbs)) {
+    const grText = fs.readFileSync(grAbs, 'utf-8');
+    if (/\r/.test(grText)) {
+      tmpGrammarDir = path.join('/mnt/c/tmp', `_s0_gr_${Date.now()}`);
+      fs.mkdirSync(tmpGrammarDir, { recursive: true });
+      fs.writeFileSync(path.join(tmpGrammarDir, `-gr.${grName}`), grText.replace(/\r\n?/g, '\n'));
+      grArg = `${tmpGrammarDir.replace('/mnt/c/', 'C:\\').replace(/\//g, '\\')}\\-gr.${grName}`;
+    }
+  }
+  args.push('-gr', grArg);
   if (ref.alphabet) args.push('-al', `${CTESTS}/${ref.alphabet}`);
   if (ref.tonality) {
     const toCtests = `${CTESTS}/${ref.tonality}`;
@@ -133,6 +147,7 @@ function processGrammar(name) {
     }
 
     if (tmpSettings) try { fs.unlinkSync(tmpSettings); } catch(e) {}
+    if (tmpGrammarDir) try { fs.rmSync(tmpGrammarDir, { recursive: true, force: true }); } catch(e) {}
 
     if (tokens.length === 0) {
       console.error(`S0 FAIL (midi): 0 notes for ${name}`);
@@ -158,6 +173,7 @@ function processGrammar(name) {
     }
 
     if (tmpSettings) try { fs.unlinkSync(tmpSettings); } catch(e) {}
+    if (tmpGrammarDir) try { fs.rmSync(tmpGrammarDir, { recursive: true, force: true }); } catch(e) {}
 
     const tokens = parseTextOutput(rawOutput);
     if (!tokens || tokens.length === 0) {

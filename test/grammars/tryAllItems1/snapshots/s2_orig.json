@@ -1,6 +1,7 @@
 {
   "source": "-gr.tryAllItems1",
   "stage": "S2",
+  "mode": "text",
   "settings": [
     0,
     10,
@@ -413,6 +414,5 @@
       "D6"
     ]
   ],
-  "midi": [],
-  "date": "2026-04-02"
+  "date": "2026-06-10"
 }
