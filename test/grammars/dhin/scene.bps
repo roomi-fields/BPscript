@@ -12,6 +12,7 @@
 @core
 @controls
 @sound.tabla_perc
+@transcription.dhin
 
 // --- Sous-grammaire 1 @mode:random — structure ---
 

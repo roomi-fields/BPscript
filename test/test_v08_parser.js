@@ -9,12 +9,13 @@
 import { readFileSync } from 'fs';
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
+import { encode } from '../src/transpiler/encoder.js';
 import { registerAll } from '../src/transpiler/libs.js';
 
 // ── Pre-register libs (no FS in tests) ─────────────────────
 
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings']) {
+for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'transcription']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -502,6 +503,155 @@ S -> A`);
   // Parse OK ; l'erreur sera levée par l'actorResolver, pas le parser.
   assert('parses (resolver raises error)', ast.actors[0].name === 'empty');
   assert('properties empty', Object.keys(ast.actors[0].properties).length === 0);
+}
+
+// ============================================================
+// 24. scene.homomorphisms — contrat BPx
+// ============================================================
+
+section('scene.homomorphisms — contrat BPx');
+
+{
+  // Sans directive @transcription : champ vide ou absent
+  const ast = parseSource(`@controls
+S -> A B`);
+  assert('sans @transcription: homomorphisms vide', !ast.homomorphisms || ast.homomorphisms.length === 0);
+}
+
+{
+  // @transcription.checkhomo — format sections → 3 décls ('*', 'H', 'TR')
+  const ast = parseSource(`@controls
+@transcription.checkhomo
+S -> A B`);
+  assert('checkhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
+  assert('checkhomo: 3 décls', ast.homomorphisms?.length === 3);
+  const names = ast.homomorphisms?.map(h => h.name);
+  assert("checkhomo: décl '*' présente", names?.includes('*'));
+  assert("checkhomo: décl 'H' présente", names?.includes('H'));
+  assert("checkhomo: décl 'TR' présente", names?.includes('TR'));
+  const star = ast.homomorphisms?.find(h => h.name === '*');
+  assert("checkhomo: type='Homomorphism'", star?.type === 'Homomorphism');
+  assert("checkhomo: paires présentes", Array.isArray(star?.pairs) && star.pairs.length > 0);
+  // paires de '*': a→a', a'→a", b→b', b'→b
+  const pairMap = Object.fromEntries(star?.pairs || []);
+  assert("checkhomo: a → a'", pairMap['a'] === "a'");
+  assert("checkhomo: b → b'", pairMap['b'] === "b'");
+  assert("checkhomo: line défini", typeof star?.line === 'number');
+}
+
+{
+  // @transcription.dhati — format sections, section '*' avec 7 paires (identités conservées)
+  const ast = parseSource(`@controls
+@transcription.dhati
+S -> dha ti`);
+  assert('dhati: homomorphisms défini', Array.isArray(ast.homomorphisms));
+  assert('dhati: 1 décl (section *)', ast.homomorphisms?.length === 1);
+  const decl = ast.homomorphisms?.[0];
+  assert("dhati: name='*'", decl?.name === '*');
+  assert('dhati: 7 paires', decl?.pairs?.length === 7);
+  const pairMap = Object.fromEntries(decl?.pairs || []);
+  assert('dhati: dha → ta', pairMap['dha'] === 'ta');
+  assert('dhati: ti → ti (identité conservée)', pairMap['ti'] === 'ti');
+  assert('dhati: ge → ke', pairMap['ge'] === 'ke');
+  assert('dhati: na → na (identité conservée)', pairMap['na'] === 'na');
+}
+
+{
+  // @transcription.dhin — format sections, section '*' avec 11 paires
+  const ast = parseSource(`@controls
+@transcription.dhin
+S -> dhin dha`);
+  assert('dhin: homomorphisms défini', Array.isArray(ast.homomorphisms));
+  assert('dhin: 1 décl', ast.homomorphisms?.length === 1);
+  const decl = ast.homomorphisms?.[0];
+  assert("dhin: name='*'", decl?.name === '*');
+  assert('dhin: 11 paires', decl?.pairs?.length === 11);
+  const pairMap = Object.fromEntries(decl?.pairs || []);
+  assert('dhin: dha → ta', pairMap['dha'] === 'ta');
+  assert('dhin: dhin → tin', pairMap['dhin'] === 'tin');
+  assert('dhin: ta → ta (identité conservée)', pairMap['ta'] === 'ta');
+}
+
+{
+  // @transcription.ruwet — format sections avec m1/m2/mineur
+  const ast = parseSource(`@controls
+@transcription.ruwet
+S -> la4 fa4`);
+  assert('ruwet: homomorphisms défini', Array.isArray(ast.homomorphisms));
+  assert('ruwet: 3 décls (m1/m2/mineur)', ast.homomorphisms?.length === 3);
+  const names = ast.homomorphisms?.map(h => h.name);
+  assert("ruwet: décl 'm1' présente", names?.includes('m1'));
+  assert("ruwet: décl 'mineur' présente", names?.includes('mineur'));
+  const mineur = ast.homomorphisms?.find(h => h.name === 'mineur');
+  assert('mineur: 2 paires seulement', mineur?.pairs?.length === 2);
+  const pairMap = Object.fromEntries(mineur?.pairs || []);
+  assert('mineur: fa4 → re4', pairMap['fa4'] === 're4');
+  assert('mineur: la4 → fa4', pairMap['la4'] === 'fa4');
+  // Sol4→mi4 NE DOIT PAS être présent (infidèle à -ho.Ruwet)
+  assert('mineur: sol4 absent', !('sol4' in pairMap));
+}
+
+{
+  // @transcription.tryhomomorphism — chaîne c-->fa4-->d dépliée en [c,fa4],[fa4,d]
+  const ast = parseSource(`@controls
+@transcription.tryhomomorphism
+S -> a b c`);
+  assert('tryhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
+  assert('tryhomo: 1 décl', ast.homomorphisms?.length === 1);
+  const decl = ast.homomorphisms?.[0];
+  assert("tryhomo: name='*'", decl?.name === '*');
+  // a→b, do4→re4, c→fa4, fa4→d (chaîne dépliée)
+  assert('tryhomo: 4 paires (chaîne dépliée)', decl?.pairs?.length === 4);
+  const pairMap = Object.fromEntries(decl?.pairs || []);
+  assert('tryhomo: a → b', pairMap['a'] === 'b');
+  assert('tryhomo: do4 → re4', pairMap['do4'] === 're4');
+  assert('tryhomo: c → fa4', pairMap['c'] === 'fa4');
+  assert('tryhomo: fa4 → d', pairMap['fa4'] === 'd');
+}
+
+// ============================================================
+// 25. Encoder — dé-pollution alphabet homomorphismes
+// ============================================================
+
+section('Encoder — dé-pollution alphabet homomorphismes');
+
+{
+  // Un nom d'homo dans le RHS ne doit PAS aller dans l'alphabet
+  const src = `@controls
+@transcription.checkhomo
+S -> $X * &X`;
+  const ast = parseSource(src);
+  const encoded = encode(ast);
+  // 'star' est un BP3_OPERATOR donc déjà absent
+  // Les noms de section comme '*' ne sont pas dans le RHS ici
+  // Vérifie juste que l'alphabet ne contient pas les noms des sections
+  const alph = Array.from(encoded.alphabet);
+  assert('alphabet ne contient pas "*" (section)', !alph.includes('*'));
+}
+
+{
+  // @transcription.tabla_stroke — 'tabla_stroke' doit être ABSENT de l'alphabet
+  const src = `@controls
+@transcription.tabla_stroke
+S -> $X tabla_stroke &X`;
+  const ast = parseSource(src);
+  const encoded = encode(ast);
+  const alph = Array.from(encoded.alphabet);
+  assert('tabla_stroke absent de alphabet (nom homo)', !alph.includes('tabla_stroke'),
+    `alphabet = ${alph.join(',')}`);
+  // Le texte grammaire doit contenir tabla_stroke verbatim
+  assert('grammar contient tabla_stroke verbatim', encoded.grammar.includes('tabla_stroke'));
+}
+
+{
+  // encode() doit retourner homomorphisms
+  const src = `@controls
+@transcription.checkhomo
+S -> $X * &X`;
+  const ast = parseSource(src);
+  const encoded = encode(ast);
+  assert('encoded.homomorphisms défini', Array.isArray(encoded.homomorphisms));
+  assert('encoded.homomorphisms 3 décls', encoded.homomorphisms?.length === 3);
 }
 
 // ============================================================

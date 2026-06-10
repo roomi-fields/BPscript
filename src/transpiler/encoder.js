@@ -37,6 +37,10 @@ let _dualCtx = new Set();   // controls in both engine and runtime — () always
 // Time pattern names from @timepatterns — these are duration symbols, NOT sound terminals.
 // They must never be added to the sound alphabet (BP3 recognises them via TIMEPATTERNS: section).
 let _timePatternNames = new Set();
+// Homomorphism invocation names from @transcription — these are homo labels, NOT sound terminals.
+// They must never be added to the sound alphabet (they name a transformation, not a bol).
+// Built from libCtx.transcriptions: mappings → the subkey, sections → section names.
+let _homoNames = new Set();
 
 // BP3 reserved words must never appear in the alphabet (Error code 54).
 // Module-scoped so both the alphabet-seeding pass in encode() and the RHS
@@ -69,6 +73,7 @@ function encode(ast) {
   _cvNames = {};
   _usedTerminals = new Set();
   _timePatternNames = new Set();
+  _homoNames = new Set();
   const lines = [];
 
   // Load control map from libs based on @ directives
@@ -77,6 +82,19 @@ function encode(ast) {
   _bp3Native = libCtx.bp3NativeControls;
   _seqPrefix = libCtx.seqPrefixControls;
   _dualCtx = libCtx.dualContextControls;
+
+  // Build set of homomorphism invocation names so they are never seeded into
+  // the alphabet. For 'mappings' format the name is the subkey; for 'sections'
+  // format the names are the section keys.
+  for (const [subkey, table] of Object.entries(libCtx.transcriptions || {})) {
+    if (table.sections) {
+      for (const secName of Object.keys(table.sections)) {
+        if (secName !== '*') _homoNames.add(secName);
+      }
+    } else if (table.mappings) {
+      _homoNames.add(subkey);
+    }
+  }
 
   // Build CV table from cvInstances
   if (ast.cvInstances) {
@@ -529,6 +547,10 @@ function encode(ast) {
   // Terminals actually used in the grammar (for prototype generation)
   output.usedTerminals = _usedTerminals;
 
+  // Propagate scene.homomorphisms (built by the parser from libCtx.transcriptions).
+  // Both parse()-direct callers (BPx tests) and compileBPS() callers get the table.
+  output.homomorphisms = ast.homomorphisms || [];
+
   return output;
 }
 
@@ -782,17 +804,22 @@ function generateAlphabetFile(libCtx, directives, customTerminals) {
 
   const hasTranscriptions = Object.keys(libCtx.transcriptions).length > 0;
 
-  // Collect all sections from all transcriptions
+  // Collect all sections from all transcriptions.
+  // For 'sections' format: section name comes from the JSON key.
+  // For 'mappings' format: section name = the invocation key (subkey), NOT '*'.
+  //   This ensures the grammar file references like `(=tabla_stroke)` resolve
+  //   correctly against the section named 'tabla_stroke' in the alphabet file.
   const allSections = {};  // sectionName → { from: to, ... }
-  for (const [, table] of Object.entries(libCtx.transcriptions)) {
+  for (const [subkey, table] of Object.entries(libCtx.transcriptions)) {
     if (table.sections) {
       // Multi-sections: { "*": {...}, "TR": {...} }
       for (const [secName, mappings] of Object.entries(table.sections)) {
         allSections[secName] = { ...(allSections[secName] || {}), ...mappings };
       }
     } else if (table.mappings) {
-      // Single section → implicit *
-      allSections['*'] = { ...(allSections['*'] || {}), ...table.mappings };
+      // Single-section format: use the invocation name (subkey) as section name.
+      // Using '*' was a bug — the grammar invokes it by subkey, not by '*'.
+      allSections[subkey] = { ...(allSections[subkey] || {}), ...table.mappings };
     }
   }
 
@@ -1027,6 +1054,11 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       // via the TIMEPATTERNS: section — NOT via the sound alphabet.  Emit the
       // name literally but do NOT add it to the alphabet.
       if (_timePatternNames.has(el.name)) return el.name;
+      // Homomorphism invocation names (e.g. 'tabla_stroke', 'mineur', 'm1') are
+      // transformation labels that appear between $X and &X in the grammar.
+      // They are NOT sound terminals — BP3 recognises them as homo names via the
+      // alphabet file -ho. sections. Emit verbatim, do NOT add to the alphabet.
+      if (_homoNames.has(el.name)) return el.name;
       // BP3: every RHS token that is never rewritten (no LHS rule) is a bol of
       // the alphabet (CompileGrammar.c, Encode/AddBolsInGrammar). A bare
       // terminal must therefore be seeded into the output alphabet, exactly
@@ -1066,8 +1098,9 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       }
       // Non-terminal: rewrite rule applies (wrap if lowercase, BP3 GetVar
       // rule). Terminal: must exist in alphabet, left bare.
+      // Homo names: emit verbatim without alphabet seeding (same as Symbol case).
       if (!_nonTerminals.has(el.name)) {
-        if (!BP3_RESERVED.has(el.name)) alphabet.add(el.name);
+        if (!BP3_RESERVED.has(el.name) && !_homoNames.has(el.name)) alphabet.add(el.name);
         _usedTerminals.add(el.name);
         tokens.push(el.name);
       } else {

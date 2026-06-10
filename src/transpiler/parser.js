@@ -34,6 +34,57 @@ function parse(tokens) {
   function atEnd() { return at(T.EOF); }
 
   // ============================================================
+  // Homomorphisms helper
+  // ============================================================
+
+  /**
+   * Build scene.homomorphisms (HomomorphismDeclAST[]) from loaded transcription tables.
+   *
+   * Contract (BPx ast.ts:150-157):
+   *   { type:'Homomorphism', name:string, pairs:[string,string][], line?:number }
+   *
+   * Formats:
+   *   - 'sections': one decl per section, name = section key ('*', 'm1', 'TR'…)
+   *   - 'mappings': one decl, name = the subkey used to invoke it (@transcription.<subkey>)
+   *
+   * Identity pairs (a→a) are KEPT (Bernard fidelity).
+   * Chain pairs (a→b→c) are already expanded to [a,b],[b,c] in the JSON.
+   *
+   * @param {Object} transcriptions  - libCtx.transcriptions: { subkey → lib }
+   * @param {Array}  directives      - scene.directives (to recover line numbers)
+   */
+  function buildHomomorphisms(transcriptions, directives) {
+    const result = [];
+    if (!transcriptions || Object.keys(transcriptions).length === 0) return result;
+
+    // Build a map from subkey → directive line number
+    const lineMap = {};
+    for (const dir of (directives || [])) {
+      if (dir.name === 'transcription' && dir.subkey) {
+        lineMap[dir.subkey] = dir.line;
+      }
+    }
+
+    for (const [subkey, table] of Object.entries(transcriptions)) {
+      const line = lineMap[subkey];
+
+      if (table.sections) {
+        // Multi-section format: one decl per named section
+        for (const [secName, mappings] of Object.entries(table.sections)) {
+          const pairs = Object.entries(mappings); // already [from, to]
+          result.push({ type: 'Homomorphism', name: secName, pairs, line });
+        }
+      } else if (table.mappings) {
+        // Single-section format: name = the invocation key (subkey)
+        const pairs = Object.entries(table.mappings);
+        result.push({ type: 'Homomorphism', name: subkey, pairs, line });
+      }
+    }
+
+    return result;
+  }
+
+  // ============================================================
   // Couche 1 — Scene
   // ============================================================
 
@@ -55,6 +106,9 @@ function parse(tokens) {
       // v0.8 — sons (prototypes anonymes + nommés) et affectations sujet→son
       soundPrototypes: null,
       soundAssignments: null,
+      // Contrat BPx (ast.ts:150-157) : table d'homomorphismes attachée par le parser
+      // après chargement des libs. Vide si aucune directive @transcription.
+      homomorphisms: [],
     };
 
     skipNewlines();
@@ -137,6 +191,11 @@ function parse(tokens) {
 
     // Load libraries based on @ directives — determines known controls
     libCtx = loadLibsFromDirectives(scene.directives);
+
+    // Build scene.homomorphisms (contrat BPx ast.ts:150-157) from loaded
+    // transcription tables. Called after loadLibsFromDirectives so that
+    // libCtx.transcriptions is fully populated.
+    scene.homomorphisms = buildHomomorphisms(libCtx.transcriptions, scene.directives);
 
     // Process actor directives — add to libCtx for dot notation lookup
     libCtx.actors = {};
