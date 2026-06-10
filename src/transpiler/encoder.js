@@ -946,6 +946,9 @@ function encodeLhs(elements) {
     if (el.type === 'Wildcard') return el.index != null ? `?${el.index}` : '?';
     if (el.type === 'Context') return encodeContext(el);
     if (el.type === 'RawBrace') return el.value;
+    // TemplateAnchor : ancre de gabarit maître « $ nu » → token BP3 « (= » (sans fermeture)
+    // Encode.c:1341-1364 : T2,0 — token littéral, ré-émis tel quel au RHS.
+    if (el.type === 'TemplateAnchor' && el.kind === 'master') return '(=';
     return el.name || '?';
   }).join(' ');
 }
@@ -1275,6 +1278,11 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
 
     case 'Wildcard':
       return el.index != null ? `?${el.index}` : '?';
+
+    case 'TemplateAnchor':
+      // Ancre de gabarit maître « $ nu » → token BP3 « (= » (sans fermeture)
+      // Encode.c:1341-1364 : T2,0 — token littéral, ré-émis tel quel au RHS.
+      return '(=';
 
     case 'TemplateMaster': {
       const args = el.args ? `(${el.args.map(a => a.key ? `${a.key}:${a.value.value}` : a.value.value).join(',')})` : '';

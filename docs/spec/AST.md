@@ -740,7 +740,7 @@ consommée par le runtime aval.
 ## Éléments LHS
 
 ```
-LhsElement = Symbol | Variable | Wildcard | Context | RawBrace
+LhsElement = Symbol | Variable | Wildcard | Context | TemplateAnchor | RawBrace
 ```
 
 ---
@@ -752,7 +752,7 @@ RhsElement = Symbol | SymbolCall | SymbolWithTriggerIn | Control | Rest | Prolon
            | Period | NumericDuration | Polymetric
            | SimultaneousGroup | OutTimeObject | InstantControl | TriggerIn
            | Variable | Wildcard
-           | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup
+           | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup | TemplateAnchor
            | TieStart | TieContinue | TieEnd
            | NilString | BacktickStandalone | Context | RawBrace
 ```
@@ -955,6 +955,16 @@ TemplateMasterGroup { type: "TemplateMasterGroup", elements: RhsElement[] }
 ```
 
 `$X` → TemplateMaster. `${$X S &X}` → TemplateMasterGroup (contenu récursif).
+
+### `TemplateAnchor`
+
+```
+TemplateAnchor { type: "TemplateAnchor", kind: "master" }
+```
+
+Ancre de gabarit maître « `$ ` » (dollar isolé avec espace). Valide en LHS et en RHS.
+Compilé en token BP3 `(=` (sans fermeture de parenthèse) — T2,0 dans Encode.c:1341-1364.
+L'ancre symétrique `(:` (esclave) est réservée, non implémentée (zéro occurrence corpus).
 
 ### `TemplateSlave` / `TemplateSlaveGroup`
 

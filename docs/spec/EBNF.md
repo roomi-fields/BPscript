@@ -402,7 +402,8 @@ negative_context = "#" , "(" , context_sym+ , ")"    (* négatif sur groupe *)
                  | "#" , context_sym                  (* négatif sur un seul symbole *)
                  | "#" , "?" ;                       (* boundary — pas de symbole ici *)
 
-context_sym      = symbol | wildcard | "{" | "}" | "," ;  (* symboles, wildcards ?N, braces *)
+context_sym      = symbol | wildcard | rest | prolongation | "{" | "}" | "," ;
+(* rest = "-", prolongation = "_" — valides comme contextes négatifs : #- (silence), #_ (prolongation) *)
 ```
 
 Les contextes peuvent apparaître avant le LHS (contexte gauche), après le RHS
@@ -417,6 +418,7 @@ lhs_element = symbol
             | variable
             | wildcard
             | context
+            | template_anchor                       (* $ nu = ancre de gabarit maître en LHS *)
             | "{" | "}" | "," ;                    (* méta-grammaires : braces comme terminaux *)
 ```
 
@@ -484,7 +486,7 @@ element_core = symbol
              | trigger_in
              | variable
              | wildcard
-             | template_master | template_slave
+             | template_master | template_slave | template_anchor
              | tie_start | tie_continue | tie_end
              | nil_string
              | backtick_standalone
@@ -768,6 +770,10 @@ template_master = "$" , IDENT , [ "(" , arg_list , ")" ]
 
 template_slave  = "&" , IDENT , [ "(" , arg_list , ")" ]
                | "&" , "{" , rhs_element+ , "}" ;          (* groupe : &{$X S &X} *)
+
+template_anchor = "$" ;                                    (* $ isolé (espace après) = ancre maître *)
+(* Graphie BPscript : "$ " (dollar + espace). Compilé en token BP3 "(=" sans fermeture.
+   Valide en LHS (contexte symétrique) et en RHS. L'ancre esclave "(:" est réservée, non implémentée. *)
 ```
 
 Sur un symbole : `$X` = master, `&X` = slave. Compilé en `(=X)` / `(:X)`.

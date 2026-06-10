@@ -1332,7 +1332,28 @@ function parse(tokens) {
       }
     }
 
-    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, runtimeQualifier, mode: ruleMode, line: tok.line };
+    // Garde-fou lint : avertissement si le nombre d'ancres LHS ≠ RHS.
+    // Le corpus connu est symétrique ; une asymétrie peut indiquer une erreur.
+    // (pas une erreur bloquante — Bernard pourrait avoir des cas asymétriques)
+    const countAnchorsLhs = lhs.filter(e => e.type === 'TemplateAnchor').length;
+    const countAnchorsRhs = (function countRhsAnchors(elements) {
+      let n = 0;
+      for (const e of elements) {
+        if (e.type === 'TemplateAnchor') n++;
+        else if (e.elements) n += countRhsAnchors(e.elements);
+      }
+      return n;
+    })(rhs);
+    const warnings = [];
+    if (countAnchorsLhs !== countAnchorsRhs && (countAnchorsLhs > 0 || countAnchorsRhs > 0)) {
+      warnings.push({
+        type: 'warning',
+        message: `ancres de gabarit asymétriques : LHS a ${countAnchorsLhs}, RHS a ${countAnchorsRhs}`,
+        line: tok.line,
+      });
+    }
+
+    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, runtimeQualifier, mode: ruleMode, line: tok.line, warnings };
   }
 
   // ============================================================
@@ -1522,6 +1543,14 @@ function parse(tokens) {
       } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA)) {
         // #{ or #} or #, — single structural char as negative context
         return { type: 'Context', positive: false, symbols: [advance().value] };
+      } else if (at(T.REST)) {
+        // #- — negative context for silence (le '-' est le silence en BPscript)
+        advance();
+        return { type: 'Context', positive: false, symbols: ['-'] };
+      } else if (at(T.PROLONG)) {
+        // #_ — negative context for prolongation
+        advance();
+        return { type: 'Context', positive: false, symbols: ['_'] };
       } else {
         const sym = expect(T.IDENT).value;
         return { type: 'Context', positive: false, symbols: [sym] };
@@ -1574,6 +1603,19 @@ function parse(tokens) {
         // - (silence) as terminal on LHS
         advance();
         elements.push({ type: 'Rest' });
+      } else if (at(T.DOLLAR)) {
+        // $ nu (ancre de gabarit maître) — le $ doit être isolé (espace après).
+        // Un $ collé à un IDENT/LBRACE sans espace est interdit en LHS.
+        const dollarTok = current();
+        const nextTok = peek(1);
+        if (!nextTok.spaceBefore && (nextTok.type === T.IDENT || nextTok.type === T.LBRACE)) {
+          throw new ParseError(
+            `"$" collé à un identifiant interdit en LHS — utiliser "$ " (dollar isolé avec espace)`,
+            dollarTok
+          );
+        }
+        advance();  // consomme le $
+        elements.push({ type: 'TemplateAnchor', kind: 'master' });
       } else if (atAny(T.LBRACE, T.RBRACE, T.COMMA, T.RPAREN)) {
         // Raw structural chars on LHS (meta-grammars: koto3, dhin)
         elements.push({ type: 'RawBrace', value: advance().value });
@@ -2297,6 +2339,12 @@ function parse(tokens) {
       }
       expect(T.RBRACE);
       return { type: 'TemplateMasterGroup', elements };
+    }
+
+    // $ nu (ancre de gabarit maître) — le token suivant a un espace (spaceBefore=true)
+    // ou n'est pas un IDENT/LBRACE. Retourner TemplateAnchor au lieu d'erreur.
+    if (!at(T.IDENT) || current().spaceBefore) {
+      return { type: 'TemplateAnchor', kind: 'master' };
     }
 
     const name = expect(T.IDENT).value;

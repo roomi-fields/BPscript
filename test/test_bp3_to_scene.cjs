@@ -22,7 +22,14 @@ async function loadESM(specifier) {
 }
 
 const ROOT = path.resolve(__dirname, '..');
-const TEST_DATA = path.join(ROOT, 'bp3-engine', 'test-data');
+// bp3-engine/test-data est un submodule vide dans les worktrees : pointer vers
+// le dépôt partagé en lecture seule pour que les tests round-trip fonctionnent.
+const TEST_DATA_WORKTREE = path.join(ROOT, 'bp3-engine', 'test-data');
+const TEST_DATA_SHARED   = '/home/romi/dev/bp/BPscript/bp3-engine/test-data';
+const TEST_DATA = (() => {
+  try { require('fs').statSync(path.join(TEST_DATA_WORKTREE, '-gr.dhati2')); return TEST_DATA_WORKTREE; }
+  catch { return TEST_DATA_SHARED; }
+})();
 const SRC = path.join(ROOT, 'src', 'transpiler');
 
 // Contrôles runtime (lib/controls.json = autorité engine-vs-runtime).
@@ -462,30 +469,41 @@ async function main() {
       expectRules: ['LIN', 'gram#1[1] <K1=1> A --> B'],
     },
 
-    // ---- Item 3 : templates BP2 nues avec flèche imbriquée ------------------
+    // ---- E6 : ancre de gabarit maître « $ nu » ← (= SANS fermeture) -----------
     {
-      name: 'template BP2 nue LHS (= V1 #tr <-> (= ti #tr → NON GÉRÉ attendu',
-      // dhati3 GRAM#4[7] — template nue en LHS : non représentable en BPscript
-      // (BPscript ne supporte pas les templates comme LHS d'une règle).
-      // Le fix findArrowInText permet de parser la flèche, mais la règle elle-même est
-      // bloquée par checkLhsForUnsupported.
+      name: 'E6: $ nu LHS — dhati3 GRAM#4[7] (= V1 #tr <-> (= ti #tr → FIDÈLE',
+      // dhati3 GRAM#4[7] — ancre en LHS et RHS : $ nu en BPscript, (= en BP3
       grammar: `LIN\ngram#4[7] (= V1 #tr <-> (= ti #tr`,
-      expectNonGere: true,
+      expectRules: ['gram#1[1] (= V1 #tr <-> (= ti #tr'],
     },
     {
-      name: 'template BP2 nue (= M V1 #tr <-> (= ti M #tr → NON GÉRÉ attendu',
-      // dhati2 GRAM#4[9] — même construct
+      name: 'E6: $ nu LHS — dhati2 GRAM#4[9] (= M V1 #tr <-> (= ti M #tr → FIDÈLE',
+      // dhati2 GRAM#4[9] — même construct avec M supplémentaire
       grammar: `LIN\ngram#4[9] (= M V1 #tr <-> (= ti M #tr`,
-      expectNonGere: true,
+      expectRules: ['gram#1[1] (= M V1 #tr <-> (= ti M #tr'],
     },
     {
-      name: 'template BP2 nue en RHS uniquement — doit passer',
+      name: 'E6: $ nu en RHS uniquement — (= V1 dha → FIDÈLE',
       // Cas où (= apparaît uniquement en RHS (LHS normal). Doit être converti correctement.
+      // Après E6 : (= V1 dha → $ V1 dha (ancre + V1 dha séparés) → compile en (= V1 dha
       grammar: `ORD\ngram#1[1] S --> (= V1 dha`,
-      // LHS normal → OK; RHS (= V1 dha sans ")" → convertit en $V1 en BPS puis (=V1) compilé
-      // Normalisation strip ")" → (=V1 des deux côtés → FIDÈLE
-      // Mais "(= V1 dha" → plusieurs tokens : on convertit tout le RHS en ${V1 dha} → (=V1 dha)
-      expectRules: ['S --> (=V1 dha'],
+      expectRules: ['S --> (= V1 dha'],
+    },
+    {
+      name: 'E6: $X inchangé — template maître avec nom',
+      grammar: `RND\ngram#1[1] S <-> (=A16) (=V8) (=A8)`,
+      expectRules: ['gram#1[1] S <-> (=A16) (=V8) (=A8)'],
+    },
+    {
+      name: 'E6: ${...} inchangé — template maître groupe',
+      grammar: `RND\ngram#1[1] S <-> (=A B)`,
+      expectRules: ['gram#1[1] S <-> (=A B)'],
+    },
+    {
+      name: 'E6: compileBPS $ nu LHS simple → (= token',
+      // compileBPS accepte $ nu en LHS et émet (= en BP3
+      grammar: `LIN\ngram#1[1] (= A B --> (= X`,
+      expectRules: ['gram#1[1] (= A B --> (= X'],
     },
 
     // ---- Item 1 : alias "-" dans les noms de terminaux ----------------------

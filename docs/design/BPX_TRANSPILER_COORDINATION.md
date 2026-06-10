@@ -155,9 +155,30 @@ uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 
 ---
 
+---
+
+## Item 6 — Ancre de gabarit maître `$ nu` / `(=` — LIVRÉ 2026-06-10
+
+> ✅ **LIVRÉ 2026-06-10** — Chantier E6. L'ancre de gabarit maître `$ ` (dollar isolé)
+> est désormais un nœud AST `TemplateAnchor { type: "TemplateAnchor", kind: "master" }`,
+> valide en LHS et en RHS. bp3ToScene convertit `(=` → `$ ` ; l'encodeur reconvertit
+> `$ ` → `(=`. Le contexte négatif silence `#-` est également supporté (parser.js).
+> dhati2 et dhati3 sont débloqués (status `active` dans grammars.json) — round-trip
+> BOLSIZE (11/8 diffs dues aux terminaux >30 chars, comportement attendu).
+
+**Moteur BP3** : `(=` sans fermeture est le token T2,0 (Encode.c:1341-1364), traité par
+égalité stricte dans Compute.c:1753, ré-émis verbatim côté RHS (Compute.c:2033-2034).
+Il délimite un patron dans les règles de substitution symétrique (LHS `(= A B` <> RHS `(= X A`).
+
+**Côté BPx** : `loadGrammar` doit reconnaître `TemplateAnchor` dans le RuleAST et l'émettre
+comme T2,0 en interne — analogue à `TemplateMaster` / `TemplateMasterGroup` mais sans
+identifiant. L'ancre esclave `(:` (T2,1) est réservée, zéro occurrence corpus, non implémentée.
+
+---
+
 ## Récapitulatif (pour priorisation)
 
-> **2026-06-10 : les 5 items sont livrés/soldés côté transpileur** (statuts détaillés en tête
+> **2026-06-10 : les 6 items sont livrés/soldés côté transpileur** (statuts détaillés en tête
 > de chaque item). Seul résidu : la validation moteur de 765432 (Item 2) attend les fixes
 > FEEDBACK_BERNARD #48/#49.
 
@@ -168,6 +189,7 @@ uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 | 3. ~56 grammaires non transpilées | couverture-native (angle mort) | moyen (volume) | ✅ (BPx les chargera) |
 | 4. `[scan:...]` placement | placement explicite de règle | faible (mapping mode) | ✅ (dispatch A3 portée) |
 | 5. `[rndtime:N]` / `@timepatterns` | surface, à confirmer | faible | ✅ |
+| 6. Ancre gabarit maître `$ nu` / `(=` | dhati2, dhati3 | faible (parser+encoder+bp3ToScene) | A CONFIRMER BPx |
 
 **Note de fidélité** : aucun de ces items n'est un port d'algorithme BP3 (donc hors de la discipline
 « lire le C, traduire le C » de BPx) — c'est de la **coordination de pipeline** : faire que l'AST
