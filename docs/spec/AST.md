@@ -1057,12 +1057,16 @@ transformations de terminaux post-dérivation via `rewriteHomomorphismMarkers`.
 
 ## Contraintes lexicales
 
-- `-` trailing (sans espace avant) fait partie de l'identifiant : `do4-` = un seul terminal.
-  `do4 -` = terminal `do4` + silence. `dhin--` = terminal `dhin` + silence + silence.
+- `-` trailing (sans espace avant) : `do4-` = IDENT(`do4`) + REST(`-`) — deux tokens distincts.
+  `do4 -` = terminal `do4` + silence (identique). `dhin--` = terminal `dhin` + silence + silence.
+  **Rappel** : BP3 interdit `-` dans les noms de bol (CompileGrammar.c:1196). Le tokenizer
+  émet donc toujours le tiret traînant comme REST séparé.
   **Exception dans `[]`** : `[times-1]` = mutation flag (`times` − 1), pas identifiant `times-`.
 - `-` interne autorisé dans les non-terminaux LHS via pré-scan (`Tr-11`, `my-var`)
 - `#` est autorisé dans les identifiants pour les altérations (C#4, F#2)
-- Les underscores sont autorisés dans les noms (`just_intonation`)
+- `_` **interne** est autorisé dans les noms (`just_intonation`, `sa_4`).
+  `_` **traînant** (sans caractère alphanum suivant) génère un ou plusieurs tokens PROLONG séparés :
+  `si3_____` = IDENT(`si3`) + PROLONG×5 — conforme à BP3 (OkBolChar2 / Encode.c:415).
 
 ---
 

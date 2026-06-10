@@ -243,14 +243,27 @@ function tokenize(source, opts = {}) {
     // Identifiers and keywords
     if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
       let id = '';
-      while (i < source.length && (
-        (peek() >= 'a' && peek() <= 'z') ||
-        (peek() >= 'A' && peek() <= 'Z') ||
-        (peek() >= '0' && peek() <= '9') ||
-        peek() === '_' || peek() === '#' ||  // allow # in identifiers like C#4
-        peek() === "'" || peek() === '"'   // allow ' and " in identifiers like A', B", F'24
-      )) {
-        id += advance();
+      while (i < source.length) {
+        const p = peek();
+        // Alphanum, #, quotes : absorbed unconditionally
+        if ((p >= 'a' && p <= 'z') || (p >= 'A' && p <= 'Z') ||
+            (p >= '0' && p <= '9') || p === '#' ||
+            p === "'" || p === '"') {
+          id += advance();
+        } else if (p === '_') {
+          // '_' absorbed into ident ONLY if followed by an alphanumeric char.
+          // If trailing (end of word), it becomes a separate PROLONG token below.
+          // BP3 rule (OkBolChar2 / Encode.c:415): '_' is not a valid char inside
+          // a terminal — trailing underscores are prolongation objects.
+          const after = source[i + 1];
+          if (after !== undefined && /[a-zA-Z0-9]/.test(after)) {
+            id += advance(); // absorb internal '_' (e.g. Up_Down, sa_4, Num_total)
+          } else {
+            break; // trailing '_' → stop, emit ident then PROLONG tokens below
+          }
+        } else {
+          break;
+        }
       }
       // Check for hyphenated identifier:
       // 1. Hyphenated non-terminal (pre-scanned): A8-2, my-var — IDENT unique
@@ -295,11 +308,18 @@ function tokenize(source, opts = {}) {
           }
         }
       }
-      // Check keywords
+      // Emit ident (keyword or plain)
       if (KEYWORDS[id]) {
         emit(KEYWORDS[id], id);
       } else {
         emit(T.IDENT, id);
+      }
+      // Emit trailing '_' as separate PROLONG tokens (BP3 OkBolChar2 / Encode.c:415:
+      // '_' is a prolongation object, never part of a terminal name).
+      // Example : si3_____ → IDENT(si3) + PROLONG×5 ; pa3_ → IDENT(pa3) + PROLONG×1
+      while (i < source.length && peek() === '_') {
+        advance();
+        emit(T.PROLONG, '_');
       }
       continue;
     }

@@ -873,17 +873,20 @@ Règles d'attachement :
 Le tokenizer n'élimine pas les espaces — il les consomme mais enregistre leur présence.
 
 ```ebnf
-IDENT       = letter , { letter | digit | "_" | "#" | "'" | '"' } , [ "-" ]
-            | letter , { letter | digit | "_" | "#" | "'" | '"' } , "-" , { letter | digit | "_" | "#" | "'" | '"' | "-" } ;
-              (* First form: standard identifier, optionally with a single trailing "-".
-                 A trailing "-" (no space before it) is part of the identifier name (e.g. do4-, mi4-).
-                 A "-" after whitespace is a REST (silence).
-                 This is consistent with BP3 where do4- is a single bol name.
+IDENT       = letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "'" | '"' }
+            | letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "'" | '"' } ,
+              "-" , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "'" | '"' | "-" } ;
+              (* Standard form: identifier built from letters/digits. An underscore "_" is only
+                 absorbed when immediately followed by a letter or digit (internal underscore:
+                 sa_4, Up_Down, just_intonation). A trailing "_" (no alphanumeric follows) stops
+                 the ident scan — the tokenizer then emits one PROLONG token per trailing "_".
+                 e.g. si3_____ = IDENT(si3) + PROLONG×5. BP3 rejects "_" in terminal names
+                 (OkBolChar2 / Encode.c:415).
+                 A trailing "-" is NOT part of the identifier name: BP3 rejects "-" in bol names
+                 (CompileGrammar.c:1196). The tokenizer always emits the trailing "-" as REST.
+                 e.g. do4- = IDENT(do4) + REST(-). do4- and do4 -  are therefore identical.
                  Second form (with "-" followed by more chars) applies to non-terminal identifiers
-                 (LHS symbols like Tr-11, my-var).
-                 Resolved by pre-scan: the tokenizer collects LHS symbols from the file
-                 and recognizes identifiers with "-" that appear in LHS position.
-                 Convention inherited from BP3 (Bernard Bel). *)
+                 (LHS symbols like Tr-11, my-var), resolved by pre-scan. *)
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;   (* littéral chaîne, pour @scene *)
@@ -896,16 +899,20 @@ blank_line  = (* ligne vide ou whitespace seul *) ;
 ```
 
 **Contraintes lexicales** :
-- `-` (tiret) en position **trailing** (immédiatement après un identifiant, sans espace) fait partie
-  du nom : `do4-` = un seul terminal. `do4 -` = terminal `do4` + silence.
-  `dhin--` = terminal `dhin` + silence + silence (le deuxième `-` empêche l'absorption du premier).
-  Cohérent avec BP3 où `do4-` est un nom de bol valide.
+- `-` (tiret) **traînant** (immédiatement après un identifiant, sans espace) : `do4-` = IDENT(`do4`)
+  + REST(`-`) — deux tokens distincts. BP3 interdit `-` dans les noms de bol
+  (CompileGrammar.c:1196). `do4-` et `do4 -` sont donc équivalents.
+  `dhin--` = terminal `dhin` + silence + silence.
   **Exception dans `[]`** : à l'intérieur d'un bracket, `[times-1]` est une mutation de flag
   (décrémenter `times` de 1), pas un identifiant `times-` suivi de `1`. Le parser détecte
   le pattern IDENT-avec-trailing-dash + INT et le décompose en flag + opérateur + valeur.
   Ceci s'applique aux guards (`[times-1]` en LHS) et aux flags RHS (`[times-1]` en RHS).
 - `-` (tiret) en position **interne** (entre deux parties alphanumériques) est autorisé
   dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`, `my-var`).
+- `_` **interne** est absorbé dans le nom si immédiatement suivi d'un alphanum (`sa_4`, `Up_Down`).
+  `_` **traînant** (sans alphanum suivant) génère un token PROLONG distinct par underscore :
+  `si3_____` = IDENT(`si3`) + PROLONG×5, `pa3_` = IDENT(`pa3`) + PROLONG×1.
+  BP3 interdit `_` dans les noms de bol (OkBolChar2 / Encode.c:415).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
   Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
 - Les underscores dans les noms sont autorisés (ex: `just_intonation`).
@@ -1065,14 +1072,14 @@ lambda   → chaîne vide (efface le non-terminal)
 | `/1` (dans template) | `*1/1` | facteur d'échelle |
 
 **Contraintes lexicales** :
-- `-` (tiret) en position **trailing** (immédiatement après un identifiant, sans espace) fait partie
-  du nom : `do4-` = un seul terminal. `do4 -` = terminal `do4` + silence.
-  `dhin--` = terminal `dhin` + silence + silence. Cohérent avec BP3.
+- `-` (tiret) **traînant** : `do4-` = IDENT(`do4`) + REST(`-`) — deux tokens distincts.
+  `do4 -` équivalent. `dhin--` = terminal `dhin` + silence + silence.
+  BP3 interdit `-` dans les noms de bol (CompileGrammar.c:1196).
   **Exception dans `[]`** : `[times-1]` = mutation flag, pas identifiant `times-` + `1`.
-- `-` (tiret) en position **interne** est autorisé dans les non-terminaux (LHS) via pré-scan
-  (ex: `Tr-11`, `my-var`).
+- `-` (tiret) **interne** : autorisé dans les non-terminaux (LHS) via pré-scan (ex: `Tr-11`).
+- `_` **interne** absorbé si suivi d'alphanum (`sa_4`, `Up_Down`, `just_intonation`).
+  `_` **traînant** (sans alphanum suivant) → PROLONG séparé par underscore :
+  `si3_____` = IDENT(`si3`) + PROLONG×5.  BP3 interdit `_` dans les noms de bol
+  (OkBolChar2 / Encode.c:415).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
   Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
-- Les underscores dans les noms sont autorisés (ex: `just_intonation`).
-  Le compilateur traduit `_` → espace dans les arguments de `_scale()` pour BP3.
-  Known limitation: `_` in terminal names is rejected by BP3's alphabet parser. This is a blocker for the planned `Sa_v`/`Sa_^` octave convention.

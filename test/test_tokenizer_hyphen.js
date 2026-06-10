@@ -308,6 +308,128 @@ section('compileBPS 765432 — pas de terminaux parasites note-');
 }
 
 // ============================================================
+// F2 — UNDERSCORE TRAÎNANT : comportement symétrique du tiret
+// Règle : '_' absorbé DANS l'ident seulement si suivi d'un alphanumérique.
+// Sinon : ident émis seul + les '_' deviennent des tokens PROLONG séparés.
+// ============================================================
+
+section('F2 : si3_____ → IDENT(si3) + PROLONG×5');
+{
+  const tokens = toks('X -> si3_____');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('si3 présent (pas si3_____)', idents.includes('si3') && !idents.includes('si3_____'),
+    `IDENT: ${idents}`);
+  assert('5 PROLONG', prolongs.length === 5, `PROLONG count: ${prolongs.length}`);
+}
+
+section('F2 : pa3_ → IDENT(pa3) + PROLONG×1');
+{
+  const tokens = toks('X -> pa3_');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('pa3 présent (pas pa3_)', idents.includes('pa3') && !idents.includes('pa3_'),
+    `IDENT: ${idents}`);
+  assert('1 PROLONG', prolongs.length === 1, `PROLONG count: ${prolongs.length}`);
+}
+
+section('F2 : Up_Down intact (underscore INTERNE suivi d\'alnum)');
+{
+  const tokens = toks('S -> Up_Down');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  assert('Up_Down intact (ident unique)', idents.includes('Up_Down'),
+    `IDENT: ${idents}`);
+  assert('pas de PROLONG parasite', tokens.filter(t => t.type === T.PROLONG).length === 0);
+}
+
+section('F2 : Num_total intact (flag avec underscore interne)');
+{
+  const tokens = toks('S -> A [Num_total=20]');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  assert('Num_total intact', idents.includes('Num_total'), `IDENT: ${idents}`);
+  assert('Num pas IDENT séparé', !idents.includes('Num'), `IDENT: ${idents}`);
+}
+
+section('F2 : sa_4 intact (shruti — underscore interne)');
+{
+  const tokens = toks('S -> sa_4 r1_4');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  assert('sa_4 intact', idents.includes('sa_4'), `IDENT: ${idents}`);
+  assert('r1_4 intact', idents.includes('r1_4'), `IDENT: ${idents}`);
+  assert('pas de PROLONG', tokens.filter(t => t.type === T.PROLONG).length === 0);
+}
+
+section('F2 : do3_ suivi espace → IDENT(do3) + PROLONG');
+{
+  const tokens = toks('X -> do3_ fa3');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('do3 présent', idents.includes('do3'), `IDENT: ${idents}`);
+  assert('do3_ absent', !idents.includes('do3_'), `IDENT: ${idents}`);
+  assert('1 PROLONG', prolongs.length === 1, `PROLONG count: ${prolongs.length}`);
+}
+
+section('F2 : do3_- → IDENT(do3) + PROLONG + REST');
+{
+  const tokens = toks('X -> do3_-');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  const rests = tokens.filter(t => t.type === T.REST);
+  assert('do3 présent', idents.includes('do3'), `IDENT: ${idents}`);
+  assert('1 PROLONG', prolongs.length === 1, `PROLONG: ${prolongs.length}`);
+  assert('1 REST', rests.length === 1, `REST: ${rests.length}`);
+}
+
+section('F2 : _rest LEADING → PROLONG (comportement inchangé)');
+{
+  // Un '_' en début de token est toujours PROLONG isolé (pas de changement)
+  const tokens = toks('X -> a _ b');
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('_ isolé → PROLONG', prolongs.length === 1, `PROLONG: ${prolongs.length}`);
+}
+
+section('F2 : W -> do4 - _ inchangé');
+{
+  // Cas de non-régression : déjà séparés, inchangé
+  const tokens = toks('W -> do4 - _');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const rests = tokens.filter(t => t.type === T.REST);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('do4 intact', idents.includes('do4'), `IDENT: ${idents}`);
+  assert('REST présent', rests.length >= 1, `REST: ${rests.length}`);
+  assert('PROLONG présent', prolongs.length >= 1, `PROLONG: ${prolongs.length}`);
+}
+
+section('F2 : gak3_ (tryRagas) → IDENT(gak3) + PROLONG');
+{
+  const tokens = toks('X -> gak3_');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('gak3 présent', idents.includes('gak3'), `IDENT: ${idents}`);
+  assert('gak3_ absent', !idents.includes('gak3_'), `IDENT: ${idents}`);
+  assert('1 PROLONG', prolongs.length === 1, `PROLONG: ${prolongs.length}`);
+}
+
+section('F2 : re5______ (shapes-rhythm) → IDENT(re5) + PROLONG×6');
+{
+  const tokens = toks('X -> re5______');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  const prolongs = tokens.filter(t => t.type === T.PROLONG);
+  assert('re5 présent', idents.includes('re5'), `IDENT: ${idents}`);
+  assert('6 PROLONG', prolongs.length === 6, `PROLONG count: ${prolongs.length}`);
+}
+
+section('F2 : Full_scale intact (LHS non-terminal avec underscores internes)');
+{
+  // Full_scale est un non-terminal avec underscore interne suivi d'alnum
+  const tokens = toks('Full_scale -> sa_4 r1_4');
+  const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
+  assert('Full_scale intact', idents.includes('Full_scale'), `IDENT: ${idents}`);
+  assert('sa_4 intact', idents.includes('sa_4'), `IDENT: ${idents}`);
+  assert('r1_4 intact', idents.includes('r1_4'), `IDENT: ${idents}`);
+}
+
+// ============================================================
 // Résultat final
 // ============================================================
 console.log(`\n${'='.repeat(50)}`);

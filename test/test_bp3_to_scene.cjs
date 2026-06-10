@@ -147,8 +147,10 @@ function extractSignificant(text) {
     // Normaliser la notation de lié BP3 : X& Y → X &Y (forme canonique avec & préfixe)
     raw = raw.replace(/([A-Za-z0-9'_#]+)&\s+/g, '$1 &');
 
-    // Normaliser les prolongations collées : do3__ → do3 _ _ (espace entre chaque token)
-    raw = raw.replace(/([A-Za-z0-9'#.]+)(_{2,})/g, (_, id, us) => {
+    // Normaliser les prolongations collées : do3__ → do3 _ _ et pa3_ → pa3 _
+    // (un ou plusieurs underscores traînants après un identifiant alphanum)
+    // Correspond au comportement du tokenizer après fix F2 (BP3 OkBolChar2 / Encode.c:415).
+    raw = raw.replace(/([A-Za-z0-9'#.]+)(_+)(?=[^a-zA-Z0-9]|$)/g, (_, id, us) => {
       return id + ' ' + us.split('').join(' ');
     });
 
@@ -602,11 +604,11 @@ async function main() {
       expectRules: ['S --> {12/10,sa3 ni2 rek3&} {48/10,&rek3}'],
     },
     {
-      name: 'E4: argument +N en forme appel → NON GÉRÉ attendu (parser boucle sur +)',
-      // Le parser BPscript ne consomme pas le token + dans les args de contrôle
-      // (parseControl) → boucle infinie. Limitation rapportée, pas de forçage.
+      name: 'E4: argument +N en forme appel → FIDÈLE (fix F1: parser consomme +)',
+      // Le parser consomme désormais T.PLUS dans parseControl (fix F1).
+      // _pitchbend(+200) est représentable en forme appel → FIDÈLE.
       grammar: `ORD\ngram#1[1] S --> a _pitchbend(+200)`,
-      expectNonGere: true,
+      expectRules: ['S --> a _pitchbend(+200)'],
     },
   ];
 
@@ -638,6 +640,39 @@ async function main() {
       failed++;
       continue;
     }
+
+    // ---- Assertion expectRules ------------------------------------------------
+    // Vérifier que chaque règle attendue apparaît dans la grammaire compilée.
+    // Les lignes compilées sont normalisées (extractSignificant) puis résolues
+    // (_script(CT N) → _ctrl(name,val) via resolveScriptCT) — même pipeline
+    // que compareGrammars — pour que "X --> _vel(110) sa6" matche
+    // "X --> _script(CT 0) sa6" une fois le CT résolu en _ctrl(vel,110).
+    if (t.expectRules && t.expectRules.length > 0) {
+      const compiledLinesRaw = extractSignificant(compiled.grammar);
+      const compiledLines = resolveScriptCT(compiledLinesRaw, compiled.controlTable);
+      const missing = [];
+      for (const expectedRaw of t.expectRules) {
+        // Normaliser la règle attendue via extractSignificant + _ctrl (même pipeline)
+        const expectedLines = resolveScriptCT(
+          extractSignificant(expectedRaw),
+          compiled.controlTable
+        );
+        const expectedNorm = expectedLines.join(' ').replace(/\s+/g, ' ').trim();
+        const found = compiledLines.some(line =>
+          line === expectedNorm || line.replace(/\s+/g, ' ').includes(expectedNorm)
+        );
+        if (!found) missing.push({ raw: expectedRaw, norm: expectedNorm });
+      }
+      if (missing.length > 0) {
+        console.log(`  FAIL       [${t.name}]: règle(s) attendue(s) absente(s) dans la grammaire compilée:`);
+        for (const m of missing) console.log(`    missing (norm): "${m.norm}"  ← raw: "${m.raw}"`);
+        console.log(`    compiled lines: ${compiledLines.slice(0, 10).join(' | ')}`);
+        failed++;
+        continue;
+      }
+    }
+    // --------------------------------------------------------------------------
+
     const cmp = compareGrammars(t.grammar, compiled.grammar, { controlTable: compiled.controlTable });
     if (cmp.ok) {
       console.log(`  OK         [${t.name}]`);

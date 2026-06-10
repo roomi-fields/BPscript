@@ -2120,7 +2120,15 @@ function parse(tokens) {
           // Allow # in control args: "MIDI controller #98 = 0"
           if (arg.length > 0 && /[a-zA-Z0-9]$/.test(arg)) arg += ' ';
           arg += advance().value;
+        } else if (t.type === T.PLUS) {
+          // positive sign in control args: pitchbend(+200) — symmetric with REST (-)
+          arg += advance().value;
         } else {
+          // Unexpected token in args — break inner loop to avoid infinite loop.
+          // If no arg was accumulated, throw to signal the unexpected token explicitly.
+          if (arg.length === 0) {
+            throw new ParseError(`Unexpected token ${t.type} (${t.value}) in control args`, t);
+          }
           break;
         }
       }

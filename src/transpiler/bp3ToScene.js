@@ -33,8 +33,6 @@
  *
  * Constructs NON GÉRÉS (stop-and-report par grammaire) :
  *   - Contrôles _xxx absents de lib/controls.json (_srand, _print, …) et _script
- *   - Arguments de forme appel contenant '+' (ex: _pitchbend(+200)) :
- *     parseControl ne consomme pas le token + → boucle infinie (limitation parser)
  *   - TEMPLATES: / TIMEPATTERNS: sections (non gérées via compileBPS)
  *   - Opérateurs tempo nus /N \N dans le RHS
  *
@@ -749,8 +747,6 @@ function stripMapControls(text) {
  *                         ou un contrôle engine → forme appel positionnelle (E4)
  *   { error: '…' }      — contrôle non représentable en forme appel
  *
- * Limitation parser connue : le token '+' dans les args d'une forme appel
- * n'est pas consommé par parseControl (boucle infinie) → NON GÉRÉ explicite.
  */
 function decideRhsControlMode(rhs) {
   if (!rhs) return { mode: 'none' };
@@ -775,10 +771,8 @@ function decideRhsControlMode(rhs) {
  */
 function validateCallFormControls(rhs) {
   for (const c of collectMapControls(rhs)) {
-    if (c.args !== null && c.args.includes('+')) {
-      return `contrôle ${c.bp3}(${c.args}) : argument avec '+' non représentable en forme appel (parseControl ne consomme pas le token + — boucle infinie, limitation parser connue)`;
-    }
-    if (c.args !== null && !/^[A-Za-z0-9_,.\/\-#= ]*$/.test(c.args)) {
+    // '+' est maintenant consommé par parseControl (fix F1) — plus de blocage.
+    if (c.args !== null && !/^[A-Za-z0-9_,.\/\-\+#= ]*$/.test(c.args)) {
       return `contrôle ${c.bp3}(${c.args}) : caractères d'argument non gérés en forme appel`;
     }
   }
@@ -921,6 +915,10 @@ function checkRhsForUnsupported(rhs) {
     if (DURATION_SLASH_RE.test(withoutMeter)) {
       return `notation durée multiplicative N/N dans RHS (ex: 4/4/4, non représentable en BPscript)`;
     }
+  }
+  // _& (prolongation liée) : pas d'équivalent direct en BPscript (~ doit s'attacher à un symbole)
+  if (/\b_&\b|(?<!\S)_&/.test(rhs)) {
+    return `lié sur prolongation _& dans RHS (non représentable en BPscript : ~ requiert un symbole)`;
   }
   if (BP2_CHAR_RE.test(rhs)) {
     return `caractère BP2 non géré par BPscript dans RHS (ex: ¥ prolongement)`;
