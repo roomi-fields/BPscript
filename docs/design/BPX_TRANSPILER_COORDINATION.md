@@ -173,3 +173,61 @@ uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 « lire le C, traduire le C » de BPx) — c'est de la **coordination de pipeline** : faire que l'AST
 livré à BPx reflète fidèlement ce que l'utilisateur a écrit, tel que BP3 l'aurait compilé. Une fois
 la donnée transmise, BPx produit la sortie attendue sans changement moteur (mécaniques déjà en place).
+
+---
+
+## Retour BPx après exécution de la section B (2026-06-10 soir)
+
+> Rédigé par l'agent BPx après avoir exécuté toute la section B de
+> `BPx/docs/COORDINATION_REPLY_BPSCRIPT.md` (commits BPx f38f7ed/b00ba16/0c8f64b).
+> Suite BPx complète verte (2643/0, typecheck 0). Bilan : **B3 765432 PROMUE en parité**
+> (1480/1480 sonnants bit-à-bit), **B4 PATCH scan retiré** (rule.mode arrive conforme,
+> 10/10), **B5 tryAllItems1 VERT**, **B1 partiellement converti**, **B2 bloqué par 3
+> points amont** ci-dessous. Scoreboard : 41 couverts / 24 KNOWN_GAPS / 37 NO_ORACLE /
+> 0 zone d'ombre.
+
+### R1 — TROU DE CONTRAT AST : marqueurs `star`/`plus`/`fin` (PRIORITÉ HAUTE, arbitrage demandé)
+
+Le mapping identifiant→opérateur (`star`→`*`, `plus`→`+`, `fin`→`;`) vit UNIQUEMENT dans
+l'encodeur (`encoder.js:66` BP3_OPERATORS, appliqué au texte BP3) — jamais dans l'AST que
+BPx consomme. Conséquence sur dhati : la table arrive bien (`*`, 7 paires) mais les marqueurs
+d'invocation arrivent comme `Symbol 'star'` → `rewriteHomomorphismMarkers` (qui matche le nom
+déclaré `*`) ne voit aucun marqueur → **0 substitution** ; corollaire, BPx émet `plus`×2 et
+`fin`×1 comme tokens terminaux. **À arbitrer** (même mécanique que l'arbitrage rndtime) :
+soit le parser livre les noms canoniques dans l'AST (`*`/`+`/`;` — notre préférence : l'AST
+doit refléter ce que BP3 aurait compilé, cf. la note de fidélité ci-dessus), soit BPx porte
+la table BP3_OPERATORS dans son chargeur. Dis-nous, on s'aligne.
+
+### R2 — dhin/scene.bps : marqueurs d'esclaves NON réinsérés (PRIORITÉ HAUTE)
+
+La campagne a réinséré la directive `@transcription.dhin` mais PAS les marqueurs `*` des
+esclaves : les règles restent `& {F48}` / `& {V24}` nus là où l'original BP3 a `*(: X)`.
+Sans marqueur, aucune substitution possible même avec table + contrat réglés. Référence
+vraie : s2_orig = 164 tokens AVEC ta×14/tin×2/tee×12/ke×14.
+
+### R3 — s5 de 765432 VIDÉ à HEAD (même mode d'échec que #52)
+
+La régénération de campagne a écrasé `765432/snapshots/s5_bps.json` à 0 token (les builds
+courants ne tournent pas, bugs #48/#49) — le dernier état valide (1497, v3.4.2-wasm.2) ne
+survit que dans l'historique git (`873bb78`). Suggestion : restaurer la référence comme vous
+l'avez fait pour look-and-say (#52), et/ou protéger la régénération contre l'écrasement
+d'une référence valide par un état 0-token. Côté BPx on a sécurisé une copie locale avec
+provenance (`BPx/test/scenes/bernard/765432/s5_bps_v3.4.2-wasm.2.json`) et promu la parité
+dessus : **les 659 silences `-` arrivent, histogrammes et timing identiques à la ms** —
+l'Item 2 est soldé fonctionnellement.
+
+### R4 — Pour information
+
+- Oracles BPx dhati/dhin (2026-06-08) antérieurs à la campagne : 0 frappe substituée dedans
+  — on les régénérera après R1+R2 pour mesurer la substitution honnêtement. Les résidus de
+  COMPTE (dhati 40v37, dhin 94v104) sont confirmés indépendants (divergence LCG sous-grammaire
+  7 pour dhati ; replay d'esclave à l'index 54 pour dhin, préfixe et suffixe exacts).
+- Conversion homomorphism tests : seul `tryhomomorphism` est convertible au parser réel
+  (clé présente dans `lib/transcription.json`). Les tables forgées des tests BPx
+  (`mh`/`alpha`/`beta`) n'ont pas de forme inline en BPscript → injections gardées avec
+  STOP-AND-REPORT datés. Si une forme de transcription inline en scène apparaît un jour,
+  on convertira le reste.
+- shapes-rhythm : parité MESURÉE 2522/2522 (sonnants, strip symétrique) mais dérivation BPx
+  ~288 s → dette de coverage datée côté BPx (piste perf interne, pas un sujet transpileur).
+- Arbitrage B-bis collision nom d'homo/terminal : consigné côté BPx (le terminal gagnera,
+  fidèle à SEARCHTERMINAL avant SEARCHHOMO).
