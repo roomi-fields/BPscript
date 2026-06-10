@@ -970,8 +970,7 @@
   },
   "trySrand": {
     "bernard": "trySrand",
-    "status": "to_be_tested",
-    "trou_langage": "Utilise opérateurs tempo /N dans RHS — conversion X[/N] non implémentée dans bp3ToScene (E5, ajourné 2026-06-10). bp3ToScene émet NON GÉRÉ.",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -986,7 +985,8 @@
       "alphabet": "-al.abc"
     },
     "production_mode": "midi",
-    "note": "500 notes MIDI. Grammaire V.2.8.1 avec _srand/_randomize/_rndseq/_rndvel"
+    "note": "500 notes MIDI. Grammaire V.2.8.1 avec _srand/_randomize/_rndseq/_rndvel. scene.bps traduit 2026-06-10 (E5). Règle 1 S->A[/5] FIDÈLE. Règle C contient _randomize (non-translatable, limitation connue).",
+    "validation_moteur": "En attente après merge : oracle s0 500 tokens, -se.trySrand, seed 1, MaxItemsProduce=20."
   },
   "repeat": {
     "bernard": "tryrepeat",

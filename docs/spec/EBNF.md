@@ -439,9 +439,10 @@ Définition complète de `engine_qualifier` et `runtime_qualifier` en section 4.
 
 Syntaxe double acceptée : `[weight:3, scan:left]` ou `[weight:3] [scan:left]`.
 
-**Opérateurs temporels** : `[/2]`, `[\2]`, `[*3]`, `[**3]` — notation directe des
-4 opérateurs BP3. Portée flexible : sur un symbole (`A[/2]`), un groupe (`{A B}[/2]`),
-ou un polymetric (`{v1, v2}[/2]`). Compilé en préfixe inline (`/2 A`, `/2 A B`, etc.).
+**Opérateurs temporels** : `[/2]`, `[*3]` — deux opérateurs BPscript distincts.
+Portée : sur un symbole (`A[/2]`), un groupe (`{A B}[/2]`), ou un polymetric (`{v1, v2}[/2]`).
+`[/N]` → opérateur NU `/N A` (absolu, persistant, fixtempo). `[*N]` → bracket `_tempo` (relatif).
+Note : `[\N]` n'est pas tokenisé par le tokenizer BPscript (anomalies natif+WASM documentées dans TEMPO_OPS_WASM.md).
 
 **Ratio polymétrique** : `[speed:N]` sur un polymetric multi-voix contrôle le ratio
 de tempo du conteneur. `{v1, v2}[speed:2]` → `{2, v1, v2}`. C'est une propriété
@@ -508,10 +509,14 @@ engine_qualifier = "[" , engine_pair , { "," , engine_pair } , "]"
                  | "[" , tempo_op , "]" ;
 
 tempo_op = ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT ) ;
-           (* / = plus rapide, * = plus lent *)
-           (* [/2] → _tempo(2/1) bracket, [*3/2] → _tempo(2/3) bracket *)
-           (* [*1.5] → _tempo(1/1.5) bracket *)
-           (* Portée déterminée par attachement : terminal, {}, ou règle *)
+           (* Deux sémantiques distinctes selon l'opérateur :
+              "/" → ABSOLU + persistant : A[/2] → « /2 A » (opérateur nu BP3, fixtempo).
+                    Durée de référence du champ imposée. Persiste jusqu'au prochain op tempo ou fin de champ.
+                    Portée : terminal (A[/2]), groupe ({A B}[/2]), règle (inline /2).
+              "*" → RELATIF : A[*2] → _tempo(1/2) A _tempo(1/1) (bracket entrer/sortir, relatif à l'hérité).
+                    L'exit _tempo(1/1) restaure la vitesse héritée au bord du bracket.
+              "!" → ![/N] dans le flux = _tempo(N/1) relatif (InstantControl, sans fixtempo, portée séquentielle).
+              "\" → non tokenisé par BPscript (bugs natif/WASM documentés dans TEMPO_OPS_WASM.md). *)
 
 engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)

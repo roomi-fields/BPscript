@@ -148,56 +148,42 @@ En revanche `_tempo()` avec décimaux fonctionne correctement :
 
 ---
 
-## 4. Synthèse pour le portage WASM
+## 4. Synthèse
 
-### Priorité haute
-1. **`\N` ignoré** — le backslash tempo operator n'a aucun effet (ni séquence ni poly)
-2. **`_tempo()` crashe** — memory access out of bounds systématique
-3. **`/N` devant `{}`** crashe — FillPhaseDiagram out of bounds
+### Bugs WASM corrigés (v3.4.5-wasm.1, vérifiés 2026-06-10)
 
-### Priorité moyenne
-4. **Décimaux `/\`** incohérents (mais `_tempo()` décimal fonctionne en natif, donc si `_tempo` est fixé les décimaux marchent)
+| Bug | Statut | Version fix |
+|-----|--------|-------------|
+| `\N` ignoré (no-op) | **CORRIGÉ** | v3.4.5-wasm.1 |
+| `_tempo()` crash (memory OOB) | **CORRIGÉ** | v3.4.5-wasm.1 |
+| `/N` devant `{}` crash (FillPhaseDiagram) | **CORRIGÉ** | v3.4.5-wasm.1 |
+| Décimaux `/\` incohérents | **CORRIGÉ** (via `_tempo()` décimal) | v3.4.5-wasm.1 |
 
-### Root cause probable
-- `\N` : le caractère backslash est peut-être mal échappé dans la chaîne JavaScript → C (double-escape `\\` vs `\`)
-- `_tempo()` : le token `_tempo(x/y)` n'est probablement pas reconnu par le parser WASM, ou le code de Polymetric.c qui le traite n'est pas compilé/lié dans le build WASM
-- `/N` devant `{}` : bug spécifique à FillPhaseDiagram quand le premier élément de l'expression est un tempo op
+### Anomalies persistantes (natif + WASM)
 
-### Fichiers concernés
-- `bp3-engine/csrc/bp3/Polymetric.c` — PolyMake, FillPhaseDiagram, TimeSet
-- `bp3-engine/csrc/wasm/bp3_api.c` — API WASM, passage des grammaires
-- Vérifier aussi le parsing du `\` dans le code de compilation des grammaires
+Ces deux anomalies sont partagées natif/WASM — elles ne sont pas des bugs de portage WASM :
 
-### Reproduction
+1. **`\1` ne reset pas** — `\N` puis `\1` ne restaure pas la vitesse de référence (asymétrie avec `/1` qui fonctionne).
+2. **`/0.5` ABORT** — `/N` avec N < 1 crashe en natif (abort dans PolyExpand) ; `_tempo(0.5)` fonctionne.
+
+### Impact sur BPscript (état actuel post-E5)
+
+`[/N]` sur un élément ou groupe → opérateur nu `/N A` (absolu, persistant, fixtempo). Fonctionne en WASM.
+`[*N]` → bracket `_tempo(1/N) … _tempo(1/1)` (relatif). Fonctionne en WASM.
+`[\N]` → non tokenisé par BPscript. Anomalies natif+WASM documentées ci-dessus.
+
+**`[speed:N]`** sur un polymetric → `{N, ...}` — fonctionne en WASM et natif.
+
+### Reproduction des anomalies persistantes
 
 Grammaires minimales (alphabet = `C4\nD4\nE4\nF4`) :
 
 ```
-# Bug \N ignoré (WASM)
-ORD
-gram#1[1] S --> \2 C4 D4 E4 F4
-
-# Bug _tempo crash (WASM)
-ORD
-gram#1[1] S --> _tempo(2/1) C4 D4 E4 F4
-
-# Bug /N devant {} crash (WASM)
-ORD
-gram#1[1] S --> /2 {C4 D4,E4 F4} {C4 D4,E4 F4}
-
-# Bug \1 ne reset pas (NATIF)
+# \1 ne reset pas (NATIF + WASM)
 ORD
 gram#1[1] S --> C4 \2 D4 E4 \1 F4
 
-# Bug /0.5 ABORT (NATIF)
+# /0.5 ABORT (NATIF)
 ORD
 gram#1[1] S --> C4 /0.5 D4 E4 F4
 ```
-
-## 5. Impact sur BPscript
-
-Le design cible est d'unifier `/N` et `*N` en un seul opérateur BPscript dont la sémantique dépend du contexte (symbole vs `{}`). Mais cela nécessite que le moteur WASM supporte correctement les tempo operators, ce qui n'est pas le cas aujourd'hui.
-
-**Workaround actuel** : utiliser `[speed:N]` → `{N, ...}` pour les groupes polymétrique (fonctionne en WASM et natif).
-
-**Cible** : une fois les bugs WASM fixés, l'encoder pourra émettre `_tempo(x/y)` en bracket autour des `{}` pour le scoping local, car c'est le mécanisme le plus fiable et le seul qui supporte les décimaux correctement en natif.
