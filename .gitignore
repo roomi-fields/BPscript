@@ -11,6 +11,8 @@ public/
 _archive/
 library.db
 *.db
+*.db-shm
+*.db-wal
 test/mail_*
 abletonstory.md
 build-web.sh
