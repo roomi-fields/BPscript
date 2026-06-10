@@ -440,6 +440,26 @@ attendu côté BP3 tant que le garde existe.
 
 ---
 
+## #52 — Régression v3.4.2 → v3.4.5 : look-and-say ne produit plus rien (2026-06-10)
+
+**Symptôme :** `-gr.look-and-say` produisait **5 notes** sous v3.4.2 (avril 2026, natif et
+wasm — snapshots conservés) ; sous v3.4.5 (natif ET wasm), la production échoue :
+« Cannot produce items because all weights are nil ». **0 token.**
+
+**Constat croisé** : détecté indépendamment par l'équipe BPx (garde-fou de couverture) et
+par notre campagne de régénération (les références d'avril ont été restaurées dans
+`test/grammars/look-and-say/snapshots/`, dernier état valide).
+
+**Piste :** même message d'erreur que la famille du garde mono-item (#51 / rc=-4,
+`(*p_length) < 3L`) — possiblement la même cause élargie par un changement récent ;
+look-and-say utilise `[scan:left]` en mode SUB et des règles à décrément `/steps-1/`.
+
+**Vigilance harnais (chez nous, pas chez Bernard)** : une comparaison 0 == 0 tokens peut
+sortir « EXACT » — les régressions à production vide passent inaperçues. À corriger côté
+scripts de comparaison BPscript.
+
+---
+
 ## Notes pour référence
 
 - Build courant v3.4.5-wasm.1 (2026-06-10) ; entrées #47-#51 ajoutées au solde de la campagne
@@ -447,6 +467,6 @@ attendu côté BP3 tant que le garde existe.
 - Build v3.3.19-wasm.8 (2026-04-06) — sources = Bernard v3.3.19 (cf9d788) + fixes #39, #42, #43 + patches #40a-c
 - Non-reg wasm.8 : S1=36/36, S2=36/36, S3=S4=35/35, S4vsS5=16/31 EXACT
 - 38 grammaires actives au 2026-06-10 (39 avec transposition3 récupérée ; bells skip — fichiers -ho.cloches1 manquants)
-- Points ouverts : #32, #36, #40, #44, #47, #48, #49, #50, #51
+- Points ouverts : #32, #36, #40, #44, #47, #48, #49, #50, #51, #52
 - Résolu moteur : #39 (p_DefaultChannel), #42 (sentinel -1), #43 (CT catchall) — fixes à intégrer par Bernard
 - Résolu WASM : #33 (dedup keep-longest, wasm.2), #35 (Kpress offset, wasm.3), #38 (T47 SSO, wasm.4)
