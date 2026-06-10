@@ -57,11 +57,18 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `RNG_PORTABLE.md` — Portabilité RNG MSVC/glibc
     - `TEMPO_OPS_WASM.md` — Opérateurs tempo `/N` `\N` `_tempo()` : écarts WASM vs natif
 
+### Tour de contrôle inter-projets (OBLIGATOIRE)
+Coordination de l'écosystème (BPscript, BPx, bp3-frontend, runtimes, moteur Bernard) :
+dépôt PRIVÉ `/home/romi/dev/bp/hub`. En début de session : lire `TABLEAU.md`, la boîte
+`courrier/bpscript.md`, et les `contrats/` concernés. En fin de session : mettre à jour
+`projets/bpscript.md` + sa ligne du TABLEAU + poster dans les boîtes des projets impactés.
+Décisions transverses : `decisions/` (après arbitrage utilisateur uniquement).
+
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/`:
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
 - `csrc/wasm/` (portage WASM) → mettre à jour `bp3-engine/CHANGELOG_WASM.md`
-- Nouveau bug/issue identifié → ajouter dans `test/FEEDBACK_BERNARD.md`
+- Nouveau bug/issue moteur → ajouter dans la tour de contrôle : `/home/romi/dev/bp/hub/courrier/bernard.md`
 
 ### Build & Test
 ```bash

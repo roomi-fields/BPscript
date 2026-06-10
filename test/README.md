@@ -100,4 +100,4 @@ Module partagé par tous les scripts. `--bin` est obligatoire.
 ## Résultats
 
 - `RESULTATS.md` — Scores détaillés par stage et par grammaire
-- `FEEDBACK_BERNARD.md` — Points ouverts signalés à Bernard
+- Registre Bernard : déplacé dans la tour de contrôle (`/home/romi/dev/bp/hub/courrier/bernard.md`)
