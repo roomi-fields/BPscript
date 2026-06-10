@@ -710,6 +710,9 @@ async function main() {
     '-gr.tryRagas',
     '-gr.tryShruti',
     '-gr.trySrand',
+    // Niveau 2 — FIDÈLE confirmé scan 2026-06-10
+    '-gr.tryAllItems0',
+    '-gr.tryPatternGrammar',
   ];
 
   console.log('\n=== Tests round-trip grammaires de référence ===\n');

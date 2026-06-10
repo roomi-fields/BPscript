@@ -268,6 +268,7 @@
   "graphics": {
     "bernard": "tryGraphics",
     "status": "active",
+    "scene_bps": true,
     "production_mode": "midi",
     "aux": [
       "se"
@@ -281,7 +282,8 @@
       "note_convention": "english",
       "settings": "-se.tryGraphics",
       "alphabet": null
-    }
+    },
+    "note": "bp3ToScene FIDÈLE confirmé scan 2026-06-10 — sans s0, round-trip 1 ligne significative"
   },
   "tryMIDIfile": {
     "bernard": "tryMIDIfile",
@@ -357,6 +359,7 @@
   "tryConsoleMaxTime": {
     "bernard": "tryConsoleMaxTime",
     "status": "excluded",
+    "scene_bps": true,
     "aux": [
       "se"
     ],
@@ -369,7 +372,7 @@
       "settings": "-se.tryConsoleMaxTime",
       "alphabet": null
     },
-    "note": "Timeout test: produces error message, not real production",
+    "note": "Timeout test: produces error message, not real production. bp3ToScene FIDÈLE confirmé scan 2026-06-10 — sans s0, round-trip 4 lignes significatives",
     "reason": "Timeout test grammar. No production output — expected behavior. [constat 2026-04-04]"
   },
   "tryLIN": {
@@ -568,6 +571,7 @@
   "tryAllItems0": {
     "bernard": "tryAllItems0",
     "status": "active",
+    "scene_bps": true,
     "aux": [
       "se",
       "al"
@@ -586,7 +590,8 @@
     "s1_args": [
       "-so",
       "-so.abc"
-    ]
+    ],
+    "note": "bp3ToScene FIDÈLE confirmé scan 2026-06-10 — round-trip 8 lignes significatives"
   },
   "transposition1": {
     "bernard": "transposition1",
@@ -799,6 +804,7 @@
   "tryPatternGrammar": {
     "bernard": "tryPatternGrammar",
     "status": "to_be_tested",
+    "scene_bps": true,
     "aux": [
       "se",
       "al"
@@ -814,7 +820,8 @@
       "alphabet": "-al.tryPatternGrammar",
       "note": "Confirmed: 0 errors, 25 text production lines with -se.tryPatternGrammar + -al.tryPatternGrammar. Previous scan used wrong settings."
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "note": "bp3ToScene FIDÈLE confirmé scan 2026-06-10 — round-trip 12 lignes significatives"
   },
   "checkSUB": {
     "bernard": "checkSUB",

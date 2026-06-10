@@ -1,8 +1,9 @@
 # Couverture baseline — grammaires BP3
 
 > Mis à jour le 2026-06-10 (solde de la campagne homomorphismes/tokenizer/bp3ToScene).
-> Comptes recalculés depuis le disque (`grammars.json` + présence réelle de `scene.bps` et des
-> snapshots `s0_php.json`/`s1_native.json` non vides). 111 entrées dans `grammars.json`
+> Mis à jour le 2026-06-10 (T2 rescan corpus — 11 FIDÈLE/59 DIFFÈRE/40 NON GÉRÉ avec comparateur
+> élargi). Comptes recalculés depuis le disque (`grammars.json` + présence réelle de `scene.bps` et
+> des snapshots `s0_php.json`/`s1_native.json` non vides). 111 entrées dans `grammars.json`
 > (110 grammaires + 1 placeholder `_comment`).
 
 ## Critère
@@ -35,7 +36,8 @@ Une grammaire est **baseline-able** si :
 765432, acceleration, acceleration_v2, alan-dice, all-items, all-items1, ames, asymmetric,
 beatrix-dice, destru, drum, ek-do-tin, flags, graphics, harmony, koto3, kss2, livecode1,
 look-and-say, mozart-dice, negative-context, not-reich, one-scale, repeat, ruwet, templates,
-time-patterns, **transposition3** (récupérée 2026-06-10), tryAllItems0, tryAllItems1,
+time-patterns, **transposition3** (récupérée 2026-06-10), **tryAllItems0** (bp3ToScene FIDÈLE,
+round-trip 8 lignes, confirmé 2026-06-10), tryAllItems1,
 **tryCsoundObjects** (scene.bps bp3ToScene FIDÈLE 2026-06-10), **tryShruti** (idem, trou-langage
 `_tempo` soldé), vina, vina2, visser-shapes, visser-waves, visser3, visser5
 
@@ -46,8 +48,8 @@ time-patterns, **transposition3** (récupérée 2026-06-10), tryAllItems0, tryAl
 ### Niveau 1bis — to_be_tested + oracle natif + `scene.bps` (14)
 
 MyMelody, checkBT, checkSUB1, dhin1, doeslittle, koto1, koto2, simpletemplates, transposition1,
-tryMIDIfile, tryPatternGrammar, **tryRagas** (scene.bps bp3ToScene FIDÈLE 2026-06-10), tryRotate,
-tryhomomorphism
+tryMIDIfile, **tryPatternGrammar** (bp3ToScene FIDÈLE, round-trip 12 lignes, confirmé 2026-06-10),
+**tryRagas** (scene.bps bp3ToScene FIDÈLE 2026-06-10), tryRotate, tryhomomorphism
 
 > `dhin1` : scène présente mais S5 WASM crashe (terminaux 51-106 caractères > BOLSIZE 30 du
 > moteur) — troncature/aliasing à faire côté transpileur.
@@ -56,10 +58,10 @@ tryhomomorphism
 
 | Grammaire | Oracle | Blocage scene.bps |
 |---|---|---|
-| blurb | s1 = 20 tokens | à générer (récupérée au re-tri 2026-04) |
+| blurb | s1 = 20 tokens | NON GÉRÉ confirmé 2026-06-10 : `_step(blurb)` absent de controls.json |
 | check& | s0 = 4 notes | `_&` (prolongation liée) NON GÉRÉ — `~` exige un symbole porteur |
-| checkVolChan | s1 = 292 tokens | à générer (récupérée au re-tri 2026-04) |
-| dhadhatite1 | s1 = 6 tokens | à générer (récupérée au re-tri 2026-04) |
+| checkVolChan | s1 = 292 tokens | NON GÉRÉ confirmé 2026-06-10 : `_script(Wait for g)` littéral non portable |
+| dhadhatite1 | s1 = 6 tokens | NON GÉRÉ confirmé 2026-06-10 : `4/4/4/4/4` durée 5-segments non représentable |
 | dhati2 | s0 = 80 notes | templates BP2 nus en LHS (trou-langage, ajourné 2026-06-10) |
 | dhati3 | s0 = 80 notes | idem dhati2 |
 | trySrand | s0 = 500 notes | opérateurs tempo `/N` en RHS (E5, ajourné 2026-06-10) |
@@ -95,6 +97,16 @@ tryhomomorphism
   présentes, originaux natifs non productifs (raisons datées dans `grammars.json`).
   `tryObjects` : S5 WASM crashe (memory OOB).
 - `dhadhatite_v2` (partial) : transposition BPscript partielle de -gr.dhadhatite.
+
+### Rescan T2 2026-06-10 — FIDÈLE sans infrastructure de test
+
+Grammaires trouvées FIDÈLE par `scan_corpus.mjs` mais sans `s0_php.json` ni dossier local.
+Listées sans création de scene.bps (pas d'oracle natif, pas de promotion possible).
+
+| Grammaire | BPS produit | Notes |
+|---|---|---|
+| testHO2 | `@mode:random\nS -> a b c d` | 2 lignes sig. — pas de dossier test/grammars/ |
+| testNC1 | `@controls\n@mode:random\nS -> {legato(20) ...}` | 2 lignes sig. — pas de dossier |
 
 ---
 
@@ -138,7 +150,8 @@ tryhomomorphism
 ## Prochaines étapes
 
 1. Re-tenter la promotion de `shapes-rhythm` (fix tokenizer F2 livré 2026-06-10).
-2. Générer `scene.bps` pour blurb, checkVolChan, dhadhatite1 (oracles natifs acquis).
+2. blurb, checkVolChan, dhadhatite1 : NON GÉRÉ confirmés 2026-06-10 (voir Niveau 2). Nécessite
+   soit une extension du transpileur (nouveaux constructs), soit un trou-langage explicite.
 3. Trous-langage restants : check& (`_&`), dhati2/dhati3 (templates LHS), trySrand (`/N`).
 4. dhin1 : tronquer/aliaser les terminaux > 30 caractères (BOLSIZE moteur).
 5. (Optionnel) Migrer les ~20 grammaires BP2 pour agrandir la baseline.
