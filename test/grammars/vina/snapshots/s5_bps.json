@@ -4,7 +4,7 @@
   "mode": "midi",
   "compile": {
     "grammarLines": 26,
-    "alphabetSize": 210
+    "alphabetSize": 223
   },
   "alphabet": [
     "sakomal0",
@@ -216,7 +216,20 @@
     "nitivra6",
     "nitivra7",
     "nitivra8",
-    "nitivra9"
+    "nitivra9",
+    "StartSlide",
+    "StartPull",
+    "Pull0",
+    "Slide0",
+    "Pull2",
+    "Slide5",
+    "Slide7",
+    "StopSlide",
+    "StopPull",
+    "LightGamaka",
+    "Spurita",
+    "Pull1",
+    "Slide1"
   ],
   "tokens": [
     [
@@ -595,5 +608,5 @@
       0
     ]
   ],
-  "date": "2026-04-26"
+  "date": "2026-06-10"
 }
