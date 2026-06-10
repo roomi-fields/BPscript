@@ -7,6 +7,13 @@
  */
 
 import { loadLibsFromDirectives, loadLib } from './libs.js';
+import { BP3_OPERATORS } from './constants.js';
+
+// Valeurs canoniques BP3 des opérateurs (*,+,;) — pour filter idempotent dans
+// l'encodeur. Après la normalisation parser, el.name est déjà '*'/'+'/ ';';
+// le check `el.name in BP3_OPERATORS` ne match plus (les clés sont star/plus/fin).
+// Ce set permet de reconnaître les formes canoniques et de ne pas les alphabétiser.
+const BP3_OPERATOR_VALUES = new Set(Object.values(BP3_OPERATORS));
 
 // Maps BPS mode names to BP3 mode names
 const MODE_MAP = {
@@ -47,23 +54,11 @@ let _homoNames = new Set();
 // terminal encoders (encodeRhsElementInner) share the same filter.
 const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 
-// BP3 grammar operators that BPscript spells as plain identifiers because the
-// raw characters are unavailable or ambiguous in BPscript source:
-//   `plus` → `+`   continuation / structure-join operator
-//   `fin`  → `;`   sequence terminator (`;` is dropped by the BPscript tokenizer)
-//   `star` → `*`   homomorphism / wildcard marker (bare `*` outside `[ ]`)
-//
-// In BP3 these are tokenised by Encode.c (FindCode, Encode.c:1316-1338) into a
-// (T0, code) pair where the code is the index of the character in the global
-// `Code[]` table (BP3main.h:126): `Code[3]='+'`, `Code[5]=';'`, `Code[21]='*'`.
-// The `*` homomorphism marker shares index 21 with the scale operator `*N`
-// (Encode.c:108-109) — BP3 disambiguates purely by a following digit, so the
-// bare marker form is unambiguous on its own.
-//
-// These names are operators, NOT bols: they must never be seeded into the
-// alphabet (they would otherwise show up as terminals and break parity with the
-// original Bernard grammars, e.g. -gr.dhati `+ M16 + * <-> + V10 A'6 + *`).
-const BP3_OPERATORS = Object.freeze({ plus: '+', fin: ';', star: '*' });
+// BP3_OPERATORS importé depuis constants.js (source unique partagée avec parser.js).
+// Historique du commentaire conservé ici pour référence :
+// `plus`→`+` jonction/continuation, `fin`→`;` terminateur de séquence,
+// `star`→`*` marqueur homomorphisme/wildcard (Encode.c:1316-1338, BP3main.h:126).
+// Ces opérateurs ne doivent JAMAIS être ajoutés à l'alphabet.
 
 function encode(ast) {
   const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {}, ccAliases: {} };
@@ -238,10 +233,12 @@ function encode(ast) {
     const isSub = sub.mode === 'sub' || sub.mode === 'sub1';
     for (const rule of sub.rules) {
       for (const el of rule.lhs) {
-        // Operator identifiers (plus/star/fin) on a LHS are BP3 operators, not
-        // non-terminals (e.g. `+ M16 + * <-> ...` in -gr.dhati). Excluding them
-        // keeps them from being treated as rewritable variables.
-        if (el.type === 'Symbol' && !isSub && !(el.name in BP3_OPERATORS)) {
+        // Operator identifiers (star/plus/fin ou formes canoniques *,+,;) sur
+        // un LHS sont des opérateurs BP3, pas des non-terminaux (ex: `+ M16 + * <-> ...`
+        // dans -gr.dhati). Les exclure évite qu'ils soient traités comme des
+        // variables réécrivables.
+        const isOp = (el.name in BP3_OPERATORS) || BP3_OPERATOR_VALUES.has(el.name);
+        if (el.type === 'Symbol' && !isSub && !isOp) {
           _nonTerminals.add(el.name);
         }
       }
@@ -937,7 +934,10 @@ function encodeLhs(elements) {
     // is a terminal pattern (not collected into _nonTerminals, see encode()).
     // Only wrap genuine non-terminals; terminals are alphabet bols.
     if (el.type === 'Symbol') {
+      // Forme ancienne (identifiant): star/plus/fin → opérateur BP3 (rétro-compat)
       if (el.name in BP3_OPERATORS) return BP3_OPERATORS[el.name];  // + ; *
+      // Forme canonique (après normalisation parser): '*'/'+'/';' émis tel quel
+      if (BP3_OPERATOR_VALUES.has(el.name)) return el.name;
       return _nonTerminals.has(el.name) ? encodeNonTerminalName(el.name) : el.name;
     }
     if (el.type === 'Prolongation') return '_';
@@ -1062,9 +1062,11 @@ function encodeQualifierTokens(q, controlMap, tokens) {
 function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
   switch (el.type) {
     case 'Symbol':
-      // BP3 grammar operators spelled as identifiers (plus/fin/star) emit their
-      // raw operator character (+ / ; / *) and are NOT alphabet terminals.
+      // Forme ancienne (identifiant): star/plus/fin → opérateur BP3 (rétro-compat)
       if (el.name in BP3_OPERATORS) return BP3_OPERATORS[el.name];
+      // Forme canonique (après normalisation parser): '*'/'+'/';' émis tel quel,
+      // PAS ajoutés à l'alphabet (ce sont des opérateurs, pas des bols).
+      if (BP3_OPERATOR_VALUES.has(el.name)) return el.name;
       // Time pattern names (t1, t2, …) are duration symbols, recognised by BP3
       // via the TIMEPATTERNS: section — NOT via the sound alphabet.  Emit the
       // name literally but do NOT add it to the alphabet.

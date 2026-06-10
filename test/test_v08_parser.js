@@ -754,6 +754,102 @@ section('Encoder — tempo absolu A[/N] → /N A (bare, absolu + persistant)');
 }
 
 // ============================================================
+// R1 — Noms canoniques BP3_OPERATORS dans l'AST
+// ============================================================
+
+section('R1 — Noms canoniques BP3_OPERATORS dans l\'AST');
+
+{
+  // @gate star:midi → déclaration acceptée (canal de déclaration) ; l'AST porte
+  // le nom d'alias 'star' dans la directive, pas dans les Symbol de règle.
+  const src = `@controls
+@gate star:midi
+S -> star`;
+  const ast = parseSource(src);
+  assert('R1: @gate star déclaration sans erreur', !ast.errors?.length);
+
+  // Le Symbol dans la règle doit porter le nom canonique '*', PAS 'star'
+  function findSymbolNames(node, out = []) {
+    if (!node || typeof node !== 'object') return out;
+    if (node.type === 'Symbol') out.push(node.name);
+    for (const v of Object.values(node)) {
+      if (Array.isArray(v)) v.forEach(x => findSymbolNames(x, out));
+      else if (typeof v === 'object') findSymbolNames(v, out);
+    }
+    return out;
+  }
+  const names = findSymbolNames(ast);
+  assert("R1: Symbol 'star' absent de l'AST", !names.includes('star'),
+    `noms trouvés: ${names.join(', ')}`);
+  assert("R1: Symbol '*' présent dans l'AST", names.includes('*'),
+    `noms trouvés: ${names.join(', ')}`);
+}
+
+{
+  // 'plus' dans une règle → Symbol '*' dans l'AST
+  const src = `@controls
+@gate plus:midi
+S -> plus A`;
+  const ast = parseSource(src);
+  function findSymbolNames(node, out = []) {
+    if (!node || typeof node !== 'object') return out;
+    if (node.type === 'Symbol') out.push(node.name);
+    for (const v of Object.values(node)) {
+      if (Array.isArray(v)) v.forEach(x => findSymbolNames(x, out));
+      else if (typeof v === 'object') findSymbolNames(v, out);
+    }
+    return out;
+  }
+  const names = findSymbolNames(ast);
+  assert("R1: Symbol 'plus' absent de l'AST", !names.includes('plus'),
+    `noms trouvés: ${names.join(', ')}`);
+  assert("R1: Symbol '+' présent dans l'AST", names.includes('+'),
+    `noms trouvés: ${names.join(', ')}`);
+}
+
+{
+  // 'fin' dans une règle → Symbol ';' dans l'AST
+  const src = `@controls
+@gate fin:midi
+S -> A fin`;
+  const ast = parseSource(src);
+  function findSymbolNames(node, out = []) {
+    if (!node || typeof node !== 'object') return out;
+    if (node.type === 'Symbol') out.push(node.name);
+    for (const v of Object.values(node)) {
+      if (Array.isArray(v)) v.forEach(x => findSymbolNames(x, out));
+      else if (typeof v === 'object') findSymbolNames(v, out);
+    }
+    return out;
+  }
+  const names = findSymbolNames(ast);
+  assert("R1: Symbol 'fin' absent de l'AST", !names.includes('fin'),
+    `noms trouvés: ${names.join(', ')}`);
+  assert("R1: Symbol ';' présent dans l'AST", names.includes(';'),
+    `noms trouvés: ${names.join(', ')}`);
+}
+
+{
+  // Vérification bout en bout sur dhati.scene.bps : aucun Symbol 'star'/'plus'/'fin' dans l'AST
+  const src = readFileSync('test/grammars/dhati/scene.bps', 'utf8');
+  const result = compileBPS(src);
+  function findOldNames(node, out = []) {
+    if (!node || typeof node !== 'object') return out;
+    if (node.type === 'Symbol' && ['star', 'plus', 'fin'].includes(node.name)) out.push(node.name);
+    for (const v of Object.values(node)) {
+      if (Array.isArray(v)) v.forEach(x => findOldNames(x, out));
+      else if (typeof v === 'object') findOldNames(v, out);
+    }
+    return out;
+  }
+  const oldNames = findOldNames(result.ast);
+  assert("R1 dhati: aucun Symbol 'star'/'plus'/'fin' dans l'AST", oldNames.length === 0,
+    `trouvé: ${oldNames.join(', ')}`);
+  assert('R1 dhati: pas d\'erreur de compilation', result.errors.length === 0,
+    result.errors.map(e => e.message).join('; '));
+}
+
+// ============================================================
 // Summary
 // ============================================================
 

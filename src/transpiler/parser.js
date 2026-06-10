@@ -8,12 +8,24 @@
 
 import { T } from './tokenizer.js';
 import { loadLibsFromDirectives } from './libs.js';
+import { BP3_OPERATORS } from './constants.js';
 
 class ParseError extends Error {
   constructor(msg, token) {
     super(`${msg} at line ${token.line}:${token.col}`);
     this.token = token;
   }
+}
+
+/**
+ * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
+ * (star→'*', plus→'+', fin→';'), retourne l'opérateur canonique BP3.
+ * Cela garantit que l'AST reflète ce que BP3 aurait compilé (R1).
+ * La déclaration `@gate star:midi` reste valide — seul le NOM porté par
+ * les Symbol nodes de règle est normalisé ici.
+ */
+function normalizeName(name) {
+  return name in BP3_OPERATORS ? BP3_OPERATORS[name] : name;
 }
 
 function parse(tokens) {
@@ -1582,7 +1594,7 @@ function parse(tokens) {
     const elements = [];
     while (!atAny(T.ARROW_R, T.ARROW_L, T.ARROW_BI, T.EOF, T.NEWLINE, T.SEPARATOR)) {
       if (at(T.IDENT) || at(T.LAMBDA)) {
-        elements.push({ type: 'Symbol', name: advance().value, line: current().line });
+        elements.push({ type: 'Symbol', name: normalizeName(advance().value), line: current().line });
       } else if (at(T.PIPE)) {
         elements.push(parseVariable());
       } else if (at(T.QUESTION)) {
@@ -1906,7 +1918,7 @@ function parse(tokens) {
         return parsePolymetric(label);
       }
       // Unbalanced { after label: — emit label as symbol, colon was consumed
-      return { type: 'Symbol', name: label, line: tok.line };
+      return { type: 'Symbol', name: normalizeName(label), line: tok.line };
     }
 
     // Polymetric { ... } or unbalanced brace (embedding pattern)
@@ -2014,7 +2026,7 @@ function parse(tokens) {
           && libCtx.actors && libCtx.actors[name]) {
         advance(); // consume PERIOD
         const terminal = advance().value;
-        return { type: 'Symbol', name: terminal, actor: name, line: tok.line };
+        return { type: 'Symbol', name: normalizeName(terminal), actor: name, line: tok.line };
       }
 
       // Tie start: C4~
@@ -2038,7 +2050,7 @@ function parse(tokens) {
       // But we must check here to avoid confusing with symbol call
       if (isRuntimeQualifier() && !current().spaceBefore) {
         // Return bare symbol — suffix will be attached by parseRhsElements
-        return { type: 'Symbol', name, line: tok.line };
+        return { type: 'Symbol', name: normalizeName(name), line: tok.line };
       }
 
       // Symbol call: Sa(custom_param:120) — only if collé (no space) and NOT a known runtime control
@@ -2060,7 +2072,7 @@ function parse(tokens) {
         }
         return {
           type: 'SymbolWithTriggerIn',
-          symbol: { type: 'Symbol', name, line: tok.line },
+          symbol: { type: 'Symbol', name: normalizeName(name), line: tok.line },
           triggers: triggerIns,
         };
       }
@@ -2071,7 +2083,7 @@ function parse(tokens) {
         return parseControl(name, tok);
       }
 
-      return { type: 'Symbol', name, line: tok.line };
+      return { type: 'Symbol', name: normalizeName(name), line: tok.line };
     }
 
     return null; // No valid RHS element found
@@ -2188,7 +2200,7 @@ function parse(tokens) {
     } else if (primaryArgs) {
       primary = { type: 'SymbolCall', name: primaryName, args: primaryArgs, line: tok.line };
     } else {
-      primary = { type: 'Symbol', name: primaryName, line: tok.line };
+      primary = { type: 'Symbol', name: normalizeName(primaryName), line: tok.line };
     }
     const secondaries = [];
 
@@ -2202,7 +2214,7 @@ function parse(tokens) {
           const call = parseSymbolCall(name, tok);
           secondaries.push(call);
         } else {
-          secondaries.push({ type: 'Symbol', name, line: tok.line });
+          secondaries.push({ type: 'Symbol', name: normalizeName(name), line: tok.line });
         }
         continue;
       }
