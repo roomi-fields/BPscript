@@ -476,16 +476,58 @@ async function main() {
       grammar: `ORD\ngram#1[1] SetRange --> _pitchrange(200)`,
       expectRules: ['SetRange --> _pitchrange(200)'],
     },
+    // ---- E3bis : valeurs négatives → FIDÈLE (rule-suffix form) -----------------
     {
-      name: 'runtime _pitchrange(-200) valeur négative → NON GÉRÉ attendu',
-      // Parser BPscript ne supporte pas les valeurs négatives dans ()
+      name: 'E3bis: _pitchbend(-200) en tête + musique → FIDÈLE',
+      // E3bis : valeur négative dans rule-suffix form → parser accepte
       grammar: `ORD\ngram#1[1] S --> _pitchbend(-200) a`,
-      expectNonGere: true,
+      expectRules: ['S --> _pitchbend(-200) a'],
     },
     {
-      name: 'runtime plusieurs contrôles consécutifs → NON GÉRÉ attendu',
-      // Parser BPscript ne supporte qu'un () autonome par règle
+      name: 'E3bis: _pitchbend(+200) explicite en tête + musique → FIDÈLE',
+      // E3bis : valeur positive explicite (+200) dans rule-suffix form → FIDÈLE
+      grammar: `ORD\ngram#1[1] S --> _pitchbend(+200) a`,
+      expectRules: ['S --> _pitchbend(+200) a'],
+    },
+
+    // ---- E2 : contrôle unique en tête + musique → FIDÈLE (rule-suffix) --------
+    {
+      name: 'E2: _scale en tête + musique → FIDÈLE',
+      // E2 : contrôle unique en tête du RHS → émis en suffixe de règle
+      grammar: `ORD\ngram#1[1] KA3 --> _scale(todi_ka_3,0) 11/10 ma3 pa3`,
+      expectRules: ['KA3 --> _scale(todi_ka_3,0) 11/10 ma3 pa3'],
+    },
+
+    // ---- E3 : plusieurs contrôles consécutifs en tête + musique → FIDÈLE ------
+    {
+      name: 'E3: _pitchrange(200) _pitchbend(0) en tête + musique → FIDÈLE',
+      // E3 : deux contrôles consécutifs en tête → mergés en () suffixe
       grammar: `ORD\ngram#1[1] S --> _pitchrange(200) _pitchbend(0) a`,
+      expectRules: ['S --> _pitchrange(200) _pitchbend(0) a'],
+    },
+    {
+      name: 'E3: _scale _pitchrange _pitchcont en tête + musique → FIDÈLE',
+      // E3 : trois contrôles consécutifs (dont pitchcont sans arg) en tête
+      grammar: `ORD\ngram#1[1] AAK2 --> _scale(todi_aak_2,0) _pitchrange(500) _pitchcont sa3 re3`,
+      expectRules: ['AAK2 --> _scale(todi_aak_2,0) _pitchrange(500) _pitchcont sa3 re3'],
+    },
+
+    // ---- E1 : notation durée N/N → FIDÈLE --------------------------------------
+    {
+      name: 'E1: durée 11/10 standalone dans RHS → FIDÈLE',
+      // E1 : N/N simple n'est plus bloqué par DURATION_SLASH_RE
+      grammar: `ORD\ngram#1[1] KA3 --> 11/10 ma3`,
+      expectRules: ['KA3 --> 11/10 ma3'],
+    },
+    {
+      name: 'E1: durée 137/100 dans polymetrie → FIDÈLE',
+      grammar: `ORD\ngram#1[1] KA2 --> {137/100,sa4 rek4}`,
+      expectRules: ['KA2 --> {137/100,sa4 rek4}'],
+    },
+    {
+      name: 'E1: durée 4/4/4/4/4 → NON GÉRÉ attendu',
+      // 4/4/4/4/4 contient 3+ segments N/N/N → reste bloqué
+      grammar: `ORD\ngram#1[1] S --> 4/4/4/4/4 S64`,
       expectNonGere: true,
     },
   ];
