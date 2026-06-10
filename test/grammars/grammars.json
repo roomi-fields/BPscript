@@ -879,13 +879,15 @@
   },
   "dhati2": {
     "bernard": "dhati2",
-    "status": "to_be_tested",
-    "trou_langage": "Templates BP2 nus en LHS — BPscript ne supporte pas les templates en position LHS. bp3ToScene émet NON GÉRÉ. Ajourné 2026-06-10.",
+    "status": "active",
+    "note": "Débloqué E6 2026-06-10 — ancre gabarit maître ($ nu / (= ) + contexte négatif silence (#-) implémentés. BOLSIZE: 2 terminaux >30 chars aliasés.",
     "aux": [
       "se"
     ],
     "features": [
-      "sub:4"
+      "sub:4",
+      "template_anchor",
+      "negative_context_rest"
     ],
     "lines": 40,
     "php_ref": {
@@ -899,13 +901,15 @@
   },
   "dhati3": {
     "bernard": "dhati3",
-    "status": "to_be_tested",
-    "trou_langage": "Templates BP2 nus en LHS — BPscript ne supporte pas les templates en position LHS. bp3ToScene émet NON GÉRÉ. Ajourné 2026-06-10.",
+    "status": "active",
+    "note": "Débloqué E6 2026-06-10 — ancre gabarit maître ($ nu / (= ) + contexte négatif silence (#-) implémentés. BOLSIZE: 2 terminaux >30 chars aliasés.",
     "aux": [
       "se"
     ],
     "features": [
-      "sub:4"
+      "sub:4",
+      "template_anchor",
+      "negative_context_rest"
     ],
     "lines": 39,
     "php_ref": {

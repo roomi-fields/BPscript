@@ -964,11 +964,12 @@ function checkGuardForUnsupported(guardStr) {
  */
 function checkLhsForUnsupported(lhs) {
   if (!lhs) return null;
-  // Template BP2 nue en LHS : "(= X Y Z" — non représentable en BPscript
-  // (les templates maîtres ne peuvent pas apparaître en LHS dans compileBPS)
+  // Note : (= NON FERMÉ en tête de LHS est maintenant géré via l'ancre de gabarit maître
+  // (graphie BPscript : « $ nu »). On ne le bloque plus ici.
+  // En revanche (: (esclave) reste réservé/non implémenté.
   const lhsTrimmed = lhs.trimStart();
-  if (lhsTrimmed.startsWith('(=') || lhsTrimmed.startsWith('(:')) {
-    return `template BP2 nue en LHS ("${lhs.substring(0, 30)}") — non représentable en BPscript (pas de template en position LHS)`;
+  if (lhsTrimmed.startsWith('(:')) {
+    return `template esclave BP2 nue en LHS ("${lhs.substring(0, 30)}") — non représentable en BPscript (ancre esclave réservée, non implémentée)`;
   }
   if (TEMPO_OP_RHS_RE.test(lhs)) {
     return `opérateur tempo /N ou \\N dans LHS (non géré)`;
@@ -1157,21 +1158,23 @@ function convertRuntimeControlToBPS(tok) {
 function convertBP3TokensToBPS(text, callMode = false, bolsizeTable = null) {
   if (!text) return '';
 
-  // ── Template nue BP2 : "(= X Y Z" ou "(: X Y Z" sans ")" de fermeture ──────
-  // Toute la zone est un seul template nue (maître ou esclave).
-  // On détecte : la chaîne commence par "(=" ou "(:" et ne contient pas de ")".
+  // ── Ancre de gabarit maître/esclave BP2 nue : "(= X Y Z" ou "(: X Y Z" sans ")" ──
+  // En BP3, "(=" NON FERMÉ est un token T2,0 (Encode.c:1341-1364) — l'ancre de gabarit.
+  // Elle n'est PAS un conteneur : les éléments suivants (X Y Z) sont des tokens frères.
+  // En BPscript : "$ " (dollar isolé, espace après) = ancre maître.
+  // Ex: "(= M V1 #tr" → "$ M V1 #tr"  ;  "(= ti M #tr" → "$ ti M #tr"
+  // L'ancre esclave "(: ..." est réservée (zéro occurrence corpus), non implémentée.
   {
     const trimmed = text.trimStart();
-    if ((trimmed.startsWith('(=') || trimmed.startsWith('(:')) && !trimmed.includes(')')) {
-      const isMaster = trimmed[1] === '=';
-      const body = trimmed.slice(2).trim();  // tout après "(=" ou "(:"
-      if (!body) return isMaster ? '${}'  : '&{}';
+    if (trimmed.startsWith('(=') && !trimmed.includes(')')) {
+      // Extraire les tokens frères après l'ancre
+      const body = trimmed.slice(2).trim();  // tout après "(="
+      if (!body) return '$';  // ancre seule (rare)
       const bodyToks = body.split(/\s+/).map(t => convertSingleToken(t, bolsizeTable));
-      const bodyBps = bodyToks.join(' ');
-      const shortForm = /^[A-Za-z][A-Za-z0-9_#']*$/.test(bodyBps);
-      if (isMaster) return shortForm ? `$${bodyBps}` : `\${${bodyBps}}`;
-      else          return shortForm ? `&${bodyBps}` : `&{${bodyBps}}`;
+      return '$ ' + bodyToks.join(' ');
     }
+    // Ancre esclave "(: ..." — réservée, non implémentée → laissée verbatim
+    // (ne devrait pas arriver : checkLhsForUnsupported bloque le chemin LHS)
   }
 
   // ── E2/E3/E3bis : contrôles en TÊTE du RHS → rule-suffix ─────────────────
@@ -1627,8 +1630,17 @@ function parseRhsZone(rhsRaw) {
   // Supprimer les annotations libres BP3 [texte libre] en fin de RHS.
   // Ces annotations ont un contenu avec espaces et/ou majuscules sans opérateur qualifier.
   // Exemple : "A B [Keep leftmost symbol]", "d #? [Append "d" at the end]"
+  // Cas spécial : annotations BP3 commençant par un caractère non-ASCII (ex: [Ô#(M)Õ...])
+  //   — elles utilisent les caractères spéciaux BP3 comme délimiteurs de citation.
   // On distingue des qualifiers BPscript [key:val] en testant le contenu.
-  let rhsRawClean = rhsRaw.replace(/\s+\[[A-Z][^\]]*\]\s*$/g, '').trim();
+  // Règle : si le premier caractère dans [...] n'est pas un identifiant ASCII minuscule
+  // (i.e., pas a-z) suivi de ':' ou d'un opérateur qualifier, c'est une annotation libre.
+  let rhsRawClean = rhsRaw
+    // Annotations démarrant par [A-Z] (ex: [Keep leftmost...])
+    .replace(/\s+\[[A-Z][^\]]*\]\s*$/g, '')
+    // Annotations démarrant par un caractère non-ASCII ou non-identifiant (ex: [Ô#(M)Õ...])
+    .replace(/\s+\[[^\x00-\x7F][^\]]*\]\s*$/g, '')
+    .trim();
 
   // Extraire toutes les gardes /.../ directement dans le texte brut (avant tokenisation)
   // Cas BP3 : gardes peuvent avoir des espaces internes (/K2 = 11/)
