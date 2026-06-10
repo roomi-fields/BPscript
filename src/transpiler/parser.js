@@ -1253,7 +1253,27 @@ function parse(tokens) {
       }
     }
 
-    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, runtimeQualifier, line: tok.line };
+    // B2 : extraire rule.mode depuis le qualificateur [scan:left|right|rnd]
+    // (BPx ast.ts:431-449 lit ast.mode ; l'encoder encoder.js:331-335 lit aussi
+    //  le qualifier pour émettre le préfixe BP3 → la QualPair est conservée.)
+    const VALID_SCAN_MODES = { left: 'left', right: 'right', rnd: 'rnd' };
+    let ruleMode = null;
+    for (const qual of qualifiers) {
+      for (const pair of (qual.pairs || [])) {
+        if (pair.key === 'scan') {
+          if (VALID_SCAN_MODES[pair.value] !== undefined) {
+            ruleMode = VALID_SCAN_MODES[pair.value];
+          } else {
+            throw new ParseError(
+              `[scan:${pair.value}] : valeur inconnue (attendu : left, right, rnd)`,
+              { line: tok.line, col: 0 }
+            );
+          }
+        }
+      }
+    }
+
+    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, runtimeQualifier, mode: ruleMode, line: tok.line };
   }
 
   // ============================================================
