@@ -2,6 +2,18 @@
 
 Version 2.0 — 26 mars 2026
 
+> **STATUT 2026-06-10** :
+> - Approche **étiquetage `N@terminal`** dans les fichiers -ho. : **AJOURNÉE**.
+>   (Raison : complexité implémentation moteur, pas de gain immédiat sur le contrat BPx.)
+> - Approche **retenue** : `Scene.homomorphisms[]` (tableau `HomomorphismDeclAST`) +
+>   marqueurs inline (`star`, noms verbatim) dans le RHS BPS. BPx consomme via
+>   `rewriteHomomorphismMarkers` post-dérivation.
+> - Les fichiers -ho. Bernard sont parsés par `parseHoFile()` dans `bp3ToScene.js`
+>   lors de la traduction inverse BP3→BPS, et les entrées sont générées dans
+>   `lib/transcription.json`.
+
+---
+
 ## Principe fondamental
 
 BP3 est un **ordonnanceur temporel pur**. Il gère la structure (durées, polymétrie,

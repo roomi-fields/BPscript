@@ -138,9 +138,16 @@ const TYPOGRAPHIC_QUOTE_RE = /[‘’“”«»‹›]/;
 
 /**
  * @param {string} grammarText  Contenu complet d'un fichier -gr.xxx BP3
- * @returns {string}  Source BPscript ou "NON GÉRÉ: <raison>"
+ * @param {{ hoText?: string, hoKey?: string }} [opts]
+ *   opts.hoText : contenu du fichier -ho compagnon (optionnel)
+ *   opts.hoKey  : clé lib (nom de l'homomorphisme, ex: 'tryhomomorphism')
+ *
+ * Sans opts → retourne string (rétrocompatibilité).
+ * Avec opts → retourne { bps: string, transcriptionEntry: object }.
+ *
+ * @returns {string | { bps: string, transcriptionEntry: object }}
  */
-function bp3ToScene(grammarText) {
+function bp3ToScene(grammarText, opts) {
   const rawLines = grammarText.split('\n').map(l => l.trim());
 
   // ── Phase 1 : parser les lignes en segments ───────────────────────────────
@@ -462,6 +469,16 @@ function bp3ToScene(grammarText) {
       // mais la sérialisation exacte est complexe. On les passe en commentaire.
       // POUR L'INSTANT : on ne les émet pas → DIFFÈRE pour les grammaires avec templates.
     }
+  }
+
+  // ── Résultat : avec ou sans opts -ho ─────────────────────────────────────
+
+  if (opts && opts.hoText && opts.hoKey) {
+    // Parsing du fichier -ho
+    const transcriptionEntry = parseHoFile(opts.hoText);
+    // Injecter @transcription.hoKey au début du BPS
+    const bpsWithHo = `@transcription.${opts.hoKey}\n` + bpsLines.join('\n');
+    return { bps: bpsWithHo, transcriptionEntry };
   }
 
   return bpsLines.join('\n');
@@ -1241,6 +1258,95 @@ function matchBareRule(line) {
   return { lhsRaw, arrow: m.arrow, rhs };
 }
 
+// ─── Parsing de fichiers -ho ─────────────────────────────────────────────────
+
+/**
+ * Parse le contenu d'un fichier -ho.xxx BP3 et retourne un objet sections.
+ *
+ * Format réel des fichiers -ho :
+ *   V.x.x          → header version, ignoré
+ *   Date: ...      → header date, ignoré
+ *   -mi.xxx        → référence fichier, ignorée
+ *   -kb.xxx        → référence fichier, ignorée
+ *   -or.xxx        → référence fichier, ignorée
+ *   //             → commentaire, ignoré
+ *   *              → label de section (nom = '*', trimé)
+ *   Nom            → label de section nommé (une seule ligne, pas de -->)
+ *   a --> b        → paire simple
+ *   a --> b --> c  → chaîne déplié en a→b et b→c
+ *   sync a b c...  → liste de sync, ignorée
+ *   -----          → séparateur, ignoré
+ *   ligne nue (terminal sans -->) → ignorée
+ *
+ * @param {string} hoText  Contenu brut d'un fichier -ho
+ * @returns {{ sections: Object.<string, Object.<string, string>> }}
+ */
+function parseHoFile(hoText) {
+  const lines = hoText.split('\n');
+  const sections = {};
+  let currentSection = '*';  // section par défaut si pas de label
+  sections[currentSection] = {};
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    // Ligne vide
+    if (!line) continue;
+
+    // Headers version/date → ignorés
+    if (/^V\.\d/.test(line)) continue;
+    if (/^Date:/.test(line)) continue;
+
+    // Références fichiers (-mi., -kb., -or., -se., -al., -ho.) → ignorées
+    if (/^-[a-z]{2}\./.test(line)) continue;
+
+    // Commentaires //
+    if (line.startsWith('//')) continue;
+
+    // Séparateurs -----
+    if (/^-{5,}$/.test(line)) continue;
+
+    // sync ... → ignoré
+    if (/^sync\b/.test(line)) continue;
+
+    // Paire ou chaîne : contient -->
+    if (line.includes('-->')) {
+      // Découper sur -->
+      const parts = line.split('-->').map(p => p.trim());
+      // Expand en paires successives : a --> b --> c → (a,b) (b,c)
+      for (let pi = 0; pi < parts.length - 1; pi++) {
+        const src = parts[pi];
+        const tgt = parts[pi + 1];
+        if (src && tgt) {
+          sections[currentSection][src] = tgt;
+        }
+      }
+      continue;
+    }
+
+    // Label de section : ligne sans --> qui n'est pas un header/ref/sync/commentaire/séparateur
+    // On accepte tout ce qui reste comme label de section (ex: '*', 'mineur', 'm1')
+    const candidateLabel = line;  // déjà trimé
+    // Vérifier que c'est un identifiant plausible (pas trop long, pas de caractères bizarres)
+    // Les terminaux nus dans -ho sont ignorés (convention : lignes nues = sync identifiers)
+    // On les traite comme labels de section si la section courante est vide,
+    // sinon on démarre une nouvelle section.
+    currentSection = candidateLabel;
+    if (!sections[currentSection]) {
+      sections[currentSection] = {};
+    }
+  }
+
+  // Nettoyer les sections vides
+  for (const key of Object.keys(sections)) {
+    if (Object.keys(sections[key]).length === 0) {
+      delete sections[key];
+    }
+  }
+
+  return { sections };
+}
+
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-export { bp3ToScene };
+export { bp3ToScene, parseHoFile };

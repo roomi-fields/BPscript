@@ -738,11 +738,14 @@ Point de synchronisation — attend un signal externe.
 Chaînable : `<!sync1<!sync2`. Qualifiable : `<!sync1[timeout:5000]` (* not yet implemented *).
 `<!` can also be attached to a symbol: `Sa<!sync1` produces a combined SymbolWithTriggerIn node.
 
-### 4.7 Variables (homomorphismes)
+### 4.7 Variables
 
 ```ebnf
 variable = "|" , IDENT , "|" ;
 ```
+
+Note : `|x|` est une variable BP3 (métavariable de réécriture), pas un homomorphisme.
+Les homomorphismes sont déclarés via `@transcription.<subkey>` et portés dans `Scene.homomorphisms`.
 
 ### 4.8 Wildcards (captures)
 
@@ -766,17 +769,23 @@ Sur un symbole : `$X` = master, `&X` = slave. Compilé en `(=X)` / `(:X)`.
 Sur un groupe : `${...}` / `&{...}`. Compilé en `(= ...)` / `(: ...)`.
 Les templates groupes peuvent contenir d'autres templates (imbrication).
 
-**Transcription (homomorphisme)** : un nom de transcription entre `$X` et `&X`
-applique la transformation au slave :
+**Marqueurs homomorphisme** : les identifiants entre `$X` et `&X` sont des marqueurs
+inline préservés verbatim dans le RHS BP3. `star` est le marqueur spécial pour `*` BP3.
 
 ```bpscript
-S -> $X tabla_stroke &X          // applique tabla_stroke au pattern capturé
-S -> $X * &X                     // applique la transcription par défaut (*)
+S -> $X tabla_stroke &X          // marqueur tabla_stroke entre master et slave
+S -> $X star &X                  // marqueur * BP3 (opérateur homo)
 ```
 
-Compilé en : `S --> (= X) tabla_stroke (: X)`.
-Le nom doit correspondre à une section dans l'alphabetFile, chargée via `@transcription.xxx`.
-Plusieurs transcriptions peuvent être chaînées : `$X * TR &X` → `(= X) * TR (: X)`.
+Compilé en : `S --> (= X) tabla_stroke (: X)` et `S --> (= X) * (: X)`.
+
+**`**` (double star)** : `S -> $X star star &X` → `S --> (= X) * * (: X)` (stacking : 2 applications).
+Le marqueur est toujours AVANT le master ou slave sur lequel il s'applique.
+
+**Provenance des noms** : les sections homomorphisme sont déclarées dans `lib/transcription.json`
+et chargées via `@transcription.<subkey>`. La section `*` correspond au marqueur `star`.
+Le tableau `Scene.homomorphisms` (contrat BPx) porte les paires source→cible.
+Plusieurs marqueurs peuvent être chaînés : `star TR` → deux applications successives.
 
 ### 4.10 Liaisons (~)
 
