@@ -24,6 +24,17 @@ Indépendant des cas ci-dessous (qui produisent 2+ items), mais piège réel pou
 scènes minimales. À documenter (et éventuellement signaler à Bernard : un item
 unique devrait produire, pas aborter).
 
+**Complément 2026-06-10** : le garde frappe aussi les chaînes **intermédiaires**
+entre sous-grammaires, pas seulement la sortie finale. Si la sous-grammaire 1
+laisse un seul item dans la chaîne de travail (ex. `gram#1[1] S --> Loop /count=3/`),
+la production avorte (rc=-4, message « Cannot produce items because all weights
+are nil in gram#1 » + « Error finding nb_candidates in Compute.c ») même si la
+dérivation complète aurait donné 2+ tokens. Avec 2 symboles en RHS
+(`S --> Loop Pad`), la même grammaire dérive. Vérifié sur v3.4.4-wasm.1 et
+v3.4.5-wasm.1 (pas une régression). Repro : `scenes/m1_04_recursion.bps` via
+`test/run_bpx_scenes.cjs` (FAIL attendu tant que le garde existe — BPx, lui,
+dérive cette scène : `test/parity/m1.test.ts` côté BPx).
+
 ## 1. Contexte positif `(Pa) Dha -> Dha Ma` — BUG TRANSPILEUR confirmé
 
 `encodeContext` (`src/transpiler/encoder.js`) **perd les parenthèses** pour un

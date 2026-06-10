@@ -1,0 +1,36 @@
+// m2_03_rnd_decrement.bps — M2 : poids décrémental [weight:N-D]
+//
+// Teste : la forme [weight:N-D] où N = poids initial, D = décrément appliqué
+//         à chaque application. Quand le poids atteint 0, la règle est
+//         définitivement désactivée (sortie du pool de sélection).
+//
+// Convention : non-terminaux capitalisés (S, Step, Stop). Terminal observable :
+// C4 (note de l'alphabet western:midi).
+//
+// Mécanique :
+//   - Règle 1 (Step) : poids initial 3, décrément 1 par fire.
+//     Évolution du poids : 3 → 2 → 1 → 0 (désactivée après 3 applications).
+//   - Règle 2 (Stop) : poids implicite (1).
+//   - À chaque tour le LCG choisit entre règle 1 (poids courant) et règle 2 (poids 1).
+//     - Tour 1 : ratio 3:1 → 75% règle 1
+//     - Tour 2 (si règle 1 a fire) : ratio 2:1 → 67% règle 1
+//     - Tour 3 (si règle 1 a fire) : ratio 1:1 → 50% règle 1
+//     - Tour 4+ (si règle 1 a fire 3 fois) : règle 1 désactivée, règle 2 forcée.
+//   - La règle 2 PEUT fire avant l'épuisement de règle 1 (issue probabiliste).
+//
+// Structure invariante :
+//   - 0 à 3 tokens C4 suivis d'un `-`
+//   - Total : 1 à 4 tokens (selon quand Stop est sélectionné)
+//
+// Sortie attendue (à mesurer par le runner avec seed=1) :
+//   ?? -    ← entre 0 et 3 C4 précédant le -
+
+@core
+@alphabet.western:midi
+@seed:1
+
+@mode:random
+S    -> Step S [weight:3-1]
+S    -> Stop
+Step -> C4
+Stop -> -

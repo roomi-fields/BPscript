@@ -1,0 +1,32 @@
+// m1_04_recursion.bps — Récursion bornée par compteur
+// Vérifie : récursion sur un non-terminal, comparaisons numériques
+//          [count>0] et [count==0], décrément [count-1] dans le RHS
+//          (PAS dans la garde — interdit M1).
+//
+// Trace de dérivation (count initial : 3) :
+//   S    -> Loop                 (mutation [count=3])
+//   Loop -> Step Loop            (count==3, [count>0] vrai → 1ère règle ; count -> 2)
+//   Step -> - -
+//   Loop -> Step Loop            (count==2 ; count -> 1)
+//   Step -> - -
+//   Loop -> Step Loop            (count==1 ; count -> 0)
+//   Step -> - -
+//   Loop -> Done                 (count==0 ; [count>0] faux, [count==0] vrai)
+//   Done -> -
+// Sortie attendue (7 tokens) :
+//   - - - - - - -
+
+@core
+@alphabet.western:midi
+
+@mode:ord
+S -> Loop [count=3]
+
+-----
+
+@mode:ord
+[count>0]  Loop -> Step Loop [count-1]
+[count==0] Loop -> Done
+
+Step -> - -
+Done -> -

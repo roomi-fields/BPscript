@@ -1,0 +1,82 @@
+// m1_05bis.bps — Combinatoire M1 complète, contournant le bug #47
+//
+// Bug #47 (Guards sur non-terminal enfant ne voient pas les flags du parent) :
+// Quand `Parent -> Child Parent [count-1]` insère un Child suivi d'une mutation,
+// les guards `[count...]` sur les règles de Child ne se déclenchent jamais.
+// Le contournement : la récursion porte ses guards sur le **non-terminal qui se
+// réécrit lui-même** (self-recursion). Les self-mutations sont visibles au tour
+// suivant car le même symbole est réévalué dans la même boucle de sélection.
+//
+// Pattern évité (bug #47) :
+//   Body -> Chunk Body [count-1]            ← parent insère Child + mutation
+//   [count>=1] Chunk -> ...                 ← guard sur Child, JAMAIS fire
+//
+// Pattern utilisé ici (safe) :
+//   [count>=1] Body -> ... Body [count-1]   ← guards et mutation sur le SELF
+//                                             les terminaux émis (C4) sont des
+//                                             feuilles, pas de guard à muter
+//
+// Couvre TOUS les opérateurs M1 :
+//   Comparaisons : ==, !=, >, <, >=, <=, bareFlag (test non-zéro)
+//   Conjonction  : plusieurs guards par règle (AND)
+//   Mutations    : [x=N], [x+1], [x-1], [x] (bare = set non-zéro)
+//   Poids        : [weight:N], [weight:0] (désactive)
+//   Runtime      : qualifiers () attachés à un terminal valide (pattern safe)
+//   Structure    : 3 sous-grammaires ord, multiples règles par LHS, S présent
+//
+// Trace de dérivation (initial : phase=1, count=2, active=1) :
+//   S      -> Setup Body Finale
+//   Setup  -> Init                                 (init [phase=1][count=2][active])
+//   Init   -> _
+//   Body   -> C4(vel:80) C4(vel:60) Body           ([active][count>=1] vrai ; count -> 1)
+//   Body   -> C4(vel:80) C4(vel:60) Body           ([active][count>=1] vrai ; count -> 0)
+//   Body   -> Done                                 ([active][count<=0] vrai)
+//   Done   -> -
+//   Finale -> Coda                                 ([active][count==0] vrai)
+//   Coda   -> Tail                                 ([phase>=1][phase<=2] vrai ; phase -> 2)
+//   Tail   -> _
+//
+// Règles non atteintes (validées par parsing seul, présence des opérateurs) :
+//   [count>0]            Body   -> _ Body [count-1]    (couverte par [count>=1] avant)
+//   [count<1]            Body   -> _                   (couverte par [count<=0] avant)
+//   [phase!=1]           Body   -> Stop [active=0]     (phase reste 1 dans Body)
+//   [active] [count<1]   Finale -> _                   (count==0 → [count==0] gagne)
+//   Finale -> Never [weight:0]                          (désactivée par weight:0)
+//
+// Sortie attendue (7 tokens) :
+//   _ C4 C4 C4 C4 - _
+
+@core
+@alphabet.western:midi
+
+@mode:ord
+S -> Setup Body Finale
+
+-----
+
+@mode:ord
+Setup -> Init [phase=1] [count=2] [active]
+Init  -> _
+
+// "1ère applicable gagne" → la sortie [count<=0]→Done est testée en premier
+// pour stopper la récursion dès count==0. Self-recursion sur Body : les
+// guards du tour suivant voient bien la mutation [count-1] du tour courant.
+[active] [count<=0] Body -> Done
+[active] [count>=1] Body -> C4(vel:80) C4(vel:60) Body [count-1]
+[count>0]           Body -> _ Body [count-1]
+[count<1]           Body -> _
+[phase!=1]          Body -> Stop [active=0]
+
+Done -> -
+Stop -> _
+
+-----
+
+@mode:ord
+[active] [count==0] Finale -> Coda
+[active] [count<1]  Finale -> _
+Finale -> Never [weight:0]
+
+[phase>=1] [phase<=2] Coda -> Tail [phase+1]
+Tail  -> _
+Never -> -

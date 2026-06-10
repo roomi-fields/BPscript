@@ -1,0 +1,71 @@
+// m1_05_combo.bps — Combinatoire M1 complète
+// Couvre TOUS les opérateurs autorisés au milestone M1 :
+//   Comparaisons : ==, !=, >, <, >=, <=, bareFlag (test non-zéro)
+//   Conjonction  : plusieurs guards par règle (AND)
+//   Mutations    : [x=N], [x+1], [x-1], [x] (bare = set non-zéro)
+//   Poids        : [weight:N], [weight:0] (désactive)
+//   Runtime      : qualifiers () attachés à un terminal (pattern le plus
+//                  largement supporté par le transpileur actuel — éviter
+//                  NonTerminal(qualifier) et rule-level qualifier)
+//   Structure    : 3 sous-grammaires ord, multiples règles par LHS,
+//                  récursion bornée, S présent.
+//
+// Trace de dérivation (initial : phase=1, count=2, active=1) :
+//   S      -> Setup Body Finale
+//   Setup  -> Init                       (init flags : [phase=1][count=2][active])
+//   Init   -> _
+//   Body   -> Chunk Body                 ([active]&[phase==1] vrai ; count -> 1)
+//                                        (la règle [active][count<=0] est testée
+//                                         en premier mais count==2 -> faux)
+//   Chunk  -> C4(vel:80) C4(vel:60)      ([count>=1] vrai ; runtime qualifiers
+//                                         opaques attachés à un terminal valide
+//                                         de l'alphabet western:midi)
+//   Body   -> Chunk Body                 (count -> 0)
+//   Chunk  -> _                          ([count<1] vrai)
+//   Body   -> Done                       ([active]&[count<=0] vrai)
+//   Done   -> -
+//   Finale -> Coda                       ([active]&[count==0] vrai)
+//   Coda   -> Tail                       ([phase>=1]&[phase<=2] vrai ; phase -> 2)
+//   Tail   -> _
+// Règles non atteintes (validées par parsing seul) :
+//   [phase!=1]            Body   -> Stop [active=0]
+//   [active] [count>0]    Finale -> _
+//   Finale -> Never [weight:0]    (désactivée)
+//
+// Sortie attendue (6 tokens) :
+//   _ C4 C4 _ - _
+
+@core
+@alphabet.western:midi
+
+@mode:ord
+S -> Setup Body Finale
+
+-----
+
+@mode:ord
+Setup -> Init [phase=1] [count=2] [active]
+Init  -> _
+
+// "1ère applicable gagne" → la sortie est en première position pour
+// stopper la récursion dès que count atteint 0.
+[active] [count<=0] Body -> Done
+[active] [phase==1]  Body -> Chunk Body [count-1]
+[phase!=1]           Body -> Stop [active=0]
+
+[count>=1] Chunk -> C4(vel:80) C4(vel:60)
+[count<1]  Chunk -> _
+
+Done -> -
+Stop -> _
+
+-----
+
+@mode:ord
+[active] [count==0] Finale -> Coda
+[active] [count>0]  Finale -> _
+Finale -> Never [weight:0]
+
+[phase>=1] [phase<=2] Coda -> Tail [phase+1]
+Tail  -> _
+Never -> -

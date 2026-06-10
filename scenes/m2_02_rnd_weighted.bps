@@ -1,0 +1,37 @@
+// m2_02_rnd_weighted.bps — M2 : poids inégaux statiques
+//
+// Teste : [weight:N] avec valeurs distinctes sur deux règles concurrentes
+//         pour un même LHS. La sélection reste LCG-déterminée mais biaisée
+//         par le ratio des poids.
+//
+// Convention : non-terminaux capitalisés (S, Heavy, Light, End). Terminaux
+// observables : C4 (heavy) et G4 (light) — distinguables et tous deux dans
+// l'alphabet western:midi.
+//
+// Mécanique :
+//   - 10 itérations forcées par le compteur (count<10 → règle Heavy/Light,
+//     count>=10 → End).
+//   - Règle Heavy : [weight:90], règle Light : [weight:10] → ratio 9:1.
+//   - À chaque tour, le LCG tire dans [0, sum(weights)) = [0, 100) ; si <90
+//     règle Heavy, sinon Light.
+//
+// Structure invariante :
+//   - 10 tokens parmi {C4, G4} suivis d'un `-`
+//   - Total : 11 tokens
+//   - Distribution attendue (loi des grands nombres, n=10) : ~9 C4, ~1 G4
+//     (mais sur n=10 la variance est forte ; ne pas asserter le ratio)
+//
+// Sortie attendue (à mesurer par le runner avec seed=1) :
+//   ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? -    ← séquence C4/G4 exacte donnée par LCG
+
+@core
+@alphabet.western:midi
+@seed:1
+
+@mode:random
+[count<10]  S -> Heavy S [count+1] [weight:90]
+[count<10]  S -> Light S [count+1] [weight:10]
+[count>=10] S -> End
+Heavy -> C4
+Light -> G4
+End   -> -

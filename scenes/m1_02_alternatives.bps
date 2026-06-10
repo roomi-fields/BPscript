@@ -1,0 +1,25 @@
+// m1_02_alternatives.bps — Plusieurs règles pour un même LHS
+// Vérifie : "1ère règle applicable gagne", désactivation [weight:0], usage de - et _.
+//
+// Trace de dérivation :
+//   S      -> Choice Tail
+//   Choice -> OptA       (1ère règle, weight:50, applicable -> gagne)
+//   OptA   -> - - -
+//   Tail   -> _ - _
+// Les règles 2 (weight:0 -> désactivée) et 3 (weight implicite -> jamais atteinte
+// car la 1ère a déjà gagné) ne sont pas sélectionnées.
+// Sortie attendue (6 tokens) :
+//   - - - _ - _
+
+@core
+@alphabet.western:midi
+
+@mode:ord
+S      -> Choice Tail
+Choice -> OptA [weight:50]
+Choice -> OptB [weight:0]
+Choice -> OptC
+OptA   -> - - -
+OptB   -> - - -
+OptC   -> - - -
+Tail   -> _ - _

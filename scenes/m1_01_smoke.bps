@@ -1,0 +1,24 @@
+// m1_01_smoke.bps — M1 smoke test
+// Le strict minimum : 1 sous-grammaire ord, S présent, dérivation finie.
+// Aucun flag, aucun poids, aucune mutation, aucun runtime qualifier.
+// Vérifie : parsing du header, sélection ord séquentielle, terminaison.
+//
+// Convention : non-terminaux capitalisés (S, Intro, Body, Outro). Terminaux
+// uniquement `-` et `_` (toujours valides, indépendants de l'alphabet).
+//
+// Trace de dérivation :
+//   S      -> Intro Body Outro
+//   Intro  -> - -
+//   Body   -> - - -
+//   Outro  -> -
+// Sortie attendue (6 tokens) :
+//   - - - - - -
+
+@core
+@alphabet.western:midi
+
+@mode:ord
+S     -> Intro Body Outro
+Intro -> - -
+Body  -> - - -
+Outro -> -

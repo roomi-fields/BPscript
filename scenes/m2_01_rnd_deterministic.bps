@@ -1,0 +1,34 @@
+// m2_01_rnd_deterministic.bps — M2 fondation : sélection RND 100% LCG
+//
+// Teste : @mode:random + plusieurs règles équiprobables pour un même LHS.
+//         La sélection dépend uniquement du LCG MSVC (seed=1).
+//         C'est le test de base du déterminisme bit-à-bit RND.
+//
+// Convention : non-terminaux capitalisés (S, A, End). Terminaux observables
+// pris dans l'alphabet western:midi : C4, D4, E4 (3 alternatives distinguables).
+//
+// Mécanique :
+//   - count démarre à 0 (default FlagStore BP3-compat).
+//   - Tour 1..5 : guard [count<5] vrai → règle 1 fire, count incrémenté.
+//     Une fois la règle 1 sélectionnée, A est dérivé → 3 alternatives C4/D4/E4
+//     avec poids implicites égaux (1) → choix purement LCG.
+//   - Tour 6 : guard [count<5] faux, [count>=5] vrai → règle 2, S → End → -.
+//
+// Structure invariante (garantie par la grammaire, indépendante du seed) :
+//   - 5 tokens parmi {C4, D4, E4} suivis d'un `-`
+//   - Total : 6 tokens
+//
+// Sortie attendue (à mesurer par le runner avec seed=1) :
+//   ?? ?? ?? ?? ?? -        ← remplacer chaque ?? par la note choisie par le LCG
+
+@core
+@alphabet.western:midi
+@seed:1
+
+@mode:random
+[count<5]  S -> A S [count+1]
+[count>=5] S -> End
+A   -> C4
+A   -> D4
+A   -> E4
+End -> -
