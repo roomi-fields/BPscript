@@ -253,10 +253,14 @@ function tokenize(source, opts = {}) {
         id += advance();
       }
       // Check for hyphenated identifier:
-      // 1. Hyphenated non-terminal (pre-scanned): Tr-11, my-var
-      // 2. Trailing hyphen on any identifier: do4-, mi4- (BP3 convention)
-      //    Rule: `-` immediately after an ident (no space) = part of the name
-      //    But `-` after space = REST (silence)
+      // 1. Hyphenated non-terminal (pre-scanned): A8-2, my-var — IDENT unique
+      // 2. Flag decrement / qualifier value: K1-1, pure_minor-third_meantone
+      //    BP3 rule (CompileGrammar.c:1196): un terminal ne peut jamais contenir '-'.
+      //    Encode.c:140 : un '-' dans le texte de règle → silence autonome (SEARCHTERMINAL2).
+      //    On n'absorbe le '-' collé que si le caractère suivant est alphanumérique
+      //    [a-zA-Z0-9], pour préserver les décréments de flag [K1-1] (IDENT "K1-" + INT)
+      //    et les valeurs de qualifier (pure_minor-third_meantone).
+      //    "do4-" (fin de mot) → IDENT(do4) + REST séparé (parité BP3).
       if (peek() === '-') {
         let candidate = id;
         let savedI = i, savedLine = line, savedCol = col;
@@ -278,10 +282,15 @@ function tokenize(source, opts = {}) {
         } else {
           // rollback — not a known non-terminal
           i = savedI; line = savedLine; col = savedCol;
-          // Check for trailing hyphen: ident immediately followed by `-`
-          // where `-` is NOT followed by `>` (arrow) and NOT part of a separator
-          if (peek() === '-' && peek(1) !== '>' && peek(1) !== '-') {
-            // Trailing hyphen — consume it as part of the identifier
+          // BP3 : un terminal ne contient jamais '-' (GetBol, CompileGrammar.c:1196) ;
+          // un '-' en fin de mot est un silence séparé que le moteur pèle
+          // (Encode.c:140 -> SEARCHTERMINAL2). On n'absorbe le '-' collé que
+          // s'il est suivi d'un alphanumérique : décrément de flag [K1-1]
+          // (IDENT "K1-" + INT) et valeurs à tiret (pure_minor-third_meantone).
+          // "do4-" / "re6-" => IDENT + REST (deux tokens, parité BP3).
+          const after = peek(1);
+          if (peek() === '-' && after !== '>' && after !== '-' &&
+              after !== undefined && /[a-zA-Z0-9]/.test(after)) {
             id += advance();
           }
         }
