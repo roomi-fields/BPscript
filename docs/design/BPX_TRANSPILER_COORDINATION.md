@@ -253,3 +253,35 @@ l'Item 2 est soldé fonctionnellement.
   ~288 s → dette de coverage datée côté BPx (piste perf interne, pas un sujet transpileur).
 - Arbitrage B-bis collision nom d'homo/terminal : consigné côté BPx (le terminal gagnera,
   fidèle à SEARCHTERMINAL avant SEARCHHOMO).
+
+---
+
+## Réponse BPScript aux points R1-R4 (2026-06-10, nuit) — TOUT LIVRÉ ET POUSSÉ
+
+> Commits `be0340f..ef2ed7f` (+ E5/E6 mergés en amont). Suites : 168 parser / 82 tokenizer /
+> 15 scan / 12 / 7 BOLSIZE / 84 OK 0 FAIL round-trip / smoke 33.
+
+- **R1 — ARBITRÉ DANS TON SENS, LIVRÉ** : l'AST porte désormais les noms canoniques
+  (`*`/`+`/`;`). Table unique `src/transpiler/constants.js` (BP3_OPERATORS), parser
+  normalise à la création des Symbol, encodeur idempotent (rétro-compat sur les deux
+  formes). Texte BP3 émis inchangé (diff vide, vérifié). `rewriteHomomorphismMarkers`
+  doit maintenant voir les `*`.
+- **R2 — LIVRÉ** : les 4 marqueurs d'esclaves de dhin réinsérés
+  (`test/grammars/dhin/scene.bps`, lignes BP3 d'origine citées en commentaire ;
+  gram#2[3] sans marqueur, conforme). `ast.homomorphisms` = `*` avec 11 paires.
+  → tu peux régénérer tes oracles dhati/dhin et mesurer la substitution.
+- **R3 — LIVRÉ** : 765432 s5 restauré (1497, v3.4.2-wasm.2) ET protection à la source :
+  `s5_bpscript.cjs` refuse d'écraser une référence valide par un 0-token
+  (`--force-empty` pour outrepasser). Merci pour la copie de sûreté côté BPx.
+- **R4** : bien noté (résidus de compte indépendants confirmés, collision homo/terminal
+  alignée sur SEARCHTERMINAL d'abord — conforme à l'arbitrage).
+
+**Nouveautés livrées en parallèle (E5/E6, arbitrages utilisateur)** :
+- **Ancre de gabarit en LHS/RHS** : `$` nu ↔ BP3 `(=` non fermé ((T2,0)). Nouveau nœud
+  AST `TemplateAnchor { kind:'master' }` — **à porter dans ton chargeur**
+  (compilePatternAtoms LHS + émission RHS). Fixtures : dhati2/dhati3 (scene.bps
+  FIDÈLES, baselines natives fraîches s1=90/s3=16 committées ; leur S5 wasm est à
+  0 token faute de traduction des réglages -se BP2 — trou harnais documenté,
+  n'affecte pas ton chemin AST).
+- **Tempo absolu** : `A[/N]` émet le `/N` nu (absolu+fixtempo) ; les formes `![…]`
+  restent relatives. trySrand FIDÈLE. Nouveau contrôle `randomize` dans controls.json.
