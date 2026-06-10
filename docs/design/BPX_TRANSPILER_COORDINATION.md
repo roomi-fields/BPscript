@@ -23,14 +23,30 @@ maître **non traduit** ; BP3 substitue les frappes (dha→ta, ge→ke, dhin→t
 
 **Détail complet** : voir `HOMOMORPHISMS.md` (tâches 1-5) dans ce même dossier. Résumé actionnable :
 
+> **Précisions de Bernard Bel (source faisant autorité, 2026-06-09)** — corrigent ce qui avait été
+> reconstruit :
+> - Les homomorphismes sont **NOMMÉS** ; `*` n'était qu'un exemple d'étiquette. Dans `-gr.Ruwet` il y
+>   en a **trois** : `m1` (la4→sib4), `m2` (la4→sol4), `mineur` (fa4→re4, la4→fa4). L'invocation se fait
+>   **par le NOM**, pas par `*`.
+> - Ils sont une **classe de token à part entière, T5** (`T5 x`, `x < Jhomo`) — à côté des terminaux
+>   (`T3 x`) et des variables (`T4 x`).
+> - Les paires peuvent impliquer des **VARIABLES**, pas seulement des terminaux :
+>   `gram#4[42] |miny| --> mineur (= |y|)` (l'homo `mineur` transforme la variable `|y|`).
+> - **Phase** : l'homomorphisme s'applique **après l'expansion polymétrique, AVANT le time-setting**
+>   (les propriétés du bol substitué — ex. `ta` au lieu de `dha` — résolvent les contraintes
+>   temporelles). C'est **structurel**, pas un relabel cosmétique. (Concerne surtout BPx, mais
+>   confirme que la donnée doit arriver assez tôt.)
+
 - **Cible (le contrat que BPx lit DÉJÀ)** : peupler `ast.homomorphisms: { name, pairs: [src, dst][],
-  line }[]`. C'est exactement ce que `buildHomomorphisms` consomme côté BPx (`loadGrammar.ts:5553`)
-  et ce que le test `homomorphism.test.ts` injecte à la main. **NE PAS** réinventer le format BP3
-  `0.1%terminal` (le stacking de profondeur) — BPx gère la profondeur via l'ordinal du marqueur.
+  line }[]` — où `name` ∈ {`m1`, `m2`, `mineur`, …} et `src`/`dst` sont des terminaux **OU des
+  variables**. C'est ce que `buildHomomorphisms` consomme côté BPx (`loadGrammar.ts:5553`) et ce que
+  `homomorphism.test.ts` injecte à la main. **NE PAS** réinventer le format BP3 `0.1%terminal`.
 - **(a) Parser** (`src/transpiler/parser.js:2238-2276`) :
-  - Parser la section de transcription `-ho.<nom>` → les paires source→destination.
-  - Reconnaître l'invocation sur l'esclave : `*(: X)`, `**(: X)`, `***(: X)` → le **nom** + le **compte
-    de `*`** (stacking). Aujourd'hui seul `&X` nu est parsé, le marqueur d'homo est perdu.
+  - Parser la section de transcription `-ho.<nom>` → les paires source→destination (chaque section =
+    un homo nommé).
+  - Reconnaître l'invocation **par NOM** sur l'esclave (le nom de l'homo, ex. `mineur`, devient un
+    token T5) + le **compte de répétition** (stacking, ex. `**` = appliquer deux fois → ordinal).
+    Aujourd'hui seul `&X` nu est parsé, le marqueur d'homo (T5) est perdu.
 - **(b) Encoder** (`src/transpiler/encoder.js`) :
   - Sérialiser la/les section(s) en `ast.homomorphisms` (`{name, pairs, line}`).
   - Sur le marqueur esclave (`encoder.js:1233-1236`, qui émet `(:X)` nu), reporter le **nom** +
