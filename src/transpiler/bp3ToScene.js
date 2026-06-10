@@ -1554,6 +1554,7 @@ function preambleToModifier(preambleLine) {
   if (line === '_striated') return 'striated';
   if (line === '_smooth') return 'smooth';
   if (line === '_destru') return 'destru';
+  if (line === '_randomize') return 'randomize';
 
   // Lignes de preamble composites : _mm(60.0000) _striated
   // Traitées en les décomposant dans extractPreambleModifiers

@@ -70,7 +70,7 @@ function extractSignificant(text) {
   let pendingSep = false;  // séparateur en attente d'être émis (lazy emission)
 
   for (let raw of lines) {
-    raw = raw.trim();
+    raw = raw.trim().replace(/\{\s+/g, '{');
     if (raw === 'COMMENT:') { inComment = true; continue; }
     if (inComment) continue;
     if (!raw) continue;
@@ -202,7 +202,23 @@ function extractSignificant(text) {
   }
   // Flush séparateur final en attente (cas d'une grammaire terminée par un séparateur)
   if (pendingSep) result.push('----');
-  return result;
+  // Normalisation : fusionner les lignes de préambule consécutives (_mm, _striated,
+  // _randomize…) en une seule ligne composite — BP3 accepte indifféremment les deux
+  // découpages (corpus : "_mm(60.0000) _striated" est déjà composite).
+  const merged = [];
+  for (const line of result) {
+    const isPreamble = /^_[a-zA-Z]/.test(line) && !/-->|<--|<->/.test(line);
+    if (isPreamble && merged.length > 0) {
+      const prev = merged[merged.length - 1];
+      if (/^_[a-zA-Z]/.test(prev) && !/-->|<--|<->/.test(prev)) {
+        merged[merged.length - 1] = prev + ' ' + line;
+        continue;
+      }
+    }
+    merged.push(line);
+  }
+  return merged;
+  // (ancien) return result;
 }
 
 function normalizeSeparator(line) {

@@ -1,17 +1,8 @@
-// trySrand.bps — Demo _srand/_randomize avec séquences aléatoires
-// Traduit de bp3-engine/test-data/-gr.trySrand (Bernard, 1998)
-//
-// Règle 1 : S -> A[/5] B C D E — opérateur tempo absolu /5 (A[/5] → /5 A en BP3)
-// Règle 4 : C -> _randomize ... — _randomize n'est pas un contrôle BPscript standard ;
-//   la règle C compile en « _ randomize … » (non conforme) — limitation connue.
-// Règles 2,3,5 : shuffle avec/sans seed — FIDÈLE.
-// Règle 6 : rndvel/vel sur a,b — FIDÈLE via _script(CT N).
-
 @controls
-@mode:random(mm:60.0000,striated)
+@mode:random(mm:60.0000,striated,randomize)
 S -> A[/5] B C D E
 A -> {C3 B3 E3 F3 G3}[shuffle]
 B -> {C4 B4 E4 F4 G4}[shuffle:1]
-C -> _randomize {C4 B4 E4 F4 G4}[shuffle] {C5 B5 E5 F5 G5}[shuffle]
+C -> randomize {C4 B4 E4 F4 G4}[shuffle] {C5 B5 E5 F5 G5}[shuffle]
 D -> {C5 B5 E5 F5 G5}[shuffle:1]
 E -> {rndvel(50) vel(80) a a a a a b b b b b}
