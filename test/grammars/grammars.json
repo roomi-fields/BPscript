@@ -22,7 +22,8 @@
   },
   "PP": {
     "bernard": "PP",
-    "status": "to_be_tested",
+    "status": "excluded",
+    "reason": "Grammaire type-0 non terminante: 3/20 items sont terminaux (b b, a a), le reste contient des variables non résolues. Boucle infinie garantie, 0 notes MIDI. Exclusion datée 2026-06-10.",
     "aux": [],
     "features": [],
     "lines": 15,
@@ -82,7 +83,8 @@
   },
   "gramgene2": {
     "bernard": "gramgene2",
-    "status": "to_be_tested",
+    "status": "excluded",
+    "reason": "BP2 INIT: directive non supportée par BP3 + templates (=X)(:X). Format incompatible, pas d'output possible. Exclusion datée 2026-06-10.",
     "aux": [
       "se"
     ],
@@ -132,6 +134,7 @@
   "tryflags2": {
     "bernard": "tryflags2",
     "status": "to_be_tested",
+    "scene_bps": true,
     "aux": [
       "se"
     ],
@@ -332,7 +335,8 @@
   },
   "checkcontext": {
     "bernard": "checkcontext",
-    "status": "to_be_tested",
+    "status": "excluded",
+    "reason": "Boucle infinie garantie: grammaire LIN avec règle de permutation sans convergence — \"Calculation overflow (10000 derivations)\". Exclusion datée 2026-06-10.",
     "aux": [],
     "features": [
       "sub:1"
@@ -367,7 +371,8 @@
   },
   "tryLIN": {
     "bernard": "tryLIN",
-    "status": "to_be_tested",
+    "status": "excluded",
+    "reason": "BP2 legacy format (V.2.5 header), parser BP3 échoue. Format non supporté. Exclusion datée 2026-06-10.",
     "aux": [
       "se"
     ],
@@ -428,7 +433,8 @@
   },
   "gramgene1": {
     "bernard": "gramgene1",
-    "status": "to_be_tested",
+    "status": "excluded",
+    "reason": "BP2 INIT: directive non supportée par BP3 + terminaux en minuscules. Format incompatible. Exclusion datée 2026-06-10.",
     "aux": [
       "se"
     ],
@@ -582,6 +588,7 @@
   "transposition1": {
     "bernard": "transposition1",
     "status": "to_be_tested",
+    "scene_bps": true,
     "production_mode": "midi",
     "aux": [
       "se",
@@ -863,6 +870,7 @@
   "dhati2": {
     "bernard": "dhati2",
     "status": "to_be_tested",
+    "trou_langage": "Templates BP2 nus en LHS — BPscript ne supporte pas les templates en position LHS. bp3ToScene émet NON GÉRÉ. Ajourné 2026-06-10.",
     "aux": [
       "se"
     ],
@@ -882,6 +890,7 @@
   "dhati3": {
     "bernard": "dhati3",
     "status": "to_be_tested",
+    "trou_langage": "Templates BP2 nus en LHS — BPscript ne supporte pas les templates en position LHS. bp3ToScene émet NON GÉRÉ. Ajourné 2026-06-10.",
     "aux": [
       "se"
     ],
@@ -921,6 +930,7 @@
   "tryShruti": {
     "bernard": "tryShruti",
     "status": "active",
+    "trou_langage": "Utilise _tempo() (contrôle engine) dans RHS — non représentable en BPscript sans syntaxe dédiée (E5, ajourné 2026-06-10). bp3ToScene émet NON GÉRÉ.",
     "production_mode": "midi",
     "s1_args": [
       "-se",
@@ -950,6 +960,7 @@
   "trySrand": {
     "bernard": "trySrand",
     "status": "to_be_tested",
+    "trou_langage": "Utilise opérateurs tempo /N dans RHS — conversion X[/N] non implémentée dans bp3ToScene (E5, ajourné 2026-06-10). bp3ToScene émet NON GÉRÉ.",
     "aux": [
       "se"
     ],
@@ -1745,6 +1756,7 @@
   "dhin1": {
     "bernard": "dhin1",
     "status": "to_be_tested",
+    "scene_bps": true,
     "production_mode": "text",
     "aux": [
       "se"

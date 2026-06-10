@@ -99,8 +99,10 @@ const RUNTIME_CTRL_CONVERTIBLE_RE = /^_(transpose|scale|pitchrange|pitchbend|pit
 // En BPscript la syntaxe équivalente est X[/N] mais la conversion est complexe.
 // Opérateur tempo BP3 /N en début de token séparé, ou notation durée N/N (ex: 4/4/4/4/4)
 const TEMPO_OP_RHS_RE = /(?:^|\s)(?:\/|\\)\d+(?:\s|$)/;
-// Token durée BP3 N/N/N... (notation musicale multiplicative, non représentable en BPscript)
-const DURATION_SLASH_RE = /\b\d+\/\d/;
+// Token durée BP3 N/N/N... avec 3+ segments (ex: 4/4/4, non représentable en BPscript).
+// Les ratios simples N/N (ex: 11/10, 137/100, 3/2) sont valides en BPscript.
+// On bloque uniquement les formes N/N/N... avec au moins deux "/" séparés par des chiffres.
+const DURATION_SLASH_RE = /\b\d+\/\d+\/\d/;
 
 // Caractères BP2 non gérés par le tokenizer BPscript (ex: ¥ = prolongement BP2)
 // BP2 legacy characters: ¥ (prolongation), ³ (≥ in old BP2), § © ® ™ °
@@ -490,51 +492,113 @@ function extractMeterPrefix(rhs) {
   return null;
 }
 
+// ─── Analyse de la structure des contrôles dans le RHS ───────────────────────
+
+/**
+ * Analyse la position des contrôles runtime dans le RHS (flux de tokens de haut niveau).
+ *
+ * Retourne un objet :
+ *   { headControls: string[], hasTrailingControls: bool, hasControlsInsidePolymetry: bool }
+ *
+ * headControls : tableau de tokens "_name(args)" consécutifs au début du RHS.
+ * hasTrailingControls : vrai si un contrôle apparaît APRÈS un token non-contrôle.
+ * hasControlsInsidePolymetry : vrai si un bloc {...} contient un pattern de contrôle.
+ *
+ * Note : tokenizeBP3Line traite {...} comme opaque. On détecte les contrôles à l'intérieur
+ * en testant le contenu brut du bloc.
+ */
+function analyzeRhsControls(rhs) {
+  if (!rhs) return { headControls: [], hasTrailingControls: false, hasControlsInsidePolymetry: false };
+
+  const CONVERTIBLE_TOK_RE = RUNTIME_CTRL_CONVERTIBLE_RE;
+  const CTRL_INSIDE_RE = /\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/;
+
+  const tokens = tokenizeBP3Line(rhs);
+  const headControls = [];
+  let seenMusic = false;
+  let hasTrailingControls = false;
+  let hasControlsInsidePolymetry = false;
+  let i = 0;
+
+  while (i < tokens.length) {
+    const tok = tokens[i];
+
+    // Détecter un bloc polymetrique/groupe {...}
+    if (tok.startsWith('{')) {
+      // Contrôle à l'intérieur ? (détection sur le contenu brut)
+      if (CTRL_INSIDE_RE.test(tok)) hasControlsInsidePolymetry = true;
+      seenMusic = true;
+      i++;
+      continue;
+    }
+
+    // Contrôle runtime de haut niveau
+    if (CONVERTIBLE_TOK_RE.test(tok)) {
+      // Fusionner _name + (args) si token suivant est (args)
+      let fullTok = tok;
+      if (i + 1 < tokens.length) {
+        const next = tokens[i + 1];
+        if (next.startsWith('(') && next.endsWith(')') && !next.startsWith('(=') && !next.startsWith('(:')) {
+          fullTok = tok + next;
+          i++;
+        }
+      }
+      if (!seenMusic) {
+        headControls.push(fullTok);
+      } else {
+        hasTrailingControls = true;
+      }
+      i++;
+      continue;
+    }
+
+    // Tout autre token → musique
+    seenMusic = true;
+    i++;
+  }
+
+  return { headControls, hasTrailingControls, hasControlsInsidePolymetry };
+}
+
 // ─── Vérification du RHS ──────────────────────────────────────────────────────
 
 /**
  * Vérifie si le RHS contient des constructs BP3 non gérés par le round-trip.
  * Retourne une description de l'erreur, ou null si tout est OK.
+ *
+ * Extensions E1/E2/E3/E3bis :
+ *   E1    — N/N simple (un seul "/") n'est plus bloqué (DURATION_SLASH_RE élargi)
+ *   E2    — Contrôle unique en TÊTE + musique → émis en suffixe de règle (valide)
+ *   E3    — Plusieurs contrôles consécutifs en TÊTE → mergés en () suffixe (valide)
+ *   E3bis — Valeurs négatives dans les contrôles → acceptées en form rule-suffix
+ *
+ * NON GÉRÉ si :
+ *   - Contrôle APRÈS un token musical (position trailing)
+ *   - Contrôle INSIDE un groupe {...} polymetrique
  */
 function checkRhsForUnsupported(rhs) {
   if (!rhs) return null;
-  // Contrôles runtime convertibles : vérifier les conditions de conversion valide.
-  // Un contrôle convertible est valide si et seulement si :
-  //   1. Il est seul dans le RHS (contrôle autonome unique) : ex: Tr0 --> _transpose(0)
-  //   2. Ses arguments ne sont pas négatifs (valeurs -N bloquent le parser BPscript)
-  // Si ces conditions ne sont pas remplies → NON GÉRÉ (le BPS généré ne compilerait pas).
+
+  // ── Contrôles runtime convertibles (E2/E3/E3bis) ──────────────────────────
   {
-    const matches = [...rhs.matchAll(/\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/g)];
-    if (matches.length > 0) {
-      // Valeur négative dans un argument : _pitchbend(-200) → NON GÉRÉ
-      if (/\b_(transpose|scale|pitchrange|pitchbend|volume|cont|value)\s*\(\s*-/.test(rhs)) {
-        const m2 = rhs.match(/\b_(transpose|scale|pitchrange|pitchbend|volume|cont|value)\s*\(\s*-/);
-        return `contrôle runtime "_${m2[1]}" avec valeur négative (non représentable en BPscript — parser rejecte les valeurs négatives dans ())`;
+    const hasAnyConvertible = RUNTIME_CTRL_CONVERTIBLE_RE.test(rhs);
+    if (hasAnyConvertible) {
+      const analysis = analyzeRhsControls(rhs);
+      // Contrôle inside polymetry → non représentable en BPscript
+      if (analysis.hasControlsInsidePolymetry) {
+        const ctrl = rhs.match(/\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/);
+        return `contrôle runtime "_${ctrl ? ctrl[1] : 'ctrl'}" dans un bloc {...} (non représentable — controls inside polymetry)`;
       }
-      // Plusieurs contrôles convertibles → parser BPscript ne supporte pas les `()` autonomes multiples
-      if (matches.length > 1) {
-        return `plusieurs contrôles runtime consécutifs dans RHS (non représentable — le parser BPscript ne supporte qu'un () autonome par règle)`;
+      // Contrôle en position trailing (après musique) → non représentable
+      if (analysis.hasTrailingControls) {
+        const ctrl = rhs.match(/\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/);
+        return `contrôle runtime "_${ctrl ? ctrl[1] : 'ctrl'}" en position trailing dans RHS (non représentable — après des tokens musicaux)`;
       }
-      // Contrôle convertible + contenu musical dans la même règle :
-      // valide seulement si le contrôle est standalone (seul token non-espace)
-      // Détection simple : si après le contrôle il y a autre chose (pas juste espace)
-      // et si le contrôle est en TÊTE (précède d'autres tokens)
-      const ctrlMatch = rhs.match(/^(.*?)\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/);
-      if (ctrlMatch) {
-        const before = ctrlMatch[1].trim();
-        // Trouver ce qui suit le contrôle + ses args
-        const afterRe = new RegExp(`\\b_(${matches[0][1]})\\s*(?:\\([^)]*\\))?\\s*(.*)`);
-        const afterMatch = rhs.match(afterRe);
-        const after = afterMatch ? afterMatch[2].trim() : '';
-        // Si le contrôle n'est pas seul (avant ou après il y a des tokens musicaux)
-        if (before || after) {
-          // Contrôle en position mixte → NON GÉRÉ
-          return `contrôle runtime "_${matches[0][1]}" en position mixte dans RHS (non représentable — doit être seul ou en suffixe)`;
-        }
-      }
-      // Un seul contrôle seul → OK (sera converti par convertBP3TokensToBPS)
+      // Sinon : tous les contrôles sont en tête → OK (E2/E3/E3bis)
+      // convertBP3TokensToBPS les émet en suffixe de règle.
     }
   }
+
   const m = rhs.match(ENGINE_CTRL_RHS_RE);
   if (m) {
     return `contrôle engine "_${m[1]}" dans RHS (non représentable en BPscript sans contrôles chargés)`;
@@ -731,6 +795,59 @@ function convertBP3TokensToBPS(text) {
       if (isMaster) return shortForm ? `$${bodyBps}` : `\${${bodyBps}}`;
       else          return shortForm ? `&${bodyBps}` : `&{${bodyBps}}`;
     }
+  }
+
+  // ── E2/E3/E3bis : contrôles en TÊTE du RHS → rule-suffix ─────────────────
+  // Si le RHS commence par des contrôles runtime convertibles suivis de musique,
+  // on émet la musique d'abord, puis les contrôles en suffixe de règle :
+  //   _pitchbend(-200) a → a (pitchbend:-200)          [E3bis]
+  //   _scale(X,0) music  → music (scale:X,0)            [E2]
+  //   _r(200) _pb(0) a   → a (pitchrange:200, pitchbend:0)  [E3]
+  // Si le RHS ne contient QUE des contrôles (standalone), on les émet inline.
+  if (RUNTIME_CTRL_CONVERTIBLE_RE.test(text)) {
+    const analysis = analyzeRhsControls(text);
+    const hasMusic = analysis.headControls.length < tokenizeBP3Line(text).filter(t => !t.startsWith('(')).length + analysis.headControls.length;
+    // Vérifier s'il y a des tokens non-contrôle après les headControls
+    const allTokens = tokenizeBP3Line(text);
+    let numCtrlTokens = 0;
+    let idx = 0;
+    while (idx < allTokens.length) {
+      const t = allTokens[idx];
+      if (RUNTIME_CTRL_CONVERTIBLE_RE.test(t)) {
+        numCtrlTokens++;
+        // Sauter le token d'args si présent
+        if (idx + 1 < allTokens.length) {
+          const nx = allTokens[idx + 1];
+          if (nx.startsWith('(') && nx.endsWith(')') && !nx.startsWith('(=') && !nx.startsWith('(:')) {
+            numCtrlTokens++;
+            idx++;
+          }
+        }
+        idx++;
+      } else {
+        break;  // premier token non-contrôle
+      }
+    }
+    const hasNonCtrlAfterHead = idx < allTokens.length;
+
+    if (analysis.headControls.length > 0 && hasNonCtrlAfterHead) {
+      // E2/E3/E3bis : contrôles en tête + musique → rule-suffix
+      // Construire le suffixe : (name1:val1, name2:val2, ...)
+      const ctrlParts = analysis.headControls.map(fullTok => {
+        const converted = convertRuntimeControlToBPS(fullTok);
+        // Extraire "name:val" de "(name:val)"
+        return converted ? converted.slice(1, -1) : null;
+      }).filter(Boolean);
+      const ctrlSuffix = `(${ctrlParts.join(', ')})`;
+
+      // Construire le texte sans les contrôles de tête (la partie musique)
+      const musicTokens = allTokens.slice(numCtrlTokens);
+      const musicText = musicTokens.join(' ');
+      // Convertir récursivement la partie musicale (sans contrôles en tête)
+      const musicBps = convertBP3TokensToBPS(musicText);
+      return musicBps ? `${musicBps} ${ctrlSuffix}` : ctrlSuffix;
+    }
+    // Sinon : standalone ou autre → continuer avec le traitement normal
   }
 
   // ── Préfixe de mètre N+N/M ──────────────────────────────────────────────
