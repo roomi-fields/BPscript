@@ -30,7 +30,7 @@ S2 = MIDI events (comme le natif). S3 = timed tokens (lecture directe de p_Insta
 ## Scripts
 
 ### Batch
-- `test_all.cjs` — Lance S1 + S2/S3 + comparaisons S1vsS2 et S2vsS3 sur les 36 grammaires actives
+- `test_all.cjs` — Lance S1 + S2/S3 + S4 + S5 + comparaisons sur les grammaires actives
 - `run_s5_all.cjs` — Lance S5 sur toutes les grammaires actives
 
 ### Par grammaire
@@ -47,21 +47,47 @@ node test/s5_bpscript.cjs drum --bin last
 
 ## Grammaires
 
-36 grammaires actives définies dans `grammars/grammars.json`.
+`grammars/grammars.json` est le registre : 111 entrées (110 grammaires + le placeholder
+`_comment`). Seules les `active` entrent dans les suites batch (`test_all`, `run_s5_all`) —
+**ne jamais itérer les dossiers directement**.
 
-Champs principaux :
-- `status` : `active`, `skip`, `excluded`, `to_be_tested`
-- `production_mode` : `midi` ou `text`
+### Statuts valides (`status`)
+
+| Statut | Sens | Effet harnais |
+|---|---|---|
+| `active` | baseline native + pipeline complet | testée par toutes les suites batch |
+| `to_be_tested` | pas encore triée ou baseline partielle | ignorée par les suites, testable à la main |
+| `excluded` | hors baseline — `reason` **datée obligatoire** | refusée par s1_native, ignorée partout |
+| `skip` | active sur le papier mais fichiers manquants (ex. bells) | sautée |
+| `partial` | transposition BPscript partielle (ex. dhadhatite_v2) | hors suites |
+
+### Champs
+
+- `bernard` : nom du fichier original (`-gr.<bernard>` dans `bp3-engine/test-data/`)
+- `production_mode` : `midi` ou `text` (pilote S1/S2/S5)
 - `aux` : fichiers auxiliaires nécessaires (`se`, `al`, `to`)
-- `php_ref` : configuration pour S0 (référence PHP)
+- `php_ref` : configuration pour S0 (référence PHP) ; `php_ref.blocked` = motif texte quand
+  bp.exe ne produit pas (constat S0, distinct du `status`)
 - `features` : tags (`sub:N`, `poly:N`, `improvize`, etc.)
+- `reason` : motif d'exclusion — **toujours daté** (`Exclusion datée YYYY-MM-DD` ou
+  `[constat YYYY-MM-DD]`)
+- `note` : commentaire libre daté (récupérations, promotions, caveats)
+- `scene_bps` : `true` si un `scene.bps` existe alors que le statut ne l'implique pas
+- `trou_langage` : construct BP3 non représentable en BPscript (bp3ToScene émet NON GÉRÉ) —
+  ex. templates BP2 en LHS, opérateurs tempo `/N`, `_&`
+- `s1_args` : arguments supplémentaires pour le run natif S1
+- `s4s5_skip` / `s3s4_skip` : exclusions motivées d'une comparaison précise
+- `c4key` : convention d'octave de la grammaire (ex. 48)
 
 Chaque grammaire a un répertoire `grammars/{name}/` contenant :
 - `original.gr` — Grammaire BP3 originale (Bernard)
 - `silent.gr` — Grammaire avec alphabet silent (pour S4)
 - `silent.al` — Alphabet silent sound objects
 - `scene.bps` — Source BPscript (pour S5)
+- `status.json` — état par grammaire (dates, notes de validation)
 - `snapshots/` — Résultats JSON de chaque stage
+
+L'état de couverture (qui a une baseline, qui a une scène) : `grammars/BASELINE_COVERAGE.md`.
 
 ## resolve_bin.cjs
 

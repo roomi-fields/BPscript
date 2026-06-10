@@ -18,6 +18,13 @@
 
 ## Item 1 — Table d'homomorphisme (`-ho`) — PRIORITÉ HAUTE
 
+> ✅ **LIVRÉ 2026-06-10** — le parser attache `ast.homomorphisms` (`{name, pairs, line}`),
+> `lib/transcription.json` reproduit fidèlement les sources BP3, et les scènes `dhati`/`dhin`
+> sont re-marquées (marqueur d'homo sur l'esclave). La voie alternative « étiquetage
+> post-dérivation » est ajournée. Vérifié côté review : contrat conforme à `ast.ts:150-157`.
+> Note : le WASM BP3, lui, ignore la table de l'alphabetFile (dhati/dhin byte-identiques
+> avant/après) — la substitution se joue côté BPx, comme prévu.
+
 **Débloque** : dhati (oracle 37 tokens), dhin (oracle 30). Aujourd'hui leurs esclaves rejouent le
 maître **non traduit** ; BP3 substitue les frappes (dha→ta, ge→ke, dhin→tin, dhee→tee).
 
@@ -66,6 +73,12 @@ maître **non traduit** ; BP3 substitue les frappes (dha→ta, ge→ke, dhin→t
 
 ## Item 2 — Découpage `do4-` (note collée au silence) — PRIORITÉ MOYENNE
 
+> ✅ **LIVRÉ 2026-06-10 (côté transpileur)** — le tokenizer pèle le `-` final comme BP3
+> (`do4-` → IDENT `do4` + REST `-`), specs AST.md/EBNF.md alignées, 82 tests tokenizer verts.
+> ⚠️ La validation S5 de bout en bout de 765432 est bloquée par **2 bugs moteur découverts au
+> passage** (cf `test/FEEDBACK_BERNARD.md` #48 terminal à tiret final → segfault, #49 terminal
+> court `Su` masque `Suresh1`) — le moteur refuse la grammaire sur tous les builds disponibles.
+
 **Débloque** : 765432 (oracle 1497 tokens, BPx 824). **Les histogrammes de notes sont DÉJÀ
 identiques** (538 do7, 90 do4, …) ; seuls manquent les **659 silences de prolongation `-`**.
 
@@ -80,6 +93,14 @@ identiques** (538 do7, 90 do4, …) ; seuls manquent les **659 silences de prolo
 ---
 
 ## Item 3 — ~56 grammaires non transpilées — PRIORITÉ MOYENNE (volume)
+
+> ✅ **LIVRÉ 2026-06-10** — **14 `scene.bps` ajoutés** pendant la campagne (vérifié git,
+> `a43fdaa..HEAD`) : csound, dhin1, major-minor, scales, transposition, transposition1,
+> tryConsoleMaxTime, tryCsoundObjects, tryObjects, tryRagas, tryShruti, tryflags2, tunings,
+> vina3. Le reste de la liste est soit couvert d'avance (doublons de casse fusionnés :
+> visser3/visser5/koto1/koto2…), soit **exclu avec raison datée** dans
+> `test/grammars/grammars.json` (PP, gramgene1/2, tryLIN, checkcontext…) — pas de drop
+> silencieux. État complet : `test/grammars/BASELINE_COVERAGE.md`.
 
 **Débloque** : la **couverture-native** (le garde-fou `BPx/test/parity/native_coverage.test.ts`).
 Ces grammaires de `BPscript/test/grammars/<nom>/` **n'ont pas de `scene.bps`** → pas de sortie
@@ -103,6 +124,9 @@ transpileur → BPx ne peut même pas les charger/tester. Elles sont comptées c
 
 ## Item 4 — Préfixe de placement de règle `[scan:left|right|rnd]` — PRIORITÉ BASSE
 
+> ✅ **LIVRÉ 2026-06-10** — le parser pose `rule.mode` (LEFT/RIGHT/RND) depuis
+> `[scan:left|right|rnd]` (commit b4fa853), suite `test_scan_mode` 15/15 verte.
+
 **Débloque** : le placement explicite niveau-règle (gauche/droite/aléa), aujourd'hui testé côté BPx
 uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 
@@ -118,6 +142,11 @@ uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 
 ## Item 5 — Surface diverse droppée — PRIORITÉ BASSE (à confirmer)
 
+> ✅ **SOLDÉ 2026-06-10** — `@timepatterns` : correction déjà committée côté BPScript ;
+> l'oracle anomal `tryAllItems1` a été refait (s5 = 134 tokens, byte-identique à s4, plus de
+> têtes de règle X/Y/T dans l'alphabet). `[rndtime:N]` : arbitré **option B = fix côté BPx**
+> (cf `docs/COORDINATION_REPLY_BPSCRIPT.md` dans le dépôt BPx) — rien à faire côté transpileur.
+
 - **`[rndtime:N]`** : vérifier que la gigue temporelle de surface est bien transmise (BPx a le handler
   T41 / `randomTime`).
 - **`@timepatterns`** : une anomalie d'alphabet a été signalée sur l'oracle des motifs temporels — à
@@ -127,6 +156,10 @@ uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 ---
 
 ## Récapitulatif (pour priorisation)
+
+> **2026-06-10 : les 5 items sont livrés/soldés côté transpileur** (statuts détaillés en tête
+> de chaque item). Seul résidu : la validation moteur de 765432 (Item 2) attend les fixes
+> FEEDBACK_BERNARD #48/#49.
 
 | Item | Débloque | Effort BPScript | BPx prêt ? |
 |---|---|---|---|

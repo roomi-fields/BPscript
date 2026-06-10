@@ -253,14 +253,17 @@
   "csound": {
     "bernard": "tryCsound",
     "status": "excluded",
-    "reason": "S1 native bug: ResetWeights=0 in original settings → after 2 items, weights drop to zero, infinite loop. MaxItemsProduce doesn't stop an unproductive derivation. Native hangs.",
+    "reason": "S1 native bug: ResetWeights=0 in original settings → after 2 items, weights drop to zero, infinite loop. MaxItemsProduce doesn't stop an unproductive derivation. Native hangs. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
     ],
     "features": [],
     "lines": 11,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 2
+    "php_errors": 2,
+    "scene_bps": true,
+    "production_mode": "midi",
+    "note": "Scène manuscrite (scenes/csound.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 11 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
   },
   "graphics": {
     "bernard": "tryGraphics",
@@ -367,7 +370,7 @@
       "alphabet": null
     },
     "note": "Timeout test: produces error message, not real production",
-    "reason": "Timeout test grammar. No production output — expected behavior."
+    "reason": "Timeout test grammar. No production output — expected behavior. [constat 2026-04-04]"
   },
   "tryLIN": {
     "bernard": "tryLIN",
@@ -413,7 +416,7 @@
       "-al",
       "-ho.abc1"
     ],
-    "reason": "S0 PHP produces no output. Needs -ho.abc1 loaded as alphabet via PHP interface."
+    "reason": "S0 PHP produces no output. Needs -ho.abc1 loaded as alphabet via PHP interface. [constat 2026-04-04]"
   },
   "negative-context": {
     "bernard": "checkNegativeContext",
@@ -930,7 +933,6 @@
   "tryShruti": {
     "bernard": "tryShruti",
     "status": "active",
-    "trou_langage": "Utilise _tempo() (contrôle engine) dans RHS — non représentable en BPscript sans syntaxe dédiée (E5, ajourné 2026-06-10). bp3ToScene émet NON GÉRÉ.",
     "production_mode": "midi",
     "s1_args": [
       "-se",
@@ -955,7 +957,9 @@
     ],
     "lines": 12,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 3
+    "php_errors": 3,
+    "scene_bps": true,
+    "note": "Trou-langage _tempo() résolu 2026-06-10 : bp3ToScene émet les contrôles engine verbatim (_tempo(...)) — round-trip FIDÈLE (5 règles), scene.bps généré (E4 forme appel)."
   },
   "trySrand": {
     "bernard": "trySrand",
@@ -1096,7 +1100,7 @@
   "tunings": {
     "bernard": "tryTunings",
     "status": "excluded",
-    "reason": "BP2 format + old settings, needs -cs. tonality. S1=raw text, S2=0.",
+    "reason": "BP2 format + old settings, needs -cs. tonality. S1=raw text, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
     ],
@@ -1106,7 +1110,10 @@
     ],
     "lines": 36,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 4
+    "php_errors": 4,
+    "scene_bps": true,
+    "production_mode": "midi",
+    "note": "Scène manuscrite (scenes/tunings.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 18 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
   },
   "tryCsoundObjects": {
     "bernard": "tryCsoundObjects",
@@ -1126,12 +1133,14 @@
       "settings": "-se.tryCsoundObjects",
       "alphabet": "-al.tryCsoundObjects"
     },
-    "s1_args": []
+    "s1_args": [],
+    "scene_bps": true,
+    "note": "scene.bps généré par le transpileur inverse bp3ToScene (E4 forme appel des contrôles), round-trip FIDÈLE 2026-06-10 (14 règles)."
   },
   "transposition": {
     "bernard": "tryTranspose",
     "status": "excluded",
-    "reason": "BP2 format grammar doesn't compile (same error as scales). S1=error text, S2=0.",
+    "reason": "BP2 format grammar doesn't compile (same error as scales). S1=error text, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
     ],
@@ -1139,7 +1148,10 @@
       "poly:4",
       "sub:1"
     ],
-    "lines": 22
+    "lines": 22,
+    "scene_bps": true,
+    "production_mode": "midi",
+    "note": "Scène manuscrite (scenes/transposition.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 151 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
   },
   "templates": {
     "bernard": "checktemplates",
@@ -1246,7 +1258,8 @@
       "settings": "-se.765432",
       "alphabet": null
     },
-    "production_mode": "midi"
+    "production_mode": "midi",
+    "trou_langage": "bp3ToScene NON GÉRÉ : _& (prolongation liée) — le ~ BPscript exige un symbole porteur, pas une prolongation. Comportement correct, pas un bug. L'argument '+' (_pitchbend(+200)) est lui accepté depuis le fix parseControl du 2026-06-10."
   },
   "Djinns": {
     "bernard": "Djinns",
@@ -1290,7 +1303,7 @@
   "livecode2": {
     "bernard": "livecode2",
     "status": "excluded",
-    "reason": "S1 native timeout (>120s). Improvize mode loops indefinitely despite MaxItemsProduce=10.",
+    "reason": "S1 native timeout (>120s). Improvize mode loops indefinitely despite MaxItemsProduce=10. [constat 2026-04-04]",
     "aux": [
       "se"
     ],
@@ -1383,7 +1396,7 @@
   },
   "transposition3": {
     "bernard": "transposition3",
-    "status": "excluded",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -1400,12 +1413,12 @@
       "settings": "-se.transposition3",
       "alphabet": null
     },
-    "reason": "Pas de S0 PHP valide (1 seul token S). Fichier grammaire en une seule ligne, hors protocole."
+    "note": "Baseline récupérée 2026-06-10 : le fichier grammaire mono-ligne CR (Mac) faussait le snapshot S0 (1 token). s0_snapshot.cjs normalise désormais CR→LF ; bp.exe produit 30 tokens, identiques à s1_native (30/30, vérifié sur bp.exe + bp3 natif)."
   },
   "major-minor": {
     "bernard": "tryMajorMinor",
     "status": "excluded",
-    "reason": "Needs -cs.Mozart tonality, grammar doesn't compile without it. S1=error messages, S2=0.",
+    "reason": "Needs -cs.Mozart tonality, grammar doesn't compile without it. S1=error messages, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
     ],
@@ -1415,7 +1428,10 @@
     ],
     "lines": 17,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 3
+    "php_errors": 3,
+    "scene_bps": true,
+    "production_mode": "midi",
+    "note": "Scène manuscrite (scenes/major-minor.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 37 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
   },
   "harmony": {
     "bernard": "tryHarmony",
@@ -1702,7 +1718,7 @@
   "scales": {
     "bernard": "tryScales",
     "status": "excluded",
-    "reason": "BP2 format grammar doesn't compile (Variable must start with uppercase). S1=error text, S2=0.",
+    "reason": "BP2 format grammar doesn't compile (Variable must start with uppercase). S1=error text, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
     ],
@@ -1712,7 +1728,10 @@
     ],
     "lines": 28,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 8
+    "php_errors": 8,
+    "scene_bps": true,
+    "production_mode": "midi",
+    "note": "Scène manuscrite (scenes/scales.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 37 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
   },
   "trySerial": {
     "bernard": "trySerial",
@@ -1776,7 +1795,7 @@
   "nadaka": {
     "bernard": "Nadaka",
     "status": "excluded",
-    "reason": "S1 OK mais S0 KO (compile fail PHP — settings -se.hamsad). Sortie de l'échantillon de test pour l'instant.",
+    "reason": "S1 OK mais S0 KO (compile fail PHP — settings -se.hamsad). Sortie de l'échantillon de test pour l'instant. [constat 2026-04-04]",
     "production_mode": "midi",
     "s1_args": [
       "-to",
@@ -1819,7 +1838,7 @@
   "vina3": {
     "bernard": "vina3",
     "status": "excluded",
-    "reason": "S1 native bug: loading -cs.Vina causes total hang of native engine. Without -cs, terminates immediately with 'instrument Vina not found'. With -cs, blocks forever, no output.",
+    "reason": "S1 native bug: loading -cs.Vina causes total hang of native engine. Without -cs, terminates immediately with 'instrument Vina not found'. With -cs, blocks forever, no output. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se",
       "to"
@@ -1831,12 +1850,15 @@
     ],
     "lines": 87,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 1
+    "php_errors": 1,
+    "scene_bps": true,
+    "production_mode": "midi",
+    "note": "Scène manuscrite (scenes/vina3.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 241 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
   },
   "dhin": {
     "bernard": "dhin--",
     "status": "excluded",
-    "reason": "S1 OK mais S0 KO (compile fail PHP — 22 erreurs, bols indiens). Sortie de l'échantillon de test pour l'instant.",
+    "reason": "S1 OK mais S0 KO (compile fail PHP — 22 erreurs, bols indiens). Sortie de l'échantillon de test pour l'instant. [constat 2026-04-04]",
     "production_mode": "text",
     "aux": [
       "se"
@@ -1872,7 +1894,9 @@
       "csound": "-cs.raga",
       "tonality": "-to.raga"
     },
-    "production_mode": "midi"
+    "production_mode": "midi",
+    "scene_bps": true,
+    "note": "scene.bps généré par bp3ToScene (E4 forme appel), round-trip FIDÈLE 2026-06-10 (12 règles). Caveat : un underscore final unique reste collé au terminal (pa3_, gak3_) — fidèle textuellement, sémantique prolongation à revoir."
   },
   "visser-waves": {
     "bernard": "Visser.Waves",
@@ -1896,7 +1920,7 @@
   "mohanam": {
     "bernard": "trial.mohanam",
     "status": "excluded",
-    "reason": "S1 OK mais S0 KO (compile fail PHP — dépendance -cs.trial.mohanam). Sortie de l'échantillon de test pour l'instant.",
+    "reason": "S1 OK mais S0 KO (compile fail PHP — dépendance -cs.trial.mohanam). Sortie de l'échantillon de test pour l'instant. [constat 2026-04-04]",
     "production_mode": "midi",
     "aux": [
       "se"
@@ -1945,12 +1969,12 @@
     "lines": 171,
     "php_status": "COMPILE_FAIL",
     "php_errors": 1,
-    "reason": "COMPILE_FAIL en PHP et S1 avec settings JSON officiels. Erreur: I46 This item cannot be played."
+    "reason": "COMPILE_FAIL en PHP et S1 avec settings JSON officiels. Erreur: I46 This item cannot be played. [constat 2026-04-04]"
   },
   "shapes-rhythm": {
     "bernard": "ShapesInRhythm",
     "status": "excluded",
-    "reason": "S1 native timeout (>120s). Known S1_FAIL — engine loops indefinitely.",
+    "reason": "S1 native timeout (>120s). Known S1_FAIL — engine loops indefinitely. [constat 2026-04-04]",
     "aux": [
       "se"
     ],
@@ -2104,7 +2128,8 @@
     }
   },
   "_comment": {
-    "status": "excluded"
+    "status": "excluded",
+    "reason": "Entrée placeholder non-grammaire (clé réservée aux commentaires). [constat 2026-06-10]"
   },
   "tryAllItems1": {
     "bernard": "tryAllItems1",

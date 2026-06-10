@@ -3,8 +3,8 @@
 Points ouverts identifiés pendant les tests systématiques des 36 grammaires actives.
 Les points résolus (#1-#31, #34, #37) sont tracés dans `bp3-engine/CHANGELOG_ENGINE.md`.
 
-Dernière mise à jour : 2026-04-06
-Build : v3.3.19-wasm.8
+Dernière mise à jour : 2026-06-10
+Build : v3.4.5-wasm.1
 
 ---
 
@@ -336,11 +336,117 @@ Alphabet : C4, D4, E4, F4. Seed=1.
 
 ---
 
+## 47. Compute — guards d'un non-terminal enfant aveugles aux flags mutés par le parent
+
+**Repro :** `scenes/m1_05_combo.bps` (via `test/run_bpx_scenes.cjs`), contournement prouvé
+`scenes/m1_05bis.bps`. WASM v3.4.5-wasm.1, seed=1.
+
+**Symptôme :** Quand une règle parent insère un non-terminal enfant **suivi d'une mutation de
+flag** :
+```
+Body --> Chunk Body /count-1/
+/count>=1/ Chunk --> ...      ← ce guard ne se déclenche JAMAIS
+```
+les guards `/count.../` portés par les règles de l'enfant (`Chunk`) ne voient pas les flags
+mutés par le parent — la règle gardée n'est jamais candidate, la dérivation prend la branche
+par défaut.
+
+**Contournement :** porter guards et mutation sur le **non-terminal qui se réécrit lui-même**
+(self-recursion) :
+```
+/count>=1/ Body --> ... Body /count-1/
+```
+Les self-mutations sont visibles au tour suivant car le même symbole est réévalué dans la même
+boucle de sélection. C'est le pattern utilisé par `m1_05bis.bps` (sortie attendue obtenue).
+
+**Impact :** tout pattern « compteur chez le parent, comportement chez l'enfant » — fréquent
+dans les grammaires structurées en couches.
+
+---
+
+## 48. CompileAlphabet/ReleaseAlphabetSpace — terminal d'alphabet à tiret final (`do4-`) → segfault
+
+**Repro :** 765432 — sortie de l'**ancien** transpileur, dont l'alphabet contenait 7 collages
+`do4-`, `mi4-`, `sol5-`, `do7-`… (note+silence en un seul terminal). Seed=1.
+
+**Symptôme :** SIGSEGV en natif, « memory access out of bounds » en WASM, dans la chaîne
+`CompileAlphabet` → `ReleaseAlphabetSpace`. Reproduit sur **v3.4.4-wasm.1 ET v3.4.5-wasm.1**
+(natif + WASM) — pas une régression récente. Seule diff grammaire entre les deux sorties
+transpileur : `gram#12 {1,do4-}` → `{1,do4 -}` ; côté alphabet : −7 collages.
+
+**Contexte :** le transpileur actuel ne produit plus ces collages (le tokenizer pèle le `-`
+final comme BP3, cf. `SEARCHTERMINAL2`, Encode.c:888-915). Mais un alphabet utilisateur
+contenant un terminal à tiret final fait toujours crasher le moteur — un rejet propre à la
+compilation d'alphabet serait préférable.
+
+---
+
+## 49. Encode — terminal court masque les variables qui le préfixent (`Su` vs `Suresh1`)
+
+**Repro :** 765432 (alphabet : terminaux `Su`, `Sm`, `Ol`, `Vi`, `Ar`, `An` ; variables
+`Suresh1/2`, `Smriti1/2`…). Reproduit sur bp3 natif v3.4.5. Seed=1.
+
+**Symptôme :** ×14 messages « Variable must start with uppercase… Can't make sense of
+"resh1" » (erreur 15) : le matcher consomme le terminal `Su` au début de `Suresh1` et tente de
+parser le reste (`resh1`) comme un nouveau symbole. La grammaire est refusée → production = 0.
+
+**Conséquence :** 765432 ne tourne plus en S5 sur aucun build disponible (les deux bugs #48 et
+#49 se combinent selon la sortie transpileur utilisée). Le snapshot 1497 tokens
+(2026-04-26, v3.4.2-wasm.2) est conservé comme dernier état valide — build absent de
+`builds/`, donc non reproductible.
+
+**Contournement transpileur possible (non appliqué) :** renommer/préfixer les variables qui
+partagent un préfixe avec un terminal d'alphabet.
+
+---
+
+## 50. Performance — `watch` : ralentissement sévère (~130 s avril → ~257 s CPU v3.4.5)
+
+**Grammaire :** `-gr.Watch_What_Happens` (2106 notes MIDI, ~81 s de musique), seed=1.
+
+**Symptôme :** en avril (v3.3.19) le run S2/S4/S5 tenait dans le timeout harnais de 130 s.
+Sur v3.4.5-wasm.1 : ~15 min temps réel / 4 min 17 s CPU → timeout systématique dans les suites
+(FAIL S2/S4/S5, ETIMEDOUT).
+
+**Vérifié :** quand on laisse le run aller au bout, le contenu est **byte-identique** au
+snapshot committé (2662 tokens) — pur ralentissement, aucune divergence de calcul.
+
+**Question :** quelque chose entre v3.3.19 et v3.4.5 a multiplié le coût (×2 environ) sur les
+grammaires longues à scheduling séquentiel. À profiler côté moteur.
+
+---
+
+## 51. Compute — garde mono-item (rc=-4) frappe aussi les chaînes intermédiaires inter-sous-grammaires
+
+**Repro :** `scenes/m1_04_recursion.bps` via `test/run_bpx_scenes.cjs`. Présent sur
+**v3.4.4-wasm.1 ET v3.4.5-wasm.1** (pas une régression). Complément du §0 de
+`docs/issues/S8_ADVANCED_MECHANISMS.md`.
+
+**Symptôme connu :** toute dérivation aboutissant à un **unique terminal** échoue (rc=-4,
+garde `(*p_length) < 3L` dans Compute.c).
+
+**Complément 2026-06-10 :** le garde frappe aussi les chaînes **intermédiaires** entre
+sous-grammaires. Si la sous-grammaire 1 laisse un seul item dans la chaîne de travail :
+```
+gram#1[1] S --> Loop /count=3/
+```
+la production avorte (« Cannot produce items because all weights are nil in gram#1 » +
+« Error finding nb_candidates in Compute.c ») même si la dérivation complète (gram#2 développe
+`Loop`) aurait donné 2+ tokens. Avec 2 symboles en RHS (`S --> Loop Pad`), la même grammaire
+dérive normalement.
+
+**Note :** BPx, lui, dérive cette scène (`test/parity/m1.test.ts` côté BPx) — le FAIL est
+attendu côté BP3 tant que le garde existe.
+
+---
+
 ## Notes pour référence
 
+- Build courant v3.4.5-wasm.1 (2026-06-10) ; entrées #47-#51 ajoutées au solde de la campagne
+  homomorphismes/tokenizer/bp3ToScene (vague de vérification V/U/R du 2026-06-10)
 - Build v3.3.19-wasm.8 (2026-04-06) — sources = Bernard v3.3.19 (cf9d788) + fixes #39, #42, #43 + patches #40a-c
 - Non-reg wasm.8 : S1=36/36, S2=36/36, S3=S4=35/35, S4vsS5=16/31 EXACT
-- 36 grammaires actives (bells skip — fichiers -ho.cloches1 manquants)
-- Points ouverts : #32, #36, #40, #44
+- 38 grammaires actives au 2026-06-10 (39 avec transposition3 récupérée ; bells skip — fichiers -ho.cloches1 manquants)
+- Points ouverts : #32, #36, #40, #44, #47, #48, #49, #50, #51
 - Résolu moteur : #39 (p_DefaultChannel), #42 (sentinel -1), #43 (CT catchall) — fixes à intégrer par Bernard
 - Résolu WASM : #33 (dedup keep-longest, wasm.2), #35 (Kpress offset, wasm.3), #38 (T47 SSO, wasm.4)
