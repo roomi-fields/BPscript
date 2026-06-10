@@ -21,16 +21,22 @@
  *   - Variables |x| → passées telles quelles
  *   - Wildcards ?, ?1 → passés tels quels
  *   - Contextes (A B) et #X → passés tels quels
- *   - Polymetrie {N,A B} → passée telle quelle
+ *   - Polymetrie {N,A B} → champs convertis (liés &→~, prolongations, contrôles)
  *   - Opérateurs BP3 +, ;, * (bare) → noms BPscript plus/fin/star
  *   - lambda (nil) → passé tel quel
  *   - Silence -, prolongation _
+ *   - Contrôles BP3 présents dans lib/controls.json (_pitchbend, _volume,
+ *     _scale, _tempo, _retro, _legato, …) :
+ *       en tête de RHS → suffixe de règle (ctrl:val)   [E2/E3/E3bis]
+ *       ailleurs (trailing, milieu, dans {…}) → FORME APPEL ctrl(args)
+ *       positionnelle [E4] — la scène charge alors @controls
  *
  * Constructs NON GÉRÉS (stop-and-report par grammaire) :
- *   - Contrôles engine dans le RHS : _vel, _transpose, _chan, _script, etc.
+ *   - Contrôles _xxx absents de lib/controls.json (_srand, _print, …) et _script
+ *   - Arguments de forme appel contenant '+' (ex: _pitchbend(+200)) :
+ *     parseControl ne consomme pas le token + → boucle infinie (limitation parser)
  *   - TEMPLATES: / TIMEPATTERNS: sections (non gérées via compileBPS)
- *   - _print dans les règles BP2
- *   - _goto, _failed, _repeat engine directives
+ *   - Opérateurs tempo nus /N \N dans le RHS
  *
  * Note sur les preambles :
  *   Les lignes de preamble (_mm, _striated, etc.) sont passées verbatim
@@ -39,6 +45,56 @@
  *   directives @mode:X(mm:N,striated).
  *   Pour un round-trip fidèle du preamble, on utilise @mode:X(modifiers).
  */
+
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+// ─── Contrôles BP3 connus (lib/controls.json = autorité engine-vs-runtime) ───
+//
+// Forme appel (E4) : un contrôle BP3 `_xxx(args)` en position non couverte par
+// les formes existantes (tête de RHS → suffixe de règle) est traduit en forme
+// appel BPscript `xxx(args)` à la position exacte du .gr. compileBPS émet :
+//   - runtime : _script(CT n) positionné (résolu via controlTable)
+//   - engine  : _xxx(args) verbatim à la même position
+// La scène générée doit alors charger @controls.
+const _bp3ToSceneDir = dirname(fileURLToPath(import.meta.url));
+const _controlsLib = JSON.parse(
+  readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'controls.json'), 'utf-8')
+);
+
+/**
+ * Construit la map token BP3 (_xxx) → { bps, kind, noArg } depuis lib/controls.json.
+ *   - runtime : token BP3 implicite '_' + clé (pas de champ bp3 dans le JSON)
+ *   - engine  : champ bp3 explicite (_tempo, _rndseq, …)
+ * Exclusions :
+ *   - 'script' : _script(CT n) est l'encodage compilé BPscript — un _script
+ *     au niveau source ne peut pas faire de round-trip.
+ *   - collisions runtime/engine (ex: rotate) : runtime prioritaire
+ *     (autorité controls.json : transpose/rotate/keyxpand sont runtime).
+ */
+function buildControlMap(lib) {
+  const map = new Map();
+  for (const group of Object.values(lib.runtime)) {
+    if (typeof group !== 'object' || group === null) continue;  // _comment
+    for (const [key, def] of Object.entries(group)) {
+      if (key === '_comment' || key === 'script') continue;
+      map.set('_' + key, { bps: key, kind: 'runtime', noArg: !(def.args && def.args.length) });
+    }
+  }
+  for (const [key, def] of Object.entries(lib.engine)) {
+    if (key === '_comment' || !def || !def.bp3) continue;
+    if (map.has(def.bp3)) continue;  // runtime prioritaire
+    map.set(def.bp3, { bps: key, kind: 'engine', noArg: !(def.args && def.args.length) });
+  }
+  return map;
+}
+
+const BP3_CONTROL_MAP = buildControlMap(_controlsLib);
+
+// Token contrôle BP3 : _name ou _name(args) (après tokenizeBP3Line, les args
+// arrivent généralement dans un token séparé "(args)" — fusion au cas par cas).
+const BP3_CTRL_TOKEN_RE = /^(_[A-Za-z]+)(?:\(([^)]*)\))?$/;
 
 // ─── Mappings inverse ────────────────────────────────────────────────────────
 
@@ -386,6 +442,30 @@ function bp3ToScene(grammarText, opts) {
 
   const bpsLines = [];
 
+  // E4 — décision au niveau GRAMMAIRE : si une règle exige la forme appel,
+  // la scène charge @controls, et @controls change la position des _script(CT)
+  // émis par la forme suffixe (E2/E3). Les deux formes ne cohabitent donc pas :
+  // dès qu'une règle est en forme appel, TOUTES les règles à contrôles le sont.
+  let grammarCallMode = false;
+  for (const sub of subgrammars) {
+    for (const rule of sub.rules) {
+      if (decideRhsControlMode(rule.rhs).mode === 'call') { grammarCallMode = true; break; }
+    }
+    if (grammarCallMode) break;
+  }
+  // Les règles promues de legacy vers forme appel doivent aussi avoir des
+  // arguments représentables (le check de phase 1 ne valide que le mode 'call').
+  if (grammarCallMode) {
+    for (const sub of subgrammars) {
+      for (const rule of sub.rules) {
+        const err = validateCallFormControls(rule.rhs);
+        if (err) {
+          return `NON GÉRÉ: ${err} (forme appel imposée par une autre règle — gram#${rule.blockNum}[${rule.ruleNum}])`;
+        }
+      }
+    }
+  }
+
   for (let si = 0; si < subgrammars.length; si++) {
     const sub = subgrammars[si];
 
@@ -438,8 +518,8 @@ function bp3ToScene(grammarText, opts) {
       const bpsArrow = BP3_TO_BPS_ARROW[rule.arrow] || rule.arrow;
       parts.push(bpsArrow);
 
-      // RHS
-      const rhsBps = convertBP3TokensToBPS(rule.rhs);
+      // RHS — forme appel (E4) au niveau grammaire (voir pré-passe ci-dessus)
+      const rhsBps = convertBP3TokensToBPS(rule.rhs, grammarCallMode);
       parts.push(rhsBps);
 
       // Flags RHS → suffixes [flag...] en BPscript
@@ -472,6 +552,9 @@ function bp3ToScene(grammarText, opts) {
       // POUR L'INSTANT : on ne les émet pas → DIFFÈRE pour les grammaires avec templates.
     }
   }
+
+  // E4 : charger la librairie de contrôles pour les formes appel
+  if (grammarCallMode) bpsLines.unshift('@controls');
 
   // ── Résultat : avec ou sans opts -ho ─────────────────────────────────────
 
@@ -577,6 +660,220 @@ function analyzeRhsControls(rhs) {
   return { headControls, hasTrailingControls, hasControlsInsidePolymetry };
 }
 
+// ─── Forme appel (E4) : analyse et conversion positionnelle des contrôles ────
+
+/**
+ * Découpe un texte sur les virgules de profondeur 0 (hors {…} et (…)).
+ * Utilisé pour séparer les champs d'une polymétrie {dur, seq1, seq2}.
+ */
+function splitTopLevelCommas(text) {
+  const fields = [];
+  let depth = 0;
+  let cur = '';
+  for (const c of text) {
+    if (c === '{' || c === '(') depth++;
+    else if (c === '}' || c === ')') depth--;
+    if (c === ',' && depth === 0) { fields.push(cur); cur = ''; }
+    else cur += c;
+  }
+  fields.push(cur);
+  return fields;
+}
+
+/**
+ * Collecte récursivement tous les tokens contrôle BP3 connus (BP3_CONTROL_MAP)
+ * dans un texte de RHS, y compris à l'intérieur des polymétries {…}.
+ * Retourne [{ bp3, args, inBrace }] dans l'ordre d'apparition.
+ * args === null pour un contrôle sans parenthèses (_pitchcont, _retro).
+ */
+function collectMapControls(text, inBrace = false, acc = []) {
+  const tokens = tokenizeBP3Line(text);
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    if (tok.startsWith('{') && tok.endsWith('}')) {
+      for (const field of splitTopLevelCommas(tok.slice(1, -1))) {
+        collectMapControls(field, true, acc);
+      }
+      continue;
+    }
+    const m = tok.match(BP3_CTRL_TOKEN_RE);
+    if (m && BP3_CONTROL_MAP.has(m[1])) {
+      let args = m[2] !== undefined ? m[2] : null;
+      if (args === null && i + 1 < tokens.length) {
+        const nx = tokens[i + 1];
+        if (nx.startsWith('(') && nx.endsWith(')') && !nx.startsWith('(=') && !nx.startsWith('(:')) {
+          args = nx.slice(1, -1);
+          i++;
+        }
+      }
+      acc.push({ bp3: m[1], args, inBrace });
+    }
+  }
+  return acc;
+}
+
+/**
+ * Reconstruit le texte sans les tokens contrôle connus (récursif dans {…}).
+ * Sert à masquer les contrôles convertibles avant les checks génériques
+ * (ENGINE_CTRL_RHS_RE, opérateurs tempo /N, durées N/N/N).
+ */
+function stripMapControls(text) {
+  const tokens = tokenizeBP3Line(text);
+  const out = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    if (tok.startsWith('{') && tok.endsWith('}')) {
+      const fields = splitTopLevelCommas(tok.slice(1, -1)).map(f => stripMapControls(f));
+      out.push('{' + fields.join(',') + '}');
+      continue;
+    }
+    const m = tok.match(BP3_CTRL_TOKEN_RE);
+    if (m && BP3_CONTROL_MAP.has(m[1])) {
+      if (m[2] === undefined && i + 1 < tokens.length) {
+        const nx = tokens[i + 1];
+        if (nx.startsWith('(') && nx.endsWith(')') && !nx.startsWith('(=') && !nx.startsWith('(:')) i++;
+      }
+      continue;
+    }
+    out.push(tok);
+  }
+  return out.join(' ');
+}
+
+/**
+ * Décide la stratégie de conversion des contrôles d'un RHS :
+ *   { mode: 'none' }    — aucun contrôle connu
+ *   { mode: 'legacy' }  — contrôles runtime convertibles uniquement en TÊTE
+ *                         (ou standalone) → forme suffixe de règle (E2/E3)
+ *   { mode: 'call' }    — au moins un contrôle en position trailing/milieu/{…}
+ *                         ou un contrôle engine → forme appel positionnelle (E4)
+ *   { error: '…' }      — contrôle non représentable en forme appel
+ *
+ * Limitation parser connue : le token '+' dans les args d'une forme appel
+ * n'est pas consommé par parseControl (boucle infinie) → NON GÉRÉ explicite.
+ */
+function decideRhsControlMode(rhs) {
+  if (!rhs) return { mode: 'none' };
+  const all = collectMapControls(rhs);
+  if (all.length === 0) return { mode: 'none' };
+
+  const allLegacySet = all.every(c => !c.inBrace && RUNTIME_CTRL_CONVERTIBLE_RE.test(c.bp3));
+  if (allLegacySet) {
+    const a = analyzeRhsControls(rhs);
+    if (!a.hasTrailingControls && !a.hasControlsInsidePolymetry) return { mode: 'legacy' };
+  }
+
+  const err = validateCallFormControls(rhs);
+  if (err) return { error: err };
+  return { mode: 'call' };
+}
+
+/**
+ * Vérifie que tous les contrôles connus d'un RHS sont représentables en
+ * forme appel (arguments parsables par parseControl).
+ * Retourne une description d'erreur ou null.
+ */
+function validateCallFormControls(rhs) {
+  for (const c of collectMapControls(rhs)) {
+    if (c.args !== null && c.args.includes('+')) {
+      return `contrôle ${c.bp3}(${c.args}) : argument avec '+' non représentable en forme appel (parseControl ne consomme pas le token + — boucle infinie, limitation parser connue)`;
+    }
+    if (c.args !== null && !/^[A-Za-z0-9_,.\/\-#= ]*$/.test(c.args)) {
+      return `contrôle ${c.bp3}(${c.args}) : caractères d'argument non gérés en forme appel`;
+    }
+  }
+  return null;
+}
+
+/**
+ * Émet la forme appel BPscript d'un contrôle BP3.
+ *   _pitchbend + "100"  → pitchbend(100)
+ *   _pitchcont + null   → pitchcont        (contrôle sans argument)
+ *   _tempo + "3/4"      → tempo(3/4)
+ */
+function emitCallForm(bp3Name, args) {
+  const def = BP3_CONTROL_MAP.get(bp3Name);
+  if (args === undefined || args === null || args.trim() === '') {
+    return def.noArg ? def.bps : `${def.bps}()`;
+  }
+  return `${def.bps}(${args.trim()})`;
+}
+
+/**
+ * Convertit un groupe polymétrique {…} BP3 en BPscript.
+ * Appliqué dans les DEUX modes (legacy et forme appel) :
+ *   - liés X& → X~ et &X → ~X ('&' nu dans {…} n'est pas accepté par compileBPS)
+ *   - prolongations collées X__ → X _ _ et ____ → _ _ _ _
+ *   - alias des identifiants à tirets (dhin-- → dhinOO)
+ *   - en mode forme appel : contrôles _xxx(args) → xxx(args)
+ * Les champs (séparés par des virgules de profondeur 0) sont convertis
+ * indépendamment puis rejoints.
+ */
+function convertBraceGroup(tok, callMode) {
+  if (!tok.startsWith('{') || !tok.endsWith('}')) return tok;
+  const fields = splitTopLevelCommas(tok.slice(1, -1))
+    .map(f => convertSequenceInBrace(f, callMode));
+  return '{' + fields.join(', ') + '}';
+}
+
+function convertSequenceInBrace(field, callMode) {
+  const tokens = tokenizeBP3Line(field);
+  const out = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+
+    // Polymétrie imbriquée
+    if (tok.startsWith('{') && tok.endsWith('}')) {
+      out.push(convertBraceGroup(tok, callMode));
+      continue;
+    }
+
+    // Contrôle connu → forme appel (mode E4 uniquement)
+    if (callMode) {
+      const cm = tok.match(BP3_CTRL_TOKEN_RE);
+      if (cm && BP3_CONTROL_MAP.has(cm[1])) {
+        let args = cm[2];
+        if (args === undefined && i + 1 < tokens.length) {
+          const nx = tokens[i + 1];
+          if (nx.startsWith('(') && nx.endsWith(')') && !nx.startsWith('(=') && !nx.startsWith('(:')) {
+            args = nx.slice(1, -1);
+            i++;
+          }
+        }
+        out.push(emitCallForm(cm[1], args));
+        continue;
+      }
+    }
+
+    // Prolongations collées
+    if (/^_{2,}$/.test(tok)) {
+      for (let k = 0; k < tok.length; k++) out.push('_');
+      continue;
+    }
+    {
+      const um = tok.match(/^(.+?)(_{2,})$/);
+      if (um) {
+        out.push(aliasTerminalDashes(um[1]));
+        for (let k = 0; k < um[2].length; k++) out.push('_');
+        continue;
+      }
+    }
+
+    // Liés X& → X~ et &X → ~X
+    if (/^[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
+      out.push(aliasTerminalDashes(tok.slice(0, -1)) + '~');
+      continue;
+    }
+    if (/^&[A-Za-z0-9]/.test(tok) && !tok.startsWith('(:')) {
+      out.push('~' + aliasTerminalDashes(tok.slice(1)));
+      continue;
+    }
+
+    out.push(aliasTerminalDashes(tok));
+  }
+  return out.join(' ');
+}
+
 // ─── Vérification du RHS ──────────────────────────────────────────────────────
 
 /**
@@ -596,38 +893,31 @@ function analyzeRhsControls(rhs) {
 function checkRhsForUnsupported(rhs) {
   if (!rhs) return null;
 
-  // ── Contrôles runtime convertibles (E2/E3/E3bis) ──────────────────────────
-  {
-    const hasAnyConvertible = RUNTIME_CTRL_CONVERTIBLE_RE.test(rhs);
-    if (hasAnyConvertible) {
-      const analysis = analyzeRhsControls(rhs);
-      // Contrôle inside polymetry → non représentable en BPscript
-      if (analysis.hasControlsInsidePolymetry) {
-        const ctrl = rhs.match(/\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/);
-        return `contrôle runtime "_${ctrl ? ctrl[1] : 'ctrl'}" dans un bloc {...} (non représentable — controls inside polymetry)`;
-      }
-      // Contrôle en position trailing (après musique) → non représentable
-      if (analysis.hasTrailingControls) {
-        const ctrl = rhs.match(/\b_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/);
-        return `contrôle runtime "_${ctrl ? ctrl[1] : 'ctrl'}" en position trailing dans RHS (non représentable — après des tokens musicaux)`;
-      }
-      // Sinon : tous les contrôles sont en tête → OK (E2/E3/E3bis)
-      // convertBP3TokensToBPS les émet en suffixe de règle.
-    }
-  }
+  // ── Contrôles connus (E2/E3/E3bis legacy + E4 forme appel) ────────────────
+  // decideRhsControlMode valide la représentabilité :
+  //   - mode 'legacy' : contrôles runtime en tête → suffixe de règle (inchangé)
+  //   - mode 'call'   : positions trailing/milieu/{…} et contrôles engine
+  //                     → forme appel positionnelle (nécessite @controls)
+  //   - error         : argument non parsable en forme appel (ex: '+')
+  const decision = decideRhsControlMode(rhs);
+  if (decision.error) return decision.error;
 
-  const m = rhs.match(ENGINE_CTRL_RHS_RE);
+  // Masquer les contrôles convertibles avant les checks génériques :
+  // _tempo(3/4) ne doit plus déclencher ENGINE_CTRL_RHS_RE ni TEMPO_OP_RHS_RE.
+  const masked = decision.mode === 'none' ? rhs : stripMapControls(rhs);
+
+  const m = masked.match(ENGINE_CTRL_RHS_RE);
   if (m) {
-    return `contrôle engine "_${m[1]}" dans RHS (non représentable en BPscript sans contrôles chargés)`;
+    return `contrôle engine "_${m[1]}" dans RHS (absent de lib/controls.json — non convertible en forme appel)`;
   }
-  if (TEMPO_OP_RHS_RE.test(rhs)) {
+  if (TEMPO_OP_RHS_RE.test(masked)) {
     return `opérateur tempo /N ou \\N dans RHS (syntaxe BPscript X[/N] différente, conversion non implémentée)`;
   }
   // DURATION_SLASH_RE : bloquer uniquement si ce n'est pas un préfixe de mètre N+N/M
   // Les mètres N+N/M sont convertis en qualifier [meter:...] par convertBP3TokensToBPS.
   // On teste après avoir retiré le préfixe de mètre éventuel.
   {
-    const withoutMeter = stripMeterPrefix(rhs);
+    const withoutMeter = stripMeterPrefix(masked);
     if (DURATION_SLASH_RE.test(withoutMeter)) {
       return `notation durée multiplicative N/N dans RHS (ex: 4/4/4, non représentable en BPscript)`;
     }
@@ -793,8 +1083,13 @@ function convertRuntimeControlToBPS(tok) {
  *   - Token &X → ~X (lié arrière) — distingué de (:X) par absence de parens
  *   - Token __ (N underscores) → _ _ _ ... (N tokens séparés)
  *   - Annotations libres [texte libre] → supprimées (extractSignificant les ignore aussi)
+ *   - Polymétries {…} : liés/prolongations convertis dans les champs (les deux modes)
+ *
+ * @param {string} text      Texte BP3 (LHS ou RHS)
+ * @param {boolean} callMode E4 : émettre les contrôles connus en FORME APPEL
+ *                           positionnelle xxx(args) au lieu du suffixe de règle.
  */
-function convertBP3TokensToBPS(text) {
+function convertBP3TokensToBPS(text, callMode = false) {
   if (!text) return '';
 
   // ── Template nue BP2 : "(= X Y Z" ou "(: X Y Z" sans ")" de fermeture ──────
@@ -821,7 +1116,9 @@ function convertBP3TokensToBPS(text) {
   //   _scale(X,0) music  → music (scale:X,0)            [E2]
   //   _r(200) _pb(0) a   → a (pitchrange:200, pitchbend:0)  [E3]
   // Si le RHS ne contient QUE des contrôles (standalone), on les émet inline.
-  if (RUNTIME_CTRL_CONVERTIBLE_RE.test(text)) {
+  // En mode forme appel (E4), ce bloc est court-circuité : les contrôles sont
+  // émis positionnellement par la boucle principale.
+  if (!callMode && RUNTIME_CTRL_CONVERTIBLE_RE.test(text)) {
     const analysis = analyzeRhsControls(text);
     const hasMusic = analysis.headControls.length < tokenizeBP3Line(text).filter(t => !t.startsWith('(')).length + analysis.headControls.length;
     // Vérifier s'il y a des tokens non-contrôle après les headControls
@@ -880,6 +1177,29 @@ function convertBP3TokensToBPS(text) {
 
   for (let ti = 0; ti < tokens.length; ti++) {
     const tok = tokens[ti];
+
+    // ── Polymétries {…} : conversion des champs (liés, prolongations, contrôles E4)
+    if (tok.startsWith('{') && tok.endsWith('}')) {
+      out.push(convertBraceGroup(tok, callMode));
+      continue;
+    }
+
+    // ── E4 : contrôles connus → forme appel positionnelle ───────────────────
+    if (callMode) {
+      const cm = tok.match(BP3_CTRL_TOKEN_RE);
+      if (cm && BP3_CONTROL_MAP.has(cm[1])) {
+        let args = cm[2];
+        if (args === undefined && ti + 1 < tokens.length) {
+          const nx = tokens[ti + 1];
+          if (nx.startsWith('(') && nx.endsWith(')') && !nx.startsWith('(=') && !nx.startsWith('(:')) {
+            args = nx.slice(1, -1);
+            ti++;
+          }
+        }
+        out.push(emitCallForm(cm[1], args));
+        continue;
+      }
+    }
 
     // ── Contrôles runtime convertibles en (ctrl:val) ─────────────────────────
     // BP3 tokenise _transpose(0) en deux tokens : "_transpose" et "(0)".

@@ -25,6 +25,29 @@ const ROOT = path.resolve(__dirname, '..');
 const TEST_DATA = path.join(ROOT, 'bp3-engine', 'test-data');
 const SRC = path.join(ROOT, 'src', 'transpiler');
 
+// Contrôles runtime (lib/controls.json = autorité engine-vs-runtime).
+// Normalisation générique appliquée aux DEUX côtés de la comparaison :
+//   _name(args) → _ctrl(name,args)        (contrôles avec arguments)
+//   _name       → _ctrl(name,1)           (contrôles sans arguments)
+// 'script' est exclu : _script(CT n) est l'encodage compilé BPscript,
+// résolu séparément par resolveScriptCT via la controlTable.
+// Les contrôles ENGINE (_tempo, _retro, _legato…) ne sont PAS normalisés :
+// ils sont émis verbatim par compileBPS et se comparent directement.
+const RUNTIME_CTRLS = (() => {
+  const lib = require(path.join(ROOT, 'lib', 'controls.json'));
+  const out = [];
+  for (const group of Object.values(lib.runtime)) {
+    if (typeof group !== 'object' || group === null) continue;
+    for (const [name, def] of Object.entries(group)) {
+      if (name === '_comment' || name === 'script') continue;
+      out.push({ name, noArg: !(def.args && def.args.length) });
+    }
+  }
+  // Noms longs d'abord (évite que _volume( capture un préfixe de _volumecont, etc.)
+  out.sort((a, b) => b.name.length - a.name.length);
+  return out;
+})();
+
 // --- Helpers ----------------------------------------------------------------
 
 /**
@@ -81,6 +104,10 @@ function extractSignificant(text) {
 
     raw = raw.replace(/\s+/g, ' ').trim();
 
+    // Normaliser l'espacement autour des virgules : "{43/10, x}" → "{43/10,x}",
+    // "{9 A _ , B}" → "{9 A _,B}". compileBPS émet toujours la forme serrée.
+    raw = raw.replace(/\s*,\s*/g, ',');
+
     // Normaliser _mm(N.0000) → _mm(N) (même valeur musicale, formatage différent)
     raw = raw.replace(/_mm\((\d+)\.0+\)/g, '_mm($1)');
 
@@ -107,6 +134,9 @@ function extractSignificant(text) {
     // Doit venir AVANT le strip ")" pour que les deux formes convergent.
     raw = raw.replace(/\)\s*\(/g, ') (');
 
+    // Normaliser les polymetries adjacentes sans espace : }{ → } { (BP3 colle souvent)
+    raw = raw.replace(/\}\s*\{/g, '} {');
+
     // Normaliser templates avec ")" de fermeture → sans ")".
     // BP2 templates nues n'ont pas de ")", les templates compilées en ont.
     // Normaliser les deux vers la forme sans ")" pour un round-trip FIDÈLE.
@@ -125,8 +155,9 @@ function extractSignificant(text) {
     // Normaliser la notation de période collée : "M1." → "M1 ." pour converger
     // avec la sortie de compileBPS qui insère toujours un espace avant le ".".
     // Pattern : token finissant par "." et précédé d'un caractère alphanum.
-    // On ne modifie pas un "." seul (séparateur) ni un ".0000" dans _mm(N.0000).
-    raw = raw.replace(/([A-Za-z0-9'#_]+)\./g, '$1 .');
+    // On ne modifie pas un "." seul (séparateur) ni un ".0000" dans _mm(N.0000),
+    // ni une décimale N.M (ex: _value(blurb,25.6)) — "." suivi d'un chiffre.
+    raw = raw.replace(/([A-Za-z0-9'#_]+)\.(?!\d)/g, '$1 .');
 
     // Aliaser les identifiants avec "-" internes (terminaux BP3 non compatibles BPscript).
     // bp3ToScene remplace "-" → "O" dans les identifiants pour que compileBPS accepte le BPS.
@@ -140,17 +171,16 @@ function extractSignificant(text) {
     }).join(' ');
 
     // Normaliser les contrôles runtime BP3 vers forme canonique _ctrl(name,val).
-    // S'applique à l'original BP3 (ex: _transpose(0)) pour que la comparaison converge
-    // avec le compilé résolu via controlTable.
-    raw = raw.replace(/_transpose\(([^)]+)\)/g, '_ctrl(transpose,$1)');
-    raw = raw.replace(/_pitchrange\(([^)]+)\)/g, '_ctrl(pitchrange,$1)');
-    raw = raw.replace(/_pitchbend\(([^)]+)\)/g, '_ctrl(pitchbend,$1)');
-    raw = raw.replace(/_volume\(([^)]+)\)/g, '_ctrl(volume,$1)');
-    raw = raw.replace(/_scale\(([^)]+)\)/g, '_ctrl(scale,$1)');
-    raw = raw.replace(/_cont\(([^)]+)\)/g, '_ctrl(cont,$1)');
-    raw = raw.replace(/_value\(([^)]+)\)/g, '_ctrl(value,$1)');
-    raw = raw.replace(/_pitchcont\b/g, '_ctrl(pitchcont,1)');
-    raw = raw.replace(/_volumecont\b/g, '_ctrl(volumecont,1)');
+    // Liste pilotée par lib/controls.json (voir RUNTIME_CTRLS ci-dessus).
+    // S'applique aux deux côtés pour que la comparaison converge avec le compilé
+    // résolu via controlTable (resolveScriptCT).
+    for (const { name, noArg } of RUNTIME_CTRLS) {
+      if (noArg) {
+        raw = raw.replace(new RegExp(`(?<![A-Za-z0-9_])_${name}\\b(?!\\()`, 'g'), `_ctrl(${name},1)`);
+      } else {
+        raw = raw.replace(new RegExp(`(?<![A-Za-z0-9_])_${name}\\(([^)]+)\\)`, 'g'), `_ctrl(${name},$1)`);
+      }
+    }
 
     // Supprimer les annotations libres en fin de ligne de mode
     if (/^(RND|ORD|LIN|SUB1?|TEM|POSLONG)(\s+\[.*)$/.test(raw)) {
@@ -186,9 +216,11 @@ function normalizeLines(lines) {
 function resolveScriptCT(lines, controlTable) {
   if (!controlTable || !controlTable.length) return lines;
   // Construire map : "CT N" → assignments
+  // scope 'start' : forme suffixe de règle (E2/E3) — _script(CT N) … _script(CT N_e)
+  // scope absent  : forme appel positionnelle — _script(CT N) seul, à sa position
   const ctMap = new Map();
   for (const ct of controlTable) {
-    if (ct.scope === 'start') ctMap.set(ct.id, ct.assignments || {});
+    if (ct.scope === 'start' || ct.scope === undefined) ctMap.set(ct.id, ct.assignments || {});
   }
   return lines.map(line => {
     // Supprimer les _script(CT N_e) (marqueurs de fin)
@@ -199,7 +231,8 @@ function resolveScriptCT(lines, controlTable) {
       if (!assignments) return `_script(CT ${id})`;
       const parts = Object.entries(assignments)
         .filter(([,v]) => v !== null && v !== undefined)
-        .map(([k, v]) => `_ctrl(${k},${v})`);
+        // true = contrôle sans argument (forme appel) ≡ valeur canonique 1
+        .map(([k, v]) => `_ctrl(${k},${v === true ? 1 : v})`);
       return parts.length ? parts.join(' ') : '';
     });
     return line.replace(/\s+/g, ' ').trim();
@@ -389,11 +422,11 @@ async function main() {
     },
 
     {
-      name: 'opérateur _vel → NON GÉRÉ attendu',
-      // _vel() est un contrôle runtime BP3 sans round-trip fidèle (compileBPS → _script(CT))
-      // → NON GÉRÉ correct.
+      name: '_vel(110) → FIDÈLE via forme appel',
+      // _vel est dans lib/controls.json (runtime.musical) → convertible en forme appel
+      // vel(110). compileBPS émet _script(CT n) positionné, résolu via controlTable.
       grammar: `RND\ngram#1[1] X --> _vel(110) sa6`,
-      expectNonGere: true,
+      expectRules: ['X --> _vel(110) sa6'],
     },
     {
       name: 'opérateur /N tempo dans RHS → NON GÉRÉ attendu',
@@ -528,6 +561,51 @@ async function main() {
       name: 'E1: durée 4/4/4/4/4 → NON GÉRÉ attendu',
       // 4/4/4/4/4 contient 3+ segments N/N/N → reste bloqué
       grammar: `ORD\ngram#1[1] S --> 4/4/4/4/4 S64`,
+      expectNonGere: true,
+    },
+
+    // ---- E4 : forme appel — contrôles en position quelconque ------------------
+    {
+      name: 'E4: contrôle runtime trailing → FIDÈLE (forme appel)',
+      // Contrôle APRÈS des tokens musicaux → forme appel pitchbend(100) positionnelle
+      grammar: `ORD\ngram#1[1] S --> a b _pitchbend(100)`,
+      expectRules: ['S --> a b _pitchbend(100)'],
+    },
+    {
+      name: 'E4: contrôle runtime dans {…} → FIDÈLE (forme appel)',
+      grammar: `ORD\ngram#1[1] S --> {43/10, _pitchbend(0) rek2 _pitchbend(-100) rek2&} a`,
+      expectRules: ['S --> {43/10,_pitchbend(0) rek2 _pitchbend(-100) rek2&} a'],
+    },
+    {
+      name: 'E4: engine _tempo en milieu de RHS → FIDÈLE (forme appel verbatim)',
+      grammar: `ORD\ngram#1[1] S --> a - - _tempo(3/4) b`,
+      expectRules: ['S --> a - - _tempo(3/4) b'],
+    },
+    {
+      name: 'E4: engine _retro dans {…} → FIDÈLE (forme appel verbatim)',
+      grammar: `ORD\ngram#1[1] S --> {_retro A} _\ngram#1[2] A --> a b`,
+      expectRules: ['S --> {_retro A} _', 'A --> a b'],
+    },
+    {
+      name: 'E4: engine _legato(300) dans {…} → FIDÈLE (forme appel verbatim)',
+      grammar: `ORD\ngram#1[1] S --> {_legato(300) p4_3 sa_4 sa_3}`,
+      expectRules: ['S --> {_legato(300) p4_3 sa_4 sa_3}'],
+    },
+    {
+      name: 'E4: _cont + _value (float) mid-RHS → FIDÈLE (forme appel)',
+      grammar: `ORD\ngram#1[1] S --> _cont(blurb) _value(blurb,25.6) e _value(blurb,100)`,
+      expectRules: ['S --> _cont(blurb) _value(blurb,25.6) e _value(blurb,100)'],
+    },
+    {
+      name: 'E4: lié X& et &X dans {…} → FIDÈLE (conversion ~ dans les accolades)',
+      grammar: `ORD\ngram#1[1] S --> {12/10,sa3 ni2 rek3&} {48/10,&rek3}`,
+      expectRules: ['S --> {12/10,sa3 ni2 rek3&} {48/10,&rek3}'],
+    },
+    {
+      name: 'E4: argument +N en forme appel → NON GÉRÉ attendu (parser boucle sur +)',
+      // Le parser BPscript ne consomme pas le token + dans les args de contrôle
+      // (parseControl) → boucle infinie. Limitation rapportée, pas de forçage.
+      grammar: `ORD\ngram#1[1] S --> a _pitchbend(+200)`,
       expectNonGere: true,
     },
   ];
