@@ -5,7 +5,7 @@
 @controls
 @allitems
 @maxitems:500
-@test_alphabets.structural
+@alphabet.western:midi
 
 @mode:random
 S -> X Y [Flag=2] [Choice=3]

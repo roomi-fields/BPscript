@@ -1,0 +1,20 @@
+// scan_mode.bps — Fixture pour le test du qualificateur [scan:...]
+// Vérifie : rule.mode dans l'AST + préfixe LEFT/RIGHT/RND dans le texte BP3
+
+@core
+@controls
+@alphabet.western:midi
+
+// Règle sans scan → mode null (par défaut)
+X -> C4
+
+// Règle avec [scan:left] → mode 'left', préfixe LEFT dans BP3
+Y -> C4 D4 E4 [scan:left]
+
+// Règle avec [scan:right] → mode 'right'
+Z -> C4 D4 [scan:right]
+
+-----
+
+// Deuxième sous-grammaire, règle avec [scan:rnd]
+A -> X Y Z [scan:rnd]

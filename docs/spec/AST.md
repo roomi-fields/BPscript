@@ -612,6 +612,12 @@ Rule {
   flags: FlagExpr[]                // mutations collectées, émises en fin de règle : /phase=2/ /Atrans/
   qualifiers: Qualifier[]          // [mode:random, scan:left] en fin de règle (engine [])
   runtimeQualifier: RuntimeQualifier | null  // suffixe () sur la règle : S -> C4 D4 (vel:80)
+  mode: "rnd" | "left" | "right" | null
+    // Extrait du qualificateur [scan:left|right|rnd] (parser.js, juste avant return Rule).
+    // null = mode par défaut de la sous-grammaire (géré par BPx loadGrammar.ts:3920-3923).
+    // Duplication intentionnelle : la QualPair 'scan' reste dans qualifiers pour que
+    // l'encoder (encoder.js:331-335) émette le préfixe BP3 LEFT/RIGHT/RND.
+    // BPx lit ast.mode (ast.ts:431-449, loadGrammar.ts:3897-3924).
   line: number
 }
 ```

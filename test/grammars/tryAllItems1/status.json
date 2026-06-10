@@ -1,6 +1,6 @@
 {
   "grammar": "tryAllItems1",
-  "date": "2026-04-01",
+  "date": "2026-06-10",
   "s1": "PASS",
   "s2": "PASS",
   "s1_s2_mode": "skip",
@@ -11,6 +11,7 @@
   "s4": "FAIL",
   "s3_s4_mode": "exact",
   "s1_vs_s2_note": "AllItems=1 + text-only. Validé manuellement (items uniques identiques).",
-  "s4_note": "No BPS scene. Same grammar as tryAllItems with different K-param init.",
-  "bpsScene": "all-items1"
+  "s4_note": "BPS scene présente ; alphabet corrigé de @test_alphabets.structural → @alphabet.western:midi (fix 2026-06-10). s5 snapshot à régénérer (vague 3, exige --bin).",
+  "bpsScene": "tryAllItems1",
+  "status": "active"
 }
