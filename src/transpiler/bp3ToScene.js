@@ -142,16 +142,23 @@ const BP2_DATE_RE = /^Date:/;
 // Ces contrôles NE SONT PAS convertibles en syntaxe BPscript → bloquent le round-trip.
 // Note : _transpose, _scale, _pitchrange, _pitchbend, _pitchcont, _volumecont, _volume,
 //        _cont, _value SONT convertibles (voir RUNTIME_CTRL_CONVERTIBLE_RE ci-dessous).
-const ENGINE_CTRL_RHS_RE = /\b_(vel|chan|script|rotate|retro|shuffle|srand|rndseq|goto|failed|repeat|stop|print|ins|step|fixed|key|note|time|dur|pitch|tempo|smooth|striated|legato|staccato|modwheel|aftertouch|sustain|portamento|expression|breath|pan|reverb|chorus|delay|distortion|phaser|flanger|eq|compress|expand|limit|gate|noise|filter|lfo|env|osc)\b/;
+// Note : _srand est converti en [shuffle:N] sur le groupe {…} suivant → retiré de cette liste.
+//        _rndseq est dans BP3_CONTROL_MAP (controls.json) → masqué par stripMapControls → pas ici.
+const ENGINE_CTRL_RHS_RE = /\b_(vel|chan|script|rotate|retro|shuffle|rndseq|goto|failed|repeat|stop|print|ins|step|fixed|key|note|time|dur|pitch|tempo|smooth|striated|legato|staccato|modwheel|aftertouch|sustain|portamento|expression|breath|pan|reverb|chorus|delay|distortion|phaser|flanger|eq|compress|expand|limit|gate|noise|filter|lfo|env|osc)\b/;
 
 // Contrôles runtime convertibles en syntaxe BPscript (ctrl:val).
 // Chaque token _xxx(args) ou _xxx (sans args) est converti en (xxx:args) ou (xxx:1).
 // La conversion est appliquée dans convertBP3TokensToBPS AVANT le test ENGINE_CTRL_RHS_RE.
 const RUNTIME_CTRL_CONVERTIBLE_RE = /^_(transpose|scale|pitchrange|pitchbend|pitchcont|volumecont|volume|cont|value)\b/;
 
-// Opérateurs tempo BP3 dans le RHS : /N, \N
-// En BPscript la syntaxe équivalente est X[/N] mais la conversion est complexe.
-// Opérateur tempo BP3 /N en début de token séparé, ou notation durée N/N (ex: 4/4/4/4/4)
+// Opérateur tempo BP3 /N dans le RHS : token séparé « /N » (suivi d'un espace ou en fin)
+// Depuis E5, /N est converti en X[/N] sur l'élément suivant → plus de NON GÉRÉ.
+// Regex pour détecter le token /N dans le flux (pas pour bloquer, mais pour la détection).
+const FORWARD_SLASH_TEMPO_RE = /(?:^|\s)(\/\d+(?:\/\d+)?)(?:\s|$)/;
+// Opérateur tempo BP3 \N dans le RHS — toujours NON GÉRÉ (\N n'est pas tokenisé par BPscript).
+const BACKSLASH_TEMPO_RHS_RE = /(?:^|\s)\\(\d+(?:\/\d+)?)(?:\s|$)/;
+// TEMPO_OP_RHS_RE : alias de compatibilité — bloque uniquement \N désormais (plus /N).
+// Utilisé dans checkLhsForUnsupported pour les deux (LHS avec /N reste NON GÉRÉ).
 const TEMPO_OP_RHS_RE = /(?:^|\s)(?:\/|\\)\d+(?:\s|$)/;
 // Token durée BP3 N/N/N... avec 3+ segments (ex: 4/4/4, non représentable en BPscript).
 // Les ratios simples N/N (ex: 11/10, 137/100, 3/2) sont valides en BPscript.
@@ -805,6 +812,36 @@ function emitCallForm(bp3Name, args) {
 }
 
 /**
+ * Détecte les seq_prefix BP3 en tête d'un champ de groupe {…} et les extrait
+ * comme qualifier BPscript [shuffle:N] ou [shuffle] à apposer sur le groupe.
+ *
+ * Formes reconnues (uniquement en PREMIER champ, sans virgule en tête) :
+ *   _srand(N) _rndseq [rest]  →  { qualifier: '[shuffle:N]', rest }
+ *   _rndseq [rest]            →  { qualifier: '[shuffle]', rest }
+ *
+ * Note : on traite UNIQUEMENT le premier champ (cas à une voix). Les groupes
+ * polymètriques à plusieurs voix séparées par des virgules ne sont pas traités ici
+ * (chaque champ est indépendant).
+ *
+ * Retourne null si aucun seq_prefix n'est détecté.
+ */
+function extractGroupSeqPrefix(inner) {
+  // Détecter _srand(N) _rndseq [reste]
+  const srandRndseq = inner.match(/^_srand\((\d+(?:\/\d+)?)\)\s+_rndseq(?:\s+(.*))?$/);
+  if (srandRndseq) {
+    return { qualifier: `[shuffle:${srandRndseq[1]}]`, rest: (srandRndseq[2] || '').trim() };
+  }
+  // Détecter _rndseq [reste]  (sans _srand → shuffle sans seed)
+  // NOTE : ce cas est aussi géré par emitCallForm('_rndseq', null) → shuffle() en callMode,
+  // mais la forme suffix qualifier [shuffle] est plus idiomatique en BPscript.
+  const rndseq = inner.match(/^_rndseq(?:\s+(.*))?$/);
+  if (rndseq) {
+    return { qualifier: '[shuffle]', rest: (rndseq[1] || '').trim() };
+  }
+  return null;
+}
+
+/**
  * Convertit un groupe polymétrique {…} BP3 en BPscript.
  * Appliqué dans les DEUX modes (legacy et forme appel) :
  *   - liés X& → X~ et &X → ~X ('&' nu dans {…} n'est pas accepté par compileBPS)
@@ -915,9 +952,11 @@ function checkRhsForUnsupported(rhs) {
   if (m) {
     return `contrôle engine "_${m[1]}" dans RHS (absent de lib/controls.json — non convertible en forme appel)`;
   }
-  if (TEMPO_OP_RHS_RE.test(masked)) {
-    return `opérateur tempo /N ou \\N dans RHS (syntaxe BPscript X[/N] différente, conversion non implémentée)`;
+  // \N : non tokenisé par BPscript → NON GÉRÉ
+  if (BACKSLASH_TEMPO_RHS_RE.test(masked)) {
+    return `opérateur tempo \\N dans RHS (\\N non tokenisé par BPscript — non convertible)`;
   }
+  // /N est désormais converti en X[/N] dans convertBP3TokensToBPS → pas de NON GÉRÉ ici.
   // DURATION_SLASH_RE : bloquer uniquement si ce n'est pas un préfixe de mètre N+N/M
   // Les mètres N+N/M sont convertis en qualifier [meter:...] par convertBP3TokensToBPS.
   // On teste après avoir retiré le préfixe de mètre éventuel.
@@ -1244,7 +1283,23 @@ function convertBP3TokensToBPS(text, callMode = false, bolsizeTable = null) {
     const tok = tokens[ti];
 
     // ── Polymétries {…} : conversion des champs (liés, prolongations, contrôles E4)
+    // Détection préalable des seq_prefix BP3 (_srand/_rndseq) en tête du premier
+    // champ : convertis en qualifier [shuffle:N] ou [shuffle] en suffixe du groupe.
     if (tok.startsWith('{') && tok.endsWith('}')) {
+      const inner = tok.slice(1, -1).trim();
+      // Ne traiter la détection seq_prefix que si le groupe n'est pas polymétrique
+      // (pas de virgule de niveau 0 — groupes à une seule voix).
+      const hasTopComma = splitTopLevelCommas(inner).length > 1;
+      if (!hasTopComma) {
+        const seqPfx = extractGroupSeqPrefix(inner);
+        if (seqPfx) {
+          // Convertir le reste du groupe (après le seq_prefix) sans les contrôles en tête
+          const restGroup = seqPfx.rest ? '{' + seqPfx.rest + '}' : '{}';
+          const convertedGroup = convertBraceGroup(restGroup, callMode, bolsizeTable);
+          out.push(convertedGroup + seqPfx.qualifier);
+          continue;
+        }
+      }
       out.push(convertBraceGroup(tok, callMode, bolsizeTable));
       continue;
     }
@@ -1280,6 +1335,37 @@ function convertBP3TokensToBPS(text, callMode = false, bolsizeTable = null) {
       const converted = convertRuntimeControlToBPS(fullTok);
       if (converted !== null) {
         out.push(converted);
+        continue;
+      }
+    }
+
+    // ── Opérateur tempo absolu /N dans RHS → attacher comme qualifier [/N] sur l'élément suivant
+    // BP3 sémantique : /N = vitesse ABSOLUE N, persistant jusqu'au prochain opérateur tempo
+    // ou fin de champ. En BPscript : A[/N] (qualifier sur l'élément suivant).
+    // Formes reconnues : /5  /3/2  (fraction N/M aussi valide en BPscript)
+    // Si aucun élément suivant : token orphelin, émis verbatim (cas dégénéré non géré).
+    {
+      const slashTempoM = tok.match(/^\/(\d+(?:\/\d+)?)$/);
+      if (slashTempoM) {
+        const ratio = slashTempoM[1];
+        // Look ahead to find the next non-empty token to attach to
+        let nextIdx = ti + 1;
+        if (nextIdx < tokens.length) {
+          // Convert the next token first, then attach the qualifier
+          const nextTok = tokens[nextIdx];
+          ti = nextIdx; // advance iterator
+          let convertedNext;
+          if (nextTok.startsWith('{') && nextTok.endsWith('}')) {
+            convertedNext = convertBraceGroup(nextTok, callMode, bolsizeTable);
+          } else {
+            convertedNext = aliasTerminalDashes(nextTok, bolsizeTable);
+          }
+          // Attach [/ratio] directly to the converted token (no space before [)
+          out.push(`${convertedNext}[/${ratio}]`);
+        } else {
+          // Orphan /N at end of RHS — emit verbatim (case not covered, documented)
+          out.push(tok);
+        }
         continue;
       }
     }

@@ -707,6 +707,53 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
 }
 
 // ============================================================
+// E5 — Tempo absolu A[/N] → bare « /N A » + exit _tempo(1/1)
+// ============================================================
+
+section('Encoder — tempo absolu A[/N] → /N A (bare, absolu + persistant)');
+
+{
+  // A[/2] doit émettre « /2 A » et NON « _tempo(2/1) A _tempo(1/2) »
+  const compiled = compileBPS('@controls\nS -> A[/2] B');
+  assert('A[/2] compile sans erreur', compiled.errors.length === 0,
+    compiled.errors.map(e => e.message).join('; '));
+  const gr = compiled.grammar;
+  assert('A[/2] → contient /2 A', gr.includes('/2 A'), `grammar: ${gr}`);
+  assert('A[/2] → pas de _tempo(2/1)', !gr.includes('_tempo(2/1)'), `grammar: ${gr}`);
+  assert('A[/2] → pas d\'exit _tempo(1/2)', !gr.includes('_tempo(1/2)'), `grammar: ${gr}`);
+}
+
+{
+  // ![/2] (InstantControl) doit rester _tempo(2/1) — relatif, inchangé
+  const compiled = compileBPS('@controls\nS -> A ![/2] B');
+  assert('![/2] compile sans erreur', compiled.errors.length === 0,
+    compiled.errors.map(e => e.message).join('; '));
+  const gr = compiled.grammar;
+  assert('![/2] → émet _tempo(2/1)', gr.includes('_tempo(2/1)'), `grammar: ${gr}`);
+}
+
+{
+  // ![tempo:2] (InstantControl clé) doit rester _tempo(2) — inchangé
+  const compiled = compileBPS('@controls\nS -> A ![tempo:2] B');
+  assert('![tempo:2] compile sans erreur', compiled.errors.length === 0,
+    compiled.errors.map(e => e.message).join('; '));
+  const gr = compiled.grammar;
+  assert('![tempo:2] → émet _tempo(2)', gr.includes('_tempo(2)'), `grammar: ${gr}`);
+}
+
+{
+  // A[*2] : *N reste _tempo pair MAIS exit doit être _tempo(1/1) pas _tempo(2/1)
+  const compiled = compileBPS('@controls\nS -> A[*2] B');
+  assert('A[*2] compile sans erreur', compiled.errors.length === 0,
+    compiled.errors.map(e => e.message).join('; '));
+  const gr = compiled.grammar;
+  // enter = _tempo(1/2) (slow down ÷2), exit = _tempo(1/1) (restore)
+  assert('A[*2] → contient _tempo(1/2)', gr.includes('_tempo(1/2)'), `grammar: ${gr}`);
+  assert('A[*2] → exit est _tempo(1/1)', gr.includes('_tempo(1/1)'), `grammar: ${gr}`);
+  assert('A[*2] → exit n\'est PAS _tempo(2/1)', !gr.includes('_tempo(2/1)'), `grammar: ${gr}`);
+}
+
+// ============================================================
 // Summary
 // ============================================================
 

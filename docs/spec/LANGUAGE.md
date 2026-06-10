@@ -1228,12 +1228,12 @@ et demande une resolution explicite :
 BP3 possede 4 operateurs temporels fondamentaux qui controlent deux variables
 internes `speed` et `scale`. Le tempo effectif est `tempo = speed / scale`.
 
-| BPscript       | Compile en BP3 | Variable    | Effet                        |
-| -------------- | -------------- | ----------- | ---------------------------- |
-| `A[/2]`        | `/2 A`         | speed = 2   | double la vitesse            |
-| `A[\2]`        | `\2 A`         | speed = 1/2 | divise la vitesse par 2      |
-| `A[*3]`        | `*3 A`         | scale = 3   | triple l'echelle de duree    |
-| `A[**3]`       | `**3 A`        | scale = 1/3 | divise l'echelle par 3       |
+| BPscript       | Compile en BP3                        | Semantique                               |
+| -------------- | ------------------------------------- | ---------------------------------------- |
+| `A[/2]`        | `/2 A`                                | absolu + persistant (fixtempo), speed=2  |
+| `A[*3]`        | `_tempo(1/3) A _tempo(1/1)`           | relatif, bracket enter/exit, scale×3     |
+| `![/2]`        | `_tempo(2/1)`                         | relatif, flux (InstantControl)           |
+| `A[\2]`        | non tokenise (EBNF exclut `\`)        | anomalie natif+WASM, voir TEMPO_OPS_WASM |
 
 Portee flexible : sur un symbole, un groupe, ou un polymetric.
 
@@ -1399,13 +1399,21 @@ Le `[speed:N]` est traduit en ratio de tempo BP3 :
 
 ### Operateurs temporels
 
-Les operateurs `[/N]`, `[\N]`, `[*N]`, `[**N]` sont traduits en position prefixe BP3 :
+Deux semantiques distinctes selon l'operateur :
 
 ```
-// BPscript                  -> BP3
-A[/2] B C                    -> /2 bolA bolB bolC
-{A B C}[\3]                  -> \3 bolA bolB bolC
+// BPscript                  -> BP3             Semantique
+A[/2] B C                    -> /2 bolA bolB bolC    absolu, persistant (fixtempo)
+{A B C}[/3]                  -> /3 {bolA bolB bolC}  idem, portee groupe
+A[*2] B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC  relatif, bracket
+![/2]                        -> _tempo(2/1)           relatif, flux (InstantControl)
 ```
+
+`[/N]` = vitesse ABSOLUE N + fixtempo (BP3 Encode.c). Persiste jusqu'au prochain operateur
+tempo ou fin de champ (reinitialise au separateur `,` des sous-champs polymetriques).
+`[*N]` = relatif a la vitesse heritee. Exit `_tempo(1/1)` restaure l'herite au bord du bracket.
+`![/N]` dans le flux (InstantControl) = `_tempo(N/1)` relatif, sans fixtempo.
+`[\N]` n'est pas tokenise par BPscript (anomalies natif+WASM, voir TEMPO_OPS_WASM.md).
 
 ### Guards et flags
 

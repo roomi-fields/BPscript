@@ -987,22 +987,34 @@ function encodeRhsElement(el, alphabet, controlMap) {
   let result = raw;
   // Legacy el.tempoOp from polymetric parser
   if (el.tempoOp) {
-    const pair = tempoOpToPair(el.tempoOp);
-    result = `${pair.enter} ${result} ${pair.exit}`;
+    if (el.tempoOp.operator === '/') {
+      // Bare absolute operator: /N A (no bracket, no exit)
+      result = `${tempoOpToBarePrefix(el.tempoOp)} ${result}`;
+    } else {
+      const pair = tempoOpToPair(el.tempoOp);
+      result = `${pair.enter} ${result} ${pair.exit}`;
+    }
   }
 
   // SUFFIX qualifiers: A[weight:50], A(vel:80) — always after the element
   // [] and () are ALWAYS suffix in BPscript. Use ![] or !() for free positioning.
-  // tempoOp (/N, *N) → _tempo(x/y) bracket: enter before, exit after
+  // tempoOp '/' → bare prefix /N (absolute, persistent, reference duration of field)
+  // tempoOp '*' → _tempo(1/N) bracket: enter before, exit _tempo(1/1) after
   const enterTokens = [];
   const exitTokens = [];
   const suffixTokens = [];
   if (el.suffixQualifiers) {
     for (const q of el.suffixQualifiers) {
       if (q.tempoOp) {
-        const pair = tempoOpToPair(q.tempoOp);
-        enterTokens.push(pair.enter);
-        exitTokens.push(pair.exit);
+        if (q.tempoOp.operator === '/') {
+          // Bare absolute operator: /N A — no exit needed (persists until next op/end of field)
+          enterTokens.push(tempoOpToBarePrefix(q.tempoOp));
+        } else {
+          // '*' (slow down): _tempo(1/N) bracket with _tempo(1/1) exit to restore
+          const pair = tempoOpToPair(q.tempoOp);
+          enterTokens.push(pair.enter);
+          exitTokens.push(pair.exit);
+        }
       }
       encodeQualifierTokens(q, controlMap, suffixTokens);
     }
@@ -1213,11 +1225,17 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       // NOTE: embedding case ({ in one rule, }[scale:N] in another) is not
       // handled here — see annotateUnbalancedBraces / polySpeed for the
       // speed analogue. Add a polyScale annotation if needed in the future.
-      // Check for tempo operator → _tempo bracket around braces
+      // Check for tempo operator on group:
+      // '/' → bare prefix /N {…} (absolute, persistent)
+      // '*' → _tempo(1/N) {…} _tempo(1/1) bracket (relative, scoped)
       const tempoOp = getTempoOp(el.qualifiers);
       if (tempoOp) {
-        const pair = tempoOpToPair(tempoOp);
-        result = `${pair.enter} ${result} ${pair.exit}`;
+        if (tempoOp.operator === '/') {
+          result = `${tempoOpToBarePrefix(tempoOp)} ${result}`;
+        } else {
+          const pair = tempoOpToPair(tempoOp);
+          result = `${pair.enter} ${result} ${pair.exit}`;
+        }
       }
       // Runtime qualifier on group: {A B}(vel:100) → _script(CTn) {A B} _script(CTn_e)
       // Note: dual-context controls (in both engine and runtime) always route to _script in ().
@@ -1470,9 +1488,15 @@ function getQualDecrement(qualifiers, key) {
   return null;
 }
 
-// Convert a BPscript TempoOp to a _tempo(x/y) pair [enter, exit]
-// BPscript / = speed up (divide duration): [/2] → _tempo(2/1) ... _tempo(1/2)
-// BPscript * = slow down (multiply duration): [*2] → _tempo(1/2) ... _tempo(2/1)
+// Convert a BPscript TempoOp (operator '*' or '\') to a _tempo(x/y) pair [enter, exit].
+// Used ONLY for the '*N' (slow down) and '\N' operators — NOT for '/' (see tempoOpToBarePrefix).
+//
+// Exit is always _tempo(1/1) to restore the inherited tempo at the bracket boundary,
+// matching BP3 semantics (the fixtempo flag is cleared when the bracket closes).
+// Previous exit = _tempo(num/den) was incorrect: it would set an absolute speed rather
+// than restoring to the parent's inherited tempo.
+//
+// BPscript * = slow down (multiply duration): [*2] → _tempo(1/2) ... _tempo(1/1)
 // Values: integer (2), fraction (3/2), decimal (1.5)
 // _tempo accepts decimals natively
 function tempoOpToPair(op) {
@@ -1489,11 +1513,22 @@ function tempoOpToPair(op) {
   // BP3 _tempo requires integer fractions — rationalize any floats
   const r = _toIntFraction(num, den);
   num = r[0]; den = r[1];
+  // Exit is always _tempo(1/1) — restores inherited tempo (NOT the reciprocal).
   if (op.operator === '/') {
-    return { enter: `_tempo(${num}/${den})`, exit: `_tempo(${den}/${num})` };
+    return { enter: `_tempo(${num}/${den})`, exit: `_tempo(1/1)` };
   } else {
-    return { enter: `_tempo(${den}/${num})`, exit: `_tempo(${num}/${den})` };
+    // '*' (slow down) → enter = 1/N
+    return { enter: `_tempo(${den}/${num})`, exit: `_tempo(1/1)` };
   }
+}
+
+// Convert a BPscript TempoOp with operator '/' to its bare BP3 inline token.
+// '/' = tempo ABSOLU + persistant + durée de référence du champ (BP3 Encode.c:418-425).
+// Syntax: A[/2] → /2 A  (opérateur NU devant l'élément, PAS de bracket _tempo).
+// This is distinct from _tempo(x/y) (relatif) used for InstantControl '![/N]'.
+function tempoOpToBarePrefix(op) {
+  // op.value is already the textual ratio ("1/2") or integer (2)
+  return `${op.operator}${op.value}`;
 }
 
 // Convert possibly-float num/den to [intNum, intDen]

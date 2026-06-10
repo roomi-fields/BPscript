@@ -431,10 +431,16 @@ async function main() {
       expectRules: ['X --> _vel(110) sa6'],
     },
     {
-      name: 'opérateur /N tempo dans RHS → NON GÉRÉ attendu',
-      // /N dans le RHS BP3 est un opérateur tempo. BPscript utilise X[/N] à la place.
-      // La conversion est complexe (non implémentée) → NON GÉRÉ correct.
-      grammar: `RND\ngram#1[1] S --> /5 A`,
+      name: 'opérateur /N tempo dans RHS → FIDÈLE (A[/N] sur le suivant)',
+      // /5 A B → A[/5] B : le /N s'attache comme qualifier sur l'élément suivant.
+      // Round-trip : compileBPS(bps) émet « /5 A » dans la grammaire BP3 → FIDÈLE.
+      grammar: `RND\ngram#1[1] S --> /5 A B`,
+      expectRules: ['RND', 'S --> /5 A B'],
+    },
+    {
+      name: 'opérateur \\N tempo dans RHS → NON GÉRÉ attendu',
+      // \\N n'est pas tokenisé par le tokenizer BPscript → reste NON GÉRÉ.
+      grammar: `RND\ngram#1[1] S --> \\5 A`,
       expectNonGere: true,
     },
     {
@@ -609,6 +615,28 @@ async function main() {
       // _pitchbend(+200) est représentable en forme appel → FIDÈLE.
       grammar: `ORD\ngram#1[1] S --> a _pitchbend(+200)`,
       expectRules: ['S --> a _pitchbend(+200)'],
+    },
+
+    // ---- E5 : _srand/_rndseq → [shuffle:N] suffix qualifier (fix srand) --------
+    {
+      name: 'E5: {_rndseq A B C} → FIDÈLE (shuffle sans seed)',
+      // _rndseq en tête de groupe → [shuffle] suffix qualifier
+      // Round-trip : {_rndseq A B C} → {A B C}[shuffle] → @controls → {_rndseq A B C}
+      grammar: `ORD\ngram#1[1] S --> {_rndseq C3 B3 E3}`,
+      expectRules: ['S --> {_rndseq C3 B3 E3}'],
+    },
+    {
+      name: 'E5: {_srand(1) _rndseq A B C} → FIDÈLE (shuffle avec seed)',
+      // _srand(N) _rndseq en tête de groupe → [shuffle:N] suffix qualifier
+      // Round-trip : {_srand(1) _rndseq A B C} → {A B C}[shuffle:1] → @controls → {_srand(1) _rndseq A B C}
+      grammar: `ORD\ngram#1[1] S --> {_srand(1) _rndseq C4 B4 E4}`,
+      expectRules: ['S --> {_srand(1) _rndseq C4 B4 E4}'],
+    },
+    {
+      name: 'E5: /5 A B C D E (trySrand ligne 9) → FIDÈLE (tempo absolu persistant)',
+      // Rule 1 de trySrand : /5 en tête de RHS → A[/5] B C D E
+      grammar: `RND\n_mm(60.0000) _striated\ngram#1[1] S --> /5 A B C D E\ngram#1[2] A --> {_rndseq C3 B3 E3 F3 G3}\ngram#1[3] B --> {_srand(1) _rndseq C4 B4 E4 F4 G4}`,
+      expectRules: ['S --> /5 A B C D E', 'A --> {_rndseq C3 B3 E3 F3 G3}', 'B --> {_srand(1) _rndseq C4 B4 E4 F4 G4}'],
     },
   ];
 

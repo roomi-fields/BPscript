@@ -675,11 +675,16 @@ Exemples :
 - `[shuffle]` → `{ pairs:[{key:"shuffle", value:true}] }` → compilé en `_rndseq` (seq_prefix)
 - `[shuffle:42]` → `{ pairs:[{key:"shuffle", value:42}] }` → compilé en `_srand(42) _rndseq`
 - `[order]` → `{ pairs:[{key:"order", value:true}] }` → compilé en `_ordseq` (seq_prefix)
-- `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `_tempo(2/1) A _tempo(1/2)`
-- `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `_tempo(1/2) A _tempo(2/1)`
-- `A[/3/2]` → `{ tempoOp:{ operator:"/", value:"3/2" } }` → compilé en `_tempo(3/2) A _tempo(2/3)`
-- `{A B}[/2]` → bracket : `_tempo(2/1) {A B} _tempo(1/2)` (portée locale au groupe)
-- `![/2]` → `_tempo(2/1)` dans le flux (pas de bracket, portée séquentielle)
+- `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `/2 A` (opérateur nu, absolu + persistant)
+- `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `_tempo(1/2) A _tempo(1/1)` (relatif, bracket)
+- `A[/3/2]` → `{ tempoOp:{ operator:"/", value:"3/2" } }` → compilé en `/3/2 A` (opérateur nu)
+- `{A B}[/2]` → `/2 {A B}` (opérateur nu devant le groupe)
+- `![/2]` → `_tempo(2/1)` dans le flux (relatif, sans bracket — portée séquentielle jusqu'au prochain opérateur)
+
+**Distinction sémantique `/` vs `*` :**
+- `/N` (opérateur NU) = vitesse ABSOLUE N + fixtempo (BP3 Encode.c:418-425). La durée de référence du champ est imposée. Persiste jusqu'au prochain opérateur tempo ou fin de champ. Pas de bracket ni d'exit token.
+- `*N` (bracket `_tempo`) = relatif à la vitesse héritée. Enter `_tempo(1/N)` avant l'élément, exit `_tempo(1/1)` après (restaure la vitesse héritée au bord du bracket).
+- `![/N]` dans le flux (InstantControl) → `_tempo(N/1)` relatif (sans fixtempo), portée séquentielle.
 - `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique, distinct du tempo)
 - `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
 - `[staccato:50]` → `{ pairs:[{key:"staccato", value:50}] }` → compilé en `_staccato(50)` (suffixe)
