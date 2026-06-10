@@ -21,6 +21,8 @@ const _args = stripBinArgs(process.argv.slice(2));
 const name = _args[0];
 if (!name) { console.error('Usage: node s5_bpscript.cjs <grammar> --bin <version>'); process.exit(1); }
 const binTag = requireBinTag();
+// --force-empty : permet d'écraser un snapshot valide par un résultat à 0 token
+const FORCE_EMPTY = _args.includes('--force-empty');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST = _resolveDist(binTag);
@@ -189,7 +191,23 @@ writeFileSync('${TMP}_resolved.json', JSON.stringify(resolved));
     compile: { grammarLines: compileInfo.grammarLines, alphabetSize: compileInfo.alphabetSize },
     alphabet: alphabet,
     tokens: finalTokens, date: today };
-  fs.writeFileSync(path.join(snapDir, 's5_bps.json'), JSON.stringify(snap, null, 2));
+  const snapPath = path.join(snapDir, 's5_bps.json');
+  // Protection anti-écrasement : refuse d'écraser une référence valide (tokens > 0)
+  // par un résultat à 0 token (signe probable de bug moteur). Utiliser --force-empty
+  // pour forcer l'écrasement volontaire.
+  if (finalTokens.length === 0 && !FORCE_EMPTY && fs.existsSync(snapPath)) {
+    let prevTokenCount = 0;
+    try {
+      const prev = JSON.parse(fs.readFileSync(snapPath, 'utf-8'));
+      prevTokenCount = prev.tokens?.length ?? 0;
+    } catch (_) { /* snapshot illisible → laisser passer */ }
+    if (prevTokenCount > 0) {
+      console.warn(`S5 WARN: résultat 0 token — référence préservée (${prevTokenCount} tokens), état 0-token NON écrit (bugs moteur possibles).`);
+      console.warn(`  Pour forcer l'écrasement : node s5_bpscript.cjs ${name} --bin <version> --force-empty`);
+      process.exit(0);
+    }
+  }
+  fs.writeFileSync(snapPath, JSON.stringify(snap, null, 2));
   console.log(`S5 OK: ${finalTokens.length} tokens → ${name}/snapshots/s5_bps.json`);
 } catch (e) {
   console.error(`S5 WASM FAIL: ${(e.stderr || e.message || '').substring(0, 120)}`);

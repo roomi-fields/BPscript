@@ -27,14 +27,19 @@ S <> S192 [weight:5, meter:4+4+4+4/6]
 // L'implémentation de [sub:dhin] appliquera la substitution dha→ta, ge→ke, etc.
 
 @mode:random
-S192 <> $ {F48} $ {V24} F'24 & {F48} & {V24} F24 [weight:5]
-S96 <> $ {V24} F'24 & {V24} F24 [weight:0]
+// BP3 orig gram#2[1]: S192 <-> (= F48 ) (= V24 ) F'24 *(: F48 ) (: V24 ) F24
+S192 <> $ {F48} $ {V24} F'24 star & {F48} & {V24} F24 [weight:5]
+// BP3 orig gram#2[2]: S96 <-> (= V24 ) F'24 *(: V24 ) F24
+S96 <> $ {V24} F'24 star & {V24} F24 [weight:0]
+// BP3 orig gram#2[3]: V24 <-> (= V12 ) (: V12 ) — PAS de *
 V24 <> $ {V12} & {V12} [weight:0]
-V24 <> $ {V12} & {V12} [weight:1]
+// BP3 orig gram#2[4]: V24 <-> (= V12 ) *(: V12 ) — OUI *
+V24 <> $ {V12} star & {V12} [weight:1]
 V24 <> Q24 [weight:0]
 V24 <> V12 V12 [weight:0]
 V24 <> B24 [weight:4]
-V12 <> $ {B6} & {B6} [weight:0]
+// BP3 orig gram#2[8]: V12 <-> (= B6 ) *(: B6 ) — OUI *
+V12 <> $ {B6} star & {B6} [weight:0]
 V12 <> B12 [weight:1]
 
 -----
