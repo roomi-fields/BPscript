@@ -1,0 +1,14 @@
+// Tâche A — espacement TIMEPATTERNS
+// @timepatterns doit émettre t1=1/1 t2=3/2 SANS espaces autour du =
+// (même format que bp3-engine/test-data/-gr.tryTimePatterns)
+
+@core
+@maxitems:0
+@qclock:3
+@controls
+@alphabet.western:midi
+
+@timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
+
+@mode:random
+S -> {t1 t2, A B} [speed:10]

@@ -1,0 +1,17 @@
+// Tâche B — rndtime engine control
+// [rndtime:10] doit émettre _rndtime(10) en BP3
+// Cas 1 : sur un élément  → A[rndtime:10] → A _rndtime(10)
+// Cas 2 : sur un groupe   → {A B C D}[rndtime:10] → {A B C D} _rndtime(10)
+//   (même comportement que staccato/legato — suffixe non seq_prefix)
+
+@core
+@controls
+@alphabet.western:midi
+
+gate A:midi
+gate B:midi
+gate C:midi
+gate D:midi
+
+@mode:ord
+S -> A[rndtime:10] B {A B C D}[rndtime:20]

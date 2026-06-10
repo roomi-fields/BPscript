@@ -1,0 +1,6 @@
+// Référence sans mutation
+@core
+@mode:ord
+S -> Sa Re
+Sa -> -
+Re -> -

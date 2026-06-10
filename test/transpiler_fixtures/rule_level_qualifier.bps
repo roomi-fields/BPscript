@@ -1,0 +1,10 @@
+// Bug C — rule-level runtime qualifier (EBNF couche 3 ligne 247)
+// `S -> C4 C4 (vel:80)` must be accepted by the parser as a rule-level
+// runtime qualifier opaque to BP3 (key:value passed to dispatcher).
+// Currently fails when `vel` is not in libCtx.controlNames.
+
+@core
+@alphabet.western:midi
+
+@mode:ord
+S -> C4 C4 (vel:80)
