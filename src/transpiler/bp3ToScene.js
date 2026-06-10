@@ -440,6 +440,9 @@ function bp3ToScene(grammarText, opts) {
 
   const bpsLines = [];
 
+  // BOLSIZE : table d'alias pour les terminaux dépassant 30 chars (limite moteur BP3)
+  const bolsizeTable = new BolsizeTable();
+
   // E4 — décision au niveau GRAMMAIRE : si une règle exige la forme appel,
   // la scène charge @controls, et @controls change la position des _script(CT)
   // émis par la forme suffixe (E2/E3). Les deux formes ne cohabitent donc pas :
@@ -509,7 +512,7 @@ function bp3ToScene(grammarText, opts) {
       }
 
       // LHS
-      const lhsBps = convertBP3TokensToBPS(rule.lhs);
+      const lhsBps = convertBP3TokensToBPS(rule.lhs, false, bolsizeTable);
       parts.push(lhsBps);
 
       // Flèche
@@ -517,7 +520,7 @@ function bp3ToScene(grammarText, opts) {
       parts.push(bpsArrow);
 
       // RHS — forme appel (E4) au niveau grammaire (voir pré-passe ci-dessus)
-      const rhsBps = convertBP3TokensToBPS(rule.rhs, grammarCallMode);
+      const rhsBps = convertBP3TokensToBPS(rule.rhs, grammarCallMode, bolsizeTable);
       parts.push(rhsBps);
 
       // Flags RHS → suffixes [flag...] en BPscript
@@ -554,13 +557,21 @@ function bp3ToScene(grammarText, opts) {
   // E4 : charger la librairie de contrôles pour les formes appel
   if (grammarCallMode) bpsLines.unshift('@controls');
 
+  // BOLSIZE : injecter le commentaire de table d'alias en tête si des alias ont été créés
+  if (bolsizeTable.hasAliases()) {
+    bpsLines.unshift(bolsizeTable.headerComment());
+  }
+
   // ── Résultat : avec ou sans opts -ho ─────────────────────────────────────
 
   if (opts && opts.hoText && opts.hoKey) {
     // Parsing du fichier -ho
     const transcriptionEntry = parseHoFile(opts.hoText);
     // Injecter @transcription.hoKey au début du BPS
-    const bpsWithHo = `@transcription.${opts.hoKey}\n` + bpsLines.join('\n');
+    // Les tirets dans le hoKey sont remplacés par 'O' car le tokenizer BPscript
+    // interprèterait '-' comme silence dans un identifiant de directive.
+    const safeHoKey = opts.hoKey.replace(/-/g, 'O');
+    const bpsWithHo = `@transcription.${safeHoKey}\n` + bpsLines.join('\n');
     return { bps: bpsWithHo, transcriptionEntry };
   }
 
@@ -803,14 +814,14 @@ function emitCallForm(bp3Name, args) {
  * Les champs (séparés par des virgules de profondeur 0) sont convertis
  * indépendamment puis rejoints.
  */
-function convertBraceGroup(tok, callMode) {
+function convertBraceGroup(tok, callMode, bolsizeTable) {
   if (!tok.startsWith('{') || !tok.endsWith('}')) return tok;
   const fields = splitTopLevelCommas(tok.slice(1, -1))
-    .map(f => convertSequenceInBrace(f, callMode));
+    .map(f => convertSequenceInBrace(f, callMode, bolsizeTable));
   return '{' + fields.join(', ') + '}';
 }
 
-function convertSequenceInBrace(field, callMode) {
+function convertSequenceInBrace(field, callMode, bolsizeTable) {
   const tokens = tokenizeBP3Line(field);
   const out = [];
   for (let i = 0; i < tokens.length; i++) {
@@ -818,7 +829,7 @@ function convertSequenceInBrace(field, callMode) {
 
     // Polymétrie imbriquée
     if (tok.startsWith('{') && tok.endsWith('}')) {
-      out.push(convertBraceGroup(tok, callMode));
+      out.push(convertBraceGroup(tok, callMode, bolsizeTable));
       continue;
     }
 
@@ -847,7 +858,7 @@ function convertSequenceInBrace(field, callMode) {
     {
       const um = tok.match(/^(.+?)(_{2,})$/);
       if (um) {
-        out.push(aliasTerminalDashes(um[1]));
+        out.push(aliasTerminalDashes(um[1], bolsizeTable));
         for (let k = 0; k < um[2].length; k++) out.push('_');
         continue;
       }
@@ -855,15 +866,15 @@ function convertSequenceInBrace(field, callMode) {
 
     // Liés X& → X~ et &X → ~X
     if (/^[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
-      out.push(aliasTerminalDashes(tok.slice(0, -1)) + '~');
+      out.push(aliasTerminalDashes(tok.slice(0, -1), bolsizeTable) + '~');
       continue;
     }
     if (/^&[A-Za-z0-9]/.test(tok) && !tok.startsWith('(:')) {
-      out.push('~' + aliasTerminalDashes(tok.slice(1)));
+      out.push('~' + aliasTerminalDashes(tok.slice(1), bolsizeTable));
       continue;
     }
 
-    out.push(aliasTerminalDashes(tok));
+    out.push(aliasTerminalDashes(tok, bolsizeTable));
   }
   return out.join(' ');
 }
@@ -975,11 +986,11 @@ function checkLhsForUnsupported(lhs) {
  * Les opérateurs nus + ; * ont des mappings spéciaux.
  * Les identifiants avec "-" internes sont aliasés (ex: dhin-- → dhinOO).
  */
-function convertSingleToken(tok) {
+function convertSingleToken(tok, bolsizeTable) {
   if (tok === '+') return 'plus';
   if (tok === ';') return 'fin';
   if (tok === '*') return 'star';
-  return aliasTerminalDashes(tok);
+  return aliasTerminalDashes(tok, bolsizeTable);
 }
 
 /**
@@ -995,11 +1006,67 @@ function convertSingleToken(tok) {
  * @param {string} tok  Token BP3 brut
  * @returns {string}  Token aliasé (ou inchangé si pas de tirets)
  */
-function aliasTerminalDashes(tok) {
+function aliasTerminalDashes(tok, bolsizeTable) {
+  let result = tok;
   if (/^[A-Za-z]/.test(tok) && tok.includes('-')) {
-    return tok.replace(/-/g, 'O');
+    result = tok.replace(/-/g, 'O');
   }
-  return tok;
+  if (bolsizeTable) {
+    result = bolsizeTable.alias(result);
+  }
+  return result;
+}
+
+// ─── Table BOLSIZE : alias déterministe pour les terminaux >30 chars ──────────
+
+const BOLSIZE_LIMIT = 30;
+
+/**
+ * Gère les alias de terminaux dépassant la limite BOLSIZE (30 chars) du moteur BP3.
+ *
+ * Stratégie :
+ *   - alias = 24 premiers chars + 'X' + compteur 3 chiffres (total ≤28 chars)
+ *   - Déterministe : même original → même alias (même instance)
+ *   - Sans collision : si le préfixe 24c est partagé par deux originaux distincts,
+ *     le compteur les discrimine.
+ *
+ * Utilisation :
+ *   const table = new BolsizeTable();
+ *   const alias = table.alias('longterminalname...');  // ≤30 → unchanged, >30 → short alias
+ *   const header = table.headerComment();              // lignes commentées pour le .bps
+ */
+class BolsizeTable {
+  constructor() {
+    this._map = new Map();  // original → alias
+    this._counter = 0;
+  }
+
+  alias(tok) {
+    if (tok.length <= BOLSIZE_LIMIT) return tok;
+    if (this._map.has(tok)) return this._map.get(tok);
+    this._counter++;
+    const prefix = tok.slice(0, 24);
+    const suffix = String(this._counter).padStart(3, '0');
+    const short = `${prefix}X${suffix}`;
+    this._map.set(tok, short);
+    return short;
+  }
+
+  hasAliases() {
+    return this._map.size > 0;
+  }
+
+  headerComment() {
+    if (this._map.size === 0) return '';
+    const lines = [
+      '// BOLSIZE aliases (terminaux >30 chars tronqués pour la limite moteur BP3)',
+    ];
+    for (const [original, alias] of this._map.entries()) {
+      lines.push(`//   ${alias} → ${original}`);
+    }
+    lines.push('//');
+    return lines.join('\n');
+  }
 }
 
 /**
@@ -1087,7 +1154,7 @@ function convertRuntimeControlToBPS(tok) {
  * @param {boolean} callMode E4 : émettre les contrôles connus en FORME APPEL
  *                           positionnelle xxx(args) au lieu du suffixe de règle.
  */
-function convertBP3TokensToBPS(text, callMode = false) {
+function convertBP3TokensToBPS(text, callMode = false, bolsizeTable = null) {
   if (!text) return '';
 
   // ── Template nue BP2 : "(= X Y Z" ou "(: X Y Z" sans ")" de fermeture ──────
@@ -1099,7 +1166,7 @@ function convertBP3TokensToBPS(text, callMode = false) {
       const isMaster = trimmed[1] === '=';
       const body = trimmed.slice(2).trim();  // tout après "(=" ou "(:"
       if (!body) return isMaster ? '${}'  : '&{}';
-      const bodyToks = body.split(/\s+/).map(convertSingleToken);
+      const bodyToks = body.split(/\s+/).map(t => convertSingleToken(t, bolsizeTable));
       const bodyBps = bodyToks.join(' ');
       const shortForm = /^[A-Za-z][A-Za-z0-9_#']*$/.test(bodyBps);
       if (isMaster) return shortForm ? `$${bodyBps}` : `\${${bodyBps}}`;
@@ -1156,7 +1223,7 @@ function convertBP3TokensToBPS(text, callMode = false) {
       const musicTokens = allTokens.slice(numCtrlTokens);
       const musicText = musicTokens.join(' ');
       // Convertir récursivement la partie musicale (sans contrôles en tête)
-      const musicBps = convertBP3TokensToBPS(musicText);
+      const musicBps = convertBP3TokensToBPS(musicText, false, bolsizeTable);
       return musicBps ? `${musicBps} ${ctrlSuffix}` : ctrlSuffix;
     }
     // Sinon : standalone ou autre → continuer avec le traitement normal
@@ -1178,7 +1245,7 @@ function convertBP3TokensToBPS(text, callMode = false) {
 
     // ── Polymétries {…} : conversion des champs (liés, prolongations, contrôles E4)
     if (tok.startsWith('{') && tok.endsWith('}')) {
-      out.push(convertBraceGroup(tok, callMode));
+      out.push(convertBraceGroup(tok, callMode, bolsizeTable));
       continue;
     }
 
@@ -1262,7 +1329,7 @@ function convertBP3TokensToBPS(text, callMode = false) {
     {
       const umatch = tok.match(/^(.+?)(_{2,})$/);
       if (umatch) {
-        out.push(aliasTerminalDashes(umatch[1]));
+        out.push(aliasTerminalDashes(umatch[1], bolsizeTable));
         const count = umatch[2].length;
         for (let k = 0; k < count; k++) out.push('_');
         continue;
@@ -1272,20 +1339,20 @@ function convertBP3TokensToBPS(text, callMode = false) {
     // Lié BP3 X& (note liée vers l'avant) → X~ en BPscript
     // Pattern : token se terminant par & (ex: do3& G#5& A'8&)
     if (/^[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
-      out.push(aliasTerminalDashes(tok.slice(0, -1)) + '~');
+      out.push(aliasTerminalDashes(tok.slice(0, -1), bolsizeTable) + '~');
       continue;
     }
 
     // Lié BP3 &X (note liée vers l'arrière) → ~X en BPscript
     // ATTENTION : &X standalone ≠ template slave (:X). On vérifie qu'il n'y a pas de parens.
     if (/^&[A-Za-z0-9]/.test(tok) && !tok.startsWith('(:')) {
-      out.push('~' + aliasTerminalDashes(tok.slice(1)));
+      out.push('~' + aliasTerminalDashes(tok.slice(1), bolsizeTable));
       continue;
     }
 
     // Tout le reste verbatim (terminaux, non-terminaux, polymetries, wildcards, etc.)
     // Aliaser les identifiants avec "-" internes (ex: dhin-- → dhinOO)
-    out.push(aliasTerminalDashes(tok));
+    out.push(aliasTerminalDashes(tok, bolsizeTable));
   }
 
   // Ajouter le qualifier de mètre en suffixe si présent

@@ -1,3 +1,13 @@
+@transcription.dhinOO
+// BOLSIZE aliases (terminaux >30 chars tronqués pour la limite moteur BP3)
+//   dhinOOdhagenadhaOOdhagenX001 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagena
+//   tagetirakitadhinOOdhagenX002 → tagetirakitadhinOOdhagenadhatigegenakadheenedheenagena
+//   tagetirakitagenaOdhagenaX003 → tagetirakitagenaOdhagenadhatigegenakadheenedheenagena
+//   tagetirakitadhinOOdhagenX004 → tagetirakitadhinOOdhagenadhatigegenakateeneteenakena
+//   tagetirakitagenaOdhagenaX005 → tagetirakitagenaOdhagenadhatigegenakateeneteenakena
+//   dhinOOdhagenadhaOOdhagenX006 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitadhinOOdhagenadhatigegenakateeneteenakena
+//   dhinOOdhagenadhaOOdhagenX007 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitagenaOdhagenadhatigegenakateeneteenakena
+//
 @mode:random(mm:360.0000,striated)
 S <> S48 [meter:4+4/6]
 S <> S96 [meter:4+4+4+4/6]
@@ -46,11 +56,11 @@ A6 <> dhatigegenaka
 -----
 @mode:random
 F'12 <> dhatigegenakateeneteenakena
-Q24 <> dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagena
-F24 <> tagetirakitadhinOOdhagenadhatigegenakadheenedheenagena
-F24 <> tagetirakitagenaOdhagenadhatigegenakadheenedheenagena
-F'24 <> tagetirakitadhinOOdhagenadhatigegenakateeneteenakena
-F'24 <> tagetirakitagenaOdhagenadhatigegenakateeneteenakena
-F48 <> dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitadhinOOdhagenadhatigegenakateeneteenakena
-F48 <> dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitagenaOdhagenadhatigegenakateeneteenakena
+Q24 <> dhinOOdhagenadhaOOdhagenX001
+F24 <> tagetirakitadhinOOdhagenX002
+F24 <> tagetirakitagenaOdhagenaX003
+F'24 <> tagetirakitadhinOOdhagenX004
+F'24 <> tagetirakitagenaOdhagenaX005
+F48 <> dhinOOdhagenadhaOOdhagenX006
+F48 <> dhinOOdhagenadhaOOdhagenX007
 -----
