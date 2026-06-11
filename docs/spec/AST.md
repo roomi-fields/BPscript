@@ -47,6 +47,13 @@ Scene {
 
 ### `Directive`
 
+> **Surfaces multiples, nœud unique** (décision 2026-06-11) : les directives de
+> production (`seed`, `maxitems`, `allitems`, `improvize`) acceptent deux écritures —
+> `@seed:1` (historique, dépréciée douce) et `[@seed:1, @items:20]` (bloc de production,
+> niveau scène) — qui produisent les MÊMES nœuds `Directive`. Aucun nouveau nœud ;
+> contrat consommateurs (BPx, frontal) intact. Cf. EBNF §production_block et
+> hub/principes-syntaxe.md.
+
 ```
 Directive {
   type: "Directive"

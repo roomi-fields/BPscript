@@ -992,12 +992,12 @@ transpose                      → transposition globale
 chan                            → canal MIDI global
 vel                            → vélocité globale
 ins                            → programme MIDI global
-improvize                      → mode improvisation continue (Improvize=1)
-allitems                       → produire tous les items (AllItems=1)
-maxitems:N                     → nombre max d'items produits (0 = illimité)
+improvize                      → mode improvisation continue (Improvize=1)   (* DÉPRÉCIÉ en @-forme → [@improvize], décision 2026-06-11 *)
+allitems                       → produire tous les items (AllItems=1)        (* DÉPRÉCIÉ en @-forme → [@allitems] *)
+maxitems:N                     → nombre max d'items produits (0 = illimité)  (* DÉPRÉCIÉ en @-forme → [@maxitems:N] *)
 quantize:N / quantization:N    → quantization en ms (défaut 10)
 qclock:N                       → Qclock (dénominateur période métronome)
-seed:N                         → graine RNG (0 = aléatoire)
+seed:N                         → graine RNG (0 = aléatoire)                 (* DÉPRÉCIÉ en @-forme → [@seed:N] *)
 tuning:SCALE                   → temperament from tuning.json (e.g. @tuning:Cmaj)
 tuning:N                       → reference pitch in Hz (e.g. @tuning:442)
 filter                         → CV/signal objects library
@@ -1094,3 +1094,23 @@ lambda   → chaîne vide (efface le non-terminal)
   (OkBolChar2 / Encode.c:415).
 - `#` est autorisé dans les identifiants pour les altérations musicales (C#4, F#2).
   Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
+
+
+## Bloc de directives de production `[@…]` (DÉCIDÉ 2026-06-11 — implémentation en file)
+
+Les directives de production (instructions au moteur sur COMMENT produire : seed,
+maxitems, allitems, improvize) s'écrivent au niveau scène entre crochets, le `@`
+répété sur chaque clé :
+
+```ebnf
+production_block = "[", production_key, { ",", production_key }, "]" ;
+production_key   = "@", IDENT, [ ":", (INT | FLOAT | IDENT) ] ;
+```
+
+Exemples : `[@seed:1]`, `[@seed:1, @items:20]`, `[@improvize]`.
+Lecture composée (table de la loi, hub/principes-syntaxe.md) : `[]` = adressé au moteur,
+`@` = hors-temps/niveau monde. Le `@` intérieur discrimine d'un coup d'œil un bloc de
+production d'une garde de règle (`[K1==1] …`). Les @-formes historiques (`@seed:N`…)
+restent lues avec avertissement de dépréciation. AST : INCHANGÉ — les deux surfaces
+produisent les mêmes nœuds `Directive`. Précédence d'exécution : console/session >
+scène > défauts moteur.
