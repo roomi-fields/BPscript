@@ -148,6 +148,12 @@ Si tu es lancé avec un nom de session (`-n`), lis immédiatement les fichiers m
 **Session `transpileur`** — Tokenizer, parser, encoder, acteurs, prototypes
 - Focus : tokenizer.js, parser.js, encoder.js, actorResolver.js, prototypes.js, libs.js, lib/*.json, test/
 
+**Session `architecte`** — Architecte/PM de l'écosystème (orchestration, arbitrages, tour de contrôle)
+- Skill faisant foi : `.claude/skills/architecte-pm/SKILL.md` ; mémoire : profil_architecte_pm.md
+
+**Session `dev`** — Développeur transpileur (TDD, exécution des ordres de travail de l'architecte)
+- Skill faisant foi : `.claude/skills/transpiler-dev/SKILL.md` ; mémoire : profil_dev_bpscript.md
+
 **Session `architecture`** — Design langage, pitch, acteurs, REPL, effets
 - Focus : docs/design/*.md, docs/spec/*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json, concepts acteurs/REPL/effets
 
