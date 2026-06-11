@@ -11,14 +11,16 @@ import { generatePrototypes } from './prototypes.js';
 import { resolveActors } from './actorResolver.js';
 
 function compileBPS(source) {
-  const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [] };
+  const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [], warnings: [] };
 
   try {
     // 1. Tokenize
     const tokens = tokenize(source);
 
     // 2. Parse → AST
-    const ast = parse(tokens);
+    // warnings : avertissements non fatals (ex. @-formes de production
+    // dépréciées, décision 2026-06-11) — canal séparé de errors.
+    const ast = parse(tokens, { onWarning: (w) => result.warnings.push(w) });
     result.ast = ast;
 
     // 2b. Resolve actors (between parser and encoder)

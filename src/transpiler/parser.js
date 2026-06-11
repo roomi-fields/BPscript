@@ -8,7 +8,7 @@
 
 import { T } from './tokenizer.js';
 import { loadLibsFromDirectives } from './libs.js';
-import { BP3_OPERATORS } from './constants.js';
+import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
   constructor(msg, token) {
@@ -28,9 +28,16 @@ function normalizeName(name) {
   return name in BP3_OPERATORS ? BP3_OPERATORS[name] : name;
 }
 
-function parse(tokens) {
+function parse(tokens, opts = {}) {
   let pos = 0;
   let libCtx = { controlNames: new Set(), noArgControls: new Set(), controlMap: {}, symbols: {} };
+
+  // Avertissements non fatals (ex. dépréciation des @-formes de production).
+  // Canal séparé des erreurs : remonté via opts.onWarning (compileBPS →
+  // result.warnings), jamais dans l'AST (contrat BPx : AST inchangé).
+  function warn(message, line) {
+    if (opts.onWarning) opts.onWarning({ message, line });
+  }
 
   function current() { return tokens[pos] || { type: T.EOF, value: null, line: 0, col: 0 }; }
   function peek(offset = 0) { return tokens[pos + offset] || { type: T.EOF }; }
@@ -185,6 +192,10 @@ function parse(tokens) {
         } else {
           scene.directives.push(dir);
         }
+      } else if (atProductionBlock()) {
+        // [@seed:1, @items:20] — bloc de production (niveau scène), dans
+        // l'ordre source (l'ordre des directives est sémantique : last wins).
+        for (const d of parseProductionBlock()) scene.directives.push(d);
       } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
         scene.declarations.push(parseDeclaration());
       } else if (at(T.BACKTICK)) {
@@ -316,6 +327,87 @@ function parse(tokens) {
     }
     expect(T.RPAREN);
     return params;
+  }
+
+  /**
+   * Valeur de directive après ':' — logique PARTAGÉE entre la @-forme
+   * historique (@seed:7) et le bloc de production ([@seed:7]) pour garantir
+   * des nœuds Directive identiques par construction (contrat BPx).
+   *   INT → value Number (négatif via '-') ; ratio N/M → value String ;
+   *   FLOAT → value String brute (sortie BP3 exacte) ; IDENT → champ runtime.
+   */
+  function parseDirectiveColonValue() {
+    let value = null, runtime = null;
+    // Handle negative values: @transpose:-24
+    let negative = false;
+    if (at(T.REST)) { // - token
+      negative = true;
+      advance();
+    }
+    if (at(T.INT)) {
+      const num = advance().value;
+      // Check for ratio: 3/4, 7/8
+      if (at(T.SLASH) && peek(1).type === T.INT) {
+        advance(); // /
+        const denom = advance().value;
+        value = `${negative ? '-' : ''}${num}/${denom}`;
+      } else {
+        value = Number(`${negative ? '-' : ''}${num}`);
+      }
+    } else if (at(T.FLOAT)) {
+      const raw = advance().value;
+      value = raw;  // Preserve raw float string for exact BP3 output (e.g. 60.0000)
+    } else if (at(T.IDENT)) {
+      // Could be runtime or string value
+      const v = advance().value;
+      // Check for ratio like 7/8
+      if (at(T.SLASH) && peek(1).type === T.INT) {
+        advance(); // /
+        const denom = advance().value;
+        value = `${v}/${denom}`;
+      } else {
+        runtime = v;
+      }
+    }
+    return { value, runtime };
+  }
+
+  /**
+   * Bloc de directives de production : `[@seed:1, @items:20]`
+   * (EBNF §production_block, décision 2026-06-11). Niveau scène uniquement.
+   * Le `@` est répété sur chaque clé ; chaque clé produit le MÊME nœud
+   * Directive que la @-forme historique. Détection sur LBRACKET suivi de AT
+   * (un `@` entre crochets était une erreur de syntaxe avant la décision).
+   */
+  function atProductionBlock() {
+    return at(T.LBRACKET) && peek(1).type === T.AT;
+  }
+
+  function parseProductionBlock() {
+    expect(T.LBRACKET);
+    const dirs = [];
+    while (true) {
+      const atTok = expect(T.AT);
+      const name = expect(T.IDENT).value;
+      let value = null, runtime = null;
+      if (at(T.COLON)) {
+        advance();
+        ({ value, runtime } = parseDirectiveColonValue());
+      }
+      // Le bloc est réservé aux directives de production (décision 2026-06-11).
+      // Une autre clé y est parsée (EBNF : IDENT) mais poussée comme Directive
+      // SIMPLE — les noms à traitement spécial (@mode, @scene, @duration…)
+      // y perdraient leur effet en silence : on avertit.
+      if (!PRODUCTION_DIRECTIVES.includes(name)) {
+        warn(`Clé '@${name}' hors des directives de production — son effet n'est pas garanti dans un bloc [@…] ; préférer la forme @${name}…`, atTok.line);
+      }
+      dirs.push({ type: 'Directive', name, subkey: null, runtime, value,
+                  aliases: null, modifiers: null, line: atTok.line });
+      if (at(T.COMMA)) { advance(); continue; }
+      break;
+    }
+    expect(T.RBRACKET);
+    return dirs;
   }
 
   function parseDirective() {
@@ -647,47 +739,7 @@ function parse(tokens) {
 
     if (at(T.COLON)) {
       advance();
-      // Handle negative values: @transpose:-24
-      let negative = false;
-      if (at(T.REST)) { // - token
-        negative = true;
-        advance();
-      }
-      if (at(T.INT)) {
-        const num = advance().value;
-        // Check for ratio: 3/4, 7/8
-        if (at(T.SLASH) && peek(1).type === T.INT) {
-          advance(); // /
-          const denom = advance().value;
-          value = `${negative ? '-' : ''}${num}/${denom}`;
-        } else {
-          value = Number(`${negative ? '-' : ''}${num}`);
-        }
-      } else if (at(T.FLOAT)) {
-        const raw = advance().value;
-        value = raw;  // Preserve raw float string for exact BP3 output (e.g. 60.0000)
-      } else if (at(T.IDENT)) {
-        // Could be runtime or string value
-        const v = advance().value;
-        // Check for ratio like 7/8
-        if (at(T.SLASH) && peek(1).type === T.INT) {
-          advance(); // /
-          const denom = advance().value;
-          value = `${v}/${denom}`;
-        } else {
-          runtime = v;
-        }
-      } else if (at(T.INT)) {
-        // Could be ratio like 3/4
-        const num = advance().value;
-        if (at(T.SLASH)) {
-          advance();
-          const denom = expect(T.INT).value;
-          value = `${num}/${denom}`;
-        } else {
-          value = Number(num);
-        }
-      }
+      ({ value, runtime } = parseDirectiveColonValue());
     }
 
     // Mode modifiers: @mode:random(destru, smooth, mm:60)
@@ -794,6 +846,13 @@ function parse(tokens) {
         };
       }
       return dirNode;
+    }
+
+    // Dépréciation douce (décision 2026-06-11) : les directives de production
+    // s'écrivent désormais en bloc [@clé:valeur] ; la @-forme reste lue.
+    if (!subkey && PRODUCTION_DIRECTIVES.includes(name)) {
+      const suggestion = value !== null ? `:${value}` : (runtime ? `:${runtime}` : '');
+      warn(`Directive '@${name}' dépréciée — écrire [@${name}${suggestion}] (bloc de production)`, tok.line);
     }
 
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };
@@ -1122,6 +1181,19 @@ function parse(tokens) {
       if (++safety > 200) throw new ParseError('Subgrammar parse loop safety limit', current());
       skipNewlines();
       if (atEnd()) break;
+
+      // Bloc de production hors en-tête : erreur franche (la place niveau
+      // règle/sous-grammaire n'est pas dans la décision 2026-06-11), plutôt
+      // qu'une troncature silencieuse de la scène.
+      if (atProductionBlock()) {
+        throw new ParseError(`Bloc de production [@…] : autorisé en en-tête de scène uniquement`, current());
+      }
+      // ![@…] : réserve de composition future (re-semer PENDANT le jeu,
+      // hub/principes-syntaxe.md §3) — non implémentée. Erreur franche plutôt
+      // que l'absorption silencieuse de la scène.
+      if (at(T.BANG) && peek(1).type === T.LBRACKET && peek(2).type === T.AT) {
+        throw new ParseError(`Forme '![@…]' réservée (directive de production dans le flux) — non implémentée`, current());
+      }
 
       // Parse @mode:X(modifiers) directive at the start of a sub-grammar block
       // Stop if @templates — that's a separate section after all subgrammars

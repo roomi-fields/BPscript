@@ -55,6 +55,7 @@
     "allitems":   { "AllItems": "1", "Improvize": "0" },
     "all_items":  { "AllItems": "1", "Improvize": "0" },
     "maxitems":   { "MaxItemsProduce": "@value" },
+    "items":      { "MaxItemsProduce": "@value" },
     "quantize":      { "Quantization": "@value" },
     "quantization":  { "Quantization": "@value" },
     "qclock":        { "Qclock": "@value" },
