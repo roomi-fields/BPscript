@@ -23,7 +23,7 @@
 
 @core
 @alphabet.western:midi
-@seed:1
+[@seed:1]
 
 @mode:random
 [count<5]  S -> A S [count+1]

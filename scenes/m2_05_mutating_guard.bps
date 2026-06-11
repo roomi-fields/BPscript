@@ -6,8 +6,8 @@
 //         Auto-désactivation quand Ideas atteint 0.
 //
 // Convention : non-terminaux capitalisés (S, Seed, Idea, Done). `Seed` reste
-// distinct de la directive `@seed:1` (la directive est reconnue par `@` et
-// `:`, pas par le mot seul). Terminal observable : C4 (note western:midi).
+// distinct de la directive de production `[@seed:1]` (la clé est reconnue par
+// `@` dans le bloc, pas par le mot seul). Terminal observable : C4 (western:midi).
 //
 // Mécanique :
 //   - Tour 1 : Ideas = 0 (default). Règles applicables :
@@ -42,7 +42,7 @@
 
 @core
 @alphabet.western:midi
-@seed:1
+[@seed:1]
 
 @mode:random
 S           -> Seed S [Ideas=3]

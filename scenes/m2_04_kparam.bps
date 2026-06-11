@@ -31,7 +31,7 @@
 
 @core
 @alphabet.western:midi
-@seed:1
+[@seed:1]
 
 @mode:random
 [count<10]  S -> Hot  S [count+1] [weight:K1=80]

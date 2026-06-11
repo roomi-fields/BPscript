@@ -26,7 +26,7 @@
 
 @core
 @alphabet.western:midi
-@seed:1
+[@seed:1]
 
 @mode:random
 [count<10]  S -> Heavy S [count+1] [weight:90]

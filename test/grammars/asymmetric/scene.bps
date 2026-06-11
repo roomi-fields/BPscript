@@ -8,7 +8,7 @@
 
 @core
 @controls
-@improvize
+[@improvize]
 
 @gate beat3:midi
 @gate beat2:midi

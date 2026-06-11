@@ -27,7 +27,7 @@
 
 @core
 @alphabet.western:midi
-@seed:1
+[@seed:1]
 
 @mode:random
 S    -> Step S [weight:3-1]
