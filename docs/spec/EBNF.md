@@ -992,12 +992,12 @@ transpose                      → transposition globale
 chan                            → canal MIDI global
 vel                            → vélocité globale
 ins                            → programme MIDI global
-improvize                      → mode improvisation continue (Improvize=1)   (* DÉPRÉCIÉ en @-forme → [@improvize], décision 2026-06-11 *)
-allitems                       → produire tous les items (AllItems=1)        (* DÉPRÉCIÉ en @-forme → [@allitems] *)
-maxitems:N                     → nombre max d'items produits (0 = illimité)  (* DÉPRÉCIÉ en @-forme → [@maxitems:N] *)
+improvize                      → mode improvisation continue (Improvize=1)   (* RETIRÉ en @-forme (erreur) → [@improvize], décision 2026-06-11 durcie *)
+allitems                       → produire tous les items (AllItems=1)        (* RETIRÉ en @-forme (erreur) → [@allitems] *)
+maxitems:N                     → nombre max d'items produits (0 = illimité)  (* RETIRÉ en @-forme (erreur) → [@maxitems:N] *)
 quantize:N / quantization:N    → quantization en ms (défaut 10)
 qclock:N                       → Qclock (dénominateur période métronome)
-seed:N                         → graine RNG (0 = aléatoire)                 (* DÉPRÉCIÉ en @-forme → [@seed:N] *)
+seed:N                         → graine RNG (0 = aléatoire)                 (* RETIRÉ en @-forme (erreur) → [@seed:N] *)
 tuning:SCALE                   → temperament from tuning.json (e.g. @tuning:Cmaj)
 tuning:N                       → reference pitch in Hz (e.g. @tuning:442)
 filter                         → CV/signal objects library
@@ -1111,6 +1111,7 @@ Exemples : `[@seed:1]`, `[@seed:1, @items:20]`, `[@improvize]`.
 Lecture composée (table de la loi, hub/principes-syntaxe.md) : `[]` = adressé au moteur,
 `@` = hors-temps/niveau monde. Le `@` intérieur discrimine d'un coup d'œil un bloc de
 production d'une garde de règle (`[K1==1] …`). Les @-formes historiques (`@seed:N`…)
-restent lues avec avertissement de dépréciation. AST : INCHANGÉ — les deux surfaces
-produisent les mêmes nœuds `Directive`. Précédence d'exécution : console/session >
-scène > défauts moteur.
+sont REJETÉES : erreur de compilation pointant la nouvelle écriture (arbitrage
+utilisateur 2026-06-11, durci le même jour — pas de dépréciation douce). AST :
+INCHANGÉ — le bloc produit les mêmes nœuds `Directive` que la @-forme d'origine.
+Précédence d'exécution : console/session > scène > défauts moteur.

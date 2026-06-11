@@ -31,7 +31,7 @@ async function run() {
   {
     const src = `
 @core
-@maxitems:0
+[@maxitems:0]
 @qclock:3
 @controls
 @alphabet.western:midi

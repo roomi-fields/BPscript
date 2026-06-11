@@ -848,11 +848,12 @@ function parse(tokens, opts = {}) {
       return dirNode;
     }
 
-    // Dépréciation douce (décision 2026-06-11) : les directives de production
-    // s'écrivent désormais en bloc [@clé:valeur] ; la @-forme reste lue.
+    // Rejet franc (arbitrage utilisateur 2026-06-11, durci le même jour) :
+    // les directives de production s'écrivent en bloc [@clé:valeur] —
+    // la @-forme historique est une erreur qui pointe la nouvelle écriture.
     if (!subkey && PRODUCTION_DIRECTIVES.includes(name)) {
       const suggestion = value !== null ? `:${value}` : (runtime ? `:${runtime}` : '');
-      warn(`Directive '@${name}' dépréciée — écrire [@${name}${suggestion}] (bloc de production)`, tok.line);
+      throw new ParseError(`Directive '@${name}' retirée — écrire [@${name}${suggestion}] (bloc de production)`, tok);
     }
 
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };

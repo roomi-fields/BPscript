@@ -56,7 +56,7 @@ valide, status.json annoté.
 | test_scan_mode | 15 PASS / 0 FAIL |
 | test_taska_taskb | 12 PASS / 0 FAIL |
 | test_bolsize_alias | 7 PASS / 0 FAIL |
-| test_production_block | 63 PASS / 0 FAIL (nouveau, décision 2026-06-11) |
+| test_production_block | 56 PASS / 0 FAIL (nouveau, décision 2026-06-11 durcie : @-formes rejetées) |
 | test_bp3_to_scene | 84 OK / 0 FAIL / 3 NON GÉRÉ |
 | smoke (src/transpiler/test.js) | 33 scènes, 0 erreur |
 

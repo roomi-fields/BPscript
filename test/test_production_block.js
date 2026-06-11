@@ -124,20 +124,25 @@ S -> C4`);
 // 2. Iso-AST : le bloc produit les MÊMES nœuds que la @-forme
 // ============================================================
 
-section('[@…] — identité AST avec les @-formes');
+section('[@…] — forme des nœuds Directive (contrat BPx inchangé)');
 
 {
-  const oldAst = parseSource(`@seed:7\n@mode:lin\nS -> C4`);
+  // Forme contractuelle exacte (décision : @seed:7 → {type:'Directive',
+  // name:'seed', value:7}) — la @-forme étant retirée, le bloc doit produire
+  // ce nœud-là, à la ligne près.
   const newAst = parseSource(`[@seed:7]\n@mode:lin\nS -> C4`);
-  assert('iso-AST seed:7 (INT)', sameDirective(oldAst.directives[0], newAst.directives[0]),
-    { old: oldAst.directives[0], new: newAst.directives[0] });
+  const expected = { type: 'Directive', name: 'seed', subkey: null, runtime: null,
+                     value: 7, aliases: null, modifiers: null, line: 1 };
+  assert('nœud seed:7 conforme au contrat', sameDirective(newAst.directives[0], expected),
+    { got: newAst.directives[0], expected });
 }
 
 {
-  const oldAst = parseSource(`@improvize\n@mode:lin\nS -> C4`);
   const newAst = parseSource(`[@improvize]\n@mode:lin\nS -> C4`);
-  assert('iso-AST improvize (sans valeur)', sameDirective(oldAst.directives[0], newAst.directives[0]),
-    { old: oldAst.directives[0], new: newAst.directives[0] });
+  const expected = { type: 'Directive', name: 'improvize', subkey: null, runtime: null,
+                     value: null, aliases: null, modifiers: null, line: 1 };
+  assert('nœud improvize conforme au contrat', sameDirective(newAst.directives[0], expected),
+    { got: newAst.directives[0], expected });
 }
 
 {
@@ -157,22 +162,20 @@ section('[@…] — identité AST avec les @-formes');
 }
 
 // ============================================================
-// 3. Bout en bout : settingsJSON identique entre les deux surfaces
+// 3. Bout en bout : réglages moteur appliqués depuis le bloc
 // ============================================================
 
-section('[@…] — settingsJSON identique aux @-formes');
+section('[@…] — réglages moteur appliqués (settingsJSON)');
 
 {
   // ⚠️ valeur ≠ 20 (20 est le défaut de MaxItemsProduce — faux positif garanti)
-  const rOld = compileBPS(`@seed:9\n@maxitems:33\n@mode:lin\nS -> C4`);
   const rNew = compileBPS(`[@seed:9, @maxitems:33]\n@mode:lin\nS -> C4`);
-  assert('ancienne forme : 0 erreur', rOld.errors.length === 0, rOld.errors);
   assert('nouvelle forme : 0 erreur', rNew.errors.length === 0, rNew.errors);
-  assert('settingsJSON identiques', rOld.settingsJSON === rNew.settingsJSON);
-  assert('grammaires identiques', rOld.grammar === rNew.grammar);
   const s = JSON.parse(rNew.settingsJSON);
   assert('Seed=9 appliqué', s.Seed?.value === '9', s.Seed);
   assert('MaxItemsProduce=33 appliqué', s.MaxItemsProduce?.value === '33', s.MaxItemsProduce);
+  assert('grammaire émise inchangée par le bloc',
+    rNew.grammar.includes('LIN') && rNew.grammar.includes('gram#1[1] S --> C4'), rNew.grammar);
 }
 
 {
@@ -193,49 +196,42 @@ section('[@…] — settingsJSON identique aux @-formes');
 }
 
 // ============================================================
-// 4. Dépréciation douce des @-formes
+// 4. Rejet franc des @-formes (arbitrage utilisateur 2026-06-11, durci)
 // ============================================================
 
-section('@-formes — dépréciation douce (warnings, pas errors)');
+section('@-formes — rejet franc (erreur pointant la nouvelle écriture)');
 
 {
   const r = compileBPS(`@seed:1\n@mode:lin\nS -> C4`);
-  assert('@seed : toujours lue (0 erreur)', r.errors.length === 0, r.errors);
-  assert('@seed : warnings est un tableau', Array.isArray(r.warnings), r.warnings);
-  assert('@seed : 1 avertissement', (r.warnings || []).length === 1, r.warnings);
-  const w = (r.warnings || [])[0];
-  assert('@seed : message cite la dépréciation', /dépréci/i.test(w?.message || ''), w);
-  assert('@seed : message cite la nouvelle forme', (w?.message || '').includes('[@seed'), w);
-  assert('@seed : ligne renseignée', w?.line === 1, w);
-  const s = JSON.parse(r.settingsJSON);
-  assert('@seed : réglage toujours appliqué', s.Seed?.value === '1', s.Seed);
+  assert('@seed : erreur', r.errors.length === 1, r.errors);
+  const e = r.errors[0];
+  assert('@seed : message cite le retrait', /retirée/.test(e?.message || ''), e);
+  assert('@seed : message cite la nouvelle forme', (e?.message || '').includes('[@seed:1]'), e);
+  assert('@seed : ligne renseignée', e?.line === 1, e);
 }
 
 {
-  const r = compileBPS(`@improvize\n@allitems\n@maxitems:33\n@mode:lin\nS -> C4`);
-  assert('3 @-formes : 3 avertissements', (r.warnings || []).length === 3, r.warnings);
-  assert('3 @-formes : 0 erreur', r.errors.length === 0, r.errors);
-  const s = JSON.parse(r.settingsJSON);
-  assert('@allitems déprécié : AllItems toujours appliqué', s.AllItems?.value === '1', s.AllItems);
-  assert('@maxitems déprécié : MaxItemsProduce toujours appliqué', s.MaxItemsProduce?.value === '33', s.MaxItemsProduce);
+  const r = compileBPS(`@improvize\n@mode:lin\nS -> C4`);
+  assert('@improvize : erreur citant [@improvize]', (r.errors[0]?.message || '').includes('[@improvize]'), r.errors);
+  const r2 = compileBPS(`@allitems\n@mode:lin\nS -> C4`);
+  assert('@allitems : erreur', r2.errors.length > 0, r2.errors);
+  const r3 = compileBPS(`@maxitems:33\n@mode:lin\nS -> C4`);
+  assert('@maxitems : erreur', r3.errors.length > 0, r3.errors);
 }
 
 {
-  // @items / @all_items en @-forme : surfaces nées dépréciées (alias),
-  // lues + averties + appliquées
+  // Les alias (items / all_items) en @-forme sont rejetés de la même façon
   const r = compileBPS(`@items:44\n@mode:lin\nS -> C4`);
-  assert('@items : 1 avertissement', (r.warnings || []).length === 1, r.warnings);
-  const s = JSON.parse(r.settingsJSON);
-  assert('@items:44 → MaxItemsProduce=44', s.MaxItemsProduce?.value === '44', s.MaxItemsProduce);
+  assert('@items : erreur', r.errors.length > 0, r.errors);
   const r2 = compileBPS(`@all_items\n@mode:lin\nS -> C4`);
-  assert('@all_items : averti + appliqué',
-    (r2.warnings || []).length === 1 && JSON.parse(r2.settingsJSON).AllItems?.value === '1',
-    { warnings: r2.warnings });
+  assert('@all_items : erreur', r2.errors.length > 0, r2.errors);
 }
 
 {
   const r = compileBPS(`[@seed:1, @improvize]\n@mode:lin\nS -> C4`);
-  assert('nouvelle forme : 0 avertissement', (r.warnings || []).length === 0, r.warnings);
+  assert('nouvelle forme : 0 erreur, 0 avertissement',
+    r.errors.length === 0 && (r.warnings || []).length === 0,
+    { errors: r.errors, warnings: r.warnings });
 }
 
 {
