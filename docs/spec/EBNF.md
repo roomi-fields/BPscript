@@ -1096,7 +1096,7 @@ lambda   → chaîne vide (efface le non-terminal)
   Known limitation: `#` in terminal names currently causes issues with BP3's internal MIDI mapping when using flat alphabet.
 
 
-## Bloc de directives de production `[@…]` (DÉCIDÉ 2026-06-11 — implémentation en file)
+## Bloc de directives de production `[@…]` (décidé et implémenté 2026-06-11)
 
 Les directives de production (instructions au moteur sur COMMENT produire : seed,
 maxitems, allitems, improvize) s'écrivent au niveau scène entre crochets, le `@`

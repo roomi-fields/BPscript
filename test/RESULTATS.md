@@ -47,15 +47,17 @@ negative-context, not-reich, repeat, templates, tryAllItems0, tryAllItems1, vina
 v3.4.4/v3.4.5). Snapshot committé 1497 tokens (v3.4.2-wasm.2) conservé comme dernier état
 valide, status.json annoté.
 
-### Suites unitaires (après fixes F1-F4, 2026-06-10)
+### Suites unitaires (après bloc de production [@…], 2026-06-11)
 
 | Suite | Résultat |
 |---|---|
-| test_v08_parser | 147 PASS / 0 FAIL |
+| test_v08_parser | 168 PASS / 0 FAIL |
 | test_tokenizer_hyphen | 82 PASS / 0 FAIL |
 | test_scan_mode | 15 PASS / 0 FAIL |
 | test_taska_taskb | 12 PASS / 0 FAIL |
-| test_bp3_to_scene | 72 OK / 0 FAIL / 6 NON GÉRÉ |
+| test_bolsize_alias | 7 PASS / 0 FAIL |
+| test_production_block | 63 PASS / 0 FAIL (nouveau, décision 2026-06-11) |
+| test_bp3_to_scene | 84 OK / 0 FAIL / 3 NON GÉRÉ |
 | smoke (src/transpiler/test.js) | 33 scènes, 0 erreur |
 
 ## Régénérations du jour (2026-06-10)
