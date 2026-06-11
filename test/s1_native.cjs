@@ -164,6 +164,13 @@ function loadSettings(seFile) {
     if (seObj.DisplayItems) seObj.DisplayItems.value = '1';
     // Keep original MaxItemsProduce from settings (don't override — must match S0/PHP)
     seObj.TraceProduce = {name: "Trace production", value: "0", boolean: "1"};
+    // se_overrides (grammars.json): per-grammar settings overrides for capture
+    // (e.g. E-006 asymmetric: Improvize=0 → simple-derivation oracle, anchorable)
+    for (const [k, v] of Object.entries(gramDef.se_overrides || {})) {
+      if (k === '_comment') continue;
+      if (seObj[k]) seObj[k].value = String(v);
+      else seObj[k] = { name: k, value: String(v) };
+    }
     fs.writeFileSync(tmpSettings, JSON.stringify(seObj));
     return tmpSettings;
   }

@@ -1595,6 +1595,10 @@
       "_goto"
     ],
     "lines": 65,
+    "se_overrides": {
+      "_comment": "E-006 : oracle re-capturé SANS Improvize (dérivation simple, graine 1) — le protocole Improvize n'est pas porté côté BPx, l'ancre native exige une dérivation simple",
+      "Improvize": "0"
+    },
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",

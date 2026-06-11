@@ -185,6 +185,19 @@ if (seMatch) {
   }
 }
 
+// se_overrides (grammars.json): same per-grammar overrides as S1 (coherent capture)
+if (seJsonContent && gramDef.se_overrides) {
+  try {
+    const o = JSON.parse(seJsonContent);
+    for (const [k, v] of Object.entries(gramDef.se_overrides)) {
+      if (k === '_comment') continue;
+      if (o[k]) o[k].value = String(v);
+      else o[k] = { name: k, value: String(v) };
+    }
+    seJsonContent = JSON.stringify(o);
+  } catch(e) {}
+}
+
 // Aux files: check s1_args first, then grammar header
 let explicitAl = null;
 if (gramDef.s1_args) {
