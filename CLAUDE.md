@@ -7,7 +7,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - **3 words**: `gate`, `trigger`, `cv` (temporal types)
 - **24 structural symbols**: `@`, `->`, `<-`, `<>`, `{}`, `,`, `()`, `:`, `=`, `[]`, ``` `` ```, `//`, `-`, `_`, `.`, `...`, `!`, `<!`, `#`, `?`, `$`, `&`, `~`, `|`
 - **9 flag operators**: comparison `==`, `!=`, `>`, `<`, `>=`, `<=` + calculation `+`, `-`, `=` (`-`/`=` are distinct operators that reuse glyphs also used as structural symbols)
-- **5 reserved qualifier keys**: `speed`, `scale`, `mode`, `weight`, `on_fail`
+- **8 reserved qualifier keys**: `mode`, `scan`, `weight`, `speed`, `on_fail`, `tempo`, `meter`, `scale` (per `docs/spec/LANGUAGE.md`; `scan`/`tempo`/`meter` handled in `encoder.js`)
 - **Double declaration**: each symbol has temporal type + runtime binding (`gate Sa:sc`)
 - Silence: `-` in both BPscript and BP3
 - Prolongation: `_` in both BPscript and BP3
