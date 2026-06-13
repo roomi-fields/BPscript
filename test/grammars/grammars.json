@@ -1072,6 +1072,10 @@
   "livecode1": {
     "bernard": "livecode1",
     "status": "active",
+    "se_overrides": {
+      "_comment": "E-010 : oracle re-capturé SANS Improvize (dérivation simple, graine 1) — l'énumération Improvize (540 notes) n'est pas portée côté BPx, l'ancre native exige une dérivation simple",
+      "Improvize": "0"
+    },
     "production_mode": "midi",
     "aux": [
       "se"
@@ -2041,6 +2045,10 @@
   "alan-dice": {
     "bernard": "Alan",
     "status": "active",
+    "se_overrides": {
+      "_comment": "E-010 : oracle re-capturé SANS Improvize (dérivation simple, graine 1) — l'énumération Improvize (5049 notes) n'est pas portée côté BPx",
+      "Improvize": "0"
+    },
     "production_mode": "midi",
     "aux": [
       "se"
@@ -2060,6 +2068,10 @@
   "beatrix-dice": {
     "bernard": "Beatrix",
     "status": "active",
+    "se_overrides": {
+      "_comment": "E-010 : oracle re-capturé SANS Improvize (dérivation simple, graine 1) — l'énumération Improvize (5049 notes) n'est pas portée côté BPx",
+      "Improvize": "0"
+    },
     "production_mode": "midi",
     "aux": [
       "se"
@@ -2079,6 +2091,10 @@
   "mozart-dice": {
     "bernard": "Mozart",
     "status": "active",
+    "se_overrides": {
+      "_comment": "E-010 : oracle re-capturé SANS Improvize (dérivation simple, graine 1) — l'énumération Improvize (10113 notes) n'est pas portée côté BPx",
+      "Improvize": "0"
+    },
     "php_ref": {
       "midi_notes": 10113,
       "note_convention": "french",
