@@ -2,9 +2,6 @@
   "name": "bpscript",
   "type": "module",
   "private": true,
-  "browser": {
-    "./src/transpiler/libs-fs.js": "./src/transpiler/libs-fs.browser.js"
-  },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
     "@lezer/highlight": "^1.2.3",
