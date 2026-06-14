@@ -1,4 +1,13 @@
-# Résultats des tests — Pipeline S0→S1→S2→S3→S4→S5
+# Résultats des tests
+
+> **MAJ 2026-06-14 — WASM RETIRÉ du harnais** (décision oracle-natif-trois-voies).
+> `test_all.cjs` ne fait plus que l'**oracle natif** (S1 MIDI + S3-native timed-tokens via
+> `s3_native.cjs --tokensout`). Les étages WASM S2/S3/S4/S5 et les comparateurs
+> s1_s2/s2_s3/s3_s4/s4_s5 sont **supprimés** ; la validation passe aux 2 voies BPx
+> (voie A `.gr`→BPx chez le frontal, voie B `.bps`→BPx chez BPx). Le tableau S0→S5
+> ci-dessous est conservé comme historique de la campagne de parité WASM (périmé).
+
+# Historique — Pipeline S0→S1→S2→S3→S4→S5 (campagne parité WASM, périmé)
 
 Dernière mise à jour : 2026-06-10
 Build : v3.4.5-wasm.1
