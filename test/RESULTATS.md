@@ -58,6 +58,7 @@ valide, status.json annoté.
 | test_bolsize_alias | 7 PASS / 0 FAIL |
 | test_production_block | 56 PASS / 0 FAIL (nouveau, décision 2026-06-11 durcie : @-formes rejetées) |
 | test_bp3_to_scene | 84 OK / 0 FAIL / 3 NON GÉRÉ |
+| test_libs_bundle | 18 PASS / 0 FAIL (nouveau 2026-06-14 : bundle libs-data.js à jour vs lib/*.json) |
 | smoke (src/transpiler/test.js) | 33 scènes, 0 erreur |
 
 ## Régénérations du jour (2026-06-10)
