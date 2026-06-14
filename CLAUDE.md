@@ -74,7 +74,7 @@ Après toute modification dans `bp3-engine/csrc/`:
 ```bash
 # OBLIGATOIRE : utiliser build.sh, JAMAIS make directement ni cp manuellement
 cd bp3-engine
-source /mnt/d/Claude/emsdk/emsdk_env.sh
+source /home/romi/dev/bp/emsdk/emsdk_env.sh        # PC2 natif (était /mnt/d/... sous WSL)
 ./build.sh all                                    # compile 3 targets (linux, windows, wasm)
 ./build.sh all --archive --version=v3.4.4-wasm.1  # compile + archive
 cd ..
