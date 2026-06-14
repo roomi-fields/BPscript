@@ -24,7 +24,7 @@ Artefacts de build : `dist/bp3.js` + `dist/bp3.wasm` + `dist/bp3.data`
 
 ```bash
 # Prerequis : Emscripten SDK
-source /mnt/d/Claude/emsdk/emsdk_env.sh
+source /home/romi/dev/bp/emsdk/emsdk_env.sh
 
 # OBLIGATOIRE : utiliser build.sh, JAMAIS make directement
 cd bp3-engine

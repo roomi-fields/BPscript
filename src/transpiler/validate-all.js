@@ -83,7 +83,7 @@ function wasmTest(name, origGrPath, bpsPath) {
   let settingsFile = '';
   if (seMatch) {
     const seName = seMatch[1].trim();
-    // test-data is in the main bp3-engine repo (/mnt/d/Claude/bp3-engine)
+    // test-data is in the main bp3-engine repo (/home/romi/dev/bp/bp3-engine)
     const TD = join(__dirname, '../../../bp3-engine/test-data');
     try { settingsFile = readFileSync(join(TD, '-se.' + seName), 'utf-8'); } catch {}
   }

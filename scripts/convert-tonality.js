@@ -16,7 +16,7 @@
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
-const TD = '/mnt/d/Claude/bp3-engine/test-data';
+const TD = '/home/romi/dev/bp/bp3-engine/test-data';
 const files = readdirSync(TD).filter(f => f.startsWith('-to.'));
 
 const scales = {};

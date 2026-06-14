@@ -15,8 +15,8 @@ import { dirname, join, basename } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SCENES_DIR = join(__dirname, '../../scenes');
 const BP3_DIR = join(__dirname, '../../bp3-engine/library');
-const BP_EXE_DIR = '/mnt/d/Claude/BP2SC/tools/bolprocessor';
-const BP_CTESTS = '/mnt/d/Claude/BP2SC/bp3-ctests';
+const BP_EXE_DIR = '/home/romi/dev/bp/BP2SC/tools/bolprocessor';
+const BP_CTESTS = '/home/romi/dev/bp/BP2SC/bp3-ctests';
 const BP3_DATA = join(__dirname, '../../bp3-engine/data');
 
 const SCENE_MAP = {

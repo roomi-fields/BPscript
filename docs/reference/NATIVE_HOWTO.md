@@ -8,14 +8,14 @@ du MIDI et du texte a partir de grammaires BP3. On l'utilise pour :
 - **Comparaison** avec le WASM (validation du portage)
 - **Production MIDI** directe
 
-Binaire : `/mnt/d/Claude/bp3-engine/bp3` (Linux ELF x86-64)
+Binaire : `/home/romi/dev/bp/bp3-engine/bp3` (Linux ELF x86-64)
 
 ---
 
 ## Build
 
 ```bash
-cd /mnt/d/Claude/bp3-engine
+cd /home/romi/dev/bp/bp3-engine
 make clean && make
 # Produit: bp3 (Linux ELF)
 ```
