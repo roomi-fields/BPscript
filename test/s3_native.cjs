@@ -221,20 +221,42 @@ function compareToOracle(name, nativeToks) {
 }
 
 // Main
-const arg = process.argv[2];
-if (!arg) { console.error('Usage: node s3_native.cjs <grammar|--all>'); process.exit(1); }
+// --write : bascule oracle natif (decision 2026-06-14-oracle-natif-trois-voies, MAJ user).
+// Écrit snapshots/s3_native.json (nouvel oracle, ADDITIF — ne touche pas aux snapshots WASM).
+// Sans --write : comparaison lecture-seule vs s3_timed (comportement d'origine).
+const WRITE = process.argv.includes('--write');
+const arg = process.argv.slice(2).find(a => a !== '--write');
+if (!arg) { console.error('Usage: node s3_native.cjs <grammar|--all> [--write]'); process.exit(1); }
 if (!fs.existsSync(BP3)) { console.error(`bp3 natif frais introuvable: ${BP3} (lance ./build.sh linux)`); process.exit(1); }
 
 const names = arg === '--all'
   ? Object.entries(GRAMMARS).filter(([k, v]) => v.status === 'active' && v.php_ref && (v.production_mode || 'midi') === 'midi').map(([k]) => k)
   : [arg];
 
-// Exclusions parité : build buggé (#48-#52) + watch (lent, #50)
-const EXCLUDE = new Set(['765432', 'look-and-say', 'watch']);
+// Poignée HORS ORACLE (natif faux sur le build courant / non-déterministe) — reste sur
+// sa référence protégée : #49 765432, #50 watch, #52 look-and-say (texte), trySrand (RNG).
+// #48 do4- et #51 gardes mono-item ne sont pas dans le set midi --all (auto-exclus).
+const EXCLUDE = new Set(['765432', 'look-and-say', 'watch', 'trySrand']);
 
-let match = 0, diff = 0, skip = 0, other = 0;
+function writeNativeOracle(name, tokens) {
+  // Triage : jamais d'oracle 0-token (protection anti-écrasement par capture vide).
+  if (!Array.isArray(tokens) || tokens.length === 0) return 'VIDE (non écrit)';
+  const snap = {
+    source: 'native --tokensout (bp3 Linux)',
+    stage: 's3_native',
+    mode: 'midi',
+    tokens: tokens.map(t => [t.token, t.start, t.end]),
+    date: '2026-06-14',
+  };
+  const dir = path.join(__dirname, 'grammars', name, 'snapshots');
+  if (!fs.existsSync(dir)) return 'PAS DE DOSSIER snapshots';
+  fs.writeFileSync(path.join(dir, 's3_native.json'), JSON.stringify(snap, null, 2));
+  return `écrit (${tokens.length} tok)`;
+}
+
+let match = 0, diff = 0, skip = 0, other = 0, written = 0;
 for (const name of names) {
-  if (EXCLUDE.has(name)) { console.log(`  ${name}: EXCLU (#48-#52 / lent)`); skip++; continue; }
+  if (EXCLUDE.has(name)) { console.log(`  ${name}: EXCLU (hors oracle : build buggé / RNG)`); skip++; continue; }
   // Skip mode texte avant même de lancer le moteur
   const gd = GRAMMARS[name];
   if (gd && gd.production_mode === 'text') { console.log(`  ${name}: SKIP (mode texte)`); skip++; continue; }
@@ -242,9 +264,15 @@ for (const name of names) {
   if (!r) { console.log(`  ${name}: SKIP (exclue/inconnue)`); other++; continue; }
   if (r.error) { console.log(`  ${name}: ${r.error}`); other++; continue; }
   const c = compareToOracle(name, r.tokens);
-  if (c.status === 'MATCH') { console.log(`  ${name}: MATCH (${c.n})`); match++; }
-  else if (c.status === 'DIFF') { console.log(`  ${name}: DIFF — ${c.detail}`); diff++; }
-  else if (c.status === 'SKIP_TEXT') { console.log(`  ${name}: SKIP (oracle texte/nul)`); skip++; }
-  else { console.log(`  ${name}: ${c.status}`); other++; }
+  let tag = '';
+  if (WRITE) {
+    const w = writeNativeOracle(name, r.tokens);
+    if (w.startsWith('écrit')) written++;
+    tag = ` → ${w}`;
+  }
+  if (c.status === 'MATCH') { console.log(`  ${name}: MATCH (${c.n})${tag}`); match++; }
+  else if (c.status === 'DIFF') { console.log(`  ${name}: DIFF — ${c.detail}${tag}`); diff++; }
+  else if (c.status === 'SKIP_TEXT') { console.log(`  ${name}: SKIP (oracle texte/nul)${tag}`); skip++; }
+  else { console.log(`  ${name}: ${c.status}${tag}`); other++; }
 }
-if (names.length > 1) console.log(`\nParité timing natif↔WASM (s3_timed) : ${match} MATCH, ${diff} DIFF, ${skip} skip, ${other} autre (sur ${names.length})`);
+if (names.length > 1) console.log(`\nNatif↔WASM(s3_timed) : ${match} MATCH, ${diff} DIFF, ${skip} skip, ${other} autre${WRITE ? ` | oracles natifs écrits : ${written}` : ''} (sur ${names.length})`);
