@@ -57,12 +57,20 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `RNG_PORTABLE.md` — Portabilité RNG MSVC/glibc
     - `TEMPO_OPS_WASM.md` — Opérateurs tempo `/N` `\N` `_tempo()` : écarts WASM vs natif
 
-### Tour de contrôle inter-projets (OBLIGATOIRE)
+### Tour de contrôle inter-projets (OBLIGATOIRE) — outil `tour`
 Coordination de l'écosystème (BPscript, BPx, bp3-frontend, runtimes, moteur Bernard) :
-dépôt PRIVÉ `/home/romi/dev/bp/hub`. En début de session : lire `TABLEAU.md`, la boîte
-`courrier/bpscript.md`, et les `contrats/` concernés. En fin de session : mettre à jour
-`projets/bpscript.md` + sa ligne du TABLEAU + poster dans les boîtes des projets impactés.
-Décisions transverses : `decisions/` (après arbitrage utilisateur uniquement).
+dépôt PRIVÉ `/home/romi/dev/bp/hub`. Le protocole est MÉCANISÉ par le CLI `hub/tour`
+(plus d'édition markdown des boîtes à la main). Détail : `hub/README.md` (§Le protocole + §Outil tour).
+
+1. **Identité (une fois par session)** : `export BP_AGENT=bpscript`.
+2. **Début de session** : `~/dev/bp/hub/tour inbox` (mes non-lus) + lire `TABLEAU.md` et mes `contrats/`.
+3. **Écrire / demander un arbitrage** : `~/dev/bp/hub/tour send <dest> "msg"` (`architecte` = destinataire
+   valide). JAMAIS écrire dans ma propre boîte. Marquer lu quand traité : `tour inbox --ack`.
+4. **Fin de session** : mettre à jour MOI-MÊME ma ligne de `TABLEAU.md`, ma fiche `projets/bpscript.md`,
+   et ma colonne `BPscript/baseline-status.json`. L'architecte ne corrige plus mes pièces — il recadre.
+5. **Décisions transverses** : `decisions/` après arbitrage utilisateur uniquement
+   (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois, référencé ailleurs.
+6. **Le code fait foi** : un statut se vérifie sur pièces, jamais affirmé de mémoire.
 
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/`:
