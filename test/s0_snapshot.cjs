@@ -1,13 +1,26 @@
 #!/usr/bin/env node
 /**
- * S0: Generate reference snapshots from bp.exe (PHP motor).
- * Same format as S1 snapshots for content-level comparison.
+ * S0: Reference snapshots — oracle MSVC.
  *
- * For MIDI grammars: run bp.exe → parse MIDI → save tokens + midi arrays
- * For text grammars: run bp.exe → parse production text → save tokens
+ * MIGRATION PC2 NATIF (2026-06-14) : bp.exe Windows (ex /mnt/c/MAMP) n'existe plus.
+ * Le port RNG MSVC (bp3_random.c, LCG 214013/2531011, RAND_MAX 32767) fait que le
+ * binaire bp3 NATIF reproduit la séquence aléatoire de bp.exe. L'oracle S0 est donc
+ * désormais produit par bp3 natif avec la configuration php_ref (settings/alphabet/
+ * tonality + convention de note explicites), lue depuis bp3-engine/test-data.
  *
- * Usage: node s0_snapshot.cjs drum        (one grammar)
- *        node s0_snapshot.cjs --all       (all S0 grammars)
+ * S0 diffère de S1 par la résolution de config : S0 suit php_ref (grammars.json,
+ * convention de note forcée) ; S1 auto-détecte. Même moteur (bp3 natif), même
+ * nettoyage de grammaire, même format de sortie (s0_php.json).
+ *
+ * ⚠️ NE PAS re-capturer tant que les bugs moteur #48-#52 ne sont pas résolus.
+ *    Utiliser --dry pour vérifier sans écraser les snapshots de référence.
+ *
+ * For MIDI grammars: run bp3 → parse MIDI → save tokens + midi arrays
+ * For text grammars: run bp3 → parse production text → save tokens
+ *
+ * Usage: node s0_snapshot.cjs drum --bin last           (one grammar)
+ *        node s0_snapshot.cjs --all --bin last           (all S0 grammars)
+ *        node s0_snapshot.cjs drum --bin last --dry      (no write, print summary)
  */
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -15,37 +28,110 @@ const path = require('path');
 
 const { requireBinTag, resolveBin: _resolveBin, stripBinArgs } = require('./resolve_bin.cjs');
 const binTag = requireBinTag();
-const BP_EXE = _resolveBin(binTag, 'bp.exe');
-const BP_EXE_DIR = '/mnt/c/MAMP/htdocs/bolprocessor';
-const CTESTS = 'ctests';
-const MIDI_DIR = '/mnt/c/tmp/php_ref';
-const MIDI_DIR_WIN = 'C:\\tmp\\php_ref';
+const BP3 = _resolveBin(binTag, 'bp3');           // binaire natif (était bp.exe)
+const ROOT = path.resolve(__dirname, '..');
+const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
+const TD = path.resolve(BP3_DIR, 'test-data');    // sources canoniques (était /mnt/c/MAMP/.../ctests)
 const PARSE_MIDI = path.join(__dirname, 'parse_midi.py');
 const GRAMMARS = require('./grammars/grammars.json');
 
-if (!fs.existsSync(MIDI_DIR)) fs.mkdirSync(MIDI_DIR, { recursive: true });
+// Diagnostic line filter for text-mode production (same family as S1)
+const DIAG_RE = /^•|^\u{1F449}|items? (have|has) been produced|^Total computation|^Interpreting|^Expanding|^Formula|^Phase|^Creating|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading|^Closing|^Buffer|^Applying|^Correction|^Jflag\b|^Subgrammar|^Production time|has channel \d|^Error code|^=> |^Should be|^Using quantization|^Csound tables|^Could not derive/u;
 
-// Control token filter (same as S1)
-const CONTROL_RE = /^_(vel|volume|script|pitchrange|transpose|pitchcont|pitchbend|chan|modulation|pressure|panoramic|ins|mm|striated|smooth|staccato|legato|baseoctave|rndvel|rndchan|randomize|velcont|volumecont|cont|value|fixed|tempo|legato)(\(|$)/;
-const DIAG_RE = /^\u2022|^\u{1F449}|items? (have|has) been produced|^Total computation|^Interpreting|^Expanding|^Formula|^Phase|^Creating|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading|^Closing|^Buffer|^Applying|^Correction|^Jflag\b|^Subgrammar|^Production time|has channel \d|^Error code|^=> |^Should be|^Using quantization|^Csound tables|^Could not derive/u;
-
-// Modify settings JSON to disable traces (same as S1)
-function patchSettings(seFile) {
-  const ctestsPath = path.join(BP_EXE_DIR, seFile);
-  if (!fs.existsSync(ctestsPath)) return null;
-  try {
-    const se = JSON.parse(fs.readFileSync(ctestsPath, 'utf-8'));
-    se.TraceProduce = { name: "Trace production", value: "0", boolean: "1" };
-    se.ShowGraphic = { name: "Show graphic", value: "0" };
-    se.ShowPianoRoll = { name: "Show piano roll", value: "0" };
-    se.ShowObjectGraph = { name: "Show object graph", value: "0" };
-    if (se.DisplayItems) se.DisplayItems.value = '1';
-    const tmp = path.join('/mnt/c/tmp', `_s0_se_${Date.now()}.json`);
-    fs.writeFileSync(tmp, JSON.stringify(se));
-    return tmp;
-  } catch (e) {
-    return null;
+// Old BP2 positional settings → JSON (identique à s1_native.cjs)
+function convertOldSettings(c) {
+  const lines = c.split(/\r\n?|\n/);
+  let hdr = 0;
+  while (hdr < lines.length && lines[hdr].trim().startsWith('//')) hdr++;
+  const vals = lines.slice(hdr);
+  if (vals.length < 48) return null;
+  const v = (pos) => {
+    const s = (vals[pos] || '').trim();
+    if (!s || s.startsWith('/') || s.startsWith('<')) return null;
+    const f = parseFloat(s); return isNaN(f) ? null : s;
+  };
+  const o = {};
+  const set = (k, nm, pos, bool, unit) => {
+    const val = v(pos); if (val === null) return;
+    const e = { name: nm, value: val, boolean: bool ? '1' : '0' };
+    if (unit) e.unit = unit; o[k] = e;
+  };
+  set('Quantization','Quantization',2,false,'ms');
+  set('Time_res','Time resolution',3,false,'ms');
+  set('MIDIsyncDelay','Sync delay',4,false,'ms');
+  set('Quantize','Quantize',5,true);
+  set('Nature_of_time','Striated time',6,true);
+  set('Pclock','Pclock',7,false);
+  set('Qclock','Qclock',8,false);
+  set('Improvize','Non-stop improvize',10,true);
+  set('MaxItemsProduce','Max items produced',11,false);
+  set('UseEachSub','Play each substitution',12,true);
+  set('AllItems','Produce all items',13,true);
+  set('DisplayProduce','Display production',14,true);
+  set('DisplayItems','Display final score',19,true);
+  set('ShowGraphic','Show graphics',20,true);
+  set('AllowRandomize','Allow randomize',21,true);
+  set('ResetNotes','Reset Notes',27,true);
+  set('ComputeWhilePlay','Compute while playing',28,true);
+  set('ResetWeights','Reset rule weights',30,true);
+  set('ResetFlags','Reset rule flags',31,true);
+  set('ResetControllers','Reset controllers',32,true);
+  set('NoConstraint','Ignore constraints',33,true);
+  set('SplitTimeObjects','Split terminal symbols',38,true);
+  set('SplitVariables','Split |variables|',39,true);
+  set('DeftBufferSize','Default buffer size',41,false);
+  set('MaxConsoleTime','Max computation time',44,false,'seconds');
+  set('Seed','Seed for randomization',45,false);
+  set('NoteConvention','Note convention',47,false);
+  if (vals.length > 51) {
+    set('GraphicScaleP','Graphic scale P',50,false);
+    set('GraphicScaleQ','Graphic scale Q',51,false);
   }
+  if (vals.length > 70) {
+    set('EndFadeOut','Fade-out time',61,false,'seconds');
+    set('C4key','C4 key number',62,false,'MIDI key');
+    set('A4freq','A4 frequency',63,false,'Hz');
+    set('StrikeAgainDefault','Strike again NoteOn\'s',64,true);
+    set('DeftVolume','Default volume',65,false,'0-127');
+    set('VolumeController','Volume controller',66,false,'0-127');
+    set('DeftVelocity','Default velocity',67,false,'0-127');
+    set('DeftPanoramic','Default panoramic',68,false,'0-127');
+    set('PanoramicController','Panoramic controller',69,false,'0-127');
+    set('SamplingRate','Sampling rate',70,false);
+  }
+  if (vals.length > 111) set('DefaultBlockKey','Default block key',111,false,'MIDI key');
+  if (vals.length > 127) {
+    set('ShowObjectGraph','Show object graph',126,true);
+    set('ShowPianoRoll','Show pianoroll',127,true);
+  }
+  return o.NoteConvention ? JSON.stringify(o) : null;
+}
+
+// Load + patch settings (JSON or old BP2), disable traces/graphics. noteConv: '0'|'1'|'2'.
+function loadSettings(seFile, noteConv, tmpSettings) {
+  if (!fs.existsSync(seFile)) return null;
+  const seContent = fs.readFileSync(seFile, 'utf-8').trim();
+  let seObj = null;
+  if (seContent.startsWith('{')) {
+    try { seObj = JSON.parse(seContent); } catch (e) {}
+  } else {
+    const converted = convertOldSettings(seContent);
+    if (converted) {
+      seObj = JSON.parse(converted);
+      seObj.NoteConvention = { name: "Note convention", value: noteConv, boolean: '0' };
+    }
+  }
+  if (!seObj) return null;
+  seObj.ShowGraphic = { name: "Show graphic", value: "0" };
+  seObj.ShowPianoRoll = { name: "Show piano roll", value: "0" };
+  seObj.ShowObjectGraph = { name: "Show object graph", value: "0" };
+  if (seObj.GraphicScaleP) seObj.GraphicScaleP.value = '0';
+  if (seObj.GraphicScaleQ) seObj.GraphicScaleQ.value = '0';
+  if (seObj.DisplayItems) seObj.DisplayItems.value = '1';
+  // MaxItemsProduce conservé tel quel (doit matcher l'oracle historique).
+  seObj.TraceProduce = { name: "Trace production", value: "0", boolean: "1" };
+  fs.writeFileSync(tmpSettings, JSON.stringify(seObj));
+  return tmpSettings;
 }
 
 function parseTextOutput(rawOutput) {
@@ -55,13 +141,11 @@ function parseTextOutput(rawOutput) {
     if (/Producing (item|all)/i.test(allLines[i])) { prodIdx = i; break; }
   }
   if (prodIdx === -1) return null;
-
   const tokens = [];
   for (let i = prodIdx + 1; i < allLines.length; i++) {
     const line = allLines[i].trim();
     if (!line) continue;
     if (DIAG_RE.test(line)) continue;
-    // Skip derivation trace lines (same filtering as S1 with TraceProduce=0)
     if (/^\[Step #/.test(line)) continue;
     if (/^Selected:/.test(line)) continue;
     const names = line.split(/\s+/).filter(t => t);
@@ -73,140 +157,136 @@ function parseTextOutput(rawOutput) {
   return tokens;
 }
 
+// Convention de note php_ref → valeur NoteConvention + flag CLI
+function noteConvOf(ref) {
+  switch ((ref.note_convention || 'english').toLowerCase()) {
+    case 'indian': return { value: '2', flag: '--indian' };
+    case 'french': return { value: '1', flag: '--french' };
+    default:       return { value: '0', flag: null };       // english
+  }
+}
+
 function processGrammar(name) {
   const gramDef = GRAMMARS[name];
   if (!gramDef || gramDef.status === 'excluded') return null;
-  if (!gramDef.php_ref) return null; // Not an S0 grammar
-  if (gramDef.php_ref.blocked) return null; // Incompatible with bp.exe v3.4.x
+  if (!gramDef.php_ref) return null;          // pas une grammaire S0
+  if (gramDef.php_ref.blocked) return null;   // incompatible oracle
 
   const grName = gramDef.bernard || name;
   const s1Mode = gramDef.production_mode || 'midi';
   const ref = gramDef.php_ref;
+  const nc = noteConvOf(ref);
 
-  // Build bp.exe command using PHP ref params
-  // Patch settings to disable traces (same as S1)
-  let tmpSettings = null;
-  let tmpGrammarDir = null;
-  const args = ['produce', '-e'];
+  const grFile = path.join(TD, `-gr.${grName}`);
+  if (!fs.existsSync(grFile)) { console.error(`S0 SKIP: grammaire absente ${grFile}`); return null; }
+
+  // Nettoyage grammaire (identique à S1) : LF, en-têtes, encodage Mac
+  let gr = fs.readFileSync(grFile, 'utf-8').replace(/\r\n?/g, '\n');
+  const grLines = gr.split('\n');
+  let startIdx = 0;
+  for (let i = 0; i < grLines.length; i++) {
+    const l = grLines[i].trim();
+    if (l.startsWith('//') || l.match(/^-[a-z]{2}\./) || l.match(/^(ORD|RND|SUB|LIN|TEM|GRAM)/i)) { startIdx = i; break; }
+  }
+  if (startIdx > 0) gr = grLines.slice(startIdx).join('\n');
+  gr = gr.split('\n').filter(l => !l.trim().startsWith('INIT:')).join('\n');
+  const grClean = gr.replace(/¥/g, '.').replace(/ž/g, 'u');
+
+  const tmpGrammar = path.join('/tmp', `_s0_${name}_grammar.txt`);
+  const tmpMidi = path.join('/tmp', `_s0_${name}_output.mid`);
+  const tmpText = path.join('/tmp', `_s0_${name}_text.txt`);
+  const tmpSettings = path.join('/tmp', `_s0_${name}_se.json`);
+  fs.writeFileSync(tmpGrammar, grClean);
+
+  const args = ['produce', '-e', '-gr', tmpGrammar, '--seed', '1'];
+  if (nc.flag) args.push(nc.flag);
   if (ref.settings) {
-    tmpSettings = patchSettings(`${CTESTS}/${ref.settings}`);
-    if (tmpSettings) {
-      // bp.exe needs Windows path for temp settings
-      const winTmp = tmpSettings.replace('/mnt/c/', 'C:\\').replace(/\//g, '\\');
-      args.push('-se', winTmp);
-    } else {
-      args.push('-se', `${CTESTS}/${ref.settings}`);
-    }
+    const se = loadSettings(path.join(TD, ref.settings), nc.value, tmpSettings);
+    if (se) args.push('-se', se);
   }
-  // Normalize line endings (CR-only Mac files are read as a single line by bp.exe):
-  // write an LF-normalized temp copy and point bp.exe at it. Keeps the -gr. naming convention.
-  let grArg = `${CTESTS}/-gr.${grName}`;
-  const grAbs = path.join(BP_EXE_DIR, CTESTS, `-gr.${grName}`);
-  if (fs.existsSync(grAbs)) {
-    const grText = fs.readFileSync(grAbs, 'utf-8');
-    if (/\r/.test(grText)) {
-      tmpGrammarDir = path.join('/mnt/c/tmp', `_s0_gr_${Date.now()}`);
-      fs.mkdirSync(tmpGrammarDir, { recursive: true });
-      fs.writeFileSync(path.join(tmpGrammarDir, `-gr.${grName}`), grText.replace(/\r\n?/g, '\n'));
-      grArg = `${tmpGrammarDir.replace('/mnt/c/', 'C:\\').replace(/\//g, '\\')}\\-gr.${grName}`;
-    }
-  }
-  args.push('-gr', grArg);
-  if (ref.alphabet) args.push('-al', `${CTESTS}/${ref.alphabet}`);
-  if (ref.tonality) {
-    const toCtests = `${CTESTS}/${ref.tonality}`;
-    const toRes = `tonality_resources/${ref.tonality}`;
-    args.push('-to', fs.existsSync(path.join(BP_EXE_DIR, toRes)) ? toRes : toCtests);
-  }
-  if (ref.csound) args.push('-cs', `${CTESTS}/${ref.csound}`);
-  args.push('--seed', '1');
+  if (ref.alphabet)  args.push('-al', path.join(TD, ref.alphabet));
+  if (ref.tonality)  args.push('-to', path.join(TD, ref.tonality));
+  if (ref.csound)    args.push('-cs', path.join(TD, ref.csound));
+
+  const cleanup = () => {
+    for (const f of [tmpGrammar, tmpMidi, tmpText, tmpSettings]) { try { fs.unlinkSync(f); } catch (e) {} }
+  };
 
   if (s1Mode === 'midi') {
-    const midiFile = path.join(MIDI_DIR, `${grName}.mid`);
-    const midiFileWin = `${MIDI_DIR_WIN}\\${grName}.mid`;
-    args.push('--midiout', midiFileWin, '-D');
-
-    try { fs.unlinkSync(midiFile); } catch(e) {}
-
+    args.push('--midiout', tmpMidi);
+    try { fs.unlinkSync(tmpMidi); } catch (e) {}
     try {
-      execSync(`"${BP_EXE}" ${args.map(a => `"${a}"`).join(' ')}`, {
-        cwd: BP_EXE_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe']
+      execSync(`"${BP3}" ${args.map(a => `"${a}"`).join(' ')}`, {
+        cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe']
       });
     } catch (e) {}
 
     let tokens = [], midiNotes = [];
-    if (fs.existsSync(midiFile) && fs.statSync(midiFile).size > 50) {
+    if (fs.existsSync(tmpMidi) && fs.statSync(tmpMidi).size > 50) {
       try {
-        const out = execSync(`python3 "${PARSE_MIDI}" "${midiFile}"`, {
-          encoding: 'utf-8', timeout: 10000
-        }).trim();
+        const out = execSync(`python3 "${PARSE_MIDI}" "${tmpMidi}"`, { encoding: 'utf-8', timeout: 10000 }).trim();
         const parsed = JSON.parse(out);
         tokens = parsed.tokens || [];
         midiNotes = parsed.midi || [];
       } catch (e) {}
     }
-
-    if (tmpSettings) try { fs.unlinkSync(tmpSettings); } catch(e) {}
-    if (tmpGrammarDir) try { fs.rmSync(tmpGrammarDir, { recursive: true, force: true }); } catch(e) {}
-
-    if (tokens.length === 0) {
-      console.error(`S0 FAIL (midi): 0 notes for ${name}`);
-      return null;
-    }
-
-    return {
-      source: `-gr.${grName}`, stage: 'S0', mode: 'midi',
-      tokens, midi: midiNotes,
-      date: new Date().toISOString().substring(0, 10)
-    };
+    cleanup();
+    if (tokens.length === 0) { console.error(`S0 FAIL (midi): 0 notes for ${name}`); return null; }
+    return { source: `-gr.${grName}`, stage: 'S0', mode: 'midi', tokens, midi: midiNotes,
+      date: new Date().toISOString().substring(0, 10) };
 
   } else {
     args.push('-D');
     let rawOutput = '';
     try {
-      rawOutput = execSync(`"${BP_EXE}" ${args.map(a => `"${a}"`).join(' ')}`, {
-        cwd: BP_EXE_DIR, timeout: 120000, encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe']
+      const fd = fs.openSync(tmpText, 'w');
+      execSync(`"${BP3}" ${args.map(a => `"${a}"`).join(' ')}`, {
+        cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', fd, 'pipe']
       });
+      fs.closeSync(fd);
+      rawOutput = fs.readFileSync(tmpText, 'utf-8');
     } catch (e) {
-      rawOutput = e.stdout || '';
+      if (fs.existsSync(tmpText)) rawOutput = fs.readFileSync(tmpText, 'utf-8');
     }
-
-    if (tmpSettings) try { fs.unlinkSync(tmpSettings); } catch(e) {}
-    if (tmpGrammarDir) try { fs.rmSync(tmpGrammarDir, { recursive: true, force: true }); } catch(e) {}
-
+    cleanup();
     const tokens = parseTextOutput(rawOutput);
-    if (!tokens || tokens.length === 0) {
-      console.error(`S0 FAIL (text): no production for ${name}`);
-      return null;
-    }
-
-    return {
-      source: `-gr.${grName}`, stage: 'S0', mode: 'text',
-      tokens,
-      date: new Date().toISOString().substring(0, 10)
-    };
+    if (!tokens || tokens.length === 0) { console.error(`S0 FAIL (text): no production for ${name}`); return null; }
+    return { source: `-gr.${grName}`, stage: 'S0', mode: 'text', tokens,
+      date: new Date().toISOString().substring(0, 10) };
   }
 }
 
 // Main
 const s0args = stripBinArgs(process.argv.slice(2));
-const arg = s0args[0];
-if (!arg) { console.error('Usage: node s0_snapshot.cjs <grammar|--all> --bin <version>'); process.exit(1); }
+const DRY = s0args.includes('--dry');
+const arg = s0args.filter(a => a !== '--dry')[0];
+if (!arg) { console.error('Usage: node s0_snapshot.cjs <grammar|--all> --bin <version> [--dry]'); process.exit(1); }
+
+if (!fs.existsSync(BP3)) { console.error(`Binaire bp3 natif introuvable: ${BP3}`); process.exit(1); }
 
 const names = arg === '--all'
-  ? Object.entries(GRAMMARS).filter(([k,v]) => v.status === 'active' && v.php_ref).map(([k]) => k)
+  ? Object.entries(GRAMMARS).filter(([k, v]) => v.status === 'active' && v.php_ref).map(([k]) => k)
   : [arg];
 
 let ok = 0, fail = 0;
 for (const name of names) {
   const snap = processGrammar(name);
   if (snap) {
-    const snapDir = path.join(__dirname, 'grammars', name, 'snapshots');
-    if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
-    fs.writeFileSync(path.join(snapDir, 's0_php.json'), JSON.stringify(snap, null, 2));
     const count = snap.mode === 'midi' ? snap.tokens.length + ' notes' : snap.tokens.length + ' tokens';
-    console.log(`S0 OK: ${count} → ${name}/snapshots/s0_php.json`);
+    if (DRY) {
+      const refPath = path.join(__dirname, 'grammars', name, 'snapshots', 's0_php.json');
+      let cmp = '(pas de référence)';
+      if (fs.existsSync(refPath)) {
+        const refN = (JSON.parse(fs.readFileSync(refPath, 'utf8')).tokens || []).length;
+        cmp = refN === snap.tokens.length ? `MATCH référence (${refN})` : `DIFF référence: ${refN} attendu, ${snap.tokens.length} obtenu`;
+      }
+      console.log(`S0 [dry] ${name}: ${count} — ${cmp}`);
+    } else {
+      const snapDir = path.join(__dirname, 'grammars', name, 'snapshots');
+      if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
+      fs.writeFileSync(path.join(snapDir, 's0_php.json'), JSON.stringify(snap, null, 2));
+      console.log(`S0 OK: ${count} → ${name}/snapshots/s0_php.json`);
+    }
     ok++;
   } else {
     fail++;
@@ -214,5 +294,5 @@ for (const name of names) {
 }
 
 if (names.length > 1) {
-  console.log(`\nS0 Snapshots: ${ok} OK, ${fail} FAIL (total ${ok + fail})`);
+  console.log(`\nS0 Snapshots${DRY ? ' [dry]' : ''}: ${ok} OK, ${fail} FAIL (total ${ok + fail})`);
 }
