@@ -241,6 +241,10 @@ const EXCLUDE = new Set(['765432', 'look-and-say', 'watch', 'trySrand']);
 function writeNativeOracle(name, tokens) {
   // Triage : jamais d'oracle 0-token (protection anti-écrasement par capture vide).
   if (!Array.isArray(tokens) || tokens.length === 0) return 'VIDE (non écrit)';
+  // Protection anti-dégénéré : noms vides = gamme invalide (i_scale > NumberScales,
+  // one-scale/tryShruti) → PrintThisNote n'écrit rien. Oracle inutilisable pour les noms.
+  const emptyNames = tokens.filter(t => !t.token || t.token === '').length;
+  if (emptyNames > tokens.length / 2) return `DÉGÉNÉRÉ (${emptyNames}/${tokens.length} noms vides, non écrit)`;
   const snap = {
     source: 'native --tokensout (bp3 Linux)',
     stage: 's3_native',
