@@ -15,9 +15,16 @@ node test/test_all.cjs --bin v3.3.19-wasm.1
 
 ## Stages
 
+> **Oracle = bp3 natif Linux** (décision `hub/decisions/2026-06-14-oracle-natif-trois-voies.md`).
+> Le générateur aléatoire de Windows a été porté dans le moteur (`bp3_random.c`, RNG_PORTABLE
+> RÉSOLU) → le natif reproduit bp.exe, **plus besoin de Windows**. S0 a été recâblé sur le natif
+> (2026-06-14). Le **WASM est en retrait** : ce n'est plus le moteur (c'est BPx) ni l'oracle
+> cible. Transition en cours : le dump timed-tokens natif est à porter (ordre moteur) ; d'ici là
+> S2/S3 restent produits par le WASM (gelés). Cible : 3 voies — oracle natif + `.gr`→BPx + `.bps`→BPx.
+
 | Stage | Script | Source | Produit |
 |-------|--------|--------|---------|
-| S0 | `s0_snapshot.cjs` | bp.exe (Windows) | Référence MIDI/TEXT via PHP |
+| S0 | `s0_snapshot.cjs` | **bp3 natif** (ex bp.exe Windows ; recâblé 2026-06-14) | Référence MIDI/TEXT (fichier `s0_php.json`, nom hérité) |
 | S1 | `s1_native.cjs` | bp3 (Linux natif) | MIDI/TEXT natif GCC |
 | S2 | `s2_wasm_orig.cjs` | bp3.wasm | MIDI events depuis PlayBuffer1 |
 | S3 | `s2_wasm_orig.cjs` | bp3.wasm | Timed tokens depuis p_Instance |
