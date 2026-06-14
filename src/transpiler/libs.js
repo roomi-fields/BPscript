@@ -8,7 +8,13 @@
  *
  * Browser-compatible: use registerLib() / registerAll() to pre-load libs.
  * Node.js fallback: readFileSync if no registry entry found.
+ *
+ * Filesystem access lives in libs-fs.js (swapped for libs-fs.browser.js in the
+ * browser via package.json "browser") — so this module loads with NO fs and NO
+ * top-level await, and a browser bundler never chokes on it.
  */
+
+import { LIB_DIR, readLibFile } from './libs-fs.js';
 
 // Registry: pre-loaded libs (browser or Node pre-registration)
 const registry = {};
@@ -42,24 +48,6 @@ function clearRegistry() {
   for (const k of Object.keys(cache)) delete cache[k];
 }
 
-// Node.js filesystem fallback (only available in Node)
-let _readFileSync = null;
-let _LIB_DIR = null;
-
-try {
-  // Dynamic import of Node.js modules — will fail silently in browser
-  const fs = await import('fs');
-  const url = await import('url');
-  const path = await import('path');
-  _readFileSync = fs.readFileSync;
-  const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-  _LIB_DIR = path.join(__dirname, '../../lib');
-} catch {
-  // Browser environment — no filesystem access, registry only
-}
-
-const LIB_DIR = _LIB_DIR;
-
 // Canonical filenames (directive name → JSON file name)
 const fileAliases = { alphabet: 'alphabets' };
 
@@ -74,10 +62,10 @@ function loadJsonFile(name) {
     return regData;
   }
 
-  // Node.js filesystem fallback
-  if (_readFileSync && _LIB_DIR) {
+  // Node.js filesystem fallback (readLibFile is null in the browser → registry only)
+  if (readLibFile && LIB_DIR) {
     try {
-      const data = JSON.parse(_readFileSync(_LIB_DIR + '/' + canonical + '.json', 'utf-8'));
+      const data = JSON.parse(readLibFile(LIB_DIR + '/' + canonical + '.json'));
       cache[canonical] = data;
       return data;
     } catch {}
