@@ -934,11 +934,15 @@ sans occuper de durée dans la séquence.
 ```
 InstantControl {
   type: "InstantControl"
-  qualifier: RuntimeQualifier | Qualifier   // le contrôle à appliquer
+  qualifier: RuntimeQualifier | Qualifier | ProductionInline   // le contrôle à appliquer
 }
+
+// ProductionInline (décision 2026-06-14) : ![@seed:N] = re-semence dans le flux.
+// { type:"ProductionInline", directives: [Directive{name:"seed", value:N}] } → _srand(N).
+// Restreint à seed (autres clés rejetées au parse). Consommateurs (BPx) : émettre _srand.
 ```
 
-`!(vel:80)` → `_script(CT n)` en BP3. `![retro]` → `_retro` en BP3.
+`!(vel:80)` → `_script(CT n)` en BP3. `![retro]` → `_retro` en BP3. `![@seed:2]` → `_srand(2)`.
 Événement instantané (zéro durée) positionné explicitement dans le flux temporel.
 La position dans le source BPscript = la position dans la sortie BP3.
 

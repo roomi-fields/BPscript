@@ -1330,6 +1330,13 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       const q = el.qualifier;
       const parts = [];
 
+      // ![@seed:N] → _srand(N) : re-semence dans le flux (décision 2026-06-14).
+      if (q.type === 'ProductionInline') {
+        for (const d of q.directives) {
+          if (d.name === 'seed') parts.push(`_srand(${d.value})`);
+        }
+      }
+
       if (q.type === 'Qualifier') {
         // Engine qualifier: ![retro] → _retro, ![rotate:2] → _rotate(2)
         if (q.tempoOp) {

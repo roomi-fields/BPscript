@@ -2046,6 +2046,17 @@ function parse(tokens, opts = {}) {
       if (isRuntimeQualifier()) {
         return { type: 'InstantControl', qualifier: parseRuntimeQualifier() };
       }
+      // ![@seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
+      // seul `_srand` existe comme contrôle de flux BP3 (décision 2026-06-14). Émet _srand(N).
+      if (at(T.LBRACKET) && peek(1).type === T.AT) {
+        const dirs = parseProductionBlock();
+        for (const d of dirs) {
+          if (d.name !== 'seed') {
+            throw new ParseError(`![@${d.name}…] : seul @seed a un sens dans le flux (re-semence _srand) ; maxitems/allitems/improvize n'ont pas de contrôle de flux BP3`, current());
+          }
+        }
+        return { type: 'InstantControl', qualifier: { type: 'ProductionInline', directives: dirs } };
+      }
       // ![...] → instant engine control. Un tempo y est RELATIF (décision 2026-06-10).
       if (at(T.LBRACKET)) {
         return { type: 'InstantControl', qualifier: parseQualifier('relative') };
@@ -2541,6 +2552,9 @@ function parse(tokens, opts = {}) {
             continue;
           }
           expect(T.COLON);
+          if (key === 'shuffle') {
+            throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' ou '![@seed:N]' ; '[shuffle]' brasse seul`, current());
+          }
           let pval, decrement = null;
           if (at(T.INT)) {
             const num = advance().value;
@@ -2583,6 +2597,13 @@ function parse(tokens, opts = {}) {
         continue;
       }
       expect(T.COLON);
+
+      // [shuffle:N] RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
+      // re-semer sont deux atomes BP3 distincts (_rndseq / _srand). La graine s'écrit
+      // [@seed:N] (global) ou ![@seed:N] (dans le flux). [shuffle] (nu) reste = _rndseq.
+      if (key === 'shuffle') {
+        throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, current());
+      }
 
       // --- Control qualifier with raw value (CSS model) ---
       // For known controls, consume everything after : until ] as raw value.

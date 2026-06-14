@@ -660,17 +660,20 @@ async function main() {
       expectRules: ['S --> {_rndseq C3 B3 E3}'],
     },
     {
-      name: 'E5: {_srand(1) _rndseq A B C} → FIDÈLE (shuffle avec seed)',
-      // _srand(N) _rndseq en tête de groupe → [shuffle:N] suffix qualifier
-      // Round-trip : {_srand(1) _rndseq A B C} → {A B C}[shuffle:1] → @controls → {_srand(1) _rndseq A B C}
+      name: 'E5: {_srand(1) _rndseq A B C} → FIDÈLE (graine via ![@seed], décision 2026-06-14)',
+      // _srand(N) _rndseq en tête de groupe → ![@seed:N] (instant) + [shuffle] sur le groupe.
+      // Round-trip SÉMANTIQUE : {_srand(1) _rndseq A B C} → ![@seed:1] {A B C}[shuffle] →
+      // @controls → _srand(1) {_rndseq A B C} (re-semence avant brassage, équivalent BP3).
       grammar: `ORD\ngram#1[1] S --> {_srand(1) _rndseq C4 B4 E4}`,
-      expectRules: ['S --> {_srand(1) _rndseq C4 B4 E4}'],
+      expectRules: ['S --> _srand(1) {_rndseq C4 B4 E4}'],
+      semantic: true,
     },
     {
       name: 'E5: /5 A B C D E (trySrand ligne 9) → FIDÈLE (tempo absolu persistant)',
       // Rule 1 de trySrand : /5 en tête de RHS → A[/5] B C D E
       grammar: `RND\n_mm(60.0000) _striated\ngram#1[1] S --> /5 A B C D E\ngram#1[2] A --> {_rndseq C3 B3 E3 F3 G3}\ngram#1[3] B --> {_srand(1) _rndseq C4 B4 E4 F4 G4}`,
-      expectRules: ['S --> /5 A B C D E', 'A --> {_rndseq C3 B3 E3 F3 G3}', 'B --> {_srand(1) _rndseq C4 B4 E4 F4 G4}'],
+      expectRules: ['S --> /5 A B C D E', 'A --> {_rndseq C3 B3 E3 F3 G3}', 'B --> _srand(1) {_rndseq C4 B4 E4 F4 G4}'],
+      semantic: true,
     },
   ];
 
@@ -732,6 +735,10 @@ async function main() {
         failed++;
         continue;
       }
+      // Round-trip SÉMANTIQUE : la forme BP3 change volontairement (ex. _srand
+      // repositionné hors du groupe, décision 2026-06-14) → expectRules fait foi,
+      // pas le byte-à-byte avec l'original.
+      if (t.semantic) { console.log(`  OK         [${t.name}] (round-trip sémantique)`); passed++; continue; }
     }
     // --------------------------------------------------------------------------
 
@@ -778,6 +785,9 @@ async function main() {
   ];
 
   console.log('\n=== Tests round-trip grammaires de référence ===\n');
+  // Grammaires dont le round-trip est SÉMANTIQUE (forme BP3 changée par décision,
+  // pas byte-identique) : trySrand = _srand(N) repositionné hors groupe (2026-06-14).
+  const KNOWN_SEMANTIC_DIFF = new Set(['-gr.trySrand']);
   for (const name of refGrammars) {
     const grPath = path.join(TEST_DATA, name);
     let grText;
@@ -809,6 +819,11 @@ async function main() {
       // Les terminaux >30 chars ont été tronqués (BOLSIZE moteur BP3) — diffs attendues
       const n = extractSignificant(grText).length;
       console.log(`  BOLSIZE    ${name}: ${cmp.diffs.length} écart(s) attendus (terminaux tronqués ≤30 chars)`);
+      passed++;
+    } else if (KNOWN_SEMANTIC_DIFF.has(name)) {
+      // Round-trip SÉMANTIQUE attendu : _srand(N) re-positionné hors du groupe
+      // (graine via ![@seed], décision 2026-06-14) — équivalent BP3, pas byte-identique.
+      console.log(`  SÉMANTIQUE ${name}: ${cmp.diffs.length} écart(s) attendus (graine _srand → ![@seed], décision 2026-06-14)`);
       passed++;
     } else {
       console.log(`  DIFFÈRE    ${name}: ${cmp.diffs.length} écart(s)`);

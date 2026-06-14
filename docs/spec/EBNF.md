@@ -540,8 +540,10 @@ A[/2]                  → /2 A
 [scale: just_intonation C4] → _scale(just intonation,C4)
 [retro]                → _retro (clé nue = sans parenthèses)
 [rotate:2]             → _rotate(2) (clé avec valeur = avec parenthèses)
-[shuffle]              → _rndseq (marqueur seq_prefix en tête de RHS ou de groupe)
-[shuffle:42]           → _srand(42) _rndseq (graine + shuffle)
+[shuffle]              → _rndseq (brasse seul ; marqueur seq_prefix en tête de RHS ou de groupe)
+[shuffle:N]            → RETIRÉ (erreur) — la graine s'écrit [@seed:N] / ![@seed:N]  (décision 2026-06-14)
+![@seed:N]             → _srand(N)  (re-semence DANS LE FLUX ; restreint à seed)
+                         brassage déterministe local : ![@seed:N] {…}[shuffle]  → _srand(N) {_rndseq …}
 [order]                → _ordseq (restaure l'ordre canonique)
 ```
 
@@ -1115,3 +1117,10 @@ sont REJETÉES : erreur de compilation pointant la nouvelle écriture (arbitrage
 utilisateur 2026-06-11, durci le même jour — pas de dépréciation douce). AST :
 INCHANGÉ — le bloc produit les mêmes nœuds `Directive` que la @-forme d'origine.
 Précédence d'exécution : console/session > scène > défauts moteur.
+
+**Forme dans le flux `![@…]`** (décision 2026-06-14-shuffle-seed-orthogonaux) : un bloc de
+production préfixé de `!` est un ÉVÉNEMENT DE FLUX (InstantControl). Restreint à `seed` —
+seule clé ayant un contrôle de flux en BP3 : `![@seed:N]` → `_srand(N)` (re-semence au point
+d'apparition). `![@maxitems:N]` / `![@allitems]` / `![@improvize]` = ERREUR (réglages de
+boucle, aucun jeton de flux BP3). Lié à : `[shuffle]` brasse seul (`_rndseq`) ; `[shuffle:N]`
+RETIRÉ (la graine s'écrit `seed`). Brassage déterministe local : `![@seed:N] {…}[shuffle]`.

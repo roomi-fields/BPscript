@@ -57,6 +57,8 @@ valide, status.json annoté.
 | test_taska_taskb | 12 PASS / 0 FAIL |
 | test_bolsize_alias | 7 PASS / 0 FAIL |
 | test_production_block | 56 PASS / 0 FAIL (nouveau, décision 2026-06-11 durcie : @-formes rejetées) |
+| test_tempo_scope | 5 PASS / 0 FAIL (TempoOp.scope absolu/relatif, contrat BPx E-007 trou A) |
+| test_shuffle_seed | 11 PASS / 0 FAIL (shuffle=brassage seul ; ![@seed:N]→_srand ; [shuffle:N] retiré) |
 | test_bp3_to_scene | 84 OK / 0 FAIL / 3 NON GÉRÉ |
 | test_libs_bundle | 18 PASS / 0 FAIL (nouveau 2026-06-14 : bundle libs-data.js à jour vs lib/*.json) |
 | smoke (src/transpiler/test.js) | 33 scènes, 0 erreur |
