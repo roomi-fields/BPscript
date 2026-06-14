@@ -673,6 +673,10 @@ TempoOp {
   type: "TempoOp"
   operator: "/" | "*"             // / = plus rapide, * = plus lent
   value: number | string          // entier (2), décimal (1.5) ou fraction ("3/2")
+  scope: "absolute" | "relative"  // absolute = A[/N] (élément) / [/N] (règle) → /N nu BP3 ;
+                                   // relative = ![/N] (instant `!`) → paire _tempo BP3.
+                                   // Décision 2026-06-10-tempo-absolu-vs-relatif ; le
+                                   // consommateur (BPx) LIT ce champ au lieu de deviner par position.
 }
 ```
 

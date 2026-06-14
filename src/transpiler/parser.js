@@ -2046,9 +2046,9 @@ function parse(tokens, opts = {}) {
       if (isRuntimeQualifier()) {
         return { type: 'InstantControl', qualifier: parseRuntimeQualifier() };
       }
-      // ![...] → instant engine control
+      // ![...] → instant engine control. Un tempo y est RELATIF (décision 2026-06-10).
       if (at(T.LBRACKET)) {
-        return { type: 'InstantControl', qualifier: parseQualifier() };
+        return { type: 'InstantControl', qualifier: parseQualifier('relative') };
       }
       // !symbol → out-time object
       if (at(T.IDENT)) {
@@ -2503,7 +2503,11 @@ function parse(tokens, opts = {}) {
     return { type: 'TriggerIn', name, qualifiers };
   }
 
-  function parseQualifier() {
+  // tempoScope : 'absolute' (défaut — A[/N] suffixe d'élément, [/N] niveau-règle)
+  // ou 'relative' (forme ![/N] dans le flux). Porté sur le nœud TempoOp pour que
+  // les consommateurs (BPx) lisent la décision au lieu de deviner par position.
+  // Réf : hub/decisions/2026-06-10-tempo-absolu-vs-relatif.md.
+  function parseQualifier(tempoScope = 'absolute') {
     expect(T.LBRACKET);
 
     // Check for tempo operator: [/2], [\2], [*3], [**3]
@@ -2524,7 +2528,7 @@ function parse(tokens, opts = {}) {
         throw new ParseError('Expected number or fraction (e.g. /2, *3/2, /1.5) after tempo operator', current());
       }
       // If followed by , → mixed qualifier [/5, mode:random, transpose:-7]
-      const tempoOp = { type: 'TempoOp', operator, value };
+      const tempoOp = { type: 'TempoOp', operator, value, scope: tempoScope };
       if (at(T.COMMA)) {
         advance(); // skip ,
         // Parse remaining pairs
