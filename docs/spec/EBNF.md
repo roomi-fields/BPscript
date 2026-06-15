@@ -95,9 +95,11 @@ actor_prop  = actor_entity_ref                      (* v0.8 : alphabet.X, tuning
 
 actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] ;
 
-ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "transport" | "sound" ;
+ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" ;
 (* alphabet — vocabulaire de symboles (requis)
    tuning   — tempérament / accordage (renomme v0.7 `scale`)
+   octaves  — convention de registre / notation (référence lib/octaves.json ; optionnelle,
+              défaut = convention du tuning, sinon `western`)
    transport — destination de rendu (requis). Pointe un **appareil typé** (librairie `@devices` ;
               `midi` = appareil basique par défaut). Les paramètres runtime entre () restent
               supportés : transport.midi(ch:10).

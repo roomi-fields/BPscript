@@ -94,13 +94,17 @@ S -> { phrase1 phrase2 phrase3 , sitar.reverb.active(0 0 _ _ 1 1 _ _ 0 0) }
 
 Même pattern que partout dans BPscript :
 
+Les portées suivent la cascade de sortie scène → acteur → terminal (cf. [ACTOR.md](ACTOR.md) §4),
+l'override le plus fin l'emportant :
+
 | Portée | Syntaxe | Exemple |
 |--------|---------|---------|
-| **Acteur** | `actor.effect.param(...)` | `sitar.lpf.cutoff(ramp(200, 4000))` |
 | **Scène** (master) | `effect.param(...)` (sans acteur) | `reverb.mix(0.3)` |
+| **Acteur** | `actor.effect.param(...)` | `sitar.lpf.cutoff(ramp(200, 4000))` |
+| **Terminal** | qualificateur runtime sur l'occurrence | `sitar.Sa(filter:300)` |
 
 Sans qualificateur d'acteur → s'applique au master bus de la scène.
-Avec acteur → dédié à cet acteur.
+Avec acteur → dédié à cet acteur. Sur une occurrence → dédié à ce terminal.
 
 ---
 

@@ -8,13 +8,14 @@ voix. Ce document décrit le modèle validé (session design 2026-06-14/15). Gra
 
 ## 1. L'acteur est une voix
 
-Un acteur lie cinq propriétés. Le niveau « voix » intermédiaire d'anciennes versions a été
+Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes versions a été
 **supprimé** : acteur = voix.
 
 | Propriété | Rôle | Référence |
 |---|---|---|
 | `alphabet` | vocabulaire de symboles (requis) | `lib/alphabets.json` |
 | `tuning` | tempérament / accordage (ex-`scale`) | `lib/tuning.json` |
+| `octaves` | convention de registre / notation (optionnelle) | `lib/octaves.json` |
 | `sound` | son par défaut de l'acteur | `@sound` |
 | `transport` | appareil de rendu typé (requis) | librairie `@devices` |
 | `eval` | interpréteur du code encapsulé | — |
