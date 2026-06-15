@@ -61,7 +61,7 @@ parallèle à la mélodie. BP3 calcule la synchronisation.
 **Syntaxe :** `actor.effect.param(valeur)`
 
 ```
-@actor sitar  alphabet:sargam  tuning:sargam_22shruti  transport:webaudio
+@actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.webaudio
 
 // Phase 1 : mélodie + filtre qui s'ouvre
 phrase1 -> { Sa Re Ga(vel:120) Pa Dha Ni Sa_^ _ , sitar.lpf.cutoff(ramp(200, 4000)) }
@@ -109,7 +109,7 @@ Avec acteur → dédié à cet acteur.
 - **Pas de câblage** — le graphe audio est dans le runtime
 - **Pas d'ordre de chaîne** — serial/parallèle/send-return, c'est le runtime
 - **Pas de DSP** — BPscript ne traite pas le signal
-- **Pas de bus** — l'acteur est le seul niveau de granularité
+- **Pas de bus** — la granularité de sortie suit la cascade scène → acteur → terminal (voir [ACTOR.md](ACTOR.md) §4)
 - **Pas de nouveau mot-clé** — tout passe par la notation dot + polymétrie + CV
 
 ---
@@ -119,7 +119,7 @@ Avec acteur → dédié à cet acteur.
 ### Filtre qui s'ouvre sur un raga
 
 ```
-@actor sitar  alphabet:sargam  tuning:sargam_22shruti  octaves:saptak  transport:webaudio
+@actor sitar  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.webaudio
 
 `js:
   const lpf = ctx.createBiquadFilter();
@@ -140,7 +140,7 @@ en parallèle avec la mélodie. BP3 synchronise les deux voix.
 ### Multi-effets temporels avec SuperCollider
 
 ```
-@actor sitar  alphabet:sargam  transport:osc  eval:sclang
+@actor sitar  alphabet.sargam  transport.osc  eval.sclang
 
 `sc:
   ~bus = Bus.audio(s, 2);
