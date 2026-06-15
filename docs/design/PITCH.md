@@ -38,10 +38,10 @@ L'alphabet seul ne suffit pas comme unité de résolution — il manque le **con
 L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
 
 ```
-@actor sitar1  alphabet:sargam  scale:sargam_22shruti  octaves:saptak  transport:webaudio
-@actor sitar2  alphabet:sargam  scale:sargam_12TET     octaves:saptak  transport:midi(ch:3)
-@actor tabla   alphabet:tabla_bols  transport:midi(ch:10)
-@actor lights  alphabet:dmx_fixtures  transport:dmx
+@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.webaudio
+@actor sitar2  alphabet.sargam  tuning.sargam_12TET    octaves.saptak  transport.midi(ch:3)
+@actor tabla   alphabet.tabla_bols  transport.midi(ch:10)
+@actor lights  alphabet.dmx_fixtures  transport.dmx
 ```
 
 Un acteur = **alphabet + tuning + octaves + transport**. C'est le contexte complet
@@ -50,18 +50,18 @@ de résolution d'un symbole.
 ### Syntaxe de la directive `@actor`
 
 ```
-@actor <nom>  <clé:valeur>  <clé:valeur>  ...
+@actor <nom>  <clé.valeur>  <clé.valeur>  ...
 ```
 
 Clés disponibles :
 
 | Clé | Obligatoire | Valeur | Exemple |
 |-----|-------------|--------|---------|
-| `alphabet` | oui | référence vers `alphabets.json` | `alphabet:sargam` |
-| `scale` | non | référence vers `tunings.json` | `scale:sargam_22shruti` |
-| `octaves` | non | référence vers `octaves.json` | `octaves:saptak` |
-| `transport` | oui | clé de transport (+params optionnels) | `transport:midi(ch:3)` |
-| `eval` | non | clé d'eval pour les backticks | `eval:sclang` |
+| `alphabet` | oui | référence vers `alphabets.json` | `alphabet.sargam` |
+| `tuning` | non | référence vers `tunings.json` | `tuning.sargam_22shruti` |
+| `octaves` | non | référence vers `octaves.json` | `octaves.saptak` |
+| `transport` | oui | appareil typé (+params optionnels) | `transport.midi(ch:3)` |
+| `eval` | non | interpréteur pour les backticks | `eval.sclang` |
 
 Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
 Si `octaves` est omis → convention par défaut du tuning ou `western` si pas de tuning.
@@ -80,7 +80,7 @@ lights.spot          // spot résolu via lights (dmx)
 
 Convention : le conteneur précède le contenu (`actor.terminal`), cohérent avec
 la notation standard dans tous les langages (`module.symbol`, `namespace.class`)
-et avec BPscript lui-même (`@alphabet.western`, `@actor sitar alphabet:sargam`).
+et avec BPscript lui-même (`@alphabet.western`, `@actor sitar alphabet.sargam`).
 
 ### Import en bloc
 
@@ -88,7 +88,7 @@ Un `@actor` avec un alphabet importe tous les symboles de cet alphabet,
 liés à cet acteur :
 
 ```
-@actor sitar1  alphabet:sargam  scale:sargam_22shruti  transport:webaudio
+@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  transport.webaudio
 
 // Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
 // automatiquement disponibles via sitar1.sa, sitar1.re, etc.
@@ -151,8 +151,8 @@ Si un symbole est utilisé **sans** préfixe acteur, le compilateur cherche un
 acteur non ambigu. Si plusieurs acteurs contiennent ce symbole → erreur :
 
 ```
-@actor sitar1  alphabet:sargam  ...
-@actor sitar2  alphabet:sargam  ...
+@actor sitar1  alphabet.sargam  ...
+@actor sitar2  alphabet.sargam  ...
 
 Sa Re Ga Pa    // ❌ Erreur : 'Sa' est dans sitar1 et sitar2 — préciser l'acteur
 sitar1.Sa sitar1.Re sitar1.Ga sitar1.Pa   // ✓ OK
@@ -161,8 +161,8 @@ sitar1.Sa sitar1.Re sitar1.Ga sitar1.Pa   // ✓ OK
 Si un seul acteur contient le symbole → résolution implicite :
 
 ```
-@actor sitar1  alphabet:sargam  ...
-@actor tabla   alphabet:tabla_bols  ...
+@actor sitar1  alphabet.sargam  ...
+@actor tabla   alphabet.tabla_bols  ...
 
 Sa Re Ga Pa    // ✓ OK — seul sitar1 a ces symboles
 tin ta ke      // ✓ OK — seul tabla a ces symboles
@@ -173,10 +173,10 @@ tin ta ke      // ✓ OK — seul tabla a ces symboles
 #### Tokenizer
 
 Le tokenizer reconnaît `@actor` comme une directive. Le reste de la ligne
-est parsé comme des paires `clé:valeur` séparées par des espaces.
+est parsé comme des références `clé.valeur` séparées par des espaces.
 
 ```
-@actor sitar  alphabet:sargam  scale:sargam_22shruti  transport:webaudio
+@actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.webaudio
 │      │      │                │                        │
 DIRECTIVE      IDENT            PAIR                     PAIR
        NAME
@@ -249,6 +249,14 @@ Le prototype generator utilise les acteurs pour savoir quels terminaux générer
 - Pour chaque acteur qui a un tuning → générer les terminaux `bol` + notes × registres
 - Pour les acteurs sans tuning (percussions, DMX) → générer les terminaux simples
 
+### Cascade de sortie
+
+Les couches de résolution pitch décrites ici (alphabet → octaves → tempérament → tuning → resolver)
+sont distinctes de la **cascade de sortie** (scène → acteur → terminal), qui gouverne vers quel
+appareil chaque événement est acheminé. Le `transport` de l'acteur est le point de jonction entre
+les deux : il porte la résolution pitch vers l'appareil cible. Voir [ACTOR.md](ACTOR.md) pour le
+détail de la cascade de sortie.
+
 ### Relation avec les concepts existants
 
 #### Remplacement de `@alphabet.X:runtime`
@@ -261,8 +269,8 @@ L'ancienne syntaxe :
 
 Devient :
 ```
-@actor melodie  alphabet:sargam  scale:sargam_22shruti  octaves:saptak  transport:osc(port:57110)  eval:sclang
-@actor keys     alphabet:western  scale:western_12TET  octaves:western  transport:midi(ch:1)
+@actor melodie  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.osc(port:57110)  eval.sclang
+@actor keys     alphabet.western  tuning.western_12TET   octaves.western  transport.midi(ch:1)
 ```
 
 Plus verbeux mais plus explicite — chaque dimension est nommée.
@@ -272,7 +280,7 @@ Plus verbeux mais plus explicite — chaque dimension est nommée.
 Si un seul acteur suffit et qu'on veut rester concis :
 
 ```
-@actor default  alphabet:western  scale:western_12TET  transport:webaudio
+@actor default  alphabet.western  tuning.western_12TET  transport.webaudio
 ```
 
 Ou une syntaxe courte possible (à discuter) :
@@ -285,7 +293,7 @@ Ou une syntaxe courte possible (à discuter) :
 Les backticks attachés à un symbole utilisent l'`eval` de l'acteur du symbole :
 
 ```
-@actor mel  alphabet:sargam  transport:osc  eval:sclang
+@actor mel  alphabet.sargam  transport.osc  eval.sclang
 
 Sa(vel:`rrand(40,127)`)   // Sa est dans mel → eval = sclang → SC évalue
 ```
@@ -299,9 +307,9 @@ Les backticks orphelins gardent le tag obligatoire :
 
 ```
 // Acteurs
-@actor sitar   alphabet:sargam       scale:sargam_22shruti  octaves:saptak  transport:osc(port:57110) eval:sclang
-@actor tabla   alphabet:tabla_bols   transport:midi(ch:10)
-@actor lights  alphabet:dmx_cues     transport:dmx
+@actor sitar   alphabet.sargam       tuning.sargam_22shruti  octaves.saptak  transport.osc(port:57110) eval.sclang
+@actor tabla   alphabet.tabla_bols   transport.midi(ch:10)
+@actor lights  alphabet.dmx_cues     transport.dmx
 
 // Inits
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
@@ -487,6 +495,15 @@ Pour maintenir la consonance pendant le morph, le timbre doit suivre le tuning
 (spectral matching — Sethares). C'est le **runtime** qui gère ça (ajustement
 des partiels dans SuperCollider ou WebAudio). BPscript envoie la valeur du
 generator, le runtime ajuste à la fois les pitches ET le spectre.
+
+**Rendu microtonal (pitchbend / MPE) :**
+
+Le langage produit des fréquences en Hz. Comment ces fréquences sont transmises à
+l'instrument (pitchbend MIDI standard, MPE, OSC, synthèse directe) est un ressort
+de l'**appareil** (`transport` de l'acteur), pas du langage. BPscript ne connaît
+pas le protocole wire — il délègue cette décision au runtime cible.
+L'implémentation MIDI (pitchbend 14 bits, MPE channel allocation) est suivie dans
+le backlog B2 / runtime-midi.
 
 **Continuum meantone — exemples :**
 
@@ -808,8 +825,8 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 
 ```
 @alphabet.western        → charge alphabet.json["western"]
-@octaves:arrows          → charge octaves.json["arrows"]
-@tuning:western_just     → charge tunings.json["western_just"]
+@octaves.arrows          → charge octaves.json["arrows"]
+@tuning.western_just     → charge tunings.json["western_just"]
                             → charge automatiquement temperaments.json["just_5limit"]
 @reference:442           → override baseHz = 442
 ```
