@@ -59,20 +59,21 @@ OSC…) ; la compatibilité voix → appareil se vérifie sur ce type.
 > clause d'interface des runtimes encapsulés (« comment j'expose ma sortie pour transport » +
 > typage de la voix).
 
-## 4. Cascade de sortie — global → acteur → note
+## 4. Cascade de sortie — scène → acteur → terminal
 
 La **sortie** (paramètres de rendu : vélocité, pan, canal, params de transport…) suit une cascade à
 **trois niveaux**, l'override le plus fin l'emportant. Elle est **distincte** de la cascade des sons
-(8 niveaux, `docs/spec/AST.md`) : ne pas en calquer la liste.
+(8 niveaux, `docs/spec/AST.md`) : ne pas en calquer la liste. On dit « terminal » et non « note » :
+tout n'est pas une note (bol, backtick…).
 
 | Niveau | Portée | Override |
 |---|---|---|
-| 1. global | défauts de scène | (à préciser — backlog A2) |
+| 1. scène | défauts de la scène | (à préciser — backlog A2) |
 | 2. acteur | tous les terminaux de la voix | bindings `transport`/`eval` ; qualifiers acteur (backlog A2) |
-| 3. note | une occurrence | `Sa(vel:80)`, `acteur.terminal(...)` |
+| 3. terminal | une occurrence | `Sa(vel:80)`, `acteur.terminal(...)` |
 
 > Ouvert (backlog A2) : lister exactement les niveaux et la **syntaxe d'override** à chaque niveau
-> (global et acteur ne disposent pas encore d'une forme d'override de sortie dédiée).
+> (scène et acteur ne disposent pas encore d'une forme d'override de sortie dédiée).
 
 ## 5. Points ouverts (renvoi backlog)
 
@@ -80,6 +81,9 @@ La **sortie** (paramètres de rendu : vélocité, pan, canal, params de transpor
 
 - **A1** — synchro temporelle moteurs-code (Strudel/Tidal ont leur horloge) ↔ timeline BPScript.
   Seul point pouvant remettre en cause l'archi ; à creuser avant l'implémentation cross-runtime.
+  Le modèle d'horloge est **défini** dans `docs/design/ARCHITECTURE.md` (répartiteur = horloge,
+  quantification au cycle façon TidalCycles, triggers `!sync`, code au temps T) — s'y aligner, ne
+  rien réinventer.
 - **A2** — niveaux exacts + syntaxe d'override de la cascade de sortie.
 - **A3** — backtick-terminal : occupe du temps (gate) ou déclenche (trigger) ? Cas limites temporels.
 - **B2/B3/B4** — librairie `@devices`, contrats d'interface des runtimes, capture-pour-retransport.

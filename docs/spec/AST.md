@@ -147,7 +147,7 @@ TransportRef {
 **`transport` = appareil typé** : la clé pointe un appareil de la librairie `@devices` (`midi` est
 l'appareil basique par défaut). **`eval` = interpréteur** du code encapsulé (backticks) ; le code
 interprété est **toujours transporté** vers le `transport` de la voix. Un acteur est une **voix** ;
-sa sortie suit la cascade global → acteur → note (voir « Cascade de sortie » ci-dessous et
+sa sortie suit la cascade scène → acteur → terminal (voir « Cascade de sortie » ci-dessous et
 `docs/design/ACTOR.md`), distincte de la cascade des sons.
 
 **v0.8 — bindings d'entités via `.`** : les références à une entité nommée
@@ -192,15 +192,16 @@ Exemples (v0.8) :
 `transport:`, `sounds:`). Le script de migration des 44 grammaires gère la
 transformation `:` → `.` (cf. `docs/design/v0.8-decisions-final.md` plan de migration).
 
-### Cascade de sortie — global → acteur → note
+### Cascade de sortie — scène → acteur → terminal
 
 La **sortie** (paramètres de rendu : vélocité, pan, canal, params de transport…) suit une cascade
 à **trois niveaux**, l'override le plus fin l'emportant :
 
-1. **global** — défauts de scène.
+1. **scène** — défauts de la scène.
 2. **acteur** — un acteur **est** une voix ; ses bindings (`transport`, `eval`) et ses qualifiers
    par défaut s'appliquent à tous ses terminaux.
-3. **note** — override sur une occurrence (`Sa(vel:80)`, `acteur.terminal(...)`).
+3. **terminal** — override sur une occurrence (`Sa(vel:80)`, `acteur.terminal(...)`). « terminal »
+   et non « note » : tout n'est pas une note (bol, backtick…).
 
 Le niveau « voix » intermédiaire a été **supprimé** : acteur = voix. Cette cascade de sortie est
 **distincte** de la cascade des sons (8 niveaux, ci-dessous) — ne pas en calquer la liste de
