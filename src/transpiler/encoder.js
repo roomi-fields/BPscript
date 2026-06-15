@@ -61,7 +61,7 @@ const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 // Ces opérateurs ne doivent JAMAIS être ajoutés à l'alphabet.
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {}, ccAliases: {} };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {}, ccAliases: {}, backticks: {} };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -1387,6 +1387,9 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       // No _ prefix — BP3 treats _ as control prefix
       const btName = `BT${el.tag || 'auto'}${alphabet.size}`;
       alphabet.add(btName);
+      // Table des backticks (prérequis lot 4 Kanopi) : le token BT<interp><id> est une
+      // RÉFÉRENCE ; le code encapsulé doit être récupérable pour router vers l'interpréteur (eval).
+      if (_output) _output.backticks[btName] = { interp: el.tag || 'auto', code: el.code };
       return btName;
     }
 

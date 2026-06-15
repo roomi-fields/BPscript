@@ -38,6 +38,7 @@ function compileBPS(source) {
     result.settingsJSON = encoded.settingsJSON;
     result.controlTable = encoded.controlTable;
     result.cvTable = encoded.cvTable;
+    result.backticks = encoded.backticks;   // lot 4: table id BT<interp><id> → {interp, code}
     result.directives = ast.directives;
     result.actorTable = actorResult.actorTable;
     result.terminalActorMap = actorResult.terminalActorMap;
