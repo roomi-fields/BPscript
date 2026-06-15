@@ -106,6 +106,7 @@ function resolveActors(ast) {
       sounds: props.sound || props.sounds || null,
       transport: props.transport || null,
       eval: props.eval || null,
+      evalParams: props.evalParams || null,   // ex. { library: "dirt-samples" } (options du moteur)
       symbols: terminals,
     };
 
