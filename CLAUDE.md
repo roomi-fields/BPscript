@@ -37,6 +37,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `AST.md` — Nœuds AST
   - `design/` — Architecture et design technique
     - `ARCHITECTURE.md` — Pipeline de compilation (source → AST → grammaire BP3) + interface WASM
+    - `ACTOR.md` — Acteur = voix (alphabet/tuning/sound/transport/eval), cascade de sortie, voix notes vs code, appareils
     - `PITCH.md` — Résolution pitch 6 couches (actor → alphabet → octaves → temperament → tuning → resolver)
     - `SOUNDS.md` — Résolution terminaux unifiée (spec < CT < CV cascading)
     - `CV.md` — CV/signal objects (ADSR, LFO, ramp)
