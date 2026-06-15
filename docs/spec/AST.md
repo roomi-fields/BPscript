@@ -139,7 +139,8 @@ ActorDirective {
 
 TransportRef {
   type: "TransportRef"
-  key: string                     // appareil typé : "midi" (défaut basique), "webaudio", "osc", "dmx"...
+  key: string                     // NOM D'APPAREIL LIBRE (clé @devices), pas un enum. Ex. "midi"
+                                  // (défaut), "webaudio"/"audio", "osc", "dmx", "strudel"...
   params: { [key: string]: any }  // { ch: 10 }, { port: 57110 }, {}
 }
 ```

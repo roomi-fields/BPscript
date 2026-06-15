@@ -100,17 +100,21 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" ;
    tuning   — tempérament / accordage (renomme v0.7 `scale`)
    octaves  — convention de registre / notation (référence lib/octaves.json ; optionnelle,
               défaut = convention du tuning, sinon `western`)
-   transport — destination de rendu (requis). Pointe un **appareil typé** (librairie `@devices` ;
-              `midi` = appareil basique par défaut). Les paramètres runtime entre () restent
-              supportés : transport.midi(ch:10).
+   transport — destination de rendu (requis). Le nom d'appareil est un IDENT **LIBRE**
+              (clé de la librairie `@devices`), PAS une liste fermée de mots-clés. `midi`/`webaudio`
+              sont des appareils par défaut (`webaudio` = alias de l'appareil `audio`). La grammaire
+              valide uniquement la SYNTAXE `transport.<nom>(params)` ; l'existence de l'appareil et la
+              compatibilité de type (sortie de la voix ↔ type d'appareil) sont résolues en aval
+              (Kanopi, cf. DEVICES_SPEC.md). Paramètres runtime entre () : transport.midi(ch:10).
    sound    — son par défaut de l'acteur (référence dans @sound).
               Une référence sound.X ici équivaut sémantiquement à
               `*:sound.X` mais s'écrit comme une entity_ref pour homogénéité.
 *)
 
 actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc, eval.strudel ... *)
-(* eval — interpréteur du code encapsulé (backticks). null = même clé que transport.
-   Le code interprété est TOUJOURS transporté vers le `transport` (appareil) de la voix. *)
+(* eval — interpréteur du code encapsulé (backticks). L'IDENT est LIBRE (clé d'interpréteur),
+   pas une liste fermée ; null = même clé que transport. Le code interprété est TOUJOURS transporté
+   vers le `transport` (appareil) de la voix. Tag de backtick = même espace de noms d'interpréteur. *)
 
 
 param_pairs = param_pair , { "," , param_pair } ;
