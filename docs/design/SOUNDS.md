@@ -4,6 +4,8 @@
 
 Ce document définit comment BPscript résout les terminaux (notes, percussions, samples, CV) en paramètres de rendu pour les transports. Le modèle unifié utilise des dictionnaires `{clé: valeur}` à trois échelles temporelles, avec cascading inspiré de CSS.
 
+> **Deux cascades distinctes.** Ce document décrit la **cascade des sons** (8 niveaux, du spec d'acteur au terminal). La **cascade de sortie** (paramètres de rendu : vélocité, pan, canal, transport…) suit sa propre cascade à 3 niveaux (scène → acteur → terminal), indépendante. Voir `docs/design/ACTOR.md §4`.
+
 ## Les trois couches
 
 ```
@@ -26,14 +28,14 @@ Transport (runtime)    interprète les clés connues, ignore le reste
   ───────────────                 ──────────              ────────────────────
 
   @actor sitar
-    alphabet: sargam
-    scale: sargam_22shruti                                 ┌─────────────┐
-    transport: webaudio           ──── compile ────→       │ Acteur      │
+    alphabet.sargam
+    tuning.sargam_22shruti                                 ┌─────────────┐
+    transport.webaudio            ──── compile ────→       │ Acteur      │
                                                            │ "sitar"     │
   @actor tabla                                             ├─────────────┤
-    alphabet: tabla                                        │ Alphabet    │
-    sounds: tabla_perc                                     │ Scale       │
-    transport: webaudio                                    │ Sounds      │
+    alphabet.tabla                                         │ Alphabet    │
+    sounds.tabla_perc                                      │ Tuning      │
+    transport.webaudio                                     │ Sounds      │
                                                            │ Transport   │
   S -> {Melody, Rhythm}           ──── BP3 WASM ──→       └──────┬──────┘
                                        timing                    │
@@ -81,12 +83,12 @@ Exemple :
   OUT: { notes: [sa, re, ga, ma, pa, dha, ni], alterations: [komal, , tivra] }
 ```
 
-#### Scale (gamme)
+#### Tuning (accordage / tempérament d'acteur)
 
 ```
 Entrée :  nom de fichier (ex: "sargam_22shruti")
-Source :  lib/scales.json
-Sortie :  mapping note → degré dans le tempérament + fréquence de référence
+Source :  lib/tunings.json
+Sortie :  mapping terminal → degré dans le tempérament + fréquence de référence
 
 Exemple :
   IN:  "sargam_22shruti"
@@ -98,7 +100,7 @@ Exemple :
 #### Temperament
 
 ```
-Entrée :  nom référencé par la scale (ex: "22shruti")
+Entrée :  nom référencé par le tuning (ex: "22shruti")
 Source :  lib/temperaments.json
 Sortie :  tableau de ratios de fréquence
 
@@ -128,23 +130,23 @@ Exemple :
 ```
 Entrées :
   - token (ex: "sa" ou "dhin")
-  - alphabet (liste de notes)
-  - [scale + temperament] (si pitched)
+  - alphabet (liste de terminaux)
+  - [tuning + temperament] (si pitched)
   - [sounds] (si non-pitched ou timbre spécifique)
 
 Sortie :
   dictionnaire {clé: valeur} avec toutes les propriétés résolues
 
-Exemple pitched (sitar, "sa") :
-  IN:  token="sa", alphabet=sargam, scale=sargam_22shruti, temperament=22shruti
-  OUT: { freq: 240, noteName: "sa", register: 4 }
+Exemple pitched (sitar, terminal "sa") :
+  IN:  token="sa", alphabet=sargam, tuning=sargam_22shruti, temperament=22shruti
+  OUT: { freq: 240, terminalName: "sa", register: 4 }
 
-Exemple percussion (tabla, "dhin") :
+Exemple percussion (tabla, terminal "dhin") :
   IN:  token="dhin", alphabet=tabla, sounds=tabla_perc
   OUT: { layers: [{freq:80, noise:0.15, decay:350}, {freq:350, noise:0.4, decay:250}] }
 
-Exemple mixte (piano, "C4") :
-  IN:  token="C4", alphabet=western, scale=western_12TET, sounds=piano_timbre
+Exemple mixte (piano, terminal "C4") :
+  IN:  token="C4", alphabet=western, tuning=western_12TET, sounds=piano_timbre
   OUT: { freq: 261.63, brightness: 1500, release: 300, noise: 0.02 }
 ```
 
@@ -200,23 +202,43 @@ Comportement :
 ## L'acteur lie tout
 
 ```
-@actor NAME  alphabet:X  [scale:Y]  [sounds:Z]  transport:T
+@actor NAME
+  alphabet.X
+  [tuning.Y]
+  [sounds.Z]
+  transport.T
 ```
 
 | Propriété | Rôle | Requis |
 |-----------|------|--------|
-| `alphabet` | Vocabulaire (noms des symboles) | oui |
-| `scale` | Sélection de degrés → pitch via temperament | si pitched |
+| `alphabet` | Vocabulaire (noms des terminaux) | oui |
+| `tuning` | Tempérament / accordage → pitch via temperament | si pitched |
 | `sounds` | Définitions per-terminal (timbre, perc, sample) | si non-pitched ou timbre spécifique |
 | `transport` | Destination de rendu | oui |
 
 Exemples :
 
 ```
-@actor sitar  alphabet:sargam   scale:sargam_22shruti   transport:webaudio
-@actor tabla  alphabet:tabla    sounds:tabla_perc        transport:webaudio
-@actor piano  alphabet:western  scale:western_12TET  sounds:piano_timbre  transport:webaudio
-@actor drums  alphabet:tabla    sounds:tabla_gm          transport:midi
+@actor sitar
+  alphabet.sargam
+  tuning.sargam_22shruti
+  transport.webaudio
+
+@actor tabla
+  alphabet.tabla
+  sounds.tabla_perc
+  transport.webaudio
+
+@actor piano
+  alphabet.western
+  tuning.western_12TET
+  sounds.piano_timbre
+  transport.webaudio
+
+@actor drums
+  alphabet.tabla
+  sounds.tabla_gm
+  transport.midi
 ```
 
 ## Trois échelles temporelles
@@ -249,8 +271,8 @@ Même modèle que CSS : user-agent defaults < stylesheet < inline style.
 
 ### Règle de priorité pour `freq`
 
-- Si l'acteur a `scale:` → freq vient du calcul scale+temperament. Les sounds ne peuvent PAS override freq.
-- Si l'acteur n'a PAS de `scale:` → freq vient de sounds (per-terminal).
+- Si l'acteur a `tuning.X` → freq vient du calcul tuning+temperament. Les sounds ne peuvent PAS override freq.
+- Si l'acteur n'a PAS de `tuning` → freq vient de sounds (per-terminal).
 - Le CT ne peut PAS override freq directement. Seuls `(transpose:N)` et `(detune:N)` modifient le pitch.
 
 ## Format des sounds
@@ -272,7 +294,7 @@ Le resolver détecte le mode depuis la structure des données :
 - `by_terminal` présent → lookup per-terminal (table)
 - `templates` présent → composition de templates
 - `parametric` présent → calcul par formule
-- `by_register` présent → variation par registre (complément de scale)
+- `by_register` présent → variation par registre (complément du tuning)
 - Plusieurs présents → mode mixte (tout coexiste)
 
 ### Format: table (per-terminal)
@@ -326,9 +348,9 @@ Templates sont flat (pas de nesting). Override permet d'ajuster un template pour
 }
 ```
 
-Les formules utilisent `register`, `index` (position dans l'alphabet), `degree` (si scale présent). Évalué au resolve.
+Les formules utilisent `register`, `index` (position dans l'alphabet), `degree` (si tuning présent). Évalué au resolve.
 
-### Format: par registre (complément de scale)
+### Format: par registre (complément du tuning)
 
 ```json
 {
@@ -346,7 +368,7 @@ Les formules utilisent `register`, `index` (position dans l'alphabet), `degree` 
 }
 ```
 
-Utilisé AVEC scale+temperament. Le scale fournit freq, le sounds fournit le timbre par registre.
+Utilisé AVEC tuning+temperament. Le tuning fournit freq, le sounds fournit le timbre par registre.
 
 ### Format: samples
 
@@ -471,7 +493,7 @@ Les contrôles se résolvent par priorité croissante :
 | Niveau | Source | Exemple |
 |--------|--------|---------|
 | 1. Default | `controls.json` (valeur `default` du sous-groupe) | `vel: 64` |
-| 2. Acteur | `@actor X transport:midi(ch:3, vel:100)` | `vel: 100, ch: 3` |
+| 2. Acteur | `@actor X transport.midi(ch:3, vel:100)` | `vel: 100, ch: 3` |
 | 3. Séquence | `(vel:120)` inline dans le RHS | `vel: 120` |
 
 Le plus spécifique gagne. Un contrôle non-overridé conserve sa valeur du niveau précédent.
@@ -545,7 +567,7 @@ Le resolver retourne un objet riche. Chaque transport prend ce dont il a besoin 
 
 ### Un resolver, N transports
 
-Il n'y a pas de "MIDIResolver" ou "SCResolver". Le resolver est **un seul type**, instancié **une fois par acteur** (binding alphabet+tuning+tempérament). Chaque transport décide :
+Il n'y a pas de "MIDIResolver" ou "SCResolver". Le resolver est **un seul type**, instancié **une fois par acteur** (binding alphabet+tuning+temperament). Chaque transport décide :
 - S'il utilise le resolver ou pas (SC/Tidal n'en ont pas besoin)
 - Quelles données il consomme (frequency, token, step+register)
 - Comment il convertit vers son protocole
@@ -568,11 +590,11 @@ Les clés inconnues ne provoquent PAS d'erreur. Le debug panel les signale comme
 ## Résolution complète — exemple piano
 
 ```
-Entrée: terminal "C4", acteur piano (scale:western_12TET + sounds:piano_timbre)
+Entrée: terminal "C4", acteur piano (tuning.western_12TET + sounds.piano_timbre)
 
-1. Alphabet:     "C" → note index 0
+1. Alphabet:     "C" → terminal index 0
 2. Octaves:      "4" → register 4
-3. Scale:        degree[0] = 0 dans le temperament
+3. Tuning:       degree[0] = 0 dans le temperament
 4. Temperament:  ratio[0] = 1.0
 5. Calcul:       freq = 440 / ratio(A) × 1.0 × 2^(4-4) = 261.63 Hz
 6. Sounds:       by_register "3-4" → { brightness: 1500, release: 300, noise: 0.02 }
@@ -586,7 +608,7 @@ Entrée: terminal "C4", acteur piano (scale:western_12TET + sounds:piano_timbre)
 ## Résolution complète — exemple dhin
 
 ```
-Entrée: terminal "dhin", acteur tabla (sounds:tabla_perc, pas de scale)
+Entrée: terminal "dhin", acteur tabla (sounds.tabla_perc, pas de tuning)
 
 1. Alphabet:     "dhin" → trouvé dans tabla
 2. Sounds:       by_terminal["dhin"] → layers: ["bayan_open", "dayan_ring"]
@@ -605,7 +627,7 @@ Entrée: terminal "dhin", acteur tabla (sounds:tabla_perc, pas de scale)
 ```
 lib/
   alphabets.json          ← vocabulaires (existant)
-  scales.json             ← gammes/degrés (existant, renommé de tunings.json)
+  tunings.json            ← accordages/degrés (existant)
   temperaments.json       ← grilles de ratios (existant)
   sounds/                 ← NOUVEAU répertoire
     tabla_perc.json       ← synthèse tabla
@@ -623,10 +645,11 @@ lib/
                     ┌──────────────────────────────────────────────────┐
                     │                   BPscript                       │
                     │                                                  │
-                    │  @actor piano alphabet:western                    │
-                    │                scale:western_12TET                │
-                    │                sounds:piano_timbre                │
-                    │                transport:webaudio                 │
+                    │  @actor piano                                     │
+                    │    alphabet.western                               │
+                    │    tuning.western_12TET                           │
+                    │    sounds.piano_timbre                            │
+                    │    transport.webaudio                             │
                     │                                                  │
                     │  S -> C4 D4 E4 (vel:80)                          │
                     └────────────────────┬─────────────────────────────┘
@@ -676,7 +699,7 @@ class ActorRegistry {
   }
 
   register(name, config) {
-    // config = { alphabet, scale, sounds, transport, resolver }
+    // config = { alphabet, tuning, sounds, transport, resolver }
     this.actors[name] = config;
     // Map each terminal in the alphabet to this actor
     for (const note of config.alphabet.notes) {
@@ -776,7 +799,7 @@ resolve(token, direction) {
 
   // Step 6: merge sounds params if available
   if (this.soundsResolver) {
-    const soundParams = this.soundsResolver.resolve(noteName, register);
+    const soundParams = this.soundsResolver.resolve(terminalName, register);
     result = { ...soundParams, ...result };  // pitch overrides sounds.freq
   }
 
@@ -784,12 +807,12 @@ resolve(token, direction) {
 }
 ```
 
-Pour les acteurs SANS scale (percussion), le Resolver fait uniquement le sounds lookup :
+Pour les acteurs SANS tuning (percussion), le Resolver fait uniquement le sounds lookup :
 
 ```javascript
 resolve(token) {
   if (!this.notes.length && this.soundsResolver) {
-    // No alphabet/scale → pure sounds lookup
+    // No tuning → pure sounds lookup
     return this.soundsResolver.resolve(token, 0);
   }
   // ... existing pitch resolution ...
@@ -884,13 +907,13 @@ function _createActorRegistry() {
 
   // Implicit actor from @alphabet/@tuning directives (legacy mode)
   const alphabetKey = ...;  // from directives
-  const scaleKey = ...;
+  const tuningKey = ...;
   const soundsKey = ...;
 
   const resolver = new Resolver({
     alphabet: alphabets[alphabetKey],
     octaves: octaves[octavesKey],
-    tuning: tunings[scaleKey],
+    tuning: tunings[tuningKey],
     temperament: temperaments[tempKey]
   });
 
@@ -914,14 +937,14 @@ function _createActorRegistry() {
 
 1. Creer `lib/sounds/tabla_perc.json` avec templates + by_terminal
 2. Creer `src/dispatcher/soundsResolver.js`
-3. Brancher dans le Resolver existant (mode sans scale = sounds only)
+3. Brancher dans le Resolver existant (mode sans tuning = sounds only)
 4. Le WebAudioTransport reconnait `noise`, `pitch_drop`, `brightness`, `layers`
 5. Tester : ek-do-tin et dhin produisent des sons percussifs distincts
 
 #### Phase 2 — Piano timbre par registre (une session)
 
 1. Creer `lib/sounds/piano_timbre.json` avec defaults + by_register
-2. Le Resolver merge scale (freq) + sounds (timbre)
+2. Le Resolver merge tuning (freq) + sounds (timbre)
 3. Tester : piano grave != piano aigu
 
 #### Phase 3 — ActorRegistry + @actor (deux sessions)
@@ -950,7 +973,7 @@ function _createActorRegistry() {
 
 ### Compatibilite
 
-- **Aucun changement aux fichiers existants** (alphabets, scales, temperaments)
+- **Aucun changement aux fichiers existants** (alphabets, tunings, temperaments)
 - **Les scenes sans @actor continuent de fonctionner** (acteur implicite depuis @alphabet)
 - **Le fallback percussion hash est remplace** par le SoundsResolver
 - **Les CV continuent de fonctionner** (chemin separe via cvTable/sendCV)
