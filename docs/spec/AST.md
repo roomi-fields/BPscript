@@ -116,6 +116,25 @@ Exemples :
 - `@allitems` -> `{ name:"allitems" }` — active AllItems=1 dans les settings BP3
 - `@timepatterns: t1=1/1, t2=3/2` -> `{ name:"timepatterns", timePatterns:[{name:"t1", ratio:"1/1"}, {name:"t2", ratio:"3/2"}] }`
 
+### `FlagStatesDirective` (A5)
+
+États de drapeau nommés : nomme les valeurs entières d'un drapeau pour pouvoir tester/poser par
+nom (`[scene==calm]` → `/scene=1/`). L'encodeur résout les noms en entiers et expose la table dans
+`compileBPS().flagStates` (Kanopi : commande de scène par nom). Un IDENT non déclaré reste tel quel
+(référence à un autre drapeau).
+
+```
+FlagStatesDirective {
+  type: "FlagStatesDirective"
+  flag: string                     // "scene"
+  states: { name: string, value: number }[]  // [{name:"calm",value:1},{name:"full",value:2}]
+  line: number
+}
+```
+
+- `@flag scene: calm:1, full:2` → `{ flag:"scene", states:[{name:"calm",value:1},{name:"full",value:2}] }`
+  → `flagStates` : `{ scene: { calm:1, full:2 } }`.
+
 ---
 
 ## Acteurs

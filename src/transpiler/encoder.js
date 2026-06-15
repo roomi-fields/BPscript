@@ -69,6 +69,19 @@ function encode(ast) {
   _usedTerminals = new Set();
   _timePatternNames = new Set();
   _homoNames = new Set();
+
+  // A5 — états de drapeau nommés (@flag scene: calm:1, full:2). Construit la table
+  // { flag → { alias → entier } } AVANT l'encodage des règles, pour résoudre les
+  // valeurs nommées dans les gardes et mutations.
+  output.flagStates = {};
+  for (const dir of (ast.directives || [])) {
+    if (dir.type === 'FlagStatesDirective') {
+      const m = output.flagStates[dir.flag] || {};
+      for (const s of dir.states) m[s.name] = s.value;
+      output.flagStates[dir.flag] = m;
+    }
+  }
+
   const lines = [];
 
   // Load control map from libs based on @ directives
@@ -466,7 +479,7 @@ function encode(ast) {
       if (rule.flags && rule.flags.length > 0) {
         for (const f of rule.flags) {
           if (f.operator) {
-            parts.push(`/${f.flag}${f.operator}${f.value}/`);
+            parts.push(`/${f.flag}${f.operator}${resolveFlagValue(f.flag, f.value)}/`);
           } else {
             parts.push(`/${f.flag}/`);
           }
@@ -874,9 +887,21 @@ function generateAlphabetFile(libCtx, directives, customTerminals) {
 
 // --- Guard encoding ---
 
+// A5 — résout un état de drapeau nommé (value = alias déclaré via @flag) en entier.
+// Un IDENT non déclaré reste tel quel (référence à un autre drapeau, comportement BP3).
+function resolveFlagValue(flag, value) {
+  if (typeof value === 'string' && _output && _output.flagStates &&
+      _output.flagStates[flag] &&
+      Object.prototype.hasOwnProperty.call(_output.flagStates[flag], value)) {
+    return _output.flagStates[flag][value];
+  }
+  return value;
+}
+
 function encodeGuard(guard) {
+  const value = resolveFlagValue(guard.flag, guard.value);
   if (guard.mutates) {
-    return `/${guard.flag}${guard.operator}${guard.value}/`;
+    return `/${guard.flag}${guard.operator}${value}/`;
   }
   // Bare flag test: [Ideas] → /Ideas/
   if (guard.operator === null) {
@@ -889,7 +914,7 @@ function encodeGuard(guard) {
              guard.operator === '<=' ? '≤' :  // ≤
              guard.operator === '!=' ? '≠' :  // ≠
              guard.operator;
-  return `/${guard.flag}${op}${guard.value}/`;
+  return `/${guard.flag}${op}${value}/`;
 }
 
 // --- Context encoding ---

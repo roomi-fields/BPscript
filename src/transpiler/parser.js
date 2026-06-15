@@ -532,6 +532,23 @@ function parse(tokens, opts = {}) {
                modifiers: null, ccMappings, line: tok.line };
     }
 
+    // @flag scene: calm:1, full:2 — états de drapeau nommés (A5). Nomme les valeurs
+    // entières d'un drapeau ; les gardes/mutations peuvent ensuite tester/poser par nom
+    // ([scene==calm] → /scene=1/). Calqué sur @cc (name:int).
+    if (name === 'flag') {
+      const flagName = expect(T.IDENT).value;
+      if (at(T.COLON)) advance();  // séparateur optionnel après le nom du drapeau
+      const states = [];
+      while (at(T.IDENT)) {
+        const stName = advance().value;
+        expect(T.COLON);
+        const stVal = Number(expect(T.INT).value);
+        states.push({ name: stName, value: stVal });
+        if (at(T.COMMA)) advance();
+      }
+      return { type: 'FlagStatesDirective', flag: flagName, states, line: tok.line };
+    }
+
     // @actor name <body>
     //
     // v0.8 (forme canonique) : références d'entités via `.`

@@ -84,7 +84,10 @@ directive_body = IDENT                              (* @core, @controls *)
                | "map" , map_endpoint , map_arrow , map_endpoint  (* @map cc:1 -> [x] — voir map_directive *)
                | "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ]  (* @duration:16b — voir duration_directive *)
                | "timepatterns" , ":" , tp_pair , { "," , tp_pair }  (* @timepatterns: t1=1/1, t2=3/2 *)
+               | "flag" , IDENT , [ ":" ] , flag_state , { "," , flag_state }  (* @flag scene: calm:1, full:2 *)
                ;
+
+flag_state = IDENT , ":" , INT ;  (* alias d'état → valeur entière du drapeau (A5) *)
 
 tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/dénominateur *)
 
@@ -395,7 +398,7 @@ guard_expr = IDENT , COMPARE_OP , flag_value      (* test pur *)
 COMPARE_OP = "==" | "!=" | ">" | "<" | ">=" | "<=" ;
 MUTATE_OP  = "+" | "-" ;
 
-flag_value = INT | IDENT ;                          (* littéral ou autre flag *)
+flag_value = INT | IDENT ;                          (* littéral, état nommé (@flag, A5), ou autre flag *)
 ```
 
 La forme `[flag-N]` décrémente ET teste > 0 atomiquement (sémantique BP3).
