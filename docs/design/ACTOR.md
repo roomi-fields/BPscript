@@ -60,7 +60,19 @@ OSC…) ; la compatibilité voix → appareil se vérifie sur ce type.
 > clause d'interface des runtimes encapsulés (« comment j'expose ma sortie pour transport » +
 > typage de la voix).
 
-## 4. Cascade de sortie — scène → acteur → terminal
+### Librairie de runtime (`@library.<moteur>`)
+
+Un moteur (`eval`) peut avoir besoin d'une **librairie de runtime** (banque d'échantillons,
+presets…) chargée avant exécution. Elle se déclare en en-tête, **liée au moteur**, et est **partagée
+par toutes les voix de ce moteur** :
+
+```bpscript
+@library.strudel "dirt-samples"
+```
+
+Le nom est une **chaîne** (convention B5 : un nom = IDENT | chaîne ; chaîne ici car tiret / ressource
+externe). BPScript ne fait que **porter** le nom ; le chargement réel est résolu en aval
+(Kanopi/workspace). Exposé dans `compileBPS().libraries` (`{ strudel: ["dirt-samples"] }`).
 
 La **sortie** (paramètres de rendu : vélocité, pan, canal, params de transport…) suit une cascade à
 **trois niveaux**, l'override le plus fin l'emportant. Elle est **distincte** de la cascade des sons

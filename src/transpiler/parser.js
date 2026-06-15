@@ -437,6 +437,15 @@ function parse(tokens, opts = {}) {
       return { type: 'SceneDirective', name: sceneName, file, line: tok.line };
     }
 
+    // @library.<moteur> "nom" — librairie de runtime liée à un moteur (eval), valeur CHAÎNE
+    // (arbitrage Romain : nom = chaîne car caractères spéciaux/externe ; partagée par toutes
+    // les voix du moteur ; résolution = Kanopi/workspace). subkey = moteur.
+    if (name === 'library') {
+      if (!subkey) throw new ParseError("@library doit cibler un moteur : @library.<moteur> \"nom\"", tok);
+      const bankName = expect(T.STRING).value;
+      return { type: 'LibraryDirective', engine: subkey, name: bankName, line: tok.line };
+    }
+
     // @expose [intensity] [energy] — expose flags to parent scene
     if (name === 'expose') {
       const flags = [];

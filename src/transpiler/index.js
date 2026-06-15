@@ -40,6 +40,7 @@ function compileBPS(source) {
     result.cvTable = encoded.cvTable;
     result.backticks = encoded.backticks;   // lot 4: table id BT<interp><id> → {interp, code}
     result.flagStates = encoded.flagStates;  // A5: états de drapeau nommés { flag → {alias→int} }
+    result.libraries = encoded.libraries;    // @library.<moteur> "nom" → { moteur → [noms] }
     result.directives = ast.directives;
     result.actorTable = actorResult.actorTable;
     result.terminalActorMap = actorResult.terminalActorMap;

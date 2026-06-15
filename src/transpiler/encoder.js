@@ -82,6 +82,15 @@ function encode(ast) {
     }
   }
 
+  // Librairies de runtime (@library.<moteur> "nom") — partagées par toutes les voix du
+  // moteur. { moteur → [noms] }. Résolution (chargement réel) = Kanopi/workspace.
+  output.libraries = {};
+  for (const dir of (ast.directives || [])) {
+    if (dir.type === 'LibraryDirective') {
+      (output.libraries[dir.engine] = output.libraries[dir.engine] || []).push(dir.name);
+    }
+  }
+
   const lines = [];
 
   // Load control map from libs based on @ directives

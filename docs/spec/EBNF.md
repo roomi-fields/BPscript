@@ -85,9 +85,14 @@ directive_body = IDENT                              (* @core, @controls *)
                | "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ]  (* @duration:16b — voir duration_directive *)
                | "timepatterns" , ":" , tp_pair , { "," , tp_pair }  (* @timepatterns: t1=1/1, t2=3/2 *)
                | "flag" , IDENT , [ ":" ] , flag_state , { "," , flag_state }  (* @flag scene: calm:1, full:2 *)
+               | "library" , "." , IDENT , STRING   (* @library.strudel "dirt-samples" — librairie de runtime liée au moteur *)
                ;
 
 flag_state = IDENT , ":" , INT ;  (* alias d'état → valeur entière du drapeau (A5) *)
+
+(* Convention de nommage (B5) : un nom de ressource est un IDENT, OU une chaîne "..." quand il
+   porte des caractères spéciaux (tiret) ou désigne une ressource externe. Ex. `@library.strudel
+   "dirt-samples"` (banque externe). La résolution du nom est faite en aval (Kanopi/workspace). *)
 
 tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/dénominateur *)
 

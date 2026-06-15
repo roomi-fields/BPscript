@@ -135,6 +135,24 @@ FlagStatesDirective {
 - `@flag scene: calm:1, full:2` → `{ flag:"scene", states:[{name:"calm",value:1},{name:"full",value:2}] }`
   → `flagStates` : `{ scene: { calm:1, full:2 } }`.
 
+### `LibraryDirective`
+
+Librairie de runtime liée à un **moteur** (eval), partagée par toutes ses voix. Le nom est une
+**chaîne** (convention B5 : un nom = IDENT | chaîne ; chaîne car caractères spéciaux/ressource
+externe). La résolution réelle (chargement) est faite en aval (Kanopi/workspace).
+
+```
+LibraryDirective {
+  type: "LibraryDirective"
+  engine: string                   // moteur ciblé (sous-clé) : "strudel"
+  name: string                     // nom de la banque (chaîne) : "dirt-samples"
+  line: number
+}
+```
+
+- `@library.strudel "dirt-samples"` → `{ engine:"strudel", name:"dirt-samples" }`
+  → `compileBPS().libraries` : `{ strudel: ["dirt-samples"] }` (accumulé par moteur).
+
 ---
 
 ## Acteurs
