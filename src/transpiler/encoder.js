@@ -503,6 +503,31 @@ function encode(ast) {
 
   output.grammar = lines.join('\n');
 
+  // D1 — Attache backtick↔acteur : un backtick NON taggé hérite de l'interpréteur de
+  // l'acteur propriétaire (la tête de règle = nom de la voix). On résout l'`interp:'auto'`
+  // de la table vers l'`eval` de cet acteur. Le tag explicite (override) n'est pas touché.
+  const actorEval = {};
+  for (const a of (ast.actors || [])) {
+    if (a.properties && a.properties.eval) actorEval[a.name] = a.properties.eval;
+  }
+  const lhsHead = (lhs) => { const h = Array.isArray(lhs) ? lhs[0] : lhs; return h && h.name ? h.name : null; };
+  const resolveBackticks = (elements, evalKey) => {
+    for (const el of (elements || [])) {
+      if (!el || typeof el !== 'object') continue;
+      if (el._btName && output.backticks[el._btName] && output.backticks[el._btName].interp === 'auto') {
+        output.backticks[el._btName].interp = evalKey;
+      }
+      if (el.elements) resolveBackticks(el.elements, evalKey);
+      if (el.voices) for (const v of el.voices) resolveBackticks(v, evalKey);
+    }
+  };
+  for (const sub of (ast.subgrammars || [])) {
+    for (const rule of (sub.rules || [])) {
+      const evalKey = actorEval[lhsHead(rule.lhs)];
+      if (evalKey) resolveBackticks(rule.rhs, evalKey);
+    }
+  }
+
   // Generate alphabet file content from loaded libraries + custom terminals
   output.alphabetFile = generateAlphabetFile(libCtx, ast.directives, output.alphabet);
 
@@ -1389,6 +1414,7 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       alphabet.add(btName);
       // Table des backticks (prérequis lot 4 Kanopi) : le token BT<interp><id> est une
       // RÉFÉRENCE ; le code encapsulé doit être récupérable pour router vers l'interpréteur (eval).
+      el._btName = btName;   // annoté pour la post-passe d'attache backtick↔acteur (D1)
       if (_output) _output.backticks[btName] = { interp: el.tag || 'auto', code: el.code };
       return btName;
     }

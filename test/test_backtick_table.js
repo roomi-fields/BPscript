@@ -30,5 +30,20 @@ check(strudel && strudel[1].code.includes('bd*4'), 'code strudel préservé');
 // La clé doit correspondre au token émis dans la grammaire (lookup côté Kanopi).
 check(sc && r.grammar.includes(sc[0]), 'la clé BTsc<id> apparaît dans la grammaire émise');
 
+// --- Voix-code (migration .kanopi→.bps) : acteur SANS alphabet + backtick NON taggé ---
+// alphabet optionnel pour une voix-code (eval présent) ; l'interpréteur du backtick non
+// taggé est résolu depuis l'eval de l'acteur propriétaire (tête de règle).
+const m = compileBPS(`@actor groove  transport.audio  eval.strudel
+@actor viz     transport.video  eval.hydra
+S -> { groove, viz }
+groove -> \`stack(note("c2*4"))\`
+viz -> \`osc(60).out()\``);
+check(m.errors.length === 0, 'voix-code sans alphabet : compile sans erreur : ' + JSON.stringify(m.errors));
+const interps = Object.values(m.backticks || {}).map(v => v.interp).sort();
+check(interps.length === 2, 'deux voix-code, obtenu ' + interps.length);
+check(interps.includes('strudel'), 'backtick non taggé de groove → interp strudel (eval de l\'acteur)');
+check(interps.includes('hydra'), 'backtick non taggé de viz → interp hydra (eval de l\'acteur)');
+check(!interps.includes('auto'), 'aucun interp \'auto\' résiduel (tous résolus depuis l\'acteur)');
+
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 process.exit(fail ? 1 : 0);

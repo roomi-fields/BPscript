@@ -79,30 +79,34 @@ function resolveActors(ast) {
     const props = actor.properties;
     const alphabetKey = props.alphabet;
 
-    if (!alphabetKey) {
+    // Voix-code (eval présent) : porte du code étranger, pas un vocabulaire de notes →
+    // alphabet OPTIONNEL. Voix de notes : alphabet requis. Cf. docs/design/ACTOR.md §2.
+    const isCodeVoice = !!props.eval;
+    if (!alphabetKey && !isCodeVoice) {
       errors.push({ message: `Actor "${name}" has no alphabet property`, line: actor.line });
       continue;
     }
 
-    // Load alphabet from alphabets.json
-    const alphabetLib = loadLib('alphabet', alphabetKey);
-    if (!alphabetLib) {
-      errors.push({ message: `Alphabet "${alphabetKey}" not found for actor "${name}"`, line: actor.line });
-      continue;
+    // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.
+    let terminals = [];
+    if (alphabetKey) {
+      const alphabetLib = loadLib('alphabet', alphabetKey);
+      if (!alphabetLib) {
+        errors.push({ message: `Alphabet "${alphabetKey}" not found for actor "${name}"`, line: actor.line });
+        continue;
+      }
+      terminals = [...expandAlphabetTerminals(alphabetLib)];
     }
 
-    // Expand terminals
-    const terminals = expandAlphabetTerminals(alphabetLib);
-
     actorTable[name] = {
-      alphabet: alphabetKey,
+      alphabet: alphabetKey || null,
       scale: props.scale || null,
       // v0.8 : la clé canonique est `sound` (singulier) ; on lit aussi `sounds`
       // pour rétrocompat avec les sorties de parseur antérieures.
       sounds: props.sound || props.sounds || null,
       transport: props.transport || null,
       eval: props.eval || null,
-      symbols: [...terminals],
+      symbols: terminals,
     };
 
     // Register each terminal → actor
