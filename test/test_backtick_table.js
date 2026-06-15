@@ -45,14 +45,5 @@ check(interps.includes('strudel'), 'backtick non taggé de groove → interp str
 check(interps.includes('hydra'), 'backtick non taggé de viz → interp hydra (eval de l\'acteur)');
 check(!interps.includes('auto'), 'aucun interp \'auto\' résiduel (tous résolus depuis l\'acteur)');
 
-// --- Librairie de runtime portée en param de l'eval (valeur chaîne) ---
-// eval.strudel(library:"dirt-samples") → actorTable.beat.evalParams = { library:"dirt-samples" }.
-const lib = compileBPS(`@actor beat  transport.audio  eval.strudel(library:"dirt-samples")
-S -> beat
-beat -> \`note("c2*4")\``);
-check(lib.errors.length === 0, 'eval avec param chaîne : compile sans erreur : ' + JSON.stringify(lib.errors));
-const ep = lib.actorTable && lib.actorTable.beat && lib.actorTable.beat.evalParams;
-check(ep && ep.library === 'dirt-samples', 'librairie capturée (valeur chaîne, tiret préservé) : ' + JSON.stringify(ep));
-
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 process.exit(fail ? 1 : 0);

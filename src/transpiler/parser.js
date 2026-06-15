@@ -606,14 +606,8 @@ function parse(tokens, opts = {}) {
             target: { kind: 'named-ref', name: value },
             line: tok.line,
           });
-        } else if (key === 'eval') {
-          // eval = interpréteur (string). Les params portent les options du moteur,
-          // ex. la librairie de runtime : eval.strudel(library:"dirt-samples") (A: valeur
-          // chaîne, scoping sur l'eval — arbitrage Romain 2026-06-15).
-          properties.eval = value;
-          if (params && Object.keys(params).length) properties.evalParams = params;
         } else {
-          // alphabet, tuning — référence simple
+          // alphabet, tuning, eval — référence simple
           properties[key] = value;
         }
       };
