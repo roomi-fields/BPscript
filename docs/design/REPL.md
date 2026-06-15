@@ -5,8 +5,10 @@
 
 ## Vue d'ensemble
 
-Les backticks permettent d'exécuter du code dans des runtimes externes
-(SuperCollider, Python, Tidal, JS) depuis le flux temporel BPscript.
+Les backticks permettent d'exécuter du code dans des interpréteurs externes
+(`sc`, `py`, `tidal`, `strudel`, `js`) depuis le flux temporel BPscript.
+Un backtick autonome est un **terminal de plein droit** : il occupe une position
+dans le flux au même titre qu'une note (cf. EBNF §4.13, `BacktickStandalone`).
 
 Le dispatcher produit deux sorties distinctes :
 - **Transports** → données horodatées (freq, vel, durée) — précis, sans état
@@ -16,11 +18,11 @@ Le dispatcher produit deux sorties distinctes :
 
 ## Trois types de backticks
 
-| Type | Syntaxe | Quand | Runtime |
-|------|---------|-------|---------|
+| Type | Syntaxe | Quand | Interpréteur |
+|------|---------|-------|--------------|
 | **Orphelin** | `` `sc: SynthDef(...)` `` | avant la dérivation (init) | tag obligatoire |
-| **Standalone** | `` `sc: i = i + 1` `` | au temps T dans le flux | tag obligatoire |
-| **Inline** | `` Sa(vel:`rrand(40,127)`) `` | évalué pour obtenir une valeur | implicite (runtime du symbole → eval de l'acteur) |
+| **Standalone** | `` `sc: i = i + 1` `` | au temps T dans le flux — **terminal de plein droit** | tag obligatoire |
+| **Inline** | `` Sa(vel:`rrand(40,127)`) `` | capture d'une valeur calculée (dans un paramètre) | implicite (`eval.` de l'acteur courant) |
 
 ---
 
@@ -64,7 +66,13 @@ Le timing précis est le travail des **transports** (OSC bundles horodatés).
 Les backticks sont pour la **logique** (compteurs, mutations, setup), pas
 pour les notes.
 
-### 3. getValue() — timeout et fallback
+### 3. Deux mécanismes de capture distincts
+
+#### (i) getValue() — capture d'une valeur calculée
+
+Utilisé pour les **backticks inline** (dans un paramètre) : le dispatcher évalue
+l'expression dans l'interpréteur et récupère une valeur scalaire (nombre ou chaîne)
+qui alimente le contrôle en cours (ex. `vel:`, `freq:`…).
 
 `getValue()` est bloquant avec un **timeout court (100ms)**.
 
@@ -76,6 +84,12 @@ Si le REPL ne répond pas à temps :
 **Optimisation future** : lookahead — le dispatcher pré-évalue les `getValue()`
 quelques beats en avance pendant le playback courant.
 
+#### (ii) Capture-pour-retransport — FUTURE (backlog B4)
+
+Mécanisme distinct de `getValue()` : capter la **sortie** d'un interpréteur
+(ex. Strudel, Tidal) pour la router vers le `transport` de la voix, afin que
+le dispatcher place l'événement dans le temps. Non implémenté ; voir backlog B4.
+
 ### 4. Erreurs
 
 **Skip + warning.** On n'arrête jamais la scène pour une erreur REPL.
@@ -85,15 +99,15 @@ Pas de lien avec `on_fail` (qui est pour les échecs de dérivation BP3).
 
 ### 5. Sessions partagées
 
-Une session par **clé d'eval**, pas par acteur.
+Une session par **interpréteur** (`eval.`), pas par acteur.
 
 ```
-@actor sitar1  ... eval:sclang
-@actor sitar2  ... eval:sclang
-@actor tabla   ... eval:python
+@actor sitar1  ... eval.sc
+@actor sitar2  ... eval.sc
+@actor tabla   ... eval.python
 ```
 
-→ **1** session sclang (partagée par sitar1 et sitar2), **1** session Python.
+→ **1** session `sc` (partagée par sitar1 et sitar2), **1** session `python`.
 
 Les variables sont dans le même scope — c'est voulu. Cohérent avec le
 principe : un runtime = une session = un scope.
@@ -105,7 +119,7 @@ multiplie pas les instances.
 
 | Événement | Action |
 |-----------|--------|
-| Premier backtick avec ce tag | Démarrer la session (connect) |
+| Premier backtick avec cet interpréteur (`eval.`) | Démarrer la session (connect) |
 | Backticks orphelins (init) | Exécuter avant le playback |
 | Hot-reload (recompile) | **Garder** la session (SynthDefs, variables survivent) |
 | Fermeture de la scène | Fermer la session (close) |
@@ -126,11 +140,11 @@ retournent des valeurs simples (nombres, chaînes).
 
 Le navigateur n'est **pas** limité à JS. Trois stratégies :
 
-| Stratégie | Runtime | Mécanisme |
-|-----------|---------|-----------|
-| **Natif** | `js:` | `new Function()` — zéro dépendance |
-| **WASM** | `sc:`, `py:` | supercollider.wasm, Pyodide — tout dans le navigateur |
-| **WebSocket** | `sc:`, `py:`, `tidal:` | WS vers un serveur distant (sclang, Python, ghci) |
+| Stratégie | Interpréteur | Mécanisme |
+|-----------|--------------|-----------|
+| **Natif** | `js` | `new Function()` — zéro dépendance |
+| **WASM** | `sc`, `py` | supercollider.wasm, Pyodide — tout dans le navigateur |
+| **WebSocket** | `sc`, `py`, `tidal` | WS vers un serveur distant (sclang, Python, ghci) |
 
 La stratégie est configurée dans `routing.json` :
 
@@ -146,7 +160,7 @@ La stratégie est configurée dans `routing.json` :
 }
 ```
 
-Si un tag référence un eval non configuré → erreur explicite
+Si un tag référence un interpréteur non configuré → erreur explicite
 ("runtime 'tidal' not available in this environment").
 
 ---
