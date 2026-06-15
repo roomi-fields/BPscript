@@ -2,7 +2,7 @@
 
 > Référencé par [LANGUAGE.md](../spec/LANGUAGE.md) §Scenes et le contrat moteur [BPx ENGINE_SPEC.md](../../../BPx/docs/ENGINE_SPEC.md) §6 (FlagStore) / §7 (TriggerBus) / §10 (orchestration).
 >
-> Précise : cycle de vie des scènes, scoping des flags, propagation des triggers, sémantique de `@map`, commandes `sys`, orchestration multi-instance, hot-swap.
+> Précise : cycle de vie des scènes, acteurs/voix, cascade de sortie, scoping des flags, propagation des triggers, sémantique de `@map`, commandes `sys`, orchestration multi-instance, hot-swap.
 
 ---
 
@@ -77,13 +77,58 @@ Session détruite quand :
 
 ---
 
-## 3. Scoping des flags
+## 3. Acteurs et voix dans une scène
 
-### 3.1 Règle absolue : un FlagStore par session
+> Référence normative : [docs/design/ACTOR.md](ACTOR.md). Grammaire : `docs/spec/EBNF.md` (actor_directive) et `docs/spec/AST.md` (ActorDirective).
+
+### 3.1 Une scène = des acteurs ; un acteur = une voix
+
+Une scène déclare un ou plusieurs **acteurs**. Un acteur **est** une voix — le niveau « voix » intermédiaire des versions antérieures a été **supprimé**. Un acteur lie cinq propriétés : `alphabet`, `tuning`, `sound`, `transport`, `eval`.
+
+```bpscript
+@actor sitar
+  alphabet.sargam
+  tuning.sargam_22shruti
+  transport.webaudio
+```
+
+Chaque acteur est autonome dans la scène. Une règle peut faire dériver plusieurs acteurs en parallèle — c'est la **voix polymétrique** `{A, B}` (structure de grammaire, sans rapport avec le niveau de voix):
+
+```bpscript
+S -> { sitar.Sa sitar.Re, tabla.ta tabla.ki }
+```
+
+Dans les règles, un terminal se qualifie par son acteur en **dot notation** : `sitar.Sa` (opérateur `.` = pointe une entité).
+
+### 3.2 Cascade de sortie — scène → acteur → terminal
+
+La **cascade de sortie** détermine les paramètres de rendu (vélocité, canal, params de transport…). Elle suit **trois niveaux**, l'override le plus fin l'emportant :
+
+| Niveau | Portée | Exemple |
+|---|---|---|
+| 1. scène | défauts de la scène | (à préciser — backlog A2) |
+| 2. acteur | tous les terminaux de la voix | bindings `transport`/`eval` ; qualifiers acteur |
+| 3. terminal | une occurrence | `sitar.Sa(vel:80)` |
+
+Cette cascade est **distincte** du mécanisme de scoping des flags (§4) : l'override de sortie détermine comment un son/signal est rendu ; la collision de flags (§4.5) détermine la visibilité de l'état entre scènes. Les deux mécanismes sont indépendants.
+
+> Ouvert (backlog A2) : syntaxe d'override de sortie aux niveaux scène et acteur — non encore spécifiée.
+
+Le `transport` pointe toujours un **appareil typé** d'une librairie `@devices` ; `midi` est l'appareil par défaut. Code encapsulé (backtick) : sa sortie est captée par l'interpréteur `eval`, puis placée par le dispatcher via le `transport` de la voix — **toujours transporté**, jamais rendu en place de façon opaque.
+
+### 3.3 Migration `.kanopi → .bps` (chantier downstream)
+
+Le format `.kanopi` est le format d'orchestration multi-acteurs cross-runtime cible (plusieurs scènes `.bps`, plusieurs acteurs, runtimes hétérogènes). La migration depuis `.kanopi` vers `.bps` + `@scene` + `@actor` est un **chantier dev downstream** (backlog D2), à engager après que la spec acteurs et la librairie `@devices` soient figées. Le schéma de mapping n'est pas spécifié ici.
+
+---
+
+## 4. Scoping des flags
+
+### 4.1 Règle absolue : un FlagStore par session
 
 Chaque session a son propre FlagStore. Pas de partage de référence entre sessions.
 
-### 3.2 Lecture parent → enfant
+### 4.2 Lecture parent → enfant
 
 Un enfant peut **lire** un flag du parent. La sémantique observable est : `verse.flags.get('mood')` retourne la valeur courante de `mood` dans le parent (ou 0 si absente).
 
@@ -93,13 +138,13 @@ L'implémentation est libre :
 
 Tant que la sémantique observable est respectée, les deux sont équivalents pour BPscript.
 
-> **Point ouvert** : choix d'implémentation non arrêté. Trade-off entre simplicité v1 (parent chain) et portabilité Worker/Rust (event-based). À trancher avant d'écrire le FlagStore. Voir aussi §10 et `BPx ENGINE_SPEC.md §6` (FlagStore).
+> **Point ouvert** : choix d'implémentation non arrêté. Trade-off entre simplicité v1 (parent chain) et portabilité Worker/Rust (event-based). À trancher avant d'écrire le FlagStore. Voir aussi §11 et `BPx ENGINE_SPEC.md §6` (FlagStore).
 
-### 3.3 Écriture — locale uniquement
+### 4.3 Écriture — locale uniquement
 
 Une mutation `[x=N]` dans la grammaire d'une scène modifie **son** FlagStore. Jamais propagée au parent ou aux enfants implicitement.
 
-### 3.4 `@expose` — bottom-up opt-in
+### 4.4 `@expose` — bottom-up opt-in
 
 ```
 @expose [intensity]
@@ -107,19 +152,19 @@ Une mutation `[x=N]` dans la grammaire d'une scène modifie **son** FlagStore. J
 
 Whitelist explicite : seul un flag exposé par l'enfant est visible en lecture par le parent. Sans `@expose`, les flags enfants sont strictement privés.
 
-### 3.5 Conflits de nom — erreur compile
+### 4.5 Conflits de nom — erreur compile
 
 Si parent et enfant déclarent tous deux un flag de même nom (utilisé localement dans un guard ou un set), c'est une erreur de compilation. Résolution : renommer dans l'un, ou retirer la déclaration côté parent (qui héritera via `@expose` côté enfant).
 
-### 3.6 Isolation siblings
+### 4.6 Isolation siblings
 
 Deux scènes sœurs ne se voient pas directement. Pour qu'`intensity` de `verse` soit visible par `chorus` : `verse @expose [intensity]` → parent reçoit → `chorus` lit via parent.
 
-### 3.7 CV ≠ flags
+### 4.7 CV ≠ flags
 
 Les Control Variables (objets temporels continus, cf. [CV.md](CV.md)) sont des **tables propres à chaque scène**, **non héritées**. Une CV `lfo1` dans `verse` n'est pas visible dans `chorus` ni dans le parent. Pas d'analogue `@expose` pour les CV.
 
-### 3.8 Tableau de visibilité
+### 4.8 Tableau de visibilité
 
 | Source           | Cible    | Mécanisme                     | Direction |
 | ---------------- | -------- | ----------------------------- | --------- |
@@ -131,13 +176,13 @@ Les Control Variables (objets temporels continus, cf. [CV.md](CV.md)) sont des *
 
 ---
 
-## 4. Triggers cross-scene
+## 5. Triggers cross-scene
 
-### 4.1 Scope local strict par défaut
+### 5.1 Scope local strict par défaut
 
 `!sync` émis dans `verse` est visible **uniquement** dans `verse`. `<!sync` n'écoute **que** les `!sync` émis localement. Pas de broadcast implicite.
 
-### 4.2 Préfixes pour cross-scene
+### 5.2 Préfixes pour cross-scene
 
 | Syntaxe        | Cible                                     |
 | -------------- | ----------------------------------------- |
@@ -149,23 +194,23 @@ Les Control Variables (objets temporels continus, cf. [CV.md](CV.md)) sont des *
 
 Idem pour la souscription (`<!parent.sync`, `<!*.ready`, etc.).
 
-### 4.3 Émission préfixée
+### 5.3 Émission préfixée
 
 Un trigger émis avec un préfixe **n'apparaît pas localement** — il sort directement vers la cible. Pour émettre à la fois local et cross-scene, deux instructions séparées.
 
-### 4.4 Triggers sans guards
+### 5.4 Triggers sans guards
 
 Un trigger est un **signal pur**. Il n'a pas de guards — il est conditionné uniquement par les règles qui le produisent. La logique conditionnelle vit dans la grammaire qui décide d'émettre, pas sur le trigger lui-même.
 
-### 4.5 Pas de protection anti-cycle
+### 5.5 Pas de protection anti-cycle
 
 Si l'utilisateur écrit une grammaire produisant des triggers cycliques (parent émet → enfant réagit → parent re-réagit), c'est sa responsabilité (BP3 ne protège pas non plus). Détection automatique = v2 si demande pratique.
 
-### 4.6 Émission externe
+### 5.6 Émission externe
 
 Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un message MIDI, à un event WebSocket de déclencher des triggers comme s'ils étaient émis dans la grammaire.
 
-### 4.7 Sémantique batch vs streaming
+### 5.7 Sémantique batch vs streaming
 
 | Mode                  | `<!trigger`                                                                                          |
 | --------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -174,9 +219,9 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 
 ---
 
-## 5. `@map` — routage I/O
+## 6. `@map` — routage I/O
 
-### 5.1 Endpoints
+### 6.1 Endpoints
 
 | Endpoint               | Source                  | Cible                         |
 | ---------------------- | ----------------------- | ----------------------------- |
@@ -190,7 +235,7 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 | `IDENT` (alias)        | Source aliasée          | Cible aliasée                 |
 | `IDENT.IDENT` (label)  | —                       | Tous éléments labellisés      |
 
-### 5.2 Multicast par labels
+### 6.2 Multicast par labels
 
 ```
 S -> C4@kick D4 E4@kick F4
@@ -199,7 +244,7 @@ S -> C4@kick D4 E4@kick F4
 
 Tous les éléments `@kick` reçoivent simultanément. Scope par défaut : la scène où `@map` est déclaré. Préfixe pour cross-scene (`verse.kick.vel`, `*.kick.vel`).
 
-### 5.3 Bidirectionnel `<->`
+### 6.3 Bidirectionnel `<->`
 
 ```
 @map cc:1 <-> [intensity]
@@ -210,7 +255,7 @@ Tous les éléments `@kick` reçoivent simultanément. Scope par défaut : la sc
 
 **Rupture d'écho automatique** au runtime (chaque update porte une origine implicite, le retour est court-circuité). Pas de loop infini.
 
-### 5.4 Direction `sys.X`
+### 6.4 Direction `sys.X`
 
 Pour `sys.tempo`, `sys.beat`, `sys.bar` : la direction est fixée par le sens de l'arrow `@map`.
 
@@ -219,13 +264,13 @@ Pour `sys.tempo`, `sys.beat`, `sys.bar` : la direction est fixée par le sens de
 @map sys.beat -> osc:/vis/beat // chaque beat émis vers OSC (état)
 ```
 
-Pour `sys.play`, `sys.stop`, etc. : commande uniquement (cf. §6).
+Pour `sys.play`, `sys.stop`, etc. : commande uniquement (cf. §7).
 
 ---
 
-## 6. Commandes système (`sys`)
+## 7. Commandes système (`sys`)
 
-### 6.1 Liste
+### 7.1 Liste
 
 | Commande                 | Direction          | Effet                                       |
 | ------------------------ | ------------------ | ------------------------------------------- |
@@ -244,7 +289,7 @@ Pour `sys.play`, `sys.stop`, etc. : commande uniquement (cf. §6).
 | `sys.beat`               | source             | Émis à chaque beat (depuis la clock)        |
 | `sys.bar`                | source             | Émis à chaque mesure (depuis la clock)      |
 
-### 6.2 Adressage
+### 7.2 Adressage
 
 | Syntaxe         | Cible                  |
 | --------------- | ---------------------- |
@@ -256,19 +301,19 @@ Pour `sys.play`, `sys.stop`, etc. : commande uniquement (cf. §6).
 
 Note : `sys` est implicite quand on adresse par nom de scène — `verse.play` ≡ `verse.sys.play`.
 
-### 6.3 Auto-exposure
+### 7.3 Auto-exposure
 
 `sys.*` est implicitement disponible cross-scene. Pas besoin d'`@expose` pour que le parent puisse appeler `verse.play`.
 
-### 6.4 Permissions
+### 7.4 Permissions
 
 Toute scène peut émettre une commande sys vers n'importe quelle autre scène atteignable. Pas de système de permissions en v1.
 
 ---
 
-## 7. Orchestrateur multi-scène (application-level)
+## 8. Orchestrateur multi-scène (application-level)
 
-### 7.1 Architecture
+### 8.1 Architecture
 
 ```
 SceneOrchestrator {
@@ -285,7 +330,7 @@ SceneOrchestrator {
 
 Construit **sur** l'API BPx (`Session`, `FlagStore`, `TriggerBus`, commands), **pas dedans**. BPx ignore l'existence de l'orchestrateur. Cette séparation garantit qu'un user peut écrire son propre orchestrateur custom sans toucher au moteur.
 
-### 7.2 Tic
+### 8.2 Tic
 
 À chaque tic du dispatcher :
 
@@ -296,7 +341,7 @@ Construit **sur** l'API BPx (`Session`, `FlagStore`, `TriggerBus`, commands), **
 
 Synchrone v1. Worker option v2 (l'API est conçue compatible : pas de référence partagée externe, commands sérialisables).
 
-### 7.3 Routing table
+### 8.3 Routing table
 
 Construite **au load** depuis l'AST de chaque scène :
 - `@scene verse "..."` → enregistre la session
@@ -306,7 +351,7 @@ Construite **au load** depuis l'AST de chaque scène :
 
 Reconstruite au hot-swap. Statique pendant un cycle.
 
-### 7.4 Snapshot
+### 8.4 Snapshot
 
 L'orchestrateur peut produire un snapshot global :
 - État de chaque session (via `Session.snapshot()`)
@@ -317,9 +362,9 @@ Sérialisable JSON. Utile pour replay, debug, persistence.
 
 ---
 
-## 8. Hot-swap dans la hiérarchie
+## 9. Hot-swap dans la hiérarchie
 
-### 8.1 Hot-swap d'une scène feuille
+### 9.1 Hot-swap d'une scène feuille
 
 `sys.hotswap` sur `verse` :
 1. Session `verse` détruite (FlagStore, RNG, derivation cursor perdus)
@@ -332,13 +377,13 @@ Le parent voit un trou de quelques ms. Pas d'impact sur ses flags ni sur les aut
 
 Préservation optionnelle : `sys.hotswap(preserveFlags: true)` snapshot avant destruction, restaure après recréation (modulo flags qui n'existent plus).
 
-### 8.2 Hot-swap du parent
+### 9.2 Hot-swap du parent
 
 Recharger la racine = détruire toute la hiérarchie + recréer. Plus coûteux mais plus simple. Pas de hot-swap partiel d'arbre en v1.
 
 ---
 
-## 9. Exemple complet
+## 10. Exemple complet
 
 ```
 // root.bps
@@ -387,16 +432,16 @@ S -> Sa Re Ga Ma
 
 ---
 
-## 10. Implications pour BPx
+## 11. Implications pour BPx
 
-- `BPx ENGINE_SPEC.md §6` (FlagStore) : implémentation libre (parent chain in-memory ou event-based) tant que la sémantique observable §3.2 est respectée.
+- `BPx ENGINE_SPEC.md §6` (FlagStore) : implémentation libre (parent chain in-memory ou event-based) tant que la sémantique observable §4.2 est respectée.
 - `BPx ENGINE_SPEC.md §7` (TriggerBus) : bus local par session ; cross-session via `SceneOrchestrator` (hors BPx).
 - `BPx ENGINE_SPEC.md §10` (SceneOrchestrator) : à compléter — détaillé dans ce doc, application-level.
 - `BPx ARCHITECTURE.md` : multi-instance hors moteur, orchestrateur consomme l'API publique.
 
 ---
 
-## 11. Hors-scope v1
+## 12. Hors-scope v1
 
 - Multi-instance d'une même scène (`@scene verse "verse.bps" instance:2`)
 - Permissions sur les commandes sys
@@ -405,5 +450,6 @@ S -> Sa Re Ga Ma
 - Workers par session
 - Persistence d'état entre runs (snapshot/restore disque)
 - Sémantique exacte du « consume terminal scène » (cf. §2.3, point ouvert)
+- Migration `.kanopi → .bps` (cf. §3.3, backlog D2)
 
 À documenter en v2 si demande pratique.
