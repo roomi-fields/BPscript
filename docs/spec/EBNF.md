@@ -98,13 +98,17 @@ actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] 
 ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "transport" | "sound" ;
 (* alphabet — vocabulaire de symboles (requis)
    tuning   — tempérament / accordage (renomme v0.7 `scale`)
-   transport — destination de rendu (requis ; les paramètres runtime entre () restent supportés : transport.midi(ch:10))
+   transport — destination de rendu (requis). Pointe un **appareil typé** (librairie `@devices` ;
+              `midi` = appareil basique par défaut). Les paramètres runtime entre () restent
+              supportés : transport.midi(ch:10).
    sound    — son par défaut de l'acteur (référence dans @sound).
               Une référence sound.X ici équivaut sémantiquement à
               `*:sound.X` mais s'écrit comme une entity_ref pour homogénéité.
 *)
 
-actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc ... *)
+actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc, eval.strudel ... *)
+(* eval — interpréteur du code encapsulé (backticks). null = même clé que transport.
+   Le code interprété est TOUJOURS transporté vers le `transport` (appareil) de la voix. *)
 
 
 param_pairs = param_pair , { "," , param_pair } ;
@@ -641,13 +645,17 @@ résolvent en instructions moteur dans la couche inférieure.
 ### 4.1 Symboles
 
 ```ebnf
-symbol      = IDENT , [ ":" , IDENT ] ;              (* terminal ou non-terminal, optionnel :acteur *)
-symbol_call = IDENT , [ ":" , IDENT ] , "(" , arg_list , ")" ;  (* appel avec paramètres, optionnel :acteur *)
+symbol      = [ IDENT , "." ] , IDENT ;              (* terminal/non-terminal, optionnel acteur.terminal *)
+symbol_call = [ IDENT , "." ] , IDENT , "(" , arg_list , ")" ;  (* idem, avec paramètres *)
 
 arg_list    = arg , { "," , arg } ;
 arg         = [ IDENT , ":" ] , arg_value ;           (* positionnel ou nommé *)
 arg_value   = value | backtick_inline ;
 ```
+
+Conforme au modèle (`.` pointe une entité) : un terminal qualifié par son acteur s'écrit
+`acteur.terminal` (`sitar.Sa` → `{ name:"Sa", actor:"sitar" }`). La forme legacy `terminal:acteur`
+n'est plus blessée par la spec (`:` lie un sujet, il ne pointe pas une entité).
 
 ### 4.2 Silences et temps
 
@@ -845,13 +853,19 @@ Symétrie LHS/RHS :
 ### 4.13 Backticks
 
 ```ebnf
-backtick_inline     = "`" , CODE , "`" ;             (* dans un paramètre *)
-backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux, taggé *)
+backtick_inline     = "`" , CODE , "`" ;             (* dans un paramètre — valeur calculée *)
+backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux — terminal de plein droit, taggé *)
 ```
 
-Backtick attaché à un symbole → runtime implicite (celui du symbole).
-Backtick dans le flux → tag obligatoire (`sc:`, `py:`, `tidal:`).
-Currently only JS backticks (`js:`) are implemented. SC/Python/Tidal tags are architecture targets.
+Le backtick autonome est un **terminal de plein droit** du RHS (cf. `element_core` et
+`BacktickStandalone` dans AST.md) : il occupe une position dans le flux au même titre qu'une note.
+Le **tag** désigne l'**interpréteur** (`eval`) du code (`sc:`, `py:`, `tidal:`, `strudel:`, `js:`…).
+Le code encapsulé est **toujours transporté** : capté à l'interprétation, puis placé par le
+dispatcher vers le `transport` (appareil) de la voix. Backtick attaché à un symbole ou dans un
+paramètre → interpréteur implicite (celui du symbole / de son acteur). Le rattachement d'un
+backtick à un acteur précis (voix-code) est décrit dans `docs/design/ACTOR.md`.
+État d'implémentation : seul `js:` est interprété aujourd'hui ; `sc`/`py`/`tidal`/`strudel` sont
+des cibles d'architecture (interpréteurs encapsulés).
 
 ### 4.14 Raw braces (méta-grammaires)
 
