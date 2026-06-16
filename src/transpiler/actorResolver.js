@@ -1,3 +1,4 @@
+// AUTORITÉ résolution acteur / pitch / contrôles : LIRE src/transpiler/_AUTORITE.md avant de modifier.
 /**
  * BPScript Actor Resolver
  *
