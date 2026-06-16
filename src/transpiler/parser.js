@@ -250,7 +250,168 @@ function parse(tokens, opts = {}) {
       scene.templates = entries;  // alias rétrocompat — même tableau (pas de copie)
     }
 
+    // ── Post-pass : annotation payload (AST_SPEC v1 §2) ───────────────────────
+    // Parcourt récursivement tous les éléments RHS et attache un `payload` à
+    // chaque nœud annatable. Le payload est ADDITIF (l'encodeur BP3 ignore les
+    // champs inconnus) et AGNOSTIQUE (zéro notion BP3 : pas de _script, flavor…).
+    //
+    // Règle de résolution d'acteur :
+    //   1. Acteur explicite sur le nœud (dot-notation `sitar.Sa`).
+    //   2. Acteur unique de la règle (quand la LHS est un symbole unique d'acteur).
+    //   3. Omis (le dispatcher résout via la déclaration actors[]).
+    //
+    // Règle flux :
+    //   - `InstantControl` → flux:true (toujours)
+    //   - `Control` standalone de nature transport-control → flux:true
+    //   - Override d'occurrence collé sur un Symbol (suffixQualifiers) → pas de flux
+    annotateScene(scene);
+
     return scene;
+  }
+
+  // ============================================================
+  // Post-pass annotation payload (AST_SPEC v1 §2)
+  // ============================================================
+
+  /**
+   * Annote récursivement toute la scène (entrée : après parseSubgrammars).
+   * Modifie les nœuds en place (payload additif).
+   */
+  function annotateScene(scene) {
+    for (const sg of scene.subgrammars) {
+      for (const rule of sg.rules) {
+        // Résolution de l'acteur de règle : quand tous les symboles LHS appartiennent
+        // au même acteur (cas fréquent), on peut pré-remplir l'acteur.
+        // En Phase 1 on passe null : l'acteur est résolu au niveau token (dot-notation).
+        annotateRhsElements(rule.rhs, null);
+      }
+    }
+  }
+
+  /**
+   * Annote une liste plate d'éléments RHS (ou une voix polymétrique).
+   * @param {Array} elements  - liste de nœuds RHS
+   * @param {string|null} ruleActor - acteur déduit du contexte (null en Phase 1)
+   */
+  function annotateRhsElements(elements, ruleActor) {
+    for (const el of elements) {
+      annotateRhsNode(el, ruleActor);
+    }
+  }
+
+  /**
+   * Annote un nœud RHS individuel avec `payload`.
+   * Rec dans Polymetric.voices.
+   *
+   * Nœuds qui reçoivent un payload.nature :
+   *   Symbol, SymbolCall, OutTimeObject, TieStart, TieContinue, TieEnd → 'sounding'
+   *   Rest, UndeterminedRest                                            → 'rest'
+   *   Prolongation                                                      → 'prolongation'
+   *   Control  → 'engine-control' (bp3NativeControls) ou 'transport-control'
+   *   InstantControl                                                     → 'instant'
+   *
+   * Nœuds sans payload.nature (structurels) :
+   *   Period, NumericDuration, NilString, RawBrace, Polymetric,
+   *   Wildcard, Variable, Homomorphism, gabarits, TriggerIn…
+   *   (on récurse dans Polymetric)
+   */
+  function annotateRhsNode(el, ruleActor) {
+    if (!el || typeof el !== 'object') return;
+
+    const type = el.type;
+
+    // ── Nœuds sonnants ────────────────────────────────────────────────
+    if (type === 'Symbol' || type === 'SymbolCall' ||
+        type === 'OutTimeObject' ||
+        type === 'TieStart' || type === 'TieContinue' || type === 'TieEnd') {
+
+      // Acteur : dot-notation (el.actor) ou ruleActor
+      const actor = el.actor || ruleActor || undefined;
+
+      // Overrides d'occurrence depuis suffixQualifiers (collés sans espace)
+      // Seuls les RuntimeQualifier comptent comme overrides de params
+      const params = extractOccurrenceParams(el.suffixQualifiers);
+
+      el.payload = {
+        nature: 'sounding',
+        ...(actor !== undefined ? { actor } : {}),
+        ...(params !== null ? { params } : {}),
+        // flux absent (override d'occurrence, pas de propagation)
+      };
+      return;
+    }
+
+    // ── Silence ────────────────────────────────────────────────────────
+    if (type === 'Rest' || type === 'UndeterminedRest') {
+      el.payload = { nature: 'rest' };
+      return;
+    }
+
+    // ── Prolongation ───────────────────────────────────────────────────
+    if (type === 'Prolongation') {
+      el.payload = { nature: 'prolongation' };
+      return;
+    }
+
+    // ── Contrôles ──────────────────────────────────────────────────────
+    if (type === 'Control') {
+      const isEngine = libCtx.bp3NativeControls && libCtx.bp3NativeControls.has(el.name);
+      const nature = isEngine ? 'engine-control' : 'transport-control';
+      el.payload = {
+        nature,
+        // flux:true pour un transport-control standalone (propagation de flux)
+        ...(nature === 'transport-control' ? { flux: true } : {}),
+      };
+      return;
+    }
+
+    // ── Contrôle instantané !(…) ou ![@seed] ──────────────────────────
+    if (type === 'InstantControl') {
+      el.payload = {
+        nature: 'instant',
+        flux: true,  // se propage aux tokens suivants du même acteur
+      };
+      return;
+    }
+
+    // ── Polymetric — récursion dans les voix ──────────────────────────
+    if (type === 'Polymetric') {
+      // Pas de payload sur le nœud Polymetric lui-même (structurel)
+      for (const voice of (el.voices || [])) {
+        annotateRhsElements(voice, ruleActor);
+      }
+      return;
+    }
+
+    // ── SimultaneousGroup — récursion ──────────────────────────────────
+    if (type === 'SimultaneousGroup') {
+      if (el.primary) annotateRhsNode(el.primary, ruleActor);
+      for (const s of (el.secondaries || [])) annotateRhsNode(s, ruleActor);
+      return;
+    }
+
+    // Tous les autres types (Period, NumericDuration, NilString, RawBrace,
+    // Wildcard, Variable, Homomorphism, Template*, TriggerIn…) : pas de payload.
+  }
+
+  /**
+   * Extrait les overrides d'occurrence depuis `suffixQualifiers` d'un nœud.
+   * Retourne un objet {key:val, …} ou null si aucun override.
+   * Seules les RuntimeQualifier (paires key:val) sont extraites.
+   */
+  function extractOccurrenceParams(suffixQualifiers) {
+    if (!suffixQualifiers || suffixQualifiers.length === 0) return null;
+    const params = {};
+    let hasParams = false;
+    for (const sq of suffixQualifiers) {
+      if (sq.type !== 'RuntimeQualifier') continue;
+      for (const pair of (sq.pairs || [])) {
+        // value:true = bare key sans valeur (ex. velcont) — on inclut quand même
+        params[pair.key] = pair.value;
+        hasParams = true;
+      }
+    }
+    return hasParams ? params : null;
   }
 
   // ============================================================
@@ -1993,8 +2154,18 @@ function parse(tokens, opts = {}) {
       return { type: 'Rest' };
     }
 
-    // Prolongation _
+    // Prolongation _ — ou forme legacy _(ident)( normalisée en transport-control (spec §4)
+    // La forme `_(ident)(args)` est héritée du moteur historique pour le transport (BP3 legacy).
+    // Un frontend conforme AST_SPEC v1 §4 n'émet jamais `_(…)` : le `_` est consommé et le
+    // nœud est normalisé en Control de nature transport-control (traité dans le post-pass).
     if (at(T.PROLONG)) {
+      // Lookahead : PROLONG suivi immédiatement de IDENT puis LPAREN sans espace
+      // = forme `_name(args)` à normaliser en Control (transport-control)
+      if (peek(1).type === T.IDENT && peek(2).type === T.LPAREN) {
+        advance(); // consomme _
+        const ctrlName = advance().value;
+        return parseControl(ctrlName, tok);
+      }
       advance();
       return { type: 'Prolongation' };
     }
