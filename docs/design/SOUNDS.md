@@ -2,14 +2,14 @@
 
 ## Résumé
 
-Ce document définit comment BPscript résout les terminaux (notes, percussions, samples, CV) en paramètres de rendu pour les transports. Le modèle unifié utilise des dictionnaires `{clé: valeur}` à trois échelles temporelles, avec cascading inspiré de CSS.
+Ce document définit comment BPScript résout les terminaux (notes, percussions, samples, CV) en paramètres de rendu pour les transports. Le modèle unifié utilise des dictionnaires `{clé: valeur}` à trois échelles temporelles, avec cascading inspiré de CSS.
 
 > **Deux cascades distinctes.** Ce document décrit la **cascade des sons** (8 niveaux, du spec d'acteur au terminal). La **cascade de sortie** (paramètres de rendu : vélocité, pan, canal, transport…) suit sa propre cascade à 3 niveaux (scène → acteur → terminal), indépendante. Voir `docs/design/ACTOR.md §4`.
 
 ## Les trois couches
 
 ```
-BPscript (langage)     alphabet, timing, grammaire, acteurs
+BPScript (langage)     alphabet, timing, grammaire, acteurs
                        → QUOI joue QUAND
 
 Spec (acteur)          resolve(terminal) → {clé: valeur}
@@ -24,7 +24,7 @@ Transport (runtime)    interprète les clés connues, ignore le reste
 ### Le flux global
 
 ```
-  Scène BPscript                  Moteur BP3              Dispatcher + Acteurs
+  Scène BPScript                  Moteur BP3              Dispatcher + Acteurs
   ───────────────                 ──────────              ────────────────────
 
   @actor sitar
@@ -643,7 +643,7 @@ lib/
 
 ```
                     ┌──────────────────────────────────────────────────┐
-                    │                   BPscript                       │
+                    │                   BPScript                       │
                     │                                                  │
                     │  @actor piano                                     │
                     │    alphabet.western                               │

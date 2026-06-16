@@ -1,12 +1,12 @@
-# BPscript — Architecture technique et fonctionnelle
+# BPScript — Architecture technique et fonctionnelle
 
 ## Principe
 
-BPscript est un méta-ordonnanceur : il dérive des structures temporelles
+BPScript est un méta-ordonnanceur : il dérive des structures temporelles
 via le moteur BP3 (WASM) et orchestre des acteurs multi-runtime dans une
 seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 
-> **Périmètre de ce dépôt** : BPscript couvre la chaîne **compile time** (source → grammaire BP3)
+> **Périmètre de ce dépôt** : BPScript couvre la chaîne **compile time** (source → grammaire BP3)
 > et la dérivation par le moteur WASM, dont la sortie est une séquence de **timed tokens**.
 > Les sections **runtime** ci-dessous (dispatcher, transports, REPL adapters) décrivent le
 > **design de référence du consommateur aval** des timed tokens — leur implémentation vit
@@ -181,7 +181,7 @@ Source .bps
   ▼
 4. Encoder
    │  Lit : alphabets.json + octaves.json
-   │  Traduit : BPscript → BP3
+   │  Traduit : BPScript → BP3
    │    - Noms de notes → noms BP3-safe (bol prefix)
    │    - [] qualifiers → instructions BP3 (/N, _tempo, mode, etc.)
    │    - () runtime → _script(CT n) start/end
@@ -292,7 +292,7 @@ Elle décale de N positions dans l'alphabet de l'acteur. Le resolver résout
 ensuite le nouveau symbole normalement à travers les 5 couches.
 
 ```
-BPscript :  C(transpose:2) D E
+BPScript :  C(transpose:2) D E
 
 Encodeur :  _script(CT 0) C D E
             controlTable[0] = { type:"transpose", value:2 }
@@ -555,7 +555,7 @@ Commencer par quantized (comme TidalCycles).
 
 ### Latence estimée
 
-- Compilation BPscript → BP3 : < 10ms
+- Compilation BPScript → BP3 : < 10ms
 - Dérivation BP3 : 10-500ms selon la grammaire
 - Total réaliste : **50-100ms**
 

@@ -6,7 +6,7 @@
 ## Vue d'ensemble
 
 Les backticks permettent d'exécuter du code dans des interpréteurs externes
-(`sc`, `py`, `tidal`, `strudel`, `js`) depuis le flux temporel BPscript.
+(`sc`, `py`, `tidal`, `strudel`, `js`) depuis le flux temporel BPScript.
 Un backtick autonome est un **terminal de plein droit** : il occupe une position
 dans le flux au même titre qu'une note (cf. EBNF §4.13, `BacktickStandalone`).
 

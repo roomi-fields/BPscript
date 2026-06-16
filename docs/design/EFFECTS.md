@@ -1,19 +1,19 @@
-# Effets et signal processing — pas de patching dans BPscript
+# Effets et signal processing — pas de patching dans BPScript
 
 > Voir aussi : [DESIGN_CV.md](CV.md) pour les objets CV,
 > [DESIGN_REPL.md](REPL.md) pour les backticks qui configurent le graphe audio.
 
 ## Principe
 
-BPscript ne gère pas le graphe audio. Le **runtime** (SuperCollider, WebAudio, etc.)
-câble les effets. BPscript scripte les **paramètres des effets dans le temps**.
+BPScript ne gère pas le graphe audio. Le **runtime** (SuperCollider, WebAudio, etc.)
+câble les effets. BPScript scripte les **paramètres des effets dans le temps**.
 
 Séparation des responsabilités :
 
 | Couche | Responsabilité | Exemple |
 |--------|---------------|---------|
 | **Runtime** (backticks init) | câblage du graphe audio | `sitar → lpf → reverb → out` |
-| **BPscript** (grammaire) | quand et comment les paramètres changent | `lpf.cutoff: ramp(200, 4000)` |
+| **BPScript** (grammaire) | quand et comment les paramètres changent | `lpf.cutoff: ramp(200, 4000)` |
 | **BP3** (moteur) | calcul des durées et de la synchronisation | polymétrie mélodie + courbe de filtre |
 
 Pas de concept de patching, de bus, de chaîne, de `>` dans le langage.
@@ -51,9 +51,9 @@ C'est lui qui sait faire ça nativement.
 ```
 
 Le graphe peut être aussi simple ou complexe que le runtime le permet.
-BPscript n'en sait rien et n'a pas besoin d'en savoir.
+BPScript n'en sait rien et n'a pas besoin d'en savoir.
 
-### 2. BPscript pilote les paramètres dans le temps
+### 2. BPScript pilote les paramètres dans le temps
 
 Les paramètres des effets sont placés en **polymétrie** — comme une voix
 parallèle à la mélodie. BP3 calcule la synchronisation.
@@ -92,7 +92,7 @@ S -> { phrase1 phrase2 phrase3 , sitar.reverb.active(0 0 _ _ 1 1 _ _ 0 0) }
 
 ## Portées des effets
 
-Même pattern que partout dans BPscript :
+Même pattern que partout dans BPScript :
 
 Les portées suivent la cascade de sortie scène → acteur → terminal (cf. [ACTOR.md](ACTOR.md) §4),
 l'override le plus fin l'emportant :
@@ -108,11 +108,11 @@ Avec acteur → dédié à cet acteur. Sur une occurrence → dédié à ce term
 
 ---
 
-## Ce que BPscript NE fait PAS
+## Ce que BPScript NE fait PAS
 
 - **Pas de câblage** — le graphe audio est dans le runtime
 - **Pas d'ordre de chaîne** — serial/parallèle/send-return, c'est le runtime
-- **Pas de DSP** — BPscript ne traite pas le signal
+- **Pas de DSP** — BPScript ne traite pas le signal
 - **Pas de bus** — la granularité de sortie suit la cascade scène → acteur → terminal (voir [ACTOR.md](ACTOR.md) §4)
 - **Pas de nouveau mot-clé** — tout passe par la notation dot + polymétrie + CV
 
@@ -165,11 +165,11 @@ climax -> `sc: ~reverb.set(\mix, 0.4)`
 ```
 
 Le delay entre au développement (backtick), la reverb au climax (backtick).
-Le cutoff du filtre et le temps du delay sont pilotés par BPscript en polymétrie.
+Le cutoff du filtre et le temps du delay sont pilotés par BPScript en polymétrie.
 
 ---
 
-## Pourquoi pas de patching dans BPscript
+## Pourquoi pas de patching dans BPScript
 
 1. **Le runtime sait mieux** — SuperCollider, WebAudio, Csound ont des graphes
    de signal natifs, optimisés, avec des possibilités (feedback, FFT, granulaire)
@@ -177,10 +177,10 @@ Le cutoff du filtre et le temps du delay sont pilotés par BPscript en polymétr
 
 2. **Chaque runtime est différent** — WebAudio a des AudioNodes, SC a des Synths
    et des Bus, MIDI ne sait pas du tout faire du signal processing. Un patching
-   dans BPscript serait implémentable sur certains transports et pas d'autres.
+   dans BPScript serait implémentable sur certains transports et pas d'autres.
 
-3. **Séparation des préoccupations** — BPscript sait le **quand**.
-   Le runtime sait le **comment**. Comme pour les notes : BPscript dit
+3. **Séparation des préoccupations** — BPScript sait le **quand**.
+   Le runtime sait le **comment**. Comme pour les notes : BPScript dit
    "joue Sa à 240 Hz pendant 1s", pas "crée un oscillateur sinusoïdal
    avec une enveloppe ADSR".
 

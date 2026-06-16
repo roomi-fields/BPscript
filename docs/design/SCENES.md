@@ -136,7 +136,7 @@ L'implémentation est libre :
 - **Parent chain in-memory** : `_parent: FlagStore | null`, lookup remontant la chaîne (rapide, simple v1)
 - **Event-based au tic** : l'orchestrateur copie les flags propagés dans le FlagStore enfant à chaque tic (sérialisable, prêt pour Worker/Rust subprocess)
 
-Tant que la sémantique observable est respectée, les deux sont équivalents pour BPscript.
+Tant que la sémantique observable est respectée, les deux sont équivalents pour BPScript.
 
 > **Point ouvert** : choix d'implémentation non arrêté. Trade-off entre simplicité v1 (parent chain) et portabilité Worker/Rust (event-based). À trancher avant d'écrire le FlagStore. Voir aussi §11 et `BPx ENGINE_SPEC.md §6` (FlagStore).
 

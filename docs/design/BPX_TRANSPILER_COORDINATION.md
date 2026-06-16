@@ -246,7 +246,7 @@ l'Item 2 est soldé fonctionnellement.
   7 pour dhati ; replay d'esclave à l'index 54 pour dhin, préfixe et suffixe exacts).
 - Conversion homomorphism tests : seul `tryhomomorphism` est convertible au parser réel
   (clé présente dans `lib/transcription.json`). Les tables forgées des tests BPx
-  (`mh`/`alpha`/`beta`) n'ont pas de forme inline en BPscript → injections gardées avec
+  (`mh`/`alpha`/`beta`) n'ont pas de forme inline en BPScript → injections gardées avec
   STOP-AND-REPORT datés. Si une forme de transcription inline en scène apparaît un jour,
   on convertira le reste.
 - shapes-rhythm : parité MESURÉE 2522/2522 (sonnants, strip symétrique) mais dérivation BPx

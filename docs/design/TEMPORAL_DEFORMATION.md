@@ -294,7 +294,7 @@ MIDI CC 3  →  swing global                 (0 — 1)
 LFO 1      →  proportion de "rhythm.dhin"  (oscille entre 0.2 et 0.5)
 ```
 
-Le mapping est déclaré dans la scène BPscript (syntaxe à définir) ou
+Le mapping est déclaré dans la scène BPScript (syntaxe à définir) ou
 dans un fichier de configuration.
 
 ---

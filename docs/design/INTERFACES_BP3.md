@@ -2,14 +2,14 @@
 
 Version 1.0 — mars 2026
 
-Ce document spécifie l'interface complète entre BPscript (JavaScript) et le moteur BP3 (WebAssembly). C'est le contrat entre le transpileur/dispatcher et le moteur d'ordonnancement.
+Ce document spécifie l'interface complète entre BPScript (JavaScript) et le moteur BP3 (WebAssembly). C'est le contrat entre le transpileur/dispatcher et le moteur d'ordonnancement.
 
 ## Principe
 
 BP3 est un **ordonnanceur symbolique pur**. Il reçoit des noms, les dérive selon les règles de grammaire, résout la polymétrie, et retourne les noms horodatés. Il ne sait pas ce que les noms signifient — pas de MIDI, pas de son, pas d'interprétation.
 
 ```
-BPscript transpileur
+BPScript transpileur
         │
         ▼
 ┌─────────────────────────────────────┐
@@ -35,7 +35,7 @@ BPscript transpileur
 └─────────────────────────────────────┘
         │
         ▼
-BPscript dispatcher (routage → transports)
+BPScript dispatcher (routage → transports)
 ```
 
 ---
@@ -98,7 +98,7 @@ gram#N[M] LHS --> RHS
 
 **Contrôles traduits par le transpileur** :
 
-| BPscript | BP3 |
+| BPScript | BP3 |
 |----------|-----|
 | `[mode:random]` | `RND` (mode de sous-grammaire) |
 | `[weight:50]` | `<50>` |

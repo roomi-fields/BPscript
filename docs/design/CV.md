@@ -1,4 +1,4 @@
-# BPscript CV / Signal Objects — Design Document
+# BPScript CV / Signal Objects — Design Document
 
 ## Date: 2026-03-18
 
@@ -7,9 +7,9 @@
 
 ## Concept
 
-Les CV (Control Voltage) sont des **objets temporels** dans BPscript qui produisent des courbes de valeurs continues. Ils s'appliquent à un signal d'entrée pour produire un signal de sortie, comme dans un synthé modulaire.
+Les CV (Control Voltage) sont des **objets temporels** dans BPScript qui produisent des courbes de valeurs continues. Ils s'appliquent à un signal d'entrée pour produire un signal de sortie, comme dans un synthé modulaire.
 
-### Les 3 types d'objets temporels BPscript
+### Les 3 types d'objets temporels BPScript
 
 | Type | Comportement | Exemple |
 |------|-------------|---------|
@@ -107,7 +107,7 @@ L'entrée d'un CV peut être à n'importe quel niveau de la hiérarchie :
 
 ## Code du CV
 
-Le comportement du CV est défini par du code **externe à BPscript** :
+Le comportement du CV est défini par du code **externe à BPScript** :
 
 1. **Librairie JSON** — paramètres déclaratifs, le transport implémente le comportement
 2. **Backtick inline** — code brut pour le live coding :
@@ -119,7 +119,7 @@ Le comportement du CV est défini par du code **externe à BPscript** :
    env1(Phrase1, browser) = `py: numpy.linspace(200, 2000, 1000)`
    ```
 
-BPscript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée et un binding.
+BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée et un binding.
 
 ## Questions ouvertes
 

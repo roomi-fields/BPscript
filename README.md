@@ -1,6 +1,6 @@
-# BPscript — A Modern Language for the Bol Processor
+# BPScript — A Modern Language for the Bol Processor
 
-**BPscript** is a research-driven composition language built on the **Bol Processor (BP3)** —
+**BPScript** is a research-driven composition language built on the **Bol Processor (BP3)** —
 the formal music grammar system Bernard Bel and Jim Kippen have developed since 1981, originally
 to model North Indian tabla improvisation.
 
@@ -13,7 +13,7 @@ conditional flags, master/slave patterns, seven derivation modes, and dozens of 
 functions. TidalCycles cites it as an influence.
 
 That power has always been locked behind a dense, archaic syntax and a 1990s C codebase.
-**BPscript is the research effort to keep the formalism and modernize everything around it:**
+**BPScript is the research effort to keep the formalism and modernize everything around it:**
 
 - **A readable, typed language** — 3 reserved words, 24 symbols, 9 flag operators. Typed temporal
   primitives (`gate`, `trigger`, `cv`), scenes, actors, declarative I/O mappings.
@@ -24,14 +24,14 @@ That power has always been locked behind a dense, archaic syntax and a 1990s C c
 - **An evolution path** — `BPx`, a next-generation reactive derivation engine designed to succeed
   BP3's batch C core (see the `BPx` repository: `../BPx/docs/ARCHITECTURE.md`).
 
-> Try it online: **[roomi-fields.com/bpscript](https://roomi-fields.com/bpscript/)** — write BPscript,
+> Try it online: **[roomi-fields.com/bpscript](https://roomi-fields.com/bpscript/)** — write BPScript,
 > compile to a BP3 grammar, and derive it in the browser.
 
 ## Setup
 
 ```bash
 git clone --recursive https://github.com/roomi-fields/BPscript.git
-cd BPscript
+cd BPScript
 
 # Recompile the engine (requires Emscripten + GCC + mingw)
 cd bp3-engine
@@ -48,7 +48,7 @@ node test/test_all.cjs --bin last
 ```
 bp3-engine/          BP3 WASM engine (submodule roomi-fields/bp3-engine, branch wasm)
 src/
-  transpiler/        Tokenizer, parser, encoder (BPscript → BP3 grammar)
+  transpiler/        Tokenizer, parser, encoder (BPScript → BP3 grammar)
   bpx/               BPx engine stub (next-generation derivation engine)
 lib/                 JSON libraries (controls, alphabets, tunings, filter, routing)
 dist/                BP3 WASM binaries (bp3.js, bp3.wasm, bp3.data)
@@ -83,7 +83,7 @@ The tests compare BP3 engine production across 6 stages:
 | S2 | bp3.wasm | MIDI events from WASM |
 | S3 | bp3.wasm | Timed tokens from p_Instance |
 | S4 | bp3.wasm | Like S3 with silent sound objects |
-| S5 | transpiler + bp3.wasm | Full BPscript pipeline |
+| S5 | transpiler + bp3.wasm | Full BPScript pipeline |
 
 ```bash
 # Run all tests (requires --bin)

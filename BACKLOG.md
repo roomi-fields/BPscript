@@ -1,4 +1,4 @@
-# BPscript — Backlog
+# BPScript — Backlog
 
 Dernière mise à jour : 2026-04-06
 Build : v3.3.19-wasm.8

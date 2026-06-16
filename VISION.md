@@ -1,4 +1,4 @@
-# BPscript — Vision produit
+# BPScript — Vision produit
 
 ## La thèse
 
@@ -13,7 +13,7 @@ Aucun ne sait orchestrer les autres. Aucun ne manipule des structures
 temporelles formelles. Aucun ne fait ce que BP3 fait depuis 30 ans dans
 le monde académique : dériver des structures complexes à partir de grammaires.
 
-BPscript transforme BP3 — un moteur de polymétries complexes, d'abord utilisé pour
+BPScript transforme BP3 — un moteur de polymétries complexes, d'abord utilisé pour
 formaliser la rythmique des percussions du nord de l'Inde, mais dont le formalisme
 est général — en **séquenceur d'un genre totalement nouveau** : un méta-ordonnanceur
 polyglotte qui orchestre SC, Tidal, Python, MIDI, DMX et tout ce qui se
@@ -25,36 +25,36 @@ Ableton a inventé le sampler multilinéaire : on découpe le temps en clips,
 on les lance, on les combine. C'est puissant mais la structure reste plate —
 des boîtes qu'on empile.
 
-BPscript invente le **sampler de structures complexes** :
+BPScript invente le **sampler de structures complexes** :
 
 | Paradigme | Ce qu'on sample | Limitation |
 |-----------|----------------|-----------|
 | Bande magnétique | du son, linéairement | on presse Play, on attend la fin |
 | Ableton | des clips, multilinéairement | on lance, on combine, mais la structure est plate |
-| **BPscript** | **des grammaires, de la complexité** | **la structure se dérive, se conditionne, se ramifie** |
+| **BPScript** | **des grammaires, de la complexité** | **la structure se dérive, se conditionne, se ramifie** |
 
 Un raga n'est pas une mélodie — c'est un ensemble de règles de dérivation
 qui génère des mélodies. Un pattern de tabla n'est pas une boucle — c'est
 une grammaire qui produit des variations infinies. Une scène multimédia
 n'est pas un timeline — c'est un réseau de comportements orchestrés.
 
-BPscript ne sample pas du son. Il sample de la **structure**.
+BPScript ne sample pas du son. Il sample de la **structure**.
 
 ## Le live coding comme la Session View
 
 Ableton a dit : "la musique n'a pas besoin d'être linéaire."
 
-BPscript dit : "la musique n'a pas besoin d'être programmée à l'avance —
+BPScript dit : "la musique n'a pas besoin d'être programmée à l'avance —
 elle se dérive en temps réel selon des règles que tu modifies en live."
 
-Le live coding est au BPscript ce que la Session View est à Ableton :
+Le live coding est au BPScript ce que la Session View est à Ableton :
 le moment où le musicien reprend le contrôle sur la machine. Sauf qu'ici,
 on ne lance pas des clips — on modifie des grammaires, on bascule des flags,
 on ajuste des poids, on réécrit des règles. La structure évolue pendant
 qu'elle joue.
 
 Ableton a rendu le computer légitime sur scène quand tout le monde pensait
-que c'était de la folie. BPscript rend les grammaires formelles légitimes
+que c'était de la folie. BPScript rend les grammaires formelles légitimes
 en live coding quand tout le monde pense que c'est académique.
 
 ## Le méta-ordonnanceur polyglotte
@@ -92,7 +92,7 @@ C'est l'argument massif :
 - Tidal seul fait des patterns mais pas de grammaires formelles
 - Python seul fait de la logique mais ne sait pas le temps musical
 - BP3 seul est un puissant ordonnanceur mais délègue la production
-- **BPscript + backticks = les quatre ensemble**
+- **BPScript + backticks = les quatre ensemble**
 
 ## Stratégie : intégration, pas remplacement
 
@@ -102,35 +102,35 @@ Ableton n'a jamais dit "jetez Pro Tools." Ils ont intégré Rewire.
 "Notre software s'ouvre dans le vôtre." Les studios ont adopté Ableton
 avant les clubs — parce qu'il ne menaçait pas leur workflow existant.
 
-BPscript fait pareil :
+BPScript fait pareil :
 - **S'intégrer complètement à Ableton et Max** — pas concurrencer
-- BPscript comme **device Max for Live** = le cheval de Troie parfait
-- Le compositeur reste dans Ableton, ouvre BPscript, et ses clips
+- BPScript comme **device Max for Live** = le cheval de Troie parfait
+- Le compositeur reste dans Ableton, ouvre BPScript, et ses clips
   deviennent des grammaires vivantes
 - Les SynthDefs SC, les patterns Tidal, les scripts Python restent
-  intacts — BPscript les orchestre sans les remplacer
+  intacts — BPScript les orchestre sans les remplacer
 
-### Les backticks = le Max for Live de BPscript
+### Les backticks = le Max for Live de BPScript
 
 Ableton est né de Max. Puis ils ont mis Max DANS Ableton — "Inception".
 Les utilisateurs construisent leurs propres instruments sans écrire de C++.
 
-BPscript fait le même geste : les backticks ouvrent une fenêtre vers
+BPScript fait le même geste : les backticks ouvrent une fenêtre vers
 chaque langage à l'intérieur du séquenceur. L'utilisateur ne programme
-pas BPscript — il écrit du vrai SC, du vrai Python, orchestré par BP3.
+pas BPScript — il écrit du vrai SC, du vrai Python, orchestré par BP3.
 
 ## Les leçons d'Ableton — aucune oubliée
 
 ### 1. Né de la frustration
 Ableton est né parce que Robert et Gerhard refusaient de jouer avec des DATs.
-BPscript naît parce que BP3 est puissant mais isolé, que SC ne sait pas
+BPScript naît parce que BP3 est puissant mais isolé, que SC ne sait pas
 ordonnancer des macro-structures, et que personne n'orchestre le tout.
 
 ### 2. Dog-fooding
 Chaque feature de la Session View a été testée en concert Monolake.
 Si ça plantait = poubelle. Si ça marchait = on garde.
 
-→ **Composer avec BPscript avant de le vendre.** Créer des pièces réelles.
+→ **Composer avec BPScript avant de le vendre.** Créer des pièces réelles.
 Les jouer en live. Identifier ce qui manque par la pratique, pas par la théorie.
 
 ### 3. Le troisième cerveau
@@ -179,7 +179,7 @@ que personne n'a encore imaginées.
 ### 9. Ouverture aux plugins
 Ableton v4 : MIDI + VST = le tournant. Tout le monde peut contribuer.
 
-→ BPscript : les librairies JSON + les backticks multi-langage = tout le monde
+→ BPScript : les librairies JSON + les backticks multi-langage = tout le monde
 peut créer son vocabulaire et ses comportements. L'écosystème se construit
 par la communauté.
 
@@ -193,7 +193,7 @@ Mais c'est pour plus tard — d'abord que le moteur marche.
 ### 11. Le moment Daft Punk
 2007, Bercy, 18 000 personnes. Ableton pilote tout. Le computer est légitimé.
 
-→ BPscript a besoin de son moment : **une performance live où un seul fichier
+→ BPScript a besoin de son moment : **une performance live où un seul fichier
 `.bp` orchestre SC + Tidal + lumières + vidéo** en temps réel.
 C'est la démo qui fait tout basculer.
 
@@ -201,32 +201,32 @@ C'est la démo qui fait tout basculer.
 Steward Ownership : actions invendables, dividendes impossibles.
 "Le seul but de l'entreprise reste la musique."
 
-→ BPscript naît dans le monde académique/open source. La filiation avec
+→ BPScript naît dans le monde académique/open source. La filiation avec
 Bernard Bel et BP3 est un atout. La mission est la structure temporelle
 et la création, pas la monétisation. Protéger cette mission dès le début.
 
-## Ce qu'Ableton n'a PAS fait — et que BPscript fait
+## Ce qu'Ableton n'a PAS fait — et que BPScript fait
 
 **Séquenceur polyglotte** — Ableton intègre Max for Live mais c'est un seul
 environnement. On ne peut pas écrire du SC, du Tidal et du Python dans le même
-projet. BPscript le peut. C'est la vraie rupture.
+projet. BPScript le peut. C'est la vraie rupture.
 
 **Grammaires formelles** — La Session View est non-linéaire mais c'est du
 clip-launching. Pas de dérivation, pas de polymétries irrationnelles, pas de
-composition conditionnelle par flags. BPscript hérite de 30 ans de recherche
+composition conditionnelle par flags. BPScript hérite de 30 ans de recherche
 de Bernard Bel. Aucun concurrent n'a cet avantage théorique.
 
-**Composition distribuée** — Un laptop = un Ableton. BPscript peut orchestrer
+**Composition distribuée** — Un laptop = un Ableton. BPScript peut orchestrer
 un réseau de machines synchronisées par `!`/`<!`.
 
-**Agnostique de la cible** — Ableton fait du son. BPscript orchestre du son,
+**Agnostique de la cible** — Ableton fait du son. BPScript orchestre du son,
 de la lumière, de la vidéo, de l'eurorack, des robots, des installations —
 tout ce qui a besoin d'être orchestré dans le temps.
 
 ## En une phrase
 
 Ableton a transformé le computer en instrument.
-BPscript transforme le computer en **chef d'orchestre polyglotte** —
+BPScript transforme le computer en **chef d'orchestre polyglotte** —
 le premier séquenceur de structures complexes, dans la continuité directe
 de la vision berlinoise, mais une étape plus loin.
 

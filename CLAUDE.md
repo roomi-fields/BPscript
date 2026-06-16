@@ -1,4 +1,4 @@
-## BPscript — Meta-sequencer for Temporal Structure Composition
+## BPScript — Meta-sequencer for Temporal Structure Composition
 
 3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
 Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
@@ -9,8 +9,8 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - **9 flag operators**: comparison `==`, `!=`, `>`, `<`, `>=`, `<=` + calculation `+`, `-`, `=` (`-`/`=` are distinct operators that reuse glyphs also used as structural symbols)
 - **8 reserved qualifier keys**: `mode`, `scan`, `weight`, `speed`, `on_fail`, `tempo`, `meter`, `scale` (per `docs/spec/LANGUAGE.md`; `scan`/`tempo`/`meter` handled in `encoder.js`)
 - **Double declaration**: each symbol has temporal type + runtime binding (`gate Sa:sc`)
-- Silence: `-` in both BPscript and BP3
-- Prolongation: `_` in both BPscript and BP3
+- Silence: `-` in both BPScript and BP3
+- Prolongation: `_` in both BPScript and BP3
 - Period notation: `.` = equal-duration fragment separator (same as BP3)
 - `!` = simultaneous event (any type: trigger, gate, cv, or flag mutation)
 - `[]` = engine instructions (BP3): guards, mode, weight, speed, tempo operators
@@ -59,7 +59,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     - `TEMPO_OPS_WASM.md` — Opérateurs tempo `/N` `\N` `_tempo()` : écarts WASM vs natif
 
 ### Tour de contrôle inter-projets (OBLIGATOIRE) — outil `tour`
-Coordination de l'écosystème (BPscript, BPx, bp3-frontend, runtimes, moteur Bernard) :
+Coordination de l'écosystème (BPScript, BPx, bp3-frontend, runtimes, moteur Bernard) :
 dépôt PRIVÉ `/home/romi/dev/bp/hub`. Le protocole est MÉCANISÉ par le CLI `hub/tour`
 (plus d'édition markdown des boîtes à la main). Détail : `hub/README.md` (§Le protocole + §Outil tour).
 
@@ -98,7 +98,7 @@ node test/test_all.cjs --bin last     # S1 + S2/S3 + comparaisons
 # Voir test/README.md pour les détails des stages S0→S5
 ```
 
-### BPscript Compilation Pipeline
+### BPScript Compilation Pipeline
 ```
 Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + flat alphabet + prototypes) → WASM engine
 ```
@@ -108,8 +108,8 @@ Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + f
 - `()` = runtime: `(vel:80)`→`_script(CT0)`, `(wave:sawtooth)`→`_script(CT1)`
 - Direction: `->` (default L→R), `<-` (RIGHT→LEFT), `<>` (bidirectional)
 - BP3 rule format: `gram#blockNum[ruleNum] MODE LHS --> RHS`
-- Silence: `-` in both BPscript and BP3
-- Tied notes: `~` in BPscript → `&` in BP3
+- Silence: `-` in both BPScript and BP3
+- Tied notes: `~` in BPScript → `&` in BP3
 - Flags: `[X==N]` → `/X=N/` (guard), `[X=N]` → `/X=N/` (mutation)
 - Flat alphabet: no OCT, all terminals as silent sound objects (C4, sa6, etc.) for BP3 compat.
 - Block separator: `-----` between subgrammars with different modes

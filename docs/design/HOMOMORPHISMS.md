@@ -134,9 +134,9 @@ Déterminée par la longueur de la chaîne dans l'alphabet :
 Le transpileur connaît les chaînes (elles viennent de `transcription.json`)
 et génère les entrées pour toutes les profondeurs.
 
-**Choix du séparateur** : `@` éliminé (directive BPscript), `'`/`"` éliminés
+**Choix du séparateur** : `@` éliminé (directive BPScript), `'`/`"` éliminés
 (terminaux transformés `a'`, `a"`), `#` éliminé (contexte négatif).
-`%` est le seul caractère autorisé par BP3 et libre en BPscript.
+`%` est le seul caractère autorisé par BP3 et libre en BPScript.
 
 ### Exemples
 
@@ -364,7 +364,7 @@ D'après Bernard, la syntaxe BP3 réelle est :
 Le `*` (ou nom d'homomorphisme) est un **préfixe** sur le `(=...)` ou `(:...)`.
 Il s'empile par concaténation (`**`) ou par nesting (`* (= * (= ...))`).
 
-### Correspondance BPscript → BP3
+### Correspondance BPScript → BP3
 
 ```bpscript
 S -> $X * &X                →  S --> (= X) * (: X)
@@ -427,7 +427,7 @@ S -> $X * TR &X             →  S --> (= X) * TR (: X)
 ## Documents liés
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Pipeline compile/runtime
-- [DESIGN_GRAMMAR.md](../spec/LANGUAGE.md) — Mapping BPscript → BP3
+- [DESIGN_GRAMMAR.md](../spec/LANGUAGE.md) — Mapping BPScript → BP3
 - [INTERFACES_BP3.md](INTERFACES_BP3.md) — Interface WASM
 - [REFERENCE_HO_FORMAT.md](../reference/HO_FORMAT.md) — Format fichiers -ho.
 - [BPSCRIPT_EBNF.md](../spec/EBNF.md) — Grammaire formelle (§4.9 Templates)
@@ -485,7 +485,7 @@ dha --> 1%dha
 Tester avec `bp3_load_alphabet()` un fichier contenant `0%dha` comme terminal.
 
 Si `%` pose problème (parsing interne), signaler à l'architecte. Les autres
-caractères autorisés (`#`, `'`, `"`) ont des conflits avec BPscript.
+caractères autorisés (`#`, `'`, `"`) ont des conflits avec BPScript.
 
 ##### 2. Les timed tokens contiendront des étiquettes
 

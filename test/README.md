@@ -29,7 +29,7 @@ node test/test_all.cjs --bin v3.3.19-wasm.1
 | S2 | `s2_wasm_orig.cjs` | bp3.wasm | MIDI events depuis PlayBuffer1 |
 | S3 | `s2_wasm_orig.cjs` | bp3.wasm | Timed tokens depuis p_Instance |
 | S4 | `s4_wasm_silent.cjs` | bp3.wasm + silent.al | Timed tokens avec silent sound objects |
-| S5 | `s5_bpscript.cjs` | transpiler + bp3.wasm | Pipeline BPscript complet (.bps → tokens) |
+| S5 | `s5_bpscript.cjs` | transpiler + bp3.wasm | Pipeline BPScript complet (.bps → tokens) |
 
 S2 et S3 sont produits par le même script (`s2_wasm_orig.cjs`).
 S2 = MIDI events (comme le natif). S3 = timed tokens (lecture directe de p_Instance).
@@ -66,7 +66,7 @@ node test/s5_bpscript.cjs drum --bin last
 | `to_be_tested` | pas encore triée ou baseline partielle | ignorée par les suites, testable à la main |
 | `excluded` | hors baseline — `reason` **datée obligatoire** | refusée par s1_native, ignorée partout |
 | `skip` | active sur le papier mais fichiers manquants (ex. bells) | sautée |
-| `partial` | transposition BPscript partielle (ex. dhadhatite_v2) | hors suites |
+| `partial` | transposition BPScript partielle (ex. dhadhatite_v2) | hors suites |
 
 ### Champs
 
@@ -80,7 +80,7 @@ node test/s5_bpscript.cjs drum --bin last
   `[constat YYYY-MM-DD]`)
 - `note` : commentaire libre daté (récupérations, promotions, caveats)
 - `scene_bps` : `true` si un `scene.bps` existe alors que le statut ne l'implique pas
-- `trou_langage` : construct BP3 non représentable en BPscript (bp3ToScene émet NON GÉRÉ) —
+- `trou_langage` : construct BP3 non représentable en BPScript (bp3ToScene émet NON GÉRÉ) —
   ex. templates BP2 en LHS, opérateurs tempo `/N`, `_&`
 - `s1_args` : arguments supplémentaires pour le run natif S1
 - `s4s5_skip` / `s3s4_skip` : exclusions motivées d'une comparaison précise
@@ -90,7 +90,7 @@ Chaque grammaire a un répertoire `grammars/{name}/` contenant :
 - `original.gr` — Grammaire BP3 originale (Bernard)
 - `silent.gr` — Grammaire avec alphabet silent (pour S4)
 - `silent.al` — Alphabet silent sound objects
-- `scene.bps` — Source BPscript (pour S5)
+- `scene.bps` — Source BPScript (pour S5)
 - `status.json` — état par grammaire (dates, notes de validation)
 - `snapshots/` — Résultats JSON de chaque stage
 
