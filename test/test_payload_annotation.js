@@ -170,17 +170,17 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // (vel:80) sans ! en début de portée ('S -> (vel:80)') va dans rule.runtimeQualifier
-  // et NON dans rhs[] — c'est le comportement du parser (break sur LPAREN spaceBefore).
-  // L'annotation du runtimeQualifier de règle sort du scope de la Phase 1.
-  // On documente ce comportement plutôt que de le forcer.
+  // (comportement parser : break sur LPAREN spaceBefore). Depuis l'item 2 (architecte),
+  // il est ANNOTÉ comme contrôle de FLUX à portée RÈGLE (flux:true, scope:'rule').
   const ast = parseSource('@controls\nS -> (vel:80)');
   const rule = ast.subgrammars[0].rules[0];
   assert('(vel:80) standalone → runtimeQualifier de règle (pas rhs)',
     rule.runtimeQualifier?.type === 'RuntimeQualifier',
     `runtimeQualifier=${JSON.stringify(rule.runtimeQualifier)}`);
-  assert('(vel:80) standalone → rhs vide',
-    rule.rhs.length === 0,
-    `rhs.length=${rule.rhs.length}`);
+  assert('runtimeQualifier de règle ANNOTÉ flux scope:rule',
+    rule.runtimeQualifier?.payload?.flux === true && rule.runtimeQualifier?.payload?.scope === 'rule'
+    && rule.runtimeQualifier?.payload?.nature === 'transport-control',
+    `payload=${JSON.stringify(rule.runtimeQualifier?.payload)}`);
 }
 
 {

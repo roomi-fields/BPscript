@@ -284,6 +284,20 @@ function parse(tokens, opts = {}) {
         // au même acteur (cas fréquent), on peut pré-remplir l'acteur.
         // En Phase 1 on passe null : l'acteur est résolu au niveau token (dot-notation).
         annotateRhsElements(rule.rhs, null);
+
+        // Qualifier de NIVEAU RÈGLE `S -> … (vel:80)` : contrôle de FLUX à portée
+        // RÈGLE (s'applique à tous les tokens de la règle, AST_SPEC §2/§4). On le
+        // marque comme transport-control flux scope:'rule' ; le dispatcher l'applique
+        // aux tokens de la règle dans l'ordre dérivé.
+        if (rule.runtimeQualifier && typeof rule.runtimeQualifier === 'object') {
+          const params = extractOccurrenceParams([rule.runtimeQualifier]);
+          rule.runtimeQualifier.payload = {
+            nature: 'transport-control',
+            flux: true,
+            scope: 'rule',
+            ...(params ? { params } : {}),
+          };
+        }
       }
     }
   }
