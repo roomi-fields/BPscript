@@ -48,16 +48,20 @@ function buildEngineArgs(name, prodFile) {
   const grFile = path.join(TD, `-gr.${grName}`);
   if (!fs.existsSync(grFile)) return null;
 
-  // On passe le fichier de grammaire D'ORIGINE (dans test-data) : le moteur natif
-  // résout les fichiers auxiliaires embarqués (-ho/-al…) relativement à ce dossier.
-  // (Le harnais WASM réécrivait en /tmp pour MEMFS ; inutile en natif et ça casse
-  // la résolution des auxiliaires.)
-  const grNoC = fs.readFileSync(grFile, 'utf8').split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
+  // Normalisation des fins de ligne : certaines grammaires (ex. transposition3,
+  // 1997) sont en CR Mac → sans normalisation, le moteur voit toute la grammaire
+  // comme UNE ligne commentée (`//`) et ne produit rien. On écrit donc un temp
+  // NORMALISÉ, mais DANS test-data, pour que les auxiliaires embarqués (-ho/-al)
+  // se résolvent relativement à ce dossier (sinon ils sont introuvables).
+  let gr = fs.readFileSync(grFile, 'utf8').replace(/\r\n?/g, '\n');
+  const grNoC = gr.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
   const hasIndian = /\b(sa|ga)\d\b/.test(grNoC);
   const hasFrench = /\b(do|re|mi|fa|sol|la|si)\d\b/.test(grNoC);
   const conv = hasIndian ? '2' : hasFrench ? '1' : '0';
 
-  const args = ['produce', '-e', '-gr', grFile, '--seed', '1'];
+  const tmpGr = path.join(TD, `_ord_tmp_${name}.gr`);
+  fs.writeFileSync(tmpGr, gr);
+  const args = ['produce', '-e', '-gr', tmpGr, '--seed', '1'];
   if (hasIndian) args.push('--indian'); else if (hasFrench) args.push('--french');
 
   // -se / -al / -to depuis s1_args ou inférés
@@ -104,6 +108,7 @@ function nativeOrder(name) {
   const args = buildEngineArgs(name, prodFile);
   if (!args) return { error: 'args' };
   try { execSync(`"${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
+  try { fs.unlinkSync(path.join(TD, `_ord_tmp_${name}.gr`)); } catch {} // temp grammaire normalisée
   if (!fs.existsSync(prodFile)) return { error: 'no output' };
   const canonical = fs.readFileSync(prodFile, 'utf8').trim();
   return { canonical, tokens: tokenizeOrder(canonical) };
@@ -116,20 +121,55 @@ function wasmOrder(name) {
   return { raw, tokens: tokenizeOrder(raw) };
 }
 
-const targets = process.argv.slice(2).length ? process.argv.slice(2) : ['flags', 'negative-context', 'ek-do-tin'];
+// Pose l'oracle natif d'ORDRE texte. Anti-dégénéré : refuse 0 jeton ou majorité de
+// noms vides (gamme invalide). Format aligné sur s3_native.cjs (midi) : mode 'text',
+// timings nuls (l'ordre EST l'information).
+function writeTextOracle(name, tokens) {
+  if (!Array.isArray(tokens) || tokens.length === 0) return 'VIDE (non écrit)';
+  const empty = tokens.filter((t) => !t || t === '').length;
+  if (empty > tokens.length / 2) return `DÉGÉNÉRÉ (${empty}/${tokens.length} noms vides, non écrit)`;
+  const dir = path.join(__dirname, 'grammars', name, 'snapshots');
+  if (!fs.existsSync(dir)) return 'PAS DE DOSSIER snapshots';
+  const snap = {
+    source: 'native -o (bp3 Linux, production canonique ordonnée)',
+    stage: 's3_native',
+    mode: 'text',
+    tokens: tokens.map((t) => [t, 0, 0]),
+    date: '2026-06-16',
+  };
+  fs.writeFileSync(path.join(dir, 's3_native.json'), JSON.stringify(snap, null, 2));
+  return `écrit (${tokens.length} jetons)`;
+}
+
+const argv = process.argv.slice(2);
+const DO_WRITE = argv.includes('--write');     // pose s3_native si parité OK
+const FORCE = argv.includes('--force');         // pose le natif même si DIFF (natif fait foi)
+const targets = argv.filter((a) => !a.startsWith('--'));
+const names = targets.length ? targets : ['flags', 'negative-context', 'ek-do-tin'];
+
 let pass = 0, fail = 0;
-console.log('=== Parité texte ORDRE-à-ORDRE (natif -o  vs  oracle WASM, tokeniseur partagé) ===\n');
-for (const name of targets) {
+console.log(`=== Parité texte ORDRE-à-ORDRE (natif -o  vs  oracle WASM, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
+for (const name of names) {
   const nat = nativeOrder(name);
   const wasm = wasmOrder(name);
   if (nat.error) { console.log(`  ${name}: ÉCHEC natif (${nat.error})`); fail++; continue; }
-  if (!wasm) { console.log(`  ${name}: pas d'oracle WASM`); fail++; continue; }
-  const a = nat.tokens, b = wasm.tokens;
+  const a = nat.tokens;
+  if (!wasm) {
+    if (DO_WRITE && FORCE) console.log(`  ${name}: pas d'oracle WASM → ${writeTextOracle(name, a)}`);
+    else { console.log(`  ${name}: pas d'oracle WASM`); fail++; }
+    continue;
+  }
+  const b = wasm.tokens;
   let diff = -1;
   const m = Math.max(a.length, b.length);
   for (let i = 0; i < m; i++) { if (a[i] !== b[i]) { diff = i; break; } }
-  if (diff === -1) { console.log(`  ${name}: OK — ${a.length} jetons, ordre identique`); pass++; }
-  else { console.log(`  ${name}: DIFF @${diff} — natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len natif=${a.length} wasm=${b.length})`); fail++; }
+  if (diff === -1) {
+    const w = DO_WRITE ? ` → ${writeTextOracle(name, a)}` : '';
+    console.log(`  ${name}: OK — ${a.length} jetons, ordre identique${w}`); pass++;
+  } else {
+    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF @${diff} (natif fait foi) → ${writeTextOracle(name, a)}`); }
+    else { console.log(`  ${name}: DIFF @${diff} — natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len natif=${a.length} wasm=${b.length})`); fail++; }
+  }
 }
-console.log(`\n${pass} OK / ${fail} DIFF sur ${targets.length}`);
+console.log(`\n${pass} OK / ${fail} DIFF sur ${names.length}`);
 process.exit(fail ? 1 : 0);

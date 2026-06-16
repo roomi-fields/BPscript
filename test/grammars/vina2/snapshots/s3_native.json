@@ -1,0 +1,48 @@
+{
+  "source": "native -o (bp3 Linux, production canonique ordonnée)",
+  "stage": "s3_native",
+  "mode": "text",
+  "tokens": [
+    [
+      "sa4",
+      0,
+      0
+    ],
+    [
+      "_",
+      0,
+      0
+    ],
+    [
+      "_",
+      0,
+      0
+    ],
+    [
+      "_pitchcont",
+      0,
+      0
+    ],
+    [
+      "_pitchrange(500)",
+      0,
+      0
+    ],
+    [
+      "_pitchbend(0)",
+      0,
+      0
+    ],
+    [
+      "-",
+      0,
+      0
+    ],
+    [
+      "_pitchbend(500)",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-06-16"
+}

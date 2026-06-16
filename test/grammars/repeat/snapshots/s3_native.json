@@ -1,0 +1,53 @@
+{
+  "source": "native -o (bp3 Linux, production canonique ordonnée)",
+  "stage": "s3_native",
+  "mode": "text",
+  "tokens": [
+    [
+      "a",
+      0,
+      0
+    ],
+    [
+      "a",
+      0,
+      0
+    ],
+    [
+      "a",
+      0,
+      0
+    ],
+    [
+      "b",
+      0,
+      0
+    ],
+    [
+      "b",
+      0,
+      0
+    ],
+    [
+      "b",
+      0,
+      0
+    ],
+    [
+      "c",
+      0,
+      0
+    ],
+    [
+      "c",
+      0,
+      0
+    ],
+    [
+      "c",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-06-16"
+}

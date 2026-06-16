@@ -63,6 +63,11 @@ Coordination de l'écosystème (BPscript, BPx, bp3-frontend, runtimes, moteur Be
 dépôt PRIVÉ `/home/romi/dev/bp/hub`. Le protocole est MÉCANISÉ par le CLI `hub/tour`
 (plus d'édition markdown des boîtes à la main). Détail : `hub/README.md` (§Le protocole + §Outil tour).
 
+0. **Règle de boucle (validée Romain 2026-06-16)** : (a) **RÉVEIL = COURRIER D'ABORD** — première
+   action de TOUT réveil (session ou ping) = `tour inbox`. (b) **RAPPORT AVANT IDLE** — ne jamais
+   s'arrêter en silence : dernière action = `tour send architecte` avec `FINI: <quoi> + commit` ou
+   `BLOQUÉ: <sur quoi>`. (Pas de stop-hook : l'architecte pilote les réveils, l'utilisateur monitore
+   en central via la tour.)
 1. **Identité (une fois par session)** : `export BP_AGENT=bpscript`.
 2. **Début de session** : `~/dev/bp/hub/tour inbox` (mes non-lus) + lire `TABLEAU.md` et mes `contrats/`.
 3. **Écrire / demander un arbitrage** : `~/dev/bp/hub/tour send <dest> "msg"` (`architecte` = destinataire

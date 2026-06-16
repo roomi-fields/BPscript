@@ -9,33 +9,37 @@
 //   2. le runtime texte de Kanopi (affiche la production en entier, PAR ORDRE).
 // Référence : hub/constats/2026-06-16-voie-texte-ordre.md.
 //
-// QUOI. `tokenizeOrder(canonical)` transforme la chaîne canonique en une LISTE
-// ORDONNÉE de jetons. Chaque jeton est une unité atomique de la production :
-// terminal/silence/prolongation, contrôle `_x(args)` (gardé entier), ou délimiteur
-// de structure. La séparation des délimiteurs évite l'artefact de collage du brut
-// WASM (qui se contentait d'un `split(' ')` et soudait `_pitchrange(200)(={2,ek`
-// en un seul morceau).
+// QUOI. `tokenizeOrder(canonical)` transforme la chaîne canonique en LISTE ORDONNÉE
+// de jetons SONNANTS (symboles produits). Chaque jeton est : un terminal / silence /
+// prolongation, ou un contrôle `_x(args)` gardé entier. Les délimiteurs de structure
+// `{ } & / ,` sont des SÉPARATEURS (comme l'espace) : ils découpent mais ne sont pas
+// émis — ce qui aligne la séquence sur ce qu'un runtime / BPx émet réellement
+// (symboles, pas accolades) et reproduit la sémantique « ordre des jetons ».
 //
 // COMMENT. Balayage gauche→droite, classes reconnues dans cet ordre :
-//   (1) espace          → séparateur (ignoré)
-//   (2) contrôle         → `_` + identifiant + groupe `( … )` optionnel (parenthèses
-//                          équilibrées, 1 niveau d'imbrication) → UN jeton
-//                          ex. `_pitchrange(200)`, `_transpose(-2)`, `_pitchcont`
-//   (3) délimiteur seul  → l'un de  { } ( ) , & / = :  → un jeton chacun
-//   (4) terminal         → suite maximale de caractères hors espace/délimiteur
-//                          ex. `a`, `b`, `A2`, `ek`, `do`, `-` (silence),
-//                          `.` (fragment), `_` (prolongation), entiers de polymétrie
+//   (1) séparateur     → espace, tab, fin de ligne, ou l'un de  { } & / ,  → ignoré
+//   (2) contrôle        → `_` + identifiant + groupe `( … )` optionnel (parenthèses
+//                         équilibrées) → UN jeton. Les `/` et `,` internes (ex.
+//                         `_tempo(2/1)`) sont protégés car le groupe est consommé
+//                         AVANT le découpage par séparateurs.
+//                         ex. `_pitchrange(200)`, `_transpose(-2)`, `_pitchcont`
+//   (3) jeton sonnant   → suite maximale de caractères hors séparateur
+//                         ex. `a`, `b`, `A2`, `ek`, `do`, `-` (silence),
+//                         `.` (fragment), `_` (prolongation), `4+4+4+4` (métrique),
+//                         `(=` / `(:` / `)` (marqueurs de portée), entiers de polymétrie
 //
-// La forme exacte (jeu de délimiteurs) est COORDONNÉE avec Kanopi (runtime texte) :
-// toute évolution se fait ici, en un seul endroit partagé.
+// La forme (jeu de séparateurs) suit la spec hub/constats/2026-06-16-voie-texte-ordre.md
+// et est COORDONNÉE avec Kanopi (runtime texte) : toute évolution se fait ICI, en un
+// seul endroit partagé. Un consommateur qui veut la chaîne canonique brute la lit
+// directement depuis `-o` ; ce tokeniseur donne la séquence ORDONNÉE comparable.
 
-/** Délimiteurs de structure émis comme jetons isolés. */
-const DELIMS = new Set(['{', '}', '(', ')', ',', '&', '/', '=', ':']);
+/** Séparateurs de structure : découpent la séquence mais ne sont pas émis. */
+const SEPARATORS = new Set([' ', '\t', '\n', '\r', '{', '}', '&', '/', ',']);
 
 /**
  * Tokenise une production canonique BP3 (sortie `-o`) en séquence ORDONNÉE.
  * @param {string} canonical - contenu brut de la sortie `-o` (une ligne en général).
- * @returns {string[]} jetons dans l'ordre de production.
+ * @returns {string[]} jetons sonnants dans l'ordre de production.
  */
 export function tokenizeOrder(canonical) {
   const s = String(canonical);
@@ -46,14 +50,13 @@ export function tokenizeOrder(canonical) {
   while (i < n) {
     const c = s[i];
 
-    // (1) espaces / fins de ligne = séparateurs
-    if (c === ' ' || c === '\t' || c === '\n' || c === '\r') { i++; continue; }
+    // (1) séparateur (espace ou délimiteur de structure) → ignoré
+    if (SEPARATORS.has(c)) { i++; continue; }
 
-    // (2) contrôle : _ + identifiant + ( … ) équilibré optionnel
+    // (2) contrôle : _ + identifiant + ( … ) équilibré optionnel, gardé ENTIER
     if (c === '_' && i + 1 < n && /[A-Za-z]/.test(s[i + 1])) {
       let j = i + 1;
       while (j < n && /[A-Za-z0-9]/.test(s[j])) j++;
-      // groupe d'arguments collé immédiatement : parenthèses équilibrées
       if (j < n && s[j] === '(') {
         let depth = 0;
         let k = j;
@@ -70,14 +73,11 @@ export function tokenizeOrder(canonical) {
       continue;
     }
 
-    // (3) délimiteur de structure isolé
-    if (DELIMS.has(c)) { out.push(c); i++; continue; }
-
-    // (4) terminal / silence / prolongation : run jusqu'au prochain espace ou délimiteur
+    // (3) jeton sonnant : run jusqu'au prochain séparateur (ou début de contrôle)
     let j = i;
     while (j < n) {
       const d = s[j];
-      if (d === ' ' || d === '\t' || d === '\n' || d === '\r' || DELIMS.has(d)) break;
+      if (SEPARATORS.has(d)) break;
       // un `_` suivi d'une lettre démarre un contrôle → on coupe ici
       if (d === '_' && j > i && j + 1 < n && /[A-Za-z]/.test(s[j + 1])) break;
       j++;
