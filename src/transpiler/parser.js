@@ -646,13 +646,14 @@ function parse(tokens, opts = {}) {
         const key = current().value;
         const next = peek(1).type;
 
-        // forme v0.8 : `alphabet.X`, `tuning.X`, `transport.X[(...)`, `sound.X`, `eval.X`
+        // forme v0.8 : `alphabet.X`, `tuning.X`, `octaves.X`, `transport.X[(...)`, `sound.X`, `eval.X`
+        // SIX clés d'entité (décision cles-acteur-six, Romain 2026-06-16).
         if (next === T.PERIOD && !peek(1).spaceBefore) {
           // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
           // symbole, début de règle).
           const isEntityKey = key === 'alphabet' || key === 'tuning' ||
-                              key === 'transport' || key === 'sound' ||
-                              key === 'eval';
+                              key === 'octaves' || key === 'transport' ||
+                              key === 'sound' || key === 'eval';
           if (!isEntityKey) break;
           advance();           // consume key IDENT
           advance();           // consume PERIOD

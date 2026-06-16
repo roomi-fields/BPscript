@@ -1,4 +1,4 @@
-# BPscript — Grammaire EBNF
+# BPScript — Grammaire EBNF
 
 Version 0.8 — dérivée de BPSCRIPT_VISION.md et validée par 44 traductions de
 scènes BP3. v0.8 ajoute `sound_section`, `sound_assignment`, renomme
@@ -103,11 +103,14 @@ actor_prop  = actor_entity_ref                      (* v0.8 : alphabet.X, tuning
 
 actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] ;
 
-ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" ;
-(* alphabet — vocabulaire de symboles (requis)
+ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "eval" ;
+(* SIX clés d'entité (décision cles-acteur-six, arbitrage Romain 2026-06-16).
+   alphabet — vocabulaire de symboles (requis)
    tuning   — tempérament / accordage (renomme v0.7 `scale`)
    octaves  — convention de registre / notation (référence lib/octaves.json ; optionnelle,
-              défaut = convention du tuning, sinon `western`)
+              défaut = **hérité de l'alphabet** de l'acteur ; `@actor X octaves.Y` SURCHARGE la
+              notation de registre pour cet acteur. Étape de résolution distincte, rattachée au
+              vocabulaire de symboles (alphabet), PAS au tuning.)
    transport — destination de rendu (requis). Le nom d'appareil est un IDENT **LIBRE**
               (clé de la librairie `@devices`), PAS une liste fermée de mots-clés. `midi`/`webaudio`
               sont des appareils par défaut (`webaudio` = alias de l'appareil `audio`). La grammaire
@@ -367,12 +370,12 @@ TEMPLATES:
 [3] *1/1 (@0 ___)(@1 )
 ```
 
-| BPscript | BP3 | Notes |
+| BPScript | BP3 | Notes |
 |----------|-----|-------|
 | `?` | `_` | wildcard terminal (un slot) |
 | `????` | `____` | wildcards compacts (4 slots) |
 | `.` | `.` | period (identique) |
-| `($0 ???)` | `(@0 ___)` | bracket master ($ = master en BPscript) |
+| `($0 ???)` | `(@0 ___)` | bracket master ($ = master en BPScript) |
 | `($1 )` | `(@1 )` | bracket slave vide |
 | `/1` | `*1/1` | facteur d'échelle |
 
@@ -459,10 +462,10 @@ Définition complète de `engine_qualifier` et `runtime_qualifier` en section 4.
 
 Syntaxe double acceptée : `[weight:3, scan:left]` ou `[weight:3] [scan:left]`.
 
-**Opérateurs temporels** : `[/2]`, `[*3]` — deux opérateurs BPscript distincts.
+**Opérateurs temporels** : `[/2]`, `[*3]` — deux opérateurs BPScript distincts.
 Portée : sur un symbole (`A[/2]`), un groupe (`{A B}[/2]`), ou un polymetric (`{v1, v2}[/2]`).
 `[/N]` → opérateur NU `/N A` (absolu, persistant, fixtempo). `[*N]` → bracket `_tempo` (relatif).
-Note : `[\N]` n'est pas tokenisé par le tokenizer BPscript (anomalies natif+WASM documentées dans TEMPO_OPS_WASM.md).
+Note : `[\N]` n'est pas tokenisé par le tokenizer BPScript (anomalies natif+WASM documentées dans TEMPO_OPS_WASM.md).
 
 **Ratio polymétrique** : `[speed:N]` sur un polymetric multi-voix contrôle le ratio
 de tempo du conteneur. `{v1, v2}[speed:2]` → `{2, v1, v2}`. C'est une propriété
@@ -536,7 +539,7 @@ tempo_op = ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT ) ;
               "*" → RELATIF : A[*2] → _tempo(1/2) A _tempo(1/1) (bracket entrer/sortir, relatif à l'hérité).
                     L'exit _tempo(1/1) restaure la vitesse héritée au bord du bracket.
               "!" → ![/N] dans le flux = _tempo(N/1) relatif (InstantControl, sans fixtempo, portée séquentielle).
-              "\" → non tokenisé par BPscript (bugs natif/WASM documentés dans TEMPO_OPS_WASM.md). *)
+              "\" → non tokenisé par BPScript (bugs natif/WASM documentés dans TEMPO_OPS_WASM.md). *)
 
 engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
@@ -684,7 +687,7 @@ numeric_duration  = INT | INT , "/" , INT ;           (* silence de durée ratio
 `numeric_duration` : un nombre nu dans le flux = silence de durée rationnelle.
 **À confirmer avec Bernard** : différence exacte entre `-` et `1`.
 
-`undetermined_rest` : `...` en BPscript est compilé en `_rest` pour BP3 (commande built-in,
+`undetermined_rest` : `...` en BPScript est compilé en `_rest` pour BP3 (commande built-in,
 token `T0, 17` dans `Encode.c`). Utilisé dans les voix polymétriques — le moteur calcule
 la durée donnant l'expression la plus simple. **Attention** : trois points littéraux `...`
 en BP3 seraient interprétés comme trois periods (`.` = `T0, 7`), pas comme un repos
@@ -744,7 +747,7 @@ Sa !(vel:80) Re            → Sa _script(CT 0) Re     // entre deux symboles
 
 Ceci remplace le mécanisme de "portée voix" : au lieu de transformer silencieusement
 un suffixe en préfixe, l'utilisateur positionne explicitement le contrôle dans le flux
-avec `!`. La position BPscript = la position BP3.
+avec `!`. La position BPScript = la position BP3.
 
 ### 4.5 Out-time object (`!` standalone)
 
@@ -796,7 +799,7 @@ template_slave  = "&" , IDENT , [ "(" , arg_list , ")" ]
                | "&" , "{" , rhs_element+ , "}" ;          (* groupe : &{$X S &X} *)
 
 template_anchor = "$" ;                                    (* $ isolé (espace après) = ancre maître *)
-(* Graphie BPscript : "$ " (dollar + espace). Compilé en token BP3 "(=" sans fermeture.
+(* Graphie BPScript : "$ " (dollar + espace). Compilé en token BP3 "(=" sans fermeture.
    Valide en LHS (contexte symétrique) et en RHS. L'ancre esclave "(:" est réservée, non implémentée. *)
 ```
 
@@ -961,10 +964,10 @@ blank_line  = (* ligne vide ou whitespace seul *) ;
   Known limitation: `_` in terminal names is rejected by BP3's alphabet parser. This is a blocker for the planned `Sa_v`/`Sa_^` octave convention.
 
 **Quoted symbols** : BP3 supporte `'texte'` pour utiliser des caractères spéciaux
-ou des nombres comme terminaux (`'1'`, `'2'`). BPscript **n'a pas** de quoted symbols —
+ou des nombres comme terminaux (`'1'`, `'2'`). BPScript **n'a pas** de quoted symbols —
 les terminaux sont toujours des identifiants. Les grammaires BP3 qui utilisent des nombres
 comme terminaux doivent être renommées dans la traduction (ex: `'1'` → `d1`).
-Les nombres nus dans le flux BPscript sont des durées numériques, pas des terminaux.
+Les nombres nus dans le flux BPScript sont des durées numériques, pas des terminaux.
 
 ---
 
@@ -1051,9 +1054,9 @@ lambda   → chaîne vide (efface le non-terminal)
 
 ---
 
-## Traduction BPscript → BP3
+## Traduction BPScript → BP3
 
-| BPscript | BP3 | Notes |
+| BPScript | BP3 | Notes |
 |----------|-----|-------|
 | `->` | `-->` | direction |
 | `<-` | `<--` | direction |

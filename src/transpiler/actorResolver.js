@@ -19,12 +19,14 @@ import { loadLib } from './libs.js';
  * @param {Object} alphabetLib - alphabet entry from alphabets.json (has notes, alterations, octaves)
  * @returns {Set<string>} set of terminal names
  */
-function expandAlphabetTerminals(alphabetLib) {
+function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   const terminals = new Set();
   if (!alphabetLib || !alphabetLib.notes) return terminals;
 
-  // Resolve octave convention
-  const octaveConvention = alphabetLib.octaves;
+  // Resolve octave convention. Décision cles-acteur-six (Romain 2026-06-16) :
+  // `@actor X octaves.Y` SURCHARGE la convention de registre ; sinon défaut =
+  // convention héritée de l'alphabet (alphabetLib.octaves).
+  const octaveConvention = octavesOverride != null ? octavesOverride : alphabetLib.octaves;
   const octaveDef = octaveConvention ? loadLib('octaves')?.[octaveConvention] : null;
 
   const alts = alphabetLib.alterations && typeof alphabetLib.alterations === 'object'
@@ -95,7 +97,8 @@ function resolveActors(ast) {
         errors.push({ message: `Alphabet "${alphabetKey}" not found for actor "${name}"`, line: actor.line });
         continue;
       }
-      terminals = [...expandAlphabetTerminals(alphabetLib)];
+      // props.octaves surcharge la convention de registre de l'alphabet (décision cles-acteur-six).
+      terminals = [...expandAlphabetTerminals(alphabetLib, props.octaves)];
     }
 
     actorTable[name] = {

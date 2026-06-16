@@ -15,7 +15,7 @@ Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes 
 |---|---|---|
 | `alphabet` | vocabulaire de symboles (requis) | `lib/alphabets.json` |
 | `tuning` | tempérament / accordage (ex-`scale`) | `lib/tuning.json` |
-| `octaves` | convention de registre / notation (optionnelle) | `lib/octaves.json` |
+| `octaves` | convention de registre / notation — **défaut hérité de l'alphabet**, surchargeable par acteur | `lib/octaves.json` |
 | `sound` | son par défaut de l'acteur | `@sound` |
 | `transport` | appareil de rendu typé (requis) | librairie `@devices` |
 | `eval` | interpréteur du code encapsulé | — |
@@ -31,6 +31,11 @@ Déclaration (les références d'entité utilisent `.`) :
 
 Dans les règles, un terminal se qualifie par son acteur en **dot notation** : `sitar.Sa`
 (→ `{ name:"Sa", actor:"sitar" }`). La forme legacy `terminal:acteur` n'est plus blessée par la spec.
+
+`octaves` est une **étape de résolution distincte** (la notation du registre, `lib/octaves.json`),
+rattachée au vocabulaire de symboles : par défaut un acteur **hérite** de la convention de son
+alphabet ; `@actor X octaves.Y` la **surcharge** (ex. écrire du sargam avec des marqueurs d'octave
+occidentaux). Décision *cles-acteur-six* (Romain 2026-06-16).
 
 ## 2. Voix de notes vs voix de code
 

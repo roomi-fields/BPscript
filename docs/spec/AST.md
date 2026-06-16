@@ -1,4 +1,4 @@
-# BPscript — AST (Abstract Syntax Tree)
+# BPScript — AST (Abstract Syntax Tree)
 
 Version 0.8 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transpilées.
 v0.8 ajoute `soundPrototypes` + `soundAssignments`, renomme `templates` → `template`
@@ -163,9 +163,12 @@ LibraryDirective {
 ActorDirective {
   type: "ActorDirective"
   name: string                    // "sitar", "tabla", "lights"
-  properties: {
+  properties: {                   // SIX clés d'entité (décision cles-acteur-six, Romain 2026-06-16)
     alphabet: string              // référence vers alphabets.json ("sargam", "western")
     tuning: string | null         // tempérament/accordage ("sargam_22shruti", "equal_temperament")
+    octaves: string | null        // convention de registre (référence octaves.json) ; null = héritée
+                                   // de l'alphabet. Résolue EN AMONT (actorResolver) : ne traverse pas
+                                   // l'AST vers BPx → contrat BPx inchangé.
     sound: string | null          // son par défaut de l'acteur (référence dans soundPrototypes)
     transport: TransportRef       // destination de rendu — appareil typé (cf. @devices)
     eval: string | null           // interpréteur des backticks (null = même clé que transport)
@@ -1003,7 +1006,7 @@ InstantControl {
 
 `!(vel:80)` → `_script(CT n)` en BP3. `![retro]` → `_retro` en BP3. `![@seed:2]` → `_srand(2)`.
 Événement instantané (zéro durée) positionné explicitement dans le flux temporel.
-La position dans le source BPscript = la position dans la sortie BP3.
+La position dans le source BPScript = la position dans la sortie BP3.
 
 Exemples :
 - `{!(chan:1) C8 - - -}` → `{_script(CT 0) C8 - - -}`

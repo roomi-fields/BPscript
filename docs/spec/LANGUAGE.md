@@ -1,4 +1,4 @@
-# BPscript Language Specification
+# BPScript Language Specification
 
 ## Table des matieres
 
@@ -9,7 +9,7 @@
 - [Le meta-ordonnanceur](#le-meta-ordonnanceur)
 - [Inventaire : 3 mots, 24 symboles, 9 operateurs](#inventaire--3-mots-24-symboles-9-operateurs)
 - [Systeme de types -- double declaration](#systeme-de-types----double-declaration)
-- [Parametres -- opaques pour BPscript](#parametres----opaques-pour-bpscript)
+- [Parametres -- opaques pour BPScript](#parametres----opaques-pour-bpscript)
 - [`[]` moteur vs `()` runtime](#-moteur-vs--runtime----deux-destinataires-memes-portees)
 - [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles-zero-ambiguite)
 - [Les accolades `{}` -- polymetrie et groupement](#les-accolades------polymetrie-et-groupement)
@@ -38,7 +38,7 @@
 
 ## Principe fondamental
 
-BPscript est un **meta-ordonnanceur** : il derive des structures temporelles
+BPScript est un **meta-ordonnanceur** : il derive des structures temporelles
 et orchestre des comportements complexes ecrits dans des vrais langages
 (SuperCollider, TidalCycles, Python, etc.) avec la puissance des grammaires
 formelles pour decider **quand** ces comportements se declenchent.
@@ -96,7 +96,11 @@ Sa!dha!spotlight          // 3 runtimes au meme instant
 
 ### Acteur -- unite de binding
 
-Un acteur lie alphabet + tuning + sound + transport (v0.8 — references via `.`) :
+Un acteur lie **six cles d'entite** (decision *cles-acteur-six*, Romain 2026-06-16) : `alphabet`
+(requis), `tuning`, `octaves`, `sound`, `transport` (requis), `eval` — references via `.`.
+`octaves` = convention de registre/notation, **defaut herite de l'alphabet**, surchargeable par
+acteur (`@actor X octaves.Y`) ; etape de resolution distincte, rattachee a l'alphabet (pas au tuning).
+Exemple :
 ```
 @actor sitar1
   alphabet.sargam
@@ -184,14 +188,14 @@ Les parametres se combinent par priorite : **spec** (defauts librairie) < **CT**
 > Le territoire `@sound` est purement declaratif ; les affectations vivent
 > dans les territoires d'origine (`@alphabet.X`, `@actor X`, ou inline).
 > La directive `@actor` utilise desormais `.` pour les references d'entites
-> (`alphabet.X`, `tuning.X`, `transport.X`, `sound.X`) -- cf.
+> (les 6 cles : `alphabet.X`, `tuning.X`, `octaves.X`, `sound.X`, `transport.X`, `eval.X`) -- cf.
 > `docs/design/v0.8-decisions-final.md`.
 
 ---
 
 ## Philosophie de separation
 
-BPscript ne fait qu'une chose : **ordonner des symboles types dans le temps.**
+BPScript ne fait qu'une chose : **ordonner des symboles types dans le temps.**
 
 - Logique algorithmique -> backticks (dans le langage du runtime cible)
 - Traitement de signal -> runtime (SuperCollider, Csound, Web Audio)
@@ -200,7 +204,7 @@ BPscript ne fait qu'une chose : **ordonner des symboles types dans le temps.**
 - Temperament et accordage -> fichier de tuning (JSON)
 
 Comme HTML ne contient pas de boucles et CSS ne contient pas de fonctions.
-Chaque couche fait ce qu'elle sait faire. BPscript sait faire le temps.
+Chaque couche fait ce qu'elle sait faire. BPScript sait faire le temps.
 
 ---
 
@@ -321,7 +325,7 @@ Soit neuf operateurs en tout. Le decrement `-` et l'assignation `=` reutilisent 
 Les nombres (`0.7`, `120`, `5ms`) sont des symboles opaques comme les autres --
 le langage ne connait pas leur semantique, c'est le recepteur qui les interprete.
 
-**Pas de `for`, pas de `while`, pas de branchement.** BPscript decrit des structures
+**Pas de `for`, pas de `while`, pas de branchement.** BPScript decrit des structures
 dans le temps. `[guard]` est une garde declarative (la regle existe ou non), pas du
 branchement imperatif. Toute logique algorithmique, traitement de signal ou chainage
 passe par le code externe (backticks) ou par le bridge.
@@ -386,16 +390,16 @@ Le parallele en informatique : **CUDA** (`__device__ float x` = type + cible d'e
 
 ---
 
-## Parametres -- opaques pour BPscript
+## Parametres -- opaques pour BPScript
 
-BPscript ne comprend pas les parametres. Il les **transporte** vers le runtime,
+BPScript ne comprend pas les parametres. Il les **transporte** vers le runtime,
 qui sait quoi en faire.
 
 ```
 // SC definit les parametres dans un SynthDef
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
 
-// BPscript declare le contrat temporel
+// BPScript declare le contrat temporel
 gate Sa:sc
 
 // Les parametres sont transportes tels quels vers SC
@@ -406,7 +410,7 @@ Sa(vel:`rrand(40,127)`)          // backtick -> SC evalue rrand(40,127)
 C'est un **gradient de complexite** -- un seul mecanisme, une seule plomberie :
 
 ```
-// Niveau 1 : litteral -- BPscript transporte
+// Niveau 1 : litteral -- BPScript transporte
 Sa(vel:120)
 
 // Niveau 2 : backtick -- le runtime du symbole evalue
@@ -416,7 +420,7 @@ Sa(vel:`rrand(40,127)`)
 `sc: SynthDef(\grain, { |freq| ... }).add`
 ```
 
-BPscript ne sait pas ce que `vel` veut dire. `120` est un litteral transporte,
+BPScript ne sait pas ce que `vel` veut dire. `120` est un litteral transporte,
 `` `rrand(40,127)` `` est du code evalue par le runtime de Sa. Meme chemin,
 le gradient est cosmetique.
 
@@ -482,7 +486,7 @@ destines au runtime (vel, filter, wave...), utiliser `()` a la place.
 ### Compilation de `[]` vers BP3
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 A[/2] B C                                -> /2 A B C
 [mode:random] S -> A B C                 -> RND  gram#N[M] S --> A B C
 {C3, E3, G3, C4}[speed:2]               -> {2, C3, E3, G3, C4}
@@ -491,7 +495,7 @@ A[/2] B C                                -> /2 A B C
 ### `()` -- parametres runtime (toujours suffixe)
 
 Les parametres `()` sont des donnees transportees vers le **runtime cible** (Web Audio,
-SuperCollider, MIDI externe, OSC, DMX...). BPscript ne les interprete pas -- il les
+SuperCollider, MIDI externe, OSC, DMX...). BPScript ne les interprete pas -- il les
 transmet. C'est le dispatcher JS qui les route.
 
 ```
@@ -512,7 +516,7 @@ Les `()` runtime sont compiles en `_script(CT n)` -- des controles opaques que B
 transmet sans interpreter. Le transpileur maintient une table de mapping :
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 Sa(vel:120)                              -> _script(CT 0) Sa
 {A B}(filter:lp)                         -> {_script(CT 2_start) A B _script(CT 2_end)}
 
@@ -524,7 +528,7 @@ Sa(vel:120)                              -> _script(CT 0) Sa
 ### Valeur brute (modele CSS)
 
 Pour `[]` et `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou delimiteur
-est la valeur brute. Le destinataire (moteur ou runtime) l'interprete -- BPscript
+est la valeur brute. Le destinataire (moteur ou runtime) l'interprete -- BPScript
 ne parse pas.
 
 ### Exception -- controles autonomes (resolution pure)
@@ -603,18 +607,18 @@ gate note(pitch, vel:80) { attack:5ms, decay:200ms }
 ```
 
 Les roles 1 et 2 suivent le comportement de BP3.
-Le role 3 est propre a BPscript (declarations typees).
+Le role 3 est propre a BPScript (declarations typees).
 
 ### Ratio de tempo sur un bloc polymetrique
 
 En BP3, un ratio optionnel peut preceder les voix : `{2, C3, E3, G3, C4}`.
-En BPscript, ce ratio s'exprime via `[speed:]` sur le groupe -- plus lisible :
+En BPScript, ce ratio s'exprime via `[speed:]` sur le groupe -- plus lisible :
 
 ```
 // BP3 : ratio en premiere position (implicite)
 {2, C3, E3, G3, C4}
 
-// BPscript : qualificateur explicite (meme resultat)
+// BPScript : qualificateur explicite (meme resultat)
 {C3, E3, G3, C4}[speed:2]
 
 // Ratio fractionnaire
@@ -622,7 +626,7 @@ En BPscript, ce ratio s'exprime via `[speed:]` sur le groupe -- plus lisible :
 ```
 
 Le compilateur traduit `{...}[speed:N]` -> `{N, ...}` pour BP3.
-Pas de ratio implicite en BPscript -- tout passe par `[speed:]`.
+Pas de ratio implicite en BPScript -- tout passe par `[speed:]`.
 
 ---
 
@@ -740,13 +744,13 @@ B -> D2 A                    // B = D2 E2 .
 C -> B2 B                    // C = B2 D2 E2 .
 ```
 
-En BPscript, `.` et `,` sont transmis tels quels a BP3 -- pas de traduction.
+En BPScript, `.` et `,` sont transmis tels quels a BP3 -- pas de traduction.
 
 ---
 
 ## Liaisons `~` -- tied sound-objects
 
-`~` remplace le `&` de BP3 (reserve aux templates en BPscript).
+`~` remplace le `&` de BP3 (reserve aux templates en BPScript).
 
 Un son est tenu a travers d'autres evenements. Le NoteOn arrive au debut,
 le NoteOff a la fin, malgre les autres sons entre les deux.
@@ -866,7 +870,7 @@ externe ne charge aucun autre regime sur la section -- il est implicite.
 
 ## Sons et cascade d'heritage (v0.8)
 
-Un son BPscript decrit a la fois son **timbre** (sample, synth) et son
+Un son BPScript decrit a la fois son **timbre** (sample, synth) et son
 **comportement temporel** (duree, alpha, cover/cont/trunc, pivot, periode).
 Pas de directive `@synth` separee -- la separation se fait dans les champs
 du prototype.
@@ -991,14 +995,14 @@ niveaux inferieurs -- c'est exactement le modele CSS.
 Le triplet defaults+named+by_terminal du format lib externe se retrouve dans
 la structure declarative :
 
-| Lib externe | Equivalent BPscript |
+| Lib externe | Equivalent BPScript |
 |---|---|
 | `defaults: { ... }` | une entree anonyme dans `@sound` |
 | `named: { N: {...} }` | une entree nommee `N { ... }` dans `@sound` |
 | `by_terminal: { Y: ref }` | une affectation `Y:sound.ref` dans `@alphabet.X` |
 
 C'est la meme cascade, exprimee une fois en JSON externe, une fois en
-syntaxe BPscript.
+syntaxe BPScript.
 
 ---
 
@@ -1093,7 +1097,7 @@ jouee -- sa position ne porte aucun sens temporel. En BP3, elle devient un marqu
 `/.../` place en fin de regle :
 
 ```
-// BPscript                  -> BP3
+// BPScript                  -> BP3
 S -> A B [count-1]           -> S --> A B /count-1/
 S -> A B [phase=1] [count=2] -> S --> A B /phase=1/ /count=2/
 ```
@@ -1228,7 +1232,7 @@ et demande une resolution explicite :
 BP3 possede 4 operateurs temporels fondamentaux qui controlent deux variables
 internes `speed` et `scale`. Le tempo effectif est `tempo = speed / scale`.
 
-| BPscript       | Compile en BP3                        | Semantique                               |
+| BPScript       | Compile en BP3                        | Semantique                               |
 | -------------- | ------------------------------------- | ---------------------------------------- |
 | `A[/2]`        | `/2 A`                                | absolu + persistant (fixtempo), speed=2  |
 | `A[*3]`        | `_tempo(1/3) A _tempo(1/1)`           | relatif, bracket enter/exit, scale×3     |
@@ -1241,7 +1245,7 @@ Portee flexible : sur un symbole, un groupe, ou un polymetric.
 
 ## Metrique -- `@meter`
 
-BPscript supporte la signature rythmique via la directive `@meter`.
+BPScript supporte la signature rythmique via la directive `@meter`.
 
 ```
 @meter:4/4                       // mesure a 4 temps
@@ -1258,7 +1262,7 @@ BPscript supporte la signature rythmique via la directive `@meter`.
 
 ## Modes, scan et directions -- trois niveaux distincts
 
-| Niveau             | Question                             | BPscript         | Portee              |
+| Niveau             | Question                             | BPScript         | Portee              |
 | ------------------ | ------------------------------------ | ---------------- | ------------------- |
 | **Mode du bloc**   | quelle strategie de selection ?      | `[mode:random]`  | bloc/sous-grammaire |
 | **Scan par regle** | dans quel sens chercher le symbole ? | `[scan:left]`    | regle individuelle  |
@@ -1289,7 +1293,7 @@ BP3 possede deux facons de controler le flux temporel (cf. Boulez,
 | **Usage**     | alap indien, gagaku, musique non pulsee | musique occidentale, danse, pop       |
 | **BP3**       | `_smooth` + time patterns              | `_striated` + `_tempo(x/y)`          |
 
-BPscript unifie les deux dans la meme syntaxe via le systeme de types :
+BPScript unifie les deux dans la meme syntaxe via le systeme de types :
 
 ```
 // Imperatif (comme _tempo) -- palier discret
@@ -1301,7 +1305,7 @@ BPscript unifie les deux dans la meme syntaxe via le systeme de types :
 
 Le type `cv` est la **modernisation du smooth time de Boulez/Bel**.
 
-| BPscript              | BP3                           | Concept                 |
+| BPScript              | BP3                           | Concept                 |
 | --------------------- | ----------------------------- | ----------------------- |
 | **gate**              | sound-object (avec duree)     | evenement dans le temps |
 | **trigger** (via `!`) | out-time object (duree nulle) | impulsion instantanee   |
@@ -1311,8 +1315,8 @@ Le type `cv` est la **modernisation du smooth time de Boulez/Bel**.
 
 ## Compilation vers BP3
 
-BPscript compile vers le format de grammaire BP3 (`-gr.`). Cette section decrit
-comment les constructions BPscript se traduisent en instructions BP3.
+BPScript compile vers le format de grammaire BP3 (`-gr.`). Cette section decrit
+comment les constructions BPScript se traduisent en instructions BP3.
 
 > Voir [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) pour l'interface WASM complete.
 
@@ -1331,7 +1335,7 @@ gram#N[M] LHS --> RHS
 
 Chaque bloc entre `-----` est une sous-grammaire avec son propre mode de derivation.
 
-| Mode BPscript      | BP3     | Comportement                              |
+| Mode BPScript      | BP3     | Comportement                              |
 | ------------------- | ------- | ----------------------------------------- |
 | `[mode:ord]`        | `ORD`   | ordonne -- les regles s'appliquent en ordre |
 | `[mode:random]`     | `RND`   | aleatoire parmi les regles applicables    |
@@ -1345,7 +1349,7 @@ entre les blocs de modes differents.
 
 ### Directions
 
-| BPscript | BP3     | Sens                     |
+| BPScript | BP3     | Sens                     |
 | -------- | ------- | ------------------------ |
 | `->`     | `-->`   | production (gauche droite) |
 | `<-`     | `<--`   | analyse (droite gauche)  |
@@ -1357,7 +1361,7 @@ BP3 recoit des **noms opaques** prefixes `bol`. Il ne sait rien des frequences,
 des acteurs, des transports.
 
 ```
-Source BPscript :
+Source BPScript :
   Sa Re Ga Pa
 
 Alphabet plat :
@@ -1378,7 +1382,7 @@ dans BP3 -- pas de NoteConvention, pas de MIDI.
 Transmise telle quelle a BP3 :
 
 ```
-// BPscript
+// BPScript
 S -> { melodie, rythme }
 
 // BP3
@@ -1390,7 +1394,7 @@ gram#1[1] S --> {melodie, rythme}
 Le `[speed:N]` est traduit en ratio de tempo BP3 :
 
 ```
-// BPscript
+// BPScript
 {C3, E3, G3, C4}[speed:2]
 
 // BP3
@@ -1402,7 +1406,7 @@ Le `[speed:N]` est traduit en ratio de tempo BP3 :
 Deux semantiques distinctes selon l'operateur :
 
 ```
-// BPscript                  -> BP3             Semantique
+// BPScript                  -> BP3             Semantique
 A[/2] B C                    -> /2 bolA bolB bolC    absolu, persistant (fixtempo)
 {A B C}[/3]                  -> /3 {bolA bolB bolC}  idem, portee groupe
 A[*2] B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC  relatif, bracket
@@ -1413,12 +1417,12 @@ A[*2] B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC  relatif,
 tempo ou fin de champ (reinitialise au separateur `,` des sous-champs polymetriques).
 `[*N]` = relatif a la vitesse heritee. Exit `_tempo(1/1)` restaure l'herite au bord du bracket.
 `![/N]` dans le flux (InstantControl) = `_tempo(N/1)` relatif, sans fixtempo.
-`[\N]` n'est pas tokenise par BPscript (anomalies natif+WASM, voir TEMPO_OPS_WASM.md).
+`[\N]` n'est pas tokenise par BPScript (anomalies natif+WASM, voir TEMPO_OPS_WASM.md).
 
 ### Guards et flags
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 [phase==1] S -> Sa Re Ga Pa             -> /phase=1/ gram#N[M] S --> bolSa bolRe bolGa bolPa
 [Ideas-1] I -> R1 A R2                  -> /Ideas-1/ gram#N[M] I --> R1 A R2
 S -> A B [count+1] C                    -> gram#N[M] S --> bolA bolB /count+1/ bolC
@@ -1428,7 +1432,7 @@ S -> A B [count+1] C                    -> gram#N[M] S --> bolA bolB /count+1/ b
 ### Poids
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 S -> A B C [weight:50]                   -> <50> gram#N[M] S --> bolA bolB bolC
 ```
 
@@ -1437,7 +1441,7 @@ S -> A B C [weight:50]                   -> <50> gram#N[M] S --> bolA bolB bolC
 Les parametres runtime sont compiles en tokens de controle opaques :
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 Sa(vel:120)                              -> _script(CT 0) bolSa
 Bass -> C2 C2 - C2 (vel:100)            -> gram#N[M] Bass --> _script(CT 1) bolC2 bolC2 - bolC2
 {A B}(filter:lp)                         -> {_script(CT 2_start) bolA bolB _script(CT 2_end)}
@@ -1466,7 +1470,7 @@ Le dispatcher applique ce cascading a chaque timed token.
 
 Transmis directement :
 ```
-// BPscript    -> BP3
+// BPScript    -> BP3
 -              -> -
 _              -> _
 ...            -> ... (repos indetermine)
@@ -1476,15 +1480,15 @@ _              -> _
 
 Transmise directement :
 ```
-// BPscript                    -> BP3
+// BPScript                    -> BP3
 S -> A B . C D . E F           -> gram#N[M] S --> bolA bolB . bolC bolD . bolE bolF
 ```
 
 ### Ties (liaisons)
 
-`~` en BPscript -> `&` en BP3 :
+`~` en BPScript -> `&` en BP3 :
 ```
-// BPscript                    -> BP3
+// BPScript                    -> BP3
 C4~ D4 E4 ~C4                 -> bolC4& bolD4 bolE4 &bolC4
 ```
 
@@ -1492,7 +1496,7 @@ C4~ D4 E4 ~C4                 -> bolC4& bolD4 bolE4 &bolC4
 
 `?n` -> metavariables BP3 :
 ```
-// BPscript                    -> BP3
+// BPScript                    -> BP3
 ?1 A ?1 -> ?1 B ?1             -> ?1 A ?1 --> ?1 B ?1
 ```
 
@@ -1502,7 +1506,7 @@ C4~ D4 E4 ~C4                 -> bolC4& bolD4 bolE4 &bolC4
 sont emis entre `(=X)` et `(:X)` dans la grammaire BP3.
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 S <> $mel &mel                           -> S <-> (=mel) (:mel)
 S -> $X tabla_stroke &X                  -> S --> (=X) tabla_stroke (:X)
 S -> $X * &X                             -> S --> (=X) * (:X)
@@ -1523,7 +1527,7 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 ### Contextes
 
 ```
-// BPscript                    -> BP3
+// BPScript                    -> BP3
 (A B) C -> D E                 -> (A B) C --> D E
 #(X Y) Z -> W                 -> #(X Y) Z --> W
 ```
@@ -1531,7 +1535,7 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 ### Homomorphismes
 
 ```
-// BPscript                    -> BP3
+// BPScript                    -> BP3
 |x| S x -> x S                -> |x| S x --> x S
 ```
 
@@ -1539,7 +1543,7 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 
 `!symbole` standalone -> `<<symbole>>` :
 ```
-// BPscript                    -> BP3
+// BPScript                    -> BP3
 Y -> !f                        -> Y --> <<f>>
 ```
 
@@ -1557,7 +1561,7 @@ comme terminaux bruts. Le parser les traite comme des `RawBrace` quand ils ne
 forment pas un polymetric balance dans la meme regle.
 
 ```
-// BPscript: koto3 -- automate cellulaire avec meta-reecriture
+// BPScript: koto3 -- automate cellulaire avec meta-reecriture
 #({) a b a -> {a c b, f f f - f}[speed:5]  // contexte negatif sur {
 } -> }                                      // { et } comme terminaux
 , -> ,                                      // , aussi
@@ -1576,7 +1580,7 @@ La validation structurelle des `{}` est **repoussee au moteur BP3**.
 ### Time signatures inline
 
 ```
-// BPscript                              -> BP3
+// BPScript                              -> BP3
 S <> S96 [meter:4+4/6]                  -> S <-> S96 4+4/6
 S -> P1 P2 P3 [meter:4+4+4+4+4+4/4]    -> gram#N[M] S --> P1 P2 P3 4+4+4+4+4+4/4
 ```
@@ -1600,7 +1604,7 @@ discretes. Trois approches possibles :
 
 #### Quoted symbols
 
-BP3 supporte les quoted symbols (`'1'`, `'texte'`). BPscript **ne porte pas**
+BP3 supporte les quoted symbols (`'1'`, `'texte'`). BPScript **ne porte pas**
 cette syntaxe. Les grammaires BP3 qui les utilisent sont renommees dans la
 traduction (ex: `'1'` -> `d1`).
 

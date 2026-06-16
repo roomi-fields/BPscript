@@ -6,7 +6,7 @@
 
 ## Vue d'ensemble
 
-La résolution d'un symbole BPscript en fréquence traverse **6 couches** indépendantes :
+La résolution d'un symbole BPScript en fréquence traverse **6 couches** indépendantes :
 
 ```
 actor       →  contexte de binding (qui joue quoi, où)
@@ -25,7 +25,7 @@ Chaque couche a une seule responsabilité. Zéro redondance entre les fichiers.
 
 ### Le problème
 
-Une scène BPscript peut contenir plusieurs instruments qui partagent le même
+Une scène BPScript peut contenir plusieurs instruments qui partagent le même
 alphabet. Deux sitaristes jouent les mêmes notes (sargam) mais :
 - vont vers des sorties différentes (MIDI ch1 vs ch3, ou WebAudio vs OSC)
 - peuvent utiliser des tunings différents (22 shruti vs 12-TET)
@@ -64,7 +64,9 @@ Clés disponibles :
 | `eval` | non | interpréteur pour les backticks | `eval.sclang` |
 
 Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
-Si `octaves` est omis → convention par défaut du tuning ou `western` si pas de tuning.
+Si `octaves` est omis → convention **héritée de l'alphabet** de l'acteur (`lib/alphabets.json`).
+`@actor X octaves.Y` surcharge cette notation de registre pour l'acteur. `octaves` est une étape de
+résolution distincte, rattachée au vocabulaire de symboles (alphabet), pas au `tuning`.
 Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne sont pas évalués.
 
 ### Utilisation dans les règles
@@ -80,7 +82,7 @@ lights.spot          // spot résolu via lights (dmx)
 
 Convention : le conteneur précède le contenu (`actor.terminal`), cohérent avec
 la notation standard dans tous les langages (`module.symbol`, `namespace.class`)
-et avec BPscript lui-même (`@alphabet.western`, `@actor sitar alphabet.sargam`).
+et avec BPScript lui-même (`@alphabet.western`, `@actor sitar alphabet.sargam`).
 
 ### Import en bloc
 
@@ -227,7 +229,7 @@ Après le parsing, une phase dédiée :
 BP3 ne connaît pas les acteurs. L'encoder **aplatit** :
 
 ```
-Source BPscript :
+Source BPScript :
   sitar.Sa sitar.Re tabla.tin
 
 Grammaire BP3 :
@@ -493,14 +495,14 @@ fonctionnels, seule la couleur change).
 
 Pour maintenir la consonance pendant le morph, le timbre doit suivre le tuning
 (spectral matching — Sethares). C'est le **runtime** qui gère ça (ajustement
-des partiels dans SuperCollider ou WebAudio). BPscript envoie la valeur du
+des partiels dans SuperCollider ou WebAudio). BPScript envoie la valeur du
 generator, le runtime ajuste à la fois les pitches ET le spectre.
 
 **Rendu microtonal (pitchbend / MPE) :**
 
 Le langage produit des fréquences en Hz. Comment ces fréquences sont transmises à
 l'instrument (pitchbend MIDI standard, MPE, OSC, synthèse directe) est un ressort
-de l'**appareil** (`transport` de l'acteur), pas du langage. BPscript ne connaît
+de l'**appareil** (`transport` de l'acteur), pas du langage. BPScript ne connaît
 pas le protocole wire — il délègue cette décision au runtime cible.
 L'implémentation MIDI (pitchbend 14 bits, MPE channel allocation) est suivie dans
 le backlog B2 / runtime-midi.
@@ -693,7 +695,7 @@ Le resolver est **instancié par acteur** (voir Layer 0 ci-dessus).
 Chaque acteur (`@actor`) porte son propre contexte de résolution
 (alphabet + octaves + tuning + tempérament).
 
-Lit les 4 fichiers et résout un token BPscript en fréquence.
+Lit les 4 fichiers et résout un token BPScript en fréquence.
 
 ### Pipeline
 
@@ -786,7 +788,7 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 ┌─────────────────────────────────────────────────────────────┐
 │  COMPILE TIME (transpiler)                                  │
 │                                                             │
-│  Source BPscript                                            │
+│  Source BPScript                                            │
 │       ↓                                                     │
 │  Tokenizer  ← octaves.json (parse registres dans tokens)   │
 │       ↓        alphabet.json (reconnaître notes valides)    │
@@ -831,7 +833,7 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 @reference:442           → override baseHz = 442
 ```
 
-Les directives `@` dans le source BPscript configurent les couches.
+Les directives `@` dans le source BPScript configurent les couches.
 Le tuning référence son tempérament → le chargement est transitif.
 `@reference` permet de changer la fréquence de base sans changer le tuning.
 
@@ -946,7 +948,7 @@ Transposition limitée aux "bonnes tonalités" du tempérament. En meantone 1/4 
 #### Bohlen-Pierce
 Transposition exacte car c'est un tempérament égal (13 notes par tritave 3:1). Mais transposer entre BP et un système à octave est impossible — les cadres d'intervalles sont incompatibles.
 
-### Recommandation pour BPscript
+### Recommandation pour BPScript
 
 #### Court terme (non prioritaire)
 Le `(transpose:N)` actuel n'est pas implémenté côté audio. Laisser en backlog.
