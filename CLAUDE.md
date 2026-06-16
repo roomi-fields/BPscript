@@ -1,5 +1,12 @@
 ## BPScript — Meta-sequencer for Temporal Structure Composition
 
+> ⚠️ **CONTEXTE BPx UNIQUEMENT (règle dure, Romain 2026-06-16).** L'AST produit par le parser est
+> **agnostique du moteur** et destiné à **BPx** — il ne doit contenir AUCUNE notion BP3 (`_xxx(N)`,
+> `flavor:'bp3'`, catégorie « bp3 »…). La sortie **BP3** (`compileBPS().grammar`, ancienne fonction
+> « BPScript → BP3 ») est **héritée : NE JAMAIS Y TOUCHER** sauf demande **claire et explicite**.
+> Toute taxonomie d'AST se conçoit agnostique (ex. `target: transport|engine`, `timing: bang|durée`),
+> jamais « bp3 vs bpx ». Cf. mémoire `feedback_bpx_only_jamais_bp3`.
+
 3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
 Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
 

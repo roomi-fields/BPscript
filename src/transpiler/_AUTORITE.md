@@ -18,8 +18,9 @@ PIÈGES (vérifiés sur pièces) :
   - Défaut d'octaves = ALPHABET (décision cles-acteur-six). PITCH.md:67 ALIGNÉ le 2026-06-16
     (l'ancienne mention « tuning/western » était périmée — déjà corrigée).
   - 6 clés d'entité : alphabet, tuning, octaves, sound, transport, eval.
-  - Contrôles `_xxx(N)` = transport-BP3 (forme BP3 explicite) ; NE PAS découper en `_` + sonnant.
-    `xxx(N)` = transport-BPx (runtime). `Control.category` porte la distinction.
+  - CONTEXTE BPx UNIQUEMENT : l'AST est AGNOSTIQUE du moteur. Aucune notion BP3 dans l'AST
+    (`_xxx(N)`, `flavor:'bp3'`…). La sortie grammaire BP3 = fonction héritée, ne pas y toucher
+    sauf demande explicite. Cf. mémoire feedback_bpx_only_jamais_bp3.
 
 EN AVAL (casse si l'AST change) : contrat AST → BPx, actorResolver, frontal BP3.
   Toute modif de forme d'AST → amender hub/contrats/bpscript-bpx.md.

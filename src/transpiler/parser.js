@@ -1993,20 +1993,6 @@ function parse(tokens, opts = {}) {
       return { type: 'Rest' };
     }
 
-    // Contrôle de TRANSPORT BP3 : `_xxx(...)` collé (underscore + ident + parenthèse).
-    // Décision contrôles (Romain 2026-06-16) : `_xxx(N)` = contrôle BP3 EXPLICITE
-    // (transporté par BPx, forme BP3 uniquement) — NE PAS le découper en `_`
-    // (prolongation) + sonnant. Le `_` n'est ici qu'un MARQUEUR de forme BP3, pas
-    // une prolongation. La forme `xxx(N)` (sans `_`) reste un contrôle transport-BPx.
-    if (at(T.PROLONG) && peek(1).type === T.IDENT && !peek(1).spaceBefore
-        && peek(2).type === T.LPAREN && !peek(2).spaceBefore) {
-      advance();                       // consume `_`
-      const name = advance().value;    // consume IDENT
-      const ctrl = parseControl(name, tok);
-      ctrl.category = 'transport-bp3'; // forme BP3 explicite
-      return ctrl;
-    }
-
     // Prolongation _
     if (at(T.PROLONG)) {
       advance();
@@ -2166,9 +2152,9 @@ function parse(tokens, opts = {}) {
         return parseControl(name, tok);
       }
 
-      // Control without args: striated, smooth, destru, stop → contrôle MOTEUR (mode/flag BP3)
+      // Control without args: striated, smooth, destru, stop
       if (!at(T.LPAREN) && isControlName(name) && isNoArgControl(name)) {
-        return { type: 'Control', name, args: [], category: 'engine' };
+        return { type: 'Control', name, args: [] };
       }
 
       // Runtime qualifier suffix: D4(vel:70) — no space = attached to symbol
@@ -2316,9 +2302,7 @@ function parse(tokens, opts = {}) {
       if (at(T.COMMA)) advance();
     }
     expect(T.RPAREN);
-    // Défaut : forme `xxx(N)` = transport-BPx (le `_xxx(N)` surcharge en transport-bp3
-    // chez l'appelant). Décision contrôles, Romain 2026-06-16.
-    return { type: 'Control', name, args, category: 'transport-bpx' };
+    return { type: 'Control', name, args };
   }
 
   function parseSimultaneousGroup(primaryName, tok, primaryArgs = null) {

@@ -1205,10 +1205,7 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       return 'lambda';
 
     case 'Control': {
-      // Forme BP3 explicite `_xxx(N)` (category transport-bp3) OU contrôle bp3-natif
-      // connu → format BP3 natif. Décision contrôles (Romain 2026-06-16) : le `_` en
-      // source désigne le transport BP3, distinct du transport-BPx `xxx(N)` (runtime).
-      if (el.category === 'transport-bp3' || _bp3Native.has(el.name)) {
+      if (_bp3Native.has(el.name)) {
         // Engine control → BP3 native format
         const bp3Name = controlMap[el.name] || `_${el.name}`;
         if (el.args.length === 0) return bp3Name;

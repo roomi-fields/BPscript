@@ -878,31 +878,14 @@ Arg { type: "Arg", key: string | null, value: Literal | BacktickInline }
 ```
 Control {
   type: "Control"
-  name: string        // nom du contrôle : transpose, pitchbend, vel, tempo, goto, destru...
+  name: string        // nom du contrôle : vel, tempo, goto, striated, smooth, destru, stop...
   args: string[]      // fragments d'arguments bruts : ["120"], ["2","1"] ; [] pour un contrôle sans argument
-  category: string    // catégorie de routage (décision contrôles, Romain 2026-06-16) :
-                      //   "transport-bp3"  — forme `_xxx(N)` : contrôle BP3 EXPLICITE (BP3 only)
-                      //   "transport-bpx"  — forme `xxx(N)`  : contrôle transporté par BPx (runtime)
-                      //   "engine"         — contrôle moteur sans argument (destru, striated, smooth, stop)
 }
 ```
 
-Forme parsée d'un contrôle écrit dans le flux. **Taxonomie de routage** (décision contrôles,
-Romain 2026-06-16) — trois formes intentionnelles, distinctes, que l'AST sépare pour que BPx route :
-
-| Source | catégorie | sens | exemple AST |
-|---|---|---|---|
-| `_xxx(N)` | `transport-bp3` | contrôle BP3 explicite (forme BP3 uniquement) | `{name:"transpose", args:["2"], category:"transport-bp3"}` |
-| `xxx(N)` | `transport-bpx` | transporté par BPx (runtime, sans interprétation) | `{name:"vel", args:["120"], category:"transport-bpx"}` |
-| `xxx` (sans arg) | `engine` | mode/flag moteur BP3 | `{name:"destru", args:[], category:"engine"}` |
-
-> **Bug corrigé (2026-06-16)** : `_xxx(N)` n'est plus découpé en `Prolongation` (`_`) + sonnant.
-> Le `_` initial est un MARQUEUR de forme BP3, pas une prolongation → un seul nœud `Control`.
-
-Catégories voisines, **distinctes de `Control`**, déjà portées par d'autres types de nœuds (la
-taxonomie complète pour BPx) : sonnant = `Symbol` ; instant/bang = `InstantControl` (`!(...)`) ;
-prolongation = `Prolongation` (`_` nu) ; silence = `Rest` (`-`) ; marqueur = `Symbol` canonique
-(`*`/`+`/`;`). Le `RuntimeQualifier` (`(...)` suffixe d'un symbole, ex. `D4(vel:70)`) reste distinct.
+Forme parsée d'un contrôle BP3 écrit directement dans le flux : `vel(120)` → `{ name:"vel", args:["120"] }`,
+`goto(2,1)` → `{ name:"goto", args:["2","1"] }`, `striated` → `{ name:"striated", args:[] }`.
+Distinct de l'`InstantControl` (`!(...)`) et du `RuntimeQualifier` (`(...)` suffixe d'un symbole).
 
 ### `SymbolWithTriggerIn`
 
