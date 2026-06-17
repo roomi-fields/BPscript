@@ -222,6 +222,26 @@ section('nature — couverture des types de nœuds RHS');
 }
 
 // ============================================================
+// Déclaration d'acteur : forme canonique ActorReference[] (conformité §2.1)
+// ============================================================
+section('ActorDirective.references[] (forme canonique, lue par le dispatcher)');
+{
+  const ast = parseSource(`@actor tabla\n  alphabet.tabla\n  transport.midi(ch:10)\nS -> tabla.Sa`);
+  const actor = ast.actors[0];
+  const refs = actor.references;
+  assert('references[] présent', Array.isArray(refs) && refs.length >= 2, `got ${JSON.stringify(refs)}`);
+  const tr = refs?.find((r) => r.category === 'transport');
+  assert('ActorReference transport présent', !!tr, `refs=${JSON.stringify(refs)}`);
+  assert('transport type=ActorReference', tr?.type === 'ActorReference', `got ${JSON.stringify(tr)}`);
+  assert('transport name=midi', tr?.name === 'midi', `got ${JSON.stringify(tr)}`);
+  assert('transport params.ch=10 (défaut acteur)', tr?.params?.ch === 10, `got ${JSON.stringify(tr)}`);
+  const al = refs?.find((r) => r.category === 'alphabet');
+  assert('ActorReference alphabet name=tabla', al?.name === 'tabla', `got ${JSON.stringify(al)}`);
+  // properties conservées pour le pipeline interne (non-régression)
+  assert('properties conservées (interne)', !!actor.properties, 'properties absentes');
+}
+
+// ============================================================
 // flux — marquage correct (spec §2)
 // ============================================================
 

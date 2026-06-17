@@ -173,6 +173,11 @@ ActorDirective {
     transport: TransportRef       // destination de rendu — appareil typé (cf. @devices)
     eval: string | null           // interpréteur des backticks (null = même clé que transport)
   }
+  references: ActorReference[]   // FORME CANONIQUE (AST_SPEC §2.1) lue par le dispatcher/BPx :
+                                 // une entrée par binding, { type:"ActorReference", category, name, params? }
+                                 // (category ∈ alphabet|tuning|octaves|sound|transport|eval).
+                                 // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
+                                 // `references` = forme consommée en aval (dérivée, lossless).
   soundAssignments: SoundAssignmentAST[] | null  // *:sound.X, Sa:sound.Y, ... dans le bloc acteur
   line: number
 }

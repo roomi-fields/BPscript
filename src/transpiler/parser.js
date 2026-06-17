@@ -886,10 +886,29 @@ function parse(tokens, opts = {}) {
         // Sortie : token inconnu (probable début de règle)
         break;
       }
+      // Forme CANONIQUE v0.8 (conformité AST_SPEC §2.1, décision architecte 2026-06-17) :
+      // `references: ActorReference[]` = ce que le dispatcher lit (UNE seule forme, comme .gr).
+      // `properties` reste pour le pipeline interne BPScript (actorResolver/encodeur) ; BPx/.gr
+      // consomment `references`. Mapping lossless (category/name/params).
+      const references = [];
+      const addRef = (category, name, params) => {
+        if (name == null) return;
+        const r = { type: 'ActorReference', category, name, line: tok.line };
+        if (params && Object.keys(params).length > 0) r.params = params;
+        references.push(r);
+      };
+      addRef('alphabet', properties.alphabet);
+      addRef('tuning', properties.tuning);
+      addRef('octaves', properties.octaves);
+      addRef('sound', properties.sound);
+      if (properties.transport) addRef('transport', properties.transport.key, properties.transport.params);
+      addRef('eval', properties.eval);
+
       return {
         type: 'ActorDirective',
         name: actorName,
         properties,
+        references,
         soundAssignments: soundAssignments.length > 0 ? soundAssignments : null,
         line: tok.line,
       };
