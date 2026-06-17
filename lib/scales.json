@@ -498,51 +498,55 @@
     "system": "zalzal-ji"
   },
   "jins_nikriz": {
-    "description": "Jins Nikriz — 4-note tetrachord with augmented second",
+    "description": "Jins Nikriz — 4-note tetrachord with augmented second [ratios JI zalzaliens (depuis degrés 24-TET)].",
     "culture": "arabic",
     "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      6,
-      12
+    "notes_count": 4,
+    "ratios": [
+      "1",
+      "9/8",
+      "6/5",
+      "45/32"
     ],
-    "notes_count": 4
+    "fragment": true
   },
   "jins_athar_kurd": {
-    "description": "Jins Athar Kurd — Kurd variant with raised 3rd",
+    "description": "Jins Athar Kurd — Kurd variant with raised 3rd [ratios JI zalzaliens (depuis degrés 24-TET)].",
     "culture": "arabic",
     "temperament": "24TET",
-    "degrees": [
-      0,
-      2,
-      6,
-      12
+    "notes_count": 4,
+    "ratios": [
+      "1",
+      "16/15",
+      "6/5",
+      "45/32"
     ],
-    "notes_count": 4
+    "fragment": true
   },
   "jins_saba_zamzam": {
-    "description": "Jins Saba Zamzam — Saba variant with flat 2nd and 4th",
+    "description": "Jins Saba Zamzam — Saba variant with flat 2nd and 4th [ratios JI zalzaliens (depuis degrés 24-TET)].",
     "culture": "arabic",
     "temperament": "24TET",
-    "degrees": [
-      0,
-      2,
-      6,
-      8
+    "notes_count": 4,
+    "ratios": [
+      "1",
+      "16/15",
+      "6/5",
+      "5/4"
     ],
-    "notes_count": 4
+    "fragment": true
   },
   "jins_mustaar": {
-    "description": "Jins Mustaar — rare 3-note jins, narrow intervals",
+    "description": "Jins Mustaar — rare 3-note jins, narrow intervals [ratios JI zalzaliens (depuis degrés 24-TET)].",
     "culture": "arabic",
     "temperament": "24TET",
-    "degrees": [
-      0,
-      3,
-      5
+    "notes_count": 3,
+    "ratios": [
+      "1",
+      "12/11",
+      "15/13"
     ],
-    "notes_count": 3
+    "fragment": true
   },
   "makam_rast": {
     "description": "Makam Rast — fundamental Turkish makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
@@ -2285,5 +2289,140 @@
     ],
     "notes_count": 6,
     "_note": "C E G + F# A# C# = all notes of two V7 chords a tritone apart. Foundation of tritone substitution."
+  },
+  "jins_rast": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "9/8",
+      "27/22",
+      "4/3"
+    ],
+    "description": "Jins Rast — tétracorde Rast à tierce neutre (C D E demi-bémol F). Tierce de Zalzal 27/22 (~354.5c) = signature musicologique de l'intonation juste arabe, PAS la tierce majeure 5/4 de Zarlino (qui donnerait un tétracorde Ajam). La donnée garde le ratio PUR (vérité ontologique) ; la projection 24-TET (350c / 7 quarts de ton) est faite au rendu par le moteur."
+  },
+  "jins_nahawand": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "9/8",
+      "6/5",
+      "4/3"
+    ],
+    "description": "Jins Nahawand — tétracorde mineur (C D Eb F)"
+  },
+  "jins_kurd": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "16/15",
+      "6/5",
+      "4/3"
+    ],
+    "description": "Jins Kurd — tétracorde phrygien (C Db Eb F)"
+  },
+  "jins_hijaz": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "16/15",
+      "5/4",
+      "4/3"
+    ],
+    "description": "Jins Hijaz — seconde augmentée caractéristique (C Db E F)"
+  },
+  "jins_bayati": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "12/11",
+      "6/5",
+      "4/3"
+    ],
+    "description": "Jins Bayati — seconde NEUTRE de Zalzal (C D-demi-bémol Eb F) : 12/11 (~151c), 6/5 (tierce mineure juste), 4/3. Intonation juste zalzalienne 5-limite (alt. pythagoricienne 32/27 pour la tierce ; on retient le juste 6/5 par cohérence du système arabe)."
+  },
+  "jins_sikah": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "12/11",
+      "6/5",
+      "4/3"
+    ],
+    "description": "Jins Sikah — assise sur la seconde neutre de Zalzal (C D-demi-bémol Eb F) : 12/11 (~151c), 6/5, 4/3. Seconde neutre = 12/11 (cohérent avec la table arabe ; remplace l'ancien 11/10 ~165c)."
+  },
+  "jins_ajam": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "9/8",
+      "5/4",
+      "4/3"
+    ],
+    "description": "Jins Ajam — tétracorde MAJEUR (C D E F) : 9/8 (ton), 5/4 (tierce majeure de Zarlino), 4/3 (quarte juste). C'est l'unique jins arabe à tierce majeure pure 5/4 (≈ majeur occidental). Le tétracorde ferme sur la quarte 4/3 (corrige l'ancien 45/32 triton, erroné pour un jins)."
+  },
+  "jins_saba": {
+    "fragment": true,
+    "ratios": [
+      1,
+      "12/11",
+      "6/5",
+      "13/10"
+    ],
+    "description": "Jins Saba — seconde neutre + tierce mineure + quarte DIMINUÉE (C D-demi-bémol Eb Fb) : 12/11, 6/5, 13/10 (~454c) ; la quarte diminuée est la signature du Saba."
+  },
+  "maqam_rast": {
+    "description": "Maqam Rast — Rast + Rast sur la quinte [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
+    "culture": "arabic",
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_rast",
+      "jins_rast"
+    ],
+    "junction": "3/2"
+  },
+  "maqam_nahawand": {
+    "description": "Maqam Nahawand — Nahawand (bas) + Kurd (haut) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
+    "culture": "arabic",
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_nahawand",
+      "jins_kurd"
+    ],
+    "junction": "3/2"
+  },
+  "maqam_hijaz": {
+    "description": "Maqam Hijaz — Hijaz (bas) + Rast (haut) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
+    "culture": "arabic",
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_hijaz",
+      "jins_rast"
+    ],
+    "junction": "3/2"
+  },
+  "maqam_bayati": {
+    "description": "Maqam Bayati — Bayati (bas) + Nahawand (haut) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
+    "culture": "arabic",
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_bayati",
+      "jins_nahawand"
+    ],
+    "junction": "3/2"
+  },
+  "maqam_saba": {
+    "description": "Maqam Saba — Saba (bas) + Hijaz (haut) + Rast (très haut, 3 jins) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
+    "culture": "arabic",
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_saba",
+      "jins_hijaz",
+      "jins_rast"
+    ],
+    "junction": [
+      "13/10",
+      "26/15"
+    ],
+    "_note": "Saba has 3 jins. Junction points: first at ~4th diminished, second at ~minor 7th."
   }
 }

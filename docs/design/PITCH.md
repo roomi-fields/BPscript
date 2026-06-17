@@ -21,6 +21,47 @@ Chaque couche a une seule responsabilité. Zéro redondance entre les fichiers.
 
 ---
 
+## Architecture des données (contrat par fichier) — ACTÉE 2026-06-17
+
+**Principe : un concept = un fichier = un modèle. Zéro doublon.** La donnée porte la **vérité
+ontologique la plus exacte** (ratios purs) ; toute grille (24-TET, 53-TET…) est une **projection de
+rendu** calculée par le moteur, **jamais** la source.
+
+| Fichier | Rôle unique | Contenu |
+|---|---|---|
+| `alphabets.json` | noms de notes + altérations | purement nominal (aucune fréquence) |
+| `octaves.json` | conventions de registre | préfixe/suffixe/séparateur |
+| `temperaments.json` | **grilles mathématiques** | `table` (ratios) ou `parametric` ; ET, méso­tonique, Werckmeister, JI, Pythagore, 24/53-TET… |
+| `scales.json` | **catalogue UNIQUE des collections de hauteurs** | jins/cins (fragments) + maqams/makams + gammes/modes du monde |
+| `tunings.json` | **bindings UNIQUEMENT** | alphabet ↔ tempérament/gamme + `baseHz`/`baseNote`/`baseRegister` |
+
+### Comment une gamme encode son intonation (règle unique)
+
+Une entrée de `scales.json` choisit **une** représentation, selon **d'où vient l'intonation** :
+
+- **`ratios`** — intonation **intrinsèque** à la gamme (maqam zalzalien, râga, genres grecs). La
+  gamme EST son accordage. Ex. tierce neutre de Rast = `27/22`, pas « degré 7 du 24-TET ».
+- **`degrees`** — intonation **fournie par le tempérament** bound (mode occidental majeur/dorien
+  joué en mésotonique / Werckmeister / ET / JI). Le mode est neutre, le tempérament colore.
+- **`compose: [jins…]` + `junction`** — pour les **maqams** : la **composition en ajnas est la
+  source** ; les jins portent les ratios exacts (une seule fois) ; **le moteur calcule** les ratios
+  du maqam depuis les jins. **Pas de `ratios` stockés** sur un maqam décomposable (zéro duplication).
+
+Une entrée n'a **jamais** deux de ces formes à la fois.
+
+### Systèmes distincts (pas de confusion)
+
+| Tradition | Système | Limite | Exemple |
+|---|---|---|---|
+| Arabe (maqam) | intonation juste **zalzalienne** | 5-limite | Rast tierce `27/22` (~350c) |
+| Turc (makam) | **Pythagore** (chaîne de quintes, 53-comma ottoman) | 3-limite | Rast turc `8192/6561` (~384c) |
+| Occidental (tonal/modal) | tempérament au choix (ET, mésotonique, Werckmeister, JI…) | — | mode + tempérament |
+
+Le champ `system` (`zalzal-ji` / `pythagorean` / …) marque l'appartenance ; arabe et turc ne se
+mélangent jamais.
+
+---
+
 ## Layer 0. Actor — Unité de binding
 
 ### Le problème
@@ -576,65 +617,50 @@ degrés → produit des ratios de la grille), comme pour les ratios du tempéram
 - En 12-TET : `degrees[C]=0`, `#` = `+1` degré, `C##` = degré 2, `degrees[D]=2` → **oui** (enharmonie)
 - En intonation juste : `C## = 1 × (25/24)² = 625/576`, `D = 9/8 = 648/576` → **non** (pas d'enharmonie)
 
-### Gammes composées (tétracordes / jins)
+### Gammes composées (jins / cins → maqams) — dans `scales.json`
 
-Dans les traditions arabe, turque et grecque, les gammes sont construites
-par **empilement de fragments** (tétracordes = 4 notes couvrant une quarte,
-jins = terme arabe pour le même concept).
+> Emplacement : jins et maqams vivent dans **`scales.json`** (le catalogue unique), PAS dans
+> `tunings.json` (qui ne contient que des bindings — cf. « Architecture des données » en tête).
 
-Les fragments sont définis comme des tunings avec `"fragment": true` :
-
-```json
-{
-  "jins_rast": {
-    "fragment": true,
-    "ratios": [1, "9/8", "5/4", "4/3"],
-    "description": "Jins Rast — tétracorde majeur (do ré mi fa)"
-  },
-  "jins_nahawand": {
-    "fragment": true,
-    "ratios": [1, "9/8", "6/5", "4/3"],
-    "description": "Jins Nahawand — tétracorde mineur"
-  },
-  "jins_hijaz": {
-    "fragment": true,
-    "ratios": [1, "16/15", "5/4", "4/3"],
-    "description": "Jins Hijaz — seconde augmentée caractéristique"
-  }
-}
-```
-
-Les gammes composées référencent ces fragments et les empilent :
+Dans les traditions arabe, turque et grecque, les gammes sont construites par **empilement de
+fragments** (tétracordes/pentacordes ; *jins* arabe, *cins* turc). Les fragments portent les
+**ratios exacts** (vérité ontologique) — une seule fois :
 
 ```json
 {
-  "maqam_rast": {
-    "temperament": "24TET",
-    "compose": ["jins_rast", "jins_rast"],
-    "junction": "3/2",
-    "degrees": "auto",
-    "baseHz": 440,
-    "baseNote": "do",
-    "baseRegister": 4,
-    "description": "Maqam Rast = Rast + Rast sur la quinte"
-  },
-  "maqam_nahawand": {
-    "temperament": "24TET",
-    "compose": ["jins_nahawand", "jins_kurd"],
-    "junction": "3/2",
-    "degrees": "auto",
-    "description": "Maqam Nahawand = Nahawand + Kurd"
-  }
+  "jins_rast":     { "fragment": true, "ratios": [1, "9/8", "27/22", "4/3"],
+                     "description": "Jins Rast — tierce NEUTRE de Zalzal 27/22 (~350c), PAS 5/4 (Ajam)" },
+  "jins_ajam":     { "fragment": true, "ratios": [1, "9/8", "5/4", "4/3"],
+                     "description": "Jins Ajam — seul jins à tierce majeure 5/4 (ferme sur 4/3)" },
+  "jins_hijaz":    { "fragment": true, "ratios": [1, "16/15", "5/4", "4/3"],
+                     "description": "Jins Hijaz — seconde augmentée" },
+  "jins_nikriz":   { "fragment": true, "ratios": [1, "9/8", "6/5", "45/32", "3/2"],
+                     "description": "Jins Nikriz — pentacorde, seconde augmentée Eb→F#" }
 }
 ```
 
-- `compose` : liste ordonnée de fragments à empiler
-- `junction` : le ratio où le second fragment commence (typiquement `"3/2"` = la quinte)
-- `degrees: "auto"` : le resolver calcule les degrees en concaténant les ratios des fragments
+Un **maqam = `compose`(jins) + `junction`** (la composition en ajnas EST la source ; **aucun
+`ratios` stocké** ; le moteur calcule). Pas de `temperament`/`degrees`/`baseHz` ici — ce sont des
+concerns de **binding** (tunings.json) :
 
-Le resolver résout la composition au chargement → produit un tableau de degrees
-comme un tuning normal. La composition est un raccourci d'écriture, pas un
-mécanisme runtime.
+```json
+{
+  "maqam_rast":   { "system": "zalzal-ji", "culture": "arabic",
+                    "compose": ["jins_rast", "jins_rast"],  "junction": "3/2" },
+  "maqam_suznak": { "system": "zalzal-ji", "culture": "arabic",
+                    "compose": ["jins_rast", "jins_hijaz"], "junction": "3/2" }
+}
+```
+
+- `compose` : liste ordonnée de jins à empiler ; `junction` : ratio où le jins suivant démarre
+  (`"3/2"` = quinte disjointe ; `"4/3"` = quarte conjointe).
+- Le **moteur** concatène les ratios des jins (jins haut × junction) → la gamme complète. Calcul,
+  pas stockage.
+- **Maqams non décomposables avec certitude** (décomposition en jins à établir) : ils portent
+  directement des `ratios` exacts + un drapeau, en attendant la décomposition sourcée (cas honnête,
+  pas de `compose` inventé).
+- **Réalisation concrète** : un binding `tunings.json` référence la gamme + `baseHz`/`baseNote`
+  (ex. jouer maqam_rast sur do à 440 Hz). Le binding ne redéfinit jamais la gamme.
 
 ### Gammes directionnelles (aroha / avaroha)
 
