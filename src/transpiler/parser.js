@@ -278,8 +278,36 @@ function parse(tokens, opts = {}) {
    * Modifie les nœuds en place (payload additif).
    */
   function annotateScene(scene) {
+    // États de drapeau nommés (@flag scene: calm:1) résolus DANS L'AST : une garde
+    // `[scene==calm]` ou une mutation `[scene=calm]` portant un alias DÉCLARÉ voit sa
+    // `value` résolue en ENTIER (calm → 1). Un IDENT NON déclaré reste tel quel
+    // (référence à un autre drapeau, fidèle BP3). Indispensable à la voie AST directe
+    // (BPx lit l'AST, pas la table) ; le texte BP3 reste identique (l'encodeur reçoit
+    // alors un entier, no-op). Bug remonté par bpx (G2), directive « source unique = AST ».
+    const flagStates = {};
+    for (const dir of scene.directives || []) {
+      if (dir.type === 'FlagStatesDirective') {
+        const mm = flagStates[dir.flag] || {};
+        for (const s of dir.states) mm[s.name] = s.value;
+        flagStates[dir.flag] = mm;
+      }
+    }
+    const resolveFlag = (flag, value) =>
+      (typeof value === 'string' && flagStates[flag]
+        && Object.prototype.hasOwnProperty.call(flagStates[flag], value))
+        ? flagStates[flag][value] : value;
+
     for (const sg of scene.subgrammars) {
       for (const rule of sg.rules) {
+        // Gardes + mutations : résoudre les états de drapeau nommés DÉCLARÉS en entier.
+        const guards = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
+        for (const g of guards) {
+          if (g && g.flag != null && 'value' in g) g.value = resolveFlag(g.flag, g.value);
+        }
+        for (const f of rule.flags || []) {
+          if (f && f.flag != null && 'value' in f) f.value = resolveFlag(f.flag, f.value);
+        }
+
         // Résolution de l'acteur de règle : quand tous les symboles LHS appartiennent
         // au même acteur (cas fréquent), on peut pré-remplir l'acteur.
         // En Phase 1 on passe null : l'acteur est résolu au niveau token (dot-notation).
