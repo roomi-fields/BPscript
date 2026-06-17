@@ -217,8 +217,8 @@
 
   "jins_rast": {
     "fragment": true,
-    "ratios": [1, "9/8", "5/4", "4/3"],
-    "description": "Jins Rast — tétracorde majeur (C D E F)"
+    "ratios": [1, "9/8", "27/22", "4/3"],
+    "description": "Jins Rast — tétracorde Rast à tierce neutre (C D E demi-bémol F). Tierce de Zalzal 27/22 (~354.5c) = signature musicologique de l'intonation juste arabe, PAS la tierce majeure 5/4 de Zarlino (qui donnerait un tétracorde Ajam). La donnée garde le ratio PUR (vérité ontologique) ; la projection 24-TET (350c / 7 quarts de ton) est faite au rendu par le moteur."
   },
 
   "jins_nahawand": {
@@ -241,26 +241,32 @@
 
   "jins_bayati": {
     "fragment": true,
-    "ratios": [1, "12/11", "32/27", "4/3"],
-    "description": "Jins Bayati — quart de ton sur la seconde (C D↓ Eb F), 24-TET approx"
+    "ratios": [1, "12/11", "6/5", "4/3"],
+    "description": "Jins Bayati — seconde NEUTRE de Zalzal (C D-demi-bémol Eb F) : 12/11 (~151c), 6/5 (tierce mineure juste), 4/3. Intonation juste zalzalienne 5-limite (alt. pythagoricienne 32/27 pour la tierce ; on retient le juste 6/5 par cohérence du système arabe)."
   },
 
   "jins_sikah": {
     "fragment": true,
-    "ratios": [1, "11/10", "6/5", "4/3"],
-    "description": "Jins Sikah — quart de ton sur la fondamentale (C D↓ Eb F), variante"
+    "ratios": [1, "12/11", "6/5", "4/3"],
+    "description": "Jins Sikah — assise sur la seconde neutre de Zalzal (C D-demi-bémol Eb F) : 12/11 (~151c), 6/5, 4/3. Seconde neutre = 12/11 (cohérent avec la table arabe ; remplace l'ancien 11/10 ~165c)."
   },
 
   "jins_ajam": {
     "fragment": true,
-    "ratios": [1, "9/8", "5/4", "45/32"],
-    "description": "Jins Ajam — tétracorde majeur avec triton (C D E F#)"
+    "ratios": [1, "9/8", "5/4", "4/3"],
+    "description": "Jins Ajam — tétracorde MAJEUR (C D E F) : 9/8 (ton), 5/4 (tierce majeure de Zarlino), 4/3 (quarte juste). C'est l'unique jins arabe à tierce majeure pure 5/4 (≈ majeur occidental). Le tétracorde ferme sur la quarte 4/3 (corrige l'ancien 45/32 triton, erroné pour un jins)."
   },
 
   "jins_saba": {
     "fragment": true,
     "ratios": [1, "12/11", "6/5", "13/10"],
-    "description": "Jins Saba — quart de ton + quarte diminuée"
+    "description": "Jins Saba — seconde neutre + tierce mineure + quarte DIMINUÉE (C D-demi-bémol Eb Fb) : 12/11, 6/5, 13/10 (~454c) ; la quarte diminuée est la signature du Saba."
+  },
+
+  "jins_nikriz": {
+    "fragment": true,
+    "ratios": [1, "9/8", "6/5", "45/32", "3/2"],
+    "description": "Jins Nikriz — PENTACORDE (C D Eb F# G) : 9/8, 6/5 (tierce mineure), 45/32 (quarte augmentée, ~590c), 3/2 (quinte). Seconde augmentée caractéristique entre Eb et F#. Ajouté (référencé par maqam_nikriz, absent jusqu'ici)."
   },
 
   "_comment_composed": "=== COMPOSED SCALES (maqam, Greek modes) === Built from tetrachord fragments.",

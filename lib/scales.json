@@ -331,229 +331,229 @@
     "notes_count": 7
   },
   "maqam_sikah": {
-    "description": "Maqam Sikah — starts on sikah (E half-flat)",
+    "description": "Maqam Sikah — starts on sikah (E half-flat) — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      3,
-      7,
-      10,
-      13,
-      17,
-      21
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "12/11",
+      "27/22",
+      "4/3",
+      "16/11",
+      "18/11",
+      "11/6"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "maqam_ajam": {
-    "description": "Maqam Ajam — equivalent to Western major",
+    "description": "Maqam Ajam — equivalent to Western major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      8,
-      10,
-      14,
-      18,
-      22
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "5/4",
+      "4/3",
+      "3/2",
+      "5/3",
+      "15/8"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "maqam_kurd": {
-    "description": "Maqam Kurd — starts with jins Kurd",
+    "description": "Maqam Kurd — starts with jins Kurd — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      2,
-      6,
-      10,
-      14,
-      16,
-      20
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "16/15",
+      "6/5",
+      "4/3",
+      "3/2",
+      "8/5",
+      "9/5"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "maqam_jiharkah": {
-    "description": "Maqam Jiharkah — Rast-like with lowered 7th",
+    "description": "Maqam Jiharkah — Rast-like with lowered 7th — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      8,
-      10,
-      14,
-      18,
-      21
-    ],
     "compose": [
       "jins_ajam",
       "jins_sikah"
     ],
     "junction": "4/3",
-    "notes_count": 7
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "5/4",
+      "4/3",
+      "3/2",
+      "5/3",
+      "11/6"
+    ],
+    "system": "zalzal-ji"
   },
   "maqam_suznak": {
-    "description": "Maqam Suznak — Rast lower + Hijaz upper",
+    "description": "Maqam Suznak — Rast lower + Hijaz upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      7,
-      10,
-      14,
-      18,
-      22
-    ],
     "compose": [
       "jins_rast",
       "jins_hijaz"
     ],
     "junction": "4/3",
-    "notes_count": 7
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "27/22",
+      "4/3",
+      "3/2",
+      "5/3",
+      "15/8"
+    ],
+    "system": "zalzal-ji"
   },
   "maqam_nawa_athar": {
-    "description": "Maqam Nawa Athar — double augmented second",
+    "description": "Maqam Nawa Athar — double augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      6,
-      12,
-      14,
-      16,
-      22
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "6/5",
+      "45/32",
+      "3/2",
+      "8/5",
+      "15/8"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "maqam_athar_kurd": {
-    "description": "Maqam Athar Kurd — Kurd with augmented second",
+    "description": "Maqam Athar Kurd — Kurd with augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      2,
-      6,
-      12,
-      14,
-      16,
-      22
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "16/15",
+      "6/5",
+      "45/32",
+      "3/2",
+      "8/5",
+      "15/8"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "maqam_hijaz_kar": {
-    "description": "Maqam Hijaz Kar — double harmonic major",
+    "description": "Maqam Hijaz Kar — double harmonic major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      2,
-      8,
-      10,
-      14,
-      16,
-      22
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "16/15",
+      "5/4",
+      "4/3",
+      "3/2",
+      "8/5",
+      "15/8"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "maqam_nikriz": {
-    "description": "Maqam Nikriz — Nikriz tetrachord + Rast upper",
+    "description": "Maqam Nikriz — Nikriz tetrachord + Rast upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      6,
-      12,
-      14,
-      18,
-      20
-    ],
     "compose": [
       "jins_nikriz",
       "jins_rast"
     ],
     "junction": "3/2",
-    "notes_count": 7
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "6/5",
+      "45/32",
+      "3/2",
+      "5/3",
+      "9/5"
+    ],
+    "system": "zalzal-ji"
   },
   "maqam_husayni": {
-    "description": "Maqam Husayni — Bayati variant with Husayni emphasis",
+    "description": "Maqam Husayni — Bayati variant with Husayni emphasis — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      3,
-      6,
-      10,
-      14,
-      17,
-      21
-    ],
     "compose": [
       "jins_bayati",
       "jins_bayati"
     ],
     "junction": "3/2",
-    "notes_count": 7
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "12/11",
+      "6/5",
+      "4/3",
+      "3/2",
+      "18/11",
+      "11/6"
+    ],
+    "system": "zalzal-ji"
   },
   "maqam_suzidil": {
-    "description": "Maqam Suzidil — Ajam lower + Hijaz Kar upper",
+    "description": "Maqam Suzidil — Ajam lower + Hijaz Kar upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      8,
-      10,
-      14,
-      16,
-      22
-    ],
     "compose": [
       "jins_ajam",
       "jins_hijaz"
     ],
     "junction": "4/3",
-    "notes_count": 7
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "5/4",
+      "4/3",
+      "3/2",
+      "8/5",
+      "15/8"
+    ],
+    "system": "zalzal-ji"
   },
   "maqam_farahfaza": {
-    "description": "Maqam Farahfaza — Nahawand with Sikah flavor",
+    "description": "Maqam Farahfaza — Nahawand with Sikah flavor — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      4,
-      6,
-      10,
-      14,
-      17,
-      20
-    ],
     "compose": [
       "jins_nahawand",
       "jins_bayati"
     ],
     "junction": "3/2",
-    "notes_count": 7
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "9/8",
+      "6/5",
+      "4/3",
+      "3/2",
+      "18/11",
+      "9/5"
+    ],
+    "system": "zalzal-ji"
   },
   "maqam_shawq_afza": {
-    "description": "Maqam Shawq Afza — Sikah-based, emotional character",
+    "description": "Maqam Shawq Afza — Sikah-based, emotional character — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
     "culture": "arabic",
-    "temperament": "24TET",
-    "degrees": [
-      0,
-      3,
-      6,
-      10,
-      14,
-      18,
-      21
+    "notes_count": 7,
+    "ratios": [
+      "1",
+      "12/11",
+      "6/5",
+      "4/3",
+      "3/2",
+      "5/3",
+      "11/6"
     ],
-    "notes_count": 7
+    "system": "zalzal-ji"
   },
   "jins_nikriz": {
     "description": "Jins Nikriz — 4-note tetrachord with augmented second",
@@ -603,184 +603,184 @@
     "notes_count": 3
   },
   "makam_rast": {
-    "description": "Makam Rast — fundamental Turkish makam",
+    "description": "Makam Rast — fundamental Turkish makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      9,
-      17,
-      22,
-      31,
-      40,
-      48
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "9/8",
+      "8192/6561",
+      "4/3",
+      "3/2",
+      "27/16",
+      "4096/2187"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_ussak": {
-    "description": "Makam Ussak — one of the most common Turkish makams",
+    "description": "Makam Ussak — one of the most common Turkish makams — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      8,
-      13,
-      22,
-      31,
-      39,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "65536/59049",
+      "32/27",
+      "4/3",
+      "3/2",
+      "32768/19683",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_huseyni": {
-    "description": "Makam Huseyni — similar to Ussak with different upper tetrachord",
+    "description": "Makam Huseyni — similar to Ussak with different upper tetrachord — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      8,
-      13,
-      22,
-      31,
-      40,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "65536/59049",
+      "32/27",
+      "4/3",
+      "3/2",
+      "27/16",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_hicaz": {
-    "description": "Makam Hicaz — augmented second in lower tetrachord",
+    "description": "Makam Hicaz — augmented second in lower tetrachord — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      5,
-      17,
-      22,
-      31,
-      39,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "2187/2048",
+      "8192/6561",
+      "4/3",
+      "3/2",
+      "32768/19683",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_nihavend": {
-    "description": "Makam Nihavend — Turkish minor, similar to harmonic minor",
+    "description": "Makam Nihavend — Turkish minor, similar to harmonic minor — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      9,
-      13,
-      22,
-      31,
-      35,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "9/8",
+      "32/27",
+      "4/3",
+      "3/2",
+      "128/81",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_kurdi": {
-    "description": "Makam Kurdi — starts with minor second",
+    "description": "Makam Kurdi — starts with minor second — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      4,
-      13,
-      22,
-      31,
-      35,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "256/243",
+      "32/27",
+      "4/3",
+      "3/2",
+      "128/81",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_segah": {
-    "description": "Makam Segah — starts on segah pitch, meditative character",
+    "description": "Makam Segah — starts on segah pitch, meditative character — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      4,
-      9,
-      22,
-      31,
-      35,
-      40
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "256/243",
+      "9/8",
+      "4/3",
+      "3/2",
+      "128/81",
+      "27/16"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_huzzam": {
-    "description": "Makam Huzzam — Segah variant with diminished fifth",
+    "description": "Makam Huzzam — Segah variant with diminished fifth — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      4,
-      9,
-      22,
-      27,
-      35,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "256/243",
+      "9/8",
+      "4/3",
+      "729/512",
+      "128/81",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_saba": {
-    "description": "Makam Saba — distinctive Turkish makam with narrow intervals",
+    "description": "Makam Saba — distinctive Turkish makam with narrow intervals — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      8,
-      13,
-      18,
-      31,
-      35,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "65536/59049",
+      "32/27",
+      "81/64",
+      "3/2",
+      "128/81",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_buselik": {
-    "description": "Makam Buselik — Turkish natural minor equivalent",
+    "description": "Makam Buselik — Turkish natural minor equivalent — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      9,
-      13,
-      22,
-      31,
-      39,
-      44
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "9/8",
+      "32/27",
+      "4/3",
+      "3/2",
+      "32768/19683",
+      "16/9"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_sultaniyegah": {
-    "description": "Makam Sultaniyegah — Rast transposed, majestic character",
+    "description": "Makam Sultaniyegah — Rast transposed, majestic character — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      9,
-      17,
-      22,
-      31,
-      39,
-      48
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "9/8",
+      "8192/6561",
+      "4/3",
+      "3/2",
+      "32768/19683",
+      "4096/2187"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "makam_karcigar": {
-    "description": "Makam Karcigar — mixed Turkish-Arabic makam",
+    "description": "Makam Karcigar — mixed Turkish-Arabic makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
     "culture": "turkish",
-    "temperament": "53TET",
-    "degrees": [
-      0,
-      8,
-      13,
-      22,
-      31,
-      35,
-      48
+    "notes_count": 7,
+    "ratios": [
+      "1/1",
+      "65536/59049",
+      "32/27",
+      "4/3",
+      "3/2",
+      "128/81",
+      "4096/2187"
     ],
-    "notes_count": 7
+    "system": "pythagorean"
   },
   "gong": {
     "description": "Gong mode — 1st mode of Chinese pentatonic, Do position",
