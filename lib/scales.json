@@ -331,7 +331,7 @@
     "notes_count": 7
   },
   "maqam_sikah": {
-    "description": "Maqam Sikah — starts on sikah (E half-flat) — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Sikah — starts on sikah (E half-flat) — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
     "culture": "arabic",
     "notes_count": 7,
     "ratios": [
@@ -346,43 +346,30 @@
     "system": "zalzal-ji"
   },
   "maqam_ajam": {
-    "description": "Maqam Ajam — equivalent to Western major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Ajam — equivalent to Western major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
     "culture": "arabic",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "9/8",
-      "5/4",
-      "4/3",
-      "3/2",
-      "5/3",
-      "15/8"
-    ],
-    "system": "zalzal-ji"
-  },
-  "maqam_kurd": {
-    "description": "Maqam Kurd — starts with jins Kurd — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
-    "culture": "arabic",
-    "notes_count": 7,
-    "ratios": [
-      "1",
-      "16/15",
-      "6/5",
-      "4/3",
-      "3/2",
-      "8/5",
-      "9/5"
-    ],
-    "system": "zalzal-ji"
-  },
-  "maqam_jiharkah": {
-    "description": "Maqam Jiharkah — Rast-like with lowered 7th — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
-    "culture": "arabic",
+    "system": "zalzal-ji",
     "compose": [
       "jins_ajam",
-      "jins_sikah"
+      "jins_ajam"
     ],
-    "junction": "4/3",
+    "junction": "3/2"
+  },
+  "maqam_kurd": {
+    "description": "Maqam Kurd — starts with jins Kurd — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
+    "culture": "arabic",
+    "notes_count": 7,
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_kurd",
+      "jins_kurd"
+    ],
+    "junction": "3/2"
+  },
+  "maqam_jiharkah": {
+    "description": "Maqam Jiharkah — Rast-like with lowered 7th — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
+    "culture": "arabic",
     "notes_count": 7,
     "ratios": [
       "1",
@@ -396,27 +383,18 @@
     "system": "zalzal-ji"
   },
   "maqam_suznak": {
-    "description": "Maqam Suznak — Rast lower + Hijaz upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Suznak — Rast lower + Hijaz upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
     "culture": "arabic",
     "compose": [
       "jins_rast",
       "jins_hijaz"
     ],
-    "junction": "4/3",
+    "junction": "3/2",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "9/8",
-      "27/22",
-      "4/3",
-      "3/2",
-      "5/3",
-      "15/8"
-    ],
     "system": "zalzal-ji"
   },
   "maqam_nawa_athar": {
-    "description": "Maqam Nawa Athar — double augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Nawa Athar — double augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
     "culture": "arabic",
     "notes_count": 7,
     "ratios": [
@@ -431,7 +409,7 @@
     "system": "zalzal-ji"
   },
   "maqam_athar_kurd": {
-    "description": "Maqam Athar Kurd — Kurd with augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Athar Kurd — Kurd with augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
     "culture": "arabic",
     "notes_count": 7,
     "ratios": [
@@ -446,22 +424,18 @@
     "system": "zalzal-ji"
   },
   "maqam_hijaz_kar": {
-    "description": "Maqam Hijaz Kar — double harmonic major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Hijaz Kar — double harmonic major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
     "culture": "arabic",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "16/15",
-      "5/4",
-      "4/3",
-      "3/2",
-      "8/5",
-      "15/8"
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_hijaz",
+      "jins_hijaz"
     ],
-    "system": "zalzal-ji"
+    "junction": "3/2"
   },
   "maqam_nikriz": {
-    "description": "Maqam Nikriz — Nikriz tetrachord + Rast upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Nikriz — Nikriz tetrachord + Rast upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
     "culture": "arabic",
     "compose": [
       "jins_nikriz",
@@ -469,19 +443,10 @@
     ],
     "junction": "3/2",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "9/8",
-      "6/5",
-      "45/32",
-      "3/2",
-      "5/3",
-      "9/5"
-    ],
     "system": "zalzal-ji"
   },
   "maqam_husayni": {
-    "description": "Maqam Husayni — Bayati variant with Husayni emphasis — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Husayni — Bayati variant with Husayni emphasis — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
     "culture": "arabic",
     "compose": [
       "jins_bayati",
@@ -489,25 +454,11 @@
     ],
     "junction": "3/2",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "12/11",
-      "6/5",
-      "4/3",
-      "3/2",
-      "18/11",
-      "11/6"
-    ],
     "system": "zalzal-ji"
   },
   "maqam_suzidil": {
-    "description": "Maqam Suzidil — Ajam lower + Hijaz Kar upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Suzidil — Ajam lower + Hijaz Kar upper — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
     "culture": "arabic",
-    "compose": [
-      "jins_ajam",
-      "jins_hijaz"
-    ],
-    "junction": "4/3",
     "notes_count": 7,
     "ratios": [
       "1",
@@ -521,7 +472,7 @@
     "system": "zalzal-ji"
   },
   "maqam_farahfaza": {
-    "description": "Maqam Farahfaza — Nahawand with Sikah flavor — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Farahfaza — Nahawand with Sikah flavor — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
     "culture": "arabic",
     "compose": [
       "jins_nahawand",
@@ -529,19 +480,10 @@
     ],
     "junction": "3/2",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "9/8",
-      "6/5",
-      "4/3",
-      "3/2",
-      "18/11",
-      "9/5"
-    ],
     "system": "zalzal-ji"
   },
   "maqam_shawq_afza": {
-    "description": "Maqam Shawq Afza — Sikah-based, emotional character — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie.",
+    "description": "Maqam Shawq Afza — Sikah-based, emotional character — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
     "culture": "arabic",
     "notes_count": 7,
     "ratios": [

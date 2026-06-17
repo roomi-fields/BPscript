@@ -4,6 +4,15 @@ Dernière mise à jour : 2026-04-06
 Build : v3.3.19-wasm.8
 S4 vs S5 : 16/29 EXACT, 13 DIFF, 7 SKIP, 2 MISSING
 
+## Données — cohérence chaîne pitch (alphabet → fréquence)
+
+### Tri des `bp3_*` dans temperaments.json (différé, 2026-06-17)
+`lib/temperaments.json` traîne ~150 entrées legacy `bp3_*` qui MÉLANGENT de vrais tempéraments
+(`bp3_werckmeister_3`, `bp3_meantone_*`, `bp3_kirnberger_*`…) avec des GAMMES déguisées en
+tempéraments (`bp3_Cmaj`, `bp3_todi1`, `bp3_asavari1`, `bp3_*_murcchana`…). À TRIER : les vrais
+tempéraments restent ; les « gammes » partent dans `scales.json`. Même nature de ménage que la
+consolidation maqams. Reporté (décision Romain) — à faire après la migration jins/maqams.
+
 ## Moteur BP3 — Investigation
 
 ### #32 WriteMIDIbyte drift CC interpolés (NotReich)
