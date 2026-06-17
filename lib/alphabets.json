@@ -32,8 +32,8 @@
   },
 
   "arabic": {
-    "description": "Arabic — 7 notes with quarter-tone alterations",
-    "notes": ["do", "re", "mi", "fa", "sol", "la", "si"],
+    "description": "Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.",
+    "notes": ["rast", "dukah", "sikah", "jaharkah", "nawa", "husayni", "awj"],
     "alterations": { "bb": -4, "b": -2, "half_b": -1, "": 0, "half_#": 1, "#": 2, "##": 4 }
   },
 

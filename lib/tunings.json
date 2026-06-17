@@ -203,8 +203,9 @@
       "##": "200c"
     },
     "baseHz": 440,
-    "baseNote": "la",
-    "baseRegister": 4
+    "baseNote": "husayni",
+    "baseRegister": 4,
+    "_note": "husayni (6e degré, ancien 'la') ancré à 440 Hz — référence A440 inchangée, alphabet en noms de perde."
   },
   "turkish_53TET": {
     "description": "Turkish makam — 53-comma system",
