@@ -1,7 +1,11 @@
 /**
  * BPScript Transpiler — Facade
  *
- * compileBPS(source) → { grammar, alphabet, settings, errors }
+ * DEUX modes SÉPARÉS (directive Romain 2026-06-17) :
+ *   - compileBPS(source)       → ancienne voie BP3 : { grammar, alphabet, settings, … }.
+ *                                 Voie 2 héritée (encodeur), vouée au retrait.
+ *   - compileToBPxAST(source)  → voie AST BPx : { ast, backticks, flagStates, libraries, … }.
+ *                                 Produit l'arbre COMPLET SANS l'ancien format (aucun encode).
  */
 
 import { tokenize } from './tokenizer.js';
@@ -9,6 +13,7 @@ import { parse, ParseError } from './parser.js';
 import { encode } from './encoder.js';
 import { generatePrototypes } from './prototypes.js';
 import { resolveActors } from './actorResolver.js';
+import { compileToBPxAST } from './bpxAst.js';
 
 function compileBPS(source) {
   const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [], warnings: [] };
@@ -77,4 +82,4 @@ function compileBPS(source) {
   return result;
 }
 
-export { compileBPS };
+export { compileBPS, compileToBPxAST };
