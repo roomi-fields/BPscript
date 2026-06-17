@@ -158,7 +158,26 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
 
 ## Pipeline de compilation
 
-### Étapes
+### Deux modes de sortie SÉPARÉS (directive Romain 2026-06-17)
+
+Le transpileur a **deux modes distincts**, deux sorties totalement différentes (cohérence,
+propreté, performance) :
+
+| Façade (`src/transpiler/index.js`) | Sortie | Rôle |
+|---|---|---|
+| `compileToBPxAST(source)` | `{ ast, backticks, flagStates, libraries, errors, warnings }` | **Voie AST BPx** : produit l'**arbre complet**, agnostique, consommé par BPx + Kanopi. **N'appelle JAMAIS l'encodeur** (`src/transpiler/bpxAst.js` n'importe que tokenizer + parser). |
+| `compileBPS(source)` | `{ grammar, alphabet, settings, … }` | **Voie 2 (BP3 héritée)** : parse + ENCODE → grammaire BP3. **Vouée au retrait** dans les prochaines versions. |
+
+La voie AST porte tout sans recours à l'ancien format : payload par token (nature/actor/params/flux)
+et `references[]` (ActorReference) viennent du **parser** ; l'étiquetage des backticks (`_btName`,
+compteur propre), la table `backticks`, `flagStates` et `libraries` sont produits par des **passes
+agnostiques** dans `bpxAst.js` (plus par l'encodeur — dépendance cachée supprimée). Cf. spec
+canonique `BPx/docs/AST_SPEC.md`.
+
+> ⚠️ **CONTEXTE BPx.** Quand on produit l'AST BPx, on n'utilise PAS le code de l'ancien format. La
+> voie 2 (`compileBPS` → grammaire BP3) ne se touche QUE sur demande explicite (cf. `CLAUDE.md`).
+
+### Étapes — voie 2 (BP3 héritée)
 
 ```
 Source .bps
