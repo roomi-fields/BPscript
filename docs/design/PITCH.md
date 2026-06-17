@@ -652,10 +652,20 @@ concerns de **binding** (tunings.json) :
 }
 ```
 
-- `compose` : liste ordonnée de jins à empiler ; `junction` : ratio où le jins suivant démarre
-  (`"3/2"` = quinte disjointe ; `"4/3"` = quarte conjointe).
-- Le **moteur** concatène les ratios des jins (jins haut × junction) → la gamme complète. Calcul,
-  pas stockage.
+- `compose` : liste ordonnée de jins à empiler ; `junction` : ratio (ou **tableau** de ratios pour
+  ≥3 jins) où chaque jins suivant démarre. Exemple jonction simple `"3/2"` ; jonction multiple
+  `["13/10","26/15"]` (maqam_saba, 3 jins).
+- **Algorithme du moteur** (concaténation) : pour chaque jins suivant, multiplier ses ratios par la
+  jonction (`r → junction × r`) et concaténer.
+- **Dédoublonnage de la note de jonction — règle par COÏNCIDENCE** (≠ « disjoint vs conjoint ») :
+  on retire la **première note** du jins supérieur **si et seulement si** elle tombe sur la même
+  hauteur que la **dernière note** du jins inférieur, c.-à-d. `junction == dernier_ratio(jins_bas)`.
+  - Arabe (jins = tétracordes finissant sur `4/3`, ou `45/32` pour nikriz/athar) + jonction `3/2` :
+    pas de coïncidence → **on garde** (le `4/3` et le `3/2` sonnent tous deux, ton disjonctif).
+  - Turc (cins = **pentacordes finissant sur `3/2`**) + jonction `3/2` : coïncidence → **on dédoublonne**.
+  - `makam_huzzam` (conjoint : jins_bas finit sur `4/3`, jonction `4/3`) : coïncidence → **on dédoublonne**.
+  ⚠️ Une règle fondée sur « 3/2 = disjoint donc pas de dédup » est FAUSSE pour le turc (doublerait
+  la quinte). Toujours tester la coïncidence `junction == dernier_ratio(jins_bas)`.
 - **Maqams non décomposables avec certitude** (décomposition en jins à établir) : ils portent
   directement des `ratios` exacts + un drapeau, en attendant la décomposition sourcée (cas honnête,
   pas de `compose` inventé). Aujourd'hui : `maqam_sikah`, `maqam_jiharkah`, `maqam_suzidil`,
