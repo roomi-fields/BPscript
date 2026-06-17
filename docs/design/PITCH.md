@@ -658,7 +658,13 @@ concerns de **binding** (tunings.json) :
   pas stockage.
 - **Maqams non décomposables avec certitude** (décomposition en jins à établir) : ils portent
   directement des `ratios` exacts + un drapeau, en attendant la décomposition sourcée (cas honnête,
-  pas de `compose` inventé).
+  pas de `compose` inventé). Aujourd'hui : `maqam_sikah`, `maqam_jiharkah`, `maqam_suzidil`,
+  `maqam_shawq_afza` (segments anormaux hérités d'anciens degrés — restent en ratios).
+- **Makams turcs (`cins` pythagoriciens)** : les 12 makams sont décomposés de la même façon en
+  `cins` turcs (beşli pentacorde + dörtlü tétracorde), tous en ratios pythagoriciens exacts
+  (`system: "pythagorean"`). Les cins portent un nom de famille (Rast, Uşşak, Hicaz, Bûselik,
+  Kürdî, Saba…) ; les noms des dörtlü rares sont **provisoires** (les ratios, eux, sont exacts et
+  la recomposition redonne la gamme à l'identique).
 - **Réalisation concrète** : un binding `tunings.json` référence la gamme + `baseHz`/`baseNote`
   (ex. jouer maqam_rast sur do à 440 Hz). Le binding ne redéfinit jamais la gamme.
 

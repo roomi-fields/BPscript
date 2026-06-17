@@ -394,34 +394,26 @@
     "system": "zalzal-ji"
   },
   "maqam_nawa_athar": {
-    "description": "Maqam Nawa Athar — double augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
+    "description": "Maqam Nawa Athar — double augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source].",
     "culture": "arabic",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "9/8",
-      "6/5",
-      "45/32",
-      "3/2",
-      "8/5",
-      "15/8"
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_nikriz",
+      "jins_hijaz"
     ],
-    "system": "zalzal-ji"
+    "junction": "3/2"
   },
   "maqam_athar_kurd": {
-    "description": "Maqam Athar Kurd — Kurd with augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].",
+    "description": "Maqam Athar Kurd — Kurd with augmented second — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source].",
     "culture": "arabic",
     "notes_count": 7,
-    "ratios": [
-      "1",
-      "16/15",
-      "6/5",
-      "45/32",
-      "3/2",
-      "8/5",
-      "15/8"
+    "system": "zalzal-ji",
+    "compose": [
+      "jins_athar_kurd",
+      "jins_hijaz"
     ],
-    "system": "zalzal-ji"
+    "junction": "3/2"
   },
   "maqam_hijaz_kar": {
     "description": "Maqam Hijaz Kar — double harmonic major — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
@@ -549,184 +541,136 @@
     "fragment": true
   },
   "makam_rast": {
-    "description": "Makam Rast — fundamental Turkish makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Rast — fundamental Turkish makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "9/8",
-      "8192/6561",
-      "4/3",
-      "3/2",
-      "27/16",
-      "4096/2187"
+    "system": "pythagorean",
+    "compose": [
+      "cins_rast",
+      "cins_rast4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_ussak": {
-    "description": "Makam Ussak — one of the most common Turkish makams — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Ussak — one of the most common Turkish makams — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "65536/59049",
-      "32/27",
-      "4/3",
-      "3/2",
-      "32768/19683",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_ussak",
+      "cins_ussak4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_huseyni": {
-    "description": "Makam Huseyni — similar to Ussak with different upper tetrachord — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Huseyni — similar to Ussak with different upper tetrachord — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "65536/59049",
-      "32/27",
-      "4/3",
-      "3/2",
-      "27/16",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_ussak",
+      "cins_buselik4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_hicaz": {
-    "description": "Makam Hicaz — augmented second in lower tetrachord — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Hicaz — augmented second in lower tetrachord — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "2187/2048",
-      "8192/6561",
-      "4/3",
-      "3/2",
-      "32768/19683",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_hicaz",
+      "cins_ussak4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_nihavend": {
-    "description": "Makam Nihavend — Turkish minor, similar to harmonic minor — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Nihavend — Turkish minor, similar to harmonic minor — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "9/8",
-      "32/27",
-      "4/3",
-      "3/2",
-      "128/81",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_buselik",
+      "cins_kurdi4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_kurdi": {
-    "description": "Makam Kurdi — starts with minor second — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Kurdi — starts with minor second — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "256/243",
-      "32/27",
-      "4/3",
-      "3/2",
-      "128/81",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_kurdi",
+      "cins_kurdi4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_segah": {
-    "description": "Makam Segah — starts on segah pitch, meditative character — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Segah — starts on segah pitch, meditative character — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "256/243",
-      "9/8",
-      "4/3",
-      "3/2",
-      "128/81",
-      "27/16"
+    "system": "pythagorean",
+    "compose": [
+      "cins_segah",
+      "cins_cargah4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_huzzam": {
-    "description": "Makam Huzzam — Segah variant with diminished fifth — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Huzzam — Segah variant with diminished fifth — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "256/243",
-      "9/8",
-      "4/3",
-      "729/512",
-      "128/81",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_cargah4",
+      "cins_huzzam"
     ],
-    "system": "pythagorean"
+    "junction": "4/3"
   },
   "makam_saba": {
-    "description": "Makam Saba — distinctive Turkish makam with narrow intervals — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Saba — distinctive Turkish makam with narrow intervals — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "65536/59049",
-      "32/27",
-      "81/64",
-      "3/2",
-      "128/81",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_saba",
+      "cins_kurdi4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_buselik": {
-    "description": "Makam Buselik — Turkish natural minor equivalent — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Buselik — Turkish natural minor equivalent — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "9/8",
-      "32/27",
-      "4/3",
-      "3/2",
-      "32768/19683",
-      "16/9"
+    "system": "pythagorean",
+    "compose": [
+      "cins_buselik",
+      "cins_ussak4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_sultaniyegah": {
-    "description": "Makam Sultaniyegah — Rast transposed, majestic character — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Sultaniyegah — Rast transposed, majestic character — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "9/8",
-      "8192/6561",
-      "4/3",
-      "3/2",
-      "32768/19683",
-      "4096/2187"
+    "system": "pythagorean",
+    "compose": [
+      "cins_rast",
+      "cins_huseyni4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "makam_karcigar": {
-    "description": "Makam Karcigar — mixed Turkish-Arabic makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection.",
+    "description": "Makam Karcigar — mixed Turkish-Arabic makam — Ratios = Pythagore (3-limite, chaîne de quintes du système ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de vérité ; le 53-TET est une projection. [système turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les dörtlü rares)].",
     "culture": "turkish",
     "notes_count": 7,
-    "ratios": [
-      "1/1",
-      "65536/59049",
-      "32/27",
-      "4/3",
-      "3/2",
-      "128/81",
-      "4096/2187"
+    "system": "pythagorean",
+    "compose": [
+      "cins_ussak",
+      "cins_segah4"
     ],
-    "system": "pythagorean"
+    "junction": "3/2"
   },
   "gong": {
     "description": "Gong mode — 1st mode of Chinese pentatonic, Do position",
@@ -2424,5 +2368,178 @@
       "26/15"
     ],
     "_note": "Saba has 3 jins. Junction points: first at ~4th diminished, second at ~minor 7th."
+  },
+  "cins_rast": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "9/8",
+      "8192/6561",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_rast) — segment pythagoricien exact"
+  },
+  "cins_rast4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "9/8",
+      "8192/6561",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_rast4) — segment pythagoricien exact"
+  },
+  "cins_ussak": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "65536/59049",
+      "32/27",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_ussak) — segment pythagoricien exact"
+  },
+  "cins_ussak4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "65536/59049",
+      "32/27",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_ussak4) — segment pythagoricien exact"
+  },
+  "cins_buselik4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "9/8",
+      "32/27",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_buselik4) — segment pythagoricien exact"
+  },
+  "cins_hicaz": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "2187/2048",
+      "8192/6561",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_hicaz) — segment pythagoricien exact"
+  },
+  "cins_buselik": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "9/8",
+      "32/27",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_buselik) — segment pythagoricien exact"
+  },
+  "cins_kurdi4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "256/243",
+      "32/27",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_kurdi4) — segment pythagoricien exact"
+  },
+  "cins_kurdi": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "256/243",
+      "32/27",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_kurdi) — segment pythagoricien exact"
+  },
+  "cins_segah": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "256/243",
+      "9/8",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_segah) — segment pythagoricien exact"
+  },
+  "cins_cargah4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "256/243",
+      "9/8",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_cargah4) — segment pythagoricien exact"
+  },
+  "cins_saba": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1/1",
+      "65536/59049",
+      "32/27",
+      "81/64",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_saba) — segment pythagoricien exact"
+  },
+  "cins_huseyni4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "65536/59049",
+      "8192/6561",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_huseyni4) — segment pythagoricien exact"
+  },
+  "cins_segah4": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "256/243",
+      "8192/6561",
+      "4/3"
+    ],
+    "description": "Cins turc (cins_segah4) — segment pythagoricien exact"
+  },
+  "cins_huzzam": {
+    "fragment": true,
+    "system": "pythagorean",
+    "ratios": [
+      "1",
+      "2187/2048",
+      "32/27",
+      "4/3",
+      "3/2"
+    ],
+    "description": "Cins turc (cins_huzzam) — segment pythagoricien exact"
   }
 }
