@@ -165,13 +165,22 @@ propreté, performance) :
 
 | Façade (`src/transpiler/index.js`) | Sortie | Rôle |
 |---|---|---|
-| `compileToBPxAST(source)` | `{ ast, backticks, flagStates, libraries, errors, warnings }` | **Voie AST BPx** : produit l'**arbre complet**, agnostique, consommé par BPx + Kanopi. **N'appelle JAMAIS l'encodeur** (`src/transpiler/bpxAst.js` n'importe que tokenizer + parser). |
+| `compileToBPxAST(source)` | `{ ast, errors, warnings }` | **Voie AST BPx** : produit l'**arbre seul**, agnostique, consommé par BPx + Kanopi. **N'appelle JAMAIS l'encodeur** (`src/transpiler/bpxAst.js` n'importe que tokenizer + parser). |
 | `compileBPS(source)` | `{ grammar, alphabet, settings, … }` | **Voie 2 (BP3 héritée)** : parse + ENCODE → grammaire BP3. **Vouée au retrait** dans les prochaines versions. |
 
-La voie AST porte tout sans recours à l'ancien format : payload par token (nature/actor/params/flux)
-et `references[]` (ActorReference) viennent du **parser** ; l'étiquetage des backticks (`_btName`,
-compteur propre), la table `backticks`, `flagStates` et `libraries` sont produits par des **passes
-agnostiques** dans `bpxAst.js` (plus par l'encodeur — dépendance cachée supprimée). Cf. spec
+**SOURCE UNIQUE = l'arbre, ZÉRO table parallèle** (directive Romain 2026-06-17, confirmée BPx +
+Kanopi). La voie AST ne renvoie que l'arbre ; tout vit DANS les nœuds / directives, lu directement
+par les consommateurs :
+
+- **payload par token** (nature/actor/params/flux) + **`references[]`** (ActorReference) → posés par
+  le **parser** ;
+- **backticks** → sur les nœuds : `_btName` (étiquette/terminal, lue par BPx), `code`, `interp`
+  (tag explicite ou hérité de l'`eval` de l'acteur) — annotés par `bpxAst.js`, **pas de table** ;
+- **drapeaux nommés** → directives `@flag` ; **librairies** → directives `@library` ;
+  **scènes/expose/map** → `ast.scenes`/`ast.exposes`/`ast.maps` ; **tempo** → `@mm`.
+
+Les anciennes tables latérales (`backticks`/`flagStates`/`libraries`/`sceneTable`/`mapTable`/
+`exposeTable`) étaient des vues redondantes (vestiges BP3) : supprimées de cette voie. Cf. spec
 canonique `BPx/docs/AST_SPEC.md`.
 
 > ⚠️ **CONTEXTE BPx.** Quand on produit l'AST BPx, on n'utilise PAS le code de l'ancien format. La
