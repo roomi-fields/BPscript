@@ -1,6 +1,16 @@
 {
   "name": "filter",
   "type": "cv",
+  "_comment_curve": [
+    "Chaque objet CV porte sa COURBE en librairie (zéro built-in moteur) — le renderer est générique",
+    "et lit `curve` sample-par-sample sans rien savoir de l'ADSR/LFO. Conventions :",
+    "  $param        — valeur d'un paramètre (ex. \"$sustain\")",
+    "  dur           — nom de paramètre (ms) donnant la durée du segment, ou littéral",
+    "  shape         — interpolation : lin | exp | log (défaut lin)",
+    "  hold/until    — phase de maintien : tient la valeur jusqu'à l'événement (ex. gate_off)",
+    "  segment sans dur — occupe toute la durée restante de l'objet CV placé (cf. ramp)",
+    "  kind          — segments (déclaratif) | periodic (LFO) | samples (échantillonné) | expr (backtick)"
+  ],
   "objects": {
     "adsr": {
       "parameters": {
@@ -11,7 +21,16 @@
         "stretch": { "type": "boolean", "default": false }
       },
       "input": "signal",
-      "output": { "range": [0, 1], "description": "Normalized envelope curve" }
+      "output": { "range": [0, 1], "description": "Normalized envelope curve" },
+      "curve": {
+        "kind": "segments",
+        "segments": [
+          { "to": 1,          "dur": "attack",  "shape": "exp" },
+          { "to": "$sustain", "dur": "decay",   "shape": "exp" },
+          { "hold": "$sustain", "until": "gate_off" },
+          { "to": 0,          "dur": "release", "shape": "exp" }
+        ]
+      }
     },
     "lfo": {
       "parameters": {
@@ -20,7 +39,13 @@
         "shape":     { "values": ["sine", "triangle", "square", "saw"], "default": "sine" }
       },
       "input": "signal",
-      "output": { "range": [-1, 1] }
+      "output": { "range": [-1, 1] },
+      "curve": {
+        "kind": "periodic",
+        "shape": "$shape",
+        "rate": "$rate",
+        "amplitude": "$amplitude"
+      }
     },
     "ramp": {
       "parameters": {
@@ -28,7 +53,13 @@
         "to":   { "default": 1 }
       },
       "input": "signal",
-      "output": { "range": [0, 1] }
+      "output": { "range": [0, 1] },
+      "curve": {
+        "kind": "segments",
+        "segments": [
+          { "from": "$from", "to": "$to", "shape": "lin" }
+        ]
+      }
     }
   }
 }

@@ -31,20 +31,25 @@ Un CV a deux aspects indépendants :
 ```bps
 @filter                                              // charge lib/filter.json
 
-// Déclaration : instanciation + routing + paramètres
-env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
-//    │         │          │      │
-//    │         │          │      └─ paramètres (attack, decay, sustain, release)
-//    │         │          └─ type d'objet dans la lib
-//    │         └─ sortie (transport)
-//    └─ entrée (cible : scène, grammaire, sous-grammaire, séquence, terminal)
+// Déclaration : modulateur : cible = objet de lib (paramètres)
+env1:Bass.cutoff = filter.adsr(attack:5, decay:150, sustain:0.2, release:400)
+//    │   │   │     │      │
+//    │   │   │     │      └─ paramètres (nommés ou positionnels)
+//    │   │   │     └─ type d'objet dans la lib
+//    │   │   └─ CVin cible : paramètre modulé (amp | freq | cutoff)
+//    │   └─ voix (acteur) ; le transport est DÉDUIT de la voix (l'acteur le binde déjà)
+//    └─ nom du modulateur (instance)
 
 // Grammaire : placement temporel
-S -> {Phrase1, env1 -}
-//             │    │
-//             │    └─ silence : env1 dure plus longtemps que Phrase1
-//             └─ env1 est un objet temporel comme une note
+S -> {Bass, env1 -}
+//          │    │
+//          │    └─ silence : env1 dure plus longtemps que Bass
+//          └─ env1 est un objet temporel comme une note
 ```
+
+> **Forme legacy (transport explicite)** : `env1(Bass, browser) = filter.adsr(...)` reste acceptée
+> (cible et transport positionnels, sans CVin nommée). Préférer la forme route `env1:Bass.cutoff`
+> qui nomme le paramètre cible et déduit le transport de la voix.
 
 ### Librairie (lib/filter.json)
 
@@ -109,7 +114,10 @@ L'entrée d'un CV peut être à n'importe quel niveau de la hiérarchie :
 
 Le comportement du CV est défini par du code **externe à BPScript** :
 
-1. **Librairie JSON** — paramètres déclaratifs, le transport implémente le comportement
+1. **Librairie JSON** — paramètres déclaratifs **ET la courbe** (bloc `curve`). La courbe vit dans
+   la lib (pas dans le moteur) : segments déclaratifs (`to`/`dur`/`shape`, phase `hold`…`until`),
+   ou `periodic` (LFO), ou `samples`, ou `expr`. Le **renderer est générique** : il lit `curve`
+   sample-par-sample et ne connaît ni l'ADSR ni le LFO.
 2. **Backtick inline** — code brut pour le live coding :
    ```bps
    env1(Phrase1, browser) = `js: new Float32Array([0, 0.5, 1, 0.8, 0])`
@@ -123,7 +131,10 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 
 ## Questions ouvertes
 
-- Comment exprimer le routing vers un paramètre spécifique ? `env1 -> filter` vs `env1(Phrase1.filter, browser)` ?
+- ~~Comment exprimer le routing vers un paramètre spécifique ?~~ **Résolu (Romain 2026-06-19)** :
+  forme route `env1:Bass.cutoff = filter.adsr(...)` — la CVin cible est nommée par la notation
+  pointée `acteur.cvin`, le transport est déduit de la voix. Override de transport par patch =
+  extension ultérieure.
 - Peut-on chaîner des CV ? `env2(env1(Phrase1))` ?
 - Comment le transport Web Audio implémente-t-il un CV ? `setValueCurveAtTime()` ?
 - Faut-il un mécanisme de "bus" pour partager un CV entre plusieurs cibles ?

@@ -138,6 +138,7 @@ function encode(ast) {
         id: cvId,
         name: cv.name,
         target: cv.target,
+        cvin: cv.cvin ?? null,
         transport: cv.transport,
         lib: cv.lib,
         objectType: cv.objectType,

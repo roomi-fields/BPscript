@@ -1114,10 +1114,27 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   function isLookaheadCVInstance() {
-    // IDENT LPAREN ... RPAREN EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
+    // Deux formes :
+    //   route (v0.9)  : IDENT COLON IDENT PERIOD IDENT EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
+    //   appel (legacy): IDENT LPAREN ... RPAREN EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
     let j = pos;
     if (tokens[j]?.type !== T.IDENT) return false;
     j++;
+    // Forme route : env1:Bass.cutoff = ...  (cible nommée acteur.cvin, transport déduit de la voix)
+    if (tokens[j]?.type === T.COLON &&
+        tokens[j+1]?.type === T.IDENT &&
+        tokens[j+2]?.type === T.PERIOD &&
+        tokens[j+3]?.type === T.IDENT &&
+        tokens[j+4]?.type === T.EQUALS) {
+      j += 5;
+      while (tokens[j]?.type === T.NEWLINE) j++;
+      if (tokens[j]?.type === T.BACKTICK) return true;
+      if (tokens[j]?.type === T.IDENT &&
+          tokens[j+1]?.type === T.PERIOD &&
+          tokens[j+2]?.type === T.IDENT &&
+          tokens[j+3]?.type === T.LPAREN) return true;
+      return false;
+    }
     if (tokens[j]?.type !== T.LPAREN) return false;
     // Skip until matching RPAREN
     let depth = 1;
@@ -1145,12 +1162,22 @@ function parse(tokens, opts = {}) {
     const tok = current();
     const name = expect(T.IDENT).value;
 
-    // (target, transport)
-    expect(T.LPAREN);
-    const target = expect(T.IDENT).value;
-    expect(T.COMMA);
-    const transport = expect(T.IDENT).value;
-    expect(T.RPAREN);
+    // Cible : forme route `:acteur.cvin` (transport déduit) ou forme appel `(target, transport)`.
+    let target, transport = null, cvin = null;
+    if (at(T.COLON)) {
+      // env1:Bass.cutoff  — target = voix/acteur, cvin = CVin (amp/freq/cutoff), transport déduit
+      advance(); // :
+      target = expect(T.IDENT).value;
+      expect(T.PERIOD);
+      cvin = expect(T.IDENT).value;
+    } else {
+      // (target, transport) — forme legacy, transport explicite
+      expect(T.LPAREN);
+      target = expect(T.IDENT).value;
+      expect(T.COMMA);
+      transport = expect(T.IDENT).value;
+      expect(T.RPAREN);
+    }
 
     expect(T.EQUALS);
     skipNewlines();
@@ -1159,7 +1186,7 @@ function parse(tokens, opts = {}) {
     if (at(T.BACKTICK)) {
       const code = advance().value;
       return {
-        type: 'CVInstance', name, target, transport,
+        type: 'CVInstance', name, target, cvin, transport,
         lib: null, objectType: 'backtick', args: [], namedArgs: {},
         code, line: tok.line
       };
@@ -1196,7 +1223,7 @@ function parse(tokens, opts = {}) {
     expect(T.RPAREN);
 
     return {
-      type: 'CVInstance', name, target, transport,
+      type: 'CVInstance', name, target, cvin, transport,
       lib, objectType, args, namedArgs, line: tok.line
     };
   }
