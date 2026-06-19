@@ -28,6 +28,10 @@ Un CV a deux aspects indépendants :
 
 ### Syntaxe
 
+> ⚠️ **Forme route `env1:Bass.cutoff` : PENDING ratification explicite de Romain.** Implémentée et
+> testée (additive, forme appel legacy préservée), mais la validation n'est pour l'instant que
+> *relayée* — à confirmer en direct avant de la traiter comme actée / déployée.
+
 ```bps
 @filter                                              // charge lib/filter.json
 
@@ -131,10 +135,11 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 
 ## Questions ouvertes
 
-- ~~Comment exprimer le routing vers un paramètre spécifique ?~~ **Résolu (Romain 2026-06-19)** :
-  forme route `env1:Bass.cutoff = filter.adsr(...)` — la CVin cible est nommée par la notation
-  pointée `acteur.cvin`, le transport est déduit de la voix. Override de transport par patch =
-  extension ultérieure.
+- Comment exprimer le routing vers un paramètre spécifique ? **Proposition implémentée, ⚠️ PENDING
+  ratification EXPLICITE de Romain** (préférence relayée via Kanopi, pas encore validée en direct —
+  ne pas déployer comme acté) : forme route `env1:Bass.cutoff = filter.adsr(...)` — la CVin cible
+  est nommée par la notation pointée `acteur.cvin`, le transport est déduit de la voix. Override de
+  transport par patch = extension ultérieure.
 - Peut-on chaîner des CV ? `env2(env1(Phrase1))` ?
 - Comment le transport Web Audio implémente-t-il un CV ? `setValueCurveAtTime()` ?
 - Faut-il un mécanisme de "bus" pour partager un CV entre plusieurs cibles ?
