@@ -166,9 +166,12 @@ Bass → joue l'alphabet western → @alphabet.western:browser → transport bro
 >    (la note traverse les nœuds) ; pitch = par-note (ConstantSource→osc.detune). Limite connue :
 >    cutoff & resonance sont deux nœuds filtre séparés → les moduler ensemble = deux filtres en série.
 > 2. ~~Renommer la lib `filter` → `mod`~~ **FAIT** (lib/mod.json). `cv env1 : mod.adsr(...)`.
-> 3. **Validation des noms par le transpileur** — À FAIRE, **par type de sortie** : `pan` est aussi un
->    contrôle MIDI/musical (0–127) ; la résolution doit dépendre du transport de la voix (webaudio
->    `pan` = −1..1 ≠ MIDI `pan` = 0–127). Design à cadrer avant implémentation.
+> 3. **Validation des noms par le transpileur** — **FAIT** (`modulationValidation.js`). Déclencheur
+>    PAR LA VALEUR : une paire `(KEY: VALUE)` n'est validée comme branchement de modulation que si
+>    VALUE est une **source de modulation** (un CV déclaré, ou un non-terminal dérivant vers des CV).
+>    Donc `(pan: 100)` = contrôle MIDI normal (non touché), `(pan: env1)` = entrée webaudio validée :
+>    la collision `pan` est résolue **sans** dépendre du transport. Portée par type de sortie quand
+>    résoluble (via `@routing`), sinon union des entrées connues. Erreur ligne/col si entrée inconnue.
 
 ## Contrat temporel des paramètres dérivés
 

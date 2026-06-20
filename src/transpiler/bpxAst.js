@@ -21,6 +21,7 @@ import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives } from './libs.js';
 import { validateControls } from './controlValidation.js';
+import { validateModulation } from './modulationValidation.js';
 
 /**
  * Annote les backticks (voix de code) SUR LE NŒUD — pas de table parallèle (directive
@@ -94,6 +95,7 @@ export function compileToBPxAST(source) {
     ];
     const libCtx = loadLibsFromDirectives(directives);
     result.errors.push(...validateControls(ast, libCtx.controls));
+    result.errors.push(...validateModulation(ast, libCtx));
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
     else throw e;

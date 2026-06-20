@@ -128,6 +128,23 @@ function loadLibsFromDirectives(directives) {
   const settingsLib = loadLib('settings');
   if (settingsLib) ctx._libs['settings'] = settingsLib;
 
+  // Registre des ENTRÉES DE MODULATION par type de sortie (lib/modulation.json) — toujours
+  // disponible (intrinsèque, pas besoin de @modulation). Utilisé pour valider les noms écrits
+  // au point de branchement `(cutoff: env1)`. modulationInputs : { type → Set(noms) } ;
+  // modulationInputsAll : union de tous les noms (fallback quand le type de sortie n'est pas résolu).
+  ctx.modulationInputs = {};
+  ctx.modulationInputsAll = new Set();
+  const modulationLib = loadLib('modulation');
+  if (modulationLib) {
+    for (const [type, inputs] of Object.entries(modulationLib)) {
+      if (type.startsWith('_') || !inputs || typeof inputs !== 'object') continue;
+      const set = new Set(Object.keys(inputs));
+      ctx.modulationInputs[type] = set;
+      for (const n of set) ctx.modulationInputsAll.add(n);
+    }
+    ctx._libs['modulation'] = modulationLib;
+  }
+
   // Built-in: cc() generic MIDI CC (always available)
   ctx.controls['cc'] = { args: ['number', 'value'], range: [0, 127], description: 'Generic MIDI CC', transportGroup: 'midi' };
   ctx.controlMap['cc'] = '_cc';
