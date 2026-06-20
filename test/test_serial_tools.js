@@ -125,16 +125,28 @@ section('Fin de règle — marqueur en tête de RHS');
 }
 
 // -----------------------------------------------------------------------
-// 4. Graine : [shuffle:N] → _srand(N) _rndseq
+// 4. Graine ORTHOGONALE : shuffle et graine sont séparés (refactor 2026-06-14).
+//    - `[shuffle:N]` est RETIRÉ → erreur d'aiguillage (plus de _srand fusionné).
+//    - la graine s'écrit `![@seed:N]` (dans le flux) → _srand(N) en tête de RHS.
 // -----------------------------------------------------------------------
 
-section('Graine — [shuffle:N]');
+section('Graine orthogonale — [shuffle:N] retiré, graine via ![@seed:N]');
 
 {
-  const line = getRuleLine(`${HDR}\nS -> {a b c d}[shuffle:42]`);
+  const r = compileBPS(`${HDR}\nS -> {a b c d}[shuffle:42]`);
+  const err = (r.errors && r.errors[0] && r.errors[0].message) || '';
   assert(
-    '{a b c d}[shuffle:42] → {_srand(42) _rndseq a b c d}',
-    line.includes('{_srand(42) _rndseq a b c d}'),
+    '[shuffle:N] retiré → erreur qui aiguille vers @seed',
+    (r.errors || []).length > 0 && /shuffle/.test(err) && /seed/.test(err),
+    err
+  );
+}
+
+{
+  const line = getRuleLine(`${HDR}\nS -> ![@seed:42] {a b c d}[shuffle]`);
+  assert(
+    '![@seed:42] {a b c d}[shuffle] → _srand(42) {_rndseq a b c d}',
+    line.includes('_srand(42)') && line.includes('{_rndseq a b c d}'),
     line
   );
 }
