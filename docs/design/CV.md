@@ -89,13 +89,13 @@ Bass et Env restent deux processus séparés ; l'un module l'autre.
 > Frontière stricte : BPx établit le câblage + l'alignement structurel ; l'**échantillonnage** de la
 > courbe et le **mappage** sur la plage se font **en aval** (dispatcher/webaudio), pas dans BPx.
 
-### Librairie des modulateurs (lib/filter.json → cible : lib/mod.json)
+### Librairie des modulateurs (lib/mod.json)
 
-> Renommage `filter` → `mod` à confirmer (voir « Points data à câbler »). Structure inchangée.
+> Renommée `filter` → `mod` (validé Romain 2026-06-20). Structure inchangée.
 
 ```json
 {
-  "name": "filter",
+  "name": "mod",
   "type": "cv",
   "objects": {
     "adsr": {
@@ -158,14 +158,13 @@ Bass → joue l'alphabet western → @alphabet.western:browser → transport bro
   la plage de l'entrée (`cutoff` : 20–20000 Hz) qui dit comment étaler ce 0..1 en valeurs réelles.
   Ce mappage est fait **en aval** (dispatcher/webaudio), pas par BPx.
 
-> **Points data à câbler (touchent le langage — à confirmer Romain avant gel) :**
-> 1. **Registre des entrées de modulation par type de sortie** : déclarer explicitement, pour
->    webaudio, `{ cutoff, amplitude, resonance, pitch, … }` avec unité+plage (noms de **synthèse**,
->    pas les noms d'implémentation `filter`/`vel`). Aujourd'hui ce registre n'existe pas → `cutoff`
->    est accepté comme chaîne libre, non validé. À ajouter (probablement dans/à côté de `routing.json`).
-> 2. **Renommer la lib de modulateurs** `filter` → `mod` : elle contient adsr/lfo/ramp (des
->    **modulateurs**), pas des filtres — et `filter` collisionne avec le contrôle de coupure. Cible :
->    `cv env1 : mod.adsr(...)`.
+> **État data :**
+> 1. **Registre des entrées de modulation par type de sortie** — EN COURS (passe Kanopi). Pour
+>    webaudio : `{ cutoff:Hz 20–20000, amplitude:0–1, resonance:0–30, pitch:±1200c, pan:… }` (noms de
+>    **synthèse**, source de vérité = le runtime webaudio de Kanopi). Tant que le registre n'est pas
+>    figé, `cutoff` etc. sont acceptés comme valeurs libres NON validées par le transpileur ; la
+>    validation des noms (erreur ligne/col si inconnu) se branchera quand Kanopi aura confirmé la liste.
+> 2. ~~Renommer la lib `filter` → `mod`~~ **FAIT** (lib/mod.json). `cv env1 : mod.adsr(...)`.
 
 ## Contrat temporel des paramètres dérivés
 

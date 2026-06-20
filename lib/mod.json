@@ -1,5 +1,5 @@
 {
-  "name": "filter",
+  "name": "mod",
   "type": "cv",
   "_comment_curve": [
     "Chaque objet CV porte sa COURBE en librairie (zéro built-in moteur) — le renderer est générique",

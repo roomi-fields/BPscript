@@ -137,9 +137,12 @@ function encode(ast) {
       output.cvTable.push({
         id: cvId,
         name: cv.name,
-        target: cv.target,
+        // Déclaration CV descriptive (design 2026-06-20) : plus de cible/route sur la
+        // déclaration (le branchement se fait au point de paramètre). target/cvin/transport
+        // restent null pour rétro-compat de la table héritée.
+        target: cv.target ?? null,
         cvin: cv.cvin ?? null,
-        transport: cv.transport,
+        transport: cv.transport ?? null,
         lib: cv.lib,
         objectType: cv.objectType,
         args: resolvedArgs,

@@ -117,7 +117,7 @@ function loadLibsFromDirectives(directives) {
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
     symbols: {},        // name → { type, ... }
-    cvObjects: {},      // "lib.type" → def (e.g. "filter.adsr" → { parameters, ... })
+    cvObjects: {},      // "lib.type" → def (e.g. "mod.adsr" → { parameters, ... })
     _libs: {},          // directive name → raw lib data (for generator access)
     _alphabets: [],     // loaded alphabet libs (deferred terminal generation)
     _octaveConvention: null,  // resolved octave convention name

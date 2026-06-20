@@ -573,11 +573,8 @@ Macro {
 ```
 CVInstance {
   type: "CVInstance"
-  name: string                      // nom de l'instance ("env1", "lfo1")
-  target: string                    // voix/cible (acteur "Bass")
-  cvin: string                      // CVin cible nommée ("amp"|"freq"|"cutoff")
-  transport: null                   // toujours déduit de la voix
-  lib: string | null                // lib source ("filter", null pour backtick)
+  name: string                      // nom du modulateur ("env1", "sweep")
+  lib: string | null                // lib source ("mod", null pour backtick)
   objectType: string                // type d'objet ("adsr", "lfo", "ramp", "backtick")
   args: (number | string)[]         // arguments positionnels
   namedArgs: { [key: string]: any } // arguments nommés (attack:10, rate:4)
@@ -586,16 +583,20 @@ CVInstance {
 }
 ```
 
-Forme **unique** (route, v0.9 — validée Romain 2026-06-20, cf. `cv_instance` dans EBNF) :
-`env1:Bass.cutoff = filter.adsr(...)` — `target` = voix, `cvin` = paramètre modulé, `transport`
-toujours `null` (déduit de la voix). Le `.` reprend la notation pointée `acteur.membre`. L'ancienne
-forme appel `env1(cible, transport) = …` est supprimée (pas de rétro-compat).
+Déclaration **purement descriptive** (design Romain 2026-06-20, cf. `cv_instance` dans EBNF) :
+`cv env1 : mod.adsr(...)` décrit ce qu'EST le modulateur — **pas de cible/route/transport** sur la
+déclaration. Le branchement se fait au point de paramètre (`(cutoff: env1)` → paire de
+`RuntimeQualifier` dont la valeur est un symbole/littéral). Les champs `target`/`cvin`/`transport`
+des anciennes formes sont supprimés.
 
 Exemples :
-- `env1:Bass.cutoff = filter.adsr(attack:5, decay:150, sustain:0.2, release:400)`
-  -> `{ name:"env1", target:"Bass", cvin:"cutoff", transport:null, lib:"filter", objectType:"adsr", args:[], namedArgs:{attack:5, decay:150, sustain:0.2, release:400} }`
-- `` mod1:Mel.freq = `js: new Float32Array(...)` ``
-  -> `{ name:"mod1", target:"Mel", cvin:"freq", transport:null, lib:null, objectType:"backtick", args:[], namedArgs:{}, code:"js: new Float32Array(...)" }`
+- `cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)`
+  -> `{ name:"env1", lib:"mod", objectType:"adsr", args:[], namedArgs:{attack:5, decay:150, sustain:0.2, release:400}, code:null }`
+- `` cv custom : `js: new Float32Array(...)` ``
+  -> `{ name:"custom", lib:null, objectType:"backtick", args:[], namedArgs:{}, code:"js: new Float32Array(...)" }`
+
+Le **branchement** `Bass -> … (cutoff: env1)` n'est PAS dans la CVInstance : c'est une paire du
+`RuntimeQualifier` de la note/règle/groupe (`{ key:"cutoff", value:"env1" }`), résolue en aval.
 
 ---
 

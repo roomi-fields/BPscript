@@ -240,18 +240,24 @@ Format préféré : `@gate Sa:midi`. Format legacy (sans `@`) : `gate Sa:sc` —
 Avec `@actor`, les symboles sont qualifiés par dot notation dans les règles :
 `sitar.Sa` → le terminal `Sa` résolu via l'acteur `sitar`.
 
-### `cv_instance`
+### `cv_instance` — déclaration de modulateur
 
 ```ebnf
-cv_instance = IDENT , ":" , IDENT , "." , IDENT , "=" , cv_rhs ;  (* env1:Bass.cutoff = ... *)
-cv_rhs = IDENT , "." , IDENT , "(" , arg_list , ")"    (* lib.type(args) *)
-       | backtick_inline ;                               (* `js: code` *)
+cv_instance = "cv" , IDENT , ":" , cv_body ;          (* cv env1 : mod.adsr(...) *)
+cv_body = IDENT , "." , IDENT , "(" , arg_list , ")"   (* lib.type(params) *)
+        | backtick_inline ;                             (* `js: code` *)
 ```
 
-Forme **UNIQUE** (route, v0.9 — validée Romain 2026-06-20) : `env1:Bass.cutoff` nomme la CVin
-cible (`acteur.cvin`, notation pointée déjà employée pour `acteur.terminal`) ; le transport est
-**déduit de la voix**. L'ancienne forme appel `env1(cible, transport) = …` est **supprimée** (pas
-de rétro-compat : bêta, une seule forme propre).
+Déclaration **purement descriptive** (design Romain 2026-06-20) : `cv env1 : mod.adsr(...)` décrit
+ce qu'EST le modulateur — mot-type `cv`, `:` = « est un », `()` = paramètres. **Aucune cible, aucune
+route, aucun `=`** sur la déclaration. Le **branchement** se fait au point de paramètre
+(`(cutoff: env1)`, cf. `runtime_qualifier`), où la valeur peut être un littéral OU un **symbole
+dérivable** de la grammaire.
+
+Désambiguïsation avec la double-déclaration temporelle `cv ramp:sc` (type temporel + runtime) : le
+corps après `cv NAME :` est un modulateur ssi c'est `IDENT.IDENT(…)` ou un backtick ; sinon c'est un
+binding de type temporel. Les anciennes formes (`env1(cible,transport)=…`, `env1:Bass.cutoff=…`)
+sont **supprimées**.
 
 ### `macro`
 

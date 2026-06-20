@@ -198,11 +198,12 @@ function parse(tokens, opts = {}) {
         // l'ordre source (l'ordre des directives est sémantique : last wins).
         for (const d of parseProductionBlock()) scene.directives.push(d);
       } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
-        scene.declarations.push(parseDeclaration());
+        const decl = parseDeclaration();
+        // `cv NAME : lib.type(...)` produit une CVInstance (modulateur), pas une Declaration.
+        if (decl.type === 'CVInstance') scene.cvInstances.push(decl);
+        else scene.declarations.push(decl);
       } else if (at(T.BACKTICK)) {
         scene.backticks.push(parseBacktickOrphan());
-      } else if (at(T.IDENT) && isLookaheadCVInstance()) {
-        scene.cvInstances.push(parseCVInstance());
       } else if (at(T.IDENT) && isLookaheadMacro()) {
         scene.macros.push(parseMacro());
       } else if (isRuleStart()) {
@@ -1140,93 +1141,9 @@ function parse(tokens, opts = {}) {
   }
 
   // ============================================================
-  // CV Instances — env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
+  // CV Instances — déclaration descriptive : `cv env1 : mod.adsr(...)`
+  // (parsée dans parseDeclaration via parseCVModulator ; branchement au point de paramètre)
   // ============================================================
-
-  function isLookaheadCVInstance() {
-    // Forme UNIQUE (route, v0.9, validée Romain 2026-06-20) :
-    //   IDENT COLON IDENT PERIOD IDENT EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
-    //   env1:Bass.cutoff = ...  — cible nommée acteur.cvin, transport déduit de la voix.
-    let j = pos;
-    if (tokens[j]?.type !== T.IDENT) return false;
-    j++;
-    if (tokens[j]?.type === T.COLON &&
-        tokens[j+1]?.type === T.IDENT &&
-        tokens[j+2]?.type === T.PERIOD &&
-        tokens[j+3]?.type === T.IDENT &&
-        tokens[j+4]?.type === T.EQUALS) {
-      j += 5;
-      while (tokens[j]?.type === T.NEWLINE) j++;
-      if (tokens[j]?.type === T.BACKTICK) return true;
-      if (tokens[j]?.type === T.IDENT &&
-          tokens[j+1]?.type === T.PERIOD &&
-          tokens[j+2]?.type === T.IDENT &&
-          tokens[j+3]?.type === T.LPAREN) return true;
-      return false;
-    }
-    return false;
-  }
-
-  function parseCVInstance() {
-    const tok = current();
-    const name = expect(T.IDENT).value;
-
-    // Cible : forme route UNIQUE `:acteur.cvin` (transport déduit de la voix).
-    // env1:Bass.cutoff — target = voix/acteur, cvin = CVin (amp/freq/cutoff).
-    const transport = null;  // toujours déduit de la voix (plus de transport explicite)
-    expect(T.COLON);
-    const target = expect(T.IDENT).value;
-    expect(T.PERIOD);
-    const cvin = expect(T.IDENT).value;
-
-    expect(T.EQUALS);
-    skipNewlines();
-
-    // RHS: backtick or lib.objectType(args...)
-    if (at(T.BACKTICK)) {
-      const code = advance().value;
-      return {
-        type: 'CVInstance', name, target, cvin, transport,
-        lib: null, objectType: 'backtick', args: [], namedArgs: {},
-        code, line: tok.line
-      };
-    }
-
-    // lib.objectType(args...)
-    const lib = expect(T.IDENT).value;
-    expect(T.PERIOD);
-    const objectType = expect(T.IDENT).value;
-    expect(T.LPAREN);
-
-    const args = [];
-    const namedArgs = {};
-    while (!at(T.RPAREN) && !atEnd()) {
-      // Check for named arg: key:value
-      if (at(T.IDENT) && peek(1).type === T.COLON) {
-        const key = advance().value;
-        advance(); // :
-        const val = at(T.IDENT) ? advance().value :
-                    at(T.INT) ? Number(advance().value) :
-                    at(T.FLOAT) ? Number(advance().value) :
-                    advance().value;
-        namedArgs[key] = val;
-      } else {
-        // Positional arg
-        const val = at(T.INT) ? Number(advance().value) :
-                    at(T.FLOAT) ? Number(advance().value) :
-                    at(T.IDENT) ? advance().value :
-                    advance().value;
-        args.push(val);
-      }
-      if (at(T.COMMA)) advance();
-    }
-    expect(T.RPAREN);
-
-    return {
-      type: 'CVInstance', name, target, cvin, transport,
-      lib, objectType, args, namedArgs, line: tok.line
-    };
-  }
 
   // ============================================================
   // Declarations
@@ -1237,8 +1154,69 @@ function parse(tokens, opts = {}) {
     const temporalType = advance().value; // gate | trigger | cv
     const name = expect(T.IDENT).value;
     expect(T.COLON);
+    // Déclaration de MODULATEUR CV (design Romain 2026-06-20) : `cv env1 : mod.adsr(...)` ou
+    // `cv env1 : `js: …``. Purement descriptive — AUCUNE cible/route (le branchement se fait
+    // au point de paramètre `(cutoff: env1)`). À distinguer de la double-déclaration temporelle
+    // `cv ramp:sc` (type temporel + runtime) par le lookahead : lib.type( … ) ou backtick.
+    if (temporalType === 'cv' && isCVModulatorBody()) {
+      return parseCVModulator(name, tok);
+    }
     const runtime = expect(T.IDENT).value;
     return { type: 'Declaration', temporalType, name, runtime, line: tok.line };
+  }
+
+  /** Le corps après `cv NAME :` est-il un modulateur (lib.type(...) ou backtick) ? */
+  function isCVModulatorBody() {
+    if (at(T.BACKTICK)) return true;
+    // IDENT . IDENT (   → lib.objectType(params)
+    return at(T.IDENT) && peek(1).type === T.PERIOD &&
+           peek(2).type === T.IDENT && peek(3).type === T.LPAREN;
+  }
+
+  /**
+   * Parse le corps d'un modulateur CV : `mod.adsr(params)` ou backtick inline.
+   * Forme déclarative pure : pas de cible, pas de transport (résolus au branchement).
+   * @returns CVInstance { name, lib, objectType, args, namedArgs, code }
+   */
+  function parseCVModulator(name, tok) {
+    // Backtick : `cv custom : `js: …``
+    if (at(T.BACKTICK)) {
+      const code = advance().value;
+      return {
+        type: 'CVInstance', name,
+        lib: null, objectType: 'backtick', args: [], namedArgs: {},
+        code, line: tok.line,
+      };
+    }
+    // lib.objectType(args…)
+    const lib = expect(T.IDENT).value;
+    expect(T.PERIOD);
+    const objectType = expect(T.IDENT).value;
+    expect(T.LPAREN);
+    const args = [];
+    const namedArgs = {};
+    while (!at(T.RPAREN) && !atEnd()) {
+      if (at(T.IDENT) && peek(1).type === T.COLON) {
+        const key = advance().value;
+        advance(); // :
+        const val = at(T.INT) ? Number(advance().value) :
+                    at(T.FLOAT) ? Number(advance().value) :
+                    at(T.IDENT) ? advance().value :
+                    advance().value;
+        namedArgs[key] = val;
+      } else {
+        const val = at(T.INT) ? Number(advance().value) :
+                    at(T.FLOAT) ? Number(advance().value) :
+                    at(T.IDENT) ? advance().value :
+                    advance().value;
+        args.push(val);
+      }
+      if (at(T.COMMA)) advance();
+    }
+    expect(T.RPAREN);
+    return {
+      type: 'CVInstance', name, lib, objectType, args, namedArgs, code: null, line: tok.line,
+    };
   }
 
   // ============================================================
