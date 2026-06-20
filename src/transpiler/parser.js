@@ -313,15 +313,16 @@ function parse(tokens, opts = {}) {
         // En Phase 1 on passe null : l'acteur est résolu au niveau token (dot-notation).
         annotateRhsElements(rule.rhs, null);
 
-        // Qualifier de NIVEAU RÈGLE `S -> … (vel:80)` : contrôle de FLUX à portée
-        // RÈGLE (s'applique à tous les tokens de la règle, AST_SPEC §2/§4). On le
-        // marque comme transport-control flux scope:'rule' ; le dispatcher l'applique
-        // aux tokens de la règle dans l'ordre dérivé.
+        // Qualifier de NIVEAU RÈGLE `S -> … (vel:80)` : CONTENANCE (concept neuf BPScript,
+        // décision Romain 2026-06-20). Un `(...)` nu est STRUCTUREL et CONFINÉ : il gouverne
+        // toute sa portée (y compris les notes écrites avant lui) et s'arrête au bord — il ne
+        // DÉBORDE pas. C'est l'inverse du flux `!(...)` (iso-BP3, forward, déborde). On le tague
+        // `containment` (PAS `flux`) : BPx route contenance→structurel, flux→séquentiel.
         if (rule.runtimeQualifier && typeof rule.runtimeQualifier === 'object') {
           const params = extractOccurrenceParams([rule.runtimeQualifier]);
           rule.runtimeQualifier.payload = {
             nature: 'transport-control',
-            flux: true,
+            containment: true,
             scope: 'rule',
             ...(params ? { params } : {}),
           };
@@ -418,7 +419,20 @@ function parse(tokens, opts = {}) {
 
     // ── Polymetric — récursion dans les voix ──────────────────────────
     if (type === 'Polymetric') {
-      // Pas de payload sur le nœud Polymetric lui-même (structurel)
+      // Pas de payload sur le nœud Polymetric lui-même (structurel).
+      // Mais un qualificateur de GROUPE `{…}(vel:80)` est de la CONTENANCE (même concept
+      // neuf que le `(...)` de règle, décision Romain 2026-06-20) : structurel, confiné au
+      // groupe, ne déborde pas. On le tague `containment` (PAS `flux`) pour que BPx le route
+      // au régime structurel. (Les Polymetric imbriqués sont atteints par la récursion.)
+      if (el.runtimeQualifier && typeof el.runtimeQualifier === 'object') {
+        const params = extractOccurrenceParams([el.runtimeQualifier]);
+        el.runtimeQualifier.payload = {
+          nature: 'transport-control',
+          containment: true,
+          scope: 'group',
+          ...(params ? { params } : {}),
+        };
+      }
       for (const voice of (el.voices || [])) {
         annotateRhsElements(voice, ruleActor);
       }

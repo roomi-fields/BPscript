@@ -557,6 +557,39 @@ attaches a un symbole.
 | **regle**   | `(cle:valeur)`   | runtime cible   | `C2 C2 (vel:100)` |
 | **symbole** | `(cle:valeur)`   | runtime cible   | `Sa(vel:120)`     |
 
+### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
+
+Un controle non-temporel (vel, wave, filter...) gouverne plusieurs notes de **deux
+manieres opposees**, selon qu'il est ecrit `()` ou `!()` :
+
+| Operateur | Regime | Portee | Deborde ? | Origine |
+| --------- | ------ | ------ | --------- | ------- |
+| **`(...)` nu** -- contenance | structurel | **toute sa portee** (regle ou groupe), **y compris les notes ecrites avant lui** | **non** : s'arrete au bord de sa portee | **ajout BPScript** (Romain 2026-06-20) |
+| **`!(...)`** -- flux | sequentiel | les notes qui **suivent** dans l'ordre joue | **oui** : continue vers l'avant, **traverse les bords** de regle, jusqu'au prochain controle | **iso-BP3** (evenement non-temporel) |
+
+```
+// CONTENANCE -- (...) nu : confine, gouverne meme ce qui precede
+Bass -> C2 E2 G2 (wave:sawtooth)     // les TROIS notes en sawtooth ; ne sort pas de Bass
+{C4 E4}(vel:80)                      // C4 et E4 a 80 ; confine au groupe
+
+// FLUX -- !(...) : forward, deborde
+S -> A B ;  A -> C4 !(vel:100) ;  B -> E4 E4
+// -> C4=defaut, puis !(vel:100) coule en avant : les E4 de B sortent A 100 (deborde dans B)
+```
+
+Le flux est un **etat courant** qui persiste **de facon continue** (pas de remise a zero
+par cycle ou par regle) : une note **echantillonne** la valeur en vigueur a son instant
+d'attaque, comme un signal en escalier. Sa portee est **par voix** : un flux pose dans une
+voix ne bave pas dans les voix paralleles.
+
+**Precedence** (du plus fort au plus faible) :
+**override de note `Sa(vel:120)` > flux `!(...)` > contenance `(...)` > defauts de declaration.**
+
+> Reference : `hub/decisions/2026-06-20-controles-non-temporels-portage-resolution.md`.
+> Comportement BP3 du flux verifie sur l'oracle natif (preuve MIDI : `P->C4 _vel(100) E4`
+> joue trois fois -> velocites `[64,100,100,100,100,100]` ; le 1er C4 reste au defaut =
+> forward-only, et le flux deborde sur la regle suivante).
+
 ---
 
 ## Les parentheses `()` -- quatre roles, zero ambiguite
@@ -657,6 +690,9 @@ Regles :
   - **`nom=valeur`** -> mutation de flag (zero duree)
 - **`!` standalone** (sans primaire) : **out-time object** -- declenche hors-temps,
   sans occuper de duree. Compile en `<<symbol>>` pour BP3.
+- **`!(controle)` standalone** : mutation de **flux** -- coule vers l'avant dans l'ordre
+  joue, deborde au-dela de sa portee (iso-BP3). A distinguer du `(...)` nu (contenance,
+  confine) -- cf. [Contenance `()` vs flux `!()`](#contenance---vs-flux---deux-facons-de-gouverner-les-notes).
 
 C'est le mecanisme central de la **simultaneite cross-runtime** :
 un seul point dans le temps peut declencher des evenements dans
