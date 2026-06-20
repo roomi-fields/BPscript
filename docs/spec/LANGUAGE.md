@@ -582,6 +582,21 @@ par cycle ou par regle) : une note **echantillonne** la valeur en vigueur a son 
 d'attaque, comme un signal en escalier. Sa portee est **par voix** : un flux pose dans une
 voix ne bave pas dans les voix paralleles.
 
+#### Table de syntaxe -- `!` est surcharge, la regle d'espace tranche
+
+| Ecriture | Sens |
+| -------- | ---- |
+| `(...)` *(sans `!`)* | **contenance** -- confinee a sa portee (concept neuf BPScript) |
+| `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- voyage avec C4, repliquee si C4 l'est |
+| `C4 !(...)` **espace** | **flux EVENEMENT SEPARE** (non conjoint) -- pose seul dans la sequence |
+| `B3!C7` *(`!` entre symboles, sans parentheses)* | **SIMULTANE / accord** (conjoint NON-flux) -- operateur existant, rien a voir avec le flux |
+
+`!` est **surcharge** : entre symboles (`B3!C7`) = simultaneite/accord ; suivi de `(...)` = flux.
+La **regle d'espace** ne s'applique qu'a **`!(...)`** : **colle = ancre** au terminal precedent,
+**espace = separe**. Un `!(...)` colle sans terminal avant lui (debut de regle ou de groupe, ex.
+`{!(vel:80) ...}`) retombe en **separe** (pas d'ancre possible). Dans l'AST, le `!(...)` porte
+`conjoint: true|false` ; seul le simultane `B3!C7` reste un `SimultaneousGroup` (inchange).
+
 **Precedence** (du plus fort au plus faible) :
 **override de note `Sa(vel:120)` > flux `!(...)` > contenance `(...)` > defauts de declaration.**
 

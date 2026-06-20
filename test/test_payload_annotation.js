@@ -169,6 +169,32 @@ section('nature — couverture des types de nœuds RHS');
 }
 
 {
+  // Règle d'espace sur !(...) (décision Romain 2026-06-20) :
+  //   C4!(...) COLLÉ  → conjoint=true (ancré au terminal précédent)
+  //   C4 !(...) ESPACÉ → conjoint=false (événement séparé)
+  //   !(...) en tête (pas de terminal avant) → conjoint=false
+  const colle = rhs0(parseSource('@controls\nS -> C4!(vel:80) E4'));
+  const espace = rhs0(parseSource('@controls\nS -> C4 !(vel:80) E4'));
+  const tete = rhs0(parseSource('@controls\nS -> !(vel:80) C4'));
+  const icColle = colle.find((e) => e.type === 'InstantControl');
+  const icEspace = espace.find((e) => e.type === 'InstantControl');
+  const icTete = tete.find((e) => e.type === 'InstantControl');
+  assert('!(...) COLLÉ → conjoint=true', icColle?.conjoint === true && icColle?.payload?.conjoint === true,
+    `got ${JSON.stringify(icColle?.payload)}`);
+  assert('!(...) ESPACÉ → conjoint=false', icEspace?.conjoint === false && icEspace?.payload?.conjoint === false,
+    `got ${JSON.stringify(icEspace?.payload)}`);
+  assert('!(...) en tête (sans terminal) → conjoint=false', icTete?.conjoint === false,
+    `got conjoint=${icTete?.conjoint}`);
+}
+
+{
+  // Frontière intacte : B3!C7 (! entre symboles) = SimultaneousGroup, PAS un flux
+  const r = rhs0(parseSource('@controls\nS -> B3!C7'));
+  assert('B3!C7 → SimultaneousGroup (inchangé)', r[0]?.type === 'SimultaneousGroup',
+    `got ${r[0]?.type}`);
+}
+
+{
   // (vel:80) sans ! en début de portée ('S -> (vel:80)') va dans rule.runtimeQualifier
   // (comportement parser : break sur LPAREN spaceBefore). Un `(...)` nu = CONTENANCE
   // (concept neuf BPScript, décision Romain 2026-06-20) : structurel, confiné, NE déborde PAS

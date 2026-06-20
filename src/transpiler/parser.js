@@ -337,8 +337,20 @@ function parse(tokens, opts = {}) {
    * @param {string|null} ruleActor - acteur déduit du contexte (null en Phase 1)
    */
   function annotateRhsElements(elements, ruleActor) {
+    // Validation de l'ancrage conjoint PAR VOIX : un `!(...)` collé n'est CONJOINT que s'il
+    // existe un terminal sonnant AVANT lui dans cette même séquence ; sinon il retombe en
+    // événement séparé (non conjoint). On parcourt en suivant le dernier sonnant rencontré.
+    let prevSounding = false;
     for (const el of elements) {
+      if (el && el.type === 'InstantControl' && el.conjoint && !prevSounding) {
+        el.conjoint = false;
+      }
       annotateRhsNode(el, ruleActor);
+      if (el && (el.type === 'Symbol' || el.type === 'SymbolCall' || el.type === 'OutTimeObject' ||
+                 el.type === 'TieStart' || el.type === 'TieContinue' || el.type === 'TieEnd' ||
+                 el.type === 'SimultaneousGroup' || el.type === 'Polymetric')) {
+        prevSounding = true;
+      }
     }
   }
 
@@ -413,6 +425,10 @@ function parse(tokens, opts = {}) {
       el.payload = {
         nature: 'instant',
         flux: true,  // se propage aux tokens suivants du même acteur
+        // conjoint (collé `C4!(...)`) = ancré au terminal précédent, voyage avec lui (régime
+        // structurel) ; non conjoint (espacé `C4 !(...)`) = événement séparé (régime séquentiel).
+        // Présent seulement pour les `!(...)` runtime (qui portent ce flag) ; absent sinon.
+        ...(el.conjoint !== undefined ? { conjoint: el.conjoint } : {}),
       };
       return;
     }
@@ -2314,10 +2330,15 @@ function parse(tokens, opts = {}) {
 
     // Standalone ! → out-time object, instant control, or simultaneous
     if (at(T.BANG)) {
+      // RÈGLE D'ESPACE sur `!(...)` (décision Romain 2026-06-20) : `C4!(...)` COLLÉ (pas d'espace
+      // avant `!`) = flux CONJOINT ancré au terminal précédent (voyage avec lui, répliqué si lui).
+      // `C4 !(...)` ESPACÉ = flux ÉVÉNEMENT SÉPARÉ (non conjoint, posé seul). On capte l'espace
+      // ici ; la validation « il existe bien un terminal précédent » est faite à l'annotation.
+      const collated = !current().spaceBefore;
       advance();
-      // !(...) → instant runtime control
+      // !(...) → instant runtime control (flux)
       if (isRuntimeQualifier()) {
-        return { type: 'InstantControl', qualifier: parseRuntimeQualifier() };
+        return { type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: collated };
       }
       // ![@seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
       // seul `_srand` existe comme contrôle de flux BP3 (décision 2026-06-14). Émet _srand(N).
