@@ -325,6 +325,20 @@ function parse(tokens, opts = {}) {
             scope: 'rule',
             ...(params ? { params } : {}),
           };
+
+          // Scellage scope-règle (E016, arbitrage 2026-06-20) : BPx transporte la charge
+          // opaque et ne PROPAGE pas le qualificateur de règle. On scelle donc, AU TRANSPILE,
+          // les params de portée règle dans le payload.params de CHAQUE note de la règle —
+          // source unique = l'arbre, le dispatcher lit mécaniquement les feuilles.
+          // PRÉCÉDENCE (fusion, pas écrasement) : note > règle. Un override propre à une note
+          // gagne clé par clé sur le scope-règle. Le qualificateur de règle reste en place
+          // (la voie BP3 héritée en a besoin) ; on ne fait qu'AJOUTER aux feuilles.
+          if (params) {
+            forEachSoundingLeaf(rule.rhs, (leaf) => {
+              if (!leaf.payload) return;
+              leaf.payload.params = { ...params, ...(leaf.payload.params || {}) };
+            });
+          }
         }
       }
     }
@@ -434,6 +448,26 @@ function parse(tokens, opts = {}) {
 
     // Tous les autres types (Period, NumericDuration, NilString, RawBrace,
     // Wildcard, Variable, Homomorphism, Template*, TriggerIn…) : pas de payload.
+  }
+
+  /**
+   * Applique `cb` à chaque FEUILLE SONNANTE d'une liste d'éléments RHS, en récursant
+   * dans les conteneurs (Polymetric.voices, SimultaneousGroup). Miroir de la récursion
+   * d'`annotateRhsNode` ; sert au scellage des params scope-règle sur les notes.
+   */
+  function forEachSoundingLeaf(elements, cb) {
+    for (const el of elements || []) {
+      if (!el || typeof el !== 'object') continue;
+      if (el.type === 'Symbol' || el.type === 'SymbolCall' || el.type === 'OutTimeObject' ||
+          el.type === 'TieStart' || el.type === 'TieContinue' || el.type === 'TieEnd') {
+        cb(el);
+      } else if (el.type === 'Polymetric') {
+        for (const voice of (el.voices || [])) forEachSoundingLeaf(voice, cb);
+      } else if (el.type === 'SimultaneousGroup') {
+        if (el.primary) forEachSoundingLeaf([el.primary], cb);
+        forEachSoundingLeaf(el.secondaries || [], cb);
+      }
+    }
   }
 
   /**
