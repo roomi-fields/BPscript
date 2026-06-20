@@ -19,42 +19,79 @@ Les CV (Control Voltage) sont des **objets temporels** dans BPScript qui produis
 
 ## Architecture
 
-### Deux dimensions séparées
+### Trois dimensions séparées
 
-Un CV a deux aspects indépendants :
+Un CV a trois aspects **indépendants**, chacun exprimé à son endroit propre — c'est ce qui rend
+le système déclaratif (chaque ligne décrit *une* chose, sans en appeler/affecter une autre) :
 
-1. **Routing (statique)** — à quoi il s'applique. Déclaré une fois dans les déclarations, ne change pas pendant la scène.
-2. **Placement temporel (dynamique)** — quand et combien de temps. Exprimé dans la grammaire comme n'importe quel objet temporel.
+1. **Ce qu'EST le CV** (forme) — `cv env1 : mod.adsr(...)`. Pure description : un nom, un type de
+   modulateur, ses paramètres. Aucune cible, aucune affectation.
+2. **Où il s'applique** (cible) — au **point de paramètre** d'une note/voix : `(cutoff: env1)`.
+   La cible est une **entrée de modulation de la sortie** (voir plus bas), jamais écrite sur le CV.
+3. **Quand / combien de temps** (placement temporel) — donné par la grammaire, comme tout objet
+   temporel : le CV (ou la voix qui le porte) occupe une durée dans une règle.
 
-### Syntaxe
+### Syntaxe (design validé Romain 2026-06-20)
 
-Forme **unique** (route, v0.9 — validée Romain 2026-06-20) : `modulateur:voix.cvin = objet(...)`.
+**1. Déclaration — descriptive, sans route ni `=`-constructeur**
 
 ```bps
-@filter                                              // charge lib/filter.json
-
-// Déclaration : modulateur : cible = objet de lib (paramètres)
-env1:Bass.cutoff = filter.adsr(attack:5, decay:150, sustain:0.2, release:400)
-//    │   │   │     │      │
-//    │   │   │     │      └─ paramètres (nommés ou positionnels)
-//    │   │   │     └─ type d'objet dans la lib
-//    │   │   └─ CVin cible : paramètre modulé (amp | freq | cutoff)
-//    │   └─ voix (acteur) ; le transport est DÉDUIT de la voix (l'acteur le binde déjà)
-//    └─ nom du modulateur (instance)
-
-// Grammaire : placement temporel
-S -> {Bass, env1 -}
-//          │    │
-//          │    └─ silence : env1 dure plus longtemps que Bass
-//          └─ env1 est un objet temporel comme une note
+cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
+//  │      │   │     └─ paramètres (convention () : key:value)
+//  │      │   └─ type de modulateur dans la lib
+//  │      └─ lib de modulateurs (adsr | lfo | ramp)
+//  └─ nom du modulateur ; `cv` = mot-type ; `:` = « est un » (comme gate Sa:sc)
 ```
 
-La cible nommée `voix.cvin` réutilise la notation pointée `acteur.membre` déjà employée ailleurs
-dans le langage. Le transport n'est jamais écrit dans le patch : il est **déduit de la voix**
-(l'acteur le binde déjà). Il n'existe **qu'une seule forme** — l'ancienne forme appel
-`env1(cible, transport) = …` a été supprimée (pas de rétro-compat : bêta).
+Se lit « env1 **est** une adsr de telle forme ». Pas de cible sur la déclaration, pas de `=`
+(on n'« affecte » pas le résultat d'un constructeur), pas de `->` (réservé à la réécriture de
+grammaire). C'est une **fiche**, pas une recette.
 
-### Librairie (lib/filter.json)
+**2. Branchement — au point de paramètre, valeur dérivable**
+
+La valeur d'un paramètre `()` peut être un **littéral** OU un **symbole dérivable de la grammaire** :
+
+```bps
+Bass -> C2 C2 C3 C2 (cutoff: Env, wave:square, vel:120, filterQ:8)
+//                    │       │
+//                    │       └─ Env est un non-terminal : Env -> env1 | env2 (la grammaire CHOISIT)
+//                    └─ cutoff = entrée de modulation de la sortie de Bass
+```
+
+- `cutoff: 2000` (littéral) → **pose statique** d'une valeur.
+- `cutoff: Env` (symbole résolvant en CV) → **modulation continue** : la courbe 0..1 du CV est
+  mappée sur la plage de l'entrée `cutoff`.
+
+C'est le cœur du design : **n'importe quel paramètre peut être branché sur n'importe quel symbole
+dérivable**. La modulation hérite donc de toute la puissance de la grammaire (choix, poids, random,
+polymétrie) sans syntaxe spéciale.
+
+**3. Voix de modulation parallèle — aléa et structure propres**
+
+```bps
+S -> {Bass Bass Bass Bass, Env Env Env Env}     // deux voix parallèles, alignées par la polymétrie
+-----
+@mode:random
+Bass -> C2 C2 C3 C2 - C2 Eb2 C2 (cutoff: Env, wave:square, vel:120) [weight:40]
+Bass -> C2 - Eb2 F2 F#2 F2 Eb2 - (cutoff: Env, wave:triangle, vel:60) [weight:30]
+Env  -> env1
+Env  -> env2
+```
+
+`Env` est une **voix indépendante** : elle tire son propre aléa (env1/env2) et peut avoir sa propre
+cadence (`{Bass×4, Env×3}` = 3 enveloppes sur 4 phrases). `(cutoff: Env)` **câble la sortie de la
+voix sœur Env** dans l'entrée `cutoff` de Bass — **sans re-dériver** (référence post-dérivation).
+Bass et Env restent deux processus séparés ; l'un module l'autre.
+
+> **Faisabilité confirmée par BPx (2026-06-20)** : voix Env dérivée normalement, référence
+> `cutoff ← Env` **établie par le résolveur post-dérivation** (qui LIT l'arbre, ne dérive ni
+> n'échantillonne), alignement par la polymétrie (équi-span), aléas indépendants prouvés bit-à-bit.
+> Frontière stricte : BPx établit le câblage + l'alignement structurel ; l'**échantillonnage** de la
+> courbe et le **mappage** sur la plage se font **en aval** (dispatcher/webaudio), pas dans BPx.
+
+### Librairie des modulateurs (lib/filter.json → cible : lib/mod.json)
+
+> Renommage `filter` → `mod` à confirmer (voir « Points data à câbler »). Structure inchangée.
 
 ```json
 {
@@ -102,19 +139,46 @@ dans le langage. Le transport n'est jamais écrit dans le patch : il est **dédu
 - Si l'objet dépasse la durée allouée → **coupure** (même contrat qu'une note)
 - Le silence `-` dans la grammaire permet d'allonger la durée du CV au-delà de l'entrée
 
-## Niveaux d'entrée
+## Entrées de modulation — déclarées sur la SORTIE
 
-La cible du patch est toujours une **voix** (`modulateur:voix.cvin`). Le niveau d'entrée dépend de
-la granularité de la voix ciblée, et la **portée temporelle** vient du placement dans la grammaire :
+Une entrée modulable (`cutoff`, `amplitude`, `resonance`, `pitch`…) **n'appartient pas à la voix**.
+Elle appartient à la **sortie** (le transport) : c'est la sortie qui expose ses points de modulation
+et leur **type/plage**. Bass n'a pas de propriété `cutoff` — `Bass.cutoff` est un **chemin de
+résolution**, pas un accès membre :
 
-| Niveau | Syntaxe | Signification |
-|--------|---------|---------------|
-| Voix (séquence) | `env1:Phrase1.cutoff` | Enveloppe sur une voix |
-| Sous-grammaire | `env1:gram2.cutoff` | Enveloppe sur un bloc |
+```
+Bass → joue l'alphabet western → @alphabet.western:browser → transport browser (webaudio)
+       → la sortie webaudio expose { cutoff: Hz 20–20000, amplitude: 0–1, resonance: 0–30, … }
+.cutoff → est-ce une entrée de CETTE sortie ?  oui → valide ; sinon → erreur (line/col)
+```
+
+- On nomme **la voix** (pas la sortie) car la modulation est **par voix** : plusieurs voix peuvent
+  partager une sortie ; `Bass.cutoff` dit « la coupure, **sur Bass** ».
+- Le **type/plage** de l'entrée n'est pas décoratif : un CV sort **normalisé** (adsr → 0..1) ; c'est
+  la plage de l'entrée (`cutoff` : 20–20000 Hz) qui dit comment étaler ce 0..1 en valeurs réelles.
+  Ce mappage est fait **en aval** (dispatcher/webaudio), pas par BPx.
+
+> **Points data à câbler (touchent le langage — à confirmer Romain avant gel) :**
+> 1. **Registre des entrées de modulation par type de sortie** : déclarer explicitement, pour
+>    webaudio, `{ cutoff, amplitude, resonance, pitch, … }` avec unité+plage (noms de **synthèse**,
+>    pas les noms d'implémentation `filter`/`vel`). Aujourd'hui ce registre n'existe pas → `cutoff`
+>    est accepté comme chaîne libre, non validé. À ajouter (probablement dans/à côté de `routing.json`).
+> 2. **Renommer la lib de modulateurs** `filter` → `mod` : elle contient adsr/lfo/ramp (des
+>    **modulateurs**), pas des filtres — et `filter` collisionne avec le contrôle de coupure. Cible :
+>    `cv env1 : mod.adsr(...)`.
+
+## Contrat temporel des paramètres dérivés
+
+La valeur d'un paramètre `()` est résolue ainsi :
+- **littéral** (`cutoff: 2000`) → valeur posée, statique.
+- **symbole dérivable** (`cutoff: Env`, `Env → env1 | env2`) → la grammaire dérive le symbole ; s'il
+  résout en CV, sa courbe module l'entrée ; s'il résout en littéral, pose statique.
+- **voix sœur** (`cutoff: Env` où Env est une voix parallèle) → câblage croisé : la sortie CV de la
+  voix Env alimente l'entrée, alignée par la polymétrie, **sans re-dérivation** (réf. post-dérivation).
 
 ## Code du CV
 
-Le comportement du CV est défini par du code **externe à BPScript** :
+Le comportement du modulateur est défini par du code **externe à BPScript** :
 
 1. **Librairie JSON** — paramètres déclaratifs **ET la courbe** (bloc `curve`). La courbe vit dans
    la lib (pas dans le moteur) : segments déclaratifs (`to`/`dur`/`shape`, phase `hold`…`until`),
@@ -122,11 +186,11 @@ Le comportement du CV est défini par du code **externe à BPScript** :
    sample-par-sample et ne connaît ni l'ADSR ni le LFO.
 2. **Backtick inline** — code brut pour le live coding :
    ```bps
-   env1:Phrase1.cutoff = `js: new Float32Array([0, 0.5, 1, 0.8, 0])`
+   cv env1 : `js: new Float32Array([0, 0.5, 1, 0.8, 0])`
    ```
 3. **Runtime externe** — Python, SuperCollider via bridge :
    ```bps
-   env1:Phrase1.cutoff = `py: numpy.linspace(200, 2000, 1000)`
+   cv env1 : `py: numpy.linspace(200, 2000, 1000)`
    ```
 
 BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée et un binding.
@@ -134,41 +198,62 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 ## Questions ouvertes
 
 - ~~Comment exprimer le routing vers un paramètre spécifique ?~~ **Résolu (Romain 2026-06-20)** :
-  forme route `env1:Bass.cutoff = filter.adsr(...)` — la CVin cible est nommée par la notation
-  pointée `acteur.cvin`, le transport est déduit de la voix. Forme unique (pas de rétro-compat).
-  Override de transport par patch = extension ultérieure si besoin.
-- Peut-on chaîner des CV ? `env2(env1(Phrase1))` ?
-- Comment le transport Web Audio implémente-t-il un CV ? `setValueCurveAtTime()` ?
-- Faut-il un mécanisme de "bus" pour partager un CV entre plusieurs cibles ?
+  pas de route sur la déclaration. La déclaration est descriptive (`cv env1 : mod.adsr(...)`) ; le
+  branchement se fait **au point de paramètre** (`(cutoff: Env)`), où la valeur est un symbole
+  dérivable de la grammaire. Faisabilité confirmée BPx (référence post-dérivation, voir plus haut).
+- Peut-on chaîner des CV ? `(cutoff: env2)` où env2 module à son tour un autre CV ?
+- Comment le transport Web Audio implémente-t-il l'échantillonnage + mappage sur plage ?
+  `setValueCurveAtTime()` ?
+- Faut-il un mécanisme de "bus" pour partager une voix CV entre plusieurs cibles ?
 
 ## Exemples
 
-### ADSR sur filtre
+### ADSR sur filtre (branchement direct)
 ```bps
 @filter
 @core
 @controls
 @alphabet.western:browser
 
-env1:Phrase1.cutoff = filter.adsr(10, 200, 0.5, 300)
+cv env1 : mod.adsr(attack:10, decay:200, sustain:0.5, release:300)
 
-S -> {Phrase1, env1 -}
+S -> Phrase1
 
-Phrase1 -> C3 E3 G3 C4 (wave:sawtooth, filter:2000)
+Phrase1 -> C3 E3 G3 C4 (cutoff: env1, wave:sawtooth)
 ```
 
-### LFO sur pan
+### LFO sur amplitude
 ```bps
 @filter
 @core
 @controls
 @alphabet.western:browser
 
-wobble:Melody.pan = filter.lfo(2, 80, shape:sine)
+cv wobble : mod.lfo(rate:2, amplitude:0.8, shape:sine)
 
-S -> {Melody, wobble}
+S -> Melody
 
-Melody -> C4 D4 E4 F4 G4 A4 B4 C5
+Melody -> C4 D4 E4 F4 G4 A4 B4 C5 (amplitude: wobble)
+```
+
+### Choix dérivé de modulation (voix parallèle)
+```bps
+@filter
+@core
+@controls
+@alphabet.western:browser
+
+cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
+cv env2 : mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
+
+S -> {Bass Bass Bass Bass, Env Env Env Env}
+-----
+@mode:random
+Bass -> C2 C2 C3 C2 - C2 Eb2 C2 (cutoff: Env, wave:square, vel:120) [weight:40]
+Bass -> C2 - Eb2 F2 F#2 F2 Eb2 - (cutoff: Env, wave:triangle, vel:60) [weight:30]
+Bass -> C2 C2 C2 - G2 - Eb2 C2 (cutoff: Env, wave:sawtooth, vel:100)
+Env  -> env1
+Env  -> env2
 ```
 
 ### Backtick CV (live coding)
@@ -177,9 +262,9 @@ Melody -> C4 D4 E4 F4 G4 A4 B4 C5
 @controls
 @alphabet.western:browser
 
-custom:Phrase1.amp = `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`
+cv custom : `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`
 
-S -> {Phrase1, custom}
+S -> Phrase1
 
-Phrase1 -> C3 E3 G3 C4
+Phrase1 -> C3 E3 G3 C4 (amplitude: custom)
 ```
