@@ -159,12 +159,16 @@ Bass → joue l'alphabet western → @alphabet.western:browser → transport bro
   Ce mappage est fait **en aval** (dispatcher/webaudio), pas par BPx.
 
 > **État data :**
-> 1. **Registre des entrées de modulation par type de sortie** — EN COURS (passe Kanopi). Pour
->    webaudio : `{ cutoff:Hz 20–20000, amplitude:0–1, resonance:0–30, pitch:±1200c, pan:… }` (noms de
->    **synthèse**, source de vérité = le runtime webaudio de Kanopi). Tant que le registre n'est pas
->    figé, `cutoff` etc. sont acceptés comme valeurs libres NON validées par le transpileur ; la
->    validation des noms (erreur ligne/col si inconnu) se branchera quand Kanopi aura confirmé la liste.
+> 1. **Registre des entrées de modulation par type de sortie** — **FIGÉ** (`lib/modulation.json`,
+>    source de vérité = runtime webaudio de Kanopi, vérifié 2026-06-20). Webaudio expose 5 entrées :
+>    `cutoff` (Hz 20–20000), `amplitude` (0–1), `resonance` (0–30), `pitch` (cents ±1200, mapping
+>    linéaire 0..1→±1200 validé Romain), `pan` (−1..1). cutoff/amplitude/resonance/pan = modèle bus
+>    (la note traverse les nœuds) ; pitch = par-note (ConstantSource→osc.detune). Limite connue :
+>    cutoff & resonance sont deux nœuds filtre séparés → les moduler ensemble = deux filtres en série.
 > 2. ~~Renommer la lib `filter` → `mod`~~ **FAIT** (lib/mod.json). `cv env1 : mod.adsr(...)`.
+> 3. **Validation des noms par le transpileur** — À FAIRE, **par type de sortie** : `pan` est aussi un
+>    contrôle MIDI/musical (0–127) ; la résolution doit dépendre du transport de la voix (webaudio
+>    `pan` = −1..1 ≠ MIDI `pan` = 0–127). Design à cadrer avant implémentation.
 
 ## Contrat temporel des paramètres dérivés
 
