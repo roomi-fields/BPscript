@@ -1,7 +1,8 @@
-// Garde-fou : syntaxe du patch CV/modulation (décision Romain 2026-06-19, courrier Kanopi).
-// Forme route (v0.9) : `env1:Bass.cutoff = filter.adsr(...)` — cible = acteur.cvin, transport DÉDUIT.
-// Forme appel (legacy) : `env1(Phrase1, browser) = filter.adsr(...)` — transport explicite, cvin null.
-// La cible nommée réutilise la notation pointée acteur.membre déjà dans le langage.
+// Garde-fou : syntaxe du patch CV/modulation (décision Romain 2026-06-20, courrier Kanopi).
+// Forme UNIQUE (route, v0.9) : `env1:Bass.cutoff = filter.adsr(...)` — cible = acteur.cvin,
+// transport DÉDUIT de la voix. La cible nommée réutilise la notation pointée acteur.membre déjà
+// dans le langage. La forme appel legacy `env1(Phrase1, browser) = ...` est SUPPRIMÉE (pas de
+// rétrocompat, bêta — une seule forme propre, validée Romain 2026-06-20).
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
 
@@ -27,17 +28,17 @@ Bass -> C4 E4`);
   check(c.namedArgs && c.namedArgs.release === 400, 'route : namedArgs.release=400');
 }
 
-// 2. Forme appel legacy : transport explicite, cvin null (rétro-compat)
+// 2. Forme appel legacy SUPPRIMÉE : `env1(Phrase1, browser) = ...` ne doit PLUS être
+//    reconnue comme une déclaration CV (pas de rétrocompat). Le lookahead échoue → ce n'est
+//    plus une CVInstance (0 collecté ; le parser la traite autrement / la rejette).
 {
-  const cvs = cvOf(`env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
+  let cvs = [];
+  try {
+    cvs = cvOf(`env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
 S -> {Phrase1, env1 -}
 Phrase1 -> C4 E4`);
-  const c = cvs[0] || {};
-  check(cvs.length === 1, 'appel : 1 CVInstance, obtenu ' + cvs.length);
-  check(c.target === 'Phrase1', 'appel : target=Phrase1, obtenu ' + c.target);
-  check(c.cvin === null, 'appel : cvin=null (pas de cible nommée), obtenu ' + c.cvin);
-  check(c.transport === 'browser', 'appel : transport=browser explicite, obtenu ' + c.transport);
-  check(c.args && c.args.length === 4, 'appel : 4 args positionnels');
+  } catch (e) { cvs = []; } // une ParseError est un rejet acceptable
+  check(cvs.length === 0, 'legacy supprimé : 0 CVInstance reconnue, obtenu ' + cvs.length);
 }
 
 // 3. Forme route avec backtick (modulateur custom)

@@ -1114,13 +1114,12 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   function isLookaheadCVInstance() {
-    // Deux formes :
-    //   route (v0.9)  : IDENT COLON IDENT PERIOD IDENT EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
-    //   appel (legacy): IDENT LPAREN ... RPAREN EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
+    // Forme UNIQUE (route, v0.9, validée Romain 2026-06-20) :
+    //   IDENT COLON IDENT PERIOD IDENT EQUALS (IDENT PERIOD IDENT LPAREN | BACKTICK)
+    //   env1:Bass.cutoff = ...  — cible nommée acteur.cvin, transport déduit de la voix.
     let j = pos;
     if (tokens[j]?.type !== T.IDENT) return false;
     j++;
-    // Forme route : env1:Bass.cutoff = ...  (cible nommée acteur.cvin, transport déduit de la voix)
     if (tokens[j]?.type === T.COLON &&
         tokens[j+1]?.type === T.IDENT &&
         tokens[j+2]?.type === T.PERIOD &&
@@ -1135,26 +1134,6 @@ function parse(tokens, opts = {}) {
           tokens[j+3]?.type === T.LPAREN) return true;
       return false;
     }
-    if (tokens[j]?.type !== T.LPAREN) return false;
-    // Skip until matching RPAREN
-    let depth = 1;
-    j++;
-    while (j < tokens.length && depth > 0) {
-      if (tokens[j].type === T.LPAREN) depth++;
-      else if (tokens[j].type === T.RPAREN) depth--;
-      j++;
-    }
-    if (tokens[j]?.type !== T.EQUALS) return false;
-    j++;
-    // Skip newlines
-    while (tokens[j]?.type === T.NEWLINE) j++;
-    // Backtick form: name(target, transport) = `...`
-    if (tokens[j]?.type === T.BACKTICK) return true;
-    // Lib form: IDENT PERIOD IDENT LPAREN
-    if (tokens[j]?.type === T.IDENT &&
-        tokens[j+1]?.type === T.PERIOD &&
-        tokens[j+2]?.type === T.IDENT &&
-        tokens[j+3]?.type === T.LPAREN) return true;
     return false;
   }
 
@@ -1162,22 +1141,13 @@ function parse(tokens, opts = {}) {
     const tok = current();
     const name = expect(T.IDENT).value;
 
-    // Cible : forme route `:acteur.cvin` (transport déduit) ou forme appel `(target, transport)`.
-    let target, transport = null, cvin = null;
-    if (at(T.COLON)) {
-      // env1:Bass.cutoff  — target = voix/acteur, cvin = CVin (amp/freq/cutoff), transport déduit
-      advance(); // :
-      target = expect(T.IDENT).value;
-      expect(T.PERIOD);
-      cvin = expect(T.IDENT).value;
-    } else {
-      // (target, transport) — forme legacy, transport explicite
-      expect(T.LPAREN);
-      target = expect(T.IDENT).value;
-      expect(T.COMMA);
-      transport = expect(T.IDENT).value;
-      expect(T.RPAREN);
-    }
+    // Cible : forme route UNIQUE `:acteur.cvin` (transport déduit de la voix).
+    // env1:Bass.cutoff — target = voix/acteur, cvin = CVin (amp/freq/cutoff).
+    const transport = null;  // toujours déduit de la voix (plus de transport explicite)
+    expect(T.COLON);
+    const target = expect(T.IDENT).value;
+    expect(T.PERIOD);
+    const cvin = expect(T.IDENT).value;
 
     expect(T.EQUALS);
     skipNewlines();

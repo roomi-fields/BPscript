@@ -574,9 +574,9 @@ Macro {
 CVInstance {
   type: "CVInstance"
   name: string                      // nom de l'instance ("env1", "lfo1")
-  target: string                    // voix/cible (acteur "Bass", ou séquence/grammaire en legacy)
-  cvin: string | null               // CVin cible nommée ("amp"|"freq"|"cutoff") ; null en forme appel
-  transport: string | null          // runtime explicite (forme appel) ; null si déduit de la voix (route)
+  target: string                    // voix/cible (acteur "Bass")
+  cvin: string                      // CVin cible nommée ("amp"|"freq"|"cutoff")
+  transport: null                   // toujours déduit de la voix
   lib: string | null                // lib source ("filter", null pour backtick)
   objectType: string                // type d'objet ("adsr", "lfo", "ramp", "backtick")
   args: (number | string)[]         // arguments positionnels
@@ -586,16 +586,14 @@ CVInstance {
 }
 ```
 
-Deux formes (cf. `cv_target` dans EBNF) :
-- **route** (v0.9) — `env1:Bass.cutoff = filter.adsr(...)` : `target` = voix, `cvin` = paramètre
-  modulé, `transport` = null (déduit de la voix). Le `.` reprend la notation pointée `acteur.membre`.
-- **appel** (legacy) — `env1(target, transport) = ...` : `transport` explicite, `cvin` = null.
+Forme **unique** (route, v0.9 — validée Romain 2026-06-20, cf. `cv_instance` dans EBNF) :
+`env1:Bass.cutoff = filter.adsr(...)` — `target` = voix, `cvin` = paramètre modulé, `transport`
+toujours `null` (déduit de la voix). Le `.` reprend la notation pointée `acteur.membre`. L'ancienne
+forme appel `env1(cible, transport) = …` est supprimée (pas de rétro-compat).
 
 Exemples :
 - `env1:Bass.cutoff = filter.adsr(attack:5, decay:150, sustain:0.2, release:400)`
   -> `{ name:"env1", target:"Bass", cvin:"cutoff", transport:null, lib:"filter", objectType:"adsr", args:[], namedArgs:{attack:5, decay:150, sustain:0.2, release:400} }`
-- `env1(filter, sc) = filter.adsr(10, 100, 0.7, 200)`
-  -> `{ name:"env1", target:"filter", cvin:null, transport:"sc", lib:"filter", objectType:"adsr", args:[10, 100, 0.7, 200], namedArgs:{} }`
 - `` mod1:Mel.freq = `js: new Float32Array(...)` ``
   -> `{ name:"mod1", target:"Mel", cvin:"freq", transport:null, lib:null, objectType:"backtick", args:[], namedArgs:{}, code:"js: new Float32Array(...)" }`
 

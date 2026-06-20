@@ -243,16 +243,15 @@ Avec `@actor`, les symboles sont qualifiés par dot notation dans les règles :
 ### `cv_instance`
 
 ```ebnf
-cv_instance = IDENT , cv_target , "=" , cv_rhs ;
-cv_target   = ":" , IDENT , "." , IDENT          (* route v0.9 : :acteur.cvin, transport déduit *)
-            | "(" , IDENT , "," , IDENT , ")" ;   (* appel legacy : (cible, transport) *)
+cv_instance = IDENT , ":" , IDENT , "." , IDENT , "=" , cv_rhs ;  (* env1:Bass.cutoff = ... *)
 cv_rhs = IDENT , "." , IDENT , "(" , arg_list , ")"    (* lib.type(args) *)
        | backtick_inline ;                               (* `js: code` *)
 ```
 
-La forme **route** `env1:Bass.cutoff` nomme la CVin cible (`acteur.cvin`, notation pointée déjà
-employée pour `acteur.terminal`) ; le transport est déduit de la voix. La forme **appel** reste
-acceptée (rétro-compatible).
+Forme **UNIQUE** (route, v0.9 — validée Romain 2026-06-20) : `env1:Bass.cutoff` nomme la CVin
+cible (`acteur.cvin`, notation pointée déjà employée pour `acteur.terminal`) ; le transport est
+**déduit de la voix**. L'ancienne forme appel `env1(cible, transport) = …` est **supprimée** (pas
+de rétro-compat : bêta, une seule forme propre).
 
 ### `macro`
 

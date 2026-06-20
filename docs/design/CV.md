@@ -28,9 +28,7 @@ Un CV a deux aspects indépendants :
 
 ### Syntaxe
 
-> ⚠️ **Forme route `env1:Bass.cutoff` : PENDING ratification explicite de Romain.** Implémentée et
-> testée (additive, forme appel legacy préservée), mais la validation n'est pour l'instant que
-> *relayée* — à confirmer en direct avant de la traiter comme actée / déployée.
+Forme **unique** (route, v0.9 — validée Romain 2026-06-20) : `modulateur:voix.cvin = objet(...)`.
 
 ```bps
 @filter                                              // charge lib/filter.json
@@ -51,9 +49,10 @@ S -> {Bass, env1 -}
 //          └─ env1 est un objet temporel comme une note
 ```
 
-> **Forme legacy (transport explicite)** : `env1(Bass, browser) = filter.adsr(...)` reste acceptée
-> (cible et transport positionnels, sans CVin nommée). Préférer la forme route `env1:Bass.cutoff`
-> qui nomme le paramètre cible et déduit le transport de la voix.
+La cible nommée `voix.cvin` réutilise la notation pointée `acteur.membre` déjà employée ailleurs
+dans le langage. Le transport n'est jamais écrit dans le patch : il est **déduit de la voix**
+(l'acteur le binde déjà). Il n'existe **qu'une seule forme** — l'ancienne forme appel
+`env1(cible, transport) = …` a été supprimée (pas de rétro-compat : bêta).
 
 ### Librairie (lib/filter.json)
 
@@ -105,14 +104,13 @@ S -> {Bass, env1 -}
 
 ## Niveaux d'entrée
 
-L'entrée d'un CV peut être à n'importe quel niveau de la hiérarchie :
+La cible du patch est toujours une **voix** (`modulateur:voix.cvin`). Le niveau d'entrée dépend de
+la granularité de la voix ciblée, et la **portée temporelle** vient du placement dans la grammaire :
 
 | Niveau | Syntaxe | Signification |
 |--------|---------|---------------|
-| Terminal | `env1(C4, browser)` | Enveloppe sur une note |
-| Séquence polymétrique | `env1(Phrase1, browser)` | Enveloppe sur une voix |
-| Sous-grammaire | `env1(gram2, browser)` | Enveloppe sur un bloc |
-| Scène entière | `env1(*, browser)` | Enveloppe globale |
+| Voix (séquence) | `env1:Phrase1.cutoff` | Enveloppe sur une voix |
+| Sous-grammaire | `env1:gram2.cutoff` | Enveloppe sur un bloc |
 
 ## Code du CV
 
@@ -124,22 +122,21 @@ Le comportement du CV est défini par du code **externe à BPScript** :
    sample-par-sample et ne connaît ni l'ADSR ni le LFO.
 2. **Backtick inline** — code brut pour le live coding :
    ```bps
-   env1(Phrase1, browser) = `js: new Float32Array([0, 0.5, 1, 0.8, 0])`
+   env1:Phrase1.cutoff = `js: new Float32Array([0, 0.5, 1, 0.8, 0])`
    ```
 3. **Runtime externe** — Python, SuperCollider via bridge :
    ```bps
-   env1(Phrase1, browser) = `py: numpy.linspace(200, 2000, 1000)`
+   env1:Phrase1.cutoff = `py: numpy.linspace(200, 2000, 1000)`
    ```
 
 BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée et un binding.
 
 ## Questions ouvertes
 
-- Comment exprimer le routing vers un paramètre spécifique ? **Proposition implémentée, ⚠️ PENDING
-  ratification EXPLICITE de Romain** (préférence relayée via Kanopi, pas encore validée en direct —
-  ne pas déployer comme acté) : forme route `env1:Bass.cutoff = filter.adsr(...)` — la CVin cible
-  est nommée par la notation pointée `acteur.cvin`, le transport est déduit de la voix. Override de
-  transport par patch = extension ultérieure.
+- ~~Comment exprimer le routing vers un paramètre spécifique ?~~ **Résolu (Romain 2026-06-20)** :
+  forme route `env1:Bass.cutoff = filter.adsr(...)` — la CVin cible est nommée par la notation
+  pointée `acteur.cvin`, le transport est déduit de la voix. Forme unique (pas de rétro-compat).
+  Override de transport par patch = extension ultérieure si besoin.
 - Peut-on chaîner des CV ? `env2(env1(Phrase1))` ?
 - Comment le transport Web Audio implémente-t-il un CV ? `setValueCurveAtTime()` ?
 - Faut-il un mécanisme de "bus" pour partager un CV entre plusieurs cibles ?
@@ -153,7 +150,7 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 @controls
 @alphabet.western:browser
 
-env1(Phrase1, browser) = filter.adsr(10, 200, 0.5, 300)
+env1:Phrase1.cutoff = filter.adsr(10, 200, 0.5, 300)
 
 S -> {Phrase1, env1 -}
 
@@ -167,7 +164,7 @@ Phrase1 -> C3 E3 G3 C4 (wave:sawtooth, filter:2000)
 @controls
 @alphabet.western:browser
 
-wobble(Melody, browser) = filter.lfo(2, 80, shape:sine)
+wobble:Melody.pan = filter.lfo(2, 80, shape:sine)
 
 S -> {Melody, wobble}
 
@@ -180,7 +177,7 @@ Melody -> C4 D4 E4 F4 G4 A4 B4 C5
 @controls
 @alphabet.western:browser
 
-custom(Phrase1, browser) = `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`
+custom:Phrase1.amp = `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`
 
 S -> {Phrase1, custom}
 
