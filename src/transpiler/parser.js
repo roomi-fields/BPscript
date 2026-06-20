@@ -317,24 +317,15 @@ function parse(tokens, opts = {}) {
         // RÈGLE (s'applique à tous les tokens de la règle, AST_SPEC §2/§4). On le
         // marque comme transport-control flux scope:'rule' ; le dispatcher l'applique
         // aux tokens de la règle dans l'ordre dérivé.
-        let ruleParams = null;
         if (rule.runtimeQualifier && typeof rule.runtimeQualifier === 'object') {
-          ruleParams = extractOccurrenceParams([rule.runtimeQualifier]);
+          const params = extractOccurrenceParams([rule.runtimeQualifier]);
           rule.runtimeQualifier.payload = {
             nature: 'transport-control',
             flux: true,
             scope: 'rule',
-            ...(ruleParams ? { params: ruleParams } : {}),
+            ...(params ? { params } : {}),
           };
         }
-
-        // Scellage de TOUS les scopes (E016, arbitrage Romain 2026-06-20) : BPx transporte la
-        // charge opaque et ne PROPAGE aucun contrôle contextuel. On scelle donc AU TRANSPILE,
-        // dans le payload.params de CHAQUE note, les params de portée règle, de portée groupe
-        // (imbriquée) et les mutations de flux `!(…)`. Source unique = l'arbre ; le dispatcher
-        // lit mécaniquement les feuilles. Les qualificateurs de règle/groupe restent en place
-        // (la voie BP3 héritée en a besoin) ; on ne fait qu'AJOUTER aux feuilles.
-        sealScopes(rule.rhs, ruleParams || {}, {});
       }
     }
   }
@@ -443,65 +434,6 @@ function parse(tokens, opts = {}) {
 
     // Tous les autres types (Period, NumericDuration, NilString, RawBrace,
     // Wildcard, Variable, Homomorphism, Template*, TriggerIn…) : pas de payload.
-  }
-
-  /** Params d'un RuntimeQualifier (ou null). */
-  function qualifierParams(rq) {
-    return rq && typeof rq === 'object' ? extractOccurrenceParams([rq]) : null;
-  }
-
-  /**
-   * Scelle les params de TOUS les scopes contextuels dans le payload.params de chaque note,
-   * en parcourant le RHS dans l'ordre du document (E016, arbitrage Romain 2026-06-20).
-   *
-   * PRÉCÉDENCE (par localité, du plus faible au plus fort) :
-   *   règle < groupe externe < groupe interne < mutation de flux `!(…)` < override de note.
-   *
-   * - `inherited` : params STRUCTURELS hérités (règle + groupes englobants), déjà fusionnés
-   *   (l'interne écrase l'externe). Passés en copie augmentée à chaque groupe.
-   * - `flux` : params accumulés POSITIONNELLEMENT par les mutations `!(…)` rencontrées dans
-   *   CETTE séquence ; ils s'appliquent aux notes SUIVANTES. Copiés (indépendants) dans chaque
-   *   voix parallèle d'un groupe : une mutation d'une voix ne fuit ni vers ses sœurs ni au-delà.
-   */
-  function sealScopes(elements, inherited, flux) {
-    for (const el of elements || []) {
-      if (!el || typeof el !== 'object') continue;
-      const t = el.type;
-
-      // Mutation de flux `!(…)` : accumule pour les notes suivantes de la séquence.
-      if (t === 'InstantControl') {
-        const p = qualifierParams(el.qualifier);
-        if (p) Object.assign(flux, p);
-        continue;
-      }
-
-      // Feuille sonnante : fusionne hérité < flux < override de note.
-      if (t === 'Symbol' || t === 'SymbolCall' || t === 'OutTimeObject' ||
-          t === 'TieStart' || t === 'TieContinue' || t === 'TieEnd') {
-        if (!el.payload) continue;
-        const own = el.payload.params || {};
-        const merged = { ...inherited, ...flux, ...own };
-        if (Object.keys(merged).length) el.payload.params = merged;
-        continue;
-      }
-
-      // Groupe polymétrique : son qualificateur enrichit l'hérité ; chaque voix reçoit une
-      // COPIE du flux courant (les voix parallèles sont indépendantes).
-      if (t === 'Polymetric') {
-        const gp = qualifierParams(el.runtimeQualifier);
-        const innerInherited = gp ? { ...inherited, ...gp } : inherited;
-        for (const voice of (el.voices || [])) sealScopes(voice, innerInherited, { ...flux });
-        continue;
-      }
-
-      // Groupe simultané : primaire + secondaires au même instant ; même hérité, copie du flux.
-      if (t === 'SimultaneousGroup') {
-        if (el.primary) sealScopes([el.primary], inherited, { ...flux });
-        for (const s of (el.secondaries || [])) sealScopes([s], inherited, { ...flux });
-        continue;
-      }
-      // Autres types (Period, Rest, Prolongation, Control…) : pas de scellage.
-    }
   }
 
   /**
