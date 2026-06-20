@@ -2145,12 +2145,14 @@ function parse(tokens, opts = {}) {
     expect(T.LPAREN);
     const pairs = [];
     while (!at(T.RPAREN) && !atEnd()) {
+      const keyTok = current();
       const key = expect(T.IDENT).value;
+      const pos = { line: keyTok.line, col: keyTok.col };
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
       if (at(T.PERIOD)) {
         advance(); // .
         const name = expect(T.IDENT).value;
-        pairs.push({ key, value: name });
+        pairs.push({ key, value: name, ...pos });
         if (at(T.COMMA)) advance();
         continue;
       }
@@ -2204,10 +2206,10 @@ function parse(tokens, opts = {}) {
             }
           }
         }
-        pairs.push({ key, value: val });
+        pairs.push({ key, value: val, ...pos });
       } else {
         // Bare key (no-arg control like velcont, pitchcont)
-        pairs.push({ key, value: true });
+        pairs.push({ key, value: true, ...pos });
       }
       if (at(T.COMMA)) advance();
     }

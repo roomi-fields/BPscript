@@ -19,6 +19,8 @@
 
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
+import { loadLibsFromDirectives } from './libs.js';
+import { validateControls } from './controlValidation.js';
 
 /**
  * Annote les backticks (voix de code) SUR LE NŒUD — pas de table parallèle (directive
@@ -82,6 +84,16 @@ export function compileToBPxAST(source) {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
     annotateBackticks(ast);   // _btName + interp posés SUR LES NŒUDS
     result.ast = ast;
+
+    // Validation sémantique des valeurs de contrôle contre la lib @controls
+    // (source unique des valeurs/plages permises). Erreurs non fatales : l'AST reste
+    // produit, Kanopi affiche les erreurs en rouge à l'éval. Cf. controlValidation.js.
+    const directives = [
+      ...(ast.directives || []),
+      ...((ast.scenes || []).flatMap((s) => s.directives || [])),
+    ];
+    const libCtx = loadLibsFromDirectives(directives);
+    result.errors.push(...validateControls(ast, libCtx.controls));
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
     else throw e;
