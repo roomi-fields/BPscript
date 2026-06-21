@@ -557,6 +557,32 @@ attaches a un symbole.
 | **regle**   | `(cle:valeur)`   | runtime cible   | `C2 C2 (vel:100)` |
 | **symbole** | `(cle:valeur)`   | runtime cible   | `Sa(vel:120)`     |
 
+### Destinataire d'une paire `[sujet:]controle:valeur`
+
+Par defaut, le `()` d'une regle vaut pour **la regle comme unite**. Une paire peut porter un
+**sujet** explicite (devant le controle) pour cibler **plus finement** -- meme mecanisme que
+l'affectation `*:sound.bell` (le `:` introduit deja un sujet dans le langage).
+
+| Ecriture | Sujet | Cible |
+| -------- | ----- | ----- |
+| `(cutoff:Env)` | omis | **la regle elle-meme** (l'unite) |
+| `(*:cutoff:Env)` | `*` | **chaque terminal** de la regle |
+| `(C2:cutoff:Env)` | `C2` | les terminaux **C2** de la regle |
+
+- `*` = « tous les terminaux » (sens qu'il a deja dans `*:sound.X`). `?` n'est PAS utilisable
+  (il signifie « capturer un symbole inconnu » dans les gabarits).
+- Le sujet est **par paire** : `(*:cutoff:Env, wave:sawtooth, vel:100)` = `cutoff` sur chaque
+  terminal, `wave`/`vel` sur la regle.
+- Pour un **CV** (qui varie dans le temps), le sujet decide l'**horloge** : sans sujet = un signal
+  sur la voix (l'unite) ; `*:` = enveloppe **relancee/tiree par note**. C'est le sujet -- pas la
+  nature de la valeur -- qui tranche. Pour un controle **statique** (`wave`), unite et par-terminal
+  donnent le meme effet : la distinction ne compte que pour le temporel.
+
+> Cible **cross-portee** (`(S:cutoff:Env)`, `(alphabet.*:...)`, niveau scene/autre regle) :
+> meme mecanisme, portees plus larges -- **acte mais non implemente** (extension a venir, cf.
+> `docs/design/CV.md` et le backlog langage). Le sucre de **groupe** `*:(cutoff:Env)` (sujet sur
+> tout le groupe) est en backlog eventuel (non requis aujourd'hui).
+
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
 Un controle non-temporel (vel, wave, filter...) gouverne plusieurs notes de **deux

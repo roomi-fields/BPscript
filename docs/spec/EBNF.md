@@ -599,7 +599,10 @@ distinctes malgré le même nom de clé.
 ```ebnf
 runtime_qualifier = "(" , runtime_pair , { "," , runtime_pair } , ")" ;
 
-runtime_pair = RUNTIME_KEY , ":" , value ;
+runtime_pair = [ subject , ":" ] , RUNTIME_KEY , ":" , value ;   (* sujet optionnel *)
+subject = "*" | IDENT ;   (* "*" = chaque terminal ; IDENT = un terminal (ex. C2)
+                             ; PARKÉ : portée cross-règle/scène. Défaut (omis) = la règle/le groupe.
+                             Cohérent avec l'affectation `*:sound.X`. Décision Romain 2026-06-21. *)
 
 RUNTIME_KEY  = (* nom présent dans lib/controls.json section "runtime" :
                   vel, chan, pan, wave, attack, release, detune,

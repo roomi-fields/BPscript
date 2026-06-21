@@ -2112,6 +2112,8 @@ function parse(tokens, opts = {}) {
     // for collé suffix attachment so SymbolCall vs Symbol+suffix routing stays
     // controlNames-driven.
     if (!at(T.LPAREN)) return false;
+    // `(*:cutoff:Env …)` — qualificateur dont la 1re paire porte un sujet '*' (chaque terminal).
+    if (peek(1).type === T.STAR && peek(2).type === T.COLON) return true;
     if (peek(1).type !== T.IDENT) return false;
     return peek(2).type === T.COLON;
   }
@@ -2123,14 +2125,28 @@ function parse(tokens, opts = {}) {
     expect(T.LPAREN);
     const pairs = [];
     while (!at(T.RPAREN) && !atEnd()) {
+      // Préfixe de SUJET (cible) devant le contrôle (décision Romain 2026-06-21,
+      // cohérent avec l'existant `*:sound.X`) :
+      //   `*:cutoff:Env`   → sujet '*' = chaque terminal de la portée  (par note)
+      //   `C2:cutoff:Env`  → sujet 'C2' = les terminaux C2 de la règle
+      //   `cutoff:Env`     → sujet omis = défaut : la portée elle-même (la règle/le groupe)
+      // Détection : `* :`  OU  `IDENT : IDENT :` (deux ':' → le 1er IDENT est le sujet).
+      let subject = null;
+      if (at(T.STAR) && peek(1).type === T.COLON) {
+        subject = '*'; advance(); advance(); // * :
+      } else if (at(T.IDENT) && peek(1).type === T.COLON &&
+                 peek(2).type === T.IDENT && peek(3).type === T.COLON) {
+        subject = current().value; advance(); advance(); // <sujet> :
+      }
       const keyTok = current();
       const key = expect(T.IDENT).value;
       const pos = { line: keyTok.line, col: keyTok.col };
+      const sub = subject !== null ? { subject } : {};
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
       if (at(T.PERIOD)) {
         advance(); // .
         const name = expect(T.IDENT).value;
-        pairs.push({ key, value: name, ...pos });
+        pairs.push({ key, value: name, ...sub, ...pos });
         if (at(T.COMMA)) advance();
         continue;
       }
@@ -2152,6 +2168,8 @@ function parse(tokens, opts = {}) {
           while (!at(T.RPAREN) && !atEnd()) {
             // Stop at , only if followed by IDENT: (next qualifier pair)
             if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COLON) break;
+            // Stop at , if followed by `*:` (next pair with '*' subject, ex. `, *:cutoff:Env`)
+            if (at(T.COMMA) && peek(1).type === T.STAR && peek(2).type === T.COLON) break;
             // v0.8 : stop at , if followed by IDENT PERIOD IDENT (référence pointée
             // = nouvelle pair, e.g. `, sound.bell`).
             if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.PERIOD
@@ -2167,6 +2185,7 @@ function parse(tokens, opts = {}) {
         }
         // If comma follows and next token is NOT IDENT: → multi-arg value, keep collecting
         while (at(T.COMMA) && !(peek(1).type === T.IDENT && peek(2).type === T.COLON)
+                           && !(peek(1).type === T.STAR && peek(2).type === T.COLON)
                            && !(peek(1).type === T.IDENT && peek(2).type === T.PERIOD && libCtx.controlNames.has(peek(1).value))
                            && !(peek(1).type === T.IDENT && peek(2).type === T.RPAREN && libCtx.controlNames.has(peek(1).value))
                            && !(peek(1).type === T.IDENT && peek(2).type === T.COMMA && libCtx.controlNames.has(peek(1).value))
@@ -2184,10 +2203,10 @@ function parse(tokens, opts = {}) {
             }
           }
         }
-        pairs.push({ key, value: val, ...pos });
+        pairs.push({ key, value: val, ...sub, ...pos });
       } else {
         // Bare key (no-arg control like velcont, pitchcont)
-        pairs.push({ key, value: true, ...pos });
+        pairs.push({ key, value: true, ...sub, ...pos });
       }
       if (at(T.COMMA)) advance();
     }

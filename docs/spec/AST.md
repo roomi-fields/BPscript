@@ -800,11 +800,20 @@ compile en `_script(CT n)` via dispatcher (rotation diatonique, transformation p
 ```
 RuntimeQualifier {
   type: "RuntimeQualifier"
-  pairs: { key: string, value: string | number | boolean }[]
+  pairs: { key: string, value: string | number | boolean, subject?: string, line, col }[]
   // key : RUNTIME_KEY (vel, wave, filter, filterQ, pan...)
   // value : 120, "sawtooth", "rrand(40,127)" ; true pour une clé nue (velcont, pitchcont)
+  // subject (optionnel) : destinataire de la paire `[sujet:]key:value` (décision Romain 2026-06-21)
+  //   absent  → la portée elle-même (la règle/le groupe comme unité)
+  //   "*"     → chaque terminal de la portée (ex. CV : enveloppe par note)
+  //   "<nom>" → les terminaux <nom> de la règle (ex. "C2"), ou (PARKÉ) une portée cross-règle/scène
 }
 ```
+
+Le **sujet** (`subject`) cible plus finement qu'une paire nue : `(*:cutoff:Env)` → `subject:"*"`
+(chaque terminal), `(C2:cutoff:Env)` → `subject:"C2"`, `(cutoff:Env)` → pas de `subject` (= la
+règle). Cohérent avec l'affectation existante `*:sound.X`. Pour un CV, le sujet décide l'**horloge**
+(unité/signal vs par-terminal) ; le consommateur (BPx/dispatcher) le lit. Cf. `docs/design/CV.md`.
 
 Les pairs runtime sont des objets nus `{ key, value }` (pas de champ `type`, contrairement aux
 `QualPair` du `Qualifier` moteur). La portée (symbole / règle / groupe / instantané) n'est **pas**

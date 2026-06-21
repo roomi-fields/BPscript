@@ -59,12 +59,29 @@ Bass -> C2 C2 C3 C2 (cutoff: Env, wave:square, vel:120, filterQ:8)
 ```
 
 - `cutoff: 2000` (littéral) → **pose statique** d'une valeur.
-- `cutoff: Env` (symbole résolvant en CV) → **modulation continue** : la courbe 0..1 du CV est
-  mappée sur la plage de l'entrée `cutoff`.
+- `cutoff: Env` (symbole résolvant en CV) → **modulation** : la courbe 0..1 du CV est mappée sur la
+  plage de l'entrée `cutoff`.
 
 C'est le cœur du design : **n'importe quel paramètre peut être branché sur n'importe quel symbole
 dérivable**. La modulation hérite donc de toute la puissance de la grammaire (choix, poids, random,
 polymétrie) sans syntaxe spéciale.
+
+**Horloge : unité vs par-note — décidée par le SUJET (Romain 2026-06-21)**
+
+`(cutoff: Env)` est attaché à la **règle** : par défaut il vise **la règle comme unité** → pour un
+CV, **un signal sur toute la voix** Bass (échantillonné par les notes). Pour relancer une enveloppe
+**à chaque note**, on désigne explicitement le sujet `*` (chaque terminal) :
+
+| Écriture | Sujet | Horloge |
+|---|---|---|
+| `(cutoff: Env)` | la règle (unité) | un signal sur la voix Bass |
+| `(*:cutoff: Env)` | chaque terminal | enveloppe relancée/tirée **par note** |
+| `(C2:cutoff: Env)` | les C2 de la règle | seulement les notes C2 |
+
+C'est **le sujet** qui décide l'horloge, **pas la nature de la valeur** (`Env` voix ou forme). Forme
+`[sujet:]contrôle:valeur`, cohérente avec l'affectation existante `*:sound.X`. `*` = « tous les
+terminaux » ; `?` interdit (= capture dans les gabarits). Détail : `docs/spec/LANGUAGE.md`
+(« Destinataire d'une paire »), `docs/spec/AST.md` (`RuntimeQualifier.subject`).
 
 **3. Voix de modulation parallèle — aléa et structure propres**
 
