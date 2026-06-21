@@ -231,9 +231,9 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 
 ## Exemples
 
-### ADSR sur filtre (branchement direct)
+### ADSR par note (acid bass) — sujet `*` = chaque terminal
 ```bps
-@filter
+@mod
 @core
 @controls
 @alphabet.western:browser
@@ -242,12 +242,12 @@ cv env1 : mod.adsr(attack:10, decay:200, sustain:0.5, release:300)
 
 S -> Phrase1
 
-Phrase1 -> C3 E3 G3 C4 (cutoff: env1, wave:sawtooth)
+Phrase1 -> C3 E3 G3 C4 (*:cutoff: env1, wave:sawtooth)   // env1 relancé À CHAQUE note
 ```
 
-### LFO sur amplitude
+### LFO signal sur amplitude — sans sujet = sur la voix
 ```bps
-@filter
+@mod
 @core
 @controls
 @alphabet.western:browser
@@ -256,7 +256,7 @@ cv wobble : mod.lfo(rate:2, amplitude:0.8, shape:sine)
 
 S -> Melody
 
-Melody -> C4 D4 E4 F4 G4 A4 B4 C5 (amplitude: wobble)
+Melody -> C4 D4 E4 F4 G4 A4 B4 C5 (amplitude: wobble)     // un LFO continu sur toute la voix
 ```
 
 ### Choix dérivé de modulation (voix parallèle)
