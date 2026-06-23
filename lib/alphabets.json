@@ -74,6 +74,6 @@
     "description": "Tabla bols — percussion syllables (no pitch)",
     "notes": ["dhin", "dha", "ge", "ghe", "ka", "ke", "na", "ta", "ti", "tin", "tun", "dhagena", "tirakita", "dheene", "dheena", "teene", "teena", "gena", "kena", "tage", "dhati", "dhage", "trkt", "kt", "tidha", "dhati_bol", "teenake", "dheenage", "dhatrkt", "trktdha", "teenakena", "dheenagena", "ek", "do", "char", "panch", "che", "sat", "at"],
     "alterations": {},
-    "_note": "Percussion alphabet — no pitch resolution. Sound params come from sounds/tabla_perc.json."
+    "_note": "Percussion alphabet — no pitch resolution. Bols nominaux uniquement ; le son reviendra via le modèle alphabet→son par backtick (cf. backlog LANG-SONS)."
   }
 }
