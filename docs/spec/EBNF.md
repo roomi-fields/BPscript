@@ -99,7 +99,15 @@ tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/déno
 actor_body  = { actor_prop | sound_assignment } ;
 
 actor_prop  = actor_entity_ref                      (* v0.8 : alphabet.X, tuning.X, transport.X(...), sound.X *)
-            | actor_eval_binding ;                  (* v0.8 : eval.X (référence à un eval runtime) *)
+            | actor_eval_binding                    (* v0.8 : eval.X (référence à un eval runtime) *)
+            | actor_osc_binding ;                   (* OSC-L1 : device:<nom> | ch:<n> (adressage de sortie OSC) *)
+
+actor_osc_binding = "device" , ":" , IDENT          (* nom du pont osc-bridge *)
+                  | "ch" , ":" , INTEGER ;          (* canal entier *)
+(* Adressage de sortie OSC figé (Romain 2026-06-23, OSC-L1). Porté PAR ACTEUR dans
+   ActorDirective.binding = { device?, channel? } (cf. AST.md). Lu par l'hôte (Kanopi)
+   → runtime-OSC.setBindings({<acteur>:{device, channel}}). `ch:` optionnel.
+   NB : `device:`/`ch:` utilisent `:` (binding de sortie), distinct des entity_ref en `.`. *)
 
 actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] ;
 

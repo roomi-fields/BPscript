@@ -179,9 +179,24 @@ ActorDirective {
                                  // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
                                  // `references` = forme consommée en aval (dérivée, lossless).
   soundAssignments: SoundAssignmentAST[] | null  // *:sound.X, Sa:sound.Y, ... dans le bloc acteur
+  binding: ActorBinding | null    // adressage de sortie OSC par acteur (figé OSC-L1, Romain 2026-06-23) ;
+                                   // null si l'acteur n'a ni `device:` ni `ch:`
   line: number
 }
 
+ActorBinding {
+  device?: string                 // nom du pont OSC (clé osc-bridge), depuis `device:<nom>`
+  channel?: number                // canal entier, depuis `ch:<n>`
+}
+```
+
+**`binding` = adressage de sortie OSC** (syntaxe figée Romain 2026-06-23, OSC-L1) :
+`@actor X device:<nom-osc-bridge> ch:<n>`. Le binding est porté **par acteur** dans la scène
+compilée et lu par l'hôte (Kanopi), qui appelle `runtime-OSC.setBindings({X:{device, channel}})`.
+Distinct des `properties`/`references` (entités de voix) : `device`/`ch` ne polluent pas `properties`.
+`ch:` est optionnel (binding `device` seul possible).
+
+```
 TransportRef {
   type: "TransportRef"
   key: string                     // NOM D'APPAREIL LIBRE (clé @devices), pas un enum. Ex. "midi"
