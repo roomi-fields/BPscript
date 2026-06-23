@@ -384,14 +384,22 @@ function parse(tokens, opts = {}) {
       // Acteur : dot-notation (el.actor) ou ruleActor
       const actor = el.actor || ruleActor || undefined;
 
-      // Overrides d'occurrence depuis suffixQualifiers (collés sans espace)
-      // Seuls les RuntimeQualifier comptent comme overrides de params
-      const params = extractOccurrenceParams(el.suffixQualifiers);
+      // Overrides d'occurrence collés sur la note. Deux origines, MÊME notion
+      // (charge d'occurrence sur la note), repliées dans le MÊME payload.params
+      // pour que l'aval (BPx) lise payload.params PARTOUT, uniforme :
+      //   - suffixQualifiers : `dha(vel:80)` quand `vel` est un contrôle connu
+      //     (la note reste Symbol + qualifieur collé) ;
+      //   - args de SymbolCall : `dha(vel:80)` sans lib de contrôles chargée,
+      //     OU dans un accord `C4!E4(vel:90)` (le secondaire est toujours un
+      //     SymbolCall) — décision frontière R4 (architecte 2026-06-23).
+      let params = extractOccurrenceParams(el.suffixQualifiers);
+      const argParams = extractSymbolCallParams(el);
+      if (argParams !== null) params = { ...(params || {}), ...argParams };
 
       el.payload = {
         nature: 'sounding',
         ...(actor !== undefined ? { actor } : {}),
-        ...(params !== null ? { params } : {}),
+        ...(params !== null ? { params, occurrence: true } : {}),
         // flux absent (override d'occurrence, pas de propagation)
       };
       return;
@@ -483,6 +491,26 @@ function parse(tokens, opts = {}) {
         params[pair.key] = pair.value;
         hasParams = true;
       }
+    }
+    return hasParams ? params : null;
+  }
+
+  /**
+   * Replie les arguments NOMMÉS d'un nœud SymbolCall sonnant en {key:val, …}
+   * (charge d'occurrence). Retourne null si le nœud n'est pas un SymbolCall,
+   * n'a pas d'argument nommé, ou n'a que des arguments positionnels.
+   * Les args originaux (el.args) sont CONSERVÉS (voie BP3 héritée).
+   */
+  function extractSymbolCallParams(el) {
+    if (!el || el.type !== 'SymbolCall' || !Array.isArray(el.args)) return null;
+    const params = {};
+    let hasParams = false;
+    for (const arg of el.args) {
+      if (!arg || !arg.key) continue; // ignore les args positionnels
+      const v = arg.value;
+      // Literal → valeur brute (nombre/chaîne) ; sinon on garde le nœud (ex. BacktickInline).
+      params[arg.key] = (v && v.type === 'Literal') ? v.value : v;
+      hasParams = true;
     }
     return hasParams ? params : null;
   }
