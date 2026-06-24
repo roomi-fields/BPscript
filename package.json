@@ -1,6 +1,8 @@
 {
   "name": "bpscript",
+  "version": "0.8.0",
   "type": "module",
+  "main": "src/transpiler/index.js",
   "private": true,
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
