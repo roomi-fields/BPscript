@@ -116,6 +116,26 @@ Exemples :
 - `@allitems` -> `{ name:"allitems" }` — active AllItems=1 dans les settings BP3
 - `@timepatterns: t1=1/1, t2=3/2` -> `{ name:"timepatterns", timePatterns:[{name:"t1", ratio:"1/1"}, {name:"t2", ratio:"3/2"}] }`
 
+#### Défauts d'environnement (à la transpilation)
+
+> Point 1 de `hub/projets/spec-ecriture-structure.md` (décision archi validée Romain 2026-06-24).
+
+La transpilation BPx prend un **environnement** en second paramètre :
+`compileToBPxAST(source, environnement)`, `environnement = { tempo?, octave?, division?, … }`
+(défauts réglés dans Kanopi, fournis en entrée). Pour chaque réglage **absent** de la scène,
+BPScript **inscrit le défaut EN DUR** dans l'AST à la création — l'AST se suffit, le moteur
+dérive depuis une structure complète. **Kanopi ne touche jamais l'AST** (remplace l'injection
+côté hôte, finding KAN-A10). Conséquence assumée : changer un défaut = re-transpiler (un défaut
+est de la config froide, pas un paramètre live ; le changement *en jeu* passe par Kairos).
+
+- **tempo** (seule clé câblée — seul lecteur aval existant) : pas de `@mm`/`@tempo` déclaré →
+  inscrit une `Directive` `{ name:"mm", value:<environnement.tempo>, fromEnvironment:true }`.
+  Lue en aval par l'hôte (`mmFromAst`) et BPx (`loadGrammar`).
+- Si la scène déclare déjà un tempo, elle **gagne** (aucune injection).
+- `fromEnvironment:true` marque la provenance (défaut, non déclaré dans la source).
+- octave/division… : même mécanisme, **câblés dès que leur cible AST + lecteur aval seront
+  définis** (pas d'inscription d'une cible que rien ne lit).
+
 ### `FlagStatesDirective` (A5)
 
 États de drapeau nommés : nomme les valeurs entières d'un drapeau pour pouvoir tester/poser par

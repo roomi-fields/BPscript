@@ -76,14 +76,65 @@ function annotateBackticks(ast) {
  *   - scènes/expose/map/tempo → `ast.scenes` / `ast.exposes` / `ast.maps` / `@mm` ;
  *   - acteurs (transport/alphabet/eval) → `ast.actors[].references` (ActorReference) ;
  *   - payload par token (nature/actor/params/flux) → posé par le parser.
+ *
+ * Défauts d'environnement (point 1, spec-ecriture-structure §A) : la transpilation
+ * prend un `environnement` (réglé dans Kanopi, fourni en entrée). Pour chaque réglage
+ * ABSENT de la scène, BPScript inscrit le défaut EN DUR dans l'AST (l'AST se suffit ;
+ * Kanopi ne touche jamais l'AST ; changer un défaut = re-transpiler). Cf.
+ * applyEnvironmentDefaults.
  * @param {string} source
+ * @param {{ tempo?: number, octave?: any, division?: any }} [environnement] défauts portés par Kanopi
  * @returns {{ ast, errors, warnings }}
  */
-export function compileToBPxAST(source) {
+/**
+ * Inscrit les défauts d'ENVIRONNEMENT dans l'AST là où la scène ne déclare rien
+ * (point 1, spec-ecriture-structure §A — décision archi validée Romain 2026-06-24).
+ *
+ * - Le défaut est inscrit EN DUR (pas une référence « va voir l'environnement plus
+ *   tard ») : l'AST se suffit, le moteur dérive depuis une structure complète.
+ * - Mécanisme GÉNÉRAL (un seul pour tout défaut), piloté par table.
+ * - On ne câble QUE les défauts qui ont un vrai consommateur en aval (sinon on
+ *   écrirait une cible que personne ne lit). Aujourd'hui : le TEMPO, lu par l'hôte
+ *   et BPx via la directive `@mm` (Kanopi mmFromAst ; BPx loadGrammar). Les autres
+ *   réglages (octave, division…) s'ajouteront ici dès que leur cible AST + lecteur
+ *   seront définis.
+ *
+ * @param {object} ast  AST de scène (muté en place)
+ * @param {{ tempo?: number }} [env]  défauts d'environnement portés par Kanopi
+ */
+function applyEnvironmentDefaults(ast, env) {
+  if (!ast || !env || typeof env !== 'object') return;
+
+  // tempo → directive `@mm` (la SEULE directive de tempo lue en aval). On n'inscrit
+  // le défaut que si la scène ne déclare AUCUN tempo (`@mm` ou `@tempo`).
+  if (env.tempo != null && !hasTempoDirective(ast)) {
+    (ast.directives = ast.directives || []).push({
+      type: 'Directive',
+      name: 'mm',
+      subkey: null,
+      runtime: null,
+      value: env.tempo,
+      aliases: null,
+      modifiers: null,
+      fromEnvironment: true,   // provenance : défaut d'environnement, pas déclaré dans la source
+      line: 0,
+    });
+  }
+}
+
+/** Vrai si la scène déclare déjà un tempo (directive `@mm` ou `@tempo`). */
+function hasTempoDirective(ast) {
+  return (ast.directives || []).some(
+    (d) => d && d.type === 'Directive' && (d.name === 'mm' || d.name === 'tempo')
+  );
+}
+
+export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
     annotateBackticks(ast);   // _btName + interp posés SUR LES NŒUDS
+    applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
