@@ -37,3 +37,4 @@ Bugs restants. Détail dans `memory/backlog_s5_transpiler.md`.
 
 - **BPS-7** `ouvert` — Resolver musical complet. Mapping note → fréquence en dur (Western 12-TET, A=440). Degrés : sargam → fréquences ; Tempérament : pythagoricien, meantone, just intonation ; Référence configurable : `@tuning:442` ; Microtonalité : échelles à N divisions.
 - **BPS-8** `ouvert` — Routage CV multi-cibles. CV crée un bus audio global. Besoin de routage par cible : `env1(Phrase1, browser)`.
+- **BPS-dhati-T0** `ouvert` — dhati operateurs T0 (coord BPx) : dhati.bps declare +/;/* en @gate X:midi (sonnants) au lieu d operateurs T0 BP3 — investiguer fixture vs besoin reel de mapping operateur->T0. Spec precise a venir de BPx. Escalader a Romain si vrai gap langage
