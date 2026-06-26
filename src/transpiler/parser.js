@@ -19,6 +19,15 @@ class ParseError extends Error {
 }
 
 /**
+ * Schéma des CLÉS D'ADRESSE de sortie (KAI-9 / GAP#2, décision 2026-06-26).
+ * Une clé d'override qui désigne OÙ va l'événement (canal/device/port) — par opposition
+ * à un contrôle d'expression (vel/pan/wave…). Sépare `payload.address` de `payload.params`
+ * (cf. splitAddress). `ch` et `channel` sont synonymes (forme courte/longue). Aligné sur les
+ * params de `transport.<type>(…)` côté acteur (canal/device/port).
+ */
+const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
+
+/**
  * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
  * (star→'*', plus→'+', fin→';'), retourne l'opérateur canonique BP3.
  * Cela garantit que l'AST reflète ce que BP3 aurait compilé (R1).
@@ -320,12 +329,13 @@ function parse(tokens, opts = {}) {
         // DÉBORDE pas. C'est l'inverse du flux `!(...)` (iso-BP3, forward, déborde). On le tague
         // `containment` (PAS `flux`) : BPx route contenance→structurel, flux→séquentiel.
         if (rule.runtimeQualifier && typeof rule.runtimeQualifier === 'object') {
-          const params = extractOccurrenceParams([rule.runtimeQualifier]);
+          const { address, controls } = splitAddress(extractOccurrenceParams([rule.runtimeQualifier]));
           rule.runtimeQualifier.payload = {
             nature: 'transport-control',
             containment: true,
             scope: 'rule',
-            ...(params ? { params } : {}),
+            ...(controls ? { params: controls } : {}),
+            ...(address ? { address } : {}),
           };
         }
       }
@@ -396,10 +406,15 @@ function parse(tokens, opts = {}) {
       const argParams = extractSymbolCallParams(el);
       if (argParams !== null) params = { ...(params || {}), ...argParams };
 
+      // GAP#2 : la charge se range en DEUX tiroirs — `address` (canal/device/port, lu par
+      // Kairos pour matérialiser event.output) et `params` (contrôles vel/pan/wave…).
+      const { address, controls } = splitAddress(params);
       el.payload = {
         nature: 'sounding',
         ...(actor !== undefined ? { actor } : {}),
-        ...(params !== null ? { params, occurrence: true } : {}),
+        ...(controls !== null ? { params: controls } : {}),
+        ...(address !== null ? { address } : {}),
+        ...((controls !== null || address !== null) ? { occurrence: true } : {}),
         // flux absent (override d'occurrence, pas de propagation)
       };
       return;
@@ -450,12 +465,13 @@ function parse(tokens, opts = {}) {
       // groupe, ne déborde pas. On le tague `containment` (PAS `flux`) pour que BPx le route
       // au régime structurel. (Les Polymetric imbriqués sont atteints par la récursion.)
       if (el.runtimeQualifier && typeof el.runtimeQualifier === 'object') {
-        const params = extractOccurrenceParams([el.runtimeQualifier]);
+        const { address, controls } = splitAddress(extractOccurrenceParams([el.runtimeQualifier]));
         el.runtimeQualifier.payload = {
           nature: 'transport-control',
           containment: true,
           scope: 'group',
-          ...(params ? { params } : {}),
+          ...(controls ? { params: controls } : {}),
+          ...(address ? { address } : {}),
         };
       }
       for (const voice of (el.voices || [])) {
@@ -513,6 +529,28 @@ function parse(tokens, opts = {}) {
       hasParams = true;
     }
     return hasParams ? params : null;
+  }
+
+  /**
+   * Sépare les DÉTAILS D'ADRESSE des CONTRÔLES dans une charge d'override (KAI-9 / GAP#2,
+   * décision 2026-06-26). Les clés d'adresse (canal/device/port) vont dans un TIROIR DÉDIÉ
+   * `payload.address`, distinct des contrôles (vel/pan/wave…) qui restent dans `payload.params`.
+   * La syntaxe utilisateur (`(ch:5)`) ne change PAS — c'est interne à l'AST. Kairos lit le tiroir
+   * adresse pour matérialiser `event.output`, sans le confondre avec un contrôle.
+   * @param {object|null} params  charge brute {clé:val, …}
+   * @returns {{ address: object|null, controls: object|null }}
+   */
+  function splitAddress(params) {
+    if (!params) return { address: null, controls: null };
+    const address = {};
+    const controls = {};
+    let hasA = false;
+    let hasC = false;
+    for (const [k, v] of Object.entries(params)) {
+      if (ADDRESS_KEYS.has(k)) { address[k] = v; hasA = true; }
+      else { controls[k] = v; hasC = true; }
+    }
+    return { address: hasA ? address : null, controls: hasC ? controls : null };
   }
 
   // ============================================================

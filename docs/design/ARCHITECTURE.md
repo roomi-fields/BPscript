@@ -172,8 +172,13 @@ propreté, performance) :
 Kanopi). La voie AST ne renvoie que l'arbre ; tout vit DANS les nœuds / directives, lu directement
 par les consommateurs :
 
-- **payload par token** (nature/actor/params/flux) + **`references[]`** (ActorReference) → posés par
-  le **parser** ;
+- **payload par token** (nature/actor/params/**address**/flux) + **`references[]`** (ActorReference) →
+  posés par le **parser**. Les overrides d'occurrence se rangent en DEUX tiroirs (KAI-9 / GAP#2) :
+  `payload.params` = contrôles d'expression (vel/pan/wave…) ; `payload.address` = détails d'adresse de
+  sortie (canal/device/port, schéma `ADDRESS_KEYS`) que Kairos lit pour matérialiser `event.output` ;
+- **adresse d'acteur** (KAI-9 / GAP#1) → `references[transport].{name, params}` : le **type** de runtime
+  (`name` = midi/osc/…) + les **détails** par défaut en params (`transport.osc(device:X, ch:N)`), une
+  seule forme partout (plus de champ `binding` séparé) ;
 - **backticks** → sur les nœuds : `_btName` (étiquette/terminal, lue par BPx), `code`, `interp`
   (tag explicite ou hérité de l'`eval` de l'acteur) — annotés par `bpxAst.js`, **pas de table** ;
 - **drapeaux nommés** → directives `@flag` ; **librairies** → directives `@library` ;
