@@ -11,7 +11,7 @@
 // BPx + Kanopi). Avant, l'encodeur BP3 déposait au passage les étiquettes de backtick et
 // des tables latérales (backticks/flagStates/libraries) — vues redondantes (vestiges BP3),
 // supprimées. Ce module ne fait que l'ANNOTATION DES BACKTICKS SUR LE NŒUD (étiquette
-// `_btName` + `interp`), sans le traducteur BP3 ; tout le reste vit déjà dans l'arbre.
+// `_btName` en tête + `payload.interp`), sans le traducteur BP3 ; tout le reste vit déjà dans l'arbre.
 //
 // L'AST porte déjà (depuis le parser) : payload par token (nature/actor/params/flux) +
 // références d'acteur canoniques (ActorReference[]). Les consommateurs lisent directement
@@ -27,35 +27,44 @@ import { validateModulation } from './modulationValidation.js';
  * Annote les backticks (voix de code) SUR LE NŒUD — pas de table parallèle (directive
  * Romain 2026-06-17, confirmée BPx + Kanopi). Chaque nœud backtick porte :
  *   - `_btName` : étiquette unique (compteur PROPRE, ordre du document, indépendant de
- *     l'ancien format). C'est le NOM du terminal dérivable, lu par BPx (loadGrammar.ts).
+ *     l'ancien format). C'est le NOM du terminal dérivable, lu par BPx (loadGrammar.ts) ;
+ *     identité STRUCTURELLE en tête de nœud.
  *   - `code`    : déjà posé par le parser.
- *   - `interp`  : l'interpréteur. Tag explicite (`sc:`, `py:`…) sinon 'auto' ; un backtick
- *     NON tagué hérite de l'`eval` de l'acteur en tête de sa règle (`drums -> ` `` `…` `` ``
- *     avec `@actor drums eval.strudel` → 'strudel'). Posé sur le nœud → le nœud est
- *     auto-suffisant ; aucun index séparé. BPx l'ignore (charge opaque) ; le sink Kanopi le lit.
+ *   - `payload` : DONNÉE D'ÉVÉNEMENT de la voix de code (KAI-9, point de bascule unique aligné
+ *     bpx + Kairos) — `{ nature:'code', interp }`. L'`interp` est l'interpréteur : tag explicite
+ *     (`sc: …`, `py: …`) sinon 'auto' ; un backtick NON tagué hérite de l'`eval` de l'acteur en
+ *     tête de sa règle (`@actor drums eval.strudel` → 'strudel'). Scellé DANS LE PAYLOAD (pas en
+ *     tête de nœud) : c'est ce qui VOYAGE dans la dérivation jusqu'à Kairos, qui matérialise
+ *     event.output = { runtime:'code', device:interp }. BPx porte le payload opaque ; Kairos le lit.
  */
 function annotateBackticks(ast) {
   let counter = 0;
   const isBt = (el) => el && (el.type === 'BacktickStandalone' || el.type === 'BacktickInline');
-  // 1. Étiquette + interp initial (tag ou 'auto').
+  // 1. Étiquette + payload de voix de code (nature:'code' + interp initial : tag ou 'auto').
+  //    L'interp est scellée DANS LE PAYLOAD (payload.interp), pas en tête de nœud : c'est la
+  //    donnée d'événement qui VOYAGE dans la dérivation jusqu'à Kairos (qui matérialise
+  //    event.output = {runtime:'code', device:interp}). Point de bascule unique, aligné bpx/Kairos.
   const label = (els) => {
     for (const el of els || []) {
       if (!el || typeof el !== 'object') continue;
-      if (isBt(el)) { el._btName = `BT${el.tag || 'auto'}${counter++}`; el.interp = el.tag || 'auto'; }
+      if (isBt(el)) {
+        el._btName = `BT${el.tag || 'auto'}${counter++}`;
+        el.payload = { ...(el.payload || {}), nature: 'code', interp: el.tag || 'auto' };
+      }
       if (el.elements) label(el.elements);
       if (el.voices) for (const v of el.voices) label(v);
     }
   };
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) label(rule.rhs);
 
-  // 2. Résolution 'auto' → eval de l'acteur en tête de règle.
+  // 2. Résolution 'auto' → eval de l'acteur en tête de règle (sur payload.interp).
   const actorEval = {};
   for (const a of ast.actors || []) if (a.properties && a.properties.eval) actorEval[a.name] = a.properties.eval;
   const lhsHead = (lhs) => { const h = Array.isArray(lhs) ? lhs[0] : lhs; return h && h.name ? h.name : null; };
   const resolve = (els, evalKey) => {
     for (const el of els || []) {
       if (!el || typeof el !== 'object') continue;
-      if (isBt(el) && el.interp === 'auto') el.interp = evalKey;
+      if (isBt(el) && el.payload && el.payload.interp === 'auto') el.payload.interp = evalKey;
       if (el.elements) resolve(el.elements, evalKey);
       if (el.voices) for (const v of el.voices) resolve(v, evalKey);
     }
@@ -70,7 +79,7 @@ function annotateBackticks(ast) {
  * Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table
  * parallèle : tout vit DANS L'ARBRE (source unique, directive Romain 2026-06-17).
  * Les consommateurs lisent directement les nœuds/directives :
- *   - backticks → nœuds (`_btName`, `code`, `interp`) ;
+ *   - backticks → nœuds (`_btName`, `code` en tête ; `payload.interp` + `payload.nature:'code'`) ;
  *   - drapeaux nommés → directives `@flag` (FlagStatesDirective) ;
  *   - librairies → directives `@library` (LibraryDirective) ;
  *   - scènes/expose/map/tempo → `ast.scenes` / `ast.exposes` / `ast.maps` / `@mm` ;
@@ -171,7 +180,7 @@ export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
-    annotateBackticks(ast);   // _btName + interp posés SUR LES NŒUDS
+    annotateBackticks(ast);   // _btName en tête + payload.interp/nature:'code' sur les nœuds backtick
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     applyDefaultActor(ast);   // acteur implicite `default` si aucun @actor (LAN-5 / KAI-9)
     result.ast = ast;

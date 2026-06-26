@@ -32,14 +32,15 @@ function backtickNodes(ast) {
   check(bts.every((n) => n._btName), 'tous _btName posés sur les nœuds');
   check(new Set(bts.map((n) => n._btName)).size === 2, '_btName uniques');
   const sc = bts.find((n) => n.tag === 'sc');
-  check(sc && sc.interp === 'sc' && sc.code === 'synth(1)', 'backtick tagué : interp+code sur le nœud : ' + JSON.stringify(sc));
+  check(sc && sc.payload?.interp === 'sc' && sc.payload?.nature === 'code' && sc.code === 'synth(1)',
+    'backtick tagué : payload.interp + nature:code, code sur le nœud : ' + JSON.stringify(sc));
 }
 
-// 3. Interp 'auto' résolu SUR LE NŒUD depuis l'eval de l'acteur (tête de règle = acteur)
+// 3. Interp 'auto' résolu DANS LE PAYLOAD depuis l'eval de l'acteur (tête de règle = acteur)
 {
   const r = compileToBPxAST('@actor stru\n  transport.audio\n  eval.strudel\nS -> stru\nstru -> `note("c2")`');
   const bt = backtickNodes(r.ast)[0];
-  check(bt && bt.interp === 'strudel', "interp 'auto' → 'strudel' (eval acteur) sur le nœud : " + JSON.stringify(bt && bt.interp));
+  check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval acteur) dans payload.interp : " + JSON.stringify(bt && bt.payload));
 }
 
 // 4. flagStates LU depuis la directive @flag (pas de table)

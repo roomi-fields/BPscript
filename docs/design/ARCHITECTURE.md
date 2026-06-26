@@ -179,7 +179,9 @@ par les consommateurs :
 - **adresse d'acteur** (KAI-9 / GAP#1) → `references[transport].{name, params}` : le **type** de runtime
   (`name` = midi/osc/…) + les **détails** par défaut en params (`transport.osc(device:X, ch:N)`), une
   seule forme partout (plus de champ `binding` séparé) ;
-- **backticks** → sur les nœuds : `_btName` (étiquette/terminal, lue par BPx), `code`, `interp`
+- **backticks** → sur les nœuds : `_btName` (étiquette/terminal, lue par BPx) + `code` en tête ;
+  l'`interp` (interpréteur de la voix de code) vit dans `payload` (`{nature:'code', interp}`), donnée
+  d'événement qui voyage jusqu'à Kairos (KAI-9) ; `interp`
   (tag explicite ou hérité de l'`eval` de l'acteur) — annotés par `bpxAst.js`, **pas de table** ;
 - **drapeaux nommés** → directives `@flag` ; **librairies** → directives `@library` ;
   **scènes/expose/map** → `ast.scenes`/`ast.exposes`/`ast.maps` ; **tempo** → `@mm`.
