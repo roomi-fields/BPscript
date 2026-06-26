@@ -199,9 +199,20 @@ ActorDirective {
                                  // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
                                  // `references` = forme consommée en aval (dérivée, lossless).
   soundAssignments: SoundAssignmentAST[] | null  // *:sound.X, Sa:sound.Y, ... dans le bloc acteur
+  synthetic?: true               // acteur IMPLICITE `default` (aucun @actor déclaré), matérialisé
+                                 // dans l'AST (LAN-5/KAI-9). Absent sur un acteur déclaré. L'aval
+                                 // le distingue d'un acteur réel (panneau Acteurs vide).
   line: number
 }
 ```
+
+**Acteur implicite `default`** (LAN-5 / KAI-9, validé Romain 2026-06-26). Quand une scène ne déclare
+AUCUN `@actor` (`.bps` simple, `.gr`, cv-adsr), BPScript inscrit un acteur `default` dans `ast.actors`
+(transport `audio` — constante `DEFAULT_ACTOR_TRANSPORT`, **à déplacer en conf éditable Kanopi**), marqué
+`synthetic:true`, **sans alphabet** (la résolution pitch tombe sur le résolveur de scène qui renifle les
+tokens). Une scène simple emprunte ainsi le MÊME chemin orchestré qu'une multi-acteurs (mono = un acteur).
+Avant, l'hôte (`kanopi bpx-adapter.ts:282-283`) le synthétisait ; KAI-9 supprime la résolution hôte →
+le défaut vit dans l'AST, BPx ne fait que le porter.
 
 **Adressage de sortie = `transport` + ses params** (KAI-9, Romain 2026-06-26). UNE seule forme
 partout : le TYPE de runtime est `transport.<type>` (`references[transport].name`) et les DÉTAILS

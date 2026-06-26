@@ -129,12 +129,51 @@ function hasTempoDirective(ast) {
   );
 }
 
+// LAN-5 / KAI-9 : transport par défaut de l'acteur IMPLICITE (quand la scène ne déclare
+// aucun @actor). CONSTANTE À DÉPLACER en conf éditable Kanopi (idéal LAN-5) ; minimal
+// acceptable KAI-9 = constante CLAIREMENT marquée, mais portée DANS L'AST (plus côté hôte).
+const DEFAULT_ACTOR_TRANSPORT = 'audio'; // TODO LAN-5 : lire depuis la conf Kanopi
+
+/**
+ * Matérialise l'acteur IMPLICITE `default` DANS L'AST quand la scène ne déclare AUCUN
+ * @actor (cas `.bps` simple, `.gr`, cv-adsr) — LAN-5, validé Romain 2026-06-26.
+ *
+ * POURQUOI : KAI-9 supprime la résolution hôte. Avant, l'hôte (kanopi bpx-adapter.ts)
+ * injectait un acteur synthétique `{name:'default', transport:audio}` quand aucun @actor
+ * n'était déclaré, pour qu'une scène simple emprunte le MÊME chemin orchestré qu'une scène
+ * multi-acteurs (mono = orchestration à un acteur). On REMONTE ce défaut dans l'AST : BPx
+ * ne fait que le PORTER, il ne l'invente plus ; l'hôte cesse de le synthétiser.
+ *
+ * L'acteur implicite N'A PAS d'alphabet (honnête) : la résolution pitch tombe sur le
+ * résolveur de scène (qui renifle western/solfège depuis les tokens). Marqué `synthetic:true`
+ * pour que l'aval le distingue d'un acteur déclaré (le panneau Acteurs reste vide).
+ *
+ * @param {object} ast  AST de scène (muté en place)
+ */
+function applyDefaultActor(ast) {
+  if (!ast) return;
+  if ((ast.actors || []).length > 0) return; // au moins un @actor déclaré → rien à faire
+  const transport = { type: 'TransportRef', key: DEFAULT_ACTOR_TRANSPORT, params: {} };
+  ast.actors = [{
+    type: 'ActorDirective',
+    name: 'default',
+    properties: { transport }, // pas d'alphabet : pitch via le résolveur de scène
+    references: [
+      { type: 'ActorReference', category: 'transport', name: DEFAULT_ACTOR_TRANSPORT, line: 0 },
+    ],
+    soundAssignments: null,
+    synthetic: true, // acteur implicite (aucun @actor déclaré) — panneau Acteurs vide
+    line: 0,
+  }];
+}
+
 export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
     annotateBackticks(ast);   // _btName + interp posés SUR LES NŒUDS
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
+    applyDefaultActor(ast);   // acteur implicite `default` si aucun @actor (LAN-5 / KAI-9)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
