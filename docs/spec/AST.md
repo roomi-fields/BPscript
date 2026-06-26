@@ -199,22 +199,17 @@ ActorDirective {
                                  // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
                                  // `references` = forme consommée en aval (dérivée, lossless).
   soundAssignments: SoundAssignmentAST[] | null  // *:sound.X, Sa:sound.Y, ... dans le bloc acteur
-  binding: ActorBinding | null    // adressage de sortie OSC par acteur (figé OSC-L1, Romain 2026-06-23) ;
-                                   // null si l'acteur n'a ni `device:` ni `ch:`
   line: number
-}
-
-ActorBinding {
-  device?: string                 // nom du pont OSC (clé osc-bridge), depuis `device:<nom>`
-  channel?: number                // canal entier, depuis `ch:<n>`
 }
 ```
 
-**`binding` = adressage de sortie OSC** (syntaxe figée Romain 2026-06-23, OSC-L1) :
-`@actor X device:<nom-osc-bridge> ch:<n>`. Le binding est porté **par acteur** dans la scène
-compilée et lu par l'hôte (Kanopi), qui appelle `runtime-OSC.setBindings({X:{device, channel}})`.
-Distinct des `properties`/`references` (entités de voix) : `device`/`ch` ne polluent pas `properties`.
-`ch:` est optionnel (binding `device` seul possible).
+**Adressage de sortie = `transport` + ses params** (KAI-9, Romain 2026-06-26). UNE seule forme
+partout : le TYPE de runtime est `transport.<type>` (`references[transport].name`) et les DÉTAILS
+d'adresse (device/channel/port) sont ses **params**, iso quel que soit le type :
+`transport.midi(ch:3)`, `transport.osc(device:reaper, ch:7)`. L'hôte reconstruit son routage depuis
+`references[transport].{name, params}` (plus de tiroir séparé). L'ancien champ `ActorDirective.binding`
+(OSC-L1, device:/ch: lâche) est **supprimé** : les détails OSC vivaient dans un tiroir parallèle au
+lieu de `transport.params`.
 
 ```
 TransportRef {

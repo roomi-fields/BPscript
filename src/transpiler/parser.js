@@ -843,11 +843,14 @@ function parse(tokens, opts = {}) {
       const actorName = expect(T.IDENT).value;
       const properties = {};
       const soundAssignments = [];
-      // Adressage de sortie OSC (figé Romain 2026-06-23, OSC-L1) : binding par-acteur
-      // `device:<nom-osc-bridge>` + `ch:<n>` — lu par l'hôte (Kanopi → runtime-OSC.setBindings).
-      const binding = {};
+      // Adressage de sortie : UNE seule forme d'adresse partout (KAI-9, décision
+      // 2026-06-26 / GAP#1). Le type de runtime est `transport.<midi|osc|...>` et les
+      // DÉTAILS d'adresse (canal/device/port) sont ses PARAMS, iso-MIDI :
+      //   transport.midi(ch:3)              transport.osc(device:reaper, ch:7)
+      // (Remplace l'ancien champ séparé `ActorDirective.binding` OSC-L1, supprimé : les
+      //  détails OSC vivaient dans un tiroir parallèle au lieu de transport.params.)
 
-      // Helper: parser les params d'un transport `(ch:3, vel:100)`
+      // Helper: parser les params d'un transport `(ch:3, vel:100)` / `(device:reaper, ch:7)`
       const parseRefParams = () => {
         expect(T.LPAREN);
         const params = {};
@@ -911,22 +914,6 @@ function parse(tokens, opts = {}) {
 
         const key = current().value;
         const next = peek(1).type;
-
-        // Adressage de sortie OSC (figé Romain 2026-06-23, OSC-L1) :
-        //   device:<nom-osc-bridge>   → binding.device  (quel pont OSC)
-        //   ch:<n>                    → binding.channel (canal du pont)
-        // Intercepté AVANT la voie générique pour loger le binding par-acteur
-        // (et non dans properties). L'hôte le lit pour runtime-OSC.setBindings.
-        if ((key === 'device' || key === 'ch') && next === T.COLON && !peek(1).spaceBefore) {
-          advance(); // key
-          advance(); // :
-          if (key === 'device') {
-            binding.device = expect(T.IDENT).value;
-          } else {
-            binding.channel = Number(expect(T.INT).value);
-          }
-          continue;
-        }
 
         // forme v0.8 : `alphabet.X`, `tuning.X`, `octaves.X`, `transport.X[(...)`, `sound.X`, `eval.X`
         // SIX clés d'entité (décision cles-acteur-six, Romain 2026-06-16).
@@ -1016,7 +1003,6 @@ function parse(tokens, opts = {}) {
         properties,
         references,
         soundAssignments: soundAssignments.length > 0 ? soundAssignments : null,
-        binding: (binding.device !== undefined || binding.channel !== undefined) ? binding : null,
         line: tok.line,
       };
     }
