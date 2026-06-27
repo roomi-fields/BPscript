@@ -367,7 +367,7 @@ eclairage -> -!spot _ _ -!fade       // → lights (seul à avoir spot, fade)
 
 ---
 
-## Layer 1. Alphabet (`lib/alphabet.json`)
+## Layer 1. Alphabet (`lib/alphabets.json`)
 
 Définit une **séquence ordonnée de noms de notes** et les **altérations** disponibles.
 L'alphabet est purement nominal — il ne contient aucune information de fréquence,
@@ -476,6 +476,10 @@ C'est le mode par défaut (si `type` est omis, c'est `"table"`).
 
 #### Type "parametric" — Dynamic Tonality
 
+> **État (cible, pas encore implémenté)** : seul `pitch = degree × generator` (réduit dans la
+> période) est résolu aujourd'hui. Le **réseau (a, b) complet** (`mapping` / `primes` / `commas` /
+> `mos_steps`) et le **generator-CV temps réel** restent une **cible**.
+
 Inspiré de la [Dynamic Tonality](https://www.dynamictonality.com/) (Milne, Sethares, Plamondon).
 Au lieu de ratios fixes, le tempérament est défini par un **period** et un **generator**
 dont la taille peut varier continûment.
@@ -565,7 +569,7 @@ Seule la valeur du generator change.
 
 ---
 
-## Layer 4. Tuning (`lib/tuning.json`)
+## Layer 4. Tuning (`lib/tunings.json`)
 
 Une **gamme concrète** qui associe un alphabet à un tempérament avec une référence pitch.
 C'est la couche qui fait le pont entre les noms (culturels) et les positions (mathématiques).
@@ -731,7 +735,12 @@ Le generator peut varier en temps réel via CV.
 
 ---
 
-## Layer 5. Resolver (`src/dispatcher/resolver.js`)
+## Layer 5. Resolver (`kairos/src/pitch/resolver.ts`)
+
+> **Depuis KAI-10** : le resolver vit dans **Kairos**, à la **projection** (matérialisation
+> de l'arbre dérivé), **plus** au runtime/dispatcher. Kronos ne fait plus que **router** la
+> hauteur **déjà résolue** ; il n'a aucune connaissance des fréquences. (Ancien emplacement
+> périmé : `src/dispatcher/resolver.js`.)
 
 Le resolver est **instancié par acteur** (voir Layer 0 ci-dessus).
 Chaque acteur (`@actor`) porte son propre contexte de résolution
@@ -762,10 +771,13 @@ Token "Re_komal_^"
 #### Mode table (tempéraments à ratios fixes)
 
 ```
-freq = baseHz × period_ratio^(register - baseRegister) × temperament.ratios[step] × alteration_ratio
+freq = baseHz × period_ratio^(register - baseRegister) × (temperament.ratios[step] / temperament.ratios[baseStep]) × alteration_ratio
 ```
 
-Où `step = tuning.degrees[degree_index]` — lookup dans le tableau de ratios.
+Où `step = tuning.degrees[degree_index]` — lookup dans le tableau de ratios — et
+`baseStep = tuning.degrees[baseNote]` est le step de la **note de base** (`baseNote`).
+La division par `ratios[baseStep]` **normalise** la grille sur la note de base : `baseHz`
+correspond à `baseNote` au registre `baseRegister`, et non au degré 0 du tempérament.
 
 #### Mode paramétrique (Dynamic Tonality)
 
@@ -796,7 +808,10 @@ selon `temperament.type` (`"table"` ou `"parametric"`).
 | Octaves     | convention `western`, registre `5`             |
 | Tuning      | `degrees[0]` = step 0, `#` = `"100c"` → step 1 |
 | Tempérament | 12-TET `ratios[1]` = `"100c"` → 2^(100/1200)   |
-| Résultat    | `440 × 2^(5-4) × 2^(1/12) = 554.37 Hz`         |
+| Résultat    | `(440 / 2^(9/12)) × 2^(5-4) × 2^(1/12) = 554.37 Hz` |
+
+Le `/ 2^(9/12)` normalise sur la note de base : `baseHz=440` vaut pour `A` (step 9), donc on
+divise par `ratios[9]` pour ramener la grille à `C` avant d'appliquer registre et altération.
 
 ### Indian : `ga_komal` (madhya saptak) en 22 shruti
 
@@ -850,18 +865,18 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
                     Timed tokens
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  RUNTIME (dispatcher)                                       │
+│  PROJECTION (Kairos) — depuis KAI-10                        │
 │                                                             │
-│  Timed token "C#4" (silent sound object)                    │
+│  Nœud dérivé "C#4" (silent sound object)                    │
 │       ↓                                                     │
 │  Resolver    ← octaves.json   (parse registre)              │
-│              ← alphabet.json  (parse note + altération)     │
-│              ← tunings.json   (degree → step, altération)   │
+│  (kairos/    ← alphabet.json  (parse note + altération)     │
+│   pitch/)    ← tunings.json   (degree → step, altération)   │
 │              ← temperaments.json (step → ratio)             │
 │       ↓                                                     │
 │  Calcul: freq = baseHz × period^Δregister × ratio × alt    │
 │       ↓                                                     │
-│  Transport (WebAudio, MIDI, OSC...)  → son                  │
+│  Kronos route la hauteur DÉJÀ résolue → transport → son     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -872,12 +887,13 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 @octaves.arrows          → charge octaves.json["arrows"]
 @tuning.western_just     → charge tunings.json["western_just"]
                             → charge automatiquement temperaments.json["just_5limit"]
-@reference:442           → override baseHz = 442
+@tuning:442              → override baseHz = 442
 ```
 
 Les directives `@` dans le source BPScript configurent les couches.
 Le tuning référence son tempérament → le chargement est transitif.
-`@reference` permet de changer la fréquence de base sans changer le tuning.
+`@tuning:442` permet de changer la fréquence de base sans changer le tuning
+(arbitrage Romain 2026-06-26 : `:` affecte une valeur).
 
 ### Cycle de vie des données
 
@@ -910,8 +926,8 @@ pas de parsing de chaînes.
 | `parser.js`      | compile | alphabets                                 | AST avec nodes Symbol typés           |
 | `encoder.js`     | compile | alphabets, octaves                        | noms BP3-safe (bol prefix), grammaire |
 | `prototypes.js`  | compile | alphabets, octaves                        | fichier -so. (durées de référence)    |
-| `resolver.js`    | runtime | octaves, alphabets, tunings, temperaments | fréquence (float)                     |
-| `dispatcher.js`  | runtime | —                                         | orchestre resolver + transport        |
+| `kairos/pitch/resolver.ts` | projection | octaves, alphabets, tunings, temperaments | fréquence (float) — depuis KAI-10 |
+| Kronos           | runtime | —                                         | route la hauteur déjà résolue → transport |
 | `transport/*.js` | runtime | —                                         | consomme la fréquence, produit du son |
 
 ### Ce que BP3 voit vs ce que le dispatcher voit
@@ -935,6 +951,10 @@ Transport:  oscillator.frequency = 284.44 at t=1500ms for 200ms
 ---
 
 ## Impact sur le code existant
+
+> **Réalisé (KAI-10).** Cette table était la to-do de migration vers le modèle 6 couches ;
+> elle est **faite**. Le resolver est passé en projection (Kairos), les catalogues sont au
+> pluriel, l'alphabet est purement nominal. Conservée ici comme **registre historique**.
 
 | Fichier                        | Action                                                                                             |
 | ------------------------------ | -------------------------------------------------------------------------------------------------- |
