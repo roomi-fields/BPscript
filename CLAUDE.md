@@ -179,3 +179,11 @@ Si tu es lancé avec un nom de session (`-n`), lis immédiatement les fichiers m
 - Focus : docs/design/*.md, docs/spec/*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json, concepts acteurs/REPL/effets
 
 Après lecture des fichiers mémoire, fais un résumé de ce que tu sais pour confirmer que tu as le contexte.
+
+## CodeGraph — graphe de code indexé
+
+Ce dépôt est indexé avec CodeGraph (`.codegraph/`). Pour **comprendre ou localiser du code**
+(symboles, appelants/appelés, rayon d'impact d'un changement), utilise
+`codegraph explore "<question | symbole>"` (ou l'outil MCP `codegraph_explore`) **avant** grep/find ou
+la lecture de fichiers. Complémentaire de RTFM : **RTFM** pour le quoi/où documentaire (texte + PDF),
+**CodeGraph** pour la structure d'appel du code. (Index local, non versionné ; cloisonné à ce dépôt.)
