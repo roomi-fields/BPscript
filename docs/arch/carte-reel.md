@@ -124,7 +124,8 @@ flowchart TD
 | `compileBPS(src)` | `.bps` | `{ grammar, alphabetFile, prototypesFile, … }` (BP3) | **héritée** — ne pas toucher |
 
 La voie PROPRE (`bpxAst.js`) ne traverse **jamais** `encoder/prototypes/orderTokens` (loi BPx-only,
-gardée — voir `docs/arch/garde-preuve.md`). La façade, elle, expose les deux voies côte à côte.
+gardée — loi `bpx-clean-no-bp3` dans `.dependency-cruiser.cjs`, vérifiable par `npm run arch`).
+La façade, elle, expose les deux voies côte à côte.
 
 ## Anomalies / candidats (à confronter, pas à trancher seul)
 

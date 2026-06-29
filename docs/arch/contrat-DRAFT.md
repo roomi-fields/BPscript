@@ -5,7 +5,7 @@
 - **Brouillon (CADRE).** À confronter à l'archi globale puis à ratifier par Romain. Non encore branché au gate.
 - **Drivers :**
   - **Carte du réel** : `/home/romi/dev/bp/BPscript/docs/arch/carte-reel.md` (21 fichiers, 5 blocs, zéro orphelin, zéro cycle).
-  - **Loi cross-repo** : la voie propre ne traverse jamais la sortie BP3 héritée — gardée par `bpx-clean-no-bp3` (`/home/romi/dev/bp/BPscript/docs/arch/garde.cjs`, preuve dans `garde-preuve.md`).
+  - **Loi cross-repo** : la voie propre ne traverse jamais la sortie BP3 héritée — gardée par `bpx-clean-no-bp3` (`.dependency-cruiser.cjs` à la racine, branchée sur `npm run arch`).
   - **Frontière de contrat** : `/home/romi/dev/bp/hub/contrats/bpscript-bpx.md` (atteste la conformité à `BPx/docs/AST_SPEC.md` v1) ; mapping surface→AST dans `BPscript/docs/spec/AST.md`.
   - **Autorité sémantique** : `/home/romi/dev/bp/BPscript/src/transpiler/_AUTORITE.md` (acteur / pitch / contrôles) + décisions hub (6 clés d'acteur, 3 formes de contrôle).
   - **Règle de garde** : tout ce qui touche la **sémantique du langage** se valide avec Romain — le présent cadre fige la **forme** et les **frontières**, jamais le sens du langage.
@@ -537,7 +537,7 @@ Règles de forme voulues :
 
 ## Invariants vérifiables MACHINE (règles du garde) ⚙️
 
-Lois **structurelles** seulement (le sémantique reste la relecture de Romain). Config `docs/arch/garde.cjs`, à promouvoir en `.dependency-cruiser.cjs` + script `arch` une fois ratifié.
+Lois **structurelles** seulement (le sémantique reste la relecture de Romain). Config `.dependency-cruiser.cjs` à la racine, branchée sur `npm run arch` (BPS-10 fermé).
 
 | Invariant | Énoncé machine | Statut |
 |---|---|---|
