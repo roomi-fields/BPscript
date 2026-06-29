@@ -1,0 +1,12 @@
+flowchart TD
+  N0["RESOLUTION (5 fichiers, 2 internes)"]
+  N1["INVERSE_BP3 (1 fichiers, 0 internes)"]
+  N2["FRONTAL_AST (5 fichiers, 7 internes)"]
+  N3["OUTILLAGE (7 fichiers, 0 internes)"]
+  N4["SORTIE_BP3 (3 fichiers, 0 internes)"]
+  N2 --> N0
+  N3 --> N2
+  N2 --> N4
+  N4 --> N2
+  N4 --> N0
+  N3 --> N4
