@@ -5,12 +5,15 @@
   "main": "src/transpiler/index.js",
   "private": true,
   "scripts": {
-    "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs"
+    "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs",
+    "typecheck:digital": "tsc -p tsconfig.digital.json",
+    "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.8",
-    "dependency-cruiser": "^16.0.0"
+    "dependency-cruiser": "^16.0.0",
+    "typescript": "^6.0.3"
   }
 }

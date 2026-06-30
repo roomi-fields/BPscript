@@ -1,0 +1,17 @@
+{
+  "//": "Chaîne TS d'AUTHORING — SCOPED aux corps de fonctions digitales (lib/digital/**/*.ts).",
+  "//2": "BPScript reste JS pur ; ce tsconfig ne type-check QUE les corps .ts, contre le SDK @kairos/core.",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@kairos/core": ["./node_modules/@kairos/core/dist/index.d.ts", "../kairos/dist/index.d.ts"]
+    },
+    "types": [],
+    "skipLibCheck": true
+  },
+  "include": ["lib/digital/**/*.ts"]
+}
