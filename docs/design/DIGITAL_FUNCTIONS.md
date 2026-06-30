@@ -51,39 +51,42 @@ Une librairie de fonctions digitales suit la structure de `lib/mod.json`, `type:
 - `body` = le code TS de la transformation. Pur, déterministe, synchrone (chemin chaud : un appel par
   note à la résolution). Il cible le **SDK** (§3).
 
-### Format du corps — point à coordonner (Kairos = runtime)
-Le `body` est du **TS** transpilé au load. Deux options, à trancher avec Kairos (qui tient la
-transpilation/bac-à-sable) et Romain :
-- **(F1) `.ts` authored + bundlé** : l'auteur écrit un module `.ts` typé contre le SDK ; un bundle
-  (miroir de `src/transpiler/libs-bundle.js`) le transpile et l'enregistre. Donne le **typage réel à
-  l'écriture** (le SDK est importé), au prix d'une étape de build.
-- **(F2) code-en-chaîne dans le JSON** : `body` est une chaîne TS ; transpilée au load. Aligné sur le
-  bundle JSON actuel, mais **pas de typage à l'écriture** (juste un contrat de signature).
-Recommandation : **F1 pour le jeu FOURNI + les libs perso** (le typage contre le SDK est tout l'intérêt
-du « vrai code TS manipulable »), F2 toléré pour des bouts simples. À valider.
+### Format du corps — RÉCONCILIÉ avec le runtime Kairos
+Kairos transpile le **TS source au CHARGEMENT** de la lib (cache par lib, clé = provenance+version+hash
+source ; KAI-B03 §1). Donc la lib **transporte du TS SOURCE** (texte). Les deux « formats » que j'avais
+opposés (F1/F2) ne s'opposent PAS — ils se composent :
+- **Authoring** : l'auteur écrit un module `.ts` **typé contre le SDK** (`DigitalFnContext`, fourni par
+  Kairos) → typage réel à l'écriture (tout l'intérêt du « vrai code TS manipulable »).
+- **Stockage/chargement** : un bundle (miroir de `src/transpiler/libs-bundle.js`) capte le **TS source**
+  dans la lib (registre `libs-data.js`) ; Kairos le transpile au load.
+→ Typage à l'écriture **ET** mécanisme de bundle existant. (Le détail du build = PAS 4.)
 
-## 3. Le SDK — frontière de typage (défini PAR Kairos, référencé par moi)
+## 3. Le SDK — le contexte Kairos (ALIGNÉ avec KAI-B03)
 
 Le **SDK** = les types du **contexte Kairos** que l'auteur d'une fonction cible. Kairos en est
-propriétaire (il possède la résolution) ; mon rôle est de définir comment l'entrée de lib **déclare sa
-signature** et **importe/cible** ce SDK.
+propriétaire (il possède la résolution). Le contexte est défini dans `kairos/docs/KAI-B03-runtime-
+fonctions-digitales.md §2` : `DigitalFnContext { target, models, params }` — `target` = vue
+LECTURE/ÉCRITURE des facettes NON-temporelles du terminal (hauteur en COORDONNÉES canoniques
+`step`/`register`/`degreeIndex`, vélocité, canal, contrôles) ; `models` = tempérament/accordage/
+alphabet/registres en LECTURE SEULE ; `params` = les arguments de l'appel (`transpose:2 → {steps:2}`).
 
-Surface PROPOSÉE (à confirmer/définir par Kairos) — une fonction de hauteur reçoit un contexte typé
-exposant la **hauteur canonique** + ses params, et renvoie une hauteur transformée :
+**Signature (contrat partagé, ALIGNÉE)** : `(ctx: DigitalFnContext) => void` — **mutation in-place de
+`target`** (PAS un retour de `Partial`). Raison (je concède l'option de Kairos, c'est la meilleure) :
+l'enveloppe `{target, models, params}` est **extensible en v2** à un nœud/sous-arbre sans changer la
+forme ; la mutation de `target` passe à l'échelle de cette v2, là où un `Partial<TerminalView>` ne le
+ferait pas. Elle gère aussi proprement l'écriture **multi-facettes** (hauteur + vélocité + canal). Reste
+**déterministe/mémoïsable** (snapshot des facettes d'entrée ; aucun I/O/horloge/aléa).
 
 ```ts
-// fourni par Kairos (le runtime), importé par l'auteur de fonction
-export interface PitchCtx {
-  readonly degreeIndex: number;     // degré dans l'alphabet
-  readonly step: number;            // pas sur la grille du tempérament
-  readonly register: number;        // registre/période
-  // … helpers déterministes exposés par Kairos (grid, period, degrés…)
-}
-// l'auteur écrit :
-export default (ctx: PitchCtx, p: { steps: number }) => ({ ...ctx, step: ctx.step + p.steps });
+// l'auteur écrit, typé contre le SDK de Kairos (DigitalFnContext) :
+export default (ctx: DigitalFnContext): void => {
+  ctx.target.pitch!.step += Number(ctx.params.steps);   // transpose = décalage de grille
+};
 ```
 
 Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire non-graine).
+**Général, pas hauteur-only** : `target` porte aussi vélocité/canal/contrôles → `accent`, routage, etc.
+(la hauteur est le premier cas, pas le seul).
 
 ## 4. Frontière BPScript ↔ Kairos (résumé)
 
@@ -102,9 +105,23 @@ Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire
   `registerLib`/`registerAll` (`libs.js:32-45`, commentaire `libs.js:14-15`). Conforme à la décision
   `hub/decisions/2026-06-29-tout-par-librairies.md` (l'hôte FOURNIT, Kairos RÉSOUT).
 
-## 6. Points ouverts (à trancher avec Romain / Kairos)
+## 6. Alignement avec Kairos (KAI-B03) — RÉSOLU vs OUVERT
 
-1. **Format du corps** : F1 (`.ts` bundlé, typé) vs F2 (chaîne dans le JSON). §2.
-2. **Types exacts du SDK** : appartiennent à Kairos (§3) — coordination en cours.
-3. **Syntaxe d'application côté scène** : hors PAS 3 (transpose passe déjà par `controls`/`[]`) ; à
-   confirmer que l'application réutilise le câblage existant.
+**Résolu (frontière emboîtée)** :
+- **Signature** = `(ctx: DigitalFnContext) => void`, mutation in-place de `target` (§3). J'ai concédé
+  l'option de Kairos (meilleure pour la v2 arbre/sous-arbre + multi-facettes).
+- **SDK** = `DigitalFnContext` de Kairos (KAI-B03 §2) ; ma forme de lib le cible.
+- **Vrai code TS, pas compo de primitives** : les `models` (lecture seule) + helpers du sandbox sont
+  DISPONIBLES au code TS libre ; la fonction n'est PAS restreinte à composer des primitives. Ma
+  proposition antérieure « compo de primitives » est **superséquée** par la décision Romain.
+- **Nom** : le nom déclaré (clé `objects` de la lib) = la référence de scène = porté **verbatim/opaque**
+  par BPx = **clé de résolution** dans la lib FOURNIE (KAI-B03 §3). Confirmé.
+- **Format du corps** : authoring `.ts` typé + bundle source-texte (§2) — composé, plus un either/or.
+
+**Ouvert (relecture archi / Romain, ou PAS 4)** :
+- Choix du transpileur navigateur (sucrase/esbuild-wasm/tsc) — **côté Kairos**, PAS 4.
+- Jeu minimal de **helpers** offerts dans le sandbox (navigation de grille, conversions de registre) —
+  côté Kairos.
+- **Migration de `transpose`** : aujourd'hui déclaré dans `lib/controls.json` (`{args:[steps]}`) ; la
+  lib digitale devient autorité du **comportement** (corps TS). La surface de scène (`transpose(steps:2)`)
+  réutilise le câblage de contrôle existant — à confirmer en PAS 4.
