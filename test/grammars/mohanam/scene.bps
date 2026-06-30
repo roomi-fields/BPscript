@@ -9,7 +9,11 @@
 
 @core
 @controls
-@alphabet.raga:midi
+// Voix unique : svaras sargam notés en octaves numériques (sa6…). La convention
+// d'octave par défaut de sargam est saptak ; `octaves.western` la SURCHARGE
+// (EBNF.md:114,118-119 ; ACTOR.md:37 ; décision clés-acteur-six). Remplace
+// l'ancien `@alphabet.raga` (alphabet absent du catalogue).
+@actor flute alphabet.sargam octaves.western transport.midi
 
 // Settings
 @ins:3
