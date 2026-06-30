@@ -1287,6 +1287,21 @@ Le `.` accede a une entree specifique dans le fichier :
 Les librairies definissent des **noms** et des **identites**, pas des formats de sortie.
 Le runtime gere la production du son/signal.
 
+### Librairies de FONCTIONS digitales (evolution 2026-06-30)
+
+Au-dela des librairies de **donnees** (alphabets, octaves, temperaments, controles, objets CV...),
+une famille porte du **comportement** : les **fonctions de manipulation digitale** (transpose en 1re ;
+puis octave/registre, gamme, rotation...). Une fonction = une entree `{params, body}` ou le `body` est
+du **vrai code TS** type (authoring F1), vivant dans une lib `{type:'digital', objects}` (3 provenances :
+fournie / perso / communautaire). C'est le **jumeau** des objets CV : meme idee (comportement nomme en
+librairie), realise par un moteur different — **Kairos** (code discret, a la resolution) pour le digital,
+le **runtime audio** (courbe declarative) pour l'analogique/CV.
+
+L'hote fournit la lib ; **Kairos** la transpile au chargement et l'**applique** (le nom de fonction est
+porte opaque jusqu'a lui ; il opere sur une **COPIE**, jamais l'arbre reel). BPScript pose la **forme**
+de lib et le **typage a l'ecriture**, il ne resout/n'execute rien. Spec complete :
+`docs/design/DIGITAL_FUNCTIONS.md` ; decision `hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`.
+
 ### Conflits de noms
 
 Si deux librairies definissent le meme symbole, le compilateur produit une erreur

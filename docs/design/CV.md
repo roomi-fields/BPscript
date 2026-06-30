@@ -9,6 +9,12 @@
 
 Les CV (Control Voltage) sont des **objets temporels** dans BPScript qui produisent des courbes de valeurs continues. Ils s'appliquent à un signal d'entrée pour produire un signal de sortie, comme dans un synthé modulaire.
 
+> **Jumeau DIGITAL (2026-06-30).** L'objet CV est la moitié **ANALOGIQUE** d'une symétrie : courbe
+> **déclarative** réalisée par le **runtime audio**. Sa moitié **DIGITALE** = les **fonctions de
+> manipulation** (transpose…) — même idée (comportement nommé en librairie) mais **vrai code TS**
+> réalisé par **Kairos** à la résolution. Cf. `docs/design/DIGITAL_FUNCTIONS.md` et la décision
+> `hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`.
+
 ### Les 3 types d'objets temporels BPScript
 
 | Type | Comportement | Exemple |

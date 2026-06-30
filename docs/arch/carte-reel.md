@@ -101,14 +101,14 @@ flowchart TD
 | `constants.js` | 34 | FRONTAL | Constantes partagées (table opérateurs BP3) |
 | `actorResolver.js` | 194 | RESOLUTION | Résolution d'acteur (alphabet/tuning/octaves/transport) |
 | `libs.js` | 327 | RESOLUTION | Chargeur de librairies (JSON → contrôles/symboles/CV) |
-| `libs-data.js` | 42 | RESOLUTION | **Généré** par `libs-bundle.js` (bundle JSON) — ne pas éditer |
+| `libs-data.js` | 44 | RESOLUTION | **Généré** par `libs-bundle.js` (bundle JSON **+ corps `.ts` des fonctions digitales captés**) — ne pas éditer |
 | `controlValidation.js` | 78 | RESOLUTION | Validation des VALEURS de contrôle runtime |
 | `modulationValidation.js` | 133 | RESOLUTION | Validation des NOMS d'entrées de modulation |
 | `encoder.js` | 1657 | SORTIE_BP3 | AST → texte grammaire BP3 (**hérité, ne pas toucher**) |
 | `prototypes.js` | 165 | SORTIE_BP3 | Génère les fichiers prototypes BP3 `-so.` (durées) |
 | `orderTokens.js` | 92 | SORTIE_BP3 | Tokenisation « ordre » de la production canonique BP3 |
 | `bp3ToScene.js` | 1954 | INVERSE | Transpileur INVERSE BP3 → BPScript |
-| `libs-bundle.js` | 48 | OUTILLAGE | Génère `libs-data.js` depuis les JSON `lib/` |
+| `libs-bundle.js` | 69 | OUTILLAGE | Génère `libs-data.js` depuis les JSON `lib/` **+ capte les corps `.ts` des fonctions digitales** (`lib/digital/<fn>.ts` → `objects[<fn>].body`) |
 | `compare.js` | 179 | OUTILLAGE | Compare scènes ↔ grammaires d'origine (CLI) |
 | `show-diffs.js` | 60 | OUTILLAGE | Affiche les diffs règle-à-règle (CLI) |
 | `test.js` | 192 | OUTILLAGE | Lance les tests (CLI) |
@@ -126,6 +126,24 @@ flowchart TD
 La voie PROPRE (`bpxAst.js`) ne traverse **jamais** `encoder/prototypes/orderTokens` (loi BPx-only,
 gardée — loi `bpx-clean-no-bp3` dans `.dependency-cruiser.cjs`, vérifiable par `npm run arch`).
 La façade, elle, expose les deux voies côte à côte.
+
+## Fonctions digitales — authoring F1 typé (évolution MAJEURE, 2026-06-30)
+
+Nouvelle famille de librairie : les **fonctions de manipulation DIGITALE** (jumelles des objets CV).
+Le transpose en est la 1re (sa sémantique sort du « en dur » côté Kairos). Source :
+`hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`, spec `docs/design/DIGITAL_FUNCTIONS.md`.
+
+| Pièce (réel) | Rôle |
+|---|---|
+| `lib/digital.json` | Fiche de lib `{type:'digital', objects:{transpose:{params}}}` — le **schéma** (signature) ; le `body` n'est PAS ici |
+| `lib/digital/<fn>.ts` | **Corps** de la fonction = vrai `.ts` TYPÉ contre le SDK Kairos (`@kairos/core`, `DigitalFnContext`). Source de vérité |
+| `tsconfig.digital.json` | Chaîne TS d'**authoring SCOPED** : type-check QUE `lib/digital/**/*.ts` (BPScript reste JS pur ailleurs) |
+| `package.json` → `typecheck:digital` | `tsc -p tsconfig.digital.json` — le typage **mord** (prouvé rouge→vert) |
+| `libs-bundle.js` (étendu) | Capte le `.ts` SOURCE → `objects[<fn>].body` dans `libs-data.js` |
+
+Flux : `lib/digital/<fn>.ts` (typé) → `libs-bundle.js` (capte le source) → `libs-data.js` (`body`) →
+`loadLib('digital').objects[<fn>]` → l'hôte fournit la lib à **Kairos** qui transpile (sucrase) +
+exécute au load. BPScript **ne résout pas** la fonction (porter≠résoudre).
 
 ## Anomalies / candidats (à confronter, pas à trancher seul)
 

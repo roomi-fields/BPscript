@@ -35,7 +35,12 @@
 
 **Résolution (RESOLUTION)** — sert l'AST, jamais l'ancien format dans la voie propre :
 - `actorResolver.js` : résolution d'acteur (les 6 clés : alphabet, tuning, octaves, sound, transport, eval ; obligatoires alphabet+transport).
-- `libs.js` (+ `libs-data.js` **généré**) : chargeur de librairies JSON (contrôles / symboles / CV).
+- `libs.js` (+ `libs-data.js` **généré**) : chargeur de librairies JSON (contrôles / symboles / CV / **fonctions digitales**).
+
+**Mission SECONDAIRE — poser la forme des librairies de FONCTIONS DIGITALES** (évolution 2026-06-30) :
+BPScript **définit** la forme de lib des manipulations digitales (transpose en 1re ; `lib/digital.json`
++ corps `.ts` typés `lib/digital/`, authoring F1) ; **Kairos** les **réalise** (runtime). BPScript ne
+résout/n'exécute rien (porter≠résoudre). Détail : frontière §3.1.D, loi §2.7, `docs/design/DIGITAL_FUNCTIONS.md`.
 
 **Hors mission (à isoler, pas à étendre) :**
 - **SORTIE_BP3** (`encoder.js`, `prototypes.js`, `orderTokens.js`) : voie héritée `compileBPS`, vouée au retrait — **ne pas toucher** sauf demande explicite.
@@ -68,18 +73,20 @@
 4. **Deux voies côte à côte dans la façade, jamais croisées.** `compileToBPxAST` (active, frontière BPx) et `compileBPS` (héritée, à retirer) coexistent dans `index.js` mais ne partagent pas le chemin de sortie.
 5. **Précédence collision homo↔terminal : LE TERMINAL GAGNE** (figé `bpscript-bpx.md:31`). À la recherche, `SEARCHTERMINAL` passe avant `SEARCHHOMO` : un nom qui est à la fois terminal et homomorphisme est résolu comme **terminal** (fidèle BP3). Invariant de forme, non négociable.
 6. **La NATURE voyage scellée dans le FLUX DÉRIVÉ, pas seulement dans l'AST statique** (exigence figée `AST_SPEC §3.1`). Tout token non purement sonnant (`transport-control`, `instant`, et `engine-control` quand restitué) ressort en sortie `'complete'` comme nœud `control` de durée nulle **portant son `TokenPayload` intact** (`nature` au minimum) ; BPx n'absorbe jamais un marqueur sans le restituer. C'est ce qui permet au dispatcher — qui ne voit que le flux dérivé en ordre — de distinguer `transport-control`/`instant` (à émettre) d'`engine-control` (déjà appliqué, à ignorer).
+7. **Frontière manipulations DIGITALES / ANALOGIQUES + invariant COPIE** (décision Romain `hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`). Une manipulation **digitale** (discrète, sur les terminaux canoniques : transpose, octave/registre, gamme…) vit dans une **librairie de fonctions** (vrai code TS, 3 provenances) **réalisée par Kairos** ; jumelle des **objets CV** (analogiques, courbe déclarative réalisée par les runtimes). **Invariant non négociable** : une fonction de lib opère sur une **COPIE** préparée par Kairos, **JAMAIS** l'arbre réel par référence ; **Kairos seul** applique le résultat. Raison : Kairos = autorité d'écriture ; le code de lib (perso/communautaire) = **non fiable**. Côté BPScript : on **POSE la forme de lib** (§3.1.D), on ne résout/n'exécute rien (porter≠résoudre).
 
 ---
 
 ## 3. Interface — frontières du transpileur BPScript
 
-Le transpileur a **trois frontières** :
+Le transpileur a **quatre frontières** :
 
 | # | Frontière | Sens | Direction | Pivot/étalon | Statut |
 |---|---|---|---|---|---|
 | ENTRÉE | Kanopi (hôte) → transpileur | amont | `compileToBPxAST(source, environnement?)` | conf éditable Kanopi (défauts) | ⚙️ |
 | SORTIE (**reine**) | transpileur → BPx | aval | `SceneAST` émis | `hub/contrats/bpscript-bpx.md` + `BPx/docs/AST_SPEC.md v1.2` ; `BPx/src/types/ast.ts` | ⚙️/❓amendements |
 | VOIES SECONDAIRES | inverse (`bp3ToScene`) + ordre texte (`orderTokens`) | hors flux principal | round-trip BP3↔BPS, tokenisation `-o` | en-têtes modules + tests d'oracle | ⚙️/❓statut |
+| FONCTIONS DIGITALES (lib) | BPScript pose la lib → hôte fournit → **Kairos** réalise | données/code | lib `{type:'digital', objects}` + corps `.ts` typés | `kairos/.../KAI-B03` + `docs/design/DIGITAL_FUNCTIONS.md` + décision `2026-06-30-frontiere-digital-analog…` | ✅ scellé+prouvé |
 
 ### 3.1 — Inventaire des directions, en TABLEAU par frontière
 
@@ -148,6 +155,20 @@ Deux modules périphériques de `src/transpiler/`, hors de la chaîne de compila
 | stop-and-report | bp3ToScene.js | échec round-trip | retour `string` `"NON GÉRÉ: …"` (par grammaire) | toute construction non fidèle bloque la grammaire ENTIÈRE, jamais d'émission partielle silencieuse |
 | `tokenizeOrder(canonical)` | orderTokens.js | prod. BP3 `-o` ▶ séquence | `string[]` jetons sonnants ordonnés | délimiteurs `{ } & / ,` = séparateurs (découpent, NON émis) ; contrôle `_x(args)` gardé entier ; même séquence vue par les 2 consommateurs |
 | default export | orderTokens.js | = `tokenizeOrder` | `function` | alias |
+
+#### 3.1.D — Frontière FONCTIONS DIGITALES (BPScript pose la lib → hôte → Kairos réalise) ✅
+
+| Nom (objet/champ) | Propriétaire | Sens | Type / forme exacte | Invariant |
+|---|---|---|---|---|
+| `lib/digital.json` | BPScript ▶ hôte | sortant (donnée) | `{name, type:'digital', objects:{<fn>:{params}}}` (jumelle CV `lib/mod.json`) | le **schéma** (signature) ; PAS le `body` |
+| `lib/digital/<fn>.ts` | BPScript (auteur) | source de vérité | vrai `.ts` TYPÉ contre le SDK (`import type … from '@kairos/core'`) | type-check à l'écriture (`typecheck:digital`) ; le typage **mord** |
+| `body` capté | `libs-bundle.js` ▶ `libs-data.js` | injecté | `string` (le `.ts` source) | capté du `.ts` ; transpilé+exécuté par Kairos au load (sucrase) |
+| nom de fonction (`transpose`) | scène → BPx → Kairos | porté opaque | `string` (clé `objects[<fn>]`) | **carry-only** : BPx porte verbatim ; Kairos résout par ce nom |
+| SDK `DigitalFnContext` | **Kairos** (`@kairos/core`) | entrant (types) | `{ target (COPIE), models (lecture seule), params, h }` | signature `(ctx)=>void` ; **invariant COPIE** (loi §2.7) |
+
+> Côté BPScript : **forme de lib + authoring F1 typé** uniquement. Le **runtime** (transpile, bac à
+> sable, application sur la copie, dérivation Hz) et les **types du contexte** sont à **Kairos**.
+> Preuve cross-réel : `{Tr2}→D4 293.66`, `{Tr7}→G4 392` (oracle Kairos chargeant le bundle BPScript).
 
 ### 3.2 — Signatures EXACTES, chaque champ déplié
 
