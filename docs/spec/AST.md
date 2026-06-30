@@ -187,8 +187,10 @@ ActorDirective {
     alphabet: string              // référence vers alphabets.json ("sargam", "western")
     tuning: string | null         // tempérament/accordage ("sargam_22shruti", "equal_temperament")
     octaves: string | null        // convention de registre (référence octaves.json) ; null = héritée
-                                   // de l'alphabet. Résolue EN AMONT (actorResolver) : ne traverse pas
-                                   // l'AST vers BPx → contrat BPx inchangé.
+                                   // de l'alphabet. TRAVERSE vers BPx via `references` (category
+                                   // "octaves", gravée parser.js:1033) — PORTÉE OPAQUE (BPx 2fdb291),
+                                   // résolue par Kairos contre octaves.json (kairos 8fce0fc). L'override
+                                   // surcharge la convention native de l'alphabet (ex. sargam noté sa6).
     sound: string | null          // son par défaut de l'acteur (référence dans soundPrototypes)
     transport: TransportRef       // destination de rendu — appareil typé (cf. @devices)
     eval: string | null           // interpréteur des backticks (null = même clé que transport)
