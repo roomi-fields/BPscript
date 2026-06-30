@@ -1,0 +1,29 @@
+{
+  "_comment": [
+    "Bibliothèque de FONCTIONS DIGITALES (manipulations non-temporelles) — jumeau DIGITAL des objets",
+    "CV (lib/mod.json) : même structure {type, objects}, mais le comportement = VRAI CODE TS réalisé par",
+    "KAIROS (vs courbe déclarative réalisée par le runtime audio). Spec : docs/design/DIGITAL_FUNCTIONS.md.",
+    "Jeu FOURNI (lecture seule) ; perso/communautaire = surcharge hôte via registerLib (3 provenances).",
+    "Chaque fonction : { params (signature typée, jumelle des params CV), body (code TS) }.",
+    "SIGNATURE SCELLÉE (Romain) : (ctx: DigitalFnContext) => void — la fonction MODIFIE ctx.target (une",
+    "COPIE préparée par Kairos, JAMAIS l'arbre réel ; Kairos seul applique le résultat à la sortie",
+    "canonique). Le corps cible le SDK Kairos (DigitalFnContext). body = TS SOURCE, transpilé au load",
+    "par Kairos (sucrase). NB authoring F1 : le body est à finaliser/typer contre le SDK .d.ts livré par",
+    "Kairos en PAS 4 (la logique ci-dessous est scellée ; seul le typage à l'écriture reste à brancher)."
+  ],
+  "name": "digital",
+  "type": "digital",
+  "objects": {
+    "transpose": {
+      "description": "Transposition — décalage de N pas sur la grille du tempérament (C4 +2 → D4 en 12-TET).",
+      "params": {
+        "steps": {
+          "type": "int",
+          "default": 0,
+          "description": "Nombre de pas de grille (peut être négatif)."
+        }
+      },
+      "body": "export default function transpose(ctx) {\n  // transpose = décalage de N pas sur la grille du tempérament.\n  // Mutation de la COPIE (ctx.target) ; Kairos dérive le Hz APRÈS (L16).\n  if (ctx.target.pitch) ctx.target.pitch.step += Number(ctx.params.steps ?? 0);\n}\n"
+    }
+  }
+}
