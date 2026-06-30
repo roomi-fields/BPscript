@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs",
+    "typecheck": "npm run typecheck:digital",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js"
   },
