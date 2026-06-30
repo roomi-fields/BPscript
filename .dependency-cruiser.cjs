@@ -13,7 +13,7 @@ module.exports = {
     { name: 'core-no-tooling', severity: 'error',
       comment: 'le coeur ne doit pas importer les scripts CLI/test',
       from: { path: 'src/transpiler/(tokenizer|parser|bpxAst|index|constants|actorResolver|libs|encoder)\\.js$' },
-      to: { path: 'src/transpiler/(compare|show-diffs|test|validate|validate-all|validate-wasm|libs-bundle)\\.js$' } },
+      to: { path: 'src/transpiler/(compare|show-diffs|test|validate|validate-all|validate-wasm|libs-bundle|libs-bundle-check)\\.js$' } },
   ],
   options: { doNotFollow: { path: 'node_modules' }, tsPreCompilationDeps: true },
 };

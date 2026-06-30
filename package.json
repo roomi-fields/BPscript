@@ -5,10 +5,12 @@
   "main": "src/transpiler/index.js",
   "private": true,
   "scripts": {
-    "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs",
+    "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs && node src/transpiler/libs-bundle-check.js",
     "typecheck": "npm run typecheck:digital",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
-    "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js"
+    "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js",
+    "bundle:check": "node src/transpiler/libs-bundle-check.js",
+    "prepare": "npm run bundle:libs"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
