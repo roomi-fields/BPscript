@@ -5,7 +5,12 @@
     "",
     "Fields:",
     "  position  — 'prefix' or 'suffix' (where the register marker goes)",
-    "  separator — string between note and register marker (empty = concatenated)",
+    "  separator — string between note and register marker (empty = concatenated).",
+    "              NEVER a space: a space is BPscript's token delimiter, so 'taar sa'",
+    "              would split into two terminals (the register prefix torn from the",
+    "              svara). Prefix conventions use '_' — already absorbed inside an",
+    "              identifier by the tokenizer (tokenizer.js:259), same glue char as",
+    "              the 'arrows' convention. Notation: 'taar_sa', 'tiz_re' (TAAR-TOK).",
     "  registers — ordered list from lowest to highest, '' = no marker (default register)",
     "  default   — index in registers[] for the 'home' register",
     "",
@@ -32,35 +37,35 @@
 
   "saptak": {
     "position": "prefix",
-    "separator": " ",
+    "separator": "_",
     "registers": ["mandra", "madhya", "taar"],
     "default": 1
   },
 
   "turkish": {
     "position": "prefix",
-    "separator": " ",
+    "separator": "_",
     "registers": ["", "tiz"],
     "default": 0
   },
 
   "gamelan": {
     "position": "prefix",
-    "separator": " ",
+    "separator": "_",
     "registers": ["ageng", "tengah", "alit"],
     "default": 1
   },
 
   "shakuhachi": {
     "position": "prefix",
-    "separator": " ",
+    "separator": "_",
     "registers": ["otsu", "kan", "daikan"],
     "default": 0
   },
 
   "korean": {
     "position": "prefix",
-    "separator": " ",
+    "separator": "_",
     "registers": ["tak", "jung", "cheong"],
     "default": 1
   }

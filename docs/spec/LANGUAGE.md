@@ -100,6 +100,11 @@ Un acteur lie **six cles d'entite** (decision *cles-acteur-six*, Romain 2026-06-
 (requis), `tuning`, `octaves`, `sound`, `transport` (requis), `eval` — references via `.`.
 `octaves` = convention de registre/notation, **defaut herite de l'alphabet**, surchargeable par
 acteur (`@actor X octaves.Y`) ; etape de resolution distincte, rattachee a l'alphabet (pas au tuning).
+Le marqueur de registre se **colle** au nom de note via le separateur de la convention (`lib/octaves.json`),
+**jamais un espace** (l'espace est le delimiteur de termes BPScript : il scinderait le terminal). Les
+conventions a **prefixe** (saptak indien, turkish, gamelan, shakuhachi, korean) utilisent `_` : la
+musique indienne s'ecrit `mandra_sa` / `madhya_sa` (defaut, ou `sa` nu) / `taar_sa` — un seul terminal,
+le registre resolu en aval par Kairos (TAAR-TOK, decision 2026-06-30).
 Exemple :
 ```
 @actor sitar1
@@ -509,6 +514,15 @@ Bass -> C2 C2 - C2 (vel:100)     // vel pour toute la phrase
 // Portee groupe -- apres le groupe
 {A B C}(filter:lp, cutoff:4000)  // filtre sur tout le groupe
 ```
+
+**Superposition (modulations continues, ex. filtres).** Quand plusieurs portees touchent le **meme
+parametre** d'une meme note (filtre de note + filtre de groupe + groupe parent...), les controles
+**s'EMPILENT en serie** -- ils ne s'ecrasent pas. L'ordre est **interieur->exterieur**, derive de
+l'**imbrication structurelle** : dans `{ C4(filter:500) D4 }(filter:300)`, le son de C4 traverse son
+filtre de note *puis* le filtre du groupe. Cette superposition est une **semantique de resolution
+aval** (BPx/Kairos/runtime), pas une syntaxe : le langage l'exprime deja par le `subject` du
+qualificateur et le nesting des groupes. (A distinguer des **scalaires** comme `vel`/`chan`, qui eux
+s'**effondrent** par precedence -- une seule valeur gagne. Decision 2026-06-30 superposition-series.)
 
 ### Compilation de `()` vers BP3
 
