@@ -2465,30 +2465,37 @@ function parse(tokens, opts = {}) {
 
     // Identifier — could be Symbol, SymbolCall, Control, or TieStart
     if (at(T.IDENT)) {
-      const name = advance().value;
+      let name = advance().value;
+      let actor = null;
 
       // Actor dot notation: sitar.Sa → { type: 'Symbol', name: 'Sa', actor: 'sitar' }
-      // Only if first IDENT is a known actor and followed by .IDENT (no space before .)
+      // Only if first IDENT is a known actor and followed by .IDENT (no space before .).
+      // On NE retourne PAS ici : on capte l'acteur puis on RETOMBE dans le même traitement
+      // que le terminal nu (suffixe (...), appel-symbole, ~, !, <!), afin que
+      // `acteur.terminal(...)` se comporte EXACTEMENT comme `terminal(...)`. Avant ce fix,
+      // le retour anticipé laissait tout `(...)` collé non consommé → rejet « Expected RBRACE
+      // got LPAREN » dès qu'un préfixe d'acteur côtoyait un override inconnu, ex. (ch:N) (LAN-9).
       if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT
           && libCtx.actors && libCtx.actors[name]) {
         advance(); // consume PERIOD
-        const terminal = advance().value;
-        return { type: 'Symbol', name: normalizeName(terminal), actor: name, line: tok.line };
+        actor = name;
+        name = advance().value; // terminal
       }
 
       // Tie start: C4~
       if (at(T.TILDE)) {
         advance();
-        return { type: 'TieStart', symbol: name };
+        return { type: 'TieStart', symbol: name, ...(actor ? { actor } : {}) };
       }
 
-      // Control: vel(120), goto(2,1) — check BEFORE symbol call
-      if (at(T.LPAREN) && isControlName(name)) {
+      // Control: vel(120), goto(2,1) — check BEFORE symbol call.
+      // Jamais pour un terminal préfixé d'acteur (acteur.terminal n'est pas un contrôle).
+      if (!actor && at(T.LPAREN) && isControlName(name)) {
         return parseControl(name, tok);
       }
 
       // Control without args: striated, smooth, destru, stop
-      if (!at(T.LPAREN) && isControlName(name) && isNoArgControl(name)) {
+      if (!actor && !at(T.LPAREN) && isControlName(name) && isNoArgControl(name)) {
         return { type: 'Control', name, args: [] };
       }
 
@@ -2497,18 +2504,22 @@ function parse(tokens, opts = {}) {
       // But we must check here to avoid confusing with symbol call
       if (isRuntimeQualifier() && !current().spaceBefore) {
         // Return bare symbol — suffix will be attached by parseRhsElements
-        return { type: 'Symbol', name: normalizeName(name), line: tok.line };
+        return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
       }
 
       // Symbol call: Sa(custom_param:120) — only if collé (no space) and NOT a known runtime control
       if (at(T.LPAREN) && !current().spaceBefore && !isContextLookahead()) {
-        return parseSymbolCall(name, tok);
+        const node = parseSymbolCall(name, tok);
+        if (actor) node.actor = actor;
+        return node;
       }
 
       // Simultaneous: Sa!dha!phase=2
       // But NOT !() or ![] — those are standalone InstantControls for the next iteration
       if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
-        return parseSimultaneousGroup(name, tok);
+        const node = parseSimultaneousGroup(name, tok);
+        if (actor) node.actor = actor;
+        return node;
       }
 
       // Trigger in on symbol: Sa<!sync1
@@ -2519,18 +2530,18 @@ function parse(tokens, opts = {}) {
         }
         return {
           type: 'SymbolWithTriggerIn',
-          symbol: { type: 'Symbol', name: normalizeName(name), line: tok.line },
+          symbol: { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) },
           triggers: triggerIns,
         };
       }
 
       // Plain symbol (might be a control like vel, tempo, goto)
       // Check if it's a control: name(args) without being a symbol call context
-      if (at(T.LPAREN) && isControlName(name)) {
+      if (!actor && at(T.LPAREN) && isControlName(name)) {
         return parseControl(name, tok);
       }
 
-      return { type: 'Symbol', name: normalizeName(name), line: tok.line };
+      return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
     }
 
     return null; // No valid RHS element found
