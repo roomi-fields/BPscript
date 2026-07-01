@@ -524,9 +524,10 @@ aval** (BPx/Kairos/runtime), pas une syntaxe : le langage l'exprime deja par le 
 qualificateur et le nesting des groupes. (A distinguer des **scalaires** comme `vel`/`chan`, qui eux
 s'**effondrent** par precedence -- une seule valeur gagne. Decision 2026-06-30 superposition-series.)
 
-**Etendue d'arc et rearmement d'enveloppe (`cutoff:env`).** Quand une enveloppe module un parametre
-(ex. `cutoff:env`), **un silence `-` re-arme l'enveloppe** (re-declenche son attaque) -- SAUF si une
-accolade `{ ... }` **enjambe** ce silence. L'accolade definit l'etendue d'**un seul arc continu**.
+**Etendue d'arc et rearmement d'enveloppe (`cutoff:env`).** *(Comportement transverse complet :
+`atlas/architecture/MODULATIONS.md` ; ici = la SYNTAXE + le guide d'ecriture de scene.)* Quand une
+enveloppe module un parametre (ex. `cutoff:env`), **un silence `-` re-arme l'enveloppe** (re-declenche
+son attaque) -- SAUF si une accolade `{ ... }` **enjambe** ce silence. L'accolade definit l'etendue d'**un seul arc continu**.
 Deux formes, deux comportements (**aucune syntaxe nouvelle** : c'est la presence/etendue de l'accolade
 qui choisit) :
 

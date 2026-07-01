@@ -89,6 +89,15 @@ C'est **le sujet** qui décide l'horloge, **pas la nature de la valeur** (`Env` 
 terminaux » ; `?` interdit (= capture dans les gabarits). Détail : `docs/spec/LANGUAGE.md`
 (« Destinataire d'une paire »), `docs/spec/AST.md` (`RuntimeQualifier.subject`).
 
+**Étendue d'arc via l'accolade — `{ … }(cutoff: Env)`.** Poser le CV sur un **groupe** définit
+l'étendue d'**un seul arc continu** : les silences `-` internes à l'accolade sont **franchis** (pas de
+ré-armement), à l'inverse de la forme règle nue où le silence articule (ré-arme). C'est la même
+syntaxe (`()` de groupe, aucune nouveauté) ; ce qui change est la **portée** du qualificateur
+(`group` vs `rule`), portée par `Polymetric.runtimeQualifier` dans l'AST. Le **comportement** complet
+(ré-armement, boucle transparente à l'articulation, build sur N tours, superposition en série) est la
+**référence transverse** `atlas/architecture/MODULATIONS.md` (décision `2026-07-01`
+réarmement-enveloppes) — la **syntaxe** fait foi ici (EBNF `runtime_qualifier` + cette section).
+
 **3. Voix de modulation parallèle — aléa et structure propres**
 
 ```bps
