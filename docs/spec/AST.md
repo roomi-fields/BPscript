@@ -871,17 +871,17 @@ stockée sur le nœud : elle est déduite de la position dans l'AST par l'encode
 Le transpileur maintient une table de mapping `CT n → { scope, params }` (la control table)
 consommée par le runtime aval.
 
-**Étendue d'arc — le `()` de groupe DOIT vivre sur le nœud conteneur** (décision 2026-07-01
-réarmement-enveloppes). Une enveloppe de groupe `{ … }(cutoff:env)` définit l'étendue d'**un arc
-continu** franchissant les silences internes ; l'AST doit donc porter ce qualificateur sur
-**`Polymetric.runtimeQualifier`** (portée `group`), **pas** hissé à `Rule.runtimeQualifier` — sinon
-l'étendue d'accolade (la fenêtre du bus, préservée par-bloc en aval) est perdue. ⚠️ **Écart code
-constaté (CVA-ARMING, 2026-07-01)** : l'attachement collé `}(…)` passe par le check **strict**
-`isRuntimeQualifier` (parser.js:2172), piloté par `controlNames`. Une clé **absente de
-`controls.json`** (ex. `cutoff`) est refusée au niveau groupe et retombe en `Rule.runtimeQualifier`
-(`scope:"rule"`), le nœud conteneur restant à `runtimeQualifier:null`. Correctif racine côté AST :
-enregistrer la famille de contrôles concernée dans `controls.json` (ou étendre l'attachement collé de
-groupe aux clés opaques).
+**Étendue d'arc — enveloppe de groupe `{ … }(cutoff:env)`** (décision 2026-07-01 réarmement-enveloppes).
+Une enveloppe de groupe définit l'étendue d'**un arc continu** franchissant les silences internes.
+**Répartition des rôles (arbitrage 2026-07-01, AST_SPEC §4 « l'arbre résout seul »)** : l'AST BPScript
+porte le qualificateur d'une clé de contrôle **inconnue** (ex. `cutoff`) en `Rule.runtimeQualifier`
+(`scope:"rule"`) — l'attachement collé `}(…)` passe par le check **strict** `isRuntimeQualifier`
+(parser.js:2172, piloté par `controlNames`) et retombe au niveau règle pour une clé hors `controls.json`.
+Ce `scope:"rule"` est **SUFFISANT et correct** : la **remontée** de la contenance au nœud conteneur
+(`Polymetric`) et le calcul de la fenêtre-bloc sont le rôle de **BPx** (l'arbre résout seul), **pas** de
+l'AST. ⚠️ Ne **PAS** enregistrer `cutoff`/`resonance` dans `controls.json` pour forcer `scope:"group"` :
+piste **abandonnée** (n'était pas la racine, risquait la parité). Le bug CVA-ARMING vit dans le chemin
+**nesté de BPx** (fenêtre recalculée par segment sous polymétrie), pas ici.
 
 ---
 
