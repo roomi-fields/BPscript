@@ -524,7 +524,16 @@ aval** (BPx/Kairos/runtime), pas une syntaxe : le langage l'exprime deja par le 
 qualificateur et le nesting des groupes. (A distinguer des **scalaires** comme `vel`/`chan`, qui eux
 s'**effondrent** par precedence -- une seule valeur gagne. Decision 2026-06-30 superposition-series.)
 
-### Compilation de `()` vers BP3
+**Etendue d'arc et rearmement (enveloppes / `cutoff:env`).** Une enveloppe posee sur un **groupe**
+`{ ... }(cutoff:env)` definit l'etendue d'**un seul arc continu** : tout **silence a l'interieur** de
+l'accolade est **franchi** (l'enveloppe ne se re-arme pas), et la **boucle est transparente** (un tour
+ne re-arme que s'il y a reellement un silence a la couture, ou si le tour tombe *hors* de l'accolade).
+La forme **regle nue** (sans accolade englobante), elle, **re-arme a chaque silence** (defaut :
+le silence articule). Il n'y a donc que **deux** comportements, selectionnes par la
+**presence/etendue de l'accolade** -- aucune syntaxe nouvelle. L'accolade doit apparaitre dans l'AST
+comme **un** noeud conteneur **unique** portant le qualificateur a la portee `group`, dont l'etendue
+**survit** a l'expansion polymetrique (c'est la fenetre du bus, calculee par-bloc en aval : BPx la
+produit, Kairos la porte opaque, le runtime la realise). Decision 2026-07-01 rearmement-enveloppes.
 
 Les `()` runtime sont compiles en `_script(CT n)` -- des controles opaques que BP3
 transmet sans interpreter. Le transpileur maintient une table de mapping :

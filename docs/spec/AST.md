@@ -871,6 +871,18 @@ stockée sur le nœud : elle est déduite de la position dans l'AST par l'encode
 Le transpileur maintient une table de mapping `CT n → { scope, params }` (la control table)
 consommée par le runtime aval.
 
+**Étendue d'arc — le `()` de groupe DOIT vivre sur le nœud conteneur** (décision 2026-07-01
+réarmement-enveloppes). Une enveloppe de groupe `{ … }(cutoff:env)` définit l'étendue d'**un arc
+continu** franchissant les silences internes ; l'AST doit donc porter ce qualificateur sur
+**`Polymetric.runtimeQualifier`** (portée `group`), **pas** hissé à `Rule.runtimeQualifier` — sinon
+l'étendue d'accolade (la fenêtre du bus, préservée par-bloc en aval) est perdue. ⚠️ **Écart code
+constaté (CVA-ARMING, 2026-07-01)** : l'attachement collé `}(…)` passe par le check **strict**
+`isRuntimeQualifier` (parser.js:2172), piloté par `controlNames`. Une clé **absente de
+`controls.json`** (ex. `cutoff`) est refusée au niveau groupe et retombe en `Rule.runtimeQualifier`
+(`scope:"rule"`), le nœud conteneur restant à `runtimeQualifier:null`. Correctif racine côté AST :
+enregistrer la famille de contrôles concernée dans `controls.json` (ou étendre l'attachement collé de
+groupe aux clés opaques).
+
 ---
 
 ## Éléments LHS
