@@ -1,10 +1,10 @@
 # BPScript — Fonctions digitales (manipulations) — Design (DRAFT, à valider Romain)
 
-## Date : 2026-06-30 · Statut : **BROUILLON** (PAS 3 du chantier « manipulations digitales »)
+## Date : 2026-06-30 (MAJ 2026-07-02) · Statut : **RÉALISÉ** — lib digitale (transpose/keyxpand/rotate) implémentée, câblée côté Kairos, Hz prouvé e2e. Surface d'invocation multi-arguments **ratifiée** (Romain 2026-07-02 — forme A, §7) ; adaptation du parseur **en attente de cadencement architecte** (LANG-DIGITAL-INVOCATION).
 
 > Spec partagée BPScript ↔ Kairos. **Mon côté (BPScript)** : la FORME de lib + le chargement +
 > l'authoring/typage. **Côté Kairos** : le runtime (transpilation/bac-à-sable/exécution) + l'API
-> de contexte (les types du SDK). La frontière est en §4. Rien n'est implémenté — spec d'abord.
+> de contexte (les types du SDK). La frontière est en §4. **Réalisé et câblé** (statut ci-dessus) ; reste l'adaptation du parseur à la surface ratifiée (§7).
 > Décision Romain (2026-06-30, via architecte [202]) : le comportement = **vrai code TS** évalué en
 > interne (pas un pattern déclaratif), déterministe, embarqué navigateur (TS→JS au load).
 
@@ -22,10 +22,12 @@ La cartographie (PAS 1) a révélé une symétrie qu'on exploite ici : une fonct
 
 Source du jumeau analogique : `lib/mod.json` (`{type:'cv', objects:{adsr,lfo,ramp}}`), `docs/design/CV.md`.
 Première fonction visée : `transpose` (décalage de N pas de grille) ; puis `register_shift` (décalage
-de N périodes/registres). Aujourd'hui `transpose` est DÉCLARÉ dans `lib/controls.json`
-(`{args:["steps"], "grid shift of N steps in the temperament"}`) mais sa sémantique est **codée en
-dur côté Kairos** (`resoudre-hauteur.ts:88` `resolveTransposed`) — c'est précisément ce qu'on
-remplace par une **application de lib**.
+de N périodes/registres). `transpose`, `keyxpand`, `rotate` sont désormais des **libs digitales
+réalisées** (`lib/digital/*.ts` + `lib/digital.json`, captées dans `libs-data.js`). Côté Kairos, le
+repli hardcode `resolveTransposed` est **SUPPRIMÉ** (`resolver.ts:415-416`) et le chemin chaud applique
+la lib via `executerDigital` (`resoudre-hauteur.ts:184-195`, ordre rotate→keyxpand→transpose) ; Hz
+prouvé e2e (`rotate-keyxpand-e2e.test.ts`, `transpose-digital-e2e.test.ts`). `transpose` reste DÉCLARÉ
+dans `lib/controls.json` comme **surface de contrôle** (l'invocation ; cf. §7).
 
 ## 2. La forme de lib (mon côté)
 
@@ -47,7 +49,7 @@ Une librairie de fonctions digitales suit la structure de `lib/mod.json`, `type:
 ```
 
 - `params` réutilise la convention de typage des paramètres CV (`{unit|type, range, default, description}`,
-  cf. `lib/mod.json` adsr/lfo). C'est la **signature** que la scène renseigne (`transpose(steps:2)`).
+  cf. `lib/mod.json` adsr/lfo). C'est la **signature** que la scène renseigne (surface d'invocation §7 : mono `(transpose:2)`, multi `keyxpand:(pivot:B3, factor:-1)`).
 - `body` = le code TS de la transformation. Pur, déterministe, synchrone (chemin chaud : un appel par
   note à la résolution). Il cible le **SDK** (§3).
 
@@ -132,6 +134,36 @@ Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire
 - Transpileur navigateur tranché : **sucrase** (strip de types au load), repli esbuild-wasm — côté Kairos.
 - Jeu minimal de **helpers** offerts dans le sandbox (navigation de grille, conversions de registre) —
   côté Kairos.
-- **Migration de `transpose`** : aujourd'hui déclaré dans `lib/controls.json` (`{args:[steps]}`) ; la
-  lib digitale devient autorité du **comportement** (corps TS). La surface de scène (`transpose(steps:2)`)
-  réutilise le câblage de contrôle existant — à confirmer en PAS 4.
+- **Migration de `transpose` — FAITE** : `transpose`/`keyxpand`/`rotate` sont des libs digitales (corps
+  TS = autorité du comportement), câblées côté Kairos (repli hardcode supprimé) ; Hz prouvé e2e.
+  `transpose` reste dans `lib/controls.json` comme **surface de contrôle**. La surface d'invocation
+  multi-arguments est **ratifiée** (§7).
+
+## 7. Surface d'invocation — RATIFIÉE (Romain, 2026-07-02) — forme A « valeur-groupe »
+
+Décision langage. Résout la **surcharge de la virgule** dans le sac `()` : elle séparait à la fois les
+réglages du sac ET les arguments d'un même réglage, le parseur devant deviner (lookahead `IDENT:` +
+connaissance du registre des réglages — couplage forme↔sens ; `parser.js` `parseRuntimeQualifier`).
+
+**Règle** : la **valeur** d'un réglage peut être un **groupe `()`** de sous-affectations nommées.
+- Mono (inchangé) : `(transpose:2)`, `vel:80`.
+- Multi : `keyxpand:(pivot:B3, factor:-1)` — chaque paramètre en `nom:valeur`, **ordre libre**.
+- Le rôle de chaque virgule est tranché par la **profondeur de parenthèses**, non par le vocabulaire.
+  Sans ambiguïté : `(vel:80, keyxpand:(pivot:B3, factor:-1), cutoff:toto)`.
+
+**Pourquoi A** (vs forme appel `keyxpand(...)`) : extension minimale (une seule idée neuve : la valeur
+peut être un groupe), `:` = affectation partout, aucune asymétrie mono/multi, découple le parseur du
+registre. Romain : « un poil plus lourd mais préserve la logique du langage ».
+
+**Portée** : sac `()` runtime uniquement. L'engine `[]` sépare déjà les deux niveaux autrement
+(espace = arguments, virgule = instructions) — non concerné (à reconfirmer au spec parseur).
+
+**Dans le groupe** (défaut proposé, arbitrage Romain final) : nommé d'abord (ordre libre) ; positionnel
+`keyxpand:(B3, -1)` admis en raccourci → mappé sur l'ordre déclaré (`controls.json` : keyxpand
+`[pivot, factor]`, rotate `[degrees]`, transpose `[steps]`).
+
+**Statut** : ratifié, **parseur pas encore adapté**. Aujourd'hui ne parse que le positionnel dans le sac
+(`(keyxpand:B3,-1)`) ou l'engine (`![keyxpand: B3 -1]`) ; la forme nommée-groupe échoue sur le `:`
+(`parser.js:2642`, `parseControl`). Changement chiffré : groupe-valeur opt-in dans `parseControl` +
+nœud Control portant les clés + remap encodeur nommé→ordre déclaré (noms d'args déjà dans
+`controls.json`). Cadencement = architecte (backlog **LANG-DIGITAL-INVOCATION**).
