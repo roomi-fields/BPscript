@@ -38,6 +38,16 @@
           "description": "Facteur d'échelle de l'écart au pivot (1 = identité, 2 = doublé, 0,5 = replié ; peut être négatif = miroir)."
         }
       }
+    },
+    "rotate": {
+      "description": "Rotation de degré dans l'alphabet (C +2 → E). rotate-HAUTEUR, distinct du ![rotate] de structure (moteur BPx).",
+      "params": {
+        "n": {
+          "type": "int",
+          "default": 0,
+          "description": "Nombre de degrés de rotation dans l'alphabet (peut être négatif ; report de registre aux bornes)."
+        }
+      }
     }
   }
 }
