@@ -22,6 +22,7 @@ const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
 const BP3 = path.resolve(BP3_DIR, 'bp3');   // build natif en place (porte --tokensout)
+const GUARD = path.join(__dirname, 'bp3-guard.sh');   // enveloppe anti-OOM, cf [231]
 const GRAMMARS = require('./grammars/grammars.json');
 
 // Old BP2 positional settings → JSON (copie de s1_native.cjs)
@@ -190,7 +191,7 @@ function runNative(name) {
   for (const f of [tmpTokens, tmpMidi]) { try { fs.unlinkSync(f); } catch (e) {} }
   const args = [...baseArgs, '--midiout', tmpMidi, '--tokensout', tmpTokens];
   try {
-    execSync(`"${BP3}" ${args.join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] });
+    execSync(`bash "${GUARD}" "${BP3}" ${args.join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] });
   } catch (e) { /* le moteur peut écrire avant un code non-zéro */ }
 
   let toks = null;

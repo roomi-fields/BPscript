@@ -29,6 +29,7 @@ const path = require('path');
 const { requireBinTag, resolveBin: _resolveBin, stripBinArgs } = require('./resolve_bin.cjs');
 const binTag = requireBinTag();
 const BP3 = _resolveBin(binTag, 'bp3');           // binaire natif (était bp.exe)
+const GUARD = path.join(__dirname, 'bp3-guard.sh'); // enveloppe anti-OOM, cf [231]
 const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');    // sources canoniques (était /mnt/c/MAMP/.../ctests)
@@ -216,7 +217,7 @@ function processGrammar(name) {
     args.push('--midiout', tmpMidi);
     try { fs.unlinkSync(tmpMidi); } catch (e) {}
     try {
-      execSync(`"${BP3}" ${args.map(a => `"${a}"`).join(' ')}`, {
+      execSync(`bash "${GUARD}" "${BP3}" ${args.map(a => `"${a}"`).join(' ')}`, {
         cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe']
       });
     } catch (e) {}
@@ -240,7 +241,7 @@ function processGrammar(name) {
     let rawOutput = '';
     try {
       const fd = fs.openSync(tmpText, 'w');
-      execSync(`"${BP3}" ${args.map(a => `"${a}"`).join(' ')}`, {
+      execSync(`bash "${GUARD}" "${BP3}" ${args.map(a => `"${a}"`).join(' ')}`, {
         cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', fd, 'pipe']
       });
       fs.closeSync(fd);

@@ -104,12 +104,16 @@ async function main() {
 
   // ---- S1: Native BP3 ----
   if (doS1) {
-    console.log(`--- S1: Native BP3 (${activeNames.length} grammars, ${JOBS} parallel) ---`);
+    // bp3 peut gonfler à ~7 Go (grammaire « watch ») : JAMAIS plus de 2 en parallèle sous peine
+    // d'OOM système (cf [231]). Le verrou flock de bp3-guard.sh est le filet infranchissable ;
+    // ce cap évite juste de lancer des workers qui attendraient le verrou pour rien.
+    const BP3_JOBS = Math.min(JOBS, 2);
+    console.log(`--- S1: Native BP3 (${activeNames.length} grammars, ${BP3_JOBS} parallel [cap anti-OOM]) ---`);
     const s1Start = Date.now();
     const s1Tasks = activeNames.map(name => ({
       name, script: 's1_native.cjs', stage: 'S1', timeout: 120000
     }));
-    const s1Results = await runParallel(s1Tasks, JOBS);
+    const s1Results = await runParallel(s1Tasks, BP3_JOBS);
     const s1Time = Date.now() - s1Start;
 
     let s1ok = 0, s1fail = 0;

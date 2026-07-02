@@ -95,6 +95,7 @@ const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
 const BP3 = _resolveBin(binTag, 'bp3');
+const GUARD = path.join(__dirname, 'bp3-guard.sh');   // enveloppe anti-OOM (plafond mém. + concurrence + victime OOM), cf [231]
 
 const GRAMMARS = require('./grammars/grammars.json');
 const gramDef = GRAMMARS[name];
@@ -262,7 +263,7 @@ if (s1Mode === 'midi') {
   // Run native BP3 — stdout to /dev/null, capture stderr for errors
   let stderrOutput = '';
   try {
-    execSync(`"${BP3}" ${midiArgs.join(' ')}`, {
+    execSync(`bash "${GUARD}" "${BP3}" ${midiArgs.join(' ')}`, {
       cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe']
     });
   } catch (e) {
@@ -331,7 +332,7 @@ else if (s1Mode === 'text') {
   let rawOutput = '';
   try {
     const fd = fs.openSync(tmpText, 'w');
-    execSync(`"${BP3}" ${textArgs.join(' ')}`, {
+    execSync(`bash "${GUARD}" "${BP3}" ${textArgs.join(' ')}`, {
       cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', fd, 'pipe']
     });
     fs.closeSync(fd);

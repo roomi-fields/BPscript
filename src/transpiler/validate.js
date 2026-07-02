@@ -18,6 +18,7 @@ const BP3_DIR = join(__dirname, '../../bp3-engine/library');
 const BP_EXE_DIR = '/home/romi/dev/bp/BP2SC/tools/bolprocessor';
 const BP_CTESTS = '/home/romi/dev/bp/BP2SC/bp3-ctests';
 const BP3_DATA = join(__dirname, '../../bp3-engine/data');
+const GUARD = join(__dirname, '../../test/bp3-guard.sh'); // enveloppe anti-OOM (plafond mém. + concurrence + victime OOM), cf [231]
 
 const SCENE_MAP = {
   'drum':             'examples/drum/grammar.gr',
@@ -43,7 +44,7 @@ const AUX_PREFIXES = ['-se.', '-al.', '-ho.', '-cs.', '-to.', '-tb.', '-md.', '-
 
 function runBP3(grammarFile, midiOut) {
   try {
-    const cmd = `cd "${BP_EXE_DIR}" && ./bp.exe produce --seed 42 -gr "${grammarFile}" --midiout "${midiOut}" 2>&1`;
+    const cmd = `cd "${BP_EXE_DIR}" && bash "${GUARD}" ./bp.exe produce --seed 42 -gr "${grammarFile}" --midiout "${midiOut}" 2>&1`;
     const out = execSync(cmd, { timeout: 30000 }).toString();
     const hasError = /Errors: [1-9]/.test(out) || /Compilation failed/.test(out);
     const match = out.match(/Writing (\d+) sound-objects/);
