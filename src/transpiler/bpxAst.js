@@ -210,6 +210,114 @@ function hasTempoDirective(ast) {
 // true qu'au top architecte Palier 4, prérequis P1-P4 réglés (voir ci-dessus).
 const INLINE_FLIP_PALIER4 = false;
 
+// ============================================================================
+// DÉCOUPEUR frontal des terminaux composés — alphabet mono-caractère
+// (flip Palier 4, ÉTAPE A — arbitrage 2 Romain : « le frontal émet les atomes »)
+//
+// Port de la tokenisation `GetBols`/`SEARCHTERMINAL2` (Encode.c:888-918,
+// longest-match sur la table des bols) pour le cas alphabet mono-caractère,
+// À L'ÉMISSION (voie BPx seule — compileBPS/encoder.js gelés intacts). Oracle
+// natif rendu ([258], constat hashab-monochar) : le longest-match gouverne —
+// sous un alphabet dont TOUS les terminaux font 1 caractère, une chaîne
+// composée `abca` s'apparie a·b·c·a (4 tokens) ; un bol multi-caractères
+// déclaré (`ek`) reste ATOMIQUE (le plus long match à sa 1re lettre est le
+// bol lui-même).
+//
+// Réplique EXACTE du splitter de l'adaptateur BPx vivant (loadGrammar.ts
+// splitRule/Lhs/RhsCompoundTerminals:2255-2418 + makeSplitSymbol:2425-2448),
+// qui devient ainsi un NO-OP structurel (après découpe, tous les noms font
+// 1 caractère → son prédicat `length < 2` ne matche plus rien) — idempotence.
+// UNE différence de principe, voulue : la PORTE n'est plus un hardcode
+// `{abc: a..z}` (déviation « transport » documentée côté BPx : l'AST ne
+// portait pas la liste de notes) — ICI la liste est dans les libs, donc la
+// porte se DÉRIVE des données : découpe ssi la scène déclare des alphabets
+// dont TOUS les terminaux GÉNÉRÉS font 1 caractère (libCtx.alphabetTerminals,
+// libs.js). En extension aujourd'hui : seule `abc` qualifie (western génère
+// C4/D#5… multi-char via les octaves ; structural/conway/kathak… multi) —
+// porte ≡ celle de BPx, sans hardcode (règle feedback_no_hardcode).
+//
+// Position pipeline : EN FIN d'émission, APRÈS annotateBackticks et les
+// validations — comme aujourd'hui où la découpe se produit en aval (dans BPx),
+// mes lecteurs de tête et validateurs voient l'AST NON découpé (aucun
+// changement de comportement pour eux). Hors périmètre (identique au splitter
+// vivant) : SymbolCall (référence d'instance, jamais découpée), noms de
+// contextes `#ab` (restent des nœuds Context bruts pré-flip-C ; leur découpe
+// oracle ¬a·b tombera du flip C : Context→Symbol nié PUIS ce découpeur).
+// ============================================================================
+
+/** Porte : Set des terminaux si TOUS les terminaux d'alphabet générés font
+ * 1 caractère (alphabet mono-char), null sinon (aucune découpe). */
+function singleCharAlphabetSet(libCtx) {
+  const terms = (libCtx && libCtx.alphabetTerminals) || [];
+  if (terms.length === 0) return null;
+  for (const t of terms) { if (typeof t !== 'string' || t.length !== 1) return null; }
+  return new Set(terms);
+}
+
+/** Découpe un nom composé en terminaux mono-char (longest-match trivial :
+ * tous les bols font 1 char). null = pas une suite pure de terminaux déclarés
+ * (le nœud reste intact). Miroir de splitCompoundTerminal (loadGrammar.ts). */
+function splitCompoundName(name, terminals) {
+  if (name.length < 2) return null; // déjà atomique
+  const out = [];
+  for (const ch of name) {
+    if (!terminals.has(ch)) return null;
+    out.push(ch);
+  }
+  return out;
+}
+
+/** Fabrique un atome découpé. line/actor sur CHAQUE atome ; negated/payload
+ * sur le PREMIER seul (le `#`/la charge portent sur le token écrit entier,
+ * BP3 les applique au premier terminal apparié — Encode.c:906/992). Miroir
+ * exact de makeSplitSymbol (loadGrammar.ts:2425-2448). */
+function makeSplitAtom(original, ch, isFirst) {
+  const node = { type: 'Symbol', name: ch };
+  if (original.line !== undefined) node.line = original.line;
+  if (original.actor !== undefined) node.actor = original.actor;
+  if (isFirst && original.negated === true) node.negated = true;
+  if (isFirst && original.payload !== undefined) node.payload = original.payload;
+  return node;
+}
+
+/** Découpe un élément de LHS (seuls les Symbol nus sont candidats). */
+function splitLhsElement(el, terminals) {
+  if (!el || el.type !== 'Symbol') return [el];
+  const parts = splitCompoundName(el.name, terminals);
+  if (parts === null) return [el];
+  return parts.map((ch, i) => makeSplitAtom(el, ch, i === 0));
+}
+
+/** Découpe un élément de RHS (Symbol nu ; récursion voix polymétriques et
+ * groupes de gabarit — mêmes nœuds que le splitter vivant). */
+function splitRhsElement(el, terminals) {
+  if (!el || typeof el !== 'object') return [el];
+  if (el.type === 'Symbol') {
+    const parts = splitCompoundName(el.name, terminals);
+    if (parts === null) return [el];
+    return parts.map((ch, i) => makeSplitAtom(el, ch, i === 0));
+  }
+  if (el.type === 'Polymetric' && Array.isArray(el.voices)) {
+    return [{ ...el, voices: el.voices.map((v) => v.flatMap((c) => splitRhsElement(c, terminals))) }];
+  }
+  if ((el.type === 'TemplateMasterGroup' || el.type === 'TemplateSlaveGroup') && Array.isArray(el.elements)) {
+    return [{ ...el, elements: el.elements.flatMap((c) => splitRhsElement(c, terminals)) }];
+  }
+  return [el];
+}
+
+/** Découpe les terminaux composés de toutes les règles (muté en place). */
+function splitCompoundTerminals(ast, libCtx) {
+  const terminals = singleCharAlphabetSet(libCtx);
+  if (!terminals) return;
+  for (const sub of ast.subgrammars || []) {
+    for (const rule of sub.rules || []) {
+      rule.lhs = rule.lhs.flatMap((el) => splitLhsElement(el, terminals));
+      rule.rhs = rule.rhs.flatMap((el) => splitRhsElement(el, terminals));
+    }
+  }
+}
+
 const CTX_METAVAR_RE = /^\?\d+$/;
 const isCtxWildcardName = (s) => s === '?' || CTX_METAVAR_RE.test(s);
 
@@ -390,6 +498,11 @@ export function compileToBPxAST(source, environnement) {
     const libCtx = loadLibsFromDirectives(directives);
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
+
+    // Découpeur frontal mono-char (flip Palier 4, étape A) — EN DERNIER :
+    // annotateBackticks et les validateurs ci-dessus voient l'AST NON découpé,
+    // exactement comme quand la découpe vivait en aval dans BPx.
+    splitCompoundTerminals(ast, libCtx);
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
     else throw e;

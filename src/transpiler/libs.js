@@ -117,6 +117,8 @@ function loadLibsFromDirectives(directives) {
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
     symbols: {},        // name → { type, ... }
+    alphabetTerminals: [],  // terminaux issus des SEULS alphabets (sans @core etc.) —
+                            // porte du découpeur mono-char (bpxAst.js, flip Palier 4 étape A)
     cvObjects: {},      // "lib.type" → def (e.g. "mod.adsr" → { parameters, ... })
     _libs: {},          // directive name → raw lib data (for generator access)
     _alphabets: [],     // loaded alphabet libs (deferred terminal generation)
@@ -310,6 +312,7 @@ function loadLibsFromDirectives(directives) {
               ? noteAlt + octaveDef.separator + reg
               : reg + octaveDef.separator + noteAlt;
             ctx.symbols[terminal] = { type: 'gate' };
+            ctx.alphabetTerminals.push(terminal);
           }
         }
       }
@@ -317,6 +320,7 @@ function loadLibsFromDirectives(directives) {
       // No octaves — terminals are just the raw notes (e.g. tabla, abc)
       for (const note of lib.notes) {
         ctx.symbols[note] = { type: 'gate' };
+        ctx.alphabetTerminals.push(note);
       }
     }
   }
