@@ -145,7 +145,8 @@ R2 -> lambda
 // Sous-grammaire 9 — Patterns terminaux + effets @mode:random
 // Str = accent (vélocité augmentée sur une note)
 // Step3Up/Step3Dn = crescendo/decrescendo sur 3 notes
-// Les notes finales sont en sargam avec octave (sa6, re6...)
+// Les notes finales sont en sargam, notation saptak par registre :
+// madhya (registre médian, svara nu = défaut) et taar (octave au-dessus, ex. taar_sa)
 // _ = prolongation
 // ============================================================
 
@@ -156,45 +157,45 @@ Step3Up ?1 ?2 ?3 -> ?1(vel:95) ?2(vel:110) ?3(vel:64) (vel:80)
 Step3Dn ?1 ?2 ?3 -> ?1(vel:95) ?2(vel:80) ?3(vel:64) (vel:110)
 
 // Patterns ascendants (P = phrases montantes)
-P41 -> sa6 re6 ga6 pa6
-P42 -> re6 ga6 pa6 ga6
-P42 -> sa6 re6 ga6 re6 [weight:0]
-P43 -> dha6 pa6 ga6 pa6
-P43 -> ga6 re6 sa6 re6 [weight:0]
-P44 -> ga6 Str dha6 pa6 Str dha6
-P44 -> sa6 ga6 re6 ga6 [weight:0]
+P41 -> sa re ga pa
+P42 -> re ga pa ga
+P42 -> sa re ga re [weight:0]
+P43 -> dha pa ga pa
+P43 -> ga re sa re [weight:0]
+P44 -> ga Str dha pa Str dha
+P44 -> sa ga re ga [weight:0]
 
-P31 -> ga6 pa6 dha6
-P31 -> sa6 re6 ga6 [weight:0]
-P32 -> sa6 ga6 re6
-P33 -> Str ga6 re6 sa6
-P34 -> Str sa7 dha6 pa6
-P34 -> ga6 re6 sa6 [weight:0]
+P31 -> ga pa dha
+P31 -> sa re ga [weight:0]
+P32 -> sa ga re
+P33 -> Str ga re sa
+P34 -> Str taar_sa dha pa
+P34 -> ga re sa [weight:0]
 
-P21 -> ga6 pa6
-P21 -> sa6 re6 [weight:0]
-P22 -> sa6 Str ga6
+P21 -> ga pa
+P21 -> sa re [weight:0]
+P22 -> sa Str ga
 
 // Patterns descendants (Q = phrases avec prolongations)
-Q41 -> Str ga6 _ re6 sa6
-Q41 -> sa6 _ re6 sa6 [weight:0]
-Q42 -> Str re6 ga6 _ re6
-Q42 -> sa6 re6 _ sa6 [weight:0]
-Q43 -> ga6 _ pa6 Str dha6
-Q43 -> sa6 _ re6 ga6 [weight:0]
-Q44 -> Str sa6 re6 _ ga6
+Q41 -> Str ga _ re sa
+Q41 -> sa _ re sa [weight:0]
+Q42 -> Str re ga _ re
+Q42 -> sa re _ sa [weight:0]
+Q43 -> ga _ pa Str dha
+Q43 -> sa _ re ga [weight:0]
+Q44 -> Str sa re _ ga
 
-Q31 -> pa6 _ dha6 [weight:0]
-Q31 -> sa6 _ re6
-Q32 -> sa6 _ ga6
-Q33 -> Str sa7 dha6
-Q33 -> sa6 re6 _ [weight:0]
-Q34 -> ga6 _ _
-Q34 -> re6 _ sa6 [weight:0]
+Q31 -> pa _ dha [weight:0]
+Q31 -> sa _ re
+Q32 -> sa _ ga
+Q33 -> Str taar_sa dha
+Q33 -> sa re _ [weight:0]
+Q34 -> ga _ _
+Q34 -> re _ sa [weight:0]
 
-Q21 -> ga6 ga6
-Q21 -> sa6 sa6 [weight:0]
-Q22 -> pa6 pa6
-Q22 -> re6 re6 [weight:0]
-Q23 -> Str dha6 Str dha6
-Q23 -> ga6 ga6 [weight:0]
+Q21 -> ga ga
+Q21 -> sa sa [weight:0]
+Q22 -> pa pa
+Q22 -> re re [weight:0]
+Q23 -> Str dha Str dha
+Q23 -> ga ga [weight:0]
