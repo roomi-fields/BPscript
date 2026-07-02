@@ -23,6 +23,21 @@
           "description": "Nombre de pas de grille (peut être négatif)."
         }
       }
+    },
+    "keyxpand": {
+      "description": "Dilatation/contraction des pas autour d'un pivot (step = pivot + arrondi((step − pivot) × facteur)).",
+      "params": {
+        "pivotStep": {
+          "type": "int",
+          "default": 0,
+          "description": "Pas de grille du pivot (résolu par Kairos depuis le token pivot) ; reste fixe."
+        },
+        "factor": {
+          "type": "float",
+          "default": 1,
+          "description": "Facteur d'échelle de l'écart au pivot (1 = identité, 2 = doublé, 0,5 = replié ; peut être négatif = miroir)."
+        }
+      }
     }
   }
 }
