@@ -173,9 +173,12 @@ function parse(tokens, opts = {}) {
           if (dir.soundAssignments && dir.soundAssignments.length > 0) {
             scene.soundAssignments = scene.soundAssignments || [];
             for (const sa of dir.soundAssignments) scene.soundAssignments.push(sa);
-            // décision PM : PAS de duplication ; on retire de l'ActorDirective
-            delete dir.soundAssignments;
           }
+          // Frontière AST (Palier 3) : `soundAssignments` est un porteur TRANSITOIRE
+          // (hoisté top-level ci-dessus) ; on le retire TOUJOURS de l'ActorDirective.
+          // Canonique = `assignments?` OPTIONNEL, jamais `soundAssignments:null`.
+          // décision PM : pas de duplication.
+          delete dir.soundAssignments;
         } else if (dir.type === 'SoundSection') {
           // v0.8 — @sound { ... } / @sound bell { ... } / @sound.libname[:variant]
           scene.soundPrototypes = scene.soundPrototypes || [];
@@ -917,7 +920,7 @@ function parse(tokens, opts = {}) {
           properties.sound = value;
           soundAssignments.push({
             type: 'SoundAssignment',
-            scope: { kind: 'actor', name: actorName },
+            scope: 'actor', actor: actorName,
             subject: '*',
             target: { kind: 'named-ref', name: value },
             line: tok.line,
@@ -940,7 +943,7 @@ function parse(tokens, opts = {}) {
           const target = parseSoundAssignmentTarget();
           soundAssignments.push({
             type: 'SoundAssignment',
-            scope: { kind: 'actor', name: actorName },
+            scope: 'actor', actor: actorName,
             subject: '*',
             target,
             line: tok.line,
@@ -989,7 +992,7 @@ function parse(tokens, opts = {}) {
             const target = parseSoundAssignmentTarget();
             soundAssignments.push({
               type: 'SoundAssignment',
-              scope: { kind: 'actor', name: actorName },
+              scope: 'actor', actor: actorName,
               subject,
               target,
               line: tok.line,
@@ -1143,7 +1146,7 @@ function parse(tokens, opts = {}) {
           const target = parseSoundAssignmentTarget();
           assignments.push({
             type: 'SoundAssignment',
-            scope: { kind: 'alphabet', name: subkey },
+            scope: 'alphabet', alphabet: subkey,
             subject: '*',
             target,
             line,
@@ -1168,7 +1171,7 @@ function parse(tokens, opts = {}) {
             const target = parseSoundAssignmentTarget();
             assignments.push({
               type: 'SoundAssignment',
-              scope: { kind: 'alphabet', name: subkey },
+              scope: 'alphabet', alphabet: subkey,
               subject,
               target,
               line,
@@ -2784,14 +2787,19 @@ function parse(tokens, opts = {}) {
     expect(T.PIPE);
     const name = expect(T.IDENT).value;
     expect(T.PIPE);
-    return { type: 'Variable', name };
+    // Frontière AST (Palier 3) : `|x|` = non-terminal nommé (BP3 T4/GetVar, même
+    // token qu'un non-terminal `S`) → s'abaisse en `Symbol{name}`. `Variable` est
+    // RÉSERVÉ au métavariable `?N` (T6, index requis). Cf. AST_SPEC §1.2.1.
+    return { type: 'Symbol', name };
   }
 
   function parseWildcard() {
     expect(T.QUESTION);
-    let index = null;
-    if (at(T.INT)) index = Number(advance().value);
-    return { type: 'Wildcard', index };
+    // Frontière AST (Palier 3) : bare `?` = index ABSENT (joker anonyme (T0,1),
+    // capture indépendante) ; `?n` = index:n (métavariable (T6,n), unification).
+    // DISTINCTS au moteur — le `?` nu ne porte JAMAIS d'`index`. Cf. AST_SPEC §1.2.1.
+    if (at(T.INT)) return { type: 'Wildcard', index: Number(advance().value) };
+    return { type: 'Wildcard' };
   }
 
   function parseTemplateMaster() {

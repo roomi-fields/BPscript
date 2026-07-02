@@ -170,7 +170,8 @@ function applyDefaultActor(ast) {
     references: [
       { type: 'ActorReference', category: 'transport', name: DEFAULT_ACTOR_TRANSPORT, line: 0 },
     ],
-    soundAssignments: null,
+    // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
+    // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
     synthetic: true, // acteur implicite (aucun @actor déclaré) — panneau Acteurs vide
     line: 0,
   }];
