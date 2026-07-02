@@ -31,9 +31,12 @@ function collectQualifierPairs(node, out) {
   }
 }
 
-/** Nom de tête d'une LHS de règle. */
+/** Nom de tête d'une LHS de règle. Saute les atomes NIÉS de tête (`#X` inline,
+ * negated:true) : ce sont des contextes, pas la tête (préparé P3, flip Palier 4 —
+ * inerte tant que le flip inline n'émet pas ces atomes dans le LHS). */
 function ruleHeadName(lhs) {
-  const h = Array.isArray(lhs) ? lhs[0] : lhs;
+  const els = Array.isArray(lhs) ? lhs : [lhs];
+  const h = els.find((e) => e && e.negated !== true);
   return h && h.name ? h.name : null;
 }
 
