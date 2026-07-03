@@ -22,6 +22,21 @@ const name = args[0];
 if (!name) { console.error('Usage: node s1_native.cjs <grammar> --bin <version>'); process.exit(1); }
 const binTag = requireBinTag();
 
+// N'écrit l'instantané que si le contenu (hors champ date) a changé : la date
+// reste celle du dernier changement réel, et un run de tests ne salit pas git.
+function writeSnapshot(snapDir, snap) {
+  if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
+  const file = path.join(snapDir, 's1_native.json');
+  if (fs.existsSync(file)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      const strip = (o) => JSON.stringify({ ...o, date: undefined });
+      if (strip(prev) === strip(snap)) return;
+    } catch (e) { /* fichier illisible → réécrire */ }
+  }
+  fs.writeFileSync(file, JSON.stringify(snap, null, 2));
+}
+
 // Convert old BP2 positional settings to JSON.
 function convertOldSettings(c) {
   const lines = c.split(/\r\n?|\n/);
@@ -298,27 +313,25 @@ if (s1Mode === 'midi') {
   if (tokens.length === 0) {
     // No MIDI produced — report error
     const snapDir = path.join(__dirname, 'grammars', name, 'snapshots');
-    if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
     const snap = {
       source: `-gr.${grName}`, stage: 'S1', mode: 'midi',
       tokens: [], midi: [],
       error: stderrOutput.substring(0, 500) || 'No MIDI output produced',
       date: new Date().toISOString().substring(0, 10)
     };
-    fs.writeFileSync(path.join(snapDir, 's1_native.json'), JSON.stringify(snap, null, 2));
+    writeSnapshot(snapDir, snap);
     console.error(`S1 FAIL (midi): 0 notes for ${name}. ${snap.error.substring(0, 100)}`);
     process.exit(1);
   }
 
   // Write snapshot
   const snapDir = path.join(__dirname, 'grammars', name, 'snapshots');
-  if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
   const snap = {
     source: `-gr.${grName}`, stage: 'S1', mode: 'midi',
     tokens, midi: midiNotes,
     date: new Date().toISOString().substring(0, 10)
   };
-  fs.writeFileSync(path.join(snapDir, 's1_native.json'), JSON.stringify(snap, null, 2));
+  writeSnapshot(snapDir, snap);
   console.log(`S1 OK: ${tokens.length} notes → ${name}/snapshots/s1_native.json`);
 }
 
@@ -358,13 +371,12 @@ else if (s1Mode === 'text') {
   if (prodIdx === -1) {
     // No "Producing" marker → compilation failed. Save error output.
     const snapDir = path.join(__dirname, 'grammars', name, 'snapshots');
-    if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
     const snap = {
       source: `-gr.${grName}`, stage: 'S1', mode: 'text',
       tokens: [], error: rawOutput.substring(0, 2000),
       date: new Date().toISOString().substring(0, 10)
     };
-    fs.writeFileSync(path.join(snapDir, 's1_native.json'), JSON.stringify(snap, null, 2));
+    writeSnapshot(snapDir, snap);
     console.error(`S1 FAIL (text): no "Producing" marker for ${name}. Compilation error saved.`);
     process.exit(1);
   }
@@ -388,13 +400,12 @@ else if (s1Mode === 'text') {
 
   // Write snapshot
   const snapDir = path.join(__dirname, 'grammars', name, 'snapshots');
-  if (!fs.existsSync(snapDir)) fs.mkdirSync(snapDir, { recursive: true });
   const snap = {
     source: `-gr.${grName}`, stage: 'S1', mode: 'text',
     tokens,
     date: new Date().toISOString().substring(0, 10)
   };
-  fs.writeFileSync(path.join(snapDir, 's1_native.json'), JSON.stringify(snap, null, 2));
+  writeSnapshot(snapDir, snap);
   console.log(`S1 OK: ${tokens.length} tokens (text) → ${name}/snapshots/s1_native.json`);
 }
 

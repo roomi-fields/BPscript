@@ -19,3 +19,4 @@ build-web.sh
 .mcp.json
 .claude/
 .codegraph/
+test/grammars/trySrand/snapshots/
