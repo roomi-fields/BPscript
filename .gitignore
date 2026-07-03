@@ -18,3 +18,4 @@ abletonstory.md
 build-web.sh
 .mcp.json
 .claude/
+.codegraph/
