@@ -206,9 +206,14 @@ function hasTempoDirective(ast) {
 //       correction que P3, côté hôte.
 // ============================================================================
 
-// Interrupteur du flip INLINE (mécanisme A émis par le frontal). NE PASSER À
-// true qu'au top architecte Palier 4, prérequis P1-P4 réglés (voir ci-dessus).
-const INLINE_FLIP_PALIER4 = false;
+// Interrupteur du flip INLINE (mécanisme A émis par le frontal). BASCULÉ au
+// top C [271] (2026-07-03), étape B de bpx landée verte (B1 4988425 bascule
+// rule.contexts→left/rightContext + B2 7360983 retraits + shim 3-formes).
+// Prérequis réglés : P1 = découpeur A/A-bis (le #ab nié tombe au longest-match
+// via splitCompoundTerminals, oracle [258]/[261]) ; P2 = side/séquence depuis
+// l'ordre SOURCE (ci-dessous) ; P3 = lecteurs de tête posés (inertes → actifs) ;
+// P4 = kanopi posé (9d88b3f, cf. [259]).
+const INLINE_FLIP_PALIER4 = true;
 
 // ============================================================================
 // DÉCOUPEUR frontal des terminaux composés — alphabet mono-caractère
@@ -461,18 +466,42 @@ function canonicalizeContexts(ast) {
         rule.contexts = rule.contexts.map((ctx) => enrichRemoteHeadContext(ctx, rule.line ?? 0));
       }
       if (INLINE_FLIP_PALIER4) {
-        // ⚠️ Palier 4 SEULEMENT (prérequis P1-P4 + recalcul de `side` selon
-        // l'ordre source). Code prêt-à-flipper, conservé testé à blanc.
-        const inlined = [];
-        const remotes = [];
+        // FLIP C (top [271], B de bpx landé) — ORDRE SOURCE (P2) : la séquence
+        // assemblée [items de tête convertis + LHS écrit] reproduit le routage
+        // positionnel historique pour calculer le `side` OBÉI par BPx
+        // (splitRuleContexts : un seul contexte par côté) :
+        //   index 0 → 'left' ; dernier index → 'right' (remote de tête à motif
+        //   vide = contexte DROIT, cas T8) ; MILIEU → erreur à la TRANSPILATION
+        //   (même sémantique que l'ancien « Remote context must appear at
+        //   start or end of LHS » levé au chargement).
+        const seq = [];
+        const remoteMarks = [];
         for (const ctx of rule.contexts || []) {
-          if (ctx && Array.isArray(ctx.elements)) { remotes.push(ctx); continue; }
+          if (ctx && Array.isArray(ctx.elements)) {
+            const mark = { __remote: ctx };
+            seq.push(mark); remoteMarks.push(mark);
+            continue;
+          }
           const conv = canonicalizeLhsContext(ctx, rule.line ?? 0, true);
-          if (conv.inline) inlined.push(conv.inline);
-          else remotes.push(conv.remote);
+          if (conv.inline) { seq.push(conv.inline); }
+          else { const mark = { __remote: conv.remote }; seq.push(mark); remoteMarks.push(mark); }
         }
-        if (inlined.length > 0) rule.lhs = [...inlined, ...rule.lhs];
-        rule.contexts = remotes;
+        const assembled = [...seq, ...rule.lhs];
+        const declared = [];
+        for (const mark of remoteMarks) {
+          const i = assembled.indexOf(mark);
+          const rc = mark.__remote;
+          if (i === 0) declared.push({ ...rc, side: 'left' });
+          else if (i === assembled.length - 1) declared.push({ ...rc, side: 'right' });
+          else {
+            throw new ParseError(
+              `contexte distant en milieu de motif (autorisé : début ou fin de LHS)`,
+              { line: rule.line ?? 0, col: 0 }
+            );
+          }
+        }
+        rule.lhs = assembled.filter((x) => !x || !x.__remote);
+        rule.contexts = declared;
         rule.lhs = rule.lhs.map(canonicalizeLhsElement);
         rule.rhs = rule.rhs.map(canonicalizeRhsElement);
       }
