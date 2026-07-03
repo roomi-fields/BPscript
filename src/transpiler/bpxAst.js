@@ -20,6 +20,7 @@
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives } from './libs.js';
+import { resolveActors } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
@@ -552,6 +553,13 @@ export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
+    // Résolution d'acteur (décision 2026-07-03 note-nue, option A) : attribution
+    // implicite mono-propriétaire + erreur d'ambiguïté « Use dot notation », MÊME
+    // sémantique que la voie héritée (index.js compileBPS:32). L'aval ne résout
+    // rien (BPx/Kairos lisent `payload.actor` opaque) → sans cette passe, toute
+    // note nue part acteur-nulle dans l'arbre. AVANT applyDefaultActor : l'acteur
+    // synthétique `default` n'a pas d'alphabet (faux « no alphabet property » sinon).
+    result.errors.push(...resolveActors(ast).errors);
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
     annotateBackticks(ast);   // _btName en tête + payload.interp/nature:'code' sur les nœuds backtick
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)

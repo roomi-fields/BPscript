@@ -143,13 +143,27 @@ function resolveActors(ast) {
 }
 
 /**
- * Walk RHS elements recursively, resolving actor on Symbol nodes.
+ * Attribue un acteur à un nœud sonnant. TROU 2 (décision Romain
+ * 2026-07-03-note-nue-ch-implique-sortie-midi.md) : SEUL le payload voyage dans
+ * l'arbre dérivé (BPx types/node.ts:619 — Kairos lit `node.payload.actor`).
+ * Écrire `el.actor` sans `el.payload.actor` = feuille droppée en aval. Les DEUX.
+ */
+function assignActor(el, actorName) {
+  el.actor = actorName;
+  if (el.payload && typeof el.payload === 'object') el.payload.actor = actorName;
+}
+
+/**
+ * Walk RHS elements recursively, resolving actor on Symbol/SymbolCall nodes.
  */
 function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActorMap, errors) {
   if (!elements) return;
 
   for (const el of elements) {
-    if (el.type === 'Symbol') {
+    // TROU 1 (même décision) : un SymbolCall (note nue AVEC suffixe, ex `E4(ch:5)`)
+    // porte l'acteur au même titre qu'un Symbol — même attribution implicite, même
+    // erreur d'ambiguïté (option A tranchée : REJET, pas d'héritage intra-règle).
+    if (el.type === 'Symbol' || el.type === 'SymbolCall') {
       if (el.actor) {
         // Explicit dot notation: sitar.Sa → already resolved by parser
         terminalActorMap[el.name] = el.actor;
@@ -159,7 +173,7 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
         if (actors && actors.size === 1) {
           // Unambiguous — assign actor implicitly
           const actorName = [...actors][0];
-          el.actor = actorName;
+          assignActor(el, actorName);
           terminalActorMap[el.name] = actorName;
         } else if (actors && actors.size > 1) {
           // Ambiguous — check if declaration resolved it
@@ -171,7 +185,7 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
             });
           } else {
             // Declaration resolved it — propagate to element
-            el.actor = terminalActorMap[el.name];
+            assignActor(el, terminalActorMap[el.name]);
           }
         }
         // If symbol is not in any actor's alphabet, leave actor null (not an actor-managed terminal)
