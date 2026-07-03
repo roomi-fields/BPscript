@@ -223,11 +223,18 @@ const INLINE_FLIP_PALIER4 = false;
 // déclaré (`ek`) reste ATOMIQUE (le plus long match à sa 1re lettre est le
 // bol lui-même).
 //
-// Réplique EXACTE du splitter de l'adaptateur BPx vivant (loadGrammar.ts
+// Même charpente que le splitter de l'adaptateur BPx vivant (loadGrammar.ts
 // splitRule/Lhs/RhsCompoundTerminals:2255-2418 + makeSplitSymbol:2425-2448),
-// qui devient ainsi un NO-OP structurel (après découpe, tous les noms font
-// 1 caractère → son prédicat `length < 2` ne matche plus rien) — idempotence.
-// UNE différence de principe, voulue : la PORTE n'est plus un hardcode
+// qui devient un NO-OP structurel sur les chaînes pur-terminales (après
+// découpe, plus aucun Symbol composé de terminaux ne l'atteint) — idempotence.
+// DEUX différences de principe, voulues : (1) RÉALIGNEMENT NATIF A-bis (accord
+// architecte 2026-07-03, preuves natives bp3-engine) : une chaîne MIXTE
+// (`abXa`, `ab4`) n'est PLUS laissée intacte — split glouton des terminaux
+// puis reste tokenisé BP3 (variable/nombre), cf. tokenizeCompoundName ;
+// l'adaptateur vivant (qui la laisse intacte) est INFIDÈLE au natif sur ce
+// point — son prédicat ne re-découpe pas mes variables émises (noms à
+// majuscule ∉ terminaux) ni les NumericDuration → toujours no-op derrière moi.
+// (2) la PORTE n'est plus un hardcode
 // `{abc: a..z}` (déviation « transport » documentée côté BPx : l'AST ne
 // portait pas la liste de notes) — ICI la liste est dans les libs, donc la
 // porte se DÉRIVE des données : découpe ssi la scène déclare des alphabets
@@ -254,17 +261,44 @@ function singleCharAlphabetSet(libCtx) {
   return new Set(terms);
 }
 
-/** Découpe un nom composé en terminaux mono-char (longest-match trivial :
- * tous les bols font 1 char). null = pas une suite pure de terminaux déclarés
- * (le nœud reste intact). Miroir de splitCompoundTerminal (loadGrammar.ts). */
-function splitCompoundName(name, terminals) {
+/**
+ * Tokenise un nom composé selon la règle NATIVE (réalignement A-bis, accord
+ * architecte 2026-07-03 sur preuves bp3-engine [263] — constat hashab-monochar,
+ * addendum) : à chaque position, (1) terminal déclaré au LONGEST-MATCH
+ * (SEARCHTERMINAL2 Encode.c:888-918) ; sinon (2) MAJUSCULE → VARIABLE qui
+ * absorbe les alphanumériques suivants (SEARCHVAR — preuves : abXa→a·b·Xa,
+ * abX4→a·b·X4, abXcd→a·b·Xcd) ; sinon (3) CHIFFRE → NOMBRE (suite de chiffres —
+ * preuves : ab4→a·b·4, ab4a→a·b·4·a) ; sinon (4) caractère hors règle prouvée →
+ * nom INTACT (conservateur). Jamais « intacte à cause d'un char non-terminal »
+ * (l'ancien choix, hérité de l'adaptateur BPx, était INFIDÈLE au natif).
+ * null = rien à découper (atomique ou un seul token).
+ */
+function tokenizeCompoundName(name, terminals) {
   if (name.length < 2) return null; // déjà atomique
-  const out = [];
-  for (const ch of name) {
-    if (!terminals.has(ch)) return null;
-    out.push(ch);
+  const toks = [];
+  let i = 0;
+  while (i < name.length) {
+    let best = null;
+    for (const t of terminals) {
+      if (name.startsWith(t, i) && (best === null || t.length > best.length)) best = t;
+    }
+    if (best !== null) { toks.push({ kind: 'terminal', text: best }); i += best.length; continue; }
+    const ch = name[i];
+    if (ch >= 'A' && ch <= 'Z') {
+      let j = i + 1;
+      while (j < name.length && /[A-Za-z0-9]/.test(name[j])) j++;
+      toks.push({ kind: 'variable', text: name.slice(i, j) });
+      i = j; continue;
+    }
+    if (ch >= '0' && ch <= '9') {
+      let j = i + 1;
+      while (j < name.length && name[j] >= '0' && name[j] <= '9') j++;
+      toks.push({ kind: 'number', text: name.slice(i, j) });
+      i = j; continue;
+    }
+    return null; // hors règle native prouvée → intact
   }
-  return out;
+  return toks.length < 2 ? null : toks;
 }
 
 /** Fabrique un atome découpé. line/actor sur CHAQUE atome ; negated/payload
@@ -280,22 +314,29 @@ function makeSplitAtom(original, ch, isFirst) {
   return node;
 }
 
-/** Découpe un élément de LHS (seuls les Symbol nus sont candidats). */
+/** Découpe un élément de LHS (seuls les Symbol nus sont candidats).
+ * terminal/variable → Symbol ; NOMBRE en LHS = non représentable dans
+ * LhsElementAST et non prouvé au natif → nom INTACT (soumis à validation
+ * bp3-engine, cas exotique `ab4 -> …`). */
 function splitLhsElement(el, terminals) {
   if (!el || el.type !== 'Symbol') return [el];
-  const parts = splitCompoundName(el.name, terminals);
-  if (parts === null) return [el];
-  return parts.map((ch, i) => makeSplitAtom(el, ch, i === 0));
+  const toks = tokenizeCompoundName(el.name, terminals);
+  if (toks === null || toks.some((t) => t.kind === 'number')) return [el];
+  return toks.map((t, i) => makeSplitAtom(el, t.text, i === 0));
 }
 
 /** Découpe un élément de RHS (Symbol nu ; récursion voix polymétriques et
- * groupes de gabarit — mêmes nœuds que le splitter vivant). */
+ * groupes de gabarit — mêmes nœuds que le splitter vivant). terminal/variable
+ * → Symbol ; nombre → NumericDuration (forme du parser pour un INT nu). */
 function splitRhsElement(el, terminals) {
   if (!el || typeof el !== 'object') return [el];
   if (el.type === 'Symbol') {
-    const parts = splitCompoundName(el.name, terminals);
-    if (parts === null) return [el];
-    return parts.map((ch, i) => makeSplitAtom(el, ch, i === 0));
+    const toks = tokenizeCompoundName(el.name, terminals);
+    if (toks === null) return [el];
+    return toks.map((t, i) =>
+      t.kind === 'number'
+        ? { type: 'NumericDuration', numerator: Number(t.text), denominator: 1 }
+        : makeSplitAtom(el, t.text, i === 0));
   }
   if (el.type === 'Polymetric' && Array.isArray(el.voices)) {
     return [{ ...el, voices: el.voices.map((v) => v.flatMap((c) => splitRhsElement(c, terminals))) }];
