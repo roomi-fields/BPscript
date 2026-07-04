@@ -8,6 +8,7 @@
     "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs && node src/transpiler/libs-bundle-check.js",
     "typecheck": "npm run typecheck:digital",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
+    "verify": "node test/ast_conformance.mjs",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs"
