@@ -632,21 +632,26 @@ function applySceneValues(ast, libCtx) {
   // n'est le socle QUE pour une valeur SANS composant (pas d'`overriddenBy`, ex. tempo).
   const cascadeDefault = (spec, props) => {
     if (spec.overriddenBy) {
-      const [axis, field] = spec.overriddenBy.split('.');
-      // Composant EFFECTIF : acteur ?? scène (forme POINT). Le défaut @core ne s'applique
-      // que si l'axe n'est PAS déclaré du tout. Si l'axe EST déclaré mais non résolu ici
-      // (ex. forme deux-points périmée, ou nom absent du catalogue) → ABSENT, l'aval résout
-      // (règle kairos [310] : jamais le socle par-dessus un composant déclaré).
-      let compName = (props && props[axis]) || sceneComponent(axis);
-      if (compName == null) {
-        if ((ast.directives || []).some((x) => x.name === axis)) return undefined; // axe déclaré, non résolu → ABSENT
-        compName = defaultComponents[axis]; // aucune déclaration de l'axe → défaut @core
+      // `overriddenBy` = "axe.champ" OU une CHAÎNE ["tuning.diapason","alphabet.diapason"] :
+      // le SPÉCIFIQUE précède le GÉNÉRIQUE (un accordage qui redéclare l'ancre = override
+      // exceptionnel, doit primer — aligné sur la lecture kairos `tuning ?? alphabet` [313]).
+      const chain = Array.isArray(spec.overriddenBy) ? spec.overriddenBy : [spec.overriddenBy];
+      let anyAxisDeclared = false;
+      for (const ref of chain) {
+        const [axis, field] = ref.split('.');
+        let compName = (props && props[axis]) || sceneComponent(axis);
+        if (compName == null) {
+          if ((ast.directives || []).some((x) => x.name === axis)) { anyAxisDeclared = true; continue; } // axe déclaré, non résolu ici
+          compName = defaultComponents[axis]; // aucune déclaration de l'axe → défaut @core
+        }
+        if (compName) {
+          const comp = loadLib(axis, compName);
+          if (comp && comp[field] != null) return comp[field]; // 1er champ résolu de la chaîne gagne
+        }
       }
-      if (compName) {
-        const comp = loadLib(axis, compName);
-        if (comp && comp[field] != null) return comp[field];
-      }
-      return undefined; // composant non résolu → ABSENT, jamais le socle global
+      // Aucun maillon résolu. Si un axe était déclaré mais non résolu (forme périmée/nom
+      // absent) → ABSENT (l'aval résout, jamais le socle global). Sinon → défaut scalaire.
+      return anyAxisDeclared ? undefined : spec.default;
     }
     return spec.default; // valeur sans composant → défaut scalaire socle
   };

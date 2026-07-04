@@ -23,7 +23,7 @@
       "transport": "audio"
     },
     "values": {
-      "diapason": { "range": [16, 8000], "unit": "Hz", "overriddenBy": "alphabet.diapason", "description": "Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `@alphabet.X` ?? alphabet par défaut @core `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Overridable @diapason:N (scène) / (diapason:N) (occurrence). Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)." }
+      "diapason": { "range": [16, 8000], "unit": "Hz", "overriddenBy": ["tuning.diapason", "alphabet.diapason"], "description": "Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `@alphabet.X` ?? alphabet par défaut @core `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Overridable @diapason:N (scène) / (diapason:N) (occurrence). Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)." }
     }
   },
   "symbols": {
