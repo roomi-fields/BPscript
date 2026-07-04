@@ -615,14 +615,36 @@ function applySceneValues(ast, libCtx) {
     if (checkDomain(d.name, spec, d.value, d.line)) sceneVals[d.name] = d.value;
   }
 
-  // Niveau ACTEUR : pli dans la déclaration (jamais de recopie par token)
+  // Composant d'un AXE au niveau SCÈNE (`@tuning.X` → 'X'), pour la résolution d'override.
+  const defaultComponents = (libCtx && libCtx.defaultComponents) || {};
+  const sceneComponent = (axis) => {
+    const d = (ast.directives || []).find((x) => x.name === axis && x.subkey);
+    return d ? d.subkey : undefined;
+  };
+  // Défaut EFFECTIF d'une valeur par la cascade des NIVEAUX 1-2 (socle @core → composant
+  // invoqué) : `spec.overriddenBy = "axe.champ"` = le champ du composant EFFECTIF de l'axe
+  // (acteur ?? scène ?? défaut @core) recouvre le socle `spec.default`. Générique.
+  const cascadeDefault = (spec, props) => {
+    if (spec.overriddenBy) {
+      const [axis, field] = spec.overriddenBy.split('.');
+      const compName = (props && props[axis]) || sceneComponent(axis) || defaultComponents[axis];
+      if (compName) {
+        const comp = loadLib(axis, compName);
+        if (comp && comp[field] != null) return comp[field];
+      }
+    }
+    return spec.default;
+  };
+
+  // Niveau ACTEUR : pli dans la déclaration (jamais de recopie par token). Cascade complète
+  // par valeur : acteur (4) → scène (3) → composant invoqué (2) → socle @core (1).
   for (const actor of ast.actors || []) {
     const props = actor.properties || {};
     const eParams = props.entityParams || {};
     for (const [axis, params] of Object.entries(eParams)) {
       for (const k of Object.keys(params)) {
         if (!registry[k]) {
-          errors.push({ message: `'${axis}.…(${k}:…)' : '${k}' n'est pas une valeur déclarée par une librairie chargée`, line: actor.line });
+          errors.push({ message: `'${axis}.…(${k}:…)' : '${k}' n'est pas une valeur déclarée (ni socle @core ni librairie invoquée)`, line: actor.line });
         }
       }
     }
@@ -631,14 +653,10 @@ function applySceneValues(ast, libCtx) {
       const spec = registry[name];
       let v;
       for (const params of Object.values(eParams)) {
-        if (params && params[name] != null) v = params[name];
+        if (params && params[name] != null) v = params[name]; // niveau 4 acteur
       }
-      if (v === undefined && sceneVals[name] !== undefined) v = sceneVals[name];
-      if (v === undefined && spec.componentDefault && spec._axis && props[spec._axis]) {
-        const comp = loadLib(spec._axis, props[spec._axis]);
-        if (comp && comp[spec.componentDefault] != null) v = comp[spec.componentDefault];
-      }
-      if (v === undefined && spec.default != null) v = spec.default;
+      if (v === undefined && sceneVals[name] !== undefined) v = sceneVals[name]; // niveau 3 scène
+      if (v === undefined) v = cascadeDefault(spec, props); // niveaux 2-1 (composant invoqué → socle @core)
       if (v === undefined) continue;
       if (checkDomain(name, spec, v, actor.line)) vals[name] = v;
     }

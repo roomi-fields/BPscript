@@ -18,17 +18,7 @@
     "",
     "Legacy BP3 scales are preserved in tuning.json for backward compatibility."
   ],
-  "values": {
-    "diapason": {
-      "unit": "Hz",
-      "range": [
-        16,
-        8000
-      ],
-      "componentDefault": "diapason",
-      "description": "Hauteur de référence (Hz). Défaut = champ diapason du composant accordage référencé ; overridable par @diapason:N (scène), tuning.X(diapason:N) (acteur), (diapason:N) (occurrence)."
-    }
-  },
+  "_diapason_note": "Le champ `diapason` de chaque accordage est la SOURCE d'override du diapason (socle @core.defaults.values.diapason, overriddenBy: tuning.diapason — voir docs/design/SCENE_DEFAULTS_CASCADE.md). La spec du diapason (défaut/plage) vit dans @core, plus ici.",
   "western_12TET": {
     "description": "Standard Western equal temperament",
     "alphabet": "western",

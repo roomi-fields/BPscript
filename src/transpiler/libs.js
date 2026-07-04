@@ -161,6 +161,21 @@ function loadLibsFromDirectives(directives) {
     }
   };
 
+  // SOCLE des défauts de scène (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04).
+  // @core porte TOUTES les valeurs par défaut — TOUJOURS chargé (racine, comme settings/
+  // modulation). `defaults.values` (diapason…) entrent au registre AVEC leur défaut socle ;
+  // `defaults.components` (alphabet/tuning/octaves/transport par défaut) informent la
+  // résolution d'override (une lib invoquée recouvre le socle via `spec.overriddenBy`).
+  // Générique : on itère @core, aucune valeur codée dans le code.
+  const coreLib = loadJsonFile('core');
+  ctx.defaultComponents = (coreLib && coreLib.defaults && coreLib.defaults.components) || {};
+  if (coreLib && coreLib.defaults && coreLib.defaults.values) {
+    for (const [vname, spec] of Object.entries(coreLib.defaults.values)) {
+      if (vname.startsWith('_') || !spec || typeof spec !== 'object') continue;
+      ctx.valueRegistry[vname] = { ...spec, _axis: null };
+    }
+  }
+
   // Always load settings (engine defaults)
   const settingsLib = loadLib('settings');
   if (settingsLib) ctx._libs['settings'] = settingsLib;
@@ -341,18 +356,6 @@ function loadLibsFromDirectives(directives) {
         ctx.cvObjects[`${libName}.${objName}`] = def;
       }
     }
-  }
-
-  // SCENE_VALUES (bug kairos [308]) : les valeurs des CATALOGUES DE HAUTEUR (diapason…)
-  // sont TOUJOURS connues du registre — indépendamment de @tuning. Sinon `@diapason:N`
-  // dans une scène SANS @tuning (ex. cv-adsr.bps) serait perdu en SILENCE : ni pli ni
-  // erreur, double violation de SCENE_VALUES_OVERRIDE.md §3.2 (registre) / §3.3 (nom
-  // inconnu = erreur claire) et de la loi « rien ne disparaît en silence ». Chargées
-  // comme settings/modulation (toujours). APRÈS la boucle : controlNames peuplé (le
-  // garde de collision nom-réservé/contrôle fonctionne). Un futur catalogue de valeurs
-  // rejoint cette liste — la valeur elle-même reste 1 entrée JSON, zéro code.
-  for (const cat of ['tunings']) {
-    mergeValueRegistry(loadJsonFile(cat), 'tuning');
   }
 
   // Generate terminals from deferred alphabets (after all directives processed)

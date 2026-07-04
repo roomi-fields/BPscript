@@ -1,7 +1,19 @@
 {
   "name": "core",
-  "description": "BPscript core — silences, prolongation, contrôles moteur",
-  "version": "0.1.0",
+  "description": "BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène",
+  "version": "0.2.0",
+  "_defaults_doc": "Cascade de défauts (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). @core est le SOCLE : il porte TOUTES les valeurs par défaut de scène. Multi-niveau : @core → lib invoquée (override) → scène → acteur → occurrence. `components` = composants par défaut par axe (recouverts par @alphabet.X/@tuning.X…). `values` = valeurs scalaires overridables (@diapason:N…) ; `overriddenBy: \"axe.champ\"` = le champ d'un composant invoqué recouvre le défaut. Aucun défaut n'est codé dans le code.",
+  "defaults": {
+    "components": {
+      "alphabet": "western",
+      "tuning": "western_12TET",
+      "octaves": "western",
+      "transport": "audio"
+    },
+    "values": {
+      "diapason": { "default": 440, "range": [16, 8000], "unit": "Hz", "overriddenBy": "tuning.diapason", "description": "Hauteur de référence (Hz). Socle 440 ; recouvert par le champ diapason de l'accordage effectif ; overridable @diapason:N (scène) / tuning.X(diapason:N) (acteur) / (diapason:N) (occurrence)." }
+    }
+  },
   "symbols": {
     "lambda": {
       "type": "special",
