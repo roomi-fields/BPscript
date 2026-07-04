@@ -1,129 +1,131 @@
 # Valeurs de scène — override générique des défauts de librairie
 
-> **Statut : 🔶 PROPOSITION** (chantier hub [291], mené par bpscript). À ratifier par
-> Romain (assisté de l'architecte) AVANT toute implémentation. Rien de ce document
-> n'est codé.
+> **Statut : ✅ PRINCIPE RATIFIÉ (Romain, hub [292]) — RÉVISION v2 intégrant ses 3
+> réponses. Le portage §3.4 (modèle contrôles, par-terminal) diffère SUBSTANTIELLEMENT
+> de la v1 ratifiée (section scène-metadata) : FLAGGÉ à l'architecte pour
+> re-vérification avant implémentation.** Rien n'est codé.
 
 ## 1. Principe (règle `:` / `.`)
 
 - `.` **appelle un composant** de librairie : `@tuning.western_just` référence une
   structure nommée du catalogue. Un composant se référence, ne se redéfinit pas
   (tranché Romain, hub [289]).
-- `:` **pose une valeur** : `@tuning:442` pose un scalaire (diapason 442 Hz).
+- `:` **pose une valeur** : `@diapason:442` pose un scalaire.
 
-**Règle systémique voulue (Romain, hub [291])** : toute valeur déclarée par une
-librairie chargée — présente ou **future** — est posable/overridable en scène par sa
-forme `:`, avec précédence **scène > défaut de librairie**, résolue **une fois,
-génériquement**. Ajouter une valeur à une librairie demain ne touche ni le parseur,
-ni le moteur, ni l'hôte.
+**Règle systémique ratifiée (hub [292])** : toute valeur déclarée par une librairie
+chargée — présente ou **future** — est posable/overridable en scène par sa forme `:`,
+avec précédence **occurrence > acteur > scène > défaut de librairie**, résolue
+génériquement. Une valeur ajoutée demain = 1 entrée JSON, zéro code.
 
-## 2. Diagnostic de l'existant (sur pièces, 2026-07-04)
+## 2. Nommage (réponse Romain n°1 : un mot = une chose)
 
-| Valeur | Défaut déclaré où | Consommateur | Câblage |
-|---|---|---|---|
-| tempo (`@mm`/`@tempo`) | — (défaut moteur) | BPx `loadGrammar.ts:1592` (`case 'tempo'`) | bespoke |
-| seed, maxitems, mode… | — | réglages moteur (BP3 settings / session BPx) | bespoke |
-| contrôles (vel, chan, wave…) | `controls.json` `runtime.*` (`default`, `range`/`values`) | runtimes via `payload.params` ; validation `controlValidation.js` | registre EXISTANT, niveaux occurrence + acteur seulement |
-| diapason | `tunings.json` `<tuning>.baseHz` (ex. `western_just` 440, `sargam_12TET` 240) | résolveur Kairos | **AUCUN canal scène** : `@tuning:442` parse (`Directive{value:442}`) et voyage, personne ne le lit (constat hub [289]) |
-| états de drapeau (`@flag`) | — | résolus dans l'AST au parse | local par définition |
+- ~~`@tuning:442`~~ **écarté** : surchargerait `tuning` (déjà le nom de l'axe `.`).
+- Champ réel des catalogues : `baseHz` (tunings.json, temperaments.json) ; le
+  résolveur Kairos lit `config.tuning?.baseHz ?? 440` (`resolver.ts:151` — repli 440
+  en dur). Terme musicologique du concept : **diapason** (cohérent avec la règle
+  vocabulaire : musicologie avant jargon technique).
+- **Nom proposé : `diapason`**, UN seul nom de bout en bout : surface `@diapason:442`
+  → registre `values.diapason` → pli acteur `values.diapason` → occurrence
+  `payload.params.diapason` → lecture Kairos `diapason`.
+- **Option de cohérence totale (à trancher)** : renommer `baseHz` → `diapason` dans
+  les 2 catalogues + la lecture Kairos (1 champ, ~3 sites) ; sinon `baseHz` reste le
+  champ-donnée du composant, documenté comme « diapason par défaut du composant ».
 
-Symptôme confirmé : chaque valeur a son câblage **par-valeur** ; le trou du diapason
-est structurel, pas accidentel.
-
-Acquis réutilisables :
-- Le parseur discrimine **déjà** génériquement : `@nom:NOMBRE` → `Directive.value`,
-  `@nom:IDENT` → `Directive.runtime` (`parser.js:643-677`). La surface est prête.
-- `controls.json` déclare **déjà** des valeurs avec `default` + domaine — le format
-  de déclaration existe, il manque son extension aux autres librairies et le niveau
-  scène.
-
-## 3. Mécanisme proposé
+## 3. Mécanisme (v2 — portage aligné sur le modèle CONTRÔLES, réponse Romain n°3)
 
 ### 3.1 Déclaration (librairies — source unique des défauts)
 
-Section normalisée `values` admise dans **toute** librairie JSON :
+Section normalisée `values` admise dans toute librairie JSON :
 
 ```json
 "values": {
-  "<nom>": { "default": 440, "range": [300, 500], "unit": "Hz", "description": "…" }
+  "diapason": { "unit": "Hz", "range": [220, 880], "description": "hauteur de référence",
+                "componentDefault": "baseHz" }
 }
 ```
 
-Cas particulier « valeur d'axe » : une librairie d'axe (tunings) peut lier la valeur
-au composant référencé — le défaut du diapason est le `baseHz` **du tuning
-référencé**, pas une constante de fichier.
+`componentDefault` : le défaut vit dans le composant référencé (le `baseHz` du tuning
+choisi), pas en constante de fichier. Une valeur simple déclarerait `default` directe
+(même dualité que controls.json aujourd'hui).
 
 ### 3.2 Registre (chargement — générique)
 
 `libs.js` collecte l'union des sections `values` des librairies chargées →
-`ctx.valueRegistry` (nom → spec). Une valeur ajoutée demain = **une entrée JSON**,
-zéro code (même mécanique que la collecte des contrôles aujourd'hui).
+`ctx.valueRegistry` (nom → spec). Noms de directives moteur (`@mode`, `@mm`,
+`@seed`…) réservés et exclus (vérifié au chargement). Un nom ne peut pas être à la
+fois valeur portée et réglage moteur (§3.7).
 
-### 3.3 Surface (scène)
+### 3.3 Surface (3 niveaux, cascade complète dès la V1)
 
-`@<nom>:<valeur>` — parse déjà générique. **Nouvelle validation générique** (même
-modèle que `controlValidation.js`) : nom ∈ registre sinon erreur claire ; valeur dans
-le domaine déclaré. Les noms de directives moteur (`@mode`, `@mm`, `@seed`…) sont
-**réservés** et exclus du registre (vérifié au chargement de la librairie).
+| Niveau | Forme | État parseur |
+|---|---|---|
+| Scène | `@diapason:442` | parse déjà (`parser.js:643` : nombre → `Directive.value`) |
+| Acteur | `@actor X tuning.western_just(diapason:432)` | parse déjà (`parser.js:961-974`, `parseRefParams`) — params aujourd'hui JETÉS pour tuning (`:930`, seul transport les garde) → les CAPTER, même modèle que `TransportRef{key, params}` |
+| Occurrence | `C4(diapason:428)` | parse déjà (qualifieur générique → `payload.params`) |
 
-### 3.4 Pliage + portage (AST → arbre)
+**Verdict niveau acteur (réponse Romain n°2) : PROPRE en V1** — réutilise le
+mécanisme acteur existant (params d'entité, pattern TransportRef), zéro syntaxe
+nouvelle, zéro verrue. Validation générique aux 3 niveaux : nom ∈ registre (sinon
+erreur claire), domaine vérifié (même modèle que `controlValidation.js`).
 
-Conformément à AST_SPEC §0.1 (« le frontend **plie la cascade statique** »), BPScript
-résout la précédence **à l'émission** :
+### 3.4 Pliage + portage (modèle CONTRÔLES — la valeur suit les terminaux)
+
+Conforme AST_SPEC §0.1 : « le frontend **plie la cascade statique** (scène→acteur)
+dans la **déclaration d'acteur** ; un token ne recopie **jamais** la config complète —
+uniquement ses overrides d'occurrence ». Donc :
+
+- **Statique** (défaut composant ?? scène ?? acteur) : plié **à l'émission** dans
+  chaque déclaration d'acteur → `actors[i].values = { diapason: <effectif> }`
+  (l'acteur implicite `default` le porte pour les scènes sans `@actor`). BPx le
+  **porte opaque** dans la fiche d'acteur de l'arbre (`ActorEntry`, qui porte déjà
+  l'identité de hauteur alphabet/tuning/octaves — KAI-10). Amendement AST_SPEC +
+  contrat bpscript-bpx : **une fois**, générique pour toutes les valeurs futures.
+- **Occurrence** : `(diapason:428)` sur une note → `payload.params.diapason` — canal
+  **déjà existant et générique**, rien à changer au portage.
+
+La valeur est ainsi **naturellement exposée aux runtimes** exactement comme les
+contrôles : fiche d'acteur pour le défaut effectif, params d'occurrence pour
+l'exception — pas de section scène-metadata séparée (v1 abandonnée sur raffinement
+Romain).
+
+### 3.5 Résolution (aval, par nom)
+
+Kairos (V1, par note) :
 
 ```
-effectif(nom) = valeur de scène (@nom:v)  ??  défaut de librairie
+diapason effectif = payload.params.diapason ?? actorEntry.values.diapason ?? baseHz du tuning
 ```
 
-et émet **une section canonique unique** `values: { nom → valeurEffective }` dans
-l'AST. BPx la **porte opaque** dans `metadata` (un seul changement, générique pour
-toujours — amendement AST_SPEC + contrat bpscript-bpx à l'appui). Aucune logique
-moteur par valeur, jamais.
+(le dernier terme disparaît si l'option de renommage §2 est prise : le pli à
+l'émission absorbe le défaut du composant). Toute valeur future : le consommateur la
+lit **par nom** au même endroit ; parseur, pliage, portage inchangés.
 
-### 3.5 Résolution (aval)
-
-Les consommateurs lisent `metadata.values.<nom>` :
-- **Kairos** (V1) : `diapason` présent → remplace le `baseHz` du tuning référencé.
-- Valeur future : le consommateur qui en a besoin la lit **par nom** ; parseur,
-  émission et portage inchangés.
-
-### 3.6 Précédence complète (cohérente avec `SOUNDS.md:263`)
-
-```
-occurrence ()  >  acteur (props)  >  scène @nom:v  >  défaut de librairie
-```
-
-V1 = niveau **scène** (le manquant). Occurrence et acteur existent déjà pour les
-contrôles et restent inchangés.
-
-### 3.7 Hors périmètre (honnêteté)
+### 3.6 Hors périmètre (inchangé)
 
 Les valeurs **interprétées par le moteur** (tempo, seed, maxitems — elles pilotent la
-dérivation elle-même) gardent leur canal moteur existant. Le mécanisme générique
-couvre les valeurs **portées** (opaques au moteur). Un nom ne peut pas appartenir aux
-deux classes (vérifié au chargement).
+dérivation) gardent leur canal moteur. Le générique couvre les valeurs **portées**.
 
 ## 4. Cas d'école : diapason
 
-`@tuning.western_just` (point = composant) + `@tuning:442` (deux-points = valeur de
-l'axe) dans la même scène : le tuning est résolu au catalogue, son `baseHz` 440 est
-précédé par 442. La démo `tuning-ref442.bps` (inerte en silence depuis toujours)
-devient la preuve e2e du chantier.
+`@tuning.western_just` + `@diapason:442` : composant résolu au catalogue, son défaut
+440 précédé par 442 pour tous les acteurs de la scène ; `@actor solo
+tuning.western_just(diapason:432)` précède la scène pour cet acteur ;
+`C4(diapason:428)` précède tout pour cette note. La démo `tuning-ref442.bps`
+(inerte en silence depuis toujours) devient la preuve e2e, réécrite `@diapason:442`.
 
-## 5. Coordination (après ratification)
+## 5. Coordination (après re-vérification du portage flaggé)
 
 | Qui | Quoi |
 |---|---|
-| Romain | ratifie le principe + questions §6 |
-| bpx | amendement AST_SPEC (`values` en métadonnées) + portage opaque (1 fois) |
-| bpscript | section `values` des libs + registre + validation + pliage + émission |
-| kairos | lecture `metadata.values.diapason` dans le résolveur |
+| architecte | re-vérifie le portage v2 (changement substantiel vs v1 ratifiée) + tranche §2 (renommage `baseHz`) |
+| bpx | amendement AST_SPEC (`values` dans la déclaration d'acteur + `ActorEntry`) + portage opaque (1 fois) |
+| bpscript | sections `values` des libs + registre + validation 3 niveaux + capture params d'entité acteur + pli à l'émission |
+| kairos | lecture `diapason` par note (occurrence ?? acteur ?? composant) ; option renommage `baseHz` |
 | kanopi | rien (hôte pur) |
 
-## 6. Questions à Romain
+## Historique
 
-1. **Nommage surface** : `@tuning:442` (valeur d'axe — même nom, deux formes) ou
-   `@diapason:442` (nom propre au registre) ?
-2. **Niveau acteur** en V1 (`@actor X … (diapason:432)`) ou différé ?
-3. La **provenance** (override vs défaut) doit-elle être exposée à l'UI, ou la
-   valeur effective seule suffit-elle ?
+- v1 (fc0a491) : principe + portage scène-metadata. Principe ratifié Romain [292].
+- v2 (ce document) : nommage `diapason`, niveau acteur V1 (jugé propre sur pièces),
+  portage re-modelé sur les contrôles (par-terminal via acteur+occurrence). La
+  question « provenance exposée à l'UI » est abandonnée (Romain).
