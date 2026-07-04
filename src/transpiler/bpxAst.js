@@ -19,7 +19,7 @@
 
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives } from './libs.js';
+import { loadLibsFromDirectives, loadLib } from './libs.js';
 import { resolveActors } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
@@ -549,6 +549,100 @@ function applyDefaultActor(ast) {
   }];
 }
 
+/**
+ * SCENE_VALUES (hub [293], design docs/design/SCENE_VALUES_OVERRIDE.md §3.4) — pli de
+ * la cascade STATIQUE des valeurs de librairie dans la déclaration d'acteur, conforme
+ * AST_SPEC §0.1 (« le frontend plie la cascade statique ; un token ne recopie jamais
+ * la config complète »). Pour chaque valeur du registre (ex. diapason) :
+ *   effectif = params d'entité acteur (tuning.X(diapason:432))
+ *           ?? valeur de scène (@diapason:442)
+ *           ?? défaut du composant référencé (spec.componentDefault, ex. le champ
+ *              diapason du tuning choisi) ?? spec.default
+ * → actors[i].values = { nom: effectif } (champ absent si rien). L'occurrence
+ * (diapason:428) reste sur payload.params (canal existant, domaine validé ici).
+ * BPx porte values OPAQUE (ActorEntry) — DISTINCT de transport.params (adresse, KAI-9).
+ * @returns {Array<{message, line?}>} erreurs (domaine, forme, noms inconnus)
+ */
+function applySceneValues(ast, libCtx) {
+  const registry = (libCtx && libCtx.valueRegistry) || {};
+  const errors = [...((libCtx && libCtx.valueRegistryErrors) || [])];
+  const names = Object.keys(registry);
+  if (!names.length) return errors;
+
+  const checkDomain = (name, spec, v, line) => {
+    if (typeof v === 'number' && Array.isArray(spec.range) && spec.range.length === 2
+        && (v < spec.range[0] || v > spec.range[1])) {
+      errors.push({ message: `'${name}': ${v} hors plage [${spec.range[0]}..${spec.range[1]}]${spec.unit ? ' ' + spec.unit : ''}`, line });
+      return false;
+    }
+    if (Array.isArray(spec.values) && !spec.values.includes(v)) {
+      errors.push({ message: `'${name}': valeur '${v}' inconnue (admises : ${spec.values.join(', ')})`, line });
+      return false;
+    }
+    return true;
+  };
+
+  // Niveau SCÈNE : @nom:valeur (forme deux-points = valeur, règle ':'/'.')
+  const sceneVals = {};
+  for (const d of ast.directives || []) {
+    const spec = registry[d.name];
+    if (!spec) continue;
+    if (d.value == null) {
+      errors.push({ message: `'@${d.name}' attend une VALEUR (ex. @${d.name}:440) — pas un nom`, line: d.line });
+      continue;
+    }
+    if (checkDomain(d.name, spec, d.value, d.line)) sceneVals[d.name] = d.value;
+  }
+
+  // Niveau ACTEUR : pli dans la déclaration (jamais de recopie par token)
+  for (const actor of ast.actors || []) {
+    const props = actor.properties || {};
+    const eParams = props.entityParams || {};
+    for (const [axis, params] of Object.entries(eParams)) {
+      for (const k of Object.keys(params)) {
+        if (!registry[k]) {
+          errors.push({ message: `'${axis}.…(${k}:…)' : '${k}' n'est pas une valeur déclarée par une librairie chargée`, line: actor.line });
+        }
+      }
+    }
+    const vals = {};
+    for (const name of names) {
+      const spec = registry[name];
+      let v;
+      for (const params of Object.values(eParams)) {
+        if (params && params[name] != null) v = params[name];
+      }
+      if (v === undefined && sceneVals[name] !== undefined) v = sceneVals[name];
+      if (v === undefined && spec.componentDefault && spec._axis && props[spec._axis]) {
+        const comp = loadLib(spec._axis, props[spec._axis]);
+        if (comp && comp[spec.componentDefault] != null) v = comp[spec.componentDefault];
+      }
+      if (v === undefined && spec.default != null) v = spec.default;
+      if (v === undefined) continue;
+      if (checkDomain(name, spec, v, actor.line)) vals[name] = v;
+    }
+    if (Object.keys(vals).length) actor.values = vals;
+  }
+
+  // Niveau OCCURRENCE : (diapason:428) → déjà porté par payload.params ; domaine validé.
+  const walkParams = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(walkParams); return; }
+    const p = node.payload && node.payload.params;
+    if (p) {
+      for (const [k, v] of Object.entries(p)) {
+        if (registry[k]) checkDomain(k, registry[k], v, node.line);
+      }
+    }
+    for (const k in node) {
+      if (k !== 'payload' && node[k] && typeof node[k] === 'object') walkParams(node[k]);
+    }
+  };
+  walkParams(ast.subgrammars);
+
+  return errors;
+}
+
 export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
@@ -572,8 +666,12 @@ export function compileToBPxAST(source, environnement) {
     const directives = [
       ...(ast.directives || []),
       ...((ast.scenes || []).flatMap((s) => s.directives || [])),
+      // SCENE_VALUES : les acteurs (hissés dans ast.actors par le parseur) touchent
+      // leurs catalogues d'entité → sections `values` au registre (libs.js).
+      ...(ast.actors || []),
     ];
     const libCtx = loadLibsFromDirectives(directives);
+    result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
 

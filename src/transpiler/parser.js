@@ -928,6 +928,12 @@ function parse(tokens, opts = {}) {
         } else {
           // alphabet, tuning, eval — référence simple
           properties[key] = value;
+          // Valeurs d'entité (SCENE_VALUES, hub [293]) : les params collés à une
+          // référence d'entité NON-transport (ex. `tuning.western_just(diapason:432)`)
+          // sont CAPTÉS ici (avant : jetés en silence) et pliés à l'émission BPx
+          // (bpxAst.applySceneValues). Additif — l'encodeur BP3 les ignore. Le
+          // transport garde son canal propre (params = ADRESSE, concept distinct).
+          if (params) (properties.entityParams || (properties.entityParams = {}))[key] = params;
         }
       };
 

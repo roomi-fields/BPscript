@@ -58,7 +58,11 @@ function clearRegistry() {
 registerAll(BUNDLED_LIBS);
 
 // Canonical filenames (directive name → JSON file name)
-const fileAliases = { alphabet: 'alphabets' };
+// `tuning` → tunings.json = le CATALOGUE servi (PITCH_LIB). Avant cet alias,
+// loadLib('tuning', X) tombait sur lib/tuning.json (héritage Bernard, gammes sous
+// .scales) et ne résolvait JAMAIS rien — la résolution d'accordage était 100 %
+// aval (Kairos). L'alias ouvre l'accès transpileur au catalogue (SCENE_VALUES).
+const fileAliases = { alphabet: 'alphabets', tuning: 'tunings' };
 
 function loadJsonFile(name) {
   const canonical = fileAliases[name] || name;
@@ -124,6 +128,37 @@ function loadLibsFromDirectives(directives) {
     _alphabets: [],     // loaded alphabet libs (deferred terminal generation)
     _octaveConvention: null,  // resolved octave convention name
     transcriptions: {},  // name → { mappings: { a: b, ... } }
+    // SCENE_VALUES (hub [293]) : registre GÉNÉRIQUE des valeurs déclarées par les
+    // librairies chargées (section top-level `values` d'un fichier lib). Une valeur
+    // ajoutée demain à une lib = une entrée JSON, zéro code. nom → spec
+    // { unit?, range?, values?, default?, componentDefault?, description?, _axis }.
+    // `_axis` = clé d'entité d'acteur du fichier déclarant (tuning, alphabet…) —
+    // sert à résoudre `componentDefault` sur le composant référencé par l'acteur.
+    valueRegistry: {},
+    valueRegistryErrors: [],  // collisions de noms (réservés/contrôles) — remontées à l'émission
+  };
+
+  // Noms interdits au registre de valeurs : directives moteur/structure existantes
+  // (une valeur portée ne peut pas partager le nom d'un réglage interprété — doc
+  // SCENE_VALUES_OVERRIDE.md §3.6) ; les noms de contrôles sont vérifiés au merge.
+  const RESERVED_VALUE_NAMES = new Set([
+    'mode', 'mm', 'tempo', 'seed', 'maxitems', 'duration', 'meter', 'scan', 'weight',
+    'speed', 'on_fail', 'scale', 'flag', 'scene', 'expose', 'map', 'alphabet',
+    'tuning', 'octaves', 'transport', 'sound', 'eval', 'actor', 'core', 'controls',
+    'quantization', 'qclock', 'timepatterns', 'ins', 'transpose', 'library',
+  ]);
+  const mergeValueRegistry = (file, axis) => {
+    if (!file || !file.values || typeof file.values !== 'object') return;
+    for (const [vname, spec] of Object.entries(file.values)) {
+      if (vname.startsWith('_') || !spec || typeof spec !== 'object') continue;
+      if (RESERVED_VALUE_NAMES.has(vname) || ctx.controlNames.has(vname)) {
+        ctx.valueRegistryErrors.push({
+          message: `Valeur de librairie '${vname}' : nom réservé (directive moteur ou contrôle existant) — renommer dans la librairie`,
+        });
+        continue;
+      }
+      ctx.valueRegistry[vname] = { ...spec, _axis: axis || null };
+    }
   };
 
   // Always load settings (engine defaults)
@@ -191,7 +226,23 @@ function loadLibsFromDirectives(directives) {
       continue;
     }
 
+    // SCENE_VALUES : les références d'entité d'un @actor (alphabet/tuning/octaves)
+    // touchent leurs fichiers-catalogues → leurs sections `values` entrent au registre
+    // (sinon une scène 100 % acteurs n'aurait aucun registre). Le fichier est chargé,
+    // pas l'entrée — la résolution du composant reste à l'émission/en aval.
+    // (Les acteurs sont hissés par le parseur dans ast.actors — type ActorDirective,
+    //  name = nom de l'acteur ; l'émission BPx les inclut dans la liste passée ici.)
+    if ((dir.type === 'ActorDirective' || dir.name === 'actor') && dir.properties) {
+      for (const axis of ['alphabet', 'tuning', 'octaves']) {
+        if (dir.properties[axis]) mergeValueRegistry(loadJsonFile(axis), axis);
+      }
+      continue;
+    }
+
     const lib = loadLib(dir.name, dir.subkey);
+    // Section `values` du FICHIER de la directive (ex. @tuning.X → tunings.json),
+    // même si l'entrée subkey n'existe pas (le registre est au niveau fichier).
+    mergeValueRegistry(loadJsonFile(dir.name), dir.name);
     if (!lib) continue;
     const libKey = dir.subkey ? `${dir.name}.${dir.subkey}` : dir.name;
     ctx._libs[libKey] = lib;

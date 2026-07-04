@@ -7,7 +7,7 @@
     "  degrees      — which steps in the temperament grid the alphabet notes land on",
     "                  (ordered to match the notes[] array in the alphabet)",
     "  alterations  — named pitch modifications as ratios (fraction, decimal, or cents)",
-    "  baseHz       — reference frequency",
+    "  diapason     — reference frequency (Hz)",
     "  baseNote     — which note has that frequency",
     "  baseRegister — in which register (octave convention index)",
     "",
@@ -18,6 +18,17 @@
     "",
     "Legacy BP3 scales are preserved in tuning.json for backward compatibility."
   ],
+  "values": {
+    "diapason": {
+      "unit": "Hz",
+      "range": [
+        16,
+        8000
+      ],
+      "componentDefault": "diapason",
+      "description": "Hauteur de référence (Hz). Défaut = champ diapason du composant accordage référencé ; overridable par @diapason:N (scène), tuning.X(diapason:N) (acteur), (diapason:N) (occurrence)."
+    }
+  },
   "western_12TET": {
     "description": "Standard Western equal temperament",
     "alphabet": "western",
@@ -37,7 +48,7 @@
       "bb": "-200c",
       "##": "200c"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "A",
     "baseRegister": 4
   },
@@ -60,7 +71,7 @@
       "##": "4782969/4194304",
       "bb": "4194304/4782969"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "A",
     "baseRegister": 4
   },
@@ -83,7 +94,7 @@
       "##": "625/576",
       "bb": "576/625"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "A",
     "baseRegister": 4
   },
@@ -106,7 +117,7 @@
       "##": "152c",
       "bb": "-152c"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "A",
     "baseRegister": 4
   },
@@ -127,10 +138,10 @@
       "komal": "-100c",
       "tivra": "100c"
     },
-    "baseHz": 240,
+    "diapason": 240,
     "baseNote": "sa",
     "baseRegister": 1,
-    "_note": "baseHz for sa is tradition-dependent. 240 Hz is a common default."
+    "_note": "diapason (Hz) for sa is tradition-dependent. 240 Hz is a common default."
   },
   "sargam_22shruti": {
     "description": "Indian sargam in 22-shruti system — full microtonal resolution",
@@ -154,7 +165,7 @@
       "depends on which note is altered. These ratios are representative defaults.",
       "Raga-specific tunings may override with exact shruti positions."
     ],
-    "baseHz": 240,
+    "diapason": 240,
     "baseNote": "sa",
     "baseRegister": 1
   },
@@ -177,7 +188,7 @@
       "bb": "-200c",
       "##": "200c"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "la",
     "baseRegister": 4
   },
@@ -202,7 +213,7 @@
       "bb": "-200c",
       "##": "200c"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "husayni",
     "baseRegister": 4,
     "_note": "husayni (6e degré, ancien 'la') ancré à 440 Hz — référence A440 inchangée, alphabet en noms de perde."
@@ -236,7 +247,7 @@
       "tanini": "203.774c"
     },
     "_note": "degrees[] maps the 16 named notes to their comma positions. Turkish system is complex with many more named pitches.",
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "neva",
     "baseRegister": 0
   },
@@ -254,7 +265,7 @@
       6
     ],
     "alterations": {},
-    "baseHz": 282,
+    "diapason": 282,
     "baseNote": "nem",
     "baseRegister": 1,
     "_note": "Gamelan tunings are ensemble-specific. These are representative Central Javanese values."
@@ -271,7 +282,7 @@
       4
     ],
     "alterations": {},
-    "baseHz": 282,
+    "diapason": 282,
     "baseNote": "nem",
     "baseRegister": 1
   },
@@ -295,7 +306,7 @@
       12
     ],
     "alterations": {},
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "C",
     "baseRegister": 0
   },
@@ -319,7 +330,7 @@
       12
     ],
     "alterations": {},
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "C",
     "baseRegister": 0
   },
@@ -350,7 +361,7 @@
       "komal": "16/15",
       "tivra": "25/24"
     },
-    "baseHz": 240,
+    "diapason": 240,
     "baseNote": "sa",
     "baseRegister": 1
   },
@@ -380,7 +391,7 @@
       "komal": "16/15",
       "tivra": "25/24"
     },
-    "baseHz": 240,
+    "diapason": 240,
     "baseNote": "sa",
     "baseRegister": 1
   },
@@ -405,7 +416,7 @@
       "##": "200c",
       "bb": "-200c"
     },
-    "baseHz": 440,
+    "diapason": 440,
     "baseNote": "A",
     "baseRegister": 4
   },
@@ -427,7 +438,7 @@
       "komal": "-100c",
       "tivra": "100c"
     },
-    "baseHz": 240,
+    "diapason": 240,
     "baseNote": "sa",
     "baseRegister": 1
   }
