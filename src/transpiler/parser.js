@@ -792,6 +792,7 @@ function parse(tokens, opts = {}) {
       } else {
         body = parseRhsElements();
       }
+      checkMacroParamsUsed(macroName, params, body, tok);
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
 
@@ -1321,6 +1322,55 @@ function parse(tokens, opts = {}) {
     return tokens[j]?.type === T.EQUALS;
   }
 
+  /**
+   * Collecte tous les identifiants MENTIONNÉS dans un corps de macro : noms de
+   * symboles/acteurs/tags, valeurs littérales chaîne (param passé en valeur d'arg,
+   * ex. `C4(vel:x)`), et mots d'un backtick (substitution textuelle dans le code).
+   * Volontairement LARGE : on veut « le param apparaît-il quelque part ? » — la
+   * leniency évite de rejeter une macro valide (un faux positif casserait le langage).
+   */
+  function macroBodyMentions(body) {
+    const names = new Set();
+    const walk = (n) => {
+      if (!n || typeof n !== 'object') return;
+      if (Array.isArray(n)) { for (const el of n) walk(el); return; }
+      for (const key of ['name', 'symbol', 'actor', 'tag']) {
+        if (typeof n[key] === 'string') names.add(n[key]);
+      }
+      if (n.type === 'Literal' && typeof n.value === 'string') names.add(n.value);
+      if (typeof n.code === 'string') {
+        for (const w of n.code.match(/[A-Za-z_][A-Za-z0-9_]*/g) || []) names.add(w);
+      }
+      for (const k in n) { if (n[k] && typeof n[k] === 'object') walk(n[k]); }
+    };
+    walk(body);
+    return names;
+  }
+
+  /**
+   * FAIL-LOUD (Romain confirmé, hub [296]) : une macro dont un paramètre déclaré
+   * n'apparaît JAMAIS dans le corps est MALFORMÉE — jamais un `continue` silencieux
+   * qui la transforme en note muette. Une macro est une SUBSTITUTION TEXTUELLE
+   * (EBNF §macro, l.59/273 ; « les params doivent apparaître dans le rhs », cf.
+   * `@macro accent(x)=x(vel:120)`). Le cas vécu `wobble(Bass, browser) = \`courbe\``
+   * (forme CV/signal `name(cible, transport)=courbe`) n'est PAS une macro valide :
+   * sa syntaxe est en attente d'arbitrage Romain (A/B) — d'ici là, elle CRIE.
+   */
+  function checkMacroParamsUsed(macroName, params, body, tok) {
+    if (!params || params.length === 0) return;
+    const used = macroBodyMentions(body);
+    const unused = params.filter((p) => !used.has(p));
+    if (unused.length > 0) {
+      throw new ParseError(
+        `Macro '${macroName}' : paramètre(s) déclaré(s) mais absent(s) du corps : `
+        + `${unused.join(', ')}. Une macro est une substitution textuelle `
+        + `(EBNF §macro l.59/273) — chaque paramètre DOIT apparaître dans le corps `
+        + `(ex. accent(x) = x(vel:120)). Une déclaration name(cible, transport) = courbe `
+        + `(forme CV/signal) n'est pas une macro valide : syntaxe en attente d'arbitrage.`,
+        tok);
+    }
+  }
+
   function parseMacro() {
     const tok = current();
     const name = expect(T.IDENT).value;
@@ -1333,6 +1383,7 @@ function parse(tokens, opts = {}) {
     expect(T.RPAREN);
     expect(T.EQUALS);
     const body = parseRhsElements();
+    checkMacroParamsUsed(name, params, body, tok);
     return { type: 'Macro', name, params, body, line: tok.line };
   }
 

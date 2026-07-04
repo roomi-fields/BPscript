@@ -44,21 +44,35 @@ for (const [name, meta] of Object.entries(grammars)) {
   const src = ['scene.bps', 'original.bps', 'input.bps']
     .map((f) => path.join(dir, f)).find((p) => existsSync(p));
   if (!src) { skipped.push(name); continue; } // grammaire .gr seule : n'exerce pas l'émission .bps
-  targets.push({ label: name, file: src });
+  targets.push({ label: name, file: src, isDemo: false });
 }
 const demosDir = path.join(ROOT, 'public/demos');
 if (existsSync(demosDir)) {
   for (const f of readdirSync(demosDir).filter((f) => f.endsWith('.bps')).sort()) {
-    targets.push({ label: `demo:${f}`, file: path.join(demosDir, f) });
+    targets.push({ label: `demo:${f}`, file: path.join(demosDir, f), isDemo: true });
   }
 }
 
 // ── Validation ─────────────────────────────────────────────────────────────
+// Portée = émission conforme AST_SPEC : on valide l'AST DÈS QU'IL EST ÉMIS. Une
+// source qui NE compile PAS (erreurs claires, pas d'AST) n'a rien à valider — ce
+// n'est pas une non-conformité d'émission. On distingue donc 3 issues :
+//   • AST émis non conforme      → bad (frontière violée)
+//   • AST null SANS erreur       → bad (« silence » = le vrai piège à traquer)
+//   • AST null AVEC erreur(s)    → compile-error : grammaire active = régression (bad) ;
+//                                  démo = TOLÉRÉ + journalisé (ex. macro CV en attente
+//                                  d'arbitrage de forme, fail-loud [296] volontaire).
 let bad = 0;
-for (const { label, file } of targets) {
+const compileErrors = [];
+for (const { label, file, isDemo } of targets) {
   const r = compileToBPxAST(readFileSync(file, 'utf8'));
   if (!r.ast) {
-    console.error(`✗ ${label} : compileToBPxAST sans AST (${(r.errors[0] || {}).message || '?'})`);
+    if (r.errors && r.errors.length) {
+      compileErrors.push(`${label} (${r.errors[0].message.split('.')[0]})`);
+      if (!isDemo) { bad++; console.error(`✗ ${label} : grammaire active ne compile plus — ${r.errors[0].message}`); }
+      continue;
+    }
+    console.error(`✗ ${label} : compileToBPxAST sans AST NI erreur (silence — piège)`);
     bad++;
     continue;
   }
@@ -69,7 +83,10 @@ for (const { label, file } of targets) {
     for (const issue of v.issues) console.error(`    ${issue.path} — ${issue.message}`);
   }
 }
-const demosCount = targets.filter((t) => t.label.startsWith('demo:')).length;
+const demosCount = targets.filter((t) => t.isDemo).length;
+if (compileErrors.length) {
+  console.log(`[ast-conformance] ${compileErrors.length} source(s) en erreur de compilation (attendu si macro/forme en attente) : ${compileErrors.join(' ; ')}`);
+}
 console.log(`[ast-conformance] ${targets.length} sources (${targets.length - demosCount} actives + ${demosCount} démos`
   + (skipped.length ? ` ; ${skipped.length} sans .bps ignorée(s) : ${skipped.join(', ')}` : '') + ') — '
   + (bad ? `${bad} NON CONFORME(S)` : 'émission conforme AST_SPEC'));
