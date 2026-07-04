@@ -131,9 +131,11 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
 *)
 
 actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc, eval.strudel ... *)
-(* eval — interpréteur du code encapsulé (backticks). L'IDENT est LIBRE (clé d'interpréteur),
-   pas une liste fermée ; null = même clé que transport. Le code interprété est TOUJOURS transporté
-   vers le `transport` (appareil) de la voix. Tag de backtick = même espace de noms d'interpréteur. *)
+(* eval — interpréteur PAR DÉFAUT de l'acteur (clé d'interpréteur libre, pas une liste fermée).
+   Le code interprété est TOUJOURS transporté vers le `transport` (appareil) de la voix. Depuis la
+   décision CV-curve 2026-07-04, le TAG du backtick (obligatoire, cf. §4.13) type le langage de CHAQUE
+   backtick explicitement — il n'est plus DÉDUIT de `eval` en silence (fail-loud). `eval` reste
+   l'appartenance de voix-code de l'acteur ; même espace de noms de clés d'interpréteur que les tags. *)
 
 
 param_pairs = param_pair , { "," , param_pair } ;
@@ -892,9 +894,17 @@ Symétrie LHS/RHS :
 ### 4.13 Backticks
 
 ```ebnf
-backtick_inline     = "`" , CODE , "`" ;             (* dans un paramètre — valeur calculée *)
+backtick_inline     = "`" , IDENT , ":" , CODE , "`" ; (* dans un paramètre — valeur calculée, taggée *)
 backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux — terminal de plein droit, taggé *)
 ```
+
+**TAG DE LANGAGE OBLIGATOIRE (décision hub `2026-07-04-cv-curve-syntaxe-backtick-type.md`,
+fail-loud Romain).** TOUT backtick — orphelin, de flux (`backtick_standalone`), de paramètre
+(`backtick_inline`) ou de courbe CV (`cv_body`) — porte un `IDENT ":"` en tête = la **clé
+d'interprète** (`js`, `ts`, `python`, `sc`, `strudel`, `hydra`…). Un backtick **sans tag** est
+**ambigu** (langage inconnu) → **erreur claire au parse**, JAMAIS de langage deviné (l'ancienne
+règle « backtick non taggé hérite de l'`eval` de l'acteur » est **supersédée**). Le tag type le
+**langage** ; le mot-clé `cv` type le **rôle** (modulation) — orthogonaux, tous deux requis.
 
 Le backtick autonome est un **terminal de plein droit** du RHS (cf. `element_core` et
 `BacktickStandalone` dans AST.md) : il occupe une position dans le flux au même titre qu'une note.

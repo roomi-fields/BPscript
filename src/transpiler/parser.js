@@ -1261,13 +1261,14 @@ function parse(tokens, opts = {}) {
    * @returns CVInstance { name, lib, objectType, args, namedArgs, code }
    */
   function parseCVModulator(name, tok) {
-    // Backtick : `cv custom : `js: …``
+    // Backtick : `cv custom : `js: …`` — tag OBLIGATOIRE (langage de la courbe).
     if (at(T.BACKTICK)) {
-      const code = advance().value;
+      const btTok = current();
+      const { tag, code } = splitBacktickTag(advance().value, btTok);
       return {
         type: 'CVInstance', name,
         lib: null, objectType: 'backtick', args: [], namedArgs: {},
-        code, line: tok.line,
+        tag, code, line: tok.line,
       };
     }
     // lib.objectType(args…)
@@ -1391,13 +1392,31 @@ function parse(tokens, opts = {}) {
   // Backtick orphan
   // ============================================================
 
+  /**
+   * Sépare le TAG de langage (clé d'interprète) du CODE d'un backtick et rend le
+   * tag OBLIGATOIRE (décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md ;
+   * fail-loud Romain). Un backtick sans tag valide (un identifiant AVANT le premier
+   * `:`, ex. `js:`, `sc:`, `python:`) est AMBIGU (langage inconnu) → erreur claire,
+   * JAMAIS de langage deviné. EBNF §backtick l.134-136 (tag = espace de noms
+   * d'interprète). S'applique à TOUS les backticks (orphelin, RHS, arg, courbe cv).
+   */
+  function splitBacktickTag(raw, tok) {
+    const colonIdx = raw.indexOf(':');
+    const tag = colonIdx > 0 ? raw.slice(0, colonIdx).trim() : '';
+    if (!/^[A-Za-z][\w+-]*$/.test(tag)) {
+      throw new ParseError(
+        `Backtick sans tag de langage : \`${raw.slice(0, 30)}${raw.length > 30 ? '…' : ''}\` — le `
+        + `TAG d'interprète est OBLIGATOIRE (ex. \`js: …\`, \`sc: …\`, \`python: …\`). `
+        + `Jamais de langage deviné (EBNF §backtick l.134-136 ; décision CV-curve 2026-07-04).`,
+        tok);
+    }
+    return { tag, code: raw.slice(colonIdx + 1).trim() };
+  }
+
   function parseBacktickOrphan() {
     const tok = current();
     const raw = expect(T.BACKTICK).value;
-    const colonIdx = raw.indexOf(':');
-    if (colonIdx === -1) throw new ParseError('Orphan backtick must be tagged (sc:, py:, tidal:)', tok);
-    const tag = raw.substring(0, colonIdx).trim();
-    const code = raw.substring(colonIdx + 1).trim();
+    const { tag, code } = splitBacktickTag(raw, tok);
     return { type: 'BacktickOrphan', tag, code, line: tok.line };
   }
 
@@ -2502,14 +2521,11 @@ function parse(tokens, opts = {}) {
       return parseContext();
     }
 
-    // Backtick standalone (tagged)
+    // Backtick standalone — tag de langage OBLIGATOIRE (fail-loud, décision CV-curve).
     if (at(T.BACKTICK)) {
-      const raw = advance().value;
-      const colonIdx = raw.indexOf(':');
-      if (colonIdx > 0) {
-        return { type: 'BacktickStandalone', tag: raw.substring(0, colonIdx).trim(), code: raw.substring(colonIdx + 1).trim(), line: tok.line };
-      }
-      return { type: 'BacktickInline', code: raw, tag: null };
+      const btTok = current();
+      const { tag, code } = splitBacktickTag(advance().value, btTok);
+      return { type: 'BacktickStandalone', tag, code, line: tok.line };
     }
 
     // Numeric duration: INT or INT/INT
@@ -2636,8 +2652,9 @@ function parse(tokens, opts = {}) {
       }
       let value;
       if (at(T.BACKTICK)) {
-        const raw = advance().value;
-        value = { type: 'BacktickInline', code: raw, tag: null };
+        const btTok = current();
+        const { tag, code } = splitBacktickTag(advance().value, btTok);
+        value = { type: 'BacktickInline', code, tag };
       } else if (at(T.INT)) {
         value = { type: 'Literal', value: Number(advance().value) };
       } else if (at(T.FLOAT)) {

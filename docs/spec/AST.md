@@ -621,7 +621,8 @@ CVInstance {
   objectType: string                // type d'objet ("adsr", "lfo", "ramp", "backtick")
   args: (number | string)[]         // arguments positionnels
   namedArgs: { [key: string]: any } // arguments nommés (attack:10, rate:4)
-  code: string | null               // code backtick (si objectType == "backtick")
+  tag: string | null                // clé d'interprète du backtick ("js", "sc"…) — OBLIGATOIRE si backtick
+  code: string | null               // code backtick SANS le tag (si objectType == "backtick")
   line: number
 }
 ```
@@ -635,11 +636,17 @@ des anciennes formes sont supprimés.
 Exemples :
 - `cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)`
   -> `{ name:"env1", lib:"mod", objectType:"adsr", args:[], namedArgs:{attack:5, decay:150, sustain:0.2, release:400}, code:null }`
-- `` cv custom : `js: new Float32Array(...)` ``
-  -> `{ name:"custom", lib:null, objectType:"backtick", args:[], namedArgs:{}, code:"js: new Float32Array(...)" }`
+- `` cv wobble : `js: (t,dur)=>…` ``
+  -> `{ name:"wobble", lib:null, objectType:"backtick", tag:"js", code:"(t,dur)=>…", args:[], namedArgs:{} }`
 
-Le **branchement** `Bass -> … (cutoff: env1)` n'est PAS dans la CVInstance : c'est une paire du
-`RuntimeQualifier` de la note/règle/groupe (`{ key:"cutoff", value:"env1" }`), résolue en aval.
+Le **tag** du backtick (`js:`) est **OBLIGATOIRE** (décision hub
+`2026-07-04-cv-curve-syntaxe-backtick-type.md`, fail-loud) : il type le **langage** de la courbe,
+séparé du `code` (le tag n'est plus laissé dans `code`). Le mot-clé `cv` type le **rôle**
+(modulation) — orthogonaux. Un backtick sans tag = erreur claire au parse (cf. EBNF §4.13).
+
+Le **branchement** `Bass -> C2(cutoff: wobble)` n'est PAS dans la CVInstance : c'est une paire du
+`RuntimeQualifier` de la note/règle/groupe (`{ key:"cutoff", value:"wobble" }`), portée en
+`payload.params.cutoff` et résolue en aval (le nom réfère la CVInstance déclarée).
 
 ---
 
@@ -1150,10 +1157,16 @@ Peut porter des flags via `Rule.flags` : `lambda [Num_a=20, Num_b=0]`.
 ### `BacktickInline` / `BacktickStandalone` / `BacktickOrphan`
 
 ```
-BacktickInline { type: "BacktickInline", code: string, tag: string | null }
+BacktickInline { type: "BacktickInline", code: string, tag: string }
 BacktickStandalone { type: "BacktickStandalone", tag: string, code: string, line: number }
 BacktickOrphan { type: "BacktickOrphan", tag: string, code: string, line: number }
 ```
+
+**Le `tag` est OBLIGATOIRE sur les TROIS** (décision hub
+`2026-07-04-cv-curve-syntaxe-backtick-type.md`, fail-loud) : un backtick sans clé d'interprète
+(`\`js: …\``, `\`sc: …\``) lève une erreur claire au parse — jamais de langage deviné, plus
+d'héritage silencieux depuis l'`eval` de l'acteur (cf. EBNF §4.13). Le `code` ne contient plus le
+tag (séparé à l'analyse).
 
 `BacktickStandalone` est un **terminal de plein droit** du RHS (membre de `RhsElement` /
 `element_core`) : il occupe une position dans le flux comme une note. Le `tag` désigne
