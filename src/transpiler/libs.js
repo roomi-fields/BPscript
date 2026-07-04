@@ -343,6 +343,18 @@ function loadLibsFromDirectives(directives) {
     }
   }
 
+  // SCENE_VALUES (bug kairos [308]) : les valeurs des CATALOGUES DE HAUTEUR (diapason…)
+  // sont TOUJOURS connues du registre — indépendamment de @tuning. Sinon `@diapason:N`
+  // dans une scène SANS @tuning (ex. cv-adsr.bps) serait perdu en SILENCE : ni pli ni
+  // erreur, double violation de SCENE_VALUES_OVERRIDE.md §3.2 (registre) / §3.3 (nom
+  // inconnu = erreur claire) et de la loi « rien ne disparaît en silence ». Chargées
+  // comme settings/modulation (toujours). APRÈS la boucle : controlNames peuplé (le
+  // garde de collision nom-réservé/contrôle fonctionne). Un futur catalogue de valeurs
+  // rejoint cette liste — la valeur elle-même reste 1 entrée JSON, zéro code.
+  for (const cat of ['tunings']) {
+    mergeValueRegistry(loadJsonFile(cat), 'tuning');
+  }
+
   // Generate terminals from deferred alphabets (after all directives processed)
   // Octave convention is now fully resolved (alphabet default + @octaves override)
   const octaveDef = ctx._octaveConvention
