@@ -80,6 +80,27 @@ function annotateBackticks(ast) {
     const evalKey = actorEval[lhsHead(rule.lhs)];
     if (evalKey) resolve(rule.rhs, evalKey);
   }
+
+  // 3. FAIL-LOUD orphelin (décision CV-curve 2026-07-04 + ajustement [299]) : un backtick
+  //    de flux resté `interp:'auto'` n'a NI tag NI eval d'acteur en tête → langage inconnu,
+  //    jamais deviné. Erreur claire (non fatale : l'AST reste produit, Kanopi l'affiche).
+  const errors = [];
+  const scanOrphans = (els) => {
+    for (const el of els || []) {
+      if (!el || typeof el !== 'object') continue;
+      if (isBt(el) && el.payload && el.payload.interp === 'auto') {
+        errors.push({
+          message: `Backtick sans langage : ni tag (\`js: …\`) ni acteur voix-code (@actor … eval.X) `
+                 + `en tête de règle — le langage doit être connu, jamais deviné (décision CV-curve [299]).`,
+          line: el.line,
+        });
+      }
+      if (el.elements) scanOrphans(el.elements);
+      if (el.voices) for (const v of el.voices) scanOrphans(v);
+    }
+  };
+  for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) scanOrphans(rule.rhs);
+  return errors;
 }
 
 /**
@@ -655,7 +676,7 @@ export function compileToBPxAST(source, environnement) {
     // synthétique `default` n'a pas d'alphabet (faux « no alphabet property » sinon).
     result.errors.push(...resolveActors(ast).errors);
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
-    annotateBackticks(ast);   // _btName en tête + payload.interp/nature:'code' sur les nœuds backtick
+    result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     applyDefaultActor(ast);   // acteur implicite `default` si aucun @actor (LAN-5 / KAI-9)
     result.ast = ast;

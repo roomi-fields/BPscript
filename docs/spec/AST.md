@@ -621,7 +621,7 @@ CVInstance {
   objectType: string                // type d'objet ("adsr", "lfo", "ramp", "backtick")
   args: (number | string)[]         // arguments positionnels
   namedArgs: { [key: string]: any } // arguments nommés (attack:10, rate:4)
-  tag: string | null                // clé d'interprète du backtick ("js", "sc"…) — OBLIGATOIRE si backtick
+  tag: string                       // clé d'interprète du backtick ("js", "sc"…) — OBLIGATOIRE (cv = orphelin)
   code: string | null               // code backtick SANS le tag (si objectType == "backtick")
   line: number
 }
@@ -1157,16 +1157,18 @@ Peut porter des flags via `Rule.flags` : `lambda [Num_a=20, Num_b=0]`.
 ### `BacktickInline` / `BacktickStandalone` / `BacktickOrphan`
 
 ```
-BacktickInline { type: "BacktickInline", code: string, tag: string }
+BacktickInline { type: "BacktickInline", code: string, tag: string | null }
 BacktickStandalone { type: "BacktickStandalone", tag: string, code: string, line: number }
 BacktickOrphan { type: "BacktickOrphan", tag: string, code: string, line: number }
 ```
 
-**Le `tag` est OBLIGATOIRE sur les TROIS** (décision hub
-`2026-07-04-cv-curve-syntaxe-backtick-type.md`, fail-loud) : un backtick sans clé d'interprète
-(`\`js: …\``, `\`sc: …\``) lève une erreur claire au parse — jamais de langage deviné, plus
-d'héritage silencieux depuis l'`eval` de l'acteur (cf. EBNF §4.13). Le `code` ne contient plus le
-tag (séparé à l'analyse).
+**Langage TOUJOURS connu — tag OU eval d'acteur, jamais deviné** (décision hub
+`2026-07-04-cv-curve-syntaxe-backtick-type.md` + ajustement [299]). `BacktickOrphan` (top-level) et
+la courbe `CVInstance` backtick EXIGENT un `tag` (erreur claire au parse sinon). Un backtick de flux
+(`BacktickStandalone`/`BacktickInline`) peut être NON taggé (`tag:null`) SSI la tête de sa règle est
+un `@actor … eval.X` : il **hérite** de X (résolu en `annotateBackticks` → `payload.interp`) ; un
+tag explicite l'override. Un flux non taggé SANS eval d'acteur en tête = **orphelin** → erreur claire
+à l'annotation. Le `code` ne contient jamais le tag (séparé à l'analyse).
 
 `BacktickStandalone` est un **terminal de plein droit** du RHS (membre de `RhsElement` /
 `element_core`) : il occupe une position dans le flux comme une note. Le `tag` désigne

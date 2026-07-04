@@ -1393,24 +1393,35 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   /**
-   * Sépare le TAG de langage (clé d'interprète) du CODE d'un backtick et rend le
-   * tag OBLIGATOIRE (décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md ;
-   * fail-loud Romain). Un backtick sans tag valide (un identifiant AVANT le premier
-   * `:`, ex. `js:`, `sc:`, `python:`) est AMBIGU (langage inconnu) → erreur claire,
-   * JAMAIS de langage deviné. EBNF §backtick l.134-136 (tag = espace de noms
-   * d'interprète). S'applique à TOUS les backticks (orphelin, RHS, arg, courbe cv).
+   * Sépare le TAG de langage (clé d'interprète) du CODE d'un backtick, SI présent.
+   * Le tag = un identifiant AVANT le premier `:` (`js:`, `sc:`, `python:`…). Retourne
+   * `null` si aucun tag valide (le `:` est alors dans le code, ou il n'y en a pas).
    */
-  function splitBacktickTag(raw, tok) {
+  function tryBacktickTag(raw) {
     const colonIdx = raw.indexOf(':');
     const tag = colonIdx > 0 ? raw.slice(0, colonIdx).trim() : '';
-    if (!/^[A-Za-z][\w+-]*$/.test(tag)) {
+    if (!/^[A-Za-z][\w+-]*$/.test(tag)) return null;
+    return { tag, code: raw.slice(colonIdx + 1).trim() };
+  }
+
+  /**
+   * Comme `tryBacktickTag`, mais le tag est OBLIGATOIRE : sites ORPHELINS où AUCUN
+   * héritage de langage n'est possible (backtick top-level, courbe `cv NAME : …`).
+   * Décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md + AJUSTEMENT [299] :
+   * le langage doit TOUJOURS être connu (tag OU eval d'acteur déclaré, jamais deviné) ;
+   * hors acteur-à-eval, seul le tag le donne → erreur claire sinon. Les backticks de
+   * FLUX (RHS/arg) sous un `@actor …eval.X` héritent de X (résolu en aval, annotateBackticks).
+   */
+  function splitBacktickTag(raw, tok) {
+    const t = tryBacktickTag(raw);
+    if (!t) {
       throw new ParseError(
-        `Backtick sans tag de langage : \`${raw.slice(0, 30)}${raw.length > 30 ? '…' : ''}\` — le `
-        + `TAG d'interprète est OBLIGATOIRE (ex. \`js: …\`, \`sc: …\`, \`python: …\`). `
-        + `Jamais de langage deviné (EBNF §backtick l.134-136 ; décision CV-curve 2026-07-04).`,
+        `Backtick orphelin sans tag de langage : \`${raw.slice(0, 30)}${raw.length > 30 ? '…' : ''}\` — le `
+        + `TAG d'interprète est OBLIGATOIRE hors voix-code d'acteur (ex. \`js: …\`, \`sc: …\`, `
+        + `\`python: …\`). Jamais de langage deviné (décision CV-curve 2026-07-04 + [299]).`,
         tok);
     }
-    return { tag, code: raw.slice(colonIdx + 1).trim() };
+    return t;
   }
 
   function parseBacktickOrphan() {
@@ -2521,11 +2532,14 @@ function parse(tokens, opts = {}) {
       return parseContext();
     }
 
-    // Backtick standalone — tag de langage OBLIGATOIRE (fail-loud, décision CV-curve).
+    // Backtick de FLUX : taggé → BacktickStandalone ; NON taggé → hérite du langage
+    // de l'acteur eval en tête de règle (résolu en annotateBackticks ; CRIE si orphelin).
+    // Ajustement [299] : héritage rétabli, borné à l'eval d'acteur déclaré.
     if (at(T.BACKTICK)) {
-      const btTok = current();
-      const { tag, code } = splitBacktickTag(advance().value, btTok);
-      return { type: 'BacktickStandalone', tag, code, line: tok.line };
+      const raw = advance().value;
+      const t = tryBacktickTag(raw);
+      if (t) return { type: 'BacktickStandalone', tag: t.tag, code: t.code, line: tok.line };
+      return { type: 'BacktickInline', code: raw, tag: null, line: tok.line };
     }
 
     // Numeric duration: INT or INT/INT
@@ -2652,9 +2666,11 @@ function parse(tokens, opts = {}) {
       }
       let value;
       if (at(T.BACKTICK)) {
-        const btTok = current();
-        const { tag, code } = splitBacktickTag(advance().value, btTok);
-        value = { type: 'BacktickInline', code, tag };
+        // Valeur calculée : taggée si tag présent, sinon héritage (résolu en aval).
+        const raw = advance().value;
+        const t = tryBacktickTag(raw);
+        value = t ? { type: 'BacktickInline', code: t.code, tag: t.tag }
+                  : { type: 'BacktickInline', code: raw, tag: null };
       } else if (at(T.INT)) {
         value = { type: 'Literal', value: Number(advance().value) };
       } else if (at(T.FLOAT)) {

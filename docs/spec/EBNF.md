@@ -132,10 +132,10 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
 
 actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc, eval.strudel ... *)
 (* eval — interpréteur PAR DÉFAUT de l'acteur (clé d'interpréteur libre, pas une liste fermée).
-   Le code interprété est TOUJOURS transporté vers le `transport` (appareil) de la voix. Depuis la
-   décision CV-curve 2026-07-04, le TAG du backtick (obligatoire, cf. §4.13) type le langage de CHAQUE
-   backtick explicitement — il n'est plus DÉDUIT de `eval` en silence (fail-loud). `eval` reste
-   l'appartenance de voix-code de l'acteur ; même espace de noms de clés d'interpréteur que les tags. *)
+   Le code interprété est TOUJOURS transporté vers le `transport` (appareil) de la voix. Un backtick
+   de flux dans une règle dont la tête est cet acteur HÉRITE de `eval` (langage connu sans tag) ; un
+   tag explicite l'override (cf. §4.13, décision CV-curve 2026-07-04 + [299]). Hors voix-code d'acteur,
+   le tag est obligatoire. Même espace de noms de clés d'interpréteur que les tags. *)
 
 
 param_pairs = param_pair , { "," , param_pair } ;
@@ -898,13 +898,18 @@ backtick_inline     = "`" , IDENT , ":" , CODE , "`" ; (* dans un paramètre —
 backtick_standalone = "`" , IDENT , ":" , CODE , "`" ; (* dans le flux — terminal de plein droit, taggé *)
 ```
 
-**TAG DE LANGAGE OBLIGATOIRE (décision hub `2026-07-04-cv-curve-syntaxe-backtick-type.md`,
-fail-loud Romain).** TOUT backtick — orphelin, de flux (`backtick_standalone`), de paramètre
-(`backtick_inline`) ou de courbe CV (`cv_body`) — porte un `IDENT ":"` en tête = la **clé
-d'interprète** (`js`, `ts`, `python`, `sc`, `strudel`, `hydra`…). Un backtick **sans tag** est
-**ambigu** (langage inconnu) → **erreur claire au parse**, JAMAIS de langage deviné (l'ancienne
-règle « backtick non taggé hérite de l'`eval` de l'acteur » est **supersédée**). Le tag type le
-**langage** ; le mot-clé `cv` type le **rôle** (modulation) — orthogonaux, tous deux requis.
+**LANGAGE TOUJOURS CONNU — tag OU eval d'acteur, jamais deviné** (décision hub
+`2026-07-04-cv-curve-syntaxe-backtick-type.md` + ajustement [299], Romain). Le langage d'un backtick
+est fixé par sa **clé d'interprète** (`js`, `ts`, `python`, `sc`, `strudel`, `hydra`…), obtenue de
+deux façons :
+- **TAG explicite** en tête (`` `js: …` ``) — requis, et **override** un eval hérité.
+- **HÉRITAGE** de l'`eval` d'un acteur : un backtick de FLUX (`backtick_standalone`/`backtick_inline`)
+  dans une règle dont la TÊTE est un `@actor … eval.X` **hérite de X** (tag facultatif dans ce cas).
+
+Un backtick **ORPHELIN** — top-level (`backtick_orphan`), courbe CV (`cv_body`), ou de flux SANS
+eval d'acteur en tête — **EXIGE un tag** : sans lui, langage inconnu → **erreur claire** (au parse
+pour les orphelins/cv ; à l'annotation pour un flux non résolu). JAMAIS de langage deviné. Le tag
+type le **langage** ; le mot-clé `cv` type le **rôle** (modulation) — orthogonaux.
 
 Le backtick autonome est un **terminal de plein droit** du RHS (cf. `element_core` et
 `BacktickStandalone` dans AST.md) : il occupe une position dans le flux au même titre qu'une note.
