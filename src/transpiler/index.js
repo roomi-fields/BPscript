@@ -14,6 +14,7 @@ import { encode } from './encoder.js';
 import { generatePrototypes } from './prototypes.js';
 import { resolveActors } from './actorResolver.js';
 import { compileToBPxAST } from './bpxAst.js';
+import { describeVocabulary } from './libs.js';
 
 function compileBPS(source) {
   const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [], warnings: [] };
@@ -82,4 +83,6 @@ function compileBPS(source) {
   return result;
 }
 
-export { compileBPS, compileToBPxAST };
+// describeVocabulary : autorité du vocabulaire du langage pour l'éditeur Kanopi
+// (coloration/autocomplétion/erreurs) — même agrégation que le garde de compilation.
+export { compileBPS, compileToBPxAST, describeVocabulary };

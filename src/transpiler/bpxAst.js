@@ -19,7 +19,7 @@
 
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives, loadLib } from './libs.js';
+import { loadLibsFromDirectives, loadLib, describeVocabulary } from './libs.js';
 import { resolveActors } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
@@ -697,6 +697,72 @@ function applySceneValues(ast, libCtx) {
   return errors;
 }
 
+/**
+ * FAIL-FAST à la COMPILATION (règle Romain 2026-07-04, langages bien faits) : toute
+ * référence dont l'info est disponible ici DOIT être vérifiée ici, pas reportée à la
+ * dérivation. Une référence — VALEUR (`@X:v`, occurrence `(k:v)`) ou COMPOSANT
+ * (`@alphabet.X`, `@tuning.X`, `@octaves.X`) — qui n'existe pas dans les librairies
+ * chargées → ERREUR CLAIRE (nom fautif). Kairos garde son filet défensif en aval.
+ * ZÉRO HARDCODE : tout le vocabulaire (contrôles/valeurs/fonctions/adresses/axes) vient
+ * des libs chargées + du schéma @core → une user library l'étend automatiquement.
+ * @returns {Array<{message, line?, col?}>}
+ */
+function validateReferences(ast) {
+  const errors = [];
+  // Univers de référence = MÊME vocabulaire que celui exposé à Kanopi (une seule source
+  // de vérité) : agrégat de TOUTES les libs disponibles. Un mot usable est valide.
+  const vocab = describeVocabulary();
+  const controlNames = new Set(vocab.controls.map((c) => c.name));
+  const registry = new Set(vocab.values.map((v) => v.name));
+  const modInputs = new Set(vocab.modulationInputs);
+  const reserved = new Set(vocab.keywords);
+  const digitalFns = new Set(vocab.functions);
+  const addressKeys = new Set(vocab.addressKeys);
+  const catalogAxes = Object.keys(vocab.components);
+  const componentExists = (axis, name) => (vocab.components[axis] || []).includes(name);
+
+  // 1. Occurrence / paramètres `(k:v)` — clé connue = contrôle ∪ valeur ∪ entrée modulation ∪
+  //    adresse ∪ fonction digitale. Les paires d'occurrence vivent dans `payload.params`
+  //    (note ou groupe/règle, foldées par le parser) ET dans les `RuntimeQualifier.pairs`.
+  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k);
+  const seen = new Set();
+  const flag = (key, line, col) => {
+    const id = key + ':' + (line || 0);
+    if (seen.has(id) || knownParamKey(key)) return;
+    seen.add(id);
+    errors.push({ message: `attribut '(${key}:…)' inconnu — ni contrôle, ni valeur de librairie, ni entrée de modulation, ni adresse`, line, col });
+  };
+  (function collect(node) {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { for (const el of node) collect(el); return; }
+    if (node.payload && node.payload.params) for (const k of Object.keys(node.payload.params)) flag(k, node.line);
+    if (node.type === 'RuntimeQualifier' && Array.isArray(node.pairs)) for (const p of node.pairs) flag(p.key, p.line, p.col);
+    for (const k in node) { if (k !== 'params' && node[k] && typeof node[k] === 'object') collect(node[k]); }
+  })(ast.subgrammars);
+
+  // 2. Existence d'un COMPOSANT référencé dans un axe à catalogue.
+  const checkComponent = (axis, name, line) => {
+    if (!name) return;
+    if (!componentExists(axis, name)) errors.push({ message: `${axis} '${name}' introuvable dans le catalogue (référence inexistante)`, line });
+  };
+
+  // 3. Directives de scène : invocation de composant (@axis.X) OU override de valeur (@X:v).
+  for (const d of ast.directives || []) {
+    if (d.subkey && catalogAxes.includes(d.name)) { checkComponent(d.name, d.subkey, d.line); continue; }
+    if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name)) {
+      errors.push({ message: `valeur '@${d.name}:…' inconnue — non déclarée par une librairie chargée`, line: d.line });
+    }
+  }
+
+  // 4. Références d'entité des ACTEURS (axes à catalogue) → existence catalogue.
+  for (const actor of ast.actors || []) {
+    const props = actor.properties || {};
+    for (const axis of catalogAxes) if (props[axis]) checkComponent(axis, props[axis], actor.line);
+  }
+
+  return errors;
+}
+
 export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
@@ -726,6 +792,7 @@ export function compileToBPxAST(source, environnement) {
     ];
     const libCtx = loadLibsFromDirectives(directives);
     result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
+    result.errors.push(...validateReferences(ast)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
 

@@ -138,20 +138,23 @@ function loadLibsFromDirectives(directives) {
     valueRegistryErrors: [],  // collisions de noms (réservés/contrôles) — remontées à l'émission
   };
 
-  // Noms interdits au registre de valeurs : directives moteur/structure existantes
-  // (une valeur portée ne peut pas partager le nom d'un réglage interprété — doc
-  // SCENE_VALUES_OVERRIDE.md §3.6) ; les noms de contrôles sont vérifiés au merge.
-  const RESERVED_VALUE_NAMES = new Set([
-    'mode', 'mm', 'tempo', 'seed', 'maxitems', 'duration', 'meter', 'scan', 'weight',
-    'speed', 'on_fail', 'scale', 'flag', 'scene', 'expose', 'map', 'alphabet',
-    'tuning', 'octaves', 'transport', 'sound', 'eval', 'actor', 'core', 'controls',
-    'quantization', 'qclock', 'timepatterns', 'ins', 'transpose', 'library',
-  ]);
+  // SOCLE @core + SCHÉMA du langage — chargés en DONNÉE, plus aucune liste en dur (Romain
+  // 2026-07-05, prépare user libraries + partage du vocabulaire à Kanopi). @core.schema
+  // déclare : `reservedDirectives` (mots de directive du langage, non-valeurs), `addressKeys`
+  // (clés d'adresse de sortie), `catalogAxes` (axes dont les valeurs sont des entrées de
+  // catalogue). @core.defaults porte les valeurs/composants par défaut (cascade).
+  const coreLib = loadJsonFile('core') || {};
+  const schema = coreLib.schema || {};
+  ctx.reservedDirectiveNames = new Set(schema.reservedDirectives || []);
+  ctx.addressKeys = new Set(schema.addressKeys || []);
+  ctx.catalogAxes = Array.isArray(schema.catalogAxes) ? schema.catalogAxes.slice() : [];
+  ctx.defaultComponents = (coreLib.defaults && coreLib.defaults.components) || {};
+
   const mergeValueRegistry = (file, axis) => {
     if (!file || !file.values || typeof file.values !== 'object') return;
     for (const [vname, spec] of Object.entries(file.values)) {
       if (vname.startsWith('_') || !spec || typeof spec !== 'object') continue;
-      if (RESERVED_VALUE_NAMES.has(vname) || ctx.controlNames.has(vname)) {
+      if (ctx.reservedDirectiveNames.has(vname) || ctx.controlNames.has(vname)) {
         ctx.valueRegistryErrors.push({
           message: `Valeur de librairie '${vname}' : nom réservé (directive moteur ou contrôle existant) — renommer dans la librairie`,
         });
@@ -161,20 +164,19 @@ function loadLibsFromDirectives(directives) {
     }
   };
 
-  // SOCLE des défauts de scène (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04).
-  // @core porte TOUTES les valeurs par défaut — TOUJOURS chargé (racine, comme settings/
-  // modulation). `defaults.values` (diapason…) entrent au registre AVEC leur défaut socle ;
-  // `defaults.components` (alphabet/tuning/octaves/transport par défaut) informent la
-  // résolution d'override (une lib invoquée recouvre le socle via `spec.overriddenBy`).
-  // Générique : on itère @core, aucune valeur codée dans le code.
-  const coreLib = loadJsonFile('core');
-  ctx.defaultComponents = (coreLib && coreLib.defaults && coreLib.defaults.components) || {};
-  if (coreLib && coreLib.defaults && coreLib.defaults.values) {
+  // @core.defaults.values : valeurs socle (diapason…) au registre (le nom `diapason` est
+  // dans reservedDirectives pour bloquer une collision de lib, mais le socle @core le pose ici).
+  if (coreLib.defaults && coreLib.defaults.values) {
     for (const [vname, spec] of Object.entries(coreLib.defaults.values)) {
       if (vname.startsWith('_') || !spec || typeof spec !== 'object') continue;
       ctx.valueRegistry[vname] = { ...spec, _axis: null };
     }
   }
+
+  // Fonctions DIGITALES/dispatcher (transpose, rotate, keyxpand…) — toujours disponibles,
+  // indépendantes de @controls. Source : digital.json (générique — une fonction ajoutée = reconnue).
+  const digitalLib = loadJsonFile('digital');
+  ctx.digitalFunctions = new Set(Object.keys((digitalLib && digitalLib.objects) || {}));
 
   // Always load settings (engine defaults)
   const settingsLib = loadLib('settings');
@@ -394,4 +396,59 @@ function loadLibsFromDirectives(directives) {
   return ctx;
 }
 
-export { loadLib, loadLibsFromDirectives, registerLib, registerAll, clearRegistry };
+/**
+ * VOCABULAIRE du langage — autorité UNIQUE, à destination de l'ÉDITEUR (Kanopi :
+ * coloration syntaxique, autocomplétion, surlignage d'erreurs) ET du garde de
+ * compilation (même agrégation, une seule source de vérité). Romain 2026-07-05.
+ *
+ * TOUT est agrégé depuis les libs chargées + le schéma @core — ZÉRO liste en dur,
+ * ZÉRO lib nommée en dur. Une user library ajoutée = ses mots entrent ici
+ * automatiquement (contrôles, valeurs, fonctions, entrées de catalogue).
+ *
+ * UNIVERS COMPLET : agrège TOUTES les librairies disponibles (registre = built-in +
+ * user libs à venir), pas seulement celles que la scène invoque — un mot USABLE est
+ * valide qu'on ait chargé sa lib ou non (principe Romain). `directives` est accepté
+ * pour compat/future portée mais le vocabulaire renvoyé couvre tout le disponible.
+ * @param {Array} [directives]  (optionnel) directives de la scène.
+ * @returns {{
+ *   keywords: string[],                       // mots du LANGAGE (réservés) — non des libs
+ *   controls: Array<{name, args?, range?, values?, default?, description?, transportGroup?}>,
+ *   values:   Array<{name, range?, unit?, values?, description?}>,
+ *   functions: string[],                      // fonctions digitales (transpose…)
+ *   components: { [axis:string]: string[] },  // entrées de catalogue par axe (alphabets, accordages…)
+ *   addressKeys: string[],
+ *   modulationInputs: string[]
+ * }}
+ */
+function describeVocabulary(directives = []) {
+  // Univers COMPLET : toutes les libs du registre (built-in + user), pas seulement la scène.
+  const allDirs = Object.keys(registry).map((name) => ({ name }));
+  const ctx = loadLibsFromDirectives(allDirs);
+  const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
+  const META = new Set(['name', 'description', 'version']);
+  const components = {};
+  for (const axis of ctx.catalogAxes) {
+    const file = loadLib(axis);
+    components[axis] = file
+      ? Object.keys(file).filter((k) => !k.startsWith('_') && !META.has(k) && isEntry(file[k]))
+      : [];
+  }
+  const pick = (def, keys) => {
+    const o = {};
+    for (const k of keys) if (def[k] !== undefined) o[k] = def[k];
+    return o;
+  };
+  return {
+    keywords: [...ctx.reservedDirectiveNames],
+    controls: Object.entries(ctx.controls).map(([name, def]) =>
+      ({ name, ...pick(def || {}, ['args', 'range', 'values', 'default', 'description', 'transportGroup']) })),
+    values: Object.entries(ctx.valueRegistry).map(([name, spec]) =>
+      ({ name, ...pick(spec || {}, ['range', 'unit', 'values', 'description']) })),
+    functions: [...ctx.digitalFunctions],
+    components,
+    addressKeys: [...ctx.addressKeys],
+    modulationInputs: [...ctx.modulationInputsAll],
+  };
+}
+
+export { loadLib, loadLibsFromDirectives, describeVocabulary, registerLib, registerAll, clearRegistry };
