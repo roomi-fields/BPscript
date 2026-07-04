@@ -1,0 +1,36 @@
+{
+  "name": "language",
+  "description": "BPscript — schéma MACHINE du langage : mots/opérateurs de syntaxe + valeurs autorisées des directives à enum. Autorité UNIQUE du vocabulaire syntaxe pour l'éditeur Kanopi (via describeVocabulary). Distinct des libs de contenu (contrôles/valeurs/catalogues, agrégées à part). Doc humaine : editor/reference.json.",
+  "version": "0.1.0",
+  "directiveValues": {
+    "mode": {
+      "description": "Mode de dérivation du sous-grammaire suivant",
+      "values": [
+        { "name": "ord", "description": "Ordonné — règles appliquées séquentiellement (défaut)" },
+        { "name": "random", "description": "Aléatoire — sélection pondérée" },
+        { "name": "lin", "description": "Linéaire — bouclage cyclique" },
+        { "name": "sub", "description": "Substitution — remplacement simultané de toutes les occurrences" },
+        { "name": "sub1", "description": "Substitution du premier — occurrence la plus à gauche seulement" },
+        { "name": "tem", "description": "Template — appariement structurel" },
+        { "name": "poslong", "description": "Positional longest — plus longue correspondance d'abord" }
+      ]
+    },
+    "scan": {
+      "description": "Placement de la règle candidate dans le contexte",
+      "values": [
+        { "name": "left", "description": "Argument gauche" },
+        { "name": "right", "description": "Argument droit" },
+        { "name": "rnd", "description": "Aléatoire" }
+      ]
+    }
+  },
+  "syntaxWords": {
+    "gate": { "kind": "keyword", "description": "Type temporel : occupe le temps (notes, samples, tout événement de durée)", "syntax": "gate name:actor" },
+    "trigger": { "kind": "keyword", "description": "Type temporel : événement instantané, sans durée (frappes, événements MIDI, triggers de signal)", "syntax": "trigger name:actor" },
+    "cv": { "kind": "keyword", "description": "Déclare un modulateur à valeur continue (ADSR, LFO, rampe), purement descriptif", "syntax": "cv name : mod.type(params)" },
+    "lambda": { "kind": "keyword", "description": "Efface le non-terminal (production epsilon) : le symbole disparaît de la dérivation", "syntax": "S -> lambda" },
+    "->": { "kind": "operator", "description": "Règle de production : le membre gauche est réécrit en membre droit (défaut gauche→droite)", "syntax": "LHS -> RHS" },
+    "<-": { "kind": "operator", "description": "Règle d'analyse : la séquence droite est réduite au symbole gauche (droite→gauche)", "syntax": "LHS <- RHS" },
+    "<>": { "kind": "operator", "description": "Règle bidirectionnelle : production ET analyse", "syntax": "LHS <> RHS" }
+  }
+}

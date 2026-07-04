@@ -417,7 +417,9 @@ function loadLibsFromDirectives(directives) {
  *   functions: string[],                      // fonctions digitales (transpose…)
  *   components: { [axis:string]: string[] },  // entrées de catalogue par axe (alphabets, accordages…)
  *   addressKeys: string[],
- *   modulationInputs: string[]
+ *   modulationInputs: string[],
+ *   directiveValues: { [directive:string]: {description?, values: [{name, description?}]} },  // enums (@mode:…, @scan:…)
+ *   syntaxWords: { [word:string]: {kind, description?, syntax?} }                              // gate/trigger/cv/lambda, ->/<-/<>
  * }}
  */
 function describeVocabulary(directives = []) {
@@ -438,6 +440,8 @@ function describeVocabulary(directives = []) {
     for (const k of keys) if (def[k] !== undefined) o[k] = def[k];
     return o;
   };
+  // Schéma SYNTAXE (mots/opérateurs + enums de directive) — lib `language.json`, autorité machine.
+  const langLib = loadJsonFile('language') || {};
   return {
     keywords: [...ctx.reservedDirectiveNames],
     controls: Object.entries(ctx.controls).map(([name, def]) =>
@@ -448,6 +452,8 @@ function describeVocabulary(directives = []) {
     components,
     addressKeys: [...ctx.addressKeys],
     modulationInputs: [...ctx.modulationInputsAll],
+    directiveValues: langLib.directiveValues || {},
+    syntaxWords: langLib.syntaxWords || {},
   };
 }
 
