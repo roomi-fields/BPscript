@@ -7,18 +7,15 @@
     "  degrees      — which steps in the temperament grid the alphabet notes land on",
     "                  (ordered to match the notes[] array in the alphabet)",
     "  alterations  — named pitch modifications as ratios (fraction, decimal, or cents)",
-    "  diapason     — reference frequency (Hz)",
-    "  baseNote     — which note has that frequency",
-    "  baseRegister — in which register (octave convention index)",
     "",
     "Alteration formats (same 3 as temperament ratios):",
     "  Fraction : \"25/24\"",
     "  Decimal  : 1.02930",
     "  Cents    : \"50c\"",
     "",
-    "Legacy BP3 scales are preserved in tuning.json for backward compatibility."
+    "Legacy BP3 scales are preserved in tuning.json for backward compatibility.",
+    "L'ANCRE (diapason/baseNote/baseRegister) vit sur l'ALPHABET (lib/alphabets.json), pas ici — elle est invariante par alphabet (cf. docs/design/SCENE_DEFAULTS_CASCADE.md). Un accordage ne la redeclare qu'en override exceptionnel (pitch historique)."
   ],
-  "_diapason_note": "Le champ `diapason` de chaque accordage est la SOURCE d'override du diapason (socle @core.defaults.values.diapason, overriddenBy: tuning.diapason — voir docs/design/SCENE_DEFAULTS_CASCADE.md). La spec du diapason (défaut/plage) vit dans @core, plus ici.",
   "western_12TET": {
     "description": "Standard Western equal temperament",
     "alphabet": "western",
@@ -37,10 +34,7 @@
       "#": "100c",
       "bb": "-200c",
       "##": "200c"
-    },
-    "diapason": 440,
-    "baseNote": "A",
-    "baseRegister": 4
+    }
   },
   "western_pythagorean": {
     "description": "Western in Pythagorean tuning — pure fifths",
@@ -60,10 +54,7 @@
       "b": "2048/2187",
       "##": "4782969/4194304",
       "bb": "4194304/4782969"
-    },
-    "diapason": 440,
-    "baseNote": "A",
-    "baseRegister": 4
+    }
   },
   "western_just": {
     "description": "Western in 5-limit just intonation",
@@ -83,10 +74,7 @@
       "b": "24/25",
       "##": "625/576",
       "bb": "576/625"
-    },
-    "diapason": 440,
-    "baseNote": "A",
-    "baseRegister": 4
+    }
   },
   "western_meantone": {
     "description": "Western in 1/4-comma meantone",
@@ -106,10 +94,7 @@
       "b": "-76c",
       "##": "152c",
       "bb": "-152c"
-    },
-    "diapason": 440,
-    "baseNote": "A",
-    "baseRegister": 4
+    }
   },
   "sargam_12TET": {
     "description": "Indian sargam in 12-TET (simplified, equal temperament)",
@@ -128,9 +113,6 @@
       "komal": "-100c",
       "tivra": "100c"
     },
-    "diapason": 240,
-    "baseNote": "sa",
-    "baseRegister": 1,
     "_note": "diapason (Hz) for sa is tradition-dependent. 240 Hz is a common default."
   },
   "sargam_22shruti": {
@@ -154,10 +136,7 @@
       "In 22-shruti, komal/tivra shift by ~2 shruti steps but the exact ratio",
       "depends on which note is altered. These ratios are representative defaults.",
       "Raga-specific tunings may override with exact shruti positions."
-    ],
-    "diapason": 240,
-    "baseNote": "sa",
-    "baseRegister": 1
+    ]
   },
   "solfege_12TET": {
     "description": "Solfège latin in 12-TET",
@@ -177,10 +156,7 @@
       "#": "100c",
       "bb": "-200c",
       "##": "200c"
-    },
-    "diapason": 440,
-    "baseNote": "la",
-    "baseRegister": 4
+    }
   },
   "arabic_24TET": {
     "description": "Arabic maqam system — quarter-tone grid",
@@ -203,9 +179,6 @@
       "bb": "-200c",
       "##": "200c"
     },
-    "diapason": 440,
-    "baseNote": "husayni",
-    "baseRegister": 4,
     "_note": "husayni (6e degré, ancien 'la') ancré à 440 Hz — référence A440 inchangée, alphabet en noms de perde."
   },
   "turkish_53TET": {
@@ -236,10 +209,7 @@
       "buyuk_mucenneb": "181.132c",
       "tanini": "203.774c"
     },
-    "_note": "degrees[] maps the 16 named notes to their comma positions. Turkish system is complex with many more named pitches.",
-    "diapason": 440,
-    "baseNote": "neva",
-    "baseRegister": 0
+    "_note": "degrees[] maps the 16 named notes to their comma positions. Turkish system is complex with many more named pitches."
   },
   "gamelan_pelog": {
     "description": "Javanese gamelan pelog — 7-tone stretched octave",
@@ -255,9 +225,6 @@
       6
     ],
     "alterations": {},
-    "diapason": 282,
-    "baseNote": "nem",
-    "baseRegister": 1,
     "_note": "Gamelan tunings are ensemble-specific. These are representative Central Javanese values."
   },
   "gamelan_slendro": {
@@ -271,10 +238,7 @@
       3,
       4
     ],
-    "alterations": {},
-    "diapason": 282,
-    "baseNote": "nem",
-    "baseRegister": 1
+    "alterations": {}
   },
   "bohlen_pierce_just": {
     "description": "Bohlen-Pierce just — 13 tones in a tritave (3:1)",
@@ -295,10 +259,7 @@
       11,
       12
     ],
-    "alterations": {},
-    "diapason": 440,
-    "baseNote": "C",
-    "baseRegister": 0
+    "alterations": {}
   },
   "bohlen_pierce_equal": {
     "description": "Bohlen-Pierce equal — 13 equal divisions of the tritave",
@@ -319,10 +280,7 @@
       11,
       12
     ],
-    "alterations": {},
-    "diapason": 440,
-    "baseNote": "C",
-    "baseRegister": 0
+    "alterations": {}
   },
   "_comment_directional": "=== DIRECTIONAL SCALES === Different ascending/descending (ragas, some maqams).",
   "raga_bhairav": {
@@ -350,10 +308,7 @@
     "alterations": {
       "komal": "16/15",
       "tivra": "25/24"
-    },
-    "diapason": 240,
-    "baseNote": "sa",
-    "baseRegister": 1
+    }
   },
   "raga_yaman": {
     "description": "Raga Yaman (Kalyan) — ma tivra à la montée, shuddh à la descente dans certaines interprétations",
@@ -380,10 +335,7 @@
     "alterations": {
       "komal": "16/15",
       "tivra": "25/24"
-    },
-    "diapason": 240,
-    "baseNote": "sa",
-    "baseRegister": 1
+    }
   },
   "_comment_parametric": "=== PARAMETRIC TUNINGS (Dynamic Tonality) === degrees = generator counts, not step indices.",
   "western_meantone_dt": {
@@ -405,10 +357,7 @@
       "b": "-100c",
       "##": "200c",
       "bb": "-200c"
-    },
-    "diapason": 440,
-    "baseNote": "A",
-    "baseRegister": 4
+    }
   },
   "sargam_meantone_dt": {
     "description": "Indian sargam in meantone continuum — same mapping as western, different names",
@@ -427,9 +376,6 @@
     "alterations": {
       "komal": "-100c",
       "tivra": "100c"
-    },
-    "diapason": 240,
-    "baseNote": "sa",
-    "baseRegister": 1
+    }
   }
 }
