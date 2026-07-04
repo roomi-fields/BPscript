@@ -615,15 +615,19 @@ function applySceneValues(ast, libCtx) {
     if (checkDomain(d.name, spec, d.value, d.line)) sceneVals[d.name] = d.value;
   }
 
-  // Composant d'un AXE au niveau SCÈNE (`@tuning.X` → 'X'), pour la résolution d'override.
+  // Composant d'un AXE déclaré au niveau SCÈNE — les DEUX formes : `@tuning.X` (point →
+  // `subkey`) ET `@tuning:X` (deux-points → `runtime`, forme héritée). Sans ça, un accordage
+  // déclaré en deux-points serait ignoré et le socle s'imposerait à tort (régression kairos [310]).
   const defaultComponents = (libCtx && libCtx.defaultComponents) || {};
   const sceneComponent = (axis) => {
-    const d = (ast.directives || []).find((x) => x.name === axis && x.subkey);
-    return d ? d.subkey : undefined;
+    const d = (ast.directives || []).find((x) => x.name === axis && (x.subkey || x.runtime));
+    return d ? (d.subkey || d.runtime) : undefined;
   };
-  // Défaut EFFECTIF d'une valeur par la cascade des NIVEAUX 1-2 (socle @core → composant
-  // invoqué) : `spec.overriddenBy = "axe.champ"` = le champ du composant EFFECTIF de l'axe
-  // (acteur ?? scène ?? défaut @core) recouvre le socle `spec.default`. Générique.
+  // Défaut EFFECTIF (niveaux 2-1) : `spec.overriddenBy = "axe.champ"` = le champ du composant
+  // EFFECTIF de l'axe (acteur ?? scène ?? défaut @core) donne le défaut. RÈGLE DURE (kairos [310]) :
+  // si un composant est en portée mais NON RÉSOLU, on renvoie `undefined` (valeur ABSENTE, l'aval
+  // résout) — JAMAIS un littéral global par-dessus un composant déclaré. Un `spec.default` littéral
+  // n'est le socle QUE pour une valeur SANS composant (pas d'`overriddenBy`, ex. tempo).
   const cascadeDefault = (spec, props) => {
     if (spec.overriddenBy) {
       const [axis, field] = spec.overriddenBy.split('.');
@@ -632,8 +636,9 @@ function applySceneValues(ast, libCtx) {
         const comp = loadLib(axis, compName);
         if (comp && comp[field] != null) return comp[field];
       }
+      return undefined; // composant non résolu → ABSENT, jamais le socle global
     }
-    return spec.default;
+    return spec.default; // valeur sans composant → défaut scalaire socle
   };
 
   // Niveau ACTEUR : pli dans la déclaration (jamais de recopie par token). Cascade complète
