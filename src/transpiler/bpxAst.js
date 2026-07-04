@@ -531,10 +531,13 @@ function canonicalizeContexts(ast) {
   }
 }
 
-// LAN-5 / KAI-9 : transport par défaut de l'acteur IMPLICITE (quand la scène ne déclare
-// aucun @actor). CONSTANTE À DÉPLACER en conf éditable Kanopi (idéal LAN-5) ; minimal
-// acceptable KAI-9 = constante CLAIREMENT marquée, mais portée DANS L'AST (plus côté hôte).
-const DEFAULT_ACTOR_TRANSPORT = 'audio'; // TODO LAN-5 : lire depuis la conf Kanopi
+// Transport par défaut de l'acteur IMPLICITE — lu DANS @core (donnée : `defaults.components
+// .transport`), plus de constante en dur (cascade de défauts, Romain 2026-07-05). Le repli
+// 'audio' n'est atteint QUE si @core est absent/cassé (bug de config) — pas un défaut normal.
+function defaultActorTransport() {
+  const core = loadLib('core');
+  return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
+}
 
 /**
  * Matérialise l'acteur IMPLICITE `default` DANS L'AST quand la scène ne déclare AUCUN
@@ -555,13 +558,14 @@ const DEFAULT_ACTOR_TRANSPORT = 'audio'; // TODO LAN-5 : lire depuis la conf Kan
 function applyDefaultActor(ast) {
   if (!ast) return;
   if ((ast.actors || []).length > 0) return; // au moins un @actor déclaré → rien à faire
-  const transport = { type: 'TransportRef', key: DEFAULT_ACTOR_TRANSPORT, params: {} };
+  const transportKey = defaultActorTransport();
+  const transport = { type: 'TransportRef', key: transportKey, params: {} };
   ast.actors = [{
     type: 'ActorDirective',
     name: 'default',
     properties: { transport }, // pas d'alphabet : pitch via le résolveur de scène
     references: [
-      { type: 'ActorReference', category: 'transport', name: DEFAULT_ACTOR_TRANSPORT, line: 0 },
+      { type: 'ActorReference', category: 'transport', name: transportKey, line: 0 },
     ],
     // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
     // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
