@@ -615,13 +615,15 @@ function applySceneValues(ast, libCtx) {
     if (checkDomain(d.name, spec, d.value, d.line)) sceneVals[d.name] = d.value;
   }
 
-  // Composant d'un AXE déclaré au niveau SCÈNE — les DEUX formes : `@tuning.X` (point →
-  // `subkey`) ET `@tuning:X` (deux-points → `runtime`, forme héritée). Sans ça, un accordage
-  // déclaré en deux-points serait ignoré et le socle s'imposerait à tort (régression kairos [310]).
+  // Composant d'un AXE déclaré au niveau SCÈNE, lu en forme POINT uniquement (`@tuning.X`
+  // → `subkey`). SÉMANTIQUE `.`/`:` (Romain) : `.` APPELLE un composant, `:` affecte une
+  // VALEUR. Un accordage est un COMPOSANT → point. `@tuning:X` (deux-points) = forme v0.7
+  // PÉRIMÉE (affecterait une « valeur » à un axe de composant, non-sens) : NON accommodée
+  // ici — elle relève de la migration v0.7→v0.8, pas d'un chemin de code.
   const defaultComponents = (libCtx && libCtx.defaultComponents) || {};
   const sceneComponent = (axis) => {
-    const d = (ast.directives || []).find((x) => x.name === axis && (x.subkey || x.runtime));
-    return d ? (d.subkey || d.runtime) : undefined;
+    const d = (ast.directives || []).find((x) => x.name === axis && x.subkey);
+    return d ? d.subkey : undefined;
   };
   // Défaut EFFECTIF (niveaux 2-1) : `spec.overriddenBy = "axe.champ"` = le champ du composant
   // EFFECTIF de l'axe (acteur ?? scène ?? défaut @core) donne le défaut. RÈGLE DURE (kairos [310]) :
@@ -631,7 +633,15 @@ function applySceneValues(ast, libCtx) {
   const cascadeDefault = (spec, props) => {
     if (spec.overriddenBy) {
       const [axis, field] = spec.overriddenBy.split('.');
-      const compName = (props && props[axis]) || sceneComponent(axis) || defaultComponents[axis];
+      // Composant EFFECTIF : acteur ?? scène (forme POINT). Le défaut @core ne s'applique
+      // que si l'axe n'est PAS déclaré du tout. Si l'axe EST déclaré mais non résolu ici
+      // (ex. forme deux-points périmée, ou nom absent du catalogue) → ABSENT, l'aval résout
+      // (règle kairos [310] : jamais le socle par-dessus un composant déclaré).
+      let compName = (props && props[axis]) || sceneComponent(axis);
+      if (compName == null) {
+        if ((ast.directives || []).some((x) => x.name === axis)) return undefined; // axe déclaré, non résolu → ABSENT
+        compName = defaultComponents[axis]; // aucune déclaration de l'axe → défaut @core
+      }
       if (compName) {
         const comp = loadLib(axis, compName);
         if (comp && comp[field] != null) return comp[field];
