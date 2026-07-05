@@ -478,7 +478,6 @@ et les traduit en instructions BP3. Elles font partie du langage, pas d'une libr
 mode               mode du bloc (random, ord, sub1, lin, tem, poslong)
 scan               sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight             poids de la regle (entier, K-param, ou inf pour priorite absolue)
-speed              ratio de tempo sur un groupe polymetrique
 on_fail            gestion d'echec (skip, retry(N), fallback(X))
 tempo              tempo local ou global (@tempo:120)
 meter              signature rythmique (@meter:7/8, @meter:4/4)
@@ -494,7 +493,7 @@ destines au runtime (vel, filter, wave...), utiliser `()` a la place.
 // BPScript                              -> BP3
 A[/2] B C                                -> /2 A B C
 [mode:random] S -> A B C                 -> RND  gram#N[M] S --> A B C
-{C3, E3, G3, C4}[speed:2]               -> {2, C3, E3, G3, C4}
+{C3, E3, G3, C4}:2                      -> {2, C3, E3, G3, C4}   // durée collée
 ```
 
 ### `()` -- parametres runtime (toujours suffixe)
@@ -724,21 +723,21 @@ Le role 3 est propre a BPScript (declarations typees).
 ### Ratio de tempo sur un bloc polymetrique
 
 En BP3, un ratio optionnel peut preceder les voix : `{2, C3, E3, G3, C4}`.
-En BPScript, ce ratio s'exprime via `[speed:]` sur le groupe -- plus lisible :
+En BPScript, ce ratio s'exprime via la **durée** `:` COLLÉE sur le groupe -- plus lisible :
 
 ```
 // BP3 : ratio en premiere position (implicite)
 {2, C3, E3, G3, C4}
 
-// BPScript : qualificateur explicite (meme resultat)
-{C3, E3, G3, C4}[speed:2]
+// BPScript : durée collée au groupe (meme resultat)
+{C3, E3, G3, C4}:2
 
 // Ratio fractionnaire
-{mi fa sol}[speed:2/3]
+{mi fa sol}:2/3
 ```
 
-Le compilateur traduit `{...}[speed:N]` -> `{N, ...}` pour BP3.
-Pas de ratio implicite en BPScript -- tout passe par `[speed:]`.
+Le compilateur traduit `{...}:N` -> `{N, ...}` pour BP3. La même durée s'écrit sur une note :
+`A4:1/2` -> `{1/2, A4}`. (Remplace l'ancien `[speed:N]`, supprimé -- décision 2026-06-26.)
 
 ---
 
@@ -1236,8 +1235,8 @@ Le compilateur traduit `[X==N]` -> `/X=N/` (condition BP3) et `[X=N]` -> `/X=N/`
 [phase==3] S -> jhala
 
 alap -> Sa _ Re _ Ga _ [phase=2]
-jor -> {Sa Re Ga Pa}[speed:2] [phase=3]
-jhala -> {Sa Re Ga Pa Dha Ni Sa}[speed:4]
+jor -> {Sa Re Ga Pa}:2 [phase=3]
+jhala -> {Sa Re Ga Pa Dha Ni Sa}:4
 ```
 
 ---
@@ -1268,7 +1267,7 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 ```
 @macro kick = (vel:120)              // preset de controles
 @macro accent(x) = x(vel:120)       // transformation parametree
-@macro fast(x) = {x}[speed:2]       // transformation structurelle
+@macro fast(x) = {x}:2              // transformation structurelle (durée collée)
 @alias breath = cc:2                 // canal MIDI nomme
 @alias intensity = osc:/sensor/1     // canal OSC nomme
 @label hat                           // nom structural pur
@@ -1427,10 +1426,10 @@ BPScript unifie les deux dans la meme syntaxe via le systeme de types :
 
 ```
 // Imperatif (comme _tempo) -- palier discret
-{A B C}[speed:2]
+{A B C}:2
 
-// Fonctionnel (comme smooth time) -- propriete continue, CV
-{A B C}[speed: ramp(1, 3)]
+// Fonctionnel (comme smooth time) -- propriete continue, CV sur le cadre
+{A B C}:ramp(1, 3)
 ```
 
 Le type `cv` est la **modernisation du smooth time de Boulez/Bel**.
@@ -1519,13 +1518,13 @@ S -> { melodie, rythme }
 gram#1[1] S --> {melodie, rythme}
 ```
 
-### Speed sur un groupe
+### Durée sur un groupe
 
-Le `[speed:N]` est traduit en ratio de tempo BP3 :
+La durée `:N` collée est traduite en cadre polymétrique BP3 :
 
 ```
 // BPScript
-{C3, E3, G3, C4}[speed:2]
+{C3, E3, G3, C4}:2
 
 // BP3
 {2, bolC3, bolE3, bolG3, bolC4}
@@ -1692,14 +1691,14 @@ forment pas un polymetric balance dans la meme regle.
 
 ```
 // BPScript: koto3 -- automate cellulaire avec meta-reecriture
-#({) a b a -> {a c b, f f f - f}[speed:5]  // contexte negatif sur {
+#({) a b a -> {a c b, f f f - f}:5  // contexte negatif sur {
 } -> }                                      // { et } comme terminaux
 , -> ,                                      // , aussi
 ```
 
 Deux usages distincts :
 - **Embedding** : `{` et `}` distribues sur plusieurs regles, forment un polymetric
-  valide apres derivation. `[speed:N]` sur `}` est propage au `{` correspondant.
+  valide apres derivation. La durée `}:N` sur `}` est propagee au `{` correspondant.
 - **Meta-grammaire** : `{`, `}`, `,` comme terminaux matchables sur le LHS et
   dans les contextes `#({)`. La grammaire construit des polymetriques par reecriture.
 

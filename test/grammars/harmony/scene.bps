@@ -28,7 +28,7 @@ S -> Seq1 - - Seq2
 
 // Règle 4 : accords en polymétrie avec speed
 // BP3 : {2, C3, E3, G3, C4} = ratio tempo 2 + 4 voix simultanées
-// BPS : {voix}[speed:ratio] — plus lisible, même résultat
+// BPS : {voix}:2 — durée collée, plus lisible, même résultat
 Seq1 -> {C3,E3,G3,C4}:2 {C3, Eb3, G3, C4}:2 {C3, E3, G3, C4}:2 {C3, Eb3, G3, C4}:2 {C3, E3, G3, C4}:2
 
 // Règle 5 : accords avec changement de gamme (Cmaj/Cmin)

@@ -488,9 +488,11 @@ Portée : sur un symbole (`A[/2]`), un groupe (`{A B}[/2]`), ou un polymetric (`
 `[/N]` → opérateur NU `/N A` (absolu, persistant, fixtempo). `[*N]` → bracket `_tempo` (relatif).
 Note : `[\N]` n'est pas tokenisé par le tokenizer BPScript (anomalies natif+WASM documentées dans TEMPO_OPS_WASM.md).
 
-**Ratio polymétrique** : `[speed:N]` sur un polymetric multi-voix contrôle le ratio
-de tempo du conteneur. `{v1, v2}[speed:2]` → `{2, v1, v2}`. C'est une propriété
-du conteneur `{}`, distincte des opérateurs temporels.
+**Durée / cadre polymétrique** : la durée s'écrit avec `:` COLLÉ. `{v1, v2}:2` → `{2, v1, v2}`
+(cadre du conteneur), `A4:1/2` → `{1/2, A4}` (durée de note : `A4:1` = noire, `A4:2` = blanche).
+C'est une propriété du conteneur `{}` (1er champ du cadre), distincte des opérateurs temporels.
+Remplace l'ancien qualificatif `[speed:N]`, **supprimé** (décision 2026-06-26-trois-concepts-temps-duree ;
+`speed`, mot de DJ, est banni — la durée est un concept de premier rang attaché à la note/au groupe).
 
 **K-params** : `[weight:K1=3]` initialise le K-param K1 à 3. `[weight:K1]` référence
 la valeur courante. Utilisé en mode LIN pour les distributions probabilistes (ex: jeu de dés
@@ -565,7 +567,7 @@ tempo_op = ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT ) ;
 engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
 
-ENGINE_KEY  = "mode" | "scan" | "speed" | "weight" | "on_fail"
+ENGINE_KEY  = "mode" | "scan" | "weight" | "on_fail"   (* `speed` SUPPRIMÉ → durée `:` *)
             | "tempo" | "meter" | "scale"
             | "retro" | "shuffle" | "order" | "rotate"
             | "keyxpand" | "repeat" | "failed" | "stop" | "goto"
@@ -671,6 +673,19 @@ Deux portées pour les suffixes de règle :
 - **Groupe** : `{A B}(vel:100)` — `()` collé au `}`, s'applique au groupe.
   Compilé en : `_script(CT 0) {A B}`
 
+**Règle universelle de portée** (vaut pour `()` runtime, `[]` moteur ET la durée `:`) : un suffixe
+s'attache à **quatre** portées, l'**espace étant significatif** (cf. §Espace, ligne ~943) :
+
+| Portée | Forme | Exemple |
+|--------|-------|---------|
+| terminal | suffixe COLLÉ au symbole | `A(vel:80)` · `A[weight:50]` · `A4:1/2` (durée note) |
+| groupe | suffixe COLLÉ au `}` | `{A B}(vel:100)` · `{A B}:2` (durée groupe) |
+| règle | suffixe en fin de RHS | `S -> A B (vel:80)` · `S -> A B [weight:40]` |
+| inline / libre | préfixe `!` dans le flux | `A !(vel:80) B` · `{![retro] A B}` |
+
+La durée `:N` suit cette règle (terminal `A4:1/2`, groupe `{A B}:2`, embedding `}:N`) ; elle a
+**remplacé** le qualificatif `[speed:N]` (supprimé, cf. §Durée ci-dessus).
+
 **Contrôles instantanés dans le RHS** : quand un non-terminal se résout en purs
 contrôles (aucun élément temporel), utiliser `!()` pour les positionner dans le flux :
 
@@ -732,8 +747,8 @@ Les contrôles à l'intérieur d'une voix se positionnent avec `!()` et `![]` :
 `{!(chan:1, vel:120) C8 - - -, !(chan:1, vel:100) - C7 C7 C7}`.
 La position dans le source = la position dans la sortie BP3.
 
-Le ratio de tempo BP3 (`{2, voix1, voix2}`) s'exprime via `[speed:N]` :
-`{voix1, voix2}[speed:2]`.
+Le cadre polymétrique BP3 (`{2, voix1, voix2}`) s'exprime via la durée `:` collée :
+`{voix1, voix2}:2`.
 
 ### 4.4 Instantanéité (`!`)
 
@@ -932,7 +947,7 @@ Utilisé quand `{`, `}`, `,` apparaissent comme terminaux bruts dans le RHS
 quand ils ne forment pas un polymetric balancé dans la même règle.
 
 **Cross-rule braces** : les accolades peuvent être déséquilibrées à travers plusieurs
-règles avec propagation du `[speed:N]` de la `}` fermante vers la `{` ouvrante correspondante.
+règles avec propagation de la durée `}:N` de la `}` fermante vers la `{` ouvrante correspondante.
 
 ---
 
@@ -1015,7 +1030,7 @@ Les nombres nus dans le flux BPScript sont des durées numériques, pas des term
 ```
 mode     → MODE du bloc (random, ord, sub1, lin, tem, poslong)
 scan     → sens du parcours par règle (left, right, rnd) — défaut : rnd
-speed    → ratio de tempo polymétrique ({v1, v2}[speed:2] → {2, v1, v2})
+:N       → durée / cadre polymétrique ({v1, v2}:2 → {2, v1, v2} ; A4:1/2 → {1/2, A4})
 /N       → diviser durée (A[/2] → durée ÷ 2, compilé en /2 A)
 *N       → multiplier durée (A[*2] → durée × 2, compilé en \2 A)
 weight   → poids de la règle
@@ -1134,7 +1149,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `A[/3/2]` | `_tempo(3/2) A _tempo(2/3)` | 1.5x plus rapide (fraction) |
 | `{A B}[/2]` | `_tempo(2/1) {A B} _tempo(1/2)` | groupe 2x plus rapide |
 | `![/2]` | `_tempo(2/1)` | tempo séquentiel (pas de bracket) |
-| `{v1, v2}[speed:2]` | `{2, v1, v2}` | ratio polymétrique (≠ tempo) |
+| `{v1, v2}:2` | `{2, v1, v2}` | durée / cadre polymétrique (≠ tempo) |
 | `-----` | `-----` | séparateur (identique) |
 | `lambda` | `lambda` | chaîne vide (identique) |
 | `<!sync1` | `<<W1>>` | sync tag |

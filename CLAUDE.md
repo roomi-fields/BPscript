@@ -14,13 +14,13 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - **3 words**: `gate`, `trigger`, `cv` (temporal types)
 - **24 structural symbols**: `@`, `->`, `<-`, `<>`, `{}`, `,`, `()`, `:`, `=`, `[]`, ``` `` ```, `//`, `-`, `_`, `.`, `...`, `!`, `<!`, `#`, `?`, `$`, `&`, `~`, `|`
 - **9 flag operators**: comparison `==`, `!=`, `>`, `<`, `>=`, `<=` + calculation `+`, `-`, `=` (`-`/`=` are distinct operators that reuse glyphs also used as structural symbols)
-- **8 reserved qualifier keys**: `mode`, `scan`, `weight`, `speed`, `on_fail`, `tempo`, `meter`, `scale` (per `docs/spec/LANGUAGE.md`; `scan`/`tempo`/`meter` handled in `encoder.js`)
+- **7 reserved qualifier keys**: `mode`, `scan`, `weight`, `on_fail`, `tempo`, `meter`, `scale` (per `docs/spec/LANGUAGE.md`; `scan`/`tempo`/`meter` handled in `encoder.js`). `speed` SUPPRIMÉ (décision 2026-06-26) → durée `:` (`{A B}:2`, `A4:1/2`)
 - **Double declaration**: each symbol has temporal type + runtime binding (`gate Sa:sc`)
 - Silence: `-` in both BPScript and BP3
 - Prolongation: `_` in both BPScript and BP3
 - Period notation: `.` = equal-duration fragment separator (same as BP3)
 - `!` = simultaneous event (any type: trigger, gate, cv, or flag mutation)
-- `[]` = engine instructions (BP3): guards, mode, weight, speed, tempo operators
+- `[]` = engine instructions (BP3): guards, mode, weight, tempo operators (durée = `:`, hors `[]`)
 - `()` = runtime instructions: vel, pan, wave, attack, release, filter, etc. (encoded as `_script(CT)`, consumed by a downstream runtime)
 - Backticks: code evaluated by the symbol's runtime (implicit) or tagged (`sc:`, `py:`)
 
@@ -111,7 +111,7 @@ Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + f
 ```
 
 ### Key conventions
-- `[]` = engine (BP3): `[mode:random]`→RND, `[weight:50]`→`<50>`, `A[/2]`→`/2 A`, `{A B}[speed:2]`→`{2, A B}`
+- `[]` = engine (BP3): `[mode:random]`→RND, `[weight:50]`→`<50>`, `A[/2]`→`/2 A`; durée `{A B}:2`→`{2, A B}` (hors `[]`)
 - `()` = runtime: `(vel:80)`→`_script(CT0)`, `(wave:sawtooth)`→`_script(CT1)`
 - Direction: `->` (default L→R), `<-` (RIGHT→LEFT), `<>` (bidirectional)
 - BP3 rule format: `gram#blockNum[ruleNum] MODE LHS --> RHS`
