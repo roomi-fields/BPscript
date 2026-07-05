@@ -16,7 +16,7 @@ S -> A [numtimes=5]
 A -> {E1,A#1 F#1} {Tr2 D}
 B -> {Tr2 A}
 C -> {Tr4 B}
-[numtimes-1] D -> - {Tr6 C {B}[speed:1]} {C}[speed:1] repeat(4)
+[numtimes-1] D -> - {Tr6 C {B}:1} {C}:1 repeat(4)
 
 -----
 

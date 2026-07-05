@@ -34,10 +34,10 @@ Y -> Y
 , -> ,
 a -> a [weight:5]
 a b a -> a a [weight:30]
-#({) a b a -> {a c b,f f f - f} [speed:5] [weight:100]
+#({) a b a -> {a c b,f f f - f}:5 [weight:100]
 b -> b [weight:5]
 #({) b a b #(}) -> b b [weight:30]
-#({) b a b -> {b a b c b a,f a f} [speed:3] [weight:100]
+#({) b a b -> {b a b c b a,f a f}:3 [weight:100]
 #({) #a b #(}) -> #a c b [weight:100-10]
 c c c -> c a c
 c a c -> b a b

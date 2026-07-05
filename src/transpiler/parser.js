@@ -2160,12 +2160,19 @@ function parse(tokens, opts = {}) {
       if (at(T.RBRACE)) {
         advance();
         const rawBrace = { type: 'RawBrace', value: '}' };
-        // Suffix qualifier on closing brace: }[speed:N] (no space)
+        // Suffix qualifier on closing brace: }[speed:N] (no space) — legacy le temps de la migration
         if (at(T.LBRACKET) && !current().spaceBefore && isPolymetricQualifier()) {
           rawBrace.qualifiers = [];
           while (at(T.LBRACKET) && !current().spaceBefore && isPolymetricQualifier()) {
             rawBrace.qualifiers.push(parseQualifier());
           }
+        }
+        // Durée collée sur l'accolade fermante d'un embedding inter-règles : }:N (décision 2026-06-26).
+        // Même sémantique que `}[speed:N]` — le cadre est propagé au `{` correspondant par la 2e passe
+        // (annotateUnbalancedBraces). C'est la forme canonique de durée pour les groupes déséquilibrés.
+        if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+          advance(); // consume COLON
+          rawBrace.frame = parseColonFrame();
         }
         elements.push(rawBrace);
         continue;
@@ -3114,6 +3121,13 @@ function parse(tokens, opts = {}) {
         continue;
       }
       expect(T.COLON);
+
+      // `[speed:N]` SUPPRIMÉ (décision 2026-06-26-trois-concepts-temps-duree) : `speed` (mot de DJ
+      // banni) est subsumé par la DURÉE, qui s'écrit avec ':' collé — `{A B}:2` (groupe),
+      // `A4:1/2` (note), `}:N` (embedding). Fail-loud, comme [shuffle] retiré ci-dessous.
+      if (key === 'speed') {
+        throw new ParseError(`'[speed:N]' a été supprimé (décision 2026-06-26) — la durée s'écrit avec ':' : '{A B}:2' (groupe), 'A4:1/2' (note) ou '}:N' (embedding)`, current());
+      }
 
       // [shuffle:N] RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
       // re-semer sont deux atomes BP3 distincts (_rndseq / _srand). La graine s'écrit

@@ -29,10 +29,10 @@ S -> Seq1 - - Seq2
 // Règle 4 : accords en polymétrie avec speed
 // BP3 : {2, C3, E3, G3, C4} = ratio tempo 2 + 4 voix simultanées
 // BPS : {voix}[speed:ratio] — plus lisible, même résultat
-Seq1 -> {C3,E3,G3,C4} [speed:2] {C3, Eb3, G3, C4}[speed:2] {C3, E3, G3, C4}[speed:2] {C3, Eb3, G3, C4}[speed:2] {C3, E3, G3, C4}[speed:2]
+Seq1 -> {C3,E3,G3,C4}:2 {C3, Eb3, G3, C4}:2 {C3, E3, G3, C4}:2 {C3, Eb3, G3, C4}:2 {C3, E3, G3, C4}:2
 
 // Règle 5 : accords avec changement de gamme (Cmaj/Cmin)
-Seq2 -> Cmaj {C3,E3,G3,C4} [speed:2] Cmin {C3, Eb3, G3, C4}[speed:2] Cmaj {C3, E3, G3, C4}[speed:2] Cmin {C3, Eb3, G3, C4}[speed:2] Cmaj {C3, E3, G3, C4}[speed:2]
+Seq2 -> Cmaj {C3,E3,G3,C4}:2 Cmin {C3, Eb3, G3, C4}:2 Cmaj {C3, E3, G3, C4}:2 Cmin {C3, Eb3, G3, C4}:2 Cmaj {C3, E3, G3, C4}:2
 
 // Règle 6 : même que 1 mais sans les chromatiques
 S -> Cmaj_c C4 E4 F4 A4 Cmin_c C4 E4 F4 A4 Cmaj_a C4 E4 F4 A4 Cmin_a C4 E4 F4 A4

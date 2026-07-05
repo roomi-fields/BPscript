@@ -16,7 +16,7 @@
 @mode:ord
 S -> $Tihai(transpose:-2) &Tihai(pitchcont, pitchbend:-200, transpose:-2) &Tihai(pitchbend:200) (pitchrange:200)
 
-Tihai -> {Huit} [speed:2] {Six}[speed:2] {Cinq}[speed:2] {Quatre}[speed:2] - {- - ek - - do - - tin - - -}[speed:3]
+Tihai -> {Huit}:2 {Six}:2 {Cinq}:2 {Quatre}:2 - {- - ek - - do - - tin - - -}:3
 Huit -> ek do tin char panch che sat at
 Six -> ek do tin char panch che
 Cinq -> ek do tin char panch

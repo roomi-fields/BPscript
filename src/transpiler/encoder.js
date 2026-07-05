@@ -1480,11 +1480,12 @@ function annotateUnbalancedBraces(rules) {
       if (el.type === 'RawBrace' && el.value === '{') {
         openStack.push(el);
       } else if (el.type === 'RawBrace' && el.value === '}') {
-        // Check for [speed:N] qualifier on this }
-        if (el.tempoOp || el.qualifiers) {
-          const speed = el.tempoOp ? null : getQualValueFromElement(el, 'speed');
+        // Cadre porté par cette `}` : durée `:N` (champ `frame`, décision 2026-06-26) OU,
+        // legacy le temps de la migration, le qualificatif `[speed:N]`. Propagé au `{` correspondant.
+        if (el.tempoOp || el.qualifiers || el.frame != null) {
+          const speed = el.tempoOp ? null : (el.frame != null ? el.frame : getQualValueFromElement(el, 'speed'));
           if (speed !== null && openStack.length > 0) {
-            // Annotate the matching { with this speed
+            // Annotate the matching { with this frame ratio
             const matchingOpen = openStack.pop();
             matchingOpen.polySpeed = speed;
           } else {
