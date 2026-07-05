@@ -2586,6 +2586,17 @@ function parse(tokens, opts = {}) {
         name = advance().value; // terminal
       }
 
+      // Durée collée sur terminal : A4:1/2 → {1/2, A4} (décision 2026-06-26 trois-concepts-temps-duree).
+      // `:` COLLÉ (pas d'espace) suivi d'un nombre = durée de note ; désucré en cadre polymétrique.
+      // Se distingue de `label:{…}` (capté plus haut, peek(2)=LBRACE) et de `A4 1/2` ESPACÉ
+      // (ancien sens : A4 puis un silence, NumericDuration). L'espace tranche (EBNF.md:943).
+      if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+        advance(); // consume COLON
+        const frame = parseColonFrame();
+        const sym = { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
+        return { type: 'Polymetric', voices: [[sym]], qualifiers: [], runtimeQualifier: null, label: null, frame };
+      }
+
       // Tie start: C4~
       if (at(T.TILDE)) {
         advance();
@@ -2869,13 +2880,33 @@ function parse(tokens, opts = {}) {
       qualifiers.push(parseQualifier());
     }
 
+    // Durée collée sur groupe : {A B}:2 → cadre {2, A B} (décision 2026-06-26 trois-concepts).
+    // `:` COLLÉ au `}` suivi d'un nombre = durée du groupe ; alimente le 1er champ du cadre.
+    let frame = null;
+    if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+      advance(); // consume COLON
+      frame = parseColonFrame();
+    }
+
     // Runtime qualifier on group: {}(vel:100)
     let runtimeQualifier = null;
     if (isRuntimeQualifier()) {
       runtimeQualifier = parseRuntimeQualifier();
     }
 
-    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null };
+    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null, frame };
+  }
+
+  // Durée collée : consomme un nombre (INT) ou un ratio (INT/INT) APRÈS un COLON déjà consommé.
+  // Renvoie la chaîne de cadre "N" ou "N/M" (1er champ de `{M, …}`). Cf. décision 2026-06-26.
+  function parseColonFrame() {
+    const num = expect(T.INT).value;
+    if (at(T.SLASH) && peek(1).type === T.INT) {
+      advance(); // consume SLASH
+      const den = expect(T.INT).value;
+      return `${num}/${den}`;
+    }
+    return `${num}`;
   }
 
   function isPolymetricQualifier() {

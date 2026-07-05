@@ -1249,11 +1249,12 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       const voiceStrs = el.voices.map(v => {
         return v.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
       });
-      // Check for speed qualifier → ratio prefix (polymetric ratio)
-      const speed = getQualValue(el.qualifiers, 'speed');
+      // Cadre polymétrique (1er champ `{M, …}`) : durée `:M` désucrée (champ `frame`,
+      // décision 2026-06-26) OU, legacy le temps de la migration, le qualificatif `speed`.
+      const frame = el.frame != null ? el.frame : getQualValue(el.qualifiers, 'speed');
       let inner = voiceStrs.join(',');
-      if (speed !== null) {
-        inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
+      if (frame !== null) {
+        inner = `${frame},${inner}`;  // no space after ratio comma (BP3 convention)
       }
       // seq_prefix qualifiers (retro, shuffle, order, rotate) — injected as prefix
       // INSIDE the group: {_rndseq a b c d} instead of {a b c d} _rndseq.
