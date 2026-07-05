@@ -610,6 +610,8 @@ function validateTerminals(ast) {
   for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
   for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
   for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
+  // Motifs temporels (@timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
+  for (const d of ast.directives || []) if (d.name === 'timepatterns' && Array.isArray(d.timePatterns)) for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
 
   // Terminaux RHS : Symbol non couvert = non déclaré.
   const seen = new Set();

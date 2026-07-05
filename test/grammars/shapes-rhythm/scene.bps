@@ -12,12 +12,10 @@
 // Uses time patterns because the dancers wanted initial sections to be
 // "a little slower". Composition starts at metronom 60 and continues at metronom 88.
 //
-// NOTE: TIMEPATTERNS section not yet supported in BPscript.
-// BP3 TIMEPATTERNS: t1 = 88/60  t2 = 88/80  t3 = 1/1
-
 @core
 @controls
-@alphabet.western:midi
+@alphabet.solfege:midi
+@timepatterns: t1=88/60, t2=88/80, t3=1/1
 
 // --- Sous-grammaire 1 @mode:ord — Structure principale ---
 
