@@ -2168,11 +2168,12 @@ function parse(tokens, opts = {}) {
           }
         }
         // Durée collée sur l'accolade fermante d'un embedding inter-règles : }:N (décision 2026-06-26).
-        // Même sémantique que `}[speed:N]` — le cadre est propagé au `{` correspondant par la 2e passe
-        // (annotateUnbalancedBraces). C'est la forme canonique de durée pour les groupes déséquilibrés.
+        // Même sémantique que `}[speed:N]` — poussée comme qualifier `speed` (contrat AST), propagée
+        // au `{` correspondant par la 2e passe (annotateUnbalancedBraces). Forme canonique déséquilibrée.
         if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
           advance(); // consume COLON
-          rawBrace.frame = parseColonFrame();
+          rawBrace.qualifiers = rawBrace.qualifiers || [];
+          rawBrace.qualifiers.push(parseColonFrame());
         }
         elements.push(rawBrace);
         continue;
@@ -2599,9 +2600,9 @@ function parse(tokens, opts = {}) {
       // (ancien sens : A4 puis un silence, NumericDuration). L'espace tranche (EBNF.md:943).
       if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
         advance(); // consume COLON
-        const frame = parseColonFrame();
+        const dur = parseColonFrame();  // qualifier `speed` (contrat AST)
         const sym = { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
-        return { type: 'Polymetric', voices: [[sym]], qualifiers: [], runtimeQualifier: null, label: null, frame };
+        return { type: 'Polymetric', voices: [[sym]], qualifiers: [dur], runtimeQualifier: null, label: null };
       }
 
       // Tie start: C4~
@@ -2888,11 +2889,11 @@ function parse(tokens, opts = {}) {
     }
 
     // Durée collée sur groupe : {A B}:2 → cadre {2, A B} (décision 2026-06-26 trois-concepts).
-    // `:` COLLÉ au `}` suivi d'un nombre = durée du groupe ; alimente le 1er champ du cadre.
-    let frame = null;
+    // `:` COLLÉ au `}` suivi d'un nombre = durée du groupe ; poussée comme qualifier `speed`
+    // dans `qualifiers` (contrat AST_SPEC:1024,1037) — pas un champ ad hoc.
     if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
       advance(); // consume COLON
-      frame = parseColonFrame();
+      qualifiers.push(parseColonFrame());
     }
 
     // Runtime qualifier on group: {}(vel:100)
@@ -2901,19 +2902,24 @@ function parse(tokens, opts = {}) {
       runtimeQualifier = parseRuntimeQualifier();
     }
 
-    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null, frame };
+    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null };
   }
 
-  // Durée collée : consomme un nombre (INT) ou un ratio (INT/INT) APRÈS un COLON déjà consommé.
-  // Renvoie la chaîne de cadre "N" ou "N/M" (1er champ de `{M, …}`). Cf. décision 2026-06-26.
+  // Durée collée : consomme un nombre (INT) ou un ratio (INT/INT) APRÈS un COLON déjà consommé,
+  // et renvoie le QUALIFIER `speed` conforme AU CONTRAT AST (docs/spec/AST.md:1024,1037,1041) :
+  // le ratio polymétrique vit dans `Polymetric.qualifiers`, JAMAIS dans un champ ad hoc — c'est
+  // ce que lisent BPx et bp3-frontend. Valeur : Number pour un entier, chaîne "N/M" pour un ratio
+  // (IDENTIQUE à l'ancien `[speed:N]`, parser.js:3188-3200) → AST byte-identique, zéro régression.
   function parseColonFrame() {
     const num = expect(T.INT).value;
+    let value;
     if (at(T.SLASH) && peek(1).type === T.INT) {
       advance(); // consume SLASH
-      const den = expect(T.INT).value;
-      return `${num}/${den}`;
+      value = `${num}/${expect(T.INT).value}`;
+    } else {
+      value = Number(num);
     }
-    return `${num}`;
+    return { type: 'Qualifier', pairs: [{ type: 'QualPair', key: 'speed', value, decrement: null }], tempoOp: null };
   }
 
   function isPolymetricQualifier() {

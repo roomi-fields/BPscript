@@ -1249,12 +1249,13 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
       const voiceStrs = el.voices.map(v => {
         return v.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
       });
-      // Cadre polymétrique (1er champ `{M, …}`) : durée `:M` désucrée (champ `frame`,
-      // décision 2026-06-26) OU, legacy le temps de la migration, le qualificatif `speed`.
-      const frame = el.frame != null ? el.frame : getQualValue(el.qualifiers, 'speed');
+      // Cadre polymétrique (1er champ `{M, …}`) : ratio porté par le qualifier `speed` de
+      // `Polymetric.qualifiers` (contrat AST_SPEC:1024,1037). La durée de surface `:M` désucre
+      // vers CE qualifier (cf. parseColonFrame) — un seul chemin, lu identiquement par BP3 et BPx.
+      const speed = getQualValue(el.qualifiers, 'speed');
       let inner = voiceStrs.join(',');
-      if (frame !== null) {
-        inner = `${frame},${inner}`;  // no space after ratio comma (BP3 convention)
+      if (speed !== null) {
+        inner = `${speed},${inner}`;  // no space after ratio comma (BP3 convention)
       }
       // seq_prefix qualifiers (retro, shuffle, order, rotate) — injected as prefix
       // INSIDE the group: {_rndseq a b c d} instead of {a b c d} _rndseq.
@@ -1480,10 +1481,10 @@ function annotateUnbalancedBraces(rules) {
       if (el.type === 'RawBrace' && el.value === '{') {
         openStack.push(el);
       } else if (el.type === 'RawBrace' && el.value === '}') {
-        // Cadre porté par cette `}` : durée `:N` (champ `frame`, décision 2026-06-26) OU,
-        // legacy le temps de la migration, le qualificatif `[speed:N]`. Propagé au `{` correspondant.
-        if (el.tempoOp || el.qualifiers || el.frame != null) {
-          const speed = el.tempoOp ? null : (el.frame != null ? el.frame : getQualValueFromElement(el, 'speed'));
+        // Cadre porté par cette `}` : qualifier `speed` de `Polymetric.qualifiers` (contrat AST) —
+        // la durée `}:N` désucre vers ce qualifier. Propagé au `{` correspondant par cette 2e passe.
+        if (el.tempoOp || el.qualifiers) {
+          const speed = el.tempoOp ? null : getQualValueFromElement(el, 'speed');
           if (speed !== null && openStack.length > 0) {
             // Annotate the matching { with this frame ratio
             const matchingOpen = openStack.pop();
