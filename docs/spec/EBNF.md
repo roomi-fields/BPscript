@@ -673,18 +673,30 @@ Deux portées pour les suffixes de règle :
 - **Groupe** : `{A B}(vel:100)` — `()` collé au `}`, s'applique au groupe.
   Compilé en : `_script(CT 0) {A B}`
 
-**Règle universelle de portée** (vaut pour `()` runtime, `[]` moteur ET la durée `:`) : un suffixe
-s'attache à **quatre** portées, l'**espace étant significatif** (cf. §Espace, ligne ~943) :
+**Portées d'attachement — BASE universelle + déclaration par élément.** Il existe une **base** de
+portées où un suffixe/opérateur peut s'attacher, l'**espace et le `!` étant significatifs** pour
+désambiguïser (cf. §Espace, ligne ~943). **Cette base n'est PAS une loi uniforme** : chaque élément
+de langage **déclare dans sa définition quelles portées lui sont valides, et vers quel nœud AST il
+se traduit** (cf. `AST.md` §Portées × nœud AST par élément — le contrat que lisent BP3 et BPx).
 
-| Portée | Forme | Exemple |
-|--------|-------|---------|
-| terminal | suffixe COLLÉ au symbole | `A(vel:80)` · `A[weight:50]` · `A4:1/2` (durée note) |
-| groupe | suffixe COLLÉ au `}` | `{A B}(vel:100)` · `{A B}:2` (durée groupe) |
-| règle | suffixe en fin de RHS | `S -> A B (vel:80)` · `S -> A B [weight:40]` |
-| inline / libre | préfixe `!` dans le flux | `A !(vel:80) B` · `{![retro] A B}` |
+Les **cinq portées** de la base :
 
-La durée `:N` suit cette règle (terminal `A4:1/2`, groupe `{A B}:2`, embedding `}:N`) ; elle a
-**remplacé** le qualificatif `[speed:N]` (supprimé, cf. §Durée ci-dessus).
+| Portée | Reconnaissance | Exemple |
+|--------|----------------|---------|
+| terminal | suffixe COLLÉ au symbole | `A(vel:80)` · `A[weight:50]` · `A4:1/2` |
+| groupe | suffixe COLLÉ au `}` | `{A B}(vel:100)` · `{A B}:2` |
+| règle | suffixe ESPACÉ en fin de RHS | `S -> A B (vel:80)` · `S -> A B [weight:40]` · `S -> A B :2` |
+| `!` accolé | `!` COLLÉ à un terminal (flux conjoint) | `C4!(vel:80)` |
+| `!` inline | `!` ESPACÉ (événement séparé dans le flux) | `A !(vel:80) B` · `A ![/2] B` |
+
+Aucun élément n'a **toutes** les portées. Exemples (matrice complète dans `AST.md`) :
+- **durée `:N`** — portées {terminal, groupe, règle} ; **`!` interdit** (une durée exige un hôte) ;
+  nœud AST : `Polymetric.qualifiers` (qualifier `speed`), jamais un champ ad hoc.
+- **tempo `/N \N *N`** — portées {terminal, règle, `!` inline} ; nœud `TempoOp`.
+- **runtime `(…)`** — les cinq portées ; nœud `RuntimeQualifier` / `InstantControl`.
+- **moteur `[weight]` `[mode]`** — portée {règle} ; nœud `Rule.flags` / `Rule.mode`.
+
+La durée `:N` a **remplacé** le qualificatif `[speed:N]` (supprimé, cf. §Durée ci-dessus).
 
 **Contrôles instantanés dans le RHS** : quand un non-terminal se résout en purs
 contrôles (aucun élément temporel), utiliser `!()` pour les positionner dans le flux :

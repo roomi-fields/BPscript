@@ -1038,7 +1038,37 @@ le source = la position dans la sortie BP3.
 Les autres qualifiers (`weight`, `mode`, `scan`, `on_fail`) après `}` appartiennent
 à la **règle**, pas au bloc polymétrique. Le parser utilise un lookahead sur la clé.
 
-`{A}[speed:2]` -> `{2, A}` en BP3. Ratios fractionnaires : `{A}[speed:1/2]` -> `{1/2, A}`.
+**Ratio de cadre** : le 1er champ `{M, …}` est porté par le qualifier **`speed`** de `qualifiers`.
+La **durée de surface** `:N` (supprime l'ancien `[speed:N]`, cf. décision 2026-06-26) **désucre vers
+ce même qualifier** — `{A B}:2` → `Polymetric{qualifiers:[speed:2]}` → `{2, A B}`. ⚠️ Le ratio vit
+ICI, **jamais dans un champ ad hoc** : c'est le contrat que lisent BP3 (`encoder.js` `getQualValue`)
+ET BPx. `{A}:2` -> `{2, A}`. Ratios fractionnaires : `{A}:1/2` -> `{1/2, A}` (value = "1/2", chaîne).
+
+## Portées d'attachement × nœud AST, par élément (CONTRAT)
+
+Un suffixe/opérateur peut s'attacher à une **base** de portées (l'espace et le `!` désambiguïsent —
+cf. `EBNF.md` §Portées). **Cette base n'est pas une loi uniforme** : chaque élément déclare **quelles
+portées lui sont valides** et **vers quel nœud AST il se traduit pour chacune**. Ce tableau est le
+**contrat** que lisent les consommateurs de l'AST (BP3 *et* BPx) : un producteur qui invente un champ
+hors-contrat (ex. un `frame` ad hoc pour un ratio qui appartient à `Polymetric.qualifiers`) casse le
+chemin vivant en silence, même si un autre chemin reste vert. **Citer cette table AVANT de coder une
+représentation.**
+
+Les cinq portées : `terminal` (collé) · `groupe` (collé `}`) · `règle` (espacé, fin de RHS) ·
+`!accolé` (collé, flux conjoint) · `!inline` (espacé, événement séparé).
+
+| Élément | terminal | groupe | règle | !accolé | !inline | Nœud AST |
+|---------|:---:|:---:|:---:|:---:|:---:|----------|
+| **durée `:N`** | ✅ | ✅ | ✅ | ❌ | ❌ | `Polymetric.qualifiers` (qualifier `speed`) — le RHS/le terminal est emballé dans le `Polymetric` |
+| **tempo `/N` `\N` `*N`** | ✅ `A[/2]` | ✅ | ✅ `[/2]A` | ❌ | ✅ `![/2]` | `TempoOp{operator, value, scope}` |
+| **runtime `(clé:val)`** | ✅ | ✅ | ✅ | ✅ | ✅ | terminal/groupe/règle → `…suffixQualifiers`/`runtimeQualifier` ; `!` → `InstantControl{conjoint}` |
+| **moteur `[weight]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.flags` |
+| **moteur `[mode]` `[scan]`** | ❌ | ❌ | ✅ / préambule bloc | ❌ | ❌ | `Rule.mode` / préambule sous-grammaire |
+| **`scale`** (polymétrie) | ❌ | ✅ | ❌ | ❌ | ❌ | `Polymetric.qualifiers` (qualifier `scale`) |
+
+Portée invalide pour un élément = **erreur fail-loud**, jamais un avalement silencieux (ex. durée
+isolée dans le flux `A :2 B` → `ParseError`). La colonne « nœud AST » est **normative** : c'est là,
+et nulle part ailleurs, que le consommateur lit la valeur.
 
 ### `SimultaneousGroup`
 
