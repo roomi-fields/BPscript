@@ -1809,6 +1809,21 @@ function parse(tokens, opts = {}) {
     // RHS
     const rhs = parseRhsElements();
 
+    // Durée NIVEAU-RÈGLE : `S -> A B C :2` (espacé, en fin de RHS) → tout le RHS dans le cadre
+    // {2, …}. C'est la portée `règle` de la durée (règle universelle de portée, cf. AST_SPEC).
+    // Le désucrage passe par le MÊME qualifier `speed` que les portées terminal/groupe (contrat AST).
+    // Si un élément RHS SUIT le `:N`, la durée est ISOLÉE au milieu du flux (portée inline —
+    // INTERDITE pour la durée, qui exige un hôte) → erreur claire (fail-loud), pas d'avalement.
+    if (at(T.COLON) && peek(1).type === T.INT && rhs.length > 0) {
+      advance(); // consume COLON
+      const dur = parseColonFrame();
+      const inner = rhs.splice(0, rhs.length);
+      rhs.push({ type: 'Polymetric', voices: [inner], qualifiers: [dur], runtimeQualifier: null, label: null });
+      if (atRhsElementStart()) {
+        throw new ParseError(`durée isolée dans le flux : ':N' se colle à un terminal (A4:1/2), un groupe ({A B}:2) ou toute la règle (en fin de RHS) — jamais au milieu du flux`, current());
+      }
+    }
+
     // Runtime qualifier suffix on rule: S -> C2 C2 (vel:100)
     // Loose check: accept opaque keys even when no @controls lib is loaded
     // (EBNF couche 3 — rule = ... rhs , [ runtime_qualifier ]).
@@ -2681,6 +2696,18 @@ function parse(tokens, opts = {}) {
 
   function isControlName(name) {
     return libCtx.controlNames.has(name);
+  }
+
+  // Vrai si le jeton courant peut DÉMARRER un élément RHS (cf. parseRhsElement). Sert à distinguer
+  // une durée en FIN de règle (`A B C :2`, portée règle, valide) d'une durée ISOLÉE au milieu du
+  // flux (`A :2 B`, portée inline — INTERDITE pour la durée). Les terminateurs de règle (NEWLINE,
+  // [], (), flèches) ne démarrent pas d'élément.
+  function atRhsElementStart() {
+    const t = current().type;
+    return t === T.IDENT || t === T.LBRACE || t === T.REST || t === T.PROLONG
+        || t === T.UNDETERMINED || t === T.PERIOD || t === T.PIPE || t === T.QUESTION
+        || t === T.DOLLAR || t === T.AMPERSAND || t === T.TILDE || t === T.BANG
+        || t === T.TRIGGER_IN || t === T.HASH || t === T.BACKTICK || t === T.LAMBDA || t === T.INT;
   }
 
   // ============================================================
