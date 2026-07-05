@@ -8,7 +8,9 @@
 
 @core
 @controls
-@alphabet.raga:midi
+@alphabet.sargam:midi
+@octaves.western
+@tuning.sargam_22shruti
 @octaves:western
 
 // --- Sous-grammaire 1 @mode:random — structure ---

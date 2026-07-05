@@ -9,7 +9,8 @@
 
 @core
 @controls
-@alphabet.raga:midi
+@alphabet.sargam:midi
+@tuning.sargam_22shruti
 
 // Settings
 @ins:3
