@@ -627,9 +627,24 @@ function validateTerminals(ast) {
 }
 
 function applyDefaultActor(ast) {
-  if (!ast) return;
-  if ((ast.actors || []).length > 0) return; // au moins un @actor déclaré → rien à faire
-  const transportKey = defaultActorTransport();
+  if (!ast) return [];
+  const errors = [];
+  // Le binding de sortie de l'alphabet de scène (`@alphabet.X:midi` → runtime:'midi') est la
+  // clé de connexion transport (+eval) de l'UNIQUE acteur implicite (AST.md:94). Décision Romain
+  // 2026-07-05 (acteur unique implicite) : sans @actor, ce binding renseigne le transport de
+  // l'acteur synthétique ; AVEC un @actor, c'est un CHEVAUCHEMENT interdit (implicite XOR explicite).
+  const alphaBinding = (ast.directives || []).find((d) => d.name === 'alphabet' && d.runtime);
+  if ((ast.actors || []).length > 0) {
+    if (alphaBinding) {
+      errors.push({
+        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (@alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) désigne un acteur implicite, incompatible avec un @actor explicite — choisis l'un OU l'autre`,
+        line: alphaBinding.line || 0,
+      });
+    }
+    return errors; // au moins un @actor déclaré → pas d'acteur implicite (pas de chevauchement)
+  }
+  // Transport de l'acteur implicite : binding de l'alphabet s'il existe, sinon défaut du composant.
+  const transportKey = (alphaBinding && alphaBinding.runtime) || defaultActorTransport();
   const transport = { type: 'TransportRef', key: transportKey, params: {} };
   ast.actors = [{
     type: 'ActorDirective',
@@ -643,6 +658,7 @@ function applyDefaultActor(ast) {
     synthetic: true, // acteur implicite (aucun @actor déclaré) — panneau Acteurs vide
     line: 0,
   }];
+  return errors;
 }
 
 /**
@@ -874,7 +890,7 @@ export function compileToBPxAST(source, environnement) {
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
-    applyDefaultActor(ast);   // acteur implicite `default` si aucun @actor (LAN-5 / KAI-9)
+    result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
