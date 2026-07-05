@@ -20,7 +20,7 @@
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, describeVocabulary } from './libs.js';
-import { resolveActors } from './actorResolver.js';
+import { resolveActors, expandAlphabetTerminals } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
@@ -576,6 +576,53 @@ function deriveAlphabetFromTuning(ast) {
   }
 }
 
+// FAIL-LOUD terminaux (bug 1.1 couche 2, Romain 2026-07-05) : le vocabulaire UTILISÉ (les
+// terminaux des règles) doit être DÉCLARÉ par un alphabet en portée. Un terminal-note qui
+// n'appartient à aucun alphabet effectif (ex. `C4` dans une scène `@alphabet.sargam`), et qui
+// n'est ni un non-terminal, ni un symbole déclaré, ni du code → CRIE à la compilation.
+// Union des alphabets effectifs = SÛRE (pas de faux positif cross-acteur).
+function validateTerminals(ast) {
+  if (!ast) return [];
+  const errors = [];
+  const codeVoice = new Set((ast.actors || []).filter((a) => (a.properties || {}).eval).map((a) => a.name));
+
+  // Vocabulaire VALIDE = terminaux de TOUS les alphabets effectifs (octaviés + formes nues).
+  const known = new Set(['lambda']);
+  const addAlphabet = (name, octaves) => {
+    const lib = loadLib('alphabet', name);
+    if (!lib || !lib.notes) return false;
+    for (const t of expandAlphabetTerminals(lib, octaves)) known.add(t);
+    const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
+      ? Object.keys(lib.alterations) : [''];
+    for (const note of lib.notes) for (const alt of alts) known.add(note + alt); // forme nue (défaut d'octave)
+    return true;
+  };
+  let anyAlphabet = false;
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
+  if (sceneAlpha) anyAlphabet = addAlphabet(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || anyAlphabet;
+  for (const a of ast.actors || []) { const p = a.properties || {}; if (p.alphabet) anyAlphabet = addAlphabet(p.alphabet, p.octaves || null) || anyAlphabet; }
+  if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider
+
+  // Symboles DÉCLARÉS : non-terminaux (LHS), déclarations gate/trigger/cv, scènes, homomorphismes.
+  const declared = new Set();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
+  for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
+  for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
+  for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
+
+  // Terminaux RHS : Symbol non couvert = non déclaré.
+  const seen = new Set();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) for (const el of (r.rhs || [])) {
+    if (!el || el.type !== 'Symbol' || !el.name) continue;
+    if (el.payload && codeVoice.has(el.payload.actor)) continue; // voix-code : terminal arbitraire
+    if (known.has(el.name) || declared.has(el.name) || seen.has(el.name)) continue;
+    seen.add(el.name);
+    errors.push({ message: `terminal '${el.name}' non déclaré — absent des alphabets en portée`, line: el.line });
+  }
+  return errors;
+}
+
 function applyDefaultActor(ast) {
   if (!ast) return;
   if ((ast.actors || []).length > 0) return; // au moins un @actor déclaré → rien à faire
@@ -840,6 +887,7 @@ export function compileToBPxAST(source, environnement) {
     const libCtx = loadLibsFromDirectives(directives);
     result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
     result.errors.push(...validateReferences(ast)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
+    result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
 
