@@ -226,6 +226,18 @@ function parse(tokens, opts = {}) {
       skipNewlines();
     }
 
+    // ALIAS @tempo → @mm (décision Romain 2026-07-05) : `tempo` est la surface préférée,
+    // mais BPx LIT le directive `mm` (nœud tempo NATIF BPScript ; `_mm` est le nœud BP3 du
+    // grammar, hors chemin BPScript). On normalise `tempo`→`mm` sur le DIRECTIVE top-level ET
+    // le modifieur de mode `@mode:X(tempo:N)`, avant tout consommateur (libCtx, encodeur BP3,
+    // AST BPx). Le bloc ENGINE `[tempo:N]` (relatif → `_tempo`) N'EST PAS un scene.directive :
+    // il n'est pas touché. Rétrocompat : @mm continue de marcher (déprécié-doux).
+    for (const d of scene.directives) {
+      if (!d || d.type !== 'Directive') continue;
+      if (d.name === 'tempo') d.name = 'mm';
+      if (Array.isArray(d.modifiers)) for (const m of d.modifiers) if (m && m.name === 'tempo') m.name = 'mm';
+    }
+
     // Load libraries based on @ directives — determines known controls
     libCtx = loadLibsFromDirectives(scene.directives);
 
@@ -1111,7 +1123,9 @@ function parse(tokens, opts = {}) {
       advance();
       modifiers = [];
       while (!at(T.RPAREN) && !atEnd()) {
-        const modName = expect(T.IDENT).value;
+        // Alias @mode:X(tempo:N) → mm (BPx lit mm ; cf. normalisation top-level plus haut).
+        const rawModName = expect(T.IDENT).value;
+        const modName = rawModName === 'tempo' ? 'mm' : rawModName;
         let modValue = true;
         if (at(T.COLON)) {
           advance();

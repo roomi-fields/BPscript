@@ -26,13 +26,6 @@
       ],
       "description": "Absolute metronome marking (BPM)"
     },
-    "tempo": {
-      "bp3": "_mm",
-      "args": [
-        "bpm"
-      ],
-      "description": "Absolute tempo (BPM) — @tempo:N global. Position distingue absolu (@tempo, subgrammar → _mm) du relatif ([tempo:*N], engine → _tempo). Decision 2026-06-26. @mm est l alias déprécié-doux."
-    },
     "randomize": {
       "bp3": "_randomize",
       "args": [],
