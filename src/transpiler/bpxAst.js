@@ -539,6 +539,50 @@ function defaultActorTransport() {
   return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
 }
 
+// PORTER≠RÉSOUDRE (régression ed5a637, architecte [335] 2026-07-05) : le suffixe d'un binding
+// (`@alphabet.X:browser`, `@actor … transport:browser`) est un NOM DE TRANSPORT de surface, PAS
+// un nom de runtime canonique. C'est au producteur (BPScript) de le RÉSOUDRE vers le nom canonique
+// que l'hôte enregistre comme sink, en consultant la DÉFINITION (routing lib : `transport.type`).
+// `:midi` marchait par identité (nom == type) ; `:browser` (type 'webaudio') restait orphelin →
+// sink inexistant → silence. On résout via la lib, jamais un hardcode.
+// Carte NOM DE TRANSPORT (surface) → TYPE (runtime canonique) sur tous les profils de la routing lib.
+function transportTypeMap() {
+  const routing = loadLib('routing') || {};
+  const map = {};
+  for (const profName of Object.keys(routing)) {
+    const prof = routing[profName];
+    const transports = prof && prof.transports;
+    if (!transports || typeof transports !== 'object') continue;
+    for (const tname of Object.keys(transports)) {
+      const t = transports[tname];
+      if (t && t.type) map[tname] = t.type;
+    }
+  }
+  return map;
+}
+
+// Résout un nom de surface vers le nom de runtime canonique. Un nom de transport connu → son type ;
+// sinon on le laisse tel quel (déjà un type canonique : 'audio' défaut, 'osc', 'webaudio', 'midi',
+// 'code' — ou hors routing, non résoluble ici : ce n'est pas notre rôle d'inventer).
+function canonicalRuntimeName(name, typeMap) {
+  if (!name) return name;
+  return Object.prototype.hasOwnProperty.call(typeMap, name) ? typeMap[name] : name;
+}
+
+// Normalise le transport de CHAQUE acteur (implicite ET @actor explicite) vers le runtime canonique.
+// Point de passage unique : couvre tous les chemins où un nom de transport devient output.runtime.
+function canonicalizeActorTransports(ast) {
+  if (!ast || !Array.isArray(ast.actors) || ast.actors.length === 0) return;
+  const typeMap = transportTypeMap();
+  for (const actor of ast.actors) {
+    const tr = actor.properties && actor.properties.transport;
+    if (tr && tr.key) tr.key = canonicalRuntimeName(tr.key, typeMap);
+    for (const ref of actor.references || []) {
+      if (ref && ref.category === 'transport' && ref.name) ref.name = canonicalRuntimeName(ref.name, typeMap);
+    }
+  }
+}
+
 /**
  * Matérialise l'acteur IMPLICITE `default` DANS L'AST quand la scène ne déclare AUCUN
  * @actor (cas `.bps` simple, `.gr`, cv-adsr) — LAN-5, validé Romain 2026-06-26.
@@ -891,6 +935,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
+    canonicalizeActorTransports(ast); // nom de transport (surface) → runtime canonique (routing lib transport.type) — implicite ET @actor (régression ed5a637, architecte [335])
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
