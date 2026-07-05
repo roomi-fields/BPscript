@@ -608,6 +608,7 @@ function validateTerminals(ast) {
   const declared = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
   for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
+  for (const c of ast.cvInstances || []) if (c && c.name) declared.add(c.name); // `cv NAME : …` → NAME est un modulateur utilisable comme terminal de règle (voix CV)
   for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
   for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
   // Motifs temporels (@timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
