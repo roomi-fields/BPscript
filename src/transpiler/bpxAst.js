@@ -555,6 +555,27 @@ function defaultActorTransport() {
  *
  * @param {object} ast  AST de scène (muté en place)
  */
+// DÉRIVATION alphabet ← accordage (bug 1.1, Romain 2026-07-05) : un accordage déclare son
+// alphabet (`tunings.json` Y.alphabet). Quand un accordage est invoqué SANS alphabet, l'alphabet
+// EFFECTIF se DÉRIVE de l'accordage (cascade), il n'est JAMAIS un western caché. Rendu EXPLICITE
+// dans l'AST (acteur : `props.alphabet` ; scène : injection d'une directive `@alphabet.Y.alphabet`).
+function deriveAlphabetFromTuning(ast) {
+  if (!ast) return;
+  const tuningAlpha = (tname) => { const t = loadLib('tuning', tname); return (t && t.alphabet) || null; };
+  for (const actor of ast.actors || []) {
+    const p = actor.properties || {};
+    if (p.tuning && !p.alphabet) { const a = tuningAlpha(p.tuning); if (a) p.alphabet = a; }
+  }
+  const dirs = ast.directives || [];
+  const tun = dirs.find((d) => d.name === 'tuning' && d.subkey);
+  const alph = dirs.find((d) => d.name === 'alphabet' && d.subkey);
+  if (tun && !alph) {
+    const a = tuningAlpha(tun.subkey);
+    if (a) dirs.push({ type: 'Directive', name: 'alphabet', subkey: a, runtime: null, value: null,
+                       aliases: null, modifiers: null, line: tun.line, _derivedFromTuning: true });
+  }
+}
+
 function applyDefaultActor(ast) {
   if (!ast) return;
   if ((ast.actors || []).length > 0) return; // au moins un @actor déclaré → rien à faire
@@ -763,6 +784,22 @@ function validateReferences(ast) {
     }
   }
 
+  // 5. COHÉRENCE alphabet/accordage (bug 1.1, Romain 2026-07-05) : un accordage n'appartient
+  //    qu'à SON alphabet (`tunings.json` Y.alphabet). Un alphabet DÉCLARÉ qui ne correspond
+  //    pas à celui de l'accordage déclaré = INCOHÉRENCE → CRIE à la compilation (fail-loud),
+  //    jamais compiler-et-sonner un mélange incohérent.
+  const tuningAlphabet = (tname) => { const t = loadLib('tuning', tname); return (t && t.alphabet) || null; };
+  const sceneComp = (axis) => { const d = (ast.directives || []).find((x) => x.name === axis && x.subkey); return d ? d.subkey : null; };
+  const checkCoherence = (alphaName, tuningName, line) => {
+    if (!alphaName || !tuningName) return;
+    const ta = tuningAlphabet(tuningName);
+    if (ta && ta !== alphaName) {
+      errors.push({ message: `alphabet '${alphaName}' incohérent avec l'accordage '${tuningName}' (qui appartient à l'alphabet '${ta}') — un accordage ne se combine qu'avec son alphabet`, line: line || 0 });
+    }
+  };
+  checkCoherence(sceneComp('alphabet'), sceneComp('tuning'), 0);
+  for (const actor of ast.actors || []) checkCoherence((actor.properties || {}).alphabet, (actor.properties || {}).tuning, actor.line);
+
   // 4. Références d'entité des ACTEURS (axes à catalogue) → existence catalogue.
   for (const actor of ast.actors || []) {
     const props = actor.properties || {};
@@ -782,6 +819,7 @@ export function compileToBPxAST(source, environnement) {
     // rien (BPx/Kairos lisent `payload.actor` opaque) → sans cette passe, toute
     // note nue part acteur-nulle dans l'arbre. AVANT applyDefaultActor : l'acteur
     // synthétique `default` n'a pas d'alphabet (faux « no alphabet property » sinon).
+    deriveAlphabetFromTuning(ast); // alphabet ← accordage quand @alphabet absent (bug 1.1) — AVANT resolveActors
     result.errors.push(...resolveActors(ast).errors);
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
