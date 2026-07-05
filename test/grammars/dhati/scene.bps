@@ -24,7 +24,7 @@
 @core
 @controls
 @sound.tabla_perc
-@mm:15
+@tempo:15
 @transcription.dhati
 
 // Terminaux — bols de tabla

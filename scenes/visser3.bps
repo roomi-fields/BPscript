@@ -9,7 +9,7 @@
 @core
 @controls
 @alphabet.western:midi
-@mm:120
+@tempo:120
 
 // --- Sous-grammaire 1 @mode:ord — structure ---
 

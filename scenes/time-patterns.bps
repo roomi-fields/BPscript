@@ -10,7 +10,7 @@
 @core
 @controls
 @alphabet.western:midi
-@mm:120
+@tempo:120
 
 // Time patterns — ratios de durée nommés
 // NOTE: la section TIMEPATTERNS: de BP3 n'a pas d'équivalent direct en BPscript.

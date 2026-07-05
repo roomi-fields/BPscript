@@ -9,7 +9,7 @@
 @controls
 @alphabet.sargam:midi
 @octaves:western
-@mm:60
+@tempo:60
 @striated
 
 // --- Sous-grammaire 1 @mode:random — transformations structurelles ---

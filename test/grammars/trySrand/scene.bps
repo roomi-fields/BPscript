@@ -1,5 +1,5 @@
 @controls
-@mode:random(mm:60.0000,striated,randomize)
+@mode:random(tempo:60.0000,striated,randomize)
 S -> A[/5] B C D E
 A -> {C3 B3 E3 F3 G3}[shuffle]
 B -> ![@seed:1] {C4 B4 E4 F4 G4}[shuffle]

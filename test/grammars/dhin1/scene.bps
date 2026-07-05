@@ -8,7 +8,7 @@
 //   dhinOOdhagenadhaOOdhagenX006 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitadhinOOdhagenadhatigegenakateeneteenakena
 //   dhinOOdhagenadhaOOdhagenX007 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitagenaOdhagenadhatigegenakateeneteenakena
 //
-@mode:random(mm:360.0000,striated)
+@mode:random(tempo:360.0000,striated)
 S <> S48 [meter:4+4/6]
 S <> S96 [meter:4+4+4+4/6]
 -----

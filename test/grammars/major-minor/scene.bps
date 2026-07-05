@@ -4,7 +4,7 @@
 @core
 @controls
 @alphabet.western:midi
-@mm:60
+@tempo:60
 @striated
 
 // --- Sous-grammaire 1 @mode:ord ---

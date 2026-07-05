@@ -10,7 +10,7 @@
 @alphabet.western:midi
 
 // Settings
-@mm:60
+@tempo:60
 @striated
 
 // Non-terminaux : S, A

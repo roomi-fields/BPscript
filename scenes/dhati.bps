@@ -19,7 +19,7 @@
 @core
 @controls
 @sounds:tabla_perc
-@mm:15
+@tempo:15
 
 // Terminaux — bols de tabla
 gate plus:midi

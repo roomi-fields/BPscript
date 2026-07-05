@@ -8,9 +8,9 @@
 @alphabet.western:midi
 @settings.notreich
 
-// --- Sous-grammaire 1 @mode:random(striated, mm:60) ---
+// --- Sous-grammaire 1 @mode:random(striated, tempo:60) ---
 
-@mode:random(striated, mm:60)
+@mode:random(striated, tempo:60)
 S -> A' B' C' (chan:1, vel:50, volumecont, volume:80)
 
 -----
