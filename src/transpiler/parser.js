@@ -3099,9 +3099,15 @@ function parse(tokens, opts = {}) {
       throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
     }
     if (universeControlNames().has(key) || libCtx.qualifierKeys.has(key)) return;
+    // Ne JAMAIS suggérer « utiliser (clé:…) » : les deux formes ne sont pas des synonymes
+    // (constat bpx 2026-07-10). `![rotate:N]` réordonne la séquence (contrôle moteur sériel) ;
+    // `(rotate:N)` transpose (paramètre de runtime, opaque). Suivre la suggestion ferait perdre
+    // le réordre EN SILENCE. On nomme les deux familles, on n'en recommande aucune.
     throw new ParseError(
       `clé '[${key}:…]' inconnue — ni contrôle de librairie, ni clé réservée du langage ` +
-      `(${[...libCtx.qualifierKeys].join(', ')}) ; pour un paramètre de runtime, utiliser '(${key}:…)'`,
+      `(${[...libCtx.qualifierKeys].join(', ')}) ; vérifier l'orthographe, ou la librairie qui la ` +
+      `déclare. '[${key}:…]' et '![${key}:…]' (contrôle moteur) ne sont PAS interchangeables avec ` +
+      `'(${key}:…)' (paramètre de runtime)`,
       tok);
   }
 

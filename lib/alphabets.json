@@ -9,81 +9,284 @@
     "Legacy BP3 alphabets (octaveChains, terminals, etc.) are preserved",
     "in alphabet.json for backward compatibility with the BP3 engine."
   ],
-
   "_anchor_doc": "L'ANCRE (diapason/baseNote/baseRegister) et l'accordage par défaut (defaultTuning) d'un système de notes vivent sur l'ALPHABET — invariants à travers tous ses accordages (cf. docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). `@alphabet.X` seul suffit à jouer juste. Un accordage peut exceptionnellement redéfinir l'ancre (pitch historique). Défauts overridables : @diapason:N (scène), etc.",
-
   "western": {
     "description": "Western chromatic — 7 natural notes, 5 alteration levels",
-    "notes": ["C", "D", "E", "F", "G", "A", "B"],
-    "alterations": { "bb": -2, "b": -1, "": 0, "#": 1, "##": 2 },
+    "notes": [
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "A",
+      "B"
+    ],
+    "alterations": {
+      "bb": -2,
+      "b": -1,
+      "": 0,
+      "#": 1,
+      "##": 2
+    },
     "octaves": "western",
-    "diapason": 440, "baseNote": "A", "baseRegister": 4, "defaultTuning": "western_12TET"
+    "diapason": 440,
+    "baseNote": "A",
+    "baseRegister": 4,
+    "defaultTuning": "western_12TET"
   },
-
   "sargam": {
     "description": "Indian sargam — 7 svaras",
-    "notes": ["sa", "re", "ga", "ma", "pa", "dha", "ni"],
-    "alterations": { "komal": -1, "": 0, "tivra": 1 },
+    "notes": [
+      "sa",
+      "re",
+      "ga",
+      "ma",
+      "pa",
+      "dha",
+      "ni"
+    ],
+    "alterations": {
+      "komal": -1,
+      "": 0,
+      "tivra": 1
+    },
     "octaves": "saptak",
-    "diapason": 240, "baseNote": "sa", "baseRegister": 1, "defaultTuning": "sargam_12TET"
+    "diapason": 240,
+    "baseNote": "sa",
+    "baseRegister": 1,
+    "defaultTuning": "sargam_12TET"
   },
-
   "solfege": {
     "description": "Solfège latin — do ré mi fa sol la si",
-    "notes": ["do", "re", "mi", "fa", "sol", "la", "si"],
-    "alterations": { "bb": -2, "b": -1, "": 0, "#": 1, "##": 2 },
+    "notes": [
+      "do",
+      "re",
+      "mi",
+      "fa",
+      "sol",
+      "la",
+      "si"
+    ],
+    "alterations": {
+      "bb": -2,
+      "b": -1,
+      "": 0,
+      "#": 1,
+      "##": 2
+    },
     "octaves": "western",
-    "diapason": 440, "baseNote": "la", "baseRegister": 4, "defaultTuning": "solfege_12TET"
+    "diapason": 440,
+    "baseNote": "la",
+    "baseRegister": 4,
+    "defaultTuning": "solfege_12TET"
   },
-
   "arabic": {
     "description": "Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.",
-    "notes": ["rast", "dukah", "sikah", "jaharkah", "nawa", "husayni", "awj"],
-    "alterations": { "bb": -4, "b": -2, "half_b": -1, "": 0, "half_#": 1, "#": 2, "##": 4 },
-    "diapason": 440, "baseNote": "husayni", "baseRegister": 4, "defaultTuning": "arabic_24TET"
+    "notes": [
+      "rast",
+      "dukah",
+      "sikah",
+      "jaharkah",
+      "nawa",
+      "husayni",
+      "awj"
+    ],
+    "alterations": {
+      "bb": -4,
+      "b": -2,
+      "half_b": -1,
+      "": 0,
+      "half_#": 1,
+      "#": 2,
+      "##": 4
+    },
+    "diapason": 440,
+    "baseNote": "husayni",
+    "baseRegister": 4,
+    "defaultTuning": "arabic_24TET"
   },
-
   "turkish": {
     "description": "Turkish makam — note names from Ottoman/Turkish tradition",
-    "notes": ["kaba_cargah", "yegah", "huseyni_asiran", "acem_asiran", "irak", "rast", "dugah", "segah", "buselik", "cargah", "neva", "huseyni", "acem", "evic", "mahur", "gerdaniye"],
-    "alterations": { "bakiye": 4, "kucuk_mucenneb": 5, "": 0, "buyuk_mucenneb": 8, "tanini": 9 },
-    "diapason": 440, "baseNote": "neva", "baseRegister": 0, "defaultTuning": "turkish_53TET",
+    "notes": [
+      "kaba_cargah",
+      "yegah",
+      "huseyni_asiran",
+      "acem_asiran",
+      "irak",
+      "rast",
+      "dugah",
+      "segah",
+      "buselik",
+      "cargah",
+      "neva",
+      "huseyni",
+      "acem",
+      "evic",
+      "mahur",
+      "gerdaniye"
+    ],
+    "alterations": {
+      "bakiye": 4,
+      "kucuk_mucenneb": 5,
+      "": 0,
+      "buyuk_mucenneb": 8,
+      "tanini": 9
+    },
+    "diapason": 440,
+    "baseNote": "neva",
+    "baseRegister": 0,
+    "defaultTuning": "turkish_53TET",
     "_note": "Turkish makam uses many more note names than 7. This is a representative subset. Full system has named pitches for each of the 53 commas in common use."
   },
-
   "gamelan_pelog": {
     "description": "Javanese gamelan pelog — 7 tones",
-    "notes": ["nem", "barang", "bem", "gulu", "lima", "enam", "pitu"],
+    "notes": [
+      "nem",
+      "barang",
+      "bem",
+      "gulu",
+      "lima",
+      "enam",
+      "pitu"
+    ],
     "alterations": {},
-    "diapason": 282, "baseNote": "nem", "baseRegister": 1, "defaultTuning": "gamelan_pelog"
+    "diapason": 282,
+    "baseNote": "nem",
+    "baseRegister": 1,
+    "defaultTuning": "gamelan_pelog"
   },
-
   "gamelan_slendro": {
     "description": "Javanese gamelan slendro — 5 tones",
-    "notes": ["nem", "barang", "gulu", "dada", "lima"],
+    "notes": [
+      "nem",
+      "barang",
+      "gulu",
+      "dada",
+      "lima"
+    ],
     "alterations": {},
-    "diapason": 282, "baseNote": "nem", "baseRegister": 1, "defaultTuning": "gamelan_slendro"
+    "diapason": 282,
+    "baseNote": "nem",
+    "baseRegister": 1,
+    "defaultTuning": "gamelan_slendro"
   },
-
   "shakuhachi": {
     "description": "Shakuhachi — 5 base fingerings (Kinko-ryū)",
-    "notes": ["ro", "tsu", "re", "chi", "ri"],
-    "alterations": { "meri": -1, "": 0, "kari": 1 },
+    "notes": [
+      "ro",
+      "tsu",
+      "re",
+      "chi",
+      "ri"
+    ],
+    "alterations": {
+      "meri": -1,
+      "": 0,
+      "kari": 1
+    },
     "_note": "meri = lowered (chin down), kari = raised (chin up). Additional fingerings exist but vary by school."
   },
-
   "bohlen_pierce": {
     "description": "Bohlen-Pierce — 13 pitch classes in a tritave",
-    "notes": ["C", "Db", "D", "E", "F", "Gb", "G", "H", "Jb", "J", "A", "Bb", "B"],
+    "notes": [
+      "C",
+      "Db",
+      "D",
+      "E",
+      "F",
+      "Gb",
+      "G",
+      "H",
+      "Jb",
+      "J",
+      "A",
+      "Bb",
+      "B"
+    ],
     "alterations": {},
-    "diapason": 440, "baseNote": "C", "baseRegister": 0, "defaultTuning": "bohlen_pierce_equal",
+    "diapason": 440,
+    "baseNote": "C",
+    "baseRegister": 0,
+    "defaultTuning": "bohlen_pierce_equal",
     "_note": "BP uses its own letter naming. No standard alteration system."
   },
-
   "tabla": {
     "description": "Tabla bols — percussion syllables (no pitch)",
-    "notes": ["dhin", "dha", "ge", "ghe", "ka", "ke", "na", "ta", "ti", "tin", "tun", "dhagena", "tirakita", "dheene", "dheena", "teene", "teena", "gena", "kena", "tage", "dhati", "dhage", "trkt", "kt", "tidha", "dhati_bol", "teenake", "dheenage", "dhatrkt", "trktdha", "teenakena", "dheenagena", "ek", "do", "char", "panch", "che", "sat", "at"],
+    "notes": [
+      "dhin",
+      "dha",
+      "ge",
+      "ghe",
+      "ka",
+      "ke",
+      "na",
+      "ta",
+      "ti",
+      "tin",
+      "tun",
+      "dhagena",
+      "tirakita",
+      "dheene",
+      "dheena",
+      "teene",
+      "teena",
+      "gena",
+      "kena",
+      "tage",
+      "dhati",
+      "dhage",
+      "trkt",
+      "kt",
+      "tidha",
+      "dhati_bol",
+      "teenake",
+      "dheenage",
+      "dhatrkt",
+      "trktdha",
+      "teenakena",
+      "dheenagena",
+      "ek",
+      "do",
+      "char",
+      "panch",
+      "che",
+      "sat",
+      "at"
+    ],
     "alterations": {},
     "_note": "Percussion alphabet — no pitch resolution. Bols nominaux uniquement ; le son reviendra via le modèle alphabet→son par backtick (cf. backlog LANG-SONS)."
+  },
+  "simple": {
+    "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",
+    "notes": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z"
+    ],
+    "alterations": {},
+    "_note": "Alphabet ABSTRAIT : aucune hauteur, aucun accordage. Il existe pour que les scenes de test structurelles (derivation, polymetrie, homomorphismes) restent abstraites tout en satisfaisant le garde des terminaux. Ne jamais lui ajouter de diapason/baseNote : un symbole de 'simple' ne sonne pas, il structure."
   }
 }
