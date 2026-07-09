@@ -2003,6 +2003,17 @@ function parse(tokens, opts = {}) {
       else if (at(T.LT)) { op = '<'; advance(); }
       else if (at(T.GTE)) { op = '>='; advance(); }
       else if (at(T.LTE)) { op = '<='; advance(); }
+      else if (at(T.EQUALS)) {
+        // `[scene=1]` en PRÉFIXE : `=` est l'opérateur de MUTATION, il n'a pas cours dans une
+        // garde (docs/spec/LANGUAGE.md:301 — comparaison avant le LHS, calcul dans la RHS).
+        // Le parseur criait déjà, mais par un « Expected RBRACKET » illisible (constat atlas
+        // 2026-07-10, qui l'a pris pour une troncature silencieuse). On nomme la faute.
+        throw new ParseError(
+          `garde '[${flag}=…]' : '=' est une MUTATION, elle s'écrit en fin de règle ` +
+          `('S -> C4 [${flag}=…]'). Pour TESTER la valeur d'un drapeau avant le LHS, comparer ` +
+          `avec '==' ('[${flag}==…] S -> C4')`,
+          current());
+      }
       else {
         // Bare flag test: [Ideas] → non-zero test
         result = { type: 'Guard', flag, operator: null, value: null, mutates: false };
