@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * S5: Compile BPscript scene → BP3 grammar → run on WASM → timed tokens.
+ * S5: Compile BPScript scene → BP3 grammar → run on WASM → timed tokens.
  *
  * Pipeline: scene.bps → transpiler(compileBPS) → grammar + alphabet + settings → WASM → timed tokens
  * Comparison: S5 vs S4 (same terminal names, same engine, different grammar source)
@@ -40,7 +40,7 @@ const gramDef = GRAMMARS[name];
 const s1Mode = gramDef?.production_mode || 'midi';
 const useTextMode = s1Mode === 'text';
 
-// Step 1: Compile BPscript via ESM wrapper (transpiler uses ES modules)
+// Step 1: Compile BPScript via ESM wrapper (transpiler uses ES modules)
 const compileScript = `
 import { compileBPS } from '${path.join(ROOT, 'src/transpiler/index.js').replace(/\\/g, '/')}';
 import { readFileSync, writeFileSync } from 'fs';

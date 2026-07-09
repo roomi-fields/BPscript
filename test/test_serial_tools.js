@@ -1,5 +1,5 @@
 /**
- * Test : outils sériels BPscript → BP3
+ * Test : outils sériels BPScript → BP3
  *
  * Vérifie que shuffle/order/retro/rotate et la graine sont émis correctement
  * dans le texte BP3 produit par compileBPS.

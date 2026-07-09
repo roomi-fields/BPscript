@@ -2,7 +2,7 @@
 /**
  * Pipeline runner — orchestrates S0→S1→S2(+S3)→S4→S5 and comparisons.
  * NOTE: S3 (timed tokens) is generated alongside S2 by s2_wasm_orig.cjs.
- * S4 = silent objects (was S3), S5 = BPscript (was S4).
+ * S4 = silent objects (was S3), S5 = BPScript (was S4).
  *
  * Usage:
  *   node runner.cjs drum          Run full pipeline for drum
@@ -93,11 +93,11 @@ function runPipeline(name) {
     status.s4 = 'TODO';
   }
 
-  // S5 (BPscript, was S4)
+  // S5 (BPScript, was S4)
   const sceneName = prev.bpsScene || name;
   const bpsFile = path.join(DIR, '..', 'scenes', `${sceneName}.bps`);
   if (fs.existsSync(bpsFile)) {
-    console.log('\n--- S5: BPscript ---');
+    console.log('\n--- S5: BPScript ---');
     status.s5 = run('s5_bpscript.cjs', sceneName) ? 'PASS' : 'FAIL';
     if (status.s5 === 'FAIL') { save(gramDir, status); return status; }
   } else {

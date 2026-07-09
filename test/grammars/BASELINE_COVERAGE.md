@@ -96,7 +96,7 @@ tryMIDIfile, **tryPatternGrammar** (bp3ToScene FIDÈLE, round-trip 12 lignes, co
 - `livecode2`, `mohanam`, `nadaka`, `tryConsoleMaxTime`, `tryObjects` (excluded) : scènes
   présentes, originaux natifs non productifs (raisons datées dans `grammars.json`).
   `tryObjects` : S5 WASM crashe (memory OOB).
-- `dhadhatite_v2` (partial) : transposition BPscript partielle de -gr.dhadhatite.
+- `dhadhatite_v2` (partial) : transposition BPScript partielle de -gr.dhadhatite.
 
 ### Rescan T2 2026-06-10 — FIDÈLE sans infrastructure de test
 

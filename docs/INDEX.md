@@ -1,10 +1,10 @@
-# BPscript — Index documentaire
+# BPScript — Index documentaire
 
 ## spec/ — Le langage tel qu'il EST
 
 | Document | Contenu | Quand le lire |
 |----------|---------|---------------|
-| [LANGUAGE.md](spec/LANGUAGE.md) | Spécification complète : vision, 3 mots / 24 symboles / 9 opérateurs de flags, types temporels (gate/trigger/cv), double déclaration, `[]` moteur vs `()` runtime, backticks, flags, templates, captures, homomorphismes, compilation vers BP3 | Comprendre la syntaxe BPscript, vérifier une construction du langage, coder le tokenizer/parser/encoder |
+| [LANGUAGE.md](spec/LANGUAGE.md) | Spécification complète : vision, 3 mots / 24 symboles / 9 opérateurs de flags, types temporels (gate/trigger/cv), double déclaration, `[]` moteur vs `()` runtime, backticks, flags, templates, captures, homomorphismes, compilation vers BP3 | Comprendre la syntaxe BPScript, vérifier une construction du langage, coder le tokenizer/parser/encoder |
 | [EBNF.md](spec/EBNF.md) | Grammaire formelle ISO 14977. Toutes les productions EBNF du langage | Valider la syntaxe, coder le parser, vérifier un edge case grammatical |
 | [AST.md](spec/AST.md) | Nœuds AST : Scene, Directive, Rule, CVInstance, Macro, Polymetry, etc. | Coder des transformations AST, comprendre la sortie du parser |
 
@@ -16,7 +16,7 @@
 | [PITCH.md](design/PITCH.md) | Résolution pitch 6 couches : Layer 0 Actor (binding) → Layer 1 Alphabet → Layer 2 Octaves → Layer 3 Temperament → Layer 4 Tuning → Layer 5 Resolver. Annexe transposition multi-tempéraments | Comprendre comment un token "C#4" devient une fréquence, coder le resolver, ajouter un alphabet/tuning |
 | [SOUNDS.md](design/SOUNDS.md) | Résolution terminaux unifiée : 3 échelles (spec < CT < CV), formats JSON (table, template, paramétrique, par registre, samples), résolution par transport (Web Audio/MIDI/OSC), dégradation gracieuse, implémentation (ActorRegistry, SoundsResolver) | Ajouter un instrument, comprendre le cascading spec/CT/CV, coder un transport |
 | [CV.md](design/CV.md) | Objets CV temporels : ADSR, LFO, ramp. Routage par cible, bus audio | Ajouter un type de CV, comprendre le routage modulation |
-| [EFFECTS.md](design/EFFECTS.md) | Effets et signal processing. Pas de patching dans BPscript — le runtime définit le graphe, le langage définit les paramètres | Comprendre la frontière BPscript/runtime pour les effets |
+| [EFFECTS.md](design/EFFECTS.md) | Effets et signal processing. Pas de patching dans BPScript — le runtime définit le graphe, le langage définit les paramètres | Comprendre la frontière BPScript/runtime pour les effets |
 | [TEMPORAL_DEFORMATION.md](design/TEMPORAL_DEFORMATION.md) | Constraint solver : structure tree (arbre polymétrique avec proportions), 3 modes de déformation (span fixe, proportions fixes, contrainte relâchée), sources de contrôle (potards, MIDI CC, CV, drag) | Coder le constraint solver, comprendre la déformation temporelle live |
 | [HOMOMORPHISMS.md](design/HOMOMORPHISMS.md) | Étiquetage post-dérivation : format `{section}.{depth}%{terminal}`, résolution REPL, stacking. Instructions d'implémentation (agent transpileur + agent WASM) | Coder les homomorphismes, comprendre le labeling, briefer un agent |
 | [REPL.md](design/REPL.md) | Architecture backticks : 3 types (orphelin, inline, standalone), REPL adapters (SC, Tidal, Python), sessions, timing | Coder un adapter REPL, comprendre l'exécution des backticks |

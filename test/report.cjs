@@ -48,7 +48,7 @@ lines.push('');
 if (fs.existsSync(path.join(dir, 'original.gr'))) lines.push('- `original.gr` — grammaire Bernard');
 if (fs.existsSync(path.join(dir, 'silent.gr'))) lines.push('- `silent.gr` — réécriture silent sound objects');
 if (fs.existsSync(path.join(dir, 'silent.al'))) lines.push('- `silent.al` — alphabet plat');
-if (fs.existsSync(path.join(dir, 'scene.bps'))) lines.push('- `scene.bps` — scène BPscript');
+if (fs.existsSync(path.join(dir, 'scene.bps'))) lines.push('- `scene.bps` — scène BPScript');
 lines.push('');
 
 // Stages summary
@@ -59,7 +59,7 @@ lines.push(`|-------|--------|--------|`);
 lines.push(`| S1 Native C | ${status.s1 || '?'} | ${s1 ? s1.tokens.length : '-'} |`);
 lines.push(`| S2 WASM orig | ${status.s2 || '?'} | ${s2 ? s2.tokens.length : '-'} |`);
 lines.push(`| S3 WASM silent | ${status.s3 || '?'} | ${s3 ? s3.tokens.length : '-'} |`);
-lines.push(`| S4 BPscript | ${status.s4 || '?'} | ${s4 ? s4.tokens.length : '-'} |`);
+lines.push(`| S4 BPScript | ${status.s4 || '?'} | ${s4 ? s4.tokens.length : '-'} |`);
 lines.push('');
 
 // Token comparison table
@@ -78,7 +78,7 @@ if (maxLen > 0) {
   // Sort S1 by start time for comparison
   let s1sorted = s1 ? [...s1.tokens].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0])) : null;
 
-  lines.push('| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPscript) |');
+  lines.push('| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPScript) |');
   lines.push('|--:|:-------------|:---------------|:------------|:--------------|');
 
   for (let i = 0; i < maxLen; i++) {

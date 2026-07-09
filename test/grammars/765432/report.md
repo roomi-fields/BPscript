@@ -8,7 +8,7 @@ Result: **PASS**
 - `original.gr` — grammaire Bernard
 - `silent.gr` — réécriture silent sound objects
 - `silent.al` — alphabet plat
-- `scene.bps` — scène BPscript
+- `scene.bps` — scène BPScript
 
 ## Stages
 
@@ -17,11 +17,11 @@ Result: **PASS**
 | S1 Native C | PASS | 823 |
 | S2 WASM orig | PASS | 823 |
 | S3 WASM silent | PASS | 823 |
-| S4 BPscript | PASS | 823 |
+| S4 BPScript | PASS | 823 |
 
 ## Token comparison
 
-| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPscript) |
+| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPScript) |
 |--:|:-------------|:---------------|:------------|:--------------|
 | 0 | C5 0-500 | do4 0-500 | do4 0-500 | do4 0-500 |
 | 1 | C8 1000-1500 | do7 1000-1500 | do7 1000-1500 | do7 1000-1500 |

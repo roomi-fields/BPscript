@@ -16,11 +16,11 @@ Result: **PASS → PASS → PASS → TODO**
 | S1 Native C | PASS | 8 |
 | S2 WASM orig | PASS | 15 |
 | S3 WASM silent | PASS | 15 |
-| S4 BPscript | TODO | - |
+| S4 BPScript | TODO | - |
 
 ## Token comparison
 
-| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPscript) |
+| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPScript) |
 |--:|:-------------|:---------------|:------------|:--------------|
 | 0 | C4 0-387 | ? 0-2000 | t1 0-2500 |  |
 | 1 | D4 387-774 | ? 2000-5000 | t2 2500-5000 |  |

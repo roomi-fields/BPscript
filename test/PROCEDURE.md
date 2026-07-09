@@ -12,7 +12,7 @@ S1  BP3 C natif (Linux)   → MIDI events ou texte (doit = S0)
 S2  BP3 WASM              → MIDI events ou texte (doit = S1, même format)
 S3  BP3 WASM              → timed tokens bruts (tous tokens avec timing)
 S4  BP3 WASM silent       → timed tokens (réécriture silent sound objects)
-S5  BPscript              → timed tokens (scène .bps transpilée)
+S5  BPScript              → timed tokens (scène .bps transpilée)
 ```
 
 ## Comparateurs
@@ -38,7 +38,7 @@ test/grammars/
   s1_native.cjs         ← S1 : BP3 natif Linux → snapshot
   s2_wasm_orig.cjs      ← S2+S3 : WASM → 2 snapshots (MIDI/text + timed tokens)
   s4_wasm_silent.cjs    ← S4 : WASM silent objects → snapshot
-  s5_bpscript.cjs       ← S5 : BPscript → snapshot
+  s5_bpscript.cjs       ← S5 : BPScript → snapshot
   compare_s0_s1.cjs     ← comparateur S0/S1
   compare_s1_s2.cjs     ← comparateur S1/S2
   compare_s2_s3.cjs     ← comparateur S2/S3
@@ -166,9 +166,9 @@ node s4_wasm_silent.cjs drum
 
 ---
 
-## S5 : BPscript (ex-S4)
+## S5 : BPScript (ex-S4)
 
-La scène `.bps` est la traduction BPscript de la grammaire. Elle doit produire une grammaire BP3 identique (ou fonctionnellement équivalente).
+La scène `.bps` est la traduction BPScript de la grammaire. Elle doit produire une grammaire BP3 identique (ou fonctionnellement équivalente).
 
 ### Commande
 

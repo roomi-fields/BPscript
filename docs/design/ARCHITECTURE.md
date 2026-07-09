@@ -598,7 +598,7 @@ Commencer par quantized (comme TidalCycles).
 
 ## Composition distribuée
 
-Plusieurs instances BPscript/BP3 synchronisées par triggers :
+Plusieurs instances BPScript/BP3 synchronisées par triggers :
 
 ```
 ┌────────────────┐          ┌────────────────┐

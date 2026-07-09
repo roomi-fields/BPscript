@@ -36,7 +36,7 @@ const SRC = path.join(ROOT, 'src', 'transpiler');
 // Normalisation générique appliquée aux DEUX côtés de la comparaison :
 //   _name(args) → _ctrl(name,args)        (contrôles avec arguments)
 //   _name       → _ctrl(name,1)           (contrôles sans arguments)
-// 'script' est exclu : _script(CT n) est l'encodage compilé BPscript,
+// 'script' est exclu : _script(CT n) est l'encodage compilé BPScript,
 // résolu séparément par resolveScriptCT via la controlTable.
 // Les contrôles ENGINE (_tempo, _retro, _legato…) ne sont PAS normalisés :
 // ils sont émis verbatim par compileBPS et se comparent directement.
@@ -168,7 +168,7 @@ function extractSignificant(text) {
     // ni une décimale N.M (ex: _value(blurb,25.6)) — "." suivi d'un chiffre.
     raw = raw.replace(/([A-Za-z0-9'#_]+)\.(?!\d)/g, '$1 .');
 
-    // Aliaser les identifiants avec "-" internes (terminaux BP3 non compatibles BPscript).
+    // Aliaser les identifiants avec "-" internes (terminaux BP3 non compatibles BPScript).
     // bp3ToScene remplace "-" → "O" dans les identifiants pour que compileBPS accepte le BPS.
     // On applique le même remplacement sur l'original pour que la comparaison converge.
     // Pattern : token (séquence sans espace) commençant par une lettre et contenant "-".
@@ -462,13 +462,13 @@ async function main() {
     },
     {
       name: 'opérateur \\N tempo dans RHS → NON GÉRÉ attendu',
-      // \\N n'est pas tokenisé par le tokenizer BPscript → reste NON GÉRÉ.
+      // \\N n'est pas tokenisé par le tokenizer BPScript → reste NON GÉRÉ.
       grammar: `RND\ngram#1[1] S --> \\5 A`,
       expectNonGere: true,
     },
     {
       name: 'notation période A8.',
-      // BP3 original: 'A8. B8' (collé). Compilé depuis BPscript: 'A8 . B8' (espacé).
+      // BP3 original: 'A8. B8' (collé). Compilé depuis BPScript: 'A8 . B8' (espacé).
       // Cette différence de formatage est classifiée DIFFÈRE:format_period au corpus scan.
       // Ici on valide que la compilation réussit et que les tokens sont identiques.
       grammar: `ORD\ngram#1[1] S --> A8 . B8`,
@@ -488,7 +488,7 @@ async function main() {
     // ---- E6 : ancre de gabarit maître « $ nu » ← (= SANS fermeture) -----------
     {
       name: 'E6: $ nu LHS — dhati3 GRAM#4[7] (= V1 #tr <-> (= ti #tr → FIDÈLE',
-      // dhati3 GRAM#4[7] — ancre en LHS et RHS : $ nu en BPscript, (= en BP3
+      // dhati3 GRAM#4[7] — ancre en LHS et RHS : $ nu en BPScript, (= en BP3
       grammar: `LIN\ngram#4[7] (= V1 #tr <-> (= ti #tr`,
       expectRules: ['gram#1[1] (= V1 #tr <-> (= ti #tr'],
     },
@@ -540,7 +540,7 @@ async function main() {
     {
       name: 'runtime _transpose(0) → round-trip FIDÈLE',
       grammar: `ORD\ngram#1[1] Tr0 --> _transpose(0)`,
-      // bp3ToScene converti en BPscript : Tr0 -> (transpose:0)
+      // bp3ToScene converti en BPScript : Tr0 -> (transpose:0)
       // compileBPS émet : Tr0 --> _script(CT 0)  _script(CT 0_e)
       // Comparaison sémantique : _script(CT 0) ≡ _transpose(0) via controlTable
       expectRules: ['Tr0 --> _transpose(0)'],

@@ -6,7 +6,7 @@ Result: **PASS → PASS → TODO → PASS**
 ## Source files
 
 - `original.gr` — grammaire Bernard
-- `scene.bps` — scène BPscript
+- `scene.bps` — scène BPScript
 
 ## Stages
 
@@ -15,11 +15,11 @@ Result: **PASS → PASS → TODO → PASS**
 | S1 Native C | PASS | 401 |
 | S2 WASM orig | PASS | 401 |
 | S3 WASM silent | TODO | - |
-| S4 BPscript | PASS | 401 |
+| S4 BPScript | PASS | 401 |
 
 ## Token comparison
 
-| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPscript) |
+| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPScript) |
 |--:|:-------------|:---------------|:------------|:--------------|
 | 0 | C3 0-500 | C3 10-510 |  | C3 10-510 |
 | 1 | B3 1000-1500 | C3 1010-1510 |  | C3 1010-1510 |

@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Look for bp3-engine: submodule first (BPscript/bp3-engine/), then sibling (../bp3-engine/)
+// Look for bp3-engine: submodule first (BPScript/bp3-engine/), then sibling (../bp3-engine/)
 const submodule = path.resolve(__dirname, '..', 'bp3-engine');
 const sibling = path.resolve(__dirname, '..', '..', 'bp3-engine');
 const BP3_DIR = fs.existsSync(path.join(submodule, 'builds')) ? submodule : sibling;

@@ -14,11 +14,11 @@ Result: **PASS → PASS → TODO → TODO**
 | S1 Native C | PASS | 5 |
 | S2 WASM orig | PASS | 33 |
 | S3 WASM silent | TODO | - |
-| S4 BPscript | TODO | - |
+| S4 BPScript | TODO | - |
 
 ## Token comparison
 
-| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPscript) |
+| # | S1 (C natif) | S2 (WASM orig) | S3 (silent) | S4 (BPScript) |
 |--:|:-------------|:---------------|:------------|:--------------|
 | 0 | --> @undefined | '-ho.abc' 0-166 |  |  |
 | 1 | ??? @undefined | 'RND' 166-333 |  |  |

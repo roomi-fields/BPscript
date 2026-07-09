@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Run S5 (BPscript transpiler) tests on all active grammars that have a .bps scene.
+ * Run S5 (BPScript transpiler) tests on all active grammars that have a .bps scene.
  * Then compare S4 vs S5 with control-token filtering.
  *
  * Reads grammars.json: only grammars with status=active are tested.
@@ -114,7 +114,7 @@ for (const name of active) {
 }
 
 // Output
-console.log('\n=== S5 BPscript — S4 vs S5 (control-filtered) ===\n');
+console.log('\n=== S5 BPScript — S4 vs S5 (control-filtered) ===\n');
 console.log('Grammar'.padEnd(20) + 'Status'.padEnd(10) + 'S4'.padStart(7) + 'S5'.padStart(7) + '  Note');
 console.log('-'.repeat(70));
 for (const r of results) {

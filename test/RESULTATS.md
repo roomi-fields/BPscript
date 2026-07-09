@@ -22,7 +22,7 @@ Build : v3.4.5-wasm.1
 | S2    | bp3.wasm (WASM)       | S1 vs S2    | MIDI events depuis PlayBuffer1 + p_Instance               |
 | S3    | bp3.wasm (WASM)       | S2 vs S3    | Timed tokens depuis p_Instance (MIDI) ou getResult (TEXT) |
 | S4    | bp3.wasm (WASM)       | S3 vs S4    | Comme S3 mais avec silent.al (bols opaques, pas de MIDI)  |
-| S5    | transpiler + bp3.wasm | S4 vs S5    | Pipeline BPscript complet (.bps → tokens)                 |
+| S5    | transpiler + bp3.wasm | S4 vs S5    | Pipeline BPScript complet (.bps → tokens)                 |
 
 ## Scores globaux — vague de vérification 2026-06-10 (test_all, 650 s, 38 actives)
 
@@ -31,7 +31,7 @@ Build : v3.4.5-wasm.1
 | S1 (natif)          | 38 OK / 0 FAIL | 36 OK | +2 (corpus élargi) |
 | S2 (WASM)           | 37 OK / 1 FAIL (watch, #50) | 36 OK | — |
 | S4 (WASM silent)    | 36 OK / 2 FAIL (watch + 765432 transitoire¹) | 36 OK | — |
-| S5 (BPscript)       | 37 OK / 1 FAIL (watch) | 33 OK | +4 |
+| S5 (BPScript)       | 37 OK / 1 FAIL (watch) | 33 OK | +4 |
 | **S1 vs S2**        | 28 EXACT / 9 TIMING / 0 CONTENT / 1 COUNT | 26/9/0/1 | **+2 EXACT** |
 | **S2 vs S3**        | 31 EXACT / 4 TIMING / 3 CONTENT / 0 | 29/4/3/0 | **+2 EXACT** |
 | **S3 vs S4**        | **37 EXACT / 0 / 0 / 0 (100 %)** | 33/1/0/2 | **+4 EXACT** |

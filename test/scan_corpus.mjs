@@ -2,7 +2,7 @@
  * Scan corpus bp3-engine/test-data/ — classifie chaque grammaire -gr.* en :
  *   FIDÈLE         : round-trip compileBPS(bp3ToScene(gr)).grammar ≡ gr
  *   DIFFÈRE:cause  : diffère, cause identifiée
- *   NON GÉRÉ:cause : construct BP3 non représentable en BPscript
+ *   NON GÉRÉ:cause : construct BP3 non représentable en BPScript
  *
  * Interface bp3ToScene : retourne une string.
  *   - Commence par "NON GÉRÉ:" → non géré

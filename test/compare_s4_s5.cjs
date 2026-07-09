@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Compare S4 (original.gr + silent.al) vs S5 (BPscript transpiler).
+ * Compare S4 (original.gr + silent.al) vs S5 (BPScript transpiler).
  *
  * S5 uses getResult() (text output) for all grammars since alphabets are silent.
  * Filters out non-terminal tokens before comparing:

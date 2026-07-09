@@ -8,7 +8,7 @@ compilation (`compileBPS`) et lecture du moteur BP3 (`Compute.c`, `ProduceItems.
 ## Résumé
 
 Les primitives de saut de dérivation existent **côté moteur BP3** et sont
-**déclarées dans la lib** (`@core`/controls), mais **aucune syntaxe BPscript ne les
+**déclarées dans la lib** (`@core`/controls), mais **aucune syntaxe BPScript ne les
 compile correctement**. Ni l'abstraction lisible `on_fail`, ni le passe-plat brut
 `goto()` / `failed()`.
 
@@ -63,7 +63,7 @@ L'encodeur n'a **aucun** code traitant `on_fail` / `retry` / `fallback` /
    sémantique — ne plus avaler la règle en silence.
 3. **`on_fail:fallback(X)` → `_failed`** : seul mapping fidèle et réalisable de
    l'abstraction. Résoudre le nom de sous-grammaire `X` → index `gram#`, émettre
-   `_failed(g, 1)`. (Adressage d'une *règle* précise non couvert : BPscript ne
+   `_failed(g, 1)`. (Adressage d'une *règle* précise non couvert : BPScript ne
    nomme pas les règles → fallback vers une sous-grammaire, règle 1.)
 4. **Séparer `_goto` de `on_fail`** : c'est un saut inconditionnel. S'il faut
    l'exposer, prévoir une primitive/directive distincte (`goto`/jump), pas `on_fail`.

@@ -1,7 +1,7 @@
 # Tempo Operators: WASM vs Natif — Bugs identifiés
 
 **Date**: 2026-04-08
-**Contexte**: Investigation des opérateurs `/N`, `\N` et `_tempo()` en BP3 pour unifier la syntaxe BPscript.
+**Contexte**: Investigation des opérateurs `/N`, `\N` et `_tempo()` en BP3 pour unifier la syntaxe BPScript.
 **Méthode**: Tests MIDI comparés natif (bp3 v3.3.19 linux) vs WASM (dist/bp3.js).
 
 ## Résumé
@@ -166,11 +166,11 @@ Ces deux anomalies sont partagées natif/WASM — elles ne sont pas des bugs de 
 1. **`\1` ne reset pas** — `\N` puis `\1` ne restaure pas la vitesse de référence (asymétrie avec `/1` qui fonctionne).
 2. **`/0.5` ABORT** — `/N` avec N < 1 crashe en natif (abort dans PolyExpand) ; `_tempo(0.5)` fonctionne.
 
-### Impact sur BPscript (état actuel post-E5)
+### Impact sur BPScript (état actuel post-E5)
 
 `[/N]` sur un élément ou groupe → opérateur nu `/N A` (absolu, persistant, fixtempo). Fonctionne en WASM.
 `[*N]` → bracket `_tempo(1/N) … _tempo(1/1)` (relatif). Fonctionne en WASM.
-`[\N]` → non tokenisé par BPscript. Anomalies natif+WASM documentées ci-dessus.
+`[\N]` → non tokenisé par BPScript. Anomalies natif+WASM documentées ci-dessus.
 
 **`[speed:N]`** sur un polymetric → `{N, ...}` — fonctionne en WASM et natif.
 
