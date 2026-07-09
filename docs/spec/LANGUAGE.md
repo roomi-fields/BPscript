@@ -1384,7 +1384,7 @@ BPScript supporte la signature rythmique via la directive `@meter`.
 
 **Distinction tempo vs metronome :**
 - `[tempo:2]` = multiplicateur relatif (double la vitesse courante)
-- `@mm:120` = marquage metronomique absolu (120 BPM)
+- `@tempo:120` = marquage metronomique absolu (120 BPM)
 - `@striated` / `@smooth` = bascule entre temps strie et temps lisse
 
 ---

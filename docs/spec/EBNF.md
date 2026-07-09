@@ -327,10 +327,10 @@ en preamble BP3 (entre la ligne mode et les règles). Ils sont déclarés dans l
 
 Exemples :
 - `@mode:lin(destru)` → `LIN` + `_destru` en preamble
-- `@mode:random(striated, mm:60)` → `RND` + `_striated _mm(60)` en preamble
+- `@mode:random(striated, tempo:60)` → `RND` + `_striated _mm(60)` en preamble
 - `@mode:ord(smooth)` → `ORD` + `_smooth` en preamble
 
-Les mêmes directives peuvent aussi apparaître en global avec `@` (`@striated`, `@mm:60`),
+Les mêmes directives peuvent aussi apparaître en global avec `@` (`@striated`, `@tempo:60`),
 auquel cas elles s'appliquent au preamble de la première sous-grammaire.
 
 **Mode SUB/SUB1** : en mode substitution, les symboles en LHS sont aussi des terminaux.
@@ -1063,8 +1063,8 @@ smooth   → temps lisse / non pulsé (_smooth)
 mm:N     → marquage métronomique en BPM (_mm(N))
 ```
 
-Utilisables comme modificateurs de `@mode` : `@mode:lin(destru)`, `@mode:random(striated, mm:60)`.
-Ou en global : `@striated`, `@mm:60` (appliqué au preamble de la première sous-grammaire).
+Utilisables comme modificateurs de `@mode` : `@mode:lin(destru)`, `@mode:random(striated, tempo:60)`.
+Ou en global : `@striated`, `@tempo:60` (appliqué au preamble de la première sous-grammaire).
 
 ### Clés réservées de `@`
 

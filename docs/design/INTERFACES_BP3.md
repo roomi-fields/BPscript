@@ -103,7 +103,7 @@ gram#N[M] LHS --> RHS
 | `[mode:random]` | `RND` (mode de sous-grammaire) |
 | `[weight:50]` | `<50>` |
 | `[/2]` | `/2` (opérateur temporel) |
-| `@tempo:120` ou `@mm:120` | `_mm(120)` |
+| `@tempo:120` | `_mm(120)` |
 | `(vel:100)` | `_script(CT n)` (passé au dispatcher) |
 
 ### 4. Settings — `bp3_load_settings(json)` ou `bp3_load_settings_params(...)`

@@ -18,7 +18,7 @@
 
 @core
 @controls
-@sounds:tabla_perc
+@sound.tabla_perc
 @tempo:15
 
 // Terminaux — bols de tabla
