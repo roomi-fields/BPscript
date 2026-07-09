@@ -85,6 +85,22 @@ dépôt PRIVÉ `/home/romi/dev/bp/hub`. Le protocole est MÉCANISÉ par le CLI `
    (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois, référencé ailleurs.
 6. **Le code fait foi** : un statut se vérifie sur pièces, jamais affirmé de mémoire.
 
+### Un fail-loud de langage est une action de FRONTIÈRE (OBLIGATOIRE, architecte 2026-07-09)
+
+Quand une forme jusque-là acceptée devient une erreur (chantier durée 2026-07-05, garde des clés
+`[]` 9ec2abc), ce n'est **pas** un commit interne : les consommateurs aval **live-importent** cette
+source, et leur portillon casse en minutes. AVANT ou AVEC le commit, envoyer une note `tour` aux
+consommateurs — **bpx au minimum**, **kanopi** si des scènes de la bibliothèque sont touchées — avec :
+
+1. la **liste EXACTE** des formes invalidées (pas « j'ai durci les clés ») ;
+2. le **commit** ;
+3. la **migration attendue**, forme par forme.
+
+Constat qui fonde la règle : deux fois le 2026-07-09, bpx a découvert mes fail-loud à son portillon,
+sans préavis. C'est le patron « caler le chantier d'un autre », interdit. Corollaire : **avant** de
+livrer un fail-loud, passer le corpus des consommateurs (`BPx/test/scenes/`) au compilateur et
+compter les casses — ne jamais les laisser les découvrir.
+
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/`:
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`

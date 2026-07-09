@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLibsFromDirectives } from './libs.js';
+import { loadLibsFromDirectives, universeControlNames } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -3082,7 +3082,11 @@ function parse(tokens, opts = {}) {
   // flux `![…]`, préfixe, polymétrie) : parseQualifier est le passage obligé de toutes.
   // Loi : « Toute clé non reservee dans [] est une erreur de compilation »
   // (docs/spec/LANGUAGE.md:486). L'univers vient de la DONNÉE, jamais d'une liste en dur :
-  // contrôles des librairies chargées (lib/controls.json…) + @core.schema.qualifierKeys.
+  // contrôles de TOUTES les libs du REGISTRE + @core.schema.qualifierKeys.
+  // L'univers est celui du registre, PAS des seules libs chargées par la scène : `[rotate:2]`
+  // reste une clé connue dans une scène sans `@controls` (cas des scènes de BPx). Exiger
+  // `@controls` pour employer un contrôle serait une décision de SURFACE, non tranchée — le
+  // garde ne rejette donc QUE l'inconnu, sans reclasser ni restreindre aucune clé existante.
   function checkQualifierKey(key, tok) {
     // `[speed:N]` SUPPRIMÉ (décision 2026-06-26-trois-concepts-temps-duree) : `speed` est
     // subsumé par la DURÉE, qui s'écrit avec ':' collé — `{A B}:2`, `A4:1/2`, `}:N`.
@@ -3094,7 +3098,7 @@ function parse(tokens, opts = {}) {
     if (key === 'shuffle') {
       throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
     }
-    if (libCtx.controlNames.has(key) || libCtx.qualifierKeys.has(key)) return;
+    if (universeControlNames().has(key) || libCtx.qualifierKeys.has(key)) return;
     throw new ParseError(
       `clé '[${key}:…]' inconnue — ni contrôle de librairie, ni clé réservée du langage ` +
       `(${[...libCtx.qualifierKeys].join(', ')}) ; pour un paramètre de runtime, utiliser '(${key}:…)'`,

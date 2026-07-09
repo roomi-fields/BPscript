@@ -32,6 +32,7 @@ const cache = {};
 function registerLib(name, data) {
   registry[name] = data;
   cache[name] = data;  // also populate cache
+  _universeControls = null;  // le registre a bougé → recalculer l'univers
 }
 
 /**
@@ -50,6 +51,22 @@ function registerAll(libs) {
 function clearRegistry() {
   for (const k of Object.keys(registry)) delete registry[k];
   for (const k of Object.keys(cache)) delete cache[k];
+  _universeControls = null;
+}
+
+/**
+ * Noms de contrôles de l'UNIVERS — toutes les libs du registre (built-in + user), et non les
+ * seules libs que la scène a chargées via ses directives. Sert au garde des clés `[]` : un
+ * `[rotate:2]` est une clé CONNUE du langage même dans une scène qui ne déclare pas `@controls`.
+ * (Savoir si `@controls` doit être exigé pour l'employer est une question de surface, non tranchée.)
+ */
+let _universeControls = null;
+function universeControlNames() {
+  if (!_universeControls) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeControls = loadLibsFromDirectives(allDirs).controlNames;
+  }
+  return _universeControls;
 }
 
 // Auto-register the pre-bundled libs at module load (Node AND browser).
@@ -461,4 +478,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, loadLibsFromDirectives, describeVocabulary, registerLib, registerAll, clearRegistry };
+export { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, registerLib, registerAll, clearRegistry };
