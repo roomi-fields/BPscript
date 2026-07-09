@@ -147,6 +147,10 @@ function loadLibsFromDirectives(directives) {
   const schema = coreLib.schema || {};
   ctx.reservedDirectiveNames = new Set(schema.reservedDirectives || []);
   ctx.addressKeys = new Set(schema.addressKeys || []);
+  // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont
+  // pas des contrôles de librairie, le compilateur les comprend lui-même. Toute autre clé
+  // dans `[]` est une erreur de compilation (ibid.) — cf. checkQualifierKey() du parser.
+  ctx.qualifierKeys = new Set(schema.qualifierKeys || []);
   ctx.catalogAxes = Array.isArray(schema.catalogAxes) ? schema.catalogAxes.slice() : [];
   ctx.defaultComponents = (coreLib.defaults && coreLib.defaults.components) || {};
 

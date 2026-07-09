@@ -5,14 +5,66 @@
   "_defaults_doc": "Cascade de défauts (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). @core est le SOCLE : il porte TOUTES les valeurs par défaut de scène. Multi-niveau : @core → lib invoquée (override) → scène → acteur → occurrence. `components` = composants par défaut par axe (recouverts par @alphabet.X/@tuning.X…). `values` = valeurs scalaires overridables (@diapason:N…) ; `overriddenBy: \"axe.champ\"` = le champ d'un composant invoqué recouvre le défaut. Aucun défaut n'est codé dans le code.",
   "_schema_doc": "SCHÉMA STRUCTUREL du langage (donnée, plus en dur dans le code — Romain 2026-07-05, prépare les user libraries + le partage du vocabulaire à Kanopi). `catalogAxes` = axes d'entité dont les valeurs sont des ENTRÉES DE CATALOGUE (une lib par axe, ex. tunings.json) → référence inexistante = erreur. `addressKeys` = clés d'adresse de sortie (canal/appareil/port). `reservedDirectives` = mots de directive du LANGAGE (non des valeurs de lib).",
   "schema": {
-    "catalogAxes": ["alphabet", "tuning", "octaves"],
-    "addressKeys": ["ch", "channel", "device", "port"],
+    "catalogAxes": [
+      "alphabet",
+      "tuning",
+      "octaves"
+    ],
+    "addressKeys": [
+      "ch",
+      "channel",
+      "device",
+      "port"
+    ],
+    "qualifierKeys": [
+      "mode",
+      "scan",
+      "weight",
+      "on_fail",
+      "tempo",
+      "meter",
+      "scale"
+    ],
     "reservedDirectives": [
-      "mode", "mm", "tempo", "seed", "maxitems", "duration", "meter", "scan", "weight", "speed",
-      "on_fail", "scale", "flag", "scene", "expose", "map", "alphabet", "tuning", "octaves",
-      "transport", "sound", "eval", "actor", "core", "controls", "quantization", "qclock",
-      "timepatterns", "ins", "transpose", "library", "sounds", "transcription", "test_alphabets",
-      "settings", "filter", "routing", "modulation", "diapason"
+      "mode",
+      "mm",
+      "tempo",
+      "seed",
+      "maxitems",
+      "duration",
+      "meter",
+      "scan",
+      "weight",
+      "speed",
+      "on_fail",
+      "scale",
+      "flag",
+      "scene",
+      "expose",
+      "map",
+      "alphabet",
+      "tuning",
+      "octaves",
+      "transport",
+      "sound",
+      "eval",
+      "actor",
+      "core",
+      "controls",
+      "quantization",
+      "qclock",
+      "timepatterns",
+      "ins",
+      "transpose",
+      "library",
+      "sounds",
+      "transcription",
+      "test_alphabets",
+      "settings",
+      "filter",
+      "routing",
+      "modulation",
+      "diapason"
     ]
   },
   "defaults": {
@@ -23,7 +75,18 @@
       "transport": "audio"
     },
     "values": {
-      "diapason": { "range": [16, 8000], "unit": "Hz", "overriddenBy": ["tuning.diapason", "alphabet.diapason"], "description": "Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `@alphabet.X` ?? alphabet par défaut @core `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Overridable @diapason:N (scène) / (diapason:N) (occurrence). Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)." }
+      "diapason": {
+        "range": [
+          16,
+          8000
+        ],
+        "unit": "Hz",
+        "overriddenBy": [
+          "tuning.diapason",
+          "alphabet.diapason"
+        ],
+        "description": "Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `@alphabet.X` ?? alphabet par défaut @core `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Overridable @diapason:N (scène) / (diapason:N) (occurrence). Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)."
+      }
     }
   },
   "symbols": {
@@ -36,7 +99,11 @@
   "settings": {
     "on_fail": {
       "type": "directive",
-      "values": ["skip", "retry", "fallback"],
+      "values": [
+        "skip",
+        "retry",
+        "fallback"
+      ],
       "default": "skip",
       "description": "Gestion d'échec de dérivation"
     }

@@ -1654,6 +1654,13 @@ function parse(tokens, opts = {}) {
         if (isRuleStart()) {
           rules.push(parseRule());
         } else {
+          // Seuls EOF, `-----` et `@…` terminent légitimement un bloc de règles. Tout
+          // autre jeton ici serait une TRONCATURE SILENCIEUSE de la scène (la boucle
+          // sortait, `rules` restait vide, la grammaire disparaissait sans une erreur).
+          // Erreur franche — même parti que le bloc de production `[@…]` ci-dessus.
+          if (!atEnd() && !at(T.SEPARATOR) && !at(T.AT)) {
+            throw new ParseError(`ligne non reconnue au niveau des règles : attendu une règle, '@directive', '-----' ou la fin de la scène`, current());
+          }
           break;
         }
         skipNewlines();
@@ -3071,6 +3078,29 @@ function parse(tokens, opts = {}) {
     return { type: 'TriggerIn', name, qualifiers };
   }
 
+  // Garde de clé `[clé:valeur]` — UNIFORME quelle que soit la position (suffixe de règle,
+  // flux `![…]`, préfixe, polymétrie) : parseQualifier est le passage obligé de toutes.
+  // Loi : « Toute clé non reservee dans [] est une erreur de compilation »
+  // (docs/spec/LANGUAGE.md:486). L'univers vient de la DONNÉE, jamais d'une liste en dur :
+  // contrôles des librairies chargées (lib/controls.json…) + @core.schema.qualifierKeys.
+  function checkQualifierKey(key, tok) {
+    // `[speed:N]` SUPPRIMÉ (décision 2026-06-26-trois-concepts-temps-duree) : `speed` est
+    // subsumé par la DURÉE, qui s'écrit avec ':' collé — `{A B}:2`, `A4:1/2`, `}:N`.
+    if (key === 'speed') {
+      throw new ParseError(`'[speed:N]' a été supprimé (décision 2026-06-26) — la durée s'écrit avec ':' : '{A B}:2' (groupe), 'A4:1/2' (note) ou '}:N' (embedding)`, tok);
+    }
+    // `[shuffle:N]` RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
+    // re-semer sont deux atomes BP3 distincts. `[shuffle]` (nu) reste = _rndseq.
+    if (key === 'shuffle') {
+      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
+    }
+    if (libCtx.controlNames.has(key) || libCtx.qualifierKeys.has(key)) return;
+    throw new ParseError(
+      `clé '[${key}:…]' inconnue — ni contrôle de librairie, ni clé réservée du langage ` +
+      `(${[...libCtx.qualifierKeys].join(', ')}) ; pour un paramètre de runtime, utiliser '(${key}:…)'`,
+      tok);
+  }
+
   // tempoScope : 'absolute' (défaut — A[/N] suffixe d'élément, [/N] niveau-règle)
   // ou 'relative' (forme ![/N] dans le flux). Porté sur le nœud TempoOp pour que
   // les consommateurs (BPx) lisent la décision au lieu de deviner par position.
@@ -3102,6 +3132,7 @@ function parse(tokens, opts = {}) {
         // Parse remaining pairs
         const pairs = [];
         while (!at(T.RBRACKET) && !atEnd()) {
+          const keyTok = current();
           const key = expect(T.IDENT).value;
           if (!at(T.COLON)) {
             pairs.push({ type: 'QualPair', key, value: true, decrement: null });
@@ -3109,9 +3140,7 @@ function parse(tokens, opts = {}) {
             continue;
           }
           expect(T.COLON);
-          if (key === 'shuffle') {
-            throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' ou '![@seed:N]' ; '[shuffle]' brasse seul`, current());
-          }
+          checkQualifierKey(key, keyTok);
           let pval, decrement = null;
           if (at(T.INT)) {
             const num = advance().value;
@@ -3146,6 +3175,7 @@ function parse(tokens, opts = {}) {
 
     const pairs = [];
     while (!at(T.RBRACKET) && !atEnd()) {
+      const keyTok = current();
       const key = expect(T.IDENT).value;
       // Bare key without value: [destru], [striated], [volumecont]
       if (!at(T.COLON)) {
@@ -3154,20 +3184,7 @@ function parse(tokens, opts = {}) {
         continue;
       }
       expect(T.COLON);
-
-      // `[speed:N]` SUPPRIMÉ (décision 2026-06-26-trois-concepts-temps-duree) : `speed` (mot de DJ
-      // banni) est subsumé par la DURÉE, qui s'écrit avec ':' collé — `{A B}:2` (groupe),
-      // `A4:1/2` (note), `}:N` (embedding). Fail-loud, comme [shuffle] retiré ci-dessous.
-      if (key === 'speed') {
-        throw new ParseError(`'[speed:N]' a été supprimé (décision 2026-06-26) — la durée s'écrit avec ':' : '{A B}:2' (groupe), 'A4:1/2' (note) ou '}:N' (embedding)`, current());
-      }
-
-      // [shuffle:N] RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
-      // re-semer sont deux atomes BP3 distincts (_rndseq / _srand). La graine s'écrit
-      // [@seed:N] (global) ou ![@seed:N] (dans le flux). [shuffle] (nu) reste = _rndseq.
-      if (key === 'shuffle') {
-        throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, current());
-      }
+      checkQualifierKey(key, keyTok);
 
       // --- Control qualifier with raw value (CSS model) ---
       // For known controls, consume everything after : until ] as raw value.
