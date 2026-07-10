@@ -366,7 +366,7 @@ Il s'empile par concaténation (`**`) ou par nesting (`* (= * (= ...))`).
 
 ### Correspondance BPScript → BP3
 
-```bpscript
+```
 S -> $X * &X                →  S --> (= X) * (: X)
 S -> $X ** &X               →  S --> (= X) ** (: X)
 S -> $X TR &X               →  S --> (= X) TR (: X)

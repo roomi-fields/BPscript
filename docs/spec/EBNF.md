@@ -377,11 +377,17 @@ post-dérivation, consommée par `[mode:tem]`. Pas de variante avec suffixe.
 
 Exemples :
 ```bpscript
+@alphabet.western
+
+S -> C4 D4
+
 @template
 [1] /1 ???????                    // 7 terminaux en séquence
 [2] /1 ?????????                  // 9 terminaux
 [3] /1 ($0 ???)($1 )              // structure récursive : master(3 slots) + slave(vide)
 ```
+
+La section vient **après** les règles : seule, elle ne compile pas.
 
 Traduction BP3 :
 ```
@@ -702,6 +708,8 @@ La durée `:N` a **remplacé** le qualificatif `[speed:N]` (supprimé, cf. §Dur
 contrôles (aucun élément temporel), utiliser `!()` pour les positionner dans le flux :
 
 ```bpscript
+@controls
+
 Pull0 -> !(pitchbend:0)                                          // → _script(CT n)
 StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)        // → _script(CT 0) _script(CT 1) _script(CT 2)
 ```

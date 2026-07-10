@@ -959,6 +959,10 @@ La section `@template` (singulier, ex-`@templates`) est un **catalogue** de
 patterns structurels.
 
 ```bpscript
+@alphabet.western
+
+S -> C4 D4
+
 @template
 [1] /1 ???????
 [2] /1 ?????????
@@ -1067,7 +1071,6 @@ Depuis un acteur :
 ```bpscript
 @actor sitar
   alphabet.tabla
-  tuning.equal_temperament:western
   transport.midi(ch:10)
   *:sound.bell_short                       // niveau 5 : defaut acteur
   Sa:sound.drum_kick                       // niveau 6 : Sa pour cet acteur
@@ -1529,6 +1532,29 @@ La durée `:N` collée est traduite en cadre polymétrique BP3 :
 // BP3
 {2, bolC3, bolE3, bolG3, bolC4}
 ```
+
+### Durée de portée règle
+
+Détachée du dernier élément et posée en fin de règle, la durée porte sur **tout le membre
+droit** — elle n'est pas un suffixe du terminal qui la précède :
+
+```
+// BPScript
+S -> C4 D4 E4 :2
+
+// BP3
+{2,C4 D4 E4}
+```
+
+Trois portées distinctes, à ne pas confondre :
+
+| Écriture            | Portée                    |
+| ------------------- | ------------------------- |
+| `A4:1/2`            | la note seule             |
+| `{A B}:2`           | le groupe                 |
+| `S -> A B C :2`     | le membre droit entier    |
+
+La durée n'existe **pas** en ligne au milieu d'un flux : `S -> A :2 B` est refusée.
 
 ### Operateurs temporels
 

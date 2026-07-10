@@ -200,7 +200,11 @@ ActorDirective {
                                  // (category ∈ alphabet|tuning|octaves|sound|transport|eval).
                                  // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
                                  // `references` = forme consommée en aval (dérivée, lossless).
-  soundAssignments: SoundAssignmentAST[] | null  // *:sound.X, Sa:sound.Y, ... dans le bloc acteur
+                                 // Les `*:sound.X` / `Sa:sound.Y` écrits DANS le bloc acteur ne sont
+                                 // PAS portés ici : ils remontent sur `Scene.soundAssignments` avec
+                                 // `scope:"actor", actor:"<nom>"` (cf. tableau des portées ci-dessous
+                                 // et `soundAssignments?` du contrat BPx, types/ast.ts:73 — champ de
+                                 // SCÈNE, jamais d'acteur).
   synthetic?: true               // acteur IMPLICITE `default` (aucun @actor déclaré), matérialisé
                                  // dans l'AST (LAN-5/KAI-9). Absent sur un acteur déclaré. L'aval
                                  // le distingue d'un acteur réel (panneau Acteurs vide).
@@ -253,7 +257,9 @@ Exemples (v0.8) :
   tuning.sargam_22shruti
   transport.webaudio
 ```
-→ `{ name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", sound:null, transport:{key:"webaudio", params:{}}, eval:null }, soundAssignments:null }`
+→ `{ type:"ActorDirective", name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", transport:{type:"TransportRef", key:"webaudio", params:{}} }, references:[…3 entrées…], line:3 }`
+
+Les clés absentes (`sound`, `octaves`, `eval`) ne sont **pas** émises à `null` : elles manquent.
 
 ```bpscript
 @actor tabla
@@ -261,7 +267,8 @@ Exemples (v0.8) :
   transport.webaudio
   *:sound.tabla_perc
 ```
-→ `{ name:"tabla", properties:{ alphabet:"tabla", tuning:null, sound:null, transport:{key:"webaudio", params:{}}, eval:null }, soundAssignments:[{ subject:"*", target:{ kind:"named-ref", name:"tabla_perc" } }] }`
+→ acteur : `{ type:"ActorDirective", name:"tabla", properties:{ alphabet:"tabla", transport:{type:"TransportRef", key:"webaudio", params:{}} }, references:[…], line:1 }`
+→ et, **sur la scène** : `soundAssignments:[{ type:"SoundAssignment", scope:"actor", actor:"tabla", subject:"*", target:{ kind:"named-ref", name:"tabla_perc" }, line:1 }]`
 
 ```bpscript
 @actor drums
@@ -270,7 +277,8 @@ Exemples (v0.8) :
   *:sound.tabla_gm
   Sa:sound.drum_kick
 ```
-→ `{ name:"drums", properties:{ alphabet:"tabla", tuning:null, sound:null, transport:{key:"midi", params:{ch:10}}, eval:null }, soundAssignments:[{ subject:"*", target:{kind:"named-ref", name:"tabla_gm"} }, { subject:"Sa", target:{kind:"named-ref", name:"drum_kick"} }] }`
+→ acteur : `{ type:"ActorDirective", name:"drums", properties:{ alphabet:"tabla", transport:{type:"TransportRef", key:"midi", params:{ch:10}} }, references:[…], line:1 }`
+→ et, **sur la scène** : `soundAssignments:[{ scope:"actor", actor:"drums", subject:"*", target:{kind:"named-ref", name:"tabla_gm"}, … }, { scope:"actor", actor:"drums", subject:"Sa", target:{kind:"named-ref", name:"drum_kick"}, … }]`
 
 **Champs v0.7 dépréciés** :
 - `scale` → renommé `tuning` (référence à `lib/tuning.json`).
