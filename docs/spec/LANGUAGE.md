@@ -926,6 +926,19 @@ est entoure de certains voisins.
 
 `#` est le symbole de negation de contexte.
 
+### Silence et prolongation comme contextes
+
+`-` (silence) et `_` (prolongation) sont des voisins comme les autres : ils
+s'emploient en contexte, notamment en contexte NEGATIF, sans parentheses.
+
+```
+#- V1 <> #- -              // V1 seulement s'il n'est PAS precede d'un silence
+#_ S -> C4                 // S seulement s'il n'est PAS precede d'une prolongation
+```
+
+Emploi reel : `test/grammars/dhati3/scene.bps:25`. La forme sans parentheses
+`#<symbole>` porte sur UN seul voisin ; `#(X Y)` porte sur le groupe.
+
 ---
 
 ## Templates `$` et `&` -- capture et reutilisation de groupes
@@ -950,6 +963,19 @@ $N14 &N14[sub:dhati]       // capture N14, rejoue en substituant
 ```
 
 Le compilateur traduit `$` -> `(=X)` et `&` -> `(:X)` pour BP3.
+
+### Ancre de gabarit maitre : `$` nu en tete de LHS
+
+Un `$` seul, sans nom, place devant le membre gauche, marque la regle entiere
+comme gabarit maitre. Il ne capture pas un groupe nomme : il ancre.
+
+```
+$ S -> C4 D4               // AST : lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]
+```
+
+C'est un noeud de l'arbre destine a BPx (`TemplateAnchor`), pas un raccourci
+d'ecriture de `$X`. La chaine BP3 heritee ne connait pas d'ancre de LHS ; seule
+la forme nommee `$X` / `&X` y a une traduction (`(=X)` / `(:X)`).
 
 ---
 

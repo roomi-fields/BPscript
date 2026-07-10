@@ -122,16 +122,27 @@ transpileur → BPx ne peut même pas les charger/tester. Elles sont comptées c
 
 ---
 
-## Item 4 — Préfixe de placement de règle `[scan:left|right|rnd]` — PRIORITÉ BASSE
+## Item 4 — Suffixe de placement de règle `[scan:left|right|rnd]` — PRIORITÉ BASSE
 
 > ✅ **LIVRÉ 2026-06-10** — le parser pose `rule.mode` (LEFT/RIGHT/RND) depuis
 > `[scan:left|right|rnd]` (commit b4fa853), suite `test_scan_mode` 15/15 verte.
 
+> ⚠️ **POSITION** : `[scan:…]` est un **suffixe** de règle. En préfixe (avant le LHS), il est
+> refusé — cette place est réservée aux gardes de drapeau. Vérifié au compilateur 2026-07-10.
+
 **Débloque** : le placement explicite niveau-règle (gauche/droite/aléa), aujourd'hui testé côté BPx
 uniquement via des `.gr` manuscrits (`BPx/test/scenes/imode-placement/`).
 
-- **Problème** : le préfixe `[scan:left|right|rnd]` atterrit dans `qualifiers` et n'est **jamais mappé
-  vers `RuleAST.mode`** → BPx reçoit toujours le mode par défaut.
+```bpscript
+@alphabet.western
+
+S -> C4 D4 [scan:left]              // RuleAST.mode = "left"
+S -> C4 D4 [scan:right]             // RuleAST.mode = "right"
+S -> C4 D4 [scan:rnd]               // RuleAST.mode = "rnd"
+```
+
+- **Problème** (état d'avant la livraison) : `[scan:left|right|rnd]` atterrissait dans `qualifiers` et
+  n'était **jamais mappé vers `RuleAST.mode`** → BPx recevait toujours le mode par défaut.
 - **BPx a déjà la mécanique** : la dispatch d'insertion (correctif A3) traite `RuleAST.mode`
   (LEFT→leftmost-sans-tirage, RIGHT→rightmost, RND→tire) fidèlement à `Compute.c:1828-1948`.
 - **Fix** : mapper `[scan:left]`→mode LEFT, `[scan:right]`→RIGHT, `[scan:rnd]`→RND sur `RuleAST.mode`.
