@@ -286,10 +286,13 @@
       "y",
       "z",
       "Z",
-      "filler"
+      "filler",
+      "b1",
+      "c1",
+      "d1"
     ],
     "alterations": {},
     "_note": "Alphabet ABSTRAIT : aucune hauteur, aucun accordage. Il existe pour que les scenes de test structurelles (derivation, polymetrie, homomorphismes) restent abstraites tout en satisfaisant le garde des terminaux. Ne jamais lui ajouter de diapason/baseNote : un symbole de 'simple' ne sonne pas, il structure.",
-    "_note_Z_filler": "'Z' (majuscule) et 'filler' (multi-caractere) sont des terminaux atypiques declares a la demande de BPx (note [367], 2026-07-11) : ce sont des terminaux de fixtures BPx validees contre des oracles BP3 FIGES (m6_09_sub_multipass_weight -> Z ; m8_0x -> filler). BP3 ne partitionne pas terminal/non-terminal par la casse mais par CLASSE declaree (GetVar) ; renommer casserait la comparaison byte-exacte a l'oracle. L'oracle fait foi."
+    "_note_litteraux_bpx": "'Z' (majuscule), 'filler' (multi-caractere), 'b1'/'c1'/'d1' (lettre+chiffre) sont des terminaux atypiques declares a la demande de BPx : ce sont des NOMS LITTERAUX de fixtures BPx validees contre des oracles BP3 FIGES (m6_09_sub_multipass_weight -> Z ; m8_0x -> filler ; ord_left/right/rnd -> b1/c1/d1). BP3 ne partitionne pas terminal/non-terminal par la casse mais par CLASSE declaree (GetVar) ; renommer casserait la comparaison byte-exacte a l'oracle. Ce sont des noms, PAS une convention d'octave : la purete abstraite de 'simple' (aucune hauteur) est preservee. L'oracle fait foi. (notes BPx [367]/[374], 2026-07-11)."
   }
 }
