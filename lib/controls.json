@@ -409,12 +409,12 @@
         "default": "0,0",
         "description": "Microtonal scale — name + base note. scale(0,0) = back to equal temperament."
       },
-      "rotate": {
+      "scaleshift": {
         "args": [
           "degrees"
         ],
         "default": 0,
-        "description": "Cyclic rotation — shift N degrees in the alphabet (diatonic). rotate(2): C->E, D->F, etc."
+        "description": "Scalar (diatonic) transposition — shift N degrees in the alphabet. scaleshift(2): Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control."
       },
       "keyxpand": {
         "args": [

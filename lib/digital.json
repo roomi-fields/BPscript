@@ -39,13 +39,13 @@
         }
       }
     },
-    "rotate": {
-      "description": "Rotation de degré dans l'alphabet (C +2 → E). rotate-HAUTEUR, distinct du ![rotate] de structure (moteur BPx).",
+    "scaleshift": {
+      "description": "Transposition SCALAIRE (diatonique) : décalage de N degrés d'alphabet (Sa +2 → Ga). Préserve les degrés, pas les intervalles (en gamme inégale). Anciennement rotate-HAUTEUR ; distinct du ![rotate] de structure (moteur BPx).",
       "params": {
         "n": {
           "type": "int",
           "default": 0,
-          "description": "Nombre de degrés de rotation dans l'alphabet (peut être négatif ; report de registre aux bornes)."
+          "description": "Nombre de degrés de décalage dans l'alphabet (peut être négatif ; report de registre aux bornes)."
         }
       }
     }
