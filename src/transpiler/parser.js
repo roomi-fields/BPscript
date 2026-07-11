@@ -2335,6 +2335,41 @@ function parse(tokens, opts = {}) {
     return peek(2).type === T.COLON;
   }
 
+  // Lit un littéral d'INTERVALLE MUSICAL pour un contrôle interval-typé (transpose…).
+  // Trois formes, identiques aux ratios de tempérament (lib/temperaments.json) :
+  //   fraction 3/2 · cents 700c · décimal 1.5 (un entier nu = ratio brut, 2 = octave).
+  // La valeur est portée BRUTE (chaîne) ; la résolution (Kairos, normalizeRatio) la normalise.
+  // Malformé → crie en NOMMANT la faute (pas de repli silencieux, L26).
+  function readIntervalLiteral(ctrlName) {
+    const startTok = current();
+    const bad = (why) => {
+      throw new ParseError(
+        `Intervalle malforme pour '${ctrlName}'${why ? ' : ' + why : ''} — attendu une fraction (3/2), des cents (700c) ou un decimal (1.5)`,
+        startTok
+      );
+    };
+    let neg = '';
+    if (at(T.REST)) { advance(); neg = '-'; }   // intervalle descendant : -200c, -1.5
+    if (!at(T.INT) && !at(T.FLOAT)) bad(`'${current().value ?? current().type}' n'est pas un nombre`);
+    const a = advance().value;
+    // Fraction : INT '/' INT
+    if (at(T.SLASH)) {
+      if (neg) bad('une fraction ne se note pas negative (utilise des cents : -700c)');
+      advance();
+      if (!at(T.INT)) bad('denominateur de fraction manquant');
+      const b = advance().value;
+      return `${a}/${b}`;
+    }
+    // Cents : nombre suivi de l'unite 'c'
+    if (at(T.IDENT) && current().value === 'c') {
+      advance();
+      return `${neg}${a}c`;
+    }
+    // Decimal / entier (ratio brut) : aucune unite ne doit suivre.
+    if (at(T.IDENT)) bad(`unite inconnue '${current().value}' (les cents s'ecrivent 700c)`);
+    return `${neg}${a}`;
+  }
+
   function parseRuntimeQualifier() {
     // (vel:80, wave:sawtooth, velcont) → runtime qualifier AST.
     // v0.8 : accepte aussi `(sound.NAME)` — référence pointée comme valeur ;
@@ -2369,6 +2404,12 @@ function parse(tokens, opts = {}) {
       }
       if (at(T.COLON)) {
         advance();
+        // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
+        if (libCtx.intervalControls && libCtx.intervalControls.has(key)) {
+          pairs.push({ key, value: readIntervalLiteral(key), ...sub, ...pos });
+          if (at(T.COMMA)) advance();
+          continue;
+        }
         // Raw value: everything until next key:value pair or )
         // Commas between args of the same control (e.g. keyxpand:G4,2)
         // are part of the value, not separator for next pair.

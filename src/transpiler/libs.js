@@ -137,6 +137,9 @@ function loadLibsFromDirectives(directives) {
     dualContextControls: new Set(),  // controls that appear in BOTH engine and runtime — in () always route to _script
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
+    intervalControls: new Set(),  // controls whose argument is a MUSICAL INTERVAL (fraction 3/2, cents 700c,
+                                  // decimal 1.5) — marqués `argType:"interval"` dans la lib. La valeur est
+                                  // portée BRUTE (chaîne) et résolue en aval par normalizeRatio (Kairos).
     symbols: {},        // name → { type, ... }
     alphabetTerminals: [],  // terminaux issus des SEULS alphabets (sans @core etc.) —
                             // porte du découpeur mono-char (bpxAst.js, flip Palier 4 étape A)
@@ -339,6 +342,11 @@ function loadLibsFromDirectives(directives) {
         }
         if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
+        }
+        // Argument = intervalle musical (fraction/cents/décimal) : la surface lit une
+        // valeur d'intervalle et la porte brute ; la résolution (Kairos) la normalise.
+        if (def.argType === 'interval') {
+          ctx.intervalControls.add(name);
         }
       }
     }
