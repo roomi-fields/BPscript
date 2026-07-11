@@ -23,7 +23,7 @@ C -> {Tr4 B}
 // --- Sous-grammaire 2 @mode:sub1 — résolution transpositions ---
 
 @mode:sub1
-Tr2 -> transpose(2)
-Tr4 -> transpose(4)
-Tr6 -> transpose(6)
+Tr2 -> transpose(200c)
+Tr4 -> transpose(400c)
+Tr6 -> transpose(600c)
 D -> lambda

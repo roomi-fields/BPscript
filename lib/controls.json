@@ -396,10 +396,10 @@
       "_comment": "Resolved by the dispatcher before reaching any transport — musical transformations",
       "transpose": {
         "args": [
-          "steps"
+          "interval"
         ],
-        "default": 0,
-        "description": "Transposition — grid shift of N steps in the temperament"
+        "argType": "interval",
+        "description": "Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A numeric value cries (migration: the old grid-step regime is removed)."
       },
       "scale": {
         "args": [

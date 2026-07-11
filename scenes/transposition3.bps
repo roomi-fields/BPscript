@@ -8,10 +8,10 @@
 
 @mode:random
 S -> A [numtimes=5]
-A -> {E1, A#1 F#1} {D}(transpose:2)
-B -> {A}(transpose:2)
-C -> {B}(transpose:4)
-[numtimes-1] D -> - {C {1,B}}(transpose:6) {1,C} [repeat:4]
+A -> {E1, A#1 F#1} {D}(transpose:200c)
+B -> {A}(transpose:200c)
+C -> {B}(transpose:400c)
+[numtimes-1] D -> - {C {1,B}}(transpose:600c) {1,C} [repeat:4]
 
 -----
 

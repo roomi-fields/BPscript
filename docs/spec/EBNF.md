@@ -607,10 +607,11 @@ fournie (`[rotate:2]`), l'encodeur émet avec parenthèses (`_rotate(2)`).
 - Sur un groupe : `{a b c}[shuffle]` → `{_rndseq a b c}` (préfixe inside les accolades)
 - En fin de règle : `a b c [shuffle]` → `_rndseq a b c` (préfixe en tête de RHS)
 
-**Distinction `[]` vs `()` pour `rotate`** : `[rotate:2]` (engine) → `_rotate(2)` en BP3
-(décalage cyclique temporel) ; `(rotate:2)` (runtime) → `_script(CT n)` via dispatcher
-(rotation diatonique dans l'alphabet, transformation pitch). Ce sont deux opérations
-distinctes malgré le même nom de clé.
+**`[rotate:2]` (STRUCTURE) vs `(scaleshift:2)` (HAUTEUR)** : `[rotate:2]` (engine) → `_rotate(2)`
+en BP3 (décalage cyclique temporel d'une séquence) ; `(scaleshift:2)` (runtime) → `_script(CT n)`
+via dispatcher (transposition SCALAIRE : décalage de N degrés dans l'alphabet). Deux opérations
+distinctes. La transposition de hauteur s'appelait autrefois `rotate` ; renommée `scaleshift`
+(décision 2026-07-11) pour lever l'homonymie avec le `![rotate]` de structure.
 
 #### `()` — Qualificateurs runtime
 
@@ -777,7 +778,7 @@ instant = "!" , instant_target ;
 
 instant_target = symbol                              (* trigger : !dha → <<dha>> *)
                | symbol_call                         (* trigger avec params : !dha(vel:120) *)
-               | runtime_qualifier                   (* contrôle runtime : !(transpose:2) → _script(CT n) *)
+               | runtime_qualifier                   (* contrôle runtime : !(transpose:200c) → _script(CT n) *)
                | engine_qualifier                    (* contrôle engine : ![retro] → _retro *)
                ;
 ```
@@ -790,7 +791,7 @@ Trois usages :
   se déclenche au même instant. Compilé en `Sa <<dha>>`.
 - **Standalone symbole** (`!f`) : out-time object — déclenché hors-temps, sans durée.
   Compilé en `<<f>>`.
-- **Standalone contrôle** (`!(transpose:2)`, `![retro]`) : instruction instantanée
+- **Standalone contrôle** (`!(transpose:200c)`, `![retro]`) : instruction instantanée
   positionnée dans le flux. La position dans la séquence détermine le moment d'application.
   Compilé en `_script(CT n)` ou `_retro` etc.
 
@@ -798,8 +799,8 @@ Chaînable : `Sa!dha!spotlight`.
 
 Exemples avec contrôles :
 ```
-{!(transpose:2) D}        → {_script(CT 0) D}       // préfixe dans la voix
-{D !(transpose:2)}        → {D _script(CT 0)}       // suffixe dans la voix
+{!(transpose:200c) D}        → {_script(CT 0) D}       // préfixe dans la voix
+{D !(transpose:200c)}        → {D _script(CT 0)}       // suffixe dans la voix
 {![retro] A B}             → {_retro A B}           // engine prefix
 Sa !(vel:80) Re            → Sa _script(CT 0) Re     // entre deux symboles
 ```
@@ -1154,7 +1155,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `S -> C4 D4 E4 (vel:80)` | `_script(CT 0) C4 D4 E4` | runtime suffixe (règle) |
 | `{!(vel:80) A B, !(vel:60) C D}` | `{_script(CT 0) A B, _script(CT 1) C D}` | contrôle instantané dans voix |
 | `{A B !(vel:80), C D !(vel:60)}` | `{A B _script(CT 0), C D _script(CT 1)}` | contrôle instantané fin de voix |
-| `!(transpose:2)` | `_script(CT n)` | contrôle runtime instantané |
+| `!(transpose:200c)` | `_script(CT n)` | contrôle runtime instantané |
 | `![retro]` | `_retro` | contrôle engine instantané |
 | `{A B}(vel:100)` | `_script(CT 0_s) {A B} _script(CT 0_e)` | runtime suffixe (groupe) |
 | `@mode:random` | `RND` en mode_line | mode du bloc |

@@ -14,7 +14,7 @@
 // --- Sous-grammaire 1 @mode:ord ---
 
 @mode:ord
-S -> $Tihai(transpose:-2) &Tihai(pitchcont, pitchbend:-200, transpose:-2) &Tihai(pitchbend:200) (pitchrange:200)
+S -> $Tihai(transpose:-200c) &Tihai(pitchcont, pitchbend:-200, transpose:-200c) &Tihai(pitchbend:200) (pitchrange:200)
 
 Tihai -> {Huit}:2 {Six}:2 {Cinq}:2 {Quatre}:2 - {- - ek - - do - - tin - - -}:3
 Huit -> ek do tin char panch che sat at

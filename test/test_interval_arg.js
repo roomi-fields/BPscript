@@ -83,17 +83,24 @@ assert('dénominateur manquant 3/', /denominateur/.test(throwsOn(HEAD + 'Tr -> (
 assert('unité inconnue 3x', /unite inconnue/.test(throwsOn(HEAD + 'Tr -> (ivl:3x)') || ''), throwsOn(HEAD + 'Tr -> (ivl:3x)'));
 assert('fraction négative -3/2', /fraction ne se note pas negative/.test(throwsOn(HEAD + 'Tr -> (ivl:-3/2)') || ''), throwsOn(HEAD + 'Tr -> (ivl:-3/2)'));
 
-// ── 5. DORMANCE en prod : aucun contrôle de prod n'est interval-typé ──
-section('Dormance — zéro régression en prod');
+// ── 5. ACTIVATION en prod : transpose EST interval-typé (décision 2026-07-11) ──
+section('Activation — transpose réel en prod');
 const prodCtx = loadLibsFromDirectives([{ name: 'controls' }]);
 assert('intervalControls existe', prodCtx.intervalControls instanceof Set, typeof prodCtx.intervalControls);
-assert('intervalControls VIDE en prod', prodCtx.intervalControls.size === 0, `taille=${prodCtx.intervalControls.size}`);
-// transpose de prod : lu comme AVANT (entier), le lecteur d'intervalle ne s'active pas
+assert('transpose est interval-typé en prod', prodCtx.intervalControls.has('transpose'), `set=${[...prodCtx.intervalControls]}`);
+// transpose de prod : lu comme INTERVALLE (chaîne brute), pas comme entier
 {
-  const ast = parse(tokenize('@controls\n@alphabet.western\n\nTr -> (transpose:11)'));
+  const ast = parse(tokenize('@controls\n@alphabet.western\n\nTr -> (transpose:-2400c)'));
   let v;
   JSON.stringify(ast, (k, val) => { if (val && val.key === 'transpose' && v === undefined) v = val.value; return val; });
-  assert('transpose:11 → 11 (entier, non interval-typé)', v === 11, String(v));
+  assert('transpose:-2400c → "-2400c" (intervalle, chaîne)', v === '-2400c', String(v));
+}
+// @transpose global : émis en chaîne d'intervalle (forme nue), pas en nombre
+{
+  const ast = parse(tokenize('@controls\n@alphabet.western\n@transpose:3/2\n\nS -> C4 D4'));
+  let v;
+  JSON.stringify(ast, (k, val) => { if (val && val.type === 'Directive' && val.name === 'transpose' && v === undefined) v = val.value; return val; });
+  assert('@transpose:3/2 global → "3/2" (chaîne)', v === '3/2', String(v));
 }
 
 // ── Bilan ─────────────────────────────────────────────────

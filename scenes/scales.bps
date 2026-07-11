@@ -36,7 +36,7 @@ Phrase -> {Cmajor} {Aminor} {Fmajor} {Gseventh} {Cmajor}
 Cmajor -> {C4 _ _ _,- E4 _ _,- - G4 _,- - - C5} {E4 _ _ _,- G4 _ _,- - C5 _}
 Cminor -> {C4 _ _ _,- Eb4 _ _,- - G4 _,- - - C5} {Eb4 _ _ _,- G4 _ _,- - C5 _}
 Cseventh -> {C4 _ _ _,- E4 _ _,- - Bb4 _,- - - C5} {E4 _ _ _,- Bb4 _ _,- - C5 _}
-Aminor -> Cminor !(transpose:-3)
-Fmajor -> Cmajor !(transpose:-7)
-Gmajor -> Cmajor !(transpose:-5)
-Gseventh -> Cseventh !(transpose:-5)
+Aminor -> Cminor !(transpose:-300c)
+Fmajor -> Cmajor !(transpose:-700c)
+Gmajor -> Cmajor !(transpose:-500c)
+Gseventh -> Cseventh !(transpose:-500c)

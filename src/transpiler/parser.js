@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLibsFromDirectives, universeControlNames } from './libs.js';
+import { loadLibsFromDirectives, universeControlNames, universeIntervalControls } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -652,8 +652,13 @@ function parse(tokens, opts = {}) {
    *   INT → value Number (négatif via '-') ; ratio N/M → value String ;
    *   FLOAT → value String brute (sortie BP3 exacte) ; IDENT → champ runtime.
    */
-  function parseDirectiveColonValue() {
+  function parseDirectiveColonValue(dirName) {
     let value = null, runtime = null;
+    // Directive interval-typée (ex. @transpose global) : lire un littéral d'INTERVALLE et le porter
+    // BRUT (chaîne), comme la forme inline. Univers du registre car libCtx n'est pas encore chargé.
+    if (dirName && universeIntervalControls().has(dirName)) {
+      return { value: readIntervalLiteral(dirName), runtime: null };
+    }
     // Handle negative values: @transpose:-24
     let negative = false;
     if (at(T.REST)) { // - token
@@ -708,7 +713,7 @@ function parse(tokens, opts = {}) {
       let value = null, runtime = null;
       if (at(T.COLON)) {
         advance();
-        ({ value, runtime } = parseDirectiveColonValue());
+        ({ value, runtime } = parseDirectiveColonValue(name));
       }
       // Le bloc est réservé aux directives de production (décision 2026-06-11).
       // Une autre clé y est parsée (EBNF : IDENT) mais poussée comme Directive
@@ -1114,7 +1119,7 @@ function parse(tokens, opts = {}) {
 
     if (at(T.COLON)) {
       advance();
-      ({ value, runtime } = parseDirectiveColonValue());
+      ({ value, runtime } = parseDirectiveColonValue(name));
     }
 
     // Mode modifiers: @mode:random(destru, smooth, mm:60)
@@ -2405,7 +2410,9 @@ function parse(tokens, opts = {}) {
       if (at(T.COLON)) {
         advance();
         // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
-        if (libCtx.intervalControls && libCtx.intervalControls.has(key)) {
+        // Univers du registre (pas seulement le libCtx de la scène) : un mot USABLE est valide
+        // qu'on ait chargé @controls ou non — cohérent avec la directive globale et le garde des `[]`.
+        if ((libCtx.intervalControls && libCtx.intervalControls.has(key)) || universeIntervalControls().has(key)) {
           pairs.push({ key, value: readIntervalLiteral(key), ...sub, ...pos });
           if (at(T.COMMA)) advance();
           continue;
@@ -2784,7 +2791,13 @@ function parse(tokens, opts = {}) {
         advance(); // :
       }
       let value;
-      if (at(T.BACKTICK)) {
+      // Argument d'un contrôle interval-typé (transpose) : soit `transpose(3/2)` (callee interval-typé,
+      // arg positionnel), soit `Sym(transpose:3/2)` (clé interval-typée). Lu comme INTERVALLE, porté brut.
+      const intervalHere = (key && universeIntervalControls().has(key))
+                        || (!key && universeIntervalControls().has(name));
+      if (intervalHere) {
+        value = { type: 'Literal', value: readIntervalLiteral(key || name) };
+      } else if (at(T.BACKTICK)) {
         // Valeur calculée : taggée si tag présent, sinon héritage (résolu en aval).
         const raw = advance().value;
         const t = tryBacktickTag(raw);
@@ -2821,6 +2834,14 @@ function parse(tokens, opts = {}) {
   function parseControl(name, tok) {
     expect(T.LPAREN);
     const args = [];
+    // Contrôle interval-typé (transpose) : l'unique argument est un INTERVALLE, lu proprement
+    // (fraction/cents/décimal) et porté brut — sans la jointure de tokens qui insérerait un espace
+    // parasite ("1100 c" au lieu de "1100c"), ce que la résolution (normalizeRatio) rejetterait.
+    if (universeIntervalControls().has(name)) {
+      args.push(readIntervalLiteral(name));
+      expect(T.RPAREN);
+      return { type: 'Control', name, args };
+    }
     while (!at(T.RPAREN) && !atEnd()) {
       // Build composite arg: K1=3, Cmaj, 120, etc.
       let arg = '';

@@ -2,6 +2,6 @@
 S -> ${|A1|} TR ${|A1|} TR TR ${|A1|} TR TR TR ${|A1|} ${|A1|}
 |A1| -> {Tr0 M1. Tr1 M1 Tr7 M1 Tr0 M1 Tr7 M1}
 M1 -> C3 B3 F4
-Tr0 -> (transpose:0)
-Tr1 -> (transpose:11)
-Tr7 -> (transpose:5)
+Tr0 -> (transpose:0c)
+Tr1 -> (transpose:1100c)
+Tr7 -> (transpose:500c)

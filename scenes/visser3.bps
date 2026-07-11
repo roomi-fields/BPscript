@@ -49,9 +49,9 @@ K -> {Tr-11 B C D}
 // --- Sous-grammaire 3 @mode:ord — résolution des transpositions ---
 
 @mode:ord
-Tr11 -> transpose(11) vel(90)
-Tr5 -> transpose(5) vel(80)
-Tr1 -> transpose(1) vel(70)
-Tr7 -> transpose(7) vel(60)
-Tr6 -> transpose(6) vel(70)
-Tr-11 -> transpose(-11) vel(90)
+Tr11 -> transpose(1100c) vel(90)
+Tr5 -> transpose(500c) vel(80)
+Tr1 -> transpose(100c) vel(70)
+Tr7 -> transpose(700c) vel(60)
+Tr6 -> transpose(600c) vel(70)
+Tr-11 -> transpose(-1100c) vel(90)

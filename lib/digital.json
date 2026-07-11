@@ -4,9 +4,13 @@
     "CV (lib/mod.json) : même structure {type, objects}, mais le comportement = VRAI CODE TS réalisé par",
     "KAIROS (vs courbe déclarative réalisée par le runtime audio). Spec : docs/design/DIGITAL_FUNCTIONS.md.",
     "Jeu FOURNI (lecture seule) ; perso/communautaire = surcharge hôte via registerLib (3 provenances).",
-    "Chaque fonction : { params (signature typée, jumelle des params CV) }. Le `body` (code TS) n'est PAS",
-    "ici : authoring F1 = un VRAI .ts TYPÉ dans lib/digital/<fn>.ts (contre le SDK @kairos/core), dont",
-    "libs-bundle.js capte le SOURCE en `body` dans libs-data.js. Type-check : `npm run typecheck:digital`.",
+    "Chaque fonction : { rank (ordre d'application, tri croissant, défaut 100), params (liaison : chaque",
+    "param porte `from` = source dans la valeur du contrôle ('value' = scalaire ; autre = champ objet) et",
+    "`coerce` = 'raw' | 'interval-ratio' (chaîne d'intervalle 3-formats → ratio) | 'token-step' (token → pas",
+    "de grille)). Le dispatch générique de Kairos lit rank + params ; il n'y a AUCUN nom de fonction en dur",
+    "chez lui. Le `body` (code TS) n'est PAS ici : authoring F1 = un VRAI .ts TYPÉ dans lib/digital/<fn>.ts",
+    "(contre le SDK @kairos/core, types DigitalFnObject/DigitalParamDecl), dont libs-bundle.js capte le",
+    "SOURCE en `body` dans libs-data.js. Type-check : `npm run typecheck:digital`.",
     "SIGNATURE SCELLÉE (Romain) : (ctx: DigitalFnContext) => void — la fonction MODIFIE ctx.target (une",
     "COPIE préparée par Kairos, JAMAIS l'arbre réel ; Kairos seul applique le résultat à la sortie",
     "canonique). body capté = TS SOURCE, transpilé au load par Kairos (sucrase)."
@@ -14,40 +18,56 @@
   "name": "digital",
   "type": "digital",
   "objects": {
-    "transpose": {
-      "description": "Transposition — décalage de N pas sur la grille du tempérament (C4 +2 → D4 en 12-TET).",
+    "scaleshift": {
+      "description": "Transposition SCALAIRE (diatonique) : décalage de N degrés d'alphabet (Sa +2 → Ga). Préserve les degrés, pas les intervalles (en gamme inégale). Anciennement rotate-HAUTEUR ; distinct du ![rotate] de structure (moteur BPx).",
+      "rank": 10,
       "params": {
-        "steps": {
-          "type": "int",
+        "n": {
+          "from": "value",
+          "coerce": "raw",
           "default": 0,
-          "description": "Nombre de pas de grille (peut être négatif)."
+          "description": "Nombre de degrés de décalage dans l'alphabet (peut être négatif ; report de registre aux bornes)."
         }
       }
     },
     "keyxpand": {
       "description": "Dilatation/contraction des pas autour d'un pivot (step = pivot + arrondi((step − pivot) × facteur)).",
+      "rank": 20,
       "params": {
         "pivotStep": {
-          "type": "int",
+          "from": "pivot",
+          "coerce": "token-step",
           "default": 0,
-          "description": "Pas de grille du pivot (résolu par Kairos depuis le token pivot) ; reste fixe."
+          "description": "Pivot : token de note résolu en pas de grille par la coercition token-step de Kairos (crie si irrésoluble) ; reste fixe."
         },
         "factor": {
-          "type": "float",
+          "from": "factor",
+          "coerce": "raw",
           "default": 1,
           "description": "Facteur d'échelle de l'écart au pivot (1 = identité, 2 = doublé, 0,5 = replié ; peut être négatif = miroir)."
         }
       }
     },
-    "scaleshift": {
-      "description": "Transposition SCALAIRE (diatonique) : décalage de N degrés d'alphabet (Sa +2 → Ga). Préserve les degrés, pas les intervalles (en gamme inégale). Anciennement rotate-HAUTEUR ; distinct du ![rotate] de structure (moteur BPx).",
+    "transpose": {
+      "description": "Transposition RÉELLE (chromatique) : décalage de l'ancre par un intervalle fixe. Préserve les intervalles ET le nom de chaque note ; fonctionne dans tout accordage (égal, inégal, paramétrique). L'argument est un intervalle 3-formats (fraction 3/2, cents 700c, décimal 1.5).",
+      "rank": 30,
       "params": {
-        "n": {
-          "type": "int",
-          "default": 0,
-          "description": "Nombre de degrés de décalage dans l'alphabet (peut être négatif ; report de registre aux bornes)."
+        "ratio": {
+          "from": "value",
+          "coerce": "interval-ratio",
+          "description": "Intervalle normalisé en ratio par Kairos depuis la chaîne 3-formats. Un transpose NUMÉRIQUE crie ici (cri de migration : l'ancien régime par pas de grille est supprimé)."
+        },
+        "interval": {
+          "from": "value",
+          "coerce": "raw",
+          "description": "La chaîne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
         }
       }
+    },
+    "rotate": {
+      "description": "TOMBSTONE de migration : rotate-HAUTEUR a été renommé scaleshift (décision 2026-07-11, transposition scalaire). Cette entrée existe pour qu'une scène NON MIGRÉE reçoive un cri LOCAL nommé au lieu d'un contrôle qui dort. À retirer une fois tout le corpus migré.",
+      "rank": 10,
+      "params": {}
     }
   }
 }

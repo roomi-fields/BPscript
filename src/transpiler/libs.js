@@ -69,6 +69,18 @@ function universeControlNames() {
   return _universeControls;
 }
 
+// Contrôles interval-typés de l'UNIVERS (marqués `argType:"interval"` dans une lib). Sert au parseur
+// AVANT que le libCtx de la scène soit chargé : une directive globale `@transpose:-2400c` doit lire
+// une valeur d'INTERVALLE (chaîne brute) dès l'analyse des directives, avant tout consommateur.
+let _universeIntervalControls = null;
+function universeIntervalControls() {
+  if (!_universeIntervalControls) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeIntervalControls = loadLibsFromDirectives(allDirs).intervalControls;
+  }
+  return _universeIntervalControls;
+}
+
 // Auto-register the pre-bundled libs at module load (Node AND browser).
 // This replaces the former Node-only `fs` fallback: the registry is always
 // populated from libs-data.js, so loadJsonFile never needs the filesystem.
@@ -486,4 +498,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, registerLib, registerAll, clearRegistry };
+export { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, registerLib, registerAll, clearRegistry };

@@ -1356,8 +1356,9 @@ Le runtime gere la production du son/signal.
 ### Librairies de FONCTIONS digitales (evolution 2026-06-30)
 
 Au-dela des librairies de **donnees** (alphabets, octaves, temperaments, controles, objets CV...),
-une famille porte du **comportement** : les **fonctions de manipulation digitale** (transpose en 1re ;
-puis octave/registre, gamme, rotation...). Une fonction = une entree `{params, body}` ou le `body` est
+une famille porte du **comportement** : les **fonctions de manipulation digitale** (transpose et
+scaleshift — les deux transpositions, voir plus bas ; puis octave/registre, gamme, keyxpand...).
+Une fonction = une entree `{params, body}` ou le `body` est
 du **vrai code TS** type (authoring F1), vivant dans une lib `{type:'digital', objects}` (3 provenances :
 fournie / perso / communautaire). C'est le **jumeau** des objets CV : meme idee (comportement nomme en
 librairie), realise par un moteur different — **Kairos** (code discret, a la resolution) pour le digital,
@@ -1367,6 +1368,27 @@ L'hote fournit la lib ; **Kairos** la transpile au chargement et l'**applique** 
 porte opaque jusqu'a lui ; il opere sur une **COPIE**, jamais l'arbre reel). BPScript pose la **forme**
 de lib et le **typage a l'ecriture**, il ne resout/n'execute rien. Spec complete :
 `docs/design/DIGITAL_FUNCTIONS.md` ; decision `hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`.
+
+### Les deux transpositions : reelle (`transpose`) et scalaire (`scaleshift`)
+
+BPScript distingue les **deux** gestes de transposition musicologiques (decision 2026-07-11) :
+
+- **`transpose` — transposition REELLE (chromatique)** : decale l'**ancre** de l'alphabet par un
+  **intervalle fixe**. Preserve tous les intervalles ET le nom de chaque note ; fonctionne dans
+  **tout** accordage (egal, inegal, parametrique). L'argument est un **intervalle** dans l'un des
+  3 formats des temperaments : **fraction** `3/2`, **cents** `700c`, **decimal** `1.5` (un entier nu
+  = ratio, `2` = octave). Ecriture **nue**, sans guillemets, comme toute valeur de controle :
+  `(transpose:700c)`, `@transpose:-2400c`, `transpose(3/2)`. Une valeur **numerique** (ex.
+  `transpose:2` compris comme un nombre de pas) n'existe plus : l'ancien regime par pas de grille est
+  **supprime** (il n'etait une vraie transposition qu'en temperament egal).
+- **`scaleshift` — transposition SCALAIRE (diatonique)** : decale de **N degres** d'alphabet
+  (`scaleshift:2` : Sa -> Ga). Preserve les degres, pas les intervalles (en gamme inegale). Argument
+  = entier N. S'appelait autrefois `rotate` (de hauteur) ; renomme pour lever l'homonymie avec le
+  `![rotate]` de **structure** (rotation de sequence, moteur BPx), qui est une autre operation et
+  garde son nom.
+
+Resolution : Kairos normalise la chaine d'intervalle et applique la transposition reelle en fin de
+chaine (facteur multiplicatif de cadre), apres les operations de grille — noms et registres preserves.
 
 ### Conflits de noms
 
