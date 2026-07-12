@@ -82,6 +82,9 @@ assert('non-nombre foo', /Intervalle malforme/.test(throwsOn(HEAD + 'Tr -> (ivl:
 assert('dénominateur manquant 3/', /denominateur/.test(throwsOn(HEAD + 'Tr -> (ivl:3/)') || ''), throwsOn(HEAD + 'Tr -> (ivl:3/)'));
 assert('unité inconnue 3x', /unite inconnue/.test(throwsOn(HEAD + 'Tr -> (ivl:3x)') || ''), throwsOn(HEAD + 'Tr -> (ivl:3x)'));
 assert('fraction négative -3/2', /fraction ne se note pas negative/.test(throwsOn(HEAD + 'Tr -> (ivl:-3/2)') || ''), throwsOn(HEAD + 'Tr -> (ivl:-3/2)'));
+// Guillemets : la forme canonique est NUE — le message nomme les guillemets, PAS les formats (msg [379])
+assert('guillemets "700c" → nomme les guillemets', /entre guillemets/.test(throwsOn(HEAD + 'Tr -> (ivl:"700c")') || ''), throwsOn(HEAD + 'Tr -> (ivl:"700c")'));
+assert('guillemets → suggère la forme nue', /forme NUE '700c'/.test(throwsOn(HEAD + 'Tr -> (ivl:"700c")') || ''), throwsOn(HEAD + 'Tr -> (ivl:"700c")'));
 
 // ── 5. ACTIVATION en prod : transpose EST interval-typé (décision 2026-07-11) ──
 section('Activation — transpose réel en prod');

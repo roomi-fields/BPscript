@@ -2355,6 +2355,15 @@ function parse(tokens, opts = {}) {
     };
     let neg = '';
     if (at(T.REST)) { advance(); neg = '-'; }   // intervalle descendant : -200c, -1.5
+    // Guillemets : la valeur canonique d'un intervalle est NUE (transpose:1200c, pas
+    // transpose:"1200c") — cf. décision architecte 2026-07-11 (forme (A) nue en source).
+    // Nommer les guillemets plutôt que laisser croire que la forme en cents serait refusée.
+    if (at(T.STRING)) {
+      throw new ParseError(
+        `Intervalle entre guillemets non supporte pour '${ctrlName}' : ecris la forme NUE '${current().value}' (sans guillemets) — un intervalle se note fraction (3/2), cents (700c) ou decimal (1.5)`,
+        startTok
+      );
+    }
     if (!at(T.INT) && !at(T.FLOAT)) bad(`'${current().value ?? current().type}' n'est pas un nombre`);
     const a = advance().value;
     // Fraction : INT '/' INT
