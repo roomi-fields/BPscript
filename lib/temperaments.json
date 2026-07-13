@@ -1,4 +1,5 @@
 {
+  "domain": "temperament",
   "_comment": [
     "Temperament grids for BPscript pitch resolution.",
     "Each temperament defines a mathematical division of a period (usually the octave).",
