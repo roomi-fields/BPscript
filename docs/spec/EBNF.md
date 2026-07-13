@@ -66,6 +66,7 @@ kv_pair  = IDENT , ":" , ( INT | FLOAT | IDENT ) ;
 directive = "@" , directive_body ;
 
 directive_body = IDENT                              (* @core, @controls *)
+               | lib_provenance_ref                 (* @factory.<chemin>.<entrée> / @mine.<chemin>.<entrée> — voir §lib_provenance_ref *)
                | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
                | IDENT , ":" , IDENT                (* @routing:studio — binding simple *)
                | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + binding *)
@@ -89,6 +90,19 @@ directive_body = IDENT                              (* @core, @controls *)
                ;
 
 flag_state = IDENT , ":" , INT ;  (* alias d'état → valeur entière du drapeau (A5) *)
+
+(* Invocation de librairie par PROVENANCE (décision hub ef75ec6 ; contrat bpscript-bpx.md §libRefs).
+   Une librairie = un FICHIER qui DÉCLARE son domaine dedans ; l'invocation nomme provenance +
+   chemin-de-fichier + entrée (DERNIER segment = entrée ; le milieu = chemin). Le domaine n'est PAS
+   dans l'adresse (Kairos le lit — L27). `factory`/`mine` sont des préfixes RÉSERVÉS. Émis dans le
+   canal NEUTRE `Scene.libRefs` (adresse canonique opaque), PAS un slot legacy.
+       @factory.alphabet.sargam        (factory explicite → normalisé au nu `alphabet.sargam`)
+       @mine.ragas.mes-svaras.sa       (perso → `mine.ragas.mes-svaras.sa`)
+   Le nom nu `@alphabet.sargam` (sans préfixe) reste le SUCRE FACTORY legacy — cf. directive_body,
+   il n'entre PAS dans lib_provenance_ref. *)
+lib_provenance_ref = ( "factory" | "mine" ) , "." , path_seg , "." , path_seg , { "." , path_seg } ;
+                     (* ≥ 2 segments après la provenance : au moins <fichier>.<entrée> *)
+path_seg = IDENT , { IDENT } ;  (* un segment peut recoller des IDENT (tiret : `mes-` + `svaras`) *)
 
 (* Convention de nommage (B5) : un nom de ressource est un IDENT, OU une chaîne "..." quand il
    porte des caractères spéciaux (tiret) ou désigne une ressource externe. Ex. `@library.strudel

@@ -1,4 +1,5 @@
 {
+  "domain": "alphabet",
   "_comment": [
     "BPscript alphabets — ordered note sequences + available alterations.",
     "Purely nominal: no frequencies, no MIDI, no ratios.",

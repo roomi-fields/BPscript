@@ -1,4 +1,5 @@
 {
+  "domain": "tuning",
   "_comment": [
     "BPscript tunings — concrete scales linking alphabet to temperament.",
     "",

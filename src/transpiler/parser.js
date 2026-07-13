@@ -198,6 +198,11 @@ function parse(tokens, opts = {}) {
           scene.directives.push(dir.directive);
           scene.soundAssignments = scene.soundAssignments || [];
           for (const sa of dir.assignments) scene.soundAssignments.push(sa);
+        } else if (dir.type === 'LibRef') {
+          // Canal NEUTRE des invocations par provenance (@factory.*/@mine.*).
+          // Adresse canonique opaque ; ordre source préservé ; dédup en fin de parseScene ;
+          // champ OMIS si vide (jamais `[]`) — contrat bpscript-bpx.md §libRefs.
+          (scene.libRefs || (scene.libRefs = [])).push(dir.address);
         } else if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
           initialMode = dir.runtime;
@@ -290,6 +295,13 @@ function parse(tokens, opts = {}) {
     //   - `Control` standalone de nature transport-control → flux:true
     //   - Override d'occurrence collé sur un Symbol (suffixQualifiers) → pas de flux
     annotateScene(scene);
+
+    // libRefs (canal neutre provenance) : dédup en préservant l'ordre source (contrat §libRefs).
+    // Le champ reste OMIS si aucune invocation par provenance (jamais `[]`).
+    if (scene.libRefs) {
+      const seen = new Set();
+      scene.libRefs = scene.libRefs.filter((a) => (seen.has(a) ? false : (seen.add(a), true)));
+    }
 
     return scene;
   }
@@ -743,6 +755,33 @@ function parse(tokens, opts = {}) {
       name = advance().value;
     } else {
       name = expect(T.IDENT).value;
+    }
+    // Invocation par PROVENANCE (chantier libs-provenance, décision hub ef75ec6 ;
+    // contrat contrats/bpscript-bpx.md §libRefs) : `@factory.<chemin-fichier>.<entrée>` et
+    // `@mine.<chemin-fichier>.<entrée>`. `factory`/`mine` sont des préfixes RÉSERVÉS. Le
+    // domaine est déclaré DANS le fichier — on ne le connaît PAS ici (L27 : on PORTE opaque,
+    // Kairos résout). Découpage POSITIONNEL : dernier segment = entrée ; le milieu = chemin.
+    // → canal NEUTRE `ast.libRefs` (adresse canonique opaque), PAS un slot legacy.
+    if (name === 'factory' || name === 'mine') {
+      const segs = [];
+      // un segment peut être plusieurs IDENT collés (tiret : `mes-` + `svaras`)
+      const readSeg = () => {
+        let s = expect(T.IDENT).value;
+        while (at(T.IDENT) && !current().spaceBefore) s += advance().value;
+        return s;
+      };
+      while (at(T.PERIOD)) { advance(); segs.push(readSeg()); }
+      if (segs.length < 2) {
+        throw new ParseError(
+          `invocation de librairie malformee '@${name}' — attendu ` +
+          `@${name}.<chemin-fichier>.<entree> (ex. @${name === 'mine' ? 'mine.ragas.mes-svaras.sa' : 'alphabet.sargam'})`,
+          tok
+        );
+      }
+      // Adresse canonique OPAQUE : `mine.` préfixe le perso ; le sucre `@factory.` est NORMALISÉ
+      // au nu (nom nu et `@factory.` confondus AVANT émission — contrat bpscript-bpx.md).
+      const address = name === 'mine' ? `mine.${segs.join('.')}` : segs.join('.');
+      return { type: 'LibRef', address, provenance: name, line: tok.line };
     }
     // @alphabet.western — dot accessor for subkey within a lib
     if (at(T.PERIOD)) {

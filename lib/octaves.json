@@ -1,4 +1,5 @@
 {
+  "domain": "octaves",
   "_comment": [
     "Octave/register naming conventions for BPscript.",
     "Each convention defines how register (octave) is expressed relative to a note name.",

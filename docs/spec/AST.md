@@ -32,6 +32,9 @@ Scene {
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
+  libRefs?: string[]                 // OPTIONNEL — invocations de librairie par PROVENANCE
+                                     // (@factory.*/@mine.*), adresses canoniques opaques.
+                                     // OMIS si aucune (jamais []). Cf. §libRefs ci-dessous.
   backticks: BacktickOrphan[]
   subgrammars: Subgrammar[]
   template: TemplateEntry[] | null         // section @template (optionnelle, v0.8 ; ex-`templates`)
@@ -40,6 +43,29 @@ Scene {
   homomorphisms: HomomorphismDeclAST[]    // contrat BPx (ajout 2026-06-10) — voir §HomomorphismDeclAST
 }
 ```
+
+### `libRefs` — invocation de librairie par provenance (canal neutre)
+
+> Décision hub `2026-07-13-invocation-librairies-factory-mine` (ef75ec6) ; contrat
+> `hub/contrats/bpscript-bpx.md §libRefs` (co-seing bpscript 2026-07-13).
+
+Une librairie est un **fichier** qui **déclare son domaine dedans** (champ `domain` en tête du
+fichier : `alphabets.json`→`"alphabet"`, etc.). L'invocation ne nomme PAS le domaine — elle nomme
+la **provenance + le chemin-de-fichier + l'entrée** (dernier segment = entrée). Le domaine est lu
+par le **résolveur** (Kairos) — BPScript **PORTE opaque** (loi 27 : porter ≠ résoudre).
+
+- `Scene.libRefs?: string[]` (frère de `cvInstances`) ; `ActorDirective.libRefs?: string[]`
+  (frère de `values`). **OMIS** si aucune invocation par provenance (jamais `[]`).
+- Chaque élément = **adresse canonique OPAQUE pré-normalisée** :
+  - **factory** (nom nu `@alphabet.sargam` OU sucre explicite `@factory.alphabet.sargam`) →
+    adresse **nue** `<chemin-fichier>.<entrée>` (ex. `alphabet.sargam`). Le préfixe `@factory.`
+    est **normalisé** (confondu au nom nu) AVANT émission.
+  - **mine** (`@mine.ragas.mes-svaras.sa`) → adresse préfixée `mine.<chemin-fichier>.<entrée>`.
+- Ordre d'apparition source **préservé** ; **dédup** chez l'émetteur (BPScript).
+- **ADDITIF** : le sucre nu `@alphabet.X`/`@tuning.Y`/`@octaves.Z` reste un slot **LEGACY**
+  inchangé (`Directive{name, subkey}`) — il **n'émet PAS** de `libRefs`. Seules les formes
+  **explicites** `@factory.*`/`@mine.*` alimentent le canal neutre.
+- `factory`/`mine` sont des **préfixes réservés** (aucune lib ne peut s'en prévaloir).
 
 ---
 

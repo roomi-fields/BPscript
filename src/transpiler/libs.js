@@ -468,7 +468,7 @@ function describeVocabulary(directives = []) {
   const allDirs = Object.keys(registry).map((name) => ({ name }));
   const ctx = loadLibsFromDirectives(allDirs);
   const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  const META = new Set(['name', 'description', 'version']);
+  const META = new Set(['name', 'description', 'version', 'domain']);
   const components = {};
   for (const axis of ctx.catalogAxes) {
     const file = loadLib(axis);
