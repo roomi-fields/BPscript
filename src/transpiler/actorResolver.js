@@ -100,6 +100,14 @@ function resolveActors(ast) {
       }
       // props.octaves surcharge la convention de registre de l'alphabet (décision cles-acteur-six).
       terminals = [...expandAlphabetTerminals(alphabetLib, props.octaves)];
+      // expandAlphabetTerminals ne produit que les formes DÉCORÉES de registre (madhya_sa…).
+      // La forme NUE (registre par défaut : `sa`) est la façon idiomatique d'écrire une note et
+      // est reconnue par validateTerminals (bpxAst.js:639-641). Sans elle ICI, une note nue
+      // n'est attribuée à AUCUN acteur → orpheline → muette avec un acteur explicite (aucun
+      // `default` synthétique pour la recueillir). On l'ajoute au vocabulaire de l'acteur.
+      const alts = alphabetLib.alterations && typeof alphabetLib.alterations === 'object' && !Array.isArray(alphabetLib.alterations)
+        ? Object.keys(alphabetLib.alterations) : [''];
+      for (const note of (alphabetLib.notes || [])) for (const alt of alts) terminals.push(note + alt);
     }
 
     actorTable[name] = {
