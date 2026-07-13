@@ -765,12 +765,15 @@ function applySceneValues(ast, libCtx) {
   // si un composant est en portée mais NON RÉSOLU, on renvoie `undefined` (valeur ABSENTE, l'aval
   // résout) — JAMAIS un littéral global par-dessus un composant déclaré. Un `spec.default` littéral
   // n'est le socle QUE pour une valeur SANS composant (pas d'`overriddenBy`, ex. tempo).
-  // Identité de hauteur portée par le canal NEUTRE (libRefs) : une invocation par provenance
-  // (@factory.*/@mine.*) porte SON ancre via la lib, RÉSOLUE chez Kairos (le domaine est déclaré
-  // DANS le fichier — opaque ici, L27). On ne connaît PAS le composant invoqué (il peut être perso)
-  // → on n'émet AUCUN diapason plié-du-catalogue socle par-dessus (forme co-signée [338] : zéro
-  // pliage de valeur de CATALOGUE pour le canal neutre). Les @diapason:N EXPLICITES de scène
-  // priment toujours (niveau 3, sceneVals). FIX 1 architecte [394].
+  // RÈGLE DE CASCADE (loi 35, constitution:175 ; docs/design/SCENE_DEFAULTS_CASCADE.md, Romain
+  // 2026-07-04) : « un pli qui ne sait PAS résoudre le composant INVOQUÉ laisse la valeur ABSENTE,
+  // le résolveur (Kairos) la remplit depuis la lib invoquée ». Le socle @core (defaultComponents,
+  // lu depuis lib/core.json `defaults.components` — PAS un hardcode) ne s'applique QUE si AUCUN
+  // composant n'est invoqué (scène nue). Un axe d'ancre est « invoqué » si un DIRECTIVE legacy le
+  // nomme (@alphabet.X/@tuning.X) OU si une invocation par le canal NEUTRE (libRefs) porte
+  // l'identité de hauteur — opaque ici (domaine déclaré DANS le fichier, résolu chez Kairos, L27).
+  // Jamais le socle par-dessus un composant invoqué (même classe que le bug diapason 2026-07-04
+  // où @core écrasait le composant déclaré). FIX [394]/[395].
   const hasNeutralPitch = !!(ast.libRefs && ast.libRefs.length);
   const cascadeDefault = (spec, props) => {
     if (spec.overriddenBy) {
@@ -783,11 +786,10 @@ function applySceneValues(ast, libCtx) {
         const [axis, field] = ref.split('.');
         let compName = (props && props[axis]) || sceneComponent(axis);
         if (compName == null) {
-          if ((ast.directives || []).some((x) => x.name === axis)) { anyAxisDeclared = true; continue; } // axe déclaré, non résolu ici
-          // Canal neutre en portée sans axe legacy déclaré : l'ancre voyage par libRefs → ABSENTE
-          // ici (Kairos la lit dans la lib invoquée). PAS le socle @core (qui sonnerait 440).
-          if (hasNeutralPitch) { anyAxisDeclared = true; continue; }
-          compName = defaultComponents[axis]; // aucune déclaration de l'axe → défaut @core
+          // Axe INVOQUÉ (directive legacy OU canal neutre) mais NON résolu ici → ABSENT (Kairos remplit).
+          const axisInvoked = (ast.directives || []).some((x) => x.name === axis) || hasNeutralPitch;
+          if (axisInvoked) { anyAxisDeclared = true; continue; }
+          compName = defaultComponents[axis]; // AUCUN composant invoqué (scène nue) → socle @core
         }
         if (compName) {
           const comp = loadLib(axis, compName);

@@ -86,6 +86,9 @@ console.log('\n=== FIX 1 (forme co-signée [338]) : ZÉRO pliage diapason-catalo
   assert('@factory.* : diapason NON plié (absent)', diapasonOf('@factory.alphabet.sargam') === undefined, String(diapasonOf('@factory.alphabet.sargam')));
   assert('@diapason:432 EXPLICITE prime toujours (même avec @mine.*)', diapasonOf('@mine.ragas.sargam\n@diapason:432') === 432, String(diapasonOf('@mine.ragas.sargam\n@diapason:432')));
   assert('LEGACY @alphabet.sargam : ancre 240 INCHANGÉE (legacy intact)', diapasonOf('@alphabet.sargam') === 240, String(diapasonOf('@alphabet.sargam')));
+  // Non-régression cascade : une scène NUE (aucun composant invoqué) plie TOUJOURS le socle @core.
+  // La règle générale ne sur-supprime PAS — le socle ne saute QUE si un composant est invoqué.
+  assert('scène NUE (@core seul) : socle @core plié (western 440), PAS absent', diapasonOf('') === 440, String(diapasonOf('')));
 }
 
 console.log('\n=== FIX 2 : entrée d\'invocation commençant par un CHIFFRE (accordages 12TET, 22shruti) ===');
