@@ -13,7 +13,7 @@ Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes 
 
 | Propriété | Rôle | Référence |
 |---|---|---|
-| `alphabet` | vocabulaire de symboles (requis) | `lib/alphabets.json` |
+| `alphabet` | vocabulaire de symboles — **hérité par cascade** (acteur → scène `@alphabet.X` → socle @core), JAMAIS requis (modèle Romain 2026-07-13) ; si la scène invoque une hauteur opaque `@mine.`/`@factory.`, l'alphabet reste résolu en aval (Kairos) | `lib/alphabets.json` |
 | `tuning` | tempérament / accordage (ex-`scale`) | `lib/tuning.json` |
 | `octaves` | convention de registre / notation — **défaut hérité de l'alphabet**, surchargeable par acteur | `lib/octaves.json` |
 | `sound` | son par défaut de l'acteur | `@sound` |

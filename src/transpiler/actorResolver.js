@@ -80,14 +80,30 @@ function resolveActors(ast) {
   for (const actor of ast.actors) {
     const name = actor.name;
     const props = actor.properties;
-    const alphabetKey = props.alphabet;
+    let alphabetKey = props.alphabet;
 
     // Voix-code (eval présent) : porte du code étranger, pas un vocabulaire de notes →
-    // alphabet OPTIONNEL. Voix de notes : alphabet requis. Cf. docs/design/ACTOR.md §2.
+    // alphabet OPTIONNEL (pas d'héritage). Cf. docs/design/ACTOR.md §2.
     const isCodeVoice = !!props.eval;
+
+    // RESOLVER-CASCADE-ALPHABET (modèle Romain 2026-07-13) : la cascade de défauts s'applique
+    // AUSSI à l'alphabet — « PAS D'ALPHABET » N'EXISTE PAS. Un acteur sans alphabet HÉRITE :
+    // scène (@alphabet.X) → sinon socle @core (western, lib/core.json defaults.components). On ne
+    // REJETTE JAMAIS pour 'no alphabet' (le rejet violait la cascade — bug §71 : bloquait le son
+    // d'une scène + acteur transport-seul). Loi 35 : si la scène INVOQUE une hauteur OPAQUE
+    // (@mine./@factory. libRef, résolue par Kairos), l'alphabet reste ABSENT ici (l'aval le
+    // remplit — @mine/@factory n'est qu'un préfixe de PROVENANCE, décision 2026-07-13) ; le socle
+    // @core ne s'applique QUE si RIEN n'est invoqué. Une voix-code n'hérite pas (pas de notes).
     if (!alphabetKey && !isCodeVoice) {
-      errors.push({ message: `Actor "${name}" has no alphabet property`, line: actor.line });
-      continue;
+      const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+      const sceneInvokesOpaquePitch = !!(ast.libRefs && ast.libRefs.length);
+      if (sceneAlpha) {
+        alphabetKey = sceneAlpha.subkey;                                  // héritage de scène (résolvable)
+      } else if (!sceneInvokesOpaquePitch) {
+        alphabetKey = loadLib('core')?.defaults?.components?.alphabet || null; // socle @core
+      }
+      // sinon (hauteur opaque invoquée) : alphabetKey reste absent → Kairos résout (loi 35).
+      if (alphabetKey) props.alphabet = alphabetKey;                      // matérialise l'héritage dans l'AST
     }
 
     // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.

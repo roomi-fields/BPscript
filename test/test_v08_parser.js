@@ -492,18 +492,20 @@ C -> B4 C5`;
 }
 
 // ============================================================
-// 23. Cas adversarial : actor sans alphabet
+// 23. Actor sans alphabet : le PARSER laisse properties vide ; l'actorResolver REMPLIT
+//     l'alphabet par cascade (acteur→scène→@core), il ne REJETTE JAMAIS (modèle Romain
+//     2026-07-13, RESOLVER-CASCADE-ALPHABET) — cf. test_actor_cascade_alphabet.js.
 // ============================================================
 
-section('Actor sans alphabet (cas erreur)');
+section('Actor sans alphabet (parser : properties vide, cascade en aval)');
 
 {
   const ast = parseSource(`@controls
 @actor empty
 S -> A`);
-  // Parse OK ; l'erreur sera levée par l'actorResolver, pas le parser.
-  assert('parses (resolver raises error)', ast.actors[0].name === 'empty');
-  assert('properties empty', Object.keys(ast.actors[0].properties).length === 0);
+  // Parse OK ; l'actorResolver remplira l'alphabet par cascade (pas d'erreur).
+  assert('parses (resolver fills alphabet by cascade)', ast.actors[0].name === 'empty');
+  assert('properties empty au PARSE (avant cascade)', Object.keys(ast.actors[0].properties).length === 0);
 }
 
 // ============================================================
