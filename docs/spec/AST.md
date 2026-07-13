@@ -67,6 +67,15 @@ par le **résolveur** (Kairos) — BPScript **PORTE opaque** (loi 27 : porter �
   **explicites** `@factory.*`/`@mine.*` alimentent le canal neutre.
 - `factory`/`mine` sont des **préfixes réservés** (aucune lib ne peut s'en prévaloir).
 
+**Raccord de SORTIE (canonique, décision Romain 2026-07-13 §Raccord sortie).** Un `libRef` nomme une
+**librairie de hauteur** ; il ne porte **aucune** sortie. Pour SONNER, une scène `@mine`/`@factory`
+déclare un **acteur explicite** avec un transport — `@actor voice transport.browser` puis
+`@mine.ragas.sargam` : la hauteur vient du `libRef` (résolue par Kairos), le transport vient de
+l'acteur. Le suffixe `:runtime` du sucre legacy `@alphabet.X:browser` n'est **PAS** étendu à la réf de
+provenance (séparation « lib de hauteur » vs « sortie » ; `libRefs` reste un `string[]` opaque, sans
+binding). Une scène `@mine` **nue** (sans acteur) retombe sur le transport par défaut `audio` (natif) —
+**muette dans le player web, et c'est VOULU** : l'auteur déclare sa sortie explicitement.
+
 ---
 
 ## Directives

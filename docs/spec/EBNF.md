@@ -101,11 +101,30 @@ flag_state = IDENT , ":" , INT ;  (* alias d'état → valeur entière du drapea
    Le nom nu `@alphabet.sargam` (sans préfixe) reste le SUCRE FACTORY legacy — cf. directive_body,
    il n'entre PAS dans lib_provenance_ref. *)
 lib_provenance_ref = ( "factory" | "mine" ) , "." , path_seg , "." , path_seg , { "." , path_seg } ;
-                     (* ≥ 2 segments après la provenance : au moins <fichier>.<entrée> *)
+                     (* ≥ 2 segments après la provenance : au moins <fichier>.<entrée>.
+                        PAS de suffixe `:runtime` (contrairement au sucre legacy @alphabet.X:browser,
+                        directive_body ci-dessus) : le raccord de SORTIE d'une scène @mine/@factory
+                        passe par un ACTEUR EXPLICITE, jamais par la réf de provenance. Décision
+                        Romain 2026-07-13 (hub/decisions/2026-07-13-invocation-librairies-factory-mine
+                        §Raccord sortie). Voir la note ci-dessous. *)
 path_seg = ( IDENT | INT ) , { IDENT | INT } ;
            (* un segment recolle des IDENT/INT collés : tiret (`mes-` + `svaras`) ET entrée
               NUMÉRIQUE (`12` + `TET` → `12TET` ; `22shruti`) — les accordages commencent
               souvent par un chiffre. *)
+```
+
+> **Raccord de SORTIE d'une scène `@mine`/`@factory` (canonique, décision Romain 2026-07-13,
+> `hub/decisions/2026-07-13-invocation-librairies-factory-mine.md §Raccord sortie).** Une réf de
+> provenance nomme une **librairie de hauteur** ; elle ne porte **PAS** de sortie. Le raccord audio
+> passe par un **ACTEUR EXPLICITE** — `@actor voice transport.browser` puis `@mine.ragas.sargam`
+> (la hauteur vient du libRef, résolue par Kairos ; le transport vient de l'acteur). Aucune nouvelle
+> syntaxe : cette voie parse déjà. Le suffixe `:runtime` du sucre legacy `@alphabet.X:browser`
+> **n'est pas** étendu à la provenance (séparation propre « lib de hauteur » vs « sortie » ; aucun
+> contact avec le contrat co-signé `libRefs` ni la règle acteur-unique). Une scène `@mine` **nue**
+> (sans acteur) retombe sur le transport par défaut `audio` (natif) — **muet dans le player web, et
+> c'est VOULU** : l'auteur déclare sa sortie explicitement.
+
+```ebnf
 
 (* Convention de nommage (B5) : un nom de ressource est un IDENT, OU une chaîne "..." quand il
    porte des caractères spéciaux (tiret) ou désigne une ressource externe. Ex. `@library.strudel
