@@ -765,6 +765,13 @@ function applySceneValues(ast, libCtx) {
   // si un composant est en portée mais NON RÉSOLU, on renvoie `undefined` (valeur ABSENTE, l'aval
   // résout) — JAMAIS un littéral global par-dessus un composant déclaré. Un `spec.default` littéral
   // n'est le socle QUE pour une valeur SANS composant (pas d'`overriddenBy`, ex. tempo).
+  // Identité de hauteur portée par le canal NEUTRE (libRefs) : une invocation par provenance
+  // (@factory.*/@mine.*) porte SON ancre via la lib, RÉSOLUE chez Kairos (le domaine est déclaré
+  // DANS le fichier — opaque ici, L27). On ne connaît PAS le composant invoqué (il peut être perso)
+  // → on n'émet AUCUN diapason plié-du-catalogue socle par-dessus (forme co-signée [338] : zéro
+  // pliage de valeur de CATALOGUE pour le canal neutre). Les @diapason:N EXPLICITES de scène
+  // priment toujours (niveau 3, sceneVals). FIX 1 architecte [394].
+  const hasNeutralPitch = !!(ast.libRefs && ast.libRefs.length);
   const cascadeDefault = (spec, props) => {
     if (spec.overriddenBy) {
       // `overriddenBy` = "axe.champ" OU une CHAÎNE ["tuning.diapason","alphabet.diapason"] :
@@ -777,6 +784,9 @@ function applySceneValues(ast, libCtx) {
         let compName = (props && props[axis]) || sceneComponent(axis);
         if (compName == null) {
           if ((ast.directives || []).some((x) => x.name === axis)) { anyAxisDeclared = true; continue; } // axe déclaré, non résolu ici
+          // Canal neutre en portée sans axe legacy déclaré : l'ancre voyage par libRefs → ABSENTE
+          // ici (Kairos la lit dans la lib invoquée). PAS le socle @core (qui sonnerait 440).
+          if (hasNeutralPitch) { anyAxisDeclared = true; continue; }
           compName = defaultComponents[axis]; // aucune déclaration de l'axe → défaut @core
         }
         if (compName) {

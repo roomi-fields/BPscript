@@ -764,10 +764,17 @@ function parse(tokens, opts = {}) {
     // → canal NEUTRE `ast.libRefs` (adresse canonique opaque), PAS un slot legacy.
     if (name === 'factory' || name === 'mine') {
       const segs = [];
-      // un segment peut être plusieurs IDENT collés (tiret : `mes-` + `svaras`)
+      // Un segment recolle les IDENT/INT collés (sans espace) : tirets (`mes-` + `svaras`)
+      // ET entrées NUMÉRIQUES (`12` + `TET` → `12TET`, `22` + `shruti` — les accordages
+      // commencent souvent par un chiffre : 12TET, 22shruti). FIX 2 architecte [394].
       const readSeg = () => {
-        let s = expect(T.IDENT).value;
-        while (at(T.IDENT) && !current().spaceBefore) s += advance().value;
+        if (!at(T.IDENT) && !at(T.INT)) {
+          throw new ParseError(
+            `invocation de librairie malformee '@${name}' — segment de nom attendu ` +
+            `(ex. @${name}.<chemin-fichier>.<entree>)`, tok);
+        }
+        let s = String(advance().value);
+        while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) s += String(advance().value);
         return s;
       };
       while (at(T.PERIOD)) { advance(); segs.push(readSeg()); }

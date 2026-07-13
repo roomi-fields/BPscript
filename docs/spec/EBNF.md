@@ -102,7 +102,10 @@ flag_state = IDENT , ":" , INT ;  (* alias d'état → valeur entière du drapea
    il n'entre PAS dans lib_provenance_ref. *)
 lib_provenance_ref = ( "factory" | "mine" ) , "." , path_seg , "." , path_seg , { "." , path_seg } ;
                      (* ≥ 2 segments après la provenance : au moins <fichier>.<entrée> *)
-path_seg = IDENT , { IDENT } ;  (* un segment peut recoller des IDENT (tiret : `mes-` + `svaras`) *)
+path_seg = ( IDENT | INT ) , { IDENT | INT } ;
+           (* un segment recolle des IDENT/INT collés : tiret (`mes-` + `svaras`) ET entrée
+              NUMÉRIQUE (`12` + `TET` → `12TET` ; `22shruti`) — les accordages commencent
+              souvent par un chiffre. *)
 
 (* Convention de nommage (B5) : un nom de ressource est un IDENT, OU une chaîne "..." quand il
    porte des caractères spéciaux (tiret) ou désigne une ressource externe. Ex. `@library.strudel

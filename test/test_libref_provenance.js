@@ -75,5 +75,28 @@ console.log('\n=== Additif : la garde terminaux LEGACY reste factory-seule ===')
   assert('@mine.* : PAS de garde terminaux au compile (opaque)', !errsMine.some((m) => /terminal/.test(m)), errsMine.join(' | '));
 }
 
+console.log('\n=== FIX 1 (forme co-signée [338]) : ZÉRO pliage diapason-catalogue pour le canal neutre ===');
+{
+  const diapasonOf = (dir) => {
+    const { ast } = compileToBPxAST(`@core\n@controls\n${dir}\nS -> sa re\n`);
+    const def = ((ast && ast.actors) || []).find((a) => a.name === 'default') || ((ast && ast.actors) || [])[0];
+    return def && def.values && def.values.diapason;
+  };
+  assert('@mine.* : diapason NON plié (absent → Kairos résout l\'ancre perso)', diapasonOf('@mine.ragas.sargam') === undefined, String(diapasonOf('@mine.ragas.sargam')));
+  assert('@factory.* : diapason NON plié (absent)', diapasonOf('@factory.alphabet.sargam') === undefined, String(diapasonOf('@factory.alphabet.sargam')));
+  assert('@diapason:432 EXPLICITE prime toujours (même avec @mine.*)', diapasonOf('@mine.ragas.sargam\n@diapason:432') === 432, String(diapasonOf('@mine.ragas.sargam\n@diapason:432')));
+  assert('LEGACY @alphabet.sargam : ancre 240 INCHANGÉE (legacy intact)', diapasonOf('@alphabet.sargam') === 240, String(diapasonOf('@alphabet.sargam')));
+}
+
+console.log('\n=== FIX 2 : entrée d\'invocation commençant par un CHIFFRE (accordages 12TET, 22shruti) ===');
+{
+  const a1 = astOf('@factory.temperaments.12TET');
+  assert('@factory.temperaments.12TET parse → libRefs=["temperaments.12TET"]',
+    JSON.stringify(a1.libRefs) === '["temperaments.12TET"]', JSON.stringify(a1.libRefs));
+  const a2 = astOf('@mine.ragas.22shruti');
+  assert('@mine.ragas.22shruti parse → libRefs=["mine.ragas.22shruti"]',
+    JSON.stringify(a2.libRefs) === '["mine.ragas.22shruti"]', JSON.stringify(a2.libRefs));
+}
+
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);
 if (ko > 0) process.exit(1);
