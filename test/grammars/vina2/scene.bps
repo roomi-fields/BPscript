@@ -4,7 +4,6 @@
 @core
 @controls
 @alphabet.sargam:midi
-@octaves:western
 
 // --- Sous-grammaire 1 @mode:random — structure ---
 

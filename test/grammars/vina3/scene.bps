@@ -7,7 +7,6 @@
 @core
 @controls
 @alphabet.western:midi
-@octaves:western
 @tempo:60
 
 // --- Sous-grammaire 1 @mode:random — structure ---
