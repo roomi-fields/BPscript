@@ -38,7 +38,7 @@ function backtickNodes(ast) {
 
 // 3. Interp 'auto' résolu DANS LE PAYLOAD depuis l'eval de l'acteur (tête de règle = acteur)
 {
-  const r = compileToBPxAST('@actor stru\n  transport.audio\n  eval.strudel\nS -> stru\nstru -> `note("c2")`');
+  const r = compileToBPxAST('@actor stru\n  transport:audio\n  eval.strudel\nS -> stru\nstru -> `note("c2")`');
   const bt = backtickNodes(r.ast)[0];
   check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval acteur) dans payload.interp : " + JSON.stringify(bt && bt.payload));
 }
@@ -61,7 +61,7 @@ function backtickNodes(ast) {
 
 // 6. acteurs : references[] (ActorReference) + sceneTable depuis ast.scenes (pas de table)
 {
-  const r = compileToBPxAST('@actor tabla\n  alphabet.tabla\n  transport.midi(ch:10)\n@scene verse "verse.bps"\nS -> tabla.Sa');
+  const r = compileToBPxAST('@actor tabla\n  @alphabet.tabla\n  transport:midi(ch:10)\n@scene verse "verse.bps"\nS -> tabla.Sa');
   const tr = r.ast.actors[0].references?.find((x) => x.category === 'transport');
   check(tr?.type === 'ActorReference' && tr?.name === 'midi' && tr?.params?.ch === 10,
     'ActorReference transport sur le nœud acteur : ' + JSON.stringify(tr));

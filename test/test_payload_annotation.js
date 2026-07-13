@@ -58,9 +58,9 @@ section('§2.1 — multi-acteur (sitar ch:1, tabla ch:10)');
 {
   const src = `@controls
 @actor sitar
-  transport.midi(ch:1)
+  transport:midi(ch:1)
 @actor tabla
-  transport.midi(ch:10)
+  transport:midi(ch:10)
 S -> { sitar.Sa, tabla.dha(vel:80) }`;
 
   const ast = parseSource(src);
@@ -254,7 +254,7 @@ section('nature — couverture des types de nœuds RHS');
 // ============================================================
 section('ActorDirective.references[] (forme canonique, lue par le dispatcher)');
 {
-  const ast = parseSource(`@actor tabla\n  alphabet.tabla\n  transport.midi(ch:10)\nS -> tabla.Sa`);
+  const ast = parseSource(`@actor tabla\n  @alphabet.tabla\n  transport:midi(ch:10)\nS -> tabla.Sa`);
   const actor = ast.actors[0];
   const refs = actor.references;
   assert('references[] présent', Array.isArray(refs) && refs.length >= 2, `got ${JSON.stringify(refs)}`);
@@ -362,9 +362,9 @@ section('Agnosticisme — zéro notion BP3 dans le payload');
 {
   const src = `@controls
 @actor sitar
-  transport.midi(ch:1)
+  transport:midi(ch:1)
 @actor tabla
-  transport.midi(ch:10)
+  transport:midi(ch:10)
 S -> { sitar.Sa, tabla.dha(vel:80) }
 S -> !(vel:80) A _transpose(2) goto(2,1) -`;
   const ast = parseSource(src);

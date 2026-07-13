@@ -37,7 +37,7 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
 
 // ── 3. scène AVEC @actor → PAS de default, pas de synthetic ──────────────
 {
-  const a = actors('@actor sitar transport.midi(ch:3)\nsitar -> C4');
+  const a = actors('@actor sitar transport:midi(ch:3)\nsitar -> C4');
   assert('un acteur déclaré', a.length === 1 && a[0].name === 'sitar');
   assert('pas synthetic', a[0].synthetic !== true);
   assert('pas d acteur default ajouté', !a.some((x) => x.name === 'default' && x.synthetic));
@@ -45,7 +45,7 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
 
 // ── 4. plusieurs @actor → aucun default ─────────────────────────────────
 {
-  const a = actors('@actor a1 transport.midi(ch:1)\n@actor a2 transport.osc(device:x)\na1 -> C4\na2 -> E4');
+  const a = actors('@actor a1 transport:midi(ch:1)\n@actor a2 transport:osc(device:x)\na1 -> C4\na2 -> E4');
   assert('2 acteurs déclarés, pas de default', a.length === 2 && !a.some((x) => x.synthetic));
 }
 
