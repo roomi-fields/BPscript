@@ -1021,6 +1021,23 @@ function parse(tokens, opts = {}) {
           continue;
         }
 
+        // LAN-8 (canon graphie bindings d'acteur — décision hub 2026-06-26 + invocation
+        // 2026-07-13) : l'alphabet SUR LA LIGNE D'ACTEUR s'écrit `@alphabet.<nom>` — le `.`
+        // APPELLE le composant. C'est le SUCRE FACTORY legacy (fichier `alphabet`, entrée
+        // <nom>) : canal legacy, `properties.alphabet` résolu au compile (note attribution
+        // inchangée). Les provenances `@factory.`/`@mine.` NE se posent PAS sur la ligne
+        // d'acteur : une hauteur perso est un libRef de SCÈNE + un acteur transport-seul
+        // (décision 2026-07-13 §Raccord sortie). On les laisse donc au parseur de directives
+        // (on ROMPT ici) → `@mine.…` devient une directive de scène, exactement le modèle §71.
+        if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'alphabet'
+            && peek(2).type === T.PERIOD && !peek(2).spaceBefore) {
+          advance(); // @
+          advance(); // alphabet
+          advance(); // .
+          properties.alphabet = expect(T.IDENT).value;
+          continue;
+        }
+
         if (!at(T.IDENT)) break;
 
         const key = current().value;

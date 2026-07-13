@@ -134,13 +134,33 @@ tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/déno
 
 actor_body  = { actor_prop | sound_assignment } ;
 
-actor_prop  = actor_entity_ref                      (* v0.8 : alphabet.X, tuning.X, transport.X(...), sound.X *)
+actor_prop  = actor_alphabet_binding                (* CANON LAN-8 : @alphabet.<nom> *)
+            | actor_transport_binding               (* CANON LAN-8 : transport:<canal>(...) *)
+            | actor_entity_ref                      (* tuning.X, octaves.X, sound.X + formes DÉPRÉCIÉES *)
             | actor_eval_binding ;                  (* v0.8 : eval.X (référence à un eval runtime) *)
 
-(* Adressage de sortie (KAI-9, Romain 2026-06-26) : UNE seule forme partout. Le TYPE de
-   runtime est `transport.<type>` et les DÉTAILS d'adresse (device/channel/port) sont ses
-   PARAMS, iso quel que soit le type :
-       transport.midi(ch:3)            transport.osc(device:reaper, ch:7)
+(* CANON DE GRAPHIE — décision hub 2026-06-26 (« . APPELLE un composant / : AFFECTE une valeur »)
+   étendue aux bindings d'acteur (LAN-8, ratifiée Romain 2026-07-13) :
+     - alphabet = @alphabet.<nom>   — le `.` appelle le composant ; sucre FACTORY legacy (fichier
+                                      `alphabet`, entrée <nom>) → properties.alphabet, canal legacy
+                                      résolu au compile. Les provenances @factory./@mine. NE se
+                                      posent PAS sur la ligne d'acteur : une hauteur perso est un
+                                      libRef de SCÈNE + un acteur transport-seul (§lib_provenance_ref,
+                                      décision 2026-07-13 §Raccord sortie).
+     - sortie   = transport:<canal> — le `:` AFFECTE la valeur (canal = clé d'appareil @devices).
+   TRANSITION (accept-both) : les formes DÉPRÉCIÉES `alphabet.<nom>`/`alphabet:<nom>` et
+   `transport.<canal>` restent ACCEPTÉES tant que le corpus consommateur (kanopi) n'a pas migré ;
+   leur REJET est une action de FRONTIÈRE coordonnée par l'architecte (backlog LAN-8). *)
+
+actor_alphabet_binding  = "@" , "alphabet" , "." , IDENT ;
+                        (* DÉPRÉCIÉ, encore accepté : "alphabet" , ( "." | ":" ) , IDENT *)
+
+actor_transport_binding = "transport" , ":" , IDENT , [ "(" , param_pairs , ")" ] ;
+                        (* DÉPRÉCIÉ, encore accepté : "transport" , "." , IDENT , [ "(" params ")" ] *)
+(* Adressage de sortie (KAI-9, Romain 2026-06-26) : UNE seule forme partout. Le canal est un IDENT
+   LIBRE (clé d'appareil) et les DÉTAILS d'adresse (device/channel/port) sont ses PARAMS, iso quel
+   que soit le canal :
+       transport:midi(ch:3)            transport:osc(device:reaper, ch:7)
    Plus de champ séparé `ActorDirective.binding` (ancien OSC-L1 device:/ch: lâche, supprimé) :
    les détails OSC vivent dans transport.params, exactement comme MIDI. L'hôte reconstruit son
    routage depuis references[transport].{name, params}. *)
@@ -148,14 +168,16 @@ actor_prop  = actor_entity_ref                      (* v0.8 : alphabet.X, tuning
 actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] ;
 
 ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "eval" ;
-(* SIX clés d'entité (décision cles-acteur-six, arbitrage Romain 2026-06-16).
-   alphabet — vocabulaire de symboles (requis)
+(* SIX clés d'entité (décision cles-acteur-six, arbitrage Romain 2026-06-16). NB : `alphabet` et
+   `transport` ici = formes DÉPRÉCIÉES (canon LAN-8 = actor_alphabet_binding / actor_transport_binding
+   ci-dessus) ; conservées le temps de la transition accept-both.
+   alphabet — vocabulaire de symboles (requis) — CANON @alphabet.<nom>
    tuning   — tempérament / accordage (renomme v0.7 `scale`)
    octaves  — convention de registre / notation (référence lib/octaves.json ; optionnelle,
               défaut = **hérité de l'alphabet** de l'acteur ; `@actor X octaves.Y` SURCHARGE la
               notation de registre pour cet acteur. Étape de résolution distincte, rattachée au
               vocabulaire de symboles (alphabet), PAS au tuning.)
-   transport — destination de rendu (requis). Le nom d'appareil est un IDENT **LIBRE**
+   transport — destination de rendu (requis) — CANON transport:<canal>. Le nom d'appareil est un IDENT **LIBRE**
               (clé de la librairie `@devices`), PAS une liste fermée de mots-clés. `midi`/`webaudio`
               sont des appareils par défaut (`webaudio` = alias de l'appareil `audio`). La grammaire
               valide uniquement la SYNTAXE `transport.<nom>(params)` ; l'existence de l'appareil et la
