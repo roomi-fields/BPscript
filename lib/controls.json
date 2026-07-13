@@ -1,4 +1,5 @@
 {
+  "domain": "control",
   "name": "controls",
   "description": "BPscript controls — layered by scope: engine [] / runtime () with transport sub-groups",
   "version": "0.3.0",

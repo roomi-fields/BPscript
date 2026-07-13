@@ -1,4 +1,5 @@
 {
+  "domain": "function",
   "_comment": [
     "Bibliothèque de FONCTIONS DIGITALES (manipulations non-temporelles) — jumeau DIGITAL des objets",
     "CV (lib/mod.json) : même structure {type, objects}, mais le comportement = VRAI CODE TS réalisé par",

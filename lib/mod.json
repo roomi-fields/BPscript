@@ -1,4 +1,5 @@
 {
+  "domain": "modulator",
   "name": "mod",
   "type": "cv",
   "_comment_curve": [
