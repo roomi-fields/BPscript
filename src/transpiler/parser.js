@@ -36,6 +36,16 @@ const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
 const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport', 'sound', 'sounds', 'eval']);
 
 /**
+ * Axes à CATALOGUE au niveau SCÈNE (directive `@axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
+ * de catalogue (une lib par axe) — donc un COMPOSANT, nommé avec `.`. DOIT rester le miroir de
+ * `lib/core.json` schema.catalogAxes (garde anti-dérive : test/test_catalog_axes_colon_reject.js
+ * itère describeVocabulary().components et prouve que CHACUN rejette le `:`). Le CUTOVER universel
+ * (Romain 2026-07-14, tour [412]) rejette `@axe:<X>` pour chacun — plus jamais d'axe-composant qui
+ * tolère l'ancienne forme.
+ */
+const CATALOG_AXIS_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'scale']);
+
+/**
  * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
  * (star→'*', plus→'+', fin→';'), retourne l'opérateur canonique BP3.
  * Cela garantit que l'AST reflète ce que BP3 aurait compilé (R1).
@@ -1204,15 +1214,18 @@ function parse(tokens, opts = {}) {
                modifiers: null, timePatterns: patterns, line: tok.line };
     }
 
-    // CUTOVER graphie / LAN-4 A (Romain GO 2026-07-14, tour [411]) : un accordage est un
-    // COMPOSANT — il se NOMME avec `.` (`@tuning.<nom>`). Le `:` n'affecte QUE des valeurs :
-    // la fréquence de référence a sa propre clé `@diapason:<N>` (décision 2026-07-04). On
-    // REJETTE donc `@tuning:<X>` (freq silencieusement no-op AVANT ; ou composant mal graphié).
-    if (name === 'tuning' && at(T.COLON)) {
+    // CUTOVER graphie UNIVERSEL (Romain 2026-07-14, tour [412]) : un axe-COMPOSANT (opérande =
+    // nom d'entrée de catalogue : alphabet/tuning/octaves/scale) se NOMME avec `.` — `@axe.<nom>`.
+    // Le `:` n'affecte QUE des valeurs (@tempo:120, @diapason:N…). On REJETTE `@axe:<X>` pour TOUT
+    // axe à catalogue, sans trou. Le garde `!subkey` préserve `@alphabet.western:midi` (subkey =
+    // composant résolu, puis `:` affecte une valeur). Pour tuning, `@diapason:<N>` porte la freq.
+    if (CATALOG_AXIS_KEYS.has(name) && !subkey && at(T.COLON)) {
+      const hint = name === 'tuning'
+        ? " ; fréquence de référence → '@diapason:<N>' ; tuning personnel → '@mine.<chemin>.<nom>'"
+        : '';
       throw new ParseError(
-        "'@tuning:<X>' refusé — ':' n'affecte pas de valeur au tuning (règle : ':' affecte, "
-        + "'.' appelle). Écris : composant → '@tuning.<nom>' ; fréquence de référence → "
-        + "'@diapason:<N>' ; tuning personnel → '@mine.<chemin>.<nom>'.",
+        `'@${name}:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '@${name}.<nom>' `
+        + `(règle : ':' affecte, '.' appelle)${hint}.`,
         current(),
       );
     }

@@ -8,7 +8,8 @@
     "catalogAxes": [
       "alphabet",
       "tuning",
-      "octaves"
+      "octaves",
+      "scale"
     ],
     "addressKeys": [
       "ch",

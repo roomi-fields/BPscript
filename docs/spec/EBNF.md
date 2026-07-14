@@ -71,7 +71,13 @@ directive_body = IDENT                              (* @core, @controls *)
                | IDENT , ":" , IDENT                (* @routing:studio — binding simple *)
                | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + binding *)
                | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) — not yet implemented *)
-               | IDENT , ":" , value                (* @tempo:120, @meter:3/4 *)
+               | IDENT , ":" , value                (* @tempo:120, @meter:3/4 — VALEUR uniquement *)
+               (* CUTOVER graphie UNIVERSEL (Romain 2026-07-14, tour [412]) : quand IDENT est un
+                  AXE À CATALOGUE (core.json schema.catalogAxes = alphabet | tuning | octaves | scale),
+                  la forme `IDENT ":" …` est REJETÉE (fail-loud) — un axe-composant se NOMME avec `.`
+                  (`@alphabet.western`, `@scale.bilaval`). Le `:` reste réservé aux VALEURS
+                  (@tempo:120, @diapason:432, @meter:3/4). Garde anti-dérive :
+                  test/test_catalog_axes_colon_reject.js. *)
                | "+"                                (* @+ — append to previous subgrammar *)
                | IDENT , "(" , alias_list , ")"     (* @alphabet.western(A:La) — résolution conflit *)
                | "actor" , IDENT , actor_body       (* @actor sitar alphabet.sargam ... — v0.8, voir actor_directive *)

@@ -91,7 +91,9 @@ registerAll(BUNDLED_LIBS);
 // loadLib('tuning', X) tombait sur lib/tuning.json (héritage Bernard, gammes sous
 // .scales) et ne résolvait JAMAIS rien — la résolution d'accordage était 100 %
 // aval (Kairos). L'alias ouvre l'accès transpileur au catalogue (SCENE_VALUES).
-const fileAliases = { alphabet: 'alphabets', tuning: 'tunings' };
+// `scale` → scales.json : axe-composant à catalogue (domain:scale) promu au CUTOVER universel
+// (Romain 2026-07-14, tour [412]) — ouvre l'accès transpileur pour valider `@scale.<nom>`.
+const fileAliases = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales' };
 
 function loadJsonFile(name) {
   const canonical = fileAliases[name] || name;

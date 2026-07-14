@@ -8,7 +8,7 @@
 @core
 @controls
 @alphabet.sargam:midi
-@octaves:western
+@octaves.western
 @tempo:60
 @striated
 
