@@ -6,7 +6,7 @@ let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
 
 const r = compileBPS(`@library.strudel "dirt-samples"
-@actor beat  transport:audio  eval.strudel
+@actor beat  transport.audio  eval.strudel
 S -> beat
 beat -> \`note("c2*4").s("sawtooth")\``);
 check(r.errors.length === 0, 'compile sans erreur : ' + JSON.stringify(r.errors));
@@ -17,7 +17,7 @@ check(r.libraries && Array.isArray(r.libraries.strudel) && r.libraries.strudel.i
 // Plusieurs librairies pour le même moteur s'accumulent.
 const r2 = compileBPS(`@library.strudel "dirt-samples"
 @library.strudel "tidal-drum-machines"
-@actor beat transport:audio eval.strudel
+@actor beat transport.audio eval.strudel
 S -> beat
 beat -> \`s("bd")\``);
 check(r2.libraries.strudel.length === 2, 'deux banques accumulées pour strudel : ' + JSON.stringify(r2.libraries));

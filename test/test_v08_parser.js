@@ -43,6 +43,13 @@ function parseSource(src) {
   return parse(tokenize(src));
 }
 
+// CUTOVER graphie 2026-07-14 : renvoie true si `src` est REJETÉ (fail-loud) avec un message
+// contenant `needle`. Sert à prouver que l'ancienne forme d'entité en `:` CRIE désormais.
+function rejects(src, needle) {
+  try { parse(tokenize(src)); return false; }
+  catch (e) { return typeof e.message === 'string' && (!needle || e.message.includes(needle)); }
+}
+
 // ============================================================
 // 1. @actor — dot notation (v0.8 canonique)
 // ============================================================
@@ -67,34 +74,34 @@ S -> A`);
 }
 
 // ============================================================
-// 2. @actor — v0.7 (rétrocompat transitoire)
+// 2. @actor — CUTOVER 2026-07-14 : l'ancienne forme d'entité en `:` est REJETÉE
 // ============================================================
 
-section('@actor — v0.7 (rétrocompat)');
+section('@actor — entité en `:` REJETÉE (cutover)');
 
 {
-  const ast = parseSource(`@controls
-@actor sitar alphabet:tabla tuning:equal_temperament transport:midi(ch:3, vel:100)
-S -> A`);
-  const actor = ast.actors[0];
-  assert('alphabet via colon (v0.7)', actor.properties.alphabet === 'tabla');
-  assert('tuning via colon (v0.7)', actor.properties.tuning === 'equal_temperament');
-  assert('transport via colon (v0.7)', actor.properties.transport?.key === 'midi');
+  // `alphabet:tabla`, `tuning:…`, `transport:…` = composants mal graphiés → fail-loud.
+  assert('alphabet:tabla → REJET',
+    rejects(`@controls\n@actor sitar alphabet:tabla\nS -> A`, "alphabet:…"));
+  assert('tuning:equal_temperament → REJET',
+    rejects(`@controls\n@actor sitar tuning:equal_temperament\nS -> A`, "tuning:…"));
+  assert('transport:midi(ch:3) → REJET',
+    rejects(`@controls\n@actor sitar transport:midi(ch:3)\nS -> A`, "transport:…"));
 }
 
 // ============================================================
-// 3. @actor — formes mixtes v0.7 + v0.8 (transition)
+// 3. @actor — CANON dot pur (alphabet.X + transport.X)
 // ============================================================
 
-section('@actor — formes mixtes');
+section('@actor — canon dot');
 
 {
   const ast = parseSource(`@controls
-@actor sitar alphabet:tabla
+@actor sitar @alphabet.tabla
   transport.midi(ch:3)
 S -> A`);
   const actor = ast.actors[0];
-  assert('alphabet via colon', actor.properties.alphabet === 'tabla');
+  assert('alphabet via dot', actor.properties.alphabet === 'tabla');
   assert('transport via dot', actor.properties.transport?.key === 'midi');
 }
 
@@ -413,19 +420,21 @@ S -> tabla.dhin tabla.dha
 }
 
 // ============================================================
-// 20. Cas adversarial : v0.7 sounds:NAME dans actor → sound (renommage)
+// 20. CUTOVER : sound.NAME (dot) → sound + SoundAssignment ; sounds:NAME (colon) REJETÉ
 // ============================================================
 
-section('v0.7 sounds:NAME → sound (canonisé)');
+section('sound.NAME (dot) canonique ; sounds:NAME (colon) REJETÉ');
 
 {
   const ast = parseSource(`@controls
-@actor t sounds:tabla_perc alphabet:tabla transport:midi(ch:1)
+@actor t sound.tabla_perc @alphabet.tabla transport.midi(ch:1)
 S -> A`);
   assert('properties.sound rempli (canonique)', ast.actors[0].properties.sound === 'tabla_perc');
   // Émet aussi une SoundAssignment scope=actor subject=*, cohérent avec
   // l'équivalence sémantique v0.8 (sound.X = *:sound.X dans @actor).
   assert('soundAssignment émis', ast.soundAssignments?.[0]?.target?.name === 'tabla_perc');
+  assert('sounds:tabla_perc (colon v0.7) → REJET',
+    rejects(`@controls\n@actor t sounds:tabla_perc\nS -> A`, "sounds:…"));
 }
 
 // ============================================================
@@ -460,11 +469,10 @@ section('eval.X harmonisé (PM décision 2)');
   transport.midi(ch:1)
   eval.python
 S -> A`);
-  const ast07 = parseSource(`@controls
-@actor a alphabet:tabla transport:midi(ch:1) eval:python
-S -> A`);
   assert('v0.8 eval.python parsed', ast08.actors[0].properties.eval === 'python');
-  assert('v0.7 eval:python parsed', ast07.actors[0].properties.eval === 'python');
+  // CUTOVER : la forme colon `eval:python` (comme alphabet:/transport:) est REJETÉE.
+  assert('eval:python (colon v0.7) → REJET',
+    rejects(`@controls\n@actor a @alphabet.tabla transport.midi(ch:1) eval:python\nS -> A`, "eval:…"));
 }
 
 // ============================================================

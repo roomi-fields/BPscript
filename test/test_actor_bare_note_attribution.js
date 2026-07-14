@@ -26,7 +26,7 @@ function notesActors(src) {
 
 console.log('\n=== Note NUE attribuée à l\'acteur explicite (via payload.actor, canal existant) ===');
 {
-  const { out, errors } = notesActors('@core\n@controls\n@actor voice @alphabet.sargam transport:browser\nS -> sa re\n');
+  const { out, errors } = notesActors('@core\n@controls\n@actor voice @alphabet.sargam transport.browser\nS -> sa re\n');
   assert('compile sans erreur', errors.length === 0, errors.join(' | '));
   assert('note nue sa → payload.actor = voice', out.find((n) => n.name === 'sa')?.actor === 'voice', JSON.stringify(out));
   assert('note nue re → payload.actor = voice', out.find((n) => n.name === 're')?.actor === 'voice', JSON.stringify(out));
@@ -36,7 +36,7 @@ console.log('\n=== Note NUE attribuée à l\'acteur explicite (via payload.actor
 
 console.log('\n=== Note altérée nue (komal) aussi attribuée ===');
 {
-  const { out } = notesActors('@core\n@controls\n@actor voice @alphabet.sargam transport:browser\nS -> rekomal ga\n');
+  const { out } = notesActors('@core\n@controls\n@actor voice @alphabet.sargam transport.browser\nS -> rekomal ga\n');
   assert('rekomal → voice', out.find((n) => n.name === 'rekomal')?.actor === 'voice', JSON.stringify(out));
   assert('ga → voice', out.find((n) => n.name === 'ga')?.actor === 'voice', JSON.stringify(out));
 }

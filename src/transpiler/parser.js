@@ -28,6 +28,14 @@ class ParseError extends Error {
 const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
 
 /**
+ * Clés d'ENTITÉ (composants) admises sur la ligne d'acteur (décision cles-acteur-six,
+ * Romain 2026-06-16). Toutes se NOMMENT avec `.` (`.` APPELLE le composant) — jamais `:`
+ * (le `:` AFFECTE une valeur). Le CUTOVER graphie (Romain 2026-07-14) rejette la forme `:`
+ * pour chacune. `sounds` = alias v0.7 de `sound` (rejeté avec renvoi vers `sound.`).
+ */
+const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport', 'sound', 'sounds', 'eval']);
+
+/**
  * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
  * (star→'*', plus→'+', fin→';'), retourne l'opérateur canonique BP3.
  * Cela garantit que l'AST reflète ce que BP3 aurait compilé (R1).
@@ -1048,9 +1056,7 @@ function parse(tokens, opts = {}) {
         if (next === T.PERIOD && !peek(1).spaceBefore) {
           // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
           // symbole, début de règle).
-          const isEntityKey = key === 'alphabet' || key === 'tuning' ||
-                              key === 'octaves' || key === 'transport' ||
-                              key === 'sound' || key === 'eval';
+          const isEntityKey = ACTOR_ENTITY_KEYS.has(key) && key !== 'sounds';
           if (!isEntityKey) break;
           advance();           // consume key IDENT
           advance();           // consume PERIOD
@@ -1061,10 +1067,10 @@ function parse(tokens, opts = {}) {
           continue;
         }
 
-        // forme v0.7 : `alphabet:X`, `tuning:X`, `transport:X(...)`, `sounds:X`
         if (next === T.COLON && !peek(1).spaceBefore) {
           // Affectation : `Sa:sound.X` ou `Sa:{ ... }`. Détection : le 3e token
           // est IDENT "sound" PERIOD IDENT (affectation), ou LBRACE (inline).
+          // Ici `:` AFFECTE une valeur à un SUJET (une note) — forme légitime, conservée.
           const t3 = peek(2);
           const t4 = peek(3);
           const isSubjectSoundAssign =
@@ -1087,7 +1093,25 @@ function parse(tokens, opts = {}) {
             continue;
           }
 
-          // forme v0.7 entité — accepté en rétrocompat
+          // CUTOVER graphie (Romain GO 2026-07-14, tour [411] ; décision hub 2026-06-26) :
+          // une référence d'ENTITÉ (composant : alphabet, tuning, octaves, transport, sound,
+          // eval) se NOMME avec `.` — `.` APPELLE le composant. Le `:` n'affecte QUE des
+          // valeurs (SCENE_VALUES, `sujet:sound.X`). L'ancienne forme v0.7 `alphabet:X` /
+          // `transport:X(...)` est REJETÉE (fail-loud) — plus AUCUNE rétrocompat, migration
+          // totale (non-négociable Romain). Un transport prend des params (canal/device) →
+          // c'est un composant, pas une valeur : `transport.midi(ch:3)`.
+          if (ACTOR_ENTITY_KEYS.has(key)) {
+            const canon = key === 'sounds' ? 'sound' : key;
+            throw new ParseError(
+              `'${key}:…' refusé — ':' n'affecte pas de valeur à un composant. `
+              + `Écris '${canon}.<nom>'`
+              + (key === 'transport' ? ' avec ses params entre () — ex. transport.midi(ch:3)' : '')
+              + ` (règle : '.' APPELLE le composant, ':' AFFECTE une valeur).`,
+              current(),
+            );
+          }
+
+          // forme non-entité `sujet:valeur` (fallback historique, non-composant)
           advance();   // key
           advance();   // :
           if (at(T.IDENT)) {
@@ -1178,6 +1202,19 @@ function parse(tokens, opts = {}) {
       }
       return { type: 'Directive', name, subkey, runtime: null, value: null, aliases: null,
                modifiers: null, timePatterns: patterns, line: tok.line };
+    }
+
+    // CUTOVER graphie / LAN-4 A (Romain GO 2026-07-14, tour [411]) : un accordage est un
+    // COMPOSANT — il se NOMME avec `.` (`@tuning.<nom>`). Le `:` n'affecte QUE des valeurs :
+    // la fréquence de référence a sa propre clé `@diapason:<N>` (décision 2026-07-04). On
+    // REJETTE donc `@tuning:<X>` (freq silencieusement no-op AVANT ; ou composant mal graphié).
+    if (name === 'tuning' && at(T.COLON)) {
+      throw new ParseError(
+        "'@tuning:<X>' refusé — ':' n'affecte pas de valeur au tuning (règle : ':' affecte, "
+        + "'.' appelle). Écris : composant → '@tuning.<nom>' ; fréquence de référence → "
+        + "'@diapason:<N>' ; tuning personnel → '@mine.<chemin>.<nom>'.",
+        current(),
+      );
     }
 
     if (at(T.COLON)) {
