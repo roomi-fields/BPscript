@@ -55,6 +55,26 @@ façon opaque : sa sortie est **captée** à l'interprétation puis **placée** 
 Le backtick est un **terminal de plein droit** : il occupe une position dans le flux comme une note
 (cf. `BacktickStandalone`, EBNF §4.13). Le **tag** désigne l'interpréteur.
 
+### Durée d'une voix de code (TRANCHÉ — décision Romain, cohérente ARCHITECTURE.md ; hub backlog A3)
+
+Un backtick étant un **terminal de plein droit ordonnancé par BPx**, il **a une durée** — la question
+« durée ou pas » n'est **pas ouverte**. Deux durées **distinctes** coexistent :
+
+- **Durée EXTÉRIEURE** = le **slot du terminal dans la dérivation**, calculé par **BPx** comme pour
+  toute position de terminal : défaut = **une unité de pas**, ou la valeur d'une **durée explicite
+  `:N`** collée (`` `js:…`:2 `` — notation de 1er rang, portées {terminal, groupe, règle},
+  EBNF §Durée). C'est CETTE durée qu'affiche la vue Structure. **Réglé**, pas ouvert. Le code est
+  déclenché **au temps T** (onset du slot) ET **occupe** ce slot — « les deux » (hub backlog A3,
+  cohérent ARCHITECTURE.md : code envoyé au temps T + quantification au cycle).
+- **Durée INTÉRIEURE** = la **séquence propre du moteur invité** (le code Strudel/Tidal/… a son
+  déroulé interne). Elle n'est PAS le slot extérieur ; le langage invité doit pouvoir la **consulter
+  via des variables** (durée du slot hôte exposée au code — spécifié par Romain de longue date), afin
+  d'aligner sa séquence interne sur le cadre temporel du terminal hôte.
+
+L'AST ne porte pas de champ « durée » sur `BacktickStandalone` **parce que** la durée extérieure EST
+le slot de dérivation (résolu par BPx), pas une donnée gravée dans le nœud — et non parce qu'elle
+serait indéfinie.
+
 ## 3. Appareils (`transport`)
 
 `transport` pointe **toujours** un **appareil typé** d'une librairie `@devices`. `midi` est
@@ -97,12 +117,16 @@ tout n'est pas une note (bol, backtick…).
 
 `hub/projets/backlog-langage-bps.md` :
 
+> **A3 (durée d'un backtick) = TRANCHÉ**, retiré de cette liste (il n'a jamais été ouvert) :
+> voir ci-dessus §2 « Durée d'une voix de code » — terminal à durée BPx (extérieure) + durée
+> intérieure du moteur invité consultable par variables. Aligné sur `backlog-langage-bps.md` §A
+> (« Points déjà DÉFINIS — ne pas rouvrir »).
+
 - **A1** — synchro temporelle moteurs-code (Strudel/Tidal ont leur horloge) ↔ timeline BPScript.
   Seul point pouvant remettre en cause l'archi ; à creuser avant l'implémentation cross-runtime.
   Le modèle d'horloge est **défini** dans `docs/design/ARCHITECTURE.md` (répartiteur = horloge,
   quantification au cycle façon TidalCycles, triggers `!sync`, code au temps T) — s'y aligner, ne
   rien réinventer.
 - **A2** — niveaux exacts + syntaxe d'override de la cascade de sortie.
-- **A3** — backtick-terminal : occupe du temps (gate) ou déclenche (trigger) ? Cas limites temporels.
 - **B2/B3/B4** — librairie `@devices`, contrats d'interface des runtimes, capture-pour-retransport.
 - **D2** — migration `.kanopi → .bps` + schéma de mapping (dev downstream, après spec ferme).
