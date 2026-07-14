@@ -177,23 +177,34 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
               défaut = **hérité de l'alphabet** de l'acteur ; `@actor X octaves.Y` SURCHARGE la
               notation de registre pour cet acteur. Étape de résolution distincte, rattachée au
               vocabulaire de symboles (alphabet), PAS au tuning.)
-   transport — destination de rendu (requis) — CANON transport.<canal>(…). Le nom d'appareil est un IDENT **LIBRE**
-              (clé de la librairie `@devices`), PAS une liste fermée de mots-clés. `midi`/`webaudio`
-              sont des appareils par défaut (`webaudio` = alias de l'appareil `audio`). La grammaire
-              valide uniquement la SYNTAXE `transport.<nom>(params)` ; l'existence de l'appareil et la
-              compatibilité de type (sortie de la voix ↔ type d'appareil) sont résolues en aval
-              (Kanopi, cf. DEVICES_SPEC.md). Paramètres runtime entre () : transport.midi(ch:10).
+   transport — CANAL de NOTRE sortie — CANON transport.<canal>(…). Modèle producteur/canal (décision
+              Romain 2026-07-14, hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md) :
+              transport ne concerne QUE nos runtimes — `audio`/`midi`/`osc`. NON requis :
+                • acteur SANS `eval` (producteur défaut `js`, ou voix symbolique alphabet→sound) :
+                  transport OPTIONNEL, défaut cascade @core = `audio` ;
+                • acteur AVEC `eval` : transport INTERDIT (fail-loud) — un programme embarqué autonome
+                  (strudel/hydra/p5/csound/mercury) sort en NATIF ; on ne route pas sa sortie.
+              PAS de `transport.video`/`transport.visual` (axe visuel SUPPRIMÉ : les visuels sortent
+              natif). Le nom d'appareil est un IDENT **LIBRE** (clé de `@devices`), PAS une liste fermée ;
+              `webaudio` = alias de `audio`. La grammaire valide la SYNTAXE `transport.<nom>(params)` ;
+              l'existence de l'appareil et la compatibilité de type sont résolues en aval (Kanopi,
+              cf. DEVICES_SPEC.md — désormais audio/midi/osc seulement). Params entre () : transport.midi(ch:10).
    sound    — son par défaut de l'acteur (référence dans @sound).
               Une référence sound.X ici équivaut sémantiquement à
               `*:sound.X` mais s'écrit comme une entity_ref pour homogénéité.
 *)
 
-actor_eval_binding = "eval" , "." , IDENT ;          (* eval.python, eval.sc, eval.strudel ... *)
-(* eval — interpréteur PAR DÉFAUT de l'acteur (clé d'interpréteur libre, pas une liste fermée).
-   Le code interprété est TOUJOURS transporté vers le `transport` (appareil) de la voix. Un backtick
-   de flux dans une règle dont la tête est cet acteur HÉRITE de `eval` (langage connu sans tag) ; un
-   tag explicite l'override (cf. §4.13, décision CV-curve 2026-07-04 + [299]). Hors voix-code d'acteur,
-   le tag est obligatoire. Même espace de noms de clés d'interpréteur que les tags. *)
+actor_eval_binding = "eval" , "." , IDENT ;          (* eval.strudel, eval.hydra, eval.csound ... *)
+(* eval — PRODUCTEUR embarqué AUTONOME de l'acteur (clé libre : strudel/hydra/p5/csound/mercury…).
+   Modèle producteur/canal (Romain 2026-07-14) : un acteur `eval` PRODUIT ET SORT EN NATIF (son propre
+   audio / canvas) ⇒ il ne porte PAS de `transport` (fail-loud si présent). L'ABSENCE d'`eval` vaut
+   producteur défaut IMPLICITE `js` (notre code, produit dans notre environnement) — SEUL cas de voix
+   de code où `transport` s'applique. `js` ne s'écrit pas `eval.js` (défaut implicite) ; la catégorie
+   qui distinguera formellement « produit-chez-nous » (js) de « produit-natif » (strudel/hydra) est
+   prospective (backlog « LP », décision 2026-07-14 §Prospectif).
+   Un backtick de flux dans une règle dont la tête est cet acteur HÉRITE de `eval` (langage connu sans
+   tag) ; un tag explicite l'override (cf. §4.13, décision CV-curve 2026-07-04 + [299]). Hors voix-code
+   d'acteur, le tag est obligatoire. Même espace de noms de clés que les tags. *)
 
 
 param_pairs = param_pair , { "," , param_pair } ;
@@ -1008,9 +1019,10 @@ type le **langage** ; le mot-clé `cv` type le **rôle** (modulation) — orthog
 Le backtick autonome est un **terminal de plein droit** du RHS (cf. `element_core` et
 `BacktickStandalone` dans AST.md) : il occupe une position dans le flux au même titre qu'une note.
 Le **tag** désigne l'**interpréteur** (`eval`) du code (`sc:`, `py:`, `tidal:`, `strudel:`, `js:`…).
-Le code encapsulé est **toujours transporté** : capté à l'interprétation, puis placé par le
-dispatcher vers le `transport` (appareil) de la voix. Backtick attaché à un symbole ou dans un
-paramètre → interpréteur implicite (celui du symbole / de son acteur). Le rattachement d'un
+La SORTIE dépend du producteur (modèle producteur/canal, Romain 2026-07-14) : un backtick sur un
+acteur `eval.<X>` (strudel/hydra/p5/csound/mercury) **sort en NATIF** (pas de transport) ; un backtick
+du producteur défaut `js` est **placé par le dispatcher vers NOTRE `transport`**. Backtick attaché à
+un symbole ou dans un paramètre → interpréteur implicite (celui du symbole / de son acteur). Le rattachement d'un
 backtick à un acteur précis (voix-code) est décrit dans `docs/design/ACTOR.md`.
 État d'implémentation : seul `js:` est interprété aujourd'hui ; `sc`/`py`/`tidal`/`strudel` sont
 des cibles d'architecture (interpréteurs encapsulés).

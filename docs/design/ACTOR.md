@@ -16,9 +16,29 @@ Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes 
 | `alphabet` | vocabulaire de symboles — **hérité par cascade** (acteur → scène `@alphabet.X` → socle @core), JAMAIS requis (modèle Romain 2026-07-13) ; si la scène invoque une hauteur opaque `@mine.`/`@factory.`, l'alphabet reste résolu en aval (Kairos) | `lib/alphabets.json` |
 | `tuning` | tempérament / accordage (ex-`scale`) | `lib/tuning.json` |
 | `octaves` | convention de registre / notation — **défaut hérité de l'alphabet**, surchargeable par acteur | `lib/octaves.json` |
-| `sound` | son par défaut de l'acteur | `@sound` |
-| `transport` | appareil de rendu typé (requis) | librairie `@devices` |
-| `eval` | interpréteur du code encapsulé | — |
+| `sound` | son par défaut de l'acteur — **producteur PAR SYMBOLE** (banque, ou prospectif backtick-synthé) | `@sound` |
+| `transport` | **canal de sortie** de NOTRE production (`audio`/`midi`/`osc`) — **optionnel**, défaut cascade @core `audio` ; **ABSENT (interdit) sur un acteur `eval`** (il sort en natif) | librairie `@devices` |
+| `eval` | **producteur embarqué autonome** (`strudel`/`hydra`/`p5`/`csound`/`mercury`) : produit + sort en **natif** ; absence d'`eval` ⇒ producteur **défaut `js`** (notre code) | — |
+
+### Modèle producteur / canal (décision Romain 2026-07-14, `hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md`)
+
+Un acteur porte **deux axes orthogonaux** en plus de son alphabet/tuning/octaves :
+
+- **PRODUCTEUR** — ce qui fabrique le signal :
+  - `eval.<X>` = **programme embarqué autonome** (strudel/hydra/p5/csound/mercury). Il **produit par
+    ses propres moyens et sort en natif** (son propre audio, son propre canvas). ⇒ on ne lui donne
+    **PAS** de `transport` (au plus l'horloge le déclenche ; on ne route pas sa sortie).
+  - **Pas d'`eval` ⇒ producteur défaut = `js`** (IMPLICITE) — notre code, qui **produit dans NOTRE
+    environnement** (nos primitives de sortie). Tient tant qu'on n'embarque qu'**un seul** langage de
+    programmation (js). C'est le seul cas de voix de code où l'on utilise nos propres `transport`.
+  - `sound.<X>` = producteur **par symbole** (transforme une note/fréquence résolue en son) : banque
+    de sons **OU** — *prospectif, à spécifier* — backtick-synthé paramétré par la hauteur.
+- **CANAL DE SORTIE** — `transport.<X>` = **NOS** runtimes de sortie (`audio`/`midi`/`osc`), appliqués
+  **uniquement à NOTRE production** (le défaut `js` et les voix symboliques alphabet→`sound`).
+
+**Il n'existe PAS de `transport.video` / `transport.visual`.** Les visuels embarqués (hydra/p5) sortent
+en natif sur leur canvas → **rien à exprimer** côté transport. L'axe visuel est **supprimé**, pas
+renommé (résout la question « video vs visual »).
 
 Déclaration (les références d'entité utilisent `.`) :
 
@@ -41,16 +61,22 @@ occidentaux). Décision *cles-acteur-six* (Romain 2026-06-16).
 
 Deux usages d'une même voix.
 
-| | Voix de notes | Voix de code |
-|---|---|---|
-| Contenu | terminaux (notes/bols) résolus en hauteurs/sons | code étranger en backtick (terminal) |
-| Interprétation | résolution pitch + son (cascades pitch/sons) | `eval` (interpréteur : `sc`, `py`, `tidal`, `strudel`, `js`…) |
-| Sortie | `transport` (appareil) | `transport` (appareil) — **capture-pour-retransport** |
-| Exemple | `S -> sitar.Sa sitar.Re` | `S -> ` `` `strudel: s("bd*4")` `` |
+Deux usages d'une même voix. La **sortie** dépend du PRODUCTEUR (modèle producteur/canal, Romain
+2026-07-14) : une voix de code sur `eval.<X>` (strudel/hydra…) sort **en natif** (pas de transport) ;
+une voix de code SANS `eval` (producteur défaut `js`) et une voix de notes utilisent **NOTRE**
+`transport`.
 
-**Code encapsulé = toujours transporté.** Le code n'est pas rendu en place par son moteur natif de
-façon opaque : sa sortie est **captée** à l'interprétation puis **placée** par le dispatcher vers le
-`transport` de la voix. C'est nous qui plaçons l'événement dans le temps.
+| | Voix de notes | Voix de code `eval.<X>` (natif) | Voix de code défaut `js` |
+|---|---|---|---|
+| Contenu | terminaux résolus en hauteurs/sons | code étranger en backtick | code étranger en backtick |
+| Producteur | alphabet→`sound` | `eval.strudel`/`hydra`/`p5`/`csound`… | `js` (implicite, notre code) |
+| Sortie | **notre** `transport` (audio/midi/osc) | **NATIVE** (son propre audio/canvas) — **pas de transport** | **notre** `transport` |
+| Exemple | `S -> sitar.Sa sitar.Re` | `@actor viz eval.hydra` / `viz -> ` `` `osc(4)` `` | `@actor v` / `v -> ` `` `js: out(...)` `` |
+
+**Ce qui est transporté = seulement NOTRE production** (voix de notes + producteur défaut `js`). Sa
+sortie est **placée** par le dispatcher dans le temps vers le `transport` de la voix. Une voix `eval.<X>`
+ne l'est PAS : elle **produit et sort par ses propres moyens** ; le rerouting de sa sortie native à
+travers nos runtimes est **écarté** (décision 2026-07-14 — pixels/audio déjà synthétisés non routables).
 
 Le backtick est un **terminal de plein droit** : il occupe une position dans le flux comme une note
 (cf. `BacktickStandalone`, EBNF §4.13). Le **tag** désigne l'interpréteur.
@@ -77,13 +103,20 @@ serait indéfinie.
 
 ## 3. Appareils (`transport`)
 
-`transport` pointe **toujours** un **appareil typé** d'une librairie `@devices`. `midi` est
-l'appareil basique par défaut. Un appareil porte un type de sortie (notes, signal, lumière, vidéo,
-OSC…) ; la compatibilité voix → appareil se vérifie sur ce type.
+`transport` est le **canal de NOTRE sortie** : il pointe un appareil typé d'une librairie `@devices`,
+et ne concerne **QUE nos runtimes** — `audio`, `midi`, `osc` (défaut cascade @core = `audio`). Un
+appareil porte un type de sortie (notes, signal, OSC…) ; la compatibilité voix → appareil se vérifie
+sur ce type.
 
-> Ouvert (backlog B2/B3) : format de la librairie `@devices`, appareil `midi` par défaut, et la
-> clause d'interface des runtimes encapsulés (« comment j'expose ma sortie pour transport » +
-> typage de la voix).
+**Deux exclusions posées par le modèle producteur/canal (décision Romain 2026-07-14) :**
+- **Pas de canal visuel** : `transport.video` / `transport.visual` **n'existent pas**. Les visuels
+  embarqués (hydra/p5) sortent en natif ; on ne route pas leurs pixels.
+- **Un acteur `eval` ne porte pas de `transport`** : il produit et sort en natif. Écrire un
+  `transport` sur un acteur `eval` est une **contradiction** (voir §1) — à rejeter, pas à ignorer.
+
+> Ouvert (backlog B2/B3) : format de la librairie `@devices` (désormais **audio/midi/osc seulement**,
+> plus le visuel), appareil par défaut, et la clause d'interface des runtimes encapsulés (« comment
+> j'expose ma sortie pour transport » + typage de la voix).
 
 ### Librairie de runtime (`@library.<moteur>`)
 
@@ -128,5 +161,7 @@ tout n'est pas une note (bol, backtick…).
   quantification au cycle façon TidalCycles, triggers `!sync`, code au temps T) — s'y aligner, ne
   rien réinventer.
 - **A2** — niveaux exacts + syntaxe d'override de la cascade de sortie.
-- **B2/B3/B4** — librairie `@devices`, contrats d'interface des runtimes, capture-pour-retransport.
+- **B2/B3** — librairie `@devices` (désormais **audio/midi/osc seulement**, plus de visuel), contrats
+  d'interface des runtimes de sortie. **B4 (capture-pour-retransport) = ÉCARTÉ** (décision 2026-07-14 :
+  les `eval.<X>` sortent en natif, on ne reroute pas leurs sorties déjà synthétisées).
 - **D2** — migration `.kanopi → .bps` + schéma de mapping (dev downstream, après spec ferme).

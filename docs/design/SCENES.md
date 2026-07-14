@@ -114,7 +114,7 @@ Cette cascade est **distincte** du mécanisme de scoping des flags (§4) : l'ove
 
 > Ouvert (backlog A2) : syntaxe d'override de sortie aux niveaux scène et acteur — non encore spécifiée.
 
-Le `transport` pointe toujours un **appareil typé** d'une librairie `@devices` ; `midi` est l'appareil par défaut. Code encapsulé (backtick) : sa sortie est captée par l'interpréteur `eval`, puis placée par le dispatcher via le `transport` de la voix — **toujours transporté**, jamais rendu en place de façon opaque.
+Le `transport` = **canal de NOTRE sortie** (`audio`/`midi`/`osc`, défaut cascade @core `audio`) ; optionnel, et **absent sur un acteur `eval`**. Modèle producteur/canal (Romain 2026-07-14) : un `eval.<X>` (strudel/hydra…) est un producteur embarqué autonome qui **sort en natif** (pas de transport) ; seul le producteur défaut `js` place sa sortie via NOTRE `transport`. Pas de `transport.video`/`visual`.
 
 ### 3.3 Migration `.kanopi → .bps` (chantier downstream)
 

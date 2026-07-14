@@ -97,7 +97,11 @@ Sa!dha!spotlight          // 3 runtimes au meme instant
 ### Acteur -- unite de binding
 
 Un acteur lie **six cles d'entite** (decision *cles-acteur-six*, Romain 2026-06-16) : `alphabet`
-(requis), `tuning`, `octaves`, `sound`, `transport` (requis), `eval` — references via `.`.
+(herite par cascade, jamais requis), `tuning`, `octaves`, `sound`, `transport`, `eval` — references
+via `.`. Modele producteur/canal (Romain 2026-07-14) : `eval.<X>` = producteur embarque autonome
+(sort en natif, PAS de `transport`) ; absence d'`eval` = producteur defaut `js` (notre code, utilise
+`transport`) ; `transport` = NOS canaux `audio`/`midi`/`osc` (optionnel, defaut cascade @core `audio`),
+JAMAIS de `transport.video`/`visual`.
 `octaves` = convention de registre/notation, **defaut herite de l'alphabet**, surchargeable par
 acteur (`@actor X octaves.Y`) ; etape de resolution distincte, rattachee a l'alphabet (pas au tuning).
 Le marqueur de registre se **colle** au nom de note via le separateur de la convention (`lib/octaves.json`),

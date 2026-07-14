@@ -84,11 +84,14 @@ Si le REPL ne répond pas à temps :
 **Optimisation future** : lookahead — le dispatcher pré-évalue les `getValue()`
 quelques beats en avance pendant le playback courant.
 
-#### (ii) Capture-pour-retransport — FUTURE (backlog B4)
+#### (ii) Capture-pour-retransport — ÉCARTÉ (décision Romain 2026-07-14)
 
-Mécanisme distinct de `getValue()` : capter la **sortie** d'un interpréteur
-(ex. Strudel, Tidal) pour la router vers le `transport` de la voix, afin que
-le dispatcher place l'événement dans le temps. Non implémenté ; voir backlog B4.
+Anciennement envisagé : capter la **sortie** d'un interpréteur (Strudel, Tidal…) pour la router vers
+notre `transport`. **Abandonné** par le modèle producteur/canal : un `eval.<X>` est un producteur
+embarqué autonome qui **sort en natif** (audio/canvas propres) — on ne reroute pas ses sorties déjà
+synthétisées (usine à gaz). Seul le producteur défaut `js` produit dans notre environnement et utilise
+notre `transport`. `getValue()` (capture d'une **valeur** calculée) reste, lui, valide. Cf.
+`docs/design/ACTOR.md` §1-2 et `hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md`.
 
 ### 4. Erreurs
 

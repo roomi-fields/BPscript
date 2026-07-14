@@ -226,9 +226,14 @@ ActorDirective {
                                    // "octaves", gravée parser.js:1033) — PORTÉE OPAQUE (BPx 2fdb291),
                                    // résolue par Kairos contre octaves.json (kairos 8fce0fc). L'override
                                    // surcharge la convention native de l'alphabet (ex. sargam noté sa6).
-    sound: string | null          // son par défaut de l'acteur (référence dans soundPrototypes)
-    transport: TransportRef       // destination de rendu — appareil typé (cf. @devices)
-    eval: string | null           // interpréteur des backticks (null = même clé que transport)
+    sound: string | null          // producteur PAR SYMBOLE (banque, ou prospectif backtick-synthé)
+    transport: TransportRef | null // CANAL de NOTRE sortie (audio/midi/osc) — modèle producteur/canal
+                                   // (Romain 2026-07-14). OPTIONNEL : acteur SANS eval → défaut cascade
+                                   // @core `audio` ; acteur AVEC eval → transport ABSENT/INTERDIT (il
+                                   // sort en natif, fail-loud si présent). PAS de transport.video/visual.
+    eval: string | null           // PRODUCTEUR embarqué AUTONOME (strudel/hydra/p5/csound/mercury) :
+                                   // produit + sort en NATIF, sans transport. null = producteur défaut
+                                   // IMPLICITE `js` (notre code, produit dans notre env → utilise transport).
   }
   references: ActorReference[]   // FORME CANONIQUE (AST_SPEC §2.1) lue par le dispatcher/BPx :
                                  // une entrée par binding, { type:"ActorReference", category, name, params? }
@@ -272,9 +277,11 @@ TransportRef {
 }
 ```
 
-**`transport` = appareil typé** : la clé pointe un appareil de la librairie `@devices` (`midi` est
-l'appareil basique par défaut). **`eval` = interpréteur** du code encapsulé (backticks) ; le code
-interprété est **toujours transporté** vers le `transport` de la voix. Un acteur est une **voix** ;
+**`transport` = canal de NOTRE sortie** (`audio`/`midi`/`osc`, défaut cascade @core `audio`) :
+optionnel, et **absent/interdit sur un acteur `eval`**. **`eval` = producteur embarqué autonome**
+(strudel/hydra/p5/csound/mercury) qui **sort en natif** ; absence d'`eval` = producteur défaut `js`
+(notre code) → SEUL cas de voix de code transportée vers NOTRE `transport` (modèle producteur/canal,
+Romain 2026-07-14). Un acteur est une **voix** ;
 sa sortie suit la cascade scène → acteur → terminal (voir « Cascade de sortie » ci-dessous et
 `docs/design/ACTOR.md`), distincte de la cascade des sons.
 
@@ -1245,9 +1252,10 @@ tag explicite l'override. Un flux non taggé SANS eval d'acteur en tête = **orp
 
 `BacktickStandalone` est un **terminal de plein droit** du RHS (membre de `RhsElement` /
 `element_core`) : il occupe une position dans le flux comme une note. Le `tag` désigne
-l'**interpréteur** (`eval`) du code (`sc`, `py`, `tidal`, `strudel`, `js`…). Le code encapsulé est
-**toujours transporté** (capté à l'interprétation, placé par le dispatcher vers le `transport` de la
-voix). `BacktickInline` est une valeur calculée dans un paramètre ; `BacktickOrphan` est du code
+l'**interpréteur**/producteur (`eval`) du code (`strudel`, `hydra`, `csound`, `js`…). Sortie (modèle
+producteur/canal, Romain 2026-07-14) : un `eval.<X>` embarqué autonome **sort en natif** (pas de
+transport) ; seul le producteur défaut `js` est placé par le dispatcher vers NOTRE `transport`.
+`BacktickInline` est une valeur calculée dans un paramètre ; `BacktickOrphan` est du code
 taggé au niveau scène. Le rattachement d'un backtick à un acteur précis (voix-code) est décrit dans
 `docs/design/ACTOR.md`.
 
