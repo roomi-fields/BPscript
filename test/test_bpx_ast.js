@@ -38,7 +38,7 @@ function backtickNodes(ast) {
 
 // 3. Interp 'auto' résolu DANS LE PAYLOAD depuis l'eval de l'acteur (tête de règle = acteur)
 {
-  const r = compileToBPxAST('@actor stru\n  transport.audio\n  eval.strudel\nS -> stru\nstru -> `note("c2")`');
+  const r = compileToBPxAST('@actor stru\n  eval.strudel\nS -> stru\nstru -> `note("c2")`');
   const bt = backtickNodes(r.ast)[0];
   check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval acteur) dans payload.interp : " + JSON.stringify(bt && bt.payload));
 }

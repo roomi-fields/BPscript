@@ -1141,6 +1141,32 @@ function parse(tokens, opts = {}) {
         // Sortie : token inconnu (probable début de règle)
         break;
       }
+
+      // ENFORCEMENT modèle producteur/canal (décision Romain 2026-07-14 ; chantier hub [419]).
+      // Source : hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md §Le modèle ;
+      // docs/spec/EBNF.md:185-188 ; docs/spec/AST.md:230-236. Le formalisme ENFORCE le canon
+      // (filet mécanique anti-régression) — sans ça le corpus dérive en silence (~45 scènes eval
+      // portaient un transport mort). Deux fail-loud au niveau du frontal (les deux voies compilent
+      // via parse()) :
+      //   a. un producteur `eval.<X>` sort en NATIF → il ne porte PAS de transport.
+      //   b. `transport.video` / `transport.visual` n'existent plus (axe visuel SUPPRIMÉ, pas renommé).
+      if (properties.eval && properties.transport) {
+        throw new ParseError(
+          `acteur '${actorName}' : un producteur 'eval.${properties.eval}' sort en natif — `
+          + `pas de 'transport' (il produit et sort par ses propres moyens ; on ne route pas sa `
+          + `sortie native). Retire le 'transport' de cet acteur.`,
+          tok,
+        );
+      }
+      if (properties.transport && (properties.transport.key === 'video' || properties.transport.key === 'visual')) {
+        throw new ParseError(
+          `acteur '${actorName}' : 'transport.${properties.transport.key}' n'existe pas — le canal `
+          + `visuel a été SUPPRIMÉ (les visuels embarqués sortent en natif sur leur canvas). `
+          + `Canal de sortie = audio/midi/osc uniquement.`,
+          tok,
+        );
+      }
+
       // Forme CANONIQUE v0.8 (conformité AST_SPEC §2.1, décision architecte 2026-06-17) :
       // `references: ActorReference[]` = ce que le dispatcher lit (UNE seule forme, comme .gr).
       // `properties` reste pour le pipeline interne BPScript (actorResolver/encodeur) ; BPx/.gr

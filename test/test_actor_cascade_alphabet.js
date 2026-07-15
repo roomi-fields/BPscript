@@ -50,7 +50,7 @@ console.log('\n=== @MINE : hauteur opaque de scène → alphabet ABSENT (Kairos 
 
 console.log('\n=== VOIX-CODE (eval) : PAS d\'héritage d\'alphabet ===');
 {
-  const r = scene('@core\n@controls\n@actor stru transport.audio eval.strudel\nS -> stru\nstru -> `x`\n');
+  const r = scene('@core\n@controls\n@actor stru eval.strudel\nS -> stru\nstru -> `x`\n');
   assert('alphabet ABSENT (voix-code, pas de vocabulaire de notes)', r.alphabet === undefined, String(r.alphabet));
 }
 

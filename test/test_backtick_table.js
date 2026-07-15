@@ -33,8 +33,9 @@ check(sc && r.grammar.includes(sc[0]), 'la clé BTsc<id> apparaît dans la gramm
 // --- Voix-code (migration .kanopi→.bps) : acteur SANS alphabet + backtick NON taggé ---
 // alphabet optionnel pour une voix-code (eval présent) ; l'interpréteur du backtick non
 // taggé est résolu depuis l'eval de l'acteur propriétaire (tête de règle).
-const m = compileBPS(`@actor groove  transport.audio  eval.strudel
-@actor viz     transport.video  eval.hydra
+// Canon producteur/canal (Romain 2026-07-14) : un acteur `eval` sort en NATIF → PAS de transport.
+const m = compileBPS(`@actor groove  eval.strudel
+@actor viz     eval.hydra
 S -> { groove, viz }
 groove -> \`stack(note("c2*4"))\`
 viz -> \`osc(60).out()\``);
