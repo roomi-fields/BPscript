@@ -48,17 +48,15 @@ function compileBPS(source) {
     result.flagStates = encoded.flagStates;  // A5: états de drapeau nommés { flag → {alias→int} }
     result.libraries = encoded.libraries;    // @library.<moteur> "nom" → { moteur → [noms] }
     result.directives = ast.directives;
-    result.actorTable = actorResult.actorTable;
-    result.terminalActorMap = actorResult.terminalActorMap;
-    result.mapTable = encoded.mapTable;
-    result.sceneTable = encoded.sceneTable;
-    result.exposeTable = encoded.exposeTable;
+    // CCP-2 (atlas 05-interfaces.md:159-163, loi L13 « une seule lecture de la carte ») :
+    // les sidecars de carte-d'œuvre (actorTable, terminalActorMap, mapTable, sceneTable,
+    // exposeTable, ccAliases) ne sont PLUS émis — l'AST fait foi (ast.actors / ast.maps /
+    // ast.scenes / ast.exposes ; BPx lit astToSceneSpec.ts, coordonné CCP-1 2026-07-16).
     result.duration = encoded.duration;
     result.macroTable = encoded.macroTable;
     result.aliasTable = encoded.aliasTable;
     result.labelTable = encoded.labelTable;
     result.labelIndex = encoded.labelIndex;        // Z2 (#106): label → targeted RHS elements
-    result.ccAliases = encoded.ccAliases;          // Z5 (#109): named MIDI CC → number (runtime inbound)
     result.homomorphisms = encoded.homomorphisms;  // Contrat BPx: HomomorphismDeclAST[] (ast.ts:150-157)
 
     // 4. Generate prototypes (-so. file) for all declared terminals

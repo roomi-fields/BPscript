@@ -61,7 +61,11 @@ const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 // Ces opérateurs ne doivent JAMAIS être ajoutés à l'alphabet.
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], labelIndex: {}, ccAliases: {}, backticks: {} };
+  // CCP-2 (revue constitution, atlas 05-interfaces.md:159-163 + loi L13 « une seule lecture de la
+  // carte ») : les sidecars de CARTE D'ŒUVRE (mapTable, sceneTable, exposeTable, ccAliases —
+  // doublons des directives de l'AST) ne sont PLUS émis ; BPx lit l'AST (ast.maps/ast.exposes,
+  // astToSceneSpec.ts). Les tables d'ENCODAGE BP3 (grammar/alphabet/settings/controlTable…) restent.
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], labelIndex: {}, backticks: {} };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -154,24 +158,15 @@ function encode(ast) {
     }
   }
 
-  // Build scene table from @scene directives — scene names become terminals
-  const sceneNames = new Set();
+  // @scene directives : les noms de scène deviennent des TERMINAUX (encodage BP3, conservé).
+  // Le sidecar sceneTable (carte d'œuvre) n'est plus émis (CCP-2) — ast.scenes fait foi.
   if (ast.scenes) {
     for (const sc of ast.scenes) {
-      output.sceneTable[sc.name] = { file: sc.file };
-      sceneNames.add(sc.name);
       output.alphabet.add(sc.name);
     }
   }
 
-  // Build expose table from @expose directives
-  if (ast.exposes) {
-    for (const exp of ast.exposes) {
-      for (const flag of exp.flags) {
-        if (!output.exposeTable.includes(flag)) output.exposeTable.push(flag);
-      }
-    }
-  }
+  // exposeTable (CCP-2) : plus émis — ast.exposes fait foi (BPx astToSceneSpec).
 
   // Z2 (#106) — Build the label → targeted-elements index BEFORE resolving @map
   // endpoints, so a scoped endpoint like `kick.ratio` (LANGUAGE.md:1172) whose
@@ -180,47 +175,9 @@ function encode(ast) {
   // were parsed but never emitted; this index locates each labelled element.
   output.labelIndex = buildLabelIndex(ast.subgrammars);
 
-  // Known label names = @label declarations + every @-suffix label found in the
-  // RHS (keys of the index just built).
-  const labelNames = new Set(Object.keys(output.labelIndex));
-  for (const l of (ast.labels || [])) labelNames.add(l.name);
-
-  // Build map table from @map directives (I/O mappings: CC/OSC ↔ triggers/flags)
-  // Resolve named CC aliases and scoped endpoints
-  if (ast.maps) {
-    for (const m of ast.maps) {
-      const entry = { source: resolveMapEndpoint(m.source), arrow: m.arrow, target: resolveMapEndpoint(m.target) };
-      output.mapTable.push(entry);
-    }
-  }
-
-  function resolveMapEndpoint(ep) {
-    if (!ep) return ep;
-    // Resolve CC alias: @cc breath:2 + @map breath -> [x] → cc:2
-    if (ep.kind === 'alias') {
-      const def = libCtx.controls[ep.name];
-      if (def?.ccNumber != null) {
-        return { kind: 'cc', number: def.ccNumber, params: ep.params || null };
-      }
-      return ep;
-    }
-    // Resolve scoped: scene.X → sys command, label.X → label target, actor.X → flag
-    if (ep.kind === 'scoped') {
-      if (sceneNames.has(ep.scope)) {
-        return { kind: 'sys', scene: ep.scope, command: ep.name };
-      }
-      // Z2 — label.param: @map cc:1 -> kick.ratio. `kick` is a known label, so
-      // the endpoint targets every element carrying that label; `param` is the
-      // controllable parameter (ratio, vel, ...). The concrete element list is
-      // available in output.labelIndex[label].
-      if (labelNames.has(ep.scope)) {
-        return { kind: 'label', label: ep.scope, param: ep.name };
-      }
-      // Assume actor-scoped flag
-      return { kind: 'flag', name: ep.name, actor: ep.scope };
-    }
-    return ep;
-  }
+  // mapTable + resolveMapEndpoint (CCP-2) : plus émis ni résolus ici — ast.maps porte les
+  // @map BRUTS (pré-résolution) et BPx résout les endpoints lui-même (astToSceneSpec.ts :
+  // alias→cc, scoped→sys/label/flag). Une résolution, un seul lecteur de la carte (L13).
 
   // Collect time pattern names from @timepatterns — they are duration symbols,
   // NOT sound terminals. Must be known before alphabet building so that
@@ -580,13 +537,8 @@ function encode(ast) {
   // transpileur, PAS le moteur BP3). Le canal de sortie se déclare via `transport.<audio|midi|osc>`
   // sur l'acteur ; @routing est rejeté au parse (parser.js tombstone).
 
-  // Z5 (#109) — Expose named MIDI CC aliases so the downstream orchestrator can
-  // resolve inbound CC by name at runtime (e.g. `cc:breath`). `@cc breath:2`
-  // (parser.js:357-370 → dir.ccMappings) is already resolved at compile time
-  // into mapTable (resolveMapEndpoint, this file: kind 'alias' → kind 'cc'),
-  // but BPx never receives the name→number table needed for live inbound CC.
-  // We surface it as the `ccAliases` sidecar, mirroring labelIndex.
-  output.ccAliases = buildCcAliases(libCtx);
+  // ccAliases (ex-Z5 #109, CCP-2) : plus émis — BPx construit lui-même la table nom→numéro CC
+  // depuis l'AST (@cc directives, astToSceneSpec.ts buildCcAliases). Un seul lecteur de la carte.
 
   // Generate settings JSON for BP3 WASM engine
   output.settingsJSON = generateSettingsJSON(libCtx, ast.directives);
@@ -599,36 +551,6 @@ function encode(ast) {
   output.homomorphisms = ast.homomorphisms || [];
 
   return output;
-}
-
-/**
- * Z5 (#109) — Build the ccAliases sidecar: named MIDI CC → controller number.
- *
- * `@cc breath:2, expression:11` is parsed (parser.js:357-370) into
- * `dir.ccMappings` and registered by libs.js (libs.js:157-166) as
- * `ctx.controls[name] = { ..., ccNumber, transportGroup: 'midi' }`. The encoder
- * already resolves a `@map breath -> [x]` endpoint through this table at compile
- * time (resolveMapEndpoint, kind 'alias' → kind 'cc'), but the resulting BP3
- * artefacts carry only the numeric CC. For live inbound control by name
- * (e.g. `cc:breath`), the orchestrator needs the raw name → number table.
- *
- * Source of truth = libCtx.controls (the same table resolveMapEndpoint reads).
- * We keep only entries that carry a concrete `ccNumber`, which is exactly the
- * set produced from `@cc` directives — the built-in generic `cc` control has no
- * `ccNumber`, so it is excluded.
- *
- * Shape: { "<name>": <number>, ... }. Empty object when no `@cc` was used.
- * Additive: does not touch mapTable/controlTable.
- */
-function buildCcAliases(libCtx) {
-  const aliases = {};
-  const controls = libCtx?.controls || {};
-  for (const [name, def] of Object.entries(controls)) {
-    if (def && def.ccNumber != null) {
-      aliases[name] = def.ccNumber;
-    }
-  }
-  return aliases;
 }
 
 /**
