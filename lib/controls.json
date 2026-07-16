@@ -251,6 +251,31 @@
         "args": [],
         "description": "Disable continuous pitch bend mode"
       },
+      "keymap": {
+        "args": [
+          "p1",
+          "q1",
+          "p2",
+          "q2"
+        ],
+        "range": [
+          0,
+          127
+        ],
+        "description": "Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than p1. BP3 _keymap (registre moteur console_strings.json:212, code 62/4 args)."
+      },
+      "mapstep": {
+        "args": [],
+        "description": "Key-map interpolation mode: STEP (discrete). BP3 _mapstep (console_strings.json:215, code 1/0 args). Sibling of mapcont/mapfixed — selects how _keymap interpolates."
+      },
+      "mapcont": {
+        "args": [],
+        "description": "Key-map interpolation mode: CONTINUOUS. BP3 _mapcont (console_strings.json:214, code 44/0 args). Sibling of mapstep/mapfixed."
+      },
+      "mapfixed": {
+        "args": [],
+        "description": "Key-map interpolation mode: FIXED. BP3 _mapfixed (console_strings.json:213, code 64/0 args). Sibling of mapstep/mapcont."
+      },
       "pressure": {
         "args": [
           "value"
