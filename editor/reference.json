@@ -11,7 +11,7 @@
       "forms": [
         { "syntax": "@core", "desc": "Load core library" },
         { "syntax": "@controls", "desc": "Load control definitions (vel, pan, wave...)" },
-        { "syntax": "@alphabet.western:browser", "desc": "Load alphabet with transport binding" },
+        { "syntax": "@alphabet.western:audio", "desc": "Load alphabet with transport binding" },
         { "syntax": "@mm:120", "desc": "Set metronome to 120 BPM" },
         { "syntax": "@mode:random", "desc": "Set derivation mode for next sub-grammar" },
         { "syntax": "@tonality.just_C", "desc": "Load tonality/tuning file" },
@@ -21,7 +21,7 @@
         { "syntax": "@+", "desc": "Append rules to previous sub-grammar" },
         { "syntax": "@actor sitar alphabet:sargam transport:midi", "desc": "Define an actor" }
       ],
-      "example": "@core\n@controls\n@alphabet.western:browser\n@mm:120"
+      "example": "@core\n@controls\n@alphabet.western:audio\n@mm:120"
     },
 
     "->": {
@@ -341,11 +341,11 @@
 
   "modulation_inputs": {
     "_comment": "Modulation inputs exposed by an OUTPUT (registry lib/modulation.json). Targeted as (input: cv-name) at a parameter point, e.g. (cutoff: env1). Source = a CV (0..1), mapped onto the input range downstream. Webaudio output:",
-    "cutoff": { "syntax": "(cutoff: cv)", "output": "webaudio", "range": "20-20000 Hz", "desc": "Low-pass filter cutoff. Modulated by a CV (0..1 mapped to range)." },
-    "amplitude": { "syntax": "(amplitude: cv)", "output": "webaudio", "range": "0-1", "desc": "Output gain. Modulated by a CV." },
-    "resonance": { "syntax": "(resonance: cv)", "output": "webaudio", "range": "0-30", "desc": "Filter resonance (Q). Modulated by a CV." },
-    "pitch": { "syntax": "(pitch: cv)", "output": "webaudio", "range": "-1200 to 1200 cents", "desc": "Detune in cents. Modulated by a CV (0..1 mapped to ±1200)." },
-    "pan": { "syntax": "(pan: cv)", "output": "webaudio", "range": "-1 to 1", "desc": "Stereo position (webaudio). Modulated by a CV. NB: distinct from the MIDI (pan:0-127) control — disambiguated by the value being a CV." }
+    "cutoff": { "syntax": "(cutoff: cv)", "output": "audio", "range": "20-20000 Hz", "desc": "Low-pass filter cutoff. Modulated by a CV (0..1 mapped to range)." },
+    "amplitude": { "syntax": "(amplitude: cv)", "output": "audio", "range": "0-1", "desc": "Output gain. Modulated by a CV." },
+    "resonance": { "syntax": "(resonance: cv)", "output": "audio", "range": "0-30", "desc": "Filter resonance (Q). Modulated by a CV." },
+    "pitch": { "syntax": "(pitch: cv)", "output": "audio", "range": "-1200 to 1200 cents", "desc": "Detune in cents. Modulated by a CV (0..1 mapped to ±1200)." },
+    "pan": { "syntax": "(pan: cv)", "output": "audio", "range": "-1 to 1", "desc": "Stereo position (audio). Modulated by a CV. NB: distinct from the MIDI (pan:0-127) control — disambiguated by the value being a CV." }
   },
 
   "controls_engine": {

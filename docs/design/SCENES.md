@@ -89,7 +89,7 @@ Une scène déclare un ou plusieurs **acteurs**. Un acteur **est** une voix — 
 @actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
-  transport.webaudio
+  transport.audio
 ```
 
 Chaque acteur est autonome dans la scène. Une règle peut faire dériver plusieurs acteurs en parallèle — c'est la **voix polymétrique** `{A, B}` (structure de grammaire, sans rapport avec le niveau de voix):

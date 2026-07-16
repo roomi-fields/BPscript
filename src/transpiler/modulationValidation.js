@@ -9,11 +9,12 @@
 // comme branchement de modulation QUE si VALUE est une SOURCE DE MODULATION (un CV déclaré, ou un
 // non-terminal dont toutes les productions sont des CV). Ainsi :
 //   (pan: 100)   → 100 littéral, pas une source → contrôle MIDI/musical normal (0..127), non touché.
-//   (pan: env1)  → env1 est un CV → branchement de modulation → 'pan' validé comme entrée webaudio.
-// Ce déclencheur résout la collision de noms (`pan` contrôle 0..127 vs entrée webaudio −1..1) SANS
+//   (pan: env1)  → env1 est un CV → branchement de modulation → 'pan' validé comme entrée audio.
+// Ce déclencheur résout la collision de noms (`pan` contrôle 0..127 vs entrée audio −1..1) SANS
 // dépendre de la résolution du transport.
 //
-// PORTÉE PAR TYPE DE SORTIE. Quand le type de sortie de la voix est résoluble (via @routing), on
+// PORTÉE PAR TYPE DE SORTIE. Quand le type de sortie de la voix est résoluble (le transport de
+// l'acteur ou le binding `@alphabet.X:<sortie>` EST le canal canonique depuis 2026-07-16), on
 // valide contre les entrées de CE type ; sinon (ou un seul type connu) on valide contre l'union de
 // toutes les entrées connues (attrape la faute, sans faux positif). L'AST n'est pas modifié.
 

@@ -21,7 +21,7 @@ au reste de `public/` qui est ignoré par git (artefacts de build/runtime).
 
 - Nouveau contrôle / valeur / mot-clé → `reference.json`.
 - Nouvelle **entrée de modulation** exposée par une sortie → section `modulation_inputs`
-  (source des noms = le runtime qui implémente la sortie, ex. webaudio = Kanopi ; cf. `lib/modulation.json`).
+  (source des noms = le runtime qui implémente la sortie, ex. audio = Kanopi ; cf. `lib/modulation.json`).
 - La **validation** des noms (erreur ligne/col) est faite par le transpileur
   (`src/transpiler/modulationValidation.js` + `controlValidation.js`), pas par ce fichier.
 

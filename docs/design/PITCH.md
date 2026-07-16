@@ -79,7 +79,7 @@ L'alphabet seul ne suffit pas comme unité de résolution — il manque le **con
 L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
 
 ```
-@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.webaudio
+@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
 @actor sitar2  alphabet.sargam  tuning.sargam_12TET    octaves.saptak  transport.midi(ch:3)
 @actor tabla   alphabet.tabla_bols  transport.midi(ch:10)
 @actor lights  alphabet.dmx_fixtures  transport.dmx
@@ -115,7 +115,7 @@ Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne son
 Le `.` (dot notation) préfixe un terminal par son acteur — comme un namespace :
 
 ```
-sitar1.Sa            // Sa résolu via sitar1 (sargam + 22shruti + webaudio)
+sitar1.Sa            // Sa résolu via sitar1 (sargam + 22shruti + audio)
 sitar2.Sa            // même note, autre acteur (sargam + 12TET + midi ch3)
 tabla.tin            // tin résolu via tabla (bols + midi ch10)
 lights.spot          // spot résolu via lights (dmx)
@@ -131,7 +131,7 @@ Un `@actor` avec un alphabet importe tous les symboles de cet alphabet,
 liés à cet acteur :
 
 ```
-@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  transport.webaudio
+@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  transport.audio
 
 // Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
 // automatiquement disponibles via sitar1.sa, sitar1.re, etc.
@@ -156,7 +156,7 @@ un singleton global — c'est une instance par acteur.
 │  octaves   : saptak (mandra, madhya, taar)  │
 │  tuning    : sargam_22shruti                │
 │  temperament: 22shruti (auto via tuning)    │
-│  transport : webaudio                       │
+│  transport : audio                       │
 │                                             │
 │  Resolver: token → freq                     │
 │  "Sa_^" → parse → sa, taar → freq           │
@@ -219,7 +219,7 @@ Le tokenizer reconnaît `@actor` comme une directive. Le reste de la ligne
 est parsé comme des références `clé.valeur` séparées par des espaces.
 
 ```
-@actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.webaudio
+@actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.audio
 │      │      │                │                        │
 DIRECTIVE      IDENT            PAIR                     PAIR
        NAME
@@ -244,7 +244,7 @@ Le parser produit un node `ActorDirective` :
     alphabet: 'sargam',
     tuning: 'sargam_22shruti',
     octaves: 'saptak',
-    transport: { key: 'webaudio', params: {} }
+    transport: { key: 'audio', params: {} }
   },
   line: 3
 }
@@ -323,12 +323,12 @@ Plus verbeux mais plus explicite — chaque dimension est nommée.
 Si un seul acteur suffit et qu'on veut rester concis :
 
 ```
-@actor default  alphabet.western  tuning.western_12TET  transport.webaudio
+@actor default  alphabet.western  tuning.western_12TET  transport.audio
 ```
 
 Ou une syntaxe courte possible (à discuter) :
 ```
-@actor default  western  12TET  webaudio
+@actor default  western  12TET  audio
 ```
 
 #### Backticks et acteurs

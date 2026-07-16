@@ -233,7 +233,7 @@ function encode(ast) {
 
   // Build alphabet from DECLARATIONS (gate/trigger/cv), loaded alphabets, and
   // bare RHS terminals — see BP3_RESERVED note at module scope.
-  // 1. Explicit declarations: gate a:midi, trigger x:sc, cv lfo:webaudio
+  // 1. Explicit declarations: gate a:midi, trigger x:sc, cv lfo:audio
   if (ast.declarations) {
     for (const decl of ast.declarations) {
       // BP3_OPERATORS (plus/fin/star) are grammar operators, not bols: a

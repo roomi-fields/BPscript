@@ -114,7 +114,7 @@ Exemple :
 @actor sitar1
   alphabet.sargam
   tuning.sargam_22shruti
-  transport.webaudio
+  transport.audio
 @actor sitar2
   alphabet.sargam
   tuning.sargam_12TET

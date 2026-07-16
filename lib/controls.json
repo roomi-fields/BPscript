@@ -322,8 +322,8 @@
         "description": "Generic MIDI CC: cc(number, value). For CCs without a named alias."
       }
     },
-    "webaudio": {
-      "_comment": "Web Audio specific controls",
+    "audio": {
+      "_comment": "Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)",
       "wave": {
         "args": [
           "type"

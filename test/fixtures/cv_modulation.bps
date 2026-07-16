@@ -1,7 +1,7 @@
 // Fixture CV — forme ACTÉE (Romain 2026-06-20). Sert de base de vérité parser pour BPx/Kanopi.
 @mod
 @controls
-@alphabet.western:browser
+@alphabet.western:audio
 
 // (1) Déclaration descriptive : cv NAME : lib.type(params) — sans cible/route/=
 cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)

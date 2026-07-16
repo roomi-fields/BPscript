@@ -147,7 +147,7 @@ function loadLibsFromDirectives(directives) {
     controlNames: new Set(),
     bp3NativeControls: new Set(),  // controls BP3 understands natively (no "transport" field)
     seqPrefixControls: new Set(),  // engine controls with scope:"seq_prefix" — emitted as prefix inside group/sequence
-    dispatcherOnlyControls: new Set(),  // controls only the dispatcher understands (have "transport" field, e.g. webaudio)
+    dispatcherOnlyControls: new Set(),  // controls only the dispatcher understands (have "transport" field, e.g. audio)
     dualContextControls: new Set(),  // controls that appear in BOTH engine and runtime — in () always route to _script
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
@@ -311,7 +311,7 @@ function loadLibsFromDirectives(directives) {
     }
 
     // Merge controls — engine (BP3 native) and runtime (dispatcher)
-    // Runtime section may contain sub-groups (musical, midi, webaudio, dispatcher, generic)
+    // Runtime section may contain sub-groups (musical, midi, audio, dispatcher, generic)
     const controlSources = [];
     if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false });
     if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true });

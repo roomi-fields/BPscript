@@ -1,8 +1,8 @@
 // Garde-fou : validation des noms d'entrées de modulation au branchement (cutoff/amplitude/...).
-// Registre lib/modulation.json (5 entrées webaudio, source Kanopi). Déclencheur PAR LA VALEUR :
+// Registre lib/modulation.json (5 entrées audio, source Kanopi). Déclencheur PAR LA VALEUR :
 // une paire (KEY: VALUE) n'est validée que si VALUE est une source de modulation (CV déclaré ou
 // non-terminal dérivant vers des CV). Résout la collision 'pan' (contrôle MIDI 0..127 vs entrée
-// webaudio -1..1) sans dépendre du transport. Demande Romain 2026-06-20.
+// audio -1..1) sans dépendre du transport. Demande Romain 2026-06-20.
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;

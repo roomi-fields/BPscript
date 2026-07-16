@@ -119,7 +119,7 @@ Bass et Env restent deux processus séparés ; l'un module l'autre.
 > `cutoff ← Env` **établie par le résolveur post-dérivation** (qui LIT l'arbre, ne dérive ni
 > n'échantillonne), alignement par la polymétrie (équi-span), aléas indépendants prouvés bit-à-bit.
 > Frontière stricte : BPx établit le câblage + l'alignement structurel ; l'**échantillonnage** de la
-> courbe et le **mappage** sur la plage se font **en aval** (dispatcher/webaudio), pas dans BPx.
+> courbe et le **mappage** sur la plage se font **en aval** (dispatcher/runtime audio), pas dans BPx.
 
 ### Librairie des modulateurs (lib/mod.json)
 
@@ -179,8 +179,8 @@ et leur **type/plage**. Bass n'a pas de propriété `cutoff` — `Bass.cutoff` e
 résolution**, pas un accès membre :
 
 ```
-Bass → joue l'alphabet western → @alphabet.western:browser → transport browser (webaudio)
-       → la sortie webaudio expose { cutoff: Hz 20–20000, amplitude: 0–1, resonance: 0–30, … }
+Bass → joue l'alphabet western → @alphabet.western:audio → transport audio
+       → la sortie audio expose { cutoff: Hz 20–20000, amplitude: 0–1, resonance: 0–30, … }
 .cutoff → est-ce une entrée de CETTE sortie ?  oui → valide ; sinon → erreur (line/col)
 ```
 
@@ -188,11 +188,11 @@ Bass → joue l'alphabet western → @alphabet.western:browser → transport bro
   partager une sortie ; `Bass.cutoff` dit « la coupure, **sur Bass** ».
 - Le **type/plage** de l'entrée n'est pas décoratif : un CV sort **normalisé** (adsr → 0..1) ; c'est
   la plage de l'entrée (`cutoff` : 20–20000 Hz) qui dit comment étaler ce 0..1 en valeurs réelles.
-  Ce mappage est fait **en aval** (dispatcher/webaudio), pas par BPx.
+  Ce mappage est fait **en aval** (dispatcher/runtime audio), pas par BPx.
 
 > **État data :**
 > 1. **Registre des entrées de modulation par type de sortie** — **FIGÉ** (`lib/modulation.json`,
->    source de vérité = runtime webaudio de Kanopi, vérifié 2026-06-20). Webaudio expose 5 entrées :
+>    source de vérité = le runtime audio de Kanopi — implémentation Web Audio, vérifié 2026-06-20). La sortie audio expose 5 entrées :
 >    `cutoff` (Hz 20–20000), `amplitude` (0–1), `resonance` (0–30), `pitch` (cents ±1200, mapping
 >    linéaire 0..1→±1200 validé Romain), `pan` (−1..1). cutoff/amplitude/resonance/pan = modèle bus
 >    (la note traverse les nœuds) ; pitch = par-note (ConstantSource→osc.detune). Limite connue :
@@ -201,7 +201,7 @@ Bass → joue l'alphabet western → @alphabet.western:browser → transport bro
 > 3. **Validation des noms par le transpileur** — **FAIT** (`modulationValidation.js`). Déclencheur
 >    PAR LA VALEUR : une paire `(KEY: VALUE)` n'est validée comme branchement de modulation que si
 >    VALUE est une **source de modulation** (un CV déclaré, ou un non-terminal dérivant vers des CV).
->    Donc `(pan: 100)` = contrôle MIDI normal (non touché), `(pan: env1)` = entrée webaudio validée :
+>    Donc `(pan: 100)` = contrôle MIDI normal (non touché), `(pan: env1)` = entrée audio validée :
 >    la collision `pan` est résolue **sans** dépendre du transport. Portée par type de sortie quand
 >    résoluble (via `@routing`), sinon union des entrées connues. Erreur ligne/col si entrée inconnue.
 
@@ -251,7 +251,7 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 @mod
 @core
 @controls
-@alphabet.western:browser
+@alphabet.western:audio
 
 cv env1 : mod.adsr(attack:10, decay:200, sustain:0.5, release:300)
 
@@ -265,7 +265,7 @@ Phrase1 -> C3 E3 G3 C4 (*:cutoff: env1, wave:sawtooth)   // env1 relancé À CHA
 @mod
 @core
 @controls
-@alphabet.western:browser
+@alphabet.western:audio
 
 cv wobble : mod.lfo(rate:2, amplitude:0.8, shape:sine)
 
@@ -279,7 +279,7 @@ Melody -> C4 D4 E4 F4 G4 A4 B4 C5 (amplitude: wobble)     // un LFO continu sur 
 @filter
 @core
 @controls
-@alphabet.western:browser
+@alphabet.western:audio
 
 cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
 cv env2 : mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
@@ -298,7 +298,7 @@ Env  -> env2
 ```bps
 @core
 @controls
-@alphabet.western:browser
+@alphabet.western:audio
 
 cv custom : `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`
 

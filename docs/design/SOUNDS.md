@@ -30,12 +30,12 @@ Transport (runtime)    interprète les clés connues, ignore le reste
   @actor sitar
     alphabet.sargam
     tuning.sargam_22shruti                                 ┌─────────────┐
-    transport.webaudio            ──── compile ────→       │ Acteur      │
+    transport.audio            ──── compile ────→       │ Acteur      │
                                                            │ "sitar"     │
   @actor tabla                                             ├─────────────┤
     alphabet.tabla                                         │ Alphabet    │
     sounds.tabla_perc                                      │ Tuning      │
-    transport.webaudio                                     │ Sounds      │
+    transport.audio                                     │ Sounds      │
                                                            │ Transport   │
   S -> {Melody, Rhythm}           ──── BP3 WASM ──→       └──────┬──────┘
                                        timing                    │
@@ -222,18 +222,18 @@ Exemples :
 @actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
-  transport.webaudio
+  transport.audio
 
 @actor tabla
   alphabet.tabla
   sounds.tabla_perc
-  transport.webaudio
+  transport.audio
 
 @actor piano
   alphabet.western
   tuning.western_12TET
   sounds.piano_timbre
-  transport.webaudio
+  transport.audio
 
 @actor drums
   alphabet.tabla
@@ -456,7 +456,7 @@ CC nommés : les CC universels (mod=CC1, volume=CC7, pan=CC10, sustain=CC64) son
 pré-déclarés. L'utilisateur peut déclarer des CC supplémentaires via `@cc name:number`
 en en-tête de scène, ou dans un fichier de mapping JSON.
 
-#### Web Audio (transport webaudio uniquement)
+#### Web Audio (transport audio uniquement)
 
 | Clé | Type | Description |
 |-----|------|-------------|
@@ -504,7 +504,7 @@ Quand un acteur est lié à un transport, seuls les contrôles des groupes suiva
 - `musical` (toujours)
 - `dispatcher` (toujours)
 - `generic` (toujours)
-- Le groupe correspondant au transport (`midi`, `webaudio`, etc.)
+- Le groupe correspondant au transport (`midi`, `audio`, etc.)
 
 Un contrôle hors-scope (ex: `wave:saw` sur un acteur MIDI) génère un **warning**, pas une erreur.
 
@@ -649,7 +649,7 @@ lib/
                     │    alphabet.western                               │
                     │    tuning.western_12TET                           │
                     │    sounds.piano_timbre                            │
-                    │    transport.webaudio                             │
+                    │    transport.audio                             │
                     │                                                  │
                     │  S -> C4 D4 E4 (vel:80)                          │
                     └────────────────────┬─────────────────────────────┘

@@ -46,7 +46,7 @@ Déclaration (les références d'entité utilisent `.`) :
 @actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
-  transport.webaudio
+  transport.audio
 ```
 
 Dans les règles, un terminal se qualifie par son acteur en **dot notation** : `sitar.Sa`

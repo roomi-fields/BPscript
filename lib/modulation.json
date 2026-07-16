@@ -5,11 +5,11 @@
     "  Bass -> C2 E2 (cutoff: env1)   // env1 (CV normalisé 0..1) module la coupure de la sortie de Bass",
     "Contrat : la source est un CV NORMALISÉ 0..1 ; l'ÉCHANTILLONNAGE de la courbe et le MAPPAGE",
     "0..1 -> plage se font EN AVAL (dispatcher/runtime), pas dans le moteur ni le transpileur.",
-    "Source de vérité = le runtime qui implémente le type de sortie (webaudio = Kanopi, vérifié 2026-06-20).",
+    "Source de vérité = le runtime qui implémente le type de sortie (audio = implémentation Web Audio de Kanopi, vérifié 2026-06-20 ; clé renommée webaudio→audio au canon 2026-07-16).",
     "Noms de SYNTHÈSE (découplés des noms d'implémentation). NB : 'pan' existe AUSSI comme contrôle",
     "MIDI/musical (0..127) — la résolution des noms doit être PAR TYPE DE SORTIE (cf. CV.md)."
   ],
-  "webaudio": {
+  "audio": {
     "cutoff":    { "target": "BiquadFilter.frequency", "unit": "Hz",    "range": [20, 20000] },
     "amplitude": { "target": "GainNode.gain",          "unit": "ratio", "range": [0, 1] },
     "resonance": { "target": "BiquadFilter.Q",         "unit": "ratio", "range": [0, 30] },
