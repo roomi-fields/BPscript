@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 /**
- * s3_native.cjs — Confirmation de parité : timed-tokens NATIF (--tokensout) vs
- * oracle WASM existant (snapshots/s3_timed.json).
+ * s3_native.cjs — Oracle timed-tokens NATIF (--tokensout).
  *
- * LECTURE SEULE : ne réécrit JAMAIS de snapshot. Sert à valider le sérialiseur
- * natif --tokensout (TokensOut.c) introduit dans le moteur (oracle = bp3 natif,
- * decisions/2026-06-14-oracle-natif-trois-voies.md). La RE-GÉNÉRATION des oracles
- * est séquencée APRÈS le fix moteur (#48-#52) — pas ici.
+ * Trois modes :
+ *   --all               lecture seule, set historique (active+php_ref+midi) — appelé par
+ *                       test_all.cjs, comparaison vs snapshots/s3_timed.json (WASM gelé).
+ *   --campaign          ISO-100 Phase A.2 ([432], plan hub/projets/iso-100-grammaires) :
+ *                       TOUTES les clés mode MIDI dont le fichier -gr. existe, tout statut
+ *                       (y compris excluded/skip — l'oracle sert le programme, pas mon gate).
+ *   --write             pose snapshots/s3_native.json (ADDITIF). Si l'oracle existant a des
+ *                       tokens identiques, le fichier n'est PAS réécrit (fraîcheur confirmée
+ *                       sans bruit de diff).
  *
  * Invocation moteur identique à s1_native.cjs (mêmes réglages, convention, aux),
  * mais émet les timed-tokens au lieu du MIDI. Utilise le bp3 fraîchement compilé
- * (bp3-engine/bp3) qui porte le flag --tokensout.
+ * (bp3-engine/bp3) qui porte le flag --tokensout, sous le garde anti-OOM.
  *
- * Usage: node s3_native.cjs <grammar|--all>
+ * Usage: node s3_native.cjs <grammar|--all|--campaign> [--write]
  */
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -95,9 +99,9 @@ function convertOldSettings(c) {
 }
 
 // Construit les args moteur (iso s1_native) + --tokensout, lance, renvoie les tokens.
-function runNative(name) {
+function runNative(name, { allowExcluded = false } = {}) {
   const gramDef = GRAMMARS[name];
-  if (!gramDef || gramDef.status === 'excluded') return null;
+  if (!gramDef || (gramDef.status === 'excluded' && !allowExcluded)) return null;
   const grName = gramDef.bernard || name;
   const grFile = path.join(TD, `-gr.${grName}`);
   if (!fs.existsSync(grFile)) return { error: `grammaire absente: ${grFile}` };
@@ -113,10 +117,12 @@ function runNative(name) {
   gr = gr.split('\n').filter(l => !l.trim().startsWith('INIT:')).join('\n');
   const grClean = gr.replace(/¥/g, '.').replace(/ž/g, 'u');
 
-  const tmpGrammar = path.join('/tmp', `_s3_${name}_grammar.txt`);
-  const tmpTokens = path.join('/tmp', `_s3_${name}_tokens.json`);
-  const tmpMidi = path.join('/tmp', `_s3_${name}.mid`);
-  const tmpSettings = path.join('/tmp', `_s3_${name}_se.json`);
+  // Slug sûr pour le shell/FS : certains noms Bernard portent '&' ou '.' (check&, a.html).
+  const slug = name.replace(/[^A-Za-z0-9_.-]/g, '_');
+  const tmpGrammar = path.join('/tmp', `_s3_${slug}_grammar.txt`);
+  const tmpTokens = path.join('/tmp', `_s3_${slug}_tokens.json`);
+  const tmpMidi = path.join('/tmp', `_s3_${slug}.mid`);
+  const tmpSettings = path.join('/tmp', `_s3_${slug}_se.json`);
   fs.writeFileSync(tmpGrammar, grClean);
 
   const baseArgs = ['produce', '-e', '-gr', tmpGrammar, '--seed', '1'];
@@ -191,7 +197,10 @@ function runNative(name) {
   for (const f of [tmpTokens, tmpMidi]) { try { fs.unlinkSync(f); } catch (e) {} }
   const args = [...baseArgs, '--midiout', tmpMidi, '--tokensout', tmpTokens];
   try {
-    execSync(`bash "${GUARD}" "${BP3}" ${args.join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] });
+    // Chaque arg quoté : des chemins aux (-se.trial.mohanam…) ou noms Bernard peuvent porter
+    // des caractères spéciaux shell.
+    const q = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
+    execSync(`bash ${q(GUARD)} ${q(BP3)} ${args.map(q).join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] });
   } catch (e) { /* le moteur peut écrire avant un code non-zéro */ }
 
   let toks = null;
@@ -227,16 +236,26 @@ function compareToOracle(name, nativeToks) {
 // Sans --write : comparaison lecture-seule vs s3_timed (comportement d'origine).
 const WRITE = process.argv.includes('--write');
 const arg = process.argv.slice(2).find(a => a !== '--write');
-if (!arg) { console.error('Usage: node s3_native.cjs <grammar|--all> [--write]'); process.exit(1); }
+if (!arg) { console.error('Usage: node s3_native.cjs <grammar|--all|--campaign> [--write]'); process.exit(1); }
 if (!fs.existsSync(BP3)) { console.error(`bp3 natif frais introuvable: ${BP3} (lance ./build.sh linux)`); process.exit(1); }
 
+const CAMPAIGN = arg === '--campaign';
 const names = arg === '--all'
   ? Object.entries(GRAMMARS).filter(([k, v]) => v.status === 'active' && v.php_ref && (v.production_mode || 'midi') === 'midi').map(([k]) => k)
-  : [arg];
+  : CAMPAIGN
+    ? Object.entries(GRAMMARS)
+        .filter(([k, v]) => k !== '_comment'
+          && (v.production_mode || 'midi') === 'midi'
+          && fs.existsSync(path.join(TD, `-gr.${v.bernard || k}`)))
+        .map(([k]) => k)
+    : [arg];
 
 // Poignée HORS ORACLE (natif faux sur le build courant / non-déterministe) — reste sur
-// sa référence protégée : #49 765432, #50 watch, #52 look-and-say (texte), trySrand (RNG).
-// #48 do4- et #51 gardes mono-item ne sont pas dans le set midi --all (auto-exclus).
+// sa référence protégée (décision 2026-06-14 §MAJ, re-confirmée [432] ISO-100 A.2) :
+// #49 765432, #50 watch, #52 look-and-say (texte), trySrand (RNG).
+// #48 do4- : le terminal fautif vit dans -gr.765432 (déjà exclue) et -da.Mozartexpression
+// (si le natif segfaulte, aucun token n'est écrit → protégé par le triage anti-vide).
+// #51 gardes mono-item (rc=-4) : pas de liste nominale — même protection (crash → pas d'oracle).
 const EXCLUDE = new Set(['765432', 'look-and-say', 'watch', 'trySrand']);
 
 function writeNativeOracle(name, tokens) {
@@ -246,17 +265,28 @@ function writeNativeOracle(name, tokens) {
   // one-scale/tryShruti) → PrintThisNote n'écrit rien. Oracle inutilisable pour les noms.
   const emptyNames = tokens.filter(t => !t.token || t.token === '').length;
   if (emptyNames > tokens.length / 2) return `DÉGÉNÉRÉ (${emptyNames}/${tokens.length} noms vides, non écrit)`;
+  const newToks = tokens.map(t => [t.token, t.start, t.end]);
+  const dir = path.join(__dirname, 'grammars', name, 'snapshots');
+  const file = path.join(dir, 's3_native.json');
+  // Idempotence : tokens identiques à l'oracle en place → fraîcheur confirmée, pas de réécriture
+  // (pas de bruit de diff ; un oracle mode:"text" n'est JAMAIS écrasé par la campagne midi).
+  if (fs.existsSync(file)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      if (prev.mode === 'text') return 'ORACLE TEXTE en place (non touché)';
+      if (JSON.stringify(prev.tokens) === JSON.stringify(newToks)) return `inchangé — frais confirmé (${newToks.length} tok)`;
+    } catch (e) { /* illisible → réécrit */ }
+  }
   const snap = {
     source: 'native --tokensout (bp3 Linux)',
     stage: 's3_native',
     mode: 'midi',
-    tokens: tokens.map(t => [t.token, t.start, t.end]),
-    date: '2026-06-14',
+    tokens: newToks,
+    date: new Date().toISOString().slice(0, 10),
   };
-  const dir = path.join(__dirname, 'grammars', name, 'snapshots');
-  if (!fs.existsSync(dir)) return 'PAS DE DOSSIER snapshots';
-  fs.writeFileSync(path.join(dir, 's3_native.json'), JSON.stringify(snap, null, 2));
-  return `écrit (${tokens.length} tok)`;
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(snap, null, 2));
+  return `écrit (${newToks.length} tok)`;
 }
 
 let match = 0, diff = 0, skip = 0, other = 0, written = 0;
@@ -265,7 +295,7 @@ for (const name of names) {
   // Skip mode texte avant même de lancer le moteur
   const gd = GRAMMARS[name];
   if (gd && gd.production_mode === 'text') { console.log(`  ${name}: SKIP (mode texte)`); skip++; continue; }
-  const r = runNative(name);
+  const r = runNative(name, { allowExcluded: CAMPAIGN });
   if (!r) { console.log(`  ${name}: SKIP (exclue/inconnue)`); other++; continue; }
   if (r.error) { console.log(`  ${name}: ${r.error}`); other++; continue; }
   const c = compareToOracle(name, r.tokens);

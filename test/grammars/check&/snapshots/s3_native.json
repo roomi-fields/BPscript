@@ -1,0 +1,28 @@
+{
+  "source": "native --tokensout (bp3 Linux)",
+  "stage": "s3_native",
+  "mode": "midi",
+  "tokens": [
+    [
+      "do3",
+      0,
+      2000
+    ],
+    [
+      "sol4",
+      0,
+      4000
+    ],
+    [
+      "mi5",
+      0,
+      1000
+    ],
+    [
+      "fa3",
+      3000,
+      5000
+    ]
+  ],
+  "date": "2026-07-16"
+}

@@ -2183,5 +2183,20 @@
       "settings": "-se.tryAllItems1",
       "alphabet": null
     }
+  },
+  "testHO2": {
+    "status": "to_be_tested",
+    "production_mode": "midi",
+    "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3."
+  },
+  "testNC1": {
+    "status": "to_be_tested",
+    "production_mode": "midi",
+    "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3."
+  },
+  "testTie7": {
+    "status": "to_be_tested",
+    "production_mode": "midi",
+    "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3."
   }
 }
