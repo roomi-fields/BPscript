@@ -5,10 +5,16 @@
 // et la compare jeton-à-jeton à l'oracle WASM gelé (s3_timed.json, reconstruit en
 // rejoignant ses jetons par espaces — le brut WASM = split(' ') de la même chaîne).
 //
-// LECTURE SEULE : ne réécrit aucun snapshot. Sert à VALIDER la voie avant tout
-// branchement (gate Romain). Référence : hub/constats/2026-06-16-voie-texte-ordre.md.
+// Sans --write : LECTURE SEULE (validation, gate Romain). Avec --write : pose
+// snapshots/s3_native.json mode 'text' (idempotent — jetons identiques → non réécrit).
+// Référence : hub/constats/2026-06-16-voie-texte-ordre.md.
 //
-// Usage : node test/order_parity.mjs [grammaire …]   (défaut : 3 cas de validation)
+// --campaign (ISO-100 A.2b, [433]) : toutes les clés mode TEXTE dont le -gr. existe,
+// tout statut (l'oracle sert le programme, pas mon gate), moins look-and-say (#52) et
+// la famille AllItems (divergence de contenu renvoyée à BPx). En campagne, le natif
+// fait foi sur les DIFF (décision 2026-06-14 §MAJ) — l'écart est affiché pour triage.
+//
+// Usage : node test/order_parity.mjs [grammaire …|--campaign] [--write] [--force]
 
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -21,6 +27,7 @@ const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
 const BP3 = path.resolve(BP3_DIR, 'bp3');
+const GUARD = path.join(__dirname, 'bp3-guard.sh');   // enveloppe anti-OOM, cf [231]
 const GRAMMARS = JSON.parse(fs.readFileSync(path.join(__dirname, 'grammars', 'grammars.json'), 'utf8'));
 
 // Réglages BP2 positionnels → JSON (repris de s3_native.cjs, version compacte).
@@ -41,9 +48,9 @@ function convertOldSettings(c, conv) {
   return o;
 }
 
-function buildEngineArgs(name, prodFile) {
+function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   const gd = GRAMMARS[name];
-  if (!gd || gd.status === 'excluded') return null;
+  if (!gd || (gd.status === 'excluded' && !allowExcluded)) return null;
   const grName = gd.bernard || name;
   const grFile = path.join(TD, `-gr.${grName}`);
   if (!fs.existsSync(grFile)) return null;
@@ -102,12 +109,14 @@ function buildEngineArgs(name, prodFile) {
   return args;
 }
 
-function nativeOrder(name) {
+function nativeOrder(name, opts = {}) {
   const prodFile = path.join('/tmp', `_ord_${name}_prod.txt`);
   try { fs.unlinkSync(prodFile); } catch {}
-  const args = buildEngineArgs(name, prodFile);
+  const args = buildEngineArgs(name, prodFile, opts);
   if (!args) return { error: 'args' };
-  try { execSync(`"${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
+  // Sous le garde anti-OOM : la campagne inclut des grammaires à boucle infinie
+  // documentée (PP, checkcontext) — plafond mémoire + victime OOM + timeout.
+  try { execSync(`bash "${GUARD}" "${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
   try { fs.unlinkSync(path.join(TD, `_ord_tmp_${name}.gr`)); } catch {} // temp grammaire normalisée
   if (!fs.existsSync(prodFile)) return { error: 'no output' };
   const canonical = fs.readFileSync(prodFile, 'utf8').trim();
@@ -128,29 +137,53 @@ function writeTextOracle(name, tokens) {
   if (!Array.isArray(tokens) || tokens.length === 0) return 'VIDE (non écrit)';
   const empty = tokens.filter((t) => !t || t === '').length;
   if (empty > tokens.length / 2) return `DÉGÉNÉRÉ (${empty}/${tokens.length} noms vides, non écrit)`;
+  const newToks = tokens.map((t) => [t, 0, 0]);
   const dir = path.join(__dirname, 'grammars', name, 'snapshots');
-  if (!fs.existsSync(dir)) return 'PAS DE DOSSIER snapshots';
+  const file = path.join(dir, 's3_native.json');
+  // Idempotence : jetons identiques à l'oracle en place → fraîcheur confirmée, pas de
+  // réécriture ; un oracle mode:'midi' n'est JAMAIS écrasé par la voie texte.
+  if (fs.existsSync(file)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (prev.mode === 'midi') return 'ORACLE MIDI en place (non touché)';
+      if (JSON.stringify(prev.tokens) === JSON.stringify(newToks)) return `inchangé — frais confirmé (${newToks.length} jetons)`;
+    } catch { /* illisible → réécrit */ }
+  }
   const snap = {
     source: 'native -o (bp3 Linux, production canonique ordonnée)',
     stage: 's3_native',
     mode: 'text',
-    tokens: tokens.map((t) => [t, 0, 0]),
-    date: '2026-06-16',
+    tokens: newToks,
+    date: new Date().toISOString().slice(0, 10),
   };
-  fs.writeFileSync(path.join(dir, 's3_native.json'), JSON.stringify(snap, null, 2));
-  return `écrit (${tokens.length} jetons)`;
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(snap, null, 2));
+  return `écrit (${newToks.length} jetons)`;
 }
 
 const argv = process.argv.slice(2);
 const DO_WRITE = argv.includes('--write');     // pose s3_native si parité OK
-const FORCE = argv.includes('--force');         // pose le natif même si DIFF (natif fait foi)
+const CAMPAIGN = argv.includes('--campaign');  // ISO-100 A.2b : tout le corpus texte
+const FORCE = argv.includes('--force') || CAMPAIGN; // pose le natif même si DIFF (natif fait foi)
 const targets = argv.filter((a) => !a.startsWith('--'));
-const names = targets.length ? targets : ['flags', 'negative-context', 'ek-do-tin'];
+
+// Hors campagne texte : #52 look-and-say (build natif faux, décision 2026-06-14 §MAJ) ;
+// famille AllItems = divergence de CONTENU (octave C5/C4) renvoyée à BPx (résorption §2.B).
+const EXCLUDE_TEXT = new Set(['look-and-say', 'all-items', 'all-items1', 'tryAllItems0', 'tryAllItems1', 'templates']);
+
+const names = CAMPAIGN
+  ? Object.entries(GRAMMARS)
+      .filter(([k, v]) => k !== '_comment'
+        && (v.production_mode || 'midi') === 'text'
+        && fs.existsSync(path.join(TD, `-gr.${v.bernard || k}`)))
+      .map(([k]) => k)
+  : targets.length ? targets : ['flags', 'negative-context', 'ek-do-tin'];
 
 let pass = 0, fail = 0;
 console.log(`=== Parité texte ORDRE-à-ORDRE (natif -o  vs  oracle WASM, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
 for (const name of names) {
-  const nat = nativeOrder(name);
+  if (CAMPAIGN && EXCLUDE_TEXT.has(name)) { console.log(`  ${name}: EXCLU (${name === 'look-and-say' ? '#52 build natif faux' : 'famille AllItems, renvoyée BPx'})`); continue; }
+  const nat = nativeOrder(name, { allowExcluded: CAMPAIGN });
   const wasm = wasmOrder(name);
   if (nat.error) { console.log(`  ${name}: ÉCHEC natif (${nat.error})`); fail++; continue; }
   const a = nat.tokens;
@@ -167,7 +200,7 @@ for (const name of names) {
     const w = DO_WRITE ? ` → ${writeTextOracle(name, a)}` : '';
     console.log(`  ${name}: OK — ${a.length} jetons, ordre identique${w}`); pass++;
   } else {
-    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF @${diff} (natif fait foi) → ${writeTextOracle(name, a)}`); }
+    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF @${diff} natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len ${a.length}/${b.length}) — natif fait foi → ${writeTextOracle(name, a)}`); }
     else { console.log(`  ${name}: DIFF @${diff} — natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len natif=${a.length} wasm=${b.length})`); fail++; }
   }
 }

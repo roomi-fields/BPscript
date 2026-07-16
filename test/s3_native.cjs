@@ -258,6 +258,11 @@ const names = arg === '--all'
 // #51 gardes mono-item (rc=-4) : pas de liste nominale — même protection (crash → pas d'oracle).
 const EXCLUDE = new Set(['765432', 'look-and-say', 'watch', 'trySrand']);
 
+// §3.2 (résorption oracle-wasm) : le natif sort des NOMS DE TERMINAUX VIDES sur gamme
+// invalide → oracle inutilisable, anti-capture NOMINAL (en plus du filet anti-dégénéré).
+// one-scale/tryShruti constatés 2026-06-14 ; nadaka ajouté 2026-07-16 ([433], 713/714 vides).
+const EMPTY_NAMES_32 = new Set(['one-scale', 'tryShruti', 'nadaka']);
+
 function writeNativeOracle(name, tokens) {
   // Triage : jamais d'oracle 0-token (protection anti-écrasement par capture vide).
   if (!Array.isArray(tokens) || tokens.length === 0) return 'VIDE (non écrit)';
@@ -292,6 +297,7 @@ function writeNativeOracle(name, tokens) {
 let match = 0, diff = 0, skip = 0, other = 0, written = 0;
 for (const name of names) {
   if (EXCLUDE.has(name)) { console.log(`  ${name}: EXCLU (hors oracle : build buggé / RNG)`); skip++; continue; }
+  if (EMPTY_NAMES_32.has(name)) { console.log(`  ${name}: EXCLU (§3.2 gamme invalide, noms vides — anti-capture)`); skip++; continue; }
   // Skip mode texte avant même de lancer le moteur
   const gd = GRAMMARS[name];
   if (gd && gd.production_mode === 'text') { console.log(`  ${name}: SKIP (mode texte)`); skip++; continue; }
