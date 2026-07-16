@@ -1114,7 +1114,7 @@
   },
   "tunings": {
     "bernard": "tryTunings",
-    "status": "excluded",
+    "status": "to_be_tested",
     "reason": "BP2 format + old settings, needs -cs. tonality. S1=raw text, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
@@ -1127,8 +1127,8 @@
     "php_status": "COMPILE_FAIL",
     "php_errors": 4,
     "scene_bps": true,
-    "production_mode": "midi",
-    "note": "Scène manuscrite (scenes/tunings.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 18 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
+    "production_mode": "text",
+    "note": "Scène manuscrite (scenes/tunings.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 18 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement. MàJ 2026-07-16 (ISO-100 [435]) : le natif PRODUIT désormais (voie texte -o, -se inféré du corps) — exclusion 2026-04 obsolète, oracle s3_native posé. Reste à passer S1-S3 avant toute promotion."
   },
   "tryCsoundObjects": {
     "bernard": "tryCsoundObjects",
@@ -1432,7 +1432,7 @@
   },
   "major-minor": {
     "bernard": "tryMajorMinor",
-    "status": "excluded",
+    "status": "to_be_tested",
     "reason": "Needs -cs.Mozart tonality, grammar doesn't compile without it. S1=error messages, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
     "aux": [
       "se"
@@ -1445,8 +1445,8 @@
     "php_status": "COMPILE_FAIL",
     "php_errors": 3,
     "scene_bps": true,
-    "production_mode": "midi",
-    "note": "Scène manuscrite (scenes/major-minor.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 37 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement."
+    "production_mode": "text",
+    "note": "Scène manuscrite (scenes/major-minor.bps) promue 2026-06-10 : scene.bps + snapshots/s5_bps.json (S5 WASM v3.4.5-wasm.1, 37 tokens, voir status.json). Sans oracle natif, reste hors suites actives (S1 natif pendrait) — testable par BPx directement. MàJ 2026-07-16 (ISO-100 [435]) : le natif PRODUIT désormais (voie texte -o, -se inféré du corps) — exclusion 2026-04 obsolète, oracle s3_native posé. Reste à passer S1-S3 avant toute promotion."
   },
   "harmony": {
     "bernard": "tryHarmony",

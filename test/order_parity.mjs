@@ -103,7 +103,15 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     }
   }
   if (!explicit.has('-se') && gd.php_ref?.settings) { const m = gd.php_ref.settings.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
+  // Repli (aligné s3_native.cjs, gap découvert en [435]) : réglages/alphabet référencés
+  // dans le CORPS de la grammaire — beaucoup de clés to_be_tested n'ont ni s1_args ni
+  // php_ref.settings alors que le -se. existe dans test-data.
+  if (!explicit.has('-se') && !args.includes('-se')) { const m = gr.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
   if (!explicit.has('-al') && gd.php_ref?.alphabet) { const m = gd.php_ref.alphabet.match(/-al\.(\S+)/); if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); } }
+  if (!explicit.has('-al') && !args.includes('-al')) {
+    const m = gr.match(/-al\.(\S+)/);
+    if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); }
+  }
 
   args.push('-o', prodFile);
   return args;
@@ -119,6 +127,10 @@ function nativeOrder(name, opts = {}) {
   try { execSync(`bash "${GUARD}" "${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
   try { fs.unlinkSync(path.join(TD, `_ord_tmp_${name}.gr`)); } catch {} // temp grammaire normalisée
   if (!fs.existsSync(prodFile)) return { error: 'no output' };
+  // Garde anti-démesure : une dérivation non terminante (Improvize, livecode2) peut écrire
+  // des centaines de Mo avant le timeout — jamais un oracle, et readFileSync exploserait.
+  const sz = fs.statSync(prodFile).size;
+  if (sz > 50 * 1024 * 1024) { try { fs.unlinkSync(prodFile); } catch {} return { error: `production démesurée (${(sz / 1048576).toFixed(0)} Mo — dérivation non terminante)` }; }
   const canonical = fs.readFileSync(prodFile, 'utf8').trim();
   return { canonical, tokens: tokenizeOrder(canonical) };
 }
@@ -183,7 +195,7 @@ let pass = 0, fail = 0;
 console.log(`=== Parité texte ORDRE-à-ORDRE (natif -o  vs  oracle WASM, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
 for (const name of names) {
   if (CAMPAIGN && EXCLUDE_TEXT.has(name)) { console.log(`  ${name}: EXCLU (${name === 'look-and-say' ? '#52 build natif faux' : 'famille AllItems, renvoyée BPx'})`); continue; }
-  const nat = nativeOrder(name, { allowExcluded: CAMPAIGN });
+  const nat = nativeOrder(name, { allowExcluded: CAMPAIGN || FORCE });
   const wasm = wasmOrder(name);
   if (nat.error) { console.log(`  ${name}: ÉCHEC natif (${nat.error})`); fail++; continue; }
   const a = nat.tokens;
