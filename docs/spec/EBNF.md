@@ -168,9 +168,12 @@ actor_alphabet_binding  = "@" , "alphabet" , "." , IDENT ;   (* forme nue `alpha
 
 actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;  (* transport.midi(ch:3) *)
 
-ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "eval" ;
-(* SIX clés d'entité (décision cles-acteur-six, arbitrage Romain 2026-06-16). CHACUNE se nomme
-   avec `.` (composant). La forme `:` est REJETÉE (cutover 2026-07-14).
+ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "eval" | "voice" ;
+(* SEPT clés d'entité : les six de la décision cles-acteur-six (arbitrage Romain 2026-06-16)
+   + `voice` (LANG-SONS-2, GO Romain [438] 2026-07-16, spec hub/projets/lang-sons-spec.md §3 :
+   voix = son de base + contrôles, entrée de lib/voices ; la HAUTEUR est STRUCTURELLE —
+   alphabet+tuning, spec §2 — jamais un flag de voix : `voice.X` sans tuning = percussion,
+   valide). CHACUNE se nomme avec `.` (composant). La forme `:` est REJETÉE (cutover 2026-07-14).
    Adressage de sortie (KAI-9, Romain 2026-06-26) : le canal `transport` est un IDENT LIBRE (clé
    d'appareil) et les DÉTAILS d'adresse (device/channel/port) sont ses PARAMS, iso quel que soit le
    canal — transport.midi(ch:3), transport.osc(device:reaper, ch:7). Plus de champ séparé

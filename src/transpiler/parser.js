@@ -32,8 +32,12 @@ const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
  * Romain 2026-06-16). Toutes se NOMMENT avec `.` (`.` APPELLE le composant) — jamais `:`
  * (le `:` AFFECTE une valeur). Le CUTOVER graphie (Romain 2026-07-14) rejette la forme `:`
  * pour chacune. `sounds` = alias v0.7 de `sound` (rejeté avec renvoi vers `sound.`).
+ * `voice` = 7e clé (LANG-SONS-2, GO Romain [438] 2026-07-16, spec hub/projets/lang-sons-spec.md
+ * §3) : la voix de l'acteur, entrée de lib/voices. NB : la spec §7 (2026-06-24, « illustratif —
+ * syntaxe à raffiner » §8) écrivait `voice:wobble` — graphie ANTÉRIEURE au cutover ; le canon
+ * postérieur s'applique : `voice.wobble`.
  */
-const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport', 'sound', 'sounds', 'eval']);
+const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport', 'sound', 'sounds', 'eval', 'voice']);
 
 /**
  * Axes à CATALOGUE au niveau SCÈNE (directive `@axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
@@ -73,6 +77,82 @@ function transportChannels() {
   const core = loadLib('core') || {};
   _transportChannels = new Set((core.schema && core.schema.transportChannels) || []);
   return _transportChannels;
+}
+
+/**
+ * Index des VOIX (lib/voices.json, LANG-SONS-2 [438], spec hub/projets/lang-sons-spec.md §3-§5).
+ * Une clé `nom for:<device>` = spécialisation par-device (cascade fin > général, résolue en
+ * AVAL) ; ici on indexe par nom de base : { nom → { base?: def, forDevices: { device → def } } }.
+ * Validation de FORME à l'indexation : une réalisation `audio` DOIT être un backtick TYPÉ
+ * (`js:…`/`faust:…` — spec §3 : compilé par le runtime comme la CV expr). Donnée non conforme
+ * = signalée quand la voix est référencée (fail-loud, jamais de son muet inventé).
+ */
+let _voicesIndex = null;
+function voicesIndex() {
+  if (_voicesIndex) return _voicesIndex;
+  _voicesIndex = new Map();
+  const lib = loadLib('voices');
+  for (const [key, def] of Object.entries((lib && lib.objects) || {})) {
+    const m = key.match(/^(\S+)\s+for:(\S+)$/);
+    const name = m ? m[1] : key;
+    const entry = _voicesIndex.get(name) || { base: null, forDevices: {} };
+    if (m) entry.forDevices[m[2]] = def; else entry.base = def;
+    _voicesIndex.set(name, entry);
+  }
+  return _voicesIndex;
+}
+
+/** Backtick TYPÉ : `js: …`, `faust: …` — le type nomme l'interpréteur (spec §3). */
+function isTypedBacktick(v) {
+  return typeof v === 'string' && /^`\s*[A-Za-z_][\w-]*\s*:/.test(v);
+}
+
+/**
+ * Valide une référence de voix (`voice.<nom>` d'acteur, ou binding alphabet→voix) :
+ * la voix existe (base ou spécialisation for:) et chaque réalisation `audio` portée
+ * par ses définitions est un backtick typé. Jette ParseError sinon (fail-loud).
+ */
+function assertVoiceRef(name, where, token) {
+  const entry = voicesIndex().get(name);
+  if (!entry) {
+    throw new ParseError(
+      `${where} : voix '${name}' inconnue — aucune entrée '${name}' (ni '${name} for:<device>') `
+      + `dans lib/voices.json (LANG-SONS §3).`, token,
+    );
+  }
+  const defs = [...(entry.base ? [entry.base] : []), ...Object.values(entry.forDevices)];
+  for (const def of defs) {
+    if (def.audio !== undefined && !isTypedBacktick(def.audio)) {
+      throw new ParseError(
+        `${where} : voix '${name}' — réalisation 'audio' invalide dans lib/voices.json : un `
+        + `backtick TYPÉ est requis (\`js: …\`, \`faust: …\`) ; reçu ${JSON.stringify(def.audio)}.`, token,
+      );
+    }
+  }
+}
+
+/**
+ * Valide le binding alphabet→voix (spec §7 : champ `voices` d'un alphabet = terminal → nom
+ * de voix). Chaque nom doit exister dans lib/voices ; chaque terminal mappé doit être une
+ * note de l'alphabet. Carte PARTIELLE admise (un terminal sans voix = résolution aval).
+ * Mémoïsé par alphabet (une lib invalide casse au premier usage — donnée curée, fail-loud).
+ */
+const _alphabetVoicesChecked = new Set();
+function assertAlphabetVoices(alphabetName, token) {
+  if (_alphabetVoicesChecked.has(alphabetName)) return;
+  const alpha = loadLib('alphabet', alphabetName);
+  if (alpha && alpha.voices) {
+    for (const [terminal, voiceName] of Object.entries(alpha.voices)) {
+      if (Array.isArray(alpha.notes) && !alpha.notes.includes(terminal)) {
+        throw new ParseError(
+          `alphabet '${alphabetName}' : le binding de voix mappe '${terminal}' qui n'est pas `
+          + `une note de cet alphabet (lib/alphabets.json).`, token,
+        );
+      }
+      assertVoiceRef(voiceName, `alphabet '${alphabetName}', binding '${terminal}'`, token);
+    }
+  }
+  _alphabetVoicesChecked.add(alphabetName);
 }
 
 /**
@@ -1220,6 +1300,12 @@ function parse(tokens, opts = {}) {
           tok,
         );
       }
+      // LANG-SONS-2 ([438], spec §2-§3) : `voice.<nom>` doit référencer une voix de lib/voices
+      // (formes valides : audio = backtick typé) ; le binding alphabet→voix de l'alphabet lié
+      // est validé au même point. La hauteur est STRUCTURELLE (alphabet+tuning) : une voix
+      // sans tuning est LÉGITIME (percussion) — aucun couplage voice↔tuning n'est vérifié ici.
+      if (properties.voice) assertVoiceRef(properties.voice, `acteur '${actorName}'`, tok);
+      if (properties.alphabet) assertAlphabetVoices(properties.alphabet, tok);
 
       // Forme CANONIQUE v0.8 (conformité AST_SPEC §2.1, décision architecte 2026-06-17) :
       // `references: ActorReference[]` = ce que le dispatcher lit (UNE seule forme, comme .gr).
@@ -1236,6 +1322,7 @@ function parse(tokens, opts = {}) {
       addRef('tuning', properties.tuning);
       addRef('octaves', properties.octaves);
       addRef('sound', properties.sound);
+      addRef('voice', properties.voice);
       if (properties.transport) addRef('transport', properties.transport.key, properties.transport.params);
       addRef('eval', properties.eval);
 
@@ -1332,6 +1419,9 @@ function parse(tokens, opts = {}) {
         current(),
       );
     }
+    // LANG-SONS-2 ([438]) : liaison d'alphabet à la scène (acteur implicite) → même validation
+    // du binding alphabet→voix qu'à la ligne d'acteur (spec §7, champ `voices` de l'alphabet).
+    if (name === 'alphabet' && subkey) assertAlphabetVoices(subkey, current());
 
     // Mode modifiers: @mode:random(destru, smooth, mm:60)
     let modifiers = null;

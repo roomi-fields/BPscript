@@ -485,7 +485,13 @@ function describeVocabulary(directives = []) {
   };
   // Schéma SYNTAXE (mots/opérateurs + enums de directive) — lib `language.json`, autorité machine.
   const langLib = loadJsonFile('language') || {};
+  // Voix (LANG-SONS-2, lib/voices.json §3) : noms de BASE pour `voice.<nom>` — les clés
+  // `nom for:<device>` (spécialisations §5) se replient sur leur nom de base.
+  const voicesLib = loadJsonFile('voices');
+  const voiceNames = [...new Set(Object.keys((voicesLib && voicesLib.objects) || {})
+    .map((k) => k.replace(/\s+for:\S+$/, '')))];
   return {
+    voices: voiceNames,
     keywords: [...ctx.reservedDirectiveNames],
     controls: Object.entries(ctx.controls).map(([name, def]) =>
       ({ name, ...pick(def || {}, ['args', 'range', 'values', 'default', 'description', 'transportGroup']) })),

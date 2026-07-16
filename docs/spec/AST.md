@@ -238,7 +238,10 @@ ActorDirective {
   }
   references: ActorReference[]   // FORME CANONIQUE (AST_SPEC §2.1) lue par le dispatcher/BPx :
                                  // une entrée par binding, { type:"ActorReference", category, name, params? }
-                                 // (category ∈ alphabet|tuning|octaves|sound|transport|eval).
+                                 // (category ∈ alphabet|tuning|octaves|sound|transport|eval|voice).
+                                 // `voice` (LANG-SONS-2, [438] 2026-07-16) : nom d'une entrée de
+                                 // lib/voices (son de base + contrôles, réalisée par-runtime) —
+                                 // la hauteur n'y vit PAS (structurelle : alphabet+tuning).
                                  // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
                                  // `references` = forme consommée en aval (dérivée, lossless).
                                  // Les `*:sound.X` / `Sa:sound.Y` écrits DANS le bloc acteur ne sont

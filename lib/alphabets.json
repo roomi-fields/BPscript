@@ -255,7 +255,20 @@
       "at"
     ],
     "alterations": {},
-    "_note": "Percussion alphabet — no pitch resolution. Bols nominaux uniquement ; le son reviendra via le modèle alphabet→son par backtick (cf. backlog LANG-SONS)."
+    "_note": "Percussion alphabet — no pitch resolution (pas de tuning → pas de hauteur, spec LANG-SONS §2). Le champ 'voices' = BINDING alphabet→voix (LANG-SONS-2, [438]) : terminal → nom de voix de lib/voices. Carte PARTIELLE assumée : un bol non mappé n'a pas de voix par l'alphabet (résolution aval ; réalisation manquante pour le runtime cible = refus à l'eval, spec §3).",
+    "voices": {
+      "dhin": "bayan_open",
+      "dha": "bayan_open",
+      "ge": "bayan_open",
+      "ghe": "bayan_open",
+      "ka": "bayan_muted",
+      "ke": "bayan_muted",
+      "na": "dayan_ring",
+      "tin": "dayan_ring",
+      "tun": "dayan_ring",
+      "ta": "dayan_tap",
+      "ti": "dayan_tap"
+    }
   },
   "simple": {
     "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",

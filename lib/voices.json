@@ -1,0 +1,44 @@
+{
+  "domain": "voice",
+  "name": "voices",
+  "_comment": [
+    "Registre des VOIX (LANG-SONS, spec hub/projets/lang-sons-spec.md, figée Romain 2026-06-24 ;",
+    "implémentation LANG-SONS-2, ordre [438] 2026-07-16). Une voix = un SON DE BASE + des",
+    "CONTRÔLES, réalisée PAR-RUNTIME (spec §3) :",
+    "  audio:  <backtick TYPÉ `js:…`/`faust:…`> — le code SYNTHÉTISE (runtime-audio compile,",
+    "          comme la CV expr / factory exprSource). Backtick NON typé = donnée invalide",
+    "          (rejet au parse quand la voix est référencée).",
+    "  device: { preset, <params…> } — réalisation MIDI/OSC : on SÉLECTIONNE le patch du device,",
+    "          on ne synthétise pas sur MIDI. Surface + expects = bibliothèque osc-bridge (spec §4-§6).",
+    "Une voix peut porter LES DEUX réalisations ; chaque runtime prend ce qu'il sait faire.",
+    "Réalisation manquante pour le runtime cible → REFUS À L'EVAL (aval — jamais de son muet inventé).",
+    "Clé 'nom for:<device>' = voix SPÉCIALISÉE pour un device (spec §5) : quand l'acteur cible ce",
+    "device, elle SPÉCIALISE l'universelle homonyme (cascade fin > général, résolue en AVAL/Kairos).",
+    "La HAUTEUR n'est PAS ici (spec §2) : elle est STRUCTURELLE (alphabet+tuning). Une voix",
+    "UTILISE `pitch` si la résolution en fournit une (son backtick le référence, ou non) —",
+    "aucun flag 'pitched'."
+  ],
+  "objects": {
+    "wobble": {
+      "audio": "`js: saw(pitch) >> lpf(cutoff) >> adsr(gate)`"
+    },
+    "fatbass": {
+      "audio": "`js: (saw(pitch) | saw(pitch*1.01)) >> lpf(cutoff) >> adsr(gate)`"
+    },
+    "fatbass for:sub37": {
+      "device": { "preset": "bass-init", "glide": 0.2, "osc1-wave": "saw" }
+    },
+    "bayan_open": {
+      "audio": "`js: (noise() >> bpf(80) | sin(80)) >> adsr(decay:350ms)`"
+    },
+    "bayan_muted": {
+      "audio": "`js: noise() >> bpf(120) >> adsr(decay:80ms)`"
+    },
+    "dayan_ring": {
+      "audio": "`js: (sin(320) | sin(480)) >> adsr(decay:400ms)`"
+    },
+    "dayan_tap": {
+      "audio": "`js: noise() >> hpf(1200) >> adsr(decay:60ms)`"
+    }
+  }
+}
