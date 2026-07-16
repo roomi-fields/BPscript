@@ -16,6 +16,12 @@
       "browser",
       "webaudio"
     ],
+    "_transportChannels_doc": "LISTE POSITIVE FERMÉE des canaux de sortie du raccord '@alphabet.X:<sortie>' (transport de l'acteur implicite, décision 2026-07-05 §2). Addendum ratifié Romain 2026-07-16 (décision sortie-acteur-implicite-browser-audio-routing-obsolete §Addendum) : « on n'autorise que les 3 qu'on connaît » — tout autre suffixe (:sc, :video, :foo…) = rejet fail-loud au parse. Le sucre historique ':sc' (= transport+eval sc) est ABOLI. Ne contraint PAS le nom d'appareil de 'transport.<X>' sur un @actor (IDENT libre, clé @devices, résolu aval).",
+    "transportChannels": [
+      "audio",
+      "midi",
+      "osc"
+    ],
     "addressKeys": [
       "ch",
       "channel",

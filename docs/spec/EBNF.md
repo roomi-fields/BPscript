@@ -69,8 +69,12 @@ directive_body = IDENT                              (* @core, @controls *)
                | lib_provenance_ref                 (* @factory.<chemin>.<entrée> / @mine.<chemin>.<entrée> — voir §lib_provenance_ref *)
                | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
                | IDENT , ":" , IDENT                (* binding simple générique ; @routing SUPPRIMÉ 2026-07-16, rejeté au parse *)
-               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:audio — subkey + sortie de l'acteur implicite (canon) *)
-               | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) — not yet implemented *)
+               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:audio — subkey + sortie de l'acteur
+                                                       implicite. LISTE POSITIVE FERMÉE {audio, midi, osc}
+                                                       (addendum ratifié Romain 2026-07-16) : tout autre suffixe
+                                                       (:sc, :video, :foo…) = rejet fail-loud. L'ancien sucre
+                                                       ':sc' (= transport+eval sc) et la forme longue
+                                                       '(transport=x, eval=y)' (jamais implémentée) sont ABOLIS. *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 — VALEUR uniquement *)
                (* CUTOVER graphie UNIVERSEL (Romain 2026-07-14, tour [412]) : quand IDENT est un
                   AXE À CATALOGUE (core.json schema.catalogAxes = alphabet | tuning | octaves | scale),
@@ -162,7 +166,7 @@ actor_prop  = actor_alphabet_binding                (* CANON : @alphabet.<nom> *
 
 actor_alphabet_binding  = "@" , "alphabet" , "." , IDENT ;   (* forme nue `alphabet.<nom>` équivalente *)
 
-actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , param_pairs , ")" ] ;
+actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;  (* transport.midi(ch:3) *)
 
 ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "eval" ;
 (* SIX clés d'entité (décision cles-acteur-six, arbitrage Romain 2026-06-16). CHACUNE se nomme
@@ -213,8 +217,8 @@ actor_eval_binding = "eval" , "." , IDENT ;          (* eval.strudel, eval.hydra
    d'acteur, le tag est obligatoire. Même espace de noms de clés que les tags. *)
 
 
-param_pairs = param_pair , { "," , param_pair } ;
-param_pair  = IDENT , "=" , IDENT ;               (* transport=sc, eval=python *)
+(* param_pairs/param_pair (IDENT = IDENT, ex-forme '(transport=sc, eval=python)') : ABOLIS
+   (addendum 2026-07-16, jamais implémentés). Les params d'entité utilisent kv_pairs (`:`). *)
 
 alias_list = alias , { "," , alias } ;
 alias      = IDENT , ":" , IDENT ;

@@ -61,6 +61,21 @@ function deprecatedTransports() {
 }
 
 /**
+ * LISTE POSITIVE FERMÉE des canaux du raccord de sortie `@alphabet.X:<sortie>` (transport de
+ * l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on n'autorise que les 3 qu'on
+ * connaît ») : suffixe ∉ {audio, midi, osc} → rejet fail-loud. Source unique = `lib/core.json`
+ * schema.transportChannels (donnée, pas un hardcode). Mémoïsé. Ne contraint PAS le nom
+ * d'appareil de `transport.<X>` sur un @actor (IDENT libre, clé @devices — EBNF §transport).
+ */
+let _transportChannels = null;
+function transportChannels() {
+  if (_transportChannels) return _transportChannels;
+  const core = loadLib('core') || {};
+  _transportChannels = new Set((core.schema && core.schema.transportChannels) || []);
+  return _transportChannels;
+}
+
+/**
  * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
  * (star→'*', plus→'+', fin→';'), retourne l'opérateur canonique BP3.
  * Cela garantit que l'AST reflète ce que BP3 aurait compilé (R1).
@@ -1301,13 +1316,19 @@ function parse(tokens, opts = {}) {
     }
 
     // '@alphabet.X:<sortie>' = sortie de l'acteur implicite (canon, décision 2026-07-05 ;
-    // applyDefaultActor lit directive.runtime). Un canal PÉRIMÉ en binding (browser/webaudio,
-    // modèle profils d'environnement supprimé 2026-07-16) → REJET fail-loud, pas de normalisation.
-    if (name === 'alphabet' && subkey && runtime && deprecatedTransports().has(runtime)) {
+    // applyDefaultActor lit directive.runtime). LISTE POSITIVE FERMÉE (addendum ratifié Romain
+    // 2026-07-16, « on n'autorise que les 3 qu'on connaît ») : suffixe ∉ {audio, midi, osc} →
+    // REJET fail-loud. Couvre les périmés browser/webaudio (hint dédié), l'ancien sucre ':sc'
+    // (= transport+eval sc, ABOLI par l'addendum), :video, :foo…
+    if (name === 'alphabet' && subkey && runtime && !transportChannels().has(runtime)) {
+      const hint = deprecatedTransports().has(runtime)
+        ? ` '${runtime}' est un canal PÉRIMÉ (modèle profils d'environnement abandonné 2026-07-16) — écris '@alphabet.${subkey}:audio'.`
+        : runtime === 'sc'
+          ? ` L'ancien sucre ':sc' (= transport+eval sc) est ABOLI — un eval se déclare sur un @actor ('eval.<X>') ; le raccord de l'acteur implicite ne nomme qu'un canal.`
+          : '';
       throw new ParseError(
-        `'@alphabet.${subkey}:${runtime}' refusé — '${runtime}' est un canal de sortie PÉRIMÉ `
-        + `(modèle profils d'environnement abandonné 2026-07-16). Écris '@alphabet.${subkey}:audio' `
-        + `(canal canonique : audio/midi/osc).`,
+        `'@alphabet.${subkey}:${runtime}' refusé — le raccord de sortie de l'acteur implicite `
+        + `n'accepte que {audio, midi, osc} (liste positive fermée, décision 2026-07-16).${hint}`,
         current(),
       );
     }

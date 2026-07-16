@@ -99,18 +99,11 @@ Directive {
   binding: string | null          // valeur après : — sur @alphabet.X = sortie de l'acteur implicite
                                   // (audio/midi/osc, décision 2026-07-16) ; sur @tuning.X = alphabet cible
   runtime: string | null          // pour @mode:X — la valeur du mode ("random", "lin", etc.)
-  params: Param[] | null          // forme explicite (transport=sc, eval=python)
   value: string | number | null   // 120, "7/8", -24...
   aliases: Alias[] | null         // résolution de conflits
   modifiers: ModeModifier[] | null // pour @mode:X(destru, mm:60) — modificateurs de sous-grammaire
   timePatterns: TimePattern[] | null // pour @timepatterns: t1=1/1, t2=3/2
   line: number
-}
-
-Param {
-  type: "Param"
-  key: string                     // "transport", "eval"
-  value: string                   // "sc", "python", "midi"
 }
 
 Alias {
@@ -135,17 +128,20 @@ Le champ `binding` reçoit la valeur après `:`. Sa sémantique dépend de la di
 - `@tuning.just_intonation:raga` → binding = alphabet cible
 - `@tuning.western_12TET` → pas de binding (chargement simple)
 
-La forme `(transport=x, eval=y)` est mutuellement exclusive avec `:` :
-- `:sc` = sucre pour `(transport=sc, eval=sc)`
-- `(transport=sc, eval=python)` = les deux spécifiés quand ils diffèrent
+**Liste positive FERMÉE** (addendum ratifié Romain 2026-07-16, décision
+`2026-07-16-sortie-acteur-implicite-browser-audio-routing-obsolete.md §Addendum`) : le suffixe du
+raccord `@alphabet.X:<sortie>` accepte **exactement** `{audio, midi, osc}` — tout autre suffixe
+(`:sc`, `:video`, `:foo`…) = rejet fail-loud au parse (« on n'autorise que les 3 qu'on connaît »).
+L'ancien sucre **`:sc` (= `(transport=sc, eval=sc)`) est ABOLI**, ainsi que la forme longue
+`(transport=x, eval=y)` sur une directive d'alphabet (jamais implémentée) : un `eval` se déclare
+sur un **@actor** (`eval.<X>`, modèle producteur/canal 2026-07-14), le raccord de l'acteur
+implicite ne nomme qu'un **canal**.
 
 Exemples :
 - `@core` -> `{ name:"core", subkey:null, binding:null }`
 - `@controls` -> `{ name:"controls", subkey:null, binding:null }`
 - `@tuning.western_12TET` -> `{ name:"tuning", subkey:"western_12TET", binding:null }`
 - `@alphabet.western:midi` -> `{ name:"alphabet", subkey:"western", binding:"midi" }`
-- `@alphabet.raga:sc` -> `{ name:"alphabet", subkey:"raga", binding:"sc" }`
-- `@alphabet.raga(transport=sc, eval=python)` -> `{ name:"alphabet", subkey:"raga", params:[{key:"transport", value:"sc"}, {key:"eval", value:"python"}] }`
 - `@tuning.just_intonation:raga` -> `{ name:"tuning", subkey:"just_intonation", binding:"raga" }`
 - `@tuning.equal_temperament:western` -> `{ name:"tuning", subkey:"equal_temperament", binding:"western" }`
 - `@sub.dhati` -> `{ name:"sub", subkey:"dhati", binding:null }`

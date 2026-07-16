@@ -4,7 +4,7 @@
 //     bpxAst.applyDefaultActor). Canal canonique = {audio, midi, osc} (EBNF:182).
 //   - browser/webaudio SUPPRIMÉS : REJET fail-loud au parse (PAS de normalisation — Romain 2026-07-16).
 //   - routing.json SUPPRIMÉ (les deux copies) ; @routing rejeté au parse.
-import { compileToBPxAST } from '../src/transpiler/index.js';
+import { compileBPS, compileToBPxAST } from '../src/transpiler/index.js';
 import { existsSync } from 'fs';
 
 let pass = 0, fail = 0;
@@ -32,6 +32,29 @@ for (const chan of ['audio', 'midi', 'osc']) {
 rejects('@alphabet.western:browser\nS -> C', 'PÉRIMÉ', '@alphabet.western:browser');
 rejects('@actor v alphabet.western transport.browser\nS -> v.C', 'PÉRIMÉ', 'transport.browser');
 rejects('@actor v alphabet.western transport.webaudio\nS -> v.C', 'PÉRIMÉ', 'transport.webaudio');
+
+// --- LISTE POSITIVE FERMÉE (addendum ratifié Romain 2026-07-16 : « on n'autorise que les 3
+// qu'on connaît ») : tout suffixe ∉ {audio, midi, osc} → rejet, sur LES DEUX voies. ':sc'
+// (ancien sucre transport+eval, ABOLI), ':video' (axe supprimé), ':foo' (inconnu). ---
+function rejectsBothPaths(src, needle, label) {
+  for (const [path, fn] of [['BPx', compileToBPxAST], ['BP3', compileBPS]]) {
+    const errors = fn(src).errors || [];
+    const hit = errors.some((e) => (e.message || '').includes(needle));
+    check(errors.length > 0 && hit, `${label} — voie ${path} CRIE (${needle})`);
+  }
+}
+function acceptsBothPaths(src, label) {
+  for (const [path, fn] of [['BPx', compileToBPxAST], ['BP3', compileBPS]]) {
+    const errors = fn(src).errors || [];
+    check(errors.length === 0, `${label} — voie ${path} sans erreur : ${JSON.stringify(errors)}`);
+  }
+}
+rejectsBothPaths('@alphabet.western:sc\nS -> C', 'ABOLI', ':sc (ancien sucre transport+eval)');
+rejectsBothPaths('@alphabet.western:video\nS -> C', 'liste positive', ':video');
+rejectsBothPaths('@alphabet.western:foo\nS -> C', 'liste positive', ':foo (inconnu)');
+for (const chan of ['audio', 'midi', 'osc']) {
+  acceptsBothPaths(`@alphabet.western:${chan}\nS -> C`, `:${chan} (liste positive)`);
+}
 
 // --- @routing SUPPRIMÉ → rejeté au parse ---
 rejects('@routing.studio\n@alphabet.western\nS -> C', "@routing", '@routing.studio');
