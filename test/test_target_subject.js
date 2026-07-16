@@ -9,7 +9,7 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = '@mod\n@controls\n@alphabet.western:browser\ncv env1 : mod.adsr(attack:5, decay:120, sustain:0.2, release:300)\n';
+const HEAD = '@mod\n@controls\n@alphabet.western:audio\ncv env1 : mod.adsr(attack:5, decay:120, sustain:0.2, release:300)\n';
 function bassPairs(rhsLine) {
   const r = compileToBPxAST(HEAD + 'S -> Bass\n' + rhsLine + '\n');
   if (r.errors && r.errors.length) return { err: r.errors };

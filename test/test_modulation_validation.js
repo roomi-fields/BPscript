@@ -7,7 +7,7 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = '@mod\n@controls\n@alphabet.western:browser\n';
+const HEAD = '@mod\n@controls\n@alphabet.western:audio\n';
 function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 1. Branchement valide : cutoff <- CV → 0 erreur

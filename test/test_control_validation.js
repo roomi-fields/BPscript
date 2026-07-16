@@ -8,7 +8,7 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = '@controls\n@alphabet.western:browser\n';
+const HEAD = '@controls\n@alphabet.western:audio\n';
 function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 1. Valeur hors-liste (enum) → erreur ciblée sur 'wave'
@@ -53,7 +53,7 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 7. Sans @controls chargé → pas de validation (aucune erreur)
 {
-  const r = compileToBPxAST('@alphabet.western:browser\nS -> C4 (wave:triangle123)\n');
+  const r = compileToBPxAST('@alphabet.western:audio\nS -> C4 (wave:triangle123)\n');
   check((r.errors || []).length === 0, 'sans @controls : 0 erreur, obtenu ' + JSON.stringify(r.errors));
 }
 

@@ -539,46 +539,35 @@ function defaultActorTransport() {
   return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
 }
 
-// PORTER≠RÉSOUDRE (régression ed5a637, architecte [335] 2026-07-05) : le suffixe d'un binding
-// (`@alphabet.X:browser`, `@actor … transport:browser`) est un NOM DE TRANSPORT de surface, PAS
-// un nom de runtime canonique. C'est au producteur (BPScript) de le RÉSOUDRE vers le nom canonique
-// que l'hôte enregistre comme sink, en consultant la DÉFINITION (routing lib : `transport.type`).
-// `:midi` marchait par identité (nom == type) ; `:browser` (type 'webaudio') restait orphelin →
-// sink inexistant → silence. On résout via la lib, jamais un hardcode.
-// Carte NOM DE TRANSPORT (surface) → TYPE (runtime canonique) sur tous les profils de la routing lib.
-function transportTypeMap() {
-  const routing = loadLib('routing') || {};
-  const map = {};
-  for (const profName of Object.keys(routing)) {
-    const prof = routing[profName];
-    const transports = prof && prof.transports;
-    if (!transports || typeof transports !== 'object') continue;
-    for (const tname of Object.keys(transports)) {
-      const t = transports[tname];
-      if (t && t.type) map[tname] = t.type;
-    }
-  }
-  return map;
+// PORTER≠RÉSOUDRE (régression ed5a637, architecte [335] 2026-07-05 ; refonte 2026-07-16 [421]) :
+// le suffixe d'un binding (`@alphabet.X:audio`, `@actor … transport.audio`) est un NOM DE CANAL de
+// surface. Le canal canonique de NOTRE sortie = {audio, midi, osc} (EBNF:182), écrit directement.
+// Le modèle profils d'environnement (routing.json : studio/live/browser) est ABANDONNÉ (décision
+// 2026-07-16 sortie-acteur-implicite-browser-audio-routing-obsolete). Restent seulement des
+// ORTHOGRAPHES PÉRIMÉES normalisées vers le canon (`webaudio`→`audio`, `browser`→`audio`), lues
+// dans lib/core.json `schema.transportAliases` (donnée, jamais un hardcode). Les noms déjà canon
+// (audio/midi/osc) et tout autre nom d'appareil libre (@devices, résolu aval) passent inchangés.
+function transportAliasMap() {
+  const core = loadLib('core') || {};
+  return (core.schema && core.schema.transportAliases) || {};
 }
 
-// Résout un nom de surface vers le nom de runtime canonique. Un nom de transport connu → son type ;
-// sinon on le laisse tel quel (déjà un type canonique : 'audio' défaut, 'osc', 'webaudio', 'midi',
-// 'code' — ou hors routing, non résoluble ici : ce n'est pas notre rôle d'inventer).
-function canonicalRuntimeName(name, typeMap) {
+// Résout un nom de surface vers le canal canonique. Alias périmé connu → sa cible ; sinon inchangé.
+function canonicalRuntimeName(name, aliasMap) {
   if (!name) return name;
-  return Object.prototype.hasOwnProperty.call(typeMap, name) ? typeMap[name] : name;
+  return Object.prototype.hasOwnProperty.call(aliasMap, name) ? aliasMap[name] : name;
 }
 
-// Normalise le transport de CHAQUE acteur (implicite ET @actor explicite) vers le runtime canonique.
+// Normalise le transport de CHAQUE acteur (implicite ET @actor explicite) vers le canal canonique.
 // Point de passage unique : couvre tous les chemins où un nom de transport devient output.runtime.
 function canonicalizeActorTransports(ast) {
   if (!ast || !Array.isArray(ast.actors) || ast.actors.length === 0) return;
-  const typeMap = transportTypeMap();
+  const aliasMap = transportAliasMap();
   for (const actor of ast.actors) {
     const tr = actor.properties && actor.properties.transport;
-    if (tr && tr.key) tr.key = canonicalRuntimeName(tr.key, typeMap);
+    if (tr && tr.key) tr.key = canonicalRuntimeName(tr.key, aliasMap);
     for (const ref of actor.references || []) {
-      if (ref && ref.category === 'transport' && ref.name) ref.name = canonicalRuntimeName(ref.name, typeMap);
+      if (ref && ref.category === 'transport' && ref.name) ref.name = canonicalRuntimeName(ref.name, aliasMap);
     }
   }
 }

@@ -68,8 +68,8 @@ directive = "@" , directive_body ;
 directive_body = IDENT                              (* @core, @controls *)
                | lib_provenance_ref                 (* @factory.<chemin>.<entrée> / @mine.<chemin>.<entrée> — voir §lib_provenance_ref *)
                | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
-               | IDENT , ":" , IDENT                (* @routing:studio — binding simple *)
-               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:midi — subkey + binding *)
+               | IDENT , ":" , IDENT                (* binding simple générique ; ex. @routing:studio ABANDONNÉ 2026-07-16 *)
+               | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:audio — subkey + sortie de l'acteur implicite (canon) *)
                | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) — not yet implemented *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 — VALEUR uniquement *)
                (* CUTOVER graphie UNIVERSEL (Romain 2026-07-14, tour [412]) : quand IDENT est un
@@ -108,7 +108,7 @@ flag_state = IDENT , ":" , INT ;  (* alias d'état → valeur entière du drapea
    il n'entre PAS dans lib_provenance_ref. *)
 lib_provenance_ref = ( "factory" | "mine" ) , "." , path_seg , "." , path_seg , { "." , path_seg } ;
                      (* ≥ 2 segments après la provenance : au moins <fichier>.<entrée>.
-                        PAS de suffixe `:runtime` (contrairement au sucre legacy @alphabet.X:browser,
+                        PAS de suffixe de sortie (contrairement au binding CANON `@alphabet.X:<sortie>`,
                         directive_body ci-dessus) : le raccord de SORTIE d'une scène @mine/@factory
                         passe par un ACTEUR EXPLICITE, jamais par la réf de provenance. Décision
                         Romain 2026-07-13 (hub/decisions/2026-07-13-invocation-librairies-factory-mine
@@ -122,10 +122,11 @@ path_seg = ( IDENT | INT ) , { IDENT | INT } ;
 > **Raccord de SORTIE d'une scène `@mine`/`@factory` (canonique, décision Romain 2026-07-13,
 > `hub/decisions/2026-07-13-invocation-librairies-factory-mine.md §Raccord sortie).** Une réf de
 > provenance nomme une **librairie de hauteur** ; elle ne porte **PAS** de sortie. Le raccord audio
-> passe par un **ACTEUR EXPLICITE** — `@actor voice transport.browser` puis `@mine.ragas.sargam`
+> passe par un **ACTEUR EXPLICITE** — `@actor voice transport.audio` puis `@mine.ragas.sargam`
 > (la hauteur vient du libRef, résolue par Kairos ; le transport vient de l'acteur). Aucune nouvelle
-> syntaxe : cette voie parse déjà. Le suffixe `:runtime` du sucre legacy `@alphabet.X:browser`
-> **n'est pas** étendu à la provenance (séparation propre « lib de hauteur » vs « sortie » ; aucun
+> syntaxe : cette voie parse déjà. Le binding de sortie CANON `@alphabet.X:<sortie>` (transport de
+> l'acteur implicite, décision 2026-07-16 — règle DISTINCTE qui coexiste) **n'est pas** étendu à la
+> provenance (séparation propre « lib de hauteur » vs « sortie » ; aucun
 > contact avec le contrat co-signé `libRefs` ni la règle acteur-unique). Une scène `@mine` **nue**
 > (sans acteur) retombe sur le transport par défaut `audio` (natif) — **muet dans le player web, et
 > c'est VOULU** : l'auteur déclare sa sortie explicitement.
@@ -186,9 +187,13 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
                   (strudel/hydra/p5/csound/mercury) sort en NATIF ; on ne route pas sa sortie.
               PAS de `transport.video`/`transport.visual` (axe visuel SUPPRIMÉ : les visuels sortent
               natif). Le nom d'appareil est un IDENT **LIBRE** (clé de `@devices`), PAS une liste fermée ;
-              `webaudio` = alias de `audio`. La grammaire valide la SYNTAXE `transport.<nom>(params)` ;
-              l'existence de l'appareil et la compatibilité de type sont résolues en aval (Kanopi,
-              cf. DEVICES_SPEC.md — désormais audio/midi/osc seulement). Params entre () : transport.midi(ch:10).
+              le canal CANONIQUE écrit directement = {`audio`, `midi`, `osc`}. Orthographes PÉRIMÉES
+              normalisées vers le canon (décision 2026-07-16, `schema.transportAliases` de core.json) :
+              `webaudio`→`audio`, `browser`→`audio` (le modèle profils d'environnement `routing.json`
+              — studio/live/browser — est ABANDONNÉ ; le fichier a été supprimé). La grammaire valide la
+              SYNTAXE `transport.<nom>(params)` ; l'existence de l'appareil et la compatibilité de type
+              sont résolues en aval (Kanopi, cf. DEVICES_SPEC.md — audio/midi/osc). Params entre () :
+              transport.midi(ch:10).
    sound    — son par défaut de l'acteur (référence dans @sound).
               Une référence sound.X ici équivaut sémantiquement à
               `*:sound.X` mais s'écrit comme une entity_ref pour homogénéité.
@@ -1157,7 +1162,7 @@ tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à AL
 sound                          → bloc déclaratif de prototypes son (anonyme + nommés, v0.8)
 sound.LIBNAME                  → charge lib/sounds/LIBNAME.json (defaults + named + by_terminal, v0.8)
 sub.KEY                        → table de substitution depuis lib/sub.json
-routing.KEY                    → config connexion KEY depuis lib/routing.json
+routing.KEY                    → OBSOLÈTE (profils studio/live/browser abandonnés 2026-07-16, lib/routing.json supprimé)
 hooks                          → macros d'interaction (* not yet implemented *)
 template                       → section template singulier (? = wildcard, ($N) = bracket marker) — v0.8 (ex-`templates`)
 mode:VALUE(modifiers)          → mode de sous-grammaire avec modificateurs optionnels

@@ -7,7 +7,7 @@ function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:'
 
 const src = `@core
 @controls
-@alphabet.western:browser
+@alphabet.western:audio
 S -> \`sc: Synth(\\default, [\\freq, 440])\` C4 \`strudel: s("bd*4")\``;
 
 const r = compileBPS(src);
