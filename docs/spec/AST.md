@@ -94,7 +94,7 @@ binding). Une scène `@mine` **nue** (sans acteur) retombe sur le transport par 
 ```
 Directive {
   type: "Directive"
-  name: string                    // "core", "controls", "alphabet", "tuning", "routing", "mode"...
+  name: string                    // "core", "controls", "alphabet", "tuning", "mode"...
   subkey: string | null           // "western", "just_intonation", "studio"... (après le .)
   binding: string | null          // valeur après : — sur @alphabet.X = sortie de l'acteur implicite
                                   // (audio/midi/osc, décision 2026-07-16) ; sur @tuning.X = alphabet cible
@@ -130,7 +130,8 @@ Convention stricte : `@file` → `lib/file.json`, `@file.key` → `lib/file.json
 Le champ `binding` reçoit la valeur après `:`. Sa sémantique dépend de la directive :
 - `@alphabet.western:audio` → binding = **sortie de l'acteur implicite** (canal audio/midi/osc,
   décision 2026-07-16 ; le binding d'alphabet renseigne le transport de l'acteur unique implicite,
-  décision 2026-07-05 §2). `:browser`/`:webaudio` = orthographes périmées normalisées vers `audio`.
+  décision 2026-07-05 §2). `:browser`/`:webaudio` = noms PÉRIMÉS REJETÉS fail-loud au parse
+  (décision 2026-07-16, Romain : on supprime, pas de normalisation) — écrire `:audio`.
 - `@tuning.just_intonation:raga` → binding = alphabet cible
 - `@tuning.western_12TET` → pas de binding (chargement simple)
 

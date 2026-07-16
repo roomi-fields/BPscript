@@ -61,7 +61,7 @@ const BP3_RESERVED = new Set(['lambda', 'nil', 'empty', 'null']);
 // Ces opérateurs ne doivent JAMAIS être ajoutés à l'alphabet.
 
 function encode(ast) {
-  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], routingTable: null, labelIndex: {}, ccAliases: {}, backticks: {} };
+  const output = { grammar: '', alphabet: new Set(), settings: [], controlTable: [], cvTable: [], mapTable: [], sceneTable: {}, exposeTable: [], duration: null, macroTable: [], aliasTable: [], labelTable: [], labelIndex: {}, ccAliases: {}, backticks: {} };
   _output = output;
   _ctIndex = 0;
   _cvIndex = 0;
@@ -575,18 +575,17 @@ function encode(ast) {
     output.labelTable = ast.labels.map(l => l.name);
   }
 
-  // Z1 (#105) — Expose loaded @routing config so the downstream orchestrator
-  // can instantiate MIDI/OSC transports. libCtx._libs['routing.<profile>']
-  // (or 'routing' when no profile) is loaded by libs.js but was never consumed.
-  // We surface it as the `routingTable` sidecar, mirroring exposeTable/mapTable.
-  output.routingTable = buildRoutingTable(libCtx, ast.directives);
+  // Feature @routing / routingTable (Z1 #105) SUPPRIMÉE (décision 2026-07-16, Romain : modèle
+  // profils d'environnement studio/live/browser abandonné ; c'était une feature de notre
+  // transpileur, PAS le moteur BP3). Le canal de sortie se déclare via `transport.<audio|midi|osc>`
+  // sur l'acteur ; @routing est rejeté au parse (parser.js tombstone).
 
   // Z5 (#109) — Expose named MIDI CC aliases so the downstream orchestrator can
   // resolve inbound CC by name at runtime (e.g. `cc:breath`). `@cc breath:2`
   // (parser.js:357-370 → dir.ccMappings) is already resolved at compile time
   // into mapTable (resolveMapEndpoint, this file: kind 'alias' → kind 'cc'),
   // but BPx never receives the name→number table needed for live inbound CC.
-  // We surface it as the `ccAliases` sidecar, mirroring routingTable/labelIndex.
+  // We surface it as the `ccAliases` sidecar, mirroring labelIndex.
   output.ccAliases = buildCcAliases(libCtx);
 
   // Generate settings JSON for BP3 WASM engine
@@ -600,62 +599,6 @@ function encode(ast) {
   output.homomorphisms = ast.homomorphisms || [];
 
   return output;
-}
-
-/**
- * Z1 (#105) — Build the routingTable sidecar from a loaded @routing directive.
- *
- * libs.js stores the loaded routing data under `_libs['routing.<profile>']`
- * (when the directive carries a subkey, e.g. @routing.studio) or `_libs['routing']`
- * (bare @routing → whole file). The subkey form resolves to a single profile
- * object ({ transports, evals }) via loadLib's collection lookup; the file-level
- * `defaults` block is a sibling of the profiles, so we re-read the whole file to
- * recover it. Returns null when no @routing directive was used.
- *
- * Shape:
- *   {
- *     profile: "studio" | null,            // selected profile (null for bare @routing)
- *     transports: { <name>: { type, ... } },
- *     evals:      { <name>: { type, ... } },
- *     defaults:   { baseHz, timeout, ... } | null
- *   }
- *
- * Additive: does not touch exposeTable/mapTable/aliasTable.
- */
-function buildRoutingTable(libCtx, directives) {
-  const routingDir = (directives || []).find(d => d.name === 'routing');
-  if (!routingDir) return null;
-
-  const profile = routingDir.subkey || null;
-  const libKey = profile ? `routing.${profile}` : 'routing';
-  const loaded = libCtx._libs?.[libKey];
-  if (!loaded) return null;
-
-  // With a profile, `loaded` is the profile object { transports, evals }.
-  // Without one, `loaded` is the whole file; profiles live at the top level
-  // alongside `defaults`, so there is no single set of transports to expose —
-  // surface the raw file under `profiles` and the shared defaults.
-  if (profile) {
-    // Recover file-level defaults (sibling of the profile, dropped by the
-    // subkey lookup). loadLib('routing') returns the whole file.
-    const wholeFile = loadLib('routing');
-    const defaults = (wholeFile && typeof wholeFile === 'object') ? (wholeFile.defaults || null) : null;
-    return {
-      profile,
-      transports: loaded.transports || {},
-      evals: loaded.evals || {},
-      defaults,
-    };
-  }
-
-  // Bare @routing — no profile selected. Expose all profiles + defaults so the
-  // orchestrator can pick one at runtime.
-  const { defaults = null, ...profiles } = loaded;
-  return {
-    profile: null,
-    profiles,
-    defaults,
-  };
 }
 
 /**
@@ -675,7 +618,7 @@ function buildRoutingTable(libCtx, directives) {
  * `ccNumber`, so it is excluded.
  *
  * Shape: { "<name>": <number>, ... }. Empty object when no `@cc` was used.
- * Additive: does not touch mapTable/controlTable/routingTable.
+ * Additive: does not touch mapTable/controlTable.
  */
 function buildCcAliases(libCtx) {
   const aliases = {};

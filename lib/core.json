@@ -11,11 +11,11 @@
       "octaves",
       "scale"
     ],
-    "_transportAliases_doc": "Orthographes PÉRIMÉES d'un canal de sortie → nom canonique (décision 2026-07-16 sortie-acteur-implicite-browser-audio-routing-obsolete). Le modèle profils d'environnement (routing.json : studio/live/browser) est ABANDONNÉ ; le canal canonique est {audio, midi, osc} écrit directement. Ces alias sont tolérés-normalisés pour la transition (kanopi migre les scènes en écrivant 'audio'). `webaudio` : EBNF:189 le disait déjà alias de 'audio'. `browser` : ancien profil, = 'audio'. Consommé par canonicalizeActorTransports (bpxAst.js) — remplace la map routing.json 'browser→webaudio'.",
-    "transportAliases": {
-      "webaudio": "audio",
-      "browser": "audio"
-    },
+    "_deprecatedTransports_doc": "Noms de canal PÉRIMÉS → REJETÉS fail-loud au parse (décision 2026-07-16, Romain : on SUPPRIME, pas de rétrocompat). `browser`/`webaudio` = ancien modèle profils d'environnement (routing.json), ABANDONNÉ ; écrire le canon `audio` directement. `video`/`visual` = axe visuel supprimé (décision 2026-07-14). Le parser nomme la faute et pointe vers audio/midi/osc.",
+    "deprecatedTransports": [
+      "browser",
+      "webaudio"
+    ],
     "addressKeys": [
       "ch",
       "channel",
@@ -68,7 +68,6 @@
       "test_alphabets",
       "settings",
       "filter",
-      "routing",
       "modulation",
       "diapason"
     ],
@@ -110,7 +109,7 @@
       "test_alphabets": "résolution-hauteur (Kairos) — alphabets de test (référence-librairie, même axe catalogue que `alphabet` ; réservé aux grammaires de test de Bernard, src/transpiler/libs-data.js)",
       "settings": "génération (BPx) — bloc de paramètres moteur BP3 (Quantization/Qclock/Seed/MaxItemsProduce/…, bp3_load_settings_params)",
       "filter": "sortie (runtime) — objets CV/signal (ADSR, LFO, ramp, lib/filter.json), la courbe est produite et appliquée par le dispatcher aval",
-      "routing": "banni (surface) — le modèle profils d'environnement (lib/routing.json : studio/live/browser) est OBSOLÈTE (décision 2026-07-16) ; le fichier a été supprimé et sa consommation (canonicalizeActorTransports via routing.json) remplacée par le canon direct + schema.transportAliases. Le mot de directive reste réservé (tolérance parse) mais n'a plus de lib à charger.",
+      "routing": "banni (surface) — la feature @routing (profils d'environnement studio/live/browser, lib/routing.json + routingTable Z1 #105) est SUPPRIMÉE (décision 2026-07-16, Romain : modèle d'environnements abandonné). Fichier lib/routing.json supprimé, buildRoutingTable/routingTable retirés, mot-directive rejeté au parse (tombstone). Ce n'était PAS le moteur BP3 de Bernard mais une feature de notre transpileur.",
       "modulation": "sortie (runtime) — entrées de modulation déclarées SUR LA SORTIE, 'elle appartient à la sortie (le transport)' (docs/design/CV.md:177)",
       "diapason": "résolution-hauteur (Kairos) — hauteur de référence (Hz), résolue par `resoudre-hauteur.ts` (hub/contrats/bpx-kairos-arbre.md §2.1)",
       "ch": "sortie (runtime) — adresse de sortie (canal)",

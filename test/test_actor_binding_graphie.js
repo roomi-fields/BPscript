@@ -33,9 +33,9 @@ function cries(src, needle) {
 
 console.log('\n=== CANON : @alphabet.<nom> + transport.<canal>(…) ===');
 {
-  const a = actor0('@core\n@controls\n@actor voice @alphabet.sargam transport.browser\nS -> sa\n');
+  const a = actor0('@core\n@controls\n@actor voice @alphabet.sargam transport.audio\nS -> sa\n');
   assert('@alphabet.sargam → properties.alphabet = sargam', a.properties.alphabet === 'sargam', JSON.stringify(a.properties.alphabet));
-  assert('transport.browser → key = browser', a.properties.transport?.key === 'browser', JSON.stringify(a.properties.transport));
+  assert('transport.audio → key = audio', a.properties.transport?.key === 'audio', JSON.stringify(a.properties.transport));
 }
 {
   const a = actor0('@core\n@controls\n@actor sitar @alphabet.sargam transport.midi(ch:3)\nS -> sa\n');
@@ -44,7 +44,7 @@ console.log('\n=== CANON : @alphabet.<nom> + transport.<canal>(…) ===');
 
 console.log('\n=== §71 : @mine.* NON posé sur la ligne d\'acteur → libRef de SCÈNE ===');
 {
-  const ast = parse(tokenize('@core\n@controls\n@actor voice transport.browser\n@mine.ragas.sargam\nS -> sa\n'));
+  const ast = parse(tokenize('@core\n@controls\n@actor voice transport.audio\n@mine.ragas.sargam\nS -> sa\n'));
   assert('acteur transport-seul : properties.alphabet ABSENT', ast.actors[0].properties.alphabet === undefined, JSON.stringify(ast.actors[0].properties.alphabet));
   assert('@mine.ragas.sargam → libRef de scène', JSON.stringify(ast.libRefs) === '["mine.ragas.sargam"]', JSON.stringify(ast.libRefs));
 }
@@ -55,7 +55,7 @@ console.log('\n=== CUTOVER : l\'ancienne forme d\'entité en `:` CRIE désormais
     cries('@core\n@controls\n@actor voice @alphabet.sargam transport:browser\nS -> sa\n', "transport:…"),
     'attendu ParseError transport:…');
   assert('alphabet:sargam (deux-points) → REJET fail-loud',
-    cries('@core\n@controls\n@actor voice alphabet:sargam transport.webaudio\nS -> sa\n', "alphabet:…"),
+    cries('@core\n@controls\n@actor voice alphabet:sargam transport.audio\nS -> sa\n', "alphabet:…"),
     'attendu ParseError alphabet:…');
   assert('transport:midi(ch:3) (deux-points) → REJET fail-loud',
     cries('@core\n@controls\n@actor voice @alphabet.sargam transport:midi(ch:3)\nS -> sa\n', "transport:…"),
@@ -71,7 +71,7 @@ console.log('\n=== NON-RÉGRESSION : le `:` reste valide pour AFFECTER une valeu
 {
   // `sujet:sound.X` (une note reçoit un son) : le `:` affecte une valeur → toujours accepté.
   // Les affectations sont hoistées top-level en `scene.soundAssignments` (parser.js:181-189).
-  const scene = parse(tokenize('@core\n@controls\n@actor voice @alphabet.sargam transport.browser\n  sa:sound.piano\nS -> sa\n'));
+  const scene = parse(tokenize('@core\n@controls\n@actor voice @alphabet.sargam transport.audio\n  sa:sound.piano\nS -> sa\n'));
   assert('sa:sound.piano (affectation de valeur à un sujet) accepté',
     Array.isArray(scene.soundAssignments) && scene.soundAssignments.some((s) => s.subject === 'sa'),
     JSON.stringify(scene.soundAssignments));

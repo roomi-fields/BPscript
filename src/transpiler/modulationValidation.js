@@ -75,10 +75,12 @@ function modulationSourceSymbols(ast) {
 }
 
 /**
- * Type de sortie de la scène (best-effort) : binding `@alphabet.X:transport` → transport, puis
- * `@routing` (chargé sous _libs['routing*']) → type. Retourne null si non résoluble.
+ * Type de sortie de la scène (best-effort) : le binding `@alphabet.X:<sortie>` ou le
+ * `transport.<sortie>` d'un acteur EST le canal canonique (audio/midi/osc) — depuis la suppression
+ * de routing.json (2026-07-16), le nom de transport EST le type, plus d'indirection par profil.
+ * Retourne null si non résoluble (→ l'appelant retombe sur l'union des entrées de modulation).
  */
-function resolveOutputType(ast, libCtx) {
+function resolveOutputType(ast) {
   let transportName = null;
   for (const d of ast.directives || []) {
     if (d.name === 'alphabet' && d.runtime) { transportName = d.runtime; break; }
@@ -86,19 +88,7 @@ function resolveOutputType(ast, libCtx) {
       transportName = d.properties.transport.key || transportName;
     }
   }
-  if (!transportName) return null;
-  for (const [k, v] of Object.entries(libCtx._libs || {})) {
-    if (!k.startsWith('routing') || !v || typeof v !== 'object') continue;
-    if (v.transports && v.transports[transportName] && v.transports[transportName].type) {
-      return v.transports[transportName].type;
-    }
-    for (const prof of Object.values(v)) {
-      if (prof && prof.transports && prof.transports[transportName] && prof.transports[transportName].type) {
-        return prof.transports[transportName].type;
-      }
-    }
-  }
-  return null;
+  return transportName;
 }
 
 /**
@@ -111,7 +101,7 @@ export function validateModulation(ast, libCtx) {
   if (sources.size === 0) return [];
 
   // Ensemble valide : type résolu si dispo, sinon union.
-  const type = resolveOutputType(ast, libCtx);
+  const type = resolveOutputType(ast);
   const validSet = (type && libCtx.modulationInputs[type]) || libCtx.modulationInputsAll;
   const known = [...validSet].join(', ');
 

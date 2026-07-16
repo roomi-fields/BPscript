@@ -539,38 +539,12 @@ function defaultActorTransport() {
   return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
 }
 
-// PORTER≠RÉSOUDRE (régression ed5a637, architecte [335] 2026-07-05 ; refonte 2026-07-16 [421]) :
-// le suffixe d'un binding (`@alphabet.X:audio`, `@actor … transport.audio`) est un NOM DE CANAL de
-// surface. Le canal canonique de NOTRE sortie = {audio, midi, osc} (EBNF:182), écrit directement.
-// Le modèle profils d'environnement (routing.json : studio/live/browser) est ABANDONNÉ (décision
-// 2026-07-16 sortie-acteur-implicite-browser-audio-routing-obsolete). Restent seulement des
-// ORTHOGRAPHES PÉRIMÉES normalisées vers le canon (`webaudio`→`audio`, `browser`→`audio`), lues
-// dans lib/core.json `schema.transportAliases` (donnée, jamais un hardcode). Les noms déjà canon
-// (audio/midi/osc) et tout autre nom d'appareil libre (@devices, résolu aval) passent inchangés.
-function transportAliasMap() {
-  const core = loadLib('core') || {};
-  return (core.schema && core.schema.transportAliases) || {};
-}
-
-// Résout un nom de surface vers le canal canonique. Alias périmé connu → sa cible ; sinon inchangé.
-function canonicalRuntimeName(name, aliasMap) {
-  if (!name) return name;
-  return Object.prototype.hasOwnProperty.call(aliasMap, name) ? aliasMap[name] : name;
-}
-
-// Normalise le transport de CHAQUE acteur (implicite ET @actor explicite) vers le canal canonique.
-// Point de passage unique : couvre tous les chemins où un nom de transport devient output.runtime.
-function canonicalizeActorTransports(ast) {
-  if (!ast || !Array.isArray(ast.actors) || ast.actors.length === 0) return;
-  const aliasMap = transportAliasMap();
-  for (const actor of ast.actors) {
-    const tr = actor.properties && actor.properties.transport;
-    if (tr && tr.key) tr.key = canonicalRuntimeName(tr.key, aliasMap);
-    for (const ref of actor.references || []) {
-      if (ref && ref.category === 'transport' && ref.name) ref.name = canonicalRuntimeName(ref.name, aliasMap);
-    }
-  }
-}
+// Canal de sortie = CANON DIRECT {audio, midi, osc} (EBNF:182), écrit tel quel. Le modèle profils
+// d'environnement (routing.json : studio/live/browser) et sa normalisation de surface (ex-
+// transportTypeMap/canonicalRuntimeName/canonicalizeActorTransports) sont SUPPRIMÉS (décision
+// 2026-07-16, Romain : on supprime, pas de rétrocompat). Les noms périmés `browser`/`webaudio`
+// sont désormais REJETÉS fail-loud au parse (parser.js, lib/core.json `schema.deprecatedTransports`)
+// — plus aucune résolution de surface ici.
 
 /**
  * Matérialise l'acteur IMPLICITE `default` DANS L'AST quand la scène ne déclare AUCUN
@@ -936,7 +910,6 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
-    canonicalizeActorTransports(ast); // nom de transport (surface) → runtime canonique (routing lib transport.type) — implicite ET @actor (régression ed5a637, architecte [335])
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls

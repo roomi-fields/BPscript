@@ -68,7 +68,7 @@ directive = "@" , directive_body ;
 directive_body = IDENT                              (* @core, @controls *)
                | lib_provenance_ref                 (* @factory.<chemin>.<entrée> / @mine.<chemin>.<entrée> — voir §lib_provenance_ref *)
                | IDENT , "." , IDENT                (* @alphabet.western — subkey access *)
-               | IDENT , ":" , IDENT                (* binding simple générique ; ex. @routing:studio ABANDONNÉ 2026-07-16 *)
+               | IDENT , ":" , IDENT                (* binding simple générique ; @routing SUPPRIMÉ 2026-07-16, rejeté au parse *)
                | IDENT , "." , IDENT , ":" , IDENT  (* @alphabet.western:audio — subkey + sortie de l'acteur implicite (canon) *)
                | IDENT , "." , IDENT , "(" , param_pairs , ")"  (* @alphabet.raga(transport=sc, eval=python) — not yet implemented *)
                | IDENT , ":" , value                (* @tempo:120, @meter:3/4 — VALEUR uniquement *)
@@ -187,12 +187,13 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
                   (strudel/hydra/p5/csound/mercury) sort en NATIF ; on ne route pas sa sortie.
               PAS de `transport.video`/`transport.visual` (axe visuel SUPPRIMÉ : les visuels sortent
               natif). Le nom d'appareil est un IDENT **LIBRE** (clé de `@devices`), PAS une liste fermée ;
-              le canal CANONIQUE écrit directement = {`audio`, `midi`, `osc`}. Orthographes PÉRIMÉES
-              normalisées vers le canon (décision 2026-07-16, `schema.transportAliases` de core.json) :
-              `webaudio`→`audio`, `browser`→`audio` (le modèle profils d'environnement `routing.json`
-              — studio/live/browser — est ABANDONNÉ ; le fichier a été supprimé). La grammaire valide la
-              SYNTAXE `transport.<nom>(params)` ; l'existence de l'appareil et la compatibilité de type
-              sont résolues en aval (Kanopi, cf. DEVICES_SPEC.md — audio/midi/osc). Params entre () :
+              le canal CANONIQUE écrit directement = {`audio`, `midi`, `osc`}. Noms PÉRIMÉS `browser`
+              et `webaudio` = REJETÉS fail-loud au parse (décision 2026-07-16, Romain : on supprime,
+              PAS de normalisation ni rétrocompat ; `schema.deprecatedTransports` de core.json). Le
+              modèle profils d'environnement (`routing.json` — studio/live/browser) est SUPPRIMÉ
+              (fichier + feature @routing/routingTable). La grammaire valide la SYNTAXE
+              `transport.<nom>(params)` ; l'existence de l'appareil et la compatibilité de type sont
+              résolues en aval (Kanopi, cf. DEVICES_SPEC.md — audio/midi/osc). Params entre () :
               transport.midi(ch:10).
    sound    — son par défaut de l'acteur (référence dans @sound).
               Une référence sound.X ici équivaut sémantiquement à
@@ -1162,7 +1163,7 @@ tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à AL
 sound                          → bloc déclaratif de prototypes son (anonyme + nommés, v0.8)
 sound.LIBNAME                  → charge lib/sounds/LIBNAME.json (defaults + named + by_terminal, v0.8)
 sub.KEY                        → table de substitution depuis lib/sub.json
-routing.KEY                    → OBSOLÈTE (profils studio/live/browser abandonnés 2026-07-16, lib/routing.json supprimé)
+routing.KEY                    → SUPPRIMÉ (feature @routing/routingTable retirée 2026-07-16 ; @routing rejeté au parse)
 hooks                          → macros d'interaction (* not yet implemented *)
 template                       → section template singulier (? = wildcard, ($N) = bracket marker) — v0.8 (ex-`templates`)
 mode:VALUE(modifiers)          → mode de sous-grammaire avec modificateurs optionnels

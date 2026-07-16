@@ -57,7 +57,6 @@ function compileBPS(source) {
     result.macroTable = encoded.macroTable;
     result.aliasTable = encoded.aliasTable;
     result.labelTable = encoded.labelTable;
-    result.routingTable = encoded.routingTable;   // Z1 (#105): loaded @routing config
     result.labelIndex = encoded.labelIndex;        // Z2 (#106): label → targeted RHS elements
     result.ccAliases = encoded.ccAliases;          // Z5 (#109): named MIDI CC → number (runtime inbound)
     result.homomorphisms = encoded.homomorphisms;  // Contrat BPx: HomomorphismDeclAST[] (ast.ts:150-157)

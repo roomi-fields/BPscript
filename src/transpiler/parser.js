@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLibsFromDirectives, universeControlNames, universeIntervalControls } from './libs.js';
+import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -44,6 +44,21 @@ const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport',
  * tolère l'ancienne forme.
  */
 const CATALOG_AXIS_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'scale']);
+
+/**
+ * Noms de canal de sortie PÉRIMÉS → rejetés fail-loud au parse (décision 2026-07-16, Romain :
+ * on supprime, pas de rétrocompat ni normalisation). Source unique = `lib/core.json`
+ * schema.deprecatedTransports (le schéma structurel est une DONNÉE, pas un hardcode — _schema_doc,
+ * Romain 2026-07-05). Mémoïsé. `browser`/`webaudio` = ancien modèle profils d'environnement
+ * (routing.json, supprimé) ; le canal canonique {audio, midi, osc} s'écrit directement.
+ */
+let _deprecatedTransports = null;
+function deprecatedTransports() {
+  if (_deprecatedTransports) return _deprecatedTransports;
+  const core = loadLib('core') || {};
+  _deprecatedTransports = new Set((core.schema && core.schema.deprecatedTransports) || []);
+  return _deprecatedTransports;
+}
 
 /**
  * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
@@ -813,6 +828,20 @@ function parse(tokens, opts = {}) {
       advance();
       subkey = expect(T.IDENT).value;
     }
+
+    // TOMBSTONE : la feature @routing (profils d'environnement studio/live/browser + routingTable
+    // Z1 #105) est SUPPRIMÉE (décision 2026-07-16, Romain : modèle d'environnements abandonné —
+    // ce n'était pas le moteur BP3 mais une feature de notre transpileur). Rejet nommé plutôt
+    // qu'un silence : le canal de sortie se déclare par `transport.<audio|midi|osc>` sur l'acteur.
+    if (name === 'routing') {
+      throw new ParseError(
+        `'@routing' n'existe plus — la feature de profils d'environnement (studio/live/browser) a `
+        + `été SUPPRIMÉE (2026-07-16). Le canal de sortie se déclare par 'transport.<audio|midi|osc>' `
+        + `sur l'acteur (ou '@alphabet.X:<sortie>' pour l'acteur implicite).`,
+        tok,
+      );
+    }
+
     let runtime = null, value = null, aliases = null;
 
     // @scene verse "verse.bps" — child scene declaration
@@ -1166,6 +1195,16 @@ function parse(tokens, opts = {}) {
           tok,
         );
       }
+      // Noms de canal PÉRIMÉS (browser/webaudio — modèle profils d'environnement supprimé
+      // 2026-07-16) : REJET fail-loud, PAS de normalisation (Romain : on supprime).
+      if (properties.transport && deprecatedTransports().has(properties.transport.key)) {
+        throw new ParseError(
+          `acteur '${actorName}' : 'transport.${properties.transport.key}' est un canal PÉRIMÉ `
+          + `(modèle profils d'environnement abandonné 2026-07-16). Écris 'transport.audio' `
+          + `(canal canonique : audio/midi/osc).`,
+          tok,
+        );
+      }
 
       // Forme CANONIQUE v0.8 (conformité AST_SPEC §2.1, décision architecte 2026-06-17) :
       // `references: ActorReference[]` = ce que le dispatcher lit (UNE seule forme, comme .gr).
@@ -1259,6 +1298,18 @@ function parse(tokens, opts = {}) {
     if (at(T.COLON)) {
       advance();
       ({ value, runtime } = parseDirectiveColonValue(name));
+    }
+
+    // '@alphabet.X:<sortie>' = sortie de l'acteur implicite (canon, décision 2026-07-05 ;
+    // applyDefaultActor lit directive.runtime). Un canal PÉRIMÉ en binding (browser/webaudio,
+    // modèle profils d'environnement supprimé 2026-07-16) → REJET fail-loud, pas de normalisation.
+    if (name === 'alphabet' && subkey && runtime && deprecatedTransports().has(runtime)) {
+      throw new ParseError(
+        `'@alphabet.${subkey}:${runtime}' refusé — '${runtime}' est un canal de sortie PÉRIMÉ `
+        + `(modèle profils d'environnement abandonné 2026-07-16). Écris '@alphabet.${subkey}:audio' `
+        + `(canal canonique : audio/midi/osc).`,
+        current(),
+      );
     }
 
     // Mode modifiers: @mode:random(destru, smooth, mm:60)
