@@ -31,6 +31,18 @@
         }
       }
     },
+    "chromashift": {
+      "description": "Transposition CHROMATIQUE sur la grille 12 clés : décale de N clés chromatiques (demi-tons), renomme vers la clé cible + son tuning. Image de BP3 _transpose (décision Romain 2026-07-17). Distinct de scaleshift (diatonique) et transpose (réel, nom préservé).",
+      "rank": 10,
+      "params": {
+        "n": {
+          "from": "value",
+          "coerce": "raw",
+          "default": 0,
+          "description": "Nombre de clés chromatiques (demi-tons) de décalage sur la grille 12 (peut être négatif ; wrap à l'octave)."
+        }
+      }
+    },
     "keyxpand": {
       "description": "Dilatation/contraction des pas autour d'un pivot (step = pivot + arrondi((step − pivot) × facteur)).",
       "rank": 20,

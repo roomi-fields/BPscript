@@ -442,6 +442,13 @@
         "default": 0,
         "description": "Scalar (diatonic) transposition — shift N degrees in the alphabet. scaleshift(2): Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control."
       },
+      "chromashift": {
+        "args": [
+          "keys"
+        ],
+        "default": 0,
+        "description": "Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved)."
+      },
       "keyxpand": {
         "args": [
           "pivot",

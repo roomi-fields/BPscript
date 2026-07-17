@@ -1390,6 +1390,11 @@ BPScript distingue les **deux** gestes de transposition musicologiques (decision
   = entier N. S'appelait autrefois `rotate` (de hauteur) ; renomme pour lever l'homonymie avec le
   `![rotate]` de **structure** (rotation de sequence, moteur BPx), qui est une autre operation et
   garde son nom.
+- **`chromashift` — transposition CHROMATIQUE (grille 12 cles)** : decale de **N cles chromatiques**
+  (demi-tons) sur la grille 12, renomme vers la cle cible et prend **son** tuning (`chromashift:11` :
+  +11 demi-tons). Argument = entier N. C'est l'**image de BP3 `_transpose(N)`** (decision Romain
+  2026-07-17, option B : trois gestes nets). DISTINCT de `scaleshift` (degres d'alphabet, diatonique)
+  et de `transpose` (reel, `frameRatio`, nom PRESERVE).
 
 Resolution : Kairos normalise la chaine d'intervalle et applique la transposition reelle en fin de
 chaine (facteur multiplicatif de cadre), apres les operations de grille — noms et registres preserves.

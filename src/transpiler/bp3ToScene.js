@@ -1169,10 +1169,11 @@ function convertRuntimeControlToBPS(tok) {
   }
   const name = m[1];
   const args = m[2].trim();
-  // BP3 _transpose(N) = scaleshift(N) sur la grille 12 clés (décision Romain 2026-07-17 :
-  // hub/decisions/2026-07-17-bp3-transpose-est-scaleshift-sur-grille-12-cles.md). N = demi-tons
-  // (Zouleb.c:555-574, key += Round(trans/100)). PAS transpose réel (qui préserve le nom).
-  const outName = name === 'transpose' ? 'scaleshift' : name;
+  // BP3 _transpose(N) = chromashift(N) sur la grille 12 clés (décision Romain 2026-07-17, option B :
+  // trois gestes — transpose réel / scaleshift diatonique / chromashift chromatique=_transpose BP3).
+  // N = demi-tons (Zouleb.c:555-574, key += Round(trans/100)). PAS transpose réel (préserve le nom),
+  // PAS scaleshift (diatonique).
+  const outName = name === 'transpose' ? 'chromashift' : name;
   if (!args) return `(${outName}:0)`;
   return `(${outName}:${args})`;
 }

@@ -8,10 +8,10 @@
 
 @mode:random
 S -> A [numtimes=5]
-A -> {E1, A#1 F#1} {D}(scaleshift:2)
-B -> {A}(scaleshift:2)
-C -> {B}(scaleshift:4)
-[numtimes-1] D -> - {C {1,B}}(scaleshift:6) {1,C} [repeat:4]
+A -> {E1, A#1 F#1} {D}(chromashift:2)
+B -> {A}(chromashift:2)
+C -> {B}(chromashift:4)
+[numtimes-1] D -> - {C {1,B}}(chromashift:6) {1,C} [repeat:4]
 
 -----
 

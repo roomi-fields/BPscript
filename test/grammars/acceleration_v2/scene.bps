@@ -1,13 +1,13 @@
 // acceleration_v2.bps — "sawtooth rhythm" par Harm Visser (1997)
 // Source: bp3-ctests/-gr.acceleration (version avec poids <N> et direction <->)
-// _scaleshift(12) → !(scaleshift:12), _vel(N) → !(vel:N), <N> → [weight:N], <-> → <>
+// _chromashift(12) → !(chromashift:12), _vel(N) → !(vel:N), <N> → [weight:N], <-> → <>
 
 @core
 @controls
 @alphabet.western:midi
 
 @mode:ord
-S <> !(scaleshift:12) !(vel:60) A B !(vel:65) C D !(vel:70) E F !(vel:75) G !(vel:77) H !(vel:80) I !(vel:85) J !(vel:87) K !(vel:90) L [weight:1]
+S <> !(chromashift:12) !(vel:60) A B !(vel:65) C D !(vel:70) E F !(vel:75) G !(vel:77) H !(vel:80) I !(vel:85) J !(vel:87) K !(vel:90) L [weight:1]
 
 A <> E2 . [weight:12]
 B <> D2 A [weight:11]

@@ -15,8 +15,8 @@
 @mode:ord
 S -> {Melos1 Melos2 Melos3} !(vel:80, rndvel:20)
 Melos1 -> {Mel1 Mel2 Mel3}
-Melos2 -> {Melos1} !(scaleshift:11)
-Melos3 -> {Melos1 - Melos2} !(scaleshift:5)
+Melos2 -> {Melos1} !(chromashift:11)
+Melos3 -> {Melos1 - Melos2} !(chromashift:5)
 
 -----
 
@@ -24,8 +24,8 @@ Melos3 -> {Melos1 - Melos2} !(scaleshift:5)
 
 @mode:ord
 Mel1 -> {M1 - - - - - . M2 - - M3 M4 - - M5}
-Mel2 -> {Mel1} !(scaleshift:-11)
-Mel3 -> ![rotate:-1] {Mel1 - Mel2} !(scaleshift:6)
+Mel2 -> {Mel1} !(chromashift:-11)
+Mel3 -> ![rotate:-1] {Mel1 - Mel2} !(chromashift:6)
 
 -----
 
@@ -33,7 +33,7 @@ Mel3 -> ![rotate:-1] {Mel1 - Mel2} !(scaleshift:6)
 
 @mode:ord
 M1 -> {C3 - . D4 F#3 ![keyxpand: B3 -1] C3 - D3 F#2}
-M2 -> {{M1} !(scaleshift:2)}
-M3 -> ![rotate:-2] {{M1 M2},{![keyxpand: C3 -1] M1}} !(scaleshift:-6)
+M2 -> {{M1} !(chromashift:2)}
+M3 -> ![rotate:-2] {{M1 M2},{![keyxpand: C3 -1] M1}} !(chromashift:-6)
 M4 -> {C3 D4 F#3 ![keyxpand: B3 -1] C3 D3 F#2}
 M5 -> {![keyxpand: B4 -1] {M4, M1 !(vel:100)}} {M2,M3}

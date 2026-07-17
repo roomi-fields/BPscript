@@ -17,7 +17,7 @@
 
 // Settings
 @ins:3
-@scaleshift:-24
+@chromashift:-24
 
 // ============================================================
 // Sous-grammaire 1 — Initialisation @mode:random
