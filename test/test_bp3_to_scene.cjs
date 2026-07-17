@@ -25,7 +25,8 @@ const ROOT = path.resolve(__dirname, '..');
 // bp3-engine/test-data est un submodule vide dans les worktrees : pointer vers
 // le dépôt partagé en lecture seule pour que les tests round-trip fonctionnent.
 const TEST_DATA_WORKTREE = path.join(ROOT, 'bp3-engine', 'test-data');
-const TEST_DATA_SHARED   = '/home/romi/dev/bp/BPscript/bp3-engine/test-data';
+// Sous-module BPscript/bp3-engine SOLDÉ (vide) → corpus dans le dépôt FRÈRE (cf. validate-all.js:87).
+const TEST_DATA_SHARED   = '/home/romi/dev/bp/bp3-engine/test-data';
 const TEST_DATA = (() => {
   try { require('fs').statSync(path.join(TEST_DATA_WORKTREE, '-gr.dhati2')); return TEST_DATA_WORKTREE; }
   catch { return TEST_DATA_SHARED; }

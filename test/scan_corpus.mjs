@@ -9,12 +9,19 @@
  *   - Sinon → BPS source à compiler
  */
 
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { bp3ToScene } from '../src/transpiler/bp3ToScene.js';
 import { compileBPS } from '../src/transpiler/index.js';
 
-const TEST_DATA = '/home/romi/dev/bp/BPscript/bp3-engine/test-data';
+// Corpus canonique : le sous-module BPscript/bp3-engine a été SOLDÉ (vide) → le corpus vit dans le
+// dépôt FRÈRE /home/romi/dev/bp/bp3-engine/test-data (comme validate-all.js:87). Worktree-local d'abord
+// (si un jour repeuplé), sinon le frère.
+const TEST_DATA = (() => {
+  const worktree = '/home/romi/dev/bp/BPscript/bp3-engine/test-data';
+  try { statSync(join(worktree, '-gr.dhati2')); return worktree; } catch { /* soldé */ }
+  return '/home/romi/dev/bp/bp3-engine/test-data';
+})();
 
 // ---- extractSignificant : normalise deux grammaires pour comparaison ----
 function extractSignificant(raw) {
