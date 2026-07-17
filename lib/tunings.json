@@ -218,53 +218,7 @@
       12
     ]
   },
-  "_comment_directional": "=== DIRECTIONAL SCALES === Different ascending/descending (ragas, some maqams).",
-  "raga_bhairav": {
-    "description": "Raga Bhairav — aroha et avaroha différents. komal re et dha à la montée, shuddh à la descente.",
-    "alphabet": "sargam",
-    "temperament": "22shruti",
-    "ascending": [
-      0,
-      2,
-      7,
-      9,
-      13,
-      15,
-      20
-    ],
-    "descending": [
-      0,
-      4,
-      7,
-      9,
-      13,
-      17,
-      20
-    ]
-  },
-  "raga_yaman": {
-    "description": "Raga Yaman (Kalyan) — ma tivra à la montée, shuddh à la descente dans certaines interprétations",
-    "alphabet": "sargam",
-    "temperament": "22shruti",
-    "ascending": [
-      0,
-      4,
-      7,
-      11,
-      13,
-      17,
-      20
-    ],
-    "descending": [
-      0,
-      4,
-      7,
-      9,
-      13,
-      17,
-      20
-    ]
-  },
+  "_comment_raga_deplacees": "Les ragas (raga_bhairav, raga_yaman) ont été DÉPLACÉES vers scales.json (décision Romain 2026-07-17, MODELE-RAGA) : une raga n'est PAS un accordage — c'est un mode mélodique dont l'aspect GAMME (aroha/avaroha) vit dans scales.json et l'aspect ACCORDAGE (intonation) est le tempérament référencé. Aucune raga en tunings.json.",
   "_comment_parametric": "=== PARAMETRIC TUNINGS (Dynamic Tonality) === degrees = generator counts, not step indices.",
   "western_meantone_dt": {
     "description": "Western diatonic in meantone continuum — generator morphable in real-time",

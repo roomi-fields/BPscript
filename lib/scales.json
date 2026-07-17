@@ -256,6 +256,54 @@
     ],
     "notes_count": 7
   },
+  "raga_bhairav": {
+    "description": "Raga Bhairav — aroha et avaroha différents. komal re et dha à la montée, shuddh à la descente. Aroha = thaat Bhairav ; avaroha variante. (Déplacée de tunings.json, MODELE-RAGA 2026-07-17 : l'aspect GAMME d'une raga vit ici ; l'intonation = tempérament référencé.)",
+    "culture": "hindustani",
+    "temperament": "22shruti",
+    "ascending": [
+      0,
+      2,
+      7,
+      9,
+      13,
+      15,
+      20
+    ],
+    "descending": [
+      0,
+      4,
+      7,
+      9,
+      13,
+      17,
+      20
+    ],
+    "notes_count": 7
+  },
+  "raga_yaman": {
+    "description": "Raga Yaman (Kalyan) — ma tivra à la montée, shuddh à la descente dans certaines interprétations. Aroha = thaat Kalyan. (Déplacée de tunings.json, MODELE-RAGA 2026-07-17.)",
+    "culture": "hindustani",
+    "temperament": "22shruti",
+    "ascending": [
+      0,
+      4,
+      7,
+      11,
+      13,
+      17,
+      20
+    ],
+    "descending": [
+      0,
+      4,
+      7,
+      9,
+      13,
+      17,
+      20
+    ],
+    "notes_count": 7
+  },
   "darbari_kanada": {
     "description": "Raga Darbari Kanada — andolit komal Ga, majestic night raga",
     "culture": "hindustani",
