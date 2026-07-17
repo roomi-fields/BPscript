@@ -7,12 +7,7 @@
     "  temperament  — reference to temperaments.json",
     "  degrees      — which steps in the temperament grid the alphabet notes land on",
     "                  (ordered to match the notes[] array in the alphabet)",
-    "  alterations  — named pitch modifications as ratios (fraction, decimal, or cents)",
-    "",
-    "Alteration formats (same 3 as temperament ratios):",
-    "  Fraction : \"25/24\"",
-    "  Decimal  : 1.02930",
-    "  Cents    : \"50c\"",
+    "  alterations  — UNIQUEMENT pour les tempéraments PARAMÉTRIQUES (décalage en cents dans l'espace du générateur). Les tempéraments à TABLE (grille de ratios) N'EN PORTENT PLUS : l'altération y est CALCULÉE PAR FORMULE (décision Romain 2026-07-17) en indexant la grille du tempérament au pas altéré = degré + OFFSET d'altération de l'ALPHABET (lib/alphabets.json). Ex. Db juste = D(pas 2) + b(−1) → grille[1] = 16/15 CALCULÉ. L'ancien ratio fixe (#=25/24) était DEAD DATA (le résolveur à table l'ignorait) et a été retiré (dedup). Cf. test/formule_alteration.mjs.",
     "",
     "Legacy BP3 scales (162 gammes plates Bernard) vivent en grilles bp3_* dans temperaments.json ; l'ex-fichier lib/tuning.json a été retiré (mort). Provenance : scripts/convert-tonality.js (trace BP3 -to.*).",
     "L'ANCRE (diapason/baseNote/baseRegister) vit sur l'ALPHABET (lib/alphabets.json), pas ici — elle est invariante par alphabet (cf. docs/design/SCENE_DEFAULTS_CASCADE.md). Un accordage ne la redeclare qu'en override exceptionnel (pitch historique)."
@@ -29,13 +24,7 @@
       7,
       9,
       11
-    ],
-    "alterations": {
-      "b": "-100c",
-      "#": "100c",
-      "bb": "-200c",
-      "##": "200c"
-    }
+    ]
   },
   "western_pythagorean": {
     "description": "Western in Pythagorean tuning — pure fifths",
@@ -49,13 +38,7 @@
       7,
       9,
       11
-    ],
-    "alterations": {
-      "#": "2187/2048",
-      "b": "2048/2187",
-      "##": "4782969/4194304",
-      "bb": "4194304/4782969"
-    }
+    ]
   },
   "western_just": {
     "description": "Western in 5-limit just intonation",
@@ -69,13 +52,7 @@
       7,
       9,
       11
-    ],
-    "alterations": {
-      "#": "25/24",
-      "b": "24/25",
-      "##": "625/576",
-      "bb": "576/625"
-    }
+    ]
   },
   "western_meantone": {
     "description": "Western in 1/4-comma meantone",
@@ -89,13 +66,7 @@
       7,
       9,
       11
-    ],
-    "alterations": {
-      "#": "76c",
-      "b": "-76c",
-      "##": "152c",
-      "bb": "-152c"
-    }
+    ]
   },
   "sargam_12TET": {
     "description": "Indian sargam in 12-TET (simplified, equal temperament)",
@@ -110,10 +81,6 @@
       9,
       11
     ],
-    "alterations": {
-      "komal": "-100c",
-      "tivra": "100c"
-    },
     "_note": "diapason (Hz) for sa is tradition-dependent. 240 Hz is a common default."
   },
   "sargam_22shruti": {
@@ -129,15 +96,7 @@
       17,
       21
     ],
-    "alterations": {
-      "komal": "16/15",
-      "tivra": "25/24"
-    },
-    "_note_on_alterations": [
-      "In 22-shruti, komal/tivra shift by ~2 shruti steps but the exact ratio",
-      "depends on which note is altered. These ratios are representative defaults.",
-      "Raga-specific tunings may override with exact shruti positions."
-    ]
+    "_note_on_alterations": "En 22-shruti, komal/tivra = offset d'altération de l'alphabet sargam (komal −1, tivra +1) indexé sur la grille 22-shruti (voie formule). NB (à vérifier séparément, hors de ce dedup) : un décalage komal réel vaut ~2 shruti — si l'offset −1 (1 pas) diverge de l'intention musicologique, c'est une question de résolution PRÉ-EXISTANTE (le résolveur utilisait déjà l'offset, pas l'ancien ratio 16/15 supprimé), à traiter avec kairos."
   },
   "solfege_12TET": {
     "description": "Solfège latin in 12-TET",
@@ -151,13 +110,7 @@
       7,
       9,
       11
-    ],
-    "alterations": {
-      "b": "-100c",
-      "#": "100c",
-      "bb": "-200c",
-      "##": "200c"
-    }
+    ]
   },
   "arabic_24TET": {
     "description": "Arabic maqam system — quarter-tone grid",
@@ -172,14 +125,6 @@
       18,
       22
     ],
-    "alterations": {
-      "half_b": "-50c",
-      "half_#": "50c",
-      "b": "-100c",
-      "#": "100c",
-      "bb": "-200c",
-      "##": "200c"
-    },
     "_note": "husayni (6e degré, ancien 'la') ancré à 440 Hz — référence A440 inchangée, alphabet en noms de perde."
   },
   "turkish_53TET": {
@@ -204,12 +149,6 @@
       13,
       17
     ],
-    "alterations": {
-      "bakiye": "90.566c",
-      "kucuk_mucenneb": "113.208c",
-      "buyuk_mucenneb": "181.132c",
-      "tanini": "203.774c"
-    },
     "_note": "degrees[] maps the 16 named notes to their comma positions. Turkish system is complex with many more named pitches."
   },
   "gamelan_pelog": {
@@ -225,7 +164,6 @@
       5,
       6
     ],
-    "alterations": {},
     "_note": "Gamelan tunings are ensemble-specific. These are representative Central Javanese values."
   },
   "gamelan_slendro": {
@@ -238,8 +176,7 @@
       2,
       3,
       4
-    ],
-    "alterations": {}
+    ]
   },
   "bohlen_pierce_just": {
     "description": "Bohlen-Pierce just — 13 tones in a tritave (3:1)",
@@ -259,8 +196,7 @@
       10,
       11,
       12
-    ],
-    "alterations": {}
+    ]
   },
   "bohlen_pierce_equal": {
     "description": "Bohlen-Pierce equal — 13 equal divisions of the tritave",
@@ -280,8 +216,7 @@
       10,
       11,
       12
-    ],
-    "alterations": {}
+    ]
   },
   "_comment_directional": "=== DIRECTIONAL SCALES === Different ascending/descending (ragas, some maqams).",
   "raga_bhairav": {
@@ -305,11 +240,7 @@
       13,
       17,
       20
-    ],
-    "alterations": {
-      "komal": "16/15",
-      "tivra": "25/24"
-    }
+    ]
   },
   "raga_yaman": {
     "description": "Raga Yaman (Kalyan) — ma tivra à la montée, shuddh à la descente dans certaines interprétations",
@@ -332,11 +263,7 @@
       13,
       17,
       20
-    ],
-    "alterations": {
-      "komal": "16/15",
-      "tivra": "25/24"
-    }
+    ]
   },
   "_comment_parametric": "=== PARAMETRIC TUNINGS (Dynamic Tonality) === degrees = generator counts, not step indices.",
   "western_meantone_dt": {
