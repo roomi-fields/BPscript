@@ -3,6 +3,11 @@
  * Convert Bernard Bel's 162 scales from lib/tuning.json (BP3 legacy format)
  * to the new lib/temperaments.json format.
  *
+ * NB (2026-07-17) : lib/tuning.json (l'entrée) a été RETIRÉ comme fichier mort — sa sortie (les
+ * grilles bp3_*) est DÉJÀ committée dans lib/temperaments.json. Ce script + scripts/convert-tonality.js
+ * sont conservés comme TRACE D'AUDIT (provenance Bernard). Pour ré-exécuter : régénérer d'abord
+ * lib/tuning.json via `node scripts/convert-tonality.js` (lit les -to.* du dépôt bp3-engine).
+ *
  * Each scale becomes a temperament entry with:
  *   - period_ratio: last ratio (usually 2, but can be stretched)
  *   - divisions: number of notes (excluding the period repeat)

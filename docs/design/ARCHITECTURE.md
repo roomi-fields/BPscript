@@ -611,7 +611,7 @@ Le langage ne connaît que `!nom` et `<!nom` — le transport est transparent.
 | `lib/filter.json`       | CV objects (ADSR, LFO, ramp)             | encoder, dispatcher                  |
 
 Ancien fichier préservé pour compatibilité BP3 :
-- `lib/tuning.json` — scales BP3 legacy (162 gammes Bernard Bel)
+- `lib/temperaments.json` — grilles de tempérament, dont **162 grilles `bp3_*`** = les gammes Bernard Bel (ex-`lib/tuning.json`, fichier plat RETIRÉ 2026-07-17 ; provenance : `scripts/convert-tonality.js`, trace BP3 `-to.*`)
 
 ---
 

@@ -14,7 +14,7 @@
     "  Decimal  : 1.02930",
     "  Cents    : \"50c\"",
     "",
-    "Legacy BP3 scales are preserved in tuning.json for backward compatibility.",
+    "Legacy BP3 scales (162 gammes plates Bernard) vivent en grilles bp3_* dans temperaments.json ; l'ex-fichier lib/tuning.json a été retiré (mort). Provenance : scripts/convert-tonality.js (trace BP3 -to.*).",
     "L'ANCRE (diapason/baseNote/baseRegister) vit sur l'ALPHABET (lib/alphabets.json), pas ici — elle est invariante par alphabet (cf. docs/design/SCENE_DEFAULTS_CASCADE.md). Un accordage ne la redeclare qu'en override exceptionnel (pitch historique)."
   ],
   "western_12TET": {

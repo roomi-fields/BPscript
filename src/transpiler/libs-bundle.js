@@ -61,8 +61,9 @@ output += '// Contains all lib/*.json data for browser use\n\n';
 output += 'const LIBS = {};\n\n';
 
 for (const [name, data] of Object.entries(libs)) {
-  // tuning.json is large (177KB) — skip it from the bundle, load on demand
-  if (name === 'tuning') continue;
+  // NB : lib/tuning.json (162 gammes plates Bernard, ex-legacy) a été RETIRÉ (fichier mort,
+  // runtime-inconsommé — ses ratios vivent dans temperaments.json en grilles bp3_*). Provenance
+  // conservée : scripts/convert-tonality.js documente le mapping BP3 -to.* → gammes.
   output += `LIBS["${name}"] = ${JSON.stringify(data)};\n\n`;
 }
 

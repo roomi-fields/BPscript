@@ -327,7 +327,7 @@ Les clés absentes (`sound`, `octaves`, `eval`) ne sont **pas** émises à `null
 → et, **sur la scène** : `soundAssignments:[{ scope:"actor", actor:"drums", subject:"*", target:{kind:"named-ref", name:"tabla_gm"}, … }, { scope:"actor", actor:"drums", subject:"Sa", target:{kind:"named-ref", name:"drum_kick"}, … }]`
 
 **Champs v0.7 dépréciés** :
-- `scale` → renommé `tuning` (référence à `lib/tuning.json`).
+- `scale` → renommé `tuning` (référence à `lib/tunings.json`).
 - `sounds` (pluriel, valeur string) → remplacé par `sound` (singulier, défaut acteur)
   et par les `soundAssignments` pour les affectations note-à-son.
 

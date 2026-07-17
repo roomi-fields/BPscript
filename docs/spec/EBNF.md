@@ -1166,7 +1166,7 @@ core                           → librairie noyau (lambda, on_fail)
 controls                       → contrôles performance (vel, tempo, transpose, etc.)
 alphabet.KEY:BINDING           → alphabet KEY depuis lib/alphabet.json, lié à BINDING
 alphabet.KEY(transport=X, eval=Y) → transport ≠ eval (forme explicite)
-tuning.KEY:ALPHABET            → tuning KEY depuis lib/tuning.json, lié à ALPHABET
+tuning.KEY:ALPHABET            → tuning KEY depuis lib/tunings.json, lié à ALPHABET
 sound                          → bloc déclaratif de prototypes son (anonyme + nommés, v0.8)
 sound.LIBNAME                  → charge lib/sounds/LIBNAME.json (defaults + named + by_terminal, v0.8)
 sub.KEY                        → table de substitution depuis lib/sub.json

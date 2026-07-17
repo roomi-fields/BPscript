@@ -1,6 +1,12 @@
 /**
  * Convert BP3 -to.* tonality files to lib/tuning.json
  *
+ * PROVENANCE / TRACE D'AUDIT (conservée sur décision architecte 2026-07-17) : ce script documente
+ * COMMENT les ratios exacts BP3 de Bernard Bel (-to.*) sont entrés dans notre système. Le fichier
+ * cible lib/tuning.json a été RETIRÉ (intermédiaire mort, runtime-inconsommé ; ses ratios vivent
+ * désormais en grilles bp3_* dans lib/temperaments.json via scripts/convert_tunings.js). Ce mapping
+ * reste comme trace vers la vérité Bernard — le ré-exécuter régénère lib/tuning.json (intermédiaire).
+ *
  * Format BP3 -to.*:
  *   "scale_name"
  *   /note1 note2 ... noteN/          — note names
