@@ -52,10 +52,22 @@ console.log('=== Câblage >> / !>> ===');
   ok('lien >> non-cut, lien !>> cut', s[1].cut === false && s[2].cut === true);
 }
 
-// 6. Substitution INCHANGÉE (corps sans >> = ancien @macro)
+// 6. Substitution INCHANGÉE (corps sans >> ni point glué = ancien @macro)
 {
   const { errors, macros: m } = macros('@macro accent(x) = x(vel:120)');
   ok('substitution reste RhsElement (pas Wiring)', errors.length === 0 && m[0].body[0].type !== 'Wiring');
+}
+
+// 6b. Dispatch MONO-ÉTAGE par la loi de graphie (point glué = appel de port → son ; [488])
+{
+  const trig = macros('@macro strike = drum.on');
+  ok('trig mono-étage (drum.on) → Wiring', trig.macros[0].body[0].type === 'Wiring'
+    && trig.macros[0].body[0].stages[0].module === 'drum' && trig.macros[0].body[0].stages[0].port === 'on');
+  const cv = macros('@macro open = lpf.cutoff: 8000');
+  ok('valeur cv mono-étage (lpf.cutoff:8000) → Wiring', cv.macros[0].body[0].type === 'Wiring'
+    && cv.macros[0].body[0].stages[0].port === 'cutoff');
+  const spaced = macros('@macro per = A . B');
+  ok('point ESPACÉ (A . B) = notation période → substitution', spaced.macros[0].body[0].type !== 'Wiring');
 }
 
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)

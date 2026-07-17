@@ -1638,7 +1638,13 @@ function parse(tokens, opts = {}) {
   // Câblage son (LANG-SONS §9 — modules à ports, opérateurs >> / !>>)
   // ============================================================
 
-  // Le corps d'un @macro est un CÂBLAGE ssi il porte >> ou !>> avant le saut de ligne.
+  // Le corps d'un @macro est un CÂBLAGE (son) ssi, avant le saut de ligne, il porte :
+  //   - un opérateur de câblage >> / !>> , OU
+  //   - un APPEL DE PORT : un point GLUÉ `composant.port` (IDENT . IDENT, Period non-spaceBefore).
+  // Loi de graphie (décision 2026-07-14, ratifiée [488]) : le point appelle un composant → action
+  // son (trig `drum.on`, valeur cv `lpf.cutoff:8000`), distinct d'une substitution. Le point ESPACÉ
+  // (`A . B`) reste la notation période (substitution). PORTER≠RÉSOUDRE : la validation que le
+  // composant est un module déclaré est à la résolution (aval), pas au parse (pas de catalogue ici).
   function bodyIsWiring() {
     if (at(T.WIRE) || at(T.WIRE_CUT)) return true;
     let j = pos;
@@ -1646,6 +1652,9 @@ function parse(tokens, opts = {}) {
       const t = tokens[j].type;
       if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR) return false;
       if (t === T.WIRE || t === T.WIRE_CUT) return true;
+      if (t === T.PERIOD && !tokens[j].spaceBefore
+          && tokens[j - 1] && tokens[j - 1].type === T.IDENT
+          && tokens[j + 1] && tokens[j + 1].type === T.IDENT) return true;
       j++;
     }
     return false;
