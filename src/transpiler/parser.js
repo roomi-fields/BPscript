@@ -3090,10 +3090,23 @@ function parse(tokens, opts = {}) {
       const gluedMember = at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT;
       const knownActor = gluedMember && libCtx.actors && libCtx.actors[name];
       const opaqueComponent = gluedMember && !knownActor && !peek(1).spaceBefore;
+      let componentOpaque = false;
       if (knownActor || opaqueComponent) {
         advance(); // consume PERIOD
         actor = name; // composant (acteur connu, ou opaque : résolu aval sur la liste d'acteurs/modules)
         name = advance().value; // membre
+        componentOpaque = opaqueComponent;
+      }
+
+      // Valeur affectée à un membre de composant OPAQUE (loi de graphie : `:` = valeur ; §4/§9
+      // activés [502]). `lpf.cutoff: 8000` (cv-set), `saw.freq: pitch` (ref), `env.decay: 350ms`.
+      // Distinct de la durée de note (`A4:1/2`) : ne vaut que pour un appel-composant OPAQUE. Porté
+      // OPAQUE (kind number|ref|backtick) ; la classe trig/cv-set/gate = résolution aval (Kairos,
+      // content.action, catalogue de ports). PORTER≠RÉSOUDRE : je ne classe pas, je porte la valeur.
+      if (componentOpaque && at(T.COLON) && !current().spaceBefore) {
+        advance(); // consume COLON
+        const value = parseWireValue();
+        return { type: 'Symbol', name: normalizeName(name), line: tok.line, actor, value };
       }
 
       // Durée collée sur terminal : A4:1/2 → {1/2, A4} (décision 2026-06-26 trois-concepts-temps-duree).

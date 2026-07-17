@@ -76,6 +76,20 @@ console.log('=== Câblage >> / !>> ===');
   ok('SEUL >> fait un Wiring', wire.macros[0].body[0].type === 'Wiring');
 }
 
+// 6c. Champ VALEUR sur appel-composant opaque (§4/§9 activés [502]) — cv-set/ref/backtick.
+{
+  const num = macros('@macro open = lpf.cutoff: 8000');
+  ok('cv-set number → Symbol.value {kind:number}', eq(num.macros[0].body[0].value, { kind: 'number', value: 8000 })
+    && num.macros[0].body[0].actor === 'lpf' && num.macros[0].body[0].name === 'cutoff');
+  const ref = macros('@macro f = saw.freq: pitch');
+  ok('valeur ref (saw.freq: pitch) parse (bug corrigé) → {kind:ref}', ref.errors.length === 0
+    && eq(ref.macros[0].body[0].value, { kind: 'ref', name: 'pitch' }));
+  const bt = macros('@macro c = lpf.cutoff: `js: lfo(2)`');
+  ok('valeur backtick typée', bt.macros[0].body[0].value.kind === 'backtick' && bt.macros[0].body[0].value.tag === 'js');
+  const trig = macros('@macro s = drum.on');
+  ok('appel sans valeur (trig) → pas de champ value', trig.macros[0].body[0].value === undefined);
+}
+
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)
 {
   const r = compileBPS('@core\n@controls\n@macro lead = saw >> lpf >> audio\nS -> Sa');
