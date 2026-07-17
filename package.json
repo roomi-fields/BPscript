@@ -6,8 +6,9 @@
   "private": true,
   "scripts": {
     "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs && node src/transpiler/libs-bundle-check.js",
-    "typecheck": "npm run typecheck:digital",
+    "typecheck": "npm run typecheck:digital && npm run typecheck:homomorphism",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
+    "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
     "verify": "node test/ast_conformance.mjs",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",

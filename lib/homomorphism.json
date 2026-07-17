@@ -1,0 +1,24 @@
+{
+  "domain": "homomorphism",
+  "_comment": [
+    "Bibliothèque de FONCTIONS D'HOMOMORPHISME (substitution de symbole) — domaine 'homomorphism' SÉPARÉ",
+    "(décision Romain/architecte 2026-07-17 : BPx = ordonnanceur pur ; la substitution `-ho`/`-al` sort de",
+    "BPx et rejoint la RÉSOLUTION Kairos, via librairie façon `digital`/`mod`). Jumelle structurelle de",
+    "lib/digital.json : { name, type, objects } — mais le contrat Kairos (HomomorphismFnObject) ne porte",
+    "QUE { body, description } (l'applicateur est UNIVERSEL, sans params : il lit la portée + les tables).",
+    "Le `body` (code TS) n'est PAS ici : authoring F1 = un VRAI .ts TYPÉ dans lib/homomorphism/<fn>.ts",
+    "(contre le SDK @kairos/core, type HomomorphismFn), dont libs-bundle.js capte le SOURCE en `body` dans",
+    "libs-data.js. Type-check : `npm run typecheck:homomorphism`.",
+    "SIGNATURE SCELLÉE (Kairos, f00ff29) : (ctx: HomomorphismFnContext) => void — la fonction lit",
+    "ctx.symbol + ctx.scope, query ctx.image(nom, sym) (table plate portée OPAQUE par BPx), écrit le",
+    "résultat via ctx.setResult. La TABLE reste dans Kairos ; la fonction ne la voit jamais brute",
+    "(PORTER≠RÉSOUDRE). Kairos résout ENSUITE nom→hz/octave du symbole substitué (pont hauteur inchangé)."
+  ],
+  "name": "homomorphism",
+  "type": "homomorphism",
+  "objects": {
+    "substitute": {
+      "description": "Applicateur universel d'homomorphisme : itère la portée active et substitue chaque symbole par son image dans la table plate (last-write-wins), identité si symbole absent. Image de l'ancien `applyImage` BPx, re-placé en résolution Kairos (décision 2026-07-17). C'est la seule fonction de la lib fournie : elle traite TOUS les homos en portée (multiplicité = empilement, homos différents = séquence)."
+    }
+  }
+}

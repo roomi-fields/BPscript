@@ -1,0 +1,19 @@
+{
+  "//": "Chaîne TS d'AUTHORING — SCOPED aux corps de fonctions d'HOMOMORPHISME (lib/homomorphism/**/*.ts).",
+  "//2": "BPScript reste JS pur ; ce tsconfig ne type-check QUE les corps .ts, contre le SDK @kairos/core.",
+  "//3": "Résout @kairos/core sur la SOURCE kairos (src/index.ts) : le type HomomorphismFn est commité en src",
+  "//4": "mais la dist publiée est périmée (f00ff29). Basculer sur dist quand kairos republie (uniformité digital).",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@kairos/core": ["../kairos/src/index.ts", "../kairos/dist/index.d.ts"]
+    },
+    "types": [],
+    "skipLibCheck": true
+  },
+  "include": ["lib/homomorphism/**/*.ts"]
+}
