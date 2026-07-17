@@ -1312,8 +1312,9 @@ Literal { type: "Literal", value: number | string }
 ```
 HomomorphismDeclAST {
   type: "Homomorphism"
-  name: string          // nom de la section (ex: "*", "m1", "mineur")
-  pairs: [string, string][]  // liste de paires [source, cible]
+  name: string          // nom de la section (ex: "*", "m1", "mineur", "TR")
+  pairs?: [string, string][]        // paires [source, cible] (homo simple)
+  chains?: { [note: string]: string[] }  // homo à CHAÎNES (mutuellement exclusif de pairs)
   line?: number         // ligne source de la directive @transcription.xxx
 }
 ```
@@ -1325,8 +1326,24 @@ Attaché à `Scene.homomorphisms[]`. Produit par le parser depuis les directives
 - Format `mappings` : une seule entrée → `name` = subkey de la directive
 - Paires identité (a→a) conservées pour fidélité Bernard
 
+**Homomorphisme à CHAÎNES (ratifié Romain 2026-07-17).** Une section peut porter
+`chains` au lieu de `pairs` : `{ note: [img1, img2, …] }` = images ordonnées par
+**profondeur d'invocation** (fidèle au format natif `-ho.<X>` : `note --> a --> b`).
+Déclaré en lib via `"sections": { "TR": { "chains": { "C3": ["B3","F4","C6"], … } } }`.
+BPx applique `chains[note][k-1]` où `k` = compte d'occurrences du marqueur en portée.
+
+**Invocation par SYMBOLE NU (marqueur `role`).** Le symbole nu dont le nom = une
+section chargée devient un marqueur d'invocation : le nœud RHS `Symbol` reçoit
+`role: "homomorphism"` (type Symbol conservé — élément positionnel du flux). La
+**répétition** du symbole encode la profondeur `k` (1er `TR` → `chains[note][0]`, `TR
+TR` → `[1]`…). Précédence de résolution (contrat bpscript-bpx L31) : **terminal >
+non-terminal (règle) > homo** — le marqueur n'est posé que si le nom n'est ni un
+terminal d'alphabet en portée ni un LHS de règle. Passe BPx-only (`resolveHomomorphismMarkers`,
+bpxAst.js) : le chemin BP3 hérité ne voit jamais `role`/`chains` (byte-id préservé).
+
 Contrat BPx (`ast.ts:150-157`) : BPx consomme ce tableau pour appliquer les
-transformations de terminaux post-dérivation via `rewriteHomomorphismMarkers`.
+transformations de terminaux post-dérivation via `rewriteHomomorphismMarkers`
+(paires) / `applyImage` étendu (chaînes, compte du marqueur `role:'homomorphism'`).
 
 ---
 

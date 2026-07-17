@@ -227,9 +227,17 @@ function parse(tokens, opts = {}) {
 
       if (table.sections) {
         // Multi-section format: one decl per named section
-        for (const [secName, mappings] of Object.entries(table.sections)) {
-          const pairs = Object.entries(mappings); // already [from, to]
-          result.push({ type: 'Homomorphism', name: secName, pairs, line });
+        for (const [secName, body] of Object.entries(table.sections)) {
+          if (body && body.chains) {
+            // Chain format (homomorphisme à chaînes, ratifié Romain 2026-07-17) :
+            // `from: [img1, img2, …]` = images ordonnées par PROFONDEUR d'invocation.
+            // Émis tel quel ; BPx applique chains[note][k-1] (k = compte d'occurrences
+            // du marqueur en portée). Fidèle au format natif -ho.<X> (note --> a --> b).
+            result.push({ type: 'Homomorphism', name: secName, chains: body.chains, line });
+          } else {
+            const pairs = Object.entries(body); // already [from, to]
+            result.push({ type: 'Homomorphism', name: secName, pairs, line });
+          }
         }
       } else if (table.mappings) {
         // Single-section format: name = the invocation key (subkey)

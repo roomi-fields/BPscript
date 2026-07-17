@@ -588,6 +588,51 @@ function deriveAlphabetFromTuning(ast) {
 // n'appartient à aucun alphabet effectif (ex. `C4` dans une scène `@alphabet.sargam`), et qui
 // n'est ni un non-terminal, ni un symbole déclaré, ni du code → CRIE à la compilation.
 // Union des alphabets effectifs = SÛRE (pas de faux positif cross-acteur).
+/**
+ * Résolution de l'invocation d'homomorphisme par SYMBOLE NU (ratifié Romain 2026-07-17).
+ * Un Symbol de RHS dont le nom = une section d'homomorphisme chargée (@transcription.<X>),
+ * et qui n'est NI un non-terminal (LHS de règle) NI un terminal d'alphabet en portée
+ * (précédence RATIFIÉE terminal > règle > homo, contrat bpscript-bpx L31), devient un
+ * MARQUEUR per-occurrence : on pose `role:'homomorphism'` sur le nœud (type Symbol conservé,
+ * il reste un élément positionnel du flux). BPx compte les occurrences en portée (profondeur
+ * k) et applique chains[note][k-1] (ou les paires). La RÉPÉTITION du symbole EST la
+ * profondeur — aucun index posé ici. Passe BPx-ONLY : le chemin BP3 hérité reparse
+ * indépendamment (compileBPS) et ne voit jamais ce champ → byte-id préservé.
+ * Cf. AST.md §HomomorphismDeclAST, message bpx [464].
+ */
+function resolveHomomorphismMarkers(ast) {
+  if (!ast || !Array.isArray(ast.homomorphisms) || ast.homomorphisms.length === 0) return;
+  const homoNames = new Set(ast.homomorphisms.map((h) => h && h.name).filter(Boolean));
+  if (homoNames.size === 0) return;
+  // Non-terminaux : LHS de règle (précédence : la règle gagne sur l'homo).
+  const nonterminals = new Set();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && s.name && nonterminals.add(s.name));
+  // Terminaux d'alphabet en portée (précédence : le terminal gagne sur l'homo).
+  const terminals = new Set();
+  const addAlphabet = (name, octaves) => {
+    const lib = loadLib('alphabet', name);
+    if (!lib || !lib.notes) return;
+    for (const t of expandAlphabetTerminals(lib, octaves)) terminals.add(t);
+    const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
+      ? Object.keys(lib.alterations) : [''];
+    for (const note of lib.notes) for (const alt of alts) terminals.add(note + alt);
+  };
+  const sa = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  const so = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
+  if (sa) addAlphabet(sa.subkey, so ? (so.subkey || so.runtime) : null);
+  for (const a of ast.actors || []) { const p = a.properties || {}; if (p.alphabet) addAlphabet(p.alphabet, p.octaves || null); }
+  const mark = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(mark); return; }
+    if (node.type === 'Symbol' && node.name && homoNames.has(node.name)
+        && !nonterminals.has(node.name) && !terminals.has(node.name)) {
+      node.role = 'homomorphism';
+    }
+    for (const k in node) { const v = node[k]; if (v && typeof v === 'object') mark(v); }
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) mark(r.rhs);
+}
+
 function validateTerminals(ast) {
   if (!ast) return [];
   const errors = [];
@@ -625,6 +670,7 @@ function validateTerminals(ast) {
   const seen = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) for (const el of (r.rhs || [])) {
     if (!el || el.type !== 'Symbol' || !el.name) continue;
+    if (el.role === 'homomorphism') continue; // marqueur d'invocation d'homo (symbole nu résolu par nom), pas un terminal
     if (el.payload && codeVoice.has(el.payload.actor)) continue; // voix-code : terminal arbitraire
     if (known.has(el.name) || declared.has(el.name) || seen.has(el.name)) continue;
     seen.add(el.name);
@@ -910,6 +956,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
+    resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
