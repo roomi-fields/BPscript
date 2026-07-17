@@ -41,6 +41,8 @@ const T = Object.freeze({
   // Flag operators (7)
   EQ:           'EQ',          // ==
   NEQ:          'NEQ',         // !=
+  WIRE:         'WIRE',        // >> (câbler série — LANG-SONS §9)
+  WIRE_CUT:     'WIRE_CUT',    // !>> (couper un câble — LANG-SONS §9)
   GT:           'GT',          // >
   LT:           'LT',         // <
   GTE:          'GTE',         // >=
@@ -199,11 +201,14 @@ function tokenize(source, opts = {}) {
 
     if (ch === '-' && peek(1) === '>') { advance(); advance(); emit(T.ARROW_R, '->'); continue; }
 
+    // Câblage son (LANG-SONS §9) : >> câbler série, !>> couper. Munch maximal AVANT >=/!=.
+    if (ch === '>' && peek(1) === '>') { advance(); advance(); emit(T.WIRE, '>>'); continue; }
     if (ch === '>' && peek(1) === '=') { advance(); advance(); emit(T.GTE, '>='); continue; }
     if (ch === '>') { advance(); emit(T.GT, '>'); continue; }
 
     if (ch === '=' && peek(1) === '=') { advance(); advance(); emit(T.EQ, '=='); continue; }
 
+    if (ch === '!' && peek(1) === '>' && peek(2) === '>') { advance(); advance(); advance(); emit(T.WIRE_CUT, '!>>'); continue; }
     if (ch === '!' && peek(1) === '=') { advance(); advance(); emit(T.NEQ, '!='); continue; }
 
     // Tempo operator: * (multiply duration)

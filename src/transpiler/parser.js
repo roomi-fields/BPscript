@@ -997,15 +997,19 @@ function parse(tokens, opts = {}) {
         }
       }
       expect(T.EQUALS);
-      // Body: if it starts with ( and looks like key:value → standalone runtime qualifier
-      // parseRhsElements would reject floating () before libCtx is loaded, so handle directly
+      // Body: câblage son (LANG-SONS §9 — corps avec >>/!>> = voix/patch) ; sinon
+      // substitution existante. Le corps câblage est dispatché par la présence de
+      // l'opérateur de câblage (>> ou !>>) avant le saut de ligne.
+      // parseRhsElements would reject floating () before libCtx is loaded, so handle directly.
       let body;
-      if (at(T.LPAREN) && peek(1).type === T.IDENT && peek(2).type === T.COLON) {
+      if (bodyIsWiring()) {
+        body = [parseWiring(tok.line)];
+      } else if (at(T.LPAREN) && peek(1).type === T.IDENT && peek(2).type === T.COLON) {
         body = [{ type: 'InstantControl', qualifier: parseRuntimeQualifier() }];
       } else {
         body = parseRhsElements();
       }
-      checkMacroParamsUsed(macroName, params, body, tok);
+      if (!(body[0] && body[0].type === 'Wiring')) checkMacroParamsUsed(macroName, params, body, tok);
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
 
@@ -1628,6 +1632,73 @@ function parse(tokens, opts = {}) {
     return {
       type: 'CVInstance', name, lib, objectType, args, namedArgs, code: null, line: tok.line,
     };
+  }
+
+  // ============================================================
+  // Câblage son (LANG-SONS §9 — modules à ports, opérateurs >> / !>>)
+  // ============================================================
+
+  // Le corps d'un @macro est un CÂBLAGE ssi il porte >> ou !>> avant le saut de ligne.
+  function bodyIsWiring() {
+    if (at(T.WIRE) || at(T.WIRE_CUT)) return true;
+    let j = pos;
+    while (j < tokens.length) {
+      const t = tokens[j].type;
+      if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR) return false;
+      if (t === T.WIRE || t === T.WIRE_CUT) return true;
+      j++;
+    }
+    return false;
+  }
+
+  // Valeur affectée à un port (`: <valeur>`) : nombre (+unité collée), référence
+  // (ident, ex. `pitch`), ou backtick typé (ex. `` `js: lfo(2)` ``).
+  function parseWireValue() {
+    if (at(T.BACKTICK)) {
+      const raw = advance().value;
+      const t = tryBacktickTag(raw);
+      return t ? { kind: 'backtick', tag: t.tag, code: t.code } : { kind: 'backtick', tag: null, code: raw };
+    }
+    if (at(T.INT)) {
+      const n = Number(advance().value);
+      if (at(T.IDENT) && !current().spaceBefore) return { kind: 'number', value: n, unit: advance().value };
+      return { kind: 'number', value: n };
+    }
+    if (at(T.IDENT)) return { kind: 'ref', name: advance().value };
+    throw new ParseError('valeur de câblage attendue après « : »', current());
+  }
+
+  // Un étage de câblage : `module (. port)? (: valeur)?`. `cut` = le lien qui l'atteint
+  // est un `!>>` (débranchement) plutôt qu'un `>>` (câbler).
+  function parseWireStage(cut) {
+    const line = current().line;
+    const module = expect(T.IDENT).value;
+    let port = null, value = null;
+    if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT) {
+      advance(); // consume PERIOD
+      port = advance().value;
+    }
+    if (at(T.COLON) && !current().spaceBefore) {
+      advance(); // consume COLON
+      value = parseWireValue();
+    }
+    return { module, port, value, cut };
+  }
+
+  // Câblage complet : `[!>>] stage ((>> | !>>) stage)*`. Une LIGNE = une chaîne série
+  // (longueur quelconque, précision Romain) ; le multi-ligne (plusieurs @macro du même
+  // nom) sert au parallélisme. `>>` câble, `!>>` coupe (patchbay dynamique).
+  function parseWiring(line) {
+    const stages = [];
+    let cut = false;
+    if (at(T.WIRE_CUT)) { cut = true; advance(); }
+    stages.push(parseWireStage(cut));
+    while (at(T.WIRE) || at(T.WIRE_CUT)) {
+      const linkCut = at(T.WIRE_CUT);
+      advance();
+      stages.push(parseWireStage(linkCut));
+    }
+    return { type: 'Wiring', cut, stages, line };
   }
 
   // ============================================================
