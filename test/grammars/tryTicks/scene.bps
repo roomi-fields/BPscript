@@ -1,0 +1,5 @@
+// tryTicks.bps — migré de bp3-engine/test-data/-gr.tryTicks (porter bp3ToScene, 2026-07-17)
+// Round-trip fidèle (règles = -gr, modulo commentaires/espacement flags) ; AST BPx valide.
+
+@mode:random
+S -> C5 D5 E5 F5 E5 G5 F5 E5 F5 D5 E5 G5 D5 F5 E5 C5 [weight:1]
