@@ -51,6 +51,16 @@ writeFileSync('${TMP}_al.txt', r.alphabetFile || (Array.isArray(r.alphabet) ? r.
 writeFileSync('${TMP}_se.txt', r.settingsJSON || '');
 writeFileSync('${TMP}_ct.json', JSON.stringify(r.controlTable || {}));
 writeFileSync('${TMP}_alphabet.json', JSON.stringify(r.alphabet || []));
+// Homomorphismes → format natif -ho (name + chaînes/paires), chargé dans le moteur via -al
+// (comme s1_native.cjs). Sans quoi un marqueur d'homo (ex. TR) reste non résolu → crash/échec.
+const _homos = r.homomorphisms || [];
+let _hoText = '';
+for (const h of _homos) {
+  _hoText += h.name + '\\n';
+  if (h.chains) { for (const k of Object.keys(h.chains)) _hoText += k + ' --> ' + h.chains[k].join(' --> ') + '\\n'; }
+  else if (h.pairs) { for (const p of h.pairs) _hoText += p[0] + ' --> ' + p[1] + '\\n'; }
+}
+writeFileSync('${TMP}_ho.txt', _hoText);
 // Extract alphabet directive for resolver config
 const alphDir = (r.directives || []).find(d => d.name === 'alphabet');
 const info = { errors: r.errors || [], grammarLines: (r.grammar || '').split('\\n').length, alphabetSize: (r.alphabet || []).length,
@@ -96,6 +106,7 @@ require('${path.join(DIST, 'bp3.js').replace(/\\/g, '/')}')().then(function(M){
   setSeed(1);
   setVerbose(1);
   var al=fs.readFileSync(TMP+'_al.txt','utf-8');if(al.trim())loadAl(al);
+  var ho='';try{ho=fs.readFileSync(TMP+'_ho.txt','utf-8');}catch(e){}if(ho.trim())loadAl(ho);
   loadGr(fs.readFileSync(TMP+'_gr.txt','utf-8'));
   var r=produce();
   var timed;
