@@ -34,6 +34,24 @@ function collect(dir, prefix) {
 }
 collect(LIB_DIR, '');
 
+// Capture des corps .ts (fonctions digitales/homomorphisme) — MÊME logique que libs-bundle.js
+// (captureDigitalBodies) : lib/<name>/<fn>.ts → expected[<name>].objects[<fn>].body. Sans ça, la
+// reconstruction disque diverge du bundle sur `digital`/`homomorphism` (qui portent leurs corps captés).
+function captureBodies(dir) {
+  for (const name of readdirSync(dir).sort()) {
+    const full = join(dir, name);
+    if (!statSync(full).isDirectory()) continue;
+    const lib = expected[name];
+    if (!lib || !lib.objects) continue;
+    for (const entry of readdirSync(full).sort()) {
+      if (!entry.endsWith('.ts')) continue;
+      const fn = entry.replace('.ts', '');
+      if (lib.objects[fn]) lib.objects[fn].body = readFileSync(join(full, entry), 'utf-8');
+    }
+  }
+}
+captureBodies(LIB_DIR);
+
 let failed = 0;
 const problems = [];
 
