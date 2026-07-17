@@ -1638,13 +1638,10 @@ function parse(tokens, opts = {}) {
   // Câblage son (LANG-SONS §9 — modules à ports, opérateurs >> / !>>)
   // ============================================================
 
-  // Le corps d'un @macro est un CÂBLAGE (son) ssi, avant le saut de ligne, il porte :
-  //   - un opérateur de câblage >> / !>> , OU
-  //   - un APPEL DE PORT : un point GLUÉ `composant.port` (IDENT . IDENT, Period non-spaceBefore).
-  // Loi de graphie (décision 2026-07-14, ratifiée [488]) : le point appelle un composant → action
-  // son (trig `drum.on`, valeur cv `lpf.cutoff:8000`), distinct d'une substitution. Le point ESPACÉ
-  // (`A . B`) reste la notation période (substitution). PORTER≠RÉSOUDRE : la validation que le
-  // composant est un module déclaré est à la résolution (aval), pas au parse (pas de catalogue ici).
+  // Le corps d'un @macro est un CÂBLAGE (Wiring) ssi il porte >> ou !>> avant le saut de ligne.
+  // Le parser NE CLASSE PAS son-vs-substitution (décision [489], PORTER≠RÉSOUDRE) : hors câblage,
+  // le corps est émis STRUCTUREL et OPAQUE (appel-composant via le point, ou symboles nus) ; la
+  // classe (module=son / acteur=hauteur / homo=substitution) est décidée à la RÉSOLUTION (aval).
   function bodyIsWiring() {
     if (at(T.WIRE) || at(T.WIRE_CUT)) return true;
     let j = pos;
@@ -1652,9 +1649,6 @@ function parse(tokens, opts = {}) {
       const t = tokens[j].type;
       if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR) return false;
       if (t === T.WIRE || t === T.WIRE_CUT) return true;
-      if (t === T.PERIOD && !tokens[j].spaceBefore
-          && tokens[j - 1] && tokens[j - 1].type === T.IDENT
-          && tokens[j + 1] && tokens[j + 1].type === T.IDENT) return true;
       j++;
     }
     return false;
@@ -3072,11 +3066,19 @@ function parse(tokens, opts = {}) {
       // `acteur.terminal(...)` se comporte EXACTEMENT comme `terminal(...)`. Avant ce fix,
       // le retour anticipé laissait tout `(...)` collé non consommé → rejet « Expected RBRACE
       // got LPAREN » dès qu'un préfixe d'acteur côtoyait un override inconnu, ex. (ch:N) (LAN-9).
-      if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT
-          && libCtx.actors && libCtx.actors[name]) {
+      // Appel-composant par le POINT (design_dot_notation ; décision [489], loi de graphie).
+      // Point GLUÉ (pas d'espace avant) suivi d'un IDENT = accès à un membre d'un composant.
+      // Composant CONNU (acteur) → chemin existant. Composant INCONNU mais point glué DES DEUX
+      // CÔTÉS (`drum.on`) → porté OPAQUE (même nœud {Symbol,name,actor}, `opaqueComponent:true`) :
+      // le parser N'INTERPRÈTE PAS (PORTER≠RÉSOUDRE) — module(son)/acteur(hauteur)/homo décidé à
+      // la RÉSOLUTION aval. byte-id sûr : aucune grammaire n'utilise un point glué-des-deux-côtés.
+      const gluedMember = at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT;
+      const knownActor = gluedMember && libCtx.actors && libCtx.actors[name];
+      const opaqueComponent = gluedMember && !knownActor && !peek(1).spaceBefore;
+      if (knownActor || opaqueComponent) {
         advance(); // consume PERIOD
-        actor = name;
-        name = advance().value; // terminal
+        actor = name; // composant (acteur connu, ou opaque : résolu aval sur la liste d'acteurs/modules)
+        name = advance().value; // membre
       }
 
       // Durée collée sur terminal : A4:1/2 → {1/2, A4} (décision 2026-06-26 trois-concepts-temps-duree).

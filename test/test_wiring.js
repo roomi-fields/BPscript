@@ -58,16 +58,22 @@ console.log('=== Câblage >> / !>> ===');
   ok('substitution reste RhsElement (pas Wiring)', errors.length === 0 && m[0].body[0].type !== 'Wiring');
 }
 
-// 6b. Dispatch MONO-ÉTAGE par la loi de graphie (point glué = appel de port → son ; [488])
+// 6b. Corps par-le-POINT = APPEL-COMPOSANT OPAQUE, PAS un Wiring (décision [489]).
+// Le parser NE CLASSE PAS son-vs-substitution : le point glué → même nœud que actor.terminal
+// (Symbol{name,actor}), OPAQUE ; la classe (module/acteur/homo) est décidée à la RÉSOLUTION.
 {
   const trig = macros('@macro strike = drum.on');
-  ok('trig mono-étage (drum.on) → Wiring', trig.macros[0].body[0].type === 'Wiring'
-    && trig.macros[0].body[0].stages[0].module === 'drum' && trig.macros[0].body[0].stages[0].port === 'on');
+  const b = trig.macros[0].body[0];
+  ok('drum.on → appel-composant Symbol{name:on, actor:drum}, PAS Wiring',
+    b.type === 'Symbol' && b.name === 'on' && b.actor === 'drum' && trig.errors.length === 0);
   const cv = macros('@macro open = lpf.cutoff: 8000');
-  ok('valeur cv mono-étage (lpf.cutoff:8000) → Wiring', cv.macros[0].body[0].type === 'Wiring'
-    && cv.macros[0].body[0].stages[0].port === 'cutoff');
+  ok('lpf.cutoff:8000 → composant opaque (pas Wiring), 0 erreur',
+    cv.macros[0].body[0].type !== 'Wiring' && cv.errors.length === 0);
   const spaced = macros('@macro per = A . B');
-  ok('point ESPACÉ (A . B) = notation période → substitution', spaced.macros[0].body[0].type !== 'Wiring');
+  ok('point ESPACÉ (A . B) = notation période inchangée',
+    spaced.macros[0].body.map((e) => e.type).join(',') === 'Symbol,Period,Symbol');
+  const wire = macros('@macro w = a >> b');
+  ok('SEUL >> fait un Wiring', wire.macros[0].body[0].type === 'Wiring');
 }
 
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)
