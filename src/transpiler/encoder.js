@@ -1070,6 +1070,11 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
     case 'NumericDuration':
       return el.denominator === 1 ? `${el.numerator}` : `${el.numerator}/${el.denominator}`;
 
+    case 'NumericTerminal':
+      // Terminal neutre : chiffre nu sonnant. BP3 hérité émet le nombre tel quel (Encode.c:87
+      // isdigit→FindNumber). Byte-id avec l'ancien NumericDuration(denom 1).
+      return `${el.value}`;
+
     case 'NilString':
       return 'lambda';
 

@@ -2963,7 +2963,7 @@ function parse(tokens, opts = {}) {
       return { type: 'BacktickInline', code: raw, tag: null, line: tok.line };
     }
 
-    // Numeric duration: INT or INT/INT
+    // Chiffre nu en flux RHS.
     if (at(T.INT) && !isSymbolCallAhead()) {
       const num = Number(advance().value);
       if (at(T.SLASH) && peek(1).type === T.INT) {
@@ -2971,7 +2971,13 @@ function parse(tokens, opts = {}) {
         const denom = Number(advance().value);
         return { type: 'NumericDuration', numerator: num, denominator: denom };
       }
-      return { type: 'NumericDuration', numerator: num, denominator: 1 };
+      // TERMINAL NEUTRE (ratifié Romain 2026-07-17, GO architecte [468]) : un entier nu
+      // SONNE (fidèle BP3 — Encode.c:87 isdigit→FindNumber produit un token, ce n'est PAS
+      // une durée). Kind sonnant DISTINCT 'numeric-terminal', pas NumericDuration, pas de
+      // drapeau. Le 2-limbes base 2^31 vit SEUL dans l'encodeur plat aval (bpx flatLength) ;
+      // l'AST reste propre. Le chemin BP3 hérité émet le même chiffre (encoder.js cas
+      // NumericTerminal → byte-id préservé).
+      return { type: 'NumericTerminal', kind: 'numeric-terminal', value: num, line: tok.line };
     }
 
     // Identifier — could be Symbol, SymbolCall, Control, or TieStart
