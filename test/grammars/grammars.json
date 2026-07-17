@@ -1318,6 +1318,7 @@
   "livecode2": {
     "bernard": "livecode2",
     "status": "excluded",
+    "production_mode": "midi",
     "reason": "S1 native timeout (>120s). Improvize mode loops indefinitely despite MaxItemsProduce=10. [constat 2026-04-04]",
     "aux": [
       "se"
