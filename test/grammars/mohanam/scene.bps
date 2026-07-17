@@ -17,7 +17,7 @@
 
 // Settings
 @ins:3
-@transpose:-2400c
+@scaleshift:-24
 
 // ============================================================
 // Sous-grammaire 1 — Initialisation @mode:random
