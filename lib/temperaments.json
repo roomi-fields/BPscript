@@ -630,21 +630,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Abmin": {
@@ -679,21 +664,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Amaj": {
@@ -728,21 +698,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_Amin": {
@@ -764,22 +719,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Bbmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma03\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'C' Created 2021-01-05 18:31:20",
@@ -800,22 +740,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Bbmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma06\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:08:40",
@@ -836,22 +761,7 @@
       "225/128",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Bmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma08\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Db' Created 2021-01-05 19:37:40",
@@ -885,21 +795,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_Bmin": {
@@ -921,22 +816,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Cmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma01\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'D' Created 2021-01-05 18:29:30",
@@ -970,21 +850,6 @@
       "h",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Cmin": {
@@ -1006,22 +871,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Dbmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma06\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Eb' Created 2021-01-05 18:35:44Scale aligned ratio 1.0125 (2022-03-11 07:59:19)",
@@ -1055,21 +905,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Dbmin": {
@@ -1104,21 +939,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Dmaj": {
@@ -1153,21 +973,6 @@
       "p",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Dmin": {
@@ -1189,22 +994,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ebmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma04\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F' Created 2021-01-05 18:33:09Scale aligned ratio 1.0125 (2022-03-11 07:50:02)",
@@ -1238,21 +1028,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Ebmin": {
@@ -1287,21 +1062,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Emaj": {
@@ -1336,21 +1096,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_Emin": {
@@ -1372,22 +1117,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_F_maj": {
     "description": "This is a reduction to 12 grades of scale \"Ma07\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Ab' Created 2021-01-05 19:36:32",
@@ -1421,21 +1151,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_F_min": {
@@ -1457,22 +1172,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Fmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma02\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'G' Created 2021-01-05 18:30:32",
@@ -1493,22 +1193,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Fmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma05\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:07:58 Scale aligned ratio 1.0125 (2022-03-11 07:59:51)",
@@ -1542,21 +1227,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Gmaj": {
@@ -1578,22 +1248,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
-    ]
+    "comma": "81/80"
   },
   "bp3_Gmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma03\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:15:32Scale aligned ratio 1.0125 (2022-03-11 07:54:43)",
@@ -1627,21 +1282,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_Ma01": {
@@ -1698,32 +1338,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "•",
-      "G",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Ma02": {
@@ -1780,32 +1394,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Ma03": {
@@ -1838,33 +1426,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma04": {
     "description": "This is a transposition of scale \"Ma3\" (23 grades) From ‘E’ to ‘A’ Created 2020-11-27 19:34:18",
@@ -1896,33 +1458,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma05": {
     "description": "This is a transposition of scale \"Ma4\" (23 grades) From ‘Eb’ to ‘Ab’ Created 2020-11-28 07:25:59",
@@ -1954,33 +1490,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma06": {
     "description": "This is a transposition of scale \"Ma5\" (23 grades) From ‘D’ to ‘G’ Created 2020-11-28 07:48:18",
@@ -2012,33 +1522,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma07": {
     "description": "This is a transposition of scale \"Ma6\" (23 grades) From ‘D’ to ‘G’ Created 2020-11-28 08:01:21",
@@ -2070,33 +1554,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma08": {
     "description": "This is a transposition of scale \"Ma7\" (23 grades) From ‘C’ to ‘F’ Created 2020-11-28 08:11:34",
@@ -2128,33 +1586,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma09": {
     "description": "This is a transposition of scale \"Ma08\" (23 grades). From ‘C’ to ‘F’. Created 2020-11-28 19:09:43",
@@ -2186,33 +1618,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma10": {
     "description": "This is a transposition of scale \"Ma09\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 17:41:33",
@@ -2268,32 +1674,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "•",
-      "D",
-      "Eb",
-      "•",
-      "•",
-      "E",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "•",
-      "G",
-      "Ab",
-      "•",
-      "•",
-      "A",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Ma11": {
@@ -2326,33 +1706,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma12": {
     "description": "This is a transposition of scale \"Ma11\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:43:43",
@@ -2384,33 +1738,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma13": {
     "description": "This is a transposition of scale \"Ma12\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:44:52",
@@ -2442,33 +1770,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma_grama": {
     "description": "Scale \"Ma_grama\" from Bernard Bel / Bol Processor",
@@ -2524,32 +1826,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa01": {
@@ -2581,32 +1857,6 @@
       "9/5",
       "15/8",
       "243/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "•",
-      "D",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "•",
-      "G",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa02": {
@@ -2638,32 +1888,6 @@
       "9/5",
       "15/8",
       "243/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "•",
-      "G",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa03": {
@@ -2695,32 +1919,6 @@
       "9/5",
       "15/8",
       "243/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa04": {
@@ -2752,32 +1950,6 @@
       "9/5",
       "15/8",
       "243/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "•",
-      "F",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa05": {
@@ -2809,32 +1981,6 @@
       "16/9",
       "15/8",
       "243/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "•",
-      "Bb",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa06": {
@@ -2867,33 +2013,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "•",
-      "Eb",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa07": {
     "description": "This is a derivation of scale \"Ma07\" (23 grades) in major tonality. Sensitive note = 'Ab' Created 2020-12-05 21:28:36",
@@ -2925,33 +2045,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "•",
-      "Ab",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa08": {
     "description": "This is a derivation of scale \"Ma08\" (23 grades) in major tonality. Sensitive note = 'Db' Created 2020-12-05 21:29:15",
@@ -2983,33 +2077,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "•",
-      "Db",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa09": {
     "description": "This is a derivation of scale \"Ma09\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F#' Created 2021-01-05 14:44:42",
@@ -3041,33 +2109,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "•",
-      "F#",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa10": {
     "description": "This is a transposition of scale \"Sa09\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:11:29",
@@ -3099,33 +2141,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa11": {
     "description": "This is a transposition of scale \"Sa10\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:49:01",
@@ -3181,32 +2197,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_Sa12": {
@@ -3239,33 +2229,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa13": {
     "description": "This is a transposition of scale \"Sa12\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:52:00",
@@ -3321,32 +2285,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "•",
-      "D",
-      "•",
-      "Eb",
-      "•",
-      "E",
-      "•",
-      "F",
-      "•",
-      "F#",
-      "•",
-      "G",
-      "•",
-      "Ab",
-      "•",
-      "A",
-      "•",
-      "Bb",
-      "•",
-      "B",
-      "•"
     ]
   },
   "bp3_base": {
@@ -3378,32 +2316,6 @@
       "9/5",
       "15/8",
       "243/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
     ]
   },
   "bp3_grama": {
@@ -3460,32 +2372,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa_",
-      "r1_",
-      "r2_",
-      "r3_",
-      "r4_",
-      "g1_",
-      "g2_",
-      "g3_",
-      "g4_",
-      "m1_",
-      "m2_",
-      "m3_",
-      "•",
-      "p3_",
-      "p4_",
-      "d1_",
-      "d2_",
-      "d3_",
-      "d4_",
-      "n1_",
-      "n2_",
-      "n3_",
-      "n4_"
     ]
   },
   "bp3_2_cycles_of_fifths": {
@@ -3554,38 +2440,6 @@
       "h",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "DO",
-      "REb-1",
-      "REb=DO#-1",
-      "DO#",
-      "RE-1",
-      "RE",
-      "MIb-1",
-      "MIb=RE#-1",
-      "RE#",
-      "MI-1",
-      "MI",
-      "FA-1",
-      "FA",
-      "SOLb-1",
-      "SOLb=FA#-1",
-      "FA#",
-      "SOL-1",
-      "SOL",
-      "LAb-1",
-      "LAb=SOL#-1",
-      "SOL#",
-      "LA-1",
-      "LA",
-      "SIb-1",
-      "LA#-1=SIb",
-      "LA#",
-      "SI-1",
-      "SI",
-      "DO-1"
     ]
   },
   "bp3_3_cycles_of_fifths": {
@@ -3678,50 +2532,6 @@
       "p",
       "h",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "DO",
-      "DO+1",
-      "REb-1",
-      "REb=DO#-1",
-      "DO#",
-      "DO#+1",
-      "RE-1",
-      "RE",
-      "RE+1",
-      "MIb-1",
-      "MIb=RE#-1",
-      "RE#",
-      "RE#+1",
-      "MI-1",
-      "MI",
-      "MI+1",
-      "FA-1",
-      "FA",
-      "FA+1",
-      "SOLb-1",
-      "SOLb=FA#-1",
-      "FA#",
-      "FA#+1",
-      "SOL-1",
-      "SOL",
-      "SOL+1",
-      "LAb-1",
-      "LAb=SOL#-1",
-      "SOL#",
-      "SOL#+1",
-      "LA-1",
-      "LA",
-      "LA+1",
-      "SIb-1",
-      "LA#-1=SIb",
-      "LA#",
-      "LA#+1",
-      "SI-1",
-      "SI",
-      "SI+1",
-      "DO-1"
     ]
   },
   "bp3_Zarlino_temp": {
@@ -3756,21 +2566,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_Zarlino_temp2": {
@@ -3807,22 +2602,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "do",
-      "do#",
-      "re",
-      "mib",
-      "mi",
-      "mi",
-      "fa",
-      "fa#",
-      "sol",
-      "sol2#",
-      "la",
-      "sib",
-      "si"
     ]
   },
   "bp3_meantone_BACH": {
@@ -3857,21 +2636,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_barca": {
@@ -3906,21 +2670,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_bethisy": {
@@ -3955,21 +2704,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_chaumont": {
@@ -4004,21 +2738,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_classic": {
@@ -4053,21 +2772,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_meantone_corrette": {
@@ -4102,21 +2806,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_d_alembert_rousseau": {
@@ -4151,21 +2840,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_kirnberger_2": {
@@ -4200,21 +2874,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_kirnberger_3": {
@@ -4249,21 +2908,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_marpourg": {
@@ -4298,21 +2942,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_meantone_pure_minor-thirds": {
@@ -4347,21 +2976,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_meantone_rameau_en_do": {
@@ -4396,21 +3010,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "do",
-      "do#",
-      "re",
-      "re#",
-      "mi",
-      "fa",
-      "fa#",
-      "sol",
-      "sol#",
-      "la",
-      "la#",
-      "si"
     ]
   },
   "bp3_meantone_sauveur": {
@@ -4445,21 +3044,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_schlick": {
@@ -4496,22 +3080,6 @@
       "p",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_tartini-vallotti": {
@@ -4546,21 +3114,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_werckmeister_3": {
@@ -4595,21 +3148,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_werckmeister_4": {
@@ -4644,21 +3182,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_werckmeister_5": {
@@ -4693,21 +3216,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_zarlino": {
@@ -4742,21 +3250,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_piano": {
@@ -4777,21 +3270,6 @@
       1.684,
       1.785,
       1.891
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_stretched_octave-Indian": {
@@ -4813,22 +3291,7 @@
       1.785,
       1.891
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_bach_temperament": {
     "description": "This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 16:02:04Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)",
@@ -4862,21 +3325,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "do",
-      "do#",
-      "re",
-      "re#",
-      "mi",
-      "fa",
-      "fa#",
-      "sol",
-      "sol#",
-      "la",
-      "la#",
-      "si"
     ]
   },
   "bp3_pure_minor-third_meantone": {
@@ -4911,21 +3359,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "do",
-      "do#",
-      "re",
-      "re#",
-      "mi",
-      "fa",
-      "fa#",
-      "sol",
-      "sol#",
-      "la",
-      "la#",
-      "si"
     ]
   },
   "bp3_just_intonation": {
@@ -4960,21 +3393,6 @@
       "h",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "sa#",
-      "re",
-      "re#",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "pa#",
-      "dha",
-      "dha#",
-      "ni"
     ]
   },
   "bp3_rameau_en_sib": {
@@ -5009,21 +3427,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "do",
-      "reb",
-      "re",
-      "mib",
-      "mi",
-      "fa",
-      "fa#",
-      "sol",
-      "lab",
-      "la",
-      "sib",
-      "si"
     ]
   },
   "bp3_Dha1_murcchana": {
@@ -5058,21 +3461,6 @@
       "p",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_Dha3_murcchana": {
@@ -5094,22 +3482,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ga1_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘gak’ to ‘sa’. Created 2020-12-17 17:13:32",
@@ -5143,21 +3516,6 @@
       "p",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_Ga3_murcchana": {
@@ -5179,22 +3537,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma1_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘ma’ to ‘sa’. Created 2020-12-17 16:59:54",
@@ -5228,21 +3571,6 @@
       "h",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_Ma3_murcchana": {
@@ -5277,21 +3605,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_Ma_grama_full": {
@@ -5348,32 +3661,6 @@
       "h",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "•",
-      "re",
-      "•",
-      "gak",
-      "•",
-      "ga",
-      "•",
-      "ma",
-      "•",
-      "ma#",
-      "•",
-      "pa",
-      "•",
-      "dhak",
-      "•",
-      "dha",
-      "•",
-      "nik",
-      "•",
-      "ni",
-      "•"
     ]
   },
   "bp3_Ni1_murcchana": {
@@ -5408,21 +3695,6 @@
       "h",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_Ni3_murcchana": {
@@ -5444,22 +3716,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_Pa3_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘pa’ to ‘sa’. Created 2020-12-17 18:03:15",
@@ -5480,22 +3737,7 @@
       "9/5",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_Re1_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘rek’ to ‘sa’. Created 2020-12-17 17:27:47",
@@ -5529,21 +3771,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_Re3_murcchana": {
@@ -5565,22 +3792,7 @@
       "9/5",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa_murcchana": {
     "description": "This is a reduction to 12 grades of scale \"Ma_grama_full\" (23 grades) in ‘-cs.raga2’ Created 2020-12-17 15:44:19",
@@ -5614,21 +3826,6 @@
       "h",
       "p",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "re",
-      "gak",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "dha",
-      "nik",
-      "ni"
     ]
   },
   "bp3_asavari1": {
@@ -5645,17 +3842,7 @@
       "8/5",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_asavari2": {
     "description": "This is a reduction to 7 grades of scale \"Re3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:01:33",
@@ -5671,17 +3858,7 @@
       "8/5",
       "9/5"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_asavari3": {
     "description": "This is a reduction to 7 grades of scale \"Pa3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:04:25",
@@ -5697,17 +3874,7 @@
       "8/5",
       "9/5"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_bad-scale": {
     "description": "This is a reduction to 7 grades of scale \"Sa_murcchana\" (12 grades) in ‘-cs.raga’ Created 2020-12-17 18:45:55",
@@ -5723,17 +3890,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_bhairao1": {
     "description": "This is a reduction to 7 grades of scale \"Ma3_murcchana\" (12 grades) in ‘-cs.raga’ Created 2020-12-17 19:50:06",
@@ -5757,16 +3914,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_bhairao2": {
@@ -5783,17 +3930,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_bhairavi1": {
     "description": "This is a reduction to 7 grades of scale \"Ni3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:48:21",
@@ -5809,17 +3946,7 @@
       "128/81",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_bhairavi2": {
     "description": "This is a reduction to 7 grades of scale \"Ga3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:54:29",
@@ -5835,17 +3962,7 @@
       "8/5",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_bhairavi3": {
     "description": "This is a reduction to 7 grades of scale \"Dha3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:59:10",
@@ -5861,17 +3978,7 @@
       "8/5",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_bhairavi4": {
     "description": "This is a reduction to 7 grades of scale \"Re3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:00:44",
@@ -5887,17 +3994,7 @@
       "8/5",
       "9/5"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma",
-      "pa",
-      "dhak",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_bilaval1": {
     "description": "This is a reduction to 7 grades of scale \"Sa_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:49:41",
@@ -5913,17 +4010,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_bilaval2": {
     "description": "This is a reduction to 7 grades of scale \"Ma_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:02:10",
@@ -5939,17 +4026,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_bilaval3": {
     "description": "This is a reduction to 7 grades of scale \"Ni_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:10:33",
@@ -5965,17 +4042,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_kalyan1": {
     "description": "This is a reduction to 7 grades of scale \"Ma_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:07:12",
@@ -5991,17 +4058,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma#",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_kalyan2": {
     "description": "This is a reduction to 7 grades of scale \"Ni_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:11:52",
@@ -6017,17 +4074,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma#",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_kalyan3": {
     "description": "This is a reduction to 7 grades of scale \"Ga_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:14:50",
@@ -6043,17 +4090,7 @@
       "27/16",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma#",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_kaphi1": {
     "description": "This is a reduction to 7 grades of scale \"Sa_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:46:42",
@@ -6069,17 +4106,7 @@
       "5/3",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dha",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_kaphi2": {
     "description": "This is a reduction to 7 grades of scale \"Re3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:02:27",
@@ -6095,17 +4122,7 @@
       "27/16",
       "9/5"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dha",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_kaphi3": {
     "description": "This is a reduction to 7 grades of scale \"Pa3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:05:03",
@@ -6121,17 +4138,7 @@
       "27/16",
       "9/5"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "gak",
-      "ma",
-      "pa",
-      "dha",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_khamaj1": {
     "description": "This is a reduction to 7 grades of scale \"Sa_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:48:50",
@@ -6147,17 +4154,7 @@
       "5/3",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma",
-      "pa",
-      "dha",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_khamaj2": {
     "description": "This is a reduction to 7 grades of scale \"Ma_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:04:13",
@@ -6173,17 +4170,7 @@
       "5/3",
       "16/9"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma",
-      "pa",
-      "dha",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_khamaj3": {
     "description": "This is a reduction to 7 grades of scale \"Pa3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:06:06",
@@ -6199,17 +4186,7 @@
       "27/16",
       "9/5"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "re",
-      "ga",
-      "ma",
-      "pa",
-      "dha",
-      "nik"
-    ]
+    "comma": "81/80"
   },
   "bp3_lalit1": {
     "description": "This is a reduction to 8 grades of scale \"Ma3_murcchana\" (12 grades) in ‘-cs.raga’ Created 2020-12-19 14:23:28",
@@ -6235,17 +4212,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_lalit2": {
@@ -6263,18 +4229,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_marva1": {
     "description": "This is a reduction to 7 grades of scale \"Ni_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:12:34",
@@ -6290,17 +4245,7 @@
       "5/3",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma#",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_marva2": {
     "description": "This is a reduction to 7 grades of scale \"Ga_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:17:10",
@@ -6316,17 +4261,7 @@
       "27/16",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma#",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_marva3": {
     "description": "This is a reduction to 7 grades of scale \"Dha_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:24:35",
@@ -6342,17 +4277,7 @@
       "27/16",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma#",
-      "pa",
-      "dha",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_purvi1": {
     "description": "This is a reduction to 7 grades of scale \"Ga_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:18:42",
@@ -6368,17 +4293,7 @@
       "128/81",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_purvi2": {
     "description": "This is a reduction to 7 grades of scale \"Dha_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:26:08",
@@ -6394,17 +4309,7 @@
       "128/81",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_purvi3": {
     "description": "This is a reduction to 7 grades of scale \"Re_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:06",
@@ -6420,17 +4325,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "ga",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_todi1": {
     "description": "This is a reduction to 7 grades of scale \"Dha_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:26:59",
@@ -6446,17 +4341,7 @@
       "128/81",
       "15/8"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_todi2": {
     "description": "This is a reduction to 7 grades of scale \"Re_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
@@ -6472,17 +4357,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_todi3": {
     "description": "This is a reduction to 7 grades of scale \"Ma3_murcchana\" (12 grades) in ‘-cs.raga’ Created 2020-12-17 19:47:44",
@@ -6506,16 +4381,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_todi4": {
@@ -6532,17 +4397,7 @@
       "8/5",
       "243/128"
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
-    ]
+    "comma": "81/80"
   },
   "bp3_todi_aak_2": {
     "description": "This is a reduction to 7 grades of scale \"Re_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
@@ -6560,16 +4415,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_todi_aak_3": {
@@ -6588,16 +4433,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_todi_ka_3": {
@@ -6617,16 +4452,6 @@
       "p",
       "h",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_todi_ka_4": {
@@ -6647,16 +4472,6 @@
       "p",
       "p",
       "p"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "sa",
-      "rek",
-      "gak",
-      "ma#",
-      "pa",
-      "dhak",
-      "ni"
     ]
   },
   "bp3_Bohlen-Pierce": {
@@ -6693,22 +4508,6 @@
       "p",
       "h",
       "h"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "H",
-      "Jb",
-      "J",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_meantone_try": {
@@ -6730,22 +4529,7 @@
       1.799,
       1.896
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "key#60",
-      "•",
-      "key#62",
-      "•",
-      "key#64",
-      "key#65",
-      "•",
-      "key#67",
-      "•",
-      "key#69",
-      "•",
-      "key#71"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_try2": {
     "description": "This is a new scale for BP3.  Creation 2020-11-17 22:55:31 Same as meantone_try except that the base key is #64. Created 2024-08-22 07:14:33",
@@ -6766,22 +4550,7 @@
       1.799,
       1.896
     ],
-    "comma": "81/80",
-    "diapason": 261.63,
-    "notes": [
-      "key#64",
-      "•",
-      "key#66",
-      "•",
-      "key#68",
-      "key#69",
-      "•",
-      "key#71",
-      "•",
-      "key#73",
-      "•",
-      "key#75"
-    ]
+    "comma": "81/80"
   },
   "bp3_zest24-supergoya17plus3_Db": {
     "description": "Goya-17 plus 484, 676, and 1180 cents This scale has been imported from a SCALA file. Created 2024-08-22 07:41:27",
@@ -6831,29 +4600,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "key#60",
-      "•",
-      "key#61",
-      "•",
-      "key#62",
-      "•",
-      "•",
-      "key#63",
-      "•",
-      "•",
-      "key#64",
-      "key#65",
-      "key#66",
-      "key#67",
-      "key#68",
-      "•",
-      "key#69",
-      "•",
-      "key#70",
-      "key#71"
     ]
   },
   "bp3_meantone1": {
@@ -6867,20 +4613,6 @@
       "NaN/NaN",
       "NaN/NaN",
       "NaN/NaN"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb"
     ]
   },
   "bp3_BACH": {
@@ -6915,21 +4647,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_Zarlino_natural": {
@@ -6950,21 +4667,6 @@
       "5/3",
       "16/9",
       "15/8"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_barca": {
@@ -6999,21 +4701,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_bethisy": {
@@ -7048,21 +4735,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_chaumont": {
@@ -7097,21 +4769,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_classic": {
@@ -7146,21 +4803,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_corrette": {
@@ -7195,21 +4837,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_d_alembert_rousseau": {
@@ -7244,21 +4871,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_equal_tempered": {
@@ -7293,21 +4905,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_kirnberger_2": {
@@ -7342,21 +4939,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_kirnberger_3": {
@@ -7391,21 +4973,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_marpourg": {
@@ -7440,21 +5007,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_pure_minor-thirds": {
@@ -7489,21 +5041,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   },
   "bp3_rameau_en_do": {
@@ -7538,21 +5075,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_sauveur": {
@@ -7587,21 +5109,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_scale_1": {
@@ -7639,9 +5146,7 @@
       1.875,
       1.898,
       1.975
-    ],
-    "diapason": 261.63,
-    "notes": []
+    ]
   },
   "bp3_schlick_bad_": {
     "description": "Schlick temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 [INCORRECT] Created meantone downward notes “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)",
@@ -7677,22 +5182,6 @@
       "p",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_tartini-vallotti": {
@@ -7727,21 +5216,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_werckmeister_3": {
@@ -7776,21 +5250,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "Gb",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_werckmeister_4": {
@@ -7825,21 +5284,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_werckmeister_5": {
@@ -7874,21 +5318,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "Ab",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_zarlino": {
@@ -7923,21 +5352,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "Db",
-      "D",
-      "Eb",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "Bb",
-      "B"
     ]
   },
   "bp3_johnston_unt3": {
@@ -7971,34 +5385,6 @@
       "7203/4096",
       "15/8",
       "245/128"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
     ]
   },
   "bp3_zwolle2": {
@@ -8024,21 +5410,6 @@
       "•",
       "•",
       "•"
-    ],
-    "diapason": 261.63,
-    "notes": [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B"
     ]
   }
 }
