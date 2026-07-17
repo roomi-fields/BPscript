@@ -1313,8 +1313,7 @@ Literal { type: "Literal", value: number | string }
 HomomorphismDeclAST {
   type: "Homomorphism"
   name: string          // nom de la section (ex: "*", "m1", "mineur", "TR")
-  pairs?: [string, string][]        // paires [source, cible] (homo simple)
-  chains?: { [note: string]: string[] }  // homo à CHAÎNES (mutuellement exclusif de pairs)
+  pairs: [string, string][]         // paires PLATES [source, cible], last-write-wins
   line?: number         // ligne source de la directive @transcription.xxx
 }
 ```
@@ -1326,11 +1325,16 @@ Attaché à `Scene.homomorphisms[]`. Produit par le parser depuis les directives
 - Format `mappings` : une seule entrée → `name` = subkey de la directive
 - Paires identité (a→a) conservées pour fidélité Bernard
 
-**Homomorphisme à CHAÎNES (ratifié Romain 2026-07-17).** Une section peut porter
-`chains` au lieu de `pairs` : `{ note: [img1, img2, …] }` = images ordonnées par
-**profondeur d'invocation** (fidèle au format natif `-ho.<X>` : `note --> a --> b`).
-Déclaré en lib via `"sections": { "TR": { "chains": { "C3": ["B3","F4","C6"], … } } }`.
-BPx applique `chains[note][k-1]` où `k` = compte d'occurrences du marqueur en portée.
+**Homomorphisme à CHAÎNES — `chains` = SUCRE, compilé en `pairs` plates (corrigé 2026-07-17).**
+Une section de lib peut se DÉCLARER en chaîne : `"sections": { "TR": { "chains": { "C3":
+["B3","F4","C6"], … } } }` (fidèle au format natif `-ho.<X>` : `note --> a --> b`). Mais
+`chains` n'est PAS un mécanisme distinct : le parser le **DÉPLIE en paires consécutives**
+(`C3-->B3-->F4-->C6` ⇒ `(C3,B3),(B3,F4),(F4,C6)`), TOUTES fusionnées **dernière écriture gagne**,
+et n'émet QUE `pairs` (jamais `chains` dans l'AST). Le mécanisme réel — infirmation du modèle
+depth-indexed par l'**oracle natif** (2026-07-17 ; BPx `loadGrammar.ts:6368-6396`) — est UNE table
+de paires par homo, appliquée par `Image()` (une application par portée empilée du même nom). Ex.
+`TR` : `C3` début de la ligne 1 (`(C3,B3)`) MAIS clé médiane de la ligne 2 (`(C3,B4)`) → `C3→B4`
+(dernière écriture). Le consommateur (Kairos) **ne déplie rien** : il query `image(name,sym)` 2-arg.
 
 **Invocation par SYMBOLE NU (marqueur `role`).** Le symbole nu dont le nom = une
 section chargée devient un marqueur d'invocation : le nœud RHS `Symbol` reçoit

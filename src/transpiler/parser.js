@@ -210,6 +210,18 @@ function parse(tokens, opts = {}) {
    * @param {Object} transcriptions  - libCtx.transcriptions: { subkey → lib }
    * @param {Array}  directives      - scene.directives (to recover line numbers)
    */
+  // Déplie une déclaration `chains` en PAIRES PLATES last-write-wins (mécanisme natif réel).
+  // `{C3:[B3,F4,C6], B3:[C3,B4,F6]}` → séquences [C3,B3,F4,C6],[B3,C3,B4,F6] → paires
+  // consécutives fusionnées, dernière écriture gagne (C3→B3 puis C3→B4 = B4). Cf. buildHomomorphisms.
+  function unfoldChains(chains) {
+    const flat = {};
+    for (const [key, imgs] of Object.entries(chains)) {
+      const seq = [key, ...imgs];
+      for (let i = 0; i < seq.length - 1; i++) flat[seq[i]] = seq[i + 1];
+    }
+    return Object.entries(flat);
+  }
+
   function buildHomomorphisms(transcriptions, directives) {
     const result = [];
     if (!transcriptions || Object.keys(transcriptions).length === 0) return result;
@@ -229,11 +241,14 @@ function parse(tokens, opts = {}) {
         // Multi-section format: one decl per named section
         for (const [secName, body] of Object.entries(table.sections)) {
           if (body && body.chains) {
-            // Chain format (homomorphisme à chaînes, ratifié Romain 2026-07-17) :
-            // `from: [img1, img2, …]` = images ordonnées par PROFONDEUR d'invocation.
-            // Émis tel quel ; BPx applique chains[note][k-1] (k = compte d'occurrences
-            // du marqueur en portée). Fidèle au format natif -ho.<X> (note --> a --> b).
-            result.push({ type: 'Homomorphism', name: secName, chains: body.chains, line });
+            // `chains` = SUCRE de saisie pour déclarer des paires en CHAÎNE (`note --> a --> b`).
+            // Le mécanisme réel (infirmation depth-indexed, oracle natif 2026-07-17 ; BPx
+            // loadGrammar.ts:6368-6396 ; concession bpscript après contre-preuve kairos [493]) :
+            // déplier chaque chaîne en PAIRES CONSÉCUTIVES, TOUTES fusionnées, DERNIÈRE ÉCRITURE
+            // GAGNE, puis appliquées par Image() (une par portée empilée). On émet donc des
+            // PAIRS PLATES last-write-wins — PORTER≠RÉSOUDRE : le consommateur (Kairos) ne déplie
+            // rien, il query image(name,sym) 2-arg. `chains se compile en pairs, point`.
+            result.push({ type: 'Homomorphism', name: secName, pairs: unfoldChains(body.chains), line });
           } else {
             const pairs = Object.entries(body); // already [from, to]
             result.push({ type: 'Homomorphism', name: secName, pairs, line });
