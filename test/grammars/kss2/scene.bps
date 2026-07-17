@@ -8,6 +8,10 @@
 @core
 @controls
 @alphabet.sargam:midi
+// La convention d'octave par défaut de sargam est saptak ; `@octaves.western` la SURCHARGE (comme
+// mohanam/nadaka, mêmes grammaires sargam Bernard). Sans elle, sa6/re6… résolvent mal l'octave sous
+// saptak (routage kairos [402]/[521] ; pendant du renversement de verrou octave kairos 95cd748).
+@octaves.western
 @tempo:60
 @striated
 

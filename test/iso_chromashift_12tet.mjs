@@ -55,10 +55,10 @@ console.log('=== (A) Émission chromashift:N (les 3 scènes) ===');
   const { ast, errors } = compileToBPxAST(G('kss2'));
   const v = chromashiftValues(ast);
   ok(v.includes(-7), 'kss2 émet chromashift:-7 — got ' + JSON.stringify(v));
-  // Bloqueur PRÉ-EXISTANT (hors chromashift) : sargam sa6/re6… non résolus sous octaves saptak par
-  // défaut (@alphabet.sargam:midi sans octaves.western). N'AFFECTE PAS l'émission chromashift ; documenté.
+  // Ex-bloqueur octave-sargam LEVÉ : `@octaves.western` déclaré (routage kairos [402]/[521]) → sa6/re6…
+  // résolvent l'octave (plus de saptak par défaut). Le scène compile désormais SANS terminal non déclaré.
   const sargamErr = errors.filter((e) => /terminal '(sa|re|ga|pa|dha|ni)\d' non déclaré/.test(e.message || ''));
-  ok(sargamErr.length > 0, 'kss2 a un bloqueur PRÉ-EXISTANT octave-sargam (' + sargamErr.length + ' terminaux) — SÉPARÉ de chromashift');
+  ok(sargamErr.length === 0, 'kss2 compile sans terminal sargam non déclaré (@octaves.western) — got ' + sargamErr.length);
 }
 {
   const { ast, errors } = compileToBPxAST(G('mohanam'));
