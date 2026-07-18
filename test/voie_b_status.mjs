@@ -12,12 +12,12 @@
  *
  * RÉPLIQUER LA MÊME ACTION QUE LE NATIF (baseline v5, champ `action`) :
  *   - `single`      → le moteur JOUE un morceau : UNE réalisation, graine 1. C'est mesurable ici.
- *   - `produce-all` → production purement SYMBOLIQUE : le moteur énumère des chaînes, il ne joue
- *                     pas. BPx n'honore pas encore `allitems` (mesuré : une grammaire à deux
- *                     alternatives rend 1 item avec ou sans la directive), donc la Voie B ne peut
- *                     PAS répliquer cette action aujourd'hui. Ces grammaires sortent
- *                     NON-MESURABLE — jamais DIFF : afficher un écart contre une action qu'on ne
- *                     sait pas reproduire serait un faux verdict.
+ *   - `produce-all` → production purement SYMBOLIQUE : le moteur ÉNUMÈRE des chaînes, il ne joue
+ *                     pas. Répliqué par `session.produceAll()` (BPx bb4e622) : un item par ligne,
+ *                     terminaux séparés par des espaces — la forme exacte des captures natives.
+ *                     Un REFUS du moteur (sous-grammaire SUB/SUB1/POSLONG, ProduceItems.c:770)
+ *                     n'est pas une panne mais une information : on retombe alors sur le jeu
+ *                     simple, comme le natif.
  *
  * Ce fichier ne compare RIEN lui-même : il produit et délègue à `compare_modal.cjs`, juge unique
  * des deux voies.
@@ -62,6 +62,30 @@ async function produceB(name, modalite) {
   } catch (e) { return { erreur: `chaîne : ${e.message}` }; }
 }
 
+/**
+ * Produit la Voie B en ÉNUMÉRATION (action `produce-all`). Forme de sortie calquée sur la
+ * capture native : un item par ligne, terminaux séparés par un espace.
+ *
+ * Un REFUS du moteur (`refused`) n'est pas un échec : le natif AVORTE lui aussi l'énumération
+ * sur certaines sous-grammaires (SUB/SUB1/POSLONG, `ProduceItems.c:770`) et retombe sur le jeu
+ * simple. On réplique ce repli plutôt que de le traiter en erreur.
+ */
+function produceAllB(name) {
+  const bps = path.join(GRAMMARS, name, 'scene.bps');
+  if (!existsSync(bps)) return { absent: true };
+  let out;
+  try {
+    out = compileBPS(readFileSync(bps, 'utf-8'));
+    if (out.errors.length) return { erreur: `compilation : ${out.errors[0].message}` };
+  } catch (e) { return { erreur: `compilation : ${e.message}` }; }
+  try {
+    const session = createSession(out.ast, { seed: 1 });
+    const r = session.produceAll();
+    if (r.refused) return { erreur: `énumération refusée par le moteur : ${r.refusedReason || 'raison non déclarée'}` };
+    return { text: r.items.map((i) => (i.terminals || []).join(' ')).join('\n'), tronque: !!r.truncated };
+  } catch (e) { return { erreur: `énumération : ${e.message}` }; }
+}
+
 const args = process.argv.slice(2);
 const asJson = args.includes('--json');
 const only = args.filter((a) => !a.startsWith('--'));
@@ -76,14 +100,9 @@ const withBps = readdirSync(GRAMMARS)
 const rows = [];
 for (const name of withBps) {
   const ref = byName[name];
-  if (ref.produit && ref.action && ref.action !== 'single') {
-    rows.push({
-      grammaire: name, modalite: ref.modalite ?? '—', status: 'NON-MESURABLE',
-      detail: `action « ${ref.action} » — BPx n'honore pas encore allitems, action non réplicable`,
-    });
-    continue;
-  }
-  const b = await produceB(name, ref.modalite);
+  const b = ref.produit && ref.action === 'produce-all'
+    ? produceAllB(name)
+    : await produceB(name, ref.modalite);
   let res;
   if (b.absent) res = { status: 'ABSENT', detail: 'pas de scene.bps' };
   else if (b.erreur) res = { status: 'NE PRODUIT PAS', modalite: ref.modalite, detail: b.erreur };
