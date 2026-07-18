@@ -63,6 +63,20 @@ async function produceB(name, modalite) {
 }
 
 /**
+ * QUARANTAINE — grammaires dont `produceAll()` ne rend JAMAIS la main.
+ *
+ * Ce n'est pas une question de volume : mesuré, `produceAll({maxItems:2})` ne termine pas non
+ * plus sur `dhati2`. Le plafond borne le RÉSULTAT, pas la RECHERCHE — une grammaire dont
+ * l'espace d'énumération ne converge pas boucle quel que soit le cap. Leur natif, lui, n'énumère
+ * qu'UN item (réglage MaxItemsProduce=0).
+ *
+ * Elles sont donc déclarées NON-MESURABLES, pas comparées : un verdict tiré d'une énumération
+ * qui n'aboutit pas n'aurait aucun sens. Liste à VIDER dès que bpx corrige — ce n'est pas une
+ * exclusion de principe, c'est une panne moteur mise de côté pour que le reste du corpus se mesure.
+ */
+const ENUMERATION_SANS_FIN = new Set(['dhadhatite_v2', 'dhati2', 'flags']);
+
+/**
  * Produit la Voie B en ÉNUMÉRATION (action `produce-all`). Forme de sortie calquée sur la
  * capture native : un item par ligne, terminaux séparés par un espace.
  *
@@ -80,7 +94,28 @@ function produceAllB(name) {
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
     const session = createSession(out.ast, { seed: 1 });
-    const r = session.produceAll();
+    // PLAFOND — passe EXPLICITEMENT depuis la directive de MA scene. BPx ne reprend pas encore
+    // `[@maxitems:N]` : ni `session.grammar.directives.maxItems` ni `instance.getStatus().maxItems`
+    // ne la voient (mesuré : les deux restent absents et l'énumération file jusqu'à 100000, au
+    // point que 4 grammaires ne rendent jamais la main). La scène reste la source de vérité —
+    // je lis SA directive, je ne relis pas le `-se` natif : la Voie B doit rester autosuffisante.
+    // Contournement à retirer dès que BPx honore la directive.
+    const capDir = (out.ast.directives || []).find((d) => d.name === 'maxitems');
+    const cap = capDir && Number(capDir.value) > 0 ? Number(capDir.value) : undefined;
+    // GARDE-FOU quand la scène n'a AUCUN plafond : sans lui, 3 grammaires (dhadhatite_v2,
+    // dhati2, flags) ne rendent jamais la main — leur natif, réglage MaxItemsProduce=0, n'énumère
+    // pourtant qu'UN item. On borne largement (100× ce que le natif énumère) et, si la borne mord,
+    // on refuse de conclure : comparer une énumération tronquée contre une énumération complète
+    // serait un faux verdict. Le non-arrêt lui-même est un défaut moteur, remonté à bpx.
+    // 10× ce que le natif énumère : assez large pour qu'une divergence de CARDINALITÉ reste
+    // visible (on verrait un 2×, un 5×), assez serré pour que la borne se paie en secondes.
+    const garde = cap || Math.max(50, 10 * (byName[name].items_enumeres || 20));
+    if (ENUMERATION_SANS_FIN.has(name)) {
+      return { nonMesurable: "l'énumération ne termine pas — le plafond borne le RÉSULTAT, pas la "
+        + "RECHERCHE (mesuré : maxItems:2 ne rend pas la main non plus). Défaut moteur remonté à bpx, "
+        + 'pas un écart de transcription' };
+    }
+    const r = session.produceAll({ maxItems: garde });
     // REFUS : le natif avorte lui aussi l'énumération sur SUB/SUB1/POSLONG et JOUE au lieu
     // d'énumérer. On réplique ce repli — le traiter en erreur inventerait un échec que le
     // natif n'a pas. (Bug de mon premier câblage : je documentais le repli sans le coder.)
@@ -108,6 +143,7 @@ for (const name of withBps) {
     : await produceB(name, ref.modalite);
   // Énumération refusée par le moteur → on joue, comme le natif.
   if (b && b.replie) b = await produceB(name, ref.modalite);
+  if (b && b.nonMesurable) { rows.push({ grammaire: name, modalite: ref.modalite ?? '—', status: 'NON-MESURABLE', detail: b.nonMesurable }); continue; }
   let res;
   if (b.absent) res = { status: 'ABSENT', detail: 'pas de scene.bps' };
   else if (b.erreur) res = { status: 'NE PRODUIT PAS', modalite: ref.modalite, detail: b.erreur };
