@@ -986,11 +986,11 @@
     ],
     "lines": 20,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 25,
       "note_convention": "english",
       "settings": "-se.trySrand",
       "alphabet": "-al.tryKeyXpand",
-      "note": "Config lot3 appliquée MAIS oracle S0 NON réécrit : la nouvelle config donne 25 là où la référence existante porte 500 (rapport exactement 20x — signature du mismatch produce-vs-allItems, cf ConsoleMain.c:971). Écrasement suspendu, arbitrage demandé."
+      "note": "Oracle S0 régénéré en DÉRIVATION SIMPLE 2026-07-18 (arbitrage [615]) : 25 notes sous seed fixe. L ancienne réf 500 était un artefact -o (20x)."
     },
     "production_mode": "midi",
     "note": "500 notes MIDI. Grammaire V.2.8.1 avec _srand/_randomize/_rndseq/_rndvel. scene.bps traduit 2026-06-10 (E5). Règle 1 S->A[/5] FIDÈLE. Règle C contient _randomize (non-translatable, limitation connue). S1 NON DÉTERMINISTE (règle C _randomize = re-semis horloge, --seed 1 inopérant) : instantané s1_native.json non versionné (gitignore), généré localement à chaque run.",
@@ -1056,7 +1056,7 @@
   },
   "checkSUB1": {
     "bernard": "checkSUB1",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -1069,7 +1069,7 @@
       "note_convention": "english",
       "settings": "-se.checkSUB1",
       "alphabet": "-al.abc",
-      "note": "Config lot3 appliquée MAIS oracle S0 NON réécrit : la nouvelle config donne 2 là où la référence existante porte 40 (rapport exactement 20x — signature du mismatch produce-vs-allItems, cf ConsoleMain.c:971). Écrasement suspendu, arbitrage demandé."
+      "note": "Oracle S0 régénéré en DÉRIVATION SIMPLE 2026-07-18 (arbitrage [615]) : 2 tokens (i j), == oracle single de bp3-engine. L ancienne réf 40 était un artefact -o (production répétée 20x, ConsoleMain.c:971)."
     },
     "production_mode": "text",
     "note": "20 tokens \"i j\" en mode texte (grammaire SUB1)"
