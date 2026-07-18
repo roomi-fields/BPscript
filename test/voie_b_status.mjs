@@ -16,21 +16,12 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const require = createRequire(import.meta.url);
-const { compare, loadBaseline } = require('./compare_modal.cjs');
+const { compare, loadBaseline, soundingOnly, soundingText } = require('./compare_modal.cjs');
 const { compileBPS } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const GRAMMARS = path.join(ROOT, 'test', 'grammars');
-
-/**
- * Jetons SONNANTS d'une capture BPx : on écarte les silences, les prolongations et les
- * échos de contrôle, qui ne sont pas des notes. La baseline native ne capture que ce qui
- * sonne — comparer sans ce filtre confronterait deux choses différentes.
- */
-const soundingOnly = (toks) => toks
-  .filter((t) => t && t.type === 'terminal' && t.token !== '-' && t.token !== '_')
-  .map((t) => ({ token: t.token, start: t.start, end: t.end }));
 
 /** Produit la Voie B d'une grammaire, dans la modalité demandée. */
 function produceB(name, modalite) {
@@ -46,7 +37,7 @@ function produceB(name, modalite) {
     s.derive();
     if (modalite === 'MIDI') return { tokens: soundingOnly(s.emit('timed-tokens')) };
     const toks = s.emit('timed-tokens');
-    return { text: soundingOnly(toks).map((t) => t.token).join(' ') };
+    return { text: soundingText(toks) };
   } catch (e) { return { erreur: `dérivation : ${e.message}` }; }
 }
 

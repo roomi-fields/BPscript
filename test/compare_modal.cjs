@@ -70,6 +70,29 @@ function referenceFor(name, baselineDir = DEFAULT_BASELINE) {
   return out;
 }
 
+/**
+ * Jetons SONNANTS d'une capture BPx — À UTILISER PAR LES DEUX VOIES.
+ *
+ * La baseline native ne capture QUE ce qui sonne. Une capture BPx brute contient en plus
+ * les silences, les prolongations et les échos de contrôle : comparer sans filtrer
+ * confronterait deux choses différentes (765432 : 1481 jetons bruts pour 823 sonnants).
+ *
+ * Ce filtre vit ICI, et non chez chaque producteur, pour une raison précise : si la Voie A
+ * et la Voie B filtraient chacune de leur côté, un écart de filtre rendrait leurs statuts
+ * SILENCIEUSEMENT incomparables — le pire des défauts pour une mesure censée les confronter.
+ * Une seule définition, donc un seul périmètre.
+ */
+function soundingOnly(tokens) {
+  return (tokens || [])
+    .filter((t) => t && t.type === 'terminal' && t.token !== '-' && t.token !== '_')
+    .map((t) => ({ token: t.token, start: t.start, end: t.end }));
+}
+
+/** Même périmètre, rendu en TEXTE (modalité TEXTE). */
+function soundingText(tokens) {
+  return soundingOnly(tokens).map((t) => t.token).join(' ');
+}
+
 /** Texte : on normalise UNIQUEMENT les blancs et les fins de ligne, jamais le contenu. */
 const normText = (s) => String(s).replace(/\r\n?/g, '\n').trim().split(/\s+/).join(' ');
 
@@ -156,7 +179,7 @@ function firstDiff(a, b) {
   return `longueurs différentes : ${a.length} vs ${b.length}`;
 }
 
-module.exports = { compare, referenceFor, loadBaseline, ISO, DIFF, NON_MESURABLE, ABSENT };
+module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, ISO, DIFF, NON_MESURABLE, ABSENT };
 
 // ── CLI de diagnostic ────────────────────────────────────────────────────────
 if (require.main === module) {
