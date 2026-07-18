@@ -308,5 +308,16 @@
     "alterations": {},
     "_note": "Alphabet ABSTRAIT : aucune hauteur, aucun accordage. Il existe pour que les scenes de test structurelles (derivation, polymetrie, homomorphismes) restent abstraites tout en satisfaisant le garde des terminaux. Ne jamais lui ajouter de diapason/baseNote : un symbole de 'simple' ne sonne pas, il structure.",
     "_note_litteraux_bpx": "'Z' (majuscule), 'filler' (multi-caractere), 'b1'/'c1'/'d1' (lettre+chiffre) sont des terminaux atypiques declares a la demande de BPx : ce sont des NOMS LITTERAUX de fixtures BPx validees contre des oracles BP3 FIGES (m6_09_sub_multipass_weight -> Z ; m8_0x -> filler ; ord_left/right/rnd -> b1/c1/d1). BP3 ne partitionne pas terminal/non-terminal par la casse mais par CLASSE declaree (GetVar) ; renommer casserait la comparaison byte-exacte a l'oracle. Ce sont des noms, PAS une convention d'octave : la purete abstraite de 'simple' (aucune hauteur) est preservee. L'oracle fait foi. (notes BPx [367]/[374], 2026-07-11)."
+  },
+  "just": {
+    "description": "Just intonation BP3 — 12 degrés chromatiques nommés (Cj..Bj), tonique Cj. Noms verbatim de -to.tryOneScale.",
+    "notes": ["Cj", "Cj#", "Dj", "Dj#", "Ej", "Fj", "Fj#", "Gj", "Gj#", "Aj", "Aj#", "Bj"],
+    "alterations": { "": 0 },
+    "octaves": "western",
+    "diapason": 261.63,
+    "baseNote": "Cj",
+    "baseRegister": 4,
+    "defaultTuning": "just_bp3",
+    "_anchor_note": "Ancre = tonique Cj4 = 261.63 Hz (valeur native -to.tryOneScale, key 60). L'intonation juste s'ancre sur SA tonique, PAS sur A440 (Aj = 5/3 = 436.05 ≠ 440) ; anchor sur A romprait le natif."
   }
 }
