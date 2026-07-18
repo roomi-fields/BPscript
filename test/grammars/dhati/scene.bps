@@ -295,5 +295,7 @@ plus A'16 <- plus dhati dhagena dhatrkt dhati dhage teenakena
 // Les sound objects sont des chaînes concaténées (pas de séparateur de bols)
 
 @mode:lin
-Lahra -> do5 _ do5 do5 do5 _ do5 do5 si4 _ si4 do5 la4 _ la4 si4 lab4 _ lab4 _ la4 _ si4 mi5 do5 _ si4 do5 la4 _ lab4 la4
-Lahra -> do5 do5 do5 do5 si4 la4 si4 do5 si4 la4 fa4 {1,mi4 do4} mi4 fa4 la4 si4
+// Objets sonores composés |[ … ] (ratifié Romain 2026-07-18) : chaque cellule = UNE unité
+// d'ordonnancement (nom concaténé do5_do5do5), _ prolonge. Aligné sur le natif -gr.dhati:168-169.
+Lahra -> |[ do5 _ do5 do5 ] |[ do5 _ do5 do5 ] |[ si4 _ si4 do5 ] |[ la4 _ la4 si4 ] |[ lab4 _ lab4 _ ] |[ la4 _ si4 mi5 ] |[ do5 _ si4 do5 ] |[ la4 _ lab4 la4 ]
+Lahra -> |[ do5 do5 do5 do5 ] |[ si4 la4 si4 do5 ] |[ si4 la4 fa4 {1,mi4 do4} ] |[ mi4 fa4 la4 si4 ]

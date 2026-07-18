@@ -1,7 +1,12 @@
 # Dossier langage — sound-object composé (`do5_do5do5`) vs notes plates
 
-> Question à trancher par Romain (préparée par bpscript, drive dhati Cause B, 2026-07-18).
-> Architecte présente. Ne rien coder avant décision.
+> **TRANCHÉ + IMPLÉMENTÉ (Romain 2026-07-18, décision hub `graphie-objet-sonore-compose-pipe-bracket`).**
+> Graphie retenue : **`|[ … ]`** (ouverture `|[`, fermeture `]`, ASYMÉTRIQUE). Un objet sonore composé =
+> une suite occupant UNE unité d'ordonnancement, `_` prolonge. AST = un unique
+> `Symbol{name:"do5_do5do5", payload:{nature:"sounding"}}` (forme canonique du frontal). Implémenté :
+> tokenizer (token `COMPOUND`), parser (`parseRhsElement`), EBNF `compound_sound_object`, AST `Symbol`.
+> Preuve : dhati Lahra réécrite → 8 composés A≡B convergent + byte-id BP3 == natif (2 lignes Lahra).
+> Le texte ci-dessous conserve l'exposé d'origine (options soumises à Romain).
 
 ## Le phénomène
 

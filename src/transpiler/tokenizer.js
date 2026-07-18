@@ -34,6 +34,7 @@ const T = Object.freeze({
   AMPERSAND:    'AMPERSAND',   // &
   TILDE:        'TILDE',       // ~
   PIPE:         'PIPE',        // |
+  COMPOUND:     'COMPOUND',    // |[ … ] objet sonore composé (ratifié Romain 2026-07-18)
 
   // Tempo operators (in [] qualifiers)
   STAR:         'STAR',        // *
@@ -186,6 +187,19 @@ function tokenize(source, opts = {}) {
       while (i < source.length && peek() !== '`') code += advance();
       if (i < source.length) advance(); // closing `
       emit(T.BACKTICK, code);
+      continue;
+    }
+
+    // Objet sonore composé |[ … ] (ratifié Romain 2026-07-18) : une suite de notes/prolongations
+    // (et poly imbriquée) occupant UNE unité d'ordonnancement. Ouverture |[ , fermeture ] (ASYMÉTRIQUE).
+    // Capture brute puis strip des blancs → nom canonique concaténé (do5 _ do5 do5 → do5_do5do5),
+    // aligné sur la forme que le frontal émet pour do5_do5do5 : Symbol{name, payload:{nature:'sounding'}}.
+    if (ch === '|' && peek(1) === '[') {
+      advance(); advance(); // |[
+      let inner = '';
+      while (i < source.length && peek() !== ']') inner += advance();
+      if (i < source.length) advance(); // ]
+      emit(T.COMPOUND, inner.replace(/\s+/g, ''));
       continue;
     }
 

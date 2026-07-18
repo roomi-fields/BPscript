@@ -2935,6 +2935,15 @@ function parse(tokens, opts = {}) {
       return { type: 'UndeterminedRest' };
     }
 
+    // Objet sonore composé |[ … ] (ratifié Romain 2026-07-18) : Symbol dont le nom est la suite
+    // concaténée (le tokenizer a déjà strippé les blancs, ex. do5_do5do5). Forme canonique alignée
+    // sur ce que le frontal émet pour do5_do5do5 : Symbol{name, payload:{nature:'sounding'}} — le
+    // payload est posé par annotateRhsNode (type 'Symbol'). Nom littéral : pas de normalizeName.
+    if (at(T.COMPOUND)) {
+      const t = advance();
+      return { type: 'Symbol', name: t.value, line: t.line };
+    }
+
     // Period .
     if (at(T.PERIOD)) {
       advance();

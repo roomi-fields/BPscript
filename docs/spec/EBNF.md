@@ -608,6 +608,7 @@ suffix_qualifier = engine_qualifier | runtime_qualifier ;
 (* [] ou () collé à gauche de l'élément : A[weight:50], A(vel:80) — déterminé par absence d'espace avant [ ou ( *)
 
 element_core = symbol
+             | compound_sound_object
              | symbol_call
              | rest | prolongation | undetermined_rest
              | period
@@ -625,6 +626,15 @@ element_core = symbol
              | context
              | raw_brace
              | flag_bracket ;
+
+compound_sound_object = "|[" , sound_atom , { sound_atom } , "]" ;
+sound_atom            = symbol | prolongation | polymetric ;
+(* Objet sonore COMPOSÉ (ratifié Romain 2026-07-18) : une suite de notes/prolongations (et poly
+   imbriquée) occupant UNE unité d'ordonnancement. Ouverture "|[" , fermeture "]" (ASYMÉTRIQUE).
+   Le contenu est concaténé SANS blancs en un nom de terminal unique : |[ do5 _ do5 do5 ] → le
+   sound object "do5_do5do5". `_` prolonge la note précédente À L'INTÉRIEUR de l'objet. AST : un
+   seul Symbol{name:"do5_do5do5", payload:{nature:"sounding"}} — forme canonique identique à celle
+   que le frontal BP3 émet pour un terminal concaténé. Cf. docs/issues/LANG_COMPOUND_SOUND_OBJECT.md. *)
 ```
 
 ### 4.0 Qualificateurs — `[]` engine vs `()` runtime

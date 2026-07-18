@@ -1001,6 +1001,14 @@ Le champ `actor` est rempli par la dot notation explicite (`sitar.Sa`), ou par l
 phase de résolution implicite (quand un seul acteur contient ce symbole). `null`
 pour les non-terminaux (qui n'ont pas d'acteur).
 
+**Objet sonore composé** (`|[ … ]`, ratifié Romain 2026-07-18) : une suite de notes/
+prolongations occupant UNE unité d'ordonnancement est représentée par un **unique
+`Symbol`** dont le `name` est la concaténation SANS blancs du contenu
+(`|[ do5 _ do5 do5 ]` → `Symbol { name: "do5_do5do5", payload: { nature: "sounding" } }`).
+Aucun nœud dédié : c'est la forme canonique identique à celle que le frontal BP3 émet pour
+un terminal concaténé — le contenu interne (`_`, poly imbriquée) fait partie du nom, opaque
+à la dérivation, résolu en aval. Cf. `docs/issues/LANG_COMPOUND_SOUND_OBJECT.md`, EBNF `compound_sound_object`.
+
 ### `SymbolCall`
 
 ```
