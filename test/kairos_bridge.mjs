@@ -24,12 +24,18 @@
  * `derive()` (pas `_lastTree`), le contexte prend l'ORDRE en argument, et la Timeline se lit
  * par `.query(début, fin)` — sans quoi elle paraît vide.
  *
- * ⚠️ `digitalLib` : je passe DÉLIBÉRÉMENT `lib/digital.json` et non `{objects:{}}`. Un
- * vocabulaire vide ferait passer `transpose`/`chromashift` pour des contrôles runtime
- * ordinaires, transmis verbatim et donc SILENCIEUSEMENT ignorés — un fantôme. Avec la vraie
- * lib, Kairos crie sur toute manipulation déclarée sans corps exécutable. Ce cri est VOULU :
- * mes 5 manipulations sont aujourd'hui déclarées sans `body` (voir l'en-tête de digital.json),
- * et je préfère une chaîne qui hurle à une chaîne qui ment.
+ * ⚠️ `digitalLib` SE PREND DANS LE BUNDLE (`libs-data.js`, `LIBS['digital']`), JAMAIS en
+ * lisant `lib/digital.json` sur le disque. Les deux ne portent pas la même chose et c'est
+ * VOULU : la vérité d'un corps de manipulation est son fichier `lib/digital/<nom>.ts` (typé
+ * contre le SDK Kairos) ; l'étape de bundle en capte la SOURCE et l'injecte dans le bundle.
+ * `digital.json` ne porte que la déclaration (description, rang, paramètres) — sans corps.
+ *
+ * J'ai payé cette distinction : en lisant le JSON du disque, mon pont ne voyait aucun corps,
+ * Kairos criait « déclarée au vocabulaire mais SANS fonction exécutable », et j'en ai conclu
+ * à tort que la lib était un catalogue de noms vides. Elle ne l'était pas — je lisais le
+ * mauvais artefact. Ne jamais passer `{objects:{}}` non plus : un vocabulaire vide ferait
+ * passer `transpose` pour un contrôle runtime ordinaire, transmis verbatim donc
+ * SILENCIEUSEMENT ignoré. Le bundle, et rien d'autre.
  */
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -90,7 +96,9 @@ export function unirCatalogues(base, apport = {}) {
 export async function resoudreViaKairos(session, opts = {}) {
   const { projeter } = await import('/home/romi/dev/bp/kairos/dist/index.js');
   const pitchLib = unirCatalogues(catalaguesDeBase(), opts.apport);
-  const digitalLib = JSON.parse(readFileSync(path.join(ROOT, 'lib', 'digital.json'), 'utf-8'));
+  // Le BUNDLE, pas le JSON du disque : lui seul porte les corps (cf. en-tête).
+  const { LIBS } = require('../src/transpiler/libs-data.js');
+  const digitalLib = LIBS.digital;
 
   const tree = session.derive().tree;
   const contexte = {
