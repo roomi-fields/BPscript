@@ -1095,6 +1095,17 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
     case 'NilString':
       return 'lambda';
 
+    case 'FlagSet': {
+      // Flag en préfixe d'un contrôle : `[B=3, A=3] goto(3,0)` → `/B=3/ /A=3/ _goto(3,0)`.
+      // Le nœud est positionné AVANT le contrôle dans le RHS, donc l'ordre byte-id du natif
+      // (flags puis goto) est porté par l'AST. Décision ratifiée Romain 2026-07-18.
+      return el.flags
+        .map((f) => (f.operator
+          ? `/${f.flag}${f.operator}${resolveFlagValue(f.flag, f.value)}/`
+          : `/${f.flag}/`))
+        .join(' ');
+    }
+
     case 'Control': {
       if (_bp3Native.has(el.name)) {
         // Engine control → BP3 native format

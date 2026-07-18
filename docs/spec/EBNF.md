@@ -1019,6 +1019,26 @@ Symétrie LHS/RHS :
 - `[phase==1] S -> ...` → test flag (guard)
 - `S -> ... [phase=2]` → set flag (RHS)
 
+#### Exception : flag en PRÉFIXE d'un contrôle
+
+```ebnf
+rhs_flag_prefix = flag_bracket , control ;          (* [B=3, A=3] goto(3,0) *)
+```
+
+Règle générale : `[]` se place en **suffixe** (après notes et terminaux). **Exception
+encadrée** : devant un **contrôle** (`goto`, `repeat`, …), le flag se place en **préfixe**.
+
+Raison : poser un flag *après* un `goto` n'a pas de sens — `goto` est un **saut**, donc le
+flag doit être posé **avant** de sauter. L'AST place le nœud `FlagSet` **avant** le nœud
+`Control` ; l'ordre est ainsi porté par l'arbre, et l'émission BP3 respecte l'ordre du natif
+(`/B=3/ /A=3/ _goto(3,0)`).
+
+L'exception est **limitée aux contrôles** : la règle « `[]` = suffixe » reste vraie partout
+ailleurs. Les deux formes restent acceptées devant un contrôle, mais seule la forme préfixe
+est fidèle au natif.
+
+> Décision Romain 2026-07-18 (`flag-prefixe-sur-controle-rhs`, option b).
+
 ### 4.13 Backticks
 
 ```ebnf

@@ -2588,6 +2588,13 @@ function parse(tokens, opts = {}) {
     while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT, T.GATE, T.TRIGGER, T.CV)) {
       // [] or () with SPACE before → not attached to previous element → end of RHS
       // (rule-level qualifiers/flags handled by parseRule after this returns)
+      // EXCEPTION (décision ratifiée 2026-07-18) : un flag qui PRÉFIXE un contrôle reste
+      // dans le RHS, émis AVANT le nœud contrôle — cf. isFlagPrefixOfControl.
+      if (at(T.LBRACKET) && current().spaceBefore && isFlagPrefixOfControl()) {
+        const line = current().line;
+        elements.push({ type: 'FlagSet', flags: parseFlagBracket(), line });
+        continue;
+      }
       if (at(T.LBRACKET) && current().spaceBefore) break;
       if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifierLoose()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
@@ -2675,6 +2682,28 @@ function parse(tokens, opts = {}) {
       j++;
     }
     return false;
+  }
+
+  // Flag en PRÉFIXE d'un CONTRÔLE dans le RHS : `[B=3, A=3] goto(3,0)`.
+  // Décision LANGAGE ratifiée Romain 2026-07-18 (flag-prefixe-sur-controle-rhs, option b) :
+  // poser le flag APRÈS un goto n'a pas de sens — goto est un SAUT, le flag doit être posé
+  // AVANT. Exception ENCADRÉE : le flag-préfixe n'est autorisé QUE devant un contrôle ;
+  // la règle générale « [] = suffixe » reste vraie pour les notes et terminaux.
+  // Byte-id BP3 : émet /B=3/ /A=3/ _goto(3,0), l'ordre du natif.
+  function isFlagPrefixOfControl() {
+    if (!at(T.LBRACKET) || !isFlagBracket()) return false;
+    // Avancer jusqu'au ] appariré, puis regarder si un contrôle suit.
+    let j = pos, depth = 0;
+    for (; j < tokens.length; j++) {
+      if (tokens[j].type === T.LBRACKET) depth++;
+      else if (tokens[j].type === T.RBRACKET) { depth--; if (depth === 0) { j++; break; } }
+    }
+    if (j >= tokens.length) return false;
+    const t = tokens[j];
+    if (t.type !== T.IDENT || !isControlName(t.value)) return false;
+    // Contrôle avec arguments `goto(3,0)` ou contrôle nu `striated`.
+    const after = tokens[j + 1];
+    return (after && after.type === T.LPAREN) || isNoArgControl(t.value);
   }
 
   function isTempoOpQualifier() {

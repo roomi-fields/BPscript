@@ -6,10 +6,8 @@
 // pas des durées) — émis en TERMINAL NEUTRE (kind numeric-terminal, ratifié 2026-07-17),
 // fidèles au natif -gr.asymmetric1 (U --> 3 U, V --> 2 V).
 //
-// CAVEAT ORDRE RHS (parser) : le natif écrit `Head /B=3/ /A=3/ _goto(3,0)` (flags PUIS goto).
-// Le parser BPScript rejette `[flags] goto(...)` (un flag-bracket clôt le RHS), donc goto est
-// écrit AVANT les flags → Voie B émet `_goto(3,0) /B=3/ /A=3/`. Semantiquement les flags sont
-// posés dans le MÊME RHS (goto n'agit qu'au cycle suivant), mais l'ordre byte-id diffère.
+// Les flags PRÉFIXENT le goto (`[B=3, A=3] goto(3,0)`), fidèle au natif qui pose les flags
+// avant le saut. Forme ratifiée Romain 2026-07-18 (flag-prefixe-sur-controle-rhs).
 
 @core
 @controls
@@ -27,8 +25,8 @@ S -> Head U V [Reverse=0, beats=24, K1]
 // --- Sous-grammaire 2 @mode:random — choix du nombre de B (impair) ---
 
 @mode:random
-Head -> Head goto(3,0) [B=3, A=3] [weight:3]
-Head -> Head goto(3,0) [B=9, A=1] [weight:1]
+Head -> Head [B=3, A=3] goto(3,0) [weight:3]
+Head -> Head [B=9, A=1] goto(3,0) [weight:1]
 
 -----
 
@@ -56,17 +54,15 @@ Head -> Head goto(3,0) [B=9, A=1] [weight:1]
 
 -----
 
-// --- Sous-grammaire 6 @mode:random — reboucler si transformations restantes ---
+// --- Sous-grammaire 6 — reboucler si transformations restantes (pas de mode = default) ---
 
-@mode:random
-[A>=1] Head -> Head goto(3,0) [K1]
-[B>=1] Head -> Head goto(3,0) [K1]
+[A>=1] Head -> Head [K1] goto(3,0)
+[B>=1] Head -> Head [K1] goto(3,0)
 
 -----
 
-// --- Sous-grammaire 7 @mode:random — effacement des variables ---
+// --- Sous-grammaire 7 — effacement des variables (pas de mode = default) ---
 
-@mode:random
 U ->
 V ->
 Head ->
