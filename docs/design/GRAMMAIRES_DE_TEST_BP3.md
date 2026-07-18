@@ -123,3 +123,47 @@ Trois remarques factuelles, sans recommandation :
 3. **Un arbitrage par CLASSE économise les prochains tours.** Il reste 4 fixtures à instruire
    (`trySerial`, `dhadhatite`, `watch`, `Mozartexpression`) ; si d'autres appartiennent à cette classe,
    une règle générale évite de rouvrir le dossier à chaque fois.
+
+---
+
+## DÉTERMINATION SÉMANTIQUE DU RATIO NU (2026-07-19, demandée par Romain)
+
+**Question posée** : `A 5/3 A` a-t-il un sens musical, comme les silences `2 3 4` ? Et que fait-il
+par rapport à `_tempo(2)` ?
+
+**Réponse : OUI, et les deux sont des objets DIFFÉRENTS — c'est déjà spécifié et vérifié au moteur.**
+
+| Forme | Sémantique | Source |
+|---|---|---|
+| `/N` (nu) | tempo **ABSOLU + persistant** (`fixtempo`) — impose la durée de référence du champ, persiste jusqu'au prochain opérateur ou la fin du champ | `EBNF.md:657` ; `Polymetric.c:1061,1709` posent `fixtempo = TRUE` |
+| `_tempo(p/q)` | tempo **RELATIF** — `speed = oldspeed × p`, `scaling = oldscaling × q`, avec entrée/sortie de bracket | `EBNF.md:659` ; `Polymetric.c:1244-1245` |
+
+Ce ne sont donc pas deux graphies d'une même chose : l'un **impose**, l'autre **multiplie l'hérité**.
+C'est pourquoi `trytemplates` les emploie côte à côte (`gram#2[4]` vs `[5]`). Et l'usage relevé dans
+15 grammaires — `1`, `2`, `1/2`, `1/4`, `5/3` posés en séquence — est bien celui d'une **durée de
+champ**, l'analogie que Romain faisait avec les silences.
+
+### CE QUI EXISTE DÉJÀ — et que j'ai failli proposer d'inventer
+
+**`[/N/M]` est déjà spécifié ET implémenté.** `EBNF.md:655` donne
+`tempo_op = ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT )` — l'opérande fractionnaire y est.
+Vérifié au compilateur : `A A[/5/3]` compile et émet `A /5/3 A`.
+
+C'est le **cinquième** faux problème de cette série (après les gabarits, l'étiquetage, le placement
+du tempo, le porteur verbatim). J'allais proposer une surface qui existe.
+
+### LE GAP RÉEL, ce qu'il reste
+
+Le natif écrit **`A 5/3 A` — sans barre de tête**, là où ma surface produit `/5/3`. Ce sont deux
+écritures différentes dans la même grammaire native :
+
+```
+gram#2[3] Y <-> A /2 A       ← opérateur, avec barre
+gram#2[5] Y <-> A 5/3 A      ← ratio NU, sans barre
+```
+
+Le gap n'est donc **pas** « exprimer un tempo fractionnaire » (fait), mais « exprimer la forme
+SANS opérateur ». Reste à établir si le BP3 leur donne deux sens distincts ou si `5/3` est un
+raccourci de `/5/3` — **je ne l'ai pas prouvé** et je ne propose pas de surface avant de l'avoir
+fait. Proposer sur une équivalence supposée serait exactement l'erreur que les cinq faux problèmes
+précédents m'ont apprise.
