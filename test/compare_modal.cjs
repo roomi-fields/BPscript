@@ -93,6 +93,47 @@ function soundingText(tokens) {
   return soundingOnly(tokens).map((t) => t.token).join(' ');
 }
 
+/**
+ * Décalage de REGISTRE dû à C4key, lu depuis le -se que la baseline référence.
+ *
+ * Le moteur natif RENUMÉROTE le nom quand C4key differe de 60 (Encode.c:678 fait
+ * key += C4key-60), alors que Kairos PRÉSERVE le nom écrit et baisse la fréquence
+ * (design E-016) : à C4key=48, le natif capture `do3` là où nos deux voies écrivent
+ * `do4` — mais kairos [434] a PROUVÉ que le Hz est identique (130.81 Hz des deux
+ * côtés). C est donc un écart de NOMMAGE à son IDENTIQUE, pas une divergence.
+ *
+ * La source est le -se de la baseline, JAMAIS ce que la voie candidate émet : la Voie B
+ * n émet pas d octaveShift, donc normaliser d après le candidat ferait basculer A en ISO
+ * et laisserait B en DIFF — on conclurait à tort que sa transcription diverge. En lisant
+ * l autorité commune, les deux voies sont traitées identiquement par construction.
+ */
+function registerShiftFor(name, baselineDir = DEFAULT_BASELINE) {
+  const { byName, dir } = loadBaseline(baselineDir);
+  const e = byName[name];
+  const se = e && e.config && e.config['-se'];
+  if (!se) return 0;
+  const p = path.join(dir, '..', 'test-data', se);
+  if (!fs.existsSync(p)) return 0;
+  const raw = fs.readFileSync(p, 'utf-8');
+  if (!raw.trimStart().startsWith('{')) return 0;
+  let j; try { j = JSON.parse(raw); } catch { return 0; }
+  const c4 = j.C4key ? Number(j.C4key.value) : 60;
+  if (!Number.isFinite(c4) || c4 === 60) return 0;
+  return (60 - c4) / 12;
+}
+
+/**
+ * Ramène le numéro de registre du candidat sur celui de la référence, MAIS SEULEMENT si
+ * l écart est EXACTEMENT le décalage attendu. Tout résidu non expliqué reste un vrai DIFF :
+ * on ne normalise pas une divergence, on aligne une CONVENTION DE NOMMAGE à son égal.
+ */
+function normalizeRegister(token, shift) {
+  if (!shift) return token;
+  const m = /^(.*?)(-?\d+)$/.exec(token);
+  if (!m) return token;
+  return `${m[1]}${parseInt(m[2], 10) - shift}`;
+}
+
 /** Texte : on normalise UNIQUEMENT les blancs et les fins de ligne, jamais le contenu. */
 const normText = (s) => String(s).replace(/\r\n?/g, '\n').trim().split(/\s+/).join(' ');
 
@@ -139,6 +180,17 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     if (a.length === b.length && a.every((x, i) => x === b[i])) {
       return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
     }
+    // ISO AU NOMMAGE PRÈS : le natif renumérote le registre quand C4key != 60, Kairos
+    // préserve le nom écrit à Hz identique. On réessaie APRÈS avoir aligné le registre —
+    // et on l'EXPOSE (renomme:true), pour qu'un ISO-au-nommage ne se lise jamais ISO strict.
+    const shift = registerShiftFor(name, baselineDir);
+    if (shift) {
+      const bn = candidate.tokens.map((t) => keyTok({ ...t, token: normalizeRegister(t.token, shift) }));
+      if (a.length === bn.length && a.every((x, i) => x === bn[i])) {
+        return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: bn.length,
+          renomme: true, shift, detail: `ISO au nommage près : registre aligné de ${shift} octave(s) (C4key), Hz identique` };
+      }
+    }
     return {
       status: DIFF, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
       detail: firstDiff(a, b),
@@ -154,6 +206,14 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     const b = normText(candidate.text).split(' ');
     if (a.length === b.length && a.every((x, i) => x === b[i])) {
       return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
+    }
+    const shiftT = registerShiftFor(name, baselineDir);
+    if (shiftT) {
+      const bn = b.map((w) => normalizeRegister(w, shiftT));
+      if (a.length === bn.length && a.every((x, i) => x === bn[i])) {
+        return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: bn.length,
+          renomme: true, shift: shiftT, detail: `ISO au nommage près : registre aligné de ${shiftT} octave(s) (C4key)` };
+      }
     }
     return {
       status: DIFF, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length,
@@ -179,7 +239,7 @@ function firstDiff(a, b) {
   return `longueurs différentes : ${a.length} vs ${b.length}`;
 }
 
-module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, ISO, DIFF, NON_MESURABLE, ABSENT };
+module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, registerShiftFor, normalizeRegister, ISO, DIFF, NON_MESURABLE, ABSENT };
 
 // ── CLI de diagnostic ────────────────────────────────────────────────────────
 if (require.main === module) {
