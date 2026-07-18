@@ -98,7 +98,7 @@
       "scope": "seq_prefix",
       "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). Emitted as prefix inside the group. Distinct from runtime (rotate) which is a pitch transformation."
     },
-    "staccato": {
+    "gap": {
       "bp3": "_staccato",
       "args": [
         "value"
@@ -107,9 +107,9 @@
         0,
         127
       ],
-      "description": "Staccato — shorten note durations (affects temporal structure)"
+      "description": "Gap — raccourcit l'endtime des notes de N% (effet piqué par trou ; durée, pas une articulation). Surface BPScript renommée depuis 'staccato' (Romain 2026-07-18) ; mapping BP3 inchangé _staccato. Le nom 'staccato' est réservé à la vraie articulation (backlog)."
     },
-    "legato": {
+    "overlap": {
       "bp3": "_legato",
       "args": [
         "value"
@@ -118,7 +118,7 @@
         0,
         127
       ],
-      "description": "Legato — extend note durations (affects temporal structure)"
+      "description": "Overlap — allonge l'endtime des notes de N% (effet lié par chevauchement ; durée, pas une articulation). Surface BPScript renommée depuis 'legato' (Romain 2026-07-18) ; mapping BP3 inchangé _legato. Le nom 'legato' est réservé à la vraie articulation (backlog)."
     },
     "rndtime": {
       "bp3": "_rndtime",
@@ -129,7 +129,7 @@
         0,
         32767
       ],
-      "description": "Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder."
+      "description": "Random timing jitter — displaces note attacks by ±N ms (temporal). Like gap/overlap, a current-parameter control, not a reorder."
     },
     "randomize": {
       "bp3": "_randomize",
