@@ -2918,9 +2918,13 @@ function parse(tokens, opts = {}) {
     // Un frontend conforme AST_SPEC v1 §4 n'émet jamais `_(…)` : le `_` est consommé et le
     // nœud est normalisé en Control de nature transport-control (traité dans le post-pass).
     if (at(T.PROLONG)) {
-      // Lookahead : PROLONG suivi immédiatement de IDENT puis LPAREN sans espace
-      // = forme `_name(args)` à normaliser en Control (transport-control)
-      if (peek(1).type === T.IDENT && peek(2).type === T.LPAREN) {
+      // Forme legacy `_name(args)` (transport-control) : le `_` est le PRÉFIXE COLLÉ du contrôle.
+      // On ne la reconnaît QUE si l'IDENT est collé au `_` (pas d'espace) — disambiguation
+      // collé/espacé, cohérente avec |[…]. Un `_` suivi d'un ESPACE puis d'un contrôle en forme
+      // nue (`_ value(…)`, `_ _ vel(…)`) est une PROLONGATION AUTONOME + un contrôle séparé :
+      // sans ce garde, le legacy happait le `_` de prolongation → corruption SILENCIEUSE du
+      // compte de prolongations (constaté kss2 → RNG divergent, tryCsoundObjects → 5 `_` perdus).
+      if (peek(1).type === T.IDENT && peek(2).type === T.LPAREN && !peek(1).spaceBefore) {
         advance(); // consomme _
         const ctrlName = advance().value;
         return parseControl(ctrlName, tok);

@@ -47,9 +47,6 @@ Y Y -> vel(110) ga6 vel(64) dha6 pa6 [weight:8-2]
 X -> _ X [weight:6-1]
 Y -> _ Y [weight:6-1]
 X X -> _ _ Y Y [weight:6-1]
-// vel en forme instantanée !(vel:…) : après deux prolongations `_ _`, la forme nue `vel(…)`
-// serait happée par le parser comme le contrôle legacy `_vel(…)` (le 2e `_` mangé) → une seule
-// prolongation au lieu de deux, divergence RNG en mode:random. `!(vel:…)` préserve les 2 `_`.
-Y Y -> _ _ !(vel:110) X Y !(vel:64) [weight:6-1]
+Y Y -> _ _ vel(110) X Y vel(64) [weight:6-1]
 X Y -> _ Y X [weight:6-1]
 Y X -> _ _ X X [weight:6-1]
