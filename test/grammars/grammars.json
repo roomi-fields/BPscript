@@ -1780,7 +1780,9 @@
       "alphabet": null,
       "blocked": "BP2 serial operators (_rndseq, _ordseq) and time pattern markers (Æ1, Æ2, Æ3) not supported in BP3. Error code 46: incorrect time pattern name(s). Tested with -se.koto3 + -al.abc."
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "voie_b": "hors-perimetre",
+    "voie_b_raison": "Terminal a DEUX-POINTS (regle 1 : « He Says: … »). L'ecrire demanderait un litteral ou un echappement pour caractere exotique — la classe que Romain a ecartee par sobriete (hub/decisions/2026-07-19, metaprogrammation et litteraux hors perimetre). PORTEE MESUREE avant de conclure : UN SEUL terminal a deux-points dans TOUT le corpus, 1 regle sur 32 ; les 4 autres candidats (checkcontext, checkSUB, checkSUB.new, cloches1) sont des FAUX POSITIFS verifies un par un — leurs deux-points sont dans des annotations libres ou des commentaires, jamais dans un terminal. Pour 1 terminal, faire evoluer la surface coute plus que ca ne vaut. PAS une transcription partielle : 31 regles sur 32 auraient diverge pour une cause introduite par le harnais, ce qui est pire qu'une fixture absente. Les 12 autres constructions sont VERIFIEES et passent (operateurs seriels en prefixe, poids a decrement, polymetrie 3 voix, virgule au niveau regle, notation de periode, motifs temporels, ratio en tete de polymetrie, randomize) — la transcription serait mecanique si la question se rouvrait. Statut natif inchange : le moteur la produit."
   },
   "Nadaka1": {
     "bernard": "Nadaka1",
