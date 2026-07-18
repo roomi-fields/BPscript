@@ -1,13 +1,26 @@
 #!/usr/bin/env node
 /**
- * VOIE B — statut par grammaire, dans la modalité déclarée par la baseline.
+ * VOIE B — statut par grammaire, EN SORTIE DE CHAÎNE COMPLÈTE.
  *
- * Décision 2026-07-18 (procédure de test suivi normée). Pour chaque grammaire disposant
- * d'une `.bps` : produire B = .bps → BPx, capturer DANS LA BONNE MODALITÉ, puis confronter
- * à la baseline native via LE comparateur partagé (`compare_modal.cjs`).
+ * Chaîne mesurée : `.bps` → compileBPS → BPx (dérivation) → KAIROS (hauteur) → KRONOS (temps).
  *
- * Ce fichier ne compare RIEN lui-même : il produit et délègue. Le verdict appartient au
- * comparateur, que le frontal utilise aussi pour la Voie A — un seul juge pour les deux voies.
+ * ⚠️ CE FICHIER MESURAIT AUTREFOIS EN SORTIE BPx (`session.emit('timed-tokens')`), ce qui est
+ * PRÉ-RÉSOLUTION : ni la hauteur ni le temps n'y sont résolus. Recadrage Romain (note [651]) :
+ * on ne mesure ni ne classe rien avant Kairos et Kronos. Les comptes publiés avant ce
+ * rebranchement étaient donc ininterprétables — ils imputaient au langage des écarts qui
+ * n'étaient que « la chaîne n'est pas branchée ».
+ *
+ * RÉPLIQUER LA MÊME ACTION QUE LE NATIF (baseline v5, champ `action`) :
+ *   - `single`      → le moteur JOUE un morceau : UNE réalisation, graine 1. C'est mesurable ici.
+ *   - `produce-all` → production purement SYMBOLIQUE : le moteur énumère des chaînes, il ne joue
+ *                     pas. BPx n'honore pas encore `allitems` (mesuré : une grammaire à deux
+ *                     alternatives rend 1 item avec ou sans la directive), donc la Voie B ne peut
+ *                     PAS répliquer cette action aujourd'hui. Ces grammaires sortent
+ *                     NON-MESURABLE — jamais DIFF : afficher un écart contre une action qu'on ne
+ *                     sait pas reproduire serait un faux verdict.
+ *
+ * Ce fichier ne compare RIEN lui-même : il produit et délègue à `compare_modal.cjs`, juge unique
+ * des deux voies.
  *
  * Usage :  node test/voie_b_status.mjs [--json] [grammaire…]
  */
@@ -16,15 +29,16 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const require = createRequire(import.meta.url);
-const { compare, loadBaseline, soundingOnly, soundingText } = require('./compare_modal.cjs');
+const { compare, loadBaseline, soundingText } = require('./compare_modal.cjs');
 const { compileBPS } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const GRAMMARS = path.join(ROOT, 'test', 'grammars');
 
-/** Produit la Voie B d'une grammaire, dans la modalité demandée. */
-function produceB(name, modalite) {
+/** Produit la Voie B d'une grammaire, en sortie de chaîne, dans la modalité demandée. */
+async function produceB(name, modalite) {
   const bps = path.join(GRAMMARS, name, 'scene.bps');
   if (!existsSync(bps)) return { absent: true };
   let out;
@@ -33,12 +47,19 @@ function produceB(name, modalite) {
     if (out.errors.length) return { erreur: `compilation : ${out.errors[0].message}` };
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
-    const s = createSession(out.ast, { seed: 1 });
-    s.derive();
-    if (modalite === 'MIDI') return { tokens: soundingOnly(s.emit('timed-tokens')) };
-    const toks = s.emit('timed-tokens');
-    return { text: soundingText(toks) };
-  } catch (e) { return { erreur: `dérivation : ${e.message}` }; }
+    const session = createSession(out.ast, { seed: 1 });
+    const { tokens } = await resoudreViaKairos(session);
+    // La scène déclare-t-elle avoir appliqué le décalage de registre ? Le comparateur
+    // n'a le droit de normaliser un NOM que si la voie ATTESTE que le SON est déjà juste
+    // (règle [642]) : sans cette attestation, normaliser masquerait un vrai défaut.
+    const shiftApplied = (out.ast.directives || []).some((d) => d.name === 'transpose');
+    // La capture native ne porte que nom + bornes ; la fréquence résolue sert la chaîne,
+    // pas la comparaison — on ne confronte que ce que la référence contient réellement.
+    if (modalite === 'MIDI') {
+      return { shiftApplied, tokens: tokens.map((t) => ({ token: t.token, start: t.start, end: t.end })) };
+    }
+    return { shiftApplied, text: soundingText(tokens.map((t) => ({ type: 'terminal', token: t.token }))) };
+  } catch (e) { return { erreur: `chaîne : ${e.message}` }; }
 }
 
 const args = process.argv.slice(2);
@@ -55,7 +76,14 @@ const withBps = readdirSync(GRAMMARS)
 const rows = [];
 for (const name of withBps) {
   const ref = byName[name];
-  const b = produceB(name, ref.modalite);
+  if (ref.produit && ref.action && ref.action !== 'single') {
+    rows.push({
+      grammaire: name, modalite: ref.modalite ?? '—', status: 'NON-MESURABLE',
+      detail: `action « ${ref.action} » — BPx n'honore pas encore allitems, action non réplicable`,
+    });
+    continue;
+  }
+  const b = await produceB(name, ref.modalite);
   let res;
   if (b.absent) res = { status: 'ABSENT', detail: 'pas de scene.bps' };
   else if (b.erreur) res = { status: 'NE PRODUIT PAS', modalite: ref.modalite, detail: b.erreur };
@@ -68,9 +96,9 @@ if (asJson) {
 } else {
   const tally = {};
   for (const r of rows) tally[r.status] = (tally[r.status] || 0) + 1;
-  console.log(`Voie B — ${rows.length} grammaires avec .bps, confrontées à la baseline native\n`);
+  console.log(`Voie B — ${rows.length} grammaires avec .bps, EN SORTIE DE CHAÎNE (BPx → Kairos → Kronos)\n`);
   for (const r of rows) {
-    const d = r.detail ? `  ${String(r.detail).slice(0, 72)}` : '';
+    const d = r.detail ? `  ${String(r.detail).slice(0, 70)}` : '';
     console.log(`  ${r.grammaire.padEnd(22)} ${String(r.modalite).padEnd(6)} ${r.status.padEnd(15)}${d}`);
   }
   console.log('\nBilan :');
