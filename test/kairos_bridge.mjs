@@ -107,15 +107,24 @@ export async function resoudreViaKairos(session, opts = {}) {
     digitalLib,
   };
   const timeline = projeter(tree, contexte);
-  const evenements = timeline.query(0, Number.MAX_SAFE_INTEGER);
+
+  // Le TEMPS devient réel ici, et nulle part ailleurs : Kronos possède l'unique pont
+  // t_scène ↔ t_audio (forme d'appel donnée par kronos, note [301], `resolveSchedule`).
+  // Déterministe : horloge virtuelle, aucun temps réel, deux appels rendent le même flux.
+  // `derivedTempo` est le tempo FROID de la dérivation, pas un tempo de session.
+  const { resolveSchedule } = await import('/home/romi/dev/bp/kronos/dist/index.js');
+  const planifies = resolveSchedule(timeline, { derivedTempo: tree.metadata?.tempo });
 
   const tokens = [];
-  for (const e of evenements) {
-    if (e.kind !== 'note') continue;
+  for (const e of planifies) {
     const c = e.content;
     if (!c || c.pitch === undefined) continue; // feuille sans hauteur résolue : on ne l'invente pas
-    const start = Math.round(c.startSec * 1000);
-    tokens.push({ token: c.token, start, end: Math.round((c.startSec + c.durSec) * 1000), hz: c.pitch.hz });
+    tokens.push({
+      token: c.token,
+      start: Math.round(e.onset * 1000),
+      end: Math.round((e.onset + e.duration) * 1000),
+      hz: c.pitch.hz,
+    });
   }
   return { tokens, duration: timeline.duration };
 }
