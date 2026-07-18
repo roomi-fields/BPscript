@@ -83,8 +83,7 @@
   },
   "gramgene2": {
     "bernard": "gramgene2",
-    "status": "excluded",
-    "reason": "BP2 INIT: directive non supportée par BP3 + templates (=X)(:X). Format incompatible, pas d'output possible. Exclusion datée 2026-06-10.",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -94,8 +93,8 @@
       "midi_notes": 0,
       "note_convention": "english",
       "settings": "-se.gramgene",
-      "alphabet": null,
-      "blocked": "BP2 INIT: directive not supported by BP3 (\"Unable to make sense of 'INIT:'\"); also uses template (=X)(:X) patterns"
+      "alphabet": "-al.gramgene",
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 372 tokens."
     },
     "production_mode": "text"
   },
@@ -151,7 +150,7 @@
   },
   "tryflags3": {
     "bernard": "tryflags3",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -161,8 +160,8 @@
       "midi_notes": 0,
       "note_convention": "english",
       "settings": "-se.tryflags3",
-      "alphabet": null,
-      "blocked": "BP2 legacy format (from -in.abc1 header line), -in not supported"
+      "alphabet": "-al.abc",
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 20 tokens."
     },
     "production_mode": "text"
   },
@@ -184,7 +183,7 @@
   },
   "tryhomomorphism": {
     "bernard": "tryhomomorphism",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -193,8 +192,9 @@
     "php_ref": {
       "midi_notes": 6,
       "note_convention": "french",
-      "settings": "-se.765432",
-      "alphabet": "-al.abc"
+      "settings": "-se.tryhomomorphism",
+      "alphabet": "-al.tryhomomorphism",
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 6 notes."
     },
     "production_mode": "midi"
   },
@@ -441,8 +441,7 @@
   },
   "gramgene1": {
     "bernard": "gramgene1",
-    "status": "excluded",
-    "reason": "BP2 INIT: directive non supportée par BP3 + terminaux en minuscules. Format incompatible. Exclusion datée 2026-06-10.",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -454,8 +453,8 @@
       "midi_notes": 0,
       "note_convention": "english",
       "settings": "-se.gramgene",
-      "alphabet": null,
-      "blocked": "BP2 INIT: directive not supported by BP3 (\"Unable to make sense of 'INIT:'\"); lowercase terminals (a,b,c,d) secondary issue"
+      "alphabet": "-al.gramgene",
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 884 tokens."
     },
     "production_mode": "text"
   },
@@ -518,18 +517,18 @@
   },
   "tryKeyMap": {
     "bernard": "tryKeyMap",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
     "features": [],
     "lines": 53,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 392,
       "note_convention": "english",
       "settings": "-se.tryKeyMap",
-      "alphabet": null,
-      "blocked": "BP2 legacy (8 compile errors)"
+      "alphabet": "-al.tryKeyMap",
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 392 notes."
     },
     "production_mode": "midi"
   },
@@ -989,8 +988,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.koto3",
-      "alphabet": "-al.abc"
+      "settings": "-se.trySrand",
+      "alphabet": "-al.tryKeyXpand",
+      "note": "Config lot3 appliquée MAIS oracle S0 NON réécrit : la nouvelle config donne 25 là où la référence existante porte 500 (rapport exactement 20x — signature du mismatch produce-vs-allItems, cf ConsoleMain.c:971). Écrasement suspendu, arbitrage demandé."
     },
     "production_mode": "midi",
     "note": "500 notes MIDI. Grammaire V.2.8.1 avec _srand/_randomize/_rndseq/_rndvel. scene.bps traduit 2026-06-10 (E5). Règle 1 S->A[/5] FIDÈLE. Règle C contient _randomize (non-translatable, limitation connue). S1 NON DÉTERMINISTE (règle C _randomize = re-semis horloge, --seed 1 inopérant) : instantané s1_native.json non versionné (gitignore), généré localement à chaque run.",
@@ -1067,8 +1067,9 @@
     "php_ref": {
       "midi_notes": 0,
       "note_convention": "english",
-      "settings": "-se.koto3",
-      "alphabet": "-al.abc"
+      "settings": "-se.checkSUB1",
+      "alphabet": "-al.abc",
+      "note": "Config lot3 appliquée MAIS oracle S0 NON réécrit : la nouvelle config donne 2 là où la référence existante porte 40 (rapport exactement 20x — signature du mismatch produce-vs-allItems, cf ConsoleMain.c:971). Écrasement suspendu, arbitrage demandé."
     },
     "production_mode": "text",
     "note": "20 tokens \"i j\" en mode texte (grammaire SUB1)"
@@ -1302,7 +1303,7 @@
   },
   "dhadhatite": {
     "bernard": "dhadhatite",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -1312,10 +1313,10 @@
     "lines": 92,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
+      "note_convention": "french",
       "settings": "-se.dhadhatite",
-      "alphabet": null,
-      "blocked": "4 compile errors (Error code 15): compound bol terminals (tite, dhadha, dheena, dhadhatitedhadhadheena) absent from any available alphabet; gram#5 uses BP2 context markers (+,#) and <-- direction. Tested with -se.hamsad + -al.dhati."
+      "alphabet": "-al.dhadhatite",
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 32 tokens."
     },
     "production_mode": "text"
   },
@@ -1504,7 +1505,7 @@
   },
   "trytemplates": {
     "bernard": "trytemplates",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -1514,10 +1515,10 @@
     "lines": 48,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
-      "settings": "-se.koto3",
+      "note_convention": "french",
+      "settings": "-se.trytemplates",
       "alphabet": "-al.abc",
-      "blocked": "templates (=X)(:X) compilés sans erreur mais non résolus dans BP3 console: les items contiennent les expressions template littéralement non interprétées"
+      "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 442 tokens."
     },
     "production_mode": "text"
   },
