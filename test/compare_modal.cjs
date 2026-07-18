@@ -102,10 +102,17 @@ function soundingText(tokens) {
  * `do4` — mais kairos [434] a PROUVÉ que le Hz est identique (130.81 Hz des deux
  * côtés). C est donc un écart de NOMMAGE à son IDENTIQUE, pas une divergence.
  *
- * La source est le -se de la baseline, JAMAIS ce que la voie candidate émet : la Voie B
- * n émet pas d octaveShift, donc normaliser d après le candidat ferait basculer A en ISO
- * et laisserait B en DIFF — on conclurait à tort que sa transcription diverge. En lisant
- * l autorité commune, les deux voies sont traitées identiquement par construction.
+ * Le -se de la baseline donne le décalage ATTENDU. Il ne donne PAS le verdict : celui-ci
+ * se joue sur le SON. Normaliser le nom n'est légitime que si la voie candidate a
+ * RÉELLEMENT appliqué le décalage (son Hz vaut alors celui du natif, seul le nom diffère).
+ *
+ * CORRECTION [642], et c'est un piège que ma première version n'évitait pas : j'avais rendu
+ * la normalisation SYMÉTRIQUE, en croyant bien faire. Or les deux voies ne sont PAS dans la
+ * même situation. La Voie A applique le décalage (c4key lu du -se) → son Hz est juste, seul
+ * le nom diffère → ISO au nommage près. La Voie B ne l'applique pas (elle n'a pas de -se) →
+ * Kairos résout au défaut c4key=60 → son Hz est VRAIMENT décalé d'un octave. Normaliser là
+ * transformerait un VRAI écart de son en faux ISO — exactement le masquage qu'on refuse.
+ * L'asymétrie est donc CORRECTE : elle SURFACE le trou de réglages de la Voie B.
  */
 function registerShiftFor(name, baselineDir = DEFAULT_BASELINE) {
   const { byName, dir } = loadBaseline(baselineDir);
@@ -149,6 +156,10 @@ const keyTok = (t) => `${t.token}@${t.start}-${t.end}`;
  * @returns {{status, modalite, produit, n_ref, n_cand, detail}}
  */
 function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
+  // `candidate.shiftApplied` : la voie déclare avoir APPLIQUÉ le décalage de registre
+  // (donc son Hz est celui du natif). Sans cette déclaration, aucune normalisation —
+  // on ne suppose jamais que le son est bon, on exige que l'appelant l'atteste.
+  const shiftApplied = !!(candidate && candidate.shiftApplied);
   const ref = referenceFor(name, baselineDir);
   if (!ref) return { status: ABSENT, modalite: null, detail: 'absente de la baseline' };
 
@@ -184,7 +195,7 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     // préserve le nom écrit à Hz identique. On réessaie APRÈS avoir aligné le registre —
     // et on l'EXPOSE (renomme:true), pour qu'un ISO-au-nommage ne se lise jamais ISO strict.
     const shift = registerShiftFor(name, baselineDir);
-    if (shift) {
+    if (shift && shiftApplied) {
       const bn = candidate.tokens.map((t) => keyTok({ ...t, token: normalizeRegister(t.token, shift) }));
       if (a.length === bn.length && a.every((x, i) => x === bn[i])) {
         return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: bn.length,
@@ -193,7 +204,10 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     }
     return {
       status: DIFF, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
-      detail: firstDiff(a, b),
+      cause: (shift && !shiftApplied) ? 'reglage-c4key-absent' : undefined,
+      detail: (shift && !shiftApplied)
+        ? `décalage de registre de ${shift} octave(s) attendu (C4key) mais NON appliqué par la voie : le son est réellement décalé, ce n'est pas un écart de nommage — cause de provisionnement, pas de transcription. ${firstDiff(a, b)}`
+        : firstDiff(a, b),
     };
   }
 
@@ -208,7 +222,7 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
       return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
     }
     const shiftT = registerShiftFor(name, baselineDir);
-    if (shiftT) {
+    if (shiftT && shiftApplied) {
       const bn = b.map((w) => normalizeRegister(w, shiftT));
       if (a.length === bn.length && a.every((x, i) => x === bn[i])) {
         return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: bn.length,
