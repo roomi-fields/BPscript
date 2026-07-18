@@ -245,6 +245,10 @@ function encode(ast) {
 
   // Global preamble and RHS prefix from @ directives
   const subgrammarCtrl = libCtx.subgrammarControls;  // Map: name → { bp3, args }
+  // Axes de résolution de HAUTEUR déclarés au niveau scène : portés par l'AST vers Kairos,
+  // jamais écrits dans la grammaire BP3 (le natif les porte dans son fichier de réglages).
+  const PITCH_SCENE_DIRECTIVES = new Set(['transpose', 'scaleshift', 'chromashift']);
+
   const preamble = [];    // Valid BP3 preamble items (subgrammar directives)
   const rhsPrefix = [];   // Controls injected at start of first rule's RHS
 
@@ -255,6 +259,18 @@ function encode(ast) {
       preamble.push(dir.value != null ? `${def.bp3}(${dir.value})` : def.bp3);
     } else if (dir.name === 'tempo' && dir.value) {
       // @tempo → goes to settings file, not grammar
+    } else if (PITCH_SCENE_DIRECTIVES.has(dir.name) && dir.value != null) {
+      // Axe de RÉSOLUTION DE HAUTEUR déclaré au niveau SCÈNE : il voyage par l'AST
+      // jusqu'à Kairos, il ne s'écrit PAS dans la grammaire BP3. Même traitement que
+      // `@tempo` juste au-dessus, et pour la même raison : le natif porte l'équivalent
+      // dans son fichier de RÉGLAGES (C4key), pas dans un jeton de règle.
+      //
+      // Sans cette exclusion, `@transpose:1/2` s'injectait en tête de la première règle
+      // sous forme de `_script(CT 0)` — un jeton que le natif n'a pas, donc un byte-id
+      // rompu sur les 5 scènes qui déclarent la directive (mesuré 2026-07-19 sur 765432 :
+      // « S --> _script(CT 0) Internal … » contre « S --> Internal … »).
+      // ⚠️ Ne concerne QUE la forme SCÈNE `@transpose:…`. La forme d'occurrence
+      // `X(transpose:…)` reste un contrôle ordinaire et continue de s'émettre.
     } else if (CONTROL_MAP[dir.name] && dir.value != null) {
       if (_bp3Native.has(dir.name)) {
         rhsPrefix.push(formatNativeValue(CONTROL_MAP[dir.name], dir.value));
