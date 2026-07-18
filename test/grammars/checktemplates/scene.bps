@@ -26,7 +26,7 @@ S <> A A A [*1/2]
 S <> A A[tempo:2] A
 
 // Règle 3 : A A avec speed doublé sur le dernier A (/2 en BP3)
-S <> A A A [/2]
+S <> A A A[/2]
 
 // Règle 4 : A A avec deux silences de durées rationnelles
 S <> A A 1 3/2 A
