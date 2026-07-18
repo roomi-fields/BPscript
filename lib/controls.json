@@ -2,6 +2,12 @@
   "domain": "control",
   "name": "controls",
   "description": "BPscript controls — layered by scope: engine [] / runtime () with transport sub-groups",
+  "_argType_doc": {
+    "_role": "Comment la SURFACE lit la valeur d'un controle. Absent = lecture ordinaire : la valeur est tokenisee et la virgule SEPARE les arguments. Les valeurs ci-dessous font lire la valeur BRUTE, d'un seul tenant, et laissent l'aval la resoudre — c'est le meme principe dans les deux cas : la surface PORTE, elle n'interprete pas.",
+    "interval": "Intervalle musical, 3 formats acceptes : fraction 3/2, cents 700c, decimal 1.5. Porte brut, normalise en ratio par Kairos. Ex. transpose. Lecteur : readIntervalLiteral (parser.js).",
+    "composite": "Valeur en PLUSIEURS parties dont la virgule fait PARTIE INTEGRANTE, ex. keyxpand 'pivot,facteur' -> 'C4,2'. Sans ce marqueur la paire est scindee en deux arguments et le controle ne recoit que sa premiere moitie (l'aval crie alors 'needs a pivot note and a factor'). Lecteur : readCompositeLiteral (parser.js) — lit jusqu'a la parenthese fermante, virgules internes conservees ; BPx re-decoupe, lui seul connait la forme attendue. Ajoute 2026-07-18.",
+    "_ajouter_une_valeur": "Mecanisme DATA-DRIVEN : declarer argType ici, peupler le Set correspondant dans libs.js (loadLibsFromDirectives) et exposer un universe<X>Controls(), puis brancher le lecteur dans parseSymbolCall. Aucune liste de controles codee en dur nulle part."
+  },
   "version": "0.3.0",
   "subgrammar": {
     "_comment": "@mode:X(modifier) syntax — emitted as BP3 preamble between mode line and rules",

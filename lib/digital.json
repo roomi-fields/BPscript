@@ -1,6 +1,7 @@
 {
   "domain": "function",
   "_comment": [
+    "⚠ CE FICHIER NE PORTE PAS LES CORPS. La verite d'une manipulation est lib/digital/<nom>.ts (vrai .ts type contre le SDK Kairos) ; l'etape de bundle en capte le SOURCE et l'injecte dans src/transpiler/libs-data.js. Un CONSOMMATEUR doit donc charger LIBS['digital'] DEPUIS LE BUNDLE, jamais lire ce JSON sur le disque : il y verrait des entrees sans 'body' et croirait la lib vide. Piege paye le 2026-07-18 — mon pont de mesure lisait ce fichier, Kairos criait 'declaree au vocabulaire mais SANS fonction executable', et j'en ai conclu a tort que les corps manquaient. La garde de fraicheur (libs-bundle-check.js) ne protege PAS de ca : elle verifie que source et bundle sont SYNCHRONES, pas qu'on lit le bon des deux.",
     "Bibliothèque de FONCTIONS DIGITALES (manipulations non-temporelles) — jumeau DIGITAL des objets",
     "CV (lib/mod.json) : même structure {type, objects}, mais le comportement = VRAI CODE TS réalisé par",
     "KAIROS (vs courbe déclarative réalisée par le runtime audio). Spec : docs/design/DIGITAL_FUNCTIONS.md.",

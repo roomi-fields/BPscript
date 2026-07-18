@@ -107,6 +107,26 @@ Après toute modification dans `bp3-engine/csrc/`:
 - `csrc/wasm/` (portage WASM) → mettre à jour `bp3-engine/CHANGELOG_WASM.md`
 - Nouveau bug/issue moteur → ajouter dans la tour de contrôle : `/home/romi/dev/bp/hub/courrier/bernard.md`
 
+### Librairies `lib/` — toute édition passe par le bundle (OBLIGATOIRE)
+
+`src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.json`
+et `lib/digital/*.ts` en sont les sources. Une édition de source non suivie d'une régénération crée
+une divergence **silencieuse** : le code lit encore l'ancienne valeur.
+
+    npm run bundle:libs     # régénère
+    npm run bundle:check    # vérifie la fraîcheur (déjà branché dans `npm run arch`, donc au gate)
+
+Règle : **toute édition de `lib/*.json` ou `lib/digital/*.ts` ⇒ régénérer ⇒ committer LES DEUX.**
+Le portillon mord (vérifié : source éditée sans bundle ⇒ `npm run arch` sort en 1, push bloqué).
+
+⚠️ **Piège distinct, que la garde de fraîcheur NE couvre PAS** : lire la *mauvaise* source. Elle
+vérifie que source et bundle sont **synchrones**, pas qu'on lit le bon des deux. `lib/digital.json`
+ne porte **que** la déclaration (description, rang, paramètres) — les corps vivent dans
+`lib/digital/<nom>.ts` et n'existent que dans le bundle. Un consommateur qui lit le JSON du disque
+y voit des entrées sans `body` et conclut à tort que la lib est vide (payé le 2026-07-18 : le pont
+de mesure lisait le JSON, Kairos criait « déclarée au vocabulaire mais SANS fonction exécutable »).
+**Charger `LIBS['digital']` depuis le bundle, jamais le JSON.**
+
 ### Build & Test
 ```bash
 # OBLIGATOIRE : utiliser build.sh, JAMAIS make directement ni cp manuellement
