@@ -271,5 +271,15 @@
     "alphabet": "shruti23",
     "temperament": "bp3_shruti23_native",
     "degrees": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+  },
+  "western_just_c": {
+    "description": "Western en intonation juste BP3, C-ancré (tonique C4 = 261.63 Hz, table native -to.tryOneScale). Le 'j' de Cj/Aj/Gj = marqueur de degré, parsé C/A/G ; TOUTES les notes rendues par cette même gamme juste (modèle Romain [428/429] : un tuning, pas d'alphabet parallèle). Distinct de western_just (A440-ancré). Tempérament bp3_just_intonation = coïncide avec just_5limit sur C/D/E/F/G/A (degrés 0,2,4,5,7,9).",
+    "alphabet": "western",
+    "temperament": "bp3_just_intonation",
+    "degrees": [0, 2, 4, 5, 7, 9, 11],
+    "baseNote": "C",
+    "baseRegister": 4,
+    "diapason": 261.63,
+    "_anchor_note": "Ré-ancre exceptionnellement sur la tonique C4=261.63 (le tuning porte sa tonique, comme _scale la déclare — builder.ts:229 lit tuning.diapason/baseNote). Généralité (backlog JUST-ANCRE-DEPUIS-TONIQUE) : dériver l'ancre de la tonique émise (règle :10 = Aj4→A)."
   }
 }
