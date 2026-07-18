@@ -129,6 +129,29 @@ sortie). Régénérer aurait livré des oracles corrompus — pire que des oracl
 qu'ils ne crient pas. Valider la régénération sur un LOT, jamais sur un cas : `bells` reproduisait
 bit-à-bit, et 49 scènes sur 51 divergeaient.
 
+### Ne jamais attribuer une CAUSE sans la prouver à la source
+
+Chercher l'existant ne suffit pas : il faut aussi vérifier qu'on **n'a pas fabriqué la cause** du
+manque. Un gap mal attribué se propage — il se documente, se transmet, et finit devant un
+arbitrage qui porte sur une raison inventée.
+
+Cas payé le 2026-07-19, deux fois le même jour :
+- `trySerial` classée hors périmètre pour « terminal à deux-points nécessitant un littéral » ;
+- `dhadhatite` présentée comme bloquée sur un « marqueur de profondeur `+`/`++` ».
+
+**Les deux causes étaient inventées.** `BP3_help.txt:97-99` documente une feature nommée —
+*Structural markers*, quatre glyphes `+ : ; =` — et cite `dhadhatite` en exemple. Ni littéral, ni
+mécanisme de profondeur : une feature du moteur que je n'avais pas lue. Sans la consigne
+« prouve l'existant avant de poser », Romain aurait tranché deux fois sur des motifs fabriqués.
+
+Avant d'écrire « X est bloqué parce que Y » : **Y est-il prouvé à la source, ou est-ce mon
+interprétation de ce que je vois échouer ?** Le symptôme est observé, la cause se démontre.
+
+⚠️ Corollaire appris le même jour : **vérifier une forme, c'est essayer ses POSITIONS.**
+`[meter:4+4+4+4/4]` était signalé comme gap d'implémentation — deux fois — alors que la forme
+existe : je l'écrivais en tête de partie droite, elle se place en fin de règle comme
+`[weight:…]`. L'existant peut être oublié, mais aussi simplement **mal placé**.
+
 ### Librairies `lib/` — toute édition passe par le bundle (OBLIGATOIRE)
 
 `src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.json`
