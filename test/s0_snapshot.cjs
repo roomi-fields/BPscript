@@ -81,7 +81,15 @@ function convertOldSettings(c) {
   set('SplitTimeObjects','Split terminal symbols',38,true);
   set('SplitVariables','Split |variables|',39,true);
   set('DeftBufferSize','Default buffer size',41,false);
-  set('MaxConsoleTime','Max computation time',44,false,'seconds');
+  // MaxConsoleTime VOLONTAIREMENT NON ÉMIS — la carte positionnelle BP2 ci-dessus n'est
+  // PAS validée pour ce champ : la position 44 rend 59944 (qui est la taille de buffer,
+  // lue au mauvais emplacement) ou 1. Or « 1 seconde » COUPE la production, et c'est
+  // exactement ce qui a amputé koto1 (7 tokens au lieu de 72) via le -se converti par
+  // bp3-engine. Ne rien émettre laisse le défaut moteur (60 s, cf docs/reference/
+  // settings_names.tab) s'appliquer. Vérifié : les 14 grammaires actives à réglages BP2
+  // MATCHENT toutes leur oracle sans ce champ — retrait sans effet, risque en moins.
+  // Le reste de la carte reste à valider contre la spec de sérialisation BP2 (non
+  // disponible ici ; settings_names.tab donne l'ordre BP3/UI, PAS l'ordre BP2).
   set('Seed','Seed for randomization',45,false);
   set('NoteConvention','Note convention',47,false);
   if (vals.length > 51) {
