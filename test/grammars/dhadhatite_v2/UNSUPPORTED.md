@@ -1,103 +1,94 @@
-# UNSUPPORTED features — dhadhatite_v2
+# dhadhatite_v2 — enquête sur les features « non supportées »
 
-Transposition of `-gr.dhadhatite` to BPScript. Partial: several BP3 features
-have no BPScript equivalent.
+Transposition de `-gr.dhadhatite` en BPScript.
 
-## 1. LHS time-signature annotation
+**Ce document a été RÉÉCRIT le 2026-07-18** après enquête forme par forme, chaque verdict
+passé au **compilateur** (skill `bpscript-oracle` : vérifier à la source, jamais de mémoire).
+La version précédente affirmait 5 gaps ; **3 étaient de faux problèmes** — la syntaxe existait
+et n'avait pas été cherchée. Elle contenait aussi une **erreur de fait** : elle plaçait
+l'annotation métrique en partie GAUCHE alors que le natif l'écrit **à droite de la flèche**
+(`GRAM#1[1] <100> S <-> 4+4+4+4/4 S64`, `-gr.dhadhatite:18`).
 
-BP3: `gram#1[1] <100> S <-> 4+4+4+4/4 S64`
+| # | Feature | Verdict |
+|---|---------|---------|
+| F1 | Annotation métrique additive `4+4+4+4/4` | **gap d'IMPLÉMENTATION** (syntaxe déjà spécifiée) |
+| F2 | Gabarits `(= …)` / `(: …)` | **FAUX PROBLÈME** |
+| F3 | Marqueurs de profondeur de contexte `+` / `++` | **VRAI GAP** |
+| F4 | Contexte négatif `#+` | **VRAI GAP, conditionné à F3** |
+| F5 | Direction `<--` + « must be last » | **FAUX PROBLÈME (les deux volets)** |
 
-The `4+4+4+4/4` on the LHS annotates the polymetric time signature of the
-derivation tree. BPScript has `@meter` for global meter but no LHS-embedded
-time-signature annotation.
+---
 
-**NOT YET SUPPORTED in BPScript** — backlog item: LHS time-signature notation.
+## F1 — Annotation métrique additive → gap d'IMPLÉMENTATION, pas de design
 
-## 2. Template bracket markers `(= ...)` and `(: ...)` in rule bodies
+Natif : `GRAM#1[1] <100> S <-> 4+4+4+4/4 S64` (en **RHS**, pas en LHS).
 
-BP3: `gram#2[1] ... S1F +S2F (= V8 ) +S2F * (= S1F ++ S2F ) (: V8 ) S1F`
+La syntaxe **est déjà spécifiée** : `docs/spec/EBNF.md:1297` documente
+`[meter:4+4/6]` → `4+4/6` avant RHS, « time signature inline ». Elle étend `@meter:3/4`
+(directive globale) en qualifieur de règle. **Syntaxe ratifiée par Romain (2026-07-18).**
 
-`(= X )` creates a "master bracket" for template matching.
-`(: X )` creates a "slave bracket" that mirrors the master (structural copy).
-`*` separates template group boundaries in the RHS.
+Mais le parser la **refuse** aujourd'hui : `S <> [meter:4+4+4+4/4] S64` →
+`Expected arrow (-> <- <>)`. Même famille que le cas `[flags] goto(...)` : un bracket
+espacé en tête de RHS clôt la règle. C'est donc un écart **spec ↔ implémentation**,
+à implémenter — pas une question de conception ouverte.
 
-BPScript has a `@templates` section with `($N ...)` bracket syntax, but it
-describes templates as standalone structural constraints, not as inline
-annotations within rule bodies.
+## F2 — Gabarits maître/esclave → FAUX PROBLÈME
 
-**NOT YET SUPPORTED in BPScript** — backlog item: inline template bracket
-markers `(= ...) / (: ...)` in rule RHS.
+Natif : `… (= V8 ) … (: V8 ) …`
 
-## 3. Context markers `+` and `++` as token prefixes
+BPScript l'écrit **`$X` (maître) / `&X` (esclave)**. Vérifié au compilateur :
+`S <> $V8 &V8` émet `gram#1[1] S <-> (=V8) (:V8)` — exactement la forme native.
+Aucune section `@template` n'est nécessaire pour ça.
 
-BP3: `gram#5[1] + B2 <-> +teena`
+## F3 — Profondeur de contexte `+` / `++` → VRAI GAP
 
-`+` and `++` prefix tokens to mark "context depth". A rule with `+ B2` on the
-LHS only fires when `B2` was introduced in a `+` context (via gram#2). The
-context tag is propagated through the derivation tree and used in gram#5 to
-disambiguate which variant of a fixed pattern to use (e.g., `dhadhatitedhadhadheena`
-vs `dhadhatitedhadhateena`).
+Natif : `gram#5[1] + B2 <-> +teena`, `gram#5[8] ++ S2F <-- ++ …`
 
-BPScript has no context-propagation mechanism of this kind.
+`+` et `++` marquent une **profondeur de contexte** propagée à travers l'arbre de
+dérivation, qui départage ensuite les variantes d'un motif fixe. Vérifié :
+`+ B2 <> +teena` → *ligne non reconnue au niveau des règles*. Aucune syntaxe
+équivalente dans la spec — le `positive_context` de `EBNF.md:530` est un contexte
+**parenthésé** `(X)`, mécanisme différent (voisinage, pas profondeur).
 
-**NOT YET SUPPORTED in BPScript** — backlog item: context-depth markers
-`+`/`++` on LHS/RHS tokens with cross-subgrammar propagation.
+**Gap réel.** C'est le seul verrou de fond de cette grammaire.
 
-## 4. Negative-context marker `#+` on LHS
+## F4 — Contexte négatif `#+` → VRAI GAP, conditionné à F3
 
-BP3: `gram#5[6] <100> #+ S1F <-> #+ dhadhatitedhadhadheena`
+Natif : `gram#5[6] <100> #+ S1F <-> #+ dhadhatitedhadhadheena`
 
-`#+` is the negative-context marker in Bernard's engine: the rule fires only
-when `S1F` is NOT in a `+` context. BPScript's `#` is a comment delimiter; it
-has no negative-context semantic.
+Contrairement à ce que disait la version précédente, **le contexte négatif existe bel et
+bien** en BPScript (`EBNF.md:528-536`) et fonctionne — vérifié au compilateur :
+`#- S1F <> dha` et `#(A B) S1F <> dha` compilent tous deux.
 
-**NOT YET SUPPORTED in BPScript** — backlog item: negative-context LHS marker
-`#+`.
+Ce qui manque est seulement `#+` : `context_sym` (`EBNF.md:533`) admet symbole, joker,
+silence `-`, prolongation `_`, accolades et virgule — **pas** `+`. Et `+` n'aurait de sens
+que si F3 existait. Donc : gap réel, mais **entièrement dérivé de F3**, pas indépendant.
 
-## 5. `<--` rule direction with ordering constraint
+## F5 — `<--` et « must be last » → FAUX PROBLÈME sur les deux volets
 
-BP3: `gram#5[8] ++ S2F <-- ++ dhadhatitedhadhadheena [This rule must be last]`
+Natif : `gram#5[8] ++ S2F <-- ++ dhadhatitedhadhadheena [This rule must be last]`
 
-`<--` means right-to-left derivation (scanning RHS before LHS). The comment
-`[This rule must be last]` is a structural constraint in the ORD sub-grammar:
-this rule must be attempted after all others, ensuring the `++`-context variant
-overrides the `+`-context variant from gram#5[7].
+**Volet direction** : la flèche BPScript `<-` **émet exactement `<--`**. Vérifié :
+`S2F <- dha` → `gram#1[1] S2F <-- dha`. Il n'y a pas deux flèches à distinguer.
+⚠️ Réserve sémantique à connaître : `<--` est l'opérateur 2 de BP3, **exclu de la
+dérivation PROD** (`Compute.c:1280`) — fidèle au natif, mais sans effet en production.
 
-BPScript has `<-` for right-to-left but no "must be last" ordering constraint
-within an ORD block.
+**Volet ordre** : `[This rule must be last]` n'est **pas une directive moteur** mais une
+**annotation libre** BP2, c'est-à-dire un commentaire (cf. `FREE_ANNOTATION_RE`,
+`src/transpiler/bp3ToScene.js:143`, qui traite `[texte]` comme tel). L'ordre effectif des
+règles est **positionnel**, en BP3 comme en BPScript : il suffit d'écrire la règle en
+dernier. Rien à implémenter.
 
-**NOT YET SUPPORTED in BPScript** — backlog items:
-  - `<--` (right-to-left) rule direction (distinct from `<-`?)
-  - Rule ordering constraint in ORD sub-grammars
+*(À ne pas confondre avec le qualifieur `[order]` de BPScript, qui est `_ordseq` et
+restaure l'ordre canonique d'une séquence — `EBNF.md:689` — sans rapport avec l'ordre
+des règles.)*
 
-## 6. Multiple LIN rules with identical LHS
+---
 
-BP3 LIN allows multiple rules with the same LHS; they are tried according to
-weights. Grammars #2 and #5 use this extensively (gram#2[2]/[3] both have
-`S1V S2F S1F S2F E32` as LHS; gram#2[5..10] all have `S1V S2V S1F S2F E32`).
+## Ce qui reste réellement à faire
 
-In BPScript, multiple rules with the same LHS in a `@mode:lin` sub-grammar
-should work (the encoder emits them as separate BP3 rules), but they are
-currently untested for LIN mode specifically.
+1. **F1** — implémenter le qualifieur `[meter:…]` (syntaxe déjà spécifiée et ratifiée).
+2. **F3** — concevoir la profondeur de contexte `+`/`++` ; **F4** en découle.
 
-**Possibly supported** — needs verification in encoder.js LIN path.
-
-## 7. TEMPLATES section translation
-
-The original has 6 template entries using the BP3 `(= ...) / (: ...)` inline
-bracket notation and `+`/`++` context markers. These cannot be translated to
-BPScript `@templates` without resolving items 2, 3, and 4 above first.
-
-**NOT TRANSLATED** — depends on items 2, 3, 4.
-
-## Summary of backlog items
-
-| # | Feature | File | Line |
-|---|---------|------|------|
-| 1 | LHS time-signature annotation | scene.bps | gram#1[1] |
-| 2 | Inline `(= ...) / (: ...)` template brackets | scene.bps | gram#2[1..10] |
-| 3 | `+`/`++` context-depth token prefixes | scene.bps | gram#2[1..10], gram#5[1..8] |
-| 4 | Negative-context marker `#+` | scene.bps | gram#5[6] |
-| 5 | `<--` direction + "must be last" constraint | scene.bps | gram#5[8] |
-| 6 | Multiple identical LHS in LIN (test needed) | encoder.js | LIN path |
-| 7 | TEMPLATES section with old bracket format | scene.bps | @templates |
+La section `TEMPLATES` de l'original dépendait, selon l'ancienne version de ce document,
+de F2/F3/F4. Puisque **F2 est un faux problème**, elle ne dépend plus que de F3.
