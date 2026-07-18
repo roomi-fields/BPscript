@@ -75,7 +75,8 @@
           "coerce": "raw",
           "description": "La chaîne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
         }
-      }
+      },
+      "body": "/**\n * transpose — transposition REELLE (chromatique) : deplace le CADRE, pas les notes.\n *\n * Recette imposee par le contrat Kairos (docs/API.md:91-93, sdk.ts CanonicalPitch.frameRatio) :\n * `frameRatio = (frameRatio ?? 1) x params.ratio`. Le ratio arrive DEJA normalise par Kairos\n * depuis la chaine 3-formats (3/2 | 700c | 1.5) — le corps ne parse rien, il compose.\n *\n * Multiplicatif et non affectatif : deux transpose successifs se COMPOSENT (une quinte puis une\n * octave = une douzieme). Ecraser ferait perdre la premiere.\n *\n * Noms et registres sont preserves PAR CONSTRUCTION : on ne touche ni `step` ni `noteName` —\n * c'est Kairos seul qui applique `hz x frameRatio` a la resolution, APRES les ops de grille.\n * C'est ce qui en fait l'image fidele du C4key natif (Encode.c:678 `key += (C4key - 60)`),\n * un decalage global qui laisse la partition ecrite intacte.\n */\nexport default (ctx: any): void => {\n  const pitch = ctx.target.pitch;\n  if (!pitch) return; // terminal non-haut (percussion, echantillon) : rien a transposer\n  const ratio = Number(ctx.params.ratio);\n  if (!Number.isFinite(ratio) || ratio <= 0) {\n    throw new Error(\n      `transpose : ratio d'intervalle invalide (${String(ctx.params.interval ?? ctx.params.ratio)}). `\n      + `Attendu un intervalle 3-formats strictement positif : fraction 3/2, cents 700c, decimal 1.5.`,\n    );\n  }\n  pitch.frameRatio = (pitch.frameRatio ?? 1) * ratio;\n};\n"
     },
     "rotate": {
       "description": "TOMBSTONE de migration : rotate-HAUTEUR a été renommé scaleshift (décision 2026-07-11, transposition scalaire). Cette entrée existe pour qu'une scène NON MIGRÉE reçoive un cri LOCAL nommé au lieu d'un contrôle qui dort. À retirer une fois tout le corpus migré.",
