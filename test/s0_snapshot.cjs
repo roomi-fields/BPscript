@@ -40,7 +40,7 @@ const GRAMMARS = require('./grammars/grammars.json');
 // Mêmes deux trous colmatés qu'en S1 (audit bp3-engine c4b1e7f) : « … items will be
 // produced. » et « Variable must start with … » passaient le filtre et entraient dans
 // les oracles comme des terminaux. Prévention : aucune capture S0 n'était polluée.
-const DIAG_RE = /^•|^\u{1F449}|items? (have|has) been produced|items? will be produced|^Variable must start with|^Total computation|^Interpreting|^Expanding|^Formula|^Phase|^Creating|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading|^Closing|^Buffer|^Applying|^Correction|^Jflag\b|^Subgrammar|^Production time|has channel \d|^Error code|^=> |^Should be|^Using quantization|^Csound tables|^Could not derive/u;
+const DIAG_RE = /^•|^\u{1F449}|items? (have|has) been produced|items? will be produced|^Variable must start with|^Loading tonality|^Script aborted|^Calculation overflow|^Total computation|^Interpreting|^Expanding|^Formula|^Phase|^Creating|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading|^Closing|^Buffer|^Applying|^Correction|^Jflag\b|^Subgrammar|^Production time|has channel \d|^Error code|^=> |^Should be|^Using quantization|^Csound tables|^Could not derive/u;
 
 // Old BP2 positional settings → JSON (identique à s1_native.cjs)
 function convertOldSettings(c) {

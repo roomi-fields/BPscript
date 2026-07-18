@@ -395,7 +395,7 @@ else if (s1Mode === 'text') {
     //  - \u00ab Variable must start with uppercase character\u2026 \u00bb passait : aucun motif ne la
     //    couvrait, si bien que des ERREURS DE COMPILATION entraient dans les oracles.
     // V\u00e9rifi\u00e9 : ces motifs n'attrapent aucune ligne de terminaux l\u00e9gitime.
-    if (/^\u2022|^\u{1F449}|items? (have|has) been produced|items? will be produced|^Variable must start with|^Total computation time|^Interpreting structure|^Expanding polymetric|^Formula is complex|^Phase diagram|^Creating phase|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading out|^Closing MIDI|^Buffer limit|^Applying serial|^Correction of|^Jflag\b|^Subgrammar \d|^Production time|has channel \d|^Error code|^=> |^Should be|^Could not derive/u.test(line)) continue;
+    if (/^\u2022|^\u{1F449}|items? (have|has) been produced|items? will be produced|^Variable must start with|^Loading tonality|^Script aborted|^Calculation overflow|^Total computation time|^Interpreting structure|^Expanding polymetric|^Formula is complex|^Phase diagram|^Creating phase|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading out|^Closing MIDI|^Buffer limit|^Applying serial|^Correction of|^Jflag\b|^Subgrammar \d|^Production time|has channel \d|^Error code|^=> |^Should be|^Could not derive/u.test(line)) continue;
     // Split line into tokens, with post-processing cleanup
     const names = line.split(/\s+/).filter(t => t);
     for (let n of names) {
