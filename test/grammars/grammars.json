@@ -96,7 +96,9 @@
       "alphabet": "-al.gramgene",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 372 tokens."
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "voie_b": "hors-perimetre",
+    "voie_b_raison": "Metagrammaire : produit du TEXTE DE GRAMMAIRE. Hors perimetre du langage BPScript par decision RATIFIEE Romain 2026-07-18 (hub/decisions/2026-07-18-metagrammaires-hors-perimetre-bpscript.md, option (c) du dossier docs/design/PORTEUR_VERBATIM.md). PAS un echec de transcription ni une fixture en attente : aucune .bps ne sera ecrite. Le statut 'active' reste VRAI pour les etages NATIFS (la grammaire produit cote moteur) — l'exclusion ne porte que sur la Voie B."
   },
   "keys": {
     "bernard": "keys",
@@ -456,7 +458,9 @@
       "alphabet": "-al.gramgene",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 884 tokens."
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "voie_b": "hors-perimetre",
+    "voie_b_raison": "Metagrammaire : produit du TEXTE DE GRAMMAIRE. Hors perimetre du langage BPScript par decision RATIFIEE Romain 2026-07-18 (hub/decisions/2026-07-18-metagrammaires-hors-perimetre-bpscript.md, option (c) du dossier docs/design/PORTEUR_VERBATIM.md). PAS un echec de transcription ni une fixture en attente : aucune .bps ne sera ecrite. Le statut 'active' reste VRAI pour les etages NATIFS (la grammaire produit cote moteur) — l'exclusion ne porte que sur la Voie B."
   },
   "koto1": {
     "bernard": "koto1",

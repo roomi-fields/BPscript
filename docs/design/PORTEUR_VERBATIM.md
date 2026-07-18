@@ -1,7 +1,25 @@
 # Dossier — faut-il généraliser le porteur verbatim ?
 
-**Pour arbitrage : Romain.** Rédigé 2026-07-18 par bpscript, à la demande de l'architecte (note [670]).
-**Statut : question ouverte.** Rien n'est implémenté, aucune syntaxe n'est proposée comme acquise.
+**CLOS — TRANCHÉ PAR ROMAIN : option (c), les métagrammaires sont HORS PÉRIMÈTRE de BPScript.**
+Décision ratifiée 2026-07-18, `hub/decisions/2026-07-18-metagrammaires-hors-perimetre-bpscript.md`.
+
+**Aucun mécanisme n'est créé** : ni littéral textuel de surface, ni généralisation du porteur verbatim.
+Le langage reste sobre — empiler (a) et (b) aurait donné deux façons de porter du texte. Le besoin est
+avéré mais étroit (2 grammaires sur 113, aucune musicale) et ne justifie pas d'élargir la surface.
+
+**Conséquence** : `gramgene1` et `gramgene2` ne sont PAS transcrites en `.bps` et sortent de la file des
+fixtures Voie B. Ce n'est pas un échec de transcription, c'est une exclusion **décidée** — marquée
+`voie_b: "hors-perimetre"` dans `test/grammars/grammars.json`. Leur statut natif reste `active` :
+l'exclusion ne porte que sur la Voie B, le moteur, lui, les produit.
+
+Ce document reste comme **trace du raisonnement**, pas comme question ouverte. Ce qu'il garde d'utile
+au-delà de la décision : la preuve, vérifiée à la source, que BPScript **possède déjà** un porteur
+verbatim (marqueurs d'homomorphisme, limité aux identifiants) — à ne pas redécouvrir comme un manque.
+
+---
+
+*Rédigé 2026-07-18 par bpscript, à la demande de l'architecte (note [670]). Ci-dessous, le dossier tel
+qu'il a été soumis à l'arbitrage.*
 
 > **Cadrage révisé.** La question n'est PAS « BPScript a-t-il besoin d'un littéral textuel ». Un
 > porteur de texte opaque **existe déjà** — je l'avais raté et j'ai failli présenter un faux trou.
