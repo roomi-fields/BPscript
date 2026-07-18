@@ -70,6 +70,10 @@ function resolveActors(ast) {
   const actorTable = {};
   const terminalActorMap = {};
 
+  // Un renvoi POINTÉ (`sitar.C4`) doit désigner un acteur DÉCLARÉ — y compris quand la scène
+  // n'en déclare aucun, cas qui filait autrefois par le retour anticipé ci-dessous.
+  verifierActeursReferences(ast, errors);
+
   if (!ast.actors || ast.actors.length === 0) {
     return { actorTable, terminalActorMap, errors };
   }
@@ -164,6 +168,60 @@ function resolveActors(ast) {
   }
 
   return { actorTable, terminalActorMap, errors };
+}
+
+/**
+ * Garde des renvois pointés — FAIL-LOUD (2026-07-18).
+ *
+ * `sitar.C4` nomme l'acteur qui porte le terminal. Un nom NON DÉCLARÉ était accepté en
+ * silence : le préfixe survivait dans l'AST, aucun consommateur ne le reconnaissait, et le
+ * terminal retombait sur les défauts de scène. MESURÉ : dans une scène où `sitar` est déclaré
+ * avec `tuning.western_just`, `sitar.C4` sonne 264.00 Hz ; `inconnu.C4` sonne 261.63 Hz —
+ * exactement comme si aucun acteur n'était écrit. Une faute de frappe sur un nom d'acteur
+ * changeait donc la HAUTEUR sans un mot, jusqu'au bout de la chaîne (Kairos ne crie pas : il
+ * ne peut pas savoir qu'un nom qu'il ne connaît pas était censé exister).
+ *
+ * Le mauvais silence n'est pas ici l'absence d'erreur, c'est le REPLI : se rabattre sur un
+ * défaut plausible masque la faute au lieu de la révéler.
+ *
+ * Rayon de casse mesuré AVANT durcissement (règle de frontière, CLAUDE.md) : 0 sur les 93
+ * scènes de `test/grammars`, et sur les 188 `.bps` du corpus BPx les 2 seules scènes à
+ * notation pointée (`kai9_actor_address`, `kai10_pitch_config`) DÉCLARENT leurs acteurs
+ * (`@actor bass…`, `@actor lead…`) — donc aucune ne casse.
+ */
+function verifierActeursReferences(ast, errors) {
+  const declares = new Set((ast.actors || []).map((a) => a.name));
+  const vus = new Set();
+
+  const visiter = (elements) => {
+    if (!elements) return;
+    for (const el of elements) {
+      if (!el || typeof el !== 'object') continue;
+      if (el.actor && !declares.has(el.actor) && !vus.has(el.actor)) {
+        vus.add(el.actor);
+        const connus = declares.size
+          ? `Acteurs déclarés : ${[...declares].join(', ')}.`
+          : "Cette scène ne déclare aucun acteur.";
+        errors.push({
+          message: `Acteur inconnu '${el.actor}' dans '${el.actor}.${el.name}'`
+            + ` — un renvoi pointé doit nommer un acteur déclaré par @actor. ${connus}`,
+          line: el.line,
+        });
+      }
+      // Un acteur peut se nicher dans une voix polymétrique ou un groupe.
+      if (el.voices) for (const voix of el.voices) visiter(voix);
+      if (el.primary) visiter([el.primary]);
+      if (el.secondaries) visiter(el.secondaries);
+      if (el.elements) visiter(el.elements);
+    }
+  };
+
+  for (const sg of (ast.subgrammars || [])) {
+    for (const rule of (sg.rules || [])) {
+      visiter(rule.rhs);
+      visiter(rule.lhs);
+    }
+  }
 }
 
 /**
