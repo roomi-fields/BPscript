@@ -260,12 +260,6 @@
       "tivra": "100c"
     }
   },
-  "just_bp3": {
-    "description": "Just intonation BP3 — 12 degrés nommés sur le tempérament bp3_just_intonation (ratios verbatim -to.tryOneScale).",
-    "alphabet": "just",
-    "temperament": "bp3_just_intonation",
-    "degrees": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-  },
   "shruti23_native": {
     "description": "22-shruti nommé BP3 — 23 degrés sur le tempérament bp3_shruti23_native (table native -to.tryShruti verbatim, 729/512). Distinct de bp3_grama (Arnold).",
     "alphabet": "shruti23",
