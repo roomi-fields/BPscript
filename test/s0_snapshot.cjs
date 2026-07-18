@@ -52,8 +52,33 @@ function convertOldSettings(c) {
     const f = parseFloat(s); return isNaN(f) ? null : s;
   };
   const o = {};
+  // GARDE DE PLAUSIBILITÉ (BPS-24). La carte positionnelle ci-dessous suppose UN layout,
+  // or le corpus BP2 en contient PLUSIEURS (fichiers de 112 à ~362 lignes). Sur un layout
+  // non prévu, les positions fixes tombent à côté et rapportent des valeurs absurdes :
+  // -se.Alarm (112 lignes) rend '10' aux positions 62/63/65/67, d'où A4freq = 10 Hz et
+  // C4key = 10, là où le même emplacement dans un fichier de 357 lignes vaut 440 et 60.
+  // Conséquence vécue : un MaxConsoleTime à 1 seconde COUPE la production (koto1 est
+  // tombée à 7 tokens au lieu de 72). 34 des 84 fichiers étaient touchés.
+  // On n'émet donc un champ QUE si sa valeur est physiquement plausible ; sinon on
+  // l'omet et le défaut moteur s'applique (cf docs/reference/settings_names.tab).
+  // Bornes fournies par bp3-engine + bornes MIDI (0-127) qui sont des faits du protocole.
+  const PLAUSIBLE = {
+    A4freq:              (n) => n >= 200 && n <= 900,
+    C4key:               (n) => n >= 36 && n <= 84,
+    SamplingRate:        (n) => n > 20,
+    MaxConsoleTime:      (n) => n > 10,
+    VolumeController:    (n) => n === 7 || n === 11,
+    PanoramicController: (n) => n === 10,
+    DeftVelocity:        (n) => n >= 1 && n <= 127,
+    DeftVolume:          (n) => n >= 1 && n <= 127,
+    DeftPanoramic:       (n) => n >= 0 && n <= 127,
+    DefaultBlockKey:     (n) => n >= 0 && n <= 127,
+  };
+  const rejected = [];
   const set = (k, nm, pos, bool, unit) => {
     const val = v(pos); if (val === null) return;
+    const check = PLAUSIBLE[k];
+    if (check && !check(parseFloat(val))) { rejected.push(`${k}=${val}`); return; }
     const e = { name: nm, value: val, boolean: bool ? '1' : '0' };
     if (unit) e.unit = unit; o[k] = e;
   };
@@ -81,15 +106,7 @@ function convertOldSettings(c) {
   set('SplitTimeObjects','Split terminal symbols',38,true);
   set('SplitVariables','Split |variables|',39,true);
   set('DeftBufferSize','Default buffer size',41,false);
-  // MaxConsoleTime VOLONTAIREMENT NON ÉMIS — la carte positionnelle BP2 ci-dessus n'est
-  // PAS validée pour ce champ : la position 44 rend 59944 (qui est la taille de buffer,
-  // lue au mauvais emplacement) ou 1. Or « 1 seconde » COUPE la production, et c'est
-  // exactement ce qui a amputé koto1 (7 tokens au lieu de 72) via le -se converti par
-  // bp3-engine. Ne rien émettre laisse le défaut moteur (60 s, cf docs/reference/
-  // settings_names.tab) s'appliquer. Vérifié : les 14 grammaires actives à réglages BP2
-  // MATCHENT toutes leur oracle sans ce champ — retrait sans effet, risque en moins.
-  // Le reste de la carte reste à valider contre la spec de sérialisation BP2 (non
-  // disponible ici ; settings_names.tab donne l'ordre BP3/UI, PAS l'ordre BP2).
+  set('MaxConsoleTime','Max computation time',44,false,'seconds');
   set('Seed','Seed for randomization',45,false);
   set('NoteConvention','Note convention',47,false);
   if (vals.length > 51) {
@@ -112,6 +129,9 @@ function convertOldSettings(c) {
   if (vals.length > 127) {
     set('ShowObjectGraph','Show object graph',126,true);
     set('ShowPianoRoll','Show pianoroll',127,true);
+  }
+  if (rejected.length && process.env.BP_SETTINGS_AUDIT) {
+    console.error(`  [plausibilité] champs écartés : ${rejected.join(', ')}`);
   }
   return o.NoteConvention ? JSON.stringify(o) : null;
 }
