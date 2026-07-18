@@ -107,6 +107,28 @@ Après toute modification dans `bp3-engine/csrc/`:
 - `csrc/wasm/` (portage WASM) → mettre à jour `bp3-engine/CHANGELOG_WASM.md`
 - Nouveau bug/issue moteur → ajouter dans la tour de contrôle : `/home/romi/dev/bp/hub/courrier/bernard.md`
 
+### Un fail-loud n'est pas le seul chantier qu'on cale — les ARTEFACTS DÉRIVÉS aussi
+
+La règle « un fail-loud de langage est une action de FRONTIÈRE » ne couvrait que les *formes
+invalidées*. Elle est trop étroite : **tout changement qui rend périmé un artefact DÉRIVÉ que
+d'autres dépôts lisent est une action de frontière**, même s'il n'invalide aucune syntaxe.
+
+Cas payé le 2026-07-19 : j'ai ajouté `@tempo` à 19 scènes (ba8867a). Aucune forme invalidée,
+aucun fail-loud — mais BPx lit ces scènes EN DIRECT *et* leurs snapshots `s5_bps` dérivés. Les
+scènes ont changé, les snapshots non : 4 de ses tests sont passés au rouge, et il a dû prouver
+que son moteur était intact avant de me le remonter. J'avais calé son chantier sans toucher à
+une seule règle de langage.
+
+Avant de committer un changement de scène/fixture, se demander : **quel artefact dérivé
+devient faux ?** (`snapshots/`, alphabets plats, prototypes, baselines). Le régénérer dans le
+MÊME commit, ou prévenir les consommateurs dans le même geste.
+
+⚠️ **Et ne jamais régénérer à l'aveugle pour faire verdir** : le pipeline `s5_bps` était mort
+depuis l'extraction de Kanopi (le dispatcher a disparu, l'outil répondait `OK` en dégradant sa
+sortie). Régénérer aurait livré des oracles corrompus — pire que des oracles périmés, parce
+qu'ils ne crient pas. Valider la régénération sur un LOT, jamais sur un cas : `bells` reproduisait
+bit-à-bit, et 49 scènes sur 51 divergeaient.
+
 ### Librairies `lib/` — toute édition passe par le bundle (OBLIGATOIRE)
 
 `src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.json`
