@@ -1,3 +1,7 @@
+// TRANSCRIPTION : le natif ecrit le /N ESPACE = forme LEGACY PERSISTANTE (decision
+// hub 2026-07-16-tempo-slash-n-nu-legacy-persistant, RATIFIEE). En BPScript elle s ecrit
+// ![/N], PAS le suffixe colle [/N] qui est la forme CANONIQUE SCOPEE (enter/exit) — deux
+// semantiques distinctes que j avais confondues.
 // templates.bps — test des templates $/ &
 // Traduit de bp3-engine/library/examples/templates/grammar.gr
 //
@@ -30,7 +34,7 @@ S <> A A A [*1/2]
 S <> A A[tempo:2] A
 
 // Règle 3 : A A avec speed doublé sur le dernier A (/2 en BP3)
-S <> A A A [/2]
+S <> A A ![/2] A
 
 // Règle 4 : A A avec deux silences de durées rationnelles
 S <> A A 1 3/2 A
