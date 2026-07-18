@@ -319,5 +319,16 @@
     "baseRegister": 4,
     "defaultTuning": "just_bp3",
     "_anchor_note": "Ancre = tonique Cj4 = 261.63 Hz (valeur native -to.tryOneScale, key 60). L'intonation juste s'ancre sur SA tonique, PAS sur A440 (Aj = 5/3 = 436.05 ≠ 440) ; anchor sur A romprait le natif."
+  },
+  "shruti23": {
+    "description": "22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
+    "notes": ["sa", "r1", "r2", "r3", "r4", "g1", "g2", "g3", "g4", "m1", "m2", "m3p1", "m4p2", "p3", "p4", "d1", "d2", "d3", "d4", "n1", "n2", "n3", "n4"],
+    "alterations": { "": 0 },
+    "octaves": "saptak_us",
+    "diapason": 261.625,
+    "baseNote": "sa",
+    "baseRegister": 4,
+    "defaultTuning": "shruti23_native",
+    "_anchor_note": "Ancre = tonique sa_4 = 261.625 Hz (native -to.tryShruti). Registre en suffixe séparé par '_' (sa_4, r1_4) — convention 'saptak_us'."
   }
 }

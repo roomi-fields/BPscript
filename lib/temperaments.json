@@ -5411,5 +5411,12 @@
       "•",
       "•"
     ]
+  },
+  "bp3_shruti23_native": {
+    "description": "Table native 22-shruti de -to.tryShruti (BP3, 23 ratios sur 23 degrés). Convention pythagoricienne au degré 12 (729/512). DISTINCT de bp3_grama (édition savante d'Arnold par B. Bel, 64/45 au même degré) — deux systèmes valides, celui-ci est la table du moteur natif.",
+    "source": "bp3-engine/test-data/-to.tryShruti",
+    "period_ratio": 2,
+    "divisions": 23,
+    "ratios": [1, "256/243", "16/15", "10/9", "9/8", "32/27", "6/5", "5/4", "81/64", "4/3", "27/20", "45/32", "729/512", "3/2", "128/81", "8/5", "5/3", "27/16", "16/9", "9/5", "15/8", "243/128", "48/25"]
   }
 }
