@@ -343,9 +343,20 @@ function tokenize(source, opts = {}) {
       continue;
     }
 
-    // Unknown character — skip with warning
-    console.warn(`Tokenizer: unexpected character '${ch}' at ${line}:${col}`);
-    advance();
+    // Caractère inconnu — FAIL-LOUD (2026-07-18). Il était auparavant AVALÉ avec un simple
+    // `console.warn`, hors de `errors` ET de `warnings` : l'appelant recevait une compilation
+    // « réussie » sur une grammaire CORROMPUE. Cas mesuré : `S -> 'X' 'Y'` rendait
+    // `S --> X' Y'` avec errors:[] — le guillemet ouvrant avalé, le fermant COLLÉ au terminal,
+    // donc deux terminaux inventés. Avaler un caractère qu'on ne sait pas lire ne peut jamais
+    // produire autre chose qu'un texte différent de celui qui a été écrit.
+    // Rayon de casse mesuré AVANT de durcir : 0 sur 93 scènes de test/grammars et 0 sur les
+    // 188 .bps du corpus BPx — aucune forme existante n'en dépend.
+    const aide = ch === "'" || ch === '"'
+      ? " — BPScript n'a pas de littéral entre guillemets ; un terminal s'écrit nu (X, pas 'X')."
+      : ch === ';'
+        ? ' — le séparateur de séquence BP2 (;) n\'existe pas : une règle par ligne.'
+        : '';
+    throw new Error(`Caractère inattendu '${ch}' à la ligne ${line}, colonne ${col}${aide}`);
   }
 
   emit(T.EOF, null);
