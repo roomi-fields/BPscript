@@ -22,5 +22,7 @@ X -> T
 
 -----
 
+// Sous-grammaire 3 — @mode:random explicite, fidèle au natif (RND)
+@mode:random
 T -> C5 [failed:3,2]
 Y -> D6

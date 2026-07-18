@@ -2032,6 +2032,9 @@ function parse(tokens, opts = {}) {
 
       // Parse @mode:X(modifiers) directive at the start of a sub-grammar block
       // Stop if @templates — that's a separate section after all subgrammars
+      // `currentMode` ne porte QUE le @mode du bloc courant : il est remis à zéro à la fin
+      // de chaque sous-grammaire (voir plus bas). On le lit ici parce que le @mode de la
+      // PREMIÈRE sous-grammaire est consommé en amont, hors de la boucle @ ci-dessous.
       let blockMode = currentMode;
       let blockModifiers = currentModifiers;
       while (at(T.AT)) {
@@ -2041,7 +2044,7 @@ function parse(tokens, opts = {}) {
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
           blockMode = dir.runtime;  // @mode:random → runtime='random'
-          currentMode = blockMode;  // persists to following blocks
+          currentMode = blockMode;  // portée du bloc courant seulement (pas d'héritage)
           blockModifiers = dir.modifiers || null;
           currentModifiers = blockModifiers;
         }
@@ -2074,6 +2077,15 @@ function parse(tokens, opts = {}) {
       } else {
         break; // No rules found → stop parsing subgrammars
       }
+
+      // Le mode NE S'HÉRITE PAS d'une sous-grammaire à l'autre : BP3 repart du défaut
+      // (RNDtype) à CHAQUE sous-grammaire et ne l'écrase que si un mot-clé de mode est
+      // présent — CompileGrammar.c:1427 (défaut) puis :1488 (override conditionnel),
+      // zéro héritage inter-bloc. Laisser `currentMode` persister faisait fuiter le mode
+      // d'un bloc @mode:ord vers les blocs SUIVANTS sans @mode, qui doivent rester au
+      // défaut. Mesuré sur asymmetric1 : sous-gram 6 en ORD au lieu de RND décalait les
+      // tirages aléatoires. Réfute « ORD explicite ≡ héritage implicite » (bpx [613]).
+      currentMode = null;
 
       if (at(T.SEPARATOR)) {
         advance();
