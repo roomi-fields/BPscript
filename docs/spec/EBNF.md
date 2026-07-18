@@ -670,7 +670,7 @@ ENGINE_KEY  = "mode" | "scan" | "weight" | "on_fail"   (* `speed` SUPPRIMÉ → 
             | "retro" | "shuffle" | "order" | "rotate"
             | "keyxpand" | "repeat" | "failed" | "stop" | "goto"
             | "striated" | "smooth"
-            | "gap" | "overlap" | "rndtime" ;
+            | "staccato" | "legato" | "rndtime" ;
 
 raw_value   = (* tout texte jusqu'au prochain "," ou "]" *) ;
 ```
@@ -717,7 +717,7 @@ subject = "*" | IDENT ;   (* "*" = chaque terminal ; IDENT = un terminal (ex. C2
 
 RUNTIME_KEY  = (* nom présent dans lib/controls.json section "runtime" :
                   vel, chan, pan, wave, attack, release, detune,
-                  filter, filterQ, transpose, ins, gap, overlap,
+                  filter, filterQ, transpose, ins, staccato, legato,
                   mod, pitchbend, volume, etc. *) ;
 ```
 

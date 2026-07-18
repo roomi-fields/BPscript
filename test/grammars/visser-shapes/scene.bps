@@ -13,7 +13,7 @@
 // --- Sous-grammaire 1 @mode:ord — structure ---
 
 @mode:ord
-S -> Shapes !(gap:50)
+S -> Shapes !(staccato:50)
 Shapes -> Part1 {![rotate:20] Part1 !(chromashift:2)} Part2 Part3 {![tempo:0.7] Part3} Part4
 
 -----
