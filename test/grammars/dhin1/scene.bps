@@ -1,13 +1,9 @@
+// NOTE BOLSIZE (2026-07-18) : terminaux en noms PLEINS (règle AST-agnostique, [566]). Deux
+// terminaux dépassent ~100 chars (F48) et débordent le buffer moteur BP3 (BOLSIZE+2=32, Encode.c:71) :
+// S5 (.bps→BP3→WASM) crashe « memory access out of bounds » tant que le garde-fou de troncature
+// n'est pas posé côté encodeur (sérialisation BP3 seule). dhin1 est to_be_tested (non gaté S4/S5)
+// et sa dérivation -gr jette (compileTemplates) : non-fonctionnel, l'activation attend ce garde-fou.
 @transcription.dhinOO
-// BOLSIZE aliases (terminaux >30 chars tronqués pour la limite moteur BP3)
-//   dhinOOdhagenadhaOOdhagenX001 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagena
-//   tagetirakitadhinOOdhagenX002 → tagetirakitadhinOOdhagenadhatigegenakadheenedheenagena
-//   tagetirakitagenaOdhagenaX003 → tagetirakitagenaOdhagenadhatigegenakadheenedheenagena
-//   tagetirakitadhinOOdhagenX004 → tagetirakitadhinOOdhagenadhatigegenakateeneteenakena
-//   tagetirakitagenaOdhagenaX005 → tagetirakitagenaOdhagenadhatigegenakateeneteenakena
-//   dhinOOdhagenadhaOOdhagenX006 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitadhinOOdhagenadhatigegenakateeneteenakena
-//   dhinOOdhagenadhaOOdhagenX007 → dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitagenaOdhagenadhatigegenakateeneteenakena
-//
 @mode:random(tempo:360.0000,striated)
 S <> S48 [meter:4+4/6]
 S <> S96 [meter:4+4+4+4/6]
@@ -56,11 +52,11 @@ A6 <> dhatigegenaka
 -----
 @mode:random
 F'12 <> dhatigegenakateeneteenakena
-Q24 <> dhinOOdhagenadhaOOdhagenX001
-F24 <> tagetirakitadhinOOdhagenX002
-F24 <> tagetirakitagenaOdhagenaX003
-F'24 <> tagetirakitadhinOOdhagenX004
-F'24 <> tagetirakitagenaOdhagenaX005
-F48 <> dhinOOdhagenadhaOOdhagenX006
-F48 <> dhinOOdhagenadhaOOdhagenX007
+Q24 <> dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagena
+F24 <> tagetirakitadhinOOdhagenadhatigegenakadheenedheenagena
+F24 <> tagetirakitagenaOdhagenadhatigegenakadheenedheenagena
+F'24 <> tagetirakitadhinOOdhagenadhatigegenakateeneteenakena
+F'24 <> tagetirakitagenaOdhagenadhatigegenakateeneteenakena
+F48 <> dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitadhinOOdhagenadhatigegenakateeneteenakena
+F48 <> dhinOOdhagenadhaOOdhagenadhatigegenakadheenedheenagenatagetirakitagenaOdhagenadhatigegenakateeneteenakena
 -----

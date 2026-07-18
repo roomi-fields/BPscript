@@ -1,7 +1,3 @@
-// BOLSIZE aliases (terminaux >30 chars tronqués pour la limite moteur BP3)
-//   dhatidhagenadhatrktdhatiX001 → dhatidhagenadhatrktdhatidhagedheenagena
-//   dhatidhagenadhatrktdhatiX002 → dhatidhagenadhatrktdhatidhageteenakena
-//
 @transcription.dhati
 
 @mode:random
@@ -33,5 +29,5 @@ $ M V1 #tr <> $ ti M #tr
 @mode:ord
 A8 <> dhatidhagedheenagena
 A'8 <> dhatidhageteenakena
-A16 <> dhatidhagenadhatrktdhatiX001
-A'16 <> dhatidhagenadhatrktdhatiX002
+A16 <> dhatidhagenadhatrktdhatidhagedheenagena
+A'16 <> dhatidhagenadhatrktdhatidhageteenakena

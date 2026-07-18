@@ -564,10 +564,9 @@ function bp3ToScene(grammarText, opts) {
   // E4 : charger la librairie de contrôles pour les formes appel
   if (grammarCallMode) bpsLines.unshift('@controls');
 
-  // BOLSIZE : injecter le commentaire de table d'alias en tête si des alias ont été créés
-  if (bolsizeTable.hasAliases()) {
-    bpsLines.unshift(bolsizeTable.headerComment());
-  }
+  // BOLSIZE : plus d'injection d'en-tête d'alias (décision archi 2026-07-18, [566]) — le porteur
+  // ne grave plus la troncature moteur BP3 dans le .bps. bolsizeTable reste vide (sans effet).
+  void bolsizeTable;
 
   // ── Résultat : avec ou sans opts -ho ─────────────────────────────────────
 
@@ -1050,9 +1049,13 @@ function aliasTerminalDashes(tok, bolsizeTable) {
   if (/^[A-Za-z]/.test(tok) && tok.includes('-')) {
     result = tok.replace(/-/g, 'O');
   }
-  if (bolsizeTable) {
-    result = bolsizeTable.alias(result);
-  }
+  // BOLSIZE : le porteur NE grave PLUS la troncature (décision archi 2026-07-18, [566]) —
+  // le .bps et l'AST portent le nom PLEIN, toujours (règle AST-agnostique : aucune notion BP3
+  // dans le source destiné à BPx). La troncature de sortie BP3 (limite moteur BOLSIZE=30), SI
+  // nécessaire pour un terminal qui déborde le buffer WASM, vit UNIQUEMENT dans l'encodeur à
+  // la sérialisation, jamais ici. bolsizeTable conservé en paramètre (sans effet) pour ne pas
+  // toucher les sites d'appel. Cf. project_bolsize_grave_dans_bps_par_porteur.
+  void bolsizeTable;
   return result;
 }
 
