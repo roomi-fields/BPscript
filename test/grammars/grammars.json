@@ -20,6 +20,25 @@
       "alphabet": null
     }
   },
+  "12345678": {
+    "bernard": "12345678",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se",
+      "al"
+    ],
+    "features": [],
+    "lines": 18,
+    "note": "Récupérée 2026-07-18 (BPS-16).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.EkDoTin",
+      "alphabet": "-al.EkDoTin",
+      "note": "514 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18."
+    }
+  },
   "PP": {
     "bernard": "PP",
     "status": "excluded",
@@ -397,7 +416,7 @@
   },
   "tryObjects": {
     "bernard": "tryObjects",
-    "status": "excluded",
+    "status": "active",
     "aux": [
       "se",
       "al"
@@ -411,15 +430,16 @@
       "midi_notes": 0,
       "note_convention": "english",
       "settings": "-se.koto3",
-      "alphabet": "-al.abc1"
+      "alphabet": "-al.abc1",
+      "note": "1040 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18. Alphabet chargé via -al.abc1 (et non -ho.abc1)."
     },
     "s1_args": [
       "-se",
       "-se.koto3",
       "-al",
-      "-ho.abc1"
+      "-al.abc1"
     ],
-    "reason": "S0 PHP produces no output. Needs -ho.abc1 loaded as alphabet via PHP interface. [constat 2026-04-04]"
+    "note": "Récupérée 2026-07-18 (BPS-16) : alphabet passé en -al.abc1."
   },
   "negative-context": {
     "bernard": "checkNegativeContext",
@@ -1977,19 +1997,25 @@
   },
   "dhati": {
     "bernard": "dhati",
-    "status": "excluded",
+    "status": "active",
     "production_mode": "midi",
     "aux": [
-      "se"
+      "se",
+      "al"
     ],
     "features": [
       "poly:12",
       "sub:6"
     ],
     "lines": 171,
-    "php_status": "COMPILE_FAIL",
-    "php_errors": 1,
-    "reason": "COMPILE_FAIL en PHP et S1 avec settings JSON officiels. Erreur: I46 This item cannot be played. [constat 2026-04-04]"
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "french",
+      "settings": "-se.dhati",
+      "alphabet": "-al.dhati",
+      "note": "491 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18. Le -ho.dhati CASSE (en-tête BP2 \":\") — le bon alphabet est -al.dhati ; pas de -gl."
+    },
+    "note": "Récupérée 2026-07-18 (BPS-16) : le blocage venait du harnais S0 qui n envoyait pas l alphabet -al, pas de la grammaire."
   },
   "shapes-rhythm": {
     "bernard": "ShapesInRhythm",
@@ -2199,5 +2225,50 @@
     "status": "to_be_tested",
     "production_mode": "midi",
     "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3."
+  },
+  "Nadaka": {
+    "bernard": "Nadaka",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se",
+      "to",
+      "cs"
+    ],
+    "features": [],
+    "lines": 99,
+    "note": "Récupérée 2026-07-18 (BPS-16).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "indian",
+      "settings": "-se.hamsad",
+      "alphabet": null,
+      "tonality": "-to.Nadaka",
+      "csound": "-cs.Nadaka",
+      "note": "3446 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18."
+    }
+  },
+  "trial.mohanam": {
+    "bernard": "trial.mohanam",
+    "status": "active",
+    "production_mode": "midi",
+    "aux": [
+      "se",
+      "al",
+      "to",
+      "cs"
+    ],
+    "features": [],
+    "lines": 132,
+    "note": "Récupérée 2026-07-18 (BPS-16).",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "indian",
+      "settings": "-se.trial.mohanam",
+      "alphabet": "-al.trial.mohanam",
+      "tonality": "-to.trial.mohanam",
+      "csound": "-cs.trial.mohanam",
+      "note": "6367 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18."
+    }
   }
 }
