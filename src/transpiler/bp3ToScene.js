@@ -60,6 +60,13 @@ const _bp3ToSceneDir = dirname(fileURLToPath(import.meta.url));
 const _controlsLib = JSON.parse(
   readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'controls.json'), 'utf-8')
 );
+// Alphabets de test : une réf `-ho.<nom>` / `-al.<nom>` en en-tête d'un -gr IMPLIQUE
+// l'alphabet <nom> côté BP3 (GetBols/SEARCHTERMINAL2, CompileGrammar.c:1107-1175). Sans
+// déclaration d'alphabet, BPx ne regroupe pas les LHS multi-caractères (bcd→j) : chaque
+// terminal redevient atomique et seules les règles à LHS-1 matchent (bug checkSUB1, [603]).
+const _testAlphabetsLib = JSON.parse(
+  readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'test_alphabets.json'), 'utf-8')
+);
 
 /**
  * Construit la map token BP3 (_xxx) → { bps, kind, noArg } depuis lib/controls.json.
@@ -215,6 +222,7 @@ function bp3ToScene(grammarText, opts) {
 
   // ── Phase 1 : parser les lignes en segments ───────────────────────────────
   const segments = [];
+  const alphabetRefs = [];
   let i = 0;
   let inTemplates = false;
   let templateLines = [];
@@ -233,6 +241,11 @@ function bp3ToScene(grammarText, opts) {
     if (line.startsWith('//')) { i++; continue; }
 
     // Références fichiers (-se., -al., -ho., -gl., etc.)
+    // `-ho.<nom>` / `-al.<nom>` DÉFINISSENT un alphabet : on les capture au lieu de les
+    // jeter (le drop silencieux masquait le vrai contenu — bug checkSUB1, [603]). Les
+    // autres réfs (-se., -gl., -to., -mi.…) restent sans effet sur la scène.
+    const auxRef = line.match(/^-(ho|al)\.([A-Za-z0-9_.-]+)/);
+    if (auxRef) { alphabetRefs.push(auxRef[2]); i++; continue; }
     if (/^-[a-z]{2}\./.test(line)) { i++; continue; }
 
     // Annotations BP2 libres [text seul]
@@ -563,6 +576,17 @@ function bp3ToScene(grammarText, opts) {
 
   // E4 : charger la librairie de contrôles pour les formes appel
   if (grammarCallMode) bpsLines.unshift('@controls');
+
+  // Déclaration d'alphabet issue des réfs `-ho.`/`-al.` de l'en-tête ([603]). Résolue quand
+  // l'alphabet existe en bibliothèque ; sinon on laisse une trace VISIBLE — jamais un drop
+  // silencieux, qui masquait le vrai contenu et faussait toute régénération.
+  for (const ref of [...new Set(alphabetRefs)].reverse()) {
+    if (Object.prototype.hasOwnProperty.call(_testAlphabetsLib, ref)) {
+      bpsLines.unshift(`@test_alphabets.${ref}`);
+    } else {
+      bpsLines.unshift(`// ALPHABET NON RÉSOLU : le -gr référence '${ref}' (aucun lib/test_alphabets.json:${ref}).`);
+    }
+  }
 
   // BOLSIZE : plus d'injection d'en-tête d'alias (décision archi 2026-07-18, [566]) — le porteur
   // ne grave plus la troncature moteur BP3 dans le .bps. bolsizeTable reste vide (sans effet).
