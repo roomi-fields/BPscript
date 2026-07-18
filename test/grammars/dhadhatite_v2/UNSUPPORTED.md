@@ -11,7 +11,7 @@ l'annotation métrique en partie GAUCHE alors que le natif l'écrit **à droite 
 
 | # | Feature | Verdict |
 |---|---------|---------|
-| F1 | Annotation métrique additive `4+4+4+4/4` | **gap d'IMPLÉMENTATION** (syntaxe déjà spécifiée) |
+| F1 | Annotation métrique additive `4+4+4+4/4` | **FAUX PROBLÈME** — la forme existe et émet le natif |
 | F2 | Gabarits `(= …)` / `(: …)` | **FAUX PROBLÈME** |
 | F3 | Marqueurs de profondeur de contexte `+` / `++` | **VRAI GAP** |
 | F4 | Contexte négatif `#+` | **VRAI GAP, conditionné à F3** |
@@ -19,18 +19,24 @@ l'annotation métrique en partie GAUCHE alors que le natif l'écrit **à droite 
 
 ---
 
-## F1 — Annotation métrique additive → gap d'IMPLÉMENTATION, pas de design
+## F1 — Annotation métrique additive → FAUX PROBLÈME (corrigé le 2026-07-19)
 
-Natif : `GRAM#1[1] <100> S <-> 4+4+4+4/4 S64` (en **RHS**, pas en LHS).
+Natif : `GRAM#1[1] <100> S <-> 4+4+4+4/4 S64`.
 
-La syntaxe **est déjà spécifiée** : `docs/spec/EBNF.md:1297` documente
-`[meter:4+4/6]` → `4+4/6` avant RHS, « time signature inline ». Elle étend `@meter:3/4`
-(directive globale) en qualifieur de règle. **Syntaxe ratifiée par Romain (2026-07-18).**
+**Cette section affirmait un « gap d'implémentation ». C'était FAUX.** La forme existe, elle
+fonctionne, et elle émet exactement le natif :
 
-Mais le parser la **refuse** aujourd'hui : `S <> [meter:4+4+4+4/4] S64` →
-`Expected arrow (-> <- <>)`. Même famille que le cas `[flags] goto(...)` : un bracket
-espacé en tête de RHS clôt la règle. C'est donc un écart **spec ↔ implémentation**,
-à implémenter — pas une question de conception ouverte.
+```bpscript
+S <> S64 [weight:100, meter:4+4+4+4/4]   →   gram#1[1] <100> S <-> 4+4+4+4/4 S64
+```
+
+**L'erreur était de POSITION, pas de syntaxe.** J'écrivais le qualifieur en TÊTE de la partie
+droite (`S <> [meter:…] S64`), où un bracket espacé clôt effectivement la règle. Il se place en
+FIN de règle, comme `[weight:…]` — et il se combine avec lui.
+
+*Leçon : j'ai signalé ce gap deux fois (dans ce document, puis à l'architecte) sans avoir essayé
+la position canonique des autres qualifieurs de règle. Vérifier une forme, c'est essayer ses
+positions, pas seulement son orthographe.*
 
 ## F2 — Gabarits maître/esclave → FAUX PROBLÈME
 
@@ -87,7 +93,7 @@ des règles.)*
 
 ## Ce qui reste réellement à faire
 
-1. **F1** — implémenter le qualifieur `[meter:…]` (syntaxe déjà spécifiée et ratifiée).
+1. ~~F1~~ — **rien à faire** : la forme existe (`[meter:…]` en fin de règle). Faux problème.
 2. **F3** — concevoir la profondeur de contexte `+`/`++` ; **F4** en découle.
 
 La section `TEMPLATES` de l'original dépendait, selon l'ancienne version de ce document,
