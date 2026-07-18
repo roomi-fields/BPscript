@@ -323,18 +323,18 @@
   },
   "checkVolMasterSlave": {
     "bernard": "checkVolMasterSlave",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [],
     "features": [
       "poly:1"
     ],
     "lines": 7,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 6,
       "note_convention": "english",
       "settings": null,
       "alphabet": null,
-      "blocked": "uses -or.checkVolMasterSlave (unsupported), 2 compile errors"
+      "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18."
     },
     "production_mode": "midi"
   },
@@ -1225,7 +1225,7 @@
   },
   "tryKeyXpand": {
     "bernard": "tryKeyXpand",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -1235,11 +1235,11 @@
     ],
     "lines": 30,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 91,
       "note_convention": "english",
       "settings": "-se.tryKeyXpand",
       "alphabet": null,
-      "blocked": "uses -or.allpianos (unsupported), 5 compile errors"
+      "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. Réglages en ANCIEN FORMAT — convertis par convertOldSettings pour S0."
     },
     "production_mode": "midi"
   },
@@ -1282,7 +1282,7 @@
   },
   "Djinns": {
     "bernard": "Djinns",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -1292,11 +1292,11 @@
     ],
     "lines": 44,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english",
+      "midi_notes": 895,
+      "note_convention": "french",
       "settings": "-se.Djinns",
       "alphabet": null,
-      "blocked": "uses -or.Djinns (unsupported) + French solfège (do2,sib5) incompatible with BP3"
+      "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. Réglages en ANCIEN FORMAT — convertis par convertOldSettings pour S0."
     },
     "production_mode": "midi"
   },
@@ -2052,7 +2052,7 @@
   },
   "Mozartexpression": {
     "bernard": "Mozartexpression",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -2062,11 +2062,11 @@
     ],
     "lines": 387,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english",
+      "midi_notes": 251,
+      "note_convention": "french",
       "settings": "-se.Mozartexpression",
       "alphabet": null,
-      "blocked": "corrupted encoding (Êt13 etc.), BP2 legacy chars in grammar"
+      "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. Réglages en ANCIEN FORMAT — convertis par convertOldSettings pour S0."
     },
     "production_mode": "midi"
   },
@@ -2213,9 +2213,16 @@
     }
   },
   "testHO2": {
-    "status": "to_be_tested",
-    "production_mode": "midi",
-    "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3."
+    "status": "active",
+    "production_mode": "text",
+    "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3.",
+    "php_ref": {
+      "midi_notes": 0,
+      "note_convention": "english",
+      "settings": null,
+      "alphabet": "-al.abc",
+      "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. production_mode corrigé midi→text (S --> a b c d = symboles de l alphabet abc, aucune note MIDI)."
+    }
   },
   "testNC1": {
     "status": "to_be_tested",
