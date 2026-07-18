@@ -81,6 +81,18 @@ function universeIntervalControls() {
   return _universeIntervalControls;
 }
 
+// Contrôles à valeur COMPOSITE de l'UNIVERS (marqués `argType:"composite"`). Même besoin que les
+// interval-typés : le parseur doit savoir AVANT le libCtx de la scène que la virgule de
+// `keyxpand:C4,2` appartient à la VALEUR et ne sépare pas deux arguments.
+let _universeCompositeControls = null;
+function universeCompositeControls() {
+  if (!_universeCompositeControls) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeCompositeControls = loadLibsFromDirectives(allDirs).compositeControls;
+  }
+  return _universeCompositeControls;
+}
+
 // Auto-register the pre-bundled libs at module load (Node AND browser).
 // This replaces the former Node-only `fs` fallback: the registry is always
 // populated from libs-data.js, so loadJsonFile never needs the filesystem.
@@ -151,6 +163,8 @@ function loadLibsFromDirectives(directives) {
     dualContextControls: new Set(),  // controls that appear in BOTH engine and runtime — in () always route to _script
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
+    compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
+                                   // virgule appartient à la VALEUR, portée brute en une seule chaîne.
     intervalControls: new Set(),  // controls whose argument is a MUSICAL INTERVAL (fraction 3/2, cents 700c,
                                   // decimal 1.5) — marqués `argType:"interval"` dans la lib. La valeur est
                                   // portée BRUTE (chaîne) et résolue en aval par normalizeRatio (Kairos).
@@ -362,6 +376,13 @@ function loadLibsFromDirectives(directives) {
         if (def.argType === 'interval') {
           ctx.intervalControls.add(name);
         }
+        // Argument COMPOSITE (ex. keyxpand `pivot,facteur`) : la virgule appartient à la
+        // VALEUR, pas à la liste d'arguments. Sans ce marqueur la paire est scindée et le
+        // contrôle ne reçoit que sa première moitié. Même principe que `interval` : porté
+        // brut par la surface, découpé par l'aval qui en connaît la forme.
+        if (def.argType === 'composite') {
+          ctx.compositeControls.add(name);
+        }
       }
     }
 
@@ -506,4 +527,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, registerLib, registerAll, clearRegistry };
+export { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, registerLib, registerAll, clearRegistry };

@@ -455,7 +455,9 @@
           "factor"
         ],
         "default": "0,1",
-        "description": "Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts."
+        "description": "Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.",
+        "argType": "composite",
+        "_argType_note": "Valeur COMPOSITE 'pivot,facteur' lue BRUTE et portee en UNE SEULE chaine (ex. 'C4,2'). Sans ce marqueur la virgule est lue comme SEPARATEUR D'ARGUMENTS et la paire est scindee : keyxpand ne recevait que le pivot, et l'aval criait (BPx/dist/index.js:5945 'keyxpand needs a pivot note and a factor'). Meme mecanisme data-driven que argType:'interval' (transpose) : la surface porte brut, l'aval resout."
       }
     },
     "generic": {
