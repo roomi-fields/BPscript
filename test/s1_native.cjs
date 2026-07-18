@@ -388,7 +388,14 @@ else if (s1Mode === 'text') {
     const line = allLines[i].trim();
     if (!line) continue;
     // Skip engine diagnostic messages that appear after production
-    if (/^\u2022|^\u{1F449}|items? (have|has) been produced|^Total computation time|^Interpreting structure|^Expanding polymetric|^Formula is complex|^Phase diagram|^Creating phase|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading out|^Closing MIDI|^Buffer limit|^Applying serial|^Correction of|^Jflag\b|^Subgrammar \d|^Production time|has channel \d|^Error code|^=> |^Should be|^Could not derive/u.test(line)) continue;
+    // Deux trous colmat\u00e9s (audit bp3-engine c4b1e7f, 13 oracles s1_native pollu\u00e9s) :
+    //  - \u00ab Only 10 items will be produced. \u00bb passait, car le motif exigeait
+    //    \u00ab items have/has been produced \u00bb et pas \u00ab will be produced \u00bb \u2192 le mot 'Only'
+    //    finissait captur\u00e9 COMME UN TERMINAL (constat\u00e9 dans asymmetric1 et gramgene1).
+    //  - \u00ab Variable must start with uppercase character\u2026 \u00bb passait : aucun motif ne la
+    //    couvrait, si bien que des ERREURS DE COMPILATION entraient dans les oracles.
+    // V\u00e9rifi\u00e9 : ces motifs n'attrapent aucune ligne de terminaux l\u00e9gitime.
+    if (/^\u2022|^\u{1F449}|items? (have|has) been produced|items? will be produced|^Variable must start with|^Total computation time|^Interpreting structure|^Expanding polymetric|^Formula is complex|^Phase diagram|^Creating phase|^Setting time|^No graphic|^MIDI file|^Writing \d|^Fading out|^Closing MIDI|^Buffer limit|^Applying serial|^Correction of|^Jflag\b|^Subgrammar \d|^Production time|has channel \d|^Error code|^=> |^Should be|^Could not derive/u.test(line)) continue;
     // Split line into tokens, with post-processing cleanup
     const names = line.split(/\s+/).filter(t => t);
     for (let n of names) {
