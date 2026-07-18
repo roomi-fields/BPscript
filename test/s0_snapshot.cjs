@@ -208,6 +208,10 @@ function processGrammar(name) {
   if (ref.alphabet)  args.push('-al', path.join(TD, ref.alphabet));
   if (ref.tonality)  args.push('-to', path.join(TD, ref.tonality));
   if (ref.csound)    args.push('-cs', path.join(TD, ref.csound));
+  // Prototypes d'objets sonores. Une grammaire dont l'alphabet ne porte que des NOMS
+  // d'objets (ek, do, tin…) ne produit AUCUNE note sans son -so : le fichier définit
+  // leur réalisation. Constaté sur 12345678 (0 note sans -so, 2034 octets de MIDI avec).
+  if (ref.soundobjects) args.push('-so', path.join(TD, ref.soundobjects));
 
   const cleanup = () => {
     for (const f of [tmpGrammar, tmpMidi, tmpText, tmpSettings]) { try { fs.unlinkSync(f); } catch (e) {} }

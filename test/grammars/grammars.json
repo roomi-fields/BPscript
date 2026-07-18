@@ -20,25 +20,6 @@
       "alphabet": null
     }
   },
-  "12345678": {
-    "bernard": "12345678",
-    "status": "active",
-    "production_mode": "midi",
-    "aux": [
-      "se",
-      "al"
-    ],
-    "features": [],
-    "lines": 18,
-    "note": "Récupérée 2026-07-18 (BPS-16).",
-    "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "french",
-      "settings": "-se.EkDoTin",
-      "alphabet": "-al.EkDoTin",
-      "note": "514 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18."
-    }
-  },
   "PP": {
     "bernard": "PP",
     "status": "excluded",
@@ -431,7 +412,8 @@
       "note_convention": "english",
       "settings": "-se.koto3",
       "alphabet": "-al.abc1",
-      "note": "1040 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18. Alphabet chargé via -al.abc1 (et non -ho.abc1)."
+      "note": "1040 octets. Oracle S0 régénéré 2026-07-18 : 360 tokens en mode texte (midi_notes reste 0). Alphabet chargé via -al.abc1 (et non -ho.abc1).",
+      "soundobjects": "-so.abc1"
     },
     "s1_args": [
       "-se",
@@ -818,7 +800,9 @@
       "midi_notes": 0,
       "note_convention": "french",
       "settings": "-se.EkDoTin",
-      "alphabet": "-al.EkDoTin"
+      "alphabet": "-al.EkDoTin",
+      "soundobjects": "-so.EkDoTin",
+      "note": "Config php_ref complétée 2026-07-18 (BPS-16) : -so.EkDoTin manquait à php_ref alors qu il était déjà dans s1_args → S0 sortait 0. Oracle régénéré : 99 tokens en mode texte (midi_notes reste 0)."
     }
   },
   "tryPatternGrammar": {
@@ -1834,8 +1818,7 @@
   },
   "nadaka": {
     "bernard": "Nadaka",
-    "status": "excluded",
-    "reason": "S1 OK mais S0 KO (compile fail PHP — settings -se.hamsad). Sortie de l'échantillon de test pour l'instant. [constat 2026-04-04]",
+    "status": "active",
     "production_mode": "midi",
     "s1_args": [
       "-to",
@@ -1854,7 +1837,16 @@
     "lines": 100,
     "note": "Tonality not referenced in grammar header. Indian notation (sa/ga).",
     "php_status": "COMPILE_FAIL",
-    "php_errors": 1
+    "php_errors": 1,
+    "php_ref": {
+      "midi_notes": 713,
+      "note_convention": "indian",
+      "settings": "-se.hamsad",
+      "alphabet": null,
+      "tonality": "-to.Nadaka",
+      "csound": "-cs.Nadaka",
+      "note": "Config php_ref complétée 2026-07-18 (BPS-16) ; oracle S0 régénéré avec -so."
+    }
   },
   "visser-shapes": {
     "bernard": "Visser.Shapes",
@@ -1959,8 +1951,7 @@
   },
   "mohanam": {
     "bernard": "trial.mohanam",
-    "status": "excluded",
-    "reason": "S1 OK mais S0 KO (compile fail PHP — dépendance -cs.trial.mohanam). Sortie de l'échantillon de test pour l'instant. [constat 2026-04-04]",
+    "status": "active",
     "production_mode": "midi",
     "aux": [
       "se"
@@ -1971,7 +1962,16 @@
     ],
     "lines": 133,
     "php_status": "COMPILE_FAIL",
-    "php_errors": 1
+    "php_errors": 1,
+    "php_ref": {
+      "midi_notes": 753,
+      "note_convention": "indian",
+      "settings": "-se.trial.mohanam",
+      "alphabet": "-al.trial.mohanam",
+      "tonality": "-to.trial.mohanam",
+      "csound": "-cs.trial.mohanam",
+      "note": "Config php_ref complétée 2026-07-18 (BPS-16) ; oracle S0 régénéré avec -so."
+    }
   },
   "ruwet": {
     "bernard": "Ruwet",
@@ -2009,11 +2009,12 @@
     ],
     "lines": 171,
     "php_ref": {
-      "midi_notes": 0,
+      "midi_notes": 276,
       "note_convention": "french",
       "settings": "-se.dhati",
       "alphabet": "-al.dhati",
-      "note": "491 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18. Le -ho.dhati CASSE (en-tête BP2 \":\") — le bon alphabet est -al.dhati ; pas de -gl."
+      "note": "491 octets. Oracle S0 régénéré 2026-07-18 avec la config php_ref (dont -so). Le -ho.dhati CASSE (en-tête BP2 \":\") — le bon alphabet est -al.dhati ; pas de -gl.",
+      "soundobjects": "-so.dhati"
     },
     "note": "Récupérée 2026-07-18 (BPS-16) : le blocage venait du harnais S0 qui n envoyait pas l alphabet -al, pas de la grammaire."
   },
@@ -2225,50 +2226,5 @@
     "status": "to_be_tested",
     "production_mode": "midi",
     "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3."
-  },
-  "Nadaka": {
-    "bernard": "Nadaka",
-    "status": "active",
-    "production_mode": "midi",
-    "aux": [
-      "se",
-      "to",
-      "cs"
-    ],
-    "features": [],
-    "lines": 99,
-    "note": "Récupérée 2026-07-18 (BPS-16).",
-    "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "indian",
-      "settings": "-se.hamsad",
-      "alphabet": null,
-      "tonality": "-to.Nadaka",
-      "csound": "-cs.Nadaka",
-      "note": "3446 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18."
-    }
-  },
-  "trial.mohanam": {
-    "bernard": "trial.mohanam",
-    "status": "active",
-    "production_mode": "midi",
-    "aux": [
-      "se",
-      "al",
-      "to",
-      "cs"
-    ],
-    "features": [],
-    "lines": 132,
-    "note": "Récupérée 2026-07-18 (BPS-16).",
-    "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "indian",
-      "settings": "-se.trial.mohanam",
-      "alphabet": "-al.trial.mohanam",
-      "tonality": "-to.trial.mohanam",
-      "csound": "-cs.trial.mohanam",
-      "note": "6367 octets. Compte de notes à confirmer après le fix harnais S0 (bp3-engine passe les deps -al/-gl) ; taille de sortie mesurée par bp3-engine 2026-07-18."
-    }
   }
 }
