@@ -9,6 +9,14 @@
     "_source": "-al.abc / -ho.abc in bp3-engine/test-data/"
   },
 
+  "abc1": {
+    "description": "Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)",
+    "notes": ["a", "b", "c", "d", "e", "f", "g", "h"],
+    "alterations": [],
+    "_note": "8 symboles déclarés dans la section '*' du -ho. Cibles primées pour a,c,d,f,g (a --> a'), symboles nus pour b,e,h. Les labels chik/cycle1/sync/cycle2 sont des tables d'objets sonores (-mi.abc1), pas des notes.",
+    "_source": "-al.abc1 / -ho.abc1 in bp3-engine/test-data/"
+  },
+
   "conway": {
     "description": "Conway look-and-say sequence digits",
     "notes": ["d1", "d2", "d3"],
