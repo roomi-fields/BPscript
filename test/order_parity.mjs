@@ -49,9 +49,12 @@ function convertOldSettings(c, conv) {
 }
 
 function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
-  const gd = GRAMMARS[name];
-  if (!gd || (gd.status === 'excluded' && !allowExcluded)) return null;
-  const grName = gd.bernard || name;
+  // gd peut être ABSENT de grammars.json (ex. Ruwet, Visser3/5 pour l'oracle single-play,
+  // item ORACLE-SINGLEPLAY-RECONCILE) : on construit alors les args depuis le seul -gr,
+  // les auxiliaires (-se/-al) étant inférés du CORPS de la grammaire (fallbacks plus bas).
+  const gd = GRAMMARS[name] || null;
+  if (gd && gd.status === 'excluded' && !allowExcluded) return null;
+  const grName = (gd && gd.bernard) || name;
   const grFile = path.join(TD, `-gr.${grName}`);
   if (!fs.existsSync(grFile)) return null;
 
@@ -80,12 +83,12 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     if (!obj) return;
     obj.ShowGraphic = { name: 'Show graphic', value: '0' };
     obj.DisplayItems = { name: 'Display final score', value: '1', boolean: '1' };
-    for (const [k, val] of Object.entries(gd.se_overrides || {})) { if (k === '_comment') continue; if (obj[k]) obj[k].value = String(val); else obj[k] = { name: k, value: String(val) }; }
+    for (const [k, val] of Object.entries(gd?.se_overrides || {})) { if (k === '_comment') continue; if (obj[k]) obj[k].value = String(val); else obj[k] = { name: k, value: String(val) }; }
     const tmpSe = path.join('/tmp', `_ord_${name}_se.json`);
     fs.writeFileSync(tmpSe, JSON.stringify(obj));
     args.push('-se', tmpSe);
   };
-  if (gd.s1_args) {
+  if (gd?.s1_args) {
     // s1_args = paires (drapeau, fichier). En BP3 les fichiers AUX commencent
     // aussi par `-` (ex. -so.abc) : un drapeau simple `-x` consomme TOUJOURS
     // l'élément suivant comme fichier. Seuls les `--xxx` sont des drapeaux nus.
@@ -102,16 +105,19 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
       } else args.push(a);
     }
   }
-  if (!explicit.has('-se') && gd.php_ref?.settings) { const m = gd.php_ref.settings.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
+  if (!explicit.has('-se') && gd?.php_ref?.settings) { const m = gd.php_ref?.settings.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
   // Repli (aligné s3_native.cjs, gap découvert en [435]) : réglages/alphabet référencés
   // dans le CORPS de la grammaire — beaucoup de clés to_be_tested n'ont ni s1_args ni
   // php_ref.settings alors que le -se. existe dans test-data.
   if (!explicit.has('-se') && !args.includes('-se')) { const m = gr.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
-  if (!explicit.has('-al') && gd.php_ref?.alphabet) { const m = gd.php_ref.alphabet.match(/-al\.(\S+)/); if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); } }
+  if (!explicit.has('-al') && gd?.php_ref?.alphabet) { const m = gd.php_ref?.alphabet.match(/-al\.(\S+)/); if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); } }
   if (!explicit.has('-al') && !args.includes('-al')) {
     const m = gr.match(/-al\.(\S+)/);
     if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); }
   }
+  // NB : le `-ho.X` (homomorphisme) référencé dans le corps est AUTO-RÉSOLU par bp3 depuis le
+  // dossier du -gr (TD) — le passer EN PLUS via `-ho` casse les grammaires qui l'auto-chargent
+  // déjà (MyMelody, koto3 : double-chargement → « no output »). On ne le passe donc PAS.
 
   args.push('-o', prodFile);
   return args;
@@ -177,7 +183,44 @@ const argv = process.argv.slice(2);
 const DO_WRITE = argv.includes('--write');     // pose s3_native si parité OK
 const CAMPAIGN = argv.includes('--campaign');  // ISO-100 A.2b : tout le corpus texte
 const FORCE = argv.includes('--force') || CAMPAIGN; // pose le natif même si DIFF (natif fait foi)
+const SINGLEPLAY = argv.includes('--singleplay'); // ORACLE-SINGLEPLAY-RECONCILE (item tour [573])
 const targets = argv.filter((a) => !a.startsWith('--'));
+
+// ── Mode --singleplay (item ORACLE-SINGLEPLAY-RECONCILE, tour [573]) ────────────
+// Émet un oracle single-play UNIFORME (texte RÉSOLU, ordonné, seed 1) pour bp3-frontend :
+// natif `bp3 … -o` (machinerie buildEngineArgs : conversion -se, note-convention, alphabet)
+// → tokenizeOrder (séquence de jetons SONNANTS incluant les contrôles `_x(args)`). C'est ce que
+// bp3-frontend confronte à son « play frontal ». Sortie : test/oracles/singleplay/<name>.json .
+// Fonctionne AUSSI pour les grammaires absentes de grammars.json (Ruwet, Visser3/5) — buildEngineArgs
+// infère les auxiliaires depuis le -gr. `allowExcluded` pour ne bloquer sur aucun statut.
+if (SINGLEPLAY) {
+  const OUT = path.join(__dirname, 'oracles', 'singleplay');
+  fs.mkdirSync(OUT, { recursive: true });
+  const list = targets.length ? targets
+    : ['MyMelody', 'doeslittle', 'simpletemplates', 'Ruwet', 'koto3', 'Visser3', 'Visser5'];
+  console.log(`=== Oracle single-play (natif -o RÉSOLU, seed 1) → test/oracles/singleplay/ ===\n`);
+  let ok = 0, ko = 0;
+  for (const name of list) {
+    const nat = nativeOrder(name, { allowExcluded: true });
+    if (nat.error || !Array.isArray(nat.tokens) || nat.tokens.length === 0) {
+      console.log(`  ${name}: ÉCHEC natif (${nat.error || '0 jeton'}) — pas d'oracle`); ko++; continue;
+    }
+    const snap = {
+      name,
+      source: 'native bp3 -o (single-play résolu, seed 1) → tokenizeOrder',
+      mode: 'text-singleplay',
+      seed: 1,
+      count: nat.tokens.length,
+      tokens: nat.tokens,
+    };
+    const file = path.join(OUT, `${name}.json`);
+    fs.writeFileSync(file, JSON.stringify(snap, null, 2));
+    console.log(`  ${name}: ${nat.tokens.length} jetons → oracles/singleplay/${name}.json`);
+    ok++;
+  }
+  console.log(`\n${ok} oracle(s) émis / ${ko} en échec sur ${list.length}`);
+  process.exit(ko && ok === 0 ? 1 : 0);
+}
 
 // Hors campagne texte : #52 look-and-say (build natif faux, décision 2026-06-14 §MAJ) ;
 // famille AllItems = divergence de CONTENU (octave C5/C4) renvoyée à BPx (résorption §2.B).
