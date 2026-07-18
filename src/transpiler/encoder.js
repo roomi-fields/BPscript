@@ -272,9 +272,16 @@ function encode(ast) {
     const sub = ast.subgrammars[si];
     const blockNum = sub.index;
 
-    // Determine mode from @mode directive on subgrammar (null = no mode line emitted)
+    // Determine mode from @mode directive on subgrammar (null = no mode line emitted).
+    // FAIL-LOUD (anti-corruption silencieuse) : un @mode:X inconnu était AVANT ignoré en
+    // silence → aucune ligne de mode émise → dérivation fausse (constaté dhati `@mode:rnd`,
+    // qui n'est PAS dans MODE_MAP — `rnd` est un nom de SCAN, pas de mode ; le mode aléatoire
+    // s'écrit `@mode:random`). On refuse désormais tout mode non reconnu.
     let mode = null;
-    if (sub.mode && MODE_MAP[sub.mode]) {
+    if (sub.mode) {
+      if (!MODE_MAP[sub.mode]) {
+        throw new Error(`@mode:${sub.mode} inconnu — modes valides : ${Object.keys(MODE_MAP).join(', ')}`);
+      }
       mode = MODE_MAP[sub.mode];
     }
 
