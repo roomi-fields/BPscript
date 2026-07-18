@@ -802,6 +802,16 @@ function encodeGuard(guard) {
   return `/${guard.flag}${op}${value}/`;
 }
 
+// Espacement des ancres de gabarit `(= … )` / `(: … )` : le natif BP3 met un espace après `(=`
+// et avant `)` SAUF quand la frontière est un opérateur (`+` `;` `*`) ou une accolade (`{` `}`)
+// qui GLUE. Reproduit exactement le -gr : `(= N14 +)`, `(=+ N14 )`, `(={16,…})` (vérifié sur les
+// 9 formes de dhati). Byte-id BPS-12.
+function anchorPad(inner) {
+  const lead = /^[+;*{]/.test(inner) ? '' : ' ';
+  const trail = /[+;*}]$/.test(inner) ? '' : ' ';
+  return `${lead}${inner}${trail}`;
+}
+
 // --- Context encoding ---
 
 // BP3 natif distingue contexte vs symbole LHS uniquement par la présence des
@@ -1240,12 +1250,12 @@ function encodeRhsElementInner(el, alphabet, controlMap, groupSeqPrefixTokens) {
 
     case 'TemplateMasterGroup': {
       const inner = el.elements.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
-      return `(=${inner})`;
+      return `(=${anchorPad(inner)})`;
     }
 
     case 'TemplateSlaveGroup': {
       const inner = el.elements.map(e => encodeRhsElement(e, alphabet, controlMap)).join(' ');
-      return `(:${inner})`;
+      return `(:${anchorPad(inner)})`;
     }
 
     case 'TieStart':
