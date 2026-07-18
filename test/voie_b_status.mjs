@@ -132,6 +132,10 @@ const { byName } = loadBaseline();
 const withBps = readdirSync(GRAMMARS)
   .filter((d) => existsSync(path.join(GRAMMARS, d, 'scene.bps')))
   .filter((d) => byName[d])
+  // DOUBLONS (champ doublon_de, baseline v8) : exports HTML dont les regles sont
+  // IDENTIQUES a une grammaire deja presente. Les mesurer creerait un DOUBLE COMPTE contre
+  // la meme reference — leur auteur a explicitement demande de les ecarter du denominateur.
+  .filter((d) => !byName[d].doublon_de)
   .filter((d) => only.length === 0 || only.includes(d))
   .sort();
 
