@@ -11,6 +11,9 @@
 // désactivé côté moteur (wMIDIorchestra commenté dans -BP3.h).
 
 @core
+@tempo:38.02   // horloge du natif -se.Djinns : periode 1578 ms par temps, soit 38.02 BPM.
+             // Sans elle BPx tombe sur son defaut 60 BPM et toutes les durees derivent.
+             // La Voie B est autosuffisante : l'horloge vit dans la scene, pas dans un -se BP3.
 @quantization:50
 @controls
 @alphabet.solfege:midi

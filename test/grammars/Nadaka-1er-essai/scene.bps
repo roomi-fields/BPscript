@@ -1,3 +1,6 @@
+@tempo:360   // horloge du natif -se.hamsad : periode 167 ms par temps, soit 360 BPM.
+             // Sans elle BPx tombe sur son defaut 60 BPM et toutes les durees derivent.
+             // La Voie B est autosuffisante : l'horloge vit dans la scene, pas dans un -se BP3.
 // Nadaka-1er-essai.bps — migré de bp3-engine/test-data/-gr.Nadaka-1er-essai (porter bp3ToScene, 2026-07-17)
 // Round-trip fidèle (règles = -gr, modulo commentaires/espacement flags) ; AST BPx valide.
 

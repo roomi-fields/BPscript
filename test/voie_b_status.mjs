@@ -81,7 +81,10 @@ function produceAllB(name) {
   try {
     const session = createSession(out.ast, { seed: 1 });
     const r = session.produceAll();
-    if (r.refused) return { erreur: `énumération refusée par le moteur : ${r.refusedReason || 'raison non déclarée'}` };
+    // REFUS : le natif avorte lui aussi l'énumération sur SUB/SUB1/POSLONG et JOUE au lieu
+    // d'énumérer. On réplique ce repli — le traiter en erreur inventerait un échec que le
+    // natif n'a pas. (Bug de mon premier câblage : je documentais le repli sans le coder.)
+    if (r.refused) return { replie: r.refusedReason || 'raison non déclarée' };
     return { text: r.items.map((i) => (i.terminals || []).join(' ')).join('\n'), tronque: !!r.truncated };
   } catch (e) { return { erreur: `énumération : ${e.message}` }; }
 }
@@ -100,9 +103,11 @@ const withBps = readdirSync(GRAMMARS)
 const rows = [];
 for (const name of withBps) {
   const ref = byName[name];
-  const b = ref.produit && ref.action === 'produce-all'
+  let b = ref.produit && ref.action === 'produce-all'
     ? produceAllB(name)
     : await produceB(name, ref.modalite);
+  // Énumération refusée par le moteur → on joue, comme le natif.
+  if (b && b.replie) b = await produceB(name, ref.modalite);
   let res;
   if (b.absent) res = { status: 'ABSENT', detail: 'pas de scene.bps' };
   else if (b.erreur) res = { status: 'NE PRODUIT PAS', modalite: ref.modalite, detail: b.erreur };

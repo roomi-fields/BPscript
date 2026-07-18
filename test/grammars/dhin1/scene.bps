@@ -1,3 +1,6 @@
+@tempo:360   // horloge du natif -se.dhin-- : periode 167 ms par temps, soit 360 BPM.
+             // Sans elle BPx tombe sur son defaut 60 BPM et toutes les durees derivent.
+             // La Voie B est autosuffisante : l'horloge vit dans la scene, pas dans un -se BP3.
 // NOTE BOLSIZE (2026-07-18) : terminaux en noms PLEINS (règle AST-agnostique, [566]). Deux
 // terminaux dépassent ~100 chars (F48) et débordent le buffer moteur BP3 (BOLSIZE+2=32, Encode.c:71) :
 // S5 (.bps→BP3→WASM) crashe « memory access out of bounds » tant que le garde-fou de troncature
