@@ -460,7 +460,7 @@
   },
   "koto1": {
     "bernard": "koto1",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -470,16 +470,16 @@
     "lines": 31,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
+      "note_convention": null,
       "settings": "-se.koto3",
       "alphabet": "-al.abc1",
-      "note": "Original -se.koto1 is BP2 format; using -se.koto3 (JSON) as proxy. -al.abc1 provides a,b,c terminals. Confirmed working: 21 text items with seed=1."
+      "note": "Reste sur le PROXY -se.koto3. Le vrai -se.koto1 issu de la conversion TRONQUE la production (MaxConsoleTime 1s au lieu de 1000) : 7 tokens au lieu de 72/109. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Bascule suspendue jusqu au correctif de conversion."
     },
     "production_mode": "text"
   },
   "koto2": {
     "bernard": "koto2",
-    "status": "to_be_tested",
+    "status": "active",
     "aux": [
       "se"
     ],
@@ -489,10 +489,10 @@
     "lines": 30,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
+      "note_convention": null,
       "settings": "-se.koto3",
       "alphabet": "-al.abc1",
-      "note": "Original -se.koto1 is BP2 format; using -se.koto3 (JSON) as proxy. -al.abc1 provides a,b,c terminals. Confirmed working: 20 text items with seed=1."
+      "note": "Reste sur le PROXY -se.koto3. Le vrai -se.koto1 issu de la conversion TRONQUE la production (MaxConsoleTime 1s au lieu de 1000) : 7 tokens au lieu de 72/109. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Bascule suspendue jusqu au correctif de conversion."
     },
     "production_mode": "text"
   },
@@ -895,10 +895,10 @@
     "lines": 40,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "indian",
-      "settings": "-se.hamsad",
+      "note_convention": null,
+      "settings": "-se.dhati2",
       "alphabet": "-al.dhati",
-      "note": "Confirmed: 0 errors, 64 tabla tokens with -se.hamsad + -al.dhati. Previous scan used -ho.dhati (BP2 alphabet with header ':' causing alphabet compile error)."
+      "note": "Config lot3 après BPE-10 : -se.dhati2 + -al.dhati, aucune convention forcée (grammaire bols-only). Oracle VÉRIFIÉ IDENTIQUE à la référence (80 tokens) avant/après bascule. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Sans effet ici : production courte et sans notes."
     },
     "production_mode": "text"
   },
@@ -917,10 +917,10 @@
     "lines": 39,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "indian",
-      "settings": "-se.hamsad",
+      "note_convention": null,
+      "settings": "-se.dhati2",
       "alphabet": "-al.dhati",
-      "note": "Confirmed: 0 errors, 64 tabla tokens with -se.hamsad + -al.dhati. Same fix as dhati2."
+      "note": "Config lot3 après BPE-10 : -se.dhati2 + -al.dhati, aucune convention forcée (grammaire bols-only). Oracle VÉRIFIÉ IDENTIQUE à la référence (80 tokens) avant/après bascule. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Sans effet ici : production courte et sans notes."
     },
     "production_mode": "text"
   },
