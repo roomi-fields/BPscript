@@ -75,10 +75,23 @@ function referenceFor(name, baselineDir = DEFAULT_BASELINE) {
     || (e.modalite === 'MIDI' ? path.join('captures', `${name}.tokens.json`)
                               : path.join('captures', `${name}.text.txt`));
   const f = path.join(dir, rel);
-  if (fs.existsSync(f)) {
-    if (e.modalite === 'MIDI') out.tokens = JSON.parse(fs.readFileSync(f, 'utf-8'));
-    else if (e.modalite === 'TEXTE') out.text = fs.readFileSync(f, 'utf-8');
+  // ⚠️ LE CORRECTIF PRÉCÉDENT A TRAITÉ L'INSTANCE, PAS LA CLASSE. Lire le chemin DÉCLARÉ au lieu
+  // de le reconstruire a réglé `check&` — mais le mode de défaillance a survécu intact : quand le
+  // fichier déclaré n'existe PAS, on rendait `out` sans `tokens`, donc une référence VIDE, sans un
+  // mot. La grammaire ressortait alors en écart de contenu contre « ∅ », ce qui se lit « le natif
+  // ne produit rien » alors que la vérité est « je n'ai pas su lire la référence ». Deux phrases
+  // opposées, un seul affichage.
+  // Mesuré le 2026-07-19 : 27 des 98 entrées déclarant une capture pointent un fichier absent
+  // (leur capture n'existe qu'en TEXTE, le relevé de jetons MIDI n'a jamais été produit). Ces 27
+  // étaient donc comptées comme des divergences réelles.
+  // On ne devine PAS un repli, et on ne compare surtout pas à du vide : on DIT que la référence
+  // manque, et l'appelant en fait un statut distinct — jamais un DIFF.
+  if (!fs.existsSync(f)) {
+    out.capture_absente = rel;
+    return out;
   }
+  if (e.modalite === 'MIDI') out.tokens = JSON.parse(fs.readFileSync(f, 'utf-8'));
+  else if (e.modalite === 'TEXTE') out.text = fs.readFileSync(f, 'utf-8');
   return out;
 }
 
@@ -204,6 +217,17 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
   const shiftApplied = !!(candidate && candidate.shiftApplied);
   const ref = referenceFor(name, baselineDir);
   if (!ref) return { status: ABSENT, modalite: null, detail: 'absente de la baseline' };
+
+  // La référence est DÉCLARÉE mais son relevé n'existe pas : on ne peut RIEN conclure. Ce cas
+  // doit rester visiblement distinct d'un vrai écart — le confondre avec un DIFF, c'est imputer
+  // à la voie candidate une divergence qu'on n'a jamais mesurée.
+  if (ref.capture_absente) {
+    return {
+      status: NON_MESURABLE, modalite: ref.modalite, produit: true,
+      n_ref: null, n_cand: candidate ? sizeOf(candidate) : 0,
+      detail: `référence introuvable — la baseline déclare « ${ref.capture_absente} », absent du disque`,
+    };
+  }
 
   // La RÉFÉRENCE est muette : rien à mesurer, ce n'est pas un échec de la voie candidate.
   if (!ref.produit) {
