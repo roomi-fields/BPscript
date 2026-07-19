@@ -121,12 +121,22 @@ export async function resoudreViaKairos(session, opts = {}) {
   const tokens = [];
   for (const e of planifie.events) {
     const c = e.content;
-    if (!c || c.pitch === undefined) continue; // feuille sans hauteur résolue : on ne l'invente pas
+    // ⚠️ CE FILTRE PORTAIT SUR LA HAUTEUR, ET C'ÉTAIT UN DÉFAUT DE MESURE.
+    // Il écartait toute feuille sans `pitch` — donc TOUTE LA PERCUSSION. Les grammaires de
+    // bols (dhati2, la famille tabla) dérivent parfaitement : mesuré sur dhati2, Kronos rend
+    // 12 événements, tous porteurs d'un jeton (`dha`, `ti`, `trkt`…), et TOUS sans hauteur.
+    // Le pont les jetait tous et je lisais « 0 jeton », que j'ai failli imputer à la dérivation.
+    // Un bol n'a pas de hauteur et n'a pas à en avoir : la référence native de ces grammaires
+    // est de modalité TEXTE et ne compare que des NOMS.
+    // Ce qui fait qu'une feuille est mesurable, c'est donc qu'elle porte un JETON — pas une
+    // hauteur. La hauteur reste facultative et n'est jamais inventée : `hz` n'est renseigné
+    // que lorsque Kairos l'a réellement résolu.
+    if (!c || c.token === undefined) continue;
     tokens.push({
       token: c.token,
       start: Math.round(e.onset * 1000),
       end: Math.round((e.onset + e.duration) * 1000),
-      hz: c.pitch.hz,
+      hz: c.pitch ? c.pitch.hz : undefined,
     });
   }
   return { tokens, duration: planifie.totalDurationSec };
