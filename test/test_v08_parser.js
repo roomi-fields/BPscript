@@ -230,8 +230,12 @@ S -> A`);
   assert('soundAssignments top-level', Array.isArray(ast.soundAssignments));
   assert('2 assignments', ast.soundAssignments.length === 2);
   const [sa1, sa2] = ast.soundAssignments;
-  assert('1st scope kind=actor', sa1.scope.kind === 'actor');
-  assert('1st scope name=tabla', sa1.scope.name === 'tabla');
+  // Forme PLATE (`scope` est une chaîne, le nom vit dans `alphabet`/`actor`) : c'est ce que
+  // le transpileur émet ET ce que BPx consomme (findAssignment compare `a.scope` puis lit
+  // `a.actor`). Ce test attendait `scope.kind`, la forme d'AVANT 498a311 — la spec l'a
+  // décrite jusqu'au 2026-07-19, et personne ne l'implémentait plus.
+  assert('1st scope=actor', sa1.scope === 'actor');
+  assert('1st actor=tabla', sa1.actor === 'tabla');
   assert('1st subject=*', sa1.subject === '*');
   assert('1st target named-ref tabla_perc', sa1.target.kind === 'named-ref' && sa1.target.name === 'tabla_perc');
   assert('2nd subject=Sa', sa2.subject === 'Sa');
@@ -273,8 +277,8 @@ section('SoundAssignment dans @alphabet.X');
 S -> Sa Re Sa`);
   assert('3 assignments', ast.soundAssignments?.length === 3);
   const [a1, a2, a3] = ast.soundAssignments;
-  assert('scope kind=alphabet', a1.scope.kind === 'alphabet');
-  assert('scope name=tabla', a1.scope.name === 'tabla');
+  assert('scope=alphabet', a1.scope === 'alphabet');
+  assert('alphabet=tabla', a1.alphabet === 'tabla');
   assert('* subject', a1.subject === '*');
   assert('Sa subject', a2.subject === 'Sa');
   assert('Re subject', a3.subject === 'Re');
@@ -463,13 +467,20 @@ S -> A B`);
 section('eval.X harmonisé (PM décision 2)');
 
 {
+  // ⚠️ SANS `transport` : un acteur qui porte `eval.<interprète>` est un PRODUCTEUR qui sort
+  // par ses propres moyens, et le parser refuse désormais de lui router une sortie (fail-loud
+  // nommé : « un producteur 'eval.python' sort en natif — pas de 'transport' »). Ce test
+  // écrivait les deux ensemble, forme d'avant ce durcissement : il ne rendait donc pas un
+  // FAIL, il faisait PLANTER tout le fichier sur une exception non rattrapée — les 172
+  // assertions suivantes ne s'exécutaient plus du tout.
   const ast08 = parseSource(`@controls
 @actor a
   alphabet.tabla
-  transport.midi(ch:1)
   eval.python
 S -> A`);
   assert('v0.8 eval.python parsed', ast08.actors[0].properties.eval === 'python');
+  assert('eval + transport ensemble → REJET nommé',
+    rejects(`@controls\n@actor a\n  alphabet.tabla\n  transport.midi(ch:1)\n  eval.python\nS -> A`, 'transport'));
   // CUTOVER : la forme colon `eval:python` (comme alphabet:/transport:) est REJETÉE.
   assert('eval:python (colon v0.7) → REJET',
     rejects(`@controls\n@actor a @alphabet.tabla transport.midi(ch:1) eval:python\nS -> A`, "eval:…"));

@@ -417,15 +417,21 @@ elles sont transmises au runtime cible (cf. `LANGUAGE.md`).
 ```
 SoundAssignmentAST {
   type: "SoundAssignment"
-  scope: SoundScope                // qui possède cette affectation (alphabet ou acteur)
+  scope: "alphabet" | "actor"      // qui possède cette affectation
+  alphabet?: string                // nom, quand scope === "alphabet"
+  actor?: string                   // nom, quand scope === "actor"
   subject: string                  // nom de note (ex. "Sa") ou "*" (défaut wildcard)
   target: SoundTarget
   line: number
 }
 
-SoundScope =
-    { kind: "alphabet", name: string }   // affectation dans @alphabet.<name>
-  | { kind: "actor",    name: string }   // affectation dans @actor <name>
+> ⚠️ **Cette forme était mal documentée jusqu'au 2026-07-19.** La spec décrivait
+> `scope: { kind, name }` — un objet — alors que le producteur ET le consommateur emploient la
+> forme PLATE ci-dessus depuis `498a311` (« émets le canonique AST », frontière AST palier 3).
+> Vérifié des deux côtés : le transpileur rend `{scope:"actor", actor:"tabla", …}`, et BPx
+> compare `a.scope !== scope` puis lit `a.alphabet` / `a.actor` (`findAssignment`). Producteur et
+> consommateur étaient donc d'accord ; seule la spec, et un test écrit contre elle, étaient restés
+> sur l'ancienne forme. Corrigé ici — la spec suit la frontière réellement en service.
 
 SoundTarget =
     { kind: "named-ref",   name: string }                       // sound.bell_short
