@@ -734,7 +734,33 @@ function applySceneValues(ast, libCtx) {
   const names = Object.keys(registry);
   if (!names.length) return errors;
 
+  /**
+   * Une valeur NUMÉRIQUE écrite en décimal arrivait ici en CHAÎNE — et deux choses en
+   * découlaient, dont une bien pire que l'autre.
+   *
+   * 1. `@diapason:261.63` était plié tel quel : l'arbre portait `"261.63"`, et Kairos le
+   *    refusait à juste titre (« un diapason est un nombre fini > 0 »). L'entier `262`, lui,
+   *    passait. Une scène pouvait donc déclarer un diapason parfaitement valide et être
+   *    rejetée en aval pour une raison de TYPE, sans que rien ne le dise ici.
+   * 2. Plus grave : le contrôle de plage ci-dessous ne s'applique QUE si la valeur est déjà un
+   *    nombre. Une chaîne le traversait sans être vérifiée — `@diapason:"99999"` passait le
+   *    domaine. Le garde existait et ne mordait pas sur la moitié des entrées.
+   *
+   * On convertit donc avant de valider, pour les valeurs dont la spec déclare une PLAGE
+   * (c'est ce qui les désigne comme numériques). Une chaîne non numérique reste telle quelle
+   * et sera rejetée par le contrôle de plage — on ne fabrique pas un nombre à partir de rien.
+   */
+  const versNombre = (spec, v) => {
+    if (!Array.isArray(spec.range) || typeof v !== 'string') return v;
+    const n = Number(v.trim());
+    return Number.isFinite(n) ? n : v;
+  };
+
   const checkDomain = (name, spec, v, line) => {
+    if (Array.isArray(spec.range) && typeof v !== 'number') {
+      errors.push({ message: `'${name}': '${v}' n'est pas un nombre (attendu : ${spec.range[0]}..${spec.range[1]}${spec.unit ? ' ' + spec.unit : ''})`, line });
+      return false;
+    }
     if (typeof v === 'number' && Array.isArray(spec.range) && spec.range.length === 2
         && (v < spec.range[0] || v > spec.range[1])) {
       errors.push({ message: `'${name}': ${v} hors plage [${spec.range[0]}..${spec.range[1]}]${spec.unit ? ' ' + spec.unit : ''}`, line });
@@ -756,7 +782,8 @@ function applySceneValues(ast, libCtx) {
       errors.push({ message: `'@${d.name}' attend une VALEUR (ex. @${d.name}:440) — pas un nom`, line: d.line });
       continue;
     }
-    if (checkDomain(d.name, spec, d.value, d.line)) sceneVals[d.name] = d.value;
+    const valeur = versNombre(spec, d.value);
+    if (checkDomain(d.name, spec, valeur, d.line)) sceneVals[d.name] = valeur;
   }
 
   // Composant d'un AXE déclaré au niveau SCÈNE, lu en forme POINT uniquement (`@tuning.X`
@@ -834,6 +861,7 @@ function applySceneValues(ast, libCtx) {
       if (v === undefined && sceneVals[name] !== undefined) v = sceneVals[name]; // niveau 3 scène
       if (v === undefined) v = cascadeDefault(spec, props); // niveaux 2-1 (composant invoqué → socle @core)
       if (v === undefined) continue;
+      v = versNombre(spec, v);
       if (checkDomain(name, spec, v, actor.line)) vals[name] = v;
     }
     if (Object.keys(vals).length) actor.values = vals;
