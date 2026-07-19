@@ -60,12 +60,24 @@ function referenceFor(name, baselineDir = DEFAULT_BASELINE) {
   if (!e) return null;
   const out = { name, modalite: e.modalite, produit: !!e.produit, raison: e.raison || null };
   if (!e.produit) return out;
-  if (e.modalite === 'MIDI') {
-    const f = path.join(dir, 'captures', `${name}.tokens.json`);
-    if (fs.existsSync(f)) out.tokens = JSON.parse(fs.readFileSync(f, 'utf-8'));
-  } else if (e.modalite === 'TEXTE') {
-    const f = path.join(dir, 'captures', `${name}.text.txt`);
-    if (fs.existsSync(f)) out.text = fs.readFileSync(f, 'utf-8');
+  // LE CHEMIN DE LA CAPTURE EST DÉCLARÉ PAR LA BASELINE — on ne le RECONSTRUIT plus.
+  //
+  // On rebâtissait `<nom>.tokens.json` depuis le nom de la grammaire. Ça marche tant que le
+  // nom est un nom de fichier valide — et ça casse en SILENCE sinon : `check&` est capturée
+  // dans `check_.tokens.json` (l'esperluette est assainie), donc le fichier reconstruit
+  // n'existait pas, la référence se chargeait VIDE, et la grammaire ressortait en écart de
+  // contenu alors qu'on ne lui avait rien opposé. Signalé par bp3-frontend, vérifié ici.
+  //
+  // L'entrée de baseline porte un champ `capture` qui dit exactement où est le fichier.
+  // On le lit. C'est la règle que bp3-engine énonce lui-même : LES CHAMPS FONT FOI, PAS UNE
+  // convention qu'on redevine à côté.
+  const rel = e.capture
+    || (e.modalite === 'MIDI' ? path.join('captures', `${name}.tokens.json`)
+                              : path.join('captures', `${name}.text.txt`));
+  const f = path.join(dir, rel);
+  if (fs.existsSync(f)) {
+    if (e.modalite === 'MIDI') out.tokens = JSON.parse(fs.readFileSync(f, 'utf-8'));
+    else if (e.modalite === 'TEXTE') out.text = fs.readFileSync(f, 'utf-8');
   }
   return out;
 }
@@ -239,6 +251,24 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     const b = normText(candidate.text).split(' ');
     if (a.length === b.length && a.every((x, i) => x === b[i])) {
       return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
+    }
+
+    // RÉFÉRENCE SANS AUCUN SÉPARATEUR : comparer la CHAÎNE, pas le découpage.
+    //
+    // Certaines captures natives écrivent les terminaux ACCOLÉS — `tryGOTO` sort
+    // `abbabaccbccca`, un seul mot. Ma voie rend les mêmes caractères mais séparés, parce que
+    // je joins toujours par une espace. On opposait donc 1 « mot » à 13 : un écart de FORME
+    // compté comme un écart de CONTENU. Signalé par bp3-frontend, vérifié ici sur la capture.
+    //
+    // ⚠️ On ne normalise QUE lorsque la référence ne porte AUCUN blanc. Retirer les espaces
+    // des deux côtés systématiquement masquerait les vraies fautes de découpage là où le natif
+    // sépare — ce serait acheter des ISO en aveuglant la mesure.
+    if (a.length === 1 && !/\s/.test(String(ref.text || '').trim())) {
+      const colle = b.join('');
+      if (colle === a[0]) {
+        return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: 1, n_cand: 1,
+          accole: true, detail: `ISO à l'accolement près : la référence écrit les ${b.length} terminaux sans séparateur` };
+      }
     }
     const shiftT = registerShiftFor(name, baselineDir);
     if (shiftT && shiftApplied) {

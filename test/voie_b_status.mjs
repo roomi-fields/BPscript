@@ -74,7 +74,11 @@ async function produceB(name, modalite) {
  * qui n'aboutit pas n'aurait aucun sens. Liste à VIDER dès que bpx corrige — ce n'est pas une
  * exclusion de principe, c'est une panne moteur mise de côté pour que le reste du corpus se mesure.
  */
-const ENUMERATION_SANS_FIN = new Set(['dhadhatite_v2', 'dhati2', 'flags', 'dhati3']);
+const ENUMERATION_SANS_FIN = new Set(['dhadhatite_v2', 'dhati2', 'flags', 'dhati3', 'dhin']);
+// `dhin` ajoutée le 2026-07-19, dès qu'elle est devenue productible (baseline v11). Même
+// protocole que `dhati3`, deux observations concordantes : le balayage s'arrête net à
+// `[27/87] dhin` et n'en repart pas ; et `produceAll()` sur cette seule grammaire ne rend pas
+// la main en 115 s, machine libre. Son natif, lui, énumère 20 items.
 // `dhati3` a été ajoutée le 2026-07-19, et c'est elle qui BLOQUAIT le recompte complet.
 // Deux observations indépendantes, une fois la progression rendue visible : le balayage
 // s'arrête net à `[25/86] dhati3` et n'en repart pas ; et `produceAll()` sur cette seule
