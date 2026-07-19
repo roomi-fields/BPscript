@@ -4,8 +4,16 @@
  * DEUX modes SÉPARÉS (directive Romain 2026-06-17) :
  *   - compileBPS(source)       → ancienne voie BP3 : { grammar, alphabet, settings, … }.
  *                                 Voie 2 héritée (encodeur), vouée au retrait.
- *   - compileToBPxAST(source)  → voie AST BPx : { ast, backticks, flagStates, libraries, … }.
+ *   - compileToBPxAST(source)  → voie AST BPx : { ast, errors, warnings }.
  *                                 Produit l'arbre COMPLET SANS l'ancien format (aucun encode).
+ *
+ * ⚠️ Cet en-tête a annoncé pendant des mois `{ ast, backticks, flagStates, libraries, … }`,
+ * une forme que la fonction n'a jamais rendue (BPS-9). Mesuré le 2026-07-19 : les champs réels
+ * sont `ast`, `errors`, `warnings` — les trois, pas plus. `backticks` et `flagStates` vivent
+ * DANS l'arbre, ils ne sont pas des champs de retour.
+ * On corrige plutôt que de le laisser traîner : le même jour, un commentaire périmé de
+ * `lib/controls.json` a fait croire à une régression majeure et failli déclencher une refonte
+ * de l'AST et de l'encodeur. Une doc qui ment coûte plus cher qu'une doc absente.
  */
 
 import { tokenize } from './tokenizer.js';
