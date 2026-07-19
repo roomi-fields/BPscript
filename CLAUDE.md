@@ -2,10 +2,15 @@
 
 > ⚠️ **CONTEXTE BPx UNIQUEMENT (règle dure, Romain 2026-06-16).** L'AST produit par le parser est
 > **agnostique du moteur** et destiné à **BPx** — il ne doit contenir AUCUNE notion BP3 (`_xxx(N)`,
-> `flavor:'bp3'`, catégorie « bp3 »…). La sortie **BP3** (`compileBPS().grammar`, ancienne fonction
-> « BPScript → BP3 ») est **héritée : NE JAMAIS Y TOUCHER** sauf demande **claire et explicite**.
-> Toute taxonomie d'AST se conçoit agnostique (ex. `target: transport|engine`, `timing: bang|durée`),
-> jamais « bp3 vs bpx ». Cf. mémoire `feedback_bpx_only_jamais_bp3`.
+> `flavor:'bp3'`, catégorie « bp3 »…). Toute taxonomie d'AST se conçoit agnostique
+> (ex. `target: transport|engine`, `timing: bang|durée`), jamais « bp3 vs bpx ».
+> Cf. mémoire `feedback_bpx_only_jamais_bp3`.
+>
+> **La sortie BP3 n'existe plus.** `compileBPS` et l'encodeur ont été SUPPRIMÉS le 2026-07-19
+> (arbitrage Romain : « pour la compatibilité bps/gr, la seule chose que je veux c'est que la
+> PRODUCTION soit identique, pas la grammaire »). La conformité au moteur natif se mesure sur les
+> **jetons produits**, comparés à la baseline native — plus sur un texte de grammaire émis.
+> Il n'y a donc plus qu'**une** voie : `compileToBPxAST(source)` → `{ ast, errors, warnings }`.
 
 3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
 Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
@@ -14,14 +19,14 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - **3 words**: `gate`, `trigger`, `cv` (temporal types)
 - **24 structural symbols**: `@`, `->`, `<-`, `<>`, `{}`, `,`, `()`, `:`, `=`, `[]`, ``` `` ```, `//`, `-`, `_`, `.`, `...`, `!`, `<!`, `#`, `?`, `$`, `&`, `~`, `|`
 - **9 flag operators**: comparison `==`, `!=`, `>`, `<`, `>=`, `<=` + calculation `+`, `-`, `=` (`-`/`=` are distinct operators that reuse glyphs also used as structural symbols)
-- **7 reserved qualifier keys**: `mode`, `scan`, `weight`, `on_fail`, `tempo`, `meter`, `scale` (per `docs/spec/LANGUAGE.md`; `scan`/`tempo`/`meter` handled in `encoder.js`). `speed` SUPPRIMÉ (décision 2026-06-26) → durée `:` (`{A B}:2`, `A4:1/2`)
+- **7 reserved qualifier keys**: `mode`, `scan`, `weight`, `on_fail`, `tempo`, `meter`, `scale` (per `docs/spec/LANGUAGE.md`; `scan`/`tempo`/`meter` portés par l'AST). `speed` SUPPRIMÉ (décision 2026-06-26) → durée `:` (`{A B}:2`, `A4:1/2`)
 - **Double declaration**: each symbol has temporal type + runtime binding (`gate Sa:sc`)
 - Silence: `-` in both BPScript and BP3
 - Prolongation: `_` in both BPScript and BP3
 - Period notation: `.` = equal-duration fragment separator (same as BP3)
 - `!` = simultaneous event (any type: trigger, gate, cv, or flag mutation)
 - `[]` = engine instructions (BP3): guards, mode, weight, tempo operators (durée = `:`, hors `[]`)
-- `()` = runtime instructions: vel, pan, wave, attack, release, filter, etc. (encoded as `_script(CT)`, consumed by a downstream runtime)
+- `()` = runtime instructions: vel, pan, wave, attack, release, filter, etc. (annotation OPAQUE portée sur l'événement jusqu'au runtime de sortie)
 - Backticks: code evaluated by the symbol's runtime (implicit) or tagged (`sc:`, `py:`)
 
 ### Architecture
@@ -29,10 +34,9 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 - `src/transpiler/` — Parser and compiler
   - `tokenizer.js` — Source text → token stream
   - `parser.js` — Tokens → AST (Scene, Directive, Rule, CVInstance, Macro, Polymetry)
-  - `encoder.js` — AST → BP3 grammar text + flat alphabet + prototypes + settings
-  - `prototypes.js` — Generates BP3 -so. prototype files for terminal durations
-  - `index.js` — Facade: `compileBPS(source)` → `{ grammar, alphabetFile, prototypesFile, controlTable, cvTable, errors }`
-  - `actorResolver.js` — Resolves actors (alphabet/tuning/octaves bindings) between parser and encoder
+  - `bpxAst.js` — Parser → AST canonique (annotations `payload`, validations fail-loud)
+  - `index.js` — Façade : `compileToBPxAST(source)` → `{ ast, errors, warnings }` (voie UNIQUE)
+  - `actorResolver.js` — Resolves actors (alphabet/tuning/octaves bindings)
   - `libs.js` — Library loader (JSON → controls, symbols, CV objects)
 - `src/bpx/` — BPx engine stub (next-generation derivation engine, see BPX specs)
 - `lib/` — JSON libraries (controls, alphabets, tunings, filter, routing, etc.)
@@ -198,14 +202,19 @@ node test/voie_b_status.mjs      # comparaison à la baseline native, EN SORTIE 
 
 ### BPScript Compilation Pipeline
 ```
-Source text → Tokenizer (tokens) → Parser (AST) → Encoder (BP3 grammar + flat alphabet + prototypes) → WASM engine
+Source text → Tokenizer (tokens) → Parser (AST) → AST canonique (bpxAst) → BPx → Kairos → Kronos
 ```
+L'étape « Encoder → grammaire BP3 → moteur WASM » a été SUPPRIMÉE le 2026-07-19 : il n'y a plus
+d'émission de texte BP3. La conformité au moteur natif se mesure sur les **jetons produits**
+(`test/voie_b_status.mjs`, comparaison à la baseline native).
 
 ### Key conventions
-- `[]` = engine (BP3): `[mode:random]`→RND, `[weight:50]`→`<50>`, `A[/2]`→`/2 A`; durée `{A B}:2`→`{2, A B}` (hors `[]`)
-- `()` = runtime: `(vel:80)`→`_script(CT0)`, `(wave:sawtooth)`→`_script(CT1)`
+- `[]` = instructions MOTEUR, lues et interprétées par BPx (mode, weight, tempo, meter…) ;
+  durée `{A B}:2` (hors `[]`)
+- `()` = annotation OPAQUE portée SUR l'événement jusqu'au runtime de sortie (`vel`, `wave`…).
+  Dans l'AST : `RuntimeQualifier` en suffixe, `InstantControl` dans le flux. La portée est
+  déclarée (`payload.scope` : `rule` | `group` | `template`, avec `containment:true`)
 - Direction: `->` (default L→R), `<-` (RIGHT→LEFT), `<>` (bidirectional)
-- BP3 rule format: `gram#blockNum[ruleNum] MODE LHS --> RHS`
 - Silence: `-` in both BPScript and BP3
 - Tied notes: `~` in BPScript → `&` in BP3
 - Flags: `[X==N]` → `/X=N/` (guard), `[X=N]` → `/X=N/` (mutation)
