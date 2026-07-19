@@ -33,63 +33,7 @@ import path from 'node:path';
 const ICI = path.dirname(new URL(import.meta.url).pathname);
 const verbeux = process.argv.includes('--verbose');
 
-/**
- * LANE MOTEUR — exigent le moteur BP3 CONSTRUIT (`--bin`). Exécutés séparément
- * (`npm run guards:moteur`), jamais dans ce portillon : il doit tourner sur un clone frais.
- */
-const LANE_MOTEUR = new Map([
-  ['test_wasm_all.js', 'intégration WASM complète : charge le moteur construit, un processus fils par scène'],
-  ['run_bpx_scenes.cjs', 'joue les scènes contre le moteur WASM, prend --bin <tag>'],
-]);
-/** Modules importés, jamais lancés — couverts par ceux qui les utilisent. */
-const MODULES = new Map([
-  ['compare_modal.cjs', 'comparateur importé par voie_b_status et les mesures'],
-  ['kairos_bridge.mjs', 'pont vers Kairos/Kronos, importé par les mesures'],
-  ['resolve_bin.cjs', 'résolution du tag de binaire, importé par la lane moteur'],
-]);
-/** Ce fichier-ci. */
-const MOI = 'run_guards.mjs';
-
-/**
- * OUTILS À SEUIL — ils sortent toujours en zéro, c'est NOUS qui jugeons leur sortie.
- * Le seuil est un plancher constaté : il ne monte pas tout seul, mais il ne doit jamais
- * descendre sans qu'on le sache.
- */
-const SEUILS = [
-  {
-    fichier: 'scan_corpus.mjs',
-    quoi: 'aller-retour BP3 → BPScript → BP3',
-    mesure: (sortie) => (sortie.match(/FIDÈLE/g) || []).length,
-    plancher: 13,
-    unite: 'grammaire(s) FIDÈLE',
-  },
-  {
-    // DETTE NOMMÉE, pas une exclusion. Ce fichier porte 6 échecs ANTÉRIEURS à la
-    // restauration du portillon : la notation métavariable `|x|` se perd à la conversion
-    // (`(=|A1|)` ressort `(=A1`). Le corriger demande de creuser le convertisseur, ce qui
-    // n'est pas le chantier du jour.
-    // Plutôt que de l'exclure — le gate ne couvrirait alors PLUS DU TOUT le convertisseur —
-    // on le surveille par son NOMBRE DE SUCCÈS : il ne doit jamais descendre. Les 6 échecs
-    // connus restent tolérés, une régression NOUVELLE mord immédiatement.
-    fichier: 'test_bp3_to_scene.cjs',
-    quoi: 'convertisseur BP3 → scène (6 échecs connus : métavariables |x|)',
-    mesure: (sortie) => Number((sortie.match(/Résultat unitaires\+ref:\s*(\d+) OK/) || [])[1] || 0),
-    plancher: 79,
-    unite: 'assertion(s) OK',
-  },
-];
-/**
- * HORS PORTILLON — chaque exclusion porte SON MOTIF, et le méta-garde vérifie qu'aucun
- * fichier n'échappe au gate sans en avoir un. Un fichier retiré « pour l'instant » sans
- * raison écrite est exactement ce qui nous a mordus.
- */
-const HORS_PORTILLON = new Map([
-  ['voie_b_status.mjs', 'mesure de conformité à la baseline native : plusieurs minutes, et son verdict est un CONSTAT à lire (20 ISO / 54 DIFF), pas une régression — au gate il rougirait en permanence pour un état connu'],
-  ['audit_horloge.mjs', 'audit ponctuel des horloges natives : rapport de diagnostic, sans verdict binaire'],
-  ['diff_families.mjs', 'classification mécanique des DIFF : outil d analyse, pas un garde'],
-  ['nom_vs_hz.mjs', 'sonde de résolution nom↔fréquence : rapport, seuil non défini'],
-  ['bp2_settings.cjs', 'inspection des réglages BP2 : utilitaire de lecture, aucune assertion'],
-]);
+import { LANE_MOTEUR, MODULES, MOI, SEUILS, HORS_PORTILLON } from './gate_classification.mjs';
 
 const fichiers = readdirSync(ICI)
   .filter((f) => /\.(js|cjs|mjs)$/.test(f))
@@ -144,67 +88,6 @@ for (const s of SEUILS) {
   } else {
     echecs++;
     console.error(`  ÉCHEC ${s.fichier} — ${n} ${s.unite}, plancher ${s.plancher} (${s.quoi})`);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MÉTA-GARDE ANTI-CONTOURNEMENT
-//
-// C'est LUI qui rend les autres obligatoires. Sans lui, la restauration du portillon
-// serait vraie aujourd'hui et fausse dans six mois : il suffirait qu'un test soit ajouté
-// hors du gate pour qu'il redevienne un garde que personne ne lance — l'état qu'on vient
-// de payer (2 fichiers lancés sur 41, quinze pourris sans témoin, un qui plantait en
-// annulant 166 assertions).
-//
-// ⚠️ MA PREMIÈRE VERSION DE CE MÉTA-GARDE ÉTAIT UN FIGURANT, et l'injection l'a prouvé.
-// Elle cherchait des « orphelins » DANS `test/` — or ce portillon inclut par DÉFAUT tout
-// fichier non déclaré ailleurs : un nouveau test y tombe automatiquement, il ne peut donc
-// JAMAIS y avoir d'orphelin ici. Le contrôle était vide par construction, exactement le
-// travers que je reprochais aux outils sortant toujours en zéro. Vérifié : un fichier
-// bidon déposé dans `test/` passait le gate au vert.
-//
-// Ce qu'il faut réellement surveiller, et que cette version vérifie :
-//   1. les fichiers de test vivant HORS de `test/` — ceux-là, rien ne les lance jamais ;
-//   2. les exclusions SANS motif écrit — « retiré pour l'instant » est ce qui pourrit.
-const RACINE = path.resolve(ICI, '..');
-/** Tests hors `test/` déjà connus et assumés, avec leur raison. */
-const HORS_DOSSIER_ADMIS = new Map([
-  ['src/transpiler/test.js', 'démonstration manuelle du transpileur (imprime alphabet et grammaire, aucune assertion, sort toujours en zéro) — conservée comme outil de mise au point, jamais un garde'],
-]);
-{
-  const trouves = [];
-  const explore = (rel) => {
-    for (const e of readdirSync(path.join(RACINE, rel), { withFileTypes: true })) {
-      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
-      const sous = rel ? `${rel}/${e.name}` : e.name;
-      if (e.isDirectory()) explore(sous);
-      else if (/(^|\/)(test|spec)[._-].*\.(js|cjs|mjs|ts)$|\.(test|spec)\.(js|cjs|mjs|ts)$|(^|\/)test\.(js|cjs|mjs)$/.test(sous)) trouves.push(sous);
-    }
-  };
-  for (const racine of ['src', 'lib', 'editor']) {
-    try { explore(racine); } catch { /* dossier absent : rien à explorer */ }
-  }
-  const horsGate = trouves.filter((f) => !HORS_DOSSIER_ADMIS.has(f));
-  const sansMotif = [...LANE_MOTEUR, ...MODULES, ...HORS_PORTILLON, ...HORS_DOSSIER_ADMIS]
-    .filter(([, motif]) => !motif || motif.trim().length < 20)
-    .map(([f]) => f);
-
-  if (horsGate.length > 0) {
-    echecs++;
-    console.error(`  ÉCHEC méta-garde — ${horsGate.length} fichier(s) de test vivent HORS de test/ et ne sont lancés par rien :`);
-    for (const f of horsGate) console.error(`         ${f}`);
-    console.error('         Déplacez-les dans test/ (ils seront lancés automatiquement), ou déclarez-les');
-    console.error('         dans HORS_DOSSIER_ADMIS avec un motif écrit.');
-  }
-  if (sansMotif.length > 0) {
-    echecs++;
-    console.error(`  ÉCHEC méta-garde — exclusion(s) sans motif écrit : ${sansMotif.join(', ')}`);
-  }
-  if (horsGate.length === 0 && sansMotif.length === 0) {
-    passes++;
-    if (verbeux) {
-      console.log(`  ok   méta-garde — tout test de test/ est lancé par défaut ; ${trouves.length} hors dossier, tous motivés`);
-    }
   }
 }
 
