@@ -683,6 +683,27 @@ lib/
 
 ### Composants modifiés
 
+> ⚠️ **TOUTE CETTE SECTION EST PÉRIMÉE — vérifié le 2026-07-19, ne pas s'en servir comme plan.**
+>
+> Elle décrit des composants sous `src/dispatcher/` et va jusqu'à demander d'en **créer**
+> (`soundsResolver.js`, `actorRegistry.js`). **Ce répertoire n'existe plus** : il a été retiré
+> du dépôt le 2026-04-13 à l'extraction de Kanopi (`4fb6b46`). Cinq chemins cités ici ne
+> mènent nulle part.
+>
+> Ce n'est pas seulement une citation morte : c'est un **plan d'implémentation** pour un
+> composant supprimé. Un lecteur pressé y trouve des instructions exécutables et des fichiers
+> à créer dans une arborescence disparue — la forme la plus coûteuse d'oracle qui ment.
+>
+> **Où les responsabilités vivent aujourd'hui** (confirmé par Kanopi et Kairos le 2026-07-19) :
+> la résolution de hauteur et les ratios sont chez **Kairos** (`src/pitch/`) ; la sortie audio
+> et le rendu CV chez **runtime-audio** ; BPScript **porte** et n'a plus de dispatcher — c'est
+> le modèle ratifié, pas un accident (Kanopi résout et compose, BPScript ordonnance).
+>
+> La section est **conservée** plutôt que supprimée : elle documente une intention de design
+> qui a réellement existé, et son historique éclaire les décisions suivantes. Mais elle ne
+> décrit **pas** le dépôt.
+
+
 #### 1. ActorRegistry (NOUVEAU)
 
 ```
