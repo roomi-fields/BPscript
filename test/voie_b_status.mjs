@@ -93,29 +93,16 @@ function produceAllB(name) {
     if (out.errors.length) return { erreur: `compilation : ${out.errors[0].message}` };
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
-    const session = createSession(out.ast, { seed: 1 });
-    // PLAFOND — passe EXPLICITEMENT depuis la directive de MA scene. BPx ne reprend pas encore
-    // `[@maxitems:N]` : ni `session.grammar.directives.maxItems` ni `instance.getStatus().maxItems`
-    // ne la voient (mesuré : les deux restent absents et l'énumération file jusqu'à 100000, au
-    // point que 4 grammaires ne rendent jamais la main). La scène reste la source de vérité —
-    // je lis SA directive, je ne relis pas le `-se` natif : la Voie B doit rester autosuffisante.
-    // Contournement à retirer dès que BPx honore la directive.
-    const capDir = (out.ast.directives || []).find((d) => d.name === 'maxitems');
-    const cap = capDir && Number(capDir.value) > 0 ? Number(capDir.value) : undefined;
-    // GARDE-FOU quand la scène n'a AUCUN plafond : sans lui, 3 grammaires (dhadhatite_v2,
-    // dhati2, flags) ne rendent jamais la main — leur natif, réglage MaxItemsProduce=0, n'énumère
-    // pourtant qu'UN item. On borne largement (100× ce que le natif énumère) et, si la borne mord,
-    // on refuse de conclure : comparer une énumération tronquée contre une énumération complète
-    // serait un faux verdict. Le non-arrêt lui-même est un défaut moteur, remonté à bpx.
-    // 10× ce que le natif énumère : assez large pour qu'une divergence de CARDINALITÉ reste
-    // visible (on verrait un 2×, un 5×), assez serré pour que la borne se paie en secondes.
-    const garde = cap || Math.max(50, 10 * (byName[name].items_enumeres || 20));
     if (ENUMERATION_SANS_FIN.has(name)) {
       return { nonMesurable: "l'énumération ne termine pas — le plafond borne le RÉSULTAT, pas la "
-        + "RECHERCHE (mesuré : maxItems:2 ne rend pas la main non plus). Défaut moteur remonté à bpx, "
+        + 'RECHERCHE (mesuré : maxItems:2 ne rend pas la main non plus). Défaut moteur remonté à bpx, '
         + 'pas un écart de transcription' };
     }
-    const r = session.produceAll({ maxItems: garde });
+    const session = createSession(out.ast, { seed: 1 });
+    // Le PLAFOND vient de la directive `[@maxitems:N]` de la scène, et BPx l'honore désormais
+    // seul (fix bpx af30c16, vérifié : tryflags2/tryLIN → 25, dhin1 → 20 sans option explicite).
+    // Le contournement qui lisait la directive à la main est retiré.
+    const r = session.produceAll();
     // REFUS : le natif avorte lui aussi l'énumération sur SUB/SUB1/POSLONG et JOUE au lieu
     // d'énumérer. On réplique ce repli — le traiter en erreur inventerait un échec que le
     // natif n'a pas. (Bug de mon premier câblage : je documentais le repli sans le coder.)
