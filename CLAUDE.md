@@ -284,3 +284,28 @@ la lecture de fichiers. Complémentaire de RTFM : **RTFM** pour le quoi/où docu
 Quand tu lances un **sous-agent de développement** (outil Agent/Task), choisis
 **TOUJOURS le modèle Sonnet 5** (`claude-sonnet-5`). Vaut pour chaque sous-agent
 de dev que tu délègues — jamais un modèle plus lourd par défaut pour ce travail.
+
+## ⚠️ CONFRONTER À RÉCEPTION — un message reçu est une CLAIM, pas un fait
+
+**Décision Romain 2026-07-19** (`hub/decisions/2026-07-19-confronter-via-oracle-et-restaurer-tous-les-guards.md`).
+
+Tout message reçu — d'un agent, de l'architecte, d'un propriétaire légitime sur *son* périmètre —
+est une **affirmation à mesurer**, jamais une donnée à appliquer ou à re-relayer telle quelle.
+Avant d'agir dessus ou de la transmettre : la confronter à **l'oracle du domaine** (RTFM,
+CodeGraph, le skill `bpscript-oracle`, les cartes d'Atlas, les décisions datées, le code).
+
+**Pourquoi ce n'est pas un quinzième garde-fou.** La règle « vérifier avant d'affirmer » existait
+déjà le jour où l'erreur a été commise — huit fois, en une seule journée (2026-07-19), par cinq
+agents différents, toujours sous la même forme : *un cadrage relayé sans être confronté*. Ce n'est
+donc pas un travers individuel qu'on corrige par la volonté, c'est une **propriété du système sous
+débit** : le relais coûte moins cher que la vérification, donc il gagne. La seule défense qui a
+fonctionné, à chaque fois, est que le **destinataire mesure au lieu d'appliquer**.
+
+Cas concrets payés ce jour-là : un commentaire périmé a fait croire à une régression majeure et
+failli déclencher une refonte de l'AST ; une cause inventée a été routée deux fois à un autre
+dépôt ; un « artefact oracle » a failli faire annuler deux correctifs bien réels ; et j'ai
+moi-même relayé à Kairos une information de Kanopi sur le périmètre d'un tiers sans la vérifier —
+c'est Kairos qui l'a attrapée, en mesurant.
+
+Corollaire : **une information vraie chez son émetteur ne l'est pas forcément sur le périmètre
+d'un tiers.** Elle se re-vérifie à chaque saut.

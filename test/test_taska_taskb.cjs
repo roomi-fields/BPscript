@@ -37,7 +37,7 @@ async function run() {
 @alphabet.western:midi
 @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
 @mode:random
-S -> {t1 t2, A B} [speed:10]
+S -> {t1 t2, A B}:10
 `;
     const r = compileBPS(src);
     const grammar = r.grammar || '';
