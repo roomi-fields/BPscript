@@ -733,46 +733,18 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
 
 section('Encoder — tempo absolu A[/N] → /N A (bare, absolu + persistant)');
 
-{
-  // A[/2] doit émettre « /2 A » et NON « _tempo(2/1) A _tempo(1/2) »
-  const compiled = compileBPS('@controls\nS -> A[/2] B');
-  assert('A[/2] compile sans erreur', compiled.errors.length === 0,
-    compiled.errors.map(e => e.message).join('; '));
-  const gr = compiled.grammar;
-  assert('A[/2] → contient /2 A', gr.includes('/2 A'), `grammar: ${gr}`);
-  assert('A[/2] → pas de _tempo(2/1)', !gr.includes('_tempo(2/1)'), `grammar: ${gr}`);
-  assert('A[/2] → pas d\'exit _tempo(1/2)', !gr.includes('_tempo(1/2)'), `grammar: ${gr}`);
-}
-
-{
-  // ![/2] (InstantControl) doit rester _tempo(2/1) — relatif, inchangé
-  const compiled = compileBPS('@controls\nS -> A ![/2] B');
-  assert('![/2] compile sans erreur', compiled.errors.length === 0,
-    compiled.errors.map(e => e.message).join('; '));
-  const gr = compiled.grammar;
-  assert('![/2] → émet _tempo(2/1)', gr.includes('_tempo(2/1)'), `grammar: ${gr}`);
-}
-
-{
-  // ![tempo:2] (InstantControl clé) doit rester _tempo(2) — inchangé
-  const compiled = compileBPS('@controls\nS -> A ![tempo:2] B');
-  assert('![tempo:2] compile sans erreur', compiled.errors.length === 0,
-    compiled.errors.map(e => e.message).join('; '));
-  const gr = compiled.grammar;
-  assert('![tempo:2] → émet _tempo(2)', gr.includes('_tempo(2)'), `grammar: ${gr}`);
-}
-
-{
-  // A[*2] : *N reste _tempo pair MAIS exit doit être _tempo(1/1) pas _tempo(2/1)
-  const compiled = compileBPS('@controls\nS -> A[*2] B');
-  assert('A[*2] compile sans erreur', compiled.errors.length === 0,
-    compiled.errors.map(e => e.message).join('; '));
-  const gr = compiled.grammar;
-  // enter = _tempo(1/2) (slow down ÷2), exit = _tempo(1/1) (restore)
-  assert('A[*2] → contient _tempo(1/2)', gr.includes('_tempo(1/2)'), `grammar: ${gr}`);
-  assert('A[*2] → exit est _tempo(1/1)', gr.includes('_tempo(1/1)'), `grammar: ${gr}`);
-  assert('A[*2] → exit n\'est PAS _tempo(2/1)', !gr.includes('_tempo(2/1)'), `grammar: ${gr}`);
-}
+// ⚠️ QUATRE BLOCS RETIRÉS ICI le 2026-07-19 — ils vérifiaient le TEXTE BP3 émis.
+//
+// Ils asseyaient l'émission des opérateurs de tempo : `A[/2]` doit rendre `/2 A` et non une
+// paire `_tempo`, `![/2]` doit rendre `_tempo(2/1)`, `A[*2]` doit rendre l'entrée `_tempo(1/2)`
+// et la sortie `_tempo(1/1)`. C'étaient de bonnes assertions — c'est leur OBJET qui a disparu.
+//
+// La certification grammaire-texte est ABANDONNÉE (arbitrage Romain 2026-07-19 : « la seule
+// chose que je veux c'est que la PRODUCTION soit identique, pas la grammaire »). L'encodeur BP3
+// est supprimé, donc il n'y a plus de texte à vérifier — et rien à porter sur l'AST : ces
+// assertions parlaient d'octets, pas de structure.
+//
+// Le reste de ce fichier — plus de 170 assertions sur l'AST — est CONSERVÉ intact.
 
 // ============================================================
 // R1 — Noms canoniques BP3_OPERATORS dans l'AST

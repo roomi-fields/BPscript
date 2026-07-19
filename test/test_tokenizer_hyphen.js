@@ -299,9 +299,10 @@ section('compileBPS 765432 — pas de terminaux parasites note-');
         `trouvé "${p}" dans alphabetFile`);
     }
     // Vérifier que la grammaire émet do4 + espace + - (séparés)
-    const hasNoteRest = result.grammar && result.grammar.includes('do4 -');
-    assert('grammaire émet "do4 -" (note + REST séparés)', hasNoteRest,
-      `do4 - non trouvé dans grammar. Extrait: ${result.grammar && result.grammar.slice(0, 200)}`);
+    // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 : elle vérifiait que la grammaire
+    // émise contenait « do4 - ». La certification grammaire-texte est abandonnée (arbitrage
+    // Romain) et l'encodeur supprimé — il n'y a plus de texte à vérifier. Le reste du fichier
+    // (plus de 75 assertions sur la TOKENISATION, son objet réel) est conservé intact.
   } catch (e) {
     assert('compileBPS 765432 sans erreur fatale', false, e.message);
   }
