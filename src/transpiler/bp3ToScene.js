@@ -924,6 +924,15 @@ function convertSequenceInBrace(field, callMode, bolsizeTable) {
     }
 
     // Liés X& → X~ et &X → ~X
+    // Cas LIÉ DES DEUX CÔTÉS `&X&` : à traiter EN PREMIER. Il satisfait aussi le motif `&X`
+    // ci-dessous, qui ne retire que le `&` de tête — la sortie gardait alors le `&` final et
+    // mélangeait les deux notations (`~Db3&`), forme qu'aucun des deux langages n'accepte.
+    // Constaté le 2026-07-19 sur -gr.Watch_What_Happens (116 mesures MusicXML) : une seule
+    // note doublement liée faisait échouer toute la conversion.
+    if (/^&[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
+      out.push('~' + aliasTerminalDashes(tok.slice(1, -1), bolsizeTable) + '~');
+      continue;
+    }
     if (/^[A-Za-z0-9][A-Za-z0-9#'_]*&$/.test(tok)) {
       out.push(aliasTerminalDashes(tok.slice(0, -1), bolsizeTable) + '~');
       continue;
