@@ -39,8 +39,8 @@ source /path/to/emsdk/emsdk_env.sh
 ./build.sh all --archive --version=v3.4.4-wasm.1
 cd ..
 
-# Run the regression tests
-node test/test_all.cjs --bin last
+# Run the regression gate (also wired to pre-push)
+npm run arch && npm run typecheck && npm run verify
 ```
 
 ## Structure
@@ -74,27 +74,25 @@ MIDI/OSC) consumes them — out of scope for this repository.
 
 Prerequisite: build the engine with `./build.sh all --archive` (see Setup).
 
-The tests compare BP3 engine production across 6 stages:
+The regression gate is three npm scripts, wired to `pre-push` — a push is refused if any bites:
 
-| Stage | Source | Description |
-|-------|--------|-------------|
-| S0 | bp.exe (Windows) | Bernard's PHP reference |
-| S1 | bp3 (native Linux) | Same engine, different platform |
-| S2 | bp3.wasm | MIDI events from WASM |
-| S3 | bp3.wasm | Timed tokens from p_Instance |
-| S4 | bp3.wasm | Like S3 with silent sound objects |
-| S5 | transpiler + bp3.wasm | Full BPScript pipeline |
+| Command | What it guards |
+|---------|----------------|
+| `npm run arch` | dependency structure + freshness of the bundled libraries |
+| `npm run typecheck` | types of the `digital` / `homomorphism` libraries |
+| `npm run verify` | AST_SPEC conformance of the whole corpus + tempo operator emission |
 
 ```bash
-# Run all tests (requires --bin)
-node test/test_all.cjs --bin last
+npm run arch && npm run typecheck && npm run verify
 
-# Test a specific grammar
-node test/s1_native.cjs drum --bin last
-node test/s4_wasm_silent.cjs drum --bin last
-
-# The "last" tag reads builds/LAST in bp3-engine
+# Complementary suites, run by hand when you touch their surface
+node test/scan_corpus.mjs        # BP3 -> BPScript -> BP3 round-trip
+node test/voie_b_status.mjs      # comparison against the native baseline, AT THE END OF THE CHAIN
 ```
+
+> The old `S0-S5` staged pipeline (`test_all.cjs`, `runner.cjs`, the `sN` steps) was **removed on
+> 2026-07-19**. Nothing live invoked it, but it stayed readable and kept being mistaken for the
+> current procedure. See `test/README.md`.
 
 The 36 reference grammars live in `test/grammars/grammars.json`. Each stage's snapshots
 are in `test/grammars/{name}/snapshots/`.

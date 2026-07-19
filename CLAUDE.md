@@ -181,10 +181,20 @@ source /home/romi/dev/bp/emsdk/emsdk_env.sh        # PC2 natif (était /mnt/d/..
 ./build.sh all --archive --version=v3.4.4-wasm.1  # compile + archive
 cd ..
 
-# Tests de non-régression (36 grammaires actives)
-node test/test_all.cjs --bin last     # S1 + S2/S3 + comparaisons
-# Voir test/README.md pour les détails des stages S0→S5
+# Non-régression — LE portillon (branché sur pre-push : un push est refusé s'il mord)
+npm run arch        # garde structurelle + fraîcheur du bundle de librairies
+npm run typecheck   # types des librairies digital/homomorphism
+npm run verify      # conformité AST_SPEC du corpus + émission des opérateurs de tempo
+
+# Suites complémentaires, à la main quand on touche leur surface
+node test/scan_corpus.mjs        # aller-retour BP3 → BPScript → BP3
+node test/voie_b_status.mjs      # comparaison à la baseline native, EN SORTIE DE CHAÎNE
+# Détail : test/README.md
 ```
+
+> L'ancien pipeline `S0-S5` (`test_all.cjs`, `runner.cjs`, les étapes `sN`) a été **supprimé le
+> 2026-07-19**. Il n'était lancé par rien de vivant, mais restait consultable et se faisait prendre
+> pour la procédure courante.
 
 ### BPScript Compilation Pipeline
 ```
