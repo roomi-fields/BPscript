@@ -79,12 +79,34 @@ const fichiers = readdirSync(ICI)
 
 let echecs = 0;
 let passes = 0;
+let assertions = 0;
+let sansCompte = 0;
+
+/**
+ * COMPTE D'ASSERTIONS RÉELLEMENT EXÉCUTÉES — pas le nombre de fichiers verts.
+ *
+ * Un fichier qui PLANTE en cours de route compte pour UN échec alors qu'il annule des
+ * centaines d'assertions : `test_v08_parser` en rapportait 4 et en cachait 166. Compter les
+ * fichiers sous-estime donc structurellement ce qu'on ne surveille pas. On totalise ce qui
+ * s'est réellement exécuté, et on dit combien de fichiers n'annoncent PAS leur compte —
+ * parce qu'un total qui ignore ses trous serait le même mensonge en plus discret.
+ */
+const compterAssertions = (sortie) => {
+  for (const re of [/(\d+)\s+passed/i, /Passé\s*:\s*(\d+)/i, /(\d+)\s+PASS\b/, /Results?:\s*(\d+)/i, /(\d+)\s+vérification\(s\) passée\(s\)/i, /Résultat[^:]*:\s*(\d+)\s+OK/i]) {
+    const m = sortie.match(re);
+    if (m) return Number(m[1]);
+  }
+  const n = (sortie.match(/^\s*(?:ok|OK|PASS|✓)\b/gm) || []).length;
+  return n > 0 ? n : null;
+};
 
 for (const f of fichiers) {
   const r = spawnSync('node', [path.join(ICI, f)], { encoding: 'utf-8', timeout: 300000 });
+  const n = compterAssertions((r.stdout || '') + (r.stderr || ''));
+  if (n === null) sansCompte++; else assertions += n;
   if (r.status === 0) {
     passes++;
-    if (verbeux) console.log(`  ok   ${f}`);
+    if (verbeux) console.log(`  ok   ${f}${n === null ? '' : `  (${n} assertions)`}`);
   } else {
     echecs++;
     console.error(`  ÉCHEC ${f}  (code ${r.status})`);
@@ -106,6 +128,8 @@ for (const s of SEUILS) {
 }
 
 console.log(`\n[gardes] ${passes} garde(s) vert(s), ${echecs} en échec.`);
+console.log(`[gardes] ${assertions} assertion(s) RÉELLEMENT exécutée(s)`
+  + (sansCompte ? ` — ${sansCompte} fichier(s) n'annoncent pas leur compte, non totalisés.` : '.'));
 if (echecs === 0) {
   console.log('[gardes] lane séparée, non lancée ici : test_wasm_all.js, run_bpx_scenes.cjs (moteur construit requis).');
 }
