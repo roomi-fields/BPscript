@@ -74,7 +74,13 @@ async function produceB(name, modalite) {
  * qui n'aboutit pas n'aurait aucun sens. Liste à VIDER dès que bpx corrige — ce n'est pas une
  * exclusion de principe, c'est une panne moteur mise de côté pour que le reste du corpus se mesure.
  */
-const ENUMERATION_SANS_FIN = new Set(['dhadhatite_v2', 'dhati2', 'flags']);
+const ENUMERATION_SANS_FIN = new Set(['dhadhatite_v2', 'dhati2', 'flags', 'dhati3']);
+// `dhati3` a été ajoutée le 2026-07-19, et c'est elle qui BLOQUAIT le recompte complet.
+// Deux observations indépendantes, une fois la progression rendue visible : le balayage
+// s'arrête net à `[25/86] dhati3` et n'en repart pas ; et `produceAll()` sur cette seule
+// grammaire dépasse 120 s sans rendre la main ni imprimer un item.
+// Ça explique rétrospectivement les deux exécutions de la nuit qui ont brûlé 10 h de
+// processeur pour zéro octet : elles n'étaient pas LENTES, elles étaient BLOQUÉES ici.
 
 /**
  * Produit la Voie B en ÉNUMÉRATION (action `produce-all`). Forme de sortie calquée sur la
@@ -127,7 +133,15 @@ const withBps = readdirSync(GRAMMARS)
   .sort();
 
 const rows = [];
+// PROGRESSION SUR LA SORTIE D ERREUR — pas cosmétique.
+// Cet outil n'imprimait qu'à la toute fin : une exécution de vingt minutes était
+// indiscernable d'une exécution BLOQUÉE, et j'ai laissé tourner deux fois des recomptes
+// qui ne rendaient jamais la main (10 h de processeur, zéro octet). Un harnais dont on ne
+// peut pas dire s'il avance est un harnais qui cache ses propres pannes. La ligne part sur
+// stderr pour ne jamais polluer le `--json` de stdout.
+let _rang = 0;
 for (const name of withBps) {
+  process.stderr.write(`[${++_rang}/${withBps.length}] ${name}\n`);
   const ref = byName[name];
   let b = ref.produit && ref.action === 'produce-all'
     ? produceAllB(name)
