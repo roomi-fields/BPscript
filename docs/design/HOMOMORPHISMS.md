@@ -2,15 +2,36 @@
 
 Version 2.0 — 26 mars 2026
 
-> **STATUT 2026-06-10** :
-> - Approche **étiquetage `N@terminal`** dans les fichiers -ho. : **AJOURNÉE**.
->   (Raison : complexité implémentation moteur, pas de gain immédiat sur le contrat BPx.)
-> - Approche **retenue** : `Scene.homomorphisms[]` (tableau `HomomorphismDeclAST`) +
->   marqueurs inline (`star`, noms verbatim) dans le RHS BPS. BPx consomme via
->   `rewriteHomomorphismMarkers` post-dérivation.
-> - Les fichiers -ho. Bernard sont parsés par `parseHoFile()` dans `bp3ToScene.js`
->   lors de la traduction inverse BP3→BPS, et les entrées sont générées dans
->   `lib/transcription.json`.
+> **STATUT 2026-07-19 — QUI RÉSOUT, ET OÙ.** Corrigé après que ce document m'a fait
+> conclure à un défaut au mauvais endroit ; le modèle ci-dessous est mesuré, pas supposé.
+>
+> - **BPScript PORTE** : la table voyage dans `Scene.homomorphisms[]`
+>   (`HomomorphismDeclAST`), plus les marqueurs inline (`star`, noms verbatim) dans le RHS.
+> - **BPx PORTE AUSSI — il ne résout pas.** Modèle **carry-only** (contrat
+>   `hub/contrats/bpx-kairos-arbre`) : il pose la table sur `tree.metadata.homomorphisms`
+>   et le scope d'homomorphisme actif par feuille, sans réécrire l'arbre. Un arbre dérivé
+>   qui rend les terminaux BRUTS est donc le comportement ATTENDU, pas un défaut.
+> - **KAIROS RÉSOUT** : c'est lui qui substitue l'étiquette, à la résolution.
+>
+> ⚠️ **Deux pièges que ce document a lui-même tendus, et qui sont corrigés ici :**
+> 1. Il annonçait « BPx consomme via `rewriteHomomorphismMarkers` **post-dérivation** ».
+>    Faux sur le moment : cette fonction est **compile-time**, appelée au chargement de la
+>    grammaire ; elle lie les marqueurs dans le RHS. Son NOM suggère une réécriture d'après
+>    coup — j'ai lu le nom, pas le rôle.
+> 2. Il désignait `src/dispatcher/dispatcher.js` comme le résolveur (voir plus bas, section
+>    Runtime). **Ce composant n'existe plus** : retiré à l'extraction de Kanopi le
+>    2026-04-13 (`4fb6b46`). Un document qui nomme un fichier disparu envoie le lecteur
+>    chercher une résolution là où il n'y a plus rien.
+>
+> Ce que ça a failli coûter : câbler la résolution dans le pont de mesure de BPScript. Ça
+> aurait **verdi** la mesure tout en dupliquant en silence une responsabilité attribuée à
+> Kairos. Un correctif qui verdit au mauvais endroit est plus dangereux qu'un écart qui
+> reste rouge.
+>
+> - Les fichiers -ho. de Bernard sont parsés par `parseHoFile()` dans `bp3ToScene.js` lors
+>   de la traduction inverse BP3→BPS ; les entrées sont générées dans `lib/transcription.json`.
+> - L'approche **étiquetage `N@terminal`** dans les fichiers -ho. reste **AJOURNÉE**
+>   (complexité moteur, pas de gain sur le contrat BPx).
 
 ---
 
@@ -402,7 +423,9 @@ S -> $X * TR &X             →  S --> (= X) * TR (: X)
 - `src/transpiler/libs.js` — charger @transcription depuis transcription.json
 
 ### Runtime (agent `transpileur`)
-- `src/dispatcher/dispatcher.js` — résolution REPL post-dérivation
+- ~~`src/dispatcher/dispatcher.js` — résolution REPL post-dérivation~~ — **PÉRIMÉ** : ce
+  composant a été retiré du dépôt à l'extraction de Kanopi (2026-04-13, `4fb6b46`). La
+  résolution appartient à **Kairos** (modèle carry-only, cf. STATUT en tête de fichier).
 
 ### Moteur WASM (agent `moteur-wasm`)
 - **Aucun changement.** C'est le point.
@@ -491,7 +514,7 @@ caractères autorisés (`#`, `'`, `"`) ont des conflits avec BPScript.
 
 `bp3_get_timed_tokens()` retournera des tokens comme `0%dha`, `1%C3`, etc.
 Ce sont des terminaux valides — BP3 les a trouvés dans l'alphabet via `Image()`.
-Le dispatcher JS les résoudra.
+~~Le dispatcher JS les résoudra.~~ — **PÉRIMÉ** : c'est **Kairos** qui les résout.
 
 #### Tâche 1 — Valider le caractère `%` et le format `.` dans les noms (BLOQUANT)
 
@@ -726,7 +749,8 @@ return { grammar, alphabetFile, controlTable, transcriptionTable, errors };
 
 #### Tâche 5 — Dispatcher : résolution REPL post-dérivation
 
-**Fichier** : `src/dispatcher/dispatcher.js`
+**Fichier** : ~~`src/dispatcher/dispatcher.js`~~ — **PÉRIMÉ**, composant retiré
+(2026-04-13, `4fb6b46`). La résolution est chez **Kairos**.
 
 Après réception des timed tokens, AVANT le strip `bol` et le routing par acteur,
 résoudre les étiquettes :
