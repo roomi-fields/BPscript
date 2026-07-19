@@ -11,8 +11,18 @@
  * (`npm run guards:moteur`), jamais dans ce portillon : il doit tourner sur un clone frais.
  */
 export const LANE_MOTEUR = new Map([
-  ['test_wasm_all.js', 'intégration WASM complète : charge le moteur construit, un processus fils par scène'],
-  ['run_bpx_scenes.cjs', 'joue les scènes contre le moteur WASM, prend --bin <tag>'],
+  // VIDE depuis le 2026-07-19 — et c'est une SUPPRESSION, pas un oubli.
+  //
+  // Les deux membres (`test_wasm_all.js`, `run_bpx_scenes.cjs`) ont été retirés sur décision de
+  // Romain. Motif : la conformité se mesure contre le moteur NATIF (captures bp3-engine), pas
+  // contre le WASM. `test_wasm_all.js` était une relique d'avant la refonte — il importait
+  // `src/dispatcher/`, supprimé, et n'était de toute façon pas chargeable (du CommonJS dans un
+  // paquet ESM). Il se PRÉSENTAIT comme une lane de conformité tout en étant incapable de
+  // démarrer : le plus trompeur des codes morts, puisqu'il rassurait sur un axe qu'il ne
+  // mesurait pas. `npm run guards:moteur` est retiré avec eux.
+  //
+  // La liste reste déclarée pour que le mécanisme survive : un futur test exigeant un binaire
+  // construit devra y entrer, jamais être branché tel quel au portillon.
 ]);
 /** Modules importés, jamais lancés — couverts par ceux qui les utilisent. */
 export const MODULES = new Map([

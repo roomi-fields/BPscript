@@ -14,7 +14,6 @@
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
     "guards": "node test/run_guards.mjs",
-    "guards:moteur": "node test/test_wasm_all.js && node test/run_bpx_scenes.cjs --bin last",
     "gate:install": "install -m 755 scripts/pre-push .git/hooks/pre-push && echo \"[gate] hook installe depuis scripts/pre-push (versionne)\""
   },
   "devDependencies": {

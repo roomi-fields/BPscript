@@ -264,7 +264,9 @@ Ce projet est indexé avec RTFM (MCP server `.mcp.json`).
 Si tu es lancé avec un nom de session (`-n`), lis immédiatement les fichiers mémoire correspondants pour récupérer tout le contexte accumulé.
 
 **Session `moteur-wasm`** — Moteur BP3 WASM, tests e2e, conformité scènes
-- Focus : bugs moteur, pipeline WASM (bp3_api.c, stubs), test_wasm_all.js, CONFORMITY.md, aux files
+- Focus : bugs moteur, pipeline WASM (bp3_api.c, stubs), CONFORMITY.md, aux files
+  (`test_wasm_all.js` retiré le 2026-07-19 : la conformité se mesure contre le moteur NATIF,
+   pas contre le WASM — il ne se chargeait plus et se présentait comme une lane de conformité.)
 
 **Session `transpileur`** — Tokenizer, parser, encoder, acteurs, prototypes
 - Focus : tokenizer.js, parser.js, encoder.js, actorResolver.js, prototypes.js, libs.js, lib/*.json, test/

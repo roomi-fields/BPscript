@@ -108,7 +108,8 @@ for (const s of SEUILS) {
     // gardaient l'émission BP3, supprimée avec elle. Un minimum de 0 serait un témoin creux —
     // on le retire donc plutôt que de le laisser passer au vert sans rien vérifier. Il
     // reviendra le jour où un outil à seuil existera de nouveau.
-    { quoi: 'exclusions motivées', vu: LANE_MOTEUR.size + MODULES.size + HORS_PORTILLON.size, minimum: 10 },
+    // plancher 8 depuis le 2026-07-19 (lane moteur videe, cf. gate_classification.mjs)
+    { quoi: 'exclusions motivées', vu: LANE_MOTEUR.size + MODULES.size + HORS_PORTILLON.size, minimum: 8 },
   ];
   const creux = temoins.filter((t) => t.vu < t.minimum);
   if (creux.length > 0) {
@@ -127,6 +128,6 @@ console.log(`\n[gardes] ${passes} garde(s) vert(s), ${echecs} en échec.`);
 console.log(`[gardes] ${assertions} assertion(s) RÉELLEMENT exécutée(s)`
   + (sansCompte ? ` — ${sansCompte} fichier(s) n'annoncent pas leur compte, non totalisés.` : '.'));
 if (echecs === 0) {
-  console.log('[gardes] lane séparée, non lancée ici : test_wasm_all.js, run_bpx_scenes.cjs (moteur construit requis).');
+  console.log(`[gardes] lane séparée : ${LANE_MOTEUR.size} test(s) exigeant un binaire construit.`);
 }
 process.exit(echecs ? 1 : 0);

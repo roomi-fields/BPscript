@@ -2,11 +2,17 @@
  * bp3ToScene — Transpileur inverse BP3 → BPscript
  *
  * Entrée  : texte d'une grammaire BP3 (fichier -gr.xxx)
- * Sortie  : source BPscript (.bps) prêt à être compilé par compileBPS()
+ * Sortie  : source BPscript (.bps), consommée par `compileToBPxAST()`
  *           OU chaîne "NON GÉRÉ: <construct>" si un construct non supporté est rencontré
  *
- * Fidélité : compileBPS(bp3ToScene(gr)).grammar doit produire un jeu de règles
- *            équivalent à gr (modulo commentaires, refs -se/-al/-ho, espaces).
+ * Fidélité : `compileToBPxAST(bp3ToScene(gr))` doit produire un arbre équivalent à `gr`
+ *            (modulo commentaires, refs -se/-al/-ho, espaces).
+ *
+ * ⚠️ Cet en-tête décrivait sa sortie comme « prête pour `compileBPS()` », et sa fidélité comme
+ * portant sur `.grammar`, un TEXTE BP3 émis. Les deux ont disparu le 2026-07-19 avec l'encodeur
+ * (arbitrage Romain : la conformité se mesure sur la PRODUCTION, pas sur la grammaire émise).
+ * Le module, lui, reste utile — il alimente la Voie A. Seul son en-tête mentait, et un en-tête
+ * qui décrit une API supprimée finit par être relu comme une spécification.
  *
  * Constructs gérés :
  *   - Modes : ORD, RND, LIN, SUB, SUB1, TEM, POSLONG  (+ absence de mode)
@@ -33,7 +39,7 @@
  *
  * Constructs NON GÉRÉS (stop-and-report par grammaire) :
  *   - Contrôles _xxx absents de lib/controls.json (_srand, _print, …) et _script
- *   - TEMPLATES: / TIMEPATTERNS: sections (non gérées via compileBPS)
+ *   - TEMPLATES: / TIMEPATTERNS: sections (jamais gérées en aller-retour)
  *   - Opérateurs tempo nus /N \N dans le RHS
  *
  * Note sur les preambles :
@@ -52,7 +58,7 @@ import { dirname, join } from 'node:path';
 //
 // Forme appel (E4) : un contrôle BP3 `_xxx(args)` en position non couverte par
 // les formes existantes (tête de RHS → suffixe de règle) est traduit en forme
-// appel BPscript `xxx(args)` à la position exacte du .gr. compileBPS émet :
+// appel BPscript `xxx(args)` à la position exacte du .gr. L'encodeur BP3 (supprimé) émettait :
 //   - runtime : _script(CT n) positionné (résolu via controlTable)
 //   - engine  : _xxx(args) verbatim à la même position
 // La scène générée doit alors charger @controls.
@@ -491,7 +497,7 @@ function bp3ToScene(grammarText, opts) {
   //
   // Elle était COLLECTÉE puis jamais sérialisée : les `t1 = 96/100 …` disparaissaient, et la
   // sous-grammaire créée pour les accueillir restait VIDE. Une sous-grammaire vide en tête émet
-  // un séparateur `-----` avant la première règle — et là, `compileBPS` avale toute la grammaire
+  // un séparateur `-----` avant la première règle — et là, l'ex-encodeur avalait toute la grammaire
   // EN SILENCE (mesuré sur Mozartexpression : 373 lignes converties, 0 erreur, 0 règle émise).
   //
   // La surface existe (`EBNF.md:97`, `AST.md:105`) : c'est une directive de SCÈNE, pas une
@@ -590,7 +596,7 @@ function bp3ToScene(grammarText, opts) {
       bpsLines.push(parts.join(' '));
     }
 
-    // TEMPLATES section — NON GÉRÉ via compileBPS (pas de support round-trip)
+    // TEMPLATES section — NON GÉRÉ (jamais de support aller-retour)
     // On les marque mais ne bloque pas la compilation
     if (sub.templates && sub.templates.length > 0) {
       // TEMPLATES sont supportés par le parser BPscript via @templates
@@ -891,7 +897,7 @@ function extractGroupSeqPrefix(inner) {
 /**
  * Convertit un groupe polymétrique {…} BP3 en BPscript.
  * Appliqué dans les DEUX modes (legacy et forme appel) :
- *   - liés X& → X~ et &X → ~X ('&' nu dans {…} n'est pas accepté par compileBPS)
+ *   - liés X& → X~ et &X → ~X ('&' nu dans {…} n'a jamais été accepté en entrée)
  *   - prolongations collées X__ → X _ _ et ____ → _ _ _ _
  *   - alias des identifiants à tirets (dhin-- → dhinOO)
  *   - en mode forme appel : contrôles _xxx(args) → xxx(args)

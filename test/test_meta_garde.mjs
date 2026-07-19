@@ -72,9 +72,15 @@ if (sansMotif.length > 0) {
 // ANTI-VACUITÉ de ce garde-ci : il balaie un ensemble ; s'il n'y voit plus rien, c'est
 // qu'il ne regarde plus au bon endroit, pas que le dépôt est devenu parfait.
 const exclusions = LANE_MOTEUR.size + MODULES.size + HORS_PORTILLON.size;
-if (exclusions < 10) {
+// PLANCHER 8 — descendu de 10 le 2026-07-19, et la raison est ECRITE parce qu'un seuil qu'on
+// baisse pour faire verdir est pire que pas de seuil. Il valait 10 quand la lane moteur portait
+// ses deux membres ; ceux-ci ont ete SUPPRIMES sur decision de Romain (test_wasm_all.js et
+// run_bpx_scenes.cjs, code mort qui se presentait comme une lane de conformite). Il reste 3
+// modules + 5 exclusions motivees = 8. Ce plancher ne remonte pas tout seul, mais il ne doit
+// plus JAMAIS descendre sans qu'on sache pourquoi.
+if (exclusions < 8) {
   echecs++;
-  console.error(`FAIL méta-garde — ${exclusions} exclusion(s) vues, au moins 10 attendues : la déclaration n'est plus lue.`);
+  console.error(`FAIL méta-garde — ${exclusions} exclusion(s) vues, au moins 8 attendues : la déclaration n'est plus lue.`);
 }
 
 console.log(`${echecs === 0 ? 'PASS' : 'FAIL'} méta-garde — ${trouves.length} test(s) hors test/ (tous motivés), ${exclusions} exclusions motivées.`);
