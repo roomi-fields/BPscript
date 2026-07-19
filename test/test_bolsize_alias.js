@@ -6,7 +6,7 @@
  *   - Terminal >30 chars → alias court déterministe, ≤30 chars
  *   - Collisions entre alias → discriminées (alias distinct par original)
  *   - Table d'alias retournée / commentée dans l'en-tête du .bps généré
- *   - Round-trip : après remplacement, compileBPS ne doit pas crasher
+ *   - Round-trip : après remplacement, compileToBPxAST ne doit pas crasher
  *
  * Exécution : node test/test_bolsize_alias.js
  */

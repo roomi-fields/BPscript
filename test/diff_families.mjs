@@ -35,7 +35,7 @@ import path from 'node:path';
 
 const require = createRequire(import.meta.url);
 const { loadBaseline, soundingOnly, registerShiftFor } = require('./compare_modal.cjs');
-const { compileBPS } = require('../src/transpiler/index.js');
+const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -66,7 +66,7 @@ function voieB(name) {
   const bps = path.join(GRAMMARS, name, 'scene.bps');
   if (!existsSync(bps)) return null;
   try {
-    const out = compileBPS(readFileSync(bps, 'utf-8'));
+    const out = compileToBPxAST(readFileSync(bps, 'utf-8'));
     if (out.errors.length) return null;
     const s = createSession(out.ast, { seed: 1 });
     s.derive();

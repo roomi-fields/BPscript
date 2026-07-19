@@ -14,7 +14,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const require = createRequire(import.meta.url);
-const { compileBPS } = require('../src/transpiler/index.js');
+const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { referenceFor, registerShiftFor } = require('./compare_modal.cjs');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
@@ -28,7 +28,7 @@ async function hzDeNoms(noms, entete) {
   for (let i = 0; i < noms.length; i += lot) {
     const tranche = noms.slice(i, i + lot);
     const src = `${entete}\nS -> ${tranche.join(' ')}\n`;
-    const out = compileBPS(src);
+    const out = compileToBPxAST(src);
     if (out.errors.length) { for (const n of tranche) carte[n] = `ERR:${out.errors[0].message.slice(0, 30)}`; continue; }
     const s = createSession(out.ast, { seed: 1 });
     const { tokens } = await resoudreViaKairos(s);
@@ -51,7 +51,7 @@ for (const nom of process.argv.slice(2)) {
   // seul artefact de sonde.
   const entete = enteteScene.split('\n').filter((l) => !l.trim().startsWith('@transpose')).join('\n');
 
-  const session = createSession(compileBPS(scene).ast, { seed: 1 });
+  const session = createSession(compileToBPxAST(scene).ast, { seed: 1 });
   const { tokens: mine } = await resoudreViaKairos(session);
 
   const nomsRef = [...new Set(refToks.map((t) => t.token))];
