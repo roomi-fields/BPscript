@@ -418,9 +418,10 @@ function parse(tokens, opts = {}) {
     // Parse subgrammars
     scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
 
-    // Parse optional @template (v0.8 singular) or @templates (v0.7 plural) section.
-    // En v0.8, le champ AST canonique est `template` (singulier). On garde
-    // `templates` pour rétrocompat avec les consommateurs existants (encoder).
+    // Parse optional @template section (SINGULIER — seule graphie acceptée).
+    // ⚠️ La graphie plurielle `@templates` (v0.7) est REFUSÉE depuis le 2026-07-19. bpx a migré
+    // ses scènes vers `@template` et retiré ses alias ; plus aucun consommateur ne l'écrit.
+    // Un alias qui survit à ses derniers usagers est du poison différé, pas de la prudence.
     skipNewlines();
     scene.template = null;
     // ⚠️ PAS d'alias `scene.templates` : le champ canonique est `template` (SINGULIER),
@@ -429,8 +430,7 @@ function parse(tokens, opts = {}) {
     // retrait : aucun consommateur ne lisait `scene.templates` — ni Kanopi, ni Kairos, ni
     // les runtimes, ni bp3-frontend ; seul BPx avait un repli `ast.template ?? ast.templates`,
     // qu'il retire dans le même mouvement.
-    if (at(T.AT) && peek(1).type === T.IDENT &&
-        (peek(1).value === 'template' || peek(1).value === 'templates')) {
+    if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'template') {
       const entries = parseTemplateSection();
       scene.template = entries;
     }
@@ -2060,16 +2060,22 @@ function parse(tokens, opts = {}) {
       }
 
       // Parse @mode:X(modifiers) directive at the start of a sub-grammar block
-      // Stop if @templates — that's a separate section after all subgrammars
+      // Stop if @template — that's a separate section after all subgrammars
       // `currentMode` ne porte QUE le @mode du bloc courant : il est remis à zéro à la fin
       // de chaque sous-grammaire (voir plus bas). On le lit ici parce que le @mode de la
       // PREMIÈRE sous-grammaire est consommé en amont, hors de la boucle @ ci-dessous.
       let blockMode = currentMode;
       let blockModifiers = currentModifiers;
       while (at(T.AT)) {
-        // v0.8: la section template est en singulier ; v0.7 acceptée en alias.
-        if (peek(1).type === T.IDENT &&
-            (peek(1).value === 'template' || peek(1).value === 'templates')) break;
+        // La section template est en SINGULIER, sans alias (cf. parseScene).
+        if (peek(1).type === T.IDENT && peek(1).value === 'template') break;
+        // Refus NOMMÉ de l'ex-graphie plurielle : c'est ICI qu'on la voit passer. Sans ce
+        // branchement, elle tomberait dans le rejet générique des directives inconnues et
+        // rendrait « ligne non reconnue » — un message qui ressemble à une coquille et n'aide
+        // personne à migrer.
+        if (peek(1).type === T.IDENT && peek(1).value === 'templates') {
+          throw new ParseError(`'@templates' (pluriel, v0.7) n'existe plus — écrire '@template' (singulier)`, peek(1));
+        }
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
           blockMode = dir.runtime;  // @mode:random → runtime='random'
@@ -2147,9 +2153,13 @@ function parse(tokens, opts = {}) {
 
   function parseTemplateSection() {
     expect(T.AT);       // @
-    const kw = expect(T.IDENT);    // template (v0.8) ou templates (v0.7 alias)
-    if (kw.value !== 'template' && kw.value !== 'templates') {
-      throw new ParseError(`Expected 'template' or 'templates' after @`, kw);
+    const kw = expect(T.IDENT);    // template — SINGULIER, sans alias
+    // Le refus NOMMÉ de l'ex-graphie plurielle ne vit PAS ici : `@templates` n'atteint jamais
+    // cette fonction (l'appelant ne l'invoque que sur `template`). Il est posé dans la boucle
+    // de sous-grammaires, seul point où la forme est réellement vue. Écrit ici, il aurait été
+    // du code mort qui rassure — le contraire d'un fail-loud.
+    if (kw.value !== 'template') {
+      throw new ParseError(`Expected 'template' after @`, kw);
     }
     skipNewlines();
 

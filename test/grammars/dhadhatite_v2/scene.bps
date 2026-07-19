@@ -44,7 +44,7 @@ S64 <> S1V S2V S1F S2F E32 [weight:100]
 //   BP3 syntax: (= V8 ) creates a "master bracket" in the template
 //               (: V8 ) creates a "slave bracket" that mirrors the master
 //               ++ prefixes tokens as context markers
-//   BPscript has @templates section with ($N ...) bracket syntax, BUT:
+//   BPscript has an @template section with ($N ...) bracket syntax, BUT:
 //   - The BP3 (= ...) / (: ...) notation in rule bodies is the old template format
 //   - The ++ and + context markers on tokens have NO BPscript equivalent
 //   NOT YET SUPPORTED in BPscript:
@@ -211,7 +211,7 @@ S2F -> dhadhatitedhadhateena [weight:100]
 // =========================================================================
 // UNSUPPORTED: The TEMPLATES: section in the original uses BP3's old (= ...)
 // bracket notation with '+' context markers and '++' positional markers.
-// The BPscript @templates syntax uses ($N ...) and ? wildcards, but the
+// The BPscript @template syntax uses ($N ...) and ? wildcards, but the
 // translation from the BP3 format is non-trivial and the context markers
 // cannot be represented.
 //

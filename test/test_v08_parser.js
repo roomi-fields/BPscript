@@ -200,18 +200,37 @@ S -> A B C
 }
 
 // ============================================================
-// 9. @templates (pluriel) — rétrocompat v0.7
+// 9. @templates (pluriel) — REFUSÉ depuis le 2026-07-19
 // ============================================================
 
-section('@templates — pluriel rétrocompat');
+section('@templates — pluriel REFUSÉ');
 
 {
-  const ast = parseSource(`@controls
+  // Ce test disait l'inverse jusqu'au 2026-07-19 : il PROUVAIT que l'alias marchait, et c'est
+  // à ce titre qu'il maintenait le rétrocompat en vie. bpx ayant migré ses scènes et retiré ses
+  // alias, la graphie plurielle n'a plus d'usager — elle est coupée, et le test la verrouille
+  // dans l'autre sens.
+  let refuse = false, message = '';
+  try {
+    parseSource(`@controls
 S -> A
 @templates
 [1] /1 ?????`);
-  assert('template parsed via pluriel', Array.isArray(ast.template));
-  assert('count=5', ast.template?.[0]?.body?.[0]?.count === 5);
+  } catch (e) { refuse = true; message = e.message; }
+  assert('@templates est REFUSÉ (plus aucun alias survivant)', refuse);
+  // Le message doit NOMMER la migration : un « attendu template » ressemblerait à une coquille.
+  assert('le refus nomme la forme de remplacement', /@template'? \(singulier\)/.test(message));
+}
+
+{
+  // Témoin : le singulier, lui, passe toujours — sans quoi le test ci-dessus serait vert
+  // même si on avait cassé la section template entière.
+  const ast = parseSource(`@controls
+S -> A
+@template
+[1] /1 ?????`);
+  assert('témoin — @template (singulier) parse toujours', Array.isArray(ast.template));
+  assert('témoin — count=5', ast.template?.[0]?.body?.[0]?.count === 5);
 }
 
 // ============================================================
