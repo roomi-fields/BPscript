@@ -487,8 +487,33 @@ function bp3ToScene(grammarText, opts) {
     }
   }
 
-  for (let si = 0; si < subgrammars.length; si++) {
-    const sub = subgrammars[si];
+  // MOTIFS TEMPORELS — section `TIMEPATTERNS:` du natif.
+  //
+  // Elle était COLLECTÉE puis jamais sérialisée : les `t1 = 96/100 …` disparaissaient, et la
+  // sous-grammaire créée pour les accueillir restait VIDE. Une sous-grammaire vide en tête émet
+  // un séparateur `-----` avant la première règle — et là, `compileBPS` avale toute la grammaire
+  // EN SILENCE (mesuré sur Mozartexpression : 373 lignes converties, 0 erreur, 0 règle émise).
+  //
+  // La surface existe (`EBNF.md:97`, `AST.md:105`) : c'est une directive de SCÈNE, pas une
+  // sous-grammaire. On l'émet donc en tête, et les sous-grammaires sans règle ne sont plus
+  // sérialisées du tout.
+  const motifsTemporels = [];
+  for (const sub of subgrammars) {
+    if (!sub.timepatterns) continue;
+    for (const ligne of sub.timepatterns) {
+      // Le natif en aligne plusieurs par ligne : « t1 = 96/100  t2 = 100/100 ».
+      for (const m of ligne.matchAll(/([A-Za-z_]\w*)\s*=\s*(\d+\s*\/\s*\d+|\d+)/g)) {
+        motifsTemporels.push(`${m[1]}=${m[2].replace(/\s+/g, '')}`);
+      }
+    }
+  }
+  if (motifsTemporels.length > 0) {
+    bpsLines.push(`@timepatterns: ${motifsTemporels.join(', ')}`);
+  }
+
+  const sousGrammairesEcrites = subgrammars.filter((s) => s.rules.length > 0);
+  for (let si = 0; si < sousGrammairesEcrites.length; si++) {
+    const sub = sousGrammairesEcrites[si];
 
     // Séparateur inter-sous-grammaires
     if (si > 0) bpsLines.push('-----');
@@ -1236,6 +1261,7 @@ function convertRuntimeControlToBPS(tok) {
  */
 function convertBP3TokensToBPS(text, callMode = false, bolsizeTable = null) {
   if (!text) return '';
+
 
   // ── Ancre de gabarit maître/esclave BP2 nue : "(= X Y Z" ou "(: X Y Z" sans ")" ──
   // En BP3, "(=" NON FERMÉ est un token T2,0 (Encode.c:1341-1364) — l'ancre de gabarit.
