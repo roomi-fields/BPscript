@@ -423,12 +423,16 @@ function parse(tokens, opts = {}) {
     // `templates` pour rétrocompat avec les consommateurs existants (encoder).
     skipNewlines();
     scene.template = null;
-    scene.templates = null;
+    // ⚠️ PAS d'alias `scene.templates` : le champ canonique est `template` (SINGULIER),
+    // normatif dans `AST.md:40`. L'alias pluriel a été SUPPRIMÉ le 2026-07-19 (arbitrage
+    // Romain : le rétrocompat s'enlève, un seul nom). Scan aval fait par bpx AVANT le
+    // retrait : aucun consommateur ne lisait `scene.templates` — ni Kanopi, ni Kairos, ni
+    // les runtimes, ni bp3-frontend ; seul BPx avait un repli `ast.template ?? ast.templates`,
+    // qu'il retire dans le même mouvement.
     if (at(T.AT) && peek(1).type === T.IDENT &&
         (peek(1).value === 'template' || peek(1).value === 'templates')) {
       const entries = parseTemplateSection();
       scene.template = entries;
-      scene.templates = entries;  // alias rétrocompat — même tableau (pas de copie)
     }
 
     // ── Post-pass : annotation payload (AST_SPEC v1 §2) ───────────────────────

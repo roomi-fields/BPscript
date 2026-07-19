@@ -192,7 +192,9 @@ S -> A B C
 [2] /1 ???????`);
   assert('template parsed', Array.isArray(ast.template));
   assert('2 entries', ast.template?.length === 2);
-  assert('templates alias (rétrocompat)', ast.templates === ast.template);
+  // ⚠️ ASSERTION RETIRÉE le 2026-07-19 : elle vérifiait l'alias `ast.templates`, supprimé
+  // (arbitrage Romain — un seul nom canonique, `template` au singulier, AST.md:40).
+  assert('champ canonique `template` présent', Array.isArray(ast.template));
   assert('entry 1 index=1', ast.template?.[0]?.index === 1);
   assert('entry 1 wildcards=3', ast.template?.[0]?.body?.[0]?.count === 3);
 }
