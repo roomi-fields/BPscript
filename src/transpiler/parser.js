@@ -665,8 +665,33 @@ function parse(tokens, opts = {}) {
       return;
     }
 
+    // ── Invocation de GABARIT `$A(…)` / `&A(…)` — portée EXPLICITE ────────
+    // La portée était déjà celle-ci (déduite de la position, `AST.md:923-924`) : un suffixe
+    // sur une invocation de gabarit gouverne l'EXPANSION du gabarit et ne déborde pas —
+    // même régime de contenance que le groupe et la règle, jamais du flux.
+    // Ce qui manquait, c'est de le DIRE. Le cas groupe portait `scope:'group'` en clair
+    // pendant que celui-ci n'avait aucun payload : le consommateur devait déduire une portée
+    // là où son voisin la lui donnait. bpx a lu cette asymétrie comme une invitation à
+    // traiter le cas en flux, et sa descente template/bloc s'est trompée — ma surface a
+    // une part dans son bug. On émet donc explicitement ce qui était déjà vrai.
+    // ADDITIF : qui déduisait de la position reste juste ; qui veut lire le peut.
+    if (type === 'TemplateMaster' || type === 'TemplateSlave') {
+      for (const sq of (el.suffixQualifiers || [])) {
+        if (!sq || sq.type !== 'RuntimeQualifier') continue;
+        const { address, controls } = splitAddress(extractOccurrenceParams([sq]));
+        sq.payload = {
+          nature: 'transport-control',
+          containment: true,
+          scope: 'template',
+          ...(controls ? { params: controls } : {}),
+          ...(address ? { address } : {}),
+        };
+      }
+      return;
+    }
+
     // Tous les autres types (Period, NumericDuration, NilString, RawBrace,
-    // Wildcard, Variable, Homomorphism, Template*, TriggerIn…) : pas de payload.
+    // Wildcard, Variable, Homomorphism, TriggerIn…) : pas de payload.
   }
 
   /**

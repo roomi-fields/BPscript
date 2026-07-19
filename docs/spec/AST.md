@@ -920,14 +920,22 @@ règle). Cohérent avec l'affectation existante `*:sound.X`. Pour un CV, le suje
 (unité/signal vs par-terminal) ; le consommateur (BPx/dispatcher) le lit. Cf. `docs/design/CV.md`.
 
 Les pairs runtime sont des objets nus `{ key, value }` (pas de champ `type`, contrairement aux
-`QualPair` du `Qualifier` moteur). La portée (symbole / règle / groupe / instantané) n'est **pas**
-stockée sur le nœud : elle est déduite de la position dans l'AST par l'encodeur.
+`QualPair` du `Qualifier` moteur). La portée est déduite de la position dans l'AST par l'encodeur —
+mais depuis le 2026-07-19 les positions de **contenance** l'écrivent aussi **explicitement** dans
+`payload` (`scope: 'rule' | 'group' | 'template'`, avec `containment: true`), pour qu'un
+consommateur puisse la lire au lieu de la déduire. Les deux lectures sont valides : l'ajout est
+additif. Motif : le cas groupe portait `scope` en clair quand l'invocation de gabarit n'avait aucun
+payload, et cette asymétrie a fait descendre le cas gabarit **en flux** chez un consommateur — une
+portée qu'aucune des positions ci-dessous n'a.
 
 `()` est **toujours suffixe** (jamais en préfixe). La portée est déduite de la position :
 - **symbole** : `Sa(vel:120)` → `Sa _script(CT 0)` — attaché au `Symbol` node
 - **règle** : `S -> C4 D4 (vel:80)` → `_script(CT 1) C4 D4` — dans `Rule.runtimeQualifier`
 - **instantané** : `{!(chan:1) C8 -, !(chan:2) C7 C7}` → `{_script(CT 2) C8 -, _script(CT 3) C7 C7}` — via `InstantControl` dans le flux
 - **groupe** : `{A B}(filter:lp)` → `_script(CT 4_start) {A B} _script(CT 4_end)` — dans `Polymetric.runtimeQualifier`
+- **invocation de gabarit** : `$A(transpose:-200c)` → `(=A) _script(CT 0)` — dans
+  `TemplateMaster.suffixQualifiers` / `TemplateSlave.suffixQualifiers`. Gouverne l'**expansion**
+  du gabarit et ne déborde pas : même régime de contenance que le groupe et la règle.
 
 Le transpileur maintient une table de mapping `CT n → { scope, params }` (la control table)
 consommée par le runtime aval.
