@@ -917,6 +917,28 @@ function convertSequenceInBrace(field, callMode, bolsizeTable) {
       continue;
     }
 
+    // ANCRE DE GABARIT DANS UN CHAMP POLYMÉTRIQUE — `{12,(=Tp2),A1 A2}`.
+    //
+    // La conversion des ancres existait déjà, mais UNIQUEMENT dans la boucle de premier
+    // niveau (`convertBP3TokensToBPS`) : ce convertisseur-ci, qui traite le contenu des
+    // accolades, n'avait pas la branche. Une ancre écrite dans un champ ressortait donc
+    // verbatim `(=Tp2)`, et le parseur la refusait (« Expected RBRACE, got LPAREN »).
+    // C'est ce qui bloquait Mozartexpression.
+    //
+    // ⚠️ On délègue à `convertTemplateToken`, la fonction qui traite DÉJÀ ce cas — surtout
+    // pas une seconde implémentation. J'avais d'abord ajouté une réécriture par expression
+    // régulière en amont : elle CASSAIT quatre tests (79 → 75), précisément parce qu'elle
+    // doublait ce traitement au lieu de le réutiliser. Le manque était une branche absente,
+    // pas un mécanisme absent.
+    if (tok.startsWith('(') && tok.endsWith(')')) {
+      const dedans = tok.slice(1, -1).trim();
+      if (dedans.startsWith('=') || dedans.startsWith(':')) {
+        const converti = convertTemplateToken(tok, dedans.startsWith('='));
+        out.push(converti !== null ? converti : tok);
+        continue;
+      }
+    }
+
     // Contrôle connu → forme appel (mode E4 uniquement)
     if (callMode) {
       const cm = tok.match(BP3_CTRL_TOKEN_RE);
