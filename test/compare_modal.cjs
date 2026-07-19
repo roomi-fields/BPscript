@@ -153,11 +153,39 @@ function normalizeRegister(token, shift) {
   return `${m[1]}${parseInt(m[2], 10) - shift}`;
 }
 
+/**
+ * NOTATION SAPTAK ↔ NOTATION NUMÉRIQUE — deux écritures du MÊME registre.
+ *
+ * Le natif écrit le sargam en degré + chiffre (`sa3`, `pa3`, `ni3`, `sa4`). BPScript écrit le
+ * registre en PRÉFIXE NOMMÉ, séparateur souligné (`mandra_sa`, `madhya_sa`) — c'est la
+ * convention ratifiée par Romain (TAAR-TOK, `189128b`), adoptée parce que l'espace faisait
+ * tokeniser `taar sa` en DEUX terminaux et que le registre aigu n'était jamais résolu.
+ *
+ * Correspondance MESURÉE par kairos contre la capture native de `vina` : chiffre N → registre
+ * saptak d'index N−3. Donc 3 = mandra, 4 = madhya, 5 = taar.
+ *
+ * ⚠️ POURQUOI CETTE NORMALISATION EST NÉCESSAIRE ET NON COMPLAISANTE. Tant que la fixture
+ * écrivait `sa3`, elle « matchait » le natif — mais AUCUNE hauteur ne se résolvait : `sa3` ne
+ * correspond à aucun registre de l'alphabet sargam, qui est configuré en saptak. C'était un ISO
+ * DE NOMS, avec du vide derrière. Corriger la fixture rend la hauteur réelle (mesuré :
+ * `mandra_sa` = 120.00 Hz, `madhya_sa` = 240.00 Hz) et fait diverger les NOMS — d'où cette
+ * table, qui compare ce que les deux notations DÉSIGNENT au lieu de leurs caractères.
+ * On ne masque donc pas un écart : on cesse d'en fabriquer un.
+ */
+const SAPTAK_PAR_CHIFFRE = { 3: 'mandra', 4: 'madhya', 5: 'taar' };
+const DEGRES_SARGAM = ['sa', 're', 'ga', 'ma', 'pa', 'dha', 'ni'];
+function normalizeSaptak(token) {
+  const m = new RegExp(`^(${DEGRES_SARGAM.join('|')})([0-9])$`).exec(String(token));
+  if (!m) return token;
+  const registre = SAPTAK_PAR_CHIFFRE[m[2]];
+  return registre ? `${registre}_${m[1]}` : token;
+}
+
 /** Texte : on normalise UNIQUEMENT les blancs et les fins de ligne, jamais le contenu. */
 const normText = (s) => String(s).replace(/\r\n?/g, '\n').trim().split(/\s+/).join(' ');
 
 /** Jeton timé → forme comparable stable. */
-const keyTok = (t) => `${t.token}@${t.start}-${t.end}`;
+const keyTok = (t) => `${normalizeSaptak(t.token)}@${t.start}-${t.end}`;
 
 /**
  * Confronte une production candidate à la référence, DANS LA MODALITÉ DÉCLARÉE.
