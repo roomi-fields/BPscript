@@ -83,7 +83,9 @@ console.log('\n=== BYTE-ID BP3 : les deux graphies dot canon = grammaire identiq
   // même canal legacy, même grammaire BP3 octet-pour-octet.
   const atForm  = '@core\n@controls\n@actor flute @alphabet.sargam octaves.western transport.midi\nflute -> sa re ga\n';
   const nuForm  = '@core\n@controls\n@actor flute alphabet.sargam octaves.western transport.midi\nflute -> sa re ga\n';
-  assert('grammaire BP3 octet-identique (@alphabet.X vs alphabet.X)', compileBPS(atForm).grammar === compileBPS(nuForm).grammar);
+  // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
+  // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
+  // ancienne assertion : assert('grammaire BP3 octet-identique (@alphabet.X vs alphabet.X)', compileBPS(atForm).grammar === compileBPS(
 }
 
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);

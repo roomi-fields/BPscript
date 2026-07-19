@@ -139,8 +139,10 @@ section('compileBPS [scan:left] → préfixe LEFT dans BP3');
 X -> C4 [scan:left]`;
   const result = compileBPS(src);
   assert('pas d\'erreur fatale', result.errors.length === 0, `errors: ${JSON.stringify(result.errors)}`);
-  assert('préfixe LEFT dans grammar', result.grammar && result.grammar.includes('LEFT'),
-    `extrait: ${result.grammar && result.grammar.slice(0, 300)}`);
+// ⚠️ ASSERTION(S) DE TEXTE BP3 RETIRÉE(S) le 2026-07-19 — certification grammaire-texte
+// abandonnée (arbitrage Romain), encodeur supprimé : plus de texte à vérifier.
+//   assert('préfixe LEFT dans grammar', result.grammar && result.grammar.includes('LEFT'),
+//     `extrait: ${result.grammar && result.grammar.slice(0, 300)}`);
 }
 
 // ============================================================
@@ -152,8 +154,8 @@ section('compileBPS [scan:rnd] → préfixe RND dans BP3');
 @alphabet.western:midi
 X -> C4 [scan:rnd]`;
   const result = compileBPS(src);
-  assert('préfixe RND dans grammar', result.grammar && result.grammar.includes('RND'),
-    `extrait: ${result.grammar && result.grammar.slice(0, 300)}`);
+//   assert('préfixe RND dans grammar', result.grammar && result.grammar.includes('RND'),
+//     `extrait: ${result.grammar && result.grammar.slice(0, 300)}`);
 }
 
 // ============================================================
@@ -166,8 +168,8 @@ section('non-régression look-and-say.bps [scan:left] en mode SUB');
     const result = compileBPS(src);
     assert('look-and-say compile sans erreur', result.errors.length === 0,
       `errors: ${JSON.stringify(result.errors)}`);
-    assert('préfixe LEFT dans grammar', result.grammar && result.grammar.includes('LEFT'),
-      'LEFT non trouvé');
+//     assert('préfixe LEFT dans grammar', result.grammar && result.grammar.includes('LEFT'),
+//       'LEFT non trouvé');
 
     // Vérifier rule.mode dans l'AST
     const ast = parseSource(src);

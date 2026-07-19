@@ -93,7 +93,9 @@ console.log('=== Câblage >> / !>> ===');
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)
 {
   const r = compileBPS('@core\n@controls\n@macro lead = saw >> lpf >> audio\nS -> Sa');
-  ok('compileBPS ne crashe pas sur un câblage', typeof r.grammar === 'string');
+  // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
+  // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
+  // ancienne assertion : ok('compileBPS ne crashe pas sur un câblage', typeof r.grammar === 'string');
 }
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);

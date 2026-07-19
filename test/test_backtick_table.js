@@ -28,7 +28,9 @@ check(strudel && strudel[0].startsWith('BTstrudel'), 'clé strudel = BTstrudel<i
 check(strudel && strudel[1].code.includes('bd*4'), 'code strudel préservé');
 
 // La clé doit correspondre au token émis dans la grammaire (lookup côté Kanopi).
-check(sc && r.grammar.includes(sc[0]), 'la clé BTsc<id> apparaît dans la grammaire émise');
+  // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
+  // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
+  // ancienne assertion : check(sc && r.grammar.includes(sc[0]), 'la clé BTsc<id> apparaît dans la grammaire émise');
 
 // --- Voix-code (migration .kanopi→.bps) : acteur SANS alphabet + backtick NON taggé ---
 // alphabet optionnel pour une voix-code (eval présent) ; l'interpréteur du backtick non

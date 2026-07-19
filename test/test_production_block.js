@@ -117,7 +117,9 @@ S -> C4`);
   assert('bloc après @mode, avant règles : accepté', r.errors.length === 0, r.errors);
   const s = JSON.parse(r.settingsJSON);
   assert('bloc après @mode : Seed=5 appliqué', s.Seed?.value === '5', s.Seed);
-  assert('bloc après @mode : mode LIN conservé', r.grammar.includes('LIN'), r.grammar);
+// ⚠️ ASSERTION(S) DE TEXTE BP3 RETIRÉE(S) le 2026-07-19 — certification grammaire-texte
+// abandonnée (arbitrage Romain), encodeur supprimé : plus de texte à vérifier.
+//   assert('bloc après @mode : mode LIN conservé', r.grammar.includes('LIN'), r.grammar);
 }
 
 // ============================================================
@@ -174,8 +176,8 @@ section('[@…] — réglages moteur appliqués (settingsJSON)');
   const s = JSON.parse(rNew.settingsJSON);
   assert('Seed=9 appliqué', s.Seed?.value === '9', s.Seed);
   assert('MaxItemsProduce=33 appliqué', s.MaxItemsProduce?.value === '33', s.MaxItemsProduce);
-  assert('grammaire émise inchangée par le bloc',
-    rNew.grammar.includes('LIN') && rNew.grammar.includes('gram#1[1] S --> C4'), rNew.grammar);
+//   assert('grammaire émise inchangée par le bloc',
+//     rNew.grammar.includes('LIN') && rNew.grammar.includes('gram#1[1] S --> C4'), rNew.grammar);
 }
 
 {
@@ -307,14 +309,14 @@ section('[…] existants — non-régression');
   // Garde de règle [K1==1] toujours une garde
   const r = compileBPS(`@mode:lin\n[K1==1] S -> C4`);
   assert('garde [K1==1] : 0 erreur', r.errors.length === 0, r.errors);
-  assert('garde émise /K1=1/', r.grammar.includes('/K1=1/'), r.grammar);
+//   assert('garde émise /K1=1/', r.grammar.includes('/K1=1/'), r.grammar);
 }
 
 {
   // Qualificateur de règle [weight:50] toujours un poids
   const r = compileBPS(`@mode:random\nS -> C4 [weight:50]`);
   assert('[weight:50] : 0 erreur', r.errors.length === 0, r.errors);
-  assert('poids émis <50>', r.grammar.includes('<50>'), r.grammar);
+//   assert('poids émis <50>', r.grammar.includes('<50>'), r.grammar);
 }
 
 // ============================================================

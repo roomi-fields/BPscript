@@ -22,13 +22,15 @@ check(r.flagStates && r.flagStates.scene && r.flagStates.scene.calm === 1, 'calm
 check(r.flagStates && r.flagStates.scene && r.flagStates.scene.full === 2, 'full = 2');
 
 // Résolution dans les gardes : calm→1, full→2
-check(r.grammar.includes('/scene=1/'), 'garde [scene==calm] → /scene=1/ : ' + (r.grammar.match(/\/scene=\d\//g) || []));
-check(r.grammar.includes('/scene=2/'), 'garde [scene==full] → /scene=2/');
-check(!r.grammar.includes('/scene=calm/'), 'aucun /scene=calm/ non résolu');
+// ⚠️ ASSERTION(S) DE TEXTE BP3 RETIRÉE(S) le 2026-07-19 — certification grammaire-texte
+// abandonnée (arbitrage Romain), encodeur supprimé : plus de texte à vérifier.
+// check(r.grammar.includes('/scene=1/'), 'garde [scene==calm] → /scene=1/ : ' + (r.grammar.match(/\/scene=\d\//g) || []));
+// check(r.grammar.includes('/scene=2/'), 'garde [scene==full] → /scene=2/');
+// check(!r.grammar.includes('/scene=calm/'), 'aucun /scene=calm/ non résolu');
 
 // Un IDENT non déclaré comme état reste tel quel (autre drapeau) — pas de fausse résolution.
 const r2 = compileBPS(`[phase==other] S -> C4`);
-check(r2.errors.length === 0 && r2.grammar.includes('/phase=other/'), 'IDENT non-état inchangé (/phase=other/)');
+// check(r2.errors.length === 0 && r2.grammar.includes('/phase=other/'), 'IDENT non-état inchangé (/phase=other/)');
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 process.exit(fail ? 1 : 0);

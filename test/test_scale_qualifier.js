@@ -57,13 +57,15 @@ S -> {C4, D4}[scale:2]
 `;
   const r = compile(src);
   assert('compile ok (no errors)', r.errors.length === 0, JSON.stringify(r.errors));
-  assert('grammar contains *2 prefix', r.grammar && r.grammar.includes('*2 {C4,D4}'),
-    `got: ${JSON.stringify(r.grammar)}`);
+// ⚠️ ASSERTION(S) DE TEXTE BP3 RETIRÉE(S) le 2026-07-19 — certification grammaire-texte
+// abandonnée (arbitrage Romain), encodeur supprimé : plus de texte à vérifier.
+//   assert('grammar contains *2 prefix', r.grammar && r.grammar.includes('*2 {C4,D4}'),
+//     `got: ${JSON.stringify(r.grammar)}`);
   // Regression guard for bug #79: encoder used to drop [scale:N], emitting
   // just `{C4,D4}` with no scaling marker. We assert the marker is present.
-  assert('scaling marker emitted (no longer dropped)',
-    r.grammar && /\*2\s+\{C4,D4\}/.test(r.grammar),
-    `got: ${JSON.stringify(r.grammar)}`);
+//   assert('scaling marker emitted (no longer dropped)',
+//     r.grammar && /\*2\s+\{C4,D4\}/.test(r.grammar),
+//     `got: ${JSON.stringify(r.grammar)}`);
 }
 
 // ----------------------------------------------------------
@@ -81,8 +83,8 @@ S -> {C4, D4, E4}[scale:3]
 `;
   const r = compile(src);
   assert('scale:3 compile ok', r.errors.length === 0, JSON.stringify(r.errors));
-  assert('grammar contains *3 prefix', r.grammar && r.grammar.includes('*3 {C4,D4,E4}'),
-    `got: ${JSON.stringify(r.grammar)}`);
+//   assert('grammar contains *3 prefix', r.grammar && r.grammar.includes('*3 {C4,D4,E4}'),
+//     `got: ${JSON.stringify(r.grammar)}`);
 }
 
 // ----------------------------------------------------------
@@ -130,8 +132,8 @@ S -> {C4, D4}:2
 `;
   const r = compile(src);
   assert('la durée « :2 » compile', r.errors.length === 0, JSON.stringify(r.errors));
-  assert('et rend {2,C4,D4}', r.grammar && r.grammar.includes('{2,C4,D4}'),
-    `got: ${JSON.stringify(r.grammar)}`);
+//   assert('et rend {2,C4,D4}', r.grammar && r.grammar.includes('{2,C4,D4}'),
+//     `got: ${JSON.stringify(r.grammar)}`);
 }
 
 // ----------------------------------------------------------
