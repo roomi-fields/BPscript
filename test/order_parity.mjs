@@ -65,9 +65,24 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // se résolvent relativement à ce dossier (sinon ils sont introuvables).
   let gr = fs.readFileSync(grFile, 'utf8').replace(/\r\n?/g, '\n');
   const grNoC = gr.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
-  const hasIndian = /\b(sa|ga)\d\b/.test(grNoC);
-  const hasFrench = /\b(do|re|mi|fa|sol|la|si)\d\b/.test(grNoC);
-  const conv = hasIndian ? '2' : hasFrench ? '1' : '0';
+  // CONVENTION DE NOTES — DÉCLARÉE d'abord, reniflée seulement à défaut.
+  //
+  // On la devinait en cherchant `sa`/`ga` puis `do|re|mi…` dans le corps. L'heuristique
+  // tient sur la plupart des grammaires et se trompe précisément là où ça compte : une
+  // grammaire indienne portant `re4` est classée FRANÇAISE, alors que le natif avale `re`
+  // comme degré indien et effondre sa production (bp3-engine, baseline v12 : `bells` rend
+  // 4 jetons en indian contre 16 en français). Deviner une convention qui CHANGE LA SORTIE
+  // est un pari, pas une mesure.
+  // La convention se déclare donc dans `grammars.json` (`note_convention`), et le reniflage
+  // ne sert plus que de défaut pour les grammaires qui ne la déclarent pas.
+  const DECLAREE = { french: '1', indian: '2', english: '0', keys: '0' };
+  const declaree = (GRAMMARS[name] || {}).note_convention;
+  if (declaree !== undefined && DECLAREE[declaree] === undefined) {
+    throw new Error(`grammars.json ${name}.note_convention = "${declaree}" inconnue (attendu : ${Object.keys(DECLAREE).join(', ')})`);
+  }
+  const hasIndian = declaree ? declaree === 'indian' : /\b(sa|ga)\d\b/.test(grNoC);
+  const hasFrench = declaree ? declaree === 'french' : /\b(do|re|mi|fa|sol|la|si)\d\b/.test(grNoC);
+  const conv = declaree ? DECLAREE[declaree] : (hasIndian ? '2' : hasFrench ? '1' : '0');
 
   const tmpGr = path.join(TD, `_ord_tmp_${name}.gr`);
   fs.writeFileSync(tmpGr, gr);
