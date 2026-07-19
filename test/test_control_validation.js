@@ -45,10 +45,20 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
   check(e.length === 1 && /attack/.test(e[0].message), 'attack:99999 hors-plage, obtenu ' + JSON.stringify(e));
 }
 
-// 6. Contrôle inconnu de la lib → PAS d'erreur (pas de faux positif : alias @cc, controls custom)
+// 6. Contrôle inconnu → ERREUR NOMMÉE (fail-loud)
+//
+// Ce bloc exigeait l'inverse : qu'un attribut inconnu soit IGNORÉ, pour ne pas faire de faux
+// positif sur les alias `@cc` et les contrôles custom. Le vocabulaire est désormais fermé et
+// vérifié (contrôles ∪ valeurs de librairie ∪ entrées de modulation ∪ adresses ∪ fonctions
+// digitales), aligné sur `controls.json` comme autorité — un mot hors de cet univers est une
+// faute, pas une extension.
+// Le motif d'origine du test a été VÉRIFIÉ et ne tient plus : `@alias cc74 = cc:74` suivi de
+// `(cc74:42)` est accepté. Le mécanisme d'alias survit ; seul l'inconnu pur est refusé.
 {
   const e = errs('S -> C4 (mysteryParam:42)\n');
-  check(e.length === 0, 'contrôle inconnu ignoré, obtenu ' + JSON.stringify(e));
+  check(e.length === 1, 'un attribut inconnu produit UNE erreur, obtenu ' + JSON.stringify(e));
+  check(e[0] && /mysteryParam/.test(e[0].message), 'l\'erreur nomme l\'attribut fautif');
+  check(e[0] && e[0].line !== undefined, 'l\'erreur porte une position');
 }
 
 // 7. Sans @controls chargé → pas de validation (aucune erreur)

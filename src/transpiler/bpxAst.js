@@ -993,6 +993,31 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
 
+    // LE DIAGNOSTIC PRÉCIS SUBSUME LE GÉNÉRIQUE (arbitrage architecte [778]).
+    //
+    // Une quasi-faute comme `(cutof:env1)` déclenchait DEUX messages : le générique
+    // « attribut '(cutof:…)' inconnu — ni contrôle, ni valeur… » et le ciblé « 'cutof' n'est
+    // pas une entrée de modulation (connues : cutoff, amplitude, resonance, pitch, pan) ».
+    // Le second dit tout ce que dit le premier, PLUS la liste des formes attendues : le
+    // générique n'ajoute rien et noie le seul message utile.
+    // On le retire donc pour les clés qui ont déjà un diagnostic nommé. Une clé sans
+    // diagnostic ciblé garde évidemment le générique — c'est le seul qu'elle ait.
+    {
+      const genericRe = /^attribut '\((.+?):…\)' inconnu/;
+      const clesDiagnostiquees = new Set(
+        result.errors
+          .filter((e) => e && typeof e.message === 'string' && !genericRe.test(e.message))
+          .map((e) => (e.message.match(/^'(.+?)'/) || [])[1])
+          .filter(Boolean),
+      );
+      if (clesDiagnostiquees.size > 0) {
+        result.errors = result.errors.filter((e) => {
+          const m = e && typeof e.message === 'string' ? e.message.match(genericRe) : null;
+          return !(m && clesDiagnostiquees.has(m[1]));
+        });
+      }
+    }
+
     // Découpeur frontal mono-char (flip Palier 4, étape A) — EN DERNIER :
     // annotateBackticks et les validateurs ci-dessus voient l'AST NON découpé,
     // exactement comme quand la découpe vivait en aval dans BPx.

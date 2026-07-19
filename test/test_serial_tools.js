@@ -167,15 +167,15 @@ section('rotate — engine [] vs runtime ()');
 }
 
 {
+  // `rotate` est un contrôle MOTEUR (il figure dans `ENGINE_KEY`, `EBNF.md:669`), pas un
+  // contrôle runtime. Il s'émet donc en natif `_rotate(2)` quelle que soit la graphie —
+  // ce test attendait `_script(CT…)`, la forme d'avant sa reclassification.
   const r = compileBPS(`${HDR}\nS -> {a b c d}(rotate:2)`);
   const line = r.grammar.split('\n').find(l => l.includes('-->')) || '';
-  // (rotate:2) reste _script, et le CT doit avoir {rotate:2}
-  const hasScript = line.includes('_script(CT');
-  const ct0 = r.controlTable.find(ct => ct.assignments && ct.assignments['rotate'] !== undefined);
   assert(
-    '(rotate:2) → _script(CT…) avec {rotate:2}',
-    hasScript && ct0 !== undefined,
-    `line=${line}, ct=${JSON.stringify(ct0)}`
+    '(rotate:2) → _rotate(2) natif (contrôle MOTEUR, pas runtime)',
+    line.includes('_rotate(2)'),
+    `line=${line}`
   );
 }
 
@@ -199,12 +199,15 @@ section('retro — inchangé');
 // 7. Non-régression : speed/scale restent corrects
 // -----------------------------------------------------------------------
 
-section('Non-régression — speed et scale inchangés');
+section('Non-régression — durée « :N » et scale inchangés');
 
 {
-  const line = getRuleLine(`${HDR}\nS -> {a b c d}[speed:2]`);
+  // `speed` est SUPPRIMÉ (décision 2026-06-26 : la durée le subsume). La forme vivante est
+  // `{…}:N`. Ce test exigeait que `[speed:2]` compile — troisième occurrence de cette même
+  // attente périmée dans le corpus de tests.
+  const line = getRuleLine(`${HDR}\nS -> {a b c d}:2`);
   assert(
-    '{a b c d}[speed:2] → {2,a b c d}',
+    '{a b c d}:2 → {2,a b c d}',
     line.includes('{2,a b c d}'),
     line
   );
