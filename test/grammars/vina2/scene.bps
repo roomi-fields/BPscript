@@ -4,6 +4,11 @@
 @core
 @controls
 @alphabet.sargam:midi
+@diapason:261.63   // ancre OCCIDENTALE, comme le natif : il plaque le sargam sur la grille
+                   // western (sa4 = C4 = 261.63 Hz) au lieu de l'ancre traditionnelle 240 Hz.
+                   // Le CATALOGUE reste intact (sargam ancre sa=240) — c'est la SCENE qui declare,
+                   // arbitrage Romain 2026-07-19. Sans cette ligne, la piece sonne juste mais
+                   // transposee d'environ 1,5 demi-ton vers le grave (facteur constant 0.917).
 
 // --- Sous-grammaire 1 @mode:random — structure ---
 
