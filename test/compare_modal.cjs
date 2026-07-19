@@ -186,6 +186,8 @@ const normText = (s) => String(s).replace(/\r\n?/g, '\n').trim().split(/\s+/).jo
 
 /** Jeton timé → forme comparable stable. */
 const keyTok = (t) => `${normalizeSaptak(t.token)}@${t.start}-${t.end}`;
+/** Même clé, SANS correspondance de notation — pour savoir si l'ISO en a eu besoin. */
+const keyBrut = (t) => `${t.token}@${t.start}-${t.end}`;
 
 /**
  * Confronte une production candidate à la référence, DANS LA MODALITÉ DÉCLARÉE.
@@ -248,6 +250,24 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     const a = (ref.tokens || []).map(keyTok);
     const b = candidate.tokens.map(keyTok);
     if (a.length === b.length && a.every((x, i) => x === b[i])) {
+      // UN ISO OBTENU PAR CORRESPONDANCE DE NOTATION NE DOIT PAS SE LIRE COMME UN ISO STRICT.
+      //
+      // `normalizeSaptak` fait coïncider `sa4` et `madhya_sa` : c'est légitime, ils désignent le
+      // MÊME registre (correspondance mesurée par kairos contre la capture native). Mais le
+      // natif plaque le sargam sur la grille occidentale (`sa4` = C4 = 261.63 Hz) là où notre
+      // alphabet garde l'ancre traditionnelle (`madhya_sa` = 240 Hz) : il reste un facteur de
+      // DIAPASON de 0.917, uniforme, non tranché à ce jour (escaladé par kairos).
+      // Rendre `ISO` tout court laisserait croire que la production est identique JUSQU'À LA
+      // FRÉQUENCE. Elle ne l'est pas — le registre et les intervalles le sont, l'absolu non.
+      // On le DIT dans le verdict, comme on le fait déjà pour l'alignement de registre C4key :
+      // acheter un ISO en taisant ce qu'il recouvre serait aveugler la mesure.
+      const parNotation = (ref.tokens || []).some((t, i) => keyBrut(t) !== keyBrut(candidate.tokens[i]));
+      if (parNotation) {
+        return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
+          notation: 'saptak', detail: 'ISO à la NOTATION près : registre équivalent (sa4 ↔ madhya_sa, '
+            + 'correspondance mesurée). Le diapason reste NON TRANCHÉ — ancre traditionnelle 240 Hz '
+            + 'contre ancre occidentale du natif, facteur 0.917 : la hauteur ABSOLUE n\'est pas prouvée identique.' };
+      }
       return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
     }
     // ISO AU NOMMAGE PRÈS : le natif renumérote le registre quand C4key != 60, Kairos
