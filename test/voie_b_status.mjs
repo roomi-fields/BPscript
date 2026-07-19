@@ -7,7 +7,7 @@
  * ⚠️ CE HARNAIS APPELAIT `compileBPS` — la façade HÉRITÉE, « vouée au retrait »
  * (`ARCHITECTURE.md:168-169`). Il ne mesurait pas le texte BP3 pour autant : il passait déjà
  * `out.ast` à BPx. Mais cet arbre-là N'EST PAS le canonique — mesuré sur `bells`,
- * `compileBPS().ast` fait 16939 octets avec `actors: []`, quand `compileToBPxAST().ast` en fait
+ * `compileToBPxAST().ast` fait 16939 octets avec `actors: []`, quand `compileToBPxAST().ast` en fait
  * 18870 et SYNTHÉTISE l'acteur par défaut avec son transport (les défauts d'environnement).
  * On mesurait donc le produit à travers une façade en retrait, sur un arbre moins complet.
  *

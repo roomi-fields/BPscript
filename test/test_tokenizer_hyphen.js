@@ -10,7 +10,7 @@
 
 import { tokenize, T } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 import { registerAll } from '../src/transpiler/libs.js';
 import { readFileSync } from 'fs';
 
@@ -291,7 +291,7 @@ section('compileBPS 765432 — pas de terminaux parasites note-');
 {
   try {
     const src = readFileSync('test/grammars/765432/scene.bps', 'utf8');
-    const result = compileBPS(src);
+    const result = compileToBPxAST(src);
     const alphaTerms = result.alphabetFile ? result.alphabetFile.split('\n').map(l => l.trim()).filter(Boolean) : [];
     const parasites = ['do4-', 'mi4-', 'sol4-', 'do5-', 'mi5-', 'sol5-', 'do7-'];
     for (const p of parasites) {

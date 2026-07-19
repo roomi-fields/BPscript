@@ -22,10 +22,10 @@ if (!fs.existsSync(SRC)) { console.error(`Not found: ${SRC}`); process.exit(1); 
 const TMP = `/tmp/_fixture_${name}`;
 
 const compileScript = `
-import { compileBPS } from '${path.join(ROOT, 'src/transpiler/index.js').replace(/\\\\/g, '/')}';
+import { compileToBPxAST } from '${path.join(ROOT, 'src/transpiler/index.js').replace(/\\\\/g, '/')}';
 import { readFileSync, writeFileSync } from 'fs';
 const src = readFileSync('${SRC.replace(/\\\\/g, '/')}', 'utf-8');
-const r = compileBPS(src);
+const r = compileToBPxAST(src);
 writeFileSync('${TMP}_gr.txt', r.grammar || '');
 writeFileSync('${TMP}_al.txt', r.alphabetFile || (Array.isArray(r.alphabet) ? r.alphabet.join('\\n') : ''));
 writeFileSync('${TMP}_se.txt', r.settingsJSON || '{}');

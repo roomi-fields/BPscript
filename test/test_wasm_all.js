@@ -120,7 +120,7 @@ require('./bp3.js')().then(async (Module) => {
 
     // S1: Transpile
     const source = fs.readFileSync('${absScene}', 'utf8');
-    const compiled = compileBPS(source);
+    const compiled = compileToBPxAST(source);
     if (compiled.errors.length > 0) {
       result.stages.s1 = { ok: false, err: compiled.errors[0].message };
       console.log(JSON.stringify(result));

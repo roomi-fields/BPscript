@@ -13,7 +13,7 @@
 
 import { parse } from '../src/transpiler/parser.js';
 import { tokenize } from '../src/transpiler/tokenizer.js';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let ok = 0, ko = 0;
 function assert(label, cond, detail) {
@@ -85,7 +85,7 @@ console.log('\n=== BYTE-ID BP3 : les deux graphies dot canon = grammaire identiq
   const nuForm  = '@core\n@controls\n@actor flute alphabet.sargam octaves.western transport.midi\nflute -> sa re ga\n';
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
   // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
-  // ancienne assertion : assert('grammaire BP3 octet-identique (@alphabet.X vs alphabet.X)', compileBPS(atForm).grammar === compileBPS(
+  // ancienne assertion : assert('grammaire BP3 octet-identique (@alphabet.X vs alphabet.X)'(atForm).grammar === compileToBPxAST(
 }
 
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);

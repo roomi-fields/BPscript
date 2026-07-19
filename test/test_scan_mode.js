@@ -10,7 +10,7 @@
 
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 import { registerAll } from '../src/transpiler/libs.js';
 import { readFileSync } from 'fs';
 
@@ -109,7 +109,7 @@ section('[scan:diagonal] → ParseError via compileBPS');
   const src = `@controls
 @alphabet.western:midi
 X -> M [scan:diagonal]`;
-  const result = compileBPS(src);
+  const result = compileToBPxAST(src);
   // Doit émettre au moins une erreur (valeur scan inconnue)
   assert('erreur pour valeur scan inconnue', result.errors && result.errors.length > 0,
     `errors: ${JSON.stringify(result.errors)}`);
@@ -137,7 +137,7 @@ section('compileBPS [scan:left] → préfixe LEFT dans BP3');
   const src = `@controls
 @alphabet.western:midi
 X -> C4 [scan:left]`;
-  const result = compileBPS(src);
+  const result = compileToBPxAST(src);
   assert('pas d\'erreur fatale', result.errors.length === 0, `errors: ${JSON.stringify(result.errors)}`);
 // ⚠️ ASSERTION(S) DE TEXTE BP3 RETIRÉE(S) le 2026-07-19 — certification grammaire-texte
 // abandonnée (arbitrage Romain), encodeur supprimé : plus de texte à vérifier.
@@ -153,7 +153,7 @@ section('compileBPS [scan:rnd] → préfixe RND dans BP3');
   const src = `@controls
 @alphabet.western:midi
 X -> C4 [scan:rnd]`;
-  const result = compileBPS(src);
+  const result = compileToBPxAST(src);
 //   assert('préfixe RND dans grammar', result.grammar && result.grammar.includes('RND'),
 //     `extrait: ${result.grammar && result.grammar.slice(0, 300)}`);
 }
@@ -165,7 +165,7 @@ section('non-régression look-and-say.bps [scan:left] en mode SUB');
 {
   try {
     const src = readFileSync('scenes/look-and-say.bps', 'utf8');
-    const result = compileBPS(src);
+    const result = compileToBPxAST(src);
     assert('look-and-say compile sans erreur', result.errors.length === 0,
       `errors: ${JSON.stringify(result.errors)}`);
 //     assert('préfixe LEFT dans grammar', result.grammar && result.grammar.includes('LEFT'),

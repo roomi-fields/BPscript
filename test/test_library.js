@@ -1,7 +1,7 @@
 // @library.<moteur> "nom" — librairie de runtime liée à un moteur (valeur chaîne).
 // Partagée par toutes les voix du moteur.
 //
-// ⚠️ Ce test lisait `compileBPS().libraries`, une TABLE PARALLÈLE que seule la façade héritée
+// ⚠️ Ce test lisait `compileToBPxAST().libraries`, une TABLE PARALLÈLE que seule la façade héritée
 // exposait. Elle est supprimée avec elle (arbitrage Romain 2026-07-19). On lit désormais la
 // SOURCE UNIQUE — l'arbre : la directive vit dans `ast.directives` sous forme
 // `LibraryDirective { engine, name }`. C'est la directive « source unique = l'arbre, zéro table

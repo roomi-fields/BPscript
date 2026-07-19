@@ -9,9 +9,8 @@
 import { readFileSync } from 'fs';
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
-import { encode } from '../src/transpiler/encoder.js';
 import { registerAll } from '../src/transpiler/libs.js';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 
 // ── Pre-register libs (no FS in tests) ─────────────────────
 
@@ -635,46 +634,16 @@ S -> a b c`);
 // 25. Encoder — dé-pollution alphabet homomorphismes
 // ============================================================
 
-section('Encoder — dé-pollution alphabet homomorphismes');
-
-{
-  // Un nom d'homo dans le RHS ne doit PAS aller dans l'alphabet
-  const src = `@controls
-@transcription.checkhomo
-S -> $X * &X`;
-  const ast = parseSource(src);
-  const encoded = encode(ast);
-  // 'star' est un BP3_OPERATOR donc déjà absent
-  // Les noms de section comme '*' ne sont pas dans le RHS ici
-  // Vérifie juste que l'alphabet ne contient pas les noms des sections
-  const alph = Array.from(encoded.alphabet);
-  assert('alphabet ne contient pas "*" (section)', !alph.includes('*'));
-}
-
-{
-  // @transcription.tabla_stroke — 'tabla_stroke' doit être ABSENT de l'alphabet
-  const src = `@controls
-@transcription.tabla_stroke
-S -> $X tabla_stroke &X`;
-  const ast = parseSource(src);
-  const encoded = encode(ast);
-  const alph = Array.from(encoded.alphabet);
-  assert('tabla_stroke absent de alphabet (nom homo)', !alph.includes('tabla_stroke'),
-    `alphabet = ${alph.join(',')}`);
-  // Le texte grammaire doit contenir tabla_stroke verbatim
-  assert('grammar contient tabla_stroke verbatim', encoded.grammar.includes('tabla_stroke'));
-}
-
-{
-  // encode() doit retourner homomorphisms
-  const src = `@controls
-@transcription.checkhomo
-S -> $X * &X`;
-  const ast = parseSource(src);
-  const encoded = encode(ast);
-  assert('encoded.homomorphisms défini', Array.isArray(encoded.homomorphisms));
-  assert('encoded.homomorphisms 3 décls', encoded.homomorphisms?.length === 3);
-}
+// ⚠️ SECTION « Encoder — dé-pollution alphabet homomorphismes » RETIRÉE le 2026-07-19.
+//
+// Ses trois blocs appelaient `encode()` directement — l'encodeur BP3, supprimé avec la façade
+// héritée (arbitrage Romain : seule la PRODUCTION doit être identique, pas la grammaire).
+// Ils vérifiaient que l'alphabet PLAT émis ne se pollue pas des noms d'homomorphisme, que le
+// texte porte `tabla_stroke` verbatim, et que `encode()` rend bien ses homomorphismes.
+//
+// Aucun n'est portable sur l'AST : l'« alphabet plat » et le « texte grammaire » sont des
+// artefacts de l'encodeur, ils n'existent pas dans l'arbre. Ce que l'arbre porte, lui —
+// `Scene.homomorphisms` — reste couvert par les assertions conservées plus haut dans ce fichier.
 
 // ============================================================
 // F1 — parseControl : pitchbend(+200) et token invalide
@@ -687,11 +656,11 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   // Stratégie : on exécute dans un Worker en lui donnant un délai maximal,
   // mais comme Worker est lourd, on utilise juste un try/catch synchrone —
   // le test échouera si le process freeze (le runner a un timeout global).
-  // Un test synchrone suffit : après le fix, compileBPS retourne.
+  // Un test synchrone suffit : après le fix retourne.
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileBPS('@controls\nS -> a pitchbend(+200)');
+    compiled = compileToBPxAST('@controls\nS -> a pitchbend(+200)');
   } catch (e) {
     caughtError = e;
   }
@@ -716,7 +685,7 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileBPS('@controls\nS -> a pitchbend(@invalid)');
+    compiled = compileToBPxAST('@controls\nS -> a pitchbend(@invalid)');
   } catch (e) {
     caughtError = e;
   }
@@ -825,7 +794,7 @@ S -> A fin`;
 {
   // Vérification bout en bout sur dhati.scene.bps : aucun Symbol 'star'/'plus'/'fin' dans l'AST
   const src = readFileSync('test/grammars/dhati/scene.bps', 'utf8');
-  const result = compileBPS(src);
+  const result = compileToBPxAST(src);
   function findOldNames(node, out = []) {
     if (!node || typeof node !== 'object') return out;
     if (node.type === 'Symbol' && ['star', 'plus', 'fin'].includes(node.name)) out.push(node.name);

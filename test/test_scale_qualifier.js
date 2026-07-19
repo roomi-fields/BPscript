@@ -9,7 +9,7 @@
  */
 
 import { readFileSync } from 'fs';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 import { registerAll } from '../src/transpiler/libs.js';
 
 const libs = {};
@@ -37,7 +37,7 @@ function section(name) {
 }
 
 function compile(src) {
-  return compileBPS(src);
+  return compileToBPxAST(src);
 }
 
 // ----------------------------------------------------------

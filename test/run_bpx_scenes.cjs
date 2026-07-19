@@ -2,7 +2,7 @@
 /**
  * Run the BPx M1/M2 fixture scenes against the BP3 WASM engine.
  *
- * Pipeline: scene.bps → compileBPS() → BP3 grammar/alphabet/settings → WASM
+ * Pipeline: scene.bps → compileToBPxAST() → BP3 grammar/alphabet/settings → WASM
  *           → terminals (from bp3_get_timed_tokens with verbose=1)
  *
  * Usage: node test/run_bpx_scenes.cjs --bin <tag>   (--bin last = builds/LAST)
@@ -48,10 +48,10 @@ const EXPECTED = {
 function compileOne(scenePath, tmp) {
   // ESM compile via inline script (transpiler is ESM)
   const compileScript = `
-import { compileBPS } from '${path.join(ROOT, 'src/transpiler/index.js').replace(/\\/g, '/')}';
+import { compileToBPxAST } from '${path.join(ROOT, 'src/transpiler/index.js').replace(/\\/g, '/')}';
 import { readFileSync, writeFileSync } from 'fs';
 const src = readFileSync('${scenePath.replace(/\\/g, '/')}', 'utf8');
-const r = compileBPS(src);
+const r = compileToBPxAST(src);
 writeFileSync('${tmp}_gr.txt', r.grammar || '');
 writeFileSync('${tmp}_al.txt', r.alphabetFile || (Array.isArray(r.alphabet) ? r.alphabet.join('\\n') : ''));
 writeFileSync('${tmp}_se.txt', r.settingsJSON || '');

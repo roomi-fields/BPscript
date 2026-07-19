@@ -1,7 +1,6 @@
 // test_wiring.js — Câblage son (LANG-SONS §9) : opérateurs >> / !>> + corps @macro câblage.
 // Vérifie le PARSER/AST (PORTER≠RÉSOUDRE : BPScript émet le Wiring, l'aval résout).
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
-import { compileBPS } from '../src/transpiler/index.js';
 
 let pass = 0, fail = 0;
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -92,7 +91,7 @@ console.log('=== Câblage >> / !>> ===');
 
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)
 {
-  const r = compileBPS('@core\n@controls\n@macro lead = saw >> lpf >> audio\nS -> Sa');
+  const r = compileToBPxAST('@core\n@controls\n@macro lead = saw >> lpf >> audio\nS -> Sa');
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
   // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
   // ancienne assertion : ok('compileBPS ne crashe pas sur un câblage', typeof r.grammar === 'string');
