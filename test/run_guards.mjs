@@ -208,6 +208,35 @@ const HORS_DOSSIER_ADMIS = new Map([
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ANTI-VACUITÉ — tout garde d'ENSEMBLE doit prouver qu'il regarde quelque chose.
+//
+// Un garde qui balaie un ensemble et le trouve vide passe au vert sans rien vérifier.
+// C'est l'erreur exacte que j'ai commise dans la première version du méta-garde : elle
+// cherchait des orphelins dans un ensemble qui ne pouvait pas en contenir, et elle
+// verdissait toujours. Un contrôle vide est indiscernable d'un contrôle satisfait.
+// On exige donc un TÉMOIN POSITIF : chaque garde d'ensemble déclare le nombre minimal
+// d'éléments qu'il doit voir. S'il en voit moins, c'est qu'il ne regarde plus au bon
+// endroit — et c'est LUI qui est cassé, pas le dépôt qui est devenu parfait.
+{
+  const temoins = [
+    { quoi: 'gardes lancés par le portillon', vu: fichiers.length, minimum: 35 },
+    { quoi: 'outils sous seuil', vu: SEUILS.length, minimum: 2 },
+    { quoi: 'exclusions motivées', vu: LANE_MOTEUR.size + MODULES.size + HORS_PORTILLON.size, minimum: 10 },
+  ];
+  const creux = temoins.filter((t) => t.vu < t.minimum);
+  if (creux.length > 0) {
+    echecs++;
+    for (const t of creux) {
+      console.error(`  ÉCHEC anti-vacuité — ${t.quoi} : ${t.vu} vu(s), minimum attendu ${t.minimum}.`);
+      console.error('         Un garde qui ne voit plus rien ne prouve rien : vérifiez qu il regarde au bon endroit.');
+    }
+  } else {
+    passes++;
+    if (verbeux) console.log(`  ok   anti-vacuité — ${temoins.map((t) => `${t.vu} ${t.quoi}`).join(', ')}`);
+  }
+}
+
 console.log(`\n[gardes] ${passes} garde(s) vert(s), ${echecs} en échec.`);
 console.log(`[gardes] ${assertions} assertion(s) RÉELLEMENT exécutée(s)`
   + (sansCompte ? ` — ${sansCompte} fichier(s) n'annoncent pas leur compte, non totalisés.` : '.'));

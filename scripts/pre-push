@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# PORTILLON — hook VERSIONNÉ (installé par `npm run gate:install`).
+#
+# Il ne définit RIEN : il délègue à `npm run verify`, la définition UNIQUE du gate.
+# Un hook qui reproduit la liste des vérifications finit par diverger d'elle — c'est
+# la même dérive que la doc qui ment, appliquée au garde-fou lui-même.
+set -e
+cd "$(git rev-parse --show-toplevel)"
+export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+maj=$(node -v 2>/dev/null | sed "s/v\([0-9]*\).*/\1/")
+if [ "${maj:-0}" -lt 20 ]; then nvm use 20 >/dev/null 2>&1 || nvm use 22 >/dev/null 2>&1; fi
+maj=$(node -v 2>/dev/null | sed "s/v\([0-9]*\).*/\1/")
+if [ "${maj:-0}" -lt 20 ]; then echo "[gate] ERREUR : Node 20+ requis (actuel $(node -v)). Push bloque."; exit 1; fi
+echo "[gate] node $(node -v) — npm run verify (definition UNIQUE du gate)…"
+npm run verify --silent
+echo "[gate] vert — push autorise."
