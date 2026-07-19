@@ -330,7 +330,7 @@ function firstDiff(a, b) {
   return `longueurs différentes : ${a.length} vs ${b.length}`;
 }
 
-module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, registerShiftFor, normalizeRegister, ISO, DIFF, NON_MESURABLE, ABSENT };
+module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, registerShiftFor, normalizeRegister, normalizeSaptak, ISO, DIFF, NON_MESURABLE, ABSENT };
 
 // ── CLI de diagnostic ────────────────────────────────────────────────────────
 if (require.main === module) {
