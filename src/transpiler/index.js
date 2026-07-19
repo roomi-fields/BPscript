@@ -1,93 +1,24 @@
 /**
- * BPScript Transpiler — Facade
+ * BPScript Transpiler — Façade
  *
- * DEUX modes SÉPARÉS (directive Romain 2026-06-17) :
- *   - compileBPS(source)       → ancienne voie BP3 : { grammar, alphabet, settings, … }.
- *                                 Voie 2 héritée (encodeur), vouée au retrait.
- *   - compileToBPxAST(source)  → voie AST BPx : { ast, errors, warnings }.
- *                                 Produit l'arbre COMPLET SANS l'ancien format (aucun encode).
+ * UNE SEULE voie : `compileToBPxAST(source)` → `{ ast, errors, warnings }`, l'arbre agnostique
+ * consommé par BPx, Kairos, Kronos et Kanopi.
  *
- * ⚠️ Cet en-tête a annoncé pendant des mois `{ ast, backticks, flagStates, libraries, … }`,
- * une forme que la fonction n'a jamais rendue (BPS-9). Mesuré le 2026-07-19 : les champs réels
- * sont `ast`, `errors`, `warnings` — les trois, pas plus. `backticks` et `flagStates` vivent
- * DANS l'arbre, ils ne sont pas des champs de retour.
- * On corrige plutôt que de le laisser traîner : le même jour, un commentaire périmé de
- * `lib/controls.json` a fait croire à une régression majeure et failli déclencher une refonte
- * de l'AST et de l'encodeur. Une doc qui ment coûte plus cher qu'une doc absente.
+ * ⚠️ `compileBPS` — la voie 2, qui encodait une grammaire BP3 en texte — A ÉTÉ SUPPRIMÉE le
+ * 2026-07-19, sur arbitrage de Romain : « pour la compatibilité bps/gr, la seule chose que je
+ * veux c'est que la PRODUCTION soit identique, pas la grammaire. » La conformité au moteur
+ * natif se mesure donc sur les JETONS PRODUITS (comparaison à la baseline native), plus sur le
+ * texte de grammaire émis.
+ *
+ * Ce qui a déclenché la suppression : la mesure ISO passait encore par cette façade héritée,
+ * « vouée au retrait » depuis des mois. Du code que personne n'assumait plus continuait d'être
+ * réutilisé et de gagner des fonctionnalités. Il n'y a pas de dépréciation douce ici, pas de
+ * repli « au cas où » : ce qui est mort est retiré.
  */
 
-import { tokenize } from './tokenizer.js';
-import { parse, ParseError } from './parser.js';
-import { encode } from './encoder.js';
-import { generatePrototypes } from './prototypes.js';
-import { resolveActors } from './actorResolver.js';
 import { compileToBPxAST } from './bpxAst.js';
 import { describeVocabulary } from './libs.js';
 
-function compileBPS(source) {
-  const result = { grammar: '', alphabet: [], settings: [], alphabetFile: null, prototypesFile: null, ast: null, errors: [], warnings: [] };
-
-  try {
-    // 1. Tokenize
-    const tokens = tokenize(source);
-
-    // 2. Parse → AST
-    // warnings : avertissements non fatals (ex. @-formes de production
-    // dépréciées, décision 2026-06-11) — canal séparé de errors.
-    const ast = parse(tokens, { onWarning: (w) => result.warnings.push(w) });
-    result.ast = ast;
-
-    // 2b. Resolve actors (between parser and encoder)
-    const actorResult = resolveActors(ast);
-    if (actorResult.errors.length > 0) {
-      result.errors.push(...actorResult.errors);
-    }
-
-    // 3. Encode → BP3
-    const encoded = encode(ast);
-    result.grammar = encoded.grammar;
-    result.alphabet = Array.from(encoded.alphabet);
-    result.settings = encoded.settings;
-    result.alphabetFile = encoded.alphabetFile;
-    result.settingsJSON = encoded.settingsJSON;
-    result.controlTable = encoded.controlTable;
-    result.cvTable = encoded.cvTable;
-    result.backticks = encoded.backticks;   // lot 4: table id BT<interp><id> → {interp, code}
-    result.flagStates = encoded.flagStates;  // A5: états de drapeau nommés { flag → {alias→int} }
-    result.libraries = encoded.libraries;    // @library.<moteur> "nom" → { moteur → [noms] }
-    result.directives = ast.directives;
-    // CCP-2 (atlas 05-interfaces.md:159-163, loi L13 « une seule lecture de la carte ») :
-    // les sidecars de carte-d'œuvre (actorTable, terminalActorMap, mapTable, sceneTable,
-    // exposeTable, ccAliases) ne sont PLUS émis — l'AST fait foi (ast.actors / ast.maps /
-    // ast.scenes / ast.exposes ; BPx lit astToSceneSpec.ts, coordonné CCP-1 2026-07-16).
-    result.duration = encoded.duration;
-    result.macroTable = encoded.macroTable;
-    result.aliasTable = encoded.aliasTable;
-    result.labelTable = encoded.labelTable;
-    result.labelIndex = encoded.labelIndex;        // Z2 (#106): label → targeted RHS elements
-    result.homomorphisms = encoded.homomorphisms;  // Contrat BPx: HomomorphismDeclAST[] (ast.ts:150-157)
-
-    // 4. Generate prototypes (-so. file) for all declared terminals
-    if (result.alphabet.length > 0) {
-      result.prototypesFile = generatePrototypes(result.alphabet);
-    }
-
-    // Propagate encoder errors (e.g. BOLSIZE violations)
-    if (encoded.errors?.length) {
-      result.errors.push(...encoded.errors.map(e => typeof e === 'string' ? { message: e } : e));
-    }
-
-  } catch (err) {
-    if (err instanceof ParseError) {
-      result.errors.push({ message: err.message, line: err.token?.line, col: err.token?.col });
-    } else {
-      result.errors.push({ message: err.message });
-    }
-  }
-
-  return result;
-}
-
 // describeVocabulary : autorité du vocabulaire du langage pour l'éditeur Kanopi
 // (coloration/autocomplétion/erreurs) — même agrégation que le garde de compilation.
-export { compileBPS, compileToBPxAST, describeVocabulary };
+export { compileToBPxAST, describeVocabulary };

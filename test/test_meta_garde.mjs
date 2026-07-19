@@ -32,7 +32,10 @@ const RACINE = path.resolve(ICI, '..');
 
 /** Tests hors `test/` connus et assumés, avec leur raison. */
 const HORS_DOSSIER_ADMIS = new Map([
-  ['src/transpiler/test.js', 'démonstration manuelle du transpileur (imprime alphabet et grammaire, aucune assertion, sort toujours en zéro) — outil de mise au point, jamais un garde'],
+  // VIDE depuis le 2026-07-19 : `src/transpiler/test.js` était une démonstration manuelle de
+  // l'ENCODEUR (elle imprimait l'alphabet plat et la grammaire BP3). Elle est partie avec lui.
+  // La carte reste déclarée pour que le mécanisme survive : un test hors `test/` devra y entrer
+  // avec son motif, jamais rester invisible.
 ]);
 
 const trouves = [];
