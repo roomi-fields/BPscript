@@ -57,6 +57,30 @@
     "baseRegister": 1,
     "defaultTuning": "sargam_12TET"
   },
+  "bp3_indian": {
+    "description": "Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) — alphabet de test BP3, à côté des autres (arbitrage Romain 2026-07-19)",
+    "notes": [
+      "sa",
+      "re",
+      "ga",
+      "ma",
+      "pa",
+      "dha",
+      "ni"
+    ],
+    "alterations": {
+      "k": -1,
+      "": 0,
+      "#": 1
+    },
+    "octaves": "bp3",
+    "diapason": 440,
+    "baseNote": "dha",
+    "baseRegister": 5,
+    "defaultTuning": "bp3_indian_12TET",
+    "_note": "⚠️ CE N'EST PAS 'sargam'. BP3 RENOMME le clavier occidental, il ne le TRANSPOSE pas : les trois conventions natives (ENGLISH/FRENCH/INDIAN) nomment les MÊMES touches. L'ancre porte donc sur la classe 9 — 'dha' = 'A' = 'la' — à 440 Hz, ce qui place sa4 à 261.626 Hz, soit le do4 natif. Ancrer sur 'sa'=240 (l'ancre TRADITIONNELLE, portée par l'alphabet 'sargam' ci-dessus) donnerait un rapport de 0.917 avec le natif : musicalement légitime, mais infidèle au moteur — et c'est précisément l'écart que vina/vina2 contournaient à la main. Les deux alphabets coexistent parce qu'ils répondent à deux questions différentes : 'sargam' joue le sargam, 'bp3_indian' reproduit BP3.",
+    "_source": "Tables VERBATIM du moteur : bp3-engine/csrc/bp3/-BP3main.h:140-141 (Indiannote) et :147 (AltIndiannote). Les 12 classes s'expriment ici en 7 naturelles + suffixes 'k' (komal, −1) et '#' (tivra, +1) — vérifié classe par classe sur les DEUX tables. Les deux quirks de bord (ni# → classe 0 registre +1 ; sak → classe 11 registre −1) relèvent du repli générique de degré, déjà porté par le résolveur de Kairos (src/pitch/bp3-alphabets.test.ts)."
+  },
   "solfege": {
     "description": "Solfège latin — do ré mi fa sol la si",
     "notes": [

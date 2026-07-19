@@ -83,6 +83,21 @@
     ],
     "_note": "diapason (Hz) for sa is tradition-dependent. 240 Hz is a common default."
   },
+  "bp3_indian_12TET": {
+    "description": "Convention de notes INDIAN du moteur BP3 natif, en 12-TET",
+    "alphabet": "bp3_indian",
+    "temperament": "12TET",
+    "degrees": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11
+    ],
+    "_note": "Mêmes degrés que sargam_12TET — c'est l'ANCRE qui distingue les deux, pas la grille : ici dha4 = 440 Hz (le clavier occidental renommé), et non sa = 240 Hz. Cf. le _note de l'alphabet bp3_indian."
+  },
   "sargam_22shruti": {
     "description": "Indian sargam in 22-shruti system — full microtonal resolution",
     "alphabet": "sargam",

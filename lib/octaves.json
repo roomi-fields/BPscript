@@ -77,5 +77,13 @@
     "registers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
     "default": 4,
     "_note": "Registre numérique en SUFFIXE séparé par '_' (sa_4, r1_4) — convention native -to.tryShruti (22-shruti). Distinct de 'saptak' (préfixe mandra/madhya/taar)."
+  },
+  "bp3": {
+    "position": "suffix",
+    "separator": "",
+    "registers": ["00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    "default": 5,
+    "_note": "Registres du moteur BP3 natif, conventions ENGLISH/FRENCH/INDIAN. Identique à 'western' SAUF le registre '00' — une octave SOUS '0' (quirk d'octave BP3 [79]). Le marqueur se lit en plus-long-d'abord : '00' ne doit jamais être avalé par '0'. Le français seul ajoute '000' (non porté ici : seul bp3_indian est servi).",
+    "_source": "bp3-engine/csrc/bp3/Inits.c:451-497 (tables d'octaves natives)"
   }
 }
