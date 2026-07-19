@@ -1,0 +1,53 @@
+{
+ "_ARCHIVE": "ARCHIVE — conditions de capture INCONNUES. N EST PAS un oracle, ne jamais citer comme reference.",
+ "_archive_motif": "Voie sans producteur depuis la suppression du pipeline S0-S5 (2026-07-19) et sans lecteur vivant. Le contenu est ATTESTE mais ses conditions de capture (nombre d items, graine, reglages -se, objets sonores charges) ne sont declarees nulle part et ne sont plus reconstituables. Oracle natif GO-FORWARD : la baseline gouvernee de bp3-engine.",
+ "_archive_date": "2026-07-19",
+ "source": "-gr.check&",
+ "stage": "S0",
+ "mode": "midi",
+ "tokens": [
+  [
+   "C3",
+   0,
+   667
+  ],
+  [
+   "G4",
+   0,
+   1334
+  ],
+  [
+   "E5",
+   0,
+   333
+  ],
+  [
+   "F3",
+   1001,
+   1668
+  ]
+ ],
+ "midi": [
+  [
+   48,
+   0,
+   667
+  ],
+  [
+   67,
+   0,
+   1334
+  ],
+  [
+   76,
+   0,
+   333
+  ],
+  [
+   53,
+   1001,
+   1668
+  ]
+ ],
+ "date": "2026-06-09"
+}
