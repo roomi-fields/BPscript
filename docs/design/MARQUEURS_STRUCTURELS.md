@@ -90,5 +90,16 @@ Trois remarques factuelles, sans recommandation :
 2. **L'enjeu n'est pas symétrique.** (b) débloque une pièce musicale ; (c) débloque une grammaire de
    test des opérateurs sériels. Si la sobriété doit trancher, elle ne tranche pas pareil des deux
    côtés.
-3. **Le redoublement `++` reste ouvert même après (b).** Le natif écrit `++`, j'émets `+ +`. Je n'ai
-   pas prouvé que le moteur les lit identiquement — à vérifier avant de conclure que (b) suffit.
+3. **Le redoublement `++` est CLOS — vérifié à la source.** J'avais laissé ce point ouvert : le
+   natif écrit `++`, j'émets `+ +`. **Les deux sont équivalents**, et le moteur le prouve.
+   `CompileGrammar.c:1244-1272` définit les caractères admis dans un nom de terminal —
+   `OkBolChar` (premier caractère : lettres et `'`) et `OkBolChar2` (suivants : chiffres, lettres,
+   `-`, `@`, `%`, `#`, `"`, `'`, backtick). **`+` n'y figure pas.** Il ne peut donc jamais
+   appartenir à un nom : il est toujours tokenisé séparément, et l'espace entre deux `+` est sans
+   effet. Mon émission est fidèle ; (b) suffit.
+
+4. **La même lecture CONFIRME le cadrage de `trySerial`.** `:` n'est pas davantage dans
+   `OkBolChar2`. Donc `Says:` ne peut PAS être un terminal nommé « Says: » — c'est nécessairement
+   `Says` suivi du marqueur `:`. La cause que j'avais d'abord inventée (« terminal à caractère
+   exotique ») est réfutée par le moteur lui-même, et le rattachement à la feature *Structural
+   markers* est le bon.
