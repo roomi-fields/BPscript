@@ -11,7 +11,7 @@
  */
 import { readFileSync } from 'fs';
 import { registerAll } from '../src/transpiler/libs.js';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const libs = {};
 for (const n of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'transcription']) {
@@ -24,45 +24,43 @@ function assert(label, cond, detail) {
   if (cond) passed++;
   else { failed++; console.error(`  FAIL: ${label}${detail !== undefined ? ` — ${JSON.stringify(detail)}` : ''}`); }
 }
-const rhs = (g) => (g.split('\n').find(l => l.includes('gram#')) || '').replace(/.*-->/, '').trim();
 
 console.log('\n=== brassage / graine orthogonaux ===');
 
 // [shuffle] conservé → _rndseq
 {
-  const r = compileBPS('@controls\n@mode:random\nA -> {a b c}[shuffle]');
+  const r = compileToBPxAST('@controls\n@mode:random\nA -> {a b c}[shuffle]');
   assert('[shuffle] : 0 erreur', r.errors.length === 0, r.errors);
-  assert('[shuffle] → _rndseq', rhs(r.grammar).includes('_rndseq'), rhs(r.grammar));
-  assert('[shuffle] : pas de _srand', !rhs(r.grammar).includes('_srand'), rhs(r.grammar));
+  // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19 (émission `_rndseq`, absence de
+  // `_srand`) — certification grammaire-texte abandonnée, encodeur supprimé.
 }
 
 // [shuffle:N] supprimé → erreur pointant @seed
 {
-  const r = compileBPS('@controls\n@mode:random\nA -> {a b c}[shuffle:1]');
+  const r = compileToBPxAST('@controls\n@mode:random\nA -> {a b c}[shuffle:1]');
   assert('[shuffle:1] : erreur', r.errors.length > 0, r.errors);
   assert('[shuffle:1] : message cite @seed', /@seed/.test((r.errors[0] || {}).message || ''), r.errors);
 }
 
 // ![@seed:N] dans le flux → _srand(N)
 {
-  const r = compileBPS('@mode:lin\nS -> a ![@seed:2] b');
+  const r = compileToBPxAST('@mode:lin\nS -> a ![@seed:2] b');
   assert('![@seed:2] : 0 erreur', r.errors.length === 0, r.errors);
-  assert('![@seed:2] → _srand(2)', rhs(r.grammar).includes('_srand(2)'), rhs(r.grammar));
+  // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 (émission `_srand(2)`).
 }
 
 // ![@<autre>] dans le flux → erreur (seul seed a un sens en flux)
 {
-  const r = compileBPS('@mode:lin\nS -> a ![@maxitems:3] b');
+  const r = compileToBPxAST('@mode:lin\nS -> a ![@maxitems:3] b');
   assert('![@maxitems] : erreur (hors seed)', r.errors.length > 0, r.errors);
 }
 
 // Remplacement de [shuffle:1] : ![@seed:1] {…}[shuffle] → _srand(1) … _rndseq
 {
-  const r = compileBPS('@controls\n@mode:random\nB -> ![@seed:1] {C4 B4 E4}[shuffle]');
+  const r = compileToBPxAST('@controls\n@mode:random\nB -> ![@seed:1] {C4 B4 E4}[shuffle]');
   assert('remplacement : 0 erreur', r.errors.length === 0, r.errors);
-  const g = rhs(r.grammar);
-  assert('remplacement → _srand(1)', g.includes('_srand(1)'), g);
-  assert('remplacement → _rndseq', g.includes('_rndseq'), g);
+  // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19. Ce qui RESTE vérifié ici est le
+  // point qui compte pour le langage : la forme de remplacement de `[shuffle:1]` COMPILE.
 }
 
 console.log(`\n${'='.repeat(40)}\nRésultat : ${passed} PASS, ${failed} FAIL`);
