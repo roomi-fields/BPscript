@@ -924,6 +924,14 @@ pas de parsing de chaînes.
 | ---------------- | ------- | ----------------------------------------- | ------------------------------------- |
 | `tokenizer.js`   | compile | octaves, alphabets                        | tokens avec note/registre reconnus    |
 | `parser.js`      | compile | alphabets                                 | AST avec nodes Symbol typés           |
+
+> ⚠️ **LES RÉFÉRENCES À `encoder.js` / `prototypes.js` CI-DESSOUS SONT PÉRIMÉES** (2026-07-19).
+> L'encodeur BP3 et le générateur de prototypes ont été **supprimés** : il n'y a plus d'émission
+> de grammaire BP3 (arbitrage Romain — « la seule chose que je veux c'est que la PRODUCTION soit
+> identique, pas la grammaire »). Les tâches et fichiers nommés dans cette section n'ont donc plus
+> de cible. Le contenu est **conservé** parce qu'il documente une intention de design qui a existé
+> et éclaire les décisions suivantes — mais il ne décrit pas le dépôt.
+
 | `encoder.js`     | compile | alphabets, octaves                        | noms BP3-safe (bol prefix), grammaire |
 | `prototypes.js`  | compile | alphabets, octaves                        | fichier -so. (durées de référence)    |
 | `kairos/pitch/resolver.ts` | projection | octaves, alphabets, tunings, temperaments | fréquence (float) — depuis KAI-10 |
