@@ -1,7 +1,22 @@
 # Dossier — les MARQUEURS STRUCTURELS de BP3 : BPScript en porte 1 sur 4
 
 **Pour arbitrage : Romain.** Rédigé 2026-07-19 par bpscript, à la demande de l'architecte (note [724]).
-**Statut : question ouverte.** Rien n'est implémenté.
+**Statut : SUSPENDU le 2026-07-19 — ne pas s'appuyer sur la section « quatre sens ? ».**
+
+> ⚠️ **La question du SENS des quatre glyphes m'est retirée** (note [747]) : elle part à Atlas
+> (architecture) et à bp3-engine (moteur natif), qui sont les spécialistes. Romain indique que les
+> marqueurs ont chacun un sens **dédié**.
+>
+> **Ce que ça corrige dans ce dossier, et c'est ma faute :** j'ai écrit qu'ils étaient
+> « interchangeables ». Ce que j'ai réellement *mesuré* est plus étroit — dans `StructuralRule()`,
+> les quatre cas tombent sur le même `return(TRUE)`, donc **pour classer une règle comme
+> structurelle** ils sont équivalents. J'en ai déduit qu'ils n'avaient pas de sens propre, en
+> m'appuyant sur une recherche qui n'en trouvait pas ailleurs. Une recherche qui ne trouve rien ne
+> prouve rien : c'est une absence de preuve que j'ai lue comme une preuve d'absence.
+>
+> La description du mécanisme (un marqueur classe la règle, et ce classement fixe la frontière des
+> gabarits via `LastStructuralSubgrammar`) reste ce que dit le code. La conclusion
+> « interchangeables » est **retirée** en attendant les spécialistes.
 
 > **Ce dossier remplace deux exclusions que j'avais mal motivées.** J'ai classé `trySerial` hors
 > périmètre pour « terminal à deux-points » et présenté le blocage de `dhadhatite` comme un
