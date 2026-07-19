@@ -24,14 +24,14 @@ S4 vs S5 : 16/29 EXACT, 13 DIFF, 7 SKIP, 2 MISSING
 
 ## Transpileur S5
 
-- **BPS-2** `ouvert` — COUNT diffs S4 vs S5 (11 grammaires). Cause à investiguer. Le pipeline S5 passe par le dispatcher (resolveTokens) qui applique transpose/rotate/etc. Les seuls contrôles qui causent un diff attendu sont ceux avec traitement audio webaudio (wave, filter, etc.) — non testables au niveau tokens.
+- **BPS-2** `abandonné` — COUNT diffs S4 vs S5 (11 grammaires). Cause à investiguer. Le pipeline S5 passe par le dispatcher (resolveTokens) qui applique transpose/rotate/etc. Les seuls contrôles qui causent un diff attendu sont ceux avec traitement audio webaudio (wave, filter, etc.) — non testables au niveau tokens.  _(abandonné: SANS OBJET — le pipeline S5 (et le dispatcher qu il traversait) ont ete SUPPRIMES le 2026-07-19 avec la voie 2 heritee. Il n y a plus de S4 ni de S5 a comparer.)_
 
 Bugs restants. Détail dans `memory/backlog_s5_transpiler.md`.
 
-- **BPS-3** `ouvert` — `_goto` : position dans la grammaire incorrect
-- **BPS-4** `ouvert` — `mode` : gram#1 toujours LIN, devrait respecter @mode
-- **BPS-5** `ouvert` — Terminaux numériques purs (ex: `1`, `2`) confondus avec des vitesses
-- **BPS-6** `ouvert` — Settings non fidèlement portés depuis les -se. de Bernard
+- **BPS-3** `abandonné` — `_goto` : position dans la grammaire incorrect  _(abandonné: SANS OBJET — le defaut portait sur la POSITION d emission dans la grammaire BP3, et il n y a plus de grammaire emise. Verifie le 2026-07-19 : `[goto:2]` est bien porte dans l AST en Qualifier/QualPair.)_
+- **BPS-4** `fait` — `mode` : gram#1 toujours LIN, devrait respecter @mode  _(fait: verifie le 2026-07-19 sur la voie AST — `@mode:ord` rend `subgrammars[0].mode === 'ord'`. Le mode est respecte ; le defaut etait dans l emission BP3, supprimee.)_
+- **BPS-5** `fait` — Terminaux numériques purs (ex: `1`, `2`) confondus avec des vitesses  _(fait: verifie le 2026-07-19 — `S -> 1 2` rend deux noeuds `NumericTerminal`, pas des vitesses. La confusion vivait dans l encodeur, supprime.)_
+- **BPS-6** `ouvert` [A REQUALIFIER] — Settings non fidèlement portés depuis les -se. de Bernard  _(2026-07-19 : le defaut d origine portait sur le fichier de reglages EMIS par l encodeur, supprime — donc SANS OBJET sous cette forme. MAIS la question de fond survit : les reglages du -se natif (horloge, plafond d items, C4key) doivent-ils entrer dans l AST ? Aujourd hui `ast.settings` est ABSENT. Ce n est plus un bug d emission, c est une question de contrat AST — a poser a bpx, pas a fermer en silence.)_
 
 ## Dispatcher / Runtime
 
