@@ -4,7 +4,7 @@
 //     bpxAst.applyDefaultActor). Canal canonique = {audio, midi, osc} (EBNF:182).
 //   - browser/webaudio SUPPRIMÉS : REJET fail-loud au parse (PAS de normalisation — Romain 2026-07-16).
 //   - routing.json SUPPRIMÉ (les deux copies) ; @routing rejeté au parse.
-import { compileBPS, compileToBPxAST } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 import { existsSync } from 'fs';
 
 let pass = 0, fail = 0;
@@ -37,14 +37,14 @@ rejects('@actor v alphabet.western transport.webaudio\nS -> v.C', 'PÉRIMÉ', 't
 // qu'on connaît ») : tout suffixe ∉ {audio, midi, osc} → rejet, sur LES DEUX voies. ':sc'
 // (ancien sucre transport+eval, ABOLI), ':video' (axe supprimé), ':foo' (inconnu). ---
 function rejectsBothPaths(src, needle, label) {
-  for (const [path, fn] of [['BPx', compileToBPxAST], ['BP3', compileBPS]]) {
+  for (const [path, fn] of [['BPx', compileToBPxAST]]) {  // voie BP3 retirée le 2026-07-19 (façade héritée supprimée)
     const errors = fn(src).errors || [];
     const hit = errors.some((e) => (e.message || '').includes(needle));
     check(errors.length > 0 && hit, `${label} — voie ${path} CRIE (${needle})`);
   }
 }
 function acceptsBothPaths(src, label) {
-  for (const [path, fn] of [['BPx', compileToBPxAST], ['BP3', compileBPS]]) {
+  for (const [path, fn] of [['BPx', compileToBPxAST]]) {  // voie BP3 retirée le 2026-07-19 (façade héritée supprimée)
     const errors = fn(src).errors || [];
     check(errors.length === 0, `${label} — voie ${path} sans erreur : ${JSON.stringify(errors)}`);
   }

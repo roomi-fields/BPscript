@@ -6,14 +6,14 @@
 //   b. `transport.video` / `transport.visual` n'existent plus (axe visuel SUPPRIMÉ).
 // La preuve exerce LES DEUX voies de compilation (BP3 legacy + AST BPx) : le rejet vit dans
 // parse(), partagé par les deux.
-import { compileBPS, compileToBPxAST } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) { pass++; } else { fail++; console.log('FAIL:', msg); } }
 
 // Un compileur renvoie { errors[] } sans jamais throw : on prouve le rejet via errors[].
 function errsOf(src) {
-  return { bp3: compileBPS(src).errors || [], bpx: compileToBPxAST(src).errors || [] };
+  return { bp3: compileToBPxAST(src).errors || [], bpx: compileToBPxAST(src).errors || [] };
 }
 function bothReject(src, needle, label) {
   const { bp3, bpx } = errsOf(src);

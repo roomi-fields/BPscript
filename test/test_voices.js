@@ -11,7 +11,7 @@
  *   6. describeVocabulary expose le catalogue des voix (éditeur).
  *   7. Non-régression : les formes canoniques sans voix compilent inchangées.
  */
-import { compileBPS, compileToBPxAST, describeVocabulary } from '../src/transpiler/index.js';
+import { compileToBPxAST, describeVocabulary } from '../src/transpiler/index.js';
 
 let pass = 0, fail = 0;
 function check(label, cond, detail) {
@@ -19,7 +19,10 @@ function check(label, cond, detail) {
   else { console.log(`  ✗ ${label}${detail ? ' — ' + detail : ''}`); fail++; }
 }
 
-const PATHS = [['BPx', compileToBPxAST], ['BP3', compileBPS]];
+// La voie BP3 (compileBPS) a été RETIRÉE de cette table le 2026-07-19 : la façade héritée est
+// supprimée (arbitrage Romain — seule la PRODUCTION doit être identique, pas la grammaire).
+// Ce test comparait les deux voies ; il ne reste qu'une voie, et c'est le produit.
+const PATHS = [['BPx', compileToBPxAST]];
 function acceptsBothPaths(label, src) {
   for (const [tag, compile] of PATHS) {
     const r = compile(src);
