@@ -2074,8 +2074,24 @@ function parse(tokens, opts = {}) {
 
       if (rules.length > 0) {
         subs.push({ type: 'Subgrammar', index: index++, rules, mode: blockMode, modifiers: blockModifiers });
+      } else if (at(T.SEPARATOR)) {
+        // BLOC VIDE, MAIS LA SCÈNE CONTINUE APRÈS LE `-----`.
+        //
+        // Ici se trouvait un `break` qui arrêtait TOUT le parcours des sous-grammaires. Une
+        // scène commençant par un séparateur (directives, `-----`, puis les règles) perdait
+        // donc l'INTÉGRALITÉ de ses règles, sans une erreur ni un avertissement : l'AST
+        // sortait avec zéro sous-grammaire et l'encodeur rendait un en-tête nu.
+        // Mesuré sur Mozartexpression : 373 lignes en entrée, 0 erreur, 47 octets en sortie.
+        //
+        // Un bloc vide ne porte rien — le sauter ne perd rien. Ce qui était inacceptable,
+        // c'est qu'il emporte tout ce qui le suit. On avance donc d'un séparateur et on
+        // continue ; le `break` ne subsiste que pour la vraie fin de scène, ci-dessous.
+        advance();
+        skipNewlines();
+        currentMode = null;
+        continue;
       } else {
-        break; // No rules found → stop parsing subgrammars
+        break; // Plus de règles ET plus de séparateur → fin légitime de la scène.
       }
 
       // Le mode NE S'HÉRITE PAS d'une sous-grammaire à l'autre : BP3 repart du défaut
