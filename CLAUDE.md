@@ -318,3 +318,37 @@ c'est Kairos qui l'a attrapée, en mesurant.
 
 Corollaire : **une information vraie chez son émetteur ne l'est pas forcément sur le périmètre
 d'un tiers.** Elle se re-vérifie à chaque saut.
+
+### NOMMER L'AXE ET LA RÉVISION — la seule défense qui ne demande aucune vigilance
+
+La règle ci-dessus (« le destinataire mesure ») marche, mais elle a un coût : elle suppose un
+destinataire qui se méfie. Le 2026-07-19 a produit une défense **complémentaire et gratuite**.
+
+**Toute mesure transmise déclare SUR QUOI elle porte** : sur quel *axe* (jetons MIDI ? sortie
+texte ? noms et temps ? Hz absolu ?) et sur quelle *révision* (un commit nommable, jamais
+« l'état courant »).
+
+Ce que ça change, mesuré ce jour-là :
+- bp3-engine a alerté trois agents d'une régression `_rotate` inexistante, diagnostiquée sur la
+  seule sortie texte. J'ai répondu que mon ISO tenait *parce que je mesure les jetons MIDI, et
+  que ça ne prouve donc rien sur l'axe où ça casse*. Je ne le soupçonnais pas — je décrivais mon
+  périmètre. C'est cette phrase qui l'a envoyé vérifier ses propres captures : identiques à
+  l'octet, la rotation était bien appliquée. **Nommer l'axe a rendu son erreur trouvable par un
+  lecteur qui ne se méfiait pas.**
+- J'ai moi-même publié « 27 captures déclarées sont absentes » en lisant l'arbre de travail d'un
+  autre dépôt pendant qu'il le réécrivait, et je l'ai propagé à trois destinataires. Mesuré sur la
+  révision publiée : zéro absente. Une mesure qui ne nomme pas sa révision est **périssable**.
+
+Corollaires, tous payés le même jour :
+- **Une vérification ne peut pas attraper ce qu'elle ne regarde pas**, si rigoureuse soit-elle.
+  J'ai vérifié `test/grammars/vina/scene.bps` ligne par ligne et annoncé la bascule faite ; Kairos
+  mesurait `scenes/vina.bps`, dont j'ignorais l'existence. Ma vérification était correcte et
+  aveugle. Avant d'annoncer qu'un changement est fait, **demander à l'aval quel fichier il lit**.
+- **Vérifier un piège ne protège pas des autres.** bp3-engine avait écarté « c'est une variance
+  aléatoire », s'en était félicité, et n'avait pas testé « je regarde le mauvais axe ». Une
+  précaution réussie donne la confiance qui fait sauter la suivante.
+- **Ne jamais garder un artefact de mesure « au cas où »** : un fichier de résultats périmé m'a
+  fait frôler trois fois le rapport d'un faux « désaccord entre outils ». Un dérivé non daté ment.
+- Quand deux chiffres ne concordent pas, **vérifier lequel des deux termes est fiable AVANT de
+  rédiger l'écart** — quatre fois ce jour-là, la cause était mon propre terme (fichier périmé,
+  souvenir pris pour mesure, dépouillement fautif), jamais l'outil mis en cause.
