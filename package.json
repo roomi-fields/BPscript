@@ -13,7 +13,8 @@
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs",
-    "guards": "node test/run_guards.mjs"
+    "guards": "node test/run_guards.mjs",
+    "guards:moteur": "node test/test_wasm_all.js && node test/run_bpx_scenes.cjs --bin last"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
