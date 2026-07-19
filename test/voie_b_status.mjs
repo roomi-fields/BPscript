@@ -2,7 +2,18 @@
 /**
  * VOIE B — statut par grammaire, EN SORTIE DE CHAÎNE COMPLÈTE.
  *
- * Chaîne mesurée : `.bps` → compileBPS → BPx (dérivation) → KAIROS (hauteur) → KRONOS (temps).
+ * Chaîne mesurée : `.bps` → compileToBPxAST → BPx (dérivation) → KAIROS (hauteur) → KRONOS (temps).
+ *
+ * ⚠️ CE HARNAIS APPELAIT `compileBPS` — la façade HÉRITÉE, « vouée au retrait »
+ * (`ARCHITECTURE.md:168-169`). Il ne mesurait pas le texte BP3 pour autant : il passait déjà
+ * `out.ast` à BPx. Mais cet arbre-là N'EST PAS le canonique — mesuré sur `bells`,
+ * `compileBPS().ast` fait 16939 octets avec `actors: []`, quand `compileToBPxAST().ast` en fait
+ * 18870 et SYNTHÉTISE l'acteur par défaut avec son transport (les défauts d'environnement).
+ * On mesurait donc le produit à travers une façade en retrait, sur un arbre moins complet.
+ *
+ * Bascule faite APRÈS mesure, jamais avant : les deux façades ont été comparées sur TOUT le
+ * corpus, jeton par jeton, bornes et hauteurs comprises — 87 identiques, 0 divergente. Le
+ * compte ISO obtenu avant la bascule reste donc valide ; seul le tuyau était le mauvais.
  *
  * ⚠️ CE FICHIER MESURAIT AUTREFOIS EN SORTIE BPx (`session.emit('timed-tokens')`), ce qui est
  * PRÉ-RÉSOLUTION : ni la hauteur ni le temps n'y sont résolus. Recadrage Romain (note [651]) :
@@ -30,7 +41,7 @@ import path from 'node:path';
 
 const require = createRequire(import.meta.url);
 const { compare, loadBaseline, soundingText } = require('./compare_modal.cjs');
-const { compileBPS } = require('../src/transpiler/index.js');
+const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 
@@ -43,7 +54,7 @@ async function produceB(name, modalite) {
   if (!existsSync(bps)) return { absent: true };
   let out;
   try {
-    out = compileBPS(readFileSync(bps, 'utf-8'));
+    out = compileToBPxAST(readFileSync(bps, 'utf-8'));
     if (out.errors.length) return { erreur: `compilation : ${out.errors[0].message}` };
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
@@ -99,7 +110,7 @@ function produceAllB(name) {
   if (!existsSync(bps)) return { absent: true };
   let out;
   try {
-    out = compileBPS(readFileSync(bps, 'utf-8'));
+    out = compileToBPxAST(readFileSync(bps, 'utf-8'));
     if (out.errors.length) return { erreur: `compilation : ${out.errors[0].message}` };
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
