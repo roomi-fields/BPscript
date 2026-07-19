@@ -181,6 +181,25 @@ function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
     };
   }
 
+  // RÉFÉRENCE NON COMPARABLE EN CONTENU (`capture_comparable:false`, baseline v11).
+  //
+  // Certaines grammaires produisent un contenu volontairement instable : `trySrand` appelle
+  // `_randomize`, qui ré-ensemence le tirage avec un nombre arbitraire et PRIME sur `--seed`.
+  // Elle sort un nombre de jetons stable, dans un ORDRE différent à chaque exécution, même à
+  // graine fixe — et c'est son OBJET (elle existe pour démontrer `_srand`/`_randomize`,
+  // `-gr.trySrand:7` et son propre commentaire l'annoncent).
+  // Diffé comme les autres, elle rendait un ÉCHEC FABRIQUÉ. On compare donc ce qui a un sens
+  // ici — le COMPTE — et jamais la séquence.
+  if (ref.capture_comparable === false) {
+    const nRef = sizeOf(ref);
+    const nCand = sizeOf(candidate);
+    return nRef === nCand
+      ? { status: ISO, modalite: ref.modalite, produit: true, n_ref: nRef, n_cand: nCand,
+          comptesSeuls: true, detail: `compte identique (${nRef}) — contenu volontairement instable, non comparé` }
+      : { status: DIFF, modalite: ref.modalite, produit: true, n_ref: nRef, n_cand: nCand,
+          comptesSeuls: true, detail: `compte ${nCand} vs ${nRef} — contenu volontairement instable, seul le compte est comparable` };
+  }
+
   if (ref.modalite === 'MIDI') {
     if (!Array.isArray(candidate.tokens)) {
       return { status: NON_MESURABLE, modalite: 'MIDI', produit: true, n_ref: (ref.tokens || []).length, n_cand: 0,
