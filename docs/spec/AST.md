@@ -964,6 +964,7 @@ piste **abandonnée** (n'était pas la racine, risquait la parité). Le bug CVA-
 
 ```
 LhsElement = Symbol | Variable | Wildcard | Context | TemplateAnchor | RawBrace
+             // `Variable` = `?N` uniquement ; `|x|` est un Symbol (voir §Variable)
 ```
 
 ---
@@ -1200,10 +1201,27 @@ Exemples :
 - `{C8 - - - !(chan:1)}` → `{C8 - - - _script(CT 0)}`
 - `![retro] A B` → `_retro A B`
 
-### `Variable`
+### `Variable` — RÉSERVÉ à `?N`, **jamais** à `|x|`
+
+> ⚠️ **Cette entrée décrivait `Variable { type, name }` comme le nœud de `|x|`. C'ÉTAIT FAUX**
+> — corrigé le 2026-07-19, après vérification aux deux sources qui font autorité :
+>
+> - **BP3 lui-même** (`BP3_help.txt:64-71`) : « BP3 recognizes strings starting with an
+>   **uppercase** character as *variables*… You may however start a variable with a
+>   **lower-case** character provided that you write it **between |vertical bars|**. » Ce que
+>   BP3 appelle *variable*, c'est ce que nous appelons un **non-terminal** (`S`, `A1`). Les
+>   barres sont un pur **artifice lexical** qui autorise une initiale minuscule — elles ne
+>   créent aucune catégorie sémantique.
+> - **Le contrat de frontière BPx** (`BPx/docs/AST_SPEC.md:128`) : « `Variable` | `?N` | …
+>   **RÉSERVÉE à `?N`, jamais `|x|`** ».
+>
+> Donc `|x|` s'abaisse en `Symbol { name: "x" }`, et c'est exactement ce que fait le parser
+> (`parser.js:3586-3594`, avec la citation d'`AST_SPEC §1.2.1` en commentaire). L'implémentation
+> était juste ; **c'est cette spec qui avait dérivé**. Porter un nœud `Variable` pour `|x|`
+> aurait cassé la frontière ratifiée avec BPx et réintroduit une distinction que BP3 ne fait pas.
 
 ```
-Variable { type: "Variable", name: string }
+Variable { type: "Variable", index: number }   // ?N seulement
 ```
 
 ### `Wildcard`
