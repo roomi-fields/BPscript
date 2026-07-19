@@ -9,7 +9,7 @@
     "typecheck": "npm run typecheck:digital && npm run typecheck:homomorphism",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
-    "verify": "npm run arch --silent && npm run typecheck --silent && node test/ast_conformance.mjs && node test/tempo_emission.test.mjs && node test/run_guards.mjs",
+    "verify": "npm run arch --silent && npm run typecheck --silent && node test/ast_conformance.mjs && node test/run_guards.mjs",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",

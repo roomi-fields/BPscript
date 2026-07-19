@@ -29,27 +29,16 @@ export const MOI = 'run_guards.mjs';
  * descendre sans qu'on le sache.
  */
 export const SEUILS = [
-  {
-    fichier: 'scan_corpus.mjs',
-    quoi: 'aller-retour BP3 → BPScript → BP3',
-    mesure: (sortie) => (sortie.match(/FIDÈLE/g) || []).length,
-    plancher: 13,
-    unite: 'grammaire(s) FIDÈLE',
-  },
-  {
-    // DETTE NOMMÉE, pas une exclusion. Ce fichier porte 6 échecs ANTÉRIEURS à la
-    // restauration du portillon : la notation métavariable `|x|` se perd à la conversion
-    // (`(=|A1|)` ressort `(=A1`). Le corriger demande de creuser le convertisseur, ce qui
-    // n'est pas le chantier du jour.
-    // Plutôt que de l'exclure — le gate ne couvrirait alors PLUS DU TOUT le convertisseur —
-    // on le surveille par son NOMBRE DE SUCCÈS : il ne doit jamais descendre. Les 6 échecs
-    // connus restent tolérés, une régression NOUVELLE mord immédiatement.
-    fichier: 'test_bp3_to_scene.cjs',
-    quoi: 'convertisseur BP3 → scène (6 échecs connus : métavariables |x|)',
-    mesure: (sortie) => Number((sortie.match(/Résultat unitaires\+ref:\s*(\d+) OK/) || [])[1] || 0),
-    plancher: 79,
-    unite: 'assertion(s) OK',
-  },
+  // VIDE depuis le 2026-07-19 — et c'est une conséquence, pas un oubli.
+  //
+  // Les deux outils qui vivaient ici (`scan_corpus.mjs`, plancher 13 FIDÈLE ;
+  // `test_bp3_to_scene.cjs`, plancher 79 OK) mesuraient la fidélité du TEXTE BP3 émis.
+  // La certification grammaire-texte est ABANDONNÉE (arbitrage Romain 2026-07-19 : « pour la
+  // compatibilité bps/gr, la seule chose que je veux c'est que la PRODUCTION soit identique,
+  // pas la grammaire »). Ces outils ont donc été supprimés avec l'encodeur qu'ils gardaient.
+  //
+  // La liste reste déclarée pour que le mécanisme de seuil survive : un outil qui imprime un
+  // rapport et sort toujours en zéro devra y entrer, jamais être branché tel quel au portillon.
 ];
 /**
  * HORS PORTILLON — chaque exclusion porte SON MOTIF, et le méta-garde vérifie qu'aucun

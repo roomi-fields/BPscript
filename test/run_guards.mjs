@@ -104,7 +104,10 @@ for (const s of SEUILS) {
 {
   const temoins = [
     { quoi: 'gardes lancés par le portillon', vu: fichiers.length, minimum: 35 },
-    { quoi: 'outils sous seuil', vu: SEUILS.length, minimum: 2 },
+    // Le témoin des outils à seuil est tombé à ZÉRO le 2026-07-19 : les deux qui y vivaient
+    // gardaient l'émission BP3, supprimée avec elle. Un minimum de 0 serait un témoin creux —
+    // on le retire donc plutôt que de le laisser passer au vert sans rien vérifier. Il
+    // reviendra le jour où un outil à seuil existera de nouveau.
     { quoi: 'exclusions motivées', vu: LANE_MOTEUR.size + MODULES.size + HORS_PORTILLON.size, minimum: 10 },
   ];
   const creux = temoins.filter((t) => t.vu < t.minimum);
