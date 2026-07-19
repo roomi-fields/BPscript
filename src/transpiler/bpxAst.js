@@ -886,12 +886,29 @@ function validateReferences(ast) {
   //    adresse ∪ fonction digitale. Les paires d'occurrence vivent dans `payload.params`
   //    (note ou groupe/règle, foldées par le parser) ET dans les `RuntimeQualifier.pairs`.
   const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k);
-  const seen = new Set();
+  // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
+  //
+  // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,
+  // SANS position) et dans `RuntimeQualifier.pairs` (AVEC ligne et colonne). L'identifiant de
+  // déduplication valait `clé + ':' + (ligne || 0)` : les deux passages produisaient donc deux
+  // identifiants différents, et l'attribut inconnu était signalé DEUX FOIS — une fois sans
+  // position, une fois avec. Pire, la version SANS position arrivait en premier, donc le
+  // premier message rendu à l'appelant n'avait ni ligne ni colonne.
+  // Mesuré : `(mysteryParam:42)` rendait 2 erreurs, `(cutof:env1)` en rendait 3.
+  //
+  // On déduplique donc par CLÉ, et on garde la position dès qu'un des passages la porte.
+  const vus = new Map();
   const flag = (key, line, col) => {
-    const id = key + ':' + (line || 0);
-    if (seen.has(id) || knownParamKey(key)) return;
-    seen.add(id);
-    errors.push({ message: `attribut '(${key}:…)' inconnu — ni contrôle, ni valeur de librairie, ni entrée de modulation, ni adresse`, line, col });
+    if (knownParamKey(key)) return;
+    const deja = vus.get(key);
+    if (deja) {
+      // Un passage ultérieur porte la position que le premier n'avait pas : on complète.
+      if (deja.line === undefined && line !== undefined) { deja.line = line; deja.col = col; }
+      return;
+    }
+    const err = { message: `attribut '(${key}:…)' inconnu — ni contrôle, ni valeur de librairie, ni entrée de modulation, ni adresse`, line, col };
+    vus.set(key, err);
+    errors.push(err);
   };
   (function collect(node) {
     if (!node || typeof node !== 'object') return;
