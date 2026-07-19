@@ -3,10 +3,12 @@
 
 @core
 @controls
-@alphabet.sargam:midi
-@octaves.western
-@tuning.sargam_22shruti
-@octaves.western
+@alphabet.bp3_indian:midi
+// L'alphabet PORTE l'ancre native (dha4 = A4 = 440 Hz, donc sa4 = C4 = 261.6256) et sa
+// propre table de registres : BP3 RENOMME le clavier occidental, il ne le transpose pas.
+// Retires avec lui le 2026-07-19 : '@octaves.western' (bp3_indian porte les registres du
+// moteur, dont le '00'), et '@tuning.sargam_22shruti' (lie a l'alphabet 'sargam' ET
+// microtonal — il rendait une hauteur qui n'est pas celle du natif, en 12-TET).
 
 // --- Sous-grammaire 1 @mode:random — structure ---
 
