@@ -8,13 +8,23 @@
  * un facteur 64 sur `tryKeyMap`, attribué à tort au moteur, alors que la cause était une
  * transcription qui confondait DEUX SURFACES distinctes.
  *
- * LA DISTINCTION QUE CES TESTS VERROUILLENT
- * (décision `hub/decisions/2026-07-16-tempo-slash-n-nu-legacy-persistant.md`, RATIFIÉE) :
- *   - `SYM[/N]` — bracket COLLÉ, surface canonique BPScript → suffixe **SCOPÉ** (enter/exit).
- *     Le tempo ne gouverne QUE l'élément qualifié ; ce qui suit revient au tempo hérité.
- *   - `![/N]`   — forme instantanée → **PERSISTANT** jusqu'à la fin du champ. C'est elle qui
- *     transcrit le `/N` ESPACÉ des grammaires `.gr` natives.
- * Les confondre change le son. Ce n'est pas une nuance de graphie.
+ * ⚠️ CET EN-TÊTE A DÉCRIT `[/N]` COMME « SCOPÉ ». C'ÉTAIT FAUX — corrigé le 2026-07-19.
+ *
+ * Ce que les trois formes émettent RÉELLEMENT (mesuré, et conforme à `EBNF.md:576` et `:657`) :
+ *   - `SYM[/N]` → `/N SYM` — l'opérateur NU de BP3. **ABSOLU et PERSISTANT** (fixtempo) :
+ *     aucun marqueur de sortie n'est émis, donc rien ne restaure le tempo hérité.
+ *   - `SYM[*N]` → `_tempo(1/N) SYM _tempo(1/1)` — **SCOPÉ**, et c'est LUI qui porte la paire
+ *     entrer/sortir. L'exit `_tempo(1/1)` restaure l'hérité au bord du bracket.
+ *   - `![/N]`   → `_tempo(N/1)` — forme instantanée, persistante elle aussi.
+ *
+ * L'erreur venait d'avoir attribué à `[/N]` le comportement de `[*N]`. Elle a une conséquence
+ * concrète : `[/N]` émet EXACTEMENT le `/N` nu des grammaires natives, il est donc
+ * byte-fidèle, là où `![/N]` émet une paire `_tempo` de même sémantique mais d'octet différent.
+ * Vérifié sur la notation de Bernard : `abbabccabcca . abcccbaab[/3] . bbb[/1] [meter:3+4+2/4]`
+ * rend `3+4+2/4 abbabccabcca . /3 abcccbaab . /1 bbb`, la ligne native.
+ *
+ * CE QUE LES TESTS VERROUILLENT VRAIMENT : que les trois formes restent DISTINCTES à
+ * l'émission. Les faire converger changerait le son — ça, c'était juste, et ça reste.
  *
  * Ces tests ne vérifient pas « ça compile » — ils verrouillent le TEXTE BP3 émis, parce que
  * c'est lui qui doit rester byte-identique au natif, et la PORTÉE, parce que c'est elle qui
