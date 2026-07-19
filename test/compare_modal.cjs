@@ -32,6 +32,29 @@ const DEFAULT_BASELINE = path.resolve(
   __dirname, '..', '..', 'bp3-engine', 'baseline-native',
 );
 
+/**
+ * ⚠️ UNE RÉFÉRENCE SE LIT SUR UNE RÉVISION, PAS SUR UN RÉPERTOIRE VIVANT.
+ *
+ * Ce chemin pointe l'arbre de travail d'un AUTRE dépôt. Le 2026-07-19 j'ai mesuré ce répertoire
+ * pendant que bp3-engine y refaisait ses captures : à cet instant il en manquait des dizaines, le
+ * nombre changeait de minute en minute, et j'en ai conclu — puis PROPAGÉ à deux consommateurs —
+ * que sa baseline déclarait des captures inexistantes. Elle n'en déclarait aucune : sur la
+ * révision publiée, les 98 captures promises sont là, et son garde d'intégrité le vérifie.
+ * J'avais photographié un remplacement en cours et pris la photo pour l'état des choses.
+ *
+ * La garde ci-dessous ne peut pas empêcher ça — elle CONSTATE seulement l'incohérence et refuse
+ * de la traiter comme une mesure. Le vrai remède est de lire une révision figée :
+ *
+ *   git -C ../bp3-engine archive <rev> baseline-native | tar -x -C <zone>
+ *   BASELINE_DIR=<zone>/baseline-native node test/voie_b_status.mjs
+ *
+ * `BASELINE_DIR` existe pour ça. Tant qu'on lit l'arbre de travail, toute mesure est datée d'un
+ * instant qu'on ne contrôle pas.
+ */
+const BASELINE_DIR = process.env.BASELINE_DIR
+  ? path.resolve(process.env.BASELINE_DIR)
+  : DEFAULT_BASELINE;
+
 /** Statuts rendus. NON_MESURABLE n'est PAS un échec : la référence elle-même est muette. */
 const ISO = 'ISO';
 const DIFF = 'DIFF';
@@ -40,7 +63,7 @@ const ABSENT = 'ABSENT';
 
 let _cache = null;
 
-function loadBaseline(baselineDir = DEFAULT_BASELINE) {
+function loadBaseline(baselineDir = BASELINE_DIR) {
   if (_cache && _cache.dir === baselineDir) return _cache;
   const file = path.join(baselineDir, 'baseline.json');
   const raw = JSON.parse(fs.readFileSync(file, 'utf-8'));
@@ -54,7 +77,7 @@ function loadBaseline(baselineDir = DEFAULT_BASELINE) {
  * Référence d'une grammaire : sa modalité déclarée et sa capture.
  * Rend `produit:false` + `raison` pour les grammaires que le natif lui-même ne produit pas.
  */
-function referenceFor(name, baselineDir = DEFAULT_BASELINE) {
+function referenceFor(name, baselineDir = BASELINE_DIR) {
   const { byName, dir } = loadBaseline(baselineDir);
   const e = byName[name];
   if (!e) return null;
@@ -81,11 +104,17 @@ function referenceFor(name, baselineDir = DEFAULT_BASELINE) {
   // mot. La grammaire ressortait alors en écart de contenu contre « ∅ », ce qui se lit « le natif
   // ne produit rien » alors que la vérité est « je n'ai pas su lire la référence ». Deux phrases
   // opposées, un seul affichage.
-  // Mesuré le 2026-07-19 : 27 des 98 entrées déclarant une capture pointent un fichier absent
-  // (leur capture n'existe qu'en TEXTE, le relevé de jetons MIDI n'a jamais été produit). Ces 27
-  // étaient donc comptées comme des divergences réelles.
-  // On ne devine PAS un repli, et on ne compare surtout pas à du vide : on DIT que la référence
-  // manque, et l'appelant en fait un statut distinct — jamais un DIFF.
+  // ⚠️ CE QUI M'A FAIT TROUVER LE DÉFAUT N'ÉTAIT PAS UN DÉFAUT — et je le note ici pour que
+  // personne ne relise ce garde comme la preuve d'un manque chez bp3-engine. J'avais mesuré
+  // « 27 des 98 captures déclarées sont absentes » et je l'avais propagé. C'était FAUX : je
+  // lisais son arbre de travail PENDANT une recapture, à un moment où le répertoire était à
+  // moitié réécrit. Sur la révision publiée, les 98 captures promises sont toutes là — vérifié
+  // sur `11f079d`, zéro absente, et son propre garde d'intégrité le contrôle à chaque passage.
+  // Le garde ci-dessous reste JUSTE et nécessaire : rendre une référence vide en silence est un
+  // mensonge d'oracle quelle qu'en soit la cause. Mais sa cause réelle est la LECTURE D'UN
+  // RÉPERTOIRE VIVANT, traitée plus haut (`BASELINE_DIR`), pas une baseline incomplète.
+  // On ne devine donc PAS un repli, et on ne compare surtout pas à du vide : on DIT que la
+  // référence manque, et l'appelant en fait un statut distinct — jamais un DIFF.
   if (!fs.existsSync(f)) {
     out.capture_absente = rel;
     return out;
@@ -139,7 +168,7 @@ function soundingText(tokens) {
  * transformerait un VRAI écart de son en faux ISO — exactement le masquage qu'on refuse.
  * L'asymétrie est donc CORRECTE : elle SURFACE le trou de réglages de la Voie B.
  */
-function registerShiftFor(name, baselineDir = DEFAULT_BASELINE) {
+function registerShiftFor(name, baselineDir = BASELINE_DIR) {
   const { byName, dir } = loadBaseline(baselineDir);
   const e = byName[name];
   const se = e && e.config && e.config['-se'];
@@ -210,7 +239,7 @@ const keyBrut = (t) => `${t.token}@${t.start}-${t.end}`;
  *                             `null`/absent = la voie candidate ne produit rien
  * @returns {{status, modalite, produit, n_ref, n_cand, detail}}
  */
-function compare(name, candidate, baselineDir = DEFAULT_BASELINE) {
+function compare(name, candidate, baselineDir = BASELINE_DIR) {
   // `candidate.shiftApplied` : la voie déclare avoir APPLIQUÉ le décalage de registre
   // (donc son Hz est celui du natif). Sans cette déclaration, aucune normalisation —
   // on ne suppose jamais que le son est bon, on exige que l'appelant l'atteste.
