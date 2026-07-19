@@ -144,7 +144,7 @@
     }
   },
   "runtime": {
-    "_comment": "() syntax — transpiler emits _script(CTn), dispatcher interprets at playback. Sub-groups define transport scope.",
+    "_comment": "() syntax — annotation OPAQUE portée SUR l'événement jusqu'au runtime de sortie (audio/midi/osc). Dans l'AST : RuntimeQualifier{pairs:[{key,value}]} en suffixe, ou InstantControl dans le flux. Le `_script(CTn)` n'existe QUE dans le texte BP3 hérité (contrôle natif BP3, BP3_help.txt:495) — jamais dans le langage ni dans l'AST. Sub-groups define transport scope.",
     "musical": {
       "_comment": "Transport-agnostic controls — every transport interprets them in its own protocol",
       "vel": {
