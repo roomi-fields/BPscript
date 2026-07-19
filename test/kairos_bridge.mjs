@@ -99,12 +99,25 @@ export async function resoudreViaKairos(session, opts = {}) {
   // Le BUNDLE, pas le JSON du disque : lui seul porte les corps (cf. en-tête).
   const { LIBS } = require('../src/transpiler/libs-data.js');
   const digitalLib = LIBS.digital;
+  // REGISTRE D'HOMOMORPHISME — jumeau structurel de `digitalLib`, et il manquait.
+  //
+  // Kairos SUBSTITUE l'étiquette à la résolution (modèle carry-only : BPScript porte la
+  // table, BPx la porte aussi sans réécrire l'arbre, Kairos résout). Sa fabrique de
+  // substituteur rend `undefined` si la LIB *ou* les tables manquent, et retombe alors sur
+  // l'identité — donc des terminaux BRUTS, sans la moindre erreur. Tables présentes mais
+  // lib absente : c'était exactement notre symptôme sur `tryhomomorphism`.
+  //
+  // ⚠️ Passer cette lib n'est sûr QUE parce que BPx est carry-only sur ce chemin. La preuve
+  // est dans la mesure elle-même : l'arbre dérivé rend le jeton BRUT `a`, pas `do4` déjà
+  // substitué. Si la substitution avait lieu en amont, l'ajouter ici la DOUBLERAIT.
+  const homomorphismeLib = LIBS.homomorphism;
 
   const tree = session.derive().tree;
   const contexte = {
     ...session.buildProjectionContext(opts.ordre || 'chronological'),
     pitchLib,
     digitalLib,
+    homomorphismeLib,
   };
   const timeline = projeter(tree, contexte);
 
