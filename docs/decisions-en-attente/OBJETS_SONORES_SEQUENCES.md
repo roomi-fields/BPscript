@@ -25,6 +25,34 @@ transcrit**, même famille que l'horloge (`-se`) traitée le même jour — sauf
 **Portée mesurée** : `-so.<grammaire>` existe pour **trois** grammaires productibles, toutes trois
 avec une `.bps` — `dhati`, `tryCsoundObjects`, `tryKeyMap`. Pas une de plus.
 
+### ⚠️ RE-EXAMEN (note [733] 4d) — le dossier généralisait à tort depuis UN fichier
+
+On m'a opposé que `-so.tryKeyMap` est un « Object prototypes file » liant le terminal à une
+ressource Csound, donc une **définition de son** que LANG-SONS sait déjà exprimer — pas une
+séquence enregistrée. J'ai réouvert les trois fichiers. **Les deux lectures sont partiellement
+vraies, et aucune des deux ne vaut pour les trois grammaires.** Le tableau réel :
+
+| Fichier | Scores Csound | Ce que l'objet porte vraiment |
+|---|---|---|
+| `-so.tryCsoundObjects` | **tous NON VIDES** (`i1 0 0.5 4.05 ; F0`…) | une **définition de son Csound** — terminal → partition |
+| `-so.dhati` | **mixtes** — certains portent `i1 0.000 0.124 8.05 …`, d'autres sont vides | les **deux** natures dans le même fichier |
+| `-so.tryKeyMap` | **tous VIDES** (`<HTML></HTML>`) | un **flux d'octets MIDI enregistré** (`176 7 90` = CC7, `144 72 64` = note-on, puis des triplets horodatés) |
+
+Donc :
+
+- **La correction est fondée pour `tryCsoundObjects`** (et pour la moitié de `dhati`) : c'est bien
+  une définition de son, proche de ce que `audio:`/`device:` couvrent. Mon dossier avait tort de
+  l'inclure dans le manque.
+- **Mais elle ne tient pas pour `tryKeyMap`**, et c'est justement la seule des trois qui porte
+  l'écart mesuré (−18 jetons). L'en-tête cite `csound_resources/-cs.tryCsoundObjects`, ce qui
+  explique la lecture opposée — sauf que **ce répertoire n'existe pas dans `test-data/`** et que
+  les deux scores de ce fichier sont vides. La référence Csound y est un **vestige d'en-tête**,
+  pas la réalisation. Ce qui est réellement joué, ce sont les octets MIDI.
+
+**Le gap se rétrécit donc, mais il ne disparaît pas** : il ne porte plus sur trois grammaires mais
+sur `tryKeyMap` et la part à scores vides de `dhati`. La question posée au §COMMENT reste la même,
+sur un périmètre plus étroit — et le reste du corpus `-so` relève, lui, de l'existant.
+
 ### Ce que le fichier contient réellement (lu, pas supposé)
 
 `-so.tryKeyMap` définit deux objets sonores, `a` et `b`. Chacun porte **une séquence MIDI
