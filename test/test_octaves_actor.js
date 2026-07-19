@@ -34,7 +34,12 @@ S -> sitar.sa`);
 S -> sitar.sa`);
   check(res.errors.length === 0, 'résolution sans erreur (défaut) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;
-  check(syms.includes('madhya sa'), 'défaut saptak : "madhya sa" présent, symboles=' + JSON.stringify(syms.slice(0, 4)));
+  // ⚠️ Le séparateur du saptak est le SOULIGNÉ, pas l'espace. Ce test attendait « madhya sa »
+  // (avec une espace) — la forme d'avant la décision de Romain sur TAAR-TOK (commit 189128b) :
+  // l'espace faisait tokeniser « taar sa » en DEUX terminaux, et le registre aigu n'était
+  // jamais résolu. Le séparateur est passé à `_` pour le saptak et quatre autres préfixes.
+  // Le test avait survécu au changement et échouait donc sur une graphie abandonnée.
+  check(syms.includes('madhya_sa'), 'défaut saptak : "madhya_sa" présent, symboles=' + JSON.stringify(syms.slice(0, 4)));
   check(!syms.some((s) => s.includes('_^^')), 'défaut saptak : pas de marqueur arrows');
 }
 
@@ -48,7 +53,7 @@ S -> sitar.sa`);
   check(res.errors.length === 0, 'résolution sans erreur (surcharge) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;
   check(syms.some((s) => s.includes('sa_^^')), 'surcharge arrows : "sa_^^" présent, symboles=' + JSON.stringify(syms.slice(0, 4)));
-  check(!syms.includes('madhya sa'), 'surcharge arrows : plus de marqueur saptak "madhya sa"');
+  check(!syms.includes('madhya_sa'), 'surcharge arrows : plus de marqueur saptak "madhya_sa"');
 }
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
