@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Inventaire des scènes .bps : compile via compileBPS, catégorise, détecte backticks/langages.
+// Inventaire des scènes .bps : compile via compileToBPxAST, catégorise, détecte backticks/langages.
+// (lisait `compileBPS` — supprimé le 2026-07-19 avec l'émission BP3 ; le script ne se chargeait
+//  plus du tout, SyntaxError à l'import. Il n'exploitait que `errors`, la migration est neutre.)
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, basename } from 'path';
-import { compileBPS } from '../src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const DIRS = ['public/demos', 'scenes', '_archive/web'];
 const EXTERNAL = ['tidal', 'foxdot', 'orca', 'sc', 'py', 'hs', 'sclang', 'supercollider'];
@@ -38,7 +40,7 @@ for (const dir of DIRS) {
     const src = readFileSync(path, 'utf-8');
     let ok = false, err = '';
     try {
-      const r = compileBPS(src);
+      const r = compileToBPxAST(src);
       ok = !r.errors || r.errors.length === 0;
       if (!ok) err = (r.errors[0].message || String(r.errors[0])).slice(0, 60);
     } catch (e) { err = (e.message || String(e)).slice(0, 60); }

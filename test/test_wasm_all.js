@@ -4,7 +4,7 @@
  * Each scene runs in an isolated child process (WASM crash can't corrupt others).
  *
  * Stages per scene:
- *   S1. Transpile:    source → grammar text (compileBPS, no errors)
+ *   S1. Transpile:    source → AST BPx (compileToBPxAST, no errors)
  *   S2. Constraints:  BOLSIZE ≤ 30, no _ prefix terminals, grammar structure,
  *                     dispatcher dependency detection (scale, transpose → deps:)
  *   S3. WASM engine:  load alphabet + settings + grammar → produce → no errors
@@ -107,7 +107,7 @@ require('./bp3.js')().then(async (Module) => {
   const result = { stages: {} };
   try {
     // ESM imports
-    const { compileBPS } = await import('${join(__dirname, '..', 'src', 'transpiler', 'index.js').replace(/\\/g, '/')}');
+    const { compileToBPxAST } = await import('${join(__dirname, '..', 'src', 'transpiler', 'index.js').replace(/\\/g, '/')}');
     const { Resolver } = await import('${join(__dirname, '..', 'src', 'dispatcher', 'resolver.js').replace(/\\/g, '/')}');
     const { SoundsResolver } = await import('${join(__dirname, '..', 'src', 'dispatcher', 'soundsResolver.js').replace(/\\/g, '/')}');
 
