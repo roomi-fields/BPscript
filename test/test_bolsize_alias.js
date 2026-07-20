@@ -14,6 +14,7 @@
 import assert from 'node:assert';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { bpsPath, grPath } from './corpus.mjs';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
@@ -128,15 +129,15 @@ test('même terminal long répété → même alias (déterministe)', () => {
 // T7 — dhin1 réel : aucun terminal >30 dans le bps généré à partir du -ho
 test('dhin1 réel : aucun terminal >30 chars dans les règles', async () => {
   const fs = await import('node:fs');
-  const gramPath = path.join(ROOT, 'test', 'grammars', 'dhin1', 'scene.bps');
+  const gramPath = bpsPath('dhin1');
   // On va régénérer depuis l'original.gr et -ho
-  const grPath = path.join(ROOT, 'test', 'grammars', 'dhin1', 'original.gr');
+  const grFile = grPath('dhin1');
   const hoPath = path.join(ROOT, 'bp3-engine', 'test-data', '-ho.dhin--');
-  if (!fs.existsSync(grPath) || !fs.existsSync(hoPath)) {
+  if (!fs.existsSync(grFile) || !fs.existsSync(hoPath)) {
     console.log('  SKIP  (fichiers dhin1 absents)');
     return;
   }
-  const grText = fs.readFileSync(grPath, 'utf-8');
+  const grText = fs.readFileSync(grFile, 'utf-8');
   const hoText = fs.readFileSync(hoPath, 'utf-8');
   const result = bp3ToScene(grText, { hoText, hoKey: 'dhin--' });
   const bps = typeof result === 'string' ? result : result.bps;

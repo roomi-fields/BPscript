@@ -13,6 +13,7 @@ import { parse } from '../src/transpiler/parser.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { registerAll } from '../src/transpiler/libs.js';
 import { readFileSync } from 'fs';
+import { bpsPath, grPath } from './corpus.mjs';
 
 // ── Pre-register libs ─────────────────────────────────────────
 const libs = {};
@@ -166,7 +167,7 @@ section('non-régression look-and-say.bps [scan:left] en mode SUB');
   try {
     // Lit la copie AUTORITAIRE (test/grammars/), pas l'ex-copie scenes/ supprimée le 2026-07-19.
     // Elle porte en plus '[@maxitems:20]', la traduction du réglage natif — donc plus fidèle.
-    const src = readFileSync('test/grammars/look-and-say/scene.bps', 'utf8');
+    const src = readFileSync(bpsPath('look-and-say'), 'utf8');
     const result = compileToBPxAST(src);
     assert('look-and-say compile sans erreur', result.errors.length === 0,
       `errors: ${JSON.stringify(result.errors)}`);

@@ -38,6 +38,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 
 const require = createRequire(import.meta.url);
 const { compare, loadBaseline, soundingText } = require('./compare_modal.cjs');
@@ -46,11 +47,11 @@ const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const GRAMMARS = path.join(ROOT, 'test', 'grammars');
+const GRAMMARS = DIR_BPS;  // corpus emprunté à la bibliothèque Kanopi (test/corpus.mjs)
 
 /** Produit la Voie B d'une grammaire, en sortie de chaîne, dans la modalité demandée. */
 async function produceB(name, modalite) {
-  const bps = path.join(GRAMMARS, name, 'scene.bps');
+  const bps = bpsPath(name);
   if (!existsSync(bps)) return { absent: true };
   let out;
   try {
@@ -106,7 +107,7 @@ const ENUMERATION_SANS_FIN = new Set(['dhadhatite_v2', 'dhati2', 'flags', 'dhati
  * simple. On réplique ce repli plutôt que de le traiter en erreur.
  */
 function produceAllB(name) {
-  const bps = path.join(GRAMMARS, name, 'scene.bps');
+  const bps = bpsPath(name);
   if (!existsSync(bps)) return { absent: true };
   let out;
   try {
@@ -137,8 +138,9 @@ const asJson = args.includes('--json');
 const only = args.filter((a) => !a.startsWith('--'));
 
 const { byName } = loadBaseline();
-const withBps = readdirSync(GRAMMARS)
-  .filter((d) => existsSync(path.join(GRAMMARS, d, 'scene.bps')))
+exigerCorpus();
+const withBps = nomsBps()
+  .filter(() => true)
   .filter((d) => byName[d])
   // DOUBLONS (champ doublon_de, baseline v8) : exports HTML dont les regles sont
   // IDENTIQUES a une grammaire deja presente. Les mesurer creerait un DOUBLE COMPTE contre

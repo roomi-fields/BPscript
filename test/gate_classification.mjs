@@ -29,6 +29,7 @@ export const MODULES = new Map([
   ['compare_modal.cjs', 'comparateur importé par voie_b_status et les mesures'],
   ['kairos_bridge.mjs', 'pont vers Kairos/Kronos, importé par les mesures'],
   ['resolve_bin.cjs', 'résolution du tag de binaire, importé par la lane moteur'],
+  ['corpus.mjs', 'déclaration UNIQUE de où vit le corpus des 113 (bibliothèque Kanopi), importée par tous ses lecteurs'],
 ]);
 /** Ce fichier-ci. */
 export const MOI = 'run_guards.mjs';

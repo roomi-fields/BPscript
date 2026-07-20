@@ -12,6 +12,7 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 
 const require = createRequire(import.meta.url);
 const { compileToBPxAST } = require('../src/transpiler/index.js');
@@ -40,7 +41,7 @@ async function hzDeNoms(noms, entete) {
 for (const nom of process.argv.slice(2)) {
   const ref = referenceFor(nom);
   const refToks = ref.tokens || [];
-  const scene = readFileSync(`${GR}/${nom}/scene.bps`, 'utf-8');
+  const scene = readFileSync(bpsPath(nom), 'utf-8');
 
   // En-tête de la scène (tout ce qui précède la 1re règle) : même alphabet, même accordage,
   // même transposition — sinon je comparerais deux résolutions différentes.

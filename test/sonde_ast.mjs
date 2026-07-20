@@ -27,10 +27,11 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const GRAMMARS = path.join(ROOT, 'test', 'grammars');
+const GRAMMARS = DIR_BPS;  // corpus emprunté à la bibliothèque Kanopi (test/corpus.mjs)
 const NATIF = '/home/romi/dev/bp/bp3-engine/test-data';
 
 const { compileToBPxAST } = require('../src/transpiler/index.js');
@@ -94,8 +95,9 @@ function premiereDivergence(a, b, chemin = '') {
 }
 
 const seulement = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const noms = readdirSync(GRAMMARS)
-  .filter((d) => existsSync(path.join(GRAMMARS, d, 'scene.bps')) && existsSync(path.join(NATIF, `-gr.${d}`)))
+exigerCorpus();
+const noms = nomsBps()
+  .filter((d) => existsSync(path.join(NATIF, `-gr.${d}`)))
   .filter((d) => seulement.length === 0 || seulement.includes(d))
   .sort();
 
@@ -105,7 +107,7 @@ console.log(`Sonde AST — ${noms.length} grammaire(s) ayant les DEUX sources (.
 for (const nom of noms) {
   let a, b;
   try {
-    b = compileToBPxAST(readFileSync(path.join(GRAMMARS, nom, 'scene.bps'), 'utf-8'));
+    b = compileToBPxAST(readFileSync(bpsPath(nom), 'utf-8'));
     if (b.errors.length) { console.log(`  ${nom.padEnd(24)} VOIE B REFUSE  ${b.errors[0].message.slice(0, 60)}`); tally.indisponible++; continue; }
   } catch (e) { console.log(`  ${nom.padEnd(24)} VOIE B ÉCHOUE  ${e.message.slice(0, 60)}`); tally.indisponible++; continue; }
   try {

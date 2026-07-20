@@ -13,6 +13,7 @@ import { parse } from '../src/transpiler/parser.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { registerAll } from '../src/transpiler/libs.js';
 import { readFileSync } from 'fs';
+import { bpsPath, grPath } from './corpus.mjs';
 
 // ── Pre-register libs ─────────────────────────────────────────
 const libs = {};
@@ -290,7 +291,7 @@ section('Cas 13 : mohanam réel [Notes-4] + [weight:50-12] — inchangé');
 section('compileBPS 765432 — pas de terminaux parasites note-');
 {
   try {
-    const src = readFileSync('test/grammars/765432/scene.bps', 'utf8');
+    const src = readFileSync(bpsPath('765432'), 'utf8');
     const result = compileToBPxAST(src);
     const alphaTerms = result.alphabetFile ? result.alphabetFile.split('\n').map(l => l.trim()).filter(Boolean) : [];
     const parasites = ['do4-', 'mi4-', 'sol4-', 'do5-', 'mi5-', 'sol5-', 'do7-'];

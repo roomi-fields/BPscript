@@ -20,6 +20,7 @@ import { readFileSync, readdirSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
+import { bpsPath, aBps } from './corpus.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -40,9 +41,7 @@ const skipped = [];
 const grammars = JSON.parse(readFileSync(path.join(ROOT, 'test/grammars/grammars.json'), 'utf8'));
 for (const [name, meta] of Object.entries(grammars)) {
   if (!meta || meta.status !== 'active') continue;
-  const dir = path.join(ROOT, 'test/grammars', name);
-  const src = ['scene.bps', 'original.bps', 'input.bps']
-    .map((f) => path.join(dir, f)).find((p) => existsSync(p));
+  const src = aBps(name) ? bpsPath(name) : undefined;
   if (!src) { skipped.push(name); continue; } // grammaire .gr seule : n'exerce pas l'émission .bps
   targets.push({ label: name, file: src, isDemo: false });
 }

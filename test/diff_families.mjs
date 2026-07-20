@@ -32,6 +32,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 
 const require = createRequire(import.meta.url);
 const { loadBaseline, soundingOnly, registerShiftFor } = require('./compare_modal.cjs');
@@ -39,7 +40,7 @@ const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const GRAMMARS = path.join(ROOT, 'test', 'grammars');
+const GRAMMARS = DIR_BPS;  // corpus emprunté à la bibliothèque Kanopi (test/corpus.mjs)
 const ENGINE = path.resolve(ROOT, '..', 'bp3-engine');
 
 const argv = process.argv.slice(2);
@@ -63,7 +64,7 @@ function capture(entry, dir) {
 
 /** Voie B — jetons sonnants, via les mêmes filtres que le comparateur partagé. */
 function voieB(name) {
-  const bps = path.join(GRAMMARS, name, 'scene.bps');
+  const bps = bpsPath(name);
   if (!existsSync(bps)) return null;
   try {
     const out = compileToBPxAST(readFileSync(bps, 'utf-8'));
@@ -108,8 +109,9 @@ function classify(ref, mine, name) {
 }
 
 const { byName, dir } = loadBaseline();
-const names = readdirSync(GRAMMARS)
-  .filter((d) => existsSync(path.join(GRAMMARS, d, 'scene.bps')))
+exigerCorpus();
+const names = nomsBps()
+  .filter(() => true)
   .filter((d) => byName[d] && byName[d].modalite === 'MIDI' && byName[d].produit)
   .filter((d) => only.length === 0 || only.includes(d))
   .sort();

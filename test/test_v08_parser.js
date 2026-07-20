@@ -11,6 +11,7 @@ import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
 import { registerAll } from '../src/transpiler/libs.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { bpsPath, grPath } from './corpus.mjs';
 
 // ── Pre-register libs (no FS in tests) ─────────────────────
 
@@ -814,7 +815,7 @@ S -> A fin`;
 
 {
   // Vérification bout en bout sur dhati.scene.bps : aucun Symbol 'star'/'plus'/'fin' dans l'AST
-  const src = readFileSync('test/grammars/dhati/scene.bps', 'utf8');
+  const src = readFileSync(bpsPath('dhati'), 'utf8');
   const result = compileToBPxAST(src);
   function findOldNames(node, out = []) {
     if (!node || typeof node !== 'object') return out;

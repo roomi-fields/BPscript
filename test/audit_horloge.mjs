@@ -20,12 +20,13 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 
 const require = createRequire(import.meta.url);
 const { loadBaseline } = require('./compare_modal.cjs');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const GRAMMARS = path.join(ROOT, 'test', 'grammars');
+const GRAMMARS = DIR_BPS;  // corpus emprunté à la bibliothèque Kanopi (test/corpus.mjs)
 const TESTDATA = path.resolve(ROOT, '..', 'bp3-engine', 'test-data');
 
 /** Réglages du `-se` qui changent le TEMPS. Les autres (MIDI, affichage…) ne nous concernent pas ici. */
@@ -50,7 +51,7 @@ function reglagesTemps(nomSe) {
 
 /** Ce que la scène DÉCLARE côté horloge. */
 function declareParLaScene(nom) {
-  const p = path.join(GRAMMARS, nom, 'scene.bps');
+  const p = bpsPath(nom);
   if (!existsSync(p)) return null;
   const src = readFileSync(p, 'utf-8');
   const lire = (mot) => {
@@ -62,8 +63,9 @@ function declareParLaScene(nom) {
 
 const tous = process.argv.includes('--tous');
 const { byName } = loadBaseline();
-const noms = readdirSync(GRAMMARS)
-  .filter((d) => existsSync(path.join(GRAMMARS, d, 'scene.bps')))
+exigerCorpus();
+const noms = nomsBps()
+  .filter(() => true)
   .filter((d) => byName[d])
   .sort();
 

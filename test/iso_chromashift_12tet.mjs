@@ -18,9 +18,10 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
+import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const G = (name) => readFileSync(join(__dirname, 'grammars', name, 'scene.bps'), 'utf-8');
+const G = (name) => readFileSync(bpsPath(name), 'utf-8');
 
 let pass = 0, fail = 0;
 const ok = (cond, msg) => { if (cond) { pass++; console.log('  OK   ' + msg); } else { fail++; console.log('  FAIL ' + msg); } };
