@@ -919,16 +919,38 @@ Plus expressif que `?` pour les transformations structurelles.
 
 ## Contextes `()` et `#` -- conditions d'application
 
-Les contextes permettent d'appliquer une regle seulement si le symbole
-est entoure de certains voisins.
-
 ```
 (A B) C -> D E              // contexte positif : C precede de A B
-#(X Y) Z -> W               // contexte negatif : Z PAS precede de X Y
+#X Z -> W                   // X : UN symbole, different de X, qui OCCUPE une position
 (A) C #(F) -> D E           // combinaison
 ```
 
-`#` est le symbole de negation de contexte.
+### ⚠️ `#X` n'est PAS une garde de largeur nulle -- il CONSOMME une position
+
+Le piege est dans le mot « contexte ». On lit `#X Z -> W` comme « Z pas precede de X »,
+donc comme une **condition sur le voisinage** qui ne consommerait rien. **C'est faux**, dans
+BP3 comme ici, et une regle transposee sur cette lecture est fausse.
+
+`#X` **apparie exactement UN symbole**, qui doit etre different de `X`, et **consomme sa
+position**. Mesure au moteur natif : la regle `#A1 #A2 #A3 A A --> Z1 Z2 Z3 A A` appliquee a
+`A A2 A3 A1 A A` donne `A Z1 Z2 Z3 A A` -- les trois creneaux negatifs ont **avale** trois
+symboles reels (`A2`, `A3`, `A1`), apparies positionnellement et dans l'ordre. Cote BPScript,
+l'AST le dit aussi : les `#X` sont des `Symbol` avec `negated: true` **dans `lhs`**, a leur
+position, et le champ `contexts` reste vide.
+
+**D'ou vient alors la qualite de CONTEXTE ?** Pas du `#`. Elle vient de ce qu'un symbole soit
+ecrit **a la meme place des deux cotes de la fleche** (prefixe ou suffixe commun). Les deux
+proprietes -- « ne pas etre X » et « etre du contexte » -- sont **independantes** : on peut
+avoir l'une sans l'autre.
+
+### Le test negatif est une DISJONCTION a l'echelle de la regle
+
+Plusieurs `#` dans une meme regle ne se lisent pas comme un « et ». Le moteur evalue une
+**disjonction globale** : il suffit qu'**UN SEUL** creneau soit mis en defaut pour que le test
+negatif passe. Le seul cas bloquant est que **TOUS** les creneaux egalent leur nom simultanement.
+
+Une lecture conjonctive (« aucun ne doit egaler ») est **fausse** et donne des grammaires qui
+ne se declenchent jamais.
 
 ### Silence et prolongation comme contextes
 
@@ -940,8 +962,9 @@ s'emploient en contexte, notamment en contexte NEGATIF, sans parentheses.
 #_ S -> C4                 // S seulement s'il n'est PAS precede d'une prolongation
 ```
 
-Emploi reel : `test/grammars/dhati3/scene.bps:25`. La forme sans parentheses
-`#<symbole>` porte sur UN seul voisin ; `#(X Y)` porte sur le groupe.
+Emploi reel : la scene `dhati3` du corpus. La forme sans parentheses `#<symbole>` apparie
+**un** creneau ; `#(X Y)` apparie un creneau qui ne doit egaler aucun membre du groupe. Dans
+les deux cas **une position est consommee** -- voir l'avertissement ci-dessus.
 
 ---
 
@@ -1743,6 +1766,11 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 (A B) C -> D E                 -> (A B) C --> D E
 #(X Y) Z -> W                 -> #(X Y) Z --> W
 ```
+
+La correspondance du `#` est **identique**, et elle a ete verifiee, pas supposee : les deux
+moteurs traitent `#X` comme un symbole apparie qui **occupe une position**. Attention au mot
+« contexte » dans cette section -- il ne veut pas dire garde de largeur nulle (voir
+« `#X` n'est PAS une garde de largeur nulle » plus haut).
 
 ### Homomorphismes
 

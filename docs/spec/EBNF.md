@@ -1253,7 +1253,7 @@ lambda   → chaîne vide (efface le non-terminal)
 | `&{A S B}` | `(:A S B)` | template slave (groupe) |
 | `$X tabla_stroke &X` | `(=X) tabla_stroke (:X)` | transcription entre master et slave |
 | `~` | `&` | liaison |
-| `#X` | `#X` | contexte négatif (identique) |
+| `#X` | `#X` | symbole apparié ≠ X, **consomme une position** (identique — voir note) |
 | `#?` | `#?` | boundary — pas de symbole (identique) |
 | `!f` (standalone) | `<<f>>` | out-time object |
 | `-` | `-` | silence (identique) |
@@ -1262,6 +1262,15 @@ lambda   → chaîne vide (efface le non-terminal)
 | `...` | `_rest` | repos indéterminé |
 | `[X==N]` | `/X=N/` en LHS | guard condition flag |
 | `[X-N]` | `/X-N/` en LHS | guard test + mutation |
+
+> **Note sur `#X` — pourquoi « identique » est vrai, et verifie.** Le doute est legitime : le mot
+> « contexte » suggere une garde de largeur nulle, qui ne consommerait rien. Ce n'est le cas dans
+> AUCUN des deux moteurs. Mesure au natif : `#A1 #A2 #A3 A A --> Z1 Z2 Z3 A A` applique a
+> `A A2 A3 A1 A A` rend `A Z1 Z2 Z3 A A` — trois symboles reels avales. Cote BPScript, l'AST place
+> les `#X` comme des `Symbol` avec `negated: true` **dans `lhs`**, a leur position, et laisse le
+> champ `contexts` vide (alors qu'il sait le peupler : la scene `bells` en porte 8). Les deux
+> semantiques coincident donc reellement. Detail complet dans `LANGUAGE.md`, section
+> « `#X` n'est PAS une garde de largeur nulle ».
 | `[X=N]` | `/X=N/` en RHS | mutation flag |
 | `[X]` | `/X/` en RHS | flag set/ref (nu) |
 | `C4(vel:120)` | `C4 _script(CT 0)` | runtime suffixe (symbole) |
