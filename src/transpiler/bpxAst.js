@@ -19,7 +19,7 @@
 
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, describeVocabulary } from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary } from './libs.js';
 import { resolveActors, expandAlphabetTerminals } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
@@ -991,6 +991,80 @@ function validateReferences(ast) {
   return errors;
 }
 
+/**
+ * PROVENANCE DES LIAISONS D'ACTEUR → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1).
+ *
+ * LE TROU QU'ELLE COMBLE. Une liaison d'acteur sort en NOM NU : `actors.bols.alphabet = 'abc'`.
+ * Ce nom ne dit pas d'où il vient. Tant que l'entrée est au catalogue standard, l'aval s'en
+ * sort — il la retrouve par son nom. Mais quand elle vient d'une librairie DÉCLARÉE PAR LA
+ * SCÈNE (`@test_alphabets.abc`), le nom nu est une impasse : Kairos ne connaît pas `abc`, et
+ * il ne DOIT pas le deviner — il lit le domaine déclaré DANS le fichier, il ne l'infère jamais
+ * d'une adresse. Sans provenance, sa seule issue serait de renifler, c'est-à-dire d'inventer.
+ *
+ * CE QU'ELLE ÉMET, et rien de plus. L'adresse canonique `<fichier>.<entrée>`, UNIQUEMENT quand
+ * l'entrée vient d'une librairie déclarée par la scène. Une liaison servie par le catalogue
+ * standard n'émet RIEN : elle se retrouve déjà par son nom, et lui poser une adresse ferait du
+ * bruit là où il n'y a pas de question. Champ OMIS si vide, jamais `[]` (patron `cvInstances`).
+ *
+ * POURQUOI CE N'EST PAS LE MIROIR DE LA PORTÉE SCÈNE. `ast.libRefs` naît des invocations par
+ * provenance (`@factory.` / `@mine.`) — mesuré sur le corpus des 95 : ZÉRO scène en émet. Le
+ * canal existe et il est testé (`test_libref_provenance.js`), mais aucune scène ne l'emprunte.
+ * Rien à recopier vers l'acteur, donc : l'adresse ne se transporte pas d'en haut, elle se
+ * DÉRIVE de la résolution — d'où `resolveActorAlphabetSource`, qui répond « d'où vient-il »
+ * là où le résolveur répond « existe-t-il ».
+ */
+function emitActorLibRefs(ast) {
+  for (const actor of ast.actors || []) {
+    const alpha = (actor.properties || {}).alphabet;
+    if (!alpha) continue;
+    const src = resolveActorAlphabetSource(alpha, ast.directives);
+    if (!src || !src.lib) continue;   // catalogue standard → aucune adresse à poser
+    actor.libRefs = [`${src.lib}.${alpha}`];
+    // L'ADRESSE REMPLACE L'ARDOISE, elle ne la double PAS.
+    //
+    // Mesuré : émettre les deux fait CRIER Kairos — « collision de domaine 'alphabet' (acteur
+    // 'bols') : 'test_alphabets.abc' vs 'slot legacy' — pas de dernier-qui-parle ». Il a raison
+    // de refuser : deux invocations du même domaine à la même portée, c'est à l'émetteur de
+    // trancher, pas au résolveur de deviner laquelle gagne.
+    //
+    // Et l'ardoise ne peut pas être celle qui reste : mesuré aussi, un nom nu (`abc`) n'est
+    // cherché que dans le catalogue STANDARD — même le fichier injecté ne le rend pas trouvable.
+    // Seule l'adresse porte la provenance. Garder les deux serait donc une voie parallèle dont
+    // l'une ne mène nulle part : exactement le patron qu'on supprime.
+    //
+    // Le RETRAIT lui-même est différé : `properties.alphabet` sert au pipeline INTERNE
+    // (résolution d'acteur, validation des terminaux), qui tourne encore après nous.
+    // Cf. `retirerArdoiseAlphabet`, appelée en toute fin de chaîne.
+  }
+}
+
+/**
+ * Retire l'ardoise `alphabet` des SEULS acteurs qui portent une adresse — en TOUT DERNIER.
+ *
+ * POURQUOI SI TARD. `properties.alphabet` a deux lecteurs qu'il ne faut pas confondre : le
+ * pipeline INTERNE de BPScript (résolution d'acteur, validation des terminaux), qui tourne
+ * jusqu'au bout de `compileToBPxAST`, et l'AVAL. Retirer le champ à l'émission de l'adresse
+ * couperait le premier ; le retirer ici ne touche que le second.
+ *
+ * POURQUOI LE CHAMP ET PAS SEULEMENT LA RÉFÉRENCE. Mesuré chez BPx : `pickActorAlphabet`
+ * (`loadGrammar.ts:3694`) lit `properties.alphabet` D'ABORD et ne regarde `references[]` qu'à
+ * défaut. Filtrer la seule référence ne changeait donc RIEN — Kairos criait la même collision,
+ * au mot près. C'est cette voie v0.7 encore préférée qui portait l'ardoise jusqu'à lui.
+ *
+ * PORTÉE, mesurée et non supposée : les acteurs qui émettent une adresse, et EUX SEULS — un
+ * sur tout le corpus des 95 aujourd'hui (`tryKeyMap`, acteur `bols`). Toutes les autres scènes
+ * sortent octet pour octet identiques, ce qui est vérifié plus bas par le bilan inchangé.
+ */
+function retirerArdoiseAlphabet(ast) {
+  for (const actor of ast.actors || []) {
+    if (!actor.libRefs || !actor.libRefs.length) continue;
+    if (actor.properties) delete actor.properties.alphabet;
+    if (Array.isArray(actor.references)) {
+      actor.references = actor.references.filter((r) => r && r.category !== 'alphabet');
+    }
+  }
+}
+
 export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
@@ -1008,6 +1082,7 @@ export function compileToBPxAST(source, environnement) {
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
+    emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
@@ -1056,6 +1131,7 @@ export function compileToBPxAST(source, environnement) {
     // annotateBackticks et les validateurs ci-dessus voient l'AST NON découpé,
     // exactement comme quand la découpe vivait en aval dans BPx.
     splitCompoundTerminals(ast, libCtx);
+    retirerArdoiseAlphabet(ast);  // EN DERNIER : l'adresse remplace l'ardoise pour l'aval, jamais pour le pipeline interne
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
     else throw e;

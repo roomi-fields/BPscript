@@ -164,12 +164,28 @@ function loadLib(name, subkey) {
  * elle-même déclarées, dans leur ordre de déclaration. Rend `null` si rien ne porte ce nom.
  */
 function resolveActorAlphabet(nom, directives) {
+  const r = resolveActorAlphabetSource(nom, directives);
+  return r ? r.entry : null;
+}
+
+/**
+ * Même résolution, mais elle rend AUSSI le fichier d'où l'entrée provient (`lib`) —
+ * `null` quand c'est le catalogue standard.
+ *
+ * POURQUOI CETTE VARIANTE. `resolveActorAlphabet` répond « cet alphabet existe-t-il », ce qui
+ * suffit à résoudre et à valider. Elle ne répond PAS à « d'où vient-il », et c'est précisément
+ * ce que l'aval doit savoir : Kairos lit le domaine DÉCLARÉ DANS LE FICHIER et n'invente rien
+ * (contrat bpx-kairos-arbre §2.1). Un nom nu comme `abc` ne dit pas son fichier — l'adresse
+ * canonique `test_alphabets.abc`, si. Les deux fonctions posent donc la même question au même
+ * endroit : dupliquer la recherche ici serait rouvrir l'écart entre validation et résolution.
+ */
+function resolveActorAlphabetSource(nom, directives) {
   const standard = loadLib('alphabet', nom);
-  if (standard && standard.notes) return standard;
+  if (standard && standard.notes) return { entry: standard, lib: null };
   for (const d of directives || []) {
     if (!d || !d.name || d.name === 'alphabet') continue;
     const entry = loadLib(d.name, nom);
-    if (entry && entry.notes) return entry;
+    if (entry && entry.notes) return { entry, lib: d.name };
   }
   return null;
 }
@@ -553,4 +569,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, resolveActorAlphabet, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, registerLib, registerAll, clearRegistry };
+export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, registerLib, registerAll, clearRegistry };

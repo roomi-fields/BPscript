@@ -44,16 +44,19 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 
-/** Les 5 catalogues de hauteur, côté bpscript — la BASE agnostique de l'union. */
+/**
+ * Les catalogues de hauteur, côté bpscript — la BASE agnostique de l'union.
+ *
+ * `test_alphabets` est le SIXIÈME, ajouté le 2026-07-20 : il manquait, et son absence était
+ * INVISIBLE. Une scène qui le déclare (`@test_alphabets.abc`) compilait sans une erreur, puis
+ * ne produisait aucune hauteur — le fichier n'arrivait simplement jamais jusqu'à Kairos. Le
+ * symptôme sortait tout en bas de la chaîne, très loin de sa cause, qui était ici.
+ */
+const FICHIERS_HAUTEUR = ['alphabets', 'tunings', 'temperaments', 'scales', 'octaves', 'test_alphabets'];
+
 function catalaguesDeBase() {
   const lire = (nom) => JSON.parse(readFileSync(path.join(ROOT, 'lib', `${nom}.json`), 'utf-8'));
-  return {
-    alphabets: lire('alphabets'),
-    tunings: lire('tunings'),
-    temperaments: lire('temperaments'),
-    scales: lire('scales'),
-    octaves: lire('octaves'),
-  };
+  return Object.fromEntries(FICHIERS_HAUTEUR.map((n) => [n, lire(n)]));
 }
 
 /**
@@ -64,7 +67,7 @@ function catalaguesDeBase() {
  */
 export function unirCatalogues(base, apport = {}) {
   const out = {};
-  for (const axe of ['alphabets', 'tunings', 'temperaments', 'scales', 'octaves']) {
+  for (const axe of FICHIERS_HAUTEUR) {
     const a = base[axe] || {};
     const b = apport[axe] || {};
     const collisions = Object.keys(b).filter(

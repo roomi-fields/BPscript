@@ -1,5 +1,6 @@
 {
-  "_comment": "Alphabets spécifiques aux grammaires de test de Bernard. Référencés par @alphabet.test:<name> dans les scènes BPscript.",
+  "domain": "alphabet",
+  "_comment": "Alphabets spécifiques aux grammaires de test de Bernard. Le champ `domain` est LU par Kairos, jamais déduit de l'adresse : un fichier qui ne le déclare pas n'est pas résolvable, même si son contenu est évident. Les cinq catalogues de hauteur le portent depuis toujours (alphabets/tunings/temperaments/scales/octaves) ; celui-ci ne le portait pas, et c'est pour ça qu'il n'arrivait pas jusqu'au résolveur.",
 
   "abc": {
     "description": "Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)",
