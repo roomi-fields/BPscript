@@ -11,7 +11,7 @@
  * Called between parser and encoder. If no actors are declared, returns empty tables.
  */
 
-import { loadLib } from './libs.js';
+import { loadLib, resolveActorAlphabet } from './libs.js';
 
 /**
  * Expand an alphabet lib into a set of terminal names.
@@ -113,7 +113,7 @@ function resolveActors(ast) {
     // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.
     let terminals = [];
     if (alphabetKey) {
-      const alphabetLib = loadLib('alphabet', alphabetKey);
+      const alphabetLib = resolveActorAlphabet(alphabetKey, ast.directives);
       if (!alphabetLib) {
         errors.push({ message: `Alphabet "${alphabetKey}" not found for actor "${name}"`, line: actor.line });
         continue;

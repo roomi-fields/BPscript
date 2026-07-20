@@ -19,7 +19,7 @@
 
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives, loadLib, describeVocabulary } from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, describeVocabulary } from './libs.js';
 import { resolveActors, expandAlphabetTerminals } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
@@ -610,7 +610,7 @@ function resolveHomomorphismMarkers(ast) {
   // Terminaux d'alphabet en portée (précédence : le terminal gagne sur l'homo).
   const terminals = new Set();
   const addAlphabet = (name, octaves) => {
-    const lib = loadLib('alphabet', name);
+    const lib = resolveActorAlphabet(name, ast.directives);
     if (!lib || !lib.notes) return;
     for (const t of expandAlphabetTerminals(lib, octaves)) terminals.add(t);
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
@@ -641,7 +641,7 @@ function validateTerminals(ast) {
   // Vocabulaire VALIDE = terminaux de TOUS les alphabets effectifs (octaviés + formes nues).
   const known = new Set(['lambda']);
   const addAlphabet = (name, octaves) => {
-    const lib = loadLib('alphabet', name);
+    const lib = resolveActorAlphabet(name, ast.directives);
     if (!lib || !lib.notes) return false;
     for (const t of expandAlphabetTerminals(lib, octaves)) known.add(t);
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
@@ -949,7 +949,13 @@ function validateReferences(ast) {
   // 2. Existence d'un COMPOSANT référencé dans un axe à catalogue.
   const checkComponent = (axis, name, line) => {
     if (!name) return;
-    if (!componentExists(axis, name)) errors.push({ message: `${axis} '${name}' introuvable dans le catalogue (référence inexistante)`, line });
+    if (componentExists(axis, name)) return;
+    // Un alphabet peut vivre HORS du catalogue standard, dans une librairie que la scène a
+    // elle-même déclarée (`@test_alphabets` par exemple). La validation doit donc poser la MÊME
+    // question que la résolution — sinon elle refuse un nom que le resolveur sait charger, et on
+    // a deux vérités sur « cet alphabet existe-t-il ».
+    if (axis === 'alphabet' && resolveActorAlphabet(name, ast.directives)) return;
+    errors.push({ message: `${axis} '${name}' introuvable dans le catalogue (référence inexistante)`, line });
   };
 
   // 3. Directives de scène : invocation de composant (@axis.X) OU override de valeur (@X:v).

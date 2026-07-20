@@ -149,6 +149,32 @@ function loadLib(name, subkey) {
 }
 
 /**
+ * Résout un alphabet nommé pour une LIAISON D'ACTEUR (`@actor X @alphabet.<nom>`).
+ *
+ * POURQUOI CETTE FONCTION EXISTE. `loadLib('alphabet', nom)` ne connaît QUE le catalogue standard
+ * (`alphabets.json`). Or une scène peut déclarer d'autres librairies d'alphabets — `@test_alphabets`
+ * en est une — et leurs entrées étaient alors INATTEIGNABLES depuis un acteur : la scène savait les
+ * résoudre, l'acteur non. `tryKeyMap` est tombé exactement là (terminaux `a`/`b` de
+ * `test_alphabets.abc`, inatteignables une fois passés par un acteur).
+ *
+ * On ne DUPLIQUE pas ces entrées dans `alphabets.json` : une donnée en deux exemplaires est
+ * précisément le défaut qu'on élimine. On élargit la RÉSOLUTION, pas le catalogue.
+ *
+ * Ordre : le catalogue standard d'abord (il fait autorité), puis les librairies que la scène a
+ * elle-même déclarées, dans leur ordre de déclaration. Rend `null` si rien ne porte ce nom.
+ */
+function resolveActorAlphabet(nom, directives) {
+  const standard = loadLib('alphabet', nom);
+  if (standard && standard.notes) return standard;
+  for (const d of directives || []) {
+    if (!d || !d.name || d.name === 'alphabet') continue;
+    const entry = loadLib(d.name, nom);
+    if (entry && entry.notes) return entry;
+  }
+  return null;
+}
+
+/**
  * Load all libraries referenced by @ directives in the AST.
  * Returns a merged context: { controls, controlMap, noArgControls, symbols }
  */
@@ -527,4 +553,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, registerLib, registerAll, clearRegistry };
+export { loadLib, resolveActorAlphabet, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, registerLib, registerAll, clearRegistry };
