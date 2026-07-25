@@ -12,10 +12,20 @@
  * il compare des jetons, il ne sait pas les fabriquer. Ce module fabrique ; l'autre juge.
  *
  * UNION DES CATALOGUES À L'EXÉCUTION (approuvé archi [641], co-signé bp3-frontend [643]) :
- * mes catalogues AGNOSTIQUES sont la base, chaque voie passe LE SIEN en paramètre et il est
- * fusionné ici. C'est ce qui permet à la Voie A d'apporter ses alphabets `bp3_*` sans que
- * j'installe du vocabulaire BP3 dans une librairie qui se veut agnostique du moteur.
- * NE JAMAIS déplacer `bp3_english`/`bp3_fr`/`bp3_indian` dans `lib/alphabets.json`.
+ * mes catalogues AGNOSTIQUES sont la base, chaque voie passe en paramètre ce qui lui est PROPRE
+ * et il est fusionné ici. C'est ce qui permet à la Voie A d'apporter ses alphabets `bp3_*` sans
+ * que j'installe du vocabulaire BP3 dans une librairie qui se veut agnostique du moteur.
+ *
+ * ⚠️ `bp3_indian` EST DÉSORMAIS DANS LA BASE, et ce n'est PAS une entorse — c'est une décision
+ * DATÉE qui prime le principe ci-dessus (feedback « décision datée > commentaire de code »). La
+ * saga diapason [347-352] (commit `4f9ab75`, « Arbitrage Romain via architecte [847] ») a fait
+ * entrer `bp3_indian` au catalogue PROD `lib/alphabets.json` comme alphabet de test BP3 normal :
+ * `vina`/`vina2` (voie B) DÉCLARENT `@alphabet.bp3_indian` et ont été CERTIFIÉES vert-prod dessus
+ * ([845]). L'ancienne consigne « ne jamais déplacer bp3_indian dans lib/alphabets.json » est donc
+ * PÉRIMÉE depuis [352]. Conséquence pour la Voie A : `bp3_indian` étant maintenant PARTAGÉ (base),
+ * elle ne doit PLUS le passer en apport — sinon `unirCatalogues` voit la même clé des deux côtés
+ * et JETTE (à raison : le garde interdit la double-fourniture). `bp3_english`/`bp3_fr`, eux, ne
+ * sont PAS dans la base et RESTENT à la charge de la Voie A (apport).
  *
  * FORME D'APPEL — calquée sur le golden de Kairos (`kairos/src/projection/c4key-octave-e2e.test.ts`),
  * pour que A et B appellent d'une seule voix : `session.derive().tree`, puis
@@ -77,7 +87,9 @@ export function unirCatalogues(base, apport = {}) {
       throw new Error(
         `[pont-kairos] collision de catalogue sur '${axe}' : ${collisions.join(', ')}. `
         + `L'apport d'une voie AJOUTE des entrées, il n'en redéfinit aucune — sinon les deux `
-        + `voies résoudraient le même nom différemment sans que la comparaison le voie.`,
+        + `voies résoudraient le même nom différemment sans que la comparaison le voie. `
+        + `Si une clé est DÉJÀ dans la base partagée (ex. bp3_indian depuis [352], commit 4f9ab75), `
+        + `la voie doit CESSER de la passer en apport : la base la fournit à tous.`,
       );
     }
     out[axe] = { ...a, ...b };
