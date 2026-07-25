@@ -49,10 +49,18 @@ const journal = (msg) => process.stderr.write(`${msg}\n`);
 /**
  * Émet le JSON de sortie UNE fois, sur STDOUT, et rend la main. Champs manquants comblés par leurs
  * défauts neutres — le contrat garantit une forme stable même en cas d'échec.
+ *
+ * UNE SEULE LIGNE (pas d'indentation) : un JSON UNIQUE compact, plus sûr à travers un pipe.
+ *
+ * ⚠️ NE JAMAIS `process.exit()` APRÈS avoir écrit ici. `process.stdout` est ASYNCHRONE sur un PIPE :
+ * `process.exit()` termine le processus AVANT le vidage du tampon et coupe la sortie net à 64 Ko
+ * (bug [905] : 20 grosses traces tronquées pile à 65536 octets). Le code de sortie passe donc par
+ * `process.exitCode` et le script se termine NATURELLEMENT — node draine alors stdout avant de rendre
+ * la main. Aucun `process.exit()` dans ce fichier.
  */
 function emettre({ grammaire, graine, chaineItems = null, trace = [], annonces = [], erreur = null }) {
   process.stdout.write(
-    JSON.stringify({ grammaire, graine, voie: 'B', chaineItems, trace, annonces, erreur }, null, 2) + '\n',
+    JSON.stringify({ grammaire, graine, voie: 'B', chaineItems, trace, annonces, erreur }) + '\n',
   );
 }
 
@@ -69,93 +77,104 @@ function recolterTrace(poignee) {
   return { trace, annonces };
 }
 
-const args = process.argv.slice(2);
-const positionnels = args.filter((a) => !a.startsWith('--'));
-const grammaire = positionnels[0];
-// Graine EXPLICITE, défaut 42 (celle du natif) — le garde de mesure BPx exige une graine posée sur
-// toute session de mesure, et ce dump en est une.
-const iGraine = args.indexOf('--graine');
-const graine = iGraine >= 0 && args[iGraine + 1] !== undefined ? Number(args[iGraine + 1]) : 42;
+/**
+ * Corps du dump : rend le CODE DE SORTIE plutôt que d'appeler `process.exit()`. Le code est ensuite
+ * posé sur `process.exitCode` et le script se termine NATURELLEMENT — c'est ce qui laisse node vider
+ * stdout à travers un pipe (fix [905], voir `emettre`).
+ */
+function principal() {
+  const args = process.argv.slice(2);
+  const positionnels = args.filter((a) => !a.startsWith('--'));
+  const grammaire = positionnels[0];
+  // Graine EXPLICITE, défaut 42 (celle du natif) — le garde de mesure BPx exige une graine posée sur
+  // toute session de mesure, et ce dump en est une.
+  const iGraine = args.indexOf('--graine');
+  const graine = iGraine >= 0 && args[iGraine + 1] !== undefined ? Number(args[iGraine + 1]) : 42;
 
-if (grammaire === undefined) {
-  journal('usage : node test/dump-voie-b.mjs <grammaire> [--graine 42]');
-  emettre({ grammaire: null, graine, erreur: 'grammaire manquante en argument' });
-  process.exit(2);
-}
-if (!Number.isFinite(graine)) {
-  emettre({ grammaire, graine: null, erreur: `graine invalide : ${args[iGraine + 1]}` });
-  process.exit(2);
-}
-
-try {
-  const bps = bpsPath(grammaire);
-  if (!existsSync(bps)) {
-    emettre({ grammaire, graine, erreur: `pas de .bps pour '${grammaire}' dans le corpus` });
-    process.exit(0);
+  if (grammaire === undefined) {
+    journal('usage : node test/dump-voie-b.mjs <grammaire> [--graine 42]');
+    emettre({ grammaire: null, graine, erreur: 'grammaire manquante en argument' });
+    return 2;
+  }
+  if (!Number.isFinite(graine)) {
+    emettre({ grammaire, graine: null, erreur: `graine invalide : ${args[iGraine + 1]}` });
+    return 2;
   }
 
-  // 1. COMPILATION — un échec sort en `erreur`, sans trace (rien n'a encore dérivé).
-  let out;
   try {
-    out = compileToBPxAST(readFileSync(bps, 'utf-8'));
-  } catch (e) {
-    emettre({ grammaire, graine, erreur: `compilation : ${e.message}` });
-    process.exit(0);
-  }
-  if (out.errors.length) {
-    emettre({ grammaire, graine, erreur: `compilation : ${out.errors[0].message}` });
-    process.exit(0);
-  }
-
-  // 2. SESSION à graine posée, trace ACTIVÉE. Le résolveur de noms ne dépend que de la table de
-  //    symboles — construit dès maintenant, il servira même si la dérivation refuse.
-  const session = createSession(out.ast, { seed: graine, trace: true });
-  const resoudreNom = session.buildProjectionContext().resolveName;
-  const kairos = new Kairos();
-
-  // 3. DÉRIVATION. Sur refus, BPx attache la trace collectée à l'erreur (`derivationTrace`) : on la
-  //    remet à Kairos par `chargerTraceSeule` pour rendre une trace PARTIELLE lisible, et on sort
-  //    en `erreur` avec `chaineItems: null` (aucune chaîne finale n'existe).
-  let deriveResult;
-  try {
-    deriveResult = session.derive();
-  } catch (e) {
-    const entrees = e.derivationTrace;
-    let trace = [];
-    let annonces = [];
-    if (entrees !== undefined) {
-      kairos.chargerTraceSeule({ entrees, rendreChaine: renderChain, resoudreNom, grammaire });
-      ({ trace, annonces } = recolterTrace(kairos.traceCourante()));
+    const bps = bpsPath(grammaire);
+    if (!existsSync(bps)) {
+      emettre({ grammaire, graine, erreur: `pas de .bps pour '${grammaire}' dans le corpus` });
+      return 0;
     }
-    emettre({ grammaire, graine, chaineItems: null, trace, annonces, erreur: `dérivation : ${e.message}` });
-    process.exit(0);
-  }
 
-  // 4. CHAÎNE D'ITEMS en graphie moteur — la règle publiée `renderChain`, via `rendreChaineFinale`
-  //    (Kairos), sur `ids` + `chainMarkers` du résultat. Dégradation honnête : un échec de rendu
-  //    pose `null`, jamais une chaîne inventée.
-  let chaineItems = null;
-  try {
-    chaineItems = rendreChaineFinale(deriveResult.ids, deriveResult.chainMarkers, resoudreNom, renderChain);
+    // 1. COMPILATION — un échec sort en `erreur`, sans trace (rien n'a encore dérivé).
+    let out;
+    try {
+      out = compileToBPxAST(readFileSync(bps, 'utf-8'));
+    } catch (e) {
+      emettre({ grammaire, graine, erreur: `compilation : ${e.message}` });
+      return 0;
+    }
+    if (out.errors.length) {
+      emettre({ grammaire, graine, erreur: `compilation : ${out.errors[0].message}` });
+      return 0;
+    }
+
+    // 2. SESSION à graine posée, trace ACTIVÉE. Le résolveur de noms ne dépend que de la table de
+    //    symboles — construit dès maintenant, il servira même si la dérivation refuse.
+    const session = createSession(out.ast, { seed: graine, trace: true });
+    const resoudreNom = session.buildProjectionContext().resolveName;
+    const kairos = new Kairos();
+
+    // 3. DÉRIVATION. Sur refus, BPx attache la trace collectée à l'erreur (`derivationTrace`) : on la
+    //    remet à Kairos par `chargerTraceSeule` pour rendre une trace PARTIELLE lisible, et on sort
+    //    en `erreur` avec `chaineItems: null` (aucune chaîne finale n'existe).
+    let deriveResult;
+    try {
+      deriveResult = session.derive();
+    } catch (e) {
+      const entrees = e.derivationTrace;
+      let trace = [];
+      let annonces = [];
+      if (entrees !== undefined) {
+        kairos.chargerTraceSeule({ entrees, rendreChaine: renderChain, resoudreNom, grammaire });
+        ({ trace, annonces } = recolterTrace(kairos.traceCourante()));
+      }
+      emettre({ grammaire, graine, chaineItems: null, trace, annonces, erreur: `dérivation : ${e.message}` });
+      return 0;
+    }
+
+    // 4. CHAÎNE D'ITEMS en graphie moteur — la règle publiée `renderChain`, via `rendreChaineFinale`
+    //    (Kairos), sur `ids` + `chainMarkers` du résultat. Dégradation honnête : un échec de rendu
+    //    pose `null`, jamais une chaîne inventée.
+    let chaineItems = null;
+    try {
+      chaineItems = rendreChaineFinale(deriveResult.ids, deriveResult.chainMarkers, resoudreNom, renderChain);
+    } catch (e) {
+      journal(`chaîne d'items : ${e.message}`);
+      chaineItems = null;
+    }
+
+    // 5. TRACE de dérivation — même compagnon de lecture, résolu par Kairos.
+    kairos.chargerTraceSeule({
+      entrees: deriveResult.trace ?? [],
+      rendreChaine: renderChain,
+      resoudreNom,
+      grammaire,
+    });
+    const { trace, annonces } = recolterTrace(kairos.traceCourante());
+
+    emettre({ grammaire, graine, chaineItems, trace, annonces, erreur: null });
+    return 0;
   } catch (e) {
-    journal(`chaîne d'items : ${e.message}`);
-    chaineItems = null;
+    // Filet ultime : aucune exception ne doit sortir en crash — toujours un JSON valide.
+    journal(`inattendu : ${e && e.stack ? e.stack : e}`);
+    emettre({ grammaire, graine, erreur: `inattendu : ${e && e.message ? e.message : String(e)}` });
+    return 1;
   }
-
-  // 5. TRACE de dérivation — même compagnon de lecture, résolu par Kairos.
-  kairos.chargerTraceSeule({
-    entrees: deriveResult.trace ?? [],
-    rendreChaine: renderChain,
-    resoudreNom,
-    grammaire,
-  });
-  const { trace, annonces } = recolterTrace(kairos.traceCourante());
-
-  emettre({ grammaire, graine, chaineItems, trace, annonces, erreur: null });
-  process.exit(0);
-} catch (e) {
-  // Filet ultime : aucune exception ne doit sortir en crash — toujours un JSON valide.
-  journal(`inattendu : ${e && e.stack ? e.stack : e}`);
-  emettre({ grammaire, graine, erreur: `inattendu : ${e && e.message ? e.message : String(e)}` });
-  process.exit(1);
 }
+
+// Pose le code de sortie SANS forcer la terminaison : le script finit naturellement et node draine
+// stdout (fix [905]). Aucun `process.exit()` dans ce fichier.
+process.exitCode = principal();
