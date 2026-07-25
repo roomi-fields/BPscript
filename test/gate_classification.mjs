@@ -58,6 +58,7 @@ export const SEUILS = [
  */
 export const HORS_PORTILLON = new Map([
   ['voie_b_status.mjs', 'mesure de conformité à la baseline native : plusieurs minutes, et son verdict est un CONSTAT à lire (20 ISO / 54 DIFF), pas une régression — au gate il rougirait en permanence pour un état connu'],
+  ['dump-voie-b.mjs', 'outil de dump texte+trace par grammaire (comparateur 3-chaînes, [903]) : invoqué avec un argument grammaire et imprime un JSON, sans verdict binaire — sans argument il sort en usage (code 2), il n a donc rien à garder au portillon'],
   ['audit_horloge.mjs', 'audit ponctuel des horloges natives : rapport de diagnostic, sans verdict binaire'],
   ['diff_families.mjs', 'classification mécanique des DIFF : outil d analyse, pas un garde'],
   ['nom_vs_hz.mjs', 'sonde de résolution nom↔fréquence : rapport, seuil non défini'],
