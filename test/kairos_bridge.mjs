@@ -190,8 +190,20 @@ export async function resoudreViaKairos(session, opts = {}) {
  */
 function nomComparable(c) {
   const p = c.pitch;
-  if (!p || p.noteName === undefined || p.noteName === null || p.register === undefined || p.register === null) {
+  // `registerName` = l'ÉTIQUETTE DE REGISTRE TELLE QUE LA SCÈNE L'ÉCRIT (Kairos 6053fbb), une
+  // CHAÎNE — et c'est elle qu'il faut, jamais `register`. Deux raisons mesurées :
+  //  1. `register` est l'INDEX CANONIQUE, qui peut légitimement différer de l'étiquette : `vina`
+  //     écrit `sa3`, sort hz 130.81 (le do3 natif, juste) mais index 4. Composer sur l'index
+  //     fabriquait `sa4` et faisait passer une scène JUSTE pour divergente (les faux-ISO
+  //     démasqués que j'avais remontés : vina, vina2, et kss2 trouvée par Kairos).
+  //  2. Cinq conventions de registre sur neuf nomment leurs registres avec des MOTS (`madhya`
+  //     en saptak, une flèche en arrows) : un numéro d'octave ne pouvait pas les rendre.
+  // ABSENCE ≠ VALEUR PAR DÉFAUT (rappel Kairos) : une facette sans étiquette n'est jamais comblée.
+  // Sans étiquette on retombe donc sur le terminal ÉCRIT, jamais sur l'index — qui donnerait un
+  // nom plausible et faux.
+  if (!p || p.noteName === undefined || p.noteName === null
+      || p.registerName === undefined || p.registerName === null) {
     return c.token;
   }
-  return `${p.noteName}${p.alteration ?? ''}${p.register}`;
+  return `${p.noteName}${p.alteration ?? ''}${p.registerName}`;
 }
