@@ -177,6 +177,19 @@ export async function resoudreViaKairos(session, opts = {}) {
       start: Math.round(e.onset * 1000),
       end: Math.round((e.onset + e.duration) * 1000),
       hz: c.pitch ? c.pitch.hz : undefined,
+      // ⚠️ UNE HAUTEUR REFUSEE N'EST PAS UNE ABSENCE DE HAUTEUR — et mon pont confondait les deux.
+      // Kairos grave `content.pitchError` quand une manipulation echoue (fail lourd LOCAL : la feuille
+      // n'emet PAS de hauteur fausse, la projection continue). Je ne lisais que `content.pitch` : une
+      // feuille REFUSEE ressortait donc `hz: undefined`, exactement comme un bol qui n'a pas de hauteur.
+      // Mesure : mes 28 feuilles « nues » de tryKeyXpand ETAIENT 28 refus explicites, chacun nomme avec
+      // sa manipulation et sa raison. J'ai conclu « le fail-loud ne se declenche pas » alors qu'il
+      // criait et que c'est moi qui n'ecoutais pas. Le champ est ADDITIF : les lecteurs existants
+      // (mesure ISO, gardes) ne changent pas, ils gagnent seulement de quoi distinguer les deux cas.
+      // Forme MESUREE de `content.pitchError` : `{manipulation, message}` DIRECTEMENT — pas d'enveloppe
+      // `{erreur:{…}}`, contrairement à ce que le type `PitchErreur` de la couture laisse croire. Ma
+      // première réparation lisait `.erreur` et rendait `undefined` sur les 28 refus : un instrument
+      // réparé de travers ment aussi bien qu'un instrument cassé.
+      erreurHauteur: c.pitchError,
     });
   }
   return { tokens, duration: planifie.totalDurationSec };
