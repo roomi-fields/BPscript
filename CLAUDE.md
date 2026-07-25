@@ -70,7 +70,6 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
 5. **Décisions transverses** : `decisions/` après arbitrage utilisateur uniquement
    (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois,
    référencé ailleurs.
-6. **Le code fait foi** : un statut se vérifie sur pièces, jamais affirmé de mémoire.
 
 ### Un fail-loud de langage est une action de FRONTIÈRE (architecte 2026-07-09)
 Quand une forme jusque-là acceptée devient une erreur, les consommateurs aval **live-importent**
@@ -99,19 +98,6 @@ prévenir dans le même geste. ⚠️ Ne jamais régénérer à l'aveugle pour f
 `s5_bps` était mort depuis l'extraction de Kanopi (dispatcher disparu, l'outil répondait `OK` en
 dégradant sa sortie) — régénérer aurait livré des oracles corrompus, muets. Valider sur un LOT,
 jamais sur un cas (`bells` reproduisait bit-à-bit, 49/51 scènes divergeaient).
-
-### Ne jamais attribuer une CAUSE sans la prouver à la source
-Chercher l'existant ne suffit pas : vérifier qu'on n'a pas fabriqué la cause du manque — un gap
-mal attribué se propage jusqu'à un arbitrage sur une raison inventée. Payé deux fois le 2026-07-19 :
-`trySerial` classée hors périmètre pour « terminal à deux-points nécessitant un littéral » et
-`dhadhatite` présentée comme bloquée sur un « marqueur de profondeur `+`/`++` » — **les deux causes
-étaient inventées** : `BP3_help.txt:97-99` documente une feature nommée (*Structural markers*,
-glyphes `+ : ; =`) citant `dhadhatite` en exemple, sans littéral ni mécanisme de profondeur. Avant
-d'écrire « X est bloqué parce que Y » : Y est-il prouvé à la source, ou est-ce mon interprétation
-de ce qui échoue ? Le symptôme s'observe, la cause se démontre. ⚠️ Corollaire même jour : **vérifier
-une forme, c'est essayer ses POSITIONS** — `[meter:4+4+4+4/4]` signalé comme gap deux fois alors
-qu'elle existe, mal placée (elle va en fin de règle comme `[weight:…]`, pas en tête). L'existant peut
-être oublié, ou simplement mal placé.
 
 ### Librairies `lib/` — toute édition passe par le bundle (OBLIGATOIRE)
 `src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.json`
@@ -177,13 +163,6 @@ de texte BP3. Conformité au moteur natif mesurée sur les **jetons produits**
   compat BP3
 - Block separator : `-----` entre sous-grammaires de modes différents
 
-### Mémoire sceptique
-La mémoire est un INDICE, pas un fait. Avant d'agir sur un souvenir : ouvrir le fichier, vérifier
-l'état réel. Conflit mémoire/code : le code fait foi. 3 niveaux :
-1. **Surface** : auto-memory (`~/.claude/projects/.../memory/`) — chargé automatiquement
-2. **Thématique** : RTFM (`rtfm_search` → `rtfm_expand`) — à la demande
-3. **Archives** : `git log`, historique sessions — recherche profonde si besoin
-
 ### Agents — Équipe de développement
 3 agents spécialisés dans `.claude/agents/` :
 - **dev** — Développeur TDD. Code, teste, log dans scratchpad.
@@ -235,44 +214,3 @@ la lecture de fichiers. Complémentaire de RTFM : **RTFM** pour le quoi/où docu
 Quand tu lances un **sous-agent de développement** (outil Agent/Task), choisis **TOUJOURS le
 modèle Sonnet 5** (`claude-sonnet-5`) — jamais un modèle plus lourd par défaut pour ce travail.
 
-## ⚠️ CONFRONTER À RÉCEPTION — un message reçu est une CLAIM, pas un fait
-**Décision Romain 2026-07-19** (`hub/decisions/2026-07-19-confronter-via-oracle-et-restaurer-tous-les-guards.md`).
-
-Tout message reçu — d'un agent, de l'architecte, d'un propriétaire légitime sur *son* périmètre —
-est une **affirmation à mesurer**, jamais une donnée à appliquer ou re-relayer telle quelle. Avant
-d'agir dessus ou de la transmettre : confronter à **l'oracle du domaine** (RTFM, CodeGraph, le
-skill `bpscript-oracle`, les cartes d'Atlas, les décisions datées, le code).
-
-**Pas un 15e garde-fou** : « vérifier avant d'affirmer » existait déjà le jour où l'erreur a été
-commise huit fois en une journée (2026-07-19) par cinq agents, toujours sous la même forme — un
-cadrage relayé sans être confronté. Propriété du système sous débit : le relais coûte moins cher
-que la vérification, donc il gagne. Seule défense qui a fonctionné : le destinataire **mesure** au
-lieu d'appliquer. Payé ce jour-là : un commentaire périmé a failli déclencher une refonte de l'AST ;
-une cause inventée routée deux fois à un autre dépôt ; un « artefact oracle » a failli faire annuler
-deux correctifs réels ; j'ai moi-même relayé à Kairos une info de Kanopi sur le périmètre d'un tiers
-sans la vérifier — c'est Kairos qui l'a attrapée en mesurant. Corollaire : une info vraie chez son
-émetteur ne l'est pas forcément sur le périmètre d'un tiers — elle se revérifie à chaque saut.
-
-### NOMMER L'AXE ET LA RÉVISION — défense complémentaire, sans vigilance requise
-Toute mesure transmise déclare SUR QUOI elle porte : sur quel **axe** (jetons MIDI ? sortie texte ?
-noms et temps ? Hz absolu ?) et sur quelle **révision** (un commit nommable, jamais « l'état
-courant »). Mesuré le 2026-07-19 :
-- bp3-engine a alerté trois agents d'une régression `_rotate` inexistante, diagnostiquée sur la
-  seule sortie texte ; nommer l'axe (jetons MIDI, identiques à l'octet) a rendu son erreur trouvable
-  et envoyé vérifier — la rotation était bien appliquée.
-- j'ai publié « 27 captures absentes » en lisant l'arbre de travail d'un autre dépôt en cours de
-  réécriture, propagé à trois destinataires ; sur la révision publiée, zéro absente — une mesure
-  sans révision nommée est **périssable**.
-
-Corollaires, tous payés le même jour :
-- Une vérification ne peut pas attraper ce qu'elle ne regarde pas : j'ai vérifié
-  `test/grammars/vina/scene.bps` ligne par ligne et annoncé la bascule faite ; Kairos mesurait
-  `scenes/vina.bps`, dont j'ignorais l'existence. Avant d'annoncer un changement fait, **demander à
-  l'aval quel fichier il lit**.
-- Vérifier un piège ne protège pas des autres : bp3-engine avait écarté « variance aléatoire » sans
-  tester « mauvais axe ». Une précaution réussie donne la confiance qui fait sauter la suivante.
-- Ne jamais garder un artefact de mesure « au cas où » : un fichier de résultats périmé a fait
-  frôler trois fois un faux « désaccord entre outils ». Un dérivé non daté ment.
-- Deux chiffres qui ne concordent pas : vérifier lequel des deux termes est fiable AVANT de rédiger
-  l'écart — quatre fois ce jour-là, la cause était mon propre terme (fichier périmé, souvenir pris
-  pour mesure, dépouillement fautif), jamais l'outil mis en cause.
