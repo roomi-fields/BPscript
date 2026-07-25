@@ -1039,6 +1039,45 @@ function emitActorLibRefs(ast) {
 }
 
 /**
+ * PORTÉE SCÈNE — un alphabet déclaré par une LIBRAIRIE doit sortir sur l'axe `alphabet`.
+ *
+ * LE DÉFAUT QUE ÇA CORRIGE, mesuré : une scène qui écrit `@test_alphabets.structural` déclare bien
+ * un alphabet — `lib/core.json` le dit noir sur blanc, `test_alphabets` = « référence-librairie,
+ * MÊME AXE CATALOGUE que `alphabet` ». Mais j'émettais la directive sous le NOM DE SA LIBRAIRIE, et
+ * l'aval ne lit que `name === 'alphabet'` (`BPx/src/session.ts:2124`) : l'alphabet n'arrivait donc
+ * jamais. `ames` sortait `scenePitch {alphabet:'western', …}`, `negative-context` sortait
+ * `scenePitch {tokens:[…]}` — sans rien. Et pour Kairos, « scène sans alphabet » et « scène dont
+ * l'alphabet ne m'est pas parvenu » sont indistinguables : il devinait, et donnait 440 Hz au
+ * symbole STRUCTUREL `A` d'une grammaire qui se déclare « test de grammaire pure ».
+ * Rayon mesuré avant correctif : 10 scènes sur 95, et TOUTES en `@test_alphabets.X` — aucune scène
+ * en `@alphabet.X` n'était touchée.
+ *
+ * L'ADRESSE, PAS L'ARDOISE — même règle qu'en portée acteur (`emitActorLibRefs`) et même raison :
+ * un nom nu n'est cherché que dans le catalogue STANDARD, donc il ne mènerait nulle part ; seule
+ * l'adresse `<lib>.<entrée>` porte la provenance. `ast.libRefs` est le canal neutre du contrat
+ * (bpx-kairos-arbre §2.1), et BPx le transporte tel quel jusqu'à `scenePitch.libRefs`
+ * (`session.ts:2144`).
+ *
+ * La directive d'origine RESTE : ce n'est pas une ardoise, c'est la déclaration qui CHARGE la
+ * librairie pour le pipeline interne (résolution d'acteur, validation des terminaux).
+ */
+function emitSceneLibRefs(ast) {
+  const axes = new Set(['alphabet', 'tuning', 'octaves', 'scale']); // axes catalogue (core.json)
+  const refs = [];
+  for (const d of ast.directives || []) {
+    if (!d || !d.name || !d.subkey || axes.has(d.name)) continue;
+    // Une directive dont le NOM est une librairie de hauteur chargeable et dont le POINT nomme une
+    // entrée résoluble : c'est une invocation d'axe catalogue par librairie.
+    const entree = loadLib(d.name, d.subkey);
+    if (!entree || !entree.notes) continue;           // pas un alphabet → rien à normaliser
+    const adresse = `${d.name}.${d.subkey}`;
+    if (!refs.includes(adresse)) refs.push(adresse);
+  }
+  if (refs.length === 0) return;
+  ast.libRefs = [...(ast.libRefs || []), ...refs.filter((r) => !(ast.libRefs || []).includes(r))];
+}
+
+/**
  * Retire l'ardoise `alphabet` des SEULS acteurs qui portent une adresse — en TOUT DERNIER.
  *
  * POURQUOI SI TARD. `properties.alphabet` a deux lecteurs qu'il ne faut pas confondre : le
@@ -1083,6 +1122,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
+    emitSceneLibRefs(ast);           // idem en portée SCÈNE : `@test_alphabets.X` → `ast.libRefs` (sinon l'alphabet n'arrive jamais)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls
