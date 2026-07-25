@@ -67,10 +67,16 @@ async function produceB(name, modalite) {
     const shiftApplied = (out.ast.directives || []).some((d) => d.name === 'transpose');
     // La capture native ne porte que nom + bornes ; la fréquence résolue sert la chaîne,
     // pas la comparaison — on ne confronte que ce que la référence contient réellement.
+    // ⚠️ ON COMPARE LE NOM RÉSOLU (`nomResolu`), PAS LE TERMINAL ÉCRIT (arbitrage archi [907]).
+    // Les captures natives portent des noms RÉSOLUS : une scène qui écrit `E2` puis demande
+    // `chromashift:12` sonne — et le natif nomme — `E3`. Comparer le littéral de la scène imputait
+    // un écart d'octave à une hauteur JUSTE. Le pont expose les deux ; ici, et ici seulement, on
+    // prend le résolu. Repli sur l'écrit quand il n'y a pas de hauteur (percussion : le nu EST le nom).
+    const nom = (t) => t.nomResolu ?? t.token;
     if (modalite === 'MIDI') {
-      return { shiftApplied, tokens: tokens.map((t) => ({ token: t.token, start: t.start, end: t.end })) };
+      return { shiftApplied, tokens: tokens.map((t) => ({ token: nom(t), start: t.start, end: t.end })) };
     }
-    return { shiftApplied, text: soundingText(tokens.map((t) => ({ type: 'terminal', token: t.token }))) };
+    return { shiftApplied, text: soundingText(tokens.map((t) => ({ type: 'terminal', token: nom(t) }))) };
   } catch (e) { return { erreur: `chaîne : ${e.message}` }; }
 }
 

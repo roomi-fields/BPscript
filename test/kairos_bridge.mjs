@@ -161,11 +161,37 @@ export async function resoudreViaKairos(session, opts = {}) {
     // que lorsque Kairos l'a réellement résolu.
     if (!c || c.token === undefined) continue;
     tokens.push({
+      // Le terminal ÉCRIT dans la scène — le contrat de ce champ NE CHANGE PAS. Plusieurs lecteurs
+      // INDEXENT par lui pour retrouver une feuille (`bp3_indian_ancre.mjs:37` construit sa carte
+      // nom→Hz sur `sa4`/`sa00`) : le remplacer leur retire leur clé (mesuré : 8 OK → 8 FAIL, NaN).
       token: c.token,
+      // ⚠️ NOM COMPARABLE = LE RÉSOLU, À CÔTÉ du nu, jamais À LA PLACE (arbitrage archi [907],
+      // mécanisme 1 — « côté MESURE uniquement »). La règle gravée dit : la mesure se fait EN SORTIE
+      // de Kairos, donc sur le RÉSOLU ; les captures natives portent des noms résolus (do2 après un
+      // chromashift:-12, E3 après un +12), pas le littéral de la scène. Kairos grave ce nom dans
+      // `content.pitch` (noteName + altération + registre) et JAMAIS dans `content.token`, dont le
+      // contrat d'événement ne change pas (refus archi). Comparer le nu imputait un DIFF d'octave à
+      // une hauteur JUSTE (mesuré : acceleration E2 nu → E reg 3 résolu = natif E3). Seule la MESURE
+      // (`voie_b_status.mjs`) lit ce champ ; les gardes gardent le nu.
+      nomResolu: nomComparable(c),
       start: Math.round(e.onset * 1000),
       end: Math.round((e.onset + e.duration) * 1000),
       hz: c.pitch ? c.pitch.hz : undefined,
     });
   }
   return { tokens, duration: planifie.totalDurationSec };
+}
+
+/**
+ * Nom COMPARABLE d'une feuille : le nom RÉSOLU par Kairos quand la hauteur existe, le terminal NU
+ * sinon (percussion/silence). Le résolu se compose de la facette `content.pitch` — `noteName` +
+ * `alteration` (orthographe enharmonique, `null` = aucune) + `register` (octave) — dans la notation
+ * de l'alphabet de la grammaire. Repli sur le nu si la facette est incomplète (jamais un nom inventé).
+ */
+function nomComparable(c) {
+  const p = c.pitch;
+  if (!p || p.noteName === undefined || p.noteName === null || p.register === undefined || p.register === null) {
+    return c.token;
+  }
+  return `${p.noteName}${p.alteration ?? ''}${p.register}`;
 }
