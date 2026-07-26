@@ -900,7 +900,8 @@ Portées :
 - `a b c [shuffle]` → `_rndseq a b c` (fin de règle, via `Rule.qualifiers`)
 
 **Distinction `[]` vs `()` pour `rotate`** : `[rotate:2]` (engine, `Qualifier`) compile en
-`_rotate(2)` BP3 (décalage cyclique temporel) ; `(rotate:2)` (runtime, `RuntimeQualifier`)
+`_rotate(2)` BP3 (décalage cyclique temporel) ; `(scaleshift:2)` (runtime, `RuntimeQualifier`) —
+le `rotate` de HAUTEUR a été renommé `scaleshift` le 2026-07-11 (`hub/decisions/2026-07-11-transposition-reelle-vs-scalaire.md`) ; `rotate` ne désigne plus que la rotation de SÉQUENCE, moteur
 compile en `_script(CT n)` via dispatcher (rotation diatonique, transformation pitch).
 
 **Poids infini** : `value === "inf"` → compilé en `<inf>` (priorité absolue en BP3).

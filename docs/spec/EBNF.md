@@ -643,7 +643,7 @@ Deux syntaxes selon la destination :
 
 | Syntaxe | Destination | Exemples |
 |---------|-------------|----------|
-| `[]` | Moteur BP3 | `[mode:random]`, `[weight:50]`, `A[/2]`, `[scale:just C4]` |
+| `[]` | Moteur BP3 | `[mode:random]`, `[weight:50]`, `A[/2]`, `[repeat:2]` |
 | `()` | Runtime/dispatcher | `(vel:80)`, `(wave:sawtooth)`, `(filter:300, filterQ:5)` |
 
 #### `[]` — Qualificateurs moteur (engine)
@@ -679,7 +679,19 @@ raw_value   = (* tout texte jusqu'au prochain "," ou "]" *) ;
 [mode:random]          → RND en mode de sous-grammaire
 [weight:50]            → <50>
 A[/2]                  → /2 A
-[scale: just_intonation C4] → _scale(just intonation,C4)
+(scale:just_intonation C4) → _scale(just intonation,C4)
+
+> ⚠️ CORRIGÉ le 2026-07-26 : ces exemples montraient `scale` et `keyxpand` dans le sac MOTEUR.
+> Ce sont des contrôles de DISPATCHER, donc RUNTIME — décision `hub/decisions/2026-06-14-locus-perf-controls.md`
+> (« controls.json EST L'AUTORITÉ ; transpose, rotate, keyxpand, vel… sont des contrôles runtime,
+> appliqués par le DISPATCHER, JAMAIS par le moteur »), qui se qualifie elle-même de règle établie
+> non négociable. La spec était en retard sur le registre ; une spec qui montre un contrôle dans le
+> mauvais sac enseigne la faute.
+>
+> ⚠️ NE PAS CONFONDRE avec l'HOMONYME `[scale:N]` — valeur unique et numérique, mise à l'échelle
+> TEMPORELLE d'un groupe (`{C4, D4}[scale:2]`, BPx `test/scenes/m4/m4_13_scale_speed_combined`).
+> Celui-là est bien moteur, et il n'est PAS déclaré dans `lib/controls.json`. Même situation que
+> `rotate` : un mot, deux contrôles.
 [retro]                → _retro (clé nue = sans parenthèses)
 [rotate:2]             → _rotate(2) (clé avec valeur = avec parenthèses)
 [shuffle]              → _rndseq (brasse seul ; marqueur seq_prefix en tête de RHS ou de groupe)
@@ -1312,8 +1324,8 @@ lambda   → chaîne vide (efface le non-terminal)
 | `-----` | `-----` | séparateur (identique) |
 | `lambda` | `lambda` | chaîne vide (identique) |
 | `<!sync1` | `<<W1>>` | sync tag |
-| `[scale: just_intonation C4]A` | `_scale(just intonation,C4) A` | valeur brute (espaces→virgules, `_`→espace) |
-| `[keyxpand: B3 -1]C3` | `_keyxpand(B3,-1) C3` | valeur brute multi-args |
+| `(scale:just_intonation C4)A` | `_scale(just intonation,C4) A` | valeur brute (espaces→virgules, `_`→espace) |
+| `(keyxpand:B3 -1)C3` | `_keyxpand(B3,-1) C3` | valeur brute multi-args |
 | `A(script: MIDI send Continue)` | `A _script(MIDI send Continue)` | espaces préservés (script) |
 | `H(value: slide 0)` | `H _value(slide,0)` | valeur brute 2 args |
 | `X ->` (RHS vide) | `X -->` | production epsilon (sans lambda) |
