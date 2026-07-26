@@ -56,8 +56,19 @@ console.log(`[corpus] la source est ${path.relative(path.resolve(ICI, '..', '..'
 
 // Témoin anti-vacuité : si la bibliothèque a disparu, ce garde passerait au vert en ne prouvant
 // rien — le faux vert le plus coûteux, puisqu'il certifie une unicité obtenue par le vide.
+//
+// ⚠️ IL NE REGARDAIT QUE L'EXISTENCE DES DOSSIERS, et c'était un cran trop haut : deux dossiers
+// VIDES le satisfaisaient, la liste de noms sortait vide, aucun fichier ne pouvait donc matcher, et
+// le verdict tombait au VERT après n'avoir comparé À RIEN. Mesuré le 2026-07-27 — même famille que
+// les six autres, mais celle-ci était la plus retorse : le témoin anti-vacuité existait DÉJÀ, il
+// vérifiait juste la mauvaise chose. Un témoin posé au mauvais niveau rassure sans protéger.
 if (!existsSync(DIR_BPS) || !existsSync(DIR_GR)) {
   console.log('  FAIL  garde CREUX : la bibliothèque est introuvable — « aucune copie ici » ne prouve alors rien');
+  process.exit(1);
+}
+if (NOMS_CORPUS.size === 0) {
+  console.log('  FAIL  garde CREUX : la bibliothèque est VIDE (0 nom) — aucun fichier ne peut entrer en collision '
+            + "avec une liste vide, « aucune copie ici » ne prouve alors rien non plus");
   process.exit(1);
 }
 
@@ -67,4 +78,5 @@ if (copies.length) {
   process.exit(1);
 }
 
-console.log('  OK   aucune scène ni grammaire du corpus n\'est hébergée sous test/ — 1 assertion');
+console.log(`  OK   aucune scène ni grammaire du corpus n'est hébergée sous test/ — 1 assertion, `
+          + `${NOMS_CORPUS.size} nom(s) du corpus confrontés à l'arborescence de test/`);

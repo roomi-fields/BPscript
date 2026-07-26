@@ -83,6 +83,18 @@ for (const { label, file, isDemo } of targets) {
   }
 }
 const demosCount = targets.filter((t) => t.isDemo).length;
+const activesCount = targets.length - demosCount;
+// ⚠️ SOCLE — ce garde REFUSE de conclure sur zéro source active. Mesuré le 2026-07-27 (question de
+// l'architecte : « ton garde peut-il rendre un verdict vert sans avoir rien examiné ? ») : pointé
+// sur un corpus vide, il annonçait « 0 actives + 54 démos ; 61 sans .bps ignorée(s) » et sortait
+// VERT. Il DISAIT pourtant son compte — mais dire zéro sans en tirer de conséquence, c'est encore
+// l'absence de signal prise pour un bon signal. Annoncer ne suffit pas, il faut refuser.
+if (activesCount === 0) {
+  console.error(`[ast-conformance] AUCUNE source active examinée (${skipped.length} grammaire(s) sans .bps). `
+    + `Le corpus appartient à la bibliothèque Kanopi — vérifier le clone ou KANOPI_LIBRARY. `
+    + `Un verdict vert sur zéro source n'est pas un verdict.`);
+  process.exit(1);
+}
 if (compileErrors.length) {
   console.log(`[ast-conformance] ${compileErrors.length} source(s) en erreur de compilation (attendu si macro/forme en attente) : ${compileErrors.join(' ; ')}`);
 }

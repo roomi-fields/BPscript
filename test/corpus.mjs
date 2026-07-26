@@ -62,4 +62,24 @@ export function exigerCorpus() {
       `(décision 2026-07-20). Cloner kanopi à côté de ce dépôt, ou pointer KANOPI_LIBRARY.`
     );
   }
+  // ⚠️ UN DOSSIER QUI EXISTE N'EST PAS UN CORPUS. Cette fonction ne vérifiait que la PRÉSENCE des
+  // deux dossiers : pointée sur deux dossiers VIDES, elle passait, et les sept gardes qui s'appuient
+  // dessus rendaient un verdict VERT en n'ayant RIEN LU. Mesuré le 2026-07-27 sur la question de
+  // l'architecte — « ton garde peut-il rendre un verdict vert sans avoir rien examiné ? ». Oui, il
+  // le pouvait, et son silence aurait ressemblé à un succès le jour même où la bibliothèque aurait
+  // été déplacée, renommée, ou où la racine aurait dérivé.
+  //
+  // L'absence de signal prise pour un bon signal : c'est la famille de défaut, et la parade est
+  // qu'un garde REFUSE d'avoir examiné zéro. La suite (compter et ANNONCER dans le verdict vert)
+  // appartient à chaque garde ; ce socle-ci ferme le cas zéro pour tout le monde d'un seul geste.
+  const nbBps = readdirSync(DIR_BPS).filter((f) => f.endsWith('.bps')).length;
+  const nbGr = readdirSync(DIR_GR).filter((f) => f.endsWith('.gr')).length;
+  if (nbBps === 0 || nbGr === 0) {
+    throw new Error(
+      `Corpus VIDE sous ${LIBRARY} : ${nbBps} scène(s) .bps et ${nbGr} grammaire(s) .gr. Les `
+      + `dossiers existent mais ne contiennent rien — un garde qui conclurait là-dessus rendrait `
+      + `un verdict vert sans avoir rien examiné. Vérifier le clone de kanopi ou KANOPI_LIBRARY.`
+    );
+  }
+  return { bps: nbBps, gr: nbGr };
 }

@@ -26,7 +26,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { universeControlNames } from '../src/transpiler/libs.js';
-import { DIR_BPS } from './corpus.mjs';
+import { DIR_BPS, exigerCorpus } from './corpus.mjs';
 
 let passe = 0;
 const echecs = [];
@@ -297,6 +297,13 @@ ok(erreursDe(scene('S -> A(vel:80)\nA -> C4 D4')).length === 0,
 // ─── §4. Aucun appelant VIVANT dans le corpus ────────────────────────────────────────────────
 // « Vivant » = qui compile encore. Les scènes qui portent une famille sans nom gardent leur
 // `script(…)` écrit — et doivent échouer. Ce test mord si l'une d'elles redevient verte.
+// ⚠️ SOCLE — ce §4 conclut SUR LE CORPUS, donc il refuse d'en examiner zéro. Mesuré le 2026-07-27
+// (question de l'architecte : « ton garde peut-il rendre un verdict vert sans avoir rien examiné ? ») :
+// pointé sur un corpus vide, il annonçait « 0 scène(s) portant script(…) refusée(s) » et sortait
+// VERT, alors qu'il en refuse trois quand il lit vraiment. Son silence ressemblait à un succès.
+const { bps: nbScenes } = exigerCorpus();
+ok(nbScenes > 40, `§4 le corpus doit fournir de quoi conclure — ${nbScenes} scène(s) lisible(s)`);
+
 const RE_APPEL_SCRIPT = /(^|[^\w.])script\s*\(/;
 const porteuses = readdirSync(DIR_BPS).filter((f) => f.endsWith('.bps')).filter((f) => {
   const lignes = readFileSync(path.join(DIR_BPS, f), 'utf8').split('\n')
@@ -322,5 +329,7 @@ if (echecs.length) {
   for (const e of echecs) console.error('   -', e);
   process.exitCode = 1;
 } else {
-  console.log(`✅ vocabulaire des appels — ${passe} vérification(s) passée(s) ; ${porteuses.length} scène(s) portant script(…) refusée(s) comme prévu`);
+  console.log(`✅ vocabulaire des appels — ${passe} vérification(s) passée(s) ; `
+            + `${porteuses.length} scène(s) portant script(…) refusée(s) comme prévu, `
+            + `sur ${nbScenes} scène(s) du corpus EXAMINÉES`);
 }
