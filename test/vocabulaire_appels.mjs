@@ -100,7 +100,7 @@ for (const [forme, quoi] of [
   ['S -> goto(3,0) C4', "forme d'appel, contrôle moteur"],
   ['S -> keymap(C3,C3,C5,C5) C4', "forme d'appel à plusieurs valeurs"],
   ['S -> !(cc:98,45) C4', 'liste positionnelle après le deux-points, sac runtime'],
-  ['S -> ![goto: 3, 0] C4', 'liste positionnelle après le deux-points, sac moteur'],
+  ['S -> ![goto:3, 0] C4', 'liste positionnelle après le deux-points, sac moteur'],
   ['S -> !(keyxpand:(B3, -1)) C4', 'valeur-groupe entre parenthèses (superseded)'],
 ]) {
   ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
@@ -108,12 +108,39 @@ for (const [forme, quoi] of [
 }
 // Et les écritures ratifiées passent — sinon ce garde interdirait tout, ce qui ne prouverait rien.
 for (const forme of [
-  'S -> !(vel:80) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 D4 [goto: 3 0]',
-  'S -> !(keymap: C3 C3 C5 C5) C4', 'S -> !(cc.98:45) C4', 'S -> C4 D4 (vel:80)',
-  'S -> C4 [repeat: K1]', 'S -> !(keyxpand: B3 -1) C4', 'S -> ![legato: 100] C4',
+  'S -> !(vel:80) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 D4 [goto:3 0]',
+  'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> !(cc.98:45) C4', 'S -> C4 D4 (vel:80)',
+  'S -> C4 [repeat:K1]', 'S -> !(keyxpand:B3 -1) C4', 'S -> ![legato:100] C4',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2ter l'écriture ratifiée '${forme}' doit être acceptée — reçu : ${e.join(' | ')}`);
+}
+
+// ─── §2quater. PAS D'ESPACE APRÈS LE DEUX-POINTS ─────────────────────────────────────────────
+// Arbitrage Romain 2026-07-26 : la valeur commence immédiatement ; l'espace ne sert QU'À séparer
+// les parties d'une valeur. Deux espacements pour la même règle, et un lecteur ne peut plus
+// déduire ce que l'espace signifie — le signe à deux métiers, encore.
+// C'est MOI qui les ai écrits : ma migration posait `!(vel: 80)`. 1023 emplois, tous repris.
+for (const [forme, ou] of [
+  ['S -> !(vel: 80) C4', 'sac runtime, dans le flux'],
+  ['S -> C4 D4 (vel: 80)', 'sac runtime, en contenance de règle'],
+  ['S -> {C4 D4}(vel: 80)', 'sac runtime, en contenance de groupe'],
+  ['S -> C4(vel: 80) D4', 'sac runtime, collé au terminal'],
+  ['S -> C4 D4 [goto: 3 0]', 'sac moteur'],
+  ['S -> C4 [weight: 50]', 'clé réservée du langage'],
+  ['S -> !(cc.98: 45) C4', 'composant numéroté'],
+]) {
+  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+     `§2quater ${ou} : l'espace après le deux-points doit être refusé — '${forme.replace('S -> ', '')}'`);
+}
+// ⚠️ LE FAUX POSITIF À NE PAS FABRIQUER : l'espace reste LÉGITIME entre les PARTIES d'une valeur.
+// Une garde qui interdirait les valeurs à plusieurs parties casserait ce qu'on vient de construire.
+for (const forme of [
+  'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> C4 D4 [goto:3 0]', 'S -> !(scale:just_intonation C4) C4',
+  'S -> !(keyxpand:B3 -1) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 [mode:random, weight:50]',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length === 0, `§2quater l'espace ENTRE PARTIES reste légitime : '${forme}' — reçu : ${e.join(' | ')}`);
 }
 
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────

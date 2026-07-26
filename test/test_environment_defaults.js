@@ -30,7 +30,7 @@ function mmFromAst(a) {
 
 // ── 1. scène sans tempo + env.tempo → défaut inscrit, lu par l'aval ─────
 {
-  const ast = compileToBPxAST('A -> C4', { tempo: 90 }).ast;
+  const ast = compileToBPxAST('A -> C4', { tempo:90 }).ast;
   assert('tempo défaut lu par mmFromAst = 90', mmFromAst(ast) === 90, `got ${mmFromAst(ast)}`);
   const dir = ast.directives.find((d) => d.name === 'mm');
   assert('directive @mm inscrite', dir != null);
@@ -41,7 +41,7 @@ function mmFromAst(a) {
 
 // ── 2. scène déclare @mm → la scène GAGNE (pas d'écrasement) ────────────
 {
-  const ast = compileToBPxAST('@mm:70\nA -> C4', { tempo: 90 }).ast;
+  const ast = compileToBPxAST('@mm:70\nA -> C4', { tempo:90 }).ast;
   assert('@mm:70 préservé (scène gagne)', mmFromAst(ast) === 70, `got ${mmFromAst(ast)}`);
   const mmDirs = ast.directives.filter((d) => d.name === 'mm');
   assert('une seule directive @mm (pas de doublon)', mmDirs.length === 1, `got ${mmDirs.length}`);
@@ -50,7 +50,7 @@ function mmFromAst(a) {
 
 // ── 3. scène déclare @tempo → pas d'injection (tempo déjà déclaré) ──────
 {
-  const ast = compileToBPxAST('@tempo:120\nA -> C4', { tempo: 90 }).ast;
+  const ast = compileToBPxAST('@tempo:120\nA -> C4', { tempo:90 }).ast;
   assert('@tempo:120 → pas d injection @mm défaut',
     !ast.directives.some((d) => d.name === 'mm' && d.fromEnvironment), JSON.stringify(ast.directives));
 }
@@ -69,7 +69,7 @@ function mmFromAst(a) {
 
 // ── 6. env.tempo = 0 ou absent → pas d'injection (garde-fou) ────────────
 {
-  const ast0 = compileToBPxAST('A -> C4', { tempo: 0 }).ast;
+  const ast0 = compileToBPxAST('A -> C4', { tempo:0 }).ast;
   // 0 est une valeur définie mais invalide comme tempo ; on l'inscrit telle quelle ?
   // Décision : env.tempo != null déclenche l'inscription ; mmFromAst (>0) la rejettera.
   // On documente le comportement plutôt que de le masquer.

@@ -39,12 +39,12 @@ function convertOldSettings(c, conv) {
   if (vals.length < 48) return null;
   const v = (p) => { const t = (vals[p] || '').trim(); if (!t || t.startsWith('/') || t.startsWith('<')) return null; return isNaN(parseFloat(t)) ? null : t; };
   const o = {};
-  const set = (k, nm, p, b, u) => { const val = v(p); if (val === null) return; const e = { name: nm, value: val, boolean: b ? '1' : '0' }; if (u) e.unit = u; o[k] = e; };
+  const set = (k, nm, p, b, u) => { const val = v(p); if (val === null) return; const e = { name: nm, value:val, boolean: b ? '1' : '0' }; if (u) e.unit = u; o[k] = e; };
   set('Quantization', 'Quantization', 2, false, 'ms'); set('Time_res', 'Time resolution', 3, false, 'ms');
   set('Improvize', 'Non-stop improvize', 10, true); set('MaxItemsProduce', 'Max items produced', 11, false);
   set('UseEachSub', 'Play each substitution', 12, true); set('AllItems', 'Produce all items', 13, true);
   set('MaxConsoleTime', 'Max computation time', 44, false, 'seconds'); set('Seed', 'Seed for randomization', 45, false);
-  o.NoteConvention = { name: 'Note convention', value: conv, boolean: '0' };
+  o.NoteConvention = { name: 'Note convention', value:conv, boolean: '0' };
   return o;
 }
 
@@ -96,9 +96,9 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     const raw = fs.readFileSync(file, 'utf8').trim();
     let obj = raw.startsWith('{') ? JSON.parse(raw) : convertOldSettings(raw, conv);
     if (!obj) return;
-    obj.ShowGraphic = { name: 'Show graphic', value: '0' };
-    obj.DisplayItems = { name: 'Display final score', value: '1', boolean: '1' };
-    for (const [k, val] of Object.entries(gd?.se_overrides || {})) { if (k === '_comment') continue; if (obj[k]) obj[k].value = String(val); else obj[k] = { name: k, value: String(val) }; }
+    obj.ShowGraphic = { name: 'Show graphic', value:'0' };
+    obj.DisplayItems = { name: 'Display final score', value:'1', boolean: '1' };
+    for (const [k, val] of Object.entries(gd?.se_overrides || {})) { if (k === '_comment') continue; if (obj[k]) obj[k].value = String(val); else obj[k] = { name: k, value:String(val) }; }
     const tmpSe = path.join('/tmp', `_ord_${name}_se.json`);
     fs.writeFileSync(tmpSe, JSON.stringify(obj));
     args.push('-se', tmpSe);
@@ -185,7 +185,7 @@ function writeTextOracle(name, tokens) {
   const snap = {
     source: 'native -o (bp3 Linux, production canonique ordonnée)',
     stage: 's3_native',
-    mode: 'text',
+    mode:'text',
     tokens: newToks,
     date: new Date().toISOString().slice(0, 10),
   };
@@ -223,7 +223,7 @@ if (SINGLEPLAY) {
     const snap = {
       name,
       source: 'native bp3 -o (single-play résolu, seed 1) → tokenizeOrder',
-      mode: 'text-singleplay',
+      mode:'text-singleplay',
       seed: 1,
       count: nat.tokens.length,
       tokens: nat.tokens,

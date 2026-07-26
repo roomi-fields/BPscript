@@ -2947,6 +2947,13 @@ function parse(tokens, opts = {}) {
             current());
         }
         advance(); // :
+        // Même règle que partout : la valeur commence immédiatement après le deux-points.
+        if (current().spaceBefore) {
+          throw new ParseError(
+            `'${key}.${component}: ' — pas d'espace après le deux-points : la valeur commence `
+            + `immédiatement ('${key}.${component}:${current().value}')`,
+            current());
+        }
         let valeur;
         if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
         else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
@@ -2968,6 +2975,17 @@ function parse(tokens, opts = {}) {
       }
       if (at(T.COLON)) {
         advance();
+        // JAMAIS D'ESPACE APRÈS LE DEUX-POINTS (arbitrage Romain 2026-07-26). La valeur commence
+        // immédiatement ; l'espace ne sert QU'À séparer les parties d'une valeur. Deux espacements
+        // pour la même règle, et un lecteur ne peut plus déduire ce que l'espace signifie — c'est
+        // le signe à deux métiers qu'on a passé la journée à supprimer.
+        // ⚠️ L'espace ENTRE les parties reste légitime : `(keymap:C3 C3 C5 C5)` est juste.
+        if (!at(T.RPAREN) && !atEnd() && current().spaceBefore) {
+          throw new ParseError(
+            `'${key}: ' — pas d'espace après le deux-points : la valeur commence immédiatement `
+            + `('${key}:${current().value}…'). L'espace ne sépare que les PARTIES d'une valeur`,
+            current());
+        }
         // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
         // Univers du registre (pas seulement le libCtx de la scène) : un mot USABLE est valide
         // qu'on ait chargé @controls ou non — cohérent avec la directive globale et le garde des `[]`.
@@ -3200,7 +3218,7 @@ function parse(tokens, opts = {}) {
             throw new ParseError(
               `'![${procedure.key}: …]' : '${procedure.key}' est une procédure de niveau RÈGLE, elle `
               + `ne se pose pas dans le flux — elle vaut pour la règle entière. Écrire `
-              + `'[${procedure.key}: ${procedure.value === true ? '…' : procedure.value}]' en `
+              + `'[${procedure.key}:${procedure.value === true ? '…' : procedure.value}]' en `
               + `suffixe de règle. Dans le flux, elle n'atteint jamais la règle et laisse un jeton `
               + `de contrôle inerte dans la production`,
               current());
@@ -3403,11 +3421,11 @@ function parse(tokens, opts = {}) {
   function refusFormeAppel(name) {
     const moteur = libCtx.bp3NativeControls && libCtx.bp3NativeControls.has(name)
                 && !(libCtx.dispatcherOnlyControls && libCtx.dispatcherOnlyControls.has(name));
-    const cible = moteur ? `![${name}: …]` : `!(${name}: …)`;
+    const cible = moteur ? `![${name}:…]` : `!(${name}:…)`;
     return `la forme d'appel '${name}(…)' n'existe pas en BPScript (supprimée le 2026-07-26) — `
-      + `écrire '${cible}' pour le poser dans le flux, ou '${moteur ? `[${name}: …]` : `(${name}: …)`}' `
+      + `écrire '${cible}' pour le poser dans le flux, ou '${moteur ? `[${name}:…]` : `(${name}:…)`}' `
       + `en contenance. Les deux points AFFECTENT la valeur, l'espace en sépare les parties `
-      + `('[goto: 3 0]'), la virgule sépare les éléments du sac ('(vel:80, pan:64)')`;
+      + `('[goto:3 0]'), la virgule sépare les éléments du sac ('(vel:80, pan:64)')`;
   }
 
   function isControlName(name) {
@@ -3945,8 +3963,17 @@ function parse(tokens, opts = {}) {
         if (at(T.COMMA)) advance();
         continue;
       }
+      const apresDeuxPoints = current();
       expect(T.COLON);
       checkQualifierKey(key, keyTok);
+      // Même règle dans le sac moteur — le format est le MÊME des deux côtés.
+      if (!at(T.RBRACKET) && !atEnd() && current().spaceBefore) {
+        throw new ParseError(
+          `'${key}: ' — pas d'espace après le deux-points : la valeur commence immédiatement `
+          + `('${key}:${current().value}…'). L'espace ne sépare que les PARTIES d'une valeur`,
+          current());
+      }
+      void apresDeuxPoints;
 
       // --- Valeur d'une paire MOTEUR (modèle CSS) ---
       // L'espace sépare les PARTIES d'une valeur (`[goto: 3 0]`), la VIRGULE sépare les ÉLÉMENTS
@@ -3969,7 +3996,7 @@ function parse(tokens, opts = {}) {
               throw new ParseError(
                 `'[${key}: ${rawValue.trim()},…]' : la virgule sépare les ÉLÉMENTS du sac, pas les `
                 + `parties d'une valeur (liste positionnelle supprimée le 2026-07-26) — écrire `
-                + `'[${key}: ${rawValue.trim()} …]', les parties séparées par une ESPACE`,
+                + `'[${key}:${rawValue.trim()} …]', les parties séparées par une ESPACE`,
                 current());
             }
             break;
@@ -3981,7 +4008,7 @@ function parse(tokens, opts = {}) {
             throw new ParseError(
               `'[${key}: ${rawValue.trim()}:…]' : le deux-points AFFECTE une valeur, il n'en sépare `
               + `pas les parties — une paire n'en porte qu'un. Les parties d'une valeur se séparent `
-              + `par une ESPACE ('[${key}: 3 0]')`,
+              + `par une ESPACE ('[${key}:3 0]')`,
               t);
           }
           if (rawValue.length > 0 && t.type !== T.RPAREN && t.type !== T.COMMA) {
@@ -4001,7 +4028,7 @@ function parse(tokens, opts = {}) {
         if (rawValue === '') {
           throw new ParseError(
             `'[${key}:]' n'affecte aucune valeur — le deux-points en attend une (par exemple `
-            + `'[${key}: 3 0]'), et un contrôle sans argument s'écrit nu, sans deux-points`,
+            + `'[${key}:3 0]'), et un contrôle sans argument s'écrit nu, sans deux-points`,
             keyTok);
         }
         pairs.push({ type: 'QualPair', key, value: rawValue, decrement: null });

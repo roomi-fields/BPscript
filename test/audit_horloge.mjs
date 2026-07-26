@@ -58,7 +58,7 @@ function declareParLaScene(nom) {
     const m = src.match(new RegExp(`^@${mot}\\s*:\\s*([0-9./]+)`, 'm'));
     return m ? m[1] : undefined;
   };
-  return { tempo: lire('tempo'), mm: lire('mm'), quantization: lire('quantization'), qclock: lire('qclock') };
+  return { tempo:lire('tempo'), mm: lire('mm'), quantization: lire('quantization'), qclock: lire('qclock') };
 }
 
 const tous = process.argv.includes('--tous');

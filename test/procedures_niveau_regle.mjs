@@ -4,7 +4,7 @@
  *
  * CE QU'ELLE PROTÈGE, et pourquoi elle compte des JETONS plutôt que de lire un arbre.
  * `goto`, `failed`, `repeat`, `stop` ne s'appliquent pas à une POSITION : elles valent pour la
- * règle entière, et le moteur les extrait en métadonnée. Écrites dans le flux (`![repeat: 3]`),
+ * règle entière, et le moteur les extrait en métadonnée. Écrites dans le flux (`![repeat:3]`),
  * elles restent dans la séquence : la règle ne les reçoit jamais, et un **jeton de contrôle
  * inerte** apparaît dans la production. L'effet est AUDIBLE, pas théorique — un `repeat` qui
  * n'a pas lieu, ce sont des notes en moins.
@@ -47,30 +47,30 @@ const compile = (regles) => {
 
 // ─── 1. Écrite dans le FLUX : REFUSÉE, et le message donne la réécriture ─────────────────────
 for (const nom of FAMILLE) {
-  const r = compile(`S -> C4 ![${nom}: 1] D4`);
+  const r = compile(`S -> C4 ![${nom}:1] D4`);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-  ok(r.errors && r.errors.length > 0, `1. '![${nom}: …]' dans le flux doit être refusé — une procédure de règle n'a pas de position`);
+  ok(r.errors && r.errors.length > 0, `1. '![${nom}:…]' dans le flux doit être refusé — une procédure de règle n'a pas de position`);
   ok(/niveau RÈGLE/.test(msg) && msg.includes(`[${nom}:`),
-     `1. le refus de '![${nom}: …]' doit NOMMER la cause et donner la réécriture '[${nom}: …]' — reçu : ${msg}`);
+     `1. le refus de '![${nom}: …]' doit NOMMER la cause et donner la réécriture '[${nom}:…]' — reçu : ${msg}`);
 }
 
 // ─── 2. Écrite en SUFFIXE : elle ATTEINT la métadonnée de la règle ───────────────────────────
 for (const [nom, valeur] of [['repeat', '3'], ['goto', '2 1'], ['failed', '2 1'], ['stop', '1']]) {
   if (!FAMILLE.includes(nom)) continue;
-  const r = compile(`S -> C4 D4 [${nom}: ${valeur}]`);
-  ok((r.errors || []).length === 0, `2. '[${nom}: ${valeur}]' en suffixe doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
+  const r = compile(`S -> C4 D4 [${nom}:${valeur}]`);
+  ok((r.errors || []).length === 0, `2. '[${nom}:${valeur}]' en suffixe doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   const regle = r.ast?.subgrammars?.[0]?.rules?.[0];
   const auNiveauRegle = (regle?.qualifiers || []).some((q) => (q.pairs || []).some((p) => p.key === nom));
-  ok(auNiveauRegle, `2. '[${nom}: ${valeur}]' doit atteindre rule.qualifiers — c'est là que le moteur la lit (BPx mergeQualifierProcedures)`);
+  ok(auNiveauRegle, `2. '[${nom}:${valeur}]' doit atteindre rule.qualifiers — c'est là que le moteur la lit (BPx mergeQualifierProcedures)`);
   const dansLeFlux = JSON.stringify(regle?.rhs || []).includes(`"${nom}"`);
-  ok(!dansLeFlux, `2. '[${nom}: ${valeur}]' ne doit PAS rester dans la RHS — un jeton de contrôle inerte y sortirait dans la production`);
+  ok(!dansLeFlux, `2. '[${nom}:${valeur}]' ne doit PAS rester dans la RHS — un jeton de contrôle inerte y sortirait dans la production`);
 }
 
 // ─── 3. LE TÉMOIN PAR L'EFFET — on dérive et on compte ce qui SORT ───────────────────────────
 // Une garde qui lit l'arbre voit une forme bien construite ; seule la production dit si la
 // procédure a eu lieu. On charge BPx s'il est là ; sinon on le DIT, on ne fait pas semblant.
 {
-  const grammaire = 'S -> X\nX -> a X [repeat: 3]\nX -> b\na -> C4\nb -> D4';
+  const grammaire = 'S -> X\nX -> a X [repeat:3]\nX -> b\na -> C4\nb -> D4';
   const r = compile(grammaire);
   ok((r.errors || []).length === 0, `3. le témoin doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   let session = null;

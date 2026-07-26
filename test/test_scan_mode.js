@@ -60,7 +60,7 @@ section('[scan:left] → rule.mode = left');
 X -> M [scan:left]`);
   const rule = getRule(ast, 0, 0);
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
-  assert('rule.mode === "left"', rule && rule.mode === 'left', `mode: ${rule && rule.mode}`);
+  assert('rule.mode === "left"', rule && rule.mode === 'left', `mode:${rule && rule.mode}`);
   // La QualPair doit rester dans qualifiers (pour l'encoder)
   if (rule) {
     const scanPair = rule.qualifiers.flatMap(q => q.pairs || []).find(p => p.key === 'scan');
@@ -77,7 +77,7 @@ section('[scan:right] → rule.mode = right');
   const ast = parseSource(`@controls
 X -> M [scan:right]`);
   const rule = getRule(ast, 0, 0);
-  assert('rule.mode === "right"', rule && rule.mode === 'right', `mode: ${rule && rule.mode}`);
+  assert('rule.mode === "right"', rule && rule.mode === 'right', `mode:${rule && rule.mode}`);
 }
 
 // ============================================================
@@ -88,7 +88,7 @@ section('[scan:rnd] → rule.mode = rnd');
   const ast = parseSource(`@controls
 X -> M [scan:rnd]`);
   const rule = getRule(ast, 0, 0);
-  assert('rule.mode === "rnd"', rule && rule.mode === 'rnd', `mode: ${rule && rule.mode}`);
+  assert('rule.mode === "rnd"', rule && rule.mode === 'rnd', `mode:${rule && rule.mode}`);
 }
 
 // ============================================================
@@ -99,7 +99,7 @@ section('sans [scan:...] → rule.mode = null');
   const ast = parseSource(`@controls
 X -> M`);
   const rule = getRule(ast, 0, 0);
-  assert('rule.mode === null (absent)', rule && rule.mode === null, `mode: ${rule && rule.mode}`);
+  assert('rule.mode === null (absent)', rule && rule.mode === null, `mode:${rule && rule.mode}`);
 }
 
 // ============================================================
@@ -126,8 +126,8 @@ A -> B
 C -> D [scan:rnd]`);
   const rule1 = getRule(ast, 0, 0);
   const rule2 = getRule(ast, 0, 1);
-  assert('règle 1 mode null', rule1 && rule1.mode === null, `mode: ${rule1 && rule1.mode}`);
-  assert('règle 2 mode rnd', rule2 && rule2.mode === 'rnd', `mode: ${rule2 && rule2.mode}`);
+  assert('règle 1 mode null', rule1 && rule1.mode === null, `mode:${rule1 && rule1.mode}`);
+  assert('règle 2 mode rnd', rule2 && rule2.mode === 'rnd', `mode:${rule2 && rule2.mode}`);
 }
 
 // ============================================================

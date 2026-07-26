@@ -1,6 +1,6 @@
 // Garde-fou : validation des VALEURS de contrôle contre la librairie @controls.
 // La lib @controls (controls.json) est la SOURCE UNIQUE des valeurs permises :
-//   - contrôle à liste fermée (wave: sine|triangle|square|sawtooth) → valeur hors-liste = ERREUR
+//   - contrôle à liste fermée (wave:sine|triangle|square|sawtooth) → valeur hors-liste = ERREUR
 //   - contrôle à plage (filterQ 0..30, attack 1..5000, vel 0..127…)   → valeur hors-plage = ERREUR
 // compileToBPxAST émet ces erreurs (message + line/col) ; Kanopi les affiche en rouge à l'éval.
 // Demande Kanopi [113] 2026-06-20. Territoire BPScript (la lib fait foi).

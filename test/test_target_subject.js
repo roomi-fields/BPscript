@@ -20,26 +20,26 @@ const get = (pairs, key) => pairs.find((p) => p.key === key) || {};
 
 // 1. Défaut : pas de sujet (= la règle)
 {
-  const { pairs, err } = bassPairs('Bass -> C2 E2 (cutoff: env1, wave:square)');
+  const { pairs, err } = bassPairs('Bass -> C2 E2 (cutoff:env1, wave:square)');
   check(!err, '1: pas d\'erreur, ' + JSON.stringify(err));
   check(get(pairs, 'cutoff').subject === undefined, '1: cutoff sans sujet (défaut=règle), obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
 }
 
 // 2. Sujet '*' = chaque terminal
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff: env1)');
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1)');
   check(get(pairs, 'cutoff').subject === '*', '2: cutoff sujet=*, obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
 }
 
 // 3. Sujet nommé 'C2'
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (C2:cutoff: env1)');
+  const { pairs } = bassPairs('Bass -> C2 E2 (C2:cutoff:env1)');
   check(get(pairs, 'cutoff').subject === 'C2', '3: cutoff sujet=C2, obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
 }
 
 // 4. Mélange : cutoff par terminal, wave/vel pour la règle (sujets indépendants par paire)
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff: env1, wave:square, vel:100)');
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1, wave:square, vel:100)');
   check(get(pairs, 'cutoff').subject === '*', '4: cutoff sujet=*');
   check(get(pairs, 'wave').subject === undefined, '4: wave sans sujet (règle)');
   check(get(pairs, 'vel').subject === undefined && get(pairs, 'vel').value === 100, '4: vel sans sujet, valeur 100');
@@ -47,14 +47,14 @@ const get = (pairs, key) => pairs.find((p) => p.key === key) || {};
 
 // 5. La valeur reste correctement captée avec un sujet (pas de glissement)
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff: env1, vel:120)');
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1, vel:120)');
   check(get(pairs, 'cutoff').value === 'env1', '5: valeur cutoff=env1 préservée, obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
   check(get(pairs, 'vel').value === 120, '5: vel=120 préservé');
 }
 
 // 6. ligne/col toujours présents avec sujet
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff: env1)');
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1)');
   check(typeof get(pairs, 'cutoff').line === 'number', '6: cutoff porte une ligne');
 }
 

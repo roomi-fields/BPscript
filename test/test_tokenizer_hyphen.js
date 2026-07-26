@@ -168,7 +168,7 @@ section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
   if (rule) {
     const guard = Array.isArray(rule.guard) ? rule.guard[0] : rule.guard;
     assert('guard K1 operator=-', guard && guard.flag === 'K1' && guard.operator === '-', `guard: ${JSON.stringify(guard)}`);
-    assert('guard value=1', guard && guard.value === 1, `guard value: ${guard && guard.value}`);
+    assert('guard value=1', guard && guard.value === 1, `guard value:${guard && guard.value}`);
     const flagA = rule.flags.find(f => f.flag === 'A');
     assert('FlagExpr A operator=-', flagA && flagA.operator === '-', `flags: ${JSON.stringify(rule.flags)}`);
     assert('FlagExpr A value=1', flagA && flagA.value === 1, `flags: ${JSON.stringify(rule.flags)}`);
@@ -181,7 +181,7 @@ section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
 section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
 {
   const src = `@controls
-S -> ![tempo:2, scale: pure_minor-third_meantone 0] Up_Down`;
+S -> ![tempo:2, scale:pure_minor-third_meantone 0] Up_Down`;
   // tokenize : pure_minor- doit être IDENT(pure_minor-) et third_meantone IDENT(third_meantone)
   const tokens = toks(src);
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
@@ -199,7 +199,7 @@ S -> ![tempo:2, scale: pure_minor-third_meantone 0] Up_Down`;
     if (exclaimEl && exclaimEl.qualifiers) {
       const scalePair = exclaimEl.qualifiers.flatMap(q => q.pairs || []).find(p => p.key === 'scale');
       assert('scale value = pure_minor-third_meantone', scalePair && scalePair.value === 'pure_minor-third_meantone',
-        `scale: ${scalePair && scalePair.value}`);
+        `scale:${scalePair && scalePair.value}`);
     } else {
       // Le test de valeur recollée est vérifié indirectement par le tokenizer
       assert('pure_minor- absorbé (alnum après)', true);
@@ -258,7 +258,7 @@ S -> A [weight:50-12]`;
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
   if (rule && rule.qualifiers && rule.qualifiers.length > 0) {
     const weightPair = rule.qualifiers.flatMap(q => q.pairs || []).find(p => p.key === 'weight');
-    assert('weight base=50', weightPair && weightPair.value === 50, `weight: ${JSON.stringify(weightPair)}`);
+    assert('weight base=50', weightPair && weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
     assert('weight decrement=12', weightPair && weightPair.decrement === 12, `weight decrement: ${JSON.stringify(weightPair)}`);
   } else {
     assert('qualifiers présents', false, 'pas de qualifiers');
@@ -278,10 +278,10 @@ section('Cas 13 : mohanam réel [Notes-4] + [weight:50-12] — inchangé');
   if (rule) {
     const guard = Array.isArray(rule.guard) ? rule.guard[0] : rule.guard;
     assert('guard Notes operator=-', guard && guard.flag === 'Notes' && guard.operator === '-', `guard: ${JSON.stringify(guard)}`);
-    assert('guard value=4', guard && guard.value === 4, `guard value: ${guard && guard.value}`);
+    assert('guard value=4', guard && guard.value === 4, `guard value:${guard && guard.value}`);
     const weightPair = rule.qualifiers.flatMap(q => q.pairs || []).find(p => p.key === 'weight');
-    assert('weight base=50', weightPair && weightPair.value === 50, `weight: ${JSON.stringify(weightPair)}`);
-    assert('weight decrement=12', weightPair && weightPair.decrement === 12, `weight: ${JSON.stringify(weightPair)}`);
+    assert('weight base=50', weightPair && weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
+    assert('weight decrement=12', weightPair && weightPair.decrement === 12, `weight:${JSON.stringify(weightPair)}`);
   }
 }
 

@@ -223,21 +223,21 @@ section('nature — couverture des types de nœuds RHS');
 }
 
 {
-  // PROCÉDURE DE NIVEAU RÈGLE à plusieurs valeurs : `[goto: 2 1]`.
+  // PROCÉDURE DE NIVEAU RÈGLE à plusieurs valeurs : `[goto:2 1]`.
   // Ce test employait la forme d'appel `goto(2,1)`, supprimée le 2026-07-26 ; je l'ai d'abord
-  // migré vers `![goto: 2 1]`, ce qui était FAUX — `goto` vaut pour la RÈGLE, pas pour une
+  // migré vers `![goto:2 1]`, ce qui était FAUX — `goto` vaut pour la RÈGLE, pas pour une
   // position, et c'est en qualificatif de règle que le moteur la lit. Dans le flux, elle
   // n'atteint jamais la règle et laisse un jeton de contrôle inerte dans la production.
   // Ce qu'on vérifie : elle arrive au NIVEAU RÈGLE, ses deux valeurs restent séparées par
   // l'espace, et elle ne traîne pas dans la séquence.
-  const ast = parseSource('@controls\nS -> A [goto: 2 1]');
+  const ast = parseSource('@controls\nS -> A [goto:2 1]');
   const regle = ast.subgrammars[0].rules[0];
   const paire = (regle.qualifiers || []).flatMap((q) => q.pairs || []).find((p) => p.key === 'goto');
-  assert('[goto: 2 1] atteint le niveau RÈGLE', paire !== undefined,
+  assert('[goto:2 1] atteint le niveau RÈGLE', paire !== undefined,
     `qualifiers=${JSON.stringify(regle.qualifiers)}`);
-  assert('[goto: 2 1] les deux valeurs restent séparées par l\'espace', paire?.value === '2 1',
+  assert('[goto:2 1] les deux valeurs restent séparées par l\'espace', paire?.value === '2 1',
     `got ${JSON.stringify(paire?.value)}`);
-  assert('[goto: 2 1] ne reste pas dans la séquence', !JSON.stringify(regle.rhs).includes('goto'),
+  assert('[goto:2 1] ne reste pas dans la séquence', !JSON.stringify(regle.rhs).includes('goto'),
     `rhs=${JSON.stringify(regle.rhs.map((e) => e.type))}`);
 }
 
@@ -374,7 +374,7 @@ section('Agnosticisme — zéro notion BP3 dans le payload');
 @actor tabla
   transport.midi(ch:10)
 S -> { sitar.Sa, tabla.dha(vel:80) }
-S -> !(vel:80) A _transpose(2) - [goto: 2 1]`;
+S -> !(vel:80) A _transpose(2) - [goto:2 1]`;
   const ast = parseSource(src);
   const json = JSON.stringify(ast);
 

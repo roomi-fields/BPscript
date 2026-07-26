@@ -23,7 +23,7 @@ console.log('=== Câblage >> / !>> ===');
 
 // 2. Ports + valeurs (ref, backtick, nombre)
 {
-  const { macros: m } = macros('@macro v = saw.freq: pitch >> lpf.cutoff: `js: lfo(2)` >> audio');
+  const { macros: m } = macros('@macro v = saw.freq: pitch >> lpf.cutoff:`js: lfo(2)` >> audio');
   const s = m[0].body[0].stages;
   ok('port adressé par le point', s[0].module === 'saw' && s[0].port === 'freq');
   ok('valeur ref (pitch)', eq(s[0].value, { kind: 'ref', name: 'pitch' }));
@@ -34,7 +34,7 @@ console.log('=== Câblage >> / !>> ===');
 // 3. Valeur nombre + unité
 {
   const { macros: m } = macros('@macro d = env.decay: 350ms >> audio');
-  ok('valeur nombre + unité', eq(m[0].body[0].stages[0].value, { kind: 'number', value: 350, unit: 'ms' }));
+  ok('valeur nombre + unité', eq(m[0].body[0].stages[0].value, { kind: 'number', value:350, unit: 'ms' }));
 }
 
 // 4. Débranchement !>> (patchbay dynamique)
@@ -65,7 +65,7 @@ console.log('=== Câblage >> / !>> ===');
   const b = trig.macros[0].body[0];
   ok('drum.on → appel-composant Symbol{name:on, actor:drum}, PAS Wiring',
     b.type === 'Symbol' && b.name === 'on' && b.actor === 'drum' && trig.errors.length === 0);
-  const cv = macros('@macro open = lpf.cutoff: 8000');
+  const cv = macros('@macro open = lpf.cutoff:8000');
   ok('lpf.cutoff:8000 → composant opaque (pas Wiring), 0 erreur',
     cv.macros[0].body[0].type !== 'Wiring' && cv.errors.length === 0);
   const spaced = macros('@macro per = A . B');
@@ -77,13 +77,13 @@ console.log('=== Câblage >> / !>> ===');
 
 // 6c. Champ VALEUR sur appel-composant opaque (§4/§9 activés [502]) — cv-set/ref/backtick.
 {
-  const num = macros('@macro open = lpf.cutoff: 8000');
-  ok('cv-set number → Symbol.value {kind:number}', eq(num.macros[0].body[0].value, { kind: 'number', value: 8000 })
+  const num = macros('@macro open = lpf.cutoff:8000');
+  ok('cv-set number → Symbol.value {kind:number}', eq(num.macros[0].body[0].value, { kind: 'number', value:8000 })
     && num.macros[0].body[0].actor === 'lpf' && num.macros[0].body[0].name === 'cutoff');
   const ref = macros('@macro f = saw.freq: pitch');
   ok('valeur ref (saw.freq: pitch) parse (bug corrigé) → {kind:ref}', ref.errors.length === 0
     && eq(ref.macros[0].body[0].value, { kind: 'ref', name: 'pitch' }));
-  const bt = macros('@macro c = lpf.cutoff: `js: lfo(2)`');
+  const bt = macros('@macro c = lpf.cutoff:`js: lfo(2)`');
   ok('valeur backtick typée', bt.macros[0].body[0].value.kind === 'backtick' && bt.macros[0].body[0].value.tag === 'js');
   const trig = macros('@macro s = drum.on');
   ok('appel sans valeur (trig) → pas de champ value', trig.macros[0].body[0].value === undefined);

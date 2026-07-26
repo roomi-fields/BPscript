@@ -11,6 +11,6 @@ cv env2 : mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
 S -> {Bass Bass, Env Env}
 
 // (2) Branchement au point de paramètre : (cutoff: Env) — value=Env identifiant brut
-Bass -> C2 E2 G2 (cutoff: Env, wave:square, vel:120)
+Bass -> C2 E2 G2 (cutoff:Env, wave:square, vel:120)
 Env -> env1
 Env -> env2
