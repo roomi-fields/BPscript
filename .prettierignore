@@ -1,0 +1,18 @@
+# Aucun formateur ne touche aux fichiers markdown de ce dépôt.
+#
+# POURQUOI. Le 2026-07-27, `docs/design/TEMPORAL_DEFORMATION.md` est apparu modifié dans l'arbre
+# sans auteur : 24 lignes, uniquement des colonnes de tableau réalignées et des tirets de
+# séparateur rallongés. Zéro mot changé. Un diff cosmétique dans un dépôt partagé coûte une
+# inspection à chaque fois qu'on le croise — et cette fois il a coûté un aller-retour entre deux
+# agents pour établir qu'il ne portait aucun sens.
+#
+# La signature (séparateurs padés à la largeur de colonne, espaces ajoutés autour des cellules) est
+# celle d'un formateur markdown, très probablement Prettier lancé à l'enregistrement par l'éditeur.
+# Je ne peux pas le PROUVER — le formateur ne vit pas dans ce dépôt et n'y laisse aucune trace. Ce
+# fichier est donc la parade portable : posée DANS le dépôt, elle vaut quel que soit le poste, au
+# lieu de dépendre d'un réglage d'éditeur qu'il faut refaire sur chaque machine.
+#
+# ⚠️ MARKDOWN SEULEMENT, délibérément. On ne veut surtout pas qu'un formateur se mette à réécrire
+# du code en passant : ce fichier ne dit rien du reste du dépôt, et ne doit pas être élargi sans
+# décision. (Architecte, 2026-07-27 : « fige le format des markdown, rien d'autre ».)
+*.md

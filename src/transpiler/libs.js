@@ -255,6 +255,7 @@ function loadLibsFromDirectives(directives) {
     dualContextControls: new Set(),  // controls that appear in BOTH engine and runtime — in () always route to _script
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
+    bagOnlyControls: new Set(),  // `sacSeul:true` — aucune forme nue dans le flux, cf. plus bas
     compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
                                    // virgule appartient à la VALEUR, portée brute en une seule chaîne.
     engineBagControls: new Set(),   // déclarés sous `engine` → sac MOTEUR `[…]`
@@ -443,7 +444,7 @@ function loadLibsFromDirectives(directives) {
           if (hasNestedDefs) {
             // Sub-group: iterate its controls, tag each with transportGroup
             for (const [name, def] of Object.entries(groupContent)) {
-              if (name === '_comment') continue;
+              if (name.startsWith('_')) continue;  // clé de DOCUMENTATION, pas un contrôle
               controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false });
             }
             continue;
@@ -455,7 +456,11 @@ function loadLibsFromDirectives(directives) {
     }
     for (const { source, isEngine } of controlSources) {
       for (const [name, def] of Object.entries(source)) {
-        if (name === '_comment') continue;
+        // ⚠️ TOUTE clé préfixée `_` est de la DOCUMENTATION, jamais un contrôle. On ne filtrait que
+        // `_comment` : la première clé `_..._doc` posée dans une section a donc été chargée COMME UN
+        // CONTRÔLE, silencieusement (mesuré le 2026-07-27, `_sacSeul_doc` entrait au vocabulaire).
+        // La convention `_` pour la documentation vaut dans tout le dépôt ; le filtre la suit.
+        if (name.startsWith('_')) continue;
         ctx.controls[name] = def;
         ctx.controlMap[name] = def.bp3 || `_${name}`;
         ctx.controlNames.add(name);
@@ -474,6 +479,17 @@ function loadLibsFromDirectives(directives) {
         }
         if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
+        }
+        // `sacSeul:true` — ce contrôle N'A PAS de forme nue dans le flux : il ne s'écrit que dans
+        // son sac. Distinction que « sans argument » ne portait PAS, et cette confusion a coûté :
+        // les contrôles continus hérités de BP3 (`volumecont`, `pitchcont`, `mapcont`…) s'écrivent
+        // bel et bien nus au fil de la séquence — 10 scènes du corpus le font — tandis que
+        // `mute`/`unmute`/`panic`, déclarés le 2026-07-26, n'ont jamais eu que la forme du sac.
+        // Faute de le dire, tout mot sans argument devenait un mot du flux, et une scène qui
+        // portait déjà ce nom était tronquée en silence (mesuré par Kairos, patchbay-demo).
+        // Le marquage est POSITIF et porté par la donnée : le code ne nomme aucun contrôle.
+        if (def.sacSeul === true) {
+          ctx.bagOnlyControls.add(name);
         }
         // Contrôle désigné par un NUMÉRO DE COMPOSANT : `(cc.98:45)`. Le point APPELLE le
         // composant (le contrôleur 98), les deux points AFFECTENT la valeur — la règle d'or du

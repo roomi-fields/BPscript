@@ -33,7 +33,14 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const SANS_ARGUMENT = [...loadLibsFromDirectives([{ name: 'core' }, { name: 'controls' }]).noArgControls].sort();
+const CTX = loadLibsFromDirectives([{ name: 'core' }, { name: 'controls' }]);
+const SANS_ARGUMENT = [...CTX.noArgControls].sort();
+// Deux familles, et la donnée les sépare — pas une liste écrite ici. « Sans argument » ne veut pas
+// dire « s'écrit nu au fil de la séquence » : les contrôles continus hérités de BP3 s'écrivent nus
+// (10 scènes du corpus le font), `mute`/`unmute`/`panic` n'ont jamais eu que la forme du sac.
+// Confondre les deux est CE QUI A TRONQUÉ la démo du patchbay.
+const SAC_SEUL = SANS_ARGUMENT.filter((n) => CTX.bagOnlyControls.has(n));
+const AVEC_FORME_NUE = SANS_ARGUMENT.filter((n) => !CTX.bagOnlyControls.has(n));
 
 const regleDe = (o) => o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [];
 
@@ -46,12 +53,32 @@ for (const attendu of ['mute', 'unmute', 'panic', 'stop']) {
   ok(SANS_ARGUMENT.includes(attendu), `1. '${attendu}' doit être un contrôle sans argument`);
 }
 
-// ─── 2. SANS déclaration locale, le mot reste un contrôle — comportement inchangé ────────────
-for (const mot of SANS_ARGUMENT) {
+ok(SAC_SEUL.length >= 3 && AVEC_FORME_NUE.length >= 10,
+   `1. les deux familles doivent être peuplées — sac seul : ${SAC_SEUL.length}, forme nue : ${AVEC_FORME_NUE.length}`);
+
+// ─── 2. Le mot QUI A une forme nue la garde — le corpus l'écrit ainsi, rien ne bouge ─────────
+for (const mot of AVEC_FORME_NUE) {
   const o = compileToBPxAST(`@core\n@controls\n@mode:ord\nS -> a ${mot} b\n`);
   const r = regleDe(o);
   ok(r[1]?.type === 'Control' && r[1]?.name === mot,
      `2. '${mot}' sans déclaration locale reste un contrôle — reçu : ${JSON.stringify(r.map((e) => e.type))}`);
+}
+
+// ─── 2bis. Le mot SANS forme nue REFUSE — il ne disparaît pas ────────────────────────────────
+// Demande de l'architecte, 2026-07-27 : « un mot réservé rencontré là où il ne peut pas l'être
+// doit refuser, pas disparaître ». Le refus NOMME la faute et donne la réécriture ; constater
+// sans réécrire laisserait l'auteur deviner.
+for (const mot of SAC_SEUL) {
+  const nu = compileToBPxAST(`@core\n@controls\n@mode:ord\nS -> a ${mot} b\n`);
+  const msg = (nu.errors || []).map((e) => e.message || e).join(' | ');
+  ok((nu.errors || []).length > 0, `2bis. '${mot}' nu dans le flux doit REFUSER, pas disparaître`);
+  ok(msg.includes(`!(${mot})`), `2bis. le refus de '${mot}' doit donner la RÉÉCRITURE — reçu : ${msg.slice(0, 110)}`);
+  // Et son sac reste ouvert, sinon on aurait supprimé le mot au lieu de le ranger.
+  for (const forme of [`S -> a !(${mot}) b`, `S -> a(${mot}) b`]) {
+    const o = compileToBPxAST(`@core\n@controls\n@mode:ord\n${forme}\n`);
+    ok((o.errors || []).length === 0,
+       `2bis. '${forme}' doit rester valide — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
+  }
 }
 
 // ─── 3. AVEC déclaration locale, la scène gagne — sur les SEIZE, pas sur le mot du ticket ────

@@ -3521,6 +3521,20 @@ function parse(tokens, opts = {}) {
       // 2026-06-26) : LE PLUS LOCAL GAGNE. La scène qui déclare un nom le possède. Le contrôle
       // reste joignable dans son sac — `(mute)`, `!(mute)` — position syntaxique distincte, aucun
       // conflit. Et l'ombrage se DIT : il est légitime, il n'est pas anodin.
+      //
+      // ⚠️ ET UN MOT QUI N'A PAS DE FORME NUE REFUSE, il ne disparaît pas. « Sans argument » ne
+      // veut pas dire « s'écrit nu au fil de la séquence » : les contrôles continus hérités de BP3
+      // s'écrivent nus, `mute`/`unmute`/`panic` non — leur seule graphie est le sac. La donnée le
+      // déclare (`sacSeul`), le code ne nomme aucun contrôle.
+      if (!actor && !at(T.LPAREN) && isControlName(name)
+          && libCtx.bagOnlyControls && libCtx.bagOnlyControls.has(name)
+          && !nomsDeclaresLocalement.has(name)) {
+        throw new ParseError(
+          `'${name}' n'a pas de forme nue dans le flux — écrire '!(${name})' pour le poser au fil `
+          + `de la séquence, ou '(${name})' en contenance sur un élément. Un mot du vocabulaire `
+          + `rencontré là où il ne peut pas l'être refuse ; il ne disparaît pas.`, tok);
+      }
+
       if (!actor && !at(T.LPAREN) && isControlName(name) && isNoArgControl(name)) {
         if (nomsDeclaresLocalement.has(name)) {
           warn(`'${name}' est déclaré par la scène ET porté par le vocabulaire comme contrôle sans `
