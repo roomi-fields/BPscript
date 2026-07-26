@@ -2305,10 +2305,11 @@ function parse(tokens, opts = {}) {
     // Si un élément RHS SUIT le `:N`, la durée est ISOLÉE au milieu du flux (portée inline —
     // INTERDITE pour la durée, qui exige un hôte) → erreur claire (fail-loud), pas d'avalement.
     if (at(T.COLON) && peek(1).type === T.INT && rhs.length > 0) {
+      const tokColon = current();
       advance(); // consume COLON
-      const dur = parseColonFrame();
+      const dur = parseColonFrame(tokColon);
       const inner = rhs.splice(0, rhs.length);
-      rhs.push({ type: 'Polymetric', voices: [inner], qualifiers: [dur], runtimeQualifier: null, label: null });
+      rhs.push(cadreDuree(dur, inner));
       if (atRhsElementStart()) {
         throw new ParseError(`durée isolée dans le flux : ':N' se colle à un terminal (A4:1/2), un groupe ({A B}:2) ou toute la règle (en fin de RHS) — jamais au milieu du flux`, current());
       }
@@ -2694,9 +2695,14 @@ function parse(tokens, opts = {}) {
         // Même sémantique que `}[speed:N]` — poussée comme qualifier `speed` (contrat AST), propagée
         // au `{` correspondant par la 2e passe (annotateUnbalancedBraces). Forme canonique déséquilibrée.
         if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+          const tokColon = current();
           advance(); // consume COLON
-          rawBrace.qualifiers = rawBrace.qualifiers || [];
-          rawBrace.qualifiers.push(parseColonFrame());
+          // La durée d'une accolade DÉSÉQUILIBRÉE ne peut pas s'envelopper ici : le `{` correspondant
+          // est dans une autre règle, et c'est une seconde passe qui les réunit. On la porte donc sur
+          // un champ NOMMÉ, au lieu de la glisser dans `qualifiers` — qui n'accepte que des nœuds
+          // `Qualifier`. Depuis que le désucrage ne produit plus de qualificatif `speed`, l'y pousser
+          // y aurait mis un nœud du mauvais type : défaut introduit puis corrigé le 2026-07-26.
+          rawBrace.duree = parseColonFrame(tokColon);
         }
         elements.push(rawBrace);
         continue;
@@ -3358,9 +3364,9 @@ function parse(tokens, opts = {}) {
       // (ancien sens : A4 puis un silence, NumericDuration). L'espace tranche (EBNF.md:943).
       if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
         advance(); // consume COLON
-        const dur = parseColonFrame();  // qualifier `speed` (contrat AST)
+        const dur = parseColonFrame(tok);
         const sym = { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
-        return { type: 'Polymetric', voices: [[sym]], qualifiers: [dur], runtimeQualifier: null, label: null };
+        return cadreDuree(dur, [sym]);
       }
 
       // Tie start: C4~
@@ -3686,6 +3692,7 @@ function parse(tokens, opts = {}) {
   }
 
   function parsePolymetric(label) {
+    let dureeCollee = null;   // `{A B}:N` — désucré en `{N, {A B}}` à la sortie
     expect(T.LBRACE);
     const voices = [];
     let currentVoice = [];
@@ -3737,8 +3744,9 @@ function parse(tokens, opts = {}) {
     // `:` COLLÉ au `}` suivi d'un nombre = durée du groupe ; poussée comme qualifier `speed`
     // dans `qualifiers` (contrat AST_SPEC:1024,1037) — pas un champ ad hoc.
     if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+      const tokColon = current();
       advance(); // consume COLON
-      qualifiers.push(parseColonFrame());
+      dureeCollee = parseColonFrame(tokColon);
     }
 
     // Runtime qualifier on group: {}(vel:100)
@@ -3747,33 +3755,51 @@ function parse(tokens, opts = {}) {
       runtimeQualifier = parseRuntimeQualifier();
     }
 
-    return { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null };
+    const groupe = { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null };
+    // `{A B}:2` → `{2, {A B}}` : le groupe reste UN élément dans le cadre, il ne s'y disperse pas.
+    return dureeCollee ? cadreDuree(dureeCollee, [groupe]) : groupe;
   }
 
   // Durée collée : consomme un nombre (INT) ou un ratio (INT/INT) APRÈS un COLON déjà consommé,
-  // et renvoie le QUALIFIER `speed` conforme AU CONTRAT AST (docs/spec/AST.md:1024,1037,1041) :
-  // le ratio polymétrique vit dans `Polymetric.qualifiers`, JAMAIS dans un champ ad hoc — c'est
-  // ce que lisent BPx et bp3-frontend. Valeur : Number pour un entier, chaîne "N/M" pour un ratio
-  // (IDENTIQUE à l'ancien `[speed:N]`, parser.js:3188-3200) → AST byte-identique, zéro régression.
-  function parseColonFrame() {
+  // et renvoie la PREMIÈRE VOIX du cadre polymétrique — exactement ce qu'aurait produit l'écriture
+  // développée. Le désucrage est celui que la décision écrit noir sur blanc
+  // (`hub/decisions/2026-06-26-trois-concepts-temps-duree.md`) : `{A B}:1/2` → `{1/2, {A B}}`.
+  //
+  // ⚠️ CE QUE ÇA CORRIGE, mesuré par bpx sur l'AST brut, et c'était DEUX fautes dans une ligne :
+  //  1. j'émettais un qualificatif de clé `speed` — le mot que cette même décision SUPPRIME, et
+  //     qu'elle supprime parce qu'il était MAL NOMMÉ (il ne désigne pas une vitesse mais un
+  //     étirement). Un mot retiré de la surface qui survit à l'intérieur de l'arbre, c'est la
+  //     survivance exacte qui a laissé vivre la forme d'appel quatre mois.
+  //  2. je gardais le contenu en voix PARALLÈLES au lieu de l'IMBRIQUER : `{2, C4, D4}` est deux
+  //     voix dans un cadre 2 ; `{2, {C4, D4}}` est UNE voix qui contient le groupe. Ce n'est pas
+  //     la même musique, même si le son coïncidait sur le cas mesuré.
+  // La forme rendue est celle que produit déjà l'écriture développée : `NumericTerminal` pour un
+  // entier, `NumericDuration` pour un ratio — vérifié en comparant les deux arbres.
+  function parseColonFrame(tok) {
     const num = expect(T.INT).value;
-    let value;
     if (at(T.SLASH) && peek(1).type === T.INT) {
       advance(); // consume SLASH
-      value = `${num}/${expect(T.INT).value}`;
-    } else {
-      value = Number(num);
+      return { type: 'NumericDuration', numerator: Number(num), denominator: Number(expect(T.INT).value) };
     }
-    return { type: 'Qualifier', pairs: [{ type: 'QualPair', key: 'speed', value, decrement: null }], tempoOp: null };
+    return { type: 'NumericTerminal', kind: 'numeric-terminal', value: Number(num), line: (tok || current()).line };
   }
 
+  /** Enveloppe un contenu dans le cadre `{durée, contenu}` — la forme canonique du désucrage. */
+  function cadreDuree(premiereVoix, contenu) {
+    return {
+      type: 'Polymetric',
+      voices: [[premiereVoix], contenu],
+      qualifiers: [], runtimeQualifier: null, label: null,
+    };
+  }
+
+  // Les DEUX qualificatifs polymétriques historiques sont supprimés du langage : `[speed:N]` le
+  // 2026-06-26 et `[scale:N]` le 2026-07-26, tous deux SUBSUMÉS par la durée collée `{A B}:N`.
+  // La fonction ne reconnaît donc plus rien — on la garde le temps que ses appelants soient
+  // retirés, mais elle ne doit plus jamais rendre vrai : un mot supprimé qui survit à l'intérieur
+  // est la survivance qui a laissé vivre la forme d'appel quatre mois.
   function isPolymetricQualifier() {
-    // Lookahead: check if [key:...] is a polymetric qualifier (speed, scale)
-    if (!at(T.LBRACKET)) return false;
-    const nextTok = peek(1);
-    if (nextTok.type !== T.IDENT) return false;
-    const key = nextTok.value;
-    return key === 'speed' || key === 'scale';
+    return false;
   }
 
   function parseVariable() {

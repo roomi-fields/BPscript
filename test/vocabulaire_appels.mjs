@@ -213,6 +213,35 @@ for (const forme of [
   ok(e.length === 0, `§2septies '${forme}' est LÉGAL et doit passer — reçu : ${e.join(' | ')}`);
 }
 
+// ─── §2octies. LE SUCRE EST STRICTEMENT SON DÉPLIÉ ──────────────────────────────────────────
+// Constat bpx : `{C4, D4}:2` rendait un cadre à DEUX VOIX portant un qualificatif de clé `speed`.
+// Deux fautes dans une ligne — le mot `speed` est SUPPRIMÉ du langage depuis le 2026-06-26 (et
+// supprimé parce qu'il était MAL NOMMÉ), et le contenu doit être IMBRIQUÉ, pas dispersé :
+// `{2, C4, D4}` est deux voix dans un cadre 2 ; `{2, {C4, D4}}` est UNE voix qui contient le
+// groupe. Ce n'est pas la même musique, même quand le son coïncide.
+// La vérification ne lit pas la forme attendue : elle COMPARE le sucre à son écriture dépliée.
+// Un oracle qui décrit ce qu'on croit juste se trompe avec nous ; une équivalence, non.
+for (const [sucre, deplie] of [
+  ['{C4, D4}:2', '{2, {C4, D4}}'],
+  ['{C4, D4}:1/2', '{1/2, {C4, D4}}'],
+  ['{C4 D4}:3', '{3, {C4 D4}}'],
+  ['A4:2 C4', '{2, A4} C4'],
+  ['A4:1/2 C4', '{1/2, A4} C4'],
+]) {
+  const arbre = (r) => {
+    const o = compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> ${r}\n`);
+    return JSON.stringify(o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs);
+  };
+  ok(arbre(sucre) === arbre(deplie),
+     `§2octies '${sucre}' doit produire EXACTEMENT l'arbre de '${deplie}'\n        sucre : ${arbre(sucre)}\n        déplié: ${arbre(deplie)}`);
+}
+// Et le mot supprimé ne doit survivre NULLE PART dans l'arbre.
+{
+  const o = compileToBPxAST('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> {C4, D4}:2 A4:3\n');
+  ok(!JSON.stringify(o.ast?.subgrammars || []).includes('"speed"'),
+     "§2octies le mot 'speed', supprimé de la surface, ne doit pas survivre comme clé dans l'arbre");
+}
+
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
   ['!(ins:5)', 'contrôle nommé, dans le flux — la traduction de script(MIDI program 5)'],
