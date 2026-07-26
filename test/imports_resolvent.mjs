@@ -24,8 +24,27 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 const RACINE = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-/** On inspecte le code qu'on possède. `_archive/` est une archive assumée, `public/src/` une copie non suivie. */
-const EXCLUS = ['node_modules', '.git', '.claude', '_archive', 'dist', 'public/src', 'bp3-engine'];
+/** On inspecte le code qu'on possède. `_archive/` est une archive assumée. */
+const EXCLUS = ['node_modules', '.git', '.claude', '_archive', 'dist', 'bp3-engine'];
+
+/**
+ * `public/src/` NE DOIT PAS REPOUSSER (directive Romain 2026-07-26 : « à supprimer »).
+ *
+ * C'était une COPIE COMPLÈTE du transpileur (9 fichiers) et d'un dispatcher (7) qui n'existe plus
+ * du tout dans le dépôt vivant. Elle portait encore `encoder.js` et `prototypes.js`, supprimés le
+ * 2026-07-19 avec l'émission BP3, et n'avait pas `bpxAst.js` : du code d'AVANT la bascule, qu'un
+ * lecteur pouvait prendre pour l'outil courant et croire à un comportement qui n'existe plus.
+ *
+ * Elle était EXCLUE de ce garde — c'est ce qui lui permettait de dormir : le garde même qui existe
+ * parce que `compileBPS` a disparu ne regardait pas le dossier qui l'appelait encore.
+ *
+ * Le garde porte sur le RÉPERTOIRE, pas sur un fichier : c'est le miroir qu'on empêche, pas
+ * l'entrée qu'on avait remarquée. Même règle que `public/lib/` (test_alphabet_output_binding.js).
+ */
+if (existsSync(path.join(RACINE, 'public/src'))) {
+  console.log('  FAIL  public/src/ est revenu — copie du transpileur d\'avant la bascule, supprimée le 2026-07-26');
+  process.exit(1);
+}
 
 function fichiers(dir, acc = []) {
   for (const e of readdirSync(dir)) {
