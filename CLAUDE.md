@@ -99,6 +99,22 @@ prévenir dans le même geste. ⚠️ Ne jamais régénérer à l'aveugle pour f
 dégradant sa sortie) — régénérer aurait livré des oracles corrompus, muets. Valider sur un LOT,
 jamais sur un cas (`bells` reproduisait bit-à-bit, 49/51 scènes divergeaient).
 
+### Une garde s'écrit pour la CONSTRUCTION, jamais pour la forme signalée (payé 4× le 2026-07-26/27)
+Une garde écrite en réaction à un cas ne garde que ce cas, reste **verte**, et donne l'illusion que la
+famille est couverte. Quatre fois en deux jours : le filtre d'adresses n'acceptait que les alphabets ;
+la garde des sacs ne voyait que la première paire valuée ; celle de `@map` ne voyait que la forme
+pointée (un nom nu passait entier) ; celle du point d'attente n'inspectait que le premier niveau du
+membre droit — l'attente **ancrée** vit sous un assemblage, elle était donc invisible (BPx l'a mesurée,
+`e1be673`). Deux règles, non négociables :
+1. **Énumérer TOUTES les formes que le parser peut produire** pour la construction (pour une attente :
+   seule, collée, séparée par une espace, multiple, qualifiée, après un silence, dans un groupe
+   polymétrique), pas la graphie du ticket.
+2. **Descendre jusqu'aux feuilles.** Compter les voisins de surface ne voit pas ce qui vit sous un
+   nœud composite. Corollaire déjà payé ailleurs : chercher au mauvais endroit et conclure à l'absence.
+
+Et **prouver que la garde mord** par injection (retirer le correctif → elle rougit → remettre → verte),
+sinon on ne sait pas si elle garde ou si elle décore.
+
 ### Librairies `lib/` — toute édition passe par le bundle (OBLIGATOIRE)
 `src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.json`
 et `lib/digital/*.ts` en sont les sources. Éditer la source sans régénérer crée une divergence
