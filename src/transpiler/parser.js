@@ -3027,9 +3027,22 @@ function parse(tokens, opts = {}) {
         // virgule qu'un seul métier supprime la question au lieu de la contourner.
         // Effet de bord réparé au passage : une valeur qui COMMENÇAIT par un nombre ne
         // collectait pas sa suite (`switchon: 64 1` échouait là où `scale: todi_ka_4 0` passait).
+        // Combien de PARTIES ce contrôle attend-il ? La donnée le dit (`args` dans la lib) — c'est
+        // la seule façon de trancher, et aucune expression régulière ne le peut : `(keyxpand:B3 -1)`
+        // est JUSTE (deux parties d'UNE valeur) tandis que `(vel:50 pan:7)` est FAUX (deux ÉLÉMENTS
+        // d'un sac, qui se séparent par une virgule). Les caractères sont les mêmes ; seul le
+        // registre distingue. Constat bpx [806].
+        const specCle = (libCtx.controls && libCtx.controls[key]) || null;
+        const monoPartie = specCle && Array.isArray(specCle.args) && specCle.args.length === 1;
         const parts = [];
         let deuxPointsEnTrop = null;
+        let elementAvale = null;
         while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
+          // Un contrôle qui n'attend QU'UNE partie ne peut pas en avaler une seconde : ce qui suit
+          // est un autre ÉLÉMENT du sac, et il lui manque sa virgule.
+          if (monoPartie && parts.length > 0 && at(T.IDENT) && libCtx.controlNames.has(current().value)) {
+            elementAvale = current(); break;
+          }
           // Un SECOND deux-points dans la valeur : `(cc:98:45)`. Le deux-points AFFECTE, il ne
           // sépare pas — une paire en porte donc exactement UN. C'est la graphie qu'on obtient en
           // cherchant à désigner un composant sans connaître le point : elle doit tomber, sinon
@@ -3039,6 +3052,14 @@ function parse(tokens, opts = {}) {
           parts.push(advance().value);
         }
         const brut = parts.join('');
+        if (elementAvale) {
+          throw new ParseError(
+            `'(${key}:${brut} ${elementAvale.value}…)' : '${key}' n'attend qu'UNE valeur, donc `
+            + `'${elementAvale.value}' est un autre ÉLÉMENT du sac — il lui manque sa VIRGULE `
+            + `('${key}:${brut}, ${elementAvale.value}…'). L'espace ne sépare que les PARTIES d'une `
+            + `même valeur`,
+            elementAvale);
+        }
         if (deuxPointsEnTrop) {
           throw new ParseError(
             `'(${key}:${brut})' : le deux-points AFFECTE une valeur, il n'en sépare pas les parties `
@@ -4085,7 +4106,19 @@ function parse(tokens, opts = {}) {
         continue;
       }
 
-      // --- Standard qualifier value parsing (mode, weight, speed, etc.) ---
+      // --- Standard qualifier value parsing (mode, weight, etc.) ---
+      // Les CLÉS RÉSERVÉES du langage passent par ici, pas par le lecteur de valeur brute
+      // ci-dessus : elles n'avaient donc AUCUNE des deux gardes. `[mode:random weight:50]` —
+      // deux éléments séparés par une espace au lieu d'une virgule — traversait en silence.
+      const gardeElement = () => {
+        if (at(T.IDENT) && peek(1).type === T.COLON) {
+          throw new ParseError(
+            `'[${key}:… ${current().value}:…]' : deux ÉLÉMENTS du sac séparés par une ESPACE — `
+            + `il leur manque une VIRGULE ('[${key}:…, ${current().value}:…]'). L'espace ne sépare `
+            + `que les PARTIES d'une même valeur`,
+            current());
+        }
+      };
       let value, decrement = null;
       if (at(T.INT)) {
         const num = advance().value;
@@ -4142,6 +4175,7 @@ function parse(tokens, opts = {}) {
           value = `${value}/${expect(T.INT).value}`;
         }
       }
+      gardeElement();
       pairs.push({ type: 'QualPair', key, value, decrement });
       if (at(T.COMMA)) advance();
     }

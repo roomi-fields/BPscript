@@ -185,6 +185,34 @@ for (const forme of [
      "§2sexies l'instanciation nommée d'un composant reste légitime — transport.midi(ch:3)");
 }
 
+// ─── §2septies. LE SAC ÉCRIT AVEC DES ESPACES — la forme que nul crible ne voit ─────────────
+// Constat bpx [806]. `(vel:50 pan:7)` est FAUX (deux ÉLÉMENTS d'un sac) et `(keyxpand:B3 -1)` est
+// JUSTE (deux PARTIES d'une valeur) : les CARACTÈRES sont les mêmes. Seul le REGISTRE tranche —
+// combien de parties le contrôle attend-il. C'est la plus dangereuse des formes fautives, parce
+// qu'elle charge parfois sans erreur et peut vivre longtemps sans que rien ne la signale.
+// Étendue mesurée par bpx : zéro dans les scènes et la bibliothèque ; zéro aujourd'hui ne veut
+// pas dire zéro demain.
+for (const [forme, quoi] of [
+  ['S -> {C4 D4}(vel:50 pan:7)', 'deux éléments valués, espace au lieu de virgule'],
+  ['S -> C4 (vel:50 velcont)', 'un élément valué puis une clé nue, sans virgule'],
+  ['S -> C4 (wave:sine detune:5)', 'deux éléments, sac runtime'],
+  ['S -> C4 [mode:random weight:50]', 'deux éléments, sac moteur et CLÉS RÉSERVÉES — elles passaient par un autre lecteur, sans aucune garde'],
+  ['S -> C2 (C2:cutoff: env1)', "espace après le SECOND deux-points (écriture à sujet) — un crible qui ne regarde que le premier le manque"],
+  ['S -> C2 (*:cutoff: env1)', 'idem avec le sujet universel'],
+]) {
+  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+     `§2septies ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
+}
+// LES LÉGALES, indiscernables des précédentes au caractère près :
+for (const forme of [
+  'S -> {C4 D4}(vel:50, pan:7)', 'S -> C4 (keyxpand:B3 -1)', 'S -> C4 (keymap:C3 C3 C5 C5)',
+  'S -> C4 (vel:50, velcont)', 'S -> C4 [mode:random, weight:50]', 'S -> C2 (C2:cutoff:env1)',
+  'S -> C2 (*:cutoff:env1)',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length === 0, `§2septies '${forme}' est LÉGAL et doit passer — reçu : ${e.join(' | ')}`);
+}
+
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
   ['!(ins:5)', 'contrôle nommé, dans le flux — la traduction de script(MIDI program 5)'],
