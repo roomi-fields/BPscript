@@ -1022,7 +1022,7 @@ Symétrie LHS/RHS :
 #### Exception : flag en PRÉFIXE d'un contrôle
 
 ```ebnf
-rhs_flag_prefix  = flag_bracket , instant_control ;      (* [B=3, A=3] ![goto: 3 0] *)
+rhs_flag_prefix  = flag_bracket , engine_bag ;           (* [B=3, A=3] [goto: 3 0] *)
 instant_control  = "!" , ( engine_bag | runtime_bag ) ;  (* contrôle posé DANS le flux *)
 engine_bag       = "[" , qual_pair , { "," , qual_pair } , "]" ;   (* moteur *)
 runtime_bag      = "(" , qual_pair , { "," , qual_pair } , ")" ;   (* runtime *)
@@ -1043,10 +1043,14 @@ Raison : poser un flag *après* un `goto` n'a pas de sens — `goto` est un **sa
 flag doit être posé **avant** de sauter. L'AST place le nœud `FlagSet` **avant** le nœud du
 contrôle ; l'ordre est ainsi porté par l'arbre, fidèle au natif (`/B=3/ /A=3/ _goto(3,0)`).
 
-⚠️ **Le `!` n'est pas facultatif ici**, et c'est mesuré : `[B=3, A=3] [goto: 3 0]` (sans `!`) fait
-remonter les flags en `rule.flags` et transforme le `goto` en qualificatif de **règle** — il quitte
-la séquence, et l'ordre que cette exception protège disparaît de l'arbre. Seule la forme `![…]`
-garde un nœud **à sa position** dans le flux.
+⚠️ **Le `!` est INTERDIT ici**, et cette ligne corrige ce que j'avais écrit le 2026-07-26 au matin.
+`goto`, `failed`, `repeat` et `stop` sont des **procédures de niveau RÈGLE** (`scope:"rule"` dans
+`lib/controls.json`) : elles ne se posent pas à une position, elles valent pour la règle, et c'est
+en **qualificatif de règle** que le moteur les lit (BPx `mergeQualifierProcedures`,
+`loadGrammar.ts:3996`). Écrites dans le flux (`![goto: …]`), elles n'atteignent jamais la règle et
+laissent un **jeton de contrôle inerte** dans la production — mesuré sur `repeat.bps`. Les flags et
+la procédure sont donc **tous deux** au niveau de la règle, et l'ordre reste porté par l'encodage
+(`/B=3/ /A=3/ _goto(3,0)`).
 
 > Décision Romain 2026-07-18 (`flag-prefixe-sur-controle-rhs`, option b), dont la **règle** survit ;
 > seule l'écriture du contrôle a changé le 2026-07-26.

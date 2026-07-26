@@ -108,9 +108,9 @@ for (const [forme, quoi] of [
 }
 // Et les écritures ratifiées passent — sinon ce garde interdirait tout, ce qui ne prouverait rien.
 for (const forme of [
-  'S -> !(vel:80) C4', 'S -> !(vel:80, pan:64) C4', 'S -> ![goto: 3 0] C4',
+  'S -> !(vel:80) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 D4 [goto: 3 0]',
   'S -> !(keymap: C3 C3 C5 C5) C4', 'S -> !(cc.98:45) C4', 'S -> C4 D4 (vel:80)',
-  'S -> ![repeat: K1] C4', 'S -> !(keyxpand: B3 -1) C4',
+  'S -> C4 [repeat: K1]', 'S -> !(keyxpand: B3 -1) C4', 'S -> ![legato: 100] C4',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2ter l'écriture ratifiée '${forme}' doit être acceptée — reçu : ${e.join(' | ')}`);

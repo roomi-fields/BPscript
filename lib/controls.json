@@ -50,6 +50,7 @@
     },
     "repeat": {
       "bp3": "_repeat",
+      "scope": "rule",
       "args": [
         "expr"
       ],
@@ -57,6 +58,7 @@
     },
     "failed": {
       "bp3": "_failed",
+      "scope": "rule",
       "args": [
         "subgrammar",
         "rule"
@@ -65,11 +67,13 @@
     },
     "stop": {
       "bp3": "_stop",
+      "scope": "rule",
       "args": [],
       "description": "Stop derivation."
     },
     "goto": {
       "bp3": "_goto",
+      "scope": "rule",
       "args": [
         "subgrammar",
         "rule"

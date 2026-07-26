@@ -34,6 +34,7 @@ function registerLib(name, data) {
   cache[name] = data;  // also populate cache
   _universeControls = null;  // le registre a bougé → recalculer l'univers
   _universeComponentControls = null;
+  _universeRuleScope = null;
 }
 
 /**
@@ -54,6 +55,7 @@ function clearRegistry() {
   for (const k of Object.keys(cache)) delete cache[k];
   _universeControls = null;
   _universeComponentControls = null;
+  _universeRuleScope = null;
 }
 
 /**
@@ -104,6 +106,17 @@ function universeComponentControls() {
     _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
   }
   return _universeComponentControls;
+}
+
+// Univers des PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"`). La nature vient de la DONNÉE : le
+// parseur ne connaît aucun nom de procédure, il lit le registre.
+let _universeRuleScope = null;
+function universeRuleScopeControls() {
+  if (!_universeRuleScope) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeRuleScope = loadLibsFromDirectives(allDirs).ruleScopeControls;
+  }
+  return _universeRuleScope;
 }
 
 // Auto-register the pre-bundled libs at module load (Node AND browser).
@@ -220,6 +233,10 @@ function loadLibsFromDirectives(directives) {
     noArgControls: new Set(),
     compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
                                    // virgule appartient à la VALEUR, portée brute en une seule chaîne.
+    ruleScopeControls: new Set(),  // PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"` dans la lib) :
+                                   // goto, failed, repeat, stop. Elles ne s'appliquent pas à une
+                                   // POSITION mais à la RÈGLE entière — le moteur les extrait en
+                                   // métadonnée (BPx loadGrammar.ts:3996 mergeQualifierProcedures).
     componentControls: new Set(),  // contrôles désignés par un NUMÉRO DE COMPOSANT : `(cc.98:45)`.
                                    // Marqués `component:"number"` dans la lib. Le point appelle le
                                    // composant, les deux points affectent la valeur.
@@ -438,6 +455,10 @@ function loadLibsFromDirectives(directives) {
         if (def.component === 'number') {
           ctx.componentControls.add(name);
         }
+        // `scope:"rule"` — la procédure vaut pour la RÈGLE, pas pour un point de la séquence.
+        if (def.scope === 'rule') {
+          ctx.ruleScopeControls.add(name);
+        }
         // Argument = intervalle musical (fraction/cents/décimal) : la surface lit une
         // valeur d'intervalle et la porte brute ; la résolution (Kairos) la normalise.
         if (def.argType === 'interval') {
@@ -594,4 +615,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, registerLib, registerAll, clearRegistry };
+export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, registerLib, registerAll, clearRegistry };

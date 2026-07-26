@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls } from './libs.js';
+import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -2767,19 +2767,14 @@ function parse(tokens, opts = {}) {
     }
     if (j >= tokens.length) return false;
     const t = tokens[j];
-    // Contrôle moteur DANS LE FLUX : `[B=3, A=3] ![goto: 3 0]` (écriture ratifiée 2026-07-26).
-    //
-    // POURQUOI CE CAS EXISTE. La décision du 2026-07-18 dit que le flag se pose EN PRÉFIXE d'un
-    // contrôle, parce que poser un flag APRÈS un `goto` n'a pas de sens — on saute avant de
-    // l'avoir posé. Elle l'illustrait avec la forme d'appel `goto(3,0)`, supprimée depuis. La
-    // RÈGLE survit, seule son écriture change : il faut donc que le préfixe reconnaisse la
-    // nouvelle graphie, sinon la décision perd son objet.
-    //
-    // ⚠️ `[B=3, A=3] [goto: 3 0]` (sans le `!`) N'EST PAS un substitut, mesuré : les flags
-    // remontent en `rule.flags` et le `goto` devient un qualificatif de RÈGLE — il quitte le flux,
-    // et l'ordre que la décision protégeait disparaît de l'arbre. Seul `![…]` garde un nœud à sa
-    // position dans la séquence.
-    if (t.type === T.BANG && tokens[j + 1] && tokens[j + 1].type === T.LBRACKET) return true;
+    // ⚠️ J'AI EU TORT ICI LE 2026-07-26, et le retrait de cette branche est la correction.
+    // J'avais fait reconnaître `[B=3, A=3] ![goto: 3 0]` en jugeant que `[goto: 3 0]` « perdait »
+    // l'ordre, parce que le nœud quittait la séquence pour devenir un qualificatif de règle.
+    // J'ai jugé sur la FORME DE L'ARBRE au lieu de l'EFFET : `goto` est une procédure de niveau
+    // RÈGLE, et c'est justement en qualificatif de règle que le moteur la lit
+    // (BPx `mergeQualifierProcedures`, loadGrammar.ts:3996). La forme que je croyais fidèle était
+    // celle qui n'arrivait nulle part, et laissait un jeton inerte dans la production.
+    // Écriture correcte : `[B=3, A=3] [goto: 3 0]`, les deux au niveau de la règle.
     if (t.type !== T.IDENT || !isControlName(t.value)) return false;
     // Contrôle nu `striated`. (La forme d'appel `goto(3,0)` a été supprimée du langage le
     // 2026-07-26 — voir hub/decisions/2026-07-26-ecriture-des-controles-….)
@@ -3184,7 +3179,34 @@ function parse(tokens, opts = {}) {
       }
       // ![...] → instant engine control. Un tempo y est RELATIF (décision 2026-06-10).
       if (at(T.LBRACKET)) {
-        return { type: 'InstantControl', qualifier: parseQualifier('relative') };
+        {
+          // Une PROCÉDURE DE NIVEAU RÈGLE (`goto`, `failed`, `repeat`, `stop`) ne s'applique pas
+          // à une POSITION : elle vaut pour la règle entière, et le moteur l'extrait en
+          // MÉTADONNÉE (BPx `mergeQualifierProcedures`, loadGrammar.ts:3996, qui lit
+          // `ast.qualifiers`). L'écrire dans le flux la laisse dans la séquence : elle n'atteint
+          // jamais la règle, et un jeton de contrôle INERTE reste dans la production.
+          //
+          // Mesuré sur `repeat.bps` : `![repeat: K1=3]` laisse `{ctrl}` dans les jetons produits
+          // et `rule.qualifiers` ne porte que `weight` ; `[repeat: K1=3]` fait arriver
+          // `repeat=K1=3` en qualificatif de règle et le jeton inerte disparaît.
+          //
+          // C'est MON erreur de migration du 2026-07-26 : j'ai traduit toute forme d'appel
+          // autonome par `!(…)`/`![…]` — la position — sans distinguer les procédures qui n'en
+          // ont pas. On refuse plutôt qu'on relève en silence : deux écritures pour une même
+          // chose, c'est précisément ce que la décision d'écriture supprime.
+          const q = parseQualifier('relative');
+          const procedure = (q.pairs || []).find((p) => p && universeRuleScopeControls().has(p.key));
+          if (procedure) {
+            throw new ParseError(
+              `'![${procedure.key}: …]' : '${procedure.key}' est une procédure de niveau RÈGLE, elle `
+              + `ne se pose pas dans le flux — elle vaut pour la règle entière. Écrire `
+              + `'[${procedure.key}: ${procedure.value === true ? '…' : procedure.value}]' en `
+              + `suffixe de règle. Dans le flux, elle n'atteint jamais la règle et laisse un jeton `
+              + `de contrôle inerte dans la production`,
+              current());
+          }
+          return { type: 'InstantControl', qualifier: q };
+        }
       }
       // !symbol → out-time object
       if (at(T.IDENT)) {
