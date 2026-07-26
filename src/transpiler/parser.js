@@ -2901,7 +2901,40 @@ function parse(tokens, opts = {}) {
     // ne marchait qu'en flux `!(…)` — le suffixe de règle butait sur le point et lisait « flèche
     // attendue ». Les deux régimes doivent l'accepter, sinon on n'aurait déplacé le trou.
     if (peek(2).type === T.PERIOD && peek(3).type === T.INT && peek(4).type === T.COLON) return true;
-    return peek(2).type === T.COLON;
+    if (peek(2).type === T.COLON) return true;
+    // CLÉ NUE EN CONTENANCE — `S -> C4 (velcont)`, `S -> C4 (velcont, pitchcont)`.
+    //
+    // Ce test exigeait que la PREMIÈRE paire soit VALUÉE (`peek(2) === COLON`). Un sac dont la
+    // première clé est nue n'était donc pas reconnu comme suffixe de règle, et la ligne sortait
+    // « flèche attendue ». Asymétrie mesurée : `!(velcont)` compile dans le flux, `{C4 D4}(velcont)`
+    // sur un groupe, `C4(velcont)` collé au terminal — mais `C4 (velcont)` en suffixe de règle, non.
+    // Et `(vel:80, velcont)` passait quand `(velcont, vel:80)` échouait : seule la POSITION de la
+    // clé nue décidait.
+    //
+    // La page de référence dit que les quatre signes se comportent à l'identique dans les deux sacs
+    // et à toute profondeur — « rien de ce qui est écrit ici ne cache une exception plus loin ».
+    // Une forme acceptée dans le flux et refusée en contenance EST une exception cachée.
+    //
+    // Reconnaissance SYNTAXIQUE, comme le reste de ce test : on regarde jusqu'à la parenthèse
+    // fermante que TOUT élément est une clé, nue ou valuée. Sans ce balayage, `( IDENT )` happerait
+    // des formes qui n'ont rien d'un sac.
+    if (peek(2).type === T.COMMA || peek(2).type === T.RPAREN) {
+      let j = pos + 1;                       // sur la 1re clé
+      while (j < tokens.length) {
+        if (tokens[j].type !== T.IDENT) return false;
+        j++;
+        if (tokens[j] && tokens[j].type === T.COLON) {        // clé valuée : sauter sa valeur
+          j++;
+          while (j < tokens.length && tokens[j].type !== T.COMMA && tokens[j].type !== T.RPAREN) j++;
+        }
+        if (!tokens[j]) return false;
+        if (tokens[j].type === T.RPAREN) return true;
+        if (tokens[j].type !== T.COMMA) return false;
+        j++;
+      }
+      return false;
+    }
+    return false;
   }
 
   // Lit un littéral d'INTERVALLE MUSICAL pour un contrôle interval-typé (transpose…).

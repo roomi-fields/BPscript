@@ -260,6 +260,26 @@ for (const forme of [
 ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> !(sync:nexistepas) C4\n').length > 0,
    "§2nonies un message de synchronisation hors de la liste déclarée doit être refusé");
 
+// ─── §2decies. LA CLÉ NUE SE COMPORTE PAREIL DANS LES DEUX RÉGIMES ──────────────────────────
+// Asymétrie mesurée et fermée le 2026-07-26 : un sac dont la PREMIÈRE clé est nue n'était pas
+// reconnu en suffixe de règle — `C4 !(velcont)` compilait, `C4 (velcont)` sortait « flèche
+// attendue ». Et seule la POSITION décidait : `(vel:80, velcont)` passait quand
+// `(velcont, vel:80)` échouait.
+// La page de référence dit que les quatre signes se comportent à l'identique dans les deux sacs
+// et à toute profondeur — « rien de ce qui est écrit ici ne cache une exception plus loin ».
+// Une forme acceptée dans le flux et refusée en contenance EST une exception cachée.
+for (const forme of [
+  'S -> C4 (velcont)', 'S -> C4 (velcont, pitchcont)', 'S -> C4 (velcont, vel:80)',
+  'S -> C4 (vel:80, velcont)', 'S -> C4 (mute)', 'S -> {C4 D4}(velcont)', 'S -> C4(velcont) D4',
+  'S -> C4 !(velcont) D4', 'S -> C4 !(velcont, pitchcont) D4',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length === 0, `§2decies '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
+}
+// Et le balayage ne doit pas happer ce qui n'est PAS un sac de clés.
+ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> C4 (vel:50 pan:7)\n').length > 0,
+   '§2decies le balayage ne doit pas rendre légal un sac écrit avec des espaces');
+
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
   ['!(ins:5)', 'contrôle nommé, dans le flux — la traduction de script(MIDI program 5)'],
