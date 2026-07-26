@@ -41,9 +41,17 @@ const EXCLUS = ['node_modules', '.git', '.claude', '_archive', 'dist', 'bp3-engi
  * Le garde porte sur le RÉPERTOIRE, pas sur un fichier : c'est le miroir qu'on empêche, pas
  * l'entrée qu'on avait remarquée. Même règle que `public/lib/` (test_alphabet_output_binding.js).
  */
-if (existsSync(path.join(RACINE, 'public/src'))) {
-  console.log('  FAIL  public/src/ est revenu — copie du transpileur d\'avant la bascule, supprimée le 2026-07-26');
-  process.exit(1);
+// L'application figée entière, pas seulement son transpileur : la coquille (`index.html` et son
+// `timeline.js`) et la build WASM périmée qu'elle chargeait (`dist/`, du 10 avril, divergente du
+// `dist/` vivant du 19 juillet). Les huit imports de la page pointaient tous dans `public/src`.
+// Ne restent sous `public/` que `demos/` (LU par la conformité, 54 des 111 sources) et les deux
+// miroirs d'éditeur, qu'un document suivi décrit comme un mécanisme vivant — décision de Romain,
+// pas la nôtre.
+for (const mort of ['public/src', 'public/index.html', 'public/timeline.js', 'public/dist']) {
+  if (existsSync(path.join(RACINE, mort))) {
+    console.log(`  FAIL  ${mort} est revenu — application figée d'avant la bascule, supprimée le 2026-07-26`);
+    process.exit(1);
+  }
 }
 
 function fichiers(dir, acc = []) {
