@@ -244,6 +244,18 @@ function resolveActorAlphabetSource(nom, directives) {
  * Load all libraries referenced by @ directives in the AST.
  * Returns a merged context: { controls, controlMap, noArgControls, symbols }
  */
+/**
+ * LA FORME d'une déclaration de contrôle — liste BLANCHE de la frontière donnée → langage.
+ *
+ * Les 57 contrôles du dépôt portent TOUS `args` et `description` : la mesure fixe le critère, on
+ * ne l'a pas choisi. Exiger la forme plutôt qu'exclure des noms de clés est ce qui empêche la
+ * prochaine clé de commodité d'entrer au vocabulaire sans être remarquée.
+ */
+function estUneDeclarationDeControle(def) {
+  return def !== null && typeof def === 'object' && !Array.isArray(def)
+      && 'args' in def && 'description' in def;
+}
+
 function loadLibsFromDirectives(directives) {
   const ctx = {
     controls: {},       // name → { bp3, args, ... }
@@ -444,7 +456,7 @@ function loadLibsFromDirectives(directives) {
           if (hasNestedDefs) {
             // Sub-group: iterate its controls, tag each with transportGroup
             for (const [name, def] of Object.entries(groupContent)) {
-              if (name.startsWith('_')) continue;  // clé de DOCUMENTATION, pas un contrôle
+              if (name.startsWith('_')) continue;  // clé de DOCUMENTATION, cf. estUneDeclarationDeControle
               controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false });
             }
             continue;
@@ -456,11 +468,25 @@ function loadLibsFromDirectives(directives) {
     }
     for (const { source, isEngine } of controlSources) {
       for (const [name, def] of Object.entries(source)) {
-        // ⚠️ TOUTE clé préfixée `_` est de la DOCUMENTATION, jamais un contrôle. On ne filtrait que
-        // `_comment` : la première clé `_..._doc` posée dans une section a donc été chargée COMME UN
-        // CONTRÔLE, silencieusement (mesuré le 2026-07-27, `_sacSeul_doc` entrait au vocabulaire).
-        // La convention `_` pour la documentation vaut dans tout le dépôt ; le filtre la suit.
-        if (name.startsWith('_')) continue;
+        // ⚠️ FRONTIÈRE DONNÉE → LANGAGE. Un fichier de données ne doit JAMAIS pouvoir agrandir le
+        // langage en le commentant. On ne filtrait que la clé `_comment` : la première clé de
+        // documentation d'une autre forme posée dans une section de contrôles est donc entrée AU
+        // VOCABULAIRE comme un contrôle, en silence (mesuré le 2026-07-27 — 58 contrôles chargés,
+        // le 58e était une ligne d'explication).
+        //
+        // LISTE BLANCHE, PAS LISTE NOIRE (architecte, 2026-07-27) : exclure des noms de clés
+        // laisserait entrer la prochaine clé de commodité qui n'y figure pas. On exige donc la
+        // FORME d'une déclaration, et tout ce qui ne l'a pas est REFUSÉ — bruyamment, sauf la
+        // documentation, seule forme explicitement admise comme non-contrôle.
+        if (name.startsWith('_')) continue;   // documentation : convention du dépôt, admise
+        if (!estUneDeclarationDeControle(def)) {
+          throw new Error(
+            `lib '${dir.name}' : l'entrée '${name}' occupe une section de contrôles sans être une `
+            + `déclaration de contrôle (il lui faut 'args' ET 'description'). Une clé de `
+            + `documentation se préfixe par '_' ; sinon, c'est une entrée du VOCABULAIRE et elle `
+            + `doit se déclarer comme telle — un fichier de données n'agrandit pas le langage en `
+            + `le commentant.`);
+        }
         ctx.controls[name] = def;
         ctx.controlMap[name] = def.bp3 || `_${name}`;
         ctx.controlNames.add(name);
