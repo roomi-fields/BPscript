@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls } from './libs.js';
+import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -2831,6 +2831,11 @@ function parse(tokens, opts = {}) {
     // `(*:cutoff:Env …)` — qualificateur dont la 1re paire porte un sujet '*' (chaque terminal).
     if (peek(1).type === T.STAR && peek(2).type === T.COLON) return true;
     if (peek(1).type !== T.IDENT) return false;
+    // `(cc.98:45)` — contrôleur NUMÉROTÉ en contenance. Reconnaissance SYNTAXIQUE, comme le reste
+    // de ce test : `IDENT . NOMBRE :` ne peut être rien d'autre. Sans ce cas, la graphie de Romain
+    // ne marchait qu'en flux `!(…)` — le suffixe de règle butait sur le point et lisait « flèche
+    // attendue ». Les deux régimes doivent l'accepter, sinon on n'aurait déplacé le trou.
+    if (peek(2).type === T.PERIOD && peek(3).type === T.INT && peek(4).type === T.COLON) return true;
     return peek(2).type === T.COLON;
   }
 
@@ -2911,6 +2916,40 @@ function parse(tokens, opts = {}) {
       const key = expect(T.IDENT).value;
       const pos = { line: keyTok.line, col: keyTok.col };
       const sub = subject !== null ? { subject } : {};
+      // CONTRÔLEUR NUMÉROTÉ — `cc.98:45` (graphie tranchée par Romain le 2026-07-26).
+      // La règle d'or du langage appliquée à un cas qui n'avait pas été traité : le point APPELLE
+      // le composant (le contrôleur numéro 98), les deux points AFFECTENT la valeur. Le langage
+      // savait déjà nommer les contrôleurs qui ont un ALIAS (`mod` = CC1, `volume` = CC7) ; il ne
+      // savait pas en désigner un QUELCONQUE, et c'est ce trou que la forme positionnelle
+      // `cc(98,45)` bouchait de travers — en fabriquant du flux sans le point d'exclamation.
+      // Déclaratif : `component:"number"` dans la lib, aucun nom de contrôle en dur ici.
+      if (at(T.PERIOD) && universeComponentControls().has(key)) {
+        advance(); // .
+        if (!at(T.INT)) {
+          throw new ParseError(
+            `'${key}.…' désigne un composant NUMÉROTÉ : il attend un numéro, pas '${current().value}' `
+            + `(exemple : '(${key}.98:45)'). Les contrôleurs qui ont un nom s'écrivent par leur nom`,
+            current());
+        }
+        const component = Number(advance().value);
+        if (!at(T.COLON)) {
+          throw new ParseError(
+            `'${key}.${component}' désigne un composant sans lui affecter de valeur — il manque `
+            + `':valeur' (exemple : '(${key}.${component}:45)')`,
+            current());
+        }
+        advance(); // :
+        let valeur;
+        if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
+        else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
+        else valeur = expect(T.IDENT).value;
+        // `component` est un champ ADDITIF sur la paire : le contrat déclare les paires portées
+        // OPAQUEMENT par BPx (AST_SPEC §« il ne les interprète jamais »), un champ de plus les
+        // traverse donc sans rien casser. C'est le runtime de sortie qui sait qu'un CC a un numéro.
+        pairs.push({ key, component, value: valeur, ...sub, ...pos });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
       if (at(T.PERIOD)) {
         advance(); // .

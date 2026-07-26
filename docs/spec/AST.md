@@ -910,7 +910,16 @@ compile en `_script(CT n)` via dispatcher (rotation diatonique, transformation p
 ```
 RuntimeQualifier {
   type: "RuntimeQualifier"
-  pairs: { key: string, value: string | number | boolean, subject?: string, line, col }[]
+  pairs: { key: string, component?: number, value: string | number | boolean, subject?: string, line, col }[]
+  // component (optionnel) : NUMÉRO DE COMPOSANT du contrôle — `(cc.98:45)` → { key:"cc",
+  //   component:98, value:45 }. Le point APPELLE le composant (le contrôleur 98), les deux
+  //   points AFFECTENT la valeur : la règle d'or du langage, appliquée par Romain le 2026-07-26
+  //   à un cas qui n'avait pas été traité. Le langage savait nommer les contrôleurs qui ont un
+  //   ALIAS (mod = CC1, volume = CC7) ; il ne savait pas en désigner un QUELCONQUE, et c'est ce
+  //   trou que la forme positionnelle `cc(98,45)` bouchait — en fabriquant du flux sans le `!`.
+  //   Champ ADDITIF : BPx porte les paires opaquement (AST_SPEC : « il ne les interprète
+  //   jamais »), c'est le runtime de sortie qui sait qu'un CC a un numéro. Quels contrôles en
+  //   portent un est DÉCLARÉ dans la lib (`component:"number"`), jamais codé en dur.
   // key : RUNTIME_KEY (vel, wave, filter, filterQ, pan...)
   // value : 120, "sawtooth", "rrand(40,127)" ; true pour une clé nue (velcont, pitchcont)
   // subject (optionnel) : destinataire de la paire `[sujet:]key:value` (décision Romain 2026-06-21)

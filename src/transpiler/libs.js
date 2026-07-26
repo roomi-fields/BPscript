@@ -33,6 +33,7 @@ function registerLib(name, data) {
   registry[name] = data;
   cache[name] = data;  // also populate cache
   _universeControls = null;  // le registre a bougé → recalculer l'univers
+  _universeComponentControls = null;
 }
 
 /**
@@ -52,6 +53,7 @@ function clearRegistry() {
   for (const k of Object.keys(registry)) delete registry[k];
   for (const k of Object.keys(cache)) delete cache[k];
   _universeControls = null;
+  _universeComponentControls = null;
 }
 
 /**
@@ -91,6 +93,17 @@ function universeCompositeControls() {
     _universeCompositeControls = loadLibsFromDirectives(allDirs).compositeControls;
   }
   return _universeCompositeControls;
+}
+
+// Univers des contrôles désignés par un NUMÉRO DE COMPOSANT (`cc.98:45`). Même mécanisme que
+// les deux ci-dessus : la donnée déclare, le code ne nomme aucun contrôle.
+let _universeComponentControls = null;
+function universeComponentControls() {
+  if (!_universeComponentControls) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
+  }
+  return _universeComponentControls;
 }
 
 // Auto-register the pre-bundled libs at module load (Node AND browser).
@@ -207,6 +220,9 @@ function loadLibsFromDirectives(directives) {
     noArgControls: new Set(),
     compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
                                    // virgule appartient à la VALEUR, portée brute en une seule chaîne.
+    componentControls: new Set(),  // contrôles désignés par un NUMÉRO DE COMPOSANT : `(cc.98:45)`.
+                                   // Marqués `component:"number"` dans la lib. Le point appelle le
+                                   // composant, les deux points affectent la valeur.
     intervalControls: new Set(),  // controls whose argument is a MUSICAL INTERVAL (fraction 3/2, cents 700c,
                                   // decimal 1.5) — marqués `argType:"interval"` dans la lib. La valeur est
                                   // portée BRUTE (chaîne) et résolue en aval par normalizeRatio (Kairos).
@@ -413,6 +429,15 @@ function loadLibsFromDirectives(directives) {
         if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
         }
+        // Contrôle désigné par un NUMÉRO DE COMPOSANT : `(cc.98:45)`. Le point APPELLE le
+        // composant (le contrôleur 98), les deux points AFFECTENT la valeur — la règle d'or du
+        // langage, appliquée par Romain le 2026-07-26 à un cas qui n'avait pas été traité.
+        // DÉCLARATIF, jamais un nom en dur : le langage sait déjà nommer les contrôleurs qui ont
+        // un alias (mod = CC1, volume = CC7) ; il lui manquait de pouvoir en désigner un
+        // quelconque, et c'est ce trou que la forme positionnelle bouchait de travers.
+        if (def.component === 'number') {
+          ctx.componentControls.add(name);
+        }
         // Argument = intervalle musical (fraction/cents/décimal) : la surface lit une
         // valeur d'intervalle et la porte brute ; la résolution (Kairos) la normalise.
         if (def.argType === 'interval') {
@@ -569,4 +594,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, registerLib, registerAll, clearRegistry };
+export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, registerLib, registerAll, clearRegistry };

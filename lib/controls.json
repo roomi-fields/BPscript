@@ -336,15 +336,15 @@
         "description": "Disable MIDI switch channel"
       },
       "cc": {
+        "component": "number",
         "args": [
-          "number",
           "value"
         ],
         "range": [
           0,
           127
         ],
-        "description": "Generic MIDI CC: cc(number, value). For CCs without a named alias."
+        "description": "Controleur MIDI NUMEROTE. Se designe par son numero de composant : (cc.98:45) en contenance, !(cc.98:45) en flux. Pour les controleurs sans alias nomme -- ceux qui en ont un s'ecrivent par leur nom (mod = CC1, volume = CC7). Graphie tranchee par Romain le 2026-07-26 : le point APPELLE le composant (le controleur 98), les deux points AFFECTENT la valeur."
       }
     },
     "audio": {
@@ -433,14 +433,14 @@
           "blockkey"
         ],
         "default": "0,0",
-        "description": "Microtonal scale — name + base note. scale(0,0) = back to equal temperament."
+        "description": "Microtonal scale — name + base note. (scale:0,0) revient au temperament egal. Graphie : parentheses cle:valeur, jamais la forme d'appel positionnelle."
       },
       "scaleshift": {
         "args": [
           "degrees"
         ],
         "default": 0,
-        "description": "Scalar (diatonic) transposition — shift N degrees in the alphabet. scaleshift(2): Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control."
+        "description": "Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control."
       },
       "chromashift": {
         "args": [
