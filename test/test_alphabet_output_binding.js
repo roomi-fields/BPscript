@@ -72,7 +72,16 @@ for (const chan of ['audio', 'midi', 'osc']) {
 
 // --- routing.json SUPPRIMÉ du dépôt (les deux copies) ---
 check(!existsSync(new URL('../lib/routing.json', import.meta.url)), 'lib/routing.json supprimé');
-check(!existsSync(new URL('../public/lib/routing.json', import.meta.url)), 'public/lib/routing.json supprimé');
+
+// --- public/lib SUPPRIMÉ EN ENTIER (directive Romain 2026-07-26 : « fais partir la copie ») ---
+// `public/lib/` était un MIROIR PÉRIMÉ de `lib/` : 10 des 12 fichiers JSON divergeaient de leur
+// original, et trois n'existaient plus que là (`filter.json`, `tuning.json` au singulier,
+// `sounds/tabla_perc.json`) — des artefacts d'avant les renommages. Une autorité dupliquée sans
+// marqueur de fraîcheur est pire qu'une autorité absente : rien ne permet de dire laquelle est à
+// jour, et un lecteur de bonne foi lit la périmée. Le garde porte sur le RÉPERTOIRE, pas sur un
+// fichier : c'est le miroir entier qui ne doit pas repousser, pas seulement l'entrée qu'on a
+// remarquée. (La vérification jumelle de `routing.json` ci-dessus est ce qui a mis la piste.)
+check(!existsSync(new URL('../public/lib', import.meta.url)), 'public/lib/ supprimé (miroir périmé de lib/)');
 
 console.log(`\n${fail === 0 ? 'OK' : 'ÉCHEC'} — ${pass} passés, ${fail} échoués`);
 process.exit(fail ? 1 : 0);
