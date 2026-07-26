@@ -100,6 +100,13 @@ consommateurs AVANT de déclarer, pas après. Deux occurrences en 24 h, par deux
    (exiger la FORME d'une déclaration), jamais liste noire** de noms de clés à exclure — sinon la
    prochaine clé de commodité rentre pareil. Critère MESURÉ sur l'existant, jamais choisi.
 
+**Cette règle est MÉCANISÉE, ne compte pas sur ta mémoire** : `test/un_mot_nouveau_ne_confisque_pas_un_nom.mjs`
+confronte à chaque portillon le vocabulaire aux noms que les 149 scènes/démos DÉCLARENT. Une
+confiscation nouvelle rougit avant le push ; une confiscation assumée s'inscrit dans son registre,
+datée et motivée. Une règle qui exige qu'on y pense au bon moment n'est pas une règle, c'est une
+intention (architecte 2026-07-27) — donc quand une règle demande de la vigilance, **chercher ce qui
+la rend mécanique** : un garde, une forme obligatoire, un champ que la machine relit.
+
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/` :
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
