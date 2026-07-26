@@ -1141,6 +1141,40 @@ function emitActorLibRefs(ast) {
  * La directive d'origine RESTE : ce n'est pas une ardoise, c'est la déclaration qui CHARGE la
  * librairie pour le pipeline interne (résolution d'acteur, validation des terminaux).
  */
+/**
+ * MÈTRE DE SCÈNE — la scène pose le DÉFAUT, la règle le RECOUVRE pour elle seule.
+ *
+ * Ce n'est pas un arbitrage neuf : c'est la CASCADE PAR PORTÉE qui gouverne déjà tout le langage
+ * (`lib/controls.json` se déclare « layered by scope » ; `hub/decisions/2026-06-26-kai9-adresse-dans-
+ * arbre.md:17-19` : « override sur les détails, EN CASCADE PAR PORTÉE » ; `LANGUAGE.md:103` emploie
+ * la même formule pour le transport). Il n'y avait rien à inventer, seulement à retrouver.
+ *
+ * POURQUOI L'ÉMETTRE SUR LA RÈGLE plutôt que de laisser la directive de scène parler : le
+ * consommateur lit le mètre dans les QUALIFICATIFS DE LA RÈGLE (BPx `loadGrammar.ts:4136-4143`,
+ * `parseMeterSignature`), jamais dans les directives. Une directive de scène qui n'atteint aucune
+ * règle n'atteint personne — c'était l'état mesuré : `@meter:4/4` compilait et n'était consommé
+ * par rien.
+ *
+ * Une règle qui porte déjà un mètre n'est PAS touchée : c'est le recouvrement.
+ */
+function emitSceneMeter(ast) {
+  const dir = (ast.directives || []).find((d) => d && d.name === 'meter' && d.value != null);
+  if (!dir) return;
+  const valeur = String(dir.value);
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      const porteDeja = (r.qualifiers || []).some((q) => (q.pairs || []).some((p) => p && p.key === 'meter'));
+      if (porteDeja) continue;   // la règle recouvre le défaut de scène, pour elle seule
+      r.qualifiers = r.qualifiers || [];
+      r.qualifiers.push({
+        type: 'Qualifier',
+        pairs: [{ type: 'QualPair', key: 'meter', value: valeur, decrement: null }],
+        tempoOp: null,
+      });
+    }
+  }
+}
+
 function emitSceneLibRefs(ast) {
   const axes = new Set(['alphabet', 'tuning', 'octaves', 'scale']); // axes catalogue (core.json)
   const refs = [];
@@ -1202,6 +1236,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
+    emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
     emitSceneLibRefs(ast);           // idem en portée SCÈNE : `@test_alphabets.X` → `ast.libRefs` (sinon l'alphabet n'arrive jamais)
     result.ast = ast;
 
