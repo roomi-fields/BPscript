@@ -81,6 +81,25 @@ invalidées ; 2. le **commit** ; 3. la **migration attendue**, forme par forme. 
 de livrer un fail-loud, passer le corpus des consommateurs (`BPx/test/scenes/`) au compilateur et
 compter les casses — ne jamais les laisser les découvrir.
 
+### DÉCLARER UN MOT est une action de frontière — et la casse est MUETTE (payé 2× le 2026-07-26/27)
+Un fail-loud invalide une forme et **crie** ; un mot nouveau ne casse aucune syntaxe, il **CONFISQUE
+un nom** — et toute scène qui portait déjà ce nom est **tronquée en silence**. Côté consommateur,
+rien ne distingue une scène qui a changé d'une scène qui a été amputée : c'est le pire mode d'échec,
+pire que le fail-loud. Donc **même condition de livraison** que ci-dessus : mesurer les corpus
+consommateurs AVANT de déclarer, pas après. Deux occurrences en 24 h, par deux chemins différents :
+1. `mute`/`unmute`/`panic` déclarés sans argument → toute occurrence nue du mot devenait un
+   contrôle ; `patchbay-demo` écrivait 7 mots, il en arrivait 6 (mesuré par Kairos). Piège de fond :
+   **« sans argument » ≠ « s'écrit nu au fil de la séquence »** — les contrôles continus hérités de
+   BP3 s'écrivent nus (10 scènes du corpus), les mots nouveaux non. La donnée doit le DIRE
+   (`sacSeul`). Deux règles en sortent : **le plus local gagne** (une scène qui déclare un nom le
+   possède, et l'ombrage s'ANNONCE), et **un mot rencontré là où il ne peut pas l'être REFUSE**, en
+   donnant la réécriture — il ne disparaît jamais.
+2. Une clé de **documentation** posée dans une section de contrôles est entrée AU VOCABULAIRE comme
+   un contrôle (58 chargés, 57 après correction — le 58e était une ligne de prose). **Un fichier de
+   données n'agrandit pas le langage en le commentant.** Frontière donnée→langage : **liste BLANCHE
+   (exiger la FORME d'une déclaration), jamais liste noire** de noms de clés à exclure — sinon la
+   prochaine clé de commodité rentre pareil. Critère MESURÉ sur l'existant, jamais choisi.
+
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/` :
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
