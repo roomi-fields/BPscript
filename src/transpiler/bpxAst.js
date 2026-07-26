@@ -1190,7 +1190,24 @@ function validateMaps(ast) {
     for (const k in n) if (n[k] && typeof n[k] === 'object') collecterLabels(n[k]);
   };
   collecterLabels(ast.subgrammars);
+  // Une extremite NUE (`@map cc:1 -> sync1`) est lue comme un ALIAS : un nom seul. Elle n'etait
+  // validee par rien — `@map nimportequoi -> nimportequoi2` passait entier. Mesure d'Atlas
+  // confirmee le 2026-07-26. Ce qu'un nom nu peut designer, selon SCENES.md §6.1 : un alias
+  // declare, un trigger/gate/cv declare, un label pose, une scene, une macro.
+  for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
+  for (const m of ast.macros || []) if (m && m.name) connus.add(m.name);
+  const verifierNu = (bout, cote, ligne) => {
+    if (!bout || bout.kind !== 'alias' || connus.has(bout.name)) return;
+    erreurs.push({
+      message: `'@map' : ${cote} '${bout.name}' ne designe rien — un nom nu doit etre un alias `
+        + `declare ('@alias ${bout.name} = …'), un trigger ou un gate declare, un label pose sur `
+        + `un element, une scene ou une macro`
+        + ([...connus].length ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
+      line: ligne,
+    });
+  };
   const verifier = (bout, cote, ligne) => {
+    verifierNu(bout, cote, ligne);
     if (!bout || bout.kind !== 'scoped' || connus.has(bout.scope)) return;
     erreurs.push({
       message: `'@map' : ${cote} '${bout.scope}.${bout.name}' ne désigne rien — '${bout.scope}' n'est `

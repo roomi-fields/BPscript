@@ -35,7 +35,10 @@ for (const [corps, quoi] of [
   ['@map cc:1 -> kick.vel\n@mode:ord\nS -> C4@kick D4', 'un LABEL posé sur un élément'],
   ['@map cc:7 -> sys.tempo\n@mode:ord\nS -> C4', 'une commande système'],
   ['@map cc:1 -> [intensity]\n@mode:ord\nS -> C4', 'un flag'],
-  ['@map osc:/x -> alias1\n@mode:ord\nS -> C4', 'un alias'],
+  // ⚠️ Le témoin d'origine écrivait un alias JAMAIS DÉCLARÉ — il était faux dès l'écriture, et
+  // seul l'ajout de la garde des noms nus l'a révélé. Un témoin qui passe parce que rien ne
+  // vérifie n'est pas un témoin.
+  ['@alias alias1 = cc:9\n@map osc:/x -> alias1\n@mode:ord\nS -> C4', 'un alias DÉCLARÉ'],
   ['@map [flag] -> cc:2\n@mode:ord\nS -> C4', 'un flag vers un contrôleur'],
   ['@map cc:1 <-> [intensity]\n@mode:ord\nS -> C4', 'une correspondance bidirectionnelle'],
 ]) {
@@ -63,6 +66,28 @@ for (const [corps, quoi, mot] of [
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok((r.errors || []).length > 0, `3. ${quoi} doit CRIER — '${corps.split('\n')[0]}'`);
   ok(msg.includes(mot), `3. le message doit NOMMER le mot fautif '${mot}' — reçu : ${msg.slice(0, 110)}`);
+}
+
+// ─── 5. L'EXTREMITE NUE — le trou que la garde du premier jet ne voyait pas ─────────────────
+// Ma premiere garde ne validait que la forme POINTEE. Un nom SEUL est lu comme un alias, et rien
+// ne le verifiait : `@map nimportequoi -> nimportequoi2` passait ENTIER, les deux bouts compris.
+// Mesure d'Atlas, confirmee. Une garde ecrite pour la forme qu'on vient de corriger ne garde que
+// celle-la — c'est la troisieme fois aujourd'hui que je le paie.
+for (const [corps, quoi] of [
+  ['@map nimportequoi -> nimportequoi2\n@mode:ord\nS -> C4', 'deux noms nus inventes'],
+  ['@map cc:1 -> inconnu\n@mode:ord\nS -> C4', 'une cible nue inconnue'],
+]) {
+  const r = compile(corps);
+  ok((r.errors || []).length > 0, `5. ${quoi} doit CRIER — '${corps.split('\n')[0]}'`);
+}
+// Et ce qu'un nom nu PEUT designer passe : alias declare, trigger declare.
+for (const [corps, quoi] of [
+  ['@trigger sync1:midi\n@map cc:1 -> sync1\n@mode:ord\nS -> C4', 'un trigger declare'],
+  ['@alias breath = cc:2\n@map breath -> [x]\n@mode:ord\nS -> C4', 'un alias declare'],
+]) {
+  const r = compile(corps);
+  ok((r.errors || []).length === 0,
+     `5. ${quoi} doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }
 
 if (echecs.length) {
