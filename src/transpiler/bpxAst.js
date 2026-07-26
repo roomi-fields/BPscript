@@ -1157,6 +1157,55 @@ function emitActorLibRefs(ast) {
  *
  * Une règle qui porte déjà un mètre n'est PAS touchée : c'est le recouvrement.
  */
+/**
+ * GARDE DE LA CORRESPONDANCE `@map` — une extrémité PORTÉE doit nommer quelque chose de déclaré.
+ *
+ * MESURÉ le 2026-07-26 (signalé par bp3-frontend) : `@map foobar.X -> sync1` compilait. La
+ * directive arrive pourtant bien dans l'arbre — dans `ast.maps`, pas dans `ast.directives`, ce qui
+ * avait fait conclure à tort qu'elle ne portait rien. Le défaut n'est donc pas un silence de
+ * transport : c'est l'ABSENCE DE VALIDATION du référent. N'importe quel mot passait.
+ *
+ * CE QUI EST DÉCLARABLE, selon `docs/design/SCENES.md` §6.1-6.2 — on ne crée aucune forme, on
+ * vérifie celles qui existent :
+ *   `verse.kick`  → `verse` est une SCÈNE déclarée (`@scene verse`) ;
+ *   `kick.vel`    → `kick` est un LABEL posé sur des éléments (`C4@kick`) ;
+ *   `*.kick.vel`  → toutes les scènes.
+ * Un mot qui n'est aucun des trois ne désigne rien, et le taire fabrique une correspondance morte.
+ *
+ * ⚠️ CE QUE CETTE GARDE NE FAIT PAS : elle ne dit pas COMMENT une note entrante se déclare comme
+ * source (`@map note.C#2`). C'est une forme à créer, et cette question est chez Romain. Ici on
+ * ferme le silence, on ne remplit pas le vide : `note.C#2` tombe donc, faute de référent déclaré,
+ * et c'est le bon comportement tant que la forme n'existe pas.
+ */
+function validateMaps(ast) {
+  const erreurs = [];
+  if (!(ast.maps || []).length) return erreurs;
+  const connus = new Set(['*']);
+  for (const sc of ast.scenes || []) if (sc && sc.name) connus.add(sc.name);
+  for (const a of ast.aliases || []) if (a && a.name) connus.add(a.name);
+  const collecterLabels = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { n.forEach(collecterLabels); return; }
+    if (typeof n.label === 'string' && n.label) connus.add(n.label);
+    for (const k in n) if (n[k] && typeof n[k] === 'object') collecterLabels(n[k]);
+  };
+  collecterLabels(ast.subgrammars);
+  const verifier = (bout, cote, ligne) => {
+    if (!bout || bout.kind !== 'scoped' || connus.has(bout.scope)) return;
+    erreurs.push({
+      message: `'@map' : ${cote} '${bout.scope}.${bout.name}' ne désigne rien — '${bout.scope}' n'est `
+        + `ni une scène déclarée, ni un label posé sur un élément (\`C4@${bout.scope}\`), ni '*'`
+        + (connus.size > 1 ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
+      line: ligne,
+    });
+  };
+  for (const m of ast.maps) {
+    verifier(m.source, 'la source', m.line);
+    verifier(m.target, 'la cible', m.line);
+  }
+  return erreurs;
+}
+
 function emitSceneMeter(ast) {
   const dir = (ast.directives || []).find((d) => d && d.name === 'meter' && d.value != null);
   if (!dir) return;
@@ -1241,6 +1290,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
+    result.errors.push(...validateMaps(ast));  // `@map` : une extrémité portée doit nommer un référent déclaré
     emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
     emitSceneLibRefs(ast);           // idem en portée SCÈNE : `@test_alphabets.X` → `ast.libRefs` (sinon l'alphabet n'arrive jamais)
     result.ast = ast;
