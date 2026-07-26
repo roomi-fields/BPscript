@@ -181,7 +181,7 @@ section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
 section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
 {
   const src = `@controls
-S -> ![tempo:2, scale:pure_minor-third_meantone 0] Up_Down`;
+S -> ![tempo:2] !(scale:pure_minor-third_meantone 0) Up_Down`;
   // tokenize : pure_minor- doit être IDENT(pure_minor-) et third_meantone IDENT(third_meantone)
   const tokens = toks(src);
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
@@ -193,7 +193,8 @@ S -> ![tempo:2, scale:pure_minor-third_meantone 0] Up_Down`;
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
   if (rule && rule.rhs) {
     // La valeur de scale doit être 'pure_minor-third_meantone'
-    // On cherche dans les rhs elements pour le qualifier de tempo/scale
+    // Sac SCINDE le 2026-07-26 : tempo est MOTEUR (crochets), scale est RUNTIME (parentheses).
+    // On cherche dans les rhs elements pour le qualificatif de scale
     // Le qualifier est dans l'élément Exclaim ou dans qualifiers de la règle
     const exclaimEl = rule.rhs.find(el => el && el.type === 'Exclaim');
     if (exclaimEl && exclaimEl.qualifiers) {

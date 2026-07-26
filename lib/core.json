@@ -28,14 +28,14 @@
       "device",
       "port"
     ],
+    "_qualifierKeys_doc": "Cles RESERVEES du sac moteur []. `scale` en a ete RETIRE le 2026-07-26 (Romain : « il faut changer notre operateur [scale:2], c'est trop confusing ») : ce qualificatif etait la mise a l'echelle TEMPORELLE d'un groupe, homonyme du `scale` microtonal (runtime). SUPPRIME, pas renomme -- il est SUBSUME par la duree collee, {A B}:2, exactement comme [speed:N] l'avait ete le 2026-06-26 (decision trois-concepts-temps-duree). L'homonymie venait de BP3, dont la doc ne signale pas la collision ; on ne la reproduit pas.",
     "qualifierKeys": [
       "mode",
       "scan",
       "weight",
       "on_fail",
       "tempo",
-      "meter",
-      "scale"
+      "meter"
     ],
     "reservedDirectives": [
       "mode",

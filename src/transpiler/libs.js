@@ -35,6 +35,7 @@ function registerLib(name, data) {
   _universeControls = null;  // le registre a bougé → recalculer l'univers
   _universeComponentControls = null;
   _universeRuleScope = null;
+  _universeSacs = null;
 }
 
 /**
@@ -56,6 +57,7 @@ function clearRegistry() {
   _universeControls = null;
   _universeComponentControls = null;
   _universeRuleScope = null;
+  _universeSacs = null;
 }
 
 /**
@@ -106,6 +108,18 @@ function universeComponentControls() {
     _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
   }
   return _universeComponentControls;
+}
+
+// Univers des SACS — quel contrôle s'écrit entre crochets, lequel entre parenthèses. La donnée
+// le déclare par sa STRUCTURE (section `engine` contre section `runtime.*`), pas par un champ.
+let _universeSacs = null;
+function universeSacs() {
+  if (!_universeSacs) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const c = loadLibsFromDirectives(allDirs);
+    _universeSacs = { moteur: c.engineBagControls, runtime: c.runtimeBagControls };
+  }
+  return _universeSacs;
 }
 
 // Univers des PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"`). La nature vient de la DONNÉE : le
@@ -233,6 +247,9 @@ function loadLibsFromDirectives(directives) {
     noArgControls: new Set(),
     compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
                                    // virgule appartient à la VALEUR, portée brute en une seule chaîne.
+    engineBagControls: new Set(),   // déclarés sous `engine` → sac MOTEUR `[…]`
+    runtimeBagControls: new Set(),  // déclarés sous `runtime.*` → sac RUNTIME `(…)`
+                                    // « le sac dit QUI REÇOIT » : un contrôle ne vit pas dans les deux.
     ruleScopeControls: new Set(),  // PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"` dans la lib) :
                                    // goto, failed, repeat, stop. Elles ne s'appliquent pas à une
                                    // POSITION mais à la RÈGLE entière — le moteur les extrait en
@@ -436,12 +453,14 @@ function loadLibsFromDirectives(directives) {
         // Runtime section = dispatcher (sound/performance: vel, chan, wave...)
         if (isEngine) {
           ctx.bp3NativeControls.add(name);
+          ctx.engineBagControls.add(name);   // SAC : ce contrôle s'écrit entre CROCHETS
           // scope:"seq_prefix" = serial tools emitted as prefix inside group/sequence
           if (def.scope === 'seq_prefix') {
             ctx.seqPrefixControls.add(name);
           }
         } else {
           ctx.dispatcherOnlyControls.add(name);
+          ctx.runtimeBagControls.add(name);  // SAC : ce contrôle s'écrit entre PARENTHÈSES
         }
         if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
@@ -615,4 +634,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, registerLib, registerAll, clearRegistry };
+export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs, registerLib, registerAll, clearRegistry };

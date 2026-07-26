@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls } from './libs.js';
+import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -2973,6 +2973,13 @@ function parse(tokens, opts = {}) {
         if (at(T.COMMA)) advance();
         continue;
       }
+      if (universeSacs().moteur.has(key)) {
+        throw new ParseError(
+          `'(${key}:…)' : '${key}' est un contrôle MOTEUR, il s'écrit entre CROCHETS — `
+          + `'[${key}:…]', ou '![${key}:…]' pour le poser dans le flux. Les parenthèses s'adressent `
+          + `au RUNTIME`,
+          keyTok);
+      }
       if (at(T.COLON)) {
         advance();
         // JAMAIS D'ESPACE APRÈS LE DEUX-POINTS (arbitrage Romain 2026-07-26). La valeur commence
@@ -3867,6 +3874,21 @@ function parse(tokens, opts = {}) {
     // re-semer sont deux atomes BP3 distincts. `[shuffle]` (nu) reste = _rndseq.
     if (key === 'shuffle') {
       throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
+    }
+    // LE SAC DIT QUI REÇOIT — crochets = moteur, parenthèses = runtime. Un contrôle ne vit pas dans
+    // les deux : `lib/controls.json` le déclare par sa STRUCTURE (section `engine` contre section
+    // `runtime.*`), et cette structure fait autorité (décision 2026-06-14, « controls.json EST
+    // L'AUTORITÉ ; transpose, rotate, keyxpand, vel… sont des contrôles RUNTIME, appliqués par le
+    // DISPATCHER, JAMAIS par le moteur », qui se qualifie elle-même de règle établie).
+    // Mesuré au corpus : 76 emplois étaient du mauvais côté, et la MAJORITÉ se trompait pour deux
+    // d'entre eux — l'arbitre est la déclaration, jamais le nombre.
+    // Les clés réservées du langage (mode, weight, meter…) ne sont pas des contrôles : elles passent.
+    if (universeSacs().runtime.has(key) && !libCtx.qualifierKeys.has(key)) {
+      throw new ParseError(
+        `'[${key}:…]' : '${key}' est un contrôle de RUNTIME, il s'écrit entre PARENTHÈSES — `
+        + `'(${key}:…)', ou '!(${key}:…)' pour le poser dans le flux. Les crochets s'adressent au `
+        + `MOTEUR`,
+        tok);
     }
     if (universeControlNames().has(key) || libCtx.qualifierKeys.has(key)) return;
     // Ne JAMAIS suggérer « utiliser (clé:…) » : les deux formes ne sont pas des synonymes

@@ -143,6 +143,32 @@ for (const forme of [
   ok(e.length === 0, `§2quater l'espace ENTRE PARTIES reste légitime : '${forme}' — reçu : ${e.join(' | ')}`);
 }
 
+// ─── §2quinquies. LE SAC DIT QUI REÇOIT ──────────────────────────────────────────────────────
+// Crochets = moteur, parenthèses = runtime : un contrôle ne vit pas dans les deux. La déclaration
+// arbitre, JAMAIS le nombre — mesuré au corpus, la majorité se trompait pour deux contrôles sur
+// cinq. Décision `hub/decisions/2026-06-14-locus-perf-controls.md`.
+for (const [forme, quoi] of [
+  ['S -> C4 [vel:80]', 'contrôle runtime écrit dans le sac moteur'],
+  ['S -> C4 [keyxpand:B3 -1]', 'contrôle de dispatcher dans le sac moteur'],
+  ['S -> C4 !(legato:100) D4', 'contrôle moteur écrit dans le sac runtime'],
+  ['S -> C4 (tempo:2)', 'contrôle moteur écrit dans le sac runtime'],
+  ['S -> {C4, D4}[scale:2]', "le `scale` MOTEUR, supprimé le 2026-07-26 : subsumé par la durée collée"],
+]) {
+  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+     `§2quinquies ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
+}
+// Ce qui reste légitime — dont les CLÉS RÉSERVÉES du langage, qui ne sont pas des contrôles, et
+// le `rotate` de SÉQUENCE, moteur et déclaré (à ne pas confondre avec l'ancien rotate de hauteur,
+// renommé `scaleshift` le 2026-07-11).
+for (const forme of [
+  'S -> {C4, D4}:2', 'S -> C4 [weight:50]', 'S -> C4 [mode:random]', 'S -> C4 [tempo:2]',
+  'S -> !(vel:80) C4', 'S -> ![legato:100] C4', 'S -> !(scale:just_intonation C4) C4',
+  'S -> {C4 D4}![rotate:2]',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length === 0, `§2quinquies '${forme}' doit rester accepté — reçu : ${e.join(' | ')}`);
+}
+
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
   ['!(ins:5)', 'contrôle nommé, dans le flux — la traduction de script(MIDI program 5)'],
