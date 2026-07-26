@@ -1405,7 +1405,7 @@ BPScript distingue les **deux** gestes de transposition musicologiques (decision
   **tout** accordage (egal, inegal, parametrique). L'argument est un **intervalle** dans l'un des
   3 formats des temperaments : **fraction** `3/2`, **cents** `700c`, **decimal** `1.5` (un entier nu
   = ratio, `2` = octave). Ecriture **nue**, sans guillemets, comme toute valeur de controle :
-  `(transpose:700c)`, `@transpose:-2400c`, `transpose(3/2)`. Une valeur **numerique** (ex.
+  `(transpose:700c)`, `@transpose:-2400c`, `!(transpose:3/2)`. Une valeur **numerique** (ex.
   `transpose:2` compris comme un nombre de pas) n'existe plus : l'ancien regime par pas de grille est
   **supprime** (il n'etait une vraie transposition qu'en temperament egal).
 - **`scaleshift` — transposition SCALAIRE (diatonique)** : decale de **N degres** d'alphabet

@@ -433,7 +433,7 @@
           "blockkey"
         ],
         "default": "0,0",
-        "description": "Microtonal scale — name + base note. (scale:0,0) revient au temperament egal. Graphie : parentheses cle:valeur, jamais la forme d'appel positionnelle."
+        "description": "Microtonal scale — name + base note. (scale: 0 0) revient au temperament egal. Graphie : la virgule separe les ELEMENTS du sac, l'espace separe les PARTIES d'une valeur (decision Romain 2026-07-26)."
       },
       "scaleshift": {
         "args": [

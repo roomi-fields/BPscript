@@ -1022,22 +1022,34 @@ Symétrie LHS/RHS :
 #### Exception : flag en PRÉFIXE d'un contrôle
 
 ```ebnf
-rhs_flag_prefix = flag_bracket , control ;          (* [B=3, A=3] goto(3,0) *)
+rhs_flag_prefix  = flag_bracket , instant_control ;      (* [B=3, A=3] ![goto: 3 0] *)
+instant_control  = "!" , ( engine_bag | runtime_bag ) ;  (* contrôle posé DANS le flux *)
+engine_bag       = "[" , qual_pair , { "," , qual_pair } , "]" ;   (* moteur *)
+runtime_bag      = "(" , qual_pair , { "," , qual_pair } , ")" ;   (* runtime *)
+qual_pair        = key , [ "." , component ] , ":" , value ;       (* value = parties séparées par ESPACE *)
 ```
+
+Le non-terminal `control` employé ici jusqu'au 2026-07-26 n'était **défini nulle part** dans cette
+grammaire : la forme d'appel `goto(3,0)` vivait dans un exemple et dans le code, jamais dans une
+production. C'est une des raisons pour lesquelles elle a pu s'installer sans jamais être ratifiée
+(cf. `hub/constats/2026-07-26-forme-d-appel-controle-jamais-ratifiee-et-seule-autonome.md`). Elle est
+**supprimée** — décision `2026-07-26-ecriture-des-controles-virgule-espace-deux-points-point.md` —
+et remplacée ci-dessus par une production explicite.
 
 Règle générale : `[]` se place en **suffixe** (après notes et terminaux). **Exception
 encadrée** : devant un **contrôle** (`goto`, `repeat`, …), le flag se place en **préfixe**.
 
 Raison : poser un flag *après* un `goto` n'a pas de sens — `goto` est un **saut**, donc le
-flag doit être posé **avant** de sauter. L'AST place le nœud `FlagSet` **avant** le nœud
-`Control` ; l'ordre est ainsi porté par l'arbre, et l'émission BP3 respecte l'ordre du natif
-(`/B=3/ /A=3/ _goto(3,0)`).
+flag doit être posé **avant** de sauter. L'AST place le nœud `FlagSet` **avant** le nœud du
+contrôle ; l'ordre est ainsi porté par l'arbre, fidèle au natif (`/B=3/ /A=3/ _goto(3,0)`).
 
-L'exception est **limitée aux contrôles** : la règle « `[]` = suffixe » reste vraie partout
-ailleurs. Les deux formes restent acceptées devant un contrôle, mais seule la forme préfixe
-est fidèle au natif.
+⚠️ **Le `!` n'est pas facultatif ici**, et c'est mesuré : `[B=3, A=3] [goto: 3 0]` (sans `!`) fait
+remonter les flags en `rule.flags` et transforme le `goto` en qualificatif de **règle** — il quitte
+la séquence, et l'ordre que cette exception protège disparaît de l'arbre. Seule la forme `![…]`
+garde un nœud **à sa position** dans le flux.
 
-> Décision Romain 2026-07-18 (`flag-prefixe-sur-controle-rhs`, option b).
+> Décision Romain 2026-07-18 (`flag-prefixe-sur-controle-rhs`, option b), dont la **règle** survit ;
+> seule l'écriture du contrôle a changé le 2026-07-26.
 
 ### 4.13 Backticks
 

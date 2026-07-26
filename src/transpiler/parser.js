@@ -2767,10 +2767,23 @@ function parse(tokens, opts = {}) {
     }
     if (j >= tokens.length) return false;
     const t = tokens[j];
+    // Contrôle moteur DANS LE FLUX : `[B=3, A=3] ![goto: 3 0]` (écriture ratifiée 2026-07-26).
+    //
+    // POURQUOI CE CAS EXISTE. La décision du 2026-07-18 dit que le flag se pose EN PRÉFIXE d'un
+    // contrôle, parce que poser un flag APRÈS un `goto` n'a pas de sens — on saute avant de
+    // l'avoir posé. Elle l'illustrait avec la forme d'appel `goto(3,0)`, supprimée depuis. La
+    // RÈGLE survit, seule son écriture change : il faut donc que le préfixe reconnaisse la
+    // nouvelle graphie, sinon la décision perd son objet.
+    //
+    // ⚠️ `[B=3, A=3] [goto: 3 0]` (sans le `!`) N'EST PAS un substitut, mesuré : les flags
+    // remontent en `rule.flags` et le `goto` devient un qualificatif de RÈGLE — il quitte le flux,
+    // et l'ordre que la décision protégeait disparaît de l'arbre. Seul `![…]` garde un nœud à sa
+    // position dans la séquence.
+    if (t.type === T.BANG && tokens[j + 1] && tokens[j + 1].type === T.LBRACKET) return true;
     if (t.type !== T.IDENT || !isControlName(t.value)) return false;
-    // Contrôle avec arguments `goto(3,0)` ou contrôle nu `striated`.
-    const after = tokens[j + 1];
-    return (after && after.type === T.LPAREN) || isNoArgControl(t.value);
+    // Contrôle nu `striated`. (La forme d'appel `goto(3,0)` a été supprimée du langage le
+    // 2026-07-26 — voir hub/decisions/2026-07-26-ecriture-des-controles-….)
+    return isNoArgControl(t.value);
   }
 
   function isTempoOpQualifier() {
@@ -2968,57 +2981,29 @@ function parse(tokens, opts = {}) {
           if (at(T.COMMA)) advance();
           continue;
         }
-        // Raw value: everything until next key:value pair or )
-        // Commas between args of the same control (e.g. keyxpand:G4,2)
-        // are part of the value, not separator for next pair.
-        // A comma is a pair separator only if followed by IDENT COLON.
-        let val;
-        if (at(T.REST)) { // negative number
-          advance();
-          val = -Number(expect(T.INT).value);
-        } else if (at(T.INT) || at(T.FLOAT)) {
-          val = Number(advance().value);
-        } else {
-          // String value — collect until next pair (IDENT:) or )
-          let parts = [];
-          while (!at(T.RPAREN) && !atEnd()) {
-            // Stop at , only if followed by IDENT: (next qualifier pair)
-            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COLON) break;
-            // Stop at , if followed by `*:` (next pair with '*' subject, ex. `, *:cutoff:Env`)
-            if (at(T.COMMA) && peek(1).type === T.STAR && peek(2).type === T.COLON) break;
-            // v0.8 : stop at , if followed by IDENT PERIOD IDENT (référence pointée
-            // = nouvelle pair, e.g. `, sound.bell`).
-            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.PERIOD
-                && libCtx.controlNames.has(peek(1).value)) break;
-            // Stop at , if followed by bare IDENT ) — but only if IDENT is a known control
-            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.RPAREN
-                && libCtx.controlNames.has(peek(1).value)) break;
-            if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COMMA
-                && libCtx.controlNames.has(peek(1).value)) break;
-            parts.push(advance().value);
-          }
-          val = parts.join('');
+        // VALEUR D'UNE PAIRE — la VIRGULE la ferme, et rien d'autre (décision Romain
+        // 2026-07-26, « un rôle par signe »). L'espace sépare les PARTIES d'une valeur,
+        // la virgule sépare les ÉLÉMENTS du sac : `(keymap: C3 C3 C5 C5, vel:80)` = deux
+        // éléments, dont le premier a quatre parties.
+        //
+        // CE QUE CETTE SIMPLICITÉ REMPLACE. Ce lecteur portait sept conditions d'arrêt et une
+        // boucle de continuation, toutes nées d'un seul défaut : la virgule faisait DEUX métiers
+        // (séparer les paires ET joindre les parties d'une valeur, `keyxpand:C4,2`). Il fallait
+        // donc deviner, à chaque virgule, lequel des deux — et la devinette s'appuyait sur le
+        // registre des contrôles, ce qui couplait le parseur au vocabulaire. Ne laisser à la
+        // virgule qu'un seul métier supprime la question au lieu de la contourner.
+        // Effet de bord réparé au passage : une valeur qui COMMENÇAIT par un nombre ne
+        // collectait pas sa suite (`switchon: 64 1` échouait là où `scale: todi_ka_4 0` passait).
+        const parts = [];
+        while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
+          if (parts.length > 0 && current().spaceBefore) parts.push(' ');
+          parts.push(advance().value);
         }
-        // If comma follows and next token is NOT IDENT: → multi-arg value, keep collecting
-        while (at(T.COMMA) && !(peek(1).type === T.IDENT && peek(2).type === T.COLON)
-                           && !(peek(1).type === T.STAR && peek(2).type === T.COLON)
-                           && !(peek(1).type === T.IDENT && peek(2).type === T.PERIOD && libCtx.controlNames.has(peek(1).value))
-                           && !(peek(1).type === T.IDENT && peek(2).type === T.RPAREN && libCtx.controlNames.has(peek(1).value))
-                           && !(peek(1).type === T.IDENT && peek(2).type === T.COMMA && libCtx.controlNames.has(peek(1).value))
-                           && !at(T.RPAREN) && !atEnd()) {
-          advance(); // skip comma
-          val = String(val) + ',';
-          if (at(T.REST)) {
-            advance();
-            val += '-' + (at(T.INT) ? advance().value : '');
-          } else if (at(T.INT) || at(T.FLOAT)) {
-            val += advance().value;
-          } else {
-            while (!at(T.COMMA) && !at(T.RPAREN) && !atEnd()) {
-              val += advance().value;
-            }
-          }
-        }
+        const brut = parts.join('');
+        // Une valeur d'UNE SEULE partie numérique reste un NOMBRE (`vel:80` → 80, `pan:-1` → -1) :
+        // les consommateurs la lisent ainsi. Plusieurs parties = chaîne portée brute, découpée
+        // par l'aval qui seul connaît l'opération.
+        const val = /^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut;
         pairs.push({ key, value: val, ...sub, ...pos });
       } else {
         // Bare key (no-arg control like velcont, pitchcont)
@@ -3285,8 +3270,18 @@ function parse(tokens, opts = {}) {
 
       // Control: vel(120), goto(2,1) — check BEFORE symbol call.
       // Jamais pour un terminal préfixé d'acteur (acteur.terminal n'est pas un contrôle).
+      // FORME D'APPEL `nom(param)` SUPPRIMÉE DU LANGAGE (décision Romain 2026-07-26,
+      // hub/decisions/2026-07-26-ecriture-des-controles-…). « fonction() n'existe pas et n'a
+      // jamais existé en BPScript ». Elle avait déjà été pesée et écartée le 2026-07-02
+      // (DIGITAL_FUNCTIONS.md §7). Un contrôle s'écrit `(nom:valeur)` au runtime, `[nom:valeur]`
+      // au moteur, `!` devant pour le poser dans le flux.
+      //
+      // On ne se contente pas de retirer la branche : sans message, l'appel retomberait en
+      // `SymbolCall` et sonnerait comme une note — le mode d'échec le plus coûteux, mesuré le
+      // 2026-07-26. On le NOMME donc, avec sa réécriture, et le sac dépend de la nature du
+      // contrôle : la donnée le dit, on ne le devine pas.
       if (!actor && at(T.LPAREN) && isControlName(name)) {
-        return parseControl(name, tok);
+        throw new ParseError(refusFormeAppel(name), tok);
       }
 
       // Control without args: striated, smooth, destru, stop
@@ -3332,8 +3327,18 @@ function parse(tokens, opts = {}) {
 
       // Plain symbol (might be a control like vel, tempo, goto)
       // Check if it's a control: name(args) without being a symbol call context
+      // FORME D'APPEL `nom(param)` SUPPRIMÉE DU LANGAGE (décision Romain 2026-07-26,
+      // hub/decisions/2026-07-26-ecriture-des-controles-…). « fonction() n'existe pas et n'a
+      // jamais existé en BPScript ». Elle avait déjà été pesée et écartée le 2026-07-02
+      // (DIGITAL_FUNCTIONS.md §7). Un contrôle s'écrit `(nom:valeur)` au runtime, `[nom:valeur]`
+      // au moteur, `!` devant pour le poser dans le flux.
+      //
+      // On ne se contente pas de retirer la branche : sans message, l'appel retomberait en
+      // `SymbolCall` et sonnerait comme une note — le mode d'échec le plus coûteux, mesuré le
+      // 2026-07-26. On le NOMME donc, avec sa réécriture, et le sac dépend de la nature du
+      // contrôle : la donnée le dit, on ne le devine pas.
       if (!actor && at(T.LPAREN) && isControlName(name)) {
-        return parseControl(name, tok);
+        throw new ParseError(refusFormeAppel(name), tok);
       }
 
       return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
@@ -3349,6 +3354,18 @@ function parse(tokens, opts = {}) {
 
   function isNoArgControl(name) {
     return libCtx.noArgControls.has(name);
+  }
+
+  /** Message de refus de la forme d'appel — il RÉÉCRIT au lieu de constater. Le sac vient de la
+   *  DONNÉE (`libCtx.engineControls`), jamais d'une liste de noms en dur ici. */
+  function refusFormeAppel(name) {
+    const moteur = libCtx.bp3NativeControls && libCtx.bp3NativeControls.has(name)
+                && !(libCtx.dispatcherOnlyControls && libCtx.dispatcherOnlyControls.has(name));
+    const cible = moteur ? `![${name}: …]` : `!(${name}: …)`;
+    return `la forme d'appel '${name}(…)' n'existe pas en BPScript (supprimée le 2026-07-26) — `
+      + `écrire '${cible}' pour le poser dans le flux, ou '${moteur ? `[${name}: …]` : `(${name}: …)`}' `
+      + `en contenance. Les deux points AFFECTENT la valeur, l'espace en sépare les parties `
+      + `('[goto: 3 0]'), la virgule sépare les éléments du sac ('(vel:80, pan:64)')`;
   }
 
   function isControlName(name) {
@@ -3426,8 +3443,13 @@ function parse(tokens, opts = {}) {
       return { type: 'TieStart', symbol: name, args };
     }
 
-    // Check for ! after call
-    if (at(T.BANG)) {
+    // `!` après un appel : ACCORD (`B3!C7`) ou CONTRÔLE DE FLUX (`Sym(…) !(vel:80)`) ?
+    // C'est ce qui SUIT le `!` qui tranche, pas le `!` lui-même — il est surchargé
+    // (LANGUAGE.md, table de syntaxe). Devant `(` ou `[`, c'est un contrôle posé dans le flux ;
+    // le lire comme un accord fait échouer la ligne sur « symbole attendu après ! ».
+    // Payé le 2026-07-26 : la migration du corpus pose des `!(…)` partout, et une scène tombait
+    // sur cette lecture — donc pour une raison FAUSSE, masquant celle qu'on voulait lui voir.
+    if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
       return parseSimultaneousGroup(name, tok, args);
     }
 
@@ -3884,19 +3906,32 @@ function parse(tokens, opts = {}) {
       expect(T.COLON);
       checkQualifierKey(key, keyTok);
 
-      // --- Control qualifier with raw value (CSS model) ---
-      // For known controls, consume everything after : until ] as raw value.
-      // Commas between arguments are part of the value: [goto:3,1] → "3,1"
-      // Commas before a new key (IDENT:) separate qualifier pairs: [goto:3,1, scan:left]
-      // Spaces are preserved: [keyxpand: B3 -1] → value = "B3 -1"
-      // Encoder converts spaces to commas for BP3: _keyxpand(B3,-1)
+      // --- Valeur d'une paire MOTEUR (modèle CSS) ---
+      // L'espace sépare les PARTIES d'une valeur (`[goto: 3 0]`), la VIRGULE sépare les ÉLÉMENTS
+      // du sac (`[mode:random, weight:50]`) — un rôle par signe, décision Romain 2026-07-26, et
+      // la même règle que dans le sac runtime.
+      //
+      // AVANT, la virgule faisait les deux ici aussi : `[goto:3,1]` rendait la valeur « 3,1 »,
+      // c'est-à-dire une LISTE POSITIONNELLE, supprimée par la même décision. On la refuse au
+      // lieu de l'absorber en silence — 8 occurrences dans le corpus, migrées en `[goto: 3 1]`.
       if (libCtx.controlNames.has(key)) {
         let rawValue = '';
         while (!at(T.RBRACKET) && !atEnd()) {
-          // Stop at , if followed by IDENT: (next qualifier pair)
-          if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.COLON) break;
-          // Stop at , if followed by bare IDENT ] (next bare key qualifier)
-          if (at(T.COMMA) && peek(1).type === T.IDENT && peek(2).type === T.RBRACKET) break;
+          if (at(T.COMMA)) {
+            // La virgule ferme la valeur. Si ce qui suit n'ouvre pas un nouvel ÉLÉMENT (une clé,
+            // nue ou suivie de ':'), c'est le reste d'une liste positionnelle : on le NOMME.
+            const suite = peek(1);
+            const ouvreUnElement = suite.type === T.IDENT
+              && (peek(2).type === T.COLON || peek(2).type === T.RBRACKET || peek(2).type === T.COMMA);
+            if (!ouvreUnElement) {
+              throw new ParseError(
+                `'[${key}: ${rawValue.trim()},…]' : la virgule sépare les ÉLÉMENTS du sac, pas les `
+                + `parties d'une valeur (liste positionnelle supprimée le 2026-07-26) — écrire `
+                + `'[${key}: ${rawValue.trim()} …]', les parties séparées par une ESPACE`,
+                current());
+            }
+            break;
+          }
           const t = current();
           if (rawValue.length > 0 && t.type !== T.RPAREN && t.type !== T.COMMA) {
             const lastChar = rawValue[rawValue.length - 1];

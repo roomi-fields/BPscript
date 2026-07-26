@@ -223,28 +223,37 @@ section('nature — couverture des types de nœuds RHS');
 }
 
 {
-  // Control moteur avec args (goto) → engine-control
-  const ast = parseSource('@controls\nS -> A goto(2,1)');
+  // Contrôle MOTEUR à plusieurs valeurs, posé dans le flux : `![goto: 2 1]`.
+  // La forme d'appel `goto(2,1)` que ce test employait a été SUPPRIMÉE du langage le 2026-07-26
+  // (décision Romain). Le nœud n'est donc plus un `Control` mais un `InstantControl` portant un
+  // `Qualifier` moteur — et c'est exactement ce qu'on veut vérifier : le contrôle reste À SA
+  // POSITION dans la séquence (`flux:true`), et ses deux valeurs restent SÉPARÉES par l'espace,
+  // sans que le parseur ait eu besoin de connaître son arité.
+  const ast = parseSource('@controls\nS -> A ![goto: 2 1]');
   const elems = rhs0(ast);
-  const gotoCtrl = elems.find(e => e.type === 'Control' && e.name === 'goto');
-  assert('Control goto présent', gotoCtrl !== undefined,
+  const gotoCtrl = elems.find((e) => e.type === 'InstantControl'
+    && (e.qualifier?.pairs || []).some((p) => p.key === 'goto'));
+  assert('![goto: 2 1] présent dans le flux', gotoCtrl !== undefined,
     `rhs=${JSON.stringify(elems.map(e => e.type+':'+e.name))}`);
-  assert('Control goto nature=engine-control', gotoCtrl?.payload?.nature === 'engine-control',
+  assert('![goto: 2 1] nature=instant, flux', gotoCtrl?.payload?.nature === 'instant' && gotoCtrl?.payload?.flux === true,
     `got ${JSON.stringify(gotoCtrl?.payload)}`);
+  assert('![goto: 2 1] les deux valeurs restent séparées par l\'espace',
+    (gotoCtrl?.qualifier?.pairs || []).some((p) => p.key === 'goto' && p.value === '2 1'),
+    `got ${JSON.stringify(gotoCtrl?.qualifier?.pairs)}`);
 }
 
 {
   // Control runtime (vel) posé explicitement → transport-control
-  const ast = parseSource('@controls\nS -> A vel(80) B');
+  const ast = parseSource('@controls\nS -> A !(vel:80) B');
   const elems = rhs0(ast);
   const velCtrl = elems.find(e => e.type === 'Control' && e.name === 'vel');
   if (velCtrl) {
     assert('Control vel nature=transport-control', velCtrl?.payload?.nature === 'transport-control',
       `got ${JSON.stringify(velCtrl?.payload)}`);
   } else {
-    // vel(80) peut se parser différemment selon la position (rule-level runtimeQualifier)
+    // !(vel:80) peut se parser différemment selon la position (rule-level runtimeQualifier)
     // On vérifie juste que le rhs contient des éléments
-    assert('A vel(80) B: A present dans rhs', elems.some(e => e.name === 'A'),
+    assert('A !(vel:80) B: A present dans rhs', elems.some(e => e.name === 'A'),
       `rhs=${JSON.stringify(elems.map(e => e.type+':'+e.name))}`);
   }
 }
@@ -366,7 +375,7 @@ section('Agnosticisme — zéro notion BP3 dans le payload');
 @actor tabla
   transport.midi(ch:10)
 S -> { sitar.Sa, tabla.dha(vel:80) }
-S -> !(vel:80) A _transpose(2) goto(2,1) -`;
+S -> !(vel:80) A _transpose(2) ![goto: 2 1] -`;
   const ast = parseSource(src);
   const json = JSON.stringify(ast);
 

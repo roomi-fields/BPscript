@@ -668,13 +668,13 @@ S -> a b c`);
 // `Scene.homomorphisms` — reste couvert par les assertions conservées plus haut dans ce fichier.
 
 // ============================================================
-// F1 — parseControl : pitchbend(+200) et token invalide
+// F1 — parseControl : !(pitchbend:+200) et token invalide
 // ============================================================
 
 section('F1 — parseControl : +N dans args + token invalide -> ParseError');
 
 {
-  // pitchbend(+200) doit compiler sans gel.
+  // !(pitchbend:+200) doit compiler sans gel.
   // Stratégie : on exécute dans un Worker en lui donnant un délai maximal,
   // mais comme Worker est lourd, on utilise juste un try/catch synchrone —
   // le test échouera si le process freeze (le runner a un timeout global).
@@ -682,20 +682,20 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@controls\nS -> a pitchbend(+200)');
+    compiled = compileToBPxAST('@controls\nS -> a !(pitchbend:+200)');
   } catch (e) {
     caughtError = e;
   }
-  assert('pitchbend(+200) ne lève pas d\'exception fatale', caughtError === null,
+  assert('!(pitchbend:+200) ne lève pas d\'exception fatale', caughtError === null,
     caughtError ? caughtError.message : '');
-  assert('pitchbend(+200) compile sans erreur',
+  assert('!(pitchbend:+200) compile sans erreur',
     compiled && compiled.errors.length === 0,
     compiled ? compiled.errors.map(e => e.message).join('; ') : 'compiled=undefined');
   // +200 encodé comme +200 ou 200 — symétrique du -200
   if (compiled && compiled.controlTable) {
     const ct = compiled.controlTable[0];
     const val = ct && ct.assignments && ct.assignments.pitchbend;
-    assert('pitchbend(+200) valeur 200 ou +200',
+    assert('!(pitchbend:+200) valeur 200 ou +200',
       val === 200 || val === '+200' || String(val) === '200',
       `val=${JSON.stringify(val)}`);
   }
@@ -703,17 +703,17 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
 
 {
   // Token vraiment invalide dans les args -> ParseError explicite (pas de gel)
-  // pitchbend(@200) : '@' n'est pas un token valide dans les args
+  // !(pitchbend:@200) : '@' n'est pas un token valide dans les args
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@controls\nS -> a pitchbend(@invalid)');
+    compiled = compileToBPxAST('@controls\nS -> a !(pitchbend:@invalid)');
   } catch (e) {
     caughtError = e;
   }
   // Le résultat peut être : une erreur dans compiled.errors, ou une ParseError catchée,
   // mais jamais un gel du process.
-  assert('pitchbend(@invalid) ne gèle pas (résultat défini)',
+  assert('!(pitchbend:@invalid) ne gèle pas (résultat défini)',
     compiled !== undefined || caughtError !== null,
     'compileBPS a gelé (undefined sans exception)');
 }

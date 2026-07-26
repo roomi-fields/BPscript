@@ -64,31 +64,63 @@ ok(erreursDe(scene('S -> {C4 script(Beep)} D4')).some((m) => m.includes('script(
 ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n').some((m) => m.includes('script(Beep)')),
    "§2 un appel hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
 
-// ─── §2bis. LE TÉMOIN DE BPx — un contrôle non importé ne doit pas SONNER ────────────────────
-// Constat `hub/constats/2026-07-26-controle-non-declare-degenere-en-note.md` (bpx [790]) : même
-// source, seule l'en-tête change. Sans la déclaration d'import, `ins(12)` n'était pas refusé —
-// il était reclassé en appel de symbole SONNANT, donc en note, et le moteur le dérivait
-// fidèlement : cinq feuilles sonnantes au lieu de deux, sans un mot. C'est le mode d'échec le
-// plus coûteux d'un chantier de nommage : le nom tout neuf se met à sonner.
-// Le message doit NOMMER LA CAUSE (import manquant), pas prétendre que le nom n'existe pas.
+// ─── §2bis. LE TÉMOIN DE BPx — refermé À LA SOURCE le 2026-07-26 ─────────────────────────────
+// Constat `hub/constats/2026-07-26-controle-non-declare-degenere-en-note.md` (bpx [790]) : sans
+// la déclaration d'import, `ins(12)` n'était pas refusé — il était reclassé en appel de symbole
+// SONNANT, donc en note, et le moteur le dérivait fidèlement, sans un mot.
+//
+// La décision d'écriture du même jour a supprimé la FORME D'APPEL elle-même. Le mode d'échec
+// n'est donc plus seulement attrapé, il est DEVENU IMPOSSIBLE : il n'y a plus d'appel à
+// reclasser. Ce paragraphe vérifie que le refus tient AVEC et SANS import — parce qu'une forme
+// qui n'existe pas ne doit pas dépendre de ce que la scène a chargé.
 {
-  const REGLES = 'S -> ins(12) chan(3) vel(80) cc(7,100) C4 D4';
-  const sans = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${REGLES}\n`);
-  for (const appel of ['ins(12)', 'chan(3)', 'vel(80)']) {
-    const m = sans.find((x) => x.includes(appel));
-    ok(m !== undefined, `§2bis témoin bpx : '${appel}' sans import doit être refusé, jamais dégénérer en note`);
-    ok(m !== undefined && /pas importé/.test(m) && !/n'existe pas/.test(m),
-       `§2bis le message pour '${appel}' doit nommer la CAUSE (import manquant) — il existe bel et bien au registre`);
+  const REGLES = 'S -> ins(12) chan(3) vel(80) C4 D4';
+  for (const [nom, entete] of [['sans import', '@core\n'], ['avec import', '@core\n@controls\n']]) {
+    const errs = erreursDe(`${entete}@alphabet.western:midi\n@mode:ord\n${REGLES}\n`);
+    ok(errs.length > 0, `§2bis témoin bpx (${nom}) : la forme d'appel doit être refusée`);
+    // Deux chemins, deux messages, et c'est correct : AVEC import, le parseur reconnaît le nom
+    // et refuse la GRAPHIE ; SANS import, le nom n'est pas un contrôle pour cette scène et c'est
+    // la garde de vocabulaire qui refuse. Ce qui compte est qu'aucun des deux ne laisse passer.
+    ok(errs.some((m) => /n'existe pas|forme d'appel|pas importé/.test(m)),
+       `§2bis témoin bpx (${nom}) : le refus doit être motivé — reçu : ${errs.join(' | ')}`);
   }
-  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${REGLES}\n`).length === 0,
-     '§2bis le même témoin AVEC import doit rester accepté (aucun faux positif)');
+  // Et l'écriture qui la remplace passe, elle, dans les deux régimes.
+  ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> !(vel:80) C4 D4\n').length === 0,
+     '§2bis la nouvelle écriture !(vel:80) doit rester acceptée');
+  ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> C4 D4 (vel:80)\n').length === 0,
+     '§2bis la contenance (vel:80) doit rester acceptée');
+}
+
+// ─── §2ter. LES TROIS DÉRIVES D'ÉCRITURE ne peuvent pas revenir ──────────────────────────────
+// Décision Romain 2026-07-26 (hub/decisions/2026-07-26-ecriture-des-controles-…) : un rôle par
+// signe. Ce paragraphe est le garde demandé au point 7 du chantier — il tient les TROIS formes
+// supprimées, pas seulement celle qui a déclenché l'affaire.
+for (const [forme, quoi] of [
+  ['S -> vel(80) C4', "forme d'appel, contrôle runtime"],
+  ['S -> goto(3,0) C4', "forme d'appel, contrôle moteur"],
+  ['S -> keymap(C3,C3,C5,C5) C4', "forme d'appel à plusieurs valeurs"],
+  ['S -> !(cc:98,45) C4', 'liste positionnelle après le deux-points, sac runtime'],
+  ['S -> ![goto: 3, 0] C4', 'liste positionnelle après le deux-points, sac moteur'],
+  ['S -> !(keyxpand:(B3, -1)) C4', 'valeur-groupe entre parenthèses (superseded)'],
+]) {
+  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+     `§2ter ${quoi} : '${forme.replace('S -> ', '').replace(' C4', '')}' doit être refusé`);
+}
+// Et les écritures ratifiées passent — sinon ce garde interdirait tout, ce qui ne prouverait rien.
+for (const forme of [
+  'S -> !(vel:80) C4', 'S -> !(vel:80, pan:64) C4', 'S -> ![goto: 3 0] C4',
+  'S -> !(keymap: C3 C3 C5 C5) C4', 'S -> !(cc.98:45) C4', 'S -> C4 D4 (vel:80)',
+  'S -> ![repeat: K1] C4', 'S -> !(keyxpand: B3 -1) C4',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length === 0, `§2ter l'écriture ratifiée '${forme}' doit être acceptée — reçu : ${e.join(' | ')}`);
 }
 
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
-  ['ins(5)', 'contrôle nommé déclaré — la traduction de script(MIDI program 5)'],
-  ['cc(98,0)', 'contrôle nommé déclaré — la traduction du controller'],
-  ['chan(1)', 'contrôle nommé déclaré'],
+  ['!(ins:5)', 'contrôle nommé, dans le flux — la traduction de script(MIDI program 5)'],
+  ['!(cc.98:0)', 'contrôleur NUMÉROTÉ — la traduction du controller'],
+  ['!(chan:1)', 'contrôle nommé, dans le flux'],
   ['C4(vel:80)', 'terminal d\'alphabet porteur d\'un qualificatif de runtime'],
 ]) {
   const errs = erreursDe(scene(`S -> ${appel} C4`));

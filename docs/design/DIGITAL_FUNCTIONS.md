@@ -139,7 +139,31 @@ Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire
   `transpose` reste dans `lib/controls.json` comme **surface de contrôle**. La surface d'invocation
   multi-arguments est **ratifiée** (§7).
 
-## 7. Surface d'invocation — RATIFIÉE (Romain, 2026-07-02) — forme A « valeur-groupe »
+## 7. Surface d'invocation — ⚠️ MÉCANISME **SUPERSEDED** le 2026-07-26 (motif conservé)
+
+> **Le MÉCANISME décrit ici — la « valeur-groupe » `keyxpand:(pivot:B3, factor:-1)` — n'est plus le
+> canon.** Il est remplacé par `hub/decisions/2026-07-26-ecriture-des-controles-virgule-espace-deux-points-point.md`
+> (RATIFIÉE, Romain) : l'**espace** sépare les parties d'une valeur, la **virgule** sépare les
+> éléments du sac. Écriture actuelle : `(keyxpand: B3 -1)`.
+>
+> **Le MOTIF de §7 est conservé, et il était juste** : la virgule faisait DEUX métiers, et il fallait
+> l'en sortir. Ce qui change est la solution. La valeur-groupe donnait à `(` un second sens — le
+> groupement — en plus de « s'adresser au runtime », flagrant dans `[goto:(3, 0)]` où une parenthèse
+> se serait ouverte à l'intérieur d'un sac moteur. Ne laisser à la virgule qu'**un seul métier**
+> supprime le problème au lieu d'ajouter une profondeur pour le contourner.
+>
+> **La note de portée ci-dessous portait déjà la piste** : « l'engine `[]` sépare déjà les deux
+> niveaux autrement (espace = arguments, virgule = instructions) — non concerné (à reconfirmer) ».
+> Le sac moteur était donc conforme depuis le début, et c'est SA règle qui a été généralisée au sac
+> runtime, plutôt qu'une règle neuve inventée pour lui. Le « à reconfirmer » a été tranché.
+>
+> **Ce qui reste vrai de §7, et pourquoi on le garde écrit** : le rejet de la forme d'appel
+> `keyxpand(...)`. Elle avait DÉJÀ été pesée et écartée ici le 2026-07-02 — « préserve la logique du
+> langage ». Elle est revenue par la fiche d'un contrôle qui la documentait, et a été supprimée du
+> parseur le 2026-07-26. Le texte d'origine est conservé ci-dessous pour cette traçabilité.
+
+### Texte d'origine (2026-07-02), conservé pour traçabilité
+
 
 Décision langage. Résout la **surcharge de la virgule** dans le sac `()` : elle séparait à la fois les
 réglages du sac ET les arguments d'un même réglage, le parseur devant deviner (lookahead `IDENT:` +
