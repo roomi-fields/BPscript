@@ -602,6 +602,16 @@ function parse(tokens, opts = {}) {
       return;
     }
 
+    // ── Note PORTANT UN POINT D'ATTENTE — `C4<!sync1` ──────────────────
+    // Le symbole reste une NOTE : le point d'attente est ancré SUR lui, il ne le remplace pas.
+    // Mesuré le 2026-07-26 : l'annotateur ne descendait pas dans `el.symbol`, donc `C4<!sync1`
+    // perdait sa nature `sounding` — la même note écrite sans point d'attente la portait. Un
+    // consommateur qui trie les feuilles par nature perdait donc la note en silence.
+    if (type === 'SymbolWithTriggerIn' && el.symbol) {
+      annotateRhsNode(el.symbol, ruleActor);
+      return;
+    }
+
     // ── Silence ────────────────────────────────────────────────────────
     if (type === 'Rest' || type === 'UndeterminedRest') {
       el.payload = { nature: 'rest' };
