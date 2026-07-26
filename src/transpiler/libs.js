@@ -145,7 +145,7 @@ registerAll(BUNDLED_LIBS);
 // aval (Kairos). L'alias ouvre l'accès transpileur au catalogue (SCENE_VALUES).
 // `scale` → scales.json : axe-composant à catalogue (domain:scale) promu au CUTOVER universel
 // (Romain 2026-07-14, tour [412]) — ouvre l'accès transpileur pour valider `@scale.<nom>`.
-const fileAliases = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales' };
+const fileAliases = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales', sound: 'sounds' };
 
 function loadJsonFile(name) {
   const canonical = fileAliases[name] || name;

@@ -5,12 +5,13 @@
   "_defaults_doc": "Cascade de défauts (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). @core est le SOCLE : il porte TOUTES les valeurs par défaut de scène. Multi-niveau : @core → lib invoquée (override) → scène → acteur → occurrence. `components` = composants par défaut par axe (recouverts par @alphabet.X/@tuning.X…). `values` = valeurs scalaires overridables (@diapason:N…) ; `overriddenBy: \"axe.champ\"` = le champ d'un composant invoqué recouvre le défaut. Aucun défaut n'est codé dans le code.",
   "_schema_doc": "SCHÉMA STRUCTUREL du langage (donnée, plus en dur dans le code — Romain 2026-07-05, prépare les user libraries + le partage du vocabulaire à Kanopi). `catalogAxes` = axes d'entité dont les valeurs sont des ENTRÉES DE CATALOGUE (une lib par axe, ex. tunings.json) → référence inexistante = erreur. `addressKeys` = clés d'adresse de sortie (canal/appareil/port). `reservedDirectives` = mots de directive du LANGAGE (non des valeurs de lib).",
   "schema": {
-    "_catalogAxes_doc": "Axes dont les valeurs sont des ENTREES DE CATALOGUE : une reference inexistante est une ERREUR, jamais un silence. `sound` N'Y EST PAS ENCORE, et c'est un TROU CONNU, mesure le 2026-07-26 : `@sound.<nom>` compile et ne produit RIEN -- ni prototype, ni reference de librairie -- la ou `@alphabet.X` et `@tuning.X` crient sur une reference inconnue. L'y ajouter FAIT CRIER, mais sur TOUT nom et pour toujours tant qu'aucune librairie d'objets sonores n'existe (mesure : la garde test_catalog_axes_colon_reject echoue alors sur `sound : catalogue vide`, et 6 scenes du corpus tombent). Les deux gestes sont donc COUPLES : fermer le silence exige de creer d'abord le type de librairie (decision 2026-07-26-trois-manques-du-temps, chantier 2).",
+    "_catalogAxes_doc": "Axes dont les valeurs sont des ENTREES DE CATALOGUE : une reference inexistante est une ERREUR, jamais un silence. `sound` y a ete AJOUTE le 2026-07-26 EN MEME TEMPS que la librairie lib/sounds.json -- les deux gestes sont couples : declarer l'axe sans catalogue ferait crier sur TOUT nom, pas seulement sur l'inconnu (garde test_catalog_axes_colon_reject.js:39).",
     "catalogAxes": [
       "alphabet",
       "tuning",
       "octaves",
-      "scale"
+      "scale",
+      "sound"
     ],
     "_deprecatedTransports_doc": "Noms de canal PÉRIMÉS → REJETÉS fail-loud au parse (décision 2026-07-16, Romain : on SUPPRIME, pas de rétrocompat). `browser`/`webaudio` = ancien modèle profils d'environnement (routing.json), ABANDONNÉ ; écrire le canon `audio` directement. `video`/`visual` = axe visuel supprimé (décision 2026-07-14). Le parser nomme la faute et pointe vers audio/midi/osc.",
     "deprecatedTransports": [

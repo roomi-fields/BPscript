@@ -1176,14 +1176,19 @@ function emitSceneMeter(ast) {
 }
 
 function emitSceneLibRefs(ast) {
-  const axes = new Set(['alphabet', 'tuning', 'octaves', 'scale']); // axes catalogue (core.json)
+  const axesHauteur = new Set(['alphabet', 'tuning', 'octaves', 'scale']); // portés par un autre canal
   const refs = [];
   for (const d of ast.directives || []) {
-    if (!d || !d.name || !d.subkey || axes.has(d.name)) continue;
-    // Une directive dont le NOM est une librairie de hauteur chargeable et dont le POINT nomme une
-    // entrée résoluble : c'est une invocation d'axe catalogue par librairie.
+    if (!d || !d.name || !d.subkey || axesHauteur.has(d.name)) continue;
+    // Une directive dont le NOM est une librairie chargeable et dont le POINT nomme une entrée
+    // résoluble : c'est une invocation par provenance.
     const entree = loadLib(d.name, d.subkey);
-    if (!entree || !entree.notes) continue;           // pas un alphabet → rien à normaliser
+    if (!entree) continue;
+    // ⚠️ Le filtre exigeait `entree.notes` — il ne laissait donc passer QUE les alphabets, pour
+    // lesquels je l'avais écrit. `@sound.tabla_perc` résolvait sans rien émettre : l'invocation
+    // était acceptée et ne PRODUISAIT rien. Accepter n'est pas transmettre — c'est le même défaut
+    // que la directive de mètre qui parlait dans le vide. Corrigé le 2026-07-26 : toute entrée
+    // résoluble émet son adresse, quel que soit ce qu'elle contient.
     const adresse = `${d.name}.${d.subkey}`;
     if (!refs.includes(adresse)) refs.push(adresse);
   }

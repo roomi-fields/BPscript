@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, loadLibsFromDirectives, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs } from './libs.js';
+import { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -47,7 +47,7 @@ const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport',
  * (Romain 2026-07-14, tour [412]) rejette `@axe:<X>` pour chacun — plus jamais d'axe-composant qui
  * tolère l'ancienne forme.
  */
-const CATALOG_AXIS_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'scale']);
+const CATALOG_AXIS_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'scale', 'sound']);
 
 /**
  * Noms de canal de sortie PÉRIMÉS → rejetés fail-loud au parse (décision 2026-07-16, Romain :
@@ -1414,6 +1414,20 @@ function parse(tokens, opts = {}) {
         soundAssignments: soundAssignments.length > 0 ? soundAssignments : null,
         line: tok.line,
       };
+    }
+
+    // `@sound:<X>` — REFUS, comme pour tout axe à catalogue. Ce cas doit être traité ICI, AVANT la
+    // section déclarative : `@sound` est à la fois un axe-composant et un mot de SECTION, et le
+    // chemin de la section happait le `:` sans passer par la garde universelle plus bas. Résultat
+    // mesuré : `@sound:tabla_perc` sortait un « ligne non reconnue » générique là où `@alphabet:X`
+    // nomme la faute et donne la réécriture. Un refus qui ne nomme pas la cause vaut à peine mieux
+    // qu'un silence — c'est la leçon de la journée, appliquée à ma propre addition.
+    if (name === 'sound' && !subkey && at(T.COLON) && peek(1).type === T.IDENT
+        && (describeVocabulary().components.sound || []).includes(peek(1).value)) {
+      throw new ParseError(
+        `'@sound:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '@sound.<nom>' `
+        + `(règle : ':' affecte, '.' appelle).`,
+        tok);
     }
 
     // @sound [.libname[:variant]] [{ ... }|name { ... }]+ — bloc déclaratif (v0.8)
