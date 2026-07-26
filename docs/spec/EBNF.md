@@ -688,10 +688,17 @@ A[/2]                  → /2 A
 > non négociable. La spec était en retard sur le registre ; une spec qui montre un contrôle dans le
 > mauvais sac enseigne la faute.
 >
-> ⚠️ NE PAS CONFONDRE avec l'HOMONYME `[scale:N]` — valeur unique et numérique, mise à l'échelle
-> TEMPORELLE d'un groupe (`{C4, D4}[scale:2]`, BPx `test/scenes/m4/m4_13_scale_speed_combined`).
-> Celui-là est bien moteur, et il n'est PAS déclaré dans `lib/controls.json`. Même situation que
-> `rotate` : un mot, deux contrôles.
+> ⚠️ L'HOMONYME MOTEUR `[scale:N]` — valeur unique et numérique, mise à l'échelle TEMPORELLE d'un
+> groupe — A ÉTÉ SUPPRIMÉ le même jour, quelques heures après que j'aie écrit ici qu'il « était bien
+> moteur ». C'était vrai à l'heure où je l'écrivais et faux à la fin de la journée : Romain a tranché
+> (« il faut changer notre opérateur `[scale:2]`, c'est trop confusing »), et la suppression l'emporte
+> sur le renommage parce que la forme de remplacement existait déjà —
+> `hub/decisions/2026-07-26-controle-moteur-scale-supprime-subsume-par-la-duree.md`, qui se rattache
+> au précédent de `[speed:N]` (2026-06-26). **Écriture actuelle : `{A B}:N`, la durée collée.**
+>
+> L'homonymie ne venait pas de nous : en BP3, le `_scale` microtonal et la variable `scale` du tempo
+> portent le même mot, et la doc du moteur ne signale nulle part la collision. On l'avait héritée ;
+> on ne la reproduit pas. Reste `rotate`, qui a résolu la sienne par un renommage (`scaleshift`).
 [retro]                → _retro (clé nue = sans parenthèses)
 [rotate:2]             → _rotate(2) (clé avec valeur = avec parenthèses)
 [shuffle]              → _rndseq (brasse seul ; marqueur seq_prefix en tête de RHS ou de groupe)

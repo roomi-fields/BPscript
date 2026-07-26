@@ -9,7 +9,7 @@ let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
 const HEAD = '@mod\n@controls\n@alphabet.western:audio\n';
 function ast(src) { return compileToBPxAST(HEAD + src); }
-function cvs(r) { return (r.ast.cvInstances || []); }
+function cvs(r) { return (r.ast?.cvInstances || []); }
 
 // 1. Déclaration descriptive : lib.type(namedArgs), pas de cible
 {
@@ -32,11 +32,16 @@ function cvs(r) { return (r.ast.cvInstances || []); }
   check(/Math.sin/.test(c.code || ''), '2: code capté');
 }
 
-// 3. Args positionnels
+// 3. Args POSITIONNELS — REFUSÉS depuis le 2026-07-26
+// La déclaration d'un modulateur avait échappé au ménage : ce n'est pas un sac de contrôle, donc
+// la garde des sacs ne la voyait pas. Or la règle ne connaît pas de sous-zone — un argument dont
+// la PLACE tient lieu de nom n'existe plus nulle part dans le langage. La forme nommée reste la
+// bonne (cas 2 ci-dessus), exactement comme `transport.midi(ch:3)`.
 {
   const r = ast('cv env2 : mod.adsr(10, 200, 0.5, 300)\nS -> C2 (cutoff:env2)\n');
-  const c = cvs(r)[0] || {};
-  check(c.args && c.args.length === 4 && c.args[0] === 10, '3: 4 args positionnels, obtenu ' + JSON.stringify(c.args));
+  const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+  check(/POSITIONNEL/.test(msg), '3: args positionnels refusés, obtenu ' + (msg || 'AUCUNE ERREUR'));
+  check(/attack:/.test(msg), '3: le refus NOMME les paramètres attendus, obtenu ' + msg);
 }
 
 // 4. NON-RÉGRESSION : `cv ramp:sc` reste une Declaration temporelle (PAS une CVInstance)

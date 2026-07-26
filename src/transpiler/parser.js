@@ -1664,11 +1664,24 @@ function parse(tokens, opts = {}) {
                     advance().value;
         namedArgs[key] = val;
       } else {
-        const val = at(T.INT) ? Number(advance().value) :
-                    at(T.FLOAT) ? Number(advance().value) :
-                    at(T.IDENT) ? advance().value :
-                    advance().value;
-        args.push(val);
+        // ARGUMENT POSITIONNEL — refusé, comme partout ailleurs dans le langage (décision Romain
+        // 2026-07-26). Cette sous-zone y avait échappé : la déclaration d'un modulateur n'est pas
+        // un sac de contrôle, donc la garde des sacs ne la voyait pas. Aucune sous-zone du langage
+        // n'échappe à la règle.
+        // ⚠️ La forme NOMMÉE reste la bonne — `mod.adsr(attack:5, decay:150)`, comme
+        // `transport.midi(ch:3)`. Ce n'est pas la parenthèse qu'on supprime, c'est l'argument dont
+        // la place tient lieu de nom. Mesuré : le corpus n'écrit QUE la forme nommée, 0 positionnel.
+        const t = current();
+        // Les paramètres vivent sous `objects.<type>.parameters` (lib/mod.json) ; on les nomme dans
+        // le message pour que l'utilisateur n'ait pas à les deviner. Silencieux si la lib n'est pas
+        // chargée — un message générique vaut mieux qu'un message faux.
+        const defObj = loadLib(lib)?.objects?.[objectType] || loadLib(lib, objectType);
+        const params = Object.keys(defObj?.parameters || {});
+        throw new ParseError(
+          `'${lib}.${objectType}(${t.value}…)' : argument POSITIONNEL — sa place tient lieu de nom. `
+          + `Nommer chaque paramètre : '${lib}.${objectType}(`
+          + `${params.length ? params.slice(0, 2).map((k) => `${k}:…`).join(', ') + (params.length > 2 ? ', …' : '') : 'nom:valeur'})'`,
+          t);
       }
       if (at(T.COMMA)) advance();
     }
@@ -3884,6 +3897,20 @@ function parse(tokens, opts = {}) {
     // d'entre eux — l'arbitre est la déclaration, jamais le nombre.
     // Les clés réservées du langage (mode, weight, meter…) ne sont pas des contrôles : elles passent.
     if (universeSacs().runtime.has(key) && !libCtx.qualifierKeys.has(key)) {
+      // NOMMER LA BONNE RÉÉCRITURE. `[scale:2]` — valeur unique et numérique — n'est pas la gamme
+      // microtonale mal rangée : c'est le contrôle moteur SUPPRIMÉ le 2026-07-26, subsumé par la
+      // DURÉE COLLÉE. Renvoyer vers `(scale:2)` enverrait l'utilisateur écrire une gamme dont le
+      // nom serait « 2 ». Deux choses portaient le même mot ; le message doit les distinguer.
+      // À ce point le deux-points est déjà consommé : la valeur est le jeton COURANT.
+      const valeurNumerique = (at(T.INT) || at(T.FLOAT))
+        && (peek(1).type === T.RBRACKET || peek(1).type === T.COMMA || peek(1).type === T.SLASH);
+      if (key === 'scale' && valeurNumerique) {
+        throw new ParseError(
+          `'[scale:N]' a été SUPPRIMÉ (décision Romain 2026-07-26) — la mise à l'échelle temporelle `
+          + `d'un groupe s'écrit avec la DURÉE COLLÉE : '{A B}:N'. (À ne pas confondre avec la gamme `
+          + `microtonale, qui est un contrôle de runtime : '(scale:nom clé)'.)`,
+          tok);
+      }
       throw new ParseError(
         `'[${key}:…]' : '${key}' est un contrôle de RUNTIME, il s'écrit entre PARENTHÈSES — `
         + `'(${key}:…)', ou '!(${key}:…)' pour le poser dans le flux. Les crochets s'adressent au `
