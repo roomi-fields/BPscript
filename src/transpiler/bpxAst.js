@@ -654,8 +654,6 @@ function validateTerminals(ast) {
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
   if (sceneAlpha) anyAlphabet = addAlphabet(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || anyAlphabet;
   for (const a of ast.actors || []) { const p = a.properties || {}; if (p.alphabet) anyAlphabet = addAlphabet(p.alphabet, p.octaves || null) || anyAlphabet; }
-  if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider
-
   // Symboles DÉCLARÉS : non-terminaux (LHS), déclarations gate/trigger/cv, scènes, homomorphismes.
   const declared = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
@@ -665,6 +663,9 @@ function validateTerminals(ast) {
   for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
   // Motifs temporels (@timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
   for (const d of ast.directives || []) if (d.name === 'timepatterns' && Array.isArray(d.timePatterns)) for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
+
+  errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
+  if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider sur les symboles NUS
 
   // Terminaux RHS : Symbol non couvert = non déclaré.
   const seen = new Set();
@@ -676,6 +677,73 @@ function validateTerminals(ast) {
     seen.add(el.name);
     errors.push({ message: `terminal '${el.name}' non déclaré — absent des alphabets en portée`, line: el.line });
   }
+  return errors;
+}
+
+/**
+ * GARDE DE VOCABULAIRE DES APPELS `nom(…)` (chantier `_script`, GO Romain 2026-07-26).
+ *
+ * Un nom SUIVI D'UNE PARENTHÈSE n'est un CONTRÔLE que s'il est déclaré dans `controls.json`
+ * (parser.js:3315 `isControlName`) ; sinon le parseur en fait un `SymbolCall`, c'est-à-dire un
+ * TERMINAL SONNANT porteur de paramètres. Ce chemin n'était contrôlé par rien : un nom absent de
+ * tout vocabulaire traversait la chaîne en silence, avec `payload.nature:'sounding'` — mesuré le
+ * 2026-07-25 (`foobar(3)` accepté, 0 erreur) et re-mesuré le 2026-07-26 après le retrait de
+ * `runtime.midi.script` : 3 des 5 scènes qui l'emploient compilaient toujours sans un mot.
+ *
+ * DEUX CRITÈRES, tous deux issus de la donnée — ni liste en dur ni cas particulier : `script`
+ * tombe parce qu'il n'est plus DANS LA DONNÉE, pas parce qu'un test le nomme.
+ *
+ *  (a) VOCABULAIRE — le nom d'un appel se valide comme un symbole nu : alphabets en portée,
+ *      non-terminaux, déclarations. Exige un alphabet en portée, exactement comme la validation
+ *      des symboles nus : sans alphabet déclaré, le compilateur ne PEUT PAS savoir ce qui est un
+ *      terminal, et juger quand même produit un faux refus (mesuré : `sitar -> C4 C4(ch:5)`,
+ *      fragment sans alphabet, refusé à tort).
+ *
+ *  (b) FORME DE L'ARGUMENT — `()` porte une annotation `clé:valeur` sur l'événement (CLAUDE.md,
+ *      « instructions runtime »). Un argument POSITIONNEL sur un nom qui n'est pas un contrôle
+ *      déclaré n'annote rien : c'est un APPEL DE FONCTION, et le langage n'en a pas. Ce critère
+ *      ne dépend d'aucun alphabet, ce qui referme le trou des scènes qui n'en ont pas (koto3,
+ *      scène à gates, passait indemne par (a) seul). Mesuré sur les DEUX corpus consommateurs
+ *      (Kanopi BPScript-tests + BPx test/scenes) : le seul appel à argument positionnel est
+ *      `script` (7 occurrences) ; tous les autres sont entièrement nommés.
+ *
+ * Le message CITE l'appel tel qu'écrit (exigence de l'ordre [936]) : un utilisateur qui a écrit
+ * `script(MIDI program 5)` doit lire sa propre ligne, pas un nom de nœud d'AST.
+ */
+function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
+  const errors = [];
+  const seen = new Set();
+  const citer = (el) => {
+    const parts = (el.args || []).map((a) => {
+      const v = a && a.value ? a.value : a;
+      const texte = v && Object.prototype.hasOwnProperty.call(v, 'value') ? v.value : v;
+      return (a && a.key ? `${a.key}:` : '') + texte;
+    });
+    return `${el.name}(${parts.join(' ')})`;
+  };
+  // Portée RÉCURSIVE, contrairement à la boucle des symboles nus ci-dessus : un appel se niche
+  // dans un groupe ou une polymétrie aussi bien qu'au premier rang de la règle.
+  const visiter = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { n.forEach(visiter); return; }
+    if (n.type === 'SymbolCall' && n.name
+        && !(n.payload && codeVoice.has(n.payload.actor))
+        && !known.has(n.name) && !declared.has(n.name) && !seen.has(n.name)) {
+      const positionnel = (n.args || []).some((a) => a && a.key == null);
+      if (anyAlphabet || positionnel) {
+        seen.add(n.name);
+        errors.push({
+          message: `appel '${citer(n)}' : '${n.name}' n'existe pas — ni contrôle déclaré `
+            + `(lib/controls.json), ni terminal des alphabets en portée, ni symbole déclaré. `
+            + `Une fonction générique n'est pas du langage : chaque intention porte son nom `
+            + `('[]' pour le moteur, '()' pour le runtime, en 'clé:valeur')`,
+          line: n.line,
+        });
+      }
+    }
+    for (const k in n) { const v = n[k]; if (v && typeof v === 'object') visiter(v); }
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) visiter(r.rhs);
   return errors;
 }
 

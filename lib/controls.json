@@ -335,12 +335,6 @@
         ],
         "description": "Disable MIDI switch channel"
       },
-      "script": {
-        "args": [
-          "command"
-        ],
-        "description": "MIDI script command (program change sequences, etc.)"
-      },
       "cc": {
         "args": [
           "number",

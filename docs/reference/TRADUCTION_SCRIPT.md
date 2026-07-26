@@ -128,7 +128,39 @@ disparaître de la librairie** — c'est le premier geste du mandat 1a.
 
 ---
 
-## 4. Ce que la mise en œuvre exige (état au 2026-07-25)
+## 4. FAIT — mise en œuvre du 2026-07-26 (GO Romain)
+
+`script` **n'existe plus**. Ce qui a été livré, et ce que ça a coûté de plus que prévu :
+
+| Geste | Où |
+|---|---|
+| `runtime.midi.script` retiré + bundle régénéré | `lib/controls.json`, `src/transpiler/libs-data.js` |
+| **Garde de vocabulaire des appels** (le vrai fail-loud) | `src/transpiler/bpxAst.js` `validateCallVocabulary` |
+| Refus de la prose en argument de contrôle | `src/transpiler/parser.js` `parseControl` |
+| Garde de non-régression + preuve d'appelant vivant | `test/vocabulaire_appels.mjs` |
+| 21 `ins(N)` + 2 `chan(N) cc(C,V)` | `shapes-rhythm.bps` |
+| 2 `ins(N)` + 1 `chan(N) cc(C,V)` | `765432.bps` |
+
+**Deux critères, pas un** — le premier ne suffisait pas :
+
+- **(a) vocabulaire** — nom d'appel absent des alphabets/déclarations. Exige un alphabet en portée,
+  sinon il refuse à tort un fragment légitime (`sitar -> C4 C4(ch:5)`, mesuré).
+- **(b) forme de l'argument** — un argument **positionnel** sur un nom qui n'est pas un contrôle
+  déclaré : `()` porte une annotation `clé:valeur`, pas une phrase. Indépendant de l'alphabet, donc
+  il ferme le cas des scènes qui n'en ont pas (`koto3`, scène à gates, passait indemne par (a)).
+  Mesuré sur les **deux** corpus consommateurs : le seul appel à argument positionnel est `script`.
+
+**Rayon mesuré** : Kanopi `BPScript-tests` 95 scènes → **4 refusées** (les 4 familles sans nom) ;
+BPx `test/scenes` 19 scènes → **0**. `765432` compile désormais sans erreur.
+
+**Nettoyage anti-rétrocompat** : `parseControl` recollait les mots successifs par des espaces et
+acceptait `#` — deux accommodements qui n'existaient **que** pour la prose de `script` (vérifié :
+`do#3` est un seul jeton, la branche `#` ne servait donc pas les noms de notes). Supprimés,
+remplacés par un refus qui nomme le contrôle fautif.
+
+---
+
+## 5. Ce que la mise en œuvre exigeait (analyse du 2026-07-25, conservée)
 
 Dans le même mouvement, sans migration douce :
 

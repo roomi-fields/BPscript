@@ -3369,7 +3369,12 @@ function parse(tokens, opts = {}) {
       } else if (at(T.IDENT)) {
         value = { type: 'Literal', value: advance().value };
       } else {
-        throw new ParseError('Expected argument value', current());
+        // Nommer l'APPELÉ : sans lui, un appel dont un argument n'est pas une valeur ne dit ni
+        // qui il est ni pourquoi il échoue. Cas mesuré (2026-07-26) : `script(MIDI controller #98
+        // = 0 channel 1)` sortait un « Expected argument value » orphelin, alors que la vraie
+        // cause est que `script` n'est pas un contrôle et que sa prose n'est pas une liste
+        // d'arguments.
+        throw new ParseError(`Expected argument value in '${name}(…)'`, current());
       }
       args.push({ type: 'Arg', key, value });
       if (at(T.COMMA)) advance();
@@ -3407,9 +3412,25 @@ function parse(tokens, opts = {}) {
       while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
         const t = current();
         if (t.type === T.INT || t.type === T.FLOAT || t.type === T.IDENT) {
-          // Preserve spaces between words: "MIDI send Continue", "wait for do#2 channel 1"
-          // But NOT after # (so "#98" stays together)
-          if (arg.length > 0 && !/[#=]$/.test(arg) && /[a-zA-Z0-9]$/.test(arg) && (t.type === T.IDENT || t.type === T.INT || t.type === T.FLOAT)) arg += ' ';
+          // PROSE INTERDITE dans un argument de contrôle (chantier `_script`, GO Romain
+          // 2026-07-26). Ce lecteur recollait autrefois les mots successifs avec des espaces —
+          // « MIDI send Continue », « wait for do#2 channel 1 » — ce qui n'existait QUE pour
+          // porter la phrase libre de `script(…)`. `script` supprimé, la prose n'a plus de
+          // destinataire : deux valeurs qui se suivent sans séparateur sont une faute, et on la
+          // NOMME plutôt que de la recoller en silence. Mesuré sur les deux corpus consommateurs
+          // (Kanopi + BPx) : 0 argument de contrôle contient un espace hors `repeat(K1 = 3)`,
+          // dont l'espace vient de la branche `=` ci-dessous.
+          // Seul le cas que le collage servait est refusé : une valeur DÉJÀ COMPLÈTE (elle finit
+          // par un alphanumérique) suivie d'une autre. Un signe en attente de son nombre
+          // (`pitchbend(+200)`, `chromashift(-12)`) ou un `=` en attente de sa valeur
+          // (`repeat(K1 = 3)`) ne finit pas par un alphanumérique et reste légitime.
+          if (arg.length > 0 && /[a-zA-Z0-9]$/.test(arg)) {
+            throw new ParseError(
+              `argument de contrôle mal formé dans '${name}(…)' : '${arg} ${t.value}' — deux valeurs `
+              + `se suivent sans séparateur. Un contrôle prend des arguments séparés par ',' ; il ne `
+              + `prend pas de phrase (la fonction générique 'script(…)' a été supprimée du langage)`,
+              t);
+          }
           arg += advance().value;
         } else if (t.type === T.EQUALS) {
           // Add spaces around = for readability: "controller #98 = 0"
@@ -3419,10 +3440,6 @@ function parse(tokens, opts = {}) {
           arg += advance().value;
         } else if (t.type === T.REST) {
           // negative number in control args
-          arg += advance().value;
-        } else if (t.type === T.HASH) {
-          // Allow # in control args: "MIDI controller #98 = 0"
-          if (arg.length > 0 && /[a-zA-Z0-9]$/.test(arg)) arg += ' ';
           arg += advance().value;
         } else if (t.type === T.PLUS) {
           // positive sign in control args: pitchbend(+200) — symmetric with REST (-)
