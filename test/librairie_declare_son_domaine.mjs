@@ -18,14 +18,17 @@
  * vraiment : il attrape le jour où une scène invoque un fichier sans domaine, quel qu'il soit.
  * Écrire la liste à la main aurait gardé le fichier du ticket, pas la construction.
  *
- * ⚠️ UNE EXCEPTION NOMMÉE, ET UNE SEULE — `settings`, EN ATTENTE D'ARBITRAGE. Deux scènes du
+ * ⚠️ UNE EXCEPTION NOMMÉE, ET UNE SEULE — `settings`, ARBITRÉE le 2026-07-27. Deux scènes du
  * corpus l'invoquent (`all-items1` → `settings.test1`, `not-reich` → `settings.notreich`) et le
- * fichier servi ne déclare aucun domaine. Ce sont les RÉGLAGES MOTEUR par grammaire, pas un
- * catalogue d'entités : leur donner un domaine serait décider qu'ils sont une librairie comme les
- * autres, ce qui n'est pas à moi de trancher (PORTER ≠ RÉSOUDRE). Je n'invente donc PAS un domaine
- * pour faire verdir — je nomme le trou ici, il est reporté, et cette exception disparaît le jour
- * de l'arbitrage. Une exception écrite et datée reste visible ; un garde qu'on n'a pas branché ne
- * garde rien.
+ * fichier servi ne déclare aucun domaine. VERDICT de l'architecte : les réglages NE SONT PAS une
+ * librairie. Un domaine identifie un catalogue d'ENTITÉS qu'on invoque par provenance ; des
+ * réglages moteur par grammaire ne sont pas un catalogue — on ne les invoque pas, on les APPLIQUE.
+ * Leur poser un domaine pour faire verdir un garde aurait décidé PAR EFFET DE BORD qu'ils sont une
+ * librairie comme les autres. Le jour où quelqu'un voudra en faire une, ce sera une décision
+ * datée, pas un champ ajouté au passage.
+ *
+ * L'exception reste donc écrite, datée et VISIBLE plutôt que fondue dans une condition — et son
+ * témoin rougit le jour où un domaine serait posé, pour qu'un tel geste ne passe pas inaperçu.
  *
  * ⚠️ CE QU'IL NE COUVRE PAS ENCORE, et c'est mesuré : quatre autres fichiers du bundle restent
  * invocables sans domaine — `core`, `language`, `modulation`, `sub`. Les deux premiers ne sont pas
@@ -75,19 +78,23 @@ for (const nom of nomsBps()) {
 ok(scenes > 40, `2. le corpus doit fournir de quoi mesurer — ${scenes} scène(s) compilée(s)`);
 ok(invoquees.size > 0, '2. le corpus doit invoquer au moins une librairie — sinon ce garde est creux');
 
-// L'exception, écrite ici et pas cachée dans une condition — cf. l'en-tête.
-const EN_ATTENTE_D_ARBITRAGE = new Set(['settings']);
-ok(EN_ATTENTE_D_ARBITRAGE.size === 1,
-   `2. une seule exception est tolérée, et elle est nommée — reçu ${EN_ATTENTE_D_ARBITRAGE.size}`);
+// L'exception, écrite ici et pas cachée dans une condition — cf. l'en-tête. ARBITRÉE le
+// 2026-07-27 : les réglages ne sont pas une librairie, on ne les invoque pas, on les APPLIQUE.
+// À NE PAS transformer en règle générale : les quatre autres fichiers sans domaine restent hors
+// garde tant qu'aucune scène ne les invoque.
+const PAS_UNE_LIBRAIRIE = new Set(['settings']);
+ok(PAS_UNE_LIBRAIRIE.size === 1,
+   `2. une seule exception est tolérée, et elle est nommée — reçu ${PAS_UNE_LIBRAIRIE.size}`);
 
 for (const [fichier, portees] of [...invoquees].sort()) {
   const lib = LIBS[fichier];
-  if (EN_ATTENTE_D_ARBITRAGE.has(fichier)) {
-    // On vérifie quand même que l'exception est encore JUSTIFIÉE : le jour où le domaine est posé,
-    // ce témoin rougit et force à retirer l'exception au lieu de la laisser dormir.
+  if (PAS_UNE_LIBRAIRIE.has(fichier)) {
+    // Le témoin garde la décision DANS LES DEUX SENS : si un domaine apparaît sur ce fichier, il
+    // rougit — parce que ce serait revenir sur l'arbitrage du 2026-07-27 sans décision datée.
     ok(lib?.domain === undefined,
-       `2. '${fichier}' déclare désormais un domaine (${JSON.stringify(lib?.domain)}) — RETIRER `
-       + `l'exception d'arbitrage, elle n'a plus lieu d'être`);
+       `2. '${fichier}' déclare désormais un domaine (${JSON.stringify(lib?.domain)}) — or il a été `
+       + `tranché le 2026-07-27 que les réglages NE SONT PAS une librairie. Revenir dessus demande `
+       + `une décision datée, pas un champ ajouté au passage`);
     continue;
   }
   ok(lib !== undefined,
