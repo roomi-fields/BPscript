@@ -626,8 +626,16 @@ function parse(tokens, opts = {}) {
     // Mesuré le 2026-07-26 : l'annotateur ne descendait pas dans `el.symbol`, donc `C4<!sync1`
     // perdait sa nature `sounding` — la même note écrite sans point d'attente la portait. Un
     // consommateur qui trie les feuilles par nature perdait donc la note en silence.
+    //
+    // ⚠️ ET LE POINT D'ATTENTE ANCRÉ EN PORTE UNE AUSSI. Mesuré par BPx le 2026-07-27 : cette
+    // branche descendait dans `el.symbol` puis RETOURNAIT — les attentes ancrées n'étaient jamais
+    // annotées. Ce n'est pas un cas de bord : le parser ancre l'attente sur le symbole qui précède
+    // MÊME séparée par une espace (`C4 <!sync1`), donc toute attente précédée d'une note tombait
+    // dans le trou. L'aval découpe le flux sur la NATURE, plus sur un nom : sans elle, l'attente
+    // arrive en position et en durée mais rien ne s'arme dessus.
     if (type === 'SymbolWithTriggerIn' && el.symbol) {
       annotateRhsNode(el.symbol, ruleActor);
+      for (const t of (el.triggers || [])) annotateRhsNode(t, ruleActor);
       return;
     }
 
