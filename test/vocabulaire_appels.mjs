@@ -64,6 +64,26 @@ ok(erreursDe(scene('S -> {C4 script(Beep)} D4')).some((m) => m.includes('script(
 ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n').some((m) => m.includes('script(Beep)')),
    "§2 un appel hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
 
+// ─── §2bis. LE TÉMOIN DE BPx — un contrôle non importé ne doit pas SONNER ────────────────────
+// Constat `hub/constats/2026-07-26-controle-non-declare-degenere-en-note.md` (bpx [790]) : même
+// source, seule l'en-tête change. Sans la déclaration d'import, `ins(12)` n'était pas refusé —
+// il était reclassé en appel de symbole SONNANT, donc en note, et le moteur le dérivait
+// fidèlement : cinq feuilles sonnantes au lieu de deux, sans un mot. C'est le mode d'échec le
+// plus coûteux d'un chantier de nommage : le nom tout neuf se met à sonner.
+// Le message doit NOMMER LA CAUSE (import manquant), pas prétendre que le nom n'existe pas.
+{
+  const REGLES = 'S -> ins(12) chan(3) vel(80) cc(7,100) C4 D4';
+  const sans = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${REGLES}\n`);
+  for (const appel of ['ins(12)', 'chan(3)', 'vel(80)']) {
+    const m = sans.find((x) => x.includes(appel));
+    ok(m !== undefined, `§2bis témoin bpx : '${appel}' sans import doit être refusé, jamais dégénérer en note`);
+    ok(m !== undefined && /pas importé/.test(m) && !/n'existe pas/.test(m),
+       `§2bis le message pour '${appel}' doit nommer la CAUSE (import manquant) — il existe bel et bien au registre`);
+  }
+  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${REGLES}\n`).length === 0,
+     '§2bis le même témoin AVEC import doit rester accepté (aucun faux positif)');
+}
+
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
   ['ins(5)', 'contrôle nommé déclaré — la traduction de script(MIDI program 5)'],

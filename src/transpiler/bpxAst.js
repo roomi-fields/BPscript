@@ -19,7 +19,7 @@
 
 import { tokenize } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary } from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
 import { resolveActors, expandAlphabetTerminals } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
@@ -732,11 +732,23 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
       const positionnel = (n.args || []).some((a) => a && a.key == null);
       if (anyAlphabet || positionnel) {
         seen.add(n.name);
+        // NOMMER LA CAUSE, PAS LE SYMPTÔME. Deux situations très différentes portent le même
+        // symptôme (un appel reclassé en terminal sonnant), et les confondre envoie l'utilisateur
+        // chercher une faute de frappe là où il manque une ligne d'en-tête :
+        //   - le nom EXISTE dans le registre des contrôles, mais la scène ne l'a pas importé ;
+        //   - le nom n'existe nulle part.
+        // Mesuré le 2026-07-26 sur le témoin de bpx : `ins(12)` sans `@controls` dégénérait en
+        // note, et mon premier message affirmait « 'ins' n'existe pas », ce qui est FAUX.
+        const auRegistre = universeControlNames().has(n.name);
         errors.push({
-          message: `appel '${citer(n)}' : '${n.name}' n'existe pas — ni contrôle déclaré `
-            + `(lib/controls.json), ni terminal des alphabets en portée, ni symbole déclaré. `
-            + `Une fonction générique n'est pas du langage : chaque intention porte son nom `
-            + `('[]' pour le moteur, '()' pour le runtime, en 'clé:valeur')`,
+          message: auRegistre
+            ? `appel '${citer(n)}' : '${n.name}' est un contrôle du registre, mais cette scène ne `
+              + `l'a pas importé — il a donc été reclassé en TERMINAL SONNANT, c'est-à-dire en note. `
+              + `Déclarer la librairie de contrôles en tête de scène ('@controls')`
+            : `appel '${citer(n)}' : '${n.name}' n'existe pas — ni contrôle du registre, ni terminal `
+              + `des alphabets en portée, ni symbole déclaré. Une fonction générique n'est pas du `
+              + `langage : chaque intention porte son nom ('[]' pour le moteur, '()' pour le `
+              + `runtime, en 'clé:valeur')`,
           line: n.line,
         });
       }
