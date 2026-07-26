@@ -1067,6 +1067,38 @@ SymbolWithTriggerIn {
 
 Émis pour `Sa<!sync1` : un symbole qui attend un trigger entrant (`<!`) avant de se déclencher.
 
+Le symbole porteur **garde sa nature** `sounding` : le point d'attente est ancré SUR lui, il ne le
+remplace pas. (Corrigé le 2026-07-26 : l'annotateur ne descendait pas dans `symbol`, et une note
+ancrée perdait sa nature — un consommateur qui trie les feuilles par nature la perdait en silence,
+alors que le point d'attente est là POUR la rendre observable.)
+
+### `TriggerIn` — le POINT D'ATTENTE
+
+```
+TriggerIn {
+  type: "TriggerIn"
+  name: string                       // le trigger attendu
+  qualifiers: Qualifier[]            // `[…]` éventuels
+  suffixQualifiers?: RuntimeQualifier[]   // `(…)` — porte le CANAL : `<!sync1(chan:1)`
+  payload: { nature: "wait" }
+}
+```
+
+Élément **de plein droit** du membre droit, à sa position dans la séquence — décision Romain
+2026-07-26 (`hub/decisions/2026-07-26-architecture-des-entrees-point-d-attente-dans-l-arbre.md`) :
+« le point d'attente DOIT vivre dans l'arbre ». Elle révoque le choix antérieur du contrat aval,
+qui le posait délibérément hors de l'union des éléments et le réécrivait en sentinelle avant
+chargement.
+
+**Nature `wait`** (contrat `BPx/docs/AST_SPEC.md:461`, posée le même jour). C'était le SEUL élément
+de membre droit sans nature, et un élément qui vit dans l'arbre sans en porter une n'y vit qu'à
+moitié. Le nom dit le **rôle**, pas la graphie : `<!nom` est la surface, `TriggerIn` le type de
+nœud, `wait` ce que le jeton EST pour le temps — cohérent avec les six autres valeurs.
+
+> ⚠️ **Ne pas confondre avec un silence.** Un silence **occupe** du temps ; une attente le
+> **suspend**. Durée nulle, ne fait pas avancer la grille — même ressort qu'`instant`. Les deux se
+> ressemblent en prose et se comportent à l'opposé.
+
 ### `Rest`
 
 ```

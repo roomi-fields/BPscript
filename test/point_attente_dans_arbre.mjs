@@ -11,11 +11,10 @@
  *   il est ÉMIS comme élément du RHS, à sa position, avec ses qualificatifs ;
  *   une note qui en porte un reste une NOTE.
  *
- * ⚠️ CE QU'IL NE TIENT PAS, et il faut le savoir : `TriggerIn` est le SEUL élément de RHS sans
- * `payload.nature`. Tous les autres en portent une — sounding, rest, prolongation, instant,
- * engine-control, transport-control. Le vocabulaire des natures est CLOS, et aucune de ses
- * valeurs ne désigne une attente. Lui en donner une est un changement de CONTRAT, pas une
- * décision d'émission : la question est remontée, elle n'est pas tranchée ici.
+ * SA NATURE EST `wait` depuis le 2026-07-26 (contrat BPx AST_SPEC.md:461, c96deb3). C'était le
+ * SEUL élément de RHS sans nature ; un élément qui vit dans l'arbre sans en porter une n'y vit
+ * qu'à moitié. Le témoin qui CONSTATAIT ce manque a été RETOURNÉ, pas retiré : il exige
+ * désormais la valeur (§4).
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
@@ -62,14 +61,30 @@ const rhs = (regle) => {
   ok(r[0]?.triggers?.[0]?.name === 'sync1', '3. le point d\'attente reste attaché à sa note');
 }
 
-// ─── 4. TÉMOIN DU MANQUE — assumé, pas caché ─────────────────────────────────────────────────
-// Ce témoin ne DEMANDE PAS de nature : il constate qu'il n'y en a pas, pour que le jour où le
-// contrat en donnera une, ce garde échoue et force la mise à jour. Un manque connu doit être
-// gardé comme un manque, sinon il devient un oubli.
+// ─── 4. TÉMOIN RETOURNÉ — il EXIGE la nature, il ne constate plus son absence ────────────────
+// Ce témoin constatait un MANQUE : le point d'attente était le seul élément de RHS sans nature,
+// et le vocabulaire était clos. La nature est posée depuis — `wait`, contrat BPx AST_SPEC.md:461,
+// en conséquence de la décision Romain « le point d'attente doit vivre dans l'arbre ».
+// On ne RETIRE pas un témoin quand le trou se comble, on le RETOURNE : il gardait l'absence,
+// il garde maintenant la présence. Sinon la valeur pourrait disparaître sans que rien ne bronche.
+//
+// ⚠️ LE NOM DIT LE RÔLE, PAS LA GRAPHIE : `<!nom` est la surface, `TriggerIn` le type de nœud,
+// `wait` ce que le jeton EST pour le temps. Et NE PAS CONFONDRE AVEC UN SILENCE — un silence
+// OCCUPE du temps, une attente le SUSPEND. Les deux se ressemblent en prose et se comportent à
+// l'opposé ; c'est pourquoi `rest` aurait été le pire choix possible.
 {
   const { rhs: r } = rhs('S -> <!sync1 C4');
-  ok(r[0]?.payload === undefined,
-     `4. TÉMOIN : le point d'attente n'a PAS de nature aujourd'hui (vocabulaire clos, aucune valeur ne désigne une attente). S'il en a une désormais, mettre ce garde à jour — reçu : ${JSON.stringify(r[0]?.payload)}`);
+  ok(r[0]?.payload?.nature === 'wait',
+     `4. le point d'attente porte la nature 'wait' — reçu : ${JSON.stringify(r[0]?.payload)}`);
+  ok(r[0]?.payload?.nature !== 'rest',
+     "4. et surtout PAS 'rest' : un silence occupe le temps, une attente le suspend");
+}
+// Tous les éléments de RHS portent désormais une nature — plus aucun trou dans le vocabulaire.
+{
+  const { rhs: r } = rhs('S -> C4 - _ <!sync1 !(vel:80)');
+  const sans = r.filter((e) => !e.payload || !e.payload.nature).map((e) => e.type);
+  ok(sans.length === 0,
+     `4. AUCUN élément de RHS ne doit rester sans nature — reçu sans nature : ${JSON.stringify(sans)}`);
 }
 
 if (echecs.length) {

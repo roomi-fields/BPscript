@@ -557,10 +557,11 @@ function parse(tokens, opts = {}) {
    *   Prolongation                                                      → 'prolongation'
    *   Control  → 'engine-control' (bp3NativeControls) ou 'transport-control'
    *   InstantControl                                                     → 'instant'
+   *   TriggerIn                                                          → 'wait'
    *
    * Nœuds sans payload.nature (structurels) :
    *   Period, NumericDuration, NilString, RawBrace, Polymetric,
-   *   Wildcard, Variable, Homomorphism, gabarits, TriggerIn…
+   *   Wildcard, Variable, Homomorphism, gabarits…
    *   (on récurse dans Polymetric)
    */
   function annotateRhsNode(el, ruleActor) {
@@ -599,6 +600,24 @@ function parse(tokens, opts = {}) {
         ...((controls !== null || address !== null) ? { occurrence: true } : {}),
         // flux absent (override d'occurrence, pas de propagation)
       };
+      return;
+    }
+
+    // ── POINT D'ATTENTE — `<!nom` ──────────────────────────────────────
+    // Nature `wait`, posée au contrat le 2026-07-26 (BPx AST_SPEC.md:461-486, c96deb3), en
+    // conséquence de la décision Romain « le point d'attente doit vivre dans l'arbre ». C'était le
+    // SEUL élément de membre droit sans nature — et un élément qui vit dans l'arbre sans en porter
+    // une n'y vit qu'à moitié : un consommateur qui trie les feuilles par nature le perdait en
+    // silence, alors qu'il est là POUR être observable.
+    //
+    // Le nom dit le RÔLE, pas la graphie : `<!nom` est la surface, `TriggerIn` le type de nœud,
+    // `wait` ce que le jeton EST pour le temps — cohérent avec les six autres valeurs.
+    //
+    // ⚠️ NE PAS CONFONDRE AVEC UN SILENCE : un silence OCCUPE du temps, une attente le SUSPEND.
+    // Durée nulle, ne fait pas avancer la grille — même ressort qu'`instant`. Les deux se
+    // ressemblent en prose et se comportent à l'opposé.
+    if (type === 'TriggerIn') {
+      el.payload = { nature: 'wait' };
       return;
     }
 
