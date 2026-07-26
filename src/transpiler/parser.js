@@ -2995,11 +2995,31 @@ function parse(tokens, opts = {}) {
         // Effet de bord réparé au passage : une valeur qui COMMENÇAIT par un nombre ne
         // collectait pas sa suite (`switchon: 64 1` échouait là où `scale: todi_ka_4 0` passait).
         const parts = [];
+        let deuxPointsEnTrop = null;
         while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
+          // Un SECOND deux-points dans la valeur : `(cc:98:45)`. Le deux-points AFFECTE, il ne
+          // sépare pas — une paire en porte donc exactement UN. C'est la graphie qu'on obtient en
+          // cherchant à désigner un composant sans connaître le point : elle doit tomber, sinon
+          // elle fabrique la valeur muette « 98:45 » que personne en aval ne sait relire.
+          if (at(T.COLON) && !deuxPointsEnTrop) deuxPointsEnTrop = current();
           if (parts.length > 0 && current().spaceBefore) parts.push(' ');
           parts.push(advance().value);
         }
         const brut = parts.join('');
+        if (deuxPointsEnTrop) {
+          throw new ParseError(
+            `'(${key}:${brut})' : le deux-points AFFECTE une valeur, il n'en sépare pas les parties `
+            + `— une paire n'en porte qu'un. Pour désigner un composant numéroté, le point l'appelle `
+            + `('(${key}.${brut.split(':')[0]}:${brut.split(':').slice(1).join(':')})') ; pour plusieurs `
+            + `parties, l'espace les sépare`,
+            deuxPointsEnTrop);
+        }
+        if (brut === '') {
+          throw new ParseError(
+            `'(${key}:)' n'affecte aucune valeur — le deux-points en attend une (par exemple `
+            + `'(${key}:80)'), et un contrôle sans argument s'écrit nu, sans deux-points`,
+            keyTok);
+        }
         // Une valeur d'UNE SEULE partie numérique reste un NOMBRE (`vel:80` → 80, `pan:-1` → -1) :
         // les consommateurs la lisent ainsi. Plusieurs parties = chaîne portée brute, découpée
         // par l'aval qui seul connaît l'opération.
@@ -3933,6 +3953,15 @@ function parse(tokens, opts = {}) {
             break;
           }
           const t = current();
+          // Mêmes deux règles que dans le sac runtime — le format est le MÊME dans les deux sacs :
+          // le deux-points AFFECTE (une paire n'en porte qu'un), et il attend une valeur.
+          if (t.type === T.COLON) {
+            throw new ParseError(
+              `'[${key}: ${rawValue.trim()}:…]' : le deux-points AFFECTE une valeur, il n'en sépare `
+              + `pas les parties — une paire n'en porte qu'un. Les parties d'une valeur se séparent `
+              + `par une ESPACE ('[${key}: 3 0]')`,
+              t);
+          }
           if (rawValue.length > 0 && t.type !== T.RPAREN && t.type !== T.COMMA) {
             const lastChar = rawValue[rawValue.length - 1];
             if (lastChar !== '(' && t.type !== T.LPAREN && lastChar !== ',') {
@@ -3947,7 +3976,13 @@ function parse(tokens, opts = {}) {
           rawValue += advance().value;
         }
         rawValue = rawValue.trim();
-        pairs.push({ type: 'QualPair', key, value: rawValue || true, decrement: null });
+        if (rawValue === '') {
+          throw new ParseError(
+            `'[${key}:]' n'affecte aucune valeur — le deux-points en attend une (par exemple `
+            + `'[${key}: 3 0]'), et un contrôle sans argument s'écrit nu, sans deux-points`,
+            keyTok);
+        }
+        pairs.push({ type: 'QualPair', key, value: rawValue, decrement: null });
         if (at(T.COMMA)) advance();
         continue;
       }
