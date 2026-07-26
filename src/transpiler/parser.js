@@ -859,6 +859,30 @@ function parse(tokens, opts = {}) {
     }
     if (at(T.INT)) {
       const num = advance().value;
+      // MÈTRE ADDITIF — `@meter:3+4+2/4`, la graphie de BP3 reprise telle quelle (décision Romain
+      // 2026-07-26, `hub/decisions/2026-07-26-trois-manques-du-temps-…`) : des sections de 3, 4 et
+      // 2 battements. Motif : « c'est plus clair à comprendre ».
+      //
+      // ⚠️ LE `+` VIT ICI DANS UN SECOND RÔLE — séparateur de sections, alors qu'il est opérateur
+      // de drapeau ailleurs. C'est un ÉCART ASSUMÉ à « un signe, un rôle », pas un oubli : deux
+      // options étaient posées, Atlas recommandait `@meter:3 4 2/4` (application littérale de la
+      // règle), et Romain a tranché pour la fidélité à BP3 au nom de la lisibilité. À NE PAS
+      // « corriger » plus tard au nom de la règle générale — l'exception est datée et motivée.
+      //
+      // La forme additive était déjà lue dans le sac moteur (`[meter:4+4/6]`) ; seule la directive
+      // `@meter` la refusait, alors qu'elle est le point d'entrée naturel.
+      if (at(T.PLUS) && peek(1).type === T.INT) {
+        let sections = `${negative ? '-' : ''}${num}`;
+        while (at(T.PLUS) && peek(1).type === T.INT) {
+          sections += advance().value;  // +
+          sections += advance().value;  // INT
+        }
+        if (at(T.SLASH) && peek(1).type === T.INT) {
+          sections += advance().value;  // /
+          sections += advance().value;  // INT
+        }
+        return { value: sections, runtime: null };
+      }
       // Check for ratio: 3/4, 7/8
       if (at(T.SLASH) && peek(1).type === T.INT) {
         advance(); // /
