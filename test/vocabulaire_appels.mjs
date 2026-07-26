@@ -242,6 +242,24 @@ for (const [sucre, deplie] of [
      "§2octies le mot 'speed', supprimé de la surface, ne doit pas survivre comme clé dans l'arbre");
 }
 
+// ─── §2nonies. LES QUATRE FAMILLES NOMMÉES ──────────────────────────────────────────────────
+// `script(…)` portait plusieurs intentions sans nom. Quatre d'entre elles en ont un depuis le
+// 2026-07-26 : mute, unmute, panic, sync. Aucune n'est un cas neuf — treize contrôles sans
+// argument existaient déjà au registre (velcont, retro, volumecont…), et la forme pointée passe
+// par le chemin générique des références.
+for (const forme of [
+  '!(mute) C4', '!(unmute) C4', '!(panic) C4',
+  '!(mute.all) C4', '!(mute.lead) C4',
+  '!(sync:start) C4', '!(sync:continue) C4', '!(sync:stop) C4',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> ${forme}\n`);
+  ok(e.length === 0, `§2nonies '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
+}
+// La liste fermée des messages de synchronisation mord déjà, sans code neuf : c'est la validation
+// de valeurs du registre qui s'en charge.
+ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> !(sync:nexistepas) C4\n').length > 0,
+   "§2nonies un message de synchronisation hors de la liste déclarée doit être refusé");
+
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────
 for (const [appel, pourquoi] of [
   ['!(ins:5)', 'contrôle nommé, dans le flux — la traduction de script(MIDI program 5)'],

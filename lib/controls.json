@@ -339,6 +339,29 @@
         ],
         "description": "Disable MIDI switch channel"
       },
+      "mute": {
+        "args": [],
+        "description": "Coupe le son. Nu, (mute), coupe tout ce qui sonne ; par composant, (mute.all) ou (mute.lead), coupe la cible nommee. Nomme le 2026-07-26 : remplace une des familles que script(...) portait sans nom."
+      },
+      "unmute": {
+        "args": [],
+        "description": "Retablit le son coupe par mute. Meme graphie : (unmute) ou (unmute.lead)."
+      },
+      "panic": {
+        "args": [],
+        "description": "Arret d'urgence : toutes les notes relachees, tous les controleurs remis a plat. Image de MIDI all notes off. Ne prend aucun argument."
+      },
+      "sync": {
+        "args": [
+          "message"
+        ],
+        "values": [
+          "start",
+          "continue",
+          "stop"
+        ],
+        "description": "Message systeme temps reel de synchronisation : (sync:start), (sync:continue), (sync:stop). Image des messages MIDI Start/Continue/Stop. Remplace script(MIDI send Continue)."
+      },
       "cc": {
         "component": "number",
         "args": [
