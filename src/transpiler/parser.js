@@ -170,6 +170,11 @@ function parse(tokens, opts = {}) {
   let pos = 0;
   let libCtx = { controlNames: new Set(), noArgControls: new Set(), controlMap: {}, symbols: {} };
 
+  // Noms que LA SCÈNE déclare elle-même. Rempli à la lecture des directives, donc connu avant la
+  // première règle (l'en-tête précède toujours les règles). Sert à trancher un homonyme entre un
+  // mot du vocabulaire et une déclaration locale — cf. `estDeclareLocalement`.
+  const nomsDeclaresLocalement = new Set();
+
   // Avertissements non fatals (ex. dépréciation des @-formes de production).
   // Canal séparé des erreurs : remonté via opts.onWarning (compileBPS →
   // result.warnings), jamais dans l'AST (contrat BPx : AST inchangé).
@@ -310,6 +315,7 @@ function parse(tokens, opts = {}) {
           scene.maps.push(dir);
         } else if (dir.type === 'MacroDirective') {
           scene.macros.push(dir);
+          nomsDeclaresLocalement.add(dir.name);
         } else if (dir.type === 'AliasDirective') {
           scene.aliases.push(dir);
         } else if (dir.type === 'LabelDirective') {
@@ -373,7 +379,9 @@ function parse(tokens, opts = {}) {
       } else if (at(T.BACKTICK)) {
         scene.backticks.push(parseBacktickOrphan());
       } else if (at(T.IDENT) && isLookaheadMacro()) {
-        scene.macros.push(parseMacro());
+        const m = parseMacro();
+        scene.macros.push(m);
+        if (m && m.name) nomsDeclaresLocalement.add(m.name);
       } else if (isRuleStart()) {
         break; // Start of rules
       } else {
@@ -3500,8 +3508,27 @@ function parse(tokens, opts = {}) {
       }
 
       // Control without args: striated, smooth, destru, stop
+      //
+      // ⚠️ LA DÉCLARATION DE LA SCÈNE PASSE AVANT LE MOT DU VOCABULAIRE. Mesuré par Kairos le
+      // 2026-07-27 : `patchbay-demo.bps` déclare `@macro mute` et écrit sept mots dans sa règle ;
+      // il en arrivait SIX. Le mot y devenait un contrôle sans un mot d'erreur, parce que j'ai
+      // déclaré `mute`/`unmute`/`panic` sans argument le 2026-07-26 — un mot jusque-là libre est
+      // devenu un mot du vocabulaire, et toute scène qui le portait déjà a été tronquée en
+      // silence. C'est le pire mode d'échec : côté consommateur, rien ne distingue une scène qui a
+      // changé d'une scène qui a été amputée.
+      //
+      // La règle est celle de la cascade, déjà posée pour tout le langage (décision
+      // 2026-06-26) : LE PLUS LOCAL GAGNE. La scène qui déclare un nom le possède. Le contrôle
+      // reste joignable dans son sac — `(mute)`, `!(mute)` — position syntaxique distincte, aucun
+      // conflit. Et l'ombrage se DIT : il est légitime, il n'est pas anodin.
       if (!actor && !at(T.LPAREN) && isControlName(name) && isNoArgControl(name)) {
-        return { type: 'Control', name, args: [] };
+        if (nomsDeclaresLocalement.has(name)) {
+          warn(`'${name}' est déclaré par la scène ET porté par le vocabulaire comme contrôle sans `
+             + `argument — la déclaration de la scène l'emporte, le mot reste un symbole ici. Pour `
+             + `le contrôle, écrire '(${name})' ou '!(${name})'.`, tok.line);
+        } else {
+          return { type: 'Control', name, args: [] };
+        }
       }
 
       // Runtime qualifier suffix: D4(vel:70) — no space = attached to symbol

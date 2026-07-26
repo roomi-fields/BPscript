@@ -147,6 +147,16 @@ registerAll(BUNDLED_LIBS);
 // (Romain 2026-07-14, tour [412]) — ouvre l'accès transpileur pour valider `@scale.<nom>`.
 const fileAliases = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales', sound: 'sounds' };
 
+/**
+ * L'axe nommé dans une invocation → le FICHIER qui le sert. Exporté parce que l'adresse produite
+ * porte l'AXE (`sound.tabla_perc`) alors que la donnée vit sous le nom du FICHIER (`sounds`) :
+ * qui veut remonter d'une adresse à sa librairie doit passer par ici. Recopier la table ailleurs
+ * rouvrirait l'écart entre ce qu'on invoque et ce qu'on charge.
+ */
+function fichierDeLAxe(axe) {
+  return fileAliases[axe] || axe;
+}
+
 function loadJsonFile(name) {
   const canonical = fileAliases[name] || name;
   if (cache[canonical]) return cache[canonical];
@@ -634,4 +644,4 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs, registerLib, registerAll, clearRegistry };
+export { loadLib, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs, registerLib, registerAll, clearRegistry };

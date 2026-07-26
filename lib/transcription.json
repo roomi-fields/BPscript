@@ -8,6 +8,9 @@
     "Applied by BP3 engine during derivation via (=NAME) / (:NAME) patterns."
   ],
 
+  "_domain_doc": "Une librairie est un FICHIER qui DECLARE son domaine (decision Romain 2026-07-13, hub ef75ec6) : le domaine n'est pas deduit d'un axe fige lu dans l'invocation, il est LU DEDANS au chargement. Ce fichier etait le SEUL catalogue du depot a ne pas le declarer -- Kairos refusait donc bruyamment de resoudre transposition1.bps, et il avait raison : il n'invente pas le domaine d'une librairie qui ne lui appartient pas. Le domaine est 'transcription', pas un domaine de hauteur : ces tables sont des correspondances SYMBOLE vers SYMBOLE, appliquees a la derivation, sans aucun rapport avec la resolution des hauteurs.",
+  "domain": "transcription",
+
   "tabla_stroke": {
     "description": "Tabla open→closed stroke mapping (qa'ida)",
     "mappings": {
