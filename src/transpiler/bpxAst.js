@@ -1043,6 +1043,45 @@ function validateReferences(ast) {
     errors.push({ message: `${axis} '${name}' introuvable dans le catalogue (référence inexistante)`, line });
   };
 
+  // 3bis. LIBRAIRIE SANS CATALOGUE — une ENTRÉE INCONNUE y crie aussi (arbitrage architecte
+  // 2026-07-27, sur le cas `dhin1`). Les axes à CATALOGUE crient depuis toujours ; les autres —
+  // `transcription`, `test_alphabets`, `settings`, `mapping`… — acceptaient n'importe quel nom EN
+  // SILENCE. Payé sur pièce : `@transcription.dhinOO` a traversé toute la migration sans un mot ;
+  // la scène croyait charger un homomorphisme et n'en chargeait AUCUN, depuis des mois.
+  //
+  // L'ARGUMENT QUI TRANCHE : ne rien pouvoir vérifier n'est pas une raison de ne rien vérifier,
+  // c'est une raison de vérifier AUTRE CHOSE. Ici le vérifiable est trivial — l'entrée existe-t-elle
+  // dans le fichier invoqué. Aucun catalogue n'est requis pour poser cette question.
+  //
+  // FRONTIÈRE MESURÉE AVANT DE LIVRER, sur 447 fichiers de scène (bibliothèque Kanopi entière,
+  // démos, scènes de BPx) : QUATRE invocations ne résolvent pas, et les quatre sont déjà refusées
+  // aujourd'hui (`@alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute donc AUCUNE casse.
+  const libExiste = (nom) => !!loadLib(nom);
+  for (const d of ast.directives || []) {
+    if (!d || !d.name || !d.subkey) continue;
+    if (catalogAxes.includes(d.name)) continue;   // déjà couvert par checkComponent, ci-dessous
+    if (!libExiste(d.name)) continue;             // pas une librairie : autre faute, autre message
+    if (loadLib(d.name, d.subkey)) continue;
+    errors.push({
+      message: `'@${d.name}.${d.subkey}' : l'entrée '${d.subkey}' n'existe pas dans la librairie `
+             + `'${d.name}'. Une invocation qui ne résout rien est indistinguable, côté `
+             + `consommateur, d'une scène qui n'a rien déclaré — elle ne peut donc pas être acceptée `
+             + `en silence.`,
+      line: d.line,
+    });
+  }
+
+  // ⚠️ LA TABLE D'UNE ENTRÉE (`mapping.<table>`) N'EST PAS SOUMISE À CE CRI, et c'est un point
+  // OUVERT, pas un oubli. La règle voudrait qu'elle le soit — c'est une invocation de librairie
+  // comme une autre. Mais `lib/mapping.json` est DÉLIBÉRÉMENT VIDE tant que Romain n'a pas donné
+  // de vraie table (décision 2026-07-27), donc appliquer le cri ici rendrait NON COMPILABLE
+  // chacun des exemples ratifiés une heure plus tôt. Mesuré : les trois formes de la décision
+  // crient toutes.
+  //
+  // Les deux issues sont défendables — soit une librairie vide par construction est exemptée
+  // jusqu'à son remplissage, soit une table inexistante crie et la fonctionnalité attend ses
+  // tables — et choisir entre elles n'est pas à moi. Reporté le 2026-07-27, pas comblé en douce.
+
   // 3. Directives de scène : invocation de composant (@axis.X) OU override de valeur (@X:v).
   for (const d of ast.directives || []) {
     if (d.subkey && catalogAxes.includes(d.name)) { checkComponent(d.name, d.subkey, d.line); continue; }
