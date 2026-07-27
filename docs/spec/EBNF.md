@@ -18,7 +18,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 scene       = { directive | actor_directive | scene_directive | expose_directive
               | var_directive | in_directive
               | map_directive | cc_directive | duration_directive
-              | macro_directive | alias_directive | label_directive
+              | macro_directive | label_directive
               | sound_section
               | declaration | cv_instance | macro
               | backtick_orphan | comment | blank_line }
@@ -35,16 +35,16 @@ cc_directive     = "@" , "cc" , [ ":" ] , cc_pair , { "," , cc_pair } ; (* @cc b
 duration_directive = "@" , "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ] ; (* @duration:16b, @duration:4.5s *)
 macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")" ]
                  , "=" , rhs ;                 (* @macro kick = (vel:120), @macro accent(x) = x(vel:120) *)
-alias_directive  = "@" , "alias" , IDENT , "=" , map_endpoint ;  (* @alias breath = cc:2 *)
+(* `alias_directive` SUPPRIMÉ le 2026-07-27 — absorbé par `map_directive`, cf. §map_directive. *)
 label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
 var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
 in_directive     = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
                  , [ "mapping" , "." , IDENT ] ;      (* @in pedale transport.midi mapping.fcb_std *)
 INPUT_CHANNEL    = "midi" | "osc" | "keyboard" ;      (* liste FERMEE, distincte des SORTIES *)
-map_directive    = "@" , "map" , map_endpoint , map_arrow , map_endpoint ;
+map_directive    = "@" , "map" , IDENT , map_endpoint ;   (* @map depart touches.z *)
 
 cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
-map_arrow  = "->" | "<->" | "<-" ;
+(* `map_arrow` SUPPRIMÉ le 2026-07-27 : la flèche redevient EXCLUSIVEMENT une production. *)
 map_endpoint = "cc" , ":" , INT , [ "(" , kv_pairs , ")" ]      (* cc:74, cc:1(min:0,max:100) *)
              | "osc" , ":" , ( "/" , IDENT )+ , [ "(" , kv_pairs , ")" ] (* osc:/sc/ready *)
              | "<!" , IDENT                                      (* <!trigger *)
@@ -97,7 +97,7 @@ directive_body = IDENT                              (* @core, @controls *)
                | "scene" , IDENT , STRING           (* @scene verse "verse.bps" — voir scene_directive *)
                | "expose" , ( "[" , IDENT , "]" )+  (* @expose [intensity] — voir expose_directive *)
                | "cc" , [ ":" ] , cc_pair , { "," , cc_pair }  (* @cc breath:2 — voir cc_directive *)
-               | "map" , map_endpoint , map_arrow , map_endpoint  (* @map cc:1 -> [x] — voir map_directive *)
+               | "map" , IDENT , map_endpoint       (* @map depart touches.z — voir map_directive *)
                | "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ]  (* @duration:16b — voir duration_directive *)
                | "timepatterns" , ":" , tp_pair , { "," , tp_pair }  (* @timepatterns: t1=1/1, t2=3/2 *)
                | "flag" , IDENT , [ ":" ] , flag_state , { "," , flag_state }  (* @flag scene: calm:1, full:2 *)
@@ -323,6 +323,45 @@ alphabet_body = { alphabet_decl | sound_assignment | comment | blank_line } ;
 alphabet_decl = "notes" , ":" , IDENT , { IDENT } ;   (* notes: Sa Re Ga ... *)
               (* + autres décl propres à l'alphabet, cf. lib/alphabet.json *)
 ```
+
+### `map_directive` — LIAISON : un nom, sa source
+
+```ebnf
+map_directive = "@" , "map" , IDENT , map_endpoint ;   (* @map depart touches.z   @map breath cc:2 *)
+```
+
+Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-map-absorbe-alias-macro-reste-separee.md`) :
+**`@alias` disparaît ici** (une seule forme, elle se dissout sans reste), **le `=` est supprimé**, et
+**le nom vient d'abord** — comme toutes les autres directives nomment avant de valoriser. La
+**flèche** redevient **exclusivement une production**.
+
+> Le `=` ne partait pas parce qu'il ne disait rien : il marquait **« ce nom se joue-t-il ou pas »**
+> — jouable pour une macro, refusé dans le flux pour un alias. **Deux sens pour un même signe**,
+> déjà avant toute fusion ; le garder en fusionnant lui en aurait donné trois.
+
+#### ⚠️ Une LIAISON n'est PAS une MACRO — et voici où elles divergent
+
+Les deux se ressemblent pour une bonne raison : **aucune des deux n'est résolue à la génération de
+l'arbre**, les deux voyagent **par leur nom**. C'est ce qui rend la confusion légitime. Elles
+divergent **après**, et sur trois plans indépendants :
+
+| | **`@macro`** | **`@map` (liaison)** |
+|---|---|---|
+| son nom s'écrit… | **dans la règle**, à sa place | **jamais** dans une règle |
+| a un **corps** | oui | non |
+| a des **paramètres** | oui | non |
+| **qui la résout** | **Kairos** (`projection/projeter.ts`, `action/resoudre-macro.ts`) | **l'orchestrateur BPx** (`orchestrator/astToSceneSpec.ts`, `orchestrator.ts`) |
+| **quand** | à la **projection**, **feuille par feuille** | au **chargement de la scène**, **une fois** |
+| **ce qui la déclenche** | **un mot qui paraît dans le flux** | **un signal qui arrive du dehors** |
+
+**Le déclencheur est la différence de fond.** Un mot qui apparaît dans la musique contre un signal
+venu de l'extérieur : ce n'est pas un détail de réalisation, **c'est ce que les deux sont**.
+
+> **En une phrase** : une **macro** est quelque chose qu'on **écrit dans la musique** ; une
+> **liaison**, quelque chose qu'on **branche à côté**.
+
+Ce qu'il faudrait pour une directive unique : donner à `@map` un corps, des paramètres et le droit
+d'être jouée — à ce moment **c'est `@macro` qui aurait absorbé `@map`**, pas l'inverse.
 
 ### `var_directive` — VARIABLES DE TRAVAIL
 

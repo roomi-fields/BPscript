@@ -147,15 +147,30 @@ Les enfants exposent explicitement les flags qu'ils veulent rendre visibles :
 @expose [intensity]            // rend ce flag lisible par le parent
 ```
 
-Le mapping `@map` connecte des I/O externes (CC, OSC) aux primitives du langage :
+`@map` nomme une LIAISON : **un nom, puis la source qui l'alimente** (décision Romain 2026-07-27) :
 ```
-@map cc:1 -> [intensity]       // CC input -> flag
-@map cc:64 -> <!sustain        // CC input -> trigger
-@map [phase] -> cc:20          // flag -> CC output
-@map osc:/sc/ready -> <!ready  // OSC input -> trigger
-@map cc:60 -> sys.play         // CC -> commande transport
-@map cc:1 <-> [mod_depth]      // bidirectionnel
+@map depart touches.z          // le nom `depart`, alimente par la touche z de l'entree `touches`
+@map breath cc:2               // un controleur continu
+@map horloge osc:/clock        // une adresse OSC
 ```
+**Le nom vient d'abord**, comme toutes les autres directives nomment avant de valoriser. Il n'y a
+**ni signe `=` ni fleche** : `@alias` a ete absorbe ici, et la fleche redevient **exclusivement une
+regle de production**.
+
+> ### Une LIAISON n'est pas une MACRO
+>
+> Les deux se ressemblent pour une bonne raison : **aucune n'est resolue a la generation de
+> l'arbre**, les deux voyagent par leur NOM. Elles divergent **apres**, sur trois plans :
+>
+> | | `@macro` | `@map` |
+> |---|---|---|
+> | son nom s'ecrit | **dans la regle** | **jamais** dans une regle |
+> | qui la resout | **Kairos**, a la **projection** | **l'orchestrateur BPx**, au **chargement** |
+> | quand | **feuille par feuille** | **une fois** |
+> | ce qui la declenche | **un mot qui parait dans le flux** | **un signal qui arrive du dehors** |
+>
+> **En une phrase** : une macro est quelque chose qu'on **ecrit dans la musique** ; une liaison,
+> quelque chose qu'on **branche a cote**.
 
 Cf. [SCENES.md](../design/SCENES.md) pour le modele complet (scoping, sys, encapsulation).
 
@@ -1314,21 +1329,25 @@ cv ramp:sc                       // ramp varie continument, SC le gere
 
 Trois directives pour nommer des choses. La difference est fonctionnelle :
 
-| Directive | Ce qu'elle fait | Exemple |
-|-----------|----------------|---------|
-| `@macro` | Transformation nommee | `@macro kick = (vel:120)` |
-| `@label` | Nom structural pur | `@label groove` |
-| `@alias` | Nom pour un canal I/O | `@alias breath = cc:2` |
+| Directive | Ce qu'elle fait | Exemple | Se joue dans une regle ? |
+|-----------|----------------|---------|--------------------------|
+| `@macro` | Transformation nommee | `@macro kick = (vel:120)` | **OUI** — a sa place, dans la regle |
+| `@label` | Nom structural pur | `@label groove` | s'APPLIQUE a un element (`C4@groove`) |
+| `@map` | Nom pour une source I/O | `@map breath cc:2` | **NON, jamais** |
 
 ```
 @macro kick = (vel:120)              // preset de controles
 @macro accent(x) = x(vel:120)       // transformation parametree
 @macro fast(x) = {x}:2              // transformation structurelle (durée collée)
-@alias breath = cc:2                 // canal MIDI nomme
-@alias intensity = osc:/sensor/1     // canal OSC nomme
+@map breath cc:2                     // canal MIDI nomme
+@map intensity osc:/sensor/1         // canal OSC nomme
 @label hat                           // nom structural pur
 @label groove                        // nom de groupe polymetrique
 ```
+
+> ⚠️ **`@alias` a DISPARU le 2026-07-27**, absorbe par `@map` — une seule forme, sans reste. Le `=`
+> est supprime avec lui. La colonne de droite dit pourquoi les deux ne se confondent pas : **une
+> macro s'ecrit DANS la musique, une liaison se branche A COTE.**
 
 Application dans le RHS via `@` suffixe — colle a l'element, sans espace :
 

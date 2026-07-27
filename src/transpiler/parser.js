@@ -350,8 +350,6 @@ function parse(tokens, opts = {}) {
         } else if (dir.type === 'MacroDirective') {
           scene.macros.push(dir);
           nomsDeclaresLocalement.add(dir.name);
-        } else if (dir.type === 'AliasDirective') {
-          scene.aliases.push(dir);
         } else if (dir.type === 'LabelDirective') {
           scene.labels.push(dir);
         } else if (dir.type === 'Declaration') {
@@ -1278,12 +1276,14 @@ function parse(tokens, opts = {}) {
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
 
-    // @alias breath = cc:2
+    // TOMBSTONE — `@alias` a DISPARU dans `@map` le 2026-07-27 (décision Romain). Sans ce refus
+    // nommé, la ligne retombait sur un message de parse illisible (« attendu une flèche ») : un mot
+    // supprimé doit NOMMER sa disparition et donner la réécriture, jamais laisser deviner.
     if (name === 'alias') {
-      const aliasName = expect(T.IDENT).value;
-      expect(T.EQUALS);
-      const source = parseMapEndpoint();
-      return { type: 'AliasDirective', name: aliasName, source, line: tok.line };
+      const nom = at(T.IDENT) ? current().value : '<nom>';
+      throw new ParseError(`'@alias' a DISPARU dans '@map' (décision 2026-07-27) — écrire `
+        + `'@map ${nom} <source>' : le nom d'abord, la source ensuite, sans signe entre les deux. `
+        + `Une seule forme désormais, aucune voie parallèle.`, tok);
     }
 
     // @label hat — named label for @ suffixe
@@ -1300,17 +1300,52 @@ function parse(tokens, opts = {}) {
       return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
     }
 
-    // @map source -> target — I/O mapping (CC/OSC ↔ triggers/flags)
+    // @map <nom> <source> — LIAISON : un nom interne, la source externe qui l'alimente.
+    //
+    // Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-map-absorbe-alias-macro-reste-separee.md`),
+    // sur inventaire mesuré :
+    //  · `@alias` DISPARAÎT ici — une seule forme, elle se dissout sans reste, aucun coût mesuré ;
+    //  · le `=` est SUPPRIMÉ — il marquait « ce nom se joue-t-il ou pas », deux sens pour un signe,
+    //    déjà incohérent avant toute fusion ; le garder en fusionnant lui en aurait donné trois ;
+    //  · le NOM D'ABORD, comme toutes les autres directives nomment avant de valoriser ;
+    //  · la FLÈCHE redevient EXCLUSIVEMENT une production — son usage de câblage ne vivait que dans
+    //    cette directive, mesuré sur les deux seuls sites du parseur.
+    //
+    // ⚠️ CE QUE ÇA N'EST PAS — et c'est la question que Romain a posée DEUX fois, donc elle mérite
+    // d'être fermée ici : une liaison n'est PAS une macro. Une MACRO s'écrit DANS LA MUSIQUE, à sa
+    // place dans la règle, et Kairos la résout à la PROJECTION, feuille par feuille, déclenchée par
+    // un MOT qui paraît dans le flux. Une LIAISON se BRANCHE À CÔTÉ, son nom ne s'écrit jamais dans
+    // une règle, et l'orchestrateur de BPx l'installe AU CHARGEMENT, une fois, déclenchée par un
+    // SIGNAL QUI ARRIVE DU DEHORS. Ni le même composant, ni le même moment, ni le même déclencheur.
+    // Les deux se ressemblent parce qu'AUCUN n'est résolu à la génération de l'arbre — c'est
+    // justement pour ça que la question était légitime ; ils divergent entièrement APRÈS.
     if (name === 'map') {
+      if (!at(T.IDENT)) {
+        throw new ParseError("@map doit NOMMER la liaison avant sa source : '@map <nom> <source>' "
+          + "— par exemple '@map depart touches.z' ou '@map breath cc:2'. Le nom d'abord, comme "
+          + 'toutes les autres directives.', tok);
+      }
+      const mapName = advance().value;
+      // ⚠️ L'ANCIENNE FORME commençait par une EXTRÉMITÉ, pas par un nom : `@map cc:1 -> [x]`. Le
+      // deux-points juste après le premier mot la trahit — sans ce refus nommé, la ligne retombait
+      // sur « attendu cc:N, osc:/path… », un message qui décrit l'ancienne grammaire et laisse
+      // l'auteur croire qu'il s'est trompé de source alors que c'est la FORME qui a changé.
+      if (at(T.COLON)) {
+        throw new ParseError(`@map : la forme '<source> -> <cible>' a DISPARU (décision 2026-07-27) `
+          + `— une liaison NOMME d'abord, puis désigne sa source : '@map <nom> ${mapName}:…'. `
+          + `La flèche redevient exclusivement une règle de production.`, current());
+      }
+      if (at(T.EQUALS)) {
+        throw new ParseError(`@map ${mapName} : le signe '=' est SUPPRIMÉ (décision 2026-07-27) — `
+          + `écrire '@map ${mapName} <source>' sans rien entre les deux.`, current());
+      }
+      if (at(T.ARROW_R) || at(T.ARROW_L) || at(T.ARROW_BI)) {
+        throw new ParseError(`@map ${mapName} : la flèche est SUPPRIMÉE de cette directive `
+          + `(décision 2026-07-27) — elle redevient exclusivement une règle de production. `
+          + `Écrire '@map ${mapName} <source>'.`, current());
+      }
       const source = parseMapEndpoint();
-      // Arrow: -> or <-> or <-
-      let arrow;
-      if (at(T.ARROW_R))      { arrow = '->'; advance(); }
-      else if (at(T.ARROW_BI)) { arrow = '<->'; advance(); }
-      else if (at(T.ARROW_L))  { arrow = '<-'; advance(); }
-      else throw new ParseError('Expected ->, <-> or <- in @map', current());
-      const target = parseMapEndpoint();
-      return { type: 'MapDirective', source, arrow, target, line: tok.line };
+      return { type: 'MapDirective', name: mapName, source, line: tok.line };
     }
 
     // @cc breath:2, expression:11 — named MIDI CC declarations

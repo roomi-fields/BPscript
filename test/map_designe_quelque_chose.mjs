@@ -30,37 +30,35 @@ const compile = (corps) => {
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
-// ─── 1. Ce qui désigne quelque chose passe ───────────────────────────────────────────────────
+// ─── 1. LA FORME NOUVELLE — un NOM, puis sa SOURCE ───────────────────────────────────────────
 for (const [corps, quoi] of [
-  ['@map cc:1 -> kick.vel\n@mode:ord\nS -> C4@kick D4', 'un LABEL posé sur un élément'],
-  ['@map cc:7 -> sys.tempo\n@mode:ord\nS -> C4', 'une commande système'],
-  ['@map cc:1 -> [intensity]\n@mode:ord\nS -> C4', 'un flag'],
-  // ⚠️ Le témoin d'origine écrivait un alias JAMAIS DÉCLARÉ — il était faux dès l'écriture, et
-  // seul l'ajout de la garde des noms nus l'a révélé. Un témoin qui passe parce que rien ne
-  // vérifie n'est pas un témoin.
-  ['@alias alias1 = cc:9\n@map osc:/x -> alias1\n@mode:ord\nS -> C4', 'un alias DÉCLARÉ'],
-  ['@map [flag] -> cc:2\n@mode:ord\nS -> C4', 'un flag vers un contrôleur'],
-  ['@map cc:1 <-> [intensity]\n@mode:ord\nS -> C4', 'une correspondance bidirectionnelle'],
+  ['@in touches transport.keyboard\n@map depart touches.z\n@mode:ord\nS -> C4', "une ENTRÉE déclarée et son étiquette"],
+  ['@map breath cc:2\n@mode:ord\nS -> C4', 'un contrôleur continu'],
+  ['@map horloge osc:/clock\n@mode:ord\nS -> C4', 'une adresse OSC'],
+  ['@trigger sync1:midi\n@map depart sync1\n@mode:ord\nS -> C4', 'un trigger déclaré'],
+  ['@map ratio kick.vel\n@mode:ord\nS -> C4@kick D4', 'un label posé sur un élément'],
 ]) {
   const r = compile(corps);
   ok((r.errors || []).length === 0,
      `1. ${quoi} doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }
 
-// ─── 2. La directive ARRIVE — dans son canal, pas dans les directives ────────────────────────
+// ─── 2. LA LIAISON ARRIVE, avec son NOM ──────────────────────────────────────────────────────
 {
-  const r = compile('@map cc:1 -> kick.vel\n@mode:ord\nS -> C4@kick D4');
-  ok((r.ast?.maps || []).length === 1, "2. la correspondance doit ARRIVER dans ast.maps — c'est son canal");
+  const r = compile('@map breath cc:2\n@mode:ord\nS -> C4');
   const m = (r.ast?.maps || [])[0];
-  ok(m?.source?.kind === 'cc' && m?.target?.kind === 'scoped',
-     `2. ses deux extrémités doivent être portées telles qu'écrites — reçu : ${JSON.stringify(m)}`);
+  ok((r.ast?.maps || []).length === 1, "2. la liaison doit ARRIVER dans ast.maps — c'est son canal");
+  ok(m?.name === 'breath' && m?.source?.kind === 'cc' && m?.source?.number === 2,
+     `2. son NOM et sa SOURCE doivent être portés tels qu'écrits — reçu : ${JSON.stringify(m)}`);
+  ok(m?.target === undefined && m?.arrow === undefined,
+     `2. et il n'y a plus ni cible ni flèche : le NOM est la cible — reçu : ${JSON.stringify(m)}`);
 }
 
-// ─── 3. Ce qui ne désigne rien CRIE, et le message nomme le mot fautif ───────────────────────
+// ─── 3. CE QUI NE DÉSIGNE RIEN CRIE, et le message nomme le mot fautif ───────────────────────
 for (const [corps, quoi, mot] of [
-  ['@map foobar.X -> sync1\n@mode:ord\nS -> C4', 'une portée inventée', 'foobar'],
-  ['@map cc:1 -> kick.vel\n@mode:ord\nS -> C4 D4', 'un label JAMAIS POSÉ sur un élément', 'kick'],
-  ['@map note.C#2 -> sync1\n@mode:ord\nS -> C4', "la note entrante, forme qui n'existe pas encore", 'note'],
+  ['@map depart foobar.z\n@mode:ord\nS -> C4', 'une portée inventée', 'foobar'],
+  ['@map ratio kick.vel\n@mode:ord\nS -> C4 D4', 'un label JAMAIS POSÉ', 'kick'],
+  ['@map depart inconnu\n@mode:ord\nS -> C4', 'un nom nu inconnu', 'inconnu'],
 ]) {
   const r = compile(corps);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
@@ -68,32 +66,38 @@ for (const [corps, quoi, mot] of [
   ok(msg.includes(mot), `3. le message doit NOMMER le mot fautif '${mot}' — reçu : ${msg.slice(0, 110)}`);
 }
 
-// ─── 5. L'EXTREMITE NUE — le trou que la garde du premier jet ne voyait pas ─────────────────
-// Ma premiere garde ne validait que la forme POINTEE. Un nom SEUL est lu comme un alias, et rien
-// ne le verifiait : `@map nimportequoi -> nimportequoi2` passait ENTIER, les deux bouts compris.
-// Mesure d'Atlas, confirmee. Une garde ecrite pour la forme qu'on vient de corriger ne garde que
-// celle-la — c'est la troisieme fois aujourd'hui que je le paie.
-for (const [corps, quoi] of [
-  ['@map nimportequoi -> nimportequoi2\n@mode:ord\nS -> C4', 'deux noms nus inventes'],
-  ['@map cc:1 -> inconnu\n@mode:ord\nS -> C4', 'une cible nue inconnue'],
+// ─── 4. LES TROIS FORMES SUPPRIMÉES REFUSENT, ET NOMMENT LEUR DISPARITION ────────────────────
+// ⚠️ Un mot supprimé qui retombe sur un message de parse illisible (« attendu une flèche ») fait
+// deviner l'auteur. Chacune des trois nomme ce qui a disparu ET donne la réécriture.
+for (const [corps, quoi, attendu] of [
+  ['@alias breath = cc:2\n@mode:ord\nS -> C4', "@alias, absorbé par @map", '@alias'],
+  ['@map breath = cc:2\n@mode:ord\nS -> C4', "le signe '=', supprimé", '='],
+  ['@map cc:1 -> [x]\n@mode:ord\nS -> C4', 'la flèche, redevenue une production', 'NOMMER'],
 ]) {
   const r = compile(corps);
-  ok((r.errors || []).length > 0, `5. ${quoi} doit CRIER — '${corps.split('\n')[0]}'`);
+  const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+  ok((r.errors || []).length > 0, `4. ${quoi} doit être REFUSÉ`);
+  ok(msg.includes('2026-07-27') || msg.includes(attendu) || msg.includes('NOMMER'),
+     `4. et le refus doit NOMMER la disparition avec sa date — reçu : ${msg.slice(0, 130)}`);
 }
-// Et ce qu'un nom nu PEUT designer passe : alias declare, trigger declare.
-for (const [corps, quoi] of [
-  ['@trigger sync1:midi\n@map cc:1 -> sync1\n@mode:ord\nS -> C4', 'un trigger declare'],
-  ['@alias breath = cc:2\n@map breath -> [x]\n@mode:ord\nS -> C4', 'un alias declare'],
+
+// ─── 5. LA FLÈCHE EST REDEVENUE EXCLUSIVEMENT UNE PRODUCTION ─────────────────────────────────
+// Le seul autre site qui l'employait pour du câblage était cette directive — mesuré sur les deux
+// sites du parseur. Une règle, elle, doit continuer de l'accepter dans ses trois sens.
+for (const [regle, quoi] of [
+  ['S -> C4 D4', 'production vers la droite'],
+  ['S <- C4 D4', 'production vers la gauche'],
+  ['S <> C4 D4', 'production bidirectionnelle'],
 ]) {
-  const r = compile(corps);
+  const r = compile(`@mode:ord\n${regle}`);
   ok((r.errors || []).length === 0,
-     `5. ${quoi} doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
+     `5. la flèche doit rester une production (${quoi}) — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }
 
 if (echecs.length) {
-  console.error(`❌ correspondance @map : ${echecs.length} échec(s)`);
+  console.error(`❌ liaison @map : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exitCode = 1;
 } else {
-  console.log(`✅ correspondance @map — ${passe} vérification(s) passée(s)`);
+  console.log(`✅ liaison @map — ${passe} vérification(s) passée(s)`);
 }

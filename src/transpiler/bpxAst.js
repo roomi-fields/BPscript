@@ -1236,7 +1236,9 @@ function validateMaps(ast) {
   if (!(ast.maps || []).length) return erreurs;
   const connus = new Set(['*']);
   for (const sc of ast.scenes || []) if (sc && sc.name) connus.add(sc.name);
-  for (const a of ast.aliases || []) if (a && a.name) connus.add(a.name);
+  // Les ENTRÉES déclarées (`@in <rôle> …`) sont des portées légitimes pour une source : c'est
+  // exactement ce que `@map depart touches.z` désigne — le rôle `touches`, et son étiquette `z`.
+  for (const e of ast.inputs || []) if (e && e.name) connus.add(e.name);
   const collecterLabels = (n) => {
     if (!n || typeof n !== 'object') return;
     if (Array.isArray(n)) { n.forEach(collecterLabels); return; }
@@ -1253,9 +1255,9 @@ function validateMaps(ast) {
   const verifierNu = (bout, cote, ligne) => {
     if (!bout || bout.kind !== 'alias' || connus.has(bout.name)) return;
     erreurs.push({
-      message: `'@map' : ${cote} '${bout.name}' ne designe rien — un nom nu doit etre un alias `
-        + `declare ('@alias ${bout.name} = …'), un trigger ou un gate declare, un label pose sur `
-        + `un element, une scene ou une macro`
+      message: `'@map' : ${cote} '${bout.name}' ne désigne rien — un nom nu doit être une ENTRÉE `
+        + `déclarée ('@in ${bout.name} transport.<canal>'), un trigger ou un gate déclaré, un label `
+        + `posé sur un élément, une scène ou une macro`
         + ([...connus].length ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
       line: ligne,
     });
@@ -1270,10 +1272,9 @@ function validateMaps(ast) {
       line: ligne,
     });
   };
-  for (const m of ast.maps) {
-    verifier(m.source, 'la source', m.line);
-    verifier(m.target, 'la cible', m.line);
-  }
+  // Une liaison porte désormais UN NOM et UNE SOURCE (décision 2026-07-27) : il n'y a plus de
+  // « cible » à vérifier — le nom EST la cible, et il est créé par la déclaration elle-même.
+  for (const m of ast.maps) verifier(m.source, 'la source', m.line);
   return erreurs;
 }
 
