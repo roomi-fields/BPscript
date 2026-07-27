@@ -1337,10 +1337,13 @@ function parse(tokens, opts = {}) {
           + 'toutes les autres directives.', tok);
       }
       const mapName = advance().value;
-      // ⚠️ L'ANCIENNE FORME commençait par une EXTRÉMITÉ, pas par un nom : `@map cc:1 -> [x]`. Le
-      // deux-points juste après le premier mot la trahit — sans ce refus nommé, la ligne retombait
-      // sur « attendu cc:N, osc:/path… », un message qui décrit l'ancienne grammaire et laisse
-      // l'auteur croire qu'il s'est trompé de source alors que c'est la FORME qui a changé.
+      // ⚠️ L'ANCIENNE FORME commençait par une EXTRÉMITÉ, pas par un nom, et la câblait avec une
+      // flèche. Elle n'est pas reproduite ici : la flèche est une règle de PRODUCTION et ne l'a
+      // jamais été d'autre chose, donc la citer même en commentaire donnerait à recopier une faute
+      // (règle Romain, 2026-07-27). Le deux-points juste après le premier mot la trahit — sans ce
+      // refus nommé, la ligne retombait sur « attendu cc:N, osc:/path… », un message qui décrit
+      // l'ancienne grammaire et laisse l'auteur croire qu'il s'est trompé de source alors que
+      // c'est la FORME qui a changé.
       if (at(T.COLON)) {
         throw new ParseError(`@map : la forme '<source> -> <cible>' a DISPARU (décision 2026-07-27) `
           + `— une liaison NOMME d'abord, puis désigne sa source : '@map <nom> ${mapName}:…'. `

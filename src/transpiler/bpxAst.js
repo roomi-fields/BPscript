@@ -1214,10 +1214,14 @@ function emitActorLibRefs(ast) {
 /**
  * GARDE DE LA CORRESPONDANCE `@map` — une extrémité PORTÉE doit nommer quelque chose de déclaré.
  *
- * MESURÉ le 2026-07-26 (signalé par bp3-frontend) : `@map foobar.X -> sync1` compilait. La
- * directive arrive pourtant bien dans l'arbre — dans `ast.maps`, pas dans `ast.directives`, ce qui
- * avait fait conclure à tort qu'elle ne portait rien. Le défaut n'est donc pas un silence de
- * transport : c'est l'ABSENCE DE VALIDATION du référent. N'importe quel mot passait.
+ * MESURÉ le 2026-07-26 (signalé par bp3-frontend) : une correspondance dont la portée était un mot
+ * INVENTÉ compilait. La directive arrive pourtant bien dans l'arbre — dans `ast.maps`, pas dans
+ * `ast.directives`, ce qui avait fait conclure à tort qu'elle ne portait rien. Le défaut n'est donc
+ * pas un silence de transport : c'est l'ABSENCE DE VALIDATION du référent. N'importe quel mot passait.
+ *
+ * ⚠️ L'incident date d'avant le 2026-07-27 et se lisait alors dans une écriture à flèche. Elle
+ * n'est pas reproduite ici : la flèche est une règle de PRODUCTION et ne l'a jamais été d'autre
+ * chose, donc la citer même au passé donnerait à recopier une faute (règle Romain, 2026-07-27).
  *
  * CE QUI EST DÉCLARABLE, selon `docs/design/SCENES.md` §6.1-6.2 — on ne crée aucune forme, on
  * vérifie celles qui existent :
@@ -1246,10 +1250,10 @@ function validateMaps(ast) {
     for (const k in n) if (n[k] && typeof n[k] === 'object') collecterLabels(n[k]);
   };
   collecterLabels(ast.subgrammars);
-  // Une extremite NUE (`@map cc:1 -> sync1`) est lue comme un ALIAS : un nom seul. Elle n'etait
-  // validee par rien — `@map nimportequoi -> nimportequoi2` passait entier. Mesure d'Atlas
-  // confirmee le 2026-07-26. Ce qu'un nom nu peut designer, selon SCENES.md §6.1 : un alias
-  // declare, un trigger/gate/cv declare, un label pose, une scene, une macro.
+  // Une extremite NUE est lue comme un ALIAS : un nom seul. Elle n'etait validee par rien — deux
+  // mots entierement inventes passaient entiers. Mesure d'Atlas confirmee le 2026-07-26. Ce qu'un
+  // nom nu peut designer, selon SCENES.md §6.1 : un alias declare, un trigger/gate/cv declare, un
+  // label pose, une scene, une macro.
   for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
   for (const m of ast.macros || []) if (m && m.name) connus.add(m.name);
   const verifierNu = (bout, cote, ligne) => {

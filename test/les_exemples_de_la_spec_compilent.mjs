@@ -110,24 +110,37 @@ ok(exemples >= 8,
 // cherche automatiquement dans tous les documents ; ajouter un document le soumet automatiquement
 // à toutes les pierres. Rien à penser au bon moment — c'est exactement ce qui a manqué le
 // 2026-07-27, où la liste des formes était complète mais la liste des fichiers ne l'était pas.
+//
+// ⚠️ ET UNE FORME EST ABSOLUE : la flèche employée comme câblage ne se cite PAS, même pour
+// expliquer sa disparition. Règle de l'architecte sur dictée de Romain, 2026-07-27 : « une graphie
+// fautive citée en exemple finit recopiée », et « la flèche est une grammaire de RÈGLE, ça ne l'a
+// JAMAIS été et ça ne le sera JAMAIS » — donc l'ancienne ligne n'est pas un état de référence
+// qu'on citerait au passé, c'est une faute d'écriture. Nommer la fonction en français, jamais par
+// sa graphie. Les autres formes gardent leur exemption : nommer `@alias` ou `=` dans une phrase,
+// c'est nommer la directive, pas exhiber une ligne recopiable.
 const MORTES = [
-  [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)"],
-  [/@alias\s+[A-Za-z_]/, "'@alias' (absorbé par '@map' le 2026-07-27)"],
-  [/@map\s+[^\n|]*(->|<->|<-)/, "la liaison à la flèche (la flèche est redevenue une production)"],
-  [/@map\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "la liaison avec le signe '=' (supprimé le 2026-07-27)"],
+  [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
+  [/@alias\s+[A-Za-z_]/, "'@alias' (absorbé par '@map' le 2026-07-27)", 'exemptable'],
+  [/@map\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "la liaison avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
+  [/@map\s+[^\n|]*(->|<->|<-)/,
+   "la flèche employée comme CÂBLAGE — elle ne se cite jamais, même au passé pour expliquer sa "
+   + "disparition : nommer la fonction en français ('un contrôleur règle le tempo pendant que ça "
+   + "joue'), jamais par sa graphie", 'absolue'],
 ];
-// Les lignes qui PARLENT de la disparition sont légitimes — elles la nomment pour l'expliquer.
+// Les lignes qui PARLENT de la disparition sont légitimes pour les formes 'exemptable' — elles
+// nomment la directive pour l'expliquer. Elles ne le sont PAS pour la forme 'absolue'.
 const PARLE_DE_SA_MORT = /DISPARU|DISPARA|SUPPRIM|disparait|disparaît|disparu|absorbé|absorbe|morte|retiré|ancien|2026-07-27/;
 let croisements = 0;
 for (const p of TOUS) {
   const nom = relatif(p);
-  const lignes = readFileSync(p, 'utf8').split('\n').filter((l) => !PARLE_DE_SA_MORT.test(l));
-  for (const [motif, quoi] of MORTES) {
+  const toutes = readFileSync(p, 'utf8').split('\n');
+  const sansExplication = toutes.filter((l) => !PARLE_DE_SA_MORT.test(l));
+  for (const [motif, quoi, rigueur] of MORTES) {
     croisements++;
-    const fautives = lignes.filter((l) => motif.test(l));
+    const fautives = (rigueur === 'absolue' ? toutes : sansExplication).filter((l) => motif.test(l));
     ok(fautives.length === 0,
-       `3. ${nom} enseigne encore ${quoi} — ${fautives.length} ligne(s), dont : `
-       + `'${(fautives[0] || '').trim().slice(0, 70)}'`);
+       `3. ${nom} ${rigueur === 'absolue' ? 'CITE' : 'enseigne'} encore ${quoi} — ${fautives.length} `
+       + `ligne(s), dont : '${(fautives[0] || '').trim().slice(0, 70)}'`);
   }
 }
 ok(croisements === TOUS.length * MORTES.length && croisements >= 100,

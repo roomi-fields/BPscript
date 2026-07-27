@@ -2,8 +2,10 @@
 /**
  * GARDE — une extrémité PORTÉE de `@map` doit nommer un référent DÉCLARÉ.
  *
- * SIGNALÉE par bp3-frontend le 2026-07-26 : `@map foobar.X -> sync1` compilait. Il a refusé de
- * s'appuyer dessus pour traduire, alors qu'il aurait pu — ça passait.
+ * SIGNALÉE par bp3-frontend le 2026-07-26 : une correspondance dont la portée était un mot INVENTÉ
+ * compilait. Il a refusé de s'appuyer dessus pour traduire, alors qu'il aurait pu — ça passait.
+ * (L'écriture de l'époque employait une flèche ; elle n'est pas reproduite — la flèche est une
+ * règle de production et rien d'autre, la citer même au passé donnerait à recopier une faute.)
  *
  * ⚠️ LE DIAGNOSTIC D'ORIGINE ÉTAIT INEXACT, et c'est instructif : on avait conclu que la directive
  * « n'arrive pas dans l'arbre » parce qu'elle est absente de `ast.directives`. Elle arrive — dans

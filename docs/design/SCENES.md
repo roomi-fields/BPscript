@@ -239,8 +239,10 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 | `IDENT.IDENT`         | une entrée et son adresse, un label posé  |
 
 **Le sens SORTANT n'existe plus** (abandonné le 2026-07-27, retiré chez BPx en `4d2fbbe`) : une
-liaison lit, elle n'émet pas. Les lignes qui décrivaient une émission — l'ancien `@map [flag] -> cc:N`,
-l'ancien bidirectionnel `<->` et sa rupture d'écho — ont été retirées avec elle, pas réécrites.
+liaison lit, elle n'émet pas. Ce qui décrivait une émission — une liaison vers un contrôleur
+externe, l'aller-retour bidirectionnel et sa rupture d'écho — a été retiré avec, sans réécriture.
+Les graphies ne sont pas citées : elles employaient la flèche comme opérateur de câblage, ce
+qu'elle n'a jamais été.
 
 ### 6.2 Multicast par labels
 
@@ -252,22 +254,33 @@ S -> C4@kick D4 E4@kick F4
 Tous les éléments `@kick` sont désignés ensemble. Portée par défaut : la scène où `@map` est
 déclaré. Préfixe pour la portée croisée (`verse.kick.vel`, `*.kick.vel`).
 
-### 6.3 ❓ CE QUI N'EST PAS TRANCHÉ — les cibles autres qu'un nom
+### 6.3 ❓ TROIS FONCTIONS QUI RESTENT À ÉCRIRE — voulues, sans forme conforme
 
-La forme vivante NOMME sa liaison : la cible est ce nom, et c'est un identifiant nu. Trois cibles
-que l'ancienne flèche exprimait n'ont donc **aucune écriture aujourd'hui**, et il ne faut pas leur
-en inventer une :
+**Ce ne sont pas des possibilités perdues.** Romain les veut ; ce qui manque, c'est **l'écriture**.
+La formulation inverse — « on a perdu ces cibles » — serait une invitation à restaurer une graphie
+fautive, et c'est précisément ce que cette section existe pour empêcher.
 
-- un **drapeau** — l'ancien `@map cc:1 -> [intensity]` ;
-- une **commande de transport**, locale ou dans une scène nommée — l'ancien `@map cc:60 -> verse.play` ;
-- une **valeur système** — l'ancien `@map cc:7 -> sys.tempo`.
+Les trois fonctions, nommées en français parce qu'aucune graphie ne les porte encore :
 
-La question est **ouverte chez Romain**, nommée telle quelle dans la décision
-`2026-07-27-symetrie-entree-sortie-jusqu-au-bout` : « les autres cibles de correspondance — un
-drapeau, une commande de transport : se symétrisent-elles au point d'usage, ou sont-elles d'une
-autre nature ? ». Elle y va avec **la multiplicité** (plusieurs sources vers une même cible), non
-tranchée elle aussi. Fermer ce silence en inventant une graphie fabriquerait une correspondance
-morte — le compilateur la refuse aujourd'hui, et c'est la bonne réponse tant que la forme n'existe pas.
+- **un contrôleur externe qui pilote un drapeau de la pièce** ;
+- **un contrôleur externe qui lance ou arrête une scène nommée** pendant que ça joue ;
+- **un contrôleur externe qui règle le tempo** en cours de jeu.
+
+**Pourquoi l'ancienne écriture ne revient pas — deux non-conformités, pas une.** Elle ne se cite
+donc pas ici, même en exemple : une graphie fautive citée finit recopiée.
+
+1. **La flèche est une règle de PRODUCTION, exclusivement.** Elle n'a jamais été une directive et
+   ne le sera jamais (Romain, 2026-07-27). Son emploi passé comme opérateur de câblage était une
+   faute d'écriture, pas un état de référence.
+2. **Une pièce nomme un RÔLE, jamais une adresse de matériel.** Un numéro de contrôleur écrit en
+   dur dans une partition la lie à une machine ; c'est le même principe qui interdit le nom de port
+   dans une déclaration d'entrée (décision `…-forme-des-entrees-in-mapping-adresse-nue`).
+
+**Rien à inventer ici.** La question de la destination est chez Romain, avec **la multiplicité**
+(plusieurs sources vers une même cible), nommées ensemble dans la décision
+`2026-07-27-symetrie-entree-sortie-jusqu-au-bout`. Le compilateur refuse aujourd'hui toute forme
+pour ces trois fonctions, et c'est la bonne réponse tant que l'écriture n'existe pas : fabriquer
+une graphie créerait une correspondance morte, à désapprendre ensuite.
 
 ---
 
