@@ -171,8 +171,7 @@ Les Control Variables (objets temporels continus, cf. [CV.md](CV.md)) sont des *
 | Parent           | Enfant   | Routing automatique des flags | Lecture   |
 | Enfant           | Parent   | `@expose` explicite           | Lecture   |
 | Enfant A         | Enfant B | Via parent (expose + relais)  | Indirecte |
-| Externe (CC/OSC) | Scène    | `@map cc:N -> [flag]`         | Lecture   |
-| Scène            | Externe  | `@map [flag] -> cc:N`         | Émission  |
+| Externe (CC/OSC) | Scène    | `@map <nom> cc:N` (cf. §6)    | Lecture   |
 
 ---
 
@@ -219,52 +218,56 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 
 ---
 
-## 6. `@map` — routage I/O
+## 6. `@map` — la liaison NOMME sa source
 
-### 6.1 Endpoints
+> ⚠️ **La flèche a DISPARU de cette directive le 2026-07-27** (décisions
+> `2026-07-27-symetrie-entree-sortie-jusqu-au-bout` et
+> `2026-07-27-map-absorbe-alias-macro-reste-separee`). Elle est redevenue **exclusivement une
+> règle de production**. `@alias` a été absorbé dans `@map` le même jour, et le signe `=` a
+> disparu de tout le langage. Les formes ci-dessous sont écrites dans la seule forme vivante :
+> **`@map <nom> <source>`** — le nom d'abord, comme toutes les autres directives.
 
-| Endpoint               | Source                  | Cible                         |
-| ---------------------- | ----------------------- | ----------------------------- |
-| `cc:N`                 | Input MIDI CC           | Output MIDI CC                |
-| `osc:/path`            | Input OSC               | Output OSC                    |
-| `[flag]`               | —                       | Flag local R/W                |
-| `<!trigger`            | —                       | Trigger entrant local         |
-| `!trigger`             | Trigger sortant         | —                             |
-| `sys.cmd`              | (selon cmd, cf. §6)     | (selon cmd)                   |
-| `verse.X`              | (selon X)               | (selon X)                     |
-| `IDENT` (alias)        | Source aliasée          | Cible aliasée                 |
-| `IDENT.IDENT` (label)  | —                       | Tous éléments labellisés      |
+### 6.1 Ce qu'une liaison peut nommer comme SOURCE
+
+| Source                | Ce qu'elle désigne                        |
+| --------------------- | ----------------------------------------- |
+| `cc:N`                | un contrôleur continu MIDI entrant        |
+| `osc:/path`           | une adresse OSC entrante                  |
+| `<!trigger`           | un point d'attente déclaré                |
+| `[flag]`              | un drapeau local                          |
+| `IDENT`               | un trigger ou une entrée déclarée         |
+| `IDENT.IDENT`         | une entrée et son adresse, un label posé  |
+
+**Le sens SORTANT n'existe plus** (abandonné le 2026-07-27, retiré chez BPx en `4d2fbbe`) : une
+liaison lit, elle n'émet pas. Les lignes qui décrivaient une émission — l'ancien `@map [flag] -> cc:N`,
+l'ancien bidirectionnel `<->` et sa rupture d'écho — ont été retirées avec elle, pas réécrites.
 
 ### 6.2 Multicast par labels
 
 ```
 S -> C4@kick D4 E4@kick F4
-@map cc:1 -> kick.vel
+@map ratio kick.vel
 ```
 
-Tous les éléments `@kick` reçoivent simultanément. Scope par défaut : la scène où `@map` est déclaré. Préfixe pour cross-scene (`verse.kick.vel`, `*.kick.vel`).
+Tous les éléments `@kick` sont désignés ensemble. Portée par défaut : la scène où `@map` est
+déclaré. Préfixe pour la portée croisée (`verse.kick.vel`, `*.kick.vel`).
 
-### 6.3 Bidirectionnel `<->`
+### 6.3 ❓ CE QUI N'EST PAS TRANCHÉ — les cibles autres qu'un nom
 
-```
-@map cc:1 <-> [intensity]
-```
+La forme vivante NOMME sa liaison : la cible est ce nom, et c'est un identifiant nu. Trois cibles
+que l'ancienne flèche exprimait n'ont donc **aucune écriture aujourd'hui**, et il ne faut pas leur
+en inventer une :
 
-- cc:1 reçoit une valeur externe → `[intensity]` mis à jour
-- `[intensity]` modifié dans la dérivation → cc:1 émis vers l'externe
+- un **drapeau** — l'ancien `@map cc:1 -> [intensity]` ;
+- une **commande de transport**, locale ou dans une scène nommée — l'ancien `@map cc:60 -> verse.play` ;
+- une **valeur système** — l'ancien `@map cc:7 -> sys.tempo`.
 
-**Rupture d'écho automatique** au runtime (chaque update porte une origine implicite, le retour est court-circuité). Pas de loop infini.
-
-### 6.4 Direction `sys.X`
-
-Pour `sys.tempo`, `sys.beat`, `sys.bar` : la direction est fixée par le sens de l'arrow `@map`.
-
-```
-@map cc:7 -> sys.tempo         // CC pilote le tempo (commande)
-@map sys.beat -> osc:/vis/beat // chaque beat émis vers OSC (état)
-```
-
-Pour `sys.play`, `sys.stop`, etc. : commande uniquement (cf. §7).
+La question est **ouverte chez Romain**, nommée telle quelle dans la décision
+`2026-07-27-symetrie-entree-sortie-jusqu-au-bout` : « les autres cibles de correspondance — un
+drapeau, une commande de transport : se symétrisent-elles au point d'usage, ou sont-elles d'une
+autre nature ? ». Elle y va avec **la multiplicité** (plusieurs sources vers une même cible), non
+tranchée elle aussi. Fermer ce silence en inventant une graphie fabriquerait une correspondance
+morte — le compilateur la refuse aujourd'hui, et c'est la bonne réponse tant que la forme n'existe pas.
 
 ---
 
@@ -346,8 +349,10 @@ Synchrone v1. Worker option v2 (l'API est conçue compatible : pas de référenc
 Construite **au load** depuis l'AST de chaque scène :
 - `@scene verse "..."` → enregistre la session
 - `@expose [x]` → règle : `verse.flag-changed:x` → `parent.flag-changed:x`
-- `@map cc:1 -> [intensity]` → règle : `external.cc:1` → `currentScene.flag-changed:intensity`
-- `@map cc:60 -> verse.play` → règle : `external.cc:60` → `verse.sys.play`
+- `@map tension cc:1` → règle : `external.cc:1` → la liaison nommée `tension` de la scène courante
+
+*(Les deux autres lignes d'exemple — un drapeau et une commande de scène comme cibles — ont été
+retirées : ces cibles n'ont plus d'écriture et la question est ouverte, cf. §6.3.)*
 
 Reconstruite au hot-swap. Statique pendant un cycle.
 
@@ -390,9 +395,7 @@ Recharger la racine = détruire toute la hiérarchie + recréer. Plus coûteux m
 @scene verse "verse.bps"
 @scene chorus "chorus.bps"
 
-@map cc:1 -> [tension]              // CC1 contrôle un flag racine
-@map cc:60 -> verse.play            // CC60 démarre verse
-@map [tension] -> cc:20             // retour visuel sur cc:20
+@map tension cc:1                   // CC1 alimente la liaison 'tension'
 
 [phase==1] S -> verse
 [phase==2] S -> chorus
@@ -402,7 +405,7 @@ Recharger la racine = détruire toute la hiérarchie + recréer. Plus coûteux m
 ```
 // verse.bps
 @expose [intensity]
-@map cc:2 -> [intensity]
+@map intensite cc:2
 [tension > 5] S -> Sa Re Ga !ready
 [tension <= 5] S -> Sa Re
 <!parent.go S -> Pa Dha

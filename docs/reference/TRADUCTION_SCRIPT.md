@@ -72,11 +72,15 @@ là où `script(…)` occupe déjà seul son emplacement de règle (`765432.bps:
 
 **On ne crée pas de syntaxe sans lui.** Ces formes sont **proposées**, pas décidées. Chacune s'ancre
 sur un mécanisme **existant** plutôt que d'ouvrir un canal parallèle (`docs/design/SCENES.md` §6 :
-`@map` = pont I/O externe ↔ langage, pour CC, OSC **et `sys`** ; `sys.reset` / `sys.destroy` existent).
+la liaison `@map <nom> <source>` lit une source externe — CC, OSC — et la nomme ; `sys.reset` /
+`sys.destroy` existent comme commandes). ⚠️ **`sys` comme CIBLE de liaison n'a plus d'écriture** —
+la flèche a disparu de la directive le 2026-07-27 et la question des cibles autres qu'un nom est
+ouverte chez Romain (`SCENES.md` §6.3). Une proposition ci-dessous qui s'y appuierait s'appuierait
+sur du vide.
 
 | Famille | Ce que ça fait | Existant le plus proche | Proposition |
 |---|---|---|---|
-| `wait for <note> channel N` | **Attend une note MIDI entrante** avant de poursuivre — synchronisation d'entrée | `@map cc:N -> [flag]` (lecture externe → flag, `SCENES.md:174`) | Étendre `@map` à la note entrante : `@map note:do#2 ch:1 -> [start]`, la règle étant gardée par `[start==1]`. Réutilise le pont et les gardes, n'invente aucun mot. |
+| `wait for <note> channel N` | **Attend une note MIDI entrante** avant de poursuivre — synchronisation d'entrée | ✅ **RÉSOLU depuis, aucune proposition à faire** : la déclaration d'entrée `@in` et le point d'attente adressé | `@in clavier transport.midi` puis `S -> C4 <!clavier.60 D4`. L'adresse se colle au point d'attente comme la destination se colle au terminal (décisions `2026-07-27-symetrie-entree-sortie-jusqu-au-bout` et `…-forme-des-entrees-in-mapping-adresse-nue`). ⚠️ L'ancienne proposition de cette ligne — étendre la directive de correspondance à la note entrante, avec une flèche — est **morte deux fois** : la flèche a quitté la directive, et le routage par directive a été explicitement écarté au profit du point d'usage. |
 | `Tick cycle ON` / `OFF` / `Reset tick cycle` | Pilote une **horloge de cycle** | commandes `sys.` (`SCENES.md:67,233`) | `sys.tick_on` / `sys.tick_off` / `sys.tick_reset`. ⚠️ Le domaine est **Kronos** (transport) : à co-signer avec lui, la sémantique d'horloge ne m'appartient pas. |
 | `MIDI send Continue` | Message **système temps réel** MIDI (transport) | idem `sys.` | `sys.midi_continue` — même remarque : transport, donc Kronos. |
 | `Beep` | Signal sonore **système**, non musical | aucun | Le seul cas sans ancrage. Question préalable à toute syntaxe : **est-ce que ça a sa place dans une partition ?** Ma recommandation est de **ne rien créer** et de laisser cette occurrence tomber en erreur. |

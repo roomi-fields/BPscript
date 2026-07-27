@@ -58,17 +58,39 @@ if (existsSync(demosDir)) {
 // n'est pas une non-conformité d'émission. On distingue donc 3 issues :
 //   • AST émis non conforme      → bad (frontière violée)
 //   • AST null SANS erreur       → bad (« silence » = le vrai piège à traquer)
-//   • AST null AVEC erreur(s)    → compile-error : grammaire active = régression (bad) ;
-//                                  démo = TOLÉRÉ + journalisé (ex. macro CV en attente
-//                                  d'arbitrage de forme, fail-loud [296] volontaire).
+//   • AST null AVEC erreur(s)    → compile-error : bad, SAUF entrée nommée au registre ci-dessous.
+//
+// ⚠️ LA TOLÉRANCE EN BLOC A ÉTÉ SUPPRIMÉE le 2026-07-27, sur mesure. Une démo qui ne compilait pas
+// passait, quelle que soit la raison — la ligne était seulement JOURNALISÉE. Mesuré par injection :
+// une forme MORTE (`@alias`, supprimée le jour même) ajoutée à une démo laissait le portillon VERT,
+// avec sa cause écrite en toutes lettres dans la sortie. C'est la famille « verdir sans avoir
+// examiné », fermée dans sept gardes le même jour — celui-ci était le huitième survivant, et il a
+// survécu pour la raison habituelle : il n'était pas dans la portée du balayage.
+//
+// Et la porte n'abritait PERSONNE : zéro démo en erreur au moment du retrait. Une dérogation sans
+// bénéficiaire n'est pas une tolérance, c'est un trou. Le registre la remplace — nommée, datée,
+// motivée, avec un témoin qui exige qu'elle serve encore (§ après la boucle).
+const ERREURS_ADMISES = [
+  // { demo: 'nom.bps', pourquoi: '…', date: '2026-…' }  ← vide, et c'est le bon état
+];
 let bad = 0;
 const compileErrors = [];
+const admises = new Set(ERREURS_ADMISES.map((e) => e.demo));
+const admisesServies = new Set();
 for (const { label, file, isDemo } of targets) {
   const r = compileToBPxAST(readFileSync(file, 'utf8'));
   if (!r.ast) {
     if (r.errors && r.errors.length) {
       compileErrors.push(`${label} (${r.errors[0].message.split('.')[0]})`);
-      if (!isDemo) { bad++; console.error(`✗ ${label} : grammaire active ne compile plus — ${r.errors[0].message}`); }
+      const nomDemo = label.replace(/^demo:/, '');
+      if (isDemo && admises.has(nomDemo)) { admisesServies.add(nomDemo); continue; }
+      bad++;
+      console.error(`✗ ${label} : ${isDemo ? 'démo' : 'grammaire active'} ne compile plus — ${r.errors[0].message}`);
+      if (isDemo) {
+        console.error(`    Une démo qui ne compile pas n'est pas un détail : c'est du langage MORT `
+          + `qu'un lecteur peut recopier. Corriger la source — ou, si le refus est voulu et `
+          + `temporaire, l'inscrire dans ERREURS_ADMISES avec sa date et sa raison.`);
+      }
       continue;
     }
     console.error(`✗ ${label} : compileToBPxAST sans AST NI erreur (silence — piège)`);
@@ -95,8 +117,17 @@ if (activesCount === 0) {
     + `Un verdict vert sur zéro source n'est pas un verdict.`);
   process.exit(1);
 }
+// ⚠️ LE REGISTRE NE RANCIT PAS — une dérogation qui ne sert plus doit PARTIR. Sans ce témoin, une
+// entrée oubliée rouvre silencieusement la porte pour tout ce qui viendrait s'y ranger plus tard.
+for (const e of ERREURS_ADMISES) {
+  if (!admisesServies.has(e.demo)) {
+    bad++;
+    console.error(`✗ ERREURS_ADMISES : '${e.demo}' est inscrit comme toléré (${e.date}) mais compile `
+      + `désormais — RETIRER l'entrée. Une dérogation sans bénéficiaire est un trou, pas une tolérance.`);
+  }
+}
 if (compileErrors.length) {
-  console.log(`[ast-conformance] ${compileErrors.length} source(s) en erreur de compilation (attendu si macro/forme en attente) : ${compileErrors.join(' ; ')}`);
+  console.log(`[ast-conformance] ${compileErrors.length} source(s) en erreur de compilation : ${compileErrors.join(' ; ')}`);
 }
 console.log(`[ast-conformance] ${targets.length} sources (${targets.length - demosCount} actives + ${demosCount} démos`
   + (skipped.length ? ` ; ${skipped.length} sans .bps ignorée(s) : ${skipped.join(', ')}` : '') + ') — '

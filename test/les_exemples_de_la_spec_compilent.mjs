@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GARDE — les exemples de mes SPECS compilent-ils encore ?
+ * GARDE — mes DOCUMENTS enseignent-ils encore des formes vivantes ?
  *
  * ⚠️ LA FAUTE QU'ELLE FERME, payée SIX FOIS le 2026-07-27 sous six habits différents :
  * **on répare l'endroit où le défaut s'est MONTRÉ, pas l'espace où il peut vivre.**
@@ -10,17 +10,25 @@
  *     réécrit un bloc d'exemples, trois autres exemples de la même directive mentaient encore,
  *     plus bas dans le même fichier.
  *
+ * ⚠️ ET LE GARDE LUI-MÊME L'A REPAYÉE, le lendemain — c'est la raison de sa version actuelle. Sa
+ * portée était **trois fichiers de `docs/spec/`**, parce que c'est là que le mensonge s'était
+ * montré. `docs/design/SCENES.md` enseignait la flèche morte DOUZE fois et `docs/reference/` une,
+ * hors portée donc invisibles : ils n'auraient jamais rougi. Le garde balaye désormais **TOUT
+ * `docs/`** — l'espace où une forme morte peut vivre, pas l'endroit où elle s'est montrée. La
+ * leçon générale est inscrite dans CLAUDE.md : quand on ferme une famille, écrire la portée ET son
+ * complément, sinon la campagne suivante retrouve les mêmes survivants.
+ *
  * LA MÉCANISATION, plutôt que s'en souvenir : la doc **ne rougit jamais** — un exemple faux ne fait
- * rien du tout, il attend qu'un lecteur le recopie. Ce garde EXTRAIT les exemples de directive des
- * trois specs et les **COMPILE**. Ce n'est plus une relecture, c'est une mesure : c'est la méthode
- * qui a trouvé les trois mensonges, alors que la relecture n'avait rien trouvé de la journée.
+ * rien du tout, il attend qu'un lecteur le recopie. Ce garde EXTRAIT les exemples de directive et
+ * les **COMPILE**. Ce n'est plus une relecture, c'est une mesure : c'est la méthode qui a trouvé
+ * tous les mensonges du 2026-07-27, alors que la relecture n'en avait trouvé aucun.
  *
  * CE QU'IL COUVRE — la moitié MESURABLE, et il faut le dire : les DIRECTIVES, qui sont compilables.
  * La prose qui les entoure ne l'est pas, et personne ne peut la mesurer automatiquement. Fermer la
  * moitié mesurable en le disant vaut mieux que laisser croire le document garanti.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 let passe = 0;
@@ -28,11 +36,38 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
-const SPECS = ['LANGUAGE.md', 'EBNF.md', 'AST.md'].map((f) => path.join(ICI, '..', 'docs', 'spec', f));
+const DOCS = path.join(ICI, '..', 'docs');
+
+/**
+ * LA PORTÉE, ET SON COMPLÉMENT ÉCRIT — pas un tri de convenance.
+ * Balayé : tout `docs/`, récursivement. Écarté, avec sa raison, et une seule :
+ *   · `decisions-en-attente/archive/` — un ARCHIVE est un compte rendu daté de ce qui a été
+ *     pensé à un moment. Le réécrire falsifierait l'histoire ; une forme morte y est à sa place,
+ *     c'est même ce qu'on y cherche. La règle est « ne pas réécrire un compte rendu », pas
+ *     « exclure ce qui gêne » — d'où le témoin §4 qui vérifie que l'écart reste étroit.
+ */
+const ARCHIVES = /(^|\/)(archive|archives)(\/|$)/;
+const listerDocs = (dir, out = []) => {
+  for (const e of readdirSync(dir)) {
+    const p = path.join(dir, e);
+    if (statSync(p).isDirectory()) { if (!ARCHIVES.test(p)) listerDocs(p, out); }
+    else if (e.endsWith('.md')) out.push(p);
+  }
+  return out;
+};
+const TOUS = listerDocs(DOCS);
+const relatif = (p) => path.relative(DOCS, p);
+// Les exemples COMPILÉS restent ciblés sur les specs : ailleurs, une directive apparaît souvent
+// dans une phrase de prose et non comme une ligne à compiler. Le §3 (formes mortes), lui, balaye
+// TOUT — c'est lui qui a laissé passer les douze.
+const SPECS = ['LANGUAGE.md', 'EBNF.md', 'AST.md'].map((f) => path.join(DOCS, 'spec', f));
 
 // ─── 1. SOCLE — refuser de conclure sur du vide ──────────────────────────────────────────────
 const manquants = SPECS.filter((p) => !existsSync(p)).map((p) => path.basename(p));
 ok(manquants.length === 0, `1. spec(s) introuvable(s) : ${manquants.join(', ')} — rien à mesurer`);
+ok(TOUS.length >= 25,
+   `1. le balayage doit voir TOUT docs/ — ${TOUS.length} document(s) trouvé(s). Un compte qui `
+   + `s'effondre ne veut pas dire que la doc a maigri : il veut dire que le garde ne la lit plus.`);
 
 // ─── 2. CHAQUE DIRECTIVE ÉCRITE EN EXEMPLE DOIT COMPILER ─────────────────────────────────────
 // Les directives dont la FORME a bougé sont celles qui mentent le plus vite. On les prend toutes,
@@ -66,34 +101,64 @@ ok(exemples >= 8,
    `2. il faut des exemples à mesurer — ${exemples} trouvé(s). Si ce compte s'effondre, ce n'est `
    + `pas que la doc est devenue parfaite : c'est que le garde ne la lit plus.`);
 
-// ─── 3. LES FORMES SUPPRIMÉES NE DOIVENT PLUS ÊTRE ENSEIGNÉES ────────────────────────────────
-// ⚠️ Un exemple supprimé d'UNE section survit dans les autres — payé le 2026-07-27, une heure après
-// la correction du bloc principal. On cherche donc dans TOUT le fichier, pas dans la section qu'on
-// vient de toucher.
+// ─── 3. AUCUNE FORME VOUÉE AU RETRAIT NE GARDE UN APPELANT VIVANT ────────────────────────────
+// Exigence du lot [1040] : « un garde qui ÉCHOUE si une forme vouée au retrait garde un appelant
+// vivant ». Un appelant, ce n'est pas seulement du code — un DOCUMENT qui enseigne la forme en est
+// un, et le pire : il ne casse rien, il attend qu'un lecteur recopie.
+//
+// ⚠️ Et le balayage est un PRODUIT CROISÉ, FORMES × DOCUMENTS. Ajouter une pierre tombale la
+// cherche automatiquement dans tous les documents ; ajouter un document le soumet automatiquement
+// à toutes les pierres. Rien à penser au bon moment — c'est exactement ce qui a manqué le
+// 2026-07-27, où la liste des formes était complète mais la liste des fichiers ne l'était pas.
 const MORTES = [
   [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)"],
   [/@alias\s+[A-Za-z_]/, "'@alias' (absorbé par '@map' le 2026-07-27)"],
-  [/@map\s+[^\n]*(->|<->|<-)/, "la liaison à la flèche (la flèche est redevenue une production)"],
+  [/@map\s+[^\n|]*(->|<->|<-)/, "la liaison à la flèche (la flèche est redevenue une production)"],
+  [/@map\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "la liaison avec le signe '=' (supprimé le 2026-07-27)"],
 ];
-for (const p of SPECS) {
-  if (!existsSync(p)) continue;
-  const nom = path.basename(p);
-  // Les lignes qui PARLENT de la disparition sont légitimes — elles la nomment pour l'expliquer.
-  const lignes = readFileSync(p, 'utf8').split('\n')
-    .filter((l) => !/DISPARU|SUPPRIM|disparait|disparaît|absorbé|absorbe|2026-07-27/.test(l));
+// Les lignes qui PARLENT de la disparition sont légitimes — elles la nomment pour l'expliquer.
+const PARLE_DE_SA_MORT = /DISPARU|DISPARA|SUPPRIM|disparait|disparaît|disparu|absorbé|absorbe|morte|retiré|ancien|2026-07-27/;
+let croisements = 0;
+for (const p of TOUS) {
+  const nom = relatif(p);
+  const lignes = readFileSync(p, 'utf8').split('\n').filter((l) => !PARLE_DE_SA_MORT.test(l));
   for (const [motif, quoi] of MORTES) {
+    croisements++;
     const fautives = lignes.filter((l) => motif.test(l));
     ok(fautives.length === 0,
        `3. ${nom} enseigne encore ${quoi} — ${fautives.length} ligne(s), dont : `
        + `'${(fautives[0] || '').trim().slice(0, 70)}'`);
   }
 }
+ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
+   `3. le produit croisé doit être PLEIN — ${croisements} croisement(s) pour ${TOUS.length} `
+   + `document(s) × ${MORTES.length} forme(s) morte(s)`);
+
+// ─── 4. TÉMOIN — l'écart de portée reste étroit, et il se justifie ───────────────────────────
+// Une exclusion est une porte : elle doit rester de la taille de sa raison. Le jour où la moitié
+// de `docs/` passerait par une exclusion, le garde serait vert et ne garderait plus rien.
+{
+  const totalMd = (function compter(dir, n = 0) {
+    for (const e of readdirSync(dir)) {
+      const q = path.join(dir, e);
+      if (statSync(q).isDirectory()) n = compter(q, n);
+      else if (e.endsWith('.md')) n++;
+    }
+    return n;
+  })(DOCS);
+  const ecartes = totalMd - TOUS.length;
+  ok(ecartes <= 3,
+     `4. trop de documents écartés du balayage — ${ecartes} sur ${totalMd}. La seule raison admise `
+     + `est « c'est un compte rendu archivé, le réécrire falsifierait l'histoire ». Si l'écart `
+     + `grandit, c'est qu'on écarte pour ne pas corriger.`);
+}
 
 if (echecs.length) {
-  console.error(`❌ exemples de la spec : ${echecs.length} échec(s)`);
+  console.error(`❌ documents du langage : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exitCode = 1;
 } else {
-  console.log(`✅ les exemples de la spec compilent — ${passe} vérification(s) passée(s) sur `
-            + `${exemples} exemple(s) de directive dans ${SPECS.length} spec(s)`);
+  console.log(`✅ les documents enseignent des formes vivantes — ${passe} vérification(s) passée(s) : `
+            + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), et ${croisements} `
+            + `croisement(s) ${TOUS.length} document(s) × ${MORTES.length} forme(s) morte(s)`);
 }

@@ -163,6 +163,20 @@ succès). Elle a survécu pour une seule raison : **ce mode n'était pas dans le
 rougira jamais pour prévenir. Donc : quand tu fermes une famille, **écris la portée ET son
 complément** — sinon la campagne suivante repart de la même portée et retrouve les mêmes survivants.
 
+**Repayé le lendemain, par le garde écrit pour fermer cette faute même.** Deux survivants d'un coup,
+tous deux hors portée : (a) le garde des exemples de doc balayait **trois fichiers de `docs/spec/`** —
+là où le mensonge s'était montré — pendant qu'un doc de conception enseignait la forme morte **douze
+fois** ; (b) la famille « verdir sans examiner » avait un **neuvième** survivant, une tolérance en
+bloc qui laissait une scène ne pas compiler sans faire rougir, cause écrite en toutes lettres dans
+sa propre sortie. Trois leçons, et la troisième est la vraie :
+- **la portée d'un garde se choisit sur l'ESPACE, jamais sur le fichier où ça s'est vu** ;
+- **une dérogation SANS BÉNÉFICIAIRE est un trou, pas une tolérance** — celle-ci n'abritait
+  personne (zéro source concernée le jour du retrait). Une porte ouverte pour personne s'enlève ;
+  si elle doit rester, c'est un **registre nommé, daté, motivé, avec témoin des deux sens** ;
+- **écrire la règle ne suffit pas, même appliquée le jour même**. Le seul geste qui a trouvé ces
+  deux-là : **injecter la faute et regarder si le garde rougit**. Une portée ne s'inspecte pas en
+  lisant le garde — elle se mesure en le faisant échouer là où on croit qu'il couvre.
+
 ### L'INSTRUMENT ment plus souvent que le sujet (6× le 2026-07-27)
 Quand un chiffre surprend, **suspecter l'instrument AVANT le sujet** — et le vérifier *avant*
 d'envoyer la mesure, pas après. Les six formes payées en un jour :
