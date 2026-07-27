@@ -307,7 +307,10 @@ function parse(tokens, opts = {}) {
       // (décision Romain 2026-07-27, symétrie entrée/sortie).
       inputs: [],
       maps: [],
-      aliases: [],
+      // `aliases` SUPPRIMÉ le 2026-07-27 : `@alias` est absorbé par `@map`, sans voie parallèle.
+      // Le champ restait ÉMIS et TOUJOURS VIDE — un champ mort que la spec décrivait encore, donc
+      // un consommateur pouvait le lire et conclure « cette scène ne déclare aucun alias » au lieu
+      // de « les alias n'existent plus ». On supprime la donnée avec le mot.
       labels: [],
       declarations: [],
       macros: [],

@@ -27,7 +27,7 @@ Scene {
   scenes: SceneDirective[]           // @scene directives (child scenes)
   exposes: ExposeDirective[]         // @expose directives (flags visible au parent)
   maps: MapDirective[]               // @map directives (I/O mappings CC/OSC ↔ flags/triggers)
-  aliases: AliasDirective[]          // @alias directives (named I/O endpoints)
+  // `aliases` SUPPRIME le 2026-07-27 : `@alias` a ete absorbe par `@map`, sans reste.
   labels: LabelDirective[]           // @label directives (label declarations)
   declarations: Declaration[]
   macros: Macro[]
@@ -592,8 +592,12 @@ MacroDirective {
 ```
 
 Exemples :
-- `@macro kick = (vel:120)` → `{ name:"kick", params:[], body:[InstantControl(vel:120)] }`
-- `@macro accent(x) = x(vel:120)` → `{ name:"accent", params:["x"], body:[SymbolCall(x, vel:120)] }`
+- `@macro kick (vel:120)` → `{ name:"kick", params:[], body:[InstantControl(vel:120)] }`
+- `@macro accent(x) x(vel:120)` → `{ name:"accent", params:["x"], body:[SymbolCall(x, vel:120)] }`
+
+> ⚠️ Le `=` a DISPARU de tout le langage le 2026-07-27 (decision Romain, uniformite declarative).
+> La liste de parametres se distingue d'un corps entre parentheses par le COLLAGE : collee au nom
+> c'est une liste, separee par une espace c'est le corps.
 
 ### `AliasDirective`
 
@@ -606,7 +610,10 @@ AliasDirective {
 }
 ```
 
-Exemple : `@alias breath = cc:2` → `{ name:"breath", source:{kind:"cc", number:2} }`
+Exemple : `@map breath cc:2` → `{ name:"breath", source:{kind:"cc", number:2} }`
+
+> ⚠️ `@alias` a DISPARU le 2026-07-27, absorbe par `@map` : un NOM, puis sa SOURCE, sans signe ni
+> fleche. Une liaison n'a plus de « cible » — **le nom EST la cible**.
 
 ### `LabelDirective`
 

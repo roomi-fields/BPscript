@@ -1364,10 +1364,12 @@ l'element precedent comme argument (pour les macros parametrees).
 Les noms sont utilisables dans les `@map` pour le controle externe :
 
 ```
-@map cc:1 -> kick.ratio             // controle le ratio de tous les @kick
-@map breath -> groove.ratio          // l'alias breath controle le groupe groove
-@map cc:2 -> kick.vel                // controle le vel des @kick
+@map ratio  kick.ratio               // nomme le ratio de tous les @kick
+@map souffle groove.ratio            // nomme le ratio du groupe groove
+@map force  kick.vel                 // nomme le vel des @kick
 ```
+Forme corrigee le 2026-07-27 : le NOM d'abord, la source ensuite, **sans fleche** — celle-ci est
+redevenue exclusivement une regle de production.
 
 Plusieurs elements peuvent partager le meme nom (multicast) :
 
