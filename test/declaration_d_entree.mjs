@@ -136,20 +136,96 @@ ok(LIBS.mapping?.domain === 'mapping',
   ok(trig && trig.address === undefined, `5. sans point, AUCUNE adresse ne doit apparaître — reçu : ${JSON.stringify(trig)}`);
 }
 
-// ─── 6. TÉMOIN D'EXCLUSION — la forme NUMÉRIQUE reste dehors ─────────────────────────────────
-// ⚠️ Ce témoin garde une ABSENCE, et c'est voulu : il doit ROUGIR le jour où quelqu'un implémente
-// la forme numérique sans que la règle de désambiguïsation ait été tranchée par Romain. Le jour de
-// l'arbitrage, il se RETOURNE (il exigera l'adresse) au lieu d'être supprimé.
+// ─── 6. COLLÉ = UNE ADRESSE, ESPACE = UN DÉCOUPAGE ──────────────────────────────────────────
+// Règle validée par Romain le 2026-07-27. Ce n'est PAS une règle nouvelle : le langage colle déjà
+// le marqueur de registre au nom de note, jamais une espace, parce que l'espace est le délimiteur
+// de termes ; et la doc écrit déjà le découpage AVEC des espaces autour. On rend explicite ce qui
+// l'était de fait.
+//
+// ⚠️ ÉCRITE POUR LA CONSTRUCTION : toutes les positions où une adresse peut vivre, pas les deux
+// exemples de la décision. Un point d'attente peut être seul ou ancré, unique ou multiple, et son
+// côté droit peut être un identifiant ou un nombre — chaque croisement est vérifié.
+const adressesDe = (ast) => {
+  const out = [];
+  const w = (n) => {
+    if (Array.isArray(n)) { n.forEach(w); return; }
+    if (!n || typeof n !== 'object') return;
+    if (n.type === 'TriggerIn') out.push({ nom: n.name, adresse: n.address });
+    // ⚠️ DESCENDRE JUSQU'AUX FEUILLES, pas au premier niveau. Écrit d'abord avec les deux seules
+    // clés de la forme simple, l'instrument a rapporté « aucune adresse » pour un groupe
+    // polymétrique où elle était bel et bien présente — quatrième fois de la journée où c'est
+    // l'instrument qui ment, pas le sujet.
+    for (const k of ['symbol', 'triggers', 'voices', 'elements', 'content', 'primary', 'secondaries']) {
+      if (n[k]) w(n[k]);
+    }
+  };
+  w(ast?.subgrammars?.[0]?.rules?.[0]?.rhs || []);
+  return out;
+};
+const AVEC_ENTREES = '@in brut transport.midi\n@in pedale transport.midi\n@mode:ord\n';
+
+for (const [regle, quoi, attendu] of [
+  ['S -> C4 <!brut.60 D4', 'adresse NUMÉRIQUE, point d\'attente seul', 60],
+  ['S -> C4 <!pedale.suivant D4', 'adresse IDENTIFIANT, point seul', 'suivant'],
+  ['S -> C4<!brut.60 D4', 'adresse numérique sur un point ANCRÉ à la note', 60],
+  ['S -> C4<!pedale.suivant D4', 'adresse identifiant sur un point ANCRÉ', 'suivant'],
+  ['S -> <!brut.60 C4', 'adresse en TÊTE de règle', 60],
+  ['S -> C4 <!brut.60', 'adresse en FIN de règle', 60],
+  ['S -> {C4 <!brut.60} D4', 'adresse dans un groupe polymétrique', 60],
+]) {
+  const r = compile(AVEC_ENTREES + regle);
+  ok((r.errors || []).length === 0,
+     `6. ${quoi} doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
+  const vues = adressesDe(r.ast).filter((t) => t.adresse !== undefined);
+  ok(vues.length === 1 && vues[0].adresse === attendu,
+     `6. ${quoi} : l'adresse doit ARRIVER telle qu'écrite (${JSON.stringify(attendu)}) — reçu : ${JSON.stringify(vues)}`);
+}
+// DEUX adresses sur un même point : les deux arrivent, aucune n'absorbe l'autre.
 {
-  const r = compile('@in brut transport.midi\n@mode:ord\nS -> C4 <!brut.60 D4');
-  ok((r.errors || []).length === 0, "6. la séquence doit rester lisible (période + terminal), pas planter");
+  const r = compile(AVEC_ENTREES + 'S -> C4<!brut.60<!pedale.suivant D4');
+  const vues = adressesDe(r.ast);
+  ok(vues.length === 2 && vues[0].adresse === 60 && vues[1].adresse === 'suivant',
+     `6. deux adresses sur un même point doivent arriver toutes les deux — reçu : ${JSON.stringify(vues)}`);
+}
+// LE TYPE DIT CE QUE L'ADRESSE EST — l'aval n'a rien à deviner.
+{
+  const r = compile(AVEC_ENTREES + 'S -> C4 <!brut.60 <!pedale.suivant D4');
+  const vues = adressesDe(r.ast).filter((t) => t.adresse !== undefined);
+  ok(typeof vues[0]?.adresse === 'number', `6. un NOMBRE sort en nombre — reçu : ${typeof vues[0]?.adresse}`);
+  ok(typeof vues[1]?.adresse === 'string', `6. un IDENTIFIANT sort en chaîne — reçu : ${typeof vues[1]?.adresse}`);
+}
+
+// ─── 7. L'ESPACE DÉCOUPE — et ce n'est PAS une adresse ───────────────────────────────────────
+for (const [regle, quoi] of [
+  ['S -> C4 <!brut . 60 D4', 'espacé des deux côtés'],
+  ['S -> C4 <!brut .60 D4', 'point détaché du nom'],
+]) {
+  const r = compile(AVEC_ENTREES + regle);
+  ok((r.errors || []).length === 0, `7. ${quoi} doit rester lisible — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   const types = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || []).map((e) => e.type);
   ok(types.includes('Period') && types.includes('NumericTerminal'),
-     `6. un point suivi d'un NOMBRE reste PÉRIODE + TERMINAL — la forme numérique n'est PAS `
-     + `implémentée tant que la règle n'est pas tranchée. Reçu : ${JSON.stringify(types)}`);
-  const trig = ((r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0]?.triggers || [])[0];
-  ok(trig && trig.address === undefined,
-     `6. et surtout AUCUNE adresse ne doit être fabriquée depuis le nombre — reçu : ${JSON.stringify(trig)}`);
+     `7. ${quoi} : DÉCOUPAGE + terminal, pas une adresse — reçu : ${JSON.stringify(types)}`);
+  ok(adressesDe(r.ast).every((t) => t.adresse === undefined),
+     `7. ${quoi} : AUCUNE adresse ne doit être fabriquée — reçu : ${JSON.stringify(adressesDe(r.ast))}`);
+}
+// Sans point du tout, rien n'est inventé.
+{
+  const r = compile(AVEC_ENTREES + 'S -> C4 <!brut D4');
+  ok(adressesDe(r.ast).every((t) => t.adresse === undefined),
+     "7. sans point, AUCUNE adresse ne doit apparaître");
+}
+
+// ─── 8. LE CAS MIXTE REFUSE — je ne choisis pas à la place de l'auteur ───────────────────────
+// Point collé au nom, valeur détachée : ni l'une ni l'autre des deux formes. Le lire en silence
+// comme un découpage trahirait une intention d'adresse manifeste ; le lire comme une adresse
+// contredirait la règle. Signalé à l'architecte avant l'arbitrage, non tranché depuis — donc on
+// REFUSE au lieu de deviner, en donnant les DEUX réécritures.
+{
+  const r = compile(AVEC_ENTREES + 'S -> C4 <!brut. 60 D4');
+  const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+  ok((r.errors || []).length > 0, '8. la forme mixte doit être REFUSÉE, pas devinée');
+  ok(msg.includes('ADRESSE') && msg.includes('DÉCOUPAGE'),
+     `8. et le refus doit donner LES DEUX réécritures — reçu : ${msg.slice(0, 150)}`);
 }
 
 if (echecs.length) {

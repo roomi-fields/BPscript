@@ -376,11 +376,35 @@ routage, pas de flèche, pas d'opérateur de câblage.**
 (décision Romain 2026-07-26, trois périphériques d'entrée nommés) et nulle part ailleurs :
 `@alphabet.X:keyboard` reste refusé — une sortie clavier n'a pas de sens.
 
-> ⚠️ **L'adresse nue NUMÉRIQUE (`<!brut.60`) n'est PAS implémentée** — arbitrage en attente. Un
-> point suivi d'un NOMBRE est déjà une lecture valide du langage : la **période** (fragment de durée
-> égale) suivie d'un terminal numérique. Les deux lectures sont grammaticalement légitimes ; les
-> départager demande une règle de langage, elle est chez Romain. Aucune forme provisoire n'est
-> tolérée en attendant : la séquence reste période + terminal.
+**L'adresse au point de réception** — `COLLÉ = une adresse, ESPACE = un découpage` (règle validée
+par Romain le 2026-07-27) :
+
+```
+S -> C4 <!brut.60 D4       (* une ADRESSE : on écoute le numéro 60 de l'entrée `brut` *)
+S -> C4 <!brut . 60 D4     (* le point d'attente `brut`, un DÉCOUPAGE, puis le terminal 60 *)
+S -> C4 <!pedale.suivant   (* côté droit IDENTIFIANT : l'étiquette produite par la table *)
+```
+
+Ce n'est **pas une règle nouvelle** : le langage colle déjà le marqueur de registre au nom de note,
+jamais une espace, parce que l'espace est le délimiteur de termes (LANGUAGE.md:107-111) ; et la doc
+écrit déjà le découpage **avec** des espaces autour (`A B . C D`, LANGUAGE.md:273). Les deux
+graphies étaient déjà distinguées dans l'usage — on rend explicite ce qui l'était de fait.
+
+Le **type** dit ce que l'adresse EST : un NOMBRE est le numéro brut de l'appareil, tel quel ; un
+IDENTIFIANT est l'étiquette produite par la table. L'aval n'a rien à deviner.
+
+> ⚠️ **La forme MIXTE** — point collé au nom, valeur détachée (`<!brut. 60`) — est **refusée**, avec
+> les deux réécritures dans le message. Elle n'est ni l'une ni l'autre : la lire en silence comme un
+> découpage trahirait une intention d'adresse manifeste, la lire comme une adresse contredirait la
+> règle. On ne devine pas à la place de l'auteur.
+
+> **Ce que la règle n'a rien brisé, mesuré avant de trancher** : ZÉRO point d'attente dans tout
+> l'écosystème (corpus, démos, scènes BPx), ZÉRO séquence découpage-puis-nombre en flux — une seule
+> occurrence dans tout le fonds, à l'intérieur d'un bloc Csound, donc hors langage.
+
+> ⚠️ **La MULTIPLICITÉ reste dehors** : viser plusieurs sources depuis un même point est voulu par
+> Romain, mais son écriture n'est pas dite. Aucune place n'est prévue pour elle ici — on livre ce
+> qui est fermé.
 
 ### `declaration`
 

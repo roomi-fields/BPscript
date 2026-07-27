@@ -4215,18 +4215,41 @@ function parse(tokens, opts = {}) {
     // collée au terminal (`sitar1.Sa`). Décision Romain 2026-07-27 : une entrée se route PAR LE NOM,
     // AU POINT OÙ ELLE AGIT, comme une sortie ; pas de directive, pas de flèche.
     //
-    // ⚠️ CÔTÉ DROIT IDENTIFIANT SEULEMENT, et la forme NUMÉRIQUE (`<!brut.60`) est DÉLIBÉRÉMENT
-    // LAISSÉE DEHORS — pas de forme provisoire, pas de tolérance en attendant (arbitrage architecte
-    // 2026-07-27). Raison mesurée : un point suivi d'un NOMBRE est déjà une lecture valide du
-    // langage — la PÉRIODE (fragment de durée égale) suivie d'un terminal numérique. Les deux
-    // lectures sont grammaticalement légitimes ; les départager demande une règle de langage
-    // (le collage en est la candidate, l'information est présente au niveau des jetons), et cette
-    // règle est chez Romain. Tant qu'elle n'est pas tranchée, on ne lit PAS le nombre : la
-    // séquence reste période + terminal, comme aujourd'hui, sans rien inventer.
+    // ⚠️ COLLÉ = UNE ADRESSE, ESPACE = UN DÉCOUPAGE (règle validée par Romain le 2026-07-27).
+    //
+    //   `<!brut.60`     → une adresse : le point d'attente écoute le numéro 60 de l'entrée `brut`
+    //   `<!brut . 60`   → le point d'attente `brut`, puis un DÉCOUPAGE, puis le terminal 60
+    //
+    // CE N'EST PAS UNE RÈGLE NOUVELLE, et il faut le lire ainsi plutôt que comme un choix : le
+    // langage COLLE déjà le marqueur de registre au nom de note, jamais une espace, parce que
+    // l'espace est le délimiteur de termes (LANGUAGE.md:107-111) ; et la doc écrit déjà le
+    // découpage AVEC des espaces autour (`A B . C D`, LANGUAGE.md:273). Les deux graphies étaient
+    // donc déjà distinguées dans l'usage — on rend explicite ce qui l'était de fait.
+    //
+    // POURQUOI IL A FALLU UNE RÈGLE : un point suivi d'un NOMBRE est une lecture valide des DEUX
+    // façons, l'adresse et le découpage suivi d'un terminal numérique. Mesuré avant de trancher, et
+    // c'est ce chiffre qui dit que la règle n'a rien brisé : ZÉRO point d'attente dans tout
+    // l'écosystème, ZÉRO séquence découpage-puis-nombre en flux hors d'un bloc Csound. Aucune scène
+    // ne casse, quelle que soit la sortie.
     let address = null;
-    if (at(T.PERIOD) && peek(1).type === T.IDENT) {
+    const colle = at(T.PERIOD) && !current().spaceBefore;
+    if (colle && (peek(1).type === T.IDENT || peek(1).type === T.INT) && !peek(1).spaceBefore) {
       advance();
-      address = advance().value;
+      const jeton = advance();
+      // Le TYPE dit ce que l'adresse EST, et l'aval n'a rien à deviner : un NOMBRE est le numéro
+      // brut de l'appareil, tel quel (décision 2026-07-27, point 3) ; un IDENTIFIANT est une
+      // étiquette, celle que la table a produite. Même convention que les extrémités `cc:N`, dont
+      // le numéro sort en nombre.
+      address = jeton.type === T.INT ? Number(jeton.value) : jeton.value;
+    } else if (colle && (peek(1).type === T.IDENT || peek(1).type === T.INT)) {
+      // ⚠️ LE CAS MIXTE — point collé au nom, mais valeur détachée. Il n'est ni l'un ni l'autre, et
+      // je REFUSE de choisir à la place de l'auteur : le lire en silence comme un découpage
+      // trahirait une intention d'adresse manifeste, le lire comme une adresse contredirait la
+      // règle. Signalé à l'architecte avant l'arbitrage, non tranché depuis — donc on ne devine pas.
+      throw new ParseError(
+        `'<!${name}.' suivi d'une espace : forme ambiguë. COLLÉ des deux côtés c'est une ADRESSE `
+        + `('<!${name}.${peek(1).value}'), ESPACÉ des deux côtés c'est un DÉCOUPAGE suivi d'un `
+        + `terminal ('<!${name} . ${peek(1).value}'). Écrire l'une des deux.`, current());
     }
     const qualifiers = [];
     while (at(T.LBRACKET)) qualifiers.push(parseQualifier());
