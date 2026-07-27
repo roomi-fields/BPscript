@@ -34,7 +34,10 @@ expose_directive = "@" , "expose" , ( "[" , IDENT , "]" )+ ; (* @expose [intensi
 cc_directive     = "@" , "cc" , [ ":" ] , cc_pair , { "," , cc_pair } ; (* @cc breath:2, expression:11 *)
 duration_directive = "@" , "duration" , ":" , ( INT | FLOAT ) , [ "b" | "s" ] ; (* @duration:16b, @duration:4.5s *)
 macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")" ]
-                 , "=" , rhs ;                 (* @macro kick = (vel:120), @macro accent(x) = x(vel:120) *)
+                 , rhs ;      (* @macro kick (vel:120)   @macro accent(x) x(vel:120) *)
+                 (* Le `=` a DISPARU le 2026-07-27 — UNE SEULE FORME dans tout le langage :
+                    `@<directive> <nom> <valeur>`. La liste de paramètres se COLLE au nom ;
+                    un corps qui commence par une parenthèse en est séparé par une espace. *)
 (* `alias_directive` SUPPRIMÉ le 2026-07-27 — absorbé par `map_directive`, cf. §map_directive. *)
 label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
 var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
@@ -485,7 +488,7 @@ sont **supprimées**.
 ### `macro`
 
 ```ebnf
-macro = IDENT , "(" , param_list , ")" , "=" , rhs ;
+macro = IDENT , "(" , param_list , ")" , rhs ;   (* `=` supprimé 2026-07-27 *)
 
 param_list = IDENT , { "," , IDENT } ;
 ```

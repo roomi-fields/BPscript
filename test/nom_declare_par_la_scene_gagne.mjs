@@ -84,7 +84,7 @@ for (const mot of SAC_SEUL) {
 // ─── 3. AVEC déclaration locale, la scène gagne — sur les SEIZE, pas sur le mot du ticket ────
 for (const mot of SANS_ARGUMENT) {
   const avert = [];
-  const o = compileToBPxAST(`@core\n@controls\n@macro ${mot} = drum.on\n@mode:ord\nS -> a ${mot} b\n`,
+  const o = compileToBPxAST(`@core\n@controls\n@macro ${mot} drum.on\n@mode:ord\nS -> a ${mot} b\n`,
                             { onWarning: (w) => avert.push(w) });
   const r = regleDe(o);
   ok((o.errors || []).length === 0,
@@ -118,7 +118,7 @@ for (const mot of SANS_ARGUMENT) {
 // Sinon la cascade coûterait le mot au lieu de le partager : deux positions syntaxiques, deux
 // sens, aucun conflit.
 {
-  const o = compileToBPxAST('@core\n@controls\n@macro mute = drum.on\n@mode:ord\nS -> a !(mute) b\n');
+  const o = compileToBPxAST('@core\n@controls\n@macro mute drum.on\n@mode:ord\nS -> a !(mute) b\n');
   ok((o.errors || []).length === 0,
      `5. '!(mute)' doit rester valide malgré la macro homonyme — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

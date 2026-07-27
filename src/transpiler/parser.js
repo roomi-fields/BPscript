@@ -1241,25 +1241,33 @@ function parse(tokens, opts = {}) {
     if (name === 'macro') {
       const macroName = expect(T.IDENT).value;
       const params = [];
-      // Params only if ( is followed by ) = (i.e. param list before =)
+      // LISTE DE PARAMÈTRES — collée au nom, `@macro accent(x) x(vel:120)`. Elle se distingue d'un
+      // corps qui commencerait par une parenthèse (`@macro kick (vel:120)`) par le COLLAGE : la
+      // liste est collée au nom, le corps est séparé par une espace. Même règle que partout
+      // ailleurs — l'espace est le délimiteur de termes.
       if (at(T.LPAREN) && !current().spaceBefore) {
-        // Lookahead: is there a ) then = ? If not, it's part of the body
-        let j = pos + 1, depth = 1;
-        while (j < tokens.length && depth > 0) {
-          if (tokens[j].type === T.LPAREN) depth++;
-          if (tokens[j].type === T.RPAREN) depth--;
-          j++;
+        advance(); // consume (
+        while (!at(T.RPAREN) && !atEnd()) {
+          params.push(expect(T.IDENT).value);
+          if (at(T.COMMA)) advance();
         }
-        if (tokens[j]?.type === T.EQUALS) {
-          advance(); // consume (
-          while (!at(T.RPAREN) && !atEnd()) {
-            params.push(expect(T.IDENT).value);
-            if (at(T.COMMA)) advance();
-          }
-          expect(T.RPAREN);
-        }
+        expect(T.RPAREN);
       }
-      expect(T.EQUALS);
+      // ⚠️ LE SIGNE `=` A DISPARU DE TOUT LE LANGAGE, `@macro` comprise (décision Romain
+      // 2026-07-27, amendement `hub afbd88a`). UNE SEULE FORME PARTOUT — `@<directive> <nom>
+      // <valeur>` : rien à retenir, aucune exception à expliquer.
+      //
+      // L'ARGUMENT ÉCARTÉ, et il était le mien : « une fois `@alias` disparu, le signe redevient
+      // univoque, donc `@macro` peut le garder ». Romain tranche que ce n'est PAS une information
+      // mais une CONVENTION — et qu'une convention qui ne vaut que pour une directive coûte plus à
+      // retenir qu'elle ne rapporte.
+      //
+      // Tombstone NOMMÉ : sans lui, la ligne retombait sur un message de grammaire illisible.
+      if (at(T.EQUALS)) {
+        throw new ParseError(`@macro ${macroName} : le signe '=' a DISPARU de tout le langage `
+          + `(décision Romain 2026-07-27) — écrire '@macro ${macroName} <corps>', comme toutes les `
+          + `autres directives : le nom, puis la valeur, sans rien entre les deux.`, current());
+      }
       // Body: câblage son (LANG-SONS §9 — corps avec >>/!>> = voix/patch) ; sinon
       // substitution existante. Le corps câblage est dispatché par la présence de
       // l'opérateur de câblage (>> ou !>>) avant le saut de ligne.

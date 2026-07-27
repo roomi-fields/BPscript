@@ -284,7 +284,7 @@ Le compositeur le voit aussi -- les types sont explicites a la definition.
 { , }          polymetrie, groupement temporel, etat interne de definition
 ( )            parametre runtime (portees : symbole, regle, groupe), definition, appel, contexte
 :              affectation/binding (gate Sa:sc, *:sound.bell, cc:2)
-=              definition (@macro kick = ..., flags)
+=              mutation de drapeau UNIQUEMENT (le `=` de definition a disparu le 2026-07-27)
 .              reference a une entite (alphabet.western, sound.bell, transport.midi) + sous-partie (actor.terminal) + period notation (A B . C D)
 [ ]            qualificateur local (sur un groupe ou une regle)
 ` `            code externe opaque (echappement vers le runtime)
@@ -1331,22 +1331,24 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 
 | Directive | Ce qu'elle fait | Exemple | Se joue dans une regle ? |
 |-----------|----------------|---------|--------------------------|
-| `@macro` | Transformation nommee | `@macro kick = (vel:120)` | **OUI** — a sa place, dans la regle |
+| `@macro` | Transformation nommee | `@macro kick (vel:120)` | **OUI** — a sa place, dans la regle |
 | `@label` | Nom structural pur | `@label groove` | s'APPLIQUE a un element (`C4@groove`) |
 | `@map` | Nom pour une source I/O | `@map breath cc:2` | **NON, jamais** |
 
 ```
-@macro kick = (vel:120)              // preset de controles
-@macro accent(x) = x(vel:120)       // transformation parametree
-@macro fast(x) = {x}:2              // transformation structurelle (durée collée)
+@macro kick (vel:120)                // preset de controles
+@macro accent(x) x(vel:120)          // transformation parametree
+@macro fast(x) {x}:2                 // transformation structurelle (duree collee)
 @map breath cc:2                     // canal MIDI nomme
 @map intensity osc:/sensor/1         // canal OSC nomme
 @label hat                           // nom structural pur
 @label groove                        // nom de groupe polymetrique
 ```
 
-> ⚠️ **`@alias` a DISPARU le 2026-07-27**, absorbe par `@map` — une seule forme, sans reste. Le `=`
-> est supprime avec lui. La colonne de droite dit pourquoi les deux ne se confondent pas : **une
+> ⚠️ **`@alias` a DISPARU le 2026-07-27**, absorbe par `@map` — une seule forme, sans reste. Et le
+> **`=` a disparu de TOUT le langage**, `@macro` comprise : **une seule forme partout**,
+> `@<directive> <nom> <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une
+> **convention**, pas une information (decision Romain 2026-07-27). La colonne de droite dit pourquoi les deux ne se confondent pas : **une
 > macro s'ecrit DANS la musique, une liaison se branche A COTE.**
 
 Application dans le RHS via `@` suffixe — colle a l'element, sans espace :
