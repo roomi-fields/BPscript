@@ -106,6 +106,31 @@ consommateurs AVANT de déclarer, pas après. Deux occurrences en 24 h, par deux
    (exiger la FORME d'une déclaration), jamais liste noire** de noms de clés à exclure — sinon la
    prochaine clé de commodité rentre pareil. Critère MESURÉ sur l'existant, jamais choisi.
 
+### Fermer une famille : écrire CE QUE LE BALAYAGE N'A PAS COUVERT (payé le 2026-07-27)
+**Un balayage a une PORTÉE, et ce qui est hors portée SURVIT** — y compris à une campagne qui croit
+avoir tout fermé. Le 2026-07-27, la famille « verdir sans avoir rien examiné » a été fermée dans
+sept gardes ; une huitième y a échappé (`order_parity.mjs`, mode campagne : liste **construite** en
+filtrant sur l'existence des fichiers → arborescence absente = `0 OK / 0 DIFF sur 0`, sortie de
+succès). Elle a survécu pour une seule raison : **ce mode n'était pas dans le balayage**.
+⚠️ « Hors portillon » ne veut pas dire inoffensif, ça veut dire **INVISIBLE** : un garde hors gate ne
+rougira jamais pour prévenir. Donc : quand tu fermes une famille, **écris la portée ET son
+complément** — sinon la campagne suivante repart de la même portée et retrouve les mêmes survivants.
+
+### L'INSTRUMENT ment plus souvent que le sujet (6× le 2026-07-27)
+Quand un chiffre surprend, **suspecter l'instrument AVANT le sujet** — et le vérifier *avant*
+d'envoyer la mesure, pas après. Les six formes payées en un jour :
+1. **Trop court** : un marcheur d'arbre qui ne descend pas dans `voices`/`triggers`/`symbol` a
+   rapporté « aucune adresse » et « nature absente » là où elles étaient présentes (3 fois).
+2. **La mauvaise clé** : chercher un CHAMP (`s1_args`) comme si c'était un nom de FICHIER → zéro
+   trouvé, conclusion « la garde lit un niveau inexistant » — 18 entrées le portaient.
+3. **Le mauvais code de sortie** : lire `$?` **après un tube** rend le statut du tube, pas du
+   programme. Un succès annoncé là où le programme échouait. *(Même famille que « le code de sortie
+   d'un outil est une CLAME, pas un oracle » — ici ce n'est même pas l'outil qui ment, c'est la
+   façon de l'interroger.)*
+4. **La mauvaise question** : lire une RESTITUTION en croyant lire une PRODUCTION.
+Ces erreurs se **refont**, ce ne sont pas des étourderies — et elles sont d'autant plus dangereuses
+qu'elles produisent les mesures qu'on envoie aux autres, qui agissent dessus.
+
 **Cette règle est MÉCANISÉE, ne compte pas sur ta mémoire** : `test/un_mot_nouveau_ne_confisque_pas_un_nom.mjs`
 confronte à chaque portillon le vocabulaire aux noms que les 149 scènes/démos DÉCLARENT. Une
 confiscation nouvelle rougit avant le push ; une confiscation assumée s'inscrit dans son registre,

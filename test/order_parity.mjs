@@ -249,6 +249,19 @@ const names = CAMPAIGN
       .map(([k]) => k)
   : targets.length ? targets : ['flags', 'negative-context', 'ek-do-tin'];
 
+// ⚠️ SOCLE — REFUSER DE CONCLURE SUR ZÉRO. En mode campagne, la liste est CONSTRUITE en filtrant
+// sur l'existence des fichiers natifs : si l'arborescence disparaît, `names` est VIDE et le verdict
+// tombe à « 0 OK / 0 DIFF sur 0 » avec une sortie de succès. C'est la famille fermée le 2026-07-27
+// dans les autres gardes (`exigerCorpus` ne vérifiait que l'existence des dossiers) — celle-ci y a
+// échappé parce que ce MODE n'était pas dans le balayage. Hors portillon ne veut pas dire inoffensif :
+// ça veut dire INVISIBLE, elle ne rougira jamais pour prévenir, et qui lancera ce mode sur une
+// arborescence absente lira un succès.
+if (names.length === 0) {
+  console.error(`\n[order_parity] AUCUNE grammaire à examiner${CAMPAIGN ? ' (mode campagne : la liste est construite en filtrant sur l\'existence des fichiers natifs — l\'arborescence est-elle là ?)' : ''}. `
+    + `Un verdict sur zéro grammaire n'est pas un verdict.`);
+  process.exit(1);
+}
+
 let pass = 0, fail = 0;
 console.log(`=== Parité texte ORDRE-à-ORDRE (natif -o  vs  oracle WASM, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
 for (const name of names) {
@@ -274,5 +287,5 @@ for (const name of names) {
     else { console.log(`  ${name}: DIFF @${diff} — natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len natif=${a.length} wasm=${b.length})`); fail++; }
   }
 }
-console.log(`\n${pass} OK / ${fail} DIFF sur ${names.length}`);
+console.log(`\n${pass} OK / ${fail} DIFF sur ${names.length} grammaire(s) EXAMINÉE(S)`);
 process.exit(fail ? 1 : 0);
