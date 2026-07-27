@@ -164,6 +164,56 @@ ok(cellules === FORMES.length * PROPRIETES.length && cellules >= 35,
   ok(surLaNote, `6. le sac écrit AVANT le point reste celui de la NOTE — reçu : ${JSON.stringify(r[0])}`);
 }
 
+// ─── 7. UNE ADRESSE MAL FORMÉE REFUSE — elle ne se DÉFAIT jamais en silence ──────────────────
+//
+// MESURÉ ET SIGNALÉ PAR BPx le 2026-07-27, et c'était le pire mode d'échec possible. Un point collé
+// au nom mais suivi d'autre chose qu'un identifiant ou un entier ne tombait dans AUCUNE branche :
+// le point restait dans le flux et la ligne se relisait en éléments FANTÔMES — `<!pedale.-1`
+// devenait un point d'attente SANS ADRESSE, puis un découpage, puis un silence, puis un terminal.
+// Trois éléments que personne n'a écrits, et l'adresse écrite disparue.
+//
+// ⚠️ POURQUOI CE N'EST PAS COSMÉTIQUE — c'est BPx qui l'a vu depuis son côté, et l'argument est
+// décisif : une attente SANS adresse se lève sur N'IMPORTE QUEL événement de son rôle (c'est la
+// forme voulue, celle du sustain). Une adresse qui s'évapore transforme donc une barrière PRÉCISE
+// en barrière PROMISCUE : la pièce repart au premier événement venu, l'exact contraire de ce qui
+// est écrit, et rien ne le dit à personne. L'aval ne peut rien rattraper — il ne distingue pas une
+// attente écrite sans adresse d'une adresse évaporée. L'information est détruite au parse, donc le
+// refus est au parse.
+//
+// ⚠️ ET C'EST UNE MATRICE, pas la graphie du ticket. BPx en a signalé DEUX ; j'énumère l'espace des
+// façons dont une adresse peut être mal formée, et je vérifie que chaque refus DIT quoi écrire.
+const ADRESSES_MALFORMEES = [
+  ['un signe moins', 'S -> C4 <!sync1.-1 D4'],
+  ['un nombre décimal', 'S -> C4 <!sync1.1.5 D4'],
+  ['une chaîne', 'S -> C4 <!sync1."x" D4'],
+  ['un exposant collé après l\'entier', 'S -> C4 <!sync1.1e999 D4'],
+  ['un identifiant collé après l\'entier', 'S -> C4 <!sync1.60bis D4'],
+  ['un point collé puis une espace', 'S -> C4 <!sync1. 60 D4'],
+];
+for (const [quoi, regle] of ADRESSES_MALFORMEES) {
+  const { err } = rhs(regle);
+  const msg = (err || []).map((e) => e.message || e).join(' | ');
+  ok((err || []).length > 0,
+     `7. une adresse formée avec ${quoi} doit REFUSER, jamais se défaire en silence — '${regle}'`);
+  ok(/adresse/i.test(msg),
+     `7. et le refus doit parler d'ADRESSE, pas retomber sur un message de parse générique — reçu : ${msg.slice(0, 120)}`);
+  ok(/<!sync1\.60|<!sync1\.suivant|<!sync1'|ADRESSE/.test(msg),
+     `7. et DONNER la forme attendue, pas seulement constater — reçu : ${msg.slice(0, 120)}`);
+}
+// ⚠️ ET LES DEUX FORMES LÉGITIMES SURVIVENT — un fail-loud qui emporte le cas valide avec le cas
+// fautif n'est pas une garde, c'est une régression. Le témoin est ici pour que le refus reste étroit.
+for (const [quoi, regle, attendu] of [
+  ["l'adresse COLLÉE des deux côtés", 'S -> C4 <!sync1.60 D4', ['SymbolWithTriggerIn', 'Symbol']],
+  ['le découpage ESPACÉ des deux côtés', 'S -> C4 <!sync1 . 60 D4', ['SymbolWithTriggerIn', 'Period', 'NumericTerminal', 'Symbol']],
+  ["l'attente SANS adresse", 'S -> C4 <!sync1 D4', ['SymbolWithTriggerIn', 'Symbol']],
+]) {
+  const { err, rhs: r } = rhs(regle);
+  ok((err || []).length === 0,
+     `7. ${quoi} doit rester VALIDE — reçu : ${(err || []).map((e) => e.message || e).join(' | ')}`);
+  ok(r.map((e) => e.type).join(',') === attendu.join(','),
+     `7. ${quoi} doit se lire tel quel — reçu : ${JSON.stringify(r.map((e) => e.type))}`);
+}
+
 if (echecs.length) {
   console.error(`❌ point d'attente : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);

@@ -4296,6 +4296,17 @@ function parse(tokens, opts = {}) {
       // étiquette, celle que la table a produite. Même convention que les extrémités `cc:N`, dont
       // le numéro sort en nombre.
       address = jeton.type === T.INT ? Number(jeton.value) : jeton.value;
+      // ⚠️ ET L'ADRESSE S'ARRÊTE À UN DÉLIMITEUR. Signalé par BPx le 2026-07-27 : `<!pedale.1e999`
+      // donnait l'adresse 1 PLUS un terminal `e999` injecté dans la pièce — l'auteur écrit une
+      // adresse, il obtient une note qu'il n'a pas écrite. Ça ne se voyait que si le nom parasite
+      // tombait hors alphabet ; dans le cas contraire, la note serait passée sans un mot.
+      if ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) {
+        throw new ParseError(
+          `'<!${name}.${jeton.value}${current().value}' : l'adresse est SUIVIE DE '${current().value}' `
+          + `sans séparateur. Une adresse est UN seul jeton — un identifiant ('<!${name}.suivant') ou `
+          + `un entier ('<!${name}.60'). Séparer par une espace ce qui doit être un terme distinct.`,
+          current());
+      }
     } else if (colle && (peek(1).type === T.IDENT || peek(1).type === T.INT)) {
       // ⚠️ LE CAS MIXTE — point collé au nom, mais valeur détachée. Il n'est ni l'un ni l'autre, et
       // je REFUSE de choisir à la place de l'auteur : le lire en silence comme un découpage
@@ -4305,6 +4316,26 @@ function parse(tokens, opts = {}) {
         `'<!${name}.' suivi d'une espace : forme ambiguë. COLLÉ des deux côtés c'est une ADRESSE `
         + `('<!${name}.${peek(1).value}'), ESPACÉ des deux côtés c'est un DÉCOUPAGE suivi d'un `
         + `terminal ('<!${name} . ${peek(1).value}'). Écrire l'une des deux.`, current());
+    } else if (colle) {
+      // ⚠️ LE TROU QUE BPx A MESURÉ le 2026-07-27, et c'était le pire mode d'échec possible : point
+      // COLLÉ au nom, mais suivi de quelque chose qui n'est ni un identifiant ni un entier — un
+      // signe moins, un nombre décimal, une chaîne. AUCUNE des deux branches ci-dessus ne tirait,
+      // le point restait dans le flux, et la ligne se relisait en éléments FANTÔMES : `<!pedale.-1`
+      // devenait un point d'attente SANS ADRESSE, puis un découpage, puis un silence, puis un
+      // terminal numérique. Trois éléments que personne n'a écrits.
+      //
+      // POURQUOI CE N'EST PAS COSMÉTIQUE, et c'est BPx qui l'a vu de son côté : une attente SANS
+      // adresse se lève sur N'IMPORTE QUEL événement de son rôle — c'est la forme voulue, celle du
+      // sustain. Une adresse qui s'évapore transforme donc une barrière PRÉCISE en barrière
+      // PROMISCUE : la pièce repart au premier événement venu, l'exact contraire de ce qui est
+      // écrit. Et l'aval ne peut RIEN rattraper : il ne distingue pas une attente écrite sans
+      // adresse d'une adresse évaporée. L'information est détruite ici, donc le refus est ici.
+      throw new ParseError(
+        `'<!${name}.' suivi de '${peek(1).value ?? peek(1).type}' : ce n'est pas une adresse. Une `
+        + `adresse est un identifiant ('<!${name}.suivant') ou un entier ('<!${name}.60'), collé au `
+        + `point des deux côtés. Sans adresse, écrire '<!${name}' seul — l'attente se lève alors sur `
+        + `n'importe quel événement de ce rôle, et c'est une forme différente, pas un raccourci.`,
+        current());
     }
     const qualifiers = [];
     while (at(T.LBRACKET)) qualifiers.push(parseQualifier());
