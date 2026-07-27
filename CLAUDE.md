@@ -106,6 +106,24 @@ consommateurs AVANT de déclarer, pas après. Deux occurrences en 24 h, par deux
    (exiger la FORME d'une déclaration), jamais liste noire** de noms de clés à exclure — sinon la
    prochaine clé de commodité rentre pareil. Critère MESURÉ sur l'existant, jamais choisi.
 
+### ⚠️ LA FAUTE DE LA JOURNÉE (6× le 2026-07-27, six habits, une seule cause)
+**On répare l'endroit où le défaut s'est MONTRÉ, pas l'espace où il peut vivre.** Les six habits :
+une garde écrite pour la forme du ticket (×5) · un balayage dont la portée laisse survivre ce qui
+est dehors · **une SECTION corrigée au lieu du DOCUMENT** — une heure après avoir réécrit un bloc
+d'exemples, trois autres exemples de la même directive mentaient encore plus bas dans le fichier,
+et un quatrième dans une autre spec.
+
+**MÉCANISER, pas se souvenir** — chaque fois qu'un défaut se montre, se demander *quel est l'espace
+où il peut vivre*, puis faire parcourir cet espace par une machine :
+- l'espace des FORMES → produit croisé (`test/point_attente_dans_arbre.mjs` §6) ;
+- l'espace des SCÈNES → balayage du corpus, socle qui refuse zéro ;
+- l'espace de la DOC → `test/les_exemples_de_la_spec_compilent.mjs` : extrait les exemples de
+  directive des trois specs et les **COMPILE**. Il a trouvé un mensonge dès son premier passage,
+  que ma correction manuelle une heure plus tôt avait laissé.
+
+**Et la méthode qui a tout trouvé aujourd'hui, chez tous les agents : COMPILER / MESURER, jamais
+RELIRE.** La relecture n'a rien trouvé de la journée.
+
 ### Une garde se construit en MATRICE, pas en liste (5× la même faute, mécanisé le 2026-07-27)
 La règle « énumérer TOUTES les formes que le parser peut produire » a été **inscrite le 2026-07-26 et
 repayée le lendemain**. Diagnostic, mesuré : j'avais bien énuméré les sept formes… **pour la

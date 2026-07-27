@@ -528,9 +528,8 @@ Exemple : `@expose [intensity]` → `{ flags:["intensity"] }`
 ```
 MapDirective {
   type: "MapDirective"
+  name: string                       // le NOM de la liaison — c'est LUI la cible
   source: MapEndpoint
-  arrow: "->" | "<->" | "<-"
-  target: MapEndpoint
   line: number
 }
 
@@ -538,14 +537,23 @@ MapEndpoint = { kind: "cc", number: int, params: object | null }
             | { kind: "osc", address: string, params: object | null }
             | { kind: "flag", name: string }
             | { kind: "trigger", name: string }
+            | { kind: "scoped", scope: string, name: string }
             | { kind: "sys", scene: string | null, command: string }
 ```
 
 Exemples :
-- `@map cc:1 -> [intensity]` → `{ source:{kind:"cc",number:1}, arrow:"->", target:{kind:"flag",name:"intensity"} }`
-- `@map [phase] -> cc:20` → `{ source:{kind:"flag",name:"phase"}, arrow:"->", target:{kind:"cc",number:20} }`
-- `@map cc:60 -> sys.play` → `{ source:{kind:"cc",number:60}, arrow:"->", target:{kind:"sys",scene:null,command:"play"} }`
-- `@map cc:60 -> verse.play` → `{ source:{kind:"cc",number:60}, arrow:"->", target:{kind:"sys",scene:"verse",command:"play"} }`
+- `@map breath cc:2` → `{ name:"breath", source:{kind:"cc",number:2} }`
+- `@map depart touches.z` → `{ name:"depart", source:{kind:"scoped",scope:"touches",name:"z"} }`
+- `@map horloge osc:/clock` → `{ name:"horloge", source:{kind:"osc",address:"/clock"} }`
+
+> ⚠️ **`arrow` et `target` ont DISPARU le 2026-07-27** (décision Romain) : une liaison NOMME d'abord,
+> puis désigne sa source — **le nom EST la cible**. `@alias` a été absorbé ici, sans reste, et la
+> flèche est redevenue **exclusivement une règle de production**.
+>
+> **Ce que ça n'est pas** : une macro. Une macro s'écrit **dans la musique** et Kairos la résout à la
+> projection, feuille par feuille, sur un **mot qui paraît dans le flux** ; une liaison se **branche
+> à côté** et l'orchestrateur BPx l'installe au chargement, une fois, sur un **signal venu du
+> dehors**. Ni le même composant, ni le même moment, ni le même déclencheur.
 
 ### `CCDirective`
 
