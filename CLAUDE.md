@@ -80,6 +80,9 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
    « 6 erreurs d'instrument attrapées AVANT envoi » ; **4 attrapées, 2 PARTIES** — et les deux
    parties sont celles qui l'ont fait agir, rattrapées par BPx et Kanopi, pas par moi.
    ⚠️ **Un bilan qui flatte devient le dossier.** Relire les chiffres qu'on me renvoie sur moi.
+   ⚠️ **Et CONFIRMER un compte JUSTE, pas seulement corriger un compte faux** — sinon je ne parle
+   de ses comptes que quand ils sont faux, et **mon silence finit par se lire comme un accord**.
+   Un contrôle qui ne parle que pour contredire n'est pas un contrôle, c'est une alarme.
 5. **Décisions transverses** : `decisions/` après arbitrage utilisateur uniquement
    (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois,
    référencé ailleurs.
