@@ -73,6 +73,13 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
    ici. Trois runtimes en ont un parce qu'ils portent une parité mesurable contre un oracle ; le
    FRONTAL, lui, a pour baseline son corpus et ses gardes, déjà au portillon. Ne pas fabriquer un
    fichier vide pour satisfaire une consigne à la lettre.)*
+4bis. **VÉRIFIER LES COMPTES QUI REVIENNENT SUR MON PROPRE TRAVAIL** (2026-07-27). L'architecte
+   compte et remonte toute la journée ; **il est celui qui compte**, donc s'il compte à son
+   avantage — ou au mien — personne ne le verra jamais. Sa propre demande : « continue à me
+   corriger là-dessus, c'est le seul contrôle qui existe ». Payé le jour même : un bilan annonçait
+   « 6 erreurs d'instrument attrapées AVANT envoi » ; **4 attrapées, 2 PARTIES** — et les deux
+   parties sont celles qui l'ont fait agir, rattrapées par BPx et Kanopi, pas par moi.
+   ⚠️ **Un bilan qui flatte devient le dossier.** Relire les chiffres qu'on me renvoie sur moi.
 5. **Décisions transverses** : `decisions/` après arbitrage utilisateur uniquement
    (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois,
    référencé ailleurs.
