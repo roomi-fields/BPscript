@@ -98,19 +98,31 @@ for (const axe of CATALOGUES) {
      `5. une directive ordinaire à côté ne doit pas être happée — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }
 
-// ─── 6. POINT OUVERT ÉPINGLÉ — la table d'une entrée n'est PAS soumise au cri ────────────────
-// ⚠️ La règle voudrait qu'elle le soit : c'est une invocation de librairie comme une autre. Mais
-// `lib/mapping.json` est DÉLIBÉRÉMENT VIDE tant que Romain n'a pas donné de vraie table, donc
-// appliquer le cri ici rendrait NON COMPILABLE chacun des exemples ratifiés une heure plus tôt.
-// Les deux issues sont défendables et choisir n'est pas à moi — donc on épingle l'état, on ne le
-// comble pas en douce. Ce témoin ROUGIRA le jour où quelqu'un tranche dans un sens ou dans l'autre,
-// ce qui est exactement le moment où il faut le savoir.
+// ─── 6. TÉMOIN RETOURNÉ — la table d'une entrée est soumise au MÊME cri ─────────────────────
+// Il gardait une ABSENCE : la table échappait au cri parce que `lib/mapping.json` est délibérément
+// vide et que l'appliquer rendait non compilables les exemples de la décision. Arbitré le
+// 2026-07-27 : ce sont les EXEMPLES qui changent — ils s'écrivent en adresse nue, forme autorisée —
+// et la règle reste entière. La raison du refus d'exempter vaut d'être retenue : une dérogation
+// posée « jusqu'au remplissage » n'a pas de date de fin, personne ne la surveille, et elle survit à
+// la raison qui l'a fait naître.
+//
+// ON NE RETIRE PAS UN TÉMOIN QUAND LE TROU SE COMBLE, ON LE RETOURNE : il gardait l'absence, il
+// garde maintenant la présence.
 {
   const r = compile('@in p transport.midi mapping.fcb_std');
+  const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+  ok((r.errors || []).length > 0,
+     "6. une table INEXISTANTE doit crier comme n'importe quelle entrée inconnue — aucune exemption");
+  ok(msg.includes('fcb_std') && msg.includes('mapping'),
+     `6. et le refus doit NOMMER la table et sa librairie — reçu : ${msg.slice(0, 120)}`);
+  ok(msg.includes('adresses nues') || msg.includes('<!'),
+     `6. et donner la SORTIE : sans table, on écrit des adresses nues — reçu : ${msg.slice(0, 160)}`);
+}
+// Sans table, rien ne crie : le cri vise l'inexistant, pas la déclaration d'entrée.
+{
+  const r = compile('@in p transport.midi');
   ok((r.errors || []).length === 0,
-     `6. POINT OUVERT : la table d'une entrée n'est pas encore soumise au cri (librairie vide par `
-     + `décision). Si ce témoin rougit, c'est que le sujet a été tranché — mettre à jour ce garde. `
-     + `Reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
+     `6. une entrée SANS table doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }
 
 if (echecs.length) {

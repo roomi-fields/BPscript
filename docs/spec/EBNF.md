@@ -372,6 +372,11 @@ routage, pas de flèche, pas d'opérateur de câblage.**
 3. **Aucune table par défaut** — sans table on écrit des adresses nues, et c'est *explicite*. Une
    identité implicite rendrait indistinguables « je n'ai pas de table » et « ma table ne fait rien ».
 
+Une table **inexistante CRIE**, comme toute entrée de librairie inconnue (arbitrage 2026-07-27) —
+aucune exemption, y compris pendant que `lib/mapping.json` est vide : une dérogation posée
+« jusqu'au remplissage » n'a pas de date de fin et survit à la raison qui l'a fait naître. Tant
+qu'aucune table réelle n'existe, une entrée s'écrit **sans table** et s'emploie en adresses nues.
+
 **La liste des canaux d'entrée est FERMÉE et distincte de celle des sorties.** `keyboard` y entre
 (décision Romain 2026-07-26, trois périphériques d'entrée nommés) et nulle part ailleurs :
 `@alphabet.X:keyboard` reste refusé — une sortie clavier n'a pas de sens.

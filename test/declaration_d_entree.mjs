@@ -48,15 +48,24 @@ ok(SORTIE.includes('audio') && !ENTREE.includes('audio'),
    "1. 'audio' est une SORTIE et pas une entrée — les deux listes ne se confondent pas");
 
 // ─── 2. LA DÉCLARATION, dans ses formes valides ──────────────────────────────────────────────
-for (const [corps, quoi, attendu] of [
-  ['@in pedale transport.midi\n@mode:ord\nS -> C4', 'un rôle et son canal, sans table', { name: 'pedale', transport: 'midi', mapping: null }],
-  ['@in pedale transport.midi mapping.fcb_std\n@mode:ord\nS -> C4', 'avec sa table', { name: 'pedale', transport: 'midi', mapping: 'fcb_std' }],
-  ['@in touches transport.keyboard mapping.azerty\n@mode:ord\nS -> C4', 'sur le canal clavier', { name: 'touches', transport: 'keyboard', mapping: 'azerty' }],
-  ['@in o transport.osc\n@mode:ord\nS -> C4', 'sur le canal OSC', { name: 'o', transport: 'osc', mapping: null }],
+// ⚠️ UNE TABLE INEXISTANTE CRIE depuis l'arbitrage du 2026-07-27 (`lib/mapping.json` est vide par
+// décision, donc TOUTE table invoquée crie aujourd'hui). Ce n'est pas ce que ce §2 mesure : il
+// mesure que la DÉCLARATION est LUE telle qu'écrite. On sépare donc les deux questions — la forme
+// est-elle portée, et la référence résout-elle — au lieu de les confondre dans un seul verdict.
+for (const [corps, quoi, attendu, crie] of [
+  ['@in pedale transport.midi\n@mode:ord\nS -> C4', 'un rôle et son canal, sans table', { name: 'pedale', transport: 'midi', mapping: null }, false],
+  ['@in pedale transport.midi mapping.fcb_std\n@mode:ord\nS -> C4', 'avec sa table', { name: 'pedale', transport: 'midi', mapping: 'fcb_std' }, true],
+  ['@in touches transport.keyboard mapping.azerty\n@mode:ord\nS -> C4', 'sur le canal clavier', { name: 'touches', transport: 'keyboard', mapping: 'azerty' }, true],
+  ['@in o transport.osc\n@mode:ord\nS -> C4', 'sur le canal OSC', { name: 'o', transport: 'osc', mapping: null }, false],
 ]) {
   const r = compile(corps);
-  ok((r.errors || []).length === 0,
-     `2. ${quoi} doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
+  const msgs = (r.errors || []).map((e) => e.message || e);
+  if (crie) {
+    ok(msgs.length === 1 && msgs[0].includes(attendu.mapping),
+       `2. ${quoi} : la table inexistante doit CRIER, et rien d'autre — reçu : ${JSON.stringify(msgs)}`);
+  } else {
+    ok(msgs.length === 0, `2. ${quoi} doit compiler — reçu : ${msgs.join(' | ')}`);
+  }
   const e = (r.ast?.inputs || [])[0];
   ok(e && e.name === attendu.name && e.transport === attendu.transport && (e.mapping ?? null) === attendu.mapping,
      `2. ${quoi} : l'entrée doit ARRIVER telle qu'écrite — reçu : ${JSON.stringify(e)}`);
@@ -106,6 +115,9 @@ for (const [corps, quoi, mot] of [
 // Sinon la scène « déclare » une table que l'aval ne voit jamais : accepter n'est pas transmettre.
 {
   const r = compile('@in pedale transport.midi mapping.fcb_std\n@mode:ord\nS -> C4');
+  // L'ADRESSE SORT MÊME QUAND LA RÉFÉRENCE CRIE, et c'est voulu : émission et validation sont deux
+  // questions distinctes. Confondre les deux ferait disparaître la trace de ce que la scène a écrit
+  // au moment précis où on en a le plus besoin pour comprendre le refus.
   ok((r.ast?.libRefs || []).includes('mapping.fcb_std'),
      `4. l'adresse de la table doit être ÉMISE — libRefs = ${JSON.stringify(r.ast?.libRefs ?? null)}`);
 }

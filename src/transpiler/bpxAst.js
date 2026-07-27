@@ -1071,16 +1071,26 @@ function validateReferences(ast) {
     });
   }
 
-  // ⚠️ LA TABLE D'UNE ENTRÉE (`mapping.<table>`) N'EST PAS SOUMISE À CE CRI, et c'est un point
-  // OUVERT, pas un oubli. La règle voudrait qu'elle le soit — c'est une invocation de librairie
-  // comme une autre. Mais `lib/mapping.json` est DÉLIBÉRÉMENT VIDE tant que Romain n'a pas donné
-  // de vraie table (décision 2026-07-27), donc appliquer le cri ici rendrait NON COMPILABLE
-  // chacun des exemples ratifiés une heure plus tôt. Mesuré : les trois formes de la décision
-  // crient toutes.
+  // LA TABLE D'UNE ENTRÉE (`mapping.<table>`) EST SOUMISE AU MÊME CRI — sans exemption (arbitrage
+  // architecte 2026-07-27). J'avais épinglé le cas plutôt que de trancher, parce que `lib/mapping.json`
+  // est délibérément vide et que le cri rendait non compilables les exemples de la décision. La
+  // réponse : ce sont les EXEMPLES qui changent, pas la règle — ils s'écrivent en ADRESSE NUE, forme
+  // explicitement autorisée.
   //
-  // Les deux issues sont défendables — soit une librairie vide par construction est exemptée
-  // jusqu'à son remplissage, soit une table inexistante crie et la fonctionnalité attend ses
-  // tables — et choisir entre elles n'est pas à moi. Reporté le 2026-07-27, pas comblé en douce.
+  // LA RAISON DU REFUS D'EXEMPTER, et elle vaut au-delà d'ici : une dérogation posée « jusqu'au
+  // remplissage » n'a pas de date de fin, personne ne la surveille, et elle survit à la raison qui
+  // l'a fait naître. Trois ont été démontées cette semaine.
+  for (const e of ast.inputs || []) {
+    if (!e || !e.mapping) continue;
+    if (loadLib('mapping', e.mapping)) continue;
+    errors.push({
+      message: `'@in ${e.name} … mapping.${e.mapping}' : la table '${e.mapping}' n'existe pas dans `
+             + `la librairie 'mapping'. Une entrée qui invoque une table inexistante croirait `
+             + `traduire et ne traduirait rien. Sans table, écrire l'entrée seule et employer des `
+             + `adresses nues ('<!${e.name}.60').`,
+      line: e.line,
+    });
+  }
 
   // 3. Directives de scène : invocation de composant (@axis.X) OU override de valeur (@X:v).
   for (const d of ast.directives || []) {
