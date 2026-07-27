@@ -663,6 +663,11 @@ function validateTerminals(ast) {
   for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
   // Motifs temporels (@timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
   for (const d of ast.directives || []) if (d.name === 'timepatterns' && Array.isArray(d.timePatterns)) for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
+  // VARIABLES DE TRAVAIL (`@var`, décision Romain 2026-07-27) : des symboles du flux qui ne sont
+  // l'écriture d'aucune note. Elles entrent ici — dans les noms DÉCLARÉS, à côté des non-terminaux
+  // — et non dans le vocabulaire d'un alphabet : elles n'ont pas de hauteur, elles ont un NOM.
+  // Le refus ne s'affaiblit pas, il gagne une porte nommée : un symbole non déclaré crie toujours.
+  for (const n of ast.vars || []) declared.add(n);
 
   errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
   if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider sur les symboles NUS

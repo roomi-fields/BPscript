@@ -1099,6 +1099,37 @@ nœud, `wait` ce que le jeton EST pour le temps — cohérent avec les six autre
 > **suspend**. Durée nulle, ne fait pas avancer la grille — même ressort qu'`instant`. Les deux se
 > ressemblent en prose et se comportent à l'opposé.
 
+### `@var` — VARIABLES DE TRAVAIL, nature `var`
+
+```
+Scene { vars: string[] }                       // @var A8   @var a, b, c
+Symbol { name: "A8", payload: { nature: "var" } }
+```
+
+Décision Romain 2026-07-27 (voie 3) : « on déclare les symboles non-alphabet terminaux en plus,
+avec une directive @. Ce sont des **variables de travail**. » Un symbole du flux qui **n'est
+l'écriture d'aucune note** — ni une note, ni de la structure.
+
+**Ce que ça lève.** Le langage confondait TERMINAL et NOTE. `Nadaka-1er-essai` écrit `A8`, qui n'a
+aucune règle et n'appartient à aucun alphabet ; le moteur natif l'émet littéralement comme jeton.
+Déclarer la convention de notes de cette scène la faisait REFUSER. Voir `EBNF.md` pour la graphie.
+
+**Pourquoi une nature propre, et pas seulement une porte.** Sans elle, `@var` serait une porte
+nommée qui ne change RIEN : la scène compilerait et l'aval continuerait d'inventer une hauteur pour
+un symbole qui n'en a pas — c'est exactement d'où venait le 7040 Hz mesuré par Kairos sur cette
+scène. **Accepter n'est pas transmettre.** Même mécanisme que `wait`, posée deux jours plus tôt
+pour la même raison mot pour mot : un jeton qui n'est pas une note et que l'aval ne doit pas traiter
+comme telle.
+
+**Ce que l'aval en fait** : BPx la **porte** opaquement, comme il porte `wait` ; Kairos ne résout
+**rien** dessus. C'est tout ce qu'ils ont à en savoir.
+
+> ⚠️ **Ni `sounding`, ni `rest`.** `sounding` lui ferait inventer une hauteur ; `rest` serait faux
+> aussi — un silence **occupe** du temps, une variable de travail n'est pas un événement du tout.
+
+Le nom se lit à deux endroits selon la forme : `name` pour un symbole, `symbol` pour une note
+**liée** (`a~` produit un `TieStart` qui range son nom là). Les deux portent `nature: "var"`.
+
 ### `Rest`
 
 ```

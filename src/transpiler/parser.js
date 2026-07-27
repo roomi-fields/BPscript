@@ -175,6 +175,10 @@ function parse(tokens, opts = {}) {
   // mot du vocabulaire et une déclaration locale — cf. `estDeclareLocalement`.
   const nomsDeclaresLocalement = new Set();
 
+  // VARIABLES DE TRAVAIL déclarées par `@var`. Sous-ensemble du précédent, tenu à part parce
+  // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
+  const nomsVariables = new Set();
+
   // Avertissements non fatals (ex. dépréciation des @-formes de production).
   // Canal séparé des erreurs : remonté via opts.onWarning (compileBPS →
   // result.warnings), jamais dans l'AST (contrat BPx : AST inchangé).
@@ -280,6 +284,9 @@ function parse(tokens, opts = {}) {
       actors: [],
       scenes: [],
       exposes: [],
+      // VARIABLES DE TRAVAIL déclarées par `@var` — noms de symboles qui ne sont l'écriture
+      // d'aucune note (décision Romain 2026-07-27, voie 3).
+      vars: [],
       maps: [],
       aliases: [],
       labels: [],
@@ -311,6 +318,12 @@ function parse(tokens, opts = {}) {
           scene.scenes.push(dir);
         } else if (dir.type === 'ExposeDirective') {
           scene.exposes.push(dir);
+        } else if (dir.type === 'VarDirective') {
+          // Les lignes s'ACCUMULENT — plusieurs `@var` ne se remplacent pas, elles s'ajoutent.
+          scene.vars = [...(scene.vars || []), ...dir.names];
+          // Une variable de travail est un nom que LA SCÈNE possède : elle gagne donc, comme une
+          // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
+          for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
         } else if (dir.type === 'MapDirective') {
           scene.maps.push(dir);
         } else if (dir.type === 'MacroDirective') {
@@ -600,8 +613,24 @@ function parse(tokens, opts = {}) {
       // GAP#2 : la charge se range en DEUX tiroirs — `address` (canal/device/port, lu par
       // Kairos pour matérialiser event.output) et `params` (contrôles vel/pan/wave…).
       const { address, controls } = splitAddress(params);
+      // ⚠️ UNE VARIABLE DE TRAVAIL N'EST PAS UNE NOTE, et sa nature doit le dire — sinon `@var`
+      // serait une porte nommée qui ne change RIEN : la scène compilerait et l'aval continuerait
+      // d'inventer une hauteur pour un symbole qui n'en a pas. C'est le défaut mesuré par Kairos
+      // sur `Nadaka-1er-essai` : le symbole `A8` sortait SONNANT, et sa résolution lui donnait
+      // 7040 Hz. Accepter n'est pas transmettre.
+      //
+      // Même mécanisme que la nature `wait`, posée deux jours plus tôt pour la même raison mot pour
+      // mot : un jeton qui n'est pas une note et que l'aval ne doit pas traiter comme telle. On
+      // n'invente pas un mécanisme, on applique celui qui vient d'être éprouvé.
+      // Le NOM se lit à deux endroits selon la forme : `el.name` pour un symbole, `el.symbol` pour
+      // une note LIÉE (`a~` produit un `TieStart` qui range son nom là). Mesuré le 2026-07-27 :
+      // sans le second, `a~` sortait SONNANT alors que `a` seul sortait variable — la même faute
+      // que l'attente ancrée deux jours plus tôt, une forme dérivée qui perd ce que la forme nue
+      // porte. On lit donc les deux, pas celle du cas qu'on vient d'écrire.
+      const nomPorte = typeof el.symbol === 'string' ? el.symbol : el.name;
+      const estVariable = nomsVariables.has(nomPorte);
       el.payload = {
-        nature: 'sounding',
+        nature: estVariable ? 'var' : 'sounding',
         ...(actor !== undefined ? { actor } : {}),
         ...(controls !== null ? { params: controls } : {}),
         ...(address !== null ? { address } : {}),
@@ -1085,6 +1114,35 @@ function parse(tokens, opts = {}) {
         expect(T.RBRACKET);
       }
       return { type: 'ExposeDirective', flags, line: tok.line };
+    }
+
+    // @var A8   /   @var a, b, c — VARIABLES DE TRAVAIL
+    //
+    // Décision Romain 2026-07-27, voie 3 : « on déclare les symboles non-alphabet terminaux en
+    // plus, avec une directive @. Ce sont des VARIABLES DE TRAVAIL. »
+    //
+    // CE QUE ÇA DÉBLOQUE : une scène peut déclarer SA CONVENTION de notes ET porter un symbole qui
+    // n'est l'écriture d'aucune note. Mesuré sur `Nadaka-1er-essai` : sa grammaire d'origine écrit
+    // `A8`, qui n'a AUCUNE règle et n'est une note dans aucun alphabet — le moteur natif l'émet
+    // littéralement comme jeton. Annoter la convention indienne de cette scène la faisait REFUSER
+    // par mon propre compilateur. La déclaration lève la contradiction sans affaiblir le refus :
+    // une COQUILLE reste attrapée (elle n'est déclarée nulle part), un symbole VOULU passe.
+    //
+    // LA GRAPHIE ne crée aucune syntaxe : pas de deux-points parce qu'on ÉNUMÈRE sans affecter
+    // (règle de Romain du 2026-07-26, comme `@expose`/`@label`) ; la virgule sépare des éléments de
+    // même rang, exactement comme dans un sac ; plusieurs lignes s'ACCUMULENT, comme plusieurs
+    // invocations de librairie.
+    if (name === 'var') {
+      if (!at(T.IDENT)) {
+        throw new ParseError("@var doit nommer au moins un symbole : '@var A8', ou '@var a, b, c' "
+          + 'pour plusieurs. Ce sont des variables de travail — des symboles du flux qui ne sont '
+          + "l'écriture d'aucune note.", tok);
+      }
+      const noms = [];
+      do {
+        noms.push(expect(T.IDENT).value);
+      } while (at(T.COMMA) && advance());
+      return { type: 'VarDirective', names: noms, line: tok.line };
     }
 
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)

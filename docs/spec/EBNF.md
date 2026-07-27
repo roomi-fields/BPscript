@@ -16,6 +16,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 
 ```ebnf
 scene       = { directive | actor_directive | scene_directive | expose_directive
+              | var_directive
               | map_directive | cc_directive | duration_directive
               | macro_directive | alias_directive | label_directive
               | sound_section
@@ -36,6 +37,7 @@ macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")"
                  , "=" , rhs ;                 (* @macro kick = (vel:120), @macro accent(x) = x(vel:120) *)
 alias_directive  = "@" , "alias" , IDENT , "=" , map_endpoint ;  (* @alias breath = cc:2 *)
 label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
+var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
 map_directive    = "@" , "map" , map_endpoint , map_arrow , map_endpoint ;
 
 cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
@@ -318,6 +320,31 @@ alphabet_body = { alphabet_decl | sound_assignment | comment | blank_line } ;
 alphabet_decl = "notes" , ":" , IDENT , { IDENT } ;   (* notes: Sa Re Ga ... *)
               (* + autres décl propres à l'alphabet, cf. lib/alphabet.json *)
 ```
+
+### `var_directive` — VARIABLES DE TRAVAIL
+
+```ebnf
+var_directive = "@" , "var" , IDENT , { "," , IDENT } ;   (* @var A8   @var a, b, c *)
+```
+
+Un symbole du flux qui **n'est l'écriture d'aucune note** (décision Romain 2026-07-27, voie 3).
+
+**Ce que ça lève.** Le langage confondait TERMINAL et NOTE : tout terminal devait appartenir à un
+alphabet en portée. Or `Nadaka-1er-essai` écrit `A8`, qui n'a **aucune règle** — ni dans la scène ni
+dans la grammaire d'origine — et n'est une note dans aucun alphabet ; le moteur natif l'émet
+littéralement comme jeton. Déclarer la convention de notes de cette scène la faisait donc REFUSER.
+
+**Le refus ne s'affaiblit pas, il gagne une porte nommée** : ce qui n'est déclaré nulle part crie
+toujours, donc une COQUILLE reste attrapée. C'est ce qui a fait préférer cette voie à « autoriser
+tout symbole hors alphabet », où coquille et symbole délibéré deviennent indistinguables.
+
+**Graphie** — aucune syntaxe nouvelle, trois règles déjà ratifiées : pas de `:` parce qu'on ÉNUMÈRE
+sans affecter (comme `@expose`, `@label`) ; la virgule sépare des éléments de même rang (règle du
+sac) ; plusieurs lignes **s'accumulent**, comme plusieurs invocations de librairie.
+
+**Nature** — la variable porte `var` dans l'arbre, jamais `sounding`. Sans ça, `@var` serait une
+porte qui ne change rien : la scène compilerait et l'aval continuerait d'inventer une hauteur pour
+un symbole qui n'en a pas. Voir `AST.md`.
 
 ### `declaration`
 
