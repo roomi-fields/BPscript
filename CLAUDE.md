@@ -65,8 +65,14 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
 2. **Début de session** : `~/dev/bp/hub/tour inbox` + lire `TABLEAU.md` et mes `contrats/`.
 3. **Écrire/arbitrer** : `~/dev/bp/hub/tour send <dest> "msg"` (`architecte` = destinataire valide).
    Jamais écrire dans ma propre boîte. Marquer lu : `tour inbox --ack`.
-4. **Fin de session** : mettre à jour MOI-MÊME `TABLEAU.md` (ma ligne), `projets/bpscript.md`,
-   `BPscript/baseline-status.json` (ma colonne). L'architecte ne corrige plus mes pièces, il recadre.
+4. **Fin de session** : mettre à jour MOI-MÊME `TABLEAU.md` (ma ligne) et `projets/bpscript.md`.
+   L'architecte ne corrige plus mes pièces, il recadre. Une ligne de tableau **nomme aussi
+   l'EN-ATTENTE** et dit de qui il dépend — une ligne qui ne dit que ce qui est fait laisse croire
+   que le reste avance.
+   *(`baseline-status.json` RETIRÉ le 2026-07-27 : consigne périmée, le fichier n'a jamais existé
+   ici. Trois runtimes en ont un parce qu'ils portent une parité mesurable contre un oracle ; le
+   FRONTAL, lui, a pour baseline son corpus et ses gardes, déjà au portillon. Ne pas fabriquer un
+   fichier vide pour satisfaire une consigne à la lettre.)*
 5. **Décisions transverses** : `decisions/` après arbitrage utilisateur uniquement
    (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois,
    référencé ailleurs.
