@@ -2,7 +2,7 @@
 
 > Référencé par [LANGUAGE.md](../spec/LANGUAGE.md) §Scenes et le contrat moteur [BPx ENGINE_SPEC.md](../../../BPx/docs/ENGINE_SPEC.md) §6 (FlagStore) / §7 (TriggerBus) / §10 (orchestration).
 >
-> Précise : cycle de vie des scènes, acteurs/voix, cascade de sortie, scoping des flags, propagation des triggers, sémantique de `@map`, commandes `sys`, orchestration multi-instance, hot-swap.
+> Précise : cycle de vie des scènes, acteurs/voix, cascade de sortie, scoping des flags, propagation des triggers, sémantique de `@alias`, commandes `sys`, orchestration multi-instance, hot-swap.
 
 ---
 
@@ -10,13 +10,14 @@
 
 Chaque scène est une **Session BPx autonome** : son propre buffer, son propre arbre, son propre FlagStore, son propre RNG, son propre TriggerBus local. Aucune session ne tient de référence directe à une autre.
 
-La communication passe par **trois mécaniques** et trois seulement :
+La communication passe par ces mécaniques, et pas d'autres :
 
 | Mécanique    | Quoi                                      | Persistance  |
 | ------------ | ----------------------------------------- | ------------ |
 | **Flags**    | État partagé, lu par les guards           | Persistant   |
 | **Triggers** | Événements ponctuels (synchro)            | Instantané   |
-| **`@map`**   | Pont I/O externe ↔ langage (CC, OSC, sys) | Selon source |
+| **`@alias`**   | Nom donné à une chose technique ou répétitive | Déclaratif  |
+| **`>>` / `!>>`** | Câblage dans le flux — brancher, débrancher | Dynamique    |
 
 Le `SceneOrchestrator` est **application-level** : il consomme l'API publique de BPx (Session, FlagStore, TriggerBus, commands) pour composer plusieurs sessions. **Il n'est pas dans le moteur BPx** — un utilisateur peut écrire son propre orchestrateur sans toucher BPx.
 
@@ -32,7 +33,7 @@ Le `SceneOrchestrator` est **application-level** : il consomme l'API publique de
 │          │                    │                 │        │
 │          └──────── routing table ────────────────┘       │
 │                  (built from @scene,                     │
-│                   @expose, @map directives)              │
+│                   @expose, @alias directives)              │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -171,7 +172,7 @@ Les Control Variables (objets temporels continus, cf. [CV.md](CV.md)) sont des *
 | Parent           | Enfant   | Routing automatique des flags | Lecture   |
 | Enfant           | Parent   | `@expose` explicite           | Lecture   |
 | Enfant A         | Enfant B | Via parent (expose + relais)  | Indirecte |
-| Externe (CC/OSC) | Scène    | `@map <nom> cc:N` (cf. §6)    | Lecture   |
+| Externe (CC/OSC) | Scène    | `@alias <nom> cc:N` (cf. §6)    | Lecture   |
 
 ---
 
@@ -218,18 +219,19 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 
 ---
 
-## 6. `@map` — la liaison NOMME sa source
+## 6. `@alias` — DÉSIGNER : un nom, puis ce qu'il désigne
 
-> ⚠️ **La flèche a DISPARU de cette directive le 2026-07-27** (décisions
-> `2026-07-27-symetrie-entree-sortie-jusqu-au-bout` et
-> `2026-07-27-map-absorbe-alias-macro-reste-separee`). Elle est redevenue **exclusivement une
-> règle de production**. `@alias` a été absorbé dans `@map` le même jour, et le signe `=` a
-> disparu de tout le langage. Les formes ci-dessous sont écrites dans la seule forme vivante :
-> **`@map <nom> <source>`** — le nom d'abord, comme toutes les autres directives.
+> ⚠️ **La directive de correspondance est ABANDONNÉE depuis le 2026-07-27 au soir**
+> (`hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`).
+> Ce qui BRANCHE passe par les chevrons `>>` / `!>>` (§6.3) ; ce qui DÉSIGNE reste ici, sous
+> `@alias`. Deux corollaires qui tiennent depuis le matin même : le signe `=` a disparu de tout le
+> langage, `@macro` comprise, et la flèche `->` est redevenue **exclusivement une règle de
+> production**. Forme vivante et unique : **`@alias <nom> <valeur>`** — le nom d'abord, comme
+> toutes les autres directives.
 
-### 6.1 Ce qu'une liaison peut nommer comme SOURCE
+### 6.1 Ce qu'un alias peut DÉSIGNER
 
-| Source                | Ce qu'elle désigne                        |
+| Valeur                | Ce qu'elle désigne                        |
 | --------------------- | ----------------------------------------- |
 | `cc:N`                | un contrôleur continu MIDI entrant        |
 | `osc:/path`           | une adresse OSC entrante                  |
@@ -239,7 +241,7 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 | `IDENT.IDENT`         | une entrée et son adresse, un label posé  |
 
 **Le sens SORTANT n'existe plus** (abandonné le 2026-07-27, retiré chez BPx en `4d2fbbe`) : une
-liaison lit, elle n'émet pas. Ce qui décrivait une émission — une liaison vers un contrôleur
+désignation NOMME, elle n'émet pas. Ce qui décrivait une émission — une correspondance vers un contrôleur
 externe, l'aller-retour bidirectionnel et sa rupture d'écho — a été retiré avec, sans réécriture.
 Les graphies ne sont pas citées : elles employaient la flèche comme opérateur de câblage, ce
 qu'elle n'a jamais été.
@@ -248,39 +250,44 @@ qu'elle n'a jamais été.
 
 ```
 S -> C4@kick D4 E4@kick F4
-@map ratio kick.vel
+@alias ratio kick.vel
 ```
 
-Tous les éléments `@kick` sont désignés ensemble. Portée par défaut : la scène où `@map` est
+Tous les éléments `@kick` sont désignés ensemble. Portée par défaut : la scène où `@alias` est
 déclaré. Préfixe pour la portée croisée (`verse.kick.vel`, `*.kick.vel`).
 
-### 6.3 ❓ TROIS FONCTIONS QUI RESTENT À ÉCRIRE — voulues, sans forme conforme
+### 6.3 Le CÂBLAGE n'est pas une désignation — il passe par `>>` et `!>>`
 
-**Ce ne sont pas des possibilités perdues.** Romain les veut ; ce qui manque, c'est **l'écriture**.
-La formulation inverse — « on a perdu ces cibles » — serait une invitation à restaurer une graphie
-fautive, et c'est précisément ce que cette section existe pour empêcher.
+**`@alias` DÉSIGNE ; il ne branche pas.** Alimenter le tempo, un drapeau ou le départ d'une partie
+est un **câblage**, et le câblage a son propre geste : `>>` pour brancher, `!>>` pour couper.
 
-Les trois fonctions, nommées en français parce qu'aucune graphie ne les porte encore :
+**L'argument qui a tranché — une directive ne se débranche pas.** `!>>` coupe un câble **pendant
+que ça joue**, et le branchement se reconfigure au fil de la pièce ; aucune déclaration ne sait
+faire ça, et il n'existe pas de « dé-déclaration ». Entre deux écritures pour brancher A sur B dont
+l'une est strictement moins puissante, c'est la moins puissante qui part.
 
-- **un contrôleur externe qui pilote un drapeau de la pièce** ;
-- **un contrôleur externe qui lance ou arrête une scène nommée** pendant que ça joue ;
-- **un contrôleur externe qui règle le tempo** en cours de jeu.
+**Un câblage de contrôle s'écrit DANS LE FLUX** (Romain, 2026-07-27 au soir), comme le câblage de
+son : sans le flux, `!>>` n'a nulle part où s'écrire, et le dynamisme qui a fait choisir le câblage
+disparaît. Conséquence directe : un contrôleur peut prendre la main sur le tempo **à un moment
+précis** de la pièce et être coupé plus loin — ce n'est pas un réglage global de début à fin.
 
-**Pourquoi l'ancienne écriture ne revient pas — deux non-conformités, pas une.** Elle ne se cite
-donc pas ici, même en exemple : une graphie fautive citée finit recopiée.
+**Le numéro de contrôleur RESTE écrivable**, en dur ou par un alias déclaré. Ce qui est banni d'une
+pièce, c'est un **nom de port** : il vient du système, il change de machine, de pilote, parfois de
+prise. Un numéro de contrôleur est l'inverse — une valeur de la norme MIDI, stable partout. Même
+règle que pour les adresses d'entrée : l'adresse nue est autorisée, aucune table par défaut, et une
+table de bibliothèque donne des étiquettes lisibles quand elle existe.
 
-1. **La flèche est une règle de PRODUCTION, exclusivement.** Elle n'a jamais été une directive et
-   ne le sera jamais (Romain, 2026-07-27). Son emploi passé comme opérateur de câblage était une
-   faute d'écriture, pas un état de référence.
-2. **Une pièce nomme un RÔLE, jamais une adresse de matériel.** Un numéro de contrôleur écrit en
-   dur dans une partition la lie à une machine ; c'est le même principe qui interdit le nom de port
-   dans une déclaration d'entrée (décision `…-forme-des-entrees-in-mapping-adresse-nue`).
+**Le multiple sur une ligne se marque par la virgule**, forme déjà en usage (`@flag scene: calm:1, full:2`).
 
-**Rien à inventer ici.** La question de la destination est chez Romain, avec **la multiplicité**
-(plusieurs sources vers une même cible), nommées ensemble dans la décision
-`2026-07-27-symetrie-entree-sortie-jusqu-au-bout`. Le compilateur refuse aujourd'hui toute forme
-pour ces trois fonctions, et c'est la bonne réponse tant que l'écriture n'existe pas : fabriquer
-une graphie créerait une correspondance morte, à désapprendre ensuite.
+> ⚠️ **ÉTAT MESURÉ DE L'IMPLÉMENTATION, à ne pas confondre avec la décision ci-dessus.** `>>` et
+> `!>>` sont reconnus par le tokeniseur et parsés **dans le corps d'une `@macro`** (nœud `Wiring`,
+> avec ses étages et son marqueur de coupure). Ils ne sont **PAS encore acceptés dans le flux d'une
+> règle** — mesuré, la ligne est refusée. La forme du flux est donc **décidée et pas encore
+> écrite** ; aucune graphie n'est inventée ici en attendant.
+
+**Pourquoi l'ancienne écriture ne revient pas.** Elle ne se cite pas, même en exemple — une graphie
+fautive citée finit recopiée. La flèche `->` est une règle de **production**, exclusivement ; elle
+n'a jamais été une directive et ne le sera jamais (Romain, 2026-07-27).
 
 ---
 
@@ -301,7 +308,7 @@ une graphie créerait une correspondance morte, à désapprendre ensuite.
 | `sys.solo` / `unsolo`    | cible              | Coupe les sœurs                             |
 | `sys.hotswap`            | cible              | Recharge la grammaire depuis le fichier     |
 | `sys.destroy`            | cible              | Détruit la session                          |
-| `sys.tempo`              | source ou cible    | Tempo BPM (lu ou piloté selon `@map`)       |
+| `sys.tempo`              | source ou cible    | Tempo BPM (lu ou piloté selon `@alias`)       |
 | `sys.beat`               | source             | Émis à chaque beat (depuis la clock)        |
 | `sys.bar`                | source             | Émis à chaque mesure (depuis la clock)      |
 
@@ -334,7 +341,7 @@ Toute scène peut émettre une commande sys vers n'importe quelle autre scène a
 ```
 SceneOrchestrator {
   sessions: Map<string, Session>          // 'root', 'verse', 'chorus', ...
-  routingTable: RoutingTable              // built from @scene + @expose + @map
+  routingTable: RoutingTable              // built from @scene + @expose + @alias
   globalTriggerBus: TriggerBus            // route triggers cross-session
 
   load(rootAst: SceneAST): void
@@ -362,7 +369,7 @@ Synchrone v1. Worker option v2 (l'API est conçue compatible : pas de référenc
 Construite **au load** depuis l'AST de chaque scène :
 - `@scene verse "..."` → enregistre la session
 - `@expose [x]` → règle : `verse.flag-changed:x` → `parent.flag-changed:x`
-- `@map tension cc:1` → règle : `external.cc:1` → la liaison nommée `tension` de la scène courante
+- `@alias tension cc:1` → le contrôleur continu 1 est désormais désignable sous le nom `tension` dans la scène courante
 
 *(Les deux autres lignes d'exemple — un drapeau et une commande de scène comme cibles — ont été
 retirées : ces cibles n'ont plus d'écriture et la question est ouverte, cf. §6.3.)*
@@ -408,7 +415,7 @@ Recharger la racine = détruire toute la hiérarchie + recréer. Plus coûteux m
 @scene verse "verse.bps"
 @scene chorus "chorus.bps"
 
-@map tension cc:1                   // CC1 alimente la liaison 'tension'
+@alias tension cc:1                   // le controleur continu 1 se nomme desormais 'tension'
 
 [phase==1] S -> verse
 [phase==2] S -> chorus
@@ -418,7 +425,7 @@ Recharger la racine = détruire toute la hiérarchie + recréer. Plus coûteux m
 ```
 // verse.bps
 @expose [intensity]
-@map intensite cc:2
+@alias intensite cc:2
 [tension > 5] S -> Sa Re Ga !ready
 [tension <= 5] S -> Sa Re
 <!parent.go S -> Pa Dha

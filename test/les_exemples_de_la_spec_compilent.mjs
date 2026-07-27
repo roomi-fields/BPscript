@@ -72,7 +72,7 @@ ok(TOUS.length >= 25,
 // ─── 2. CHAQUE DIRECTIVE ÉCRITE EN EXEMPLE DOIT COMPILER ─────────────────────────────────────
 // Les directives dont la FORME a bougé sont celles qui mentent le plus vite. On les prend toutes,
 // pas celles du dernier chantier : c'est précisément l'erreur que ce garde existe pour fermer.
-const DIRECTIVES = ['macro', 'map', 'in', 'var', 'label', 'expose', 'meter', 'duration'];
+const DIRECTIVES = ['macro', 'alias', 'in', 'var', 'label', 'expose', 'meter', 'duration'];
 const RE = new RegExp(`^(@(?:${DIRECTIVES.join('|')})\\s[^\\n]*)$`, 'gm');
 // Un refus de RÉSOLUTION (l'entrée n'existe pas dans une librairie, le nom ne désigne rien) n'est
 // PAS une faute de forme : un exemple de doc nomme des choses qui ne vivent pas dans la scène
@@ -118,11 +118,18 @@ ok(exemples >= 8,
 // qu'on citerait au passé, c'est une faute d'écriture. Nommer la fonction en français, jamais par
 // sa graphie. Les autres formes gardent leur exemption : nommer `@alias` ou `=` dans une phrase,
 // c'est nommer la directive, pas exhiber une ligne recopiable.
+//
+// ⚠️ CETTE LISTE A CHANGÉ DE SENS le 2026-07-27 au soir, et il faut le dire : `@alias` en est SORTI
+// (il est revenu au langage) et `@map` y est ENTRÉ (il est abandonné). Ce n'est pas une hésitation
+// de ma part — c'est un arbitrage de Romain sur un argument absent de tous les inventaires : une
+// directive ne se débranche pas, `!>>` si. La liste est le REGISTRE de l'état courant, pas une
+// mémoire des mouvements ; ce qui est mort y figure, ce qui vit n'y figure pas.
 const MORTES = [
   [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
-  [/@alias\s+[A-Za-z_]/, "'@alias' (absorbé par '@map' le 2026-07-27)", 'exemptable'],
-  [/@map\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "la liaison avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
-  [/@map\s+[^\n|]*(->|<->|<-)/,
+  [/@alias\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "l'alias avec le signe '=' (supprimé de TOUT le langage le 2026-07-27)", 'exemptable'],
+  [/@map\s+[A-Za-z_<[]/, "'@map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
+   + "'!>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@alias'", 'exemptable'],
+  [/@(?:map|alias)\s+[^\n|]*(->|<->|<-)/,
    "la flèche employée comme CÂBLAGE — elle ne se cite jamais, même au passé pour expliquer sa "
    + "disparition : nommer la fonction en français ('un contrôleur règle le tempo pendant que ça "
    + "joue'), jamais par sa graphie", 'absolue'],

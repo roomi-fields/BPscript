@@ -72,7 +72,7 @@ là où `script(…)` occupe déjà seul son emplacement de règle (`765432.bps:
 
 **On ne crée pas de syntaxe sans lui.** Ces formes sont **proposées**, pas décidées. Chacune s'ancre
 sur un mécanisme **existant** plutôt que d'ouvrir un canal parallèle (`docs/design/SCENES.md` §6 :
-la liaison `@map <nom> <source>` lit une source externe — CC, OSC — et la nomme ; `sys.reset` /
+`@alias <nom> <valeur>` nomme une chose technique ou repetitive ; `sys.reset` /
 `sys.destroy` existent comme commandes). ⚠️ **`sys` comme CIBLE de liaison n'a plus d'écriture** —
 la flèche a disparu de la directive le 2026-07-27 et la question des cibles autres qu'un nom est
 ouverte chez Romain (`SCENES.md` §6.3). Une proposition ci-dessous qui s'y appuierait s'appuierait

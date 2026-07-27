@@ -110,7 +110,7 @@ function annotateBackticks(ast) {
  *   - backticks → nœuds (`_btName`, `code` en tête ; `payload.interp` + `payload.nature:'code'`) ;
  *   - drapeaux nommés → directives `@flag` (FlagStatesDirective) ;
  *   - librairies → directives `@library` (LibraryDirective) ;
- *   - scènes/expose/map/tempo → `ast.scenes` / `ast.exposes` / `ast.maps` / `@mm` ;
+ *   - scènes/expose/alias/tempo → `ast.scenes` / `ast.exposes` / `ast.aliases` / `@mm` ;
  *   - acteurs (transport/alphabet/eval) → `ast.actors[].references` (ActorReference) ;
  *   - payload par token (nature/actor/params/flux) → posé par le parser.
  *
@@ -1212,10 +1212,10 @@ function emitActorLibRefs(ast) {
  * Une règle qui porte déjà un mètre n'est PAS touchée : c'est le recouvrement.
  */
 /**
- * GARDE DE LA CORRESPONDANCE `@map` — une extrémité PORTÉE doit nommer quelque chose de déclaré.
+ * GARDE DE `@alias` — une valeur PORTÉE doit nommer quelque chose de déclaré.
  *
  * MESURÉ le 2026-07-26 (signalé par bp3-frontend) : une correspondance dont la portée était un mot
- * INVENTÉ compilait. La directive arrive pourtant bien dans l'arbre — dans `ast.maps`, pas dans
+ * INVENTÉ compilait. La directive arrive pourtant bien dans l'arbre — dans son canal propre, pas dans
  * `ast.directives`, ce qui avait fait conclure à tort qu'elle ne portait rien. Le défaut n'est donc
  * pas un silence de transport : c'est l'ABSENCE DE VALIDATION du référent. N'importe quel mot passait.
  *
@@ -1231,17 +1231,17 @@ function emitActorLibRefs(ast) {
  * Un mot qui n'est aucun des trois ne désigne rien, et le taire fabrique une correspondance morte.
  *
  * ⚠️ CE QUE CETTE GARDE NE FAIT PAS : elle ne dit pas COMMENT une note entrante se déclare comme
- * source (`@map note.C#2`). C'est une forme à créer, et cette question est chez Romain. Ici on
+ * source (`@alias note.C#2`). C'est une forme à créer, et cette question est chez Romain. Ici on
  * ferme le silence, on ne remplit pas le vide : `note.C#2` tombe donc, faute de référent déclaré,
  * et c'est le bon comportement tant que la forme n'existe pas.
  */
-function validateMaps(ast) {
+function validateAliases(ast) {
   const erreurs = [];
-  if (!(ast.maps || []).length) return erreurs;
+  if (!(ast.aliases || []).length) return erreurs;
   const connus = new Set(['*']);
   for (const sc of ast.scenes || []) if (sc && sc.name) connus.add(sc.name);
   // Les ENTRÉES déclarées (`@in <rôle> …`) sont des portées légitimes pour une source : c'est
-  // exactement ce que `@map depart touches.z` désigne — le rôle `touches`, et son étiquette `z`.
+  // exactement ce que `@alias depart touches.z` désigne — le rôle `touches`, et son étiquette `z`.
   for (const e of ast.inputs || []) if (e && e.name) connus.add(e.name);
   const collecterLabels = (n) => {
     if (!n || typeof n !== 'object') return;
@@ -1259,7 +1259,7 @@ function validateMaps(ast) {
   const verifierNu = (bout, cote, ligne) => {
     if (!bout || bout.kind !== 'alias' || connus.has(bout.name)) return;
     erreurs.push({
-      message: `'@map' : ${cote} '${bout.name}' ne désigne rien — un nom nu doit être une ENTRÉE `
+      message: `'@alias' : ${cote} '${bout.name}' ne désigne rien — un nom nu doit être une ENTRÉE `
         + `déclarée ('@in ${bout.name} transport.<canal>'), un trigger ou un gate déclaré, un label `
         + `posé sur un élément, une scène ou une macro`
         + ([...connus].length ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
@@ -1270,7 +1270,7 @@ function validateMaps(ast) {
     verifierNu(bout, cote, ligne);
     if (!bout || bout.kind !== 'scoped' || connus.has(bout.scope)) return;
     erreurs.push({
-      message: `'@map' : ${cote} '${bout.scope}.${bout.name}' ne désigne rien — '${bout.scope}' n'est `
+      message: `'@alias' : ${cote} '${bout.scope}.${bout.name}' ne désigne rien — '${bout.scope}' n'est `
         + `ni une scène déclarée, ni un label posé sur un élément (\`C4@${bout.scope}\`), ni '*'`
         + (connus.size > 1 ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
       line: ligne,
@@ -1278,7 +1278,7 @@ function validateMaps(ast) {
   };
   // Une liaison porte désormais UN NOM et UNE SOURCE (décision 2026-07-27) : il n'y a plus de
   // « cible » à vérifier — le nom EST la cible, et il est créé par la déclaration elle-même.
-  for (const m of ast.maps) verifier(m.source, 'la source', m.line);
+  for (const a of ast.aliases) verifier(a.source, 'la valeur', a.line);
   return erreurs;
 }
 
@@ -1380,7 +1380,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
-    result.errors.push(...validateMaps(ast));  // `@map` : une extrémité portée doit nommer un référent déclaré
+    result.errors.push(...validateAliases(ast));  // `@alias` : une valeur portée doit nommer un référent déclaré
     emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
     emitSceneLibRefs(ast);           // idem en portée SCÈNE : `@test_alphabets.X` → `ast.libRefs` (sinon l'alphabet n'arrive jamais)
     result.ast = ast;

@@ -306,11 +306,11 @@ function parse(tokens, opts = {}) {
       // ENTRÉES déclarées par `@in` — un rôle, son canal, sa table éventuelle
       // (décision Romain 2026-07-27, symétrie entrée/sortie).
       inputs: [],
-      maps: [],
-      // `aliases` SUPPRIMÉ le 2026-07-27 : `@alias` est absorbé par `@map`, sans voie parallèle.
-      // Le champ restait ÉMIS et TOUJOURS VIDE — un champ mort que la spec décrivait encore, donc
-      // un consommateur pouvait le lire et conclure « cette scène ne déclare aucun alias » au lieu
-      // de « les alias n'existent plus ». On supprime la donnée avec le mot.
+      // `maps` SUPPRIMÉ le 2026-07-27 au soir, avec le mot : `@map` est abandonné, le câblage passe
+      // par les chevrons. Un champ ÉMIS ET TOUJOURS VIDE n'est pas neutre — un consommateur qui le
+      // lit conclut « cette scène ne câble rien » au lieu de « ce canal n'existe plus ». On
+      // supprime la donnée avec le mot, dans le même mouvement, sans voie parallèle.
+      aliases: [],
       labels: [],
       declarations: [],
       macros: [],
@@ -348,8 +348,11 @@ function parse(tokens, opts = {}) {
           // Une variable de travail est un nom que LA SCÈNE possède : elle gagne donc, comme une
           // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
           for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
-        } else if (dir.type === 'MapDirective') {
-          scene.maps.push(dir);
+        } else if (dir.type === 'AliasDirective') {
+          scene.aliases.push(dir);
+          // Un alias est un nom que LA SCÈNE possède : il gagne sur un mot homonyme du vocabulaire
+          // (cascade, le plus local l'emporte) — même règle que macros et variables de travail.
+          nomsDeclaresLocalement.add(dir.name);
         } else if (dir.type === 'MacroDirective') {
           scene.macros.push(dir);
           nomsDeclaresLocalement.add(dir.name);
@@ -861,10 +864,18 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   /**
-   * Parse a @map endpoint: cc:N, osc:/path, <!trigger, [flag], or named-cc alias.
-   * Returns { kind, ... } descriptor.
+   * Parse la VALEUR d'un `@alias` : cc:N, osc:/path, <!trigger, [flag], un nom, ou un nom pointé
+   * (`kick.vel`, `sys.tempo`, `verse.X`). Rend un descripteur `{ kind, … }`.
+   *
+   * ⚠️ CE QUE CETTE FONCTION N'A PAS CHANGÉ le 2026-07-27 au soir, et pourquoi. `@map` est abandonné
+   * et `@alias` revient à sa place : c'est un RENOMMAGE de la directive, pas une refonte de ce
+   * qu'elle peut désigner. L'espace de valeurs reste EXACTEMENT celui d'avant — restreindre serait
+   * trancher, et deux des restrictions envisageables sont justement des QUESTIONS OUVERTES chez
+   * Romain (le numéro de contrôleur brut comme source, qu'il a déclaré hors langage mais dont le
+   * retrait reste à confirmer ; et où s'écrit un câblage de contrôle). Je ne rétrécis pas une
+   * directive sur une déduction : coût mesuré du statu quo = nul, aucune pièce n'écrit ces formes.
    */
-  function parseMapEndpoint() {
+  function parseAliasValue() {
     // <!trigger
     if (at(T.TRIGGER_IN)) {
       advance();
@@ -884,7 +895,7 @@ function parse(tokens, opts = {}) {
       if (id === 'cc' && at(T.COLON)) {
         advance();
         const number = Number(expect(T.INT).value);
-        const params = at(T.LPAREN) ? parseMapParams() : null;
+        const params = at(T.LPAREN) ? parseAliasParams() : null;
         return { kind: 'cc', number, params };
       }
       if (id === 'osc' && at(T.COLON)) {
@@ -896,7 +907,7 @@ function parse(tokens, opts = {}) {
           const seg = at(T.IDENT) ? advance().value : at(T.INT) ? advance().value : '';
           address += '/' + seg;
         }
-        const params = at(T.LPAREN) ? parseMapParams() : null;
+        const params = at(T.LPAREN) ? parseAliasParams() : null;
         return { kind: 'osc', address, params };
       }
       // sys.command, scene.command, or actor.flag
@@ -913,11 +924,11 @@ function parse(tokens, opts = {}) {
       // Named CC alias (e.g. "breath" from @cc breath:2)
       return { kind: 'alias', name: id };
     }
-    throw new ParseError('Expected cc:N, osc:/path, <!trigger, [flag] or alias in @map', current());
+    throw new ParseError("@alias : valeur attendue — un nom ('kick.vel'), un point d'attente ('<!depart'), un drapeau ('[tension]'), 'cc:N' ou 'osc:/chemin'.", current());
   }
 
-  /** Parse optional (key:value, ...) params for @map endpoints */
-  function parseMapParams() {
+  /** Paramètres facultatifs `(clé:valeur, …)` d'une valeur d'alias. */
+  function parseAliasParams() {
     expect(T.LPAREN);
     const params = {};
     while (!at(T.RPAREN) && !atEnd()) {
@@ -1287,16 +1298,6 @@ function parse(tokens, opts = {}) {
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
 
-    // TOMBSTONE — `@alias` a DISPARU dans `@map` le 2026-07-27 (décision Romain). Sans ce refus
-    // nommé, la ligne retombait sur un message de parse illisible (« attendu une flèche ») : un mot
-    // supprimé doit NOMMER sa disparition et donner la réécriture, jamais laisser deviner.
-    if (name === 'alias') {
-      const nom = at(T.IDENT) ? current().value : '<nom>';
-      throw new ParseError(`'@alias' a DISPARU dans '@map' (décision 2026-07-27) — écrire `
-        + `'@map ${nom} <source>' : le nom d'abord, la source ensuite, sans signe entre les deux. `
-        + `Une seule forme désormais, aucune voie parallèle.`, tok);
-    }
-
     // @label hat — named label for @ suffixe
     if (name === 'label') {
       const labelName = expect(T.IDENT).value;
@@ -1311,55 +1312,60 @@ function parse(tokens, opts = {}) {
       return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
     }
 
-    // @map <nom> <source> — LIAISON : un nom interne, la source externe qui l'alimente.
+    // ─── PIERRE TOMBALE — `@map` est ABANDONNÉ (décision Romain 2026-07-27 au soir) ───────────
+    // `hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`
     //
-    // Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-map-absorbe-alias-macro-reste-separee.md`),
-    // sur inventaire mesuré :
-    //  · `@alias` DISPARAÎT ici — une seule forme, elle se dissout sans reste, aucun coût mesuré ;
-    //  · le `=` est SUPPRIMÉ — il marquait « ce nom se joue-t-il ou pas », deux sens pour un signe,
-    //    déjà incohérent avant toute fusion ; le garder en fusionnant lui en aurait donné trois ;
-    //  · le NOM D'ABORD, comme toutes les autres directives nomment avant de valoriser ;
-    //  · la FLÈCHE redevient EXCLUSIVEMENT une production — son usage de câblage ne vivait que dans
-    //    cette directive, mesuré sur les deux seuls sites du parseur.
+    // L'ARGUMENT QUI A TRANCHÉ, et il n'était dans aucun inventaire : **une directive ne se
+    // débranche pas.** `!>>` coupe un câble PENDANT QUE ÇA JOUE, et le branchement se reconfigure
+    // au fil de la pièce ; aucune déclaration ne sait faire ça, et il n'existe pas de
+    // « dé-déclaration ». Deux écritures pour brancher A sur B, dont l'une strictement moins
+    // puissante : c'est la moins puissante qui part.
     //
-    // ⚠️ CE QUE ÇA N'EST PAS — et c'est la question que Romain a posée DEUX fois, donc elle mérite
-    // d'être fermée ici : une liaison n'est PAS une macro. Une MACRO s'écrit DANS LA MUSIQUE, à sa
-    // place dans la règle, et Kairos la résout à la PROJECTION, feuille par feuille, déclenchée par
-    // un MOT qui paraît dans le flux. Une LIAISON se BRANCHE À CÔTÉ, son nom ne s'écrit jamais dans
-    // une règle, et l'orchestrateur de BPx l'installe AU CHARGEMENT, une fois, déclenchée par un
-    // SIGNAL QUI ARRIVE DU DEHORS. Ni le même composant, ni le même moment, ni le même déclencheur.
-    // Les deux se ressemblent parce qu'AUCUN n'est résolu à la génération de l'arbre — c'est
-    // justement pour ça que la question était légitime ; ils divergent entièrement APRÈS.
+    // ⚠️ ET LA LEÇON DE MÉTHODE, qui est de moi : mon inventaire du matin comparait cette directive
+    // à `@macro` et concluait JUSTE sur ce couple — il ne l'avait jamais comparée au CÂBLAGE, qui
+    // était pourtant le geste qu'elle finissait par faire. Une comparaison bien menée sur le
+    // mauvais couple donne une réponse correcte et sans valeur.
     if (name === 'map') {
+      throw new ParseError("'@map' est ABANDONNÉ (décision Romain 2026-07-27, le soir) — le câblage "
+        + "passe par les chevrons '>>' et '!>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
+        + "ce qu'une directive ne sait pas faire. Pour ÉTIQUETER un nom ou DÉSIGNER des éléments "
+        + "marqués, écrire '@alias <nom> <valeur>'. Pour attendre un geste, rien à câbler : "
+        + "'@in <rôle> transport.<canal>' puis l'adresse collée au point d'attente.", tok);
+    }
+
+    // @alias <nom> <valeur> — DÉSIGNER : donner un nom à une chose technique ou répétitive, ou
+    // désigner ensemble les éléments marqués d'un label (`kick.vel`).
+    //
+    // ⚠️ `@alias` REVIENT le 2026-07-27 au soir, après avoir été absorbé le matin même. Ce n'est pas
+    // une rétrocompatibilité : c'est la directive qui reste quand le CÂBLAGE en sort. Elle DÉSIGNE,
+    // elle ne branche pas — brancher est le geste des chevrons.
+    //
+    // LE SIGNE '=' NE REVIENT PAS AVEC ELLE. Cette partie du matin tient (décision Romain,
+    // uniformité déclarative) : une seule forme dans tout le langage, `@directive <nom> <valeur>`.
+    //
+    // ⚠️ CE QUE ÇA N'EST PAS — question posée DEUX fois par Romain, donc fermée ici : ce n'est pas
+    // une MACRO. Une macro s'écrit DANS LA MUSIQUE, à sa place dans la règle, et Kairos la résout à
+    // la PROJECTION, feuille par feuille, déclenchée par un MOT qui paraît dans le flux. Un alias
+    // ne s'écrit jamais comme un mot du flux et n'a ni corps ni paramètres. Ni le même composant,
+    // ni le même moment, ni le même déclencheur.
+    if (name === 'alias') {
       if (!at(T.IDENT)) {
-        throw new ParseError("@map doit NOMMER la liaison avant sa source : '@map <nom> <source>' "
-          + "— par exemple '@map depart touches.z' ou '@map breath cc:2'. Le nom d'abord, comme "
-          + 'toutes les autres directives.', tok);
+        throw new ParseError("@alias doit NOMMER avant de désigner : '@alias <nom> <valeur>' — par "
+          + "exemple '@alias frappe kick.vel'. Le nom d'abord, comme toutes les autres directives.", tok);
       }
-      const mapName = advance().value;
-      // ⚠️ L'ANCIENNE FORME commençait par une EXTRÉMITÉ, pas par un nom, et la câblait avec une
-      // flèche. Elle n'est pas reproduite ici : la flèche est une règle de PRODUCTION et ne l'a
-      // jamais été d'autre chose, donc la citer même en commentaire donnerait à recopier une faute
-      // (règle Romain, 2026-07-27). Le deux-points juste après le premier mot la trahit — sans ce
-      // refus nommé, la ligne retombait sur « attendu cc:N, osc:/path… », un message qui décrit
-      // l'ancienne grammaire et laisse l'auteur croire qu'il s'est trompé de source alors que
-      // c'est la FORME qui a changé.
-      if (at(T.COLON)) {
-        throw new ParseError(`@map : la forme '<source> -> <cible>' a DISPARU (décision 2026-07-27) `
-          + `— une liaison NOMME d'abord, puis désigne sa source : '@map <nom> ${mapName}:…'. `
-          + `La flèche redevient exclusivement une règle de production.`, current());
-      }
+      const aliasName = advance().value;
       if (at(T.EQUALS)) {
-        throw new ParseError(`@map ${mapName} : le signe '=' est SUPPRIMÉ (décision 2026-07-27) — `
-          + `écrire '@map ${mapName} <source>' sans rien entre les deux.`, current());
+        throw new ParseError(`@alias ${aliasName} : le signe '=' est SUPPRIMÉ de tout le langage `
+          + `(décision Romain 2026-07-27) — écrire '@alias ${aliasName} <valeur>' sans rien entre `
+          + `les deux. Le retour de '@alias' ne ramène pas le signe avec lui.`, current());
       }
       if (at(T.ARROW_R) || at(T.ARROW_L) || at(T.ARROW_BI)) {
-        throw new ParseError(`@map ${mapName} : la flèche est SUPPRIMÉE de cette directive `
-          + `(décision 2026-07-27) — elle redevient exclusivement une règle de production. `
-          + `Écrire '@map ${mapName} <source>'.`, current());
+        throw new ParseError(`@alias ${aliasName} : la flèche n'entre pas dans une directive — elle `
+          + `est EXCLUSIVEMENT une règle de production, et ne l'a jamais été d'autre chose. Pour `
+          + `désigner : '@alias ${aliasName} <valeur>'. Pour BRANCHER : les chevrons '>>'.`, current());
       }
-      const source = parseMapEndpoint();
-      return { type: 'MapDirective', name: mapName, source, line: tok.line };
+      const source = parseAliasValue();
+      return { type: 'AliasDirective', name: aliasName, source, line: tok.line };
     }
 
     // @cc breath:2, expression:11 — named MIDI CC declarations

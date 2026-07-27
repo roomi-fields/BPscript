@@ -147,30 +147,36 @@ Les enfants exposent explicitement les flags qu'ils veulent rendre visibles :
 @expose [intensity]            // rend ce flag lisible par le parent
 ```
 
-`@map` nomme une LIAISON : **un nom, puis la source qui l'alimente** (décision Romain 2026-07-27) :
+`@alias` DESIGNE : **un nom, puis ce qu'il designe** (decision Romain 2026-07-27) :
 ```
-@map depart touches.z          // le nom `depart`, alimente par la touche z de l'entree `touches`
-@map breath cc:2               // un controleur continu
-@map horloge osc:/clock        // une adresse OSC
+@alias depart touches.z          // le nom `depart`, alimente par la touche z de l'entree `touches`
+@alias breath cc:2               // un controleur continu
+@alias horloge osc:/clock        // une adresse OSC
 ```
 **Le nom vient d'abord**, comme toutes les autres directives nomment avant de valoriser. Il n'y a
-**ni signe `=` ni fleche** : `@alias` a ete absorbe ici, et la fleche redevient **exclusivement une
-regle de production**.
+**ni signe `=` ni fleche** : le signe a disparu de tout le langage, et la fleche est
+**exclusivement une regle de production**.
 
-> ### Une LIAISON n'est pas une MACRO
+> ⚠️ **UN ALIAS DESIGNE, IL NE BRANCHE PAS.** Alimenter le tempo, un drapeau ou le depart d'une
+> partie est un **cablage**, et le cablage a son propre geste : `>>` pour brancher, `!>>` pour
+> couper, **dans le flux** (decision Romain 2026-07-27 au soir). L'argument qui a tranche :
+> **une directive ne se debranche pas** -- `!>>` coupe un cable pendant que ca joue et le
+> branchement se reconfigure au fil de la piece ; il n'existe pas de « de-declaration ».
+
+> ### Un ALIAS n'est pas une MACRO
 >
 > Les deux se ressemblent pour une bonne raison : **aucune n'est resolue a la generation de
 > l'arbre**, les deux voyagent par leur NOM. Elles divergent **apres**, sur trois plans :
 >
-> | | `@macro` | `@map` |
+> | | `@macro` | `@alias` |
 > |---|---|---|
 > | son nom s'ecrit | **dans la regle** | **jamais** dans une regle |
 > | qui la resout | **Kairos**, a la **projection** | **l'orchestrateur BPx**, au **chargement** |
 > | quand | **feuille par feuille** | **une fois** |
 > | ce qui la declenche | **un mot qui parait dans le flux** | **un signal qui arrive du dehors** |
 >
-> **En une phrase** : une macro est quelque chose qu'on **ecrit dans la musique** ; une liaison,
-> quelque chose qu'on **branche a cote**.
+> **En une phrase** : une macro est quelque chose qu'on **ecrit dans la musique** ; un alias, un
+> **nom donne a quelque chose** — et brancher n'est ni l'un ni l'autre, c'est le role des chevrons.
 
 Cf. [SCENES.md](../design/SCENES.md) pour le modele complet (scoping, sys, encapsulation).
 
@@ -1333,23 +1339,23 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 |-----------|----------------|---------|--------------------------|
 | `@macro` | Transformation nommee | `@macro kick (vel:120)` | **OUI** — a sa place, dans la regle |
 | `@label` | Nom structural pur | `@label groove` | s'APPLIQUE a un element (`C4@groove`) |
-| `@map` | Nom pour une source I/O | `@map breath cc:2` | **NON, jamais** |
+| `@alias` | Nom donne a une chose technique ou repetitive | `@alias breath cc:2` | **NON, jamais** |
 
 ```
 @macro kick (vel:120)                // preset de controles
 @macro accent(x) x(vel:120)          // transformation parametree
 @macro fast(x) {x}:2                 // transformation structurelle (duree collee)
-@map breath cc:2                     // canal MIDI nomme
-@map intensity osc:/sensor/1         // canal OSC nomme
+@alias breath cc:2                     // canal MIDI nomme
+@alias intensity osc:/sensor/1         // canal OSC nomme
 @label hat                           // nom structural pur
 @label groove                        // nom de groupe polymetrique
 ```
 
-> ⚠️ **`@alias` a DISPARU le 2026-07-27**, absorbe par `@map` — une seule forme, sans reste. Et le
-> **`=` a disparu de TOUT le langage**, `@macro` comprise : **une seule forme partout**,
-> `@<directive> <nom> <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une
-> **convention**, pas une information (decision Romain 2026-07-27). La colonne de droite dit pourquoi les deux ne se confondent pas : **une
-> macro s'ecrit DANS la musique, une liaison se branche A COTE.**
+> ⚠️ **La directive de correspondance a ete ABANDONNEE le 2026-07-27 au soir** : ce qui BRANCHE
+> passe par les chevrons `>>` / `!>>`, ce qui DESIGNE reste sous `@alias`. Et le **`=` a disparu
+> de TOUT le langage**, `@macro` comprise : **une seule forme partout**, `@<directive> <nom>
+> <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une **convention**, pas une
+> information (decision Romain 2026-07-27).
 
 Application dans le RHS via `@` suffixe — colle a l'element, sans espace :
 
@@ -1361,15 +1367,16 @@ S -> {melody, drums}@groove
 `C4@kick` = "C4, avec kick applique". Le `@` en suffixe passe implicitement
 l'element precedent comme argument (pour les macros parametrees).
 
-Les noms sont utilisables dans les `@map` pour le controle externe :
+Les noms poses sont designables par un `@alias` :
 
 ```
-@map ratio  kick.ratio               // nomme le ratio de tous les @kick
-@map souffle groove.ratio            // nomme le ratio du groupe groove
-@map force  kick.vel                 // nomme le vel des @kick
+@alias ratio  kick.ratio               // nomme le ratio de tous les @kick
+@alias souffle groove.ratio            // nomme le ratio du groupe groove
+@alias force  kick.vel                 // nomme le vel des @kick
 ```
-Forme corrigee le 2026-07-27 : le NOM d'abord, la source ensuite, **sans fleche** — celle-ci est
-redevenue exclusivement une regle de production.
+Le NOM d'abord, ce qu'il designe ensuite, **sans fleche** — celle-ci est exclusivement une regle
+de production. Un alias NOMME ; pour BRANCHER une de ces choses sur autre chose, ce sont les
+chevrons, dans le flux.
 
 Plusieurs elements peuvent partager le meme nom (multicast) :
 

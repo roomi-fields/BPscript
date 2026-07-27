@@ -26,8 +26,10 @@ Scene {
   actors: ActorDirective[]           // @actor directives
   scenes: SceneDirective[]           // @scene directives (child scenes)
   exposes: ExposeDirective[]         // @expose directives (flags visible au parent)
-  maps: MapDirective[]               // @map directives (I/O mappings CC/OSC ↔ flags/triggers)
-  // `aliases` SUPPRIME le 2026-07-27 : `@alias` a ete absorbe par `@map`, sans reste.
+  aliases: AliasDirective[]          // @alias directives — DESIGNATION (un nom, ce qu'il designe)
+  // `maps` SUPPRIME le 2026-07-27 au soir AVEC le mot : la directive de correspondance est
+  // ABANDONNEE, le cablage passe par les chevrons `>>` / `!>>`. Un champ emis et toujours vide
+  // ferait conclure « cette scene ne cable rien » au lieu de « ce canal n'existe plus ».
   labels: LabelDirective[]           // @label directives (label declarations)
   declarations: Declaration[]
   macros: Macro[]
@@ -523,12 +525,12 @@ ExposeDirective {
 
 Exemple : `@expose [intensity]` → `{ flags:["intensity"] }`
 
-### `MapDirective`
+### `AliasDirective`
 
 ```
-MapDirective {
-  type: "MapDirective"
-  name: string                       // le NOM de la liaison — c'est LUI la cible
+AliasDirective {
+  type: "AliasDirective"
+  name: string                       // le NOM donné — c'est LUI la cible
   source: MapEndpoint
   line: number
 }
@@ -542,18 +544,18 @@ MapEndpoint = { kind: "cc", number: int, params: object | null }
 ```
 
 Exemples :
-- `@map breath cc:2` → `{ name:"breath", source:{kind:"cc",number:2} }`
-- `@map depart touches.z` → `{ name:"depart", source:{kind:"scoped",scope:"touches",name:"z"} }`
-- `@map horloge osc:/clock` → `{ name:"horloge", source:{kind:"osc",address:"/clock"} }`
+- `@alias breath cc:2` → `{ name:"breath", source:{kind:"cc",number:2} }`
+- `@alias depart touches.z` → `{ name:"depart", source:{kind:"scoped",scope:"touches",name:"z"} }`
+- `@alias horloge osc:/clock` → `{ name:"horloge", source:{kind:"osc",address:"/clock"} }`
 
-> ⚠️ **`arrow` et `target` ont DISPARU le 2026-07-27** (décision Romain) : une liaison NOMME d'abord,
-> puis désigne sa source — **le nom EST la cible**. `@alias` a été absorbé ici, sans reste, et la
-> flèche est redevenue **exclusivement une règle de production**.
+> ⚠️ **`arrow` et `target` ont DISPARU le 2026-07-27** (décision Romain) : un alias NOMME d'abord,
+> puis désigne — **le nom EST la cible**. La flèche est **exclusivement une règle de production**.
 >
-> **Ce que ça n'est pas** : une macro. Une macro s'écrit **dans la musique** et Kairos la résout à la
-> projection, feuille par feuille, sur un **mot qui paraît dans le flux** ; une liaison se **branche
-> à côté** et l'orchestrateur BPx l'installe au chargement, une fois, sur un **signal venu du
-> dehors**. Ni le même composant, ni le même moment, ni le même déclencheur.
+> **Ce que ça n'est pas — deux fois.** Ce n'est pas une **macro** : une macro s'écrit *dans la
+> musique* et Kairos la résout à la projection, feuille par feuille, sur un mot qui paraît dans le
+> flux ; un alias ne s'écrit jamais comme un mot du flux et n'a ni corps ni paramètres. Et ce n'est
+> pas un **câblage** : brancher se fait avec `>>`, couper avec `!>>`, dans le flux — parce qu'une
+> directive ne se débranche pas (décision Romain 2026-07-27 au soir).
 
 ### `CCDirective`
 
@@ -618,10 +620,11 @@ AliasDirective {
 }
 ```
 
-Exemple : `@map breath cc:2` → `{ name:"breath", source:{kind:"cc", number:2} }`
+Exemple : `@alias breath cc:2` → `{ name:"breath", source:{kind:"cc", number:2} }`
 
-> ⚠️ `@alias` a DISPARU le 2026-07-27, absorbe par `@map` : un NOM, puis sa SOURCE, sans signe ni
-> fleche. Une liaison n'a plus de « cible » — **le nom EST la cible**.
+> ⚠️ Un NOM, puis ce qu'il designe, sans signe ni fleche. Il n'y a plus de « cible » — **le nom EST
+> la cible**. La directive de correspondance, elle, a ete ABANDONNEE le 2026-07-27 au soir : le
+> cablage passe par les chevrons.
 
 ### `LabelDirective`
 
