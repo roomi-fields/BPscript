@@ -107,6 +107,25 @@ datée et motivée. Une règle qui exige qu'on y pense au bon moment n'est pas u
 intention (architecte 2026-07-27) — donc quand une règle demande de la vigilance, **chercher ce qui
 la rend mécanique** : un garde, une forme obligatoire, un champ que la machine relit.
 
+### Écrire dans le dépôt d'un AUTRE : signer, prévenir, ne rien déclarer (payé le 2026-07-27)
+**Une écriture chez un autre n'est LIVRÉE que quand son propriétaire l'a committée** (règle
+architecte 2026-07-27). Tant qu'elle ne l'est pas, elle n'existe pas — ni dans un report, ni dans un
+décompte, ni dans une preuve. Celui qui écrit **prévient et ne déclare rien** ; celui qui possède
+committe dans la foulée ou dit pourquoi il ne peut pas.
+
+**Corollaire de mon côté : SIGNER.** Payé sur `tryTicks` — annotation écrite, rapportée comme
+livrée, **annulée une heure plus tard** par un `git checkout` explicite chez Kanopi parce que
+personne ne la revendiquait. Elle portait sa date et sa raison, pas son auteur. Le même jour, un
+diff sans auteur est apparu dans MON arbre et a coûté deux messages pour établir qu'il ne portait
+aucun sens : **une écriture étrangère anonyme est indistinguable d'un bruit d'outil**, dans les deux
+sens. La règle du propriétaire déplace la preuve ; la signature lui donne de quoi chercher l'auteur
+au lieu de deviner. Les deux ensemble ferment le trou.
+
+⚠️ **Et ne jamais avancer une CAUSE non mesurée dans un report qui, par ailleurs, mesure tout.**
+J'ai transmis « probablement emporté par une opération git » ; c'était une annulation délibérée. Le
+mot « probablement » ne rachète rien — dans un report où le reste est mesuré, une supposition se lit
+comme une mesure.
+
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/` :
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
