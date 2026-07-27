@@ -201,6 +201,13 @@ d'envoyer la mesure, pas après. Les sept formes payées en un jour :
    qu'il a MESURÉ avant de conclure sur ce qu'il a ÉCRIT.** Et corollaire de leur côté, qu'ils ont
    inscrit et qui vaut ici : quand deux graphies voisines se comportent différemment, **nommer la
    forme sans ambiguïté** plutôt que mesurer mieux.
+   ⚠️ **Et les deux règles NE SE SUBSTITUENT PAS** (leur mise au point, et elle est juste) : le même
+   malentendu est passé **deux fois**, par deux défauts différents — d'abord leur phrase qui ne
+   distinguait pas, ensuite ma lecture qui n'est pas allée à la preuve. Chacun a d'abord voulu
+   prendre le tort de l'autre : ils ont refusé que leur formulation « allait bien » sous prétexte
+   que leur preuve rattrapait, j'ai refusé que ma sur-affirmation soit excusée par leur ambiguïté.
+   **Une correction en sa propre faveur se re-mesure comme une correction contre soi** — sinon on
+   négocie un compte au lieu de l'établir.
 Ces erreurs se **refont**, ce ne sont pas des étourderies — et elles sont d'autant plus dangereuses
 qu'elles produisent les mesures qu'on envoie aux autres, qui agissent dessus.
 
