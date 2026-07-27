@@ -87,48 +87,81 @@ const rhs = (regle) => {
      `4. AUCUN élément de RHS ne doit rester sans nature — reçu sans nature : ${JSON.stringify(sans)}`);
 }
 
-// ─── 6. TOUTES LES FORMES QUE LE PARSER PRODUIT, pas seulement celle du jour ─────────────────
-// Mesuré par BPx le 2026-07-27 : l'attente ANCRÉE (`C4<!sync1`) n'avait pas de nature. Le §4
-// ci-dessus ne l'attrapait pas — il n'inspectait que le premier niveau du membre droit, et une
-// attente ancrée vit SOUS un `SymbolWithTriggerIn`. C'est la même faute que les trois gardes
-// précédentes : écrite pour la forme signalée, aveugle à la construction.
+// ─── 6. LA MATRICE — FORMES × PROPRIÉTÉS, en PRODUIT CROISÉ ─────────────────────────────────
 //
-// ⚠️ ET CE N'EST PAS UN CAS DE BORD : le parser ancre l'attente sur le symbole qui précède MÊME
-// séparée par une espace — `C4 <!sync1` produit un `SymbolWithTriggerIn`, exactement comme
-// `C4<!sync1`. Donc toute attente précédée d'une note tombait dans le trou, soit l'écriture
-// courante. D'où l'énumération : attente seule, collée, espacée, multiple, qualifiée, sous
-// silence, sous groupe polymétrique.
+// ⚠️ POURQUOI UNE MATRICE ET PAS UNE LISTE, et c'est le vrai sujet. J'ai inscrit le 2026-07-26 la
+// règle « énumérer TOUTES les formes que le parser peut produire ». Je la connaissais, je l'avais
+// écrite — et je l'ai repayée le lendemain. Diagnostic, mesuré sur ce fichier même : j'avais bien
+// énuméré les sept formes… pour la PROPRIÉTÉ DU JOUR (la nature). Le §2, plus ancien, testait le
+// sac d'annotations sur UNE seule forme. **L'énumération était une propriété de la SECTION, pas du
+// garde.** Un garde grandit incident par incident, et seule la section la plus récente porte
+// l'énumération complète.
 //
-// Le wrapper `SymbolWithTriggerIn` ne porte PAS de nature et n'en portera pas : ce n'est pas une
-// feuille, c'est un assemblage. Ses deux parts en portent une chacune, et ce sont elles qu'on
-// observe. On descend donc jusqu'aux feuilles au lieu de compter des voisins de surface.
-{
-  const feuilles = (n, out = []) => {
-    if (Array.isArray(n)) { for (const x of n) feuilles(x, out); return out; }
-    if (!n || typeof n !== 'object') return out;
-    if (n.type === 'TriggerIn') out.push(n);
-    for (const k of ['symbol', 'triggers', 'voices', 'elements', 'content', 'items']) {
-      if (n[k]) feuilles(n[k], out);
-    }
-    return out;
-  };
-  for (const [regle, quoi] of [
-    ['S -> <!sync1 C4', 'attente SEULE'],
-    ['S -> C4<!sync1 D4', 'attente ANCRÉE, collée'],
-    ['S -> C4 <!sync1 D4', "attente ANCRÉE par une espace — le parser l'ancre quand même"],
-    ['S -> C4<!sync1<!sync2 D4', 'DEUX attentes sur la même note'],
-    ['S -> C4<!sync1(chan:1) D4', 'attente ancrée AVEC son canal'],
-    ['S -> - <!sync1', 'attente après un silence'],
-    ['S -> {C4 <!sync1} D4', 'attente DANS un groupe polymétrique'],
-  ]) {
-    const { err, rhs: r } = rhs(regle);
-    const trouvees = feuilles(r);
-    ok((err || []).length === 0 && trouvees.length > 0,
-       `6. ${quoi} : l'attente doit ARRIVER dans l'arbre — '${regle}'`);
-    const nues = trouvees.filter((t) => t.payload?.nature !== 'wait');
-    ok(nues.length === 0,
-       `6. ${quoi} : CHAQUE attente porte 'wait', à quelque profondeur qu'elle vive — ${nues.length} nue(s) sur ${trouvees.length} dans '${regle}'`);
+// LA MÉCANISATION : on ne s'en remet plus à la discipline d'énumérer. Le garde CONSTRUIT le produit
+// croisé de deux listes — les formes que le parser produit, les propriétés qu'un point d'attente
+// peut porter. Ajouter une propriété la teste AUTOMATIQUEMENT sur les sept formes ; ajouter une
+// forme teste automatiquement toutes les propriétés. Il n'y a plus rien à penser au bon moment.
+const FORMES = [
+  ['seule', (n, ann) => `S -> <!${n}${ann} C4`],
+  ['ancrée, collée', (n, ann) => `S -> C4<!${n}${ann} D4`],
+  ['ancrée, séparée par une espace', (n, ann) => `S -> C4 <!${n}${ann} D4`],
+  ['double sur la même note', (n, ann) => `S -> C4<!${n}${ann}<!sync2 D4`],
+  ['après un silence', (n, ann) => `S -> - <!${n}${ann} C4`],
+  ['dans un groupe polymétrique', (n, ann) => `S -> {C4 <!${n}${ann}} D4`],
+  ['en fin de règle', (n, ann) => `S -> C4 <!${n}${ann}`],
+];
+const PROPRIETES = [
+  ['la nature', '', (t) => t.payload?.nature === 'wait'],
+  ["le sac d'ANNOTATIONS", '(chan:1)',
+    (t) => (t.suffixQualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'chan' && p.value === 1)],
+  ['le sac MOTEUR', '[weight:2]',
+    (t) => (t.qualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'weight' && p.value === 2)],
+  ["l'ADRESSE de sa source", '.60', (t) => t.address === 60],
+  ['son NOM', '', (t) => t.name === 'sync1'],
+];
+
+const pointsDe = (rhs, out = []) => {
+  if (Array.isArray(rhs)) { for (const x of rhs) pointsDe(x, out); return out; }
+  if (!rhs || typeof rhs !== 'object') return out;
+  if (rhs.type === 'TriggerIn') out.push(rhs);
+  for (const k of ['symbol', 'triggers', 'voices', 'elements', 'content']) if (rhs[k]) pointsDe(rhs[k], out);
+  return out;
+};
+
+let cellules = 0;
+for (const [nomForme, ecrire] of FORMES) {
+  for (const [nomProp, annotation, verifie] of PROPRIETES) {
+    cellules++;
+    const { err, rhs: r } = rhs(ecrire('sync1', annotation));
+    ok((err || []).length === 0,
+       `6. ${nomForme} + ${nomProp} : doit compiler — reçu : ${(err || []).map((e) => e.message || e).join(' | ')}`);
+    const vus = pointsDe(r).filter((t) => t.name === 'sync1');
+    ok(vus.length > 0, `6. ${nomForme} + ${nomProp} : le point d'attente doit ARRIVER dans l'arbre`);
+    ok(vus.some(verifie),
+       `6. ${nomForme} : ${nomProp} doit être portée PAR LE POINT D'ATTENTE lui-même — reçu : `
+       + `${JSON.stringify(vus)}`);
   }
+}
+// TÉMOIN ANTI-RÉTRÉCISSEMENT : la matrice doit rester pleine. Si quelqu'un retire une forme ou une
+// propriété pour faire passer un cas gênant, le compte tombe et le garde le dit.
+ok(cellules === FORMES.length * PROPRIETES.length && cellules >= 35,
+   `6. la matrice doit être PLEINE — ${cellules} cellule(s) pour ${FORMES.length} forme(s) × `
+   + `${PROPRIETES.length} propriété(s)`);
+
+// ⚠️ ET LE SAC APPARTIENT AU POINT, PAS À L'ASSEMBLAGE. Mesuré le 2026-07-27 : écrit sur une forme
+// ancrée, il atterrissait sur le nœud `SymbolWithTriggerIn`. Ce n'était pas une PERTE mais un
+// DÉPLACEMENT — et c'est pire à sa façon : rien ne manque, donc rien ne peut le signaler.
+{
+  const { rhs: r } = rhs('S -> C4 <!sync1(chan:1) D4');
+  ok(r[0]?.suffixQualifiers === undefined,
+     `6. l'assemblage ne doit PAS porter le sac du point d'attente — reçu : ${JSON.stringify(r[0]?.suffixQualifiers)}`);
+}
+// Et la note garde le SIEN : le sac écrit AVANT le point d'attente appartient toujours à la note.
+{
+  const { rhs: r } = rhs('S -> C4(vel:80)<!sync1 D4');
+  const surLaNote = (r[0]?.symbol?.suffixQualifiers || r[0]?.suffixQualifiers || [])
+    .flatMap((q) => q.pairs || []).some((p) => p.key === 'vel');
+  ok(surLaNote, `6. le sac écrit AVANT le point reste celui de la NOTE — reçu : ${JSON.stringify(r[0])}`);
 }
 
 if (echecs.length) {

@@ -106,6 +106,25 @@ consommateurs AVANT de déclarer, pas après. Deux occurrences en 24 h, par deux
    (exiger la FORME d'une déclaration), jamais liste noire** de noms de clés à exclure — sinon la
    prochaine clé de commodité rentre pareil. Critère MESURÉ sur l'existant, jamais choisi.
 
+### Une garde se construit en MATRICE, pas en liste (5× la même faute, mécanisé le 2026-07-27)
+La règle « énumérer TOUTES les formes que le parser peut produire » a été **inscrite le 2026-07-26 et
+repayée le lendemain**. Diagnostic, mesuré : j'avais bien énuméré les sept formes… **pour la
+propriété du jour**. Les sections plus anciennes du même fichier testaient toujours UNE forme.
+**L'énumération était une propriété de la SECTION, pas du garde** — un garde grandit incident par
+incident, et seule la section la plus récente porte l'énumération complète.
+
+⚠️ **Une règle qu'on a écrite et qu'on connaît ne suffit pas** si elle demande d'y penser au bon
+moment. La parade n'est pas plus de discipline, c'est le **PRODUIT CROISÉ** : le garde construit
+`FORMES × PROPRIÉTÉS` lui-même. Ajouter une propriété la teste automatiquement sur toutes les
+formes ; ajouter une forme teste automatiquement toutes les propriétés. Plus rien à penser.
+Modèle : `test/point_attente_dans_arbre.mjs` §6 (7 formes × 5 propriétés = 35 cellules, plus un
+témoin anti-rétrécissement qui échoue si la matrice se vide).
+
+⚠️ **Et chercher par le MOTIF, pas par l'occurrence** : « quoi d'autre se perd entre une forme nue
+et sa forme dérivée ? ». Le balayage a montré que le sac n'était pas PERDU mais **DÉPLACÉ** (porté
+par l'assemblage au lieu du point) — pire à sa façon : rien ne manque, donc rien ne peut le
+signaler ; il faut regarder au bon endroit pour voir que ce n'est pas le bon endroit.
+
 ### Fermer une famille : écrire CE QUE LE BALAYAGE N'A PAS COUVERT (payé le 2026-07-27)
 **Un balayage a une PORTÉE, et ce qui est hors portée SURVIT** — y compris à une campagne qui croit
 avoir tout fermé. Le 2026-07-27, la famille « verdir sans avoir rien examiné » a été fermée dans

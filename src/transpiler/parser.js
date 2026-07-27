@@ -4288,7 +4288,26 @@ function parse(tokens, opts = {}) {
     }
     const qualifiers = [];
     while (at(T.LBRACKET)) qualifiers.push(parseQualifier());
-    return { type: 'TriggerIn', name, ...(address !== null ? { address } : {}), qualifiers };
+    // ⚠️ LE SAC D'ANNOTATIONS APPARTIENT AU POINT D'ATTENTE, dans TOUTES ses écritures.
+    //
+    // Mesuré le 2026-07-27 : écrit SEUL (`<!p(chan:1)`) le sac atterrissait sur le point d'attente ;
+    // écrit ANCRÉ à une note (`C4 <!p(chan:1)`, la forme la plus courante) il atterrissait sur
+    // l'ASSEMBLAGE `SymbolWithTriggerIn`. La même écriture, deux propriétaires — un consommateur
+    // qui lit le sac du point n'en trouvait aucun, alors que la donnée était là, sous un autre nœud.
+    //
+    // ⚠️ CE N'ÉTAIT PAS UNE PERTE, C'ÉTAIT UN DÉPLACEMENT — et c'est pire à sa façon : rien ne
+    // manque, donc rien ne peut le signaler ; il faut regarder au bon endroit pour voir que ce n'est
+    // pas le bon endroit. (Je l'avais d'abord rapporté comme une perte, à tort.)
+    //
+    // Le sac est donc consommé ICI, par le point lui-même, avant que l'attachement de suffixe au
+    // niveau de l'élément ne s'en saisisse. La note garde le sien : `C4(vel:80)<!p` — le sac écrit
+    // AVANT le point d'attente appartient toujours à la note, mesuré.
+    const suffixQualifiers = [];
+    while (at(T.LPAREN) && isRuntimeQualifier()) suffixQualifiers.push(parseRuntimeQualifier());
+    return {
+      type: 'TriggerIn', name, ...(address !== null ? { address } : {}), qualifiers,
+      ...(suffixQualifiers.length ? { suffixQualifiers } : {}),
+    };
   }
 
   // Garde de clé `[clé:valeur]` — UNIFORME quelle que soit la position (suffixe de règle,
