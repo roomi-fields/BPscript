@@ -80,6 +80,22 @@ function transportChannels() {
 }
 
 /**
+ * LISTE POSITIVE FERMÉE des canaux d'ENTRÉE (`@in <rôle> transport.<canal>`) — DISTINCTE de celle
+ * des sorties, et c'est délibéré. L'addendum du 2026-07-16 qui ferme `transportChannels` ne s'est
+ * jamais prononcé sur une entrée : il ne connaissait que des SORTIES. La décision Romain du
+ * 2026-07-26 nomme, elle, TROIS périphériques d'entrée — MIDI, OSC, CLAVIER. Le clavier entre donc
+ * ici et NULLE PART ailleurs : `@alphabet.X:keyboard` reste refusé, une sortie clavier n'a pas de
+ * sens. On AJOUTE UN MEMBRE à une liste fermée, on ne relâche pas la règle.
+ */
+let _inputTransportChannels = null;
+function inputTransportChannels() {
+  if (_inputTransportChannels) return _inputTransportChannels;
+  const core = loadLib('core') || {};
+  _inputTransportChannels = new Set((core.schema && core.schema.inputTransportChannels) || []);
+  return _inputTransportChannels;
+}
+
+/**
  * Index des VOIX (lib/voices.json, LANG-SONS-2 [438], spec hub/projets/lang-sons-spec.md §3-§5).
  * Une clé `nom for:<device>` = spécialisation par-device (cascade fin > général, résolue en
  * AVAL) ; ici on indexe par nom de base : { nom → { base?: def, forDevices: { device → def } } }.
@@ -287,6 +303,9 @@ function parse(tokens, opts = {}) {
       // VARIABLES DE TRAVAIL déclarées par `@var` — noms de symboles qui ne sont l'écriture
       // d'aucune note (décision Romain 2026-07-27, voie 3).
       vars: [],
+      // ENTRÉES déclarées par `@in` — un rôle, son canal, sa table éventuelle
+      // (décision Romain 2026-07-27, symétrie entrée/sortie).
+      inputs: [],
       maps: [],
       aliases: [],
       labels: [],
@@ -318,6 +337,8 @@ function parse(tokens, opts = {}) {
           scene.scenes.push(dir);
         } else if (dir.type === 'ExposeDirective') {
           scene.exposes.push(dir);
+        } else if (dir.type === 'InDirective') {
+          scene.inputs = [...(scene.inputs || []), dir];
         } else if (dir.type === 'VarDirective') {
           // Les lignes s'ACCUMULENT — plusieurs `@var` ne se remplacent pas, elles s'ajoutent.
           scene.vars = [...(scene.vars || []), ...dir.names];
@@ -1114,6 +1135,79 @@ function parse(tokens, opts = {}) {
         expect(T.RBRACKET);
       }
       return { type: 'ExposeDirective', flags, line: tok.line };
+    }
+
+    // @in pedale transport.midi mapping.fcb_std — DÉCLARATION D'UNE ENTRÉE
+    //
+    // Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-forme-des-entrees-in-mapping-adresse-
+    // nue.md`), en conséquence de la symétrie entrée/sortie du même jour : une sortie est routée
+    // PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une entrée l'est de la même façon, au point
+    // de RÉCEPTION — le point d'attente. Pas de directive de routage, pas de flèche.
+    //
+    // TROIS CONTRAINTES, chacune refusée bruyamment plus bas :
+    //  1. AUCUN NOM DE PORT. La scène nomme un RÔLE ; le nom d'un port vient du système et change
+    //     de machine en machine — une scène qui le porterait ne s'ouvrirait plus ailleurs.
+    //     L'association rôle → appareil réel vit HORS de la scène.
+    //  2. AUCUN ALPHABET. Il n'y a RIEN à résoudre en entrée : l'événement est DISCRET (Romain :
+    //     « si sur mon entrée je fais un glissando, ça va activer au croisement de la fréquence ?
+    //     on attend un événement DISCRET, pas un traitement de signal »). Le mécanisme est
+    //     événement brut → table → étiquette interne ; l'alphabet n'est qu'un réservoir de NOMS où
+    //     les étiquettes puisent, et c'est LA TABLE qui le déclare, en librairie.
+    //  3. AUCUNE TABLE PAR DÉFAUT. Sans table déclarée on écrit des adresses nues, et c'est
+    //     EXPLICITE dans la scène — poser une identité implicite rendrait indistinguables « je
+    //     n'ai pas de table » et « ma table ne fait rien ».
+    if (name === 'in') {
+      if (!at(T.IDENT)) {
+        throw new ParseError("@in doit nommer un rôle : '@in pedale transport.midi' — le nom est "
+          + "celui du RÔLE dans la scène, pas celui d'un appareil du système.", tok);
+      }
+      const roleName = advance().value;
+      let canal = null;
+      let table = null;
+      while (at(T.IDENT)) {
+        const cle = advance().value;
+        if (!at(T.PERIOD)) {
+          throw new ParseError(`@in ${roleName} : '${cle}' doit APPELER un composant avec un point `
+            + `('transport.midi', 'mapping.<table>') — le point APPELLE, les deux points AFFECTENT.`, tok);
+        }
+        advance();
+        const valeur = expect(T.IDENT).value;
+        if (cle === 'transport') {
+          // ⚠️ CONTRAINTE 1 — un nom de port dans la scène est REFUSÉ, pas ignoré.
+          if (at(T.LPAREN)) {
+            throw new ParseError(`@in ${roleName} : 'transport.${valeur}(…)' est refusé — une entrée `
+              + `ne porte AUCUN nom de port. Un nom de port vient du système et change de machine `
+              + `en machine ; la scène nomme un RÔLE, l'utilisateur associe l'appareil, et `
+              + `l'association vit hors de la scène.`, tok);
+          }
+          // LISTE FERMÉE PROPRE AUX ENTRÉES — voir `inputTransportChannels` dans lib/core.json :
+          // le clavier y entre (décision Romain 2026-07-26, trois périphériques d'entrée nommés)
+          // et NULLE PART ailleurs. On ajoute un membre à une liste fermée, on ne relâche rien.
+          if (!inputTransportChannels().has(valeur)) {
+            throw new ParseError(`@in ${roleName} : canal d'entrée '${valeur}' inconnu — les canaux `
+              + `d'entrée sont ${[...inputTransportChannels()].join(', ')}. La liste est FERMÉE.`, tok);
+          }
+          canal = valeur;
+        } else if (cle === 'mapping') {
+          table = valeur;
+        } else if (cle === 'alphabet') {
+          // ⚠️ CONTRAINTE 2 — et c'est la correction la plus importante de la décision.
+          throw new ParseError(`@in ${roleName} : une entrée ne porte AUCUN alphabet. Il n'y a rien `
+            + `à résoudre en entrée — l'événement est DISCRET, pas un signal à interpréter. C'est `
+            + `la TABLE (mapping.<nom>) qui déclare le vocabulaire où les étiquettes puisent, et `
+            + `elle le fait en librairie, pas dans la scène.`, tok);
+        } else {
+          throw new ParseError(`@in ${roleName} : propriété '${cle}' inconnue — une entrée déclare `
+            + `son canal ('transport.<canal>') et, facultativement, sa table `
+            + `('mapping.<table>'). Rien d'autre.`, tok);
+        }
+      }
+      if (canal === null) {
+        throw new ParseError(`@in ${roleName} : il manque le canal d'entrée — `
+          + `'@in ${roleName} transport.midi'.`, tok);
+      }
+      // CONTRAINTE 3 : `table` reste null quand rien n'est déclaré. On n'invente AUCUN défaut.
+      return { type: 'InDirective', name: roleName, transport: canal, mapping: table, line: tok.line };
     }
 
     // @var A8   /   @var a, b, c — VARIABLES DE TRAVAIL
@@ -4117,9 +4211,26 @@ function parse(tokens, opts = {}) {
   function parseTriggerIn() {
     expect(T.TRIGGER_IN);
     const name = expect(T.IDENT).value;
+    // ADRESSE DE LA SOURCE, collée au point de réception — symétrique de l'adresse de destination
+    // collée au terminal (`sitar1.Sa`). Décision Romain 2026-07-27 : une entrée se route PAR LE NOM,
+    // AU POINT OÙ ELLE AGIT, comme une sortie ; pas de directive, pas de flèche.
+    //
+    // ⚠️ CÔTÉ DROIT IDENTIFIANT SEULEMENT, et la forme NUMÉRIQUE (`<!brut.60`) est DÉLIBÉRÉMENT
+    // LAISSÉE DEHORS — pas de forme provisoire, pas de tolérance en attendant (arbitrage architecte
+    // 2026-07-27). Raison mesurée : un point suivi d'un NOMBRE est déjà une lecture valide du
+    // langage — la PÉRIODE (fragment de durée égale) suivie d'un terminal numérique. Les deux
+    // lectures sont grammaticalement légitimes ; les départager demande une règle de langage
+    // (le collage en est la candidate, l'information est présente au niveau des jetons), et cette
+    // règle est chez Romain. Tant qu'elle n'est pas tranchée, on ne lit PAS le nombre : la
+    // séquence reste période + terminal, comme aujourd'hui, sans rien inventer.
+    let address = null;
+    if (at(T.PERIOD) && peek(1).type === T.IDENT) {
+      advance();
+      address = advance().value;
+    }
     const qualifiers = [];
     while (at(T.LBRACKET)) qualifiers.push(parseQualifier());
-    return { type: 'TriggerIn', name, qualifiers };
+    return { type: 'TriggerIn', name, ...(address !== null ? { address } : {}), qualifiers };
   }
 
   // Garde de clé `[clé:valeur]` — UNIFORME quelle que soit la position (suffixe de règle,

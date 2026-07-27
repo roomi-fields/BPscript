@@ -16,7 +16,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 
 ```ebnf
 scene       = { directive | actor_directive | scene_directive | expose_directive
-              | var_directive
+              | var_directive | in_directive
               | map_directive | cc_directive | duration_directive
               | macro_directive | alias_directive | label_directive
               | sound_section
@@ -38,6 +38,9 @@ macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")"
 alias_directive  = "@" , "alias" , IDENT , "=" , map_endpoint ;  (* @alias breath = cc:2 *)
 label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
 var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
+in_directive     = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
+                 , [ "mapping" , "." , IDENT ] ;      (* @in pedale transport.midi mapping.fcb_std *)
+INPUT_CHANNEL    = "midi" | "osc" | "keyboard" ;      (* liste FERMEE, distincte des SORTIES *)
 map_directive    = "@" , "map" , map_endpoint , map_arrow , map_endpoint ;
 
 cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
@@ -345,6 +348,39 @@ sac) ; plusieurs lignes **s'accumulent**, comme plusieurs invocations de librair
 **Nature** — la variable porte `var` dans l'arbre, jamais `sounding`. Sans ça, `@var` serait une
 porte qui ne change rien : la scène compilerait et l'aval continuerait d'inventer une hauteur pour
 un symbole qui n'en a pas. Voir `AST.md`.
+
+### `in_directive` — DÉCLARATION D'UNE ENTRÉE
+
+```ebnf
+in_directive  = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
+              , [ "mapping" , "." , IDENT ] ;
+INPUT_CHANNEL = "midi" | "osc" | "keyboard" ;
+```
+
+Décision Romain 2026-07-27, en conséquence de la symétrie entrée/sortie du même jour. Une **sortie**
+est routée PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une **entrée** l'est de la même façon,
+au point de RÉCEPTION — le point d'attente : `S -> C4 <!pedale.suivant D4`. **Pas de directive de
+routage, pas de flèche, pas d'opérateur de câblage.**
+
+**Trois contraintes**, chacune refusée bruyamment :
+1. **Aucun nom de port** — il vient du système et change de machine en machine ; une scène qui le
+   porterait ne s'ouvrirait plus ailleurs. La scène nomme un **rôle**, l'association vit dehors.
+2. **Aucun alphabet** — il n'y a *rien à résoudre* en entrée : l'événement est **discret**, pas un
+   signal à interpréter. Le mécanisme est événement brut → table → étiquette interne ; l'alphabet
+   n'est qu'un réservoir de NOMS où les étiquettes puisent, et c'est **la table** qui le déclare,
+   en librairie (`lib/mapping.json`, domaine `mapping`).
+3. **Aucune table par défaut** — sans table on écrit des adresses nues, et c'est *explicite*. Une
+   identité implicite rendrait indistinguables « je n'ai pas de table » et « ma table ne fait rien ».
+
+**La liste des canaux d'entrée est FERMÉE et distincte de celle des sorties.** `keyboard` y entre
+(décision Romain 2026-07-26, trois périphériques d'entrée nommés) et nulle part ailleurs :
+`@alphabet.X:keyboard` reste refusé — une sortie clavier n'a pas de sens.
+
+> ⚠️ **L'adresse nue NUMÉRIQUE (`<!brut.60`) n'est PAS implémentée** — arbitrage en attente. Un
+> point suivi d'un NOMBRE est déjà une lecture valide du langage : la **période** (fragment de durée
+> égale) suivie d'un terminal numérique. Les deux lectures sont grammaticalement légitimes ; les
+> départager demande une règle de langage, elle est chez Romain. Aucune forme provisoire n'est
+> tolérée en attendant : la séquence reste période + terminal.
 
 ### `declaration`
 

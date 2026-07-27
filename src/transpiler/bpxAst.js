@@ -1263,6 +1263,20 @@ function emitSceneLibRefs(ast) {
     const adresse = `${d.name}.${d.subkey}`;
     if (!refs.includes(adresse)) refs.push(adresse);
   }
+  // TABLE DE CORRESPONDANCE d'une ENTRÉE (`@in pedale transport.midi mapping.<table>`). C'est une
+  // invocation de librairie comme une autre : son ADRESSE doit sortir, sinon la scène « déclare »
+  // une table que l'aval ne voit jamais. Accepter n'est pas transmettre.
+  //
+  // ⚠️ ELLE SORT MÊME QUAND L'ENTRÉE NE RÉSOUT PAS, et c'est délibéré pour l'instant :
+  // `lib/mapping.json` est volontairement VIDE tant que Romain n'a pas donné de vraie table
+  // (arbitrage 2026-07-27), donc exiger la résolution refuserait TOUS les exemples ratifiés.
+  // Le cri sur entrée inconnue est un chantier ouvert, tranché mais séquencé derrière un
+  // renommage chez Kanopi — quand il arrivera, il vaudra ici comme ailleurs.
+  for (const e of ast.inputs || []) {
+    if (!e || !e.mapping) continue;
+    const adresse = `mapping.${e.mapping}`;
+    if (!refs.includes(adresse)) refs.push(adresse);
+  }
   if (refs.length === 0) return;
   ast.libRefs = [...(ast.libRefs || []), ...refs.filter((r) => !(ast.libRefs || []).includes(r))];
 }

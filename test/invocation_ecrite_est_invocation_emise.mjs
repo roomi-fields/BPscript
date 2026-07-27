@@ -32,17 +32,11 @@ const AXES_HAUTEUR = new Set(['alphabet', 'tuning', 'octaves', 'scale']);
  * Y ajouter une ligne vaut « j'ai mesuré la cause et je l'assume en attendant l'arbitrage ».
  */
 const PERTES_CONNUES = [
-  {
-    scene: 'dhin1',
-    adresse: 'transcription.dhinOO',
-    date: '2026-07-27',
-    pourquoi: "l'entrée n'existe pas dans la librairie (elle s'appelle 'dhin' ; la grammaire "
-            + "d'origine déclare '-ho.dhin--', et la migration a rendu les deux tirets par 'OO'). "
-            + "Le compilateur l'accepte en SILENCE parce que 'transcription' n'est pas un axe à "
-            + "catalogue — une entrée inconnue n'y crie pas. Deux corrections possibles, aucune "
-            + "n'est à moi seul : renommer dans la scène (fichier Kanopi) ou faire crier l'axe "
-            + "(fail-loud, action de frontière). Reporté le 2026-07-27, en attente d'arbitrage.",
-  },
+  // VIDE — et c'est le témoin §3 qui l'a exigé, pas moi. La seule perte inscrite (`dhin1` invoquait
+  // `transcription.dhinOO`, une entrée qui n'existait pas) a été corrigée par Kanopi le 2026-07-27
+  // (`5dd7798`) ; l'adresse résout désormais, vérifié. Le registre a donc rougi POUR SIGNALER QU'IL
+  // ÉTAIT PÉRIMÉ — c'est exactement ce qu'on lui demandait, et c'est ce qui empêche un registre de
+  // survivre à ce qu'il enregistrait.
 ];
 
 // ─── 1. SOCLE — refuser de conclure sur du vide ──────────────────────────────────────────────

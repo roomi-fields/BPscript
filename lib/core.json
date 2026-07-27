@@ -24,6 +24,12 @@
       "midi",
       "osc"
     ],
+    "_inputTransportChannels_doc": "LISTE POSITIVE FERMEE des canaux d'ENTREE, DISTINCTE de celle des sorties. Pourquoi deux listes et pas une : l'addendum Romain du 2026-07-16 qui ferme `transportChannels` ne s'est jamais prononce sur une entree -- il ne connaissait que des SORTIES (le raccord `@alphabet.X:<sortie>`). La decision Romain du 2026-07-26 (hub/decisions/2026-07-26-entrees-sont-des-acteurs-devices-in-et-tables-en-librairie.md) nomme, elle, TROIS peripheriques d'entree : MIDI, OSC, CLAVIER. Le clavier entre donc ici et NULLE PART ailleurs : `@alphabet.X:keyboard` reste refuse, une sortie clavier n'a aucun sens. On AJOUTE UN MEMBRE a une liste fermee, on ne relache pas la regle (arbitrage architecte 2026-07-27).",
+    "inputTransportChannels": [
+      "midi",
+      "osc",
+      "keyboard"
+    ],
     "addressKeys": [
       "ch",
       "channel",
@@ -80,7 +86,8 @@
       "filter",
       "modulation",
       "diapason",
-      "var"
+      "var",
+      "in"
     ],
     "_dest_doc": "LÉGENDE (Romain 2026-07-13, lève l'ambiguïté du schéma — le schéma dit QUOI, pas QUI). Pour chaque mot de catalogAxes/addressKeys/qualifierKeys/reservedDirectives, `_destinations` nomme le COMPOSANT qui le RÉSOUT/CONSOMME en aval (pas seulement qui le PORTE dans l'arbre — BPx porte beaucoup de champs sans les résoudre, cf. hub/contrats/bpx-kairos-arbre.md §1 'BPx DÉRIVE et PORTE ; Kairos RÉSOUT et MATÉRIALISE'). Buckets : génération (BPx) = paramètres du moteur de dérivation (RNG/mode/scan/weight/seed/maxitems/quantization/qclock, FlagStore) ; structure (BPx) = forme temporelle portée par l'arbre (polymétrie/durée/acteur-voix/motifs temporels nommés) ; transport (Kronos) = horloge/ordonnancement ; résolution-hauteur (Kairos) = tout ce que Kairos résout (catalogues alphabet/tuning/octaves, gamme, transposition, diapason) ; sortie (runtime) = ce qu'exécute effectivement le transport/dispatcher aval (adresse, son, contrôles de performance, CV/modulation, code eval, I/O externe) — même quand Kairos calcule la forme intermédiaire (ex. address→event.output), la destination listée ici est l'EFFET final, pas l'étape de calcul ; orchestration hôte (application) = composition/orchestration multi-scène par le `SceneOrchestrator`, HORS moteur (docs/design/SCENES.md §8) ; banni (surface) = mot de directive supprimé, rejeté au parse (tombstone), aucun consommateur aval. `a-confirmer` = vérifié mais non tranchable avec certitude sur les sources de ce dépôt seul ; ne PAS lire comme une affirmation.",
     "_destinations": {
@@ -125,6 +132,7 @@
       "routing": "banni (surface) — la feature @routing (profils d'environnement studio/live/browser, lib/routing.json + routingTable Z1 #105) est SUPPRIMÉE (décision 2026-07-16, Romain : modèle d'environnements abandonné). Fichier lib/routing.json supprimé, buildRoutingTable/routingTable retirés, mot-directive rejeté au parse (tombstone). Ce n'était PAS le moteur BP3 de Bernard mais une feature de notre transpileur.",
       "modulation": "sortie (runtime) — entrées de modulation déclarées SUR LA SORTIE, 'elle appartient à la sortie (le transport)' (docs/design/CV.md:177)",
       "diapason": "résolution-hauteur (Kairos) — hauteur de référence (Hz), résolue par `resoudre-hauteur.ts` (hub/contrats/bpx-kairos-arbre.md §2.1)",
+      "in": "sortie (runtime) — DECLARATION D'UNE ENTREE (decision Romain 2026-07-27, hub/decisions/2026-07-27-forme-des-entrees-in-mapping-adresse-nue.md) : un ROLE nomme, son canal d'entree, et facultativement sa table de correspondance. La scene nomme un role, l'utilisateur associe l'appareil reel, et l'association vit HORS de la scene -- un nom de port vient du systeme et change de machine en machine, une scene qui le porterait ne s'ouvrirait plus ailleurs. AUCUN alphabet sur une entree : il n'y a rien a resoudre de ce cote, l'evenement est DISCRET (Romain : « si sur mon entree je fais un glissando, ca va activer au croisement de la frequence ? »). Le mecanisme est evenement brut vers table vers etiquette interne ; l'alphabet n'est qu'un vocabulaire ou les etiquettes puisent, et c'est LA TABLE qui le declare, en bibliotheque.",
       "var": "structure (BPx) — VARIABLES DE TRAVAIL (décision Romain 2026-07-27, voie 3) : des symboles du flux qui ne sont l'écriture d'aucune note. BPx les PORTE opaquement, comme il porte `wait` ; Kairos ne résout RIEN dessus — c'est tout ce que l'aval a à en savoir. Leur nature dans l'arbre est `var`, distincte de `sounding` (sinon la résolution leur inventerait une hauteur : c'est d'où venait le 7040 Hz mesuré sur Nadaka-1er-essai) et distincte de `rest` (un silence OCCUPE du temps, une variable n'est pas un événement).",
       "ch": "sortie (runtime) — adresse de sortie (canal)",
       "channel": "sortie (runtime) — adresse de sortie (canal)",
