@@ -44,7 +44,7 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
     tuning→resolver) · `SOUNDS.md` (résolution terminaux unifiée : spec < CT < CV cascading) ·
     `CV.md` (CV/signal : ADSR, LFO, ramp) · `EFFECTS.md` · `HOMOMORPHISMS.md` (étiquetage
     post-dérivation) · `REPL.md` (adapters, backticks) · `SCENES.md` (hiérarchie de scènes,
-    scoping flags, @scene/@expose/@map, sys) · (docs moteur BPx migrées dans le dépôt BPx :
+    scoping flags, @scene/@expose/@alias, câblage >>/!>>, sys) · (docs moteur BPx migrées dans le dépôt BPx :
     `../BPx/docs/ARCHITECTURE.md`, `../BPx/docs/ENGINE_SPEC.md`, `../BPx/docs/IMPLEMENTATION.md`)
     · `INTERFACES_BP3.md` (interface WASM in/out) · `TEMPORAL_DEFORMATION.md` (constraint solver)
   - `reference/` — `WASM_HOWTO.md` · `NATIVE_HOWTO.md` · `BP3_FILE_FORMATS.md` · `HO_FORMAT.md`
@@ -177,9 +177,9 @@ sa propre sortie. Trois leçons, et la troisième est la vraie :
   deux-là : **injecter la faute et regarder si le garde rougit**. Une portée ne s'inspecte pas en
   lisant le garde — elle se mesure en le faisant échouer là où on croit qu'il couvre.
 
-### L'INSTRUMENT ment plus souvent que le sujet (6× le 2026-07-27)
+### L'INSTRUMENT ment plus souvent que le sujet (7× le 2026-07-27)
 Quand un chiffre surprend, **suspecter l'instrument AVANT le sujet** — et le vérifier *avant*
-d'envoyer la mesure, pas après. Les six formes payées en un jour :
+d'envoyer la mesure, pas après. Les sept formes payées en un jour :
 1. **Trop court** : un marcheur d'arbre qui ne descend pas dans `voices`/`triggers`/`symbol` a
    rapporté « aucune adresse » et « nature absente » là où elles étaient présentes (3 fois).
 2. **La mauvaise clé** : chercher un CHAMP (`s1_args`) comme si c'était un nom de FICHIER → zéro
@@ -189,8 +189,27 @@ d'envoyer la mesure, pas après. Les six formes payées en un jour :
    d'un outil est une CLAME, pas un oracle » — ici ce n'est même pas l'outil qui ment, c'est la
    façon de l'interroger.)*
 4. **La mauvaise question** : lire une RESTITUTION en croyant lire une PRODUCTION.
+5. **L'instrument, c'est TA LECTURE de ce qu'un autre a mesuré** (2026-07-27, avec BPx). Ils
+   rapportaient un défaut avec un témoin dont la PHRASE était ambiguë — mais leur paragraphe
+   portait aussi le détail qui tranche (« refusé *avec le message qui explique la forme collée* »,
+   et une seule des deux graphies produit ce message). J'ai conclu « votre témoin est FAUX » sur
+   leur phrase, sans relire leur preuve, qui était juste à côté. Or **un témoin faux est une mesure
+   à refaire ; un témoin mal nommé est une mesure JUSTE à renommer** — je leur ai attribué la
+   première. Pire : l'architecte a repris ma formulation et en a fait le point le plus important de
+   son message, donc **une entrée sur-affirmée est entrée dans son dossier par moi**, exactement le
+   mode d'échec que je dénonçais. Règle symétrique : **quand quelqu'un rapporte une mesure, lire ce
+   qu'il a MESURÉ avant de conclure sur ce qu'il a ÉCRIT.** Et corollaire de leur côté, qu'ils ont
+   inscrit et qui vaut ici : quand deux graphies voisines se comportent différemment, **nommer la
+   forme sans ambiguïté** plutôt que mesurer mieux.
 Ces erreurs se **refont**, ce ne sont pas des étourderies — et elles sont d'autant plus dangereuses
 qu'elles produisent les mesures qu'on envoie aux autres, qui agissent dessus.
+
+⚠️ **Et deux défauts voisins se MASQUENT mutuellement** (mesuré avec BPx le 2026-07-27, le fait le
+plus instructif de la journée) : leur point d'attente disparaissait de l'arbre dès qu'une règle
+portait un chiffre nu, ce qui cachait mon défaut d'adresse ; mon défaut produisait chez eux des
+éléments fantômes qui ressemblaient à un problème de portage, ce qui cachait le leur. **Aucun des
+deux ne se voyait seul** — d'où la valeur d'une mesure faite depuis l'autre bout de la chaîne, et
+la raison de ne jamais renvoyer un rapport voisin au motif qu'il « ne reproduit pas chez moi ».
 
 **Cette règle est MÉCANISÉE, ne compte pas sur ta mémoire** : `test/un_mot_nouveau_ne_confisque_pas_un_nom.mjs`
 confronte à chaque portillon le vocabulaire aux noms que les 149 scènes/démos DÉCLARENT. Une
@@ -239,7 +258,7 @@ jamais sur un cas (`bells` reproduisait bit-à-bit, 49/51 scènes divergeaient).
 ### Une garde s'écrit pour la CONSTRUCTION, jamais pour la forme signalée (payé 4× le 2026-07-26/27)
 Une garde écrite en réaction à un cas ne garde que ce cas, reste **verte**, et donne l'illusion que la
 famille est couverte. Quatre fois en deux jours : le filtre d'adresses n'acceptait que les alphabets ;
-la garde des sacs ne voyait que la première paire valuée ; celle de `@map` ne voyait que la forme
+la garde des sacs ne voyait que la première paire valuée ; celle de la correspondance ne voyait que la forme
 pointée (un nom nu passait entier) ; celle du point d'attente n'inspectait que le premier niveau du
 membre droit — l'attente **ancrée** vit sous un assemblage, elle était donc invisible (BPx l'a mesurée,
 `e1be673`). Deux règles, non négociables :
