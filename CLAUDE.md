@@ -14,6 +14,40 @@
 3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
 Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
 
+### ⛔ JE NE SPÉCULE PAS SUR LE LANGAGE — 3 règles dures (Romain, 2026-07-28)
+
+**Son constat, mot pour mot** : « ton rôle c'est d'être le spécialiste du langage BPScript et tu
+spécules complètement, tu ne le maîtrises pas du tout. » En une journée : une graphie INVENTÉE
+montrée à Romain, des antislashs doublés semés dans quatre documents, une forme documentée qui
+fabrique un son fantôme. Les ressources existaient toutes — je ne les ai pas employées.
+
+1. **AUCUNE forme BPScript ne sort de moi sans être passée au compilateur** — message, doc,
+   rapport, sans exception. L'oracle est `/home/romi/dev/bp/atlas/tools/oracle-bpscript.mjs`
+   (chemin absolu : il sert tout l'écosystème). Si je cite une forme, je peux dire OÙ je l'ai
+   compilée ; si je ne peux pas, **je ne la cite pas**.
+   · Mes DOCUMENTS sont gardés (`test/les_exemples_de_la_spec_compilent.mjs`).
+   · Mes MESSAGES le sont depuis le 2026-07-28 : toute forme s'écrit dans un **bloc indenté de
+     quatre espaces**, et `node test/formes_d_un_message.mjs <brouillon>` les compile AVANT
+     l'envoi. L'indentation n'est pas de la mise en page, c'est ce qui rend la règle VÉRIFIABLE À
+     L'ŒIL — une forme non indentée est une forme non vérifiée. Le vérificateur ne devine jamais
+     ce qui est du BPScript dans de la prose : mes phrases citent des directives en permanence.
+
+2. ⚠️ **UNE QUESTION DE SENS NE SE TRANCHE JAMAIS PAR UNE COMPILATION.** J'ai un outil qui répond
+   à « est-ce que ça compile » et AUCUN qui réponde à « est-ce que ça a un sens » — et j'ai passé
+   la journée à employer le premier pour répondre au second. Le fantôme sonore, la voix de code,
+   la forme au point : chaque fois une compilation réussie transformée en affirmation de sens.
+   C'est le piège que j'avais décrit à l'architecte le matin, commis par moi le soir.
+   **Le sens ne se mesure pas, il se demande** : une décision datée, Atlas, ou Romain. Jamais
+   « ça compile, donc ».
+
+3. **Le skill oracle s'invoque À L'OUVERTURE d'une question de langage**, pas quand je bute — un
+   geste de départ, pas un recours. Et **Atlas est l'autorité documentaire** : quand la question
+   est « que dit la référence », je l'interroge au lieu de reconstituer.
+
+⚠️ **Ce que ces règles NE réparent pas** : elles m'empêchent d'inventer des graphies et
+d'affirmer des formes fausses. Elles ne me donnent pas la maîtrise du langage — elle se construit,
+par les décisions et par Romain, pas par le compilateur.
+
 ### Language summary
 - **3 words**: `gate`, `trigger`, `cv` (temporal types)
 - **24 structural symbols**: `@`, `->`, `<-`, `<>`, `{}`, `,`, `()`, `:`, `=`, `[]`, ``` `` ```, `//`, `-`, `_`, `.`, `...`, `!`, `<!`, `#`, `?`, `$`, `&`, `~`, `|`
