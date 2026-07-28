@@ -57,6 +57,13 @@ function annotateBackticks(ast) {
     }
   };
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) label(rule.rhs);
+  // ⚠️ ET LES CORPS DE MACRO, qui n'étaient parcourus PAR RIEN. Un bloc de code y voyageait sans
+  // nature et sans langage — ni étiqueté, ni refusé : muet de bout en bout. Mesuré le 2026-07-28
+  // sur une question de Romain, qui décrit la macro comme une façon LÉGITIME d'associer un nom à
+  // du code (« pour ne pas avoir à écrire le code dans les règles »). Une écriture qu'on veut
+  // légitime ne peut pas être le seul endroit où le langage n'est jamais vérifié.
+  // Coût mesuré AVANT : 0 scène sur 442 porte du code dans un corps de macro.
+  for (const m of ast.macros || []) label(m.body);
 
   // 2. Résolution 'auto' → eval de l'acteur en tête de règle (sur payload.interp).
   const actorEval = {};
@@ -100,6 +107,10 @@ function annotateBackticks(ast) {
     }
   };
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) scanOrphans(rule.rhs);
+  // Même portée que l'étiquetage : un corps de macro est un endroit où du code peut s'écrire,
+  // donc un endroit où son langage doit être connu. Il n'a pas de tête de règle dont hériter —
+  // le tag est donc, aujourd'hui, la seule façon d'y dire le langage.
+  for (const m of ast.macros || []) scanOrphans(m.body);
   return errors;
 }
 

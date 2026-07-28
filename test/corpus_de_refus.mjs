@@ -77,6 +77,13 @@ const REGLES = [
   ['sans-sens', "un caractère qui n'existe pas dans le langage", S('S -> C4 % D4'), S('S -> C4 D4'), 'inattendu'],
   ['sans-sens', "un littéral entre guillemets en tête", S("S -> 'C4' D4"), S('S -> C4 D4'), null],
   ['sans-sens', "un backtick sans langage connu", S('S -> `note("c3")`'), S('S -> `js: 1 + 1`'), 'sans langage'],
+  // ⚠️ LE CORPS DE MACRO N ETAIT PARCOURU PAR RIEN — ni etiquete, ni refuse : un bloc de code y
+  // voyageait sans nature et sans langage, muet de bout en bout. Trouve le 2026-07-28 en mesurant
+  // les quatre ecritures que Romain decrit comme legitimes ; la macro en est une (« pour ne pas
+  // avoir a ecrire le code dans les regles »). Une ecriture qu on veut legitime ne peut pas etre
+  // le seul endroit ou le langage n est jamais verifie.
+  ['sans-sens', "un code sans langage DANS UN CORPS DE MACRO",
+   S('@macro forme `note("c3")`\nS -> forme'), S('@macro forme `js: 1 + 1`\nS -> forme'), 'sans langage'],
   // ⚠️ La voisine valide emploie une MACRO, pas une variable de travail — mesuré : une variable
   // déclarée par '@var' n'est PAS acceptée comme valeur d'alias, alors qu'une macro l'est. Les
   // deux CRÉENT pourtant un nom au sens de la règle d'unicité. Incohérence entre deux de mes
