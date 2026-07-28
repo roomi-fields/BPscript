@@ -218,7 +218,21 @@ for (const [nom, src, attendu] of INTACTS) {
 // que la forme directe s'arrête, et une garde qui ne regarderait que mon étage dirait « ça
 // marche » d'une écriture que personne ne peut jouer.
 // ============================================================================
-const { Session } = await import('../../BPx/dist/index.js');
+// Même motif que le garde de conformité : si la dist du moteur manque ou est périmée, ce garde
+// DOIT le dire en le nommant, et échouer. Ni crash obscur (qu'on lirait comme un défaut de
+// langage), ni saut silencieux (qui verdirait sans rien examiner — la famille fermée le 2026-07-27).
+let Session;
+try {
+  ({ Session } = await import('../../BPx/dist/index.js'));
+} catch (e) {
+  console.error('§8 — dist BPx introuvable ou illisible : `npm run build` côté BPx. '
+    + 'Ce n\'est PAS un défaut du langage. (' + String(e.message).slice(0, 100) + ')');
+  process.exit(1);
+}
+if (typeof Session !== 'function') {
+  console.error('§8 — `Session` absente de la dist BPx : dist périmée ? (npm run build côté BPx)');
+  process.exit(1);
+}
 
 const EXEMPLE_DOCUMENTE = `@core
 @controls
