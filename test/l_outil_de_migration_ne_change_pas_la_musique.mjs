@@ -171,7 +171,9 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   ok(p1.jetons !== p2.jetons,
     '3ter. remplacer une NOTE par une autre doit se VOIR — c\'est la cible même de l\'outil');
   // Et la propriété qui manquait : l'empreinte porte des NOMS, pas des rangs.
-  ok(/A#5/.test(p1.jetons || ''), '3ter. l\'empreinte doit porter le NOM du symbole, pas son numéro');
+  ok(/A#5/.test(p1.jetons || ''), '3ter. l\'empreinte doit porter le NOM du symbole');
+  ok(/\d+\/A#5/.test(p1.jetons || ''),
+    '3ter. et AUSSI son rang — le nom attrape un renommage fautif, le rang un changement d\'ordre');
 }
 {
   // De bout en bout : une scène dont la tête heurte une note, ET qui contient une altération.

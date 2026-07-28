@@ -178,7 +178,13 @@ export function production(source) {
     if (!n || typeof n !== 'object') return;
     if (Array.isArray(n)) return n.forEach(parcourir);
     if (n.span && typeof n.span.startBeat === 'number') {
-      const identite = n.symbolId !== undefined ? nomDe(n.symbolId) : (n.name ?? '?');
+      // Le NOM **et** le rang, pas l'un à la place de l'autre (précision de BPx, et elle est
+      // juste) : le nom attrape un renommage fautif, le rang attrape un changement d'ordre
+      // d'internement que les noms seuls ne montreraient pas. Un comparateur doit être aussi
+      // discriminant qu'il peut l'être — c'est la leçon entière de cette journée, et le coût est
+      // nul. S'il devient trop sévère, il REFUSE : c'est le sens sûr de l'erreur, celui qui se
+      // voit et s'inspecte, jamais celui qui certifie à tort.
+      const identite = n.symbolId !== undefined ? `${n.symbolId}/${nomDe(n.symbolId)}` : (n.name ?? '?');
       jetons.push(`${n.span.startBeat}:${n.span.endBeat}:${identite}`);
     }
     for (const k in n) if (n[k] && typeof n[k] === 'object') parcourir(n[k]);
