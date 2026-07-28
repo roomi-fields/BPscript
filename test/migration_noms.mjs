@@ -110,7 +110,17 @@ export function collisions(ast) {
  */
 export function renommer(source, avant, apres) {
   const motif = new RegExp(`(^|[^A-Za-z0-9_])${avant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9_])`, 'g');
-  return source.replace(motif, `$1${apres}`);
+  // ⚠️ LE CODE ENTRE BACKTICKS EST INTOUCHABLE, et ce n'est pas un scrupule : le comparateur de
+  // production est AVEUGLE à ce qu'il contient. Le code est porté opaque jusqu'au runtime, donc
+  // le réécrire ne change AUCUN jeton produit — l'outil déclarerait « production identique » sur
+  // une scène dont il vient de casser le code. Mesuré le 2026-07-28 : `A -> C4 \`js: A + 1\``
+  // devenait `A_r -> C4 \`js: A_r + 1\`` et l'outil disait OK.
+  // C'est la limite exacte de la garantie : elle porte sur ce que la dérivation produit, pas sur
+  // ce qu'un runtime exécutera plus tard. Là où on ne peut pas prouver, on ne touche pas.
+  return source.split(/(`[^`]*`)/).map((bout) =>
+    bout.startsWith('`') && bout.endsWith('`') && bout.length > 1
+      ? bout                                   // un backtick traverse intact
+      : bout.replace(motif, `$1${apres}`)).join('');
 }
 
 /** Les jetons produits, à graine fixe : début, fin et identité de chaque feuille. */

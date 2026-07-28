@@ -63,6 +63,24 @@ for (const [nom, avant, de, vers, attendu] of VOISINS) {
     `${nom} — attendu « ${attendu} », obtenu « ${renommer(avant, de, vers)} »`);
 }
 
+// ── 2bis. LE CODE ENTRE BACKTICKS EST INTOUCHABLE ────────────────────────────
+// ⚠️ TROUVÉ EN CHERCHANT UN CAS DE REFUS, à la demande de BPx. L'outil réécrivait le code :
+// `A -> C4 \`js: A + 1\`` devenait `A_r -> C4 \`js: A_r + 1\``, et il déclarait « production
+// identique » — CE QUI EST VRAI, et c'est bien le problème. Le code est porté opaque jusqu'au
+// runtime : le réécrire ne change aucun jeton produit, donc le comparateur ne peut RIEN en voir.
+// La garantie de l'outil porte sur ce que la dérivation produit, jamais sur ce qu'un runtime
+// exécutera plus tard. Là où il ne peut pas prouver, il ne touche pas.
+const BACKTICKS = [
+  ['le code n\'est pas réécrit',        'A -> C4 `js: A + 1`',        'A', 'A_r', 'A_r -> C4 `js: A + 1`'],
+  ['plusieurs backticks sur la ligne',  'A -> `a: A` A `b: A`',       'A', 'A_r', 'A_r -> `a: A` A_r `b: A`'],
+  ['hors backtick on renomme toujours', 'A -> A `x` A',               'A', 'A_r', 'A_r -> A_r `x` A_r'],
+];
+console.log(`[outil migration] backticks : ${BACKTICKS.length} cas`);
+for (const [nom, avant, de, vers, attendu] of BACKTICKS) {
+  ok(renommer(avant, de, vers) === attendu,
+    `${nom} — attendu « ${attendu} », obtenu « ${renommer(avant, de, vers)} »`);
+}
+
 // ── 3. LE VERDICT DE BOUT EN BOUT ────────────────────────────────────────────
 // Une scène où le renommage est sûr doit passer AVEC preuve de production identique ; une scène
 // sans collision ne doit rien changer ; une déclaration qui pose une propriété sur un nom existant
@@ -128,7 +146,8 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
 }
 
 // ── 4. TÉMOIN ANTI-RÉTRÉCISSEMENT ────────────────────────────────────────────
-ok(DETECTION.length >= 6 && VOISINS.length >= 6, '4. les matrices ne se sont pas vidées');
+ok(DETECTION.length >= 6 && VOISINS.length >= 6 && BACKTICKS.length >= 3,
+    '4. les matrices ne se sont pas vidées');
 {
   // Et que l'outil sait encore VOIR : sans ce témoin, une régression qui viderait la détection
   // rendrait « aucune collision partout » et tout ce fichier passerait au vert.
