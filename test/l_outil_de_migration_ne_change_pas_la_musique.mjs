@@ -205,24 +205,35 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
 // obligatoire : renommer la tête seule fait perdre son langage au code et la scène est REFUSÉE.
 console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
 {
-  const AMALGAME = '@core\n@actor drums  eval.strudel\nS -> drums\ndrums -> `note("c3 e3")`';
+  // La scène d'essai déclare l'acteur SANS moteur d'évaluation : depuis que l'acteur peut
+  // qualifier un bloc par le point, un acteur À moteur rend la source invalide autrement (le bloc
+  // n'a plus de langage) et l'outil refuserait pour cette raison-là, pas pour l'amalgame.
+  const AMALGAME = '@core\n@alphabet.western\n@actor drums\n  alphabet.western\n  transport.audio\nS -> drums\ndrums -> C4 D4';
   const r = migrerSource(AMALGAME);
   ok(r.ok === true, '3quater. une scène à l\'amalgame doit être migrable');
   ok(!/^drums\s*->/m.test(r.source || ''), '3quater. la tête ne porte plus le nom de l\'acteur');
-  ok(/@actor drums/.test(r.source || ''), '3quater. mais l\'ACTEUR garde son nom — c\'est la règle qui cède');
-  ok(/`strudel:/.test(r.source || ''), '3quater. et le code a reçu son TAG, sans quoi il perdrait son langage');
+  ok(/@actor\s+drums/.test(r.source || ''), '3quater. mais l\'ACTEUR garde son nom — c\'est la règle qui cède');
+  ok(!/^drums\s*->/m.test(r.source || ''), '3quater. et plus aucune règle ne porte le nom de l\'acteur');
   const apres = compileToBPxAST(r.source || '');
   ok(!!apres.ast && apres.errors.length === 0, '3quater. la scène migrée compile sans erreur');
   // Le second geste est-il vraiment indispensable ? On le prouve en ne faisant que le premier.
-  const teteSeule = AMALGAME.replace(/drums ->/, 'drums_r ->').replace('S -> drums', 'S -> drums_r');
-  ok((compileToBPxAST(teteSeule).errors || []).length >= 1,
-    '3quater. renommer la TÊTE SEULE doit casser — c\'est pourquoi le tag est obligatoire');
-  // Un acteur SANS moteur d'évaluation n'est pas concerné : rien n'hérite de lui.
-  // (Cas que Kanopi a testé sur son propre instrument avant de donner son chiffre.)
+  // Sur une voix de CODE, renommer la tête seule casse : le bloc perd son langage. C'est pourquoi
+  // l'outil pose aussi le tag — et c'est aussi ce qui a motivé la forme `acteur.<bloc>`.
+  const codeTeteSeule = '@core\n@actor d  eval.strudel\nS -> d_r\nd_r -> `note("c3")`';
+  ok((compileToBPxAST(codeTeteSeule).errors || []).length >= 1,
+    '3quater. sur une voix de code, renommer la TÊTE SEULE casse — d\'où le tag');
+  // ⚠️ CE TÉMOIN A ÉTÉ RETOURNÉ, ET LA DISTINCTION MÉRITE D'ÊTRE GARDÉE. Kanopi avait raison :
+  // un acteur SANS moteur d'évaluation n'est PAS une voix de code, et ne compte pas dans le
+  // dénombrement des voix à migrer — c'est le cas qu'il a testé avant de donner son chiffre.
+  // MAIS la règle d'unicité, elle, refuse qu'une tête porte le nom d'UN acteur, quel qu'il soit.
+  // L'outil doit donc migrer tout ce que la règle refuse, sinon il migre MOINS qu'elle ne refuse
+  // et la différence tombe sur l'auteur, sans outil pour l'aider.
+  // Ici : on renomme, et on ne pose AUCUN tag — il n'y a pas de code à qualifier.
   const sansEval = '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  transport.audio\nS -> v\nv -> C4 D4';
   const r2 = migrerSource(sansEval);
-  ok(r2.ok && r2.aucunChangement,
-    '3quater. un acteur SANS moteur d\'évaluation ne doit RIEN déclencher');
+  ok(r2.ok && !r2.aucunChangement, '3quater. un acteur SANS moteur est migré aussi (la règle le refuse)');
+  ok(!/`/.test(r2.source || ''), '3quater. et AUCUN tag n\'y est posé — il n\'y a pas de code');
+  ok(/@actor v/.test(r2.source || ''), '3quater. l\'acteur y garde également son nom');
 }
 {
   // ⚠️ LE POINT QUE L'ARCHITECTE A DEMANDÉ DE SOIGNER, dans les DEUX SENS. L'identifiant généré du
@@ -230,8 +241,10 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // écarté. Il est neutralisé PAR SA FORME — jamais par sa clé, qui est la même que celle portant
   // les notes. L'écarter par la clé rouvrirait le trou que Kanopi a trouvé le 2026-07-28.
   const { production } = await import('./migration_noms.mjs');
-  const avant = production('@core\n@actor d  eval.strudel\nS -> d\nd -> `note("c3")`');
-  const apres = production('@core\n@actor d  eval.strudel\nS -> d_r\nd_r -> `strudel: note("c3")`');
+  // Les deux écritures VIVANTES du même bloc : l'acteur qui qualifie, et le tag. Elles ne
+  // diffèrent que par l'identifiant généré — c'est lui qu'on neutralise.
+  const avant = production('@core\n@actor d  eval.strudel\nS -> voix\nvoix -> d.`note("c3")`');
+  const apres = production('@core\n@actor d  eval.strudel\nS -> voix\nvoix -> `strudel: note("c3")`');
   ok(!avant.erreur && !apres.erreur, '3quater. les deux témoins doivent se dériver');
   ok(avant.jetons === apres.jetons,
     '3quater. l\'identifiant généré est NEUTRALISÉ — la migration ne change pas la production');

@@ -38,9 +38,13 @@ function backtickNodes(ast) {
 
 // 3. Interp 'auto' résolu DANS LE PAYLOAD depuis l'eval de l'acteur (tête de règle = acteur)
 {
-  const r = compileToBPxAST('@actor stru\n  eval.strudel\nS -> stru\nstru -> `note("c2")`');
+  // ⚠️ LA SOURCE DE L'HÉRITAGE A CHANGÉ LE 2026-07-28 : le langage venait du nom de la TÊTE DE
+  // RÈGLE, ce qui obligeait à nommer une règle comme un acteur — l'amalgame refusé depuis. Il
+  // vient désormais de l'acteur qui QUALIFIE le bloc par le point, là où il qualifie déjà une note.
+  const r = compileToBPxAST('@actor stru\n  eval.strudel\nS -> voix\nvoix -> stru.`note("c2")`');
   const bt = backtickNodes(r.ast)[0];
-  check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval acteur) dans payload.interp : " + JSON.stringify(bt && bt.payload));
+  check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval de l'acteur qui qualifie) : " + JSON.stringify(bt && bt.payload));
+  check(bt && bt.actor === 'stru', "et le bloc porte l'IDENTITÉ de la voix, que le tag seul ne donne pas : " + JSON.stringify(bt && bt.actor));
 }
 
 // 4. flagStates LU depuis la directive @flag (pas de table)

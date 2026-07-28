@@ -80,7 +80,23 @@ ne l'est PAS : elle **produit et sort par ses propres moyens** ; le rerouting de
 travers nos runtimes est **écarté** (décision 2026-07-14 — pixels/audio déjà synthétisés non routables).
 
 Le backtick est un **terminal de plein droit** : il occupe une position dans le flux comme une note
-(cf. `BacktickStandalone`, EBNF §4.13). Le **tag** désigne l'interpréteur.
+(cf. `BacktickStandalone`, EBNF §4.13).
+
+**Deux façons de dire son langage, et elles ne rendent pas la même chose** (Romain, 2026-07-28) :
+
+| Écriture | Ce qu'elle donne |
+|---|---|
+| `motif -> ` `` `strudel: …` `` | le **langage** seul — le bloc ne porte aucun acteur |
+| `motif -> drums.` `` `…` `` | le **langage ET l'identité de la voix** — l'acteur qualifie le bloc par le point, là où il qualifie déjà une note (`sitar.Sa`) |
+
+Un tag explicite reste prioritaire : il surcharge l'héritage, comme partout ailleurs.
+
+⚠️ **Pourquoi la seconde existe.** L'ancienne écriture faisait porter le nom de l'acteur à la
+**tête de règle** — un amalgame entre un nom d'acteur et un nom de règle, refusé depuis. Or cet
+amalgame faisait **deux** choses : donner le langage, et donner son identité à la voix. Le tag ne
+remplace que la première : mesuré, un bloc tagué ne porte **aucun** acteur, donc tout ce qui est
+clé par acteur en aval cesse de le trouver — un voyant de santé est resté au vert sur une voix qui
+erreurait en continu. Le point rend les deux.
 
 ### Durée d'une voix de code (TRANCHÉ — décision Romain, cohérente ARCHITECTURE.md ; hub backlog A3)
 

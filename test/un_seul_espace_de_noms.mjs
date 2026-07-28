@@ -83,6 +83,10 @@ const DOIVENT_PASSER = [
   // REFUSÉS, plus bas.
   ['une voix de code à la forme RATIFIÉE : le code annonce son langage',
    '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> `hydra: osc(4).out()`'],
+  // La forme décidée par Romain le 2026-07-28 : l'acteur QUALIFIE le bloc par le point, à droite,
+  // là où il qualifie déjà une note. Elle donne le langage ET l'identité de la voix.
+  ['un ACTEUR qui qualifie un bloc de code par le point',
+   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`'],
   ['des noms sans rapport entre eux',
    '@core\n@alphabet.western\n@macro grondement saw >> audio\n@alias souffle cc:2\nmotif -> C4\nS -> motif'],
   ['un nom PROCHE d\'un terminal, mais qui n\'en est pas un',

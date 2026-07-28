@@ -264,8 +264,13 @@ export function production(source) {
  * Mesuré : tête renommée seule → « Backtick sans langage » ; tête renommée + tag → identique.
  */
 function migrerAmalgame(source, ast, suffixe) {
+  // ⚠️ TOUS LES ACTEURS, pas seulement ceux à moteur d'évaluation. La règle d'unicité refuse
+  // qu'une tête porte le nom d'UN acteur, quel qu'il soit — l'outil doit donc migrer tout ce que
+  // la règle refuse. Il ne couvrait que les voix de code : il migrait MOINS que la règle ne
+  // refusait, et la différence serait tombée sur l'auteur, sans outil pour l'aider.
+  // Le tag n'est posé que là où il y a un moteur ET du code : ailleurs, renommer suffit.
   const moteurDe = {};
-  for (const a of ast.actors || []) if (!a?.synthetic && a.properties?.eval) moteurDe[a.name] = a.properties.eval;
+  for (const a of ast.actors || []) if (!a?.synthetic && a.name) moteurDe[a.name] = a.properties?.eval ?? null;
   if (!Object.keys(moteurDe).length) return null;
 
   // Les têtes de règle qui portent un nom d'acteur À MOTEUR D'ÉVALUATION. Un acteur SANS moteur
@@ -274,7 +279,10 @@ function migrerAmalgame(source, ast, suffixe) {
   const tetes = new Set();
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
-      for (const t of r.lhs || []) if (t?.name && !t.negated && moteurDe[t.name]) tetes.add(t.name);
+      // ⚠️ `in`, PAS la valeur : un acteur SANS moteur a la valeur `null`, qui est fausse. Tester
+      // la valeur faisait rater exactement les acteurs que je venais d ajouter — un bug introduit
+      // par la correction elle-meme, vu parce que le garde a continue de rougir.
+      for (const t of r.lhs || []) if (t?.name && !t.negated && (t.name in moteurDe)) tetes.add(t.name);
     }
   }
   if (!tetes.size) return null;
@@ -285,9 +293,11 @@ function migrerAmalgame(source, ast, suffixe) {
     const moteur = moteurDe[nom];
     // 1. LE TAG D'ABORD, tant que la tête porte encore le nom : c'est lui qui identifie les lignes
     //    concernées. Seuls les backticks SANS tag sont touchés (`langage: …` est déjà explicite).
-    migre = migre.replace(
-      new RegExp(`(^${nom}\\s*->[^\n]*?)\`(?![A-Za-z_][A-Za-z0-9_]*\\s*:)`, 'gm'),
-      `$1\`${moteur}: `);
+    if (moteur) {
+      migre = migre.replace(
+        new RegExp(`(^${nom}\\s*->[^\n]*?)\`(?![A-Za-z_][A-Za-z0-9_]*\\s*:)`, 'gm'),
+        `$1\`${moteur}: `);
+    }
     // 2. PUIS la tête et ses appels cessent de porter le nom de l'acteur.
     //    ⚠️ La ligne de DÉCLARATION est épargnée — l'acteur garde son nom, c'est la règle qui cède.
     //    ⚠️ Et un renvoi POINTÉ (`nom.terminal`) est épargné aussi : là le nom désigne bien
@@ -298,7 +308,7 @@ function migrerAmalgame(source, ast, suffixe) {
     migre = migre.split('\n').map((l) => (l.trimStart().startsWith('@actor')
       ? l
       : l.replace(new RegExp(`(^|[^A-Za-z0-9_])${nom}(?![A-Za-z0-9_.])`, 'g'), `$1${cible}`))).join('\n');
-    gestes.push({ de: nom, vers: cible, sortes: [`voix de code ${moteur}`] });
+    gestes.push({ de: nom, vers: cible, sortes: [moteur ? `voix de code ${moteur}` : 'acteur'] });
   }
   return { source: migre, gestes };
 }

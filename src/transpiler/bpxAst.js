@@ -65,28 +65,29 @@ function annotateBackticks(ast) {
   // Coût mesuré AVANT : 0 scène sur 442 porte du code dans un corps de macro.
   for (const m of ast.macros || []) label(m.body);
 
-  // 2. Résolution 'auto' → eval de l'acteur en tête de règle (sur payload.interp).
-  const actorEval = {};
-  for (const a of ast.actors || []) if (a.properties && a.properties.eval) actorEval[a.name] = a.properties.eval;
-  // Tête de règle = premier atome NON NIÉ (un `#X` inline de tête est un contexte,
-  // pas la tête — préparé P3, flip Palier 4 ; inerte tant que le flip n'émet rien).
-  const lhsHead = (lhs) => {
-    const els = Array.isArray(lhs) ? lhs : [lhs];
-    const h = els.find((e) => e && e.negated !== true);
-    return h && h.name ? h.name : null;
-  };
-  const resolve = (els, evalKey) => {
+  // 2. Résolution 'auto' → eval de L'ACTEUR QUI QUALIFIE LE BLOC (sur payload.interp).
+  //
+  // ⚠️ CE CHEMIN A CHANGÉ LE 2026-07-28. Il lisait le nom de la TÊTE DE RÈGLE et le cherchait dans
+  // la table des acteurs : c'est ce qui obligeait à nommer une règle comme un acteur — l'amalgame
+  // que Romain a qualifié d'erreur grave, et que la règle d'unicité refuse désormais. Ce chemin
+  // était donc DEVENU MORT : une tête ne peut plus porter un nom d'acteur.
+  // Il est remplacé, pas doublé : le langage vient de l'acteur qui QUALIFIE le bloc par le point
+  // (`drums.\`note("c3")\``), là où il qualifie déjà une note (`sitar.Sa`). Un nom de règle
+  // redevient une étiquette pour appeler la règle, et rien d'autre.
+  const acteurEval = {};
+  for (const a of ast.actors || []) if (a.properties && a.properties.eval) acteurEval[a.name] = a.properties.eval;
+  const resoudre = (els) => {
     for (const el of els || []) {
       if (!el || typeof el !== 'object') continue;
-      if (isBt(el) && el.payload && el.payload.interp === 'auto') el.payload.interp = evalKey;
-      if (el.elements) resolve(el.elements, evalKey);
-      if (el.voices) for (const v of el.voices) resolve(v, evalKey);
+      if (isBt(el) && el.payload && el.payload.interp === 'auto' && el.actor && acteurEval[el.actor]) {
+        el.payload.interp = acteurEval[el.actor];
+      }
+      if (el.elements) resoudre(el.elements);
+      if (el.voices) for (const v of el.voices) resoudre(v);
     }
   };
-  for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) {
-    const evalKey = actorEval[lhsHead(rule.lhs)];
-    if (evalKey) resolve(rule.rhs, evalKey);
-  }
+  for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) resoudre(rule.rhs);
+  for (const m of ast.macros || []) resoudre(m.body);
 
   // 3. FAIL-LOUD orphelin (décision CV-curve 2026-07-04 + ajustement [299]) : un backtick
   //    de flux resté `interp:'auto'` n'a NI tag NI eval d'acteur en tête → langage inconnu,
@@ -97,8 +98,10 @@ function annotateBackticks(ast) {
       if (!el || typeof el !== 'object') continue;
       if (isBt(el) && el.payload && el.payload.interp === 'auto') {
         errors.push({
-          message: `Backtick sans langage : ni tag (\`js: …\`) ni acteur voix-code (@actor … eval.X) `
-                 + `en tête de règle — le langage doit être connu, jamais deviné (décision CV-curve [299]).`,
+          message: `Backtick sans langage — il doit être connu, jamais deviné. Deux façons de le `
+                 + `dire : un TAG dans le bloc (\`js: …\`), ou un ACTEUR qui qualifie le bloc par le `
+                 + `point (\`drums.\`…\`\`, avec '@actor drums eval.<moteur>'). Le second porte AUSSI `
+                 + `l'identité de la voix, que le tag seul ne donne pas.`,
           line: el.line,
         });
       }

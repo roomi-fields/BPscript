@@ -3725,6 +3725,28 @@ function parse(tokens, opts = {}) {
       // CÔTÉS (`drum.on`) → porté OPAQUE (même nœud {Symbol,name,actor}, `opaqueComponent:true`) :
       // le parser N'INTERPRÈTE PAS (PORTER≠RÉSOUDRE) — module(son)/acteur(hauteur)/homo décidé à
       // la RÉSOLUTION aval. byte-id sûr : aucune grammaire n'utilise un point glué-des-deux-côtés.
+      // ── L'ACTEUR QUALIFIE UN BLOC DE CODE, PAR LE POINT, À DROITE ────────────────
+      // `drums.\`note("c3")\`` — décidé par Romain le 2026-07-28, et c'est la forme qui manquait.
+      //
+      // ⚠️ POURQUOI ELLE EXISTE, et ce n'est pas un confort d'écriture. L'ancienne forme faisait
+      // porter le nom de l'acteur À LA TÊTE DE RÈGLE — un amalgame, refusé depuis. Or cet amalgame
+      // faisait DEUX choses : il donnait son langage au code, ET son identité à la voix. Le tag
+      // (`\`strudel: …\``) ne remplace que la première : mesuré, un bloc tagué ne porte AUCUN acteur,
+      // donc tout ce qui est clé par acteur en aval cesse de le trouver — Kanopi a mesuré un voyant
+      // de santé resté AU VERT sur une voix qui erreure en continu.
+      // Cette forme rend les deux : le point qualifie le bloc comme il qualifie une note
+      // (`sitar.Sa`), l'acteur garde son nom, et la règle n'est qu'une règle.
+      if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.BACKTICK
+          && libCtx.actors && libCtx.actors[name]) {
+        advance();                                  // le point
+        const raw = advance().value;                // le bloc
+        const t = tryBacktickTag(raw);
+        // Un tag EXPLICITE reste prioritaire — il surcharge l'héritage, comme partout ailleurs.
+        return t
+          ? { type: 'BacktickStandalone', tag: t.tag, code: t.code, actor: name, line: tok.line }
+          : { type: 'BacktickInline', code: raw, tag: null, actor: name, line: tok.line };
+      }
+
       const gluedMember = at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT;
       const knownActor = gluedMember && libCtx.actors && libCtx.actors[name];
       const opaqueComponent = gluedMember && !knownActor && !peek(1).spaceBefore;
