@@ -61,6 +61,18 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
    tout réveil (session ou ping) = `tour inbox`. (b) **RAPPORT AVANT IDLE** — jamais s'arrêter en
    silence : dernière action = `tour send architecte` avec `FINI: <quoi> + commit` ou
    `BLOQUÉ: <sur quoi>`.
+0bis. ⛔ **UN ACQUITTEMENT NE SE TRONQUE JAMAIS — règle mécanique, pas vigilance** (payé 3× le
+   2026-07-28, dont deux fois APRÈS l'avoir reconnu). Le geste, vérifiable d'un coup d'œil sur la
+   commande elle-même : **`tour inbox --ack` se lance NU** — aucun tube, aucune redirection, aucun
+   `tail`/`head`/`grep`. Sa sortie EST la lecture ; l'abréger, c'est acquitter sans avoir lu.
+   Corollaire : lire d'abord avec `tour inbox` (sans `--ack`), traiter, puis acquitter nu.
+   ⚠️ **Pourquoi c'est grave et pas une faute de forme** : un message acquitté sans être lu est
+   **indistinguable d'un message traité**. C'est exactement le mode d'échec muet que je passe mes
+   journées à chasser chez les autres, commis sur ma propre boucle — et deux fois sur des messages
+   qui ouvraient un chantier. La parade n'est pas de faire attention : c'est que la commande
+   n'ait pas de tube. (Même famille que « le code de sortie lu après un tube » : la façon
+   d'interroger l'outil détruit l'information.)
+
 1. **Identité** (une fois/session) : `export BP_AGENT=bpscript`.
 2. **Début de session** : `~/dev/bp/hub/tour inbox` + lire `TABLEAU.md` et mes `contrats/`.
 3. **Écrire/arbitrer** : `~/dev/bp/hub/tour send <dest> "msg"` (`architecte` = destinataire valide).
