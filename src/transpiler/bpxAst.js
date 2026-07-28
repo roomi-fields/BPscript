@@ -633,27 +633,47 @@ function resolveHomomorphismMarkers(ast) {
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) mark(r.rhs);
 }
 
+/**
+ * Les terminaux de TOUS les alphabets effectifs de la scène — UNE seule définition.
+ *
+ * Deux gardes en ont besoin et posent la MÊME question : « ce mot est-il une note ici ? ».
+ * `validateTerminals` la pose sur un mot écrit dans une règle ; la garde des noms de macro la pose
+ * sur un nom déclaré. Dupliquer le calcul, c'est se garantir qu'un jour l'une acceptera ce que
+ * l'autre refuse — la dérive qu'on paie ailleurs, appliquée aux garde-fous eux-mêmes.
+ *
+ * « Effectif » = l'alphabet de la scène ET celui de chaque acteur. Les deux formes comptent :
+ * décorée du registre (`madhya_sa`) et nue (`sa`), parce que les deux s'écrivent.
+ */
+function terminauxEnPortee(ast) {
+  const terminaux = new Set();
+  const ajouter = (name, octaves) => {
+    const lib = resolveActorAlphabet(name, ast.directives);
+    if (!lib || !lib.notes) return false;
+    for (const t of expandAlphabetTerminals(lib, octaves)) terminaux.add(t);
+    const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
+      ? Object.keys(lib.alterations) : [''];
+    for (const note of lib.notes) for (const alt of alts) terminaux.add(note + alt); // forme nue
+    return true;
+  };
+  let aUnAlphabet = false;
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
+  if (sceneAlpha) aUnAlphabet = ajouter(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || aUnAlphabet;
+  for (const a of ast.actors || []) {
+    const p = a.properties || {};
+    if (p.alphabet) aUnAlphabet = ajouter(p.alphabet, p.octaves || null) || aUnAlphabet;
+  }
+  return { terminaux, aUnAlphabet };
+}
+
 function validateTerminals(ast) {
   if (!ast) return [];
   const errors = [];
   const codeVoice = new Set((ast.actors || []).filter((a) => (a.properties || {}).eval).map((a) => a.name));
 
   // Vocabulaire VALIDE = terminaux de TOUS les alphabets effectifs (octaviés + formes nues).
-  const known = new Set(['lambda']);
-  const addAlphabet = (name, octaves) => {
-    const lib = resolveActorAlphabet(name, ast.directives);
-    if (!lib || !lib.notes) return false;
-    for (const t of expandAlphabetTerminals(lib, octaves)) known.add(t);
-    const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
-      ? Object.keys(lib.alterations) : [''];
-    for (const note of lib.notes) for (const alt of alts) known.add(note + alt); // forme nue (défaut d'octave)
-    return true;
-  };
-  let anyAlphabet = false;
-  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
-  const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
-  if (sceneAlpha) anyAlphabet = addAlphabet(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || anyAlphabet;
-  for (const a of ast.actors || []) { const p = a.properties || {}; if (p.alphabet) anyAlphabet = addAlphabet(p.alphabet, p.octaves || null) || anyAlphabet; }
+  const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
+  known.add('lambda');
   // Symboles DÉCLARÉS : non-terminaux (LHS), déclarations gate/trigger/cv, scènes, homomorphismes.
   const declared = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
@@ -1238,6 +1258,55 @@ function emitActorLibRefs(ast) {
  * ferme le silence, on ne remplit pas le vide : `note.C#2` tombe donc, faute de référent déclaré,
  * et c'est le bon comportement tant que la forme n'existe pas.
  */
+/**
+ * GARDE — une macro ne peut pas s'appeler comme un TERMINAL DE L'ALPHABET ACTIF.
+ *
+ * Règle de Romain (2026-07-28) : « une macro nommée G4 (lettre de l'alphabet actif) doit tomber en
+ * erreur LORS DE LA DÉCLARATION. »
+ *
+ * CE QU'ELLE VISE, et ce n'est PAS un défaut d'exécution. Kairos a mesuré que la macro l'emporte
+ * sur l'alphabet : `C4!G4` rend une hauteur nulle et l'action de la macro, il n'y a pas de son
+ * fantôme. Le problème est pour l'AUTEUR : en lisant `C4!G4`, il ne peut pas savoir si `G4` est
+ * une note ou sa macro. On refuse donc l'ambiguïté À LA SOURCE plutôt que de s'en remettre à une
+ * précédence qui, elle, fonctionne. Un lecteur ne devrait jamais avoir à connaître l'ordre de
+ * priorité pour lire une règle.
+ *
+ * REFUS À LA DÉCLARATION, PAS À L'USAGE : on n'attend pas que le conflit se joue quelque part, on
+ * interdit de créer le nom. Une macro déclarée et jamais employée est refusée elle aussi.
+ *
+ * ⚠️ L'ORDRE DANS LE FICHIER N'ENTRE PAS EN JEU, et c'est mesuré : la vérification tourne APRÈS
+ * la résolution des acteurs, donc après que toutes les directives ont été lues. Une macro écrite
+ * AVANT l'alphabet qu'elle heurte est refusée exactement pareil. Une garde qui aurait regardé au
+ * moment où la ligne se lit n'aurait attrapé qu'une moitié des cas — celle où l'auteur a rangé
+ * son fichier dans le bon sens.
+ *
+ * PORTÉE, ET SON COMPLÉMENT — parce qu'un balayage qui tait ce qu'il laisse dehors fait
+ * retrouver les mêmes survivants : cette garde ne couvre QUE `@macro`, sur consigne explicite
+ * (Romain a dit macro). Les autres déclarations qui créent un nom — alias, entrée, acteur,
+ * variable de travail, déclaration de symbole — portent la MÊME ambiguïté et ne sont PAS
+ * couvertes ici : les étendre serait appliquer une règle plus large que la directive. Elles sont
+ * nommées et remontées, l'arbitrage est chez Romain.
+ */
+function refuserMacroHomonymeDunTerminal(ast) {
+  const erreurs = [];
+  if (!(ast.macros || []).length) return erreurs;
+  // MÊME définition que la garde des terminaux de règle — un mot qui serait refusé comme note
+  // ne doit pas être acceptable comme nom de macro, et réciproquement.
+  const { terminaux } = terminauxEnPortee(ast);
+  if (!terminaux.size) return erreurs;
+  for (const m of ast.macros || []) {
+    if (!m || typeof m.name !== 'string' || !terminaux.has(m.name)) continue;
+    erreurs.push({
+      message: `'@macro ${m.name}' porte le nom d'un TERMINAL de l'alphabet actif — une règle qui `
+        + `écrirait '${m.name}' ne dirait plus si elle joue la note ou la macro. Choisir un autre `
+        + `nom pour la macro (par exemple un mot du geste qu'elle fait). Le refus tombe à la `
+        + `DÉCLARATION : le nom n'a pas besoin d'être employé pour que l'ambiguïté existe.`,
+      line: m.line,
+    });
+  }
+  return erreurs;
+}
+
 function validateAliases(ast) {
   const erreurs = [];
   if (!(ast.aliases || []).length) return erreurs;
@@ -1380,6 +1449,8 @@ export function compileToBPxAST(source, environnement) {
     // synthétique `default` n'a pas d'alphabet (faux « no alphabet property » sinon).
     deriveAlphabetFromTuning(ast); // alphabet ← accordage quand @alphabet absent (bug 1.1) — AVANT resolveActors
     result.errors.push(...resolveActors(ast).errors);
+    // Une macro ne peut pas porter le nom d'un terminal de l'alphabet actif (Romain 2026-07-28).
+
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
@@ -1404,6 +1475,10 @@ export function compileToBPxAST(source, environnement) {
     const libCtx = loadLibsFromDirectives(directives);
     result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
     result.errors.push(...validateReferences(ast)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
+    // Le nom d'une macro se vérifie ICI, avec les terminaux de règle : même question, même
+    // définition, et les acteurs sont pliés à ce stade (avant, `ast.actors` est encore vide —
+    // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).
+    result.errors.push(...refuserMacroHomonymeDunTerminal(ast));
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
