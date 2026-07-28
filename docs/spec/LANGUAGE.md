@@ -678,12 +678,28 @@ voix ne bave pas dans les voix paralleles.
 | `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- voyage avec C4, repliquee si C4 l'est |
 | `C4 !(...)` **espace** | **flux EVENEMENT SEPARE** (non conjoint) -- pose seul dans la sequence |
 | `B3!C7` *(`!` entre symboles, sans parentheses)* | **SIMULTANE / accord** (conjoint NON-flux) -- operateur existant, rien a voir avec le flux |
+| `!f` *(en tete, sans primaire)* | **objet HORS-TEMPS** -- element pose seul, sans duree (`OutTimeObject`) |
+| `![@seed:N]` | **directive de production DANS LE FLUX** -- element sans duree (`InstantControl`) |
+| `!>>` | **COUPER un cablage** -- la negation de l'operateur `>>`, pas un instantane |
+| `!=` *(dans un drapeau)* | **comparaison de difference** -- la negation de l'operateur `=` |
 
-`!` est **surcharge** : entre symboles (`B3!C7`) = simultaneite/accord ; suivi de `(...)` = flux.
+`!` est **surcharge**, et **c'est ce qui SUIT le `!` qui tranche, jamais le `!` lui-meme.** La
+table ci-dessus enumere TOUTES les lectures mesurees dans le langage -- une enumeration qui en
+oublie une donne l'illusion que le signe est plus simple qu'il n'est. Deux familles s'y lisent :
+devant un **element** (symbole, `(...)`, `[@...]`) le `!` marque **l'instantane** -- pose dans le
+flux, sans occuper de temps ; devant un **operateur** (`>>`, `=`) il en marque la **negation**.
+Les deux cohabitent aujourd'hui sans se contredire parce qu'elles ne s'appliquent jamais au meme
+genre de suite.
+
 La **regle d'espace** ne s'applique qu'a **`!(...)`** : **colle = ancre** au terminal precedent,
 **espace = separe**. Un `!(...)` colle sans terminal avant lui (debut de regle ou de groupe, ex.
 `{!(vel:80) ...}`) retombe en **separe** (pas d'ancre possible). Dans l'AST, le `!(...)` porte
 `conjoint: true|false` ; seul le simultane `B3!C7` reste un `SimultaneousGroup` (inchange).
+
+**L'enchainement ne se factorise pas : chaque element porte SON `!`**, et ils se suivent sans
+autre separateur qu'une espace. `Internal -> !(ins:1) !(chan:1) !(cc.98:0)` donne trois elements
+freres ; `C4!dha!phase` donne un primaire et deux secondaires. Plusieurs elements apres un SEUL
+`!` n'est pas une forme du langage.
 
 **Precedence** (du plus fort au plus faible) :
 **override de note `Sa(vel:120)` > flux `!(...)` > contenance `(...)` > defauts de declaration.**
