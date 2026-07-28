@@ -195,6 +195,26 @@ export function renommer(source, avant, apres) {
  * (Proposition de Kanopi, retenue telle quelle.)
  */
 const CHRONOMETRES = /^(derivation[A-Za-z]*Ms|[a-z][A-Za-z]*TimeMs|elapsed[A-Za-z]*|timestamp[A-Za-z]*)$/;
+/**
+ * L'identifiant généré d'un bloc de code — EXCLUSION NOMMÉE, arbitrée par Romain (2026-07-28).
+ *
+ * Il encode COMMENT le langage a été connu : `BTauto0` quand il restait à résoudre, `BTstrudel0`
+ * quand il est déclaré. Migrer une voix de code vers le tag le fait donc changer — parce qu'un
+ * FAIT a changé, pas la musique : même code, même langage, même instant.
+ * Romain, mot pour mot : « c'est juste un identifiant dans l'AST, on s'en fout de comment il
+ * s'appelle ».
+ *
+ * ⚠️ C'est une exclusion ARBITRÉE, pas un champ que j'ai écarté parce qu'il me gênait. La
+ * distinction est celle qui m'a coûté trois corrections aujourd'hui : une empreinte qui CHOISIT
+ * ses champs ne vaut que le choix. Ici le choix n'est pas le mien, il est écrit, daté et motivé.
+ */
+/**
+ * ⚠️ NEUTRALISÉ PAR SA FORME, JAMAIS PAR SA CLÉ. L'identifiant vit sous la clé `token` — la MÊME
+ * que celle qui porte les notes. Écarter la clé rouvrirait exactement le trou que Kanopi a trouvé
+ * ce soir (un comparateur aveugle aux hauteurs). On ne neutralise donc que les VALEURS de la forme
+ * `BT<langage><rang>`, qui ne peuvent être qu'un identifiant généré de bloc de code.
+ */
+const NOM_GENERE_DE_CODE = /^BT[A-Za-z]*\d+$/;
 export function production(source) {
   const { ast, errors } = compileToBPxAST(source);
   if (!ast) return { erreur: (errors || []).map((e) => e.message ?? String(e)).join(' | ') || 'aucun arbre' };
@@ -207,7 +227,13 @@ export function production(source) {
   }
   const arbre = session.tree ?? session._lastTree ?? null;
   if (!arbre) return { erreur: 'aucun arbre dérivé' };
-  return { jetons: JSON.stringify(arbre, (k, v) => (CHRONOMETRES.test(k) ? undefined : v)) };
+  return {
+    jetons: JSON.stringify(arbre, (k, v) => {
+      if (CHRONOMETRES.test(k)) return undefined;
+      if (typeof v === 'string' && NOM_GENERE_DE_CODE.test(v)) return 'BT<identifiant généré>';
+      return v;
+    }),
+  };
 }
 
 /**
