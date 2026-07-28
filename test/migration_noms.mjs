@@ -38,6 +38,14 @@
  * Élargir la collecte aux chaînes n'est donc pas « ajouter une extension de fichier » : ça
  * commence par corriger l'ancrage pour ce cas, sinon l'outil fabrique en silence le défaut qu'il
  * est censé prévenir.
+ *
+ * ⚠️ ET UNE CONSÉQUENCE DE LA RÈGLE D'UNICITÉ, POUR QUI VOUDRA COMPARER À L'HISTOIRE.
+ * Depuis qu'elle est posée, une scène d'AVANT la migration NE COMPILE PLUS avec le compilateur
+ * d'aujourd'hui — c'est le but, mais ça rend l'histoire inmesurable par la voie évidente. Toute
+ * comparaison avant/après doit donc extraire AUSSI LE COMPILATEUR D'AVANT, sinon le « avant » ne
+ * produit rien et l'on conclut sur un vide en croyant conclure sur une différence.
+ * bp3-frontend a failli s'y prendre, l'a vu, et l'a dit (2026-07-28). Quiconque re-mesurera une
+ * scène ancienne dans trois mois tombera dessus : c'est écrit ici, pas dans un fil de messages.
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
