@@ -24,6 +24,20 @@
  *   node test/migration_noms.mjs --suffixe=_nt <fichier.bps>        → choisir le suffixe (défaut `_r`)
  *
  * Chaque propriétaire le lance SUR SON PROPRE DÉPÔT. Cet outil ne va écrire nulle part de lui-même.
+ *
+ * ⚠️ CE QU'IL NE COUVRE PAS, ET LE PIÈGE QUI ATTEND CELUI QUI VOUDRA L'ÉLARGIR.
+ * Il ne parcourt que les fichiers de SCÈNE. Or des grammaires vivent aussi DANS des fichiers de
+ * test, écrites en chaînes de caractères — elles échappent donc à la migration et rougissent quand
+ * la règle d'unicité est posée (4 cas chez BPx, repris à la main ; Kanopi a le même angle mort).
+ *
+ * ET LE PIÈGE EST PIRE QUE L'OUBLI : dans une chaîne, le retour à la ligne s'écrit avec DEUX
+ * caractères, la barre et la lettre `n`. Une tête de règle y est donc précédée de la LETTRE `n`,
+ * que l'ancrage compte comme un caractère de nom — il ne renomme alors que le membre droit. C'est
+ * EXACTEMENT le renommage à moitié que cet outil existe pour empêcher, et BPx se l'est fait à
+ * lui-même au premier essai.
+ * Élargir la collecte aux chaînes n'est donc pas « ajouter une extension de fichier » : ça
+ * commence par corriger l'ancrage pour ce cas, sinon l'outil fabrique en silence le défaut qu'il
+ * est censé prévenir.
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
