@@ -1336,6 +1336,15 @@ function refuserNomsEnDouble(ast) {
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
       for (const t of r.lhs || []) {
+        // ⚠️ UN CONTEXTE N'EST PAS UNE TÊTE — il DÉSIGNE un terminal, c'est sa raison d'être.
+        // `#C4 S -> G4` dit « S, à condition de ne pas être précédé de C4 » : le `#C4` NOMME la
+        // note exprès, et cette condition ne peut pas s'écrire autrement. Ma garde lisait le
+        // premier jeton du membre gauche et prenait donc le contexte pour la tête — elle
+        // demandait au contexte de ne pas faire ce pour quoi il existe, et l'auteur n'avait
+        // AUCUNE issue : renommer C4 change la condition, y renoncer supprime le mécanisme.
+        // Mesuré par BPx le 2026-07-28 (contexte de tête ET de queue ; le contexte POSITIF, lui,
+        // ne passe pas par ici — le parser le range dans `rule.contexts`, hors du membre gauche).
+        if (t?.negated) continue;
         const nom = t?.name;
         if (!nom || tetesVues.has(nom)) continue;
         tetesVues.add(nom);

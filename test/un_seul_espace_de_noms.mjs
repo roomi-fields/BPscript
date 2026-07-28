@@ -85,6 +85,18 @@ const DOIVENT_PASSER = [
    '@core\n@alphabet.western\n@macro pa1 saw >> audio\nS -> C4'],
   ['aucun alphabet résolu : rien à heurter',
    '@core\n@macro G4 saw >> audio\nS -> C4'],
+  // ⚠️ LES CONTEXTES — régression mesurée par BPx le 2026-07-28. Un contexte n'est PAS une tête :
+  // il DÉSIGNE un terminal, c'est sa raison d'être. « ne pas être précédé de C4 » ne peut pas
+  // s'écrire sans nommer C4, et l'auteur n'a aucune issue — renommer change la condition,
+  // renoncer supprime le mécanisme. Ma garde lisait le premier jeton du membre gauche.
+  ['un contexte NÉGATIF en tête désigne un terminal, et c\'est son rôle',
+   '@core\n@alphabet.western:midi\n@mode:sub\n#C4 S -> G4\nS -> C4 D4 E4'],
+  ['un contexte négatif en QUEUE aussi',
+   '@core\n@alphabet.western:midi\n@mode:sub\nS #C4 -> G4\nS -> C4 D4 E4'],
+  ['plusieurs contextes négatifs',
+   '@core\n@alphabet.western:midi\n@mode:sub\n#C4 #D4 S -> G4\nS -> C4 D4'],
+  ['un contexte POSITIF, que le parser range ailleurs',
+   '@core\n@alphabet.western:midi\n@mode:sub\n(C4) S -> G4\nS -> C4 D4'],
 ];
 for (const [quoi, src] of DOIVENT_PASSER) {
   const r = refus(src);
@@ -99,7 +111,7 @@ ok(refus('@core\n@alphabet.western\nG4 -> C4').length >= 1,
   'TÉMOIN — la règle doit savoir MORDRE (sinon tout ce fichier ment)');
 ok(refus('@core\n@alphabet.western\nmotif -> C4').length === 0,
   'TÉMOIN — et savoir se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
-ok(SORTES.length >= 4 && CE_QUI_EST_DEJA_PRIS.length >= 3 && DOIVENT_PASSER.length >= 9,
+ok(SORTES.length >= 4 && CE_QUI_EST_DEJA_PRIS.length >= 3 && DOIVENT_PASSER.length >= 13,
   'les matrices ne se sont pas vidées');
 
 if (echecs.length) {
