@@ -13,7 +13,7 @@ function cvs(r) { return (r.ast?.cvInstances || []); }
 
 // 1. Déclaration descriptive : lib.type(namedArgs), pas de cible
 {
-  const r = ast('cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)\nS -> C2 E2 (cutoff:env1)\nC2 -> C2\nE2 -> E2\n');
+  const r = ast('cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)\nS -> grave aigu (cutoff:env1)\ngrave -> C2\naigu -> E2\n');
   check((r.errors || []).length === 0, '1: 0 erreur, obtenu ' + JSON.stringify(r.errors));
   const c = cvs(r)[0] || {};
   check(cvs(r).length === 1, '1: 1 CVInstance, obtenu ' + cvs(r).length);

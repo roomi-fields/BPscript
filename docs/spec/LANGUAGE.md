@@ -1363,6 +1363,38 @@ cv ramp:sc                       // ramp varie continument, SC le gere
 
 ### Macros, labels, alias — noms et transformations
 
+### Un seul espace de noms
+
+**RIEN ne porte le nom d'autre chose** (Romain, 2026-07-28). L'intention n'est pas technique : un
+auteur ne doit jamais lire un nom dans une regle sans savoir de quoi il parle. Meme quand une
+precedence fonctionne, l'ECRITURE reste ambigue pour l'humain.
+
+**Deux enonces, tous deux GLOBAUX — aucune portee :**
+1. une **tete de regle** ne peut porter le nom d'aucune AUTRE sorte de chose : terminal de
+   l'alphabet actif, macro, alias, entree, variable de travail, scene, objet CV ;
+2. **deux declarations qui CREENT un nom** ne peuvent pas porter le meme, ni celui d'un terminal.
+
+Le refus tombe **a la DECLARATION** : le nom n'a pas besoin d'etre employe pour que l'ambiguite
+existe.
+
+⚠️ **Le critere est L'EFFET, jamais la forme de la ligne.** Ce qui est refuse, c'est ce qui CREE un
+nom. Une ecriture qui pose une **propriete sur un nom existant** reste permise, et ca se mesure :
+les noeuds produits sont identiques avec et sans elle. `gate Sa:sc` dit le type temporel et le
+routage d'un terminal ; `@actor viz eval.hydra` puis `viz -> ...` est la voix de code, ou la regle
+DIT ce que la voix joue. Ni l'une ni l'autre ne cree un nom rival.
+
+⚠️ **Les tetes de regle ne se heurtent JAMAIS entre elles**, et c'est la moitie qu'on casse sans
+s'en apercevoir. Une tete repetee n'est pas un conflit : c'est une **alternative** — le choix et
+les poids, c'est-a-dire le mecanisme meme d'une grammaire stochastique. Et deux sous-grammaires
+sont des **passes successives**, pas des espaces paralleles : un meme nom y est le meme symbole,
+reecrit plus tard. Mesure : une garde qui aurait refuse ce cas aurait refuse **120 scenes sur 333**.
+
+**Renommer sans changer la musique** : `test/migration_noms.mjs` detecte les collisions, renomme
+tous les emplois, et **prouve** que la production ne bouge pas en comparant l'arbre derive entier
+avant et apres, a graine fixe. Il refuse d'ecrire si un seul jeton differe.
+
+---
+
 Trois directives pour nommer des choses. La difference est fonctionnelle :
 
 | Directive | Ce qu'elle fait | Exemple | Se joue dans une regle ? |

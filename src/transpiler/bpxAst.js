@@ -1259,50 +1259,104 @@ function emitActorLibRefs(ast) {
  * et c'est le bon comportement tant que la forme n'existe pas.
  */
 /**
- * GARDE — une macro ne peut pas s'appeler comme un TERMINAL DE L'ALPHABET ACTIF.
+ * GARDE — UN SEUL ESPACE DE NOMS. Rien ne peut porter le nom d'autre chose.
  *
- * Règle de Romain (2026-07-28) : « une macro nommée G4 (lettre de l'alphabet actif) doit tomber en
- * erreur LORS DE LA DÉCLARATION. »
+ * Règle de Romain (2026-07-28) : « il ne faut AUCUNE AMBIGUÏTÉ POSSIBLE. RIEN ne peut avoir des
+ * noms identiques. À chaque fois qu'on déclare un truc dont le nom existe déjà, ça doit être
+ * signalé par une ERREUR. »
  *
- * CE QU'ELLE VISE, et ce n'est PAS un défaut d'exécution. Kairos a mesuré que la macro l'emporte
- * sur l'alphabet : `C4!G4` rend une hauteur nulle et l'action de la macro, il n'y a pas de son
- * fantôme. Le problème est pour l'AUTEUR : en lisant `C4!G4`, il ne peut pas savoir si `G4` est
- * une note ou sa macro. On refuse donc l'ambiguïté À LA SOURCE plutôt que de s'en remettre à une
- * précédence qui, elle, fonctionne. Un lecteur ne devrait jamais avoir à connaître l'ordre de
- * priorité pour lire une règle.
+ * ⚠️ LE CRITÈRE EST L'EFFET, JAMAIS LA FORME DE LA LIGNE. Ce qui est refusé, c'est ce qui CRÉE un
+ * nom. Une écriture qui pose une PROPRIÉTÉ sur un nom existant reste permise — `gate Sa:sc` dit
+ * le type temporel et le routage d'un terminal, elle ne crée aucun nom rival : mesuré, le nœud
+ * produit est identique avec et sans elle. Un garde qui filtrerait sur « ça commence par une
+ * directive » refuserait cette forme ratifiée et laisserait passer une tête de règle ambiguë.
  *
- * REFUS À LA DÉCLARATION, PAS À L'USAGE : on n'attend pas que le conflit se joue quelque part, on
- * interdit de créer le nom. Une macro déclarée et jamais employée est refusée elle aussi.
+ * DEUX ÉNONCÉS, TOUS DEUX GLOBAUX — aucune portée, et c'est mesuré, pas supposé :
+ *   A. une TÊTE DE RÈGLE ne peut porter le nom d'aucune AUTRE SORTE de chose (terminal de
+ *      l'alphabet actif, macro, alias, entrée, acteur, variable de travail, scène, objet CV) ;
+ *   B. deux déclarations qui CRÉENT un nom ne peuvent pas porter le même, ni le nom d'un terminal.
  *
- * ⚠️ L'ORDRE DANS LE FICHIER N'ENTRE PAS EN JEU, et c'est mesuré : la vérification tourne APRÈS
- * la résolution des acteurs, donc après que toutes les directives ont été lues. Une macro écrite
- * AVANT l'alphabet qu'elle heurte est refusée exactement pareil. Une garde qui aurait regardé au
- * moment où la ligne se lit n'aurait attrapé qu'une moitié des cas — celle où l'auteur a rangé
- * son fichier dans le bon sens.
- *
- * PORTÉE, ET SON COMPLÉMENT — parce qu'un balayage qui tait ce qu'il laisse dehors fait
- * retrouver les mêmes survivants : cette garde ne couvre QUE `@macro`, sur consigne explicite
- * (Romain a dit macro). Les autres déclarations qui créent un nom — alias, entrée, acteur,
- * variable de travail, déclaration de symbole — portent la MÊME ambiguïté et ne sont PAS
- * couvertes ici : les étendre serait appliquer une règle plus large que la directive. Elles sont
- * nommées et remontées, l'arbitrage est chez Romain.
+ * ⚠️ CE QUI N'EST PAS DEDANS, ET C'EST LA MOITIÉ DU TRAVAIL : les têtes de règle ne se heurtent
+ * JAMAIS entre elles. Une tête répétée n'est pas un conflit, c'est une ALTERNATIVE — le choix et
+ * les poids, c'est-à-dire le mécanisme même d'une grammaire stochastique ; et deux sous-grammaires
+ * sont des PASSES successives, pas des espaces parallèles, donc un même nom y est le même symbole
+ * réécrit plus tard. Un témoin de garde m'avait été prescrit qui refusait ce cas : mesuré, il
+ * aurait refusé 120 scènes sur 333. C'est en le mesurant qu'il est tombé, pas en le relisant.
  */
-function refuserMacroHomonymeDunTerminal(ast) {
+function refuserNomsEnDouble(ast) {
   const erreurs = [];
-  if (!(ast.macros || []).length) return erreurs;
-  // MÊME définition que la garde des terminaux de règle — un mot qui serait refusé comme note
-  // ne doit pas être acceptable comme nom de macro, et réciproquement.
   const { terminaux } = terminauxEnPortee(ast);
-  if (!terminaux.size) return erreurs;
-  for (const m of ast.macros || []) {
-    if (!m || typeof m.name !== 'string' || !terminaux.has(m.name)) continue;
-    erreurs.push({
-      message: `'@macro ${m.name}' porte le nom d'un TERMINAL de l'alphabet actif — une règle qui `
-        + `écrirait '${m.name}' ne dirait plus si elle joue la note ou la macro. Choisir un autre `
-        + `nom pour la macro (par exemple un mot du geste qu'elle fait). Le refus tombe à la `
-        + `DÉCLARATION : le nom n'a pas besoin d'être employé pour que l'ambiguïté existe.`,
-      line: m.line,
-    });
+
+  // Ce qui CRÉE un nom, par sorte. `declarations` (gate/trigger/cv) n'y est PAS : elle pose une
+  // propriété sur un nom existant. Les têtes de règle sont à part — elles ne se heurtent pas
+  // entre elles, donc elles ne peuvent pas servir de « déjà pris » les unes pour les autres.
+  const creesParDeclaration = new Map();   // nom → { sorte, line }
+  const noter = (nom, sorte, line) => {
+    if (!nom || typeof nom !== 'string') return;
+    if (creesParDeclaration.has(nom)) {
+      const p = creesParDeclaration.get(nom);
+      erreurs.push({
+        message: `le nom '${nom}' est déjà pris : ${p.sorte} l'a déclaré${p.line ? ` ligne ${p.line}` : ''}, `
+          + `et ${sorte} le redéclare. Un nom ne désigne qu'UNE chose dans une scène — sinon, en le `
+          + `lisant dans une règle, on ne sait plus de quoi on parle. Choisir un autre nom.`,
+        line,
+      });
+      return;
+    }
+    creesParDeclaration.set(nom, { sorte, line });
+    if (terminaux.has(nom)) {
+      erreurs.push({
+        message: `'${nom}' est un TERMINAL de l'alphabet actif, et ${sorte} en fait un nom — une `
+          + `règle qui écrirait '${nom}' ne dirait plus si elle joue la note ou l'autre chose. `
+          + `Choisir un autre nom. Le refus tombe à la DÉCLARATION : le nom n'a pas besoin d'être `
+          + `employé pour que l'ambiguïté existe.`,
+        line,
+      });
+    }
+  };
+  for (const m of ast.macros || []) noter(m?.name, 'une macro', m?.line);
+  for (const a of ast.aliases || []) noter(a?.name, 'un alias', a?.line);
+  for (const e of ast.inputs || []) noter(e?.name, 'une entrée', e?.line);
+  for (const v of ast.vars || []) noter(typeof v === 'string' ? v : v?.name, 'une variable de travail', v?.line);
+  // ⚠️ L'ACTEUR N'EST PAS LÀ, et c'est le CRITÈRE RATIFIÉ qui l'en écarte, pas une commodité.
+  // `@actor viz eval.hydra` puis `viz -> \`code\`` est l'écriture documentée d'une voix de code :
+  // la règle DIT ce que la voix joue. Mesuré avec le même test que pour `gate Sa:sc` — les règles
+  // produites sont IDENTIQUES avec et sans la déclaration d'acteur : elle POSE DES PROPRIÉTÉS
+  // (alphabet, accordage, transport, moteur d'évaluation) sur un nom, elle n'en crée pas un
+  // rival. C'est exactement le cas que Romain a permis : « pas de problème pour déclarer une
+  // propriété sur un nom existant a posteriori ».
+  // L'inclure refusait la voix de code — forme ratifiée, sans réécriture possible, puisque
+  // renommer la règle ferait que le nom ne désigne plus la voix.
+  for (const sc of ast.scenes || []) noter(sc?.name, 'une scène', sc?.line);
+  for (const c of ast.cvInstances || []) noter(c?.name, 'un objet CV', c?.line);
+
+  // A. Les têtes de règle, contre TOUT LE RESTE — jamais entre elles. Une tête vue plusieurs fois
+  // n'est signalée qu'UNE fois : c'est le même symbole, pas plusieurs fautes.
+  const tetesVues = new Set();
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      for (const t of r.lhs || []) {
+        const nom = t?.name;
+        if (!nom || tetesVues.has(nom)) continue;
+        tetesVues.add(nom);
+        if (creesParDeclaration.has(nom)) {
+          erreurs.push({
+            message: `la règle '${nom}' porte un nom déjà pris par ${creesParDeclaration.get(nom).sorte} — `
+              + `en lisant '${nom}' dans une séquence, on ne sait plus de quoi on parle. `
+              + `Choisir un autre nom pour l'un des deux.`,
+            line: r.line,
+          });
+        } else if (terminaux.has(nom)) {
+          erreurs.push({
+            message: `la règle '${nom}' porte le nom d'un TERMINAL de l'alphabet actif — la note '${nom}' `
+              + `devient inatteignable, et en lisant '${nom}' on ne sait plus si c'est elle ou la règle. `
+              + `Renommer la règle (et TOUS ses emplois : l'outil test/migration_noms.mjs le fait en `
+              + `prouvant que la production ne change pas).`,
+            line: r.line,
+          });
+        }
+      }
+    }
   }
   return erreurs;
 }
@@ -1478,7 +1532,7 @@ export function compileToBPxAST(source, environnement) {
     // Le nom d'une macro se vérifie ICI, avec les terminaux de règle : même question, même
     // définition, et les acteurs sont pliés à ce stade (avant, `ast.actors` est encore vide —
     // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).
-    result.errors.push(...refuserMacroHomonymeDunTerminal(ast));
+    result.errors.push(...refuserNomsEnDouble(ast));
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));

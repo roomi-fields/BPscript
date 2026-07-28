@@ -29,7 +29,8 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const refus = (src) => (compileToBPxAST(src).errors || [])
-  .map((e) => e.message ?? String(e)).filter((m) => /porte le nom d'un TERMINAL/.test(m));
+  .map((e) => e.message ?? String(e))
+  .filter((m) => /TERMINAL de l'alphabet actif|déjà pris/.test(m));
 
 // L'espace des SITUATIONS, pas la graphie du ticket : ce qui varie, c'est d'où vient l'alphabet et
 // où se trouve la macro par rapport à lui.
@@ -43,7 +44,7 @@ const AMBIGUES = [
 const PROPRIETES = [
   ['est refusée', (r) => r.length >= 1],
   ['le refus NOMME le conflit (un terminal de l\'alphabet)', (r) => r.some((m) => /TERMINAL de l'alphabet actif/.test(m))],
-  ['le refus dit que l\'ambiguïté est de LECTURE', (r) => r.some((m) => /ne dirait plus si elle joue la note ou la macro/.test(m))],
+  ['le refus dit que l\'ambiguïté est de LECTURE', (r) => r.some((m) => /ne dirait plus si elle joue la note/.test(m))],
   ['le refus propose la SORTIE (changer de nom)', (r) => r.some((m) => /Choisir un autre nom/.test(m))],
   ['le refus dit qu\'il tombe à la DÉCLARATION', (r) => r.some((m) => /DÉCLARATION/.test(m))],
 ];
@@ -66,14 +67,22 @@ for (const [nom, src] of LEGITIMES) ok(refus(src).length === 0, `LÉGITIME ${nom
 // LA PORTÉE NE S'EST PAS ÉTENDUE TOUTE SEULE. Ces déclarations portent la même ambiguïté et
 // restent VOLONTAIREMENT permises : l'arbitrage est chez Romain. Si l'une se met à refuser, ce
 // témoin rougit et la portée doit être re-décidée, pas constatée après coup.
-const HORS_PORTEE_ASSUMEE = [
-  ['un alias',                 '@core\n@alphabet.western\n@alias G4 cc:2\nS -> C4 D4'],
-  ['une variable de travail',  '@core\n@alphabet.western\n@var G4\nS -> C4 G4'],
-  ['une déclaration de gate',  '@core\n@alphabet.western\ngate G4:sc\nS -> C4'],
+// ⚠️ LES TROIS TÉMOINS « HORS PORTÉE » ONT ÉTÉ RETIRÉS ICI le 2026-07-28, ET C'EST DÉLIBÉRÉ.
+// Ils gardaient que l'alias, la variable de travail et la déclaration de symbole restent PERMIS
+// tant que la règle ne couvrait que la macro. Romain a étendu : un seul espace de noms, tout ce
+// qui CRÉE un nom est unique. Deux d'entre eux sont donc devenus FAUX — un alias ou une variable
+// nommés comme une note sont maintenant refusés — et les garder aurait fait rougir la règle même
+// qu'ils étaient censés protéger.
+// Le troisième, la déclaration de symbole, n'a PAS disparu : il a déménagé dans la garde générale,
+// où il tient la distinction ratifiée (une PROPRIÉTÉ posée sur un nom existant reste permise).
+// Retirer un témoin est un rétrécissement : il se justifie, il ne se fait pas en silence.
+const COUVERTES_AILLEURS = [
+  ['un alias nommé comme une note',      '@core\n@alphabet.western\n@alias G4 cc:2\nS -> C4 D4'],
+  ['une variable nommée comme une note', '@core\n@alphabet.western\n@var G4\nS -> C4 G4'],
 ];
-for (const [nom, src] of HORS_PORTEE_ASSUMEE) {
-  ok(refus(src).length === 0,
-    `HORS PORTÉE ${nom} — doit rester permis tant que Romain n'a pas étendu la règle`);
+for (const [nom, src] of COUVERTES_AILLEURS) {
+  ok(refus(src).length >= 1,
+    `${nom} — désormais REFUSÉ par la règle générale (l'était pas quand seule la macro comptait)`);
 }
 
 if (echecs.length) {

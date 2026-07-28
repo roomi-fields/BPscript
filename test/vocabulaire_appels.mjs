@@ -291,7 +291,7 @@ for (const [appel, pourquoi] of [
   ok(errs.length === 0, `§3 '${appel}' (${pourquoi}) doit rester accepté — reçu : ${errs.join(' | ')}`);
 }
 // Un non-terminal déclaré, appelé avec des arguments, reste valide.
-ok(erreursDe(scene('S -> A(vel:80)\nA -> C4 D4')).length === 0,
+ok(erreursDe(scene('S -> motif(vel:80)\nmotif -> C4 D4')).length === 0,
    '§3 un non-terminal DÉCLARÉ appelé avec arguments doit rester accepté');
 
 // ─── §4. Aucun appelant VIVANT dans le corpus ────────────────────────────────────────────────

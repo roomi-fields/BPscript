@@ -26,8 +26,8 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 // 3. Toutes les entrées valides : pan/amplitude/resonance/pitch <- CV (une par règle)
 {
   const e = errs('cv m : mod.lfo(rate:2, amplitude:0.8, shape:sine)\n'
-    + 'S -> A B C D\n'
-    + 'A -> C2 (pan:m)\nB -> D2 (amplitude:m)\nC -> E2 (resonance:m)\nD -> F2 (pitch:m)\n');
+    + 'S -> Aq Bq Cq Dq\n'
+    + 'Aq -> C2 (pan:m)\nBq -> D2 (amplitude:m)\nCq -> E2 (resonance:m)\nDq -> F2 (pitch:m)\n');
   check(e.length === 0, '3: pan/amplitude/resonance/pitch valides, obtenu ' + JSON.stringify(e));
 }
 

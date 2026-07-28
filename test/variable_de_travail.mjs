@@ -6,7 +6,7 @@
  * DÉCISION Romain 2026-07-27, voie 3 : « on déclare les symboles non-alphabet terminaux en plus,
  * avec une directive @. Ce sont des VARIABLES DE TRAVAIL. »
  *
- * LE BLOCAGE QUE ÇA LÈVE, mesuré avant d'être arbitré : `Nadaka-1er-essai` écrit `A8`, qui n'a
+ * LE BLOCAGE QUE ÇA LÈVE, mesuré avant d'être arbitré : `Nadaka-1er-essai` écrit `v8`, qui n'a
  * AUCUNE règle (ni dans la scène ni dans la grammaire d'origine) et n'est une note dans aucun
  * alphabet — le moteur natif l'émet littéralement comme jeton. Annoter la convention de notes de
  * cette scène la faisait REFUSER par le compilateur. Le langage confondait TERMINAL et NOTE.
@@ -53,7 +53,7 @@ const toutesLesFeuilles = (ast) => {
 
 // ─── 1. LA GRAPHIE — telle que validée, et rien de plus ──────────────────────────────────────
 for (const [corps, quoi, attendus] of [
-  ['@var A8\n@mode:ord\nS -> C4 A8', 'un symbole seul', ['A8']],
+  ['@var v8\n@mode:ord\nS -> C4 v8', 'un symbole seul', ['v8']],
   ['@var a, b, c\n@mode:ord\nS -> C4 a b c', 'une liste séparée par des virgules', ['a', 'b', 'c']],
   ['@var a\n@var b\n@mode:ord\nS -> C4 a b', "deux lignes qui S'ACCUMULENT (elles ne se remplacent pas)", ['a', 'b']],
 ]) {
