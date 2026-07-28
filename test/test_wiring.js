@@ -239,32 +239,47 @@ const EXEMPLE_DOCUMENTE = `@core
 @macro prise    pot >> tempo.bpm
 @macro lache    \\>> tempo.bpm
 
-S -> A4 !prise  B4 C4 D4  !lache  E4`;
+S -> A4 prise  B4 C4 D4  lache  E4`;
 
 console.log('\n=== §8. la forme documentée ===');
 {
   const r = compileToBPxAST(EXEMPLE_DOCUMENTE);
   ok('§8. l\'exemple de la doc compile', !!r.ast && r.errors.length === 0);
   const rhs = r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs ?? [];
-  // Le nom PRÉCÉDÉ du signe ne prend pas un pas : il se co-attaque au terminal qui le précède.
-  ok('§8. le nom instantané ne devient PAS un élément de séquence à lui seul',
-    rhs.filter((e) => e.type === 'SimultaneousGroup').length === 2);
-  ok('§8. et il porte bien le nom de la macro',
-    rhs.filter((e) => e.type === 'SimultaneousGroup')
-      .every((g) => ['prise', 'lache'].includes(g.secondaries?.[0]?.name)));
-  // La différence annoncée dans la doc : nu, le même nom occupe un pas.
-  const nu = compileToBPxAST(EXEMPLE_DOCUMENTE.replace('!prise', 'prise').replace('!lache', 'lache'));
-  const rhsNu = nu.ast?.subgrammars?.[0]?.rules?.[0]?.rhs ?? [];
-  ok('§8. écrit NU, le même nom occupe un pas — la doc ne ment pas',
-    rhsNu.length === rhs.length + 2 && rhsNu.every((e) => e.type === 'Symbol'));
-  // Le corps de macro ne porte PAS le signe — le piège mesuré par BPx.
+  // La forme documentée est le nom NU : il occupe un pas, comme un terminal.
+  ok('§8. le nom nu est un élément de séquence à lui seul',
+    rhs.length === 7 && rhs.every((e) => e.type === 'Symbol'));
+  ok('§8. et les deux noms de macro y sont', ['prise', 'lache'].every((n) => rhs.some((e) => e.name === n)));
+  // Le corps de macro ne porte PAS le signe d'instantané — le piège mesuré par BPx.
   const avecSigne = compileToBPxAST(EXEMPLE_DOCUMENTE.replace('@macro lache    \\>>', '@macro lache    !\\>>'));
   ok('§8. le signe DANS un corps de macro ne passe pas (piège documenté)', !avecSigne.ast);
-  // Et ça charge chez le moteur.
   let charge = null;
   try { new Session(r.ast, {}); charge = true; } catch (e) { charge = String(e.message); }
   ok('§8. la forme documentée CHARGE chez le moteur', charge === true);
 }
+
+// §8bis. LE PIÈGE DU SON FANTÔME — trouvé par BPx le 2026-07-28 sur une version de ma doc qui
+// conseillait cette écriture. Elle COMPILE : rien ne peut la signaler, et c'est tout le problème.
+// Ce témoin ne demande pas qu'elle soit refusée — l'accord est une graphie légitime — il vérifie
+// qu'elle produit bien un co-attaqué SONNANT, donc que le conseil reste faux tant que c'est vrai.
+// Si un jour un nom de macro cessait d'être sonnant dans un accord, cette ligne rougirait et la
+// mise en garde de la doc devrait être relue.
+console.log('\n=== §8bis. le piège du son fantôme ===');
+{
+  const base = '@core\n@controls\n@macro voix saw >> audio\n';
+  const accord = compileToBPxAST(base + 'S -> C4 !voix D4');
+  const g = accord.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
+  ok('§8bis. le nom précédé du signe compile — donc rien ne le signale', !!accord.ast);
+  ok('§8bis. et il devient un co-attaqué SONNANT (le fantôme)',
+    g?.type === 'SimultaneousGroup' && g.secondaries?.[0]?.payload?.nature === 'sounding');
+  // La graphie du point d'application, elle, est correcte au frontal.
+  const arobase = compileToBPxAST(base + 'S -> C4@voix D4');
+  const s0 = arobase.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
+  ok('§8bis. l\'arobase collée porte le point d\'application', s0?.label === 'voix');
+  ok('§8bis. et n\'ajoute AUCUN élément à la séquence',
+    arobase.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.length === 2);
+}
+
 // L'ÉTAT DATÉ que la doc affirme : la forme directe est acceptée par le langage et REFUSÉE au
 // chargement. Témoin des deux sens — si le moteur se met à la porter, cette ligne rougit et la
 // doc doit changer le jour même, au lieu de rester périmée sans que rien ne le dise.

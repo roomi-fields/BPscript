@@ -279,34 +279,49 @@ table de bibliothèque donne des étiquettes lisibles quand elle existe.
 
 **Le multiple sur une ligne se marque par la virgule**, forme déjà en usage (`@flag scene: calm:1, full:2`).
 
-### 6.4 Brancher ou couper À UN INSTANT PRÉCIS — la forme complète
+### 6.4 Brancher ou couper PENDANT QUE ÇA JOUE — la forme, et ce qui n'arrive pas encore
 
 C'est le geste que la décision voulait rendre possible : **un potard prend la main sur quelque
-chose pendant que la pièce joue, et le lâche plus loin.** Il s'écrit en deux temps.
+chose pendant que la pièce joue, et le lâche plus loin.** Il s'écrit en deux temps : on NOMME le
+câblage dans une macro, puis on pose ce nom dans le flux.
 
 ```bpscript
-@macro prise    pot >> tempo.bpm      // on NOMME le câblage : brancher
-@macro lache    \>> tempo.bpm         // on NOMME la coupure : débrancher
+@macro prise    pot >> tempo.bpm      // on nomme le branchement
+@macro lache    \>> tempo.bpm         // on nomme la coupure
 
-S -> A4 !prise  B4 C4 D4  !lache  E4
+S -> A4 prise  B4 C4 D4  lache  E4
 ```
 
-Le nom se pose dans le flux **précédé du point d'exclamation** : il se déclenche à l'instant
-qu'occupe le terminal qui le précède, **sans prendre un pas à lui**. La pièce garde exactement la
-même durée avec ou sans lui. Écrit **nu** (`S -> A4 prise B4`), le même nom occupe au contraire un
-pas entier — c'est une autre pièce, pas un raccourci.
+Le nom se pose **nu** dans la séquence. Il **occupe un pas**, comme un terminal — c'est ce que
+fait `public/demos/patchbay-demo.bps`, et c'est la seule écriture qui aille aujourd'hui jusqu'au
+bout de la chaîne.
 
-**Le multiple ne demande aucun séparateur** : chaque nom porte son propre point d'exclamation et
-ils se suivent — `!prise !lache`. C'est le modèle déjà en usage pour les instantanés
-(`!(ins:1) !(chan:1) !(cc.98:0)`), où le signe se répète et ne se partage jamais. La virgule, qui
-sépare déjà les voix d'un groupe polymétrique, n'est pas concernée.
+> ⚠️ **LA GRAPHIE N'EST PAS LA MÊME DES DEUX CÔTÉS.**
+> Dans le **corps d'une macro**, le câblage ne porte AUCUN signe d'instantané (`pot >> tempo.bpm`)
+> — un corps de macro n'est pas dans le temps, il n'a rien à marquer comme instantané.
+> Dans le **flux**, on écrit le nom, pas le câblage.
+> Recopier le corps avec un signe d'instantané ne compile pas. Mesuré par BPx le 2026-07-28, en
+> écrivant leur propre test à partir de cette page.
 
-> ⚠️ **LA GRAPHIE N'EST PAS LA MÊME DES DEUX CÔTÉS, et c'est le piège de cette page.**
-> Dans le **flux**, le nom porte le point d'exclamation (`!prise`) — il dit l'instantané.
-> Dans le **corps d'une macro**, le câblage ne le porte PAS (`pot >> tempo.bpm`) — un corps de
-> macro n'est pas dans le temps, il n'a rien à marquer comme instantané.
-> Recopier le corps avec le signe, ou le nom sans, ne compile pas. Le défaut a été mesuré par BPx
-> le 2026-07-28, en écrivant leur propre test à partir de cette section.
+> ⛔ **NE PAS ÉCRIRE `C4 !prise`** — la forme paraît naturelle et elle **compile sans une erreur
+> nulle part**, ce qui la rend d'autant plus coûteuse. Le point d'exclamation entre deux noms est
+> l'**accord** : `prise` y devient un co-attaqué **sonnant**, et un résolveur aval essaiera de lui
+> donner une hauteur. On obtient un **son fantôme**, silencieusement — la même famille de défaut
+> que la fréquence aberrante mesurée sur `nadaka`. Trouvé par BPx le 2026-07-28, sur une version
+> de cette page qui conseillait cette écriture.
+
+#### Le point d'application, et pourquoi il n'arrive pas encore
+
+Poser un geste **à un instant précis sans occuper de pas** s'écrit avec l'arobase **collée** au
+terminal : `C4@prise` — le geste s'applique là où est `C4`, sans rien ajouter à la séquence.
+C'est la graphie des étiquettes, elle existe déjà, et le frontal la porte correctement.
+
+⚠️ **Mais elle ne va pas jusqu'au bout aujourd'hui** (2026-07-28) : le moteur ne lit pas encore ce
+champ. Il porte donc **la déclaration** de la macro et perd **l'endroit** où elle s'applique — le
+*quoi* arrive, le *quand* non. Or c'est le *quand* qui avait fait choisir le câblage plutôt qu'une
+déclaration. Le porter change la forme du nœud d'arbre, donc une surface de contrat avec l'aval :
+c'est escaladé, pas bricolé. **Tant que ce n'est pas fait, seule l'écriture nue ci-dessus produit
+un effet**, et elle occupe un pas.
 
 #### Pourquoi ça passe par un nom — et pourquoi ça n'est pas un contournement
 
@@ -324,15 +339,15 @@ identité porte un câblage sans nom*, et cette réponse touche le tirage aléat
 
 #### État daté, sans différé caché (2026-07-28)
 
-| Où | Ce qui se passe |
+| Écriture | Où ça s'arrête |
 |---|---|
-| Le langage | la forme directe (`S -> C4 !osc >> filtre D4`) est **acceptée** — le frontal la lit et produit l'arbre |
-| Le contrat d'arbre | le type de nœud y est **admis** (BPx `b9d0fa2`), le validateur ne la refuse plus |
-| La dérivation | elle est **refusée au chargement**, et le refus dit d'écrire le câblage dans une macro |
+| `prise` **nu** dans le flux | **marche de bout en bout** — occupe un pas |
+| `C4@prise` (arobase collée) | le frontal porte le point d'application ; **le moteur ne le lit pas encore** |
+| `C4 !prise` | ⛔ compile, mais c'est un **accord** — son fantôme, aucune erreur nulle part |
+| `S -> C4 !osc >> filtre D4` (câblage écrit dans le flux) | lu par le langage, **refusé au chargement** ; le refus donne la réécriture |
 
-La capacité du frontal reste en place et elle est juste ; c'est l'aval qui ne la porte pas. Les
-trois lignes disent la même chose de trois endroits : personne n'a à deviner à quel étage ça
-s'arrête, et le refus du moteur donne lui-même la réécriture.
+Les quatre lignes disent d'où ça s'arrête à quel étage : personne n'a à le deviner, et rien n'est
+promis qui n'arrive pas.
 
 **Pourquoi l'ancienne écriture ne revient pas.** Elle ne se cite pas, même en exemple — une graphie
 fautive citée finit recopiée. La flèche `->` est une règle de **production**, exclusivement ; elle
