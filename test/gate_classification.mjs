@@ -63,5 +63,6 @@ export const HORS_PORTILLON = new Map([
   ['diff_families.mjs', 'classification mécanique des DIFF : outil d analyse, pas un garde'],
   ['nom_vs_hz.mjs', 'sonde de résolution nom↔fréquence : rapport, seuil non défini'],
   ['bp2_settings.cjs', 'inspection des réglages BP2 : utilitaire de lecture, aucune assertion'],
+  ['migration_noms.mjs', 'OUTIL de migration des noms en collision, lancé avec des chemins par le PROPRIÉTAIRE de chaque dépôt : sans argument il sort en usage (code 2), il n a donc rien à garder au portillon. Ce qu il fait est gardé, lui, par l_outil_de_migration_ne_change_pas_la_musique.mjs, qui est AU portillon'],
 ]);
 
