@@ -279,11 +279,32 @@ table de bibliothèque donne des étiquettes lisibles quand elle existe.
 
 **Le multiple sur une ligne se marque par la virgule**, forme déjà en usage (`@flag scene: calm:1, full:2`).
 
-> ⚠️ **ÉTAT MESURÉ DE L'IMPLÉMENTATION, à ne pas confondre avec la décision ci-dessus.** `>>` et
-> `!>>` sont reconnus par le tokeniseur et parsés **dans le corps d'une `@macro`** (nœud `Wiring`,
-> avec ses étages et son marqueur de coupure). Ils ne sont **PAS encore acceptés dans le flux d'une
-> règle** — mesuré, la ligne est refusée. La forme du flux est donc **décidée et pas encore
-> écrite** ; aucune graphie n'est inventée ici en attendant.
+> ⚠️ **ÉTAT MESURÉ DE L'IMPLÉMENTATION, à ne pas confondre avec la décision ci-dessus**
+> (mesure 2026-07-28, chaîne entière : frontal → BPx → Kairos).
+>
+> **Ce qui existe.** `>>` et `!>>` sont reconnus par le tokeniseur (`tokenizer.js:219,225`) et
+> parsés **dans le corps d'une `@macro`** en nœud `Wiring` (étages + marqueur de coupure,
+> `parser.js:2041`). Ce nœud voyage OPAQUE : BPx le porte name-keyed sur `metadata.macros`
+> (`BPx/src/session.ts:1477`), Kairos le résout quand le **nom de la macro est joué dans le flux**
+> (`kairos/src/projection/projeter.ts:695` — `Wiring` = brancher, `Wiring{cut}` = couper).
+>
+> **Donc le câblage à un moment précis est DÉJÀ atteignable — par un détour de NOM.** On déclare
+> `@macro coupe !>> out.in`, puis on écrit `coupe` au bon endroit du flux. C'est ce que fait
+> `public/demos/patchbay-demo.bps`. Ce qui manque n'est pas la capacité : c'est l'écriture
+> **directe**, sans avoir à baptiser le câble.
+>
+> **Ce que l'écriture directe coûte, et c'est plus qu'une affaire de parser.** Dans le flux d'une
+> règle, un chevron n'est reconnu par rien : l'analyse de la séquence s'arrête dessus en silence et
+> la ligne est refusée plus haut par un message générique, sans réécriture. Surtout, tout l'aval
+> ne connaît le câblage que comme une **entrée de table hors-temps** ; un câblage écrit dans le flux
+> est au contraire un élément de la dérivation, à une place et à un instant. Aucun consommateur n'a
+> aujourd'hui d'endroit pour le recevoir.
+>
+> **La forme est donc décidée et pas encore écrite**, et trois questions de forme restent chez
+> Romain : ce qu'un câblage écrit dans le flux **occupe dans le temps** (le détour par le nom en
+> fait aujourd'hui un élément sonnant, qui prend un pas) ; ce qu'il **devient dans l'arbre** ; et
+> comment se marque le **multiple sur une ligne** dans un flux, où la virgule sépare déjà les voix
+> d'un groupe polymétrique. Aucune graphie n'est inventée ici en attendant.
 
 **Pourquoi l'ancienne écriture ne revient pas.** Elle ne se cite pas, même en exemple — une graphie
 fautive citée finit recopiée. La flèche `->` est une règle de **production**, exclusivement ; elle
