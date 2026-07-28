@@ -40,7 +40,6 @@ macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")"
                     un corps qui commence par une parenthèse en est séparé par une espace. *)
 (* `map_directive` SUPPRIMÉ le 2026-07-27 au soir — la directive de correspondance est ABANDONNÉE,
    le câblage passe par `>>` / `\>>`. Ce qui DÉSIGNE reste dans `alias_directive`. *)
-label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
 var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
 in_directive     = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
                  , [ "mapping" , "." , IDENT ] ;      (* @in pedale transport.midi mapping.fcb_std *)
@@ -740,7 +739,9 @@ Clés nues reconnues : `destru`, `striated`, `smooth`.
 
 ```ebnf
 rhs_element = element_core , [ suffix_qualifier ] , [ "@" , IDENT ] ;
-(* Le @ suffixe attache un label à l'élément : C4@kick, {A B}@groove. Sans espace avant @. *)
+(* Le suffixe arobase est SUPPRIMÉ (2026-07-28) : associer un geste dans la production se fait
+   avec le point d'exclamation attaché au terminal ; nommer se fait dans la partie déclarative.
+   L'étiquette d'un GROUPE polymétrique reste, et s'écrit en préfixe : groove:{A B}. *)
 (* Pas de qualificateur préfixe sur un élément : utiliser ![X] / !(X) pour positionner
    une instruction avant un élément ou dans le flux. *)
 

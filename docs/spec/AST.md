@@ -30,7 +30,6 @@ Scene {
   // `maps` SUPPRIME le 2026-07-27 au soir AVEC le mot : la directive de correspondance est
   // ABANDONNEE, le cablage passe par les chevrons `>>` / `\>>`. Un champ emis et toujours vide
   // ferait conclure « cette scene ne cable rien » au lieu de « ce canal n'existe plus ».
-  labels: LabelDirective[]           // @label directives (label declarations)
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
@@ -636,15 +635,14 @@ LabelDirective {
 }
 ```
 
-Exemple : `@label groove` → `{ name:"groove" }`
+> ⚠️ La directive d'étiquette est SUPPRIMÉE (2026-07-28), avec le suffixe qu'elle déclarait.
 
 ### Label suffixe (`@`)
 
 Tout nœud RHS peut porter un champ optionnel `label: string` attaché par `@` sans espace :
 
 ```
-C4@kick   → Symbol { name: "C4", label: "kick" }
-{A B}@groove → Polymetric { ..., label: "groove" }
+groove:{A B} → Polymetric { ..., label: "groove" }   // seule source d'étiquette depuis 2026-07-28
 ```
 
 ---

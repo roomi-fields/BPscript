@@ -100,7 +100,7 @@ for (const [corps, quoi] of [
   ['@var a\n@mode:ord\nS -> a!C4', 'PRIMAIRE d\'un événement simultané'],
   ['@var a\n@mode:ord\nS -> {C4 a}', 'dans un groupe polymétrique'],
   ['@var a\n@mode:ord\nS -> a(vel:80) C4', 'porteuse d\'une annotation runtime'],
-  ['@var a\n@mode:ord\nS -> C4 a@lbl', 'étiquetée'],
+  ['@var a\n@mode:ord\nS -> groove:{C4 a, D4}', 'dans un groupe étiqueté'],
   ['@var a\n@mode:ord\nS -> a:2 C4', 'porteuse d\'une durée'],
   ['@var a\n@mode:ord\nS -> a a a', 'répétée'],
   ['@var a\n@mode:ord\nS -> C4\n-----\n@mode:ord\nT -> a', 'dans une AUTRE sous-grammaire'],

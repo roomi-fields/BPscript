@@ -30,7 +30,7 @@ Version 2.0 — 26 mars 2026
 >
 > - Les fichiers -ho. de Bernard sont parsés par `parseHoFile()` dans `bp3ToScene.js` lors
 >   de la traduction inverse BP3→BPS ; les entrées sont générées dans `lib/transcription.json`.
-> - L'approche **étiquetage `N@terminal`** dans les fichiers -ho. reste **AJOURNÉE**
+> - L'approche **étiquetage `N@terminal`** dans les fichiers -ho — AJOURNÉE, jamais adoptée, et sans rapport avec le suffixe arobase de BPScript (SUPPRIMÉ le 2026-07-28). reste **AJOURNÉE**
 >   (complexité moteur, pas de gain sur le contrat BPx).
 
 ---

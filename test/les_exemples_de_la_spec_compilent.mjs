@@ -134,6 +134,10 @@ const MORTES = [
    + "voit : ca ne compile pas", 'absolue'],
   [/(?<![\\`])!>>/, "'!>>' — l'ancienne coupure de câblage, remplacée par '\\>>' le 2026-07-28 : le "
    + "point d'exclamation ne dit QUE l'instantané, il ne dit plus la coupure", 'exemptable'],
+  [/[A-Za-z0-9_)}]@[A-Za-z_][A-Za-z0-9_]*/, "le SUFFIXE arobase collé à un élément (C4@kick) — "
+   + "SUPPRIMÉ le 2026-07-28 : associer dans la production se fait avec le point d'exclamation, "
+   + "déclarer une étiquette se fait dans la partie déclarative", 'exemptable'],
+  [/@label\s+[A-Za-z_]/, "'@label' — SUPPRIMÉE le 2026-07-28 avec le suffixe qu'elle déclarait", 'exemptable'],
   [/@(?:map|alias)\s+[^\n|]*(->|<->|<-)/,
    "la flèche employée comme CÂBLAGE — elle ne se cite jamais, même au passé pour expliquer sa "
    + "disparition : nommer la fonction en français ('un contrôleur règle le tempo pendant que ça "

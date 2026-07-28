@@ -39,7 +39,7 @@ for (const [corps, quoi] of [
   ['@alias breath cc:2\n@mode:ord\nS -> C4', 'un contrôleur continu'],
   ['@alias horloge osc:/clock\n@mode:ord\nS -> C4', 'une adresse OSC'],
   ['@trigger sync1:midi\n@alias depart sync1\n@mode:ord\nS -> C4', 'un trigger déclaré'],
-  ['@alias ratio kick.vel\n@mode:ord\nS -> C4@kick D4', 'un label posé sur un élément'],
+  ['@alias ratio groove.vel\n@mode:ord\nS -> groove:{C4 D4, E4}', "l'étiquette d'un groupe polymétrique"],
 ]) {
   const r = compile(corps);
   ok((r.errors || []).length === 0,

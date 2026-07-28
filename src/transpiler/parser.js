@@ -311,7 +311,8 @@ function parse(tokens, opts = {}) {
       // lit conclut « cette scène ne câble rien » au lieu de « ce canal n'existe plus ». On
       // supprime la donnée avec le mot, dans le même mouvement, sans voie parallèle.
       aliases: [],
-      labels: [],
+      // `labels` SUPPRIMÉ avec '@label' (2026-07-28) : un champ émis et toujours vide fait
+      // conclure « cette scène n'étiquette rien » au lieu de « ce canal n'existe plus ».
       declarations: [],
       macros: [],
       backticks: [],
@@ -356,8 +357,6 @@ function parse(tokens, opts = {}) {
         } else if (dir.type === 'MacroDirective') {
           scene.macros.push(dir);
           nomsDeclaresLocalement.add(dir.name);
-        } else if (dir.type === 'LabelDirective') {
-          scene.labels.push(dir);
         } else if (dir.type === 'Declaration') {
           // @gate, @trigger, @cv — prefixed declarations
           scene.declarations.push(dir);
@@ -1307,10 +1306,18 @@ function parse(tokens, opts = {}) {
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
 
-    // @label hat — named label for @ suffixe
+    // PIERRE TOMBALE — `@label` part AVEC le suffixe qu'elle servait (Romain 2026-07-28). Elle
+    // DÉCLARAIT un nom que le suffixe APPLIQUAIT : ce sont bien deux choses distinctes, mesurées
+    // comme telles, mais rien ne les liait et aucune scène n'écrivait ni l'une ni l'autre. Retirer
+    // le suffixe en laissant la directive aurait laissé un mot qui ne peut plus rien nommer —
+    // c'est-à-dire une voie en attente de se rouvrir.
     if (name === 'label') {
-      const labelName = expect(T.IDENT).value;
-      return { type: 'LabelDirective', name: labelName, line: tok.line };
+      const nom = at(T.IDENT) ? current().value : 'nom';
+      throw new ParseError(
+        `'@label' est SUPPRIMÉE du langage (décision Romain 2026-07-28), en même temps que le `
+        + `suffixe '@${nom}' qu'elle servait à déclarer. Pour ASSOCIER un geste à un élément dans `
+        + `la production : le point d'exclamation ('C4!${nom}'). Pour NOMMER quelque chose dans la `
+        + `partie déclarative : '@macro ${nom} <corps>' ou '@alias ${nom} <valeur>'.`, tok);
     }
 
     // @gate Sa:midi, @trigger dha:sc, @cv ramp:sc — prefixed declarations
@@ -3061,12 +3068,7 @@ function parse(tokens, opts = {}) {
         }
       }
 
-      // @ suffixe: C4@kick — label attachment (no space before @)
-      if (at(T.AT) && !current().spaceBefore) {
-        advance();
-        el.label = expect(T.IDENT).value;
-      }
-
+      refuserSuffixeArobase();
       elements.push(el);
     }
     return elements;
@@ -3452,6 +3454,31 @@ function parse(tokens, opts = {}) {
     const nextTok = peek(1);
     if (nextTok.type !== T.IDENT) return false;
     return libCtx.controlNames.has(nextTok.value);
+  }
+
+  // PIERRE TOMBALE — le suffixe arobase (`C4@kick`, `{A B}@groove`) est SUPPRIMÉ du langage
+  // (Romain, 2026-07-28 : « on supprime, tu n'as pas pu me prouver que ça avait une utilité
+  // quelconque »). Son motif, mot pour mot : ASSOCIER DANS LA PRODUCTION se fait déjà avec le
+  // point d'exclamation ; DÉCLARER UNE ÉTIQUETTE se fait dans la partie déclarative. Deux voies
+  // existantes couvraient les deux besoins — cette forme n'en avait aucun à elle.
+  // État mesuré au retrait : aucune décision datée ne la fondait, sa seule caractérisation écrite
+  // la disait ignorée, son usage documenté visait la directive de correspondance désormais morte,
+  // et ZÉRO scène l'écrivait sur tout l'écosystème.
+  //
+  // ⚠️ EN FONCTION, appelée par TOUS les endroits qui lisent un élément — pas seulement le flux de
+  // premier niveau. Écrite d'abord à un seul endroit, elle laissait le suffixe se faire refuser
+  // DANS UNE VOIX POLYMÉTRIQUE par un message générique (« accolade fermante attendue ») : la
+  // forme disparaissait bien, mais celui qui l'écrivait n'apprenait rien. Trouvé par la matrice
+  // du garde, pas par relecture.
+  function refuserSuffixeArobase() {
+    if (!at(T.AT) || current().spaceBefore) return;
+    const nom = peek(1).type === T.IDENT ? peek(1).value : 'nom';
+    throw new ParseError(
+      `le suffixe '@${nom}' collé à un élément est SUPPRIMÉ du langage (décision Romain `
+      + `2026-07-28). Deux écritures le remplacent, selon ce qu'on voulait faire. Pour ASSOCIER `
+      + `un geste à un élément DANS LA PRODUCTION : le point d'exclamation, `
+      + `'C4!${nom}' — le geste se déclenche à l'instant du terminal sans occuper de pas. Pour `
+      + `DÉCLARER UNE ÉTIQUETTE : la partie déclarative, une macro ou un alias.`, current());
   }
 
   function parseRhsElement() {
@@ -4116,6 +4143,7 @@ function parse(tokens, opts = {}) {
 
       const el = parseRhsElement();
       if (!el) break;
+      refuserSuffixeArobase();   // même refus nommé partout où un élément se lit
 
       // SUFFIX qualifiers: A[X] or A(X) — no space before [ or (
       while ((at(T.LBRACKET) && !current().spaceBefore) ||
@@ -4239,6 +4267,7 @@ function parse(tokens, opts = {}) {
         const el = parseRhsElement();
         if (el) elements.push(el);
         else break;
+        refuserSuffixeArobase();   // même refus nommé partout où un élément se lit
       }
       expect(T.RBRACE);
       return { type: 'TemplateMasterGroup', elements };
@@ -4285,6 +4314,7 @@ function parse(tokens, opts = {}) {
         const el = parseRhsElement();
         if (el) elements.push(el);
         else break;
+        refuserSuffixeArobase();   // même refus nommé partout où un élément se lit
       }
       expect(T.RBRACE);
       return { type: 'TemplateSlaveGroup', elements };

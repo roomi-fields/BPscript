@@ -246,15 +246,21 @@ externe, l'aller-retour bidirectionnel et sa rupture d'écho — a été retiré
 Les graphies ne sont pas citées : elles employaient la flèche comme opérateur de câblage, ce
 qu'elle n'a jamais été.
 
-### 6.2 Multicast par labels
+### 6.2 Désigner plusieurs éléments ensemble
 
 ```
-S -> C4@kick D4 E4@kick F4
-@alias ratio kick.vel
+S -> groove:{C4 D4, E4} F4
+@alias ratio groove.vel
 ```
 
-Tous les éléments `@kick` sont désignés ensemble. Portée par défaut : la scène où `@alias` est
-déclaré. Préfixe pour la portée croisée (`verse.kick.vel`, `*.kick.vel`).
+L'**étiquette d'un groupe polymétrique** — le nom, deux-points, le groupe — désigne tout ce qu'il
+contient. Portée par défaut : la scène où `@alias` est déclaré. Préfixe pour la portée croisée
+(`verse.groove.vel`, `*.groove.vel`).
+
+> ⚠️ **Le suffixe arobase, qui posait une étiquette sur un élément isolé, est SUPPRIMÉ**
+> (Romain, 2026-07-28). Il n'avait aucun besoin à lui : associer un geste dans la production se
+> fait avec le point d'exclamation, nommer se fait dans la partie déclarative. La directive
+> `@label` part avec lui. L'étiquette de groupe ci-dessus, elle, est une autre graphie et reste.
 
 ### 6.3 Le CÂBLAGE n'est pas une désignation — il passe par `>>` et `\>>`
 
@@ -310,18 +316,35 @@ bout de la chaîne.
 > que la fréquence aberrante mesurée sur `nadaka`. Trouvé par BPx le 2026-07-28, sur une version
 > de cette page qui conseillait cette écriture.
 
-#### Le point d'application, et pourquoi il n'arrive pas encore
+#### Poser le geste SANS occuper de pas — la forme attachée
 
-Poser un geste **à un instant précis sans occuper de pas** s'écrit avec l'arobase **collée** au
-terminal : `C4@prise` — le geste s'applique là où est `C4`, sans rien ajouter à la séquence.
-C'est la graphie des étiquettes, elle existe déjà, et le frontal la porte correctement.
+Le nom écrit **nu** occupe un pas, comme un terminal. Pour le poser à un instant précis **sans
+allonger la pièce**, on l'**attache** au terminal avec le point d'exclamation :
 
-⚠️ **Mais elle ne va pas jusqu'au bout aujourd'hui** (2026-07-28) : le moteur ne lit pas encore ce
-champ. Il porte donc **la déclaration** de la macro et perd **l'endroit** où elle s'applique — le
-*quoi* arrive, le *quand* non. Or c'est le *quand* qui avait fait choisir le câblage plutôt qu'une
-déclaration. Le porter change la forme du nœud d'arbre, donc une surface de contrat avec l'aval :
-c'est escaladé, pas bricolé. **Tant que ce n'est pas fait, seule l'écriture nue ci-dessus produit
-un effet**, et elle occupe un pas.
+```bpscript
+S -> A4!prise  B4 C4 D4  E4!lache
+```
+
+Le geste se déclenche à l'instant du terminal auquel il est attaché ; c'est le terminal qui porte
+la durée. **Collé ou séparé d'une espace, c'est la même forme** — la règle d'espace ne joue que
+sur `!(…)`, jamais sur un nom.
+
+**Ce qui le fonde, mesuré de bout en bout le 2026-07-28**, et non pas affirmé :
+
+| Mesure | Résultat |
+|---|---|
+| durée de la pièce, forme attachée | **2 temps** — deux feuilles partagent la même étendue |
+| durée de la même pièce, nom écrit nu | **3 temps** — le nom prend un pas |
+| ce que le nom reçoit à la sortie | hauteur **nulle**, et son **action** à la place |
+| macro nommée `G4`, donc résoluble par l'alphabet | hauteur **nulle** quand même — **la macro l'emporte sur l'alphabet** |
+
+La dernière ligne est celle qui compte : sans elle, « pas de hauteur » aurait pu vouloir dire
+seulement « ce mot n'est pas une note ». C'est une **exclusion** qui protège, pas le hasard du
+vocabulaire. Mesure de Kairos, sur dérivation réelle.
+
+> ⚠️ **Une réserve, et elle est honnête** : sans catalogue de ports câblé, la même écriture rend
+> une hauteur. Ce n'est pas un défaut de la forme mais un hôte incomplet — et dans ce mode
+> l'action est perdue de toute façon, donc le manque se voit.
 
 #### Pourquoi ça passe par un nom — et pourquoi ça n'est pas un contournement
 
@@ -341,13 +364,17 @@ identité porte un câblage sans nom*, et cette réponse touche le tirage aléat
 
 | Écriture | Où ça s'arrête |
 |---|---|
-| `prise` **nu** dans le flux | **marche de bout en bout** — occupe un pas |
-| `C4@prise` (arobase collée) | le frontal porte le point d'application ; **le moteur ne le lit pas encore** |
-| `C4 !prise` | ⛔ compile, mais c'est un **accord** — son fantôme, aucune erreur nulle part |
+| `A4!prise` **attaché** | **marche de bout en bout** — n'occupe aucun pas ; c'est LA forme |
+| `prise` **nu** dans le flux | marche aussi, mais **occupe un pas** — autre pièce, pas un raccourci |
 | `S -> C4 !osc >> filtre D4` (câblage écrit dans le flux) | lu par le langage, **refusé au chargement** ; le refus donne la réécriture |
 
-Les quatre lignes disent d'où ça s'arrête à quel étage : personne n'a à le deviner, et rien n'est
+Les trois lignes disent où ça s'arrête à quel étage : personne n'a à le deviner, et rien n'est
 promis qui n'arrive pas.
+
+> Le suffixe arobase figurait ici comme la forme du point d'application, entre 17h et 18h le
+> 2026-07-28. Il a été **supprimé** le soir même, et la mesure a montré que la forme attachée
+> faisait le geste sans lui. Les deux arbitrages se sont croisés à une heure d'intervalle sur la
+> même question ; c'est la mesure qui les a réconciliés, pas le raisonnement.
 
 **Pourquoi l'ancienne écriture ne revient pas.** Elle ne se cite pas, même en exemple — une graphie
 fautive citée finit recopiée. La flèche `->` est une règle de **production**, exclusivement ; elle

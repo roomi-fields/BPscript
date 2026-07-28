@@ -264,20 +264,86 @@ console.log('\n=== §8. la forme documentée ===');
 // qu'elle produit bien un co-attaqué SONNANT, donc que le conseil reste faux tant que c'est vrai.
 // Si un jour un nom de macro cessait d'être sonnant dans un accord, cette ligne rougirait et la
 // mise en garde de la doc devrait être relue.
-console.log('\n=== §8bis. le piège du son fantôme ===');
+console.log('\n=== §8bis. la forme ATTACHÉE — le point d\'application ===');
 {
   const base = '@core\n@controls\n@macro voix saw >> audio\n';
-  const accord = compileToBPxAST(base + 'S -> C4 !voix D4');
-  const g = accord.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
-  ok('§8bis. le nom précédé du signe compile — donc rien ne le signale', !!accord.ast);
-  ok('§8bis. et il devient un co-attaqué SONNANT (le fantôme)',
-    g?.type === 'SimultaneousGroup' && g.secondaries?.[0]?.payload?.nature === 'sounding');
-  // La graphie du point d'application, elle, est correcte au frontal.
-  const arobase = compileToBPxAST(base + 'S -> C4@voix D4');
-  const s0 = arobase.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
-  ok('§8bis. l\'arobase collée porte le point d\'application', s0?.label === 'voix');
-  ok('§8bis. et n\'ajoute AUCUN élément à la séquence',
-    arobase.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.length === 2);
+  // Collé et espacé sont la MÊME forme : la règle d'espace ne joue que sur `!(…)`.
+  const colle = compileToBPxAST(base + 'S -> C4!voix D4');
+  const espace = compileToBPxAST(base + 'S -> C4 !voix D4');
+  const rhsDe = (r) => JSON.stringify(r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs);
+  ok('§8bis. collé et espacé donnent le MÊME arbre', rhsDe(colle) === rhsDe(espace));
+  const g = colle.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
+  ok('§8bis. le nom est ATTACHÉ au terminal, pas posé à côté', g?.type === 'SimultaneousGroup');
+  ok('§8bis. et c\'est bien le nom de la macro', g?.secondaries?.[0]?.name === 'voix');
+  // LA propriété qui fonde la forme, mesurée DANS LE MOTEUR : le secondaire copie l'étendue du
+  // primaire, donc il n'allonge pas la pièce. Sans cette mesure, « sans occuper de pas » serait
+  // une affirmation de doc — c'est ici qu'elle devient vérifiable.
+  const etendues = (ast) => {
+    const s2 = new Session(ast, {});
+    for (const m of ['derive', 'step', 'tick', 'produce', 'run']) {
+      if (typeof s2[m] === 'function') { try { s2[m](); } catch { /* la dérivation suffit */ } }
+    }
+    const t = s2.tree ?? s2._lastTree ?? null;
+    const spans = [];
+    const walk = (n) => { if (!n || typeof n !== 'object') return;
+      if (Array.isArray(n)) return n.forEach(walk);
+      if (n.span && typeof n.span.startBeat === 'number') spans.push([n.span.startBeat, n.span.endBeat]);
+      for (const k in n) if (n[k] && typeof n[k] === 'object') walk(n[k]); };
+    walk(t);
+    return spans;
+  };
+  const sAttache = etendues(colle.ast);
+  const sNu = etendues(compileToBPxAST(base + 'S -> C4 voix D4').ast);
+  const fin = (sp) => Math.max(0, ...sp.map((x) => x[1]));
+  ok('§8bis. ATTACHÉ, la pièce dure 2 temps — le nom n\'occupe aucun pas', fin(sAttache) === 2);
+  ok('§8bis. NU, la même pièce dure 3 temps — le nom prend un pas', fin(sNu) === 3);
+  ok('§8bis. et deux feuilles partagent la même étendue (la co-attaque)',
+    sAttache.filter(([a, b]) => a === 0 && b === 1).length === 2);
+}
+
+// §8ter. LE SUFFIXE ARROBASE A DISPARU — partout où il pouvait s'écrire, et la directive avec lui.
+// Chaque refus doit NOMMER la disparition ET donner LES DEUX réécritures : la dichotomie de Romain
+// (associer dans la production / déclarer en déclaratif) est le motif du retrait, un refus qui n'en
+// donnerait qu'une moitié laisserait choisir au hasard.
+console.log('\n=== §8ter. le suffixe arobase a disparu ===');
+const OU_LE_SUFFIXE_POUVAIT_S_ECRIRE = [
+  ['sur un terminal',            '@core\nS -> C4@kick D4'],
+  ['sur un groupe',              '@core\nS -> {C4 D4}@groove'],
+  ['sur une variable',           '@core\n@var a\nS -> C4 a@lbl'],
+  ['en fin de règle',            '@core\nS -> C4 D4@fin'],
+  ['dans une voix polymétrique', '@core\nS -> {C4@kick D4, E4}'],
+  ['dans un groupe de gabarit maître',  '@core\nS -> ${C4@kick D4}'],
+  ['dans un groupe de gabarit esclave', '@core\nS -> &{C4@kick D4}'],
+  ['la directive elle-même',     '@core\n@label groove\nS -> C4 D4'],
+];
+// ⚠️ CETTE LISTE EST L'ESPACE, PAS LE TICKET. Écrite d'abord avec le seul flux de premier niveau,
+// elle laissait TROIS positions refuser par un message générique — voix polymétrique et les deux
+// groupes de gabarit — parce que quatre endroits du parser lisent un élément et qu'un seul avait
+// la pierre tombale. La forme disparaissait bien partout ; ce qui manquait, c'est ce que le
+// lecteur apprend. Trouvé par la matrice, pas par relecture.
+for (const [ou, src] of OU_LE_SUFFIXE_POUVAIT_S_ECRIRE) {
+  const r = compileToBPxAST(src);
+  const msg = (r.errors || []).map((e) => e.message ?? String(e)).join(' ');
+  ok(`${ou} — refusé`, !r.ast);
+  ok(`${ou} — le refus NOMME la disparition`, /SUPPRIM/.test(msg));
+  ok(`${ou} — donne la réécriture pour ASSOCIER (le point d'exclamation)`, /!/.test(msg) && /production/i.test(msg));
+  ok(`${ou} — donne la réécriture pour DÉCLARER (le déclaratif)`, /déclarati/i.test(msg));
+}
+// Le champ quitte l'arbre AVEC le mot : un champ émis et toujours vide fait conclure « cette scène
+// n'étiquette rien » au lieu de « ce canal n'existe plus ».
+{
+  const r = compileToBPxAST('@core\nS -> C4 D4');
+  ok('§8ter. le champ des étiquettes a quitté l\'arbre', r.ast?.labels === undefined);
+  ok('§8ter. et aucun élément ne porte plus d\'étiquette',
+    !JSON.stringify(r.ast?.subgrammars ?? {}).includes('"label"'));
+}
+// TÉMOIN INVERSE — l'étiquette de GROUPE polymétrique est une AUTRE graphie et elle RESTE.
+// Sans lui, un retrait trop large passerait pour un succès.
+{
+  const r = compileToBPxAST('@core\nS -> groove:{C4 D4, E4}');
+  ok('§8ter. l\'étiquette de groupe polymétrique (deux-points) survit', !!r.ast && r.errors.length === 0);
+  ok('§8ter. et elle porte bien son nom',
+    r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0]?.label === 'groove');
 }
 
 // L'ÉTAT DATÉ que la doc affirme : la forme directe est acceptée par le langage et REFUSÉE au

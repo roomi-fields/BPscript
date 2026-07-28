@@ -285,7 +285,7 @@ Le compositeur le voit aussi -- les types sont explicites a la definition.
 ### Vingt-quatre symboles structurels
 
 ```
-@              declaration (header) + application (suffixe RHS : C4@kick)
+@              declaration (header) -- le suffixe d'application est SUPPRIME (2026-07-28)
 -> <- <>       derivation + direction (BP3 : --> <-- <->)
 { , }          polymetrie, groupement temporel, etat interne de definition
 ( )            parametre runtime (portees : symbole, regle, groupe), definition, appel, contexte
@@ -1368,7 +1368,6 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 | Directive | Ce qu'elle fait | Exemple | Se joue dans une regle ? |
 |-----------|----------------|---------|--------------------------|
 | `@macro` | Transformation nommee | `@macro kick (vel:120)` | **OUI** — a sa place, dans la regle |
-| `@label` | Nom structural pur | `@label groove` | s'APPLIQUE a un element (`C4@groove`) |
 | `@alias` | Nom donne a une chose technique ou repetitive | `@alias breath cc:2` | **NON, jamais** |
 
 ```
@@ -1377,8 +1376,6 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 @macro fast(x) {x}:2                 // transformation structurelle (duree collee)
 @alias breath cc:2                     // canal MIDI nomme
 @alias intensity osc:/sensor/1         // canal OSC nomme
-@label hat                           // nom structural pur
-@label groove                        // nom de groupe polymetrique
 ```
 
 > ⚠️ **La directive de correspondance a ete ABANDONNEE le 2026-07-27 au soir** : ce qui BRANCHE
@@ -1387,15 +1384,23 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 > <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une **convention**, pas une
 > information (decision Romain 2026-07-27).
 
-Application dans le RHS via `@` suffixe — colle a l'element, sans espace :
+**Application dans une regle : le point d'exclamation, ATTACHE au terminal.**
 
 ```
-S -> C4@kick D4@hat E4@accent F4
-S -> {melody, drums}@groove
+S -> C4!kick D4 E4!accent F4
 ```
 
-`C4@kick` = "C4, avec kick applique". Le `@` en suffixe passe implicitement
-l'element precedent comme argument (pour les macros parametrees).
+Le nom se declenche **a l'instant du terminal auquel il est attache**, et **n'occupe aucun pas** :
+c'est le terminal qui porte la duree. Mesure de bout en bout (2026-07-28) : la meme regle dure
+**deux temps avec la forme attachee, trois avec le nom ecrit nu**, et deux feuilles y partagent
+la meme etendue. Colle ou separe d'une espace, c'est la MEME forme -- la regle d'espace ne joue
+que sur `!(...)`.
+
+> ⚠️ **Le suffixe arobase (`C4@kick`) est SUPPRIME** (Romain, 2026-07-28). Motif : associer dans
+> la production, on a deja le point d'exclamation ; declarer une etiquette, ca se fait dans la
+> partie declarative. Deux voies existantes couvraient les deux besoins. La directive `@label`
+> part avec lui : elle ne declarait que des noms que lui seul savait appliquer.
+> L'etiquette d'un **groupe polymetrique** est une autre graphie et elle RESTE : `groove:{A B}`.
 
 Les noms poses sont designables par un `@alias` :
 
@@ -1411,7 +1416,7 @@ chevrons, dans le flux.
 Plusieurs elements peuvent partager le meme nom (multicast) :
 
 ```
-S -> C4@kick D4 E4@kick F4          // cc:1 modifie les 2 kicks en meme temps
+S -> groove:{C4 D4, E4} F4          // cc:1 modifie tout le groupe etiquete en meme temps
 ```
 
 ---
@@ -1815,7 +1820,7 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 
 > Voir [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) pour l'architecture complète.
 >
-> **AJOURNÉ (2026-06-10)** : l'approche étiquetage `N@terminal` dans le fichier -ho.
+> **AJOURNÉ (2026-06-10)** : l'approche étiquetage `N@terminal` dans le fichier -ho — jamais adoptée, sans rapport avec le suffixe arobase de BPScript, SUPPRIMÉ le 2026-07-28.
 > (où BP3 émet des étiquettes opaques et le REPL les résout post-dérivation) est ajournée.
 > L'approche retenue est `Scene.homomorphisms` + marqueurs inline (`star`, noms verbatim).
 

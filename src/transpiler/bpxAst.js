@@ -1226,7 +1226,10 @@ function emitActorLibRefs(ast) {
  * CE QUI EST DÉCLARABLE, selon `docs/design/SCENES.md` §6.1-6.2 — on ne crée aucune forme, on
  * vérifie celles qui existent :
  *   `verse.kick`  → `verse` est une SCÈNE déclarée (`@scene verse`) ;
- *   `kick.vel`    → `kick` est un LABEL posé sur des éléments (`C4@kick`) ;
+ *   `groove.vel`  → `groove` est l'ÉTIQUETTE d'un groupe polymétrique (`groove:{…}`) ;
+ *     ⚠️ le SUFFIXE arobase qui posait une étiquette sur un élément est SUPPRIMÉ depuis le
+ *     2026-07-28 — il ne se cite pas, même pour expliquer sa disparition : associer dans la
+ *     production se fait avec le point d'exclamation, déclarer se fait en déclaratif ;
  *   `*.kick.vel`  → toutes les scènes.
  * Un mot qui n'est aucun des trois ne désigne rien, et le taire fabrique une correspondance morte.
  *
@@ -1246,6 +1249,9 @@ function validateAliases(ast) {
   const collecterLabels = (n) => {
     if (!n || typeof n !== 'object') return;
     if (Array.isArray(n)) { n.forEach(collecterLabels); return; }
+    // Depuis le retrait du suffixe arobase (2026-07-28), la SEULE source d'étiquette est le
+    // groupe polymétrique préfixé par deux-points (`groove:{…}`) — autre graphie, même champ.
+    // C'est ce qui reste de vivant sous ce parcours ; sans lui il n'aurait plus rien à collecter.
     if (typeof n.label === 'string' && n.label) connus.add(n.label);
     for (const k in n) if (n[k] && typeof n[k] === 'object') collecterLabels(n[k]);
   };
@@ -1271,7 +1277,7 @@ function validateAliases(ast) {
     if (!bout || bout.kind !== 'scoped' || connus.has(bout.scope)) return;
     erreurs.push({
       message: `'@alias' : ${cote} '${bout.scope}.${bout.name}' ne désigne rien — '${bout.scope}' n'est `
-        + `ni une scène déclarée, ni un label posé sur un élément (\`C4@${bout.scope}\`), ni '*'`
+        + `ni une scène déclarée, ni une étiquette de groupe polymétrique (\`${bout.scope}:{…}\`), ni '*'`
         + (connus.size > 1 ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
       line: ligne,
     });

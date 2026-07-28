@@ -55,7 +55,7 @@ avant le LHS, après le RHS ou dans le RHS. Vérifié, ils compilent :
 |---|---|
 | `(+) N16 <> V8 A8` | ❌ *Expected RPAREN, got PLUS* — un contexte ne peut pas porter le glyphe |
 | `N16 <> V8 A8 (+)` | ❌ *Expected arrow* |
-| `N16@ctx <> V8 A8` | ❌ *Expected arrow, got AT* |
+| `N16@ctx <> V8 A8` | ❌ refusé (et le suffixe arobase est SUPPRIMÉ depuis le 2026-07-28) |
 
 S'ajoute une différence de **nature** : un contexte est un *entourage* qui n'est pas réécrit, alors
 que le marqueur de dhati traverse la règle et persiste. Les deux mécanismes ne se substituent pas.
