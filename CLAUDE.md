@@ -177,6 +177,40 @@ sa propre sortie. Trois leçons, et la troisième est la vraie :
   deux-là : **injecter la faute et regarder si le garde rougit**. Une portée ne s'inspecte pas en
   lisant le garde — elle se mesure en le faisant échouer là où on croit qu'il couvre.
 
+### UN GARDE QUI NE TESTE QUE DES CAS QUI RÉUSSISSENT GARDE L'ACCUSÉ, PAS LE JUGE (2026-07-28)
+
+J'ai livré un outil de migration bâti pour parer UN piège précis — un renommage qui change la
+musique en silence — avec un **juge structurellement aveugle à ce piège exact**, et un garde qui le
+déclarait bon. Ses assertions restaient vertes quand je débranchais la comparaison de production,
+parce que **toutes mes scènes d'essai renommaient correctement** : aucune ne pouvait révéler que le
+juge était absent. Corollaire opérationnel : après avoir injecté la faute dans l'ACCUSÉ, injecter
+la faute dans le **JUGE** — le rendre constant, aveugle, muet — et exiger que le garde rougisse.
+
+⚠️ **Et le témoin doit prouver les DEUX SENS : mordre ET se taire.** Une règle qui refuserait tout
+laisse au vert la moitié « doit mordre » ; c'est la moitié « doit passer » qui la démasque. Payé
+deux fois le 2026-07-28 : un témoin prescrit exigeait le refus de deux têtes homonymes dans une
+sous-grammaire — mesuré, il aurait refusé **120 scènes sur 333**, parce qu'une tête répétée est une
+ALTERNATIVE. Il est tombé en le MESURANT, pas en le relisant.
+
+### UNE EMPREINTE BÂTIE SUR DES CHAMPS CHOISIS NE VAUT QUE CE QUE VALAIT LE CHOIX (2026-07-28)
+
+Le comparateur du même outil a été corrigé **trois fois**, et chaque fois j'ai corrigé **le symptôme
+qu'on me montrait** : le rang du symbole (aveugle à un renommage cohérent), puis le nom (aveugle
+aux feuilles qui portent leur note ailleurs). Il a fallu qu'un troisième le mesure autrement pour
+voir que le défaut n'était dans **aucun des deux champs** — il était dans le FAIT DE CHOISIR des
+champs. Corrigé à la racine : on compare **tout**, en ne retirant que ce qui est prouvé non-sujet
+(ici les chronomètres).
+
+⚠️ **Une correction qui suit le rapport reçu reste dans le cadre de ce rapport.** Quand un deuxième
+défaut de la même famille arrive, ne pas le corriger : chercher **ce que les deux ont en commun**.
+Et un juge doit être **aussi discriminant qu'il PEUT l'être**, pas seulement assez pour le défaut
+du jour — s'il devient trop sévère il REFUSE, ce qui se voit et s'inspecte, au lieu de certifier à
+tort, ce qui ne se voit jamais.
+
+⚠️ **Corollaire mesuré** : la garantie d'un outil s'arrête où sa mesure s'arrête. Le mien réécrivait
+le code dans les backticks en déclarant « production identique » — ce qui était VRAI, le code étant
+porté opaque jusqu'au runtime. **Là où on ne peut pas prouver, on ne touche pas** — et on l'écrit.
+
 ### L'INSTRUMENT ment plus souvent que le sujet (7× le 2026-07-27)
 Quand un chiffre surprend, **suspecter l'instrument AVANT le sujet** — et le vérifier *avant*
 d'envoyer la mesure, pas après. Les sept formes payées en un jour :
