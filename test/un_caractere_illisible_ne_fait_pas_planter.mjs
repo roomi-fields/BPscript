@@ -80,6 +80,34 @@ ok(ILLISIBLES.length >= 6 && POSITIONS.length >= 5, 'la matrice ne s\'est pas vi
     'témoin inverse : collé aux chevrons, l\'antislash est la COUPURE et doit passer');
 }
 
+// ── LA GRAPHIE DE L'AUTRE LANGAGE ────────────────────────────────────────────
+// ⚠️ CE BLOC EXISTE PARCE QU'UN EXEMPLE FAUX A ÉTÉ MONTRÉ À ROMAIN, et qu'il « compilait ».
+// La flèche du moteur historique (`-->`) était acceptée EN SILENCE : le tiret de trop était avalé
+// comme un SILENCE de membre gauche, et l'arbre produit était exactement celui de `->`. Rien ne
+// pouvait le signaler — c'est l'angle miroir, un exemple faux qui compile révèle un trou de refus.
+// Deux langages, deux frontaux, aucun code partagé : avaler la graphie de l'autre fait passer pour
+// du BPScript une ligne qui n'en est pas.
+{
+  const FLECHES_ETRANGERES = ['-->', '--->', '---->'];
+  for (const f of FLECHES_ETRANGERES) {
+    const r = compileToBPxAST(`gate S:sc\nS ${f} C4 D4`);
+    const msg = (r.errors ?? []).map((e) => e.message ?? String(e)).join(' ');
+    ok(!r.ast, `la flèche '${f}' du moteur historique doit être REFUSÉE`);
+    ok(/moteur historique/.test(msg), `'${f}' — le refus doit NOMMER la confusion entre les deux langages`);
+    ok(msg.includes("'->'"), `'${f}' — le refus doit donner la flèche de BPScript`);
+  }
+  // ⚠️ TÉMOINS QUE LE REFUS NE DÉBORDE PAS, et ils sont mesurés sur le corpus : un SILENCE en
+  // membre gauche est une forme LÉGITIME (`- V V <> - tidha`, 4 scènes), et le séparateur de
+  // sous-grammaires est fait des mêmes tirets. Refuser « un tiret devant une flèche » aurait
+  // emporté les deux. Le refus porte donc sur le tiret COLLÉ, que personne n'écrit pour un silence.
+  const sep = compileToBPxAST('gate S:sc\n@alphabet.simple\nS -> a b\n-----\nS -> c d');
+  ok(!!sep.ast, 'le séparateur de sous-grammaires (cinq tirets) doit survivre');
+  const silence = compileToBPxAST('gate S:sc\n@alphabet.simple\n- a a -> b');
+  ok(!!silence.ast, 'un SILENCE en membre gauche, détaché, doit rester permis');
+  const espace = compileToBPxAST('gate S:sc\n@alphabet.simple\nS - -> a');
+  ok(!!espace.ast, 'un tiret DÉTACHÉ de la flèche reste un silence, pas une flèche étrangère');
+}
+
 if (echecs.length) {
   console.error(`[caractère illisible] ${echecs.length} ÉCHEC(S) :`);
   for (const e of echecs) console.error('  ✗ ' + e);

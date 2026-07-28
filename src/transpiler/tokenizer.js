@@ -254,6 +254,31 @@ function tokenize(source, opts = {}) {
       advance(); emit(T.LT, '<'); continue;
     }
 
+    // PIERRE TOMBALE — la flèche du moteur historique (`-->`) n'existe pas en BPScript.
+    //
+    // ⚠️ ELLE ÉTAIT ACCEPTÉE EN SILENCE, et c'est le pire mode d'échec : le tiret de trop était
+    // avalé comme un SILENCE dans le membre gauche, la règle compilait, et l'arbre produit était
+    // celui de `->` — donc rien ne pouvait le signaler. Mesuré le 2026-07-28 : l'architecte a
+    // montré à Romain un exemple qui « compilait », donc qu'il croyait juste.
+    // Deux langages, deux frontaux, aucun code partagé : avaler la graphie de l'autre, c'est
+    // faire passer pour du BPScript une ligne qui n'en est pas.
+    //
+    // ⚠️ ET LE REFUS EST ÉTROIT, PAR MESURE : un SILENCE en membre gauche est une forme
+    // LÉGITIME — `- V V <> - tidha` existe dans le corpus (dhati, 4 scènes). Ce qui est refusé,
+    // c'est le tiret COLLÉ à la flèche, que personne n'écrit pour dire un silence.
+    if (ch === '-' && peek(1) === '-') {
+      let j = 1;
+      while (peek(j) === '-') j++;
+      if (peek(j) === '>') {
+        const fleche = '-'.repeat(j) + '>';
+        throw new LexError(
+          `'${fleche}' est la flèche du moteur historique, elle n'existe pas en BPScript — la règle `
+          + `s'écrit avec '->'. Ce sont deux langages distincts : ce qui s'écrit ainsi dans une `
+          + `grammaire native ne se recopie pas ici. (Un SILENCE en membre gauche, lui, reste `
+          + `permis : il s'écrit détaché, '- V V -> …'.) Ligne ${line}, colonne ${col}.`, line, col);
+      }
+    }
+
     if (ch === '-' && peek(1) === '>') { advance(); advance(); emit(T.ARROW_R, '->'); continue; }
 
     // Câblage : `>>` câble, `\>>` coupe. Munch maximal AVANT `>=`.
