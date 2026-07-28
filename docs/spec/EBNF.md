@@ -39,7 +39,7 @@ macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")"
                     `@<directive> <nom> <valeur>`. La liste de paramètres se COLLE au nom ;
                     un corps qui commence par une parenthèse en est séparé par une espace. *)
 (* `map_directive` SUPPRIMÉ le 2026-07-27 au soir — la directive de correspondance est ABANDONNÉE,
-   le câblage passe par `>>` / `\\>>`. Ce qui DÉSIGNE reste dans `alias_directive`. *)
+   le câblage passe par `>>` / `\>>`. Ce qui DÉSIGNE reste dans `alias_directive`. *)
 label_directive  = "@" , "label" , IDENT ;     (* @label groove *)
 var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
 in_directive     = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
@@ -345,8 +345,8 @@ Décisions Romain 2026-07-27 : **le `=` est supprimé** de tout le langage, **le
 > ⚠️ **UN ALIAS DÉSIGNE, IL NE BRANCHE PAS**
 > (`hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`).
 > La directive de correspondance a été **abandonnée** le 2026-07-27 au soir : brancher se fait avec
-> `>>`, couper avec `\\>>`, **dans le flux**. L'argument qui a tranché — **une directive ne se
-> débranche pas** : `\\>>` coupe un câble pendant que ça joue, et il n'existe pas de
+> `>>`, couper avec `\>>`, **dans le flux**. L'argument qui a tranché — **une directive ne se
+> débranche pas** : `\>>` coupe un câble pendant que ça joue, et il n'existe pas de
 > « dé-déclaration ». Entre deux écritures pour brancher A sur B dont l'une est strictement moins
 > puissante, c'est la moins puissante qui part.
 

@@ -205,5 +205,64 @@ for (const [nom, src, attendu] of INTACTS) {
   ok(`${nom} — n'est PAS devenu un câblage`, cablagesDe(rhs).length === 0);
 }
 
+
+// ============================================================================
+// §8. LA FORME DOCUMENTÉE, COMPILÉE ET CHARGÉE (docs/design/SCENES.md §6.4)
+//
+// Pourquoi ici et pas seulement dans la démo : le dossier des démos n'est PAS versionné. Une
+// pièce qui exerce la capacité doit vivre quelque part de SUIVI, sinon la preuve est locale et
+// disparaît au prochain clone — payé le 2026-07-28, où j'ai cité une démo non versionnée comme
+// preuve qu'une forme était en service.
+//
+// Et la mesure va jusqu'au CHARGEMENT chez le moteur, pas seulement jusqu'à mon arbre : c'est là
+// que la forme directe s'arrête, et une garde qui ne regarderait que mon étage dirait « ça
+// marche » d'une écriture que personne ne peut jouer.
+// ============================================================================
+const { Session } = await import('../../BPx/dist/index.js');
+
+const EXEMPLE_DOCUMENTE = `@core
+@controls
+@macro prise    pot >> tempo.bpm
+@macro lache    \\>> tempo.bpm
+
+S -> A4 !prise  B4 C4 D4  !lache  E4`;
+
+console.log('\n=== §8. la forme documentée ===');
+{
+  const r = compileToBPxAST(EXEMPLE_DOCUMENTE);
+  ok('§8. l\'exemple de la doc compile', !!r.ast && r.errors.length === 0);
+  const rhs = r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs ?? [];
+  // Le nom PRÉCÉDÉ du signe ne prend pas un pas : il se co-attaque au terminal qui le précède.
+  ok('§8. le nom instantané ne devient PAS un élément de séquence à lui seul',
+    rhs.filter((e) => e.type === 'SimultaneousGroup').length === 2);
+  ok('§8. et il porte bien le nom de la macro',
+    rhs.filter((e) => e.type === 'SimultaneousGroup')
+      .every((g) => ['prise', 'lache'].includes(g.secondaries?.[0]?.name)));
+  // La différence annoncée dans la doc : nu, le même nom occupe un pas.
+  const nu = compileToBPxAST(EXEMPLE_DOCUMENTE.replace('!prise', 'prise').replace('!lache', 'lache'));
+  const rhsNu = nu.ast?.subgrammars?.[0]?.rules?.[0]?.rhs ?? [];
+  ok('§8. écrit NU, le même nom occupe un pas — la doc ne ment pas',
+    rhsNu.length === rhs.length + 2 && rhsNu.every((e) => e.type === 'Symbol'));
+  // Le corps de macro ne porte PAS le signe — le piège mesuré par BPx.
+  const avecSigne = compileToBPxAST(EXEMPLE_DOCUMENTE.replace('@macro lache    \\>>', '@macro lache    !\\>>'));
+  ok('§8. le signe DANS un corps de macro ne passe pas (piège documenté)', !avecSigne.ast);
+  // Et ça charge chez le moteur.
+  let charge = null;
+  try { new Session(r.ast, {}); charge = true; } catch (e) { charge = String(e.message); }
+  ok('§8. la forme documentée CHARGE chez le moteur', charge === true);
+}
+// L'ÉTAT DATÉ que la doc affirme : la forme directe est acceptée par le langage et REFUSÉE au
+// chargement. Témoin des deux sens — si le moteur se met à la porter, cette ligne rougit et la
+// doc doit changer le jour même, au lieu de rester périmée sans que rien ne le dise.
+{
+  const r = compileToBPxAST('@core\n@controls\nS -> C4 !lpf \\>> out.in D4');
+  ok('§8. la forme DIRECTE est acceptée par le langage', !!r.ast && r.errors.length === 0);
+  let refus = null;
+  try { new Session(r.ast, {}); } catch (e) { refus = String(e.message); }
+  ok('§8. et REFUSÉE au chargement par le moteur', refus !== null);
+  ok('§8. le refus du moteur donne la réécriture (écrire dans une macro)',
+    refus !== null && /macro/i.test(refus));
+}
+
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 if (fail > 0) process.exit(1);

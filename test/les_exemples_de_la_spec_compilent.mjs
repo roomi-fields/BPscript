@@ -129,6 +129,9 @@ const MORTES = [
   [/@alias\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "l'alias avec le signe '=' (supprimé de TOUT le langage le 2026-07-27)", 'exemptable'],
   [/@map\s+[A-Za-z_<[]/, "'@map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
    + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@alias'", 'exemptable'],
+  [/\\\\>>/, "l'antislash DOUBLE — le signe de coupure n'en porte qu'UN. Deux se glissent "
+   + "quand on recopie une chaine de code dans de la prose, et le lecteur recopie ce qu'il "
+   + "voit : ca ne compile pas", 'absolue'],
   [/(?<![\\`])!>>/, "'!>>' — l'ancienne coupure de câblage, remplacée par '\\>>' le 2026-07-28 : le "
    + "point d'exclamation ne dit QUE l'instantané, il ne dit plus la coupure", 'exemptable'],
   [/@(?:map|alias)\s+[^\n|]*(->|<->|<-)/,

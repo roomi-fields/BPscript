@@ -158,9 +158,9 @@ Les enfants exposent explicitement les flags qu'ils veulent rendre visibles :
 **exclusivement une regle de production**.
 
 > ⚠️ **UN ALIAS DESIGNE, IL NE BRANCHE PAS.** Alimenter le tempo, un drapeau ou le depart d'une
-> partie est un **cablage**, et le cablage a son propre geste : `>>` pour brancher, `\\>>` pour
+> partie est un **cablage**, et le cablage a son propre geste : `>>` pour brancher, `\>>` pour
 > couper, **dans le flux** (decision Romain 2026-07-27 au soir). L'argument qui a tranche :
-> **une directive ne se debranche pas** -- `\\>>` coupe un cable pendant que ca joue et le
+> **une directive ne se debranche pas** -- `\>>` coupe un cable pendant que ca joue et le
 > branchement se reconfigure au fil de la piece ; il n'existe pas de « de-declaration ».
 
 > ### Un ALIAS n'est pas une MACRO
@@ -680,8 +680,8 @@ voix ne bave pas dans les voix paralleles.
 | `B3!C7` *(`!` entre symboles, sans parentheses)* | **SIMULTANE / accord** (conjoint NON-flux) -- operateur existant, rien a voir avec le flux |
 | `!f` *(en tete, sans primaire)* | **objet HORS-TEMPS** -- element pose seul, sans duree (`OutTimeObject`) |
 | `![@seed:N]` | **directive de production DANS LE FLUX** -- element sans duree (`InstantControl`) |
-| `!osc >> filtre` | **CABLAGE pose dans le flux** -- element a part entiere, sans duree |
-| `!\>> out.in` | **COUPURE posee dans le flux** -- la barre BARRE le fil ; le `!` reste l'instantane |
+| `!prise` *(nom d'une `@macro` de cablage)* | **BRANCHER ou COUPER a un instant precis** -- la forme retenue, cf. SCENES.md §6.4 |
+| `!osc >> filtre` | cablage ECRIT dans le flux -- **lu par le langage, REFUSE au chargement par le moteur** (2026-07-28) |
 | `!=` *(dans un drapeau)* | **comparaison de difference** -- la negation de l'operateur `=` |
 
 `!` est **surcharge**, et **c'est ce qui SUIT le `!` qui tranche, jamais le `!` lui-meme.** La
@@ -695,6 +695,12 @@ meme signe y disait l'instant PUIS la coupure, et la ligne ne se lisait plus. Un
 qui porte deux sens ne se rattrape pas par une regle de lecture, il se separe. Reste une seule
 exception, et elle est d'une autre famille : `!=` FUSIONNE en un jeton unique, comme `==` ou `>=`,
 et ne se lit jamais comme un `!` suivi de quelque chose.
+
+⚠️ **Le cablage ECRIT dans le flux n'est pas la forme a employer** (arbitrage Romain 2026-07-28) :
+le langage le lit, mais le moteur le REFUSE au chargement -- un cablage n'a pas de nom, et la
+table des symboles interne tout sous un nom. Pour brancher ou couper a un instant precis, on
+NOMME le cablage dans une `@macro` et on pose son nom dans le flux : `!prise`. La forme complete,
+avec son motif et son piege de graphie, est en [SCENES.md §6.4](../design/SCENES.md).
 
 La **regle d'espace** ne s'applique qu'a **`!(...)`** : **colle = ancre** au terminal precedent,
 **espace = separe**. Un `!(...)` colle sans terminal avant lui (debut de regle ou de groupe, ex.
@@ -1373,7 +1379,7 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 ```
 
 > ⚠️ **La directive de correspondance a ete ABANDONNEE le 2026-07-27 au soir** : ce qui BRANCHE
-> passe par les chevrons `>>` / `\\>>`, ce qui DESIGNE reste sous `@alias`. Et le **`=` a disparu
+> passe par les chevrons `>>` / `\>>`, ce qui DESIGNE reste sous `@alias`. Et le **`=` a disparu
 > de TOUT le langage**, `@macro` comprise : **une seule forme partout**, `@<directive> <nom>
 > <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une **convention**, pas une
 > information (decision Romain 2026-07-27).
