@@ -237,6 +237,59 @@ export function production(source) {
 }
 
 /**
+ * L'AMALGAME acteur / tête de règle — la migration des voix de code (Romain, 2026-07-28).
+ *
+ * ⚠️ CE QUE C'EST, ET POURQUOI C'EST UNE ERREUR : écrire une règle dont la tête porte le nom d'un
+ * acteur fait que le code du membre droit tire son langage DU NOM DE LA RÈGLE. Romain :
+ * « ça amalgame un nom d'acteur et un nom de règle, c'est une erreur grave ». Un nom de règle est
+ * une étiquette pour appeler la règle — il ne porte pas d'identité d'acteur.
+ *
+ * LA MIGRATION A DEUX GESTES, ET LE SECOND EST OBLIGATOIRE : renommer la tête NE SUFFIT PAS. En
+ * perdant le nom de l'acteur, le code perd son langage et la scène est REFUSÉE. Il faut donc, dans
+ * le même mouvement, donner au code son TAG — la forme qui annonce son langage elle-même.
+ * Mesuré : tête renommée seule → « Backtick sans langage » ; tête renommée + tag → identique.
+ */
+function migrerAmalgame(source, ast, suffixe) {
+  const moteurDe = {};
+  for (const a of ast.actors || []) if (!a?.synthetic && a.properties?.eval) moteurDe[a.name] = a.properties.eval;
+  if (!Object.keys(moteurDe).length) return null;
+
+  // Les têtes de règle qui portent un nom d'acteur À MOTEUR D'ÉVALUATION. Un acteur SANS moteur
+  // n'est pas concerné : rien n'hérite de lui, donc rien à migrer — c'est le troisième cas que
+  // Kanopi a testé sur son propre instrument avant de donner son chiffre.
+  const tetes = new Set();
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      for (const t of r.lhs || []) if (t?.name && !t.negated && moteurDe[t.name]) tetes.add(t.name);
+    }
+  }
+  if (!tetes.size) return null;
+
+  let migre = source;
+  const gestes = [];
+  for (const nom of tetes) {
+    const moteur = moteurDe[nom];
+    // 1. LE TAG D'ABORD, tant que la tête porte encore le nom : c'est lui qui identifie les lignes
+    //    concernées. Seuls les backticks SANS tag sont touchés (`langage: …` est déjà explicite).
+    migre = migre.replace(
+      new RegExp(`(^${nom}\\s*->[^\n]*?)\`(?![A-Za-z_][A-Za-z0-9_]*\\s*:)`, 'gm'),
+      `$1\`${moteur}: `);
+    // 2. PUIS la tête et ses appels cessent de porter le nom de l'acteur.
+    //    ⚠️ La ligne de DÉCLARATION est épargnée — l'acteur garde son nom, c'est la règle qui cède.
+    //    ⚠️ Et un renvoi POINTÉ (`nom.terminal`) est épargné aussi : là le nom désigne bien
+    //       l'acteur, c'est son emploi légitime, et le renommer casserait la qualification.
+    let cible = `${nom}${suffixe}`;
+    let n = 2;
+    while (new RegExp(`(^|[^A-Za-z0-9_])${cible}(?![A-Za-z0-9_])`).test(source)) cible = `${nom}${suffixe}${n++}`;
+    migre = migre.split('\n').map((l) => (l.trimStart().startsWith('@actor')
+      ? l
+      : l.replace(new RegExp(`(^|[^A-Za-z0-9_])${nom}(?![A-Za-z0-9_.])`, 'g'), `$1${cible}`))).join('\n');
+    gestes.push({ de: nom, vers: cible, sortes: [`voix de code ${moteur}`] });
+  }
+  return { source: migre, gestes };
+}
+
+/**
  * Migre UNE source en mémoire et VÉRIFIE. Rend toujours un verdict explicite ; ne décide jamais
  * d'écrire — c'est l'appelant qui écrit, et seulement sur `ok:true`.
  */
@@ -248,14 +301,15 @@ export function migrerSource(source, suffixe = '_r') {
   // pour une vraie raison, personne ne le lit.
   if (!ast) return { ok: true, horsSujet: true, renommages: [] };
   const enCollision = collisions(ast);
-  if (!enCollision.size) return { ok: true, aucunChangement: true, renommages: [] };
+  const amalgame = migrerAmalgame(source, ast, suffixe);
+  if (!enCollision.size && !amalgame) return { ok: true, aucunChangement: true, renommages: [] };
 
   const avant = production(source);
   if (avant.erreur) {
     return { ok: false, motif: `production INVÉRIFIABLE avant migration (${avant.erreur}) — on ne renomme pas ce qu'on ne sait pas comparer` };
   }
-  let migre = source;
-  const renommages = [];
+  let migre = amalgame ? amalgame.source : source;
+  const renommages = amalgame ? [...amalgame.gestes] : [];
   for (const [nom, sortes] of enCollision) {
     let cible = `${nom}${suffixe}`;
     // Le nom d'arrivée ne doit être pris par RIEN — ni une note, ni un autre nom déjà là.
@@ -273,7 +327,14 @@ export function migrerSource(source, suffixe = '_r') {
     return { ok: false, renommages,
       motif: 'LA PRODUCTION A CHANGÉ — le renommage a modifié la musique. On n\'écrit pas.' };
   }
-  const restantes = collisions(compileToBPxAST(migre).ast || {});
+  // L'amalgame doit avoir DISPARU, pas seulement les collisions de noms : sans ce contrôle, une
+  // migration qui renomme la tête sans poser le tag passerait pour un succès — or c'est justement
+  // la moitié qui casse la scène.
+  const astApres = compileToBPxAST(migre).ast || {};
+  if (migrerAmalgame(migre, astApres, suffixe)) {
+    return { ok: false, renommages, motif: "l'amalgame acteur/tête de règle subsiste après migration" };
+  }
+  const restantes = collisions(astApres);
   if (restantes.size) {
     return { ok: false, renommages,
       motif: `il reste ${restantes.size} collision(s) après migration : ${[...restantes.keys()].join(', ')}` };
