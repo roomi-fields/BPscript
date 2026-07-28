@@ -14,8 +14,8 @@ function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:'
 
 const r = compileToBPxAST(`@library.strudel "dirt-samples"
 @actor beat  eval.strudel
-S -> beat
-beat -> \`note("c2*4").s("sawtooth")\``);
+S -> voix
+voix -> \`strudel: note("c2*4").s("sawtooth")\``);
 check(r.errors.length === 0, 'compile sans erreur : ' + JSON.stringify(r.errors));
 const libs = (r.ast.directives || []).filter((d) => d.type === 'LibraryDirective');
 check(libs.some((d) => d.engine === 'strudel'), 'LibraryDirective strudel présente : ' + JSON.stringify(libs));
@@ -26,8 +26,8 @@ check(libs.some((d) => d.engine === 'strudel' && d.name === 'dirt-samples'),
 const r2 = compileToBPxAST(`@library.strudel "dirt-samples"
 @library.strudel "tidal-drum-machines"
 @actor beat eval.strudel
-S -> beat
-beat -> \`s("bd")\``);
+S -> voix
+voix -> \`strudel: s("bd")\``);
 const libs2 = (r2.ast.directives || []).filter((d) => d.type === 'LibraryDirective' && d.engine === 'strudel');
 check(libs2.length === 2, 'deux banques accumulées pour strudel : ' + JSON.stringify(libs2));
 

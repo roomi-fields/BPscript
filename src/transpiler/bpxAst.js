@@ -1329,15 +1329,15 @@ function refuserNomsEnDouble(ast) {
   for (const a of ast.aliases || []) noter(a?.name, 'un alias', a?.line);
   for (const e of ast.inputs || []) noter(e?.name, 'une entrée', e?.line);
   for (const v of ast.vars || []) noter(typeof v === 'string' ? v : v?.name, 'une variable de travail', v?.line);
-  // ⚠️ L'ACTEUR N'EST PAS LÀ, et c'est le CRITÈRE RATIFIÉ qui l'en écarte, pas une commodité.
-  // `@actor viz eval.hydra` puis `viz -> \`code\`` est l'écriture documentée d'une voix de code :
-  // la règle DIT ce que la voix joue. Mesuré avec le même test que pour `gate Sa:sc` — les règles
-  // produites sont IDENTIQUES avec et sans la déclaration d'acteur : elle POSE DES PROPRIÉTÉS
-  // (alphabet, accordage, transport, moteur d'évaluation) sur un nom, elle n'en crée pas un
-  // rival. C'est exactement le cas que Romain a permis : « pas de problème pour déclarer une
-  // propriété sur un nom existant a posteriori ».
-  // L'inclure refusait la voix de code — forme ratifiée, sans réécriture possible, puisque
-  // renommer la règle ferait que le nom ne désigne plus la voix.
+  // ⚠️ L'ACTEUR EST LÀ, ET IL Y EST REVENU LE 2026-07-28 AU SOIR. Je l'en avais écarté le matin,
+  // en croyant protéger la voix de code : `@actor viz eval.hydra` puis `viz -> <code>` était la
+  // forme du corpus, et je l'avais remontée comme un « conflit dans la décision » à arbitrer.
+  // Romain a tranché l'inverse, et il avait raison depuis le début : cette écriture AMALGAME un
+  // nom d'acteur et un nom de règle, et c'est précisément ce que la règle existe pour interdire.
+  // J'avais donc écrit une exception pour protéger la faute.
+  // Ce qui donne son langage au code est le TAG, pas le nom de la règle — 44 scènes migrées chez
+  // Kanopi, zéro amalgame restant, mesuré avant de poser ceci.
+  for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, 'un acteur', a?.line);
   for (const sc of ast.scenes || []) noter(sc?.name, 'une scène', sc?.line);
   for (const c of ast.cvInstances || []) noter(c?.name, 'un objet CV', c?.line);
 

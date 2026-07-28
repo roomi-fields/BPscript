@@ -29,12 +29,12 @@ function bothAccept(src, label) {
 
 // --- a. eval + transport → REJET ---
 bothReject(
-  '@actor viz  eval.hydra  transport.audio\nS -> viz\nviz -> `osc(4).out()`',
+  '@actor viz  eval.hydra  transport.audio\nS -> voix\nvoix -> `hydra: osc(4).out()`',
   'sort en natif',
   'a. eval.hydra + transport.audio',
 );
 bothReject(
-  '@actor beat  transport.midi(ch:3)  eval.strudel\nS -> beat\nbeat -> `s("bd")`',
+  '@actor beat  transport.midi(ch:3)  eval.strudel\nS -> voix\nvoix -> `strudel: s("bd")`',
   'sort en natif',
   'a. transport.midi + eval.strudel (ordre inverse)',
 );
@@ -53,7 +53,7 @@ bothReject(
 
 // --- Formes CANONIQUES toujours acceptées (non-régression) ---
 bothAccept(
-  '@actor viz  eval.hydra\nS -> viz\nviz -> `osc(4).out()`',
+  '@actor viz  eval.hydra\nS -> voix\nvoix -> `hydra: osc(4).out()`',
   'canon : eval SANS transport (sort en natif)',
 );
 bothAccept(

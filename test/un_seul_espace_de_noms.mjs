@@ -57,6 +57,9 @@ const TETES_REFUSEES = [
   ['contre un alias',     '@core\n@alias motif cc:2\nmotif -> C4'],
   ['contre une variable', '@core\n@var motif\nmotif -> C4'],
   ['contre une entrée',   '@core\n@in motif transport.midi\nmotif -> C4'],
+  // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
+  ['contre un ACTEUR (l\'amalgame)', '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'],
+  ['contre un acteur de notes',      '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  transport.audio\nS -> v\nv -> C4 D4'],
 ];
 for (const [quoi, src] of TETES_REFUSEES) {
   const r = refus(src);
@@ -73,10 +76,13 @@ const DOIVENT_PASSER = [
    '@core\n@alphabet.simple\nS -> X\nX -> a b\n-----\nX -> c d'],
   ['une PROPRIÉTÉ posée sur un nom existant : gate sur un terminal',
    '@core\n@alphabet.western\ngate C4:midi\nS -> C4 D4'],
-  ['une PROPRIÉTÉ posée sur un nom existant : un acteur et sa règle (voix de code)',
-   '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `osc(4).out()`'],
-  ['un acteur et sa règle, voix de notes',
-   '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  transport.audio\nS -> v\nv -> C4 D4'],
+  // ⚠️ CES DEUX TÉMOINS ONT ÉTÉ RETIRÉS LE 2026-07-28 AU SOIR, ET C'EST L'INVERSE D'UN
+  // RÉTRÉCISSEMENT : ils affirmaient qu'un acteur et sa règle homonyme devaient PASSER. Romain a
+  // tranché que c'est une ERREUR GRAVE — l'amalgame d'un nom d'acteur et d'un nom de règle. Les
+  // garder aurait fait rougir la règle qu'ils étaient censés protéger. Ils deviennent des cas
+  // REFUSÉS, plus bas.
+  ['une voix de code à la forme RATIFIÉE : le code annonce son langage',
+   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> `hydra: osc(4).out()`'],
   ['des noms sans rapport entre eux',
    '@core\n@alphabet.western\n@macro grondement saw >> audio\n@alias souffle cc:2\nmotif -> C4\nS -> motif'],
   ['un nom PROCHE d\'un terminal, mais qui n\'en est pas un',
@@ -111,7 +117,7 @@ ok(refus('@core\n@alphabet.western\nG4 -> C4').length >= 1,
   'TÉMOIN — la règle doit savoir MORDRE (sinon tout ce fichier ment)');
 ok(refus('@core\n@alphabet.western\nmotif -> C4').length === 0,
   'TÉMOIN — et savoir se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
-ok(SORTES.length >= 4 && CE_QUI_EST_DEJA_PRIS.length >= 3 && DOIVENT_PASSER.length >= 13,
+ok(SORTES.length >= 4 && CE_QUI_EST_DEJA_PRIS.length >= 3 && DOIVENT_PASSER.length >= 12,
   'les matrices ne se sont pas vidées');
 
 if (echecs.length) {

@@ -227,7 +227,21 @@ export function production(source) {
   }
   const arbre = session.tree ?? session._lastTree ?? null;
   if (!arbre) return { erreur: 'aucun arbre dérivé' };
+  // ⚠️ LE CODE D'UN BLOC N'EST PAS DANS L'ARBRE DÉRIVÉ — seul son identifiant y voyage. Mesuré :
+  // on remplace tout le contenu d'un bloc, l'arbre sort STRICTEMENT identique. Or c'est DANS ces
+  // blocs que la migration de l'amalgame écrit (elle y pose le tag). Mon juge était donc aveugle
+  // à l'endroit exact où mon outil agit — la même faute que ce matin, un cran plus loin.
+  // Trouvé par Kanopi le 2026-07-28, en refusant de signer 44 migrations sur une seule mesure.
+  const codes = [];
+  const ramasserCode = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) return n.forEach(ramasserCode);
+    if (typeof n.type === 'string' && /Backtick/.test(n.type)) codes.push(`${n.payload?.interp ?? '?'}::${n.code ?? ''}`);
+    for (const k in n) if (n[k] && typeof n[k] === 'object') ramasserCode(n[k]);
+  };
+  ramasserCode(ast);
   return {
+    codes,
     jetons: JSON.stringify(arbre, (k, v) => {
       if (CHRONOMETRES.test(k)) return undefined;
       if (typeof v === 'string' && NOM_GENERE_DE_CODE.test(v)) return 'BT<identifiant généré>';
@@ -327,6 +341,27 @@ export function migrerSource(source, suffixe = '_r') {
     return { ok: false, renommages,
       motif: 'LA PRODUCTION A CHANGÉ — le renommage a modifié la musique. On n\'écrit pas.' };
   }
+  // ── LE CODE DES BLOCS ────────────────────────────────────────────────────────
+  // ⚠️ POSER LE TAG TRIME LE BLOC : le langage retire le saut de ligne d'ouverture et celui de
+  // fermeture d'un bloc TAGUÉ, et ne les retire pas d'un bloc hérité. Deux caractères de bord.
+  // Mesuré par Kanopi sur 9 scènes p5, reproduit ici sur deux scènes minimales.
+  // CE N'EST PAS un effet de l'insertion (essayé avec un saut de ligne après le tag : même
+  // résultat) — c'est une ASYMÉTRIE DU LANGAGE, remontée à Romain, pas tranchée ici.
+  //
+  // On NE LE TAIT PAS. Le code a changé, et le dire est le minimum : l'outil l'ANNONCE à chaque
+  // scène concernée. On ne certifie « identique » que ce qui l'est.
+  const avantC = avant.codes ?? [], apresC = apres.codes ?? [];
+  const memeCodeAuBordPres = avantC.length === apresC.length
+    && avantC.every((c, i) => c.trim() === (apresC[i] ?? '').trim());
+  const codeIdentique = JSON.stringify(avantC) === JSON.stringify(apresC);
+  let avertissement = null;
+  if (!codeIdentique && memeCodeAuBordPres) {
+    avertissement = 'le code des blocs est TRIMÉ par la pose du tag (saut de ligne d\'ouverture et '
+      + 'de fermeture) — asymétrie du langage, inerte pour js/p5/csound, remontée à Romain';
+  } else if (!codeIdentique) {
+    return { ok: false, renommages,
+      motif: 'LE CODE D\'UN BLOC A CHANGÉ autrement que par le trim des bords. On n\'écrit pas.' };
+  }
   // L'amalgame doit avoir DISPARU, pas seulement les collisions de noms : sans ce contrôle, une
   // migration qui renomme la tête sans poser le tag passerait pour un succès — or c'est justement
   // la moitié qui casse la scène.
@@ -339,7 +374,7 @@ export function migrerSource(source, suffixe = '_r') {
     return { ok: false, renommages,
       motif: `il reste ${restantes.size} collision(s) après migration : ${[...restantes.keys()].join(', ')}` };
   }
-  return { ok: true, source: migre, renommages };
+  return { ok: true, source: migre, renommages, ...(avertissement ? { avertissement } : {}) };
 }
 
 // ── Ligne de commande ────────────────────────────────────────────────────────
@@ -383,6 +418,7 @@ if (estPrincipal) {
     }
     migres++;
     console.log(`✔ ${nom}  production IDENTIQUE  ${r.renommages.map((x) => `${x.de}→${x.vers} (${x.sortes.join('+')})`).join(', ')}`);
+    if (r.avertissement) console.log(`    ⚠️ ${r.avertissement}`);
     if (ecrire) writeFileSync(f, r.source);
   }
   console.log(`\n${fichiers.length} scène(s) · ${migres} à migrer (production vérifiée identique)`
