@@ -31,6 +31,7 @@ import { pathToFileURL } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { expandAlphabetTerminals } from '../src/transpiler/actorResolver.js';
 import { resolveActorAlphabet } from '../src/transpiler/libs.js';
+import { LIBS } from '../src/transpiler/libs-data.js';
 
 const GRAINE = 12345;   // fixe : deux dérivations ne sont comparables qu'à tirage identique.
 
@@ -108,8 +109,33 @@ export function collisions(ast) {
  * `A` ne doit jamais toucher `A4` : c'est exactement l'erreur qui transforme une note en autre
  * chose. On ancre des deux côtés sur « pas un caractère de nom ».
  */
+/**
+ * Ce qui peut CONTINUER un terminal, mesuré sur les alphabets — jamais deviné.
+ *
+ * ⚠️ L'ancrage n'interdisait que lettres, chiffres et souligné. Il ne connaissait pas le DIÈSE :
+ * `A` protégeait bien `A4` — c'était écrit et c'était vrai — mais mordait `A#5`, qui devenait
+ * `A_r#5`. Une note redevenue autre chose en silence, TEXTUELLEMENT le piège que cet outil existe
+ * pour parer. Trois scènes cassées chez BPx avant qu'il le voie.
+ * La parade n'est pas d'ajouter le dièse : c'est de LIRE les signes d'altération dans les
+ * bibliothèques. Un alphabet qui en apporterait un nouveau étend l'ancrage tout seul — rien à
+ * penser au bon moment, et c'est ce qui manquait la première fois.
+ */
+function signesDAlteration() {
+  const cars = new Set();
+  const parcourir = (o) => {
+    if (!o || typeof o !== 'object') return;
+    if (o.alterations && typeof o.alterations === 'object' && !Array.isArray(o.alterations)) {
+      for (const k of Object.keys(o.alterations)) for (const c of k) if (!/[A-Za-z0-9_]/.test(c)) cars.add(c);
+    }
+    for (const k in o) if (o[k] && typeof o[k] === 'object') parcourir(o[k]);
+  };
+  for (const nom of Object.keys(LIBS)) parcourir(LIBS[nom]);
+  return [...cars];
+}
+
 export function renommer(source, avant, apres) {
-  const motif = new RegExp(`(^|[^A-Za-z0-9_])${avant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9_])`, 'g');
+  const suite = ('A-Za-z0-9_' + signesDAlteration().map((c) => c.replace(/[.*+?^${}()|[\]\\\-]/g, '\\$&')).join(''));
+  const motif = new RegExp(`(^|[^${suite}])${avant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![${suite}])`, 'g');
   // ⚠️ LE CODE ENTRE BACKTICKS EST INTOUCHABLE, et ce n'est pas un scrupule : le comparateur de
   // production est AVEUGLE à ce qu'il contient. Le code est porté opaque jusqu'au runtime, donc
   // le réécrire ne change AUCUN jeton produit — l'outil déclarerait « production identique » sur
@@ -135,12 +161,25 @@ export function production(source) {
     if (typeof session[m] === 'function') { try { session[m](); } catch { /* la dérivation suffit */ } }
   }
   const arbre = session.tree ?? session._lastTree ?? null;
+  // ⚠️ L'EMPREINTE PORTE LE NOM, PAS LE NUMÉRO DE TABLE — et c'est tout le sujet.
+  // Elle a d'abord porté `symbolId`, un numéro d'internement. Or un renommage COHÉRENT préserve
+  // l'ordre d'internement, donc les numéros : l'empreinte sortait IDENTIQUE alors que les NOMS
+  // avaient changé. Le juge était donc structurellement aveugle à la classe de faute qu'il vise —
+  // renommer une note. Il voyait très bien un renommage INCOMPLET (un symbole nouveau apparaît et
+  // décale les numéros), et pas du tout un renommage COMPLET mais fautif.
+  // Mesuré par BPx le 2026-07-28 : mon outil a déclaré 19 scènes saines, 3 avaient changé de
+  // musique. C'est le nom qui tranche, jamais son rang.
+  const nomDe = (id) => {
+    try { return session.grammar?.symbols?.getName?.(id) ?? `#${id}`; }
+    catch { return `#${id}`; }
+  };
   const jetons = [];
   const parcourir = (n) => {
     if (!n || typeof n !== 'object') return;
     if (Array.isArray(n)) return n.forEach(parcourir);
     if (n.span && typeof n.span.startBeat === 'number') {
-      jetons.push(`${n.span.startBeat}:${n.span.endBeat}:${n.symbolId ?? n.name ?? '?'}`);
+      const identite = n.symbolId !== undefined ? nomDe(n.symbolId) : (n.name ?? '?');
+      jetons.push(`${n.span.startBeat}:${n.span.endBeat}:${identite}`);
     }
     for (const k in n) if (n[k] && typeof n[k] === 'object') parcourir(n[k]);
   };

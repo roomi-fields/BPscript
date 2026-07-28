@@ -56,6 +56,15 @@ const VOISINS = [
   ['A en début de ligne',       'A -> A A',          'A', 'A_r', 'A_r -> A_r A_r'],
   ['sa ne touche pas sa4',      'S -> sa sa4',       'sa', 'sa_r', 'S -> sa_r sa4'],
   ['un nom ne touche pas son préfixé', 'S -> re rega', 're', 're_r', 'S -> re_r rega'],
+  // ⚠️ LES ALTÉRATIONS — l'angle mort qui a cassé 3 scènes chez BPx. L'ancrage interdisait
+  // lettres, chiffres et souligné ; il ne connaissait pas le DIÈSE, donc `A` mordait `A#5`.
+  // Ma matrice testait A4, Ab et _A : les voisins auxquels j'avais pensé. C'est exactement la
+  // faute « énumérer les formes qu'on a en tête » — et la parade est que l'ancrage LIT désormais
+  // les signes d'altération dans les bibliothèques au lieu de les énumérer à la main.
+  ['A ne touche pas A#5',       'S -> A A#5',        'A', 'A_r', 'S -> A_r A#5'],
+  ['F ne touche pas F#2',       'S -> F F#2',        'F', 'F_r', 'S -> F_r F#2'],
+  ['E ne touche pas E#3',       'S -> E E#3',        'E', 'E_r', 'S -> E_r E#3'],
+  ['A ne touche pas A##',       'S -> A A##',        'A', 'A_r', 'S -> A_r A##'],
 ];
 console.log(`[outil migration] renommage : ${VOISINS.length} cas`);
 for (const [nom, avant, de, vers, attendu] of VOISINS) {
@@ -145,8 +154,37 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
     '3bis. un renommage À MOITIÉ doit se voir — production différente ou scène refusée');
 }
 
+// ── 3ter. LE JUGE VOIT-IL UN RENOMMAGE DE NOTE ? ─────────────────────────────
+// ⚠️ CE BLOC EXISTE PARCE QUE MON JUGE ÉTAIT AVEUGLE À SA PROPRE CIBLE. L'empreinte portait le
+// NUMÉRO d'internement du symbole. Or un renommage COHÉRENT préserve l'ordre d'internement, donc
+// les numéros : l'empreinte sortait identique alors que les NOMS avaient changé. Le juge voyait
+// très bien un renommage INCOMPLET — un symbole nouveau décale les numéros — et pas du tout un
+// renommage COMPLET mais fautif, qui est justement ce que l'outil doit empêcher.
+// Mesuré par BPx : 19 scènes déclarées saines, 3 avaient changé de musique.
+// Le témoin ci-dessous est le SEUL qui aurait attrapé ça.
+{
+  const { production } = await import('./migration_noms.mjs');
+  const avant = '@core\n@alphabet.western\nS -> A#5 C4';
+  const apres = '@core\n@alphabet.western\nS -> B5 C4';     // une NOTE en remplace une autre
+  const p1 = production(avant), p2 = production(apres);
+  ok(!p1.erreur && !p2.erreur, '3ter. les deux témoins doivent se dériver');
+  ok(p1.jetons !== p2.jetons,
+    '3ter. remplacer une NOTE par une autre doit se VOIR — c\'est la cible même de l\'outil');
+  // Et la propriété qui manquait : l'empreinte porte des NOMS, pas des rangs.
+  ok(/A#5/.test(p1.jetons || ''), '3ter. l\'empreinte doit porter le NOM du symbole, pas son numéro');
+}
+{
+  // De bout en bout : une scène dont la tête heurte une note, ET qui contient une altération.
+  // C'est la forme exacte des scènes cassées chez BPx.
+  const r = migrerSource('@core\n@alphabet.western\nS -> A B\nA -> C4 A#5\nB -> E4 F#2');
+  ok(r.ok === true, '3ter. la scène doit être migrable');
+  ok(/A#5/.test(r.source || '') && /F#2/.test(r.source || ''),
+    '3ter. les notes altérées doivent être INTACTES — A#5 et F#2 tels quels');
+  ok(!/A_r#5|F_r#2/.test(r.source || ''), '3ter. et surtout pas altérées en A_r#5 / F_r#2');
+}
+
 // ── 4. TÉMOIN ANTI-RÉTRÉCISSEMENT ────────────────────────────────────────────
-ok(DETECTION.length >= 6 && VOISINS.length >= 6 && BACKTICKS.length >= 3,
+ok(DETECTION.length >= 6 && VOISINS.length >= 10 && BACKTICKS.length >= 3,
     '4. les matrices ne se sont pas vidées');
 {
   // Et que l'outil sait encore VOIR : sans ce témoin, une régression qui viderait la détection
