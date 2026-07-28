@@ -158,9 +158,9 @@ Les enfants exposent explicitement les flags qu'ils veulent rendre visibles :
 **exclusivement une regle de production**.
 
 > ⚠️ **UN ALIAS DESIGNE, IL NE BRANCHE PAS.** Alimenter le tempo, un drapeau ou le depart d'une
-> partie est un **cablage**, et le cablage a son propre geste : `>>` pour brancher, `!>>` pour
+> partie est un **cablage**, et le cablage a son propre geste : `>>` pour brancher, `\\>>` pour
 > couper, **dans le flux** (decision Romain 2026-07-27 au soir). L'argument qui a tranche :
-> **une directive ne se debranche pas** -- `!>>` coupe un cable pendant que ca joue et le
+> **une directive ne se debranche pas** -- `\\>>` coupe un cable pendant que ca joue et le
 > branchement se reconfigure au fil de la piece ; il n'existe pas de « de-declaration ».
 
 > ### Un ALIAS n'est pas une MACRO
@@ -680,16 +680,21 @@ voix ne bave pas dans les voix paralleles.
 | `B3!C7` *(`!` entre symboles, sans parentheses)* | **SIMULTANE / accord** (conjoint NON-flux) -- operateur existant, rien a voir avec le flux |
 | `!f` *(en tete, sans primaire)* | **objet HORS-TEMPS** -- element pose seul, sans duree (`OutTimeObject`) |
 | `![@seed:N]` | **directive de production DANS LE FLUX** -- element sans duree (`InstantControl`) |
-| `!>>` | **COUPER un cablage** -- la negation de l'operateur `>>`, pas un instantane |
+| `!osc >> filtre` | **CABLAGE pose dans le flux** -- element a part entiere, sans duree |
+| `!\>> out.in` | **COUPURE posee dans le flux** -- la barre BARRE le fil ; le `!` reste l'instantane |
 | `!=` *(dans un drapeau)* | **comparaison de difference** -- la negation de l'operateur `=` |
 
 `!` est **surcharge**, et **c'est ce qui SUIT le `!` qui tranche, jamais le `!` lui-meme.** La
 table ci-dessus enumere TOUTES les lectures mesurees dans le langage -- une enumeration qui en
-oublie une donne l'illusion que le signe est plus simple qu'il n'est. Deux familles s'y lisent :
-devant un **element** (symbole, `(...)`, `[@...]`) le `!` marque **l'instantane** -- pose dans le
-flux, sans occuper de temps ; devant un **operateur** (`>>`, `=`) il en marque la **negation**.
-Les deux cohabitent aujourd'hui sans se contredire parce qu'elles ne s'appliquent jamais au meme
-genre de suite.
+oublie une donne l'illusion que le signe est plus simple qu'il n'est.
+
+**Le `!` n'a qu'UN sens : l'instantane, duree zero.** Il l'a toujours eu, et il l'a garde. La
+coupure de cablage a porte le point d'exclamation jusqu'au 2026-07-28 ; elle s'ecrit desormais
+`\>>`. Ce qui l'a fait partir, Romain l'a vu en ecrivant un instantane suivi d'une coupure : le
+meme signe y disait l'instant PUIS la coupure, et la ligne ne se lisait plus. Un signe
+qui porte deux sens ne se rattrape pas par une regle de lecture, il se separe. Reste une seule
+exception, et elle est d'une autre famille : `!=` FUSIONNE en un jeton unique, comme `==` ou `>=`,
+et ne se lit jamais comme un `!` suivi de quelque chose.
 
 La **regle d'espace** ne s'applique qu'a **`!(...)`** : **colle = ancre** au terminal precedent,
 **espace = separe**. Un `!(...)` colle sans terminal avant lui (debut de regle ou de groupe, ex.
@@ -1368,7 +1373,7 @@ Trois directives pour nommer des choses. La difference est fonctionnelle :
 ```
 
 > ⚠️ **La directive de correspondance a ete ABANDONNEE le 2026-07-27 au soir** : ce qui BRANCHE
-> passe par les chevrons `>>` / `!>>`, ce qui DESIGNE reste sous `@alias`. Et le **`=` a disparu
+> passe par les chevrons `>>` / `\\>>`, ce qui DESIGNE reste sous `@alias`. Et le **`=` a disparu
 > de TOUT le langage**, `@macro` comprise : **une seule forme partout**, `@<directive> <nom>
 > <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une **convention**, pas une
 > information (decision Romain 2026-07-27).

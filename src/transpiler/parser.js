@@ -738,6 +738,15 @@ function parse(tokens, opts = {}) {
       return;
     }
 
+    // ── Câblage posé dans le flux (`!osc >> filtre`, `!\>> out.in`) ───
+    // Même nature que les autres instantanés : ZÉRO DURÉE, jamais un pas (Romain 2026-07-28).
+    // Un câblage écrit dans un corps de `@macro` ne passe pas ici — cette annotation ne parcourt
+    // que les membres droits — et il reste donc sans `payload`, comme avant.
+    if (type === 'Wiring') {
+      el.payload = { nature: 'instant', flux: true };
+      return;
+    }
+
     // ── Polymetric — récursion dans les voix ──────────────────────────
     if (type === 'Polymetric') {
       // Pas de payload sur le nœud Polymetric lui-même (structurel).
@@ -1282,9 +1291,9 @@ function parse(tokens, opts = {}) {
           + `(décision Romain 2026-07-27) — écrire '@macro ${macroName} <corps>', comme toutes les `
           + `autres directives : le nom, puis la valeur, sans rien entre les deux.`, current());
       }
-      // Body: câblage son (LANG-SONS §9 — corps avec >>/!>> = voix/patch) ; sinon
+      // Body: câblage (corps avec >>/\>> = voix/patch) ; sinon
       // substitution existante. Le corps câblage est dispatché par la présence de
-      // l'opérateur de câblage (>> ou !>>) avant le saut de ligne.
+      // l'opérateur de câblage (>> ou \>>) avant le saut de ligne.
       // parseRhsElements would reject floating () before libCtx is loaded, so handle directly.
       let body;
       if (bodyIsWiring()) {
@@ -1316,7 +1325,7 @@ function parse(tokens, opts = {}) {
     // `hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`
     //
     // L'ARGUMENT QUI A TRANCHÉ, et il n'était dans aucun inventaire : **une directive ne se
-    // débranche pas.** `!>>` coupe un câble PENDANT QUE ÇA JOUE, et le branchement se reconfigure
+    // débranche pas.** La coupure de câblage coupe un câble PENDANT QUE ÇA JOUE, et le branchement se reconfigure
     // au fil de la pièce ; aucune déclaration ne sait faire ça, et il n'existe pas de
     // « dé-déclaration ». Deux écritures pour brancher A sur B, dont l'une strictement moins
     // puissante : c'est la moins puissante qui part.
@@ -1327,7 +1336,7 @@ function parse(tokens, opts = {}) {
     // mauvais couple donne une réponse correcte et sans valeur.
     if (name === 'map') {
       throw new ParseError("'@map' est ABANDONNÉ (décision Romain 2026-07-27, le soir) — le câblage "
-        + "passe par les chevrons '>>' et '!>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
+        + "passe par les chevrons '>>' et '\\>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
         + "ce qu'une directive ne sait pas faire. Pour ÉTIQUETER un nom ou DÉSIGNER des éléments "
         + "marqués, écrire '@alias <nom> <valeur>'. Pour attendre un geste, rien à câbler : "
         + "'@in <rôle> transport.<canal>' puis l'adresse collée au point d'attente.", tok);
@@ -1982,13 +1991,31 @@ function parse(tokens, opts = {}) {
   }
 
   // ============================================================
-  // Câblage son (LANG-SONS §9 — modules à ports, opérateurs >> / !>>)
+  // Câblage (modules à ports, opérateurs >> / \>>) — corps de @macro ET flux d'une règle
   // ============================================================
 
-  // Le corps d'un @macro est un CÂBLAGE (Wiring) ssi il porte >> ou !>> avant le saut de ligne.
+  // Le corps d'un @macro est un CÂBLAGE (Wiring) ssi il porte >> ou \>> avant le saut de ligne.
   // Le parser NE CLASSE PAS son-vs-substitution (décision [489], PORTER≠RÉSOUDRE) : hors câblage,
   // le corps est émis STRUCTUREL et OPAQUE (appel-composant via le point, ou symboles nus) ; la
   // classe (module=son / acteur=hauteur / homo=substitution) est décidée à la RÉSOLUTION (aval).
+  // Un `!` du FLUX ouvre-t-il un câblage ? On regarde ce qui suit, jusqu'à la fin de l'élément.
+  //
+  // La borne est le POINT D'EXCLAMATION SUIVANT autant que la fin de ligne : sans elle,
+  // `C4 !dha !osc >> filtre` lirait le premier `!dha` comme le début d'un câblage, parce qu'un
+  // chevron traîne plus loin sur la ligne. Chaque instantané s'arrête où commence le suivant.
+  function fluxIsWiring(from = pos) {
+    if (tokens[from]?.type === T.WIRE_CUT) return true;   // `!\>> out.in` — coupure sans étage amont
+    let j = from;
+    while (j < tokens.length) {
+      const t = tokens[j].type;
+      if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR || t === T.COMMENT) return false;
+      if (t === T.BANG) return false;  // l'élément suivant commence : ce `!`-ci n'était pas un câblage
+      if (t === T.WIRE || t === T.WIRE_CUT) return true;
+      j++;
+    }
+    return false;
+  }
+
   function bodyIsWiring() {
     if (at(T.WIRE) || at(T.WIRE_CUT)) return true;
     let j = pos;
@@ -2019,7 +2046,7 @@ function parse(tokens, opts = {}) {
   }
 
   // Un étage de câblage : `module (. port)? (: valeur)?`. `cut` = le lien qui l'atteint
-  // est un `!>>` (débranchement) plutôt qu'un `>>` (câbler).
+  // est un `\>>` (débranchement) plutôt qu'un `>>` (câbler).
   function parseWireStage(cut) {
     const line = current().line;
     const module = expect(T.IDENT).value;
@@ -2035,9 +2062,9 @@ function parse(tokens, opts = {}) {
     return { module, port, value, cut };
   }
 
-  // Câblage complet : `[!>>] stage ((>> | !>>) stage)*`. Une LIGNE = une chaîne série
+  // Câblage complet : `[\>>] stage ((>> | \>>) stage)*`. Une LIGNE = une chaîne série
   // (longueur quelconque, précision Romain) ; le multi-ligne (plusieurs @macro du même
-  // nom) sert au parallélisme. `>>` câble, `!>>` coupe (patchbay dynamique).
+  // nom) sert au parallélisme. `>>` câble, `\>>` coupe (patchbay dynamique).
   function parseWiring(line) {
     const stages = [];
     let cut = false;
@@ -3550,6 +3577,18 @@ function parse(tokens, opts = {}) {
       // ici ; la validation « il existe bien un terminal précédent » est faite à l'annotation.
       const collated = !current().spaceBefore;
       advance();
+      // `!osc >> filtre` / `!\>> out.in` → CÂBLAGE posé DANS LE FLUX.
+      //
+      // Décidé par Romain le 2026-07-28, sur sa propre écriture `!eltA\>>eltB` : un câblage
+      // N'OCCUPE PAS DE TEMPS — il se pose en instantané dans une règle, et c'est le point
+      // d'exclamation qui le dit, comme pour tout ce qui est dans le flux sans prendre un pas.
+      // Il devient un ÉLÉMENT DE SÉQUENCE À PART ENTIÈRE : le précédent est uniforme sur tous
+      // les autres contrôles du langage, aucun n'est une marque accrochée à son voisin.
+      // Le MULTIPLE ne demande aucun séparateur — chaque câblage porte SON point d'exclamation
+      // et ils se suivent (`!a >> b !c >> d`), exactement comme s'enchaînent les instantanés.
+      if (fluxIsWiring()) {
+        return parseWiring(tok.line);
+      }
       // !(...) → instant runtime control (flux)
       if (isRuntimeQualifier()) {
         return { type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: collated };
@@ -3769,7 +3808,12 @@ function parse(tokens, opts = {}) {
 
       // Simultaneous: Sa!dha!phase=2
       // But NOT !() or ![] — those are standalone InstantControls for the next iteration
-      if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
+      // NI un CÂBLAGE (`C4 !osc >> filtre`) : le `!` y ouvre un élément à part entière, qu'on
+      // laisse au tour suivant de la boucle du flux. Sans ce test, l'accord avalait le premier
+      // étage puis butait sur le chevron, et la ligne tombait sur un refus GÉNÉRIQUE — un
+      // câblage lu comme un accord, exactement le mode d'échec payé en juillet sur `!(…)`.
+      if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET
+          && !fluxIsWiring(pos + 1)) {
         const node = parseSimultaneousGroup(name, tok);
         if (actor) node.actor = actor;
         return node;
@@ -3912,7 +3956,8 @@ function parse(tokens, opts = {}) {
     // le lire comme un accord fait échouer la ligne sur « symbole attendu après ! ».
     // Payé le 2026-07-26 : la migration du corpus pose des `!(…)` partout, et une scène tombait
     // sur cette lecture — donc pour une raison FAUSSE, masquant celle qu'on voulait lui voir.
-    if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
+    if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET
+        && !fluxIsWiring(pos + 1)) {
       return parseSimultaneousGroup(name, tok, args);
     }
 
@@ -3996,6 +4041,11 @@ function parse(tokens, opts = {}) {
     const secondaries = [];
 
     while (at(T.BANG)) {
+      // Un `!` qui ouvre un CÂBLAGE n'est pas un secondaire d'accord : `C4 !dha !osc >> filtre`
+      // est un accord PUIS un câblage, deux éléments frères. Sans ce test, l'accord absorbait
+      // `!osc` et butait sur le chevron — le premier `!` était bien lu, c'est le DEUXIÈME qui
+      // se perdait. La garde du haut ne suffisait pas : elle ne voit que l'entrée dans l'accord.
+      if (fluxIsWiring(pos + 1)) break;
       advance(); // !
 
       // ! is exclusively temporal — only symbols/symbol calls

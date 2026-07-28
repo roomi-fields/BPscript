@@ -76,7 +76,7 @@ for (const [corps, quoi, mot] of [
 //
 // ⚠️ `@map` FIGURE ICI DEPUIS LE 2026-07-27 AU SOIR, et c'est l'inverse du matin même : la
 // directive de correspondance est ABANDONNÉE. L'argument, absent de tous les inventaires (y
-// compris du mien) : **une directive ne se débranche pas**. `!>>` coupe un câble pendant que ça
+// compris du mien) : **une directive ne se débranche pas**. `\\>>` coupe un câble pendant que ça
 // joue ; aucune déclaration ne sait faire ça. Entre deux écritures pour brancher A sur B, la
 // moins puissante part. Mon inventaire du matin comparait la directive à `@macro` et concluait
 // juste sur ce couple — il ne l'avait jamais comparée au CÂBLAGE, le geste qu'elle faisait.

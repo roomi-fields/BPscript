@@ -6,6 +6,47 @@
  * Each token: { type, value, line, col }
  */
 
+/**
+ * Erreur de LECTURE — un caractère que le langage ne sait pas lire.
+ *
+ * Elle existe pour une raison précise : sans elle, le découpeur jetait une `Error` NUE, que la
+ * façade ne reconnaissait pas et relançait telle quelle (`bpxAst.js`, la branche « sinon je
+ * relance »). Résultat mesuré le 2026-07-28 : une faute de frappe d'UN caractère faisait PLANTER
+ * le compilateur au lieu de remplir son canal d'erreurs — alors que le message, lui, était déjà
+ * bon. Le défaut n'était pas ce qu'on disait, c'était par où on le disait.
+ *
+ * Le découpeur ne peut pas emprunter l'erreur de l'analyseur (l'analyseur importe le découpeur —
+ * l'inverse ferait un cycle, et le portillon d'architecture le refuse). D'où un type à lui, que
+ * la façade attrape au même endroit.
+ */
+class LexError extends Error {
+  constructor(message, line, col) {
+    super(message);
+    this.name = 'LexError';
+    this.line = line;
+    this.col = col;
+  }
+}
+
+/**
+ * Ce que le langage sait dire à la place d'un caractère qu'il ne lit pas — TABLE, pas cascade.
+ *
+ * En liste et non en `if` enchaînés parce que c'est un ESPACE, pas une série de cas : ajouter une
+ * entrée doit être une ligne de donnée. Chaque entrée donne la RÉÉCRITURE, jamais seulement le
+ * constat — un refus qui n'apprend rien oblige à aller lire la spec pour une faute de frappe.
+ */
+const CARACTERES_CONNUS_MAIS_ETRANGERS = new Map([
+  ["'", "BPScript n'a pas de littéral entre guillemets — un terminal s'écrit nu (X, pas 'X')."],
+  ['"', "BPScript n'a pas de littéral entre guillemets — un terminal s'écrit nu (X, pas \"X\")."],
+  [';', "le séparateur de séquence de BP2 n'existe pas — une règle par ligne."],
+  ['\\', "le SEUL emploi de l'antislash est la coupure de câblage '\\>>' ; seul, il ne veut rien dire."],
+  ['%', "le pourcentage n'est pas un signe du langage — un poids s'écrit '[weight:N]'."],
+]);
+// Volontairement COURTE : une entrée n'y figure que si sa réécriture est PROUVÉE sur pièces.
+// L'accent circonflexe en a été retiré avant d'être livré — j'allais y écrire une graphie
+// d'octave que je n'ai pas pu retrouver dans les specs. Un refus muet vaut mieux qu'un refus
+// qui enseigne une forme inventée : le premier fait ouvrir la doc, le second fait écrire faux.
+
 const T = Object.freeze({
   // Structural symbols (24)
   AT:           'AT',           // @
@@ -43,7 +84,7 @@ const T = Object.freeze({
   EQ:           'EQ',          // ==
   NEQ:          'NEQ',         // !=
   WIRE:         'WIRE',        // >> (câbler série — LANG-SONS §9)
-  WIRE_CUT:     'WIRE_CUT',    // !>> (couper un câble — LANG-SONS §9)
+  WIRE_CUT:     'WIRE_CUT',    // \>> (couper un câble — l'antislash BARRE le fil, Romain 2026-07-28)
   GT:           'GT',          // >
   LT:           'LT',         // <
   GTE:          'GTE',         // >=
@@ -215,14 +256,31 @@ function tokenize(source, opts = {}) {
 
     if (ch === '-' && peek(1) === '>') { advance(); advance(); emit(T.ARROW_R, '->'); continue; }
 
-    // Câblage son (LANG-SONS §9) : >> câbler série, !>> couper. Munch maximal AVANT >=/!=.
+    // Câblage : `>>` câble, `\>>` coupe. Munch maximal AVANT `>=`.
     if (ch === '>' && peek(1) === '>') { advance(); advance(); emit(T.WIRE, '>>'); continue; }
     if (ch === '>' && peek(1) === '=') { advance(); advance(); emit(T.GTE, '>='); continue; }
     if (ch === '>') { advance(); emit(T.GT, '>'); continue; }
 
     if (ch === '=' && peek(1) === '=') { advance(); advance(); emit(T.EQ, '=='); continue; }
 
-    if (ch === '!' && peek(1) === '>' && peek(2) === '>') { advance(); advance(); advance(); emit(T.WIRE_CUT, '!>>'); continue; }
+    // La coupure s'écrit `\>>` — l'antislash BARRE le fil. Il a été choisi (Romain 2026-07-28)
+    // parce qu'il était le SEUL caractère encore sans aucun sens dans le langage : `|` ouvre déjà
+    // une variable, `/` est l'opérateur d'échelle et de tempo. Zéro collision, par mesure.
+    if (ch === '\\' && peek(1) === '>' && peek(2) === '>') {
+      advance(); advance(); advance(); emit(T.WIRE_CUT, '\\>>'); continue;
+    }
+
+    // PIERRE TOMBALE — `!>>` a été la coupure jusqu'au 2026-07-28. Il part parce qu'il faisait
+    // porter DEUX sens au point d'exclamation, qui signifie déjà « instantané, durée zéro » : dans
+    // `!eltA!>>eltB` le même signe disait l'instant puis la coupure. Refusé ICI, au découpage, pour
+    // que le message soit le même partout où la forme pouvait s'écrire — corps de macro comme flux.
+    if (ch === '!' && peek(1) === '>' && peek(2) === '>') {
+      throw new LexError(
+        `'!>>' n'est plus la coupure de câblage (décision Romain 2026-07-28) — écrire '\\>>', avec `
+        + `un antislash : la barre BARRE le fil. Le point d'exclamation gardait deux sens, celui de `
+        + `l'instantané et celui de la coupure, et '!eltA!>>eltB' ne se lisait plus. `
+        + `Ligne ${line}, colonne ${col}.`, line, col);
+    }
     if (ch === '!' && peek(1) === '=') { advance(); advance(); emit(T.NEQ, '!='); continue; }
 
     // Tempo operator: * (multiply duration)
@@ -351,16 +409,17 @@ function tokenize(source, opts = {}) {
     // produire autre chose qu'un texte différent de celui qui a été écrit.
     // Rayon de casse mesuré AVANT de durcir : 0 sur 93 scènes de test/grammars et 0 sur les
     // 188 .bps du corpus BPx — aucune forme existante n'en dépend.
-    const aide = ch === "'" || ch === '"'
-      ? " — BPScript n'a pas de littéral entre guillemets ; un terminal s'écrit nu (X, pas 'X')."
-      : ch === ';'
-        ? ' — le séparateur de séquence BP2 (;) n\'existe pas : une règle par ligne.'
-        : '';
-    throw new Error(`Caractère inattendu '${ch}' à la ligne ${line}, colonne ${col}${aide}`);
+    // Le message était déjà bon ; ce qui manquait, c'était le CANAL — il partait en `Error` nue,
+    // que la façade relançait, donc l'appelant PLANTAIT au lieu de recevoir une erreur de
+    // compilation. Une faute de frappe d'un caractère ne doit jamais tomber hors du canal.
+    const aide = CARACTERES_CONNUS_MAIS_ETRANGERS.get(ch)
+      ?? "ce caractère n'a aucun sens dans le langage — vérifier la frappe (docs/spec/LANGUAGE.md).";
+    throw new LexError(
+      `Caractère inattendu '${ch}' à la ligne ${line}, colonne ${col} — ${aide}`, line, col);
   }
 
   emit(T.EOF, null);
   return tokens;
 }
 
-export { tokenize, T };
+export { tokenize, T, LexError };

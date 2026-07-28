@@ -122,13 +122,15 @@ ok(exemples >= 8,
 // ⚠️ CETTE LISTE A CHANGÉ DE SENS le 2026-07-27 au soir, et il faut le dire : `@alias` en est SORTI
 // (il est revenu au langage) et `@map` y est ENTRÉ (il est abandonné). Ce n'est pas une hésitation
 // de ma part — c'est un arbitrage de Romain sur un argument absent de tous les inventaires : une
-// directive ne se débranche pas, `!>>` si. La liste est le REGISTRE de l'état courant, pas une
+// directive ne se débranche pas, la coupure de câblage si. La liste est le REGISTRE de l'état courant, pas une
 // mémoire des mouvements ; ce qui est mort y figure, ce qui vit n'y figure pas.
 const MORTES = [
   [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
   [/@alias\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "l'alias avec le signe '=' (supprimé de TOUT le langage le 2026-07-27)", 'exemptable'],
   [/@map\s+[A-Za-z_<[]/, "'@map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
-   + "'!>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@alias'", 'exemptable'],
+   + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@alias'", 'exemptable'],
+  [/(?<![\\`])!>>/, "'!>>' — l'ancienne coupure de câblage, remplacée par '\\>>' le 2026-07-28 : le "
+   + "point d'exclamation ne dit QUE l'instantané, il ne dit plus la coupure", 'exemptable'],
   [/@(?:map|alias)\s+[^\n|]*(->|<->|<-)/,
    "la flèche employée comme CÂBLAGE — elle ne se cite jamais, même au passé pour expliquer sa "
    + "disparition : nommer la fonction en français ('un contrôleur règle le tempo pendant que ça "
@@ -136,7 +138,7 @@ const MORTES = [
 ];
 // Les lignes qui PARLENT de la disparition sont légitimes pour les formes 'exemptable' — elles
 // nomment la directive pour l'expliquer. Elles ne le sont PAS pour la forme 'absolue'.
-const PARLE_DE_SA_MORT = /DISPARU|DISPARA|SUPPRIM|disparait|disparaît|disparu|absorbé|absorbe|morte|retiré|ancien|2026-07-27/;
+const PARLE_DE_SA_MORT = /DISPARU|DISPARA|SUPPRIM|disparait|disparaît|disparu|absorbé|absorbe|morte|retiré|ancien|remplac|2026-07-27|2026-07-28/;
 let croisements = 0;
 for (const p of TOUS) {
   const nom = relatif(p);

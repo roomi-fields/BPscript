@@ -17,7 +17,7 @@ La communication passe par ces mécaniques, et pas d'autres :
 | **Flags**    | État partagé, lu par les guards           | Persistant   |
 | **Triggers** | Événements ponctuels (synchro)            | Instantané   |
 | **`@alias`**   | Nom donné à une chose technique ou répétitive | Déclaratif  |
-| **`>>` / `!>>`** | Câblage dans le flux — brancher, débrancher | Dynamique    |
+| **`>>` / `\\>>`** | Câblage dans le flux — brancher, débrancher | Dynamique    |
 
 Le `SceneOrchestrator` est **application-level** : il consomme l'API publique de BPx (Session, FlagStore, TriggerBus, commands) pour composer plusieurs sessions. **Il n'est pas dans le moteur BPx** — un utilisateur peut écrire son propre orchestrateur sans toucher BPx.
 
@@ -223,7 +223,7 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 
 > ⚠️ **La directive de correspondance est ABANDONNÉE depuis le 2026-07-27 au soir**
 > (`hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`).
-> Ce qui BRANCHE passe par les chevrons `>>` / `!>>` (§6.3) ; ce qui DÉSIGNE reste ici, sous
+> Ce qui BRANCHE passe par les chevrons `>>` / `\\>>` (§6.3) ; ce qui DÉSIGNE reste ici, sous
 > `@alias`. Deux corollaires qui tiennent depuis le matin même : le signe `=` a disparu de tout le
 > langage, `@macro` comprise, et la flèche `->` est redevenue **exclusivement une règle de
 > production**. Forme vivante et unique : **`@alias <nom> <valeur>`** — le nom d'abord, comme
@@ -256,18 +256,18 @@ S -> C4@kick D4 E4@kick F4
 Tous les éléments `@kick` sont désignés ensemble. Portée par défaut : la scène où `@alias` est
 déclaré. Préfixe pour la portée croisée (`verse.kick.vel`, `*.kick.vel`).
 
-### 6.3 Le CÂBLAGE n'est pas une désignation — il passe par `>>` et `!>>`
+### 6.3 Le CÂBLAGE n'est pas une désignation — il passe par `>>` et `\\>>`
 
 **`@alias` DÉSIGNE ; il ne branche pas.** Alimenter le tempo, un drapeau ou le départ d'une partie
-est un **câblage**, et le câblage a son propre geste : `>>` pour brancher, `!>>` pour couper.
+est un **câblage**, et le câblage a son propre geste : `>>` pour brancher, `\\>>` pour couper.
 
-**L'argument qui a tranché — une directive ne se débranche pas.** `!>>` coupe un câble **pendant
+**L'argument qui a tranché — une directive ne se débranche pas.** `\\>>` coupe un câble **pendant
 que ça joue**, et le branchement se reconfigure au fil de la pièce ; aucune déclaration ne sait
 faire ça, et il n'existe pas de « dé-déclaration ». Entre deux écritures pour brancher A sur B dont
 l'une est strictement moins puissante, c'est la moins puissante qui part.
 
 **Un câblage de contrôle s'écrit DANS LE FLUX** (Romain, 2026-07-27 au soir), comme le câblage de
-son : sans le flux, `!>>` n'a nulle part où s'écrire, et le dynamisme qui a fait choisir le câblage
+son : sans le flux, `\\>>` n'a nulle part où s'écrire, et le dynamisme qui a fait choisir le câblage
 disparaît. Conséquence directe : un contrôleur peut prendre la main sur le tempo **à un moment
 précis** de la pièce et être coupé plus loin — ce n'est pas un réglage global de début à fin.
 
@@ -279,32 +279,30 @@ table de bibliothèque donne des étiquettes lisibles quand elle existe.
 
 **Le multiple sur une ligne se marque par la virgule**, forme déjà en usage (`@flag scene: calm:1, full:2`).
 
-> ⚠️ **ÉTAT MESURÉ DE L'IMPLÉMENTATION, à ne pas confondre avec la décision ci-dessus**
-> (mesure 2026-07-28, chaîne entière : frontal → BPx → Kairos).
+> ✅ **ÉTAT MESURÉ DE L'IMPLÉMENTATION** (2026-07-28, chaîne entière : frontal → BPx → Kairos).
 >
-> **Ce qui existe.** `>>` et `!>>` sont reconnus par le tokeniseur (`tokenizer.js:219,225`) et
-> parsés **dans le corps d'une `@macro`** en nœud `Wiring` (étages + marqueur de coupure,
-> `parser.js:2041`). Ce nœud voyage OPAQUE : BPx le porte name-keyed sur `metadata.macros`
-> (`BPx/src/session.ts:1477`), Kairos le résout quand le **nom de la macro est joué dans le flux**
-> (`kairos/src/projection/projeter.ts:695` — `Wiring` = brancher, `Wiring{cut}` = couper).
+> **Le câblage s'écrit maintenant DANS LE FLUX d'une règle**, comme dans un corps de `@macro` :
+> `S -> C4 !osc >> filtre D4` branche, `S -> C4 !\>> out.in D4` coupe. Il n'occupe **aucun
+> temps** — c'est le point d'exclamation qui le dit, comme pour tout ce qui se pose dans le flux
+> sans prendre un pas. Dans l'arbre, c'est un **élément de séquence à part entière**, jamais une
+> marque accrochée à son voisin : le précédent est uniforme sur tous les autres contrôles du
+> langage, et c'est lui qui a décidé.
 >
-> **Donc le câblage à un moment précis est DÉJÀ atteignable — par un détour de NOM.** On déclare
-> `@macro coupe !>> out.in`, puis on écrit `coupe` au bon endroit du flux. C'est ce que fait
-> `public/demos/patchbay-demo.bps`. Ce qui manque n'est pas la capacité : c'est l'écriture
-> **directe**, sans avoir à baptiser le câble.
+> **Le multiple ne demande aucun séparateur** : chaque câblage porte son propre point
+> d'exclamation et ils se suivent — `S -> !a >> b !c >> d`. C'est le modèle déjà en usage pour
+> les instantanés (`!(ins:1) !(chan:1) !(cc.98:0)`), où le signe se répète et ne se partage
+> jamais. La virgule, qui sépare déjà les voix d'un groupe polymétrique, n'a pas été touchée.
 >
-> **Ce que l'écriture directe coûte, et c'est plus qu'une affaire de parser.** Dans le flux d'une
-> règle, un chevron n'est reconnu par rien : l'analyse de la séquence s'arrête dessus en silence et
-> la ligne est refusée plus haut par un message générique, sans réécriture. Surtout, tout l'aval
-> ne connaît le câblage que comme une **entrée de table hors-temps** ; un câblage écrit dans le flux
-> est au contraire un élément de la dérivation, à une place et à un instant. Aucun consommateur n'a
-> aujourd'hui d'endroit pour le recevoir.
+> **Le détour par le NOM reste possible et n'a pas bougé** : déclarer `@macro coupe \>> out.in`
+> puis écrire `coupe` dans le flux fait la même chose, en baptisant le câble. Les deux écritures
+> ne font pas double emploi — l'une pose un câblage anonyme là où on le lit, l'autre nomme un
+> geste qu'on rejoue. `public/demos/patchbay-demo.bps` montre la seconde.
 >
-> **La forme est donc décidée et pas encore écrite**, et trois questions de forme restent chez
-> Romain : ce qu'un câblage écrit dans le flux **occupe dans le temps** (le détour par le nom en
-> fait aujourd'hui un élément sonnant, qui prend un pas) ; ce qu'il **devient dans l'arbre** ; et
-> comment se marque le **multiple sur une ligne** dans un flux, où la virgule sépare déjà les voix
-> d'un groupe polymétrique. Aucune graphie n'est inventée ici en attendant.
+> ⚠️ **CE QUI MANQUE ENCORE, ET IL EST CHEZ BPx** : le type `Wiring` n'est pas dans l'union des
+> éléments de membre droit du contrat d'arbre, dont BPx est propriétaire. Le frontal produit donc
+> l'arbre, mais toute scène qui écrit un câblage dans son flux est refusée par le validateur —
+> d'où l'absence d'une telle scène dans le corpus tant que l'union n'a pas été étendue. C'est une
+> action de frontière, séquencée par l'architecte, pas une finition.
 
 **Pourquoi l'ancienne écriture ne revient pas.** Elle ne se cite pas, même en exemple — une graphie
 fautive citée finit recopiée. La flèche `->` est une règle de **production**, exclusivement ; elle

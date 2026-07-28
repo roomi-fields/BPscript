@@ -28,7 +28,7 @@ Scene {
   exposes: ExposeDirective[]         // @expose directives (flags visible au parent)
   aliases: AliasDirective[]          // @alias directives — DESIGNATION (un nom, ce qu'il designe)
   // `maps` SUPPRIME le 2026-07-27 au soir AVEC le mot : la directive de correspondance est
-  // ABANDONNEE, le cablage passe par les chevrons `>>` / `!>>`. Un champ emis et toujours vide
+  // ABANDONNEE, le cablage passe par les chevrons `>>` / `\\>>`. Un champ emis et toujours vide
   // ferait conclure « cette scene ne cable rien » au lieu de « ce canal n'existe plus ».
   labels: LabelDirective[]           // @label directives (label declarations)
   declarations: Declaration[]
@@ -554,7 +554,7 @@ Exemples :
 > **Ce que ça n'est pas — deux fois.** Ce n'est pas une **macro** : une macro s'écrit *dans la
 > musique* et Kairos la résout à la projection, feuille par feuille, sur un mot qui paraît dans le
 > flux ; un alias ne s'écrit jamais comme un mot du flux et n'a ni corps ni paramètres. Et ce n'est
-> pas un **câblage** : brancher se fait avec `>>`, couper avec `!>>`, dans le flux — parce qu'une
+> pas un **câblage** : brancher se fait avec `>>`, couper avec `\\>>`, dans le flux — parce qu'une
 > directive ne se débranche pas (décision Romain 2026-07-27 au soir).
 
 ### `CCDirective`

@@ -17,7 +17,7 @@
 // références d'acteur canoniques (ActorReference[]). Les consommateurs lisent directement
 // les nœuds/directives (backticks sur le nœud ; @flag/@library/@scene/@mm dans les directives).
 
-import { tokenize } from './tokenizer.js';
+import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
 import { resolveActors, expandAlphabetTerminals } from './actorResolver.js';
@@ -1434,6 +1434,10 @@ export function compileToBPxAST(source, environnement) {
     retirerArdoiseAlphabet(ast);  // EN DERNIER : l'adresse remplace l'ardoise pour l'aval, jamais pour le pipeline interne
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
+    // Un caractère illisible est une erreur de COMPILATION, pas un plantage. Elle arrivait ici en
+    // `Error` nue et repartait par le `throw` ci-dessous : l'appelant qui attend `{ast, errors}`
+    // recevait une exception. Mesuré le 2026-07-28 sur une faute de frappe d'UN caractère.
+    else if (e instanceof LexError) result.errors.push({ message: e.message, line: e.line });
     else throw e;
   }
   return result;
