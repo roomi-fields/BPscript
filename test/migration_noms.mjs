@@ -143,13 +143,36 @@ export function renommer(source, avant, apres) {
   // devenait `A_r -> C4 \`js: A_r + 1\`` et l'outil disait OK.
   // C'est la limite exacte de la garantie : elle porte sur ce que la dérivation produit, pas sur
   // ce qu'un runtime exécutera plus tard. Là où on ne peut pas prouver, on ne touche pas.
-  return source.split(/(`[^`]*`)/).map((bout) =>
-    bout.startsWith('`') && bout.endsWith('`') && bout.length > 1
-      ? bout                                   // un backtick traverse intact
+  // ⚠️ LES COMMENTAIRES AUSSI SONT INTOUCHABLES (mesuré par Kanopi le 2026-07-28). L'outil y
+  // renommait, et le cas grave n'est pas la prose abîmée : c'est qu'une CITATION de la grammaire
+  // native se met à suivre nos renommages. Une citation qui change avec nous n'est plus une
+  // citation — elle devient un faux témoin, et c'est précisément sur ces conversions que la
+  // comparaison au natif doit rester lisible.
+  const zonesProtegees = /(`[^`]*`|\/\/[^\n]*)/;
+  return source.split(zonesProtegees).map((bout) =>
+    (bout.startsWith('`') && bout.endsWith('`') && bout.length > 1) || bout.startsWith('//')
+      ? bout                                   // backtick et commentaire traversent intacts
       : bout.replace(motif, `$1${apres}`)).join('');
 }
 
-/** Les jetons produits, à graine fixe : début, fin et identité de chaque feuille. */
+/**
+ * L'empreinte d'une production : L'ARBRE DÉRIVÉ ENTIER, chronomètres neutralisés.
+ *
+ * ⚠️ ELLE A ÉTÉ UNE LISTE DE CHAMPS CHOISIS, ET C'ÉTAIT LE DÉFAUT DE FOND. D'abord le rang du
+ * symbole — aveugle à un renommage cohérent. Puis le nom — aveugle aux feuilles qui portent leur
+ * note ailleurs : sur les scènes converties du natif, Kanopi a mesuré qu'on pouvait remplacer
+ * `E2` par `C7` sans que le verdict bouge. Deux corrections successives du MÊME défaut : une
+ * empreinte bâtie sur des champs choisis ne vaut que ce que valait le choix, et le prochain angle
+ * mort sera invisible de la même façon.
+ *
+ * On compare donc TOUT, et on retire seulement ce qui n'est pas de la musique : les chronomètres.
+ * Le juge devient plus sévère que nécessaire — c'est voulu. S'il se trompe, il REFUSE : l'erreur
+ * se voit et s'inspecte, au lieu de certifier à tort. Mesuré : stable sur deux dérivations d'une
+ * même source, et aucun faux refus sur les scènes migrables.
+ *
+ * (Proposition de Kanopi, retenue telle quelle.)
+ */
+const CHRONOMETRES = /^(derivation[A-Za-z]*Ms|[a-z][A-Za-z]*TimeMs|elapsed[A-Za-z]*|timestamp[A-Za-z]*)$/;
 export function production(source) {
   const { ast, errors } = compileToBPxAST(source);
   if (!ast) return { erreur: (errors || []).map((e) => e.message ?? String(e)).join(' | ') || 'aucun arbre' };
@@ -161,36 +184,8 @@ export function production(source) {
     if (typeof session[m] === 'function') { try { session[m](); } catch { /* la dérivation suffit */ } }
   }
   const arbre = session.tree ?? session._lastTree ?? null;
-  // ⚠️ L'EMPREINTE PORTE LE NOM, PAS LE NUMÉRO DE TABLE — et c'est tout le sujet.
-  // Elle a d'abord porté `symbolId`, un numéro d'internement. Or un renommage COHÉRENT préserve
-  // l'ordre d'internement, donc les numéros : l'empreinte sortait IDENTIQUE alors que les NOMS
-  // avaient changé. Le juge était donc structurellement aveugle à la classe de faute qu'il vise —
-  // renommer une note. Il voyait très bien un renommage INCOMPLET (un symbole nouveau apparaît et
-  // décale les numéros), et pas du tout un renommage COMPLET mais fautif.
-  // Mesuré par BPx le 2026-07-28 : mon outil a déclaré 19 scènes saines, 3 avaient changé de
-  // musique. C'est le nom qui tranche, jamais son rang.
-  const nomDe = (id) => {
-    try { return session.grammar?.symbols?.getName?.(id) ?? `#${id}`; }
-    catch { return `#${id}`; }
-  };
-  const jetons = [];
-  const parcourir = (n) => {
-    if (!n || typeof n !== 'object') return;
-    if (Array.isArray(n)) return n.forEach(parcourir);
-    if (n.span && typeof n.span.startBeat === 'number') {
-      // Le NOM **et** le rang, pas l'un à la place de l'autre (précision de BPx, et elle est
-      // juste) : le nom attrape un renommage fautif, le rang attrape un changement d'ordre
-      // d'internement que les noms seuls ne montreraient pas. Un comparateur doit être aussi
-      // discriminant qu'il peut l'être — c'est la leçon entière de cette journée, et le coût est
-      // nul. S'il devient trop sévère, il REFUSE : c'est le sens sûr de l'erreur, celui qui se
-      // voit et s'inspecte, jamais celui qui certifie à tort.
-      const identite = n.symbolId !== undefined ? `${n.symbolId}/${nomDe(n.symbolId)}` : (n.name ?? '?');
-      jetons.push(`${n.span.startBeat}:${n.span.endBeat}:${identite}`);
-    }
-    for (const k in n) if (n[k] && typeof n[k] === 'object') parcourir(n[k]);
-  };
-  parcourir(arbre);
-  return { jetons: jetons.join(' ') };
+  if (!arbre) return { erreur: 'aucun arbre dérivé' };
+  return { jetons: JSON.stringify(arbre, (k, v) => (CHRONOMETRES.test(k) ? undefined : v)) };
 }
 
 /**

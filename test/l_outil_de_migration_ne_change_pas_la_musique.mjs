@@ -83,6 +83,13 @@ const BACKTICKS = [
   ['le code n\'est pas réécrit',        'A -> C4 `js: A + 1`',        'A', 'A_r', 'A_r -> C4 `js: A + 1`'],
   ['plusieurs backticks sur la ligne',  'A -> `a: A` A `b: A`',       'A', 'A_r', 'A_r -> `a: A` A_r `b: A`'],
   ['hors backtick on renomme toujours', 'A -> A `x` A',               'A', 'A_r', 'A_r -> A_r `x` A_r'],
+  // ⚠️ LES COMMENTAIRES, mesuré par Kanopi. Le cas grave n'est pas la prose abîmée : c'est qu'une
+  // CITATION de la grammaire native se mette à suivre nos renommages. Une citation qui change
+  // avec nous n'est plus une citation, elle devient un faux témoin — et c'est justement sur ces
+  // conversions que la comparaison au natif doit rester lisible.
+  ['un commentaire n\'est pas touché',   '// D est la tête\nD -> C4',  'D', 'D_r', '// D est la tête\nD_r -> C4'],
+  ['une citation du natif est intacte',  '// natif : D --> C4\nD -> C4', 'D', 'D_r', '// natif : D --> C4\nD_r -> C4'],
+  ['un commentaire en fin de ligne',     'D -> C4   // D ici\n',        'D', 'D_r', 'D_r -> C4   // D ici\n'],
 ];
 console.log(`[outil migration] backticks : ${BACKTICKS.length} cas`);
 for (const [nom, avant, de, vers, attendu] of BACKTICKS) {
@@ -171,9 +178,16 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   ok(p1.jetons !== p2.jetons,
     '3ter. remplacer une NOTE par une autre doit se VOIR — c\'est la cible même de l\'outil');
   // Et la propriété qui manquait : l'empreinte porte des NOMS, pas des rangs.
-  ok(/A#5/.test(p1.jetons || ''), '3ter. l\'empreinte doit porter le NOM du symbole');
-  ok(/\d+\/A#5/.test(p1.jetons || ''),
-    '3ter. et AUSSI son rang — le nom attrape un renommage fautif, le rang un changement d\'ordre');
+  ok((p1.jetons || '').length > 50, '3ter. l\'empreinte doit être l\'arbre entier, pas un résumé');
+  // ⚠️ LE TÉMOIN QUI MANQUAIT DEUX FOIS : une SUBSTITUTION DE HAUTEUR doit se voir. Mon empreinte
+  // a été un rang (aveugle au renommage cohérent), puis un nom (aveugle aux feuilles qui portent
+  // leur note ailleurs — Kanopi a pu remplacer E2 par C7 sans que le verdict bouge). C'est le même
+  // défaut deux fois : une empreinte bâtie sur des champs CHOISIS ne vaut que le choix.
+  const h1 = production('@core\n@alphabet.western\nS -> E2 C4');
+  const h2 = production('@core\n@alphabet.western\nS -> C7 C4');
+  ok(h1.jetons !== h2.jetons, '3ter. remplacer E2 par C7 doit se VOIR — le juge ne choisit plus ses champs');
+  const h3 = production('@core\n@alphabet.western\nS -> E2 C4');
+  ok(h1.jetons === h3.jetons, '3ter. et deux dérivations identiques restent identiques (pas de bruit)');
 }
 {
   // De bout en bout : une scène dont la tête heurte une note, ET qui contient une altération.
@@ -186,7 +200,7 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
 }
 
 // ── 4. TÉMOIN ANTI-RÉTRÉCISSEMENT ────────────────────────────────────────────
-ok(DETECTION.length >= 6 && VOISINS.length >= 10 && BACKTICKS.length >= 3,
+ok(DETECTION.length >= 6 && VOISINS.length >= 10 && BACKTICKS.length >= 6,
     '4. les matrices ne se sont pas vidées');
 {
   // Et que l'outil sait encore VOIR : sans ce témoin, une régression qui viderait la détection
