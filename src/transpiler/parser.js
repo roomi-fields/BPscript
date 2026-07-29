@@ -397,6 +397,12 @@ function parse(tokens, opts = {}) {
           // Adresse canonique opaque ; ordre source préservé ; dédup en fin de parseScene ;
           // champ OMIS si vide (jamais `[]`) — contrat bpscript-bpx.md §libRefs.
           (scene.libRefs || (scene.libRefs = [])).push(dir.address);
+        } else if (dir.type === 'Wiring') {
+          // `@wire saw >> lpf >> audio` — le CÂBLAGE INITIAL vit à la RACINE, pas dans
+          // `directives` : demandé par BPx, qui a mesuré avant que j'écrive. Sans champ propre,
+          // leur repli attrape-tout le collerait sur CHAQUE FEUILLE — le risque n'était pas la
+          // casse mais le PLACEMENT SILENCIEUX. ABSENT ≠ VIDE, comme `libRefs`.
+          (scene.wires || (scene.wires = [])).push(dir);
         } else if (dir.type === 'CVInstance') {
           // `@cv env1 mod.adsr(…)` — une DÉCLARATION qui crée un nom, pas une directive de
           // scène. Elle vit dans `cvInstances`, comme la forme nue le faisait avant sa
@@ -1344,6 +1350,30 @@ function parse(tokens, opts = {}) {
         + `la production : le point d'exclamation ('C4!${nom}'). Pour NOMMER quelque chose dans la `
         + `partie déclarative : '@macro ${nom} <corps>' ou '@alias ${nom} <valeur>'.`, tok);
     }
+
+    // ─── @wire — LE CÂBLAGE INITIAL (Romain, 2026-07-29) ─────────────────────────────────────
+    //
+    //     @wire saw >> lpf >> audio
+    //
+    // Il pose l'ÉTAT DE DÉPART du branchement ; le flux le modifie ensuite avec les chevrons
+    // existants (`>>` brancher, `\>>` couper). Ça ne rouvre PAS la directive de correspondance
+    // abandonnée le 2026-07-27 : l'argument qui l'avait tuée était qu'UNE DIRECTIVE NE SE
+    // DÉBRANCHE PAS — or un câblage INITIAL n'a pas à se débrancher, c'est précisément sa
+    // définition.
+    //
+    // ⚠️ LE NŒUD N'EST PAS NEUF — c'est le `Wiring` que produisent déjà les corps de macro, à
+    // l'identique. Inventer un second nœud pour le même fait aurait été une seconde source de
+    // vérité, et c'est la faute que j'ai payée le matin même en fondant `noteTerminals` avec
+    // `alphabetTerminals`. Un même fait, un même nœud.
+    //
+    // ⚠️ ET IL VIT À LA RACINE, PAS DANS `directives` — demandé par BPx, qui a mesuré avant que
+    // j'écrive : sans champ propre, leur repli attrape-tout le collerait sur CHAQUE FEUILLE. Le
+    // risque n'était pas la casse (leurs trois formes d'essai chargent vertes) mais le PLACEMENT
+    // SILENCIEUX. `scene.wires` le met là où vivent déjà les acteurs et la config de hauteur.
+    // ABSENT ≠ VIDE, comme `libRefs` : le champ est OMIS quand la scène ne câble rien.
+    // On REND le nœud et l'appelant le range : `scene` n'est pas dans la portée ici, et le même
+    // aiguillage sert déjà au modulateur `@cv`. Un seul mécanisme de routage, pas deux.
+    if (name === 'wire') return parseWiring(tok.line);
 
     // @gate Sa:midi · @cv env1 mod.adsr(…) — LE DEUX-POINTS TRANCHE (Romain, 2026-07-29).
     //

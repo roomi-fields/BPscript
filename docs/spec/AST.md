@@ -33,6 +33,10 @@ Scene {
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
+  wires?: Wiring[]                   // OPTIONNEL — CABLAGE INITIAL (`@wire saw >> lpf >> audio`),
+                                     // l'ETAT DE DEPART du branchement. MEME noeud que le corps
+                                     // d'une macro de cablage. A la RACINE, pas dans directives.
+                                     // OMIS si la scene ne cable rien (jamais []).
   alphabetTerminals?: string[]       // OPTIONNEL — les noms de CETTE scene qui sont des terminaux
                                      // d'un alphabet qui NE resout PAS de hauteur (frappes,
                                      // symboles abstraits). DISTINCT de noteTerminals : deux
