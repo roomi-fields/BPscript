@@ -26,7 +26,11 @@
       "audio": "`js: (saw(pitch) | saw(pitch*1.01)) >> lpf(cutoff) >> adsr(gate)`"
     },
     "fatbass for:sub37": {
-      "device": { "preset": "bass-init", "glide": 0.2, "osc1-wave": "saw" }
+      "device": {
+        "preset": "bass-init",
+        "glide": 0.2,
+        "osc1-wave": "saw"
+      }
     },
     "bayan_open": {
       "audio": "`js: (noise() >> bpf(80) | sin(80)) >> adsr(decay:350ms)`"
@@ -39,6 +43,34 @@
     },
     "dayan_tap": {
       "audio": "`js: noise() >> hpf(1200) >> adsr(decay:60ms)`"
+    },
+    "dummy_csound_a": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'a' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
+    },
+    "dummy_csound_b": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'b' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
+    },
+    "dummy_csound_c": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'c' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
+    },
+    "dummy_csound_d": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'd' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
+    },
+    "dummy_csound_e": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'e' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
+    },
+    "dummy_csound_f": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'f' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
+    },
+    "dummy_csound_midiobject": {
+      "audio": "`js: sin(220) >> adsr(decay:200ms)`",
+      "_dummy": "⚠️ SUBSTITUT ASSUME — CE N EST PAS LE SON DE L OBJET 'midiobject' DE LA GRAMMAIRE NATIVE. Posé le 2026-07-29 sur ordre de Romain pour VALIDER LE MODELE (alphabet d objets sonores + voix + scene qui derive), pas pour sonner juste. Son vrai son vit dans -so.tryCsoundObjects, 440 lignes de nombres non encore decodees ; le portage est en investigation chez bp3-frontend. NE PAS LE PRENDRE POUR L ORIGINAL : un dummy assume n est pas une invention, un dummy silencieux qui passe pour le vrai en est une. Le remplacer = reecrire CETTE entree, rien d autre."
     }
   }
 }

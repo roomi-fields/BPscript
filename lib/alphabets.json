@@ -439,5 +439,30 @@
     "alterations": {},
     "_note": "⚠️ POURQUOI UN ALPHABET DISTINCT PLUTOT QUE D'ELARGIR 'tabla' — critere de Romain, 2026-07-29 : « on ne denature pas l'alphabet tabla ; si ce sont des percus de tabla on peut les ajouter, sinon alphabet distinct ». Trois des terminaux de cette qa'ida ne sont pas des FRAPPES mais des ENCHAINEMENTS : dhadhatitedhadhadheena se decompose en SIX unites (dha+dhati+te+dha+dha+dheena) et compte 22 caracteres, la ou le plus long compose de tabla en fait 2 et 10. Les y ranger aurait fait entrer des phrases de qa'ida dans le vocabulaire de TOUTE scene de tabla. Les deux qui SONT des frappes (dhadha, tite) ont ete ajoutes a 'tabla' dans le meme mouvement, et figurent ici aussi parce que cette scene les emploie. AUCUN accordage : une qa'ida ne resout pas de hauteur, comme 'tabla'.",
     "_source": "Vocabulaire releve AU COMPILATEUR sur kanopi .../BPScript-tests/dhadhatite_v2.bps (8 terminaux employes, membres droits, non-terminaux exclus). L'alphabet natif bp3-ctests/-al.dhadhatite ne declare que six bols SIMPLES (dha, ti, te, na, dhee, tr) et AUCUN des enchainements : la scene .bps le dit elle-meme en commentaire — « dhadhateena is NOT in gram#4 terminals, it is a composite bol »."
+  },
+  "tryCsoundObjects": {
+    "description": "Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)",
+    "notes": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "midiobject"
+    ],
+    "alterations": {},
+    "voices": {
+      "a": "dummy_csound_a",
+      "b": "dummy_csound_b",
+      "c": "dummy_csound_c",
+      "d": "dummy_csound_d",
+      "e": "dummy_csound_e",
+      "f": "dummy_csound_f",
+      "midiobject": "dummy_csound_midiobject"
+    },
+    "_note": "⚠️ SES VOIX SONT DES SUBSTITUTS ASSUMES, PAS LES SONS D ORIGINE (ordre Romain, 2026-07-29 : « prenons des sons dummy juste pour VALIDER LE MODELE »). L objectif de cette entree n est PAS que la scene sonne juste — c est que la CHAINE tienne : un alphabet d objets sonores, ses terminaux lies a des voix, et la scene qui compile et derive. Les sept NOMS, eux, sont VERBATIM du natif (-al.tryCsoundObjects : « a b c d e f midiobject », sous le commentaire « the alphabet of terminal symbols which are also used as labels of sound-object instances »). Les noms sont une traduction ; les sons ne le sont pas encore.",
+    "_dummy": "REMPLACER LES VOIX EST UN CHANGEMENT DE DONNEE, PAS DE STRUCTURE : le portage reel n aura qu a reecrire les entrees `dummy_csound_*` de lib/voices.json, sans toucher a cette entree ni aux scenes. C est la condition posee par l architecte, l investigation du portage etant en cours chez bp3-frontend. Ce que le portage devra decoder : -so.tryCsoundObjects, 440 lignes, 22 prototypes pour ces 7 noms — un FLUX DE NOMBRES, zero ligne de csound lisible (mesure 2026-07-29). L orchestre existe et tient en 44 lignes (BP2test.orc, UN instrument).",
+    "_source": "bp3-ctests/-al.tryCsoundObjects (noms, verbatim) · -so.tryCsoundObjects (prototypes, non portes)"
   }
 }
