@@ -707,15 +707,45 @@ function validateTerminals(ast) {
   if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider sur les symboles NUS
 
   // Terminaux RHS : Symbol non couvert = non déclaré.
+  //
+  // ⚠️ CETTE BOUCLE NE LISAIT QUE LE PREMIER NIVEAU — un terminal inconnu placé dans un GROUPE
+  // passait SANS UN MOT. Mesuré le 2026-07-29, trois scènes minimales sous alphabet occidental :
+  //   `motif -> zzz` REFUSÉ · `motif -> a b` REFUSÉ · `motif -> {a a b b}` ZÉRO ERREUR.
+  //
+  // ⚠️ C'EST LA QUATRIÈME FOIS QUE JE PAIE CETTE FAMILLE, et je l'avais inscrite trois fois :
+  // « descendre jusqu'aux FEUILLES — compter les voisins de surface ne voit pas ce qui vit sous un
+  // nœud composite ». Je l'avais réparée dans la garde des sacs, dans celle de la correspondance,
+  // dans celle du point d'attente… et jamais re-balayée ICI, dans le validateur le plus central.
+  // Une règle qu'on a écrite et appliquée ailleurs ne protège pas l'endroit qu'on n'a pas regardé.
+  //
+  // CE QUE ÇA COÛTAIT, ET C'EST PIRE QUE LE TROU LUI-MÊME : tant qu'il était ouvert, AUCUNE scène à
+  // groupes ne pouvait être migrée sur la foi d'un « zéro erreur » — le compilateur disait oui à
+  // tout. Une scène de la bibliothèque a été déclarée MIGRÉE le matin même sur ce vert-là
+  // (`Mozartexpression`, huit noms de solfège cachés sous alphabet occidental). Un vert qui ne
+  // mesure pas ce qu'on croit est pire qu'un rouge (formule de bpx, reprise).
+  //
+  // AMPLEUR MESURÉE AVANT ÉCRITURE, 258 scènes : 76 portent des terminaux sous un groupe, 7 y
+  // cachent un inconnu, 6 passent de verte à rouge. Les trois consommateurs ont été prévenus À
+  // L'ÉCRITURE avec la liste exacte — pas au push (règle du 2026-07-29).
   const seen = new Set();
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) for (const el of (r.rhs || [])) {
-    if (!el || el.type !== 'Symbol' || !el.name) continue;
-    if (el.role === 'homomorphism') continue; // marqueur d'invocation d'homo (symbole nu résolu par nom), pas un terminal
-    if (el.payload && codeVoice.has(el.payload.actor)) continue; // voix-code : terminal arbitraire
-    if (known.has(el.name) || declared.has(el.name) || seen.has(el.name)) continue;
-    seen.add(el.name);
-    errors.push({ message: `terminal '${el.name}' non déclaré — absent des alphabets en portée`, line: el.line });
-  }
+  // ⚠️ LA LISTE DES CHAMPS PORTEURS SE MESURE, ELLE NE SE DEVINE PAS. Mon premier jet en oubliait
+  // deux —  et , ceux de l'événement simultané — et le garde l'a dit tout
+  // de suite parce qu'il éprouve l'ESPACE des contenants et pas le groupe qui s'était montré.
+  // C'est précisément ce qu'une matrice achète : la faute que j'allais refaire au même endroit.
+  const COMPOSITES = ['voices', 'elements', 'content', 'symbol', 'triggers', 'primary', 'secondaries'];
+  const verifier = (el) => {
+    if (!el || typeof el !== 'object') return;
+    if (Array.isArray(el)) { el.forEach(verifier); return; }
+    if (el.type === 'Symbol' && el.name
+        && el.role !== 'homomorphism'            // marqueur d'invocation d'homo, pas un terminal
+        && !(el.payload && codeVoice.has(el.payload.actor))   // voix-code : terminal arbitraire
+        && !known.has(el.name) && !declared.has(el.name) && !seen.has(el.name)) {
+      seen.add(el.name);
+      errors.push({ message: `terminal '${el.name}' non déclaré — absent des alphabets en portée`, line: el.line });
+    }
+    for (const k of COMPOSITES) if (el[k]) verifier(el[k]);
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifier(r.rhs || []);
   return errors;
 }
 

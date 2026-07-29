@@ -131,7 +131,7 @@ const FORMES_FLUX = [
   ['câblage avec port et valeur',      'S -> C4 !pot >> tempo.bpm: 120 D4',      1, [false]],
   ['deux câblages enchaînés',          'S -> C4 !a >> b !c >> d D4',             2, [false, false]],
   ['un câblage et une coupure',        'S -> C4 !a >> b !\\>> out.in D4',        2, [false, true]],
-  ['après un accord',                  'S -> C4 !dha !osc >> filtre D4',         1, [false]],
+  ['après un accord',                  'S -> C4 !E4 !osc >> filtre D4',         1, [false]],
   ['après un silence',                 'S -> - !osc >> filtre D4',               1, [false]],
   ['dans une voix polymétrique',       'S -> {C4 !osc >> filtre, D4}',           0, []],
 ];
@@ -195,9 +195,9 @@ for (const [ou, src] of OU_ELLE_POUVAIT_S_ECRIRE) {
 // désambiguïsation a mangé les formes voisines — le `!` en portait déjà cinq.
 console.log('\n=== §7ter. les voisins du point d\'exclamation sont intacts ===');
 const INTACTS = [
-  ['accord collé',                 'S -> C4!dha D4',            'SimultaneousGroup'],
-  ['accord espacé',                'S -> C4 !dha D4',           'SimultaneousGroup'],
-  ['accord à deux secondaires',    'S -> C4!dha!phase D4',      'SimultaneousGroup'],
+  ['accord collé',                 'S -> C4!E4 D4',            'SimultaneousGroup'],
+  ['accord espacé',                'S -> C4 !E4 D4',           'SimultaneousGroup'],
+  ['accord à deux secondaires',    'S -> C4!E4!G4 D4',      'SimultaneousGroup'],
   ['objet hors-temps',             'S -> !f D4',                'OutTimeObject'],
   ['contrôle instantané',          'S -> C4 !(vel:80) D4',      'InstantControl'],
   ['contrôle moteur instantané',   'S -> C4 ![retro] D4',       'InstantControl'],
