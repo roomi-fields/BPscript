@@ -33,6 +33,10 @@ Scene {
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
+  alphabetTerminals?: string[]       // OPTIONNEL — les noms de CETTE scene qui sont des terminaux
+                                     // d'un alphabet qui NE resout PAS de hauteur (frappes,
+                                     // symboles abstraits). DISTINCT de noteTerminals : deux
+                                     // sources, deux sens ; les fondre est INTERDIT.
   noteTerminals?: string[]           // OPTIONNEL — les noms de CETTE scene qui SONT des notes,
                                      // resolus contre l'alphabet actif. ABSENT != VIDE :
                                      // absent = aucun alphabet resolvable ici (hauteur opaque,
@@ -73,6 +77,32 @@ champ pour le meme fait serait une seconde source de verite.
 - champ **absent** = aucun alphabet resolvable ici — le frontal ne sait pas, et son silence ne doit
   pas se lire « aucune note » ;
 - liste **vide** = un alphabet est en portee et aucun nom de la scene n'est une note. Un fait.
+
+### Le partage entre les deux champs — corrige le 2026-07-29
+
+⚠️ **CE CHAMP A D'ABORD ETE EMIS SEUL, ET C'ETAIT UN DEFAUT.** J'ai repris le NOM defini par la
+decision du 2026-07-28 sans reprendre la DISTINCTION qui le justifie — elle ecrit pourtant
+« champ **DISTINCT** de `scene.alphabetTerminals` : deux sources, deux sens ; les fondre est
+**INTERDIT** ». Mesure du defaut : l'arbre annoncait `dha`, `dhin`, `ka` (frappes de tabla) et
+`a`, `b`, `c` (symboles abstraits) comme des **notes**, quand la donnee dit l'inverse en toutes
+lettres (`tabla` : *percussion syllables, no pitch*). Trouve par bp3-frontend, qui emet les deux
+champs depuis le debut.
+
+**LE CRITERE VIENT DE LA DONNEE**, et deux mesures independantes designent exactement les memes
+trois alphabets — `shakuhachi`, `tabla`, `simple` :
+- le champ `defaultTuning` de `lib/alphabets.json` : un alphabet qui en declare un resout une
+  hauteur, les autres non ;
+- l'oracle **natif** (mesure bp3-frontend, 2026-07-29) : en BP3 un nom de note n'est **jamais nu**,
+  il porte toujours son registre. `dha` n'est une note dans aucune convention ; `dha4` l'est en
+  indien.
+
+**PRECEDENCE** — un nom present dans les deux champs est traite comme **note** (ordre du C :
+`SEARCHNOTE` avant `SEARCHTERMINAL`). Regle de la decision du 2026-07-28, appliquee et non
+decidee ici : les deux champs sont emis fidelement, c'est au lecteur d'appliquer la precedence.
+
+**Question de DONNEE routee, non tranchee** : `shakuhachi` ne declare ni accordage ni registres,
+donc ses doigtes sortent en terminaux d'alphabet — alors que ses alterations `meri`/`kari`
+(menton bas, menton haut) sont des inflexions de hauteur. Merite-t-il un accordage ?
 
 **Une tete de regle nommee comme une note y figure** : c'est meme le cas que l'aval cherche, pour
 l'ecarter de sa lecture de structure. Un **point d'attente** n'y figure jamais — une attente

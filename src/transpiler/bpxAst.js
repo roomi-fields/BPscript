@@ -1488,7 +1488,7 @@ function validateAliases(ast) {
  */
 function emitNoteTerminals(ast) {
   const { terminaux, aUnAlphabet } = terminauxEnPortee(ast);
-  if (!aUnAlphabet) return;                       // je ne sais pas → champ ABSENT, jamais []
+  if (!aUnAlphabet) return;                       // je ne sais pas → champs ABSENTS, jamais []
   // Les noms PRÉSENTS dans la scène, des deux côtés de la flèche : une tête de règle qui porte un
   // nom de note en est un cas, et c'est justement celui que l'aval cherche à écarter de sa lecture
   // de structure. Descendre jusqu'aux FEUILLES — un nom sous un groupe polymétrique ou sous une
@@ -1501,7 +1501,56 @@ function emitNoteTerminals(ast) {
     for (const k in n) if (n[k] && typeof n[k] === 'object') recolter(n[k]);
   };
   recolter(ast.subgrammars || []);
-  ast.noteTerminals = [...presents].filter((n) => terminaux.has(n)).sort();
+
+  // ⚠️ LE PARTAGE EN DEUX — CORRECTION D'UN DÉFAUT QUE J'AI LIVRÉ, PAS UNE EXTENSION (2026-07-29).
+  // J'ai d'abord émis UN champ, en reprenant le NOM que la décision du 2026-07-28 définit sans
+  // reprendre la DISTINCTION qui le justifie — elle écrit pourtant « champ DISTINCT de
+  // alphabetTerminals : deux sources, deux sens ; les fondre est INTERDIT ». Résultat mesuré :
+  // mon arbre AFFIRMAIT que `dha`, `dhin`, `ka` (frappes de tabla) et `a`, `b`, `c` (symboles
+  // abstraits) SONT des notes, quand la donnée dit l'inverse en toutes lettres. Trouvé par
+  // bp3-frontend, qui émet les deux champs depuis le début.
+  //
+  // LE CRITÈRE VIENT DE LA DONNÉE, ET DEUX MESURES INDÉPENDANTES LE DÉSIGNENT :
+  //  · le mien — un alphabet qui déclare un `defaultTuning` résout une hauteur, les autres non ;
+  //  · le leur, mesuré sur le moteur natif — un nom de note n'y est JAMAIS nu, il porte toujours
+  //    son registre (`dha` n'est une note dans aucune convention, `dha4` l'est en indien).
+  // Les deux désignent EXACTEMENT les mêmes trois alphabets : shakuhachi, tabla, simple — les
+  // seuls sans accordage, et les seuls sans convention de registres. Cette convergence est ce qui
+  // ferme le sujet : j'avais objecté que le critère mésclassait shakuhachi (ses altérations
+  // meri/kari sont des inflexions de hauteur), mais mon objection était une inférence tirée de la
+  // PROSE de l'entrée, la leur une mesure. La mesure gagne. Reste une question de DONNÉE, routée
+  // et non tranchée ici : shakuhachi mérite-t-il un accordage et des registres ?
+  //
+  // PRÉCÉDENCE, et elle n'est pas de moi : la décision du 2026-07-28 la fixe — « un nom présent
+  // dans les deux champs est traité comme NOTE, c'est l'ordre du C » (SEARCHNOTE avant
+  // SEARCHTERMINAL). On émet donc fidèlement dans les deux ; c'est au lecteur d'appliquer la
+  // règle, pas à moi de trancher en amputant un champ.
+  const aHauteur = (nomAlphabet) => {
+    const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
+    return !!(lib && lib.defaultTuning);
+  };
+  const notes = new Set();
+  const sansHauteur = new Set();
+  const verser = (nomAlphabet, octaves) => {
+    const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
+    if (!lib || !lib.notes) return;
+    const cible = aHauteur(nomAlphabet) ? notes : sansHauteur;
+    for (const t of expandAlphabetTerminals(lib, octaves)) cible.add(t);
+    const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
+      ? Object.keys(lib.alterations) : [''];
+    for (const note of lib.notes) for (const alt of alts) cible.add(note + alt); // forme nue
+  };
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
+  if (sceneAlpha) verser(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null);
+  for (const a of ast.actors || []) {
+    const p = a.properties || {};
+    if (p.alphabet) verser(p.alphabet, p.octaves || null);
+  }
+
+  const dansLaScene = (ens) => [...presents].filter((n) => ens.has(n)).sort();
+  ast.noteTerminals = dansLaScene(notes);
+  ast.alphabetTerminals = dansLaScene(sansHauteur);
 }
 
 function emitSceneMeter(ast) {

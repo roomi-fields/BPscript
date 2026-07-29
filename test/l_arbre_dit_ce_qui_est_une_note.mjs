@@ -14,16 +14,32 @@
  * réponse pour les trois quarts du catalogue. La phrase de Kanopi, reprise par l'architecte.
  *
  * ⚠️ LA FORME N'EST PAS DE MOI, et c'est délibéré : Romain a gravé le 2026-07-29 que ni bpscript ni
- * l'architecte ne prennent de décision de FORMALISME DE LANGAGE. Le champ `noteTerminals` EXISTE,
- * ratifié et daté (`hub/decisions/2026-07-28-le-fait-ce-nom-est-une-note-vient-du-frontal.md`,
- * défini pour bp3-frontend) : liste PLATE de noms nus, au niveau SCÈNE, ABSENT ≠ VIDE, « la
- * résolution DÉJÀ FAITE, pour cette scène-là ». On GÉNÉRALISE ce champ, on n'en invente pas un
- * second — deux champs pour un même fait seraient deux sources de vérité.
+ * l'architecte ne prennent de décision de FORMALISME DE LANGAGE. Les DEUX champs existent, ratifiés
+ * et datés (`hub/decisions/2026-07-28-le-fait-ce-nom-est-une-note-vient-du-frontal.md`, définis pour
+ * bp3-frontend) : listes PLATES de noms nus, au niveau SCÈNE, ABSENT ≠ VIDE.
+ *
+ * ⚠️⚠️ ET UNE PHRASE DE CET EN-TÊTE A ÉTÉ RETIRÉE PARCE QU'ELLE ÉTAIT FAUSSE. J'avais écrit ici
+ * « on généralise CE champ, on n'en invente pas un second — deux champs pour un même fait seraient
+ * deux sources de vérité ». C'était le contraire de ce que dit la décision que je citais dans la
+ * ligne au-dessus : elle écrit « champ DISTINCT de alphabetTerminals : deux sources, deux sens ;
+ * les fondre est INTERDIT ». Ce ne sont PAS deux champs pour un même fait, ce sont deux faits.
+ * J'ai repris le NOM sans la DISTINCTION, et ce garde a servi à défendre l'erreur : il exigeait que
+ * la première note de CHAQUE alphabet soit une note, tabla et simple compris. Trouvé par
+ * bp3-frontend, qui émet les deux depuis le début.
+ *
+ * LE CRITÈRE DU PARTAGE VIENT DE LA DONNÉE, et deux mesures indépendantes désignent les mêmes trois
+ * alphabets (shakuhachi, tabla, simple) : le champ `defaultTuning` de ma librairie, et l'oracle
+ * natif de bp3-frontend — en BP3 un nom de note n'est JAMAIS nu, il porte toujours son registre.
+ * J'avais objecté que le critère mésclassait shakuhachi ; mon objection était tirée de la PROSE de
+ * l'entrée, la leur d'une mesure. Question de DONNÉE routée, non tranchée ici : shakuhachi
+ * mérite-t-il un accordage et des registres ?
  *
  * ⚠️ LE TÉMOIN QUE L'ARCHITECTE EXIGE, et c'est lui qui juge la solution : « ça doit marcher pour
  * gamelan_pelog, bohlen_pierce et shruti23 comme pour western. Une solution qui ne marche que pour
- * trois alphabets est fausse — c'est précisément le défaut qu'on retire. » Le §2 balaie donc les
- * DOUZE alphabets de la librairie, construits depuis la DONNÉE, jamais depuis une liste écrite ici.
+ * trois alphabets est fausse — c'est précisément le défaut qu'on retire. » Le §2 balaie donc TOUS
+ * les alphabets de la librairie, construits depuis la DONNÉE, jamais depuis une liste écrite ici —
+ * ils sont quinze depuis l'entrée de bp3_english et bp3_fr, et le garde l'a su sans qu'on le lui
+ * dise. C'est exactement ce qu'on attend d'un témoin bâti sur la donnée.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
@@ -40,6 +56,7 @@ const compiler = (src) => compileToBPxAST(src);
   const r = compiler('@core\n@mine.perso.gamme\nS -> C4');
   ok(r.ast?.noteTerminals === undefined,
     `1. hauteur OPAQUE : le champ doit être ABSENT, pas vide (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
+  ok(r.ast?.alphabetTerminals === undefined, '1. hauteur OPAQUE : alphabetTerminals ABSENT aussi');
 }
 {
   const r = compiler('@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`');
@@ -51,26 +68,37 @@ const compiler = (src) => compileToBPxAST(src);
   const r = compiler('@core\n@alphabet.western\n@var travail\nS -> travail');
   ok(Array.isArray(r.ast?.noteTerminals) && r.ast.noteTerminals.length === 0,
     `1. alphabet en portée mais aucune note écrite : liste VIDE, pas absente (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
+  ok(Array.isArray(r.ast?.alphabetTerminals),
+    '1. les DEUX champs suivent la même règle absent/vide — sinon l\'un mentirait pendant que l\'autre dit vrai');
 }
 
 // ── 2. LES DOUZE ALPHABETS — le témoin exigé, construit depuis la DONNÉE ────────────────────
 // La liste des alphabets n'est PAS écrite ici : elle est LUE dans la librairie. Ajouter un
 // alphabet le teste automatiquement ; en retirer un ne peut pas passer inaperçu (le socle §4 le
 // refuse). C'est ce qui distingue un témoin d'une liste que quelqu'un devra penser à compléter.
+// ⚠️ ET LE PARTAGE EN DEUX CHAMPS, corrigé le 2026-07-29 : un alphabet qui déclare un accordage
+// résout une hauteur, les autres non. Ce garde AFFIRMAIT l'inverse — il exigeait que la première
+// note de CHAQUE alphabet soit dans noteTerminals, tabla et simple compris. Il gardait donc le
+// défaut : mon arbre disait que des frappes de tabla étaient des notes, et ce témoin l'exigeait.
 const ALPHABETS = Object.entries(LIBS['alphabets'])
   .filter(([, o]) => o && typeof o === 'object' && !Array.isArray(o) && Array.isArray(o.notes) && o.notes.length)
-  .map(([nom, o]) => [nom, o.notes[0]]);
+  .map(([nom, o]) => [nom, o.notes[0], !!o.defaultTuning]);
 console.log(`[arbre note] ${ALPHABETS.length} alphabets de la librairie, lus dans la donnée`);
-for (const [nom, premiereNote] of ALPHABETS) {
+for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // On écrit une règle dont la tête n'est PAS une note et dont le corps EST une note de cet
   // alphabet-là. Le fait attendu ne dépend d'aucune convention BP3 : il n'y en a pas ici.
   const r = compiler(`@core\n@alphabet.${nom}\nmotif -> ${premiereNote}\nS -> motif`);
   ok((r.errors || []).length === 0,
     `2. ${nom} : la scène témoin doit compiler — ${(r.errors || []).map((e) => e.message).slice(0, 1)}`);
-  ok((r.ast?.noteTerminals || []).includes(premiereNote),
-    `2. ${nom} : '${premiereNote}' doit être RECONNU comme note (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
-  ok(!(r.ast?.noteTerminals || []).includes('motif'),
-    `2. ${nom} : 'motif' n'est PAS une note et ne doit pas y figurer`);
+  // Le champ dépend de ce que l'alphabet DÉCLARE, pas de mon opinion sur l'instrument.
+  const attendu = resoutUneHauteur ? 'noteTerminals' : 'alphabetTerminals';
+  const autre = resoutUneHauteur ? 'alphabetTerminals' : 'noteTerminals';
+  ok((r.ast?.[attendu] || []).includes(premiereNote),
+    `2. ${nom} : '${premiereNote}' doit être dans ${attendu} (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
+  ok(!(r.ast?.[autre] || []).includes(premiereNote),
+    `2. ${nom} : '${premiereNote}' ne doit PAS être dans ${autre} — les fondre est interdit (décision 2026-07-28)`);
+  ok(!(r.ast?.noteTerminals || []).includes('motif') && !(r.ast?.alphabetTerminals || []).includes('motif'),
+    `2. ${nom} : 'motif' n'est ni une note ni un terminal d'alphabet`);
 }
 
 // ── 3. CE QUE LE CONSOMMATEUR CHERCHE VRAIMENT ──────────────────────────────────────────────
@@ -100,6 +128,24 @@ for (const [nom, premiereNote] of ALPHABETS) {
   const l = r.ast?.noteTerminals || [];
   ok(l.length === 1 && l[0] === 'C4',
     `3. la liste porte ce que la SCÈNE écrit, pas le catalogue de l'alphabet (reçu ${l.length} entrée(s))`);
+}
+
+// ── 3bis. LES TROIS ALPHABETS SANS HAUTEUR — le défaut exact qui a été livré ────────────────
+// Deux mesures indépendantes désignent les mêmes trois : le champ `defaultTuning` de ma donnée, et
+// l'oracle natif de bp3-frontend (un nom de note n'est JAMAIS nu en BP3, il porte son registre).
+for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['shakuhachi', 'ro']]) {
+  const r = compiler(`@core\n@alphabet.${alpha}\nmotif -> ${terminal}\nS -> motif`);
+  ok(!(r.ast?.noteTerminals || []).includes(terminal),
+    `3bis. ${alpha} ne résout aucune hauteur : '${terminal}' ne doit PAS être annoncé comme note`);
+  ok((r.ast?.alphabetTerminals || []).includes(terminal),
+    `3bis. ${alpha} : '${terminal}' est un TERMINAL D'ALPHABET, et il doit être dit`);
+}
+{
+  // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.
+  const r = compiler('@core\n@actor perc\n  alphabet.tabla\n  transport.audio\n'
+    + '@actor n\n  alphabet.western\n  transport.audio\nmotif -> dha C4\nS -> motif');
+  ok((r.ast?.noteTerminals || []).join() === 'C4' && (r.ast?.alphabetTerminals || []).join() === 'dha',
+    `3bis. deux vocabulaires : chacun dans son champ (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
 }
 
 // ── 4. SOCLE ET ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────
