@@ -98,6 +98,37 @@
     ],
     "_note": "Mêmes degrés que sargam_12TET — c'est l'ANCRE qui distingue les deux, pas la grille : ici dha4 = 440 Hz (le clavier occidental renommé), et non sa = 240 Hz. Cf. le _note de l'alphabet bp3_indian."
   },
+  "bp3_english_12TET": {
+    "description": "Convention de notes ENGLISH du moteur BP3 natif, en 12-TET",
+    "alphabet": "bp3_english",
+    "temperament": "12TET",
+    "degrees": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11
+    ],
+    "_provenance": "bp3-frontend, courrier [1098] du 2026-07-29 — verbatim."
+  },
+  "bp3_fr_12TET": {
+    "description": "Convention de notes FRENCH du moteur BP3 natif, en 12-TET",
+    "alphabet": "bp3_fr",
+    "temperament": "12TET",
+    "degrees": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11
+    ],
+    "_note": "Mêmes degrés que bp3_english — c'est l'ANCRE qui distingue (la3 = 440 Hz), pas la grille. BP3 RENOMME le clavier, il ne le transpose pas.",
+    "_provenance": "bp3-frontend, courrier [1098] du 2026-07-29 — verbatim."
+  },
   "sargam_22shruti": {
     "description": "Indian sargam in 22-shruti system — full microtonal resolution",
     "alphabet": "sargam",
@@ -279,13 +310,45 @@
     "description": "22-shruti nommé BP3 — 23 degrés sur le tempérament bp3_shruti23_native (table native -to.tryShruti verbatim, 729/512). Distinct de bp3_grama (Arnold).",
     "alphabet": "shruti23",
     "temperament": "bp3_shruti23_native",
-    "degrees": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    "degrees": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ]
   },
   "western_just_c": {
     "description": "Western en intonation juste BP3, C-ancré (tonique C4 = 261.63 Hz, table native -to.tryOneScale). Le 'j' de Cj/Aj/Gj = marqueur de degré, parsé C/A/G ; TOUTES les notes rendues par cette même gamme juste (modèle Romain [428/429] : un tuning, pas d'alphabet parallèle). Distinct de western_just (A440-ancré). Tempérament bp3_just_intonation = coïncide avec just_5limit sur C/D/E/F/G/A (degrés 0,2,4,5,7,9).",
     "alphabet": "western",
     "temperament": "bp3_just_intonation",
-    "degrees": [0, 2, 4, 5, 7, 9, 11],
+    "degrees": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11
+    ],
     "baseNote": "C",
     "baseRegister": 4,
     "diapason": 261.63,

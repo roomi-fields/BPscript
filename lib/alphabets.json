@@ -81,6 +81,56 @@
     "_note": "⚠️ CE N'EST PAS 'sargam'. BP3 RENOMME le clavier occidental, il ne le TRANSPOSE pas : les trois conventions natives (ENGLISH/FRENCH/INDIAN) nomment les MÊMES touches. L'ancre porte donc sur la classe 9 — 'dha' = 'A' = 'la' — à 440 Hz, ce qui place sa4 à 261.626 Hz, soit le do4 natif. Ancrer sur 'sa'=240 (l'ancre TRADITIONNELLE, portée par l'alphabet 'sargam' ci-dessus) donnerait un rapport de 0.917 avec le natif : musicalement légitime, mais infidèle au moteur — et c'est précisément l'écart que vina/vina2 contournaient à la main. Les deux alphabets coexistent parce qu'ils répondent à deux questions différentes : 'sargam' joue le sargam, 'bp3_indian' reproduit BP3.",
     "_source": "Tables VERBATIM du moteur : bp3-engine/csrc/bp3/-BP3main.h:140-141 (Indiannote) et :147 (AltIndiannote). Les 12 classes s'expriment ici en 7 naturelles + suffixes 'k' (komal, −1) et '#' (tivra, +1) — vérifié classe par classe sur les DEUX tables. Les deux quirks de bord (ni# → classe 0 registre +1 ; sak → classe 11 registre −1) relèvent du repli générique de degré, déjà porté par le résolveur de Kairos (src/pitch/bp3-alphabets.test.ts)."
   },
+  "bp3_english": {
+    "description": "Convention de notes ENGLISH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29 : la mécanique n'utilise que des alphabets)",
+    "notes": [
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "A",
+      "B"
+    ],
+    "alterations": {
+      "b": -1,
+      "": 0,
+      "#": 1
+    },
+    "octaves": "bp3",
+    "diapason": 440,
+    "baseNote": "A",
+    "baseRegister": 5,
+    "defaultTuning": "bp3_english_12TET",
+    "_note": "⚠️ CE N'EST PAS 'western'. Même jeu de naturelles, mais les REGISTRES sont ceux du natif : l'octave −1 s'écrit '00' et non '-1' (table 'bp3', lue plus-long-d'abord). baseRegister 5 = le registre '4' de cette table → A4 = 440 Hz. Les alternantes du natif (B#/Db/Eb/Fb/E#/Gb/Ab/Bb/Cb) s'expriment par la carte d'altérations ; les deux quirks de bord (B# → classe 0 registre +1, Cb → classe 11 registre −1) relèvent du repli générique de degré.",
+    "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530 (SetNoteNames, registres et quirks d'octave)",
+    "_provenance": "Donnée fournie VERBATIM par bp3-frontend le 2026-07-29 (courrier [1098], son banc test/alphabet_librairie.test.ts, commit 52d6638). NON refabriquée ici — ordre de l'architecte : il la possède depuis [79], la refabriquer aurait créé une seconde source pour la même table. Sa vérification : 223 noms de part et d'autre, ZÉRO désaccord, bp3_indian inclus dans le lot POUR VALIDER LE MODÈLE et pas seulement sa transcription."
+  },
+  "bp3_fr": {
+    "description": "Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)",
+    "notes": [
+      "do",
+      "re",
+      "mi",
+      "fa",
+      "sol",
+      "la",
+      "si"
+    ],
+    "alterations": {
+      "b": -1,
+      "": 0,
+      "#": 1
+    },
+    "octaves": "bp3_fr",
+    "diapason": 440,
+    "baseNote": "la",
+    "baseRegister": 5,
+    "defaultTuning": "bp3_fr_12TET",
+    "_note": "⚠️ CE N'EST PAS 'solfege'. Même jeu de naturelles, mais le natif NOMME ses registres un cran plus bas : la3 = A4 = 440 Hz (là où 'solfege' pose la4). D'où une table de registres PROPRE ('bp3_fr'), qui ajoute '000' sous '00' — le français est la seule convention native à descendre si bas. Traduire une grammaire française vers 'solfege' la déplacerait d'une octave entière.",
+    "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530 (SetNoteNames, registres et quirks d'octave)",
+    "_provenance": "Donnée fournie VERBATIM par bp3-frontend le 2026-07-29 (courrier [1098]). Voir bp3_english. Défaut qu'ils ont trouvé en la vérifiant et qu'on ne recopie donc pas : ils acceptaient l'alternante de la classe 0 tout en bas du clavier (si#-3), qui réclame un registre SOUS le plus bas de la table native — corrigé chez eux avant l'envoi."
+  },
   "solfege": {
     "description": "Solfège latin — do ré mi fa sol la si",
     "notes": [
@@ -335,8 +385,34 @@
   },
   "shruti23": {
     "description": "22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
-    "notes": ["sa", "r1", "r2", "r3", "r4", "g1", "g2", "g3", "g4", "m1", "m2", "m3p1", "m4p2", "p3", "p4", "d1", "d2", "d3", "d4", "n1", "n2", "n3", "n4"],
-    "alterations": { "": 0 },
+    "notes": [
+      "sa",
+      "r1",
+      "r2",
+      "r3",
+      "r4",
+      "g1",
+      "g2",
+      "g3",
+      "g4",
+      "m1",
+      "m2",
+      "m3p1",
+      "m4p2",
+      "p3",
+      "p4",
+      "d1",
+      "d2",
+      "d3",
+      "d4",
+      "n1",
+      "n2",
+      "n3",
+      "n4"
+    ],
+    "alterations": {
+      "": 0
+    },
     "octaves": "saptak_us",
     "diapason": 261.625,
     "baseNote": "sa",
