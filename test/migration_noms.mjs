@@ -222,11 +222,34 @@ export function production(source) {
   let session;
   try { session = new Session(ast, { seed: GRAINE }); }
   catch (e) { return { erreur: 'chargement refusé : ' + String(e.message).slice(0, 160) }; }
+  // ⚠️ CE `catch` AVALAIT LA CAUSE, ET C EST CE QUI M A FAIT GRAVER UNE RAISON FAUSSE DANS UNE
+  // SCÈNE QUI N'EST PAS LA MIENNE (2026-07-29). Il jetait l'exception de dérivation, puis le
+  // `if (!arbre)` plus bas rendait « aucun arbre dérivé » — un message qui dit l'ABSENCE là où
+  // l'outil connaissait la CAUSE. Sur `trySrand` la vraie cause était :
+  //   « LCG.reseedOrShuffle(NEWSEED) needs a wall-clock seed »
+  // c'est-à-dire que la scène demande une graine d'HORLOGE et que ma graine fixe ne la satisfait
+  // pas. J'en avais conclu « la production est NULLE avant comme après » et je l'ai ÉCRIT dans la
+  // scène pour justifier d'avoir contourné mon propre outil. Kanopi a mesuré 35 jetons par la
+  // porte de son application : une référence EXISTAIT.
+  //
+  // LA RÈGLE, ET ELLE VAUT AU-DELÀ D'ICI : un outil qui rapporte une ABSENCE alors qu'il tient la
+  // CAUSE fabrique une conclusion fausse chez celui qui le lit — et cette conclusion-là s'est
+  // retrouvée gravée dans un fichier, où elle aurait menti pendant des mois.
+  let causeDerivation = null;
   for (const m of ['derive', 'step', 'tick', 'produce', 'run']) {
-    if (typeof session[m] === 'function') { try { session[m](); } catch { /* la dérivation suffit */ } }
+    if (typeof session[m] === 'function') {
+      try { session[m](); }
+      catch (e) { if (!causeDerivation) causeDerivation = String(e && e.message ? e.message : e); }
+    }
   }
   const arbre = session.tree ?? session._lastTree ?? null;
-  if (!arbre) return { erreur: 'aucun arbre dérivé' };
+  if (!arbre) {
+    return { erreur: causeDerivation
+      ? `la dérivation a échoué ICI — ${causeDerivation.slice(0, 160)}. Ce n'est PAS « la scène ne `
+        + `produit rien » : c'est ce banc-ci qui ne sait pas la dériver, et un autre chemin le peut `
+        + `peut-être. Ne pas en conclure que la production est nulle.`
+      : 'aucun arbre dérivé, et le moteur n\'a donné aucune cause' };
+  }
   // ⚠️ LE CODE D'UN BLOC N'EST PAS DANS L'ARBRE DÉRIVÉ — seul son identifiant y voyage. Mesuré :
   // on remplace tout le contenu d'un bloc, l'arbre sort STRICTEMENT identique. Or c'est DANS ces
   // blocs que la migration de l'amalgame écrit (elle y pose le tag). Mon juge était donc aveugle
