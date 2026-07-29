@@ -63,14 +63,26 @@ function backtickNodes(ast) {
   check(ld?.engine === 'strudel' && ld?.name === 'dirt-samples', '@library lisible depuis la directive : ' + JSON.stringify(ld));
 }
 
-// 6. acteurs : references[] (ActorReference) + sceneTable depuis ast.scenes (pas de table)
+// 6. acteurs : references[] (ActorReference)
+// ⚠️ CE CAS PORTAIT AUSSI UNE ASSERTION SUR `ast.scenes`, RETIRÉE le 2026-07-29 : `@scene` est
+// SUPPRIMÉE du langage (décision Romain, « on n'a ni la maturité ni le besoin de déclarer des
+// sous-scènes »). Le témoin est devenu un cas REFUSÉ, plus bas — le garder aurait fait rougir la
+// pierre tombale qu'il aurait dû protéger.
 {
-  const r = compileToBPxAST('@actor tabla\n  @alphabet.tabla\n  transport.midi(ch:10)\n@scene verse "verse.bps"\nS -> tabla.Sa');
+  const r = compileToBPxAST('@actor tabla\n  @alphabet.tabla\n  transport.midi(ch:10)\nS -> tabla.Sa');
   const tr = r.ast.actors[0].references?.find((x) => x.category === 'transport');
   check(tr?.type === 'ActorReference' && tr?.name === 'midi' && tr?.params?.ch === 10,
     'ActorReference transport sur le nœud acteur : ' + JSON.stringify(tr));
-  check(r.ast.scenes?.[0]?.name === 'verse' && r.ast.scenes?.[0]?.file === 'verse.bps',
-    'scène lisible depuis ast.scenes : ' + JSON.stringify(r.ast.scenes));
+}
+
+// 6bis. `@scene` est REFUSÉE, et le refus NOMME la faute — il ne dit pas « ligne non reconnue ».
+{
+  const r = compileToBPxAST('@core\n@alphabet.western\n@scene verse "verse.bps"\nS -> C4');
+  const msgs = (r.errors || []).map((e) => e.message ?? String(e));
+  check(msgs.some((m) => /'@scene' est SUPPRIMÉE/.test(m)),
+    '@scene doit être refusée en NOMMANT la suppression : ' + JSON.stringify(msgs));
+  check(msgs.some((m) => /sous-scènes/.test(m)),
+    '@scene — le refus doit dire POURQUOI, pas seulement refuser : ' + JSON.stringify(msgs));
 }
 
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom

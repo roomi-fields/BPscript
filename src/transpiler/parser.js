@@ -1173,6 +1173,30 @@ function parse(tokens, opts = {}) {
       subkey = expect(T.IDENT).value;
     }
 
+    // ─── PIERRE TOMBALE — `@scene` est SUPPRIMÉE de la graphie (Romain, 2026-07-29) ──────────
+    // Ses mots : « on n'a ni la maturité ni le besoin de déclarer des sous-scènes », puis, une fois
+    // la pièce sur la table : « je propose de LAISSER scenes dans BPx, ça peut servir plus tard,
+    // mais on le retire du RESTE ».
+    //
+    // ⚠️ CE QUE ÇA RETIRE N'EST PAS RIEN, ET LA PIÈCE A ÉTÉ MESURÉE AVANT LA DÉCISION. J'avais
+    // annoncé que cette suppression « ne touche personne », sur la foi d'un zéro mesuré chez UN
+    // consommateur. Mesuré chez BPx avant d'écrire : leur orchestrateur multi-scène EXPORTE une
+    // surface publique, LIT `ast.scenes` à trois endroits, et dix cas d'intégration en dépendent.
+    // Ils ne CASSENT pas — le champ est optionnel chez eux — mais ils perdent l'ENTRÉE de ce
+    // chemin et le SUJET de ces dix cas. Leur orchestrateur reste, comme capacité conservée en
+    // attente d'usage. Ce n'est PAS de la rétrocompatibilité : rien ne l'appelle plus côté langage.
+    //
+    // LA LEÇON, ET ELLE VAUT AU-DELÀ D'ICI : UN ZÉRO CHEZ UN CONSOMMATEUR N'EST PAS UN ZÉRO
+    // PARTOUT. Et sa réciproque, apprise le même jour et plus vicieuse : chercher les OCCURRENCES
+    // dans les données ne trouve pas les LECTEURS — BPx n'avait aucune scène employant `@scene`, et
+    // c'est pourtant chez eux que la suppression mord, parce que c'est leur CODE qui lit le champ.
+    if (name === 'scene') {
+      throw new ParseError(
+        `'@scene' est SUPPRIMÉE du langage (décision Romain 2026-07-29) : « on n'a ni la maturité `
+        + `ni le besoin de déclarer des sous-scènes ». Une scène ne déclare plus de sous-scènes — `
+        + `la composition multi-scène, si elle revient, se fera hors du langage.`, tok);
+    }
+
     // TOMBSTONE : la feature @routing (profils d'environnement studio/live/browser + routingTable
     // Z1 #105) est SUPPRIMÉE (décision 2026-07-16, Romain : modèle d'environnements abandonné —
     // ce n'était pas le moteur BP3 mais une feature de notre transpileur). Rejet nommé plutôt
