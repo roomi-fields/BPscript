@@ -434,11 +434,10 @@ function parse(tokens, opts = {}) {
           + `une PROPRIÉTÉ sur un nom qui existe, '@${nu.value} <nom> <valeur>' DÉCLARE un nom neuf.`,
           nu,
         );
-      } else if (false) {
-        const decl = parseDeclaration();
-        // `cv NAME : lib.type(...)` produit une CVInstance (modulateur), pas une Declaration.
-        if (decl.type === 'CVInstance') scene.cvInstances.push(decl);
-        else scene.declarations.push(decl);
+        // (Le corps de l'ancienne voie a été SUPPRIMÉ ici, pas neutralisé : signalé par bpx, et
+        // ils ont raison — un `else if (false)` avec le code derrière est littéralement la forme
+        // que la règle anti-rétrocompat du 2026-07-19 veut voir disparaître dans le même
+        // mouvement. La pierre tombale ci-dessus suffit.)
       } else if (at(T.BACKTICK)) {
         scene.backticks.push(parseBacktickOrphan());
       } else if (at(T.IDENT) && isLookaheadMacro()) {
@@ -1361,6 +1360,22 @@ function parse(tokens, opts = {}) {
       const declName = expect(T.IDENT).value;
       if (at(T.COLON)) {                     // PROPRIÉTÉ sur un nom existant
         advance();
+        // ⚠️ SAUF SI CE QUI SUIT EST UN CORPS DE MODULATEUR — signalé par kairos via bpx, et le
+        // défaut est de moi : mon refus de la forme nue ENSEIGNE que le deux-points pose une
+        // propriété. Qui migre `cv env1 : mod.adsr(…)` en lisant ce message garde donc
+        // naturellement le deux-points… et tombait sur « ligne non reconnue au niveau des
+        // règles », un générique qui ne dit plus rien du modulateur.
+        // UNE ERREUR QUI APPREND UNE GRAPHIE NE DOIT PAS MENER À UNE ERREUR QUI N'APPREND RIEN :
+        // c'est le deuxième pas de la migration, et c'est là qu'on abandonne l'auteur.
+        if (isCVModulatorBody()) {
+          throw new ParseError(
+            `'@${name} ${declName} : …' — le deux-points n'a pas de sens ici : ce qui suit DÉCLARE `
+            + `un modulateur, ça ne pose pas une propriété sur un nom qui existe. Retirer le `
+            + `deux-points : '@${name} ${declName} <valeur>'. `
+            + `(Le deux-points ne sert qu'à la forme '@${name} <nom>:<cible>', qui vise un nom déjà là.)`,
+            tok,
+          );
+        }
         const runtime = expect(T.IDENT).value;
         return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
       }

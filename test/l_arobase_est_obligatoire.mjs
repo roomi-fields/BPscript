@@ -67,6 +67,23 @@ ok(err(`${S}@cv w \`js: (t,d) => 0.5\`\nS -> C4\n`).length === 0,
   ok(e.some((m) => /ne déclare rien/.test(m)), '2. et le refus doit dire POURQUOI');
 }
 
+// ── 2bis. LE DEUXIÈME PAS DE LA MIGRATION — là où on abandonne l'auteur ─────────────────────
+// ⚠️ SIGNALÉ PAR KAIROS VIA BPX, ET LE DÉFAUT ÉTAIT DE MOI. Mon refus de la forme nue ENSEIGNE
+// que le deux-points pose une propriété. Qui migre `cv env1 : mod.adsr(…)` en lisant ce message
+// garde donc naturellement le deux-points — et tombait sur « ligne non reconnue au niveau des
+// règles », un générique qui ne dit plus rien du modulateur.
+// UNE ERREUR QUI APPREND UNE GRAPHIE NE DOIT PAS MENER À UNE ERREUR QUI N'APPREND RIEN. Un
+// message de migration se juge sur le CHEMIN COMPLET, pas sur son premier pas : c'est le second
+// qui décide si l'auteur s'en sort.
+for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['un bloc de code', '`js: 1`']]) {
+  const e = err(`@core\n@mod\n@alphabet.western\n@cv x : ${corps}\nS -> C4\n`);
+  ok(e.length >= 1, `2bis. '@cv x : ${quoi}' doit être refusé — le deux-points n'a pas de sens là`);
+  ok(e.some((m) => /deux-points n'a pas de sens ici/.test(m)),
+    `2bis. ${quoi} — le refus doit NOMMER la faute, pas dire « ligne non reconnue » (reçu : ${e[0]})`);
+  ok(e.some((m) => /Retirer le deux-points/.test(m)),
+    `2bis. ${quoi} — et donner la RÉÉCRITURE, sinon le second pas abandonne l'auteur`);
+}
+
 // ── 3. L'OBJET DÉCLARÉ DOIT ARRIVER — pas seulement compiler ────────────────────────────────
 // ⚠️ C'EST ICI QUE LE DÉFAUT S'EST MONTRÉ. La déclaration sans deux-points compilait proprement
 // et le modulateur était rangé parmi les directives : déclaré, invisible, non invocable. « Ça

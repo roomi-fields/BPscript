@@ -8,10 +8,10 @@
 @controls
 @alphabet.western:midi
 
-gate A:midi
-gate B:midi
-gate C:midi
-gate D:midi
+@gate A:midi
+@gate B:midi
+@gate C:midi
+@gate D:midi
 
 @mode:ord
 S -> A[rndtime:10] B {A B C D}[rndtime:20]

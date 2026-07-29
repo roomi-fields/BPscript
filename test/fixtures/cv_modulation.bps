@@ -4,8 +4,8 @@
 @alphabet.western:audio
 
 // (1) Déclaration descriptive : cv NAME : lib.type(params) — sans cible/route/=
-cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
-cv env2 : mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
+@cv env1 mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
+@cv env2 mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
 
 // (3) Voix Env parallèle dérivable
 S -> {Bass Bass, Env Env}
