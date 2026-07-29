@@ -56,28 +56,36 @@ ok(SOCLE_CORE.alphabet === 'western',
 // `null` = la valeur doit être ABSENTE, et l'absence est alors une VALEUR, pas un trou.
 const SITUATIONS = [
   ['scène nue : elle hérite du socle @core',
-   '@core\nS -> C4 D4', { alphabet: 'western', octaves: 'western' }],
+   '@core\nS -> C4 D4', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
   ['la scène déclare son alphabet : il gagne sur le socle',
-   '@core\n@alphabet.sargam\nS -> sa re', { alphabet: 'sargam', octaves: 'saptak' }],
+   '@core\n@alphabet.sargam\nS -> sa re', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Un alphabet SANS registres : l'absence est le sens (« notes nues »), pas un défaut à combler.
   ['un alphabet sans registres reste sans registres (tabla : 39 frappes nues)',
-   '@core\n@alphabet.tabla\nS -> dha', { alphabet: 'tabla', octaves: null }],
+   '@core\n@alphabet.tabla\nS -> dha', { alphabet: 'tabla', octaves: null, tuning: null }],
   ['la scène déclare des registres : ils gagnent sur ceux de l\'alphabet',
-   '@core\n@alphabet.sargam\n@octaves.saptak\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak' }],
+   '@core\n@alphabet.sargam\n@octaves.saptak\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   ['un acteur déclaré porte les siens',
-   '@core\n@actor voix\n  alphabet.sargam\n  transport.audio\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak' }],
+   '@core\n@actor voix\n  alphabet.sargam\n  transport.audio\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Les deux SEULES absences légitimes.
   ['hauteur OPAQUE : l\'alphabet reste ABSENT, Kairos le remplit (loi 35)',
-   '@core\n@mine.perso.gamme\nS -> C4', { alphabet: null, octaves: null }],
+   '@core\n@mine.perso.gamme\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
   ['invocation par le canal NEUTRE : ABSENT aussi — le socle ne recouvre jamais un composant invoqué',
-   '@core\n@test_alphabets.abc\nS -> a b', { alphabet: null, octaves: null }],
+   '@core\n@test_alphabets.abc\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
   ['une VOIX-CODE n\'a pas de vocabulaire de notes : ABSENT',
-   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: null, octaves: null }],
+   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: null, octaves: null, tuning: null }],
+  // ⚠️ L'ACCORDAGE vient de l'ALPHABET, jamais du socle @core (Romain 2026-07-29). J'avais laissé
+  // cet axe à vide sur 230 scènes en refusant de poser western_12TET sur du sargam — le refus
+  // était juste, et la réponse est que je n'ai jamais à le poser : l'alphabet le déclare.
+  ['un alphabet non occidental porte SON accordage, pas celui du socle',
+   '@core\n@alphabet.gamelan_pelog\nS -> nem', { alphabet: 'gamelan_pelog', octaves: null, tuning: 'gamelan_pelog' }],
+  ['la scène peut surcharger l\'accordage de l\'alphabet',
+   '@core\n@alphabet.western\n@tuning.western_just\nS -> C4', { alphabet: 'western', octaves: 'western', tuning: 'western_just' }],
 ];
 const PROPRIETES = [
   ['la scène compile', (o) => o.erreurs.length === 0],
   ['l\'alphabet effectif est porté', (o, a) => propriete(o.ast, 'alphabet') === (a.alphabet ?? undefined)],
   ['les registres effectifs sont portés', (o, a) => propriete(o.ast, 'octaves') === (a.octaves ?? undefined)],
+  ['l\'accordage effectif est porté', (o, a) => propriete(o.ast, 'tuning') === (a.tuning ?? undefined)],
   // Une propriété sans sa référence, c'est une moitié de matérialisation : mesuré chez BPx, son
   // lecteur d'alphabet regarde `properties` D'ABORD et `references[]` seulement à défaut — les
   // deux doivent dire la même chose, sinon le désaccord se règle chez le consommateur.
@@ -121,26 +129,43 @@ if (existsSync(DEMOS)) marcher(DEMOS, 'demo:');
 ok(sources.length > 100, `3. il faut de quoi mesurer — ${sources.length} source(s)`);
 
 const sansRaison = [];
-let avecAlphabet = 0, opaques = 0, voixCode = 0;
+// ⚠️ ET LE MÊME BALAYAGE POUR L'ACCORDAGE, sur l'ESPACE : tout acteur dont l'alphabet DÉCLARE un
+// accordage doit le porter. Une matrice prouve mes deux exemples ; seul le balayage dit que la
+// famille est fermée. C'est aussi lui qui rendrait visible un alphabet ajouté sans accordage.
+const accordageManquant = [];
+let avecAlphabet = 0, opaques = 0, voixCode = 0, avecAccordage = 0;
 for (const [nom, src] of sources) {
   let o;
   try { o = compiler(src); } catch { continue; }
   if (!o.ast) continue;
   const acteurs = o.ast.actors || [];
   for (const a of acteurs) {
-    if ((a.properties || {}).alphabet) { avecAlphabet++; continue; }
+    const alpha = (a.properties || {}).alphabet;
+    if (alpha) {
+      avecAlphabet++;
+      const declare = LIBS['alphabets']?.[alpha]?.defaultTuning;
+      if (declare) {
+        if ((a.properties || {}).tuning) avecAccordage++;
+        else accordageManquant.push(`${nom} → acteur '${a.name}' (alphabet ${alpha} déclare ${declare})`);
+      }
+      continue;
+    }
     if ((a.properties || {}).eval) { voixCode++; continue; }                 // voix-code : légitime
     if ((o.ast.libRefs || []).length) { opaques++; continue; }               // hauteur opaque : légitime
     sansRaison.push(`${nom} → acteur '${a.name}'`);
   }
 }
 console.log(`[ast complet] ${sources.length} scènes · ${avecAlphabet} acteur(s) avec alphabet · `
-  + `${voixCode} voix-code · ${opaques} hauteur opaque · ${sansRaison.length} SANS RAISON`);
+  + `${voixCode} voix-code · ${opaques} hauteur opaque · ${avecAccordage} avec accordage · `
+  + `${sansRaison.length} SANS RAISON`);
+ok(accordageManquant.length === 0,
+  `3. tout alphabet qui DÉCLARE un accordage doit le voir porté — ${accordageManquant.length} manquant(s) : ${accordageManquant.slice(0, 4).join(' · ')}`);
+ok(avecAccordage > 50, `3. le balayage doit VOIR des accordages résolus — ${avecAccordage}`);
 ok(sansRaison.length === 0,
   `3. aucun acteur ne doit sortir sans alphabet SANS RAISON — ${sansRaison.length} : ${sansRaison.slice(0, 6).join(' · ')}`);
 // Anti-rétrécissement : si ce balayage cessait de trouver des acteurs, il verdirait sans rien voir.
 ok(avecAlphabet > 100, `3. le balayage doit VOIR des acteurs alphabétisés — ${avecAlphabet}`);
-ok(SITUATIONS.length >= 8 && PROPRIETES.length >= 4, '3. la matrice ne s\'est pas vidée');
+ok(SITUATIONS.length >= 10 && PROPRIETES.length >= 5, '3. la matrice ne s\'est pas vidée');
 
 if (echecs.length) {
   console.error(`[ast complet] ${echecs.length} ÉCHEC(S) :`);

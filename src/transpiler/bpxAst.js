@@ -20,7 +20,7 @@
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
-import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite } from './actorResolver.js';
+import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
@@ -835,6 +835,12 @@ function applyDefaultActor(ast) {
     if (oct) {
       properties.octaves = oct;
       references.push({ type: 'ActorReference', category: 'octaves', name: oct, line: 0 });
+    }
+    // L'ACCORDAGE vient de l'ALPHABET, jamais du socle @core (Romain 2026-07-29).
+    const tun = tuningHerite(ast, alphabetKey);
+    if (tun) {
+      properties.tuning = tun;
+      references.push({ type: 'ActorReference', category: 'tuning', name: tun, line: 0 });
     }
   }
   ast.actors = [{

@@ -127,6 +127,39 @@ function octavesHerite(ast, alphabetKey) {
 }
 
 /**
+ * L'ACCORDAGE HÉRITÉ — et il vient de L'ALPHABET, jamais du socle @core (Romain, 2026-07-29).
+ *
+ * ⚠️ CETTE FONCTION EXISTE PARCE QUE J'AI REFUSÉ DE L'ÉCRIRE HIER, ET C'ÉTAIT LE BON REFLEXE.
+ * @core porte `defaults.components.tuning: western_12TET`. Le poser sur une scène sargam ou
+ * gamelan est une AFFIRMATION MUSICALE que je ne sais pas prouver — j'ai donc laissé l'axe à vide
+ * sur 230 scènes et je l'ai escaladé plutôt que de trancher une question de sens par une
+ * compilation. Réponse de Romain : « l'accordage par défaut de chaque alphabet doit être DANS
+ * L'ALPHABET, c'est déjà géré, pas besoin d'accordage par défaut dans core ».
+ *
+ * Donc je n'ai JAMAIS à poser cette valeur : je la LIS sur l'alphabet actif, qui la déclare
+ * (`defaultTuning`). western → western_12TET, sargam → sargam_12TET, arabic → arabic_24TET,
+ * turkish → turkish_53TET, bohlen_pierce → bohlen_pierce_equal, shruti23 → shruti23_native.
+ * Trois alphabets n'en déclarent aucun (tabla, simple, shakuhachi) : la valeur reste ABSENTE, ce
+ * qui est un FAIT porté par la donnée et non une ignorance de ma part.
+ *
+ * ⚠️ ET UNE ANOMALIE DE DONNÉE, MESURÉE, QUE JE NE CORRIGE PAS ICI : `shakuhachi` n'a pas de
+ * `defaultTuning` alors que ses altérations `meri`/`kari` (menton bas / menton haut) SONT des
+ * inflexions de hauteur. Son absence ressemble à un trou de donnée, pas à « cet alphabet ne
+ * résout pas de hauteur ». Signalé à l'architecte ; se répare dans la librairie, pas par une
+ * exception dans ce fichier.
+ *
+ * @returns {string|undefined} l'accordage effectif, ou undefined = l'alphabet n'en déclare pas
+ */
+function tuningHerite(ast, alphabetKey) {
+  const connu = (nom) => !!(nom && loadLib('tunings')?.[nom]);
+  const sceneTun = (ast.directives || []).find((d) => d.name === 'tuning' && d.subkey);
+  if (sceneTun) return connu(sceneTun.subkey) ? sceneTun.subkey : undefined;  // niveau 3 : la scène
+  if (!alphabetKey) return undefined;
+  const lib = resolveActorAlphabet(alphabetKey, ast.directives);              // niveau 2 : l'alphabet
+  return connu(lib && lib.defaultTuning) ? lib.defaultTuning : undefined;
+}
+
+/**
  * Resolve actors for the AST.
  *
  * @param {Object} ast - parsed Scene AST (with actors[] and subgrammars[])
@@ -172,10 +205,14 @@ function resolveActors(ast) {
       alphabetKey = alphabetHerite(ast);                                  // cascade scène → socle @core
       if (alphabetKey) props.alphabet = alphabetKey;                      // matérialise l'héritage dans l'AST
     }
-    // Les REGISTRES suivent le même chemin : acteur (déjà là) → scène → alphabet invoqué.
+    // Les REGISTRES et l'ACCORDAGE suivent le même chemin : acteur (déjà là) → scène → alphabet.
     if (props.octaves == null && alphabetKey) {
       const oct = octavesHerite(ast, alphabetKey);
       if (oct) props.octaves = oct;
+    }
+    if (props.tuning == null && alphabetKey) {
+      const tun = tuningHerite(ast, alphabetKey);
+      if (tun) props.tuning = tun;
     }
 
     // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.
@@ -355,4 +392,4 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
   }
 }
 
-export { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite };
+export { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite };
