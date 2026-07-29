@@ -45,11 +45,11 @@ const ILLISIBLES = [
 
 // Les positions où il peut tomber : le défaut ne vit pas qu'au milieu d'une règle.
 const POSITIONS = [
-  ['au milieu d\'une règle', (c) => `gate S:sc\nS -> C4 ${c} D4`],
-  ['collé à un terminal', (c) => `gate S:sc\nS -> C4${c} D4`],
-  ['en tête de membre droit', (c) => `gate S:sc\nS -> ${c} C4`],
-  ['dans une déclaration', (c) => `gate S${c}:sc\nS -> C4`],
-  ['sur la toute première ligne', (c) => `${c}\ngate S:sc\nS -> C4`],
+  ['au milieu d\'une règle', (c) => `@gate S:sc\nS -> C4 ${c} D4`],
+  ['collé à un terminal', (c) => `@gate S:sc\nS -> C4${c} D4`],
+  ['en tête de membre droit', (c) => `@gate S:sc\nS -> ${c} C4`],
+  ['dans une déclaration', (c) => `@gate S${c}:sc\nS -> C4`],
+  ['sur la toute première ligne', (c) => `${c}\n@gate S:sc\nS -> C4`],
 ];
 
 console.log(`[caractère illisible] ${ILLISIBLES.length} caractères × ${POSITIONS.length} positions`
@@ -75,7 +75,7 @@ for (const [nomCar, car] of ILLISIBLES) {
 // le langage doit sortir de cette liste explicitement, pas y rester à mentir.
 ok(ILLISIBLES.length >= 6 && POSITIONS.length >= 5, 'la matrice ne s\'est pas vidée');
 {
-  const r = compileToBPxAST('gate S:sc\n@macro coupe \\>> out.in\nS -> C4');
+  const r = compileToBPxAST('@gate S:sc\n@macro coupe \\>> out.in\nS -> C4');
   ok(!!r.ast && (r.errors ?? []).length === 0,
     'témoin inverse : collé aux chevrons, l\'antislash est la COUPURE et doit passer');
 }
@@ -90,7 +90,7 @@ ok(ILLISIBLES.length >= 6 && POSITIONS.length >= 5, 'la matrice ne s\'est pas vi
 {
   const FLECHES_ETRANGERES = ['-->', '--->', '---->'];
   for (const f of FLECHES_ETRANGERES) {
-    const r = compileToBPxAST(`gate S:sc\nS ${f} C4 D4`);
+    const r = compileToBPxAST(`@gate S:sc\nS ${f} C4 D4`);
     const msg = (r.errors ?? []).map((e) => e.message ?? String(e)).join(' ');
     ok(!r.ast, `la flèche '${f}' du moteur historique doit être REFUSÉE`);
     ok(/moteur historique/.test(msg), `'${f}' — le refus doit NOMMER la confusion entre les deux langages`);
@@ -100,11 +100,11 @@ ok(ILLISIBLES.length >= 6 && POSITIONS.length >= 5, 'la matrice ne s\'est pas vi
   // membre gauche est une forme LÉGITIME (`- V V <> - tidha`, 4 scènes), et le séparateur de
   // sous-grammaires est fait des mêmes tirets. Refuser « un tiret devant une flèche » aurait
   // emporté les deux. Le refus porte donc sur le tiret COLLÉ, que personne n'écrit pour un silence.
-  const sep = compileToBPxAST('gate S:sc\n@alphabet.simple\nS -> a b\n-----\nS -> c d');
+  const sep = compileToBPxAST('@gate S:sc\n@alphabet.simple\nS -> a b\n-----\nS -> c d');
   ok(!!sep.ast, 'le séparateur de sous-grammaires (cinq tirets) doit survivre');
-  const silence = compileToBPxAST('gate S:sc\n@alphabet.simple\n- a a -> b');
+  const silence = compileToBPxAST('@gate S:sc\n@alphabet.simple\n- a a -> b');
   ok(!!silence.ast, 'un SILENCE en membre gauche, détaché, doit rester permis');
-  const espace = compileToBPxAST('gate S:sc\n@alphabet.simple\nS - -> a');
+  const espace = compileToBPxAST('@gate S:sc\n@alphabet.simple\nS - -> a');
   ok(!!espace.ast, 'un tiret DÉTACHÉ de la flèche reste un silence, pas une flèche étrangère');
 }
 

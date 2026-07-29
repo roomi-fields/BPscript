@@ -175,11 +175,11 @@ for (const forme of [
 // Ce n'est pas la parenthèse qu'on supprime — c'est l'argument dont la PLACE tient lieu de nom.
 {
   const entete = '@core\n@controls\n@mod\n@alphabet.western:midi\n@mode:ord\n';
-  const positionnel = erreursDe(`${entete}cv env : mod.adsr(5, 120)\nS -> C4\n`);
+  const positionnel = erreursDe(`${entete}@cv env mod.adsr(5, 120)\nS -> C4\n`);
   ok(positionnel.length > 0, "§2sexies un argument POSITIONNEL dans une déclaration de modulateur doit être refusé");
   ok(positionnel.some((m) => /POSITIONNEL/.test(m) && /attack:/.test(m)),
      `§2sexies le refus doit NOMMER les paramètres attendus — reçu : ${positionnel.join(' | ')}`);
-  ok(erreursDe(`${entete}cv env : mod.adsr(attack:5, decay:120)\nS -> C4\n`).length === 0,
+  ok(erreursDe(`${entete}@cv env mod.adsr(attack:5, decay:120)\nS -> C4\n`).length === 0,
      '§2sexies la forme NOMMÉE reste la bonne — mod.adsr(attack:5, decay:120)');
   ok(erreursDe(`@core\n@controls\n@actor v alphabet.western transport.midi(ch:3)\n@mode:ord\nS -> v.C4\n`).length === 0,
      "§2sexies l'instanciation nommée d'un composant reste légitime — transport.midi(ch:3)");

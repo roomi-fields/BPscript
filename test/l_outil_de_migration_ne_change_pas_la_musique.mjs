@@ -13,7 +13,7 @@
  *   · qu'il n'en INVENTE pas quand un nom ressemble à une note d'une AUTRE convention ;
  *   · qu'il RENOMME tous les usages, jamais un préfixe (`A` ne doit pas toucher `A4`) ;
  *   · qu'il REFUSE quand il ne peut pas prouver la production identique ;
- *   · qu'il laisse tranquille ce qui pose une PROPRIÉTÉ sur un nom existant (`gate Sa:sc`).
+ *   · qu'il laisse tranquille ce qui pose une PROPRIÉTÉ sur un nom existant (`@gate Sa:sc`).
  */
 import { chargerMoteur, collisions, renommer, migrerSource, terminauxActifs } from './migration_noms.mjs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
@@ -118,9 +118,9 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   ok(r.ok && r.aucunChangement, '3. une scène sans collision ne doit rien changer');
 }
 {
-  // `gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant — ratifié Romain 2026-07-28. Ce témoin
+  // `@gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant — ratifié Romain 2026-07-28. Ce témoin
   // garde la distinction : elle ne crée pas de nom rival, donc l'outil ne doit rien y toucher.
-  const r = migrerSource('@core\n@alphabet.western\ngate C4:midi\nS -> C4 D4');
+  const r = migrerSource('@core\n@alphabet.western\n@gate C4:midi\nS -> C4 D4');
   ok(r.ok && r.aucunChangement,
     '3. une déclaration qui pose une PROPRIÉTÉ sur un nom existant ne doit RIEN déclencher');
 }

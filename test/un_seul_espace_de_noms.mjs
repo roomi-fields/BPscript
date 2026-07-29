@@ -75,7 +75,7 @@ const DOIVENT_PASSER = [
   ['la même tête dans DEUX sous-grammaires = deux passes successives',
    '@core\n@alphabet.simple\nS -> X\nX -> a b\n-----\nX -> c d'],
   ['une PROPRIÉTÉ posée sur un nom existant : gate sur un terminal',
-   '@core\n@alphabet.western\ngate C4:midi\nS -> C4 D4'],
+   '@core\n@alphabet.western\n@gate C4:midi\nS -> C4 D4'],
   // ⚠️ CES DEUX TÉMOINS ONT ÉTÉ RETIRÉS LE 2026-07-28 AU SOIR, ET C'EST L'INVERSE D'UN
   // RÉTRÉCISSEMENT : ils affirmaient qu'un acteur et sa règle homonyme devaient PASSER. Romain a
   // tranché que c'est une ERREUR GRAVE — l'amalgame d'un nom d'acteur et d'un nom de règle. Les

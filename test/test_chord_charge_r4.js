@@ -27,7 +27,7 @@ function rule(src) {
   return r.ast.subgrammars[0].rules[0];
 }
 
-const DECLS = 'gate C4:sc\ngate E4:sc\n';
+const DECLS = '@gate C4:sc\n@gate E4:sc\n';
 
 // ── Forme 1 : contenance de bloc ────────────────────────────────────────
 {
@@ -79,7 +79,7 @@ const DECLS = 'gate C4:sc\ngate E4:sc\n';
 
 // ── Repliement aussi hors accord : note simple SymbolCall ───────────────
 {
-  const r = rule('gate C4:sc\nAccord -> C4(vel:80)');
+  const r = rule('@gate C4:sc\nAccord -> C4(vel:80)');
   const n = r.rhs[0];
   assert('note simple params.vel=80 (repliée)', n?.payload?.params?.vel === 80,
     JSON.stringify(n?.payload));

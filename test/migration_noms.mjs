@@ -100,7 +100,7 @@ export function terminauxActifs(ast) {
  * Les noms EN COLLISION avec un terminal, par sorte.
  *
  * ⚠️ Le critère est CE QUI CRÉE UN NOM, jamais « ce qui commence par une directive ». Une
- * déclaration `gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant : mesuré, le nœud produit est
+ * déclaration `@gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant : mesuré, le nœud produit est
  * identique avec et sans elle, elle ne crée aucun nom rival. Elle n'est donc PAS une collision et
  * ne figure pas ici. Un garde qui filtrerait sur la forme de la ligne se tromperait.
  */

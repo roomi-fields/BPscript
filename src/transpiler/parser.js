@@ -397,6 +397,16 @@ function parse(tokens, opts = {}) {
           // Adresse canonique opaque ; ordre source préservé ; dédup en fin de parseScene ;
           // champ OMIS si vide (jamais `[]`) — contrat bpscript-bpx.md §libRefs.
           (scene.libRefs || (scene.libRefs = [])).push(dir.address);
+        } else if (dir.type === 'CVInstance') {
+          // `@cv env1 mod.adsr(…)` — une DÉCLARATION qui crée un nom, pas une directive de
+          // scène. Elle vit dans `cvInstances`, comme la forme nue le faisait avant sa
+          // suppression : sans ce routage, le modulateur était parsé puis rangé parmi les
+          // directives, donc invisible de tout ce qui le cherche — un objet déclaré que rien
+          // ne peut invoquer. Même famille que la directive jetée après les règles, à un
+          // aiguillage près.
+          scene.cvInstances.push(dir);
+        } else if (dir.type === 'Declaration') {
+          scene.declarations.push(dir);   // `@gate Sa:midi` — propriété sur un nom existant
         } else if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
           initialMode = dir.runtime;
@@ -409,6 +419,22 @@ function parse(tokens, opts = {}) {
         // l'ordre source (l'ordre des directives est sémantique : last wins).
         for (const d of parseProductionBlock()) scene.directives.push(d);
       } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
+        // ─── PIERRE TOMBALE — L'AROBASE EST OBLIGATOIRE EN PARTIE DÉCLARATIVE ───────────────
+        // Décision Romain, 2026-07-29. La forme NUE (`gate Sa:midi`, `cv env1 : …`) est
+        // SUPPRIMÉE, pas dépréciée : ma grammaire l'annonçait comme « format legacy toujours
+        // supporté », donc c'était de la rétrocompatibilité conservée, et elle tombe sous la
+        // règle du 2026-07-19. Une partie déclarative se lit à l'œil quand toutes ses lignes
+        // commencent par le même signe ; une exception par type le défait.
+        // FRONTIÈRE MESURÉE AVANT LIVRAISON : 12 scènes sur 263, 27 occurrences.
+        const nu = current();
+        throw new ParseError(
+          `'${nu.value}' sans arobase n'existe plus (décision Romain 2026-07-29) — la partie `
+          + `déclarative s'écrit TOUJOURS avec l'arobase : '@${nu.value} …'. `
+          + `Et depuis la même décision, le DEUX-POINTS tranche : '@${nu.value} <nom>:<cible>' pose `
+          + `une PROPRIÉTÉ sur un nom qui existe, '@${nu.value} <nom> <valeur>' DÉCLARE un nom neuf.`,
+          nu,
+        );
+      } else if (false) {
         const decl = parseDeclaration();
         // `cv NAME : lib.type(...)` produit une CVInstance (modulateur), pas une Declaration.
         if (decl.type === 'CVInstance') scene.cvInstances.push(decl);
@@ -1320,12 +1346,30 @@ function parse(tokens, opts = {}) {
         + `partie déclarative : '@macro ${nom} <corps>' ou '@alias ${nom} <valeur>'.`, tok);
     }
 
-    // @gate Sa:midi, @trigger dha:sc, @cv ramp:sc — prefixed declarations
+    // @gate Sa:midi · @cv env1 mod.adsr(…) — LE DEUX-POINTS TRANCHE (Romain, 2026-07-29).
+    //
+    // ⚠️ CE N'EST PAS UN ÉLARGISSEMENT, C'EST LE RETRAIT D'UNE DEVINETTE. Le compilateur
+    // distinguait ces deux formes d'après ce qui SUIVAIT le deux-points (`isCVModulatorBody` :
+    // est-ce `lib.type(…)` ou un bloc de code ?). C'est exactement le mécanisme qui a condamné
+    // le signe `=` le 27 juillet — un mot dont le sens dépend du contexte. Désormais la
+    // PRÉSENCE du deux-points décide, et rien d'autre :
+    //   · AVEC `:` → une PROPRIÉTÉ posée sur un nom qui existe déjà (`@gate Sa:midi`) ;
+    //   · SANS `:` → une DÉCLARATION qui CRÉE un nom (`@cv env1 mod.adsr(…)`), et c'est la
+    //     forme unique du langage depuis le 27 juillet : `@<directive> <nom> <valeur>`.
+    // Romain généralise aux QUATRE types : « en toute logique les 2 formes s'appliquent aux 4 ».
     if (name === 'gate' || name === 'trigger' || name === 'cv') {
       const declName = expect(T.IDENT).value;
-      expect(T.COLON);
-      const runtime = expect(T.IDENT).value;
-      return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
+      if (at(T.COLON)) {                     // PROPRIÉTÉ sur un nom existant
+        advance();
+        const runtime = expect(T.IDENT).value;
+        return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
+      }
+      if (name === 'cv') return parseCVModulator(declName, tok);   // DÉCLARATION d'un modulateur
+      throw new ParseError(
+        `'@${name} ${declName}' sans valeur ne déclare rien. Écrire '@${name} ${declName}:<cible>' `
+        + `pour poser une propriété sur un nom qui existe, ou donner une valeur pour en créer un.`,
+        tok,
+      );
     }
 
     // ─── PIERRE TOMBALE — `@map` est ABANDONNÉ (décision Romain 2026-07-27 au soir) ───────────

@@ -12,20 +12,20 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 1. Branchement valide : cutoff <- CV → 0 erreur
 {
-  const e = errs('cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\nS -> Bass\nBass -> C2 (cutoff:env1)\n');
+  const e = errs('@cv env1 mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\nS -> Bass\nBass -> C2 (cutoff:env1)\n');
   check(e.length === 0, '1: (cutoff:env1) valide, obtenu ' + JSON.stringify(e));
 }
 
 // 2. Faute de frappe sur l'entrée : cutof <- CV → erreur ligne/col
 {
-  const e = errs('cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\nS -> Bass\nBass -> C2 (cutof:env1)\n');
+  const e = errs('@cv env1 mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\nS -> Bass\nBass -> C2 (cutof:env1)\n');
   check(e.length === 1 && /cutof/.test(e[0].message), '2: (cutof:env1) -> erreur, obtenu ' + JSON.stringify(e));
   check(e[0] && typeof e[0].line === 'number', '2: erreur porte une ligne');
 }
 
 // 3. Toutes les entrées valides : pan/amplitude/resonance/pitch <- CV (une par règle)
 {
-  const e = errs('cv m : mod.lfo(rate:2, amplitude:0.8, shape:sine)\n'
+  const e = errs('@cv m mod.lfo(rate:2, amplitude:0.8, shape:sine)\n'
     + 'S -> Aq Bq Cq Dq\n'
     + 'Aq -> C2 (pan:m)\nBq -> D2 (amplitude:m)\nCq -> E2 (resonance:m)\nDq -> F2 (pitch:m)\n');
   check(e.length === 0, '3: pan/amplitude/resonance/pitch valides, obtenu ' + JSON.stringify(e));
@@ -39,21 +39,21 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 5. Brancher un CV sur un NON-entrée (vel n'est pas une entrée de modulation) → erreur
 {
-  const e = errs('cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\nS -> Bass\nBass -> C2 (vel:env1)\n');
+  const e = errs('@cv env1 mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\nS -> Bass\nBass -> C2 (vel:env1)\n');
   check(e.length === 1 && /vel/.test(e[0].message), '5: (vel:env1) -> erreur (vel pas une entrée), obtenu ' + JSON.stringify(e));
 }
 
 // 6. Indirection : (cutoff:Env) où Env -> env1 | env2 → Env reconnu comme source → cutoff valide
 {
-  const e = errs('cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\n'
-    + 'cv env2 : mod.adsr(attack:3, decay:100, sustain:0.2, release:400)\n'
+  const e = errs('@cv env1 mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\n'
+    + '@cv env2 mod.adsr(attack:3, decay:100, sustain:0.2, release:400)\n'
     + 'S -> {Bass Bass, Env Env}\nBass -> C2 C3 (cutoff:Env)\nEnv -> env1\nEnv -> env2\n');
   check(e.length === 0, '6: (cutoff:Env) indirection valide, obtenu ' + JSON.stringify(e));
 }
 
 // 7. Indirection + faute : (cutof:Env) → erreur
 {
-  const e = errs('cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\n'
+  const e = errs('@cv env1 mod.adsr(attack:5, decay:150, sustain:0.2, release:400)\n'
     + 'S -> {Bass, Env}\nBass -> C2 (cutof:Env)\nEnv -> env1\n');
   check(e.length === 1 && /cutof/.test(e[0].message), '7: (cutof:Env) -> erreur, obtenu ' + JSON.stringify(e));
 }

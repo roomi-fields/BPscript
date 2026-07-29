@@ -31,7 +31,7 @@ const ok = (cond, msg) => { if (cond) { pass++; console.log('  OK   ' + msg); } 
 
 /** Hz de chaque nom, résolus par LE catalogue de la scène — jamais recalculés ici. */
 async function hz(entete, noms) {
-  const out = compileToBPxAST(`${entete}\ngate S:audio\nS -> ${noms.join(' ')}\n`);
+  const out = compileToBPxAST(`${entete}\n@gate S:audio\nS -> ${noms.join(' ')}\n`);
   if (out.errors.length) throw new Error(`${entete} : ${out.errors[0].message}`);
   const { tokens } = await resoudreViaKairos(createSession(out.ast, { seed: 1 }));
   const carte = {};
