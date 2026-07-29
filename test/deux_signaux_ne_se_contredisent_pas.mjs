@@ -41,50 +41,52 @@ const naturesSonnantes = (n, out = []) => {
   return out;
 };
 
-// ── 1. LA CONTRADICTION EXISTE-T-ELLE, ET SUR QUELLE ÉTENDUE ? ──────────────────────────────
-// ÉTENDUE INSCRITE le 2026-07-29 : UNE scène, UNE macro de câblage. Mesurée, pas estimée.
-const ETENDUE_INSCRITE = [{ scene: 'patchbay.bps', macro: 'lead',
-  date: '2026-07-29',
-  pourquoi: "macro de câblage dont le nom sort en nature 'sounding' — donc l'aval lui donne une "
-          + "place ET une durée alors que rien ne sonne. Réparation en attente d'une décision de "
-          + "formalisme (le NOM de la nature) ; le correctif est localisé, parser.js:680-682." }];
+// ── 1. L'INVARIANT — le cliquet est devenu une ASSERTION, et c'est LUI qui me l'a dit ───────
+// ⚠️ CE BLOC ÉTAIT UN REGISTRE À CLIQUET. Il inscrivait l'étendue exacte de la contradiction (UNE
+// scène, UNE macro) et mordait si elle grandissait — parce que la réparation demandait de NOMMER
+// la nature, donc une décision qui n'était pas la mienne.
+// Romain me l'a rendue le 2026-07-29 (« l'agent a toujours été autonome là-dessus »), avec la
+// frontière : la GRAPHIE est à lui, un NOM INTERNE D'AST ne l'est pas. La nature `wire` est scellée
+// à parser.js:680-682, et LE CLIQUET A ROUGI DE LUI-MÊME en disant quoi faire : « ne pas ajuster
+// le nombre — c'est la réparation qui est arrivée, retirez l'entrée et transformez-le en
+// assertion ». C'est fait, et le mécanisme a fonctionné de bout en bout sans que j'aie à y penser.
+const naturesDe = (ast) => {
+  const macros = new Map((ast.macros || []).map((m) => [m.name, m]));
+  const fautives = [];
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
+    for (const n of naturesSonnantes(r.rhs || [])) {
+      const m = macros.get(n);
+      if (m && (m.body || []).some((b) => b && b.type === 'Wiring')) fautives.push(n);
+    }
+  }
+  return fautives;
+};
 
 exigerCorpus();
-const trouvees = [];
+const fautives = [];
+let scenes = 0;
 for (const [nom, src] of toutesLesScenes()) {
   let o;
   try { o = compileToBPxAST(src); } catch { continue; }
   if (!o.ast || (o.errors || []).length) continue;
-  const macros = new Map((o.ast.macros || []).map((m) => [m.name, m]));
-  if (!macros.size) continue;
-  for (const sg of o.ast.subgrammars || []) for (const r of sg.rules || []) {
-    for (const n of naturesSonnantes(r.rhs || [])) {
-      const m = macros.get(n);
-      if (!m) continue;
-      if (!(m.body || []).some((b) => b && b.type === 'Wiring')) continue;  // seul le CÂBLAGE est en cause
-      const cle = `${nom.replace(/^.*\//, '')}:${n}`;
-      if (!trouvees.includes(cle)) trouvees.push(cle);
-    }
-  }
+  scenes++;
+  for (const n of naturesDe(o.ast)) fautives.push(`${nom.replace(/^.*\//, '')}:${n}`);
 }
+console.log(`[deux signaux] ${scenes} scènes examinées`);
+ok(fautives.length === 0,
+  `1. INVARIANT — une macro de CÂBLAGE ne porte JAMAIS la nature 'sounding' : ${fautives.length} `
+  + `violation(s) : ${fautives.join(' · ')}. Je publierais alors noteTerminals SANS ce nom ET une `
+  + `nature sonnante DESSUS — l'aval suit la nature et lui donne un temps qu'il ne doit pas avoir.`);
 
-const inscrites = ETENDUE_INSCRITE.map((e) => `${e.scene}:${e.macro}`);
-const nouvelles = trouvees.filter((t) => !inscrites.includes(t));
-const disparues = inscrites.filter((i) => !trouvees.includes(i));
-
-console.log(`[deux signaux] étendue inscrite : ${inscrites.length} · mesurée : ${trouvees.length}`);
-
-// LE CLIQUET — elle ne doit pas GRANDIR pendant qu'on attend l'arbitrage.
-ok(nouvelles.length === 0,
-  `1. la contradiction ne doit pas S'ÉTENDRE — ${nouvelles.length} nouvelle(s) : ${nouvelles.join(' · ')}. `
-  + `Une macro de câblage de plus dans le flux, c'est un temps de musique de plus avalé.`);
-
-// LE TÉMOIN QUI DIT QUE C'EST RÉPARÉ — et qui dit quoi faire, pas quoi ajuster.
-ok(disparues.length === 0,
-  `1. ⚠️ ${disparues.length} entrée(s) du registre ONT DISPARU : ${disparues.join(' · ')}. `
-  + `NE PAS AJUSTER LE NOMBRE — c'est la RÉPARATION qui est arrivée. Vérifier que la nature a été `
-  + `scellée (parser.js:680-682), puis RETIRER l'entrée du registre et transformer ce cliquet en `
-  + `assertion : « une macro de câblage ne porte JAMAIS la nature sounding ».`);
+// TÉMOIN D'INSTRUMENT — sans lui, un balayage qui ne lirait rien passerait au vert.
+ok(scenes > 100, `1. le balayage doit LIRE des scènes — ${scenes}`);
+{
+  // Et la nature scellée est bien celle qu'on attend, mesurée et pas supposée.
+  const r = compileToBPxAST('@core\n@alphabet.western\n@macro chain saw >> audio\nS -> chain C4\n');
+  const e = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
+  ok(e?.payload?.nature === 'wire',
+    `1. la macro de câblage porte la nature 'wire' (reçu : ${JSON.stringify(e?.payload)})`);
+}
 
 // ── 2. CE QUI DOIT RESTER VRAI PENDANT L'ATTENTE ────────────────────────────────────────────
 // Une macro ORDINAIRE garde sa durée : Romain l'a tranché explicitement (« une macro a TOUJOURS
@@ -100,9 +102,17 @@ ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@cv env1 mod.adsr(attack:5)\
   '2. SE TAIT — un modulateur invoqué reste légitime dans le flux');
 
 // ── 3. SOCLE ─────────────────────────────────────────────────────────────────────────────────
-ok(ETENDUE_INSCRITE.length >= 1, '3. le registre ne s\'est pas vidé de lui-même');
-ok(ETENDUE_INSCRITE.every((e) => e.date && e.pourquoi),
-  '3. chaque entrée du registre porte sa DATE et sa RAISON — une dérogation muette est un trou');
+// Le registre a disparu avec la réparation : il n'y a plus de dérogation à dater ni à motiver.
+// Ce qui reste à garder, c'est que le PÉRIMÈTRE n'a pas débordé — les appels-composants opaques
+// (`lpf.cutoff:12000`) ne sont PAS du câblage strict, et savoir s'ils doivent suivre le même sort
+// est une question encore chez Romain. Élargir ici trancherait à sa place.
+{
+  const r = compileToBPxAST('@core\n@alphabet.western\n@controls\n@macro open lpf.cutoff:12000\nS -> open C4\n');
+  const e = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
+  ok(e?.payload?.nature !== 'wire',
+    `3. PÉRIMÈTRE — un appel-composant opaque n'est PAS du câblage strict : sa nature ne doit pas `
+    + `avoir été changée par ce lot (reçu : ${JSON.stringify(e?.payload)})`);
+}
 
 if (echecs.length) {
   console.error(`[deux signaux] ${echecs.length} ÉCHEC(S) :`);

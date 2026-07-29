@@ -194,6 +194,10 @@ function parse(tokens, opts = {}) {
   // VARIABLES DE TRAVAIL déclarées par `@var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
   const nomsVariables = new Set();
+  // Les noms de MACRO dont le corps est un CÂBLAGE. Rempli à la déclaration, lu au moment où la
+  // nature d'un symbole de flux se décide — les déclarations précèdent les règles (fail-loud du
+  // 2026-07-29), donc l'information est là quand on en a besoin, sans passe supplémentaire.
+  const nomsCablage = new Set();
 
   // Avertissements non fatals (ex. dépréciation des @-formes de production).
   // Canal séparé des erreurs : remonté via opts.onWarning (compileBPS →
@@ -684,8 +688,31 @@ function parse(tokens, opts = {}) {
       // porte. On lit donc les deux, pas celle du cas qu'on vient d'écrire.
       const nomPorte = typeof el.symbol === 'string' ? el.symbol : el.name;
       const estVariable = nomsVariables.has(nomPorte);
+      // ⚠️ LE CÂBLAGE NE SONNE PAS, ET IL NE DOIT PAS DURER (Romain, 2026-07-29 : « une macro de
+      // câblage est juste, et elle doit avoir une place SANS DURÉE dans la production »).
+      //
+      // CE QUE ÇA COÛTAIT, mesuré des deux bouts et pas déduit : BPx émettait `chain@0-500` en
+      // TERMINAL et repoussait C4 de 0 à 500 — à 120 au tempo, UN TEMPS ENTIER de musique avalé.
+      // Sur `patchbay.bps`, 8 jetons sur 8 sont des macros, ZÉRO note : 100 % de la pièce.
+      //
+      // ⚠️ ET LA CAUSE ÉTAIT UNE CONTRADICTION ENTRE DEUX DE MES PROPRES SIGNAUX : je publiais
+      // `noteTerminals` SANS ce nom — donc je disais moi-même qu'il ne sonne pas — et je posais
+      // `nature:'sounding'` DESSUS. BPx suit la nature (contrat d'opacité, ils portent et ne
+      // fabriquent pas) : ils ne pouvaient qu'émettre un sonnant. L'information juste circulait
+      // déjà jusqu'à eux par `scene.macros`, contredite par le champ qu'ils sont obligés de suivre.
+      //
+      // LE NOM EST DE MOI, et la frontière a été posée le jour même : la GRAPHIE (ce que l'auteur
+      // écrit) est à Romain, un NOM INTERNE D'AST ne l'est pas. `wire` parce que la directive
+      // s'appelle `@wire` et le nœud `Wiring` — un même fait, un même mot, la discipline qui m'a
+      // fait réutiliser le nœud existant au lieu d'en créer un second.
+      //
+      // ⚠️ PÉRIMÈTRE VOLONTAIREMENT ÉTROIT : le câblage STRICT, corps de type `Wiring`. Les
+      // appels-composants opaques (`lpf.cutoff:12000`) N'Y SONT PAS — ils ne sonnent pas non plus
+      // et durent aussi, mais savoir si un RÉGLAGE doit suivre le même sort que le BRANCHEMENT est
+      // une question ouverte chez Romain. Élargir ici trancherait à sa place.
+      const estCablage = nomsCablage.has(nomPorte);
       el.payload = {
-        nature: estVariable ? 'var' : 'sounding',
+        nature: estCablage ? 'wire' : (estVariable ? 'var' : 'sounding'),
         ...(actor !== undefined ? { actor } : {}),
         ...(controls !== null ? { params: controls } : {}),
         ...(address !== null ? { address } : {}),
@@ -1333,7 +1360,8 @@ function parse(tokens, opts = {}) {
       } else {
         body = parseRhsElements();
       }
-      if (!(body[0] && body[0].type === 'Wiring')) checkMacroParamsUsed(macroName, params, body, tok);
+      if (body[0] && body[0].type === 'Wiring') nomsCablage.add(macroName);
+      else checkMacroParamsUsed(macroName, params, body, tok);
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
 

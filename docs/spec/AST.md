@@ -58,6 +58,29 @@ Scene {
 }
 ```
 
+### La nature `wire` — le CABLAGE ne sonne pas et ne dure pas
+
+Un nom de MACRO dont le corps est un `Wiring` porte `payload.nature = 'wire'` dans le flux, et non
+`sounding`.
+
+**Ce que ca corrigeait**, mesure des deux bouts le 2026-07-29 : l'aval emettait `chain@0-500` en
+terminal et repoussait `C4` de 0 a 500 — a 120 au tempo, **un temps entier de musique avale**. Sur
+`patchbay.bps`, 8 jetons sur 8 sont des macros et ZERO une note : **100 % de la piece**.
+
+**La cause etait une contradiction entre deux signaux de ce frontal** : `noteTerminals` NE
+CONTENAIT PAS ce nom — donc il declarait lui-meme qu'il ne sonne pas — et il posait
+`nature:'sounding'` DESSUS. L'aval suit la nature (contrat d'opacite : il porte, il ne fabrique
+pas), il ne pouvait qu'emettre un sonnant. L'information juste circulait deja par `scene.macros`.
+
+**Le nom est interne**, et la frontiere a ete posee le meme jour : la GRAPHIE — ce que l'auteur
+ecrit dans une scene — appartient a Romain ; un NOM INTERNE D'AST, non. `wire` parce que la
+directive s'appelle `@wire` et le noeud `Wiring` — un meme fait, un meme mot.
+
+> ⚠️ **PERIMETRE : le cablage STRICT seulement** (corps de type `Wiring`). Un APPEL-COMPOSANT
+> opaque (`@macro open lpf.cutoff:12000`) ne sonne pas non plus et dure aussi, mais savoir si un
+> **reglage** doit suivre le meme sort qu'un **branchement** est une question ouverte. Elargir ici
+> la trancherait. Garde : `test/deux_signaux_ne_se_contredisent_pas.mjs` §3.
+
 ### `noteTerminals` — l'arbre dit LUI-MEME ce qui est une note
 
 Liste **plate** de noms nus, au niveau **scene** : les noms **presents dans la scene** que le
