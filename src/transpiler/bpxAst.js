@@ -1451,6 +1451,53 @@ function validateAliases(ast) {
   return erreurs;
 }
 
+/**
+ * L'ARBRE DIT LUI-MÊME QUELS NOMS SONT DES NOTES — `ast.noteTerminals`.
+ *
+ * ORDRE de l'architecte (2026-07-29), sur une règle que Romain venait de graver le matin même
+ * (`hub/decisions/2026-07-29-notre-mecanique-n-utilise-que-des-alphabets.md`) : « notre mécanique
+ * ne doit utiliser QUE des alphabets ; les conventions ne doivent être connues QUE du frontend
+ * BP3 ». Et sa consigne pour ici : l'arbre porte LE FAIT, pas un nom d'alphabet que le
+ * consommateur devrait interpréter.
+ *
+ * ⚠️ POURQUOI CE N'EST PAS UNE FORME QUE J'INVENTE — je n'ai pas à décider du formalisme du
+ * langage (règle gravée par Romain le 2026-07-29). Le champ EXISTE, ratifié et daté :
+ * `hub/decisions/2026-07-28-le-fait-ce-nom-est-une-note-vient-du-frontal.md` le définit pour
+ * bp3-frontend — liste PLATE de noms nus, au niveau SCÈNE, ABSENT ≠ VIDE, contenant « les noms
+ * présents dans la scène qu'il reconnaît comme notes : pas le catalogue, pas une table, la
+ * résolution DÉJÀ FAITE ». On généralise ce champ, on n'en crée pas un second.
+ *
+ * CE QUE ÇA RETIRE À L'AVAL, et c'est la raison d'être : Kanopi interrogeait un prédicat à TROIS
+ * conventions BP3 (anglaise, française, indienne). La bibliothèque déclare DOUZE alphabets —
+ * gamelan_pelog, shruti23, bohlen_pierce et shakuhachi n'ont AUCUNE image dans ces trois-là. Un
+ * consommateur qui pose la question porte donc une décision sémantique qui ne lui appartient pas,
+ * et qui n'a pas de réponse pour les trois quarts du catalogue. Ici elle en a une, toujours :
+ * c'est moi qui possède les alphabets.
+ *
+ * ABSENT ≠ VIDE, et la distinction porte du sens :
+ *   · champ ABSENT  = aucun alphabet résolvable ici (hauteur opaque, voix-code pure) — je ne sais
+ *     PAS, et l'aval ne doit pas lire mon silence comme « aucune note » ;
+ *   · liste VIDE    = un alphabet est en portée et AUCUN nom de la scène n'est une note. C'est un
+ *     fait, pas une ignorance.
+ */
+function emitNoteTerminals(ast) {
+  const { terminaux, aUnAlphabet } = terminauxEnPortee(ast);
+  if (!aUnAlphabet) return;                       // je ne sais pas → champ ABSENT, jamais []
+  // Les noms PRÉSENTS dans la scène, des deux côtés de la flèche : une tête de règle qui porte un
+  // nom de note en est un cas, et c'est justement celui que l'aval cherche à écarter de sa lecture
+  // de structure. Descendre jusqu'aux FEUILLES — un nom sous un groupe polymétrique ou sous une
+  // note ancrée compte autant qu'un voisin de surface (faute payée quatre fois en juillet).
+  const presents = new Set();
+  const recolter = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) return n.forEach(recolter);
+    if (typeof n.name === 'string') presents.add(n.name);
+    for (const k in n) if (n[k] && typeof n[k] === 'object') recolter(n[k]);
+  };
+  recolter(ast.subgrammars || []);
+  ast.noteTerminals = [...presents].filter((n) => terminaux.has(n)).sort();
+}
+
 function emitSceneMeter(ast) {
   const dir = (ast.directives || []).find((d) => d && d.name === 'meter' && d.value != null);
   if (!dir) return;
@@ -1562,6 +1609,7 @@ export function compileToBPxAST(source, environnement) {
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
     result.errors.push(...validateAliases(ast));  // `@alias` : une valeur portée doit nommer un référent déclaré
+    emitNoteTerminals(ast);          // l'arbre dit LUI-MÊME quels noms sont des notes (ordre architecte 2026-07-29)
     emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
     result.ast = ast;
 

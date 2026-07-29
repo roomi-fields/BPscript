@@ -33,6 +33,11 @@ Scene {
   declarations: Declaration[]
   macros: Macro[]
   cvInstances: CVInstance[]
+  noteTerminals?: string[]           // OPTIONNEL — les noms de CETTE scene qui SONT des notes,
+                                     // resolus contre l'alphabet actif. ABSENT != VIDE :
+                                     // absent = aucun alphabet resolvable ici (hauteur opaque,
+                                     // voix-code) ; [] = un alphabet est en portee et la scene
+                                     // n'ecrit aucune note. Cf. §noteTerminals ci-dessous.
   libRefs?: string[]                 // OPTIONNEL — invocations de librairie par PROVENANCE
                                      // (@factory.*/@mine.*), adresses canoniques opaques.
                                      // OMIS si aucune (jamais []). Cf. §libRefs ci-dessous.
@@ -44,6 +49,37 @@ Scene {
   homomorphisms: HomomorphismDeclAST[]    // contrat BPx (ajout 2026-06-10) — voir §HomomorphismDeclAST
 }
 ```
+
+### `noteTerminals` — l'arbre dit LUI-MEME ce qui est une note
+
+Liste **plate** de noms nus, au niveau **scene** : les noms **presents dans la scene** que le
+frontal reconnait comme des notes de l'**alphabet actif**. Pas le catalogue, pas une table — la
+**resolution deja faite**, pour cette scene-la.
+
+**Pourquoi le fait, et pas la convention** (ordre architecte 2026-07-29, sur la regle gravee par
+Romain le meme matin, `hub/decisions/2026-07-29-notre-mecanique-n-utilise-que-des-alphabets.md`) :
+« notre mecanique ne doit utiliser QUE des alphabets ; les conventions ne doivent etre connues QUE
+du frontend BP3 ». Un consommateur interrogeait jusqu'ici un predicat a **trois** conventions BP3
+(anglaise, francaise, indienne) ; la librairie declare **treize** alphabets — `gamelan_pelog`,
+`shruti23`, `bohlen_pierce` et `shakuhachi` n'ont **aucune image** dans ces trois-la. Tant que
+c'est le lecteur qui pose la question, il porte une decision semantique qui n'est pas la sienne,
+et qui n'a pas de reponse pour les trois quarts du catalogue.
+
+**La forme n'est pas nouvelle** : elle generalise `scene.noteTerminals` emis par bp3-frontend
+(decision `hub/decisions/2026-07-28-le-fait-ce-nom-est-une-note-vient-du-frontal.md`). Un second
+champ pour le meme fait serait une seconde source de verite.
+
+**ABSENT != VIDE**, et la distinction porte du sens :
+- champ **absent** = aucun alphabet resolvable ici — le frontal ne sait pas, et son silence ne doit
+  pas se lire « aucune note » ;
+- liste **vide** = un alphabet est en portee et aucun nom de la scene n'est une note. Un fait.
+
+**Une tete de regle nommee comme une note y figure** : c'est meme le cas que l'aval cherche, pour
+l'ecarter de sa lecture de structure. Un **point d'attente** n'y figure jamais — une attente
+suspend le temps, elle ne sonne pas.
+
+Garde : `test/l_arbre_dit_ce_qui_est_une_note.mjs` (les treize alphabets balayes depuis la DONNEE,
+jamais depuis une liste ecrite dans le garde).
 
 ### `libRefs` — invocation de librairie par provenance (canal neutre)
 
