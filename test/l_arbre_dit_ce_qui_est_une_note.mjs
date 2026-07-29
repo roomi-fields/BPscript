@@ -27,12 +27,17 @@
  * la première note de CHAQUE alphabet soit une note, tabla et simple compris. Trouvé par
  * bp3-frontend, qui émet les deux depuis le début.
  *
- * LE CRITÈRE DU PARTAGE VIENT DE LA DONNÉE, et deux mesures indépendantes désignent les mêmes trois
- * alphabets (shakuhachi, tabla, simple) : le champ `defaultTuning` de ma librairie, et l'oracle
- * natif de bp3-frontend — en BP3 un nom de note n'est JAMAIS nu, il porte toujours son registre.
- * J'avais objecté que le critère mésclassait shakuhachi ; mon objection était tirée de la PROSE de
- * l'entrée, la leur d'une mesure. Question de DONNÉE routée, non tranchée ici : shakuhachi
- * mérite-t-il un accordage et des registres ?
+ * LE CRITÈRE DU PARTAGE VIENT DE LA DONNÉE : le champ `defaultTuning`. Un alphabet qui en déclare un
+ * résout une hauteur — shakuhachi, tabla et simple n'en déclarent pas. C'est ce critère-là, et lui
+ * seul, qu'applique le code. L'oracle natif de bp3-frontend le CONFIRME sur ces trois (en BP3 un nom
+ * de note n'est jamais nu), sans être le critère.
+ *
+ * ⚠️⚠️ J'AVAIS ÉCRIT QUE LES DEUX CRITÈRES DÉSIGNAIENT « EXACTEMENT LES MÊMES TROIS ». C'EST FAUX,
+ * mesuré sur ma propre donnée : sans accordage → 3 ; sans champ `octaves` → HUIT. Cinq alphabets
+ * (arabic, turkish, gamelan_pelog, gamelan_slendro, bohlen_pierce) ont un accordage et ne pointent
+ * aucune table de registres — le critère par les registres les déclasserait tous. Bonne réponse,
+ * mauvaise raison, et la mauvaise raison mordait sur cinq alphabets. Le §2bis le MESURE désormais
+ * plutôt que de me faire confiance.
  *
  * ⚠️ LE TÉMOIN QUE L'ARCHITECTE EXIGE, et c'est lui qui juge la solution : « ça doit marcher pour
  * gamelan_pelog, bohlen_pierce et shruti23 comme pour western. Une solution qui ne marche que pour
@@ -99,6 +104,37 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     `2. ${nom} : '${premiereNote}' ne doit PAS être dans ${autre} — les fondre est interdit (décision 2026-07-28)`);
   ok(!(r.ast?.noteTerminals || []).includes('motif') && !(r.ast?.alphabetTerminals || []).includes('motif'),
     `2. ${nom} : 'motif' n'est ni une note ni un terminal d'alphabet`);
+}
+
+// ── 2bis. LES DEUX CRITÈRES NE SE CONFONDENT PAS, ET C'EST MESURÉ ICI ──────────────────────
+// ⚠️ J'AI PUBLIÉ QU'ILS DÉSIGNAIENT « EXACTEMENT LES MÊMES TROIS ALPHABETS ». C'était faux, et je
+// l'ai écrit dans un commit, dans une spec et dans deux messages avant que bp3-frontend ne le
+// mesure SUR MA PROPRE DONNÉE. Le code, lui, n'a jamais suivi que l'accordage — c'est la RAISON
+// publiée qui était fausse, pas le résultat. Une bonne réponse pour une mauvaise raison se
+// propage : la raison, elle, sert à décider la fois suivante.
+// Ce bloc empêche la rechute autrement que par ma mémoire : il MESURE l'écart. Si quelqu'un
+// bascule le code sur le critère des registres, les cinq alphabets ci-dessous le font rougir.
+{
+  const parAccordage = [], parRegistres = [];
+  for (const [nom, o] of Object.entries(LIBS['alphabets'])) {
+    if (!o || typeof o !== 'object' || Array.isArray(o) || !Array.isArray(o.notes) || !o.notes.length) continue;
+    if (!o.defaultTuning) parAccordage.push(nom);
+    if (!o.octaves) parRegistres.push(nom);
+  }
+  const ecart = parRegistres.filter((n) => !parAccordage.includes(n));
+  ok(ecart.length > 0,
+    '2bis. les deux critères DIVERGENT — si cet écart tombait à zéro, la phrase « exactement les mêmes » '
+    + 'redeviendrait vraie et ce témoin devrait être relu, pas supprimé');
+  // Chacun de l'écart a un accordage : le critère des registres les déclasserait à tort.
+  for (const nom of ecart) {
+    const o = LIBS['alphabets'][nom];
+    ok(!!o.defaultTuning,
+      `2bis. '${nom}' n'a pas de table de registres mais A un accordage — le critère par les registres le déclasserait`);
+    const premiere = o.notes[0];
+    const r = compiler(`@core\n@alphabet.${nom}\nmotif -> ${premiere}\nS -> motif`);
+    ok((r.ast?.noteTerminals || []).includes(premiere),
+      `2bis. '${premiere}' (${nom}) DOIT rester une note — c'est l'accordage qui décide, pas les registres`);
+  }
 }
 
 // ── 3. CE QUE LE CONSOMMATEUR CHERCHE VRAIMENT ──────────────────────────────────────────────

@@ -1511,15 +1511,25 @@ function emitNoteTerminals(ast) {
   // bp3-frontend, qui émet les deux champs depuis le début.
   //
   // LE CRITÈRE VIENT DE LA DONNÉE, ET DEUX MESURES INDÉPENDANTES LE DÉSIGNENT :
-  //  · le mien — un alphabet qui déclare un `defaultTuning` résout une hauteur, les autres non ;
+  //  · le mien — un alphabet qui déclare un `defaultTuning` résout une hauteur, les autres non :
+  //    shakuhachi, tabla, simple ne le déclarent pas. C'EST CE CRITÈRE-LÀ, ET LUI SEUL, QUI EST
+  //    APPLIQUÉ ICI ;
   //  · le leur, mesuré sur le moteur natif — un nom de note n'y est JAMAIS nu, il porte toujours
-  //    son registre (`dha` n'est une note dans aucune convention, `dha4` l'est en indien).
-  // Les deux désignent EXACTEMENT les mêmes trois alphabets : shakuhachi, tabla, simple — les
-  // seuls sans accordage, et les seuls sans convention de registres. Cette convergence est ce qui
-  // ferme le sujet : j'avais objecté que le critère mésclassait shakuhachi (ses altérations
-  // meri/kari sont des inflexions de hauteur), mais mon objection était une inférence tirée de la
-  // PROSE de l'entrée, la leur une mesure. La mesure gagne. Reste une question de DONNÉE, routée
-  // et non tranchée ici : shakuhachi mérite-t-il un accordage et des registres ?
+  //    son registre (`dha` n'est une note dans aucune convention, `dha4` l'est en indien). Il
+  //    CONFIRME la conclusion sur les trois, sans être le critère du code.
+  //
+  // ⚠️⚠️ ET J'AI ÉCRIT ICI QUE LES DEUX CRITÈRES DÉSIGNAIENT « EXACTEMENT LES MÊMES TROIS
+  // ALPHABETS ». C'EST FAUX, mesuré par bp3-frontend SUR MA PROPRE DONNÉE et re-mesuré par moi :
+  // sans accordage → 3 (shakuhachi, tabla, simple) ; sans champ `octaves` → HUIT, car arabic,
+  // turkish, gamelan_pelog, gamelan_slendro et bohlen_pierce ont un accordage et ne pointent
+  // aucune table de registres. Appliquer « pas de registres donc pas une note » déclasserait ces
+  // cinq-là — arabic porte pourtant arabic_24TET, une ancre husayni/4 et un diapason 440.
+  // LA CONCLUSION TIENT, LA RAISON QUE J'AI PUBLIÉE ÉTAIT FAUSSE. Le glissement est nommé : leur
+  // critère mesure le NOMMAGE NATIF (un nom de note porte son registre) ; je l'avais traduit en
+  // « l'alphabet a-t-il un champ octaves », qui est la présence d'une RÉFÉRENCE vers une table,
+  // pas la présence de registres. Les tables existent d'ailleurs sans être pointées
+  // (`octaves.turkish`, `octaves.gamelan`, `octaves.shakuhachi`).
+  // Bonne réponse, mauvaise raison — et la mauvaise raison mordait sur cinq alphabets.
   //
   // PRÉCÉDENCE, et elle n'est pas de moi : la décision du 2026-07-28 la fixe — « un nom présent
   // dans les deux champs est traité comme NOTE, c'est l'ordre du C » (SEARCHNOTE avant

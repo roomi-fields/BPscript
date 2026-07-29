@@ -88,21 +88,38 @@ decision du 2026-07-28 sans reprendre la DISTINCTION qui le justifie — elle ec
 lettres (`tabla` : *percussion syllables, no pitch*). Trouve par bp3-frontend, qui emet les deux
 champs depuis le debut.
 
-**LE CRITERE VIENT DE LA DONNEE**, et deux mesures independantes designent exactement les memes
-trois alphabets — `shakuhachi`, `tabla`, `simple` :
-- le champ `defaultTuning` de `lib/alphabets.json` : un alphabet qui en declare un resout une
-  hauteur, les autres non ;
-- l'oracle **natif** (mesure bp3-frontend, 2026-07-29) : en BP3 un nom de note n'est **jamais nu**,
-  il porte toujours son registre. `dha` n'est une note dans aucune convention ; `dha4` l'est en
-  indien.
+**LE CRITERE VIENT DE LA DONNEE** : le champ `defaultTuning` de `lib/alphabets.json`. Un alphabet
+qui en declare un resout une hauteur, les autres non — `shakuhachi`, `tabla`, `simple`. C'est ce
+critere-la, **et lui seul**, qu'applique le code. L'oracle **natif** (mesure bp3-frontend,
+2026-07-29) le **confirme** sur ces trois sans etre le critere : en BP3 un nom de note n'est
+**jamais nu**, il porte toujours son registre (`dha` n'est une note dans aucune convention,
+`dha4` l'est en indien).
+
+> ⚠️ **CE PARAGRAPHE A AFFIRME QUE LES DEUX CRITERES DESIGNAIENT « EXACTEMENT LES MEMES TROIS ».
+> C'ETAIT FAUX**, mesure par bp3-frontend sur cette donnee meme, puis re-mesure ici : sans
+> accordage → **3** ; sans champ `octaves` → **8**. Cinq alphabets (`arabic`, `turkish`,
+> `gamelan_pelog`, `gamelan_slendro`, `bohlen_pierce`) ont un accordage et ne pointent aucune table
+> de registres — le critere par les registres les declasserait tous les cinq, alors qu'`arabic`
+> porte `arabic_24TET`, une ancre `husayni/4` et un diapason 440.
+> Le glissement est nomme : leur critere mesure le **nommage natif** ; il avait ete traduit en
+> « l'alphabet a-t-il un champ `octaves` », qui est la presence d'une **REFERENCE** vers une table,
+> pas la presence de registres. Les tables existent d'ailleurs sans etre pointees
+> (`octaves.turkish`, `octaves.gamelan`, `octaves.shakuhachi`).
+> **Bonne reponse, mauvaise raison** — et la mauvaise raison mordait sur cinq alphabets. L'ecart est
+> desormais MESURE par le garde (`test/l_arbre_dit_ce_qui_est_une_note.mjs` §2bis), pas confie a
+> une relecture.
 
 **PRECEDENCE** — un nom present dans les deux champs est traite comme **note** (ordre du C :
 `SEARCHNOTE` avant `SEARCHTERMINAL`). Regle de la decision du 2026-07-28, appliquee et non
 decidee ici : les deux champs sont emis fidelement, c'est au lecteur d'appliquer la precedence.
 
-**Question de DONNEE routee, non tranchee** : `shakuhachi` ne declare ni accordage ni registres,
-donc ses doigtes sortent en terminaux d'alphabet — alors que ses alterations `meri`/`kari`
-(menton bas, menton haut) sont des inflexions de hauteur. Merite-t-il un accordage ?
+**Question de DONNEE routee, non tranchee** : `shakuhachi` ne declare aucune donnee de hauteur —
+ni accordage, ni `baseNote`, ni `baseRegister`, ni diapason — donc ses doigtes sortent en terminaux
+d'alphabet, alors que ses alterations `meri`/`kari` (menton bas, menton haut) sont des inflexions
+de hauteur. C'est le seul des trois decrit en prose comme portant de la hauteur sans porter la
+moindre donnee pour la resoudre. **Ses REGISTRES, eux, existent deja** (`octaves.shakuhachi` :
+`otsu`, `kan`, `daikan`) et ne sont references par personne — la moitie de la question etait donc
+deja repondue par la donnee. Reste l'accordage.
 
 **Une tete de regle nommee comme une note y figure** : c'est meme le cas que l'aval cherche, pour
 l'ecarter de sa lecture de structure. Un **point d'attente** n'y figure jamais — une attente
