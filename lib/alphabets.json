@@ -309,6 +309,8 @@
       "kena",
       "tage",
       "dhati",
+      "tite",
+      "dhadha",
       "dhage",
       "trkt",
       "kt",
@@ -342,7 +344,9 @@
       "tun": "dayan_ring",
       "ta": "dayan_tap",
       "ti": "dayan_tap"
-    }
+    },
+    "_ajouts_2026_07_29": "dhadha et tite AJOUTES le 2026-07-29 (GO Romain, critere « on ne denature pas l'alphabet tabla : si ce sont des percus de tabla on peut les ajouter, sinon alphabet distinct »). JUGE SUR LA DONNEE, pas sur la commodite : les composes deja presents ici font AU PLUS 2 unites et 10 caracteres (tidha 2/5, dhagena 1/7, teenakena 2/9, dheenagena 2/10). dhadha (dha+dha, 2 unites, 6 car.) et tite (ti+te, 2 unites, 4 car.) tombent tous deux DANS cette forme. TROIS AUTRES ONT ETE REFUSES ICI et vivent dans l'alphabet 'dhadhatite' : dhadhateena (3 unites, 11 car.) et deux enchainements de 6 unites / 21-22 car. — au-dela de tout ce que tabla porte. ⚠️ dhadhateena est le cas sur lequel j'ai HESITE et je le dis : il n'est qu'un cran au-dessus (3 unites contre 2, 11 car. contre 10). C'est la DONNEE qui l'a mis dehors, pas la commodite — l'y mettre aurait justement simplifie mon travail en reduisant l'alphabet a creer.",
+    "_manque_signale": "⚠️ 'te' est un bol declare par le moteur natif (bp3-ctests/-al.dhadhatite : dha, ti, te, na, dhee, tr) et ABSENT de cet alphabet, alors que 'ta', 'ti', 'tin', 'tun' y sont. Signale et NON ajoute : aucune scene ne l'emploie seul aujourd'hui, et enrichir un alphabet partage sans consommateur est une speculation. A trancher si une scene en a besoin."
   },
   "simple": {
     "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",
@@ -419,5 +423,21 @@
     "baseRegister": 4,
     "defaultTuning": "shruti23_native",
     "_anchor_note": "Ancre = tonique sa_4 = 261.625 Hz (native -to.tryShruti). Registre en suffixe séparé par '_' (sa_4, r1_4) — convention 'saptak_us'."
+  },
+  "dhadhatite": {
+    "description": "Qa'ida « dhadhatite » — bols et ENCHAINEMENTS de cette composition de tabla (sans hauteur)",
+    "notes": [
+      "dha",
+      "dhadha",
+      "dhadhateena",
+      "dhadhatitedhadhadheena",
+      "dhadhatitedhadhateena",
+      "dheena",
+      "teena",
+      "tite"
+    ],
+    "alterations": {},
+    "_note": "⚠️ POURQUOI UN ALPHABET DISTINCT PLUTOT QUE D'ELARGIR 'tabla' — critere de Romain, 2026-07-29 : « on ne denature pas l'alphabet tabla ; si ce sont des percus de tabla on peut les ajouter, sinon alphabet distinct ». Trois des terminaux de cette qa'ida ne sont pas des FRAPPES mais des ENCHAINEMENTS : dhadhatitedhadhadheena se decompose en SIX unites (dha+dhati+te+dha+dha+dheena) et compte 22 caracteres, la ou le plus long compose de tabla en fait 2 et 10. Les y ranger aurait fait entrer des phrases de qa'ida dans le vocabulaire de TOUTE scene de tabla. Les deux qui SONT des frappes (dhadha, tite) ont ete ajoutes a 'tabla' dans le meme mouvement, et figurent ici aussi parce que cette scene les emploie. AUCUN accordage : une qa'ida ne resout pas de hauteur, comme 'tabla'.",
+    "_source": "Vocabulaire releve AU COMPILATEUR sur kanopi .../BPScript-tests/dhadhatite_v2.bps (8 terminaux employes, membres droits, non-terminaux exclus). L'alphabet natif bp3-ctests/-al.dhadhatite ne declare que six bols SIMPLES (dha, ti, te, na, dhee, tr) et AUCUN des enchainements : la scene .bps le dit elle-meme en commentaire — « dhadhateena is NOT in gram#4 terminals, it is a composite bol »."
   }
 }
