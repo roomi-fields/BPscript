@@ -60,7 +60,13 @@ const LEGITIMES = [
   ['un mot du geste',                 '@core\n@alphabet.western\n@macro grondement saw >> audio\nS -> C4 D4'],
   ['un nom PROCHE d\'un terminal',    '@core\n@alphabet.western\n@macro G4_v saw >> audio\nS -> C4 D4'],
   ['un terminal d\'un AUTRE alphabet','@core\n@alphabet.western\n@macro sa saw >> audio\nS -> C4 D4'],
-  ['aucun alphabet résolu',           '@core\n@macro G4 saw >> audio\nS -> C4 D4'],
+  // ⚠️ UN TÉMOIN « aucun alphabet résolu » VIVAIT ICI — RETIRÉ le 2026-07-29, et son retrait
+  // DURCIT la règle. Il affirmait qu'une scène sans convention de notes laisse `@macro G4`
+  // légitime : c'était la description de ma zone aveugle, pas d'une règle. Depuis la cascade
+  // @core, une scène qui se tait hérite de `western`, donc `G4` y est une note et la règle mord.
+  // Ce qui reste légitime, c'est la hauteur OPAQUE — et elle, elle est testée ci-dessous.
+  ['hauteur OPAQUE invoquée : l\'alphabet est ABSENT pour de vrai (loi 35)',
+   '@core\n@mine.perso.gamme\n@macro G4 saw >> audio\nS -> C4 D4'],
 ];
 for (const [nom, src] of LEGITIMES) ok(refus(src).length === 0, `LÉGITIME ${nom} — doit passer`);
 

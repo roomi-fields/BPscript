@@ -682,7 +682,7 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@controls\nS -> a !(pitchbend:+200)');
+    compiled = compileToBPxAST('@controls\n@alphabet.simple\nS -> a !(pitchbend:+200)');
   } catch (e) {
     caughtError = e;
   }

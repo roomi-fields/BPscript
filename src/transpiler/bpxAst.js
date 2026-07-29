@@ -20,7 +20,7 @@
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
-import { resolveActors, expandAlphabetTerminals } from './actorResolver.js';
+import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
@@ -818,13 +818,30 @@ function applyDefaultActor(ast) {
   // Transport de l'acteur implicite : binding de l'alphabet s'il existe, sinon défaut du composant.
   const transportKey = (alphaBinding && alphaBinding.runtime) || defaultActorTransport();
   const transport = { type: 'TransportRef', key: transportKey, params: {} };
+  // ⚠️ ET SON ALPHABET — il naissait SANS, et c'était le trou (Romain 2026-07-29, « ça ne devrait
+  // JAMAIS ARRIVER »). L'ancien commentaire ici disait « pas d'alphabet : pitch via le résolveur de
+  // scène » : il n'existait aucun résolveur de scène en aval pour le remplir, donc l'AST partait
+  // muet et le consommateur devait deviner. La cascade est la MÊME que pour un acteur déclaré
+  // (`alphabetHerite`, définie une seule fois) : scène → socle @core, ABSENT si la hauteur est
+  // opaque. Une voix-code pure n'est pas concernée : elle n'a pas d'alphabet DÉCLARÉ ici, et
+  // l'acteur implicite n'existe que faute de tout @actor — il n'y a donc aucun eval à hériter.
+  const alphabetKey = alphabetHerite(ast);
+  const properties = { transport };
+  const references = [{ type: 'ActorReference', category: 'transport', name: transportKey, line: 0 }];
+  if (alphabetKey) {
+    properties.alphabet = alphabetKey;
+    references.push({ type: 'ActorReference', category: 'alphabet', name: alphabetKey, line: 0 });
+    const oct = octavesHerite(ast, alphabetKey);   // les registres suivent l'alphabet, même cascade
+    if (oct) {
+      properties.octaves = oct;
+      references.push({ type: 'ActorReference', category: 'octaves', name: oct, line: 0 });
+    }
+  }
   ast.actors = [{
     type: 'ActorDirective',
     name: 'default',
-    properties: { transport }, // pas d'alphabet : pitch via le résolveur de scène
-    references: [
-      { type: 'ActorReference', category: 'transport', name: transportKey, line: 0 },
-    ],
+    properties,
+    references,
     // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
     // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
     synthetic: true, // acteur implicite (aucun @actor déclaré) — panneau Acteurs vide
@@ -1522,8 +1539,18 @@ export function compileToBPxAST(source, environnement) {
     // implicite mono-propriétaire + erreur d'ambiguïté « Use dot notation », MÊME
     // sémantique que la voie héritée (index.js compileBPS:32). L'aval ne résout
     // rien (BPx/Kairos lisent `payload.actor` opaque) → sans cette passe, toute
-    // note nue part acteur-nulle dans l'arbre. AVANT applyDefaultActor : l'acteur
-    // synthétique `default` n'a pas d'alphabet (faux « no alphabet property » sinon).
+    // note nue part acteur-nulle dans l'arbre.
+    //
+    // ⚠️ CET APPEL A ÉTÉ REMONTÉ ICI LE 2026-07-29, ET IL CORRIGE UN DÉFAUT QUE J'AI INTRODUIT LE
+    // JOUR MÊME. La cascade d'alphabet (`alphabetHerite`) laisse la valeur ABSENTE quand la scène
+    // invoque une hauteur OPAQUE — c'est la loi 35, la seule absence légitime. Elle lit ça dans
+    // `ast.libRefs`… qui était rempli DEUX PASSES PLUS BAS pour les invocations de SCÈNE. Une
+    // scène `@test_alphabets.abc` recevait donc le socle @core PAR-DESSUS son alphabet invoqué,
+    // et ses terminaux `a b c` étaient refusés comme inconnus. C'est très exactement le bug
+    // diapason du 2026-07-04 (« jamais le socle par-dessus un composant invoqué »), rejoué sur un
+    // autre axe. Trouvé par un témoin que j'écrivais pour AUTRE CHOSE : l'ordre des passes est
+    // une donnée du calcul, pas de la mise en page.
+    emitSceneLibRefs(ast);         // invocations de librairie en portée SCÈNE — AVANT toute cascade qui les lit
     deriveAlphabetFromTuning(ast); // alphabet ← accordage quand @alphabet absent (bug 1.1) — AVANT resolveActors
     result.errors.push(...resolveActors(ast).errors);
     // Une macro ne peut pas porter le nom d'un terminal de l'alphabet actif (Romain 2026-07-28).
@@ -1536,7 +1563,6 @@ export function compileToBPxAST(source, environnement) {
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
     result.errors.push(...validateAliases(ast));  // `@alias` : une valeur portée doit nommer un référent déclaré
     emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
-    emitSceneLibRefs(ast);           // idem en portée SCÈNE : `@test_alphabets.X` → `ast.libRefs` (sinon l'alphabet n'arrive jamais)
     result.ast = ast;
 
     // Validation sémantique des valeurs de contrôle contre la lib @controls

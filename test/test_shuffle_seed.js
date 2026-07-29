@@ -29,7 +29,7 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // [shuffle] conservé → _rndseq
 {
-  const r = compileToBPxAST('@controls\n@mode:random\nA -> {a b c}[shuffle]');
+  const r = compileToBPxAST('@controls\n@alphabet.simple\n@mode:random\nA -> {a b c}[shuffle]');
   assert('[shuffle] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19 (émission `_rndseq`, absence de
   // `_srand`) — certification grammaire-texte abandonnée, encodeur supprimé.
@@ -37,27 +37,27 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // [shuffle:N] supprimé → erreur pointant @seed
 {
-  const r = compileToBPxAST('@controls\n@mode:random\nA -> {a b c}[shuffle:1]');
+  const r = compileToBPxAST('@controls\n@alphabet.simple\n@mode:random\nA -> {a b c}[shuffle:1]');
   assert('[shuffle:1] : erreur', r.errors.length > 0, r.errors);
   assert('[shuffle:1] : message cite @seed', /@seed/.test((r.errors[0] || {}).message || ''), r.errors);
 }
 
 // ![@seed:N] dans le flux → _srand(N)
 {
-  const r = compileToBPxAST('@mode:lin\nS -> a ![@seed:2] b');
+  const r = compileToBPxAST('@alphabet.simple\n@mode:lin\nS -> a ![@seed:2] b');
   assert('![@seed:2] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 (émission `_srand(2)`).
 }
 
 // ![@<autre>] dans le flux → erreur (seul seed a un sens en flux)
 {
-  const r = compileToBPxAST('@mode:lin\nS -> a ![@maxitems:3] b');
+  const r = compileToBPxAST('@alphabet.simple\n@mode:lin\nS -> a ![@maxitems:3] b');
   assert('![@maxitems] : erreur (hors seed)', r.errors.length > 0, r.errors);
 }
 
 // Remplacement de [shuffle:1] : ![@seed:1] {…}[shuffle] → _srand(1) … _rndseq
 {
-  const r = compileToBPxAST('@controls\n@mode:random\nB -> ![@seed:1] {C4 B4 E4}[shuffle]');
+  const r = compileToBPxAST('@controls\n@mode:random\nBrassage -> ![@seed:1] {C4 B4 E4}[shuffle]');
   assert('remplacement : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19. Ce qui RESTE vérifié ici est le
   // point qui compte pour le langage : la forme de remplacement de `[shuffle:1]` COMPILE.

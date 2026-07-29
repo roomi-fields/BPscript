@@ -7,7 +7,11 @@ const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 function ok(name, cond) { if (cond) { pass++; console.log('  ✓', name); } else { fail++; console.log('  ✗', name); } }
 
 function macros(src) {
-  const r = compileToBPxAST('@core\n@controls\n' + src + '\nS -> lead');
+  // ⚠️ LA RÈGLE DE CE HARNAIS ÉCRIVAIT `S -> lead` — un symbole qu'AUCUN cas ne déclare, et qui
+  // traversait sans un mot parce que la scène n'avait pas de convention de notes en portée.
+  // Depuis la cascade @core (2026-07-29), toute scène en a une : le harnais écrit donc une note,
+  // et ce qu'il mesure — la forme des corps de macro — n'en dépendait de toute façon pas.
+  const r = compileToBPxAST('@core\n@controls\n' + src + '\nS -> C4');
   return { errors: r.errors, macros: r.ast?.macros || [] };
 }
 

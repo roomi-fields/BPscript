@@ -52,6 +52,37 @@ export function nomsBps() {
 }
 
 /**
+ * TOUTES les scènes BPScript de la bibliothèque, pas seulement les 95 de `BP3-tests`.
+ *
+ * ⚠️ POURQUOI CETTE FONCTION EXISTE (2026-07-29). `nomsBps()` ne lit QU'UN dossier — celui des
+ * scènes converties depuis BP3. La bibliothèque en a quinze autres (`code-voices/`, `csound/`,
+ * `strudel/`, `world/`…), et ce sont eux qui portent les cas les plus atypiques : les voix de
+ * code, justement. Un garde bâti sur `nomsBps()` seul balaie 156 scènes sur 263 et n'en croise
+ * AUCUNE — il rendrait un verdict vert sur une famille qu'il n'a jamais vue. C'est la faute
+ * « la portée d'un garde se choisit sur l'ESPACE, jamais sur le dossier où ça s'est vu » ;
+ * elle est ici mécanisée plutôt que rappelée.
+ *
+ * Ne remplace PAS `nomsBps()` : les mesures de parité BP3↔BPScript ont besoin de l'appariement
+ * `.bps`/`.gr`, qui n'existe que dans ces deux dossiers-là. Deux questions, deux portées.
+ *
+ * @returns {Array<[string, string]>} paires [chemin relatif à la bibliothèque, contenu]
+ */
+export function toutesLesScenes() {
+  const racine = path.join(LIBRARY, 'scenes');
+  if (!existsSync(racine)) return [];
+  const out = [];
+  const marcher = (dir, prefixe) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) marcher(p, `${prefixe}${e.name}/`);
+      else if (e.name.endsWith('.bps')) out.push([`${prefixe}${e.name}`, readFileSync(p, 'utf-8')]);
+    }
+  };
+  marcher(racine, '');
+  return out.sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+/**
  * Fail-loud si la bibliothèque est absente. Un corpus introuvable doit CRIER : une mesure qui
  * tourne sur zéro scène sortirait au vert en ne prouvant rien — le pire des faux verts.
  */

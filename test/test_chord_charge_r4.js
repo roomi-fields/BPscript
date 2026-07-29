@@ -31,7 +31,7 @@ const DECLS = 'gate C4:sc\ngate E4:sc\n';
 
 // ── Forme 1 : contenance de bloc ────────────────────────────────────────
 {
-  const r = rule(DECLS + 'A -> {C4!E4}(vel:90)');
+  const r = rule(DECLS + 'Accord -> {C4!E4}(vel:90)');
   const poly = r.rhs[0];
   assert('F1 RHS = Polymetric (bloc)', poly?.type === 'Polymetric', `got ${poly?.type}`);
   const grp = poly?.voices?.[0]?.[0];
@@ -51,7 +51,7 @@ const DECLS = 'gate C4:sc\ngate E4:sc\n';
 
 // ── Forme 2 : charge collée → E4 seul ───────────────────────────────────
 {
-  const r = rule(DECLS + 'A -> C4!E4(vel:90)');
+  const r = rule(DECLS + 'Accord -> C4!E4(vel:90)');
   const grp = r.rhs[0];
   assert('F2 RHS = SimultaneousGroup', grp?.type === 'SimultaneousGroup', `got ${grp?.type}`);
   assert('F2 C4 (primaire) SANS charge', !grp?.primary?.payload?.params,
@@ -65,7 +65,7 @@ const DECLS = 'gate C4:sc\ngate E4:sc\n';
 
 // ── Forme 3 : par note ──────────────────────────────────────────────────
 {
-  const r = rule(DECLS + 'A -> C4(vel:80)!E4(vel:90)');
+  const r = rule(DECLS + 'Accord -> C4(vel:80)!E4(vel:90)');
   const grp = r.rhs[0];
   assert('F3 RHS = SimultaneousGroup', grp?.type === 'SimultaneousGroup', `got ${grp?.type}`);
   assert('F3 C4 params.vel=80', grp?.primary?.payload?.params?.vel === 80,
@@ -79,7 +79,7 @@ const DECLS = 'gate C4:sc\ngate E4:sc\n';
 
 // ── Repliement aussi hors accord : note simple SymbolCall ───────────────
 {
-  const r = rule('gate C4:sc\nA -> C4(vel:80)');
+  const r = rule('gate C4:sc\nAccord -> C4(vel:80)');
   const n = r.rhs[0];
   assert('note simple params.vel=80 (repliée)', n?.payload?.params?.vel === 80,
     JSON.stringify(n?.payload));

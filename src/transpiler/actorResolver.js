@@ -57,6 +57,76 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
 }
 
 /**
+ * L'ALPHABET HÉRITÉ PAR UNE SCÈNE — la cascade @core → scène, DÉFINIE UNE SEULE FOIS.
+ *
+ * ⚠️ POURQUOI CETTE FONCTION EXISTE, ET C'EST UNE FAUTE PAYÉE, PAS UN REFACTOR (2026-07-29).
+ * Cette cascade vivait ICI et ne s'appliquait qu'aux acteurs DÉCLARÉS. L'acteur implicite, lui,
+ * est fabriqué plus tard (`bpxAst.applyDefaultActor`) et naissait SANS alphabet — donc une scène
+ * qui ne déclare aucune convention de notes sortait de chez moi avec un ensemble de terminaux
+ * VIDE. Mesuré : 91 scènes sur 263 (bibliothèque Kanopi 279a533 + démos de ce dépôt).
+ *
+ * CE QUE ÇA COÛTAIT EN AVAL, et c'est le vrai dégât : tout ce qui demande « est-ce une note ? »
+ * se taisait sur ces scènes — la règle d'unicité des noms comme le refus d'un terminal inconnu.
+ * Un consommateur ne pouvait pas le savoir : un ensemble vide et un ensemble non calculé ont
+ * exactement la même tête. Verdict de Romain (2026-07-29) : « ça ne devrait JAMAIS ARRIVER ».
+ *
+ * LE PRINCIPE N'EST PAS DE MOI — il est RATIFIÉ et daté : `docs/design/SCENE_DEFAULTS_CASCADE.md`
+ * (Romain, 2026-07-04), « tout ce qu'une scène peut définir a un défaut, et ce défaut vit dans une
+ * librairie », « un paramètre définissable n'est jamais inexistant ». Son étape 2 (étendre aux
+ * autres axes) n'avait jamais été faite. L'AST SORT COMPLET : un consommateur n'a rien à compléter,
+ * et surtout rien à DEVINER.
+ *
+ * LA SEULE ABSENCE LÉGITIME reste la hauteur OPAQUE (loi 35) : quand la scène invoque une identité
+ * de hauteur par le canal neutre, l'alphabet n'est pas résolvable ici et Kairos le remplit. Poser
+ * le socle @core par-dessus un composant invoqué serait le bug diapason du 2026-07-04 à l'envers.
+ *
+ * @returns {string|null} le nom de l'alphabet hérité, ou null si la hauteur est opaque
+ */
+function alphabetHerite(ast) {
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  if (sceneAlpha) return sceneAlpha.subkey;                              // niveau 3 : la scène
+  if (ast.libRefs && ast.libRefs.length) return null;                    // hauteur opaque → Kairos (loi 35)
+  return loadLib('core')?.defaults?.components?.alphabet || null;        // niveau 1 : socle @core
+}
+
+/**
+ * LA CONVENTION DE REGISTRES HÉRITÉE — même cascade, deuxième axe (2026-07-29).
+ *
+ * Elle sortait à vide dans 251 scènes sur 263, y compris quand la scène ÉCRIT `@octaves.saptak`
+ * noir sur blanc : la directive était lue par le validateur de terminaux et par PERSONNE d'autre,
+ * donc l'arbre ne la portait nulle part. Deux définitions de « quels sont les terminaux ici » qui
+ * ne lisaient pas les mêmes registres — la famille de défaut que je paie le plus souvent.
+ *
+ * ⚠️ ET LE SOCLE @core S'ARRÊTE ICI, DÉLIBÉRÉMENT, PARCE QUE C'EST MESURÉ. `defaults.components
+ * .octaves` vaut `western`. L'appliquer à un alphabet qui ne déclare AUCUN registre le casserait :
+ * `expandAlphabetTerminals` traite ce cas comme « notes nues » (« No octaves — raw notes, e.g.
+ * tabla ») — les 39 terminaux de `tabla` deviendraient octaviés et aucune scène de tabla ne
+ * reconnaîtrait plus ses propres frappes. L'absence de registres n'est donc PAS un trou : c'est
+ * une VALEUR, et le document de cascade le dit à sa façon (« invoquer @alphabet.X recouvre
+ * l'octavation »). Conséquence à reporter, pas à masquer : l'entrée `octaves` de @core n'est plus
+ * atteignable une fois qu'un alphabet est toujours résolu — c'est une donnée morte, et l'arbitrage
+ * de son sort appartient à Romain, pas à ce fichier.
+ *
+ * @returns {string|undefined} la convention de registres, ou undefined = notes nues (une VALEUR)
+ */
+function octavesHerite(ast, alphabetKey) {
+  // ⚠️ ON NE MATÉRIALISE QUE CE QUI RÉSOUT, et ce n'est pas de la prudence : une convention que le
+  // catalogue ne connaît pas n'a AUCUNE valeur effective à porter. Sans ce filtre, un
+  // `@octaves.nexistepas` était recopié sur l'acteur et le validateur de références le refusait
+  // DEUX FOIS — une pour la directive, une pour la copie. Un même défaut qui parle deux fois se
+  // lit comme deux défauts ; la scène en a un. Le cri reste, à sa place, sur la directive.
+  const connu = (nom) => !!(nom && loadLib('octaves')?.[nom]);
+  const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
+  if (sceneOct) {
+    const nom = sceneOct.subkey || sceneOct.runtime;                     // niveau 3 : la scène
+    return connu(nom) ? nom : undefined;
+  }
+  if (!alphabetKey) return undefined;
+  const lib = resolveActorAlphabet(alphabetKey, ast.directives);         // niveau 2 : l'alphabet invoqué
+  return connu(lib && lib.octaves) ? lib.octaves : undefined;
+}
+
+/**
  * Resolve actors for the AST.
  *
  * @param {Object} ast - parsed Scene AST (with actors[] and subgrammars[])
@@ -99,15 +169,13 @@ function resolveActors(ast) {
     // remplit — @mine/@factory n'est qu'un préfixe de PROVENANCE, décision 2026-07-13) ; le socle
     // @core ne s'applique QUE si RIEN n'est invoqué. Une voix-code n'hérite pas (pas de notes).
     if (!alphabetKey && !isCodeVoice) {
-      const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
-      const sceneInvokesOpaquePitch = !!(ast.libRefs && ast.libRefs.length);
-      if (sceneAlpha) {
-        alphabetKey = sceneAlpha.subkey;                                  // héritage de scène (résolvable)
-      } else if (!sceneInvokesOpaquePitch) {
-        alphabetKey = loadLib('core')?.defaults?.components?.alphabet || null; // socle @core
-      }
-      // sinon (hauteur opaque invoquée) : alphabetKey reste absent → Kairos résout (loi 35).
+      alphabetKey = alphabetHerite(ast);                                  // cascade scène → socle @core
       if (alphabetKey) props.alphabet = alphabetKey;                      // matérialise l'héritage dans l'AST
+    }
+    // Les REGISTRES suivent le même chemin : acteur (déjà là) → scène → alphabet invoqué.
+    if (props.octaves == null && alphabetKey) {
+      const oct = octavesHerite(ast, alphabetKey);
+      if (oct) props.octaves = oct;
     }
 
     // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.
@@ -287,4 +355,4 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
   }
 }
 
-export { resolveActors, expandAlphabetTerminals };
+export { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite };

@@ -93,8 +93,15 @@ const DOIVENT_PASSER = [
    '@core\n@alphabet.western\n@macro G4_v saw >> audio\nS -> C4'],
   ['un nom d\'une AUTRE convention que l\'alphabet actif',
    '@core\n@alphabet.western\n@macro pa1 saw >> audio\nS -> C4'],
-  ['aucun alphabet résolu : rien à heurter',
-   '@core\n@macro G4 saw >> audio\nS -> C4'],
+  // ⚠️ IL Y AVAIT ICI UN TÉMOIN « aucun alphabet résolu : rien à heurter » — RETOURNÉ le
+  // 2026-07-29, et son retrait est un DURCISSEMENT. Il affirmait qu'une scène sans convention de
+  // notes n'a rien à heurter, donc que `@macro G4` y est légitime. C'était la description d'un
+  // TROU, pas d'une règle : depuis la cascade @core (SCENE_DEFAULTS_CASCADE.md, ratifié
+  // 2026-07-04), une scène qui se tait HÉRITE de `western` — donc `G4` y est bien une note, et la
+  // règle mord. L'ancien témoin gardait ma zone aveugle : 91 scènes sur 263 y vivaient.
+  // Il devient un cas REFUSÉ, plus haut.
+  ['une hauteur OPAQUE invoquée : l\'alphabet reste ABSENT, et c\'est la SEULE absence légitime (loi 35)',
+   '@core\n@test_alphabets.abc\n@macro G4 saw >> audio\nS -> a b'],
   // ⚠️ LES CONTEXTES — régression mesurée par BPx le 2026-07-28. Un contexte n'est PAS une tête :
   // il DÉSIGNE un terminal, c'est sa raison d'être. « ne pas être précédé de C4 » ne peut pas
   // s'écrire sans nommer C4, et l'auteur n'a aucune issue — renommer change la condition,
