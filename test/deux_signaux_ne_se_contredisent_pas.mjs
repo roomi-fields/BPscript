@@ -56,7 +56,11 @@ const naturesDe = (ast) => {
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
     for (const n of naturesSonnantes(r.rhs || [])) {
       const m = macros.get(n);
-      if (m && (m.body || []).some((b) => b && b.type === 'Wiring')) fautives.push(n);
+      // ⚠️ PÉRIMÈTRE ÉLARGI le 2026-07-29 : « régler un paramètre ne doit pas avoir de durée »
+      // (Romain). Le critère n'est plus le câblage strict mais CE QUI AGIT SUR UN MODULE — un
+      // corps `Wiring` OU un appel-composant (`Symbol` portant un acteur). J'avais signalé que mon
+      // registre était trop étroit SANS l'élargir moi-même ; l'élargissement vient de la décision.
+      if (m && (m.body || []).some((b) => b && (b.type === 'Wiring' || (b.type === 'Symbol' && b.actor)))) fautives.push(n);
     }
   }
   return fautives;
@@ -107,11 +111,21 @@ ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@cv env1 mod.adsr(attack:5)\
 // (`lpf.cutoff:12000`) ne sont PAS du câblage strict, et savoir s'ils doivent suivre le même sort
 // est une question encore chez Romain. Élargir ici trancherait à sa place.
 {
+  // ⚠️ CE TÉMOIN A ÉTÉ RETOURNÉ — il exigeait l'INVERSE il y a une heure. Il gardait que le
+  // périmètre s'arrête au câblage strict, parce que la question « un RÉGLAGE doit-il suivre le sort
+  // d'un BRANCHEMENT » était encore chez Romain. Il a tranché : « régler un paramètre ne doit pas
+  // avoir de durée ». Le témoin garde donc maintenant l'inclusion qu'il interdisait.
   const r = compileToBPxAST('@core\n@alphabet.western\n@controls\n@macro open lpf.cutoff:12000\nS -> open C4\n');
   const e = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
-  ok(e?.payload?.nature !== 'wire',
-    `3. PÉRIMÈTRE — un appel-composant opaque n'est PAS du câblage strict : sa nature ne doit pas `
-    + `avoir été changée par ce lot (reçu : ${JSON.stringify(e?.payload)})`);
+  ok(e?.payload?.nature === 'wire',
+    `3. PÉRIMÈTRE — un RÉGLAGE agit sur un module sans produire de son : même nature que le `
+    + `branchement (reçu : ${JSON.stringify(e?.payload)})`);
+  // Et la moitié qui empêche de déborder : une macro de SUBSTITUTION garde sa durée.
+  const o = compileToBPxAST('@core\n@alphabet.western\n@macro motif C4 D4\nS -> motif E4\n');
+  const f = (o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
+  ok(f?.payload?.nature === 'sounding',
+    `3. et une macro ORDINAIRE garde 'sounding' — elle a une durée, celle de son contenu `
+    + `(reçu : ${JSON.stringify(f?.payload)})`);
 }
 
 if (echecs.length) {

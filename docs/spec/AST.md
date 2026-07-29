@@ -76,10 +76,18 @@ pas), il ne pouvait qu'emettre un sonnant. L'information juste circulait deja pa
 ecrit dans une scene — appartient a Romain ; un NOM INTERNE D'AST, non. `wire` parce que la
 directive s'appelle `@wire` et le noeud `Wiring` — un meme fait, un meme mot.
 
-> ⚠️ **PERIMETRE : le cablage STRICT seulement** (corps de type `Wiring`). Un APPEL-COMPOSANT
-> opaque (`@macro open lpf.cutoff:12000`) ne sonne pas non plus et dure aussi, mais savoir si un
-> **reglage** doit suivre le meme sort qu'un **branchement** est une question ouverte. Elargir ici
-> la trancherait. Garde : `test/deux_signaux_ne_se_contredisent_pas.mjs` §3.
+**PERIMETRE — CE QUI AGIT SUR UN MODULE SANS PRODUIRE DE SON.** Arbitrage Romain, 2026-07-29 :
+« regler un parametre ne doit pas avoir de duree ». Brancher, couper, regler : meme traitement.
+Deux corps de macro entrent :
+- `Wiring` — `@macro lead saw >> lpf >> audio` ;
+- l'APPEL-COMPOSANT, un `Symbol` qui porte un **acteur** — `@macro open lpf.cutoff:12000`.
+
+> ⚠️ **C'est l'ACTEUR qui discrimine.** Un corps de `Symbol` SANS acteur est une macro de
+> SUBSTITUTION ordinaire, et elle GARDE sa duree — celle de son contenu (meme arbitrage). Mesure
+> sur 196 scenes : quatre macros entrent (un branchement, trois reglages), **zero macro ordinaire**
+> n'est touchee. Garde : `test/deux_signaux_ne_se_contredisent_pas.mjs` §3, qui eprouve les DEUX
+> cotes du perimetre — il rougit si l'on retrecit au cablage strict comme si l'on deborde sur les
+> substitutions.
 
 ### `noteTerminals` — l'arbre dit LUI-MEME ce qui est une note
 

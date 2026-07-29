@@ -1360,7 +1360,19 @@ function parse(tokens, opts = {}) {
       } else {
         body = parseRhsElements();
       }
-      if (body[0] && body[0].type === 'Wiring') nomsCablage.add(macroName);
+      // ⚠️ PÉRIMÈTRE ÉLARGI LE 2026-07-29, sur arbitrage de Romain : « régler un paramètre ne doit
+      // pas avoir de durée ». Le critère n'est donc plus le câblage strict mais CE QUI AGIT SUR UN
+      // MODULE SANS PRODUIRE DE SON — brancher, couper, régler, même traitement.
+      // Deux corps entrent : `Wiring` (`saw >> lpf >> audio`) et l'APPEL-COMPOSANT, un `Symbol` qui
+      // porte un ACTEUR (`lpf.cutoff:12000` → {Symbol, name:cutoff, actor:lpf, value:…}).
+      // C'est l'ACTEUR qui discrimine : un corps de `Symbol` SANS acteur est une macro de
+      // substitution ordinaire, et elle garde sa durée — celle de son contenu (arbitrage Romain).
+      // MESURÉ sur 196 scènes : quatre macros entrent (un câblage, trois réglages), ZÉRO macro
+      // ordinaire n'est touchée. J'avais signalé que mon registre était trop étroit sans l'élargir
+      // moi-même : l'élargissement vient de la décision, pas de mon intuition.
+      const agitSurUnModule = (body || []).some((b) => b
+        && (b.type === 'Wiring' || (b.type === 'Symbol' && b.actor)));
+      if (agitSurUnModule) nomsCablage.add(macroName);
       else checkMacroParamsUsed(macroName, params, body, tok);
       return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
     }
