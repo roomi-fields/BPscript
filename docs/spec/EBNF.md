@@ -1082,7 +1082,7 @@ trigger_in = "<!" , IDENT , [ qualifier ] ;
 
 Point de synchronisation — attend un signal externe.
 Chaînable : `<!sync1<!sync2`. Qualifiable : `<!sync1[timeout:5000]` (* not yet implemented *).
-`<!` can also be attached to a symbol: `Sa<!sync1` produces a combined SymbolWithTriggerIn node.
+`<!` can also be attached to a symbol: `Sa<!sync1` produces a combined SymbolWithWait node.
 
 ### 4.7 Variables
 

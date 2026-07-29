@@ -162,7 +162,7 @@ const adressesDe = (ast) => {
   const w = (n) => {
     if (Array.isArray(n)) { n.forEach(w); return; }
     if (!n || typeof n !== 'object') return;
-    if (n.type === 'TriggerIn') out.push({ nom: n.name, adresse: n.address });
+    if (n.type === 'Wait') out.push({ nom: n.name, adresse: n.address });
     // ⚠️ DESCENDRE JUSQU'AUX FEUILLES, pas au premier niveau. Écrit d'abord avec les deux seules
     // clés de la forme simple, l'instrument a rapporté « aucune adresse » pour un groupe
     // polymétrique où elle était bel et bien présente — quatrième fois de la journée où c'est

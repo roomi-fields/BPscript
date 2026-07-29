@@ -627,7 +627,7 @@ function parse(tokens, opts = {}) {
    *   Prolongation                                                      → 'prolongation'
    *   Control  → 'engine-control' (bp3NativeControls) ou 'transport-control'
    *   InstantControl                                                     → 'instant'
-   *   TriggerIn                                                          → 'wait'
+   *   Wait                                                          → 'wait'
    *
    * Nœuds sans payload.nature (structurels) :
    *   Period, NumericDuration, NilString, RawBrace, Polymetric,
@@ -696,13 +696,13 @@ function parse(tokens, opts = {}) {
     // une n'y vit qu'à moitié : un consommateur qui trie les feuilles par nature le perdait en
     // silence, alors qu'il est là POUR être observable.
     //
-    // Le nom dit le RÔLE, pas la graphie : `<!nom` est la surface, `TriggerIn` le type de nœud,
+    // Le nom dit le RÔLE, pas la graphie : `<!nom` est la surface, `Wait` le type de nœud,
     // `wait` ce que le jeton EST pour le temps — cohérent avec les six autres valeurs.
     //
     // ⚠️ NE PAS CONFONDRE AVEC UN SILENCE : un silence OCCUPE du temps, une attente le SUSPEND.
     // Durée nulle, ne fait pas avancer la grille — même ressort qu'`instant`. Les deux se
     // ressemblent en prose et se comportent à l'opposé.
-    if (type === 'TriggerIn') {
+    if (type === 'Wait') {
       el.payload = { nature: 'wait' };
       return;
     }
@@ -719,7 +719,7 @@ function parse(tokens, opts = {}) {
     // MÊME séparée par une espace (`C4 <!sync1`), donc toute attente précédée d'une note tombait
     // dans le trou. L'aval découpe le flux sur la NATURE, plus sur un nom : sans elle, l'attente
     // arrive en position et en durée mais rien ne s'arme dessus.
-    if (type === 'SymbolWithTriggerIn' && el.symbol) {
+    if (type === 'SymbolWithWait' && el.symbol) {
       annotateRhsNode(el.symbol, ruleActor);
       for (const t of (el.triggers || [])) annotateRhsNode(t, ruleActor);
       return;
@@ -827,7 +827,7 @@ function parse(tokens, opts = {}) {
     }
 
     // Tous les autres types (Period, NumericDuration, NilString, RawBrace,
-    // Wildcard, Variable, Homomorphism, TriggerIn…) : pas de payload.
+    // Wildcard, Variable, Homomorphism, Wait…) : pas de payload.
   }
 
   /**
@@ -3764,7 +3764,7 @@ function parse(tokens, opts = {}) {
 
     // Trigger in <!
     if (at(T.TRIGGER_IN)) {
-      return parseTriggerIn();
+      return parseWait();
     }
 
     // Hash (context in RHS)
@@ -3964,10 +3964,10 @@ function parse(tokens, opts = {}) {
       if (at(T.TRIGGER_IN)) {
         const triggerIns = [];
         while (at(T.TRIGGER_IN)) {
-          triggerIns.push(parseTriggerIn());
+          triggerIns.push(parseWait());
         }
         return {
-          type: 'SymbolWithTriggerIn',
+          type: 'SymbolWithWait',
           symbol: { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) },
           triggers: triggerIns,
         };
@@ -4457,7 +4457,7 @@ function parse(tokens, opts = {}) {
     return { type: 'TemplateSlave', name, args };
   }
 
-  function parseTriggerIn() {
+  function parseWait() {
     expect(T.TRIGGER_IN);
     const name = expect(T.IDENT).value;
     // ADRESSE DE LA SOURCE, collée au point de réception — symétrique de l'adresse de destination
@@ -4537,7 +4537,7 @@ function parse(tokens, opts = {}) {
     //
     // Mesuré le 2026-07-27 : écrit SEUL (`<!p(chan:1)`) le sac atterrissait sur le point d'attente ;
     // écrit ANCRÉ à une note (`C4 <!p(chan:1)`, la forme la plus courante) il atterrissait sur
-    // l'ASSEMBLAGE `SymbolWithTriggerIn`. La même écriture, deux propriétaires — un consommateur
+    // l'ASSEMBLAGE `SymbolWithWait`. La même écriture, deux propriétaires — un consommateur
     // qui lit le sac du point n'en trouvait aucun, alors que la donnée était là, sous un autre nœud.
     //
     // ⚠️ CE N'ÉTAIT PAS UNE PERTE, C'ÉTAIT UN DÉPLACEMENT — et c'est pire à sa façon : rien ne
@@ -4550,7 +4550,7 @@ function parse(tokens, opts = {}) {
     const suffixQualifiers = [];
     while (at(T.LPAREN) && isRuntimeQualifier()) suffixQualifiers.push(parseRuntimeQualifier());
     return {
-      type: 'TriggerIn', name, ...(address !== null ? { address } : {}), qualifiers,
+      type: 'Wait', name, ...(address !== null ? { address } : {}), qualifiers,
       ...(suffixQualifiers.length ? { suffixQualifiers } : {}),
     };
   }

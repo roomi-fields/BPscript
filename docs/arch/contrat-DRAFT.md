@@ -131,7 +131,7 @@ Le transpileur a **quatre frontières** :
 | graine au point `![@seed:N]` | parser | sortant | `InstantControl{qualifier:ProductionInline[Directive{name:'seed',value:N}]}` | toute clé ≠ `seed` **rejetée au parse** → `_srand(N)` en aval |
 | `@mm` d'environnement | bpxAst `applyEnvironmentDefaults` | sortant | `Directive{name:'mm', value:tempo, fromEnvironment:true, line:0}` | injecté EN DUR SEULEMENT si aucun `@mm`/`@tempo` déclaré (l'AST se suffit) |
 | forme `_(…)` héritée | — | exclusion | **jamais émise** | normalisée en `(…)` (`transport-control`) avant l'AST |
-| `TriggerIn`/`SymbolWithTriggerIn` | parser | sortant (hors union) | `TriggerInAST`/`SymbolWithTriggerInAST` | réécrits en sentinelles côté BPx AVANT dérivation ; jamais vus par la dérivation |
+| `Wait`/`SymbolWithWait` | parser | sortant (hors union) | `WaitAST`/`SymbolWithWaitAST` | réécrits en sentinelles côté BPx AVANT dérivation ; jamais vus par la dérivation |
 
 #### 3.1.C — Frontière VOIES SECONDAIRES : INVERSE_BP3 (`bp3ToScene`) + SORTIE_BP3 ordre (`orderTokens`) ⚙️
 
@@ -490,7 +490,7 @@ NON GÉRÉ (retour `"NON GÉRÉ: …"`, par grammaire) — déclencheurs exacts 
 #### 3.3.B — Frontière SORTIE : code BPScript ↔ étalon `AST_SPEC v1.2` ↔ consommateur réel BPx
 
 **Conforme / aligné ✅ :**
-- Union RHS (27) et LHS (8), atomes, ties, polymétrie, accord, gabarits, sections de tête, homomorphismes (dépliés, identité conservée), `TempoOp.scope`, graine `![@seed:N]` restreinte à `seed`, exclusion de `_(…)`, hors-union `TriggerIn`/`SymbolWithTriggerIn` : **émis tels que figés** par l'étalon et consommés par `loadGrammar` (frontière A §3.2.A). Vérifié : tous les `type:` de l'union sont effectivement émis par `parser.js`.
+- Union RHS (27) et LHS (8), atomes, ties, polymétrie, accord, gabarits, sections de tête, homomorphismes (dépliés, identité conservée), `TempoOp.scope`, graine `![@seed:N]` restreinte à `seed`, exclusion de `_(…)`, hors-union `Wait`/`SymbolWithWait` : **émis tels que figés** par l'étalon et consommés par `loadGrammar` (frontière A §3.2.A). Vérifié : tous les `type:` de l'union sont effectivement émis par `parser.js`.
 - `containment` + régime structurel/séquentiel : aligné sur `AST_SPEC §4.1` (décision 2026-06-20) ; le `flux:true` jadis posé sur un `(…)` nu est bien **corrigé** en `containment`.
 
 **Écarts signalés (à porter à l'attention de l'architecte) 🔶/❓ :**

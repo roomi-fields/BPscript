@@ -1081,9 +1081,9 @@ LhsElement = Symbol | Variable | Wildcard | Context | TemplateAnchor | RawBrace
 ## Éléments RHS
 
 ```
-RhsElement = Symbol | SymbolCall | SymbolWithTriggerIn | Control | Rest | Prolongation | UndeterminedRest
+RhsElement = Symbol | SymbolCall | SymbolWithWait | Control | Rest | Prolongation | UndeterminedRest
            | Period | NumericDuration | Polymetric
-           | SimultaneousGroup | OutTimeObject | InstantControl | TriggerIn
+           | SimultaneousGroup | OutTimeObject | InstantControl | Wait
            | Variable | Wildcard
            | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup | TemplateAnchor
            | TieStart | TieContinue | TieEnd
@@ -1154,13 +1154,13 @@ Forme parsée d'un contrôle BP3 écrit directement dans le flux : `vel(120)` �
 `goto(2,1)` → `{ name:"goto", args:["2","1"] }`, `striated` → `{ name:"striated", args:[] }`.
 Distinct de l'`InstantControl` (`!(...)`) et du `RuntimeQualifier` (`(...)` suffixe d'un symbole).
 
-### `SymbolWithTriggerIn`
+### `SymbolWithWait`
 
 ```
-SymbolWithTriggerIn {
-  type: "SymbolWithTriggerIn"
+SymbolWithWait {
+  type: "SymbolWithWait"
   symbol: Symbol           // le symbole porteur
-  triggers: TriggerIn[]    // un ou plusieurs trigger-in attachés
+  triggers: Wait[]    // un ou plusieurs trigger-in attachés
 }
 ```
 
@@ -1171,11 +1171,11 @@ remplace pas. (Corrigé le 2026-07-26 : l'annotateur ne descendait pas dans `sym
 ancrée perdait sa nature — un consommateur qui trie les feuilles par nature la perdait en silence,
 alors que le point d'attente est là POUR la rendre observable.)
 
-### `TriggerIn` — le POINT D'ATTENTE
+### `Wait` — le POINT D'ATTENTE
 
 ```
-TriggerIn {
-  type: "TriggerIn"
+Wait {
+  type: "Wait"
   name: string                       // le trigger attendu
   qualifiers: Qualifier[]            // `[…]` éventuels
   suffixQualifiers?: RuntimeQualifier[]   // `(…)` — porte le CANAL : `<!sync1(chan:1)`
@@ -1191,7 +1191,7 @@ chargement.
 
 **Nature `wait`** (contrat `BPx/docs/AST_SPEC.md:461`, posée le même jour). C'était le SEUL élément
 de membre droit sans nature, et un élément qui vit dans l'arbre sans en porter une n'y vit qu'à
-moitié. Le nom dit le **rôle**, pas la graphie : `<!nom` est la surface, `TriggerIn` le type de
+moitié. Le nom dit le **rôle**, pas la graphie : `<!nom` est la surface, `Wait` le type de
 nœud, `wait` ce que le jeton EST pour le temps — cohérent avec les six autres valeurs.
 
 > ⚠️ **Ne pas confondre avec un silence.** Un silence **occupe** du temps ; une attente le
@@ -1336,10 +1336,10 @@ Exemples :
 - `Sa!dha [phase=2]` -> `{ primary: Symbol("Sa"), secondaries: [Symbol("dha")] }` + rule flag `[phase=2]`
 - `lambda [Num_a=20, Num_b=0]` -> `NilString` + rule flags
 
-### `TriggerIn`
+### `Wait`
 
 ```
-TriggerIn { type: "TriggerIn", name: string, qualifiers: Qualifier[] }
+Wait { type: "Wait", name: string, qualifiers: Qualifier[] }
 ```
 
 ### `OutTimeObject`

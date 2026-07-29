@@ -30,13 +30,13 @@ const rhs = (regle) => {
 {
   const { err, rhs: r } = rhs('S -> <!sync1 C4 D4');
   ok(err.length === 0, `1. '<!sync1' doit compiler — reçu : ${err.map((e) => e.message || e).join(' | ')}`);
-  ok(r[0]?.type === 'TriggerIn' && r[0]?.name === 'sync1',
+  ok(r[0]?.type === 'Wait' && r[0]?.name === 'sync1',
      `1. il doit être le PREMIER élément du RHS, pas une sentinelle ni un oubli — reçu : ${JSON.stringify(r.map((e) => e.type))}`);
   ok(r.length === 3, `1. il ne doit ni remplacer ni absorber ce qui suit — reçu ${r.length} éléments`);
 }
 {
   const { rhs: r } = rhs('S -> -<!sync1 C4 D4');
-  ok(r.map((e) => e.type).join(',') === 'Rest,TriggerIn,Symbol,Symbol',
+  ok(r.map((e) => e.type).join(',') === 'Rest,Wait,Symbol,Symbol',
      `1. sa POSITION dans la séquence est portée telle qu'écrite — reçu : ${JSON.stringify(r.map((e) => e.type))}`);
 }
 
@@ -55,7 +55,7 @@ const rhs = (regle) => {
 // nature perdait la note sans un mot.
 {
   const { rhs: r } = rhs('S -> C4<!sync1 D4');
-  ok(r[0]?.type === 'SymbolWithTriggerIn', `3. la forme ancrée doit être portée — reçu : ${r[0]?.type}`);
+  ok(r[0]?.type === 'SymbolWithWait', `3. la forme ancrée doit être portée — reçu : ${r[0]?.type}`);
   ok(r[0]?.symbol?.payload?.nature === 'sounding',
      `3. la note ancrée garde sa nature SOUNDING — reçu : ${JSON.stringify(r[0]?.symbol?.payload)}`);
   ok(r[0]?.triggers?.[0]?.name === 'sync1', '3. le point d\'attente reste attaché à sa note');
@@ -68,7 +68,7 @@ const rhs = (regle) => {
 // On ne RETIRE pas un témoin quand le trou se comble, on le RETOURNE : il gardait l'absence,
 // il garde maintenant la présence. Sinon la valeur pourrait disparaître sans que rien ne bronche.
 //
-// ⚠️ LE NOM DIT LE RÔLE, PAS LA GRAPHIE : `<!nom` est la surface, `TriggerIn` le type de nœud,
+// ⚠️ LE NOM DIT LE RÔLE, PAS LA GRAPHIE : `<!nom` est la surface, `Wait` le type de nœud,
 // `wait` ce que le jeton EST pour le temps. Et NE PAS CONFONDRE AVEC UN SILENCE — un silence
 // OCCUPE du temps, une attente le SUSPEND. Les deux se ressemblent en prose et se comportent à
 // l'opposé ; c'est pourquoi `rest` aurait été le pire choix possible.
@@ -123,7 +123,7 @@ const PROPRIETES = [
 const pointsDe = (rhs, out = []) => {
   if (Array.isArray(rhs)) { for (const x of rhs) pointsDe(x, out); return out; }
   if (!rhs || typeof rhs !== 'object') return out;
-  if (rhs.type === 'TriggerIn') out.push(rhs);
+  if (rhs.type === 'Wait') out.push(rhs);
   for (const k of ['symbol', 'triggers', 'voices', 'elements', 'content']) if (rhs[k]) pointsDe(rhs[k], out);
   return out;
 };
@@ -149,7 +149,7 @@ ok(cellules === FORMES.length * PROPRIETES.length && cellules >= 35,
    + `${PROPRIETES.length} propriété(s)`);
 
 // ⚠️ ET LE SAC APPARTIENT AU POINT, PAS À L'ASSEMBLAGE. Mesuré le 2026-07-27 : écrit sur une forme
-// ancrée, il atterrissait sur le nœud `SymbolWithTriggerIn`. Ce n'était pas une PERTE mais un
+// ancrée, il atterrissait sur le nœud `SymbolWithWait`. Ce n'était pas une PERTE mais un
 // DÉPLACEMENT — et c'est pire à sa façon : rien ne manque, donc rien ne peut le signaler.
 {
   const { rhs: r } = rhs('S -> C4 <!sync1(chan:1) D4');
@@ -203,9 +203,9 @@ for (const [quoi, regle] of ADRESSES_MALFORMEES) {
 // ⚠️ ET LES DEUX FORMES LÉGITIMES SURVIVENT — un fail-loud qui emporte le cas valide avec le cas
 // fautif n'est pas une garde, c'est une régression. Le témoin est ici pour que le refus reste étroit.
 for (const [quoi, regle, attendu] of [
-  ["l'adresse COLLÉE des deux côtés", 'S -> C4 <!sync1.60 D4', ['SymbolWithTriggerIn', 'Symbol']],
-  ['le découpage ESPACÉ des deux côtés', 'S -> C4 <!sync1 . 60 D4', ['SymbolWithTriggerIn', 'Period', 'NumericTerminal', 'Symbol']],
-  ["l'attente SANS adresse", 'S -> C4 <!sync1 D4', ['SymbolWithTriggerIn', 'Symbol']],
+  ["l'adresse COLLÉE des deux côtés", 'S -> C4 <!sync1.60 D4', ['SymbolWithWait', 'Symbol']],
+  ['le découpage ESPACÉ des deux côtés', 'S -> C4 <!sync1 . 60 D4', ['SymbolWithWait', 'Period', 'NumericTerminal', 'Symbol']],
+  ["l'attente SANS adresse", 'S -> C4 <!sync1 D4', ['SymbolWithWait', 'Symbol']],
 ]) {
   const { err, rhs: r } = rhs(regle);
   ok((err || []).length === 0,
