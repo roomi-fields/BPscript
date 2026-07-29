@@ -133,6 +133,31 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
    (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois,
    référencé ailleurs.
 
+### ⛔ ON SE PRÉVIENT À L'ÉCRITURE, PAS AU PUSH (règle de Romain, 2026-07-29)
+
+**Dans cet atelier, les dépôts consomment la SOURCE l'un de l'autre — pas un paquet publié.** Une
+modification d'une surface partagée (nom de type d'un nœud d'arbre, champ de contrat, signature
+exportée, graphie du langage) est donc **EN PRODUCTION À LA SECONDE OÙ ELLE EST ÉCRITE** ; le push
+ne fait que la rendre **IRRÉVERSIBLE**. Prévenir « avant de pousser » est la bonne précaution **au
+mauvais moment** : les voisins sont déjà rouges.
+
+**LE GESTE** : dès que tu touches une surface partagée, tu préviens ses consommateurs — **avec les
+sites à changer chez eux** — et tu **vérifies qu'ils ont basculé AVANT de pousser**. L'ancien nom
+sort dans le même mouvement ; le garder en parallèle est la bifurcation interdite du 2026-07-19.
+
+⚠️ **CE QUI A DÉCLENCHÉ LA RÈGLE EST DE MOI, et ce n'est pas théorique.** Renommage du type du
+point d'attente poussé à 14h15 ; `LoadGrammarError: Unsupported RHS element type 'SymbolWithWait'`
+chez BPx, **trois bancs rouges chez Kairos, toute la chaîne cessant de charger**. J'avais annoncé
+la précaution — elle portait sur le push. Et j'avais l'accord explicite de BPx, qui m'avait dit
+« poussez d'abord, je suis dans la foulée » avec un raisonnement sur l'ordre de la fenêtre : **leur
+accord était juste sur l'ordre et faux sur le moment**, parce qu'eux aussi pensaient que le push
+était la publication. Un GO reçu ne déplace pas le moment où le mal est fait.
+
+**Corollaire déjà payé le même jour, dans l'autre sens** : mon arbre de travail non committé a
+bloqué Kairos et Kanopi toute une matinée. Même cause exactement — ce que j'écris tourne chez eux.
+Donc : *travailler* sur une surface partagée est déjà un acte public, et la fenêtre stable
+s'annonce avant d'écrire, pas après.
+
 ### Un fail-loud de langage est une action de FRONTIÈRE (architecte 2026-07-09)
 Quand une forme jusque-là acceptée devient une erreur, les consommateurs aval **live-importent**
 la source et leur portillon casse en minutes (précédent : chantier durée 2026-07-05, garde des
