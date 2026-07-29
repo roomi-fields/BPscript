@@ -131,6 +131,40 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   ok(r.ok && r.horsSujet, '3. une scène qui ne compile pas est HORS SUJET, pas refusée');
 }
 
+// ── 3ante. « RÉFÉRENCE INDISPONIBLE » N'EST PAS « MIGRATION DANGEREUSE » ─────
+// ⚠️ RÈGLE DE KANOPI (2026-07-28), transmise par l'architecte le 2026-07-29 : UN COMPARATEUR NE
+// PEUT PAS JUGER UNE MIGRATION EN PRENANT POUR RÉFÉRENCE L'ÉTAT QUE CETTE MIGRATION RÉPARE. Ils
+// l'ont mesurée en me voyant refuser 52 de leurs scènes à tort — l'état d'avant ne produisait
+// plus rien, non parce que le renommage était risqué, mais parce que la règle d'unicité l'avait
+// rendu invalide la veille.
+//
+// LES DEUX SENS COMPTENT ÉGALEMENT, et c'est tout l'objet de ce bloc : si je me contentais du
+// premier témoin, un outil qui déclarerait « référence indisponible » sur TOUT passerait au vert
+// en n'accusant plus jamais rien — exactement l'excuse universelle que la règle ne demande pas.
+// Le second témoin est donc le plus important : une production qui CHANGE reste un vrai refus.
+// ⚠️⚠️ CE QUE CE BLOC NE PROUVE PAS, ET IL FAUT LE LIRE AVANT SON VERT.
+// Le versant « la classification DOIT se déclencher » n'a AUCUN témoin : je n'ai su construire
+// aucune scène où l'avant ne produit pas et où le migré produit. Mesuré sur les 202 scènes de la
+// bibliothèque : ce verdict se déclenche ZÉRO fois aujourd'hui. Il implémente une règle transmise
+// pour l'avenir, pas un défaut reproductible ce matin — et un vert ici ne dit rien de sa justesse.
+// Ce qui EST prouvé ci-dessous, c'est l'autre moitié, celle qui compte le plus : il n'excuse pas
+// tout. Écrire ce qu'un garde NE couvre PAS vaut mieux qu'un vert qui laisse croire qu'il couvre.
+{
+  // ⚠️ LE SENS QUI DÉMASQUE L'EXCUSE UNIVERSELLE. Une scène que le moteur ne sait dériver NI
+  // avant NI après (ici `randomize {…}[shuffle]`, la ligne exacte qui bloque `trySrand` dans la
+  // bibliothèque) a une cause PROPRE : elle doit rester un vrai refus, jamais « sans référence ».
+  // Ce témoin a été RÉÉCRIT : le premier ne passait même pas par la branche testée, donc il
+  // restait vert quand je remplaçais la condition par `true`. Un témoin qui n'atteint pas le code
+  // qu'il juge est un témoin absent — et il a exactement la même couleur qu'un témoin qui tient.
+  const r = migrerSource('@controls\n@core\n@alphabet.western\n@mode:random\n'
+    + 'S -> A\nA -> randomize {C4 B4 E4}[shuffle]');
+  ok(r.ok === false, '3ante. la scène indérivable des deux côtés reste REFUSÉE');
+  ok(r.referenceIndisponible !== true,
+    `3ante. SE TAIT — et elle n'est PAS excusée en « sans référence » (reçu : ${r.motif})`);
+  ok(/avant ET après/.test(r.motif || ''),
+    '3ante. le motif doit dire que les DEUX côtés sont muets — c\'est ce qui la distingue');
+}
+
 // ── 3bis. LE COMPARATEUR SAIT-IL VOIR UNE DIFFÉRENCE ? ───────────────────────
 // ⚠️ CE BLOC EXISTE PARCE QU'UNE INJECTION N'A RIEN FAIT ROUGIR. J'avais débranché la comparaison
 // de production — le cœur de sécurité de l'outil, ce qui l'empêche d'écrire quand la musique

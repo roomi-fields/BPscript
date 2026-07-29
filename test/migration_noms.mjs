@@ -330,7 +330,42 @@ export function migrerSource(source, suffixe = '_r') {
 
   const avant = production(source);
   if (avant.erreur) {
-    return { ok: false, motif: `production INVÉRIFIABLE avant migration (${avant.erreur}) — on ne renomme pas ce qu'on ne sait pas comparer` };
+    // ⚠️ UN COMPARATEUR NE PEUT PAS JUGER UNE MIGRATION EN PRENANT POUR RÉFÉRENCE L'ÉTAT QUE CETTE
+    // MIGRATION RÉPARE. Règle formulée par Kanopi le 2026-07-28 après avoir mesuré que je refusais
+    // 52 de leurs scènes à tort, et transmise par l'architecte le 2026-07-29. Elle vaut bien au-delà
+    // du cas : c'est la même famille qu'une preuve valide ailleurs, appliquée là où elle ne prouve
+    // plus rien.
+    //
+    // LE MÉCANISME EXACT : depuis que la règle d'unicité existe, une scène PORTEUSE du défaut ne
+    // compile plus. Sa production est donc vide — non parce que la migration serait dangereuse,
+    // mais parce que l'état d'AVANT a cessé d'être valide le jour où on a décidé qu'il était
+    // fautif. Refuser là-dessus accuse la migration de ce qu'elle vient réparer.
+    //
+    // ON NE CERTIFIE RIEN POUR AUTANT — il n'y a rien à comparer, et inventer une équivalence
+    // serait pire que refuser. On SÉPARE les deux verdicts, parce qu'ils appellent des gestes
+    // opposés : « la production changerait » se corrige à la main, « la référence n'existe pas »
+    // se mesure autrement. Et on NOMME la technique qui marche, celle que Kanopi a employée deux
+    // fois : rejouer l'outil dans le monde où l'AVANT était encore valide (le compilateur d'alors,
+    // extrait en lecture seule), puis vérifier chaque résultat avec le compilateur courant.
+    // ⚠️ LE DISCRIMINANT EST « L'APRÈS PRODUIT-IL ? », ET C'EST UNE CORRECTION D'AUTOCRITIQUE.
+    // J'avais d'abord classé sur « les erreurs d'avant contiennent-elles une collision ? ». En
+    // injectant l'excuse universelle (`if (true)`) dans ce test, RIEN N'A ROUGI : la condition
+    // était VRAIE chaque fois qu'on l'atteignait — on n'arrive ici qu'avec une collision, donc
+    // avec son message. Un discriminant vacant a exactement la tête d'un discriminant.
+    // Le seul critère qui SÉPARE quelque chose est celui-ci : si l'APRÈS produit là où l'AVANT
+    // ne produit pas, la migration a RÉPARÉ, et l'absence de référence lui est imputable à tort.
+    // Si NI l'un NI l'autre ne produit, l'échec a une cause propre — vrai refus.
+    let migreEssai = amalgame ? amalgame.source : source;
+    for (const nom of enCollision.keys()) migreEssai = renommer(migreEssai, nom, `${nom}${suffixe}`);
+    const apresEssai = production(migreEssai);
+    if (!apresEssai.erreur) {
+      return { ok: false, referenceIndisponible: true,
+        motif: `RÉFÉRENCE INDISPONIBLE — l'état d'avant ne produit rien (${avant.erreur}) là où `
+             + `l'état migré produit : c'est le défaut réparé qui empêche la comparaison, pas le `
+             + `renommage. Comparer ici ne prouverait rien. Mesurer en rejouant l'outil sur le `
+             + `compilateur où l'AVANT était valide, puis revérifier avec le compilateur courant.` };
+    }
+    return { ok: false, motif: `production INVÉRIFIABLE avant ET après migration (${avant.erreur}) — on ne renomme pas ce qu'on ne sait pas comparer` };
   }
   let migre = amalgame ? amalgame.source : source;
   const renommages = amalgame ? [...amalgame.gestes] : [];
@@ -413,7 +448,7 @@ if (estPrincipal) {
   };
   cibles.forEach(collecter);
 
-  let migres = 0, inchanges = 0, refuses = 0, horsSujet = 0;
+  let migres = 0, inchanges = 0, refuses = 0, horsSujet = 0, sansReference = 0;
   for (const f of fichiers.sort()) {
     const source = readFileSync(f, 'utf8');
     const r = migrerSource(source, suffixe);
@@ -421,8 +456,11 @@ if (estPrincipal) {
     if (r.horsSujet) { horsSujet++; continue; }
     if (r.aucunChangement) { inchanges++; continue; }
     if (!r.ok) {
-      refuses++;
-      console.log(`✗ ${nom}\n    ${r.motif}`);
+      // Deux verdicts SÉPARÉS parce qu'ils appellent des gestes opposés : « la production
+      // changerait » se reprend à la main ; « la référence n'existe plus » se mesure autrement.
+      // Les confondre noie le seul refus qui accuse vraiment la migration.
+      if (r.referenceIndisponible) sansReference++; else refuses++;
+      console.log(`${r.referenceIndisponible ? '·' : '✗'} ${nom}\n    ${r.motif}`);
       if (r.renommages?.length) console.log(`    renommages tentés : ${r.renommages.map((x) => `${x.de}→${x.vers}`).join(', ')}`);
       continue;
     }
@@ -433,13 +471,18 @@ if (estPrincipal) {
   }
   console.log(`\n${fichiers.length} scène(s) · ${migres} à migrer (production vérifiée identique)`
     + ` · ${inchanges} sans collision · ${horsSujet} qui ne compilent pas (hors sujet)`
-    + ` · ${refuses} REFUSÉE(S)`);
+    + ` · ${sansReference} SANS RÉFÉRENCE · ${refuses} REFUSÉE(S)`);
   console.log(ecrire ? 'Écriture effectuée sur les scènes vérifiées.'
     : 'Essai à blanc : RIEN n\'a été écrit. Relancer avec --ecrire pour appliquer.');
-  if (refuses) {
-    console.log('⚠️ Une scène refusée n\'est PAS un détail : soit sa production changerait, soit');
-    console.log('   elle n\'est pas vérifiable. Dans les deux cas elle se migre à la main, et la');
-    console.log('   production se compare avant de committer.');
-    process.exit(1);
+  if (sansReference) {
+    console.log('· SANS RÉFÉRENCE n\'accuse PAS la migration : l\'état d\'avant ne produit plus rien');
+    console.log('  parce qu\'il porte le défaut qu\'on répare. Rejouer l\'outil sur le compilateur où');
+    console.log('  cet avant était valide, puis revérifier chaque résultat avec le compilateur courant.');
   }
+  if (refuses) {
+    console.log('⚠️ Une scène REFUSÉE n\'est PAS un détail : sa production changerait, ou elle n\'est');
+    console.log('   pas vérifiable pour une raison qui lui est propre. Elle se migre à la main, et la');
+    console.log('   production se compare avant de committer.');
+  }
+  if (refuses || sansReference) process.exit(1);
 }
