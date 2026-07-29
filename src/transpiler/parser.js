@@ -2413,12 +2413,45 @@ function parse(tokens, opts = {}) {
         if (peek(1).type === T.IDENT && peek(1).value === 'templates') {
           throw new ParseError(`'@templates' (pluriel, v0.7) n'existe plus — écrire '@template' (singulier)`, peek(1));
         }
+        const dirTok = current();
+        // Le NOM se lit sur le jeton, pas sur le nœud produit : certaines directives (`@var`…)
+        // rendent un nœud sans champ `name`, et le message annonçait alors « @undefined » — un
+        // refus qui ne nomme pas la faute vaut à peine mieux qu'un silence.
+        const dirNom = peek(1) && peek(1).value ? String(peek(1).value) : '?';
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
           blockMode = dir.runtime;  // @mode:random → runtime='random'
           currentMode = blockMode;  // portée du bloc courant seulement (pas d'héritage)
           blockModifiers = dir.modifiers || null;
           currentModifiers = blockModifiers;
+        } else if (dir.name !== 'mode') {
+          // ⚠️ ELLES ÉTAIENT PARSÉES PUIS JETÉES — SANS UN MOT (Romain, 2026-07-29).
+          //
+          // Ce `while` lisait toute directive posée entre deux blocs de règles et ne gardait que
+          // `@mode`. Les autres étaient construites, puis abandonnées ici même : l'auteur écrivait
+          // `@var v` ou `@alphabet.sargam`, la scène compilait sans une erreur, et RIEN n'avait été
+          // déclaré. C'est le mode d'échec de la flèche du moteur historique, en pire — là au moins
+          // ça ne compilait pas.
+          //
+          // MESURÉ, ET C'EST L'ESPACE QUI COMPTE, PAS LA FORME DU TICKET : le signalement portait
+          // sur `@var`. Le balayage des directives réservées en trouve VINGT-QUATRE dans le même
+          // cas — alphabet, tuning, octaves, transport, eval, actor, controls, var, in, alias, mm,
+          // tempo, duration, meter, quantization, qclock, transpose, diapason, transcription,
+          // settings, filter, modulation, ins, test_alphabets. Garder la seule forme signalée aurait
+          // laissé vivre les vingt-trois autres.
+          //
+          // ⚠️ ET `@mode` RESTE LÉGITIME ICI, ce n'est pas une exception de complaisance : il porte
+          // le mode de la sous-grammaire QUI SUIT, et 67 scènes du corpus sur 263 en vivent. Un
+          // refus en bloc les aurait toutes cassées — la même faute que le témoin qui aurait refusé
+          // 120 scènes sur 333 le 2026-07-28. Le corpus a été mesuré AVANT d'écrire ce refus : une
+          // seule scène y perd quelque chose (`bells.bps`, trois directives aujourd'hui muettes).
+          throw new ParseError(
+            `'@${dirNom}' est écrit APRÈS des règles, et à cette place il ne déclare RIEN : `
+            + `il était accepté puis jeté en silence. Les déclarations précèdent les règles — `
+            + `remonter cette ligne avant la première règle de la scène. `
+            + `(Seul '@mode' se place ici : il gouverne la sous-grammaire qui suit.)`,
+            dirTok,
+          );
         }
         skipNewlines();
       }
