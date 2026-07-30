@@ -296,6 +296,17 @@ function resolveActors(ast) {
  */
 function verifierActeursReferences(ast, errors) {
   const declares = new Set((ast.actors || []).map((a) => a.name));
+  // ⚠️ L'ACTEUR IMPLICITE N'EXISTE PAS ENCORE ICI, et c'est un ORDRE DE PASSES, pas un oubli :
+  // il est fabriqué plus loin (`applyDefaultActor`, bpxAst.js) quand la scène ne déclare aucun
+  // `@actor`. Sans cette ligne, `scene.C4` était refusé par « Acteur inconnu » alors que `scene`
+  // est précisément le nom que la décision du 2026-07-30 donne pour pouvoir le DÉSIGNER —
+  // « la réponse est la notation pointée, pas la forme nue en @ ». Le renommage seul ne suffisait
+  // donc pas : il fallait aussi que la validation sache que ce nom sera là.
+  // ⚠️ ET C'EST BIEN « SI ET SEULEMENT SI » : quand la scène déclare ses acteurs, il n'y a PAS
+  // d'acteur implicite, donc `scene.X` doit rester refusé — sinon on offrirait un nom qui ne
+  // désigne rien. Mesuré : cette ligne n'ACCEPTE que des formes jusque-là refusées, elle n'en
+  // refuse aucune de nouvelle.
+  if (declares.size === 0) declares.add('scene');
   const vus = new Set();
 
   const visiter = (elements) => {

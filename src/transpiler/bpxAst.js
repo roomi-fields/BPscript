@@ -565,7 +565,7 @@ function defaultActorTransport() {
  * @actor (cas `.bps` simple, `.gr`, cv-adsr) — LAN-5, validé Romain 2026-06-26.
  *
  * POURQUOI : KAI-9 supprime la résolution hôte. Avant, l'hôte (kanopi bpx-adapter.ts)
- * injectait un acteur synthétique `{name:'default', transport:audio}` quand aucun @actor
+ * injectait un acteur synthétique `{name:'scene', transport:audio}` quand aucun @actor
  * n'était déclaré, pour qu'une scène simple emprunte le MÊME chemin orchestré qu'une scène
  * multi-acteurs (mono = orchestration à un acteur). On REMONTE ce défaut dans l'AST : BPx
  * ne fait que le PORTER, il ne l'invente plus ; l'hôte cesse de le synthétiser.
@@ -873,9 +873,17 @@ function applyDefaultActor(ast) {
       references.push({ type: 'ActorReference', category: 'tuning', name: tun, line: 0 });
     }
   }
+  // ⚠️ IL S'APPELAIT `default` JUSQU'AU 2026-07-30 (décision Romain, en direct :
+  // `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`). Son motif n'est pas
+  // esthétique : il refusait que ce qui s'appelle normalement en notation pointée remonte en `@`.
+  // Nommer l'acteur implicite `scene` donne à l'auteur de quoi DÉSIGNER ce qui n'appartient à
+  // personne — quand rien n'est déclaré, le contenu appartient bien à la scène.
+  // LE MOT N'ÉTAIT PAS LIBRE : trois scènes de la bibliothèque l'employaient comme nom de drapeau.
+  // Elles sont refusées par la règle d'unicité et migrées par leur propriétaire — c'est le mode qui
+  // CRIE, pas celui qui se tait, et c'est pour ça qu'on peut le prendre.
   ast.actors = [{
     type: 'ActorDirective',
-    name: 'default',
+    name: 'scene',
     properties,
     references,
     // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
