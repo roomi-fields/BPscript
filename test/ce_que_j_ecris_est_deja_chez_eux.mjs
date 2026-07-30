@@ -49,11 +49,18 @@ const CONSOMMATEURS = [
   { depot: 'bp3-frontend', lienDirect: false, note: 'importe par chemin relatif' },
   { depot: 'runtime-MIDI', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB' },
   { depot: 'atlas', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure" },
-  { depot: 'runtime-audio', lienDirect: false, note: 'bancs de frontière et de voix' },
   { depot: 'runtime-ui', lienDirect: false, note: "vues de texte : lit l'arbre et ses annotations" },
 ];
+// ⚠️ `runtime-audio` A ÉTÉ RETIRÉ LE 2026-07-30, ET SON RETRAIT EST UNE MESURE, PAS UN OUBLI :
+// ses trois occurrences sont des COMMENTAIRES, dont un qui dit son intention en toutes lettres —
+// « miroir, pour ne pas coupler les dépôts ». Il ne lit pas ma source, il en garde une COPIE.
+// Ce n'est donc pas un consommateur au sens de ce garde, et l'y laisser rendait le compte faux.
+// MAIS LA COPIE, ELLE, EXISTE : c'est la famille « un juge qui rejoue une copie ne voit pas la
+// dérive qu'il garde », et leur commentaire cite un commit de mon dépôt — une clame sur l'amont.
+// Signalé chez eux ; je n'écris pas dans leur dépôt.
+//
 // ⚠️ CES TROIS-LÀ ONT ÉTÉ TROUVÉS PAR CE GARDE À SON PREMIER PASSAGE, le 2026-07-30. Je croyais
-// avoir CINQ consommateurs, il y en a HUIT — et l'un des trois est `atlas`, dont l'oracle du
+// avoir CINQ consommateurs, il y en a HUIT, dont SEPT réels — et l'un des trois est `atlas`, dont l'oracle du
 // langage COMPILE avec mon compilateur : une forme que je refuse casse sa mesure, et c'est
 // l'outil que tout l'écosystème interroge pour savoir ce qui est valide. Je ne l'aurais pas
 // prévenu. C'est la meilleure preuve que la liste ne devait pas rester dans ma tête.
@@ -67,10 +74,17 @@ function lecteurs(depot) {
   const racine = path.join(ATELIER, depot);
   if (!existsSync(racine)) return null;
   try {
+    // ⚠️ ON NE COMPTE QUE LES LIGNES DE CODE, PAS LES MENTIONS EN COMMENTAIRE. Sans le filtre,
+    // ce garde annonçait un PLAFOND présenté comme un compte : Kairos a mesuré chez lui que sur
+    // 51 fichiers trouvés par un motif naïf, UNE SEULE était du code — les cinquante autres
+    // citaient ses chemins dans des commentaires, ce qui est la bonne pratique adoptée le 29.
+    // « Une mention n'est pas un lien » (Kairos, 2026-07-30). Mon premier chiffre a été relayé à
+    // Romain avant que je le dégonfle.
     const trouves = execFileSync('bash', ['-c',
       `find ${JSON.stringify(racine)} \\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \\) `
       + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' 2>/dev/null "
-      + "| xargs grep -l \"BPscript/lib\\|BPscript/src\\|from 'bpscript\\|require('bpscript\" 2>/dev/null | wc -l",
+      + "| while read f; do grep -H \"BPscript/lib\\|BPscript/src\\|from 'bpscript\\|require('bpscript\" \"$f\" 2>/dev/null "
+      + "| grep -qv \"^[^:]*: *\\(//\\|\\*\\)\" && echo \"$f\"; done | wc -l",
     ], { encoding: 'utf-8' });
     return parseInt(trouves.trim(), 10) || 0;
   } catch { return 0; }
@@ -171,7 +185,7 @@ ok(nouveaux.length === 0,
 }
 
 // ── TÉMOIN ANTI-RÉTRÉCISSEMENT ───────────────────────────────────────────────
-ok(CONSOMMATEURS.length >= 8, 'TÉMOIN — la liste ne s\'est pas vidée');
+ok(CONSOMMATEURS.length >= 7, 'TÉMOIN — la liste ne s\'est pas vidée');
 ok(CONSOMMATEURS.some((c) => c.lienDirect),
   'TÉMOIN — au moins un consommateur par LIEN doit être suivi : c\'est le cas où écrire = publier');
 
