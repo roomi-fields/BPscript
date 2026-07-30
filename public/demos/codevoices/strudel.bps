@@ -1,0 +1,18 @@
+// Voix de code — STRUDEL (patterns, live coding).
+// L'ACTEUR QUALIFIE SON BLOC PAR LE POINT (`bass.` devant les accents graves) : cette écriture
+// rend le LANGAGE et l'IDENTITÉ de la voix. La tête de règle porte un nom DISTINCT de l'acteur —
+// une tête qui reprend un nom d'acteur est un amalgame, tranché erreur grave par Romain le
+// 2026-07-28. Un producteur `eval.<langage>` sort en natif : il ne porte PAS de `transport`.
+// (Forme TAGUÉE, sans acteur : `strudel: note("c2 eb2")` — elle donne le langage seul, pas
+// l'identité, et le bloc reste un orphelin assumé.)
+// Motif SYNTHÉ (sonne sans réseau) ; pour des samples : `@library.strudel "dirt-samples"`
+// puis `s("bd sd hh hh")`. Décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md + [299].
+
+@core
+@tempo:120
+
+@actor bass  eval.strudel
+
+S -> bass_r bass_r bass_r bass_r
+
+bass_r -> bass.`note("c2 eb2 g2 c3").s("sawtooth")`

@@ -1,0 +1,18 @@
+// Voix de code — MERCURY (live coding minimal).
+// L'ACTEUR QUALIFIE SON BLOC PAR LE POINT (`lead.` devant les accents graves) : cette écriture
+// rend le LANGAGE et l'IDENTITÉ de la voix. La tête de règle porte un nom DISTINCT de l'acteur —
+// une tête qui reprend un nom d'acteur est un amalgame, tranché erreur grave par Romain le
+// 2026-07-28. Un producteur `eval.<langage>` sort en natif : il ne porte PAS de `transport`.
+// Rappel timing (ratifié) : `set tempo 110` dans le patch serait ÉCRASÉ — la voix
+// est asservie au tempo maître de Kronos ; son rythme s'échelonne, polytempo = ratio.
+
+@core
+@tempo:110
+
+@actor lead  eval.mercury
+
+S -> lead_r lead_r
+
+lead_r -> lead.`new synth saw
+  note(0 3 5 7) time(1/8)
+  shape(1 200)`

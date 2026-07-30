@@ -1,0 +1,19 @@
+// Voix de code — CSOUND (synthèse audio).
+// L'ACTEUR QUALIFIE SON BLOC PAR LE POINT (`synth.` devant les accents graves) : cette écriture
+// rend le LANGAGE et l'IDENTITÉ de la voix. La tête de règle porte un nom DISTINCT de l'acteur —
+// une tête qui reprend un nom d'acteur est un amalgame, tranché erreur grave par Romain le
+// 2026-07-28. Un producteur `eval.<langage>` sort en natif : il ne porte PAS de `transport`.
+// Le tempo absolu éventuel du patch est ÉCRASÉ : Kronos est seul maître (modèle DAW,
+// décision 2026-07-04-modele-timing-voix-de-code.md).
+
+@core
+@tempo:96
+
+@actor synth  eval.csound
+
+S -> synth_r synth_r synth_r synth_r
+
+synth_r -> synth.`instr 1
+  aOut oscili 0.3, 220
+  outs aOut, aOut
+endin`

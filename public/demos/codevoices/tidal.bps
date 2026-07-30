@@ -1,0 +1,22 @@
+// Voix de code — TIDALCYCLES (patterns, Haskell).
+// DEUX FORMES MONTRÉES, ET LEUR DIFFÉRENCE EST LE SUJET DE CETTE DÉMO :
+//   1. L'ACTEUR QUALIFIE SON BLOC PAR LE POINT (`beat.` devant les accents graves) — cette
+//      écriture rend le LANGAGE et l'IDENTITÉ de la voix. La tête de règle porte un nom DISTINCT
+//      de l'acteur : une tête qui reprend un nom d'acteur est un amalgame, tranché erreur grave
+//      par Romain le 2026-07-28.
+//   2. LE BLOC TAGUÉ (`sc:`) reste SANS acteur, et c'est VOULU — un bloc tagué donne le langage
+//      seul, pas d'identité, donc il n'a pas d'entrée chez le répartiteur. C'est un ORPHELIN
+//      ASSUMÉ. ⚠️ NE PAS LE « RÉPARER » : un balayage qui exigerait un acteur sur TOUS les blocs
+//      accuserait cette scène à tort (le défaut exact que Kanopi a mesuré le 2026-07-29).
+// Un producteur `eval.<langage>` sort en natif : il ne porte PAS de `transport`.
+// NB : Tidal/SC exigent un backend natif (SuperDirt) — cette démo montre la FORME
+// des voix ; en navigateur elle ne sonne pas (pas de serveur SC).
+
+@core
+@tempo:120
+
+@actor beat  eval.tidal
+
+S -> beat_r beat_r beat_r `sc: Synth.new(\ping)`
+
+beat_r -> beat.`d1 $ sound "bd sn hh sn" # gain 0.9`

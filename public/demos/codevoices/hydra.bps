@@ -1,0 +1,16 @@
+// Voix de code — HYDRA (synthé vidéo / visuels).
+// L'ACTEUR QUALIFIE SON BLOC PAR LE POINT (`visuals.` devant les accents graves) : cette écriture
+// rend le LANGAGE et l'IDENTITÉ de la voix. La tête de règle porte un nom DISTINCT de l'acteur —
+// une tête qui reprend un nom d'acteur est un amalgame, tranché erreur grave par Romain le
+// 2026-07-28. Un producteur `eval.<langage>` sort en natif : il ne porte PAS de `transport`.
+// Une voix de code n'est pas forcément sonore : hydra rend de l'image, routée par
+// son runtime. Le container (début/fin/boucle) reste piloté par Kronos.
+
+@core
+@tempo:120
+
+@actor visuals  eval.hydra
+
+S -> visuals_r visuals_r
+
+visuals_r -> visuals.`osc(10, 0.1, 0.8).rotate(0.5).out()`
