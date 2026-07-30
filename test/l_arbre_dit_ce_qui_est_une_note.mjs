@@ -146,14 +146,44 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
       `2bis. '${premiere}' (${nom}) DOIT rester une note — et depuis le 2026-07-30 c'est le champ DÉCLARÉ qui le dit, `
       + 'ni l\'accordage ni les registres ; ces cinq-là restent le témoin que deux déductions plausibles divergent');
   }
-  // ⚠️ LA TROISIÈME DÉDUCTION, celle qui a été RETIRÉE : l'accordage. Sans ce témoin, cette section
-  // laisserait croire qu'elle n'a écarté qu'un critère sur deux, alors que les DEUX sont écartés.
-  const parAccordageSeul = Object.entries(LIBS['alphabets'])
+  // ⚠️ LE TÉMOIN QUI SURVEILLAIT L'ÉCART AVEC L'ACCORDAGE A ROUGI LE 2026-07-30, ET C'EST SON RÔLE.
+  // Il exigeait qu'au moins un alphabet diverge entre `resolvesPitch` et `defaultTuning` — c'était
+  // `shakuhachi`, et c'est cette divergence qui avait fait retirer la déduction. Le même jour,
+  // Romain a demandé de combler les ancres manquantes : shakuhachi a reçu la sienne (ré4 = 293,66 Hz)
+  // et un accordage, donc l'écart est retombé à ZÉRO et le témoin a mordu.
+  // IL EST CONVERTI EN ASSERTION, pas supprimé, et la nuance est tout l'objet de ce bloc :
+  // les deux critères coïncident aujourd'hui PAR ACCIDENT — parce qu'on a réparé une donnée — et
+  // la déduction reste interdite PAR DÉCISION, pas parce qu'elle divergeait. Sans cette trace,
+  // quelqu'un verra deux critères identiques dans trois mois et conclura qu'ils sont équivalents.
+  const divergents = Object.entries(LIBS['alphabets'])
     .filter(([, o]) => o && typeof o === 'object' && Array.isArray(o.notes) && o.notes.length)
     .filter(([, o]) => !!o.resolvesPitch !== !!o.defaultTuning);
-  ok(parAccordageSeul.length > 0,
-    '2bis. le champ DÉCLARÉ diverge aussi de l\'ACCORDAGE — c\'est ce qui a fait retirer cette déduction-là '
-    + `(divergents : ${parAccordageSeul.map(([n]) => n).join(' ') || 'aucun'})`);
+  ok(divergents.length === 0,
+    '2bis. les deux critères coïncident depuis que shakuhachi a son ancre — si un alphabet redivergeait, '
+    + `il faudrait le DIRE ici plutôt que de le laisser passer (divergents : ${divergents.map(([n]) => n).join(' ')})`);
+  // ⚠️ ET LA COÏNCIDENCE REND LE TEST FACILE À TROMPER : tant que les deux critères désignent le même
+  // ensemble, un code qui lirait l'accordage passerait tous les témoins ci-dessus. On construit donc
+  // le cas discriminant à la volée — un alphabet qui a un accordage et déclare NE PAS résoudre —
+  // et on exige que le code suive la DÉCLARATION. C'est la seule façon de prouver ce qu'il lit.
+  {
+    // ⚠️ CE TÉMOIN A TROUVÉ AUTRE CHOSE EN ÉCHOUANT, ET C'EST POURQUOI IL RESTE. Je l'avais écrit
+    // avec `@test_declaration_prime.faux` — une LIBRAIRIE inexistante — en supposant qu'elle serait
+    // refusée. Mesuré : elle passe en SILENCE (0 erreur), alors qu'un ALPHABET inexistant est refusé
+    // avec un message clair. Deux portes voisines, une seule fermée. Inscrit BPS-42 ; le témoin
+    // emploie désormais la forme dont le refus est prouvé, sinon il ne prouve rien.
+    const temoin = compiler('@core\n@alphabet.nexistepas\nmotif -> C4\nS -> motif');
+    const nom = 'western';
+    const sauvegarde = LIBS['alphabets'][nom].resolvesPitch;
+    LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: false };
+    const r = compiler(`@core\n@alphabet.${nom}\nmotif -> C4\nS -> motif`);
+    LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: sauvegarde };
+    ok((r.ast?.alphabetTerminals || []).includes('C4') && !(r.ast?.noteTerminals || []).includes('C4'),
+      "2bis. LE CODE SUIT LA DÉCLARATION, PAS L'ACCORDAGE : western privé de resolvesPitch se déclasse, "
+      + `bien qu'il garde son accordage (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} `
+      + `alpha=${JSON.stringify(r.ast?.alphabetTerminals)}) — sans ce cas, un code lisant l'accordage passerait tout`);
+    ok((temoin.errors || []).length > 0,
+      '2bis. TÉMOIN D\'INSTRUMENT — une librairie inexistante doit être refusée, sinon la mesure ci-dessus ne prouve rien');
+  }
 }
 
 // ── 3. CE QUE LE CONSOMMATEUR CHERCHE VRAIMENT ──────────────────────────────────────────────
@@ -226,11 +256,18 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
 {
   const j = JSON.parse(readFileSync(new URL('../lib/alphabets.json', import.meta.url), 'utf-8'));
   const entrees = Object.keys(j).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  // ⚠️ MÊME CONVERSION QU'EN 2bis, et pour la même raison : ce témoin exigeait la divergence, elle a
+  // été comblée le 2026-07-30 par l'ancre de shakuhachi. Ce qu'on garde ici est l'INVARIANT qui
+  // survit à la coïncidence : tout alphabet qui déclare résoudre une hauteur doit porter une ANCRE
+  // COMPLÈTE — un nom de référence, son registre, et sa fréquence. C'est cet invariant qui manquait
+  // à shakuhachi, et c'est lui qui empêchera le prochain alphabet d'entrer sans position.
   const resolvent = entrees.filter((n) => j[n].resolvesPitch);
-  const devineParAccordage = entrees.filter((n) => !!j[n].defaultTuning);
-  ok(resolvent.length !== devineParAccordage.length || resolvent.some((n) => !j[n].defaultTuning),
-    "3bis. le champ DÉCLARÉ et l'ancien critère déduit DIVERGENT — c'est pourquoi le second a été retiré ; "
-    + 'si un jour ils coïncident, ce témoin le dira au lieu de laisser croire que la déduction suffisait');
+  const sansAncre = resolvent.filter((n) => j[n].diapason == null || j[n].baseNote == null || j[n].baseRegister == null);
+  ok(sansAncre.length === 0,
+    "3bis. tout alphabet qui DÉCLARE résoudre une hauteur porte une ANCRE COMPLÈTE (nom de référence, "
+    + `registre, fréquence) — sinon il annonce une hauteur sans dire où elle commence : ${sansAncre.join(' ')}`);
+  ok(resolvent.every((n) => !!j[n].defaultTuning),
+    '3bis. et il porte un ACCORDAGE — l\'ancre dit où ça commence, l\'accordage dit comment on avance');
 }
 {
   // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.

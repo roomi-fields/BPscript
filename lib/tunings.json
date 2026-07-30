@@ -353,5 +353,18 @@
     "baseRegister": 4,
     "diapason": 261.63,
     "_anchor_note": "Ré-ancre exceptionnellement sur la tonique C4=261.63 (le tuning porte sa tonique, comme _scale la déclare — builder.ts:229 lit tuning.diapason/baseNote). Généralité (backlog JUST-ANCRE-DEPUIS-TONIQUE) : dériver l'ancre de la tonique émise (règle :10 = Aj4→A)."
+  },
+  "shakuhachi_12TET": {
+    "description": "Shakuhachi 1.8 shaku — les cinq doigtes de base sur temperament egal",
+    "alphabet": "shakuhachi",
+    "temperament": "12TET",
+    "degrees": [
+      0,
+      3,
+      5,
+      7,
+      10
+    ],
+    "_note": "Les cinq doigtes du registre otsu sonnent RE FA SOL LA DO, soit 0, 3, 5, 7 et 10 demi-tons au-dessus de la fondamentale (sources dans lib/alphabets.json, champ _source_ancre). Le temperament EGAL est le choix coherent avec cette entree : ses alterations meri et kari sont deja exprimees en demi-tons. Un shakuhachi d atelier n est pas exactement tempere — cette table decrit le systeme de notes, pas la facture d un instrument donne."
   }
 }
