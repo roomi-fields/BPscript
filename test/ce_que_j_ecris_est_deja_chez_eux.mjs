@@ -3,13 +3,22 @@
  * GARDE — CE QUE J'ÉCRIS EST DÉJÀ CHEZ EUX.
  *
  * ⚠️ POURQUOI IL EXISTE, ET C'EST UNE RÈGLE QUE J'AI ÉCRITE PUIS RE-VIOLÉE DEUX FOIS EN DEUX JOURS.
- * Dans cet atelier les dépôts consomment la SOURCE les uns des autres — pas un paquet publié. Une
- * modification d'une surface partagée est donc EN PRODUCTION À LA SECONDE OÙ ELLE EST ÉCRITE ; le
- * push ne la rend qu'IRRÉVERSIBLE. J'ai fait inscrire cette règle le 2026-07-29 après avoir cassé
- * trois bancs chez Kairos, je l'ai citée à trois agents dans la semaine — et le 2026-07-30 j'ai
- * écrit une ancre de hauteur puis demandé à Kanopi si sa scène risquait de se mettre à sonner.
- * Elle SONNAIT DÉJÀ : leur dépendance est un lien vers mon arbre de travail, et leur portillon vert
- * de l'heure précédente avait tourné avec mon fichier non commité.
+ * Une modification d'une surface partagée est en production DÈS QU'ELLE ATTEINT CE QUE LE VOISIN
+ * LIT ; le push ne la rend qu'IRRÉVERSIBLE. J'ai fait inscrire cette règle le 2026-07-29 après
+ * avoir cassé trois bancs chez Kairos, je l'ai citée à trois agents dans la semaine — et le
+ * 2026-07-30 j'ai écrit une ancre de hauteur puis demandé à Kanopi si sa scène risquait de se
+ * mettre à sonner. Elle SONNAIT DÉJÀ : leur dépendance est un lien vers mon arbre de travail, et
+ * leur portillon vert de l'heure précédente avait tourné avec mon fichier non commité.
+ *
+ * ⚠️⚠️ ET CE FICHIER A PORTÉ UNE PHRASE FAUSSE PENDANT UNE HEURE, héritée de mon CLAUDE.md :
+ * « dans cet atelier les dépôts consomment la SOURCE les uns des autres, pas un paquet publié ».
+ * LA FRONTIÈRE EST PAR USAGE, PAS PAR VOISIN — un même voisin relève souvent des deux régimes :
+ * il importe ta SOURCE (ou l'ouvre comme du texte) et le moment critique est ta FRAPPE ; il exécute
+ * ton PAQUET CONSTRUIT et le moment critique est ta PUBLICATION. Corrigé le 2026-07-30 après que
+ * BPx a publié sans prévenir Kairos — sa formulation : il n'avait pas oublié une règle, il avait
+ * chez lui une phrase qui lui disait que ce cas n'existait pas.
+ * DONC CE GARDE MESURE MON RÉGIME au lieu de l'affirmer (§ RÉGIME plus bas) : une phrase qu'on
+ * écrit est une clame, y compris dans l'en-tête du garde censé la faire tenir.
  *
  * CE QU'IL FAIT, ET CE QU'IL NE FAIT PAS — je l'écris pour ne pas me raconter qu'il ferme le cas.
  *  · IL FAIT : mesurer QUI lit ce dépôt en direct, l'AFFICHER à chaque portillon, et ROUGIR si un
@@ -119,6 +128,47 @@ const nouveaux = presents
 ok(nouveaux.length === 0,
   `DÉPÔT(S) qui lisent ce dépôt sans être déclarés ici : ${nouveaux.join(' ')} — les inscrire, `
   + 'sinon la prochaine surface partagée sera modifiée sans que personne sache qui elle atteint');
+
+// ── RÉGIME : SOURCE OU PAQUET CONSTRUIT ? MESURÉ, JAMAIS AFFIRMÉ ─────────────
+// La frontière est PAR USAGE, pas par voisin. Ce bloc décide de quel côté je suis en lisant la
+// donnée, parce que la phrase qui l'affirmait était fausse et vivait dans l'en-tête de ce fichier.
+{
+  const pkg = JSON.parse(
+    execFileSync('cat', [path.join(MOI, 'package.json')], { encoding: 'utf-8' }),
+  );
+  const pointDEntree = pkg.main || (pkg.exports && JSON.stringify(pkg.exports)) || '';
+  const versSource = /^(\.\/)?src\//.test(String(pointDEntree));
+  console.log(`[surface partagée] point d'entrée déclaré : ${pointDEntree || '(aucun)'} → régime `
+    + `${versSource ? 'SOURCE (préavis à ma FRAPPE)' : 'PAQUET CONSTRUIT (préavis à ma PUBLICATION)'}`);
+
+  // Combien lisent un artefact CONSTRUIT de moi ? Aujourd'hui : personne — `dist/` est le build
+  // WASM du 19/07, vestige de l'émission BP3 supprimée le même jour.
+  let lecteursDeDist = 0;
+  for (const d of presents) {
+    if (d === path.basename(MOI)) continue;
+    try {
+      const n = execFileSync('bash', ['-c',
+        `find ${JSON.stringify(path.join(ATELIER, d))} \\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' -o -name '*.json' \\) `
+        + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' 2>/dev/null "
+        + '| xargs grep -l "BPscript/dist\\|bpscript/dist" 2>/dev/null | wc -l',
+      ], { encoding: 'utf-8' });
+      lecteursDeDist += parseInt(n.trim(), 10) || 0;
+    } catch { /* rien */ }
+  }
+  console.log(`[surface partagée] fichiers de l'atelier qui lisent un artefact CONSTRUIT de moi : ${lecteursDeDist}`);
+
+  ok(versSource || lecteursDeDist > 0,
+    'RÉGIME — mon point d\'entrée ne pointe plus vers ma source ET personne ne lit d\'artefact '
+    + 'construit : l\'un des deux est faux, et ce garde ne sait plus quand prévenir');
+  // ⚠️ LE CLIQUET. Le jour où quelqu'un exécute un artefact construit de moi, un SECOND régime
+  // s'ajoute — préavis à la PUBLICATION, qui ne dépend PAS de ce que je change : le voisin l'attend
+  // pour REPOSER SON POINT DE COMPARAISON, et un changement inoffensif est précisément celui qui
+  // produit le faux négatif « rien n'a bougé » vs « je n'ai pas regardé ». Ce témoin le dira au
+  // lieu de me laisser continuer à ne prévenir qu'à la frappe.
+  ok(lecteursDeDist === 0,
+    `${lecteursDeDist} fichier(s) lisent désormais un artefact CONSTRUIT de moi — le régime a CHANGÉ : `
+    + 'il faut AUSSI prévenir à la PUBLICATION, même quand rien ne bouge. Inscrire le second régime ici.');
+}
 
 // ── TÉMOIN ANTI-RÉTRÉCISSEMENT ───────────────────────────────────────────────
 ok(CONSOMMATEURS.length >= 8, 'TÉMOIN — la liste ne s\'est pas vidée');

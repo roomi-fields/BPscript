@@ -135,11 +135,39 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
 
 ### ⛔ ON SE PRÉVIENT À L'ÉCRITURE, PAS AU PUSH (règle de Romain, 2026-07-29)
 
-**Dans cet atelier, les dépôts consomment la SOURCE l'un de l'autre — pas un paquet publié.** Une
-modification d'une surface partagée (nom de type d'un nœud d'arbre, champ de contrat, signature
-exportée, graphie du langage) est donc **EN PRODUCTION À LA SECONDE OÙ ELLE EST ÉCRITE** ; le push
-ne fait que la rendre **IRRÉVERSIBLE**. Prévenir « avant de pousser » est la bonne précaution **au
-mauvais moment** : les voisins sont déjà rouges.
+⚠️ **CETTE SECTION PORTAIT UNE INSTRUCTION FAUSSE JUSQU'AU 2026-07-30** — « dans cet atelier, les
+dépôts consomment la SOURCE l'un de l'autre, pas un paquet publié ». Elle généralisait UN type de
+lien à tous, et elle vivait à l'identique chez cinq agents. **Une doc périmée laisse croire ; une
+instruction périmée FAIT FAIRE** : BPx a publié sans prévenir Kairos parce qu'il avait chez lui une
+phrase qui lui disait que ce cas n'existait pas.
+
+**LA FRONTIÈRE EST PAR USAGE, PAS PAR VOISIN**, et un même voisin relève souvent des deux régimes :
+
+| ce que le voisin fait de toi | le moment critique |
+| --- | --- |
+| il **importe ta source**, ou l'**ouvre comme du texte** | ta **frappe** |
+| il **exécute ton paquet construit** | ta **publication** |
+
+Une modification d'une surface partagée (nom de type d'un nœud d'arbre, champ de contrat, signature
+exportée, graphie du langage) est **en production dès qu'elle atteint ce que le voisin lit** ; le
+push ne fait que la rendre **IRRÉVERSIBLE**. Prévenir « avant de pousser » est la bonne précaution
+**au mauvais moment** quand le voisin lit la source : il est déjà rouge.
+
+⚠️ **ET LE PRÉAVIS DE PUBLICATION NE DÉPEND PAS DE CE QUE TU CHANGES.** Le voisin ne l'attend pas
+pour savoir *quoi* a bougé — il l'attend pour **reposer son point de comparaison** avant que ton
+paquet change sous ses tests. Sans ce mot il ne distingue plus « rien n'a bougé » de « je n'ai pas
+regardé ». **Un changement inoffensif est donc précisément celui qui produit ce faux négatif** —
+c'est l'inverse de l'intuition. Préviens surtout quand tu es sûr que rien ne bouge, et **joins une
+prédiction falsifiable** : « aucune de tes scènes ne doit bouger ; si une bouge, ma mesure est
+fausse ».
+
+**DE QUEL CÔTÉ JE SUIS, MESURÉ ET NON SUPPOSÉ (2026-07-30)** : `package.json` déclare
+`main: src/transpiler/index.js` — mes huit consommateurs lisent donc ma **SOURCE**, aucun n'exécute
+un paquet construit de moi. `dist/` existe mais c'est le build WASM du 19/07, vestige de l'émission
+BP3 supprimée : **zéro fichier de l'atelier le lit**. Mon régime est donc « préavis à la frappe »,
+entièrement — et `test/ce_que_j_ecris_est_deja_chez_eux.mjs` le **mesure** à chaque portillon au
+lieu de le répéter. Le jour où j'exposerai un artefact construit, le second régime s'ajoutera.
+Texte de référence, plus complet et qui bouge : `hub/AGENT_WELCOME.md`.
 
 **LE GESTE** : dès que tu touches une surface partagée, tu préviens ses consommateurs — **avec les
 sites à changer chez eux** — et tu **vérifies qu'ils ont basculé AVANT de pousser**. L'ancien nom
