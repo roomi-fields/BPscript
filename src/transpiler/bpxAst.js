@@ -1540,26 +1540,26 @@ function emitNoteTerminals(ast) {
   // abstraits) SONT des notes, quand la donnée dit l'inverse en toutes lettres. Trouvé par
   // bp3-frontend, qui émet les deux champs depuis le début.
   //
-  // LE CRITÈRE VIENT DE LA DONNÉE, ET DEUX MESURES INDÉPENDANTES LE DÉSIGNENT :
-  //  · le mien — un alphabet qui déclare un `defaultTuning` résout une hauteur, les autres non :
-  //    shakuhachi, tabla, simple ne le déclarent pas. C'EST CE CRITÈRE-LÀ, ET LUI SEUL, QUI EST
-  //    APPLIQUÉ ICI ;
-  //  · le leur, mesuré sur le moteur natif — un nom de note n'y est JAMAIS nu, il porte toujours
-  //    son registre (`dha` n'est une note dans aucune convention, `dha4` l'est en indien). Il
-  //    CONFIRME la conclusion sur les trois, sans être le critère du code.
+  // ⚠️ LE CRITÈRE NE SE DÉDUIT PLUS, IL SE LIT — REMPLACEMENT, PAS AJOUT (Romain, 2026-07-30,
+  // `hub/decisions/2026-07-30-ce-qui-sonne-ce-qui-dure-ce-qui-resout-une-hauteur-se-declare.md`) :
+  // « il faut que soit spécifié non seulement si c'est un objet sonnant mais aussi s'il résout une
+  // hauteur », et « aucune des trois propriétés ne se déduit ». L'alphabet le DÉCLARE, par
+  // `resolvesPitch`.
   //
-  // ⚠️⚠️ ET J'AI ÉCRIT ICI QUE LES DEUX CRITÈRES DÉSIGNAIENT « EXACTEMENT LES MÊMES TROIS
-  // ALPHABETS ». C'EST FAUX, mesuré par bp3-frontend SUR MA PROPRE DONNÉE et re-mesuré par moi :
-  // sans accordage → 3 (shakuhachi, tabla, simple) ; sans champ `octaves` → HUIT, car arabic,
-  // turkish, gamelan_pelog, gamelan_slendro et bohlen_pierce ont un accordage et ne pointent
-  // aucune table de registres. Appliquer « pas de registres donc pas une note » déclasserait ces
-  // cinq-là — arabic porte pourtant arabic_24TET, une ancre husayni/4 et un diapason 440.
-  // LA CONCLUSION TIENT, LA RAISON QUE J'AI PUBLIÉE ÉTAIT FAUSSE. Le glissement est nommé : leur
-  // critère mesure le NOMMAGE NATIF (un nom de note porte son registre) ; je l'avais traduit en
-  // « l'alphabet a-t-il un champ octaves », qui est la présence d'une RÉFÉRENCE vers une table,
-  // pas la présence de registres. Les tables existent d'ailleurs sans être pointées
-  // (`octaves.turkish`, `octaves.gamelan`, `octaves.shakuhachi`).
-  // Bonne réponse, mauvaise raison — et la mauvaise raison mordait sur cinq alphabets.
+  // CE QUE LE CRITÈRE DÉDUIT MANQUAIT, ET C'EST CE QUI L'A FAIT RETIRER. Je lisais `defaultTuning`
+  // — un alphabet sans accordage ne résolvait pas de hauteur. Mesuré sur les 22 entrées des deux
+  // catalogues : UN SEUL faux négatif, mais il est réel — `shakuhachi`. Il ne porte aucun
+  // accordage et résout pourtant une hauteur : `lib/octaves.json` lui déclare des registres nommés
+  // (otsu, kan, daikan) et ses altérations *meri* et *kari* valent un demi-ton. Les quatre autres
+  // sans accordage (tabla, simple, dhadhatite, tryCsoundObjects) étaient bien classés.
+  // Un critère juste 21 fois sur 22 reste un critère qui DEVINE ; celui-ci LIT.
+  //
+  // ⚠️ ET IL RESTE UN TROU QUE CE CHANGEMENT DÉPLACE SANS LE FERMER, dit ici pour qu'on ne le
+  // cherche pas ailleurs : `shakuhachi` est désormais une NOTE et ne porte AUCUNE ancre — ni
+  // accordage, ni diapason, ni note de base. La donnée dit qu'il résout une hauteur, pas PAR
+  // RAPPORT À QUOI. Kairos l'avait signalé le 2026-07-29 ; le combler ici reviendrait à choisir une
+  // règle que la donnée n'énonce pas. Consommateurs prévenus avant écriture (préavis du
+  // 2026-07-30 à bpx, kairos, bp3-frontend).
   //
   // PRÉCÉDENCE, et elle n'est pas de moi : la décision du 2026-07-28 la fixe — « un nom présent
   // dans les deux champs est traité comme NOTE, c'est l'ordre du C » (SEARCHNOTE avant
@@ -1567,7 +1567,7 @@ function emitNoteTerminals(ast) {
   // règle, pas à moi de trancher en amputant un champ.
   const aHauteur = (nomAlphabet) => {
     const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
-    return !!(lib && lib.defaultTuning);
+    return !!(lib && lib.resolvesPitch);
   };
   const notes = new Set();
   const sansHauteur = new Set();

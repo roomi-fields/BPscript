@@ -13,6 +13,7 @@
   "_anchor_doc": "L'ANCRE (diapason/baseNote/baseRegister) et l'accordage par défaut (defaultTuning) d'un système de notes vivent sur l'ALPHABET — invariants à travers tous ses accordages (cf. docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). `@alphabet.X` seul suffit à jouer juste. Un accordage peut exceptionnellement redéfinir l'ancre (pitch historique). Défauts overridables : @diapason:N (scène), etc.",
   "western": {
     "description": "Western chromatic — 7 natural notes, 5 alteration levels",
+    "resolvesPitch": true,
     "notes": [
       "C",
       "D",
@@ -37,6 +38,7 @@
   },
   "sargam": {
     "description": "Indian sargam — 7 svaras",
+    "resolvesPitch": true,
     "notes": [
       "sa",
       "re",
@@ -59,6 +61,7 @@
   },
   "bp3_indian": {
     "description": "Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) — alphabet de test BP3, à côté des autres (arbitrage Romain 2026-07-19)",
+    "resolvesPitch": true,
     "notes": [
       "sa",
       "re",
@@ -83,6 +86,7 @@
   },
   "bp3_english": {
     "description": "Convention de notes ENGLISH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29 : la mécanique n'utilise que des alphabets)",
+    "resolvesPitch": true,
     "notes": [
       "C",
       "D",
@@ -108,6 +112,7 @@
   },
   "bp3_fr": {
     "description": "Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)",
+    "resolvesPitch": true,
     "notes": [
       "do",
       "re",
@@ -133,6 +138,7 @@
   },
   "solfege": {
     "description": "Solfège latin — do ré mi fa sol la si",
+    "resolvesPitch": true,
     "notes": [
       "do",
       "re",
@@ -157,6 +163,7 @@
   },
   "arabic": {
     "description": "Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.",
+    "resolvesPitch": true,
     "notes": [
       "rast",
       "dukah",
@@ -182,6 +189,7 @@
   },
   "turkish": {
     "description": "Turkish makam — note names from Ottoman/Turkish tradition",
+    "resolvesPitch": true,
     "notes": [
       "kaba_cargah",
       "yegah",
@@ -215,6 +223,7 @@
   },
   "gamelan_pelog": {
     "description": "Javanese gamelan pelog — 7 tones",
+    "resolvesPitch": true,
     "notes": [
       "nem",
       "barang",
@@ -232,6 +241,7 @@
   },
   "gamelan_slendro": {
     "description": "Javanese gamelan slendro — 5 tones",
+    "resolvesPitch": true,
     "notes": [
       "nem",
       "barang",
@@ -247,6 +257,7 @@
   },
   "shakuhachi": {
     "description": "Shakuhachi — 5 base fingerings (Kinko-ryū)",
+    "resolvesPitch": true,
     "notes": [
       "ro",
       "tsu",
@@ -263,6 +274,7 @@
   },
   "bohlen_pierce": {
     "description": "Bohlen-Pierce — 13 pitch classes in a tritave",
+    "resolvesPitch": true,
     "notes": [
       "C",
       "Db",
@@ -287,6 +299,7 @@
   },
   "tabla": {
     "description": "Tabla bols — percussion syllables (no pitch)",
+    "resolvesPitch": false,
     "notes": [
       "dhin",
       "dha",
@@ -350,6 +363,7 @@
   },
   "simple": {
     "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",
+    "resolvesPitch": false,
     "notes": [
       "a",
       "b",
@@ -389,6 +403,7 @@
   },
   "shruti23": {
     "description": "22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
+    "resolvesPitch": true,
     "notes": [
       "sa",
       "r1",
@@ -426,6 +441,7 @@
   },
   "dhadhatite": {
     "description": "Qa'ida « dhadhatite » — bols et ENCHAINEMENTS de cette composition de tabla (sans hauteur)",
+    "resolvesPitch": false,
     "notes": [
       "dha",
       "dhadha",
@@ -442,6 +458,7 @@
   },
   "tryCsoundObjects": {
     "description": "Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)",
+    "resolvesPitch": false,
     "notes": [
       "a",
       "b",

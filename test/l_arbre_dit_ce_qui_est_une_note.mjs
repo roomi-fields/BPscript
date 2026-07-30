@@ -27,10 +27,16 @@
  * la première note de CHAQUE alphabet soit une note, tabla et simple compris. Trouvé par
  * bp3-frontend, qui émet les deux depuis le début.
  *
- * LE CRITÈRE DU PARTAGE VIENT DE LA DONNÉE : le champ `defaultTuning`. Un alphabet qui en déclare un
- * résout une hauteur — shakuhachi, tabla et simple n'en déclarent pas. C'est ce critère-là, et lui
- * seul, qu'applique le code. L'oracle natif de bp3-frontend le CONFIRME sur ces trois (en BP3 un nom
- * de note n'est jamais nu), sans être le critère.
+ * LE CRITÈRE DU PARTAGE NE SE DÉDUIT PLUS, IL SE LIT : l'alphabet DÉCLARE `resolvesPitch`
+ * (Romain, 2026-07-30 — « aucune des trois propriétés ne se déduit »). Treize entrées sur vingt-deux
+ * résolvent une hauteur.
+ *
+ * ⚠️ IL A LONGTEMPS ÉTÉ DÉDUIT DE `defaultTuning`, et cette déduction a été RETIRÉE parce qu'elle
+ * était fausse une fois sur vingt-deux : `shakuhachi` ne porte aucun accordage et résout pourtant
+ * une hauteur — `lib/octaves.json` lui déclare des registres nommés (otsu, kan, daikan) et ses
+ * altérations *meri* et *kari* valent un demi-ton. Un critère juste vingt et une fois sur
+ * vingt-deux reste un critère qui DEVINE. L'oracle natif de bp3-frontend (en BP3, un nom de note
+ * n'est jamais nu) reste une CONFIRMATION indépendante, il n'a jamais été le critère.
  *
  * ⚠️⚠️ J'AVAIS ÉCRIT QUE LES DEUX CRITÈRES DÉSIGNAIENT « EXACTEMENT LES MÊMES TROIS ». C'EST FAUX,
  * mesuré sur ma propre donnée : sans accordage → 3 ; sans champ `octaves` → HUIT. Cinq alphabets
@@ -46,6 +52,7 @@
  * ils sont quinze depuis l'entrée de bp3_english et bp3_fr, et le garde l'a su sans qu'on le lui
  * dise. C'est exactement ce qu'on attend d'un témoin bâti sur la donnée.
  */
+import { readFileSync } from 'node:fs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
@@ -81,13 +88,16 @@ const compiler = (src) => compileToBPxAST(src);
 // La liste des alphabets n'est PAS écrite ici : elle est LUE dans la librairie. Ajouter un
 // alphabet le teste automatiquement ; en retirer un ne peut pas passer inaperçu (le socle §4 le
 // refuse). C'est ce qui distingue un témoin d'une liste que quelqu'un devra penser à compléter.
-// ⚠️ ET LE PARTAGE EN DEUX CHAMPS, corrigé le 2026-07-29 : un alphabet qui déclare un accordage
-// résout une hauteur, les autres non. Ce garde AFFIRMAIT l'inverse — il exigeait que la première
-// note de CHAQUE alphabet soit dans noteTerminals, tabla et simple compris. Il gardait donc le
-// défaut : mon arbre disait que des frappes de tabla étaient des notes, et ce témoin l'exigeait.
+// ⚠️ ET LE PARTAGE EN DEUX CHAMPS, corrigé le 2026-07-29 : ce garde AFFIRMAIT l'inverse — il
+// exigeait que la première note de CHAQUE alphabet soit dans noteTerminals, tabla et simple
+// compris. Il gardait donc le défaut : mon arbre disait que des frappes de tabla étaient des notes,
+// et ce témoin l'exigeait.
+// ⚠️⚠️ ET LE CRITÈRE A CHANGÉ DE SOURCE LE 2026-07-30 : il lisait `defaultTuning` — une DÉDUCTION.
+// Romain a tranché que la propriété se DÉCLARE (`resolvesPitch`), après que ma mesure ait mis la
+// déduction en défaut sur `shakuhachi`. Ce garde lit désormais ce que la donnée DIT, comme le code.
 const ALPHABETS = Object.entries(LIBS['alphabets'])
   .filter(([, o]) => o && typeof o === 'object' && !Array.isArray(o) && Array.isArray(o.notes) && o.notes.length)
-  .map(([nom, o]) => [nom, o.notes[0], !!o.defaultTuning]);
+  .map(([nom, o]) => [nom, o.notes[0], !!o.resolvesPitch]);
 console.log(`[arbre note] ${ALPHABETS.length} alphabets de la librairie, lus dans la donnée`);
 for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // On écrit une règle dont la tête n'est PAS une note et dont le corps EST une note de cet
@@ -133,8 +143,17 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     const premiere = o.notes[0];
     const r = compiler(`@core\n@alphabet.${nom}\nmotif -> ${premiere}\nS -> motif`);
     ok((r.ast?.noteTerminals || []).includes(premiere),
-      `2bis. '${premiere}' (${nom}) DOIT rester une note — c'est l'accordage qui décide, pas les registres`);
+      `2bis. '${premiere}' (${nom}) DOIT rester une note — et depuis le 2026-07-30 c'est le champ DÉCLARÉ qui le dit, `
+      + 'ni l\'accordage ni les registres ; ces cinq-là restent le témoin que deux déductions plausibles divergent');
   }
+  // ⚠️ LA TROISIÈME DÉDUCTION, celle qui a été RETIRÉE : l'accordage. Sans ce témoin, cette section
+  // laisserait croire qu'elle n'a écarté qu'un critère sur deux, alors que les DEUX sont écartés.
+  const parAccordageSeul = Object.entries(LIBS['alphabets'])
+    .filter(([, o]) => o && typeof o === 'object' && Array.isArray(o.notes) && o.notes.length)
+    .filter(([, o]) => !!o.resolvesPitch !== !!o.defaultTuning);
+  ok(parAccordageSeul.length > 0,
+    '2bis. le champ DÉCLARÉ diverge aussi de l\'ACCORDAGE — c\'est ce qui a fait retirer cette déduction-là '
+    + `(divergents : ${parAccordageSeul.map(([n]) => n).join(' ') || 'aucun'})`);
 }
 
 // ── 3. CE QUE LE CONSOMMATEUR CHERCHE VRAIMENT ──────────────────────────────────────────────
@@ -166,15 +185,44 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     `3. la liste porte ce que la SCÈNE écrit, pas le catalogue de l'alphabet (reçu ${l.length} entrée(s))`);
 }
 
-// ── 3bis. LES TROIS ALPHABETS SANS HAUTEUR — le défaut exact qui a été livré ────────────────
-// Deux mesures indépendantes désignent les mêmes trois : le champ `defaultTuning` de ma donnée, et
-// l'oracle natif de bp3-frontend (un nom de note n'est JAMAIS nu en BP3, il porte son registre).
-for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['shakuhachi', 'ro']]) {
+// ── 3bis. LES ALPHABETS SANS HAUTEUR — le défaut exact qui a été livré ──────────────────────
+// ⚠️ CETTE SECTION A ÉTÉ RETOURNÉE LE 2026-07-30, ET C'EST UN DURCISSEMENT. Elle exigeait que
+// `shakuhachi` NE SOIT PAS une note, sur le critère déduit « pas d'accordage donc pas de hauteur ».
+// Romain a retiré ce critère (décision du 2026-07-30) précisément parce que ma mesure l'a mis en
+// défaut sur lui : `lib/octaves.json` lui déclare des registres nommés (otsu, kan, daikan) et ses
+// altérations *meri* et *kari* valent un demi-ton. Il RÉSOUT une hauteur ; ce qui lui manque est
+// une ancre, pas une nature. Le garde qui exigeait l'inverse gardait donc le défaut.
+// Le critère n'est plus déduit : l'alphabet DÉCLARE `resolvesPitch`.
+for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite', 'dha']]) {
   const r = compiler(`@core\n@alphabet.${alpha}\nmotif -> ${terminal}\nS -> motif`);
   ok(!(r.ast?.noteTerminals || []).includes(terminal),
     `3bis. ${alpha} ne résout aucune hauteur : '${terminal}' ne doit PAS être annoncé comme note`);
   ok((r.ast?.alphabetTerminals || []).includes(terminal),
     `3bis. ${alpha} : '${terminal}' est un TERMINAL D'ALPHABET, et il doit être dit`);
+}
+// ⚠️ L'AUTRE SENS, ET C'EST LA MOITIÉ QU'ON CASSE : un alphabet qui déclare résoudre une hauteur
+// SANS porter d'accordage doit quand même sortir en NOTE. Sans ce témoin, un retour au critère
+// déduit repasserait au vert sans que rien ne le dise.
+{
+  const r = compiler('@core\n@alphabet.shakuhachi\nmotif -> ro\nS -> motif');
+  ok((r.ast?.noteTerminals || []).includes('ro'),
+    "3bis. shakuhachi DÉCLARE résoudre une hauteur : 'ro' est une NOTE, même sans accordage");
+  ok(!(r.ast?.alphabetTerminals || []).includes('ro'),
+    "3bis. shakuhachi : 'ro' ne doit PAS être aussi un terminal d'alphabet — les fondre est interdit");
+}
+// ⚠️ ET LE CRITÈRE LUI-MÊME EST MESURÉ, PAS RELU : la donnée doit PORTER le champ, sinon le code
+// retomberait en silence sur une déduction. Ce témoin échoue le jour où `resolvesPitch` disparaît.
+{
+  const j = JSON.parse(readFileSync(new URL('../lib/alphabets.json', import.meta.url), 'utf-8'));
+  const entrees = Object.keys(j).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  const sansChamp = entrees.filter((n) => typeof j[n].resolvesPitch !== 'boolean');
+  ok(sansChamp.length === 0,
+    `3bis. TOUTE entrée déclare resolvesPitch — sans lui le code devine (manquant : ${sansChamp.join(' ')})`);
+  const resolvent = entrees.filter((n) => j[n].resolvesPitch);
+  const devineParAccordage = entrees.filter((n) => !!j[n].defaultTuning);
+  ok(resolvent.length !== devineParAccordage.length || resolvent.some((n) => !j[n].defaultTuning),
+    "3bis. le champ DÉCLARÉ et l'ancien critère déduit DIVERGENT — c'est pourquoi le second a été retiré ; "
+    + 'si un jour ils coïncident, ce témoin le dira au lieu de laisser croire que la déduction suffisait');
 }
 {
   // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.
