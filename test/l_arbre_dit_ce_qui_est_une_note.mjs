@@ -212,12 +212,20 @@ for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite
 }
 // ⚠️ ET LE CRITÈRE LUI-MÊME EST MESURÉ, PAS RELU : la donnée doit PORTER le champ, sinon le code
 // retomberait en silence sur une déduction. Ce témoin échoue le jour où `resolvesPitch` disparaît.
+// ⚠️ LES DEUX CATALOGUES, PAS SEULEMENT CELUI OÙ LE DÉFAUT S'EST MONTRÉ. `test_alphabets.json`
+// porte cinq entrées de plus ; les omettre laisserait la moitié de l'espace sans garde — la faute
+// « on répare l'endroit où le défaut s'est MONTRÉ, pas l'espace où il peut vivre ».
+for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
+  const j = JSON.parse(readFileSync(new URL(fichier, import.meta.url), 'utf-8'));
+  const entrees = Object.keys(j).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  ok(entrees.length > 0, `3bis. ${fichier} doit contenir des entrées (socle : un catalogue vide ne prouve rien)`);
+  const sansChamp = entrees.filter((n) => typeof j[n].resolvesPitch !== 'boolean');
+  ok(sansChamp.length === 0,
+    `3bis. ${fichier} : TOUTE entrée déclare resolvesPitch — sans lui le code devine (manquant : ${sansChamp.join(' ')})`);
+}
 {
   const j = JSON.parse(readFileSync(new URL('../lib/alphabets.json', import.meta.url), 'utf-8'));
   const entrees = Object.keys(j).filter((k) => k !== 'domain' && !k.startsWith('_'));
-  const sansChamp = entrees.filter((n) => typeof j[n].resolvesPitch !== 'boolean');
-  ok(sansChamp.length === 0,
-    `3bis. TOUTE entrée déclare resolvesPitch — sans lui le code devine (manquant : ${sansChamp.join(' ')})`);
   const resolvent = entrees.filter((n) => j[n].resolvesPitch);
   const devineParAccordage = entrees.filter((n) => !!j[n].defaultTuning);
   ok(resolvent.length !== devineParAccordage.length || resolvent.some((n) => !j[n].defaultTuning),
