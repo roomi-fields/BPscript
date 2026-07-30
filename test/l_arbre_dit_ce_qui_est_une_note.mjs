@@ -268,6 +268,21 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
     + `registre, fréquence) — sinon il annonce une hauteur sans dire où elle commence : ${sansAncre.join(' ')}`);
   ok(resolvent.every((n) => !!j[n].defaultTuning),
     '3bis. et il porte un ACCORDAGE — l\'ancre dit où ça commence, l\'accordage dit comment on avance');
+  // ⚠️ ET LA TABLE DE REGISTRES DOIT ÊTRE BRANCHÉE, PAS SEULEMENT NOMMÉE DANS UN COMMENTAIRE.
+  // Défaut mesuré par Kairos le 2026-07-30 : `shakuhachi` portait dans sa PROSE « le registre se
+  // nomme otsu, index 0 de lib/octaves.json » et ne portait AUCUN champ `octaves`. Résultat par son
+  // chemin de production : `ro` rendait 293,66 et `otsu_ro`, `kan_ro`, `daikan_ro` rendaient NULL.
+  // PERTE SILENCIEUSE — le jeton à registre ne sonnait pas faux, il ne sonnait pas.
+  // LA FORME DE LA FAUTE : la prose dit l'intention, la donnée dit l'état, et personne ne mesure
+  // une phrase. En cherchant l'ESPACE plutôt que l'occurrence, `turkish` avait le même défaut.
+  const registres = JSON.parse(readFileSync(new URL('../lib/octaves.json', import.meta.url), 'utf-8'));
+  const tables = Object.keys(registres).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  const nonBranches = resolvent.filter((n) => tables.includes(n) && !j[n].octaves);
+  ok(nonBranches.length === 0,
+    "3bis. une table de registres HOMONYME existe et n'est pas branchée — le nommer dans un "
+    + `commentaire ne la branche pas : ${nonBranches.join(' ')}`);
+  ok(tables.length > 0 && resolvent.some((n) => !!j[n].octaves),
+    '3bis. TÉMOIN — des tables existent ET au moins un alphabet en pointe une (sinon ce bloc ne mesure rien)');
 }
 {
   // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.
