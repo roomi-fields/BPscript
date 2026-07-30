@@ -68,17 +68,29 @@ export function nomsBps() {
  * @returns {Array<[string, string]>} paires [chemin relatif à la bibliothèque, contenu]
  */
 export function toutesLesScenes() {
-  const racine = path.join(LIBRARY, 'scenes');
-  if (!existsSync(racine)) return [];
   const out = [];
   const marcher = (dir, prefixe) => {
+    if (!existsSync(dir)) return;
     for (const e of readdirSync(dir, { withFileTypes: true })) {
+      // `_archive` est GELÉE, et le critère est MESURÉ, pas choisi : 54 de ses 58 scènes ne
+      // compilent plus (elles portent `:browser`, un raccord retiré du langage). Exiger qu'une
+      // archive suive le langage vivant n'a pas de sens — c'est la seule dérogation que
+      // `aucune_scene_ne_vit_hors_de_portee.mjs` accepte, et elle y est datée et motivée.
+      if (e.name === '.git' || e.name === 'node_modules' || e.name === '_archive') continue;
       const p = path.join(dir, e.name);
       if (e.isDirectory()) marcher(p, `${prefixe}${e.name}/`);
       else if (e.name.endsWith('.bps')) out.push([`${prefixe}${e.name}`, readFileSync(p, 'utf-8')]);
     }
   };
-  marcher(racine, '');
+  marcher(path.join(LIBRARY, 'scenes'), '');
+  // ⚠️ LES SCÈNES DE CE DÉPÔT AUSSI — ajoutées le 2026-07-30, et c'est une RÉPARATION.
+  // Elles n'étaient dans AUCUNE liste : 70 scènes (démos et fixtures de test) que personne ne
+  // vérifiait. Quand la forme des voix de code a changé le 2026-07-28, les 52 scènes de la
+  // bibliothèque ont été migrées et les CINQ démos d'ici sont restées cassées deux jours, en
+  // silence. `aucune_scene_ne_vit_hors_de_portee.mjs` refuse désormais tout écart entre ce qui
+  // EXISTE et ce qui est VÉRIFIÉ — mais il ne pouvait rien réparer tant que cette fonction
+  // regardait un seul côté de la frontière.
+  marcher(path.resolve(ICI, '..'), '');
   return out.sort((a, b) => a[0].localeCompare(b[0]));
 }
 
