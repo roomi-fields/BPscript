@@ -33,11 +33,16 @@ const SORTES = [
   ['un alias',               (n) => `@alias ${n} cc:2`],
   ['une entrée',             (n) => `@in ${n} transport.midi`],
   ['une variable de travail', (n) => `@var ${n}`],
+  // Décision Romain 2026-07-30 (`hub/decisions/2026-07-30-trois-arbitrages-nature-fabrique-
+  // drapeaux.md`) : un drapeau CRÉE un nom, comme les quatre sortes ci-dessus — c'était un TROU,
+  // pas un espace séparé légitime.
+  ['un drapeau',             (n) => `@flag ${n}: a:1, b:2`],
 ];
 const CE_QUI_EST_DEJA_PRIS = [
   ['un TERMINAL de l\'alphabet', 'G4', (poseur) => `@core\n@alphabet.western\n${poseur}\nS -> C4 D4`],
   ['une MACRO déjà déclarée',    'pris', (poseur) => `@core\n@macro pris saw >> audio\n${poseur}\nS -> C4`],
   ['un ALIAS déjà déclaré',      'pris', (poseur) => `@core\n@alias pris cc:9\n${poseur}\nS -> C4`],
+  ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `@core\n@flag pris: a:1, b:2\n${poseur}\nS -> C4`],
 ];
 console.log(`[un seul espace de noms] ${SORTES.length} sortes × ${CE_QUI_EST_DEJA_PRIS.length} conflits`);
 for (const [sorte, ligne] of SORTES) {
@@ -57,6 +62,7 @@ const TETES_REFUSEES = [
   ['contre un alias',     '@core\n@alias motif cc:2\nmotif -> C4'],
   ['contre une variable', '@core\n@var motif\nmotif -> C4'],
   ['contre une entrée',   '@core\n@in motif transport.midi\nmotif -> C4'],
+  ['contre un drapeau',   '@core\n@flag motif: a:1, b:2\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
   ['contre un ACTEUR (l\'amalgame)', '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'],
   ['contre un acteur de notes',      '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  transport.audio\nS -> v\nv -> C4 D4'],
@@ -114,6 +120,14 @@ const DOIVENT_PASSER = [
    '@core\n@alphabet.western:midi\n@mode:sub\n#C4 #D4 S -> G4\nS -> C4 D4'],
   ['un contexte POSITIF, que le parser range ailleurs',
    '@core\n@alphabet.western:midi\n@mode:sub\n(C4) S -> G4\nS -> C4 D4'],
+  // ⚠️ LES DRAPEAUX — décision Romain 2026-07-30. Le nom qui entre dans l'espace de noms est le
+  // drapeau LUI-MÊME (`section`) ; ses ÉTATS (`calm`, `full`…) sont des étiquettes internes, pas
+  // des noms globaux — les y faire entrer déborderait la règle.
+  ['un ÉTAT de drapeau qui porte le nom d\'un terminal : ce n\'est pas un nom global',
+   '@core\n@alphabet.western\n@flag section: C4:1, D4:2\nS -> C4'],
+  ['un drapeau LU plusieurs fois en garde : une lecture ne crée rien',
+   '@core\n@alphabet.simple\n@flag section: calm:1, full:2\n[section==calm] S -> X\n'
+   + '[section==full] S -> X\n[section==calm] X -> a'],
 ];
 for (const [quoi, src] of DOIVENT_PASSER) {
   const r = refus(src);

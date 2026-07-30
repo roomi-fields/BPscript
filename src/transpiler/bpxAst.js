@@ -1348,7 +1348,8 @@ function emitActorLibRefs(ast) {
  *
  * DEUX ÉNONCÉS, TOUS DEUX GLOBAUX — aucune portée, et c'est mesuré, pas supposé :
  *   A. une TÊTE DE RÈGLE ne peut porter le nom d'aucune AUTRE SORTE de chose (terminal de
- *      l'alphabet actif, macro, alias, entrée, acteur, variable de travail, scène, objet CV) ;
+ *      l'alphabet actif, macro, alias, entrée, acteur, variable de travail, scène, objet CV,
+ *      DRAPEAU) ;
  *   B. deux déclarations qui CRÉENT un nom ne peuvent pas porter le même, ni le nom d'un terminal.
  *
  * ⚠️ CE QUI N'EST PAS DEDANS, ET C'EST LA MOITIÉ DU TRAVAIL : les têtes de règle ne se heurtent
@@ -1357,6 +1358,17 @@ function emitActorLibRefs(ast) {
  * sont des PASSES successives, pas des espaces parallèles, donc un même nom y est le même symbole
  * réécrit plus tard. Un témoin de garde m'avait été prescrit qui refusait ce cas : mesuré, il
  * aurait refusé 120 scènes sur 333. C'est en le mesurant qu'il est tombé, pas en le relisant.
+ *
+ * ⚠️ UN DRAPEAU CRÉE UN NOM, DEPUIS LE 2026-07-30 (Romain, `hub/decisions/2026-07-30-trois-
+ * arbitrages-nature-fabrique-drapeaux.md`) : « les drapeaux doivent être inclus dans l'espace de
+ * déduplication des noms ». C'était un TROU, pas un espace séparé légitime — mesuré sur les 272
+ * scènes du corpus : 3 portent un drapeau, toutes nommées `section`, zéro homonymie, donc le
+ * corpus ne bouge pas en fermant le trou. Ce qui crée le nom, c'est le drapeau LUI-MÊME
+ * (`@flag section: …`), PAS ses états : `calm`/`full` dans `@flag section: calm:1, full:2` ne
+ * sont que des étiquettes internes au drapeau, jamais des noms globaux — les y faire entrer
+ * déborderait la règle. Une LECTURE du drapeau (`[section==calm]`, une mutation `[section=full]`)
+ * n'en crée pas non plus : comme `declarations` (gate/trigger/cv), c'est une propriété posée sur
+ * un nom existant, pas une création.
  */
 function refuserNomsEnDouble(ast) {
   const erreurs = [];
@@ -1404,6 +1416,11 @@ function refuserNomsEnDouble(ast) {
   for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, 'un acteur', a?.line);
   for (const sc of ast.scenes || []) noter(sc?.name, 'une scène', sc?.line);
   for (const c of ast.cvInstances || []) noter(c?.name, 'un objet CV', c?.line);
+  // Un drapeau CRÉE un nom (Romain 2026-07-30) : le nom est `dir.flag`, jamais les états
+  // (`dir.states[].name`) — cf. en-tête de fonction.
+  for (const d of ast.directives || []) {
+    if (d?.type === 'FlagStatesDirective') noter(d.flag, 'un drapeau', d.line);
+  }
 
   // A. Les têtes de règle, contre TOUT LE RESTE — jamais entre elles. Une tête vue plusieurs fois
   // n'est signalée qu'UNE fois : c'est le même symbole, pas plusieurs fautes.

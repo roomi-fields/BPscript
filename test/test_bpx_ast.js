@@ -49,8 +49,8 @@ function backtickNodes(ast) {
 
 // 4. flagStates LU depuis la directive @flag (pas de table)
 {
-  const r = compileToBPxAST('@flag scene: calm:1, full:2\n@core\nS -> C4');
-  const fd = (r.ast.directives || []).find((d) => d.type === 'FlagStatesDirective' && d.flag === 'scene');
+  const r = compileToBPxAST('@flag section: calm:1, full:2\n@core\nS -> C4');
+  const fd = (r.ast.directives || []).find((d) => d.type === 'FlagStatesDirective' && d.flag === 'section');
   check(!!fd, 'directive @flag présente dans l\'arbre');
   const m = Object.fromEntries((fd?.states || []).map((s) => [s.name, s.value]));
   check(m.calm === 1 && m.full === 2, 'états lisibles depuis la directive : ' + JSON.stringify(m));
@@ -87,17 +87,17 @@ function backtickNodes(ast) {
 
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom
 {
-  const r = compileToBPxAST('@flag scene: calm:1, full:2\n[scene==calm] S -> A\n[scene==full] S -> Two\nA -> C4\nTwo -> C4 C4');
+  const r = compileToBPxAST('@flag section: calm:1, full:2\n[section==calm] S -> A\n[section==full] S -> Two\nA -> C4\nTwo -> C4 C4');
   const guards = [];
   for (const sg of r.ast.subgrammars) for (const rule of sg.rules) {
     const gg = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
     for (const g of gg) guards.push(g);
   }
-  check(guards.some((g) => g.flag === 'scene' && g.value === 1), 'garde [scene==calm] résolue à 1 dans l\'AST : ' + JSON.stringify(guards.map((g) => g.value)));
-  check(guards.some((g) => g.flag === 'scene' && g.value === 2), 'garde [scene==full] résolue à 2 dans l\'AST');
+  check(guards.some((g) => g.flag === 'section' && g.value === 1), 'garde [section==calm] résolue à 1 dans l\'AST : ' + JSON.stringify(guards.map((g) => g.value)));
+  check(guards.some((g) => g.flag === 'section' && g.value === 2), 'garde [section==full] résolue à 2 dans l\'AST');
   check(!guards.some((g) => typeof g.value === 'string'), 'aucun nom d\'état non résolu (que des entiers)');
   // IDENT NON déclaré = reste string (référence à un autre drapeau, fidèle BP3)
-  const r2 = compileToBPxAST('@flag scene: calm:1\n[scene==other] S -> A\nA -> C4');
+  const r2 = compileToBPxAST('@flag section: calm:1\n[section==other] S -> A\nA -> C4');
   check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'other', 'IDENT non déclaré reste string (réf drapeau)');
 }
 
