@@ -6,6 +6,17 @@
 
 ---
 
+> ⚠️ **`@scene` SUPPRIMÉE DU LANGAGE (2026-07-29/30).** Romain : « on n'a ni la maturité ni le
+> besoin de déclarer des sous-scènes » (`hub/decisions/2026-07-29-les-formes-declaratives-de-bpscript.md`
+> §4, « @scene DISPARAÎT »). Le compilateur **REFUSE** désormais toute scène qui déclare `@scene` —
+> ce n'est plus une intention mais un état déjà en vigueur, vérifié de bout en bout
+> (`hub/decisions/2026-07-30-les-scenes-sortent-de-l-ui-alt-chiffres-vise-les-acteurs.md` : « le banc
+> de bout en bout verrouille désormais l'absence »). Le mécanisme de hiérarchie de sous-scènes décrit
+> par ce document (§1-§2, §3.3, §4, §5, §8-§10, §12) n'existe plus aujourd'hui ; conservé pour
+> l'intention de design historique, il ne décrit plus le dépôt.
+
+---
+
 ## 1. Principe — modèle multi-instance
 
 Chaque scène est une **Session BPx autonome** : son propre buffer, son propre arbre, son propre FlagStore, son propre RNG, son propre TriggerBus local. Aucune session ne tient de référence directe à une autre.
@@ -84,7 +95,7 @@ Session détruite quand :
 
 ### 3.1 Une scène = des acteurs ; un acteur = une voix
 
-Une scène déclare un ou plusieurs **acteurs**. Un acteur **est** une voix — le niveau « voix » intermédiaire des versions antérieures a été **supprimé**. Un acteur lie cinq propriétés : `alphabet`, `tuning`, `sound`, `transport`, `eval`.
+Une scène déclare un ou plusieurs **acteurs**. Un acteur **est** une voix — le niveau « voix » intermédiaire des versions antérieures a été **supprimé**. Un acteur lie sept propriétés : `alphabet`, `tuning`, `octaves`, `sound`, `transport`, `eval`, `voice` (`hub/decisions/2026-06-16-cles-acteur-six.md` + `voice` ajoutée le 2026-07-16 — cf. `BPscript/docs/spec/EBNF.md:179-184`, `BPscript/src/transpiler/parser.js:40`).
 
 ```bpscript
 @actor sitar
@@ -119,7 +130,7 @@ Le `transport` = **canal de NOTRE sortie** (`audio`/`midi`/`osc`, défaut cascad
 
 ### 3.3 Migration `.kanopi → .bps` (chantier downstream)
 
-Le format `.kanopi` est le format d'orchestration multi-acteurs cross-runtime cible (plusieurs scènes `.bps`, plusieurs acteurs, runtimes hétérogènes). La migration depuis `.kanopi` vers `.bps` + `@scene` + `@actor` est un **chantier dev downstream** (backlog D2), à engager après que la spec acteurs et la librairie `@devices` soient figées. Le schéma de mapping n'est pas spécifié ici.
+Le format `.kanopi` est le format d'orchestration multi-acteurs cross-runtime cible (plusieurs scènes `.bps`, plusieurs acteurs, runtimes hétérogènes). La migration depuis `.kanopi` vers `.bps` + `@actor` est un **chantier dev downstream** (backlog D2), à engager après que la spec acteurs et la librairie `@devices` soient figées. `@scene` est supprimée du langage (cf. bandeau en tête) ; le mécanisme de composition multi-scène que ce chantier emploiera reste à définir — rien n'est tranché sur son remplacement (`LAN-30`). Le schéma de mapping n'est pas spécifié ici.
 
 ---
 
@@ -557,7 +568,7 @@ S -> Sa Re Ga Ma
 
 ## 12. Hors-scope v1
 
-- Multi-instance d'une même scène (`@scene verse "verse.bps" instance:2`)
+- Multi-instance d'une même scène — **fonctionnalité v2 ouverte, jamais tranchée** (cf. §1). C'est l'ÉCRITURE qui a disparu, pas le besoin : elle se notait `@scene verse "verse.bps" instance:2`, et `@scene` est supprimée du langage (2026-07-29). La décision du 2026-07-30 le dit explicitement : *« rien sur le retour éventuel de la composition multi-scène »* — donc rien n'est décidé sur son remplacement, cf. bandeau en tête et LAN-30.
 - Permissions sur les commandes sys
 - Détection automatique de cycles de triggers
 - Hot-swap partiel d'arbre (recharger un sous-arbre sans recréer la racine)
