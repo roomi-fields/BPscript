@@ -1,8 +1,7 @@
 # BPScript — Backlog
 
-Dernière mise à jour : 2026-04-06
-Build : v3.3.19-wasm.8
-S4 vs S5 : 16/29 EXACT, 13 DIFF, 7 SKIP, 2 MISSING
+> En-tête (date/build/mesure S4 vs S5) retirée le 2026-07-31 : plus de référent depuis la
+> suppression du pipeline S4/S5 le 2026-07-19 (détail : item BPS-2 ci-dessous).
 
 ## Données — cohérence chaîne pitch (alphabet → fréquence)
 

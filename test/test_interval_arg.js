@@ -8,10 +8,12 @@
  * résolution (Kairos, normalizeRatio) la normalise. Un contrôle est interval-typé
  * quand sa def de lib porte `argType:"interval"` (libs.js, ctx.intervalControls).
  *
- * NB : au moment d'écrire ce test, AUCUN contrôle de PROD n'est encore marqué
- * interval-typé (le marquage de lib est une action de FRONTIÈRE gelée jusqu'au GO
- * Kairos). On prouve donc le MÉCANISME via une lib de test éphémère, et on vérifie
- * la DORMANCE en prod (zéro régression).
+ * NB : `transpose` (lib/controls.json:458, `argType:"interval"`) EST interval-typé
+ * EN PROD depuis le GO architecte du 2026-07-11 (commit BPscript 854f62f,
+ * hub/decisions/2026-07-11-transposition-reelle-vs-scalaire.md) — cf. section 5
+ * plus bas, qui le PROUVE (`prodCtx.intervalControls.has('transpose')`). Les
+ * formats/erreurs des sections 1-4 restent prouvés sur une lib de test éphémère,
+ * indépendante de la prod.
  *
  * Run: node test/test_interval_arg.js
  */

@@ -3,7 +3,8 @@
 // POURQUOI (directive Romain 2026-06-17). Deux modes / deux sorties TOTALEMENT
 // SÉPARÉS, pour la cohérence, la propreté et la performance :
 //   - `compileBPS()` (index.js) = ancienne voie : parse + ENCODE → grammaire BP3.
-//     Fonction héritée (voie 2), vouée à être supprimée dans les prochaines versions.
+//     Fonction héritée (voie 2) — SUPPRIMÉE le 2026-07-19 (cf. index.js:7-16, commit
+//     1b974f5) ; ce paragraphe documente pourquoi compileToBPxAST n'en a jamais dépendu.
 //   - `compileToBPxAST()` (ici)  = voie AST BPx : produit UNIQUEMENT l'arbre, COMPLET,
 //     **sans JAMAIS appeler le code de l'ancien format** (aucun import d'`encoder.js`).
 //
@@ -182,11 +183,12 @@ function hasTempoDirective(ast) {
 
 // ============================================================================
 // Frontière AST (Palier 3, décision architecte 2026-07-02) — canonicalisation
-// des CONTEXTES pour la voie BPx SEULE. parser.js/encoder.js restent INTACTS :
-// la sortie BP3 héritée (compileBPS) est GELÉE (le texte .grammar est l'oracle
+// des CONTEXTES pour la voie BPx SEULE. Jusqu'à sa suppression le 2026-07-19
+// (commit 1b974f5), parser.js/encoder.js restaient INTACTS : la sortie BP3
+// héritée (compileBPS) était GELÉE (le texte .grammar servait d'oracle
 // de parité), or la forme canonique RHS jette le nom du symbole nié (`#a` →
-// joker nié) et changerait ce texte. D'où la transformation ICI — compileToBPxAST
-// est la couche d'émission BPx de BPScript ; compileBPS ne passe jamais par elle.
+// joker nié) et aurait changé ce texte. D'où la transformation ICI — compileToBPxAST
+// est la couche d'émission BPx de BPScript ; compileBPS (supprimé) ne passait jamais par elle.
 //
 // RÉPLIQUE À L'IDENTIQUE la catégorisation de l'adaptateur BPx vivant
 // (injectParserContext + normaliseLhs/RhsWildcardToVariable, loadGrammar.ts:
@@ -257,7 +259,8 @@ const INLINE_FLIP_PALIER4 = true;
 //
 // Port de la tokenisation `GetBols`/`SEARCHTERMINAL2` (Encode.c:888-918,
 // longest-match sur la table des bols) pour le cas alphabet mono-caractère,
-// À L'ÉMISSION (voie BPx seule — compileBPS/encoder.js gelés intacts). Oracle
+// À L'ÉMISSION (voie BPx seule — compileBPS/encoder.js, supprimés le 2026-07-19,
+// commit 1b974f5). Oracle
 // natif rendu ([258], constat hashab-monochar) : le longest-match gouverne —
 // sous un alphabet dont TOUS les terminaux font 1 caractère, une chaîne
 // composée `abca` s'apparie a·b·c·a (4 tokens) ; un bol multi-caractères
@@ -610,8 +613,9 @@ function deriveAlphabetFromTuning(ast) {
  * MARQUEUR per-occurrence : on pose `role:'homomorphism'` sur le nœud (type Symbol conservé,
  * il reste un élément positionnel du flux). BPx compte les occurrences en portée (profondeur
  * k) et applique chains[note][k-1] (ou les paires). La RÉPÉTITION du symbole EST la
- * profondeur — aucun index posé ici. Passe BPx-ONLY : le chemin BP3 hérité reparse
- * indépendamment (compileBPS) et ne voit jamais ce champ → byte-id préservé.
+ * profondeur — aucun index posé ici. Passe BPx-ONLY : jusqu'à la suppression de
+ * compileBPS le 2026-07-19 (commit 1b974f5), le chemin BP3 hérité reparsait
+ * indépendamment et ne voyait jamais ce champ → byte-id préservé.
  * Cf. AST.md §HomomorphismDeclAST, message bpx [464].
  */
 function resolveHomomorphismMarkers(ast) {
@@ -1704,7 +1708,8 @@ export function compileToBPxAST(source, environnement) {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
     // Résolution d'acteur (décision 2026-07-03 note-nue, option A) : attribution
     // implicite mono-propriétaire + erreur d'ambiguïté « Use dot notation », MÊME
-    // sémantique que la voie héritée (index.js compileBPS:32). L'aval ne résout
+    // sémantique que la voie héritée, compileBPS (supprimée le 2026-07-19, commit
+    // 1b974f5, cf. index.js). L'aval ne résout
     // rien (BPx/Kairos lisent `payload.actor` opaque) → sans cette passe, toute
     // note nue part acteur-nulle dans l'arbre.
     //

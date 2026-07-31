@@ -34,7 +34,7 @@ export const LIBRARY = process.env.KANOPI_LIBRARY
 export const DIR_GR = path.join(LIBRARY, 'scenes', 'BP3-tests');
 export const DIR_BPS = path.join(LIBRARY, 'scenes', 'BPScript-tests');
 
-/** Chemin de la version BPScript d'une grammaire. Existe pour 96 des 113. */
+/** Chemin de la version BPScript d'une grammaire. Existe pour 95 des 113. */
 export const bpsPath = (nom) => path.join(DIR_BPS, `${nom}.bps`);
 /** Chemin de la version BP3 d'une grammaire. Existe pour les 113. */
 export const grPath = (nom) => path.join(DIR_GR, `${nom}.gr`);

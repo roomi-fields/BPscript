@@ -15,12 +15,6 @@
  *     un traitement de signal. » C'est la TABLE qui déclare le vocabulaire, en librairie.
  *  3. AUCUNE TABLE PAR DÉFAUT — sans table on écrit des adresses nues, et c'est EXPLICITE. Une
  *     identité implicite rendrait indistinguables « je n'ai pas de table » et « ma table ne fait rien ».
- *
- * ⚠️ CE QUI EST DÉLIBÉRÉMENT DEHORS : l'adresse nue NUMÉRIQUE (`<!brut.60`). Un point suivi d'un
- * NOMBRE est déjà une lecture valide — la PÉRIODE suivie d'un terminal numérique. Les deux lectures
- * sont grammaticalement légitimes ; les départager demande une règle de langage, elle est chez
- * Romain. Pas de forme provisoire, pas de tolérance en attendant : ce garde ÉPINGLE l'exclusion
- * pour qu'elle ne se comble pas par accident, et il devra être retourné le jour de l'arbitrage.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';

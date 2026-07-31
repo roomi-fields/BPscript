@@ -38,5 +38,9 @@
 | Document | Contenu | Status |
 |----------|---------|--------|
 | [POLYMAKE_STACK.md](issues/POLYMAKE_STACK.md) | Stack overflow sur polymétrie imbriquée 5+ niveaux (not-reich). Workaround : text only, pas de timing | Non résolu — workaround actif |
-| [RNG_PORTABLE.md](issues/RNG_PORTABLE.md) | RNG non portable MSVC vs glibc : 6 grammaires S0≠S1. Spec LCG écrite, implémentation pending | Spec prête, code à faire |
 | [TEMPO_OPS_WASM.md](issues/TEMPO_OPS_WASM.md) | Opérateurs tempo `/N`, `\N`, `_tempo()` : écarts comportementaux WASM vs natif (tests MIDI comparés) | Investigation en cours |
+
+> RNG non portable MSVC vs glibc (6 grammaires S0≠S1) : **résolu le 2026-04-02** (LCG portable
+> implémenté, `bp3_random.c`/`.h`, score S0=S1 passé à 26/30 EXACT). Retiré de la table ci-dessus ;
+> le document `issues/RNG_PORTABLE.md` qui portait ce détail a été supprimé le 2026-07-31
+> (assainissement doc, chantier clos — `hub/decisions/2026-07-31-refonte-de-la-documentation-sept-formes-un-proprietaire-trois-gardes.md`).
