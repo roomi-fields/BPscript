@@ -10,7 +10,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Look for bp3-engine: submodule first (BPScript/bp3-engine/), then sibling (../bp3-engine/)
+// bp3-engine a cessé d'être un sous-module de BPscript le 2026-06-14 (hub/decisions/
+// 2026-06-14-desubmodule-bp3-engine.md) : le sibling (../bp3-engine/) est devenu l'UNIQUE
+// dépôt moteur canonique. Le test ci-dessous garde un ordre de résolution à deux branches
+// (submodule puis sibling), mais la branche submodule est morte : BPscript/bp3-engine
+// n'existe plus sur le disque, elle ne peut plus jamais matcher.
 const submodule = path.resolve(__dirname, '..', 'bp3-engine');
 const sibling = path.resolve(__dirname, '..', '..', 'bp3-engine');
 const BP3_DIR = fs.existsSync(path.join(submodule, 'builds')) ? submodule : sibling;

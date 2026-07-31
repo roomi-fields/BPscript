@@ -1013,7 +1013,7 @@ Exemples :
 - `/N` (opérateur NU) = vitesse ABSOLUE N + fixtempo (BP3 Encode.c:418-425). La durée de référence du champ est imposée. Persiste jusqu'au prochain opérateur tempo ou fin de champ. Pas de bracket ni d'exit token.
 - `*N` (bracket `_tempo`) = relatif à la vitesse héritée. Enter `_tempo(1/N)` avant l'élément, exit `_tempo(1/1)` après (restaure la vitesse héritée au bord du bracket).
 - `![/N]` dans le flux (InstantControl) → `_tempo(N/1)` relatif (sans fixtempo), portée séquentielle.
-- `{v1, v2}[speed:2]` → compilé en `{2, v1, v2}` (ratio polymétrique, distinct du tempo)
+- `{v1, v2}:2` → compilé en `{2, v1, v2}` (ratio polymétrique, distinct du tempo)
 - `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
 - `[staccato:50]` → `{ pairs:[{key:"staccato", value:50}] }` → compilé en `_staccato(50)` (suffixe)
 - `[legato:80]` → `{ pairs:[{key:"legato", value:80}] }` → compilé en `_legato(80)` (suffixe)
@@ -1525,14 +1525,14 @@ Utilisé dans les grammaires LIN pour les patterns de permutation (ex: change ri
 ```
 RawBrace {
   type: "RawBrace"
-  value: "{" | "}" | ","            // brace brute pour embedding patterns
-  polySpeed: number | string | null  // annoté par le 2-pass depuis }[speed:N]
-  qualifiers: Qualifier[] | null     // [speed:N] sur } (source du polySpeed)
+  value: "{" | "}" | ","                            // brace brute pour embedding patterns
+  duree: NumericTerminal | NumericDuration | null   // durée collée `}:N`, annotée par le 2-pass depuis la `}` fermante
 }
 ```
 
 Émis quand `{`, `}`, `,` sont non-balancés dans une règle (embedding pattern).
-Le 2-pass `annotateUnbalancedBraces` propage `[speed:N]` du `}` vers le `{` correspondant.
+Le 2-pass propage la durée `}:N` (durée collée, décision 2026-06-26-trois-concepts-temps-duree,
+qui a supprimé l'ancien qualificatif `[speed:N]`) de la `}` fermante vers le `{` correspondant.
 
 ### `FlagExpr`
 

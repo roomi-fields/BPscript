@@ -807,11 +807,18 @@ engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
 
 ENGINE_KEY  = "mode" | "scan" | "weight" | "on_fail"   (* `speed` SUPPRIMÉ → durée `:` *)
-            | "tempo" | "meter" | "scale"
+            | "tempo" | "meter"
             | "retro" | "shuffle" | "order" | "rotate"
-            | "keyxpand" | "repeat" | "failed" | "stop" | "goto"
+            | "repeat" | "failed" | "stop" | "goto"
             | "striated" | "smooth"
             | "staccato" | "legato" | "rndtime" ;
+            (* `keyxpand` retiré : contrôle RUNTIME (dispatcher), jamais moteur — décision
+               `2026-06-14-locus-perf-controls.md`. `scale` retiré : l'homonyme MOTEUR (mise à
+               l'échelle temporelle numérique d'un groupe) est SUPPRIMÉ, pas déplacé — subsumé
+               par `{A B}:N` — décision `2026-07-26-controle-moteur-scale-supprime-subsume-par-la-duree.md`.
+               Seul l'AUTRE homonyme `scale` (gamme microtonale, `(scale:nom clé)`) reste un
+               contrôle runtime, régi par la décision du 2026-06-14. Les deux sont rejetés
+               fail-loud dans `[]` par `src/transpiler/parser.js` (checkQualifierKey). *)
 
 raw_value   = (* tout texte jusqu'au prochain "," ou "]" *) ;
 ```
@@ -997,7 +1004,6 @@ numeric_duration  = INT | INT , "/" , INT ;           (* silence de durée ratio
 ```
 
 `numeric_duration` : un nombre nu dans le flux = silence de durée rationnelle.
-**À confirmer avec Bernard** : différence exacte entre `-` et `1`.
 
 `undetermined_rest` : `...` en BPScript est compilé en `_rest` pour BP3 (commande built-in,
 token `T0, 17` dans `Encode.c`). Utilisé dans les voix polymétriques — le moteur calcule

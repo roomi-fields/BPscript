@@ -1,8 +1,9 @@
 # Voix de code — langages backtickés
 
 > **Brouillon source (bpscript) à router par l'architecte vers Atlas** pour intégration
-> dans la doc utilisateur (MkDocs). Parties **ratifiées** ; la sous-section *Timing fin*
-> est un **placeholder** jusqu'à ratification du chantier Kronos.
+> dans la doc utilisateur (MkDocs). Parties **ratifiées** (y compris le modèle container de
+> la sous-section *Timing fin*) ; seul le **chantier d'implémentation** (asservissement
+> Kronos, re-déclenchement runtime-codevoices, curseur Kanopi) y reste en cours.
 > Sources : décisions hub `2026-07-04-cv-curve-syntaxe-backtick-type.md` et
 > `2026-07-04-modele-timing-voix-de-code.md`.
 
@@ -80,14 +81,24 @@ Comme dans un DAW, **l'hôte possède le tempo maître et toute voix de code y e
 La convention live-coding (`setcps` dans le code) est donc **réinterprétée** : l'hôte pilote
 l'horloge, le code exprime le rythme **relativement**. « Un DAW pour live-codeurs. »
 
-## 5. Timing fin — *placeholder (en cours de ratification)*
+## 5. Timing fin — *chantier d'implémentation en cours*
 
-> Cette section sera complétée à la ratification du chantier transport (Kronos). Cadre
-> pressenti (non encore ratifié, **ne pas s'y fier**) : une voix de code est un **container**
-> dont le début / fin / boucle appartiennent au transport ; l'invité **remplit** le container
-> sans en dicter la taille ; à la couture de boucle, l'invité **redémarre**. Le mode
-> d'expression de la **durée** d'un container par la scène (annotation ? multiplicateur ?)
-> est une décision de surface **à trancher** — elle sera documentée ici une fois ratifiée.
+> Le **modèle container** est **ratifié** (Romain 2026-07-04, décision hub
+> `2026-07-04-modele-timing-voix-de-code.md`, section « Le modèle tranché (A) »), confirmé
+> indépendamment dans `hub/courrier/kronos.md:1496` (« Romain a CONFIRMÉ A ») : une voix de
+> code est un **container** dont le début / fin / boucle appartiennent au transport ;
+> l'invité **remplit** le container sans en dicter la taille ; à la couture de boucle,
+> l'invité **redémarre**.
+>
+> Le mode d'expression de la durée d'un container par la scène est **tranché** (Romain
+> 2026-07-04, décision hub `2026-07-04-modele-timing-voix-de-code.md`, section Q1) :
+> **forme canon = le cadre `{N, …}`** (la prolongation `_` reste une forme équivalente en
+> dérivation, mais non canon documentée). Aucune nouvelle syntaxe.
+>
+> Reste réellement en cours (chantier de design, à mener par les propriétaires, section
+> finale de la même décision) : l'asservissement de l'invité à l'horloge maître Kronos, le
+> point de re-déclenchement par moteur (runtime-codevoices), et le câblage du curseur Kanopi
+> sur la position de Kronos.
 
 ## Récapitulatif des formes
 

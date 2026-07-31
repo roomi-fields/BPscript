@@ -30,7 +30,6 @@ seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 │  │  octaves.json                 │                                │
 │  │  tunings.json → temperaments  │                                │
 │  │  controls.json                │                                │
-│  │  routing.json                 │                                │
 │  └───────────────────────────────┘                                │
 │       ↓                                                           │
 │  Grammaire BP3 + alphabet plat + prototypes -so. + settings       │
@@ -81,6 +80,10 @@ seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
      └────────────────┘     └─────────────────┘                    │
 ```
 
+> ⚠️ **Étape 2 du diagramme (« Resolver du token → fréquence ») : PÉRIMÉE**, même statut que la
+> section Dispatcher plus bas — Kairos est seul à résoudre les hauteurs, ce runtime n'en calcule
+> plus (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+
 **Deux sorties fondamentalement différentes :**
 
 - **Transports** = envoyer des **données** horodatées (freq, vel, durée).
@@ -120,7 +123,10 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
 
 - **Pas de resolver global** — un resolver par acteur
 - **Pas d'alphabet global** — chaque acteur a le sien
-- Le dispatcher identifie l'acteur d'un token et délègue à son resolver
+- Le dispatcher identifie l'acteur d'un token et délègue à son resolver — **périmé** : depuis
+  `hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`, Kairos
+  est seul à résoudre les hauteurs ; le dispatcher aval ne calcule plus rien (cf. bandeau ci-dessous,
+  section Dispatcher)
 - Le compilateur vérifie les conflits inter-acteurs à la compilation
 
 ---
@@ -135,7 +141,6 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
 | 4   | **Registre**    | `octaves.json`      | convention d'octave       | notation registres    | fréquences, MIDI   |
 | 5   | **Tempérament** | `temperaments.json` | grille d'intervalles      | ratios mathématiques  | noms de notes      |
 | 6   | **Tuning**      | `tunings.json`      | gamme concrète            | degrees + alterations | structure          |
-| —   | **Routage**     | `routing.json`      | connexions                | adresses, ports       | musique, structure |
 | —   | **Transport**   | runtime             | protocoles (OSC, MIDI...) | envoyer des données   | composition        |
 | —   | **REPL**        | runtime             | sessions code             | évaluer du code       | composition        |
 
@@ -154,6 +159,10 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
        └→ crée un Resolver configuré avec ces 4 sources
 ```
 
+> ⚠️ **« Crée un Resolver » : PÉRIMÉ.** Même statut que la section Dispatcher plus bas — Kairos est
+> seul à résoudre les hauteurs depuis ces 4 sources, aucun Resolver n'est instancié au runtime
+> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+
 ---
 
 ## Pipeline de compilation
@@ -166,7 +175,7 @@ propreté, performance) :
 | Façade (`src/transpiler/index.js`) | Sortie | Rôle |
 |---|---|---|
 | `compileToBPxAST(source)` | `{ ast, errors, warnings }` | **Voie AST BPx** : produit l'**arbre seul**, agnostique, consommé par BPx + Kanopi. **N'appelle JAMAIS l'encodeur** (`src/transpiler/bpxAst.js` n'importe que tokenizer + parser). |
-| `compileBPS(source)` | `{ grammar, alphabet, settings, … }` | **Voie 2 (BP3 héritée)** : parse + ENCODE → grammaire BP3. **Vouée au retrait** dans les prochaines versions. |
+| `compileBPS(source)` | `{ grammar, alphabet, settings, … }` | **Voie 2 (BP3 héritée) — SUPPRIMÉE le 2026-07-19.** Ligne conservée pour l'intention de design historique ; ne décrit plus le dépôt (cf. bandeau ci-dessous). |
 
 **SOURCE UNIQUE = l'arbre, ZÉRO table parallèle** (directive Romain 2026-06-17, confirmée BPx +
 Kanopi). La voie AST ne renvoie que l'arbre ; tout vit DANS les nœuds / directives, lu directement
@@ -193,7 +202,12 @@ canonique `BPx/docs/AST_SPEC.md`.
 > ⚠️ **CONTEXTE BPx.** Quand on produit l'AST BPx, on n'utilise PAS le code de l'ancien format. La
 > voie 2 (`compileBPS` → grammaire BP3) ne se touche QUE sur demande explicite (cf. `CLAUDE.md`).
 
-### Étapes — voie 2 (BP3 héritée)
+### Étapes — voie 2 (BP3 héritée) — SUPPRIMÉE (2026-07-19)
+
+`compileBPS`, l'**Encoder** et le **Prototype generator** décrits ci-dessous ont été **SUPPRIMÉS**
+le 2026-07-19 (commit `1b974f5`) — pas de dépréciation douce, code mort retiré dans le même
+mouvement (`BPscript/src/transpiler/index.js:7-16`). La section est conservée pour l'intention de
+design historique ; elle ne décrit plus le dépôt aujourd'hui.
 
 ```
 Source .bps
@@ -276,6 +290,14 @@ Timed tokens (noms résolus) → Dispatcher
 
 ### Dispatcher
 
+> ⚠️ **Résolution de hauteur : PÉRIMÉ.** L'étape 4 ci-dessous et la section « Resolver par acteur »
+> (classe `Resolver`) décrivent un design antérieur à Kairos, où le dispatcher calculait le pitch au
+> runtime. Ce n'est plus le cas : **Kairos est seul à résoudre les hauteurs** et transmet des
+> hauteurs déjà calculées aux runtimes ; le dispatcher (Kanopi) ne calcule rien, il assemble
+> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md` ;
+> `hub/decisions/2026-07-29-notre-mecanique-n-utilise-que-des-alphabets.md`). Section conservée pour
+> l'intention de design historique.
+
 Le dispatcher est la boucle centrale du runtime. Il reçoit la séquence
 horodatée (après résolution REPL) et orchestre les acteurs.
 
@@ -317,6 +339,11 @@ Pour chaque token à l'instant T :
 ```
 
 ### Transposition — chemin complet
+
+> ⚠️ **« Dispatcher étape 5 (pitch) » ci-dessous et la « Formule de résolution » qui suit : PÉRIMÉES**,
+> même statut que « l'étape 4 » et la classe `Resolver` déjà signalées section Dispatcher — Kairos
+> est seul à résoudre les hauteurs, ce runtime ne calcule plus de fréquence
+> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
 
 La transposition est un contrôle runtime (`_script(CT n)`), pas une opération
 moteur. C'est une **opération symbolique sur l'alphabet**, pas un calcul de
@@ -521,10 +548,14 @@ REPL avant le dispatcher. Les `_script(CT n)` sont des contrôles opaques.
 
 ### Interface 3 : Dispatcher → Transport (à adapter)
 
+> ⚠️ **`// Hz (résolu par actor.resolver)` : PÉRIMÉ**, même statut que la section Dispatcher —
+> la fréquence arrive déjà résolue par Kairos, aucun `actor.resolver` ne tourne à ce point
+> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+
 ```js
 actor.transport.send({
   type: "gate",              // gate | trigger | cv
-  frequency: 261.63,         // Hz (résolu par actor.resolver)
+  frequency: 261.63,         // Hz
   duration: 1000,            // ms
   onset: 0,                  // ms
   controls: { vel: 120 }     // depuis controlTable
@@ -606,9 +637,8 @@ Le langage ne connaît que `!nom` et `<!nom` — le transport est transparent.
 | `lib/temperaments.json` | grilles d'intervalles (ratios)           | resolver                             |
 | `lib/tunings.json`      | gammes concrètes (degrees + alterations) | resolver                             |
 | `lib/controls.json`     | contrôles runtime (vel, pan, wave...)    | encoder, dispatcher                  |
-| `lib/routing.json`      | connexions transport/eval                | dispatcher                           |
 | `lib/sub.json`          | tables de substitution                   | encoder                              |
-| `lib/filter.json`       | CV objects (ADSR, LFO, ramp)             | encoder, dispatcher                  |
+| `lib/mod.json`          | CV objects (ADSR, LFO, ramp)             | encoder, dispatcher                  |
 
 Ancien fichier préservé pour compatibilité BP3 :
 - `lib/temperaments.json` — grilles de tempérament, dont **162 grilles `bp3_*`** = les gammes Bernard Bel (ex-`lib/tuning.json`, fichier plat RETIRÉ 2026-07-17 ; provenance : `scripts/convert-tonality.js`, trace BP3 `-to.*`)

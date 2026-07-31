@@ -205,6 +205,7 @@ Comportement :
 @actor NAME
   alphabet.X
   [tuning.Y]
+  [octaves.O]
   [sounds.Z]
   transport.T
 ```
@@ -213,8 +214,15 @@ Comportement :
 |-----------|------|--------|
 | `alphabet` | Vocabulaire (noms des terminaux) | oui |
 | `tuning` | Tempérament / accordage → pitch via temperament | si pitched |
+| `octaves` | Convention de registre / notation, défaut hérité de l'alphabet | si pitched, surcharge optionnelle |
 | `sounds` | Définitions per-terminal (timbre, perc, sample) | si non-pitched ou timbre spécifique |
 | `transport` | Destination de rendu | oui |
+
+Ce tableau couvre les propriétés engagées dans la cascade de son ; le modèle complet de
+l'acteur (SEPT clés — les six de `hub/decisions/2026-06-16-cles-acteur-six.md` + `voice`,
+ajoutée le 2026-07-16 — dont `eval` et `voice` qui ne passent pas par cette cascade) est
+documenté dans `ACTOR.md` ; canon des clés : `docs/spec/EBNF.md:179` (`ACTOR_ENTITY_KEY`) et
+`src/transpiler/parser.js:40` (`ACTOR_ENTITY_KEYS`).
 
 Exemples :
 

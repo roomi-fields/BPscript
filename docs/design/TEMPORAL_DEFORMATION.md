@@ -2,6 +2,14 @@
 
 Version 1.0 — 26 mars 2026
 
+> ⚠️ **« Dispatcher » ci-dessous nomme un rôle, pas un composant qui existe** : le module a été
+> retiré du dépôt le 2026-04-13 (extraction Kanopi, commit `4fb6b46` — voir « Ce qui existe vs
+> ce qui est à construire » plus bas pour la répartition actuelle : BPx ordonnance, Kairos résout
+> la hauteur, Kronos route vers le transport, runtime-audio rend). Les mentions de « dispatcher »
+> dans la vision ci-après (Principe, Deux sorties complémentaires, Constraint solver, Pipeline
+> complet) décrivent l'intention de design de mars 2026 ; elles ne désignent plus un composant
+> du dépôt.
+
 ## Vision
 
 BP3 est un compilateur de structures temporelles. Il produit un résultat statique.
@@ -306,7 +314,13 @@ dans un fichier de configuration.
 - BP3 WASM : dérivation, polymétrie, phase diagram ✅
 - Timed tokens : sortie plate ✅
 - REPL : résolution étiquettes (Phase 1, en cours) ✅
-- Dispatcher : scheduling et routing ✅
+- Dispatcher : ❌ retiré du dépôt le 2026-04-13 (extraction Kanopi, commit `4fb6b46`) — BPScript
+  ne porte plus de dispatcher. Les responsabilités se répartissent : l'ordonnancement (structure,
+  timing) reste chez **BPx**, l'**ordonnanceur** au sens de
+  `hub/decisions/2026-07-17-bpx-ordonnanceur-opaque-homomorphisme-en-resolution-kairos-librairie.md` ;
+  la résolution de hauteur et les ratios chez **Kairos** ; le routage vers le transport chez
+  **Kronos**, qui route la hauteur déjà résolue (cf. `PITCH.md` Layer 5) ; le rendu audio/CV chez
+  **runtime-audio** — confirmé le 2026-07-19 (cf. `SOUNDS.md:705-707`)
 - CV objects : LFO, ramp, ADSR (design) ✅
 - Web interface : affichage résultat ✅
 

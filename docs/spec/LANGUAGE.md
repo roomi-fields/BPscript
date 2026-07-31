@@ -506,8 +506,18 @@ weight             poids de la regle (entier, K-param, ou inf pour priorite abso
 on_fail            gestion d'echec (skip, retry(N), fallback(X))
 tempo              tempo local ou global (@tempo:120)
 meter              signature rythmique (@meter:7/8, @meter:4/4)
-scale              gamme microtonale
 ```
+
+`scale` recouvre deux contrôles homonymes, distincts :
+- `scale` NUMÉRIQUE (mise à l'échelle temporelle d'un groupe) était un contrôle MOTEUR, **SUPPRIMÉ**
+  (décision `hub/decisions/2026-07-26-controle-moteur-scale-supprime-subsume-par-la-duree.md`) : il
+  se réécrit avec la DURÉE COLLÉE — `{A B}[scale:2]` → `{A B}:2`.
+- `scale` (gamme microtonale) n'est PAS une clé de `[]` : c'est un contrôle de RUNTIME, rejeté
+  fail-loud par le compilateur s'il apparaît entre crochets — il s'écrit `(scale:nom clé)`.
+
+Les deux ne se confondent jamais : un `[scale:N]` numérique ne se réécrit **jamais** en
+`(scale:...)` — ce serait écrire une gamme dont le nom serait « 2 » (`src/transpiler/parser.js`,
+`checkQualifierKey`).
 
 Toute cle non reservee dans `[]` est une erreur de compilation. Pour les parametres
 destines au runtime (vel, filter, wave...), utiliser `()` a la place.

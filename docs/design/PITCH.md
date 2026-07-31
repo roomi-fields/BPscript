@@ -85,8 +85,8 @@ L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
 @actor lights  alphabet.dmx_fixtures  transport.dmx
 ```
 
-Un acteur = **alphabet + tuning + octaves + transport**. C'est le contexte complet
-de résolution d'un symbole.
+Un acteur = **alphabet + tuning + octaves + transport + sound + eval + voice** (sept clés,
+voir tableau ci-dessous). C'est le contexte complet de résolution d'un symbole.
 
 ### Syntaxe de la directive `@actor`
 
@@ -94,7 +94,10 @@ de résolution d'un symbole.
 @actor <nom>  <clé.valeur>  <clé.valeur>  ...
 ```
 
-Clés disponibles :
+Clés disponibles (**SEPT** aujourd'hui — les six de la décision
+`hub/decisions/2026-06-16-cles-acteur-six.md` + `voice`, ajoutée le 2026-07-16 ; le tableau
+ci-dessous en listait cinq, il en manquait deux : `sound` et `voice` — cf.
+`BPscript/src/transpiler/parser.js:40` `ACTOR_ENTITY_KEYS`, `BPscript/docs/spec/EBNF.md:179`) :
 
 | Clé | Obligatoire | Valeur | Exemple |
 |-----|-------------|--------|---------|
@@ -102,13 +105,17 @@ Clés disponibles :
 | `tuning` | non | référence vers `tunings.json` | `tuning.sargam_22shruti` |
 | `octaves` | non | référence vers `octaves.json` | `octaves.saptak` |
 | `transport` | oui | appareil typé (+params optionnels) | `transport.midi(ch:3)` |
+| `sound` | non | référence vers un prototype de son | `sound.tabla_perc` |
 | `eval` | non | interpréteur pour les backticks | `eval.sclang` |
+| `voice` | non | référence vers `lib/voices` (son de base + contrôles) | `voice.wobble` |
 
 Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
 Si `octaves` est omis → convention **héritée de l'alphabet** de l'acteur (`lib/alphabets.json`).
 `@actor X octaves.Y` surcharge cette notation de registre pour l'acteur. `octaves` est une étape de
 résolution distincte, rattachée au vocabulaire de symboles (alphabet), pas au `tuning`.
 Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne sont pas évalués.
+`voice` désigne la voix de l'acteur ; la hauteur reste structurelle (`alphabet`+`tuning`), jamais un
+flag de voix — `voice.X` sans `tuning` = percussion, valide.
 
 ### Utilisation dans les règles
 

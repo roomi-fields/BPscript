@@ -1,7 +1,9 @@
 # Dossier — les grammaires de TEST des features BP3 : par grammaire ou par CLASSE ?
 
-**Pour arbitrage : Romain.** Rédigé 2026-07-19 par bpscript, à la demande de l'architecte (note [677]).
-**Statut : question ouverte.** Rien n'est implémenté, aucune syntaxe n'est proposée comme acquise.
+Rédigé 2026-07-19 par bpscript, à la demande de l'architecte (note [677]).
+**Statut : question sémantique TRANCHÉE par Romain le 2026-07-30** — cf. `hub/decisions/2026-07-30-un-nombre-nu-est-un-silence-de-duree-n.md`, reprise en fin de dossier. Reste un
+**travail d'implémentation** (vérifier/réparer que la durée du nombre nu est bien occupée en sortie),
+pas une question ouverte.
 
 > **Suite de `PORTEUR_VERBATIM.md`**, clos par la décision « métagrammaires hors périmètre »
 > (2026-07-18). En instruisant la fixture suivante, `trytemplates`, deux gaps sont apparus — dont
@@ -167,3 +169,12 @@ SANS opérateur ». Reste à établir si le BP3 leur donne deux sens distincts o
 raccourci de `/5/3` — **je ne l'ai pas prouvé** et je ne propose pas de surface avant de l'avoir
 fait. Proposer sur une équivalence supposée serait exactement l'erreur que les cinq faux problèmes
 précédents m'ont apprise.
+
+**RÉSOLU 2026-07-30** : cf. `hub/decisions/2026-07-30-un-nombre-nu-est-un-silence-de-duree-n.md` —
+un nombre nu en séquence (entier ou fractionnaire) porte la nature `rest` (silence de durée n), ce
+qui exclut par nature qu'il s'agisse de l'opérateur `/N` (tempo absolu persistant, cf. lignes 138-141
+ci-dessus) : ce sont deux objets distincts, `5/3` n'est pas un raccourci de `/5/3`. Reste un travail
+d'implémentation (vérifier/réparer que la durée est bien occupée en sortie), pas une question
+sémantique. Nuance : la décision ne cite pas nommément `/N` ni ce dossier — la distinction avec
+l'opérateur de tempo est une inférence logique (silence ≠ opérateur), pas une phrase littérale de
+Romain.
