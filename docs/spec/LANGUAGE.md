@@ -613,11 +613,11 @@ Trois ecritures, une seule plomberie :
 ```text
 Sa(vel:120)                                  litteral -- BPScript transporte la valeur
 Sa(vel:`rrand(40,127)`)                      backtick inline -- le runtime de Sa evalue
-`sc: SynthDef(\grain, { |freq| ... }).add`   backtick orphelin -- le tag nomme le runtime
+`sc: SynthDef(\grain, { |freq| ... }).add`   backtick autonome -- le tag nomme le langage
 ```
 
 Un backtick qui tient sa propre place -- en tete de scene ou dans le flux d'une regle -- est
-**orphelin** : son langage se nomme, soit par un tag dans le bloc (`` `js: …` ``), soit par un
+**autonome** : son langage se nomme, soit par un tag dans le bloc (`` `js: …` ``), soit par un
 acteur qui le qualifie avec le point (`` drums.`…` ``, declare par `@actor drums eval.<moteur>`).
 La regle vaut aux deux emplacements.
 
