@@ -1,3 +1,11 @@
+> # ⛔ ARCHIVÉ — LA HIÉRARCHIE DE SCÈNES EST SUPPRIMÉE DU LANGAGE
+>
+> **Archivé le 2026-08-01, sur décision de Romain.** Ce document décrit un mécanisme qui **ne fait
+> plus partie de BPScript**. Il est conservé pour mémoire seulement.
+>
+> **Ne t'appuie sur rien de ce qui suit.** La référence du langage est
+> `BPscript/docs/spec/LANGUAGE.md`, et elle seule.
+
 # SCENES.md — Hiérarchie de scènes : modèle de communication
 
 > Référencé par [LANGUAGE.md](../spec/LANGUAGE.md) §Scenes et le contrat moteur [BPx ENGINE_SPEC.md](../../../BPx/docs/ENGINE_SPEC.md) §6 (FlagStore) / §7 (TriggerBus) / §10 (orchestration).
