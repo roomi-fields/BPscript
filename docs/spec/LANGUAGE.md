@@ -240,6 +240,7 @@ Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le
 @var cv cutoff
 @var gate porte
 @var trig depart
+@var wire principal saw >> lpf >> audio
 @var pivot
 ```
 
@@ -250,6 +251,7 @@ Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le
 | `cv` | une valeur continue |
 | `gate` | un etat ouvert ou ferme |
 | `trig` | un instant |
+| `wire` | un cablage nomme : une chaine de modules qu'on rebranche d'un mot |
 | *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle |
 
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
@@ -315,6 +317,38 @@ cascade.
   octaves.saptak
   transport.audio
 ```
+
+### Les modules -- ce qu'on cable
+
+Un **module** est une fonction : une ou plusieurs **entrees**, du code, une ou plusieurs
+**sorties**. C'est un module eurorack ecrit en code. Les modules vivent dans une librairie et
+s'invoquent comme tout le reste.
+
+```text
+@module.saw
+@module.lpf
+@module.adsr
+```
+
+**Chaque port est type.** Un port accepte ou rend un `cv`, un `gate`, un `trig`, ou le signal
+lui-meme. Le type d'un port dit ce qu'on a le droit d'y brancher, et le compilateur le verifie.
+
+**Un module a une entree et une sortie de signal par defaut.** Quand elles suffisent, la chaine
+s'ecrit sans les nommer :
+
+```text
+saw >> lpf >> audio
+```
+
+**Quand il y en a plusieurs, le cablage les nomme**, avec le point :
+
+```text
+saw.freq >> lpf.cutoff
+env.out >> lpf.cutoff
+```
+
+Un module est un **patron** : il se declare une fois et s'instancie autant de fois qu'une piece en
+a besoin, chaque instance portant ses propres valeurs de port.
 
 ### Invoquer une librairie
 
@@ -1780,13 +1814,14 @@ partageant le premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe
 
 ### Câbler : `>>` et `\>>`
 
-`>>` branche, `\>>` coupe. Le câblage initial s'écrit avec `@wire`. Un câblage nommé s'écrit
+`>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `@init`. Un câblage nommé se déclare
+avec `@var wire`, et s'écrit
 dans le corps d'une `@macro`, et son nom se pose **nu** dans le flux ; le compilateur marque
 alors cet élément de la nature « câblage », que l'aval traite comme telle.
 
 ```bpscript
 @alphabet.western
-@wire saw >> lpf >> audio
+@var wire principal saw >> lpf >> audio
 @macro ouvre lpf.cutoff:12000
 @macro coupe saw \>> lpf
 
