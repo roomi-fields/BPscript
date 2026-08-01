@@ -213,153 +213,152 @@ S -> !(vel:80) sitar1.sa!tin!na <!depart sitar1.re
 `!(vel:80)` se pose seul, sans duree, et vaut a partir de la. `sitar1.sa!tin!na` produit **trois
 evenements** au meme instant. `<!depart` retient la suite jusqu'a l'arrivee du signal `depart`.
 
-### Acteur -- unite de binding
+## La partie declarative
 
-Un acteur lie sept cles d'entite, referencees par `.` :
+Une scene commence par ce qu'elle declare, et se poursuit par ce qu'elle produit. La partie
+declarative fait exister des choses ; les regles de production les font sonner dans le temps.
 
-| Cle         | Ce qu'elle fixe                                       | Sa source par defaut                       |
-| ----------- | ----------------------------------------------------- | ------------------------------------------ |
-| `alphabet`  | le vocabulaire de terminaux que l'acteur reconnait    | l'`@alphabet` de la scene, sinon `@core`   |
-| `tuning`    | le temperament qui donne sa hauteur a chaque terminal | le temperament attache a l'alphabet        |
-| `octaves`   | la convention de registre et son ecriture             | la convention attachee a l'alphabet        |
-| `voice`     | le son de base d'un terminal et ses controles         | la voix que l'alphabet attache au terminal |
-| `sound`     | le prototype d'objet sonore que porte un terminal     | la cascade des sons                        |
-| `transport` | le canal de sortie : `audio`, `midi`, `osc`           | `audio`, fourni par `@core`                |
-| `eval`      | le producteur embarque qui execute son code natif     | un backtick porte alors son propre tag     |
+### Quatre mots
 
-Chaque cle se surcharge en la nommant dans le bloc `@actor` ; une cle absente prend sa source par
-defaut (cf. [L'heritage par cascade](#lheritage-par-cascade)). `voice` et `sound` se lisent dans un
-catalogue ferme (`lib/voices.json`, `lib/sounds.json`) : un nom absent du catalogue est nomme comme
-une faute au parse.
+Le coeur declaratif tient en quatre mots. Tout le reste s'ecrit en invoquant une librairie ou une
+categorie de reglages.
 
-**Sortir et sonner sont deux axes independants.** `transport` dit **par ou** l'acteur sort, et ne
-connait que nos trois canaux : `audio`, `midi`, `osc`. `voice` et `sound` disent **ce qui sonne** :
-la voix donne le son de base et ses controles, realise par le runtime vise -- du code qui synthetise
-en audio, un preset d'appareil en MIDI ou en OSC ; le prototype d'objet sonore donne au terminal son
-echantillon ou son synthe et son comportement dans le temps (duree, dilatation, recouvrement,
-troncature). Un meme acteur nomme les deux axes : `tabla1` sort en MIDI sur le canal 10 **et** porte
-le prototype `tabla_perc`.
+| mot | ce qu'il fait |
+| --- | --- |
+| `@actor` | declare **qui joue** : un acteur, son alphabet, sa sortie |
+| `@var` | declare **une variable** : un nom qui porte une valeur ou un etat |
+| `@def` | declare **une definition** : un nom associe a un corps qu'on reinvoque |
+| `@init` | declare **l'etat de depart** de la scene |
 
-**Producteur embarque** : `eval.<moteur>` donne a l'acteur un producteur qui **produit et sort en
-natif** -- son propre audio, sa propre image. Un acteur qui nomme `eval` ne nomme pas `transport` :
-le compilateur refuse les deux ensemble, puisqu'il n'y a pas de sortie a router.
+### `@var` -- declarer une variable
 
-**Le registre** est l'octave ou se joue un degre : le meme nom de note, un cran plus grave ou plus
-aigu. La convention de registre (`lib/octaves.json`) donne la liste des crans, celui qui vaut par
-defaut, et la facon de l'ecrire -- le marqueur se colle au nom de note par le separateur de la
-convention. Les conventions a **prefixe** -- saptak indien, turkish, gamelan, shakuhachi, korean --
-ecrivent le marqueur devant, separe par `_` : la musique indienne s'ecrit `mandra_sa`, `madhya_sa`
-(le cran par defaut, qui s'ecrit aussi `sa` nu) et `taar_sa`. Les conventions a **suffixe**
-l'ecrivent derriere, avec ou sans separateur : `C4` en occidental, `sa_4` en saptak numerote. Dans
-les deux cas il s'agit d'un seul terminal, dont Kairos resout le registre en aval.
+Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le mot et le nom.
 
-```bpscript
-@core
-@controls
+```text
+@var flag section: calm:1, full:2
+@var in touches transport.keyboard
+@var cv cutoff
+@var gate porte
+@var trig depart
+@var pivot
+```
 
-@actor sitar1
+| type | ce que la variable porte |
+| --- | --- |
+| `flag` | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent |
+| `in` | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance |
+| `cv` | une valeur continue |
+| `gate` | un etat ouvert ou ferme |
+| `trig` | un instant |
+| *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle |
+
+**Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
+entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
+
+**Le role d'une entree ne nomme jamais un appareil.** La scene declare `touches` ; l'utilisateur
+associe le clavier reel, et cette association vit **hors de la scene** -- un nom de port change de
+machine en machine. Le flux attend un geste de ce role avec le point d'attente : `<!touches.Space`.
+
+**Une variable sans type** existe pour etre ecrite dans une regle sans sonner : un pivot de
+grammaire, un jalon de structure.
+
+### `@def` -- declarer une definition
+
+`@def` associe un nom a un corps, pour le reinvoquer d'un mot. Ses types sont ceux des signaux :
+`cv`, `gate`, `trig`.
+
+```text
+@def souffle lfo:2 >> filtre.cutoff
+@def cadence sa re ga pa
+@def cv enveloppe `js: (t, dur) => 1 - t / dur`
+```
+
+Ce qu'une definition peut porter : une structure de terminaux, un branchement, du code, un signal.
+**Ce qui se definit est ce qui se reinvoque** -- un fil isole entre deux points ne se definit pas,
+puisqu'on ne le rejoue jamais seul.
+
+### `@init` -- l'etat de depart
+
+`@init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le
+branchement initial, le code lance une fois, les valeurs de depart.
+
+```text
+@init
+  saw >> lpf >> audio
+  `sc: SynthDef(\grain, { |freq| ... }).add`
+```
+
+**Une production ne s'ecrit pas dans `@init`** : une regle produit dans le temps, l'initialisation
+precede le temps.
+
+Ce qui appartient a une chose s'initialise **dans sa declaration** -- un flag ecrit son etat de
+depart la ou il nait. `@init` recueille ce qui ne se rattache a rien : un branchement relie des
+modules deja declares, il n'appartient a aucun d'eux.
+
+### `@actor` -- declarer qui joue
+
+Un acteur porte cinq cles. Chacune se lit dans un catalogue, et ce qui n'est pas ecrit vient de la
+cascade.
+
+| cle | ce qu'elle fixe |
+| --- | --- |
+| `alphabet` | la collection de terminaux que l'acteur joue |
+| `tuning` | l'accordage qui donne une frequence a chaque degre |
+| `octaves` | la convention de registre |
+| `transport` | par ou l'acteur sort : `audio`, `midi`, `osc` |
+| `eval` | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
+
+```text
+@actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
   octaves.saptak
   transport.audio
-
-@actor sitar2
-  alphabet.sargam
-  transport.midi(ch:3)
-
-@actor tabla1
-  alphabet.tabla
-  voice.bayan_open
-  sound.tabla_perc
-  transport.midi(ch:10)
-
-@actor visu
-  eval.hydra
-
-S -> sitar1.taar_sa sitar2.sa tabla1.tin visu.`osc(10).out()`
 ```
 
-`sitar1` nomme ses quatre cles. `sitar2` nomme son alphabet et son canal, et recoit de l'alphabet
-son temperament (`sargam_12TET`) et sa convention de registre (`saptak`). `tabla1` sort en MIDI et
-nomme aussi ce qui sonne : la voix `bayan_open` et le prototype `tabla_perc`. `visu` porte un
-producteur embarque : son backtick sort en natif.
+### Invoquer une librairie
 
-Dans les regles, la dot notation `acteur.terminal` qualifie un terminal par son acteur. Un terminal
-nu se resout par l'acteur qui le possede, quand un seul acteur le possede :
+**Une librairie s'invoque par son nom, l'entree apres le point.** C'est la forme unique de tout ce
+qui vit dans un catalogue.
 
-```bpscript
-@core
-@controls
-
-@actor sitar1
-  alphabet.sargam
-  transport.audio
-
-@actor tabla1
-  alphabet.tabla
-  transport.midi(ch:10)
-
-S -> sitar1.sa sitar1.re tabla1.tin
-T -> sa re tin
-```
-
-### Alias -- donner un nom
-
-`@alias` donne un nom a une chose exterieure ou repetitive. Il **nomme d'abord, designe ensuite** :
-`@alias <nom> <valeur>`, comme toutes les directives. La fleche appartient exclusivement aux regles
-de production.
-
-```bpscript
-@core
-@controls
+```text
 @alphabet.sargam
-
-@alias horloge osc:/clock
-@alias depart <!go
-@alias tension [phase]
-@alias vitesse sys.tempo
-@alias assise rythme.tempo
-
-S -> { rythme:{ sa re ga }, pa dha }
+@tuning.just
+@octaves.saptak
+@sound.tabla_perc
+@transcription.dhati
+@library.strudel
 ```
 
-Ce qu'un alias peut designer : une adresse OSC (`osc:/clock`), un point d'attente (`<!go`), un
-drapeau (`[phase]`), une commande systeme (`sys.<commande>`), ou un renvoi pointe `portee.nom`.
+| librairie | ce qu'elle collectionne |
+| --- | --- |
+| `alphabet` | des **terminaux** -- sonnants ou non, avec ou sans hauteur, code ou calcul |
+| `tuning` | des accordages |
+| `octaves` | des conventions de registre |
+| `sound` | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
+| `transcription` | des tables de correspondance entre notations |
+| `library` | des banques chargees par un moteur de code |
 
-Une **etiquette** est un nom pose devant un groupe polymetrique, separe de lui par un deux-points :
-`rythme:{ sa re ga }` etiquette ce groupe `rythme`. Le renvoi `rythme.tempo` designe alors le
-`tempo` des elements du groupe ainsi etiquete. Le compilateur verifie la portee -- `rythme` doit
-etre une etiquette posee dans la scene, une scene declaree, ou `*` -- et laisse l'aval resoudre le
-nom qui suit le point.
+**Un alphabet est une collection structuree de terminaux.** Un terminal est une chose entiere : il
+sonne ou non, porte une hauteur ou non, invoque du code ou une instruction de calcul de hauteur.
+Ce qui le simplifie est une **definition**, pas un decoupage en axes portes par l'acteur.
 
-Le nom d'un alias appartient a la scene : il l'emporte sur un mot homonyme du vocabulaire, selon la
-meme cascade que les macros et les variables de travail.
+### Invoquer un reglage
 
-### Cablage `>>` -- producteurs, filtres, sorties
+**Un reglage s'ecrit par sa categorie, l'entree apres le point.** La categorie dit a quoi le reglage
+touche, donc qui le consomme.
 
-Un cablage est une **chaine de modules** : un **producteur** fabrique un signal, des **filtres** le
-transforment, une **sortie** le rend audible. La chaine s'ecrit de gauche a droite, un chevron par
-lien -- `saw >> lpf >> audio` -- et c'est la place d'un module dans la chaine qui en fait un
-producteur, un filtre ou une sortie. Un etage s'ecrit `module`, `module.port`, ou
-`module.port:valeur`, ses parties collees.
+| categorie | ce qu'elle regle |
+| --- | --- |
+| `@pitch.` | `transpose` · `scaleshift` · `chromashift` · `diapason` |
+| `@time.` | `tempo` · `duration` · `meter` · `timepatterns` |
+| `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` |
 
-`@wire` pose le cablage de depart de la scene. Les chevrons rebranchent ensuite **pendant que la
-piece joue** : `>>` cable un etage sur le suivant, `\>>` coupe le fil.
-
-```bpscript
-@core
-@controls
-@alphabet.sargam
-
-@alias horloge osc:/clock
-@macro souffle() lfo:2 >> filtre.cutoff
-
-S -> sa !horloge >> sys.tempo re !\>> sys.tempo ga
+```text
+@time.tempo:120
+@engine.seed:42
+@pitch.diapason:442
 ```
-
-Un cablage s'ouvre sur un `!` dans le flux d'une regle, ou occupe le corps d'un `@macro`. Une ligne
-forme une chaine serie ; plusieurs lignes du meme nom forment des chaines paralleles. Un etage
-s'ecrit `module.port:valeur`, ses trois parties collees.
 
 ### Duree explicite
 
@@ -2322,4 +2321,6 @@ traduction : `'1'` devient `d1`.
 - [CV.md](../design/CV.md) — CV / objets de signal
 - [PITCH.md](../design/PITCH.md) — architecture 5 couches de hauteur
 - [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) — homomorphismes
+
+
 
