@@ -21,9 +21,9 @@
 - [Homomorphismes `|x|`](#homomorphismes-x----variables-liees)
 - [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
 - [Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes)
-- [Templates : regime catalogue (v0.8)](#templates---regime-catalogue-v08)
-- [Sons et cascade d'heritage (v0.8)](#sons-et-cascade-dheritage-v08)
-- [Conventions de notation v0.8 (. / : / *)](#conventions-de-notation-v08-----)
+- [Templates : regime catalogue](#templates--regime-catalogue)
+- [Sons et cascade d'heritage](#sons-et-cascade-dheritage)
+- [Conventions de notation (`.` / `:` / `*`)](#conventions-de-notation-----)
 - [Flags](#flags----variables-detat-et-composition-conditionnelle)
 - [Definitions et macros](#definitions-et-macros)
 - [Les librairies](#les-librairies)
@@ -38,223 +38,355 @@
 
 ## Principe fondamental
 
-BPScript est un **meta-ordonnanceur** : il derive des structures temporelles
-et orchestre des comportements complexes ecrits dans des vrais langages
-(SuperCollider, TidalCycles, Python, etc.) avec la puissance des grammaires
-formelles pour decider **quand** ces comportements se declenchent.
+BPScript est un **meta-ordonnanceur** : il derive des structures temporelles par grammaires
+formelles et decide **quand** se declenchent des comportements ecrits dans d'autres langages
+(SuperCollider, TidalCycles, Python).
 
 Les symboles sont des noms avec un double contrat :
 - **Type temporel** : comment ils se comportent dans le temps (gate, trigger, cv)
 - **Runtime** : qui les manipule (sc, tidal, python, midi...)
 
-Le langage connait trois mots et ne fait qu'une chose : ordonner dans le temps.
+Le langage connait trois mots et fait une chose : ordonner dans le temps.
 
 ---
 
 ## Le langage : dense, pas simple
 
-3 mots reserves, 24 symboles, 9 operateurs de flags -- le vocabulaire est petit mais la
+3 mots reserves, 24 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
 combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
+```bpscript
+@core
+@controls
+@alphabet.sargam
+
+// Une sequence de notes
+S -> sa re ga pa
+
+// Polymetrie, simultaneite, silence, prolongation et garde de drapeau
+[phase==1] S -> { sa!dha re!ni, - _ }
+
+// Homomorphisme, contexte, gabarit, mutation de drapeau
+|x| (A) x B -> x $mel &mel [phase+1]
 ```
-// Trivial -- une sequence de notes
-S -> Sa Re Ga Pa
 
-// Intermediaire -- polymetrie avec triggers et flags
-[phase==1] S -> { Sa!dha Re!ti, -!spotlight _ }
-
-// Complexe -- templates, captures, homomorphismes, multi-runtime
-|x| (A) x!dha B -> x!ti $mel &mel [mode:random, phase+1]
-```
-
-Les symboles ne se memorisent pas -- ils se **lisent**. `->` est une fleche.
-`!` est une impulsion. `...` est du suspens. La charge cognitive n'est pas
-dans le vocabulaire mais dans la profondeur structurelle.
-
-La vraie promesse : un compositeur peut commencer avec `S -> Sa Re Ga` et
-decouvrir progressivement la polymetrie, les flags, les captures, les backticks.
-Chaque feature est optionnelle -- la complexite est **additive**, pas imposee.
+Le langage est pense pour rester le plus lisible possible : `->` est une fleche, `!` une
+impulsion, `...` un suspens. La difficulte se trouve dans la profondeur structurelle.
 
 ---
 
 ## Concepts cles
 
+### L'heritage par cascade
+
+Toute valeur du langage a une source par defaut et se surcharge en la nommant a un niveau plus
+local. La regle vaut partout, pour les entites d'un acteur comme pour les parametres d'un
+evenement : **le plus local l'emporte**. Nommer une valeur a un niveau la fixe pour ce niveau et
+pour tout ce qu'il contient.
+
+| Niveau      | Ce qu'il fixe                                   | Ecriture                              |
+| ----------- | ----------------------------------------------- | ------------------------------------- |
+| librairie   | les defauts d'un alphabet, d'un tuning, d'un son | `lib/*.json`                          |
+| scene       | ce dont heritent tous les acteurs                | `@alphabet.sargam`, `@tempo:90`       |
+| acteur      | ce que cet acteur emploie                       | `@actor sitar1` + `tuning.sargam_22shruti` |
+| regle       | ce qui vaut pour toute la production            | `S -> sa re (vel:70)`                 |
+| terme       | ce qui vaut pour ce terme                       | `sa(vel:100)`                         |
+
+```bpscript
+@core
+@controls
+@alphabet.sargam
+
+@actor sitar1
+  tuning.sargam_22shruti
+
+S -> sitar1.sa sitar1.re(vel:100) ga (vel:70)
+```
+
+Cas d'usage mesures dans cet exemple :
+- `@alphabet.sargam` seul donne a la scene sa convention de registre (`saptak`), son temperament
+  (`sargam_12TET`) et son canal de sortie (`audio`, fourni par `@core`).
+- `sitar1` ne nomme que son temperament : il recoit l'alphabet de la scene et la convention de
+  registre de l'alphabet, et emploie `sargam_22shruti` pour lui seul.
+- `(vel:100)` colle a `re` vaut pour ce terme ; `(vel:70)` en fin de regle vaut pour la regle.
+
+### L'espace, delimiteur de termes
+
+L'espace separe deux termes du flux. Ce qui est **colle** a un terme appartient a ce terme et le
+gouverne ; ce qui en est **separe par un espace** est un terme, ou une portee, a part. Un meme
+signe change donc de portee selon qu'il est colle ou separe.
+
+| Ecriture               | Portee                                                              |
+| ---------------------- | ------------------------------------------------------------------- |
+| `sa(vel:100)`          | les parentheses collees portent le controle sur `sa`                 |
+| `S -> sa re (vel:70)`  | les parentheses separees, en fin de regle, portent sur toute la regle |
+| `pa:2`                 | le `:` colle fixe la duree du terme                                  |
+| `{re ga}:2`            | le `:` colle fixe la duree du groupe                                 |
+| `S -> sa re [phase=1]` | le crochet separe, en fin de regle, mute un drapeau                  |
+| `sitar1.sa`            | le point colle qualifie `sa` par l'acteur `sitar1`                   |
+| `taar_sa`              | le separateur de registre colle le marqueur au nom de note           |
+
+```bpscript
+@core
+@controls
+@alphabet.sargam
+
+@actor sitar1
+  tuning.sargam_22shruti
+
+S -> sitar1.sa(vel:100) taar_sa {re ga}:2 pa:2
+T -> sa re (vel:70)
+U -> sa re [phase=1]
+```
+
+Le sens de chaque signe accole -- le point, le deux-points, l'etoile -- est detaille dans
+[Conventions de notation](#conventions-de-notation-----).
+
 ### Backticks -- code natif dans le flux
 
-```
-`sc: SynthDef(\grain, {...}).add`      // orphelin -- init avant derivation
-Sa(vel:`rrand(40,127)`)                // inline -- evalue par le runtime du symbole
-`sc: i = i + 1`                       // standalone -- execute au temps T
+Un backtick porte du code ecrit dans le langage d'un autre moteur. Le tag en tete (`sc:`, `py:`,
+`tidal:`, `strudel:`, `hydra:`...) nomme l'interprete.
+
+Il prend deux formes :
+
+- **autonome** -- le backtick occupe une position a lui seul et joue son code quand la derivation
+  l'atteint. En tete de scene, il prepare le moteur au chargement ; dans le flux d'une regle, il
+  est un terminal de plein droit et joue a son instant. Son tag est requis, ou bien un acteur
+  `eval.<moteur>` le qualifie par le point.
+- **inline** -- le backtick occupe un parametre et rend une valeur, evaluee par le runtime du
+  symbole qui le porte ; il herite du tag de ce symbole.
+
+```bpscript
+@core
+@controls
+@alphabet.sargam
+
+// Autonome, en tete de scene : prepare le moteur au chargement
+`sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
+
+// Autonome dans le flux : joue son code a son instant, comme une note
+// Inline dans un parametre : evalue par le runtime du symbole
+S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 ```
 
 ### Simultaneite `!` et synchronisation `<!`
 
+`!` place plusieurs symboles au meme instant. `<!` attend un signal exterieur avant de poursuivre.
+
+```bpscript
+@core
+@controls
+@actor sitar1
+  alphabet.sargam
+  transport.audio
+@actor tabla1
+  alphabet.tabla
+  transport.midi(ch:10)
+
+S -> sitar1.sa!tin!na <!depart sitar1.re
 ```
-Sa!dha!spotlight          // 3 runtimes au meme instant
-<!sync1 Sa Re Ga          // attend un signal externe avant de jouer
-```
+
+`sitar1.sa!tin!na` produit **trois evenements** au meme instant. `<!depart` retient la suite
+jusqu'a l'arrivee du signal `depart`.
 
 ### Acteur -- unite de binding
 
-Un acteur lie **six cles d'entite** (decision *cles-acteur-six*, Romain 2026-06-16) : `alphabet`
-(herite par cascade, jamais requis), `tuning`, `octaves`, `sound`, `transport`, `eval` — references
-via `.`. Modele producteur/canal (Romain 2026-07-14) : `eval.<X>` = producteur embarque autonome
-(sort en natif, PAS de `transport`) ; absence d'`eval` = producteur defaut `js` (notre code, utilise
-`transport`) ; `transport` = NOS canaux `audio`/`midi`/`osc` (optionnel, defaut cascade @core `audio`),
-JAMAIS de `transport.video`/`visual`.
-`octaves` = convention de registre/notation, **defaut herite de l'alphabet**, surchargeable par
-acteur (`@actor X octaves.Y`) ; etape de resolution distincte, rattachee a l'alphabet (pas au tuning).
-Le marqueur de registre se **colle** au nom de note via le separateur de la convention (`lib/octaves.json`),
-**jamais un espace** (l'espace est le delimiteur de termes BPScript : il scinderait le terminal). Les
-conventions a **prefixe** (saptak indien, turkish, gamelan, shakuhachi, korean) utilisent `_` : la
-musique indienne s'ecrit `mandra_sa` / `madhya_sa` (defaut, ou `sa` nu) / `taar_sa` — un seul terminal,
-le registre resolu en aval par Kairos (TAAR-TOK, decision 2026-06-30).
-Exemple :
-```
+Un acteur lie six cles d'entite, referencees par `.` :
+
+| Cle         | Ce qu'elle fixe                                              | Sa source par defaut                     |
+| ----------- | ------------------------------------------------------------ | ---------------------------------------- |
+| `alphabet`  | le vocabulaire de terminaux que l'acteur reconnait           | l'`@alphabet` de la scene                |
+| `tuning`    | le temperament qui donne sa hauteur a chaque terminal        | le temperament attache a l'alphabet      |
+| `octaves`   | la convention de registre et son ecriture                    | la convention attachee a l'alphabet      |
+| `sound`     | le prototype sonore porte par les terminaux                  | la cascade des sons                      |
+| `transport` | le canal de sortie : `audio`, `midi`, `osc`                  | `audio`, fourni par `@core`              |
+| `eval`      | le producteur embarque qui execute le code natif             | le producteur `js`                       |
+
+Chaque cle se surcharge en la nommant dans le bloc `@actor` ; une cle absente prend sa source par
+defaut (cf. [L'heritage par cascade](#lheritage-par-cascade)).
+
+**Modele producteur / canal** : `eval.<X>` designe un producteur embarque, autonome, dont la sortie
+est native. Un acteur sans `eval` emploie le producteur `js` et sort par son `transport`, qui nomme
+l'un de nos canaux : `audio`, `midi` ou `osc`.
+
+**Ecriture du registre** : le marqueur de registre se colle au nom de note par le separateur de la
+convention (`lib/octaves.json`). Les conventions a **prefixe** -- saptak indien, turkish, gamelan,
+shakuhachi, korean -- emploient `_` : la musique indienne s'ecrit `mandra_sa`, `madhya_sa` (registre
+par defaut, ou `sa` nu) et `taar_sa`. Les conventions a **suffixe** collent le chiffre directement :
+`C4`. Dans les deux cas il s'agit d'un seul terminal, dont Kairos resout le registre en aval.
+
+```bpscript
+@core
+@controls
+
 @actor sitar1
   alphabet.sargam
   tuning.sargam_22shruti
+  octaves.saptak
   transport.audio
+
 @actor sitar2
   alphabet.sargam
-  tuning.sargam_12TET
   transport.midi(ch:3)
-@actor tabla
-  alphabet.tabla_bols
+
+@actor tabla1
+  alphabet.tabla
+  sound.tabla_perc
   transport.midi(ch:10)
+
+@actor visu
+  eval.hydra
+
+S -> sitar1.taar_sa sitar2.sa tabla1.tin visu.`osc(10).out()`
 ```
 
-Dans les regles, la dot notation `actor.terminal` qualifie un terminal par son acteur :
-```
-S -> sitar1.Sa sitar2.Sa tabla.tin    // acteur explicite
-S -> Sa Re tin                         // resolution implicite si non ambigu
+`sitar1` nomme ses quatre cles. `sitar2` nomme son alphabet et son canal, et recoit de l'alphabet
+son temperament (`sargam_12TET`) et sa convention de registre (`saptak`). `visu` porte un
+producteur embarque : son backtick sort en natif.
+
+Dans les regles, la dot notation `acteur.terminal` qualifie un terminal par son acteur. Un terminal
+nu se resout par l'acteur qui le possede, quand un seul acteur le possede :
+
+```bpscript
+@core
+@controls
+
+@actor sitar1
+  alphabet.sargam
+  transport.audio
+
+@actor tabla1
+  alphabet.tabla
+  transport.midi(ch:10)
+
+S -> sitar1.sa sitar1.re tabla1.tin
+T -> sa re tin
 ```
 
-### Scenes -- hierarchie et communication
+### Alias -- donner un nom
 
-Une scene peut referencer d'autres scenes comme terminaux :
+`@alias` donne un nom a une chose exterieure ou repetitive. Il **nomme d'abord, designe ensuite** :
+`@alias <nom> <valeur>`, comme toutes les directives. La fleche appartient exclusivement aux regles
+de production.
+
+```bpscript
+@core
+@controls
+@alphabet.sargam
+
+@alias horloge osc:/clock
+@alias depart <!go
+@alias tension [phase]
+@alias vitesse sys.tempo
+@alias assise rythme.tempo
+
+S -> { rythme:{ sa re ga }, pa dha }
 ```
-@scene verse "verse.bps"
-@scene chorus "chorus.bps"
 
-S -> { verse, chorus }         // polymetrie de scenes
-[mood==dark] S -> verse        // conditionnel
+Ce qu'un alias peut designer : une adresse OSC (`osc:/clock`), un point d'attente (`<!go`), un
+drapeau (`[phase]`), une commande systeme (`sys.<commande>`), ou les elements marques d'une
+etiquette de groupe polymetrique (`rythme.tempo`).
+
+Le nom d'un alias appartient a la scene : il l'emporte sur un mot homonyme du vocabulaire, selon la
+meme cascade que les macros et les variables de travail.
+
+### Cablage `>>` -- brancher dans le flux
+
+Nommer et brancher sont deux gestes. Les chevrons branchent, **dans le flux** : `>>` cable un etage
+sur le suivant, `\>>` coupe le fil. Le branchement se reconfigure ainsi pendant que la piece joue.
+
+```bpscript
+@core
+@controls
+@alphabet.sargam
+
+@alias horloge osc:/clock
+@macro souffle() lfo:2 >> filtre.cutoff
+
+S -> sa !horloge >> sys.tempo re !\>> sys.tempo ga
 ```
 
-Les flags du parent sont visibles en lecture par les enfants (heritage top-down).
-Les enfants exposent explicitement les flags qu'ils veulent rendre visibles :
-```
-@expose [intensity]            // rend ce flag lisible par le parent
-```
-
-`@alias` DESIGNE : **un nom, puis ce qu'il designe** (decision Romain 2026-07-27) :
-```
-@alias depart touches.z          // le nom `depart`, alimente par la touche z de l'entree `touches`
-@alias breath cc:2               // un controleur continu
-@alias horloge osc:/clock        // une adresse OSC
-```
-**Le nom vient d'abord**, comme toutes les autres directives nomment avant de valoriser. Il n'y a
-**ni signe `=` ni fleche** : le signe a disparu de tout le langage, et la fleche est
-**exclusivement une regle de production**.
-
-> ⚠️ **UN ALIAS DESIGNE, IL NE BRANCHE PAS.** Alimenter le tempo, un drapeau ou le depart d'une
-> partie est un **cablage**, et le cablage a son propre geste : `>>` pour brancher, `\>>` pour
-> couper, **dans le flux** (decision Romain 2026-07-27 au soir). L'argument qui a tranche :
-> **une directive ne se debranche pas** -- `\>>` coupe un cable pendant que ca joue et le
-> branchement se reconfigure au fil de la piece ; il n'existe pas de « de-declaration ».
-
-> ### Un ALIAS n'est pas une MACRO
->
-> Les deux se ressemblent pour une bonne raison : **aucune n'est resolue a la generation de
-> l'arbre**, les deux voyagent par leur NOM. Elles divergent **apres**, sur trois plans :
->
-> | | `@macro` | `@alias` |
-> |---|---|---|
-> | son nom s'ecrit | **dans la regle** | **jamais** dans une regle |
-> | qui la resout | **Kairos**, a la **projection** | **l'orchestrateur BPx**, au **chargement** |
-> | quand | **feuille par feuille** | **une fois** |
-> | ce qui la declenche | **un mot qui parait dans le flux** | **un signal qui arrive du dehors** |
->
-> **En une phrase** : une macro est quelque chose qu'on **ecrit dans la musique** ; un alias, un
-> **nom donne a quelque chose** — et brancher n'est ni l'un ni l'autre, c'est le role des chevrons.
-
-Cf. [SCENES.md](../design/SCENES.md) pour le modele complet (scoping, sys, encapsulation).
+Un cablage s'ouvre sur un `!` dans le flux d'une regle, ou occupe le corps d'un `@macro`. Une ligne
+forme une chaine serie ; plusieurs lignes du meme nom forment des chaines paralleles. Un etage
+s'ecrit `module.port:valeur`, ses trois parties collees.
 
 ### Duree explicite
 
+```bpscript
+@core
+@controls
+@alphabet.sargam
+@tempo:90
+@duration:16b
+
+S -> sa re ga pa
 ```
-@duration:16b                  // cette scene dure 16 beats (au tempo @mm courant)
-@duration:8s                   // cette scene dure 8 secondes
-```
+
+`@duration:16b` fixe une enveloppe de 16 beats au tempo `@tempo` courant ; `@duration:8s` la fixe
+en secondes.
 
 `@duration` separe trois preoccupations :
 - **Densite** = le contenu (combien de tokens, quelles proportions)
-- **Duree** = @duration (combien de beats/secondes cette scene occupe)
-- **Vitesse** = @mm (la clock, partagee avec le monde exterieur)
+- **Duree** = `@duration` (combien de beats ou de secondes la scene occupe)
+- **Vitesse** = `@tempo` (la clock, partagee avec le monde exterieur)
 
-Sans `@duration` : comportement implicite (duree = nombre de tokens × tempo).
-Avec `@duration` : scaling uniforme, proportions internes preservees.
+Avec `@duration`, la scene subit un scaling uniforme et ses proportions internes sont preservees.
+Par defaut, la duree decoule du contenu : nombre de tokens x tempo.
 
-`@duration` ne s'applique qu'au **conteneur racine**. Quand une scene est
-imbiquee dans un parent via `@scene`, son `@duration` est ignore — le parent
-decide de l'enveloppe. Le `@duration` de l'enfant est effectif uniquement
-quand il est joue seul.
+### Priorite des parametres
 
-### CC nommes
+Les parametres d'un evenement se combinent par priorite croissante : **spec** (defauts de
+librairie) < **CT** (controles inline `()`) < **CV** (objets temporels continus). C'est le cas
+particulier, pour les parametres, de [L'heritage par cascade](#lheritage-par-cascade).
 
-```
-@cc breath:2                   // declare CC2 comme "breath"
-@cc expression:11              // declare CC11 comme "expression"
-Sa(breath:80)                  // utilisable par nom dans les qualifiers
-Sa(cc:74,80)                   // CC generique par numero
-```
-
-### Sounds system -- cascading
-
-Les parametres se combinent par priorite : **spec** (defauts librairie) < **CT** (controles inline `()`) < **CV** (objets temporels continus).
-
-> Modele v0.8 : la cascade complete a 8 niveaux est decrite dans la section
-> [Sons et cascade d'heritage (v0.8)](#sons-et-cascade-dheritage-v08).
-> Le territoire `@sound` est purement declaratif ; les affectations vivent
-> dans les territoires d'origine (`@alphabet.X`, `@actor X`, ou inline).
-> La directive `@actor` utilise desormais `.` pour les references d'entites
-> (les 6 cles : `alphabet.X`, `tuning.X`, `octaves.X`, `sound.X`, `transport.X`, `eval.X`) -- cf.
-> `docs/design/v0.8-decisions-final.md`.
+> La cascade complete des sons, avec ses huit niveaux, est decrite dans
+> [Sons et cascade d'heritage](#sons-et-cascade-dheritage). Le territoire `@sound` declare ;
+> les affectations s'ecrivent dans leur territoire d'origine (`@alphabet.X`, `@actor X`, ou inline).
+> La directive `@actor` emploie `.` pour ses references d'entites -- les six cles `alphabet.X`,
+> `tuning.X`, `octaves.X`, `sound.X`, `transport.X`, `eval.X`.
 
 ---
 
 ## Philosophie de separation
 
-BPScript ne fait qu'une chose : **ordonner des symboles types dans le temps.**
+BPScript ordonne des symboles types dans le temps. Le reste s'ecrit la ou il se calcule :
 
-- Logique algorithmique -> backticks (dans le langage du runtime cible)
+- Logique algorithmique -> backticks, dans le langage du runtime qui les execute
 - Traitement de signal -> runtime (SuperCollider, Csound, Web Audio)
-- Sound design -> runtime (SynthDefs, instruments)
-- Routage -> fichier de routage (JSON)
-- Temperament et accordage -> fichier de tuning (JSON)
+- Synthese et design sonore -> runtime (SynthDefs, instruments) ; `@sound` en nomme le
+  prototype et son comportement temporel
+- Temperament et accordage -> librairie de tuning (`lib/tunings.json`, `lib/temperaments.json`)
 
-Comme HTML ne contient pas de boucles et CSS ne contient pas de fonctions.
-Chaque couche fait ce qu'elle sait faire. BPScript sait faire le temps.
+Chaque couche fait ce qu'elle sait faire ; BPScript fait le temps.
 
 ---
 
 ## Le meta-ordonnanceur
 
-L'idee centrale : BP3 sait **quand**. SC, Tidal, Python savent **quoi**.
-Les backticks connectent les deux dans un seul fichier.
+BPScript decide **quand**. Le code entre backticks decide **quoi** : il est execute par le
+runtime que son tag nomme (`sc:`, `tidal:`, `py:`). Les deux vivent dans le meme fichier.
 
-```
+```bpscript
+@core
+@controls
+@alphabet.western:audio
+
 // Initialisation -- chaque runtime prepare ses objets
 `sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
 `tidal: let pat = s "bd sd hh sd"`
 `py: import dmx; d = dmx.open()`
 
-// Structure temporelle -- BP3 orchestre tout
-[phase==1] S -> { intro, rythme }
-[phase==2] S -> { melodie, rythme, lumieres }
-```
+// Structure temporelle -- la derivation orchestre les trois
+S -> Section [phase=1]
 
-Un fichier. Trois langages. Un seul ordonnanceur. Live-codable.
+-----
+
+[phase==1] Section -> { Intro, Rythme }
+[phase==2] Section -> { Melodie, Rythme }
+Intro   -> C4 D4 E4
+Rythme  -> G3 G3 G3 G3
+Melodie -> E4 F4 G4 A4
+```
 
 Le meta-ordonnanceur est agnostique de la cible :
 - **Audio** : SuperCollider, Csound, Web Audio
@@ -264,7 +396,6 @@ Le meta-ordonnanceur est agnostique de la cible :
 - **Eurorack** : gate/trigger/CV via OSC, MIDI
 - **Graphiques** : Canvas, WebGL, SVG via JavaScript
 - **Installations** : capteurs, actionneurs, IoT
-- **Tout ce qui a besoin d'etre orchestre dans le temps**
 
 ---
 
@@ -278,56 +409,56 @@ Le meta-ordonnanceur est agnostique de la cible :
 | **trigger** | type  | instant, zero duree, impulsion ponctuelle |
 | **cv**      | type  | occupe du temps, valeur varie continument |
 
-Les trois types sont inspires de l'eurorack et definissent le **rapport au temps** de chaque symbole.
-Le compilateur sait ce qui occupe du temps et ce qui n'en occupe pas.
-Le compositeur le voit aussi -- les types sont explicites a la definition.
+Les trois noms viennent de l'eurorack ; ils fixent le **rapport au temps** de chaque symbole.
+Le compilateur en deduit l'occupation du temps, le compositeur la lit a la declaration.
 
 ### Vingt-quatre symboles structurels
 
-```
-@              declaration (header) -- le suffixe d'application est SUPPRIME (2026-07-28)
--> <- <>       derivation + direction (BP3 : --> <-- <->)
-{ , }          polymetrie, groupement temporel, etat interne de definition
-( )            parametre runtime (portees : symbole, regle, groupe), definition, appel, contexte
-:              affectation/binding (gate Sa:sc, *:sound.bell, cc:2)
-=              mutation de drapeau UNIQUEMENT (le `=` de definition a disparu le 2026-07-27)
-.              reference a une entite (alphabet.western, sound.bell, transport.midi) + sous-partie (actor.terminal) + period notation (A B . C D)
-[ ]            qualificateur local (sur un groupe ou une regle)
-` `            code externe opaque (echappement vers le runtime)
+```text
+@              directive de declaration, en tete de scene
+-> <- <>       derivation et direction (BP3 : --> <-- <->)
+{ , }          polymetrie et groupement temporel
+( )            parametres runtime (portees symbole, regle, groupe) et contexte de regle
+:              affectation : lie un sujet a une valeur (@gate Sa:sc, *:sound.bell_short)
+=              mutation de drapeau, entre crochets ([phase=2])
+.              reference a une entite (alphabet.western, sound.bell_short, transport.midi),
+               sous-partie (acteur.terminal), separateur de fragments (A B . C D)
+[ ]            qualificateur moteur, sur un symbole, un groupe ou une regle
+` `            code externe, execute par le runtime que son tag nomme
 //             commentaire
--              silence (occupe du temps, absence d'evenement)
-_              prolongation (etend l'evenement precedent)
-...            repos indetermine (duree calculee par le moteur)
-!              evenement zero-duree : trigger sortant ou mutation de flag
-<!             trigger entrant (on attend -- point de synchronisation)
+-              silence : occupe du temps
+_              prolongation : etend l'evenement precedent
+...            repos indetermine, duree calculee par le moteur
+!              evenement zero-duree : trigger sortant ou mutation de drapeau
+<!             trigger entrant : point de synchronisation, la derivation attend
 #              contexte negatif
-?              capture (un symbole inconnu)
-$              template : definition de motif (groupe)
-&              template : reference au motif
-~              liaison d'objets sonores (C4~ = debut, ~C4 = fin, ~C4~ = continuation)
-| |            homomorphisme (variable liee dans une regle)
+?              capture d'un symbole quelconque
+$              template : definition d'un motif
+&              template : reference a un motif
+~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
+| |            homomorphisme : variable liee dans une regle
+>> \>>         cablage : brancher un element sur un autre, couper le cable
 ```
 
-Trois separateurs fondamentaux :
-- **espace** = separe le mot-cle du contenu dans les declarations
-- **`.`** = navigation dans une structure (sous-partie)
-- **`:`** = affectation/binding (lie une chose a une autre)
+L'espace separe les termes : `C4 D4` est deux notes, `- - -` est trois silences. L'emploi de
+`.`, `:` et `*` est decrit dans « Conventions de notation ».
 
-Les symboles temporels (`-`, `_`, `.`, `...`) sont des symboles du langage,
-pas du vocabulaire de librairie -- le compilateur connait leur semantique.
+Ecriture des symboles temporels :
+- `.` s'ecrit isole entre deux espaces -- separateur de fragments (`A B . C D`)
+- `...` s'ecrit en trois caracteres colles -- repos indetermine
+- `-` s'ecrit isole -- un silence par occurrence
 
-Pas d'ambiguite entre `.` et `...` : ce sont des caracteres differents de `-`.
-- `.` = toujours isole (separateur entre fragments)
-- `...` = toujours 3 caracteres colles (repos indetermine)
-- `-` = silence, `- - -` = trois silences (tokens separes par des espaces)
+Le compilateur connait la semantique de `-`, `_`, `.` et `...` : ce sont des symboles du
+langage, au meme titre que les fleches.
 
 ### Neuf operateurs de flags
 
-Les operateurs de flags se repartissent en deux groupes : comparaison (tests, dans une `[guard]` avant le LHS) et calcul (mutations, dans `[...]` dans le RHS).
+Les operateurs de flags forment deux groupes : comparaison (dans une garde, avant le LHS) et
+calcul (dans un `[...]` en fin de RHS).
 
 Comparaison (6) :
 
-```
+```text
 ==             test d'egalite
 !=             test d'inegalite
 >              test superieur
@@ -338,136 +469,180 @@ Comparaison (6) :
 
 Calcul (3) :
 
-```
+```text
 +              increment        [flag+1]
 -              decrement        [flag-1]
 =              assignation      [flag=valeur]
 ```
 
-Soit neuf operateurs en tout. Le decrement `-` et l'assignation `=` reutilisent un glyphe employe ailleurs (`-` pour le silence, `=` pour la definition de macro), mais ce sont des operateurs distincts : l'inventaire des glyphes (les 24 symboles) et celui des operateurs sont independants. Tous n'ont de sens que dans le contexte des flags.
+Les neuf a l'oeuvre dans une scene :
+
+```bpscript
+@core
+@controls
+@alphabet.western:audio
+
+S -> Loop [phase=1, count=4]
+
+-----
+
+@mode:random
+[count-1]  Loop -> C4 Loop
+[count>0]  Loop -> D4 Loop
+[count>=2] Loop -> E4 Loop
+[count<9]  Loop -> F4 Loop
+[count<=9] Loop -> G4 Loop
+[phase!=0] Loop -> A4 Loop [phase+1]
+[count==0] Loop -> C5
+```
+
+Le decrement `-` s'ecrit avec le glyphe du silence ; entre crochets et pose sur un drapeau,
+c'est l'operateur. Le signe `=` appartient aux drapeaux, et a eux seuls. L'inventaire des
+glyphes et celui des operateurs sont independants.
 
 ### Trois portees de metadonnees
 
-- `@` = **global** : environnement, imports, configuration du systeme
-- `[]` = **local moteur** : instructions BP3 -- modes, flags, operateurs temporels
+- `@` = **global** : environnement, imports, configuration de la scene
+- `[]` = **local moteur** : instructions BP3 -- modes, drapeaux, operateurs temporels
 - `()` = **local runtime** : parametres transportes au runtime cible (vel, filter, wave...)
 
-Les nombres (`0.7`, `120`, `5ms`) sont des symboles opaques comme les autres --
-le langage ne connait pas leur semantique, c'est le recepteur qui les interprete.
+```bpscript
+@core
+@controls
+@alphabet.western:audio
+@tempo:120
 
-**Pas de `for`, pas de `while`, pas de branchement.** BPScript decrit des structures
-dans le temps. `[guard]` est une garde declarative (la regle existe ou non), pas du
-branchement imperatif. Toute logique algorithmique, traitement de signal ou chainage
-passe par le code externe (backticks) ou par le bridge.
+S -> C4(vel:0.7) D4[/2] E4 F4 [mode:random]
+```
+
+Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est le recepteur qui leur
+donne un sens.
+
+BPScript decrit des structures dans le temps. Une garde `[...]` posee avant le LHS est
+declarative : elle dit si la regle existe pour cette derivation. Le calcul, le traitement de
+signal et le chainage s'ecrivent dans le code externe (backticks) ou dans le bridge.
 
 ---
 
 ## Systeme de types -- double declaration
 
-Chaque symbole a un **double contrat** avant d'etre utilise :
+Chaque symbole porte un **double contrat** avant d'etre employe :
 
-| Dimension         | Question                | Valeurs                    | Exemples                        |
-| ----------------- | ----------------------- | -------------------------- | ------------------------------- |
-| **Type temporel** | comment dans le temps ? | gate, trigger, cv          | gate = duree, trigger = instant |
-| **Runtime**       | qui le manipule ?       | sc, tidal, python, midi... | sc = SuperCollider evalue       |
+| Dimension         | Question                | Valeurs                | Exemple                                |
+| ----------------- | ----------------------- | ---------------------- | -------------------------------------- |
+| **Type temporel** | comment dans le temps ? | gate, trigger, cv      | gate = duree, trigger = instant        |
+| **Runtime**       | qui l'execute ?         | sc, py, tidal, midi... | `@gate Sa:sc` -- SuperCollider joue Sa |
 
-Sans ces deux informations, le compilateur refuse. Il ne sait pas comment
-ordonnancer (type temporel) ni ou envoyer (runtime).
+Le compilateur exige les deux : le type temporel dit comment ordonnancer, le runtime dit ou
+envoyer.
 
 ### Trois categories de symboles
 
-Une scene BPS contient trois categories de symboles, identifiees automatiquement
-par le compilateur :
+Une scene contient trois categories de symboles, que le compilateur reconnait a leur ecriture :
 
-| Categorie        | Declaration                             | Role                                           | Exemples                      |
-| ---------------- | --------------------------------------- | ---------------------------------------------- | ----------------------------- |
-| **Non-terminal** | implicite (apparait en LHS d'une regle) | variable de grammaire, se reecrit et disparait | S, I, A, B, R1, P4            |
-| **Terminal**     | explicite (type + runtime)              | symbole de sortie, atteint un runtime          | sa6:gate:midi, dha:trigger:sc |
-| **Controle**     | via `@controls` / `@hooks`              | commande moteur BP3, zero duree                | [tempo:2], [mode:random], [/2] |
+| Categorie        | Declaration                             | Role                                           | Exemples                               |
+| ---------------- | --------------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Non-terminal** | implicite (apparait en LHS d'une regle) | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
+| **Terminal**     | explicite (`@gate`, `@trigger`, `@cv`, ou un alphabet) | symbole de sortie, atteint un runtime | `@gate Sa:sc`, `@trigger flash:py`     |
+| **Controle**     | via `@controls`                         | commande moteur BP3, zero duree                | `[mode:random]`, `[/2]`, `[weight:50]` |
 
-Les non-terminaux sont des **symboles purement BPS** : ils n'existent que
-pendant la derivation, n'ont ni type temporel ni runtime. Ils se reecrivent
-en terminaux via les regles de grammaire. Si un non-terminal survit dans la
-sortie finale (n'a pas ete reecrit), c'est une **erreur de grammaire** --
-la derivation est incomplete.
+Le compilateur reconnait un non-terminal a sa presence en LHS d'une regle ; tout autre nom est
+un terminal, et vient alors d'une declaration ou d'un alphabet en portee. Un non-terminal vit
+le temps de la derivation : son role est d'etre reecrit, et les regles le remplacent par des
+terminaux. La derivation s'acheve sur des terminaux, seuls porteurs d'un type temporel et d'un
+runtime.
 
 ### Declaration : type temporel + runtime
 
-La syntaxe utilise `:` pour lier un symbole a son runtime :
+Une declaration donne le type temporel, le nom, puis la cible apres le deux-points :
 
+```bpscript
+@core
+@controls
+
+@gate Sa:sc                      // Sa occupe du temps, SuperCollider le joue
+@trigger flash:python            // flash est un instant, Python le declenche
+@cv ramp:tidal                   // ramp varie continument, Tidal le calcule
+
+S -> Sa flash Sa
 ```
-// Declaration dans la scene
-gate Sa:sc                       // Sa est un gate, gere par SuperCollider
-trigger flash:python             // flash est un trigger, gere par Python
-cv ramp:sc                       // ramp est un cv, gere par SuperCollider
 
-// Declaration par import (en bloc)
-@alphabet.raga:supercollider     // tous les symboles du raga -> gate/trigger:sc
-@lights:python                   // tous les symboles de lights -> trigger:python
+Un alphabet declare ses symboles en bloc. Le deux-points nomme alors le **canal de sortie** de
+l'acteur implicite, pris parmi `audio`, `midi` et `osc` :
+
+```bpscript
+@core
+@controls
+@alphabet.sargam:audio
+
+S -> sa re ga
 ```
 
-Le type temporel et le runtime ne changent jamais apres declaration.
+Le type temporel et la cible d'un symbole valent pour toute la scene.
 
-Un symbole non declare est une erreur :
-```
-S -> Sa Re Bloup Ga
+Chaque symbole employe dans une regle est declare, et le compilateur nomme celui qui manque :
+
+```text
+S -> C4 D4 Bloup E4
 //            ^^^^
-// Erreur : 'Bloup' n'est pas declare (ni type temporel, ni runtime)
+// terminal 'Bloup' non declare -- absent des alphabets en portee
 ```
-
-Le parallele en informatique : **CUDA** (`__device__ float x` = type + cible d'execution),
-**GLSL** (`uniform float x` = qualifier + type). Deux dimensions orthogonales sur le meme objet.
 
 ---
 
 ## Parametres -- opaques pour BPScript
 
-BPScript ne comprend pas les parametres. Il les **transporte** vers le runtime,
-qui sait quoi en faire.
+BPScript transporte les parametres jusqu'au runtime, qui les interprete.
 
-```
-// SC definit les parametres dans un SynthDef
+```bpscript
+@core
+@controls
+
+// SuperCollider definit les parametres dans un SynthDef
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
 
 // BPScript declare le contrat temporel
-gate Sa:sc
+@gate Sa:sc
 
-// Les parametres sont transportes tels quels vers SC
-Sa(vel:120)                      // litteral -> SC recoit vel=120
-Sa(vel:`rrand(40,127)`)          // backtick -> SC evalue rrand(40,127)
+// Les parametres partent tels quels vers SuperCollider
+S -> Sa(vel:120) Sa(vel:`rrand(40,127)`) Sa
 ```
 
-C'est un **gradient de complexite** -- un seul mecanisme, une seule plomberie :
+Trois ecritures, une seule plomberie :
 
-```
-// Niveau 1 : litteral -- BPScript transporte
-Sa(vel:120)
-
-// Niveau 2 : backtick -- le runtime du symbole evalue
-Sa(vel:`rrand(40,127)`)
-
-// Niveau 3 : backtick orphelin -- tag obligatoire
-`sc: SynthDef(\grain, { |freq| ... }).add`
+```text
+Sa(vel:120)                                  litteral -- BPScript transporte la valeur
+Sa(vel:`rrand(40,127)`)                      backtick inline -- le runtime de Sa evalue
+`sc: SynthDef(\grain, { |freq| ... }).add`   backtick orphelin -- le tag nomme le runtime
 ```
 
-BPScript ne sait pas ce que `vel` veut dire. `120` est un litteral transporte,
-`` `rrand(40,127)` `` est du code evalue par le runtime de Sa. Meme chemin,
-le gradient est cosmetique.
+Un backtick qui tient sa propre place -- en tete de scene ou dans le flux d'une regle -- est
+**orphelin** : son langage se nomme, soit par un tag dans le bloc (`` `js: …` ``), soit par un
+acteur qui le qualifie avec le point (`` drums.`…` ``, declare par `@actor drums eval.<moteur>`).
+La regle vaut aux deux emplacements.
 
-### Override et heritage
+Pour BPScript, `vel` est un nom qu'il porte, `120` une valeur qu'il transporte, et
+`` `rrand(40,127)` `` du code que le runtime de Sa evalue. Les trois suivent le meme chemin.
 
-Les librairies declarent les defauts des symboles qu'elles fournissent.
-Le compositeur surcharge ponctuellement. Le runtime recoit le resultat.
+### Surcharge des parametres
 
+La cascade fournit la valeur de chaque parametre ; ecrire ce parametre sur l'occurrence remplace
+cette valeur, pour cette occurrence. La cascade complete est decrite dans « Sons et cascade
+d'heritage ».
+
+```bpscript
+@core
+@controls
+
+`sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
+@gate Sa:sc
+
+S -> Sa Sa(vel:120) Sa(vel:`rrand(40,127)`)
+//   ^ herite       ^ litteral      ^ evalue par SuperCollider
 ```
-// @alphabet.raga:supercollider definit Sa avec vel:80 par defaut
 
-Sa                               // vel:80 (defaut herite de la lib)
-Sa(vel:120)                      // vel:120 (surcharge litterale)
-Sa(vel:`rrand(40,127)`)          // vel:evalue par SC (surcharge backtick)
-```
-
-La surcharge ne modifie que les parametres, jamais le contrat (type + runtime).
+La surcharge porte sur les parametres ; le contrat -- type temporel et runtime -- reste celui
+de la declaration.
 
 ---
 
@@ -475,121 +650,109 @@ La surcharge ne modifie que les parametres, jamais le contrat (type + runtime).
 
 ### `[]` -- instructions moteur BP3 (toujours suffixe)
 
-Les qualificateurs `[]` sont des commandes pour le **moteur BP3**. Le compilateur
-les traduit en instructions BP3 (`_tempo()`, `_scale()`, mode de sous-grammaire, etc.).
-Ils sont resolus **pendant** la derivation et le calcul temporel -- ils n'existent
-plus dans la sortie.
+Les qualificateurs `[]` s'adressent au **moteur BP3**. Le compilateur les traduit en instructions
+moteur (operateurs temporels, tempo, mode de sous-grammaire...). Le moteur les consomme **pendant**
+la derivation et le calcul temporel ; la sortie porte leur effet.
 
-```
+```bpscript
 // Portee symbole -- colle a l'element
-A[/2] B C                       // divise la vitesse de A
+S -> A[/2] B C                  // divise la vitesse de A
 
 // Portee regle -- en fin de regle
 S -> A B C [mode:random]        // mode de la sous-grammaire
-Bass -> C2 C2 C3 [weight:50]    // poids de la regle
-X X -> abca [weight:inf]        // poids infini (priorite absolue)
+Basse -> C2 C2 C3 [weight:50]   // poids de la regle
+Basse -> C2 E2 G2 [weight:inf]  // poids infini : priorite absolue
 
 // Portee groupe -- apres le groupe
-{A B C}[/2]                     // vitesse du groupe divisee
+S -> {A B C}[/2]                // vitesse du groupe divisee
 ```
 
 ### Cles reservees de `[]`
 
-Les cles suivantes sont reservees -- le compilateur les comprend
-et les traduit en instructions BP3. Elles font partie du langage, pas d'une librairie :
+Ces cles font partie du langage : le compilateur les comprend et les traduit en instructions
+moteur.
 
+```text
+/N   \N   *N   **N   operateurs temporels BP3
+mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
+scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
+weight      poids de la regle (entier, K-param, ou inf pour priorite absolue)
+on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
+tempo       tempo de la regle -- [tempo:120] ; @tempo:120 pose celui de la scene
+meter       signature rythmique -- [meter:7/8], [meter:4/4]
 ```
-/N   \N   *N   **N    operateurs temporels BP3
-mode               mode du bloc (random, ord, sub1, lin, tem, poslong)
-scan               sens du parcours par regle (left, right, rnd) -- defaut : rnd
-weight             poids de la regle (entier, K-param, ou inf pour priorite absolue)
-on_fail            gestion d'echec (skip, retry(N), fallback(X))
-tempo              tempo local ou global (@tempo:120)
-meter              signature rythmique (@meter:7/8, @meter:4/4)
-```
 
-`scale` recouvre deux contrôles homonymes, distincts :
-- `scale` NUMÉRIQUE (mise à l'échelle temporelle d'un groupe) était un contrôle MOTEUR, **SUPPRIMÉ**
-  (décision `hub/decisions/2026-07-26-controle-moteur-scale-supprime-subsume-par-la-duree.md`) : il
-  se réécrit avec la DURÉE COLLÉE — `{A B}[scale:2]` → `{A B}:2`.
-- `scale` (gamme microtonale) n'est PAS une clé de `[]` : c'est un contrôle de RUNTIME, rejeté
-  fail-loud par le compilateur s'il apparaît entre crochets — il s'écrit `(scale:nom clé)`.
+Toute autre cle entre crochets arrete la compilation. Les parametres destines au runtime
+(`vel`, `filter`, `wave`...) s'ecrivent entre parentheses.
 
-Les deux ne se confondent jamais : un `[scale:N]` numérique ne se réécrit **jamais** en
-`(scale:...)` — ce serait écrire une gamme dont le nom serait « 2 » (`src/transpiler/parser.js`,
-`checkQualifierKey`).
-
-Toute cle non reservee dans `[]` est une erreur de compilation. Pour les parametres
-destines au runtime (vel, filter, wave...), utiliser `()` a la place.
+Le mot `scale` designe la **gamme microtonale** : c'est un controle de runtime, il s'ecrit
+`(scale:nom cle)`. La mise a l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**,
+`{A B}:2`.
 
 ### Compilation de `[]` vers BP3
 
-```
+```text
 // BPScript                              -> BP3
 A[/2] B C                                -> /2 A B C
 [mode:random] S -> A B C                 -> RND  gram#N[M] S --> A B C
-{C3, E3, G3, C4}:2                      -> {2, C3, E3, G3, C4}   // durée collée
+{C3, E3, G3, C4}:2                       -> {2, C3, E3, G3, C4}      // duree collee
 ```
 
 ### `()` -- parametres runtime (toujours suffixe)
 
-Les parametres `()` sont des donnees transportees vers le **runtime cible** (Web Audio,
-SuperCollider, MIDI externe, OSC, DMX...). BPScript ne les interprete pas -- il les
-transmet. C'est le dispatcher JS qui les route.
+Les parametres `()` sont des donnees destinees au **runtime cible** (Web Audio, SuperCollider,
+MIDI externe, OSC, DMX...). Le compilateur verifie que la cle appartient au vocabulaire charge,
+transmet la valeur telle quelle, et le dispatcher JS route l'ensemble.
 
-```
+```bpscript
 // Portee symbole -- colle a l'element
-Sa(vel:120)                      // vel envoye au runtime quand Sa joue
-C2(wave:sawtooth, filterQ:8)     // parametres de synthese
+S -> C4(vel:120)                        // vel envoye au runtime quand C4 joue
+S -> C2(wave:sawtooth, filterQ:8)       // parametres de synthese
 
 // Portee regle -- en fin de RHS
-Bass -> C2 C2 - C2 (vel:100)     // vel pour toute la phrase
+Basse -> C2 C2 - C2 (vel:100)           // vel pour toute la phrase
 
 // Portee groupe -- apres le groupe
-{A B C}(filter:lp, cutoff:4000)  // filtre sur tout le groupe
+S -> {A B C}(filter:lp, cutoff:4000)    // filtre sur tout le groupe
 ```
 
-**Superposition (modulations continues, ex. filtres).** Quand plusieurs portees touchent le **meme
-parametre** d'une meme note (filtre de note + filtre de groupe + groupe parent...), les controles
-**s'EMPILENT en serie** -- ils ne s'ecrasent pas. L'ordre est **interieur->exterieur**, derive de
-l'**imbrication structurelle** : dans `{ C4(filter:500) D4 }(filter:300)`, le son de C4 traverse son
-filtre de note *puis* le filtre du groupe. Cette superposition est une **semantique de resolution
-aval** (BPx/Kairos/runtime), pas une syntaxe : le langage l'exprime deja par le `subject` du
-qualificateur et le nesting des groupes. (A distinguer des **scalaires** comme `vel`/`chan`, qui eux
-s'**effondrent** par precedence -- une seule valeur gagne. Decision 2026-06-30 superposition-series.)
+**Superposition des modulations continues.** Quand plusieurs portees posent le **meme parametre**
+sur une meme note (note, groupe, groupe parent...), les controles **s'empilent en serie**, de
+l'**interieur vers l'exterieur**, dans l'ordre de l'imbrication : dans
+`{ C4(filter:500) D4 }(filter:300)`, le son de C4 traverse son filtre de note puis celui du groupe.
+Les **scalaires** (`vel`, `chan`) suivent l'autre regime : la precedence en retient **une** valeur.
+L'empilement se resout en aval (BPx, Kairos, runtime) ; le langage le dit deja par le sujet du
+qualificateur et par l'imbrication des groupes.
 
-**Etendue d'arc et rearmement d'enveloppe (`cutoff:env`).** *(Comportement transverse complet :
-`atlas/architecture/MODULATIONS.md` ; ici = la SYNTAXE + le guide d'ecriture de scene.)* Quand une
-enveloppe module un parametre (ex. `cutoff:env`), **un silence `-` re-arme l'enveloppe** (re-declenche
-son attaque) -- SAUF si une accolade `{ ... }` **enjambe** ce silence. L'accolade definit l'etendue d'**un seul arc continu**.
-Deux formes, deux comportements (**aucune syntaxe nouvelle** : c'est la presence/etendue de l'accolade
-qui choisit) :
+**Etendue d'arc et rearmement d'enveloppe (`cutoff:env`).** Un silence `-` **re-arme** l'enveloppe
+qui module un parametre : elle rejoue son attaque. Une accolade `{ ... }` qui enjambe ce silence
+definit **un seul arc continu**, qui le franchit. C'est l'etendue de l'accolade qui choisit :
 
-```
-// Forme REGLE nue -> le silence ARTICULE : re-arme a chaque -, phrases DETACHEES
-Bass -> C2 - C2 (cutoff:env)      // deux arcs : l'enveloppe repart apres le -
+```bpscript
+// Regle nue -> le silence ARTICULE : l'enveloppe repart apres chaque -
+Detache -> C2 - C2 (cutoff:env)
 
-// Forme ACCOLADES -> UN arc continu : le - interne est FRANCHI (legato / liaison)
-Bass -> { C2 - C2 }(cutoff:env)   // un seul swell couvre C2, le silence, C2
+// Accolade -> UN arc continu : le - interne est franchi (liaison)
+Lie -> { C2 - C2 }(cutoff:env)
 
-// La BOUCLE est transparente : un tour ne re-arme QUE s'il y a un silence a la couture,
-// ou si le tour tombe HORS de l'accolade. "Long build sur N tours" = une accolade qui
-// couvre la reprise -- toujours pas de syntaxe nouvelle :
-S -> { Bass Bass Bass Bass }(cutoff:env)   // un seul arc etale sur les 4 tours
+// La boucle est transparente : un tour re-arme quand un silence tombe a la couture,
+// ou quand le tour sort de l'accolade. Un long arc sur N tours = une accolade
+// qui couvre la reprise :
+S -> { Lie Lie Lie Lie }(cutoff:env)
 ```
 
-Il n'y a donc que **deux** comportements ; le « drone / flux continu » n'est **pas** un 3e mode, c'est
-`{}` sur une grande etendue. Cote formalisme : l'accolade doit apparaitre dans l'AST comme **un** noeud
-conteneur **unique** portant le qualificateur a la portee `group`, dont l'etendue **survit** a
-l'expansion polymetrique (fenetre du bus calculee par-bloc en aval : BPx la produit, Kairos la porte
-opaque, le runtime la realise). Decision 2026-07-01 rearmement-enveloppes.
+Un flux continu tenu sur une grande etendue s'ecrit donc avec la meme accolade, ouverte plus large.
+Cote formalisme, l'accolade est **un** noeud conteneur unique portant le qualificateur a la portee
+`group`, et son etendue survit a l'expansion polymetrique : BPx produit la fenetre du bus, Kairos
+la porte opaque, le runtime la realise. Le comportement transverse complet est decrit dans
+`atlas/architecture/MODULATIONS.md`.
 
-Les `()` runtime sont compiles en `_script(CT n)` -- des controles opaques que BP3
-transmet sans interpreter. Le transpileur maintient une table de mapping :
+Les `()` runtime sont compiles en `_script(CT n)` -- des controles opaques que BP3 transmet tels
+quels. Le transpileur maintient une table de mapping :
 
-```
+```text
 // BPScript                              -> BP3
-Sa(vel:120)                              -> _script(CT 0) Sa
+C4(vel:120)                              -> _script(CT 0) C4
 {A B}(filter:lp)                         -> {_script(CT 2_start) A B _script(CT 2_end)}
 
 // Table de mapping (cote JS) :
@@ -599,23 +762,27 @@ Sa(vel:120)                              -> _script(CT 0) Sa
 
 ### Valeur brute (modele CSS)
 
-Pour `[]` et `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou delimiteur
-est la valeur brute. Le destinataire (moteur ou runtime) l'interprete -- BPScript
-ne parse pas.
+Dans `[]` comme dans `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou au delimiteur fermant
+est la **valeur brute** : le destinataire -- moteur ou runtime -- l'interprete.
 
-### Exception -- controles autonomes (resolution pure)
+### Controles autonomes (resolution pure)
 
-Quand un non-terminal se resout **entierement** en controles runtime
-(pas d'element temporel), les controles peuvent apparaitre comme elements
-RHS autonomes :
+Quand un non-terminal se resout **entierement** en controles runtime, un sac `()` tient lieu de
+RHS et la regle produit des elements de duree nulle :
 
-```
-Pull0 -> (pitchbend:0)                                    // -> _script(CT n)
-StartPull -> (pitchcont) (pitchrange:500) (pitchbend:0)    // -> _script(CT 0) _script(CT 1) _script(CT 2)
+```bpscript
+Pull0 -> (pitchbend:0)
+StartPull -> (pitchcont, pitchrange:500, pitchbend:0)
 ```
 
-C'est le seul cas ou des elements zero-duree sont toleres dans le RHS sans etre
-attaches a un symbole.
+Une regle porte **un** sac en contenance. Pour en poser plusieurs, chacun prend son `!` et se pose
+dans le flux :
+
+```bpscript
+@controls
+
+StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
+```
 
 ### Resume des portees
 
@@ -627,143 +794,132 @@ attaches a un symbole.
 | **symbole** | `[cle:valeur]`   | moteur BP3      | `A[/2]`           |
 | **groupe**  | `{}(cle:valeur)` | runtime cible   | `{A B}(vel:100)`  |
 | **regle**   | `(cle:valeur)`   | runtime cible   | `C2 C2 (vel:100)` |
-| **symbole** | `(cle:valeur)`   | runtime cible   | `Sa(vel:120)`     |
+| **symbole** | `(cle:valeur)`   | runtime cible   | `C4(vel:120)`     |
 
 ### Destinataire d'une paire `[sujet:]controle:valeur`
 
-Par defaut, le `()` d'une regle vaut pour **la regle comme unite**. Une paire peut porter un
-**sujet** explicite (devant le controle) pour cibler **plus finement** -- meme mecanisme que
-l'affectation `*:sound.bell` (le `:` introduit deja un sujet dans le langage).
+Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peut porter un
+**sujet** devant le controle pour viser plus finement -- meme mecanisme que l'affectation
+`*:sound.bell`, ou le `:` introduit deja un sujet.
 
 | Ecriture | Sujet | Cible |
 | -------- | ----- | ----- |
-| `(cutoff:Env)` | omis | **la regle elle-meme** (l'unite) |
-| `(*:cutoff:Env)` | `*` | **chaque terminal** de la regle |
-| `(C2:cutoff:Env)` | `C2` | les terminaux **C2** de la regle |
+| `(cutoff:env)` | omis | **la regle elle-meme** (l'unite) |
+| `(*:cutoff:env)` | `*` | **chaque terminal** de la regle |
+| `(C2:cutoff:env)` | `C2` | les terminaux **C2** de la regle |
 
-- `*` = « tous les terminaux » (sens qu'il a deja dans `*:sound.X`). `?` n'est PAS utilisable
-  (il signifie « capturer un symbole inconnu » dans les gabarits).
-- Le sujet est **par paire** : `(*:cutoff:Env, wave:sawtooth, vel:100)` = `cutoff` sur chaque
-  terminal, `wave`/`vel` sur la regle.
-- Pour un **CV** (qui varie dans le temps), le sujet decide l'**horloge** : sans sujet = un signal
-  sur la voix (l'unite) ; `*:` = enveloppe **relancee/tiree par note**. C'est le sujet -- pas la
-  nature de la valeur -- qui tranche. Pour un controle **statique** (`wave`), unite et par-terminal
-  donnent le meme effet : la distinction ne compte que pour le temporel.
-
-> Cible **cross-portee** (`(S:cutoff:Env)`, `(alphabet.*:...)`, niveau scene/autre regle) :
-> meme mecanisme, portees plus larges -- **acte mais non implemente** (extension a venir, cf.
-> `docs/design/CV.md` et le backlog langage). Le sucre de **groupe** `*:(cutoff:Env)` (sujet sur
-> tout le groupe) est en backlog eventuel (non requis aujourd'hui).
+- `*` designe tous les terminaux, le sens qu'il a deja dans `*:sound.X`.
+- Le sujet vaut **par paire** : `(*:cutoff:env, wave:sawtooth, vel:100)` pose `cutoff` sur chaque
+  terminal, `wave` et `vel` sur la regle.
+- Pour un **CV** (qui varie dans le temps), le sujet decide l'**horloge** : sans sujet, un signal
+  sur la voix ; avec `*:`, une enveloppe relancee par note. C'est le sujet qui tranche, pas la
+  nature de la valeur. Pour un controle **statique** (`wave`), les deux ecritures donnent le meme
+  effet : la distinction porte sur le temporel.
 
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
-Un controle non-temporel (vel, wave, filter...) gouverne plusieurs notes de **deux
-manieres opposees**, selon qu'il est ecrit `()` ou `!()` :
+Un controle non-temporel (`vel`, `wave`, `filter`...) gouverne plusieurs notes selon deux regimes,
+que l'ecriture designe :
 
-| Operateur | Regime | Portee | Deborde ? | Origine |
-| --------- | ------ | ------ | --------- | ------- |
-| **`(...)` nu** -- contenance | structurel | **toute sa portee** (regle ou groupe), **y compris les notes ecrites avant lui** | **non** : s'arrete au bord de sa portee | **ajout BPScript** (Romain 2026-06-20) |
-| **`!(...)`** -- flux | sequentiel | les notes qui **suivent** dans l'ordre joue | **oui** : continue vers l'avant, **traverse les bords** de regle, jusqu'au prochain controle | **iso-BP3** (evenement non-temporel) |
+| Ecriture | Regime | Ce qu'elle gouverne |
+| -------- | ------ | ------------------- |
+| `(...)` | **contenance**, structurel | toute sa portee -- regle ou groupe -- les elements ecrits avant elle compris ; l'effet s'arrete au bord de la portee |
+| `!(...)` | **flux**, sequentiel | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain controle |
 
+```bpscript
+@controls
+
+// CONTENANCE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
+Basse -> C2 E2 G2 (wave:sawtooth)
+S -> {C4 E4}(vel:80)                 // C4 et E4 a 80, l'effet reste dans le groupe
+
+// FLUX -- !(...) : la valeur coule vers l'avant et franchit la fin de Debut
+S -> Debut Suite
+Debut -> C4 !(vel:100)               // C4 garde le defaut, le flux part apres lui
+Suite -> E4 E4                       // les deux E4 sortent a 100
 ```
-// CONTENANCE -- (...) nu : confine, gouverne meme ce qui precede
-Bass -> C2 E2 G2 (wave:sawtooth)     // les TROIS notes en sawtooth ; ne sort pas de Bass
-{C4 E4}(vel:80)                      // C4 et E4 a 80 ; confine au groupe
 
-// FLUX -- !(...) : forward, deborde
-S -> A B ;  A -> C4 !(vel:100) ;  B -> E4 E4
-// -> C4=defaut, puis !(vel:100) coule en avant : les E4 de B sortent A 100 (deborde dans B)
-```
+Le flux est un **etat courant** qui reste en vigueur d'un cycle et d'une regle a l'autre. Une note
+**echantillonne** la valeur en vigueur a son instant d'attaque, comme un signal en escalier. Sa
+portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 
-Le flux est un **etat courant** qui persiste **de facon continue** (pas de remise a zero
-par cycle ou par regle) : une note **echantillonne** la valeur en vigueur a son instant
-d'attaque, comme un signal en escalier. Sa portee est **par voix** : un flux pose dans une
-voix ne bave pas dans les voix paralleles.
-
-#### Table de syntaxe -- `!` est surcharge, la regle d'espace tranche
+#### Table de syntaxe du `!`
 
 | Ecriture | Sens |
 | -------- | ---- |
-| `(...)` *(sans `!`)* | **contenance** -- confinee a sa portee (concept neuf BPScript) |
-| `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- voyage avec C4, repliquee si C4 l'est |
-| `C4 !(...)` **espace** | **flux EVENEMENT SEPARE** (non conjoint) -- pose seul dans la sequence |
-| `B3!C7` *(`!` entre symboles, sans parentheses)* | **SIMULTANE / accord** (conjoint NON-flux) -- operateur existant, rien a voir avec le flux |
-| `!f` *(en tete, sans primaire)* | **objet HORS-TEMPS** -- element pose seul, sans duree (`OutTimeObject`) |
+| `(...)` *(sans `!`)* | **contenance** -- l'effet reste dans sa portee |
+| `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- il voyage avec C4 et se replique avec lui |
+| `C4 !(...)` **espace** | **flux, EVENEMENT SEPARE** -- pose seul dans la sequence |
+| `B3!C7` *(`!` entre symboles)* | **SIMULTANE / accord** -- les deux notes attaquent au meme instant |
+| `!f` *(en tete, sans primaire)* | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`) |
 | `![@seed:N]` | **directive de production DANS LE FLUX** -- element sans duree (`InstantControl`) |
-| `C4 !prise` *(nom d'une `@macro`)* | ⛔ **ACCORD, donc SON FANTOME** -- le nom y devient un co-attaque sonnant ; cf. SCENES.md §6.4 |
-| `!osc >> filtre` | cablage ECRIT dans le flux -- **lu par le langage, REFUSE au chargement par le moteur** (2026-07-28) |
-| `!=` *(dans un drapeau)* | **comparaison de difference** -- la negation de l'operateur `=` |
+| `C4 !prise` *(nom d'une `@macro`)* | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur |
+| `!osc >> filtre` | **cablage pose dans le flux** -- le langage le lit, le moteur le refuse au chargement |
+| `!=` *(dans une garde)* | **comparaison de difference**, pendant de `==` |
 
-`!` est **surcharge**, et **c'est ce qui SUIT le `!` qui tranche, jamais le `!` lui-meme.** La
-table ci-dessus enumere TOUTES les lectures mesurees dans le langage -- une enumeration qui en
-oublie une donne l'illusion que le signe est plus simple qu'il n'est.
+C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
+zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
 
-**Le `!` n'a qu'UN sens : l'instantane, duree zero.** Il l'a toujours eu, et il l'a garde. La
-coupure de cablage a porte le point d'exclamation jusqu'au 2026-07-28 ; elle s'ecrit desormais
-`\>>`. Ce qui l'a fait partir, Romain l'a vu en ecrivant un instantane suivi d'une coupure : le
-meme signe y disait l'instant PUIS la coupure, et la ligne ne se lisait plus. Un signe
-qui porte deux sens ne se rattrape pas par une regle de lecture, il se separe. Reste une seule
-exception, et elle est d'une autre famille : `!=` FUSIONNE en un jeton unique, comme `==` ou `>=`,
-et ne se lit jamais comme un `!` suivi de quelque chose.
+**Un cablage se nomme.** La table des symboles du moteur range chaque element sous un nom, et un
+cablage ecrit directement dans le flux est refuse au chargement. On le nomme donc dans une `@macro`
+et on pose son nom **nu** dans le flux, ou il occupe un pas :
 
-⚠️ **Le cablage ECRIT dans le flux n'est pas la forme a employer** (arbitrage Romain 2026-07-28) :
-le langage le lit, mais le moteur le REFUSE au chargement -- un cablage n'a pas de nom, et la
-table des symboles interne tout sous un nom. On NOMME donc le cablage dans une `@macro` et on
-pose son nom **NU** dans le flux (`S -> A4 prise B4`), ou il occupe un pas.
-⛔ **Jamais `C4 !prise`** : le `!` entre deux noms est l'ACCORD, le nom y devient un co-attaque
-SONNANT et l'aval lui cherche une hauteur -- un son fantome, sans aucune erreur pour le signaler.
-La forme complete, avec son point d'application et l'etat date de chaque etage, est en
-[SCENES.md §6.4](../design/SCENES.md).
+```bpscript
+@macro prise osc >> filtre
 
-La **regle d'espace** ne s'applique qu'a **`!(...)`** : **colle = ancre** au terminal precedent,
-**espace = separe**. Un `!(...)` colle sans terminal avant lui (debut de regle ou de groupe, ex.
-`{!(vel:80) ...}`) retombe en **separe** (pas d'ancre possible). Dans l'AST, le `!(...)` porte
-`conjoint: true|false` ; seul le simultane `B3!C7` reste un `SimultaneousGroup` (inchange).
+S -> A4 prise B4
+```
 
-**L'enchainement ne se factorise pas : chaque element porte SON `!`**, et ils se suivent sans
-autre separateur qu'une espace. `Internal -> !(ins:1) !(chan:1) !(cc.98:0)` donne trois elements
-freres ; `C4!dha!phase` donne un primaire et deux secondaires. Plusieurs elements apres un SEUL
-`!` n'est pas une forme du langage.
+Ecrit `C4 !prise`, le meme nom devient une co-attaque de l'accord : l'aval lui cherche une hauteur
+et un son sort, sans qu'aucune erreur le signale.
+
+**L'espace tranche l'attache de `!(...)`** -- application de la convention generale de l'espace,
+delimiteur de termes : colle au terminal precedent, le controle voyage avec lui ; separe par une
+espace, il se pose seul dans la sequence. En tete de regle ou de groupe (`{!(vel:80) ...}`), il se
+pose seul. L'AST porte cette attache sur le noeud `!(...)` (`conjoint`), et le simultane `B3!C7`
+reste un `SimultaneousGroup`.
+
+**Chaque element porte son `!`**, et une espace les separe : `Interne -> !(ins:1) !(chan:1)` donne
+deux elements freres ; `C4!E4!G4` donne un primaire et deux secondaires.
 
 **Precedence** (du plus fort au plus faible) :
-**override de note `Sa(vel:120)` > flux `!(...)` > contenance `(...)` > defauts de declaration.**
-
-> Reference : `hub/decisions/2026-06-20-controles-non-temporels-portage-resolution.md`.
-> Comportement BP3 du flux verifie sur l'oracle natif (preuve MIDI : `P->C4 _vel(100) E4`
-> joue trois fois -> velocites `[64,100,100,100,100,100]` ; le 1er C4 reste au defaut =
-> forward-only, et le flux deborde sur la regle suivante).
+**override de note `C4(vel:120)` > flux `!(...)` > contenance `(...)` > defauts de declaration.**
 
 ---
 
-## Les parentheses `()` -- quatre roles, zero ambiguite
+## Les parentheses `()` -- quatre roles
 
-Les parentheses ont quatre fonctions selon le contexte :
+Les parentheses ont quatre fonctions, decidees par la position :
 
+```bpscript
+// 1. Sac de parametres runtime -- sur un symbole, une regle ou un groupe
+S -> C4(vel:120)                      // symbole : vel envoye au runtime quand C4 joue
+Basse -> C2 C2 - C2 (vel:100)         // regle : vel pour toute la phrase
+S -> {A B}(filter:lp, cutoff:4000)    // groupe : filter pour tout le groupe
+
+// 2. Contexte -- condition d'application d'une regle
+(A B) X -> D E                        // X se reecrit en D E seulement s'il suit A B
 ```
-// 1. Parametre runtime -- sur un symbole, une regle ou un groupe
-Sa(vel:120)                      // symbole : vel envoye au runtime quand Sa joue
-C2 C2 - C2 (vel:100)             // regle : vel pour toute la phrase
-{A B}(filter:lp, cutoff:4000)    // groupe : filter pour tout le groupe
 
-// 2. Declaration -- avec un type devant
-gate note(pitch, vel:80) { ... }
+```bpscript
+// 3. Liste de parametres d'une declaration -- collee au nom
+@macro accent(x) x(vel:120)
 
-// 3. Appel -- apres un symbole dans une expression
-note(Sa, vel:120)
-
-// 4. Contexte -- condition d'application d'une regle
-(A B) C -> D E           // C se reecrit en D E seulement si precede de A B
+// 4. Argument d'un appel de macro
+S -> accent(C4) E4
 ```
 
 La regle de desambiguation est positionnelle :
-- `symbole(` dans une expression = parametre runtime ou appel
-- `(` en fin de RHS = parametre runtime de portee regle
-- `{}(` apres un groupe = parametre runtime de portee groupe
-- `type nom(` = declaration
-- `(` en tete de regle, avant le LHS et `->` = contexte
+- `symbole(` colle, dans une regle = sac de parametres runtime ou appel de macro
+- `(` en fin de RHS = sac de parametres de portee regle
+- `{}(` apres un groupe = sac de parametres de portee groupe
+- `@directive nom(` colle au nom = liste de parametres d'une declaration
+- `(` en tete de regle, avant le LHS et la fleche = contexte
 
-Le **groupement** n'est pas un role de `()`. C'est `{}` qui fait le groupement,
-conformement a BP3.
+Une procedure moteur prend elle aussi son argument entre parentheses, a l'interieur du sac `[]` :
+`[on_fail:retry(2)]`, `[on_fail:fallback(Autre)]`.
+
+Le groupement s'ecrit avec les accolades `{}`.
 
 ---
 
@@ -771,38 +927,42 @@ conformement a BP3.
 
 Les accolades ont trois roles :
 
-```
-// 1. Polymetrie -- plusieurs voix simultanees (separees par ,)
-S -> { melodie, rythme }
+```bpscript
+// 1. Polymetrie -- plusieurs voix simultanees, separees par ,
+Melodie -> C4 E4
+Rythme -> G4 -
+S -> { Melodie, Rythme }
 
-// 2. Groupement temporel -- sous-groupe dans une sequence (une seule voix)
+// 2. Groupement temporel -- un sous-groupe dans une sequence, une seule voix
 S -> A {B C D} E F
-
-// 3. Etat interne -- dans les definitions (paires cle:valeur privees)
-gate note(pitch, vel:80) { attack:5ms, decay:200ms }
 ```
 
-Les roles 1 et 2 suivent le comportement de BP3.
-Le role 3 est propre a BPScript (declarations typees).
+```bpscript
+// 3. Sac de proprietes dans une declaration
+@sound
+  bell_short { sample:"bell.wav", dur:400 }
 
-### Ratio de tempo sur un bloc polymetrique
-
-En BP3, un ratio optionnel peut preceder les voix : `{2, C3, E3, G3, C4}`.
-En BPScript, ce ratio s'exprime via la **durée** `:` COLLÉE sur le groupe -- plus lisible :
-
-```
-// BP3 : ratio en premiere position (implicite)
-{2, C3, E3, G3, C4}
-
-// BPScript : durée collée au groupe (meme resultat)
-{C3, E3, G3, C4}:2
-
-// Ratio fractionnaire
-{mi fa sol}:2/3
+S -> C4(sound.bell_short)
 ```
 
-Le compilateur traduit `{...}:N` -> `{N, ...}` pour BP3. La même durée s'écrit sur une note :
-`A4:1/2` -> `{1/2, A4}`. (Remplace l'ancien `[speed:N]`, supprimé -- décision 2026-06-26.)
+Les roles 1 et 2 suivent le comportement de BP3 ; le sac de proprietes est propre a BPScript.
+
+### Duree collee sur un groupe
+
+Une duree s'ecrit avec `:` colle (cf. la section des conventions de notation `.` / `:` / `*`).
+Posee sur un bloc polymetrique, elle donne le ratio que BP3 place en premiere position du bloc :
+
+```bpscript
+S -> {C3, E3, G3, C4}:2      // duree du bloc
+S -> {C4 E4 G4}:2/3          // ratio fractionnaire
+S -> A4:1/2                  // la meme duree, sur une note
+```
+
+```text
+// BPScript              -> BP3
+{C3, E3, G3, C4}:2       -> {2, C3, E3, G3, C4}
+A4:1/2                   -> {1/2, A4}
+```
 
 ---
 
@@ -816,133 +976,135 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 
 `!` accepte **tous les types** :
 
-```
-Sa!dha                       // gate:sc + trigger:sc
-Sa!visual_glow               // gate:sc + gate:processing (herite duree de Sa)
-Sa!dha!spotlight [phase=2]   // gate + triggers + flag (! = temporel, [] = etat)
--!dha                        // silence + trigger
-Sa!ramp(brightness,0,255)    // gate:sc + cv:python (herite duree de Sa)
+```bpscript
+@gate visual_glow:osc
+@trigger dha:sc
+@trigger spotlight:osc
+@cv monte mod.ramp(from:0, to:255)
+
+S -> C4!dha                        // gate + trigger
+S -> C4!visual_glow                // gate + gate : visual_glow prend la duree de C4
+S -> C4!dha!spotlight [phase=2]    // gate + trigger + mutation de drapeau
+S -> -!dha                         // silence + trigger
+S -> C4!monte                      // gate + cv : monte prend la duree de C4
 ```
 
 Regles :
-- **Avant `!`** : le primaire -- doit occuper du temps (gate, cv, silence)
-- **Apres `!`** : secondaires -- se declenchent au meme instant
-  - **trigger** -> zero duree
-  - **gate** -> herite de la duree du primaire
-  - **cv** -> herite de la duree du primaire
-  - **`nom=valeur`** -> mutation de flag (zero duree)
-- **`!` standalone** (sans primaire) : **out-time object** -- declenche hors-temps,
-  sans occuper de duree. Compile en `<<symbol>>` pour BP3.
-- **`!(controle)` standalone** : mutation de **flux** -- coule vers l'avant dans l'ordre
-  joue, deborde au-dela de sa portee (iso-BP3). A distinguer du `(...)` nu (contenance,
-  confine) -- cf. [Contenance `()` vs flux `!()`](#contenance---vs-flux---deux-facons-de-gouverner-les-notes).
+- **Avant `!`** : le primaire -- il occupe du temps (gate, cv, silence)
+- **Apres `!`** : les secondaires -- ils partagent l'instant d'attaque du primaire
+  - **trigger** -> duree zero
+  - **gate** -> prend la duree du primaire
+  - **cv** -> prend la duree du primaire
+  - **`nom=valeur`** -> mutation de drapeau, duree zero
+- **`!nom` pose seul** dans la sequence : **objet hors-temps** -- il tient sa place dans
+  l'ordre joue pour une duree nulle. Compile en `<<nom>>` pour BP3.
+- **`!(controle)` pose seul** : mutation de **flux** -- cf.
+  [Contenance `()` vs flux `!()`](#contenance---vs-flux---deux-facons-de-gouverner-les-notes)
 
-C'est le mecanisme central de la **simultaneite cross-runtime** :
-un seul point dans le temps peut declencher des evenements dans
-SC, Python, Processing, DMX -- sans utiliser la polymetrie.
+C'est le mecanisme de la **simultaneite cross-runtime** : un seul point dans le temps porte
+des evenements destines a SC, Python, Processing, DMX.
 
-### Bundles recurrents via macros
+### Grouper des evenements simultanes dans une macro
 
-Si un ensemble d'evenements simultanes revient souvent, une macro
-le factorise :
+Un ensemble d'evenements simultanes qui revient souvent se factorise dans une macro :
 
-```
-scene_a(x) = x!visual_glow!spotlight
-scene_b(x) = x!visual_strobe!flash
+```bpscript
+@gate visual_glow:osc
+@trigger spotlight:osc
+@gate visual_strobe:osc
+@trigger flash:osc
+@macro halo(x) x!visual_glow!spotlight
+@macro eclair(x) x!visual_strobe!flash
 
-S -> scene_a(Sa) scene_b(Re) scene_a(Ga)
-
+S -> halo(C4) eclair(D4) halo(E4)
 // Expansion :
-// Sa!visual_glow!spotlight Re!visual_strobe!flash Ga!visual_glow!spotlight
+// C4!visual_glow!spotlight D4!visual_strobe!flash E4!visual_glow!spotlight
 ```
 
 ### `<!` -- trigger entrant (on attend)
 
-`<!` est le miroir de `!` : il attend un signal externe avant de continuer.
-C'est un point de synchronisation -- zero duree, comme tout trigger.
+`<!` attend un signal externe avant de continuer. C'est un point de synchronisation, de
+duree zero comme tout trigger.
 
+```bpscript
+@trigger dha:sc
+@in sync1 transport.midi
+
+S -> -<!sync1 C4 D4 E4       // attend en silence, puis joue
+S -> C4<!sync1 D4 E4         // joue C4, attend, puis continue
+S -> <!sync1 C4 D4 E4        // attend seul puis demarre
+S -> C4!dha<!sync1 D4 E4     // joue C4 + dha, attend sync1, puis D4
 ```
-trigger sync1()     // declare trigger, configure dans le mapping
 
-S -> -<!sync1 Sa Re Ga       // attend en silence, puis joue
-S -> Sa<!sync1 Re Ga         // joue Sa, attend, puis continue
-S -> <!sync1 Sa Re Ga        // attend seul puis demarre
-S -> Sa!dha<!sync1 Re Ga     // joue Sa + dha, attend sync1, puis Re
-```
-
-La source du signal (MIDI, OSC, capteur, autre instance BP3...) est configuree
-dans le mapping, pas dans le langage.
-
-### `@hooks` -- interaction temps reel simplifiee
-
-Le mecanisme `<!` est puissant mais bas niveau. La librairie `@hooks` fournit
-des macros intuitives qui cachent la plomberie :
-
-| Fonction              | Ce qu'elle fait                      | Expansion         |
-| --------------------- | ------------------------------------ | ----------------- |
-| `wait(x)`             | attend un signal                     | `<!x`             |
-| `wait_all(a,b,c)`     | attend tous les signaux dans l'ordre | `<!a<!b<!c`       |
-| `wait_timeout(x,ms)`  | attend avec limite de temps          | `<!x[timeout:ms]` |
-| `speed_ctrl(cc,chan)` | CC MIDI pilote le tempo en live      | config dispatcher |
-| `tap_tempo(key,chan)` | tap tempo via MIDI note              | config dispatcher |
+`@in <role> transport.<canal>` nomme dans la scene le **role** que tient l'entree ; les canaux
+d'entree sont `midi`, `osc` et `keyboard`. L'appareil qui remplit ce role s'y associe hors de
+la scene. L'adresse de la source se colle au point d'attente -- `<!sync1.60` ecoute le numero
+60 de l'entree `sync1` -- et les points d'attente se chainent : `<!sync1<!sync2`.
 
 ---
 
 ## Les trois silences
 
-| Symbole | Nom                   | Duree                       | Semantique                               |
-| ------- | --------------------- | --------------------------- | ---------------------------------------- |
-| `-`     | **silence**           | fixee par le compositeur    | absence d'evenement, occupe du temps     |
-| `_`     | **prolongation**      | etend l'evenement precedent | le son continue, pas de nouvelle attaque |
-| `...`   | **repos indetermine** | calculee par le moteur      | le moteur trouve la duree optimale       |
+| Symbole | Nom                   | Duree                       | Ce qu'il fait                             |
+| ------- | --------------------- | --------------------------- | ----------------------------------------- |
+| `-`     | **silence**           | fixee par le compositeur    | occupe une position, le temps s'ecoule    |
+| `_`     | **prolongation**      | etend l'evenement precedent | le son se poursuit sur l'attaque d'avant  |
+| `...`   | **repos indetermine** | calculee par le moteur      | le moteur choisit la duree la plus simple |
 
-```
-S -> Sa Re - Ga              // Silence explicite : 4 positions, la 3e est vide
-S -> Sa _ Re Ga              // Prolongation : Sa dure 2 positions
-S -> { A B C ..., D E F G }  // Repos indetermine : le moteur calcule
+```bpscript
+S -> C4 D4 - E4              // silence explicite : 4 positions, la 3e est vide
+S -> C4 _ D4 E4              // prolongation : C4 dure 2 positions
+S -> { A B C ..., D E F G }  // repos indetermine : le moteur calcule
 ```
 
-Le repos indetermine `...` est fondamental pour la **representation minimale**
-des structures polymetriques. Le compositeur ecrit le minimum, le moteur
-calcule les silences qui produisent la structure temporelle la plus simple.
+Le repos indetermine `...` porte la **representation minimale** des structures polymetriques :
+le compositeur ecrit les evenements, le moteur calcule les silences qui produisent la
+structure temporelle la plus simple.
 
 ---
 
 ## Period notation `.` -- fragments de duree egale
 
-Le `.` est un separateur qui decoupe une sequence en fragments de **duree
-symbolique egale**. C'est un mecanisme fondamental de BP3.
+Le `.` separe une sequence en fragments de **duree symbolique egale**. C'est un mecanisme
+fondamental de BP3.
 
-```
+```bpscript
 S -> A B . C D . E F          // 3 fragments : (A B), (C D), (E F)
-S -> { A B . C D, E F G }    // voix 1 : 2 fragments, voix 2 : 3 symboles
-
-// Derivation recursive avec expansion (exemple de Bernard Bel)
-A -> E2 .
-B -> D2 A                    // B = D2 E2 .
-C -> B2 B                    // C = B2 D2 E2 .
+S -> { A B . C D, E F G }     // voix 1 : 2 fragments, voix 2 : 3 symboles
 ```
 
-En BPScript, `.` et `,` sont transmis tels quels a BP3 -- pas de traduction.
+Le decoupage se construit aussi par derivation, chaque regle apportant sa part :
+
+```bpscript
+M1 -> E2 .
+M2 -> D2 M1                  // M2 = D2 E2 .
+M3 -> B2 M2                  // M3 = B2 D2 E2 .
+```
+
+En BPScript, `.` et `,` s'ecrivent comme en BP3 et sont transmis tels quels.
+
+**L'espace tranche** : entoure d'espaces, le `.` decoupe la sequence ; colle entre deux noms,
+il appelle un composant (`transport.midi`, `<!sync1.60`) -- cf. la section « Conventions de
+notation ».
 
 ---
 
 ## Liaisons `~` -- tied sound-objects
 
-`~` remplace le `&` de BP3 (reserve aux templates en BPScript).
+En BPScript, la liaison s'ecrit `~` ; `&` y designe le gabarit esclave.
 
-Un son est tenu a travers d'autres evenements. Le NoteOn arrive au debut,
-le NoteOff a la fin, malgre les autres sons entre les deux.
+Un son est tenu a travers d'autres evenements. Le NoteOn arrive au debut, le NoteOff a la fin,
+par-dessus les sons intercales.
 
-```
-C4~ D4 E4 ~C4            // C4 tenu du debut a la fin
-C4~ D4 E4 ~C4~ F4 ~C4    // C4 tenu, avec deux points de suture
+```bpscript
+S -> C4~ D4 E4 ~C4            // C4 tenu du debut a la fin
+S -> C4~ D4 E4 ~C4~ F4 ~C4    // C4 tenu, avec deux points de suture
 ```
 
 Syntaxe :
-- `C4~` = debut de liaison (NoteOn, pas de NoteOff)
-- `~C4~` = continuation (pas de NoteOn ni NoteOff)
-- `~C4` = fin de liaison (NoteOff)
+- `C4~` ouvre la liaison : NoteOn au debut
+- `~C4~` la continue : le son se poursuit a travers l'evenement
+- `~C4` la ferme : NoteOff a la fin
 
 Le compilateur traduit `~` -> `&` pour BP3 (`C4~` -> `C4&`, `~C4` -> `&C4`).
 
@@ -950,127 +1112,137 @@ Le compilateur traduit `~` -> `&` pour BP3 (`C4~` -> `C4&`, `~C4` -> `&C4`).
 
 ## Captures `?` -- pattern matching
 
-`?` suivi d'un chiffre capture un symbole inconnu. A gauche de `->`, il capture.
-A droite, il rejoue la valeur capturee.
+`?` apparie un symbole quelconque. A gauche de la fleche il capture ; a droite il rejoue la
+valeur capturee.
 
-```
-?1 A ?1 -> ?1 B ?1       // do A do -> do B do
-?1 ?2 -> ?2 ?1           // inverse deux symboles
-?1(vel:120) -> ?1(vel:80) // change la velocite de tout symbole qui a vel:120
+`?n` **unifie** : toutes les occurrences de `?1` dans une regle designent le meme symbole.
+Le `?` nu capture chaque position independamment.
+
+```bpscript
+@var N
+?1 M ?1 -> ?1 N ?1       // le symbole qui encadre M revient autour de N
+?1 ?2 -> ?2 ?1           // echange deux symboles
 ```
 
-`?` capture exactement **un** symbole. Jusqu'a 32 captures numerotees par regle.
-Le compilateur traduit `?n` vers les metavariables BP3.
+Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
+traduit `?n` vers les metavariables BP3.
 
 ---
 
 ## Homomorphismes `|x|` -- variables liees
 
-`|x|` declare une variable qui matche n'importe quel symbole dans une regle.
-Plus expressif que `?` pour les transformations structurelles.
+`|x|` nomme une variable qui apparie n'importe quel symbole ; toutes les occurrences de `x`
+dans la regle designent le meme symbole. Elle s'abaisse en non-terminal nomme pour le moteur.
 
-```
-|x| S x -> x S              // inversion
+```bpscript
+|x| M x -> x M              // inversion
 |x| x x -> x                // dedoublonnage
 |x| |y| x y -> y x          // permutation
-|x| (A) x B -> x C x        // variable avec contexte
+|x| (C4) x M -> x M x       // variable sous contexte positif
 ```
+
+Les tables d'homomorphisme se declarent par `@transcription.<table>` et s'appliquent entre un
+gabarit maitre et son esclave -- cf.
+[Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes).
 
 ---
 
 ## Contextes `()` et `#` -- conditions d'application
 
-```
-(A B) C -> D E              // contexte positif : C precede de A B
-#X Z -> W                   // X : UN symbole, different de X, qui OCCUPE une position
-(A) C #(F) -> D E           // combinaison
-```
-
-### ⚠️ `#X` n'est PAS une garde de largeur nulle -- il CONSOMME une position
-
-Le piege est dans le mot « contexte ». On lit `#X Z -> W` comme « Z pas precede de X »,
-donc comme une **condition sur le voisinage** qui ne consommerait rien. **C'est faux**, dans
-BP3 comme ici, et une regle transposee sur cette lecture est fausse.
-
-`#X` **apparie exactement UN symbole**, qui doit etre different de `X`, et **consomme sa
-position**. Mesure au moteur natif : la regle `#A1 #A2 #A3 A A --> Z1 Z2 Z3 A A` appliquee a
-`A A2 A3 A1 A A` donne `A Z1 Z2 Z3 A A` -- les trois creneaux negatifs ont **avale** trois
-symboles reels (`A2`, `A3`, `A1`), apparies positionnellement et dans l'ordre. Cote BPScript,
-l'AST le dit aussi : les `#X` sont des `Symbol` avec `negated: true` **dans `lhs`**, a leur
-position, et le champ `contexts` reste vide.
-
-**D'ou vient alors la qualite de CONTEXTE ?** Pas du `#`. Elle vient de ce qu'un symbole soit
-ecrit **a la meme place des deux cotes de la fleche** (prefixe ou suffixe commun). Les deux
-proprietes -- « ne pas etre X » et « etre du contexte » -- sont **independantes** : on peut
-avoir l'une sans l'autre.
-
-### Le test negatif est une DISJONCTION a l'echelle de la regle
-
-Plusieurs `#` dans une meme regle ne se lisent pas comme un « et ». Le moteur evalue une
-**disjonction globale** : il suffit qu'**UN SEUL** creneau soit mis en defaut pour que le test
-negatif passe. Le seul cas bloquant est que **TOUS** les creneaux egalent leur nom simultanement.
-
-Une lecture conjonctive (« aucun ne doit egaler ») est **fausse** et donne des grammaires qui
-ne se declenchent jamais.
-
-### Silence et prolongation comme contextes
-
-`-` (silence) et `_` (prolongation) sont des voisins comme les autres : ils
-s'emploient en contexte, notamment en contexte NEGATIF, sans parentheses.
-
-```
-#- V1 <> #- -              // V1 seulement s'il n'est PAS precede d'un silence
-#_ S -> C4                 // S seulement s'il n'est PAS precede d'une prolongation
+```bpscript
+(C4 D4) M -> E4 F4          // contexte positif : M se reecrit quand il suit C4 D4
+#X M -> C4                  // creneau negatif : un symbole qui differe de X
+(C4) M #(F4) -> D4 E4       // contexte positif a gauche, creneau negatif a droite
 ```
 
-Emploi reel : la scene `dhati3` du corpus. La forme sans parentheses `#<symbole>` apparie
-**un** creneau ; `#(X Y)` apparie un creneau qui ne doit egaler aucun membre du groupe. Dans
-les deux cas **une position est consommee** -- voir l'avertissement ci-dessus.
+### `#X` apparie un symbole et consomme sa position
+
+`#X` apparie exactement **un** symbole, qui doit differer de `X`, et il **occupe la position**
+de ce symbole.
+
+```bpscript
+@var z1, z2, z3
+#K1 #K2 #K3 M M -> z1 z2 z3 M M
+```
+
+Appliquee a `M K2 K3 K1 M M`, cette regle donne `M z1 z2 z3 M M` : les trois creneaux negatifs
+ont apparie `K2`, `K3` et `K1` -- trois symboles reels, pris dans l'ordre, position par
+position. Dans l'arbre, un `#X` est un `Symbol` de `lhs`, a sa place, avec `negated: true` ;
+les contextes positifs `(...)`, eux, vivent dans le champ `contexts`.
+
+**La qualite de CONTEXTE vient de la SYMETRIE de la regle** : un symbole ecrit a la meme place
+des deux cotes de la fleche (prefixe ou suffixe commun) est du contexte. Differer de `X` et
+appartenir au contexte sont deux proprietes independantes -- chacune s'obtient sans l'autre.
+
+### Le test negatif est une disjonction a l'echelle de la regle
+
+Plusieurs `#` dans une meme regle forment **un seul test** : il passe des qu'**UN** creneau
+differe de son nom, et il bloque quand **TOUS** les creneaux egalent leur nom simultanement.
+
+### Silence et prolongation comme creneaux
+
+`-` (silence) et `_` (prolongation) sont des voisins comme les autres : ils s'emploient en
+creneau, y compris en creneau negatif, ou le symbole se colle au `#` -- `#-`, `#_`.
+
+```bpscript
+#- V1 <> #- -              // le creneau apparie un symbole qui differe du silence
+#_ M -> C4                 // le creneau apparie un symbole qui differe de la prolongation
+#(X Y) M -> C4             // le creneau apparie un symbole qui differe de X et de Y
+```
+
+`#<symbole>` apparie un creneau ; `#(X Y)` apparie un creneau dont le symbole differe de chaque
+membre du groupe. Les deux formes consomment une position.
 
 ---
 
 ## Templates `$` et `&` -- capture et reutilisation de groupes
 
-`$` definit (master) un motif de groupe. `&` le reference (slave).
+`$` capture un motif de groupe (maitre), `&` le rejoue (esclave). Le nom porte
+l'appariement entre les deux.
 
-```
-S <> $mel &mel                            // $mel definit, &mel rejoue
-S <> $mel(tempo:120) &mel(tempo:80)       // avec transformation
-S -> ${$X S &X} &{$X S &X}               // capture de groupe entier
-```
-
-### Substitution (`[sub:table]`)
-
-Les tables de substitution sont dans `lib/sub.json`. Le qualifier `[sub:nom]`
-sur un template slave `&` applique la substitution nommee :
-
-```
-@sub
-
-$N14 &N14[sub:dhati]       // capture N14, rejoue en substituant
+```bpscript
+S <> $mel &mel                            // $mel capture, &mel rejoue
+S <> $mel(tempo:120) &mel(tempo:80)       // chaque invocation porte ses parametres
+S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
 ```
 
-Le compilateur traduit `$` -> `(=X)` et `&` -> `(:X)` pour BP3.
+Les parametres d'une invocation gouvernent l'expansion du gabarit : ils valent
+pour ce que cette invocation produit. En BP3, `$X` s'ecrit `(=X)` et `&X`
+s'ecrit `(:X)`.
 
-### Ancre de gabarit maitre : `$` nu en tete de LHS
+### Ancre de gabarit maitre : `$` seul en tete de LHS
 
-Un `$` seul, sans nom, place devant le membre gauche, marque la regle entiere
-comme gabarit maitre. Il ne capture pas un groupe nomme : il ancre.
+Un `$` suivi d'une espace, en tete du membre gauche, marque la regle entiere
+comme gabarit maitre : il ancre la regle.
 
+```bpscript
+$ S -> C4 D4
 ```
-$ S -> C4 D4               // AST : lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]
+
+L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace
+tranche entre les deux emplois du signe : colle a un identifiant, `$X` nomme une
+capture ; suivi d'une espace, `$` ancre -- cf. l'espace, delimiteur de termes.
+En BP3, l'ancre correspond au token `(=` laisse ouvert.
+
+### Tables de substitution
+
+Les tables de substitution vivent dans `lib/sub.json`, une par nom, chacune avec
+ses sections. `@sub.<nom>` invoque une table :
+
+```bpscript
+@sub.dhati
+
+S -> $N14 &N14
 ```
 
-C'est un noeud de l'arbre destine a BPx (`TemplateAnchor`), pas un raccourci
-d'ecriture de `$X`. La chaine BP3 heritee ne connait pas d'ancre de LHS ; seule
-la forme nommee `$X` / `&X` y a une traduction (`(=X)` / `(:X)`).
+Un nom absent de la librairie est refuse au parse.
 
 ---
 
-## Templates : regime catalogue (v0.8)
+## La section `@template` -- catalogue de patrons
 
-La section `@template` (singulier, ex-`@templates`) est un **catalogue** de
-patterns structurels.
+`@template` liste des patrons structurels. Elle se place apres les regles, en
+fin de scene.
 
 ```bpscript
 @alphabet.western
@@ -1079,503 +1251,647 @@ S -> C4 D4
 
 @template
 [1] /1 ???????
-[2] /1 ?????????
+[2] *3/2 ??.??
 [3] /1 ($0 ???)($1 )
 ```
 
-Trois faits structurants :
+Une entree s'ecrit `[<numero>] <echelle> <corps>` :
 
-1. **Singulier sans suffixe** -- la directive s'appelle `@template`, alignee
-   avec `@actor`, `@sound`, `@alphabet`. La v0.7 utilisait `@templates`.
-2. **Pas de variantes ni de bindings** -- aucun suffixe `.X` ou `:X` sur la
-   section.
-3. **Toujours en mode catalogue** -- la section est consommee par
-   `[mode:tem]` pour l'analyse inverse (modus tollens). Sa presence active
-   le regime catalogue ; son absence laisse BP3 generer ses templates a la
-   volee.
+- `<numero>` -- l'index de l'entree, entre crochets.
+- `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
+- `<corps>` -- des jokers `?`, un par symbole attendu ; des points `.`
+  (fragments de duree egale) ; des groupes numerotes `($N ...)`, imbricables.
 
-Cote moteur, le regime catalogue correspond au regime B (catalogue
-post-derivation) decrit dans `BPx/backlog/m8-port-plan.md:103-117`. La spec
-externe ne charge aucun autre regime sur la section -- il est implicite.
+Le mode `tem` fait l'appariement structurel sur ce catalogue. Il s'ecrit en tete
+de scene ou en suffixe de regle.
+
+```bpscript
+@alphabet.sargam
+@mode:tem
+
+S -> sa re ga
+
+@template
+[1] /1 ???
+```
 
 ---
 
-## Sons et cascade d'heritage (v0.8)
+## Heritage par cascade
 
-Un son BPScript decrit a la fois son **timbre** (sample, synth) et son
-**comportement temporel** (duree, alpha, cover/cont/trunc, pivot, periode).
-Pas de directive `@synth` separee -- la separation se fait dans les champs
-du prototype.
+Une propriete se resout par cascade : plusieurs niveaux la posent, du plus
+general au plus specifique, et le niveau le plus specifique qui la mentionne
+l'emporte. La fusion se fait **champ par champ** -- un niveau qui laisse un
+champ de cote laisse passer celui du dessous. Chaque niveau ecrit donc
+uniquement ce qu'il change, et l'ecriture est la meme partout : on pose la
+propriete au niveau ou on veut qu'elle change.
+
+### Les composants d'un acteur
+
+Les six cles d'entite d'un acteur (`alphabet`, `tuning`, `octaves`, `sound`,
+`transport`, `eval`) cascadent de la scene vers l'acteur. Une scene qui nomme
+son alphabet tient les autres de la cascade :
+
+```bpscript
+@alphabet.sargam
+
+S -> sa re ga
+```
+
+L'acteur de scene resolu prend l'alphabet `sargam`, le registre `saptak`,
+l'accordage `sargam_12TET`, le canal `audio` et un diapason de 240 Hz :
+l'entree `sargam` de `lib/alphabets.json` porte la convention de registre,
+l'accordage par defaut et l'ancre de hauteur, et l'acteur en herite.
+`@actor X octaves.Y` change le registre pour cet acteur ; les autres cles
+restent celles heritees.
+
+### Les parametres runtime `()`
+
+Un parametre cascade des defauts de la librairie du symbole vers la valeur
+ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
+(`spec < CT < CV`) -- cf. le cascading des controles.
+
+```bpscript
+@alphabet.sargam
+
+S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
+```
+
+### Les proprietes d'un son
+
+Sept niveaux, du defaut moteur a l'occurrence dans une regle -- cf. les sons.
+
+### La vitesse d'un bloc
+
+`[*N]` multiplie la vitesse heritee du contexte englobant ; `[/N]` pose une
+vitesse absolue -- cf. les operateurs temporels.
+
+```bpscript
+S -> {A B}[*2] C
+```
+
+---
+
+## Sons
+
+Un son decrit son **timbre** (`sample`, `synth`) et son **comportement
+temporel** : duree, dilatation, pivot, periode, recouvrement, troncature. Le
+vocabulaire complet des proprietes d'un prototype vit dans `lib/sounds.json`
+(capacites booleennes, bornes temporelles et leurs modes, duree, dilatation,
+periode, timbre).
 
 ### Territoires : un seul role chacun
 
-| Territoire | Role | Affectations a un sujet ? |
+| Territoire | Role | Affectation a un sujet |
 |---|---|---|
-| `@sound` | declarer des prototypes (anonymes + nommes) | **non** |
-| `@alphabet.X` | declarer un alphabet | **oui** -- `*:sound.Y`, `Sa:sound.Z` |
-| `@actor X` | declarer un acteur | **oui** -- `*:sound.Y`, `Sa:sound.Z` |
-| RHS d'une regle | flux temporel | **oui** -- inline `Sa(sound.Y)` |
+| `@sound` | declarer des prototypes, anonymes et nommes | declaratif seul |
+| `@alphabet.X` | declarer un alphabet | `*:sound.Y`, `sa:sound.Y` |
+| `@actor X` | declarer un acteur | `*:sound.Y`, `sa:sound.Y` |
+| RHS d'une regle | flux temporel | `sa(sound.Y)` a l'occurrence |
 
-Regle absolue : **une affectation se fait depuis le territoire d'origine du
-sujet**, jamais depuis `@sound`. Cela garde `@sound` purement declaratif.
+Une affectation s'ecrit depuis le territoire d'origine du sujet, ce qui garde
+`@sound` declaratif.
 
-### Declarer des sons (`@sound`)
+### Declarer des sons
 
 ```bpscript
 @sound
-  { dur:500, alphaMin:80, alphaMax:120 }   // entree anonyme = defaut herite
+  { dur:500, alphaMin:80, alphaMax:120 }   // entree anonyme = defaut de scene
   bell_short { sample:"bell.wav", dur:400 }
   bell_long  { sample:"bell.wav", dur:1200, coverEnd:true }
-  drum_kick  { sample:"kick.wav", dur:200, breakTempo:true }
+  drum_kick  { sample:"kick.wav", dur:200, breakTempo }
 ```
 
-- Une entree **anonyme** (`{ ... }` sans nom) est un defaut de scene (niveau 2
-  de la cascade). Plusieurs entrees anonymes fusionnent dans l'ordre source.
-- Une entree **nommee** (`name { ... }`) est referencable ailleurs via
-  `sound.name`.
+- Une entree **anonyme** (`{ ... }`) est un defaut de scene. Plusieurs entrees
+  anonymes se lisent dans l'ordre source.
+- Une entree **nommee** (`nom { ... }`) se reference ailleurs par `sound.nom`.
+- Une capacite ecrite nue vaut `true` : `{ breakTempo }` donne
+  `breakTempo: true` dans l'arbre.
+- Les modes s'ecrivent en chaine (`'absolute'`, `'relative'` ; `'irrelevant'`
+  pour `periodMode`) ; `pivType` accepte la chaine ou l'entier `1..7`.
 
-Les ~33 proprietes d'un prototype son sont decrites dans
-`BPx/backlog/m4-symbol-config-audit.md` (~33 props -- capacites booleennes,
-bornes temporelles, duree, alpha, pivot, periode) et formalisees cote
-consommateur dans `BPx/src/types/soundConfig.ts:194-251`
-(`SoundConfigInput`). Les defauts moteur viennent de
-`ResetPrototype` (`bp3-engine/source/BP3/SoundObjects3.c:43-117`).
+### Invoquer un prototype du catalogue
 
-Forme canonique des champs :
+`@sound.<nom>` invoque une entree du catalogue `lib/sounds.json` :
 
-- modes en string (`'absolute' | 'relative'` ; `'irrelevant'` pour `periodMode`)
-- `pivType` accepte string ou entier `1..7` (cf. `soundConfig.ts:76-86`)
-- booleens nus = `true` (`{ breakTempo }` == `{ breakTempo:true }`)
+```bpscript
+@sound.tabla_perc
 
-### Charger une lib de sons
-
-`@sound.LIBNAME` charge `lib/sounds/LIBNAME.json`. Format :
-
-```json
-{
-  "defaults":   { "dur": 500, "alphaMin": 80 },
-  "named":      { "bell_short": { "sample": "bell.wav", "dur": 400 },
-                  "drum_kick":  { "sample": "kick.wav", "breakTempo": true } },
-  "by_terminal":{ "Sa": "drum_kick",
-                  "Re": { "sample": "re.wav" } }
-}
+S -> C4 D4
 ```
 
-- `defaults` -> defaut anonyme de scene (niveau 2).
-- `named` -> sons nommes utilisables via `sound.NAME`.
-- `by_terminal` -> affectations injectees dans l'alphabet associe (niveau 4).
-  La valeur peut etre une reference nommee (string) ou un bloc inline.
-
-S'aligne sur le pattern existant `lib/sounds/tabla_perc.json`.
+Un nom absent du catalogue est refuse au parse (« sound '<nom>' introuvable
+dans le catalogue »).
 
 ### Affecter un son a un sujet
 
-Depuis un alphabet :
-
 ```bpscript
-@alphabet.tabla
-  notes: Sa Re ga ma Pa dha ni
-  *:sound.bell_short                       // niveau 3 : defaut alphabet
-  Sa:sound.drum_kick                       // niveau 4 : Sa specifique
-  Re:sound.bell_long                       // niveau 4
-```
+@sound
+  { dur:500 }
+  cloche { sample:"bell.wav", dur:400 }
 
-Depuis un acteur :
+@alphabet.sargam
+  *:sound.cloche                           // defaut de l'alphabet
+  sa:sound.cloche                          // sa dans cet alphabet
+  re:{ dur:300 }                           // bloc de proprietes anonyme
 
-```bpscript
 @actor sitar
-  alphabet.tabla
+  alphabet.sargam
   transport.midi(ch:10)
-  *:sound.bell_short                       // niveau 5 : defaut acteur
-  Sa:sound.drum_kick                       // niveau 6 : Sa pour cet acteur
+  *:sound.cloche                           // defaut de l'acteur
+  sa:{ dur:120 }                           // sa pour cet acteur
+
+S -> sa(sound.cloche) re ga                // l'occurrence porte son son
 ```
 
-Inline sur une occurrence dans une regle :
+Le sujet d'une affectation est un terminal (`sa`) ou `*`, qui vaut pour tous les
+terminaux. La cible est une reference `sound.<nom>` ou un bloc de proprietes
+`{ ... }` -- cf. le point et le deux-points.
 
-```bpscript
-S -> Sa(sound.bell_short)                  // niveau 7 : override CT
-```
+### Les sept niveaux de la cascade des sons
 
-### Cascade -- 8 niveaux
+Du moins specifique au plus specifique.
 
-Du moins specifique au plus specifique. Le moteur resout les proprietes d'un
-son joue par un acteur en fusionnant les niveaux **par propriete** (heritage
-fin, a la CSS).
-
-| # | Niveau | Source |
+| # | Niveau | Ecriture |
 |---|---|---|
-| 1 | Defaut moteur BP3 | constantes `ResetPrototype` (SoundObjects3.c:43-117) |
-| 2 | Defaut anonyme de scene | `@sound { ... }` (entree sans nom) |
-| 3 | Defaut alphabet | `@alphabet.X *:sound.NAME` |
-| 4 | Defaut note dans alphabet | `@alphabet.X Y:sound.NAME` |
-| 5 | Defaut acteur | `@actor X *:sound.NAME` (ou `sound.NAME` dans le bloc acteur) |
-| 6 | Defaut note d'acteur | `@actor X Y:sound.NAME` |
-| 7 | Inline sur occurrence | `Y(sound.NAME)` dans RHS |
-| 8 | (Reserve) override CV runtime | future v0.9+ |
+| 1 | Defaut moteur | constantes de `ResetPrototype` (`SoundObjects3.c:43-117`) |
+| 2 | Defaut de scene | `@sound { ... }` |
+| 3 | Defaut d'alphabet | `@alphabet.X` + `*:sound.NOM` |
+| 4 | Note dans l'alphabet | `@alphabet.X` + `Y:sound.NOM` |
+| 5 | Defaut d'acteur | `@actor X` + `*:sound.NOM` |
+| 6 | Note pour un acteur | `@actor X` + `Y:sound.NOM` |
+| 7 | Occurrence dans une regle | `Y(sound.NOM)` |
 
-Chaque niveau peut soit pointer un son nomme (reference), soit donner un
-bloc de proprietes anonyme qui s'ajoute a la cascade.
-
-**Fusion par propriete** : pour chaque champ (`dur`, `alphaMin`, `sample`,
-`breakTempo`, ...), le niveau le plus eleve qui le specifie gagne. Les
-niveaux intermediaires qui ne specifient pas ce champ ne masquent pas les
-niveaux inferieurs -- c'est exactement le modele CSS.
-
-### Pattern `defaults / named / by_terminal`
-
-Le triplet defaults+named+by_terminal du format lib externe se retrouve dans
-la structure declarative :
-
-| Lib externe | Equivalent BPScript |
-|---|---|
-| `defaults: { ... }` | une entree anonyme dans `@sound` |
-| `named: { N: {...} }` | une entree nommee `N { ... }` dans `@sound` |
-| `by_terminal: { Y: ref }` | une affectation `Y:sound.ref` dans `@alphabet.X` |
-
-C'est la meme cascade, exprimee une fois en JSON externe, une fois en
-syntaxe BPScript.
+Chaque niveau pointe un son nomme ou pose un bloc de proprietes anonyme. La
+fusion se fait champ par champ -- cf. l'heritage par cascade.
 
 ---
 
-## Conventions de notation v0.8 (`.` / `:` / `*`)
+## Conventions de notation — l'espace, le point, le deux-points
 
-### Tableau cristallise
+Trois signes structurent toute l'écriture : l'**espace** sépare les termes, le **point**
+désigne un élément dans un espace de noms, le **deux-points** lie un sujet à une valeur.
+Ils gardent le même sens dans la partie déclarative et dans le flux.
 
-| Symbole | Sens | Exemple |
+### Tableau des signes
+
+| Signe | Sens | Exemple |
 |---|---|---|
-| `.` | reference a un element dans un namespace | `sound.bell_short`, `alphabet.tabla`, `transport.midi` |
-| `:` | affectation a un sujet | `Sa:sound.drum_kick`, `*:sound.bell_short` |
-| `*` | sujet = defaut (wildcard) | `*:sound.bell_short` |
-| `()` | parametres runtime (heritables) | `Sa(vel:80)`, `transport.midi(ch:10)` |
-| `[]` | instructions moteur (non heritees) | `[mode:tem]`, `[*1/2]` |
-| `@` | directive top-level | `@sound`, `@actor`, `@template`, `@alphabet` |
+| espace | sépare deux termes | `@macro souffle (vel:60)` |
+| collage | réunit deux termes en un seul | `@macro accent(x) x(vel:120)` |
+| `.` | désigne un élément dans un espace de noms | `sound.cloche`, `alphabet.tabla`, `transport.midi` |
+| `:` | lie un sujet à une valeur | `dha:sound.frappe`, `@tempo:120`, `(vel:100)` |
+| `*` | sujet = tous les terminaux | `*:sound.cloche` |
+| `()` | paramètres runtime, hérités par cascade | `sa(vel:80)`, `transport.midi(ch:10)` |
+| `[]` | instructions moteur, portée locale | `[mode:random]`, `[/2]` |
+| `@` | ouvre une ligne de la partie déclarative | `@sound`, `@actor`, `@alphabet.tabla` |
+| `->` | règle de production | `S -> C4 D4` |
+| `>>` `\>>` | brancher un câble, le couper | `saw >> lpf >> audio` |
 
-### Regle dominante
+### L'espace, délimiteur de termes
 
-`.` = **pointer**, `:` = **lier**. Les deux ne se confondent jamais. Le `*`
-en position de sujet d'une affectation n'entre pas en conflit avec `[*N]`
-(entre crochets) ni avec l'homomorphisme futur `* (= X)` (cote droit d'une
-regle) -- contextes parser disjoints.
+Une espace sépare deux termes ; leur **collage** en fait un seul. Partout où deux termes
+peuvent se suivre, le collage porte une information et le langage la lit.
 
-### Harmonisation `@actor` -- migration v0.7 -> v0.8
+| Écriture | Lecture |
+|---|---|
+| `@macro accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la macro |
+| `@macro souffle (vel:60)` | `(vel:60)` séparé du nom = corps de la macro |
+| `C4[/2]` | qualificateur du terminal `C4` |
+| `C4 D4 [mode:random]` | qualificateur de la règle entière |
+| `C4!(vel:100)` | flux ancré à `C4`, il voyage avec lui (`conjoint: true`) |
+| `C4 !(vel:100)` | flux posé seul dans la séquence (`conjoint: false`) |
+| `{C4 D4}:2` | durée du groupe |
+| `sitar.sa` | le terminal `sa` vu à travers l'acteur `sitar` |
+| `C4 D4 . E4 F4 G4` | point isolé = frontière entre fragments de durée égale |
 
-v0.7 :
+```bpscript
+@alphabet.western
+@controls
+@macro accent(x) x(vel:120)
+@macro souffle (vel:60)
+
+S -> C4!accent D4 [mode:random]
+Motif -> {C4 D4}:2 E4[/2]
 ```
-@actor sitar alphabet:sargam tuning:sargam_22shruti transport:midi(ch:3, vel:100)
-```
 
-v0.8 :
-```
+### Le point — désigner dans un espace de noms
+
+`espace.nom` nomme un élément à l'intérieur d'un espace. Les espaces de noms sont les
+catégories de librairie (`alphabet`, `tuning`, `octaves`, `sound`, `transport`, `eval`,
+`mod`), les acteurs, les modules à ports et les étiquettes de groupe.
+
+| Emploi | Écriture |
+|---|---|
+| entité de librairie | `alphabet.sargam`, `tuning.sargam_22shruti`, `sound.cloche` |
+| directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@sub.dhati` |
+| terminal vu à travers un acteur | `sitar.sa` |
+| port d'un module | `lpf.cutoff` |
+| contrôle d'un groupe étiqueté | `groove.vel` |
+| frontière entre fragments, point isolé | `C4 D4 . E4 F4 G4` |
+
+Les clés d'entité d'un acteur — `alphabet`, `tuning`, `octaves`, `sound`, `transport`,
+`eval`, `voice` — sont des références : chacune s'écrit avec le point, sur sa ligne.
+
+```bpscript
+@alphabet.sargam
 @actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
   transport.midi(ch:3, vel:100)
+
+S -> sitar.sa sitar.re sitar.ga
 ```
 
-Raison : `sargam`, `sargam_22shruti`, `midi` sont des references a des
-entites (libs / types de transport), pas des affectations. `.` est la
-notation canonique de la reference. Convention uniforme dans tout le
-langage.
+### Le deux-points — lier un sujet à une valeur
 
-### Separation des territoires (resume)
+Le sujet est à gauche du signe, la valeur à droite.
 
-- **Declaratif** -- ce que l'on declare une fois et qui peut etre reutilise :
-  `@sound`, `@alphabet.X`, `@actor X`, `@template`.
-- **Affectations** -- ce qui lie un sujet a un comportement :
-  `*:sound.X`, `Y:sound.X`. Toujours **depuis le territoire d'origine du
-  sujet**, jamais depuis `@sound`.
+| Emploi | Écriture |
+|---|---|
+| affecter un son à un terminal | `dha:sound.frappe` |
+| affecter un son au sujet par défaut | `*:sound.cloche` |
+| poser une propriété sur un nom qui existe | `@gate dha:midi` |
+| réglage global de scène | `@tempo:120` |
+| paire clé-valeur dans `()` ou `[]` | `(vel:100)`, `[mode:random]` |
+| durée, collée à un terminal ou à un groupe | `C4:2`, `{C4 D4}:2` |
+| étiqueter un groupe polymétrique | `groove:{C4 D4, E4}` |
 
-Cette separation evite l'erreur classique « ou est-ce que j'ai mis l'affectation
-de Sa ? » -- la reponse est toujours « dans l'alphabet ou l'acteur ou Sa est
-declare, ou inline sur la note ».
+```bpscript
+@alphabet.tabla
+  *:sound.cloche
+  dha:sound.frappe
+@sound
+  cloche { sample:"bell.wav", dur:400 }
+  frappe { sample:"kick.wav", dur:200 }
+@tempo:120
+@gate dha:midi
+
+S -> dha ti [mode:random]
+```
+
+### Deux formes déclaratives : créer un nom, poser une propriété
+
+Toute ligne de la partie déclarative s'ouvre par l'arobase, et la présence du deux-points
+dit laquelle des deux formes on écrit.
+
+| Forme | Effet |
+|---|---|
+| `@<directive> <nom> <valeur>` | **crée** un nom |
+| `@<directive> <nom>:<cible>` | pose une **propriété** sur un nom qui existe déjà |
+
+```bpscript
+@alphabet.western
+@gate C4:midi                              // propriété : C4 est joué par MIDI
+@cv env1 mod.adsr(attack:10, decay:200)    // déclaration : env1 est un nom neuf
+
+S -> C4 D4
+```
+
+### `*` — le sujet par défaut
+
+En position de sujet, `*` désigne tous les terminaux du territoire où il est écrit :
+`*:sound.cloche` donne un son à l'alphabet ou à l'acteur entier, et chaque terminal nommé
+ensuite l'affine — c'est l'héritage par cascade, appliqué aux sons (cf. la cascade
+d'héritage).
+
+### Séparation des territoires
+
+- **Déclarer** — `@sound`, `@alphabet.X`, `@actor X`, `@template` : ce que l'on écrit une
+  fois et que l'on réutilise.
+- **Affecter** — `*:sound.X`, `Y:sound.X` : depuis le territoire d'origine du sujet,
+  c'est-à-dire l'alphabet ou l'acteur où il est déclaré, ou l'occurrence dans une règle.
 
 ---
 
-## Flags -- variables d'etat et composition conditionnelle
+## Flags — variables d'état et composition conditionnelle
 
-Les flags sont des variables entieres globales qui conditionnent l'application
-des regles et permettent de modifier l'etat pendant la derivation.
+Un flag est une variable entière globale. Il conditionne l'application des règles et se
+modifie pendant la dérivation.
 
-### `[guard]` -- garde conditionnelle
+### `[garde]` — condition d'application
 
-**Test pur** (operateur de comparaison) :
-```
-[phase==1] S -> Sa Re Ga Pa       // active si phase vaut 1
-[count>3]  A -> B C               // active si count > 3
-```
+Écrite devant le membre gauche, la garde décide si la règle existe pour cette dérivation.
 
-**Test + mutation** (operateur arithmetique) :
-```
-[Ideas-1] I -> R1 A R2           // decremente Ideas, active si > 0 apres
-[NumR+1] I -> I                  // incremente NumR (toujours actif)
+**Test** (opérateur de comparaison) :
+
+```bpscript
+@alphabet.sargam
+[phase==1] S -> sa re ga pa       // active quand phase vaut 1
+[count>3]  S -> ga pa             // active quand count dépasse 3
 ```
 
-Operateurs de test : `==`, `!=`, `>`, `<`, `>=`, `<=`
-Operateurs de test+mutation : `+` (incremente), `-` (decremente)
+**Test et mutation** (opérateur arithmétique) :
 
-La garde est declarative : la regle **existe** quand la condition est vraie.
-
-### `[]` -- mutation d'etat en fin de regle
-
-```
-S -> A B [count-1]                        // mutation en fin de regle : count-1
-S -> A B [phase=1] [count=2]              // plusieurs mutations en fin de regle
+```bpscript
+@alphabet.sargam
+[Ideas-1] S -> Motif S            // décrémente Ideas, active tant qu'il reste positif
+[NumR+1] S -> S                   // incrémente NumR, active à chaque fois
+Motif -> sa re ga
 ```
 
-Une mutation s'ecrit en suffixe, **en fin de regle**. Elle est **hors-temps** : appliquee
-au declenchement de la regle (pendant la derivation), pas a un point de la sequence
-jouee -- sa position ne porte aucun sens temporel. En BP3, elle devient un marqueur
-`/.../` place en fin de regle :
+Opérateurs de test : `==`, `!=`, `>`, `<`, `>=`, `<=`.
+Opérateurs de test et mutation : `+` (incrémente), `-` (décrémente).
 
+La garde est déclarative : la règle **existe** quand la condition est vraie.
+
+### `[]` — mutation d'état en fin de règle
+
+Une mutation s'écrit en suffixe, en fin de règle. Elle est **hors-temps** : elle s'applique
+au déclenchement de la règle, pendant la dérivation ; sa position se lit dans la règle, la
+séquence jouée reste inchangée.
+
+```bpscript
+@alphabet.sargam
+S -> Motif Cadence [count-1]                 // une mutation
+S -> Motif Motif [phase=1] [count=2]         // plusieurs mutations
+Motif -> sa re
+Cadence -> ga pa
 ```
-// BPScript                  -> BP3
-S -> A B [count-1]           -> S --> A B /count-1/
-S -> A B [phase=1] [count=2] -> S --> A B /phase=1/ /count=2/
+
+Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter).
+
+En BP3, la mutation devient un marqueur `/…/` placé en fin de règle :
+
+```text
+// BPScript                                -> BP3
+S -> Motif Cadence [count-1]               -> S --> Motif Cadence /count-1/
+S -> Motif Motif [phase=1] [count=2]       -> S --> Motif Motif /phase=1/ /count=2/
 ```
 
-Operateurs de mutation : `=` (assigner), `+` (incrementer), `-` (decrementer)
+Le compilateur traduit `[X==N]` en condition BP3 `/X=N/`, et `[X=N]` en assignation BP3 `/X=N/`.
 
-La distinction est syntaxique :
-- `!dha` -> `!` suivi d'un symbole -> trigger temporel
-- `[phase=2]` -> `[]` -> mutation de flag (etat moteur)
+Le délimiteur distingue deux écritures voisines : `!dha` est un `!` suivi d'un symbole, donc
+un déclenchement dans le temps ; `[phase=2]` est entre crochets, donc une mutation de flag.
 
-Le compilateur traduit `[X==N]` -> `/X=N/` (condition BP3) et `[X=N]` -> `/X=N/` (assignation BP3).
+### Exemple : une pièce en trois phases
 
-### Exemple : raga en 3 phases
-
-```
-@alphabet.raga
+```bpscript
+@alphabet.sargam
 @tempo:60
 
 [phase==1] S -> alap S
 [phase==2] S -> jor S
 [phase==3] S -> jhala
 
-alap -> Sa _ Re _ Ga _ [phase=2]
-jor -> {Sa Re Ga Pa}:2 [phase=3]
-jhala -> {Sa Re Ga Pa Dha Ni Sa}:4
+alap -> sa _ re _ ga _ [phase=2]
+jor -> {sa re ga pa}:2 [phase=3]
+jhala -> {sa re ga pa dha ni sa}:4
 ```
 
 ---
 
-## Definitions et macros
+## Déclarations, macros et alias
 
-### Definitions -- contrat temporel + runtime
+### Déclarer un symbole : type temporel et runtime
 
-Les definitions declarent le double contrat d'un symbole.
+Une déclaration donne à un symbole son rapport au temps — `@gate`, `@trigger`, `@cv` — et le
+runtime qui le prend en charge.
 
+```bpscript
+@alphabet.sargam
+@gate sa:sc                      // sa occupe du temps, SuperCollider le joue
+@trigger dha:sc                  // dha est instantané, SuperCollider le joue
+@trigger flash:python            // flash est instantané, Python le joue
+@cv ramp:sc                      // ramp varie continûment, SuperCollider le joue
+
+S -> sa dha
 ```
-gate Sa:sc                       // Sa occupe du temps, SC le gere
-trigger dha:sc                   // dha est instant, SC le gere
-trigger flash:python             // flash est instant, Python le gere
-cv ramp:sc                       // ramp varie continument, SC le gere
-```
-
-### Macros, labels, alias — noms et transformations
 
 ### Un seul espace de noms
 
-**RIEN ne porte le nom d'autre chose** (Romain, 2026-07-28). L'intention n'est pas technique : un
-auteur ne doit jamais lire un nom dans une regle sans savoir de quoi il parle. Meme quand une
-precedence fonctionne, l'ECRITURE reste ambigue pour l'humain.
+Les noms de toutes les sortes de choses vivent dans le **même espace** : terminaux de
+l'alphabet actif, têtes de règle, macros, alias, entrées, acteurs, variables de travail,
+objets CV, drapeaux. Chaque nom y appartient à **une seule** d'entre elles. Le contrôle a
+lieu **à la déclaration** : c'est le fait de déclarer le nom qui tranche, son emploi dans
+une règle étant une autre affaire.
 
-**Deux enonces, tous deux GLOBAUX — aucune portee :**
-1. une **tete de regle** ne peut porter le nom d'aucune AUTRE sorte de chose : terminal de
-   l'alphabet actif, macro, alias, entree, variable de travail, scene, objet CV ;
-2. **deux declarations qui CREENT un nom** ne peuvent pas porter le meme, ni celui d'un terminal.
+Deux énoncés, tous deux globaux :
 
-Le refus tombe **a la DECLARATION** : le nom n'a pas besoin d'etre employe pour que l'ambiguite
-existe.
+1. une **tête de règle** porte un nom qui lui appartient en propre parmi toutes les sortes
+   ci-dessus ;
+2. deux déclarations qui **créent** un nom en portent chacune un différent.
 
-⚠️ **Le critere est L'EFFET, jamais la forme de la ligne.** Ce qui est refuse, c'est ce qui CREE un
-nom. Une ecriture qui pose une **propriete sur un nom existant** reste permise, et ca se mesure :
-les noeuds produits sont identiques avec et sans elle. `gate Sa:sc` dit le type temporel et le
-routage d'un terminal ; `@actor viz eval.hydra` puis `viz -> ...` est la voix de code, ou la regle
-DIT ce que la voix joue. Ni l'une ni l'autre ne cree un nom rival.
+Le critère est l'**effet** de la ligne : entre dans la règle ce qui crée un nom. Une écriture
+qui pose une propriété sur un nom existant (`@gate sa:sc`) laisse ce nom à sa sorte d'origine
+et reste libre.
 
-⚠️ **Les tetes de regle ne se heurtent JAMAIS entre elles**, et c'est la moitie qu'on casse sans
-s'en apercevoir. Une tete repetee n'est pas un conflit : c'est une **alternative** — le choix et
-les poids, c'est-a-dire le mecanisme meme d'une grammaire stochastique. Et deux sous-grammaires
-sont des **passes successives**, pas des espaces paralleles : un meme nom y est le meme symbole,
-reecrit plus tard. Mesure : une garde qui aurait refuse ce cas aurait refuse **120 scenes sur 333**.
+Les têtes de règle se rencontrent librement **entre elles**. Une tête répétée est une
+**alternative** : le choix et les poids en découlent, et c'est le mécanisme même d'une
+grammaire stochastique. Deux sous-grammaires sont des **passes successives** — un même nom y
+est le même symbole, réécrit plus tard.
 
-**Renommer sans changer la musique** : `test/migration_noms.mjs` detecte les collisions, renomme
-tous les emplois, et **prouve** que la production ne bouge pas en comparant l'arbre derive entier
-avant et apres, a graine fixe. Il refuse d'ecrire si un seul jeton differe.
+**Renommer en gardant la même musique** : `test/migration_noms.mjs` renomme un nom et tous ses
+emplois, puis compare l'arbre dérivé entier avant et après, à graine fixe. Il écrit quand
+chaque jeton coïncide.
 
----
+### `@macro` et `@alias`
 
-Trois directives pour nommer des choses. La difference est fonctionnelle :
+Une seule forme pour les deux, comme pour toute directive : `@<directive> <nom> <valeur>`.
+Le nom vient d'abord, ce qu'il vaut ensuite.
 
-| Directive | Ce qu'elle fait | Exemple | Se joue dans une regle ? |
-|-----------|----------------|---------|--------------------------|
-| `@macro` | Transformation nommee | `@macro kick (vel:120)` | **OUI** — a sa place, dans la regle |
-| `@alias` | Nom donne a une chose technique ou repetitive | `@alias breath cc:2` | **NON, jamais** |
+| Directive | Ce qu'elle fait | Où elle s'emploie |
+|---|---|---|
+| `@macro` | nomme une transformation, un préréglage, un câblage | à sa place dans une règle |
+| `@alias` | donne un nom à une chose technique ou répétitive | dans la partie déclarative |
 
+```bpscript
+@alphabet.western
+@controls
+@macro kick (vel:120)               // préréglage de contrôles
+@macro accent(x) x(vel:120)         // transformation paramétrée
+@macro fast(x) {x}:2                // transformation structurelle
+
+Motif -> C4 D4 E4
+S -> C4!kick D4 E4!accent fast(Motif)
 ```
-@macro kick (vel:120)                // preset de controles
-@macro accent(x) x(vel:120)          // transformation parametree
-@macro fast(x) {x}:2                 // transformation structurelle (duree collee)
-@alias breath cc:2                     // canal MIDI nomme
-@alias intensity osc:/sensor/1         // canal OSC nomme
+
+La valeur d'un `@alias` est un nom déclaré — macro, `@gate`/`@trigger`/`@cv`, entrée —, une
+étiquette de groupe suivie d'un contrôle, ou une adresse OSC. Un nom suivi du deux-points,
+placé devant un groupe, étiquette l'ensemble : l'alias désigne alors d'un seul mot un
+contrôle porté par tous ses éléments.
+
+```bpscript
+@alphabet.western
+@controls
+@trigger flash:python
+@alias eclat flash                  // autre nom pour un symbole déclaré
+@alias intensite osc:/sensor/1      // canal OSC nommé
+@alias souffle groove.vel           // le vel du groupe étiqueté groove
+
+S -> groove:{C4 D4, E4} F4
 ```
 
-> ⚠️ **La directive de correspondance a ete ABANDONNEE le 2026-07-27 au soir** : ce qui BRANCHE
-> passe par les chevrons `>>` / `\>>`, ce qui DESIGNE reste sous `@alias`. Et le **`=` a disparu
-> de TOUT le langage**, `@macro` comprise : **une seule forme partout**, `@<directive> <nom>
-> <valeur>`. Rien a retenir, aucune exception a expliquer — c'etait une **convention**, pas une
-> information (decision Romain 2026-07-27).
+### Appliquer un nom dans une règle : le point d'exclamation
 
-**Application dans une regle : le point d'exclamation, ATTACHE au terminal.**
+`!nom` attache le nom au terminal qui le précède : les deux partagent l'instant, et le
+terminal porte la durée. Collé ou séparé d'une espace, `!nom` donne le même nœud ; la règle
+d'espace joue sur `!(…)`, où le collage ancre le flux au terminal précédent.
 
-```
+```bpscript
+@alphabet.western
+@controls
+@macro kick (vel:120)
+@macro accent(x) x(vel:120)
+
 S -> C4!kick D4 E4!accent F4
 ```
 
-Le nom se declenche **a l'instant du terminal auquel il est attache**, et **n'occupe aucun pas** :
-c'est le terminal qui porte la duree. Mesure de bout en bout (2026-07-28) : la meme regle dure
-**deux temps avec la forme attachee, trois avec le nom ecrit nu**, et deux feuilles y partagent
-la meme etendue. Colle ou separe d'une espace, c'est la MEME forme -- la regle d'espace ne joue
-que sur `!(...)`.
+Mesuré : `S -> C4!kick D4` donne **deux** éléments dans le membre droit, `C4` et son attache
+partageant le premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe son propre pas.
 
-> ⚠️ **Le suffixe arobase (`C4@kick`) est SUPPRIME** (Romain, 2026-07-28). Motif : associer dans
-> la production, on a deja le point d'exclamation ; declarer une etiquette, ca se fait dans la
-> partie declarative. Deux voies existantes couvraient les deux besoins. La directive `@label`
-> part avec lui : elle ne declarait que des noms que lui seul savait appliquer.
-> L'etiquette d'un **groupe polymetrique** est une autre graphie et elle RESTE : `groove:{A B}`.
+### Câbler : `>>` et `\>>`
 
-Les noms poses sont designables par un `@alias` :
+`>>` branche, `\>>` coupe. Le câblage initial s'écrit avec `@wire`. Un câblage nommé s'écrit
+dans le corps d'une `@macro`, et son nom se pose **nu** dans le flux ; le compilateur marque
+alors cet élément de la nature « câblage », que l'aval traite comme telle.
 
+```bpscript
+@alphabet.western
+@wire saw >> lpf >> audio
+@macro ouvre lpf.cutoff:12000
+@macro coupe saw \>> lpf
+
+S -> C4 ouvre D4 coupe E4
 ```
-@alias ratio  kick.ratio               // nomme le ratio de tous les @kick
-@alias souffle groove.ratio            // nomme le ratio du groupe groove
-@alias force  kick.vel                 // nomme le vel des @kick
-```
-Le NOM d'abord, ce qu'il designe ensuite, **sans fleche** — celle-ci est exclusivement une regle
-de production. Un alias NOMME ; pour BRANCHER une de ces choses sur autre chose, ce sont les
-chevrons, dans le flux.
 
-Plusieurs elements peuvent partager le meme nom (multicast) :
-
-```
-S -> groove:{C4 D4, E4} F4          // cc:1 modifie tout le groupe etiquete en meme temps
-```
+Le même traitement vaut pour les trois gestes qui agissent sur un module : brancher, couper,
+régler.
 
 ---
 
 ## Les librairies
 
-Le langage ne connait que ses trois types. Les librairies apportent le vocabulaire.
+Le langage connait ses trois types ; les librairies apportent le vocabulaire.
 
-```
-@core                            // on_fail, controles moteur
-@controls                        // vel, tempo, transpose, ins, chan...
-@hooks                           // wait(), wait_all(), wait_timeout()...
-@alphabet.western:supercollider  // C, D, E, F, G, A, B (gate:sc)
-@alphabet.raga:supercollider     // Sa, Re, Ga... (gate:sc), dha, ti... (trigger:sc)
-@sub.dhati                       // table de substitution dhati
-@lights:python                   // spotlight, strobe, fade... (trigger:python)
-@patterns                        // macros agnostiques : fast(), slow(), rev(), euclid()
+```bpscript
+@core                        // silences, prolongation, controles moteur, defauts de scene
+@controls                    // vel, tempo, transpose, ins, chan...
+@alphabet.sargam:midi        // sa re ga ma pa dha ni, raccordes a la sortie MIDI
+@tuning.sargam_22shruti      // accordage des degres de l'alphabet
+@octaves.saptak              // convention de registre : mandra_sa / madhya_sa / taar_sa
+@sub.dhati                   // table de substitution dhati
 ```
 
-**Convention stricte** : le nom de la directive = le nom du fichier JSON dans `lib/`.
-Le `.` accede a une entree specifique dans le fichier :
-- `@alphabet.western` -> `lib/alphabet.json` -> cle `"western"`
-- `@sub.dhati` -> `lib/sub.json` -> cle `"dhati"`
-- `@core` -> `lib/core.json` (fichier entier)
+**Convention stricte** : la directive nomme l'**axe**, et le `.` designe l'**entree** lue dans le
+fichier qui sert cet axe.
 
-Les librairies definissent des **noms** et des **identites**, pas des formats de sortie.
-Le runtime gere la production du son/signal.
+- `@alphabet.sargam` -> `lib/alphabets.json`, entree `sargam`
+- `@tuning.sargam_22shruti` -> `lib/tunings.json`, entree `sargam_22shruti`
+- `@sub.dhati` -> `lib/sub.json`, entree `dhati`
+- `@core` -> `lib/core.json`, fichier entier
 
-### Librairies de FONCTIONS digitales (evolution 2026-06-30)
+Cinq axes ont un **catalogue ferme** : `alphabet`, `tuning`, `octaves`, `scale`, `sound`. Sur
+ceux-la, une entree se lit dans le catalogue ou le compilateur nomme la faute — `@alphabet.raga`
+repond « alphabet 'raga' introuvable dans le catalogue ».
 
-Au-dela des librairies de **donnees** (alphabets, octaves, temperaments, controles, objets CV...),
-une famille porte du **comportement** : les **fonctions de manipulation digitale** (transpose et
-scaleshift — les deux transpositions, voir plus bas ; puis octave/registre, gamme, keyxpand...).
-Une fonction = une entree `{params, body}` ou le `body` est
-du **vrai code TS** type (authoring F1), vivant dans une lib `{type:'digital', objects}` (3 provenances :
-fournie / perso / communautaire). C'est le **jumeau** des objets CV : meme idee (comportement nomme en
-librairie), realise par un moteur different — **Kairos** (code discret, a la resolution) pour le digital,
-le **runtime audio** (courbe declarative) pour l'analogique/CV.
+Le `:` d'une directive de librairie raccorde tous ses symboles a une sortie de l'acteur implicite.
+Trois canaux sont ouverts : `audio`, `midi`, `osc`.
 
-L'hote fournit la lib ; **Kairos** la transpile au chargement et l'**applique** (le nom de fonction est
-porte opaque jusqu'a lui ; il opere sur une **COPIE**, jamais l'arbre reel). BPScript pose la **forme**
-de lib et le **typage a l'ecriture**, il ne resout/n'execute rien. Spec complete :
-`docs/design/DIGITAL_FUNCTIONS.md` ; decision `hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`.
+Les librairies definissent des **noms** et des **identites** ; le runtime produit le son ou le
+signal.
 
-### Les deux transpositions : reelle (`transpose`) et scalaire (`scaleshift`)
+### Librairies de FONCTIONS digitales
 
-BPScript distingue les **deux** gestes de transposition musicologiques (decision 2026-07-11) :
+Au-dela des librairies de **donnees** (alphabets, accordages, octaves, temperaments, controles,
+objets CV...), une famille porte du **comportement** : les **fonctions de manipulation digitale**
+— les trois transpositions ci-dessous, puis octave/registre, gamme, keyxpand. Une fonction est une
+entree `{params, body}` dont le `body` est du **vrai code TS** type, dans une lib
+`{type:'digital', objects}` (trois provenances : fournie, perso, communautaire). C'est le **jumeau**
+des objets CV : un comportement nomme en librairie, realise par **Kairos** (code discret, a la
+resolution) pour le digital, par le **runtime audio** (courbe declarative) pour l'analogique/CV.
 
-- **`transpose` — transposition REELLE (chromatique)** : decale l'**ancre** de l'alphabet par un
-  **intervalle fixe**. Preserve tous les intervalles ET le nom de chaque note ; fonctionne dans
+L'hote fournit la lib ; **Kairos** la transpile au chargement et l'**applique** sur une **COPIE**
+de l'arbre, le nom de fonction lui parvenant opaque. BPScript pose la **forme** de lib et le
+**typage a l'ecriture** ; Kairos resout et execute. Spec complete :
+`docs/design/DIGITAL_FUNCTIONS.md`.
+
+### Les trois transpositions : `transpose`, `scaleshift`, `chromashift`
+
+BPScript distingue trois gestes de transposition musicologiques.
+
+- **`transpose` — transposition REELLE (chromatique)** : decale l'**ancre** de l'alphabet d'un
+  **intervalle fixe**, en preservant tous les intervalles ET le nom de chaque note ; vaut dans
   **tout** accordage (egal, inegal, parametrique). L'argument est un **intervalle** dans l'un des
-  3 formats des temperaments : **fraction** `3/2`, **cents** `700c`, **decimal** `1.5` (un entier nu
-  = ratio, `2` = octave). Ecriture **nue**, sans guillemets, comme toute valeur de controle :
-  `(transpose:700c)`, `@transpose:-2400c`, `!(transpose:3/2)`. Une valeur **numerique** (ex.
-  `transpose:2` compris comme un nombre de pas) n'existe plus : l'ancien regime par pas de grille est
-  **supprime** (il n'etait une vraie transposition qu'en temperament egal).
+  3 formats des temperaments : **fraction** `3/2`, **cents** `700c`, **decimal** `1.5` — un entier
+  nu vaut un ratio (`2` = octave). Il s'ecrit **nu**, comme toute valeur de controle.
 - **`scaleshift` — transposition SCALAIRE (diatonique)** : decale de **N degres** d'alphabet
-  (`scaleshift:2` : Sa -> Ga). Preserve les degres, pas les intervalles (en gamme inegale). Argument
-  = entier N. S'appelait autrefois `rotate` (de hauteur) ; renomme pour lever l'homonymie avec le
-  `![rotate]` de **structure** (rotation de sequence, moteur BPx), qui est une autre operation et
-  garde son nom.
+  (`scaleshift:2` : `sa` -> `ga`), en preservant les degres. Argument = entier N. Le `![rotate]` de
+  **structure** (rotation de sequence, moteur BPx) est un autre geste, avec son propre nom.
 - **`chromashift` — transposition CHROMATIQUE (grille 12 cles)** : decale de **N cles chromatiques**
-  (demi-tons) sur la grille 12, renomme vers la cle cible et prend **son** tuning (`chromashift:11` :
-  +11 demi-tons). Argument = entier N. C'est l'**image de BP3 `_transpose(N)`** (decision Romain
-  2026-07-17, option B : trois gestes nets). DISTINCT de `scaleshift` (degres d'alphabet, diatonique)
-  et de `transpose` (reel, `frameRatio`, nom PRESERVE).
+  (demi-tons) sur la grille 12, renomme vers la cle cible et prend **son** accordage
+  (`chromashift:11` : +11 demi-tons). Argument = entier N. C'est l'**image de BP3 `_transpose(N)`**.
+
+```bpscript
+@controls
+@alphabet.sargam
+@transpose:-2400c                    // scene entiere : deux octaves plus bas
+S -> sa re(transpose:700c) ga        // contenance : la quinte tient sur re
+T -> sa !(scaleshift:2) re ga        // flux : les suivantes montent de deux degres
+U -> sa ga(chromashift:11) pa        // grille 12 : ga part 11 demi-tons plus haut
+```
 
 Resolution : Kairos normalise la chaine d'intervalle et applique la transposition reelle en fin de
-chaine (facteur multiplicatif de cadre), apres les operations de grille — noms et registres preserves.
+chaine (facteur multiplicatif de cadre), apres les operations de grille — noms et registres
+preserves.
 
-### Conflits de noms
+### Plusieurs vocabulaires dans une meme scene
 
-Si deux librairies definissent le meme symbole, le compilateur produit une erreur
-et demande une resolution explicite :
+Un acteur porte son propre alphabet, et la notation `acteur.terminal` dit lequel s'applique
+(cf. [Acteur](#acteur----unite-de-binding)) :
 
-```
-@alphabet.raga               // definit A (degree 6 = Dha)
-@alphabet.western            // definit A (note la)
-// Erreur : symbole 'A' defini dans @alphabet.raga et @alphabet.western
-
-// Resolution : alias explicite
-@alphabet.raga
-@alphabet.western(A:La)       // renomme A de @alphabet.western en La
+```bpscript
+@actor tabliste
+  alphabet.tabla
+@actor chanteur
+  alphabet.sargam
+S -> tabliste.dha chanteur.sa
 ```
 
 ---
 
 ## Operateurs temporels BP3
 
-BP3 possede 4 operateurs temporels fondamentaux qui controlent deux variables
-internes `speed` et `scale`. Le tempo effectif est `tempo = speed / scale`.
+Les operateurs temporels de BP3 gouvernent deux variables internes, `speed` et `scale` : le tempo
+effectif vaut `speed / scale`.
 
 | BPScript       | Compile en BP3                        | Semantique                               |
 | -------------- | ------------------------------------- | ---------------------------------------- |
 | `A[/2]`        | `/2 A`                                | absolu + persistant (fixtempo), speed=2  |
 | `A[*3]`        | `_tempo(1/3) A _tempo(1/1)`           | relatif, bracket enter/exit, scale×3     |
 | `![/2]`        | `_tempo(2/1)`                         | relatif, flux (InstantControl)           |
-| `A[\2]`        | non tokenise (EBNF exclut `\`)        | anomalie natif+WASM, voir TEMPO_OPS_WASM |
 
 Portee flexible : sur un symbole, un groupe, ou un polymetric.
+
+```bpscript
+@alphabet.sargam
+S -> sa[/2] re {ga ma}[*3] ![/2] pa
+```
 
 ---
 
 ## Metrique -- `@meter`
 
-BPScript supporte la signature rythmique via la directive `@meter`.
+BPScript porte la signature rythmique via la directive `@meter`.
 
-```
+```bpscript
 @meter:4/4                       // mesure a 4 temps
 @meter:7/8                       // mesure a 7 croches
+@meter:3+4+2/4                   // mesure additive : 3 + 4 + 2 temps
 @tempo:120                       // 120 BPM
 ```
 
 **Distinction tempo vs metronome :**
-- `[tempo:2]` = multiplicateur relatif (double la vitesse courante)
+- `[tempo:2]` = multiplicateur relatif (double la vitesse courante), en suffixe de terminal, de
+  groupe ou de regle
 - `@tempo:120` = marquage metronomique absolu (120 BPM)
 - `@striated` / `@smooth` = bascule entre temps strie et temps lisse
+
+```bpscript
+@meter:4/4
+@tempo:120
+S -> C4 D4 [tempo:2]
+```
 
 ---
 
@@ -1587,17 +1903,31 @@ BPScript supporte la signature rythmique via la directive `@meter`.
 | **Scan par regle** | dans quel sens chercher le symbole ? | `[scan:left]`    | regle individuelle  |
 | **Direction**      | la regle se lit dans quel sens ?     | `->`, `<-`, `<>` | regle individuelle  |
 
+Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de scene, ou `[mode:<valeur>]` en
+suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
+
+```bpscript
+@alphabet.sargam
+@mode:random
+S -> sa re [scan:left]
+S <- ga ma
+S <> pa dha
+```
+
 ---
 
 ## Gestion d'echec -- `on_fail`
 
-```
-@on_fail:skip                              // directive globale
-[on_fail:retry(3)] S -> A B C              // override local -- reessayer 3 fois
-[on_fail:fallback(B)] S -> A B C           // basculer vers sous-grammaire B
-```
+Trois strategies : `skip`, `retry(N)`, `fallback(X)`. La strategie de scene s'ecrit
+`@on_fail:<strategie>` ; la forme avec argument s'ecrit en suffixe de regle.
 
-Strategies : `skip`, `retry(N)`, `fallback(X)`.
+```bpscript
+@alphabet.sargam
+@on_fail:skip                              // strategie de scene
+S -> sa re ga [on_fail:retry(3)]           // cette regle : reessayer 3 fois
+T -> ma pa [on_fail:fallback(ALT)]         // cette regle : basculer vers ALT
+ALT -> dha ni
+```
 
 ---
 
@@ -1614,15 +1944,11 @@ BP3 possede deux facons de controler le flux temporel (cf. Boulez,
 
 BPScript unifie les deux dans la meme syntaxe via le systeme de types :
 
+```bpscript
+@cv ramp:audio                       // ramp est un cv, gere par le runtime audio
+S -> {C4 D4 E4}:2                    // palier discret -- la duree du groupe est un nombre
+T -> C4!ramp(0,1)                    // continu -- la valeur court le long de la duree de C4
 ```
-// Imperatif (comme _tempo) -- palier discret
-{A B C}:2
-
-// Fonctionnel (comme smooth time) -- propriete continue, CV sur le cadre
-{A B C}:ramp(1, 3)
-```
-
-Le type `cv` est la **modernisation du smooth time de Boulez/Bel**.
 
 | BPScript              | BP3                           | Concept                 |
 | --------------------- | ----------------------------- | ----------------------- |
@@ -1634,85 +1960,91 @@ Le type `cv` est la **modernisation du smooth time de Boulez/Bel**.
 
 ## Compilation vers BP3
 
-BPScript compile vers le format de grammaire BP3 (`-gr.`). Cette section decrit
-comment les constructions BPScript se traduisent en instructions BP3.
+Cette section décrit la correspondance entre les constructions BPScript et les
+instructions du format de grammaire BP3 (`-gr.`).
 
-> Voir [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) pour l'interface WASM complete.
+> Voir [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) pour l'interface WASM complète.
 
 ### Format de grammaire BP3
 
 Structure du fichier :
-```
-MODE                           // ORD, RND, SUB1, LIN, TEM, POSLONG
-gram#N[M] LHS --> RHS          // regles
------                          // separateur de sous-grammaire
+```text
+MODE                           // ORD, RND, SUB, SUB1, LIN, TEM, POSLONG
+gram#N[M] LHS --> RHS          // règles
+-----                          // séparateur de sous-grammaire
 MODE
 gram#N[M] LHS --> RHS
 ```
 
 ### Sous-grammaires et modes
 
-Chaque bloc entre `-----` est une sous-grammaire avec son propre mode de derivation.
+Chaque bloc entre `-----` est une sous-grammaire. `@mode:X` déclare le mode de
+dérivation du bloc qui suit, jusqu'au séparateur suivant (cf. « Modes, scan et
+directions »).
 
-| Mode BPScript      | BP3     | Comportement                              |
-| ------------------- | ------- | ----------------------------------------- |
-| `[mode:ord]`        | `ORD`   | ordonne -- les regles s'appliquent en ordre |
-| `[mode:random]`     | `RND`   | aleatoire parmi les regles applicables    |
-| `[mode:sub1]`       | `SUB1`  | substitution (une seule application)      |
-| `[mode:lin]`        | `LIN`   | lineaire                                  |
-| `[mode:tem]`        | `TEM`   | template matching                         |
-| `[mode:poslong]`    | `POSLONG` | position la plus longue                 |
+| BPScript        | BP3       | Stratégie de sélection                        |
+| --------------- | --------- | --------------------------------------------- |
+| `@mode:ord`     | `ORD`     | ordonné — règles appliquées en séquence       |
+| `@mode:random`  | `RND`     | aléatoire — sélection pondérée                |
+| `@mode:lin`     | `LIN`     | linéaire — bouclage cyclique                  |
+| `@mode:sub`     | `SUB`     | substitution — toutes les occurrences à la fois |
+| `@mode:sub1`    | `SUB1`    | substitution — occurrence la plus à gauche    |
+| `@mode:tem`     | `TEM`     | appariement par gabarit                       |
+| `@mode:poslong` | `POSLONG` | plus longue correspondance d'abord            |
 
-Le compilateur regroupe les regles par non-terminal et mode, inserant `-----`
-entre les blocs de modes differents.
+Les règles sont regroupées par non-terminal et par mode ; un `-----` sépare deux
+blocs de modes différents.
+
+En mode `sub` et `sub1`, les symboles du membre gauche sont eux aussi des
+terminaux : ce qui reste après les itérations appartient à l'alphabet et se joue.
 
 ### Directions
 
-| BPScript | BP3     | Sens                     |
-| -------- | ------- | ------------------------ |
-| `->`     | `-->`   | production (gauche droite) |
-| `<-`     | `<--`   | analyse (droite gauche)  |
-| `<>`     | `<->`   | bidirectionnel           |
+| BPScript | BP3     | Sens                                                    |
+| -------- | ------- | ------------------------------------------------------- |
+| `->`     | `-->`   | production — le membre gauche est réécrit en membre droit |
+| `<-`     | `<--`   | analyse — la séquence droite est réduite au symbole gauche |
+| `<>`     | `<->`   | production et analyse                                   |
 
-### Symboles terminaux -- alphabet plat
+### Symboles terminaux — alphabet plat
 
-BP3 recoit des **noms opaques** prefixes `bol`. Il ne sait rien des frequences,
-des acteurs, des transports.
+BP3 reçoit des **noms opaques** préfixés `bol` et les traite comme des symboles.
+La hauteur, l'acteur et le transport se résolvent en amont.
 
-```
+```text
 Source BPScript :
-  Sa Re Ga Pa
+  sa re ga pa
 
 Alphabet plat :
-  bolSa
-  bolRe
-  bolGa
-  bolPa
+  bolsa
+  bolre
+  bolga
+  bolpa
 
 Grammaire BP3 :
-  gram#1[1] S --> bolSa bolRe bolGa bolPa
+  gram#1[1] S --> bolsa bolre bolga bolpa
 ```
 
-Les noms de notes standard (`C4`, `sa`, `re`) deviennent des silent sound objects
-dans BP3 -- pas de NoteConvention, pas de MIDI.
+Les noms de notes (`C4`, `sa`, `re`) arrivent dans BP3 comme des objets sonores
+silencieux : ils portent une position dans le temps, leur son se résout ailleurs.
 
-### Polymetrie
+### Polymétrie
 
-Transmise telle quelle a BP3 :
+Transmise telle quelle à BP3 :
 
-```
+```text
 // BPScript
-S -> { melodie, rythme }
+S -> { Melodie, Rythme }
 
 // BP3
-gram#1[1] S --> {melodie, rythme}
+gram#1[1] S --> {Melodie, Rythme}
 ```
 
 ### Durée sur un groupe
 
 La durée `:N` collée est traduite en cadre polymétrique BP3 :
 
-```
+```text
 // BPScript
 {C3, E3, G3, C4}:2
 
@@ -1722,10 +2054,10 @@ La durée `:N` collée est traduite en cadre polymétrique BP3 :
 
 ### Durée de portée règle
 
-Détachée du dernier élément et posée en fin de règle, la durée porte sur **tout le membre
-droit** — elle n'est pas un suffixe du terminal qui la précède :
+Posée en fin de règle et séparée du dernier élément par une espace, la durée
+porte sur **tout le membre droit** :
 
-```
+```text
 // BPScript
 S -> C4 D4 E4 :2
 
@@ -1733,7 +2065,7 @@ S -> C4 D4 E4 :2
 {2,C4 D4 E4}
 ```
 
-Trois portées distinctes, à ne pas confondre :
+Trois portées distinctes :
 
 | Écriture            | Portée                    |
 | ------------------- | ------------------------- |
@@ -1741,119 +2073,122 @@ Trois portées distinctes, à ne pas confondre :
 | `{A B}:2`           | le groupe                 |
 | `S -> A B C :2`     | le membre droit entier    |
 
-La durée n'existe **pas** en ligne au milieu d'un flux : `S -> A :2 B` est refusée.
+Une durée collée suit son terminal ou son groupe ; une durée détachée se place en
+fin de membre droit.
 
-### Operateurs temporels
+### Opérateurs temporels
 
-Deux semantiques distinctes selon l'operateur :
+Portée et persistance, en complément de « Opérateurs temporels BP3 » :
 
+```text
+// BPScript                  -> BP3                                       Sémantique
+A[/2] B C                    -> /2 bolA bolB bolC                         absolu, persistant (fixtempo)
+{A B C}[/3]                  -> /3 {bolA bolB bolC}                       idem, portée groupe
+A[*2] B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC    relatif, bracket
+![/2]                        -> _tempo(2/1)                               relatif, flux (InstantControl)
 ```
-// BPScript                  -> BP3             Semantique
-A[/2] B C                    -> /2 bolA bolB bolC    absolu, persistant (fixtempo)
-{A B C}[/3]                  -> /3 {bolA bolB bolC}  idem, portee groupe
-A[*2] B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC  relatif, bracket
-![/2]                        -> _tempo(2/1)           relatif, flux (InstantControl)
-```
 
-`[/N]` = vitesse ABSOLUE N + fixtempo (BP3 Encode.c). Persiste jusqu'au prochain operateur
-tempo ou fin de champ (reinitialise au separateur `,` des sous-champs polymetriques).
-`[*N]` = relatif a la vitesse heritee. Exit `_tempo(1/1)` restaure l'herite au bord du bracket.
-`![/N]` dans le flux (InstantControl) = `_tempo(N/1)` relatif, sans fixtempo.
-`[\N]` n'est pas tokenise par BPScript (anomalies natif+WASM, voir TEMPO_OPS_WASM.md).
+`[/N]` impose la vitesse absolue N et persiste jusqu'au prochain opérateur de
+tempo ou jusqu'à la fin du champ ; le séparateur `,` d'un sous-champ polymétrique
+la réinitialise. `[*N]` s'applique relativement à la vitesse héritée, et la sortie
+du bracket (`_tempo(1/1)`) restaure l'hérité. `![/N]` dans le flux vaut
+`_tempo(N/1)` relatif, sans fixtempo.
 
-### Guards et flags
+### Gardes et flags
 
-```
+La garde se teste avant le membre gauche avec `==` ; la mutation s'écrit en fin de
+règle.
+
+```text
 // BPScript                              -> BP3
-[phase==1] S -> Sa Re Ga Pa             -> /phase=1/ gram#N[M] S --> bolSa bolRe bolGa bolPa
-[Ideas-1] I -> R1 A R2                  -> /Ideas-1/ gram#N[M] I --> R1 A R2
-S -> A B [count+1] C                    -> gram#N[M] S --> bolA bolB /count+1/ bolC
-[phase==1] S -> Ga [phase=2] Re         -> /phase=1/ gram#N[M] S --> bolGa /phase=2/ bolRe
+[phase==1] S -> sa re ga pa             -> /phase=1/ gram#N[M] S --> bolsa bolre bolga bolpa
+[Ideas-1] Ideas -> R1 C4 R2             -> /Ideas-1/ gram#N[M] Ideas --> R1 bolC4 R2
+S -> C4 D4 E4 [count+1]                 -> gram#N[M] S --> bolC4 bolD4 bolE4 /count+1/
+[phase==1] S -> ga re [phase=2]         -> /phase=1/ gram#N[M] S --> bolga bolre /phase=2/
 ```
 
 ### Poids
 
-```
+```text
 // BPScript                              -> BP3
 S -> A B C [weight:50]                   -> <50> gram#N[M] S --> bolA bolB bolC
 ```
 
-### Controles runtime `()` -- _script(CT n)
+### Contrôles runtime `()`
 
-Les parametres runtime sont compiles en tokens de controle opaques :
+Un paramètre runtime est porté sur l'événement comme une annotation opaque,
+jusqu'au runtime de sortie. Dans l'AST, il vit sur le nœud :
+`RuntimeQualifier{pairs:[{clé, valeur}]}` en suffixe, `InstantControl` dans le
+flux. Le contrôle natif BP3 correspondant est `_script(CT n)`.
 
-```
+```text
 // BPScript                              -> BP3
-Sa(vel:120)                              -> _script(CT 0) bolSa
-Bass -> C2 C2 - C2 (vel:100)            -> gram#N[M] Bass --> _script(CT 1) bolC2 bolC2 - bolC2
-{A B}(filter:lp)                         -> {_script(CT 2_start) bolA bolB _script(CT 2_end)}
+sa(vel:120)                              -> _script(CT 0) bolsa
+Bass -> C2 C2 - C2 (vel:100)             -> gram#N[M] Bass --> _script(CT 1) bolC2 bolC2 - bolC2
+{A B}(filter:300)                        -> {_script(CT 2_start) bolA bolB _script(CT 2_end)}
 ```
 
-Le transpileur emet une **controlTable** a cote de la grammaire :
-```json
-{
-  "CT0": { "scope": "symbol", "params": { "vel": 120 } },
-  "CT1": { "scope": "rule", "params": { "vel": 100 } },
-  "CT2": { "scope": "group", "params": { "filter": "lp" } }
-}
-```
+Trois portées, distinguées par la place du sac : collé au terminal
+(`C4(vel:120)`), espacé en fin de membre droit (portée règle), collé au groupe
+(`{A B}(…)`).
 
-### Cascading des controles (spec < CT < CV)
+### Cascade des contrôles
 
-Quand plusieurs sources definissent le meme parametre, l'ordre de priorite est :
+Quand plusieurs sources donnent le même paramètre, la valeur retenue vient du
+niveau le plus élevé qui le précise (cf. « Cascade — 8 niveaux ») :
 
-1. **spec** (defauts de la librairie) -- plus basse
-2. **CT** (controles inline `()`) -- surcharge la spec
-3. **CV** (objets temporels continus) -- plus haute priorite
+1. **spec** — défauts de la librairie ;
+2. **`()`** — contrôle écrit en ligne, qui surcharge la spec ;
+3. **CV** — objet temporel continu, priorité la plus haute.
 
-Le dispatcher applique ce cascading a chaque timed token.
+La cascade s'applique à chaque événement daté.
 
 ### Silences et prolongation
 
 Transmis directement :
-```
+```text
 // BPScript    -> BP3
 -              -> -
 _              -> _
-...            -> ... (repos indetermine)
+...            -> ... (repos indéterminé)
 ```
 
-### Period notation
+### Notation par périodes
 
 Transmise directement :
-```
+```text
 // BPScript                    -> BP3
 S -> A B . C D . E F           -> gram#N[M] S --> bolA bolB . bolC bolD . bolE bolF
 ```
 
-### Ties (liaisons)
+### Liaisons
 
-`~` en BPScript -> `&` en BP3 :
-```
+`~` en BPScript → `&` en BP3 :
+```text
 // BPScript                    -> BP3
 C4~ D4 E4 ~C4                 -> bolC4& bolD4 bolE4 &bolC4
 ```
 
 ### Captures
 
-`?n` -> metavariables BP3 :
-```
-// BPScript                    -> BP3
-?1 A ?1 -> ?1 B ?1             -> ?1 A ?1 --> ?1 B ?1
+`?n` → métavariables BP3 :
+```text
+// BPScript                            -> BP3
+?1 Motif ?1 -> ?1 Autre ?1             -> ?1 Motif ?1 --> ?1 Autre ?1
 ```
 
-### Templates et transcriptions (homomorphismes)
+### Gabarits et transcriptions (homomorphismes)
 
-`$` -> `(=X)` et `&` -> `(:X)`. Les noms de transcription entre master et slave
-sont emis entre `(=X)` et `(:X)` dans la grammaire BP3.
+`$` → `(=X)` et `&` → `(:X)`. Les noms de transcription entre maître et esclave
+sont émis entre `(=X)` et `(:X)` dans la grammaire BP3.
 
-```
+```text
 // BPScript                              -> BP3
 S <> $mel &mel                           -> S <-> (=mel) (:mel)
-S -> $X tabla_stroke &X                  -> S --> (=X) tabla_stroke (:X)
+S -> $X dha &X                           -> S --> (=X) dha (:X)
 S -> $X * &X                             -> S --> (=X) * (:X)
 S -> $X * TR &X                          -> S --> (=X) * TR (:X)
-Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
+Qaida <> $ {plus S64 fin}                -> Qaida <-> (= + S64 ;)
 ```
 
 **Contrat BPx** : les paires source→cible sont portées dans `Scene.homomorphisms[]`
@@ -1861,115 +2196,90 @@ Qaida <> $ {plus S64 fin}               -> Qaida <-> (= plus S64 fin)
 `rewriteHomomorphismMarkers` pour appliquer les transformations de terminaux.
 
 > Voir [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) pour l'architecture complète.
->
-> **AJOURNÉ (2026-06-10)** : l'approche étiquetage `N@terminal` dans le fichier -ho — jamais adoptée, sans rapport avec le suffixe arobase de BPScript, SUPPRIMÉ le 2026-07-28.
-> (où BP3 émet des étiquettes opaques et le REPL les résout post-dérivation) est ajournée.
-> L'approche retenue est `Scene.homomorphisms` + marqueurs inline (`star`, noms verbatim).
 
 ### Contextes
 
-```
+```text
 // BPScript                    -> BP3
 (A B) C -> D E                 -> (A B) C --> D E
-#(X Y) Z -> W                 -> #(X Y) Z --> W
+#(X Y) Z -> W                  -> #(X Y) Z --> W
 ```
 
-La correspondance du `#` est **identique**, et elle a ete verifiee, pas supposee : les deux
-moteurs traitent `#X` comme un symbole apparie qui **occupe une position**. Attention au mot
-« contexte » dans cette section -- il ne veut pas dire garde de largeur nulle (voir
-« `#X` n'est PAS une garde de largeur nulle » plus haut).
+La correspondance du `#` est terme à terme : les deux moteurs traitent `#X` comme
+un symbole apparié qui **occupe une position** (cf. « `#X` … CONSOMME une
+position » plus haut).
 
-### Homomorphismes
+### Variables liées `|x|`
 
-```
+```text
 // BPScript                    -> BP3
-|x| S x -> x S                -> |x| S x --> x S
+|x| S x -> x S                 -> |x| S x --> x S
 ```
 
 ### Out-time objects
 
-`!symbole` standalone -> `<<symbole>>` :
-```
+`!symbole` autonome → `<<symbole>>` :
+```text
 // BPScript                    -> BP3
 Y -> !f                        -> Y --> <<f>>
 ```
 
 ### Backticks
 
-Les backticks orphelins et standalone sont encodes comme terminaux speciaux
-dans la grammaire. Les backticks-parametres sont resolus via la controlTable.
+Un backtick autonome est un terminal de plein droit du membre droit : il est
+encodé comme terminal spécial dans la grammaire. Un backtick en valeur de
+paramètre voyage avec sa paire jusqu'au runtime qui l'évalue.
 
 ---
 
-### Meta-grammaires -- reecriture structurelle
+### Méta-grammaires — réécriture structurelle
 
-BP3 est un systeme de reecriture de chaines -- `{`, `}`, `,` peuvent apparaitre
-comme terminaux bruts. Le parser les traite comme des `RawBrace` quand ils ne
-forment pas un polymetric balance dans la meme regle.
+BP3 est un système de réécriture de chaînes : `{`, `}`, `,` peuvent apparaître
+comme terminaux bruts. Une accolade appariée dans la même règle forme un
+polymétrique ; seule, elle est une accolade brute (`RawBrace`).
 
-```
-// BPScript: koto3 -- automate cellulaire avec meta-reecriture
-#({) a b a -> {a c b, f f f - f}:5  // contexte negatif sur {
-} -> }                                      // { et } comme terminaux
-, -> ,                                      // , aussi
+```text
+// BPScript : koto3 — automate cellulaire avec méta-réécriture
+#({) a b a -> {a c b, f f f - f}:5   // contexte négatif sur {
+} -> }                                // { et } comme terminaux
+, -> ,                                // , aussi
 ```
 
 Deux usages distincts :
-- **Embedding** : `{` et `}` distribues sur plusieurs regles, forment un polymetric
-  valide apres derivation. La durée `}:N` sur `}` est propagee au `{` correspondant.
-- **Meta-grammaire** : `{`, `}`, `,` comme terminaux matchables sur le LHS et
-  dans les contextes `#({)`. La grammaire construit des polymetriques par reecriture.
+- **Distribution** : `{` et `}` répartis sur plusieurs règles, formant un
+  polymétrique valide après dérivation. La durée `}:N` sur `}` est propagée au `{`
+  correspondant.
+- **Méta-grammaire** : `{`, `}`, `,` comme terminaux matchables sur le membre
+  gauche et dans les contextes `#({)`. La grammaire construit des polymétriques
+  par réécriture.
 
-La validation structurelle des `{}` est **repoussee au moteur BP3**.
+La validation structurelle des `{}` est **repoussée au moteur BP3**.
 
 ---
 
-### Time signatures inline
+### Métrique en ligne
 
-```
+```text
 // BPScript                              -> BP3
-S <> S96 [meter:4+4/6]                  -> S <-> S96 4+4/6
-S -> P1 P2 P3 [meter:4+4+4+4+4+4/4]    -> gram#N[M] S --> P1 P2 P3 4+4+4+4+4+4/4
+S <> S96 [meter:4+4/6]                   -> S <-> S96 4+4/6
+S -> P1 P2 P3 [meter:4+4+4+4+4+4/4]      -> gram#N[M] S --> P1 P2 P3 4+4+4+4+4+4/4
 ```
 
 ---
 
-### Extensions futures (necessitent modifications BP3)
+### Symboles quotés BP3
 
-#### Capture de groupes
-
-Actuellement `?` capture exactement **un** symbole. Pas de mecanisme
-pour capturer un **groupe** de symboles de longueur variable.
-
-#### CV sur les parametres moteur (speed, scale, tempo)
-
-Les parametres resolus par le moteur BP3 lui-meme ne supportent que des valeurs
-discretes. Trois approches possibles :
-1. Modifier le moteur BP3 pour supporter des durees variables
-2. Discretiser au compilateur -- `ramp(1, 3)` -> serie de `/N`
-3. Post-traiter -- deformer le timeline apres resolution BP3
-
-#### Quoted symbols
-
-BP3 supporte les quoted symbols (`'1'`, `'texte'`). BPScript **ne porte pas**
-cette syntaxe. Les grammaires BP3 qui les utilisent sont renommees dans la
-traduction (ex: `'1'` -> `d1`).
-
-#### Conventions de notes
-
-Le contournement actuel (flat alphabet + bol prefix + prototypes -so.) est
-documente dans [DESIGN_PITCH.md](../design/PITCH.md).
-L'architecture cible (alphabets parametriques, temperaments, tunings)
-rend obsolete le NoteConvention hardcode de BP3.
+Les symboles quotés d'une grammaire BP3 (`'1'`, `'texte'`) sont renommés à la
+traduction : `'1'` devient `d1`.
 
 ---
 
-## Documents lies
+## Documents liés
 
-- [EBNF.md](EBNF.md) -- Grammaire formelle EBNF
-- [AST.md](AST.md) -- Structure de l'AST
-- [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) -- Interface WASM complete (in/out)
-- [ARCHITECTURE.md](../design/ARCHITECTURE.md) -- Architecture technique
-- [DESIGN_CV.md](../design/CV.md) -- CV / signal objects
-- [DESIGN_PITCH.md](../design/PITCH.md) -- Architecture 5 couches pitch
-- [DESIGN_HOMOMORPHISM_LABELING.md](../design/HOMOMORPHISMS.md) -- Etiquetage homomorphismes
+- [EBNF.md](EBNF.md) — grammaire formelle EBNF
+- [AST.md](AST.md) — structure de l'AST
+- [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) — interface WASM complète (in/out)
+- [ARCHITECTURE.md](../design/ARCHITECTURE.md) — architecture technique
+- [CV.md](../design/CV.md) — CV / objets de signal
+- [PITCH.md](../design/PITCH.md) — architecture 5 couches de hauteur
+- [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) — homomorphismes
