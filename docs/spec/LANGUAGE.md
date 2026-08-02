@@ -8,7 +8,7 @@
 - [Philosophie de separation](#philosophie-de-separation)
 - [L'ordonnanceur](#lordonnanceur)
 - [Inventaire : 3 mots, 24 symboles, 9 operateurs](#inventaire--3-mots-24-symboles-9-operateurs)
-- [Systeme de types -- double declaration](#systeme-de-types----double-declaration)
+- [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres -- opaques pour BPScript](#parametres----opaques-pour-bpscript)
 - [`[]` moteur vs `()` runtime](#-moteur-vs--runtime----deux-destinataires-memes-portees)
 - [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles-zero-ambiguite)
@@ -223,12 +223,12 @@ declarative fait exister des choses ; les regles de production les font sonner d
 Le coeur declaratif tient en quatre mots. Tout le reste s'ecrit en invoquant une librairie ou une
 categorie de reglages.
 
-| mot | ce qu'il fait |
-| --- | --- |
-| `@actor` | declare **qui joue** : un acteur, son alphabet, sa sortie |
-| `@var` | declare **une variable** : un nom qui porte une valeur ou un etat |
-| `@def` | declare **une definition** : un nom associe a un corps qu'on reinvoque |
-| `@init` | declare **l'etat de depart** de la scene |
+| mot      | ce qu'il fait                                                          |
+| -------- | ---------------------------------------------------------------------- |
+| `@actor` | declare **qui joue** : un acteur, son alphabet, sa sortie              |
+| `@var`   | declare **une variable** : un nom qui porte une valeur ou un etat      |
+| `@def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque |
+| `@init`  | declare **l'etat de depart** de la scene                               |
 
 ### `@var` -- declarer une variable
 
@@ -245,16 +245,16 @@ Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le
 @var pivot
 ```
 
-| type | ce que la variable porte |
-| --- | --- |
-| `flag` | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent |
-| `in` | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance |
-| `signal` | un flux de nombres, sans convention de lecture — le cas ordinaire |
-| `pitch` | un signal lu comme une **hauteur** |
-| `phase` | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule** |
-| `logic` | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
-| `wire` | un cablage nomme : une chaine de modules qu'on rebranche d'un mot |
-| *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle |
+| type      | ce que la variable porte                                                                        |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `flag`    | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent                         |
+| `in`      | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance             |
+| `signal`  | un flux de nombres, sans convention de lecture — le cas ordinaire                               |
+| `pitch`   | un signal lu comme une **hauteur**                                                              |
+| `phase`   | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule**  |
+| `logic`   | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
+| `wire`    | un cablage nomme : une chaine de modules qu'on rebranche d'un mot                               |
+| *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
 entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
@@ -303,13 +303,13 @@ modules deja declares, il n'appartient a aucun d'eux.
 Un acteur porte cinq cles. Chacune se lit dans un catalogue, et ce qui n'est pas ecrit vient de la
 cascade.
 
-| cle | ce qu'elle fixe |
-| --- | --- |
-| `alphabet` | la collection de terminaux que l'acteur joue |
-| `tuning` | l'accordage qui donne une frequence a chaque degre |
-| `octaves` | la convention de registre |
-| `transport` | par ou l'acteur sort : `audio`, `midi`, `osc` |
-| `eval` | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
+| cle         | ce qu'elle fixe                                                           |
+| ----------- | ------------------------------------------------------------------------- |
+| `alphabet`  | la collection de terminaux que l'acteur joue                              |
+| `tuning`    | l'accordage qui donne une frequence a chaque degre                        |
+| `octaves`   | la convention de registre                                                 |
+| `transport` | par ou l'acteur sort : `audio`, `midi`, `osc`                             |
+| `eval`      | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
 
 ```text
 @actor sitar
@@ -373,14 +373,14 @@ qui vit dans un catalogue.
 @library.strudel
 ```
 
-| librairie | ce qu'elle collectionne |
-| --- | --- |
-| `alphabet` | des **terminaux** -- sonnants ou non, avec ou sans hauteur, code ou calcul |
-| `tuning` | des accordages |
-| `octaves` | des conventions de registre |
-| `sound` | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
-| `transcription` | des tables de correspondance entre notations |
-| `library` | des banques chargees par un moteur de code |
+| librairie       | ce qu'elle collectionne                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `alphabet`      | des **terminaux** -- sonnants ou non, avec ou sans hauteur, code ou calcul                                                      |
+| `tuning`        | des accordages                                                                                                                  |
+| `octaves`       | des conventions de registre                                                                                                     |
+| `sound`         | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
+| `transcription` | des tables de correspondance entre notations                                                                                    |
+| `library`       | des banques chargees par un moteur de code                                                                                      |
 
 **Un alphabet est une collection structuree de terminaux.** Un terminal est une chose entiere : il
 sonne ou non, porte une hauteur ou non, invoque du code ou une instruction de calcul de hauteur.
@@ -391,10 +391,10 @@ Ce qui le simplifie est une **definition**, pas un decoupage en axes portes par 
 **Un reglage s'ecrit par sa categorie, l'entree apres le point.** La categorie dit a quoi le reglage
 touche, donc qui le consomme.
 
-| categorie | ce qu'elle regle |
-| --- | --- |
-| `@pitch.` | `transpose` · `scaleshift` · `chromashift` · `diapason` |
-| `@time.` | `tempo` · `duration` · `meter` · `timepatterns` |
+| categorie  | ce qu'elle regle                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| `@pitch.`  | `transpose` · `scaleshift` · `chromashift` · `diapason`                                  |
+| `@time.`   | `tempo` · `duration` · `meter` · `timepatterns`                                          |
 | `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` |
 
 ```text
@@ -547,9 +547,12 @@ Calcul (3) :
 =              affectation    [count=4]     fin de regle
 ```
 
-Dans la garde, `+` et `-` font les deux en un pas : `[count-1]` teste que `count` est positif
-et le decremente au moment ou la regle s'applique. En fin de regle, ils modifient le drapeau
-pour les derivations suivantes.
+Dans la garde, `+` et `-` testent d'abord et mutent ensuite, dans cet ordre. `[count-1]` rend la
+regle candidate tant que `count` est strictement positif ; le decrement s'applique apres, au
+moment ou la regle est retenue et appliquee. Le drapeau vaut donc encore sa valeur d'avant
+pendant tout le test, et les deux operateurs partagent ce meme test de positivite : `[count+1]`
+demande lui aussi un `count` strictement positif, et l'incremente a l'application. En fin de
+regle, ils modifient le drapeau pour les derivations suivantes.
 
 `=` pose la valeur d'un drapeau et s'ecrit en fin de regle : `S -> Loop [phase=1, count=4]`.
 Pour comparer un drapeau avant le LHS, l'operateur est `==` : `[phase==1] Loop -> C4`.
@@ -584,71 +587,81 @@ meme signe sert dans les deux, sa place tranche lequel des deux roles il tient.
 ### Trois portees de metadonnees
 
 - `@` = **global** : environnement, imports, configuration de la scene
-- `[]` = **local moteur** : instructions BP3 -- modes, drapeaux, operateurs temporels
+- `[]` = **local moteur** : instructions BPx -- modes, drapeaux, operateurs temporels
 - `()` = **local runtime** : parametres transportes au runtime cible (vel, filter, wave...)
+
+```text
+@core
+@controls
+@alphabet.western:audio
+@time.tempo:120
+
+S -> C4(vel:0.7) D4[/2] E4 F4 [mode:random]
+```
+
+Un reglage s'invoque par sa categorie -- `@pitch.`, `@time.`, `@engine.` -- decrite dans
+« Invoquer un reglage ». Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est
+le recepteur qui leur donne un sens.
+
+### Deux crochets, deux roles
+
+Le crochet tient deux roles que sa **place** distingue, et le compilateur accepte dans chacun un
+vocabulaire different.
+
+| place                       | role          | ce qu'il porte                                                   |
+| --------------------------- | ------------- | ---------------------------------------------------------------- |
+| avant le membre gauche      | **garde**     | un test de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`        |
+| dans le flux, en fin de regle | **directive moteur** | un reglage BPx, un operateur temporel, une mutation : `[mode:random]`, `[/2]`, `[phase=1]` |
+
+La **garde** decide si la regle s'applique a cette derivation : elle lit les drapeaux, et c'est
+tout ce qu'elle accepte -- `[mode:random] S -> C4` arrete la compilation. La **directive
+moteur** gouverne la derivation et le calcul temporel : elle accepte les cles reservees, les
+operateurs temporels et les mutations de drapeau -- `S -> C4 [phase==1]` arrete la compilation.
 
 ```bpscript
 @core
 @controls
 @alphabet.western:audio
-@tempo:120
 
-S -> C4(vel:0.7) D4[/2] E4 F4 [mode:random]
+[count-1] S -> C4 D4 [mode:random]
 ```
 
-Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est le recepteur qui leur
-donne un sens.
+Cette regle porte les deux : `[count-1]` en tete est la garde, `[mode:random]` en fin de regle
+est la directive. Les gardes sont detaillees dans « Flags », les directives dans
+« `[]` moteur vs `()` runtime ».
 
-BPScript decrit des structures dans le temps. Une garde `[...]` posee avant le LHS decide si
-la regle s'applique a cette derivation. Le calcul et le traitement de signal s'ecrivent dans
-le code externe (backticks).
+BPScript decrit des structures dans le temps. Le calcul et le traitement de signal s'ecrivent
+dans le code externe (backticks).
 
 ---
 
-## Systeme de types -- double declaration
+## Systeme de types -- ce qu'un nom est, comment un signal se lit
 
-Chaque symbole porte un **double contrat** avant d'etre employe :
-
-| Dimension         | Question                | Valeurs                | Exemple                                |
-| ----------------- | ----------------------- | ---------------------- | -------------------------------------- |
-| **Type temporel** | comment dans le temps ? | gate, trigger, cv      | gate = duree, trigger = instant        |
-| **Runtime**       | qui l'execute ?         | sc, py, tidal, midi... | `@gate Sa:sc` -- SuperCollider joue Sa |
-
-Le compilateur exige les deux : le type temporel dit comment ordonnancer, le runtime dit ou
-envoyer.
+Un type repond a deux questions distinctes : ce qu'un **nom** est dans la scene, et comment un
+**signal** se lit chez celui qui le recoit.
 
 ### Trois categories de symboles
 
 Une scene contient trois categories de symboles, que le compilateur reconnait a leur ecriture :
 
-| Categorie        | Declaration                                            | Role                                           | Exemples                               |
-| ---------------- | ------------------------------------------------------ | ---------------------------------------------- | -------------------------------------- |
-| **Non-terminal** | implicite (apparait en LHS d'une regle)                | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
-| **Terminal**     | explicite (`@gate`, `@trigger`, `@cv`, ou un alphabet) | symbole de sortie, atteint un runtime          | `@gate Sa:sc`, `@trigger flash:py`     |
-| **Controle**     | via `@controls`                                        | commande moteur BP3, zero duree                | `[mode:random]`, `[/2]`, `[weight:50]` |
+| Categorie        | Declaration                             | Role                                           | Exemples                               |
+| ---------------- | --------------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Non-terminal** | implicite (apparait en LHS d'une regle) | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
+| **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
+| **Controle**     | via `@controls`                         | commande moteur BPx, zero duree                | `[mode:random]`, `[/2]`, `[weight:50]` |
 
 Le compilateur reconnait un non-terminal a sa presence en LHS d'une regle ; tout autre nom est
 un terminal, et vient alors d'une declaration ou d'un alphabet en portee. Un non-terminal vit
 le temps de la derivation : son role est d'etre reecrit, et les regles le remplacent par des
-terminaux. La derivation s'acheve sur des terminaux, seuls porteurs d'un type temporel et d'un
-runtime.
+terminaux. La derivation s'acheve sur des terminaux, seuls porteurs d'une sortie.
 
-### Declaration : type temporel + runtime
+### Ce que porte un terminal
 
-Une declaration donne le type temporel, le nom, puis la cible apres le deux-points :
+Un terminal est une chose entiere : il sonne ou non, porte une hauteur ou non, invoque du code
+ou une instruction de calcul de hauteur. Il vient d'un **alphabet**, decrit dans « Invoquer une
+librairie ».
 
-```bpscript
-@core
-@controls
-
-@gate Sa:sc                      // Sa occupe du temps, SuperCollider le joue
-@trigger flash:python            // flash est un instant, Python le declenche
-@cv ramp:tidal                   // ramp varie continument, Tidal le calcule
-
-S -> Sa flash Sa
-```
-
-Un alphabet declare ses symboles en bloc. Le deux-points nomme alors le **canal de sortie** de
+Un alphabet declare ses terminaux en bloc. Le deux-points nomme alors le **canal de sortie** de
 l'acteur implicite, pris parmi `audio`, `midi` et `osc` :
 
 ```bpscript
@@ -659,15 +672,34 @@ l'acteur implicite, pris parmi `audio`, `midi` et `osc` :
 S -> sa re ga
 ```
 
-Le type temporel et la cible d'un symbole valent pour toute la scene.
+La sortie d'un terminal vaut pour toute la scene.
 
-Chaque symbole employe dans une regle est declare, et le compilateur nomme celui qui manque :
+Chaque terminal employe dans une regle est declare, et le compilateur nomme celui qui manque :
 
 ```text
 S -> C4 D4 Bloup E4
 //            ^^^^
 // terminal 'Bloup' non declare -- absent des alphabets en portee
 ```
+
+### Les conventions de lecture d'un signal
+
+Un signal est un flux de nombres ; le type dit **comment le recepteur le lit**, et c'est tout ce
+qu'il ajoute.
+
+| convention | lecture                                                                     |
+| ---------- | ---------------------------------------------------------------------------- |
+| *(aucune)* | un signal ordinaire -- le cas courant, ce qu'on appelle ailleurs « l'audio » |
+| `pitch`    | une hauteur, en logarithmique : `1.0` vaut une octave                        |
+| `phase`    | une position dans un cycle entre 0 et 1 ; ce qui depasse s'enroule            |
+| `logic`    | un etat haut ou bas, dont les **transitions** font evenement                  |
+
+Un declenchement est une transition d'un etat bistable, donc un `logic` : une meme convention
+couvre l'etat tenu et l'impulsion.
+
+Ces quatre conventions typent les ports des modules, les variables `@var` et les definitions
+`@def`. Le principe et les ports sont decrits dans « Les modules -- ce qu'on cable », les
+variables dans « `@var` -- declarer une variable ».
 
 ---
 
