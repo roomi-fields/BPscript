@@ -1081,10 +1081,9 @@ deux :
 Un cable se coupe pendant que ca joue ; une portee, elle, se referme. C'est pour cela qu'un geste
 n'a pas d'etendue et qu'un calque en a une.
 
-**Les ports d'un chainage sont ceux de ses modules**, en notation pointee, et la resolution par
-unicite s'y applique : `sombre.cutoff` passe si un seul module du chainage porte un `cutoff` ; deux
-candidats obligent a nommer le module. Un chainage precise ses ports quand ce ne sont pas ceux par
-defaut.
+**Un chainage n'encapsule rien.** Ses modules restent des instances nommees, et on les adresse par
+leur nom ou qu'on soit : `@def sombre lpf1 >> vca1` se regle en ecrivant `lpf1.cutoff:400`. Il n'y a
+ni port a exposer, ni nom a traduire, ni rien a cacher -- un nom d'instance suffit.
 
 **Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backticks
 `patch:`. Un seul langage, deux emplacements : nomme dans un `@def`, litteral dans une regle.
@@ -1108,6 +1107,9 @@ vivent en parallele, **un par calque invoque** -- comme un fil porte plusieurs v
 nom. L'auteur ne les compte jamais : un site d'ecriture donne un exemplaire, `*:` en donne un par
 terminal. Chacun a ses propres valeurs de port et son propre etat interne.
 
+**Une nouvelle derivation ne recycle rien** : chaque exemplaire termine meurt proprement, chaque
+exemplaire neuf part de zero.
+
 **Un geste vise tous les exemplaires.** `patch: lpf1 switchoff` eteint la famille entiere, comme on
 adresse un fil et non l'une de ses voies. Viser un exemplaire seul demanderait de savoir lequel, et
 un nom ne le dit pas.
@@ -1128,7 +1130,8 @@ ce qui est deja en cours **finit proprement** avec l'ancienne.
 le traverse sans etre traite, et c'est `eteint` qui dit quelle entree ressort alors par quelle
 sortie. Ce n'est pas la meme chose que couper le cable -- `\>>` deconnecte et plus rien n'arrive,
 `switchoff` court-circuite et le signal ressort intact. Le premier fait taire, le second laisse
-passer. Le geste est **binaire** : `switchon` / `switchoff`, sans dosage.
+passer. Le geste est **binaire** : `switchon` / `switchoff`, sans dosage -- et il ne coupe rien net,
+ce qui est dans le module s'ecoule comme a la fin d'une portee.
 
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
