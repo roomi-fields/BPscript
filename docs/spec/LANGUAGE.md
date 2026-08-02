@@ -373,11 +373,11 @@ a besoin, chaque instance portant ses propres valeurs de port.
 
 **Trois sous-prototypes** couvrent les formes possibles. Chacun **ajoute** les champs de son cas.
 
-| sous-prototype | ce qu'il a | ce qu'il ajoute |
-| --- | --- | --- |
-| **source** | des sorties seulement | `defaultout` |
+| sous-prototype | ce qu'il a                     | ce qu'il ajoute                       |
+| -------------- | ------------------------------ | ------------------------------------- |
+| **source**     | des sorties seulement          | `defaultout`                          |
 | **traitement** | des entrées **et** des sorties | `defaultin` · `defaultout` · `eteint` |
-| **puits** | des entrées seulement | `defaultin` |
+| **puits**      | des entrées seulement          | `defaultin`                           |
 
 Un oscillateur, du bruit, un LFO sont des **sources** : on ne les neutralise pas, il n'y a rien à
 faire passer à travers, donc pas de `eteint`. Un filtre, un amplificateur, une enveloppe sont des
@@ -387,13 +387,13 @@ faire passer à travers, donc pas de `eteint`. Un filtre, un amplificateur, une 
 peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
 deux catégories et la même forme.
 
-| champ | ce qu'il porte |
-| --- | --- |
-| `nom` · `categorie` · `description` | identité, famille, prose d'aide |
-| `ports` | les ports du module, par leur nom |
-| `defaultin` · `defaultout` | le port qu'un câblage vise sans le nommer : `saw >> lpf` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre |
-| `eteint` | `{ "<sortie>": "<entree>" }` — ce que chaque sortie reprend quand le module est neutralisé |
-| `code` | le traitement |
+| champ                               | ce qu'il porte                                                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `nom` · `categorie` · `description` | identité, famille, prose d'aide                                                                                              |
+| `ports`                             | les ports du module, par leur nom                                                                                            |
+| `defaultin` · `defaultout`          | le port qu'un câblage vise sans le nommer : `saw >> lpf` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre |
+| `eteint`                            | `{ "<sortie>": "<entree>" }` — ce que chaque sortie reprend quand le module est neutralisé                                   |
+| `code`                              | le traitement                                                                                                                |
 
 #### Le patron d'un port
 
@@ -411,12 +411,12 @@ deux catégories et la même forme.
 **Une entrée ajoute `repli`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
 pas : la notion lui est étrangère.
 
-| champ | ce qu'il porte |
-| --- | --- |
-| `sens` | `entree` ou `sortie` |
-| `convention` | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic` |
-| `voies` | combien de voies ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
-| `plage` · `unite` | les bornes et l'unité du signal attendu |
+| champ             | ce qu'il porte                                                               |
+| ----------------- | ---------------------------------------------------------------------------- |
+| `sens`            | `entree` ou `sortie`                                                         |
+| `convention`      | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`        |
+| `voies`           | combien de voies ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
+| `plage` · `unite` | les bornes et l'unité du signal attendu                                      |
 
 **Les conventions.** `null` désigne un signal ordinaire, sans convention de lecture — c'est le cas
 courant, celui qu'on appelle ailleurs « l'audio ». `pitch` se lit comme une hauteur, en
@@ -558,11 +558,10 @@ Un signal est un flux de nombres ; ces trois mots disent comment le **recepteur*
 signal sans convention est le cas ordinaire, et c'est ce qu'on appelle ailleurs « l'audio ».
 Le detail est dans « Les conventions de lecture d'un signal ».
 
-### Vingt-quatre symboles structurels
+### Vingt-trois symboles structurels
 
 ```text
 @              directive de declaration, en tete de scene
--> <- <>       derivation et direction (BP3 : --> <-- <->)
 -> <- <>       derivation et direction (BP3 : --> <-- <->)
 { , }          polymetrie et groupement temporel
 ( )            parametres runtime (portees symbole, regle, groupe) et contexte de regle
@@ -754,10 +753,10 @@ une notion etrangere a l'objet n'a pas de champ du tout. Un sous-patron **ajoute
 de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pas la hauteur : une
 percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
-| sous-patron | ce qu'il ajoute |
-| --- | --- |
-| **note** | `hauteur` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
-| **percussion** | rien : elle sonne et dure, sans porter de hauteur |
+| sous-patron    | ce qu'il ajoute                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| **note**       | `hauteur` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
+| **percussion** | rien : elle sonne et dure, sans porter de hauteur                                                 |
 
 **L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
 ecrit.
@@ -903,13 +902,13 @@ Ces cles font partie du langage : le compilateur les comprend et les traduit en 
 moteur.
 
 ```text
-/N   \N   *N   **N   operateurs temporels BP3
+/N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
 mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight      poids de la regle (entier, K-param, ou inf pour priorite absolue)
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
-tempo       tempo de la regle -- [tempo:120] ; @time.tempo:120 pose celui de la scene
-meter       signature rythmique -- [meter:7/8], [meter:4/4]
+tempo       tempo de la regle -- [time.tempo:120] ; @time.tempo:120 pose celui de la scene
+meter       signature rythmique -- [meter:7/8], [meter:4+4/4]
 ```
 
 Toute autre cle entre crochets arrete la compilation. Les parametres destines au runtime
@@ -918,15 +917,6 @@ Toute autre cle entre crochets arrete la compilation. Les parametres destines au
 Le mot `scale` designe la **gamme microtonale** : c'est un controle de runtime, il s'ecrit
 `(scale:nom cle)`. La mise a l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**,
 `{A B}:2`.
-
-### Compilation de `[]` vers BP3
-
-```text
-// BPScript                              -> BP3
-A[/2] B C                                -> /2 A B C
-[mode:random] S -> A B C                 -> RND  gram#N[M] S --> A B C
-{C3, E3, G3, C4}:2                       -> {2, C3, E3, G3, C4}      // duree collee
-```
 
 ### `()` -- parametres runtime (toujours suffixe)
 
@@ -2019,11 +2009,11 @@ le catalogue ». Rien ne se resout par defaut en silence.
 Une librairie est **native** — livree avec le produit — ou **ecrite par l'utilisateur**. Les deux
 ont la meme forme ; seul le moment de leur compilation differe.
 
-| moment | ce qui s'y passe |
-| --- | --- |
-| a la construction du produit | les librairies natives sont **precompilees** |
+| moment                          | ce qui s'y passe                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------------------- |
+| a la construction du produit    | les librairies natives sont **precompilees**                                                       |
 | a la validation d'une librairie | l'utilisateur enregistre la sienne, elle est **compilee la**, et il voit ses erreurs immediatement |
-| au lancement d'une scene | **rien ne se compile** : on charge ce qui l'est deja |
+| au lancement d'une scene        | **rien ne se compile** : on charge ce qui l'est deja                                               |
 
 **Le lancement d'une piece ne compile rien.** Une erreur d'ecriture se dit a l'auteur pendant qu'il
 ecrit, jamais au moment de jouer.
