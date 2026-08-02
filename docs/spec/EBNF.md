@@ -647,7 +647,7 @@ s'applique à toute la portée de la règle.
 guard = "[" , guard_expr , "]" , { "[" , guard_expr , "]" } ;     (* multi-guard = AND *)
 
 guard_expr = IDENT , COMPARE_OP , flag_value      (* test pur *)
-           | IDENT , MUTATE_OP , INT               (* test + mutation atomique *)
+           | IDENT , MUTATE_OP , INT               (* test de positivité, puis mutation au tir *)
            | IDENT                                  (* bare flag : non-zéro test *)
            ;
 
@@ -657,7 +657,11 @@ MUTATE_OP  = "+" | "-" ;
 flag_value = INT | IDENT ;                          (* littéral, état nommé (@flag, A5), ou autre flag *)
 ```
 
-La forme `[flag-N]` décrémente ET teste > 0 atomiquement (sémantique BP3).
+La forme `[flag-N]` tient deux temps, dans cet ordre : le test rend la règle candidate
+tant que `flag > 0`, puis la mutation s'applique au moment où la règle est retenue et
+appliquée. Le drapeau vaut donc encore sa valeur d'avant pendant tout le test. Ce test de
+positivité vaut pour les deux opérateurs : `[flag+N]` demande lui aussi `flag > 0`, et
+incrémente à l'application (sémantique BP3).
 La forme `[flag>N]` teste sans muter.
 La forme `[Ideas]` (bare flag) teste que le flag est non-zéro → `/Ideas/` en BP3.
 
