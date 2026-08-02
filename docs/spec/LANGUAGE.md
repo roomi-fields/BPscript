@@ -1980,93 +1980,55 @@ régler.
 
 ## Les librairies
 
-Le langage connait ses trois types ; les librairies apportent le vocabulaire.
+**Le langage connait la mecanique ; les librairies apportent tout le reste.** Un moteur sait
+deriver une grammaire, instancier un module, relier des ports, echantillonner un signal. Il ne
+connait ni le sargam, ni ce qu'est un filtre passe-bas, ni comment une enveloppe se calcule : ces
+choses vivent en librairie, avec leur description **et leur code**.
 
-```bpscript
-@core                        // silences, prolongation, controles moteur, defauts de scene
-@controls                    // vel, tempo, transpose, ins, chan...
-@alphabet.sargam:midi        // sa re ga ma pa dha ni, raccordes a la sortie MIDI
-@tuning.sargam_22shruti      // accordage des degres de l'alphabet
-@octaves.saptak              // convention de registre : mandra_sa / madhya_sa / taar_sa
-@sub.dhati                   // table de substitution dhati
+### Invoquer
+
+**La directive nomme la librairie, le point designe l'entree.**
+
+```text
+@alphabet.sargam:midi        // l'entree `sargam` de la librairie des alphabets, raccordee au MIDI
+@tuning.sargam_22shruti      // l'accordage des degres
+@octaves.saptak              // la convention de registre
+@module.lpf                  // un module de signal
 ```
 
-**Convention stricte** : la directive nomme l'**axe**, et le `.` designe l'**entree** lue dans le
-fichier qui sert cet axe.
+**Le deux-points affecte une valeur** — pour un alphabet et ses terminaux, c'est le runtime de
+sortie, pris parmi `audio`, `midi` et `osc`.
 
-- `@alphabet.sargam` -> `lib/alphabets.json`, entree `sargam`
-- `@tuning.sargam_22shruti` -> `lib/tunings.json`, entree `sargam_22shruti`
-- `@sub.dhati` -> `lib/sub.json`, entree `dhati`
-- `@core` -> `lib/core.json`, fichier entier
+**Les categories du coeur s'invoquent directement**, sans nommer la librairie qui les porte :
+`@time.tempo:120`, `@engine.seed:42`, `@pitch.diapason:442`. La categorie dit a quoi le reglage
+touche.
 
-Cinq axes ont un **catalogue ferme** : `alphabet`, `tuning`, `octaves`, `scale`, `sound`. Sur
-ceux-la, une entree se lit dans le catalogue ou le compilateur nomme la faute — `@alphabet.raga`
-repond « alphabet 'raga' introuvable dans le catalogue ».
+### Ce qu'une librairie contient
 
-Le `:` d'une directive de librairie raccorde tous ses symboles a une sortie de l'acteur implicite.
-Trois canaux sont ouverts : `audio`, `midi`, `osc`.
+**Des objets conformes a un patron.** Un alphabet collectionne des terminaux ; une librairie de
+modules collectionne des modules, chacun avec ses ports. Le patron dit quels champs un objet porte,
+et un champ n'existe que si sa notion s'applique.
 
-Les librairies definissent des **noms** et des **identites** ; le runtime produit le son ou le
-signal.
+**Un objet porte son code.** Un module y decrit son traitement, pas seulement ses ports. C'est ce
+qui permet au moteur de rester vide de toute specificite : ajouter un filtre n'ajoute pas une ligne
+au moteur, il ajoute une entree a une librairie.
 
-### Librairies de FONCTIONS digitales
+**Une entree introuvable est nommee** : `@alphabet.raga` repond « alphabet 'raga' introuvable dans
+le catalogue ». Rien ne se resout par defaut en silence.
 
-Au-dela des librairies de **donnees** (alphabets, accordages, octaves, temperaments, controles,
-objets de signal...), une famille porte du **comportement** : les **fonctions de manipulation
-digitale** — les trois transpositions ci-dessous, puis octave/registre, gamme, keyxpand. Une
-fonction est une entree `{params, body}` dont le `body` est du **vrai code TS** type, dans une lib
-`{type:'digital', objects}` (trois provenances : fournie, perso, communautaire). C'est le **jumeau**
-des objets de signal : un comportement nomme en librairie, realise par **Kairos** (code discret, a
-la resolution) pour le digital, par le **runtime audio** (courbe declarative) pour le continu.
+### Deux origines, trois moments
 
-L'hote fournit la lib ; **Kairos** la transpile au chargement et l'**applique** sur une **COPIE**
-de l'arbre, le nom de fonction lui parvenant opaque. BPScript pose la **forme** de lib et le
-**typage a l'ecriture** ; Kairos resout et execute. Spec complete :
-`docs/design/DIGITAL_FUNCTIONS.md`.
+Une librairie est **native** — livree avec le produit — ou **ecrite par l'utilisateur**. Les deux
+ont la meme forme ; seul le moment de leur compilation differe.
 
-### Les trois transpositions : `transpose`, `scaleshift`, `chromashift`
+| moment | ce qui s'y passe |
+| --- | --- |
+| a la construction du produit | les librairies natives sont **precompilees** |
+| a la validation d'une librairie | l'utilisateur enregistre la sienne, elle est **compilee la**, et il voit ses erreurs immediatement |
+| au lancement d'une scene | **rien ne se compile** : on charge ce qui l'est deja |
 
-BPScript distingue trois gestes de transposition musicologiques.
-
-- **`transpose` — transposition REELLE (chromatique)** : decale l'**ancre** de l'alphabet d'un
-  **intervalle fixe**, en preservant tous les intervalles ET le nom de chaque note ; vaut dans
-  **tout** accordage (egal, inegal, parametrique). L'argument est un **intervalle** dans l'un des
-  3 formats des temperaments : **fraction** `3/2`, **cents** `700c`, **decimal** `1.5` — un entier
-  nu vaut un ratio (`2` = octave). Il s'ecrit **nu**, comme toute valeur de controle.
-- **`scaleshift` — transposition SCALAIRE (diatonique)** : decale de **N degres** d'alphabet
-  (`scaleshift:2` : `sa` -> `ga`), en preservant les degres. Argument = entier N. Le `![rotate]` de
-  **structure** (rotation de sequence, moteur BPx) est un autre geste, avec son propre nom.
-- **`chromashift` — transposition CHROMATIQUE (grille 12 cles)** : decale de **N cles chromatiques**
-  (demi-tons) sur la grille 12, renomme vers la cle cible et prend **son** accordage
-  (`chromashift:11` : +11 demi-tons). Argument = entier N. C'est l'**image de BP3 `_transpose(N)`**.
-
-```bpscript
-@controls
-@alphabet.sargam
-@transpose:-2400c                    // scene entiere : deux octaves plus bas
-S -> sa re(transpose:700c) ga        // contenance : la quinte tient sur re
-T -> sa !(scaleshift:2) re ga        // flux : les suivantes montent de deux degres
-U -> sa ga(chromashift:11) pa        // grille 12 : ga part 11 demi-tons plus haut
-```
-
-Resolution : Kairos normalise la chaine d'intervalle et applique la transposition reelle en fin de
-chaine (facteur multiplicatif de cadre), apres les operations de grille — noms et registres
-preserves.
-
-### Plusieurs vocabulaires dans une meme scene
-
-Un acteur porte son propre alphabet, et la notation `acteur.terminal` dit lequel s'applique
-(cf. [Acteur](#acteur----unite-de-binding)) :
-
-```bpscript
-@actor tabliste
-  alphabet.tabla
-@actor chanteur
-  alphabet.sargam
-S -> tabliste.dha chanteur.sa
-```
-
----
+**Le lancement d'une piece ne compile rien.** Une erreur d'ecriture se dit a l'auteur pendant qu'il
+ecrit, jamais au moment de jouer.
 
 ## Operateurs temporels BP3
 
