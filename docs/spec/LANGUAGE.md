@@ -156,8 +156,14 @@ Le sens de chaque signe accole -- le point, le deux-points, l'etoile -- est deta
 
 ### Backticks -- code natif dans le flux
 
-Un backtick porte du code ecrit dans le langage d'un autre moteur. Le tag en tete (`sc:`, `py:`,
-`tidal:`, `strudel:`, `hydra:`...) nomme l'interprete.
+Un backtick porte du code, et **le tag en tete est une adresse** : il nomme le langage, et le
+langage nomme son interprete -- exactement comme le domaine d'une cle. Les langages externes
+(`sc:`, `py:`, `tidal:`, `strudel:`, `hydra:`...) vont a runtime-codevoices ; **`patch:` va a
+Dedale**, parce que le cablage est son metier.
+
+**Chaque langage se declare en librairie** -- voir « Le patron d'un langage backtique ». C'est la
+qu'il dit s'il sonne et s'il occupe du temps, au lieu de le laisser deviner ; une occurrence
+surcharge ces defauts avec un sac.
 
 Il prend deux formes :
 
@@ -180,6 +186,28 @@ Il prend deux formes :
 // Inline dans un parametre : evalue par le runtime du symbole
 S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 ```
+
+#### Le langage de patch
+
+**`patch:` est le langage du cablage**, et Dedale l'interprete. Il s'ecrit dans une regle comme
+tout backtick, et **ne sonne pas, n'occupe aucun temps**.
+
+```bpscript
+S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4
+```
+
+Il porte **tout ce qui touche a la gestion du patch** : brancher `>>`, couper `\>>`, neutraliser
+`switchon` / `switchoff`, et affecter une valeur a un port (`lpf1.cutoff:400`).
+
+**Il manipule seulement, il ne declare rien.** Creer une instance se fait en partie declarative,
+jamais dans le flux -- c'est un principe universel du langage, et le patch n'y fait pas exception.
+
+**Ce n'est pas une exception au refus des chevrons en derivation.** `S -> saw1 >> lpf1` reste
+refuse : une derivation produit de la matiere, cabler n'en produit pas. Un backtick, lui, est un
+terminal, et un terminal se pose dans une regle.
+
+**Le meme langage sert dans un `@def`** : ce qu'on reinvoque se nomme, ce qu'on ecrit une fois
+reste litteral. Un seul langage, deux emplacements.
 
 ### Simultaneite `!` et synchronisation `<!`
 
@@ -373,10 +401,12 @@ sont deux instances nommees, chacune avec ses valeurs de port.
 
 #### Le patron d'un module
 
+**Les noms de champs sont en anglais** -- c'est du code. La prose qui les decrit reste en francais.
+
 ```json
 {
-  "nom": "",
-  "categorie": "",
+  "name": "",
+  "category": "",
   "description": "",
   "ports": {},
   "code": ""
@@ -385,50 +415,51 @@ sont deux instances nommees, chacune avec ses valeurs de port.
 
 **Trois sous-prototypes** couvrent les formes possibles. Chacun **ajoute** les champs de son cas.
 
-| sous-prototype | ce qu'il a                     | ce qu'il ajoute                       |
-| -------------- | ------------------------------ | ------------------------------------- |
-| **source**     | des sorties seulement          | `defaultout`                          |
-| **traitement** | des entrées **et** des sorties | `defaultin` · `defaultout` · `eteint` |
-| **puits**      | des entrées seulement          | `defaultin`                           |
+| sous-prototype  | ce qu'il a                     | ce qu'il ajoute                            |
+| --------------- | ------------------------------ | ------------------------------------------ |
+| **`source`**    | des sorties seulement          | `defaultOut`                               |
+| **`processor`** | des entrées **et** des sorties | `defaultIn` · `defaultOut` · `passthrough` |
+| **`sink`**      | des entrées seulement          | `defaultIn`                                |
 
 Un oscillateur, du bruit, un LFO sont des **sources** : on ne les neutralise pas, il n'y a rien à
-faire passer à travers, donc pas de `eteint`. Un filtre, un amplificateur, une enveloppe sont des
-**traitements**. La sortie audio est un **puits**.
+faire passer à travers, donc pas de `passthrough`. Un filtre, un amplificateur, une enveloppe sont
+des **traitements**. La sortie audio est un **puits**.
 
 **Le sous-prototype est structurel, la catégorie est descriptive.** Le premier dit ce que le module
 peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
 deux catégories et la même forme.
 
-| champ                               | ce qu'il porte                                                                                                               |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `nom` · `categorie` · `description` | identité, famille, prose d'aide                                                                                              |
-| `ports`                             | les ports du module, par leur nom                                                                                            |
-| `defaultin` · `defaultout`          | le port qu'un câblage vise sans le nommer : `saw >> lpf` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre |
-| `eteint`                            | `{ "<sortie>": "<entree>" }` — ce que chaque sortie reprend quand le module est neutralisé                                   |
-| `code`                              | le traitement                                                                                                                |
+| champ                                | ce qu'il porte                                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `name` · `category` · `description`  | identité, famille, prose d'aide                                                                                                    |
+| `ports`                              | les ports du module, par leur nom                                                                                                  |
+| `defaultIn` · `defaultOut`           | le port qu'un câblage vise sans le nommer : `saw1 >> lpf1` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre     |
+| `passthrough`                        | `{ "<sortie>": "<entrée>" }` — le chemin que le signal emprunte quand le module est court-circuité                                  |
+| `code`                               | le traitement                                                                                                                      |
 
 #### Le patron d'un port
 
 ```json
 {
-  "sens": "entree",
+  "direction": "in",
   "convention": null,
-  "voies": 1,
-  "plage": null,
-  "unite": null,
+  "voices": 1,
+  "range": null,
+  "unit": null,
   "description": ""
 }
 ```
 
-**Une entrée ajoute `repli`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
+**Une entrée ajoute `fallback`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
 pas : la notion lui est étrangère.
 
-| champ             | ce qu'il porte                                                               |
-| ----------------- | ---------------------------------------------------------------------------- |
-| `sens`            | `entree` ou `sortie`                                                         |
-| `convention`      | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`        |
-| `voies`           | combien de voies ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
-| `plage` · `unite` | les bornes et l'unité du signal attendu                                      |
+| champ             | ce qu'il porte                                                                        |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| `direction`       | `in` ou `out`                                                                         |
+| `convention`      | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`                 |
+| `voices`          | combien de **voix** ce port accepte — `1` pour une seule, `8` pour jusqu'à huit       |
+| `range` · `unit`  | les bornes et l'unité du signal attendu                                               |
+| `fallback`        | *(entrée seulement)* la valeur prise quand rien n'est branché                          |
 
 **Les conventions.** `null` désigne un signal ordinaire, sans convention de lecture — c'est le cas
 courant, celui qu'on appelle ailleurs « l'audio ». `pitch` se lit comme une hauteur, en
@@ -436,7 +467,7 @@ logarithmique : 1,0 vaut une octave. `phase` se lit comme une position dans un c
 ce qui dépasse s'enroule. `logic` se lit comme un état haut ou bas, dont ce sont les **transitions**
 qui font événement.
 
-**Un paramètre est une entrée** avec un `repli` et rien de branché. Régler est un cas particulier de
+**Un paramètre est une entrée** avec un `fallback` et rien de branché. Régler est un cas particulier de
 brancher.
 
 **La polyphonie appartient au port**, pas au module : un filtre traite huit voix tout en gardant une
@@ -579,12 +610,12 @@ Le detail est dans « Les conventions de lecture d'un signal ».
 ( )            parametres runtime (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:sound.bell_short)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
-               (*:sound.cloche, (*:vel:80)) ; entre crochets, multiplie la duree (C4[*2]) ;
+               (*:sound.cloche, (*:vel:80)) ; dans un sac, multiplie la duree (C4(*2)) ;
                entre un gabarit maitre et son esclave, marqueur d'homomorphisme ($X * &X)
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [phase=2])
 .              reference a une entite (alphabet.western, sound.bell_short, transport.midi),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
-[ ]            qualificateur moteur, sur un symbole, un groupe ou une regle
+[ ]            drapeaux : un test avant le membre gauche, une affectation en fin de regle
 ` `            code externe, execute par le runtime que son tag nomme
 //             commentaire
 -              silence : occupe du temps
@@ -592,7 +623,7 @@ _              prolongation : etend l'evenement precedent
 ...            repos indetermine, duree calculee par le moteur
 !              simultaneite : ce qui suit partage l'instant d'attaque de l'element qui
                precede (C4!dha) ; sans element devant lui, objet hors-temps de duree nulle
-               (S -> !dha C4) ; devant un controle, mutation de flux (![mode:random])
+               (S -> !dha C4) ; devant un controle, mutation de flux (!(mode:random))
 <!             point d'attente : point de synchronisation, la derivation attend un geste entrant
 #              contexte negatif
 ?              capture d'un symbole quelconque
@@ -688,39 +719,39 @@ meme signe sert dans les deux, sa place tranche lequel des deux roles il tient.
 @alphabet.western:audio
 @time.tempo:120
 
-S -> C4(vel:0.7) D4[/2] E4 F4 [mode:random]
+S -> C4(vel:0.7) D4(/2) E4 F4 (mode:random)
 ```
 
 Un reglage s'invoque par sa categorie -- `@pitch.`, `@time.`, `@engine.` -- decrite dans
 « Invoquer un reglage ». Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est
 le recepteur qui leur donne un sens.
 
-### Deux crochets, deux roles
+### Le crochet ne porte que des gardes
 
-Le crochet tient deux roles que sa **place** distingue, et le compilateur accepte dans chacun un
-vocabulaire different.
+**Le crochet est reserve aux drapeaux** : tester l'etat de la derivation, et le changer. Tout
+reglage -- moteur ou non -- s'ecrit entre **parentheses**, et c'est le **domaine de la cle** qui
+nomme son destinataire.
 
-| place                         | role                 | ce qu'il porte                                                                             |
-| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------ |
-| avant le membre gauche        | **garde**            | un test de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`                                  |
-| dans le flux, en fin de regle | **directive moteur** | un reglage BPx, un operateur temporel, une mutation : `[mode:random]`, `[/2]`, `[phase=1]` |
+| place                         | ce qu'il porte                                                    |
+| ----------------------------- | ------------------------------------------------------------------- |
+| avant le membre gauche        | un **test** de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`     |
+| en fin de regle               | une **affectation** de drapeau : `[phase=2]`                      |
 
-La **garde** decide si la regle s'applique a cette derivation : elle lit les drapeaux, et c'est
-tout ce qu'elle accepte -- `[mode:random] S -> C4` arrete la compilation. La **directive
-moteur** gouverne la derivation et le calcul temporel : elle accepte les cles reservees, les
-operateurs temporels et les mutations de drapeau -- `S -> C4 [phase==1]` arrete la compilation.
+Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
+suite. Rien d'autre n'entre dans un crochet -- `(mode:random)` arrete la compilation, et la meme
+intention s'ecrit `(mode:random)`.
 
 ```bpscript
 @core
-@controls
 @alphabet.western:audio
 
-[count-1] S -> C4 D4 [mode:random]
+[count-1] S -> C4 D4 (mode:random) [phase=2]
 ```
 
-Cette regle porte les deux : `[count-1]` en tete est la garde, `[mode:random]` en fin de regle
-est la directive. Les gardes sont detaillees dans « Flags », les directives dans
-« `[]` moteur vs `()` runtime ».
+**Pourquoi le crochet perd son second role.** Il portait a la fois des gardes et des reglages
+moteur, ce qui obligeait a savoir de quel cote de la frontiere chaque mot tombait. Depuis que
+chaque reglage declare son domaine, le signe n'apprend plus rien que le nom ne dise deja : le
+distinguer coutait une regle a retenir et ne rendait rien.
 
 BPScript decrit des structures dans le temps. Le calcul et le traitement de signal s'ecrivent
 dans le code externe (backticks).
@@ -740,7 +771,7 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | -------------------------------------- |
 | **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
-| **Controle**     | via `@controls`                          | commande moteur BPx, zero duree                | `[mode:random]`, `[/2]`, `[weight:50]` |
+| **Controle**     | via `@controls`                          | commande moteur BPx, zero duree                | `(mode:random)`, `(/2)`, `(weight:50)` |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
 donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
@@ -757,7 +788,7 @@ ou une instruction de calcul de hauteur.
 par defaut ; un terminal concret ne declare que ce qui differe.
 
 ```json
-{ "nom": "", "runtime": "audio", "sonne": true, "duree": null, "code": null }
+{ "name": "", "runtime": "audio", "sounding": true, "duration": null, "code": null }
 ```
 
 **Un champ n'existe que si sa notion s'applique.** Une valeur non renseignee prend son defaut ;
@@ -765,24 +796,27 @@ une notion etrangere a l'objet n'a pas de champ du tout. Un sous-patron **ajoute
 de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pas la hauteur : une
 percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
-| sous-patron    | ce qu'il ajoute                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------- |
-| **note**       | `hauteur` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
-| **percussion** | rien : elle sonne et dure, sans porter de hauteur                                                 |
+| sous-patron      | ce qu'il ajoute                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
+| **`percussion`** | rien : elle sonne et dure, sans porter de hauteur                                                |
+
+`degree` et non `pitch` : le champ porte un **degre** que l'accordage resout, alors que `pitch` est
+deja une convention de lecture de signal. Un mot, une chose.
 
 **L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
 ecrit.
 
-Les autres cas tombent du meme socle : un terminal dont `sonne` est faux ne produit aucune sortie,
-c'est le pivot de grammaire ; un terminal sans `duree` occupe l'instant ; un terminal dont `code`
-est renseigne invoque du code.
+Les autres cas tombent du meme socle : un terminal dont `sounding` est faux ne produit aucune
+sortie, c'est le pivot de grammaire ; un terminal sans `duration` occupe l'instant ; un terminal
+dont `code` est renseigne invoque du code.
 
 **Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
 terminal peut se declarer seul. Le patron d'un alphabet porte la meme affectation, et ses
 terminaux en heritent :
 
 ```json
-{ "nom": "", "description": "", "runtime": "audio", "terminaux": {} }
+{ "name": "", "description": "", "runtime": "audio", "terminals": {} }
 ```
 
 Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi` et `osc` ; un
@@ -797,6 +831,34 @@ S -> sa re ga
 ```
 
 La sortie d'un terminal vaut pour toute la scene.
+
+#### Le patron d'un langage backtique
+
+**Un langage backtique se declare en librairie comme tout le reste** -- un patron avec ses defauts,
+surcharge par chaque langage. C'est lui qui repond a « ce code sonne-t-il, et occupe-t-il du
+temps ? », au lieu de le laisser deviner.
+
+```json
+{ "name": "", "description": "", "sounding": true, "duration": null }
+```
+
+| champ         | ce qu'il porte                                                                     |
+| ------------- | ------------------------------------------------------------------------------------ |
+| `name`        | le tag ecrit devant le deux-points -- `sc`, `js`, `strudel`, `patch`               |
+| `description` | a quoi sert ce langage                                                             |
+| `sounding`    | ce que ce langage produit par defaut, sonnant ou non                               |
+| `duration`    | la duree par defaut de ce qu'il produit                                            |
+| `returns`     | *(seulement s'il rend une valeur)* la convention de ce qu'il rend                   |
+
+**`returns` n'existe que pour les langages employables EN LIGNE** -- `sa(vel:` suivi d'un backtick
+qui rend un nombre. Un langage qui ne rend rien n'a pas ce champ du tout, et son absence apprend
+qu'on ne peut pas l'ecrire dans un parametre.
+
+**Pas de sous-patrons.** Les deux emplois d'un backtique -- autonome dans le flux, en ligne dans un
+parametre -- ne sont pas deux natures de langage : le meme `sc:` fait les deux. Ce qui varie, ce
+sont les defauts, et une occurrence les surcharge avec un sac : `` `sc: i = i + 1`(sounding:false) ``.
+
+**`patch` declare `sounding` faux et `duration` nulle**, toujours.
 
 Chaque terminal employe dans une regle est declare, et le compilateur nomme celui qui manque :
 
@@ -889,29 +951,28 @@ reste celui de la declaration.
 
 ## `[]` moteur vs `()` runtime -- deux destinataires, memes portees
 
-### `[]` -- instructions moteur BPx (toujours suffixe)
+### Les reglages du moteur
 
-Les qualificateurs `[]` s'adressent au **moteur BPx**. Le compilateur les traduit en instructions
-moteur (operateurs temporels, tempo, mode de sous-grammaire...). Le moteur les consomme **pendant**
-la derivation et le calcul temporel ; la sortie porte leur effet.
+**Le moteur recoit ses reglages entre parentheses**, comme tout le reste : c'est le domaine de la
+cle qui l'adresse, pas le signe. Il les consomme **pendant** la derivation et le calcul temporel ;
+la sortie porte leur effet.
 
 ```bpscript
 // Portee symbole -- colle a l'element
-S -> A[/2] B C                  // divise la vitesse de A
+S -> A(/2) B C                  // divise la vitesse de A
 
 // Portee regle -- en fin de regle
-S -> A B C [mode:random]        // mode de la sous-grammaire
-Basse -> C2 C2 C3 [weight:50]   // poids de la regle
-Basse -> C2 E2 G2 [weight:inf]  // poids infini : priorite absolue
+S -> A B C (mode:random)        // mode de la sous-grammaire
+Basse -> C2 C2 C3 (weight:50)   // poids de la regle
+Basse -> C2 E2 G2 (weight:inf)  // poids infini : priorite absolue
 
 // Portee groupe -- apres le groupe
-S -> {A B C}[/2]                // vitesse du groupe divisee
+S -> {A B C}(/2)                // vitesse du groupe divisee
 ```
 
-### Cles reservees de `[]`
+### Les cles que le moteur consomme
 
-Ces cles font partie du langage : le compilateur les comprend et les traduit en instructions
-moteur.
+Elles vivent dans la librairie `engine`, sauf le tempo qui vit dans `time` :
 
 ```text
 /N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
@@ -919,24 +980,24 @@ mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut :
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight      poids de la regle (entier, K-param, ou inf pour priorite absolue)
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
-tempo       tempo de la regle -- [time.tempo:120] ; @time.tempo:120 pose celui de la scene
-meter       signature rythmique -- [meter:7/8], [meter:4+4/4]
+tempo       tempo de la regle -- (tempo:120) ; @time.tempo:120 pose celui de la scene
+meter       signature rythmique -- (meter:7/8), (meter:4+4/4)
 ```
 
-Toute autre cle entre crochets arrete la compilation. Les parametres destines au runtime
-(`vel`, `filter`, `wave`...) s'ecrivent entre parentheses.
+Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
 
-Le mot `scale` designe la **gamme microtonale** : c'est un controle de runtime, il s'ecrit
-`(scale:nom cle)`. La mise a l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**,
-`{A B}:2`.
+Le mot `scale` designe la **gamme microtonale**, resolue par Kairos : `(scale:nom cle)`. La mise a
+l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**, `{A B}:2`.
 
-### `()` -- ce que BPx n'interprete pas (toujours suffixe)
+### `()` -- un reglage, et son domaine dit qui le recoit (toujours suffixe)
 
-Les parametres `()` ne s'adressent pas a BPx : ils le **traversent**. Le signe est une indication
-pour le moteur -- « je ne lis pas ceci, je le porte » -- et c'est le **domaine de la cle** qui
-nomme le destinataire : Kairos pour la hauteur, Kronos pour le temps qui s'ecoule, un runtime de
-sortie pour ce qui sonne. Le compilateur verifie que la cle appartient au vocabulaire charge et
-transmet la valeur telle quelle.
+**Le signe n'adresse rien : le nom de la cle le fait.** `(mode:random)` va au moteur,
+`(scale:just)` a Kairos, `(wave:sawtooth)` a un runtime de sortie -- le domaine de la cle est
+l'adresse, et c'est la meme regle que pour les directives de tete. Le compilateur verifie que la
+cle appartient a une librairie invoquee et transmet la valeur telle quelle.
+
+Pour BPx, la difference reste entiere : ce qui releve de `engine` ou de `time`, il le **lit** ; le
+reste, il le **porte** sans l'interpreter.
 
 ```bpscript
 // Portee symbole -- colle a l'element
@@ -1021,15 +1082,18 @@ StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 
 ### Resume des portees
 
-| Portee      | Syntaxe          | Destinataire    | Exemple           |
-| ----------- | ---------------- | --------------- | ----------------- |
-| **globale** | `@cle:valeur`    | settings moteur | `@time.tempo:120` |
-| **groupe**  | `{}[cle:valeur]` | moteur BPx      | `{A B}[/2]`       |
-| **regle**   | `[cle:valeur]`   | moteur BPx      | `[mode:random]`   |
-| **symbole** | `[cle:valeur]`   | moteur BPx      | `A[/2]`           |
-| **groupe**  | `{}(cle:valeur)` | runtime cible   | `{A B}(vel:100)`  |
-| **regle**   | `(cle:valeur)`   | runtime cible   | `C2 C2 (vel:100)` |
-| **symbole** | `(cle:valeur)`   | runtime cible   | `C4(vel:120)`     |
+**Le destinataire ne se lit jamais dans le signe** -- il se lit dans le domaine de la cle. La portee,
+elle, se lit dans la **place** du sac.
+
+| Portee      | Syntaxe          | Exemple           |
+| ----------- | ---------------- | ----------------- |
+| **globale** | `@cle:valeur`    | `@time.tempo:120` |
+| **groupe**  | `{}(cle:valeur)` | `{A B}(/2)`       |
+| **regle**   | `(cle:valeur)`   | `C2 C2 (vel:100)` |
+| **symbole** | `(cle:valeur)`   | `C4(vel:120)`     |
+
+Le crochet ne figure pas dans ce tableau : il ne porte pas de reglage, seulement des **drapeaux** --
+un test avant le membre gauche, une affectation en fin de regle.
 
 ### Destinataire d'une paire `[sujet:]controle:valeur`
 
@@ -1127,7 +1191,7 @@ ecrite.
 ce qui est deja en cours **finit proprement** avec l'ancienne.
 
 **Vivant et interagissable sont deux etats distincts.** Un module peut tourner sans agir : le signal
-le traverse sans etre traite, et c'est `eteint` qui dit quelle entree ressort alors par quelle
+le traverse sans etre traite, et c'est `passthrough` qui dit quelle entree ressort alors par quelle
 sortie. Ce n'est pas la meme chose que couper le cable -- `\>>` deconnecte et plus rien n'arrive,
 `switchoff` court-circuite et le signal ressort intact. Le premier fait taire, le second laisse
 passer. Le geste est **binaire** : `switchon` / `switchoff`, sans dosage -- et il ne coupe rien net,
@@ -1234,7 +1298,7 @@ La regle de desambiguation est positionnelle :
 - `(` en tete de regle, avant le LHS et la fleche = contexte
 
 Une procedure moteur prend elle aussi son argument entre parentheses, a l'interieur du sac `[]` :
-`[on_fail:retry(2)]`, `[on_fail:fallback(Autre)]`.
+`(on_fail:retry(2))`, `(on_fail:fallback(Autre))`.
 
 Le groupement s'ecrit avec les accolades `{}`.
 
@@ -1635,7 +1699,7 @@ Sept niveaux, du defaut moteur a l'occurrence dans une regle -- cf. les sons.
 vitesse absolue -- cf. les operateurs temporels.
 
 ```bpscript
-S -> {A B}[*2] C
+S -> {A B}(*2) C
 ```
 
 ---
@@ -1750,8 +1814,8 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `.`        | désigne un élément dans un espace de noms | `sound.cloche`, `alphabet.tabla`, `transport.midi` |
 | `:`        | lie un sujet à une valeur                 | `dha:sound.frappe`, `@time.tempo:120`, `(vel:100)` |
 | `*`        | sujet = tous les terminaux                | `*:sound.cloche`                                   |
-| `()`       | paramètres runtime, hérités par cascade   | `sa(vel:80)`, `transport.midi(ch:10)`              |
-| `[]`       | instructions moteur, portée locale        | `[mode:random]`, `[/2]`                            |
+| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(scale:just)`      |
+| `[]`       | drapeaux : test et affectation            | `[phase==1]`, `[phase=2]`                          |
 | `@`        | ouvre une ligne de la partie déclarative  | `@sound`, `@actor`, `@alphabet.tabla`              |
 | `->`       | règle de production                       | `S -> C4 D4`                                       |
 | `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                              |
@@ -1765,8 +1829,8 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 | ----------------------------- | -------------------------------------------------------- |
 | `@macro accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la macro     |
 | `@macro souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la macro             |
-| `C4[/2]`                      | qualificateur du terminal `C4`                           |
-| `C4 D4 [mode:random]`         | qualificateur de la règle entière                        |
+| `C4(/2)`                      | qualificateur du terminal `C4`                           |
+| `C4 D4 (mode:random)`         | qualificateur de la règle entière                        |
 | `C4!(vel:100)`                | flux ancré à `C4`, il voyage avec lui (`conjoint: true`) |
 | `C4 !(vel:100)`               | flux posé seul dans la séquence (`conjoint: false`)      |
 | `{C4 D4}:2`                   | durée du groupe                                          |
@@ -1779,8 +1843,8 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 @macro accent(x) x(vel:120)
 @macro souffle (vel:60)
 
-S -> C4!accent D4 [mode:random]
-Motif -> {C4 D4}:2 E4[/2]
+S -> C4!accent D4 (mode:random)
+Motif -> {C4 D4}:2 E4(/2)
 ```
 
 ### Le point — désigner dans un espace de noms
@@ -1821,7 +1885,7 @@ Le sujet est à gauche du signe, la valeur à droite.
 | affecter un son au sujet par défaut        | `*:sound.cloche`             |
 | poser une propriété sur un nom qui existe  | `@alphabet.tabla:midi`       |
 | réglage global de scène                    | `@time.tempo:120`            |
-| paire clé-valeur dans `()` ou `[]`         | `(vel:100)`, `[mode:random]` |
+| paire clé-valeur dans `()`                 | `(vel:100)`, `(mode:random)` |
 | durée, collée à un terminal ou à un groupe | `C4:2`, `{C4 D4}:2`          |
 | étiqueter un groupe polymétrique           | `groove:{C4 D4, E4}`         |
 
@@ -1834,7 +1898,7 @@ Le sujet est à gauche du signe, la valeur à droite.
   frappe { sample:"kick.wav", dur:200 }
 @time.tempo:120
 
-S -> dha ti [mode:random]
+S -> dha ti (mode:random)
 ```
 
 ### Deux formes déclaratives : créer un nom, poser une propriété
@@ -2154,15 +2218,15 @@ effectif vaut `speed / scale`.
 
 | BPScript | Compile en BP3              | Semantique                              |
 | -------- | --------------------------- | --------------------------------------- |
-| `A[/2]`  | `/2 A`                      | absolu + persistant (fixtempo), speed=2 |
-| `A[*3]`  | `_tempo(1/3) A _tempo(1/1)` | relatif, bracket enter/exit, scale×3    |
-| `![/2]`  | `_tempo(2/1)`               | relatif, flux (InstantControl)          |
+| `A(/2)`  | `/2 A`                      | absolu + persistant (fixtempo), speed=2 |
+| `A(*3)`  | `_tempo(1/3) A _tempo(1/1)` | relatif, bracket enter/exit, scale×3    |
+| `!(/2)`  | `_tempo(2/1)`               | relatif, flux (InstantControl)          |
 
 Portee flexible : sur un symbole, un groupe, ou un polymetric.
 
 ```bpscript
 @alphabet.sargam
-S -> sa[/2] re {ga ma}[*3] ![/2] pa
+S -> sa(/2) re {ga ma}(*3) !(/2) pa
 ```
 
 ---
@@ -2179,7 +2243,7 @@ BPScript porte la signature rythmique via la directive `@meter`.
 ```
 
 **Distinction tempo vs metronome :**
-- `[tempo:2]` = multiplicateur relatif (double la vitesse courante), en suffixe de terminal, de
+- `(tempo:2)` = multiplicateur relatif (double la vitesse courante), en suffixe de terminal, de
   groupe ou de regle
 - `@time.tempo:120` = marquage metronomique absolu (120 BPM)
 - `@striated` / `@smooth` = bascule entre temps strie et temps lisse
@@ -2187,7 +2251,7 @@ BPScript porte la signature rythmique via la directive `@meter`.
 ```text
 @meter:4/4
 @time.tempo:120
-S -> C4 D4 [tempo:2]
+S -> C4 D4 (tempo:2)
 ```
 
 ---
@@ -2196,17 +2260,17 @@ S -> C4 D4 [tempo:2]
 
 | Niveau             | Question                             | BPScript         | Portee              |
 | ------------------ | ------------------------------------ | ---------------- | ------------------- |
-| **Mode du bloc**   | quelle strategie de selection ?      | `[mode:random]`  | bloc/sous-grammaire |
-| **Scan par regle** | dans quel sens chercher le symbole ? | `[scan:left]`    | regle individuelle  |
+| **Mode du bloc**   | quelle strategie de selection ?      | `(mode:random)`  | bloc/sous-grammaire |
+| **Scan par regle** | dans quel sens chercher le symbole ? | `(scan:left)`    | regle individuelle  |
 | **Direction**      | la regle se lit dans quel sens ?     | `->`, `<-`, `<>` | regle individuelle  |
 
-Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de scene, ou `[mode:<valeur>]` en
+Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de scene, ou `(mode:<valeur>)` en
 suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
 
 ```bpscript
 @alphabet.sargam
 @mode:random
-S -> sa re [scan:left]
+S -> sa re (scan:left)
 S <- ga ma
 S <> pa dha
 ```
@@ -2221,8 +2285,8 @@ Trois strategies : `skip`, `retry(N)`, `fallback(X)`. La strategie de scene s'ec
 ```bpscript
 @alphabet.sargam
 @on_fail:skip                              // strategie de scene
-S -> sa re ga [on_fail:retry(3)]           // cette regle : reessayer 3 fois
-T -> ma pa [on_fail:fallback(ALT)]         // cette regle : basculer vers ALT
+S -> sa re ga (on_fail:retry(3))           // cette regle : reessayer 3 fois
+T -> ma pa (on_fail:fallback(ALT))         // cette regle : basculer vers ALT
 ALT -> dha ni
 ```
 
@@ -2381,10 +2445,10 @@ Portée et persistance, en complément de « Opérateurs temporels BP3 » :
 
 ```text
 // BPScript                  -> BP3                                       Sémantique
-A[/2] B C                    -> /2 bolA bolB bolC                         absolu, persistant (fixtempo)
-{A B C}[/3]                  -> /3 {bolA bolB bolC}                       idem, portée groupe
-A[*2] B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC    relatif, bracket
-![/2]                        -> _tempo(2/1)                               relatif, flux (InstantControl)
+A(/2) B C                    -> /2 bolA bolB bolC                         absolu, persistant (fixtempo)
+{A B C}(/3)                  -> /3 {bolA bolB bolC}                       idem, portée groupe
+A(*2) B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC    relatif, bracket
+!(/2)                        -> _tempo(2/1)                               relatif, flux (InstantControl)
 ```
 
 `[/N]` impose la vitesse absolue N et persiste jusqu'au prochain opérateur de
@@ -2410,7 +2474,7 @@ S -> C4 D4 E4 [count+1]                 -> gram#N[M] S --> bolC4 bolD4 bolE4 /co
 
 ```text
 // BPScript                              -> BP3
-S -> A B C [weight:50]                   -> <50> gram#N[M] S --> bolA bolB bolC
+S -> A B C (weight:50)                   -> <50> gram#N[M] S --> bolA bolB bolC
 ```
 
 ### Contrôles runtime `()`
@@ -2525,6 +2589,10 @@ Un backtick autonome est un terminal de plein droit du membre droit : il est
 encodé comme terminal spécial dans la grammaire. Un backtick en valeur de
 paramètre voyage avec sa paire jusqu'au runtime qui l'évalue.
 
+Le **tag** dit à qui il va : les langages externes à runtime-codevoices, `patch:` à Dédale. Ce
+qu'un backtick sonne et combien il dure vient de la **librairie** qui déclare son langage, jamais
+d'une déduction sur son contenu.
+
 ---
 
 ### Méta-grammaires — réécriture structurelle
@@ -2556,8 +2624,8 @@ La validation structurelle des `{}` est **repoussée au moteur BP3**.
 
 ```text
 // BPScript                              -> BP3
-S <> S96 [meter:4+4/6]                   -> S <-> S96 4+4/6
-S -> P1 P2 P3 [meter:4+4+4+4+4+4/4]      -> gram#N[M] S --> P1 P2 P3 4+4+4+4+4+4/4
+S <> S96 (meter:4+4/6)                   -> S <-> S96 4+4/6
+S -> P1 P2 P3 (meter:4+4+4+4+4+4/4)      -> gram#N[M] S --> P1 P2 P3 4+4+4+4+4+4/4
 ```
 
 ---
