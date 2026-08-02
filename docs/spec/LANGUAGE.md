@@ -1208,11 +1208,10 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 
 ```bpscript
 @alphabet.western:audio
-@alphabet.tabla:audio
 @macro monte mod.ramp(from:0, to:255)
 
-S -> C4!dha                        // une note et un symbole a la meme attaque
-S -> C4!tin                // tin prend la duree de C4
+S -> dha!tin                       // deux symboles a la meme attaque
+S -> dha!na                        // na prend la duree de dha
 S -> C4!dha!ge [phase=2]    // deux secondaires et une mutation de drapeau
 S -> -!dha                         // le silence porte la position, dha attaque avec lui
 S -> C4!monte                      // monte prend la duree de C4
@@ -1249,7 +1248,7 @@ S -> halo(C4) eclair(D4) halo(E4)
 duree zero.
 
 ```bpscript
-@alphabet.tabla:audio
+@alphabet.western:audio
 @in sync1 transport.midi
 
 S -> -<!sync1 C4 D4 E4       // attend en silence, puis joue
@@ -1932,7 +1931,6 @@ contrôle porté par tous ses éléments.
 ```bpscript
 @alphabet.western
 @controls
-@alias eclat ka                  // autre nom pour un symbole déclaré
 @alias intensite osc:/sensor/1      // canal OSC nommé
 @alias souffle groove.vel           // le vel du groupe étiqueté groove
 
@@ -1964,7 +1962,7 @@ avec `@var wire`, et s'écrit
 dans le corps d'une `@macro`, et son nom se pose **nu** dans le flux ; le compilateur marque
 alors cet élément de la nature « câblage », que l'aval traite comme telle.
 
-```bpscript
+```text
 @alphabet.western
 @var wire principal saw >> lpf >> audio
 @macro ouvre lpf.cutoff:12000
