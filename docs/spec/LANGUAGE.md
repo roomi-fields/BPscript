@@ -1039,6 +1039,20 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
   nature de la valeur. Pour un controle **statique** (`wave`), les deux ecritures donnent le meme
   effet : la distinction porte sur le temporel.
 
+**Un chainage nomme s'invoque de la meme facon, et le signe suit la regle d'or** : le sujet precede
+un **deux-points** quand ce qui suit est une valeur a affecter, un **point** quand c'est un
+composant a appeler.
+
+| Ecriture         | Ce que ca vise                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| `{…}(sombre)`    | la portee comme **une seule chose** -- un traitement partage que tout traverse      |
+| `{…}(*.sombre)`  | **chaque terminal** individuellement -- autant d'instances que d'elements           |
+| `{…}(C2.sombre)` | **les terminaux `C2`** de la portee, eux seuls                                      |
+
+**La difference est musicale, pas cosmetique.** Un traitement partage melange les terminaux avant de
+les traiter ; un traitement par terminal en donne un a chacun. Sur un filtre resonant, le premier
+fait resonner l'accord, le second fait resonner chaque note.
+
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
 Un controle non-temporel (`vel`, `wave`, `filter`...) gouverne plusieurs notes selon deux regimes,
@@ -1994,6 +2008,23 @@ sortie, pris parmi `audio`, `midi` et `osc`.
 `@time.tempo:120`, `@engine.seed:42`, `@pitch.diapason:442`. La categorie dit a quoi le reglage
 touche.
 
+### Le prefixe est optionnel -- un nom se resout par unicite
+
+**Un nom nu passe s'il n'existe que dans une seule librairie invoquee.** S'il est porte par deux,
+la compilation s'arrete et **nomme les deux candidats** : on ne prefixe que ce cas.
+
+```text
+(cutoff:4000)          // un seul catalogue porte `cutoff` -- il passe nu
+(time.tempo:120)       // on prefixerait si deux librairies portaient `tempo`
+```
+
+**L'ambiguite n'a jamais de gagnant implicite** -- ni le premier invoque, ni le dernier. Un ordre
+d'appel rendrait une ligne dependante de ce qui la precede : en session, invoquer une librairie
+changerait le destinataire d'une ligne qu'on n'a pas touchee. La resolution est **statique**.
+
+Une librairie neuve peut rendre ambigu du code qui compilait : le message nomme les deux candidats
+et l'auteur choisit. Le prefixe reste toujours ecrivable, y compris la ou il n'est pas necessaire.
+
 ### Ce qu'une librairie contient
 
 **Des objets conformes a un patron.** Un alphabet collectionne des terminaux ; une librairie de
@@ -2294,16 +2325,12 @@ jusqu'au runtime de sortie. Dans l'AST, il vit sur le nœud :
 `RuntimeQualifier{pairs:[{clé, valeur}]}` en suffixe, `InstantControl` dans le
 flux. Le contrôle natif BP3 correspondant est `_script(CT n)`.
 
-```text
-// BPScript                              -> BP3
-sa(vel:120)                              -> _script(CT 0) bolsa
-Bass -> C2 C2 - C2 (vel:100)             -> gram#N[M] Bass --> _script(CT 1) bolC2 bolC2 - bolC2
-{A B}(filter:300)                        -> {_script(CT 2_start) bolA bolB _script(CT 2_end)}
-```
+**Trois étages de portée**, distingués par la place du sac : collé au terminal (`C4(vel:120)`),
+espacé en fin de membre droit (portée règle), collé au groupe (`{A B}(…)`).
 
-Trois portées, distinguées par la place du sac : collé au terminal
-(`C4(vel:120)`), espacé en fin de membre droit (portée règle), collé au groupe
-(`{A B}(…)`).
+**Dans un groupe et dans une règle, un sujet vise plus finement** — `{…}(sombre)` traite la portée
+comme une seule chose, `{…}(*.sombre)` traite chaque terminal individuellement, `{…}(C2.sombre)` ne
+traite que les `C2`. Détail et graphie : « Destinataire d'une paire ».
 
 ### Cascade des contrôles
 
