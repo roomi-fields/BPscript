@@ -232,16 +232,17 @@ categorie de reglages.
 
 ### `@var` -- declarer une variable
 
-Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le mot et le nom.
+Une variable porte un **type** qui dit ce qu'elle est. **Le nom vient d'abord, le type ensuite** --
+l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
 
 ```text
-@var flag section: calm:1, full:2
-@var in touches transport.keyboard
-@var signal grain
-@var pitch hauteur
-@var phase rotation
-@var logic porte
-@var wire principal saw >> lpf >> audio
+@var section flag: calm:1, full:2
+@var touches in transport.keyboard
+@var grain signal
+@var hauteur pitch
+@var rotation phase
+@var porte logic
+@var lpf1 lpf
 @var pivot
 ```
 
@@ -253,7 +254,7 @@ Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le
 | `pitch`   | un signal lu comme une **hauteur**                                                              |
 | `phase`   | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule**  |
 | `logic`   | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
-| `wire`    | un cablage nomme : une chaine de modules qu'on rebranche d'un mot                               |
+| un **module** | une **instance** de ce module -- `lpf1` de type `lpf` ; elle ne porte aucun corps propre    |
 | *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
@@ -2036,22 +2037,37 @@ partageant le premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe
 
 ### Câbler : `>>` et `\>>`
 
-`>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `@init`. Un câblage nommé se déclare
-avec `@var wire`, et s'écrit
-dans le corps d'une `@macro`, et son nom se pose **nu** dans le flux ; le compilateur marque
-alors cet élément de la nature « câblage », que l'aval traite comme telle.
+`>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `@init`. Un chaînage nommé se déclare
+avec `@def`, et son nom se pose **nu** dans le flux ; le compilateur marque alors cet élément de la
+nature « câblage », que l'aval traite comme telle.
 
 ```text
 @alphabet.western
-@var wire principal saw >> lpf >> audio
-@macro ouvre lpf.cutoff:12000
-@macro coupe saw \>> lpf
+@var saw1 saw
+@var lpf1 lpf
+
+@init
+  saw1 >> lpf1 >> audio
+
+@def ouvre lpf1.cutoff:12000
+@def coupe saw1 \>> lpf1
 
 S -> C4 ouvre D4 coupe E4
 ```
 
 Le même traitement vaut pour les trois gestes qui agissent sur un module : brancher, couper,
 régler.
+
+**Le corps d'un `@def` de câblage est écrit dans le langage de patch**, celui-là même que porte un
+backtick `patch:`. Un câblage qu'on ne réinvoque pas s'écrit donc **littéralement dans la règle** :
+
+```text
+S -> C4 `patch: saw1 \>> lpf1` D4
+```
+
+Un seul langage, deux emplacements : nommé dans un `@def`, littéral dans un backtick. Ce n'est pas
+une exception au refus des chevrons en dérivation — un backtick est un terminal, et un terminal se
+pose dans une règle.
 
 ---
 
