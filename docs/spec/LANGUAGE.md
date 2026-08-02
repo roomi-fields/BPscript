@@ -609,9 +609,9 @@ le recepteur qui leur donne un sens.
 Le crochet tient deux roles que sa **place** distingue, et le compilateur accepte dans chacun un
 vocabulaire different.
 
-| place                       | role          | ce qu'il porte                                                   |
-| --------------------------- | ------------- | ---------------------------------------------------------------- |
-| avant le membre gauche      | **garde**     | un test de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`        |
+| place                         | role                 | ce qu'il porte                                                                             |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------ |
+| avant le membre gauche        | **garde**            | un test de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`                                  |
 | dans le flux, en fin de regle | **directive moteur** | un reglage BPx, un operateur temporel, une mutation : `[mode:random]`, `[/2]`, `[phase=1]` |
 
 La **garde** decide si la regle s'applique a cette derivation : elle lit les drapeaux, et c'est
@@ -645,25 +645,51 @@ Un type repond a deux questions distinctes : ce qu'un **nom** est dans la scene,
 
 Une scene contient trois categories de symboles, que le compilateur reconnait a leur ecriture :
 
-| Categorie        | Declaration                             | Role                                           | Exemples                               |
-| ---------------- | --------------------------------------- | ---------------------------------------------- | -------------------------------------- |
-| **Non-terminal** | implicite (apparait en LHS d'une regle) | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
+| Categorie        | Declaration                              | Role                                           | Exemples                               |
+| ---------------- | ---------------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
-| **Controle**     | via `@controls`                         | commande moteur BPx, zero duree                | `[mode:random]`, `[/2]`, `[weight:50]` |
+| **Controle**     | via `@controls`                          | commande moteur BPx, zero duree                | `[mode:random]`, `[/2]`, `[weight:50]` |
 
-Le compilateur reconnait un non-terminal a sa presence en LHS d'une regle ; tout autre nom est
-un terminal, et vient alors d'une declaration ou d'un alphabet en portee. Un non-terminal vit
-le temps de la derivation : son role est d'etre reecrit, et les regles le remplacent par des
-terminaux. La derivation s'acheve sur des terminaux, seuls porteurs d'une sortie.
+**Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
+donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
+intermediaires, qui n'ont pas de regle a leur nom. Un non-terminal vit le temps de la derivation :
+son role est d'etre reecrit, et les regles le remplacent par des terminaux. La derivation s'acheve
+sur des terminaux, seuls porteurs d'une sortie.
 
 ### Ce que porte un terminal
 
 Un terminal est une chose entiere : il sonne ou non, porte une hauteur ou non, invoque du code
-ou une instruction de calcul de hauteur. Il vient d'un **alphabet**, decrit dans « Invoquer une
-librairie ».
+ou une instruction de calcul de hauteur.
 
-Un alphabet declare ses terminaux en bloc. Le deux-points nomme alors le **canal de sortie** de
-l'acteur implicite, pris parmi `audio`, `midi` et `osc` :
+**Un terminal se declare sur un patron.** Le patron porte toutes ses proprietes avec leur valeur
+par defaut ; un terminal concret ne declare que ce qui differe.
+
+```json
+{ "nom": "", "runtime": "audio", "sonne": true, "hauteur": null, "duree": null, "code": null }
+```
+
+**L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
+ecrit. Deux sous-patrons couvrent les cas courants, et les autres tombent du meme arbre :
+
+| sous-patron | ce qu'il fixe |
+| --- | --- |
+| **note** | `hauteur` renseignee : un degre que Kairos resout |
+| **percussion** | `sonne`, `hauteur` a `null` : elle sonne sans porter de hauteur |
+
+Un terminal dont `sonne` est faux ne produit aucune sortie -- c'est le pivot de grammaire. Un
+terminal dont `code` est renseigne invoque du code.
+
+**Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
+terminal peut se declarer seul. Le patron d'un alphabet porte la meme affectation, et ses
+terminaux en heritent :
+
+```json
+{ "nom": "", "description": "", "runtime": "audio", "terminaux": {} }
+```
+
+Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi` et `osc` ; un
+terminal qui n'en declare pas prend celui de son alphabet :
 
 ```bpscript
 @core
@@ -688,12 +714,12 @@ S -> C4 D4 Bloup E4
 Un signal est un flux de nombres ; le type dit **comment le recepteur le lit**, et c'est tout ce
 qu'il ajoute.
 
-| convention | lecture                                                                     |
+| convention | lecture                                                                      |
 | ---------- | ---------------------------------------------------------------------------- |
 | *(aucune)* | un signal ordinaire -- le cas courant, ce qu'on appelle ailleurs « l'audio » |
 | `pitch`    | une hauteur, en logarithmique : `1.0` vaut une octave                        |
-| `phase`    | une position dans un cycle entre 0 et 1 ; ce qui depasse s'enroule            |
-| `logic`    | un etat haut ou bas, dont les **transitions** font evenement                  |
+| `phase`    | une position dans un cycle entre 0 et 1 ; ce qui depasse s'enroule           |
+| `logic`    | un etat haut ou bas, dont les **transitions** font evenement                 |
 
 Un declenchement est une transition d'un etat bistable, donc un `logic` : une meme convention
 couvre l'etat tenu et l'impulsion.
