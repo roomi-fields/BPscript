@@ -918,11 +918,13 @@ Le mot `scale` designe la **gamme microtonale** : c'est un controle de runtime, 
 `(scale:nom cle)`. La mise a l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**,
 `{A B}:2`.
 
-### `()` -- parametres runtime (toujours suffixe)
+### `()` -- ce que BPx n'interprete pas (toujours suffixe)
 
-Les parametres `()` sont des donnees destinees au **runtime cible** (Web Audio, SuperCollider,
-MIDI externe, OSC, DMX...). Le compilateur verifie que la cle appartient au vocabulaire charge,
-transmet la valeur telle quelle, et le dispatcher JS route l'ensemble.
+Les parametres `()` ne s'adressent pas a BPx : ils le **traversent**. Le signe est une indication
+pour le moteur -- « je ne lis pas ceci, je le porte » -- et c'est le **domaine de la cle** qui
+nomme le destinataire : Kairos pour la hauteur, Kronos pour le temps qui s'ecoule, un runtime de
+sortie pour ce qui sonne. Le compilateur verifie que la cle appartient au vocabulaire charge et
+transmet la valeur telle quelle.
 
 ```bpscript
 // Portee symbole -- colle a l'element
@@ -933,13 +935,14 @@ S -> C2(wave:sawtooth, filterQ:8)       // parametres de synthese
 Basse -> C2 C2 - C2 (vel:100)           // vel pour toute la phrase
 
 // Portee groupe -- apres le groupe
-S -> {A B C}(filter:lp, cutoff:4000)    // filtre sur tout le groupe
+S -> {A B C}(lpf.cutoff:4000)           // un module nomme, un de ses ports
 ```
 
 **Superposition des modulations continues.** Quand plusieurs portees posent le **meme parametre**
 sur une meme note (note, groupe, groupe parent...), les controles **s'empilent en serie**, de
 l'**interieur vers l'exterieur**, dans l'ordre de l'imbrication : dans
-`{ C4(filter:500) D4 }(filter:300)`, le son de C4 traverse son filtre de note puis celui du groupe.
+`{ C4(lpf.cutoff:500) D4 }(lpf.cutoff:300)`, le son de C4 traverse son filtre de note puis celui du
+groupe.
 Les **scalaires** (`vel`, `chan`) suivent l'autre regime : la precedence en retient **une** valeur.
 L'empilement se resout en aval (BPx, Kairos, runtime) ; le langage le dit deja par le sujet du
 qualificateur et par l'imbrication des groupes.
