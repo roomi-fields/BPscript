@@ -360,9 +360,15 @@ Un module est un **patron** : il se declare une fois et s'instancie autant de fo
 a besoin, chaque instance portant ses propres valeurs de port.
 
 **La librairie declare le TYPE, la scene declare l'INSTANCE, et c'est l'instance qu'on invoque.**
-Un filtre passe-bas nomme `lpf` en librairie ne s'ecrit pas dans une regle : la scene declare
-`lpf1` **de type** `lpf`, et c'est `lpf1` qui se cable et se regle. Deux filtres dans une piece sont
-deux instances nommees, chacune avec ses valeurs.
+Un filtre passe-bas nomme `lpf` en librairie ne s'ecrit pas dans une regle : la scene ecrit
+
+```text
+@def lpf1 lpf
+```
+
+et c'est `lpf1` qui se cable et se regle. Le nom d'abord, ce a quoi on l'associe ensuite -- la forme
+de toute definition. Deux filtres dans une piece sont deux instances nommees, chacune avec ses
+valeurs de port.
 
 #### Le patron d'un module
 
@@ -1084,8 +1090,8 @@ defaut.
 
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
 une librairie de modules est une collection de `@def`, comme un alphabet est une collection de
-terminaux. Ce qui s'invoque dans une regle est **l'instance**, jamais le type : la scene declare
-`lpf1` de type `lpf`, puis ecrit `{A B}(lpf1.cutoff:4000)`.
+terminaux. Ce qui s'invoque dans une regle est **l'instance**, jamais le type : la scene ecrit
+`@def lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
 
 **Plusieurs calques s'empilent de gauche a droite.** Ils ne sont pas cables entre eux : chacun ajoute
 une couche, dans l'ordre ou il est ecrit. La regle vaut aussi quand les sujets different --
