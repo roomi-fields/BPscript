@@ -359,6 +359,11 @@ env.out >> lpf.cutoff
 Un module est un **patron** : il se declare une fois et s'instancie autant de fois qu'une piece en
 a besoin, chaque instance portant ses propres valeurs de port.
 
+**La librairie declare le TYPE, la scene declare l'INSTANCE, et c'est l'instance qu'on invoque.**
+Un filtre passe-bas nomme `lpf` en librairie ne s'ecrit pas dans une regle : la scene declare
+`lpf1` **de type** `lpf`, et c'est `lpf1` qui se cable et se regle. Deux filtres dans une piece sont
+deux instances nommees, chacune avec ses valeurs.
+
 #### Le patron d'un module
 
 ```json
@@ -935,13 +940,13 @@ S -> C2(wave:sawtooth, filterQ:8)       // parametres de synthese
 Basse -> C2 C2 - C2 (vel:100)           // vel pour toute la phrase
 
 // Portee groupe -- apres le groupe
-S -> {A B C}(lpf.cutoff:4000)           // un module nomme, un de ses ports
+S -> {A B C}(lpf1.cutoff:4000)          // une instance nommee, un de ses ports
 ```
 
 **Superposition des modulations continues.** Quand plusieurs portees posent le **meme parametre**
 sur une meme note (note, groupe, groupe parent...), les controles **s'empilent en serie**, de
 l'**interieur vers l'exterieur**, dans l'ordre de l'imbrication : dans
-`{ C4(lpf.cutoff:500) D4 }(lpf.cutoff:300)`, le son de C4 traverse son filtre de note puis celui du
+`{ C4(lpf1.cutoff:500) D4 }(lpf2.cutoff:300)`, le son de C4 traverse son filtre de note puis celui du
 groupe.
 Les **scalaires** (`vel`, `chan`) suivent l'autre regime : la precedence en retient **une** valeur.
 L'empilement se resout en aval (BPx, Kairos, runtime) ; le langage le dit deja par le sujet du
@@ -1074,10 +1079,13 @@ unicite s'y applique : `sombre.cutoff` passe si un seul module du chainage porte
 candidats obligent a nommer le module. Un chainage precise ses ports quand ce ne sont pas ceux par
 defaut.
 
+**Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backticks
+`patch:`. Un seul langage, deux emplacements : nomme dans un `@def`, litteral dans une regle.
+
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
 une librairie de modules est une collection de `@def`, comme un alphabet est une collection de
-terminaux. Un module livre s'invoque donc directement -- `{A B}(lpf.cutoff:4000)` -- sans qu'on ait
-rien a declarer.
+terminaux. Ce qui s'invoque dans une regle est **l'instance**, jamais le type : la scene declare
+`lpf1` de type `lpf`, puis ecrit `{A B}(lpf1.cutoff:4000)`.
 
 **Plusieurs calques s'empilent de gauche a droite.** Ils ne sont pas cables entre eux : chacun ajoute
 une couche, dans l'ordre ou il est ecrit. La regle vaut aussi quand les sujets different --
