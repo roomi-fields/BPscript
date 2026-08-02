@@ -1100,6 +1100,12 @@ ecrite.
 **Une definition reecrite pendant que ca joue prend effet en vol** pour ce qui commence apres elle ;
 ce qui est deja en cours **finit proprement** avec l'ancienne.
 
+**Vivant et interagissable sont deux etats distincts.** Un module peut tourner sans agir : le signal
+le traverse sans etre traite, et c'est `eteint` qui dit quelle entree ressort alors par quelle
+sortie. Ce n'est pas la meme chose que couper le cable -- `\>>` deconnecte et plus rien n'arrive,
+`switchoff` court-circuite et le signal ressort intact. Le premier fait taire, le second laisse
+passer. Le geste est **binaire** : `switchon` / `switchoff`, sans dosage.
+
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
 Un controle non-temporel (`vel`, `wave`, `filter`...) gouverne plusieurs notes selon deux regimes,
