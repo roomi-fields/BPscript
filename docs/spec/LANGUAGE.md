@@ -359,6 +359,86 @@ env.out >> lpf.cutoff
 Un module est un **patron** : il se declare une fois et s'instancie autant de fois qu'une piece en
 a besoin, chaque instance portant ses propres valeurs de port.
 
+#### Le patron d'un module
+
+```json
+{
+  "nom": "",
+  "categorie": "",
+  "description": "",
+  "ports": {},
+  "code": ""
+}
+```
+
+**Trois sous-prototypes** couvrent les formes possibles. Chacun **ajoute** les champs de son cas.
+
+| sous-prototype | ce qu'il a | ce qu'il ajoute |
+| --- | --- | --- |
+| **source** | des sorties seulement | `defaultout` |
+| **traitement** | des entrées **et** des sorties | `defaultin` · `defaultout` · `eteint` |
+| **puits** | des entrées seulement | `defaultin` |
+
+Un oscillateur, du bruit, un LFO sont des **sources** : on ne les neutralise pas, il n'y a rien à
+faire passer à travers, donc pas de `eteint`. Un filtre, un amplificateur, une enveloppe sont des
+**traitements**. La sortie audio est un **puits**.
+
+**Le sous-prototype est structurel, la catégorie est descriptive.** Le premier dit ce que le module
+peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
+deux catégories et la même forme.
+
+| champ | ce qu'il porte |
+| --- | --- |
+| `nom` · `categorie` · `description` | identité, famille, prose d'aide |
+| `ports` | les ports du module, par leur nom |
+| `defaultin` · `defaultout` | le port qu'un câblage vise sans le nommer : `saw >> lpf` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre |
+| `eteint` | `{ "<sortie>": "<entree>" }` — ce que chaque sortie reprend quand le module est neutralisé |
+| `code` | le traitement |
+
+#### Le patron d'un port
+
+```json
+{
+  "sens": "entree",
+  "convention": null,
+  "voies": 1,
+  "plage": null,
+  "unite": null,
+  "description": ""
+}
+```
+
+**Une entrée ajoute `repli`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
+pas : la notion lui est étrangère.
+
+| champ | ce qu'il porte |
+| --- | --- |
+| `sens` | `entree` ou `sortie` |
+| `convention` | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic` |
+| `voies` | combien de voies ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
+| `plage` · `unite` | les bornes et l'unité du signal attendu |
+
+**Les conventions.** `null` désigne un signal ordinaire, sans convention de lecture — c'est le cas
+courant, celui qu'on appelle ailleurs « l'audio ». `pitch` se lit comme une hauteur, en
+logarithmique : 1,0 vaut une octave. `phase` se lit comme une position dans un cycle entre 0 et 1 ;
+ce qui dépasse s'enroule. `logic` se lit comme un état haut ou bas, dont ce sont les **transitions**
+qui font événement.
+
+**Un paramètre est une entrée** avec un `repli` et rien de branché. Régler est un cas particulier de
+brancher.
+
+**La polyphonie appartient au port**, pas au module : un filtre traite huit voix tout en gardant une
+seule coupure.
+
+**Ces patrons vivent avec les autres.** Un module, un port, un terminal, un alphabet suivent le meme
+mecanisme : un socle, des sous-patrons qui **ajoutent** les champs de leur cas, et un champ qui
+n'existe que si sa notion s'applique.
+
+**Aucun ne porte le nom du composant qui le resout.** Le langage dit ce qu'une piece veut ; quel
+composant le calcule est une affaire d'architecture, et le nommer ici ferait d'un changement
+d'architecture un changement de langage. Ce qu'un objet porte, c'est sa **destination** -- le
+runtime de sortie d'un terminal --, jamais son resolveur.
+
 ### Invoquer une librairie
 
 **Une librairie s'invoque par son nom, l'entree apres le point.** C'est la forme unique de tout ce
