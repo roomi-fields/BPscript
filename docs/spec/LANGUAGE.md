@@ -666,19 +666,23 @@ ou une instruction de calcul de hauteur.
 par defaut ; un terminal concret ne declare que ce qui differe.
 
 ```json
-{ "nom": "", "runtime": "audio", "sonne": true, "hauteur": null, "duree": null, "code": null }
+{ "nom": "", "runtime": "audio", "sonne": true, "duree": null, "code": null }
 ```
 
-**L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
-ecrit. Deux sous-patrons couvrent les cas courants, et les autres tombent du meme arbre :
+**Le socle ne connait pas la hauteur.** Un sous-patron **ajoute** les champs de son cas ; il ne
+se contente pas d'en changer la valeur.
 
-| sous-patron | ce qu'il fixe |
+| sous-patron | ce qu'il ajoute |
 | --- | --- |
-| **note** | `hauteur` renseignee : un degre que Kairos resout |
-| **percussion** | `sonne`, `hauteur` a `null` : elle sonne sans porter de hauteur |
+| **note** | `hauteur` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
+| **percussion** | rien : elle sonne et dure, sans porter de hauteur |
 
-Un terminal dont `sonne` est faux ne produit aucune sortie -- c'est le pivot de grammaire. Un
-terminal dont `code` est renseigne invoque du code.
+**L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
+ecrit.
+
+Les autres cas tombent du meme socle : un terminal dont `sonne` est faux ne produit aucune sortie,
+c'est le pivot de grammaire ; un terminal sans `duree` occupe l'instant ; un terminal dont `code`
+est renseigne invoque du code.
 
 **Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
 terminal peut se declarer seul. Le patron d'un alphabet porte la meme affectation, et ses
