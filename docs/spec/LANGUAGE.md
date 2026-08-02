@@ -669,8 +669,10 @@ par defaut ; un terminal concret ne declare que ce qui differe.
 { "nom": "", "runtime": "audio", "sonne": true, "duree": null, "code": null }
 ```
 
-**Le socle ne connait pas la hauteur.** Un sous-patron **ajoute** les champs de son cas ; il ne
-se contente pas d'en changer la valeur.
+**Un champ n'existe que si sa notion s'applique.** Une valeur non renseignee prend son defaut ;
+une notion etrangere a l'objet n'a pas de champ du tout. Un sous-patron **ajoute** donc les champs
+de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pas la hauteur : une
+percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
 | sous-patron | ce qu'il ajoute |
 | --- | --- |
