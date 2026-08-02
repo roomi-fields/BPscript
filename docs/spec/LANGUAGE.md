@@ -363,12 +363,12 @@ a besoin, chaque instance portant ses propres valeurs de port.
 Un filtre passe-bas nomme `lpf` en librairie ne s'ecrit pas dans une regle : la scene ecrit
 
 ```text
-@def lpf1 lpf
+@var lpf1 lpf
 ```
 
-et c'est `lpf1` qui se cable et se regle. Le nom d'abord, ce a quoi on l'associe ensuite -- la forme
-de toute definition. Deux filtres dans une piece sont deux instances nommees, chacune avec ses
-valeurs de port.
+et c'est `lpf1` qui se cable et se regle. **Une instance est une variable, pas une definition** :
+elle ne porte aucun corps propre, son comportement vient de son type. Deux filtres dans une piece
+sont deux instances nommees, chacune avec ses valeurs de port.
 
 #### Le patron d'un module
 
@@ -1091,7 +1091,7 @@ defaut.
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
 une librairie de modules est une collection de `@def`, comme un alphabet est une collection de
 terminaux. Ce qui s'invoque dans une regle est **l'instance**, jamais le type : la scene ecrit
-`@def lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
+`@var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
 
 **Plusieurs calques s'empilent de gauche a droite.** Ils ne sont pas cables entre eux : chacun ajoute
 une couche, dans l'ordre ou il est ecrit. La regle vaut aussi quand les sujets different --
@@ -1101,6 +1101,11 @@ l'interieur vers l'exterieur entre les etages.
 
 **Un calque de groupe s'applique a tout le groupe** -- la polymetrie n'y change rien, toutes les voix
 traversent le meme noeud.
+
+**Un nom d'instance designe un role, pas un exemplaire unique.** Plusieurs exemplaires de `lpf1`
+vivent en parallele, **un par calque invoque** -- comme un fil porte plusieurs voies sous un seul
+nom. L'auteur ne les compte jamais : un site d'ecriture donne un exemplaire, `*:` en donne un par
+terminal. Chacun a ses propres valeurs de port et son propre etat interne.
 
 **Le runtime applique ce qui a du sens chez lui** et **avertit pour le reste**. Une portee peut
 melanger des terminaux de sorties differentes ; un filtre n'a pas de sens sur une note MIDI. Ce
