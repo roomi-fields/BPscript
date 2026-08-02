@@ -237,9 +237,10 @@ Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le
 ```text
 @var flag section: calm:1, full:2
 @var in touches transport.keyboard
-@var cv cutoff
-@var gate porte
-@var trig depart
+@var signal grain
+@var pitch hauteur
+@var phase rotation
+@var logic porte
 @var wire principal saw >> lpf >> audio
 @var pivot
 ```
@@ -248,9 +249,10 @@ Une variable porte un **type** qui dit ce qu'elle est. Le type se place entre le
 | --- | --- |
 | `flag` | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent |
 | `in` | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance |
-| `cv` | une valeur continue |
-| `gate` | un etat ouvert ou ferme |
-| `trig` | un instant |
+| `signal` | un flux de nombres, sans convention de lecture — le cas ordinaire |
+| `pitch` | un signal lu comme une **hauteur** |
+| `phase` | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule** |
+| `logic` | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
 | `wire` | un cablage nomme : une chaine de modules qu'on rebranche d'un mot |
 | *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle |
 
@@ -266,13 +268,12 @@ grammaire, un jalon de structure.
 
 ### `@def` -- declarer une definition
 
-`@def` associe un nom a un corps, pour le reinvoquer d'un mot. Ses types sont ceux des signaux :
-`cv`, `gate`, `trig`.
+`@def` associe un nom a un corps, pour le reinvoquer d'un mot. Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`.
 
 ```text
 @def souffle lfo:2 >> filtre.cutoff
 @def cadence sa re ga pa
-@def cv enveloppe `js: (t, dur) => 1 - t / dur`
+@def phase enveloppe `js: (t, dur) => 1 - t / dur`
 ```
 
 Ce qu'une definition peut porter : une structure de terminaux, un branchement, du code, un signal.
@@ -330,8 +331,16 @@ s'invoquent comme tout le reste.
 @module.adsr
 ```
 
-**Chaque port est type.** Un port accepte ou rend un `cv`, un `gate`, un `trig`, ou le signal
-lui-meme. Le type d'un port dit ce qu'on a le droit d'y brancher, et le compilateur le verifie.
+**Un seul signal, des conventions de lecture.** Il n'existe pas plusieurs natures de signal : un
+signal est un flux de nombres. Ce qu'un type ajoute, c'est **la facon dont le recepteur le lit** --
+une hauteur se transpose, une phase s'enroule, un etat logique se seuille. C'est pourquoi tout se
+branche partout : il n'y a rien a convertir, seulement une convention a appliquer.
+
+**Le signal sans convention est le cas ordinaire.** Ce qu'on appelle ailleurs « l'audio » est
+simplement un signal dont on ne dit rien de plus.
+
+**Chaque port est type.** Un port porte la **convention** selon laquelle son contenu se lit : `pitch`, `phase`,
+`logic` — ou aucune, et c'est alors un signal ordinaire. Le type d'un port dit ce qu'on a le droit d'y brancher, et le compilateur le verifie.
 
 **Un module a une entree et une sortie de signal par defaut.** Quand elles suffisent, la chaine
 s'ecrit sans les nommer :
