@@ -1039,19 +1039,66 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
   nature de la valeur. Pour un controle **statique** (`wave`), les deux ecritures donnent le meme
   effet : la distinction porte sur le temporel.
 
-**Un chainage nomme s'invoque de la meme facon, et le signe suit la regle d'or** : le sujet precede
-un **deux-points** quand ce qui suit est une valeur a affecter, un **point** quand c'est un
-composant a appeler.
+**Un chainage nomme s'invoque de la meme facon** -- affecter un filtre a un sujet et lui affecter
+une valeur s'ecrivent pareil, avec le **deux-points**.
 
-| Ecriture         | Ce que ca vise                                                                     |
-| ---------------- | ---------------------------------------------------------------------------------- |
-| `{…}(sombre)`    | la portee comme **une seule chose** -- un traitement partage que tout traverse      |
-| `{…}(*.sombre)`  | **chaque terminal** individuellement -- autant d'instances que d'elements           |
-| `{…}(C2.sombre)` | **les terminaux `C2`** de la portee, eux seuls                                      |
+| Ecriture         | Ce que ca vise                                                                |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `{…}(sombre)`    | la portee comme **une seule chose** -- un traitement partage que tout traverse |
+| `{…}(*:sombre)`  | **chaque terminal** individuellement -- autant d'instances que d'elements      |
+| `{…}(C2:sombre)` | **les terminaux `C2`** de la portee, eux seuls                                 |
 
 **La difference est musicale, pas cosmetique.** Un traitement partage melange les terminaux avant de
 les traiter ; un traitement par terminal en donne un a chacun. Sur un filtre resonant, le premier
 fait resonner l'accord, le second fait resonner chaque note.
+
+### Appliquer un module -- le calque
+
+Un terminal produit et pousse vers sa sortie ; il y a donc un chemin, meme sans qu'on l'ecrive.
+**Un module invoque dans un sac `()` s'insere dans ce chemin** : c'est un **calque**, et sa portee
+en donne l'etendue.
+
+**Un calque et un geste de cablage se distinguent a l'ecriture, pas au mot.** Le meme `@def` sert aux
+deux :
+
+| Ecriture               | Nature                                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| dans un sac `(sombre)` | **calque** -- il vit sur la portee, il nait et meurt avec elle                     |
+| nu dans le flux `coupe`| **geste** -- il change la topologie a cet instant, et ca **reste** apres lui        |
+
+Un cable se coupe pendant que ca joue ; une portee, elle, se referme. C'est pour cela qu'un geste
+n'a pas d'etendue et qu'un calque en a une.
+
+**Les ports d'un chainage sont ceux de ses modules**, en notation pointee, et la resolution par
+unicite s'y applique : `sombre.cutoff` passe si un seul module du chainage porte un `cutoff` ; deux
+candidats obligent a nommer le module. Un chainage precise ses ports quand ce ne sont pas ceux par
+defaut.
+
+**Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
+une librairie de modules est une collection de `@def`, comme un alphabet est une collection de
+terminaux. Un module livre s'invoque donc directement -- `{A B}(lpf.cutoff:4000)` -- sans qu'on ait
+rien a declarer.
+
+**Plusieurs calques s'empilent de gauche a droite.** Ils ne sont pas cables entre eux : chacun ajoute
+une couche, dans l'ordre ou il est ecrit. La regle vaut aussi quand les sujets different --
+`{…}(*:sombre, C2:large)` donne `sombre` a chaque terminal, et `large` en plus aux `C2`, dans cet
+ordre. **Deux axes se composent sans se contredire** : de gauche a droite dans un sac, de
+l'interieur vers l'exterieur entre les etages.
+
+**Un calque de groupe s'applique a tout le groupe** -- la polymetrie n'y change rien, toutes les voix
+traversent le meme noeud.
+
+**Le runtime applique ce qui a du sens chez lui** et **avertit pour le reste**. Une portee peut
+melanger des terminaux de sorties differentes ; un filtre n'a pas de sens sur une note MIDI. Ce
+n'est pas au langage d'arbitrer, et ce qui n'est pas applique ne se tait jamais.
+
+**A la fin de sa portee, un calque cesse de recevoir -- il ne cesse pas d'exister.** Il meurt quand
+il ne produit plus rien : une reverberation sort sa queue, un delai finit ses repetitions, un
+relachement va au bout. Rien n'impose de fondu : ce serait ajouter une articulation que personne n'a
+ecrite.
+
+**Une definition reecrite pendant que ca joue prend effet en vol** pour ce qui commence apres elle ;
+ce qui est deja en cours **finit proprement** avec l'ancienne.
 
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
@@ -2329,8 +2376,8 @@ flux. Le contrôle natif BP3 correspondant est `_script(CT n)`.
 espacé en fin de membre droit (portée règle), collé au groupe (`{A B}(…)`).
 
 **Dans un groupe et dans une règle, un sujet vise plus finement** — `{…}(sombre)` traite la portée
-comme une seule chose, `{…}(*.sombre)` traite chaque terminal individuellement, `{…}(C2.sombre)` ne
-traite que les `C2`. Détail et graphie : « Destinataire d'une paire ».
+comme une seule chose, `{…}(*:sombre)` traite chaque terminal individuellement, `{…}(C2:sombre)` ne
+traite que les `C2`. Détail et graphie : « Destinataire d'une paire » et « Appliquer un module ».
 
 ### Cascade des contrôles
 
