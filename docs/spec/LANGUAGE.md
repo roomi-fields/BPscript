@@ -1108,6 +1108,10 @@ vivent en parallele, **un par calque invoque** -- comme un fil porte plusieurs v
 nom. L'auteur ne les compte jamais : un site d'ecriture donne un exemplaire, `*:` en donne un par
 terminal. Chacun a ses propres valeurs de port et son propre etat interne.
 
+**Un geste vise tous les exemplaires.** `patch: lpf1 switchoff` eteint la famille entiere, comme on
+adresse un fil et non l'une de ses voies. Viser un exemplaire seul demanderait de savoir lequel, et
+un nom ne le dit pas.
+
 **Le runtime applique ce qui a du sens chez lui** et **avertit pour le reste**. Une portee peut
 melanger des terminaux de sorties differentes ; un filtre n'a pas de sens sur une note MIDI. Ce
 n'est pas au langage d'arbitrer, et ce qui n'est pas applique ne se tait jamais.
