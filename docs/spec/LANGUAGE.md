@@ -1367,15 +1367,15 @@ duree zero.
 
 ```bpscript
 @alphabet.western:audio
-@in sync1 transport.midi
+@var sync1 in transport.midi
 
 S -> -<!sync1 C4 D4 E4       // attend en silence, puis joue
 S -> C4<!sync1 D4 E4         // joue C4, attend, puis continue
 S -> <!sync1 C4 D4 E4        // attend seul puis demarre
-S -> C4!dha<!sync1 D4 E4     // joue C4 + dha, attend sync1, puis D4
+S -> C4!E4<!sync1 D4 E4      // joue C4 + E4, attend sync1, puis D4
 ```
 
-`@in <role> transport.<canal>` nomme dans la scene le **role** que tient l'entree ; les canaux
+`@var <role> in transport.<canal>` nomme dans la scene le **role** que tient l'entree ; les canaux
 d'entree sont `midi`, `osc` et `keyboard`. L'appareil qui remplit ce role s'y associe hors de
 la scene. L'adresse de la source se colle au point d'attente -- `<!sync1.60` ecoute le numero
 60 de l'entree `sync1` -- et les points d'attente se chainent : `<!sync1<!sync2`.
