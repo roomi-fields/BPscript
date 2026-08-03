@@ -810,6 +810,11 @@ Les autres cas tombent du meme socle : un terminal dont `sounding` est faux ne p
 sortie, c'est le pivot de grammaire ; un terminal sans `duration` occupe l'instant ; un terminal
 dont `code` est renseigne invoque du code.
 
+**D'autres natures s'ajouteront par le meme mecanisme.** Un terminal qui joue un **echantillon**
+aura son sous-patron : de quel fichier il vient, et ce que le moteur a le droit d'en deformer --
+comprimer, etirer, tronquer -- pour le faire tenir dans une polymetrie. Le socle ne bouge pas ; un
+sous-patron ajoute les champs de son cas, comme `note` ajoute le degre.
+
 **Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
 terminal peut se declarer seul. Le patron d'un alphabet porte la meme affectation, et ses
 terminaux en heritent :
