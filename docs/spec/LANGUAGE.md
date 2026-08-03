@@ -1186,6 +1186,11 @@ espace, il se pose seul dans la sequence. En tete de regle ou de groupe (`{!(vel
 pose seul. L'AST porte cette attache sur le noeud `!(...)` (`conjoint`), et le simultane `B3!C7`
 reste un `SimultaneousGroup`.
 
+**Un nom pose apres `!` s'attache au terminal qui precede** : les deux partagent l'instant, et le
+terminal porte la duree. `S -> C4!kick D4` donne **deux** elements dans le membre droit, `C4` et son
+attache partageant le premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe son propre
+pas.
+
 **Chaque element porte son `!`**, et une espace les separe : `Interne -> !(ins:1) !(chan:1)` donne
 deux elements freres ; `C4!E4!G4` donne un primaire et deux secondaires.
 
@@ -1771,7 +1776,6 @@ catégories de librairie (`alphabet`, `tuning`, `octaves`, `transport`, `eval`,
 | directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@sub.dhati`                           |
 | terminal vu à travers un acteur                           | `sitar.sa`                                                |
 | port d'un module                                          | `lpf.cutoff`                                              |
-| contrôle d'un groupe étiqueté                             | `groove.vel`                                              |
 | frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                        |
 
 Les cinq clés d'un acteur — `alphabet`, `tuning`, `octaves`, `transport`, `eval` — sont des
@@ -1799,7 +1803,6 @@ Le sujet est à gauche du signe, la valeur à droite.
 | réglage global de scène                    | `@time.tempo:120`            |
 | paire clé-valeur dans `()`                 | `(vel:100)`, `(mode:random)` |
 | durée, collée à un terminal ou à un groupe | `C4:2`, `{C4 D4}:2`          |
-| étiqueter un groupe polymétrique           | `groove:{C4 D4, E4}`         |
 
 ```text
 @alphabet.tabla:midi
@@ -1974,34 +1977,6 @@ est le même symbole, réécrit plus tard.
 **Renommer en gardant la même musique** : `test/migration_noms.mjs` renomme un nom et tous ses
 emplois, puis compare l'arbre dérivé entier avant et après, à graine fixe. Il écrit quand
 chaque jeton coïncide.
-
-### Étiqueter un groupe
-
-**Un nom suivi du deux-points, devant une accolade, étiquette l'ensemble** : il désigne alors d'un
-seul mot un contrôle porté par tous ses éléments.
-
-```bpscript
-@alphabet.western
-
-S -> groove:{C4 D4, E4} F4
-```
-
-### Appliquer un nom dans une règle : le point d'exclamation
-
-`!nom` attache le nom au terminal qui le précède : les deux partagent l'instant, et le
-terminal porte la durée. Collé ou séparé d'une espace, `!nom` donne le même nœud ; la règle
-d'espace joue sur `!(…)`, où le collage ancre le flux au terminal précédent.
-
-```bpscript
-@alphabet.western
-@def kick (vel:120)
-@def accent(x) x(vel:120)
-
-S -> C4!kick D4 E4!accent F4
-```
-
-`S -> C4!kick D4` donne **deux** éléments dans le membre droit, `C4` et son attache partageant le
-premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe son propre pas.
 
 ### Câbler : `>>` et `\>>`
 
