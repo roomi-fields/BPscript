@@ -7,10 +7,10 @@
 - [Concepts cles](#concepts-cles)
 - [Philosophie de separation](#philosophie-de-separation)
 - [L'ordonnanceur](#lordonnanceur)
-- [Inventaire : 3 mots, 24 symboles, 9 operateurs](#inventaire--3-mots-24-symboles-9-operateurs)
+- [Inventaire : 3 mots, 23 symboles, 9 operateurs](#inventaire--3-mots-23-symboles-9-operateurs)
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres -- opaques pour BPScript](#parametres----opaques-pour-bpscript)
-- [`[]` moteur vs `()` runtime](#-moteur-vs--runtime----deux-destinataires-memes-portees)
+- [Les sacs : `()` reglages, `[]` drapeaux](#les-sacs---reglages--drapeaux)
 - [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles-zero-ambiguite)
 - [Les accolades `{}` -- polymetrie et groupement](#les-accolades------polymetrie-et-groupement)
 - [L'operateur `!` -- simultaneite](#loperateur------simultaneite)
@@ -27,12 +27,11 @@
 - [Flags](#flags----variables-detat-et-composition-conditionnelle)
 - [Definitions et macros](#definitions-et-macros)
 - [Les librairies](#les-librairies)
-- [Operateurs temporels BP3](#operateurs-temporels-bp3)
+- [Operateurs temporels](#operateurs-temporels)
 - [Metrique -- `@meter`](#metrique----meter)
 - [Modes, scan et directions](#modes-scan-et-directions----trois-niveaux-distincts)
 - [Gestion d'echec -- `on_fail`](#gestion-dechec----on_fail)
 - [Deux philosophies du temps](#deux-philosophies-du-temps)
-- [Compilation vers BP3](#compilation-vers-bp3)
 
 ---
 
@@ -52,12 +51,11 @@ Le langage connait trois mots et fait une chose : ordonner dans le temps.
 
 ## Le langage : dense, pas simple
 
-3 mots reserves, 24 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
+3 mots reserves, 23 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
 combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
 ```bpscript
 @core
-@controls
 @alphabet.sargam
 
 // Une sequence de notes
@@ -95,7 +93,6 @@ pour tout ce qu'il contient.
 
 ```bpscript
 @core
-@controls
 @alphabet.sargam
 
 @actor sitar1
@@ -140,7 +137,6 @@ refusee.
 
 ```bpscript
 @core
-@controls
 @alphabet.sargam
 
 @actor sitar1
@@ -176,7 +172,6 @@ Il prend deux formes :
 
 ```bpscript
 @core
-@controls
 @alphabet.sargam
 
 // Autonome, en tete de scene : prepare le moteur au chargement
@@ -227,7 +222,6 @@ Ecrit apres une note, il s'ancre sur elle : la note sonne, puis la suite attend.
 
 ```bpscript
 @core
-@controls
 @actor sitar1
   alphabet.sargam
   transport.audio
@@ -530,7 +524,6 @@ touche, donc qui le consomme.
 
 ```text
 @core
-@controls
 @alphabet.sargam
 @time.tempo:90
 @duration:16b
@@ -561,7 +554,6 @@ instant -- ecrits directement dans la regle, ou nommes par une `@macro` (cf.
 
 ```bpscript
 @core
-@controls
 @alphabet.western:audio
 
 // En tete de scene : chaque runtime prepare ses objets au chargement
@@ -587,7 +579,7 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 
 ---
 
-## Inventaire : 3 mots, 24 symboles, 9 operateurs
+## Inventaire : 3 mots, 23 symboles, 9 operateurs
 
 ### Trois mots reserves
 
@@ -686,7 +678,6 @@ Les neuf a l'oeuvre dans une scene :
 
 ```bpscript
 @core
-@controls
 @alphabet.western:audio
 
 S -> Loop [phase=1, count=4]
@@ -715,7 +706,6 @@ meme signe sert dans les deux, sa place tranche lequel des deux roles il tient.
 
 ```text
 @core
-@controls
 @alphabet.western:audio
 @time.tempo:120
 
@@ -822,7 +812,6 @@ terminal qui n'en declare pas prend celui de son alphabet :
 
 ```bpscript
 @core
-@controls
 @alphabet.sargam:audio
 
 S -> sa re ga
@@ -893,7 +882,6 @@ BPScript transporte les parametres jusqu'au runtime, qui les interprete.
 
 ```bpscript
 @core
-@controls
 
 // SuperCollider definit les parametres dans un SynthDef
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
@@ -931,7 +919,6 @@ d'heritage ».
 
 ```bpscript
 @core
-@controls
 
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
 @actor sitar
@@ -947,13 +934,13 @@ reste celui de la declaration.
 
 ---
 
-## `[]` moteur vs `()` runtime -- deux destinataires, memes portees
+## Les sacs : `()` reglages, `[]` drapeaux
 
 ### Les reglages du moteur
 
-**Le moteur recoit ses reglages entre parentheses**, comme tout le reste : c'est le domaine de la
-cle qui l'adresse, pas le signe. Il les consomme **pendant** la derivation et le calcul temporel ;
-la sortie porte leur effet.
+**Le moteur recoit ses reglages entre parentheses**, comme tout le reste : le domaine de la cle
+l'adresse. Il les consomme **pendant** la derivation et le calcul temporel ; la sortie porte leur
+effet.
 
 ```bpscript
 // Portee symbole -- colle a l'element
@@ -1072,7 +1059,6 @@ Une regle porte **un** sac en contenance. Pour en poser plusieurs, chacun prend 
 dans le flux :
 
 ```bpscript
-@controls
 
 StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 ```
@@ -1201,7 +1187,6 @@ que l'ecriture designe :
 | `!(...)` | **flux**, sequentiel       | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain controle                   |
 
 ```bpscript
-@controls
 
 // CONTENANCE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
 Basse -> C2 E2 G2 (wave:sawtooth)
@@ -1832,7 +1817,6 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 
 ```bpscript
 @alphabet.western
-@controls
 @macro accent(x) x(vel:120)
 @macro souffle (vel:60)
 
@@ -2058,7 +2042,6 @@ Le nom vient d'abord, ce qu'il vaut ensuite.
 
 ```bpscript
 @alphabet.western
-@controls
 @macro kick (vel:120)               // préréglage de contrôles
 @macro accent(x) x(vel:120)         // transformation paramétrée
 @macro fast(x) {x}:2                // transformation structurelle
@@ -2074,7 +2057,6 @@ contrôle porté par tous ses éléments.
 
 ```bpscript
 @alphabet.western
-@controls
 @alias intensite osc:/sensor/1      // canal OSC nommé
 @alias souffle groove.vel           // le vel du groupe étiqueté groove
 
@@ -2089,7 +2071,6 @@ d'espace joue sur `!(…)`, où le collage ancre le flux au terminal précédent
 
 ```bpscript
 @alphabet.western
-@controls
 @macro kick (vel:120)
 @macro accent(x) x(vel:120)
 
