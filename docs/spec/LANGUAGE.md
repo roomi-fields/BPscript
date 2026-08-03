@@ -21,7 +21,7 @@
 - [Homomorphismes `|x|`](#homomorphismes-x----variables-liees)
 - [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
 - [Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes)
-- [Templates : regime catalogue](#templates--regime-catalogue)
+- [Les patrons structurels](#les-patrons-structurels)
 - [Sons et cascade d'heritage](#sons-et-cascade-dheritage)
 - [Conventions de notation (`.` / `:` / `*`)](#conventions-de-notation-----)
 - [Flags](#flags----variables-detat-et-composition-conditionnelle)
@@ -1576,40 +1576,36 @@ Un nom absent de la librairie est refuse au parse.
 
 ---
 
-## La section `@template` -- catalogue de patrons
+## Les patrons structurels
 
-`@template` liste des patrons structurels. Elle se place apres les regles, en
-fin de scene.
+**Un patron structurel se declare comme tout ce qui a un corps** : `@def`, le nom, puis le corps.
 
 ```bpscript
 @alphabet.western
 
-S -> C4 D4
+@def large    /1 ???????
+@def boiteux  *3/2 ??.??
+@def groupe   /1 ($0 ???)($1 )
 
-@template
-[1] /1 ???????
-[2] *3/2 ??.??
-[3] /1 ($0 ???)($1 )
+S -> C4 D4
 ```
 
-Une entree s'ecrit `[<numero>] <echelle> <corps>` :
+Un corps s'ecrit `<echelle> <forme>` :
 
-- `<numero>` -- l'index de l'entree, entre crochets.
 - `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
-- `<corps>` -- des jokers `?`, un par symbole attendu ; des points `.`
+- `<forme>` -- des jokers `?`, un par symbole attendu ; des points `.`
   (fragments de duree egale) ; des groupes numerotes `($N ...)`, imbricables.
 
-Le mode `tem` fait l'appariement structurel sur ce catalogue. Il s'ecrit en tete
-de scene ou en suffixe de regle.
+Le mode `tem` fait l'appariement structurel sur ces patrons, dans **l'ordre de leur declaration**.
+Il s'ecrit en tete de scene ou en suffixe de regle.
 
 ```bpscript
 @alphabet.sargam
 @mode:tem
 
-S -> sa re ga
+@def trois /1 ???
 
-@template
-[1] /1 ???
+S -> sa re ga
 ```
 
 ---
@@ -1891,7 +1887,7 @@ d'héritage).
 
 ### Séparation des territoires
 
-- **Déclarer** — `@sound`, `@alphabet.X`, `@actor X`, `@template` : ce que l'on écrit une
+- **Déclarer** — `@sound`, `@alphabet.X`, `@actor X`, `@def` : ce que l'on écrit une
   fois et que l'on réutilise.
 - **Affecter** — `*:sound.X`, `Y:sound.X` : depuis le territoire d'origine du sujet,
   c'est-à-dire l'alphabet ou l'acteur où il est déclaré, ou l'occurrence dans une règle.
