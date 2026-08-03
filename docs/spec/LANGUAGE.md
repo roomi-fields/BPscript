@@ -2316,7 +2316,7 @@ suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
 
 | Mode      | Strategie de selection                           |
 | --------- | ------------------------------------------------ |
-| `ord`     | ordonne -- les regles s'appliquent en sequence   |
+| `ord`     | ordonne -- la premiere regle applicable gagne    |
 | `random`  | aleatoire -- selection ponderee par les poids    |
 | `lin`     | lineaire -- bouclage cyclique                    |
 | `sub`     | substitution -- toutes les occurrences a la fois |
