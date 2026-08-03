@@ -1079,11 +1079,11 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
 **sujet** devant le controle pour viser plus finement -- meme mecanisme que l'affectation
 `*:sound.bell`, ou le `:` introduit deja un sujet.
 
-| Ecriture                            | Sujet | Cible                            |
-| ----------------------------------- | ----- | -------------------------------- |
-| `(cutoff:env)` · `{…}(sombre)`      | omis  | **la portee elle-meme** (l'unite) |
-| `(*:cutoff:env)` · `{…}(*:sombre)`  | `*`   | **chaque terminal** de la portee  |
-| `(C2:cutoff:env)` · `{…}(C2:sombre)`| `C2`  | les terminaux **C2** de la portee |
+| Ecriture                             | Sujet | Cible                             |
+| ------------------------------------ | ----- | --------------------------------- |
+| `(cutoff:env)` · `{…}(sombre)`       | omis  | **la portee elle-meme** (l'unite) |
+| `(*:cutoff:env)` · `{…}(*:sombre)`   | `*`   | **chaque terminal** de la portee  |
+| `(C2:cutoff:env)` · `{…}(C2:sombre)` | `C2`  | les terminaux **C2** de la portee |
 
 Le sujet s'ecrit pareil devant une **valeur** a affecter et devant un **nom** a appliquer : le
 deux-points introduit le sujet dans les deux cas.
@@ -1117,9 +1117,9 @@ S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)   // les deux : C4 traverse le 
 **Le meme nom pose un calque ou un geste, selon l'endroit ou il est ecrit :**
 
 | Ecriture                | Ce que ca fait                                                              |
-| ----------------------- | ----------------------------------------------------------------------------- |
-| dans un sac `(sombre)`  | un **calque** -- il vit sur la portee, il nait et meurt avec elle            |
-| nu dans le flux `coupe` | un **geste** -- il change la topologie a cet instant, et ca reste apres lui  |
+| ----------------------- | --------------------------------------------------------------------------- |
+| dans un sac `(sombre)`  | un **calque** -- il vit sur la portee, il nait et meurt avec elle           |
+| nu dans le flux `coupe` | un **geste** -- il change la topologie a cet instant, et ca reste apres lui |
 
 ```bpscript
 @def sombre lpf1 >> vca1
@@ -1400,7 +1400,7 @@ notation ».
 
 ## Liaisons `~` -- tied sound-objects
 
-En BPScript, la liaison s'ecrit `~` ; `&` y designe le gabarit esclave.
+En BPScript, la liaison s'ecrit `~`.
 
 Un son est tenu a travers d'autres evenements. Le NoteOn arrive au debut, le NoteOff a la fin,
 par-dessus les sons intercales.
@@ -1439,19 +1439,28 @@ les porte jusqu'au moteur.
 
 ## Homomorphismes `|x|` -- variables liees
 
-`|x|` nomme une variable qui apparie n'importe quel symbole ; toutes les occurrences de `x`
-dans la regle designent le meme symbole. Elle s'abaisse en non-terminal nomme pour le moteur.
+**`|x|` se lit « quel que soit x ».** La barre en tete de regle **quantifie** : elle annonce que ce
+qui suit vaut pour n'importe quel symbole, et que toutes les occurrences de `x` dans cette regle
+designent **le meme**.
 
 ```bpscript
-|x| M x -> x M              // inversion
-|x| x x -> x                // dedoublonnage
-|x| |y| x y -> y x          // permutation
-|x| (C4) x M -> x M x       // variable sous contexte positif
+|x| M x -> x M              // quel que soit x : M suivi de x devient x suivi de M
 ```
+
+C'est ce qui la distingue d'une capture `?` : celle-ci apparie une position, tandis qu'une variable
+liee tient son identite d'un bout a l'autre de la regle.
+
+```bpscript
+|x| x x -> x                // quel que soit x : deux x de suite deviennent un seul
+|x| |y| x y -> y x          // quels que soient x et y : ils s'echangent
+|x| (C4) x M -> x M x       // quel que soit x, quand il suit C4
+```
+
+Elle s'abaisse en non-terminal nomme pour le moteur.
 
 Les tables d'homomorphisme se declarent par `@transcription.<table>` et s'appliquent entre un
 gabarit maitre et son esclave -- cf.
-[Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes).
+[Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
 
 ---
 
