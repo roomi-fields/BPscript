@@ -769,7 +769,7 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | -------------------------------------- |
 | **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
-| **Controle**     | via `@controls`                          | commande moteur BPx, zero duree                | `(mode:random)`, `(/2)`, `(weight:50)` |
+| **Reglage**      | une cle d'une librairie invoquee          | decrit une propriete, zero duree               | `(mode:random)`, `(/2)`, `(weight:50)` |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
 donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
@@ -924,8 +924,8 @@ Pour BPScript, `vel` est un nom qu'il porte, `120` une valeur qu'il transporte, 
 ### Surcharge des parametres
 
 La cascade fournit la valeur de chaque parametre ; ecrire ce parametre sur l'occurrence remplace
-cette valeur, pour cette occurrence. La cascade complete est decrite dans « Sons et cascade
-d'heritage ».
+cette valeur, pour cette occurrence. La cascade complete est decrite dans « Heritage par
+cascade ».
 
 ```bpscript
 @core
