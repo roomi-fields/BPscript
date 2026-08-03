@@ -291,15 +291,25 @@ grammaire, un jalon de structure.
 
 ### `@def` -- declarer une definition
 
-`@def` associe un nom a un corps, pour le reinvoquer d'un mot. Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`.
+`@def` associe un nom a un corps, pour le reinvoquer d'un mot. **Le nom vient d'abord, ce qu'il vaut
+ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`.
 
 ```text
-@def souffle lfo:2 >> filtre.cutoff
-@def cadence sa re ga pa
-@def phase enveloppe `js: (t, dur) => 1 - t / dur`
+@def souffle lfo:2 >> filtre.cutoff       // un branchement
+@def cadence sa re ga pa                  // une structure de terminaux
+@def phase enveloppe `js: (t, dur) => 1 - t / dur`   // du code
+@def kick (vel:120)                       // un prereglage
+@def accent(x) x(vel:120)                 // une transformation parametree
+@def fast(x) {x}:2                        // une transformation structurelle
 ```
 
-Ce qu'une definition peut porter : une structure de terminaux, un branchement, du code, un signal.
+Le nom se pose ensuite a sa place dans une regle :
+
+```bpscript
+Motif -> C4 D4 E4
+S -> C4!kick D4 E4!accent fast(Motif)
+```
+
 **Ce qui se definit est ce qui se reinvoque** -- un fil isole entre deux points ne se definit pas,
 puisqu'on ne le rejoue jamais seul.
 
@@ -1965,23 +1975,10 @@ est le même symbole, réécrit plus tard.
 emplois, puis compare l'arbre dérivé entier avant et après, à graine fixe. Il écrit quand
 chaque jeton coïncide.
 
-### `@def` — nommer ce qu'on réinvoque
+### Étiqueter un groupe
 
-**Le nom vient d'abord, ce qu'il vaut ensuite** — la forme de toute déclaration. `@def` nomme une
-transformation, un préréglage, un câblage, et ce nom se pose à sa place dans une règle.
-
-```bpscript
-@alphabet.western
-@def kick (vel:120)               // préréglage de contrôles
-@def accent(x) x(vel:120)         // transformation paramétrée
-@def fast(x) {x}:2                // transformation structurelle
-
-Motif -> C4 D4 E4
-S -> C4!kick D4 E4!accent fast(Motif)
-```
-
-**Étiqueter un groupe se fait dans la règle**, avec un nom suivi du deux-points : le nom désigne
-alors d'un seul mot un contrôle porté par tous ses éléments.
+**Un nom suivi du deux-points, devant une accolade, étiquette l'ensemble** : il désigne alors d'un
+seul mot un contrôle porté par tous ses éléments.
 
 ```bpscript
 @alphabet.western
