@@ -975,7 +975,7 @@ Elles vivent dans la librairie `engine`, sauf le tempo qui vit dans `time` :
 /N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
 mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
-weight      poids de la regle (entier, K-param, ou inf pour priorite absolue)
+weight      poids de la regle (entier, K-param, ou inf) -- a zero, la regle est ecartee
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
 tempo       tempo de la regle -- (tempo:120) ; @time.tempo:120 pose celui de la scene
 meter       signature rythmique -- (meter:7/8), (meter:4+4/4)
