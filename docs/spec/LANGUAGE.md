@@ -1428,16 +1428,25 @@ meme symbole. Le `?` nu prend chaque place independamment.
 
 ```bpscript
 @var N
-? M -> N                 //  A M    ->  N          la place de A est prise, rien ne la rejoue
-?1 M ?1 -> ?1 N ?1       //  A M A  ->  A N A      le symbole qui encadre M revient autour de N
-?1 ?2 -> ?2 ?1           //  A B    ->  B A        deux places, echangees
+
+// « quelque chose, puis M » devient N
+? M -> N                 //  A M    ->  N
+
+// « quelque chose, M, la meme chose » devient « cette chose, N, cette chose »
+?1 M ?1 -> ?1 N ?1       //  A M A  ->  A N A
+
+// « deux choses » deviennent « les memes, echangees »
+?1 ?2 -> ?2 ?1           //  A B    ->  B A
 ```
 
 **Le numero change ce que la regle accepte, pas seulement ce qu'elle rejoue.**
 
 ```bpscript
-? ?   -> X               //  A B    ->  X          deux places quelconques, independantes
-?1 ?1 -> X               //  A B    ->  (rien)     il faut DEUX FOIS LE MEME
+// « deux choses quelconques » -- elles peuvent differer
+? ?   -> X               //  A B    ->  X
+
+// « deux fois la meme chose » -- sinon la regle ne s'applique pas
+?1 ?1 -> X               //  A B    ->  (rien)
                          //  A A    ->  X
 ```
 
@@ -1453,11 +1462,18 @@ qui suit vaut pour n'importe quel symbole, et que toutes les occurrences de `x` 
 designent **le meme**. Comme une capture, `x` **occupe une place** et la consomme.
 
 ```bpscript
-|x| M x -> x M              //  M A    ->  A M      quel que soit x, M et x s'echangent
-|x| x x -> x                //  A A    ->  A        deux fois le meme deviennent un seul
-                            //  A B    ->  (rien)   il faut DEUX FOIS LE MEME
-|x| |y| x y -> y x          //  A B    ->  B A      quels que soient x et y, ils s'echangent
-|x| (C4) x M -> x M x       //  C4 A M ->  C4 A M A quel que soit x, quand il suit C4
+// « quel que soit x : M puis x » devient « x puis M »
+|x| M x -> x M              //  M A     ->  A M
+
+// « quel que soit x : deux x de suite » deviennent « un seul x »
+|x| x x -> x                //  A A     ->  A
+                            //  A B     ->  (rien)
+
+// « quels que soient x et y : x puis y » deviennent « y puis x »
+|x| |y| x y -> y x          //  A B     ->  B A
+
+// « quel que soit x, quand il suit C4 : x puis M » devient « x, M, x »
+|x| (C4) x M -> x M x       //  C4 A M  ->  C4 A M A
 ```
 
 **Un nom plutot qu'un numero, et rien d'autre :** `|x| x x -> x` et `?1 ?1 -> ?1` decrivent la meme
@@ -1476,26 +1492,37 @@ gabarit maitre et son esclave -- cf.
 **La parenthese se lit « quand », le diese se lit « sauf ».**
 
 ```bpscript
-(C4 D4) M -> E4 F4          //  C4 D4 M  ->  C4 D4 E4 F4   le contexte reste, M devient E4 F4
-#X M -> C4                  //  A M      ->  C4            A est pris, pourvu qu'il ne soit pas X
+// « quand M suit C4 D4 » : M devient E4 F4, et le contexte reste ou il est
+(C4 D4) M -> E4 F4          //  C4 D4 M  ->  C4 D4 E4 F4
+
+// « quelque chose sauf X, puis M » devient C4
+#X M -> C4                  //  A M      ->  C4
                             //  X M      ->  (rien)
-(C4) M #(F4) -> D4 E4       //  C4 M G4  ->  C4 D4 E4 G4   quand M suit C4, et sauf s'il precede F4
+
+// « quand M suit C4, et sauf s'il precede F4 » : M devient D4 E4
+(C4) M #(F4) -> D4 E4       //  C4 M G4  ->  C4 D4 E4 G4
 ```
 
 **Un contexte REGARDE, il ne PREND pas.** C'est la seule difference avec une variable, et elle
 s'entend a la resolution :
 
 ```bpscript
-|x| x M -> M x              //  A M  ->  M A      x est pris a sa place, et remis apres M
-(x)  M -> M x               //  x M  ->  x M x    x n'a pas bouge, et un second est ajoute
+// « quel que soit x : x puis M » devient « M puis x » -- x est PRIS, donc il bouge
+|x| x M -> M x              //  A M  ->  M A
+
+// « quand M suit x » : M devient « M puis x » -- x est REGARDE, donc il reste
+(x)  M -> M x               //  x M  ->  x M x
 ```
 
 **D'ou une asymetrie.** Une variable peut imiter un contexte -- il suffit de la remettre a
 l'identique :
 
 ```bpscript
+// « quand M suit x » : M devient N
 (x)     M -> N              //  x M  ->  x N
-|x| x   M -> x N            //  A M  ->  A N      la meme chose, en prenant puis remettant
+
+// « quel que soit x : x puis M » devient « x puis N » -- pris, puis remis a l'identique
+|x| x   M -> x N            //  A M  ->  A N
 ```
 
 L'inverse est impossible : un contexte ne peut ni deplacer ni retirer ce qu'il regarde. Ce qu'il
