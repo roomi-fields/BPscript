@@ -485,7 +485,6 @@ qui vit dans un catalogue.
 @alphabet.sargam
 @tuning.just
 @octaves.saptak
-@sound.tabla_perc
 @transcription.dhati
 @library.strudel
 ```
@@ -609,12 +608,12 @@ Le detail est dans « Les conventions de lecture d'un signal ».
 -> <- <>       derivation et direction
 { , }          polymetrie et groupement temporel
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
-:              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:sound.bell_short)
+:              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:vel:80)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
-               (*:sound.cloche, (*:vel:80)) ; dans un sac, multiplie la duree (C4(*2)) ;
+               (*:vel:80, *:sombre) ; dans un sac, multiplie la duree (C4(*2)) ;
                entre un gabarit maitre et son esclave, marqueur d'homomorphisme ($X * &X)
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [phase=2])
-.              reference a une entite (alphabet.western, sound.bell_short, transport.midi),
+.              reference a une entite (alphabet.western, lpf1.cutoff, transport.midi),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
 [ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
 ` `            code externe, execute par le runtime que son tag nomme
@@ -1077,7 +1076,7 @@ Le crochet a son propre tableau, sous « Le crochet -- ce qui appartient a la de
 
 Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peut porter un
 **sujet** devant le controle pour viser plus finement -- meme mecanisme que l'affectation
-`*:sound.bell`, ou le `:` introduit deja un sujet.
+`*:vel:80`, ou le `:` introduit deja un sujet.
 
 | Ecriture                             | Sujet | Cible                             |
 | ------------------------------------ | ----- | --------------------------------- |
@@ -1088,7 +1087,7 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
 Le sujet s'ecrit pareil devant une **valeur** a affecter et devant un **nom** a appliquer : le
 deux-points introduit le sujet dans les deux cas.
 
-- `*` designe tous les terminaux, le sens qu'il a deja dans `*:sound.X`.
+- `*` designe tous les terminaux de la portee.
 - Le sujet vaut **par paire** : `(*:cutoff:env, wave:sawtooth, vel:100)` pose `cutoff` sur chaque
   terminal, `wave` et `vel` sur la regle.
 - Pour un **signal** (qui varie dans le temps), le sujet decide l'**horloge** : sans sujet, il court
@@ -1261,14 +1260,6 @@ S -> { Melodie, Rythme }
 
 // 2. Groupement temporel -- un sous-groupe dans une sequence, une seule voix
 S -> A {B C D} E F
-```
-
-```bpscript
-// 3. Sac de proprietes dans une declaration
-@sound
-  bell_short { sample:"bell.wav", dur:400 }
-
-S -> C4(sound.bell_short)
 ```
 
 ### Duree collee sur un groupe
@@ -1698,7 +1689,7 @@ propriete au niveau ou on veut qu'elle change.
 
 ### Les composants d'un acteur
 
-Les six cles d'entite d'un acteur (`alphabet`, `tuning`, `octaves`, `sound`,
+Les cinq cles d'un acteur (`alphabet`, `tuning`, `octaves`,
 `transport`, `eval`) cascadent de la scene vers l'acteur. Une scene qui nomme
 son alphabet tient les autres de la cascade :
 
@@ -1739,104 +1730,6 @@ vitesse absolue -- cf. les operateurs temporels.
 ```bpscript
 S -> {A B}(*2) C
 ```
-
----
-
-## Sons
-
-Un son decrit son **timbre** (`sample`, `synth`) et son **comportement
-temporel** : duree, dilatation, pivot, periode, recouvrement, troncature. Le
-vocabulaire complet des proprietes d'un prototype vit dans la librairie `sound`
-(capacites booleennes, bornes temporelles et leurs modes, duree, dilatation,
-periode, timbre).
-
-### Territoires : un seul role chacun
-
-| Territoire      | Role                                        | Affectation a un sujet       |
-| --------------- | ------------------------------------------- | ---------------------------- |
-| `@sound`        | declarer des prototypes, anonymes et nommes | declaratif seul              |
-| `@alphabet.X`   | declarer un alphabet                        | `*:sound.Y`, `sa:sound.Y`    |
-| `@actor X`      | declarer un acteur                          | `*:sound.Y`, `sa:sound.Y`    |
-| RHS d'une regle | flux temporel                               | `sa(sound.Y)` a l'occurrence |
-
-Une affectation s'ecrit depuis le territoire d'origine du sujet, ce qui garde
-`@sound` declaratif.
-
-### Declarer des sons
-
-```bpscript
-@sound
-  { dur:500, alphaMin:80, alphaMax:120 }   // entree anonyme = defaut de scene
-  bell_short { sample:"bell.wav", dur:400 }
-  bell_long  { sample:"bell.wav", dur:1200, coverEnd:true }
-  drum_kick  { sample:"kick.wav", dur:200, breakTempo }
-```
-
-- Une entree **anonyme** (`{ ... }`) est un defaut de scene. Plusieurs entrees
-  anonymes se lisent dans l'ordre source.
-- Une entree **nommee** (`nom { ... }`) se reference ailleurs par `sound.nom`.
-- Une capacite ecrite nue vaut `true` : `{ breakTempo }` donne
-  `breakTempo: true` dans l'arbre.
-- Les modes s'ecrivent en chaine (`'absolute'`, `'relative'` ; `'irrelevant'`
-  pour `periodMode`) ; `pivType` accepte la chaine ou l'entier `1..7`.
-
-### Invoquer un prototype du catalogue
-
-`@sound.<nom>` invoque une entree du catalogue `lib/sounds.json` :
-
-```bpscript
-@sound.tabla_perc
-
-S -> C4 D4
-```
-
-Un nom absent du catalogue est refuse au parse (« sound '<nom>' introuvable
-dans le catalogue »).
-
-### Affecter un son a un sujet
-
-```bpscript
-@sound
-  { dur:500 }
-  cloche { sample:"bell.wav", dur:400 }
-
-@alphabet.sargam
-  *:sound.cloche                           // defaut de l'alphabet
-  sa:sound.cloche                          // sa dans cet alphabet
-  re:{ dur:300 }                           // bloc de proprietes anonyme
-
-@actor sitar
-  alphabet.sargam
-  transport.midi(ch:10)
-  *:sound.cloche                           // defaut de l'acteur
-  sa:{ dur:120 }                           // sa pour cet acteur
-
-S -> sa(sound.cloche) re ga                // l'occurrence porte son son
-```
-
-Le sujet d'une affectation est un terminal (`sa`) ou `*`, qui vaut pour tous les
-terminaux. La cible est une reference `sound.<nom>` ou un bloc de proprietes
-`{ ... }` -- cf. le point et le deux-points.
-
-### Les sept niveaux de la cascade des sons
-
-Du moins specifique au plus specifique.
-
-| #   | Niveau                    | Ecriture                                        |
-| --- | ------------------------- | ----------------------------------------------- |
-| 1   | Socle                     | `@core` -- les defauts de la librairie invoquee |
-| 2   | Defaut de scene           | `@sound { ... }`                                |
-| 3   | Defaut d'alphabet         | `@alphabet.X` + `*:sound.NOM`                   |
-| 4   | Note dans l'alphabet      | `@alphabet.X` + `Y:sound.NOM`                   |
-| 5   | Defaut d'acteur           | `@actor X` + `*:sound.NOM`                      |
-| 6   | Note pour un acteur       | `@actor X` + `Y:sound.NOM`                      |
-| 7   | Occurrence dans une regle | `Y(sound.NOM)`                                  |
-
-Chaque niveau pointe un son nomme ou pose un bloc de proprietes anonyme. La
-fusion se fait champ par champ -- cf. l'heritage par cascade.
-
----
-
 ## Conventions de notation — l'espace, le point, le deux-points
 
 Trois signes structurent toute l'écriture : l'**espace** sépare les termes, le **point**
@@ -1849,12 +1742,12 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | ---------- | ----------------------------------------- | -------------------------------------------------- |
 | espace     | sépare deux termes                        | `@def souffle (vel:60)`                            |
 | collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                        |
-| `.`        | désigne un élément dans un espace de noms | `sound.cloche`, `alphabet.tabla`, `transport.midi` |
-| `:`        | lie un sujet à une valeur                 | `dha:sound.frappe`, `@time.tempo:120`, `(vel:100)` |
-| `*`        | sujet = tous les terminaux                | `*:sound.cloche`                                   |
+| `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `transport.midi`  |
+| `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`         |
+| `*`        | sujet = tous les terminaux                | `*:vel:80`                                         |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(scale:just)`      |
 | `[]`       | ce qui appartient a la derivation         | `[phase==1]`, `[phase=2]`, `[3]` dans `@template`  |
-| `@`        | ouvre une ligne de la partie déclarative  | `@sound`, `@actor`, `@alphabet.tabla`              |
+| `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`                |
 | `->`       | règle de production                       | `S -> C4 D4`                                       |
 | `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                              |
 
@@ -1887,12 +1780,12 @@ Motif -> {C4 D4}:2 E4(/2)
 ### Le point — désigner dans un espace de noms
 
 `espace.nom` nomme un élément à l'intérieur d'un espace. Les espaces de noms sont les
-catégories de librairie (`alphabet`, `tuning`, `octaves`, `sound`, `transport`, `eval`,
+catégories de librairie (`alphabet`, `tuning`, `octaves`, `transport`, `eval`,
 `mod`), les acteurs, les modules à ports et les étiquettes de groupe.
 
 | Emploi                                                    | Écriture                                                    |
 | --------------------------------------------------------- | ----------------------------------------------------------- |
-| entité de librairie                                       | `alphabet.sargam`, `tuning.sargam_22shruti`, `sound.cloche` |
+| entité de librairie                                       | `alphabet.sargam`, `tuning.sargam_22shruti`, `module.lpf`   |
 | directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@sub.dhati`                             |
 | terminal vu à travers un acteur                           | `sitar.sa`                                                  |
 | port d'un module                                          | `lpf.cutoff`                                                |
@@ -1918,8 +1811,8 @@ Le sujet est à gauche du signe, la valeur à droite.
 
 | Emploi                                     | Écriture                     |
 | ------------------------------------------ | ---------------------------- |
-| affecter un son à un terminal              | `dha:sound.frappe`           |
-| affecter un son au sujet par défaut        | `*:sound.cloche`             |
+| affecter une sortie à un terminal          | `dha:midi`                   |
+| affecter une sortie au sujet par défaut    | `*:midi`                     |
 | poser une propriété sur un nom qui existe  | `@alphabet.tabla:midi`       |
 | réglage global de scène                    | `@time.tempo:120`            |
 | paire clé-valeur dans `()`                 | `(vel:100)`, `(mode:random)` |
@@ -1928,11 +1821,6 @@ Le sujet est à gauche du signe, la valeur à droite.
 
 ```text
 @alphabet.tabla:midi
-  *:sound.cloche
-  dha:sound.frappe
-@sound
-  cloche { sample:"bell.wav", dur:400 }
-  frappe { sample:"kick.wav", dur:200 }
 @time.tempo:120
 
 S -> dha ti (mode:random)
@@ -1958,15 +1846,14 @@ S -> C4 D4
 ### `*` — le sujet par défaut
 
 En position de sujet, `*` désigne tous les terminaux du territoire où il est écrit :
-`*:sound.cloche` donne un son à l'alphabet ou à l'acteur entier, et chaque terminal nommé
-ensuite l'affine — c'est l'héritage par cascade, appliqué aux sons (cf. la cascade
-d'héritage).
+`*:midi` donne une sortie à l'alphabet entier, et chaque terminal nommé ensuite l'affine —
+c'est l'héritage par cascade.
 
 ### Séparation des territoires
 
-- **Déclarer** — `@sound`, `@alphabet.X`, `@actor X`, `@def` : ce que l'on écrit une
+- **Déclarer** — `@alphabet.X`, `@actor X`, `@var`, `@def` : ce que l'on écrit une
   fois et que l'on réutilise.
-- **Affecter** — `*:sound.X`, `Y:sound.X` : depuis le territoire d'origine du sujet,
+- **Affecter** — `*:midi`, `Y:osc` : depuis le territoire d'origine du sujet,
   c'est-à-dire l'alphabet ou l'acteur où il est déclaré, ou l'occurrence dans une règle.
 
 ---
@@ -2075,7 +1962,7 @@ Deux énoncés, tous deux globaux :
 2. deux déclarations qui **créent** un nom en portent chacune un différent.
 
 Le critère est l'**effet** de la ligne : entre dans la règle ce qui crée un nom. Une écriture
-qui pose une propriété sur un nom existant (`dha:sound.frappe`) laisse ce nom à sa sorte
+qui pose une propriété sur un nom existant (`dha:midi`) laisse ce nom à sa sorte
 d'origine et reste libre.
 
 Les têtes de règle se rencontrent librement **entre elles**. Une tête répétée est une
