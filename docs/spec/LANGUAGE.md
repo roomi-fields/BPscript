@@ -1420,17 +1420,20 @@ Syntaxe :
 
 ## Captures `?` -- pattern matching
 
-`?` apparie un symbole quelconque. A gauche de la fleche il capture ; a droite il rejoue la
-valeur capturee.
+**`?` se lit « ce qu'il y a la ».** Il ne nomme rien : il designe une **place** et prend le symbole
+qui s'y trouve. A gauche de la fleche il capture ; a droite il rejoue ce qu'il a pris.
 
-`?n` **unifie** : toutes les occurrences de `?1` dans une regle designent le meme symbole.
-Le `?` nu capture chaque position independamment.
+**`?n` ajoute « et le meme ailleurs »** : toutes les occurrences de `?1` dans une regle designent le
+meme symbole. Le `?` nu prend chaque place independamment.
 
 ```bpscript
 @var N
-?1 M ?1 -> ?1 N ?1       // le symbole qui encadre M revient autour de N
-?1 ?2 -> ?2 ?1           // echange deux symboles
+?1 M ?1 -> ?1 N ?1       // ce qu'il y a la, M, la meme chose -> cette chose, N, cette chose
+?1 ?2 -> ?2 ?1           // deux choses -> les memes, echangees
 ```
+
+**C'est ce qui separe une capture d'une variable liee.** `|x|` **annonce d'avance** -- quel que soit
+x --, puis emploie ce nom ; `?` ne previent de rien et **prend ce qui passe**.
 
 Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
 les porte jusqu'au moteur.
@@ -1466,10 +1469,12 @@ gabarit maitre et son esclave -- cf.
 
 ## Contextes `()` et `#` -- conditions d'application
 
+**La parenthese se lit « quand », le diese se lit « sauf ».**
+
 ```bpscript
-(C4 D4) M -> E4 F4          // contexte positif : M se reecrit quand il suit C4 D4
-#X M -> C4                  // creneau negatif : un symbole qui differe de X
-(C4) M #(F4) -> D4 E4       // contexte positif a gauche, creneau negatif a droite
+(C4 D4) M -> E4 F4          // quand M suit C4 D4, il devient E4 F4
+#X M -> C4                  // sauf X : un symbole quelconque, pourvu qu'il ne soit pas X
+(C4) M #(F4) -> D4 E4       // quand M suit C4, et sauf s'il precede F4
 ```
 
 ### `#X` apparie un symbole et consomme sa position
@@ -1491,10 +1496,14 @@ les contextes positifs `(...)`, eux, vivent dans le champ `contexts`.
 des deux cotes de la fleche (prefixe ou suffixe commun) est du contexte. Differer de `X` et
 appartenir au contexte sont deux proprietes independantes -- chacune s'obtient sans l'autre.
 
-### Le test negatif est une disjonction a l'echelle de la regle
+### Plusieurs `#` forment un seul « sauf »
 
-Plusieurs `#` dans une meme regle forment **un seul test** : il passe des qu'**UN** creneau
-differe de son nom, et il bloque quand **TOUS** les creneaux egalent leur nom simultanement.
+**La negation porte sur l'ENSEMBLE, pas sur chaque creneau.** `#K1 #K2 #K3 M M` se lit « trois
+symboles quelconques suivis de M M, **sauf K1 K2 K3** » -- et non « trois symboles dont chacun
+differe du sien ».
+
+Le test passe donc des qu'**UN** creneau differe de son nom, et il bloque seulement quand **TOUS**
+egalent le leur en meme temps.
 
 ### Silence et prolongation comme creneaux
 
