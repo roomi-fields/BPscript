@@ -1848,8 +1848,8 @@ catégories de librairie (`alphabet`, `tuning`, `octaves`, `sound`, `transport`,
 | contrôle d'un groupe étiqueté                             | `groove.vel`                                                |
 | frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                          |
 
-Les clés d'entité d'un acteur — `alphabet`, `tuning`, `octaves`, `sound`, `transport`,
-`eval`, `voice` — sont des références : chacune s'écrit avec le point, sur sa ligne.
+Les cinq clés d'un acteur — `alphabet`, `tuning`, `octaves`, `transport`, `eval` — sont des
+références : chacune s'écrit avec le point, sur sa ligne.
 
 ```bpscript
 @alphabet.sargam
