@@ -1529,20 +1529,20 @@ L'inverse est impossible : un contexte ne peut ni deplacer ni retirer ce qu'il r
 apporte en propre, c'est la **garantie que ce qui est entre parentheses ne bougera pas** -- lisible
 sans comparer les deux cotes de la fleche.
 
-### `#X` apparie un symbole et consomme sa position
+### Un contexte negatif consomme sa position
 
-`#X` apparie exactement **un** symbole, qui doit differer de `X`, et il **occupe la position**
-de ce symbole.
+**`#X` apparie exactement UN symbole**, qui doit differer de `X`, et il **occupe la position** de ce
+symbole. C'est ce qui le separe d'un contexte positif : `(X)` regarde sans prendre, `#X` prend.
 
 ```bpscript
 @var z1, z2, z3
-#K1 #K2 #K3 M M -> z1 z2 z3 M M
+
+// « trois choses, sauf K1 K2 K3, puis M M » deviennent « z1 z2 z3 M M »
+#K1 #K2 #K3 M M -> z1 z2 z3 M M   //  M K2 K3 K1 M M  ->  M z1 z2 z3 M M
 ```
 
-Appliquee a `M K2 K3 K1 M M`, cette regle donne `M z1 z2 z3 M M` : les trois creneaux negatifs
-ont apparie `K2`, `K3` et `K1` -- trois symboles reels, pris dans l'ordre, position par
-position. Dans l'arbre, un `#X` est un `Symbol` de `lhs`, a sa place, avec `negated: true` ;
-les contextes positifs `(...)`, eux, vivent dans le champ `contexts`.
+Les trois contextes negatifs ont apparie `K2`, `K3` et `K1` -- trois symboles reels, pris dans
+l'ordre, position par position.
 
 **La qualite de CONTEXTE vient de la SYMETRIE de la regle** : un symbole ecrit a la meme place
 des deux cotes de la fleche (prefixe ou suffixe commun) est du contexte. Differer de `X` et
@@ -1550,26 +1550,42 @@ appartenir au contexte sont deux proprietes independantes -- chacune s'obtient s
 
 ### Plusieurs `#` forment un seul « sauf »
 
-**La negation porte sur l'ENSEMBLE, pas sur chaque creneau.** `#K1 #K2 #K3 M M` se lit « trois
+**La negation porte sur l'ENSEMBLE, pas sur chaque contexte pris a part.** `#K1 #K2 #K3 M M` se lit « trois
 symboles quelconques suivis de M M, **sauf K1 K2 K3** » -- et non « trois symboles dont chacun
 differe du sien ».
 
-Le test passe donc des qu'**UN** creneau differe de son nom, et il bloque seulement quand **TOUS**
+Le test passe donc des qu'**UN** contexte differe de son nom, et il bloque seulement quand **TOUS**
 egalent le leur en meme temps.
 
-### Silence et prolongation comme creneaux
+### `#K1 #K2 #K3` et `#(K1 K2 K3)` : trois positions ou une seule
 
-`-` (silence) et `_` (prolongation) sont des voisins comme les autres : ils s'emploient en
-creneau, y compris en creneau negatif, ou le symbole se colle au `#` -- `#-`, `#_`.
+**Le groupe ne change pas le nombre d'interdits, il change le nombre de PLACES.**
 
 ```bpscript
-#- V1 <> #- -              // le creneau apparie un symbole qui differe du silence
-#_ M -> C4                 // le creneau apparie un symbole qui differe de la prolongation
-#(X Y) M -> C4             // le creneau apparie un symbole qui differe de X et de Y
+// TROIS places, une par diese : « trois choses, sauf la suite K1 K2 K3 »
+#K1 #K2 #K3 M -> C4        //  A B C M   ->  C4
+                           //  K1 K2 K3 M ->  (rien)
+
+// UNE place : « une chose qui n'est ni K1, ni K2, ni K3 »
+#(K1 K2 K3) M -> C4        //  A M      ->  C4
+                           //  K2 M     ->  (rien)
 ```
 
-`#<symbole>` apparie un creneau ; `#(X Y)` apparie un creneau dont le symbole differe de chaque
-membre du groupe. Les deux formes consomment une position.
+Le premier interdit **une sequence** ; le second interdit **un ensemble de valeurs a une seule
+place**.
+
+### Silence et prolongation
+
+`-` (silence) et `_` (prolongation) sont des voisins comme les autres : ils s'emploient en contexte
+negatif, ou le symbole se colle au `#` -- `#-`, `#_`.
+
+```bpscript
+// « quelque chose qui n'est pas un silence, puis V1 »
+#- V1 <> #- -
+
+// « quelque chose qui n'est pas une prolongation, puis M » devient C4
+#_ M -> C4
+```
 
 ---
 
