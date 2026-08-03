@@ -1420,20 +1420,26 @@ Syntaxe :
 
 ## Captures `?` -- pattern matching
 
-**`?` se lit « ce qu'il y a la ».** Il ne nomme rien : il designe une **place** et prend le symbole
-qui s'y trouve. A gauche de la fleche il capture ; a droite il rejoue ce qu'il a pris.
+**`?` se lit « ce qu'il y a la ».** Il ne nomme rien : il designe une **place**, prend le symbole qui
+s'y trouve, et cette place est **consommee**. A droite de la fleche, il rejoue ce qu'il a pris.
 
 **`?n` ajoute « et le meme ailleurs »** : toutes les occurrences de `?1` dans une regle designent le
 meme symbole. Le `?` nu prend chaque place independamment.
 
 ```bpscript
 @var N
-?1 M ?1 -> ?1 N ?1       // ce qu'il y a la, M, la meme chose -> cette chose, N, cette chose
-?1 ?2 -> ?2 ?1           // deux choses -> les memes, echangees
+? M -> N                 //  A M    ->  N          la place de A est prise, rien ne la rejoue
+?1 M ?1 -> ?1 N ?1       //  A M A  ->  A N A      le symbole qui encadre M revient autour de N
+?1 ?2 -> ?2 ?1           //  A B    ->  B A        deux places, echangees
 ```
 
-**C'est ce qui separe une capture d'une variable liee.** `|x|` **annonce d'avance** -- quel que soit
-x --, puis emploie ce nom ; `?` ne previent de rien et **prend ce qui passe**.
+**Le numero change ce que la regle accepte, pas seulement ce qu'elle rejoue.**
+
+```bpscript
+? ?   -> X               //  A B    ->  X          deux places quelconques, independantes
+?1 ?1 -> X               //  A B    ->  (rien)     il faut DEUX FOIS LE MEME
+                         //  A A    ->  X
+```
 
 Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
 les porte jusqu'au moteur.
@@ -1444,20 +1450,18 @@ les porte jusqu'au moteur.
 
 **`|x|` se lit « quel que soit x ».** La barre en tete de regle **quantifie** : elle annonce que ce
 qui suit vaut pour n'importe quel symbole, et que toutes les occurrences de `x` dans cette regle
-designent **le meme**.
+designent **le meme**. Comme une capture, `x` **occupe une place** et la consomme.
 
 ```bpscript
-|x| M x -> x M              // quel que soit x : M suivi de x devient x suivi de M
+|x| M x -> x M              //  M A    ->  A M      quel que soit x, M et x s'echangent
+|x| x x -> x                //  A A    ->  A        deux fois le meme deviennent un seul
+                            //  A B    ->  (rien)   il faut DEUX FOIS LE MEME
+|x| |y| x y -> y x          //  A B    ->  B A      quels que soient x et y, ils s'echangent
+|x| (C4) x M -> x M x       //  C4 A M ->  C4 A M A quel que soit x, quand il suit C4
 ```
 
-C'est ce qui la distingue d'une capture `?` : celle-ci apparie une position, tandis qu'une variable
-liee tient son identite d'un bout a l'autre de la regle.
-
-```bpscript
-|x| x x -> x                // quel que soit x : deux x de suite deviennent un seul
-|x| |y| x y -> y x          // quels que soient x et y : ils s'echangent
-|x| (C4) x M -> x M x       // quel que soit x, quand il suit C4
-```
+**Un nom plutot qu'un numero, et rien d'autre :** `|x| x x -> x` et `?1 ?1 -> ?1` decrivent la meme
+regle. La barre nomme ce que le numero indexe.
 
 Elle s'abaisse en non-terminal nomme pour le moteur.
 
@@ -1472,10 +1476,31 @@ gabarit maitre et son esclave -- cf.
 **La parenthese se lit « quand », le diese se lit « sauf ».**
 
 ```bpscript
-(C4 D4) M -> E4 F4          // quand M suit C4 D4, il devient E4 F4
-#X M -> C4                  // sauf X : un symbole quelconque, pourvu qu'il ne soit pas X
-(C4) M #(F4) -> D4 E4       // quand M suit C4, et sauf s'il precede F4
+(C4 D4) M -> E4 F4          //  C4 D4 M  ->  C4 D4 E4 F4   le contexte reste, M devient E4 F4
+#X M -> C4                  //  A M      ->  C4            A est pris, pourvu qu'il ne soit pas X
+                            //  X M      ->  (rien)
+(C4) M #(F4) -> D4 E4       //  C4 M G4  ->  C4 D4 E4 G4   quand M suit C4, et sauf s'il precede F4
 ```
+
+**Un contexte REGARDE, il ne PREND pas.** C'est la seule difference avec une variable, et elle
+s'entend a la resolution :
+
+```bpscript
+|x| x M -> M x              //  A M  ->  M A      x est pris a sa place, et remis apres M
+(x)  M -> M x               //  x M  ->  x M x    x n'a pas bouge, et un second est ajoute
+```
+
+**D'ou une asymetrie.** Une variable peut imiter un contexte -- il suffit de la remettre a
+l'identique :
+
+```bpscript
+(x)     M -> N              //  x M  ->  x N
+|x| x   M -> x N            //  A M  ->  A N      la meme chose, en prenant puis remettant
+```
+
+L'inverse est impossible : un contexte ne peut ni deplacer ni retirer ce qu'il regarde. Ce qu'il
+apporte en propre, c'est la **garantie que ce qui est entre parentheses ne bougera pas** -- lisible
+sans comparer les deux cotes de la fleche.
 
 ### `#X` apparie un symbole et consomme sa position
 
