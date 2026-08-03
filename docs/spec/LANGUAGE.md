@@ -10,7 +10,7 @@
 - [Inventaire : 3 mots, 23 symboles, 9 operateurs](#inventaire--3-mots-23-symboles-9-operateurs)
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres -- opaques pour BPScript](#parametres----opaques-pour-bpscript)
-- [Les sacs : `()` reglages, `[]` drapeaux](#les-sacs---reglages--drapeaux)
+- [Les sacs : `()` reglages, `[]` derivation](#les-sacs---reglages--derivation)
 - [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles)
 - [Les accolades `{}` -- polymetrie et groupement](#les-accolades------polymetrie-et-groupement)
 - [L'operateur `!` -- simultaneite](#loperateur------simultaneite)
@@ -21,7 +21,7 @@
 - [Homomorphismes `|x|`](#homomorphismes-x----variables-liees)
 - [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
 - [Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes)
-- [Les patrons structurels](#les-patrons-structurels)
+- [La section `@template`](#la-section-template----le-catalogue-des-formes)
 - [Heritage par cascade](#heritage-par-cascade)
 - [Sons](#sons)
 - [Conventions de notation](#conventions-de-notation--lespace-le-point-le-deux-points)
@@ -617,7 +617,7 @@ Le detail est dans « Les conventions de lecture d'un signal ».
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [phase=2])
 .              reference a une entite (alphabet.western, sound.bell_short, transport.midi),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
-[ ]            drapeaux : un test avant le membre gauche, une affectation en fin de regle
+[ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
 ` `            code externe, execute par le runtime que son tag nomme
 //             commentaire
 -              silence : occupe du temps
@@ -711,7 +711,7 @@ meme signe sert dans les deux, sa place tranche lequel des deux roles il tient.
 ### Trois places, trois roles
 
 - `@` = **global** : environnement, imports, configuration de la scene
-- `[]` = **les drapeaux** : un test avant le membre gauche, une affectation en fin de regle
+- `[]` = **la derivation** : un drapeau qui la conditionne, un rang qui designe une de ses formes
 - `()` = **les reglages** : le domaine de la cle nomme leur destinataire
 
 ```text
@@ -726,15 +726,17 @@ Un reglage s'invoque par sa categorie -- `@pitch.`, `@time.`, `@engine.` -- decr
 « Invoquer un reglage ». Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est
 le recepteur qui leur donne un sens.
 
-### Le crochet -- les drapeaux
+### Le crochet -- ce qui appartient a la derivation
 
-**Le crochet porte les drapeaux** : il teste l'etat de la derivation, et il le change. Tout reglage
-s'ecrit entre **parentheses**, ou le **domaine de la cle** nomme son destinataire.
+**Le crochet porte ce qui gouverne la derivation elle-meme** : l'etat qui decide de son chemin, et
+le rang d'une forme dans le catalogue. Tout reglage s'ecrit entre **parentheses**, ou le **domaine
+de la cle** nomme son destinataire.
 
 | place                         | ce qu'il porte                                                    |
 | ----------------------------- | ------------------------------------------------------------------- |
 | avant le membre gauche        | un **test** de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`     |
 | en fin de regle               | une **affectation** de drapeau : `[phase=2]`                      |
+| en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`            |
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
 suite. Un reglage ecrit entre crochets arrete la compilation, et le message donne sa forme : le
@@ -747,9 +749,10 @@ suite. Un reglage ecrit entre crochets arrete la compilation, et le message donn
 [count-1] S -> C4 D4 (mode:random) [phase=2]
 ```
 
-**Un signe, un role.** Un drapeau appartient a la derivation : il decide de son chemin. Un reglage
-appartient a ce qu'elle produit : il en decrit une propriete. Deux natures, deux signes -- et pour
-router un reglage, le domaine de sa cle suffit.
+**Un signe, une nature.** Ce qui est entre crochets appartient a la **derivation** : un drapeau
+decide de son chemin, un rang designe une des formes qu'elle autorise. Ce qui est entre parentheses
+appartient a ce qu'elle **produit** : un reglage en decrit une propriete, et le domaine de sa cle
+suffit a le router.
 
 BPScript decrit des structures dans le temps. Le calcul et le traitement de signal s'ecrivent
 dans le code externe (backticks).
@@ -944,7 +947,7 @@ reste celui de la declaration.
 
 ---
 
-## Les sacs : `()` reglages, `[]` drapeaux
+## Les sacs : `()` reglages, `[]` derivation
 
 ### Les reglages du moteur
 
@@ -1071,7 +1074,7 @@ StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 | **regle**   | `(cle:valeur)`   | `C2 C2 (vel:100)` |
 | **symbole** | `(cle:valeur)`   | `C4(vel:120)`     |
 
-Le crochet a son propre tableau, sous « Le crochet -- les drapeaux ».
+Le crochet a son propre tableau, sous « Le crochet -- ce qui appartient a la derivation ».
 
 ### Destinataire d'une paire `[sujet:]controle:valeur`
 
@@ -1577,36 +1580,45 @@ Un nom absent de la librairie est refuse au parse.
 
 ---
 
-## Les patrons structurels
+## La section `@template` -- le catalogue des formes
 
-**Un patron structurel se declare comme tout ce qui a un corps** : `@def`, le nom, puis le corps.
+`@template` porte les **formes structurelles que la grammaire autorise**. Elle se place apres les
+regles, en fin de scene.
 
 ```bpscript
 @alphabet.western
 
-@def large    /1 ???????
-@def boiteux  *3/2 ??.??
-@def groupe   /1 ($0 ???)($1 )
-
 S -> C4 D4
+
+@template
+[1] /1 ???????
+[2] *3/2 ??.??
+[3] /1 ($0 ???)($1 )
 ```
 
-Un corps s'ecrit `<echelle> <forme>` :
+Une entree s'ecrit `[<rang>] <echelle> <forme>` :
 
+- `<rang>` -- la place de l'entree dans le catalogue, entre crochets.
 - `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
 - `<forme>` -- des jokers `?`, un par symbole attendu ; des points `.`
   (fragments de duree egale) ; des groupes numerotes `($N ...)`, imbricables.
 
-Le mode `tem` fait l'appariement structurel sur ces patrons, dans **l'ordre de leur declaration**.
-Il s'ecrit en tete de scene ou en suffixe de regle.
+**Le catalogue s'enumere.** Le moteur explore les formes que la grammaire permet et les ecrit ici,
+une par ligne : une grammaire de quinze regles peut en produire seize, parce que les variantes de
+vitesse se croisent avec celles des non-terminaux. Le rang est la place dans cette enumeration, et
+c'est lui que l'analyse rend pour dire quelle forme a repondu.
+
+Le mode `tem` fait l'appariement structurel sur ce catalogue, dans l'ordre des rangs. Il s'ecrit en
+tete de scene ou en suffixe de regle.
 
 ```bpscript
 @alphabet.sargam
 @mode:tem
 
-@def trois /1 ???
-
 S -> sa re ga
+
+@template
+[1] /1 ???
 ```
 
 ---
@@ -1777,7 +1789,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `:`        | lie un sujet à une valeur                 | `dha:sound.frappe`, `@time.tempo:120`, `(vel:100)` |
 | `*`        | sujet = tous les terminaux                | `*:sound.cloche`                                   |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(scale:just)`      |
-| `[]`       | drapeaux : test et affectation            | `[phase==1]`, `[phase=2]`                          |
+| `[]`       | ce qui appartient a la derivation         | `[phase==1]`, `[phase=2]`, `[3]` dans `@template`  |
 | `@`        | ouvre une ligne de la partie déclarative  | `@sound`, `@actor`, `@alphabet.tabla`              |
 | `->`       | règle de production                       | `S -> C4 D4`                                       |
 | `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                              |
