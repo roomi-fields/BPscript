@@ -2001,6 +2001,20 @@ S -> C4 ouvre D4 coupe E4
 Le même traitement vaut pour les trois gestes qui agissent sur un module : brancher, couper,
 régler.
 
+**Un nombre devant les chevrons donne la largeur du câble** — `8>>` relie huit voix d'un coup.
+Sans nombre, le câble en porte une.
+
+```text
+@init
+  saw1 8>> lpf1 8>> audio     // huit voix jusqu'à la sortie
+  lfo1 >> lpf1.cutoff         // une seule voix pilote la coupure des huit
+```
+
+**Une inadéquation de largeur s'adapte, elle n'échoue jamais** : un port à une voie prend la
+première, un port à plusieurs voies alimenté en une seule diffuse cette valeur sur toutes, et une
+largeur écrite qui dépasse ce que le port accepte se ramène à ce nombre. Ce que chaque port accepte
+se lit dans son champ `voices`.
+
 **Le corps d'un `@def` de câblage est écrit dans le langage de patch**, celui-là même que porte un
 backtick `patch:`. Un câblage qu'on ne réinvoque pas s'écrit donc **littéralement dans la règle** :
 
