@@ -1563,18 +1563,18 @@ egalent le leur en meme temps.
 
 ```bpscript
 // TROIS places, une par diese : « trois choses, sauf la suite K1 K2 K3 »
-#K1 #K2 #K3 M -> C4        //  A B C M     ->  C4        les trois places sont prises
-                           //  A B K3 M    ->  C4        il suffit qu'UNE differe de son nom
+#K1 #K2 #K3 M -> C4        //  A B K3 M    ->  C4        les quatre places sont prises
                            //  K1 K2 K3 M  ->  (rien)    toutes egalent la leur
 
 // UNE place : « une chose qui n'est ni K1, ni K2, ni K3 »
-#(K1 K2 K3) M -> C4        //  A B C M     ->  A B C4    seul C est pris, A et B restent
-                           //  A B K3 M    ->  (rien)    K3 est l'un des trois interdits
+#(K1 K2 K3) M -> C4        //  A B C M     ->  A B C C4  seul M est pris, le reste demeure
 ```
 
-Sur la meme entree `A B K3 M`, la premiere regle produit `C4` et la seconde ne s'applique pas : le
-premier interdit **une sequence de trois symboles**, le second interdit **trois valeurs a une seule
-place**.
+**La difference se voit a ce qui reste.** La forme a trois dieses **consomme quatre positions** et
+ne laisse que `C4` ; la forme groupee n'en consomme qu'**une** -- elle regarde le voisin sans le
+prendre -- et laisse les trois autres en place.
+
+*Verifie au moteur natif (`bp3-engine`, v3.4.7) sur ces trois entrees.*
 
 ### Silence et prolongation
 
