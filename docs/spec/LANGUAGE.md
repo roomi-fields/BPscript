@@ -1426,6 +1426,19 @@ s'y trouve, et cette place est **consommee**. A droite de la fleche, il rejoue c
 **`?n` ajoute « et le meme ailleurs »** : toutes les occurrences de `?1` dans une regle designent le
 meme symbole. Le `?` nu prend chaque place independamment.
 
+**Une regle de motif se pose dans une sous-grammaire en substitution** -- c'est la que sa tete peut
+etre un terminal, puisqu'elle le reecrit :
+
+```bpscript
+@core
+@alphabet.western
+
+S -> C4 D4 C4
+-----
+@mode:sub1
+?1 D4 ?1 -> ?1 G4 ?1        //  C4 D4 C4  ->  C4 G4 C4
+```
+
 ```bpscript
 // « quelque chose, puis D4 » devient G4
 ? D4 -> G4               //  C4 D4     ->  G4
@@ -1449,7 +1462,7 @@ s'applique pas laisse la chaine **inchangee** :
                          //  C4 D4  ->  C4 D4     inchangee
 ```
 
-*Verifie au moteur natif (`bp3-engine` v3.4.7, mode SUB1).*
+*Comportement mesure au moteur natif (`bp3-engine` v3.4.7) en `@mode:sub1`.*
 
 Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
 les porte jusqu'au moteur.
@@ -1476,7 +1489,7 @@ Les tables d'homomorphisme, elles, se declarent par `@transcription.<table>` et 
 un gabarit maitre et son esclave -- cf.
 [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
 
-*Verifie au moteur natif (`bp3-engine` v3.4.7) : `|a| --> C4` sur la chaine `|a| |b|` rend `C4 D4`.*
+*Comportement mesure au moteur natif : `|a| -> C4` sur la chaine `|a| |b|` rend `C4 D4`.*
 
 ---
 
@@ -1493,7 +1506,7 @@ un gabarit maitre et son esclave -- cf.
                             //  C4 D4     ->  C4 D4     inchangee
 ```
 
-*Verifie au moteur natif (`bp3-engine` v3.4.7, mode SUB1).*
+*Comportement mesure au moteur natif (`bp3-engine` v3.4.7) en `@mode:sub1`.*
 
 **Un contexte REGARDE, il ne PREND pas.** C'est ce qui le separe d'une capture, et elle s'entend a
 la resolution :
@@ -1555,18 +1568,16 @@ egalent le leur en meme temps.
 
 ```bpscript
 // TROIS places, une par diese : « trois choses, sauf la suite K1 K2 K3 »
-#K1 #K2 #K3 M -> C4        //  A B K3 M    ->  C4        les quatre places sont prises
-                           //  K1 K2 K3 M  ->  (rien)    toutes egalent la leur
+#K1 #K2 #K3 M -> C4        //  W1 W2 K3 M  ->  C4           les quatre places sont prises
+                           //  K1 K2 K3 M  ->  K1 K2 K3 M   toutes egalent la leur, inchangee
 
 // UNE place : « une chose qui n'est ni K1, ni K2, ni K3 »
-#(K1 K2 K3) M -> C4        //  A B C M     ->  A B C C4  seul M est pris, le reste demeure
+#(K1 K2 K3) M -> C4        //  W1 W2 W3 M  ->  W1 W2 W3 C4  seul M est pris, le reste demeure
 ```
 
 **La difference se voit a ce qui reste.** La forme a trois dieses **consomme quatre positions** et
 ne laisse que `C4` ; la forme groupee n'en consomme qu'**une** -- elle regarde le voisin sans le
 prendre -- et laisse les trois autres en place.
-
-*Verifie au moteur natif (`bp3-engine`, v3.4.7) sur ces trois entrees.*
 
 ### Silence et prolongation
 
