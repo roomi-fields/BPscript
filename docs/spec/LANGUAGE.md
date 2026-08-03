@@ -1427,28 +1427,26 @@ s'y trouve, et cette place est **consommee**. A droite de la fleche, il rejoue c
 meme symbole. Le `?` nu prend chaque place independamment.
 
 ```bpscript
-@var N
+// « quelque chose, puis D4 » devient G4
+? D4 -> G4               //  C4 D4     ->  G4
 
-// « quelque chose, puis M » devient N
-? M -> N                 //  A M    ->  N
-
-// « quelque chose, M, la meme chose » devient « cette chose, N, cette chose »
-?1 M ?1 -> ?1 N ?1       //  A M A  ->  A N A
-
-// « deux choses » deviennent « les memes, echangees »
-?1 ?2 -> ?2 ?1           //  A B    ->  B A
+// « quelque chose, D4, la meme chose » devient « cette chose, G4, cette chose »
+?1 D4 ?1 -> ?1 G4 ?1     //  C4 D4 C4  ->  C4 G4 C4
 ```
 
-**Le numero change ce que la regle accepte, pas seulement ce qu'elle rejoue.**
+**Le numero change ce que la regle accepte, pas seulement ce qu'elle rejoue.** Une regle qui ne
+s'applique pas laisse la chaine **inchangee** :
 
 ```bpscript
 // « deux choses quelconques » -- elles peuvent differer
-? ?   -> X               //  A B    ->  X
+? ?   -> G4              //  C4 D4  ->  G4
 
-// « deux fois la meme chose » -- sinon la regle ne s'applique pas
-?1 ?1 -> X               //  A B    ->  (rien)
-                         //  A A    ->  X
+// « deux fois la meme chose » -- sinon la regle ne mord pas
+?1 ?1 -> G4              //  C4 C4  ->  G4
+                         //  C4 D4  ->  C4 D4     inchangee
 ```
+
+*Verifie au moteur natif (`bp3-engine` v3.4.7, mode SUB1).*
 
 Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
 les porte jusqu'au moteur.
@@ -1492,16 +1490,15 @@ gabarit maitre et son esclave -- cf.
 **La parenthese se lit « quand », le diese se lit « sauf ».**
 
 ```bpscript
-// « quand M suit C4 D4 » : M devient E4 F4, et le contexte reste ou il est
-(C4 D4) M -> E4 F4          //  C4 D4 M  ->  C4 D4 E4 F4
+// « quand E4 suit C4 D4 » : E4 devient F4 G4, et le contexte reste ou il est
+(C4 D4) E4 -> F4 G4         //  C4 D4 E4  ->  C4 D4 F4 G4
 
-// « quelque chose sauf X, puis M » devient C4
-#X M -> C4                  //  A M      ->  C4
-                            //  X M      ->  (rien)
-
-// « quand M suit C4, et sauf s'il precede F4 » : M devient D4 E4
-(C4) M #(F4) -> D4 E4       //  C4 M G4  ->  C4 D4 E4 G4
+// « quelque chose sauf C4, puis D4 » devient G4
+#C4 D4 -> G4                //  E4 D4     ->  G4
+                            //  C4 D4     ->  C4 D4     inchangee
 ```
+
+*Verifie au moteur natif (`bp3-engine` v3.4.7, mode SUB1).*
 
 **Un contexte REGARDE, il ne PREND pas.** C'est la seule difference avec une variable, et elle
 s'entend a la resolution :
