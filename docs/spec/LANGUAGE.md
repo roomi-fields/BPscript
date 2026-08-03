@@ -1669,7 +1669,7 @@ S -> {A B}(*2) C
 
 Un son decrit son **timbre** (`sample`, `synth`) et son **comportement
 temporel** : duree, dilatation, pivot, periode, recouvrement, troncature. Le
-vocabulaire complet des proprietes d'un prototype vit dans `lib/sounds.json`
+vocabulaire complet des proprietes d'un prototype vit dans la librairie `sound`
 (capacites booleennes, bornes temporelles et leurs modes, duree, dilatation,
 periode, timbre).
 
@@ -1747,7 +1747,7 @@ Du moins specifique au plus specifique.
 
 | #   | Niveau                    | Ecriture                                                  |
 | --- | ------------------------- | --------------------------------------------------------- |
-| 1   | Defaut moteur             | constantes de `ResetPrototype` (`SoundObjects3.c:43-117`) |
+| 1   | Socle                     | `@core` -- les defauts de la librairie invoquee            |
 | 2   | Defaut de scene           | `@sound { ... }`                                          |
 | 3   | Defaut d'alphabet         | `@alphabet.X` + `*:sound.NOM`                             |
 | 4   | Note dans l'alphabet      | `@alphabet.X` + `Y:sound.NOM`                             |
