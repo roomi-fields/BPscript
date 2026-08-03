@@ -18,7 +18,7 @@
 - [Period notation `.`](#period-notation------fragments-de-duree-egale)
 - [Liaisons `~`](#liaisons------tied-sound-objects)
 - [Captures `?`](#captures------pattern-matching)
-- [Homomorphismes `|x|`](#homomorphismes-x----variables-liees)
+- [Les barres `|x|`](#les-barres-x----delimiter-un-nom)
 - [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
 - [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production)
 - [Heritage par cascade](#heritage-par-cascade)
@@ -1434,6 +1434,9 @@ meme symbole. Le `?` nu prend chaque place independamment.
 ?1 D4 ?1 -> ?1 G4 ?1     //  C4 D4 C4  ->  C4 G4 C4
 ```
 
+**Une capture est le SEUL joker du langage** -- les barres `|x|`, elles, ne font que delimiter un
+nom de non-terminal.
+
 **Le numero change ce que la regle accepte, pas seulement ce qu'elle rejoue.** Une regle qui ne
 s'applique pas laisse la chaine **inchangee** :
 
@@ -1453,35 +1456,27 @@ les porte jusqu'au moteur.
 
 ---
 
-## Homomorphismes `|x|` -- variables liees
+## Les barres `|x|` -- delimiter un nom
 
-**`|x|` se lit « quel que soit x ».** La barre en tete de regle **quantifie** : elle annonce que ce
-qui suit vaut pour n'importe quel symbole, et que toutes les occurrences de `x` dans cette regle
-designent **le meme**. Comme une capture, `x` **occupe une place** et la consomme.
+**Les barres delimitent le NOM d'un non-terminal.** Elles ne quantifient rien et n'apparient rien :
+`|x|` designe le non-terminal appele `x`, ni plus ni moins. Elles servent quand le nom
+commencerait par une minuscule, la ou il serait sinon pris pour un terminal.
 
 ```bpscript
-// « quel que soit x : M puis x » devient « x puis M »
-|x| M x -> x M              //  M A     ->  A M
-
-// « quel que soit x : deux x de suite » deviennent « un seul x »
-|x| x x -> x                //  A A     ->  A
-                            //  A B     ->  (rien)
-
-// « quels que soient x et y : x puis y » deviennent « y puis x »
-|x| |y| x y -> y x          //  A B     ->  B A
-
-// « quel que soit x, quand il suit C4 : x puis M » devient « x, M, x »
-|x| (C4) x M -> x M x       //  C4 A M  ->  C4 A M A
+S -> |a| |b|                //  la regle produit deux non-terminaux
+|a| -> C4                   //  C4 D4     chacun se reecrit comme n'importe quelle regle
+|b| -> D4
 ```
 
-**Un nom plutot qu'un numero, et rien d'autre :** `|x| x x -> x` et `?1 ?1 -> ?1` decrivent la meme
-regle. La barre nomme ce que le numero indexe.
+**Un nom entre barres est une tete de regle comme une autre** -- il se declare a gauche, il se
+reecrit, il disparait de la production. Ce qui apparie *n'importe quel* symbole, ce sont les
+captures `?` et `?n`.
 
-Elle s'abaisse en non-terminal nomme pour le moteur.
-
-Les tables d'homomorphisme se declarent par `@transcription.<table>` et s'appliquent entre un
-gabarit maitre et son esclave -- cf.
+Les tables d'homomorphisme, elles, se declarent par `@transcription.<table>` et s'appliquent entre
+un gabarit maitre et son esclave -- cf.
 [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
+
+*Verifie au moteur natif (`bp3-engine` v3.4.7) : `|a| --> C4` sur la chaine `|a| |b|` rend `C4 D4`.*
 
 ---
 
