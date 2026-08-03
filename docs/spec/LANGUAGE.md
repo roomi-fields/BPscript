@@ -25,7 +25,7 @@
 - [Sons et cascade d'heritage](#sons-et-cascade-dheritage)
 - [Conventions de notation (`.` / `:` / `*`)](#conventions-de-notation-----)
 - [Flags](#flags----variables-detat-et-composition-conditionnelle)
-- [Definitions et macros](#definitions-et-macros)
+- [Definitions](#definitions)
 - [Les librairies](#les-librairies)
 - [Operateurs temporels](#operateurs-temporels)
 - [Metrique -- `@meter`](#metrique----meter)
@@ -549,7 +549,7 @@ Sans `@duration`, la duree suit le contenu : le nombre de termes derives et le t
 BPScript decide **quand**. Le code entre backticks decide **quoi** : il est execute par le
 runtime que son tag nomme (`sc:`, `tidal:`, `py:`). Les deux vivent dans le meme fichier : les
 backticks de tete preparent chaque runtime au chargement, ceux des productions jouent a leur
-instant -- ecrits directement dans la regle, ou nommes par une `@macro` (cf.
+instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 [Backticks](#backticks----code-natif-dans-le-flux)).
 
 ```bpscript
@@ -561,8 +561,8 @@ instant -- ecrits directement dans la regle, ou nommes par une `@macro` (cf.
 `tidal: let pat = s "bd sd hh sd"`
 `py: import dmx; d = dmx.open()`
 
-// Une macro nomme un fragment de code ; son nom se pose nu dans le flux
-@macro noir `py: d.blackout()`
+// Une definition nomme un fragment de code ; son nom se pose nu dans le flux
+@def noir `py: d.blackout()`
 
 S -> Section [phase=1]
 
@@ -572,7 +572,7 @@ S -> Section [phase=1]
 [phase==2] Section -> { Melodie, Rythme }
 Intro   -> C4 D4 `tidal: once pat` E4     // code ecrit directement dans la production
 Rythme  -> G3 G3 G3 G3
-Melodie -> E4 F4 noir G4 A4               // le meme geste, nomme par la macro
+Melodie -> E4 F4 noir G4 A4               // le meme geste, nomme par la definition
 ```
 
 Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
@@ -1212,7 +1212,7 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 | `B3!C7` *(`!` entre symboles)*                | **SIMULTANE / accord** -- les deux notes attaquent au meme instant                    |
 | `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                       |
 | `![@seed:N]`                                  | **directive de production DANS LE FLUX** -- element sans duree (`InstantControl`)     |
-| `C4 !prise` *(nom d'une `@macro`)*            | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur      |
+| `C4 !prise` *(nom d'une definition)*            | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur      |
 | `!osc >> filtre`                              | **cablage pose dans le flux** -- le langage le lit, le moteur le refuse au chargement |
 | `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                        |
 
@@ -1220,11 +1220,11 @@ C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'ins
 zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
 
 **Un cablage se nomme.** La table des symboles du moteur range chaque element sous un nom, et un
-cablage ecrit directement dans le flux est refuse au chargement. On le nomme donc dans une `@macro`
+cablage ecrit directement dans le flux est refuse au chargement. On le nomme donc dans une definition
 et on pose son nom **nu** dans le flux, ou il occupe un pas :
 
 ```bpscript
-@macro prise osc >> filtre
+@def prise osc >> filtre
 
 S -> A4 prise B4
 ```
@@ -1262,14 +1262,14 @@ S -> {A B}(filter:lp, cutoff:4000)    // groupe : filter pour tout le groupe
 
 ```bpscript
 // 3. Liste de parametres d'une declaration -- collee au nom
-@macro accent(x) x(vel:120)
+@def accent(x) x(vel:120)
 
-// 4. Argument d'un appel de macro
+// 4. Argument d'un appel de definition
 S -> accent(C4) E4
 ```
 
 La regle de desambiguation est positionnelle :
-- `symbole(` colle, dans une regle = sac de parametres runtime ou appel de macro
+- `symbole(` colle, dans une regle = sac de parametres, ou appel d'une definition
 - `(` en fin de RHS = sac de parametres de portee regle
 - `{}(` apres un groupe = sac de parametres de portee groupe
 - `@directive nom(` colle au nom = liste de parametres d'une declaration
@@ -1337,7 +1337,7 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 
 ```bpscript
 @alphabet.western:audio
-@macro monte mod.ramp(from:0, to:255)
+@def monte mod.ramp(from:0, to:255)
 
 S -> dha!tin                       // deux symboles a la meme attaque
 S -> dha!na                        // na prend la duree de dha
@@ -1358,13 +1358,13 @@ Regles :
 C'est le mecanisme de la **simultaneite cross-runtime** : un seul point dans le temps porte
 des evenements destines a SC, Python, Processing, DMX.
 
-### Grouper des evenements simultanes dans une macro
+### Grouper des evenements simultanes dans une definition
 
-Un ensemble d'evenements simultanes qui revient souvent se factorise dans une macro :
+Un ensemble d'evenements simultanes qui revient souvent se factorise dans une definition :
 
 ```bpscript
-@macro halo(x) x!tin!ge
-@macro eclair(x) x!na!ka
+@def halo(x) x!tin!ge
+@def eclair(x) x!na!ka
 
 S -> halo(C4) eclair(D4) halo(E4)
 // Expansion :
@@ -1787,8 +1787,8 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 
 | Signe      | Sens                                      | Exemple                                            |
 | ---------- | ----------------------------------------- | -------------------------------------------------- |
-| espace     | sépare deux termes                        | `@macro souffle (vel:60)`                          |
-| collage    | réunit deux termes en un seul             | `@macro accent(x) x(vel:120)`                      |
+| espace     | sépare deux termes                        | `@def souffle (vel:60)`                          |
+| collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                      |
 | `.`        | désigne un élément dans un espace de noms | `sound.cloche`, `alphabet.tabla`, `transport.midi` |
 | `:`        | lie un sujet à une valeur                 | `dha:sound.frappe`, `@time.tempo:120`, `(vel:100)` |
 | `*`        | sujet = tous les terminaux                | `*:sound.cloche`                                   |
@@ -1805,8 +1805,8 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 
 | Écriture                      | Lecture                                                  |
 | ----------------------------- | -------------------------------------------------------- |
-| `@macro accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la macro     |
-| `@macro souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la macro             |
+| `@def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
+| `@def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
 | `C4(/2)`                      | qualificateur du terminal `C4`                           |
 | `C4 D4 (mode:random)`         | qualificateur de la règle entière                        |
 | `C4!(vel:100)`                | flux ancré à `C4`, il voyage avec lui (`conjoint: true`) |
@@ -1817,8 +1817,8 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 
 ```bpscript
 @alphabet.western
-@macro accent(x) x(vel:120)
-@macro souffle (vel:60)
+@def accent(x) x(vel:120)
+@def souffle (vel:60)
 
 S -> C4!accent D4 (mode:random)
 Motif -> {C4 D4}:2 E4(/2)
@@ -1890,7 +1890,7 @@ dit laquelle des deux formes on écrit.
 
 ```bpscript
 @alphabet.western:midi                     // propriété : les terminaux de western sortent en MIDI
-@macro env1 mod.adsr(attack:10, decay:200) // déclaration : env1 est un nom neuf
+@def env1 mod.adsr(attack:10, decay:200) // déclaration : env1 est un nom neuf
 
 S -> C4 D4
 ```
@@ -1988,7 +1988,7 @@ jhala -> {sa re ga pa dha ni sa}:4
 
 ---
 
-## Déclarations, macros et alias
+## Déclarations et alias
 
 ### Déclarer un symbole : convention de lecture et sortie
 
@@ -2006,7 +2006,7 @@ S -> sa dha
 ### Un seul espace de noms
 
 Les noms de toutes les sortes de choses vivent dans le **même espace** : terminaux de
-l'alphabet actif, têtes de règle, macros, alias, entrées, acteurs, variables de travail,
+l'alphabet actif, têtes de règle, définitions, alias, entrées, acteurs, variables de travail,
 signaux, drapeaux. Chaque nom y appartient à **une seule** d'entre elles. Le contrôle a
 lieu **à la déclaration** : c'est le fait de déclarer le nom qui tranche, son emploi dans
 une règle étant une autre affaire.
@@ -2030,27 +2030,27 @@ est le même symbole, réécrit plus tard.
 emplois, puis compare l'arbre dérivé entier avant et après, à graine fixe. Il écrit quand
 chaque jeton coïncide.
 
-### `@macro` et `@alias`
+### `@def` et `@alias`
 
 Une seule forme pour les deux, comme pour toute directive : `@<directive> <nom> <valeur>`.
 Le nom vient d'abord, ce qu'il vaut ensuite.
 
 | Directive | Ce qu'elle fait                                     | Où elle s'emploie          |
 | --------- | --------------------------------------------------- | -------------------------- |
-| `@macro`  | nomme une transformation, un préréglage, un câblage | à sa place dans une règle  |
+| `@def`  | nomme une transformation, un préréglage, un câblage | à sa place dans une règle  |
 | `@alias`  | donne un nom à une chose technique ou répétitive    | dans la partie déclarative |
 
 ```bpscript
 @alphabet.western
-@macro kick (vel:120)               // préréglage de contrôles
-@macro accent(x) x(vel:120)         // transformation paramétrée
-@macro fast(x) {x}:2                // transformation structurelle
+@def kick (vel:120)               // préréglage de contrôles
+@def accent(x) x(vel:120)         // transformation paramétrée
+@def fast(x) {x}:2                // transformation structurelle
 
 Motif -> C4 D4 E4
 S -> C4!kick D4 E4!accent fast(Motif)
 ```
 
-La valeur d'un `@alias` est un nom déclaré — macro, variable, entrée —, une
+La valeur d'un `@alias` est un nom déclaré — définition, variable, entrée —, une
 étiquette de groupe suivie d'un contrôle, ou une adresse OSC. Un nom suivi du deux-points,
 placé devant un groupe, étiquette l'ensemble : l'alias désigne alors d'un seul mot un
 contrôle porté par tous ses éléments.
@@ -2071,8 +2071,8 @@ d'espace joue sur `!(…)`, où le collage ancre le flux au terminal précédent
 
 ```bpscript
 @alphabet.western
-@macro kick (vel:120)
-@macro accent(x) x(vel:120)
+@def kick (vel:120)
+@def accent(x) x(vel:120)
 
 S -> C4!kick D4 E4!accent F4
 ```
@@ -2280,7 +2280,7 @@ BPScript unifie les deux dans la meme syntaxe via le systeme de types :
 
 ```bpscript
 @alphabet.western:audio
-@macro ramp(a, b) mod.ramp(from:a, to:b)   // un signal, gere par le runtime audio
+@def ramp(a, b) mod.ramp(from:a, to:b)   // un signal, gere par le runtime audio
 
 S -> {C4 D4 E4}:2                    // palier discret -- la duree du groupe est un nombre
 T -> C4!ramp(0,1)                    // continu -- la valeur court le long de la duree de C4
