@@ -606,7 +606,7 @@ Le detail est dans « Les conventions de lecture d'un signal ».
 
 ```text
 @              directive de declaration, en tete de scene
--> <- <>       derivation et direction (BP3 : --> <-- <->)
+-> <- <>       derivation et direction
 { , }          polymetrie et groupement temporel
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:sound.bell_short)
@@ -1036,19 +1036,6 @@ Cote formalisme, l'accolade est **un** noeud conteneur unique portant le qualifi
 la porte opaque, le runtime la realise. Le comportement transverse complet est decrit dans
 `atlas/architecture/MODULATIONS.md`.
 
-Les `()` runtime sont compiles en `_script(CT n)` -- des controles opaques que BP3 transmet tels
-quels. Le transpileur maintient une table de mapping :
-
-```text
-// BPScript                              -> BP3
-C4(vel:120)                              -> _script(CT 0) C4
-{A B}(filter:lp)                         -> {_script(CT 2_start) A B _script(CT 2_end)}
-
-// Table de mapping (cote JS) :
-// CT 0 -> { scope: 'symbol', params: { vel: 120 } }
-// CT 2_start/end -> { scope: 'group', params: { filter: 'lp' } }
-```
-
 ### Valeur brute (modele CSS)
 
 Dans `[]` comme dans `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou au delimiteur fermant
@@ -1313,23 +1300,15 @@ S -> A {B C D} E F
 S -> C4(sound.bell_short)
 ```
 
-Les roles 1 et 2 suivent le comportement de BP3 ; le sac de proprietes est propre a BPScript.
-
 ### Duree collee sur un groupe
 
 Une duree s'ecrit avec `:` colle (cf. la section des conventions de notation `.` / `:` / `*`).
-Posee sur un bloc polymetrique, elle donne le ratio que BP3 place en premiere position du bloc :
+Posee sur un bloc polymetrique, elle en donne le ratio :
 
 ```bpscript
 S -> {C3, E3, G3, C4}:2      // duree du bloc
 S -> {C4 E4 G4}:2/3          // ratio fractionnaire
 S -> A4:1/2                  // la meme duree, sur une note
-```
-
-```text
-// BPScript              -> BP3
-{C3, E3, G3, C4}:2       -> {2, C3, E3, G3, C4}
-A4:1/2                   -> {1/2, A4}
 ```
 
 ---
@@ -1360,7 +1339,7 @@ Regles :
 - **Apres `!`** : les secondaires -- ils partagent l'instant d'attaque du primaire et **prennent
   sa duree** ; seule une mutation de drapeau (`nom=valeur`) reste de duree zero
 - **`!nom` pose seul** dans la sequence : **objet hors-temps** -- il tient sa place dans
-  l'ordre joue pour une duree nulle. Compile en `<<nom>>` pour BP3.
+  l'ordre joue pour une duree nulle.
 - **`!(controle)` pose seul** : mutation de **flux** -- cf.
   [Contenance `()` vs flux `!()`](#contenance---vs-flux---deux-facons-de-gouverner-les-notes)
 
@@ -1425,7 +1404,7 @@ structure temporelle la plus simple.
 ## Period notation `.` -- fragments de duree egale
 
 Le `.` separe une sequence en fragments de **duree symbolique egale**. C'est un mecanisme
-fondamental de BP3.
+fondamental du langage.
 
 ```bpscript
 S -> A B . C D . E F          // 3 fragments : (A B), (C D), (E F)
@@ -1440,7 +1419,7 @@ M2 -> D2 M1                  // M2 = D2 E2 .
 M3 -> B2 M2                  // M3 = B2 D2 E2 .
 ```
 
-En BPScript, `.` et `,` s'ecrivent comme en BP3 et sont transmis tels quels.
+Le point et la virgule sont transmis tels quels au moteur.
 
 **L'espace tranche** : entoure d'espaces, le `.` decoupe la sequence ; colle entre deux noms,
 il appelle un composant (`transport.midi`, `<!sync1.60`) -- cf. la section « Conventions de
@@ -1465,7 +1444,6 @@ Syntaxe :
 - `~C4~` la continue : le son se poursuit a travers l'evenement
 - `~C4` la ferme : NoteOff a la fin
 
-Le compilateur traduit `~` -> `&` pour BP3 (`C4~` -> `C4&`, `~C4` -> `&C4`).
 
 ---
 
@@ -1484,7 +1462,7 @@ Le `?` nu capture chaque position independamment.
 ```
 
 Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
-traduit `?n` vers les metavariables BP3.
+les porte jusqu'au moteur.
 
 ---
 
@@ -1566,7 +1544,7 @@ S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
 ```
 
 Les parametres d'une invocation gouvernent l'expansion du gabarit : ils valent
-pour ce que cette invocation produit. En BP3, `$X` s'ecrit `(=X)` et `&X`
+pour ce que cette invocation produit. Le moteur recoit `$X`
 s'ecrit `(:X)`.
 
 ### Ancre de gabarit maitre : `$` seul en tete de LHS
@@ -1581,7 +1559,7 @@ $ S -> C4 D4
 L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace
 tranche entre les deux emplois du signe : colle a un identifiant, `$X` nomme une
 capture ; suivi d'une espace, `$` ancre -- cf. l'espace, delimiteur de termes.
-En BP3, l'ancre correspond au token `(=` laisse ouvert.
+L'ancre reste ouverte jusqu'a sa fermeture.
 
 ### Tables de substitution
 
@@ -1967,15 +1945,12 @@ Cadence -> ga pa
 
 Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter).
 
-En BP3, la mutation devient un marqueur `/…/` placé en fin de règle :
+Une règle peut porter plusieurs mutations, chacune dans son crochet :
 
 ```text
-// BPScript                                -> BP3
-S -> Motif Cadence [count-1]               -> S --> Motif Cadence /count-1/
-S -> Motif Motif [phase=1] [count=2]       -> S --> Motif Motif /phase=1/ /count=2/
+S -> Motif Cadence [count-1]
+S -> Motif Motif [phase=1] [count=2]
 ```
-
-Le compilateur traduit `[X==N]` en condition BP3 `/X=N/`, et `[X=N]` en assignation BP3 `/X=N/`.
 
 Le délimiteur distingue deux écritures voisines : `!dha` est un `!` suivi d'un symbole, donc
 un déclenchement dans le temps ; `[phase=2]` est entre crochets, donc une mutation de flag.
@@ -2193,16 +2168,18 @@ ont la meme forme ; seul le moment de leur compilation differe.
 **Le lancement d'une piece ne compile rien.** Une erreur d'ecriture se dit a l'auteur pendant qu'il
 ecrit, jamais au moment de jouer.
 
-## Operateurs temporels BP3
+## Operateurs temporels
 
-Les operateurs temporels de BP3 gouvernent deux variables internes, `speed` et `scale` : le tempo
-effectif vaut `speed / scale`.
+**Deux operateurs, declares dans `engine`** comme tout reglage : `/` et `*`. Ils s'ecrivent dans un
+sac, avec une fraction (`*3/2`) ou un decimal (`/1.5`).
 
-| BPScript | Compile en BP3              | Semantique                              |
-| -------- | --------------------------- | --------------------------------------- |
-| `A(/2)`  | `/2 A`                      | absolu + persistant (fixtempo), speed=2 |
-| `A(*3)`  | `_tempo(1/3) A _tempo(1/1)` | relatif, bracket enter/exit, scale×3    |
-| `!(/2)`  | `_tempo(2/1)`               | relatif, flux (InstantControl)          |
+| Ecriture | Ce qu'elle fait                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------ |
+| `A(/2)`  | **vitesse absolue**, et elle **persiste** jusqu'au prochain operateur ou la fin du champ        |
+| `A(*3)`  | **etirement relatif** a la vitesse heritee, **entre deux bornes** : la sortie restaure l'herite |
+| `!(/2)`  | pose la vitesse **dans le flux**, relative, sans persistance                                   |
+
+La virgule d'un sous-champ polymetrique **reinitialise** une vitesse absolue.
 
 Portee flexible : sur un symbole, un groupe, ou un polymetric.
 
@@ -2210,6 +2187,15 @@ Portee flexible : sur un symbole, un groupe, ou un polymetric.
 @alphabet.sargam
 S -> sa(/2) re {ga ma}(*3) !(/2) pa
 ```
+
+**La duree, elle, a trois portees** -- collee elle suit son terme ou son groupe, detachee en fin de
+membre droit elle porte sur toute la production :
+
+| Ecriture        | Portee                 |
+| --------------- | ---------------------- |
+| `A4:1/2`        | la note seule          |
+| `{A B}:2`       | le groupe              |
+| `S -> A B C :2` | le membre droit entier |
 
 ---
 
@@ -2249,6 +2235,25 @@ S -> C4 D4 (tempo:2)
 Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de scene, ou `(mode:<valeur>)` en
 suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
 
+| Mode      | Strategie de selection                          |
+| --------- | ------------------------------------------------- |
+| `ord`     | ordonne -- les regles s'appliquent en sequence  |
+| `random`  | aleatoire -- selection ponderee par les poids   |
+| `lin`     | lineaire -- bouclage cyclique                   |
+| `sub`     | substitution -- toutes les occurrences a la fois |
+| `sub1`    | substitution -- l'occurrence la plus a gauche   |
+| `tem`     | appariement par gabarit                         |
+| `poslong` | la plus longue correspondance d'abord           |
+
+**En mode `sub` et `sub1`, les symboles du membre gauche sont eux aussi des terminaux** : ce qui
+reste apres les iterations appartient a l'alphabet et se joue.
+
+| Direction | Sens                                                             |
+| --------- | ------------------------------------------------------------------ |
+| `->`      | **production** -- le membre gauche est reecrit en membre droit    |
+| `<-`      | **analyse** -- la sequence droite est reduite au symbole gauche   |
+| `<>`      | **production et analyse** -- la regle vaut dans les deux sens     |
+
 ```bpscript
 @alphabet.sargam
 @mode:random
@@ -2276,14 +2281,12 @@ ALT -> dha ni
 
 ## Deux philosophies du temps
 
-BP3 possede deux facons de controler le flux temporel (cf. Boulez,
-*Penser la musique aujourd'hui*, 1963) :
+Le flux temporel se controle de deux facons (cf. Boulez, *Penser la musique aujourd'hui*, 1963) :
 
-|               | Smooth time (temps lisse)                 | `_tempo()` (temps strie)               |
+|               | Temps lisse                               | Temps strie                            |
 | ------------- | ----------------------------------------- | -------------------------------------- |
 | **Paradigme** | fonctionnel -- le temps est une propriete | imperatif -- le temps est une commande |
 | **Usage**     | alap indien, gagaku, musique non pulsee   | musique occidentale, danse, pop        |
-| **BP3**       | `_smooth` + time patterns                 | `_striated` + `_tempo(x/y)`            |
 
 BPScript unifie les deux dans la meme syntaxe via le systeme de types :
 
@@ -2295,335 +2298,15 @@ S -> {C4 D4 E4}:2                    // palier discret -- la duree du groupe est
 T -> C4!ramp(0,1)                    // continu -- la valeur court le long de la duree de C4
 ```
 
-| BPScript                         | BP3                           | Concept                 |
-| -------------------------------- | ----------------------------- | ----------------------- |
-| **terminal qui occupe du temps** | sound-object (avec duree)     | evenement dans le temps |
-| **objet hors-temps** (via `!`)   | out-time object (duree nulle) | impulsion instantanee   |
-| **signal**                       | time pattern (smooth time)    | duree comme propriete   |
-
----
-
-## Compilation vers BP3
-
-Cette section décrit la correspondance entre les constructions BPScript et les
-instructions du format de grammaire BP3 (`-gr.`).
-
-> Voir [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) pour l'interface WASM complète.
-
-### Format de grammaire BP3
-
-Structure du fichier :
-```text
-MODE                           // ORD, RND, SUB, SUB1, LIN, TEM, POSLONG
-gram#N[M] LHS --> RHS          // règles
------                          // séparateur de sous-grammaire
-MODE
-gram#N[M] LHS --> RHS
-```
-
-### Sous-grammaires et modes
-
-Chaque bloc entre `-----` est une sous-grammaire. `@mode:X` déclare le mode de
-dérivation du bloc qui suit, jusqu'au séparateur suivant (cf. « Modes, scan et
-directions »).
-
-| BPScript        | BP3       | Stratégie de sélection                          |
-| --------------- | --------- | ----------------------------------------------- |
-| `@mode:ord`     | `ORD`     | ordonné — règles appliquées en séquence         |
-| `@mode:random`  | `RND`     | aléatoire — sélection pondérée                  |
-| `@mode:lin`     | `LIN`     | linéaire — bouclage cyclique                    |
-| `@mode:sub`     | `SUB`     | substitution — toutes les occurrences à la fois |
-| `@mode:sub1`    | `SUB1`    | substitution — occurrence la plus à gauche      |
-| `@mode:tem`     | `TEM`     | appariement par gabarit                         |
-| `@mode:poslong` | `POSLONG` | plus longue correspondance d'abord              |
-
-Les règles sont regroupées par non-terminal et par mode ; un `-----` sépare deux
-blocs de modes différents.
-
-En mode `sub` et `sub1`, les symboles du membre gauche sont eux aussi des
-terminaux : ce qui reste après les itérations appartient à l'alphabet et se joue.
-
-### Directions
-
-| BPScript | BP3   | Sens                                                       |
-| -------- | ----- | ---------------------------------------------------------- |
-| `->`     | `-->` | production — le membre gauche est réécrit en membre droit  |
-| `<-`     | `<--` | analyse — la séquence droite est réduite au symbole gauche |
-| `<>`     | `<->` | production et analyse                                      |
-
-### Symboles terminaux — alphabet plat
-
-BP3 reçoit des **noms opaques** préfixés `bol` et les traite comme des symboles.
-La hauteur, l'acteur et le transport se résolvent en amont.
-
-```text
-Source BPScript :
-  sa re ga pa
-
-Alphabet plat :
-  bolsa
-  bolre
-  bolga
-  bolpa
-
-Grammaire BP3 :
-  gram#1[1] S --> bolsa bolre bolga bolpa
-```
-
-Les noms de notes (`C4`, `sa`, `re`) arrivent dans BP3 comme des objets sonores
-silencieux : ils portent une position dans le temps, leur son se résout ailleurs.
-
-### Polymétrie
-
-Transmise telle quelle à BP3 :
-
-```text
-// BPScript
-S -> { Melodie, Rythme }
-
-// BP3
-gram#1[1] S --> {Melodie, Rythme}
-```
-
-### Durée sur un groupe
-
-La durée `:N` collée est traduite en cadre polymétrique BP3 :
-
-```text
-// BPScript
-{C3, E3, G3, C4}:2
-
-// BP3
-{2, bolC3, bolE3, bolG3, bolC4}
-```
-
-### Durée de portée règle
-
-Posée en fin de règle et séparée du dernier élément par une espace, la durée
-porte sur **tout le membre droit** :
-
-```text
-// BPScript
-S -> C4 D4 E4 :2
-
-// BP3
-{2,C4 D4 E4}
-```
-
-Trois portées distinctes :
-
-| Écriture        | Portée                 |
-| --------------- | ---------------------- |
-| `A4:1/2`        | la note seule          |
-| `{A B}:2`       | le groupe              |
-| `S -> A B C :2` | le membre droit entier |
-
-Une durée collée suit son terminal ou son groupe ; une durée détachée se place en
-fin de membre droit.
-
-### Opérateurs temporels
-
-Portée et persistance, en complément de « Opérateurs temporels BP3 » :
-
-```text
-// BPScript                  -> BP3                                       Sémantique
-A(/2) B C                    -> /2 bolA bolB bolC                         absolu, persistant (fixtempo)
-{A B C}(/3)                  -> /3 {bolA bolB bolC}                       idem, portée groupe
-A(*2) B C                    -> _tempo(1/2) bolA _tempo(1/1) bolB bolC    relatif, bracket
-!(/2)                        -> _tempo(2/1)                               relatif, flux (InstantControl)
-```
-
-`[/N]` impose la vitesse absolue N et persiste jusqu'au prochain opérateur de
-tempo ou jusqu'à la fin du champ ; le séparateur `,` d'un sous-champ polymétrique
-la réinitialise. `[*N]` s'applique relativement à la vitesse héritée, et la sortie
-du bracket (`_tempo(1/1)`) restaure l'hérité. `![/N]` dans le flux vaut
-`_tempo(N/1)` relatif, sans fixtempo.
-
-### Gardes et flags
-
-La garde se teste avant le membre gauche avec `==` ; la mutation s'écrit en fin de
-règle.
-
-```text
-// BPScript                              -> BP3
-[phase==1] S -> sa re ga pa             -> /phase=1/ gram#N[M] S --> bolsa bolre bolga bolpa
-[Ideas-1] Ideas -> R1 C4 R2             -> /Ideas-1/ gram#N[M] Ideas --> R1 bolC4 R2
-S -> C4 D4 E4 [count+1]                 -> gram#N[M] S --> bolC4 bolD4 bolE4 /count+1/
-[phase==1] S -> ga re [phase=2]         -> /phase=1/ gram#N[M] S --> bolga bolre /phase=2/
-```
-
-### Poids
-
-```text
-// BPScript                              -> BP3
-S -> A B C (weight:50)                   -> <50> gram#N[M] S --> bolA bolB bolC
-```
-
-### Contrôles runtime `()`
-
-Un paramètre runtime est porté sur l'événement comme une annotation opaque,
-jusqu'au runtime de sortie. Dans l'AST, il vit sur le nœud :
-`RuntimeQualifier{pairs:[{clé, valeur}]}` en suffixe, `InstantControl` dans le
-flux. Le contrôle natif BP3 correspondant est `_script(CT n)`.
-
-**Trois étages de portée**, distingués par la place du sac : collé au terminal (`C4(vel:120)`),
-espacé en fin de membre droit (portée règle), collé au groupe (`{A B}(…)`).
-
-**Dans un groupe et dans une règle, un sujet vise plus finement** — `{…}(sombre)` traite la portée
-comme une seule chose, `{…}(*:sombre)` traite chaque terminal individuellement, `{…}(C2:sombre)` ne
-traite que les `C2`. Détail et graphie : « Destinataire d'une paire » et « Appliquer un module ».
-
-### Cascade des contrôles
-
-Quand plusieurs sources donnent le même paramètre, la valeur retenue vient du
-niveau le plus élevé qui le précise (cf. « Cascade — 8 niveaux ») :
-
-1. **spec** — défauts de la librairie ;
-2. **`()`** — contrôle écrit en ligne, qui surcharge la spec ;
-3. **signal** — flux continu qui pilote le paramètre, priorité la plus haute.
-
-La cascade s'applique à chaque événement daté.
-
-### Silences et prolongation
-
-Transmis directement :
-```text
-// BPScript    -> BP3
--              -> -
-_              -> _
-...            -> ... (repos indéterminé)
-```
-
-### Notation par périodes
-
-Transmise directement :
-```text
-// BPScript                    -> BP3
-S -> A B . C D . E F           -> gram#N[M] S --> bolA bolB . bolC bolD . bolE bolF
-```
-
-### Liaisons
-
-`~` en BPScript → `&` en BP3 :
-```text
-// BPScript                    -> BP3
-C4~ D4 E4 ~C4                 -> bolC4& bolD4 bolE4 &bolC4
-```
-
-### Captures
-
-`?n` → métavariables BP3 :
-```text
-// BPScript                            -> BP3
-?1 Motif ?1 -> ?1 Autre ?1             -> ?1 Motif ?1 --> ?1 Autre ?1
-```
-
-### Gabarits et transcriptions (homomorphismes)
-
-`$` → `(=X)` et `&` → `(:X)`. Les noms de transcription entre maître et esclave
-sont émis entre `(=X)` et `(:X)` dans la grammaire BP3.
-
-```text
-// BPScript                              -> BP3
-S <> $mel &mel                           -> S <-> (=mel) (:mel)
-S -> $X dha &X                           -> S --> (=X) dha (:X)
-S -> $X * &X                             -> S --> (=X) * (:X)
-S -> $X * TR &X                          -> S --> (=X) * TR (:X)
-Qaida <> $ {plus S64 fin}                -> Qaida <-> (= + S64 ;)
-```
-
-**Contrat BPx** : les paires source→cible sont portées dans `Scene.homomorphisms[]`
-(tableau de `HomomorphismDeclAST`). BPx consomme ce tableau post-dérivation via
-`rewriteHomomorphismMarkers` pour appliquer les transformations de terminaux.
-
-> Voir [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) pour l'architecture complète.
-
-### Contextes
-
-```text
-// BPScript                    -> BP3
-(A B) C -> D E                 -> (A B) C --> D E
-#(X Y) Z -> W                  -> #(X Y) Z --> W
-```
-
-La correspondance du `#` est terme à terme : les deux moteurs traitent `#X` comme
-un symbole apparié qui **occupe une position** (cf. « `#X` … CONSOMME une
-position » plus haut).
-
-### Variables liées `|x|`
-
-```text
-// BPScript                    -> BP3
-|x| S x -> x S                 -> |x| S x --> x S
-```
-
-### Out-time objects
-
-`!symbole` autonome → `<<symbole>>` :
-```text
-// BPScript                    -> BP3
-Y -> !f                        -> Y --> <<f>>
-```
-
-### Backticks
-
-Un backtick autonome est un terminal de plein droit du membre droit : il est
-encodé comme terminal spécial dans la grammaire. Un backtick en valeur de
-paramètre voyage avec sa paire jusqu'au runtime qui l'évalue.
-
-Le **tag** dit à qui il va : les langages externes à runtime-codevoices, `patch:` à Dédale. Ce
-qu'un backtick sonne et combien il dure vient de la **librairie** qui déclare son langage, jamais
-d'une déduction sur son contenu.
-
----
-
-### Méta-grammaires — réécriture structurelle
-
-BP3 est un système de réécriture de chaînes : `{`, `}`, `,` peuvent apparaître
-comme terminaux bruts. Une accolade appariée dans la même règle forme un
-polymétrique ; seule, elle est une accolade brute (`RawBrace`).
-
-```text
-// BPScript : koto3 — automate cellulaire avec méta-réécriture
-#({) a b a -> {a c b, f f f - f}:5   // contexte négatif sur {
-} -> }                                // { et } comme terminaux
-, -> ,                                // , aussi
-```
-
-Deux usages distincts :
-- **Distribution** : `{` et `}` répartis sur plusieurs règles, formant un
-  polymétrique valide après dérivation. La durée `}:N` sur `}` est propagée au `{`
-  correspondant.
-- **Méta-grammaire** : `{`, `}`, `,` comme terminaux matchables sur le membre
-  gauche et dans les contextes `#({)`. La grammaire construit des polymétriques
-  par réécriture.
-
-La validation structurelle des `{}` est **repoussée au moteur BP3**.
-
----
-
-### Métrique en ligne
-
-```text
-// BPScript                              -> BP3
-S <> S96 (meter:4+4/6)                   -> S <-> S96 4+4/6
-S -> P1 P2 P3 (meter:4+4+4+4+4+4/4)      -> gram#N[M] S --> P1 P2 P3 4+4+4+4+4+4/4
-```
-
----
-
-### Symboles quotés BP3
-
-Les symboles quotés d'une grammaire BP3 (`'1'`, `'texte'`) sont renommés à la
-traduction : `'1'` devient `d1`.
-
----
-
+| Ecriture                         | Concept                 |
+| -------------------------------- | ----------------------- |
+| **terminal qui occupe du temps** | evenement dans le temps |
+| **objet hors-temps** (via `!`)   | impulsion instantanee   |
+| **signal**                       | duree comme propriete   |
 ## Documents liés
 
 - [EBNF.md](EBNF.md) — grammaire formelle EBNF
 - [AST.md](AST.md) — structure de l'AST
-- [INTERFACES_BP3.md](../design/INTERFACES_BP3.md) — interface WASM complète (in/out)
 - [ARCHITECTURE.md](../design/ARCHITECTURE.md) — architecture technique
 - [CV.md](../design/CV.md) — objets de signal
 - [PITCH.md](../design/PITCH.md) — architecture 5 couches de hauteur
