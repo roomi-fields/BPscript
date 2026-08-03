@@ -498,6 +498,12 @@ qui vit dans un catalogue.
 | `sound`         | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
 | `transcription` | des tables de correspondance entre notations                                                                                    |
 | `library`       | des banques chargees par un moteur de code                                                                                      |
+| `module`        | des modules de signal : leurs ports, leurs conventions et leur traitement                                                       |
+| `patch`         | le langage de cablage des backtiques `patch:`                                                                                   |
+| `eval`          | les langages backtiques externes -- `sc`, `js`, `strudel`, `hydra`                                                              |
+
+Le catalogue complet, avec la nature de chaque librairie et le composant qui la resout, vit dans
+`atlas/architecture/LIBRAIRIES.md`.
 
 **Un alphabet est une collection structuree de terminaux.** Un terminal est une chose entiere : il
 sonne ou non, porte une hauteur ou non, invoque du code ou une instruction de calcul de hauteur.
@@ -508,11 +514,15 @@ Ce qui le simplifie est une **definition**, pas un decoupage en axes portes par 
 **Un reglage s'ecrit par sa categorie, l'entree apres le point.** La categorie dit a quoi le reglage
 touche, donc qui le consomme.
 
-| categorie  | ce qu'elle regle                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------- |
-| `@pitch.`  | `transpose` · `scaleshift` · `chromashift` · `diapason`                                  |
-| `@time.`   | `tempo` · `duration` · `meter` · `timepatterns`                                          |
-| `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` |
+| categorie  | ce qu'elle regle                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| `@pitch.`  | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                  |
+| `@time.`   | `tempo` -- la vitesse a laquelle le temps se lit                                                      |
+| `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `duration` · `meter` · `timepatterns` · les operateurs `/` et `*` |
+
+**Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
+chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre et la
+duree disent ou les choses tombent, donc ils relevent du premier.
 
 ```text
 @time.tempo:120
@@ -526,21 +536,20 @@ touche, donc qui le consomme.
 @core
 @alphabet.sargam
 @time.tempo:90
-@duration:16b
+@engine.duration:16b
 
 S -> sa re ga pa
 ```
 
-`@duration:16b` fixe une enveloppe de 16 beats au tempo `@time.tempo` courant ; `@duration:8s` la
-fixe en secondes.
+`@engine.duration:16b` fixe une enveloppe de 16 beats au tempo courant ; `8s` la fixe en secondes.
 
-`@duration` separe trois preoccupations :
+La duree separe trois preoccupations :
 - **Densite** = le contenu (combien de termes, quelles proportions)
-- **Duree** = `@duration` (combien de beats ou de secondes la scene occupe)
+- **Duree** = `@engine.duration` (combien de beats ou de secondes la scene occupe)
 - **Vitesse** = `@time.tempo` (l'horloge, partagee avec le monde exterieur)
 
-Avec `@duration`, la scene est dilatee uniformement et ses proportions internes sont preservees.
-Sans `@duration`, la duree suit le contenu : le nombre de termes derives et le tempo courant.
+Avec une duree posee, la scene est dilatee uniformement et ses proportions internes sont
+preservees. Sans elle, la duree suit le contenu : le nombre de termes derives et le tempo courant.
 
 ---
 
