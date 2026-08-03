@@ -213,8 +213,8 @@ c'est ce qui **suit** le `!` qui decide duquel il s'agit.
 sur une seule attaque, et le premier terme donne la duree du groupe.
 
 **En tete d'un terme**, il pose dans le flux un element sans duree, qui prend effet a l'endroit ou
-il est ecrit : un controle de sortie `!(vel:80)`, un reglage moteur `![retro]`, une re-semence
-`![@seed:7]`, un cablage. La table complete des lectures du `!` est dans
+il est ecrit : un controle de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
+`!(seed:7)`, un cablage. La table complete des lectures du `!` est dans
 [Table de syntaxe du `!`](#table-de-syntaxe-du-).
 
 `<!` suspend le flux jusqu'a l'arrivee d'un signal exterieur. Le nom attendu se colle au signe.
@@ -1220,22 +1220,22 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 | `C4 !(...)` **espace**                        | **flux, EVENEMENT SEPARE** -- pose seul dans la sequence                              |
 | `B3!C7` *(`!` entre symboles)*                | **SIMULTANE / accord** -- les deux notes attaquent au meme instant                    |
 | `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                       |
-| `![@seed:N]`                                  | **directive de production DANS LE FLUX** -- element sans duree (`InstantControl`)     |
+| `!(seed:N)`                                   | **reglage pose DANS LE FLUX** -- element sans duree (`InstantControl`)                |
 | `C4 !prise` *(nom d'une definition)*            | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur      |
-| `!osc >> filtre`                              | **cablage pose dans le flux** -- le langage le lit, le moteur le refuse au chargement |
+| `` !`patch: osc1 >> lpf1` ``                  | **cablage pose dans le flux** -- un terminal de code, muet et de duree nulle          |
 | `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                        |
 
 C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
 zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
 
-**Un cablage se nomme.** La table des symboles du moteur range chaque element sous un nom, et un
-cablage ecrit directement dans le flux est refuse au chargement. On le nomme donc dans une definition
-et on pose son nom **nu** dans le flux, ou il occupe un pas :
+**Un cablage s'ecrit de deux facons.** Ce qu'on rejoue se **nomme** dans une definition, et son nom
+se pose **nu** dans le flux, ou il occupe un pas. Ce qu'on ecrit une fois reste **litteral**, dans un
+backtique `patch:` :
 
 ```bpscript
-@def prise osc >> filtre
+@def prise osc1 >> lpf1
 
-S -> A4 prise B4
+S -> A4 prise B4 `patch: lpf1 switchoff` C4
 ```
 
 Ecrit `C4 !prise`, le meme nom devient une co-attaque de l'accord : l'aval lui cherche une hauteur
@@ -1260,10 +1260,10 @@ deux elements freres ; `C4!E4!G4` donne un primaire et deux secondaires.
 Les parentheses ont quatre fonctions, decidees par la position :
 
 ```bpscript
-// 1. Sac de parametres runtime -- sur un symbole, une regle ou un groupe
-S -> C4(vel:120)                      // symbole : vel envoye au runtime quand C4 joue
+// 1. Sac de reglages -- sur un symbole, une regle ou un groupe
+S -> C4(vel:120)                      // symbole : vel envoye a la sortie quand C4 joue
 Basse -> C2 C2 - C2 (vel:100)         // regle : vel pour toute la phrase
-S -> {A B}(filter:lp, cutoff:4000)    // groupe : filter pour tout le groupe
+S -> {A B}(lpf1.cutoff:4000)          // groupe : le filtre couvre tout le groupe
 
 // 2. Contexte -- condition d'application d'une regle
 (A B) X -> D E                        // X se reecrit en D E seulement s'il suit A B
@@ -1278,9 +1278,9 @@ S -> accent(C4) E4
 ```
 
 La regle de desambiguation est positionnelle :
-- `symbole(` colle, dans une regle = sac de parametres, ou appel d'une definition
-- `(` en fin de RHS = sac de parametres de portee regle
-- `{}(` apres un groupe = sac de parametres de portee groupe
+- `symbole(` colle, dans une regle = sac de reglages, ou appel d'une definition
+- `(` en fin de RHS = sac de reglages de portee regle
+- `{}(` apres un groupe = sac de reglages de portee groupe
 - `@directive nom(` colle au nom = liste de parametres d'une declaration
 - `(` en tete de regle, avant le LHS et la fleche = contexte
 
