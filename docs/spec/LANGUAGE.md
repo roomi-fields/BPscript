@@ -1495,26 +1495,26 @@ un gabarit maitre et son esclave -- cf.
 
 *Verifie au moteur natif (`bp3-engine` v3.4.7, mode SUB1).*
 
-**Un contexte REGARDE, il ne PREND pas.** C'est la seule difference avec une variable, et elle
-s'entend a la resolution :
+**Un contexte REGARDE, il ne PREND pas.** C'est ce qui le separe d'une capture, et elle s'entend a
+la resolution :
 
 ```bpscript
-// « quel que soit x : x puis M » devient « M puis x » -- x est PRIS, donc il bouge
-|x| x M -> M x              //  A M  ->  M A
+// « quelque chose, puis D4 » devient « D4, puis cette chose » -- la place est PRISE, donc elle bouge
+?1 D4 -> D4 ?1              //  C4 D4  ->  D4 C4
 
-// « quand M suit x » : M devient « M puis x » -- x est REGARDE, donc il reste
-(x)  M -> M x               //  x M  ->  x M x
+// « quand D4 suit C4 » : D4 devient « D4 puis C4 » -- C4 est REGARDE, donc il reste
+(C4) D4 -> D4 C4            //  C4 D4  ->  C4 D4 C4
 ```
 
-**D'ou une asymetrie.** Une variable peut imiter un contexte -- il suffit de la remettre a
+**D'ou une asymetrie.** Une capture peut imiter un contexte -- il suffit de la remettre a
 l'identique :
 
 ```bpscript
-// « quand M suit x » : M devient N
-(x)     M -> N              //  x M  ->  x N
+// « quand D4 suit C4 » : D4 devient G4
+(C4)    D4 -> G4            //  C4 D4  ->  C4 G4
 
-// « quel que soit x : x puis M » devient « x puis N » -- pris, puis remis a l'identique
-|x| x   M -> x N            //  A M  ->  A N
+// « quelque chose, puis D4 » devient « cette chose, puis G4 » -- pris, puis remis a l'identique
+?1      D4 -> ?1 G4         //  C4 D4  ->  C4 G4
 ```
 
 L'inverse est impossible : un contexte ne peut ni deplacer ni retirer ce qu'il regarde. Ce qu'il
