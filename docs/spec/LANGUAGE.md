@@ -671,7 +671,7 @@ Le decrement `-` s'ecrit avec le glyphe du silence ; entre crochets et pose sur 
 l'operateur. L'inventaire des glyphes et celui des operateurs sont independants : un meme signe sert
 dans les deux, sa place tranche lequel des deux roles il tient.
 
-Ce qu'ils font est decrit dans « Flags -- variables d'etat et composition conditionnelle ».
+Ce qu'ils font est decrit dans « Flags ».
 
 ### Trois places, trois roles
 
@@ -1710,18 +1710,18 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 
 ### Tableau des signes
 
-| Signe      | Sens                                      | Exemple                                            |
-| ---------- | ----------------------------------------- | -------------------------------------------------- |
-| espace     | sépare deux termes                        | `@def souffle (vel:60)`                            |
-| collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                        |
-| `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `transport.midi`  |
-| `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`         |
-| `*`        | sujet = tous les terminaux                | `*:vel:80`                                         |
-| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(scale:just)`      |
-| `[]`       | ce qui appartient a la derivation         | `[phase==1]`, `[phase=2]`, `[3]` dans `@template`  |
-| `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`                |
-| `->`       | règle de production                       | `S -> C4 D4`                                       |
-| `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                              |
+| Signe      | Sens                                      | Exemple                                           |
+| ---------- | ----------------------------------------- | ------------------------------------------------- |
+| espace     | sépare deux termes                        | `@def souffle (vel:60)`                           |
+| collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                       |
+| `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `transport.midi` |
+| `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`        |
+| `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
+| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(scale:just)`     |
+| `[]`       | ce qui appartient a la derivation         | `[phase==1]`, `[phase=2]`, `[3]` dans `@template` |
+| `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
+| `->`       | règle de production                       | `S -> C4 D4`                                      |
+| `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                             |
 
 ### L'espace, délimiteur de termes
 
@@ -1755,14 +1755,14 @@ Motif -> {C4 D4}:2 E4(/2)
 catégories de librairie (`alphabet`, `tuning`, `octaves`, `transport`, `eval`,
 `mod`), les acteurs, les modules à ports et les étiquettes de groupe.
 
-| Emploi                                                    | Écriture                                                    |
-| --------------------------------------------------------- | ----------------------------------------------------------- |
-| entité de librairie                                       | `alphabet.sargam`, `tuning.sargam_22shruti`, `module.lpf`   |
-| directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@sub.dhati`                             |
-| terminal vu à travers un acteur                           | `sitar.sa`                                                  |
-| port d'un module                                          | `lpf.cutoff`                                                |
-| contrôle d'un groupe étiqueté                             | `groove.vel`                                                |
-| frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                          |
+| Emploi                                                    | Écriture                                                  |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| entité de librairie                                       | `alphabet.sargam`, `tuning.sargam_22shruti`, `module.lpf` |
+| directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@sub.dhati`                           |
+| terminal vu à travers un acteur                           | `sitar.sa`                                                |
+| port d'un module                                          | `lpf.cutoff`                                              |
+| contrôle d'un groupe étiqueté                             | `groove.vel`                                              |
+| frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                        |
 
 Les cinq clés d'un acteur — `alphabet`, `tuning`, `octaves`, `transport`, `eval` — sont des
 références : chacune s'écrit avec le point, sur sa ligne.
@@ -1833,7 +1833,8 @@ c'est l'héritage par cascade.
 ## Flags — variables d'état et composition conditionnelle
 
 Un flag est une variable entière globale. Il conditionne l'application des règles et se
-modifie pendant la dérivation.
+modifie pendant la dérivation. Les neuf opérateurs qui le lisent et l'écrivent sont listés dans
+« Inventaire » ; cette section dit ce qu'ils font.
 
 ### `[garde]` — condition d'application
 
@@ -1862,9 +1863,6 @@ où la règle est retenue. Le drapeau vaut donc encore sa valeur d'avant pendant
 `[count+1]` demande lui aussi un `count` strictement positif.
 
 **Un nom de drapeau seul teste qu'il vaut autre chose que zéro** : `[Ideas] S -> C4`.
-
-Opérateurs de test : `==`, `!=`, `>`, `<`, `>=`, `<=`.
-Opérateurs de test et mutation : `+` (incrémente), `-` (décrémente).
 
 La garde est déclarative : la règle **existe** quand la condition est vraie.
 
@@ -1902,8 +1900,8 @@ Motif -> sa re
 Cadence -> ga pa
 ```
 
-Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter). `=` ne s'écrit qu'en
-fin de règle ; pour comparer un drapeau devant le membre gauche, l'opérateur est `==`.
+`=` ne s'écrit qu'en fin de règle ; pour comparer un drapeau devant le membre gauche, l'opérateur
+est `==`.
 
 Le délimiteur distingue deux écritures voisines : `!dha` est un `!` suivi d'un symbole, donc
 un déclenchement dans le temps ; `[phase=2]` est entre crochets, donc une mutation de flag.
@@ -2126,10 +2124,10 @@ ecrit, jamais au moment de jouer.
 **Deux operateurs, declares dans `engine`** comme tout reglage : `/` et `*`. Ils s'ecrivent dans un
 sac, avec une fraction (`*3/2`) ou un decimal (`/1.5`).
 
-| Ecriture | Ce qu'elle fait                                                            |
-| -------- | ---------------------------------------------------------------------------- |
-| `/N`     | pose une vitesse **absolue**                                               |
-| `*N`     | **etire** relativement a la vitesse heritee                                |
+| Ecriture | Ce qu'elle fait                             |
+| -------- | ------------------------------------------- |
+| `/N`     | pose une vitesse **absolue**                |
+| `*N`     | **etire** relativement a la vitesse heritee |
 
 **Un operateur ne se referme pas de lui-meme : c'est la PORTEE qui le borne.** Colle a un symbole
 ou a un groupe, il ne vaut que pour lui. Pose dans le flux avec `!`, il court **jusqu'a la fin du
