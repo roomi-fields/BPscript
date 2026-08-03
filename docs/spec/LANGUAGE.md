@@ -27,11 +27,10 @@
 - [Flags](#flags--variables-détat-et-composition-conditionnelle)
 - [Declarations](#déclarations)
 - [Les librairies](#les-librairies)
-- [Operateurs temporels](#operateurs-temporels)
-- [Metrique -- `@meter`](#metrique----meter)
+- [Le temps](#le-temps)
 - [Modes, scan et directions](#modes-scan-et-directions----trois-niveaux-distincts)
 - [Gestion d'echec -- `on_fail`](#gestion-dechec----on_fail)
-- [Deux philosophies du temps](#deux-philosophies-du-temps)
+- [Le temps -- formes avancees](#le-temps----formes-avancees)
 
 ---
 
@@ -620,7 +619,7 @@ Le detail est dans « Les conventions de lecture d'un signal ».
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:vel:80)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
-               (*:vel:80, *:sombre) ; dans un sac, multiplie la duree (C4(*2)) ;
+               (*:vel:80, *:sombre) ; dans une vitesse, ecrit la fraction (! (*2/3)) ;
                entre un gabarit maitre et son esclave, marqueur d'homomorphisme ($X * &X)
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [phase=2])
 .              reference a une entite (alphabet.western, lpf1.cutoff, transport.midi),
@@ -694,7 +693,7 @@ Ce qu'ils font est decrit dans « Flags ».
 @alphabet.western:audio
 @time.tempo:120
 
-S -> C4(vel:0.7) D4(/2) E4 F4 (mode:random)
+S -> C4(vel:0.7) D4:0.5 E4 F4 (mode:random)
 ```
 
 Un reglage s'invoque par sa categorie -- `@pitch.`, `@time.`, `@engine.` -- decrite dans
@@ -747,7 +746,7 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | -------------------------------------- |
 | **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
-| **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(mode:random)`, `(/2)`, `(weight:50)` |
+| **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(mode:random)`, `(weight:50)`, `(vel:80)` |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
 donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
@@ -937,7 +936,7 @@ effet.
 
 ```bpscript
 // Portee symbole -- colle a l'element
-S -> A(/2) B C                  // divise la vitesse de A
+S -> A:0.5 B C                  // A occupe un demi-battement
 
 // Portee regle -- en fin de regle
 S -> A B C (mode:random)        // mode de la sous-grammaire
@@ -945,7 +944,7 @@ Basse -> C2 C2 C3 (weight:50)   // poids de la regle
 Basse -> C2 E2 G2 (weight:inf)  // poids infini : priorite absolue
 
 // Portee groupe -- apres le groupe
-S -> {A B C}(/2)                // vitesse du groupe divisee
+S -> {A B C}:0.5                // le groupe occupe un demi-battement
 ```
 
 ### Les cles que le moteur consomme
@@ -1048,7 +1047,7 @@ StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 | Portee      | Syntaxe          | Exemple           |
 | ----------- | ---------------- | ----------------- |
 | **globale** | `@cle:valeur`    | `@time.tempo:120` |
-| **groupe**  | `{}(cle:valeur)` | `{A B}(/2)`       |
+| **groupe**  | `{}(cle:valeur)` | `{A B}(vel:80)`   |
 | **regle**   | `(cle:valeur)`   | `C2 C2 (vel:100)` |
 | **symbole** | `(cle:valeur)`   | `C4(vel:120)`     |
 
@@ -1715,7 +1714,7 @@ Sept niveaux, du defaut moteur a l'occurrence dans une regle -- cf. les sons.
 vitesse absolue -- cf. les operateurs temporels.
 
 ```bpscript
-S -> {A B}(*2) C
+S -> {A B}:2 C
 ```
 ## Conventions de notation — l'espace, le point, le deux-points
 
@@ -1747,7 +1746,7 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 | --------------------------- | --------------------------------------------------------- |
 | `@def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
 | `@def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
-| `C4(/2)`                    | qualificateur du terminal `C4`                            |
+| `C4(vel:80)`                | qualificateur du terminal `C4`                            |
 | `C4 D4 (mode:random)`       | qualificateur de la règle entière                         |
 | `C4!(vel:100)`              | flux ancré à `C4`, il voyage avec lui (`conjoint: true`)  |
 | `C4 !(vel:100)`             | flux posé seul dans la séquence (`conjoint: false`)       |
@@ -1761,7 +1760,7 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 @def souffle (vel:60)
 
 S -> C4!accent D4 (mode:random)
-Motif -> {C4 D4}:2 E4(/2)
+Motif -> {C4 D4}:2 E4:0.5
 ```
 
 ### Le point — désigner dans un espace de noms
@@ -2096,67 +2095,84 @@ ont la meme forme ; seul le moment de leur compilation differe.
 **Le lancement d'une piece ne compile rien.** Une erreur d'ecriture se dit a l'auteur pendant qu'il
 ecrit, jamais au moment de jouer.
 
-## Operateurs temporels
+## Le temps
 
-**Deux operateurs, declares dans `engine`** comme tout reglage : `/` et `*`. Ils s'ecrivent dans un
-sac, avec une fraction (`*3/2`) ou un decimal (`/1.5`).
+**Cinq choses se disent sur le temps, et chacune a son ecriture.**
 
-| Ecriture | Ce qu'elle fait                             |
-| -------- | ------------------------------------------- |
-| `/N`     | pose une vitesse **absolue**                |
-| `*N`     | **etire** relativement a la vitesse heritee |
+| Ce qu'on veut dire                    | Comment ca s'ecrit                    |
+| ------------------------------------- | --------------------------------------- |
+| l'horloge de la scene                 | `@tempo:120`, en tete                 |
+| ce que dure un element ou un groupe   | le deux-points colle -- `C4:0.5`      |
+| accelerer ou ralentir a partir d'ici  | `! (/2)`, dans le flux                |
+| est-ce que ca pulse                   | `@striated` · `@smooth`               |
+| comment on bat                        | `@meter:4/4`                          |
 
-**Un operateur ne se referme pas de lui-meme : c'est la PORTEE qui le borne.** Colle a un symbole
-ou a un groupe, il ne vaut que pour lui. Pose dans le flux avec `!`, il court **jusqu'a la fin du
-champ**, ou jusqu'a la prochaine vitesse ecrite.
+### L'horloge -- `@tempo`
+
+**Le tempo se pose en tete de scene, en battements par minute.** C'est l'horloge, celle qu'on
+partage avec le monde exterieur : elle vaut pour la piece entiere.
 
 ```bpscript
-@alphabet.sargam
-
-S -> sa(/2) re ga          // seul sa est accelere
-S -> sa !(/2) re ga        // re et ga le sont, sa garde sa duree
-S -> sa !(/2) re !(/1) ga  // seul re : /1 restaure la vitesse d'origine
-S -> {ga ma}(*3) pa        // le groupe est etire, pa ne l'est pas
+@tempo:120
 ```
 
-**Un sous-champ polymetrique a sa propre vitesse** : ce qui est pose dans l'un ne franchit pas la
-virgule.
+Ce qui varie d'un passage a l'autre est une **vitesse**, et elle a sa propre ecriture.
 
-**La duree, elle, a trois portees** -- collee elle suit son terme ou son groupe, detachee en fin de
-membre droit elle porte sur toute la production :
+### La duree -- le deux-points colle
 
-| Ecriture        | Portee                 |
-| --------------- | ---------------------- |
-| `A4:1/2`        | la note seule          |
-| `{A B}:2`       | le groupe              |
-| `S -> A B C :2` | le membre droit entier |
+**Le deux-points colle dit ce qu'un element occupe**, en battements. Il ne touche que son hote :
+ce qui l'entoure garde sa duree.
 
----
-
-## Metrique -- `@meter`
-
-BPScript porte la signature rythmique via la directive `@meter`.
-
-```text
-@meter:4/4                       // mesure a 4 temps
-@meter:7/8                       // mesure a 7 croches
-@meter:3+4+2/4                   // mesure additive : 3 + 4 + 2 temps
-@time.tempo:120                  // 120 BPM
+```bpscript
+S -> C4:2 D4 E4              // C4 occupe deux battements, D4 et E4 un chacun
+S -> C4:0.5 D4 E4            // C4 occupe un demi-battement
+S -> {C4 D4}:2 E4            // le groupe occupe deux battements
 ```
 
-**Distinction tempo vs metronome :**
-- `(tempo:2)` = multiplicateur relatif (double la vitesse courante), en suffixe de terminal, de
-  groupe ou de regle
-- `@time.tempo:120` = marquage metronomique absolu (120 BPM)
-- `@striated` / `@smooth` = bascule entre temps strie et temps lisse
+**Un groupe polymetrique pose la meme contrainte, sur plusieurs voix** : `{2, C4 D4, E4}` dit que ce
+bloc occupe deux battements, et chaque voix s'y arrange.
 
-```text
-@meter:4/4
-@time.tempo:120
-S -> C4 D4 (tempo:2)
+### La vitesse -- `! (/N)` dans le flux
+
+**La vitesse se pose dans le flux et court jusqu'a la fin du champ.** Elle s'ecrit avec `!` separe
+par une espace, comme tout element pose seul dans la sequence.
+
+```bpscript
+S -> C4 ! (/2) D4 E4         // D4 et E4 vont deux fois plus vite, C4 garde sa duree
+S -> C4 ! (/2) D4 ! (/1) E4  // seul D4 est accelere ; /1 restaure la vitesse d'origine
 ```
 
----
+**`/N` accelere, `*N/M` ecrit la fraction inverse.** `/2` va deux fois plus vite ; `*2/3` etire de
+moitie plus. Les deux graphies disent la meme chose : `*1/2` **est** `/2`.
+
+### La nature du temps -- `@striated` et `@smooth`
+
+**Le temps strie pulse ; le temps lisse coule.** L'un donne une grille de battements que le
+metronome engendre, l'autre laisse chaque objet porter sa propre duree.
+
+```bpscript
+@striated                    // la musique occidentale, la danse
+@smooth                      // un alap, un gagaku, une musique non pulsee
+```
+
+C'est la distinction de Boulez (*Penser la musique aujourd'hui*, 1963), et le langage l'ecrit d'un
+mot.
+
+### Le battement -- `@meter`
+
+**Le metre dit comment on bat.** Il s'adresse a qui joue et a qui affiche : quatre temps par mesure,
+sept croches, ou un cycle inegal.
+
+```bpscript
+@meter:4/4                   // quatre temps
+@meter:7/8                   // sept croches
+@meter:3+4+2/4               // un cycle de neuf temps, battu 3 puis 4 puis 2
+```
+
+**La forme additive structure aussi la production** : elle decoupe le cycle en groupes inegaux et y
+repartit ce qui est derive. C'est ce qui permet un rupak a sept temps, un jhaptal a dix, une
+metrique balkanique.
+
 
 ## Modes, scan et directions -- trois niveaux distincts
 
@@ -2213,30 +2229,47 @@ ALT -> dha ni
 
 ---
 
-## Deux philosophies du temps
+---
 
-Le flux temporel se controle de deux facons (cf. Boulez, *Penser la musique aujourd'hui*, 1963) :
+## Le temps -- formes avancees
 
-|               | Temps lisse                               | Temps strie                            |
-| ------------- | ----------------------------------------- | -------------------------------------- |
-| **Paradigme** | fonctionnel -- le temps est une propriete | imperatif -- le temps est une commande |
-| **Usage**     | alap indien, gagaku, musique non pulsee   | musique occidentale, danse, pop        |
+**Cette section porte ce qu'on ecrit rarement.** Les cinq ecritures ci-dessus suffisent a jouer ;
+celles-ci existent pour ce qu'elles seules permettent.
 
-BPScript unifie les deux dans la meme syntaxe via le systeme de types :
+### La duree de la scene
+
+**Fixer l'enveloppe totale et laisser le contenu s'y dilater.** La scene occupe la duree ecrite, et
+ses proportions internes sont preservees.
 
 ```bpscript
-@alphabet.western:audio
-@def ramp(a, b) mod.ramp(from:a, to:b)   // un signal, gere par le runtime audio
-
-S -> {C4 D4 E4}:2                    // palier discret -- la duree du groupe est un nombre
-T -> C4!ramp(0,1)                    // continu -- la valeur court le long de la duree de C4
+@engine.duration:16b         // seize battements au tempo courant
+@engine.duration:8s          // huit secondes
 ```
 
-| Ecriture                         | Concept                 |
-| -------------------------------- | ----------------------- |
-| **terminal qui occupe du temps** | evenement dans le temps |
-| **objet hors-temps** (via `!`)   | impulsion instantanee   |
-| **signal**                       | duree comme propriete   |
+Trois choses s'y separent : la **densite** vient du contenu, la **duree** de cette ecriture, la
+**vitesse** du tempo.
+
+### Les motifs temporels
+
+**Une courbe de temps plutot qu'une pulsation reguliere.** Un motif temporel decrit comment le temps
+s'ecoule sur une etendue, la ou le tempo n'en donne qu'une valeur.
+
+### La vitesse absolue
+
+**Poser un nombre d'evenements par battement**, au lieu d'un rapport a la vitesse heritee.
+
+### La deviation aleatoire
+
+**Humaniser les attaques** en les decalant d'une amplitude ecrite. Elle appartient a l'oeuvre : ce
+qu'elle produit fait partie de ce qu'on a compose.
+
+```bpscript
+S -> C4 (rndtime:100) D4 E4  // les attaques devient jusqu'a cent millisecondes
+```
+
+---
+
+
 ## Documents liés
 
 - [EBNF.md](EBNF.md) — grammaire formelle EBNF
