@@ -983,17 +983,15 @@ meter       signature rythmique -- (meter:7/8), (meter:4+4/4)
 
 Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
 
-Le mot `scale` designe la **gamme microtonale**, resolue par Kairos : `(scale:nom cle)`. La mise a
-l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**, `{A B}:2`.
+### `()` -- un reglage (toujours suffixe)
 
-### `()` -- un reglage, adresse par le domaine de sa cle (toujours suffixe)
+**Le nom d'un reglage suffit a savoir ou il va.** Chaque nom appartient a une librairie, et chaque
+librairie a un destinataire : ecrire `mode` dit le moteur, `scale` dit la hauteur, `wave` dit une
+sortie sonore. On n'ecrit donc jamais le destinataire -- le nom le porte. C'est la meme regle que
+pour les directives de tete.
 
-**Le domaine de la cle est l'adresse.** `(mode:random)` va au moteur, `(scale:just)` a Kairos,
-`(wave:sawtooth)` a un runtime de sortie -- la meme regle que pour les directives de tete. Le
-compilateur verifie que la cle appartient a une librairie invoquee et transmet la valeur telle
-quelle.
-
-**BPx lit ce qui releve de `engine` et de `time`, et porte le reste** jusqu'a son destinataire.
+Le compilateur verifie que la cle appartient a une librairie invoquee et transmet la valeur telle
+quelle. **Qui lit quoi est decrit dans `atlas/architecture/05-interfaces.md`.**
 
 ```bpscript
 // Portee symbole -- colle a l'element
@@ -1012,13 +1010,14 @@ sur une meme note (note, groupe, groupe parent...), les controles **s'empilent e
 l'**interieur vers l'exterieur**, dans l'ordre de l'imbrication : dans
 `{ C4(lpf1.cutoff:500) D4 }(lpf2.cutoff:300)`, le son de C4 traverse son filtre de note puis celui du
 groupe.
-Les **scalaires** (`vel`, `chan`) suivent l'autre regime : la precedence en retient **une** valeur.
-L'empilement se resout en aval (BPx, Kairos, runtime) ; le langage le dit deja par le sujet du
-qualificateur et par l'imbrication des groupes.
+**Une valeur simple, elle, ne s'empile pas.** Deux `vel` sur la meme note ne s'additionnent pas et
+ne se traversent pas : le plus local gagne, l'autre est ignore. La difference tient a ce que la
+chose est -- un filtre se traverse, une intensite se choisit.
 
-**Etendue d'arc et rearmement d'enveloppe (`cutoff:env`).** Un silence `-` **re-arme** l'enveloppe
-qui module un parametre : elle rejoue son attaque. Une accolade `{ ... }` qui enjambe ce silence
-definit **un seul arc continu**, qui le franchit. C'est l'etendue de l'accolade qui choisit :
+**Quand un reglage est pilote par une enveloppe, le silence la fait repartir.** Ecrire
+`(cutoff:env)` confie la coupure a une enveloppe nommee `env` : elle monte, elle tient, elle
+redescend. Un silence `-` la relance depuis le debut ; une accolade qui enjambe ce silence lui fait
+au contraire **traverser** -- une seule montee sur toute l'etendue. L'accolade choisit :
 
 ```bpscript
 // Regle nue -> le silence ARTICULE : l'enveloppe repart apres chaque -
@@ -1033,11 +1032,9 @@ Lie -> { C2 - C2 }(cutoff:env)
 S -> { Lie Lie Lie Lie }(cutoff:env)
 ```
 
-Un flux continu tenu sur une grande etendue s'ecrit donc avec la meme accolade, ouverte plus large.
-Cote formalisme, l'accolade est **un** noeud conteneur unique portant le qualificateur a la portee
-`group`, et son etendue survit a l'expansion polymetrique : BPx produit la fenetre du bus, Kairos
-la porte opaque, le runtime la realise. Le comportement transverse complet est decrit dans
-`atlas/architecture/MODULATIONS.md`.
+**Une seule regle a retenir : c'est l'accolade qui dit jusqu'ou une enveloppe tient.** Plus elle
+est large, plus la montee est longue -- sur une note, sur une phrase, sur plusieurs tours de boucle.
+Ce qui la realise est decrit dans `atlas/architecture/MODULATIONS.md`.
 
 ### Valeur brute (modele CSS)
 
