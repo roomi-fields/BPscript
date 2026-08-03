@@ -1605,6 +1605,15 @@ S <> $mel(tempo:120) &mel(tempo:80)       // chaque invocation porte ses paramet
 S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
 ```
 
+**L'esclave rejoue le CHOIX du maitre, pas la regle.** Quand le nom capture designe une regle a
+plusieurs alternatives, les deux invocations donnent la **meme** -- c'est ce qui distingue un
+gabarit de deux invocations libres :
+
+```bpscript
+S -> $mel &mel      // deux productions possibles : les deux moities sont toujours identiques
+S -> mel mel        // quatre : chaque moitie tire son alternative
+```
+
 Les parametres d'une invocation gouvernent l'expansion du gabarit : ils valent pour ce que cette
 invocation produit.
 
@@ -2237,20 +2246,26 @@ ecrit, jamais au moment de jouer.
 **Deux operateurs, declares dans `engine`** comme tout reglage : `/` et `*`. Ils s'ecrivent dans un
 sac, avec une fraction (`*3/2`) ou un decimal (`/1.5`).
 
-| Ecriture | Ce qu'elle fait                                                                                 |
-| -------- | ----------------------------------------------------------------------------------------------- |
-| `A(/2)`  | **vitesse absolue**, et elle **persiste** jusqu'au prochain operateur ou la fin du champ        |
-| `A(*3)`  | **etirement relatif** a la vitesse heritee, **entre deux bornes** : la sortie restaure l'herite |
-| `!(/2)`  | pose la vitesse **dans le flux**, relative, sans persistance                                    |
+| Ecriture | Ce qu'elle fait                                                            |
+| -------- | ---------------------------------------------------------------------------- |
+| `/N`     | pose une vitesse **absolue**                                               |
+| `*N`     | **etire** relativement a la vitesse heritee                                |
 
-La virgule d'un sous-champ polymetrique **reinitialise** une vitesse absolue.
-
-Portee flexible : sur un symbole, un groupe, ou un polymetric.
+**Un operateur ne se referme pas de lui-meme : c'est la PORTEE qui le borne.** Colle a un symbole
+ou a un groupe, il ne vaut que pour lui. Pose dans le flux avec `!`, il court **jusqu'a la fin du
+champ**, ou jusqu'a la prochaine vitesse ecrite.
 
 ```bpscript
 @alphabet.sargam
-S -> sa(/2) re {ga ma}(*3) !(/2) pa
+
+S -> sa(/2) re ga          // seul sa est accelere
+S -> sa !(/2) re ga        // re et ga le sont, sa garde sa duree
+S -> sa !(/2) re !(/1) ga  // seul re : /1 restaure la vitesse d'origine
+S -> {ga ma}(*3) pa        // le groupe est etire, pa ne l'est pas
 ```
+
+**Un sous-champ polymetrique a sa propre vitesse** : ce qui est pose dans l'un ne franchit pas la
+virgule.
 
 **La duree, elle, a trois portees** -- collee elle suit son terme ou son groupe, detachee en fin de
 membre droit elle porte sur toute la production :
