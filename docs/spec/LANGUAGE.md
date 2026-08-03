@@ -1415,7 +1415,6 @@ Syntaxe :
 - `~C4~` la continue : le son se poursuit a travers l'evenement
 - `~C4` la ferme : NoteOff a la fin
 
-
 ---
 
 ## Captures `?` -- pattern matching
@@ -1462,8 +1461,6 @@ s'applique pas laisse la chaine **inchangee** :
                          //  C4 D4  ->  C4 D4     inchangee
 ```
 
-*Comportement mesure au moteur natif (`bp3-engine` v3.4.7) en `@mode:sub1`.*
-
 Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
 les porte jusqu'au moteur.
 
@@ -1489,8 +1486,6 @@ Les tables d'homomorphisme, elles, se declarent par `@transcription.<table>` et 
 un gabarit maitre et son esclave -- cf.
 [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
 
-*Comportement mesure au moteur natif : `|a| -> C4` sur la chaine `|a| |b|` rend `C4 D4`.*
-
 ---
 
 ## Contextes `()` et `#` -- conditions d'application
@@ -1505,8 +1500,6 @@ un gabarit maitre et son esclave -- cf.
 #C4 D4 -> G4                //  E4 D4     ->  G4
                             //  C4 D4     ->  C4 D4     inchangee
 ```
-
-*Comportement mesure au moteur natif (`bp3-engine` v3.4.7) en `@mode:sub1`.*
 
 **Un contexte REGARDE, il ne PREND pas.** C'est ce qui le separe d'une capture, et elle s'entend a
 la resolution :
@@ -2132,8 +2125,8 @@ d'espace joue sur `!(…)`, où le collage ancre le flux au terminal précédent
 S -> C4!kick D4 E4!accent F4
 ```
 
-Mesuré : `S -> C4!kick D4` donne **deux** éléments dans le membre droit, `C4` et son attache
-partageant le premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe son propre pas.
+`S -> C4!kick D4` donne **deux** éléments dans le membre droit, `C4` et son attache partageant le
+premier ; `S -> C4 kick D4` en donne **trois**, et le nom y occupe son propre pas.
 
 ### Câbler : `>>` et `\>>`
 
@@ -2382,6 +2375,4 @@ T -> C4!ramp(0,1)                    // continu -- la valeur court le long de la
 - [CV.md](../design/CV.md) — objets de signal
 - [PITCH.md](../design/PITCH.md) — architecture 5 couches de hauteur
 - [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) — homomorphismes
-
-
 
