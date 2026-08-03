@@ -25,7 +25,7 @@
 - [Sons](#sons)
 - [Conventions de notation](#conventions-de-notation--lespace-le-point-le-deux-points)
 - [Flags](#flags--variables-détat-et-composition-conditionnelle)
-- [Declarations et alias](#déclarations-et-alias)
+- [Declarations](#déclarations)
 - [Les librairies](#les-librairies)
 - [Operateurs temporels](#operateurs-temporels)
 - [Metrique -- `@meter`](#metrique----meter)
@@ -1923,7 +1923,7 @@ jhala -> {sa re ga pa dha ni sa}:4
 
 ---
 
-## Déclarations et alias
+## Déclarations
 
 ### Déclarer un symbole : convention de lecture et sortie
 
@@ -1941,7 +1941,7 @@ S -> sa dha
 ### Un seul espace de noms
 
 Les noms de toutes les sortes de choses vivent dans le **même espace** : terminaux de
-l'alphabet actif, têtes de règle, définitions, alias, entrées, acteurs, variables de travail,
+l'alphabet actif, têtes de règle, définitions, entrées, acteurs, variables de travail,
 signaux, drapeaux. Chaque nom y appartient à **une seule** d'entre elles. Le contrôle a
 lieu **à la déclaration** : c'est le fait de déclarer le nom qui tranche, son emploi dans
 une règle étant une autre affaire.
@@ -1965,15 +1965,10 @@ est le même symbole, réécrit plus tard.
 emplois, puis compare l'arbre dérivé entier avant et après, à graine fixe. Il écrit quand
 chaque jeton coïncide.
 
-### `@def` et `@alias`
+### `@def` — nommer ce qu'on réinvoque
 
-Une seule forme pour les deux, comme pour toute directive : `@<directive> <nom> <valeur>`.
-Le nom vient d'abord, ce qu'il vaut ensuite.
-
-| Directive | Ce qu'elle fait                                     | Où elle s'emploie          |
-| --------- | --------------------------------------------------- | -------------------------- |
-| `@def`    | nomme une transformation, un préréglage, un câblage | à sa place dans une règle  |
-| `@alias`  | donne un nom à une chose technique ou répétitive    | dans la partie déclarative |
+**Le nom vient d'abord, ce qu'il vaut ensuite** — la forme de toute déclaration. `@def` nomme une
+transformation, un préréglage, un câblage, et ce nom se pose à sa place dans une règle.
 
 ```bpscript
 @alphabet.western
@@ -1985,15 +1980,11 @@ Motif -> C4 D4 E4
 S -> C4!kick D4 E4!accent fast(Motif)
 ```
 
-La valeur d'un `@alias` est un nom déclaré — définition, variable, entrée —, une
-étiquette de groupe suivie d'un contrôle, ou une adresse OSC. Un nom suivi du deux-points,
-placé devant un groupe, étiquette l'ensemble : l'alias désigne alors d'un seul mot un
-contrôle porté par tous ses éléments.
+**Étiqueter un groupe se fait dans la règle**, avec un nom suivi du deux-points : le nom désigne
+alors d'un seul mot un contrôle porté par tous ses éléments.
 
 ```bpscript
 @alphabet.western
-@alias intensite osc:/sensor/1      // canal OSC nommé
-@alias souffle groove.vel           // le vel du groupe étiqueté groove
 
 S -> groove:{C4 D4, E4} F4
 ```
