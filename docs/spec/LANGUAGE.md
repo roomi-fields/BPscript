@@ -190,21 +190,21 @@ S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 #### Le langage de patch
 
 **`patch:` est le langage du cablage**, et Dedale l'interprete. Il s'ecrit dans une regle comme
-tout backtick, et **ne sonne pas, n'occupe aucun temps**.
+tout backtick : **muet, et de duree nulle**.
 
 ```bpscript
 S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4
 ```
 
 Il porte **tout ce qui touche a la gestion du patch** : brancher `>>`, couper `\>>`, neutraliser
-`switchon` / `switchoff`, et affecter une valeur a un port (`lpf1.cutoff:400`).
+`switchon` / `switchoff`, affecter une valeur a un port (`lpf1.cutoff:400`).
 
-**Il manipule seulement, il ne declare rien.** Creer une instance se fait en partie declarative,
-jamais dans le flux -- c'est un principe universel du langage, et le patch n'y fait pas exception.
+**Il manipule le patch ; les declarations vivent en tete de scene** -- creer une instance s'y ecrit,
+comme toute declaration du langage.
 
-**Ce n'est pas une exception au refus des chevrons en derivation.** `S -> saw1 >> lpf1` reste
-refuse : une derivation produit de la matiere, cabler n'en produit pas. Un backtick, lui, est un
-terminal, et un terminal se pose dans une regle.
+**Un backtick est un terminal, et un terminal se pose dans une regle** : c'est a ce titre que le
+cablage y entre. La derivation, elle, produit de la matiere -- `S -> saw1 >> lpf1` arrete la
+compilation.
 
 **Le meme langage sert dans un `@def`** : ce qu'on reinvoque se nomme, ce qu'on ecrit une fois
 reste litteral. Un seul langage, deux emplacements.
@@ -395,8 +395,8 @@ Un filtre passe-bas nomme `lpf` en librairie ne s'ecrit pas dans une regle : la 
 @var lpf1 lpf
 ```
 
-et c'est `lpf1` qui se cable et se regle. **Une instance est une variable, pas une definition** :
-elle ne porte aucun corps propre, son comportement vient de son type. Deux filtres dans une piece
+et c'est `lpf1` qui se cable et se regle. **Une instance est une variable** : son comportement vient
+de son type. Deux filtres dans une piece
 sont deux instances nommees, chacune avec ses valeurs de port.
 
 #### Le patron d'un module
@@ -726,11 +726,10 @@ Un reglage s'invoque par sa categorie -- `@pitch.`, `@time.`, `@engine.` -- decr
 « Invoquer un reglage ». Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est
 le recepteur qui leur donne un sens.
 
-### Le crochet ne porte que des gardes
+### Le crochet -- les drapeaux
 
-**Le crochet est reserve aux drapeaux** : tester l'etat de la derivation, et le changer. Tout
-reglage -- moteur ou non -- s'ecrit entre **parentheses**, et c'est le **domaine de la cle** qui
-nomme son destinataire.
+**Le crochet porte les drapeaux** : il teste l'etat de la derivation, et il le change. Tout reglage
+s'ecrit entre **parentheses**, ou le **domaine de la cle** nomme son destinataire.
 
 | place                         | ce qu'il porte                                                    |
 | ----------------------------- | ------------------------------------------------------------------- |
@@ -738,8 +737,8 @@ nomme son destinataire.
 | en fin de regle               | une **affectation** de drapeau : `[phase=2]`                      |
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
-suite. Rien d'autre n'entre dans un crochet -- `(mode:random)` arrete la compilation, et la meme
-intention s'ecrit `(mode:random)`.
+suite. Un reglage ecrit entre crochets arrete la compilation, et le message donne sa forme : le
+`mode` s'ecrit `(mode:random)`.
 
 ```bpscript
 @core
@@ -748,10 +747,9 @@ intention s'ecrit `(mode:random)`.
 [count-1] S -> C4 D4 (mode:random) [phase=2]
 ```
 
-**Pourquoi le crochet perd son second role.** Il portait a la fois des gardes et des reglages
-moteur, ce qui obligeait a savoir de quel cote de la frontiere chaque mot tombait. Depuis que
-chaque reglage declare son domaine, le signe n'apprend plus rien que le nom ne dise deja : le
-distinguer coutait une regle a retenir et ne rendait rien.
+**Un signe, un role.** Un drapeau appartient a la derivation : il decide de son chemin. Un reglage
+appartient a ce qu'elle produit : il en decrit une propriete. Deux natures, deux signes -- et pour
+router un reglage, le domaine de sa cle suffit.
 
 BPScript decrit des structures dans le temps. Le calcul et le traitement de signal s'ecrivent
 dans le code externe (backticks).
@@ -850,13 +848,13 @@ temps ? », au lieu de le laisser deviner.
 | `duration`    | la duree par defaut de ce qu'il produit                                            |
 | `returns`     | *(seulement s'il rend une valeur)* la convention de ce qu'il rend                   |
 
-**`returns` n'existe que pour les langages employables EN LIGNE** -- `sa(vel:` suivi d'un backtick
-qui rend un nombre. Un langage qui ne rend rien n'a pas ce champ du tout, et son absence apprend
-qu'on ne peut pas l'ecrire dans un parametre.
+**`returns` appartient aux langages employables EN LIGNE** -- `sa(vel:` suivi d'un backtick qui rend
+un nombre. Sa presence dit qu'on peut ecrire ce langage dans un parametre, et la convention de ce
+qu'il y rend.
 
-**Pas de sous-patrons.** Les deux emplois d'un backtique -- autonome dans le flux, en ligne dans un
-parametre -- ne sont pas deux natures de langage : le meme `sc:` fait les deux. Ce qui varie, ce
-sont les defauts, et une occurrence les surcharge avec un sac : `` `sc: i = i + 1`(sounding:false) ``.
+**Un seul patron pour les deux emplois.** Le meme `sc:` s'ecrit autonome dans le flux et en ligne
+dans un parametre ; ce qui varie d'un langage a l'autre, ce sont ses defauts, et une occurrence les
+surcharge avec un sac : `` `sc: i = i + 1`(sounding:false) ``.
 
 **`patch` declare `sounding` faux et `duration` nulle**, toujours.
 
@@ -989,15 +987,14 @@ Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
 Le mot `scale` designe la **gamme microtonale**, resolue par Kairos : `(scale:nom cle)`. La mise a
 l'echelle temporelle d'un groupe s'ecrit avec la **duree collee**, `{A B}:2`.
 
-### `()` -- un reglage, et son domaine dit qui le recoit (toujours suffixe)
+### `()` -- un reglage, adresse par le domaine de sa cle (toujours suffixe)
 
-**Le signe n'adresse rien : le nom de la cle le fait.** `(mode:random)` va au moteur,
-`(scale:just)` a Kairos, `(wave:sawtooth)` a un runtime de sortie -- le domaine de la cle est
-l'adresse, et c'est la meme regle que pour les directives de tete. Le compilateur verifie que la
-cle appartient a une librairie invoquee et transmet la valeur telle quelle.
+**Le domaine de la cle est l'adresse.** `(mode:random)` va au moteur, `(scale:just)` a Kairos,
+`(wave:sawtooth)` a un runtime de sortie -- la meme regle que pour les directives de tete. Le
+compilateur verifie que la cle appartient a une librairie invoquee et transmet la valeur telle
+quelle.
 
-Pour BPx, la difference reste entiere : ce qui releve de `engine` ou de `time`, il le **lit** ; le
-reste, il le **porte** sans l'interpreter.
+**BPx lit ce qui releve de `engine` et de `time`, et porte le reste** jusqu'a son destinataire.
 
 ```bpscript
 // Portee symbole -- colle a l'element
@@ -1082,8 +1079,7 @@ StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 
 ### Resume des portees
 
-**Le destinataire ne se lit jamais dans le signe** -- il se lit dans le domaine de la cle. La portee,
-elle, se lit dans la **place** du sac.
+**Le domaine de la cle nomme le destinataire ; la place du sac donne la portee.**
 
 | Portee      | Syntaxe          | Exemple           |
 | ----------- | ---------------- | ----------------- |
@@ -1092,8 +1088,7 @@ elle, se lit dans la **place** du sac.
 | **regle**   | `(cle:valeur)`   | `C2 C2 (vel:100)` |
 | **symbole** | `(cle:valeur)`   | `C4(vel:120)`     |
 
-Le crochet ne figure pas dans ce tableau : il ne porte pas de reglage, seulement des **drapeaux** --
-un test avant le membre gauche, une affectation en fin de regle.
+Le crochet a son propre tableau, sous « Le crochet -- les drapeaux ».
 
 ### Destinataire d'une paire `[sujet:]controle:valeur`
 
@@ -1145,9 +1140,9 @@ deux :
 Un cable se coupe pendant que ca joue ; une portee, elle, se referme. C'est pour cela qu'un geste
 n'a pas d'etendue et qu'un calque en a une.
 
-**Un chainage n'encapsule rien.** Ses modules restent des instances nommees, et on les adresse par
-leur nom ou qu'on soit : `@def sombre lpf1 >> vca1` se regle en ecrivant `lpf1.cutoff:400`. Il n'y a
-ni port a exposer, ni nom a traduire, ni rien a cacher -- un nom d'instance suffit.
+**Les modules d'un chainage restent des instances nommees**, adressables par leur nom ou qu'on
+soit : `@def sombre lpf1 >> vca1` se regle en ecrivant `lpf1.cutoff:400`. Un nom d'instance suffit
+a tout designer.
 
 **Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backticks
 `patch:`. Un seul langage, deux emplacements : nomme dans un `@def`, litteral dans une regle.
@@ -1171,31 +1166,29 @@ vivent en parallele, **un par calque invoque** -- comme un fil porte plusieurs v
 nom. L'auteur ne les compte jamais : un site d'ecriture donne un exemplaire, `*:` en donne un par
 terminal. Chacun a ses propres valeurs de port et son propre etat interne.
 
-**Une nouvelle derivation ne recycle rien** : chaque exemplaire termine meurt proprement, chaque
-exemplaire neuf part de zero.
+**A chaque derivation, les exemplaires sont neufs** : chacun part de zero, et ceux du tirage
+precedent finissent leur course.
 
 **Un geste vise tous les exemplaires.** `patch: lpf1 switchoff` eteint la famille entiere, comme on
-adresse un fil et non l'une de ses voies. Viser un exemplaire seul demanderait de savoir lequel, et
-un nom ne le dit pas.
+adresse un fil et toutes ses voies a la fois : un nom designe le role, et le role les rassemble.
 
 **Le runtime applique ce qui a du sens chez lui** et **avertit pour le reste**. Une portee peut
 melanger des terminaux de sorties differentes ; un filtre n'a pas de sens sur une note MIDI. Ce
-n'est pas au langage d'arbitrer, et ce qui n'est pas applique ne se tait jamais.
+le langage laisse la sortie juger, et chaque ecart lui arrache un avertissement.
 
-**A la fin de sa portee, un calque cesse de recevoir -- il ne cesse pas d'exister.** Il meurt quand
-il ne produit plus rien : une reverberation sort sa queue, un delai finit ses repetitions, un
-relachement va au bout. Rien n'impose de fondu : ce serait ajouter une articulation que personne n'a
-ecrite.
+**A la fin de sa portee, un calque cesse de recevoir et vit jusqu'a ce qu'il se taise.** Une
+reverberation sort sa queue, un delai finit ses repetitions, un relachement va au bout. La sortie
+suit ce que le module produit, sans fondu ajoute -- un fondu serait une articulation que personne
+n'a ecrite.
 
 **Une definition reecrite pendant que ca joue prend effet en vol** pour ce qui commence apres elle ;
 ce qui est deja en cours **finit proprement** avec l'ancienne.
 
 **Vivant et interagissable sont deux etats distincts.** Un module peut tourner sans agir : le signal
 le traverse sans etre traite, et c'est `passthrough` qui dit quelle entree ressort alors par quelle
-sortie. Ce n'est pas la meme chose que couper le cable -- `\>>` deconnecte et plus rien n'arrive,
-`switchoff` court-circuite et le signal ressort intact. Le premier fait taire, le second laisse
-passer. Le geste est **binaire** : `switchon` / `switchoff`, sans dosage -- et il ne coupe rien net,
-ce qui est dans le module s'ecoule comme a la fin d'une portee.
+sortie. Deux gestes, deux effets : `\>>` deconnecte, et le module se tait ; `switchoff`
+court-circuite, et le signal ressort intact. Le geste est **binaire** : `switchon` / `switchoff`. Ce qui est dans le module s'ecoule
+ensuite, comme a la fin d'une portee.
 
 ### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
 
@@ -2136,9 +2129,8 @@ backtick `patch:`. Un câblage qu'on ne réinvoque pas s'écrit donc **littéral
 S -> C4 `patch: saw1 \>> lpf1` D4
 ```
 
-Un seul langage, deux emplacements : nommé dans un `@def`, littéral dans un backtick. Ce n'est pas
-une exception au refus des chevrons en dérivation — un backtick est un terminal, et un terminal se
-pose dans une règle.
+Un seul langage, deux emplacements : nommé dans un `@def`, littéral dans un backtick. Le backtick
+y entre comme terminal, et un terminal se pose dans une règle.
 
 ---
 
@@ -2182,7 +2174,7 @@ d'appel rendrait une ligne dependante de ce qui la precede : en session, invoque
 changerait le destinataire d'une ligne qu'on n'a pas touchee. La resolution est **statique**.
 
 Une librairie neuve peut rendre ambigu du code qui compilait : le message nomme les deux candidats
-et l'auteur choisit. Le prefixe reste toujours ecrivable, y compris la ou il n'est pas necessaire.
+et l'auteur choisit. Le prefixe reste ecrivable partout, y compris la ou un nom nu suffirait.
 
 ### Ce qu'une librairie contient
 
