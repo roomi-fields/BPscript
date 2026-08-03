@@ -1563,15 +1563,17 @@ egalent le leur en meme temps.
 
 ```bpscript
 // TROIS places, une par diese : « trois choses, sauf la suite K1 K2 K3 »
-#K1 #K2 #K3 M -> C4        //  A B C M   ->  C4
-                           //  K1 K2 K3 M ->  (rien)
+#K1 #K2 #K3 M -> C4        //  A B C M     ->  C4        les trois places sont prises
+                           //  A B K3 M    ->  C4        il suffit qu'UNE differe de son nom
+                           //  K1 K2 K3 M  ->  (rien)    toutes egalent la leur
 
 // UNE place : « une chose qui n'est ni K1, ni K2, ni K3 »
-#(K1 K2 K3) M -> C4        //  A M      ->  C4
-                           //  K2 M     ->  (rien)
+#(K1 K2 K3) M -> C4        //  A B C M     ->  A B C4    seul C est pris, A et B restent
+                           //  A B K3 M    ->  (rien)    K3 est l'un des trois interdits
 ```
 
-Le premier interdit **une sequence** ; le second interdit **un ensemble de valeurs a une seule
+Sur la meme entree `A B K3 M`, la premiere regle produit `C4` et la seconde ne s'applique pas : le
+premier interdit **une sequence de trois symboles**, le second interdit **trois valeurs a une seule
 place**.
 
 ### Silence et prolongation
