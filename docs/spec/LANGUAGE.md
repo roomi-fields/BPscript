@@ -1014,10 +1014,11 @@ groupe.
 ne se traversent pas : le plus local gagne, l'autre est ignore. La difference tient a ce que la
 chose est -- un filtre se traverse, une intensite se choisit.
 
-**Quand un reglage est pilote par une enveloppe, le silence la fait repartir.** Ecrire
-`(cutoff:env)` confie la coupure a une enveloppe nommee `env` : elle monte, elle tient, elle
-redescend. Un silence `-` la relance depuis le debut ; une accolade qui enjambe ce silence lui fait
-au contraire **traverser** -- une seule montee sur toute l'etendue. L'accolade choisit :
+**Une enveloppe posee sur une portee repart a chaque silence.** Ecrire `(cutoff:env)` confie la
+coupure a une enveloppe nommee `env` : elle monte, elle tient, elle redescend. Quand elle couvre une
+**regle** ou un **groupe**, chaque silence `-` de cette portee la relance depuis le debut ; une
+accolade qui enjambe le silence lui fait au contraire **traverser** -- une seule montee sur toute
+l'etendue. L'accolade choisit :
 
 ```bpscript
 // Regle nue -> le silence ARTICULE : l'enveloppe repart apres chaque -
@@ -1038,7 +1039,7 @@ Ce qui la realise est decrit dans `atlas/architecture/MODULATIONS.md`.
 
 ### Valeur brute (modele CSS)
 
-Dans `[]` comme dans `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou au delimiteur fermant
+Dans `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou au delimiteur fermant
 est la **valeur brute** : le destinataire -- moteur ou runtime -- l'interprete.
 
 ### Controles autonomes (resolution pure)
@@ -1051,7 +1052,7 @@ Pull0 -> (pitchbend:0)
 StartPull -> (pitchcont, pitchrange:500, pitchbend:0)
 ```
 
-Une regle porte **un** sac en contenance. Pour en poser plusieurs, chacun prend son `!` et se pose
+Une regle porte **un** sac de portee. Pour en poser plusieurs, chacun prend son `!` et se pose
 dans le flux :
 
 ```bpscript
@@ -1078,11 +1079,14 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
 **sujet** devant le controle pour viser plus finement -- meme mecanisme que l'affectation
 `*:sound.bell`, ou le `:` introduit deja un sujet.
 
-| Ecriture          | Sujet | Cible                            |
-| ----------------- | ----- | -------------------------------- |
-| `(cutoff:env)`    | omis  | **la regle elle-meme** (l'unite) |
-| `(*:cutoff:env)`  | `*`   | **chaque terminal** de la regle  |
-| `(C2:cutoff:env)` | `C2`  | les terminaux **C2** de la regle |
+| Ecriture                            | Sujet | Cible                            |
+| ----------------------------------- | ----- | -------------------------------- |
+| `(cutoff:env)` · `{…}(sombre)`      | omis  | **la portee elle-meme** (l'unite) |
+| `(*:cutoff:env)` · `{…}(*:sombre)`  | `*`   | **chaque terminal** de la portee  |
+| `(C2:cutoff:env)` · `{…}(C2:sombre)`| `C2`  | les terminaux **C2** de la portee |
+
+Le sujet s'ecrit pareil devant une **valeur** a affecter et devant un **nom** a appliquer : le
+deux-points introduit le sujet dans les deux cas.
 
 - `*` designe tous les terminaux, le sens qu'il a deja dans `*:sound.X`.
 - Le sujet vaut **par paire** : `(*:cutoff:env, wave:sawtooth, vel:100)` pose `cutoff` sur chaque
@@ -1092,41 +1096,52 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
   nature de la valeur. Pour un controle **statique** (`wave`), les deux ecritures donnent le meme
   effet : la distinction porte sur le temporel.
 
-**Un chainage nomme s'invoque de la meme facon** -- affecter un filtre a un sujet et lui affecter
-une valeur s'ecrivent pareil, avec le **deux-points**.
-
-| Ecriture         | Ce que ca vise                                                                 |
-| ---------------- | ------------------------------------------------------------------------------ |
-| `{…}(sombre)`    | la portee comme **une seule chose** -- un traitement partage que tout traverse |
-| `{…}(*:sombre)`  | **chaque terminal** individuellement -- autant d'instances que d'elements      |
-| `{…}(C2:sombre)` | **les terminaux `C2`** de la portee, eux seuls                                 |
-
 **La difference est musicale, pas cosmetique.** Un traitement partage melange les terminaux avant de
 les traiter ; un traitement par terminal en donne un a chacun. Sur un filtre resonant, le premier
 fait resonner l'accord, le second fait resonner chaque note.
 
-### Appliquer un module -- le calque
+### Appliquer un module
 
-Un terminal produit et pousse vers sa sortie ; il y a donc un chemin, meme sans qu'on l'ecrive.
-**Un module invoque dans un sac `()` s'insere dans ce chemin** : c'est un **calque**, et sa portee
-en donne l'etendue.
+**Un module invoque dans un sac s'insere entre le terminal et sa sortie.** C'est un **calque**, et
+sa portee en donne l'etendue.
 
-**Un calque et un geste de cablage se distinguent a l'ecriture, pas au mot.** Le meme `@def` sert aux
-deux :
+```bpscript
+@var lpf1 lpf
+@var lpf2 lpf
 
-| Ecriture                | Nature                                                                       |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| dans un sac `(sombre)`  | **calque** -- il vit sur la portee, il nait et meurt avec elle               |
-| nu dans le flux `coupe` | **geste** -- il change la topologie a cet instant, et ca **reste** apres lui |
+S -> C4(lpf1.cutoff:400)              // un calque sur une note
+S -> { C4 D4 }(lpf2.cutoff:800)       // un calque sur un groupe
+S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)   // les deux : C4 traverse le sien, puis celui du groupe
+```
 
-Un cable se coupe pendant que ca joue ; une portee, elle, se referme. C'est pour cela qu'un geste
-n'a pas d'etendue et qu'un calque en a une.
+**Le meme nom pose un calque ou un geste, selon l'endroit ou il est ecrit :**
 
-**Les modules d'un chainage restent des instances nommees**, adressables par leur nom ou qu'on
-soit : `@def sombre lpf1 >> vca1` se regle en ecrivant `lpf1.cutoff:400`. Un nom d'instance suffit
-a tout designer.
+| Ecriture                | Ce que ca fait                                                              |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| dans un sac `(sombre)`  | un **calque** -- il vit sur la portee, il nait et meurt avec elle            |
+| nu dans le flux `coupe` | un **geste** -- il change la topologie a cet instant, et ca reste apres lui  |
 
-**Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backticks
+```bpscript
+@def sombre lpf1 >> vca1
+@def coupe  saw1 \>> lpf1
+
+S -> { C4 D4 }(sombre) E4 coupe F4
+```
+
+Un cable se coupe pendant que ca joue ; une portee, elle, se referme.
+
+**Les modules d'un chainage restent des instances nommees.** Un chainage se declare en tete, comme
+toute definition ; son nom et ceux de ses modules s'emploient ensuite dans les regles :
+
+```bpscript
+@var lpf1 lpf
+@var vca1 vca
+@def sombre lpf1 >> vca1
+
+S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)
+```
+
+**Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backtiques
 `patch:`. Un seul langage, deux emplacements : nomme dans un `@def`, litteral dans une regle.
 
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
@@ -1134,57 +1149,23 @@ une librairie de modules est une collection de `@def`, comme un alphabet est une
 terminaux. Ce qui s'invoque dans une regle est **l'instance**, jamais le type : la scene ecrit
 `@var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
 
-**Plusieurs calques s'empilent de gauche a droite.** Ils ne sont pas cables entre eux : chacun ajoute
-une couche, dans l'ordre ou il est ecrit. La regle vaut aussi quand les sujets different --
-`{…}(*:sombre, C2:large)` donne `sombre` a chaque terminal, et `large` en plus aux `C2`, dans cet
-ordre. **Deux axes se composent sans se contredire** : de gauche a droite dans un sac, de
-l'interieur vers l'exterieur entre les etages.
+**Ce que le calque devient a l'execution** -- exemplaires, ordre de traversee, fin de vie,
+rechargement a chaud -- est decrit dans `hub/projets/dedale/LE-CALQUE.md`.
 
-**Un calque de groupe s'applique a tout le groupe** -- la polymetrie n'y change rien, toutes les voix
-traversent le meme noeud.
+### Le sac dans le flux : `!()`
 
-**Un nom d'instance designe un role, pas un exemplaire unique.** Plusieurs exemplaires de `lpf1`
-vivent en parallele, **un par calque invoque** -- comme un fil porte plusieurs voies sous un seul
-nom. L'auteur ne les compte jamais : un site d'ecriture donne un exemplaire, `*:` en donne un par
-terminal. Chacun a ses propres valeurs de port et son propre etat interne.
+**Un sac vaut pour sa portee ; le meme sac precede de `!` vaut pour ce qui suit.** C'est
+l'application de deux principes deja poses : la portee se lit dans la place du sac, et le `!` pose
+un element sans duree a l'endroit ou il est ecrit.
 
-**A chaque derivation, les exemplaires sont neufs** : chacun part de zero, et ceux du tirage
-precedent finissent leur course.
-
-**Un geste vise tous les exemplaires.** `patch: lpf1 switchoff` eteint la famille entiere, comme on
-adresse un fil et toutes ses voies a la fois : un nom designe le role, et le role les rassemble.
-
-**Le runtime applique ce qui a du sens chez lui** et **avertit pour le reste**. Une portee peut
-melanger des terminaux de sorties differentes ; un filtre n'a pas de sens sur une note MIDI. Ce
-le langage laisse la sortie juger, et chaque ecart lui arrache un avertissement.
-
-**A la fin de sa portee, un calque cesse de recevoir et vit jusqu'a ce qu'il se taise.** Une
-reverberation sort sa queue, un delai finit ses repetitions, un relachement va au bout. La sortie
-suit ce que le module produit, sans fondu ajoute -- un fondu serait une articulation que personne
-n'a ecrite.
-
-**Une definition reecrite pendant que ca joue prend effet en vol** pour ce qui commence apres elle ;
-ce qui est deja en cours **finit proprement** avec l'ancienne.
-
-**Vivant et interagissable sont deux etats distincts.** Un module peut tourner sans agir : le signal
-le traverse sans etre traite, et c'est `passthrough` qui dit quelle entree ressort alors par quelle
-sortie. Deux gestes, deux effets : `\>>` deconnecte, et le module se tait ; `switchoff`
-court-circuite, et le signal ressort intact. Le geste est **binaire** : `switchon` / `switchoff`. Ce qui est dans le module s'ecoule
-ensuite, comme a la fin d'une portee.
-
-### Contenance `()` vs flux `!()` -- deux facons de gouverner les notes
-
-Un controle non-temporel (`vel`, `wave`, `filter`...) gouverne plusieurs notes selon deux regimes,
-que l'ecriture designe :
-
-| Ecriture | Regime                     | Ce qu'elle gouverne                                                                                                  |
-| -------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `(...)`  | **contenance**, structurel | toute sa portee -- regle ou groupe -- les elements ecrits avant elle compris ; l'effet s'arrete au bord de la portee |
-| `!(...)` | **flux**, sequentiel       | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain controle                   |
+| Ecriture | Ce qu'elle gouverne                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `(...)`  | toute sa portee -- regle ou groupe -- les elements ecrits avant elle compris ; l'effet s'arrete au bord de la portee |
+| `!(...)` | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain sac                        |
 
 ```bpscript
 
-// CONTENANCE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
+// PORTEE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
 Basse -> C2 E2 G2 (wave:sawtooth)
 S -> {C4 E4}(vel:80)                 // C4 et E4 a 80, l'effet reste dans le groupe
 
@@ -1202,7 +1183,7 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 
 | Ecriture                                      | Sens                                                                             |
 | --------------------------------------------- | -------------------------------------------------------------------------------- |
-| `(...)` *(sans `!`)*                          | **contenance** -- l'effet reste dans sa portee                                   |
+| `(...)` *(sans `!`)*                          | **portee** -- l'effet reste dans sa portee                                       |
 | `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- il voyage avec C4 et se replique avec lui       |
 | `C4 !(...)` **espace**                        | **flux, EVENEMENT SEPARE** -- pose seul dans la sequence                         |
 | `B3!C7` *(`!` entre symboles)*                | **SIMULTANE / accord** -- les deux notes attaquent au meme instant               |
@@ -1215,18 +1196,8 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
 zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
 
-**Un cablage s'ecrit de deux facons.** Ce qu'on rejoue se **nomme** dans une definition, et son nom
-se pose **nu** dans le flux, ou il occupe un pas. Ce qu'on ecrit une fois reste **litteral**, dans un
-backtique `patch:` :
-
-```bpscript
-@def prise osc1 >> lpf1
-
-S -> A4 prise B4 `patch: lpf1 switchoff` C4
-```
-
-Ecrit `C4 !prise`, le meme nom devient une co-attaque de l'accord : l'aval lui cherche une hauteur
-et un son sort, sans qu'aucune erreur le signale.
+Ecrit `C4 !prise`, le nom d'un cablage devient une co-attaque de l'accord : l'aval lui cherche une
+hauteur et un son sort, sans qu'aucune erreur le signale.
 
 **L'espace tranche l'attache de `!(...)`** -- application de la convention generale de l'espace,
 delimiteur de termes : colle au terminal precedent, le controle voyage avec lui ; separe par une
@@ -1238,7 +1209,7 @@ reste un `SimultaneousGroup`.
 deux elements freres ; `C4!E4!G4` donne un primaire et deux secondaires.
 
 **Precedence** (du plus fort au plus faible) :
-**override de note `C4(vel:120)` > flux `!(...)` > contenance `(...)` > defauts de declaration.**
+**override de note `C4(vel:120)` > flux `!(...)` > portee `(...)` > defauts de declaration.**
 
 ---
 
@@ -1341,7 +1312,7 @@ Regles :
 - **`!nom` pose seul** dans la sequence : **objet hors-temps** -- il tient sa place dans
   l'ordre joue pour une duree nulle.
 - **`!(controle)` pose seul** : mutation de **flux** -- cf.
-  [Contenance `()` vs flux `!()`](#contenance---vs-flux---deux-facons-de-gouverner-les-notes)
+  [Le sac dans le flux : `!()`](#le-sac-dans-le-flux--)
 
 C'est le mecanisme de la **simultaneite cross-runtime** : un seul point dans le temps porte
 des evenements destines a SC, Python, Processing, DMX.
