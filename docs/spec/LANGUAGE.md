@@ -11,7 +11,7 @@
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres -- opaques pour BPScript](#parametres----opaques-pour-bpscript)
 - [Les sacs : `()` reglages, `[]` drapeaux](#les-sacs---reglages--drapeaux)
-- [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles-zero-ambiguite)
+- [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles)
 - [Les accolades `{}` -- polymetrie et groupement](#les-accolades------polymetrie-et-groupement)
 - [L'operateur `!` -- simultaneite](#loperateur------simultaneite)
 - [Les trois silences](#les-trois-silences)
@@ -608,7 +608,7 @@ Le detail est dans « Les conventions de lecture d'un signal ».
 @              directive de declaration, en tete de scene
 -> <- <>       derivation et direction (BP3 : --> <-- <->)
 { , }          polymetrie et groupement temporel
-( )            parametres runtime (portees symbole, regle, groupe) et contexte de regle
+( )            reglages (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:sound.bell_short)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
                (*:sound.cloche, (*:vel:80)) ; dans un sac, multiplie la duree (C4(*2)) ;
@@ -707,11 +707,11 @@ Le decrement `-` s'ecrit avec le glyphe du silence ; entre crochets et pose sur 
 c'est l'operateur. L'inventaire des glyphes et celui des operateurs sont independants : un
 meme signe sert dans les deux, sa place tranche lequel des deux roles il tient.
 
-### Trois portees de metadonnees
+### Trois places, trois roles
 
 - `@` = **global** : environnement, imports, configuration de la scene
-- `[]` = **local moteur** : instructions BPx -- modes, drapeaux, operateurs temporels
-- `()` = **local runtime** : parametres transportes au runtime cible (vel, filter, wave...)
+- `[]` = **les drapeaux** : un test avant le membre gauche, une affectation en fin de regle
+- `()` = **les reglages** : le domaine de la cle nomme leur destinataire
 
 ```text
 @core
@@ -1664,9 +1664,9 @@ l'accordage par defaut et l'ancre de hauteur, et l'acteur en herite.
 `@actor X octaves.Y` change le registre pour cet acteur ; les autres cles
 restent celles heritees.
 
-### Les parametres runtime `()`
+### Les reglages `()`
 
-Un parametre cascade des defauts de la librairie du symbole vers la valeur
+Un reglage cascade des defauts de la librairie du symbole vers la valeur
 ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
 (`spec < CT < signal`) -- cf. le cascading des controles.
 
