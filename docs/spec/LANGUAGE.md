@@ -2048,9 +2048,9 @@ choses vivent en librairie, avec leur description **et leur code**.
 **Le deux-points affecte une valeur** — pour un alphabet et ses terminaux, c'est le runtime de
 sortie, pris parmi `audio`, `midi` et `osc`.
 
-**Les categories du coeur s'invoquent directement**, sans nommer la librairie qui les porte :
-`@time.tempo:120`, `@engine.seed:42`, `@pitch.diapason:442`. La categorie dit a quoi le reglage
-touche.
+**La notation pointee n'est obligatoire qu'en cas d'homonymie.** `@tempo:120` suffit tant qu'une
+seule librairie invoquee porte ce nom ; on ecrit `@time.tempo:120` le jour ou deux le portent.
+La categorie dit alors a quoi le reglage touche.
 
 ### Le prefixe est optionnel -- un nom se resout par unicite
 
