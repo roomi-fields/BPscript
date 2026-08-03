@@ -648,9 +648,6 @@ langage, au meme titre que les fleches.
 
 ### Neuf operateurs de flags
 
-Un drapeau se lit et s'ecrit a deux endroits de la regle : la **garde**, entre crochets avant
-le LHS, et le crochet de **fin de regle**, apres le RHS. Chaque operateur a sa place.
-
 Comparaison (6) -- dans la garde :
 
 ```text
@@ -670,41 +667,11 @@ Calcul (3) :
 =              affectation    [count=4]     fin de regle
 ```
 
-Dans la garde, `+` et `-` testent d'abord et mutent ensuite, dans cet ordre. `[count-1]` rend la
-regle candidate tant que `count` est strictement positif ; le decrement s'applique apres, au
-moment ou la regle est retenue et appliquee. Le drapeau vaut donc encore sa valeur d'avant
-pendant tout le test, et les deux operateurs partagent ce meme test de positivite : `[count+1]`
-demande lui aussi un `count` strictement positif, et l'incremente a l'application. En fin de
-regle, ils modifient le drapeau pour les derivations suivantes.
+Le decrement `-` s'ecrit avec le glyphe du silence ; entre crochets et pose sur un drapeau, c'est
+l'operateur. L'inventaire des glyphes et celui des operateurs sont independants : un meme signe sert
+dans les deux, sa place tranche lequel des deux roles il tient.
 
-`=` pose la valeur d'un drapeau et s'ecrit en fin de regle : `S -> Loop [phase=1, count=4]`.
-Pour comparer un drapeau avant le LHS, l'operateur est `==` : `[phase==1] Loop -> C4`.
-
-Un nom de drapeau seul entre crochets teste qu'il vaut autre chose que zero : `[Ideas] S -> C4`.
-
-Les neuf a l'oeuvre dans une scene :
-
-```bpscript
-@core
-@alphabet.western:audio
-
-S -> Loop [phase=1, count=4]
-
------
-
-@mode:random
-[count-1]  Loop -> C4 Loop
-[count>0]  Loop -> D4 Loop
-[count>=2] Loop -> E4 Loop
-[count<9]  Loop -> F4 Loop
-[count<=9] Loop -> G4 Loop
-[phase!=0] Loop -> A4 Loop [phase+1]
-[count==0] Loop -> C5
-```
-
-Le decrement `-` s'ecrit avec le glyphe du silence ; entre crochets et pose sur un drapeau,
-c'est l'operateur. L'inventaire des glyphes et celui des operateurs sont independants : un
-meme signe sert dans les deux, sa place tranche lequel des deux roles il tient.
+Ce qu'ils font est decrit dans « Flags -- variables d'etat et composition conditionnelle ».
 
 ### Trois places, trois roles
 
@@ -1889,10 +1856,37 @@ modifie pendant la dérivation.
 Motif -> sa re ga
 ```
 
+**Dans la garde, `+` et `-` testent d'abord et mutent ensuite, dans cet ordre.** `[count-1]` rend la
+règle candidate tant que `count` est strictement positif ; le décrément s'applique après, au moment
+où la règle est retenue. Le drapeau vaut donc encore sa valeur d'avant pendant tout le test, et
+`[count+1]` demande lui aussi un `count` strictement positif.
+
+**Un nom de drapeau seul teste qu'il vaut autre chose que zéro** : `[Ideas] S -> C4`.
+
 Opérateurs de test : `==`, `!=`, `>`, `<`, `>=`, `<=`.
 Opérateurs de test et mutation : `+` (incrémente), `-` (décrémente).
 
 La garde est déclarative : la règle **existe** quand la condition est vraie.
+
+Les neuf à l'œuvre dans une scène :
+
+```bpscript
+@core
+@alphabet.western:audio
+
+S -> Loop [phase=1, count=4]
+
+-----
+
+@mode:random
+[count-1]  Loop -> C4 Loop
+[count>0]  Loop -> D4 Loop
+[count>=2] Loop -> E4 Loop
+[count<9]  Loop -> F4 Loop
+[count<=9] Loop -> G4 Loop
+[phase!=0] Loop -> A4 Loop [phase+1]
+[count==0] Loop -> C5
+```
 
 ### `[]` — mutation d'état en fin de règle
 
@@ -1908,14 +1902,8 @@ Motif -> sa re
 Cadence -> ga pa
 ```
 
-Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter).
-
-Une règle peut porter plusieurs mutations, chacune dans son crochet :
-
-```text
-S -> Motif Cadence [count-1]
-S -> Motif Motif [phase=1] [count=2]
-```
+Opérateurs de mutation : `=` (assigner), `+` (incrémenter), `-` (décrémenter). `=` ne s'écrit qu'en
+fin de règle ; pour comparer un drapeau devant le membre gauche, l'opérateur est `==`.
 
 Le délimiteur distingue deux écritures voisines : `!dha` est un `!` suivi d'un symbole, donc
 un déclenchement dans le temps ; `[phase=2]` est entre crochets, donc une mutation de flag.
