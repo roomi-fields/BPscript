@@ -20,8 +20,7 @@
 - [Captures `?`](#captures------pattern-matching)
 - [Homomorphismes `|x|`](#homomorphismes-x----variables-liees)
 - [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
-- [Templates `$` et `&`](#templates----et------capture-et-reutilisation-de-groupes)
-- [La section `@template`](#la-section-template----le-catalogue-des-formes)
+- [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production)
 - [Heritage par cascade](#heritage-par-cascade)
 - [Sons](#sons)
 - [Conventions de notation](#conventions-de-notation--lespace-le-point-le-deux-points)
@@ -269,16 +268,16 @@ l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
 @var pivot
 ```
 
-| type      | ce que la variable porte                                                                        |
-| --------- | ----------------------------------------------------------------------------------------------- |
-| `flag`    | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent                         |
-| `in`      | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance             |
-| `signal`  | un flux de nombres, sans convention de lecture — le cas ordinaire                               |
-| `pitch`   | un signal lu comme une **hauteur**                                                              |
-| `phase`   | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule**  |
-| `logic`   | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
-| un **module** | une **instance** de ce module -- `lpf1` de type `lpf` ; elle ne porte aucun corps propre    |
-| *(aucun)* | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
+| type          | ce que la variable porte                                                                        |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| `flag`        | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent                         |
+| `in`          | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance             |
+| `signal`      | un flux de nombres, sans convention de lecture — le cas ordinaire                               |
+| `pitch`       | un signal lu comme une **hauteur**                                                              |
+| `phase`       | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule**  |
+| `logic`       | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
+| un **module** | une **instance** de ce module -- `lpf1` de type `lpf` ; elle ne porte aucun corps propre        |
+| *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
 entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
@@ -424,13 +423,13 @@ des **traitements**. La sortie audio est un **puits**.
 peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
 deux catégories et la même forme.
 
-| champ                                | ce qu'il porte                                                                                                                     |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `name` · `category` · `description`  | identité, famille, prose d'aide                                                                                                    |
-| `ports`                              | les ports du module, par leur nom                                                                                                  |
-| `defaultIn` · `defaultOut`           | le port qu'un câblage vise sans le nommer : `saw1 >> lpf1` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre     |
-| `passthrough`                        | `{ "<sortie>": "<entrée>" }` — le chemin que le signal emprunte quand le module est court-circuité                                  |
-| `code`                               | le traitement                                                                                                                      |
+| champ                               | ce qu'il porte                                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `name` · `category` · `description` | identité, famille, prose d'aide                                                                                                |
+| `ports`                             | les ports du module, par leur nom                                                                                              |
+| `defaultIn` · `defaultOut`          | le port qu'un câblage vise sans le nommer : `saw1 >> lpf1` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre |
+| `passthrough`                       | `{ "<sortie>": "<entrée>" }` — le chemin que le signal emprunte quand le module est court-circuité                             |
+| `code`                              | le traitement                                                                                                                  |
 
 #### Le patron d'un port
 
@@ -448,13 +447,13 @@ deux catégories et la même forme.
 **Une entrée ajoute `fallback`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
 pas : la notion lui est étrangère.
 
-| champ             | ce qu'il porte                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------- |
-| `direction`       | `in` ou `out`                                                                         |
-| `convention`      | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`                 |
-| `voices`          | combien de **voix** ce port accepte — `1` pour une seule, `8` pour jusqu'à huit       |
-| `range` · `unit`  | les bornes et l'unité du signal attendu                                               |
-| `fallback`        | *(entrée seulement)* la valeur prise quand rien n'est branché                          |
+| champ            | ce qu'il porte                                                                  |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `direction`      | `in` ou `out`                                                                   |
+| `convention`     | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`           |
+| `voices`         | combien de **voix** ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
+| `range` · `unit` | les bornes et l'unité du signal attendu                                         |
+| `fallback`       | *(entrée seulement)* la valeur prise quand rien n'est branché                   |
 
 **Les conventions.** `null` désigne un signal ordinaire, sans convention de lecture — c'est le cas
 courant, celui qu'on appelle ailleurs « l'audio ». `pitch` se lit comme une hauteur, en
@@ -515,10 +514,10 @@ Ce qui le simplifie est une **definition**, pas un decoupage en axes portes par 
 **Un reglage s'ecrit par sa categorie, l'entree apres le point.** La categorie dit a quoi le reglage
 touche, donc qui le consomme.
 
-| categorie  | ce qu'elle regle                                                                                      |
-| ---------- | ------------------------------------------------------------------------------------------------------- |
-| `@pitch.`  | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                  |
-| `@time.`   | `tempo` -- la vitesse a laquelle le temps se lit                                                      |
+| categorie  | ce qu'elle regle                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@pitch.`  | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
+| `@time.`   | `tempo` -- la vitesse a laquelle le temps se lit                                                                                                             |
 | `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `duration` · `meter` · `timepatterns` · les operateurs `/` et `*` |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
@@ -629,8 +628,8 @@ _              prolongation : etend l'evenement precedent
 <!             point d'attente : point de synchronisation, la derivation attend un geste entrant
 #              contexte negatif
 ?              capture d'un symbole quelconque
-$              template : definition d'un motif
-&              template : reference a un motif
+$              gabarit : capture d'un motif (maitre)
+&              gabarit : rejeu d'un motif (esclave)
 ~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
 | |            homomorphisme : variable liee dans une regle
 >> \>>         cablage : brancher un element sur un autre, couper le cable
@@ -732,11 +731,11 @@ le recepteur qui leur donne un sens.
 le rang d'une forme dans le catalogue. Tout reglage s'ecrit entre **parentheses**, ou le **domaine
 de la cle** nomme son destinataire.
 
-| place                         | ce qu'il porte                                                    |
-| ----------------------------- | ------------------------------------------------------------------- |
-| avant le membre gauche        | un **test** de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]`     |
-| en fin de regle               | une **affectation** de drapeau : `[phase=2]`                      |
-| en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`            |
+| place                              | ce qu'il porte                                                |
+| ---------------------------------- | ------------------------------------------------------------- |
+| avant le membre gauche             | un **test** de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]` |
+| en fin de regle                    | une **affectation** de drapeau : `[phase=2]`                  |
+| en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`             |
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
 suite. Un reglage ecrit entre crochets arrete la compilation, et le message donne sa forme : le
@@ -772,7 +771,7 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | -------------------------------------- |
 | **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
-| **Reglage**      | une cle d'une librairie invoquee          | decrit une propriete, zero duree               | `(mode:random)`, `(/2)`, `(weight:50)` |
+| **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(mode:random)`, `(/2)`, `(weight:50)` |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
 donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
@@ -798,7 +797,7 @@ de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pa
 percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
 | sous-patron      | ce qu'il ajoute                                                                                  |
-| ---------------- | -------------------------------------------------------------------------------------------------- |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
 | **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
 | **`percussion`** | rien : elle sonne et dure, sans porter de hauteur                                                |
 
@@ -842,13 +841,13 @@ temps ? », au lieu de le laisser deviner.
 { "name": "", "description": "", "sounding": true, "duration": null }
 ```
 
-| champ         | ce qu'il porte                                                                     |
-| ------------- | ------------------------------------------------------------------------------------ |
-| `name`        | le tag ecrit devant le deux-points -- `sc`, `js`, `strudel`, `patch`               |
-| `description` | a quoi sert ce langage                                                             |
-| `sounding`    | ce que ce langage produit par defaut, sonnant ou non                               |
-| `duration`    | la duree par defaut de ce qu'il produit                                            |
-| `returns`     | *(seulement s'il rend une valeur)* la convention de ce qu'il rend                   |
+| champ         | ce qu'il porte                                                       |
+| ------------- | -------------------------------------------------------------------- |
+| `name`        | le tag ecrit devant le deux-points -- `sc`, `js`, `strudel`, `patch` |
+| `description` | a quoi sert ce langage                                               |
+| `sounding`    | ce que ce langage produit par defaut, sonnant ou non                 |
+| `duration`    | la duree par defaut de ce qu'il produit                              |
+| `returns`     | *(seulement s'il rend une valeur)* la convention de ce qu'il rend    |
 
 **`returns` appartient aux langages employables EN LIGNE** -- `sa(vel:` suivi d'un backtick qui rend
 un nombre. Sa presence dit qu'on peut ecrire ce langage dans un parametre, et la convention de ce
@@ -1099,7 +1098,7 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
 **Un chainage nomme s'invoque de la meme facon** -- affecter un filtre a un sujet et lui affecter
 une valeur s'ecrivent pareil, avec le **deux-points**.
 
-| Ecriture         | Ce que ca vise                                                                |
+| Ecriture         | Ce que ca vise                                                                 |
 | ---------------- | ------------------------------------------------------------------------------ |
 | `{…}(sombre)`    | la portee comme **une seule chose** -- un traitement partage que tout traverse |
 | `{…}(*:sombre)`  | **chaque terminal** individuellement -- autant d'instances que d'elements      |
@@ -1118,10 +1117,10 @@ en donne l'etendue.
 **Un calque et un geste de cablage se distinguent a l'ecriture, pas au mot.** Le meme `@def` sert aux
 deux :
 
-| Ecriture               | Nature                                                                            |
-| ---------------------- | ----------------------------------------------------------------------------------- |
-| dans un sac `(sombre)` | **calque** -- il vit sur la portee, il nait et meurt avec elle                     |
-| nu dans le flux `coupe`| **geste** -- il change la topologie a cet instant, et ca **reste** apres lui        |
+| Ecriture                | Nature                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| dans un sac `(sombre)`  | **calque** -- il vit sur la portee, il nait et meurt avec elle               |
+| nu dans le flux `coupe` | **geste** -- il change la topologie a cet instant, et ca **reste** apres lui |
 
 Un cable se coupe pendant que ca joue ; une portee, elle, se referme. C'est pour cela qu'un geste
 n'a pas d'etendue et qu'un calque en a une.
@@ -1204,17 +1203,17 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 
 #### Table de syntaxe du `!`
 
-| Ecriture                                      | Sens                                                                                  |
-| --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `(...)` *(sans `!`)*                          | **contenance** -- l'effet reste dans sa portee                                        |
-| `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- il voyage avec C4 et se replique avec lui            |
-| `C4 !(...)` **espace**                        | **flux, EVENEMENT SEPARE** -- pose seul dans la sequence                              |
-| `B3!C7` *(`!` entre symboles)*                | **SIMULTANE / accord** -- les deux notes attaquent au meme instant                    |
-| `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                       |
-| `!(seed:N)`                                   | **reglage pose DANS LE FLUX** -- element sans duree (`InstantControl`)                |
-| `C4 !prise` *(nom d'une definition)*            | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur      |
-| `` !`patch: osc1 >> lpf1` ``                  | **cablage pose dans le flux** -- un terminal de code, muet et de duree nulle          |
-| `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                        |
+| Ecriture                                      | Sens                                                                             |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `(...)` *(sans `!`)*                          | **contenance** -- l'effet reste dans sa portee                                   |
+| `C4!(...)` **colle** (pas d'espace avant `!`) | **flux CONJOINT, ancre a C4** -- il voyage avec C4 et se replique avec lui       |
+| `C4 !(...)` **espace**                        | **flux, EVENEMENT SEPARE** -- pose seul dans la sequence                         |
+| `B3!C7` *(`!` entre symboles)*                | **SIMULTANE / accord** -- les deux notes attaquent au meme instant               |
+| `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                  |
+| `!(seed:N)`                                   | **reglage pose DANS LE FLUX** -- element sans duree (`InstantControl`)           |
+| `C4 !prise` *(nom d'une definition)*          | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur |
+| `` !`patch: osc1 >> lpf1` ``                  | **cablage pose dans le flux** -- un terminal de code, muet et de duree nulle     |
+| `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                   |
 
 C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
 zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
@@ -1536,10 +1535,17 @@ membre du groupe. Les deux formes consomment une position.
 
 ---
 
-## Templates `$` et `&` -- capture et reutilisation de groupes
+## Les gabarits `$` et `&` -- la structure d'une production
 
-`$` capture un motif de groupe (maitre), `&` le rejoue (esclave). Le nom porte
-l'appariement entre les deux.
+**Un gabarit est une production dont les terminaux sont effaces.** Ce qui reste est sa structure :
+les groupes, leur appariement, les echelles de vitesse, les fragments. Le meme mecanisme sert a
+deux echelles -- dans une regle, pour capturer un motif et le rejouer ; en catalogue, pour enumerer
+les formes qu'une grammaire autorise.
+
+### Capturer et rejouer, dans une regle
+
+`$` capture un motif de groupe (maitre), `&` le rejoue (esclave). Le nom porte l'appariement entre
+les deux.
 
 ```bpscript
 S <> $mel &mel                            // $mel capture, &mel rejoue
@@ -1547,28 +1553,26 @@ S <> $mel(tempo:120) &mel(tempo:80)       // chaque invocation porte ses paramet
 S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
 ```
 
-Les parametres d'une invocation gouvernent l'expansion du gabarit : ils valent
-pour ce que cette invocation produit. Le moteur recoit `$X`
-s'ecrit `(:X)`.
+Les parametres d'une invocation gouvernent l'expansion du gabarit : ils valent pour ce que cette
+invocation produit.
 
 ### Ancre de gabarit maitre : `$` seul en tete de LHS
 
-Un `$` suivi d'une espace, en tete du membre gauche, marque la regle entiere
-comme gabarit maitre : il ancre la regle.
+Un `$` suivi d'une espace, en tete du membre gauche, marque la regle entiere comme gabarit maitre :
+il ancre la regle.
 
 ```bpscript
 $ S -> C4 D4
 ```
 
-L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace
-tranche entre les deux emplois du signe : colle a un identifiant, `$X` nomme une
-capture ; suivi d'une espace, `$` ancre -- cf. l'espace, delimiteur de termes.
-L'ancre reste ouverte jusqu'a sa fermeture.
+L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace tranche entre les deux
+emplois du signe : colle a un identifiant, `$X` nomme une capture ; suivi d'une espace, `$` ancre --
+cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a sa fermeture.
 
 ### Tables de substitution
 
-Les tables de substitution vivent dans `lib/sub.json`, une par nom, chacune avec
-ses sections. `@sub.<nom>` invoque une table :
+Les tables de substitution vivent dans `lib/sub.json`, une par nom, chacune avec ses sections.
+`@sub.<nom>` invoque une table :
 
 ```bpscript
 @sub.dhati
@@ -1578,12 +1582,11 @@ S -> $N14 &N14
 
 Un nom absent de la librairie est refuse au parse.
 
----
+### `@template` -- le catalogue des formes
 
-## La section `@template` -- le catalogue des formes
-
-`@template` porte les **formes structurelles que la grammaire autorise**. Elle se place apres les
-regles, en fin de scene.
+**Le catalogue porte les memes gabarits, un par ligne.** Le moteur derive une production, en efface
+les terminaux, et ecrit ce qui reste : c'est le meme geste que `$mel`, applique a une production
+entiere plutot qu'a un groupe. La section se place apres les regles, en fin de scene.
 
 ```bpscript
 @alphabet.western
@@ -1600,13 +1603,13 @@ Une entree s'ecrit `[<rang>] <echelle> <forme>` :
 
 - `<rang>` -- la place de l'entree dans le catalogue, entre crochets.
 - `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
-- `<forme>` -- des jokers `?`, un par symbole attendu ; des points `.`
-  (fragments de duree egale) ; des groupes numerotes `($N ...)`, imbricables.
+- `<forme>` -- des jokers `?`, un par terminal efface ; des points `.` (fragments de duree egale) ;
+  des groupes appariees `($N ...)`, imbricables -- les memes maitres et esclaves que dans une regle.
 
-**Le catalogue s'enumere.** Le moteur explore les formes que la grammaire permet et les ecrit ici,
-une par ligne : une grammaire de quinze regles peut en produire seize, parce que les variantes de
-vitesse se croisent avec celles des non-terminaux. Le rang est la place dans cette enumeration, et
-c'est lui que l'analyse rend pour dire quelle forme a repondu.
+**Le catalogue s'enumere.** Le moteur explore les formes que la grammaire permet et les ecrit ici :
+une grammaire de quinze regles peut en produire seize, parce que les variantes de vitesse se
+croisent avec celles des non-terminaux. Le rang est la place dans cette enumeration, et c'est lui
+que l'analyse rend pour dire quelle forme a repondu.
 
 Le mode `tem` fait l'appariement structurel sur ce catalogue, dans l'ordre des rangs. Il s'ecrit en
 tete de scene ou en suffixe de regle.
@@ -1758,15 +1761,15 @@ terminaux. La cible est une reference `sound.<nom>` ou un bloc de proprietes
 
 Du moins specifique au plus specifique.
 
-| #   | Niveau                    | Ecriture                                                  |
-| --- | ------------------------- | --------------------------------------------------------- |
-| 1   | Socle                     | `@core` -- les defauts de la librairie invoquee            |
-| 2   | Defaut de scene           | `@sound { ... }`                                          |
-| 3   | Defaut d'alphabet         | `@alphabet.X` + `*:sound.NOM`                             |
-| 4   | Note dans l'alphabet      | `@alphabet.X` + `Y:sound.NOM`                             |
-| 5   | Defaut d'acteur           | `@actor X` + `*:sound.NOM`                                |
-| 6   | Note pour un acteur       | `@actor X` + `Y:sound.NOM`                                |
-| 7   | Occurrence dans une regle | `Y(sound.NOM)`                                            |
+| #   | Niveau                    | Ecriture                                        |
+| --- | ------------------------- | ----------------------------------------------- |
+| 1   | Socle                     | `@core` -- les defauts de la librairie invoquee |
+| 2   | Defaut de scene           | `@sound { ... }`                                |
+| 3   | Defaut d'alphabet         | `@alphabet.X` + `*:sound.NOM`                   |
+| 4   | Note dans l'alphabet      | `@alphabet.X` + `Y:sound.NOM`                   |
+| 5   | Defaut d'acteur           | `@actor X` + `*:sound.NOM`                      |
+| 6   | Note pour un acteur       | `@actor X` + `Y:sound.NOM`                      |
+| 7   | Occurrence dans une regle | `Y(sound.NOM)`                                  |
 
 Chaque niveau pointe un son nomme ou pose un bloc de proprietes anonyme. La
 fusion se fait champ par champ -- cf. l'heritage par cascade.
@@ -1783,8 +1786,8 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 
 | Signe      | Sens                                      | Exemple                                            |
 | ---------- | ----------------------------------------- | -------------------------------------------------- |
-| espace     | sépare deux termes                        | `@def souffle (vel:60)`                          |
-| collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                      |
+| espace     | sépare deux termes                        | `@def souffle (vel:60)`                            |
+| collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                        |
 | `.`        | désigne un élément dans un espace de noms | `sound.cloche`, `alphabet.tabla`, `transport.midi` |
 | `:`        | lie un sujet à une valeur                 | `dha:sound.frappe`, `@time.tempo:120`, `(vel:100)` |
 | `*`        | sujet = tous les terminaux                | `*:sound.cloche`                                   |
@@ -1799,17 +1802,17 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 Une espace sépare deux termes ; leur **collage** en fait un seul. Partout où deux termes
 peuvent se suivre, le collage porte une information et le langage la lit.
 
-| Écriture                      | Lecture                                                  |
-| ----------------------------- | -------------------------------------------------------- |
+| Écriture                    | Lecture                                                   |
+| --------------------------- | --------------------------------------------------------- |
 | `@def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
 | `@def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
-| `C4(/2)`                      | qualificateur du terminal `C4`                           |
-| `C4 D4 (mode:random)`         | qualificateur de la règle entière                        |
-| `C4!(vel:100)`                | flux ancré à `C4`, il voyage avec lui (`conjoint: true`) |
-| `C4 !(vel:100)`               | flux posé seul dans la séquence (`conjoint: false`)      |
-| `{C4 D4}:2`                   | durée du groupe                                          |
-| `sitar.sa`                    | le terminal `sa` vu à travers l'acteur `sitar`           |
-| `C4 D4 . E4 F4 G4`            | point isolé = frontière entre fragments de durée égale   |
+| `C4(/2)`                    | qualificateur du terminal `C4`                            |
+| `C4 D4 (mode:random)`       | qualificateur de la règle entière                         |
+| `C4!(vel:100)`              | flux ancré à `C4`, il voyage avec lui (`conjoint: true`)  |
+| `C4 !(vel:100)`             | flux posé seul dans la séquence (`conjoint: false`)       |
+| `{C4 D4}:2`                 | durée du groupe                                           |
+| `sitar.sa`                  | le terminal `sa` vu à travers l'acteur `sitar`            |
+| `C4 D4 . E4 F4 G4`          | point isolé = frontière entre fragments de durée égale    |
 
 ```bpscript
 @alphabet.western
@@ -2030,7 +2033,7 @@ Le nom vient d'abord, ce qu'il vaut ensuite.
 
 | Directive | Ce qu'elle fait                                     | Où elle s'emploie          |
 | --------- | --------------------------------------------------- | -------------------------- |
-| `@def`  | nomme une transformation, un préréglage, un câblage | à sa place dans une règle  |
+| `@def`    | nomme une transformation, un préréglage, un câblage | à sa place dans une règle  |
 | `@alias`  | donne un nom à une chose technique ou répétitive    | dans la partie déclarative |
 
 ```bpscript
@@ -2182,11 +2185,11 @@ ecrit, jamais au moment de jouer.
 **Deux operateurs, declares dans `engine`** comme tout reglage : `/` et `*`. Ils s'ecrivent dans un
 sac, avec une fraction (`*3/2`) ou un decimal (`/1.5`).
 
-| Ecriture | Ce qu'elle fait                                                                                |
-| -------- | ------------------------------------------------------------------------------------------------ |
+| Ecriture | Ce qu'elle fait                                                                                 |
+| -------- | ----------------------------------------------------------------------------------------------- |
 | `A(/2)`  | **vitesse absolue**, et elle **persiste** jusqu'au prochain operateur ou la fin du champ        |
 | `A(*3)`  | **etirement relatif** a la vitesse heritee, **entre deux bornes** : la sortie restaure l'herite |
-| `!(/2)`  | pose la vitesse **dans le flux**, relative, sans persistance                                   |
+| `!(/2)`  | pose la vitesse **dans le flux**, relative, sans persistance                                    |
 
 La virgule d'un sous-champ polymetrique **reinitialise** une vitesse absolue.
 
@@ -2244,24 +2247,24 @@ S -> C4 D4 (tempo:2)
 Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de scene, ou `(mode:<valeur>)` en
 suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
 
-| Mode      | Strategie de selection                          |
-| --------- | ------------------------------------------------- |
-| `ord`     | ordonne -- les regles s'appliquent en sequence  |
-| `random`  | aleatoire -- selection ponderee par les poids   |
-| `lin`     | lineaire -- bouclage cyclique                   |
+| Mode      | Strategie de selection                           |
+| --------- | ------------------------------------------------ |
+| `ord`     | ordonne -- les regles s'appliquent en sequence   |
+| `random`  | aleatoire -- selection ponderee par les poids    |
+| `lin`     | lineaire -- bouclage cyclique                    |
 | `sub`     | substitution -- toutes les occurrences a la fois |
-| `sub1`    | substitution -- l'occurrence la plus a gauche   |
-| `tem`     | appariement par gabarit                         |
-| `poslong` | la plus longue correspondance d'abord           |
+| `sub1`    | substitution -- l'occurrence la plus a gauche    |
+| `tem`     | appariement par gabarit                          |
+| `poslong` | la plus longue correspondance d'abord            |
 
 **En mode `sub` et `sub1`, les symboles du membre gauche sont eux aussi des terminaux** : ce qui
 reste apres les iterations appartient a l'alphabet et se joue.
 
-| Direction | Sens                                                             |
-| --------- | ------------------------------------------------------------------ |
-| `->`      | **production** -- le membre gauche est reecrit en membre droit    |
-| `<-`      | **analyse** -- la sequence droite est reduite au symbole gauche   |
-| `<>`      | **production et analyse** -- la regle vaut dans les deux sens     |
+| Direction | Sens                                                            |
+| --------- | --------------------------------------------------------------- |
+| `->`      | **production** -- le membre gauche est reecrit en membre droit  |
+| `<-`      | **analyse** -- la sequence droite est reduite au symbole gauche |
+| `<>`      | **production et analyse** -- la regle vaut dans les deux sens   |
 
 ```bpscript
 @alphabet.sargam
