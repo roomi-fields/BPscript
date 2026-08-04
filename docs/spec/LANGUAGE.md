@@ -457,8 +457,9 @@ deux catégories et la même forme.
 }
 ```
 
-**Une entrée ajoute `fallback`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
-pas : la notion lui est étrangère.
+**Une entrée ajoute `default`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
+pas : la notion lui est étrangère. C'est le champ que les librairies écrivent déjà pour les
+paramètres d'un module : un paramètre et une entrée non branchée sont la même chose.
 
 | champ            | ce qu'il porte                                                                  |
 | ---------------- | ------------------------------------------------------------------------------- |
@@ -466,7 +467,7 @@ pas : la notion lui est étrangère.
 | `convention`     | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`           |
 | `voices`         | combien de **voix** ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
 | `range` · `unit` | les bornes et l'unité du signal attendu                                         |
-| `fallback`       | *(entrée seulement)* la valeur prise quand rien n'est branché                   |
+| `default`        | *(entrée seulement)* la valeur prise quand rien n'est branché                   |
 
 **Les conventions.** `null` désigne un signal ordinaire, sans convention de lecture — c'est le cas
 courant, celui qu'on appelle ailleurs « l'audio ». `pitch` se lit comme une hauteur, en
@@ -474,7 +475,7 @@ logarithmique : 1,0 vaut une octave. `phase` se lit comme une position dans un c
 ce qui dépasse s'enroule. `logic` se lit comme un état haut ou bas, dont ce sont les **transitions**
 qui font événement.
 
-**Un paramètre est une entrée** avec un `fallback` et rien de branché. Régler est un cas particulier de
+**Un paramètre est une entrée** avec un `default` et rien de branché. Régler est un cas particulier de
 brancher.
 
 **La polyphonie appartient au port** : un filtre traite huit voix tout en gardant une seule coupure.
