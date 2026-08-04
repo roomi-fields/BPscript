@@ -291,7 +291,7 @@ l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
 entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
 
-**Le role d'une entree ne nomme jamais un appareil.** La scene declare `touches` ; l'utilisateur
+**Une entree nomme un ROLE.** La scene declare `touches` ; l'utilisateur
 associe le clavier reel, et cette association vit **hors de la scene** -- un nom de port change de
 machine en machine. Le flux attend un trigger de ce role avec le point d'attente : `<!touches.Space`.
 
@@ -320,7 +320,7 @@ S -> C4!kick D4 E4!accent fast(Motif)
 ```
 
 **Ce qui se definit est ce qui se reinvoque** -- un fil isole entre deux points ne se definit pas,
-puisqu'on ne le rejoue jamais seul.
+puisqu'il vaut pour l'endroit ou il est ecrit.
 
 #### Declarer un terminal
 
@@ -528,7 +528,7 @@ de leur cas ; la ou elles se distinguent par des axes independants, le socle les
 **Aucun ne porte le nom du composant qui le resout.** Le langage dit ce qu'une piece veut ; quel
 composant le calcule est une affaire d'architecture, et le nommer ici ferait d'un changement
 d'architecture un changement de langage. Ce qu'un objet porte, c'est sa **destination** -- le
-runtime de sortie d'un terminal --, jamais son resolveur.
+runtime de sortie d'un terminal.
 
 ### Invoquer une librairie
 
@@ -1015,7 +1015,7 @@ Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
 
 **Le nom d'un reglage suffit a savoir ou il va.** Chaque nom appartient a une librairie, et chaque
 librairie a un destinataire : ecrire `mode` dit le moteur, `tuning` dit la hauteur, `wave` dit une
-sortie sonore. On n'ecrit donc jamais le destinataire -- le nom le porte. C'est la meme regle que
+sortie sonore : le nom du reglage porte son destinataire. C'est la meme regle que
 pour les directives de tete.
 
 Le compilateur verifie que la cle appartient a une librairie invoquee et transmet la valeur telle
@@ -2024,10 +2024,6 @@ Les têtes de règle se rencontrent librement **entre elles**. Une tête répét
 grammaire stochastique. Deux sous-grammaires sont des **passes successives** — un même nom y
 est le même symbole, réécrit plus tard.
 
-**Renommer en gardant la même musique** : `test/migration_noms.mjs` renomme un nom et tous ses
-emplois, puis compare l'arbre dérivé entier avant et après, à graine fixe. Il écrit quand
-chaque jeton coïncide.
-
 ### Câbler : `>>` et `\>>`
 
 `>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `@init`. Un chaînage nommé se déclare
@@ -2116,7 +2112,7 @@ la compilation s'arrete et **nomme les deux candidats** : on ne prefixe que ce c
 (time.tempx:2/3)       // on prefixerait si deux librairies portaient `tempx`
 ```
 
-**L'ambiguite n'a jamais de gagnant implicite** -- ni le premier invoque, ni le dernier. Un ordre
+**La resolution est STATIQUE** -- la compilation nomme les deux candidats et l'auteur choisit. Un ordre
 d'appel rendrait une ligne dependante de ce qui la precede : en session, invoquer une librairie
 changerait le destinataire d'une ligne qu'on n'a pas touchee. La resolution est **statique**.
 
@@ -2148,7 +2144,7 @@ ont la meme forme ; seul le moment de leur compilation differe.
 | au lancement d'une scene        | **rien ne se compile** : on charge ce qui l'est deja                                               |
 
 **Le lancement d'une piece ne compile rien.** Une erreur d'ecriture se dit a l'auteur pendant qu'il
-ecrit, jamais au moment de jouer.
+ecrit.
 
 ## Le temps
 
