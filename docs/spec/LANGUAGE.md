@@ -600,17 +600,24 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 
 ## Inventaire
 
-### Les conventions de lecture
+### Ce que le langage connait en propre
 
-| Mot       | Role       | Sens                                                               |
-| --------- | ---------- | ------------------------------------------------------------------ |
-| **pitch** | convention | une hauteur, en logarithmique : `1.0` vaut une octave              |
-| **phase** | convention | une position dans un cycle entre 0 et 1 ; ce qui depasse s'enroule |
-| **logic** | convention | un etat haut ou bas, dont les **transitions** font evenement       |
+**Est reserve ce qui existe quand aucune librairie n'est invoquee.** Une scene nue n'a que ces
+mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut les redefinir.
 
-Un signal est un flux de nombres ; ces mots disent comment le **recepteur** le lit. Un
-signal sans convention est le cas ordinaire, et c'est ce qu'on appelle ailleurs « l'audio ».
-Le detail est dans « Les conventions de lecture d'un signal ».
+| Mot     | Ce qu'il declare                        |
+| ------- | ----------------------------------------- |
+| `@actor` | qui joue                                |
+| `@var`   | qu'un nom existe, et de quel type       |
+| `@def`   | qu'un nom vaut un corps                 |
+| `@init`  | l'etat de depart de la scene            |
+
+Plus les **symboles structurels** ci-dessous.
+
+**Tout le reste vient des librairies.** `mode`, `tempo`, `vel`, `cutoff`, les alphabets, les
+accordages, les modules : rien de cela n'est un mot du langage. Une scene qui n'invoque aucune
+librairie ne les connait pas, et les ecrire se heurte a des noms inconnus -- c'est le comportement
+attendu, pas une faute.
 
 ### Les symboles structurels
 
