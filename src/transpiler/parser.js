@@ -86,8 +86,10 @@ function channelCatalog() {
 /**
  * LISTE POSITIVE FERMÉE des canaux de SORTIE (`out.<canal>` sur un @actor, ou le raccord
  * `@alphabet.X:<sortie>` de l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on
- * n'autorise que les 3 qu'on connaît ») : suffixe ∉ {audio, midi, osc} → rejet fail-loud.
- * Préservée à l'identique de l'ancienne `transportChannels`, dérivée du catalogue unifié.
+ * n'autorise que ceux qu'on connaît ») : suffixe ∉ schema.channels{out:true} → rejet fail-loud.
+ * `dmx` y est entré le 2026-08-04 (catalogue unique `lib/core.json`, légitime même sans runtime
+ * dmx encore écrit) ; `text` en est délibérément absent — il est dans le catalogue mais ne porte
+ * aucune direction. Dérivée du catalogue unifié, jamais recopiée en dur ici.
  */
 let _outChannels = null;
 function outChannels() {
