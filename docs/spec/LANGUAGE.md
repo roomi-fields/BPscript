@@ -122,7 +122,7 @@ refusee.
 
 | Ecriture               | Portee                                                                       |
 | ---------------------- | ---------------------------------------------------------------------------- |
-| `sa(vel:100)`          | les parentheses collees portent le controle sur `sa`                         |
+| `sa(vel:100)`          | les parentheses collees portent le reglage sur `sa`                          |
 | `S -> sa re (vel:70)`  | les parentheses separees, en fin de regle, portent sur toute la regle        |
 | `pa:2`                 | le `:` colle fixe la duree du terme ; separe (`pa :2`), la ligne est refusee |
 | `{re ga}:2`            | le `:` colle fixe la duree du groupe                                         |
@@ -130,8 +130,8 @@ refusee.
 | `sitar1.sa`            | le point colle qualifie `sa` par l'acteur `sitar1`                           |
 | `sa . re`              | le point separe decoupe la sequence en fragments de duree egale              |
 | `taar_sa`              | le separateur de registre colle le marqueur au nom de note                   |
-| `sa!(vel:70)`          | le `!` colle ancre le controle sur `sa` : il voyage avec lui                 |
-| `sa !(vel:70)`         | le `!` separe pose le controle seul dans la sequence                         |
+| `sa!(vel:70)`          | le `!` colle ancre le reglage sur `sa` : il voyage avec lui                  |
+| `sa !(vel:70)`         | le `!` separe pose le reglage seul dans la sequence                          |
 | `<!depart`             | le point d'attente et le nom qu'il attend forment un seul terme              |
 
 ```bpscript
@@ -156,7 +156,7 @@ langage nomme son interprete -- exactement comme le domaine d'une cle. Les langa
 (`sc:`, `py:`, `tidal:`, `strudel:`, `hydra:`...) vont a runtime-codevoices ; **`patch:` va a
 Dedale**, parce que le cablage est son metier.
 
-**Chaque langage se declare en librairie** -- voir « Le patron d'un langage backtique ». C'est la
+**Chaque langage se declare en librairie** -- voir « Le prototype d'un langage backtique ». C'est la
 qu'il dit s'il sonne et s'il occupe du temps, au lieu de le laisser deviner ; une occurrence
 surcharge ces defauts avec un sac.
 
@@ -212,7 +212,7 @@ c'est ce qui **suit** le `!` qui decide duquel il s'agit.
 sur une seule attaque, et le premier terme donne la duree du groupe.
 
 **En tete d'un terme**, il pose dans le flux un element sans duree, qui prend effet a l'endroit ou
-il est ecrit : un controle de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
+il est ecrit : un reglage de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
 `!(seed:7)`, un cablage. La table complete des lectures du `!` est dans
 [Table de syntaxe du `!`](#table-de-syntaxe-du-).
 
@@ -296,7 +296,7 @@ ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`
 ```text
 @def souffle lfo:2 >> filtre.cutoff       // un branchement
 @def cadence sa re ga pa                  // une structure de terminaux
-@def phase enveloppe `js: (t, dur) => 1 - t / dur`   // du code
+@def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
 @def kick (vel:120)                       // un prereglage
 @def accent(x) x(vel:120)                 // une transformation parametree
 @def fast(x) {x}:2                        // une transformation structurelle
@@ -318,8 +318,11 @@ puisqu'on ne le rejoue jamais seul.
 branchement initial, le code lance une fois, les valeurs de depart.
 
 ```text
+@var saw1 saw
+@var lpf1 lpf
+
 @init
-  saw >> lpf >> audio
+  saw1 >> lpf1 >> audio
   `sc: SynthDef(\grain, { |freq| ... }).add`
 ```
 
@@ -388,7 +391,7 @@ saw.freq >> lpf.cutoff
 env.out >> lpf.cutoff
 ```
 
-Un module est un **patron** : il se declare une fois et s'instancie autant de fois qu'une piece en
+Un module est un **prototype** : il se declare une fois et s'instancie autant de fois qu'une piece en
 a besoin, chaque instance portant ses propres valeurs de port.
 
 **La librairie declare le TYPE, la scene declare l'INSTANCE, et c'est l'instance qu'on invoque.**
@@ -402,7 +405,7 @@ et c'est `lpf1` qui se cable et se regle. **Une instance est une variable** : so
 de son type. Deux filtres dans une piece
 sont deux instances nommees, chacune avec ses valeurs de port.
 
-#### Le patron d'un module
+#### Le prototype d'un module
 
 **Les noms de champs sont en anglais** -- c'est du code. La prose qui les decrit reste en francais.
 
@@ -440,7 +443,7 @@ deux catégories et la même forme.
 | `passthrough`                       | `{ "<sortie>": "<entrée>" }` — le chemin que le signal emprunte quand le module est court-circuité                             |
 | `code`                              | le traitement                                                                                                                  |
 
-#### Le patron d'un port
+#### Le prototype d'un port
 
 ```json
 {
@@ -476,8 +479,8 @@ brancher.
 **La polyphonie appartient au port**, pas au module : un filtre traite huit voix tout en gardant une
 seule coupure.
 
-**Ces patrons vivent avec les autres.** Un module, un port, un terminal, un alphabet suivent le meme
-mecanisme : un socle, des sous-patrons qui **ajoutent** les champs de leur cas, et un champ qui
+**Ces prototypes vivent avec les autres.** Un module, un port, un terminal, un alphabet suivent le meme
+mecanisme : un socle, des sous-prototypes qui **ajoutent** les champs de leur cas, et un champ qui
 n'existe que si sa notion s'applique.
 
 **Aucun ne porte le nom du composant qui le resout.** Le langage dit ce qu'une piece veut ; quel
@@ -632,7 +635,7 @@ _              prolongation : etend l'evenement precedent
 ...            repos indetermine, duree calculee par le moteur
 !              simultaneite : ce qui suit partage l'instant d'attaque de l'element qui
                precede (C4!dha) ; sans element devant lui, objet hors-temps de duree nulle
-               (S -> !dha C4) ; devant un controle, mutation de flux (!(mode:random))
+               (S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))
 <!             point d'attente : point de synchronisation, la derivation attend un geste entrant
 #              contexte negatif
 ?              capture d'un symbole quelconque
@@ -759,7 +762,7 @@ sur des terminaux, seuls porteurs d'une sortie.
 Un terminal est une chose entiere : il sonne ou non, porte une hauteur ou non, invoque du code
 ou une instruction de calcul de hauteur.
 
-**Un terminal se declare sur un patron.** Le patron porte toutes ses proprietes avec leur valeur
+**Un terminal se declare sur un prototype.** Le prototype porte toutes ses proprietes avec leur valeur
 par defaut ; un terminal concret ne declare que ce qui differe.
 
 ```json
@@ -767,11 +770,11 @@ par defaut ; un terminal concret ne declare que ce qui differe.
 ```
 
 **Un champ n'existe que si sa notion s'applique.** Une valeur non renseignee prend son defaut ;
-une notion etrangere a l'objet n'a pas de champ du tout. Un sous-patron **ajoute** donc les champs
+une notion etrangere a l'objet n'a pas de champ du tout. Un sous-prototype **ajoute** donc les champs
 de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pas la hauteur : une
 percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
-| sous-patron      | ce qu'il ajoute                                                                                  |
+| sous-prototype      | ce qu'il ajoute                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------ |
 | **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
 | **`percussion`** | rien : elle sonne et dure, sans porter de hauteur                                                |
@@ -787,12 +790,12 @@ sortie, c'est le pivot de grammaire ; un terminal sans `duration` occupe l'insta
 dont `code` est renseigne invoque du code.
 
 **D'autres natures s'ajouteront par le meme mecanisme.** Un terminal qui joue un **echantillon**
-aura son sous-patron : de quel fichier il vient, et ce que le moteur a le droit d'en deformer --
+aura son sous-prototype : de quel fichier il vient, et ce que le moteur a le droit d'en deformer --
 comprimer, etirer, tronquer -- pour le faire tenir dans une polymetrie. Le socle ne bouge pas ; un
-sous-patron ajoute les champs de son cas, comme `note` ajoute le degre.
+sous-prototype ajoute les champs de son cas, comme `note` ajoute le degre.
 
 **Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
-terminal peut se declarer seul. Le patron d'un alphabet porte la meme affectation, et ses
+terminal peut se declarer seul. Le prototype d'un alphabet porte la meme affectation, et ses
 terminaux en heritent :
 
 ```json
@@ -811,9 +814,9 @@ S -> sa re ga
 
 La sortie d'un terminal vaut pour toute la scene.
 
-#### Le patron d'un langage backtique
+#### Le prototype d'un langage backtique
 
-**Un langage backtique se declare en librairie comme tout le reste** -- un patron avec ses defauts,
+**Un langage backtique se declare en librairie comme tout le reste** -- un prototype avec ses defauts,
 surcharge par chaque langage. C'est lui qui repond a « ce code sonne-t-il, et occupe-t-il du
 temps ? », au lieu de le laisser deviner.
 
@@ -833,7 +836,7 @@ temps ? », au lieu de le laisser deviner.
 un nombre. Sa presence dit qu'on peut ecrire ce langage dans un parametre, et la convention de ce
 qu'il y rend.
 
-**Un seul patron pour les deux emplois.** Le meme `sc:` s'ecrit autonome dans le flux et en ligne
+**Un seul prototype pour les deux emplois.** Le meme `sc:` s'ecrit autonome dans le flux et en ligne
 dans un parametre ; ce qui varie d'un langage a l'autre, ce sont ses defauts, et une occurrence les
 surcharge avec un sac : `` `sc: i = i + 1`(sounding:false) ``.
 
@@ -986,7 +989,7 @@ S -> {A B C}(lpf1.cutoff:4000)          // une instance nommee, un de ses ports
 ```
 
 **Superposition des modulations continues.** Quand plusieurs portees posent le **meme parametre**
-sur une meme note (note, groupe, groupe parent...), les controles **s'empilent en serie**, de
+sur une meme note (note, groupe, groupe parent...), les reglages **s'empilent en serie**, de
 l'**interieur vers l'exterieur**, dans l'ordre de l'imbrication : dans
 `{ C4(lpf1.cutoff:500) D4 }(lpf2.cutoff:300)`, le son de C4 traverse son filtre de note puis celui du
 groupe.
@@ -1024,7 +1027,7 @@ est la **valeur brute** : le destinataire -- moteur ou runtime -- l'interprete.
 
 ### Controles autonomes (resolution pure)
 
-Quand un non-terminal se resout **entierement** en controles runtime, un sac `()` tient lieu de
+Quand un non-terminal se resout **entierement** en reglages, un sac `()` tient lieu de
 RHS et la regle produit des elements de duree nulle :
 
 ```bpscript
@@ -1053,10 +1056,10 @@ StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 
 Le crochet a son propre tableau, sous « Le crochet -- ce qui appartient a la derivation ».
 
-### Destinataire d'une paire `[sujet:]controle:valeur`
+### Destinataire d'une paire `[sujet:]cle:valeur`
 
 Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peut porter un
-**sujet** devant le controle pour viser plus finement -- meme mecanisme que l'affectation
+**sujet** devant la cle pour viser plus finement -- meme mecanisme que l'affectation
 `*:vel:80`, ou le `:` introduit deja un sujet.
 
 | Ecriture                             | Sujet | Cible                             |
@@ -1073,7 +1076,7 @@ deux-points introduit le sujet dans les deux cas.
   terminal, `wave` et `vel` sur la regle.
 - Pour un **signal** (qui varie dans le temps), le sujet decide l'**horloge** : sans sujet, il court
   sur la voix ; avec `*:`, une enveloppe relancee par note. C'est le sujet qui tranche, pas la
-  nature de la valeur. Pour un controle **statique** (`wave`), les deux ecritures donnent le meme
+  nature de la valeur. Pour un reglage **statique** (`wave`), les deux ecritures donnent le meme
   effet : la distinction porte sur le temporel.
 
 **La difference est musicale, pas cosmetique.** Un traitement partage melange les terminaux avant de
@@ -1180,7 +1183,7 @@ Ecrit `C4 !prise`, le nom d'un cablage devient une co-attaque de l'accord : l'av
 hauteur et un son sort, sans qu'aucune erreur le signale.
 
 **L'espace tranche l'attache de `!(...)`** -- application de la convention generale de l'espace,
-delimiteur de termes : colle au terminal precedent, le controle voyage avec lui ; separe par une
+delimiteur de termes : colle au terminal precedent, le reglage voyage avec lui ; separe par une
 espace, il se pose seul dans la sequence. En tete de regle ou de groupe (`{!(vel:80) ...}`), il se
 pose seul. L'AST porte cette attache sur le noeud `!(...)` (`conjoint`), et le simultane `B3!C7`
 reste un `SimultaneousGroup`.
@@ -1273,6 +1276,7 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 
 ```bpscript
 @alphabet.western:audio
+@alphabet.tabla:osc
 @def monte mod.ramp(from:0, to:255)
 
 S -> dha!tin                       // deux symboles a la meme attaque
@@ -1288,7 +1292,7 @@ Regles :
   sa duree** ; seule une mutation de drapeau (`nom=valeur`) reste de duree zero
 - **`!nom` pose seul** dans la sequence : **objet hors-temps** -- il tient sa place dans
   l'ordre joue pour une duree nulle.
-- **`!(controle)` pose seul** : mutation de **flux** -- cf.
+- **`!(reglage)` pose seul** : mutation de **flux** -- cf.
   [Le sac dans le flux : `!()`](#le-sac-dans-le-flux--)
 
 C'est le mecanisme de la **simultaneite cross-runtime** : un seul point dans le temps porte
@@ -1696,7 +1700,7 @@ restent celles heritees.
 
 Un reglage cascade des defauts de la librairie du symbole vers la valeur
 ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
-(`spec < CT < signal`) -- cf. le cascading des controles.
+(`spec < CT < signal`) -- cf. l'heritage par cascade.
 
 ```bpscript
 @alphabet.sargam
@@ -1947,7 +1951,7 @@ aucune — et la sortie qui le prend en charge. La convention s'écrit avec `@va
 @alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio
 @alphabet.tabla:osc              // ceux de tabla sortent par l'OSC
 
-S -> sa dha
+S -> sa dhin
 ```
 
 ### Un seul espace de noms
@@ -2070,8 +2074,8 @@ et l'auteur choisit. Le prefixe reste ecrivable partout, y compris la ou un nom 
 
 ### Ce qu'une librairie contient
 
-**Des objets conformes a un patron.** Un alphabet collectionne des terminaux ; une librairie de
-modules collectionne des modules, chacun avec ses ports. Le patron dit quels champs un objet porte,
+**Des objets conformes a un prototype.** Un alphabet collectionne des terminaux ; une librairie de
+modules collectionne des modules, chacun avec ses ports. Le prototype dit quels champs un objet porte,
 et un champ n'existe que si sa notion s'applique.
 
 **Un objet porte son code.** Un module y decrit son traitement, pas seulement ses ports. C'est ce
