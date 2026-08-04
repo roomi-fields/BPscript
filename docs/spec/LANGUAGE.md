@@ -216,7 +216,8 @@ il est ecrit : un reglage de sortie `!(vel:80)`, un reglage moteur `!(retro)`, u
 `!(seed:7)`, un cablage. La table complete des lectures du `!` est dans
 [Table de syntaxe du `!`](#table-de-syntaxe-du-).
 
-`<!` suspend le flux jusqu'a l'arrivee d'un signal exterieur. Le nom attendu se colle au signe.
+`<!` suspend le flux jusqu'a l'arrivee d'un **trigger** -- une occurrence entrante nommee. Le nom
+attendu se colle au signe.
 Ecrit apres une note, il s'ancre sur elle : la note sonne, puis la suite attend.
 
 ```bpscript
@@ -232,7 +233,7 @@ S -> !(vel:80) sitar1.sa!tin!na <!depart sitar1.re
 ```
 
 `!(vel:80)` se pose seul, sans duree, et vaut a partir de la. `sitar1.sa!tin!na` produit **trois
-evenements** au meme instant. `<!depart` retient la suite jusqu'a l'arrivee du signal `depart`.
+evenements** au meme instant. `<!depart` retient la suite jusqu'a l'arrivee du trigger `depart`.
 
 ## La partie declarative
 
@@ -283,7 +284,7 @@ entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
 
 **Le role d'une entree ne nomme jamais un appareil.** La scene declare `touches` ; l'utilisateur
 associe le clavier reel, et cette association vit **hors de la scene** -- un nom de port change de
-machine en machine. Le flux attend un geste de ce role avec le point d'attente : `<!touches.Space`.
+machine en machine. Le flux attend un trigger de ce role avec le point d'attente : `<!touches.Space`.
 
 **Une variable sans type** existe pour etre ecrite dans une regle sans sonner : un pivot de
 grammaire, un jalon de structure.
@@ -592,7 +593,7 @@ S -> Section [phase=1]
 [phase==2] Section -> { Melodie, Rythme }
 Intro   -> C4 D4 `tidal: once pat` E4     // code ecrit directement dans la production
 Rythme  -> G3 G3 G3 G3
-Melodie -> E4 F4 noir G4 A4               // le meme geste, nomme par la definition
+Melodie -> E4 F4 noir G4 A4               // la meme chose, nommee par la definition
 ```
 
 Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
@@ -665,7 +666,7 @@ _              prolongation : etend l'evenement precedent
 !              simultaneite : ce qui suit partage l'instant d'attaque de l'element qui
                precede (C4!dha) ; sans element devant lui, objet hors-temps de duree nulle
                (S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))
-<!             point d'attente : point de synchronisation, la derivation attend un geste entrant
+<!             point d'attente : la derivation attend un trigger entrant, nomme apres le signe
 #              contexte negatif
 ?              wildcard : un symbole quelconque
 $              gabarit maitre : capture un motif
@@ -1340,7 +1341,7 @@ S -> halo(C4) eclair(D4) halo(E4)
 
 ### `<!` -- le point d'attente
 
-`<!` attend un signal externe avant de continuer. C'est un point de synchronisation, de
+`<!` attend un **trigger** avant de continuer. C'est un point de synchronisation, de
 duree zero.
 
 ```bpscript
@@ -1664,7 +1665,7 @@ cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a sa fermeture.
 ### `@template` -- le catalogue des formes
 
 **Le catalogue porte les memes gabarits, un par ligne.** Le moteur derive une production, en efface
-les terminaux, et ecrit ce qui reste : c'est le meme geste que `$mel`, applique a une production
+les terminaux, et ecrit ce qui reste : c'est la meme operation que `$mel`, appliquee a une production
 entiere plutot qu'a un groupe. La section se place apres les regles, en fin de scene.
 
 ```bpscript
