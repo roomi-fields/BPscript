@@ -1258,6 +1258,33 @@ function parse(tokens, opts = {}) {
       return { type: 'ExposeDirective', flags, line: tok.line };
     }
 
+    // ─── PIERRE TOMBALE — `@transport`/`@out` ne sont PAS des directives de scène (Romain,
+    // 2026-08-04) ─────────────────────────────────────────────────────────────────────────────
+    // Signalé par Atlas, mesuré avant correction : le tombstone `transport` posé DANS un bloc
+    // `@actor` (plus bas, `ACTOR_ENTITY_KEYS`) ne couvrait pas l'écriture en TÊTE de scène —
+    // `@transport.midi` et `@out.midi` compilaient tous les deux SANS ERREUR et SANS AUCUN EFFET
+    // (l'acteur implicite garde `{type:'TransportRef', key:'audio'}` quoi qu'on écrive : la
+    // directive produisait un nœud que rien ne consomme). Le trou est PRÉEXISTANT — `@transport`
+    // compilait déjà avant le lot de renommage du 2026-08-04, ce n'est pas une régression de ce
+    // lot, c'est ce que ce lot aurait dû fermer.
+    //
+    // Les deux mots restent dans `schema.reservedDirectives` (`lib/core.json`) — ce refus
+    // s'AJOUTE, il ne les en retire pas : c'est ce qui empêche une librairie de déclarer une
+    // valeur portant ce nom (cf. `_destinations.transport`/`_destinations.out` du même fichier).
+    if (name === 'transport') {
+      throw new ParseError(
+        `'@transport' n'existe plus en directive de scène (décision Romain 2026-08-04) — le mot `
+        + `'transport' est SORTI du langage. La direction se déclare sur l'acteur, dans un bloc `
+        + `'@actor' : 'out.<canal>' (ex-'transport.<canal>'). `
+        + `Exemple : '@actor S\\n  out.audio'.`, tok);
+    }
+    if (name === 'out') {
+      throw new ParseError(
+        `'@out' n'est pas une directive de scène (décision Romain 2026-08-04) — 'out' est une clé `
+        + `d'ACTEUR, elle s'écrit 'out.<canal>' à l'intérieur d'un bloc '@actor', jamais en tête `
+        + `de scène. Exemple : '@actor S\\n  out.audio'.`, tok);
+    }
+
     // ─── PIERRE TOMBALE — `@in` n'existe plus (Romain, 2026-08-04) ────────────────────────────
     // `hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md`. La bible
     // (`docs/spec/LANGUAGE.md` §« @var — déclarer une variable ») écrivait déjà `@var <rôle>

@@ -40,7 +40,17 @@ const S = '@core\n@alphabet.western\n';
 // parseur accepte AVANT les règles, vérifiée par la moitié « doit passer » de cette même matrice.
 const DECLARATIONS = [
   ['alphabet', '@alphabet.sargam'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
-  ['transport', '@transport.midi'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
+  ['scan', '@scan:left'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
+  // ⚠️⚠️ `transport` ET `out` SONT SORTIS DE LA MATRICE le 2026-08-04, remplacés 1-pour-1 par
+  // `scan` et `sound` — le témoin anti-rétrécissement (>= 24) reste tenu, et les deux remplaçants
+  // ont été MESURÉS génériques avant d'être choisis (acceptés avant les règles, refusés après),
+  // pas supposés tels. Raison de leur sortie : Atlas a signalé que `@transport.midi` en tête de
+  // scène compilait SANS ERREUR alors que le mot a quitté le langage — mesuré, la directive
+  // orpheline ne produisait AUCUN effet (l'acteur implicite gardait `audio` avec ou sans elle).
+  // Le trou était PRÉEXISTANT, pas ouvert par le renommage : il n'avait simplement jamais été
+  // fermé. Les deux sont désormais des TOMBSTONES INCONDITIONNELS, donc sans comportement
+  // générique à éprouver ici — leur refus est gardé par
+  // `test/transport_et_out_ne_sont_pas_des_directives_de_scene.mjs`.
   // ⚠️ `in` REMPLACÉ par `out` dans la matrice le 2026-08-04 (in/out remplacent transport, ligne
   // réservée ajoutée avec le mot) : `@in` seul est désormais un TOMBSTONE INCONDITIONNEL (refusé
   // dans LES DEUX positions, avant comme après les règles — cf. `test/declaration_d_entree.mjs`),
@@ -49,7 +59,7 @@ const DECLARATIONS = [
   // '@var <rôle> in.<canal>', couverte par la ligne 'var'. `out`, mot NOUVEAU du même jour, garde
   // lui le comportement générique (accepté-ignoré avant, refusé-nommé après) : il prend la place
   // dans la matrice SANS la rétrécir.
-  ['out', '@out.audio'],
+  ['sound', '@sound.tabla_perc'],
   ['controls', '@controls'], ['var', '@var v'],
   ['alias', '@alias g cc:2'], ['mm', '@mm:60'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
