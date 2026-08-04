@@ -605,12 +605,29 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 **Est reserve ce qui existe quand aucune librairie n'est invoquee.** Une scene nue n'a que ces
 mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut les redefinir.
 
-| Mot     | Ce qu'il declare                        |
-| ------- | ----------------------------------------- |
-| `@actor` | qui joue                                |
-| `@var`   | qu'un nom existe, et de quel type       |
-| `@def`   | qu'un nom vaut un corps                 |
-| `@init`  | l'etat de depart de la scene            |
+**Quatre mots declaratifs** :
+
+| Mot      | Ce qu'il declare                    |
+| -------- | ------------------------------------- |
+| `@actor` | qui joue                            |
+| `@var`   | qu'un nom existe, et de quel type   |
+| `@def`   | qu'un nom vaut un corps             |
+| `@init`  | l'etat de depart de la scene        |
+
+**Six types de variable**, que le parser doit connaitre pour lire la ligne qui les porte :
+
+| Type     | Ce que la variable porte                                    |
+| -------- | ------------------------------------------------------------- |
+| `flag`   | un etat entier, avec ses valeurs nommees                    |
+| `in`     | une valeur qui vient du dehors                              |
+| `signal` | un flux de nombres, sans convention de lecture              |
+| `pitch`  | un signal lu comme une hauteur                              |
+| `phase`  | un signal lu comme une position dans un cycle               |
+| `logic`  | un signal lu comme un etat haut ou bas                      |
+
+Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `@var`
+peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie, il n'est pas
+reserve.
 
 Plus les **symboles structurels** ci-dessous.
 
