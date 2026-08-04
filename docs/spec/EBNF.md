@@ -330,7 +330,7 @@ Le silence et la prolongation sont des voisins comme les autres, et le symbole s
 ```ebnf
 lhs = lhs_element+ ;
 
-lhs_element = symbol | variable | wildcard | context
+lhs_element = symbol | barred_name | wildcard | context
             | template_anchor                       (* $ nu = ancre de gabarit maître *)
             | "{" | "}" | "," ;                    (* méta-grammaires : accolades terminales *)
 
@@ -357,7 +357,7 @@ element_core = symbol
              | out_time_object
              | instant
              | wait
-             | variable
+             | barred_name
              | wildcard
              | template_master | template_slave | template_anchor
              | homomorphism_marker
@@ -519,7 +519,7 @@ est l'étiquette produite par la table de correspondance.
 ### 4.7 Les barres — délimiter un nom
 
 ```ebnf
-variable = "|" , IDENT , "|" ;
+barred_name = "|" , IDENT , "|" ;
 ```
 
 Les barres délimitent le **nom** d'un non-terminal : `|x|` désigne le non-terminal appelé `x`, ni

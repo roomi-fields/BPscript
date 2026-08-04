@@ -40,8 +40,9 @@ BPScript est un **ordonnanceur** : il derive des structures temporelles par gram
 formelles et decide **quand** se declenchent des comportements ecrits dans d'autres langages
 (SuperCollider, TidalCycles, Python).
 
-Les symboles sont des noms avec un double contrat :
-- **Convention de lecture** : comment le recepteur lit ce qu'ils portent (pitch, phase, logic)
+Les symboles sont des noms avec un triple contrat :
+- **Convention de lecture** : comment le recepteur lit ce qu'ils portent (`signal`, `pitch`,
+  `phase`, `logic`)
 - **Runtime** : par ou ils sortent (`audio`, `midi`, `osc`, `dmx`)
 - **Interpreter** : qui execute leur code, quand ils en portent (`sc`, `tidal`, `py`)
 
@@ -297,7 +298,7 @@ associe le clavier reel, et cette association vit **hors de la scene** -- un nom
 machine en machine. Le flux attend un trigger de ce role avec le point d'attente : `<!touches.Space`.
 
 **Une variable sans type** existe pour etre ecrite dans une regle sans sonner : un pivot de
-grammaire, un jalon de structure.
+grammaire, un jalon de structure. Elle porte son seul nom, et l'aval la transporte tel quel.
 
 ### `@def` -- declarer une definition
 
@@ -338,7 +339,7 @@ bloc s'ecrit sous le nom, une cle par ligne, ou sur la meme ligne quand il tient
 
 @def ka  voice.sec
 @def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`
-@def pivot  sounding:false
+@def muet  sounding:false
 ```
 
 **Le point appelle un composant, le deux-points affecte une valeur** -- la convention du langage,
@@ -495,7 +496,7 @@ deux catégories et la même forme.
 ```json
 {
   "direction": "in",
-  "convention": null,
+  "convention": "signal",
   "voices": 1,
   "range": null,
   "unit": null,
@@ -510,14 +511,13 @@ d'un module : un paramètre et une entrée non branchée sont la même chose.
 | champ            | ce qu'il porte                                                                  |
 | ---------------- | ------------------------------------------------------------------------------- |
 | `direction`      | `in` ou `out`                                                                   |
-| `convention`     | comment le contenu du port se lit : `null`, `pitch`, `phase`, `logic`           |
+| `convention`     | comment le contenu du port se lit : `signal`, `pitch`, `phase`, `logic`         |
 | `voices`         | combien de **voix** ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
 | `range` · `unit` | les bornes et l'unité du signal attendu                                         |
 | `default`        | *(entrée seulement)* la valeur prise quand rien n'est branché                   |
 
-**Les conventions.** `null` désigne un signal ordinaire, sans convention de lecture — c'est le cas
-courant, celui qu'on appelle ailleurs « l'audio ». `pitch` se lit comme une hauteur, en
-logarithmique : 1,0 vaut une octave. `phase` se lit comme une position dans un cycle entre 0 et 1 ;
+**Les conventions.** `signal` est un flux de nombres que le récepteur lit tel quel — le cas
+courant. `pitch` se lit comme une hauteur, en logarithmique : 1,0 vaut une octave. `phase` se lit comme une position dans un cycle entre 0 et 1 ;
 ce qui dépasse s'enroule. `logic` se lit comme un état haut ou bas, dont ce sont les **transitions**
 qui font événement.
 
@@ -916,7 +916,7 @@ qu'il ajoute.
 
 | convention | lecture                                                                      |
 | ---------- | ---------------------------------------------------------------------------- |
-| *(aucune)* | un signal ordinaire -- le cas courant, ce qu'on appelle ailleurs « l'audio » |
+| `signal`   | un flux de nombres, lu tel quel -- le cas courant                            |
 | `pitch`    | une hauteur, en logarithmique : `1.0` vaut une octave                        |
 | `phase`    | une position dans un cycle entre 0 et 1 ; ce qui depasse s'enroule           |
 | `logic`    | un etat haut ou bas, dont les **transitions** font evenement                 |
@@ -2051,8 +2051,8 @@ jhala -> {sa re ga pa dha ni sa}:4
 
 ### Déclarer un symbole : convention de lecture et sortie
 
-Une déclaration donne à un symbole sa convention de lecture — `pitch`, `phase`, `logic`, ou
-aucune — et la sortie qui le prend en charge. La convention s'écrit avec `@var` et `@def` (cf.
+Une déclaration donne à un symbole sa convention de lecture — `signal`, `pitch`, `phase` ou
+`logic` — et la sortie qui le prend en charge. La convention s'écrit avec `@var` et `@def` (cf.
 « `@var` — déclarer une variable ») ; la sortie se pose sur l'alphabet ou sur l'acteur.
 
 ```bpscript
