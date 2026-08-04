@@ -356,7 +356,7 @@ Rule {
   rhs: RhsElement[]
   flags: FlagExpr[]                // les mutations, émises en fin de règle
   settings: SettingBag | null // le sac de portée règle
-  scan: "left" | "right" | "rnd" | null   // null = le défaut de la sous-grammaire
+  scan: "left" | "right" | "rnd" | null   // null = le défaut, `rnd`
   line: number
 }
 ```
@@ -487,8 +487,8 @@ c'est là, et nulle part ailleurs, que le consommateur la lit.
 ```
 SimultaneousGroup {
   type: "SimultaneousGroup"
-  primary: Symbol | SymbolCall | Rest | NilString
-  secondaries: (Symbol | SymbolCall)[]
+  primary: RhsElement
+  secondaries: RhsElement[]
 }
 
 OutTimeObject  { type: "OutTimeObject", name: string }
@@ -639,7 +639,7 @@ SettingBag {
 
 Setting {
   key: string                      // le nom du réglage ; il porte son destinataire
-  component?: number               // le composant nommé par le point : (cc.98:45)
+  component?: string | number      // le composant nommé par le point : (cc.98:45), (lpf1.cutoff:400)
   subject?: string                 // le sujet : "*", ou un nom de terminal
   value: string | number | boolean // true pour une clé nue
   line: number
@@ -671,7 +671,7 @@ droit) · `!accolé` (collé, flux conjoint) · `!inline` (espacé, événement 
 
 | Élément | terminal | groupe | règle | !accolé | !inline | Nœud |
 |---------|:---:|:---:|:---:|:---:|:---:|------|
-| **durée `:N`** | ✅ | ✅ | ✅ | ❌ | ❌ | `Polymetric.frame` — le terminal ou le membre droit est emballé |
+| **durée `:N`** | ✅ | ✅ | ❌ | ❌ | ❌ | `Polymetric.frame` — le terminal ou le groupe est emballé |
 | **réglage `(clé:val)`** | ✅ | ✅ | ✅ | ✅ | ✅ | `…suffixQualifiers` · `Rule.settings` · `Polymetric.settings` · `InstantControl` |
 | **vitesse `(/N)` `(*N/M)`** | ❌ | ❌ | ❌ | ❌ | ✅ | `SpeedChange`, dans un `InstantControl` |
 | **garde `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.guard` |

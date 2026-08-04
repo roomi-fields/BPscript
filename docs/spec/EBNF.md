@@ -432,8 +432,8 @@ compositeur écrit les événements, le moteur calcule les silences qui produise
 temporelle la plus simple.
 
 Le deux-points collé dit ce qu'un élément occupe, en battements. Il ne touche que son hôte : ce qui
-l'entoure garde sa durée. Ses portées sont le terminal, le groupe et la règle ; une durée détachée
-en fin de règle est refusée, elle se colle à son hôte.
+l'entoure garde sa durée. Ses portées sont le terminal et le groupe ; une durée détachée en fin de
+règle est refusée, elle se colle à son hôte.
 
 Le `.` s'écrit isolé entre deux espaces, `...` en trois caractères collés, `-` isolé — un silence
 par occurrence.
@@ -476,9 +476,9 @@ la position et la durée, et tout ce qui suit se déclenche au même instant en 
 une mutation de drapeau reste de durée zéro.
 
 **En tête d'un terme**, il pose dans le flux un élément instantané, qui prend effet à l'endroit où
-il est écrit : un réglage de sortie, un réglage moteur, une re-semence, un changement de vitesse, un
-câblage. Posé seul, un nom devient un **objet hors-temps** : il tient sa place dans l'ordre joué
-pour une durée nulle.
+il est écrit : un réglage de sortie, un réglage moteur, une re-semence, un changement de vitesse.
+Posé seul, un nom devient un **objet hors-temps** : il tient sa place dans l'ordre joué pour une
+durée nulle.
 
 | Écriture                        | Sens                                                                 |
 | ------------------------------- | -------------------------------------------------------------------- |
@@ -488,7 +488,7 @@ pour une durée nulle.
 | `!f` en tête, sans primaire     | objet **hors-temps** — posé seul, sans durée                         |
 | `!(seed:7)`                     | réglage posé **dans le flux** — élément sans durée                   |
 | `C4 !prise`                     | **accord** — le nom y sonne comme co-attaque                         |
-| `` !`patch: osc1 >> lpf1` ``    | **câblage** posé dans le flux — un terminal de code, muet, sans durée |
+| `! (/2)`                        | **changement de vitesse** posé dans le flux — élément sans durée     |
 
 Un sac vaut pour sa portée ; le même sac précédé de `!` vaut pour ce qui suit, au-delà des bords de
 règle, jusqu'au prochain sac. Le flux est un **état courant** : une note échantillonne la valeur en
@@ -600,8 +600,8 @@ Efface le non-terminal. Un membre droit vide fait la même chose.
 ```ebnf
 setting_bag = "(" , setting , { "," , setting } , ")" ;
 
-setting = [ subject , ":" ] , KEY , [ "." , IDENT ] , ":" , raw_value   (* clé et valeur *)
-        | [ subject , ":" ] , KEY ;                                      (* clé nue *)
+setting = [ subject , ":" ] , KEY , [ "." , ( IDENT | INT ) ] , ":" , raw_value  (* clé et valeur *)
+        | [ subject , ":" ] , KEY ;                                             (* clé nue *)
 
 subject   = "*" | IDENT ;
 raw_value = (* tout texte jusqu'au prochain "," ou au délimiteur fermant *) ;

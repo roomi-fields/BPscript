@@ -44,7 +44,7 @@ Les symboles sont des noms avec un double contrat :
 - **Runtime** : par ou ils sortent (`audio`, `midi`, `osc`, `dmx`)
 - **Interpreter** : qui execute leur code, quand ils en portent (`sc`, `tidal`, `py`)
 
-Le langage connait trois mots et fait une chose : ordonner dans le temps.
+Le langage connait quatre mots et fait une chose : ordonner dans le temps.
 
 ---
 
@@ -222,7 +222,7 @@ sur une seule attaque, et le premier terme donne la duree du groupe.
 
 **En tete d'un terme**, il pose dans le flux un element instantane, qui prend effet a l'endroit ou
 il est ecrit : un reglage de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
-`!(seed:7)`, un cablage. La table complete des lectures du `!` est dans
+`!(seed:7)`, un changement de vitesse `! (/2)`. La table complete des lectures du `!` est dans
 [Table de syntaxe du `!`](#table-de-syntaxe-du-).
 
 `<!` suspend le flux jusqu'a l'arrivee d'un **trigger** -- une occurrence entrante nommee. Le nom
@@ -424,14 +424,14 @@ simplement un signal dont on ne dit rien de plus.
 s'ecrit sans les nommer :
 
 ```text
-saw >> lpf >> out
+saw1 >> lpf1 >> out
 ```
 
 **Quand il y en a plusieurs, le cablage les nomme**, avec le point :
 
 ```text
-saw.freq >> lpf.cutoff
-env.out >> lpf.cutoff
+saw1.freq >> lpf1.cutoff
+env1.out >> lpf1.cutoff
 ```
 
 Un module est un **prototype** : il se declare une fois et s'instancie autant de fois qu'une piece en
@@ -576,7 +576,7 @@ touche, donc qui le consomme.
 | categorie   | ce qu'elle regle                                                                                                                                             |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
-| `@time.`    | `tempo` -- la vitesse a laquelle le temps se lit                                                                                                             |
+| `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `tempx` -- le multiplicateur de vitesse d'une regle                                          |
 | `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `meter` · `timepatterns` · les operateurs `/` et `*` |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
@@ -824,8 +824,9 @@ ou une instruction de calcul de hauteur.
 par defaut ; un terminal concret ne declare que ce qui differe.
 
 ```json
-{ "name": "", "runtime": "audio", "sounding": true, "duration": null, "code": null,
-  "degree": null, "register": null, "hz": null, "voice": null }
+{ "name": "", "runtime": "audio", "sounding": true, "duration": null,
+  "degree": null, "register": null, "hz": null,
+  "tuning": null, "octaves": null, "voice": null }
 ```
 
 **Deux axes qualifient un terminal, et ils sont independants** : d'ou vient sa **hauteur**, et par
@@ -834,22 +835,28 @@ quoi il se **realise**. Chacun peut rester vide, et toutes les combinaisons ont 
 | axe             | ce qu'il porte                                                                          |
 | --------------- | ---------------------------------------------------------------------------------------- |
 | **hauteur**     | `degree` et `register`, resolus par les librairies d'accordage et de registres, ou `hz`, une frequence deja connue |
-| **realisation** | `voice` -- une entree de la librairie des voix, ou `code` -- du code que le terminal joue |
+| **realisation** | `voice` -- une entree de la librairie des voix, ou un backtick qui porte le code que le terminal joue |
 
-Un terminal a hauteur et a voix est une note ; a voix seule, une percussion ; a hauteur et a code,
-un calcul qui recoit sa hauteur du meme systeme qu'une note. Un terminal dont `sounding` est faux
-est le pivot de grammaire ; un terminal sans `duration` occupe l'instant.
+Un terminal a hauteur et a voix est une note ; a voix seule, une percussion ; a hauteur et a
+backtick, un calcul qui recoit sa hauteur du meme systeme qu'une note. Un terminal dont `sounding`
+est faux garde sa hauteur, sa duree et sa sortie, et se pose dans une regle sans sonner ; un
+terminal sans `duration` occupe l'instant.
 
-**L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
-ecrit.
+**Le deux-points pose sur le nom d'un terminal ou d'un alphabet affecte son runtime de sortie.**
+Dans le bloc de cles, il porte la valeur de la cle qu'il suit.
 
 **Un alphabet est une collection de terminaux**, et il **peut** porter de quoi resoudre leur
 hauteur. C'est une commodite de regroupement : un terminal peut se declarer seul. Le prototype d'un
 alphabet pose pour sa collection les proprietes que ses terminaux surchargent :
 
 ```json
-{ "name": "", "description": "", "runtime": "audio", "voice": null, "terminals": {} }
+{ "name": "", "description": "", "runtime": "audio", "voice": null,
+  "tuning": null, "octaves": null, "diapason": null, "terminals": {} }
 ```
+
+`tuning` donne l'accordage par defaut de la collection, `octaves` sa convention de registre et
+`diapason` son ancre de hauteur : c'est de la que vient la hauteur d'un terminal qui n'en nomme
+aucune, et l'acteur qui joue cet alphabet en herite.
 
 Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi`, `osc` et `dmx` ; un
 terminal qui n'en declare pas prend celui de son alphabet, et il en va de meme de sa voix :
@@ -1196,6 +1203,9 @@ un element sans duree a l'endroit ou il est ecrit.
 | `(...)`  | toute sa portee -- regle ou groupe -- les elements ecrits avant elle compris ; l'effet s'arrete au bord de la portee |
 | `!(...)` | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain sac                        |
 
+**Le `mode` porte plus loin que sa place** : ecrit `(mode:<valeur>)` en suffixe de regle, il vaut
+pour la sous-grammaire entiere, dont toutes les regles partagent la strategie de selection.
+
 ```bpscript
 
 // PORTEE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
@@ -1223,7 +1233,7 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 | `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                  |
 | `!(seed:N)`                                   | **reglage pose DANS LE FLUX** -- element sans duree (`InstantControl`)           |
 | `C4 !prise` *(nom d'une definition)*          | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur |
-| `` !`patch: osc1 >> lpf1` ``                  | **cablage pose dans le flux** -- un terminal de code, muet et de duree nulle     |
+| `! (/N)` · `! (*N/M)`                         | **changement de vitesse** pose dans le flux (`SpeedChange`)                     |
 | `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                   |
 
 C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
@@ -1280,7 +1290,7 @@ La regle de desambiguation est positionnelle :
 - `@directive nom(` colle au nom = liste de parametres d'une declaration
 - `(` en tete de regle, avant le LHS et la fleche = contexte
 
-Une procedure moteur prend elle aussi son argument entre parentheses, a l'interieur du sac `[]` :
+Une procedure moteur prend elle aussi son argument entre parentheses, a l'interieur du sac `()` :
 `(on_fail:retry(2))`, `(on_fail:fallback(Autre))`.
 
 Le groupement s'ecrit avec les accolades `{}`.
@@ -1327,7 +1337,8 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 ```bpscript
 @alphabet.western:audio
 @alphabet.tabla:osc
-@def monte mod.ramp(from:0, to:255)
+@var ramp1 ramp
+@def monte ramp1(from:0, to:255)
 
 S -> dha!tin                       // deux symboles a la meme attaque
 S -> dha!na                        // na prend la duree de dha
@@ -1621,12 +1632,12 @@ egalent le leur en meme temps.
                            //  K1 K2 K3 M  ->  K1 K2 K3 M   toutes egalent la leur, inchangee
 
 // UNE place : « une chose qui n'est ni K1, ni K2, ni K3 »
-#(K1 K2 K3) M -> C4        //  W1 W2 W3 M  ->  W1 W2 W3 C4  seul M est pris, le reste demeure
+#(K1 K2 K3) M -> C4        //  W1 W2 W3 M  ->  W1 W2 C4     le diese prend W3, M prend la sienne
 ```
 
 **La difference se voit a ce qui reste.** La forme a trois dieses **consomme quatre positions** et
-ne laisse que `C4` ; la forme groupee n'en consomme qu'**une** -- elle regarde le voisin sans le
-prendre -- et laisse les trois autres en place.
+ne laisse que `C4` ; la forme groupee en consomme **deux** -- une pour le diese, une pour `M` -- et
+laisse les deux premieres en place.
 
 ### Silence et prolongation
 
@@ -1717,7 +1728,7 @@ croisent avec celles des non-terminaux. Le rang est la place dans cette enumerat
 que l'analyse rend pour dire quelle forme a repondu.
 
 Le mode `tem` fait l'appariement structurel sur ce catalogue, dans l'ordre des rangs. Il s'ecrit en
-tete de scene ou en suffixe de regle.
+tete de sous-grammaire ou en suffixe de regle.
 
 ```bpscript
 @alphabet.sargam
@@ -1794,7 +1805,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `@template` |
 | `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
-| `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> out`                             |
+| `>>` `\>>` | brancher un câble, le couper              | `saw1 >> lpf1 >> out`                           |
 
 ### L'espace, délimiteur de termes
 
@@ -1880,8 +1891,8 @@ dit laquelle des deux formes on écrit.
 | `@<directive> <nom>:<cible>`  | pose une **propriété** sur un nom qui existe déjà |
 
 ```bpscript
-@alphabet.western:midi                     // propriété : les terminaux de western sortent en MIDI
-@def env1 mod.adsr(attack:10, decay:200) // déclaration : env1 est un nom neuf
+@alphabet.western:midi     // propriété : les terminaux de western sortent en MIDI
+@var env1 adsr             // déclaration : env1 est un nom neuf, une instance d'adsr
 
 S -> C4 D4
 ```
@@ -2187,7 +2198,7 @@ S -> C4:0.5 D4 E4            // C4 occupe un demi-battement
 S -> {C4 D4}:2 E4            // le groupe occupe deux battements
 ```
 
-**Un groupe polymetrique pose la meme contrainte, sur plusieurs voix** : `{2, C4 D4, E4}` dit que ce
+**Un groupe polymetrique pose la meme contrainte, sur plusieurs voix** : `{C4 D4, E4}:2` dit que ce
 bloc occupe deux battements, et chaque voix s'y arrange.
 
 ### La vitesse -- `! (/N)` dans le flux
@@ -2245,8 +2256,8 @@ metrique balkanique.
 | **Scan par regle** | dans quel sens chercher le symbole ? | `(scan:left)`    | regle individuelle  |
 | **Direction**      | la regle se lit dans quel sens ?     | `->`, `<-`, `<>` | regle individuelle  |
 
-Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de scene, ou `(mode:<valeur>)` en
-suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
+Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de sous-grammaire, ou
+`(mode:<valeur>)` en suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
 
 | Mode      | Strategie de selection                           |
 | --------- | ------------------------------------------------ |
