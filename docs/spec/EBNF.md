@@ -285,8 +285,7 @@ retenue. Le drapeau vaut donc encore sa valeur d'avant pendant tout le test.
 ```ebnf
 flag_bracket = "[" , flag_expr , { "," , flag_expr } , "]" ;
 
-flag_expr = IDENT , MUTATE_ASSIGN , flag_rvalue     (* [stage=2] *)
-          | IDENT ;                                  (* drapeau nu : [Atrans] *)
+flag_expr = IDENT , MUTATE_ASSIGN , flag_rvalue ;   (* [stage=2] *)
 
 MUTATE_ASSIGN = "=" | "+" | "-" ;
 flag_rvalue   = INT | IDENT ;
@@ -704,9 +703,9 @@ fermante vers l'ouvrante correspondante.
 ## Couche 5 — Lexèmes
 
 ```ebnf
-IDENT       = letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "'" | '"' }
-            | letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "'" | '"' } ,
-              "-" , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "'" | '"' | "-" } ;
+IDENT       = letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" }
+            | letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" } ,
+              "-" , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "-" } ;
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
@@ -752,7 +751,7 @@ blank_line  = (* ligne vide ou espaces seuls *) ;
 | `-` `_` `.` | `-` `_` `.` | silence, prolongation, fragment |
 | `...` | `_rest` | repos indéterminé |
 | `[X==N]` / `[X-N]` | `/X=N/` / `/X-N/` en membre gauche | garde |
-| `[X=N]` / `[X]` | `/X=N/` / `/X/` en membre droit | mutation, drapeau nu |
+| `[X=N]` | `/X=N/` en membre droit | mutation |
 | `C4(vel:120)` | `C4 _script(CT 0)` | réglage sur un symbole |
 | `S -> C4 D4 (vel:80)` | `_script(CT 0) C4 D4` | réglage de règle |
 | `{A B}(vel:100)` | `_script(CT 0_s) {A B} _script(CT 0_e)` | réglage de groupe |

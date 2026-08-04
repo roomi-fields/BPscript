@@ -386,8 +386,8 @@ d'avant pendant tout le test. Un drapeau seul teste qu'il vaut autre chose que z
 FlagExpr {
   type: "FlagExpr"
   flag: string
-  operator: "=" | "+" | "-" | null   // null = drapeau nu
-  value: number | string | null
+  operator: "=" | "+" | "-"
+  value: number | string
 }
 ```
 
