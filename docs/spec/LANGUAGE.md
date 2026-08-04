@@ -2204,8 +2204,9 @@ S -> C4 ! (/2) {D4 E4} F4         // le groupe herite de la vitesse en cours
 **Ce qu'une vitesse couvre en herite** : un groupe qui n'en pose pas garde celle du contexte qui le
 contient.
 
-**`/N` accelere, `*N/M` ecrit la fraction inverse.** `/2` va deux fois plus vite ; `*2/3` etire de
-moitie plus. Les deux graphies disent la meme chose : `*1/2` **est** `/2`.
+**`/N` accelere, et `*N/M` ecrit la meme chose en fraction inverse** : `*a/b` vaut `/(b/a)`. `/2` va
+deux fois plus vite, et `*2/3` vaut `/1.5`, une fois et demie plus vite. La graphie fractionnaire
+existe parce que `*2/3` se lit mieux que `/1.5`.
 
 ### La nature du temps -- `@striated` et `@smooth`
 
