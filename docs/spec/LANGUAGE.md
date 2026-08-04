@@ -681,8 +681,7 @@ attendu, pas une faute.
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:vel:80)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
-               (*:vel:80, *:sombre) ; dans une vitesse, ecrit la fraction (! (*2/3)) ;
-               entre un gabarit maitre et son esclave, marqueur d'homomorphisme ($X * &X)
+               (*:vel:80, *:sombre) ; dans une vitesse, ecrit la fraction (! (*3/2))
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [stage=2])
 .              reference a une entite (alphabet.western, lpf1.cutoff, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
@@ -701,7 +700,7 @@ _              prolongation : etend l'evenement precedent
 $              gabarit maitre : capture un motif
 &              gabarit : rejeu d'un motif (esclave)
 ~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
-| |            homomorphisme : variable liee dans une regle
+| |            delimite le nom d'un non-terminal (|x| designe la regle appelee x)
 >> \>>         cablage : brancher un element sur un autre, couper le cable
 ```
 
