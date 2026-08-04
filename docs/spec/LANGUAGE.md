@@ -3,7 +3,7 @@
 ## Table des matieres
 
 - [Principe fondamental](#principe-fondamental)
-- [Le langage : dense, pas simple](#le-langage--dense-pas-simple)
+- [Le langage : dense, pas simple](#le-langage-dense-pas-simple)
 - [Concepts cles](#concepts-cles)
 - [La partie declarative](#la-partie-declarative)
 - [L'ordonnanceur](#lordonnanceur)
@@ -11,20 +11,20 @@
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres](#parametres----opaques-pour-bpscript)
 - [Les sacs : `()` reglages, `[]` derivation](#les-sacs---reglages--derivation)
-- [Les parentheses `()`](#les-parentheses-----quatre-roles)
-- [Les accolades `{}`](#les-accolades-----polymetrie-et-groupement)
+- [Les parentheses `()`](#les-parentheses----quatre-roles)
+- [Les accolades `{}`](#les-accolades----polymetrie-et-groupement)
 - [L'objet sonore compose `|[ ]`](#lobjet-sonore-compose--)
-- [L'operateur `!`](#loperateur-----simultaneite)
+- [L'operateur `!`](#loperateur----simultaneite)
 - [Les quatre silences](#les-quatre-silences)
-- [Period notation `.`](#period-notation-----fragments-de-duree-egale)
-- [Liaisons `~`](#liaisons-----tied-sound-objects)
-- [Wildcards `?`](#wildcards-----pattern-matching)
+- [Period notation `.`](#period-notation----fragments-de-duree-egale)
+- [Liaisons `~`](#liaisons----tied-sound-objects)
+- [Wildcards `?`](#wildcards----pattern-matching)
 - [Les barres `|x|`](#les-barres-x----delimiter-un-nom)
-- [Contextes `()` et `#`](#contextes--et-----conditions-dapplication)
-- [Les gabarits `$` et `&`](#les-gabarits--et-----la-structure-dune-production)
+- [Contextes `()` et `#`](#contextes-et----conditions-dapplication)
+- [Les gabarits `$` et `&`](#les-gabarits-et----la-structure-dune-production)
 - [Comment une valeur se resout](#comment-une-valeur-se-resout)
-- [Conventions de notation](#conventions-de-notation-—-lespace-le-point-le-deux-points)
-- [Flags](#flags-—-variables-détat-et-composition-conditionnelle)
+- [Conventions de notation](#conventions-de-notation-lespace-le-point-le-deux-points)
+- [Flags](#les-operateurs-de-flags)
 - [Déclarations](#déclarations)
 - [Les librairies](#les-librairies)
 - [Le temps](#le-temps)
@@ -158,7 +158,7 @@ U -> sa!(vel:70) re !(vel:100) ga . dha <!depart ni [stage=1]
 ```
 
 Le sens de chaque signe accole -- le point, le deux-points, l'etoile -- est detaille dans
-[Conventions de notation](#conventions-de-notation-----).
+[Conventions de notation](#conventions-de-notation-lespace-le-point-le-deux-points).
 
 ### Backticks -- code natif dans le flux
 
@@ -225,7 +225,7 @@ sur une seule attaque, et le premier terme donne la duree du groupe.
 **En tete d'un terme**, il pose dans le flux un element instantane, qui prend effet a l'endroit ou
 il est ecrit : un reglage de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
 `!(seed:7)`, un changement de vitesse `! (/2)`. La table complete des lectures du `!` est dans
-[Table de syntaxe du `!`](#table-de-syntaxe-du-).
+[Table de syntaxe du `!`](#les-operateurs-de-flags).
 
 `<!` suspend le flux jusqu'a l'arrivee d'un **trigger** -- une occurrence entrante nommee. Le nom
 attendu se colle au signe.
@@ -1381,7 +1381,7 @@ Regles :
 - **`!nom` pose seul** dans la sequence : **objet hors-temps** -- il tient sa place dans
   l'ordre joue pour une duree nulle.
 - **`!(reglage)` pose seul** : mutation de **flux** -- cf.
-  [Le sac dans le flux : `!()`](#le-sac-dans-le-flux--)
+  [Le sac dans le flux : `!()`](#le-sac-dans-le-flux)
 
 C'est le mecanisme de la **simultaneite cross-runtime** : un seul point dans le temps porte
 des evenements destines a SC, Python, Processing, DMX.
@@ -1581,7 +1581,7 @@ S -> $N14 dhati &N14
 Elle s'applique **entre un gabarit maitre et son esclave**, dont le nom se pose entre les deux :
 l'esclave rejoue alors le maitre transforme par la table. **Un nom de table s'ecrit en
 identifiant** ; les signes que le langage emploie ailleurs sont refuses a cette place.
-Cf. [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
+Cf. [Les gabarits `$` et `&`](#les-gabarits-et----la-structure-dune-production).
 
 Un nom absent de la librairie est refuse au parse.
 
