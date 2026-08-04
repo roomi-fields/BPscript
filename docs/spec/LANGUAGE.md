@@ -7,30 +7,29 @@
 - [Concepts cles](#concepts-cles)
 - [La partie declarative](#la-partie-declarative)
 - [L'ordonnanceur](#lordonnanceur)
-- [Inventaire : 3 mots, 23 symboles, 9 operateurs](#inventaire--3-mots-23-symboles-9-operateurs)
+- [Inventaire : 3 mots, 24 symboles, 9 operateurs](#inventaire--3-mots-24-symboles-9-operateurs)
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
-- [Parametres -- opaques pour BPScript](#parametres----opaques-pour-bpscript)
+- [Parametres](#parametres----opaques-pour-bpscript)
 - [Les sacs : `()` reglages, `[]` derivation](#les-sacs---reglages--derivation)
-- [Les parentheses `()` -- quatre roles](#les-parentheses------quatre-roles)
-- [Les accolades `{}` -- polymetrie et groupement](#les-accolades------polymetrie-et-groupement)
-- [L'operateur `!` -- simultaneite](#loperateur------simultaneite)
+- [Les parentheses `()`](#les-parentheses-----quatre-roles)
+- [Les accolades `{}`](#les-accolades-----polymetrie-et-groupement)
+- [L'operateur `!`](#loperateur-----simultaneite)
 - [Les trois silences](#les-trois-silences)
-- [Period notation `.`](#period-notation------fragments-de-duree-egale)
-- [Liaisons `~`](#liaisons------tied-sound-objects)
-- [Captures `?`](#captures------pattern-matching)
+- [Period notation `.`](#period-notation-----fragments-de-duree-egale)
+- [Liaisons `~`](#liaisons-----tied-sound-objects)
+- [Captures `?`](#captures-----pattern-matching)
 - [Les barres `|x|`](#les-barres-x----delimiter-un-nom)
-- [Contextes `()` et `#`](#contextes----et------conditions-dapplication)
-- [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production)
+- [Contextes `()` et `#`](#contextes--et-----conditions-dapplication)
+- [Les gabarits `$` et `&`](#les-gabarits--et-----la-structure-dune-production)
 - [Heritage par cascade](#heritage-par-cascade)
-- [Sons](#sons)
-- [Conventions de notation](#conventions-de-notation--lespace-le-point-le-deux-points)
-- [Flags](#flags--variables-détat-et-composition-conditionnelle)
-- [Declarations](#déclarations)
+- [Conventions de notation](#conventions-de-notation-—-lespace-le-point-le-deux-points)
+- [Flags](#flags-—-variables-détat-et-composition-conditionnelle)
+- [Déclarations](#déclarations)
 - [Les librairies](#les-librairies)
 - [Le temps](#le-temps)
 - [Modes, scan et directions](#modes-scan-et-directions----trois-niveaux-distincts)
-- [Gestion d'echec -- `on_fail`](#gestion-dechec----on_fail)
-- [Le temps -- formes avancees](#le-temps----formes-avancees)
+- [Gestion d'echec](#gestion-dechec----on_fail)
+- [Le temps](#le-temps----formes-avancees)
 
 ---
 
@@ -50,7 +49,7 @@ Le langage connait trois mots et fait une chose : ordonner dans le temps.
 
 ## Le langage : dense, pas simple
 
-3 mots reserves, 23 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
+3 mots reserves, 24 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
 combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
 ```bpscript
@@ -125,6 +124,7 @@ refusee.
 | `sa(vel:100)`          | les parentheses collees portent le reglage sur `sa`                          |
 | `S -> sa re (vel:70)`  | les parentheses separees, en fin de regle, portent sur toute la regle        |
 | `pa:2`                 | le `:` colle fixe la duree du terme ; separe (`pa :2`), la ligne est refusee |
+| `S -> A B :2`          | une duree detachee en fin de regle est refusee : elle se colle a son hote   |
 | `{re ga}:2`            | le `:` colle fixe la duree du groupe                                         |
 | `S -> sa re [phase=1]` | le crochet separe, en fin de regle, mute un drapeau                          |
 | `sitar1.sa`            | le point colle qualifie `sa` par l'acteur `sitar1`                           |
@@ -576,7 +576,7 @@ instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 @core
 @alphabet.western:audio
 
-// En tete de scene : chaque runtime prepare ses objets au chargement
+// En tete de scene : chaque moteur de code prepare ses objets au chargement
 `sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
 `tidal: let pat = s "bd sd hh sd"`
 `py: import dmx; d = dmx.open()`
@@ -599,7 +599,7 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 
 ---
 
-## Inventaire : 3 mots, 23 symboles, 9 operateurs
+## Inventaire : 3 mots, 24 symboles, 9 operateurs
 
 ### Trois mots reserves
 
@@ -613,11 +613,12 @@ Un signal est un flux de nombres ; ces trois mots disent comment le **recepteur*
 signal sans convention est le cas ordinaire, et c'est ce qu'on appelle ailleurs « l'audio ».
 Le detail est dans « Les conventions de lecture d'un signal ».
 
-### Vingt-trois symboles structurels
+### Vingt-quatre symboles structurels
 
 ```text
 @              directive de declaration, en tete de scene
 -> <- <>       derivation et direction
+-----          separateur de sous-grammaires : la passe suivante commence
 { , }          polymetrie et groupement temporel
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:vel:80)
@@ -1708,10 +1709,6 @@ ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
 S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
 ```
 
-### Les proprietes d'un son
-
-Sept niveaux, du defaut moteur a l'occurrence dans une regle -- cf. les sons.
-
 ### La vitesse d'un bloc
 
 `[*N]` multiplie la vitesse heritee du contexte englobant ; `[/N]` pose une
@@ -2038,6 +2035,10 @@ connait ni le sargam, ni ce qu'est un filtre passe-bas, ni comment une enveloppe
 choses vivent en librairie, avec leur description **et leur code**.
 
 ### Invoquer
+
+**`@core` apporte le socle.** Une scene qui l'ecrit recoit les librairies de base et leurs valeurs
+par defaut, comme un fichier C inclut son en-tete. Une scene qui ne l'ecrit pas n'a **aucun defaut**,
+et ce qu'elle emploie se heurte a des noms inconnus : c'est le comportement attendu, pas une faute.
 
 **La directive nomme la librairie, le point designe l'entree.**
 
