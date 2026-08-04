@@ -526,7 +526,7 @@ touche, donc qui le consomme.
 
 | categorie  | ce qu'elle regle                                                                                                                                             |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@pitch.`  | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
+| `@transpo.`  | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
 | `@time.`   | `tempo` -- la vitesse a laquelle le temps se lit                                                                                                             |
 | `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `duration` · `meter` · `timepatterns` · les operateurs `/` et `*` |
 
@@ -537,7 +537,7 @@ duree disent ou les choses tombent, donc ils relevent du premier.
 ```text
 @time.tempo:120
 @engine.seed:42
-@pitch.diapason:442
+@transpo.diapason:442
 ```
 
 ### Duree explicite
@@ -699,7 +699,7 @@ Ce qu'ils font est decrit dans « Flags ».
 S -> C4(vel:0.7) D4:0.5 E4 F4 (mode:random)
 ```
 
-Un reglage s'invoque par sa categorie -- `@pitch.`, `@time.`, `@engine.` -- decrite dans
+Un reglage s'invoque par sa categorie -- `@transpo.`, `@time.`, `@engine.` -- decrite dans
 « Invoquer un reglage ». Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est
 le recepteur qui leur donne un sens.
 
