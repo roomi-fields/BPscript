@@ -108,9 +108,7 @@ Un acteur porte **cinq clés**. Chacune se lit dans un catalogue, et ce qui n'es
 l'hérite de la scène. `properties` est la forme interne ; `references` est la forme consommée en
 aval, dérivée sans perte.
 
-Le canal de sortie s'écrit `out.<canal>` et **le champ interne s'appelle `transport`**. Le mot écrit
-et le nom du champ ne coïncident pas : renommer ce champ est un changement de contrat, à mesurer
-chez ses consommateurs avant de le poser.
+Le canal de sortie s'écrit `out.<canal>` et **le champ interne s'appelle `transport`**.
 
 Une clé absente manque du champ.
 
@@ -209,8 +207,6 @@ InitEntry = PatchExpr | BacktickOrphan
 `@init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le
 branchement initial, le code lancé une fois, les valeurs de départ. Ce qui appartient à une chose
 s'initialise dans sa déclaration ; `@init` recueille ce qui appartient à la scène entière.
-
-Une production ne s'y écrit pas — une règle produit dans le temps, l'initialisation précède le temps.
 
 ### Le langage de patch
 
@@ -553,9 +549,8 @@ SymbolWithWait {
 Le point d'attente est un élément **de plein droit** du membre droit, à sa position dans la
 séquence. Sa nature dit ce que le jeton est pour le temps.
 
-Une attente **suspend** le temps là où un silence l'**occupe** : durée nulle, la grille n'avance
-pas. Le symbole porteur **garde sa nature** — le point d'attente est ancré sur lui, il ne le
-remplace pas.
+Une attente **suspend** le temps là où un silence l'**occupe** : durée zéro, la grille reste où
+elle est. Le symbole porteur **garde sa nature**, et le point d'attente s'ancre sur lui.
 
 L'adresse dit ce qu'elle **est** par son type : un nombre est le numéro brut de l'appareil, un
 identifiant est l'étiquette produite par la table de correspondance.
@@ -570,9 +565,8 @@ Wildcard { type: "Wildcard", index: number | null }   // `?` nu, ou `?n`
 lie toutes les occurrences du même numéro dans une règle au même symbole ; le `?` nu prend chaque
 place indépendamment. Une règle en porte jusqu'à 32 numérotés.
 
-Un nom **entre barres** s'abaisse en `Symbol` : les barres délimitent le nom d'un non-terminal et ne
-sont un artifice d'écriture : elles autorisent une initiale minuscule là où le nom serait sinon
-pris pour un terminal.
+Un nom **entre barres** s'abaisse en `Symbol`. Les barres délimitent le nom d'un non-terminal, et
+autorisent une initiale minuscule là où le nom serait pris pour un terminal.
 
 ### Gabarits
 

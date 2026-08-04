@@ -689,7 +689,7 @@ le qualifie par le point.
 symbole qui le porte ; il hérite du tag de ce symbole. Un langage employable en ligne le déclare en
 librairie, avec la convention de ce qu'il rend.
 
-`patch:` est le langage du câblage — il ne sonne pas et n'occupe pas de temps.
+`patch:` est le langage du câblage : il agit sur la topologie des modules, muet et de durée nulle.
 
 ### 4.15 Accolades brutes
 

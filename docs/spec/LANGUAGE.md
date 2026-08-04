@@ -366,9 +366,6 @@ branchement initial, le code lance une fois, les valeurs de depart.
   `sc: SynthDef(\grain, { |freq| ... }).add`
 ```
 
-**Une production ne s'ecrit pas dans `@init`** : une regle produit dans le temps, l'initialisation
-precede le temps.
-
 Ce qui appartient a une chose s'initialise **dans sa declaration** -- un flag ecrit son etat de
 depart la ou il nait. `@init` recueille ce qui ne se rattache a rien : un branchement relie des
 modules deja declares, il n'appartient a aucun d'eux.
@@ -411,16 +408,15 @@ s'invoquent comme tout le reste.
 @module.adsr
 ```
 
-**Un seul signal, des conventions de lecture.** Il n'existe pas plusieurs natures de signal : un
-signal est un flux de nombres. Ce qu'un type ajoute, c'est **la facon dont le recepteur le lit** --
-une hauteur se transpose, une phase s'enroule, un etat logique se seuille. C'est pourquoi tout se
-branche partout : il n'y a rien a convertir, seulement une convention a appliquer.
+**Un seul signal, des conventions de lecture.** Un signal est un flux de nombres, et la convention
+dit **comment le recepteur le lit** -- une hauteur se transpose, une phase s'enroule, un etat
+logique se seuille. Tout se branche partout : la convention s'applique a la reception.
 
-**Le signal sans convention est le cas ordinaire.** Ce qu'on appelle ailleurs « l'audio » est
-simplement un signal dont on ne dit rien de plus.
+**`signal` est le cas ordinaire** -- un flux de nombres que le recepteur lit tel quel.
 
-**Chaque port est type.** Un port porte la **convention** selon laquelle son contenu se lit : `pitch`, `phase`,
-`logic` — ou aucune, et c'est alors un signal ordinaire. Le type d'un port dit ce qu'on a le droit d'y brancher, et le compilateur le verifie.
+**Chaque port est type.** Un port porte la **convention** selon laquelle son contenu se lit :
+`signal`, `pitch`, `phase` ou `logic`. Le type d'un port dit ce qu'on a le droit d'y brancher, et le
+compilateur le verifie.
 
 **Un module a une entree et une sortie de signal par defaut.** Quand elles suffisent, la chaine
 s'ecrit sans les nommer :
@@ -472,9 +468,8 @@ sont deux instances nommees, chacune avec ses valeurs de port.
 | **`processor`** | des entrées **et** des sorties | `defaultIn` · `defaultOut` · `passthrough` |
 | **`sink`**      | des entrées seulement          | `defaultIn`                                |
 
-Un oscillateur, du bruit, un LFO sont des **sources** : on ne les neutralise pas, il n'y a rien à
-faire passer à travers, donc pas de `passthrough`. Un filtre, un amplificateur, une enveloppe sont
-des **traitements**. La sortie `out` est un **puits**.
+Un oscillateur, du bruit, un LFO sont des **sources**. Un filtre, un amplificateur, une enveloppe
+sont des **traitements**. La sortie `out` est un **puits**.
 
 **Le puits d'une chaine s'ecrit `out`.** Il designe la sortie de l'acteur, dont le canal --
 `audio`, `midi`, `osc` ou `dmx` -- est celui que l'acteur declare.
@@ -504,9 +499,9 @@ deux catégories et la même forme.
 }
 ```
 
-**Une entrée ajoute `default`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
-pas : la notion lui est étrangère. C'est le champ que les librairies portent pour les paramètres
-d'un module : un paramètre et une entrée non branchée sont la même chose.
+**Une entrée ajoute `default`** — la valeur qu'elle prend si rien n'est branché. C'est le champ que
+les librairies portent pour les paramètres d'un module : un paramètre et une entrée non branchée
+sont la même chose.
 
 | champ            | ce qu'il porte                                                                  |
 | ---------------- | ------------------------------------------------------------------------------- |
@@ -567,7 +562,7 @@ Le catalogue complet, avec la nature de chaque librairie et le composant qui la 
 
 **Un alphabet est une collection structuree de terminaux.** Un terminal est une chose entiere : il
 sonne ou non, porte une hauteur ou non, invoque du code ou une instruction de calcul de hauteur.
-Ce qui le simplifie est une **definition**, pas un decoupage en axes portes par l'acteur.
+Ce qui le simplifie est une **definition**.
 
 ### Invoquer un reglage
 
@@ -668,9 +663,8 @@ qui l'apporte.
 Plus les **symboles structurels** ci-dessous.
 
 **Tout le reste vient des librairies.** `mode`, `tempo`, `vel`, `cutoff`, les alphabets, les
-accordages, les modules : rien de cela n'est un mot du langage. Une scene qui n'invoque aucune
-librairie ne les connait pas, et les ecrire se heurte a des noms inconnus -- c'est le comportement
-attendu, pas une faute.
+accordages, les modules : chacun de ces noms vient d'un catalogue. Un nom qui ne vient d'aucune
+librairie invoquee arrete la compilation, et le message le nomme.
 
 ### Les symboles structurels
 
@@ -1246,7 +1240,7 @@ C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'ins
 zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
 
 Ecrit `C4 !prise`, le nom d'un cablage devient une co-attaque de l'accord : l'aval lui cherche une
-hauteur et un son sort, sans qu'aucune erreur le signale.
+hauteur et un son sort.
 
 **L'espace tranche l'attache de `!(...)`** -- application de la convention generale de l'espace,
 delimiteur de termes : colle au terminal precedent, le reglage voyage avec lui ; separe par une
@@ -2143,8 +2137,8 @@ ce qu'est un filtre passe-bas, le calcul d'une enveloppe vivent en librairie, av
 ### Invoquer
 
 **`@core` apporte le socle.** Une scene qui l'ecrit recoit les librairies de base et leurs valeurs
-par defaut, comme un fichier C inclut son en-tete. Une scene qui ne l'ecrit pas n'a **aucun defaut**,
-et ce qu'elle emploie se heurte a des noms inconnus : c'est le comportement attendu, pas une faute.
+par defaut, comme un fichier C inclut son en-tete. Les noms qu'une scene emploie viennent des
+librairies qu'elle invoque, et la compilation nomme ceux qu'elle ne trouve pas.
 
 **La directive nomme la librairie, le point designe l'entree.**
 
@@ -2270,9 +2264,6 @@ metronome engendre, l'autre laisse chaque objet porter sa propre duree.
 @striated                    // la musique occidentale, la danse
 @smooth                      // un alap, un gagaku, une musique non pulsee
 ```
-
-C'est la distinction de Boulez (*Penser la musique aujourd'hui*, 1963), et le langage l'ecrit d'un
-mot.
 
 ### Le battement -- `@meter`
 
