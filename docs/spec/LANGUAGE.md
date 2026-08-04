@@ -1525,8 +1525,8 @@ Un nom absent de la librairie est refuse au parse.
                             //  C4 D4     ->  C4 D4     inchangee
 ```
 
-**Un contexte REGARDE, il ne PREND pas.** C'est ce qui le separe d'un wildcard, et elle s'entend a
-la resolution :
+**La parenthese regarde sans prendre ; le diese colle a un symbole, lui, occupe la place.** C'est
+ce qui separe un contexte parenthese d'un wildcard, et ca s'entend a la resolution :
 
 ```bpscript
 // « quelque chose, puis D4 » devient « D4, puis cette chose » -- la place est PRISE, donc elle bouge
@@ -1536,8 +1536,8 @@ la resolution :
 (C4) D4 -> D4 C4            //  C4 D4  ->  C4 D4 C4
 ```
 
-**D'ou une asymetrie.** Un wildcard peut imiter un contexte -- il suffit de la remettre a
-l'identique :
+**D'ou une asymetrie.** Un wildcard peut imiter un contexte parenthese -- il suffit de le remettre
+a l'identique :
 
 ```bpscript
 // « quand D4 suit C4 » : D4 devient G4
@@ -1569,6 +1569,8 @@ l'ordre, position par position.
 **La qualite de CONTEXTE vient de la SYMETRIE de la regle** : un symbole ecrit a la meme place
 des deux cotes de la fleche (prefixe ou suffixe commun) est du contexte. Differer de `X` et
 appartenir au contexte sont deux proprietes independantes -- chacune s'obtient sans l'autre.
+C'est aussi ainsi que BP3 le compte : son champ de regle mesure le contexte negatif « en symboles,
+commun aux deux membres ».
 
 ### Plusieurs `#` forment un seul « sauf »
 
