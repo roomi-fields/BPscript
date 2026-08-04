@@ -21,7 +21,7 @@
 - [Les barres `|x|`](#les-barres-x----delimiter-un-nom)
 - [Contextes `()` et `#`](#contextes--et-----conditions-dapplication)
 - [Les gabarits `$` et `&`](#les-gabarits--et-----la-structure-dune-production)
-- [Heritage par cascade](#heritage-par-cascade)
+- [Comment une valeur se resout](#comment-une-valeur-se-resout)
 - [Conventions de notation](#conventions-de-notation-—-lespace-le-point-le-deux-points)
 - [Flags](#flags-—-variables-détat-et-composition-conditionnelle)
 - [Déclarations](#déclarations)
@@ -73,12 +73,21 @@ impulsion, `...` un suspens. La difficulte se trouve dans la profondeur structur
 
 ## Concepts cles
 
-### L'heritage par cascade
+### L'heritage et la cascade
 
 Toute valeur du langage a une source par defaut et se surcharge en la nommant a un niveau plus
 local. La regle vaut partout, pour les entites d'un acteur comme pour les parametres d'un
 evenement : **le plus local l'emporte**. Nommer une valeur a un niveau la fixe pour ce niveau et
 pour tout ce qu'il contient.
+
+**Ce sont deux mecanismes, et les confondre rend la regle illisible.**
+
+- **L'heritage** repond a « d'ou vient une valeur que je n'ai pas ecrite ? » -- **du niveau qui me
+  contient**. Un acteur qui ne nomme pas son accordage prend celui de la scene ; un terme qui ne
+  nomme pas sa velocite prend celle de sa regle.
+- **La cascade** repond a « qui gagne quand plusieurs niveaux l'ecrivent ? » -- **le plus local**.
+  Elle arbitre entre des sources concurrentes ; la fusion se fait **champ par champ**, donc un
+  niveau n'ecrit que ce qu'il change.
 
 | Niveau    | Ce qu'il fixe                                    | Ecriture                                   |
 | --------- | ------------------------------------------------ | ------------------------------------------ |
@@ -336,8 +345,8 @@ modules deja declares, il n'appartient a aucun d'eux.
 
 ### `@actor` -- declarer qui joue
 
-Un acteur porte cinq cles. Chacune se lit dans un catalogue, et ce qui n'est pas ecrit vient de la
-cascade.
+Un acteur porte cinq cles. Chacune se lit dans un catalogue, et ce qui n'est pas ecrit, l'acteur
+l'herite de la scene.
 
 | cle         | ce qu'elle fixe                                                           |
 | ----------- | ------------------------------------------------------------------------- |
@@ -919,8 +928,8 @@ Pour BPScript, `vel` est un nom qu'il porte, `120` une valeur qu'il transporte, 
 ### Surcharge des parametres
 
 La cascade fournit la valeur de chaque parametre ; ecrire ce parametre sur l'occurrence remplace
-cette valeur, pour cette occurrence. La cascade complete est decrite dans « Heritage par
-cascade ».
+cette valeur, pour cette occurrence. La regle complete est decrite dans « Comment une valeur se
+resout ».
 
 ```bpscript
 @core
@@ -1691,20 +1700,24 @@ S -> sa re ga
 
 ---
 
-## Heritage par cascade
+## Comment une valeur se resout
 
-Une propriete se resout par cascade : plusieurs niveaux la posent, du plus
+Une propriete se resout par **cascade** : plusieurs niveaux la posent, du plus
 general au plus specifique, et le niveau le plus specifique qui la mentionne
 l'emporte. La fusion se fait **champ par champ** -- un niveau qui laisse un
 champ de cote laisse passer celui du dessous. Chaque niveau ecrit donc
 uniquement ce qu'il change, et l'ecriture est la meme partout : on pose la
 propriete au niveau ou on veut qu'elle change.
 
+Ce qu'un niveau ne pose pas, il le tient par **heritage** du niveau qui le
+contient. Les trois cas ci-dessous montrent les deux a l'oeuvre.
+
 ### Les composants d'un acteur
 
 Les cinq cles d'un acteur (`alphabet`, `tuning`, `octaves`,
-`out`, `eval`) cascadent de la scene vers l'acteur. Une scene qui nomme
-son alphabet tient les autres de la cascade :
+`out`, `eval`) **s'heritent de la scene vers l'acteur**. Une scene qui nomme
+son alphabet tient les autres de la **cascade**, qui remonte jusqu'aux defauts
+de la librairie -- **l'exemple ci-dessous montre les deux a l'oeuvre** :
 
 ```bpscript
 @alphabet.sargam
@@ -1723,7 +1736,7 @@ restent celles heritees.
 
 Un reglage cascade des defauts de la librairie du symbole vers la valeur
 ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
-(`spec < CT < signal`) -- cf. l'heritage par cascade.
+(`spec < CT < signal`) -- cf. « Comment une valeur se resout ».
 
 ```bpscript
 @alphabet.sargam
@@ -1854,7 +1867,7 @@ S -> C4 D4
 
 En position de sujet, `*` désigne tous les terminaux du territoire où il est écrit :
 `*:midi` donne une sortie à l'alphabet entier, et chaque terminal nommé ensuite l'affine —
-c'est l'héritage par cascade.
+les terminaux héritent du territoire, la cascade tranche quand les deux écrivent.
 
 ### Séparation des territoires
 
