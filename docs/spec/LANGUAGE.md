@@ -2011,7 +2011,7 @@ Sans nombre, le câble en porte une.
 ```
 
 **Une inadéquation de largeur s'adapte, elle n'échoue jamais** : un port à une voix prend la
-première, un port à plusieurs voies alimenté en une seule diffuse cette valeur sur toutes, et une
+première, un port à plusieurs voix alimenté en une seule diffuse cette valeur sur toutes, et une
 largeur écrite qui dépasse ce que le port accepte se ramène à ce nombre. Ce que chaque port accepte
 se lit dans son champ `voices`.
 
