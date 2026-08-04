@@ -41,7 +41,7 @@ formelles et decide **quand** se declenchent des comportements ecrits dans d'aut
 
 Les symboles sont des noms avec un double contrat :
 - **Convention de lecture** : comment le recepteur lit ce qu'ils portent (pitch, phase, logic)
-- **Runtime** : par ou ils sortent (`audio`, `midi`, `osc`)
+- **Runtime** : par ou ils sortent (`audio`, `midi`, `osc`, `dmx`)
 - **Interpreter** : qui execute leur code, quand ils en portent (`sc`, `tidal`, `py`)
 
 Le langage connait trois mots et fait une chose : ordonner dans le temps.
@@ -385,7 +385,7 @@ sont les siennes.
 | `alphabet`  | la collection de terminaux que l'acteur joue                              |
 | `tuning`    | l'accordage qui donne une frequence a chaque degre                        |
 | `octaves`   | la convention de registre                                                 |
-| `out`       | par ou l'acteur sort : `audio`, `midi`, `osc`                             |
+| `out`       | par ou l'acteur sort : `audio`, `midi`, `osc`, `dmx`                      |
 | `eval`      | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
 
 ```text
@@ -475,7 +475,7 @@ faire passer à travers, donc pas de `passthrough`. Un filtre, un amplificateur,
 des **traitements**. La sortie `out` est un **puits**.
 
 **Le puits d'une chaine s'ecrit `out`.** Il designe la sortie de l'acteur, dont le canal --
-`audio`, `midi` ou `osc` -- est celui que l'acteur declare.
+`audio`, `midi`, `osc` ou `dmx` -- est celui que l'acteur declare.
 
 **Le sous-prototype est structurel, la catégorie est descriptive.** Le premier dit ce que le module
 peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
@@ -852,7 +852,7 @@ alphabet pose pour sa collection les proprietes que ses terminaux surchargent :
 { "name": "", "description": "", "runtime": "audio", "voice": null, "terminals": {} }
 ```
 
-Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi` et `osc` ; un
+Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi`, `osc` et `dmx` ; un
 terminal qui n'en declare pas prend celui de son alphabet, et il en va de meme de sa voix :
 
 ```bpscript
@@ -1391,6 +1391,7 @@ ce role s'y associe hors de la scene. L'adresse de la source se colle au point d
 | `midi`     | oui   | oui    | le meme port, vu des deux bouts  |
 | `osc`      | oui   | oui    | le meme port, vu des deux bouts  |
 | `keyboard` | oui   |        | les touches de la machine        |
+| `dmx`      |       | oui    | les projecteurs                  |
 
 Un canal s'ecrit dans les directions qu'il declare ; toute autre ecriture arrete la compilation en
 nommant la direction attendue.
@@ -2102,7 +2103,7 @@ et ce qu'elle emploie se heurte a des noms inconnus : c'est le comportement atte
 ```
 
 **Le deux-points affecte une valeur** — pour un alphabet et ses terminaux, c'est le runtime de
-sortie, pris parmi `audio`, `midi` et `osc`.
+sortie, pris parmi `audio`, `midi`, `osc` et `dmx`.
 
 **La notation pointee n'est obligatoire qu'en cas d'homonymie.** `@tempo:120` suffit tant qu'une
 seule librairie invoquee porte ce nom ; on ecrit `@time.tempo:120` le jour ou deux le portent.
