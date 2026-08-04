@@ -1,859 +1,286 @@
-# BPScript — AST (Abstract Syntax Tree)
+# BPScript — l'arbre de syntaxe abstraite
 
-Version 0.8 — dérivé de BPSCRIPT_EBNF.md v0.6, validé par 44 scènes transpilées.
-v0.8 ajoute `soundPrototypes` + `soundAssignments`, renomme `templates` → `template`
-et bascule les bindings d'acteurs de `:` à `.` pour les références d'entités
-(cf. `docs/design/v0.8-decisions-final.md`).
+Ce document décrit ce que **l'arbre porte**. `LANGUAGE.md` dit le sens du langage ; `EBNF.md` en dit
+la forme écrite.
 
----
+**Les noms de nœuds et de champs sont en anglais** — c'est du code. La prose qui les décrit reste en
+français. Un nom de nœud est **interne** : ce que l'auteur d'une scène écrit vit dans `LANGUAGE.md`,
+et les deux n'ont pas à coïncider.
 
 ## Conventions
 
-- Chaque noeud a un `type` (string) et des propriétés spécifiques
-- Les positions source (ligne, colonne) sont attachées à chaque noeud pour les erreurs
-- `null` = propriété absente/optionnelle
+- Chaque nœud porte un `type` et les propriétés de sa sorte.
+- La position source — ligne, colonne — est attachée à chaque nœud, pour les messages.
+- `null` marque une propriété absente. **Absent et vide ne disent pas la même chose** : un champ
+  omis dit que le producteur ne sait pas, une liste vide dit qu'il sait et qu'il n'y a rien.
 
 ---
 
-## Noeud racine
+## Nœud racine
 
 ### `Scene`
 
 ```
 Scene {
   type: "Scene"
-  directives: Directive[]
-  actors: ActorDirective[]           // @actor directives
-  scenes: SceneDirective[]           // @scene directives (child scenes)
-  exposes: ExposeDirective[]         // @expose directives (flags visible au parent)
-  aliases: AliasDirective[]          // @alias directives — DESIGNATION (un nom, ce qu'il designe)
-  // `maps` SUPPRIME le 2026-07-27 au soir AVEC le mot : la directive de correspondance est
-  // ABANDONNEE, le cablage passe par les chevrons `>>` / `\>>`. Un champ emis et toujours vide
-  // ferait conclure « cette scene ne cable rien » au lieu de « ce canal n'existe plus ».
-  declarations: Declaration[]
-  macros: Macro[]
-  cvInstances: CVInstance[]
-  wires?: Wiring[]                   // OPTIONNEL — CABLAGE INITIAL (`@wire saw >> lpf >> audio`),
-                                     // l'ETAT DE DEPART du branchement. MEME noeud que le corps
-                                     // d'une macro de cablage. A la RACINE, pas dans directives.
-                                     // OMIS si la scene ne cable rien (jamais []).
-  alphabetTerminals?: string[]       // OPTIONNEL — les noms de CETTE scene qui sont des terminaux
-                                     // d'un alphabet qui NE resout PAS de hauteur (frappes,
-                                     // symboles abstraits). DISTINCT de noteTerminals : deux
-                                     // sources, deux sens ; les fondre est INTERDIT.
-  noteTerminals?: string[]           // OPTIONNEL — les noms de CETTE scene qui SONT des notes,
-                                     // resolus contre l'alphabet actif. ABSENT != VIDE :
-                                     // absent = aucun alphabet resolvable ici (hauteur opaque,
-                                     // voix-code) ; [] = un alphabet est en portee et la scene
-                                     // n'ecrit aucune note. Cf. §noteTerminals ci-dessous.
-  libRefs?: string[]                 // OPTIONNEL — invocations de librairie par PROVENANCE
-                                     // (@factory.*/@mine.*), adresses canoniques opaques.
-                                     // OMIS si aucune (jamais []). Cf. §libRefs ci-dessous.
-  backticks: BacktickOrphan[]
+  directives: Directive[]            // invocations de librairie et de réglage
+  actors: ActorDirective[]
+  vars: VarDirective[]
+  defs: DefDirective[]
+  init: InitEntry[] | null           // le bloc @init ; null si la scène n'en a pas
   subgrammars: Subgrammar[]
-  template: TemplateEntry[] | null         // section @template (optionnelle, v0.8 ; ex-`templates`)
-  soundPrototypes: SoundPrototypeAST[] | null  // section @sound (déclaratif, v0.8)
-  soundAssignments: SoundAssignmentAST[] | null  // affectations sujet→son (v0.8)
-  homomorphisms: HomomorphismDeclAST[]    // contrat BPx (ajout 2026-06-10) — voir §HomomorphismDeclAST
+  template: TemplateEntry[] | null   // le catalogue des formes
+  homomorphisms: HomomorphismDecl[]
+  backticks: BacktickOrphan[]
+  libRefs?: string[]                 // invocations par provenance, adresses opaques
+  noteTerminals?: string[]           // les noms de cette scène qui SONT des notes
+  alphabetTerminals?: string[]       // les noms qui sont des terminaux sans hauteur
 }
 ```
 
-### La nature `wire` — le CABLAGE ne sonne pas et ne dure pas
+### `noteTerminals` et `alphabetTerminals` — l'arbre dit lui-même ce qui est une note
 
-Un nom de MACRO dont le corps est un `Wiring` porte `payload.nature = 'wire'` dans le flux, et non
-`sounding`.
+Deux listes plates de noms nus, au niveau scène : les noms **présents dans la scène** que le frontal
+reconnaît comme des notes de l'alphabet actif, et ceux qu'il reconnaît comme des terminaux d'un
+alphabet qui ne résout aucune hauteur — frappes, symboles abstraits. **Deux sources, deux sens ; les
+fondre est interdit.**
 
-**Ce que ca corrigeait**, mesure des deux bouts le 2026-07-29 : l'aval emettait `chain@0-500` en
-terminal et repoussait `C4` de 0 a 500 — a 120 au tempo, **un temps entier de musique avale**. Sur
-`patchbay.bps`, 8 jetons sur 8 sont des macros et ZERO une note : **100 % de la piece**.
+Ce n'est ni un catalogue ni une table : c'est la **résolution déjà faite**, pour cette scène-là. Le
+critère vient de la donnée — un alphabet qui déclare un accordage résout une hauteur, les autres
+non.
 
-**La cause etait une contradiction entre deux signaux de ce frontal** : `noteTerminals` NE
-CONTENAIT PAS ce nom — donc il declarait lui-meme qu'il ne sonne pas — et il posait
-`nature:'sounding'` DESSUS. L'aval suit la nature (contrat d'opacite : il porte, il ne fabrique
-pas), il ne pouvait qu'emettre un sonnant. L'information juste circulait deja par `scene.macros`.
+**Absent et vide diffèrent.** Le champ absent dit qu'aucun alphabet n'est résolvable ici, et ce
+silence ne se lit pas « aucune note ». La liste vide dit qu'un alphabet est en portée et qu'aucun
+nom de la scène n'est une note — c'est un fait.
 
-**Le nom est interne**, et la frontiere a ete posee le meme jour : la GRAPHIE — ce que l'auteur
-ecrit dans une scene — appartient a Romain ; un NOM INTERNE D'AST, non. `wire` parce que la
-directive s'appelle `@wire` et le noeud `Wiring` — un meme fait, un meme mot.
+Un nom présent dans les deux listes est traité comme **note**. Une tête de règle nommée comme une
+note y figure : c'est le cas que l'aval cherche, pour l'écarter de sa lecture de structure. Un point
+d'attente n'y figure jamais — une attente suspend le temps, elle ne sonne pas.
 
-**PERIMETRE — CE QUI AGIT SUR UN MODULE SANS PRODUIRE DE SON.** Arbitrage Romain, 2026-07-29 :
-« regler un parametre ne doit pas avoir de duree ». Brancher, couper, regler : meme traitement.
-Deux corps de macro entrent :
-- `Wiring` — `@macro lead saw >> lpf >> audio` ;
-- l'APPEL-COMPOSANT, un `Symbol` qui porte un **acteur** — `@macro open lpf.cutoff:12000`.
+### `libRefs` — invocation de librairie par provenance
 
-> ⚠️ **C'est l'ACTEUR qui discrimine.** Un corps de `Symbol` SANS acteur est une macro de
-> SUBSTITUTION ordinaire, et elle GARDE sa duree — celle de son contenu (meme arbitrage). Mesure
-> sur 196 scenes : quatre macros entrent (un branchement, trois reglages), **zero macro ordinaire**
-> n'est touchee. Garde : `test/deux_signaux_ne_se_contredisent_pas.mjs` §3, qui eprouve les DEUX
-> cotes du perimetre — il rougit si l'on retrecit au cablage strict comme si l'on deborde sur les
-> substitutions.
+Une librairie est un **fichier** qui déclare son domaine dedans. L'invocation nomme la provenance,
+le chemin de fichier et l'entrée — le dernier segment est l'entrée. Le domaine se lit en aval :
+BPScript **porte** l'adresse, il ne la résout pas.
 
-### `noteTerminals` — l'arbre dit LUI-MEME ce qui est une note
+Chaque élément est une **adresse canonique opaque**, pré-normalisée. L'ordre d'apparition source est
+préservé et les doublons sont retirés à l'émission. `factory` et `mine` sont des préfixes réservés.
 
-Liste **plate** de noms nus, au niveau **scene** : les noms **presents dans la scene** que le
-frontal reconnait comme des notes de l'**alphabet actif**. Pas le catalogue, pas une table — la
-**resolution deja faite**, pour cette scene-la.
-
-**Pourquoi le fait, et pas la convention** (ordre architecte 2026-07-29, sur la regle gravee par
-Romain le meme matin, `hub/decisions/2026-07-29-notre-mecanique-n-utilise-que-des-alphabets.md`) :
-« notre mecanique ne doit utiliser QUE des alphabets ; les conventions ne doivent etre connues QUE
-du frontend BP3 ». Un consommateur interrogeait jusqu'ici un predicat a **trois** conventions BP3
-(anglaise, francaise, indienne) ; la librairie declare **treize** alphabets — `gamelan_pelog`,
-`shruti23`, `bohlen_pierce` et `shakuhachi` n'ont **aucune image** dans ces trois-la. Tant que
-c'est le lecteur qui pose la question, il porte une decision semantique qui n'est pas la sienne,
-et qui n'a pas de reponse pour les trois quarts du catalogue.
-
-**La forme n'est pas nouvelle** : elle generalise `scene.noteTerminals` emis par bp3-frontend
-(decision `hub/decisions/2026-07-28-le-fait-ce-nom-est-une-note-vient-du-frontal.md`). Un second
-champ pour le meme fait serait une seconde source de verite.
-
-**ABSENT != VIDE**, et la distinction porte du sens :
-- champ **absent** = aucun alphabet resolvable ici — le frontal ne sait pas, et son silence ne doit
-  pas se lire « aucune note » ;
-- liste **vide** = un alphabet est en portee et aucun nom de la scene n'est une note. Un fait.
-
-### Le partage entre les deux champs — corrige le 2026-07-29
-
-⚠️ **CE CHAMP A D'ABORD ETE EMIS SEUL, ET C'ETAIT UN DEFAUT.** J'ai repris le NOM defini par la
-decision du 2026-07-28 sans reprendre la DISTINCTION qui le justifie — elle ecrit pourtant
-« champ **DISTINCT** de `scene.alphabetTerminals` : deux sources, deux sens ; les fondre est
-**INTERDIT** ». Mesure du defaut : l'arbre annoncait `dha`, `dhin`, `ka` (frappes de tabla) et
-`a`, `b`, `c` (symboles abstraits) comme des **notes**, quand la donnee dit l'inverse en toutes
-lettres (`tabla` : *percussion syllables, no pitch*). Trouve par bp3-frontend, qui emet les deux
-champs depuis le debut.
-
-**LE CRITERE VIENT DE LA DONNEE** : le champ `defaultTuning` de `lib/alphabets.json`. Un alphabet
-qui en declare un resout une hauteur, les autres non — `shakuhachi`, `tabla`, `simple`. C'est ce
-critere-la, **et lui seul**, qu'applique le code. L'oracle **natif** (mesure bp3-frontend,
-2026-07-29) le **confirme** sur ces trois sans etre le critere : en BP3 un nom de note n'est
-**jamais nu**, il porte toujours son registre (`dha` n'est une note dans aucune convention,
-`dha4` l'est en indien).
-
-> ⚠️ **CE PARAGRAPHE A AFFIRME QUE LES DEUX CRITERES DESIGNAIENT « EXACTEMENT LES MEMES TROIS ».
-> C'ETAIT FAUX**, mesure par bp3-frontend sur cette donnee meme, puis re-mesure ici : sans
-> accordage → **3** ; sans champ `octaves` → **8**. Cinq alphabets (`arabic`, `turkish`,
-> `gamelan_pelog`, `gamelan_slendro`, `bohlen_pierce`) ont un accordage et ne pointent aucune table
-> de registres — le critere par les registres les declasserait tous les cinq, alors qu'`arabic`
-> porte `arabic_24TET`, une ancre `husayni/4` et un diapason 440.
-> Le glissement est nomme : leur critere mesure le **nommage natif** ; il avait ete traduit en
-> « l'alphabet a-t-il un champ `octaves` », qui est la presence d'une **REFERENCE** vers une table,
-> pas la presence de registres. Les tables existent d'ailleurs sans etre pointees
-> (`octaves.turkish`, `octaves.gamelan`, `octaves.shakuhachi`).
-> **Bonne reponse, mauvaise raison** — et la mauvaise raison mordait sur cinq alphabets. L'ecart est
-> desormais MESURE par le garde (`test/l_arbre_dit_ce_qui_est_une_note.mjs` §2bis), pas confie a
-> une relecture.
-
-**PRECEDENCE** — un nom present dans les deux champs est traite comme **note** (ordre du C :
-`SEARCHNOTE` avant `SEARCHTERMINAL`). Regle de la decision du 2026-07-28, appliquee et non
-decidee ici : les deux champs sont emis fidelement, c'est au lecteur d'appliquer la precedence.
-
-**Question de DONNEE routee, non tranchee** : `shakuhachi` ne declare aucune donnee de hauteur —
-ni accordage, ni `baseNote`, ni `baseRegister`, ni diapason — donc ses doigtes sortent en terminaux
-d'alphabet, alors que ses alterations `meri`/`kari` (menton bas, menton haut) sont des inflexions
-de hauteur. C'est le seul des trois decrit en prose comme portant de la hauteur sans porter la
-moindre donnee pour la resoudre. **Ses REGISTRES, eux, existent deja** (`octaves.shakuhachi` :
-`otsu`, `kan`, `daikan`) et ne sont references par personne — la moitie de la question etait donc
-deja repondue par la donnee. Reste l'accordage.
-
-**Une tete de regle nommee comme une note y figure** : c'est meme le cas que l'aval cherche, pour
-l'ecarter de sa lecture de structure. Un **point d'attente** n'y figure jamais — une attente
-suspend le temps, elle ne sonne pas.
-
-Garde : `test/l_arbre_dit_ce_qui_est_une_note.mjs` (les treize alphabets balayes depuis la DONNEE,
-jamais depuis une liste ecrite dans le garde).
-
-### `libRefs` — invocation de librairie par provenance (canal neutre)
-
-> Décision hub `2026-07-13-invocation-librairies-factory-mine` (ef75ec6) ; contrat
-> `hub/contrats/bpscript-bpx.md §libRefs` (co-seing bpscript 2026-07-13).
-
-Une librairie est un **fichier** qui **déclare son domaine dedans** (champ `domain` en tête du
-fichier : `alphabets.json`→`"alphabet"`, etc.). L'invocation ne nomme PAS le domaine — elle nomme
-la **provenance + le chemin-de-fichier + l'entrée** (dernier segment = entrée). Le domaine est lu
-par le **résolveur** (Kairos) — BPScript **PORTE opaque** (loi 27 : porter ≠ résoudre).
-
-- `Scene.libRefs?: string[]` (frère de `cvInstances`) ; `ActorDirective.libRefs?: string[]`
-  (frère de `values`). **OMIS** si aucune invocation par provenance (jamais `[]`).
-- Chaque élément = **adresse canonique OPAQUE pré-normalisée** :
-  - **factory** (nom nu `@alphabet.sargam` OU sucre explicite `@factory.alphabet.sargam`) →
-    adresse **nue** `<chemin-fichier>.<entrée>` (ex. `alphabet.sargam`). Le préfixe `@factory.`
-    est **normalisé** (confondu au nom nu) AVANT émission.
-  - **mine** (`@mine.ragas.mes-svaras.sa`) → adresse préfixée `mine.<chemin-fichier>.<entrée>`.
-- Ordre d'apparition source **préservé** ; **dédup** chez l'émetteur (BPScript).
-- **ADDITIF** : le sucre nu `@alphabet.X`/`@tuning.Y`/`@octaves.Z` reste un slot **LEGACY**
-  inchangé (`Directive{name, subkey}`) — il **n'émet PAS** de `libRefs`. Seules les formes
-  **explicites** `@factory.*`/`@mine.*` alimentent le canal neutre.
-- `factory`/`mine` sont des **préfixes réservés** (aucune lib ne peut s'en prévaloir).
-
-**Raccord de SORTIE (canonique, décision Romain 2026-07-13 §Raccord sortie).** Un `libRef` nomme une
-**librairie de hauteur** ; il ne porte **aucune** sortie. Pour SONNER, une scène `@mine`/`@factory`
-déclare un **acteur explicite** avec une sortie — `@actor voice out.audio` puis
-`@mine.ragas.sargam` : la hauteur vient du `libRef` (résolue par Kairos), la sortie vient de
-l'acteur (`out` remplace `transport`, décision Romain 2026-08-04). Le binding de sortie CANON
-`@alphabet.X:<sortie>` (sortie de l'acteur implicite, décision 2026-07-16 — règle DISTINCTE qui
-coexiste) n'est **PAS** étendu à la réf de provenance (séparation « lib de hauteur » vs « sortie » ;
-`libRefs` reste un `string[]` opaque, sans binding). Une scène `@mine` **nue** (sans acteur) retombe
-sur la sortie par défaut `audio` (natif) — **muette dans le player web, et c'est VOULU** : l'auteur
-déclare sa sortie explicitement.
+Une référence de provenance nomme une librairie de hauteur ; elle ne porte aucune sortie. Pour
+sonner, la scène déclare un acteur avec la sienne.
 
 ---
 
-## Directives
-
-### `Directive`
-
-> **Bloc de production, nœud inchangé** (décision 2026-06-11, durcie le même jour) :
-> les directives de production (`seed`, `maxitems`/`items`, `allitems`, `improvize`)
-> s'écrivent UNIQUEMENT en bloc niveau scène — `[@seed:1, @items:20]`. La @-forme
-> historique (`@seed:1`) est REJETÉE à la compilation (erreur pointant la nouvelle
-> écriture — pas de dépréciation douce, arbitrage utilisateur). La forme du nœud
-> `Directive` produit est inchangée ; aucun nouveau nœud ; contrat consommateurs
-> (BPx, frontal) intact. Cf. EBNF §production_block et hub/principes-syntaxe.md.
-
-```
-Directive {
-  type: "Directive"
-  name: string                    // "core", "controls", "alphabet", "tuning", "mode"...
-  subkey: string | null           // "western", "just_intonation", "studio"... (après le .)
-  binding: string | null          // valeur après : — sur @alphabet.X = sortie de l'acteur implicite
-                                  // (audio/midi/osc, décision 2026-07-16) ; sur @tuning.X = alphabet cible
-  runtime: string | null          // pour @mode:X — la valeur du mode ("random", "lin", etc.)
-  value: string | number | null   // 120, "7/8", -24...
-  aliases: Alias[] | null         // résolution de conflits
-  modifiers: ModeModifier[] | null // pour @mode:X(destru, mm:60) — modificateurs de sous-grammaire
-  timePatterns: TimePattern[] | null // pour @timepatterns: t1=1/1, t2=3/2
-  line: number
-}
-
-Alias {
-  type: "Alias"
-  from: string
-  to: string
-}
-
-TimePattern {
-  name: string                    // "t1", "t2" — nom du time pattern
-  ratio: string                   // "1/1", "3/2" — ratio de durée
-}
-```
-
-Convention stricte : `@file` → `lib/file.json`, `@file.key` → `lib/file.json` → clé `key`.
-
-Le champ `binding` reçoit la valeur après `:`. Sa sémantique dépend de la directive :
-- `@alphabet.western:audio` → binding = **sortie de l'acteur implicite** (canal audio/midi/osc,
-  décision 2026-07-16 ; le binding d'alphabet renseigne la sortie (`out`) de l'acteur unique
-  implicite, décision 2026-07-05 §2). `:browser`/`:webaudio` = noms PÉRIMÉS REJETÉS fail-loud au parse
-  (décision 2026-07-16, Romain : on supprime, pas de normalisation) — écrire `:audio`.
-- `@tuning.just_intonation:raga` → binding = alphabet cible
-- `@tuning.western_12TET` → pas de binding (chargement simple)
-
-**Liste positive FERMÉE** (addendum ratifié Romain 2026-07-16, décision
-`2026-07-16-sortie-acteur-implicite-browser-audio-routing-obsolete.md §Addendum`) : le suffixe du
-raccord `@alphabet.X:<sortie>` accepte **exactement** `{audio, midi, osc}` — tout autre suffixe
-(`:sc`, `:video`, `:foo`…) = rejet fail-loud au parse (« on n'autorise que les 3 qu'on connaît »).
-L'ancien sucre **`:sc` (= `(transport=sc, eval=sc)`) est ABOLI**, ainsi que la forme longue
-`(transport=x, eval=y)` sur une directive d'alphabet (jamais implémentée) : un `eval` se déclare
-sur un **@actor** (`eval.<X>`, modèle producteur/canal 2026-07-14), le raccord de l'acteur
-implicite ne nomme qu'un **canal**.
-
-Exemples :
-- `@core` -> `{ name:"core", subkey:null, binding:null }`
-- `@controls` -> `{ name:"controls", subkey:null, binding:null }`
-- `@tuning.western_12TET` -> `{ name:"tuning", subkey:"western_12TET", binding:null }`
-- `@alphabet.western:midi` -> `{ name:"alphabet", subkey:"western", binding:"midi" }`
-- `@tuning.just_intonation:raga` -> `{ name:"tuning", subkey:"just_intonation", binding:"raga" }`
-- `@tuning.equal_temperament:western` -> `{ name:"tuning", subkey:"equal_temperament", binding:"western" }`
-- `@sub.dhati` -> `{ name:"sub", subkey:"dhati", binding:null }`
-- `@tempo:120` -> `{ name:"tempo", subkey:null, value:120 }`
-- `@baseHz:440` -> `{ name:"baseHz", subkey:null, value:440 }`
-- `@alphabet.western(A:La)` -> `{ name:"alphabet", subkey:"western", aliases:[{from:"A", to:"La"}] }`
-- `@improvize` -> `{ name:"improvize" }` — active Improvize=1 dans les settings BP3
-- `@allitems` -> `{ name:"allitems" }` — active AllItems=1 dans les settings BP3
-- `@timepatterns: t1=1/1, t2=3/2` -> `{ name:"timepatterns", timePatterns:[{name:"t1", ratio:"1/1"}, {name:"t2", ratio:"3/2"}] }`
-
-#### Défauts d'environnement (à la transpilation)
-
-> Point 1 de `hub/projets/spec-ecriture-structure.md` (décision archi validée Romain 2026-06-24).
-
-La transpilation BPx prend un **environnement** en second paramètre :
-`compileToBPxAST(source, environnement)`, `environnement = { tempo?, octave?, division?, … }`
-(défauts réglés dans Kanopi, fournis en entrée). Pour chaque réglage **absent** de la scène,
-BPScript **inscrit le défaut EN DUR** dans l'AST à la création — l'AST se suffit, le moteur
-dérive depuis une structure complète. **Kanopi ne touche jamais l'AST** (remplace l'injection
-côté hôte, finding KAN-A10). Conséquence assumée : changer un défaut = re-transpiler (un défaut
-est de la config froide, pas un paramètre live ; le changement *en jeu* passe par Kairos).
-
-- **tempo** (seule clé câblée — seul lecteur aval existant) : pas de `@mm`/`@tempo` déclaré →
-  inscrit une `Directive` `{ name:"mm", value:<environnement.tempo>, fromEnvironment:true }`.
-  Lue en aval par l'hôte (`mmFromAst`) et BPx (`loadGrammar`).
-- Si la scène déclare déjà un tempo, elle **gagne** (aucune injection).
-- `fromEnvironment:true` marque la provenance (défaut, non déclaré dans la source).
-- octave/division… : même mécanisme, **câblés dès que leur cible AST + lecteur aval seront
-  définis** (pas d'inscription d'une cible que rien ne lit).
-
-### `FlagStatesDirective` (A5)
-
-États de drapeau nommés : nomme les valeurs entières d'un drapeau pour pouvoir tester/poser par
-nom (`[scene==calm]` → `/scene=1/`). L'encodeur résout les noms en entiers et expose la table dans
-`compileBPS().flagStates` (Kanopi : commande de scène par nom). Un IDENT non déclaré reste tel quel
-(référence à un autre drapeau).
-
-```
-FlagStatesDirective {
-  type: "FlagStatesDirective"
-  flag: string                     // "scene"
-  states: { name: string, value: number }[]  // [{name:"calm",value:1},{name:"full",value:2}]
-  line: number
-}
-```
-
-- `@flag scene: calm:1, full:2` → `{ flag:"scene", states:[{name:"calm",value:1},{name:"full",value:2}] }`
-  → `flagStates` : `{ scene: { calm:1, full:2 } }`.
-
-### `LibraryDirective`
-
-Librairie de runtime liée à un **moteur** (eval), partagée par toutes ses voix. Le nom est une
-**chaîne** (convention B5 : un nom = IDENT | chaîne ; chaîne car caractères spéciaux/ressource
-externe). La résolution réelle (chargement) est faite en aval (Kanopi/workspace).
-
-```
-LibraryDirective {
-  type: "LibraryDirective"
-  engine: string                   // moteur ciblé (sous-clé) : "strudel"
-  name: string                     // nom de la banque (chaîne) : "dirt-samples"
-  line: number
-}
-```
-
-- `@library.strudel "dirt-samples"` → `{ engine:"strudel", name:"dirt-samples" }`
-  → `compileBPS().libraries` : `{ strudel: ["dirt-samples"] }` (accumulé par moteur).
-
----
-
-## Acteurs
+## La partie déclarative
 
 ### `ActorDirective`
 
 ```
 ActorDirective {
   type: "ActorDirective"
-  name: string                    // "sitar", "tabla", "lights"
-  properties: {                   // SIX clés d'entité (décision cles-acteur-six, Romain 2026-06-16)
-    alphabet: string              // référence vers alphabets.json ("sargam", "western")
-    tuning: string | null         // tempérament/accordage ("sargam_22shruti", "equal_temperament")
-    octaves: string | null        // convention de registre (référence octaves.json) ; null = héritée
-                                   // de l'alphabet. TRAVERSE vers BPx via `references` (category
-                                   // "octaves", gravée parser.js:1033) — PORTÉE OPAQUE (BPx 2fdb291),
-                                   // résolue par Kairos contre octaves.json (kairos 8fce0fc). L'override
-                                   // surcharge la convention native de l'alphabet (ex. sargam noté sa6).
-    sound: string | null          // producteur PAR SYMBOLE (banque, ou prospectif backtick-synthé)
-    transport: TransportRef | null // CANAL de NOTRE sortie (audio/midi/osc) — modèle producteur/canal
-                                   // (Romain 2026-07-14). S'ÉCRIT `out.<canal>` depuis le 2026-08-04
-                                   // (in/out remplacent transport — le mot `transport` est SORTI du
-                                   // langage ; le CHAMP interne, lui, NE CHANGE PAS de nom : seul le
-                                   // mot que l'auteur ÉCRIT change, pas le nœud d'arbre). OPTIONNEL :
-                                   // acteur SANS eval → défaut cascade @core `audio` ; acteur AVEC eval
-                                   // → transport ABSENT/INTERDIT (il sort en natif, fail-loud si
-                                   // présent). PAS de out.video/visual.
-    eval: string | null           // PRODUCTEUR embarqué AUTONOME (strudel/hydra/p5/csound/mercury) :
-                                   // produit + sort en NATIF, sans sortie routée. null = producteur
-                                   // défaut IMPLICITE `js` (notre code, produit dans notre env → utilise
-                                   // `out`).
-  }
-  references: ActorReference[]   // FORME CANONIQUE (AST_SPEC §2.1) lue par le dispatcher/BPx :
-                                 // une entrée par binding, { type:"ActorReference", category, name, params? }
-                                 // (category ∈ alphabet|tuning|octaves|sound|transport|eval|voice).
-                                 // `voice` (LANG-SONS-2, [438] 2026-07-16) : nom d'une entrée de
-                                 // lib/voices (son de base + contrôles, réalisée par-runtime) —
-                                 // la hauteur n'y vit PAS (structurelle : alphabet+tuning).
-                                 // `properties` ci-dessus = forme interne BPScript (pipeline encodeur) ;
-                                 // `references` = forme consommée en aval (dérivée, lossless).
-                                 // Les `*:sound.X` / `Sa:sound.Y` écrits DANS le bloc acteur ne sont
-                                 // PAS portés ici : ils remontent sur `Scene.soundAssignments` avec
-                                 // `scope:"actor", actor:"<nom>"` (cf. tableau des portées ci-dessous
-                                 // et `soundAssignments?` du contrat BPx, types/ast.ts:73 — champ de
-                                 // SCÈNE, jamais d'acteur).
-  synthetic?: true               // acteur IMPLICITE `default` (aucun @actor déclaré), matérialisé
-                                 // dans l'AST (LAN-5/KAI-9). Absent sur un acteur déclaré. L'aval
-                                 // le distingue d'un acteur réel (panneau Acteurs vide).
-  line: number
-}
-```
-
-**Acteur implicite `default`** (LAN-5 / KAI-9, validé Romain 2026-06-26). Quand une scène ne déclare
-AUCUN `@actor` (`.bps` simple, `.gr`, cv-adsr), BPScript inscrit un acteur `default` dans `ast.actors`
-(transport `audio` — constante `DEFAULT_ACTOR_TRANSPORT`, **à déplacer en conf éditable Kanopi**), marqué
-`synthetic:true`, **sans alphabet** (la résolution pitch tombe sur le résolveur de scène qui renifle les
-tokens). Une scène simple emprunte ainsi le MÊME chemin orchestré qu'une multi-acteurs (mono = un acteur).
-Avant, l'hôte (`kanopi bpx-adapter.ts:282-283`) le synthétisait ; KAI-9 supprime la résolution hôte →
-le défaut vit dans l'AST, BPx ne fait que le porter.
-
-**Adressage de sortie = `out` (ex-`transport`) + ses params** (KAI-9, Romain 2026-06-26 ; mot
-renommé le 2026-08-04). UNE seule forme partout : le TYPE de runtime s'ÉCRIT `out.<type>` et vit
-dans `references[transport].name` (le champ interne garde son nom) et les DÉTAILS d'adresse
-(device/channel/port) sont ses **params**, iso quel que soit le type :
-`out.midi(ch:3)`, `out.osc(device:reaper, ch:7)`. L'hôte reconstruit son routage depuis
-`references[transport].{name, params}` (plus de tiroir séparé). L'ancien champ `ActorDirective.binding`
-(OSC-L1, device:/ch: lâche) est **supprimé** : les détails OSC vivaient dans un tiroir parallèle au
-lieu de `transport.params`.
-
-```
-TransportRef {
-  type: "TransportRef"
-  key: string                     // NOM D'APPAREIL LIBRE (clé @devices), pas un enum. Ex. "midi"
-                                  // canon {audio, midi, osc} ; "dmx"/"strudel"... = appareils libres (@devices, résolus aval)
-  params: { [key: string]: any }  // { ch: 10 }, { port: 57110 }, {}
-}
-```
-
-**`out` (ex-`transport`) = canal de NOTRE sortie** (`audio`/`midi`/`osc`, défaut cascade @core
-`audio`) : optionnel, et **absent/interdit sur un acteur `eval`**. **`eval` = producteur embarqué
-autonome** (strudel/hydra/p5/csound/mercury) qui **sort en natif** ; absence d'`eval` = producteur
-défaut `js` (notre code) → SEUL cas de voix de code routée vers NOTRE sortie (`out`, modèle
-producteur/canal, Romain 2026-07-14 ; mot renommé le 2026-08-04). Un acteur est une **voix** ;
-sa sortie suit la cascade scène → acteur → terminal (voir « Cascade de sortie » ci-dessous et
-`docs/design/ACTOR.md`), distincte de la cascade des sons.
-
-**v0.8 — bindings d'entités via `.`** : les références à une entité nommée
-(`alphabet`, `tuning`, `out`, `sound`) utilisent désormais `.` et non `:`.
-Le `:` reste réservé aux affectations de sujet (cf. `SoundAssignmentAST`).
-Les `actor_props` sont écrites une par ligne (ou séparées par espaces) dans le
-bloc qui suit `@actor NAME`.
-
-Exemples (v0.8) :
-
-```bpscript
-@actor sitar
-  alphabet.sargam
-  tuning.sargam_22shruti
-  out.audio
-```
-→ `{ type:"ActorDirective", name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", transport:{type:"TransportRef", key:"audio", params:{}} }, references:[…3 entrées…], line:3 }`
-
-Les clés absentes (`sound`, `octaves`, `eval`) ne sont **pas** émises à `null` : elles manquent.
-
-```bpscript
-@actor tabla
-  alphabet.tabla
-  out.audio
-  *:sound.tabla_perc
-```
-→ acteur : `{ type:"ActorDirective", name:"tabla", properties:{ alphabet:"tabla", transport:{type:"TransportRef", key:"audio", params:{}} }, references:[…], line:1 }`
-→ et, **sur la scène** : `soundAssignments:[{ type:"SoundAssignment", scope:"actor", actor:"tabla", subject:"*", target:{ kind:"named-ref", name:"tabla_perc" }, line:1 }]`
-
-```bpscript
-@actor drums
-  alphabet.tabla
-  out.midi(ch:10)
-  *:sound.tabla_gm
-  Sa:sound.drum_kick
-```
-→ acteur : `{ type:"ActorDirective", name:"drums", properties:{ alphabet:"tabla", transport:{type:"TransportRef", key:"midi", params:{ch:10}} }, references:[…], line:1 }`
-→ et, **sur la scène** : `soundAssignments:[{ scope:"actor", actor:"drums", subject:"*", target:{kind:"named-ref", name:"tabla_gm"}, … }, { scope:"actor", actor:"drums", subject:"Sa", target:{kind:"named-ref", name:"drum_kick"}, … }]`
-
-**Champs v0.7 dépréciés** :
-- `scale` → renommé `tuning` (référence à `lib/tunings.json`).
-- `sounds` (pluriel, valeur string) → remplacé par `sound` (singulier, défaut acteur)
-  et par les `soundAssignments` pour les affectations note-à-son.
-
-**Compatibilité** : la v0.8 n'accepte plus la syntaxe `alphabet:X` (ni `tuning:`,
-`out:`, `sounds:`). `transport.<canal>`/`transport:<canal>` sont également REJETÉS depuis le
-2026-08-04 (le mot `transport` est sorti du langage, `out` le remplace). Le script de migration
-des 44 grammaires gère la transformation `:` → `.` (cf. `docs/design/v0.8-decisions-final.md` plan
-de migration).
-
-### Cascade de sortie — scène → acteur → terminal
-
-La **sortie** (paramètres de rendu : vélocité, pan, canal, params de sortie…) suit une cascade
-à **trois niveaux**, l'override le plus fin l'emportant :
-
-1. **scène** — défauts de la scène.
-2. **acteur** — un acteur **est** une voix ; ses bindings (`out`, `eval`) et ses qualifiers
-   par défaut s'appliquent à tous ses terminaux.
-3. **terminal** — override sur une occurrence (`Sa(vel:80)`, `acteur.terminal(...)`). « terminal »
-   et non « note » : tout n'est pas une note (bol, backtick…).
-
-Le niveau « voix » intermédiaire a été **supprimé** : acteur = voix. Cette cascade de sortie est
-**distincte** de la cascade des sons (8 niveaux, ci-dessous) — ne pas en calquer la liste de
-niveaux. Modèle complet : `docs/design/ACTOR.md`.
-
----
-
-## Sons (v0.8)
-
-La directive `@sound` est **déclarative uniquement** : elle déclare des
-prototypes anonymes (défauts de scène) ou nommés (`bell_short`, `drum_kick`,
-etc.). Les **affectations** (lier un sujet — note, alphabet, acteur — à un son)
-se font depuis le territoire d'origine du sujet, jamais depuis `@sound`. Cf.
-`docs/design/v0.8-decisions-final.md` §1-2.
-
-### `SoundPrototypeAST`
-
-```
-SoundPrototypeAST {
-  type: "SoundPrototype"
-  name: string | null              // null = entrée anonyme (défaut de scène),
-                                   // sinon nom du son (référence depuis ailleurs)
-  config: Partial<SoundConfigInput>  // propriétés du son (sample/synth/dur/alpha/...)
-  line: number
-}
-```
-
-Le champ `config` est une forme partielle. Toutes les clés sont optionnelles ;
-les manquantes héritent de la cascade (cf. `LANGUAGE.md` section « Sons et
-cascade d'héritage »). Le shape canonique de `SoundConfigInput` côté
-consommateur est défini dans `BPx/src/types/soundConfig.ts:194-251` (~33
-propriétés couvrant capacités booléennes, bornes temporelles, durée, alpha,
-pivot, période). Forme canonique : modes en string (`'absolute' | 'relative'`),
-`pivType` accepte string ou entier `1..7`, booléens nus = `true`.
-
-Origine des défauts moteur (niveau 1 de la cascade) :
-`bp3-engine/source/BP3/SoundObjects3.c:43-117` (`ResetPrototype`). Index BP3
-des propriétés : `bp3-engine/source/BP3/-BP3decl.h:185-200`.
-
-Exemples :
-
-```bpscript
-@sound
-  { dur:500, alphaMin:80, alphaMax:120 }     // anonyme = défaut scène
-  bell_short { sample:"bell.wav", dur:400 }
-  bell_long  { sample:"bell.wav", dur:1200, coverEnd:true }
-  drum_kick  { sample:"kick.wav", dur:200, breakTempo:true }
-```
-→
-```
-[
-  { type:"SoundPrototype", name:null,         config:{ dur:500, alphaMin:80, alphaMax:120 } },
-  { type:"SoundPrototype", name:"bell_short", config:{ sample:"bell.wav", dur:400 } },
-  { type:"SoundPrototype", name:"bell_long",  config:{ sample:"bell.wav", dur:1200, coverEnd:true } },
-  { type:"SoundPrototype", name:"drum_kick",  config:{ sample:"kick.wav", dur:200, breakTempo:true } }
-]
-```
-
-Plusieurs entrées anonymes sont autorisées et fusionnent dans l'ordre source
-(défauts les plus tardifs gagnent, façon CSS).
-
-**Note timbre vs comportement** : un son décrit à la fois son timbre
-(`sample:`, `synth:`) et son comportement temporel (durée, alpha, cover/cont/
-trunc, pivot, période). Pas de directive `@synth` séparée. Les clés timbre
-(`sample`, `synth`, `samplerate`, etc.) sont opaques pour le moteur BPx —
-elles sont transmises au runtime cible (cf. `LANGUAGE.md`).
-
-### `SoundAssignmentAST`
-
-```
-SoundAssignmentAST {
-  type: "SoundAssignment"
-  scope: "alphabet" | "actor"      // qui possède cette affectation
-  alphabet?: string                // nom, quand scope === "alphabet"
-  actor?: string                   // nom, quand scope === "actor"
-  subject: string                  // nom de note (ex. "Sa") ou "*" (sujet par défaut)
-  target: SoundTarget
-  line: number
-}
-
-> ⚠️ **Cette forme était mal documentée jusqu'au 2026-07-19.** La spec décrivait
-> `scope: { kind, name }` — un objet — alors que le producteur ET le consommateur emploient la
-> forme PLATE ci-dessus depuis `498a311` (« émets le canonique AST », frontière AST palier 3).
-> Vérifié des deux côtés : le transpileur rend `{scope:"actor", actor:"tabla", …}`, et BPx
-> compare `a.scope !== scope` puis lit `a.alphabet` / `a.actor` (`findAssignment`). Producteur et
-> consommateur étaient donc d'accord ; seule la spec, et un test écrit contre elle, étaient restés
-> sur l'ancienne forme. Corrigé ici — la spec suit la frontière réellement en service.
-
-SoundTarget =
-    { kind: "named-ref",   name: string }                       // sound.bell_short
-  | { kind: "inline-props", props: Partial<SoundConfigInput> }   // { dur:300 } (bloc anonyme)
-```
-
-Une `SoundAssignmentAST` apparaît dans **trois contextes** parents (le territoire
-d'origine du sujet) :
-
-| Contexte parent | Niveau cascade | Émis dans | `scope` |
-|---|---|---|---|
-| `@alphabet.X` (corps) | 3 (`*:`) ou 4 (`Y:`) | `Scene.soundAssignments` | `{ kind:"alphabet", name:"X" }` |
-| `@actor X` (corps) | 5 (`*:`) ou 6 (`Y:`) | `ActorDirective.soundAssignments` | `{ kind:"actor", name:"X" }` |
-| Inline sur occurrence dans une règle | 7 | `Symbol.suffixQualifiers` (via runtime qualifier `sound.NAME`) | — (pas une assignation, mais un suffixe d'élément) |
-
-Le champ `subject` :
-- `"*"` = sujet par défaut (hérité par tous les sujets non explicitement
-  affectés dans le même territoire).
-- nom d'un terminal (ex. `"Sa"`, `"do4"`) = affectation à cette note dans le
-  scope parent.
-
-Le champ `target` :
-- `kind: "named-ref"` = pointe un son nommé déclaré dans `@sound` ou importé
-  via une lib externe.
-- `kind: "inline-props"` = bloc anonyme `{ dur:300, sample:"x.wav" }` qui
-  s'ajoute à la cascade comme couche de propriétés (sans nom global).
-
-Exemples :
-
-```bpscript
-@alphabet.tabla
-  notes: Sa Re ga ma Pa dha ni
-  *:sound.bell_short            // défaut alphabet
-  Sa:sound.drum_kick
-  Re:sound.bell_long
-```
-→ `Scene.soundAssignments` contient :
-```
-[
-  { type:"SoundAssignment", scope:{kind:"alphabet", name:"tabla"}, subject:"*",  target:{ kind:"named-ref", name:"bell_short" } },
-  { type:"SoundAssignment", scope:{kind:"alphabet", name:"tabla"}, subject:"Sa", target:{ kind:"named-ref", name:"drum_kick" } },
-  { type:"SoundAssignment", scope:{kind:"alphabet", name:"tabla"}, subject:"Re", target:{ kind:"named-ref", name:"bell_long" } }
-]
-```
-
-Note : le champ `scope` rend chaque affectation autonome (sans dépendance à sa
-position structurelle dans le doc) — un consommateur peut itérer sur la liste
-plate `Scene.soundAssignments` sans rejoindre via la position. Voir EBNF.md
-pour la grammaire `alphabet_section` étendue.
-
-### Cascade des sons — 8 niveaux (résumé)
-
-| # | Niveau | Source AST |
-|---|---|---|
-| 1 | défaut moteur BP3 | constantes `ResetPrototype` (SoundObjects3.c:43-117) — pas dans l'AST |
-| 2 | défaut anonyme de scène | `SoundPrototypeAST` avec `name:null` |
-| 3 | défaut alphabet | `SoundAssignmentAST` `scope:{kind:"alphabet"}` + `subject:"*"` |
-| 4 | défaut note dans alphabet | `SoundAssignmentAST` `scope:{kind:"alphabet"}` + `subject:"<note>"` |
-| 5 | défaut acteur | `SoundAssignmentAST` `scope:{kind:"actor"}` + `subject:"*"` (ou `ActorDirective.properties.sound`) |
-| 6 | défaut note d'acteur | `SoundAssignmentAST` `scope:{kind:"actor"}` + `subject:"<note>"` |
-| 7 | inline sur occurrence | `Symbol.suffixQualifiers` portant un `RuntimeQualifier` `sound:NAME` |
-| 8 | (réservé) override CV runtime | future v0.9+ |
-
-Sémantique détaillée et fusion par propriété : voir `LANGUAGE.md` section « Sons
-et cascade d'héritage ».
-
-### `SceneDirective`
-
-```
-SceneDirective {
-  type: "SceneDirective"
-  name: string                    // nom de la scène (devient un terminal)
-  file: string                    // chemin du fichier .bps
-  line: number
-}
-```
-
-Exemple : `@scene verse "verse.bps"` → `{ name:"verse", file:"verse.bps" }`
-
-### `ExposeDirective`
-
-```
-ExposeDirective {
-  type: "ExposeDirective"
-  flags: string[]                 // noms des flags rendus visibles au parent
-  line: number
-}
-```
-
-Exemple : `@expose [intensity]` → `{ flags:["intensity"] }`
-
-### `AliasDirective`
-
-```
-AliasDirective {
-  type: "AliasDirective"
-  name: string                       // le NOM donné — c'est LUI la cible
-  source: MapEndpoint
-  line: number
-}
-
-MapEndpoint = { kind: "cc", number: int, params: object | null }
-            | { kind: "osc", address: string, params: object | null }
-            | { kind: "flag", name: string }
-            | { kind: "trigger", name: string }
-            | { kind: "scoped", scope: string, name: string }
-            | { kind: "sys", scene: string | null, command: string }
-```
-
-Exemples :
-- `@alias breath cc:2` → `{ name:"breath", source:{kind:"cc",number:2} }`
-- `@alias depart touches.z` → `{ name:"depart", source:{kind:"scoped",scope:"touches",name:"z"} }`
-- `@alias horloge osc:/clock` → `{ name:"horloge", source:{kind:"osc",address:"/clock"} }`
-
-> ⚠️ **`arrow` et `target` ont DISPARU le 2026-07-27** (décision Romain) : un alias NOMME d'abord,
-> puis désigne — **le nom EST la cible**. La flèche est **exclusivement une règle de production**.
->
-> **Ce que ça n'est pas — deux fois.** Ce n'est pas une **macro** : une macro s'écrit *dans la
-> musique* et Kairos la résout à la projection, feuille par feuille, sur un mot qui paraît dans le
-> flux ; un alias ne s'écrit jamais comme un mot du flux et n'a ni corps ni paramètres. Et ce n'est
-> pas un **câblage** : brancher se fait avec `>>`, couper avec `\>>`, dans le flux — parce qu'une
-> directive ne se débranche pas (décision Romain 2026-07-27 au soir).
-
-### `CCDirective`
-
-```
-CCDirective {
-  type: "Directive"
-  name: "cc"
-  ccMappings: { name: string, number: int }[]
-  line: number
-}
-```
-
-Exemple : `@cc breath:2` → `{ name:"cc", ccMappings:[{name:"breath", number:2}] }`
-
-### `DurationDirective`
-
-```
-DurationDirective {
-  type: "Directive"
-  name: "duration"
-  value: {
-    amount: number              // 16, 8, 4.5
-    unit: "b" | "s"             // b = beats, s = secondes (défaut: b)
-  }
-  line: number
-}
-```
-
-Exemple : `@duration:16b` → `{ name:"duration", value:{amount:16, unit:"b"} }`
-Exemple : `@duration:4.5s` → `{ name:"duration", value:{amount:4.5, unit:"s"} }`
-
-Le runtime aval rescale les timestamps proportionnellement pour que la séquence tienne dans la durée déclarée.
-
-### `MacroDirective`
-
-```
-MacroDirective {
-  type: "MacroDirective"
-  name: string                    // "kick", "accent", "fast"
-  params: string[]                // [] si sans paramètres, ["x"] si @macro accent(x)
-  body: RhsElement[]              // body parsé par parseRhsElements()
-  line: number
-}
-```
-
-Exemples :
-- `@macro kick (vel:120)` → `{ name:"kick", params:[], body:[InstantControl(vel:120)] }`
-- `@macro accent(x) x(vel:120)` → `{ name:"accent", params:["x"], body:[SymbolCall(x, vel:120)] }`
-
-> ⚠️ Le `=` a DISPARU de tout le langage le 2026-07-27 (decision Romain, uniformite declarative).
-> La liste de parametres se distingue d'un corps entre parentheses par le COLLAGE : collee au nom
-> c'est une liste, separee par une espace c'est le corps.
-
-### `AliasDirective`
-
-```
-AliasDirective {
-  type: "AliasDirective"
-  name: string                    // "breath", "sensor"
-  source: MapEndpoint             // { kind: "cc", number: 2 } ou { kind: "osc", address: "/sensor/1" }
-  line: number
-}
-```
-
-Exemple : `@alias breath cc:2` → `{ name:"breath", source:{kind:"cc", number:2} }`
-
-> ⚠️ Un NOM, puis ce qu'il designe, sans signe ni fleche. Il n'y a plus de « cible » — **le nom EST
-> la cible**. La directive de correspondance, elle, a ete ABANDONNEE le 2026-07-27 au soir : le
-> cablage passe par les chevrons.
-
-### `LabelDirective`
-
-```
-LabelDirective {
-  type: "LabelDirective"
-  name: string                    // "groove", "hat"
-  line: number
-}
-```
-
-> ⚠️ La directive d'étiquette est SUPPRIMÉE (2026-07-28), avec le suffixe qu'elle déclarait.
-
-### Label suffixe (`@`)
-
-Tout nœud RHS peut porter un champ optionnel `label: string` attaché par `@` sans espace :
-
-```
-groove:{A B} → Polymetric { ..., label: "groove" }   // seule source d'étiquette depuis 2026-07-28
-```
-
----
-
-## Déclarations
-
-### `Declaration`
-
-```
-Declaration {
-  type: "Declaration"
-  temporalType: "gate" | "trigger" | "cv"
   name: string
-  actor: string                   // nom de l'acteur (remplace "runtime" quand @actor est utilisé)
-  runtime: string | null          // legacy : runtime direct (quand pas de @actor)
+  properties: {
+    alphabet: string              // la collection de terminaux que l'acteur joue
+    tuning: string | null         // l'accordage qui donne une fréquence à chaque degré
+    octaves: string | null        // la convention de registre
+    transport: OutputRef | null   // par où l'acteur sort — ÉCRIT `out.<canal>`
+    eval: string | null           // le langage par défaut de ses backticks
+  }
+  references: ActorReference[]
+  synthetic?: true
   line: number
 }
-```
 
-Avec `@actor`, les symboles ne sont pas déclarés individuellement — l'acteur importe
-tout son alphabet. La qualification se fait dans les règles via dot notation (`sitar.Sa`).
-Format préféré : `@gate Sa:midi`. Format legacy (sans `@`) : `gate Sa:sc` — toujours supporté.
-Exemple : `@gate Sa:midi` → `{ temporalType:"gate", name:"Sa", runtime:"midi" }`.
+OutputRef {
+  type: "OutputRef"
+  key: string                     // le canal : audio, midi, osc
+  params: { [key: string]: any }  // l'adresse : { ch: 10 }, { device: "reaper", ch: 7 }
+}
 
----
-
-## Macros
-
-### `Macro`
-
-```
-Macro {
-  type: "Macro"
+ActorReference {
+  type: "ActorReference"
+  category: "alphabet" | "tuning" | "octaves" | "transport" | "eval"
   name: string
-  params: string[]
-  body: RhsElement[]
+  params?: { [key: string]: any }
+}
+```
+
+Un acteur porte **cinq clés**. Chacune se lit dans un catalogue, et ce qui n'est pas écrit, l'acteur
+l'hérite de la scène. `properties` est la forme interne ; `references` est la forme consommée en
+aval, dérivée sans perte.
+
+Le canal de sortie s'écrit `out.<canal>` et **le champ interne s'appelle `transport`**. Le mot écrit
+et le nom du champ ne coïncident pas : renommer ce champ est un changement de contrat, à mesurer
+chez ses consommateurs avant de le poser.
+
+Une clé absente n'est pas émise à `null` : elle manque.
+
+**L'acteur implicite.** Quand une scène ne déclare aucun acteur, l'arbre en porte un nommé `default`,
+marqué `synthetic`, sans alphabet. Une scène simple emprunte ainsi le même chemin qu'une scène à
+plusieurs acteurs — un seul acteur est le cas d'un.
+
+### `VarDirective`
+
+```
+VarDirective {
+  type: "VarDirective"
+  names: string[]                  // un nom, ou plusieurs quand la ligne les énumère
+  varType: VarType | null          // null = une variable sans type
+  line: number
+}
+
+VarType =
+    { kind: "flag",       states: { name: string, value: number }[] }
+  | { kind: "in",         channel: "midi" | "osc" | "keyboard" }
+  | { kind: "convention", convention: "signal" | "pitch" | "phase" | "logic" }
+  | { kind: "module",     module: string }
+```
+
+Une variable porte un **type** qui dit ce qu'elle est. Le nom vient d'abord, le type ensuite.
+
+| type          | ce que la variable porte                                                            |
+| ------------- | ----------------------------------------------------------------------------------- |
+| `flag`        | un état entier, avec ses valeurs nommées ; les règles s'y conditionnent             |
+| `in`          | une valeur qui vient du dehors : un **rôle**, et le canal qui l'apporte             |
+| `convention`  | un flux de nombres, et la façon dont le récepteur le lit                            |
+| `module`      | une **instance** de ce module — elle ne porte aucun corps propre                    |
+| *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de règle                         |
+
+Un flag déclare ses états en même temps que lui-même, et l'encodeur résout ensuite les noms en
+entiers. Le rôle d'une entrée ne nomme jamais un appareil : l'association vit hors de la scène.
+
+**Une variable sans type porte la nature `var` dans le flux.** Sans elle, la déclaration serait une
+porte qui ne change rien : l'aval continuerait d'inventer une hauteur pour un symbole qui n'en a
+pas. L'aval la porte opaquement, et rien ne s'y résout.
+
+### `DefDirective`
+
+```
+DefDirective {
+  type: "DefDirective"
+  name: string
+  params: string[]                 // [] quand la définition n'en prend pas
+  convention: "signal" | "pitch" | "phase" | "logic" | null
+  body: DefBody
+  line: number
+}
+
+DefBody =
+    { kind: "patch",    expr: PatchExpr }        // @def sombre lpf1 >> vca1
+  | { kind: "setting",  qualifier: RuntimeQualifier }  // @def kick (vel:120)
+  | { kind: "code",     backtick: BacktickInline }     // @def fondu phase `js: …`
+  | { kind: "elements", body: RhsElement[] }           // @def cadence sa re ga pa
+```
+
+`@def` associe un nom à un corps, pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut
+ensuite. La liste de paramètres se distingue d'un corps entre parenthèses par le **collage** :
+collée au nom c'est une liste, séparée par une espace c'est le corps.
+
+Un nom dont le corps est un `PatchExpr` porte la nature **`wire`** dans le flux, et non `sounding` :
+brancher, couper et régler agissent sur un module sans produire de son, donc sans durée.
+
+### `InitEntry`
+
+```
+InitEntry = PatchExpr | BacktickOrphan
+```
+
+`@init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le
+branchement initial, le code lancé une fois, les valeurs de départ. Ce qui appartient à une chose
+s'initialise dans sa déclaration ; `@init` recueille ce qui ne se rattache à rien.
+
+Une production ne s'y écrit pas — une règle produit dans le temps, l'initialisation précède le temps.
+
+### Le langage de patch
+
+```
+PatchExpr = PatchChain | PatchSwitch | PortAssignment
+
+PatchChain {
+  type: "PatchChain"
+  nodes: PatchNode[]               // les étages, dans l'ordre écrit
+  links: PatchLink[]               // un de moins que d'étages
+}
+
+PatchNode {
+  type: "PatchNode"
+  name: string                     // "lpf1", ou "out" pour le puits
+  port: string | null              // le port nommé : lpf1.cutoff
+}
+
+PatchLink {
+  type: "PatchLink"
+  cut: boolean                     // false = brancher `>>`, true = couper `\>>`
+  width: number                    // la largeur du câble ; 1 quand aucun nombre n'est écrit
+}
+
+PatchSwitch {
+  type: "PatchSwitch"
+  target: string
+  on: boolean                      // switchon / switchoff
+}
+
+PortAssignment {
+  type: "PortAssignment"
+  target: string                   // l'instance
+  port: string
+  value: string | number
+}
+```
+
+Le puits d'une chaîne s'écrit `out` : il désigne la sortie de l'acteur, dont le canal est celui que
+l'acteur déclare. Un module a une entrée et une sortie par défaut ; quand elles suffisent, la chaîne
+se lit sans les nommer, et `port` vaut `null`.
+
+**Une inadéquation de largeur s'adapte** : un port à une voix prend la première, un port à plusieurs
+voix alimenté en une seule diffuse cette valeur sur toutes, et une largeur qui dépasse ce que le
+port accepte se ramène à ce nombre.
+
+### `Directive` — invocations de librairie et de réglage
+
+```
+Directive {
+  type: "Directive"
+  name: string                    // "core", "alphabet", "tuning", "time", "engine"…
+  subkey: string | null           // l'entrée, après le point
+  binding: string | null          // la valeur après le `:` — sur un alphabet, le runtime de sortie
+  value: string | number | null   // 120, "7/8", -24…
   line: number
 }
 ```
 
----
+Une librairie s'invoque par son nom, l'entrée après le point. Un réglage s'écrit par sa catégorie,
+l'entrée après le point. Le deux-points affecte une valeur ; sur un alphabet et ses terminaux, c'est
+le runtime de sortie, pris parmi `audio`, `midi` et `osc`.
 
-## CV Instances
+**Le préfixe est optionnel** : un nom nu passe s'il vit dans une seule librairie invoquée. La
+résolution est **statique** — l'ambiguïté n'a jamais de gagnant implicite, et la compilation nomme
+les deux candidats.
 
-### `CVInstance`
+### `HomomorphismDecl`
 
 ```
-CVInstance {
-  type: "CVInstance"
-  name: string                      // nom du modulateur ("env1", "sweep")
-  lib: string | null                // lib source ("mod", null pour backtick)
-  objectType: string                // type d'objet ("adsr", "lfo", "ramp", "backtick")
-  args: (number | string)[]         // arguments positionnels
-  namedArgs: { [key: string]: any } // arguments nommés (attack:10, rate:4)
-  tag: string                       // clé d'interprète du backtick ("js", "sc"…) — OBLIGATOIRE (cv = orphelin)
-  code: string | null               // code backtick SANS le tag (si objectType == "backtick")
-  line: number
+HomomorphismDecl {
+  type: "Homomorphism"
+  name: string                      // le nom de la section
+  pairs: [string, string][]         // paires plates source → cible
+  line?: number
 }
 ```
 
-Déclaration **purement descriptive** (design Romain 2026-06-20, cf. `cv_instance` dans EBNF) :
-`cv env1 : mod.adsr(...)` décrit ce qu'EST le modulateur — **pas de cible/route/transport** sur la
-déclaration. Le branchement se fait au point de paramètre (`(cutoff: env1)` → paire de
-`RuntimeQualifier` dont la valeur est un symbole/littéral). Les champs `target`/`cvin`/`transport`
-des anciennes formes sont supprimés.
+Une table porte des correspondances symbole vers symbole, appliquées à la dérivation, et l'étiquette
+de la section est le nom de l'homomorphisme. Une section déclarée en **chaîne** se déplie en paires
+consécutives à la lecture ; l'arbre ne porte que les paires. Quand deux écritures visent la même
+source, la dernière gagne. Les paires identité sont conservées.
 
-Exemples :
-- `cv env1 : mod.adsr(attack:5, decay:150, sustain:0.2, release:400)`
-  -> `{ name:"env1", lib:"mod", objectType:"adsr", args:[], namedArgs:{attack:5, decay:150, sustain:0.2, release:400}, code:null }`
-- `` cv wobble : `js: (t,dur)=>…` ``
-  -> `{ name:"wobble", lib:null, objectType:"backtick", tag:"js", code:"(t,dur)=>…", args:[], namedArgs:{} }`
-
-Le **tag** du backtick (`js:`) est **OBLIGATOIRE** (décision hub
-`2026-07-04-cv-curve-syntaxe-backtick-type.md`, fail-loud) : il type le **langage** de la courbe,
-séparé du `code` (le tag n'est plus laissé dans `code`). Le mot-clé `cv` type le **rôle**
-(modulation) — orthogonaux. Un backtick sans tag = erreur claire au parse (cf. EBNF §4.13).
-
-Le **branchement** `Bass -> C2(cutoff: wobble)` n'est PAS dans la CVInstance : c'est une paire du
-`RuntimeQualifier` de la note/règle/groupe (`{ key:"cutoff", value:"wobble" }`), portée en
-`payload.params.cutoff` et résolue en aval (le nom réfère la CVInstance déclarée).
+**Invocation par symbole nu.** Le symbole dont le nom est celui d'une section chargée devient un
+marqueur : le nœud du flux reçoit `role: "homomorphism"`, et sa **répétition** encode la profondeur.
+La précédence de résolution est terminal, puis nom de règle, puis homomorphisme — le marqueur n'est
+posé que si le nom n'est ni l'un ni l'autre.
 
 ---
 
-## Sous-grammaires
+## Sous-grammaires et catalogue
 
 ### `Subgrammar`
 
@@ -862,71 +289,36 @@ Subgrammar {
   type: "Subgrammar"
   rules: Rule[]
   index: number
-  mode: string | null              // "random", "ord", "sub", "sub1", "lin", "tem", "poslong"
-  modifiers: ModeModifier[] | null // directives de sous-grammaire depuis @mode:X(modifiers)
-}
-
-ModeModifier {
-  name: string                     // clé de controls.json section "subgrammar" : destru, striated, smooth, mm
-  value: number | string | true    // true = flag sans valeur, number = mm:60
+  mode: "ord" | "random" | "lin" | "sub" | "sub1" | "tem" | "poslong" | null
 }
 ```
 
-Exemples :
-- `@mode:lin(destru)` → `{ mode:"lin", modifiers:[{ name:"destru", value:true }] }`
-- `@mode:random(striated, mm:60)` → `{ mode:"random", modifiers:[{ name:"striated", value:true }, { name:"mm", value:60 }] }`
+Les règles d'une même sous-grammaire partagent le mode. Deux sous-grammaires sont des **passes
+successives** : un même nom y est le même symbole, réécrit plus tard.
 
-L'encoder émet les modifiers en preamble BP3 (ligne séparée entre le mode et les règles).
-Les clés sont déclarées dans `controls.json` section `subgrammar` avec leur nom BP3
-(`destru` → `_destru`, `mm` → `_mm`).
-
-**Mode SUB/SUB1** : en mode substitution, les symboles LHS sont aussi des terminaux
-(ils restent dans la séquence après les itérations et doivent être dans l'alphabet).
-L'encoder ne les exclut pas de l'alphabet, contrairement aux modes ORD/RND où les
-symboles LHS sont des non-terminaux.
+En mode `sub` et `sub1`, les symboles du membre gauche sont eux aussi des terminaux — ce qui reste
+après les itérations appartient à l'alphabet et se joue.
 
 ### `TemplateEntry`
 
 ```
 TemplateEntry {
   type: "TemplateEntry"
-  index: number                    // [1], [2], [3]...
-  scale: string                    // "/1", "/2", "*1/2" — facteur d'échelle
+  index: number                    // le rang dans le catalogue
+  scale: string                    // "/1", "*3/2" — l'échelle ; "/1" quand elle est omise
   body: TemplateElement[]
 }
 
 TemplateElement = TemplateWildcard | TemplatePeriod | TemplateBracket
 
-TemplateWildcard {
-  type: "TemplateWildcard"
-  count: number                    // ???? → count=4, ? → count=1
-}
-
-TemplatePeriod {
-  type: "TemplatePeriod"
-}
-
-TemplateBracket {
-  type: "TemplateBracket"
-  index: number                    // ($0 ...) → index=0
-  body: TemplateElement[]          // contenu du bracket (peut être vide)
-}
+TemplateWildcard { type: "TemplateWildcard", count: number }
+TemplatePeriod   { type: "TemplatePeriod" }
+TemplateBracket  { type: "TemplateBracket", index: number, body: TemplateElement[] }
 ```
 
-Exemples :
-- `[1] /1 ???????` → `{ index:1, scale:"/1", body:[{ type:"TemplateWildcard", count:7 }] }`
-- `[3] /1 ($0 ???)($1 )` → `{ index:3, scale:"/1", body:[{ type:"TemplateBracket", index:0, body:[{type:"TemplateWildcard", count:3}] }, { type:"TemplateBracket", index:1, body:[] }] }`
-
-La section `@template` (v0.8 — singulier, ex-`@templates`) est optionnelle.
-Si absente, `Scene.template` est `null` et BP3 génère les templates
-automatiquement. Si présente, l'encoder émet la section `TEMPLATES:` dans la
-grammaire BP3 avec `_` au lieu de `?` et `@N` au lieu de `$N`.
-
-**Régime catalogue (v0.8)** : la section `@template` est **toujours** en mode
-catalogue (utilisée en `[mode:tem]` pour l'analyse inverse / modus tollens).
-Pas de suffixe de mode sur la section. Sémantique côté moteur : régime B
-(catalogue post-dérivation), cf. `BPx/backlog/m8-port-plan.md:103-117`. Voir
-`LANGUAGE.md` section « Templates : régime catalogue ».
+Le moteur explore les formes que la grammaire permet et les écrit ici ; le rang est la place dans
+cette énumération, et c'est lui que l'analyse rend pour dire quelle forme a répondu. Le mode `tem`
+fait l'appariement structurel sur ce catalogue, dans l'ordre des rangs.
 
 ---
 
@@ -937,23 +329,23 @@ Pas de suffixe de mode sur la section. Sémantique côté moteur : régime B
 ```
 Rule {
   type: "Rule"
-  guard: Guard | Guard[] | null    // un ou plusieurs guards (AND)
+  guard: Guard[] | null            // plusieurs gardes se lisent comme un ET
   contexts: Context[]
   lhs: LhsElement[]
   arrow: "->" | "<-" | "<>"
   rhs: RhsElement[]
-  flags: FlagExpr[]                // mutations collectées, émises en fin de règle : /phase=2/ /Atrans/
-  qualifiers: Qualifier[]          // [mode:random, scan:left] en fin de règle (engine [])
-  runtimeQualifier: RuntimeQualifier | null  // suffixe () sur la règle : S -> C4 D4 (vel:80)
-  mode: "rnd" | "left" | "right" | null
-    // Extrait du qualificateur [scan:left|right|rnd] (parser.js, juste avant return Rule).
-    // null = mode par défaut de la sous-grammaire (géré par BPx loadGrammar.ts:3920-3923).
-    // Duplication intentionnelle : la QualPair 'scan' reste dans qualifiers pour que
-    // l'encoder (encoder.js:331-335) émette le préfixe BP3 LEFT/RIGHT/RND.
-    // BPx lit ast.mode (ast.ts:431-449, loadGrammar.ts:3897-3924).
+  flags: FlagExpr[]                // les mutations, émises en fin de règle
+  settings: RuntimeQualifier | null // le sac de portée règle
+  scan: "left" | "right" | "rnd" | null   // null = le défaut de la sous-grammaire
   line: number
 }
 ```
+
+| Direction | Sens                                                            |
+| --------- | --------------------------------------------------------------- |
+| `->`      | **production** — le membre gauche est réécrit en membre droit   |
+| `<-`      | **analyse** — la séquence droite est réduite au symbole gauche  |
+| `<>`      | **production et analyse** — la règle vaut dans les deux sens    |
 
 ### `Guard`
 
@@ -967,581 +359,10 @@ Guard {
 }
 ```
 
-Exemples :
-- `[phase==1]` -> `{ flag:"phase", operator:"==", value:1, mutates:false }`
-- `[Ideas-1]` -> `{ flag:"Ideas", operator:"-", value:1, mutates:true }`
-- `[Ideas]` (bare flag) -> `{ flag:"Ideas", operator:null, value:null, mutates:false }`
-
-**Note lexicale** : le tokenizer absorbe le `-` trailing dans l'identifiant (`times-` → un
-seul token IDENT). Le parser détecte le pattern `IDENT-trailing-dash + INT` dans les guards
-et les flags, et décompose en `flag` + `operator` + `value`. `[times-1]` produit donc bien
-`{ flag:"times", operator:"-", value:1 }` et non `{ flag:"times-", ... }`.
-
-### `Qualifier` — instructions moteur BP3
-
-```
-Qualifier {
-  type: "Qualifier"
-  pairs: QualPair[]
-  tempoOp: TempoOp | null          // [/2], [*3] etc. — mutuellement exclusif avec pairs
-}
-
-QualPair {
-  type: "QualPair"
-  key: string                      // ENGINE_KEY : mode, scan, weight, tempx, scale...
-  value: string | number | boolean // "random", 50, "1/2", "K1=3", "inf", true (clé nue)
-  decrement: number | null         // pour weight:50-12
-}
-// value = "inf" pour [weight:inf] → poids infini (compilé en <°> pour BP3)
-
-TempoOp {
-  type: "TempoOp"
-  operator: "/" | "*"             // / = plus rapide, * = plus lent
-  value: number | string          // entier (2), décimal (1.5) ou fraction ("3/2")
-  scope: "absolute" | "relative"  // absolute = A[/N] (élément) / [/N] (règle) → /N nu BP3 ;
-                                   // relative = ![/N] (instant `!`) → paire _tempo BP3.
-                                   // Décision 2026-06-10-tempo-absolu-vs-relatif ; le
-                                   // consommateur (BPx) LIT ce champ au lieu de deviner par position.
-}
-```
-
-Exemples :
-- `[mode:random]` → `{ pairs:[{key:"mode", value:"random"}] }`
-- `[retro]` → `{ pairs:[{key:"retro", value:true}] }` → compilé en `_retro` (sans parenthèses)
-- `[rotate:2]` → `{ pairs:[{key:"rotate", value:2}] }` → compilé en `_rotate(2)`
-- `[shuffle]` → `{ pairs:[{key:"shuffle", value:true}] }` → compilé en `_rndseq` (seq_prefix)
-- `[shuffle:42]` → `{ pairs:[{key:"shuffle", value:42}] }` → compilé en `_srand(42) _rndseq`
-- `[order]` → `{ pairs:[{key:"order", value:true}] }` → compilé en `_ordseq` (seq_prefix)
-- `A[/2]` → `{ tempoOp:{ operator:"/", value:2 } }` → compilé en `/2 A` (opérateur nu, absolu + persistant)
-- `A[*2]` → `{ tempoOp:{ operator:"*", value:2 } }` → compilé en `_tempo(1/2) A _tempo(1/1)` (relatif, bracket)
-- `A[/3/2]` → `{ tempoOp:{ operator:"/", value:"3/2" } }` → compilé en `/3/2 A` (opérateur nu)
-- `{A B}[/2]` → `/2 {A B}` (opérateur nu devant le groupe)
-- `![/2]` → `_tempo(2/1)` dans le flux (relatif, sans bracket — portée séquentielle jusqu'au prochain opérateur)
-
-**Distinction sémantique `/` vs `*` :**
-- `/N` (opérateur NU) = vitesse ABSOLUE N + fixtempo (BP3 Encode.c:418-425). La durée de référence du champ est imposée. Persiste jusqu'au prochain opérateur tempo ou fin de champ. Pas de bracket ni d'exit token.
-- `*N` (bracket `_tempo`) = relatif à la vitesse héritée. Enter `_tempo(1/N)` avant l'élément, exit `_tempo(1/1)` après (restaure la vitesse héritée au bord du bracket).
-- `![/N]` dans le flux (InstantControl) → `_tempo(N/1)` relatif (sans fixtempo), portée séquentielle.
-- `{v1, v2}:2` → compilé en `{2, v1, v2}` (ratio polymétrique, distinct du tempo)
-- `[weight:inf]` → `{ pairs:[{key:"weight", value:"inf"}] }` → compilé en `<inf>`
-- `[staccato:50]` → `{ pairs:[{key:"staccato", value:50}] }` → compilé en `_staccato(50)` (suffixe)
-- `[legato:80]` → `{ pairs:[{key:"legato", value:80}] }` → compilé en `_legato(80)` (suffixe)
-- `[rndtime:10]` → `{ pairs:[{key:"rndtime", value:10}] }` → compilé en `_rndtime(10)` (suffixe)
-  Portée : sur un élément (`A[rndtime:10]` → `A _rndtime(10)`) ou un groupe
-  (`{A B C D}[rndtime:20]` → `{A B C D} _rndtime(20)`). Pas de seq_prefix — contrôle
-  courant non-réordonnant, profil identique à staccato/legato (CompileProcs.c case 59,
-  plage 0..32767 ms, `p_Instance[k].randomtime`).
-
-**Clés nues** : quand `value === true` (clé sans `:valeur`), l'encodeur émet le nom BP3
-sans parenthèses (`_retro`, `_rndseq`, `_ordseq`). Quand une valeur est fournie, avec
-parenthèses (`_rotate(2)`) ou avec préfixe graine (`_srand(42) _rndseq` pour `shuffle`).
-
-**Contrôles seq_prefix** (`scope:"seq_prefix"` dans controls.json) : `retro`, `shuffle`,
-`order`, `rotate`. Injectés en tête du groupe (inside `{}`) ou en tête de RHS (fin de règle).
-Portées :
-- `{a b c}[shuffle]` → `{_rndseq a b c}` (inside accolades, via `Polymetric.suffixQualifiers`)
-- `a b c [shuffle]` → `_rndseq a b c` (fin de règle, via `Rule.qualifiers`)
-
-**Distinction `[]` vs `()` pour `rotate`** : `[rotate:2]` (engine, `Qualifier`) compile en
-`_rotate(2)` BP3 (décalage cyclique temporel) ; `(scaleshift:2)` (runtime, `RuntimeQualifier`) —
-le `rotate` de HAUTEUR a été renommé `scaleshift` le 2026-07-11 (`hub/decisions/2026-07-11-transposition-reelle-vs-scalaire.md`) ; `rotate` ne désigne plus que la rotation de SÉQUENCE, moteur
-compile en `_script(CT n)` via dispatcher (rotation diatonique, transformation pitch).
-
-**Poids infini** : `value === "inf"` → compilé en `<inf>` (priorité absolue en BP3).
-
-### `RuntimeQualifier` — paramètres runtime
-
-```
-RuntimeQualifier {
-  type: "RuntimeQualifier"
-  pairs: { key: string, component?: number, value: string | number | boolean, subject?: string, line, col }[]
-  // component (optionnel) : NUMÉRO DE COMPOSANT du contrôle — `(cc.98:45)` → { key:"cc",
-  //   component:98, value:45 }. Le point APPELLE le composant (le contrôleur 98), les deux
-  //   points AFFECTENT la valeur : la règle d'or du langage, appliquée par Romain le 2026-07-26
-  //   à un cas qui n'avait pas été traité. Le langage savait nommer les contrôleurs qui ont un
-  //   ALIAS (mod = CC1, volume = CC7) ; il ne savait pas en désigner un QUELCONQUE, et c'est ce
-  //   trou que la forme positionnelle `cc(98,45)` bouchait — en fabriquant du flux sans le `!`.
-  //   Champ ADDITIF : BPx porte les paires opaquement (AST_SPEC : « il ne les interprète
-  //   jamais »), c'est le runtime de sortie qui sait qu'un CC a un numéro. Quels contrôles en
-  //   portent un est DÉCLARÉ dans la lib (`component:"number"`), jamais codé en dur.
-  // key : RUNTIME_KEY (vel, wave, filter, filterQ, pan...)
-  // value : 120, "sawtooth", "rrand(40,127)" ; true pour une clé nue (velcont, pitchcont)
-  // subject (optionnel) : destinataire de la paire `[sujet:]key:value` (décision Romain 2026-06-21)
-  //   absent  → la portée elle-même (la règle/le groupe comme unité)
-  //   "*"     → chaque terminal de la portée (ex. CV : enveloppe par note)
-  //   "<nom>" → les terminaux <nom> de la règle (ex. "C2"), ou (PARKÉ) une portée cross-règle/scène
-}
-```
-
-Le **sujet** (`subject`) cible plus finement qu'une paire nue : `(*:cutoff:Env)` → `subject:"*"`
-(chaque terminal), `(C2:cutoff:Env)` → `subject:"C2"`, `(cutoff:Env)` → pas de `subject` (= la
-règle). Cohérent avec l'affectation existante `*:sound.X`. Pour un CV, le sujet décide l'**horloge**
-(unité/signal vs par-terminal) ; le consommateur (BPx/dispatcher) le lit. Cf. `docs/design/CV.md`.
-
-Les pairs runtime sont des objets nus `{ key, value }` (pas de champ `type`, contrairement aux
-`QualPair` du `Qualifier` moteur). La portée est déduite de la position dans l'AST par l'encodeur —
-mais depuis le 2026-07-19 les positions de **contenance** l'écrivent aussi **explicitement** dans
-`payload` (`scope: 'rule' | 'group' | 'template'`, avec `containment: true`), pour qu'un
-consommateur puisse la lire au lieu de la déduire. Les deux lectures sont valides : l'ajout est
-additif. Motif : le cas groupe portait `scope` en clair quand l'invocation de gabarit n'avait aucun
-payload, et cette asymétrie a fait descendre le cas gabarit **en flux** chez un consommateur — une
-portée qu'aucune des positions ci-dessous n'a.
-
-`()` est **toujours suffixe** (jamais en préfixe). La portée est déduite de la position :
-- **symbole** : `Sa(vel:120)` → `Sa _script(CT 0)` — attaché au `Symbol` node
-- **règle** : `S -> C4 D4 (vel:80)` → `_script(CT 1) C4 D4` — dans `Rule.runtimeQualifier`
-- **instantané** : `{!(chan:1) C8 -, !(chan:2) C7 C7}` → `{_script(CT 2) C8 -, _script(CT 3) C7 C7}` — via `InstantControl` dans le flux
-- **groupe** : `{A B}(filter:lp)` → `_script(CT 4_start) {A B} _script(CT 4_end)` — dans `Polymetric.runtimeQualifier`
-- **invocation de gabarit** : `$A(transpose:-200c)` → `(=A) _script(CT 0)` — dans
-  `TemplateMaster.suffixQualifiers` / `TemplateSlave.suffixQualifiers`. Gouverne l'**expansion**
-  du gabarit et ne déborde pas : même régime de contenance que le groupe et la règle.
-
-Le transpileur maintient une table de mapping `CT n → { scope, params }` (la control table)
-consommée par le runtime aval.
-
-**Étendue d'arc — enveloppe de groupe `{ … }(cutoff:env)`** (décision 2026-07-01 réarmement-enveloppes).
-Une enveloppe de groupe définit l'étendue d'**un arc continu** franchissant les silences internes.
-**Répartition des rôles (arbitrage 2026-07-01, AST_SPEC §4 « l'arbre résout seul »)** : l'AST BPScript
-porte le qualificateur d'une clé de contrôle **inconnue** (ex. `cutoff`) en `Rule.runtimeQualifier`
-(`scope:"rule"`) — l'attachement collé `}(…)` passe par le check **strict** `isRuntimeQualifier`
-(parser.js:2172, piloté par `controlNames`) et retombe au niveau règle pour une clé hors `controls.json`.
-Ce `scope:"rule"` est **SUFFISANT et correct** : la **remontée** de la contenance au nœud conteneur
-(`Polymetric`) et le calcul de la fenêtre-bloc sont le rôle de **BPx** (l'arbre résout seul), **pas** de
-l'AST. ⚠️ Ne **PAS** enregistrer `cutoff`/`resonance` dans `controls.json` pour forcer `scope:"group"` :
-piste **abandonnée** (n'était pas la racine, risquait la parité). Le bug CVA-ARMING vit dans le chemin
-**nesté de BPx** (fenêtre recalculée par segment sous polymétrie), pas ici.
-
----
-
-## Éléments LHS
-
-```
-LhsElement = Symbol | Variable | Wildcard | Context | TemplateAnchor | RawBrace
-             // `Variable` = `?N` uniquement ; `|x|` est un Symbol (voir §Variable)
-```
-
----
-
-## Éléments RHS
-
-```
-RhsElement = Symbol | SymbolCall | SymbolWithWait | Control | Rest | Prolongation | UndeterminedRest
-           | Period | NumericDuration | Polymetric
-           | SimultaneousGroup | OutTimeObject | InstantControl | Wait
-           | Variable | Wildcard
-           | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup | TemplateAnchor
-           | TieStart | TieContinue | TieEnd
-           | NilString | BacktickStandalone | Context | RawBrace
-```
-
-### Qualificateurs par élément
-
-Tout `RhsElement` peut porter des qualificateurs moteur `[]` et/ou runtime `()`,
-toujours en **suffixe** : collés à droite de l'élément (sans espace avant).
-
-```
-RhsElement {
-  ...                                            // propriétés spécifiques au type
-  suffixQualifiers: (Qualifier | RuntimeQualifier)[] | null  // [] ou () collés à droite : A[weight:50], A(vel:80)
-}
-```
-
-Le tokenizer marque chaque token avec `spaceBefore`. Un `[` ou `(` **sans** espace
-avant s'attache comme suffixe à l'élément précédent. Un `[` précédé d'un espace, en
-fin de règle, est un qualificateur de règle ; un `[` en tête de règle est une garde
-de flag (voir `Guard`). Le parser ne produit pas de qualificateur préfixe.
-
-Exemples :
-- `A[weight:50]` (collé à A) : `suffixQualifiers: [Qualifier{ pairs:[{key:"weight", value:50}] }]`
-- `A[/2]` (opérateur de durée, collé à A) : `suffixQualifiers: [Qualifier{ tempoOp:{operator:"/", value:2} }]`
-- `A(vel:80)` (runtime, collé à A) : `suffixQualifiers: [RuntimeQualifier{ pairs:[{key:"vel", value:80}] }]`
-- `A [X] B` → **erreur** : qualificateur flottant, utiliser `A ![X] B`
-
-Sur le RHS, `[]` comme `()` sont toujours en suffixe.
-
-### `Symbol`
-
-```
-Symbol { type: "Symbol", name: string, actor: string | null, line: number }
-```
-
-Le champ `actor` est rempli par la dot notation explicite (`sitar.Sa`), ou par la
-phase de résolution implicite (quand un seul acteur contient ce symbole). `null`
-pour les non-terminaux (qui n'ont pas d'acteur).
-
-**Objet sonore composé** (`|[ … ]`, ratifié Romain 2026-07-18) : une suite de notes/
-prolongations occupant UNE unité d'ordonnancement est représentée par un **unique
-`Symbol`** dont le `name` est la concaténation SANS blancs du contenu
-(`|[ do5 _ do5 do5 ]` → `Symbol { name: "do5_do5do5", payload: { nature: "sounding" } }`).
-Aucun nœud dédié : c'est la forme canonique identique à celle que le frontal BP3 émet pour
-un terminal concaténé — le contenu interne (`_`, poly imbriquée) fait partie du nom, opaque
-à la dérivation, résolu en aval. Cf. `docs/issues/LANG_COMPOUND_SOUND_OBJECT.md`, EBNF `compound_sound_object`.
-
-### `SymbolCall`
-
-```
-SymbolCall { type: "SymbolCall", name: string, actor: string | null, args: Arg[], line: number }
-Arg { type: "Arg", key: string | null, value: Literal | BacktickInline }
-```
-
-### `Control`
-
-```
-Control {
-  type: "Control"
-  name: string        // nom du contrôle : vel, tempo, goto, striated, smooth, destru, stop...
-  args: string[]      // fragments d'arguments bruts : ["120"], ["2","1"] ; [] pour un contrôle sans argument
-}
-```
-
-Forme parsée d'un contrôle BP3 écrit directement dans le flux : `vel(120)` → `{ name:"vel", args:["120"] }`,
-`goto(2,1)` → `{ name:"goto", args:["2","1"] }`, `striated` → `{ name:"striated", args:[] }`.
-Distinct de l'`InstantControl` (`!(...)`) et du `RuntimeQualifier` (`(...)` suffixe d'un symbole).
-
-### `SymbolWithWait`
-
-```
-SymbolWithWait {
-  type: "SymbolWithWait"
-  symbol: Symbol           // le symbole porteur
-  triggers: Wait[]    // un ou plusieurs trigger-in attachés
-}
-```
-
-Émis pour `Sa<!sync1` : un symbole qui attend un trigger entrant (`<!`) avant de se déclencher.
-
-Le symbole porteur **garde sa nature** `sounding` : le point d'attente est ancré SUR lui, il ne le
-remplace pas. (Corrigé le 2026-07-26 : l'annotateur ne descendait pas dans `symbol`, et une note
-ancrée perdait sa nature — un consommateur qui trie les feuilles par nature la perdait en silence,
-alors que le point d'attente est là POUR la rendre observable.)
-
-### `Wait` — le POINT D'ATTENTE
-
-```
-Wait {
-  type: "Wait"
-  name: string                       // le trigger attendu
-  qualifiers: Qualifier[]            // `[…]` éventuels
-  suffixQualifiers?: RuntimeQualifier[]   // `(…)` — porte le CANAL : `<!sync1(chan:1)`
-  payload: { nature: "wait" }
-}
-```
-
-Élément **de plein droit** du membre droit, à sa position dans la séquence — décision Romain
-2026-07-26 (`hub/decisions/2026-07-26-architecture-des-entrees-point-d-attente-dans-l-arbre.md`) :
-« le point d'attente DOIT vivre dans l'arbre ». Elle révoque le choix antérieur du contrat aval,
-qui le posait délibérément hors de l'union des éléments et le réécrivait en sentinelle avant
-chargement.
-
-**Nature `wait`** (contrat `BPx/docs/AST_SPEC.md:461`, posée le même jour). C'était le SEUL élément
-de membre droit sans nature, et un élément qui vit dans l'arbre sans en porter une n'y vit qu'à
-moitié. Le nom dit le **rôle**, pas la graphie : `<!nom` est la surface, `Wait` le type de
-nœud, `wait` ce que le jeton EST pour le temps — cohérent avec les six autres valeurs.
-
-> ⚠️ **Ne pas confondre avec un silence.** Un silence **occupe** du temps ; une attente le
-> **suspend**. Durée nulle, ne fait pas avancer la grille — même ressort qu'`instant`. Les deux se
-> ressemblent en prose et se comportent à l'opposé.
-
-### `@var` — VARIABLES DE TRAVAIL, nature `var`
-
-```
-Scene { vars: string[] }                       // @var A8   @var a, b, c
-Symbol { name: "A8", payload: { nature: "var" } }
-```
-
-Décision Romain 2026-07-27 (voie 3) : « on déclare les symboles non-alphabet terminaux en plus,
-avec une directive @. Ce sont des **variables de travail**. » Un symbole du flux qui **n'est
-l'écriture d'aucune note** — ni une note, ni de la structure.
-
-**Ce que ça lève.** Le langage confondait TERMINAL et NOTE. `Nadaka-1er-essai` écrit `A8`, qui n'a
-aucune règle et n'appartient à aucun alphabet ; le moteur natif l'émet littéralement comme jeton.
-Déclarer la convention de notes de cette scène la faisait REFUSER. Voir `EBNF.md` pour la graphie.
-
-**Pourquoi une nature propre, et pas seulement une porte.** Sans elle, `@var` serait une porte
-nommée qui ne change RIEN : la scène compilerait et l'aval continuerait d'inventer une hauteur pour
-un symbole qui n'en a pas — c'est exactement d'où venait le 7040 Hz mesuré par Kairos sur cette
-scène. **Accepter n'est pas transmettre.** Même mécanisme que `wait`, posée deux jours plus tôt
-pour la même raison mot pour mot : un jeton qui n'est pas une note et que l'aval ne doit pas traiter
-comme telle.
-
-**Ce que l'aval en fait** : BPx la **porte** opaquement, comme il porte `wait` ; Kairos ne résout
-**rien** dessus. C'est tout ce qu'ils ont à en savoir.
-
-> ⚠️ **Ni `sounding`, ni `rest`.** `sounding` lui ferait inventer une hauteur ; `rest` serait faux
-> aussi — un silence **occupe** du temps, une variable de travail n'est pas un événement du tout.
-
-Le nom se lit à deux endroits selon la forme : `name` pour un symbole, `symbol` pour une note
-**liée** (`a~` produit un `TieStart` qui range son nom là). Les deux portent `nature: "var"`.
-
-### `Rest`
-
-```
-Rest { type: "Rest" }
-```
-
-### `Prolongation`
-
-```
-Prolongation { type: "Prolongation" }
-```
-
-### `UndeterminedRest`
-
-```
-UndeterminedRest { type: "UndeterminedRest" }
-```
-
-Compilé en `_rest` (commande BP3 built-in, encodée `T0, 17` dans `Encode.c`).
-**Pas en `...`** — trois points seraient interprétés comme trois periods (`T0, 7` × 3).
-Le caractère historique `…` (Unicode U+2026) a été abandonné par Bernard en 2022
-pour des raisons de compatibilité UTF-8/HTML. `_rest` est la notation recommandée.
-
-### `Period`
-
-```
-Period { type: "Period" }
-```
-
-### `NumericDuration`
-
-```
-NumericDuration { type: "NumericDuration", numerator: number, denominator: number }
-```
-
-### `Polymetric`
-
-```
-Polymetric {
-  type: "Polymetric"
-  voices: RhsElement[][]                     // tableau de voix, chaque voix = séquence plate
-  qualifiers: Qualifier[]                    // speed et scale uniquement (engine [])
-  runtimeQualifier: RuntimeQualifier | null  // suffixe () sur le groupe : {A B}(vel:100)
-  label: string | null                       // étiquette UI : couplet1:{A B, C D}
-}
-```
-
-Une voix est une séquence plate d'éléments RHS (pas de nœud wrapper), conforme à
-EBNF.md `voice = rhs_element+`.
-
-Les contrôles à l'intérieur d'une voix se positionnent avec `!()` et `![]` comme
-éléments instantanés dans le flux. Pas de portée voix implicite — la position dans
-le source = la position dans la sortie BP3.
-
-**Contrainte** : seuls `speed` et `scale` sont des qualifiers de polymétrie.
-Les autres qualifiers (`weight`, `mode`, `scan`, `on_fail`) après `}` appartiennent
-à la **règle**, pas au bloc polymétrique. Le parser utilise un lookahead sur la clé.
-
-**Ratio de cadre** : le 1er champ `{M, …}` est porté par le qualifier **`speed`** de `qualifiers`.
-La **durée de surface** `:N` (supprime l'ancien `[speed:N]`, cf. décision 2026-06-26) **désucre vers
-ce même qualifier** — `{A B}:2` → `Polymetric{qualifiers:[speed:2]}` → `{2, A B}`. ⚠️ Le ratio vit
-ICI, **jamais dans un champ ad hoc** : c'est le contrat que lisent BP3 (`encoder.js` `getQualValue`)
-ET BPx. `{A}:2` -> `{2, A}`. Ratios fractionnaires : `{A}:1/2` -> `{1/2, A}` (value = "1/2", chaîne).
-
-## Portées d'attachement × nœud AST, par élément (CONTRAT)
-
-Un suffixe/opérateur peut s'attacher à une **base** de portées (l'espace et le `!` désambiguïsent —
-cf. `EBNF.md` §Portées). **Cette base n'est pas une loi uniforme** : chaque élément déclare **quelles
-portées lui sont valides** et **vers quel nœud AST il se traduit pour chacune**. Ce tableau est le
-**contrat** que lisent les consommateurs de l'AST (BP3 *et* BPx) : un producteur qui invente un champ
-hors-contrat (ex. un `frame` ad hoc pour un ratio qui appartient à `Polymetric.qualifiers`) casse le
-chemin vivant en silence, même si un autre chemin reste vert. **Citer cette table AVANT de coder une
-représentation.**
-
-Les cinq portées : `terminal` (collé) · `groupe` (collé `}`) · `règle` (espacé, fin de RHS) ·
-`!accolé` (collé, flux conjoint) · `!inline` (espacé, événement séparé).
-
-| Élément | terminal | groupe | règle | !accolé | !inline | Nœud AST |
-|---------|:---:|:---:|:---:|:---:|:---:|----------|
-| **durée `:N`** | ✅ | ✅ | ✅ | ❌ | ❌ | `Polymetric.qualifiers` (qualifier `speed`) — le RHS/le terminal est emballé dans le `Polymetric` |
-| **tempo `/N` `\N` `*N`** | ✅ `A[/2]` | ✅ | ✅ `[/2]A` | ❌ | ✅ `![/2]` | `TempoOp{operator, value, scope}` |
-| **runtime `(clé:val)`** | ✅ | ✅ | ✅ | ✅ | ✅ | terminal/groupe/règle → `…suffixQualifiers`/`runtimeQualifier` ; `!` → `InstantControl{conjoint}` |
-| **moteur `[weight]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.flags` |
-| **moteur `[mode]` `[scan]`** | ❌ | ❌ | ✅ / préambule bloc | ❌ | ❌ | `Rule.mode` / préambule sous-grammaire |
-| **`scale`** (polymétrie) | ❌ | ✅ | ❌ | ❌ | ❌ | `Polymetric.qualifiers` (qualifier `scale`) |
-
-Portée invalide pour un élément = **erreur fail-loud**, jamais un avalement silencieux (ex. durée
-isolée dans le flux `A :2 B` → `ParseError`). La colonne « nœud AST » est **normative** : c'est là,
-et nulle part ailleurs, que le consommateur lit la valeur.
-
-### `SimultaneousGroup`
-
-```
-SimultaneousGroup {
-  type: "SimultaneousGroup"
-  primary: Symbol | SymbolCall | Rest | NilString
-  secondaries: (Symbol | SymbolCall)[]
-}
-```
-
-`!` est exclusivement temporel — pas de FlagMutation dans les secondaries.
-Les flags vont dans les qualifiers de la Rule (via `[]`).
-
-Exemples :
-- `Sa!dha [phase=2]` -> `{ primary: Symbol("Sa"), secondaries: [Symbol("dha")] }` + rule flag `[phase=2]`
-- `lambda [Num_a=20, Num_b=0]` -> `NilString` + rule flags
-
-### `Wait`
-
-```
-Wait { type: "Wait", name: string, qualifiers: Qualifier[] }
-```
-
-### `OutTimeObject`
-
-```
-OutTimeObject { type: "OutTimeObject", name: string }
-```
-
-`!f` standalone (sans primaire) → `<<f>>` en BP3. Objet hors-temps déclenché
-sans occuper de durée dans la séquence.
-
-### `InstantControl`
-
-```
-InstantControl {
-  type: "InstantControl"
-  qualifier: RuntimeQualifier | Qualifier | ProductionInline   // le contrôle à appliquer
-}
-
-// ProductionInline (décision 2026-06-14) : ![@seed:N] = re-semence dans le flux.
-// { type:"ProductionInline", directives: [Directive{name:"seed", value:N}] } → _srand(N).
-// Restreint à seed (autres clés rejetées au parse). Consommateurs (BPx) : émettre _srand.
-```
-
-`!(vel:80)` → `_script(CT n)` en BP3. `![retro]` → `_retro` en BP3. `![@seed:2]` → `_srand(2)`.
-Événement instantané (zéro durée) positionné explicitement dans le flux temporel.
-La position dans le source BPScript = la position dans la sortie BP3.
-
-Exemples :
-- `{!(chan:1) C8 - - -}` → `{_script(CT 0) C8 - - -}`
-- `{C8 - - - !(chan:1)}` → `{C8 - - - _script(CT 0)}`
-- `![retro] A B` → `_retro A B`
-
-### `Variable` — RÉSERVÉ à `?N`, **jamais** à `|x|`
-
-> ⚠️ **Cette entrée décrivait `Variable { type, name }` comme le nœud de `|x|`. C'ÉTAIT FAUX**
-> — corrigé le 2026-07-19, après vérification aux deux sources qui font autorité :
->
-> - **BP3 lui-même** (`BP3_help.txt:64-71`) : « BP3 recognizes strings starting with an
->   **uppercase** character as *variables*… You may however start a variable with a
->   **lower-case** character provided that you write it **between |vertical bars|**. » Ce que
->   BP3 appelle *variable*, c'est ce que nous appelons un **non-terminal** (`S`, `A1`). Les
->   barres sont un pur **artifice lexical** qui autorise une initiale minuscule — elles ne
->   créent aucune catégorie sémantique.
-> - **Le contrat de frontière BPx** (`BPx/docs/AST_SPEC.md:128`) : « `Variable` | `?N` | …
->   **RÉSERVÉE à `?N`, jamais `|x|`** ».
->
-> Donc `|x|` s'abaisse en `Symbol { name: "x" }`, et c'est exactement ce que fait le parser
-> (`parser.js:3586-3594`, avec la citation d'`AST_SPEC §1.2.1` en commentaire). L'implémentation
-> était juste ; **c'est cette spec qui avait dérivé**. Porter un nœud `Variable` pour `|x|`
-> aurait cassé la frontière ratifiée avec BPx et réintroduit une distinction que BP3 ne fait pas.
-
-```
-Variable { type: "Variable", index: number }   // ?N seulement
-```
-
-### `Wildcard`
-
-```
-Wildcard { type: "Wildcard", index: number | null }
-```
-
-### `TemplateMaster` / `TemplateMasterGroup`
-
-```
-TemplateMaster { type: "TemplateMaster", name: string, args: Arg[] | null }
-TemplateMasterGroup { type: "TemplateMasterGroup", elements: RhsElement[] }
-```
-
-`$X` → TemplateMaster. `${$X S &X}` → TemplateMasterGroup (contenu récursif).
-
-### `TemplateAnchor`
-
-```
-TemplateAnchor { type: "TemplateAnchor", kind: "master" }
-```
-
-Ancre de gabarit maître « `$ ` » (dollar isolé avec espace). Valide en LHS et en RHS.
-Compilé en token BP3 `(=` (sans fermeture de parenthèse) — T2,0 dans Encode.c:1341-1364.
-L'ancre symétrique `(:` (esclave) est réservée, non implémentée (zéro occurrence corpus).
-
-### `TemplateSlave` / `TemplateSlaveGroup`
-
-```
-TemplateSlave { type: "TemplateSlave", name: string, args: Arg[] | null }
-TemplateSlaveGroup { type: "TemplateSlaveGroup", elements: RhsElement[] }
-```
-
-> **ABANDONNÉ (2026-06-10)** : le champ `transcriptions: string[] | null` prévu dans cette
-> version a été supprimé en faveur de l'approche `Scene.homomorphisms` + marqueurs inline
-> (`star`, `$X`, `&X`). Les noms de transcription entre master et slave sont conservés
-> verbatim dans le RHS BP3 ; BPx les consume via `rewriteHomomorphismMarkers`.
-> Le champ `transcriptions` N'EXISTE PAS dans l'implémentation courante du parser.
-
-### `TieStart` / `TieContinue` / `TieEnd`
-
-```
-TieStart { type: "TieStart", symbol: string }
-TieContinue { type: "TieContinue", symbol: string }
-TieEnd { type: "TieEnd", symbol: string }
-```
-
-### `NilString`
-
-```
-NilString { type: "NilString" }
-```
-
-Peut porter des flags via `Rule.flags` : `lambda [Num_a=20, Num_b=0]`.
-
-### `BacktickInline` / `BacktickStandalone` / `BacktickOrphan`
-
-```
-BacktickInline { type: "BacktickInline", code: string, tag: string | null }
-BacktickStandalone { type: "BacktickStandalone", tag: string, code: string, line: number }
-BacktickOrphan { type: "BacktickOrphan", tag: string, code: string, line: number }
-```
-
-**Langage TOUJOURS connu — tag OU eval d'acteur, jamais deviné** (décision hub
-`2026-07-04-cv-curve-syntaxe-backtick-type.md` + ajustement [299]). `BacktickOrphan` (top-level) et
-la courbe `CVInstance` backtick EXIGENT un `tag` (erreur claire au parse sinon). Un backtick de flux
-(`BacktickStandalone`/`BacktickInline`) peut être NON taggé (`tag:null`) SSI la tête de sa règle est
-un `@actor … eval.X` : il **hérite** de X (résolu en `annotateBackticks` → `payload.interp`) ; un
-tag explicite l'override. Un flux non taggé SANS eval d'acteur en tête = **orphelin** → erreur claire
-à l'annotation. Le `code` ne contient jamais le tag (séparé à l'analyse).
-
-`BacktickStandalone` est un **terminal de plein droit** du RHS (membre de `RhsElement` /
-`element_core`) : il occupe une position dans le flux comme une note. Le `tag` désigne
-l'**interpréteur**/producteur (`eval`) du code (`strudel`, `hydra`, `csound`, `js`…). Sortie (modèle
-producteur/canal, Romain 2026-07-14) : un `eval.<X>` embarqué autonome **sort en natif** (pas de
-`out`) ; seul le producteur défaut `js` est placé par le dispatcher vers NOTRE sortie (`out`).
-`BacktickInline` est une valeur calculée dans un paramètre ; `BacktickOrphan` est du code
-taggé au niveau scène. Le rattachement d'un backtick à un acteur précis (voix-code) est décrit dans
-`docs/design/ACTOR.md`.
-
-### `Context`
-
-```
-Context { type: "Context", positive: boolean, symbols: string[] }
-```
-
-`#X` (un seul symbole), `#(X Y)` (groupe), `#?` (boundary) sont les trois formes du contexte négatif.
-Les wildcards `?N` sont acceptés dans les groupes : `#(?1 ?3 ?2 ?4)` → `symbols: ["?1","?3","?2","?4"]`.
-Utilisé dans les grammaires LIN pour les patterns de permutation (ex: change ringing).
-
-### `RawBrace`
-
-```
-RawBrace {
-  type: "RawBrace"
-  value: "{" | "}" | ","                            // brace brute pour embedding patterns
-  duree: NumericTerminal | NumericDuration | null   // durée collée `}:N`, annotée par le 2-pass depuis la `}` fermante
-}
-```
-
-Émis quand `{`, `}`, `,` sont non-balancés dans une règle (embedding pattern).
-Le 2-pass propage la durée `}:N` (durée collée, décision 2026-06-26-trois-concepts-temps-duree,
-qui a supprimé l'ancien qualificatif `[speed:N]`) de la `}` fermante vers le `{` correspondant.
+La garde décide si la règle **existe** pour cette dérivation. Avec `+` et `-`, elle tient deux temps
+dans cet ordre : le test rend la règle candidate tant que le drapeau est strictement positif, puis
+la mutation s'applique au moment où la règle est retenue. Le drapeau vaut donc encore sa valeur
+d'avant pendant tout le test. Un drapeau seul teste qu'il vaut autre chose que zéro.
 
 ### `FlagExpr`
 
@@ -1549,105 +370,363 @@ qui a supprimé l'ancien qualificatif `[speed:N]`) de la `}` fermante vers le `{
 FlagExpr {
   type: "FlagExpr"
   flag: string
-  operator: "=" | "+" | "-" | null  // null = flag nu [Atrans]
-  value: number | string | null     // null = flag nu
+  operator: "=" | "+" | "-" | null   // null = drapeau nu
+  value: number | string | null
 }
 ```
 
-Même note lexicale que `Guard` : `[times-1]` → `{ flag:"times", operator:"-", value:1 }`
-(le parser décompose le trailing-dash absorbé par le tokenizer).
+Une mutation est **hors-temps** : elle s'applique au déclenchement de la règle, pendant la
+dérivation. Sa position se lit dans la règle ; la séquence jouée reste inchangée.
 
-### `Literal`
-
-```
-Literal { type: "Literal", value: number | string }
-```
-
-### `HomomorphismDeclAST`
+### `Context`
 
 ```
-HomomorphismDeclAST {
-  type: "Homomorphism"
-  name: string          // nom de la section (ex: "*", "m1", "mineur", "TR")
-  pairs: [string, string][]         // paires PLATES [source, cible], last-write-wins
-  line?: number         // ligne source de la directive @transcription.xxx
+Context { type: "Context", positive: boolean, symbols: string[] }
+```
+
+La parenthèse regarde sans prendre ; le dièse collé à un symbole occupe la place. Un contexte
+négatif est un contexte **avec un signe** — c'est le champ `positive` qui le porte. Les wildcards
+sont acceptés dans les groupes.
+
+Un contexte négatif est placé **dans le membre gauche**, à sa position, parce qu'il consomme un
+emplacement.
+
+---
+
+## Éléments
+
+```
+LhsElement = Symbol | Variable | Wildcard | Context | TemplateAnchor | RawBrace
+
+RhsElement = Symbol | SymbolCall | SymbolWithWait | Rest | Prolongation | UndeterminedRest
+           | Period | NumericDuration | Polymetric
+           | SimultaneousGroup | OutTimeObject | InstantControl | Wait
+           | Variable | Wildcard
+           | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup
+           | TemplateAnchor
+           | TieStart | TieContinue | TieEnd
+           | NilString | BacktickStandalone | Context | RawBrace
+```
+
+Tout élément du membre droit peut porter des suffixes, **toujours collés à droite** :
+
+```
+RhsElement {
+  …                                          // les propriétés de sa sorte
+  suffixQualifiers: RuntimeQualifier[] | null
 }
 ```
 
-Attaché à `Scene.homomorphisms[]`. Produit par le parser depuis les directives
-`@transcription.<subkey>` et les entrées de `lib/transcription.json`.
+Le tokenizer marque chaque token d'un drapeau `spaceBefore` : c'est lui qui tranche l'attache. Une
+parenthèse **sans** espace avant s'attache comme suffixe à l'élément précédent ; espacée en fin de
+règle, elle qualifie la règle. Il n'existe pas de qualificateur préfixe.
 
-- Format `sections` : une entrée par section → `name` = clé de section
-- Format `mappings` : une seule entrée → `name` = subkey de la directive
-- Paires identité (a→a) conservées pour fidélité Bernard
+### Symboles
 
-**Homomorphisme à CHAÎNES — `chains` = SUCRE, compilé en `pairs` plates (corrigé 2026-07-17).**
-Une section de lib peut se DÉCLARER en chaîne : `"sections": { "TR": { "chains": { "C3":
-["B3","F4","C6"], … } } }` (fidèle au format natif `-ho.<X>` : `note --> a --> b`). Mais
-`chains` n'est PAS un mécanisme distinct : le parser le **DÉPLIE en paires consécutives**
-(`C3-->B3-->F4-->C6` ⇒ `(C3,B3),(B3,F4),(F4,C6)`), TOUTES fusionnées **dernière écriture gagne**,
-et n'émet QUE `pairs` (jamais `chains` dans l'AST). Le mécanisme réel — infirmation du modèle
-depth-indexed par l'**oracle natif** (2026-07-17 ; BPx `loadGrammar.ts:6368-6396`) — est UNE table
-de paires par homo, appliquée par `Image()` (une application par portée empilée du même nom). Ex.
-`TR` : `C3` début de la ligne 1 (`(C3,B3)`) MAIS clé médiane de la ligne 2 (`(C3,B4)`) → `C3→B4`
-(dernière écriture). Le consommateur (Kairos) **ne déplie rien** : il query `image(name,sym)` 2-arg.
+```
+Symbol      { type: "Symbol", name: string, actor: string | null, line: number }
+SymbolCall  { type: "SymbolCall", name: string, actor: string | null, args: Arg[], line: number }
+Arg         { type: "Arg", key: string | null, value: Literal | BacktickInline }
+Literal     { type: "Literal", value: number | string }
+```
 
-**Invocation par SYMBOLE NU (marqueur `role`).** Le symbole nu dont le nom = une
-section chargée devient un marqueur d'invocation : le nœud RHS `Symbol` reçoit
-`role: "homomorphism"` (type Symbol conservé — élément positionnel du flux). La
-**répétition** du symbole encode la profondeur `k` (1er `TR` → `chains[note][0]`, `TR
-TR` → `[1]`…). Précédence de résolution (contrat bpscript-bpx L31) : **terminal >
-non-terminal (règle) > homo** — le marqueur n'est posé que si le nom n'est ni un
-terminal d'alphabet en portée ni un LHS de règle. Passe BPx-only (`resolveHomomorphismMarkers`,
-bpxAst.js) : le chemin BP3 hérité ne voit jamais `role`/`chains` (byte-id préservé).
+Le champ `actor` est rempli par le point explicite — `sitar.sa` —, ou par la résolution quand un
+seul acteur porte ce symbole. Il vaut `null` pour un non-terminal, qui n'a pas d'acteur.
 
-Contrat BPx (`ast.ts:150-157`) : BPx consomme ce tableau pour appliquer les
-transformations de terminaux post-dérivation via `rewriteHomomorphismMarkers`
-(paires) / `applyImage` étendu (chaînes, compte du marqueur `role:'homomorphism'`).
+Un **objet sonore composé** est un unique `Symbol` dont le nom est la concaténation sans blancs de
+son contenu : le contenu interne fait partie du nom, opaque à la dérivation.
+
+### Silences, temps et durée
+
+```
+Rest             { type: "Rest" }               // occupe une position, le temps s'écoule
+Prolongation     { type: "Prolongation" }       // étend l'événement précédent
+UndeterminedRest { type: "UndeterminedRest" }   // durée calculée par le moteur
+Period           { type: "Period" }             // frontière entre fragments de durée égale
+NumericDuration  { type: "NumericDuration", numerator: number, denominator: number }
+```
+
+### `Polymetric`
+
+```
+Polymetric {
+  type: "Polymetric"
+  voices: RhsElement[][]                     // une voix est une séquence plate
+  frame: string | number | null              // la durée du bloc, posée par le `:` collé
+  settings: RuntimeQualifier | null          // le sac collé au `}`
+  label: string | null
+}
+```
+
+Les accolades portent la polymétrie — plusieurs voix séparées par la virgule — et le groupement
+temporel — une seule voix. La durée collée donne le **ratio du cadre** : elle vit dans `frame`, et
+c'est là, et nulle part ailleurs, que le consommateur la lit.
+
+### Simultanéité et instantané
+
+```
+SimultaneousGroup {
+  type: "SimultaneousGroup"
+  primary: Symbol | SymbolCall | Rest | NilString
+  secondaries: (Symbol | SymbolCall)[]
+}
+
+OutTimeObject  { type: "OutTimeObject", name: string }
+
+InstantControl {
+  type: "InstantControl"
+  qualifier: RuntimeQualifier | SpeedChange
+  conjoint: boolean                // true quand le `!` est collé au terminal précédent
+}
+
+SpeedChange {
+  type: "SpeedChange"
+  operator: "/" | "*"
+  value: number | string           // entier, décimal, ou fraction
+}
+```
+
+Le **primaire** donne la position et la durée ; les **secondaires** partagent son instant d'attaque
+et prennent sa durée. Un objet hors-temps tient sa place dans l'ordre joué pour une durée nulle.
+
+`conjoint` porte l'attache que l'espace tranche : collé au terminal précédent, le réglage voyage
+avec lui et se réplique avec lui ; séparé par une espace, il se pose seul dans la séquence. En tête
+de règle ou de groupe, il se pose seul.
+
+Un réglage posé dans le flux vaut pour ce qui **suit**, au-delà des bords de règle, jusqu'au
+prochain sac. Le flux est un **état courant** : une note échantillonne la valeur en vigueur à son
+instant d'attaque, et sa portée est **par voix**.
+
+`/N` accélère, `*N/M` écrit la fraction inverse : les deux graphies disent la même chose.
+
+### `Wait` et `SymbolWithWait` — le point d'attente
+
+```
+Wait {
+  type: "Wait"
+  name: string                       // le rôle attendu
+  address: string | number | null    // l'adresse collée : <!sync1.60
+  suffixQualifiers: RuntimeQualifier[] | null
+  payload: { nature: "wait" }
+}
+
+SymbolWithWait {
+  type: "SymbolWithWait"
+  symbol: Symbol
+  triggers: Wait[]
+}
+```
+
+Le point d'attente est un élément **de plein droit** du membre droit, à sa position dans la
+séquence. Sa nature dit ce que le jeton est pour le temps.
+
+Une attente **suspend** le temps là où un silence l'**occupe** : durée nulle, la grille n'avance
+pas. Le symbole porteur **garde sa nature** — le point d'attente est ancré sur lui, il ne le
+remplace pas.
+
+L'adresse dit ce qu'elle **est** par son type : un nombre est le numéro brut de l'appareil, un
+identifiant est l'étiquette produite par la table de correspondance.
+
+### Wildcards et barres
+
+```
+Wildcard { type: "Wildcard", index: number | null }   // `?` nu, ou `?n`
+Variable { type: "Variable", index: number }
+```
+
+`?` désigne une **place**, prend le symbole qui s'y trouve, et cette place est consommée. Le numéro
+lie toutes les occurrences du même numéro dans une règle au même symbole ; le `?` nu prend chaque
+place indépendamment. Une règle en porte jusqu'à 32 numérotés.
+
+Un nom **entre barres** s'abaisse en `Symbol` : les barres délimitent le nom d'un non-terminal et ne
+créent aucune catégorie — elles autorisent une initiale minuscule là où le nom serait sinon pris
+pour un terminal.
+
+### Gabarits
+
+```
+TemplateMaster      { type: "TemplateMaster", name: string, args: Arg[] | null }
+TemplateMasterGroup { type: "TemplateMasterGroup", elements: RhsElement[] }
+TemplateSlave       { type: "TemplateSlave", name: string, args: Arg[] | null }
+TemplateSlaveGroup  { type: "TemplateSlaveGroup", elements: RhsElement[] }
+TemplateAnchor      { type: "TemplateAnchor", kind: "master" }
+```
+
+Un gabarit est une production dont les terminaux sont effacés ; ce qui reste est sa structure. Le
+maître capture, l'esclave rejoue, et le nom porte l'appariement. **L'esclave rejoue le choix du
+maître** : quand le nom capturé désigne une règle à plusieurs alternatives, les deux invocations
+donnent la même.
+
+Les paramètres d'une invocation gouvernent l'expansion de ce qu'elle produit, et ne débordent pas —
+même régime de contenance que le groupe et la règle.
+
+L'**ancre** marque la règle entière comme gabarit maître et reste ouverte jusqu'à sa fermeture. Les
+groupes s'imbriquent.
+
+### Liaisons et chaîne vide
+
+```
+TieStart    { type: "TieStart", symbol: string }
+TieContinue { type: "TieContinue", symbol: string }
+TieEnd      { type: "TieEnd", symbol: string }
+NilString   { type: "NilString" }
+```
+
+### Backticks
+
+```
+BacktickInline     { type: "BacktickInline", code: string, tag: string | null }
+BacktickStandalone { type: "BacktickStandalone", tag: string | null, code: string, line: number }
+BacktickOrphan     { type: "BacktickOrphan", tag: string, code: string, line: number }
+```
+
+Le tag nomme le **langage**, et le langage nomme son **interpréteur**. Le code ne contient jamais le
+tag : les deux sont séparés à l'analyse.
+
+Un backtick de tête et une courbe exigent leur tag. Un backtick de flux peut s'en passer quand la
+tête de sa règle est un acteur qui déclare son `eval` : il en hérite, et un tag explicite gagne sur
+l'héritage. Un backtick de flux sans tag ni acteur qui le qualifie est un orphelin, et la
+compilation le nomme.
+
+Un backtick autonome est un **terminal de plein droit** : il occupe une position dans le flux comme
+une note. Un langage dit en librairie s'il sonne et s'il occupe du temps ; une occurrence surcharge
+ces défauts avec un sac.
+
+### `RawBrace`
+
+```
+RawBrace {
+  type: "RawBrace"
+  value: "{" | "}" | ","
+  frame: string | number | null    // la durée collée, propagée depuis la fermante
+}
+```
+
+Émise quand une accolade ou une virgule paraît comme terminal brut, sans former un bloc équilibré
+dans la même règle. Les accolades peuvent être déséquilibrées à travers plusieurs règles, la durée
+se propageant de la fermante vers l'ouvrante correspondante.
+
+---
+
+## Les réglages
+
+### `RuntimeQualifier`
+
+```
+RuntimeQualifier {
+  type: "RuntimeQualifier"
+  pairs: Setting[]
+}
+
+Setting {
+  key: string                      // le nom du réglage ; il porte son destinataire
+  component?: number               // le composant nommé par le point : (cc.98:45)
+  subject?: string                 // le sujet : "*", ou un nom de terminal
+  value: string | number | boolean // true pour une clé nue
+  line: number
+  col: number
+}
+```
+
+**Le nom d'un réglage suffit à savoir où il va** : chaque nom appartient à une librairie, et chaque
+librairie a un destinataire. Les paires sont portées **opaquement** — l'arbre les transporte, il ne
+les interprète pas.
+
+Le **sujet** cible plus finement qu'une paire nue, et vaut **par paire** : absent, c'est la portée
+elle-même comme unité ; `*` désigne chaque terminal de la portée ; un nom désigne les terminaux de
+ce nom. Pour un signal, le sujet décide l'**horloge** ; pour un réglage statique, les deux écritures
+donnent le même effet.
+
+Le **composant** est ce que le point appelle à l'intérieur d'une clé. Quels contrôles en portent un
+est déclaré en librairie.
+
+### Portées d'attachement × nœud — le contrat
+
+Un suffixe s'attache à une **base** de portées, que l'espace et le `!` désambiguïsent. Cette base
+n'est pas une loi uniforme : **chaque élément déclare quelles portées lui sont valides, et vers quel
+nœud il se traduit pour chacune.** Ce tableau est le contrat que lisent les consommateurs de
+l'arbre ; c'est là, et nulle part ailleurs, qu'ils lisent la valeur.
+
+Les cinq portées : `terminal` (collé) · `groupe` (collé au `}`) · `règle` (espacé, en fin de membre
+droit) · `!accolé` (collé, flux conjoint) · `!inline` (espacé, événement séparé).
+
+| Élément | terminal | groupe | règle | !accolé | !inline | Nœud |
+|---------|:---:|:---:|:---:|:---:|:---:|------|
+| **durée `:N`** | ✅ | ✅ | ✅ | ❌ | ❌ | `Polymetric.frame` — le terminal ou le membre droit est emballé |
+| **réglage `(clé:val)`** | ✅ | ✅ | ✅ | ✅ | ✅ | `…suffixQualifiers` · `Rule.settings` · `Polymetric.settings` · `InstantControl` |
+| **vitesse `(/N)` `(*N/M)`** | ❌ | ❌ | ❌ | ❌ | ✅ | `SpeedChange`, dans un `InstantControl` |
+| **garde `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.guard` |
+| **mutation `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.flags` |
+
+Une portée invalide pour un élément est une **erreur nommée**, jamais un avalement silencieux : une
+durée isolée dans le flux arrête la compilation.
+
+**Précédence**, du plus fort au plus faible : réglage de note > flux `!(...)` > portée `(...)` >
+défauts de déclaration.
+
+### Comment une valeur se résout
+
+Une propriété se résout par **cascade** : plusieurs niveaux la posent, du plus général au plus
+spécifique, et le niveau le plus spécifique qui la mentionne l'emporte. La fusion se fait **champ
+par champ** — un niveau qui laisse un champ de côté laisse passer celui du dessous. Ce qu'un niveau
+ne pose pas, il le tient par **héritage** du niveau qui le contient.
+
+| Niveau    | Ce qu'il fixe                                     |
+| --------- | ------------------------------------------------- |
+| global    | les défauts communs à toutes les scènes           |
+| librairie | les défauts d'un alphabet, d'un accordage, d'un son |
+| scène     | ce dont héritent tous les acteurs                 |
+| acteur    | ce que cet acteur emploie                         |
+| règle     | ce qui vaut pour toute la production              |
+| terme     | ce qui vaut pour ce terme                         |
+
+Quand plusieurs portées posent le **même paramètre** sur une même note, les réglages **s'empilent en
+série**, de l'intérieur vers l'extérieur. Une valeur simple ne s'empile pas : le plus local gagne.
+Un filtre se traverse, une intensité se choisit.
+
+### Les défauts d'environnement
+
+La transpilation prend un **environnement** en second paramètre. Pour chaque réglage absent de la
+scène, l'arbre reçoit le défaut **en dur** à la création : il se suffit, et le moteur dérive depuis
+une structure complète. Une scène qui déclare déjà la valeur gagne. Le champ `fromEnvironment`
+marque la provenance.
 
 ---
 
 ## Contraintes lexicales
 
-- `-` trailing (sans espace avant) : `do4-` = IDENT(`do4`) + REST(`-`) — deux tokens distincts.
-  `do4 -` = terminal `do4` + silence (identique). `dhin--` = terminal `dhin` + silence + silence.
-  **Rappel** : BP3 interdit `-` dans les noms de bol (CompileGrammar.c:1196). Le tokenizer
-  émet donc toujours le tiret traînant comme REST séparé.
-  **Exception dans `[]`** : `[times-1]` = mutation flag (`times` − 1), pas identifiant `times-`.
-- `-` interne autorisé dans les non-terminaux LHS via pré-scan (`Tr-11`, `my-var`)
-- `#` est autorisé dans les identifiants pour les altérations (C#4, F#2)
-- `_` **interne** est autorisé dans les noms (`just_intonation`, `sa_4`).
-  `_` **traînant** (sans caractère alphanum suivant) génère un ou plusieurs tokens PROLONG séparés :
-  `si3_____` = IDENT(`si3`) + PROLONG×5 — conforme à BP3 (OkBolChar2 / Encode.c:415).
+- Un `_` **interne** est absorbé dans le nom quand une lettre ou un chiffre le suit : `sa_4`,
+  `just_intonation`.
+- Un `_` **traînant** arrête la lecture du nom et devient une prolongation par underscore.
+- Un `-` **traînant** est un silence, jamais une partie du nom : `do4-` s'écrit aussi `do4 -`.
+- Un `-` **interne** est autorisé dans les noms de non-terminaux : `Tr-11`.
+- **Entre crochets**, `[times-1]` est une mutation : le parser décompose le motif
+  identifiant-tiret-nombre en drapeau, opérateur et valeur.
+- `#` est autorisé dans les identifiants, pour les altérations : `C#4`.
 
 ---
 
-## Pipeline AST
+## Le chemin
 
 ```
-Source (.bps) -> Tokenizer -> Parser -> AST (Scene)
-  -> Actor resolver (charge JSON, expand symboles, conflits)
-  -> Encoder -> BP3 grammar + terminalActorMap + mapTable + sceneTable -> WASM engine
+Source (.bps) → Tokenizer → Parser → Scene
+  → résolution des acteurs (charge les catalogues, étend les symboles, tranche les conflits)
+  → Encodeur → grammaire BP3 + tables de routage → moteur
 ```
 
-La phase **Actor resolver** (`src/transpiler/actorResolver.js`) entre le parser et l'encoder :
-1. Collecte les `ActorDirective` de la Scene
-2. Charge `alphabets.json` par acteur via `loadLib()`, expand les terminaux (notes × altérations × registres)
-3. Construit un `symbolActorMap` : terminal → Set d'acteurs qui le contiennent
-4. Résout les déclarations `gate X:actorName` comme bindings acteur
-5. Walk récursif du RHS : résolution implicite (1 acteur → auto) ou erreur (ambiguïté)
+La **résolution des acteurs** vient entre le parser et l'encodeur : elle collecte les acteurs,
+charge leur alphabet, construit la correspondance terminal → acteurs, et parcourt le membre droit
+pour résoudre chaque symbole — automatiquement quand un seul acteur le porte, par une erreur nommée
+quand plusieurs le portent.
 
-L'encoder émet en parallèle :
-- `terminalActorMap` (terminal BP3 → acteur) — pour le routing runtime
-- `mapTable` (I/O mappings CC/OSC ↔ flags/triggers) — pour le bus I/O runtime
-- `sceneTable` (nom → fichier .bps) — pour l'orchestration multi-scènes
-- `exposeTable` (flags exposés au parent) — pour le scoping inter-scènes
+L'encodeur émet en parallèle la correspondance terminal → acteur, pour le routage, et la table des
+réglages que le runtime consomme.
 
 ---
 
 ## Exemple
 
-Source : `[phase==1] S -> Sa!dha Re [mode:random]`
+Source : `[stage==1] S -> sa!dha re (mode:random)`
 
 ```json
 {
@@ -1657,17 +736,19 @@ Source : `[phase==1] S -> Sa!dha Re [mode:random]`
     "index": 1,
     "rules": [{
       "type": "Rule",
-      "guard": { "flag": "phase", "operator": "==", "value": 1, "mutates": false },
+      "guard": [{ "flag": "stage", "operator": "==", "value": 1, "mutates": false }],
       "lhs": [{ "type": "Symbol", "name": "S" }],
       "arrow": "->",
       "rhs": [
         { "type": "SimultaneousGroup",
-          "primary": { "type": "Symbol", "name": "Sa" },
+          "primary": { "type": "Symbol", "name": "sa" },
           "secondaries": [{ "type": "Symbol", "name": "dha" }] },
-        { "type": "Symbol", "name": "Re" }
+        { "type": "Symbol", "name": "re" }
       ],
-      "qualifiers": [{ "pairs": [{ "key": "mode", "value": "random" }] }],
-      "runtimeQualifier": null
+      "flags": [],
+      "settings": { "type": "RuntimeQualifier",
+                    "pairs": [{ "key": "mode", "value": "random" }] },
+      "scan": null
     }]
   }]
 }
