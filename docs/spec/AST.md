@@ -526,7 +526,7 @@ Un réglage posé dans le flux vaut pour ce qui **suit**, au-delà des bords de 
 prochain sac. Le flux est un **état courant** : une note échantillonne la valeur en vigueur à son
 instant d'attaque, et sa portée est **par voix**.
 
-`/N` accélère, `*N/M` écrit la fraction inverse : les deux graphies disent la même chose.
+`/N` accélère, et `*N/M` écrit la même chose en fraction inverse : `*a/b` vaut `/(b/a)`.
 
 ### `Wait` et `SymbolWithWait` — le point d'attente
 
