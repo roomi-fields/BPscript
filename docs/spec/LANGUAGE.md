@@ -162,8 +162,8 @@ Le sens de chaque signe accole -- le point, le deux-points, l'etoile -- est deta
 
 Un backtick porte du code, et **le tag en tete est une adresse** : il nomme le langage, et le
 langage nomme son interprete -- exactement comme le domaine d'une cle. Les langages externes
-(`sc:`, `py:`, `tidal:`, `strudel:`, `hydra:`...) vont a runtime-codevoices ; **`patch:` va a
-Dedale**, parce que le cablage est son metier.
+s'ecrivent `sc:`, `py:`, `tidal:`, `strudel:`, `hydra:` ; **`patch:` est le langage du cablage**, et
+son interprete lui est propre.
 
 **Chaque langage se declare en librairie** -- voir « Le prototype d'un langage backtique ». C'est la
 qu'il dit s'il sonne et s'il occupe du temps ; une occurrence
@@ -192,8 +192,8 @@ S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 
 #### Le langage de patch
 
-**`patch:` est le langage du cablage**, et Dedale l'interprete. Il s'ecrit dans une regle comme
-tout backtick : **muet, et de duree nulle**.
+**`patch:` est le langage du cablage.** Il s'ecrit dans une regle comme tout backtick : **muet, et
+de duree nulle**.
 
 ```bpscript
 S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4
@@ -800,7 +800,7 @@ percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
 | sous-prototype   | ce qu'il ajoute                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------ |
-| **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
+| **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves            |
 | **`percussion`** | le socle seul lui suffit : elle sonne et elle dure                                               |
 
 **L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
