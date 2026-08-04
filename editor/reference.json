@@ -196,7 +196,7 @@
       "name": "Wildcard",
       "category": "advanced",
       "syntax": "? or ?N",
-      "description": "Matches any single terminal. ?N captures with a numeric label for back-reference. Used in SUB/SUB1 mode patterns.",
+      "description": "Matches any single terminal. ?N is a numbered wildcard: same number, same symbol. Used in SUB/SUB1 mode patterns.",
       "bp3": "?",
       "example": "@mode:sub1\nA ?1 B -> A ?1 C\n// replace B after any symbol with C"
     },

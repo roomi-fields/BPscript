@@ -17,7 +17,7 @@
 - [Les trois silences](#les-trois-silences)
 - [Period notation `.`](#period-notation-----fragments-de-duree-egale)
 - [Liaisons `~`](#liaisons-----tied-sound-objects)
-- [Captures `?`](#captures-----pattern-matching)
+- [Wildcards `?`](#wildcards-----pattern-matching)
 - [Les barres `|x|`](#les-barres-x----delimiter-un-nom)
 - [Contextes `()` et `#`](#contextes--et-----conditions-dapplication)
 - [Les gabarits `$` et `&`](#les-gabarits--et-----la-structure-dune-production)
@@ -665,8 +665,8 @@ _              prolongation : etend l'evenement precedent
                (S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))
 <!             point d'attente : point de synchronisation, la derivation attend un geste entrant
 #              contexte negatif
-?              capture d'un symbole quelconque
-$              gabarit : capture d'un motif (maitre)
+?              wildcard : un symbole quelconque
+$              gabarit maitre : capture un motif
 &              gabarit : rejeu d'un motif (esclave)
 ~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
 | |            homomorphisme : variable liee dans une regle
@@ -1436,7 +1436,7 @@ Syntaxe :
 
 ---
 
-## Captures `?` -- pattern matching
+## Wildcards `?` -- pattern matching
 
 **`?` se lit « ce qu'il y a la ».** Il ne nomme rien : il designe une **place**, prend le symbole qui
 s'y trouve, et cette place est **consommee**. A droite de la fleche, il rejoue ce qu'il a pris.
@@ -1465,7 +1465,7 @@ S -> C4 D4 C4
 ?1 D4 ?1 -> ?1 G4 ?1     //  C4 D4 C4  ->  C4 G4 C4
 ```
 
-**Une capture est le SEUL joker du langage.**
+**Le `?` est le SEUL wildcard du langage.**
 
 **Le numero change ce que la regle accepte autant que ce qu'elle rejoue.** Une regle qui ne
 s'applique pas laisse la chaine **inchangee** :
@@ -1479,7 +1479,7 @@ s'applique pas laisse la chaine **inchangee** :
                          //  C4 D4  ->  C4 D4     inchangee
 ```
 
-Une capture vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotees. Le compilateur
+Un wildcard vaut pour **un** symbole. Une regle en porte jusqu'a 32 numerotes. Le compilateur
 les porte jusqu'au moteur.
 
 ---
@@ -1518,7 +1518,7 @@ un gabarit maitre et son esclave -- cf.
                             //  C4 D4     ->  C4 D4     inchangee
 ```
 
-**Un contexte REGARDE, il ne PREND pas.** C'est ce qui le separe d'une capture, et elle s'entend a
+**Un contexte REGARDE, il ne PREND pas.** C'est ce qui le separe d'un wildcard, et elle s'entend a
 la resolution :
 
 ```bpscript
@@ -1529,7 +1529,7 @@ la resolution :
 (C4) D4 -> D4 C4            //  C4 D4  ->  C4 D4 C4
 ```
 
-**D'ou une asymetrie.** Une capture peut imiter un contexte -- il suffit de la remettre a
+**D'ou une asymetrie.** Un wildcard peut imiter un contexte -- il suffit de la remettre a
 l'identique :
 
 ```bpscript
@@ -1619,7 +1619,7 @@ les deux.
 ```bpscript
 S <> $mel &mel                            // $mel capture, &mel rejoue
 S <> $mel(tempx:1) &mel(tempx:2/3)        // chaque invocation porte ses parametres
-S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
+S -> ${$X S &X} &{$X S &X}                // capture un groupe entier
 ```
 
 **L'esclave rejoue le CHOIX du maitre.** Quand le nom capture designe une regle a
@@ -1644,7 +1644,7 @@ $ S -> C4 D4
 ```
 
 L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace tranche entre les deux
-emplois du signe : colle a un identifiant, `$X` nomme une capture ; suivi d'une espace, `$` ancre --
+emplois du signe : colle a un identifiant, `$X` nomme un gabarit ; suivi d'une espace, `$` ancre --
 cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a sa fermeture.
 
 ### Tables de substitution
@@ -1681,8 +1681,10 @@ Une entree s'ecrit `[<rang>] <echelle> <forme>` :
 
 - `<rang>` -- la place de l'entree dans le catalogue, entre crochets.
 - `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
-- `<forme>` -- des jokers `?`, un par terminal efface ; des points `.` (fragments de duree egale) ;
-  des groupes appariees `($N ...)`, imbricables -- les memes maitres et esclaves que dans une regle.
+- `<forme>` -- les memes `?` que dans une regle, un par terminal efface, et toujours anonymes :
+  une ligne de catalogue n'a pas de fleche, donc rien a rejouer et pas de numero. Plus des points
+  `.` (fragments de duree egale) et des groupes appariees `($N ...)`, imbricables -- les memes
+  maitres et esclaves que dans une regle.
 
 **Le catalogue s'enumere.** Le moteur explore les formes que la grammaire permet et les ecrit ici :
 une grammaire de quinze regles peut en produire seize, parce que les variantes de vitesse se

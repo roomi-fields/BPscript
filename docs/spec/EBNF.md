@@ -1103,13 +1103,13 @@ variable = "|" , IDENT , "|" ;
 Note : `|x|` est une variable BP3 (métavariable de réécriture), pas un homomorphisme.
 Les homomorphismes sont déclarés via `@transcription.<subkey>` et portés dans `Scene.homomorphisms`.
 
-### 4.8 Wildcards (captures)
+### 4.8 Wildcards
 
 ```ebnf
 wildcard = "?" , [ INT ] ;
 ```
 
-`?` = anonyme, `?1` = capture nommée.
+`?` = wildcard anonyme, `?1` = wildcard numéroté (métavariable, unifie).
 
 ### 4.9 Templates
 

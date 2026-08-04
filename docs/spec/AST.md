@@ -539,7 +539,7 @@ SoundAssignmentAST {
   scope: "alphabet" | "actor"      // qui possède cette affectation
   alphabet?: string                // nom, quand scope === "alphabet"
   actor?: string                   // nom, quand scope === "actor"
-  subject: string                  // nom de note (ex. "Sa") ou "*" (défaut wildcard)
+  subject: string                  // nom de note (ex. "Sa") ou "*" (sujet par défaut)
   target: SoundTarget
   line: number
 }
@@ -567,7 +567,7 @@ d'origine du sujet) :
 | Inline sur occurrence dans une règle | 7 | `Symbol.suffixQualifiers` (via runtime qualifier `sound.NAME`) | — (pas une assignation, mais un suffixe d'élément) |
 
 Le champ `subject` :
-- `"*"` = wildcard sujet (défaut hérité par tous les sujets non explicitement
+- `"*"` = sujet par défaut (hérité par tous les sujets non explicitement
   affectés dans le même territoire).
 - nom d'un terminal (ex. `"Sa"`, `"do4"`) = affectation à cette note dans le
   scope parent.

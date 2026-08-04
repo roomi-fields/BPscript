@@ -4456,8 +4456,8 @@ function parse(tokens, opts = {}) {
 
   function parseWildcard() {
     expect(T.QUESTION);
-    // Frontière AST (Palier 3) : bare `?` = index ABSENT (joker anonyme (T0,1),
-    // capture indépendante) ; `?n` = index:n (métavariable (T6,n), unification).
+    // Frontière AST (Palier 3) : bare `?` = index ABSENT (wildcard anonyme (T0,1),
+    // indépendant) ; `?n` = index:n (wildcard numéroté / métavariable (T6,n), unification).
     // DISTINCTS au moteur — le `?` nu ne porte JAMAIS d'`index`. Cf. AST_SPEC §1.2.1.
     if (at(T.INT)) return { type: 'Wildcard', index: Number(advance().value) };
     return { type: 'Wildcard' };
