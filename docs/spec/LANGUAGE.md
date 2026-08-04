@@ -24,7 +24,7 @@
 - [Les gabarits `$` et `&`](#les-gabarits-et----la-structure-dune-production)
 - [Comment une valeur se resout](#comment-une-valeur-se-resout)
 - [Conventions de notation](#conventions-de-notation-lespace-le-point-le-deux-points)
-- [Flags](#flags--variables-détat-et-composition-conditionnelle)
+- [Flags](#flags-variables-détat-et-composition-conditionnelle)
 - [Déclarations](#déclarations)
 - [Les librairies](#les-librairies)
 - [Le temps](#le-temps)
