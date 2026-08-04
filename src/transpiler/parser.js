@@ -88,8 +88,9 @@ function channelCatalog() {
  * `@alphabet.X:<sortie>` de l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on
  * n'autorise que ceux qu'on connaît ») : suffixe ∉ schema.channels{out:true} → rejet fail-loud.
  * `dmx` y est entré le 2026-08-04 (catalogue unique `lib/core.json`, légitime même sans runtime
- * dmx encore écrit) ; `text` en est délibérément absent — il est dans le catalogue mais ne porte
- * aucune direction. Dérivée du catalogue unifié, jamais recopiée en dur ici.
+ * dmx encore écrit). `text` y est PRÉSENT (il porte `out:true`, routé comme les autres sorties) —
+ * son refus à l'écriture est une question SÉPARÉE, portée par `writableChannels` (DIRECTION ≠
+ * ÉCRITURE, voir plus bas). Dérivée du catalogue unifié, jamais recopiée en dur ici.
  */
 let _outChannels = null;
 function outChannels() {
@@ -112,6 +113,24 @@ function inChannels() {
   const cat = channelCatalog();
   _inChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].in));
   return _inChannels;
+}
+
+/**
+ * DIRECTION ≠ ÉCRITURE (correction Romain 2026-08-04). `outChannels`/`inChannels` disent OÙ VA
+ * le signal ; `writableChannels` dit si un AUTEUR peut TAPER ce canal dans une scène AUJOURD'HUI.
+ * `text` est le premier cas des deux : il EST routé en sortie (`out:true`, comme les autres
+ * destinations de l'architecture) mais son point d'écriture — son appareil dédié — n'existe pas
+ * encore. Avant ce champ, le refus de 'out.text' répondait « text n'est pas une sortie » — FAUX,
+ * text EST une sortie, seule son écriture attend son appareil. `writable` est déclaré EXPLICITEMENT
+ * sur les SIX canaux de `lib/core.json` (jamais déduit d'une absence, cf. `_writable_doc`) : la
+ * forme se reproduira, un canal peut exister dans l'architecture avant d'avoir sa graphie.
+ */
+let _writableChannels = null;
+function writableChannels() {
+  if (_writableChannels) return _writableChannels;
+  const cat = channelCatalog();
+  _writableChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].writable));
+  return _writableChannels;
 }
 
 /**
@@ -1894,6 +1913,20 @@ function parse(tokens, opts = {}) {
           tok,
         );
       }
+      // DIRECTION ≠ ÉCRITURE (décision Romain 2026-08-04). Un canal peut porter la sortie
+      // (vérifié ci-dessus) et rester REFUSÉ à l'écriture : c'est le cas de 'text', routé comme
+      // les autres sorties mais sans point d'écriture en scène. Le refus NOMME la vraie raison —
+      // jamais « n'est pas une sortie », qui serait FAUX ici (`writableChannels`, lib/core.json
+      // `schema.channels.<canal>.writable`).
+      if (properties.transport && outChannels().has(properties.transport.key)
+          && !writableChannels().has(properties.transport.key)) {
+        throw new ParseError(
+          `acteur '${actorName}' : 'out.${properties.transport.key}' est refusé — ce canal est `
+          + `une DESTINATION de l'architecture, routée comme les autres sorties, mais son `
+          + `ÉCRITURE dans une scène attend encore son appareil dédié.`,
+          tok,
+        );
+      }
       // LANG-SONS-2 ([438], spec §2-§3) : `voice.<nom>` doit référencer une voix de lib/voices
       // (formes valides : audio = backtick typé) ; le binding alphabet→voix de l'alphabet lié
       // est validé au même point. La hauteur est STRUCTURELLE (alphabet+tuning) : une voix
@@ -2024,6 +2057,19 @@ function parse(tokens, opts = {}) {
       throw new ParseError(
         `'@alphabet.${subkey}:${runtime}' refusé — le raccord de sortie de l'acteur implicite `
         + `n'accepte que {audio, midi, osc} (liste positive fermée, décision 2026-07-16).${hint}`,
+        current(),
+      );
+    }
+    // DIRECTION ≠ ÉCRITURE, même règle qu'au raccord explicite `@actor … out.<canal>` ci-dessus :
+    // un canal peut être une sortie du catalogue (vérifié juste au-dessus) et rester refusé à
+    // l'écriture ('text', routé mais sans point d'écriture en scène). Le refus NOMME la vraie
+    // raison, jamais « n'est pas une sortie ».
+    if (name === 'alphabet' && subkey && runtime && outChannels().has(runtime)
+        && !writableChannels().has(runtime)) {
+      throw new ParseError(
+        `'@alphabet.${subkey}:${runtime}' refusé — ce canal est une DESTINATION de l'architecture, `
+        + `routée comme les autres sorties, mais son ÉCRITURE dans une scène attend encore son `
+        + `appareil dédié.`,
         current(),
       );
     }
