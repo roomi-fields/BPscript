@@ -91,7 +91,7 @@ const REGLES = [
   ['sans-sens', "un alias qui ne désigne rien", S('@alias g fantome\nS -> C4'), S('@macro reel saw >> audio\n@alias g reel\nS -> C4'), 'ne désigne rien'],
   ['sans-sens', "un terminal absent des alphabets en portée", S('S -> zzz'), S('S -> C4'), 'non déclaré'],
   ['sans-sens', "une adresse de point d'attente malformée",
-   S('@in touches transport.keyboard\nS -> C4 <!touches.60bis D4'), S('@in touches transport.keyboard\nS -> C4 <!touches.60 D4'), 'adresse'],
+   S('@var touches in.keyboard\nS -> C4 <!touches.60bis D4'), S('@var touches in.keyboard\nS -> C4 <!touches.60 D4'), 'adresse'],
   ['sans-sens', "un alphabet inexistant", S('@alphabet.klingon\nS -> C4'), S('@alphabet.western\nS -> C4'), null],
   ['sans-sens', "une directive inconnue", S('@zorglub 3\nS -> C4'), S('@quantization:50\nS -> C4'), null],
 ];

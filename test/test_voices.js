@@ -41,7 +41,7 @@ const HDR = '@core\n@controls\n';
 
 console.log('--- 1. voice.<nom> = référence d\'entité (ActorReference) ---');
 {
-  const src = HDR + '@actor lead @alphabet.western tuning.western_12TET voice.wobble transport.audio\nS -> C4 E4\n';
+  const src = HDR + '@actor lead @alphabet.western tuning.western_12TET voice.wobble out.audio\nS -> C4 E4\n';
   const r = compileToBPxAST(src);
   check('compile sans erreur', r.errors.length === 0, JSON.stringify(r.errors[0] || ''));
   const lead = r.ast && r.ast.actors.find(a => a.name === 'lead');
@@ -52,7 +52,7 @@ console.log('--- 1. voice.<nom> = référence d\'entité (ActorReference) ---');
 
 console.log('--- 2. PREUVE [438] : voix audio SANS hauteur (percussion, pas de tuning) ---');
 {
-  const src = HDR + '@actor tabla @alphabet.tabla voice.bayan_open transport.audio\nS -> dhin ka dhin ti\n';
+  const src = HDR + '@actor tabla @alphabet.tabla voice.bayan_open out.audio\nS -> dhin ka dhin ti\n';
   acceptsBothPaths('tabla + voice sans tuning accepté', src);
   const r = compileToBPxAST(src);
   const tabla = r.ast && r.ast.actors.find(a => a.name === 'tabla');
@@ -63,23 +63,23 @@ console.log('--- 2. PREUVE [438] : voix audio SANS hauteur (percussion, pas de t
 
 console.log('--- 3. Fail-loud ---');
 rejectsBothPaths('voix inconnue rejetée',
-  HDR + '@actor x @alphabet.western tuning.western_12TET voice.inexistante transport.audio\nS -> C4\n',
+  HDR + '@actor x @alphabet.western tuning.western_12TET voice.inexistante out.audio\nS -> C4\n',
   "voix 'inexistante' inconnue");
 rejectsBothPaths('graphie voice: rejetée (cutover : \'.\' appelle un composant)',
-  HDR + '@actor x @alphabet.western tuning.western_12TET voice:wobble transport.audio\nS -> C4\n',
+  HDR + '@actor x @alphabet.western tuning.western_12TET voice:wobble out.audio\nS -> C4\n',
   "Écris 'voice.<nom>'");
 
 console.log('--- 4. Binding alphabet→voix (tabla.voices) validé au parse ---');
 {
   // La tabla porte une carte voices (lib/alphabets.json) : sa validation passe au bind,
   // par la ligne d'acteur ET par le raccord de scène '@alphabet.tabla:audio'.
-  acceptsBothPaths('bind par ligne d\'acteur', HDR + '@actor t @alphabet.tabla transport.audio\nS -> dhin ka\n');
+  acceptsBothPaths('bind par ligne d\'acteur', HDR + '@actor t @alphabet.tabla out.audio\nS -> dhin ka\n');
   acceptsBothPaths('bind par raccord de scène', HDR + '@alphabet.tabla:audio\nS -> dhin ka\n');
 }
 
 console.log('--- 5. Spécialisation for:<device> — référable par nom de base ---');
 acceptsBothPaths('voice.fatbass (base + \'fatbass for:sub37\' en lib)',
-  HDR + '@actor bass @alphabet.western tuning.western_12TET voice.fatbass transport.midi(ch:1)\nS -> C2 G2\n');
+  HDR + '@actor bass @alphabet.western tuning.western_12TET voice.fatbass out.midi(ch:1)\nS -> C2 G2\n');
 
 console.log('--- 6. describeVocabulary expose les voix ---');
 {
@@ -92,9 +92,9 @@ console.log('--- 6. describeVocabulary expose les voix ---');
 
 console.log('--- 7. Non-régression : formes canoniques sans voix ---');
 acceptsBothPaths('acteur canonique sans voix',
-  HDR + '@actor sitar @alphabet.sargam tuning.sargam_22shruti transport.midi(ch:3)\nS -> sa re\n');
+  HDR + '@actor sitar @alphabet.sargam tuning.sargam_22shruti out.midi(ch:3)\nS -> sa re\n');
 acceptsBothPaths('acteur NOMMÉ voice (nom libre, pas la clé)',
-  HDR + '@actor voice @alphabet.sargam transport.audio\nS -> sa re\n');
+  HDR + '@actor voice @alphabet.sargam out.audio\nS -> sa re\n');
 
 console.log(`\n${pass} OK / ${fail} KO`);
 process.exit(fail ? 1 : 0);

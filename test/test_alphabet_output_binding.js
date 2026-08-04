@@ -30,8 +30,8 @@ for (const chan of ['audio', 'midi', 'osc']) {
 
 // --- Noms PÉRIMÉS browser/webaudio → REJETÉS (pas normalisés) ---
 rejects('@alphabet.western:browser\nS -> C', 'PÉRIMÉ', '@alphabet.western:browser');
-rejects('@actor v alphabet.western transport.browser\nS -> v.C', 'PÉRIMÉ', 'transport.browser');
-rejects('@actor v alphabet.western transport.webaudio\nS -> v.C', 'PÉRIMÉ', 'transport.webaudio');
+rejects('@actor v alphabet.western out.browser\nS -> v.C', 'PÉRIMÉ', 'out.browser');
+rejects('@actor v alphabet.western out.webaudio\nS -> v.C', 'PÉRIMÉ', 'out.webaudio');
 
 // --- LISTE POSITIVE FERMÉE (addendum ratifié Romain 2026-07-16 : « on n'autorise que les 3
 // qu'on connaît ») : tout suffixe ∉ {audio, midi, osc} → rejet, sur LES DEUX voies. ':sc'
@@ -62,12 +62,12 @@ rejects('@routing\n@alphabet.western\nS -> C', "@routing", '@routing (nu)');
 
 // --- Canon direct inchangé (non-régression) ---
 for (const chan of ['audio', 'midi', 'osc']) {
-  const { key } = transportKey(`@actor v alphabet.western transport.${chan}\nS -> v.C`);
-  check(key === chan, `transport.${chan} (canon) inchangé, obtenu '${key}'`);
+  const { key } = transportKey(`@actor v alphabet.western out.${chan}\nS -> v.C`);
+  check(key === chan, `out.${chan} (canon) inchangé, obtenu '${key}'`);
 }
 {
-  const { key } = transportKey('@actor v alphabet.western transport.midi(ch:3)\nS -> v.C');
-  check(key === 'midi', `transport.midi(ch:3) → 'midi', obtenu '${key}'`);
+  const { key } = transportKey('@actor v alphabet.western out.midi(ch:3)\nS -> v.C');
+  check(key === 'midi', `out.midi(ch:3) → 'midi', obtenu '${key}'`);
 }
 
 // --- routing.json SUPPRIMÉ du dépôt (les deux copies) ---

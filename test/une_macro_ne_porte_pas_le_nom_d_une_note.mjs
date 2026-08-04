@@ -39,7 +39,7 @@ const AMBIGUES = [
   ['alphabet de scène, macro AVANT',  '@core\n@macro G4 saw >> audio\n@alphabet.western\nS -> C4 D4'],
   ['macro jamais employée',           '@core\n@alphabet.western\n@macro G4 saw >> audio\nS -> C4'],
   ['deux macros, une seule fautive',  '@core\n@alphabet.western\n@macro sain saw >> audio\n@macro G4 saw >> audio\nS -> C4'],
-  ['alphabet porté par un acteur',    '@core\n@actor v\n  alphabet.western\n  transport.audio\n@macro G4 saw >> audio\nS -> v.C4'],
+  ['alphabet porté par un acteur',    '@core\n@actor v\n  alphabet.western\n  out.audio\n@macro G4 saw >> audio\nS -> v.C4'],
 ];
 const PROPRIETES = [
   ['est refusée', (r) => r.length >= 1],

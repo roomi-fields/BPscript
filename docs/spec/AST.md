@@ -188,13 +188,14 @@ par le **résolveur** (Kairos) — BPScript **PORTE opaque** (loi 27 : porter �
 
 **Raccord de SORTIE (canonique, décision Romain 2026-07-13 §Raccord sortie).** Un `libRef` nomme une
 **librairie de hauteur** ; il ne porte **aucune** sortie. Pour SONNER, une scène `@mine`/`@factory`
-déclare un **acteur explicite** avec un transport — `@actor voice transport.audio` puis
-`@mine.ragas.sargam` : la hauteur vient du `libRef` (résolue par Kairos), le transport vient de
-l'acteur. Le binding de sortie CANON `@alphabet.X:<sortie>` (transport de l'acteur implicite,
-décision 2026-07-16 — règle DISTINCTE qui coexiste) n'est **PAS** étendu à la réf de
-provenance (séparation « lib de hauteur » vs « sortie » ; `libRefs` reste un `string[]` opaque, sans
-binding). Une scène `@mine` **nue** (sans acteur) retombe sur le transport par défaut `audio` (natif) —
-**muette dans le player web, et c'est VOULU** : l'auteur déclare sa sortie explicitement.
+déclare un **acteur explicite** avec une sortie — `@actor voice out.audio` puis
+`@mine.ragas.sargam` : la hauteur vient du `libRef` (résolue par Kairos), la sortie vient de
+l'acteur (`out` remplace `transport`, décision Romain 2026-08-04). Le binding de sortie CANON
+`@alphabet.X:<sortie>` (sortie de l'acteur implicite, décision 2026-07-16 — règle DISTINCTE qui
+coexiste) n'est **PAS** étendu à la réf de provenance (séparation « lib de hauteur » vs « sortie » ;
+`libRefs` reste un `string[]` opaque, sans binding). Une scène `@mine` **nue** (sans acteur) retombe
+sur la sortie par défaut `audio` (natif) — **muette dans le player web, et c'est VOULU** : l'auteur
+déclare sa sortie explicitement.
 
 ---
 
@@ -241,8 +242,8 @@ Convention stricte : `@file` → `lib/file.json`, `@file.key` → `lib/file.json
 
 Le champ `binding` reçoit la valeur après `:`. Sa sémantique dépend de la directive :
 - `@alphabet.western:audio` → binding = **sortie de l'acteur implicite** (canal audio/midi/osc,
-  décision 2026-07-16 ; le binding d'alphabet renseigne le transport de l'acteur unique implicite,
-  décision 2026-07-05 §2). `:browser`/`:webaudio` = noms PÉRIMÉS REJETÉS fail-loud au parse
+  décision 2026-07-16 ; le binding d'alphabet renseigne la sortie (`out`) de l'acteur unique
+  implicite, décision 2026-07-05 §2). `:browser`/`:webaudio` = noms PÉRIMÉS REJETÉS fail-loud au parse
   (décision 2026-07-16, Romain : on supprime, pas de normalisation) — écrire `:audio`.
 - `@tuning.just_intonation:raga` → binding = alphabet cible
 - `@tuning.western_12TET` → pas de binding (chargement simple)
@@ -348,12 +349,17 @@ ActorDirective {
                                    // surcharge la convention native de l'alphabet (ex. sargam noté sa6).
     sound: string | null          // producteur PAR SYMBOLE (banque, ou prospectif backtick-synthé)
     transport: TransportRef | null // CANAL de NOTRE sortie (audio/midi/osc) — modèle producteur/canal
-                                   // (Romain 2026-07-14). OPTIONNEL : acteur SANS eval → défaut cascade
-                                   // @core `audio` ; acteur AVEC eval → transport ABSENT/INTERDIT (il
-                                   // sort en natif, fail-loud si présent). PAS de transport.video/visual.
+                                   // (Romain 2026-07-14). S'ÉCRIT `out.<canal>` depuis le 2026-08-04
+                                   // (in/out remplacent transport — le mot `transport` est SORTI du
+                                   // langage ; le CHAMP interne, lui, NE CHANGE PAS de nom : seul le
+                                   // mot que l'auteur ÉCRIT change, pas le nœud d'arbre). OPTIONNEL :
+                                   // acteur SANS eval → défaut cascade @core `audio` ; acteur AVEC eval
+                                   // → transport ABSENT/INTERDIT (il sort en natif, fail-loud si
+                                   // présent). PAS de out.video/visual.
     eval: string | null           // PRODUCTEUR embarqué AUTONOME (strudel/hydra/p5/csound/mercury) :
-                                   // produit + sort en NATIF, sans transport. null = producteur défaut
-                                   // IMPLICITE `js` (notre code, produit dans notre env → utilise transport).
+                                   // produit + sort en NATIF, sans sortie routée. null = producteur
+                                   // défaut IMPLICITE `js` (notre code, produit dans notre env → utilise
+                                   // `out`).
   }
   references: ActorReference[]   // FORME CANONIQUE (AST_SPEC §2.1) lue par le dispatcher/BPx :
                                  // une entrée par binding, { type:"ActorReference", category, name, params? }
@@ -383,10 +389,11 @@ tokens). Une scène simple emprunte ainsi le MÊME chemin orchestré qu'une mult
 Avant, l'hôte (`kanopi bpx-adapter.ts:282-283`) le synthétisait ; KAI-9 supprime la résolution hôte →
 le défaut vit dans l'AST, BPx ne fait que le porter.
 
-**Adressage de sortie = `transport` + ses params** (KAI-9, Romain 2026-06-26). UNE seule forme
-partout : le TYPE de runtime est `transport.<type>` (`references[transport].name`) et les DÉTAILS
-d'adresse (device/channel/port) sont ses **params**, iso quel que soit le type :
-`transport.midi(ch:3)`, `transport.osc(device:reaper, ch:7)`. L'hôte reconstruit son routage depuis
+**Adressage de sortie = `out` (ex-`transport`) + ses params** (KAI-9, Romain 2026-06-26 ; mot
+renommé le 2026-08-04). UNE seule forme partout : le TYPE de runtime s'ÉCRIT `out.<type>` et vit
+dans `references[transport].name` (le champ interne garde son nom) et les DÉTAILS d'adresse
+(device/channel/port) sont ses **params**, iso quel que soit le type :
+`out.midi(ch:3)`, `out.osc(device:reaper, ch:7)`. L'hôte reconstruit son routage depuis
 `references[transport].{name, params}` (plus de tiroir séparé). L'ancien champ `ActorDirective.binding`
 (OSC-L1, device:/ch: lâche) est **supprimé** : les détails OSC vivaient dans un tiroir parallèle au
 lieu de `transport.params`.
@@ -400,16 +407,16 @@ TransportRef {
 }
 ```
 
-**`transport` = canal de NOTRE sortie** (`audio`/`midi`/`osc`, défaut cascade @core `audio`) :
-optionnel, et **absent/interdit sur un acteur `eval`**. **`eval` = producteur embarqué autonome**
-(strudel/hydra/p5/csound/mercury) qui **sort en natif** ; absence d'`eval` = producteur défaut `js`
-(notre code) → SEUL cas de voix de code transportée vers NOTRE `transport` (modèle producteur/canal,
-Romain 2026-07-14). Un acteur est une **voix** ;
+**`out` (ex-`transport`) = canal de NOTRE sortie** (`audio`/`midi`/`osc`, défaut cascade @core
+`audio`) : optionnel, et **absent/interdit sur un acteur `eval`**. **`eval` = producteur embarqué
+autonome** (strudel/hydra/p5/csound/mercury) qui **sort en natif** ; absence d'`eval` = producteur
+défaut `js` (notre code) → SEUL cas de voix de code routée vers NOTRE sortie (`out`, modèle
+producteur/canal, Romain 2026-07-14 ; mot renommé le 2026-08-04). Un acteur est une **voix** ;
 sa sortie suit la cascade scène → acteur → terminal (voir « Cascade de sortie » ci-dessous et
 `docs/design/ACTOR.md`), distincte de la cascade des sons.
 
 **v0.8 — bindings d'entités via `.`** : les références à une entité nommée
-(`alphabet`, `tuning`, `transport`, `sound`) utilisent désormais `.` et non `:`.
+(`alphabet`, `tuning`, `out`, `sound`) utilisent désormais `.` et non `:`.
 Le `:` reste réservé aux affectations de sujet (cf. `SoundAssignmentAST`).
 Les `actor_props` sont écrites une par ligne (ou séparées par espaces) dans le
 bloc qui suit `@actor NAME`.
@@ -420,7 +427,7 @@ Exemples (v0.8) :
 @actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
-  transport.audio
+  out.audio
 ```
 → `{ type:"ActorDirective", name:"sitar", properties:{ alphabet:"sargam", tuning:"sargam_22shruti", transport:{type:"TransportRef", key:"audio", params:{}} }, references:[…3 entrées…], line:3 }`
 
@@ -429,7 +436,7 @@ Les clés absentes (`sound`, `octaves`, `eval`) ne sont **pas** émises à `null
 ```bpscript
 @actor tabla
   alphabet.tabla
-  transport.audio
+  out.audio
   *:sound.tabla_perc
 ```
 → acteur : `{ type:"ActorDirective", name:"tabla", properties:{ alphabet:"tabla", transport:{type:"TransportRef", key:"audio", params:{}} }, references:[…], line:1 }`
@@ -438,7 +445,7 @@ Les clés absentes (`sound`, `octaves`, `eval`) ne sont **pas** émises à `null
 ```bpscript
 @actor drums
   alphabet.tabla
-  transport.midi(ch:10)
+  out.midi(ch:10)
   *:sound.tabla_gm
   Sa:sound.drum_kick
 ```
@@ -451,16 +458,18 @@ Les clés absentes (`sound`, `octaves`, `eval`) ne sont **pas** émises à `null
   et par les `soundAssignments` pour les affectations note-à-son.
 
 **Compatibilité** : la v0.8 n'accepte plus la syntaxe `alphabet:X` (ni `tuning:`,
-`transport:`, `sounds:`). Le script de migration des 44 grammaires gère la
-transformation `:` → `.` (cf. `docs/design/v0.8-decisions-final.md` plan de migration).
+`out:`, `sounds:`). `transport.<canal>`/`transport:<canal>` sont également REJETÉS depuis le
+2026-08-04 (le mot `transport` est sorti du langage, `out` le remplace). Le script de migration
+des 44 grammaires gère la transformation `:` → `.` (cf. `docs/design/v0.8-decisions-final.md` plan
+de migration).
 
 ### Cascade de sortie — scène → acteur → terminal
 
-La **sortie** (paramètres de rendu : vélocité, pan, canal, params de transport…) suit une cascade
+La **sortie** (paramètres de rendu : vélocité, pan, canal, params de sortie…) suit une cascade
 à **trois niveaux**, l'override le plus fin l'emportant :
 
 1. **scène** — défauts de la scène.
-2. **acteur** — un acteur **est** une voix ; ses bindings (`transport`, `eval`) et ses qualifiers
+2. **acteur** — un acteur **est** une voix ; ses bindings (`out`, `eval`) et ses qualifiers
    par défaut s'appliquent à tous ses terminaux.
 3. **terminal** — override sur une occurrence (`Sa(vel:80)`, `acteur.terminal(...)`). « terminal »
    et non « note » : tout n'est pas une note (bol, backtick…).
@@ -979,7 +988,7 @@ Qualifier {
 
 QualPair {
   type: "QualPair"
-  key: string                      // ENGINE_KEY : mode, scan, weight, tempo, scale...
+  key: string                      // ENGINE_KEY : mode, scan, weight, tempx, scale...
   value: string | number | boolean // "random", 50, "1/2", "K1=3", "inf", true (clé nue)
   decrement: number | null         // pour weight:50-12
 }
@@ -1505,7 +1514,7 @@ tag explicite l'override. Un flux non taggé SANS eval d'acteur en tête = **orp
 `element_core`) : il occupe une position dans le flux comme une note. Le `tag` désigne
 l'**interpréteur**/producteur (`eval`) du code (`strudel`, `hydra`, `csound`, `js`…). Sortie (modèle
 producteur/canal, Romain 2026-07-14) : un `eval.<X>` embarqué autonome **sort en natif** (pas de
-transport) ; seul le producteur défaut `js` est placé par le dispatcher vers NOTRE `transport`.
+`out`) ; seul le producteur défaut `js` est placé par le dispatcher vers NOTRE sortie (`out`).
 `BacktickInline` est une valeur calculée dans un paramètre ; `BacktickOrphan` est du code
 taggé au niveau scène. Le rattachement d'un backtick à un acteur précis (voix-code) est décrit dans
 `docs/design/ACTOR.md`.

@@ -61,7 +61,7 @@ section('@actor — dot notation v0.8');
 @actor sitar
   alphabet.tabla
   tuning.equal_temperament
-  transport.midi(ch:3, vel:100)
+  out.midi(ch:3, vel:100)
 S -> A`);
   const actor = ast.actors[0];
   assert('actor name parsed', actor.name === 'sitar');
@@ -80,17 +80,17 @@ S -> A`);
 section('@actor — entité en `:` REJETÉE (cutover)');
 
 {
-  // `alphabet:tabla`, `tuning:…`, `transport:…` = composants mal graphiés → fail-loud.
+  // `alphabet:tabla`, `tuning:…`, `out:…` = composants mal graphiés → fail-loud.
   assert('alphabet:tabla → REJET',
     rejects(`@controls\n@actor sitar alphabet:tabla\nS -> A`, "alphabet:…"));
   assert('tuning:equal_temperament → REJET',
     rejects(`@controls\n@actor sitar tuning:equal_temperament\nS -> A`, "tuning:…"));
-  assert('transport:midi(ch:3) → REJET',
-    rejects(`@controls\n@actor sitar transport:midi(ch:3)\nS -> A`, "transport:…"));
+  assert('out:midi(ch:3) → REJET',
+    rejects(`@controls\n@actor sitar out:midi(ch:3)\nS -> A`, "out:…"));
 }
 
 // ============================================================
-// 3. @actor — CANON dot pur (alphabet.X + transport.X)
+// 3. @actor — CANON dot pur (alphabet.X + out.X)
 // ============================================================
 
 section('@actor — canon dot');
@@ -98,7 +98,7 @@ section('@actor — canon dot');
 {
   const ast = parseSource(`@controls
 @actor sitar @alphabet.tabla
-  transport.midi(ch:3)
+  out.midi(ch:3)
 S -> A`);
   const actor = ast.actors[0];
   assert('alphabet via dot', actor.properties.alphabet === 'tabla');
@@ -244,7 +244,7 @@ section('SoundAssignment dans @actor');
   const ast = parseSource(`@controls
 @actor tabla
   alphabet.tabla
-  transport.midi(ch:10)
+  out.midi(ch:10)
   *:sound.tabla_perc
   Sa:sound.drum_kick
 S -> A`);
@@ -433,7 +433,7 @@ section('Cas migration : forme v0.8 issue du script');
 @alphabet.tabla:midi
 @actor tabla
   alphabet.tabla
-  transport.midi(ch:10)
+  out.midi(ch:10)
   *:sound.tabla_perc
 S -> tabla.dhin tabla.dha
 @template
@@ -452,7 +452,7 @@ section('sound.NAME (dot) canonique ; sounds:NAME (colon) REJETÉ');
 
 {
   const ast = parseSource(`@controls
-@actor t sound.tabla_perc @alphabet.tabla transport.midi(ch:1)
+@actor t sound.tabla_perc @alphabet.tabla out.midi(ch:1)
 S -> A`);
   assert('properties.sound rempli (canonique)', ast.actors[0].properties.sound === 'tabla_perc');
   // Émet aussi une SoundAssignment scope=actor subject=*, cohérent avec
@@ -488,9 +488,9 @@ S -> A B`);
 section('eval.X harmonisé (PM décision 2)');
 
 {
-  // ⚠️ SANS `transport` : un acteur qui porte `eval.<interprète>` est un PRODUCTEUR qui sort
-  // par ses propres moyens, et le parser refuse désormais de lui router une sortie (fail-loud
-  // nommé : « un producteur 'eval.python' sort en natif — pas de 'transport' »). Ce test
+  // ⚠️ SANS `out` (ex-`transport`) : un acteur qui porte `eval.<interprète>` est un PRODUCTEUR
+  // qui sort par ses propres moyens, et le parser refuse désormais de lui router une sortie
+  // (fail-loud nommé : « un producteur 'eval.python' sort en natif — pas de 'out' »). Ce test
   // écrivait les deux ensemble, forme d'avant ce durcissement : il ne rendait donc pas un
   // FAIL, il faisait PLANTER tout le fichier sur une exception non rattrapée — les 172
   // assertions suivantes ne s'exécutaient plus du tout.
@@ -500,11 +500,11 @@ section('eval.X harmonisé (PM décision 2)');
   eval.python
 S -> A`);
   assert('v0.8 eval.python parsed', ast08.actors[0].properties.eval === 'python');
-  assert('eval + transport ensemble → REJET nommé',
-    rejects(`@controls\n@actor a\n  alphabet.tabla\n  transport.midi(ch:1)\n  eval.python\nS -> A`, 'transport'));
-  // CUTOVER : la forme colon `eval:python` (comme alphabet:/transport:) est REJETÉE.
+  assert('eval + out ensemble → REJET nommé',
+    rejects(`@controls\n@actor a\n  alphabet.tabla\n  out.midi(ch:1)\n  eval.python\nS -> A`, 'out'));
+  // CUTOVER : la forme colon `eval:python` (comme alphabet:/out:) est REJETÉE.
   assert('eval:python (colon v0.7) → REJET',
-    rejects(`@controls\n@actor a @alphabet.tabla transport.midi(ch:1) eval:python\nS -> A`, "eval:…"));
+    rejects(`@controls\n@actor a @alphabet.tabla out.midi(ch:1) eval:python\nS -> A`, "eval:…"));
 }
 
 // ============================================================

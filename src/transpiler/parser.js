@@ -23,7 +23,7 @@ class ParseError extends Error {
  * Une clé d'override qui désigne OÙ va l'événement (canal/device/port) — par opposition
  * à un contrôle d'expression (vel/pan/wave…). Sépare `payload.address` de `payload.params`
  * (cf. splitAddress). `ch` et `channel` sont synonymes (forme courte/longue). Aligné sur les
- * params de `transport.<type>(…)` côté acteur (canal/device/port).
+ * params de `out.<type>(…)` côté acteur (canal/device/port).
  */
 const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
 
@@ -36,8 +36,12 @@ const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
  * §3) : la voix de l'acteur, entrée de lib/voices. NB : la spec §7 (2026-06-24, « illustratif —
  * syntaxe à raffiner » §8) écrivait `voice:wobble` — graphie ANTÉRIEURE au cutover ; le canon
  * postérieur s'applique : `voice.wobble`.
+ * `out` = la DIRECTION de sortie (décision Romain 2026-08-04, remplace `transport` — le mot
+ * `transport` est SORTI du langage, cf. `channelCatalog`/tombstone plus bas). Le champ interne
+ * (`properties.transport`, `TransportRef`, `references[transport]`) NE CHANGE PAS de nom : seul
+ * le mot que l'auteur ÉCRIT change.
  */
-const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'transport', 'sound', 'sounds', 'eval', 'voice']);
+const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'out', 'sound', 'sounds', 'eval', 'voice']);
 
 /**
  * Axes à CATALOGUE au niveau SCÈNE (directive `@axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
@@ -65,34 +69,47 @@ function deprecatedTransports() {
 }
 
 /**
- * LISTE POSITIVE FERMÉE des canaux du raccord de sortie `@alphabet.X:<sortie>` (transport de
- * l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on n'autorise que les 3 qu'on
- * connaît ») : suffixe ∉ {audio, midi, osc} → rejet fail-loud. Source unique = `lib/core.json`
- * schema.transportChannels (donnée, pas un hardcode). Mémoïsé. Ne contraint PAS le nom
- * d'appareil de `transport.<X>` sur un @actor (IDENT libre, clé @devices — EBNF §transport).
+ * UN SEUL CATALOGUE des canaux, chacun portant les DIRECTIONS qu'il autorise (décision Romain
+ * 2026-08-04, hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md).
+ * Remplace les deux listes distinctes `transportChannels`/`inputTransportChannels` qui coexistaient
+ * sous le même mot `transport` selon l'endroit où on l'écrivait. Source unique = `lib/core.json`
+ * schema.channels (donnée, pas un hardcode). Mémoïsé.
  */
-let _transportChannels = null;
-function transportChannels() {
-  if (_transportChannels) return _transportChannels;
+let _channelCatalog = null;
+function channelCatalog() {
+  if (_channelCatalog) return _channelCatalog;
   const core = loadLib('core') || {};
-  _transportChannels = new Set((core.schema && core.schema.transportChannels) || []);
-  return _transportChannels;
+  _channelCatalog = (core.schema && core.schema.channels) || {};
+  return _channelCatalog;
 }
 
 /**
- * LISTE POSITIVE FERMÉE des canaux d'ENTRÉE (`@in <rôle> transport.<canal>`) — DISTINCTE de celle
- * des sorties, et c'est délibéré. L'addendum du 2026-07-16 qui ferme `transportChannels` ne s'est
- * jamais prononcé sur une entrée : il ne connaissait que des SORTIES. La décision Romain du
- * 2026-07-26 nomme, elle, TROIS périphériques d'entrée — MIDI, OSC, CLAVIER. Le clavier entre donc
- * ici et NULLE PART ailleurs : `@alphabet.X:keyboard` reste refusé, une sortie clavier n'a pas de
- * sens. On AJOUTE UN MEMBRE à une liste fermée, on ne relâche pas la règle.
+ * LISTE POSITIVE FERMÉE des canaux de SORTIE (`out.<canal>` sur un @actor, ou le raccord
+ * `@alphabet.X:<sortie>` de l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on
+ * n'autorise que les 3 qu'on connaît ») : suffixe ∉ {audio, midi, osc} → rejet fail-loud.
+ * Préservée à l'identique de l'ancienne `transportChannels`, dérivée du catalogue unifié.
  */
-let _inputTransportChannels = null;
-function inputTransportChannels() {
-  if (_inputTransportChannels) return _inputTransportChannels;
-  const core = loadLib('core') || {};
-  _inputTransportChannels = new Set((core.schema && core.schema.inputTransportChannels) || []);
-  return _inputTransportChannels;
+let _outChannels = null;
+function outChannels() {
+  if (_outChannels) return _outChannels;
+  const cat = channelCatalog();
+  _outChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].out));
+  return _outChannels;
+}
+
+/**
+ * LISTE POSITIVE FERMÉE des canaux d'ENTRÉE (`@var <rôle> in.<canal>`) — DISTINCTE de celle des
+ * sorties, et c'est délibéré. La décision Romain du 2026-07-26 nomme TROIS périphériques
+ * d'entrée — MIDI, OSC, CLAVIER. Le clavier entre donc ici et NULLE PART ailleurs :
+ * `@alphabet.X:keyboard` reste refusé, une sortie clavier n'a pas de sens. Préservée à
+ * l'identique de l'ancienne `inputTransportChannels`, dérivée du catalogue unifié.
+ */
+let _inChannels = null;
+function inChannels() {
+  if (_inChannels) return _inChannels;
+  const cat = channelCatalog();
+  _inChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].in));
+  return _inChannels;
 }
 
 /**
@@ -307,8 +324,8 @@ function parse(tokens, opts = {}) {
       // VARIABLES DE TRAVAIL déclarées par `@var` — noms de symboles qui ne sont l'écriture
       // d'aucune note (décision Romain 2026-07-27, voie 3).
       vars: [],
-      // ENTRÉES déclarées par `@in` — un rôle, son canal, sa table éventuelle
-      // (décision Romain 2026-07-27, symétrie entrée/sortie).
+      // ENTRÉES déclarées par `@var <rôle> in.<canal>` (ex-`@in`, décision Romain 2026-08-04) —
+      // un rôle, son canal, sa table éventuelle (décision Romain 2026-07-27, symétrie entrée/sortie).
       inputs: [],
       // `maps` SUPPRIMÉ le 2026-07-27 au soir, avec le mot : `@map` est abandonné, le câblage passe
       // par les chevrons. Un champ ÉMIS ET TOUJOURS VIDE n'est pas neutre — un consommateur qui le
@@ -466,8 +483,10 @@ function parse(tokens, opts = {}) {
     // mais BPx LIT le directive `mm` (nœud tempo NATIF BPScript ; `_mm` est le nœud BP3 du
     // grammar, hors chemin BPScript). On normalise `tempo`→`mm` sur le DIRECTIVE top-level ET
     // le modifieur de mode `@mode:X(tempo:N)`, avant tout consommateur (libCtx, encodeur BP3,
-    // AST BPx). Le bloc ENGINE `[tempo:N]` (relatif → `_tempo`) N'EST PAS un scene.directive :
-    // il n'est pas touché. Rétrocompat : @mm continue de marcher (déprécié-doux).
+    // AST BPx). Le bloc ENGINE `[tempx:N]` (relatif → `_tempo`, renommé tempo→tempx le
+    // 2026-08-04, décision 2026-08-04-le-multiplicateur-de-vitesse-d-une-regle-s-appelle-tempx)
+    // N'EST PAS un scene.directive : il n'est pas touché. Rétrocompat : @mm continue de
+    // marcher (déprécié-doux).
     for (const d of scene.directives) {
       if (!d || d.type !== 'Directive') continue;
       if (d.name === 'tempo') d.name = 'mm';
@@ -1200,11 +1219,11 @@ function parse(tokens, opts = {}) {
     // TOMBSTONE : la feature @routing (profils d'environnement studio/live/browser + routingTable
     // Z1 #105) est SUPPRIMÉE (décision 2026-07-16, Romain : modèle d'environnements abandonné —
     // ce n'était pas le moteur BP3 mais une feature de notre transpileur). Rejet nommé plutôt
-    // qu'un silence : le canal de sortie se déclare par `transport.<audio|midi|osc>` sur l'acteur.
+    // qu'un silence : le canal de sortie se déclare par `out.<audio|midi|osc>` sur l'acteur.
     if (name === 'routing') {
       throw new ParseError(
         `'@routing' n'existe plus — la feature de profils d'environnement (studio/live/browser) a `
-        + `été SUPPRIMÉE (2026-07-16). Le canal de sortie se déclare par 'transport.<audio|midi|osc>' `
+        + `été SUPPRIMÉE (2026-07-16). Le canal de sortie se déclare par 'out.<audio|midi|osc>' `
         + `sur l'acteur (ou '@alphabet.X:<sortie>' pour l'acteur implicite).`,
         tok,
       );
@@ -1239,80 +1258,20 @@ function parse(tokens, opts = {}) {
       return { type: 'ExposeDirective', flags, line: tok.line };
     }
 
-    // @in pedale transport.midi mapping.fcb_std — DÉCLARATION D'UNE ENTRÉE
-    //
-    // Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-forme-des-entrees-in-mapping-adresse-
-    // nue.md`), en conséquence de la symétrie entrée/sortie du même jour : une sortie est routée
-    // PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une entrée l'est de la même façon, au point
-    // de RÉCEPTION — le point d'attente. Pas de directive de routage, pas de flèche.
-    //
-    // TROIS CONTRAINTES, chacune refusée bruyamment plus bas :
-    //  1. AUCUN NOM DE PORT. La scène nomme un RÔLE ; le nom d'un port vient du système et change
-    //     de machine en machine — une scène qui le porterait ne s'ouvrirait plus ailleurs.
-    //     L'association rôle → appareil réel vit HORS de la scène.
-    //  2. AUCUN ALPHABET. Il n'y a RIEN à résoudre en entrée : l'événement est DISCRET (Romain :
-    //     « si sur mon entrée je fais un glissando, ça va activer au croisement de la fréquence ?
-    //     on attend un événement DISCRET, pas un traitement de signal »). Le mécanisme est
-    //     événement brut → table → étiquette interne ; l'alphabet n'est qu'un réservoir de NOMS où
-    //     les étiquettes puisent, et c'est LA TABLE qui le déclare, en librairie.
-    //  3. AUCUNE TABLE PAR DÉFAUT. Sans table déclarée on écrit des adresses nues, et c'est
-    //     EXPLICITE dans la scène — poser une identité implicite rendrait indistinguables « je
-    //     n'ai pas de table » et « ma table ne fait rien ».
+    // ─── PIERRE TOMBALE — `@in` n'existe plus (Romain, 2026-08-04) ────────────────────────────
+    // `hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md`. La bible
+    // (`docs/spec/LANGUAGE.md` §« @var — déclarer une variable ») écrivait déjà `@var <rôle>
+    // in.<canal>` : ce n'était pas une nouvelle forme, c'est le code qui divergeait. La déclaration
+    // d'entrée vit désormais dans `@var`, avec les autres variables — voir plus bas.
     if (name === 'in') {
-      if (!at(T.IDENT)) {
-        throw new ParseError("@in doit nommer un rôle : '@in pedale transport.midi' — le nom est "
-          + "celui du RÔLE dans la scène, pas celui d'un appareil du système.", tok);
-      }
-      const roleName = advance().value;
-      let canal = null;
-      let table = null;
-      while (at(T.IDENT)) {
-        const cle = advance().value;
-        if (!at(T.PERIOD)) {
-          throw new ParseError(`@in ${roleName} : '${cle}' doit APPELER un composant avec un point `
-            + `('transport.midi', 'mapping.<table>') — le point APPELLE, les deux points AFFECTENT.`, tok);
-        }
-        advance();
-        const valeur = expect(T.IDENT).value;
-        if (cle === 'transport') {
-          // ⚠️ CONTRAINTE 1 — un nom de port dans la scène est REFUSÉ, pas ignoré.
-          if (at(T.LPAREN)) {
-            throw new ParseError(`@in ${roleName} : 'transport.${valeur}(…)' est refusé — une entrée `
-              + `ne porte AUCUN nom de port. Un nom de port vient du système et change de machine `
-              + `en machine ; la scène nomme un RÔLE, l'utilisateur associe l'appareil, et `
-              + `l'association vit hors de la scène.`, tok);
-          }
-          // LISTE FERMÉE PROPRE AUX ENTRÉES — voir `inputTransportChannels` dans lib/core.json :
-          // le clavier y entre (décision Romain 2026-07-26, trois périphériques d'entrée nommés)
-          // et NULLE PART ailleurs. On ajoute un membre à une liste fermée, on ne relâche rien.
-          if (!inputTransportChannels().has(valeur)) {
-            throw new ParseError(`@in ${roleName} : canal d'entrée '${valeur}' inconnu — les canaux `
-              + `d'entrée sont ${[...inputTransportChannels()].join(', ')}. La liste est FERMÉE.`, tok);
-          }
-          canal = valeur;
-        } else if (cle === 'mapping') {
-          table = valeur;
-        } else if (cle === 'alphabet') {
-          // ⚠️ CONTRAINTE 2 — et c'est la correction la plus importante de la décision.
-          throw new ParseError(`@in ${roleName} : une entrée ne porte AUCUN alphabet. Il n'y a rien `
-            + `à résoudre en entrée — l'événement est DISCRET, pas un signal à interpréter. C'est `
-            + `la TABLE (mapping.<nom>) qui déclare le vocabulaire où les étiquettes puisent, et `
-            + `elle le fait en librairie, pas dans la scène.`, tok);
-        } else {
-          throw new ParseError(`@in ${roleName} : propriété '${cle}' inconnue — une entrée déclare `
-            + `son canal ('transport.<canal>') et, facultativement, sa table `
-            + `('mapping.<table>'). Rien d'autre.`, tok);
-        }
-      }
-      if (canal === null) {
-        throw new ParseError(`@in ${roleName} : il manque le canal d'entrée — `
-          + `'@in ${roleName} transport.midi'.`, tok);
-      }
-      // CONTRAINTE 3 : `table` reste null quand rien n'est déclaré. On n'invente AUCUN défaut.
-      return { type: 'InDirective', name: roleName, transport: canal, mapping: table, line: tok.line };
+      throw new ParseError(
+        `'@in' n'existe plus (décision Romain 2026-08-04) — la direction s'écrit : `
+        + `'@var <rôle> in.<canal>' remplace '@in <rôle> transport.<canal>'. `
+        + `Exemple : '@var pedale in.midi mapping.fcb_std'.`, tok);
     }
 
     // @var A8   /   @var a, b, c — VARIABLES DE TRAVAIL
+    // @var touches in.keyboard    — DÉCLARATION D'UNE ENTRÉE
     //
     // Décision Romain 2026-07-27, voie 3 : « on déclare les symboles non-alphabet terminaux en
     // plus, avec une directive @. Ce sont des VARIABLES DE TRAVAIL. »
@@ -1328,16 +1287,89 @@ function parse(tokens, opts = {}) {
     // (règle de Romain du 2026-07-26, comme `@expose`/`@label`) ; la virgule sépare des éléments de
     // même rang, exactement comme dans un sac ; plusieurs lignes s'ACCUMULENT, comme plusieurs
     // invocations de librairie.
+    //
+    // ⚠️ PÉRIMÈTRE (2026-08-04) : `docs/spec/LANGUAGE.md` documente un `@var` typé bien plus large
+    // (flag, signal, pitch, phase, logic, module — table « `@var` — déclarer une variable »). CE
+    // CHANTIER (transport → in/out) n'ajoute QUE la forme d'entrée `<rôle> in.<canal>`, ex-`@in` —
+    // les autres types restent hors périmètre, non implémentés ici.
     if (name === 'var') {
       if (!at(T.IDENT)) {
-        throw new ParseError("@var doit nommer au moins un symbole : '@var A8', ou '@var a, b, c' "
-          + 'pour plusieurs. Ce sont des variables de travail — des symboles du flux qui ne sont '
-          + "l'écriture d'aucune note.", tok);
+        throw new ParseError("@var doit nommer au moins un symbole : '@var A8', '@var a, b, c' "
+          + "pour plusieurs, ou déclarer une entrée : '@var <rôle> in.<canal>'. Ce sont des "
+          + "variables de travail — des symboles du flux qui ne sont l'écriture d'aucune note, "
+          + 'ou le rôle que tient une entrée.', tok);
       }
-      const noms = [];
-      do {
-        noms.push(expect(T.IDENT).value);
-      } while (at(T.COMMA) && advance());
+      const first = expect(T.IDENT).value;
+
+      // @var <rôle> in.<canal> [mapping.<table>] — DÉCLARATION D'UNE ENTRÉE
+      //
+      // Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-forme-des-entrees-in-mapping-adresse-
+      // nue.md`), en conséquence de la symétrie entrée/sortie du même jour : une sortie est routée
+      // PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une entrée l'est de la même façon, au point
+      // de RÉCEPTION — le point d'attente. Pas de directive de routage, pas de flèche. Réécrite en
+      // `@var` par la décision du 2026-08-04 (transport → in/out), qui abandonne `@in`.
+      //
+      // TROIS CONTRAINTES, chacune refusée bruyamment plus bas :
+      //  1. AUCUN NOM DE PORT. La scène nomme un RÔLE ; le nom d'un port vient du système et change
+      //     de machine en machine — une scène qui le porterait ne s'ouvrirait plus ailleurs.
+      //     L'association rôle → appareil réel vit HORS de la scène.
+      //  2. AUCUN ALPHABET. Il n'y a RIEN à résoudre en entrée : l'événement est DISCRET (Romain :
+      //     « si sur mon entrée je fais un glissando, ça va activer au croisement de la fréquence ?
+      //     on attend un événement DISCRET, pas un traitement de signal »). Le mécanisme est
+      //     événement brut → table → étiquette interne ; l'alphabet n'est qu'un réservoir de NOMS où
+      //     les étiquettes puisent, et c'est LA TABLE qui le déclare, en librairie.
+      //  3. AUCUNE TABLE PAR DÉFAUT. Sans table déclarée on écrit des adresses nues, et c'est
+      //     EXPLICITE dans la scène — poser une identité implicite rendrait indistinguables « je
+      //     n'ai pas de table » et « ma table ne fait rien ».
+      if (at(T.IDENT) && current().value === 'in' && peek(1).type === T.PERIOD && !peek(1).spaceBefore) {
+        const roleName = first;
+        advance(); // in
+        advance(); // .
+        const canal = expect(T.IDENT).value;
+        // ⚠️ CONTRAINTE 1 — un nom de port dans la scène est REFUSÉ, pas ignoré.
+        if (at(T.LPAREN)) {
+          throw new ParseError(`@var ${roleName} : 'in.${canal}(…)' est refusé — une entrée `
+            + `ne porte AUCUN nom de port. Un nom de port vient du système et change de machine `
+            + `en machine ; la scène nomme un RÔLE, l'utilisateur associe l'appareil, et `
+            + `l'association vit hors de la scène.`, tok);
+        }
+        // LISTE FERMÉE PROPRE AUX ENTRÉES — voir `inChannels`/`lib/core.json` schema.channels :
+        // le clavier y entre (décision Romain 2026-07-26, trois périphériques d'entrée nommés)
+        // et NULLE PART ailleurs. On n'a relâché aucune règle en fusionnant les catalogues.
+        if (!inChannels().has(canal)) {
+          throw new ParseError(`@var ${roleName} : '${canal}' n'est pas une entrée — les canaux `
+            + `d'entrée sont ${[...inChannels()].join(', ')}. La liste est FERMÉE.`, tok);
+        }
+        let table = null;
+        while (at(T.IDENT)) {
+          const cle = advance().value;
+          if (!at(T.PERIOD)) {
+            throw new ParseError(`@var ${roleName} : '${cle}' doit APPELER un composant avec un `
+              + `point ('mapping.<table>') — le point APPELLE, les deux points AFFECTENT.`, tok);
+          }
+          advance();
+          const valeur = expect(T.IDENT).value;
+          if (cle === 'mapping') {
+            table = valeur;
+          } else if (cle === 'alphabet') {
+            // ⚠️ CONTRAINTE 2 — et c'est la correction la plus importante de la décision.
+            throw new ParseError(`@var ${roleName} : une entrée ne porte AUCUN alphabet. Il n'y a `
+              + `rien à résoudre en entrée — l'événement est DISCRET, pas un signal à interpréter. `
+              + `C'est la TABLE (mapping.<nom>) qui déclare le vocabulaire où les étiquettes `
+              + `puisent, et elle le fait en librairie, pas dans la scène.`, tok);
+          } else {
+            throw new ParseError(`@var ${roleName} : propriété '${cle}' inconnue — une entrée `
+              + `déclare son canal ('in.<canal>') et, facultativement, sa table `
+              + `('mapping.<table>'). Rien d'autre.`, tok);
+          }
+        }
+        // CONTRAINTE 3 : `table` reste null quand rien n'est déclaré. On n'invente AUCUN défaut.
+        return { type: 'InDirective', name: roleName, transport: canal, mapping: table, line: tok.line };
+      }
+
+      // Forme nue : VARIABLES DE TRAVAIL
+      const noms = [first];
+      while (at(T.COMMA) && advance()) noms.push(expect(T.IDENT).value);
       return { type: 'VarDirective', names: noms, line: tok.line };
     }
 
@@ -1499,7 +1531,7 @@ function parse(tokens, opts = {}) {
         + "passe par les chevrons '>>' et '\\>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
         + "ce qu'une directive ne sait pas faire. Pour ÉTIQUETER un nom ou DÉSIGNER des éléments "
         + "marqués, écrire '@alias <nom> <valeur>'. Pour attendre un geste, rien à câbler : "
-        + "'@in <rôle> transport.<canal>' puis l'adresse collée au point d'attente.", tok);
+        + "'@var <rôle> in.<canal>' puis l'adresse collée au point d'attente.", tok);
     }
 
     // @alias <nom> <valeur> — DÉSIGNER : donner un nom à une chose technique ou répétitive, ou
@@ -1575,30 +1607,34 @@ function parse(tokens, opts = {}) {
     //   @actor sitar
     //     alphabet.sargam
     //     tuning.sargam_22shruti
-    //     transport.midi(ch:3, vel:100)
+    //     out.midi(ch:3, vel:100)
     //     eval.python
     //     sound.bell_short            // équivaut à *:sound.bell_short
     //     *:sound.bell_short          // affectation défaut
     //     Sa:sound.drum_kick          // affectation note
     //
     // v0.7 (rétrocompat transitoire, accepté en silence) : références via `:`
-    //   @actor sitar alphabet:sargam tuning:sargam_22shruti transport:midi(ch:3)
+    //   @actor sitar alphabet:sargam tuning:sargam_22shruti out:midi(ch:3)
     //
     // Les deux formes peuvent être mêlées sur la même ligne et le parseur
     // bascule par token (le `*` ou un IDENT:sound.X = affectation, sinon
     // entity_ref).
+    //
+    // ⚠️ `out` remplace `transport` (Romain, 2026-08-04) — le mot `transport` est SORTI du
+    // langage, la direction s'écrit. Le CHAMP interne reste `properties.transport`/`TransportRef`
+    // (`references[transport]`) : seul le mot que l'auteur ÉCRIT change, pas le nœud d'arbre.
     if (name === 'actor') {
       const actorName = expect(T.IDENT).value;
       const properties = {};
       const soundAssignments = [];
       // Adressage de sortie : UNE seule forme d'adresse partout (KAI-9, décision
-      // 2026-06-26 / GAP#1). Le type de runtime est `transport.<midi|osc|...>` et les
+      // 2026-06-26 / GAP#1). Le type de runtime est `out.<midi|osc|...>` et les
       // DÉTAILS d'adresse (canal/device/port) sont ses PARAMS, iso-MIDI :
-      //   transport.midi(ch:3)              transport.osc(device:reaper, ch:7)
+      //   out.midi(ch:3)              out.osc(device:reaper, ch:7)
       // (Remplace l'ancien champ séparé `ActorDirective.binding` OSC-L1, supprimé : les
-      //  détails OSC vivaient dans un tiroir parallèle au lieu de transport.params.)
+      //  détails OSC vivaient dans un tiroir parallèle au lieu de out.params.)
 
-      // Helper: parser les params d'un transport `(ch:3, vel:100)` / `(device:reaper, ch:7)`
+      // Helper: parser les params d'une sortie `(ch:3, vel:100)` / `(device:reaper, ch:7)`
       const parseRefParams = () => {
         expect(T.LPAREN);
         const params = {};
@@ -1616,9 +1652,10 @@ function parse(tokens, opts = {}) {
       };
 
       // Helper : enregistre une référence d'entité dans `properties`
-      // (alphabet, tuning, transport, sound, eval).
+      // (alphabet, tuning, out, sound, eval). `out` (ex-`transport`) alimente TOUJOURS le champ
+      // interne `properties.transport`/`TransportRef` — seul le mot ÉCRIT par l'auteur a changé.
       const setEntityRef = (key, value, params /* | null */) => {
-        if (key === 'transport') {
+        if (key === 'out') {
           properties.transport = { type: 'TransportRef', key: value, params: params || {} };
         } else if (key === 'sound') {
           // sound.X dans @actor X = sucre pour *:sound.X (cf. EBNF v0.8 ligne 104).
@@ -1636,10 +1673,10 @@ function parse(tokens, opts = {}) {
           // alphabet, tuning, eval — référence simple
           properties[key] = value;
           // Valeurs d'entité (SCENE_VALUES, hub [293]) : les params collés à une
-          // référence d'entité NON-transport (ex. `tuning.western_just(diapason:432)`)
+          // référence d'entité NON-`out` (ex. `tuning.western_just(diapason:432)`)
           // sont CAPTÉS ici (avant : jetés en silence) et pliés à l'émission BPx
-          // (bpxAst.applySceneValues). Additif — l'encodeur BP3 les ignore. Le
-          // transport garde son canal propre (params = ADRESSE, concept distinct).
+          // (bpxAst.applySceneValues). Additif — l'encodeur BP3 les ignore. La
+          // sortie garde son canal propre (params = ADRESSE, concept distinct).
           if (params) (properties.entityParams || (properties.entityParams = {}))[key] = params;
         }
       };
@@ -1686,7 +1723,20 @@ function parse(tokens, opts = {}) {
         const key = current().value;
         const next = peek(1).type;
 
-        // forme v0.8 : `alphabet.X`, `tuning.X`, `octaves.X`, `transport.X[(...)`, `sound.X`, `eval.X`
+        // ─── PIERRE TOMBALE — `transport` n'existe plus sur un acteur (Romain, 2026-08-04) ───
+        // Le mot est SORTI du langage : `transport` n'est plus dans `ACTOR_ENTITY_KEYS`, donc
+        // sans ce garde il tomberait en silence hors de la boucle (traité comme début de règle)
+        // au lieu de crier. `out` porte désormais la direction de sortie.
+        if (key === 'transport' && (next === T.PERIOD || next === T.COLON) && !peek(1).spaceBefore) {
+          throw new ParseError(
+            `acteur '${actorName}' : 'transport' n'existe plus (décision Romain 2026-08-04) — la `
+            + `direction s'écrit : 'out.<canal>' remplace 'transport.<canal>'. `
+            + `Exemple : 'out.audio', 'out.midi(ch:3)'.`,
+            current(),
+          );
+        }
+
+        // forme v0.8 : `alphabet.X`, `tuning.X`, `octaves.X`, `out.X[(...)`, `sound.X`, `eval.X`
         // SIX clés d'entité (décision cles-acteur-six, Romain 2026-06-16).
         if (next === T.PERIOD && !peek(1).spaceBefore) {
           // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
@@ -1729,18 +1779,18 @@ function parse(tokens, opts = {}) {
           }
 
           // CUTOVER graphie (Romain GO 2026-07-14, tour [411] ; décision hub 2026-06-26) :
-          // une référence d'ENTITÉ (composant : alphabet, tuning, octaves, transport, sound,
+          // une référence d'ENTITÉ (composant : alphabet, tuning, octaves, out, sound,
           // eval) se NOMME avec `.` — `.` APPELLE le composant. Le `:` n'affecte QUE des
           // valeurs (SCENE_VALUES, `sujet:sound.X`). L'ancienne forme v0.7 `alphabet:X` /
-          // `transport:X(...)` est REJETÉE (fail-loud) — plus AUCUNE rétrocompat, migration
-          // totale (non-négociable Romain). Un transport prend des params (canal/device) →
-          // c'est un composant, pas une valeur : `transport.midi(ch:3)`.
+          // `out:X(...)` est REJETÉE (fail-loud) — plus AUCUNE rétrocompat, migration
+          // totale (non-négociable Romain). Une sortie prend des params (canal/device) →
+          // c'est un composant, pas une valeur : `out.midi(ch:3)`.
           if (ACTOR_ENTITY_KEYS.has(key)) {
             const canon = key === 'sounds' ? 'sound' : key;
             throw new ParseError(
               `'${key}:…' refusé — ':' n'affecte pas de valeur à un composant. `
               + `Écris '${canon}.<nom>'`
-              + (key === 'transport' ? ' avec ses params entre () — ex. transport.midi(ch:3)' : '')
+              + (key === 'out' ? ' avec ses params entre () — ex. out.midi(ch:3)' : '')
               + ` (règle : '.' APPELLE le composant, ':' AFFECTE une valeur).`,
               current(),
             );
@@ -1771,21 +1821,21 @@ function parse(tokens, opts = {}) {
       // Source : hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md §Le modèle ;
       // docs/spec/EBNF.md:185-188 ; docs/spec/AST.md:230-236. Le formalisme ENFORCE le canon
       // (filet mécanique anti-régression) — sans ça le corpus dérive en silence (~45 scènes eval
-      // portaient un transport mort). Deux fail-loud au niveau du frontal (les deux voies compilent
+      // portaient une sortie morte). Deux fail-loud au niveau du frontal (les deux voies compilent
       // via parse()) :
-      //   a. un producteur `eval.<X>` sort en NATIF → il ne porte PAS de transport.
-      //   b. `transport.video` / `transport.visual` n'existent plus (axe visuel SUPPRIMÉ, pas renommé).
+      //   a. un producteur `eval.<X>` sort en NATIF → il ne porte PAS de sortie routée.
+      //   b. `out.video` / `out.visual` n'existent plus (axe visuel SUPPRIMÉ, pas renommé).
       if (properties.eval && properties.transport) {
         throw new ParseError(
           `acteur '${actorName}' : un producteur 'eval.${properties.eval}' sort en natif — `
-          + `pas de 'transport' (il produit et sort par ses propres moyens ; on ne route pas sa `
-          + `sortie native). Retire le 'transport' de cet acteur.`,
+          + `pas de 'out' (il produit et sort par ses propres moyens ; on ne route pas sa `
+          + `sortie native). Retire le 'out' de cet acteur.`,
           tok,
         );
       }
       if (properties.transport && (properties.transport.key === 'video' || properties.transport.key === 'visual')) {
         throw new ParseError(
-          `acteur '${actorName}' : 'transport.${properties.transport.key}' n'existe pas — le canal `
+          `acteur '${actorName}' : 'out.${properties.transport.key}' n'existe pas — le canal `
           + `visuel a été SUPPRIMÉ (les visuels embarqués sortent en natif sur leur canvas). `
           + `Canal de sortie = audio/midi/osc uniquement.`,
           tok,
@@ -1795,9 +1845,23 @@ function parse(tokens, opts = {}) {
       // 2026-07-16) : REJET fail-loud, PAS de normalisation (Romain : on supprime).
       if (properties.transport && deprecatedTransports().has(properties.transport.key)) {
         throw new ParseError(
-          `acteur '${actorName}' : 'transport.${properties.transport.key}' est un canal PÉRIMÉ `
-          + `(modèle profils d'environnement abandonné 2026-07-16). Écris 'transport.audio' `
+          `acteur '${actorName}' : 'out.${properties.transport.key}' est un canal PÉRIMÉ `
+          + `(modèle profils d'environnement abandonné 2026-07-16). Écris 'out.audio' `
           + `(canal canonique : audio/midi/osc).`,
+          tok,
+        );
+      }
+      // LISTE POSITIVE FERMÉE de sortie (décision Romain 2026-08-04, catalogue unifié
+      // `lib/core.json` schema.channels) : un canal qui ne porte pas la direction `out` est
+      // REFUSÉ, et le refus NOMME la direction — ex. 'out.keyboard' répond « keyboard n'est
+      // pas une sortie » (keyboard ne porte que l'entrée). Ferme le trou hérité de l'ancien
+      // `transport.<X>` explicite, qui acceptait tout IDENT libre côté @actor (device @devices,
+      // résolu aval) : la fusion des deux catalogues applique désormais la MÊME liste fermée
+      // aux deux formes (@actor explicite ET raccord `@alphabet.X:<sortie>` implicite).
+      if (properties.transport && !outChannels().has(properties.transport.key)) {
+        throw new ParseError(
+          `acteur '${actorName}' : '${properties.transport.key}' n'est pas une sortie — les `
+          + `canaux de sortie sont ${[...outChannels()].join(', ')}. La liste est FERMÉE.`,
           tok,
         );
       }
@@ -1922,7 +1986,7 @@ function parse(tokens, opts = {}) {
     // 2026-07-16, « on n'autorise que les 3 qu'on connaît ») : suffixe ∉ {audio, midi, osc} →
     // REJET fail-loud. Couvre les périmés browser/webaudio (hint dédié), l'ancien sucre ':sc'
     // (= transport+eval sc, ABOLI par l'addendum), :video, :foo…
-    if (name === 'alphabet' && subkey && runtime && !transportChannels().has(runtime)) {
+    if (name === 'alphabet' && subkey && runtime && !outChannels().has(runtime)) {
       const hint = deprecatedTransports().has(runtime)
         ? ` '${runtime}' est un canal PÉRIMÉ (modèle profils d'environnement abandonné 2026-07-16) — écris '@alphabet.${subkey}:audio'.`
         : runtime === 'sc'
@@ -2092,7 +2156,7 @@ function parse(tokens, opts = {}) {
 
   /**
    * Parse le corps d'un modulateur CV : `mod.adsr(params)` ou backtick inline.
-   * Forme déclarative pure : pas de cible, pas de transport (résolus au branchement).
+   * Forme déclarative pure : pas de cible, pas de sortie (résolus au branchement).
    * @returns CVInstance { name, lib, objectType, args, namedArgs, code }
    */
   function parseCVModulator(name, tok) {
@@ -2128,7 +2192,7 @@ function parse(tokens, opts = {}) {
         // un sac de contrôle, donc la garde des sacs ne la voyait pas. Aucune sous-zone du langage
         // n'échappe à la règle.
         // ⚠️ La forme NOMMÉE reste la bonne — `mod.adsr(attack:5, decay:150)`, comme
-        // `transport.midi(ch:3)`. Ce n'est pas la parenthèse qu'on supprime, c'est l'argument dont
+        // `out.midi(ch:3)`. Ce n'est pas la parenthèse qu'on supprime, c'est l'argument dont
         // la place tient lieu de nom. Mesuré : le corpus n'écrit QUE la forme nommée, 0 positionnel.
         const t = current();
         // Les paramètres vivent sous `objects.<type>.parameters` (lib/mod.json) ; on les nomme dans
@@ -2727,6 +2791,28 @@ function parse(tokens, opts = {}) {
       if (at(T.QUESTION)) {
         let count = 0;
         while (at(T.QUESTION)) { advance(); count++; }
+        // `?N` (numéroté) n'a de sens que dans une RÈGLE : le numéro unifie avec la
+        // flèche qui rejoue le choix (`$X`/`&X` gabarit). Une ligne de catalogue n'a
+        // pas de flèche — décision 2026-08-04 (« Le `?` est un wildcard ; `$X`/`&X`
+        // restent des gabarits », `hub/decisions/2026-08-04-le-signe-interrogation-
+        // est-un-wildcard-le-gabarit-garde-capturer.md ») : « les mêmes `?` que dans
+        // une règle, un par terminal effacé, et toujours ANONYMES : une ligne de
+        // catalogue n'a pas de flèche, donc rien à rejouer et pas de numéro. »
+        //
+        // Avant ce refus, `?N` ici n'était atteint par AUCUNE branche : le `?` était
+        // compté comme wildcard nu, puis l'INT restant ne correspondait à aucun cas
+        // du `if/else if` ci-dessous → le `else break` final sortait de la boucle EN
+        // SILENCE, tronquant tout le reste de la ligne de catalogue sans une erreur.
+        // Mesuré : `[1] /1 ?1 ? .` ne gardait qu'un seul `TemplateWildcard`, ' ? .'
+        // disparaissait de l'AST sans warning ni erreur.
+        if (at(T.INT)) {
+          throw new ParseError(
+            `'?${current().value}' : un wildcard numéroté n'a de sens que dans une règle `
+            + `(le numéro unifie avec la flèche, qui rejoue le choix). Une ligne de catalogue `
+            + `@template n'a pas de flèche — ses wildcards sont toujours anonymes ('?'), jamais numérotés.`,
+            current(),
+          );
+        }
         elements.push({ type: 'TemplateWildcard', count });
       }
       // Period

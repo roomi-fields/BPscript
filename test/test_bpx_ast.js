@@ -69,7 +69,7 @@ function backtickNodes(ast) {
 // sous-scènes »). Le témoin est devenu un cas REFUSÉ, plus bas — le garder aurait fait rougir la
 // pierre tombale qu'il aurait dû protéger.
 {
-  const r = compileToBPxAST('@actor tabla\n  @alphabet.tabla\n  transport.midi(ch:10)\nS -> tabla.Sa');
+  const r = compileToBPxAST('@actor tabla\n  @alphabet.tabla\n  out.midi(ch:10)\nS -> tabla.Sa');
   const tr = r.ast.actors[0].references?.find((x) => x.category === 'transport');
   check(tr?.type === 'ActorReference' && tr?.name === 'midi' && tr?.params?.ch === 10,
     'ActorReference transport sur le nœud acteur : ' + JSON.stringify(tr));

@@ -65,7 +65,7 @@ const SITUATIONS = [
   ['la scène déclare des registres : ils gagnent sur ceux de l\'alphabet',
    '@core\n@alphabet.sargam\n@octaves.saptak\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   ['un acteur déclaré porte les siens',
-   '@core\n@actor voix\n  alphabet.sargam\n  transport.audio\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
+   '@core\n@actor voix\n  alphabet.sargam\n  out.audio\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Les deux SEULES absences légitimes.
   ['hauteur OPAQUE : l\'alphabet reste ABSENT, Kairos le remplit (loi 35)',
    '@core\n@mine.perso.gamme\nS -> C4', { alphabet: null, octaves: null, tuning: null }],

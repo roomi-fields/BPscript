@@ -40,8 +40,17 @@ const S = '@core\n@alphabet.western\n';
 // parseur accepte AVANT les règles, vérifiée par la moitié « doit passer » de cette même matrice.
 const DECLARATIONS = [
   ['alphabet', '@alphabet.sargam'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
-  ['transport', '@transport.midi'], ['eval', '@eval.sc'], ['actor', '@actor v\n  transport.audio'],
-  ['controls', '@controls'], ['var', '@var v'], ['in', '@in touches transport.keyboard'],
+  ['transport', '@transport.midi'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
+  // ⚠️ `in` REMPLACÉ par `out` dans la matrice le 2026-08-04 (in/out remplacent transport, ligne
+  // réservée ajoutée avec le mot) : `@in` seul est désormais un TOMBSTONE INCONDITIONNEL (refusé
+  // dans LES DEUX positions, avant comme après les règles — cf. `test/declaration_d_entree.mjs`),
+  // pas une déclaration mal placée. La prémisse de cette matrice (« la forme PASSE avant les
+  // règles ») ne tient plus pour ce mot précis — la déclaration d'entrée s'écrit maintenant
+  // '@var <rôle> in.<canal>', couverte par la ligne 'var'. `out`, mot NOUVEAU du même jour, garde
+  // lui le comportement générique (accepté-ignoré avant, refusé-nommé après) : il prend la place
+  // dans la matrice SANS la rétrécir.
+  ['out', '@out.audio'],
+  ['controls', '@controls'], ['var', '@var v'],
   ['alias', '@alias g cc:2'], ['mm', '@mm:60'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
   ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['transcription', '@transcription.dhati'],

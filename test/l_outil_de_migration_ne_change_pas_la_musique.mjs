@@ -242,7 +242,7 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // La scène d'essai déclare l'acteur SANS moteur d'évaluation : depuis que l'acteur peut
   // qualifier un bloc par le point, un acteur À moteur rend la source invalide autrement (le bloc
   // n'a plus de langage) et l'outil refuserait pour cette raison-là, pas pour l'amalgame.
-  const AMALGAME = '@core\n@alphabet.western\n@actor drums\n  alphabet.western\n  transport.audio\nS -> drums\ndrums -> C4 D4';
+  const AMALGAME = '@core\n@alphabet.western\n@actor drums\n  alphabet.western\n  out.audio\nS -> drums\ndrums -> C4 D4';
   const r = migrerSource(AMALGAME);
   ok(r.ok === true, '3quater. une scène à l\'amalgame doit être migrable');
   ok(!/^drums\s*->/m.test(r.source || ''), '3quater. la tête ne porte plus le nom de l\'acteur');
@@ -263,7 +263,7 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // L'outil doit donc migrer tout ce que la règle refuse, sinon il migre MOINS qu'elle ne refuse
   // et la différence tombe sur l'auteur, sans outil pour l'aider.
   // Ici : on renomme, et on ne pose AUCUN tag — il n'y a pas de code à qualifier.
-  const sansEval = '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  transport.audio\nS -> v\nv -> C4 D4';
+  const sansEval = '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  out.audio\nS -> v\nv -> C4 D4';
   const r2 = migrerSource(sansEval);
   ok(r2.ok && !r2.aucunChangement, '3quater. un acteur SANS moteur est migré aussi (la règle le refuse)');
   ok(!/`/.test(r2.source || ''), '3quater. et AUCUN tag n\'y est posé — il n\'y a pas de code');

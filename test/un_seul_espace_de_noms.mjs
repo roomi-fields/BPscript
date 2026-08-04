@@ -31,7 +31,7 @@ const refus = (src) => (compileToBPxAST(src).errors || [])
 const SORTES = [
   ['une macro',              (n) => `@macro ${n} saw >> audio`],
   ['un alias',               (n) => `@alias ${n} cc:2`],
-  ['une entrée',             (n) => `@in ${n} transport.midi`],
+  ['une entrée',             (n) => `@var ${n} in.midi`],
   ['une variable de travail', (n) => `@var ${n}`],
   // Décision Romain 2026-07-30 (`hub/decisions/2026-07-30-trois-arbitrages-nature-fabrique-
   // drapeaux.md`) : un drapeau CRÉE un nom, comme les quatre sortes ci-dessus — c'était un TROU,
@@ -61,11 +61,11 @@ const TETES_REFUSEES = [
   ['contre une macro',    '@core\n@macro motif saw >> audio\nmotif -> C4'],
   ['contre un alias',     '@core\n@alias motif cc:2\nmotif -> C4'],
   ['contre une variable', '@core\n@var motif\nmotif -> C4'],
-  ['contre une entrée',   '@core\n@in motif transport.midi\nmotif -> C4'],
+  ['contre une entrée',   '@core\n@var motif in.midi\nmotif -> C4'],
   ['contre un drapeau',   '@core\n@flag motif: a:1, b:2\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
   ['contre un ACTEUR (l\'amalgame)', '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'],
-  ['contre un acteur de notes',      '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  transport.audio\nS -> v\nv -> C4 D4'],
+  ['contre un acteur de notes',      '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  out.audio\nS -> v\nv -> C4 D4'],
 ];
 for (const [quoi, src] of TETES_REFUSEES) {
   const r = refus(src);

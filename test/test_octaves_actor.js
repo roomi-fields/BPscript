@@ -18,7 +18,7 @@ function resolve(src) {
   const { ast } = resolve(`@actor sitar
   alphabet.sargam
   octaves.arrows
-  transport.audio
+  out.audio
 S -> sitar.sa`);
   const a = ast.actors.find((x) => x.name === 'sitar');
   check(!!a, 'acteur sitar parsé');
@@ -30,7 +30,7 @@ S -> sitar.sa`);
 {
   const { res } = resolve(`@actor sitar
   alphabet.sargam
-  transport.audio
+  out.audio
 S -> sitar.sa`);
   check(res.errors.length === 0, 'résolution sans erreur (défaut) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;
@@ -48,7 +48,7 @@ S -> sitar.sa`);
   const { res } = resolve(`@actor sitar
   alphabet.sargam
   octaves.arrows
-  transport.audio
+  out.audio
 S -> sitar.sa`);
   check(res.errors.length === 0, 'résolution sans erreur (surcharge) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * GARDE — `@in` déclare une ENTRÉE : un RÔLE, son canal, et facultativement sa table.
+ * GARDE — `@var <rôle> in.<canal>` déclare une ENTRÉE : un RÔLE, son canal, et facultativement
+ * sa table (ex-`@in`, absorbée dans `@var` le 2026-08-04 — décision Romain, in/out remplacent
+ * transport, hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md).
  *
  * DÉCISION Romain 2026-07-27 (`hub/decisions/2026-07-27-forme-des-entrees-in-mapping-adresse-nue.md`),
  * en conséquence de la symétrie entrée/sortie du même jour : une sortie est routée PAR LE NOM, AU
@@ -30,8 +32,11 @@ const compile = (corps) => {
 };
 
 // ─── 1. LA LISTE DES CANAUX D'ENTRÉE EST FERMÉE, ET DISTINCTE DE CELLE DES SORTIES ───────────
-const ENTREE = LIBS.core?.schema?.inputTransportChannels || [];
-const SORTIE = LIBS.core?.schema?.transportChannels || [];
+// Les deux listes vivent désormais dans UN SEUL catalogue (schema.channels, décision 2026-08-04) :
+// chaque canal porte les directions qu'il autorise, dérivées ici comme avant la fusion.
+const CHANNELS = LIBS.core?.schema?.channels || {};
+const ENTREE = Object.keys(CHANNELS).filter((c) => CHANNELS[c]?.in);
+const SORTIE = Object.keys(CHANNELS).filter((c) => CHANNELS[c]?.out);
 ok(ENTREE.length === 3, `1. trois canaux d'entrée attendus (décision 2026-07-26) — reçu ${JSON.stringify(ENTREE)}`);
 for (const c of ['midi', 'osc', 'keyboard']) {
   ok(ENTREE.includes(c), `1. '${c}' doit être un canal d'ENTRÉE`);
@@ -47,10 +52,10 @@ ok(SORTIE.includes('audio') && !ENTREE.includes('audio'),
 // mesure que la DÉCLARATION est LUE telle qu'écrite. On sépare donc les deux questions — la forme
 // est-elle portée, et la référence résout-elle — au lieu de les confondre dans un seul verdict.
 for (const [corps, quoi, attendu, crie] of [
-  ['@in pedale transport.midi\n@mode:ord\nS -> C4', 'un rôle et son canal, sans table', { name: 'pedale', transport: 'midi', mapping: null }, false],
-  ['@in pedale transport.midi mapping.fcb_std\n@mode:ord\nS -> C4', 'avec sa table', { name: 'pedale', transport: 'midi', mapping: 'fcb_std' }, true],
-  ['@in touches transport.keyboard mapping.azerty\n@mode:ord\nS -> C4', 'sur le canal clavier', { name: 'touches', transport: 'keyboard', mapping: 'azerty' }, true],
-  ['@in o transport.osc\n@mode:ord\nS -> C4', 'sur le canal OSC', { name: 'o', transport: 'osc', mapping: null }, false],
+  ['@var pedale in.midi\n@mode:ord\nS -> C4', 'un rôle et son canal, sans table', { name: 'pedale', transport: 'midi', mapping: null }, false],
+  ['@var pedale in.midi mapping.fcb_std\n@mode:ord\nS -> C4', 'avec sa table', { name: 'pedale', transport: 'midi', mapping: 'fcb_std' }, true],
+  ['@var touches in.keyboard mapping.azerty\n@mode:ord\nS -> C4', 'sur le canal clavier', { name: 'touches', transport: 'keyboard', mapping: 'azerty' }, true],
+  ['@var o in.osc\n@mode:ord\nS -> C4', 'sur le canal OSC', { name: 'o', transport: 'osc', mapping: null }, false],
 ]) {
   const r = compile(corps);
   const msgs = (r.errors || []).map((e) => e.message || e);
@@ -66,23 +71,27 @@ for (const [corps, quoi, attendu, crie] of [
 }
 // Plusieurs entrées coexistent.
 {
-  const r = compile('@in a transport.midi\n@in b transport.osc\n@mode:ord\nS -> C4');
+  const r = compile('@var a in.midi\n@var b in.osc\n@mode:ord\nS -> C4');
   ok((r.ast?.inputs || []).length === 2, `2. plusieurs entrées doivent coexister — reçu ${(r.ast?.inputs || []).length}`);
 }
 
 // ─── 3. LES TROIS CONTRAINTES REFUSENT, ET LE REFUS DIT POURQUOI ─────────────────────────────
 for (const [corps, quoi, mot] of [
-  ['@in x transport.midi(port:LPK25)\n@mode:ord\nS -> C4', 'un NOM DE PORT dans la scène', 'port'],
+  ['@var x in.midi(port:LPK25)\n@mode:ord\nS -> C4', 'un NOM DE PORT dans la scène', 'port'],
   // ⚠️ Le mot 'alphabet' ne suffit PAS à distinguer ce refus : le message générique « propriété
   // inconnue » le contient aussi. Prouvé par injection le 2026-07-27 — en désactivant la branche
   // dédiée, la garde restait VERTE. On exige donc ce que la contrainte a de PROPRE : dire qu'il
   // n'y a rien à résoudre en entrée, et renvoyer vers la table.
-  ['@in x transport.midi alphabet.sargam\n@mode:ord\nS -> C4', 'un ALPHABET sur une entrée', 'rien'],
-  ['@in x transport.audio\n@mode:ord\nS -> C4', 'un canal de SORTIE employé en entrée', 'audio'],
-  ['@in x transport.bluetooth\n@mode:ord\nS -> C4', 'un canal inventé', 'bluetooth'],
-  ['@in x transport.midi octaves.western\n@mode:ord\nS -> C4', 'une propriété étrangère', 'octaves'],
-  ['@in x\n@mode:ord\nS -> C4', 'une entrée sans canal', 'canal'],
-  ['@in\n@mode:ord\nS -> C4', 'une entrée sans nom', 'rôle'],
+  ['@var x in.midi alphabet.sargam\n@mode:ord\nS -> C4', 'un ALPHABET sur une entrée', 'rien'],
+  ['@var x in.audio\n@mode:ord\nS -> C4', 'un canal de SORTIE employé en entrée', 'audio'],
+  ['@var x in.bluetooth\n@mode:ord\nS -> C4', 'un canal inventé', 'bluetooth'],
+  ['@var x in.midi octaves.western\n@mode:ord\nS -> C4', 'une propriété étrangère', 'octaves'],
+  // ⚠️ 'une entrée sans canal'/'sans nom' n'ont plus d'équivalent DIRECT depuis la fusion dans
+  // `@var` (2026-08-04) : `@var x` seul est une VARIABLE DE TRAVAIL valide (forme nue), pas une
+  // entrée incomplète — il n'y a plus de mot qui ENGAGE à un canal avant de le lire. Ce que la
+  // contrainte protégeait reste vrai autrement : `@var` sans AUCUN nom (ni rôle ni variable)
+  // refuse toujours, et le message renvoie vers la forme d'entrée.
+  ['@var\n@mode:ord\nS -> C4', 'un @var sans aucun nom', 'rôle'],
 ]) {
   const r = compile(corps);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
@@ -91,7 +100,7 @@ for (const [corps, quoi, mot] of [
 }
 // Le refus de l'alphabet doit dire POURQUOI, pas seulement refuser.
 {
-  const msg = (compile('@in x transport.midi alphabet.sargam\n@mode:ord\nS -> C4').errors || [])
+  const msg = (compile('@var x in.midi alphabet.sargam\n@mode:ord\nS -> C4').errors || [])
     .map((e) => e.message || e).join(' | ');
   ok(msg.includes('AUCUN alphabet') && msg.includes('DISCRET') && msg.includes('mapping'),
      `3. le refus de l'alphabet doit expliquer qu'il n'y a RIEN à résoudre en entrée et renvoyer `
@@ -99,7 +108,7 @@ for (const [corps, quoi, mot] of [
 }
 // CONTRAINTE 3 : aucune table n'est inventée quand rien n'est déclaré.
 {
-  const r = compile('@in x transport.midi\n@mode:ord\nS -> C4');
+  const r = compile('@var x in.midi\n@mode:ord\nS -> C4');
   const e = (r.ast?.inputs || [])[0];
   ok(e && (e.mapping === null || e.mapping === undefined),
      `3. AUCUNE table par défaut ne doit être posée — reçu : ${JSON.stringify(e)}`);
@@ -108,7 +117,7 @@ for (const [corps, quoi, mot] of [
 // ─── 4. LA TABLE EST UNE INVOCATION DE LIBRAIRIE — son adresse doit SORTIR ───────────────────
 // Sinon la scène « déclare » une table que l'aval ne voit jamais : accepter n'est pas transmettre.
 {
-  const r = compile('@in pedale transport.midi mapping.fcb_std\n@mode:ord\nS -> C4');
+  const r = compile('@var pedale in.midi mapping.fcb_std\n@mode:ord\nS -> C4');
   // L'ADRESSE SORT MÊME QUAND LA RÉFÉRENCE CRIE, et c'est voulu : émission et validation sont deux
   // questions distinctes. Confondre les deux ferait disparaître la trace de ce que la scène a écrit
   // au moment précis où on en a le plus besoin pour comprendre le refus.
@@ -126,7 +135,7 @@ ok(LIBS.mapping?.domain === 'mapping',
 
 // ─── 5. L'ADRESSE AU POINT D'USAGE — côté droit IDENTIFIANT ──────────────────────────────────
 {
-  const r = compile('@in pedale transport.midi\n@mode:ord\nS -> C4 <!pedale.suivant D4');
+  const r = compile('@var pedale in.midi\n@mode:ord\nS -> C4 <!pedale.suivant D4');
   ok((r.errors || []).length === 0,
      `5. l'adresse pointée doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   const t = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
@@ -137,7 +146,7 @@ ok(LIBS.mapping?.domain === 'mapping',
 }
 // Sans adresse, rien n'est inventé.
 {
-  const r = compile('@in pedale transport.midi\n@mode:ord\nS -> C4 <!pedale D4');
+  const r = compile('@var pedale in.midi\n@mode:ord\nS -> C4 <!pedale D4');
   const trig = ((r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0]?.triggers || [])[0];
   ok(trig && trig.address === undefined, `5. sans point, AUCUNE adresse ne doit apparaître — reçu : ${JSON.stringify(trig)}`);
 }
@@ -168,7 +177,7 @@ const adressesDe = (ast) => {
   w(ast?.subgrammars?.[0]?.rules?.[0]?.rhs || []);
   return out;
 };
-const AVEC_ENTREES = '@in brut transport.midi\n@in pedale transport.midi\n@mode:ord\n';
+const AVEC_ENTREES = '@var brut in.midi\n@var pedale in.midi\n@mode:ord\n';
 
 for (const [regle, quoi, attendu] of [
   ['S -> C4 <!brut.60 D4', 'adresse NUMÉRIQUE, point d\'attente seul', 60],
@@ -239,5 +248,5 @@ if (echecs.length) {
   for (const e of echecs) console.error(`   - ${e}`);
   process.exitCode = 1;
 } else {
-  console.log(`✅ déclaration d'entrée @in — ${passe} vérification(s) passée(s) sur ${ENTREE.length} canal(aux) d'entrée`);
+  console.log(`✅ déclaration d'entrée @var in. (ex-@in) — ${passe} vérification(s) passée(s) sur ${ENTREE.length} canal(aux) d'entrée`);
 }

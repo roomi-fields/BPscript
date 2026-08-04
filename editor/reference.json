@@ -11,7 +11,7 @@
       "forms": [
         { "syntax": "@core", "desc": "Load core library" },
         { "syntax": "@controls", "desc": "Load control definitions (vel, pan, wave...)" },
-        { "syntax": "@alphabet.western:audio", "desc": "Load alphabet with transport binding" },
+        { "syntax": "@alphabet.western:audio", "desc": "Load alphabet with output binding" },
         { "syntax": "@mm:120", "desc": "Set metronome to 120 BPM" },
         { "syntax": "@mode:random", "desc": "Set derivation mode for next sub-grammar" },
         { "syntax": "@tonality.just_C", "desc": "Load tonality/tuning file" },
@@ -19,7 +19,7 @@
         { "syntax": "@transcription.tabla", "desc": "Load homomorphism table" },
         { "syntax": "@timepatterns: t1=1/1, t2=3/2", "desc": "Define time patterns" },
         { "syntax": "@+", "desc": "Append rules to previous sub-grammar" },
-        { "syntax": "@actor sitar alphabet:sargam transport:midi", "desc": "Define an actor" }
+        { "syntax": "@actor sitar alphabet.sargam out.midi", "desc": "Define an actor" }
       ],
       "example": "@core\n@controls\n@alphabet.western:audio\n@mm:120"
     },
@@ -272,8 +272,8 @@
     "core": { "syntax": "@core", "desc": "Load core library (required)" },
     "controls": { "syntax": "@controls", "desc": "Load control definitions — vel, pan, wave, attack, release, etc." },
     "alphabet": {
-      "syntax": "@alphabet.name:transport",
-      "desc": "Load a note alphabet with transport binding",
+      "syntax": "@alphabet.name:<channel>",
+      "desc": "Load a note alphabet with output binding",
       "subkeys": {
         "western": "C D E F G A B with #/b alterations and octave numbers",
         "sargam": "sa re ga ma pa dha ni (Indian svaras)",
@@ -314,7 +314,7 @@
     "octaves": { "syntax": "@octaves:convention", "desc": "Set octave naming convention (western, saptak, etc.)" },
     "transcription": { "syntax": "@transcription.name", "desc": "Load a homomorphism/substitution table for template-based rewriting." },
     "timepatterns": { "syntax": "@timepatterns: name=num/den, ...", "desc": "Define named time patterns with rational durations." },
-    "actor": { "syntax": "@actor name key:value ...", "desc": "Define an actor: bundles alphabet + scale + transport + sounds into a named entity." },
+    "actor": { "syntax": "@actor name key:value ...", "desc": "Define an actor: bundles alphabet + scale + output + sounds into a named entity." },
     "templates": { "syntax": "@templates", "desc": "Begin template section. Templates define structural constraints for TEM mode." }
   },
 

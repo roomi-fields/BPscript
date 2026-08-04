@@ -83,7 +83,7 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 }
 {
   // Les propriétés d'un @actor sont un corps de bloc : elles ne déclarent pas des noms de scène.
-  const r = compileToBPxAST('@core\n@actor v\n  alphabet.western\n  transport.audio\nS -> v.C4\n');
+  const r = compileToBPxAST('@core\n@actor v\n  alphabet.western\n  out.audio\nS -> v.C4\n');
   ok((r.errors || []).length === 0, '3. les propriétés d\'un @actor doivent compiler');
   ok(!(r.ast?.vars || []).includes('alphabet'),
     '3. et elles ne fuient pas non plus — un mot de propriété n\'est pas un nom de scène');

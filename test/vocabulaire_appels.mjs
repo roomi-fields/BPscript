@@ -151,7 +151,7 @@ for (const [forme, quoi] of [
   ['S -> C4 [vel:80]', 'contrôle runtime écrit dans le sac moteur'],
   ['S -> C4 [keyxpand:B3 -1]', 'contrôle de dispatcher dans le sac moteur'],
   ['S -> C4 !(legato:100) D4', 'contrôle moteur écrit dans le sac runtime'],
-  ['S -> C4 (tempo:2)', 'contrôle moteur écrit dans le sac runtime'],
+  ['S -> C4 (tempx:2)', 'contrôle moteur écrit dans le sac runtime'],
   ['S -> {C4, D4}[scale:2]', "le `scale` MOTEUR, supprimé le 2026-07-26 : subsumé par la durée collée"],
 ]) {
   ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
@@ -161,7 +161,7 @@ for (const [forme, quoi] of [
 // le `rotate` de SÉQUENCE, moteur et déclaré (à ne pas confondre avec l'ancien rotate de hauteur,
 // renommé `scaleshift` le 2026-07-11).
 for (const forme of [
-  'S -> {C4, D4}:2', 'S -> C4 [weight:50]', 'S -> C4 [mode:random]', 'S -> C4 [tempo:2]',
+  'S -> {C4, D4}:2', 'S -> C4 [weight:50]', 'S -> C4 [mode:random]', 'S -> C4 [tempx:2]',
   'S -> !(vel:80) C4', 'S -> ![legato:100] C4', 'S -> !(scale:just_intonation C4) C4',
   'S -> {C4 D4}![rotate:2]',
 ]) {
@@ -181,8 +181,8 @@ for (const forme of [
      `§2sexies le refus doit NOMMER les paramètres attendus — reçu : ${positionnel.join(' | ')}`);
   ok(erreursDe(`${entete}@cv env mod.adsr(attack:5, decay:120)\nS -> C4\n`).length === 0,
      '§2sexies la forme NOMMÉE reste la bonne — mod.adsr(attack:5, decay:120)');
-  ok(erreursDe(`@core\n@controls\n@actor v alphabet.western transport.midi(ch:3)\n@mode:ord\nS -> v.C4\n`).length === 0,
-     "§2sexies l'instanciation nommée d'un composant reste légitime — transport.midi(ch:3)");
+  ok(erreursDe(`@core\n@controls\n@actor v alphabet.western out.midi(ch:3)\n@mode:ord\nS -> v.C4\n`).length === 0,
+     "§2sexies l'instanciation nommée d'un composant reste légitime — out.midi(ch:3)");
 }
 
 // ─── §2septies. LE SAC ÉCRIT AVEC DES ESPACES — la forme que nul crible ne voit ─────────────

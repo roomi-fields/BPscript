@@ -286,8 +286,8 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
 }
 {
   // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.
-  const r = compiler('@core\n@actor perc\n  alphabet.tabla\n  transport.audio\n'
-    + '@actor n\n  alphabet.western\n  transport.audio\nmotif -> dha C4\nS -> motif');
+  const r = compiler('@core\n@actor perc\n  alphabet.tabla\n  out.audio\n'
+    + '@actor n\n  alphabet.western\n  out.audio\nmotif -> dha C4\nS -> motif');
   ok((r.ast?.noteTerminals || []).join() === 'C4' && (r.ast?.alphabetTerminals || []).join() === 'dha',
     `3bis. deux vocabulaires : chacun dans son champ (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
 }

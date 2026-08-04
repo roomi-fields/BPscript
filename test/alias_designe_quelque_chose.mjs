@@ -35,7 +35,7 @@ const compile = (corps) => {
 
 // ─── 1. LA FORME NOUVELLE — un NOM, puis sa SOURCE ───────────────────────────────────────────
 for (const [corps, quoi] of [
-  ['@in touches transport.keyboard\n@alias depart touches.z\n@mode:ord\nS -> C4', "une ENTRÉE déclarée et son étiquette"],
+  ['@var touches in.keyboard\n@alias depart touches.z\n@mode:ord\nS -> C4', "une ENTRÉE déclarée et son étiquette"],
   ['@alias breath cc:2\n@mode:ord\nS -> C4', 'un contrôleur continu'],
   ['@alias horloge osc:/clock\n@mode:ord\nS -> C4', 'une adresse OSC'],
   ['@trigger sync1:midi\n@alias depart sync1\n@mode:ord\nS -> C4', 'un trigger déclaré'],

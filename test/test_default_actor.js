@@ -59,7 +59,7 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
 
 // ── 3. scène AVEC @actor → PAS de default, pas de synthetic ──────────────
 {
-  const a = actors('@actor sitar transport.midi(ch:3)\nsitar -> C4');
+  const a = actors('@actor sitar out.midi(ch:3)\nsitar -> C4');
   assert('un acteur déclaré', a.length === 1 && a[0].name === 'sitar');
   assert('pas synthetic', a[0].synthetic !== true);
   assert('pas d acteur implicite ajouté', !a.some((x) => x.name === 'scene' && x.synthetic));
@@ -67,7 +67,7 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
 
 // ── 4. plusieurs @actor → aucun default ─────────────────────────────────
 {
-  const a = actors('@actor a1 transport.midi(ch:1)\n@actor a2 transport.osc(device:x)\na1 -> C4\na2 -> E4');
+  const a = actors('@actor a1 out.midi(ch:1)\n@actor a2 out.osc(device:x)\na1 -> C4\na2 -> E4');
   assert('2 acteurs déclarés, pas d acteur implicite', a.length === 2 && !a.some((x) => x.synthetic));
 }
 
@@ -87,7 +87,7 @@ if (fail > 0) process.exit(1);
 {
   // ET « si et seulement si » : quand la scène déclare ses acteurs, il n'y a PAS d'acteur
   // implicite — `scene.X` doit rester refusé, sinon on offre un nom qui ne désigne rien.
-  const r = compileToBPxAST('@core\n@alphabet.western\n@actor v\n  transport.midi\nS -> scene.C4');
+  const r = compileToBPxAST('@core\n@alphabet.western\n@actor v\n  out.midi\nS -> scene.C4');
   assert('scene.X reste REFUSÉ quand des acteurs sont déclarés',
     (r.errors || []).some((e) => /Acteur inconnu/.test(e.message || '')), JSON.stringify(r.errors));
 }

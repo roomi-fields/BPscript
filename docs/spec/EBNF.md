@@ -3,7 +3,7 @@
 Version 0.8 — dérivée de BPSCRIPT_VISION.md et validée par 44 traductions de
 scènes BP3. v0.8 ajoute `sound_section`, `sound_assignment`, renomme
 `@templates` → `@template`, et étend `actor_decl` pour la notation `.` sur les
-références d'entités (`alphabet.X`, `tuning.X`, `transport.X`, `sound.X`). Cf.
+références d'entités (`alphabet.X`, `tuning.X`, `out.X`, `sound.X`). Cf.
 `docs/design/v0.8-decisions-final.md` pour les décisions verrouillées.
 
 Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
@@ -16,7 +16,7 @@ Notation : ISO 14977 (`=` définition, `,` concaténation, `|` alternative,
 
 ```ebnf
 scene       = { directive | actor_directive | scene_directive | expose_directive
-              | var_directive | in_directive
+              | var_directive
               | alias_directive | cc_directive | duration_directive
               | macro_directive | label_directive
               | sound_section
@@ -27,7 +27,7 @@ scene       = { directive | actor_directive | scene_directive | expose_directive
 actor_directive  = "@" , "actor" , IDENT , actor_body ;
 
 (* v0.8 : les actor_props bascule de `:` à `.` pour les références d'entités
-   (alphabet, tuning, transport, sound). Les affectations à un sujet (note ou
+   (alphabet, tuning, out, sound). Les affectations à un sujet (note ou
    *) utilisent toujours `:` (sound_assignment). Voir actor_body. *)
 scene_directive  = "@" , "scene" , IDENT , STRING ;        (* @scene verse "verse.bps" *)
 expose_directive = "@" , "expose" , ( "[" , IDENT , "]" )+ ; (* @expose [intensity] [energy] *)
@@ -40,10 +40,15 @@ macro_directive  = "@" , "macro" , IDENT , [ "(" , IDENT , { "," , IDENT } , ")"
                     un corps qui commence par une parenthèse en est séparé par une espace. *)
 (* `map_directive` SUPPRIMÉ le 2026-07-27 au soir — la directive de correspondance est ABANDONNÉE,
    le câblage passe par `>>` / `\>>`. Ce qui DÉSIGNE reste dans `alias_directive`. *)
-var_directive    = "@" , "var" , IDENT , { "," , IDENT } ; (* @var A8   @var a, b, c *)
-in_directive     = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
-                 , [ "mapping" , "." , IDENT ] ;      (* @in pedale transport.midi mapping.fcb_std *)
-INPUT_CHANNEL    = "midi" | "osc" | "keyboard" ;      (* liste FERMEE, distincte des SORTIES *)
+(* `in_directive` (ex-`@in`) ABSORBÉE dans `var_directive` le 2026-08-04 (in/out remplacent
+   transport, hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md) :
+   la bible (`docs/spec/LANGUAGE.md` §« @var — déclarer une variable ») écrivait déjà
+   `@var <rôle> in.<canal>` — ce n'était pas une forme nouvelle, c'était le code qui divergeait.
+   `@in <rôle> transport.<canal>` REJETÉ au parse (tombstone nommé, pointe vers la forme `@var`). *)
+var_directive    = "@" , "var" , IDENT , { "," , IDENT }              (* @var A8   @var a, b, c *)
+                 | "@" , "var" , IDENT , "in" , "." , IN_CHANNEL
+                   , [ "mapping" , "." , IDENT ] ;    (* @var pedale in.midi mapping.fcb_std *)
+IN_CHANNEL       = "midi" | "osc" | "keyboard" ;      (* liste FERMEE, distincte des SORTIES *)
 alias_directive    = "@" , "alias" , IDENT , alias_value ;   (* @alias depart touches.z *)
 
 cc_pair    = IDENT , ":" , INT ;               (* breath:2 — nom:numéro CC *)
@@ -134,14 +139,15 @@ path_seg = ( IDENT | INT ) , { IDENT | INT } ;
 > **Raccord de SORTIE d'une scène `@mine`/`@factory` (canonique, décision Romain 2026-07-13,
 > `hub/decisions/2026-07-13-invocation-librairies-factory-mine.md §Raccord sortie).** Une réf de
 > provenance nomme une **librairie de hauteur** ; elle ne porte **PAS** de sortie. Le raccord audio
-> passe par un **ACTEUR EXPLICITE** — `@actor voice transport.audio` puis `@mine.ragas.sargam`
-> (la hauteur vient du libRef, résolue par Kairos ; le transport vient de l'acteur). Aucune nouvelle
-> syntaxe : cette voie parse déjà. Le binding de sortie CANON `@alphabet.X:<sortie>` (transport de
+> passe par un **ACTEUR EXPLICITE** — `@actor voice out.audio` puis `@mine.ragas.sargam`
+> (la hauteur vient du libRef, résolue par Kairos ; la sortie vient de l'acteur). Aucune nouvelle
+> syntaxe : cette voie parse déjà. Le binding de sortie CANON `@alphabet.X:<sortie>` (sortie de
 > l'acteur implicite, décision 2026-07-16 — règle DISTINCTE qui coexiste) **n'est pas** étendu à la
 > provenance (séparation propre « lib de hauteur » vs « sortie » ; aucun
 > contact avec le contrat co-signé `libRefs` ni la règle acteur-unique). Une scène `@mine` **nue**
-> (sans acteur) retombe sur le transport par défaut `audio` (natif) — **muet dans le player web, et
-> c'est VOULU** : l'auteur déclare sa sortie explicitement.
+> (sans acteur) retombe sur la sortie par défaut `audio` (natif) — **muet dans le player web, et
+> c'est VOULU** : l'auteur déclare sa sortie explicitement. (`out` remplace `transport`, décision
+> Romain 2026-08-04.)
 
 ```ebnf
 
@@ -154,37 +160,42 @@ tp_pair = IDENT , "=" , INT , "/" , INT ;  (* t1=1/1 — nom = numérateur/déno
 actor_body  = { actor_prop | sound_assignment } ;
 
 actor_prop  = actor_alphabet_binding                (* CANON : @alphabet.<nom> *)
-            | actor_entity_ref                      (* CANON : tuning.X, octaves.X, transport.X(...), sound.X *)
+            | actor_entity_ref                      (* CANON : tuning.X, octaves.X, out.X(...), sound.X *)
             | actor_eval_binding ;                  (* v0.8 : eval.X (référence à un eval runtime) *)
 
 (* CANON DE GRAPHIE — décision hub 2026-06-26 (« . APPELLE un composant / : AFFECTE une valeur »)
    étendue aux bindings d'acteur (ratifiée Romain 2026-07-13, CUTOVER 2026-07-14 tour [411]) :
-   TOUT composant se nomme avec `.`. Un transport prend des params (canal/device) → c'est un
-   COMPOSANT, pas une valeur.
+   TOUT composant se nomme avec `.`. Une sortie prend des params (canal/device) → c'est un
+   COMPOSANT, pas une valeur. `out` remplace `transport` (décision Romain 2026-08-04, in/out
+   remplacent transport — le mot `transport` est SORTI du langage).
      - alphabet  = @alphabet.<nom>       — sucre FACTORY legacy (fichier `alphabet`, entrée <nom>)
                                            → properties.alphabet, canal legacy résolu au compile.
                                            Les provenances @factory./@mine. NE se posent PAS sur la
                                            ligne d'acteur : une hauteur perso est un libRef de SCÈNE
-                                           + un acteur transport-seul (§lib_provenance_ref, décision
+                                           + un acteur sortie-seule (§lib_provenance_ref, décision
                                            2026-07-13 §Raccord sortie).
-     - transport = transport.<canal>(…)  — le `.` appelle le composant ; params entre () = adresse.
+     - out       = out.<canal>(…)        — le `.` appelle le composant ; params entre () = adresse.
    CUTOVER (Romain 2026-07-14, ZÉRO rétrocompat) : les formes d'ENTITÉ en `:` (`alphabet:X`,
-   `transport:X`, `tuning:X`, `octaves:X`, `sound:X`, `eval:X`) sont REJETÉES (fail-loud, message
+   `out:X`, `tuning:X`, `octaves:X`, `sound:X`, `eval:X`) sont REJETÉES (fail-loud, message
    pointant le canon `.`). Le `:` n'affecte QUE des valeurs (SCENE_VALUES, `sujet:sound.X`). *)
 
 actor_alphabet_binding  = "@" , "alphabet" , "." , IDENT ;   (* forme nue `alphabet.<nom>` équivalente *)
 
-actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;  (* transport.midi(ch:3) *)
+actor_entity_ref = ACTOR_ENTITY_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;  (* out.midi(ch:3) *)
 
-ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "eval" | "voice" ;
+ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "out" | "sound" | "eval" | "voice" ;
 (* SEPT clés d'entité : les six de la décision cles-acteur-six (arbitrage Romain 2026-06-16)
    + `voice` (LANG-SONS-2, GO Romain [438] 2026-07-16, spec hub/projets/lang-sons-spec.md §3 :
    voix = son de base + contrôles, entrée de lib/voices ; la HAUTEUR est STRUCTURELLE —
    alphabet+tuning, spec §2 — jamais un flag de voix : `voice.X` sans tuning = percussion,
    valide). CHACUNE se nomme avec `.` (composant). La forme `:` est REJETÉE (cutover 2026-07-14).
-   Adressage de sortie (KAI-9, Romain 2026-06-26) : le canal `transport` est un IDENT LIBRE (clé
+   `transport` a nommé cette clé jusqu'au 2026-08-04 (décision Romain, in/out remplacent
+   transport) : `transport.<canal>` et `transport:<canal>` sont désormais REJETÉS au parse
+   (tombstone nommé, pointe vers `out.<canal>`) — le champ interne (`properties.transport`,
+   `TransportRef`, `references[transport]`) NE CHANGE PAS, seul le mot ÉCRIT change.
+   Adressage de sortie (KAI-9, Romain 2026-06-26) : le canal `out` est un IDENT LIBRE (clé
    d'appareil) et les DÉTAILS d'adresse (device/channel/port) sont ses PARAMS, iso quel que soit le
-   canal — transport.midi(ch:3), transport.osc(device:reaper, ch:7). Plus de champ séparé
+   canal — out.midi(ch:3), out.osc(device:reaper, ch:7). Plus de champ séparé
    `ActorDirective.binding` (ancien OSC-L1, supprimé). L'hôte reconstruit son routage depuis
    references[transport].{name, params}.
    alphabet — vocabulaire de symboles (requis) — CANON @alphabet.<nom>
@@ -193,23 +204,24 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
               défaut = **hérité de l'alphabet** de l'acteur ; `@actor X octaves.Y` SURCHARGE la
               notation de registre pour cet acteur. Étape de résolution distincte, rattachée au
               vocabulaire de symboles (alphabet), PAS au tuning.)
-   transport — CANAL de NOTRE sortie — CANON transport.<canal>(…). Modèle producteur/canal (décision
-              Romain 2026-07-14, hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md) :
-              transport ne concerne QUE nos runtimes — `audio`/`midi`/`osc`. NON requis :
+   out       — CANAL de NOTRE sortie (ex-`transport`) — CANON out.<canal>(…). Modèle producteur/canal
+              (décision Romain 2026-07-14, hub/decisions/2026-07-14-modele-producteur-canal-eval-
+              transport.md ; mot renommé le 2026-08-04) : la sortie ne concerne QUE nos runtimes —
+              `audio`/`midi`/`osc`. NON requis :
                 • acteur SANS `eval` (producteur défaut `js`, ou voix symbolique alphabet→sound) :
-                  transport OPTIONNEL, défaut cascade @core = `audio` ;
-                • acteur AVEC `eval` : transport INTERDIT (fail-loud) — un programme embarqué autonome
+                  out OPTIONNEL, défaut cascade @core = `audio` ;
+                • acteur AVEC `eval` : out INTERDIT (fail-loud) — un programme embarqué autonome
                   (strudel/hydra/p5/csound/mercury) sort en NATIF ; on ne route pas sa sortie.
-              PAS de `transport.video`/`transport.visual` (axe visuel SUPPRIMÉ : les visuels sortent
+              PAS de `out.video`/`out.visual` (axe visuel SUPPRIMÉ : les visuels sortent
               natif). Le nom d'appareil est un IDENT **LIBRE** (clé de `@devices`), PAS une liste fermée ;
               le canal CANONIQUE écrit directement = {`audio`, `midi`, `osc`}. Noms PÉRIMÉS `browser`
               et `webaudio` = REJETÉS fail-loud au parse (décision 2026-07-16, Romain : on supprime,
               PAS de normalisation ni rétrocompat ; `schema.deprecatedTransports` de core.json). Le
               modèle profils d'environnement (`routing.json` — studio/live/browser) est SUPPRIMÉ
               (fichier + feature @routing/routingTable). La grammaire valide la SYNTAXE
-              `transport.<nom>(params)` ; l'existence de l'appareil et la compatibilité de type sont
+              `out.<nom>(params)` ; l'existence de l'appareil et la compatibilité de type sont
               résolues en aval (Kanopi, cf. DEVICES_SPEC.md — audio/midi/osc). Params entre () :
-              transport.midi(ch:10).
+              out.midi(ch:10).
    sound    — son par défaut de l'acteur (référence dans @sound).
               Une référence sound.X ici équivaut sémantiquement à
               `*:sound.X` mais s'écrit comme une entity_ref pour homogénéité.
@@ -218,9 +230,9 @@ ACTOR_ENTITY_KEY = "alphabet" | "tuning" | "octaves" | "transport" | "sound" | "
 actor_eval_binding = "eval" , "." , IDENT ;          (* eval.strudel, eval.hydra, eval.csound ... *)
 (* eval — PRODUCTEUR embarqué AUTONOME de l'acteur (clé libre : strudel/hydra/p5/csound/mercury…).
    Modèle producteur/canal (Romain 2026-07-14) : un acteur `eval` PRODUIT ET SORT EN NATIF (son propre
-   audio / canvas) ⇒ il ne porte PAS de `transport` (fail-loud si présent). L'ABSENCE d'`eval` vaut
+   audio / canvas) ⇒ il ne porte PAS de `out` (fail-loud si présent). L'ABSENCE d'`eval` vaut
    producteur défaut IMPLICITE `js` (notre code, produit dans notre environnement) — SEUL cas de voix
-   de code où `transport` s'applique. `js` ne s'écrit pas `eval.js` (défaut implicite) ; la catégorie
+   de code où `out` s'applique. `js` ne s'écrit pas `eval.js` (défaut implicite) ; la catégorie
    qui distinguera formellement « produit-chez-nous » (js) de « produit-natif » (strudel/hydra) est
    prospective (backlog « LP », décision 2026-07-14 §Prospectif).
    Un backtick de flux dans une règle dont la tête est cet acteur HÉRITE de `eval` (langage connu sans
@@ -318,7 +330,7 @@ alphabet_section = "@" , "alphabet" , "." , IDENT , [ ":" , IDENT ]
                  , [ "(" , alias_list , ")" ]
                  , [ NEWLINE , alphabet_body ] ;
 
-(* `:` après la notation pointée = variante : @alphabet.tabla:transport.
+(* `:` après la notation pointée = variante : @alphabet.tabla:audio.
    `(...)` = résolution de conflit (cf. Directive). *)
 
 alphabet_body = { alphabet_decl | sound_assignment | comment | blank_line } ;
@@ -396,15 +408,16 @@ sac) ; plusieurs lignes **s'accumulent**, comme plusieurs invocations de librair
 porte qui ne change rien : la scène compilerait et l'aval continuerait d'inventer une hauteur pour
 un symbole qui n'en a pas. Voir `AST.md`.
 
-### `in_directive` — DÉCLARATION D'UNE ENTRÉE
+### `var_directive` (forme entrée) — DÉCLARATION D'UNE ENTRÉE
 
 ```ebnf
-in_directive  = "@" , "in" , IDENT , "transport" , "." , INPUT_CHANNEL
-              , [ "mapping" , "." , IDENT ] ;
-INPUT_CHANNEL = "midi" | "osc" | "keyboard" ;
+var_directive (forme entrée) = "@" , "var" , IDENT , "in" , "." , IN_CHANNEL
+                              , [ "mapping" , "." , IDENT ] ;
+IN_CHANNEL = "midi" | "osc" | "keyboard" ;
 ```
 
-Décision Romain 2026-07-27, en conséquence de la symétrie entrée/sortie du même jour. Une **sortie**
+Décision Romain 2026-07-27, en conséquence de la symétrie entrée/sortie du même jour ; réécrite en
+`@var` (ex-`@in`) par la décision du 2026-08-04 (in/out remplacent transport). Une **sortie**
 est routée PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une **entrée** l'est de la même façon,
 au point de RÉCEPTION — le point d'attente : `S -> C4 <!pedale.suivant D4`. **Pas de directive de
 routage, pas de flèche, pas d'opérateur de câblage.**
@@ -426,7 +439,9 @@ qu'aucune table réelle n'existe, une entrée s'écrit **sans table** et s'emplo
 
 **La liste des canaux d'entrée est FERMÉE et distincte de celle des sorties.** `keyboard` y entre
 (décision Romain 2026-07-26, trois périphériques d'entrée nommés) et nulle part ailleurs :
-`@alphabet.X:keyboard` reste refusé — une sortie clavier n'a pas de sens.
+`@alphabet.X:keyboard` reste refusé — une sortie clavier n'a pas de sens. Les deux listes vivent
+désormais dans UN SEUL catalogue (`lib/core.json` schema.channels, décision 2026-08-04), chaque
+canal portant les directions qu'il autorise — préservées à l'identique, rien n'est relâché.
 
 **L'adresse au point de réception** — `COLLÉ = une adresse, ESPACE = un découpage` (règle validée
 par Romain le 2026-07-27) :
@@ -811,7 +826,9 @@ engine_pair = ENGINE_KEY , ":" , raw_value
             | ENGINE_KEY ;                              (* flag nu : [destru] *)
 
 ENGINE_KEY  = "mode" | "scan" | "weight" | "on_fail"   (* `speed` SUPPRIMÉ → durée `:` *)
-            | "tempo" | "meter"
+            | "tempx" | "meter"           (* renommé tempo -> tempx le 2026-08-04, décision
+                                              2026-08-04-le-multiplicateur-de-vitesse-d-une-regle-s-appelle-tempx :
+                                              `tempo` reste la SEULE directive de scène (@tempo:120, mm) *)
             | "retro" | "shuffle" | "order" | "rotate"
             | "repeat" | "failed" | "stop" | "goto"
             | "striated" | "smooth"
@@ -1249,8 +1266,8 @@ Le backtick autonome est un **terminal de plein droit** du RHS (cf. `element_cor
 `BacktickStandalone` dans AST.md) : il occupe une position dans le flux au même titre qu'une note.
 Le **tag** désigne l'**interpréteur** (`eval`) du code (`sc:`, `py:`, `tidal:`, `strudel:`, `js:`…).
 La SORTIE dépend du producteur (modèle producteur/canal, Romain 2026-07-14) : un backtick sur un
-acteur `eval.<X>` (strudel/hydra/p5/csound/mercury) **sort en NATIF** (pas de transport) ; un backtick
-du producteur défaut `js` est **placé par le dispatcher vers NOTRE `transport`**. Backtick attaché à
+acteur `eval.<X>` (strudel/hydra/p5/csound/mercury) **sort en NATIF** (pas de `out`) ; un backtick
+du producteur défaut `js` est **placé par le dispatcher vers NOTRE sortie (`out`)**. Backtick attaché à
 un symbole ou dans un paramètre → interpréteur implicite (celui du symbole / de son acteur). Le rattachement d'un
 backtick à un acteur précis (voix-code) est décrit dans `docs/design/ACTOR.md`.
 État d'implémentation : seul `js:` est interprété aujourd'hui ; `sc`/`py`/`tidal`/`strudel` sont
@@ -1377,7 +1394,7 @@ Ou en global : `@striated`, `@tempo:60` (appliqué au preamble de la première s
 ### Clés réservées de `@`
 
 ```
-actor NAME props...            → déclare un acteur (binding alphabet.X + tuning.X + sound.X + transport.X(...) — v0.8)
+actor NAME props...            → déclare un acteur (binding alphabet.X + tuning.X + sound.X + out.X(...) — v0.8)
 core                           → librairie noyau (lambda, on_fail)
 controls                       → contrôles performance (vel, tempo, transpose, etc.)
 alphabet.KEY:BINDING           → alphabet KEY depuis lib/alphabet.json, lié à BINDING

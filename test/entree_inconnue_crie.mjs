@@ -109,7 +109,7 @@ for (const axe of CATALOGUES) {
 // ON NE RETIRE PAS UN TÉMOIN QUAND LE TROU SE COMBLE, ON LE RETOURNE : il gardait l'absence, il
 // garde maintenant la présence.
 {
-  const r = compile('@in p transport.midi mapping.fcb_std');
+  const r = compile('@var p in.midi mapping.fcb_std');
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok((r.errors || []).length > 0,
      "6. une table INEXISTANTE doit crier comme n'importe quelle entrée inconnue — aucune exemption");
@@ -120,7 +120,7 @@ for (const axe of CATALOGUES) {
 }
 // Sans table, rien ne crie : le cri vise l'inexistant, pas la déclaration d'entrée.
 {
-  const r = compile('@in p transport.midi');
+  const r = compile('@var p in.midi');
   ok((r.errors || []).length === 0,
      `6. une entrée SANS table doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

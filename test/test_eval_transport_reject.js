@@ -2,8 +2,10 @@
 // Source : hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md §Le modèle ;
 // docs/spec/EBNF.md:185-188 ; docs/spec/AST.md:230-236.
 // Deux fail-loud du frontal (parser.js, avant construction des references d'acteur) :
-//   a. un producteur `eval.<X>` sort en NATIF → il ne porte PAS de transport ;
-//   b. `transport.video` / `transport.visual` n'existent plus (axe visuel SUPPRIMÉ).
+//   a. un producteur `eval.<X>` sort en NATIF → il ne porte PAS de sortie routée (`out`) ;
+//   b. `out.video` / `out.visual` n'existent plus (axe visuel SUPPRIMÉ).
+// `out` remplace `transport` (décision Romain 2026-08-04) — le nom de ce fichier reste
+// historique, la surface qu'il garde est celle de la sortie de l'acteur.
 // La preuve exerce LES DEUX voies de compilation (BP3 legacy + AST BPx) : le rejet vit dans
 // parse(), partagé par les deux.
 import { compileToBPxAST } from '../src/transpiler/index.js';
@@ -27,42 +29,42 @@ function bothAccept(src, label) {
   check(bpx.length === 0, `${label} — voie BPx sans erreur : ${JSON.stringify(bpx)}`);
 }
 
-// --- a. eval + transport → REJET ---
+// --- a. eval + out → REJET ---
 bothReject(
-  '@actor viz  eval.hydra  transport.audio\nS -> voix\nvoix -> `hydra: osc(4).out()`',
+  '@actor viz  eval.hydra  out.audio\nS -> voix\nvoix -> `hydra: osc(4).out()`',
   'sort en natif',
-  'a. eval.hydra + transport.audio',
+  'a. eval.hydra + out.audio',
 );
 bothReject(
-  '@actor beat  transport.midi(ch:3)  eval.strudel\nS -> voix\nvoix -> `strudel: s("bd")`',
+  '@actor beat  out.midi(ch:3)  eval.strudel\nS -> voix\nvoix -> `strudel: s("bd")`',
   'sort en natif',
-  'a. transport.midi + eval.strudel (ordre inverse)',
+  'a. out.midi + eval.strudel (ordre inverse)',
 );
 
-// --- b. transport.video / transport.visual → REJET (canal supprimé) ---
+// --- b. out.video / out.visual → REJET (canal supprimé) ---
 bothReject(
-  '@actor v  alphabet.western  transport.video\nS -> v.C',
+  '@actor v  alphabet.western  out.video\nS -> v.C',
   'SUPPRIMÉ',
-  'b. transport.video (acteur de notes, sans eval)',
+  'b. out.video (acteur de notes, sans eval)',
 );
 bothReject(
-  '@actor v  alphabet.western  transport.visual\nS -> v.C',
+  '@actor v  alphabet.western  out.visual\nS -> v.C',
   'SUPPRIMÉ',
-  'b. transport.visual',
+  'b. out.visual',
 );
 
 // --- Formes CANONIQUES toujours acceptées (non-régression) ---
 bothAccept(
   '@actor viz  eval.hydra\nS -> voix\nvoix -> `hydra: osc(4).out()`',
-  'canon : eval SANS transport (sort en natif)',
+  'canon : eval SANS out (sort en natif)',
 );
 bothAccept(
-  '@actor v  alphabet.western  transport.audio\nS -> v.C',
-  'canon : acteur de notes AVEC transport.audio',
+  '@actor v  alphabet.western  out.audio\nS -> v.C',
+  'canon : acteur de notes AVEC out.audio',
 );
 bothAccept(
-  '@actor v  alphabet.western  transport.midi(ch:10)\nS -> v.C',
-  'canon : transport.midi(ch:10)',
+  '@actor v  alphabet.western  out.midi(ch:10)\nS -> v.C',
+  'canon : out.midi(ch:10)',
 );
 
 console.log(`\n${fail === 0 ? 'OK' : 'ÉCHEC'} — ${pass} passés, ${fail} échoués`);
