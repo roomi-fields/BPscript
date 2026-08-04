@@ -529,11 +529,11 @@ touche, donc qui le consomme.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
 | `@time.`    | `tempo` -- la vitesse a laquelle le temps se lit                                                                                                             |
-| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `duration` · `meter` · `timepatterns` · les operateurs `/` et `*` |
+| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `meter` · `timepatterns` · les operateurs `/` et `*` |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
-chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre et la
-duree disent ou les choses tombent, donc ils relevent du premier.
+chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre dit
+ou les choses tombent, donc il releve du premier.
 
 ```text
 @time.tempo:120
@@ -541,26 +541,8 @@ duree disent ou les choses tombent, donc ils relevent du premier.
 @transpo.diapason:442
 ```
 
-### Duree explicite
-
-```text
-@core
-@alphabet.sargam
-@time.tempo:90
-@engine.duration:16b
-
-S -> sa re ga pa
-```
-
-`@engine.duration:16b` fixe une enveloppe de 16 beats au tempo courant ; `8s` la fixe en secondes.
-
-La duree separe trois preoccupations :
-- **Densite** = le contenu (combien de termes, quelles proportions)
-- **Duree** = `@engine.duration` (combien de beats ou de secondes la scene occupe)
-- **Vitesse** = `@time.tempo` (l'horloge, partagee avec le monde exterieur)
-
-Avec une duree posee, la scene est dilatee uniformement et ses proportions internes sont
-preservees. Sans elle, la duree suit le contenu : le nombre de termes derives et le tempo courant.
+**La duree d'une scene suit son contenu** : le nombre de termes derives et le tempo courant. Elle
+ne se pose pas.
 
 ---
 
@@ -2278,19 +2260,6 @@ ALT -> dha ni
 
 **Cette section porte ce qu'on ecrit rarement.** Les cinq ecritures ci-dessus suffisent a jouer ;
 celles-ci existent pour ce qu'elles seules permettent.
-
-### La duree de la scene
-
-**Fixer l'enveloppe totale et laisser le contenu s'y dilater.** La scene occupe la duree ecrite, et
-ses proportions internes sont preservees.
-
-```bpscript
-@engine.duration:16b         // seize battements au tempo courant
-@engine.duration:8s          // huit secondes
-```
-
-Trois choses s'y separent : la **densite** vient du contenu, la **duree** de cette ecriture, la
-**vitesse** du tempo.
 
 ### Les motifs temporels
 
