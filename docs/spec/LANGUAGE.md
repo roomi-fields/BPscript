@@ -332,7 +332,7 @@ branchement initial, le code lance une fois, les valeurs de depart.
 @var lpf1 lpf
 
 @init
-  saw1 >> lpf1 >> audio
+  saw1 >> lpf1 >> out
   `sc: SynthDef(\grain, { |freq| ... }).add`
 ```
 
@@ -391,7 +391,7 @@ simplement un signal dont on ne dit rien de plus.
 s'ecrit sans les nommer :
 
 ```text
-saw >> lpf >> audio
+saw >> lpf >> out
 ```
 
 **Quand il y en a plusieurs, le cablage les nomme**, avec le point :
@@ -439,7 +439,11 @@ sont deux instances nommees, chacune avec ses valeurs de port.
 
 Un oscillateur, du bruit, un LFO sont des **sources** : on ne les neutralise pas, il n'y a rien à
 faire passer à travers, donc pas de `passthrough`. Un filtre, un amplificateur, une enveloppe sont
-des **traitements**. La sortie audio est un **puits**.
+des **traitements**. La sortie `out` est un **puits**.
+
+**Le puits s'ecrit `out`, jamais un nom de canal.** Un patch s'applique a des terminaux, et c'est le
+terminal qui dit par ou il sort -- `audio`, `midi` ou `osc`. Ecrire `>> audio` graverait un canal
+dans une chaine qui n'a pas a le connaitre : `out` designe la sortie, celle que l'acteur a declaree.
 
 **Le sous-prototype est structurel, la catégorie est descriptive.** Le premier dit ce que le module
 peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
@@ -1773,7 +1777,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `@template` |
 | `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
-| `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                             |
+| `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> out`                             |
 
 ### L'espace, délimiteur de termes
 
@@ -2026,7 +2030,7 @@ nature « câblage », que l'aval traite comme telle.
 @var lpf1 lpf
 
 @init
-  saw1 >> lpf1 >> audio
+  saw1 >> lpf1 >> out
 
 @def ouvre lpf1.cutoff:12000
 @def coupe saw1 \>> lpf1
@@ -2042,7 +2046,7 @@ Sans nombre, le câble en porte une.
 
 ```text
 @init
-  saw1 8>> lpf1 8>> audio     // huit voix jusqu'à la sortie
+  saw1 8>> lpf1 8>> out       // huit voix jusqu'à la sortie
   lfo1 >> lpf1.cutoff         // une seule voix pilote la coupure des huit
 ```
 
