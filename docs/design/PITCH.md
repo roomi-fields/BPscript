@@ -108,11 +108,10 @@ Si `octaves` est omis → convention **héritée de l'alphabet** de l'acteur (`l
 résolution distincte, rattachée au vocabulaire de symboles (alphabet), pas au `tuning`.
 Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne sont pas évalués.
 
-**La voix appartient au terminal, pas à l'acteur** (`hub/decisions/2026-08-04-un-terminal-porte-sa-voix-l-alphabet-la-pose-par-defaut.md`).
-Un terminal porte deux axes indépendants — sa **hauteur** (`degree`, résolue par les couches
-ci-dessous) et sa **réalisation** (`voice`, ou du code) — et l'alphabet pose la voix par défaut pour
-sa collection, comme il pose le runtime de sortie. La hauteur reste structurelle : `alphabet` +
-`tuning`, jamais un attribut de voix.
+**La voix appartient au terminal.** Un terminal porte deux axes indépendants — sa **hauteur**
+(`degree` et `register`, résolus par les couches ci-dessous, ou `hz`) et sa **réalisation** (`voice`,
+ou du code). L'alphabet pose la voix par défaut pour sa collection, comme il pose le runtime de
+sortie, et le terminal la surcharge. La hauteur, elle, est structurelle : `alphabet` + `tuning`.
 
 ### Utilisation dans les règles
 

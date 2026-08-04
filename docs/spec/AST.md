@@ -11,8 +11,8 @@ et les deux n'ont pas à coïncider.
 
 - Chaque nœud porte un `type` et les propriétés de sa sorte.
 - La position source — ligne, colonne — est attachée à chaque nœud, pour les messages.
-- `null` marque une propriété absente. **Absent et vide ne disent pas la même chose** : un champ
-  omis dit que le producteur ne sait pas, une liste vide dit qu'il sait et qu'il n'y a rien.
+- `null` marque une propriété absente. **Absent et vide disent deux choses** : un champ omis dit
+  que le producteur l'ignore, une liste vide dit qu'il le sait et que le compte est zéro.
 
 ---
 
@@ -46,16 +46,15 @@ alphabet qui ne résout aucune hauteur — frappes, symboles abstraits. **Deux s
 fondre est interdit.**
 
 Ce n'est ni un catalogue ni une table : c'est la **résolution déjà faite**, pour cette scène-là. Le
-critère vient de la donnée — un alphabet qui déclare un accordage résout une hauteur, les autres
-non.
+critère vient de la donnée : un alphabet qui déclare un accordage résout une hauteur.
 
-**Absent et vide diffèrent.** Le champ absent dit qu'aucun alphabet n'est résolvable ici, et ce
-silence ne se lit pas « aucune note ». La liste vide dit qu'un alphabet est en portée et qu'aucun
-nom de la scène n'est une note — c'est un fait.
+**Absent et vide disent deux choses.** Le champ absent dit que la résolution d'un alphabet est hors
+de portée ici — le producteur l'ignore. La liste vide dit qu'un alphabet est en portée et que le
+compte est zéro — c'est un fait.
 
 Un nom présent dans les deux listes est traité comme **note**. Une tête de règle nommée comme une
-note y figure : c'est le cas que l'aval cherche, pour l'écarter de sa lecture de structure. Un point
-d'attente n'y figure jamais — une attente suspend le temps, elle ne sonne pas.
+note y figure : c'est le cas que l'aval cherche, pour l'écarter de sa lecture de structure. Ces
+listes portent ce qui sonne ; une attente, qui suspend le temps, vit ailleurs.
 
 ### `libRefs` — invocation de librairie par provenance
 
@@ -113,7 +112,7 @@ Le canal de sortie s'écrit `out.<canal>` et **le champ interne s'appelle `trans
 et le nom du champ ne coïncident pas : renommer ce champ est un changement de contrat, à mesurer
 chez ses consommateurs avant de le poser.
 
-Une clé absente n'est pas émise à `null` : elle manque.
+Une clé absente manque du champ.
 
 **L'acteur implicite.** Quand une scène ne déclare aucun acteur, l'arbre en porte un nommé `default`,
 marqué `synthetic`, sans alphabet. Une scène simple emprunte ainsi le même chemin qu'une scène à
@@ -147,11 +146,10 @@ Une variable porte un **type** qui dit ce qu'elle est. Le nom vient d'abord, le 
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de règle                         |
 
 Un flag déclare ses états en même temps que lui-même, et l'encodeur résout ensuite les noms en
-entiers. Le rôle d'une entrée ne nomme jamais un appareil : l'association vit hors de la scène.
+entiers. Une entrée nomme un **rôle** ; l'appareil qui le remplit s'y associe hors de la scène.
 
-**Une variable sans type porte la nature `var` dans le flux.** Sans elle, la déclaration serait une
-porte qui ne change rien : l'aval continuerait d'inventer une hauteur pour un symbole qui n'en a
-pas. L'aval la porte opaquement, et rien ne s'y résout.
+**Une variable sans type porte la nature `var` dans le flux.** L'aval la porte opaquement, et la
+résolution la laisse telle quelle.
 
 ### `DefDirective`
 
@@ -185,17 +183,15 @@ TerminalProto {
 }
 ```
 
-**Un corps de sorte `terminal` déclare un terminal indépendant** : il n'entre dans aucun alphabet,
-puisqu'un alphabet appartient à un acteur. Ce que les terminaux d'un alphabet en héritent, il le
-nomme ; ce qu'il ne nomme pas, il le tient de la scène.
+**Un corps de sorte `terminal` déclare un terminal qui vit au niveau de la scène.** Il y nomme
+lui-même son système de hauteur, sa sortie et sa voix, et prend de la scène ce qu'il laisse de côté.
 
 **Deux axes le qualifient, indépendamment** : d'où vient sa **hauteur** — `degree` et `register`
 résolus par les librairies, ou `hz` déjà connue — et par quoi il se **réalise** — `voice`, ou du
 code. Chacun peut rester vide, et toutes les combinaisons ont un sens.
 
-Sa hauteur vit dans un champ, là où celle d'un terminal d'alphabet se lit dans son **nom** : il n'a
-aucune convention de registre pour découper le sien. Les deux populations n'empruntent donc jamais
-le même chemin de résolution.
+Sa hauteur vit dans ses champs : `degree` et `register` la font résoudre par les librairies, `hz` la
+donne directement.
 
 `@def` associe un nom à un corps, pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut
 ensuite. La liste de paramètres se distingue d'un corps entre parenthèses par le **collage** :
@@ -212,7 +208,7 @@ InitEntry = PatchExpr | BacktickOrphan
 
 `@init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le
 branchement initial, le code lancé une fois, les valeurs de départ. Ce qui appartient à une chose
-s'initialise dans sa déclaration ; `@init` recueille ce qui ne se rattache à rien.
+s'initialise dans sa déclaration ; `@init` recueille ce qui appartient à la scène entière.
 
 Une production ne s'y écrit pas — une règle produit dans le temps, l'initialisation précède le temps.
 
@@ -279,8 +275,7 @@ l'entrée après le point. Le deux-points affecte une valeur ; sur un alphabet e
 le runtime de sortie, pris parmi `audio`, `midi` et `osc`.
 
 **Le préfixe est optionnel** : un nom nu passe s'il vit dans une seule librairie invoquée. La
-résolution est **statique** — l'ambiguïté n'a jamais de gagnant implicite, et la compilation nomme
-les deux candidats.
+résolution est **statique**, et la compilation nomme les deux candidats.
 
 ### `HomomorphismDecl`
 
@@ -444,7 +439,7 @@ RhsElement {
 
 Le tokenizer marque chaque token d'un drapeau `spaceBefore` : c'est lui qui tranche l'attache. Une
 parenthèse **sans** espace avant s'attache comme suffixe à l'élément précédent ; espacée en fin de
-règle, elle qualifie la règle. Il n'existe pas de qualificateur préfixe.
+règle, elle qualifie la règle.
 
 ### Symboles
 
@@ -563,8 +558,8 @@ lie toutes les occurrences du même numéro dans une règle au même symbole ; l
 place indépendamment. Une règle en porte jusqu'à 32 numérotés.
 
 Un nom **entre barres** s'abaisse en `Symbol` : les barres délimitent le nom d'un non-terminal et ne
-créent aucune catégorie — elles autorisent une initiale minuscule là où le nom serait sinon pris
-pour un terminal.
+sont un artifice d'écriture : elles autorisent une initiale minuscule là où le nom serait sinon
+pris pour un terminal.
 
 ### Gabarits
 
@@ -604,8 +599,8 @@ BacktickStandalone { type: "BacktickStandalone", tag: string | null, code: strin
 BacktickOrphan     { type: "BacktickOrphan", tag: string, code: string, line: number }
 ```
 
-Le tag nomme le **langage**, et le langage nomme son **interpréteur**. Le code ne contient jamais le
-tag : les deux sont séparés à l'analyse.
+Le tag nomme le **langage**, et le langage nomme son **interpréteur**. Le tag et le code sont
+séparés à l'analyse.
 
 Un backtick de tête et une courbe exigent leur tag. Un backtick de flux peut s'en passer quand la
 tête de sa règle est un acteur qui déclare son `eval` : il en hérite, et un tag explicite gagne sur
@@ -667,8 +662,8 @@ est déclaré en librairie.
 ### Portées d'attachement × nœud — le contrat
 
 Un suffixe s'attache à une **base** de portées, que l'espace et le `!` désambiguïsent. Cette base
-n'est pas une loi uniforme : **chaque élément déclare quelles portées lui sont valides, et vers quel
-nœud il se traduit pour chacune.** Ce tableau est le contrat que lisent les consommateurs de
+vaut comme socle : **chaque élément déclare quelles portées lui sont valides, et vers quel nœud il
+se traduit pour chacune.** Ce tableau est le contrat que lisent les consommateurs de
 l'arbre ; c'est là, et nulle part ailleurs, qu'ils lisent la valeur.
 
 Les cinq portées : `terminal` (collé) · `groupe` (collé au `}`) · `règle` (espacé, en fin de membre
@@ -682,8 +677,8 @@ droit) · `!accolé` (collé, flux conjoint) · `!inline` (espacé, événement 
 | **garde `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.guard` |
 | **mutation `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.flags` |
 
-Une portée invalide pour un élément est une **erreur nommée**, jamais un avalement silencieux : une
-durée isolée dans le flux arrête la compilation.
+Une portée invalide pour un élément est une **erreur nommée** : une durée isolée dans le flux
+arrête la compilation.
 
 **Précédence**, du plus fort au plus faible : réglage de note > flux `!(...)` > portée `(...)` >
 défauts de déclaration.
@@ -722,7 +717,7 @@ marque la provenance.
 - Un `_` **interne** est absorbé dans le nom quand une lettre ou un chiffre le suit : `sa_4`,
   `just_intonation`.
 - Un `_` **traînant** arrête la lecture du nom et devient une prolongation par underscore.
-- Un `-` **traînant** est un silence, jamais une partie du nom : `do4-` s'écrit aussi `do4 -`.
+- Un `-` **traînant** est un silence : `do4-` s'écrit aussi `do4 -`.
 - Un `-` **interne** est autorisé dans les noms de non-terminaux : `Tr-11`.
 - **Entre crochets**, `[times-1]` est une mutation : le parser décompose le motif
   identifiant-tiret-nombre en drapeau, opérateur et valeur.

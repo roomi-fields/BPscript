@@ -344,14 +344,11 @@ bloc s'ecrit sous le nom, une cle par ligne, ou sur la meme ligne quand il tient
 sans exception : `tuning.`, `octaves.`, `out.` et `voice.` nomment ce qu'ils empruntent ; `degree`,
 `register`, `hz`, `sounding` et `duration` portent une valeur.
 
-**Un terminal declare dans une scene est independant** : il n'entre dans aucun alphabet, puisqu'un
-alphabet appartient a un acteur. Ce que les terminaux d'un alphabet en heritent, il le nomme --
-son systeme de hauteur, sa sortie, sa voix -- et ce qu'il ne nomme pas, il le tient de la scene.
+**Un terminal declare dans une scene vit au niveau de la scene.** Il y nomme lui-meme son systeme de
+hauteur, sa sortie et sa voix, et prend de la scene ce qu'il laisse de cote.
 
-**Sa hauteur s'ecrit, la ou celle d'un terminal d'alphabet se lit dans son nom.** `C4` porte la
-sienne dans son ecriture, decoupee par la convention de registre de son alphabet ; un terminal
-independant n'a pas de convention pour lire la sienne, donc il ecrit `degree` et `register`, ou
-`hz` quand la frequence est deja connue.
+**Sa hauteur s'ecrit dans ses cles** : `degree` et `register` la font resoudre par les librairies
+d'accordage et de registres, `hz` la donne directement.
 
 ### `@init` -- l'etat de depart
 

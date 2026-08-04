@@ -87,14 +87,12 @@ d'abord, ce qu'il vaut ensuite. La liste de paramètres se **colle** au nom ; un
 par une parenthèse en est séparé par une espace. Le nom se pose ensuite à sa place dans une règle.
 
 **Un bloc de clés déclare un terminal.** Ce sont celles du prototype d'un terminal, et le nom de
-chacune suffit à la reconnaître. Un terminal déclaré dans une scène est **indépendant** : il n'entre
-dans aucun alphabet, puisqu'un alphabet appartient à un acteur. Ce que les terminaux d'un alphabet
-en héritent, il le nomme — son système de hauteur, sa sortie, sa voix — et ce qu'il ne nomme pas, il
-le tient de la scène.
+chacune suffit à la reconnaître. Un terminal déclaré dans une scène vit au niveau de la scène : il y
+nomme lui-même son système de hauteur, sa sortie et sa voix, et prend de la scène ce qu'il laisse de
+côté.
 
-Sa hauteur s'écrit, là où celle d'un terminal d'alphabet se lit dans son nom : il n'a pas de
-convention de registre pour découper le sien, donc il porte `degree` et `register`, ou `hz` quand la
-fréquence est déjà connue.
+Sa hauteur s'écrit dans ses clés : `degree` et `register` la font résoudre par les librairies
+d'accordage et de registres, `hz` la donne directement.
 
 ```ebnf
 init_directive = "@" , "init" , NEWLINE , init_entry+ ;
@@ -102,8 +100,8 @@ init_directive = "@" , "init" , NEWLINE , init_entry+ ;
 init_entry = patch_expr | backtick_orphan ;
 ```
 
-`@init` déclare **l'état de départ** de la scène : ce qui existe au démarrage et n'appartient à
-aucune déclaration — le branchement initial, le code lancé une fois, les valeurs de départ. Ce qui
+`@init` déclare **l'état de départ** de la scène : ce qui existe au démarrage et appartient à la
+scène entière — le branchement initial, le code lancé une fois, les valeurs de départ. Ce qui
 appartient à une chose s'initialise dans sa déclaration.
 
 ### Le langage de patch
@@ -603,7 +601,7 @@ raw_value = (* tout texte jusqu'au prochain "," ou au délimiteur fermant *) ;
 ```
 
 **Le nom d'un réglage suffit à savoir où il va.** Chaque nom appartient à une librairie, et chaque
-librairie a un destinataire ; on n'écrit donc jamais le destinataire, le nom le porte. Une clé
+librairie a un destinataire : le nom du réglage porte le sien. Une clé
 qu'aucune librairie invoquée ne porte arrête la compilation.
 
 Tout ce qui suit le `:` jusqu'au prochain `,` ou au délimiteur fermant est la **valeur brute** : le
@@ -720,13 +718,13 @@ blank_line  = (* ligne vide ou espaces seuls *) ;
   `sa_4`, `Up_Down`, `just_intonation`.
 - Un `_` **traînant** arrête la lecture du nom : le tokenizer émet une prolongation par underscore.
   `si3_____` est `si3` suivi de cinq prolongations.
-- Un `-` **traînant** est un silence, jamais une partie du nom : `do4-` est `do4` suivi d'un
+- Un `-` **traînant** est un silence : `do4-` est `do4` suivi d'un
   silence, et s'écrit donc aussi `do4 -`.
 - Un `-` **interne** est autorisé dans les noms de non-terminaux : `Tr-11`, `my-var`.
 - **Entre crochets**, `[times-1]` est une mutation de drapeau : le parser décompose le motif
   identifiant-tiret-nombre en drapeau, opérateur et valeur.
 - `#` est autorisé dans les identifiants, pour les altérations : `C#4`, `F#2`.
-- Les nombres nus dans le flux sont des durées, jamais des terminaux.
+- Les nombres nus dans le flux sont des durées.
 
 ---
 
