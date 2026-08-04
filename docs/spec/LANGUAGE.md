@@ -7,7 +7,7 @@
 - [Concepts cles](#concepts-cles)
 - [La partie declarative](#la-partie-declarative)
 - [L'ordonnanceur](#lordonnanceur)
-- [Inventaire : 3 mots, 24 symboles, 9 operateurs](#inventaire--3-mots-24-symboles-9-operateurs)
+- [Inventaire : 3 mots, 32 symboles, 9 operateurs](#inventaire--3-mots-32-symboles-9-operateurs)
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres](#parametres----opaques-pour-bpscript)
 - [Les sacs : `()` reglages, `[]` derivation](#les-sacs---reglages--derivation)
@@ -49,7 +49,7 @@ Le langage connait trois mots et fait une chose : ordonner dans le temps.
 
 ## Le langage : dense, pas simple
 
-3 mots reserves, 24 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
+3 mots reserves, 32 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
 combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
 ```bpscript
@@ -599,7 +599,7 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 
 ---
 
-## Inventaire : 3 mots, 24 symboles, 9 operateurs
+## Inventaire : 3 mots, 32 symboles, 9 operateurs
 
 ### Trois mots reserves
 
@@ -613,7 +613,7 @@ Un signal est un flux de nombres ; ces trois mots disent comment le **recepteur*
 signal sans convention est le cas ordinaire, et c'est ce qu'on appelle ailleurs « l'audio ».
 Le detail est dans « Les conventions de lecture d'un signal ».
 
-### Vingt-quatre symboles structurels
+### Trente-deux symboles structurels
 
 ```text
 @              directive de declaration, en tete de scene
@@ -970,7 +970,7 @@ Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
 ### `()` -- un reglage (toujours suffixe)
 
 **Le nom d'un reglage suffit a savoir ou il va.** Chaque nom appartient a une librairie, et chaque
-librairie a un destinataire : ecrire `mode` dit le moteur, `scale` dit la hauteur, `wave` dit une
+librairie a un destinataire : ecrire `mode` dit le moteur, `tuning` dit la hauteur, `wave` dit une
 sortie sonore. On n'ecrit donc jamais le destinataire -- le nom le porte. C'est la meme regle que
 pour les directives de tete.
 
@@ -1637,9 +1637,9 @@ entiere plutot qu'a un groupe. La section se place apres les regles, en fin de s
 S -> C4 D4
 
 @template
-[1] /1 ???????
-[2] *3/2 ??.??
-[3] /1 ($0 ???)($1 )
+[1] /1 ??
+[2] *3/2 ?.?
+[3] /1 ($0 ?)($1 )
 ```
 
 Une entree s'ecrit `[<rang>] <echelle> <forme>` :
@@ -1732,7 +1732,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `transport.midi` |
 | `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`        |
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
-| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(scale:just)`     |
+| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(tuning:just)`    |
 | `[]`       | ce qui appartient a la derivation         | `[phase==1]`, `[phase=2]`, `[3]` dans `@template` |
 | `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
@@ -1768,7 +1768,7 @@ Motif -> {C4 D4}:2 E4:0.5
 
 `espace.nom` nomme un élément à l'intérieur d'un espace. Les espaces de noms sont les
 catégories de librairie (`alphabet`, `tuning`, `octaves`, `transport`, `eval`,
-`mod`), les acteurs, les modules à ports et les étiquettes de groupe.
+`module`), les acteurs et les instances de module avec leurs ports.
 
 | Emploi                                                    | Écriture                                                  |
 | --------------------------------------------------------- | --------------------------------------------------------- |
@@ -2010,7 +2010,7 @@ Sans nombre, le câble en porte une.
   lfo1 >> lpf1.cutoff         // une seule voix pilote la coupure des huit
 ```
 
-**Une inadéquation de largeur s'adapte, elle n'échoue jamais** : un port à une voie prend la
+**Une inadéquation de largeur s'adapte, elle n'échoue jamais** : un port à une voix prend la
 première, un port à plusieurs voies alimenté en une seule diffuse cette valeur sur toutes, et une
 largeur écrite qui dépasse ce que le port accepte se ramène à ce nombre. Ce que chaque port accepte
 se lit dans son champ `voices`.
