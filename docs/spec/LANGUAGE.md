@@ -60,10 +60,10 @@ Le vocabulaire est petit et la combinatoire est riche. Comme les echecs : 6 type
 S -> sa re ga pa
 
 // Polymetrie, simultaneite, silence, prolongation et garde de drapeau
-[phase==1] S -> { sa!dha re!ni, - _ }
+[stage==1] S -> { sa!dha re!ni, - _ }
 
 // Homomorphisme, contexte, gabarit, mutation de drapeau
-|x| (A) x B -> x $mel &mel [phase+1]
+|x| (A) x B -> x $mel &mel [stage+1]
 ```
 
 Le langage est pense pour rester le plus lisible possible : `->` est une fleche, `!` une
@@ -135,7 +135,7 @@ refusee.
 | `pa:2`                 | le `:` colle fixe la duree du terme ; separe (`pa :2`), la ligne est refusee |
 | `S -> A B :2`          | une duree detachee en fin de regle est refusee : elle se colle a son hote    |
 | `{re ga}:2`            | le `:` colle fixe la duree du groupe                                         |
-| `S -> sa re [phase=1]` | le crochet separe, en fin de regle, mute un drapeau                          |
+| `S -> sa re [stage=1]` | le crochet separe, en fin de regle, mute un drapeau                          |
 | `sitar1.sa`            | le point colle qualifie `sa` par l'acteur `sitar1`                           |
 | `sa . re`              | le point separe decoupe la sequence en fragments de duree egale              |
 | `taar_sa`              | le separateur de registre colle le marqueur au nom de note                   |
@@ -152,7 +152,7 @@ refusee.
 
 S -> T U sitar1.sa(vel:100) taar_sa {re ga}:2 pa:2
 T -> sa re (vel:70)
-U -> sa!(vel:70) re !(vel:100) ga . dha <!depart ni [phase=1]
+U -> sa!(vel:70) re !(vel:100) ga . dha <!depart ni [stage=1]
 ```
 
 Le sens de chaque signe accole -- le point, le deux-points, l'etoile -- est detaille dans
@@ -577,12 +577,12 @@ instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 // Une definition nomme un fragment de code ; son nom se pose nu dans le flux
 @def noir `py: d.blackout()`
 
-S -> Section [phase=1]
+S -> Section [stage=1]
 
 -----
 
-[phase==1] Section -> { Intro, Rythme }
-[phase==2] Section -> { Melodie, Rythme }
+[stage==1] Section -> { Intro, Rythme }
+[stage==2] Section -> { Melodie, Rythme }
 Intro   -> C4 D4 `tidal: once pat` E4     // code ecrit directement dans la production
 Rythme  -> G3 G3 G3 G3
 Melodie -> E4 F4 noir G4 A4               // la meme chose, nommee par la definition
@@ -646,7 +646,7 @@ attendu, pas une faute.
 *              sujet universel d'une affectation -- tous les terminaux de la portee
                (*:vel:80, *:sombre) ; dans une vitesse, ecrit la fraction (! (*2/3)) ;
                entre un gabarit maitre et son esclave, marqueur d'homomorphisme ($X * &X)
-=              affectation de drapeau, entre crochets en fin de regle (S -> C4 [phase=2])
+=              affectation de drapeau, entre crochets en fin de regle (S -> C4 [stage=2])
 .              reference a une entite (alphabet.western, lpf1.cutoff, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
 [ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
@@ -733,8 +733,8 @@ de la cle** nomme son destinataire.
 
 | place                              | ce qu'il porte                                                |
 | ---------------------------------- | ------------------------------------------------------------- |
-| avant le membre gauche             | un **test** de drapeau : `[phase==1]`, `[Ideas]`, `[count-1]` |
-| en fin de regle                    | une **affectation** de drapeau : `[phase=2]`                  |
+| avant le membre gauche             | un **test** de drapeau : `[stage==1]`, `[Ideas]`, `[count-1]` |
+| en fin de regle                    | une **affectation** de drapeau : `[stage=2]`                  |
 | en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`             |
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
@@ -745,7 +745,7 @@ suite. Un reglage ecrit entre crochets arrete la compilation, et le message donn
 @core
 @alphabet.western:audio
 
-[count-1] S -> C4 D4 (mode:random) [phase=2]
+[count-1] S -> C4 D4 (mode:random) [stage=2]
 ```
 
 **Un signe, une nature.** Ce qui est entre crochets appartient a la **derivation** : un drapeau
@@ -1301,7 +1301,7 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 
 S -> dha!tin                       // deux symboles a la meme attaque
 S -> dha!na                        // na prend la duree de dha
-S -> C4!dha!ge [phase=2]    // deux secondaires et une mutation de drapeau
+S -> C4!dha!ge [stage=2]    // deux secondaires et une mutation de drapeau
 S -> -!dha                         // le silence porte la position, dha attaque avec lui
 S -> C4!monte                      // monte prend la duree de C4
 ```
@@ -1768,7 +1768,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`        |
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(tuning:just)`    |
-| `[]`       | ce qui appartient a la derivation         | `[phase==1]`, `[phase=2]`, `[3]` dans `@template` |
+| `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `@template` |
 | `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
 | `>>` `\>>` | brancher un câble, le couper              | `saw >> lpf >> audio`                             |
@@ -1892,7 +1892,7 @@ modifie pendant la dérivation. Les neuf opérateurs qui le lisent et l'écriven
 
 ```bpscript
 @alphabet.sargam
-[phase==1] S -> sa re ga pa       // active quand phase vaut 1
+[stage==1] S -> sa re ga pa       // active quand stage vaut 1
 [count>3]  S -> ga pa             // active quand count dépasse 3
 ```
 
@@ -1920,7 +1920,7 @@ Les neuf à l'œuvre dans une scène :
 @core
 @alphabet.western:audio
 
-S -> Loop [phase=1, count=4]
+S -> Loop [stage=1, count=4]
 
 -----
 
@@ -1930,7 +1930,7 @@ S -> Loop [phase=1, count=4]
 [count>=2] Loop -> E4 Loop
 [count<9]  Loop -> F4 Loop
 [count<=9] Loop -> G4 Loop
-[phase!=0] Loop -> A4 Loop [phase+1]
+[stage!=0] Loop -> A4 Loop [stage+1]
 [count==0] Loop -> C5
 ```
 
@@ -1943,7 +1943,7 @@ séquence jouée reste inchangée.
 ```bpscript
 @alphabet.sargam
 S -> Motif Cadence [count-1]                 // une mutation
-S -> Motif Motif [phase=1] [count=2]         // plusieurs mutations
+S -> Motif Motif [stage=1] [count=2]         // plusieurs mutations
 Motif -> sa re
 Cadence -> ga pa
 ```
@@ -1952,20 +1952,20 @@ Cadence -> ga pa
 est `==`.
 
 Le délimiteur distingue deux écritures voisines : `!dha` est un `!` suivi d'un symbole, donc
-un déclenchement dans le temps ; `[phase=2]` est entre crochets, donc une mutation de flag.
+un déclenchement dans le temps ; `[stage=2]` est entre crochets, donc une mutation de flag.
 
-### Exemple : une pièce en trois phases
+### Exemple : une pièce en trois étapes
 
 ```text
 @alphabet.sargam
 @time.tempo:60
 
-[phase==1] S -> alap S
-[phase==2] S -> jor S
-[phase==3] S -> jhala
+[stage==1] S -> alap S
+[stage==2] S -> jor S
+[stage==3] S -> jhala
 
-alap -> sa _ re _ ga _ [phase=2]
-jor -> {sa re ga pa}:2 [phase=3]
+alap -> sa _ re _ ga _ [stage=2]
+jor -> {sa re ga pa}:2 [stage=3]
 jhala -> {sa re ga pa dha ni sa}:4
 ```
 
