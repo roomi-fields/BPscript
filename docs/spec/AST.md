@@ -92,7 +92,7 @@ ActorDirective {
 
 OutputRef {
   type: "OutputRef"
-  key: string                     // le canal : audio, midi, osc
+  key: string                     // le canal : audio, midi, osc, dmx
   params: { [key: string]: any }  // l'adresse : { ch: 10 }, { device: "reaper", ch: 7 }
 }
 
@@ -268,7 +268,7 @@ Directive {
 
 Une librairie s'invoque par son nom, l'entrée après le point. Un réglage s'écrit par sa catégorie,
 l'entrée après le point. Le deux-points affecte une valeur ; sur un alphabet et ses terminaux, c'est
-le runtime de sortie, pris parmi `audio`, `midi` et `osc`.
+le runtime de sortie, pris parmi `audio`, `midi`, `osc` et `dmx`.
 
 **Le préfixe est optionnel** : un nom nu passe s'il vit dans une seule librairie invoquée. La
 résolution est **statique**, et la compilation nomme les deux candidats.
@@ -483,7 +483,6 @@ Polymetric {
   voices: RhsElement[][]                     // une voix est une séquence plate
   frame: string | number | null              // la durée du bloc, posée par le `:` collé
   settings: SettingBag | null          // le sac collé au `}`
-  label: string | null
 }
 ```
 

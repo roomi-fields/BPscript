@@ -549,6 +549,7 @@ qui vit dans un catalogue.
 | `alphabet`      | des **terminaux** -- sonnants ou non, avec ou sans hauteur, code ou calcul                                                      |
 | `tuning`        | des accordages                                                                                                                  |
 | `octaves`       | des conventions de registre                                                                                                     |
+| `voice`         | des realisations sonores : le code qui synthetise, ou le preset d'un appareil                                                   |
 | `sound`         | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
 | `homomorphism`  | des tables de correspondance symbole vers symbole, appliquees a la derivation                                                   |
 | `library`       | des banques chargees par un moteur de code                                                                                      |
@@ -2137,8 +2138,8 @@ ce qu'est un filtre passe-bas, le calcul d'une enveloppe vivent en librairie, av
 ### Invoquer
 
 **`@core` apporte le socle.** Une scene qui l'ecrit recoit les librairies de base et leurs valeurs
-par defaut, comme un fichier C inclut son en-tete. Les noms qu'une scene emploie viennent des
-librairies qu'elle invoque, et la compilation nomme ceux qu'elle ne trouve pas.
+par defaut. Sans lui, les valeurs attendues restent **non initialisees**, et la compilation s'arrete
+en nommant celle qui manque.
 
 **La directive nomme la librairie, le point designe l'entree.**
 

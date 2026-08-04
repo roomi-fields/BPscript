@@ -135,7 +135,7 @@ library_invocation = "@" , "core"
 
 LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism"
            | "library" | "module" | "patch" | "eval" | "devices" ;
-RUNTIME    = "audio" | "midi" | "osc" ;
+RUNTIME    = "audio" | "midi" | "osc" | "dmx" ;
 provenance = "factory" | "mine" ;
 path_seg   = ( IDENT | INT ) , { IDENT | INT } ;
 
@@ -441,9 +441,8 @@ par occurrence.
 ### 4.4 Polymétrie et groupement
 
 ```ebnf
-polymetric = [ label , ":" ] , "{" , voice , { "," , voice } , "}" , { suffix } ;
+polymetric = "{" , voice , { "," , voice } , "}" , { suffix } ;
 
-label      = IDENT ;
 voice      = rhs_element+ ;
 ```
 
