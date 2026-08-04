@@ -495,7 +495,7 @@ qui vit dans un catalogue.
 @alphabet.sargam
 @tuning.just
 @octaves.saptak
-@transcription.dhati
+@homomorphism.dhati
 @library.strudel
 ```
 
@@ -505,7 +505,7 @@ qui vit dans un catalogue.
 | `tuning`        | des accordages                                                                                                                  |
 | `octaves`       | des conventions de registre                                                                                                     |
 | `sound`         | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
-| `transcription` | des tables de correspondance entre notations                                                                                    |
+| `homomorphism`  | des tables de correspondance symbole vers symbole, appliquees a la derivation                                                   |
 | `library`       | des banques chargees par un moteur de code                                                                                      |
 | `module`        | des modules de signal : leurs ports, leurs conventions et leur traitement                                                       |
 | `patch`         | le langage de cablage des backtiques `patch:`                                                                                   |
@@ -1499,9 +1499,21 @@ S -> |a| |b|                //  la regle produit deux non-terminaux
 **Un nom entre barres est une tete de regle comme une autre** -- il se declare a gauche, il se
 reecrit, il disparait de la production.
 
-Les tables d'homomorphisme se declarent par `@transcription.<table>` et s'appliquent entre
-un gabarit maitre et son esclave -- cf.
-[Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
+**Les tables d'homomorphisme se declarent par `@homomorphism.<table>`**, une par nom, chacune
+avec ses sections. Une table porte des correspondances symbole vers symbole, et l'etiquette de la
+section est le nom de l'homomorphisme.
+
+```bpscript
+@homomorphism.dhati
+
+S -> $N14 * &N14
+```
+
+Elle s'applique **entre un gabarit maitre et son esclave** : sans elle, l'esclave rejoue le maitre
+a l'identique ; avec elle, il le rejoue transforme -- le nom de la table se pose entre les deux.
+Cf. [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
+
+Un nom absent de la librairie est refuse au parse.
 
 ---
 
@@ -1646,19 +1658,6 @@ $ S -> C4 D4
 L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace tranche entre les deux
 emplois du signe : colle a un identifiant, `$X` nomme un gabarit ; suivi d'une espace, `$` ancre --
 cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a sa fermeture.
-
-### Tables de substitution
-
-Les tables de substitution vivent dans `lib/sub.json`, une par nom, chacune avec ses sections.
-`@sub.<nom>` invoque une table :
-
-```bpscript
-@sub.dhati
-
-S -> $N14 &N14
-```
-
-Un nom absent de la librairie est refuse au parse.
 
 ### `@template` -- le catalogue des formes
 
@@ -1810,7 +1809,7 @@ catégories de librairie (`alphabet`, `tuning`, `octaves`, `out`, `eval`,
 | Emploi                                                    | Écriture                                                  |
 | --------------------------------------------------------- | --------------------------------------------------------- |
 | entité de librairie                                       | `alphabet.sargam`, `tuning.sargam_22shruti`, `module.lpf` |
-| directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@sub.dhati`                           |
+| directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@homomorphism.dhati`                  |
 | terminal vu à travers un acteur                           | `sitar.sa`                                                |
 | port d'un module                                          | `lpf.cutoff`                                              |
 | frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                        |
