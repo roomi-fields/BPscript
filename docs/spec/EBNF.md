@@ -713,7 +713,8 @@ IDENT       = letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
-value       = [ "-" ] , INT | FLOAT | IDENT | INT , "/" , INT ;
+value       = [ "-" ] , INT | FLOAT | IDENT
+            | INT , { "+" , INT } , "/" , INT ;   (* 7/8, 4+4/4 — la signature rythmique *)
 KEY         = IDENT ;
 TAG         = IDENT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
