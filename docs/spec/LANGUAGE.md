@@ -376,6 +376,10 @@ modules deja declares, il n'appartient a aucun d'eux.
 Un acteur porte cinq cles. Chacune se lit dans un catalogue, et ce qui n'est pas ecrit, l'acteur
 l'herite de la scene.
 
+**Les cinq s'ecrivent aussi en tete de scene**, ou elles valent pour la piece entiere : c'est la
+cascade, et le plus local l'emporte. Une scene qui ne declare aucun acteur en a un, et ces lignes
+sont les siennes.
+
 | cle         | ce qu'elle fixe                                                           |
 | ----------- | ------------------------------------------------------------------------- |
 | `alphabet`  | la collection de terminaux que l'acteur joue                              |
@@ -385,10 +389,11 @@ l'herite de la scene.
 | `eval`      | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
 
 ```text
-@actor sitar
-  alphabet.sargam
+@alphabet.sargam          // la scene entiere joue le sargam et sort par le MIDI
+@out.midi(ch:1)
+
+@actor sitar              // cet acteur affine ce dont il herite
   tuning.sargam_22shruti
-  octaves.saptak
   out.audio
 ```
 
@@ -554,6 +559,7 @@ qui vit dans un catalogue.
 | `module`        | des modules de signal : leurs ports, leurs conventions et leur traitement                                                       |
 | `patch`         | le langage de cablage des backtiques `patch:`                                                                                   |
 | `eval`          | les langages backtiques externes -- `sc`, `js`, `strudel`, `hydra`                                                              |
+| `devices`       | les appareils de sortie : les directions qu'un canal porte, et ses valeurs par defaut                                          |
 
 Le catalogue complet, avec la nature de chaque librairie et le composant qui la resout, vit dans
 `atlas/architecture/LIBRAIRIES.md`.
