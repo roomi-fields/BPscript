@@ -7,7 +7,7 @@
 - [Concepts cles](#concepts-cles)
 - [La partie declarative](#la-partie-declarative)
 - [L'ordonnanceur](#lordonnanceur)
-- [Inventaire : 3 mots, 32 symboles, 9 operateurs](#inventaire--3-mots-32-symboles-9-operateurs)
+- [Inventaire](#inventaire)
 - [Systeme de types](#systeme-de-types----ce-quun-nom-est-comment-un-signal-se-lit)
 - [Parametres](#parametres----opaques-pour-bpscript)
 - [Les sacs : `()` reglages, `[]` derivation](#les-sacs---reglages--derivation)
@@ -49,8 +49,7 @@ Le langage connait trois mots et fait une chose : ordonner dans le temps.
 
 ## Le langage : dense, pas simple
 
-3 mots reserves, 32 symboles, 9 operateurs de flags -- le vocabulaire est petit et la
-combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
+Le vocabulaire est petit et la combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
 ```bpscript
 @core
@@ -599,9 +598,9 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 
 ---
 
-## Inventaire : 3 mots, 32 symboles, 9 operateurs
+## Inventaire
 
-### Trois mots reserves
+### Les conventions de lecture
 
 | Mot       | Role       | Sens                                                               |
 | --------- | ---------- | ------------------------------------------------------------------ |
@@ -609,11 +608,11 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 | **phase** | convention | une position dans un cycle entre 0 et 1 ; ce qui depasse s'enroule |
 | **logic** | convention | un etat haut ou bas, dont les **transitions** font evenement       |
 
-Un signal est un flux de nombres ; ces trois mots disent comment le **recepteur** le lit. Un
+Un signal est un flux de nombres ; ces mots disent comment le **recepteur** le lit. Un
 signal sans convention est le cas ordinaire, et c'est ce qu'on appelle ailleurs « l'audio ».
 Le detail est dans « Les conventions de lecture d'un signal ».
 
-### Trente-deux symboles structurels
+### Les symboles structurels
 
 ```text
 @              directive de declaration, en tete de scene
@@ -659,7 +658,7 @@ Ecriture des symboles temporels :
 Le compilateur connait la semantique de `-`, `_`, `.` et `...` : ce sont des symboles du
 langage, au meme titre que les fleches.
 
-### Neuf operateurs de flags
+### Les operateurs de flags
 
 Comparaison (6) -- dans la garde :
 
