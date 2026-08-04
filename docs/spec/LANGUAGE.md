@@ -573,7 +573,7 @@ touche, donc qui le consomme.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
 | `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `tempx` -- le multiplicateur de vitesse d'une regle                                          |
-| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · les operateurs `/` et `*`                                |
+| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
 chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre dit
