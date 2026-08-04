@@ -79,14 +79,14 @@ L'alphabet seul ne suffit pas comme unité de résolution — il manque le **con
 L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
 
 ```
-@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
-@actor sitar2  alphabet.sargam  tuning.sargam_12TET    octaves.saptak  transport.midi(ch:3)
-@actor tabla   alphabet.tabla_bols  transport.midi(ch:10)
-@actor lights  alphabet.dmx_fixtures  transport.dmx
+@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  out.audio
+@actor sitar2  alphabet.sargam  tuning.sargam_12TET    octaves.saptak  out.midi(ch:3)
+@actor tabla   alphabet.tabla_bols  out.midi(ch:10)
+@actor lights  alphabet.dmx_fixtures  out.dmx
 ```
 
-Un acteur = **alphabet + tuning + octaves + transport + sound + eval + voice** (sept clés,
-voir tableau ci-dessous). C'est le contexte complet de résolution d'un symbole.
+Un acteur = **alphabet + tuning + octaves + out + eval** (cinq clés, voir tableau ci-dessous).
+C'est le contexte complet de résolution d'un symbole.
 
 ### Syntaxe de la directive `@actor`
 
@@ -94,28 +94,25 @@ voir tableau ci-dessous). C'est le contexte complet de résolution d'un symbole.
 @actor <nom>  <clé.valeur>  <clé.valeur>  ...
 ```
 
-Clés disponibles (**SEPT** aujourd'hui — les six de la décision
-`hub/decisions/2026-06-16-cles-acteur-six.md` + `voice`, ajoutée le 2026-07-16 ; le tableau
-ci-dessous en listait cinq, il en manquait deux : `sound` et `voice` — cf.
-`BPscript/src/transpiler/parser.js:40` `ACTOR_ENTITY_KEYS`, `BPscript/docs/spec/EBNF.md:179`) :
-
 | Clé | Obligatoire | Valeur | Exemple |
 |-----|-------------|--------|---------|
 | `alphabet` | oui | référence vers `alphabets.json` | `alphabet.sargam` |
 | `tuning` | non | référence vers `tunings.json` | `tuning.sargam_22shruti` |
 | `octaves` | non | référence vers `octaves.json` | `octaves.saptak` |
-| `transport` | oui | appareil typé (+params optionnels) | `transport.midi(ch:3)` |
-| `sound` | non | référence vers un prototype de son | `sound.tabla_perc` |
+| `out` | oui | canal de sortie (+params optionnels) | `out.midi(ch:3)` |
 | `eval` | non | interpréteur pour les backticks | `eval.sclang` |
-| `voice` | non | référence vers `lib/voices` (son de base + contrôles) | `voice.wobble` |
 
 Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
 Si `octaves` est omis → convention **héritée de l'alphabet** de l'acteur (`lib/alphabets.json`).
 `@actor X octaves.Y` surcharge cette notation de registre pour l'acteur. `octaves` est une étape de
 résolution distincte, rattachée au vocabulaire de symboles (alphabet), pas au `tuning`.
 Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne sont pas évalués.
-`voice` désigne la voix de l'acteur ; la hauteur reste structurelle (`alphabet`+`tuning`), jamais un
-flag de voix — `voice.X` sans `tuning` = percussion, valide.
+
+**La voix appartient au terminal, pas à l'acteur** (`hub/decisions/2026-08-04-un-terminal-porte-sa-voix-l-alphabet-la-pose-par-defaut.md`).
+Un terminal porte deux axes indépendants — sa **hauteur** (`degree`, résolue par les couches
+ci-dessous) et sa **réalisation** (`voice`, ou du code) — et l'alphabet pose la voix par défaut pour
+sa collection, comme il pose le runtime de sortie. La hauteur reste structurelle : `alphabet` +
+`tuning`, jamais un attribut de voix.
 
 ### Utilisation dans les règles
 
@@ -138,16 +135,11 @@ Un `@actor` avec un alphabet importe tous les symboles de cet alphabet,
 liés à cet acteur :
 
 ```
-@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  transport.audio
+@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  out.audio
 
 // Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
 // automatiquement disponibles via sitar1.sa, sitar1.re, etc.
 // Si sitar1 est le seul acteur avec sargam, "sa" seul suffit (résolution implicite)
-```
-
-Surcharge de type temporel possible :
-```
-trigger dha   // override : dha est un trigger, pas un gate (dans le contexte de son acteur)
 ```
 
 ### Resolver par acteur
@@ -163,7 +155,7 @@ un singleton global — c'est une instance par acteur.
 │  octaves   : saptak (mandra, madhya, taar)  │
 │  tuning    : sargam_22shruti                │
 │  temperament: 22shruti (auto via tuning)    │
-│  transport : audio                       │
+│  out       : audio                       │
 │                                             │
 │  Resolver: token → freq                     │
 │  "Sa_^" → parse → sa, taar → freq           │
@@ -176,7 +168,7 @@ un singleton global — c'est une instance par acteur.
 │  octaves   : saptak (même convention)       │
 │  tuning    : sargam_12TET (autre tuning!)   │
 │  temperament: 12TET                         │
-│  transport : midi(ch:3)                     │
+│  out       : midi(ch:3)                     │
 │                                             │
 │  Resolver: token → freq (résultat différent)│
 │  "Sa_^" → parse → sa, taar → freq           │
@@ -226,7 +218,7 @@ Le tokenizer reconnaît `@actor` comme une directive. Le reste de la ligne
 est parsé comme des références `clé.valeur` séparées par des espaces.
 
 ```
-@actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.audio
+@actor sitar  alphabet.sargam  tuning.sargam_22shruti  out.audio
 │      │      │                │                        │
 DIRECTIVE      IDENT            PAIR                     PAIR
        NAME
@@ -291,7 +283,7 @@ Le `terminalActorMap` est un dictionnaire `terminal BP3 → nom d'acteur`.
 Il est produit par l'encoder et transmis au dispatcher avec la grammaire.
 
 BP3 voit des noms opaques. Le dispatcher utilise le map pour retrouver
-l'acteur et donc le resolver + transport approprié.
+l'acteur, donc le resolver et la sortie appropriés.
 
 #### Prototypes
 
@@ -303,7 +295,7 @@ Le prototype generator utilise les acteurs pour savoir quels terminaux générer
 
 Les couches de résolution pitch décrites ici (alphabet → octaves → tempérament → tuning → resolver)
 sont distinctes de la **cascade de sortie** (scène → acteur → terminal), qui gouverne vers quel
-appareil chaque événement est acheminé. Le `transport` de l'acteur est le point de jonction entre
+appareil chaque événement est acheminé. La sortie de l'acteur est le point de jonction entre
 les deux : il porte la résolution pitch vers l'appareil cible. Voir [ACTOR.md](ACTOR.md) pour le
 détail de la cascade de sortie.
 
@@ -319,8 +311,8 @@ L'ancienne syntaxe :
 
 Devient :
 ```
-@actor melodie  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.osc(port:57110)  eval.sclang
-@actor keys     alphabet.western  tuning.western_12TET   octaves.western  transport.midi(ch:1)
+@actor melodie  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  out.osc(port:57110)  eval.sclang
+@actor keys     alphabet.western  tuning.western_12TET   octaves.western  out.midi(ch:1)
 ```
 
 Plus verbeux mais plus explicite — chaque dimension est nommée.
@@ -330,7 +322,7 @@ Plus verbeux mais plus explicite — chaque dimension est nommée.
 Si un seul acteur suffit et qu'on veut rester concis :
 
 ```
-@actor default  alphabet.western  tuning.western_12TET  transport.audio
+@actor default  alphabet.western  tuning.western_12TET  out.audio
 ```
 
 Ou une syntaxe courte possible (à discuter) :
@@ -343,7 +335,7 @@ Ou une syntaxe courte possible (à discuter) :
 Les backticks attachés à un symbole utilisent l'`eval` de l'acteur du symbole :
 
 ```
-@actor mel  alphabet.sargam  transport.osc  eval.sclang
+@actor mel  alphabet.sargam  out.osc  eval.sclang
 
 Sa(vel:`rrand(40,127)`)   // Sa est dans mel → eval = sclang → SC évalue
 ```
@@ -357,9 +349,9 @@ Les backticks orphelins gardent le tag obligatoire :
 
 ```
 // Acteurs
-@actor sitar   alphabet.sargam       tuning.sargam_22shruti  octaves.saptak  transport.osc(port:57110) eval.sclang
-@actor tabla   alphabet.tabla_bols   transport.midi(ch:10)
-@actor lights  alphabet.dmx_cues     transport.dmx
+@actor sitar   alphabet.sargam       tuning.sargam_22shruti  octaves.saptak  out.osc(port:57110) eval.sclang
+@actor tabla   alphabet.tabla_bols   out.midi(ch:10)
+@actor lights  alphabet.dmx_cues     out.dmx
 
 // Inits
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
@@ -485,7 +477,7 @@ C'est le mode par défaut (si `type` est omis, c'est `"table"`).
 
 > **État (cible, pas encore implémenté)** : seul `pitch = degree × generator` (réduit dans la
 > période) est résolu aujourd'hui. Le **réseau (a, b) complet** (`mapping` / `primes` / `commas` /
-> `mos_steps`) et le **generator-CV temps réel** restent une **cible**.
+> `mos_steps`) et le **generator en signal temps réel** restent une **cible**.
 
 Inspiré de la [Dynamic Tonality](https://www.dynamictonality.com/) (Milne, Sethares, Plamondon).
 Au lieu de ratios fixes, le tempérament est défini par un **period** et un **generator**
@@ -530,7 +522,7 @@ Pour la gamme diatonic MOS (7 notes) de meantone avec g=697 :
 - Seconde = (0,1) - P réduit → 697¢ - 1200¢ = ... voir ci-dessous
 - Les 7 notes sont les 7 premiers termes de la chaîne de generators, réduits dans la période
 
-**Le generator est un CV :**
+**Le generator est un signal :**
 
 Le generator peut varier dans le temps via la polymétrie, comme un paramètre d'effet :
 
@@ -554,7 +546,7 @@ generator, le runtime ajuste à la fois les pitches ET le spectre.
 
 Le langage produit des fréquences en Hz. Comment ces fréquences sont transmises à
 l'instrument (pitchbend MIDI standard, MPE, OSC, synthèse directe) est un ressort
-de l'**appareil** (`transport` de l'acteur), pas du langage. BPScript ne connaît
+de l'**appareil** (la sortie de l'acteur), pas du langage. BPScript ne connaît
 pas le protocole wire — il délègue cette décision au runtime cible.
 L'implémentation MIDI (pitchbend 14 bits, MPE channel allocation) est suivie dans
 le backlog B2 / runtime-midi.
@@ -738,7 +730,7 @@ Ici `degrees` = nombre de generators depuis l'origine :
 - C = 0g, D = 2g, E = 4g, F = -1g, G = 1g, A = 3g, B = 5g
 
 Le resolver calcule : `pitch_cents = degree × generator` (réduit mod period).
-Le generator peut varier en temps réel via CV.
+Le generator peut varier en temps réel via un signal.
 
 ---
 
@@ -796,7 +788,7 @@ pitch_cents_absolute = pitch_cents_reduced + register × period
 freq = baseHz × 2^((pitch_cents_absolute - baseNote_cents) / 1200) × alteration_ratio
 ```
 
-Où `generator` est une valeur continue qui peut varier en temps réel via CV.
+Où `generator` est une valeur continue qui peut varier en temps réel via un signal.
 Le `period` est en cents (1200 = octave). Les `degrees` sont des nombres
 de generators (entiers, possiblement négatifs : F = -1g dans meantone).
 
@@ -856,7 +848,7 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 │       ↓                                                     │
 │  Tokenizer  ← octaves.json (parse registres dans tokens)   │
 │       ↓        alphabet.json (reconnaître notes valides)    │
-│  Parser     ← alphabet.json (type gate pour les notes)     │
+│  Parser     ← alphabet.json (les noms de l'alphabet)       │
 │       ↓                                                     │
 │  Encoder    ← alphabet.json + octaves.json                 │
 │       │        → émet terminaux dans la grammaire           │
@@ -883,7 +875,7 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 │       ↓                                                     │
 │  Calcul: freq = baseHz × period^Δregister × ratio × alt    │
 │       ↓                                                     │
-│  Kronos route la hauteur DÉJÀ résolue → transport → son     │
+│  Kronos route la hauteur DÉJÀ résolue → sortie → son     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -942,8 +934,8 @@ pas de parsing de chaînes.
 | `encoder.js`     | compile | alphabets, octaves                        | noms BP3-safe (bol prefix), grammaire |
 | `prototypes.js`  | compile | alphabets, octaves                        | fichier -so. (durées de référence)    |
 | `kairos/pitch/resolver.ts` | projection | octaves, alphabets, tunings, temperaments | fréquence (float) — depuis KAI-10 |
-| Kronos           | runtime | —                                         | route la hauteur déjà résolue → transport |
-| `transport/*.js` | runtime | —                                         | consomme la fréquence, produit du son |
+| Kronos           | runtime | —                                         | route la hauteur déjà résolue → sortie |
+|  les runtimes de sortie | runtime | —                                         | consomme la fréquence, produit du son |
 
 ### Ce que BP3 voit vs ce que le dispatcher voit
 
@@ -951,7 +943,7 @@ BP3 ne voit que des **noms opaques** (`bolC_^4`, `bolSa`, `bolga_komal_v`).
 Il ne sait rien des fréquences — il gère uniquement le temps.
 
 Le dispatcher reçoit ces noms avec un **timing** (onset, durée).
-Il strip le prefix `bol`, passe au resolver, et envoie la fréquence au transport.
+Il strip le prefix `bol`, passe au resolver, et envoie la fréquence à la sortie.
 
 ```
 BP3:        "bolga_komal  200ms  at  1500ms"
@@ -960,7 +952,7 @@ Dispatcher: strip "bol" → "ga_komal"
                  ↓
 Resolver:   ga_komal → { freq: 284.44, register: 1 }
                  ↓
-Transport:  oscillator.frequency = 284.44 at t=1500ms for 200ms
+Sortie:     oscillator.frequency = 284.44 at t=1500ms for 200ms
 ```
 
 ---
@@ -1002,7 +994,7 @@ En 12-TET, chaque demi-ton = 2^(1/12). Décaler de N steps préserve tous les in
 | **Tonic shift** — changer la fréquence de référence | Tous les intervalles (ratios invariants) | Tout | Changer Sa en raga, qarar en maqam, tonique en western |
 | **Degree shift** — décaler de N degrés dans la gamme | Le contour mélodique | Tout (intervalles changent) | "Joue cette phrase en partant du 5ème degré" |
 | **Grid shift** — décaler de N steps dans le tempérament | Les intervalles exacts | Tempéraments égaux uniquement | Transposition chromatique classique |
-| **Freq ratio** — multiplier toutes les fréquences par R | Tous les intervalles | Synthèse/CV uniquement | Pitch shift continu, notes quittent la grille |
+| **Freq ratio** — multiplier toutes les fréquences par R | Tous les intervalles | Synthèse/signal uniquement | Pitch shift continu, notes quittent la grille |
 
 ### Ce que font les traditions
 
