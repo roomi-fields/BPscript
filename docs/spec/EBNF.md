@@ -67,15 +67,34 @@ def_directive = "@" , "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
-def_body = patch_expr                (* @def sombre lpf1 >> vca1 *)
-         | setting_bag                (* @def kick (vel:120) *)
-         | backtick                   (* @def fondu phase `js: (t, dur) => 1 - t / dur` *)
-         | rhs ;                      (* @def cadence sa re ga pa   @def accent(x) x(vel:120) *)
+def_body = terminal_block            (* @def cloche  degree:0  voice.sombre *)
+         | patch_expr                (* @def sombre lpf1 >> vca1 *)
+         | setting_bag               (* @def kick (vel:120) *)
+         | backtick                  (* @def fondu phase `js: (t, dur) => 1 - t / dur` *)
+         | rhs ;                     (* @def cadence sa re ga pa   @def accent(x) x(vel:120) *)
+
+terminal_block = terminal_key+ ;     (* une clé par ligne, ou sur la même ligne *)
+
+terminal_key = TERMINAL_REF , "." , ( IDENT | backtick )     (* le point appelle un composant *)
+             | TERMINAL_VALUE , ":" , value ;                (* le deux-points affecte une valeur *)
+
+TERMINAL_REF   = "tuning" | "octaves" | "out" | "voice" ;
+TERMINAL_VALUE = "degree" | "register" | "hz" | "sounding" | "duration" ;
 ```
 
 `@def` déclare **une définition** : un nom associé à un corps qu'on réinvoque d'un mot. Le nom vient
 d'abord, ce qu'il vaut ensuite. La liste de paramètres se **colle** au nom ; un corps qui commence
 par une parenthèse en est séparé par une espace. Le nom se pose ensuite à sa place dans une règle.
+
+**Un bloc de clés déclare un terminal.** Ce sont celles du prototype d'un terminal, et le nom de
+chacune suffit à la reconnaître. Un terminal déclaré dans une scène est **indépendant** : il n'entre
+dans aucun alphabet, puisqu'un alphabet appartient à un acteur. Ce que les terminaux d'un alphabet
+en héritent, il le nomme — son système de hauteur, sa sortie, sa voix — et ce qu'il ne nomme pas, il
+le tient de la scène.
+
+Sa hauteur s'écrit, là où celle d'un terminal d'alphabet se lit dans son nom : il n'a pas de
+convention de registre pour découper le sien, donc il porte `degree` et `register`, ou `hz` quand la
+fréquence est déjà connue.
 
 ```ebnf
 init_directive = "@" , "init" , NEWLINE , init_entry+ ;

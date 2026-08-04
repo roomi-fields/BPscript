@@ -322,6 +322,37 @@ S -> C4!kick D4 E4!accent fast(Motif)
 **Ce qui se definit est ce qui se reinvoque** -- un fil isole entre deux points ne se definit pas,
 puisqu'on ne le rejoue jamais seul.
 
+#### Declarer un terminal
+
+**Un terminal se declare avec `@def` et un bloc de cles**, celles du prototype d'un terminal. Le
+bloc s'ecrit sous le nom, une cle par ligne, ou sur la meme ligne quand il tient :
+
+```text
+@def cloche
+  tuning.western_12TET
+  octaves.western
+  register:5
+  degree:0
+  voice.sombre
+
+@def ka  voice.sec
+@def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`
+@def pivot  sounding:false
+```
+
+**Le point appelle un composant, le deux-points affecte une valeur** -- la convention du langage,
+sans exception : `tuning.`, `octaves.`, `out.` et `voice.` nomment ce qu'ils empruntent ; `degree`,
+`register`, `hz`, `sounding` et `duration` portent une valeur.
+
+**Un terminal declare dans une scene est independant** : il n'entre dans aucun alphabet, puisqu'un
+alphabet appartient a un acteur. Ce que les terminaux d'un alphabet en heritent, il le nomme --
+son systeme de hauteur, sa sortie, sa voix -- et ce qu'il ne nomme pas, il le tient de la scene.
+
+**Sa hauteur s'ecrit, la ou celle d'un terminal d'alphabet se lit dans son nom.** `C4` porte la
+sienne dans son ecriture, decoupee par la convention de registre de son alphabet ; un terminal
+independant n'a pas de convention pour lire la sienne, donc il ecrit `degree` et `register`, ou
+`hz` quand la frequence est deja connue.
+
 ### `@init` -- l'etat de depart
 
 `@init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le
@@ -791,8 +822,8 @@ ou une instruction de calcul de hauteur.
 par defaut ; un terminal concret ne declare que ce qui differe.
 
 ```json
-{ "name": "", "runtime": "audio", "sounding": true, "duration": null,
-  "code": null, "degree": null, "voice": null }
+{ "name": "", "runtime": "audio", "sounding": true, "duration": null, "code": null,
+  "degree": null, "register": null, "hz": null, "voice": null }
 ```
 
 **Deux axes qualifient un terminal, et ils sont independants** : d'ou vient sa **hauteur**, et par
@@ -800,7 +831,7 @@ quoi il se **realise**. Chacun peut rester vide, et toutes les combinaisons ont 
 
 | axe             | ce qu'il porte                                                                          |
 | --------------- | ---------------------------------------------------------------------------------------- |
-| **hauteur**     | `degree` -- un degre, resolu par les librairies d'accordage et de registres              |
+| **hauteur**     | `degree` et `register`, resolus par les librairies d'accordage et de registres, ou `hz`, une frequence deja connue |
 | **realisation** | `voice` -- une entree de la librairie des voix, ou `code` -- du code que le terminal joue |
 
 Un terminal a hauteur et a voix est une note ; a voix seule, une percussion ; a hauteur et a code,

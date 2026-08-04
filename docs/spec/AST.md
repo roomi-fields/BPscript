@@ -166,11 +166,36 @@ DefDirective {
 }
 
 DefBody =
-    { kind: "patch",    expr: PatchExpr }              // @def sombre lpf1 >> vca1
+    { kind: "terminal", proto: TerminalProto }         // @def cloche  degree:0  voice.sombre
+  | { kind: "patch",    expr: PatchExpr }              // @def sombre lpf1 >> vca1
   | { kind: "setting",  bag: SettingBag }              // @def kick (vel:120)
   | { kind: "code",     backtick: BacktickInline }     // @def fondu phase `js: …`
   | { kind: "elements", body: RhsElement[] }           // @def cadence sa re ga pa
+
+TerminalProto {
+  runtime: string | null           // le canal de sortie
+  sounding: boolean | null
+  duration: number | null
+  degree: number | null            // la hauteur, résolue par accordage et registres
+  register: string | number | null
+  hz: number | null                // la hauteur, déjà connue
+  voice: string | BacktickInline | null   // la réalisation
+  tuning: string | null            // le système de hauteur qu'il emprunte
+  octaves: string | null
+}
 ```
+
+**Un corps de sorte `terminal` déclare un terminal indépendant** : il n'entre dans aucun alphabet,
+puisqu'un alphabet appartient à un acteur. Ce que les terminaux d'un alphabet en héritent, il le
+nomme ; ce qu'il ne nomme pas, il le tient de la scène.
+
+**Deux axes le qualifient, indépendamment** : d'où vient sa **hauteur** — `degree` et `register`
+résolus par les librairies, ou `hz` déjà connue — et par quoi il se **réalise** — `voice`, ou du
+code. Chacun peut rester vide, et toutes les combinaisons ont un sens.
+
+Sa hauteur vit dans un champ, là où celle d'un terminal d'alphabet se lit dans son **nom** : il n'a
+aucune convention de registre pour découper le sien. Les deux populations n'empruntent donc jamais
+le même chemin de résolution.
 
 `@def` associe un nom à un corps, pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut
 ensuite. La liste de paramètres se distingue d'un corps entre parenthèses par le **collage** :
