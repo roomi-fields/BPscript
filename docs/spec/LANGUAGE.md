@@ -156,7 +156,7 @@ langage nomme son interprete -- exactement comme le domaine d'une cle. Les langa
 Dedale**, parce que le cablage est son metier.
 
 **Chaque langage se declare en librairie** -- voir « Le prototype d'un langage backtique ». C'est la
-qu'il dit s'il sonne et s'il occupe du temps, au lieu de le laisser deviner ; une occurrence
+qu'il dit s'il sonne et s'il occupe du temps ; une occurrence
 surcharge ces defauts avec un sac.
 
 Il prend deux formes :
@@ -210,7 +210,7 @@ c'est ce qui **suit** le `!` qui decide duquel il s'agit.
 **Entre deux termes**, il les place au meme instant : `sitar1.sa!tin!na` produit trois evenements
 sur une seule attaque, et le premier terme donne la duree du groupe.
 
-**En tete d'un terme**, il pose dans le flux un element sans duree, qui prend effet a l'endroit ou
+**En tete d'un terme**, il pose dans le flux un element instantane, qui prend effet a l'endroit ou
 il est ecrit : un reglage de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
 `!(seed:7)`, un cablage. La table complete des lectures du `!` est dans
 [Table de syntaxe du `!`](#table-de-syntaxe-du-).
@@ -394,7 +394,7 @@ Un module est un **prototype** : il se declare une fois et s'instancie autant de
 a besoin, chaque instance portant ses propres valeurs de port.
 
 **La librairie declare le TYPE, la scene declare l'INSTANCE, et c'est l'instance qu'on invoque.**
-Un filtre passe-bas nomme `lpf` en librairie ne s'ecrit pas dans une regle : la scene ecrit
+Un filtre passe-bas nomme `lpf` en librairie s'instancie avant de servir : la scene ecrit
 
 ```text
 @var lpf1 lpf
@@ -475,8 +475,7 @@ qui font événement.
 **Un paramètre est une entrée** avec un `fallback` et rien de branché. Régler est un cas particulier de
 brancher.
 
-**La polyphonie appartient au port**, pas au module : un filtre traite huit voix tout en gardant une
-seule coupure.
+**La polyphonie appartient au port** : un filtre traite huit voix tout en gardant une seule coupure.
 
 **Ces prototypes vivent avec les autres.** Un module, un port, un terminal, un alphabet suivent le meme
 mecanisme : un socle, des sous-prototypes qui **ajoutent** les champs de leur cas, et un champ qui
@@ -626,8 +625,7 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | `logic`  | un signal lu comme un etat haut ou bas         |
 
 Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `@var`
-peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie, il n'est pas
-reserve.
+peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie.
 
 Plus les **symboles structurels** ci-dessous.
 
@@ -795,7 +793,7 @@ par defaut ; un terminal concret ne declare que ce qui differe.
 
 **Un champ n'existe que si sa notion s'applique.** Une valeur non renseignee prend son defaut ;
 une notion etrangere a l'objet n'a pas de champ du tout. Un sous-prototype **ajoute** donc les champs
-de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pas la hauteur : une
+de son cas. Le socle ne connait pas la hauteur : une
 percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
 | sous-prototype   | ce qu'il ajoute                                                                                  |
@@ -839,7 +837,7 @@ La sortie d'un terminal vaut pour toute la scene.
 
 **Un langage backtique se declare en librairie comme tout le reste** -- un prototype avec ses defauts,
 surcharge par chaque langage. C'est lui qui repond a « ce code sonne-t-il, et occupe-t-il du
-temps ? », au lieu de le laisser deviner.
+temps ? ».
 
 ```json
 { "name": "", "description": "", "sounding": true, "duration": null }
@@ -1100,7 +1098,7 @@ deux-points introduit le sujet dans les deux cas.
   nature de la valeur. Pour un reglage **statique** (`wave`), les deux ecritures donnent le meme
   effet : la distinction porte sur le temporel.
 
-**La difference est musicale, pas cosmetique.** Un traitement partage melange les terminaux avant de
+**La difference est musicale.** Un traitement partage melange les terminaux avant de
 les traiter ; un traitement par terminal en donne un a chacun. Sur un filtre resonant, le premier
 fait resonner l'accord, le second fait resonner chaque note.
 
@@ -1150,7 +1148,7 @@ S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)
 
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
 une librairie de modules est une collection de `@def`, comme un alphabet est une collection de
-terminaux. Ce qui s'invoque dans une regle est **l'instance**, jamais le type : la scene ecrit
+terminaux. Ce qui s'invoque dans une regle est **l'instance** : la scene ecrit
 `@var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
 
 **Ce que le calque devient a l'execution** -- exemplaires, ordre de traversee, fin de vie,
@@ -1207,7 +1205,7 @@ hauteur et un son sort, sans qu'aucune erreur le signale.
 delimiteur de termes : colle au terminal precedent, le reglage voyage avec lui ; separe par une
 espace, il se pose seul dans la sequence. En tete de regle ou de groupe (`{!(vel:80) ...}`), il se
 pose seul. L'AST porte cette attache sur le noeud `!(...)` (`conjoint`), et le simultane `B3!C7`
-reste un `SimultaneousGroup`.
+est un `SimultaneousGroup`.
 
 **Un nom pose apres `!` s'attache au terminal qui precede** : les deux partagent l'instant, et le
 terminal porte la duree. `S -> C4!kick D4` donne **deux** elements dans le membre droit, `C4` et son
@@ -1448,10 +1446,9 @@ S -> C4 D4 C4
 ?1 D4 ?1 -> ?1 G4 ?1     //  C4 D4 C4  ->  C4 G4 C4
 ```
 
-**Une capture est le SEUL joker du langage** -- les barres `|x|`, elles, ne font que delimiter un
-nom de non-terminal.
+**Une capture est le SEUL joker du langage.**
 
-**Le numero change ce que la regle accepte, pas seulement ce qu'elle rejoue.** Une regle qui ne
+**Le numero change ce que la regle accepte autant que ce qu'elle rejoue.** Une regle qui ne
 s'applique pas laisse la chaine **inchangee** :
 
 ```bpscript
@@ -1481,10 +1478,9 @@ S -> |a| |b|                //  la regle produit deux non-terminaux
 ```
 
 **Un nom entre barres est une tete de regle comme une autre** -- il se declare a gauche, il se
-reecrit, il disparait de la production. Ce qui apparie *n'importe quel* symbole, ce sont les
-captures `?` et `?n`.
+reecrit, il disparait de la production.
 
-Les tables d'homomorphisme, elles, se declarent par `@transcription.<table>` et s'appliquent entre
+Les tables d'homomorphisme se declarent par `@transcription.<table>` et s'appliquent entre
 un gabarit maitre et son esclave -- cf.
 [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
 
@@ -1607,7 +1603,7 @@ S <> $mel(tempo:120) &mel(tempo:80)       // chaque invocation porte ses paramet
 S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
 ```
 
-**L'esclave rejoue le CHOIX du maitre, pas la regle.** Quand le nom capture designe une regle a
+**L'esclave rejoue le CHOIX du maitre.** Quand le nom capture designe une regle a
 plusieurs alternatives, les deux invocations donnent la **meme** -- c'est ce qui distingue un
 gabarit de deux invocations libres :
 
@@ -1976,8 +1972,7 @@ S -> sa dhin
 Les noms de toutes les sortes de choses vivent dans le **même espace** : terminaux de
 l'alphabet actif, têtes de règle, définitions, entrées, acteurs, variables de travail,
 signaux, drapeaux. Chaque nom y appartient à **une seule** d'entre elles. Le contrôle a
-lieu **à la déclaration** : c'est le fait de déclarer le nom qui tranche, son emploi dans
-une règle étant une autre affaire.
+lieu **à la déclaration** : c'est le fait de déclarer le nom qui tranche.
 
 Deux énoncés, tous deux globaux :
 
@@ -2030,7 +2025,7 @@ Sans nombre, le câble en porte une.
   lfo1 >> lpf1.cutoff         // une seule voix pilote la coupure des huit
 ```
 
-**Une inadéquation de largeur s'adapte, elle n'échoue jamais** : un port à une voix prend la
+**Une inadéquation de largeur s'adapte** : un port à une voix prend la
 première, un port à plusieurs voix alimenté en une seule diffuse cette valeur sur toutes, et une
 largeur écrite qui dépasse ce que le port accepte se ramène à ce nombre. Ce que chaque port accepte
 se lit dans son champ `voices`.
@@ -2050,9 +2045,9 @@ y entre comme terminal, et un terminal se pose dans une règle.
 ## Les librairies
 
 **Le langage connait la mecanique ; les librairies apportent tout le reste.** Un moteur sait
-deriver une grammaire, instancier un module, relier des ports, echantillonner un signal. Il ne
-connait ni le sargam, ni ce qu'est un filtre passe-bas, ni comment une enveloppe se calcule : ces
-choses vivent en librairie, avec leur description **et leur code**.
+deriver une grammaire, instancier un module, relier des ports, echantillonner un signal. Le sargam,
+ce qu'est un filtre passe-bas, le calcul d'une enveloppe vivent en librairie, avec leur description
+**et leur code**.
 
 ### Invoquer
 
@@ -2078,7 +2073,7 @@ La categorie dit alors a quoi le reglage touche.
 
 ### Le prefixe est optionnel -- un nom se resout par unicite
 
-**Un nom nu passe s'il n'existe que dans une seule librairie invoquee.** S'il est porte par deux,
+**Un nom nu passe s'il vit dans une seule librairie invoquee.** S'il est porte par deux,
 la compilation s'arrete et **nomme les deux candidats** : on ne prefixe que ce cas.
 
 ```text
