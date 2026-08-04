@@ -80,7 +80,7 @@ local. La regle vaut partout, pour les entites d'un acteur comme pour les parame
 evenement : **le plus local l'emporte**. Nommer une valeur a un niveau la fixe pour ce niveau et
 pour tout ce qu'il contient.
 
-**Ce sont deux mecanismes, et les confondre rend la regle illisible.**
+**Deux mecanismes s'y combinent.**
 
 - **L'heritage** repond a « d'ou vient une valeur que je n'ai pas ecrite ? » -- **du niveau qui me
   contient**. Un acteur qui ne nomme pas son accordage prend celui de la scene ; un terme qui ne
@@ -441,9 +441,8 @@ Un oscillateur, du bruit, un LFO sont des **sources** : on ne les neutralise pas
 faire passer à travers, donc pas de `passthrough`. Un filtre, un amplificateur, une enveloppe sont
 des **traitements**. La sortie `out` est un **puits**.
 
-**Le puits s'ecrit `out`, jamais un nom de canal.** Un patch s'applique a des terminaux, et c'est le
-terminal qui dit par ou il sort -- `audio`, `midi` ou `osc`. Ecrire `>> audio` graverait un canal
-dans une chaine qui n'a pas a le connaitre : `out` designe la sortie, celle que l'acteur a declaree.
+**Le puits d'une chaine s'ecrit `out`.** Il designe la sortie de l'acteur, dont le canal --
+`audio`, `midi` ou `osc` -- est celui que l'acteur declare.
 
 **Le sous-prototype est structurel, la catégorie est descriptive.** Le premier dit ce que le module
 peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
@@ -471,8 +470,8 @@ deux catégories et la même forme.
 ```
 
 **Une entrée ajoute `default`** — la valeur qu'elle prend si rien n'est branché. Une sortie n'en a
-pas : la notion lui est étrangère. C'est le champ que les librairies écrivent déjà pour les
-paramètres d'un module : un paramètre et une entrée non branchée sont la même chose.
+pas : la notion lui est étrangère. C'est le champ que les librairies portent pour les paramètres
+d'un module : un paramètre et une entrée non branchée sont la même chose.
 
 | champ            | ce qu'il porte                                                                  |
 | ---------------- | ------------------------------------------------------------------------------- |
@@ -555,8 +554,7 @@ ou les choses tombent, donc il releve du premier.
 @transpo.diapason:442
 ```
 
-**La duree d'une scene suit son contenu** : le nombre de termes derives et le tempo courant. Elle
-ne se pose pas.
+**La duree d'une scene suit son contenu** : le nombre de termes derives et le tempo courant.
 
 ---
 
@@ -627,9 +625,9 @@ Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees 
 peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie.
 
 **Deux mots de direction**, `in` et `out`, qui nomment par ou une chose entre ou sort :
-`in.keyboard`, `out.midi`. Le canal les suit, la direction se lit sur le mot -- pas sur la position
-de l'ecriture. `in` est aussi le type de variable ci-dessus : c'est le meme mot, un role qui vient
-du dehors se declare par le canal qui l'apporte.
+`in.keyboard`, `out.midi`. Le canal les suit, et la direction se lit sur le mot. `in` est aussi le
+type de variable ci-dessus : c'est le meme mot, un role qui vient du dehors se declare par le canal
+qui l'apporte.
 
 Plus les **symboles structurels** ci-dessous.
 
@@ -1365,8 +1363,8 @@ ce role s'y associe hors de la scene. L'adresse de la source se colle au point d
 | `osc`      | oui   | oui    | le meme port, vu des deux bouts  |
 | `keyboard` | oui   |        | les touches de la machine        |
 
-Une direction qu'un canal ne porte pas arrete la compilation, et le refus la nomme : `out.keyboard`
-repond « keyboard n'est pas une sortie ».
+Un canal s'ecrit dans les directions qu'il declare ; toute autre ecriture arrete la compilation en
+nommant la direction attendue.
 
 ---
 
@@ -1508,8 +1506,8 @@ section est le nom de l'homomorphisme.
 S -> $N14 * &N14
 ```
 
-Elle s'applique **entre un gabarit maitre et son esclave** : sans elle, l'esclave rejoue le maitre
-a l'identique ; avec elle, il le rejoue transforme -- le nom de la table se pose entre les deux.
+Elle s'applique **entre un gabarit maitre et son esclave**, dont le nom se pose entre les deux :
+l'esclave rejoue alors le maitre transforme par la table.
 Cf. [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
 
 Un nom absent de la librairie est refuse au parse.
@@ -1573,8 +1571,6 @@ l'ordre, position par position.
 **La qualite de CONTEXTE vient de la SYMETRIE de la regle** : un symbole ecrit a la meme place
 des deux cotes de la fleche (prefixe ou suffixe commun) est du contexte. Differer de `X` et
 appartenir au contexte sont deux proprietes independantes -- chacune s'obtient sans l'autre.
-C'est aussi ainsi que BP3 le compte : son champ de regle mesure le contexte negatif « en symboles,
-commun aux deux membres ».
 
 ### Plusieurs `#` forment un seul « sauf »
 
@@ -1681,10 +1677,9 @@ Une entree s'ecrit `[<rang>] <echelle> <forme>` :
 
 - `<rang>` -- la place de l'entree dans le catalogue, entre crochets.
 - `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
-- `<forme>` -- les memes `?` que dans une regle, un par terminal efface, et toujours anonymes :
-  une ligne de catalogue n'a pas de fleche, donc rien a rejouer et pas de numero. Plus des points
-  `.` (fragments de duree egale) et des groupes appariees `($N ...)`, imbricables -- les memes
-  maitres et esclaves que dans une regle.
+- `<forme>` -- les memes `?` que dans une regle, un par terminal efface, **anonymes** : le numero
+  appartient a la regle, ou une fleche les rejoue. Plus des points `.` (fragments de duree egale) et
+  des groupes appariees `($N ...)`, imbricables -- les memes maitres et esclaves que dans une regle.
 
 **Le catalogue s'enumere.** Le moteur explore les formes que la grammaire permet et les ecrit ici :
 une grammaire de quinze regles peut en produire seize, parce que les variantes de vitesse se
