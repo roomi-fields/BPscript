@@ -171,8 +171,8 @@ backtick_orphan = "`" , TAG , ":" , CODE , "`" ;
 comment         = "//" , TEXT ;
 ```
 
-Un backtick de tête prépare son interpréteur au chargement. Le tag est une **adresse** : il nomme le
-langage, et le langage nomme son interpréteur. Chaque langage se déclare en librairie, où il dit
+Un backtick de tête prépare son `interpreter` au chargement. Le tag est une **adresse** : il nomme le
+langage, et le langage nomme son `interpreter`. Chaque langage se déclare en librairie, où il dit
 s'il sonne et s'il occupe du temps ; une occurrence surcharge ces défauts avec un sac.
 
 ---
@@ -668,14 +668,14 @@ backtick_standalone = "`" , [ TAG , ":" ] , CODE , "`" ;   (* dans le flux : ter
 ```
 
 Un backtick porte du code, et le tag en tête est une **adresse** : il nomme le langage, et le
-langage nomme son interpréteur. Il prend deux formes.
+langage nomme son `interpreter`. Il prend deux formes.
 
 **Autonome** — le backtick occupe une position à lui seul et joue son code quand la dérivation
 l'atteint. En tête de scène, il prépare le moteur au chargement ; dans le flux d'une règle, il est
 un terminal de plein droit et joue à son instant. Son tag est requis, ou bien un acteur `eval.<X>`
 le qualifie par le point.
 
-**En ligne** — le backtick occupe un paramètre et rend une valeur, évaluée par l'interpréteur du
+**En ligne** — le backtick occupe un paramètre et rend une valeur, évaluée par l'`interpreter` du
 symbole qui le porte ; il hérite du tag de ce symbole. Un langage employable en ligne le déclare en
 librairie, avec la convention de ce qu'il rend.
 

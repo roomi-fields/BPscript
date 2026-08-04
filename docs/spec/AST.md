@@ -599,7 +599,7 @@ BacktickStandalone { type: "BacktickStandalone", tag: string | null, code: strin
 BacktickOrphan     { type: "BacktickOrphan", tag: string, code: string, line: number }
 ```
 
-Le tag nomme le **langage**, et le langage nomme son **interpréteur**. Le tag et le code sont
+Le tag nomme le **langage**, et le langage nomme son **`interpreter`**. Le tag et le code sont
 séparés à l'analyse.
 
 Un backtick de tête et une courbe exigent leur tag. Un backtick de flux peut s'en passer quand la
