@@ -222,10 +222,10 @@ Ecrit apres une note, il s'ancre sur elle : la note sonne, puis la suite attend.
 @core
 @actor sitar1
   alphabet.sargam
-  transport.audio
+  out.audio
 @actor tabla1
   alphabet.tabla
-  transport.midi(ch:10)
+  out.midi(ch:10)
 
 S -> !(vel:80) sitar1.sa!tin!na <!depart sitar1.re
 ```
@@ -257,7 +257,7 @@ l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
 
 ```text
 @var section flag: calm:1, full:2
-@var touches in transport.keyboard
+@var touches in.keyboard
 @var grain signal
 @var hauteur pitch
 @var rotation phase
@@ -342,7 +342,7 @@ cascade.
 | `alphabet`  | la collection de terminaux que l'acteur joue                              |
 | `tuning`    | l'accordage qui donne une frequence a chaque degre                        |
 | `octaves`   | la convention de registre                                                 |
-| `transport` | par ou l'acteur sort : `audio`, `midi`, `osc`                             |
+| `out`       | par ou l'acteur sort : `audio`, `midi`, `osc`                             |
 | `eval`      | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
 
 ```text
@@ -350,7 +350,7 @@ cascade.
   alphabet.sargam
   tuning.sargam_22shruti
   octaves.saptak
-  transport.audio
+  out.audio
 ```
 
 ### Les modules -- ce qu'on cable
@@ -618,7 +618,7 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | Type     | Ce que la variable porte                       |
 | -------- | ---------------------------------------------- |
 | `flag`   | un etat entier, avec ses valeurs nommees       |
-| `in`     | une valeur qui vient du dehors                 |
+| `in`     | une valeur qui vient du dehors -- `in.<canal>` |
 | `signal` | un flux de nombres, sans convention de lecture |
 | `pitch`  | un signal lu comme une hauteur                 |
 | `phase`  | un signal lu comme une position dans un cycle  |
@@ -626,6 +626,11 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 
 Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `@var`
 peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie.
+
+**Deux mots de direction**, `in` et `out`, qui nomment par ou une chose entre ou sort :
+`in.keyboard`, `out.midi`. Le canal les suit, la direction se lit sur le mot -- pas sur la position
+de l'ecriture. `in` est aussi le type de variable ci-dessus : c'est le meme mot, un role qui vient
+du dehors se declare par le canal qui l'apporte.
 
 Plus les **symboles structurels** ci-dessous.
 
@@ -647,7 +652,7 @@ attendu, pas une faute.
                (*:vel:80, *:sombre) ; dans une vitesse, ecrit la fraction (! (*2/3)) ;
                entre un gabarit maitre et son esclave, marqueur d'homomorphisme ($X * &X)
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [phase=2])
-.              reference a une entite (alphabet.western, lpf1.cutoff, transport.midi),
+.              reference a une entite (alphabet.western, lpf1.cutoff, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
 [ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
 ` `            code externe, execute par le runtime que son tag nomme
@@ -1338,7 +1343,7 @@ duree zero.
 
 ```bpscript
 @alphabet.western:audio
-@var sync1 in transport.midi
+@var sync1 in.midi
 
 S -> -<!sync1 C4 D4 E4       // attend en silence, puis joue
 S -> C4<!sync1 D4 E4         // joue C4, attend, puis continue
@@ -1346,10 +1351,23 @@ S -> <!sync1 C4 D4 E4        // attend seul puis demarre
 S -> C4!E4<!sync1 D4 E4      // joue C4 + E4, attend sync1, puis D4
 ```
 
-`@var <role> in transport.<canal>` nomme dans la scene le **role** que tient l'entree ; les canaux
-d'entree sont `midi`, `osc` et `keyboard`. L'appareil qui remplit ce role s'y associe hors de
-la scene. L'adresse de la source se colle au point d'attente -- `<!sync1.60` ecoute le numero
-60 de l'entree `sync1` -- et les points d'attente se chainent : `<!sync1<!sync2`.
+`@var <role> in.<canal>` nomme dans la scene le **role** que tient l'entree. L'appareil qui remplit
+ce role s'y associe hors de la scene. L'adresse de la source se colle au point d'attente --
+`<!sync1.60` ecoute le numero 60 de l'entree `sync1` -- et les points d'attente se chainent :
+`<!sync1<!sync2`.
+
+**Un canal declare les directions qu'il porte**, et la direction s'ecrit : `in.` pour ce qui entre,
+`out.` pour ce qui sort. Un seul catalogue, lu des deux bouts.
+
+| canal      | `in.` | `out.` | ce que c'est                     |
+| ---------- | ----- | ------ | -------------------------------- |
+| `audio`    |       | oui    | le son                           |
+| `midi`     | oui   | oui    | le meme port, vu des deux bouts  |
+| `osc`      | oui   | oui    | le meme port, vu des deux bouts  |
+| `keyboard` | oui   |        | les touches de la machine        |
+
+Une direction qu'un canal ne porte pas arrete la compilation, et le refus la nomme : `out.keyboard`
+repond « keyboard n'est pas une sortie ».
 
 ---
 
@@ -1394,7 +1412,7 @@ M3 -> B2 M2                  // M3 = B2 D2 E2 .
 Le point et la virgule sont transmis tels quels au moteur.
 
 **L'espace tranche** : entoure d'espaces, le `.` decoupe la sequence ; colle entre deux noms,
-il appelle un composant (`transport.midi`, `<!sync1.60`) -- cf. la section « Conventions de
+il appelle un composant (`out.midi`, `<!sync1.60`) -- cf. la section « Conventions de
 notation ».
 
 ---
@@ -1698,7 +1716,7 @@ propriete au niveau ou on veut qu'elle change.
 ### Les composants d'un acteur
 
 Les cinq cles d'un acteur (`alphabet`, `tuning`, `octaves`,
-`transport`, `eval`) cascadent de la scene vers l'acteur. Une scene qui nomme
+`out`, `eval`) cascadent de la scene vers l'acteur. Une scene qui nomme
 son alphabet tient les autres de la cascade :
 
 ```bpscript
@@ -1746,7 +1764,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | ---------- | ----------------------------------------- | ------------------------------------------------- |
 | espace     | sépare deux termes                        | `@def souffle (vel:60)`                           |
 | collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                       |
-| `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `transport.midi` |
+| `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `out.midi` |
 | `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`        |
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(tuning:just)`    |
@@ -1784,7 +1802,7 @@ Motif -> {C4 D4}:2 E4:0.5
 ### Le point — désigner dans un espace de noms
 
 `espace.nom` nomme un élément à l'intérieur d'un espace. Les espaces de noms sont les
-catégories de librairie (`alphabet`, `tuning`, `octaves`, `transport`, `eval`,
+catégories de librairie (`alphabet`, `tuning`, `octaves`, `out`, `eval`,
 `module`), les acteurs et les instances de module avec leurs ports.
 
 | Emploi                                                    | Écriture                                                  |
@@ -1795,7 +1813,7 @@ catégories de librairie (`alphabet`, `tuning`, `octaves`, `transport`, `eval`,
 | port d'un module                                          | `lpf.cutoff`                                              |
 | frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                        |
 
-Les cinq clés d'un acteur — `alphabet`, `tuning`, `octaves`, `transport`, `eval` — sont des
+Les cinq clés d'un acteur — `alphabet`, `tuning`, `octaves`, `out`, `eval` — sont des
 références : chacune s'écrit avec le point, sur sa ligne.
 
 ```bpscript
@@ -1803,7 +1821,7 @@ références : chacune s'écrit avec le point, sur sa ligne.
 @actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
-  transport.midi(ch:3, vel:100)
+  out.midi(ch:3, vel:100)
 
 S -> sitar.sa sitar.re sitar.ga
 ```
