@@ -458,14 +458,12 @@ simultaneous = element_core , "!" , element_core , { "!" , element_core } ;
 
 instant      = "!" , instant_target ;
 
-instant_target = symbol
-               | symbol_call
-               | setting_bag                   (* !(vel:80)   !(retro)   !(seed:7) *)
-               | speed_change ;                      (* ! (/2)   ! (*2/3) *)
+instant_target = setting_bag                   (* !(vel:80)   !(retro)   !(seed:7) *)
+               | speed_change ;                (* ! (/2)   ! (*3/2) *)
 
 speed_change = "(" , ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT ) , ")" ;
 
-out_time_object = "!" , IDENT ;
+out_time_object = "!" , IDENT , [ "(" , arg_list , ")" ] ;   (* !f   !dha(vel:120) *)
 ```
 
 `!` marque l'instant : ce qu'il porte ne prend aucun pas dans la séquence. C'est ce qui **suit** le
