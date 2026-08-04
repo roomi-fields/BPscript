@@ -971,7 +971,7 @@ S -> {A B C}:0.5                // le groupe occupe un demi-battement
 
 ### Les cles que le moteur consomme
 
-Elles vivent dans la librairie `engine`, sauf le tempo qui vit dans `time` :
+Elles vivent dans la librairie `engine`, sauf `tempx` qui vit dans `time` :
 
 ```text
 /N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
@@ -979,7 +979,8 @@ mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut :
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight      poids de la regle (entier, K-param, ou inf) -- a zero, la regle est ecartee
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
-tempo       tempo de la regle -- (tempo:120) ; @time.tempo:120 pose celui de la scene
+tempx       multiplicateur de vitesse de la regle -- (tempx:2/3) ralentit d'un tiers
+            @tempo:120 pose le metronome de la scene, en battements par minute
 meter       signature rythmique -- (meter:7/8), (meter:4+4/4)
 ```
 
@@ -1599,7 +1600,7 @@ les deux.
 
 ```bpscript
 S <> $mel &mel                            // $mel capture, &mel rejoue
-S <> $mel(tempo:120) &mel(tempo:80)       // chaque invocation porte ses parametres
+S <> $mel(tempx:1) &mel(tempx:2/3)        // chaque invocation porte ses parametres
 S -> ${$X S &X} &{$X S &X}                // capture d'un groupe entier
 ```
 
@@ -2078,7 +2079,7 @@ la compilation s'arrete et **nomme les deux candidats** : on ne prefixe que ce c
 
 ```text
 (cutoff:4000)          // un seul catalogue porte `cutoff` -- il passe nu
-(time.tempo:120)       // on prefixerait si deux librairies portaient `tempo`
+(time.tempx:2/3)       // on prefixerait si deux librairies portaient `tempx`
 ```
 
 **L'ambiguite n'a jamais de gagnant implicite** -- ni le premier invoque, ni le dernier. Un ordre
