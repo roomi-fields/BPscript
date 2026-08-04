@@ -68,9 +68,9 @@ def_directive = "@" , "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
 def_body = patch_expr                (* @def sombre lpf1 >> vca1 *)
-         | runtime_qualifier         (* @def kick (vel:120) *)
-         | backtick                  (* @def fondu phase `js: (t, dur) => 1 - t / dur` *)
-         | rhs ;                     (* @def cadence sa re ga pa   @def accent(x) x(vel:120) *)
+         | setting_bag                (* @def kick (vel:120) *)
+         | backtick                   (* @def fondu phase `js: (t, dur) => 1 - t / dur` *)
+         | rhs ;                      (* @def cadence sa re ga pa   @def accent(x) x(vel:120) *)
 ```
 
 `@def` déclare **une définition** : un nom associé à un corps qu'on réinvoque d'un mot. Le nom vient
@@ -220,7 +220,7 @@ La section se place après les règles, en fin de scène.
 ## Couche 3 — Règles
 
 ```ebnf
-rule = [ guard ] , { context } , lhs , ARROW , rhs , [ runtime_qualifier ] , { flag_bracket } ;
+rule = [ guard ] , { context } , lhs , ARROW , rhs , [ setting_bag ] , { flag_bracket } ;
 
 ARROW = "->" | "<-" | "<>" ;
 ```
@@ -327,7 +327,7 @@ rhs = rhs_element* ;                               (* peut être vide *)
 ```ebnf
 rhs_element = element_core , { suffix } ;
 
-suffix      = runtime_qualifier | duration | flag_bracket ;
+suffix      = setting_bag | duration | flag_bracket ;
 
 element_core = symbol
              | symbol_call
@@ -442,7 +442,7 @@ instant      = "!" , instant_target ;
 
 instant_target = symbol
                | symbol_call
-               | runtime_qualifier                   (* !(vel:80)   !(retro)   !(seed:7) *)
+               | setting_bag                   (* !(vel:80)   !(retro)   !(seed:7) *)
                | speed_change ;                      (* ! (/2)   ! (*2/3) *)
 
 speed_change = "(" , ( "/" | "*" ) , ( INT | FLOAT | INT , "/" , INT ) , ")" ;
@@ -574,7 +574,7 @@ Efface le non-terminal. Un membre droit vide fait la même chose.
 ### 4.12 Réglages — `()`
 
 ```ebnf
-runtime_qualifier = "(" , setting , { "," , setting } , ")" ;
+setting_bag = "(" , setting , { "," , setting } , ")" ;
 
 setting = [ subject , ":" ] , KEY , [ "." , IDENT ] , ":" , raw_value   (* clé et valeur *)
         | [ subject , ":" ] , KEY ;                                      (* clé nue *)

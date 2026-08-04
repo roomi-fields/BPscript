@@ -166,8 +166,8 @@ DefDirective {
 }
 
 DefBody =
-    { kind: "patch",    expr: PatchExpr }        // @def sombre lpf1 >> vca1
-  | { kind: "setting",  qualifier: RuntimeQualifier }  // @def kick (vel:120)
+    { kind: "patch",    expr: PatchExpr }              // @def sombre lpf1 >> vca1
+  | { kind: "setting",  bag: SettingBag }              // @def kick (vel:120)
   | { kind: "code",     backtick: BacktickInline }     // @def fondu phase `js: …`
   | { kind: "elements", body: RhsElement[] }           // @def cadence sa re ga pa
 ```
@@ -309,10 +309,10 @@ TemplateEntry {
   body: TemplateElement[]
 }
 
-TemplateElement = TemplateWildcard | TemplatePeriod | TemplateBracket
+TemplateElement = TemplateSlot | TemplateFragment | TemplateBracket
 
-TemplateWildcard { type: "TemplateWildcard", count: number }
-TemplatePeriod   { type: "TemplatePeriod" }
+TemplateSlot { type: "TemplateSlot", count: number }
+TemplateFragment   { type: "TemplateFragment" }
 TemplateBracket  { type: "TemplateBracket", index: number, body: TemplateElement[] }
 ```
 
@@ -335,7 +335,7 @@ Rule {
   arrow: "->" | "<-" | "<>"
   rhs: RhsElement[]
   flags: FlagExpr[]                // les mutations, émises en fin de règle
-  settings: RuntimeQualifier | null // le sac de portée règle
+  settings: SettingBag | null // le sac de portée règle
   scan: "left" | "right" | "rnd" | null   // null = le défaut de la sous-grammaire
   line: number
 }
@@ -396,12 +396,12 @@ emplacement.
 ## Éléments
 
 ```
-LhsElement = Symbol | Variable | Wildcard | Context | TemplateAnchor | RawBrace
+LhsElement = Symbol | Wildcard | Context | TemplateAnchor | RawBrace
 
 RhsElement = Symbol | SymbolCall | SymbolWithWait | Rest | Prolongation | UndeterminedRest
            | Period | NumericDuration | Polymetric
            | SimultaneousGroup | OutTimeObject | InstantControl | Wait
-           | Variable | Wildcard
+           | Wildcard
            | TemplateMaster | TemplateMasterGroup | TemplateSlave | TemplateSlaveGroup
            | TemplateAnchor
            | TieStart | TieContinue | TieEnd
@@ -413,7 +413,7 @@ Tout élément du membre droit peut porter des suffixes, **toujours collés à d
 ```
 RhsElement {
   …                                          // les propriétés de sa sorte
-  suffixQualifiers: RuntimeQualifier[] | null
+  suffixQualifiers: SettingBag[] | null
 }
 ```
 
@@ -453,7 +453,7 @@ Polymetric {
   type: "Polymetric"
   voices: RhsElement[][]                     // une voix est une séquence plate
   frame: string | number | null              // la durée du bloc, posée par le `:` collé
-  settings: RuntimeQualifier | null          // le sac collé au `}`
+  settings: SettingBag | null          // le sac collé au `}`
   label: string | null
 }
 ```
@@ -475,7 +475,7 @@ OutTimeObject  { type: "OutTimeObject", name: string }
 
 InstantControl {
   type: "InstantControl"
-  qualifier: RuntimeQualifier | SpeedChange
+  qualifier: SettingBag | SpeedChange
   conjoint: boolean                // true quand le `!` est collé au terminal précédent
 }
 
@@ -506,7 +506,7 @@ Wait {
   type: "Wait"
   name: string                       // le rôle attendu
   address: string | number | null    // l'adresse collée : <!sync1.60
-  suffixQualifiers: RuntimeQualifier[] | null
+  suffixQualifiers: SettingBag[] | null
   payload: { nature: "wait" }
 }
 
@@ -531,7 +531,6 @@ identifiant est l'étiquette produite par la table de correspondance.
 
 ```
 Wildcard { type: "Wildcard", index: number | null }   // `?` nu, ou `?n`
-Variable { type: "Variable", index: number }
 ```
 
 `?` désigne une **place**, prend le symbole qui s'y trouve, et cette place est consommée. Le numéro
@@ -610,11 +609,11 @@ se propageant de la fermante vers l'ouvrante correspondante.
 
 ## Les réglages
 
-### `RuntimeQualifier`
+### `SettingBag`
 
 ```
-RuntimeQualifier {
-  type: "RuntimeQualifier"
+SettingBag {
+  type: "SettingBag"
   pairs: Setting[]
 }
 
@@ -746,7 +745,7 @@ Source : `[stage==1] S -> sa!dha re (mode:random)`
         { "type": "Symbol", "name": "re" }
       ],
       "flags": [],
-      "settings": { "type": "RuntimeQualifier",
+      "settings": { "type": "SettingBag",
                     "pairs": [{ "key": "mode", "value": "random" }] },
       "scan": null
     }]

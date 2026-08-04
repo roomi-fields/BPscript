@@ -1740,15 +1740,6 @@ ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
 S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
 ```
 
-### La vitesse
-
-Une vitesse posee dans le flux court jusqu'a la fin du champ, et ce qu'elle
-couvre en **herite** : un groupe qui n'en pose pas garde celle du contexte qui
-le contient. En reposer une plus loin rend la main -- cf. « La vitesse ».
-
-```bpscript
-S -> C4 ! (/2) {D4 E4} ! (/1) F4   // le groupe herite de /2 ; F4 retrouve la vitesse d'origine
-```
 ## Conventions de notation — l'espace, le point, le deux-points
 
 Trois signes structurent toute l'écriture : l'**espace** sépare les termes, le **point**
@@ -2174,9 +2165,13 @@ bloc occupe deux battements, et chaque voix s'y arrange.
 par une espace, comme tout element pose seul dans la sequence.
 
 ```bpscript
-S -> C4 ! (/2) D4 E4         // D4 et E4 vont deux fois plus vite, C4 garde sa duree
-S -> C4 ! (/2) D4 ! (/1) E4  // seul D4 est accelere ; /1 restaure la vitesse d'origine
+S -> C4 ! (/2) D4 E4              // D4 et E4 vont deux fois plus vite, C4 garde sa duree
+S -> C4 ! (/2) D4 ! (/1) E4       // seul D4 est accelere ; /1 restaure la vitesse d'origine
+S -> C4 ! (/2) {D4 E4} F4         // le groupe herite de la vitesse en cours
 ```
+
+**Ce qu'une vitesse couvre en herite** : un groupe qui n'en pose pas garde celle du contexte qui le
+contient.
 
 **`/N` accelere, `*N/M` ecrit la fraction inverse.** `/2` va deux fois plus vite ; `*2/3` etire de
 moitie plus. Les deux graphies disent la meme chose : `*1/2` **est** `/2`.
