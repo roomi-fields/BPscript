@@ -24,13 +24,13 @@
 - [Les gabarits `$` et `&`](#les-gabarits-et----la-structure-dune-production)
 - [Comment une valeur se resout](#comment-une-valeur-se-resout)
 - [Conventions de notation](#conventions-de-notation-lespace-le-point-le-deux-points)
-- [Flags](#les-operateurs-de-flags)
+- [Flags](#flags--variables-détat-et-composition-conditionnelle)
 - [Déclarations](#déclarations)
 - [Les librairies](#les-librairies)
 - [Le temps](#le-temps)
 - [Modes, scan et directions](#modes-scan-et-directions----trois-niveaux-distincts)
 - [Gestion d'echec](#gestion-dechec----on_fail)
-- [Le temps](#le-temps----formes-avancees)
+- [Le temps — formes avancées](#le-temps----formes-avancees)
 
 ---
 
