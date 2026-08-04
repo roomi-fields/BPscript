@@ -123,7 +123,7 @@ refusee.
 | `sa(vel:100)`          | les parentheses collees portent le reglage sur `sa`                          |
 | `S -> sa re (vel:70)`  | les parentheses separees, en fin de regle, portent sur toute la regle        |
 | `pa:2`                 | le `:` colle fixe la duree du terme ; separe (`pa :2`), la ligne est refusee |
-| `S -> A B :2`          | une duree detachee en fin de regle est refusee : elle se colle a son hote   |
+| `S -> A B :2`          | une duree detachee en fin de regle est refusee : elle se colle a son hote    |
 | `{re ga}:2`            | le `:` colle fixe la duree du groupe                                         |
 | `S -> sa re [phase=1]` | le crochet separe, en fin de regle, mute un drapeau                          |
 | `sitar1.sa`            | le point colle qualifie `sa` par l'acteur `sitar1`                           |
@@ -524,11 +524,11 @@ Ce qui le simplifie est une **definition**, pas un decoupage en axes portes par 
 **Un reglage s'ecrit par sa categorie, l'entree apres le point.** La categorie dit a quoi le reglage
 touche, donc qui le consomme.
 
-| categorie  | ce qu'elle regle                                                                                                                                             |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@transpo.`  | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
-| `@time.`   | `tempo` -- la vitesse a laquelle le temps se lit                                                                                                             |
-| `@engine.` | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `duration` · `meter` · `timepatterns` · les operateurs `/` et `*` |
+| categorie   | ce qu'elle regle                                                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
+| `@time.`    | `tempo` -- la vitesse a laquelle le temps se lit                                                                                                             |
+| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `duration` · `meter` · `timepatterns` · les operateurs `/` et `*` |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
 chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre et la
@@ -607,23 +607,23 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 
 **Quatre mots declaratifs** :
 
-| Mot      | Ce qu'il declare                    |
-| -------- | ------------------------------------- |
-| `@actor` | qui joue                            |
-| `@var`   | qu'un nom existe, et de quel type   |
-| `@def`   | qu'un nom vaut un corps             |
-| `@init`  | l'etat de depart de la scene        |
+| Mot      | Ce qu'il declare                  |
+| -------- | --------------------------------- |
+| `@actor` | qui joue                          |
+| `@var`   | qu'un nom existe, et de quel type |
+| `@def`   | qu'un nom vaut un corps           |
+| `@init`  | l'etat de depart de la scene      |
 
 **Six types de variable**, que le parser doit connaitre pour lire la ligne qui les porte :
 
-| Type     | Ce que la variable porte                                    |
-| -------- | ------------------------------------------------------------- |
-| `flag`   | un etat entier, avec ses valeurs nommees                    |
-| `in`     | une valeur qui vient du dehors                              |
-| `signal` | un flux de nombres, sans convention de lecture              |
-| `pitch`  | un signal lu comme une hauteur                              |
-| `phase`  | un signal lu comme une position dans un cycle               |
-| `logic`  | un signal lu comme un etat haut ou bas                      |
+| Type     | Ce que la variable porte                       |
+| -------- | ---------------------------------------------- |
+| `flag`   | un etat entier, avec ses valeurs nommees       |
+| `in`     | une valeur qui vient du dehors                 |
+| `signal` | un flux de nombres, sans convention de lecture |
+| `pitch`  | un signal lu comme une hauteur                 |
+| `phase`  | un signal lu comme une position dans un cycle  |
+| `logic`  | un signal lu comme un etat haut ou bas         |
 
 Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `@var`
 peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie, il n'est pas
@@ -769,10 +769,10 @@ Un type repond a deux questions distinctes : ce qu'un **nom** est dans la scene,
 
 Une scene contient trois categories de symboles, que le compilateur reconnait a leur ecriture :
 
-| Categorie        | Declaration                              | Role                                           | Exemples                               |
-| ---------------- | ---------------------------------------- | ---------------------------------------------- | -------------------------------------- |
-| **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                |
-| **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                      |
+| Categorie        | Declaration                              | Role                                           | Exemples                                   |
+| ---------------- | ---------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                    |
+| **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                          |
 | **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(mode:random)`, `(weight:50)`, `(vel:80)` |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
@@ -798,20 +798,17 @@ une notion etrangere a l'objet n'a pas de champ du tout. Un sous-prototype **ajo
 de son cas, il ne se contente pas d'en changer la valeur. Le socle ne connait pas la hauteur : une
 percussion ne porte pas une hauteur vide, la notion lui est etrangere.
 
-| sous-prototype      | ce qu'il ajoute                                                                                  |
+| sous-prototype   | ce qu'il ajoute                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------ |
 | **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves, **calcule par Kairos** |
-| **`percussion`** | rien : elle sonne et dure, sans porter de hauteur                                                |
-
-`degree` et non `pitch` : le champ porte un **degre** que l'accordage resout, alors que `pitch` est
-deja une convention de lecture de signal. Un mot, une chose.
+| **`percussion`** | le socle seul lui suffit : elle sonne et elle dure                                               |
 
 **L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
 ecrit.
 
-Les autres cas tombent du meme socle : un terminal dont `sounding` est faux ne produit aucune
-sortie, c'est le pivot de grammaire ; un terminal sans `duration` occupe l'instant ; un terminal
-dont `code` est renseigne invoque du code.
+Les autres cas tombent du meme socle : un terminal dont `sounding` est faux est le pivot de
+grammaire ; un terminal sans `duration` occupe l'instant ; un terminal dont `code` est renseigne
+invoque du code.
 
 **D'autres natures s'ajouteront par le meme mecanisme.** Un terminal qui joue un **echantillon**
 aura son sous-prototype : de quel fichier il vient, et ce que le moteur a le droit d'en deformer --
@@ -2127,13 +2124,13 @@ ecrit, jamais au moment de jouer.
 
 **Cinq choses se disent sur le temps, et chacune a son ecriture.**
 
-| Ce qu'on veut dire                    | Comment ca s'ecrit                    |
-| ------------------------------------- | --------------------------------------- |
-| l'horloge de la scene                 | `@tempo:120`, en tete                 |
-| ce que dure un element ou un groupe   | le deux-points colle -- `C4:0.5`      |
-| accelerer ou ralentir a partir d'ici  | `! (/2)`, dans le flux                |
-| est-ce que ca pulse                   | `@striated` · `@smooth`               |
-| comment on bat                        | `@meter:4/4`                          |
+| Ce qu'on veut dire                   | Comment ca s'ecrit               |
+| ------------------------------------ | -------------------------------- |
+| l'horloge de la scene                | `@tempo:120`, en tete            |
+| ce que dure un element ou un groupe  | le deux-points colle -- `C4:0.5` |
+| accelerer ou ralentir a partir d'ici | `! (/2)`, dans le flux           |
+| est-ce que ca pulse                  | `@striated` · `@smooth`          |
+| comment on bat                       | `@meter:4/4`                     |
 
 ### L'horloge -- `@tempo`
 
