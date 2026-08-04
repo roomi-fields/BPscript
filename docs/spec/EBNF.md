@@ -1216,31 +1216,13 @@ runtime_bag      = "(" , qual_pair , { "," , qual_pair } , ")" ;   (* runtime *)
 qual_pair        = key , [ "." , component ] , ":" , value ;       (* value = parties séparées par ESPACE *)
 ```
 
-Le non-terminal `control` employé ici jusqu'au 2026-07-26 n'était **défini nulle part** dans cette
-grammaire : la forme d'appel `goto(3,0)` vivait dans un exemple et dans le code, jamais dans une
-production. C'est une des raisons pour lesquelles elle a pu s'installer sans jamais être ratifiée
-(cf. `hub/constats/2026-07-26-forme-d-appel-controle-jamais-ratifiee-et-seule-autonome.md`). Elle est
-**supprimée** — décision `2026-07-26-ecriture-des-controles-virgule-espace-deux-points-point.md` —
-et remplacée ci-dessus par une production explicite.
+`[]` se place en **suffixe**, après notes et terminaux. Devant un **contrôle** (`goto`, `repeat`,
+…), le flag se place en **préfixe** : un `goto` est un saut, donc le flag se pose avant de sauter.
+L'AST place le nœud du flag avant celui du contrôle, et l'ordre est ainsi porté par l'arbre.
 
-Règle générale : `[]` se place en **suffixe** (après notes et terminaux). **Exception
-encadrée** : devant un **contrôle** (`goto`, `repeat`, …), le flag se place en **préfixe**.
-
-Raison : poser un flag *après* un `goto` n'a pas de sens — `goto` est un **saut**, donc le
-flag doit être posé **avant** de sauter. L'AST place le nœud `FlagSet` **avant** le nœud du
-contrôle ; l'ordre est ainsi porté par l'arbre, fidèle au natif (`/B=3/ /A=3/ _goto(3,0)`).
-
-⚠️ **Le `!` est INTERDIT ici**, et cette ligne corrige ce que j'avais écrit le 2026-07-26 au matin.
-`goto`, `failed`, `repeat` et `stop` sont des **procédures de niveau RÈGLE** (`scope:"rule"` dans
-`lib/controls.json`) : elles ne se posent pas à une position, elles valent pour la règle, et c'est
-en **qualificatif de règle** que le moteur les lit (BPx `mergeQualifierProcedures`,
-`loadGrammar.ts:3996`). Écrites dans le flux (`![goto: …]`), elles n'atteignent jamais la règle et
-laissent un **jeton de contrôle inerte** dans la production — mesuré sur `repeat.bps`. Les flags et
-la procédure sont donc **tous deux** au niveau de la règle, et l'ordre reste porté par l'encodage
-(`/B=3/ /A=3/ _goto(3,0)`).
-
-> Décision Romain 2026-07-18 (`flag-prefixe-sur-controle-rhs`, option b), dont la **règle** survit ;
-> seule l'écriture du contrôle a changé le 2026-07-26.
+`goto`, `failed`, `repeat` et `stop` sont des **procédures de niveau règle** : elles valent pour la
+règle entière, et c'est en qualificatif de règle que le moteur les lit. Les flags et la procédure
+sont donc tous deux au niveau de la règle.
 
 ### 4.13 Backticks
 
