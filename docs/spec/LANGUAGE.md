@@ -493,8 +493,9 @@ brancher.
 **La polyphonie appartient au port** : un filtre traite huit voix tout en gardant une seule coupure.
 
 **Ces prototypes vivent avec les autres.** Un module, un port, un terminal, un alphabet suivent le meme
-mecanisme : un socle, des sous-prototypes qui **ajoutent** les champs de leur cas, et un champ qui
-n'existe que si sa notion s'applique.
+mecanisme : un socle, et un champ qui n'existe que si sa notion s'applique. La ou les formes se
+distinguent par ce qu'elles peuvent recevoir et rendre, des sous-prototypes **ajoutent** les champs
+de leur cas ; la ou elles se distinguent par des axes independants, le socle les porte tous.
 
 **Aucun ne porte le nom du composant qui le resout.** Le langage dit ce qu'une piece veut ; quel
 composant le calcule est une affaire d'architecture, et le nommer ici ferait d'un changement
@@ -790,36 +791,35 @@ ou une instruction de calcul de hauteur.
 par defaut ; un terminal concret ne declare que ce qui differe.
 
 ```json
-{ "name": "", "runtime": "audio", "sounding": true, "duration": null, "code": null }
+{ "name": "", "runtime": "audio", "sounding": true, "duration": null,
+  "code": null, "degree": null, "voice": null }
 ```
 
-**Un champ n'existe que si sa notion s'applique.** Une valeur non renseignee prend son defaut ;
-une notion etrangere a l'objet n'a pas de champ du tout. Un sous-prototype **ajoute** donc les champs
-de son cas. Le socle ne connait pas la hauteur : une
-percussion ne porte pas une hauteur vide, la notion lui est etrangere.
+**Deux axes qualifient un terminal, et ils sont independants** : d'ou vient sa **hauteur**, et par
+quoi il se **realise**. Chacun peut rester vide, et toutes les combinaisons ont un sens.
 
-| sous-prototype   | ce qu'il ajoute                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| **`note`**       | `degree` -- un degre, resolu par les librairies d'accordage et d'octaves            |
-| **`percussion`** | le socle seul lui suffit : elle sonne et elle dure                                               |
+| axe             | ce qu'il porte                                                                          |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| **hauteur**     | `degree` -- un degre, resolu par les librairies d'accordage et de registres              |
+| **realisation** | `voice` -- une entree de la librairie des voix, ou `code` -- du code que le terminal joue |
+
+Un terminal a hauteur et a voix est une note ; a voix seule, une percussion ; a hauteur et a code,
+un calcul qui recoit sa hauteur du meme systeme qu'une note. Un terminal dont `sounding` est faux
+est le pivot de grammaire ; un terminal sans `duration` occupe l'instant.
 
 **L'affectation de valeur d'un terminal est son runtime de sortie** -- ce que le deux-points
 ecrit.
 
-Les autres cas tombent du meme socle : un terminal dont `sounding` est faux est le pivot de
-grammaire ; un terminal sans `duration` occupe l'instant ; un terminal dont `code` est renseigne
-invoque du code.
-
-**Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
-terminal peut se declarer seul. Le prototype d'un alphabet porte la meme affectation, et ses
-terminaux en heritent :
+**Un alphabet est une collection de terminaux**, et il **peut** porter de quoi resoudre leur
+hauteur. C'est une commodite de regroupement : un terminal peut se declarer seul. Le prototype d'un
+alphabet pose pour sa collection les proprietes que ses terminaux surchargent :
 
 ```json
-{ "name": "", "description": "", "runtime": "audio", "terminals": {} }
+{ "name": "", "description": "", "runtime": "audio", "voice": null, "terminals": {} }
 ```
 
 Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi` et `osc` ; un
-terminal qui n'en declare pas prend celui de son alphabet :
+terminal qui n'en declare pas prend celui de son alphabet, et il en va de meme de sa voix :
 
 ```bpscript
 @core
