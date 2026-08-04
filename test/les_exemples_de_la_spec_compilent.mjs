@@ -69,9 +69,30 @@ ok(TOUS.length >= 25,
    `1. le balayage doit voir TOUT docs/ — ${TOUS.length} document(s) trouvé(s). Un compte qui `
    + `s'effondre ne veut pas dire que la doc a maigri : il veut dire que le garde ne la lit plus.`);
 
-// ─── 2. CHAQUE DIRECTIVE ÉCRITE EN EXEMPLE DOIT COMPILER ─────────────────────────────────────
+// ─── 2. CHAQUE DIRECTIVE ÉCRITE EN EXEMPLE DOIT COMPILER — SAUF LE RATTRAPAGE ATTENDU ─────────
 // Les directives dont la FORME a bougé sont celles qui mentent le plus vite. On les prend toutes,
 // pas celles du dernier chantier : c'est précisément l'erreur que ce garde existe pour fermer.
+//
+// ⚠️ CE GARDE A CHANGÉ DE NATURE le 2026-08-04. Jusqu'au 2026-08-03 un exemple refusé était
+// TOUJOURS un défaut : la spec décrivait ce que le parser savait déjà lire, donc tout refus était
+// une forme morte oubliée dans la doc. Romain a arrêté la référence le 2026-08-03 (BPscript/
+// CLAUDE.md) : LANGUAGE.md est désormais délibérément EN AVANCE sur le parser — `def`, `init`, le
+// langage de patch, les modules, les blocs de terminaux y sont écrits avant d'être lus. Exiger que
+// TOUT compile mesurerait alors le chantier voulu, pas un défaut, et resterait rouge pour toujours
+// — le même piège qu'un oracle qui juge « faux » une forme simplement pas encore lue (faux négatif).
+//
+// Donc ce garde est un CLIQUET, pas un interrupteur : BASELINE_RATTRAPAGE fige, datée et motivée,
+// la liste EXACTE des exemples que le parser refuse aujourd'hui pour la même cause connue. La
+// mesure doit tomber PILE sur cette liste :
+//   · une forme refusée EN PLUS (absente de la référence, ou refusée pour une AUTRE cause que celle
+//     enregistrée) → régression non inventoriée, le garde MORD (règle #4 : ne pas perdre ce que le
+//     garde attrapait déjà) ;
+//   · une forme de la référence qui NE refuse PLUS (rattrapée par le parser, ou disparue de la
+//     doc) → la référence n'a pas suivi le rattrapage, le garde MORD aussi — sinon le cliquet ne
+//     cliquette pas, il grossit et personne ne le resserre.
+// Faire descendre le compte est un geste EXPLICITE : retirer la ligne de BASELINE_RATTRAPAGE à la
+// main, daté. L'élargir l'est tout autant : y ajouter une ligne, avec sa cause. Rien ne bouge tout
+// seul.
 const DIRECTIVES = ['macro', 'alias', 'in', 'var', 'label', 'expose', 'meter', 'duration'];
 const RE = new RegExp(`^(@(?:${DIRECTIVES.join('|')})\\s[^\\n]*)$`, 'gm');
 // Un refus de RÉSOLUTION (l'entrée n'existe pas dans une librairie, le nom ne désigne rien) n'est
@@ -79,7 +100,29 @@ const RE = new RegExp(`^(@(?:${DIRECTIVES.join('|')})\\s[^\\n]*)$`, 'gm');
 // minimale qu'on lui fabrique. On ne garde que ce qui est refusé pour sa FORME.
 const REFUS_DE_RESOLUTION = /ne désigne rien|n'existe pas|introuvable|non déclaré|jamais posé/;
 
+// RÉFÉRENCE — mesurée le 2026-08-04 sur LANGUAGE.md seul (EBNF.md et AST.md n'ont, vérifié, aucun
+// exemple des 8 directives ci-dessus). 9 formes DISTINCTES pour 19 lignes matchées : la même forme
+// est enseignée plusieurs fois dans le document (`@var lpf1 lpf` seul, 6 fois) — compter les
+// LIGNES aurait donné 15, un chiffre qui gonfle avec la pédagogie de la doc et non avec l'écart
+// réel. UNE SEULE CAUSE pour les 9 : `@var <nom> <type>`, la déclaration TYPÉE sans flèche (ports
+// de module signal/pitch/phase/logic, enum de flag, devices lpf/saw/vca) qu'écrit le chantier
+// def/init/patch du 2026-08-03. Le parser ne connaît encore que l'ancien `@var <nom> -> <valeur>`
+// et exige la flèche — d'où le message partagé par les 9.
+const CAUSE_VAR_TYPE_SANS_FLECHE = /^Expected arrow \(-> <- <>\)/;
+const BASELINE_RATTRAPAGE = new Map([
+  ['@var section flag: calm:1, full:2', CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var grain signal',                 CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var hauteur pitch',                CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var rotation phase',               CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var porte logic',                  CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var lpf1 lpf',                     CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var saw1 saw',                     CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var lpf2 lpf',                     CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var vca1 vca',                     CAUSE_VAR_TYPE_SANS_FLECHE],
+]);
+
 let exemples = 0;
+const vusEnEchecConnu = new Set(); // lignes de la référence retrouvées en échec CETTE passe
 for (const p of SPECS) {
   if (!existsSync(p)) continue;
   const nom = path.basename(p);
@@ -90,16 +133,35 @@ for (const p of SPECS) {
     try { r = compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n${ligne}\n@mode:ord\nS -> C4\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-    ok(msg === '' || REFUS_DE_RESOLUTION.test(msg),
-       `2. ${nom} enseigne une forme que le compilateur REFUSE : '${ligne.slice(0, 60)}' → `
-       + `${msg.slice(0, 110)}. Une spec qui enseigne une forme morte ne rougit jamais — elle attend `
-       + `qu'un lecteur la recopie.`);
+    const echoue = msg !== '' && !REFUS_DE_RESOLUTION.test(msg);
+    if (!echoue) continue; // compile, ou refus de résolution (hors sujet de forme) : rien à dire
+    const causeAttendue = BASELINE_RATTRAPAGE.get(ligne);
+    if (causeAttendue && causeAttendue.test(msg)) {
+      vusEnEchecConnu.add(ligne); // rattrapage attendu, retrouvé identique : le cliquet le sait déjà
+      continue; // pas un échec DE CE GARDE — inventorié dans BASELINE_RATTRAPAGE
+    }
+    ok(false,
+       `2. ${nom} enseigne une forme que le compilateur REFUSE, HORS RÉFÉRENCE : '${ligne.slice(0, 60)}' → `
+       + `${msg.slice(0, 110)}. Si c'est un rattrapage attendu du chantier def/init/patch, AJOUTE-la `
+       + `à BASELINE_RATTRAPAGE avec sa cause au lieu de la laisser rougir en silence ; sinon c'est `
+       + `une forme morte, comme avant ce chantier.`);
   }
 }
 
 ok(exemples >= 8,
    `2. il faut des exemples à mesurer — ${exemples} trouvé(s). Si ce compte s'effondre, ce n'est `
    + `pas que la doc est devenue parfaite : c'est que le garde ne la lit plus.`);
+
+// ─── 2bis. LA RÉFÉRENCE NE PEUT QUE DESCENDRE, ET À LA MAIN ──────────────────────────────────
+// Le cliquet ne descend jamais tout seul : si le parser rattrape une forme (ou si la ligne
+// disparaît de la doc), BASELINE_RATTRAPAGE doit être resserrée dans le MÊME commit — sinon ce
+// garde reste vert par accident et n'empêche plus rien de remonter discrètement derrière lui.
+for (const [ligne] of BASELINE_RATTRAPAGE) {
+  ok(vusEnEchecConnu.has(ligne),
+     `2bis. '${ligne}' est dans BASELINE_RATTRAPAGE mais NE REFUSE PLUS avec la cause enregistrée `
+     + `(rattrapée par le parser, refusée pour une autre cause, ou disparue de LANGUAGE.md) — `
+     + `RETIRE-la de la référence : un cliquet qui ne se resserre jamais n'est qu'un compteur.`);
+}
 
 // ─── 3. AUCUNE FORME VOUÉE AU RETRAIT NE GARDE UN APPELANT VIVANT ────────────────────────────
 // Exigence du lot [1040] : « un garde qui ÉCHOUE si une forme vouée au retrait garde un appelant
@@ -188,6 +250,8 @@ if (echecs.length) {
   process.exitCode = 1;
 } else {
   console.log(`✅ les documents enseignent des formes vivantes — ${passe} vérification(s) passée(s) : `
-            + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), et ${croisements} `
-            + `croisement(s) ${TOUS.length} document(s) × ${MORTES.length} forme(s) morte(s)`);
+            + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), ${vusEnEchecConnu.size}/`
+            + `${BASELINE_RATTRAPAGE.size} rattrapage(s) connu(s) retrouvés PILE (chantier def/init/`
+            + `patch du 2026-08-03), et ${croisements} croisement(s) ${TOUS.length} document(s) × `
+            + `${MORTES.length} forme(s) morte(s)`);
 }
