@@ -41,7 +41,8 @@ formelles et decide **quand** se declenchent des comportements ecrits dans d'aut
 
 Les symboles sont des noms avec un double contrat :
 - **Convention de lecture** : comment le recepteur lit ce qu'ils portent (pitch, phase, logic)
-- **Runtime** : qui les manipule (sc, tidal, python, midi...)
+- **Runtime** : par ou ils sortent (`audio`, `midi`, `osc`)
+- **Interpreter** : qui execute leur code, quand ils en portent (`sc`, `tidal`, `py`)
 
 Le langage connait trois mots et fait une chose : ordonner dans le temps.
 
@@ -165,7 +166,7 @@ Il prend deux formes :
   l'atteint. En tete de scene, il prepare le moteur au chargement ; dans le flux d'une regle, il
   est un terminal de plein droit et joue a son instant. Son tag est requis, ou bien un acteur
   `eval.<moteur>` le qualifie par le point.
-- **inline** -- le backtick occupe un parametre et rend une valeur, evaluee par le runtime du
+- **inline** -- le backtick occupe un parametre et rend une valeur, evaluee par l'interpreter du
   symbole qui le porte ; il herite du tag de ce symbole.
 
 ```bpscript
@@ -176,7 +177,7 @@ Il prend deux formes :
 `sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
 
 // Autonome dans le flux : joue son code a son instant, comme une note
-// Inline dans un parametre : evalue par le runtime du symbole
+// Inline dans un parametre : evalue par l'interpreter du symbole
 S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 ```
 
@@ -564,9 +565,10 @@ preservees. Sans elle, la duree suit le contenu : le nombre de termes derives et
 
 ## L'ordonnanceur
 
-BPScript decide **quand**. Le code entre backticks decide **quoi** : il est execute par le
-runtime que son tag nomme (`sc:`, `tidal:`, `py:`). Les deux vivent dans le meme fichier : les
-backticks de tete preparent chaque runtime au chargement, ceux des productions jouent a leur
+BPScript decide **quand**. Le code entre backticks decide **quoi** : il est execute par
+l'**interpreter** que son tag nomme (`sc:`, `tidal:`, `py:`). Les deux vivent dans le meme
+fichier : les backticks de tete preparent chaque interpreter au chargement, ceux des productions
+jouent a leur
 instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 [Backticks](#backticks----code-natif-dans-le-flux)).
 
@@ -655,7 +657,7 @@ attendu, pas une faute.
 .              reference a une entite (alphabet.western, lpf1.cutoff, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
 [ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
-` `            code externe, execute par le runtime que son tag nomme
+` `            code externe, execute par l'interpreter que son tag nomme
 //             commentaire
 -              silence : occupe du temps
 _              prolongation : etend l'evenement precedent
@@ -918,7 +920,7 @@ Trois ecritures, une seule plomberie :
 
 ```text
 sa(vel:120)                                  litteral -- BPScript transporte la valeur
-sa(vel:`rrand(40,127)`)                      backtick inline -- le runtime de sa evalue
+sa(vel:`rrand(40,127)`)                      backtick inline -- l'interpreter de sa evalue
 `sc: SynthDef(\grain, { |freq| ... }).add`   backtick autonome -- le tag nomme le langage
 ```
 
@@ -928,7 +930,7 @@ acteur qui le qualifie avec le point (`` drums.`…` ``, declare par `@actor dru
 La regle vaut aux deux emplacements.
 
 Pour BPScript, `vel` est un nom qu'il porte, `120` une valeur qu'il transporte, et
-`` `rrand(40,127)` `` du code que le runtime de `sa` evalue. Les trois suivent le meme chemin.
+`` `rrand(40,127)` `` du code que l'interpreter de `sa` evalue. Les trois suivent le meme chemin.
 
 ### Surcharge des parametres
 
