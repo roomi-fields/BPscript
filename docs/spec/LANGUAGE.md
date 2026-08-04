@@ -13,8 +13,9 @@
 - [Les sacs : `()` reglages, `[]` derivation](#les-sacs---reglages--derivation)
 - [Les parentheses `()`](#les-parentheses-----quatre-roles)
 - [Les accolades `{}`](#les-accolades-----polymetrie-et-groupement)
+- [L'objet sonore compose `|[ ]`](#lobjet-sonore-compose--)
 - [L'operateur `!`](#loperateur-----simultaneite)
-- [Les trois silences](#les-trois-silences)
+- [Les quatre silences](#les-quatre-silences)
 - [Period notation `.`](#period-notation-----fragments-de-duree-egale)
 - [Liaisons `~`](#liaisons-----tied-sound-objects)
 - [Wildcards `?`](#wildcards-----pattern-matching)
@@ -316,7 +317,7 @@ Le nom se pose ensuite a sa place dans une regle :
 
 ```bpscript
 Motif -> C4 D4 E4
-S -> C4!kick D4 E4!accent fast(Motif)
+S -> C4!kick D4 accent(E4) fast(Motif)
 ```
 
 **Ce qui se definit est ce qui se reinvoque** -- un fil isole entre deux points ne se definit pas,
@@ -577,7 +578,7 @@ touche, donc qui le consomme.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
 | `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `tempx` -- le multiplicateur de vitesse d'une regle                                          |
-| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `quantization` · `qclock` · `meter` · `timepatterns` · les operateurs `/` et `*` |
+| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · les operateurs `/` et `*`                                |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
 chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre dit
@@ -695,13 +696,15 @@ _              prolongation : etend l'evenement precedent
                precede (C4!dha) ; sans element devant lui, objet hors-temps de duree nulle
                (S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))
 <!             point d'attente : la derivation attend un trigger entrant, nomme apres le signe
-#              contexte negatif
+#              contexte negatif ; #? apparie la frontiere de la chaine
 ?              wildcard : un symbole quelconque
 $              gabarit maitre : capture un motif
 &              gabarit : rejeu d'un motif (esclave)
 ~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
 | |            delimite le nom d'un non-terminal (|x| designe la regle appelee x)
 >> \>>         cablage : brancher un element sur un autre, couper le cable
+|[ ]           objet sonore compose : une suite de notes sur une seule unite d'ordonnancement
+lambda         chaine vide : le non-terminal s'efface, comme sur un membre droit vide
 ```
 
 L'espace separe les termes : `C4 D4` est deux notes, `- - -` est trois silences. L'emploi de
@@ -1008,7 +1011,7 @@ S -> {A B C}:0.5                // le groupe occupe un demi-battement
 
 ### Les cles que le moteur consomme
 
-Elles vivent dans la librairie `engine`, sauf `tempx` qui vit dans `time` :
+Elles vivent dans la librairie `engine`, sauf `tempo` et `tempx` qui vivent dans `time` :
 
 ```text
 /N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
@@ -1016,9 +1019,12 @@ mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut :
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight      poids de la regle (entier, K-param, ou inf) -- a zero, la regle est ecartee
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
-tempx       multiplicateur de vitesse de la regle -- (tempx:2/3) ralentit d'un tiers
-            @tempo:120 pose le metronome de la scene, en battements par minute
 meter       signature rythmique -- (meter:7/8), (meter:4+4/4)
+seed        graine du tirage
+maxitems    nombre d'items produits
+rndtime     deviation aleatoire des attaques, en millisecondes
+tempo       le metronome de la scene, en battements par minute
+tempx       multiplicateur de vitesse de la regle -- (tempx:2/3) ralentit d'un tiers
 ```
 
 Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
@@ -1309,7 +1315,16 @@ S -> { Melodie, Rythme }
 
 // 2. Groupement temporel -- un sous-groupe dans une sequence, une seule voix
 S -> A {B C D} E F
+
+// 3. Terminal brut -- l'accolade et la virgule posees comme symboles du flux
+Debut -> { A B
+Fin   -> C D }:2
 ```
+
+**Une accolade ou une virgule est un terminal brut quand elle parait seule dans une regle**, hors
+d'un bloc equilibre : c'est la lecture des meta-grammaires. Les accolades s'equilibrent alors a
+travers plusieurs regles, et la duree `}:N` se propage de la fermante vers l'ouvrante
+correspondante.
 
 ### Duree collee sur un groupe
 
@@ -1321,6 +1336,23 @@ S -> {C3, E3, G3, C4}:2      // duree du bloc
 S -> {C4 E4 G4}:2/3          // ratio fractionnaire
 S -> A4:1/2                  // la meme duree, sur une note
 ```
+
+---
+
+## L'objet sonore compose `|[ ]`
+
+**Un objet sonore compose est une suite de notes et de prolongations qui occupe UNE unite
+d'ordonnancement.** Il s'ecrit entre `|[` et `]`, et son contenu se concatene sans blancs en un nom
+de terminal unique.
+
+```bpscript
+S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante
+S -> |[sa _ re] ga           // la prolongation etend `sa` a l'interieur de l'objet
+```
+
+Le nom ainsi forme se pose dans le flux comme un terminal ordinaire, et son contenu est **opaque a
+la derivation** : il fait partie du nom. Une note, une prolongation et un bloc polymetrique sont ce
+qui s'ecrit a l'interieur.
 
 ---
 
@@ -1408,19 +1440,24 @@ nommant la direction attendue.
 
 ---
 
-## Les trois silences
+## Les quatre silences
 
-| Symbole | Nom                   | Duree                       | Ce qu'il fait                             |
-| ------- | --------------------- | --------------------------- | ----------------------------------------- |
-| `-`     | **silence**           | fixee par le compositeur    | occupe une position, le temps s'ecoule    |
-| `_`     | **prolongation**      | etend l'evenement precedent | le son se poursuit sur l'attaque d'avant  |
-| `...`   | **repos indetermine** | calculee par le moteur      | le moteur choisit la duree la plus simple |
+| Symbole    | Nom                              | Duree                       | Ce qu'il fait                             |
+| ---------- | -------------------------------- | --------------------------- | ----------------------------------------- |
+| `-`        | **silence**                      | fixee par le compositeur    | occupe une position, le temps s'ecoule    |
+| `_`        | **prolongation**                 | etend l'evenement precedent | le son se poursuit sur l'attaque d'avant  |
+| `...`      | **repos indetermine**            | calculee par le moteur      | le moteur choisit la duree la plus simple |
+| `N` `N/M`  | **silence de duree rationnelle** | ecrite par le nombre        | occupe une position, pour cette duree     |
 
 ```bpscript
 S -> C4 D4 - E4              // silence explicite : 4 positions, la 3e est vide
 S -> C4 _ D4 E4              // prolongation : C4 dure 2 positions
 S -> { A B C ..., D E F G }  // repos indetermine : le moteur calcule
+S -> C4 2 D4                 // silence de deux battements entre C4 et D4
+S -> C4 1/2 D4               // la meme chose, en fraction de battement
 ```
+
+**Un nombre nu pose dans le flux est un silence**, et le nombre en donne la duree, en battements.
 
 Le repos indetermine `...` porte la **representation minimale** des structures polymetriques :
 le compositeur ecrit les evenements, le moteur calcule les silences qui produisent la
@@ -1652,6 +1689,11 @@ negatif, ou le symbole se colle au `#` -- `#-`, `#_`.
 #_ M -> C4
 ```
 
+### `#?` -- la frontiere de la chaine
+
+**`#?` apparie la frontiere de la chaine** : le bord qui precede le premier symbole, ou celui qui
+suit le dernier. Il se pose dans le membre gauche, a sa place, comme les autres contextes negatifs.
+
 ---
 
 ## Les gabarits `$` et `&` -- la structure d'une production
@@ -1829,7 +1871,7 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 @def accent(x) x(vel:120)
 @def souffle (vel:60)
 
-S -> C4!accent D4 (mode:random)
+S -> accent(C4) D4 (mode:random)
 Motif -> {C4 D4}:2 E4:0.5
 ```
 
@@ -2325,7 +2367,7 @@ s'ecoule sur une etendue, la ou le tempo n'en donne qu'une valeur.
 qu'elle produit fait partie de ce qu'on a compose.
 
 ```bpscript
-S -> C4 (rndtime:100) D4 E4  // les attaques devient jusqu'a cent millisecondes
+S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes
 ```
 
 ---

@@ -134,7 +134,7 @@ library_invocation = "@" , "core"
                    | "@" , provenance , "." , path_seg , "." , path_seg , { "." , path_seg } ;
 
 LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism"
-           | "library" | "module" | "patch" | "eval" ;
+           | "library" | "module" | "patch" | "eval" | "devices" ;
 RUNTIME    = "audio" | "midi" | "osc" ;
 provenance = "factory" | "mine" ;
 path_seg   = ( IDENT | INT ) , { IDENT | INT } ;
@@ -646,7 +646,7 @@ gagne. Un filtre se traverse, une intensité se choisit.
 
 ### 4.13 Les clés que le moteur consomme
 
-Elles vivent dans la librairie `engine`, sauf `tempx` qui vit dans `time`.
+Elles vivent dans la librairie `engine`, sauf `tempo` et `tempx` qui vivent dans `time`.
 
 ```
 /N   *N     les deux opérateurs temporels — fraction (*3/2) et décimal (/1.5) admis
@@ -654,10 +654,12 @@ mode        mode du bloc (ord, random, lin, sub, sub1, tem, poslong) — défaut
 scan        sens du parcours par règle (left, right, rnd) — défaut : rnd
 weight      poids de la règle (entier, K-param, ou inf) — à zéro, la règle est écartée
 on_fail     gestion d'échec (skip, retry(N), fallback(X)) — défaut : skip
-tempx       multiplicateur de vitesse de la règle — (tempx:2/3) ralentit d'un tiers
 meter       signature rythmique — (meter:7/8), (meter:4+4/4)
 seed        graine du tirage
 maxitems    nombre d'items produits
+rndtime     déviation aléatoire des attaques, en millisecondes
+tempo       le métronome de la scène, en battements par minute
+tempx       multiplicateur de vitesse de la règle — (tempx:2/3) ralentit d'un tiers
 ```
 
 Une procédure moteur prend son argument entre parenthèses, à l'intérieur du sac :
@@ -671,7 +673,8 @@ courante, pour les distributions probabilistes du mode `lin`.
 
 ```ebnf
 backtick_inline     = "`" , [ TAG , ":" ] , CODE , "`" ;   (* dans un paramètre : rend une valeur *)
-backtick_standalone = "`" , [ TAG , ":" ] , CODE , "`" ;   (* dans le flux : terminal de plein droit *)
+backtick_standalone = [ IDENT , "." ] , "`" , [ TAG , ":" ] , CODE , "`" ;
+                                                           (* dans le flux : terminal de plein droit *)
 ```
 
 Un backtick porte du code, et le tag en tête est une **adresse** : il nomme le langage, et le
@@ -711,6 +714,7 @@ INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
 value       = [ "-" ] , INT | FLOAT | IDENT | INT , "/" , INT ;
+KEY         = IDENT ;
 TAG         = IDENT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
 TEXT        = (* tout caractère jusqu'à fin de ligne *) ;
@@ -731,7 +735,7 @@ blank_line  = (* ligne vide ou espaces seuls *) ;
 - **Entre crochets**, `[times-1]` est une mutation de drapeau : le parser décompose le motif
   identifiant-tiret-nombre en drapeau, opérateur et valeur.
 - `#` est autorisé dans les identifiants, pour les altérations : `C#4`, `F#2`.
-- Les nombres nus dans le flux sont des durées.
+- Un nombre nu dans le flux est un silence, et le nombre en donne la durée.
 
 ---
 

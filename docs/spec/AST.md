@@ -444,7 +444,10 @@ règle, elle qualifie la règle.
 ### Symboles
 
 ```
-Symbol      { type: "Symbol", name: string, actor: string | null, line: number }
+Symbol      { type: "Symbol", name: string, actor: string | null,
+              payload: { nature: "sounding" | "var" | "wire" | "wait" },
+              role: "homomorphism" | null,
+              line: number }
 SymbolCall  { type: "SymbolCall", name: string, actor: string | null, args: Arg[], line: number }
 Arg         { type: "Arg", key: string | null, value: Literal | BacktickInline }
 Literal     { type: "Literal", value: number | string }
@@ -452,6 +455,13 @@ Literal     { type: "Literal", value: number | string }
 
 Le champ `actor` est rempli par le point explicite — `sitar.sa` —, ou par la résolution quand un
 seul acteur porte ce symbole. Il vaut `null` pour un non-terminal, qui n'a pas d'acteur.
+
+**La nature dit ce que le jeton est pour le temps**, et la liste est fermée : `sounding` pour ce qui
+sonne, `var` pour une variable sans type, `wire` pour un nom dont le corps est un câblage, `wait`
+pour un point d'attente. Elle vit dans `payload`, sur le nœud posé dans le flux.
+
+**Le rôle** vaut `homomorphism` sur le symbole dont le nom est celui d'une section chargée, et
+`null` sur tout autre symbole.
 
 Un **objet sonore composé** est un unique `Symbol` dont le nom est la concaténation sans blancs de
 son contenu : le contenu interne fait partie du nom, opaque à la dérivation.
@@ -465,6 +475,9 @@ UndeterminedRest { type: "UndeterminedRest" }   // durée calculée par le moteu
 Period           { type: "Period" }             // frontière entre fragments de durée égale
 NumericDuration  { type: "NumericDuration", numerator: number, denominator: number }
 ```
+
+Un nombre nu posé dans le flux est un silence, et le nombre en donne la durée. Un entier nu donne
+`denominator` à 1.
 
 ### `Polymetric`
 
@@ -595,17 +608,18 @@ NilString   { type: "NilString" }
 
 ```
 BacktickInline     { type: "BacktickInline", code: string, tag: string | null }
-BacktickStandalone { type: "BacktickStandalone", tag: string | null, code: string, line: number }
+BacktickStandalone { type: "BacktickStandalone", tag: string | null, actor: string | null,
+                     code: string, line: number }
 BacktickOrphan     { type: "BacktickOrphan", tag: string, code: string, line: number }
 ```
 
 Le tag nomme le **langage**, et le langage nomme son **`interpreter`**. Le tag et le code sont
 séparés à l'analyse.
 
-Un backtick de tête et une courbe exigent leur tag. Un backtick de flux peut s'en passer quand la
-tête de sa règle est un acteur qui déclare son `eval` : il en hérite, et un tag explicite gagne sur
-l'héritage. Un backtick de flux sans tag ni acteur qui le qualifie est un orphelin, et la
-compilation le nomme.
+Un backtick de tête exige son tag. Un backtick de flux peut s'en passer quand un acteur le qualifie
+par le point — `` drums.`…` `` — : il prend l'`eval` de cet acteur, que le champ `actor` porte, et
+un tag explicite gagne sur l'héritage. Un backtick de flux sans tag ni acteur qui le qualifie est un
+orphelin, et la compilation le nomme.
 
 Un backtick autonome est un **terminal de plein droit** : il occupe une position dans le flux comme
 une note. Un langage dit en librairie s'il sonne et s'il occupe du temps ; une occurrence surcharge
