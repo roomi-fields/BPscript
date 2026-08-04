@@ -304,7 +304,7 @@ grammaire, un jalon de structure.
 ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`.
 
 ```text
-@def souffle lfo:2 >> filtre.cutoff       // un branchement
+@def souffle lfo1.out >> lpf1.cutoff       // un branchement
 @def cadence sa re ga pa                  // une structure de terminaux
 @def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
 @def kick (vel:120)                       // un prereglage
@@ -809,11 +809,6 @@ ecrit.
 Les autres cas tombent du meme socle : un terminal dont `sounding` est faux est le pivot de
 grammaire ; un terminal sans `duration` occupe l'instant ; un terminal dont `code` est renseigne
 invoque du code.
-
-**D'autres natures s'ajouteront par le meme mecanisme.** Un terminal qui joue un **echantillon**
-aura son sous-prototype : de quel fichier il vient, et ce que le moteur a le droit d'en deformer --
-comprimer, etirer, tronquer -- pour le faire tenir dans une polymetrie. Le socle ne bouge pas ; un
-sous-prototype ajoute les champs de son cas, comme `note` ajoute le degre.
 
 **Un alphabet est une collection de terminaux**, et c'est une commodite de regroupement : un
 terminal peut se declarer seul. Le prototype d'un alphabet porte la meme affectation, et ses
@@ -1745,13 +1740,14 @@ ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
 S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
 ```
 
-### La vitesse d'un bloc
+### La vitesse
 
-`[*N]` multiplie la vitesse heritee du contexte englobant ; `[/N]` pose une
-vitesse absolue -- cf. les operateurs temporels.
+Une vitesse posee dans le flux court jusqu'a la fin du champ, et ce qu'elle
+couvre en **herite** : un groupe qui n'en pose pas garde celle du contexte qui
+le contient. En reposer une plus loin rend la main -- cf. « La vitesse ».
 
 ```bpscript
-S -> {A B}:2 C
+S -> C4 ! (/2) {D4 E4} ! (/1) F4   // le groupe herite de /2 ; F4 retrouve la vitesse d'origine
 ```
 ## Conventions de notation — l'espace, le point, le deux-points
 
