@@ -360,6 +360,7 @@ element_core = symbol
              | variable
              | wildcard
              | template_master | template_slave | template_anchor
+             | homomorphism_marker
              | tie_start | tie_continue | tie_end
              | nil_string
              | backtick_standalone
@@ -564,11 +565,17 @@ Un `$` suivi d'une espace, en tête du membre gauche, marque la règle entière 
 il ancre la règle, et l'ancre reste ouverte jusqu'à sa fermeture. L'espace tranche entre les deux
 emplois du signe : collé à un identifiant, `$X` nomme un gabarit ; suivi d'une espace, `$` ancre.
 
+```ebnf
+homomorphism_marker = IDENT ;      (* $N14 dhati &N14 — le nom de la table, entre les deux *)
+```
+
 Une **table d'homomorphisme** s'invoque par `@homomorphism.<table>`, une par nom, chacune avec ses
 sections. Elle porte des correspondances symbole vers symbole, et l'étiquette de la section est le
 nom de l'homomorphisme. Elle s'applique **entre un gabarit maître et son esclave**, dont le nom se
-pose entre les deux : l'esclave rejoue alors le maître transformé par la table. Un nom absent de la
-librairie est refusé au parse.
+pose entre les deux : l'esclave rejoue alors le maître transformé par la table.
+
+**Un nom de table est un identifiant.** Les signes que le langage emploie ailleurs sont refusés à
+cette place, et un nom absent de la librairie est refusé au parse.
 
 ### 4.10 Liaisons
 

@@ -1533,11 +1533,12 @@ section est le nom de l'homomorphisme.
 ```bpscript
 @homomorphism.dhati
 
-S -> $N14 * &N14
+S -> $N14 dhati &N14
 ```
 
 Elle s'applique **entre un gabarit maitre et son esclave**, dont le nom se pose entre les deux :
-l'esclave rejoue alors le maitre transforme par la table.
+l'esclave rejoue alors le maitre transforme par la table. **Un nom de table s'ecrit en
+identifiant** ; les signes que le langage emploie ailleurs sont refuses a cette place.
 Cf. [Les gabarits `$` et `&`](#les-gabarits----et------la-structure-dune-production).
 
 Un nom absent de la librairie est refuse au parse.
