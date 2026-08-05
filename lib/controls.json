@@ -41,6 +41,32 @@
   },
   "engine": {
     "_comment": "[] syntax — translated directly to BP3 instructions by the transpiler",
+    "_reglages_reserves_doc": "mode/scan/weight/on_fail/meter -- SANS champ 'bp3' (contrairement aux autres entrees de cette section) : ce ne sont pas des PROCEDURES BP3 (`_nom(args)` recherchees via controlMap), ce sont des attributs STRUCTURELS de la grammaire native (poids litteral `<N>`, suffixe de mode de sous-grammaire, prefixe scan LEFT/RIGHT, signature rythmique) que `bp3ToScene.js` lit/emet par un chemin dedie (formatWeightQualifier, extractScanToken...), pas par la table generique bp3->controle. Leur inventer un nom '_xxx' serait une correspondance FAUSSE. Declarees ici (2026-08-05) pour que `libCtx.controlNames` les reconnaisse -- le routage sac moteur/runtime reste tranche par `libCtx.qualifierKeys` (lib/core.json schema.qualifierKeys), inchange par cet ajout. Textes de description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec gelee, non modifiee).",
+    "mode": {
+      "args": ["mode"],
+      "values": ["random", "ord", "sub", "sub1", "lin", "tem", "poslong"],
+      "default": "ord",
+      "description": "Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord."
+    },
+    "scan": {
+      "args": ["direction"],
+      "values": ["left", "right", "rnd"],
+      "default": "rnd",
+      "description": "Sens du parcours par regle (left, right, rnd) -- defaut : rnd."
+    },
+    "weight": {
+      "args": ["value"],
+      "description": "Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param."
+    },
+    "on_fail": {
+      "args": ["strategy"],
+      "default": "skip",
+      "description": "Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis."
+    },
+    "meter": {
+      "args": ["signature"],
+      "description": "Signature rythmique -- (meter:7/8), (meter:4+4/4)."
+    },
     "tempx": {
       "bp3": "_tempo",
       "args": [

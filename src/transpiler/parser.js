@@ -3579,6 +3579,21 @@ function parse(tokens, opts = {}) {
            afterName.type === T.RPAREN || afterName.type === T.PERIOD;
   }
 
+  // (mode:…) / (weight:…) / (tempx:…)… — un RÉGLAGE RÉSERVÉ (lib/core.json
+  // schema.qualifierKeys) est un mot du LANGAGE, pas un contrôle optionnel de librairie : il doit
+  // être reconnu que `@controls` soit chargé ou non. `isRuntimeQualifier()` ci-dessus dépend de
+  // `libCtx.controlNames`, peuplé UNIQUEMENT par `@controls` — c'est déjà contourné au suffixe de
+  // règle par `isRuntimeQualifierLoose()` (syntaxique, aucune dépendance au registre). Le marqueur
+  // AUTONOME `!(…)` dans le flux n'avait PAS cet assouplissement : `!(mode:random)` sans
+  // `@controls` échouait avec « Expected symbol, (...) or [...] after ! » — un message qui NOMME
+  // '(...)' comme forme attendue puis la refuse. Mesuré par bpx, 117 sites.
+  function isReservedSettingParen() {
+    if (!at(T.LPAREN)) return false;
+    const nextTok = peek(1);
+    return nextTok.type === T.IDENT && libCtx.qualifierKeys.has(nextTok.value)
+        && peek(2).type === T.COLON;
+  }
+
   function isRuntimeQualifierLoose() {
     // Syntactic check: `(IDENT:value...)` regardless of whether IDENT is a
     // known control. Used to detect rule-level / standalone runtime qualifiers
@@ -4059,8 +4074,9 @@ function parse(tokens, opts = {}) {
       if (fluxIsWiring()) {
         return parseWiring(tok.line);
       }
-      // !(...) → instant runtime control (flux)
-      if (isRuntimeQualifier()) {
+      // !(...) → instant runtime control (flux). Le second test admet les réglages RÉSERVÉS
+      // même sans `@controls` (cf. isReservedSettingParen ci-dessus).
+      if (isRuntimeQualifier() || isReservedSettingParen()) {
         return { type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: collated };
       }
       // ![@seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
@@ -4418,7 +4434,19 @@ function parse(tokens, opts = {}) {
         value = t ? { type: 'BacktickInline', code: t.code, tag: t.tag }
                   : { type: 'BacktickInline', code: raw, tag: null };
       } else if (at(T.INT)) {
-        value = { type: 'Literal', value: Number(advance().value) };
+        // RAPPORT `N/D` (ex. tempx:11/5) : même lecture que `TempoOp`/`readIntervalLiteral`
+        // ailleurs dans ce fichier (le glyphe SLASH y porte déjà ce sens, jamais une division
+        // calculée). Sans ce embranchement, le RESTE de la fraction (`/5`) retombait comme un
+        // second argument sans clé et sans forme reconnue — « Expected argument value » sur une
+        // valeur qui compile pourtant dans TOUTE autre position de sac (runtime qualifier connu,
+        // qualifier moteur). Un entier seul (pas suivi de '/') garde son ancienne lecture NUMBER.
+        const n = advance().value;
+        if (at(T.SLASH) && peek(1).type === T.INT) {
+          advance();
+          value = { type: 'Literal', value: `${n}/${advance().value}` };
+        } else {
+          value = { type: 'Literal', value: Number(n) };
+        }
       } else if (at(T.FLOAT)) {
         value = { type: 'Literal', value: Number(advance().value) };
       } else if (at(T.IDENT)) {
