@@ -293,9 +293,10 @@ l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
 entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
 
-**Une entree nomme un ROLE.** La scene declare `touches` ; l'utilisateur
-associe le clavier reel, et cette association vit **hors de la scene** -- un nom de port change de
-machine en machine. Le flux attend un trigger de ce role avec le point d'attente : `<!touches.Space`.
+**Une entree nomme un ROLE.** La scene declare `touches` ; l'utilisateur y associe le clavier reel
+**au moment de jouer**, et la scene garde le role. Un nom de port change de machine en machine ; un
+role s'ouvre partout. Le flux attend un trigger de ce role avec le point d'attente :
+`<!touches.Space`.
 
 **Une variable sans type** existe pour etre ecrite dans une regle sans sonner : un pivot de
 grammaire, un jalon de structure. **Une ligne en declare plusieurs**, separees par la virgule. Elle porte son seul nom, et l'aval la transporte tel quel.
