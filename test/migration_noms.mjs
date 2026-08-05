@@ -118,7 +118,9 @@ export function collisions(ast) {
   for (const m of ast.macros || []) noter(m?.name, 'macro');
   for (const a of ast.aliases || []) noter(a?.name, 'alias');
   for (const e of ast.inputs || []) noter(e?.name, 'entrée');
-  for (const v of ast.vars || []) noter(typeof v === 'string' ? v : v?.name, 'variable de travail');
+  // `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05,
+  // pas un nom nu — une ligne peut en porter PLUSIEURS (`names`).
+  for (const v of ast.vars || []) for (const n of v?.names || []) noter(n, 'variable de travail');
   for (const a of ast.actors || []) if (!a.synthetic) noter(a?.name, 'acteur');
   for (const s of ast.scenes || []) noter(s?.name, 'scène');
   for (const c of ast.cvInstances || []) noter(c?.name, 'objet CV');

@@ -30,6 +30,9 @@ const err = (src) => {
   try { return (compileToBPxAST(`@core\n@alphabet.western\n${src}`).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
 };
+// `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05,
+// pas un nom nu — une ligne peut en porter PLUSIEURS (`names`).
+const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 
 // ── 1. LES QUATRE DÉCLARATIONS — chacune déclare, et son nom est UTILISABLE dans le flux ────
 // Il ne suffit pas qu'elles compilent : le nom doit ARRIVER quelque part. « Ça compile » n'est pas
@@ -39,7 +42,7 @@ const DECLARATIONS = [
   ['@gate',    '@gate C4:midi\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
   ['@trigger', '@controls\n@trigger sync1:midi\nS -> C4 <!sync1', (a) => (a.declarations || []).some((d) => d.name === 'sync1')],
   ['@cv',      '@mod\n@cv env1 mod.adsr(attack:5)\nS -> C4 env1', (a) => (a.cvInstances || []).some((c) => c.name === 'env1')],
-  ['@var',     '@var travail\nS -> C4 travail',                   (a) => (a.vars || []).includes('travail')],
+  ['@var',     '@var travail\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];
 console.log(`[portée unique] ${DECLARATIONS.length} déclarations de terminal`);
 for (const [nom, src, arrive] of DECLARATIONS) {
@@ -78,14 +81,14 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 {
   const r = compileToBPxAST('@core\n@alphabet.western\n@macro accent(x) x(vel:120)\nS -> C4\n');
   ok((r.errors || []).length === 0, '3. un paramètre de macro doit compiler');
-  ok(!(r.ast?.vars || []).includes('x') && !(r.ast?.declarations || []).some((d) => d.name === 'x'),
+  ok(!nomsVars(r.ast).includes('x') && !(r.ast?.declarations || []).some((d) => d.name === 'x'),
     '3. et il ne FUIT PAS dans les noms de la scène — la localité du corps est la seule admise');
 }
 {
   // Les propriétés d'un @actor sont un corps de bloc : elles ne déclarent pas des noms de scène.
   const r = compileToBPxAST('@core\n@actor v\n  alphabet.western\n  out.audio\nS -> v.C4\n');
   ok((r.errors || []).length === 0, '3. les propriétés d\'un @actor doivent compiler');
-  ok(!(r.ast?.vars || []).includes('alphabet'),
+  ok(!nomsVars(r.ast).includes('alphabet'),
     '3. et elles ne fuient pas non plus — un mot de propriété n\'est pas un nom de scène');
 }
 

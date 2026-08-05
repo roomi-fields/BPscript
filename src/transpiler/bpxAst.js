@@ -123,7 +123,7 @@ function annotateBackticks(ast) {
  * parallèle : tout vit DANS L'ARBRE (source unique, directive Romain 2026-06-17).
  * Les consommateurs lisent directement les nœuds/directives :
  *   - backticks → nœuds (`_btName`, `code` en tête ; `payload.interp` + `payload.nature:'code'`) ;
- *   - drapeaux nommés → directives `@flag` (FlagStatesDirective) ;
+ *   - drapeaux nommés → `ast.vars` (`VarDirective` de `varType.kind === 'flag'`, ex-`@flag`) ;
  *   - librairies → directives `@library` (LibraryDirective) ;
  *   - scènes/expose/alias/tempo → `ast.scenes` / `ast.exposes` / `ast.aliases` / `@mm` ;
  *   - acteurs (transport/alphabet/eval) → `ast.actors[].references` (ActorReference) ;
@@ -705,7 +705,9 @@ function validateTerminals(ast) {
   // l'écriture d'aucune note. Elles entrent ici — dans les noms DÉCLARÉS, à côté des non-terminaux
   // — et non dans le vocabulaire d'un alphabet : elles n'ont pas de hauteur, elles ont un NOM.
   // Le refus ne s'affaiblit pas, il gagne une porte nommée : un symbole non déclaré crie toujours.
-  for (const n of ast.vars || []) declared.add(n);
+  // ⚠️ `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le
+  // 2026-08-05, pas ses noms nus — une ligne peut en porter PLUSIEURS (`names`).
+  for (const v of ast.vars || []) for (const n of v?.names || []) declared.add(n);
 
   errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
   if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider sur les symboles NUS
@@ -1368,8 +1370,9 @@ function emitActorLibRefs(ast) {
  * déduplication des noms ». C'était un TROU, pas un espace séparé légitime — mesuré sur les 272
  * scènes du corpus : 3 portent un drapeau, toutes nommées `section`, zéro homonymie, donc le
  * corpus ne bouge pas en fermant le trou. Ce qui crée le nom, c'est le drapeau LUI-MÊME
- * (`@flag section: …`), PAS ses états : `calm`/`full` dans `@flag section: calm:1, full:2` ne
- * sont que des étiquettes internes au drapeau, jamais des noms globaux — les y faire entrer
+ * (`@var section flag: …`, ex-`@flag section: …` — la forme de tête de scène est tombée le
+ * 2026-08-05), PAS ses états : `calm`/`full` dans `@var section flag: calm:1, full:2` ne sont
+ * que des étiquettes internes au drapeau, jamais des noms globaux — les y faire entrer
  * déborderait la règle. Une LECTURE du drapeau (`[section==calm]`, une mutation `[section=full]`)
  * n'en crée pas non plus : comme `declarations` (gate/trigger/cv), c'est une propriété posée sur
  * un nom existant, pas une création.
@@ -1408,7 +1411,14 @@ function refuserNomsEnDouble(ast) {
   for (const m of ast.macros || []) noter(m?.name, 'une macro', m?.line);
   for (const a of ast.aliases || []) noter(a?.name, 'un alias', a?.line);
   for (const e of ast.inputs || []) noter(e?.name, 'une entrée', e?.line);
-  for (const v of ast.vars || []) noter(typeof v === 'string' ? v : v?.name, 'une variable de travail', v?.line);
+  // ⚠️ `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`) depuis le 2026-08-05, pas un nom nu :
+  // une ligne peut en porter PLUSIEURS (`names`). Un drapeau (Romain 2026-07-30, `varType.kind ===
+  // 'flag'`, ex-`@flag`) CRÉE un nom comme toute autre variable — le nom est `names[0]`, jamais
+  // les états (`varType.states[].name`), qui sont des étiquettes internes.
+  for (const v of ast.vars || []) {
+    const sorte = v?.varType?.kind === 'flag' ? 'un drapeau' : 'une variable de travail';
+    for (const n of v?.names || []) noter(n, sorte, v?.line);
+  }
   // ⚠️ L'ACTEUR EST LÀ, ET IL Y EST REVENU LE 2026-07-28 AU SOIR. Je l'en avais écarté le matin,
   // en croyant protéger la voix de code : `@actor viz eval.hydra` puis `viz -> <code>` était la
   // forme du corpus, et je l'avais remontée comme un « conflit dans la décision » à arbitrer.
@@ -1420,11 +1430,8 @@ function refuserNomsEnDouble(ast) {
   for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, 'un acteur', a?.line);
   for (const sc of ast.scenes || []) noter(sc?.name, 'une scène', sc?.line);
   for (const c of ast.cvInstances || []) noter(c?.name, 'un objet CV', c?.line);
-  // Un drapeau CRÉE un nom (Romain 2026-07-30) : le nom est `dir.flag`, jamais les états
-  // (`dir.states[].name`) — cf. en-tête de fonction.
-  for (const d of ast.directives || []) {
-    if (d?.type === 'FlagStatesDirective') noter(d.flag, 'un drapeau', d.line);
-  }
+  // Un drapeau CRÉE un nom (Romain 2026-07-30) — voir la boucle sur `ast.vars` ci-dessus, qui le
+  // couvre depuis que `@flag` est tombé (2026-08-05) : `FlagStatesDirective` n'est plus produite.
 
   // A. Les têtes de règle, contre TOUT LE RESTE — jamais entre elles. Une tête vue plusieurs fois
   // n'est signalée qu'UNE fois : c'est le même symbole, pas plusieurs fautes.

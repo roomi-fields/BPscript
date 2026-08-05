@@ -100,25 +100,25 @@ const RE = new RegExp(`^(@(?:${DIRECTIVES.join('|')})\\s[^\\n]*)$`, 'gm');
 // minimale qu'on lui fabrique. On ne garde que ce qui est refusé pour sa FORME.
 const REFUS_DE_RESOLUTION = /ne désigne rien|n'existe pas|introuvable|non déclaré|jamais posé/;
 
-// RÉFÉRENCE — mesurée le 2026-08-04 sur LANGUAGE.md seul (EBNF.md et AST.md n'ont, vérifié, aucun
-// exemple des 8 directives ci-dessus). 9 formes DISTINCTES pour 19 lignes matchées : la même forme
-// est enseignée plusieurs fois dans le document (`@var lpf1 lpf` seul, 6 fois) — compter les
-// LIGNES aurait donné 15, un chiffre qui gonfle avec la pédagogie de la doc et non avec l'écart
-// réel. UNE SEULE CAUSE pour les 9 : `@var <nom> <type>`, la déclaration TYPÉE sans flèche (ports
-// de module signal/pitch/phase/logic, enum de flag, devices lpf/saw/vca) qu'écrit le chantier
-// def/init/patch du 2026-08-03. Le parser ne connaît encore que l'ancien `@var <nom> -> <valeur>`
-// et exige la flèche — d'où le message partagé par les 9.
-const CAUSE_VAR_TYPE_SANS_FLECHE = /^Expected arrow \(-> <- <>\)/;
+// RÉFÉRENCE — resserrée le 2026-08-05 (dev, palier « `@var` porte son type jusqu'à l'arbre »).
+// `Scene.vars` porte désormais la directive ENTIÈRE (`VarDirective`, `AST.md:119-150`) et le
+// parser sait lire les six familles de `var_type` (`EBNF.md:47-57`) : flag, les quatre conventions
+// (signal/pitch/phase/logic) et un IDENT nu résolu contre le catalogue `lib/mod.json`. Sept des
+// neuf formes AUTREFOIS refusées faute de flèche COMPILENT désormais et SORTENT du cliquet :
+// `@var section flag: …`, `grain signal`, `hauteur pitch`, `rotation phase`, `porte logic`,
+// `ramp1 ramp` (module `ramp` au catalogue), `env1 adsr` (module `adsr` au catalogue).
+//
+// CE QUI RESTE, ET POUR UNE AUTRE RAISON : `lpf`/`saw`/`vca` sont des devices RÉELS que la
+// référence emploie en exemple, mais `lib/mod.json` ne porte que `adsr`/`lfo`/`ramp` — un trou de
+// DONNÉE connu et assumé (traité dans un lot séparé), pas une faute de forme. La cause n'est donc
+// plus « il manque la flèche » mais « le module est absent du catalogue » — le message du parser
+// le dit explicitement (`@var lpf1 lpf : 'lpf' est absent du catalogue de modules…`).
+const CAUSE_MODULE_ABSENT_DU_CATALOGUE = /est absent du catalogue de modules/;
 const BASELINE_RATTRAPAGE = new Map([
-  ['@var section flag: calm:1, full:2', CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var grain signal',                 CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var hauteur pitch',                CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var rotation phase',               CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var porte logic',                  CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var lpf1 lpf',                     CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var saw1 saw',                     CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var lpf2 lpf',                     CAUSE_VAR_TYPE_SANS_FLECHE],
-  ['@var vca1 vca',                     CAUSE_VAR_TYPE_SANS_FLECHE],
+  ['@var lpf1 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['@var saw1 saw', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['@var lpf2 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['@var vca1 vca', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
 ]);
 
 let exemples = 0;

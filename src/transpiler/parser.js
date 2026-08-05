@@ -28,6 +28,13 @@ class ParseError extends Error {
 const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
 
 /**
+ * CONVENTION — les quatre lectures d'un flux de nombres qu'un `@var` typé peut nommer
+ * (EBNF.md:55 : `CONVENTION = "signal" | "pitch" | "phase" | "logic"`). Partagée par `@var` et
+ * `@def` (`def_directive`, EBNF.md:66), qui portent les mêmes quatre mots.
+ */
+const VAR_CONVENTIONS = new Set(['signal', 'pitch', 'phase', 'logic']);
+
+/**
  * Clés d'ENTITÉ (composants) admises sur la ligne d'acteur (décision cles-acteur-six,
  * Romain 2026-06-16). Toutes se NOMMENT avec `.` (`.` APPELLE le composant) — jamais `:`
  * (le `:` AFFECTE une valeur). Le CUTOVER graphie (Romain 2026-07-14) rejette la forme `:`
@@ -387,7 +394,10 @@ function parse(tokens, opts = {}) {
           scene.inputs = [...(scene.inputs || []), dir];
         } else if (dir.type === 'VarDirective') {
           // Les lignes s'ACCUMULENT — plusieurs `@var` ne se remplacent pas, elles s'ajoutent.
-          scene.vars = [...(scene.vars || []), ...dir.names];
+          // `scene.vars` porte la DIRECTIVE ENTIÈRE (AST.md:28, `vars: VarDirective[]`), pas ses
+          // noms nus réduits en chaînes — sinon le type (`varType`) n'a nulle part où survivre
+          // jusqu'à l'arbre (décision Romain, référence EBNF.md:47-57, 2026-08-05).
+          scene.vars = [...(scene.vars || []), dir];
           // Une variable de travail est un nom que LA SCÈNE possède : elle gagne donc, comme une
           // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
           for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
@@ -590,18 +600,18 @@ function parse(tokens, opts = {}) {
    * Modifie les nœuds en place (payload additif).
    */
   function annotateScene(scene) {
-    // États de drapeau nommés (@flag scene: calm:1) résolus DANS L'AST : une garde
-    // `[scene==calm]` ou une mutation `[scene=calm]` portant un alias DÉCLARÉ voit sa
-    // `value` résolue en ENTIER (calm → 1). Un IDENT NON déclaré reste tel quel
-    // (référence à un autre drapeau, fidèle BP3). Indispensable à la voie AST directe
-    // (BPx lit l'AST, pas la table) ; le texte BP3 reste identique (l'encodeur reçoit
+    // États de drapeau nommés (`@var section flag: calm:1, full:2` — ex-`@flag`, tombée le
+    // 2026-08-05) résolus DANS L'AST : une garde `[scene==calm]` ou une mutation `[scene=calm]`
+    // portant un alias DÉCLARÉ voit sa `value` résolue en ENTIER (calm → 1). Un IDENT NON déclaré
+    // reste tel quel (référence à un autre drapeau, fidèle BP3). Indispensable à la voie AST
+    // directe (BPx lit l'AST, pas la table) ; le texte BP3 reste identique (l'encodeur reçoit
     // alors un entier, no-op). Bug remonté par bpx (G2), directive « source unique = AST ».
     const flagStates = {};
-    for (const dir of scene.directives || []) {
-      if (dir.type === 'FlagStatesDirective') {
-        const mm = flagStates[dir.flag] || {};
-        for (const s of dir.states) mm[s.name] = s.value;
-        flagStates[dir.flag] = mm;
+    for (const v of scene.vars || []) {
+      if (v?.varType?.kind === 'flag') {
+        const mm = flagStates[v.names[0]] || {};
+        for (const s of v.varType.states) mm[s.name] = s.value;
+        flagStates[v.names[0]] = mm;
       }
     }
     const resolveFlag = (flag, value) =>
@@ -1415,10 +1425,70 @@ function parse(tokens, opts = {}) {
         return { type: 'InDirective', name: roleName, transport: canal, mapping: table, line: tok.line };
       }
 
-      // Forme nue : VARIABLES DE TRAVAIL
+      // @var <nom> <var_type> — UNE VARIABLE TYPÉE (EBNF.md:47-57, AST.md:119-150, référence
+      // 2026-08-05). Le nom vient d'abord, le type ensuite. Trois familles, dans l'ordre où la
+      // grammaire les distingue :
+      //   1. "flag" ":" flag_state {"," flag_state}   — un drapeau et ses états nommés
+      //   2. CONVENTION ("signal"|"pitch"|"phase"|"logic")  — un flux lu selon une convention
+      //   3. IDENT nu                                  — une INSTANCE d'un module du catalogue
+      // La forme SANS type (un nom seul, ou une liste séparée par des virgules) reste plus bas.
+      if (at(T.IDENT)) {
+        const typeTok = current();
+        const typeWord = typeTok.value;
+
+        if (typeWord === 'flag') {
+          advance();
+          if (!at(T.COLON)) {
+            throw new ParseError(`@var ${first} flag : un drapeau nomme ses états après un ':' — `
+              + `'@var ${first} flag: <nom>:<entier>, ...'. Le deux-points AFFECTE, ici il introduit `
+              + `l'énumération des états.`, typeTok);
+          }
+          advance(); // :
+          const states = [];
+          while (at(T.IDENT)) {
+            const stName = advance().value;
+            if (!at(T.COLON)) {
+              throw new ParseError(`@var ${first} flag : l'état '${stName}' doit porter sa valeur `
+                + `entière après ':' — '${stName}:<entier>'.`, typeTok);
+            }
+            advance(); // :
+            const stVal = Number(expect(T.INT).value);
+            states.push({ name: stName, value: stVal });
+            if (at(T.COMMA)) advance();
+          }
+          if (!states.length) {
+            throw new ParseError(`@var ${first} flag : au moins un état est requis — `
+              + `'@var ${first} flag: <nom>:<entier>, ...'.`, typeTok);
+          }
+          return { type: 'VarDirective', names: [first], varType: { kind: 'flag', states }, line: tok.line };
+        }
+
+        if (VAR_CONVENTIONS.has(typeWord)) {
+          advance();
+          return { type: 'VarDirective', names: [first],
+                   varType: { kind: 'convention', convention: typeWord }, line: tok.line };
+        }
+
+        // Reste des IDENT nus : un MODULE — une INSTANCE de ce module (`@var lpf1 lpf`). Résolu
+        // contre le catalogue `lib/mod.json`. « Une entrée introuvable est nommée. RIEN NE SE
+        // RÉSOUT PAR DÉFAUT EN SILENCE » (LANGUAGE.md) — vaut pour un module comme pour un
+        // alphabet : un IDENT absent du catalogue est REFUSÉ, jamais accepté à l'aveugle.
+        advance();
+        const modules = loadLib('mod')?.objects || {};
+        if (!Object.prototype.hasOwnProperty.call(modules, typeWord)) {
+          throw new ParseError(`@var ${first} ${typeWord} : '${typeWord}' est absent du catalogue `
+            + `de modules ('lib/mod.json') — modules connus : ${Object.keys(modules).join(', ') || '(aucun)'}. `
+            + `Rien ne se résout par défaut en silence : une entrée absente du catalogue se nomme, `
+            + `elle ne s'invente pas.`, typeTok);
+        }
+        return { type: 'VarDirective', names: [first],
+                 varType: { kind: 'module', module: typeWord }, line: tok.line };
+      }
+
+      // Forme nue : VARIABLES DE TRAVAIL, sans type — un nom, ou plusieurs séparés par des virgules.
       const noms = [first];
       while (at(T.COMMA) && advance()) noms.push(expect(T.IDENT).value);
-      return { type: 'VarDirective', names: noms, line: tok.line };
+      return { type: 'VarDirective', names: noms, varType: null, line: tok.line };
     }
 
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)
@@ -1632,21 +1702,19 @@ function parse(tokens, opts = {}) {
                modifiers: null, ccMappings, line: tok.line };
     }
 
-    // @flag scene: calm:1, full:2 — états de drapeau nommés (A5). Nomme les valeurs
-    // entières d'un drapeau ; les gardes/mutations peuvent ensuite tester/poser par nom
-    // ([scene==calm] → /scene=1/). Calqué sur @cc (name:int).
+    // ─── PIERRE TOMBALE — `@flag` (directive de tête de scène) n'existe plus (référence
+    // 2026-08-05) ─────────────────────────────────────────────────────────────────────────────
+    // La référence ne connaît que QUATRE mots déclaratifs — `actor`, `var`, `def`, `init`
+    // (EBNF.md:29-33, `docs/spec/LANGUAGE.md` §« Quatre mots »). Un drapeau n'en est pas un
+    // cinquième : c'est une VARIABLE, comme les autres, qui se déclare par `@var` (EBNF.md:47-57,
+    // `var_type = "flag" , ":" , flag_state, ...`). La forme unique est désormais
+    // `@var <nom> flag: <état>:<entier>, ...`.
     if (name === 'flag') {
-      const flagName = expect(T.IDENT).value;
-      if (at(T.COLON)) advance();  // séparateur optionnel après le nom du drapeau
-      const states = [];
-      while (at(T.IDENT)) {
-        const stName = advance().value;
-        expect(T.COLON);
-        const stVal = Number(expect(T.INT).value);
-        states.push({ name: stName, value: stVal });
-        if (at(T.COMMA)) advance();
-      }
-      return { type: 'FlagStatesDirective', flag: flagName, states, line: tok.line };
+      throw new ParseError(
+        `'@flag' n'est pas une directive de tête de scène — un drapeau se déclare par `
+        + `'@var <nom> flag: <état>:<entier>, ...', comme toute variable (le nom vient d'abord, `
+        + `le type ensuite). Exemple : '@var section flag: calm:1, full:2' remplace `
+        + `'@flag section: calm:1, full:2'.`, tok);
     }
 
     // @actor name <body>

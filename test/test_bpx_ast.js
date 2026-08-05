@@ -47,12 +47,13 @@ function backtickNodes(ast) {
   check(bt && bt.actor === 'stru', "et le bloc porte l'IDENTITÉ de la voix, que le tag seul ne donne pas : " + JSON.stringify(bt && bt.actor));
 }
 
-// 4. flagStates LU depuis la directive @flag (pas de table)
+// 4. flagStates LU depuis `@var <nom> flag: ...` (ex-`@flag`, tombée le 2026-08-05 — `@flag` n'est
+// plus une directive de tête de scène, EBNF.md:29-33 : quatre mots déclaratifs seulement).
 {
-  const r = compileToBPxAST('@flag section: calm:1, full:2\n@core\nS -> C4');
-  const fd = (r.ast.directives || []).find((d) => d.type === 'FlagStatesDirective' && d.flag === 'section');
-  check(!!fd, 'directive @flag présente dans l\'arbre');
-  const m = Object.fromEntries((fd?.states || []).map((s) => [s.name, s.value]));
+  const r = compileToBPxAST('@var section flag: calm:1, full:2\n@core\nS -> C4');
+  const vd = (r.ast.vars || []).find((v) => v.names?.[0] === 'section' && v.varType?.kind === 'flag');
+  check(!!vd, "directive @var section flag: présente dans l'arbre");
+  const m = Object.fromEntries((vd?.varType?.states || []).map((s) => [s.name, s.value]));
   check(m.calm === 1 && m.full === 2, 'états lisibles depuis la directive : ' + JSON.stringify(m));
 }
 
@@ -86,8 +87,9 @@ function backtickNodes(ast) {
 }
 
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom
+// (`@var <nom> flag: ...`, ex-`@flag` tombée le 2026-08-05)
 {
-  const r = compileToBPxAST('@flag section: calm:1, full:2\n[section==calm] S -> A\n[section==full] S -> Two\nA -> C4\nTwo -> C4 C4');
+  const r = compileToBPxAST('@var section flag: calm:1, full:2\n[section==calm] S -> A\n[section==full] S -> Two\nA -> C4\nTwo -> C4 C4');
   const guards = [];
   for (const sg of r.ast.subgrammars) for (const rule of sg.rules) {
     const gg = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
@@ -97,7 +99,7 @@ function backtickNodes(ast) {
   check(guards.some((g) => g.flag === 'section' && g.value === 2), 'garde [section==full] résolue à 2 dans l\'AST');
   check(!guards.some((g) => typeof g.value === 'string'), 'aucun nom d\'état non résolu (que des entiers)');
   // IDENT NON déclaré = reste string (référence à un autre drapeau, fidèle BP3)
-  const r2 = compileToBPxAST('@flag section: calm:1\n[section==other] S -> A\nA -> C4');
+  const r2 = compileToBPxAST('@var section flag: calm:1\n[section==other] S -> A\nA -> C4');
   check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'other', 'IDENT non déclaré reste string (réf drapeau)');
 }
 

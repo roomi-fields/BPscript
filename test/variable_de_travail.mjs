@@ -30,6 +30,10 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const EN_TETE = '@core\n@controls\n@alphabet.western:midi\n@trigger sync1:midi\n';
+// `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05 —
+// une ligne peut nommer PLUSIEURS variables (`names`). On aplatit pour les témoins qui ne
+// vérifient que la PRÉSENCE d'un nom.
+const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 const compile = (corps) => {
   try { return compileToBPxAST(`${EN_TETE}${corps}\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
@@ -61,7 +65,7 @@ for (const [corps, quoi, attendus] of [
   ok((r.errors || []).length === 0,
      `1. ${quoi} doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   for (const n of attendus) {
-    ok((r.ast?.vars || []).includes(n), `1. ${quoi} : '${n}' doit ARRIVER dans l'arbre — reçu : ${JSON.stringify(r.ast?.vars)}`);
+    ok(nomsVars(r.ast).includes(n), `1. ${quoi} : '${n}' doit ARRIVER dans l'arbre — reçu : ${JSON.stringify(r.ast?.vars)}`);
   }
 }
 // Pas de deux-points : on ÉNUMÈRE, on n'affecte pas. La forme fautive ne doit pas se glisser.
