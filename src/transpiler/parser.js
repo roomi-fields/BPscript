@@ -3073,22 +3073,20 @@ function parse(tokens, opts = {}) {
       }
     }
 
-    // B2 : extraire rule.mode depuis le qualificateur [scan:left|right|rnd]
-    // (BPx ast.ts:431-449 lit ast.mode ; l'encoder encoder.js:331-335 lit aussi
-    //  le qualifier pour émettre le préfixe BP3 → la QualPair est conservée.)
+    // B2 : extraire rule.mode depuis le réglage (scan:left|right|rnd) — écrit en PARENTHÈSES
+    // depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800), plus en crochets.
+    // (BPx ast.ts:431-449 lit ast.mode : le champ DÉRIVÉ ne change pas, seule sa source le fait.)
     const VALID_SCAN_MODES = { left: 'left', right: 'right', rnd: 'rnd' };
     let ruleMode = null;
-    for (const qual of qualifiers) {
-      for (const pair of (qual.pairs || [])) {
-        if (pair.key === 'scan') {
-          if (VALID_SCAN_MODES[pair.value] !== undefined) {
-            ruleMode = VALID_SCAN_MODES[pair.value];
-          } else {
-            throw new ParseError(
-              `[scan:${pair.value}] : valeur inconnue (attendu : left, right, rnd)`,
-              { line: tok.line, col: 0 }
-            );
-          }
+    for (const pair of (runtimeQualifier ? runtimeQualifier.pairs : [])) {
+      if (pair.key === 'scan') {
+        if (VALID_SCAN_MODES[pair.value] !== undefined) {
+          ruleMode = VALID_SCAN_MODES[pair.value];
+        } else {
+          throw new ParseError(
+            `(scan:${pair.value}) : valeur inconnue (attendu : left, right, rnd)`,
+            { line: tok.line, col: 0 }
+          );
         }
       }
     }
@@ -3759,7 +3757,12 @@ function parse(tokens, opts = {}) {
         if (at(T.COMMA)) advance();
         continue;
       }
-      if (universeSacs().moteur.has(key)) {
+      // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800) : un réglage
+      // RÉSERVÉ (`mode`, `scan`, `weight`, `on_fail`, `tempx`, `meter`) s'écrit désormais en
+      // PARENTHÈSES comme tout réglage — même `tempx`, bien que `lib/controls.json` le déclare
+      // aussi dans sa section `engine`. Cette déclaration ne tranche plus : la nature de réglage
+      // l'emporte sur l'ancienne structure engine/runtime de `controls.json`.
+      if (universeSacs().moteur.has(key) && !libCtx.qualifierKeys.has(key)) {
         throw new ParseError(
           `'(${key}:…)' : '${key}' est un contrôle MOTEUR, il s'écrit entre CROCHETS — `
           + `'[${key}:…]', ou '![${key}:…]' pour le poser dans le flux. Les parenthèses s'adressent `
@@ -3778,6 +3781,31 @@ function parse(tokens, opts = {}) {
             `'${key}: ' — pas d'espace après le deux-points : la valeur commence immédiatement `
             + `('${key}:${current().value}…'). L'espace ne sépare que les PARTIES d'une valeur`,
             current());
+        }
+        // RÉGLAGE RÉSERVÉ — même lecteur de valeur que le résidu `[]` (readQualifierValue),
+        // pour que `(weight:50-12)` et `(meter:4+4/6)` gardent le même format qu'avant leur
+        // migration en parenthèses (décrément et signature temporelle compris).
+        if (libCtx.qualifierKeys.has(key)) {
+          const { value, decrement } = readQualifierValue();
+          if (value === undefined) {
+            throw new ParseError(
+              `'(${key}:)' n'affecte aucune valeur — le deux-points en attend une (par exemple `
+              + `'(${key}:${key === 'mode' ? 'random' : '…'})')`,
+              keyTok);
+          }
+          // DEUX ÉLÉMENTS SÉPARÉS PAR UNE ESPACE, SANS VIRGULE — même garde que le résidu `[]`
+          // (gardeElement, parseQualifier) : sans elle, `(mode:random weight:50)` avalait le
+          // second élément en silence au lieu de réclamer sa virgule.
+          if (at(T.IDENT) && peek(1).type === T.COLON) {
+            throw new ParseError(
+              `'(${key}:… ${current().value}:…)' : deux ÉLÉMENTS du sac séparés par une ESPACE — `
+              + `il leur manque une VIRGULE ('(${key}:…, ${current().value}:…)'). L'espace ne `
+              + `sépare que les PARTIES d'une même valeur`,
+              current());
+          }
+          pairs.push({ key, value, decrement, ...sub, ...pos });
+          if (at(T.COMMA)) advance();
+          continue;
         }
         // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
         // Univers du registre (pas seulement le libCtx de la scène) : un mot USABLE est valide
@@ -4898,6 +4926,22 @@ function parse(tokens, opts = {}) {
     if (key === 'shuffle') {
       throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
     }
+    // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800). Le crochet ne
+    // garde que trois emplois : un test de drapeau (garde), une affectation de drapeau (fin de
+    // règle), un rang de forme (`@template`). Un RÉGLAGE — même réservé au langage — décrit une
+    // propriété PRODUITE, et le domaine de sa clé suffit à le router : il s'écrit désormais entre
+    // PARENTHÈSES, dans TOUS les cas, sans exception pour les mots réservés `mode`/`scan`/
+    // `weight`/`on_fail`/`tempx`/`meter`. L'ancien raisonnement « tempx est un contrôle MOTEUR
+    // donc crochets » disparaît avec cette décision : ce n'est plus la déclaration `engine` de
+    // `controls.json` qui tranche pour un réglage réservé, c'est sa nature de réglage.
+    if (libCtx.qualifierKeys.has(key)) {
+      throw new ParseError(
+        `'[${key}:…]' : '${key}' est un réglage, il s'écrit entre PARENTHÈSES — '(${key}:…)' `
+        + `(décision Romain 2026-08-02, LANGUAGE.md:773-800). Le crochet ne porte plus que ce qui `
+        + `gouverne la dérivation elle-même : un test de drapeau ('[flag]', '[flag==1]'), une `
+        + `affectation ('[flag=1]'), ou le rang d'une forme de gabarit ('[3]')`,
+        tok);
+    }
     // LE SAC DIT QUI REÇOIT — crochets = moteur, parenthèses = runtime. Un contrôle ne vit pas dans
     // les deux : `lib/controls.json` le déclare par sa STRUCTURE (section `engine` contre section
     // `runtime.*`), et cette structure fait autorité (décision 2026-06-14, « controls.json EST
@@ -4905,8 +4949,7 @@ function parse(tokens, opts = {}) {
     // DISPATCHER, JAMAIS par le moteur », qui se qualifie elle-même de règle établie).
     // Mesuré au corpus : 76 emplois étaient du mauvais côté, et la MAJORITÉ se trompait pour deux
     // d'entre eux — l'arbitre est la déclaration, jamais le nombre.
-    // Les clés réservées du langage (mode, weight, meter…) ne sont pas des contrôles : elles passent.
-    if (universeSacs().runtime.has(key) && !libCtx.qualifierKeys.has(key)) {
+    if (universeSacs().runtime.has(key)) {
       // NOMMER LA BONNE RÉÉCRITURE. `[scale:2]` — valeur unique et numérique — n'est pas la gamme
       // microtonale mal rangée : c'est le contrôle moteur SUPPRIMÉ le 2026-07-26, subsumé par la
       // DURÉE COLLÉE. Renvoyer vers `(scale:2)` enverrait l'utilisateur écrire une gamme dont le
@@ -4927,16 +4970,16 @@ function parse(tokens, opts = {}) {
         + `MOTEUR`,
         tok);
     }
-    if (universeControlNames().has(key) || libCtx.qualifierKeys.has(key)) return;
+    if (universeControlNames().has(key)) return;
     // Ne JAMAIS suggérer « utiliser (clé:…) » : les deux formes ne sont pas des synonymes
     // (constat bpx 2026-07-10). `![rotate:N]` réordonne la séquence (contrôle moteur sériel) ;
     // `(rotate:N)` transpose (paramètre de runtime, opaque). Suivre la suggestion ferait perdre
     // le réordre EN SILENCE. On nomme les deux familles, on n'en recommande aucune.
     throw new ParseError(
-      `clé '[${key}:…]' inconnue — ni contrôle de librairie, ni clé réservée du langage ` +
-      `(${[...libCtx.qualifierKeys].join(', ')}) ; vérifier l'orthographe, ou la librairie qui la ` +
-      `déclare. '[${key}:…]' et '![${key}:…]' (contrôle moteur) ne sont PAS interchangeables avec ` +
-      `'(${key}:…)' (paramètre de runtime)`,
+      `clé '[${key}:…]' inconnue — ni contrôle de librairie, ni garde, ni affectation, ni rang de ` +
+      `gabarit ; vérifier l'orthographe, ou la librairie qui la déclare. '[${key}:…]' et ` +
+      `'![${key}:…]' (contrôle moteur) ne sont PAS interchangeables avec '(${key}:…)' (paramètre ` +
+      `de runtime)`,
       tok);
   }
 
@@ -5095,10 +5138,10 @@ function parse(tokens, opts = {}) {
         continue;
       }
 
-      // --- Standard qualifier value parsing (mode, weight, etc.) ---
-      // Les CLÉS RÉSERVÉES du langage passent par ici, pas par le lecteur de valeur brute
-      // ci-dessus : elles n'avaient donc AUCUNE des deux gardes. `[mode:random weight:50]` —
-      // deux éléments séparés par une espace au lieu d'une virgule — traversait en silence.
+      // --- Standard qualifier value parsing ---
+      // Ce chemin ne sert plus les clés réservées (`mode`, `weight`… REFUSÉES plus haut par
+      // checkQualifierKey) : il reste pour un contrôle du REGISTRE non chargé par cette scène
+      // (`universeControlNames()` sans `libCtx.controlNames`), cf. commentaire de checkQualifierKey.
       const gardeElement = () => {
         if (at(T.IDENT) && peek(1).type === T.COLON) {
           throw new ParseError(
@@ -5108,68 +5151,71 @@ function parse(tokens, opts = {}) {
             current());
         }
       };
-      let value, decrement = null;
-      if (at(T.INT)) {
-        const num = advance().value;
-        // Check for time signature: meter:4+4/6, meter:4+4+4+4/6
-        if (at(T.PLUS) && peek(1).type === T.INT) {
-          let sig = num;
-          while (at(T.PLUS) && peek(1).type === T.INT) {
-            sig += advance().value; // +
-            sig += advance().value; // INT
-          }
-          if (at(T.SLASH) && peek(1).type === T.INT) {
-            sig += advance().value; // /
-            sig += advance().value; // INT
-          }
-          value = sig;
-        // Check for ratio: speed:1/2
-        } else if (at(T.SLASH) && peek(1).type === T.INT) {
-          advance();
-          const denom = advance().value;
-          value = `${num}/${denom}`;
-        } else {
-          value = Number(num);
-          // Check for decremental weight: 50-12
-          if (at(T.REST) && peek(1).type === T.INT) {
-            advance();
-            decrement = Number(advance().value);
-          }
-        }
-      } else if (at(T.FLOAT)) {
-        value = Number(advance().value);
-      } else if (at(T.REST)) {
-        // Negative number: transpose:-12
-        const sign = advance().value;
-        value = sign + (at(T.INT) ? advance().value : '');
-      } else if (at(T.IDENT)) {
-        value = advance().value;
-        // Check for K-param assignment: weight:K1=3
-        if (at(T.EQUALS) && peek(1).type === T.INT) {
-          advance(); // =
-          value = `${value}=${advance().value}`;
-        }
-        // Check for on_fail:fallback(B)
-        else if (at(T.LPAREN)) {
-          advance();
-          const arg = at(T.IDENT) ? advance().value : expect(T.INT).value;
-          expect(T.RPAREN);
-          value = `${value}(${arg})`;
-        }
-      } else if (at(T.INT)) {
-        // ratio like speed:2/3
-        value = advance().value;
-        if (at(T.SLASH)) {
-          advance();
-          value = `${value}/${expect(T.INT).value}`;
-        }
-      }
+      const { value, decrement } = readQualifierValue();
       gardeElement();
       pairs.push({ type: 'QualPair', key, value, decrement });
       if (at(T.COMMA)) advance();
     }
     expect(T.RBRACKET);
     return { type: 'Qualifier', pairs, tempoOp: null };
+  }
+
+  // Lecture de la VALEUR d'un réglage (entier, fraction, décimal, décrément `50-12`, signature
+  // temporelle `4+4/6`, K-param `K1=3`, fallback `fallback(B)`). PARTAGÉE entre `parseQualifier`
+  // (le résidu `[]` d'un contrôle du registre non chargé) et `parseRuntimeQualifier` (les
+  // réglages réservés `mode`/`scan`/`weight`/`on_fail`/`tempx`/`meter`, désormais en `()`,
+  // décision Romain 2026-08-02) — même format des deux côtés du sac, un seul lecteur.
+  function readQualifierValue() {
+    let value, decrement = null;
+    if (at(T.INT)) {
+      const num = advance().value;
+      // Check for time signature: meter:4+4/6, meter:4+4+4+4/6
+      if (at(T.PLUS) && peek(1).type === T.INT) {
+        let sig = num;
+        while (at(T.PLUS) && peek(1).type === T.INT) {
+          sig += advance().value; // +
+          sig += advance().value; // INT
+        }
+        if (at(T.SLASH) && peek(1).type === T.INT) {
+          sig += advance().value; // /
+          sig += advance().value; // INT
+        }
+        value = sig;
+      // Check for ratio: speed:1/2
+      } else if (at(T.SLASH) && peek(1).type === T.INT) {
+        advance();
+        const denom = advance().value;
+        value = `${num}/${denom}`;
+      } else {
+        value = Number(num);
+        // Check for decremental weight: 50-12
+        if (at(T.REST) && peek(1).type === T.INT) {
+          advance();
+          decrement = Number(advance().value);
+        }
+      }
+    } else if (at(T.FLOAT)) {
+      value = Number(advance().value);
+    } else if (at(T.REST)) {
+      // Negative number: transpose:-12
+      const sign = advance().value;
+      value = sign + (at(T.INT) ? advance().value : '');
+    } else if (at(T.IDENT)) {
+      value = advance().value;
+      // Check for K-param assignment: weight:K1=3
+      if (at(T.EQUALS) && peek(1).type === T.INT) {
+        advance(); // =
+        value = `${value}=${advance().value}`;
+      }
+      // Check for on_fail:fallback(B)
+      else if (at(T.LPAREN)) {
+        advance();
+        const arg = at(T.IDENT) ? advance().value : expect(T.INT).value;
+        expect(T.RPAREN);
+        value = `${value}(${arg})`;
+      }
+    }
+    return { value, decrement };
   }
 
   // ============================================================

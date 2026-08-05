@@ -127,7 +127,10 @@ for (const [forme, ou] of [
   ['S -> {C4 D4}(vel: 80)', 'sac runtime, en contenance de groupe'],
   ['S -> C4(vel: 80) D4', 'sac runtime, collé au terminal'],
   ['S -> C4 D4 [goto: 3 0]', 'sac moteur'],
-  ['S -> C4 [weight: 50]', 'clé réservée du langage'],
+  // ⚠️ `weight` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
+  // `[weight:…]` est désormais refusé quelle que soit la présence d'un espace. Le cas qui teste
+  // GENUINEMENT la règle de l'espace pour une clé réservée doit donc s'écrire dans son sac d'accueil.
+  ['S -> C4 (weight: 50)', 'clé réservée du langage'],
   ['S -> !(cc.98: 45) C4', 'composant numéroté'],
 ]) {
   ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
@@ -137,36 +140,67 @@ for (const [forme, ou] of [
 // Une garde qui interdirait les valeurs à plusieurs parties casserait ce qu'on vient de construire.
 for (const forme of [
   'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> C4 D4 [goto:3 0]', 'S -> !(scale:just_intonation C4) C4',
-  'S -> !(keyxpand:B3 -1) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 [mode:random, weight:50]',
+  'S -> !(keyxpand:B3 -1) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 (mode:random, weight:50)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quater l'espace ENTRE PARTIES reste légitime : '${forme}' — reçu : ${e.join(' | ')}`);
 }
 
 // ─── §2quinquies. LE SAC DIT QUI REÇOIT ──────────────────────────────────────────────────────
-// Crochets = moteur, parenthèses = runtime : un contrôle ne vit pas dans les deux. La déclaration
-// arbitre, JAMAIS le nombre — mesuré au corpus, la majorité se trompait pour deux contrôles sur
-// cinq. Décision `hub/decisions/2026-06-14-locus-perf-controls.md`.
+// Crochets = moteur, parenthèses = runtime : un CONTRÔLE (déclaré dans `lib/controls.json`) ne
+// vit pas dans les deux. La déclaration arbitre, JAMAIS le nombre — mesuré au corpus, la majorité
+// se trompait pour deux contrôles sur cinq. Décision `hub/decisions/2026-06-14-locus-perf-controls.md`.
+//
+// ⚠️ `tempx` SORT de cette règle depuis le 2026-08-02 (LANGUAGE.md:773-800) : c'est un RÉGLAGE
+// réservé du langage (`@core.schema.qualifierKeys`), pas un contrôle au sens de cette section —
+// « un signe, une nature » le fait toujours atterrir en parenthèses, même s'il est AUSSI déclaré
+// dans la section `engine` de `controls.json`. Cf. §2quinquies (légitimes) plus bas.
 for (const [forme, quoi] of [
   ['S -> C4 [vel:80]', 'contrôle runtime écrit dans le sac moteur'],
   ['S -> C4 [keyxpand:B3 -1]', 'contrôle de dispatcher dans le sac moteur'],
   ['S -> C4 !(legato:100) D4', 'contrôle moteur écrit dans le sac runtime'],
-  ['S -> C4 (tempx:2)', 'contrôle moteur écrit dans le sac runtime'],
   ['S -> {C4, D4}[scale:2]', "le `scale` MOTEUR, supprimé le 2026-07-26 : subsumé par la durée collée"],
 ]) {
   ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
      `§2quinquies ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
 }
-// Ce qui reste légitime — dont les CLÉS RÉSERVÉES du langage, qui ne sont pas des contrôles, et
-// le `rotate` de SÉQUENCE, moteur et déclaré (à ne pas confondre avec l'ancien rotate de hauteur,
-// renommé `scaleshift` le 2026-07-11).
+// Ce qui reste légitime — dont le `rotate` de SÉQUENCE, moteur et déclaré (à ne pas confondre
+// avec l'ancien rotate de hauteur, renommé `scaleshift` le 2026-07-11).
 for (const forme of [
-  'S -> {C4, D4}:2', 'S -> C4 [weight:50]', 'S -> C4 [mode:random]', 'S -> C4 [tempx:2]',
+  'S -> {C4, D4}:2',
   'S -> !(vel:80) C4', 'S -> ![legato:100] C4', 'S -> !(scale:just_intonation C4) C4',
   'S -> {C4 D4}![rotate:2]',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quinquies '${forme}' doit rester accepté — reçu : ${e.join(' | ')}`);
+}
+
+// ─── §2quinquies bis. UN SIGNE, UNE NATURE — le RÉGLAGE réservé change de sac (2026-08-02) ──
+// Décision Romain 2026-08-02 (LANGUAGE.md:773-800) : `mode`/`scan`/`weight`/`on_fail`/`tempx`/
+// `meter` sont des RÉGLAGES, pas des contrôles — ils décrivent une propriété PRODUITE, et
+// s'écrivent désormais en PARENTHÈSES dans TOUS les cas, `tempx` compris (bien que ce dernier
+// soit AUSSI déclaré dans la section `engine` de `controls.json` — cette déclaration ne le
+// classe plus, sa nature de réglage l'emporte). Le crochet ne garde que trois emplois : garde,
+// affectation de drapeau, rang de gabarit.
+for (const [forme, quoi] of [
+  ['S -> C4 [mode:random]', 'mode : crochets refusés'],
+  ['S -> C4 [scan:left]', 'scan : crochets refusés'],
+  ['S -> C4 [weight:50]', 'weight : crochets refusés'],
+  ['S -> C4 [on_fail:fallback(B)]', 'on_fail : crochets refusés'],
+  ['S -> C4 [tempx:2]', 'tempx : crochets refusés (même déclaré engine dans controls.json)'],
+  ['S -> C4 [meter:4+4/6]', 'meter : crochets refusés'],
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length > 0, `§2quinquies bis ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
+  ok(e.some((m) => /est un réglage, il s'écrit entre PARENTHÈSES/.test(m)),
+     `§2quinquies bis ${quoi} : le message doit donner la forme du jour — reçu : ${e.join(' | ')}`);
+}
+for (const forme of [
+  'S -> C4 (mode:random)', 'S -> C4 (scan:left)', 'S -> C4 (weight:50)',
+  'S -> C4 (on_fail:fallback(B))', 'S -> C4 (tempx:2)', 'S -> C4 (meter:4+4/6)',
+]) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length === 0, `§2quinquies bis '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
 }
 
 // ─── §2sexies. AUCUNE SOUS-ZONE N'ECHAPPE À LA RÈGLE ────────────────────────────────────────
@@ -196,7 +230,8 @@ for (const [forme, quoi] of [
   ['S -> {C4 D4}(vel:50 pan:7)', 'deux éléments valués, espace au lieu de virgule'],
   ['S -> C4 (vel:50 velcont)', 'un élément valué puis une clé nue, sans virgule'],
   ['S -> C4 (wave:sine detune:5)', 'deux éléments, sac runtime'],
-  ['S -> C4 [mode:random weight:50]', 'deux éléments, sac moteur et CLÉS RÉSERVÉES — elles passaient par un autre lecteur, sans aucune garde'],
+  // ⚠️ `mode`/`weight` s'écrivent en PARENTHÈSES depuis la décision 2026-08-02 (LANGUAGE.md:773-800).
+  ['S -> C4 (mode:random weight:50)', 'deux éléments, RÉGLAGES RÉSERVÉS — elles passaient par un autre lecteur, sans aucune garde'],
   ['S -> C2 (C2:cutoff: env1)', "espace après le SECOND deux-points (écriture à sujet) — un crible qui ne regarde que le premier le manque"],
   ['S -> C2 (*:cutoff: env1)', 'idem avec le sujet universel'],
 ]) {
@@ -206,7 +241,7 @@ for (const [forme, quoi] of [
 // LES LÉGALES, indiscernables des précédentes au caractère près :
 for (const forme of [
   'S -> {C4 D4}(vel:50, pan:7)', 'S -> C4 (keyxpand:B3 -1)', 'S -> C4 (keymap:C3 C3 C5 C5)',
-  'S -> C4 (vel:50, velcont)', 'S -> C4 [mode:random, weight:50]', 'S -> C2 (C2:cutoff:env1)',
+  'S -> C4 (vel:50, velcont)', 'S -> C4 (mode:random, weight:50)', 'S -> C2 (C2:cutoff:env1)',
   'S -> C2 (*:cutoff:env1)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);

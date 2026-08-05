@@ -114,8 +114,15 @@ const PROPRIETES = [
   ['la nature', '', (t) => t.payload?.nature === 'wait'],
   ["le sac d'ANNOTATIONS", '(chan:1)',
     (t) => (t.suffixQualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'chan' && p.value === 1)],
-  ['le sac MOTEUR', '[weight:2]',
-    (t) => (t.qualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'weight' && p.value === 2)],
+  // ⚠️ L'EXEMPLE A CHANGÉ le 2026-08-05 : `weight` est un RÉGLAGE, il s'écrit désormais en
+  // PARENTHÈSES (décision Romain 2026-08-02, LANGUAGE.md:773-800) — `[weight:…]` est REFUSÉ.
+  // `rotate` reste un contrôle du sac MOTEUR (crochets inchangés, non couvert par cette
+  // décision) : il porte la même propriété pour cette section (le sac attaché AU POINT). Sa
+  // valeur est ici une CHAÎNE ('2', pas 2) : `@controls` est chargé par ce fichier, donc
+  // `rotate` — déclaré dans `lib/controls.json` — passe par le lecteur brut de `libCtx.controlNames`
+  // (parser.js), pas par le lecteur numérique partagé des réglages réservés.
+  ['le sac MOTEUR', '[rotate:2]',
+    (t) => (t.qualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'rotate' && p.value === '2')],
   ["l'ADRESSE de sa source", '.60', (t) => t.address === 60],
   ['son NOM', '', (t) => t.name === 'sync1'],
 ];

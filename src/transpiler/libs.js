@@ -640,6 +640,7 @@ function loadLibsFromDirectives(directives) {
  *   functions: string[],                      // fonctions digitales (transpose…)
  *   components: { [axis:string]: string[] },  // entrées de catalogue par axe (alphabets, accordages…)
  *   addressKeys: string[],
+ *   qualifierKeys: string[],                   // réglages réservés (mode/scan/weight/on_fail/tempx/meter), écrits en '()'
  *   modulationInputs: string[],
  *   directiveValues: { [directive:string]: {description?, values: [{name, description?}]} },  // enums (@mode:…, @scan:…)
  *   syntaxWords: { [word:string]: {kind, description?, syntax?} }                              // gate/trigger/cv/lambda, ->/<-/<>
@@ -680,6 +681,10 @@ function describeVocabulary(directives = []) {
     functions: [...ctx.digitalFunctions],
     components,
     addressKeys: [...ctx.addressKeys],
+    // Réglages RÉSERVÉS (mode/scan/weight/on_fail/tempx/meter) — écrits en PARENTHÈSES depuis la
+    // décision Romain 2026-08-02 (LANGUAGE.md:773-800). Exposé pour que le vocabulaire consommé
+    // par validateReferences() les reconnaisse comme des attributs `(k:v)` connus.
+    qualifierKeys: [...ctx.qualifierKeys],
     modulationInputs: [...ctx.modulationInputsAll],
     directiveValues: langLib.directiveValues || {},
     syntaxWords: langLib.syntaxWords || {},

@@ -44,7 +44,11 @@ const CONTENANTS = [
   ['événement simultané',              'motif -> C4!%s'],
   ['note ancrée à un point d\'attente', 'motif -> {%s<!s1}'],
   ['groupe avec durée collée',         'motif -> {%s C4}:2'],
-  ['groupe avec sac moteur',           'motif -> {%s C4}[weight:2]'],
+  // ⚠️ L'EXEMPLE A CHANGÉ le 2026-08-05 : `weight` est un RÉGLAGE, il s'écrit désormais en
+  // PARENTHÈSES (décision Romain 2026-08-02, LANGUAGE.md:773-800) — `[weight:…]` est REFUSÉ.
+  // `rotate` reste un contrôle du sac MOTEUR (crochets inchangés, hors périmètre de cette
+  // décision) : il vérifie la même chose (un sac attaché à un groupe).
+  ['groupe avec sac moteur',           'motif -> {%s C4}[rotate:2]'],
 ];
 console.log(`[terminal sous un groupe] ${CONTENANTS.length} contenants x 2 sens`);
 for (const [quoi, forme] of CONTENANTS) {

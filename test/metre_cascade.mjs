@@ -15,6 +15,11 @@
  * LA GRAPHIE ADDITIVE `3+4+2/4` est celle de BP3, reprise telle quelle (décision Romain
  * 2026-07-26, contre la recommandation d'Atlas). Le `+` y a un SECOND rôle — séparateur de
  * sections — et c'est un écart assumé, daté, motivé : ce garde le PROTÈGE au lieu de le corriger.
+ *
+ * ⚠️ `meter` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
+ * un signe, une nature : c'est un RÉGLAGE (ce que la règle PRODUIT), pas ce qui gouverne sa
+ * dérivation. `[meter:…]` (crochets) est désormais REFUSÉ ; la cascade de scène (`emitSceneMeter`,
+ * bpxAst.js) injecte donc le défaut dans `rule.runtimeQualifier.pairs`, plus `rule.qualifiers`.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
@@ -23,8 +28,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (src) => compileToBPxAST(src);
-const metresDe = (ast, i) => (ast?.subgrammars?.[0]?.rules?.[i]?.qualifiers || [])
-  .flatMap((q) => (q.pairs || []))
+const metresDe = (ast, i) => (ast?.subgrammars?.[0]?.rules?.[i]?.runtimeQualifier?.pairs || [])
   .filter((p) => p && p.key === 'meter')
   .map((p) => p.value);
 
@@ -38,7 +42,7 @@ for (const forme of ['4/4', '3+4+2/4', '5+7/8', '3+4/4', '4+4+4+4/6']) {
 
 // ─── 2. La cascade : défaut de scène, recouvrement par la règle ──────────────────────────────
 {
-  const r = compile('@core\n@controls\n@meter:3+4+2/4\n@alphabet.western:midi\n@mode:ord\nS -> C4 D4\nA -> C4 [meter:7/8]\nB -> D4\n');
+  const r = compile('@core\n@controls\n@meter:3+4+2/4\n@alphabet.western:midi\n@mode:ord\nS -> C4 D4\nA -> C4 (meter:7/8)\nB -> D4\n');
   ok(metresDe(r.ast, 0)[0] === '3+4+2/4', '2. une règle sans mètre reçoit le défaut de la scène');
   ok(metresDe(r.ast, 1).length === 1 && metresDe(r.ast, 1)[0] === '7/8',
      `2. une règle QUI PORTE le sien le garde, et n'en reçoit pas un second — reçu : ${JSON.stringify(metresDe(r.ast, 1))}`);

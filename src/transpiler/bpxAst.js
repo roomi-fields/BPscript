@@ -1093,13 +1093,19 @@ function validateReferences(ast) {
   const reserved = new Set(vocab.keywords);
   const digitalFns = new Set(vocab.functions);
   const addressKeys = new Set(vocab.addressKeys);
+  // Réglages RÉSERVÉS (mode/scan/weight/on_fail/tempx/meter) — écrits en '()' depuis la décision
+  // Romain 2026-08-02 (LANGUAGE.md:773-800). Sans cette entrée, `knownParamKey` les refusait
+  // comme « attribut inconnu » : le vocabulaire des `(k:v)` ne les avait jamais portés, ils ne
+  // vivaient QUE côté `[]` (checkQualifierKey, parser.js).
+  const qualifierKeys = new Set(vocab.qualifierKeys);
   const catalogAxes = Object.keys(vocab.components);
   const componentExists = (axis, name) => (vocab.components[axis] || []).includes(name);
 
   // 1. Occurrence / paramètres `(k:v)` — clé connue = contrôle ∪ valeur ∪ entrée modulation ∪
-  //    adresse ∪ fonction digitale. Les paires d'occurrence vivent dans `payload.params`
-  //    (note ou groupe/règle, foldées par le parser) ET dans les `RuntimeQualifier.pairs`.
-  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k);
+  //    adresse ∪ fonction digitale ∪ réglage réservé. Les paires d'occurrence vivent dans
+  //    `payload.params` (note ou groupe/règle, foldées par le parser) ET dans les
+  //    `RuntimeQualifier.pairs`.
+  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k);
   // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
   //
   // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,
@@ -1630,19 +1636,18 @@ function emitNoteTerminals(ast) {
 }
 
 function emitSceneMeter(ast) {
+  // `meter` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) :
+  // l'injection du défaut de scène rejoint donc `r.runtimeQualifier.pairs`, plus `r.qualifiers`
+  // (le crochet REFUSE désormais `[meter:…]`, cf. checkQualifierKey, parser.js).
   const dir = (ast.directives || []).find((d) => d && d.name === 'meter' && d.value != null);
   if (!dir) return;
   const valeur = String(dir.value);
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
-      const porteDeja = (r.qualifiers || []).some((q) => (q.pairs || []).some((p) => p && p.key === 'meter'));
+      const porteDeja = (r.runtimeQualifier?.pairs || []).some((p) => p && p.key === 'meter');
       if (porteDeja) continue;   // la règle recouvre le défaut de scène, pour elle seule
-      r.qualifiers = r.qualifiers || [];
-      r.qualifiers.push({
-        type: 'Qualifier',
-        pairs: [{ type: 'QualPair', key: 'meter', value: valeur, decrement: null }],
-        tempoOp: null,
-      });
+      r.runtimeQualifier = r.runtimeQualifier || { type: 'RuntimeQualifier', pairs: [] };
+      r.runtimeQualifier.pairs.push({ key: 'meter', value: valeur, decrement: null });
     }
   }
 }

@@ -180,8 +180,11 @@ section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
 // ============================================================
 section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
 {
+  // ⚠️ `tempx` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
+  // `![tempx:…]` (crochets) est désormais REFUSÉ. `!(tempx:2)` sert la même fonction dans ce test
+  // (un AUTRE élément du flux à côté de `scale`, non le sujet mesuré ici).
   const src = `@controls
-S -> ![tempx:2] !(scale:pure_minor-third_meantone 0) Up_Down`;
+S -> !(tempx:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
   // tokenize : pure_minor- doit être IDENT(pure_minor-) et third_meantone IDENT(third_meantone)
   const tokens = toks(src);
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
@@ -248,31 +251,34 @@ section('Cas 11 : a->b flèche — inchangé');
 }
 
 // ============================================================
-// Cas 12 — [weight:50-12] → INT(50) REST INT(12), decrement=12 après parse
+// Cas 12 — (weight:50-12) → INT(50) REST INT(12), decrement=12 après parse
+// ⚠️ `weight` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
+// `[weight:…]` (crochets) est désormais REFUSÉ. Le décrément (`readQualifierValue`, parser.js)
+// est PARTAGÉ entre les deux sacs : ce cas prouve qu'il survit à la migration en `()`.
 // ============================================================
-section('Cas 12 : [weight:50-12] décrement de poids — inchangé');
+section('Cas 12 : (weight:50-12) décrement de poids — même lecteur, sac déplacé');
 {
   const src = `@controls
-S -> A [weight:50-12]`;
+S -> A (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
-  if (rule && rule.qualifiers && rule.qualifiers.length > 0) {
-    const weightPair = rule.qualifiers.flatMap(q => q.pairs || []).find(p => p.key === 'weight');
-    assert('weight base=50', weightPair && weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
-    assert('weight decrement=12', weightPair && weightPair.decrement === 12, `weight decrement: ${JSON.stringify(weightPair)}`);
+  const weightPair = (rule && rule.runtimeQualifier && rule.runtimeQualifier.pairs || []).find(p => p.key === 'weight');
+  if (weightPair) {
+    assert('weight base=50', weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
+    assert('weight decrement=12', weightPair.decrement === 12, `weight decrement: ${JSON.stringify(weightPair)}`);
   } else {
-    assert('qualifiers présents', false, 'pas de qualifiers');
+    assert('runtimeQualifier.pairs présents', false, 'pas de runtimeQualifier.pairs');
   }
 }
 
 // ============================================================
-// Cas 13 — mohanam [Notes-4] A -> P4 [weight:50-12] — inchangé
+// Cas 13 — mohanam [Notes-4] A -> P4 (weight:50-12) — sac déplacé
 // ============================================================
-section('Cas 13 : mohanam réel [Notes-4] + [weight:50-12] — inchangé');
+section('Cas 13 : mohanam réel [Notes-4] + (weight:50-12) — sac déplacé');
 {
   const src = `@controls
-[Notes-4] A -> P4 [weight:50-12]`;
+[Notes-4] A -> P4 (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
@@ -280,7 +286,7 @@ section('Cas 13 : mohanam réel [Notes-4] + [weight:50-12] — inchangé');
     const guard = Array.isArray(rule.guard) ? rule.guard[0] : rule.guard;
     assert('guard Notes operator=-', guard && guard.flag === 'Notes' && guard.operator === '-', `guard: ${JSON.stringify(guard)}`);
     assert('guard value=4', guard && guard.value === 4, `guard value:${guard && guard.value}`);
-    const weightPair = rule.qualifiers.flatMap(q => q.pairs || []).find(p => p.key === 'weight');
+    const weightPair = (rule.runtimeQualifier && rule.runtimeQualifier.pairs || []).find(p => p.key === 'weight');
     assert('weight base=50', weightPair && weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
     assert('weight decrement=12', weightPair && weightPair.decrement === 12, `weight:${JSON.stringify(weightPair)}`);
   }
