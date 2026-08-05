@@ -298,7 +298,7 @@ associe le clavier reel, et cette association vit **hors de la scene** -- un nom
 machine en machine. Le flux attend un trigger de ce role avec le point d'attente : `<!touches.Space`.
 
 **Une variable sans type** existe pour etre ecrite dans une regle sans sonner : un pivot de
-grammaire, un jalon de structure. Elle porte son seul nom, et l'aval la transporte tel quel.
+grammaire, un jalon de structure. **Une ligne en declare plusieurs**, separees par la virgule. Elle porte son seul nom, et l'aval la transporte tel quel.
 
 ### `@def` -- declarer une definition
 
@@ -572,9 +572,17 @@ touche, donc qui le consomme.
 
 | categorie   | ce qu'elle regle                                                                                                                                             |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason`                                                                                         |
-| `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `tempx` -- le multiplicateur de vitesse d'une regle                                          |
+| `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason` -- decrites ci-dessous                                                                  |
+| `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `tempx` -- le multiplicateur de vitesse d'une regle · `striated` et `smooth` -- si le temps pulse ou coule |
 | `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
+
+| cle           | ce qu'elle decale                                                             |
+| ------------- | ----------------------------------------------------------------------------- |
+| `transpose`   | la hauteur, en demi-tons -- un decalage reel                                  |
+| `scaleshift`  | la hauteur, en degres de l'accordage -- un decalage dans la gamme             |
+| `chromashift` | la hauteur, en degres chromatiques                                            |
+| `keyxpand`    | l'ecart entre les degres -- il dilate ou resserre l'echelle autour d'une ancre |
+| `diapason`    | la frequence de reference, en hertz                                           |
 
 **Le temps se partage entre deux categories** : `engine` porte le temps **calcule** -- ou tombe
 chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoule**. Le metre dit
@@ -641,6 +649,8 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | `@var`   | qu'un nom existe, et de quel type |
 | `@def`   | qu'un nom vaut un corps           |
 | `@init`  | l'etat de depart de la scene      |
+
+**Un mot de section** : `@template` ouvre le catalogue des formes, en fin de scene.
 
 **Six types de variable**, que le parser doit connaitre pour lire la ligne qui les porte :
 
@@ -1012,7 +1022,8 @@ Elles vivent dans la librairie `engine`, sauf `tempo` et `tempx` qui vivent dans
 /N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
 mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
-weight      poids de la regle (entier, K-param, ou inf) -- a zero, la regle est ecartee
+weight      poids de la regle -- un entier, `inf` pour la priorite absolue, ou un K-param
+            (`K1=3` l'initialise, `K1` reprend sa valeur courante) pour une distribution
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
 meter       signature rythmique -- (meter:7/8), (meter:4+4/4)
 seed        graine du tirage
