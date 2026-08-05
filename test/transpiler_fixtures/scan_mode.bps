@@ -9,12 +9,12 @@
 X -> C4
 
 // Règle avec [scan:left] → mode 'left', préfixe LEFT dans BP3
-Y -> C4 D4 E4 [scan:left]
+Y -> C4 D4 E4 (scan:left)
 
 // Règle avec [scan:right] → mode 'right'
-Z -> C4 D4 [scan:right]
+Z -> C4 D4 (scan:right)
 
 -----
 
 // Deuxième sous-grammaire, règle avec [scan:rnd]
-A -> X Y Z [scan:rnd]
+A -> X Y Z (scan:rnd)

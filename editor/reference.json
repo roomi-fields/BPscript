@@ -315,7 +315,7 @@
     "transcription": { "syntax": "@transcription.name", "desc": "Load a homomorphism/substitution table for template-based rewriting." },
     "timepatterns": { "syntax": "@timepatterns: name=num/den, ...", "desc": "Define named time patterns with rational durations." },
     "actor": { "syntax": "@actor name key:value ...", "desc": "Define an actor: bundles alphabet + scale + output + sounds into a named entity." },
-    "templates": { "syntax": "@templates", "desc": "Begin template section. Templates define structural constraints for TEM mode." }
+    "template": { "syntax": "@template", "desc": "Begin template section. Templates define structural constraints for TEM mode. SINGULIER : la graphie plurielle '@templates' (v0.7) est refusée depuis le 2026-07-19." }
   },
 
   "controls_runtime": {

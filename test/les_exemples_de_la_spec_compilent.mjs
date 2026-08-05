@@ -244,6 +244,130 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
      + `grandit, c'est qu'on écarte pour ne pas corriger.`);
 }
 
+// ─── 5. L'AIDE COMPILE AUSSI — mêmes fichiers, MÊME MÉCANIQUE de cliquet ─────────────────────
+// Étendu le 2026-08-05 (dev). Jusqu'ici le garde ne lisait que `docs/spec/` : `editor/reference.json`
+// et `public/help/reference.json` (panneau d'Aide, tooltips, autocomplétion) n'étaient balayés par
+// RIEN. Mesuré : `editor/reference.json` enseignait `gate Sa:sitar` — refusé par NOTRE PROPRE
+// parser depuis le 2026-07-29 (« 'gate' sans arobase n'existe plus ») — sans qu'aucun garde ne le
+// signale. Trois semaines de silence pour la même raison que toujours : un garde a une PORTÉE, et
+// l'aide était DEHORS.
+//
+// ⚠️ PORTÉE, ET SON COMPLÉMENT ÉCRIT : seul le champ `"example"` est compilé (partout dans le
+// JSON, à toute profondeur) — c'est le champ que le fichier lui-même réserve à une illustration
+// COMPLÈTE ("_description" : dérivé de l'EBNF, utilisé pour hover/autocomplétion). Le champ
+// `"syntax"` (top-level ou dans `forms[]`) reste HORS PORTÉE : c'est une NOTATION abrégée, souvent
+// un GABARIT avec des mots génériques en position de valeur (`"gate name:actor"`, `"@ name[.subkey]
+// [:binding]"`) — le compiler littéralement ne mesurerait pas le langage, ça fabriquerait une
+// forme qu'aucun auteur n'a écrite. Distinguer les deux est la même règle que §2 (DIRECTIVES vs
+// prose) appliquée à une autre forme de document. Un futur garde qui voudrait aussi mesurer
+// `forms[].syntax` devra le faire EXPLICITEMENT : ce n'est pas un oubli, c'est une exclusion nommée.
+//
+// L'ENVELOPPE — dite ici, pas cachée dans le code. Un exemple d'aide est un FRAGMENT bien plus
+// souvent qu'une spec : `{C4 D4 E4, G4 ...}` n'est même pas rattaché à un symbole. Règle UNIQUE,
+// appliquée à tous, aucune exception par exemple :
+//   1. si le texte ne déclare déjà ni directive/déclaration (`@…`, `gate …`, `trigger …`, `cv …`) ni
+//      flèche de règle (`->`, `<-`, `<>`), il est traité comme une RHS nue et rattaché à un symbole
+//      minimal : `S -> <texte>` ;
+//   2. sinon il est pris tel quel ; s'il ne contient aucune flèche (directives seules), on lui donne
+//      un point de départ dérivable (`@mode:ord\nS -> C4`) pour qu'il reste mesurable ;
+//   3. dans tous les cas, un préambule minimal (`@core/@controls/@alphabet.western:midi/@mode:ord`)
+//      est ajouté SAUF si le texte porte déjà `@core` ou `@alphabet`.
+// LIMITE CONNUE, mesurée et non maquillée : deux exemples de `concepts` mélangent PROSE et code sur
+// une même ligne (une flèche anglaise « -> plays C4… », ou plusieurs illustrations indépendantes
+// bout à bout) — l'enveloppe les prend pour une seule règle et le refus qui en sort teste
+// l'ASSEMBLAGE mécanique, pas le langage. Étiqueté ci-dessous, pas confondu avec une vraie forme
+// morte.
+const AIDE_FICHIERS = ['editor/reference.json', 'public/help/reference.json'].map((f) => path.join(ICI, '..', f));
+
+const collecterExamples = (o, chemin, out) => {
+  if (o === null || typeof o !== 'object') return out;
+  if (Array.isArray(o)) { o.forEach((e, i) => collecterExamples(e, `${chemin}[${i}]`, out)); return out; }
+  for (const [k, v] of Object.entries(o)) {
+    if (k === 'example' && typeof v === 'string') out.push({ chemin: `${chemin}.${k}`, valeur: v });
+    else collecterExamples(v, `${chemin}.${k}`, out);
+  }
+  return out;
+};
+
+const envelopperAide = (texte) => {
+  const aPreambule = /@core|@alphabet/.test(texte);
+  const aDeclaration = /^\s*(@|gate\s|trigger\s|cv\s)/m.test(texte);
+  const aRegle = /(->|<-|<>)/.test(texte);
+  let scene = aPreambule ? '' : '@core\n@controls\n@alphabet.western:midi\n@mode:ord\n';
+  if (aDeclaration || aRegle) {
+    scene += `${texte}\n`;
+    if (!aRegle) scene += '@mode:ord\nS -> C4\n';
+  } else {
+    scene += `S -> ${texte}\n`;
+  }
+  return scene;
+};
+
+// Causes NOMMÉES — chaque entrée de BASELINE_RATTRAPAGE_AIDE en porte une, jamais un motif vague.
+const CAUSE_SPEED_SUPPRIME = /a été supprimé \(décision 2026-06-26\)/; // [speed:N] retiré, pas migré
+const CAUSE_WEIGHT_PARENTHESES = /'weight' est un réglage, il s'écrit entre PARENTHÈSES/; // même famille que le geste 1 de ce lot
+const CAUSE_AROBASE_OBLIGATOIRE = /sans arobase n'existe plus/; // le cas SIGNALÉ : gate/trigger/cv nus
+const CAUSE_DOLLAR_MACRO_MORTE = /collé à un identifiant interdit en LHS/; // `$lfo(...) = ...` : ancienne forme de CV/macro, `$` n'est plus qu'un gabarit de template
+const CAUSE_NOM_COLLISION_TERMINAL = /porte le nom d'un TERMINAL de l'alphabet actif/; // règles nommées A/B : même défaut que test/transpiler_fixtures/scan_mode.bps (geste 1)
+const CAUSE_MUTATION_MID_RHS_BUG = /Expected arrow \(-> <- <>\), got NEWLINE/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
+const CAUSE_ENVELOPPE_PROSE_LBRACKET = /Expected arrow \(-> <- <>\), got LBRACKET/; // limite d'enveloppe : prose+code sur une ligne
+const CAUSE_ENVELOPPE_PROSE_LPAREN = /Expected arrow \(-> <- <>\), got LPAREN/; // limite d'enveloppe : plusieurs illustrations indépendantes bout à bout
+const BASELINE_RATTRAPAGE_AIDE = new Map([
+  ['.symbols.[speed:N].example', CAUSE_SPEED_SUPPRIME],
+  ['.symbols.[].example', CAUSE_WEIGHT_PARENTHESES],
+  ['.keywords.lambda.example', CAUSE_WEIGHT_PARENTHESES],
+  ['.keywords.gate.example', CAUSE_AROBASE_OBLIGATOIRE],
+  ['.keywords.trigger.example', CAUSE_AROBASE_OBLIGATOIRE],
+  ['.keywords.cv.example', CAUSE_AROBASE_OBLIGATOIRE],
+  ['.symbols.`.example', CAUSE_DOLLAR_MACRO_MORTE],
+  ['.symbols.?.example', CAUSE_NOM_COLLISION_TERMINAL],
+  ['.symbols.-----.example', CAUSE_NOM_COLLISION_TERMINAL],
+  ['.concepts.rewriting.example', CAUSE_NOM_COLLISION_TERMINAL],
+  ['.concepts.sub_grammars.example', CAUSE_NOM_COLLISION_TERMINAL],
+  ['.concepts.flags.example', CAUSE_MUTATION_MID_RHS_BUG],
+  ['.controls_engine.tempo_ops.ops.[/N].example', CAUSE_ENVELOPPE_PROSE_LBRACKET],
+  ['.concepts.control_scoping.example', CAUSE_ENVELOPPE_PROSE_LPAREN],
+]);
+
+let exemplesAide = 0;
+const vusEnEchecConnuAide = new Map(); // chemin -> nb de fichiers où le rattrapage attendu est retrouvé
+for (const f of AIDE_FICHIERS) {
+  const nomFichier = path.relative(path.join(ICI, '..'), f);
+  const json = JSON.parse(readFileSync(f, 'utf8'));
+  const examples = collecterExamples(json, '', []);
+  for (const { chemin, valeur } of examples) {
+    exemplesAide++;
+    let r;
+    try { r = compileToBPxAST(envelopperAide(valeur)); }
+    catch (e) { r = { errors: [{ message: e.message }] }; }
+    const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+    const echoue = msg !== '' && !REFUS_DE_RESOLUTION.test(msg);
+    if (!echoue) continue;
+    const causeAttendue = BASELINE_RATTRAPAGE_AIDE.get(chemin);
+    if (causeAttendue && causeAttendue.test(msg)) {
+      vusEnEchecConnuAide.set(chemin, (vusEnEchecConnuAide.get(chemin) || 0) + 1);
+      continue;
+    }
+    ok(false,
+       `5. ${nomFichier}${chemin} enseigne une forme que le compilateur REFUSE, HORS RÉFÉRENCE : `
+       + `'${valeur.slice(0, 60).replace(/\n/g, '⏎')}' → ${msg.slice(0, 110)}. Si c'est un rattrapage `
+       + `attendu, AJOUTE-le à BASELINE_RATTRAPAGE_AIDE avec sa cause ; sinon c'est une forme morte.`);
+  }
+}
+ok(exemplesAide >= 60,
+   `5. il faut des exemples d'aide à mesurer (2 fichiers × ~33) — ${exemplesAide} trouvé(s). Un `
+   + `effondrement ne veut pas dire que l'aide est devenue parfaite : le garde ne la lit plus.`);
+// Le cliquet ne descend qu'à la main, même règle qu'en §2bis : chaque entrée doit se retrouver EN
+// ÉCHEC dans les DEUX fichiers balayés, pas un seul — sinon soit le parser a rattrapé la forme dans
+// l'un des deux, soit l'aide a divergé sous le garde sans qu'il resserre sa référence.
+for (const [chemin] of BASELINE_RATTRAPAGE_AIDE) {
+  ok(vusEnEchecConnuAide.get(chemin) === AIDE_FICHIERS.length,
+     `5bis. '${chemin}' est dans BASELINE_RATTRAPAGE_AIDE mais ne refuse plus avec la cause `
+     + `enregistrée dans les ${AIDE_FICHIERS.length} fichiers (retrouvé dans `
+     + `${vusEnEchecConnuAide.get(chemin) || 0}) — RETIRE-le : un cliquet qui ne se resserre jamais `
+     + `n'est qu'un compteur.`);
+}
+
 if (echecs.length) {
   console.error(`❌ documents du langage : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
@@ -253,5 +377,7 @@ if (echecs.length) {
             + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), ${vusEnEchecConnu.size}/`
             + `${BASELINE_RATTRAPAGE.size} rattrapage(s) connu(s) retrouvés PILE (chantier def/init/`
             + `patch du 2026-08-03), et ${croisements} croisement(s) ${TOUS.length} document(s) × `
-            + `${MORTES.length} forme(s) morte(s)`);
+            + `${MORTES.length} forme(s) morte(s) — ET ${exemplesAide} exemple(s) d'aide compilés dans `
+            + `${AIDE_FICHIERS.length} fichier(s), ${vusEnEchecConnuAide.size}/${BASELINE_RATTRAPAGE_AIDE.size} `
+            + `rattrapage(s) connus retrouvés PILE`);
 }
