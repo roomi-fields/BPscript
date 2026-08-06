@@ -185,11 +185,19 @@ const RETARD_REGLES = new Map([
   ['S -> {A B}(lpf1.cutoff:4000)', /Expected arrow/],
   // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
   //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
-  // (d') un exemple de la bible qui emploie encore le mot supprimé `tempx`, en ARGUMENTS DE
-  //     GABARIT. Son sujet n'est pas `tempx` mais « chaque invocation porte ses paramètres » ;
-  //     la valeur fractionnaire `2/3` n'a de toute façon pas sa place dans des arguments, qui
-  //     lisent un entier ou un nom. À rendre à Romain : la bible doit choisir un autre
-  //     paramètre pour cet exemple. Je ne le choisis pas à sa place.
+  // (d') L'EXEMPLE DES PARAMÈTRES D'INVOCATION — et il est plus abîmé qu'il n'en a l'air.
+  //     Son sujet est « chaque invocation porte ses paramètres » (LANGUAGE.md:1719, et :1732 :
+  //     « ils gouvernent l'expansion du gabarit »). `AST.md:573` leur donne un champ à eux,
+  //     `TemplateMaster.args`.
+  //     ⚠️ MESURÉ LE 2026-08-06 : cet exemple n'a JAMAIS produit de paramètre. Un nom déclaré au
+  //     vocabulaire des contrôles est routé vers le SAC DE RÉGLAGES, pas vers `args` — c'était
+  //     le cas de `tempx` avant son retrait, et c'est le cas de tout remplaçant pris dans ce
+  //     vocabulaire. La ligne illustrait donc autre chose que ce qu'elle annonce, en silence.
+  //     ⚠️ ET CE N'EST PAS QU'UN DÉFAUT DE DOC : sur tout l'écosystème, UNE SEULE scène écrit une
+  //     invocation avec parenthèse (`ek-do-tin`), et son arbre ne porte AUCUN paramètre non plus.
+  //     `TemplateMaster.args` est déclaré par la spec et produit par RIEN.
+  //     La réparation demande de savoir quel vocabulaire prennent ces paramètres — la bible est
+  //     MUETTE là-dessus. Question pour Romain ; je ne comble pas un silence par une mesure.
   ['S <> $mel(tempx:1) &mel(tempx:2/3)', /arguments d'un gabarit/],
   // (d) une clé que le parser tient encore pour un contrôle de crochet
   ['S -> C4 (rndtime:100) D4 E4', /s'écrit entre CROCHETS/],

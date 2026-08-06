@@ -125,9 +125,13 @@ const DETTE = new Set([
   'Scene.macros', 'Scene.cvInstances', 'Scene.soundPrototypes', 'Scene.soundAssignments',
   // Champs de DIRECTIVE et d'ACTEUR portés par l'arbre, absents de leur déclaration.
   'Directive.runtime', 'Directive.aliases', 'Directive.modifiers', 'Directive.timePatterns',
-  'ActorDirective.values', 'ActorReference.line',
-  // (`ActorDirective.libRefs` RETIRÉ du cliquet le 2026-08-06 : plus aucune scène ne le
-  //  porte depuis le retrait de `tempx` — le témoin de dette périmée l'a signalé lui-même.)
+  'ActorDirective.values', 'ActorReference.line', 'ActorDirective.libRefs',
+  // ⚠️ `RawBrace.duree` — l'arbre porte un champ FRANÇAIS là où `AST.md:…` déclare `frame` pour
+  //    la même chose (la durée collée d'un bloc). Apparu à la mesure le 2026-08-06, quand la
+  //    migration du corpus par l'architecte (304 sites) a fait compiler 19 scènes de plus : le
+  //    champ existait, aucune scène compilable ne l'exposait. Deux noms pour une notion, dont
+  //    un seul est spécifié.
+  'RawBrace.duree',
   'Subgrammar.modifiers',
   // Divers : diagnostic de lint porté sur la règle, étiquette de bloc, suffixes de bloc.
   'Rule.warnings', 'Polymetric.label', 'Polymetric.suffixQualifiers',
