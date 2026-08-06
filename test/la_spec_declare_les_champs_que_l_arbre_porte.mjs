@@ -126,15 +126,18 @@ const DETTE = new Set([
   // Champs de DIRECTIVE et d'ACTEUR portés par l'arbre, absents de leur déclaration.
   'Directive.runtime', 'Directive.aliases', 'Directive.modifiers', 'Directive.timePatterns',
   'ActorDirective.values', 'ActorReference.line', 'ActorDirective.libRefs',
-  // ⚠️ `RawBrace.duree` — l'arbre porte un champ FRANÇAIS là où `AST.md:…` déclare `frame` pour
-  //    la même chose (la durée collée d'un bloc). Apparu à la mesure le 2026-08-06, quand la
-  //    migration du corpus par l'architecte (304 sites) a fait compiler 19 scènes de plus : le
-  //    champ existait, aucune scène compilable ne l'exposait. Deux noms pour une notion, dont
-  //    un seul est spécifié.
+  // ⚠️ `RawBrace.duree` — l'arbre porte un champ FRANÇAIS là où `AST.md` déclare `frame` pour la
+  //    même chose : la durée collée d'une accolade déséquilibrée, propagée depuis la fermante.
+  //    Deux noms pour une notion. ⚠️ Celui-ci N'EST PAS le `Polymetric.frame` corrigé le
+  //    2026-08-06 : là-bas la spec inventait un champ que le désucrage rend inutile, ICI le
+  //    champ existe bel et bien des deux côtés et seul son NOM diffère. Deux défauts voisins,
+  //    deux corrections différentes — les confondre en ferait disparaître un.
   'RawBrace.duree',
   'Subgrammar.modifiers',
   // Divers : diagnostic de lint porté sur la règle, étiquette de bloc, suffixes de bloc.
-  'Rule.warnings', 'Polymetric.label', 'Polymetric.suffixQualifiers',
+  'Rule.warnings', 'Polymetric.suffixQualifiers',
+  // (`Polymetric.label` SORTI du cliquet le 2026-08-06 : AST.md le déclare désormais, en même
+  //  temps que la correction du champ `frame` qui n'existait pas. Le témoin l'a exigé.)
   // ⚠️ DEUX DETTES QUE LA BIBLE CRÉE, ET C'EST LE BON SENS DE LECTURE (2026-08-06).
   // `Rule.mode` : la bible distingue TROIS niveaux (« Modes, scan et directions »,
   //   LANGUAGE.md:2297) — `(mode:…)` est la stratégie du BLOC, `(scan:…)` le sens de parcours

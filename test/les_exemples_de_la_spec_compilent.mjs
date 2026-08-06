@@ -169,12 +169,10 @@ const RE_REGLE = /^[A-Za-z_][\w']*\s*(?:->|<>|<-)\s/;
 // Retard mesuré le 2026-08-06 : 16 règles sur 123, en QUATRE familles. Chaque ligne sort de cette
 // liste le jour où le parser la rattrape — à la main, datée, comme le cliquet du dessus.
 const RETARD_REGLES = new Map([
-  // (a) la DURÉE COLLÉE décimale — `:0.5` (l'entière `:2` passe déjà)
-  ['S -> A:0.5 B C', /ligne non reconnue au niveau des règles/],
-  ['S -> {A B C}:0.5', /ligne non reconnue au niveau des règles/],
-  ['S -> C4:0.5 D4 E4', /ligne non reconnue au niveau des règles/],
-  ['Motif -> {C4 D4}:2 E4:0.5', /ligne non reconnue au niveau des règles/],
-  ['S -> C4(vel:0.7) D4:0.5 E4 F4 (mode:random)', /ligne non reconnue au niveau des règles/],
+  // (a) la DURÉE COLLÉE décimale — RATTRAPÉE le 2026-08-06, les cinq lignes sont SORTIES d'ici.
+  //     Romain : « ces exemples doivent fonctionner, ils sont légitimes ». `0.5` produit
+  //     désormais le MÊME arbre que `1/2` — même durée, deux écritures. C'est le cliquet qui a
+  //     exigé ce resserrement en rougissant, pas ma mémoire.
   // (b) LE SAC COLLÉ à un groupe ou à un terminal, avec le COMPOSANT d'une instance.
   //     ⚠️ CAUSE RÉVISÉE le 2026-08-06 : la FORME est désormais reconnue — `(env1.attack:400)`
   //     compile et rend `{key:'env1', component:'attack', value:400}`, exactement ce que

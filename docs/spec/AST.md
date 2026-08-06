@@ -481,14 +481,21 @@ Un nombre nu posé dans le flux est un silence, et le nombre en donne la durée.
 Polymetric {
   type: "Polymetric"
   voices: RhsElement[][]                     // une voix est une séquence plate
-  frame: string | number | null              // la durée du bloc, posée par le `:` collé
-  settings: SettingBag | null          // le sac collé au `}`
+  settings: SettingBag | null                // le sac collé au `}`
+  label: string | null                       // le nom donné au bloc
 }
 ```
 
 Les accolades portent la polymétrie — plusieurs voix séparées par la virgule — et le groupement
-temporel — une seule voix. La durée collée donne le **ratio du cadre** : elle vit dans `frame`, et
-c'est là, et nulle part ailleurs, que le consommateur la lit.
+temporel — une seule voix.
+
+**La durée collée n'est pas un champ : elle se DÉSUCRE en cadre.** `A4:1/2` produit `{1/2, A4}` et
+`{A B}:1/2` produit `{1/2, {A B}}` — la durée devient la **première voix** du bloc, celle que le
+cadre polymétrique lit déjà. C'est du sucre pur : le moteur ne change pas
+(`hub/decisions/2026-06-26-trois-concepts-temps-duree.md`, validé Romain).
+
+**Une durée décimale est la même chose qu'une fraction**, écrite autrement : `A:0.5` et `A:1/2`
+produisent le même arbre. L'entier donne un `NumericTerminal`, tout le reste un `NumericDuration`.
 
 ### Simultanéité et instantané
 
@@ -680,7 +687,7 @@ droit) · `!accolé` (collé, flux conjoint) · `!inline` (espacé, événement 
 
 | Élément | terminal | groupe | règle | !accolé | !inline | Nœud |
 |---------|:---:|:---:|:---:|:---:|:---:|------|
-| **durée `:N`** | ✅ | ✅ | ❌ | ❌ | ❌ | `Polymetric.frame` — le terminal ou le groupe est emballé |
+| **durée `:N`** | ✅ | ✅ | ❌ | ❌ | ❌ | désucrée : le terminal ou le groupe est emballé dans `{durée, contenu}` |
 | **réglage `(clé:val)`** | ✅ | ✅ | ✅ | ✅ | ✅ | `…suffixQualifiers` · `Rule.settings` · `Polymetric.settings` · `InstantControl` |
 | **vitesse `(/N)` `(*N)`** | ❌ | ❌ | ❌ | ❌ | ✅ | `SpeedChange`, dans un `InstantControl` |
 | **garde `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.guard` |

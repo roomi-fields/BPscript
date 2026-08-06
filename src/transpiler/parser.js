@@ -3154,7 +3154,7 @@ function parse(tokens, opts = {}) {
     // Le désucrage passe par le MÊME qualifier `speed` que les portées terminal/groupe (contrat AST).
     // Si un élément RHS SUIT le `:N`, la durée est ISOLÉE au milieu du flux (portée inline —
     // INTERDITE pour la durée, qui exige un hôte) → erreur claire (fail-loud), pas d'avalement.
-    if (at(T.COLON) && peek(1).type === T.INT && rhs.length > 0) {
+    if (at(T.COLON) && estNombreDeDuree(peek(1)) && rhs.length > 0) {
       const tokColon = current();
       advance(); // consume COLON
       const dur = parseColonFrame(tokColon);
@@ -3565,7 +3565,7 @@ function parse(tokens, opts = {}) {
         // Durée collée sur l'accolade fermante d'un embedding inter-règles : }:N (décision 2026-06-26).
         // Même sémantique que `}[speed:N]` — poussée comme qualifier `speed` (contrat AST), propagée
         // au `{` correspondant par la 2e passe (annotateUnbalancedBraces). Forme canonique déséquilibrée.
-        if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+        if (at(T.COLON) && !current().spaceBefore && estNombreDeDuree(peek(1))) {
           const tokColon = current();
           advance(); // consume COLON
           // La durée d'une accolade DÉSÉQUILIBRÉE ne peut pas s'envelopper ici : le `{` correspondant
@@ -4447,7 +4447,7 @@ function parse(tokens, opts = {}) {
       // `:` COLLÉ (pas d'espace) suivi d'un nombre = durée de note ; désucré en cadre polymétrique.
       // Se distingue de `label:{…}` (capté plus haut, peek(2)=LBRACE) et de `A4 1/2` ESPACÉ
       // (ancien sens : A4 puis un silence, NumericDuration). L'espace tranche (EBNF.md:943).
-      if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+      if (at(T.COLON) && !current().spaceBefore && estNombreDeDuree(peek(1))) {
         advance(); // consume COLON
         const dur = parseColonFrame(tok);
         const sym = { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
@@ -4885,7 +4885,7 @@ function parse(tokens, opts = {}) {
     // Durée collée sur groupe : {A B}:2 → cadre {2, A B} (décision 2026-06-26 trois-concepts).
     // `:` COLLÉ au `}` suivi d'un nombre = durée du groupe ; poussée comme qualifier `speed`
     // dans `qualifiers` (contrat AST_SPEC:1024,1037) — pas un champ ad hoc.
-    if (at(T.COLON) && !current().spaceBefore && peek(1).type === T.INT) {
+    if (at(T.COLON) && !current().spaceBefore && estNombreDeDuree(peek(1))) {
       const tokColon = current();
       advance(); // consume COLON
       dureeCollee = parseColonFrame(tokColon);
@@ -4917,7 +4917,43 @@ function parse(tokens, opts = {}) {
   //     la même musique, même si le son coïncidait sur le cas mesuré.
   // La forme rendue est celle que produit déjà l'écriture développée : `NumericTerminal` pour un
   // entier, `NumericDuration` pour un ratio — vérifié en comparant les deux arbres.
+  /**
+   * Un nombre de DURÉE — entier ou décimal. La fraction se lit après l'entier (`1/2`).
+   * ⚠️ Les quatre portes du `:` collé testaient `T.INT` seul : le décimal n'entrait nulle part,
+   * et `parseColonFrame` ne le voyait jamais. Corriger le lecteur sans corriger les portes ne
+   * changeait RIEN — mesuré le 2026-08-06, la durée décimale restait refusée à l'identique.
+   */
+  const estNombreDeDuree = (t) => t && (t.type === T.INT || t.type === T.FLOAT);
+
   function parseColonFrame(tok) {
+    // ⚠️ LA DURÉE DÉCIMALE — `A:0.5`, cinq exemples de LANGUAGE.md (l. 764, 1005, 1013, 1895,
+    // 2259, tous glosés « occupe un demi-battement »). Elle était REFUSÉE, et pas seulement en
+    // forme collée : `{0.5, A}` développé l'était aussi.
+    //
+    // POURQUOI ELLE NE POUVAIT PAS PASSER PAR LE CHEMIN DE L'ENTIER. Un nombre nu dans le flux
+    // est un TERMINAL SONNANT (ratification Romain 2026-07-17, fidèle à Encode.c:87) — pas une
+    // durée. Émettre `NumericTerminal{value:0.5}` inventerait une note décimale, qui n'existe
+    // dans aucun moteur.
+    //
+    // CE QU'ELLE EST VRAIMENT : la même chose que la fraction, écrite autrement. `0.5` et `1/2`
+    // disent un demi-battement ; ils produisent donc le MÊME arbre, `NumericDuration{1,2}`. La
+    // conversion est EXACTE — un décimal fini est un rationnel — et réduite, pour que `0.50` et
+    // `1/2` ne se distinguent pas dans l'arbre.
+    // ⚠️ Aucun champ nouveau, aucune frontière : le désucrage reste celui que la décision datée
+    // prescrit (`hub/decisions/2026-06-26-trois-concepts-temps-duree.md` : « `A4:1/2` → `{1/2,
+    // A4}`, sucre pur BPScript, zéro changement moteur »).
+    if (at(T.FLOAT)) {
+      const brut = String(advance().value);
+      const decimales = (brut.split('.')[1] || '').length;
+      let n = Math.round(Number(brut) * 10 ** decimales), d = 10 ** decimales;
+      const pgcd = (a, b) => (b === 0 ? a : pgcd(b, a % b));
+      const g = pgcd(n, d) || 1;
+      n /= g; d /= g;
+      if (d === 1) {
+        return { type: 'NumericTerminal', kind: 'numeric-terminal', value: n, line: (tok || current()).line };
+      }
+      return { type: 'NumericDuration', numerator: n, denominator: d };
+    }
     const num = expect(T.INT).value;
     if (at(T.SLASH) && peek(1).type === T.INT) {
       advance(); // consume SLASH
