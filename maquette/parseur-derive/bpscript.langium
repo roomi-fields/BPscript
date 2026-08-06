@@ -26,11 +26,11 @@ entry Scene:
     )*;
 
 ProdLigne:
-    directive=ProdDirective NL+;
+    directive=ProdDirective NL*;
 
 // ── Déclaratif ──────────────────────────────────────────────────────────────
 ActorDirective:
-    '@' 'actor' name=ID (keys+=ActorKey)* NL+;
+    '@' 'actor' name=ID (keys+=ActorKey)* NL*;
 
 // ⚠️ Une clé d'acteur peut porter l'arobase : `@actor flute @alphabet.sargam octaves.western`.
 // Les deux graphies coexistent dans le corpus.
@@ -41,17 +41,20 @@ ActorKey:
 // `@actor sitar alphabet.sargam`. Une valeur nue ne suffit pas.
 Directive:
     '@' name=ID ('.' target=ID)? (':' value=Valeur)? (bag=SettingBag)?
-    (args+=ArgDirective | ',' args+=ArgDirective)* NL+;
+    (args+=ArgDirective | ',' args+=ArgDirective)* NL*;
 
 // ⚠️ `@timepatterns: t1=96/100, t2=100/100` — un argument de directive peut AFFECTER une valeur
 // avec le signe égal, pas seulement avec le deux-points. Mesuré : deux scènes l'écrivent ainsi.
+// ⚠️ Un argument de directive peut être du CODE (`@cv sweep \`js: …\``) ou un TYPE À DEUX-POINTS
+// suivi de paires (`@var section flag: a:1, b:2`).
 ArgDirective:
     mot=ID ('.' sous=ID)? ((':' | '=') valeur=Valeur)?
   | num=NUMBER
-  | texte=STRING;
+  | texte=STRING
+  | code=BACKTICK;
 
 Separator:
-    value='-----' NL+;
+    value='-----' NL*;
 
 // ── Règles de production ────────────────────────────────────────────────────
 // ⚠️ TROIS CHOSES QUE LA MESURE DU CORPUS A IMPOSÉES, chacune sur un paquet de scènes :
@@ -61,7 +64,7 @@ Separator:
 Rule:
     (guards+=Guard | prod+=ProdDirective)*
     lhs+=Lhs+ arrow=Arrow rhs+=RhsElement*
-    (flags+=Guard | prod+=ProdDirective | bag=SettingBag)* NL+;
+    (flags+=Guard | prod+=ProdDirective | bag=SettingBag)* NL*;
 
 // ⚠️ Plusieurs directives dans un même crochet : `[@allitems, @maxitems:500]`.
 ProdDirective:
@@ -141,7 +144,7 @@ OpVitesse returns string:
 // des accolades, elle redevient de la mise en page. C'est la seule place du langage où le retour
 // à la ligne change de sens, et la grammaire doit le dire.
 Polymetric:
-    '{' NL* voices+=Voice (',' NL* voices+=Voice)* NL* '}' (':' frame=Duree)? (bag=SettingBag)?;
+    '{' NL* voices+=Voice (',' NL* voices+=Voice)* NL* '}' (':' frame=Duree)? (bags+=SettingBag)* (crochets+=Guard)*;
 
 // ⚠️ Une VOIX porte son propre sac : `{C5 E5 (vel:100), E4 G4 (vel:70)}`.
 Voice:
@@ -152,7 +155,7 @@ Voice:
 // `{2,~G#5,~B6}` était refusé faute d'admettre le tilde en tête.
 SymbolRef:
     (gabarit=SigneGabarit)? (lien='~')? (negatif='#')? (actor=ID '.')? name=ID
-    (':' duree=Duree)? ('.' numero=NUMBER)? (bag=SettingBag)? (tie='~')?;
+    (':' duree=Duree)? ('.' numero=NUMBER)? (bags+=SettingBag | crochets+=Guard)* (tie='~')?;
 
 SigneGabarit returns string:
     '$' | '&';
@@ -177,8 +180,8 @@ Valeur:
 
 // ⚠️ `K1=1` — un K-paramètre s'initialise DANS une valeur (`weight:K1=1`, `rotate:K1=2`).
 Atome:
-    (signe='-')? num=NUMBER (('/' | '-' | '+') suite=NUMBER)*
-  | mot=ID ('=' (initSigne='-')? init=NUMBER (('/' | '-' | '+') initSuite=NUMBER)*)?
+    (signe='-')? num=NUMBER (('/' | '-' | '+') suite+=NUMBER)*
+  | mot=ID ('=' (initSigne='-')? init=NUMBER (('/' | '-' | '+') initSuite+=NUMBER)*)?
   | texte=STRING;
 
 Nombre:
@@ -204,6 +207,11 @@ Wildcard:      value='?' (rang=NUMBER)? (bag=SettingBag)?;
 // `*` — le marqueur d'homomorphisme, posé dans le flux.
 Etoile:        value='*';
 
+// ⚠️ LA DERNIÈRE LIGNE D'UN FICHIER N'A PAS DE SAUT DE LIGNE. Mesuré : 59 scènes du corpus se
+// terminent sans, et ma règle en exigeait un — un refus qui ne disait rien du langage, seulement
+// de ma grammaire trop stricte. Un quart du corpus tombait là-dessus.
+
+
 // ── Lexèmes ─────────────────────────────────────────────────────────────────
 // ⚠️ `ID` accepte le chiffre en fin de mot et l'apostrophe : les terminaux du langage s'écrivent
 // `C4`, `Bb3`, `A_r`, `B_r'`. Un identifiant qui les refuserait rejetterait la moitié du corpus.
@@ -213,7 +221,9 @@ Etoile:        value='*';
 // marquent le registre (`A'8`, `B"8`), le dièse une altération (`G#5`), et le TIRET SUIVI D'UN
 // CHIFFRE une variante (`Tr-11`, `A'6-2`). Un identifiant qui les refuserait rejetterait des
 // familles entières — et aucun des trois documents ne le disait.
-terminal ID: /[A-Za-z_][A-Za-z0-9_#'"]*(-[0-9]+)*/;
+// ⚠️ Le TIRET vit aussi ENTRE DEUX MOTS : `pure_minor-third_meantone`. Mesuré sur le corpus —
+// le restreindre au tiret-chiffre laissait tomber les noms d'accordage composés.
+terminal ID: /[A-Za-z_][A-Za-z0-9_#'"]*(-[A-Za-z0-9_][A-Za-z0-9_#'"]*)*/;
 terminal NUMBER returns number: /[0-9]+(\.[0-9]+)?/;
 terminal STRING: /"[^"]*"/;
 terminal BACKTICK: /`[^`]*`/;

@@ -243,7 +243,12 @@ le plus fréquent**, jamais par ce que je croyais manquer.
 | 15 | argument à signe égal · objet composé (deux graphies) | **205** |
 | 16 | silence à sac · **tête de règle composée** | **208** |
 
-**208 sur 271 — 77 % du corpus**, avec une grammaire de 190 lignes contre 7 836 lignes de parseur
+| 17 | **le fichier peut ne pas finir par un saut de ligne** | **213** |
+| 18 | sacs multiples collés · crochet après un bloc | **219** |
+| 19 | crochet collé à un terminal · tiret entre deux mots | **221** |
+| 20 | argument de directive en backtick | **225** |
+
+**225 sur 271 — 83 % du corpus**, avec une grammaire de 200 lignes contre 7 836 lignes de parseur
 écrit à la main.
 
 ⚠️ Le dénominateur est passé de 274 à **271** : les trois scènes que la décision du 2026-08-06
@@ -349,3 +354,21 @@ distingue ce langage d'une grammaire ordinaire, et aucun des trois documents ne 
 arguments d'une directive, j'ai interdit sans le voir les arguments séparés par une ESPACE — une
 scène est tombée. Le compte l'a dit tout de suite (201 → 201, avec un motif nouveau). Sans mesure
 à chaque pas, une passe qui « ajoute » peut retirer en silence.
+
+
+## Passe 17 — la faute la plus bête, et la plus coûteuse
+
+**Cinquante-neuf scènes tombaient parce que leur fichier ne finit pas par un saut de ligne.**
+
+Ma règle exigeait `NL+` pour terminer une règle ; la dernière ligne d'un fichier n'en a pas. Un
+quart du corpus refusé, et le message ne disait rien du langage — seulement que ma grammaire était
+trop stricte.
+
+⚠️ **C'est la leçon la plus utile de la série** : un motif de refus qui touche beaucoup de scènes
+n'est PAS le signe d'une lacune profonde. Ici, un caractère. Le réflexe de chercher grand devant un
+grand nombre est exactement ce qui fait perdre du temps — j'ai d'abord soupçonné les commentaires
+de tête, puis les directives, avant de mesurer le dernier caractère du fichier.
+
+⚠️ **Et j'ai vérifié que la relâche ne rouvrait pas la faille précédente** : un témoin dédié
+confirme que deux règles sur deux lignes font toujours DEUX règles, pas une. Relâcher une
+contrainte sans re-tester celle qu'elle protégeait est le meilleur moyen de payer deux fois.
