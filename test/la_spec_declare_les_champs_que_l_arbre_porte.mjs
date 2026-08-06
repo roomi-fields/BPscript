@@ -129,6 +129,16 @@ const DETTE = new Set([
   'Subgrammar.modifiers',
   // Divers : diagnostic de lint porté sur la règle, étiquette de bloc, suffixes de bloc.
   'Rule.warnings', 'Polymetric.label', 'Polymetric.suffixQualifiers',
+  // ⚠️ DEUX DETTES QUE LA BIBLE CRÉE, ET C'EST LE BON SENS DE LECTURE (2026-08-06).
+  // `Rule.mode` : la bible distingue TROIS niveaux (« Modes, scan et directions »,
+  //   LANGUAGE.md:2297) — `(mode:…)` est la stratégie du BLOC, `(scan:…)` le sens de parcours
+  //   d'UNE règle. Le champ dérivé de `(scan:…)` s'appelle `mode` dans l'arbre : un homonyme du
+  //   mode de bloc. `AST.md` dit `scan`, comme la bible ; c'est le CODE qui est en retard.
+  // `Setting.decrement` : la bible donne au poids « un entier, `inf`, ou un K-param »
+  //   (LANGUAGE.md:1026) — pas de décrément. L'arbre en porte un sur 20 paires. Question
+  //   OUVERTE pour Romain, et elle est réelle celle-là : la bible est MUETTE, elle n'a pas
+  //   tranché contre.
+  'Rule.mode', 'Setting.decrement',
 ]);
 
 // ────────────────────────────────────────────────────────────────────────────
