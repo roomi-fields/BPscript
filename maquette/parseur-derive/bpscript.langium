@@ -1,74 +1,159 @@
-// MAQUETTE — phase 2 du chantier « parseur dérivé d'un formalisme ».
+// GRAMMAIRE DE MAQUETTE — chantier « parseur dérivé d'un formalisme », phase 3.
 //
-// ⚠️ CE N'EST PAS LE LANGAGE. C'est un FRAGMENT, choisi sur la mesure de la phase 0 : les natures
-// de nœud les plus produites du corpus — Symbol, Rule, Polymetric, Rest, Prolongation, le nombre.
-// Elles couvrent la quasi-totalité des 274 scènes ; la queue longue (câblage, gabarits, points
-// d'attente) est délibérément absente.
+// Elle vise le CŒUR mesuré en phase 0 : les natures qui portent la quasi-totalité du corpus.
+// Ce n'est pas encore le langage entier — la queue longue (câblage, gabarits, points d'attente,
+// homomorphismes) est absente, et le compte d'acceptation le dit.
 //
-// CE QUE CETTE MAQUETTE DOIT PROUVER, et rien d'autre :
-//   1. qu'une grammaire maintenue produit un analyseur qui accepte le langage réel ;
-//   2. que l'arbre qu'elle en tire se compare à celui du parseur écrit à la main ;
-//   3. que les refus portent une position et un attendu — la gestion d'erreur des compilateurs
-//      standards, sans qu'on l'écrive.
+// ⚠️ DEUX CONTRAINTES MESURÉES SONT INSCRITES DANS SA FORME, pas dans un commentaire d'intention :
+//   1. LA FIN DE LIGNE TERMINE UNE RÈGLE. L'espace caché fondait deux règles en une.
+//   2. PAS DE RÉPÉTITION ENGLOBANTE AU SOMMET. Une itération au sommet avale l'échec de ce qu'elle
+//      répète, et toute faute remonte au premier caractère. Les règles sont filles directes de la
+//      scène pour que chacune échoue À SA PLACE — la qualité des diagnostics est une propriété de
+//      la GRAMMAIRE, pas seulement de l'outil.
 //
-// ⚠️ CE QU'ELLE NE PROUVE PAS : le sens, la résolution (alphabets, acteurs, hauteurs), et les
-// messages qui nomment une relève. Ces derniers viennent d'un catalogue à tenir, quel que soit
-// l'outil — c'est le troisième formalisme du plan.
+// ⚠️ `Symbol` reste interdit (nom réservé du runtime JavaScript) : le nœud le plus produit du
+// langage s'appelle ici `SymbolRef`. C'est une frontière pour les huit dépôts qui lisent l'arbre.
 
 grammar BPScript
 
-// ⚠️ PAS DE RÉPÉTITION ENGLOBANTE AU SOMMET. Mesuré à la maquette : avec `subgrammars+=Subgrammar`
-// et `Subgrammar: rules+=Rule+`, TOUTE faute — même au milieu d'un groupe, à la ligne 40 —
-// remontait à « ligne 1, colonne 1 ». Une itération au sommet avale l'échec de ce qu'elle répète.
-// Les règles sont donc filles directes de la scène : chacune échoue à SA place.
 entry Scene:
-    NL* (directives+=Directive NL+ | rules+=Rule)*;
+    NL* (
+        actors+=ActorDirective
+      | directives+=Directive
+      | separators+=Separator
+      | prods+=ProdLigne
+      | rules+=Rule
+    )*;
 
-// ── La partie déclarative, réduite à l'invocation de librairie ───────────────
+ProdLigne:
+    directive=ProdDirective NL+;
+
+// ── Déclaratif ──────────────────────────────────────────────────────────────
+ActorDirective:
+    '@' 'actor' name=ID (keys+=ActorKey)* NL+;
+
+ActorKey:
+    key=ID '.' target=ID ('(' params+=Paire (',' params+=Paire)* ')')?;
+
 Directive:
-    '@' name=ID ('.' target=ID)?;
+    '@' name=ID ('.' target=ID)? (':' value=Valeur)? (args+=Valeur)* NL+;
 
-// ── Les règles de production ────────────────────────────────────────────────
-// ⚠️ LA FIN DE LIGNE FAIT PARTIE DE LA GRAMMAIRE. Mesuré à la maquette : avec l'espace entièrement
-// caché, deux règles qui se suivent se fondent en une — le membre droit de la première avale la
-// tête de la seconde, puis la flèche échoue. Le retour à la ligne n'est donc PAS de la mise en
-// page dans ce langage : il TERMINE une règle, et la grammaire doit le dire.
+Separator:
+    value='-----' NL+;
+
+// ── Règles de production ────────────────────────────────────────────────────
+// ⚠️ TROIS CHOSES QUE LA MESURE DU CORPUS A IMPOSÉES, chacune sur un paquet de scènes :
+//   · un SAC DE RÉGLAGES en fin de règle (`… - (vel:110)`) — 111 scènes butaient là ;
+//   · une TÊTE À PLUSIEURS SYMBOLES (`S1F S2F E32 ->`) — la règle contextuelle ;
+//   · une DIRECTIVE DE PRODUCTION entre crochets (`[@maxitems:20]`).
 Rule:
-    lhs=SymbolRef arrow=Arrow rhs+=RhsElement+ NL+;
+    (guards+=Guard | prod+=ProdDirective)*
+    lhs+=Lhs+ arrow=Arrow rhs+=RhsElement+
+    (flags+=Guard | prod+=ProdDirective | bag=SettingBag)* NL+;
+
+// ⚠️ Plusieurs directives dans un même crochet : `[@allitems, @maxitems:500]`.
+ProdDirective:
+    '[' '@' names+=ProdNom (',' '@'? names+=ProdNom)* ']';
+
+ProdNom:
+    name=ID (':' value=Valeur)?;
+
+Lhs:
+    (negatif='#')? name=ID | joker='?' (rang=NUMBER)?;
 
 Arrow returns string:
     '->' | '<-' | '<>';
 
+// ⚠️ Le crochet porte aussi les PROCÉDURES de niveau règle (`[repeat:1]`, `[goto:2 1]`) — une
+// clé suivie d'un deux-points, distincte d'un test de drapeau.
+// ⚠️ Plusieurs mutations dans un même crochet : `[Ideas=20, Notes=32, NumR=1]`.
+Guard:
+    '[' items+=GuardItem (',' items+=GuardItem)* ']';
+
+GuardItem:
+    flag=ID ((op=OpDrapeau | deuxpoints=':') value=Valeur)?;
+
+OpDrapeau returns string:
+    '==' | '!=' | '>=' | '<=' | '>' | '<' | '=' | '+' | '-';
+
+// ── Membre droit ────────────────────────────────────────────────────────────
 RhsElement:
-    Polymetric | Rest | Prolongation | NumericTerminal | SymbolRef;
+    Instant | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
+  | Wildcard | Nombre | SymbolRef;
 
-// `{A B, C D}` — plusieurs voix séparées par la virgule ; une seule voix = un groupement.
+// `$ {…}` capture un GROUPE entier, `& {…}` le rejoue — l'espace sépare le signe du groupe.
+GabaritGroupe:
+    signe=SigneGabarit groupe=Polymetric;
+
+// `!(vel:80)` runtime · `! (/2)` vitesse · `![retro]` moteur · `![@seed:1]` production · `!nom`
+Instant:
+    '!' (speed=Speed | bag=SettingBag | prod=ProdDirective | crochet=Guard | name=ID);
+
+Speed:
+    '(' op=OpVitesse value=NUMBER ('/' denom=NUMBER)? ')';
+
+OpVitesse returns string:
+    '/' | '*';
+
 Polymetric:
-    '{' voices+=Voice (',' voices+=Voice)* '}';
+    '{' voices+=Voice (',' voices+=Voice)* '}' (':' frame=Duree)? (bag=SettingBag)?;
 
+// ⚠️ Une VOIX porte son propre sac : `{C5 E5 (vel:100), E4 G4 (vel:70)}`.
 Voice:
-    elements+=RhsElement+;
+    elements+=RhsElement+ (bag=SettingBag)?;
 
-// ⚠️ NOMMÉ `SymbolRef` ET NON `Symbol` : l'outil refuse `Symbol`, nom réservé du runtime
-// JavaScript. Contrainte réelle relevée à la maquette — le nom des nœuds n'est donc PAS
-// entièrement libre, et l'arbre engendré ne pourra pas porter partout les noms actuels.
+// `$mel` capture, `&mel` rejoue — les gabarits. `#X` est un contexte négatif.
 SymbolRef:
-    name=ID;
+    (gabarit=SigneGabarit)? (negatif='#' (joker='?')?)? (actor=ID '.')? name=ID
+    (':' duree=Duree)? ('.' numero=NUMBER)? (bag=SettingBag)? (tie='~')?;
 
-Rest:
-    value='-';
+SigneGabarit returns string:
+    '$' | '&';
 
-Prolongation:
-    value='_';
+Duree:
+    num=NUMBER ('/' denom=NUMBER)?;
 
-NumericTerminal:
-    value=NUMBER;
+SettingBag:
+    '(' pairs+=Paire (',' pairs+=Paire)* ')';
+
+// `cc.98:0` — le composant peut être un NUMÉRO.
+Paire:
+    key=ID ('.' (component=ID | numero=NUMBER))? (':' value=Valeur)?;
+
+// ⚠️ UNE VALEUR PEUT AVOIR PLUSIEURS PARTIES, séparées par une ESPACE — `(scale:todi_ka_4 0)`,
+// `(keymap:C3 C3 C5 C5)`, `(scale:Cmaj C4)`. C'est la loi du langage : la VIRGULE sépare les
+// éléments du sac, l'ESPACE sépare les parties d'une valeur. Sans cela le sac se refermait sur la
+// deuxième partie.
+// ⚠️ Et le DÉCRÉMENT `N-D` (`weight:20-4`) est une valeur d'un seul tenant, pas deux parties.
+Valeur:
+    parts+=Atome+;
+
+// ⚠️ `K1=1` — un K-paramètre s'initialise DANS une valeur (`weight:K1=1`, `rotate:K1=2`).
+Atome:
+    (signe='-')? num=NUMBER (('/' | '-' | '+') suite=NUMBER)*
+  | mot=ID ('=' init=NUMBER)?
+  | texte=STRING;
+
+Nombre:
+    value=NUMBER ('/' denom=NUMBER)?;
+
+Backtick:      value=BACKTICK;
+Rest:          value='-';
+Prolongation:  value='_';
+Undetermined:  value='...';
+Period:        value='.';
+// `?` anonyme, `?1` numéroté — les jokers d'un gabarit.
+Wildcard:      value='?' (rang=NUMBER)?;
 
 // ── Lexèmes ─────────────────────────────────────────────────────────────────
-// ⚠️ `ID` accepte le chiffre en fin de mot : les terminaux du langage s'écrivent `C4`, `Bb3`,
-// `A_r` — un identifiant qui refuserait le chiffre final rejetterait la moitié du corpus.
-terminal ID: /[A-Za-z_][A-Za-z0-9_']*/;
+// ⚠️ `ID` accepte le chiffre en fin de mot et l'apostrophe : les terminaux du langage s'écrivent
+// `C4`, `Bb3`, `A_r`, `B_r'`. Un identifiant qui les refuserait rejetterait la moitié du corpus.
+// ⚠️ L'APOSTROPHE VIT À L'INTÉRIEUR DU NOM, pas seulement à la fin : `A'8`, `F'24`, `B_r'`.
+// Mesuré : la placer en suffixe seul rejetait toute une famille de scènes.
+terminal ID: /[A-Za-z_][A-Za-z0-9_#']*/;
 terminal NUMBER returns number: /[0-9]+(\.[0-9]+)?/;
+terminal STRING: /"[^"]*"/;
+terminal BACKTICK: /`[^`]*`/;
 
 terminal NL: /[\r\n]+/;
 hidden terminal WS: /[ \t]+/;

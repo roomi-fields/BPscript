@@ -212,3 +212,54 @@ d'erreur des compilateurs standards**, et elle est atteinte.
 actuel (qui fait en plus la résolution et le scellement). Les 283 ms cités plus haut sont le temps
 d'ENGENDRER l'analyseur — une étape de construction, faite une fois. La confusion était dans ma
 rédaction.
+
+
+---
+
+# Phase 3 — la grammaire couvre 60 % du corpus, mesuré pas à pas
+
+**2026-08-06, en fin de session.** Cinq passes successives, chacune guidée par le **motif de refus
+le plus fréquent**, jamais par ce que je croyais manquer.
+
+| passe | ce qu'elle a ajouté | acceptées |
+|---|---|---|
+| fragment initial | six natures du cœur | **0 / 274** |
+| 1 | déclaratif, gardes, sacs, instantané, backticks, durée collée | **89** |
+| 2 | sac en fin de règle · tête à plusieurs symboles · directive en crochets | **132** |
+| 3 | valeur multi-parties · décrément · joker numéroté · procédure en crochets | **145** |
+| 4 | K-paramètre · crochets multiples · composant numéroté | **147** |
+| 5 | apostrophe interne · sac de voix · joker en tête · directive de ligne | **163** |
+| 6 | instantané en crochets · groupe de gabarit | **164** |
+
+**164 sur 274 — 60 % du corpus réel**, avec une grammaire de 130 lignes contre 7 836 lignes de
+parseur écrit à la main.
+
+## Ce que la montée a appris sur le langage lui-même
+
+Chaque passe a révélé une propriété que **ni la bible ni la grammaire ne portaient** :
+
+- **la fin de ligne termine une règle** — sans quoi deux règles se fondent en une ;
+- **l'apostrophe vit à l'intérieur d'un nom** (`A'8`, `F'24`), pas seulement à la fin ;
+- **une voix polymétrique porte son propre sac** — `{C5 E5 (vel:100), E4 (vel:70)}` ;
+- **une valeur a plusieurs parties séparées par l'espace** — la virgule sépare les éléments du sac,
+  l'espace les parties d'une valeur ;
+- **un crochet peut porter plusieurs mutations** — `[Ideas=20, Notes=32]`.
+
+⚠️ **C'est le bénéfice qu'on n'attendait pas.** Écrire la grammaire ne fait pas que produire un
+analyseur : elle **oblige à dire** ce que le parseur fait sans l'avoir écrit nulle part. Chacune de
+ces cinq propriétés était vraie depuis toujours, appliquée par 7 836 lignes de code, et absente des
+trois documents.
+
+## Ce qui reste — la queue longue, et elle est nommée
+
+Les 110 scènes restantes butent sur des constructions rares, chacune sur deux à quatre scènes :
+entrées du catalogue de gabarits (`[1] /1 ???????`), contexte négatif groupé (`#(?1 ?3 ?2)`),
+appel de code libre (`script(wait for do#2 channel 1)`), objet sonore composé (`|`), guillemet
+dans un nom. Aucune n'est un obstacle de principe ; ce sont des lignes de grammaire à écrire.
+
+## Ce que cette phase établit pour la décision
+
+1. **La méthode tient sur le langage réel**, pas seulement sur un fragment jouet.
+2. **La montée est régulière et guidée par la mesure** — pas d'effet falaise.
+3. **Le coût est celui de la queue**, pas du cœur : 60 % en six passes courtes, les 40 % restants
+   demanderont plus de passes pour moins de scènes chacune.

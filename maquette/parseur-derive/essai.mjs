@@ -13,12 +13,16 @@ for (const [nom, src] of toutesLesScenes()) {
   const r = parse(src);
   const errs = [...(r.lexerErrors || []), ...(r.parserErrors || [])];
   if (errs.length === 0) { ok++; continue; }
-  const m = (errs[0].message || '').replace(/\s+/g, ' ').slice(0, 58);
+  const e = errs[0];
+  const ligne = (e.token && e.token.startLine) ? (src.split('\n')[e.token.startLine - 1] || '').trim() : '';
+  const m = (e.message || '').replace(/\s+/g, ' ').slice(0, 40);
   if (!echecs.has(m)) echecs.set(m, []);
-  echecs.get(m).push(nom);
+  echecs.get(m).push(nom + ' | ' + ligne.slice(0, 56));
 }
 const total = ok + [...echecs.values()].reduce((a, b) => a + b.length, 0);
 console.log(`analyseur ENGENDRE sur le corpus : ${ok}/${total} scenes acceptees`);
 console.log('\n--- ce qu il refuse, par motif ---');
-for (const [m, l] of [...echecs].sort((a, b) => b[1].length - a[1].length).slice(0, 8))
+for (const [m, l] of [...echecs].sort((a, b) => b[1].length - a[1].length).slice(0, 6)) {
   console.log(String(l.length).padStart(4), m);
+  for (const x of l.slice(0, 3)) console.log('        ' + x);
+}
