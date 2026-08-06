@@ -86,7 +86,8 @@ function actorKeysData() {
   if (!Array.isArray(valides) || valides.length === 0) {
     throw new Error("lib/core.json schema.actorKeys est vide ou absent — le parseur n'a plus de clés d'acteur");
   }
-  _actorKeys = { valides: new Set(valides), toutes: new Set([...valides, ...perimees]) };
+  _actorKeys = { valides: new Set(valides), perimees: new Set(perimees),
+                 toutes: new Set([...valides, ...perimees]) };
   return _actorKeys;
 }
 
@@ -1937,13 +1938,38 @@ function parse(tokens, opts = {}) {
           );
         }
 
-        // forme v0.8 : `alphabet.X`, `tuning.X`, `octaves.X`, `out.X[(...)`, `sound.X`, `eval.X`
-        // SIX clés d'entité (décision cles-acteur-six, Romain 2026-06-16).
+        // Les CINQ clés d'entité — `alphabet.X`, `tuning.X`, `octaves.X`, `out.X[(…)]`, `eval.X`.
         if (next === T.PERIOD && !peek(1).spaceBefore) {
-          // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
-          // symbole, début de règle).
-          const isEntityKey = actorKeysData().valides.has(key);
-          if (!isEntityKey) break;
+          // ⛔ LISTE BLANCHE — EST REFUSÉ TOUT CE QUI N'EST PAS ACCEPTÉ (Romain, 2026-08-06).
+          // Une liste noire de clés périmées ne ferme que ce qu'on a pensé à y mettre ; la
+          // prochaine faute de frappe passe. Ici, une clé qui n'est pas dans `schema.actorKeys`
+          // REFUSE, quelle qu'elle soit — et le message nomme les cinq qui existent.
+          //
+          // ⚠️ UNE SEULE CHOSE DOIT ÉCHAPPER À CE REFUS : le début d'une RÈGLE. Un membre gauche
+          // peut porter un terminal qualifié par son acteur (`sitar1.sa -> …`), qui a la même
+          // forme qu'une clé. On les distingue par la FLÈCHE, sur la même ligne : une règle en a
+          // une, une clé d'acteur jamais. Mesuré avant d'écrire : aucune scène de l'écosystème
+          // n'écrit aujourd'hui une tête de règle pointée — le cas est donc théorique, mais le
+          // langage l'autorise et un refus qui l'attraperait serait un faux positif silencieux.
+          if (!actorKeysData().valides.has(key)) {
+            let k = 0, estRegle = false;
+            while (peek(k) && peek(k).type !== T.NEWLINE && peek(k).type !== T.EOF) {
+              const t = peek(k).type;
+              if (t === T.ARROW_R || t === T.ARROW_L || t === T.ARROW_BI) { estRegle = true; break; }
+              k++;
+            }
+            if (estRegle) break;   // c'est une règle, pas une clé : l'acteur est fini
+            const perimee = actorKeysData().perimees.has(key);
+            const ou = key === 'voice'
+              ? ` — une voix s'attache au TERMINAL, pas à l'acteur`
+              : key === 'sound' || key === 'sounds'
+                ? ` — un prototype d'objet sonore vit en librairie, il ne se pose pas sur l'acteur`
+                : '';
+            throw new ParseError(
+              `'${key}.…' n'est pas une clé d'acteur${perimee ? ' (retirée le 2026-08-06)' : ''}${ou}. `
+              + `Les clés d'un acteur sont : ${[...actorKeysData().valides].join(', ')}`,
+              current());
+          }
           advance();           // consume key IDENT
           advance();           // consume PERIOD
           const value = expect(T.IDENT).value;

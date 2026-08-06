@@ -176,19 +176,19 @@
       "device": "sortie (runtime) — adresse de sortie (appareil)",
       "port": "sortie (runtime) — adresse de sortie (port)"
     },
-    "_actorKeys_doc": "CLES D'UN ACTEUR — les mots qui peuvent suivre le nom d'un acteur, et que le POINT appelle (`alphabet.sargam`, `out.midi(ch:3)`, `eval.strudel(bank:gm)`). Declarees ICI depuis le 2026-08-06 (Romain : « est-ce que les cles d'acteur devraient etre specifiees en librairies comme tout le reste ? ») : elles vivaient en dur dans le parseur, seule liste structurelle du langage a ne pas avoir de domicile dans la donnee.\n\n⚠️ ELLES NE SE DEDUISENT PAS DES AUTRES LISTES, et le supposer serait faux : `scale` et `sound` sont des `catalogAxes`, mais `scale` n'est PAS une cle d'acteur. Une derivation inventerait une cle. C'est donc une liste propre — dont chaque membre reste verifiable contre les autres.\n\n⚠️ ECART BIBLE↔CODE, MESURE LE 2026-08-06, NON TRANCHE : LANGUAGE.md ecrit « les CINQ cles d'un acteur » et cite alphabet, tuning, octaves, out, eval. Le code en accepte DEUX de plus, `sound` et `voice`, qu'aucune scene du corpus n'ecrit mais que des tests exercent (`voice` : neuf assertions dediees et une librairie de quatorze entrees ; `sound` : trois fichiers de test et lib/sounds.json). Elles sont donc CONSTRUITES et NON ADOPTEES. Romain tranche : soit la bible les decrit, soit elles sortent — et c'est alors une suppression de fonctionnalite, pas un menage de liste.",
+    "_actorKeys_doc": "CLES D'UN ACTEUR — les mots qui peuvent suivre le nom d'un acteur, et que le POINT appelle (`alphabet.sargam`, `out.midi(ch:3)`, `eval.strudel(bank:gm)`). Declarees ICI depuis le 2026-08-06 (Romain : « est-ce que les cles d'acteur devraient etre specifiees en librairies comme tout le reste ? ») : elles vivaient en dur dans le parseur, seule liste structurelle du langage a ne pas avoir de domicile dans la donnee.\n\nELLES SONT CINQ, comme LANGUAGE.md l'ecrit. `sound` et `voice` en sont SORTIES le 2026-08-06 sur decision de Romain, et le motif n'est pas qu'elles etaient inemployees — c'est qu'elles ne sont PAS des proprietes d'un acteur : « voice est maintenant la librairie des voix et est liee au TERMINAL, pas a l'acteur ; sound serait une librairie de prototypes d'objets sonores, pas dans acteur non plus ». Les librairies restent ; c'est leur point d'accroche qui change.\n\n⚠️ ELLES NE SE DEDUISENT PAS DES AUTRES LISTES, et le supposer serait faux : `scale` et `sound` sont des `catalogAxes`, mais aucune des deux n'est une cle d'acteur. Une derivation inventerait une cle.",
     "actorKeys": [
       "alphabet",
       "tuning",
       "octaves",
       "out",
-      "eval",
-      "sound",
-      "voice"
+      "eval"
     ],
-    "_deprecatedActorKeys_doc": "Cles d'acteur PERIMEES → refusees au parse, jamais acceptees. Meme mecanisme que `deprecatedTransports`. ⚠️ `sounds` est ici et NON dans `actorKeys` : un nom peut figurer dans une liste pour INTERDIRE, jamais pour permettre. Mesure du 2026-08-06 : retire des deux listes, `sounds:tabla_perc` redevenait SILENCIEUSEMENT ACCEPTE — le retirer OUVRE au lieu de fermer.",
+    "_deprecatedActorKeys_doc": "Cles d'acteur PERIMEES → REFUSEES au parse avec un message qui nomme la releve, jamais acceptees en silence. Meme mecanisme que `deprecatedTransports`.\n\n⚠️ POURQUOI UNE CLE RETIREE ATTERRIT ICI ET NE DISPARAIT PAS. Mesure du 2026-08-06 : sortie des DEUX listes, `sounds:tabla_perc` redevenait SILENCIEUSEMENT ACCEPTE. Un nom peut figurer dans une liste pour INTERDIRE, jamais pour permettre — l'enlever OUVRE au lieu de fermer. C'est la raison pour laquelle `sound` et `voice`, retirees des cles valides le meme jour, viennent ICI plutot que nulle part : une scene qui ecrivait `sound.X` sur un acteur doit l'APPRENDRE.",
     "deprecatedActorKeys": [
-      "sounds"
+      "sound",
+      "sounds",
+      "voice"
     ],
     "_varConventions_doc": "Les quatre CONVENTIONS d'une variable de travail (`@var hauteur pitch`). Declarees ici le 2026-08-06, meme geste que `actorKeys` : elles etaient en dur dans le parseur. EBNF.md les porte sous `CONVENTION` — c'est un DERIVE, il suit cette declaration.",
     "varConventions": [

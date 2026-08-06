@@ -269,18 +269,24 @@ S -> A`);
 // 11. sound.X seul (= *:sound.X)
 // ============================================================
 
-section('sound.X seul (sucre pour *:sound.X)');
+section('sound.X sur un acteur — RETIRE le 2026-08-06');
 
+// ⚠️ CE CAS TESTAIT `sound.X` comme raccourci de `*:sound.X` SUR UN ACTEUR. Romain a retire la
+// cle le 2026-08-06 : « sound, ca serait a priori une librairie de prototypes d'objets sonores,
+// pas dans acteur non plus ». La librairie reste, son point d'accroche change.
+// Le cas ne DISPARAIT pas avec la forme : il devient la pierre tombale, sinon la cle pourrait
+// revenir en silence par une regression du parseur.
 {
-  const ast = parseSource(`@controls
+  let msg = '';
+  try {
+    parseSource(`@controls
 @actor x
   alphabet.tabla
   sound.bell_short
 S -> A`);
-  // Doit produire properties.sound + une SoundAssignment scope=actor subject=*.
-  assert('actor properties.sound rempli', ast.actors[0].properties.sound === 'bell_short');
-  assert('SoundAssignment scope=actor subject=*', ast.soundAssignments?.[0]?.subject === '*');
-  assert('target.name=bell_short', ast.soundAssignments?.[0]?.target?.name === 'bell_short');
+  } catch (e) { msg = e.message; }
+  assert('sound.X sur un acteur est REFUSE', msg !== '');
+  assert("le refus nomme la cause, pas « fleche attendue »", /n'est pas une cle d'acteur|n'est pas une clé d'acteur/.test(msg));
 }
 
 // ============================================================
@@ -448,18 +454,19 @@ S -> tabla.dhin tabla.dha
 // 20. CUTOVER : sound.NAME (dot) → sound + SoundAssignment ; sounds:NAME (colon) REJETÉ
 // ============================================================
 
-section('sound.NAME (dot) canonique ; sounds:NAME (colon) REJETÉ');
+section('sound sur un acteur — LES DEUX GRAPHIES REFUSENT');
 
+// ⚠️ CE CAS OPPOSAIT le point (canonique) au deux-points (v0.7, rejete). Depuis le 2026-08-06,
+// `sound` n'est plus une cle d'acteur du tout : LES DEUX refusent. La question qu'il gardait
+// — « une graphie morte ne passe pas en silence » — reste, elle porte juste sur les deux formes.
 {
-  const ast = parseSource(`@controls
-@actor t sound.tabla_perc @alphabet.tabla out.midi(ch:1)
-S -> A`);
-  assert('properties.sound rempli (canonique)', ast.actors[0].properties.sound === 'tabla_perc');
-  // Émet aussi une SoundAssignment scope=actor subject=*, cohérent avec
-  // l'équivalence sémantique v0.8 (sound.X = *:sound.X dans @actor).
-  assert('soundAssignment émis', ast.soundAssignments?.[0]?.target?.name === 'tabla_perc');
-  assert('sounds:tabla_perc (colon v0.7) → REJET',
+  assert('sounds:tabla_perc (deux-points) → REJET',
     rejects(`@controls\n@actor t sounds:tabla_perc\nS -> A`, "sounds:…"));
+  let msg = '';
+  try { parseSource(`@controls\n@actor t sound.tabla_perc @alphabet.tabla out.midi(ch:1)\nS -> A`); }
+  catch (e) { msg = e.message; }
+  assert('sound.tabla_perc (point) → REJET aussi', msg !== '');
+  assert('le refus nomme la cause', /cl[eé] d'acteur/.test(msg));
 }
 
 // ============================================================

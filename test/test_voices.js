@@ -1,100 +1,66 @@
-/**
- * test_voices.js — LANG-SONS-2 : modèle de VOIX ([438], spec hub/projets/2026-06-24-lang-sons-spec/README.md).
- *
- * Couvre :
- *   1. `voice.<nom>` = 7e clé d'entité d'acteur → ActorReference {category:'voice'} (2 voies).
- *   2. PREUVE ORDONNÉE [438] : une voix avec réalisation audio SANS hauteur (alphabet sans
- *      tuning, percussion) est ACCEPTÉE — la hauteur est structurelle (spec §2), pas un flag.
- *   3. Fail-loud : voix inconnue (pas dans lib/voices) ; graphie `voice:` (cutover 2026-07-14).
- *   4. Binding alphabet→voix (champ `voices` de l'alphabet tabla) : validé au parse.
- *   5. Spécialisation `for:<device>` : indexée sous le nom de base (voice.fatbass référable).
- *   6. describeVocabulary expose le catalogue des voix (éditeur).
- *   7. Non-régression : les formes canoniques sans voix compilent inchangées.
- */
-import { compileToBPxAST, describeVocabulary } from '../src/transpiler/index.js';
+// LA VOIX N'EST PLUS UNE CLÉ D'ACTEUR — pierre tombale et intégrité de la librairie.
+//
+// ⚠️ CE FICHIER A CHANGÉ DE SUJET LE 2026-08-06, ET LE POURQUOI IMPORTE.
+// Il exerçait `voice.<nom>` comme septième clé d'entité d'un acteur — neuf assertions. Romain a
+// tranché ce jour-là : « voice est maintenant la librairie des voix et est liée au TERMINAL, pas
+// à l'acteur ». Le motif n'est PAS que la clé était inemployée — aucune scène ne l'écrivait, mais
+// ce n'est pas ce qui a décidé : c'est qu'une voix n'est pas une propriété de l'acteur.
+//
+// ⚠️ CE QUE CE FICHIER NE TESTE PAS, ET IL FAUT LE DIRE : l'attache au TERMINAL. Mesuré le même
+// jour — elle n'existe pas encore dans le code, et aucune scène ne l'écrit. C'est l'état CIBLE,
+// pas l'état actuel. Écrire ici des assertions dessus reviendrait à tester une intention ; les
+// écrire quand elle existera est le geste juste. Ce fichier garde donc les DEUX choses qui sont
+// vraies aujourd'hui : la clé refuse, et la librairie tient.
+//
+// Run: node test/test_voices.js
+
+import { compileToBPxAST } from '../src/transpiler/index.js';
+import { LIBS } from '../src/transpiler/libs-data.js';
 
 let pass = 0, fail = 0;
-function check(label, cond, detail) {
-  if (cond) { console.log(`  ✓ ${label}`); pass++; }
-  else { console.log(`  ✗ ${label}${detail ? ' — ' + detail : ''}`); fail++; }
-}
+const check = (cond, label) => { if (cond) { pass++; } else { fail++; console.error('  ✗ ' + label); } };
+const erreurs = (src) => {
+  try { const r = compileToBPxAST(src); return (r.errors || []).map((e) => e.message); }
+  catch (e) { return [e.message]; }
+};
 
-// La voie BP3 (compileBPS) a été RETIRÉE de cette table le 2026-07-19 : la façade héritée est
-// supprimée (arbitrage Romain — seule la PRODUCTION doit être identique, pas la grammaire).
-// Ce test comparait les deux voies ; il ne reste qu'une voie, et c'est le produit.
-const PATHS = [['BPx', compileToBPxAST]];
-function acceptsBothPaths(label, src) {
-  for (const [tag, compile] of PATHS) {
-    const r = compile(src);
-    check(`${label} [${tag}]`, r.errors.length === 0, JSON.stringify(r.errors[0] || ''));
-  }
-}
-function rejectsBothPaths(label, src, needle) {
-  for (const [tag, compile] of PATHS) {
-    const r = compile(src);
-    const hit = r.errors.some(e => (e.message || '').includes(needle));
-    check(`${label} [${tag}]`, hit, `attendu '${needle}', reçu ${JSON.stringify(r.errors[0] || 'aucune erreur')}`);
-  }
-}
-
-const HDR = '@core\n@controls\n';
-
-console.log('--- 1. voice.<nom> = référence d\'entité (ActorReference) ---');
+console.log('--- 1. `voice.<nom>` sur un acteur REFUSE, et le refus dit où la voix vit ---');
 {
-  const src = HDR + '@actor lead @alphabet.western tuning.western_12TET voice.wobble out.audio\nS -> C4 E4\n';
-  const r = compileToBPxAST(src);
-  check('compile sans erreur', r.errors.length === 0, JSON.stringify(r.errors[0] || ''));
-  const lead = r.ast && r.ast.actors.find(a => a.name === 'lead');
-  const vref = lead && lead.references.find(x => x.category === 'voice');
-  check('ActorReference category voice présent', !!vref && vref.name === 'wobble', JSON.stringify(lead && lead.references));
-  check('properties.voice porté (pipeline interne)', lead && lead.properties.voice === 'wobble');
+  const e = erreurs('@core\n@actor lead  alphabet.western voice.wobble out.audio\nS -> C4\n');
+  check(e.length > 0, 'voice.wobble sur un acteur doit être REFUSÉ');
+  check(e.some((m) => /voix s'attache au TERMINAL/.test(m)),
+        'le refus doit nommer la relève, pas dire « flèche attendue » : ' + e.join(' | ').slice(0, 120));
 }
 
-console.log('--- 2. PREUVE [438] : voix audio SANS hauteur (percussion, pas de tuning) ---');
+console.log('--- 2. TOUTE clé hors liste refuse — liste blanche, pas liste noire ---');
+// Exigence de Romain le 2026-08-06 : « ce qui est refusé, ça devrait être tout ce qui n'est pas
+// accepté ». Une liste noire ne ferme que ce qu'on a pensé à y mettre ; ce témoin passe donc par
+// une clé que PERSONNE n'a jamais écrite — une faute de frappe.
 {
-  const src = HDR + '@actor tabla @alphabet.tabla voice.bayan_open out.audio\nS -> dhin ka dhin ti\n';
-  acceptsBothPaths('tabla + voice sans tuning accepté', src);
-  const r = compileToBPxAST(src);
-  const tabla = r.ast && r.ast.actors.find(a => a.name === 'tabla');
-  check('aucune référence tuning (hauteur structurelle absente)',
-    tabla && !tabla.references.some(x => x.category === 'tuning'));
-  check('référence voice posée', tabla && tabla.references.some(x => x.category === 'voice' && x.name === 'bayan_open'));
+  const e = erreurs('@core\n@actor lead  alphabt.western\nS -> C4\n');
+  check(e.length > 0, "une clé inconnue (faute de frappe) doit REFUSER, pas finir le bloc en silence");
+  check(e.some((m) => /n'est pas une clé d'acteur/.test(m)), 'le refus la nomme : ' + e.join(' | ').slice(0, 100));
 }
 
-console.log('--- 3. Fail-loud ---');
-rejectsBothPaths('voix inconnue rejetée',
-  HDR + '@actor x @alphabet.western tuning.western_12TET voice.inexistante out.audio\nS -> C4\n',
-  "voix 'inexistante' inconnue");
-rejectsBothPaths('graphie voice: rejetée (cutover : \'.\' appelle un composant)',
-  HDR + '@actor x @alphabet.western tuning.western_12TET voice:wobble out.audio\nS -> C4\n',
-  "Écris 'voice.<nom>'");
-
-console.log('--- 4. Binding alphabet→voix (tabla.voices) validé au parse ---');
+console.log('--- 3. LES CINQ CLÉS VIVANTES passent — la moitié qui doit se taire ---');
+// Sans ce cas, une règle qui refuserait TOUT resterait verte.
 {
-  // La tabla porte une carte voices (lib/alphabets.json) : sa validation passe au bind,
-  // par la ligne d'acteur ET par le raccord de scène '@alphabet.tabla:audio'.
-  acceptsBothPaths('bind par ligne d\'acteur', HDR + '@actor t @alphabet.tabla out.audio\nS -> dhin ka\n');
-  acceptsBothPaths('bind par raccord de scène', HDR + '@alphabet.tabla:audio\nS -> dhin ka\n');
+  const e = erreurs('@core\n@actor lead  alphabet.western tuning.western_12TET octaves.western out.audio\nS -> C4\n');
+  check(e.length === 0, 'les clés valides doivent passer : ' + e.join(' | ').slice(0, 120));
+  const e2 = erreurs('@core\n@actor d  eval.strudel(bank:gm)\nS -> d_r\nd_r -> d.`s("bd")`\n');
+  check(e2.length === 0, 'eval avec son paramètre propre doit passer : ' + e2.join(' | ').slice(0, 120));
 }
 
-console.log('--- 5. Spécialisation for:<device> — référable par nom de base ---');
-acceptsBothPaths('voice.fatbass (base + \'fatbass for:sub37\' en lib)',
-  HDR + '@actor bass @alphabet.western tuning.western_12TET voice.fatbass out.midi(ch:1)\nS -> C2 G2\n');
-
-console.log('--- 6. describeVocabulary expose les voix ---');
+console.log('--- 4. LA LIBRAIRIE DES VOIX TIENT — elle ne part pas avec la clé ---');
 {
-  const v = describeVocabulary();
-  check('catalogue voices présent', Array.isArray(v.voices) && v.voices.length > 0);
-  check('noms de base dédupliqués (fatbass unique malgré for:sub37)',
-    v.voices.filter(n => n === 'fatbass').length === 1, JSON.stringify(v.voices));
-  check('wobble et bayan_open exposés', v.voices.includes('wobble') && v.voices.includes('bayan_open'));
+  const objets = (LIBS.voices || {}).objects || {};
+  const noms = Object.keys(objets);
+  check(noms.length >= 10, `lib/voices.json doit rester peuplée — ${noms.length} entrée(s)`);
+  // Les deux réalisations que la spec LANG-SONS distingue : le code qui synthétise, le preset
+  // d'un appareil. Une entrée de chaque au moins, sinon la librairie a perdu la moitié de sa forme.
+  check(noms.some((n) => objets[n].audio), 'au moins une voix porte une réalisation `audio`');
+  check(noms.some((n) => objets[n].device), 'au moins une voix porte une réalisation `device`');
 }
-
-console.log('--- 7. Non-régression : formes canoniques sans voix ---');
-acceptsBothPaths('acteur canonique sans voix',
-  HDR + '@actor sitar @alphabet.sargam tuning.sargam_22shruti out.midi(ch:3)\nS -> sa re\n');
-acceptsBothPaths('acteur NOMMÉ voice (nom libre, pas la clé)',
-  HDR + '@actor voice @alphabet.sargam out.audio\nS -> sa re\n');
 
 console.log(`\n${pass} OK / ${fail} KO`);
-process.exit(fail ? 1 : 0);
+if (fail > 0) process.exit(1);
