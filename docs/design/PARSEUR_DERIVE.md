@@ -240,7 +240,10 @@ le plus fréquent**, jamais par ce que je croyais manquer.
 | 13 | joker à sac · prolongation en tête de règle · objet composé | **199** |
 | 14 | guillemet et tiret-chiffre dans un nom | **201** |
 
-**201 sur 271 — 74 % du corpus**, avec une grammaire de 180 lignes contre 7 836 lignes de parseur
+| 15 | argument à signe égal · objet composé (deux graphies) | **205** |
+| 16 | silence à sac · **tête de règle composée** | **208** |
+
+**208 sur 271 — 77 % du corpus**, avec une grammaire de 190 lignes contre 7 836 lignes de parseur
 écrit à la main.
 
 ⚠️ Le dénominateur est passé de 274 à **271** : les trois scènes que la décision du 2026-08-06
@@ -327,3 +330,22 @@ toujours ; il a fallu qu'une grammaire refuse deux familles de scènes pour que 
 de nom et l'opérateur de contexte négatif ; `-` est à la fois un caractère de nom et le silence.
 Le parseur actuel tranche par le contexte ; une grammaire doit le dire explicitement, et c'est
 elle qui a rendu le conflit visible.
+
+
+## Passe 16 — une tête de règle n'est pas un nom
+
+La dernière passe a fait tomber une idée que je portais sans l'avoir vérifiée : que le membre
+gauche d'une règle soit un **identifiant**. Mesuré sur le corpus, il peut être :
+
+- un **objet sonore composé** — `|a4| -> |x| |z31|`
+- un **gabarit** — `$ V1 #tr <> $ ti #tr`
+- une **prolongation** ou un **silence** — `re5_r _ G ->`, `#- V1 <>`
+- un **joker**, seul ou groupé — `#? ?1 -> #? ?1`, `#(?1 ?3 ?2 ?4) …`
+
+⚠️ **Une tête de règle est un MOTIF à reconnaître dans la dérivation, pas un nom.** C'est ce qui
+distingue ce langage d'une grammaire ordinaire, et aucun des trois documents ne le formulait.
+
+⚠️ **Et une régression que je me suis infligée dans la même session** : en resserrant la liste des
+arguments d'une directive, j'ai interdit sans le voir les arguments séparés par une ESPACE — une
+scène est tombée. Le compte l'a dit tout de suite (201 → 201, avec un motif nouveau). Sans mesure
+à chaque pas, une passe qui « ajoute » peut retirer en silence.

@@ -41,10 +41,12 @@ ActorKey:
 // `@actor sitar alphabet.sargam`. Une valeur nue ne suffit pas.
 Directive:
     '@' name=ID ('.' target=ID)? (':' value=Valeur)? (bag=SettingBag)?
-    (args+=ArgDirective)* (',' args+=ArgDirective)* NL+;
+    (args+=ArgDirective | ',' args+=ArgDirective)* NL+;
 
+// ⚠️ `@timepatterns: t1=96/100, t2=100/100` — un argument de directive peut AFFECTER une valeur
+// avec le signe égal, pas seulement avec le deux-points. Mesuré : deux scènes l'écrivent ainsi.
 ArgDirective:
-    mot=ID ('.' sous=ID)? (':' valeur=Valeur)?
+    mot=ID ('.' sous=ID)? ((':' | '=') valeur=Valeur)?
   | num=NUMBER
   | texte=STRING;
 
@@ -71,8 +73,13 @@ ProdNom:
 // `#(?1 ?3 ?2 ?4)` — un contexte négatif peut porter sur un GROUPE de jokers.
 // ⚠️ La PROLONGATION et le SILENCE font partie d'une tête de règle : `re5_r _ G ->`, `Oc3 _ ->`.
 // Une tête n'est pas qu'une suite de noms — elle décrit un MOTIF à reconnaître.
+// ⚠️ UNE TÊTE DE RÈGLE N'EST PAS QU'UN NOM. Mesuré : elle peut être un objet sonore composé
+// (`|a4| -> …`), un gabarit (`$ V1 #tr <> …`), une prolongation, un silence, un joker. C'est un
+// MOTIF à reconnaître dans la dérivation, pas un identifiant.
 Lhs:
-    prolongation='_'
+    compose=Compose
+  | gabarit=SigneGabarit
+  | prolongation='_'
   | silence='-'
   | (negatif='#')? name=ID
   | (negatif='#')? joker='?' (rang=NUMBER)?
@@ -171,16 +178,23 @@ Valeur:
 // ⚠️ `K1=1` — un K-paramètre s'initialise DANS une valeur (`weight:K1=1`, `rotate:K1=2`).
 Atome:
     (signe='-')? num=NUMBER (('/' | '-' | '+') suite=NUMBER)*
-  | mot=ID ('=' init=NUMBER)?
+  | mot=ID ('=' (initSigne='-')? init=NUMBER (('/' | '-' | '+') initSuite=NUMBER)*)?
   | texte=STRING;
 
 Nombre:
     value=NUMBER ('/' denom=NUMBER)?;
 
 Backtick:      value=BACKTICK;
-Rest:          value='-';
-// `|` — l'objet sonore composé : un terminal suivi d'un bloc de propriétés.
-Compose:       value='|' bloc=Guard;
+// Un silence porte son sac comme un terminal : `-(vel:127)`.
+Rest:          value='-' (bag=SettingBag)?;
+// ⚠️ `|[ do5 _ do5 do5 ]` — l'OBJET SONORE COMPOSÉ : le tube ouvre un bloc dont le contenu est
+// une séquence de terminaux, pas des paires clé-valeur. Mesuré : la lecture par `Guard` échouait
+// sur la prolongation, qui n'est pas un nom de drapeau.
+// ⚠️ DEUX GRAPHIES pour l'objet sonore composé, mesurées sur deux scènes différentes :
+// `|[ do5 _ do5 ]` avec des crochets, et `|a4|` encadré par des tubes.
+Compose:
+    '|' '[' elements+=RhsElement+ ']'
+  | '|' elements+=RhsElement+ '|';
 Prolongation:  value='_';
 Undetermined:  value='...';
 Period:        value='.';
