@@ -13,13 +13,13 @@
 // L'AST n'est PAS modifié (contrat BPx) : on lit, on retourne une liste d'erreurs.
 
 /**
- * Collecte récursivement toutes les paires de RuntimeQualifier de l'AST.
+ * Collecte récursivement toutes les paires de SettingBag de l'AST.
  * Chaque paire porte { key, value, line, col } (posé par le parser).
  */
 function collectQualifierPairs(node, out) {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) { for (const el of node) collectQualifierPairs(el, out); return; }
-  if (node.type === 'RuntimeQualifier' && Array.isArray(node.pairs)) {
+  if (node.type === 'SettingBag' && Array.isArray(node.pairs)) {
     for (const p of node.pairs) out.push(p);
   }
   for (const k in node) {

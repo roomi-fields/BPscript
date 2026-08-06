@@ -17,7 +17,8 @@
  * que les neuf ci-dessous, mais NE SONT PAS dans `qualifierKeys` — mesuré au corpus, ils s'écrivent
  * exclusivement en SUFFIXE DE RÈGLE, et BPx (`loadGrammar.ts`, `mergeQualifierProcedures` +
  * la lecture dédiée de `rndtime`) les lit EXCLUSIVEMENT depuis `ast.qualifiers` (le nœud produit
- * par `[]`), jamais depuis `ast.runtimeQualifier` (celui que produit `()`). Les migrer romprait
+ * par `[]`), jamais depuis `ast.settings` (le SettingBag que produit `()`, renommé depuis
+ * `ast.runtimeQualifier` le 2026-08-06 — même nœud, même lieu, nouveau nom). Les migrer romprait
  * SILENCIEUSEMENT leur effet moteur côté BPx. Cf. `lib/core.json` `_qualifierKeys_doc` pour le
  * détail ligne par ligne. `shuffle` est un cas distinct : sa forme AVEC VALEUR (`[shuffle:N]`) a
  * été RETIRÉE du langage le 2026-06-14 (la graine s'écrit `[@seed:N]`), donc il n'y a pas de forme

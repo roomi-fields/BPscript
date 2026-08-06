@@ -37,7 +37,7 @@ const DECLS = '@gate C4:sc\n@gate E4:sc\n';
   const grp = poly?.voices?.[0]?.[0];
   assert('F1 bloc contient un SimultaneousGroup', grp?.type === 'SimultaneousGroup');
   // La charge est sur le conteneur (qualifieur de règle), PAS sur les notes.
-  const rq = r.runtimeQualifier;
+  const rq = r.settings;
   assert('F1 contenance sur le conteneur', rq?.payload?.containment === true,
     JSON.stringify(rq?.payload));
   assert('F1 params.vel=90 sur le conteneur', rq?.payload?.params?.vel === 90,

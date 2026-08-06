@@ -47,7 +47,7 @@ function section(name) { console.log(`\n=== ${name} ===`); }
 
 const HEAD = '@ivltest\n@alphabet.western\n\n';
 
-// Récupère la 1re valeur portée pour la clé 'ivl' dans l'AST (RuntimeQualifier.pairs).
+// Récupère la 1re valeur portée pour la clé 'ivl' dans l'AST (SettingBag.pairs).
 function ivlValue(src) {
   const ast = parse(tokenize(src));
   let found;

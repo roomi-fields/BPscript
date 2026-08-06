@@ -319,7 +319,7 @@ S -> Sa(sound.bell_short) Re`);
   assert('Sa is Symbol', sa.type === 'Symbol' && sa.name === 'Sa');
   assert('has suffixQualifiers', Array.isArray(sa.suffixQualifiers));
   const rq = sa.suffixQualifiers[0];
-  assert('is RuntimeQualifier', rq.type === 'RuntimeQualifier');
+  assert('is SettingBag', rq.type === 'SettingBag');
   assert('pair key=sound', rq.pairs[0].key === 'sound');
   assert('pair value=bell_short', rq.pairs[0].value === 'bell_short');
 }

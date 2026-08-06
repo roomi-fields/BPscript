@@ -36,7 +36,7 @@ for (const forme of ['mode:random', 'weight:50', 'scan:left', 'on_fail:skip', 't
   ok(errors.length === 0, `1. '!(${forme})' dans le flux (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
     const noeud = ast.subgrammars[0].rules[0].rhs.find((e) => e.type === 'InstantControl');
-    ok(noeud?.qualifier?.type === 'RuntimeQualifier', `1. '!(${forme})' doit produire un InstantControl { qualifier: RuntimeQualifier }`);
+    ok(noeud?.qualifier?.type === 'SettingBag', `1. '!(${forme})' doit produire un InstantControl { qualifier: SettingBag }`);
   }
 }
 

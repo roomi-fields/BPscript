@@ -1104,12 +1104,12 @@ function validateReferences(ast) {
   // 1. Occurrence / paramètres `(k:v)` — clé connue = contrôle ∪ valeur ∪ entrée modulation ∪
   //    adresse ∪ fonction digitale ∪ réglage réservé. Les paires d'occurrence vivent dans
   //    `payload.params` (note ou groupe/règle, foldées par le parser) ET dans les
-  //    `RuntimeQualifier.pairs`.
+  //    `SettingBag.pairs`.
   const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k);
   // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
   //
   // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,
-  // SANS position) et dans `RuntimeQualifier.pairs` (AVEC ligne et colonne). L'identifiant de
+  // SANS position) et dans `SettingBag.pairs` (AVEC ligne et colonne). L'identifiant de
   // déduplication valait `clé + ':' + (ligne || 0)` : les deux passages produisaient donc deux
   // identifiants différents, et l'attribut inconnu était signalé DEUX FOIS — une fois sans
   // position, une fois avec. Pire, la version SANS position arrivait en premier, donc le
@@ -1134,7 +1134,7 @@ function validateReferences(ast) {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { for (const el of node) collect(el); return; }
     if (node.payload && node.payload.params) for (const k of Object.keys(node.payload.params)) flag(k, node.line);
-    if (node.type === 'RuntimeQualifier' && Array.isArray(node.pairs)) for (const p of node.pairs) flag(p.key, p.line, p.col);
+    if (node.type === 'SettingBag' && Array.isArray(node.pairs)) for (const p of node.pairs) flag(p.key, p.line, p.col);
     for (const k in node) { if (k !== 'params' && node[k] && typeof node[k] === 'object') collect(node[k]); }
   })(ast.subgrammars);
 
@@ -1637,17 +1637,18 @@ function emitNoteTerminals(ast) {
 
 function emitSceneMeter(ast) {
   // `meter` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) :
-  // l'injection du défaut de scène rejoint donc `r.runtimeQualifier.pairs`, plus `r.qualifiers`
-  // (le crochet REFUSE désormais `[meter:…]`, cf. checkQualifierKey, parser.js).
+  // l'injection du défaut de scène rejoint donc `r.settings.pairs` (le crochet REFUSE désormais
+  // `[meter:…]`, cf. checkQualifierKey, parser.js). `r.qualifiers` (sac bracket, procédures de
+  // niveau règle) n'est PAS concerné — meter n'y a jamais vécu.
   const dir = (ast.directives || []).find((d) => d && d.name === 'meter' && d.value != null);
   if (!dir) return;
   const valeur = String(dir.value);
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
-      const porteDeja = (r.runtimeQualifier?.pairs || []).some((p) => p && p.key === 'meter');
+      const porteDeja = (r.settings?.pairs || []).some((p) => p && p.key === 'meter');
       if (porteDeja) continue;   // la règle recouvre le défaut de scène, pour elle seule
-      r.runtimeQualifier = r.runtimeQualifier || { type: 'RuntimeQualifier', pairs: [] };
-      r.runtimeQualifier.pairs.push({ key: 'meter', value: valeur, decrement: null });
+      r.settings = r.settings || { type: 'SettingBag', pairs: [] };
+      r.settings.pairs.push({ key: 'meter', value: valeur, decrement: null });
     }
   }
 }

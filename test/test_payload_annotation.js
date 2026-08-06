@@ -195,20 +195,20 @@ section('nature — couverture des types de nœuds RHS');
 }
 
 {
-  // (vel:80) sans ! en début de portée ('S -> (vel:80)') va dans rule.runtimeQualifier
+  // (vel:80) sans ! en début de portée ('S -> (vel:80)') va dans rule.settings
   // (comportement parser : break sur LPAREN spaceBefore). Un `(...)` nu = CONTENANCE
   // (concept neuf BPScript, décision Romain 2026-06-20) : structurel, confiné, NE déborde PAS
   // → tagué `containment:true scope:'rule'` (PAS flux). Seul `!(...)` porte flux:true.
   const ast = parseSource('@controls\nS -> (vel:80)');
   const rule = ast.subgrammars[0].rules[0];
-  assert('(vel:80) standalone → runtimeQualifier de règle (pas rhs)',
-    rule.runtimeQualifier?.type === 'RuntimeQualifier',
-    `runtimeQualifier=${JSON.stringify(rule.runtimeQualifier)}`);
-  assert('runtimeQualifier de règle ANNOTÉ contenance scope:rule (pas flux)',
-    rule.runtimeQualifier?.payload?.containment === true && rule.runtimeQualifier?.payload?.scope === 'rule'
-    && rule.runtimeQualifier?.payload?.flux === undefined
-    && rule.runtimeQualifier?.payload?.nature === 'transport-control',
-    `payload=${JSON.stringify(rule.runtimeQualifier?.payload)}`);
+  assert('(vel:80) standalone → settings de règle (pas rhs)',
+    rule.settings?.type === 'SettingBag',
+    `settings=${JSON.stringify(rule.settings)}`);
+  assert('settings de règle ANNOTÉ contenance scope:rule (pas flux)',
+    rule.settings?.payload?.containment === true && rule.settings?.payload?.scope === 'rule'
+    && rule.settings?.payload?.flux === undefined
+    && rule.settings?.payload?.nature === 'transport-control',
+    `payload=${JSON.stringify(rule.settings?.payload)}`);
 }
 
 {

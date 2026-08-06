@@ -18,11 +18,11 @@
 // valide contre les entrées de CE type ; sinon (ou un seul type connu) on valide contre l'union de
 // toutes les entrées connues (attrape la faute, sans faux positif). L'AST n'est pas modifié.
 
-/** Collecte récursive des paires de RuntimeQualifier (mêmes que controlValidation). */
+/** Collecte récursive des paires de SettingBag (mêmes que controlValidation). */
 function collectQualifierPairs(node, out) {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) { for (const el of node) collectQualifierPairs(el, out); return; }
-  if (node.type === 'RuntimeQualifier' && Array.isArray(node.pairs)) {
+  if (node.type === 'SettingBag' && Array.isArray(node.pairs)) {
     for (const p of node.pairs) out.push(p);
   }
   for (const k in node) {

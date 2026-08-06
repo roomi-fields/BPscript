@@ -19,7 +19,8 @@
  * ⚠️ `meter` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
  * un signe, une nature : c'est un RÉGLAGE (ce que la règle PRODUIT), pas ce qui gouverne sa
  * dérivation. `[meter:…]` (crochets) est désormais REFUSÉ ; la cascade de scène (`emitSceneMeter`,
- * bpxAst.js) injecte donc le défaut dans `rule.runtimeQualifier.pairs`, plus `rule.qualifiers`.
+ * bpxAst.js) injecte donc le défaut dans `rule.settings.pairs` (SettingBag, renommé depuis
+ * `runtimeQualifier` le 2026-08-06).
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
@@ -28,7 +29,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (src) => compileToBPxAST(src);
-const metresDe = (ast, i) => (ast?.subgrammars?.[0]?.rules?.[i]?.runtimeQualifier?.pairs || [])
+const metresDe = (ast, i) => (ast?.subgrammars?.[0]?.rules?.[i]?.settings?.pairs || [])
   .filter((p) => p && p.key === 'meter')
   .map((p) => p.value);
 

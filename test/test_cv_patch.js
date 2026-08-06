@@ -64,7 +64,7 @@ function cvs(r) { return (r.ast?.cvInstances || []); }
   const bassRule = r.ast.subgrammars[0].rules.find((rl) => {
     const h = Array.isArray(rl.lhs) ? rl.lhs[0] : rl.lhs; return h && h.name === 'Bass';
   });
-  const pairs = bassRule && bassRule.runtimeQualifier && bassRule.runtimeQualifier.pairs || [];
+  const pairs = bassRule && bassRule.settings && bassRule.settings.pairs || [];
   const cutoff = pairs.find((p) => p.key === 'cutoff');
   check(cutoff && cutoff.value === 'Env', '5: branchement (cutoff:Env) capté, obtenu ' + JSON.stringify(cutoff));
 }

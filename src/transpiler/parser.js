@@ -640,9 +640,9 @@ function parse(tokens, opts = {}) {
         // toute sa portée (y compris les notes écrites avant lui) et s'arrête au bord — il ne
         // DÉBORDE pas. C'est l'inverse du flux `!(...)` (iso-BP3, forward, déborde). On le tague
         // `containment` (PAS `flux`) : BPx route contenance→structurel, flux→séquentiel.
-        if (rule.runtimeQualifier && typeof rule.runtimeQualifier === 'object') {
-          const { address, controls } = splitAddress(extractOccurrenceParams([rule.runtimeQualifier]));
-          rule.runtimeQualifier.payload = {
+        if (rule.settings && typeof rule.settings === 'object') {
+          const { address, controls } = splitAddress(extractOccurrenceParams([rule.settings]));
+          rule.settings.payload = {
             nature: 'transport-control',
             containment: true,
             scope: 'rule',
@@ -861,9 +861,9 @@ function parse(tokens, opts = {}) {
       // neuf que le `(...)` de règle, décision Romain 2026-06-20) : structurel, confiné au
       // groupe, ne déborde pas. On le tague `containment` (PAS `flux`) pour que BPx le route
       // au régime structurel. (Les Polymetric imbriqués sont atteints par la récursion.)
-      if (el.runtimeQualifier && typeof el.runtimeQualifier === 'object') {
-        const { address, controls } = splitAddress(extractOccurrenceParams([el.runtimeQualifier]));
-        el.runtimeQualifier.payload = {
+      if (el.settings && typeof el.settings === 'object') {
+        const { address, controls } = splitAddress(extractOccurrenceParams([el.settings]));
+        el.settings.payload = {
           nature: 'transport-control',
           containment: true,
           scope: 'group',
@@ -896,7 +896,7 @@ function parse(tokens, opts = {}) {
     // ADDITIF : qui déduisait de la position reste juste ; qui veut lire le peut.
     if (type === 'TemplateMaster' || type === 'TemplateSlave') {
       for (const sq of (el.suffixQualifiers || [])) {
-        if (!sq || sq.type !== 'RuntimeQualifier') continue;
+        if (!sq || sq.type !== 'SettingBag') continue;
         const { address, controls } = splitAddress(extractOccurrenceParams([sq]));
         sq.payload = {
           nature: 'transport-control',
@@ -916,14 +916,14 @@ function parse(tokens, opts = {}) {
   /**
    * Extrait les overrides d'occurrence depuis `suffixQualifiers` d'un nœud.
    * Retourne un objet {key:val, …} ou null si aucun override.
-   * Seules les RuntimeQualifier (paires key:val) sont extraites.
+   * Seules les SettingBag (paires key:val) sont extraites.
    */
   function extractOccurrenceParams(suffixQualifiers) {
     if (!suffixQualifiers || suffixQualifiers.length === 0) return null;
     const params = {};
     let hasParams = false;
     for (const sq of suffixQualifiers) {
-      if (sq.type !== 'RuntimeQualifier') continue;
+      if (sq.type !== 'SettingBag') continue;
       for (const pair of (sq.pairs || [])) {
         // value:true = bare key sans valeur (ex. velcont) — on inclut quand même
         params[pair.key] = pair.value;
@@ -3066,18 +3066,23 @@ function parse(tokens, opts = {}) {
     // `[]` cassait avec « Expected arrow », un message qui pointe vers la règle SUIVANTE au lieu
     // de nommer le vrai problème : mesuré sur `S -> C4 [B=3] (weight:3)`.
     //
-    // Plusieurs groupes `()` sont fusionnés dans UN SEUL `runtimeQualifier` (mêmes paires, ordre
+    // Plusieurs groupes `()` sont fusionnés dans UN SEUL `settings` (mêmes paires, ordre
     // d'écriture préservé) : le reste du compilateur (extraction de `scan`, etc.) lit un unique
-    // nœud RuntimeQualifier par règle.
+    // nœud SettingBag par règle. `qualifiers` (crochet) reste un sac SÉPARÉ et disjoint : il ne
+    // porte QUE ce que `checkQualifierKey` laisse encore passer en `[]` — garde/mutation de
+    // drapeau, rang de gabarit, procédures de niveau règle (goto/failed/repeat/rndtime) et
+    // opérateur de tempo — aucune de ces natures n'est un `Setting` au sens `AST.md:642-659`
+    // (cf. rapport de session : `qualifiers` n'a PAS été plié dans `SettingBag`, ambiguïté
+    // remontée plutôt que tranchée).
     // Loose check : accepte les clés opaques même sans `@controls` chargé (EBNF couche 3).
-    let runtimeQualifier = null;
+    let settings = null;
     const qualifiers = [];
     const flags = [];
     while (true) {
       if (isRuntimeQualifierLoose()) {
         const rq = parseRuntimeQualifier();
-        if (runtimeQualifier) runtimeQualifier.pairs.push(...rq.pairs);
-        else runtimeQualifier = rq;
+        if (settings) settings.pairs.push(...rq.pairs);
+        else settings = rq;
         continue;
       }
       if (at(T.LBRACKET)) {
@@ -3096,7 +3101,7 @@ function parse(tokens, opts = {}) {
     // (BPx ast.ts:431-449 lit ast.mode : le champ DÉRIVÉ ne change pas, seule sa source le fait.)
     const VALID_SCAN_MODES = { left: 'left', right: 'right', rnd: 'rnd' };
     let ruleMode = null;
-    for (const pair of (runtimeQualifier ? runtimeQualifier.pairs : [])) {
+    for (const pair of (settings ? settings.pairs : [])) {
       if (pair.key === 'scan') {
         if (VALID_SCAN_MODES[pair.value] !== undefined) {
           ruleMode = VALID_SCAN_MODES[pair.value];
@@ -3130,7 +3135,7 @@ function parse(tokens, opts = {}) {
       });
     }
 
-    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, runtimeQualifier, mode: ruleMode, line: tok.line, warnings };
+    return { type: 'Rule', guard, contexts, lhs, arrow, rhs, flags, qualifiers, settings, mode: ruleMode, line: tok.line, warnings };
   }
 
   // ============================================================
@@ -3931,7 +3936,7 @@ function parse(tokens, opts = {}) {
       if (at(T.COMMA)) advance();
     }
     expect(T.RPAREN);
-    return { type: 'RuntimeQualifier', pairs };
+    return { type: 'SettingBag', pairs };
   }
 
   function isPerElementQualifier() {
@@ -4705,13 +4710,13 @@ function parse(tokens, opts = {}) {
       dureeCollee = parseColonFrame(tokColon);
     }
 
-    // Runtime qualifier on group: {}(vel:100)
-    let runtimeQualifier = null;
+    // Setting bag on group: {}(vel:100)
+    let settings = null;
     if (isRuntimeQualifier()) {
-      runtimeQualifier = parseRuntimeQualifier();
+      settings = parseRuntimeQualifier();
     }
 
-    const groupe = { type: 'Polymetric', voices, qualifiers, runtimeQualifier, label: label || null };
+    const groupe = { type: 'Polymetric', voices, qualifiers, settings, label: label || null };
     // `{A B}:2` → `{2, {A B}}` : le groupe reste UN élément dans le cadre, il ne s'y disperse pas.
     return dureeCollee ? cadreDuree(dureeCollee, [groupe]) : groupe;
   }
@@ -4745,7 +4750,7 @@ function parse(tokens, opts = {}) {
     return {
       type: 'Polymetric',
       voices: [[premiereVoix], contenu],
-      qualifiers: [], runtimeQualifier: null, label: null,
+      qualifiers: [], settings: null, label: null,
     };
   }
 

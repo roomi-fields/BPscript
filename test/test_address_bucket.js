@@ -84,7 +84,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 // ── 7. qualifieur de CONTENANCE (règle) {…}(ch:4, vel:70) → adresse + contrôle séparés ─
 {
   const r = compileToBPxAST('sitar -> {C4 E4}(ch:4, vel:70)');
-  const q = r.ast.subgrammars?.[0]?.rules?.[0]?.runtimeQualifier?.payload;
+  const q = r.ast.subgrammars?.[0]?.rules?.[0]?.settings?.payload;
   assert('contenance : address.ch=4', q?.address?.ch === 4, JSON.stringify(q));
   assert('contenance : params.vel=70 (contrôle reste)', q?.params?.vel === 70, JSON.stringify(q));
   assert('contenance : containment/scope préservés', q?.containment === true && q?.scope === 'rule', JSON.stringify(q));

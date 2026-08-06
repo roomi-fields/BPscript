@@ -263,12 +263,12 @@ S -> A (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
-  const weightPair = (rule && rule.runtimeQualifier && rule.runtimeQualifier.pairs || []).find(p => p.key === 'weight');
+  const weightPair = (rule && rule.settings && rule.settings.pairs || []).find(p => p.key === 'weight');
   if (weightPair) {
     assert('weight base=50', weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
     assert('weight decrement=12', weightPair.decrement === 12, `weight decrement: ${JSON.stringify(weightPair)}`);
   } else {
-    assert('runtimeQualifier.pairs présents', false, 'pas de runtimeQualifier.pairs');
+    assert('settings.pairs présents', false, 'pas de settings.pairs');
   }
 }
 
@@ -286,7 +286,7 @@ section('Cas 13 : mohanam réel [Notes-4] + (weight:50-12) — sac déplacé');
     const guard = Array.isArray(rule.guard) ? rule.guard[0] : rule.guard;
     assert('guard Notes operator=-', guard && guard.flag === 'Notes' && guard.operator === '-', `guard: ${JSON.stringify(guard)}`);
     assert('guard value=4', guard && guard.value === 4, `guard value:${guard && guard.value}`);
-    const weightPair = (rule.runtimeQualifier && rule.runtimeQualifier.pairs || []).find(p => p.key === 'weight');
+    const weightPair = (rule.settings && rule.settings.pairs || []).find(p => p.key === 'weight');
     assert('weight base=50', weightPair && weightPair.value === 50, `weight:${JSON.stringify(weightPair)}`);
     assert('weight decrement=12', weightPair && weightPair.decrement === 12, `weight:${JSON.stringify(weightPair)}`);
   }

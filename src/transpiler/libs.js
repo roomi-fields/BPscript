@@ -550,7 +550,7 @@ function loadLibsFromDirectives(directives) {
     }
 
     // Compute dual-context controls: appear in both engine (bp3Native) and runtime (dispatcher)
-    // These must always route to _script when used in () RuntimeQualifier context.
+    // These must always route to _script when used in () SettingBag context.
     for (const name of ctx.bp3NativeControls) {
       if (ctx.dispatcherOnlyControls.has(name)) {
         ctx.dualContextControls.add(name);

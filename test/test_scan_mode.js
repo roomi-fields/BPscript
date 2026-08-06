@@ -2,7 +2,8 @@
  * test_scan_mode.js — Tests du mapping (scan:...) → rule.mode dans le parser
  *
  * B2 : parser.js doit poser rule.mode = 'left'|'right'|'rnd'|null lors du parse
- * d'un réglage (scan:...). Le réglage RESTE dans rule.runtimeQualifier.pairs.
+ * d'un réglage (scan:...). Le réglage RESTE dans rule.settings.pairs (SettingBag,
+ * renommé depuis rule.runtimeQualifier le 2026-08-06).
  *
  * ⚠️ `scan` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02
  * (LANGUAGE.md:773-800) : `[scan:...]` (crochets) est désormais REFUSÉ — un signe,
@@ -65,11 +66,11 @@ X -> M (scan:left)`);
   const rule = getRule(ast, 0, 0);
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
   assert('rule.mode === "left"', rule && rule.mode === 'left', `mode:${rule && rule.mode}`);
-  // La QualPair doit rester dans runtimeQualifier.pairs (pour l'aval)
+  // La QualPair doit rester dans settings.pairs (pour l'aval)
   if (rule) {
-    const scanPair = (rule.runtimeQualifier?.pairs || []).find(p => p.key === 'scan');
-    assert('QualPair scan conservée dans runtimeQualifier.pairs', scanPair && scanPair.value === 'left',
-      `runtimeQualifier: ${JSON.stringify(rule.runtimeQualifier)}`);
+    const scanPair = (rule.settings?.pairs || []).find(p => p.key === 'scan');
+    assert('QualPair scan conservée dans settings.pairs', scanPair && scanPair.value === 'left',
+      `settings: ${JSON.stringify(rule.settings)}`);
   }
 }
 

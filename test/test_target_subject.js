@@ -14,7 +14,7 @@ function bassPairs(rhsLine) {
   const r = compileToBPxAST(HEAD + 'S -> Bass\n' + rhsLine + '\n');
   if (r.errors && r.errors.length) return { err: r.errors };
   const rule = r.ast.subgrammars[0].rules.find((rl) => (Array.isArray(rl.lhs) ? rl.lhs[0] : rl.lhs)?.name === 'Bass');
-  return { pairs: rule.runtimeQualifier ? rule.runtimeQualifier.pairs : [] };
+  return { pairs: rule.settings ? rule.settings.pairs : [] };
 }
 const get = (pairs, key) => pairs.find((p) => p.key === key) || {};
 
