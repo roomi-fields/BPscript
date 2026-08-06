@@ -352,7 +352,7 @@ Rule {
   rhs: RhsElement[]
   flags: FlagExpr[]                // les mutations, émises en fin de règle
   settings: SettingBag | null // le sac de portée règle
-  scan: "left" | "right" | "rnd" | null   // null = le défaut, `rnd`
+  mode: "left" | "right" | "rnd" | null   // null = le défaut, `rnd`
   line: number
 }
 ```
@@ -649,10 +649,16 @@ Setting {
   component?: string | number      // le composant nommé par le point : (cc.98:45), (lpf1.cutoff:400)
   subject?: string                 // le sujet : "*", ou un nom de terminal
   value: string | number | boolean // true pour une clé nue
+  decrement?: number               // le pas de décroissance : (weight:50-12)
   line: number
   col: number
 }
 ```
+
+Le **décrément** est le second nombre d'une valeur écrite `N-P` : l'arbre porte `N` en valeur et
+`P`, toujours positif, dans ce champ. C'est une **magnitude** ; le signe est celui du signe écrit,
+et le consommateur seul décide quand il s'applique. Il voyage **par paire**, aussi opaquement que
+la valeur.
 
 **Le nom d'un réglage suffit à savoir où il va** : chaque nom appartient à une librairie, et chaque
 librairie a un destinataire. Les paires sont portées **opaquement** — l'arbre les transporte, il ne
@@ -773,8 +779,8 @@ Source : `[stage==1] S -> sa!dha re (mode:random)`
       ],
       "flags": [],
       "settings": { "type": "SettingBag",
-                    "pairs": [{ "key": "mode", "value": "random" }] },
-      "scan": null
+                    "pairs": [{ "key": "weight", "value": 50 }] },
+      "mode": null
     }]
   }]
 }
