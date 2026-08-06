@@ -57,11 +57,17 @@ function backtickNodes(ast) {
   check(m.calm === 1 && m.full === 2, 'états lisibles depuis la directive : ' + JSON.stringify(m));
 }
 
-// 5. libraries LU depuis la directive @library (pas de table)
+// 5. LA BANQUE D'ÉCHANTILLONS EST LUE SUR L'ACTEUR, PAS SUR UNE DIRECTIVE DE SCÈNE.
+// ⚠️ CE CAS A CHANGÉ DE SUJET le 2026-08-06 : `@library.<moteur> "<banque>"` est SUPPRIMÉE
+// (décision Romain — « bank est intrinsèque à strudel, c'est pas générique »). La banque est
+// devenue un paramètre propre de l'entrée `strudel` de `lib/eval.json`, et se pose sur l'acteur.
+// Le test ne disparaît pas avec la directive : c'est la même question — la banque est-elle
+// LISIBLE DANS L'ARBRE, sans table annexe ? — posée au nouvel endroit.
 {
-  const r = compileToBPxAST('@library.strudel "dirt-samples"\n@core\nS -> C4');
-  const ld = (r.ast.directives || []).find((d) => d.type === 'LibraryDirective');
-  check(ld?.engine === 'strudel' && ld?.name === 'dirt-samples', '@library lisible depuis la directive : ' + JSON.stringify(ld));
+  const r = compileToBPxAST('@core\n@actor drums  eval.strudel(bank:gm)\nS -> drums_r\ndrums_r -> drums.`s("bd")`');
+  const a = (r.ast.actors || []).find((x) => x.name === 'drums');
+  const bank = a?.properties?.entityParams?.eval?.bank;
+  check(bank === 'gm', 'banque lisible sur l acteur : ' + JSON.stringify(a?.properties?.entityParams));
 }
 
 // 6. acteurs : references[] (ActorReference)

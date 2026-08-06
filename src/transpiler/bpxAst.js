@@ -124,7 +124,7 @@ function annotateBackticks(ast) {
  * Les consommateurs lisent directement les nœuds/directives :
  *   - backticks → nœuds (`_btName`, `code` en tête ; `payload.interp` + `payload.nature:'code'`) ;
  *   - drapeaux nommés → `ast.vars` (`VarDirective` de `varType.kind === 'flag'`, ex-`@flag`) ;
- *   - librairies → directives `@library` (LibraryDirective) ;
+ *   - librairies → directives d'invocation (`@alphabet.X`, `@tuning.Y`…) ;
  *   - scènes/expose/alias/tempo → `ast.scenes` / `ast.exposes` / `ast.aliases` / `@mm` ;
  *   - acteurs (transport/alphabet/eval) → `ast.actors[].references` (ActorReference) ;
  *   - payload par token (nature/actor/params/flux) → posé par le parser.
@@ -1031,9 +1031,21 @@ function applySceneValues(ast, libCtx) {
     const props = actor.properties || {};
     const eParams = props.entityParams || {};
     for (const [axis, params] of Object.entries(eParams)) {
+      // UN PARAMÈTRE PEUT ÊTRE INTRINSÈQUE À L'ENTRÉE, PAS SEULEMENT GLOBAL (décision Romain
+      // 2026-08-06, sur `eval.strudel(bank:…)` : « bank est intrinsèque à strudel, c'est pas
+      // générique »). Avant, un paramètre de clé d'acteur devait être une valeur DÉCLARÉE au
+      // registre global — donc valable pour tous les langages, ce qui est faux : une banque
+      // d'échantillons n'a de sens que pour le moteur qui sait la charger.
+      // On regarde donc d'abord l'ENTRÉE elle-même (`lib/<axe>.json` → `objects.<entrée>.
+      // parameters`), exactement comme `lib/mod.json` déclare `attack`/`release` sur `adsr`.
+      const entree = props[axis];
+      const propres = (typeof entree === 'string' && loadLib(axis, entree)?.parameters) || null;
       for (const k of Object.keys(params)) {
+        if (propres && propres[k] !== undefined) continue;   // propre à l'entrée : accepté
         if (!registry[k]) {
-          errors.push({ message: `'${axis}.…(${k}:…)' : '${k}' n'est pas une valeur déclarée (ni socle @core ni librairie invoquée)`, line: actor.line });
+          errors.push({ message: `'${axis}.${entree ?? '…'}(${k}:…)' : '${k}' n'est ni un paramètre `
+            + `de '${entree ?? axis}' ni une valeur déclarée (socle @core ou librairie invoquée)`,
+            line: actor.line });
         }
       }
     }

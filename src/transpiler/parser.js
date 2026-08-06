@@ -1269,13 +1269,26 @@ function parse(tokens, opts = {}) {
       return { type: 'SceneDirective', name: sceneName, file, line: tok.line };
     }
 
-    // @library.<moteur> "nom" — librairie de runtime liée à un moteur (eval), valeur CHAÎNE
-    // (arbitrage Romain : nom = chaîne car caractères spéciaux/externe ; partagée par toutes
-    // les voix du moteur ; résolution = Kanopi/workspace). subkey = moteur.
+    // ⛔ PIERRE TOMBALE — `@library` est SUPPRIMÉE du langage (décision Romain 2026-08-06).
+    //
+    // POURQUOI ELLE PART. C'était la seule des quinze librairies dont ce qui suit le point n'était
+    // pas l'ENTRÉE du catalogue mais le MOTEUR, l'entrée venant après entre guillemets : trois
+    // pièces là où toutes les autres en ont deux. Mesuré avant de trancher : sa forme nue
+    // `@library.strudel` — celle que la bible imprimait — ne compilait même pas.
+    //
+    // CE QUI LA REMPLACE : la banque est un paramètre INTRINSÈQUE du moteur, déclaré sur l'entrée
+    // `strudel` de `lib/eval.json` (Romain : « bank est intrinsèque à strudel, c'est pas
+    // générique »). Elle se pose donc sur l'ACTEUR, à côté du moteur qui la charge — et l'écriture
+    // existait déjà, c'est celle de `out.midi(ch:3)`. Gain de passage : deux voix Strudel peuvent
+    // désormais porter deux banques différentes dans une même scène, ce que la directive de scène
+    // rendait impossible.
     if (name === 'library') {
-      if (!subkey) throw new ParseError("@library doit cibler un moteur : @library.<moteur> \"nom\"", tok);
-      const bankName = expect(T.STRING).value;
-      return { type: 'LibraryDirective', engine: subkey, name: bankName, line: tok.line };
+      throw new ParseError(
+        `'@library' est SUPPRIMÉE du langage (décision Romain 2026-08-06) : la banque n'est pas une `
+        + `librairie, c'est un paramètre du moteur qui la charge. Elle se pose sur l'acteur — `
+        + `'@actor <nom> eval.${subkey || '<moteur>'}(bank:<banque>)'. Deux voix du même moteur `
+        + `peuvent ainsi porter deux banques différentes`,
+        tok);
     }
 
     // @expose [intensity] [energy] — expose flags to parent scene

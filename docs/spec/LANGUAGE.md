@@ -542,7 +542,6 @@ qui vit dans un catalogue.
 @tuning.just
 @octaves.saptak
 @homomorphism.dhati
-@library.strudel
 ```
 
 | librairie       | ce qu'elle collectionne                                                                                                         |
@@ -553,7 +552,6 @@ qui vit dans un catalogue.
 | `voice`         | des realisations sonores : le code qui synthetise, ou le preset d'un appareil                                                   |
 | `sound`         | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
 | `homomorphism`  | des tables de correspondance symbole vers symbole, appliquees a la derivation                                                   |
-| `library`       | des banques chargees par un moteur de code                                                                                      |
 | `module`        | des modules de signal : leurs ports, leurs conventions et leur traitement                                                       |
 | `patch`         | le langage de cablage des backtiques `patch:`                                                                                   |
 | `eval`          | les langages backtiques externes -- `sc`, `js`, `strudel`, `hydra`                                                              |
@@ -1821,6 +1819,21 @@ l'entree `sargam` de `lib/alphabets.json` porte la convention de registre,
 l'accordage par defaut et l'ancre de hauteur, et l'acteur en herite.
 `@actor X octaves.Y` change le registre pour cet acteur ; les autres cles
 restent celles heritees.
+
+**Une cle d'acteur porte les parametres propres a l'entree qu'elle nomme.** Ils s'ecrivent entre
+parentheses, apres le point, et chaque entree declare les siens en librairie.
+
+```bpscript
+@actor drums  eval.strudel(bank:gm)
+@actor lead  out.midi(ch:3)
+
+S -> drums_r
+drums_r -> drums.`s("bd*4")`
+```
+
+`bank` appartient a **Strudel**, pas a l'axe `eval` : la banque d'echantillons n'a de sens que
+pour le moteur qui sait la charger, et une autre entree du meme axe la refuse. Deux voix du meme
+moteur peuvent ainsi porter deux banques differentes dans une seule scene.
 
 ### Les reglages `()`
 

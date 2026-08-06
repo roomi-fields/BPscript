@@ -188,8 +188,13 @@ function loadLib(name, subkey) {
   if (subkey) {
     const file = loadJsonFile(name);
     if (file) {
-      // Look for subkey in known collection fields, or directly on root
-      const entry = file.alphabets?.[subkey] || file.tables?.[subkey] || file[subkey];
+      // Look for subkey in known collection fields, or directly on root.
+      // `objects` AJOUTÉ le 2026-08-06 : c'est le champ que les librairies de CODE emploient
+      // (`mod.json`, `voices.json`, et `eval.json` depuis la décision Romain du jour). Sans lui,
+      // une entrée de ces librairies était INATTEIGNABLE par `loadLib(axe, entrée)` — la donnée
+      // existait, le chargeur regardait ailleurs et rendait `null`.
+      const entry = file.alphabets?.[subkey] || file.tables?.[subkey] || file.objects?.[subkey]
+                 || file[subkey];
       if (entry) return entry;
     }
     // Fallback: try name/subkey as a separate file (e.g. settings/visser2.json)

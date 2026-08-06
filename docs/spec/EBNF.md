@@ -134,7 +134,7 @@ library_invocation = "@" , "core"
                    | "@" , provenance , "." , path_seg , "." , path_seg , { "." , path_seg } ;
 
 LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism"
-           | "library" | "module" | "patch" | "eval" | "devices" ;
+           | "module" | "patch" | "eval" | "devices" ;
 RUNTIME    = "audio" | "midi" | "osc" | "dmx" ;
 provenance = "factory" | "mine" ;
 path_seg   = ( IDENT | INT ) , { IDENT | INT } ;

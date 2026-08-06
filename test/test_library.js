@@ -1,40 +1,67 @@
-// @library.<moteur> "nom" — librairie de runtime liée à un moteur (valeur chaîne).
-// Partagée par toutes les voix du moteur.
+// LA BANQUE D'ÉCHANTILLONS — un paramètre INTRINSÈQUE au moteur, porté par l'acteur.
 //
-// ⚠️ Ce test lisait `compileToBPxAST().libraries`, une TABLE PARALLÈLE que seule la façade héritée
-// exposait. Elle est supprimée avec elle (arbitrage Romain 2026-07-19). On lit désormais la
-// SOURCE UNIQUE — l'arbre : la directive vit dans `ast.directives` sous forme
-// `LibraryDirective { engine, name }`. C'est la directive « source unique = l'arbre, zéro table
-// parallèle » (Romain 2026-06-17) appliquée : l'information n'a pas disparu, elle est lue là où
-// elle vit réellement au lieu d'une vue recopiée à côté.
+// ⚠️ CE FICHIER A CHANGÉ DE SUJET LE 2026-08-06, ET LE POURQUOI IMPORTE.
+// Il testait `@library.<moteur> "<banque>"`, une directive de scène. Elle est SUPPRIMÉE
+// (décision Romain) : c'était la seule des quinze librairies dont ce qui suit le point n'était
+// pas l'ENTRÉE du catalogue mais le MOTEUR, l'entrée venant après entre guillemets — trois
+// pièces là où toutes les autres en ont deux. Mesuré avant de trancher : sa forme nue
+// `@library.strudel`, celle que la bible imprimait, ne compilait même pas.
+//
+// LA QUESTION, ELLE, N'A PAS CHANGÉ : la banque est-elle lisible dans l'arbre, sans table
+// annexe ? Elle est seulement posée au nouvel endroit — `lib/eval.json` déclare `bank` sur
+// l'entrée `strudel`, et l'acteur l'écrit `eval.strudel(bank:gm)`.
+//
+// CE QUE LE NOUVEAU MODÈLE PERMET ET QUE L'ANCIEN INTERDISAIT : deux voix du même moteur avec
+// deux banques DIFFÉRENTES dans une seule scène. La directive était de portée scène.
+//
+// Run: node test/test_library.js
+
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let pass = 0, fail = 0;
-function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
+const check = (cond, label) => { if (cond) { pass++; } else { fail++; console.error('  FAIL: ' + label); } };
+const banqueDe = (ast, acteur) =>
+  (ast?.actors || []).find((a) => a.name === acteur)?.properties?.entityParams?.eval?.bank;
 
-const r = compileToBPxAST(`@library.strudel "dirt-samples"
-@actor beat  eval.strudel
-S -> voix
-voix -> \`strudel: note("c2*4").s("sawtooth")\``);
-check(r.errors.length === 0, 'compile sans erreur : ' + JSON.stringify(r.errors));
-const libs = (r.ast.directives || []).filter((d) => d.type === 'LibraryDirective');
-check(libs.some((d) => d.engine === 'strudel'), 'LibraryDirective strudel présente : ' + JSON.stringify(libs));
-check(libs.some((d) => d.engine === 'strudel' && d.name === 'dirt-samples'),
-      'banque "dirt-samples" (tiret préservé via chaîne) : ' + JSON.stringify(libs));
+// 1. La banque est portée par l'acteur et lisible dans l'arbre.
+{
+  const r = compileToBPxAST('@core\n@actor drums  eval.strudel(bank:gm)\nS -> drums_r\ndrums_r -> drums.`s("bd")`');
+  check((r.errors || []).length === 0, 'compile sans erreur : ' + JSON.stringify(r.errors));
+  check(banqueDe(r.ast, 'drums') === 'gm', 'banque lisible sur l acteur');
+}
 
-// Plusieurs librairies pour le même moteur s'accumulent.
-const r2 = compileToBPxAST(`@library.strudel "dirt-samples"
-@library.strudel "tidal-drum-machines"
-@actor beat eval.strudel
-S -> voix
-voix -> \`strudel: s("bd")\``);
-const libs2 = (r2.ast.directives || []).filter((d) => d.type === 'LibraryDirective' && d.engine === 'strudel');
-check(libs2.length === 2, 'deux banques accumulées pour strudel : ' + JSON.stringify(libs2));
+// 2. DEUX VOIX DU MÊME MOTEUR, DEUX BANQUES — ce que la directive de scène rendait impossible.
+{
+  const r = compileToBPxAST('@core\n@actor drums  eval.strudel(bank:gm)\n@actor perc  eval.strudel(bank:dirt)\n'
+                          + 'S -> drums_r perc_r\ndrums_r -> drums.`s("bd")`\nperc_r -> perc.`s("cp")`');
+  check((r.errors || []).length === 0, 'deux banques compilent : ' + JSON.stringify(r.errors));
+  check(banqueDe(r.ast, 'drums') === 'gm' && banqueDe(r.ast, 'perc') === 'dirt',
+        'chaque voix garde la sienne : ' + banqueDe(r.ast, 'drums') + ' / ' + banqueDe(r.ast, 'perc'));
+}
 
-// @library sans moteur → erreur claire (pas un silence).
-const bad = compileToBPxAST(`@library "dirt-samples"
-S -> C4`);
-check(bad.errors.length > 0, '@library sans moteur → erreur');
+// 3. `bank` EST INTRINSÈQUE À STRUDEL — l'exigence exacte de Romain, et c'est la moitié qui
+//    MORD : un paramètre déclaré sur une entrée ne vaut pas pour les autres entrées de l'axe.
+{
+  const r = compileToBPxAST('@core\n@actor v  eval.hydra(bank:gm)\nS -> v_r\nv_r -> v.`osc()`');
+  check((r.errors || []).length > 0, 'bank sur hydra doit être REFUSÉ — il appartient à strudel');
+  check((r.errors || []).some((e) => /n'est ni un paramètre de 'hydra'/.test(e.message)),
+        'le refus nomme l entrée : ' + (r.errors || []).map((e) => e.message).join(' | '));
+}
+
+// 4. Un nom de paramètre inconnu refuse, et le refus dit où il aurait dû être déclaré.
+{
+  const r = compileToBPxAST('@core\n@actor d  eval.strudel(banque:gm)\nS -> d_r\nd_r -> d.`s("bd")`');
+  check((r.errors || []).length > 0, 'un paramètre inconnu doit refuser');
+}
+
+// 5. LA PIERRE TOMBALE — la forme supprimée refuse, et NOMME sa relève. Sans ce cas, la
+//    directive pourrait revenir en silence par une régression du parseur.
+{
+  const r = compileToBPxAST('@library.strudel "dirt-samples"\n@core\nS -> C4\n');
+  const msg = (r.errors || []).map((e) => e.message).join(' | ');
+  check((r.errors || []).length > 0, '@library doit être REFUSÉE');
+  check(/eval\.strudel\(bank:/.test(msg), 'le refus donne la forme vivante : ' + msg.slice(0, 120));
+}
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
-process.exit(fail ? 1 : 0);
+if (fail > 0) process.exit(1);

@@ -136,17 +136,15 @@ descendre(AXIOME);
 // Une production inaccessible est une DETTE mesurée, pas une tolérance : elle sort du registre le
 // jour où la grammaire la raccroche.
 const INACCESSIBLES_CONNUS = new Map([
-  ['STRING', "mesuré le 2026-08-06, et la mesure RENVERSE ce que les documents laissent croire. "
-    + "Le lexème existe (tokenizer.js:214) mais rien ne le référence, parce que `library_invocation` "
-    + "(EBNF.md:132) ne prévoit pas d'argument et que LANGUAGE.md:545 écrit `@library.strudel` NU. "
-    + "⚠️ OR LA FORME NUE N'EST ÉCRITE PAR PERSONNE : zéro occurrence sur tout l'écosystème. Les SIX "
-    + "sites du corpus portent tous un argument (`@library.strudel \"dirt-samples\"`), et cet "
-    + "argument a un CONSOMMATEUR MESURÉ — Kanopi collecte les banques d'échantillons d'une scène "
-    + "pour les précharger (`preload-on-open.svelte.ts`), et son test de non-régression enregistre "
-    + "le bug quand la déclaration manque : « banque inconnue → son MUET ». "
-    + "Donc ce n'est pas l'argument qui est de trop, c'est la forme NUE : la doc décrit une écriture "
-    + "que nul n'emploie et tait celle qui fait sonner. Correction à faire dans la BIBLE d'abord "
-    + "(Romain, 2026-08-06 : « je ne vois pas le sens de cette déclaration ») — la grammaire suivra."],
+  ['STRING', "mesuré le 2026-08-06, cause RÉVISÉE le même jour. Le lexème n'était référencé par "
+    + "aucune production parce que la seule écriture qui le portait, `@library.<moteur> \"<banque>\"`, "
+    + "n'était pas décrite. Cette directive a depuis été SUPPRIMÉE du langage (décision Romain : la "
+    + "banque est un paramètre intrinsèque du moteur, `eval.strudel(bank:…)`), donc ce trou-là est "
+    + "refermé — mais le lexème reste orphelin, pour une AUTRE raison : le parseur accepte encore "
+    + "une valeur entre guillemets dans une paire de propriété (parser.js:2629) et la production "
+    + "`value` de la grammaire ne prévoit que INT, FLOAT et IDENT. ⚠️ Une entrée de registre dont "
+    + "la CAUSE change n'est pas la même dette : la réécrire vaut mieux que la laisser dire une "
+    + "raison périmée."],
 ]);
 const inaccessiblesTous = [...definis.keys()].filter((n) => !atteints.has(n));
 const inaccessibles = inaccessiblesTous.filter((n) => !INACCESSIBLES_CONNUS.has(n));
