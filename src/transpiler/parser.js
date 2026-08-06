@@ -882,7 +882,23 @@ function parse(tokens, opts = {}) {
     }
 
     // ── Silence ────────────────────────────────────────────────────────
-    if (type === 'Rest' || type === 'UndeterminedRest') {
+    // ⚠️ UN NOMBRE NU EST UN SILENCE, ET IL PORTE DONC `rest` COMME LES AUTRES.
+    // Décision Romain 2026-07-30 (`hub/decisions/2026-07-30-un-nombre-nu-est-un-silence-de-
+    // duree-n.md`) : « Un nombre nu dans les règles de production, c'est un silence de durée n »,
+    // et `-` ne diffère pas de `1`. La décision est explicite sur la conséquence : « Aucune
+    // huitième nature à inventer — un nombre nu porte `rest` ; la nature existe déjà. »
+    //
+    // Mesuré le 2026-08-06 : `S -> C4 2 D4` rendait un `NumericTerminal` SANS AUCUNE nature.
+    // ⚠️ Et absent n'est pas neutre — `AST.md` le dit en tête : un champ omis annonce que le
+    // producteur IGNORE la question. L'aval devait donc deviner, pour une famille qui pèse 531
+    // terminaux numériques et 1876 durées dans la seule scène `watch`.
+    //
+    // ⚠️ CE QUI M'AVAIT ÉGARÉ, et Romain l'a corrigé : j'ai lu « terminal NEUTRE » (ratification
+    // du 2026-07-17) comme « qui sonne ». « Neutre » porte sur la SORTE DU NOM — un nombre ne
+    // nomme aucune règle — et ne dit rien du son. J'ai bâti sur ce contresens un raisonnement
+    // entier, jusqu'à ouvrir un préavis de frontière à BPx pour rien.
+    if (type === 'Rest' || type === 'UndeterminedRest'
+        || type === 'NumericTerminal' || type === 'NumericDuration') {
       el.payload = { nature: 'rest' };
       return;
     }
