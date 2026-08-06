@@ -429,3 +429,54 @@ refus massif tenait à un détail d'écriture**, pas à une lacune de conception
 **La méthode est prouvée sur le langage entier.** Ce qui reste pour la phase 4 n'est plus la
 reconnaissance — c'est la construction de l'arbre, les diagnostics, et la frontière avec les huit
 dépôts qui lisent l'arbre.
+
+
+---
+
+# Phase 3 bis — l'arbre est construit, et l'écart dit ce qui n'est PAS de la syntaxe
+
+**2026-08-07.** La maquette ne faisait que reconnaître. Elle **produit** désormais un arbre, et
+`maquette/parseur-derive/arbre.mjs` le compare à celui du parseur de production, sur 270 scènes.
+
+| nature | engendré | production | écart |
+|---|---|---|---|
+| `Rule` | 3 953 | 3 953 | **=** |
+| `Rest` | 1 254 | 1 257 | **=** |
+| `Scene` | 270 | 270 | **=** |
+| `InstantControl` | 989 | 975 | +1 % |
+| `SettingBag` | 2 500 | 2 455 | +2 % |
+| `Symbol` | 18 653 | 21 180 | −12 % |
+| `Polymetric` | 5 027 | 5 699 | −12 % |
+| `Prolongation` | 1 011 | 1 176 | −14 % |
+| `Wildcard` | 303 | 498 | −39 % |
+| `NumericDuration` | 696 | 2 013 | −65 % |
+| `NumericTerminal` | 3 010 | 1 692 | +78 % |
+| `ActorReference` | 84 | 878 | −90 % |
+| `ActorDirective` | 70 | 282 | −75 % |
+| `Guard` | 236 | 130 | +82 % |
+| `BacktickStandalone` | 65 | 7 | +829 % |
+
+**Cinq natures sur seize à moins de 5 % d'écart** — dont `Rule`, au nombre exact.
+
+## ⚠️ Ce que l'écart mesure vraiment : la part SÉMANTIQUE de l'arbre
+
+Aucune de ces divergences n'est un défaut d'analyse. Chacune nomme un endroit où l'arbre de
+production **contient ce que le texte ne dit pas** :
+
+- **`ActorDirective` −75 %, `ActorReference` −90 %** — la production fabrique un **acteur
+  synthétique** pour toute scène qui n'en déclare aucun, avec ses quatre références par défaut. Le
+  texte n'en porte pas un mot.
+- **`NumericDuration` −65 % contre `NumericTerminal` +78 %** — la production **désucre** la durée
+  collée en cadre polymétrique, et distingue durée et terminal selon la position. Ma grammaire ne
+  voit que des nombres.
+- **`Symbol` −12 %, `Polymetric` −12 %** — même cause : le désucrage crée des nœuds.
+- **`BacktickStandalone` +829 %** — la production distingue le code **isolé** du code **attaché à
+  une voix** ; ma table les confond. C'est une erreur de ma table, pas de la grammaire.
+
+**Conclusion, et elle dimensionne toute la suite** : la reconnaissance est faite, mais **l'arbre de
+production est pour une part notable un produit de la RÉSOLUTION**, pas de la lecture. Un parseur
+engendré donnera l'ossature ; l'acteur implicite, le désucrage, la distinction terminal/durée
+resteront du code — pilotés par le schéma d'arbre, mais du code.
+
+⚠️ **Et la mesure est de PREMIER ORDRE** : même distribution ne veut pas dire même arbre.
+L'imbrication n'est pas comparée. Une nature au compte exact peut être placée ailleurs.
