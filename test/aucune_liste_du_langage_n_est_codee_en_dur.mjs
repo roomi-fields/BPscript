@@ -74,15 +74,14 @@ for (const [nom, valeurs] of listes) {
 // Elles ne peuvent pas être « dé-codées en dur » : il n'y a nulle part où les mettre. Les nommer
 // vaut mieux que les taire — et l'écart mesuré ci-dessous dit pourquoi ça compte.
 const SANS_DOMICILE = [
-  { nom: 'VAR_CONVENTIONS', ou: 'parser.js',
-    quoi: "les quatre conventions de variable (signal, pitch, phase, logic). Déclarées dans "
-        + "EBNF.md (`CONVENTION`), nulle part dans la donnée." },
-  { nom: 'ACTOR_ENTITY_KEYS', ou: 'parser.js',
-    quoi: "les clés d'un acteur. ⚠️ ÉCART MESURÉ le 2026-08-06 : le parseur en porte HUIT "
-        + "(alphabet, tuning, octaves, out, sound, sounds, eval, voice), EBNF.md n'en déclare "
-        + "que CINQ (`ACTOR_KEY`), et LANGUAGE.md écrit « les cinq clés d'un acteur ». Trois clés "
-        + "vivent donc dans le code sans qu'aucun document ne les connaisse." },
-];
+  // ⚠️ CET INVENTAIRE EST VIDE DEPUIS LE 2026-08-06, ET C'EST SON TÉMOIN QUI L'A VIDÉ.
+  // Il portait `VAR_CONVENTIONS` et `ACTOR_ENTITY_KEYS` — les deux dernières listes du langage
+  // sans domicile dans la donnée. Romain a tranché le jour même (« qu'est-ce qui t'empêche de
+  // créer les déclarations en librairies ? ») : elles vivent désormais dans
+  // `lib/core.json` schema (`actorKeys`, `deprecatedActorKeys`, `varConventions`), et le témoin
+  // ci-dessous a EXIGÉ leur retrait d'ici en rougissant. Un inventaire qui ne se vide jamais
+  // n'est qu'une liste de regrets.
+]; 
 for (const e of SANS_DOMICILE) {
   const vue = sources.some(([f, t]) => f === e.ou && t.includes(e.nom));
   ok(vue, `l'inventaire cite '${e.nom}' dans ${e.ou}, introuvable — entrée périmée, à retirer`);
@@ -95,5 +94,5 @@ if (echecs.length) {
 }
 console.log(`✅ aucune liste déclarée n'est reproduite en dur — ${passe} vérification(s) : `
           + `${listes.length} liste(s) de lib/core.json confrontées à ${litteraux.length} littéral(aux) `
-          + `dans ${FICHIERS.length} fichiers. ${SANS_DOMICILE.length} liste(s) du langage restent SANS `
-          + `domicile dans la donnée — voir l'inventaire du fichier, elles ne sont pas couvertes.`);
+          + `dans ${FICHIERS.length} fichiers. ${SANS_DOMICILE.length} liste(s) du langage sans domicile `
+          + `dans la donnée.`);

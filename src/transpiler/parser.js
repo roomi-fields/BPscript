@@ -48,7 +48,7 @@ function addressKeys() {
  * (EBNF.md:55 : `CONVENTION = "signal" | "pitch" | "phase" | "logic"`). Partagée par `@var` et
  * `@def` (`def_directive`, EBNF.md:66), qui portent les mêmes quatre mots.
  */
-const VAR_CONVENTIONS = new Set(['signal', 'pitch', 'phase', 'logic']);
+
 
 /**
  * Clés d'ENTITÉ (composants) admises sur la ligne d'acteur (décision cles-acteur-six,
@@ -64,31 +64,43 @@ const VAR_CONVENTIONS = new Set(['signal', 'pitch', 'phase', 'logic']);
  * (`properties.transport`, `TransportRef`, `references[transport]`) NE CHANGE PAS de nom : seul
  * le mot que l'auteur ÉCRIT change.
  */
-// LES CINQ CLÉS D'UN ACTEUR — la bible fait foi (LANGUAGE.md, « Les composants d'un acteur »).
-//
-// ⚠️ AUCUNE CLÉ RETIRÉE — et les trois tentatives du 2026-08-06 méritent d'être écrites, parce
-// qu'elles ont chacune failli casser quelque chose de vivant.
-//   · `sounds` : je l'ai prise pour un vestige, puisqu'elle est écartée À LA MAIN plus bas
-//     (`key !== 'sounds'`). Mesure après retrait : `sounds:tabla_perc` devenait SILENCIEUSEMENT
-//     ACCEPTÉE. Elle est dans cet ensemble pour être REFUSÉE — c'est la pierre tombale de la
-//     graphie v0.7 — et l'exclusion manuelle plus bas dit seulement qu'elle n'est pas une clé
-//     VALIDE. ⚠️ Un nom dans une liste peut y être pour interdire, jamais pour permettre : le
-//     retirer ouvre au lieu de fermer.
-//   · `sound` et `voice` : absentes de la bible et d'aucune scène. La bible écrit « les CINQ clés d'un acteur »
-// et n'y cite ni `sound` ni `voice` ; le corpus n'en écrit aucune des deux. Les retirer sur ces
-// deux mesures aurait supprimé une fonctionnalité VIVANTE : `voice` porte NEUF assertions dédiées
-// (`test_voices.js`) et une librairie de quatorze entrées, `sound` en a d'autres. « Aucune scène
-// ne l'écrit » ne veut pas dire « ça ne sert plus » — ça peut vouloir dire « pas encore adopté ».
-// Les retirer aurait supprimé une fonctionnalité VIVANTE : `voice` porte NEUF assertions dédiées
-//     (`test_voices.js`) et une librairie de quatorze entrées. « Aucune scène ne l'écrit » ne veut
-//     pas dire « ça ne sert plus » — ça peut vouloir dire « pas encore adopté ».
-// L'écart bible↔code sur `sound` et `voice` est RÉEL et remonté à Romain, non tranché.
-//
-// ⚠️ CETTE LISTE N'A PAS DE DOMICILE DANS LA DONNÉE, et ce n'est pas un oubli : lui en donner un
-// est une décision de structure, posée à Romain le 2026-08-06 et non tranchée. Elle ne peut PAS
-// se déduire des listes existantes — `scale` et `sound` sont des axes de catalogue qui ne sont
-// PAS des clés d'acteur, donc une dérivation serait fausse.
-const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'out', 'sound', 'sounds', 'eval', 'voice']);
+/**
+ * CLÉS D'UN ACTEUR — lues dans la DONNÉE (`lib/core.json` schema.actorKeys + deprecatedActorKeys).
+ *
+ * Déclarées en librairie le 2026-08-06 (Romain : « est-ce que les clés d'acteur devraient être
+ * spécifiées en librairies comme tout le reste ? »). C'était la dernière liste structurelle du
+ * langage à vivre en dur dans le parseur.
+ *
+ * ⚠️ DEUX LISTES, ET LA SECONDE EST LÀ POUR INTERDIRE. `actorKeys` sont les clés VALIDES ;
+ * `deprecatedActorKeys` porte celles qui doivent REFUSER (`sounds`, graphie v0.7). L'ensemble
+ * ci-dessous est leur UNION, parce que le refus du deux-points doit couvrir les deux — une clé
+ * périmée écrite `sounds:X` doit être nommée, pas ignorée.
+ * Mesuré le 2026-08-06 : sortir `sounds` des deux listes rendait `sounds:tabla_perc`
+ * SILENCIEUSEMENT ACCEPTÉ. Un nom peut figurer dans une liste pour fermer, jamais pour ouvrir.
+ */
+let _actorKeys = null;
+function actorKeysData() {
+  if (_actorKeys) return _actorKeys;
+  const sch = (loadLib('core') || {}).schema || {};
+  const valides = sch.actorKeys, perimees = sch.deprecatedActorKeys || [];
+  if (!Array.isArray(valides) || valides.length === 0) {
+    throw new Error("lib/core.json schema.actorKeys est vide ou absent — le parseur n'a plus de clés d'acteur");
+  }
+  _actorKeys = { valides: new Set(valides), toutes: new Set([...valides, ...perimees]) };
+  return _actorKeys;
+}
+
+/** Les quatre conventions d'une variable — lues dans la donnée, pas listées ici. */
+let _varConventions = null;
+function varConventions() {
+  if (_varConventions) return _varConventions;
+  const c = ((loadLib('core') || {}).schema || {}).varConventions;
+  if (!Array.isArray(c) || c.length === 0) {
+    throw new Error("lib/core.json schema.varConventions est vide ou absent");
+  }
+  _varConventions = new Set(c);
+  return _varConventions;
+}
 
 /**
  * Axes à CATALOGUE au niveau SCÈNE (directive `@axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
@@ -1365,7 +1377,7 @@ function parse(tokens, opts = {}) {
     // ─── PIERRE TOMBALE — `@transport`/`@out` ne sont PAS des directives de scène (Romain,
     // 2026-08-04) ─────────────────────────────────────────────────────────────────────────────
     // Signalé par Atlas, mesuré avant correction : le tombstone `transport` posé DANS un bloc
-    // `@actor` (plus bas, `ACTOR_ENTITY_KEYS`) ne couvrait pas l'écriture en TÊTE de scène —
+    // `@actor` (plus bas, `actorKeysData()`) ne couvrait pas l'écriture en TÊTE de scène —
     // `@transport.midi` et `@out.midi` compilaient tous les deux SANS ERREUR et SANS AUCUN EFFET
     // (l'acteur implicite garde `{type:'TransportRef', key:'audio'}` quoi qu'on écrive : la
     // directive produisait un nœud que rien ne consomme). Le trou est PRÉEXISTANT — `@transport`
@@ -1536,7 +1548,7 @@ function parse(tokens, opts = {}) {
           return { type: 'VarDirective', names: [first], varType: { kind: 'flag', states }, line: tok.line };
         }
 
-        if (VAR_CONVENTIONS.has(typeWord)) {
+        if (varConventions().has(typeWord)) {
           advance();
           return { type: 'VarDirective', names: [first],
                    varType: { kind: 'convention', convention: typeWord }, line: tok.line };
@@ -1913,7 +1925,7 @@ function parse(tokens, opts = {}) {
         const next = peek(1).type;
 
         // ─── PIERRE TOMBALE — `transport` n'existe plus sur un acteur (Romain, 2026-08-04) ───
-        // Le mot est SORTI du langage : `transport` n'est plus dans `ACTOR_ENTITY_KEYS`, donc
+        // Le mot est SORTI du langage : `transport` n'est plus dans `schema.actorKeys`, donc
         // sans ce garde il tomberait en silence hors de la boucle (traité comme début de règle)
         // au lieu de crier. `out` porte désormais la direction de sortie.
         if (key === 'transport' && (next === T.PERIOD || next === T.COLON) && !peek(1).spaceBefore) {
@@ -1930,7 +1942,7 @@ function parse(tokens, opts = {}) {
         if (next === T.PERIOD && !peek(1).spaceBefore) {
           // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
           // symbole, début de règle).
-          const isEntityKey = ACTOR_ENTITY_KEYS.has(key);
+          const isEntityKey = actorKeysData().valides.has(key);
           if (!isEntityKey) break;
           advance();           // consume key IDENT
           advance();           // consume PERIOD
@@ -1974,7 +1986,7 @@ function parse(tokens, opts = {}) {
           // `out:X(...)` est REJETÉE (fail-loud) — plus AUCUNE rétrocompat, migration
           // totale (non-négociable Romain). Une sortie prend des params (canal/device) →
           // c'est un composant, pas une valeur : `out.midi(ch:3)`.
-          if (ACTOR_ENTITY_KEYS.has(key)) {
+          if (actorKeysData().toutes.has(key)) {
             const canon = key === 'sounds' ? 'sound' : key;
             throw new ParseError(
               `'${key}:…' refusé — ':' n'affecte pas de valeur à un composant. `
