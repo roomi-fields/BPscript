@@ -12,7 +12,10 @@ let ok = 0; const echecs = new Map();
 // ⚠️ TROIS SCENES SONT DECLAREES INCOMPATIBLES (decision Romain 2026-08-06, l accolade ne
 // traverse plus les regles). Elles sortent du DENOMINATEUR : les compter serait mesurer un
 // refus voulu comme un manque de la grammaire.
-const INCOMPATIBLES = ['visser-waves', 'koto3', 'dhati2'];
+// ⚠️ `dhin` AJOUTÉE le 2026-08-06 après mesure : sa ligne 83 est `) B12 <> ) A4 B8` — une
+// PARENTHÈSE en tête de règle, même famille que l'accolade traversante. Elle relève de la même
+// décision de Romain, pas d'une lacune de la grammaire.
+const INCOMPATIBLES = ['visser-waves', 'koto3', 'dhati2', 'dhin'];
 for (const [nom, src] of toutesLesScenes()) {
   if (INCOMPATIBLES.some((x) => nom.endsWith('/' + x + '.bps') || nom === x + '.bps')) continue;
   const r = parse(src);

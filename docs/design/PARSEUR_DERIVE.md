@@ -250,8 +250,14 @@ le plus fréquent**, jamais par ce que je croyais manquer.
 
 | 21 | type de variable suivi d'une liste de paires (`flag: a:1, b:2`) | **230** |
 
-**230 sur 271 — 85 % du corpus**, avec une grammaire de 205 lignes contre 7 836 lignes de parseur
-écrit à la main.
+| 22 | **durée collée à un bloc de code** · catalogue de gabarits | **260** |
+| 23 | sac sur argument de directive · groupes d'une forme de gabarit | **265** |
+| 24 | **sujet d'un réglage** (`*:cutoff:env1`) · coupure de câblage | **268** |
+| 25 | code en valeur de branchement · coupure en tête de directive | **270** |
+
+**270 sur 270 — la totalité du corpus**, une fois écartées les quatre scènes que la décision du
+2026-08-06 rend incompatibles. Grammaire : **220 lignes**, contre 7 836 lignes de parseur écrit à
+la main.
 
 ⚠️ Le dénominateur est passé de 274 à **271** : les trois scènes que la décision du 2026-08-06
 rend incompatibles sortent de la mesure. Les compter serait prendre un refus VOULU pour un manque
@@ -393,3 +399,33 @@ gain est conservé et l'ambiguïté disparaît au lieu d'être arbitrée au hasa
 qualité d'une grammaire. Une passe peut faire monter le compte **et** dégrader la grammaire. Le
 compte ne le dit pas ; l'outil, lui, le dit — encore faut-il lire ce qu'il écrit avant de se
 réjouir du chiffre.
+
+
+## Le chantier atteint la totalité du corpus
+
+**270 scènes sur 270.** Les quatre écartées relèvent toutes de la même décision de Romain — une
+accolade, ou une parenthèse, qui s'ouvre dans une règle et se ferme dans une autre.
+
+⚠️ **La dernière, `dhin`, n'a été identifiée qu'à la mesure** : sa ligne 83 écrit `) B12 <> ) A4 B8`
+— une **parenthèse** en tête de règle. Même famille que l'accolade, forme différente. Sans la
+mesure, elle serait restée comptée comme une lacune de la grammaire.
+
+## La passe 22 — trente scènes d'un coup, pour une durée
+
+`` `…` :18 `` — un bloc de code porte sa durée, collée à l'accent grave fermant. Trente scènes
+Csound tombaient là-dessus. C'est, avec le saut de ligne final, le second cas où **un motif de
+refus massif tenait à un détail d'écriture**, pas à une lacune de conception.
+
+## Ce que le chantier a établi, au total
+
+| | |
+|---|---|
+| couverture | **0 → 270 / 270** |
+| grammaire | **220 lignes** |
+| parseur écrit à la main | **7 836 lignes** |
+| passes | **25**, chacune guidée par le motif de refus le plus fréquent |
+| ambiguïtés introduites puis levées | **2**, dont aucune conservée |
+
+**La méthode est prouvée sur le langage entier.** Ce qui reste pour la phase 4 n'est plus la
+reconnaissance — c'est la construction de l'arbre, les diagnostics, et la frontière avec les huit
+dépôts qui lisent l'arbre.

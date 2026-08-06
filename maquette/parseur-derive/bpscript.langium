@@ -22,11 +22,27 @@ entry Scene:
       | directives+=Directive
       | separators+=Separator
       | prods+=ProdLigne
+      | gabarits+=EntreeGabarit
       | rules+=Rule
     )*;
 
 ProdLigne:
     directive=ProdDirective NL*;
+
+// ⚠️ LE CATALOGUE DE GABARITS : `[1] /1 ???????` — un RANG entre crochets, une ÉCHELLE, puis la
+// forme en jokers. Ce n'est pas une règle : il n'y a pas de flèche.
+EntreeGabarit:
+    '[' rang=NUMBER ']' (echelle=Speed | echelleNue=EchelleNue)?
+    (forme+=RhsElement | groupes+=GroupeGabarit)+ NL*;
+
+// `($0 ???)` — un groupe de la forme, avec son ancre numérotée.
+GroupeGabarit:
+    '(' (ancre=ANCRE)? elements+=RhsElement* ')';
+
+terminal ANCRE: /\$[0-9]+/;
+
+EchelleNue:
+    op=OpVitesse value=NUMBER ('/' denom=NUMBER)?;
 
 // ── Déclaratif ──────────────────────────────────────────────────────────────
 ActorDirective:
@@ -41,7 +57,7 @@ ActorKey:
 // `@actor sitar alphabet.sargam`. Une valeur nue ne suffit pas.
 Directive:
     '@' name=ID ('.' target=ID)? (':' value=Valeur)? (bag=SettingBag)?
-    (args+=ArgDirective | ',' args+=ArgDirective)* NL*;
+    (args+=ArgDirective | ',' args+=ArgDirective | coupures+=Branchement)* NL*;
 
 // ⚠️ `@timepatterns: t1=96/100, t2=100/100` — un argument de directive peut AFFECTER une valeur
 // avec le signe égal, pas seulement avec le deux-points. Mesuré : deux scènes l'écrivent ainsi.
@@ -51,7 +67,7 @@ Directive:
 // d'une liste de paires nommées séparées par des virgules. La valeur d'un argument peut donc
 // elle-même être une liste.
 ArgDirective:
-    mot=ID ('.' sous=ID)? ((':' | '=') paires+=PaireNommee (',' paires+=PaireNommee)*)?
+    mot=ID ('.' sous=ID)? (bag=SettingBag)? ((':' | '=') paires+=PaireNommee (',' paires+=PaireNommee)*)?
   | num=NUMBER
   | texte=STRING
   | code=BACKTICK;
@@ -60,8 +76,13 @@ ArgDirective:
 // valeur », et l'outil a signalé une AMBIGUÏTÉ : les deux commencent par un identifiant. Une
 // grammaire ambiguë analyse de travers en silence — c'est pire qu'un refus. Une paire dont la
 // valeur est facultative couvre les deux cas et l'ambiguïté disparaît au lieu d'être arbitrée.
+// ⚠️ `>>` BRANCHE, `\\>>` COUPE — le câblage relie deux ports, et il apparaît AUSSI comme valeur
+// d'une directive : `@macro lead saw.freq: pitch >> lpf.cutoff: …`.
+Branchement:
+    ('>>' | COUPE) (code=BACKTICK | cible=ID ('.' port=ID)? (':' (codeVal=BACKTICK | valeur=Valeur))?);
+
 PaireNommee:
-    valeur=Valeur ((':' | '=') suite=Valeur)?;
+    valeur=Valeur ((':' | '=') (code=BACKTICK | suite=Valeur))? (branchements+=Branchement)*;
 
 Separator:
     value='-----' NL*;
@@ -177,8 +198,18 @@ SettingBag:
     '(' pairs+=Paire (',' pairs+=Paire)* ')';
 
 // `cc.98:0` — le composant peut être un NUMÉRO.
+// ⚠️ LE SUJET d'un réglage, écrit devant la clé et séparé par un deux-points : `(*:cutoff:env1)`
+// pose `cutoff` sur CHAQUE terminal de la portée, `(C2:cutoff:400)` sur les seuls `C2`. Trois
+// pièces séparées par deux `:` là où une paire ordinaire en a deux.
+// ⚠️ LE SUJET d'un réglage s'écrit devant la clé : `(*:cutoff:env1)` pose `cutoff` sur CHAQUE
+// terminal de la portée, `(C2:cutoff:400)` sur les seuls `C2`.
+// ⚠️ ET IL NE S'ÉCRIT PAS EN ALTERNATIVE. Première rédaction : « un sujet optionnel PUIS une clé »
+// — deux chemins commençant par un identifiant, donc AMBIGU, et l'outil l'a dit deux fois. La
+// paire lit donc ses parties DANS L'ORDRE, et c'est le NOMBRE de deux-points qui décide du sens :
+// deux parties = clé et valeur, trois = sujet, clé et valeur. Aucune alternative à arbitrer.
 Paire:
-    key=ID ('.' (component=ID | numero=NUMBER))? (':' value=Valeur)?;
+    (etoile='*' | premier=ID) ('.' (component=ID | numero=NUMBER))?
+    (':' deuxieme=Valeur (':' troisieme=Valeur)?)?;
 
 // ⚠️ UNE VALEUR PEUT AVOIR PLUSIEURS PARTIES, séparées par une ESPACE — `(scale:todi_ka_4 0)`,
 // `(keymap:C3 C3 C5 C5)`, `(scale:Cmaj C4)`. C'est la loi du langage : la VIRGULE sépare les
@@ -197,7 +228,9 @@ Atome:
 Nombre:
     value=NUMBER ('/' denom=NUMBER)?;
 
-Backtick:      value=BACKTICK;
+// ⚠️ Un bloc de code porte sa DURÉE, collée à l'accent grave fermant : les scènes Csound
+// écrivent `…`:18 — dix-huit battements pour tout le bloc.
+Backtick:      value=BACKTICK (':' duree=Duree)? (bags+=SettingBag)*;
 // Un silence porte son sac comme un terminal : `-(vel:127)`.
 // `>>` branche, `\\>>` coupe — le câblage posé dans le flux.
 Cablage:       source=ID coupe='>>' cible=ID ('.' port=ID)?;
@@ -241,5 +274,6 @@ terminal STRING: /"[^"]*"/;
 terminal BACKTICK: /`[^`]*`/;
 
 terminal NL: /[\r\n]+/;
+terminal COUPE: /\\>>/;
 hidden terminal WS: /[ \t]+/;
 hidden terminal COMMENT: /\/\/[^\n\r]*/;
