@@ -78,5 +78,61 @@ for (const [quoi, src] of [
     tops.map(t => t.scope));
 }
 
+// ─── « COLLÉ » VEUT DIRE COLLÉ À UN TERME — matrice des OUVRANTS ────────────────────────────
+// ⚠️ CE BLOC VIENT D'UN DÉFAUT MESURÉ PAR KANOPI, PAS D'UNE IDÉE. `{! (/2) C4, D4}` était REFUSÉ
+// et `{ ! (/2) C4, D4}` accepté : le `!` en tête de voix était pris pour un flux CONJOINT parce
+// que le test ne regardait que l'espace à gauche, jamais ce qu'il y avait à gauche. Une accolade
+// n'est pas un terminal. Coût réel chez l'architecte : 178 espaces posés après des accolades pour
+// réparer quatre scènes, en suivant un message qui accusait l'espace.
+//
+// ⚠️ ET LA PREMIÈRE VERSION DE CETTE MATRICE NE MORDAIT PAS. Je l'avais écrite avec des formes
+// ESPACÉES (`{a, ! (/2) b}`) : la garde n'agit que sur le COLLÉ, donc huit de ses neuf cellules
+// passaient quel que soit l'état du code. Mesuré en retirant la garde : une seule rougissait.
+// Chaque cellule est désormais COLLÉE à son ouvrant — la seule position où la question se pose.
+//
+// ⚠️ QUELLES CELLULES MORDENT VRAIMENT, MESURÉ PAR INJECTION — et il faut le dire, sinon un vert
+// laisse croire plus qu'il ne prouve :
+//   · les DEUX cellules « vitesse collée à une accolade / à une virgule » rougissent quand on
+//     retire la garde. Ce sont elles qui gardent cette correction.
+//   · les cellules `conjointDe` ne bougent PAS sous injection : le drapeau `conjoint` d'un
+//     RÉGLAGE en tête de voix ou de membre droit est produit par un AUTRE site, qui était déjà
+//     juste. Elles restent comme témoins de non-régression DE CE SITE-LÀ — elles ne prouvent
+//     rien sur la garde ci-dessous, et ce fichier ne prétend pas le contraire.
+{
+  const conjointDe = (src) => {
+    let n = 0; const vu = new WeakSet();
+    const w = x => { if (!x || typeof x !== 'object' || vu.has(x)) return; vu.add(x);
+      if (x.type === 'InstantControl' && x.conjoint === true) n++;
+      if (Array.isArray(x)) { x.forEach(w); return; } for (const v of Object.values(x)) w(v); };
+    w(parse(tokenize(src))); return n;
+  };
+  const EN_TETE = '@core\n@controls\n@mode:lin\n';
+  // UN OUVRANT NE PORTE PAS DE TERME : collé ou non, jamais conjoint. Formes COLLÉES — c'est là,
+  // et là seulement, que la garde décide quelque chose.
+  for (const [quoi, src] of [
+    ['fleche',   EN_TETE + 'S ->!(vel:80) a'],
+    ['accolade', EN_TETE + 'S -> {!(vel:80) a, b}'],
+    ['virgule',  EN_TETE + 'S -> {a,!(vel:80) b}'],
+  ]) assert(`colle a une ${quoi} : jamais conjoint`, conjointDe(src) === 0, conjointDe(src));
+
+  // LA MOITIÉ « DOIT MORDRE » : un vrai terme collé donne bien un conjoint. Sans elle, une règle
+  // qui refuserait TOUT resterait verte.
+  for (const [quoi, src] of [
+    ['terminal', EN_TETE + 'S -> a!(vel:80) b'],
+    ['groupe',   EN_TETE + 'S -> {a}!(vel:80) b'],
+  ]) assert(`colle a un ${quoi} : conjoint`, conjointDe(src) === 1, conjointDe(src));
+
+  // LA VITESSE refuse le conjoint : elle passe après un ouvrant, elle tombe après un terme.
+  for (const [quoi, src] of [
+    ['accolade', '@mode:lin\nS -> {!(/2) a, b}'],
+    ['virgule',  '@mode:lin\nS -> {a,!(/2) b}'],
+    ['fleche',   '@mode:lin\nS -> !(/2) a'],
+  ]) assert(`vitesse collee a une ${quoi} : acceptee`, refuse(src) === null, refuse(src));
+  for (const [quoi, src] of [
+    ['terminal', '@mode:lin\nS -> a!(/2) b'],
+    ['groupe',   '@mode:lin\nS -> {a}!(/2) b'],
+  ]) assert(`vitesse collee a un ${quoi} : refusee`, refuse(src) !== null);
+}
+
 console.log(`\n${'='.repeat(40)}\nRésultat : ${passed} PASS, ${failed} FAIL`);
 if (failed > 0) process.exit(1);

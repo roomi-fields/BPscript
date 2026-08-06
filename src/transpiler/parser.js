@@ -4095,7 +4095,27 @@ function parse(tokens, opts = {}) {
       // avant `!`) = flux CONJOINT ancré au terminal précédent (voyage avec lui, répliqué si lui).
       // `C4 !(...)` ESPACÉ = flux ÉVÉNEMENT SÉPARÉ (non conjoint, posé seul). On capte l'espace
       // ici ; la validation « il existe bien un terminal précédent » est faite à l'annotation.
-      const collated = !current().spaceBefore;
+      // ⚠️ « COLLÉ » VEUT DIRE COLLÉ À UN TERME, PAS « SANS ESPACE À GAUCHE ». Un `!` qui ouvre
+      // une voix, un groupe ou un membre droit n'a AUCUN terme derrière lui : il ne peut pas être
+      // conjoint, quoi que dise l'espace. `{! (/2) C4, D4}` pose la vitesse en TÊTE de voix,
+      // exactement comme `{ ! (/2) C4, D4}` — l'accolade n'est pas un terminal.
+      //
+      // Mesuré le 2026-08-06 par Kanopi, reproduit ici : la seconde écriture passait, la première
+      // était REFUSÉE, et mon message accusait l'espace — que l'auteur avait pourtant mis. Coût
+      // réel : 178 espaces posés après des accolades pour réparer quatre scènes, en cherchant du
+      // côté que mon message désignait. Un refus JUSTE dont la CAUSE est fausse envoie son lecteur
+      // corriger ce qui n'a rien à voir ; c'est la même famille que « ça compile ≠ ça veut dire ce
+      // que la phrase dit », côté diagnostic.
+      // ⚠️ Et ce n'était pas qu'un défaut de message : le refus LUI-MÊME était faux.
+      // Noms pris dans le tokenizer, pas de mémoire : j'en avais inventé trois sur quatre au
+      // premier jet (`T.ARROW`, `T.ARROW_LEFT`, `T.ARROW_BOTH` n'existent pas), ce qui met
+      // `undefined` dans l'ensemble et le fait correspondre à tort.
+      const OUVRANTS = new Set([T.LBRACE, T.LPAREN, T.LBRACKET, T.COMMA,
+                                T.ARROW_R, T.ARROW_L, T.ARROW_BI, T.NEWLINE]);
+      for (const t of OUVRANTS) if (t === undefined) throw new Error('OUVRANTS porte un type de jeton inexistant');
+      const precedent = peek(-1);
+      const collated = !current().spaceBefore && precedent !== undefined
+                    && !OUVRANTS.has(precedent.type);
       advance();
       // `!osc >> filtre` / `!\>> out.in` → CÂBLAGE posé DANS LE FLUX.
       //
