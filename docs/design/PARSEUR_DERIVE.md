@@ -89,3 +89,66 @@ coloration, et `bpscript.grammar` garde ce rôle.
 - **Le coût des diagnostics.** Les outils donnent la gestion d'erreur des compilateurs standards :
   position, jetons attendus, reprise. Ce qu'ils ne donnent pas, c'est le message qui nomme la
   relève d'une forme retirée — celui-là vient d'un catalogue à tenir, quel que soit l'outil.
+
+
+---
+
+# Phase 2 — la maquette, et ce qu'elle a mesuré
+
+**Faite le 2026-08-06** avec Langium 4.3.1, sur un fragment choisi par la phase 0 : les six natures
+les plus produites (règle, symbole, bloc polymétrique, silence, prolongation, nombre).
+Fichiers : `maquette/parseur-derive/` — une grammaire de **60 lignes**.
+
+## Ce qui marche, et il faut le dire d'abord
+
+**La chaîne complète tient.** Une grammaire → un analyseur → un arbre typé → une coloration, en
+une commande et 283 ms. Les cinq formes du fragment sont acceptées, et l'arbre produit se lit :
+
+```
+regle : S ->
+    SymbolRef        "C4"
+    Polymetric       "A B | C"
+    Rest             "-"
+```
+
+**Les types de l'arbre sont ENGENDRÉS** depuis la même grammaire. C'est le point qui compte pour
+le chantier : les deux premiers formalismes du plan n'en font qu'un seul à maintenir.
+
+## Trois contraintes mesurées, qu'aucune description ne donnait
+
+**1. `Symbol` est un nom interdit.** L'outil refuse les noms réservés du runtime JavaScript. Le
+nœud le plus produit du langage — 21 924 occurrences — ne peut pas garder son nom. L'arbre engendré
+ne portera donc pas partout les noms actuels : c'est une **action de frontière** pour les huit
+dépôts qui lisent l'arbre, à planifier, pas à découvrir.
+
+**2. LA FIN DE LIGNE FAIT PARTIE DE LA GRAMMAIRE.** Avec l'espace entièrement caché — le réglage
+naturel — deux règles qui se suivent **se fondent en une** : le membre droit de la première avale
+la tête de la seconde, puis la flèche échoue. Le retour à la ligne n'est pas de la mise en page
+dans ce langage, il **termine une règle**. Une fois déclaré, les cinq formes passent.
+⚠️ Cette contrainte ne se voyait dans aucun des trois documents. Elle s'est vue à la première
+exécution.
+
+**3. ⚠️ LES MESSAGES D'ERREUR PAR DÉFAUT NE VALENT RIEN — et c'est moi qui avais sur-affirmé.**
+J'avais écrit à Romain que ces outils donnent « la gestion d'erreur des compilateurs standards :
+position, jetons attendus, reprise ». Mesuré sur trois fautes évidentes :
+
+```
+"S -> "        ligne 1, colonne 1 — Expecting: expecting at least one iteration which starts with…
+"S C4 D4"      ligne 1, colonne 1 — (le même)
+"S -> {A B, C" ligne 1, colonne 1 — (le même)
+```
+
+**La position est fausse** (toujours 1,1) et **le texte est le même pour trois fautes différentes**.
+Ce n'est pas « standard mais générique » : c'est inutilisable tel quel. La gestion d'erreur
+demandée par Romain — « tout ce qui n'est pas spécifié est en erreur, et je veux des erreurs
+explicites » — **ne vient pas gratuitement avec l'outil**. Elle est à construire, et son coût
+n'était pas dans mon plan.
+
+## Ce que la maquette change au plan
+
+- **La phase 1 n'est plus un choix d'outil sur description** : il faut mesurer les diagnostics de
+  chaque candidat sur les mêmes trois fautes. C'est le critère qui départage, pas la génération
+  d'arbre — que tous savent faire.
+- **Le troisième formalisme monte en importance.** Le catalogue de diagnostics n'est pas un
+  complément : c'est la moitié du travail.
+- **Le renommage des nœuds est une frontière**, à annoncer avant d'écrire.

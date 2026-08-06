@@ -21,6 +21,8 @@
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.8",
     "dependency-cruiser": "^16.0.0",
+    "langium": "^4.3.1",
+    "langium-cli": "^4.3.0",
     "typescript": "^6.0.3"
   }
 }
