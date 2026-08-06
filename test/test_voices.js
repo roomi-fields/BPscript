@@ -1,5 +1,5 @@
 /**
- * test_voices.js — LANG-SONS-2 : modèle de VOIX ([438], spec hub/projets/lang-sons-spec.md).
+ * test_voices.js — LANG-SONS-2 : modèle de VOIX ([438], spec hub/projets/2026-06-24-lang-sons-spec/README.md).
  *
  * Couvre :
  *   1. `voice.<nom>` = 7e clé d'entité d'acteur → ActorReference {category:'voice'} (2 voies).

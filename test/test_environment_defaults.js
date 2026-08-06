@@ -1,6 +1,6 @@
 /**
  * BPS-defaut-env / M5 — défauts d'environnement inscrits dans l'AST à la création
- * (point 1, hub/projets/spec-ecriture-structure.md §A ; décision archi Romain 2026-06-24).
+ * (point 1, hub/projets/2026-06-24-spec-ecriture-structure/README.md §A ; décision archi Romain 2026-06-24).
  *
  *   compileToBPxAST(source, environnement) -> { ast, ... }
  *   environnement = { tempo?, octave?, division?, … }   // défauts portés par Kanopi

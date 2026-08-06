@@ -18,7 +18,7 @@ PIÈGES (vérifiés sur pièces) :
   - Défaut d'octaves = ALPHABET (décision cles-acteur-six). PITCH.md:67 ALIGNÉ le 2026-06-16
     (l'ancienne mention « tuning/western » était périmée — déjà corrigée).
   - 7 clés d'entité : alphabet, tuning, octaves, sound, transport, eval + voice
-    (LANG-SONS-2, GO Romain [438] 2026-07-16 — hub/projets/lang-sons-spec.md ; les six
+    (LANG-SONS-2, GO Romain [438] 2026-07-16 — hub/projets/2026-06-24-lang-sons-spec/README.md ; les six
     premières = décision cles-acteur-six 2026-06-16).
   - CONTEXTE BPx UNIQUEMENT : l'AST est AGNOSTIQUE du moteur. Aucune notion BP3 dans l'AST
     (`_xxx(N)`, `flavor:'bp3'`…). La sortie grammaire BP3 = fonction héritée, ne pas y toucher

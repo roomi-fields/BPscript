@@ -19,7 +19,7 @@ Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes 
 | `sound` | son par défaut de l'acteur — **producteur PAR SYMBOLE** (banque, ou prospectif backtick-synthé) | `@sound` |
 | `transport` | **canal de sortie** de NOTRE production (`audio`/`midi`/`osc`) — **optionnel**, défaut cascade @core `audio` ; **ABSENT (interdit) sur un acteur `eval`** (il sort en natif) | librairie `@devices` |
 | `eval` | **producteur embarqué autonome** (`strudel`/`hydra`/`p5`/`csound`/`mercury`) : produit + sort en **natif** ; absence d'`eval` ⇒ producteur **défaut `js`** (notre code) | — |
-| `voice` | **le SON de l'acteur** (LANG-SONS-2, GO Romain [438] 2026-07-16, spec `hub/projets/lang-sons-spec.md`) : son de base + contrôles, réalisé **par-runtime** (`audio:` backtick typé synthétisé par runtime-audio ; `device:` preset MIDI/OSC). La **hauteur n'y vit pas** (structurelle : alphabet+tuning, spec §2) — `voice.X` sans tuning = percussion, valide. Binding par-terminal via le champ `voices` de l'alphabet (ex. tabla). NB : distinct de l'ancienne « voix intermédiaire » supprimée (ici acteur = voix ; `voice` = son SON). | `lib/voices.json` |
+| `voice` | **le SON de l'acteur** (LANG-SONS-2, GO Romain [438] 2026-07-16, spec `hub/projets/2026-06-24-lang-sons-spec/README.md`) : son de base + contrôles, réalisé **par-runtime** (`audio:` backtick typé synthétisé par runtime-audio ; `device:` preset MIDI/OSC). La **hauteur n'y vit pas** (structurelle : alphabet+tuning, spec §2) — `voice.X` sans tuning = percussion, valide. Binding par-terminal via le champ `voices` de l'alphabet (ex. tabla). NB : distinct de l'ancienne « voix intermédiaire » supprimée (ici acteur = voix ; `voice` = son SON). | `lib/voices.json` |
 
 ### Modèle producteur / canal (décision Romain 2026-07-14, `hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md`)
 
@@ -165,7 +165,7 @@ tout n'est pas une note (bol, backtick…).
 
 ## 5. Points ouverts (renvoi backlog)
 
-`hub/projets/backlog-langage-bps.md` :
+`hub/projets/2026-06-15-backlog-langage-bps/README.md` :
 
 > **A3 (durée d'un backtick) = TRANCHÉ**, retiré de cette liste (il n'a jamais été ouvert) :
 > voir ci-dessus §2 « Durée d'une voix de code » — terminal à durée BPx (extérieure) + durée

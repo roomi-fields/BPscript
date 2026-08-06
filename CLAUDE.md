@@ -111,7 +111,7 @@ PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus
 2. **Début de session** : `~/dev/bp/hub/tour inbox` + lire `TABLEAU.md` et mes `contrats/`.
 3. **Écrire/arbitrer** : `~/dev/bp/hub/tour send <dest> "msg"` (`architecte` = destinataire valide).
    Jamais écrire dans ma propre boîte. Marquer lu : `tour inbox --ack`.
-4. **Fin de session** : mettre à jour MOI-MÊME `TABLEAU.md` (ma ligne) et `projets/bpscript.md`.
+4. **Fin de session** : mettre à jour MOI-MÊME `TABLEAU.md` (ma ligne) et `projets/agents/bpscript.md`.
    L'architecte ne corrige plus mes pièces, il recadre. Une ligne de tableau **nomme aussi
    l'EN-ATTENTE** et dit de qui il dépend — une ligne qui ne dit que ce qui est fait laisse croire
    que le reste avance.

@@ -1203,7 +1203,7 @@ terminaux. Ce qui s'invoque dans une regle est **l'instance** : la scene ecrit
 `@var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
 
 **Ce que le calque devient a l'execution** -- exemplaires, ordre de traversee, fin de vie,
-rechargement a chaud -- est decrit dans `hub/projets/dedale/LE-CALQUE.md`.
+rechargement a chaud -- est decrit dans `dedale/docs/LE-CALQUE.md`.
 
 ### Le sac dans le flux : `!()`
 

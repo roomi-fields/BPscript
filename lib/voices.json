@@ -2,7 +2,7 @@
   "domain": "voice",
   "name": "voices",
   "_comment": [
-    "Registre des VOIX (LANG-SONS, spec hub/projets/lang-sons-spec.md, figée Romain 2026-06-24 ;",
+    "Registre des VOIX (LANG-SONS, spec hub/projets/2026-06-24-lang-sons-spec/README.md, figée Romain 2026-06-24 ;",
     "implémentation LANG-SONS-2, ordre [438] 2026-07-16). Une voix = un SON DE BASE + des",
     "CONTRÔLES, réalisée PAR-RUNTIME (spec §3) :",
     "  audio:  <backtick TYPÉ `js:…`/`faust:…`> — le code SYNTHÉTISE (runtime-audio compile,",

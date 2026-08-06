@@ -39,7 +39,7 @@ const VAR_CONVENTIONS = new Set(['signal', 'pitch', 'phase', 'logic']);
  * Romain 2026-06-16). Toutes se NOMMENT avec `.` (`.` APPELLE le composant) — jamais `:`
  * (le `:` AFFECTE une valeur). Le CUTOVER graphie (Romain 2026-07-14) rejette la forme `:`
  * pour chacune. `sounds` = alias v0.7 de `sound` (rejeté avec renvoi vers `sound.`).
- * `voice` = 7e clé (LANG-SONS-2, GO Romain [438] 2026-07-16, spec hub/projets/lang-sons-spec.md
+ * `voice` = 7e clé (LANG-SONS-2, GO Romain [438] 2026-07-16, spec hub/projets/2026-06-24-lang-sons-spec/README.md
  * §3) : la voix de l'acteur, entrée de lib/voices. NB : la spec §7 (2026-06-24, « illustratif —
  * syntaxe à raffiner » §8) écrivait `voice:wobble` — graphie ANTÉRIEURE au cutover ; le canon
  * postérieur s'applique : `voice.wobble`.
@@ -141,7 +141,7 @@ function writableChannels() {
 }
 
 /**
- * Index des VOIX (lib/voices.json, LANG-SONS-2 [438], spec hub/projets/lang-sons-spec.md §3-§5).
+ * Index des VOIX (lib/voices.json, LANG-SONS-2 [438], spec hub/projets/2026-06-24-lang-sons-spec/README.md §3-§5).
  * Une clé `nom for:<device>` = spécialisation par-device (cascade fin > général, résolue en
  * AVAL) ; ici on indexe par nom de base : { nom → { base?: def, forDevices: { device → def } } }.
  * Validation de FORME à l'indexation : une réalisation `audio` DOIT être un backtick TYPÉ
