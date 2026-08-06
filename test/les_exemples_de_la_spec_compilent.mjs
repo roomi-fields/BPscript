@@ -213,15 +213,33 @@ const retardRetrouve = new Set();
 for (const p of SPECS) {
   if (!existsSync(p)) continue;
   const nom = path.basename(p);
-  let dans = false;
+  // ⚠️ UNE RÈGLE SE LIT AVEC LE CONTEXTE DE SON BLOC, pas nue. Mesuré le 2026-08-06 : sept
+  // exemples tombaient sur « attribut inconnu » parce que le `@var lpf1 lpf` qui les précède DANS
+  // LE MÊME BLOC était jeté par ce garde. La forme était juste ; l'instrument la mesurait sans
+  // son contexte, alors qu'un lecteur de la doc voit les deux lignes ensemble.
+  // On ne prend QUE les déclarations du bloc COURANT : rien de fabriqué, rien d'emprunté à un
+  // autre exemple. Un contexte inventé masquerait de vrais refus.
+  let dans = false, contexte = [];
   for (const brut of readFileSync(p, 'utf8').split('\n')) {
-    if (/^```/.test(brut)) { dans = !dans; continue; }
+    if (/^```/.test(brut)) { dans = !dans; contexte = []; continue; }
     if (!dans) continue;
     const ligne = brut.replace(/\s*\/\/.*$/, '').trim();
+    // ⚠️ UN CONTEXTE NE DOIT QUE SERVIR, JAMAIS EMPOISONNER. Première version : toute ligne
+    // déclarative du bloc était reprise — et un `@def` (forme que le parser ne lit pas encore)
+    // faisait alors ÉCHOUER quatre règles qui passaient auparavant. Une déclaration qui ne
+    // compile pas seule n'est pas un contexte utilisable : on ne garde que celles qui tiennent
+    // debout d'elles-mêmes.
+    if (/^@(var|actor|def|alphabet|tuning|octaves)\b/.test(ligne)) {
+      let seule = false;
+      try { seule = (compileToBPxAST(`@core\n@controls\n${ligne}\nS -> C4\n`).errors || []).length === 0; }
+      catch { seule = false; }
+      if (seule) contexte.push(ligne);
+      continue;
+    }
     if (!RE_REGLE.test(ligne)) continue;
     regles++;
     let r;
-    try { r = compileToBPxAST(`@core\n@controls\n${ligne}\n`); }
+    try { r = compileToBPxAST(`@core\n@controls\n${contexte.join('\n')}\n${ligne}\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     if (msg === '' || REFUS_DE_RESOLUTION.test(msg)) continue;
