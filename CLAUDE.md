@@ -14,6 +14,46 @@
 3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
 Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
 
+### ⛔⛔ `docs/spec/LANGUAGE.md` EST LA BIBLE — seule référence, cible intransgressible (Romain, 2026-08-06)
+
+**Une seule autorité sur le langage : `docs/spec/LANGUAGE.md`.** Elle n'est pas une source parmi
+d'autres, elle est LA source. Elle ne se discute pas, elle ne se contourne pas, et rien ne la
+recouvre — ni le code, ni une mesure, ni un dérivé, ni un raisonnement.
+
+**`AST.md` et `EBNF.md` en sont DÉRIVÉS** et normalement alignés sur elle (Romain, 2026-08-06). Un
+dérivé qui la contredit est **FAUX**, et il se corrige **sur elle** — jamais l'inverse, jamais un
+arbitrage entre les deux. Il n'y a pas deux autorités à concilier : il y a une bible et ses copies.
+
+⚠️ **CELA RENVERSE « LE CODE FAIT FOI ».** Le skill `bpscript-oracle` établit une hiérarchie qui
+tranche le *syntaxiquement accepté* ; elle reste juste pour cela et pour rien d'autre. Le
+compilateur répond à « **est-ce que ça compile** », **jamais** à « est-ce que c'est juste ». Donc :
+
+> **Une forme que la bible écrit et que le compilateur refuse dit UNE seule chose : le compilateur
+> est EN RETARD sur la référence.** Pas une divergence à arbitrer, pas un défaut à instruire —
+> **une dette de rattrapage**, et elle est pour moi. La bible est délibérément EN AVANCE sur le
+> parser (elle est remaniée souvent) ; ce décalage est le régime NORMAL, pas une anomalie.
+
+**CE QUI A COÛTÉ CETTE RÈGLE, mesuré le jour même.** Je tenais `AST.md` pour une autorité
+concurrente de la bible, donc tout désaccord entre elles me paraissait demander un arbitrage de
+Romain. J'ai remonté « la vitesse s'écrit `[/2]` dans le code, `(/2)` dans la spec, tranchez » —
+**la bible avait déjà tranché**, §« La vitesse — `! (/N)` dans le flux », et ses **trois exemples**
+de cette section sont refusés par mon parseur (`Expected symbol, (...) or [...] after !`). Un
+simple retard de rattrapage, que j'ai présenté comme un blocage exigeant une décision.
+⚠️ **Le coût réel n'est pas le retard, c'est le faux blocage** : demander un arbitrage déjà rendu
+immobilise Romain sur une question fermée et fait passer une dette de code pour une question de
+langage.
+
+**LE GESTE, à chaque question de langage** : lire la bible AVANT de mesurer le code. Si le code en
+diverge, le code est en dette. Si la bible est muette, c'est une question pour Romain — et
+**seulement dans ce cas**.
+
+⚠️ **MÉCANISATION — et elle est INCOMPLÈTE, ne pas compter dessus.**
+`test/les_exemples_de_la_spec_compilent.mjs` compile les exemples des trois specs et porte un
+cliquet daté des retards connus. **Mesuré le 2026-08-06 : il n'extrait que les lignes de
+DIRECTIVE** (`@macro`, `@var`, `@meter`…) — les exemples de RÈGLE, dont les trois de la vitesse,
+sont **hors de sa portée** et n'ont jamais été mesurés. Tant que sa portée n'est pas élargie aux
+règles, ce garde ne prouve PAS que le code suit la bible.
+
 ### ⛔ JE NE SPÉCULE PAS SUR LE LANGAGE — 3 règles dures (Romain, 2026-07-28)
 
 **Son constat, mot pour mot** : « ton rôle c'est d'être le spécialiste du langage BPScript et tu
