@@ -183,10 +183,14 @@ const RETARD_REGLES = new Map([
   ['S -> { C4 D4 }(sombre) E4 coupe F4', /Expected arrow/],
   ['S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)', /Expected arrow/],
   ['S -> {A B}(lpf1.cutoff:4000)', /Expected arrow/],
-  // (c) la VITESSE dans le flux — `! (/N)`, la seule graphie que la bible donne
-  ['S -> C4 ! (/2) D4 E4', /after !/],
-  ['S -> C4 ! (/2) D4 ! (/1) E4', /after !/],
-  ['S -> C4 ! (/2) {D4 E4} F4', /after !/],
+  // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
+  //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
+  // (d') un exemple de la bible qui emploie encore le mot supprimé `tempx`, en ARGUMENTS DE
+  //     GABARIT. Son sujet n'est pas `tempx` mais « chaque invocation porte ses paramètres » ;
+  //     la valeur fractionnaire `2/3` n'a de toute façon pas sa place dans des arguments, qui
+  //     lisent un entier ou un nom. À rendre à Romain : la bible doit choisir un autre
+  //     paramètre pour cet exemple. Je ne le choisis pas à sa place.
+  ['S <> $mel(tempx:1) &mel(tempx:2/3)', /arguments d'un gabarit/],
   // (d) une clé que le parser tient encore pour un contrôle de crochet
   ['S -> C4 (rndtime:100) D4 E4', /s'écrit entre CROCHETS/],
 ]);

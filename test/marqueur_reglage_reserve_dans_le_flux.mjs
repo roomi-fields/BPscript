@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * GARDE — un RÉGLAGE RÉSERVÉ (lib/core.json schema.qualifierKeys : mode/scan/weight/on_fail/
- * tempx/meter) est un mot du LANGAGE, pas un contrôle optionnel de librairie. Il doit être
+ * weight/meter) est un mot du LANGAGE, pas un contrôle optionnel de librairie. Il doit être
  * reconnu que `@controls` soit chargé ou non — même principe déjà appliqué au suffixe de règle
  * (`isRuntimeQualifierLoose`, contrat AST §runtime qualifier).
  *
@@ -9,14 +9,14 @@
  * n'est pas chargé — les deux passages qui LISENT `(clé:valeur)` sans passer par
  * `parseRuntimeQualifier` :
  *
- * 1. Le marqueur AUTONOME `!(mode:…)` / `!(weight:…)` / `!(tempx:…)` dans le flux (position
+ * 1. Le marqueur AUTONOME `!(mode:…)` / `!(weight:…)` / `!(meter:…)` dans le flux (position
  *    `S -> C4 !(mode:random) D4`) était refusé quelle que soit la valeur, avec un message qui
  *    se contredit : « Expected symbol, (...) or [...] after ! » — il nomme '(...)' comme une
  *    forme ATTENDUE puis la refuse. Cause : `isRuntimeQualifier()` (parser.js) ne reconnaît que
  *    les contrôles de `controlNames`, peuplé par `@controls` — les réglages réservés n'y sont
  *    jamais entrés puisqu'ils ne sont PAS des contrôles de librairie facultatifs.
  *
- * 2. `C4(tempx:11/5)` COLLÉ à un terminal, sans `@controls` chargé, tombe dans le lecteur
+ * 2. `C4(meter:11/5)` COLLÉ à un terminal, sans `@controls` chargé, tombe dans le lecteur
  *    générique de `parseSymbolCall` (appel de symbole, pas qualifieur runtime reconnu) : celui-ci
  *    lit un entier seul mais n'avale pas le `/5` d'une fraction — la valeur RAPPORT échoue avec
  *    « Expected argument value » là où la même position accepte un entier nu.
@@ -31,7 +31,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const compile = (rhs) => compileToBPxAST(`@core\n@alphabet.western:midi\n\nS -> ${rhs}\n`);
 
 // ─── 1. Marqueur autonome !(…) dans le flux, SANS @controls ──────────────────────────────────
-for (const forme of ['mode:random', 'weight:50', 'scan:left', 'on_fail:skip', 'tempx:2', 'meter:7/8']) {
+for (const forme of ['mode:random', 'weight:50', 'scan:left', 'on_fail:skip', 'weight:2', 'meter:7/8']) {
   const { ast, errors } = compile(`C4 !(${forme}) D4`);
   ok(errors.length === 0, `1. '!(${forme})' dans le flux (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
@@ -47,10 +47,10 @@ for (const forme of ['mode:random', 'weight:50', 'scan:left', 'on_fail:skip', 't
   ok(errors.length > 0, `1. (témoin) '!(zzz_pas_un_reglage:1)' doit rester refusé — une clé inconnue n'est ni un réglage réservé ni un contrôle`);
 }
 
-// ─── 2. (tempx:N/D) collé à un terminal, SANS @controls ──────────────────────────────────────
+// ─── 2. (meter:N/D) collé à un terminal, SANS @controls ──────────────────────────────────────
 {
-  const { ast, errors } = compile(`C4(tempx:11/5) D4`);
-  ok(errors.length === 0, `2. 'C4(tempx:11/5)' collé (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
+  const { ast, errors } = compile(`C4(meter:11/5) D4`);
+  ok(errors.length === 0, `2. 'C4(meter:11/5)' collé (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
     const c4 = ast.subgrammars[0].rules[0].rhs[0];
     const valeur = c4.suffixQualifiers?.[0]?.pairs?.[0]?.value ?? c4.args?.[0]?.value?.value;
@@ -59,8 +59,8 @@ for (const forme of ['mode:random', 'weight:50', 'scan:left', 'on_fail:skip', 't
 }
 {
   // Non-régression : l'entier collé continue de marcher (c'est lui qui marchait déjà).
-  const { errors } = compile(`C4(tempx:2) D4`);
-  ok(errors.length === 0, `2. (non-régression) 'C4(tempx:2)' collé (sans @controls) doit rester accepté`);
+  const { errors } = compile(`C4(weight:2) D4`);
+  ok(errors.length === 0, `2. (non-régression) 'C4(weight:2)' collé (sans @controls) doit rester accepté`);
 }
 
 if (echecs.length) {

@@ -67,13 +67,6 @@
       "args": ["signature"],
       "description": "Signature rythmique -- (meter:7/8), (meter:4+4/4)."
     },
-    "tempx": {
-      "bp3": "_tempo",
-      "args": [
-        "ratio"
-      ],
-      "description": "Relative tempo multiplier. Renommé tempo -> tempx le 2026-08-04 (Romain, hub/decisions/2026-08-04-le-multiplicateur-de-vitesse-d-une-regle-s-appelle-tempx.md) : le mot 'tempo' etait porte par deux grandeurs distinctes -- le metronome de scene (@tempo:120, BPM absolu) et ce multiplicateur RELATIF de regle. Le nom emis vers BP3 ne change pas (_tempo)."
-    },
     "repeat": {
       "bp3": "_repeat",
       "scope": "rule",

@@ -642,7 +642,7 @@ gagne. Un filtre se traverse, une intensité se choisit.
 
 ### 4.13 Les clés que le moteur consomme
 
-Elles vivent dans la librairie `engine`, sauf `tempo` et `tempx` qui vivent dans `time`.
+Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time`.
 
 ```
 /N   *N     les deux opérateurs temporels — fraction (*3/2) et décimal (/1.5) admis
@@ -655,7 +655,6 @@ seed        graine du tirage
 maxitems    nombre d'items produits
 rndtime     déviation aléatoire des attaques, en millisecondes
 tempo       le métronome de la scène, en battements par minute
-tempx       multiplicateur de vitesse de la règle — (tempx:2/3) ralentit d'un tiers
 ```
 
 Une procédure moteur prend son argument entre parenthèses, à l'intérieur du sac :

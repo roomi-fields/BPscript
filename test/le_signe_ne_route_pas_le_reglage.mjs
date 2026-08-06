@@ -48,7 +48,10 @@ const QUALIFIER_KEYS = LIBS.core?.schema?.qualifierKeys || [];
 // sous-groupe MIDI si présentes, sinon on retombe sur un couple connu du corpus.
 const runtimeSample = ['vel', 'pan'].filter((k) => !QUALIFIER_KEYS.includes(k));
 
-ok(QUALIFIER_KEYS.length >= 9, `0. schema.qualifierKeys doit rester peuplé — reçu ${QUALIFIER_KEYS.length}`);
+// Plancher abaissé de 9 à 8 le 2026-08-06 : `tempx` SUPPRIMÉ du langage (décision Romain,
+// doublon exact de l'opérateur de vitesse, qui s'écrit `! (/N)` dans le flux). Un plancher se
+// baisse à la MAIN, daté et motivé — jamais parce qu'un compte a bougé.
+ok(QUALIFIER_KEYS.length >= 8, `0. schema.qualifierKeys doit rester peuplé — reçu ${QUALIFIER_KEYS.length}`);
 ok(runtimeSample.length === 2, `0. l'échantillon runtime (vel, pan) doit être hors qualifierKeys — reçu ${JSON.stringify(runtimeSample)}`);
 
 function valeurExemple(spec) {
@@ -112,7 +115,9 @@ for (const cle of clesTestees) {
   }
 }
 
-ok(cellules === clesTestees.length * 3 && cellules >= 33,
+// Plancher 33 -> 30 le 2026-08-06 : `tempx` SUPPRIMÉ du langage (décision Romain — doublon
+// exact de l'opérateur de vitesse). Le produit croisé reste PLEIN, il a une clé de moins.
+ok(cellules === clesTestees.length * 3 && cellules >= 30,
   `la matrice doit être PLEINE — ${cellules} cellule(s) pour ${clesTestees.length} clé(s) × 3 positions`);
 
 // ─── 3. Témoin MORD : une clé qui n'est ni réglage réservé ni contrôle connu reste refusée ─────

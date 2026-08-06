@@ -154,7 +154,11 @@ for (const forme of [
 // vit pas dans les deux. La déclaration arbitre, JAMAIS le nombre — mesuré au corpus, la majorité
 // se trompait pour deux contrôles sur cinq. Décision `hub/decisions/2026-06-14-locus-perf-controls.md`.
 //
-// ⚠️ `tempx` SORT de cette règle depuis le 2026-08-02 (LANGUAGE.md:773-800) : c'est un RÉGLAGE
+// ⚠️ `tempx` est SORTI DU LANGAGE le 2026-08-06 (décision Romain — doublon exact de l'opérateur
+// de vitesse, qui s'écrit `! (/N)` dans le flux). Il ne figure plus dans ces deux listes : il
+// n'est plus « un réglage mal signé », il n'est plus un mot. Son refus est vérifié à sa propre
+// section (§2quinquies ter), avec la relève que le message doit nommer.
+// ⚠️ `tempx` SORTAIT de cette règle depuis le 2026-08-02 (LANGUAGE.md:773-800) : c'était un RÉGLAGE
 // réservé du langage (`@core.schema.qualifierKeys`), pas un contrôle au sens de cette section —
 // « un signe, une nature » le fait toujours atterrir en parenthèses, même s'il est AUSSI déclaré
 // dans la section `engine` de `controls.json`. Cf. §2quinquies (légitimes) plus bas.
@@ -194,7 +198,6 @@ for (const [forme, quoi] of [
   ['S -> C4 [scan:left]', 'scan : crochets refusés'],
   ['S -> C4 [weight:50]', 'weight : crochets refusés'],
   ['S -> C4 [on_fail:fallback(B)]', 'on_fail : crochets refusés'],
-  ['S -> C4 [tempx:2]', 'tempx : crochets refusés (même déclaré engine dans controls.json)'],
   ['S -> C4 [meter:4+4/6]', 'meter : crochets refusés'],
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
@@ -204,10 +207,22 @@ for (const [forme, quoi] of [
 }
 for (const forme of [
   'S -> C4 (mode:random)', 'S -> C4 (scan:left)', 'S -> C4 (weight:50)',
-  'S -> C4 (on_fail:fallback(B))', 'S -> C4 (tempx:2)', 'S -> C4 (meter:4+4/6)',
+  'S -> C4 (on_fail:fallback(B))', 'S -> C4 (meter:4+4/6)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quinquies bis '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
+}
+
+// ─── §2quinquies ter. UN MOT SUPPRIMÉ REFUSE, ET NOMME SA RELÈVE ────────────────────────────
+// `tempx` est SUPPRIMÉ (décision Romain 2026-08-06). Le retirer de la librairie ne suffisait
+// PAS : une clé inconnue entre parenthèses est portée OPAQUEMENT jusqu'au runtime, donc
+// `(tempx:2)` aurait été accepté et n'aurait plus atteint personne — un doublon bruyant devenu
+// réglage MUET. Il refuse donc dans les DEUX signes, et le message donne l'écriture vivante.
+for (const forme of ['S -> C4 [tempx:2]', 'S -> C4 (tempx:2)', 'S -> C4 ![tempx:2] D4']) {
+  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  ok(e.length > 0, `§2quinquies ter '${forme}' doit être REFUSÉ — 'tempx' n'est plus un mot`);
+  ok(e.some((m) => /! \(\/N\)/.test(m)),
+     `§2quinquies ter '${forme}' : le refus doit nommer la relève '! (/N)' — reçu : ${e.join(' | ')}`);
 }
 
 // ─── §2sexies. AUCUNE SOUS-ZONE N'ECHAPPE À LA RÈGLE ────────────────────────────────────────

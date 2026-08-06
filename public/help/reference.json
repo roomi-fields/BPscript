@@ -1,7 +1,6 @@
 {
   "_version": "1.1",
   "_description": "BPscript complete reference — derived from BPSCRIPT_EBNF.md. Used for Help panel, hover tooltips, and autocompletion.",
-
   "symbols": {
     "@": {
       "name": "Directive",
@@ -9,21 +8,53 @@
       "syntax": "@ name[.subkey][:binding]",
       "description": "Configures the compilation environment. Loads libraries, sets parameters, defines actors.",
       "forms": [
-        { "syntax": "@core", "desc": "Load core library" },
-        { "syntax": "@controls", "desc": "Load control definitions (vel, pan, wave...)" },
-        { "syntax": "@alphabet.western:audio", "desc": "Load alphabet with output binding" },
-        { "syntax": "@mm:120", "desc": "Set metronome to 120 BPM" },
-        { "syntax": "@mode:random", "desc": "Set derivation mode for next sub-grammar" },
-        { "syntax": "@tonality.just_C", "desc": "Load tonality/tuning file" },
-        { "syntax": "@octaves:western", "desc": "Set octave convention" },
-        { "syntax": "@transcription.tabla", "desc": "Load homomorphism table" },
-        { "syntax": "@timepatterns: t1=1/1, t2=3/2", "desc": "Define time patterns" },
-        { "syntax": "@+", "desc": "Append rules to previous sub-grammar" },
-        { "syntax": "@actor sitar alphabet.sargam out.midi", "desc": "Define an actor" }
+        {
+          "syntax": "@core",
+          "desc": "Load core library"
+        },
+        {
+          "syntax": "@controls",
+          "desc": "Load control definitions (vel, pan, wave...)"
+        },
+        {
+          "syntax": "@alphabet.western:audio",
+          "desc": "Load alphabet with output binding"
+        },
+        {
+          "syntax": "@mm:120",
+          "desc": "Set metronome to 120 BPM"
+        },
+        {
+          "syntax": "@mode:random",
+          "desc": "Set derivation mode for next sub-grammar"
+        },
+        {
+          "syntax": "@tonality.just_C",
+          "desc": "Load tonality/tuning file"
+        },
+        {
+          "syntax": "@octaves:western",
+          "desc": "Set octave convention"
+        },
+        {
+          "syntax": "@transcription.tabla",
+          "desc": "Load homomorphism table"
+        },
+        {
+          "syntax": "@timepatterns: t1=1/1, t2=3/2",
+          "desc": "Define time patterns"
+        },
+        {
+          "syntax": "@+",
+          "desc": "Append rules to previous sub-grammar"
+        },
+        {
+          "syntax": "@actor sitar alphabet.sargam out.midi",
+          "desc": "Define an actor"
+        }
       ],
       "example": "@core\n@controls\n@alphabet.western:audio\n@mm:120"
     },
-
     "->": {
       "name": "Rule (left to right)",
       "category": "rules",
@@ -48,7 +79,6 @@
       "bp3": "LHS <-> RHS",
       "example": "S <> A B C"
     },
-
     "-": {
       "name": "Silence (rest)",
       "category": "time",
@@ -81,7 +111,6 @@
       "bp3": ".",
       "example": "S -> C4 D4 . E4 F4 G4\n// 2 notes in first half, 3 in second half"
     },
-
     "~": {
       "name": "Tie (legato)",
       "category": "time",
@@ -90,22 +119,32 @@
       "bp3": "note& / &note& / &note",
       "example": "S -> C4~ ~C4~ ~C4 E4\n// C4 held for 3 units (no re-attack), then E4"
     },
-
     "!": {
       "name": "Simultaneous / Instant",
       "category": "time",
       "syntax": "symbol!symbol / !(control) / ![engine] / !symbol",
       "description": "Marks an instantaneous event (zero duration). Multiple uses: chord (Sa!dha), instant control (!(vel:80)), out-time object (!symbol).",
       "forms": [
-        { "syntax": "C4!E4!G4", "desc": "Chord: C4, E4, G4 triggered simultaneously" },
-        { "syntax": "!(vel:80)", "desc": "Instant control change positioned in the sequence" },
-        { "syntax": "![retro]", "desc": "Instant engine instruction" },
-        { "syntax": "!trigger_name", "desc": "Out-time object (zero duration trigger)" }
+        {
+          "syntax": "C4!E4!G4",
+          "desc": "Chord: C4, E4, G4 triggered simultaneously"
+        },
+        {
+          "syntax": "!(vel:80)",
+          "desc": "Instant control change positioned in the sequence"
+        },
+        {
+          "syntax": "![retro]",
+          "desc": "Instant engine instruction"
+        },
+        {
+          "syntax": "!trigger_name",
+          "desc": "Out-time object (zero duration trigger)"
+        }
       ],
       "bp3": "<< >> for out-time, _script() for controls",
       "example": "S -> C4!E4!G4 - D4!F#4!A4 -\n// Two chords with rests"
     },
-
     "<!": {
       "name": "Trigger in (sync point)",
       "category": "time",
@@ -113,7 +152,6 @@
       "description": "Synchronization point: waits for an external signal before continuing. Used for inter-process coordination.",
       "example": "S -> C4 D4 <!sync1 E4 F4\n// waits for sync1 signal after D4"
     },
-
     "{,}": {
       "name": "Polymetric group",
       "category": "structure",
@@ -122,7 +160,6 @@
       "bp3": "{ voice1, voice2 }",
       "example": "{C4 D4 E4, G4 A4}\n// 3 notes against 2 in same duration"
     },
-
     "[speed:N]": {
       "name": "Speed ratio (polymetric)",
       "category": "engine",
@@ -131,7 +168,6 @@
       "bp3": "{N, v1, v2}",
       "example": "{C4 D4 E4, G4 A4}[speed:2]\n// polymetric group at double speed"
     },
-
     "()": {
       "name": "Runtime control",
       "category": "runtime",
@@ -139,50 +175,130 @@
       "description": "Runtime parameters interpreted by the dispatcher during playback. Controls sound, pitch, MIDI. Position determines scope: suffix on element, end of rule, or free with !().",
       "bp3": "_script(CT N)",
       "controls": {
-        "sound": ["vel", "pan", "wave", "attack", "release", "filter", "filterQ", "detune"],
-        "pitch": ["transpose", "rotate", "scale", "keyxpand"],
-        "midi": ["chan", "ins", "mod", "pitchbend", "pitchrange", "pressure", "volume"]
+        "sound": [
+          "vel",
+          "pan",
+          "wave",
+          "attack",
+          "release",
+          "filter",
+          "filterQ",
+          "detune"
+        ],
+        "pitch": [
+          "transpose",
+          "rotate",
+          "scale",
+          "keyxpand"
+        ],
+        "midi": [
+          "chan",
+          "ins",
+          "mod",
+          "pitchbend",
+          "pitchrange",
+          "pressure",
+          "volume"
+        ]
       },
       "example": "S -> C4(vel:100) D4(vel:60) E4\n// C4 loud, D4 soft, E4 default"
     },
-
     "[]": {
       "name": "Engine instruction",
       "category": "engine",
       "syntax": "[key:value] or [temporal_op]",
       "description": "BP3 engine instructions. Controls derivation, weights, tempo operators, flags. Distinct from () runtime controls.",
       "forms": [
-        { "syntax": "[mode:random]", "desc": "Set derivation mode (on @mode directive)" },
-        { "syntax": "[weight:50]", "desc": "Rule weight for random selection", "bp3": "<50>" },
-        { "syntax": "[/2]", "desc": "Halve duration (tempo operator)", "bp3": "/2" },
-        { "syntax": "[\\2]", "desc": "Double duration (tempo operator)", "bp3": "\\2" },
-        { "syntax": "[*3]", "desc": "Multiply (accelerando)", "bp3": "*3" },
-        { "syntax": "[**3]", "desc": "Power multiply (strong accelerando)", "bp3": "**3" },
-        { "syntax": "[retro]", "desc": "Retrograde (reverse order)", "bp3": "_retro" },
-        { "syntax": "[staccato:80]", "desc": "Shorten note durations", "bp3": "_staccato(80)" },
-        { "syntax": "[repeat:K1]", "desc": "Controlled repetition with K-parameter" },
-        { "syntax": "[goto:3,1]", "desc": "Jump to sub-grammar 3, rule 1", "bp3": "_goto(3,1)" },
-        { "syntax": "[stop]", "desc": "Stop derivation", "bp3": "_stop" },
-        { "syntax": "[failed:2,1]", "desc": "Jump on derivation failure", "bp3": "_failed(2,1)" },
-        { "syntax": "[scan:left]", "desc": "Scan direction: left to right" },
-        { "syntax": "[scan:right]", "desc": "Scan direction: right to left" }
+        {
+          "syntax": "[mode:random]",
+          "desc": "Set derivation mode (on @mode directive)"
+        },
+        {
+          "syntax": "[weight:50]",
+          "desc": "Rule weight for random selection",
+          "bp3": "<50>"
+        },
+        {
+          "syntax": "[/2]",
+          "desc": "Halve duration (tempo operator)",
+          "bp3": "/2"
+        },
+        {
+          "syntax": "[\\2]",
+          "desc": "Double duration (tempo operator)",
+          "bp3": "\\2"
+        },
+        {
+          "syntax": "[*3]",
+          "desc": "Multiply (accelerando)",
+          "bp3": "*3"
+        },
+        {
+          "syntax": "[**3]",
+          "desc": "Power multiply (strong accelerando)",
+          "bp3": "**3"
+        },
+        {
+          "syntax": "[retro]",
+          "desc": "Retrograde (reverse order)",
+          "bp3": "_retro"
+        },
+        {
+          "syntax": "[staccato:80]",
+          "desc": "Shorten note durations",
+          "bp3": "_staccato(80)"
+        },
+        {
+          "syntax": "[repeat:K1]",
+          "desc": "Controlled repetition with K-parameter"
+        },
+        {
+          "syntax": "[goto:3,1]",
+          "desc": "Jump to sub-grammar 3, rule 1",
+          "bp3": "_goto(3,1)"
+        },
+        {
+          "syntax": "[stop]",
+          "desc": "Stop derivation",
+          "bp3": "_stop"
+        },
+        {
+          "syntax": "[failed:2,1]",
+          "desc": "Jump on derivation failure",
+          "bp3": "_failed(2,1)"
+        },
+        {
+          "syntax": "[scan:left]",
+          "desc": "Scan direction: left to right"
+        },
+        {
+          "syntax": "[scan:right]",
+          "desc": "Scan direction: right to left"
+        }
       ],
       "example": "@mode:random\nS -> A B [weight:70]\nS -> C D [weight:30]"
     },
-
     "`": {
       "name": "Backtick (embedded code)",
       "category": "advanced",
       "syntax": "`code` or `tag: code`",
       "description": "Embeds code for an external runtime. Inline backticks use the symbol's implicit runtime. Tagged backticks (sc:, py:, js:) specify the target explicitly.",
       "forms": [
-        { "syntax": "`js: Math.random() * 127`", "desc": "JavaScript expression" },
-        { "syntax": "`sc: SinOsc.ar(440)`", "desc": "SuperCollider code (requires bridge)" },
-        { "syntax": "`py: import music21`", "desc": "Python code (requires bridge)" }
+        {
+          "syntax": "`js: Math.random() * 127`",
+          "desc": "JavaScript expression"
+        },
+        {
+          "syntax": "`sc: SinOsc.ar(440)`",
+          "desc": "SuperCollider code (requires bridge)"
+        },
+        {
+          "syntax": "`py: import music21`",
+          "desc": "Python code (requires bridge)"
+        }
       ],
       "example": "// CV with JS backtick\n$lfo(freq,depth) = `js: Math.sin(t * freq) * depth`"
     },
-
     "|x|": {
       "name": "Variable (homomorphism)",
       "category": "advanced",
@@ -191,7 +307,6 @@
       "bp3": "|name|",
       "example": "// Context-sensitive rule\n|o| |miny| -> |o1| |miny|"
     },
-
     "?": {
       "name": "Wildcard",
       "category": "advanced",
@@ -200,7 +315,6 @@
       "bp3": "?",
       "example": "@mode:sub1\nA ?1 B -> A ?1 C\n// replace B after any symbol with C"
     },
-
     "$": {
       "name": "Template master",
       "category": "advanced",
@@ -217,7 +331,6 @@
       "bp3": "(:name) or (: ...)",
       "example": "S -> $X * &X\n// capture, apply default transcription, emit result"
     },
-
     "#": {
       "name": "Negative context",
       "category": "advanced",
@@ -226,7 +339,6 @@
       "bp3": "same",
       "example": "#(A B) S -> C D\n// S rewrites only if A B is NOT the left context"
     },
-
     "-----": {
       "name": "Sub-grammar separator",
       "category": "structure",
@@ -235,7 +347,6 @@
       "example": "@mode:ord\nS -> A B\n\n-----\n\n@mode:random\nA -> C4 D4\nA -> E4 F4"
     }
   },
-
   "keywords": {
     "gate": {
       "name": "Gate (temporal type)",
@@ -267,10 +378,15 @@
       "example": "// Probabilistic erasure\n@mode:random\nA -> C4 D4 [weight:80]\nA -> lambda [weight:20]"
     }
   },
-
   "directives": {
-    "core": { "syntax": "@core", "desc": "Load core library (required)" },
-    "controls": { "syntax": "@controls", "desc": "Load control definitions — vel, pan, wave, attack, release, etc." },
+    "core": {
+      "syntax": "@core",
+      "desc": "Load core library (required)"
+    },
+    "controls": {
+      "syntax": "@controls",
+      "desc": "Load control definitions — vel, pan, wave, attack, release, etc."
+    },
     "alphabet": {
       "syntax": "@alphabet.name:<channel>",
       "desc": "Load a note alphabet with output binding",
@@ -309,70 +425,246 @@
         "mm:N": "Metronome marking in BPM"
       }
     },
-    "mm": { "syntax": "@mm:N", "desc": "Set metronome to N BPM (default: 60). Determines the absolute duration of one time unit." },
-    "tonality": { "syntax": "@tonality.name", "desc": "Load a tonality/tuning file for microtonal pitch resolution." },
-    "octaves": { "syntax": "@octaves:convention", "desc": "Set octave naming convention (western, saptak, etc.)" },
-    "transcription": { "syntax": "@transcription.name", "desc": "Load a homomorphism/substitution table for template-based rewriting." },
-    "timepatterns": { "syntax": "@timepatterns: name=num/den, ...", "desc": "Define named time patterns with rational durations." },
-    "actor": { "syntax": "@actor name key:value ...", "desc": "Define an actor: bundles alphabet + scale + output + sounds into a named entity." },
-    "template": { "syntax": "@template", "desc": "Begin template section. Templates define structural constraints for TEM mode. SINGULIER : la graphie plurielle '@templates' (v0.7) est refusée depuis le 2026-07-19." }
+    "mm": {
+      "syntax": "@mm:N",
+      "desc": "Set metronome to N BPM (default: 60). Determines the absolute duration of one time unit."
+    },
+    "tonality": {
+      "syntax": "@tonality.name",
+      "desc": "Load a tonality/tuning file for microtonal pitch resolution."
+    },
+    "octaves": {
+      "syntax": "@octaves:convention",
+      "desc": "Set octave naming convention (western, saptak, etc.)"
+    },
+    "transcription": {
+      "syntax": "@transcription.name",
+      "desc": "Load a homomorphism/substitution table for template-based rewriting."
+    },
+    "timepatterns": {
+      "syntax": "@timepatterns: name=num/den, ...",
+      "desc": "Define named time patterns with rational durations."
+    },
+    "actor": {
+      "syntax": "@actor name key:value ...",
+      "desc": "Define an actor: bundles alphabet + scale + output + sounds into a named entity."
+    },
+    "template": {
+      "syntax": "@template",
+      "desc": "Begin template section. Templates define structural constraints for TEM mode. SINGULIER : la graphie plurielle '@templates' (v0.7) est refusée depuis le 2026-07-19."
+    }
   },
-
   "controls_runtime": {
     "_comment": "() runtime controls — full list in controls.json, summary here for help",
-    "vel": { "syntax": "(vel:N)", "range": "0-127", "default": "64", "desc": "Velocity (loudness). 0=silent, 127=maximum." },
-    "pan": { "syntax": "(pan:N)", "range": "0-127", "default": "64", "desc": "Stereo position. 0=full left, 64=center, 127=full right." },
-    "wave": { "syntax": "(wave:type)", "values": "sine, triangle, square, sawtooth", "default": "triangle", "desc": "Oscillator waveform (Web Audio)." },
-    "attack": { "syntax": "(attack:N)", "range": "1-5000 ms", "default": "20", "desc": "Attack time of the amplitude envelope." },
-    "release": { "syntax": "(release:N)", "range": "1-5000 ms", "default": "100", "desc": "Release time of the amplitude envelope." },
-    "filter": { "syntax": "(filter:N)", "range": "20-20000 Hz", "default": "0 (off)", "desc": "Low-pass filter cutoff frequency." },
-    "filterQ": { "syntax": "(filterQ:N)", "range": "0-30", "default": "1", "desc": "Filter resonance (Q factor)." },
-    "detune": { "syntax": "(detune:N)", "range": "-1200 to 1200 cents", "default": "0", "desc": "Pitch detuning in cents." },
-    "transpose": { "syntax": "(transpose:N)", "desc": "Transpose by N steps in the current temperament grid." },
-    "rotate": { "syntax": "(rotate:N)", "desc": "Rotate the alphabet cyclically by N degrees. rotate(2): C->E, D->F..." },
-    "keyxpand": { "syntax": "(keyxpand:pivot,factor)", "desc": "Expand/contract intervals around a pivot. factor=2 doubles, -1 inverts, 0.5 contracts." },
-    "scale": { "syntax": "(scale:name,root)", "desc": "Change tuning scale in real-time. scale(0,0) returns to equal temperament." },
-    "chan": { "syntax": "(chan:N)", "range": "1-16", "default": "1", "desc": "MIDI channel." },
-    "ins": { "syntax": "(ins:N)", "range": "1-128", "desc": "MIDI program change (instrument)." },
-    "mod": { "syntax": "(mod:N)", "range": "0-127", "desc": "MIDI modulation wheel (CC1)." },
-    "pitchbend": { "syntax": "(pitchbend:N)", "range": "-8192 to 8191", "desc": "MIDI pitch bend." },
-    "volume": { "syntax": "(volume:N)", "range": "0-127", "default": "100", "desc": "MIDI volume (CC7)." }
+    "vel": {
+      "syntax": "(vel:N)",
+      "range": "0-127",
+      "default": "64",
+      "desc": "Velocity (loudness). 0=silent, 127=maximum."
+    },
+    "pan": {
+      "syntax": "(pan:N)",
+      "range": "0-127",
+      "default": "64",
+      "desc": "Stereo position. 0=full left, 64=center, 127=full right."
+    },
+    "wave": {
+      "syntax": "(wave:type)",
+      "values": "sine, triangle, square, sawtooth",
+      "default": "triangle",
+      "desc": "Oscillator waveform (Web Audio)."
+    },
+    "attack": {
+      "syntax": "(attack:N)",
+      "range": "1-5000 ms",
+      "default": "20",
+      "desc": "Attack time of the amplitude envelope."
+    },
+    "release": {
+      "syntax": "(release:N)",
+      "range": "1-5000 ms",
+      "default": "100",
+      "desc": "Release time of the amplitude envelope."
+    },
+    "filter": {
+      "syntax": "(filter:N)",
+      "range": "20-20000 Hz",
+      "default": "0 (off)",
+      "desc": "Low-pass filter cutoff frequency."
+    },
+    "filterQ": {
+      "syntax": "(filterQ:N)",
+      "range": "0-30",
+      "default": "1",
+      "desc": "Filter resonance (Q factor)."
+    },
+    "detune": {
+      "syntax": "(detune:N)",
+      "range": "-1200 to 1200 cents",
+      "default": "0",
+      "desc": "Pitch detuning in cents."
+    },
+    "transpose": {
+      "syntax": "(transpose:N)",
+      "desc": "Transpose by N steps in the current temperament grid."
+    },
+    "rotate": {
+      "syntax": "(rotate:N)",
+      "desc": "Rotate the alphabet cyclically by N degrees. rotate(2): C->E, D->F..."
+    },
+    "keyxpand": {
+      "syntax": "(keyxpand:pivot,factor)",
+      "desc": "Expand/contract intervals around a pivot. factor=2 doubles, -1 inverts, 0.5 contracts."
+    },
+    "scale": {
+      "syntax": "(scale:name,root)",
+      "desc": "Change tuning scale in real-time. scale(0,0) returns to equal temperament."
+    },
+    "chan": {
+      "syntax": "(chan:N)",
+      "range": "1-16",
+      "default": "1",
+      "desc": "MIDI channel."
+    },
+    "ins": {
+      "syntax": "(ins:N)",
+      "range": "1-128",
+      "desc": "MIDI program change (instrument)."
+    },
+    "mod": {
+      "syntax": "(mod:N)",
+      "range": "0-127",
+      "desc": "MIDI modulation wheel (CC1)."
+    },
+    "pitchbend": {
+      "syntax": "(pitchbend:N)",
+      "range": "-8192 to 8191",
+      "desc": "MIDI pitch bend."
+    },
+    "volume": {
+      "syntax": "(volume:N)",
+      "range": "0-127",
+      "default": "100",
+      "desc": "MIDI volume (CC7)."
+    }
   },
-
   "modulation_inputs": {
     "_comment": "Modulation inputs exposed by an OUTPUT (registry lib/modulation.json). Targeted as (input: cv-name) at a parameter point, e.g. (cutoff: env1). Source = a CV (0..1), mapped onto the input range downstream. Webaudio output:",
-    "cutoff": { "syntax": "(cutoff: cv)", "output": "audio", "range": "20-20000 Hz", "desc": "Low-pass filter cutoff. Modulated by a CV (0..1 mapped to range)." },
-    "amplitude": { "syntax": "(amplitude: cv)", "output": "audio", "range": "0-1", "desc": "Output gain. Modulated by a CV." },
-    "resonance": { "syntax": "(resonance: cv)", "output": "audio", "range": "0-30", "desc": "Filter resonance (Q). Modulated by a CV." },
-    "pitch": { "syntax": "(pitch: cv)", "output": "audio", "range": "-1200 to 1200 cents", "desc": "Detune in cents. Modulated by a CV (0..1 mapped to ±1200)." },
-    "pan": { "syntax": "(pan: cv)", "output": "audio", "range": "-1 to 1", "desc": "Stereo position (audio). Modulated by a CV. NB: distinct from the MIDI (pan:0-127) control — disambiguated by the value being a CV." }
+    "cutoff": {
+      "syntax": "(cutoff: cv)",
+      "output": "audio",
+      "range": "20-20000 Hz",
+      "desc": "Low-pass filter cutoff. Modulated by a CV (0..1 mapped to range)."
+    },
+    "amplitude": {
+      "syntax": "(amplitude: cv)",
+      "output": "audio",
+      "range": "0-1",
+      "desc": "Output gain. Modulated by a CV."
+    },
+    "resonance": {
+      "syntax": "(resonance: cv)",
+      "output": "audio",
+      "range": "0-30",
+      "desc": "Filter resonance (Q). Modulated by a CV."
+    },
+    "pitch": {
+      "syntax": "(pitch: cv)",
+      "output": "audio",
+      "range": "-1200 to 1200 cents",
+      "desc": "Detune in cents. Modulated by a CV (0..1 mapped to ±1200)."
+    },
+    "pan": {
+      "syntax": "(pan: cv)",
+      "output": "audio",
+      "range": "-1 to 1",
+      "desc": "Stereo position (audio). Modulated by a CV. NB: distinct from the MIDI (pan:0-127) control — disambiguated by the value being a CV."
+    }
   },
-
   "controls_engine": {
     "_comment": "[] engine instructions — processed by BP3, not the dispatcher",
-    "mode": { "syntax": "[mode:X]", "desc": "Derivation mode (on @ directive only). Values: ord, random, lin, sub, sub1, tem, poslong." },
-    "weight": { "syntax": "[weight:N]", "desc": "Rule weight for random selection. Higher = more likely. [weight:inf] = always chosen.", "bp3": "<N>" },
-    "speed": { "syntax": "[speed:N]", "desc": "Tempo ratio for a polymetric group. {v1,v2}[speed:2] plays at double speed.", "bp3": "{N, v1, v2}" },
-    "scan": { "syntax": "[scan:left|right|rnd]", "desc": "Scan direction for rule matching. Default: depends on mode." },
+    "mode": {
+      "syntax": "[mode:X]",
+      "desc": "Derivation mode (on @ directive only). Values: ord, random, lin, sub, sub1, tem, poslong."
+    },
+    "weight": {
+      "syntax": "[weight:N]",
+      "desc": "Rule weight for random selection. Higher = more likely. [weight:inf] = always chosen.",
+      "bp3": "<N>"
+    },
+    "speed": {
+      "syntax": "[speed:N]",
+      "desc": "Tempo ratio for a polymetric group. {v1,v2}[speed:2] plays at double speed.",
+      "bp3": "{N, v1, v2}"
+    },
+    "scan": {
+      "syntax": "[scan:left|right|rnd]",
+      "desc": "Scan direction for rule matching. Default: depends on mode."
+    },
     "tempo_ops": {
       "desc": "Temporal operators — modify duration of a symbol or group",
       "ops": {
-        "[/N]": { "desc": "Divide duration by N (speed up)", "bp3": "/N", "example": "C4[/2] -> plays C4 in half the time" },
-        "[\\N]": { "desc": "Multiply duration by N (slow down)", "bp3": "\\N" },
-        "[*N]": { "desc": "Accelerando multiply", "bp3": "*N" },
-        "[**N]": { "desc": "Power accelerando", "bp3": "**N" }
+        "[/N]": {
+          "desc": "Divide duration by N (speed up)",
+          "bp3": "/N",
+          "example": "C4[/2] -> plays C4 in half the time"
+        },
+        "[\\N]": {
+          "desc": "Multiply duration by N (slow down)",
+          "bp3": "\\N"
+        },
+        "[*N]": {
+          "desc": "Accelerando multiply",
+          "bp3": "*N"
+        },
+        "[**N]": {
+          "desc": "Power accelerando",
+          "bp3": "**N"
+        }
       }
     },
-    "retro": { "syntax": "[retro]", "desc": "Reverse the order of elements.", "bp3": "_retro" },
-    "staccato": { "syntax": "[staccato:N]", "range": "0-127", "desc": "Shorten note durations (affects temporal structure).", "bp3": "_staccato(N)" },
-    "legato": { "syntax": "[legato:N]", "range": "0-127", "desc": "Lengthen note durations.", "bp3": "_legato(N)" },
-    "goto": { "syntax": "[goto:gram,rule]", "desc": "Jump to a specific sub-grammar and rule.", "bp3": "_goto(gram,rule)" },
-    "stop": { "syntax": "[stop]", "desc": "Stop the derivation.", "bp3": "_stop" },
-    "failed": { "syntax": "[failed:gram,rule]", "desc": "Jump on derivation failure.", "bp3": "_failed(gram,rule)" },
-    "repeat": { "syntax": "[repeat:K]", "desc": "Controlled repetition using a K-parameter.", "bp3": "_repeat(K)" },
-    "on_fail": { "syntax": "[on_fail:action]", "desc": "Action when rule application fails." }
+    "retro": {
+      "syntax": "[retro]",
+      "desc": "Reverse the order of elements.",
+      "bp3": "_retro"
+    },
+    "staccato": {
+      "syntax": "[staccato:N]",
+      "range": "0-127",
+      "desc": "Shorten note durations (affects temporal structure).",
+      "bp3": "_staccato(N)"
+    },
+    "legato": {
+      "syntax": "[legato:N]",
+      "range": "0-127",
+      "desc": "Lengthen note durations.",
+      "bp3": "_legato(N)"
+    },
+    "goto": {
+      "syntax": "[goto:gram,rule]",
+      "desc": "Jump to a specific sub-grammar and rule.",
+      "bp3": "_goto(gram,rule)"
+    },
+    "stop": {
+      "syntax": "[stop]",
+      "desc": "Stop the derivation.",
+      "bp3": "_stop"
+    },
+    "failed": {
+      "syntax": "[failed:gram,rule]",
+      "desc": "Jump on derivation failure.",
+      "bp3": "_failed(gram,rule)"
+    },
+    "repeat": {
+      "syntax": "[repeat:K]",
+      "desc": "Controlled repetition using a K-parameter.",
+      "bp3": "_repeat(K)"
+    },
+    "on_fail": {
+      "syntax": "[on_fail:action]",
+      "desc": "Action when rule application fails."
+    }
   },
-
   "concepts": {
     "rewriting": {
       "title": "Rewriting rules",
@@ -391,8 +683,8 @@
     },
     "control_scoping": {
       "title": "Control scoping: [] vs ()",
-      "desc": "Two separate systems:\n- [] = engine instructions processed by BP3 during derivation\n- () = runtime controls interpreted by the dispatcher during playback\n\nPosition matters: suffix (A[x]) = attached to A, prefix ([x]A) = before A, free (!(x)) = positioned in sequence.",
-      "example": "A[/2]           // engine: halve A's duration\nA(vel:80)       // runtime: play A at velocity 80\n!(transpose:2)  // free runtime control in sequence"
+      "desc": "Two separate systems:\n- [] = derivation itself: flag guard ([f], [f==1]), flag assignment ([f=1]), template rank ([3])\n- () = settings, read by the engine or carried to the runtime\n\nPosition matters: suffix (A(x)) = attached to A, rule-level (… (x)) = whole rule, free (!(x)) = positioned in sequence. The speed operator is written `! (/N)` and lives only in the flow.",
+      "example": "A:1/2          // durée : A occupe un demi-temps\nA(vel:80)      // runtime : A se joue à la vélocité 80\n! (/2)         // vitesse : à partir d'ici, deux fois plus vite"
     },
     "sub_grammars": {
       "title": "Sub-grammars",
@@ -405,14 +697,41 @@
       "example": "// These are all terminal symbols for BP3:\n// C4, D#5, Eb3, sa6, dha7, do4"
     }
   },
-
   "categories": {
-    "structure": { "label": "Structure", "color": "#e94560", "order": 1 },
-    "rules": { "label": "Rules", "color": "#ff6b8a", "order": 2 },
-    "time": { "label": "Time & Duration", "color": "#00ff88", "order": 3 },
-    "engine": { "label": "Engine []", "color": "#4a90d9", "order": 4 },
-    "runtime": { "label": "Runtime ()", "color": "#e9a845", "order": 5 },
-    "declarations": { "label": "Declarations", "color": "#c792ea", "order": 6 },
-    "advanced": { "label": "Advanced", "color": "#888", "order": 7 }
+    "structure": {
+      "label": "Structure",
+      "color": "#e94560",
+      "order": 1
+    },
+    "rules": {
+      "label": "Rules",
+      "color": "#ff6b8a",
+      "order": 2
+    },
+    "time": {
+      "label": "Time & Duration",
+      "color": "#00ff88",
+      "order": 3
+    },
+    "engine": {
+      "label": "Engine []",
+      "color": "#4a90d9",
+      "order": 4
+    },
+    "runtime": {
+      "label": "Runtime ()",
+      "color": "#e9a845",
+      "order": 5
+    },
+    "declarations": {
+      "label": "Declarations",
+      "color": "#c792ea",
+      "order": 6
+    },
+    "advanced": {
+      "label": "Advanced",
+      "color": "#888",
+      "order": 7
+    }
   }
 }

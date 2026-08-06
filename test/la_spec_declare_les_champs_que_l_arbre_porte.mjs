@@ -125,7 +125,9 @@ const DETTE = new Set([
   'Scene.macros', 'Scene.cvInstances', 'Scene.soundPrototypes', 'Scene.soundAssignments',
   // Champs de DIRECTIVE et d'ACTEUR portés par l'arbre, absents de leur déclaration.
   'Directive.runtime', 'Directive.aliases', 'Directive.modifiers', 'Directive.timePatterns',
-  'ActorDirective.values', 'ActorDirective.libRefs', 'ActorReference.line',
+  'ActorDirective.values', 'ActorReference.line',
+  // (`ActorDirective.libRefs` RETIRÉ du cliquet le 2026-08-06 : plus aucune scène ne le
+  //  porte depuis le retrait de `tempx` — le témoin de dette périmée l'a signalé lui-même.)
   'Subgrammar.modifiers',
   // Divers : diagnostic de lint porté sur la règle, étiquette de bloc, suffixes de bloc.
   'Rule.warnings', 'Polymetric.label', 'Polymetric.suffixQualifiers',

@@ -3744,6 +3744,7 @@ function parse(tokens, opts = {}) {
       }
       const keyTok = current();
       const key = expect(T.IDENT).value;
+      refuserTempx(key, keyTok, '(');
       const pos = { line: keyTok.line, col: keyTok.col };
       const sub = subject !== null ? { subject } : {};
       // CONTRÔLEUR NUMÉROTÉ — `cc.98:45` (graphie tranchée par Romain le 2026-07-26).
@@ -4107,6 +4108,26 @@ function parse(tokens, opts = {}) {
       // et ils se suivent (`!a >> b !c >> d`), exactement comme s'enchaînent les instantanés.
       if (fluxIsWiring()) {
         return parseWiring(tok.line);
+      }
+      // ! (/N) · ! (*N/M) → CHANGEMENT DE VITESSE posé dans le flux.
+      // La bible en donne l'écriture et la place : LANGUAGE.md:1249 (« ! (/N) · ! (*N/M) —
+      // changement de vitesse posé dans le flux ») et :2267 (« /N accélère, et *N/M écrit la
+      // MÊME chose en fraction inverse : *a/b vaut /(b/a) »). Un seul opérateur, deux graphies.
+      //
+      // ⚠️ IL SE POSE SEUL, JAMAIS COLLÉ À UN TERME. La vitesse court « à partir d'ici » et
+      // jusqu'à la fin du champ (LANGUAGE.md:2254) : elle ne voyage pas avec un terminal et ne
+      // se réplique pas avec lui. C'est ce que dit le tableau des portées d'`AST.md` — ❌ en
+      // `!accolé`, ✅ en `!inline` seulement. `C4!(/2)` est donc refusé, et nommé.
+      if (at(T.LPAREN) && (peek(1).type === T.SLASH || peek(1).type === T.STAR)) {
+        if (collated) {
+          throw new ParseError(
+            `'!(…)' collé à un terme porte un flux CONJOINT, qui voyage avec ce terme et se `
+            + `réplique avec lui — une vitesse ne fait ni l'un ni l'autre : elle court à partir `
+            + `d'où elle est posée jusqu'à la fin du champ. Elle se détache par une espace : `
+            + `'… ! (${peek(1).type === T.STAR ? '*N/M' : '/N'})'`,
+            current());
+        }
+        return { type: 'InstantControl', qualifier: parseVitesseParenthese(), conjoint: false };
       }
       // !(...) → instant runtime control (flux). Le second test admet les réglages RÉSERVÉS
       // même sans `@controls` (cf. isReservedSettingParen ci-dessus).
@@ -4782,6 +4803,46 @@ function parse(tokens, opts = {}) {
     return { type: 'Wildcard' };
   }
 
+  // LECTURE DES ARGUMENTS D'UN GABARIT — UNE SEULE, pour le maître (`$nom(…)`) ET pour l'esclave
+  // (`&nom(…)`).
+  //
+  // ⚠️ ELLE EXISTE PARCE QUE LA MÊME BOUCLE VIVAIT À DEUX ENDROITS, ET QUE J'EN AI RÉPARÉ UN SEUL.
+  // Le 2026-08-06 au matin, la boucle du MAÎTRE piétinait sur un jeton qu'aucune branche ne
+  // consommait : elle empilait sans fin et emportait la machine (6,6 Go). Corrigée là où le défaut
+  // s'était MONTRÉ — et l'ESCLAVE, copie exacte, est resté intact jusqu'à ce que `&mel(tempx:1)` le
+  // réveille l'après-midi même. « On répare l'endroit où le défaut s'est montré, pas l'espace où il
+  // peut vivre », payé deux fois dans la journée sur le même code.
+  // La parade n'est pas d'y penser : c'est qu'il n'y ait plus qu'un seul corps à réparer.
+  function lireArgumentsDeGabarit(sigil, nom) {
+    const args = [];
+    advance(); // (
+    while (!at(T.RPAREN) && !atEnd()) {
+      const avant = pos;
+      let key = null;
+      if (at(T.IDENT) && peek(1).type === T.COLON) {
+        key = advance().value;
+        advance();
+      }
+      let value;
+      if (at(T.INT)) value = { type: 'Literal', value: Number(advance().value) };
+      else if (at(T.IDENT)) value = { type: 'Literal', value: advance().value };
+      args.push({ type: 'Arg', key, value });
+      if (at(T.COMMA)) advance();
+      // ⛔ CETTE BOUCLE NE DOIT JAMAIS PIÉTINER — un tour qui ne consomme aucun jeton tourne sans
+      // fin. Un refus nommé vaut toujours mieux qu'une machine à genoux.
+      if (pos === avant) {
+        throw new ParseError(
+          `'${sigil}${nom}(…${current().value}…)' : '${current().value}' n'a pas sa place dans les `
+          + `arguments d'un gabarit — ils s'écrivent 'nom:valeur', séparés par des virgules. `
+          + `Pour poser un RÉGLAGE sur la règle, une ESPACE le détache du gabarit `
+          + `('${sigil}${nom} (${key || 'clé'}:…)')`,
+          current());
+      }
+    }
+    expect(T.RPAREN);
+    return args;
+  }
+
   function parseTemplateMaster() {
     expect(T.DOLLAR);
 
@@ -4819,36 +4880,7 @@ function parse(tokens, opts = {}) {
     // chargé `@controls` — ce que ces scènes ne font pas. Mesuré : une seule écriture de
     // l'écosystème donne des arguments à un gabarit, et elle est COLLÉE.
     if (at(T.LPAREN) && !current().spaceBefore && !isRuntimeQualifier()) {
-      args = [];
-      advance();
-      while (!at(T.RPAREN) && !atEnd()) {
-        const avant = pos;
-        let key = null;
-        if (at(T.IDENT) && peek(1).type === T.COLON) {
-          key = advance().value;
-          advance();
-        }
-        let value;
-        if (at(T.INT)) value = { type: 'Literal', value: Number(advance().value) };
-        else if (at(T.IDENT)) value = { type: 'Literal', value: advance().value };
-        args.push({ type: 'Arg', key, value });
-        if (at(T.COMMA)) advance();
-        // ⛔ CETTE BOUCLE NE DOIT JAMAIS PIÉTINER. Un jeton qu'aucune branche ne consomme la
-        // faisait tourner SANS FIN en empilant des arguments vides : le compilateur mangeait
-        // toute la mémoire de la machine au lieu de rendre une erreur. Mesuré le 2026-08-06 sur
-        // `$A16 (meter:4/4)` — 6,6 Go en 45 s, session distante perdue. Un refus nommé vaut
-        // toujours mieux qu'une machine à genoux, et il vaut pour TOUT jeton inattendu, pas
-        // seulement pour la barre de fraction qui l'a révélé.
-        if (pos === avant) {
-          throw new ParseError(
-            `'$${name}(…${current().value}…)' : '${current().value}' n'a pas sa place dans les `
-            + `arguments d'un gabarit — ils s'écrivent 'nom:valeur', séparés par des virgules. `
-            + `Pour poser un RÉGLAGE sur la règle, une ESPACE le détache du gabarit `
-            + `('$${name} (${key || 'clé'}:…)')`,
-            current());
-        }
-      }
-      expect(T.RPAREN);
+      args = lireArgumentsDeGabarit('$', name);
     }
     return { type: 'TemplateMaster', name, args };
   }
@@ -4873,23 +4905,11 @@ function parse(tokens, opts = {}) {
 
     const name = expect(T.IDENT).value;
     let args = null;
-    // Parse () as template params ONLY if not a runtime qualifier
-    if (at(T.LPAREN) && !isRuntimeQualifier()) {
-      args = [];
-      advance();
-      while (!at(T.RPAREN) && !atEnd()) {
-        let key = null;
-        if (at(T.IDENT) && peek(1).type === T.COLON) {
-          key = advance().value;
-          advance();
-        }
-        let value;
-        if (at(T.INT)) value = { type: 'Literal', value: Number(advance().value) };
-        else if (at(T.IDENT)) value = { type: 'Literal', value: advance().value };
-        args.push({ type: 'Arg', key, value });
-        if (at(T.COMMA)) advance();
-      }
-      expect(T.RPAREN);
+    // Même loi que le maître : c'est l'ESPACE qui sépare les arguments de gabarit du sac de
+    // réglages, et c'est la MÊME lecture (`lireArgumentsDeGabarit`) — plus deux corps à tenir
+    // synchronisés.
+    if (at(T.LPAREN) && !current().spaceBefore && !isRuntimeQualifier()) {
+      args = lireArgumentsDeGabarit('&', name);
     }
     return { type: 'TemplateSlave', name, args };
   }
@@ -5001,7 +5021,29 @@ function parse(tokens, opts = {}) {
   // reste une clé connue dans une scène sans `@controls` (cas des scènes de BPx). Exiger
   // `@controls` pour employer un contrôle serait une décision de SURFACE, non tranchée — le
   // garde ne rejette donc QUE l'inconnu, sans reclasser ni restreindre aucune clé existante.
+  // ⛔ PIERRE TOMBALE PARTAGÉE — `tempx` est SUPPRIMÉ du langage (décision Romain 2026-08-06,
+  // hub/decisions/2026-08-06-tempx-est-supprime-doublon-exact-de-l-operateur-de-vitesse.md) :
+  // « si tempx fait la même chose que `*` on le supprime et c'est tout ». La mesure qui l'établit
+  // est du 3 août : `![tempo:2]` et `![/2]` rendent 500/500/500, le même flux.
+  //
+  // ⚠️ POURQUOI UNE PIERRE TOMBALE ET PAS UN SIMPLE RETRAIT DE LA LIBRAIRIE. Retirer l'entrée
+  // suffit à ce que le mot cesse d'être un contrôle CONNU — mais une clé inconnue entre
+  // parenthèses est portée OPAQUEMENT jusqu'au runtime : `(tempx:2)` serait alors accepté et
+  // n'atteindrait plus personne. Le retrait seul aurait transformé un doublon bruyant en réglage
+  // MUET, le pire des deux. Le mot doit REFUSER, et nommer sa relève.
+  function refuserTempx(key, tok, signeOuvrant) {
+    if (key !== 'tempx' && key !== 'tempo') return;
+    throw new ParseError(
+      `'${signeOuvrant === '[' ? '[' : '('}${key}:…${signeOuvrant === '[' ? ']' : ')'}' : `
+      + `'${key}' ne s'écrit pas dans une règle — le multiplicateur de vitesse EST l'opérateur, `
+      + `et il se pose dans le flux : '! (/N)' ralentit, '! (*N/M)' écrit la même chose en `
+      + `fraction inverse (décision Romain 2026-08-06). Le métronome de la scène, lui, s'écrit `
+      + `en tête : '@tempo:120'`,
+      tok);
+  }
+
   function checkQualifierKey(key, tok) {
+    refuserTempx(key, tok, '[');
     // `[speed:N]` SUPPRIMÉ (décision 2026-06-26-trois-concepts-temps-duree) : `speed` est
     // subsumé par la DURÉE, qui s'écrit avec ':' collé — `{A B}:2`, `A4:1/2`, `}:N`.
     if (key === 'speed') {
@@ -5073,72 +5115,56 @@ function parse(tokens, opts = {}) {
   // ou 'relative' (forme ![/N] dans le flux). Porté sur le nœud TempoOp pour que
   // les consommateurs (BPx) lisent la décision au lieu de deviner par position.
   // Réf : hub/decisions/2026-06-10-tempo-absolu-vs-relatif.md.
+  // `(/N)` · `(*N/M)` — la VALEUR d'un changement de vitesse, lue après le `!` qui la pose dans
+  // le flux. Le nœud produit est IDENTIQUE à celui que la forme en crochets rendait avant son
+  // retrait : seule la GRAPHIE change, l'arbre ne bouge pas — donc aucun consommateur aval n'a
+  // à s'adapter, et le lot reste une affaire de surface.
+  function parseVitesseParenthese() {
+    expect(T.LPAREN);
+    const operator = at(T.STAR) ? (advance(), '*') : (expect(T.SLASH), '/');
+    let value;
+    if (at(T.INT)) {
+      value = Number(advance().value);
+      if (at(T.SLASH) && peek(1).type === T.INT) {
+        const denom = (advance(), Number(advance().value));
+        value = `${value}/${denom}`;
+      }
+    } else if (at(T.FLOAT)) {
+      value = Number(advance().value);
+    } else {
+      throw new ParseError(
+        `'! (${operator}…)' attend un nombre ou une fraction — '! (/2)', '! (*3/2)', '! (/1.5)'`,
+        current());
+    }
+    expect(T.RPAREN);
+    // `scope: 'relative'` — une vitesse posée dans le flux se compose avec celle en cours ; c'est
+    // ce que portait déjà la forme de flux avant ce changement de graphie (décision 2026-06-10).
+    return { type: 'Qualifier', pairs: [], tempoOp: { type: 'TempoOp', operator, value, scope: 'relative' } };
+  }
+
   function parseQualifier(tempoScope = 'absolute') {
     expect(T.LBRACKET);
 
-    // Check for tempo operator: [/2], [\2], [*3], [**3]
+    // ⛔ PIERRE TOMBALE — L'OPÉRATEUR DE VITESSE NE S'ÉCRIT PLUS ENTRE CROCHETS.
+    // Décision Romain 2026-08-06 (hub/decisions/2026-08-06-tempx-est-supprime-doublon-exact-de-
+    // l-operateur-de-vitesse.md) : « la graphie est la parenthèse : (/2), (*2) — jamais le
+    // crochet ». La bible ne connaît qu'une écriture, et elle est dans le FLUX
+    // (LANGUAGE.md:1249 « ! (/N) · ! (*N/M) — changement de vitesse posé dans le flux »).
+    //
+    // ⚠️ LE REFUS NOMME LA POSITION AUTANT QUE LE SIGNE. La vitesse ne vit QUE dans le flux :
+    // ni en suffixe de règle, ni collée à un élément (`AST.md`, tableau des portées — ❌ partout
+    // sauf `!inline`). Mesuré au corpus le jour du retrait : 18 écritures au crochet, dont 15
+    // déjà dans le flux — celles-là changent de signe et rien d'autre. Les 3 autres (2 en
+    // suffixe de règle, 1 collée à un élément) n'ont PAS d'équivalent : elles doivent devenir
+    // un élément de flux, ce que le message dit.
     if (atAny(T.SLASH, T.STAR)) {
-      let operator;
-      if (at(T.STAR)) { operator = '*'; advance(); }
-      else if (at(T.SLASH)) { operator = '/'; advance(); }
-      let value;
-      if (at(T.INT)) {
-        value = Number(advance().value);
-        if (at(T.SLASH) && peek(1).type === T.INT) {
-          const denom = (advance(), Number(advance().value));
-          value = `${value}/${denom}`;
-        }
-      } else if (at(T.FLOAT)) {
-        value = Number(advance().value);
-      } else {
-        throw new ParseError('Expected number or fraction (e.g. /2, *3/2, /1.5) after tempo operator', current());
-      }
-      // If followed by , → mixed qualifier [/5, mode:random, transpose:-7]
-      const tempoOp = { type: 'TempoOp', operator, value, scope: tempoScope };
-      if (at(T.COMMA)) {
-        advance(); // skip ,
-        // Parse remaining pairs
-        const pairs = [];
-        while (!at(T.RBRACKET) && !atEnd()) {
-          const keyTok = current();
-          const key = expect(T.IDENT).value;
-          if (!at(T.COLON)) {
-            pairs.push({ type: 'QualPair', key, value: true, decrement: null });
-            if (at(T.COMMA)) advance();
-            continue;
-          }
-          expect(T.COLON);
-          checkQualifierKey(key, keyTok);
-          let pval, decrement = null;
-          if (at(T.INT)) {
-            const num = advance().value;
-            if (at(T.PLUS) && peek(1).type === T.INT) {
-              let sig = num;
-              while (at(T.PLUS) && peek(1).type === T.INT) { sig += advance().value; sig += advance().value; }
-              if (at(T.SLASH) && peek(1).type === T.INT) { sig += advance().value; sig += advance().value; }
-              pval = sig;
-            } else if (at(T.SLASH) && peek(1).type === T.INT) {
-              advance(); pval = `${num}/${advance().value}`;
-            } else {
-              pval = Number(num);
-              if (at(T.REST) && peek(1).type === T.INT) { advance(); decrement = Number(advance().value); }
-            }
-          } else if (at(T.REST)) {
-            // Negative number: transpose:-7
-            const sign = advance().value;
-            pval = sign + (at(T.INT) ? advance().value : '');
-          } else if (at(T.IDENT)) {
-            pval = advance().value;
-            if (at(T.EQUALS) && peek(1).type === T.INT) { advance(); pval = `${pval}=${advance().value}`; }
-          }
-          pairs.push({ type: 'QualPair', key, value: pval, decrement });
-          if (at(T.COMMA)) advance();
-        }
-        expect(T.RBRACKET);
-        return { type: 'Qualifier', pairs, tempoOp };
-      }
-      expect(T.RBRACKET);
-      return { type: 'Qualifier', pairs: [], tempoOp };
+      const signe = at(T.STAR) ? '*' : '/';
+      throw new ParseError(
+        `'[${signe}N]' : l'opérateur de vitesse s'écrit entre PARENTHÈSES et se pose dans le `
+        + `FLUX — '! (${signe}N)' (décision Romain 2026-08-06). Il ne vit nulle part ailleurs : `
+        + `ni en suffixe de règle, ni collé à un élément. '/N' accélère, '*N/M' écrit la même `
+        + `chose en fraction inverse`,
+        current());
     }
 
     const pairs = [];

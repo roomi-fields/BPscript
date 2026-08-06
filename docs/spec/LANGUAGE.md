@@ -574,7 +574,7 @@ touche, donc qui le consomme.
 | categorie   | ce qu'elle regle                                                                                                                                             |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason` -- decrites ci-dessous                                                                  |
-| `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `tempx` -- le multiplicateur de vitesse d'une regle · `striated` et `smooth` -- si le temps pulse ou coule |
+| `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `striated` et `smooth` -- si le temps pulse ou coule |
 | `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
 
 | cle           | ce qu'elle decale                                                             |
@@ -1017,7 +1017,7 @@ S -> {A B C}:0.5                // le groupe occupe un demi-battement
 
 ### Les cles que le moteur consomme
 
-Elles vivent dans la librairie `engine`, sauf `tempo` et `tempx` qui vivent dans `time` :
+Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time` :
 
 ```text
 /N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
@@ -1031,7 +1031,6 @@ seed        graine du tirage
 maxitems    nombre d'items produits
 rndtime     deviation aleatoire des attaques, en millisecondes
 tempo       le metronome de la scene, en battements par minute
-tempx       multiplicateur de vitesse de la regle -- (tempx:2/3) ralentit d'un tiers
 ```
 
 Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
@@ -2176,7 +2175,7 @@ la compilation s'arrete et **nomme les deux candidats** : on ne prefixe que ce c
 
 ```text
 (cutoff:4000)          // un seul catalogue porte `cutoff` -- il passe nu
-(time.tempx:2/3)       // on prefixerait si deux librairies portaient `tempx`
+(time.tempo:120)       // on prefixerait si deux librairies portaient `tempo`
 ```
 
 **La resolution est STATIQUE** -- la compilation nomme les deux candidats et l'auteur choisit. Un ordre

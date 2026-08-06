@@ -180,11 +180,11 @@ section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
 // ============================================================
 section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
 {
-  // ⚠️ `tempx` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
-  // `![tempx:…]` (crochets) est désormais REFUSÉ. `!(tempx:2)` sert la même fonction dans ce test
+  // ⚠️ `weight` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
+  // `![tempx:…]` (crochets) est désormais REFUSÉ. `!(weight:2)` sert la même fonction dans ce test
   // (un AUTRE élément du flux à côté de `scale`, non le sujet mesuré ici).
   const src = `@controls
-S -> !(tempx:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
+S -> !(weight:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
   // tokenize : pure_minor- doit être IDENT(pure_minor-) et third_meantone IDENT(third_meantone)
   const tokens = toks(src);
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
