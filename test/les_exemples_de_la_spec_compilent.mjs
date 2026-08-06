@@ -152,6 +152,83 @@ ok(exemples >= 8,
    `2. il faut des exemples à mesurer — ${exemples} trouvé(s). Si ce compte s'effondre, ce n'est `
    + `pas que la doc est devenue parfaite : c'est que le garde ne la lit plus.`);
 
+// ─── 2ter. LES EXEMPLES DE RÈGLE — la portée qui manquait ────────────────────────────────────
+// ⚠️ CE VOLET EST UNE RÉPARATION DE PORTÉE, ET ELLE A ÉTÉ MESURÉE, PAS DEVINÉE (2026-08-06).
+// Jusqu'ici ce garde n'extrayait que les lignes de DIRECTIVE (`@macro`, `@var`…). Les exemples de
+// RÈGLE — la matière même du langage — n'ont JAMAIS été mesurés. Conséquence directe : les trois
+// exemples de la section « La vitesse » de la bible sont refusés par le parser depuis qu'elle a
+// été réécrite, et rien ne l'a jamais dit. Le garde était vert et ne prouvait pas ce qu'on croyait
+// qu'il prouvait : « la portée d'un garde se choisit sur l'ESPACE, jamais sur le fichier où ça
+// s'est vu ».
+//
+// LE RÉGIME EST CELUI DE LA BIBLE (CLAUDE.md, Romain 2026-08-06) : `LANGUAGE.md` est
+// délibérément EN AVANCE sur le parser. Une règle qu'elle écrit et que le parser refuse dit que le
+// COMPILATEUR EST EN RETARD — une dette de rattrapage, pas une faute. Ce volet la CHIFFRE et
+// l'empêche de grandir en silence ; il ne la traite pas.
+const RE_REGLE = /^[A-Za-z_][\w']*\s*(?:->|<>|<-)\s/;
+// Retard mesuré le 2026-08-06 : 16 règles sur 123, en QUATRE familles. Chaque ligne sort de cette
+// liste le jour où le parser la rattrape — à la main, datée, comme le cliquet du dessus.
+const RETARD_REGLES = new Map([
+  // (a) la DURÉE COLLÉE décimale — `:0.5` (l'entière `:2` passe déjà)
+  ['S -> A:0.5 B C', /ligne non reconnue au niveau des règles/],
+  ['S -> {A B C}:0.5', /ligne non reconnue au niveau des règles/],
+  ['S -> C4:0.5 D4 E4', /ligne non reconnue au niveau des règles/],
+  ['Motif -> {C4 D4}:2 E4:0.5', /ligne non reconnue au niveau des règles/],
+  ['S -> C4(vel:0.7) D4:0.5 E4 F4 (mode:random)', /ligne non reconnue au niveau des règles/],
+  // (b) le SAC COLLÉ à un groupe ou à un terminal, et le COMPOSANT d'une instance (`lpf1.cutoff`)
+  ['S -> {A B C}(lpf1.cutoff:4000)', /Expected arrow/],
+  ['S -> C4(lpf1.cutoff:400)', /Expected argument value/],
+  ['S -> { C4 D4 }(lpf2.cutoff:800)', /Expected arrow/],
+  ['S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)', /Expected argument value/],
+  ['S -> { C4 D4 }(sombre) E4 coupe F4', /Expected arrow/],
+  ['S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)', /Expected arrow/],
+  ['S -> {A B}(lpf1.cutoff:4000)', /Expected arrow/],
+  // (c) la VITESSE dans le flux — `! (/N)`, la seule graphie que la bible donne
+  ['S -> C4 ! (/2) D4 E4', /after !/],
+  ['S -> C4 ! (/2) D4 ! (/1) E4', /after !/],
+  ['S -> C4 ! (/2) {D4 E4} F4', /after !/],
+  // (d) une clé que le parser tient encore pour un contrôle de crochet
+  ['S -> C4 (rndtime:100) D4 E4', /s'écrit entre CROCHETS/],
+]);
+
+let regles = 0;
+const retardRetrouve = new Set();
+for (const p of SPECS) {
+  if (!existsSync(p)) continue;
+  const nom = path.basename(p);
+  let dans = false;
+  for (const brut of readFileSync(p, 'utf8').split('\n')) {
+    if (/^```/.test(brut)) { dans = !dans; continue; }
+    if (!dans) continue;
+    const ligne = brut.replace(/\s*\/\/.*$/, '').trim();
+    if (!RE_REGLE.test(ligne)) continue;
+    regles++;
+    let r;
+    try { r = compileToBPxAST(`@core\n@controls\n${ligne}\n`); }
+    catch (e) { r = { errors: [{ message: e.message }] }; }
+    const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+    if (msg === '' || REFUS_DE_RESOLUTION.test(msg)) continue;
+    const cause = RETARD_REGLES.get(ligne);
+    if (cause && cause.test(msg)) { retardRetrouve.add(ligne); continue; }
+    ok(false,
+       `2ter. ${nom} écrit une règle que le compilateur REFUSE, HORS RETARD INVENTORIÉ : `
+       + `'${ligne.slice(0, 60)}' → ${msg.replace(/\s+/g, ' ').slice(0, 110)}. La bible fait foi : `
+       + `soit le parser la rattrape, soit la ligne entre dans RETARD_REGLES avec sa cause.`);
+  }
+}
+// SOCLE — un extracteur cassé rendrait zéro règle et passerait au vert en ne mesurant rien.
+// C'est exactement ce qui est arrivé au brouillon de ce volet : une bascule de bloc fautive
+// rendait 8 règles au lieu de 123, et « 0 refus » avait l'air d'une bonne nouvelle.
+ok(regles >= 100,
+   `2ter. SOCLE : ${regles} règle(s) extraite(s) des specs — l'extracteur ne lit plus les blocs.`);
+// CLIQUET — le retard ne descend jamais tout seul.
+for (const [ligne] of RETARD_REGLES) {
+  ok(retardRetrouve.has(ligne),
+     `2ter-cliquet. '${ligne.slice(0, 50)}' est inscrite au retard mais NE REFUSE PLUS avec sa `
+     + `cause (rattrapée, refusée autrement, ou disparue de la bible) — RETIRE-la : un retard qui `
+     + `ne se resserre jamais n'est qu'un compteur.`);
+}
+
 // ─── 2bis. LA RÉFÉRENCE NE PEUT QUE DESCENDRE, ET À LA MAIN ──────────────────────────────────
 // Le cliquet ne descend jamais tout seul : si le parser rattrape une forme (ou si la ligne
 // disparaît de la doc), BASELINE_RATTRAPAGE doit être resserrée dans le MÊME commit — sinon ce
@@ -374,6 +451,8 @@ if (echecs.length) {
   process.exitCode = 1;
 } else {
   console.log(`✅ les documents enseignent des formes vivantes — ${passe} vérification(s) passée(s) : `
+            + `${regles} RÈGLE(S) des specs compilées dont ${retardRetrouve.size} en retard `
+            + `inventorié (le parser rattrape la bible), `
             + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), ${vusEnEchecConnu.size}/`
             + `${BASELINE_RATTRAPAGE.size} rattrapage(s) connu(s) retrouvés PILE (chantier def/init/`
             + `patch du 2026-08-03), et ${croisements} croisement(s) ${TOUS.length} document(s) × `
