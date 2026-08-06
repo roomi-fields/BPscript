@@ -35,8 +35,15 @@ ActorDirective:
 ActorKey:
     key=ID '.' target=ID ('(' params+=Paire (',' params+=Paire)* ')')?;
 
+// ⚠️ Un argument de directive peut être une RÉFÉRENCE POINTÉE : `@var touches in.keyboard`,
+// `@actor sitar alphabet.sargam`. Une valeur nue ne suffit pas.
 Directive:
-    '@' name=ID ('.' target=ID)? (':' value=Valeur)? (args+=Valeur)* NL+;
+    '@' name=ID ('.' target=ID)? (':' value=Valeur)? (bag=SettingBag)? (args+=ArgDirective)* NL+;
+
+ArgDirective:
+    mot=ID ('.' sous=ID)? (':' valeur=Valeur)?
+  | num=NUMBER
+  | texte=STRING;
 
 Separator:
     value='-----' NL+;
@@ -48,7 +55,7 @@ Separator:
 //   · une DIRECTIVE DE PRODUCTION entre crochets (`[@maxitems:20]`).
 Rule:
     (guards+=Guard | prod+=ProdDirective)*
-    lhs+=Lhs+ arrow=Arrow rhs+=RhsElement+
+    lhs+=Lhs+ arrow=Arrow rhs+=RhsElement*
     (flags+=Guard | prod+=ProdDirective | bag=SettingBag)* NL+;
 
 // ⚠️ Plusieurs directives dans un même crochet : `[@allitems, @maxitems:500]`.
@@ -58,8 +65,11 @@ ProdDirective:
 ProdNom:
     name=ID (':' value=Valeur)?;
 
+// `#(?1 ?3 ?2 ?4)` — un contexte négatif peut porter sur un GROUPE de jokers.
 Lhs:
-    (negatif='#')? name=ID | joker='?' (rang=NUMBER)?;
+    (negatif='#')? name=ID
+  | (negatif='#')? joker='?' (rang=NUMBER)?
+  | negatif='#' '(' groupe+=Wildcard+ ')';
 
 Arrow returns string:
     '->' | '<-' | '<>';
@@ -78,8 +88,24 @@ OpDrapeau returns string:
 
 // ── Membre droit ────────────────────────────────────────────────────────────
 RhsElement:
-    Instant | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
+    Attente | AppelLibre | Instant | Etoile | ContexteJoker | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
   | Wildcard | Nombre | SymbolRef;
+
+// `#?` — un contexte négatif portant sur un joker, en tête comme en membre droit.
+ContexteJoker:
+    negatif='#' joker='?' (rang=NUMBER)?;
+
+// `<!touches.Space` — le point d'attente : le flux suspend jusqu'à l'arrivée du rôle nommé.
+Attente:
+    '<!' role=ID ('.' adresse=(ID | NUMBER))?;
+
+// ⚠️ `script(wait for do#2 channel 1)` — un appel dont les arguments sont du TEXTE LIBRE, pas des
+// paires. La grammaire doit donc admettre une suite de mots quelconques entre les parenthèses.
+AppelLibre:
+    nom='script' '(' mots+=MotLibre+ ')';
+
+MotLibre:
+    valeur=ID | valeur=NUMBER;
 
 // `$ {…}` capture un GROUPE entier, `& {…}` le rejoue — l'espace sépare le signe du groupe.
 GabaritGroupe:
@@ -95,16 +121,22 @@ Speed:
 OpVitesse returns string:
     '/' | '*';
 
+// ⚠️ UN BLOC PEUT S'ÉTENDRE SUR PLUSIEURS LIGNES — mesuré : trois scènes du corpus l'écrivent
+// ainsi, une voix par ligne. La fin de ligne termine une RÈGLE, mais pas un BLOC : à l'intérieur
+// des accolades, elle redevient de la mise en page. C'est la seule place du langage où le retour
+// à la ligne change de sens, et la grammaire doit le dire.
 Polymetric:
-    '{' voices+=Voice (',' voices+=Voice)* '}' (':' frame=Duree)? (bag=SettingBag)?;
+    '{' NL* voices+=Voice (',' NL* voices+=Voice)* NL* '}' (':' frame=Duree)? (bag=SettingBag)?;
 
 // ⚠️ Une VOIX porte son propre sac : `{C5 E5 (vel:100), E4 G4 (vel:70)}`.
 Voice:
-    elements+=RhsElement+ (bag=SettingBag)?;
+    elements+=RhsElement+ (bag=SettingBag)? NL*;
 
 // `$mel` capture, `&mel` rejoue — les gabarits. `#X` est un contexte négatif.
+// ⚠️ LA LIAISON SE POSE DES DEUX CÔTÉS : `G#5~` ouvre, `~G#5` ferme. Mesuré sur le corpus —
+// `{2,~G#5,~B6}` était refusé faute d'admettre le tilde en tête.
 SymbolRef:
-    (gabarit=SigneGabarit)? (negatif='#' (joker='?')?)? (actor=ID '.')? name=ID
+    (gabarit=SigneGabarit)? (lien='~')? (negatif='#')? (actor=ID '.')? name=ID
     (':' duree=Duree)? ('.' numero=NUMBER)? (bag=SettingBag)? (tie='~')?;
 
 SigneGabarit returns string:
@@ -144,6 +176,8 @@ Undetermined:  value='...';
 Period:        value='.';
 // `?` anonyme, `?1` numéroté — les jokers d'un gabarit.
 Wildcard:      value='?' (rang=NUMBER)?;
+// `*` — le marqueur d'homomorphisme, posé dans le flux.
+Etoile:        value='*';
 
 // ── Lexèmes ─────────────────────────────────────────────────────────────────
 // ⚠️ `ID` accepte le chiffre en fin de mot et l'apostrophe : les terminaux du langage s'écrivent

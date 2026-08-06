@@ -230,8 +230,13 @@ le plus fréquent**, jamais par ce que je croyais manquer.
 | 4 | K-paramètre · crochets multiples · composant numéroté | **147** |
 | 5 | apostrophe interne · sac de voix · joker en tête · directive de ligne | **163** |
 | 6 | instantané en crochets · groupe de gabarit | **164** |
+| 7 | contexte négatif groupé · appel de code libre | **167** |
+| 8 | liaison en tête (`~G#5`) · argument pointé de directive | **174** |
+| 9 | point d'attente · membre droit vide · joker après contexte | **180** |
+| 10 | directive avec sac · étoile d'homomorphisme · contexte joker | **188** |
+| 11 | le bloc traverse les lignes | **191** |
 
-**164 sur 274 — 60 % du corpus réel**, avec une grammaire de 130 lignes contre 7 836 lignes de
+**191 sur 274 — 70 % du corpus réel**, avec une grammaire de 160 lignes contre 7 836 lignes de
 parseur écrit à la main.
 
 ## Ce que la montée a appris sur le langage lui-même
@@ -263,3 +268,35 @@ dans un nom. Aucune n'est un obstacle de principe ; ce sont des lignes de gramma
 2. **La montée est régulière et guidée par la mesure** — pas d'effet falaise.
 3. **Le coût est celui de la queue**, pas du cœur : 60 % en six passes courtes, les 40 % restants
    demanderont plus de passes pour moins de scènes chacune.
+
+
+## La contrainte la plus profonde, trouvée à la onzième passe
+
+**La fin de ligne termine une RÈGLE, mais pas un BLOC.**
+
+```
+S -> {
+  !(chan:1, vel:120) C8 - - -,
+  !(chan:1, vel:120) - C7 C7 C7
+}
+```
+
+Trois scènes du corpus écrivent une voix par ligne. À l'intérieur des accolades, le retour à la
+ligne **redevient de la mise en page** — c'est la seule place du langage où ce signe change de
+sens, et il a fallu le dire à la grammaire pour que ces scènes passent.
+
+⚠️ **C'est le genre de règle qu'un parseur écrit à la main applique sans que personne l'écrive.**
+Elle n'est dans aucun des trois documents. La grammaire, elle, ne laisse pas le choix : ou on la
+déclare, ou les scènes tombent.
+
+## Où en est la queue
+
+Les 83 scènes restantes butent sur des formes rares et souvent anciennes : accolades réellement
+déséquilibrées d'une règle à l'autre, catalogue de gabarits (`[1] /1 ???????`), objet sonore
+composé (`|`), guillemet dans un nom, contexte négatif sur un silence (`#-`). Chacune concerne une
+à trois scènes.
+
+⚠️ **Une seule est un vrai problème de conception** : l'accolade qui s'ouvre dans une règle et se
+ferme dans une AUTRE. Le parseur actuel la résout par une seconde passe ; une grammaire, par
+construction, ne le peut pas. C'est le point à trancher avant la phase 4, et il est structurel —
+pas une ligne de grammaire à écrire.
