@@ -107,10 +107,13 @@ for (const [forme, quoi] of [
      `§2ter ${quoi} : '${forme.replace('S -> ', '').replace(' C4', '')}' doit être refusé`);
 }
 // Et les écritures ratifiées passent — sinon ce garde interdirait tout, ce qui ne prouverait rien.
+// ⚠️ `legato` a rejoint les RÉGLAGES RÉSERVÉS le 2026-08-06 (usage FLUX uniquement au corpus,
+// sûr côté BPx — cf. lib/core.json `_qualifierKeys_doc`) : `![legato:100]` (l'ancienne écriture
+// ratifiée) est désormais REFUSÉ, remplacé par `!(legato:100)`.
 for (const forme of [
   'S -> !(vel:80) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 D4 [goto:3 0]',
   'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> !(cc.98:45) C4', 'S -> C4 D4 (vel:80)',
-  'S -> C4 [repeat:K1]', 'S -> !(keyxpand:B3 -1) C4', 'S -> ![legato:100] C4',
+  'S -> C4 [repeat:K1]', 'S -> !(keyxpand:B3 -1) C4', 'S -> !(legato:100) C4',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2ter l'écriture ratifiée '${forme}' doit être acceptée — reçu : ${e.join(' | ')}`);
@@ -155,21 +158,25 @@ for (const forme of [
 // réservé du langage (`@core.schema.qualifierKeys`), pas un contrôle au sens de cette section —
 // « un signe, une nature » le fait toujours atterrir en parenthèses, même s'il est AUSSI déclaré
 // dans la section `engine` de `controls.json`. Cf. §2quinquies (légitimes) plus bas.
+// ⚠️ `rotate`/`legato`/`staccato` SORTENT de cette règle aussi depuis le 2026-08-06, même
+// mécanisme, même raison — `rndtime` (usage rule-suffix côté BPx, hors périmètre de cette
+// migration, cf. lib/core.json `_qualifierKeys_doc`) reprend leur place d'exemple ci-dessous.
 for (const [forme, quoi] of [
   ['S -> C4 [vel:80]', 'contrôle runtime écrit dans le sac moteur'],
   ['S -> C4 [keyxpand:B3 -1]', 'contrôle de dispatcher dans le sac moteur'],
-  ['S -> C4 !(legato:100) D4', 'contrôle moteur écrit dans le sac runtime'],
+  ['S -> C4 !(rndtime:10) D4', 'contrôle moteur écrit dans le sac runtime'],
   ['S -> {C4, D4}[scale:2]', "le `scale` MOTEUR, supprimé le 2026-07-26 : subsumé par la durée collée"],
 ]) {
   ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
      `§2quinquies ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
 }
-// Ce qui reste légitime — dont le `rotate` de SÉQUENCE, moteur et déclaré (à ne pas confondre
+// Ce qui reste légitime — dont le `rotate`/`legato` de SÉQUENCE, désormais des RÉGLAGES réservés
+// (parenthèses, `!(…)` dans le flux) et non plus des contrôles du sac moteur (à ne pas confondre
 // avec l'ancien rotate de hauteur, renommé `scaleshift` le 2026-07-11).
 for (const forme of [
   'S -> {C4, D4}:2',
-  'S -> !(vel:80) C4', 'S -> ![legato:100] C4', 'S -> !(scale:just_intonation C4) C4',
-  'S -> {C4 D4}![rotate:2]',
+  'S -> !(vel:80) C4', 'S -> !(legato:100) C4', 'S -> !(scale:just_intonation C4) C4',
+  'S -> {C4 D4}!(rotate:2)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quinquies '${forme}' doit rester accepté — reçu : ${e.join(' | ')}`);

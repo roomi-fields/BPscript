@@ -3054,23 +3054,41 @@ function parse(tokens, opts = {}) {
       }
     }
 
-    // Runtime qualifier suffix on rule: S -> C2 C2 (vel:100)
-    // Loose check: accept opaque keys even when no @controls lib is loaded
-    // (EBNF couche 3 — rule = ... rhs , [ runtime_qualifier ]).
+    // Suffixe de règle — DEUX sacs disjoints, `()` (réglage/contrôle runtime) et `[]` (garde/
+    // affectation de drapeau, qualifieur moteur non réservé), qui peuvent s'écrire dans N'IMPORTE
+    // QUEL ORDRE, y compris en alternance (`S -> C4 [B=3] (weight:3)` comme `S -> C4 (weight:3)
+    // [B=3]`) : la position de l'un ne ferme pas l'autre — un signe n'annonce pas la fin de la
+    // règle, seule l'ABSENCE des deux le fait.
+    //
+    // AVANT ce correctif, `()` n'était regardé qu'UNE FOIS, avant la boucle `[]` (EBNF couche 3 :
+    // `rule = ... rhs , [ runtime_qualifier ] , { flag_bracket | qualifier }`, un ordre figé qui
+    // ne correspond à aucune règle du langage — les deux sacs sont orthogonaux). Un `()` après un
+    // `[]` cassait avec « Expected arrow », un message qui pointe vers la règle SUIVANTE au lieu
+    // de nommer le vrai problème : mesuré sur `S -> C4 [B=3] (weight:3)`.
+    //
+    // Plusieurs groupes `()` sont fusionnés dans UN SEUL `runtimeQualifier` (mêmes paires, ordre
+    // d'écriture préservé) : le reste du compilateur (extraction de `scan`, etc.) lit un unique
+    // nœud RuntimeQualifier par règle.
+    // Loose check : accepte les clés opaques même sans `@controls` chargé (EBNF couche 3).
     let runtimeQualifier = null;
-    if (isRuntimeQualifierLoose()) {
-      runtimeQualifier = parseRuntimeQualifier();
-    }
-
-    // Qualifiers and RHS flags — both use []
     const qualifiers = [];
     const flags = [];
-    while (at(T.LBRACKET)) {
-      if (isFlagBracket()) {
-        flags.push(...parseFlagBracket());
-      } else {
-        qualifiers.push(parseQualifier());
+    while (true) {
+      if (isRuntimeQualifierLoose()) {
+        const rq = parseRuntimeQualifier();
+        if (runtimeQualifier) runtimeQualifier.pairs.push(...rq.pairs);
+        else runtimeQualifier = rq;
+        continue;
       }
+      if (at(T.LBRACKET)) {
+        if (isFlagBracket()) {
+          flags.push(...parseFlagBracket());
+        } else {
+          qualifiers.push(parseQualifier());
+        }
+        continue;
+      }
+      break;
     }
 
     // B2 : extraire rule.mode depuis le réglage (scan:left|right|rnd) — écrit en PARENTHÈSES
@@ -3800,7 +3818,18 @@ function parse(tokens, opts = {}) {
         // RÉGLAGE RÉSERVÉ — même lecteur de valeur que le résidu `[]` (readQualifierValue),
         // pour que `(weight:50-12)` et `(meter:4+4/6)` gardent le même format qu'avant leur
         // migration en parenthèses (décrément et signature temporelle compris).
-        if (libCtx.qualifierKeys.has(key)) {
+        //
+        // ⚠️ SAUF pour un réglage dont la valeur porte PLUSIEURS PARTIES séparées par une espace
+        // (`goto:2 1`, `failed:3 2` — `args` en déclare deux dans lib/controls.json) : lecteur
+        // MONO-valeur, `readQualifierValue` ne lit qu'un seul jeton et laisse pendre le reste
+        // (`Expected IDENT, got INT`). Ces clés tombent donc dans le lecteur générique
+        // multi-parties plus bas (celui qui sert déjà `keyxpand`), piloté par la DONNÉE
+        // (`args.length`), jamais par un nom en dur — et lu à l'échelle de l'UNIVERS
+        // (`universeSacs().specs`) pour rester disponible sans `@controls`, comme tout réglage
+        // réservé.
+        const specReglage = universeSacs().specs && universeSacs().specs[key];
+        const reglageMultiPartie = specReglage && Array.isArray(specReglage.args) && specReglage.args.length > 1;
+        if (libCtx.qualifierKeys.has(key) && !reglageMultiPartie) {
           const { value, decrement } = readQualifierValue();
           if (value === undefined) {
             throw new ParseError(

@@ -117,7 +117,11 @@ function universeSacs() {
   if (!_universeSacs) {
     const allDirs = Object.keys(registry).map((name) => ({ name }));
     const c = loadLibsFromDirectives(allDirs);
-    _universeSacs = { moteur: c.engineBagControls, runtime: c.runtimeBagControls };
+    // `specs` : la déclaration COMPLÈTE (args, values, range…) de l'UNIVERS, indépendante de
+    // `@controls` — un réglage réservé (qualifierKeys) est un mot du LANGAGE, il doit savoir
+    // combien de PARTIES sa valeur porte (`goto`/`failed` : 2 ; `weight`/`rotate`… : 1) que la
+    // scène ait chargé `@controls` ou non. Même principe que les univers ci-dessus.
+    _universeSacs = { moteur: c.engineBagControls, runtime: c.runtimeBagControls, specs: c.controls };
   }
   return _universeSacs;
 }
