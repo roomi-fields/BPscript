@@ -47,11 +47,21 @@ Directive:
 // avec le signe égal, pas seulement avec le deux-points. Mesuré : deux scènes l'écrivent ainsi.
 // ⚠️ Un argument de directive peut être du CODE (`@cv sweep \`js: …\``) ou un TYPE À DEUX-POINTS
 // suivi de paires (`@var section flag: a:1, b:2`).
+// ⚠️ `@var section flag: a:1, b:2` — le TYPE d'une variable est suivi d'un deux-points, puis
+// d'une liste de paires nommées séparées par des virgules. La valeur d'un argument peut donc
+// elle-même être une liste.
 ArgDirective:
-    mot=ID ('.' sous=ID)? ((':' | '=') valeur=Valeur)?
+    mot=ID ('.' sous=ID)? ((':' | '=') paires+=PaireNommee (',' paires+=PaireNommee)*)?
   | num=NUMBER
   | texte=STRING
   | code=BACKTICK;
+
+// ⚠️ UNE SEULE VOIE, pas deux. La première rédaction offrait « une liste de paires OU une
+// valeur », et l'outil a signalé une AMBIGUÏTÉ : les deux commencent par un identifiant. Une
+// grammaire ambiguë analyse de travers en silence — c'est pire qu'un refus. Une paire dont la
+// valeur est facultative couvre les deux cas et l'ambiguïté disparaît au lieu d'être arbitrée.
+PaireNommee:
+    valeur=Valeur ((':' | '=') suite=Valeur)?;
 
 Separator:
     value='-----' NL*;
@@ -189,6 +199,8 @@ Nombre:
 
 Backtick:      value=BACKTICK;
 // Un silence porte son sac comme un terminal : `-(vel:127)`.
+// `>>` branche, `\\>>` coupe — le câblage posé dans le flux.
+Cablage:       source=ID coupe='>>' cible=ID ('.' port=ID)?;
 Rest:          value='-' (bag=SettingBag)?;
 // ⚠️ `|[ do5 _ do5 do5 ]` — l'OBJET SONORE COMPOSÉ : le tube ouvre un bloc dont le contenu est
 // une séquence de terminaux, pas des paires clé-valeur. Mesuré : la lecture par `Guard` échouait

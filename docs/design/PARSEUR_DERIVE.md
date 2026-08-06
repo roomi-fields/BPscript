@@ -248,7 +248,9 @@ le plus fréquent**, jamais par ce que je croyais manquer.
 | 19 | crochet collé à un terminal · tiret entre deux mots | **221** |
 | 20 | argument de directive en backtick | **225** |
 
-**225 sur 271 — 83 % du corpus**, avec une grammaire de 200 lignes contre 7 836 lignes de parseur
+| 21 | type de variable suivi d'une liste de paires (`flag: a:1, b:2`) | **230** |
+
+**230 sur 271 — 85 % du corpus**, avec une grammaire de 205 lignes contre 7 836 lignes de parseur
 écrit à la main.
 
 ⚠️ Le dénominateur est passé de 274 à **271** : les trois scènes que la décision du 2026-08-06
@@ -372,3 +374,22 @@ de tête, puis les directives, avant de mesurer le dernier caractère du fichier
 ⚠️ **Et j'ai vérifié que la relâche ne rouvrait pas la faille précédente** : un témoin dédié
 confirme que deux règles sur deux lignes font toujours DEUX règles, pas une. Relâcher une
 contrainte sans re-tester celle qu'elle protégeait est le meilleur moyen de payer deux fois.
+
+
+## Passe 21 — le gain est venu avec une ambiguïté, et je ne l'ai pas gardée
+
+La première rédaction de cette passe faisait passer 5 scènes de plus **et** faisait apparaître un
+avertissement : `Ambiguous Alternatives Detected`. J'offrais deux chemins — « une liste de paires
+OU une valeur » — et les deux commencent par un identifiant.
+
+⚠️ **Une grammaire ambiguë analyse de travers en silence : c'est pire qu'un refus.** L'outil
+arbitre alors selon l'ordre d'écriture, ce qui n'est pas une décision de langage mais un accident
+de rédaction.
+
+Réécrit en **une seule voie** — une paire dont la valeur est facultative couvre les deux cas — le
+gain est conservé et l'ambiguïté disparaît au lieu d'être arbitrée au hasard.
+
+⚠️ **À retenir pour la phase 4** : le nombre de scènes acceptées n'est pas le seul critère de
+qualité d'une grammaire. Une passe peut faire monter le compte **et** dégrader la grammaire. Le
+compte ne le dit pas ; l'outil, lui, le dit — encore faut-il lire ce qu'il écrit avant de se
+réjouir du chiffre.
