@@ -9,7 +9,12 @@ const parse = (texte) => services.parser.LangiumParser.parse(texte);
 
 const { toutesLesScenes } = await import('/home/romi/dev/bp/BPscript/test/corpus.mjs');
 let ok = 0; const echecs = new Map();
+// ⚠️ TROIS SCENES SONT DECLAREES INCOMPATIBLES (decision Romain 2026-08-06, l accolade ne
+// traverse plus les regles). Elles sortent du DENOMINATEUR : les compter serait mesurer un
+// refus voulu comme un manque de la grammaire.
+const INCOMPATIBLES = ['visser-waves', 'koto3', 'dhati2'];
 for (const [nom, src] of toutesLesScenes()) {
+  if (INCOMPATIBLES.some((x) => nom.endsWith('/' + x + '.bps') || nom === x + '.bps')) continue;
   const r = parse(src);
   const errs = [...(r.lexerErrors || []), ...(r.parserErrors || [])];
   if (errs.length === 0) { ok++; continue; }

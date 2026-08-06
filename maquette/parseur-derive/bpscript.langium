@@ -32,13 +32,16 @@ ProdLigne:
 ActorDirective:
     '@' 'actor' name=ID (keys+=ActorKey)* NL+;
 
+// ⚠️ Une clé d'acteur peut porter l'arobase : `@actor flute @alphabet.sargam octaves.western`.
+// Les deux graphies coexistent dans le corpus.
 ActorKey:
-    key=ID '.' target=ID ('(' params+=Paire (',' params+=Paire)* ')')?;
+    (arobase='@')? key=ID '.' target=ID ('(' params+=Paire (',' params+=Paire)* ')')?;
 
 // ⚠️ Un argument de directive peut être une RÉFÉRENCE POINTÉE : `@var touches in.keyboard`,
 // `@actor sitar alphabet.sargam`. Une valeur nue ne suffit pas.
 Directive:
-    '@' name=ID ('.' target=ID)? (':' value=Valeur)? (bag=SettingBag)? (args+=ArgDirective)* NL+;
+    '@' name=ID ('.' target=ID)? (':' value=Valeur)? (bag=SettingBag)?
+    (args+=ArgDirective)* (',' args+=ArgDirective)* NL+;
 
 ArgDirective:
     mot=ID ('.' sous=ID)? (':' valeur=Valeur)?
@@ -66,9 +69,14 @@ ProdNom:
     name=ID (':' value=Valeur)?;
 
 // `#(?1 ?3 ?2 ?4)` — un contexte négatif peut porter sur un GROUPE de jokers.
+// ⚠️ La PROLONGATION et le SILENCE font partie d'une tête de règle : `re5_r _ G ->`, `Oc3 _ ->`.
+// Une tête n'est pas qu'une suite de noms — elle décrit un MOTIF à reconnaître.
 Lhs:
-    (negatif='#')? name=ID
+    prolongation='_'
+  | silence='-'
+  | (negatif='#')? name=ID
   | (negatif='#')? joker='?' (rang=NUMBER)?
+  | negatif='#' silence='-'
   | negatif='#' '(' groupe+=Wildcard+ ')';
 
 Arrow returns string:
@@ -88,12 +96,12 @@ OpDrapeau returns string:
 
 // ── Membre droit ────────────────────────────────────────────────────────────
 RhsElement:
-    Attente | AppelLibre | Instant | Etoile | ContexteJoker | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
+    Attente | AppelLibre | Instant | Etoile | ContexteJoker | Compose | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
   | Wildcard | Nombre | SymbolRef;
 
 // `#?` — un contexte négatif portant sur un joker, en tête comme en membre droit.
 ContexteJoker:
-    negatif='#' joker='?' (rang=NUMBER)?;
+    negatif='#' (joker='?' (rang=NUMBER)? | silence='-');
 
 // `<!touches.Space` — le point d'attente : le flux suspend jusqu'à l'arrivée du rôle nommé.
 Attente:
@@ -171,11 +179,14 @@ Nombre:
 
 Backtick:      value=BACKTICK;
 Rest:          value='-';
+// `|` — l'objet sonore composé : un terminal suivi d'un bloc de propriétés.
+Compose:       value='|' bloc=Guard;
 Prolongation:  value='_';
 Undetermined:  value='...';
 Period:        value='.';
 // `?` anonyme, `?1` numéroté — les jokers d'un gabarit.
-Wildcard:      value='?' (rang=NUMBER)?;
+// Un joker porte son propre sac : `?1(vel:95)`.
+Wildcard:      value='?' (rang=NUMBER)? (bag=SettingBag)?;
 // `*` — le marqueur d'homomorphisme, posé dans le flux.
 Etoile:        value='*';
 
@@ -184,7 +195,11 @@ Etoile:        value='*';
 // `C4`, `Bb3`, `A_r`, `B_r'`. Un identifiant qui les refuserait rejetterait la moitié du corpus.
 // ⚠️ L'APOSTROPHE VIT À L'INTÉRIEUR DU NOM, pas seulement à la fin : `A'8`, `F'24`, `B_r'`.
 // Mesuré : la placer en suffixe seul rejetait toute une famille de scènes.
-terminal ID: /[A-Za-z_][A-Za-z0-9_#']*/;
+// ⚠️ UN NOM PORTE PLUS QUE DES LETTRES. Mesuré sur le corpus : l'apostrophe et le GUILLEMET
+// marquent le registre (`A'8`, `B"8`), le dièse une altération (`G#5`), et le TIRET SUIVI D'UN
+// CHIFFRE une variante (`Tr-11`, `A'6-2`). Un identifiant qui les refuserait rejetterait des
+// familles entières — et aucun des trois documents ne le disait.
+terminal ID: /[A-Za-z_][A-Za-z0-9_#'"]*(-[0-9]+)*/;
 terminal NUMBER returns number: /[0-9]+(\.[0-9]+)?/;
 terminal STRING: /"[^"]*"/;
 terminal BACKTICK: /`[^`]*`/;

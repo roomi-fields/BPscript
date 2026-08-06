@@ -236,8 +236,16 @@ le plus fréquent**, jamais par ce que je croyais manquer.
 | 10 | directive avec sac · étoile d'homomorphisme · contexte joker | **188** |
 | 11 | le bloc traverse les lignes | **191** |
 
-**191 sur 274 — 70 % du corpus réel**, avec une grammaire de 160 lignes contre 7 836 lignes de
-parseur écrit à la main.
+| 12 | clé d'acteur arobasée · directive à paires · contexte sur silence | **194** |
+| 13 | joker à sac · prolongation en tête de règle · objet composé | **199** |
+| 14 | guillemet et tiret-chiffre dans un nom | **201** |
+
+**201 sur 271 — 74 % du corpus**, avec une grammaire de 180 lignes contre 7 836 lignes de parseur
+écrit à la main.
+
+⚠️ Le dénominateur est passé de 274 à **271** : les trois scènes que la décision du 2026-08-06
+rend incompatibles sortent de la mesure. Les compter serait prendre un refus VOULU pour un manque
+de la grammaire.
 
 ## Ce que la montée a appris sur le langage lui-même
 
@@ -300,3 +308,22 @@ composé (`|`), guillemet dans un nom, contexte négatif sur un silence (`#-`). 
 ferme dans une AUTRE. Le parseur actuel la résout par une seconde passe ; une grammaire, par
 construction, ne le peut pas. C'est le point à trancher avant la phase 4, et il est structurel —
 pas une ligne de grammaire à écrire.
+
+
+## Ce que la montée a encore appris — un nom porte plus que des lettres
+
+Passe 14, la plus instructive du lot. Un identifiant du langage peut contenir :
+
+| signe | ce qu'il marque | exemple |
+|---|---|---|
+| `'` et `"` | le registre | `A'8`, `B"8` |
+| `#` | l'altération | `G#5` |
+| `-` suivi d'un chiffre | une variante | `Tr-11`, `A'6-2` |
+
+⚠️ **Aucun des trois documents ne le disait.** Le tokenizer écrit à la main l'applique depuis
+toujours ; il a fallu qu'une grammaire refuse deux familles de scènes pour que ça se voie.
+
+⚠️ Et c'est un **conflit lexical** à garder en tête pour la suite : `#` est à la fois un caractère
+de nom et l'opérateur de contexte négatif ; `-` est à la fois un caractère de nom et le silence.
+Le parseur actuel tranche par le contexte ; une grammaire doit le dire explicitement, et c'est
+elle qui a rendu le conflit visible.
