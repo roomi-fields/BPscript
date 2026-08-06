@@ -121,6 +121,9 @@ par les décisions et par Romain, pas par le compilateur.
     scoping flags, @scene/@expose/@alias, câblage >>/!>>, sys) · (docs moteur BPx migrées dans le dépôt BPx :
     `../BPx/docs/ARCHITECTURE.md`, `../BPx/docs/ENGINE_SPEC.md`, `../BPx/docs/IMPLEMENTATION.md`)
     · `INTERFACES_BP3.md` (interface WASM in/out) · `TEMPORAL_DEFORMATION.md` (constraint solver)
+    · `PARSEUR_DERIVE.md` (chantier « parseur dérivé d'un formalisme » — phase 0, la mesure de
+      départ : 56 natures produites, 22 nommées nulle part, et pourquoi `bpscript.grammar` est une
+      création et non une reprise)
   - `reference/` — `WASM_HOWTO.md` · `NATIVE_HOWTO.md` · `BP3_FILE_FORMATS.md` · `HO_FORMAT.md`
   - `issues/` — `POLYMAKE_STACK.md` (stack overflow polymétrie imbriquée) · `RNG_PORTABLE.md`
     (portabilité RNG MSVC/glibc) · `TEMPO_OPS_WASM.md` (opérateurs tempo `/N` `\N` `_tempo()` :
