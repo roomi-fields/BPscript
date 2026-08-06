@@ -686,7 +686,7 @@ librairie invoquee arrete la compilation, et le message le nomme.
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
 :              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:vel:80)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
-               (*:vel:80, *:sombre) ; dans une vitesse, ecrit la fraction (! (*3/2))
+               (*:vel:80, *:sombre) ; dans une vitesse, ralentit (! (*2), ! (*3/2))
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [stage=2])
 .              reference a une entite (alphabet.western, lpf1.cutoff, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
@@ -1018,7 +1018,8 @@ S -> {A B C}:0.5                // le groupe occupe un demi-battement
 Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time` :
 
 ```text
-/N   *N     les deux operateurs temporels -- fraction (*3/2) et decimal (/1.5) admis
+/N   *N     les deux operateurs temporels, inverses l'un de l'autre -- entier, decimal
+            ou fraction pour chacun (/2 /1.5 /3/2, *2 *1.5 *3/2)
 mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight      poids de la regle -- un entier, `inf` pour la priorite absolue, ou un K-param
@@ -1243,7 +1244,7 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 | `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                  |
 | `!(seed:N)`                                   | **reglage pose DANS LE FLUX** -- element sans duree (`InstantControl`)           |
 | `C4 !prise` *(nom d'une definition)*          | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur |
-| `! (/N)` · `! (*N/M)`                         | **changement de vitesse** pose dans le flux (`SpeedChange`)                     |
+| `! (/N)` · `! (*N)`                           | **changement de vitesse** pose dans le flux (`SpeedChange`)                     |
 | `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                   |
 
 C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
@@ -1763,7 +1764,7 @@ S -> C4 D4
 Une entree s'ecrit `[<rang>] <echelle> <forme>` :
 
 - `<rang>` -- la place de l'entree dans le catalogue, entre crochets.
-- `<echelle>` -- `/N` ou `*N/M`, `/1` quand elle est omise.
+- `<echelle>` -- `/N` ou `*N`, `/1` quand elle est omise.
 - `<forme>` -- les memes `?` que dans une regle, un par terminal efface, **anonymes** : le numero
   appartient a la regle, ou une fleche les rejoue. Plus des points `.` (fragments de duree egale) et
   des groupes appariees `($N ...)`, imbricables -- les memes maitres et esclaves que dans une regle.
@@ -2276,9 +2277,15 @@ S -> C4 ! (/2) {D4 E4} F4         // le groupe herite de la vitesse en cours
 **Ce qu'une vitesse couvre en herite** : un groupe qui n'en pose pas garde celle du contexte qui le
 contient.
 
-**`/N` accelere, et `*N/M` ecrit la meme chose en fraction inverse** : `*a/b` vaut `/(b/a)`. `/2` va
-deux fois plus vite, et `*2/3` vaut `/1.5`, une fois et demie plus vite. La graphie fractionnaire
-existe parce que `*2/3` se lit mieux que `/1.5`.
+**`/` et `*` sont deux operations INVERSES l'une de l'autre** : `*n` vaut `/(1/n)`, et `/n` vaut
+`*(1/n)`. `/` accelere, `*` ralentit -- `! (/2)` va deux fois plus vite, `! (*2)` deux fois moins
+vite, et les deux ecrivent le meme rapport dans un sens ou dans l'autre.
+
+**Les deux prennent un ENTIER, un DECIMAL ou une FRACTION** -- `/2` `/1.5` `/3/2` comme `*2` `*1.5`
+`*3/2`. Aucune des trois formes de nombre n'est reservee a l'un des deux signes.
+
+La graphie fractionnaire existe parce qu'un rapport se lit parfois mieux ainsi : `*2/3` vaut
+`/1.5`, une fois et demie plus vite.
 
 ### La nature du temps -- `@striated` et `@smooth`
 

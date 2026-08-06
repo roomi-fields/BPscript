@@ -525,7 +525,9 @@ Un réglage posé dans le flux vaut pour ce qui **suit**, au-delà des bords de 
 prochain sac. Le flux est un **état courant** : une note échantillonne la valeur en vigueur à son
 instant d'attaque, et sa portée est **par voix**.
 
-`/N` accélère, et `*N/M` écrit la même chose en fraction inverse : `*a/b` vaut `/(b/a)`.
+`/` et `*` sont deux opérations **inverses** l'une de l'autre : `*n` vaut `/(1/n)`. `/` accélère,
+`*` ralentit. Les deux prennent un **entier**, un **décimal** ou une **fraction** — `/2` `/1.5`
+`/3/2` comme `*2` `*1.5` `*3/2`.
 
 ### `Wait` et `SymbolWithWait` — le point d'attente
 
@@ -680,7 +682,7 @@ droit) · `!accolé` (collé, flux conjoint) · `!inline` (espacé, événement 
 |---------|:---:|:---:|:---:|:---:|:---:|------|
 | **durée `:N`** | ✅ | ✅ | ❌ | ❌ | ❌ | `Polymetric.frame` — le terminal ou le groupe est emballé |
 | **réglage `(clé:val)`** | ✅ | ✅ | ✅ | ✅ | ✅ | `…suffixQualifiers` · `Rule.settings` · `Polymetric.settings` · `InstantControl` |
-| **vitesse `(/N)` `(*N/M)`** | ❌ | ❌ | ❌ | ❌ | ✅ | `SpeedChange`, dans un `InstantControl` |
+| **vitesse `(/N)` `(*N)`** | ❌ | ❌ | ❌ | ❌ | ✅ | `SpeedChange`, dans un `InstantControl` |
 | **garde `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.guard` |
 | **mutation `[…]`** | ❌ | ❌ | ✅ | ❌ | ❌ | `Rule.flags` |
 
