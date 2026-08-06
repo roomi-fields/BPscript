@@ -64,6 +64,30 @@ const VAR_CONVENTIONS = new Set(['signal', 'pitch', 'phase', 'logic']);
  * (`properties.transport`, `TransportRef`, `references[transport]`) NE CHANGE PAS de nom : seul
  * le mot que l'auteur ÉCRIT change.
  */
+// LES CINQ CLÉS D'UN ACTEUR — la bible fait foi (LANGUAGE.md, « Les composants d'un acteur »).
+//
+// ⚠️ AUCUNE CLÉ RETIRÉE — et les trois tentatives du 2026-08-06 méritent d'être écrites, parce
+// qu'elles ont chacune failli casser quelque chose de vivant.
+//   · `sounds` : je l'ai prise pour un vestige, puisqu'elle est écartée À LA MAIN plus bas
+//     (`key !== 'sounds'`). Mesure après retrait : `sounds:tabla_perc` devenait SILENCIEUSEMENT
+//     ACCEPTÉE. Elle est dans cet ensemble pour être REFUSÉE — c'est la pierre tombale de la
+//     graphie v0.7 — et l'exclusion manuelle plus bas dit seulement qu'elle n'est pas une clé
+//     VALIDE. ⚠️ Un nom dans une liste peut y être pour interdire, jamais pour permettre : le
+//     retirer ouvre au lieu de fermer.
+//   · `sound` et `voice` : absentes de la bible et d'aucune scène. La bible écrit « les CINQ clés d'un acteur »
+// et n'y cite ni `sound` ni `voice` ; le corpus n'en écrit aucune des deux. Les retirer sur ces
+// deux mesures aurait supprimé une fonctionnalité VIVANTE : `voice` porte NEUF assertions dédiées
+// (`test_voices.js`) et une librairie de quatorze entrées, `sound` en a d'autres. « Aucune scène
+// ne l'écrit » ne veut pas dire « ça ne sert plus » — ça peut vouloir dire « pas encore adopté ».
+// Les retirer aurait supprimé une fonctionnalité VIVANTE : `voice` porte NEUF assertions dédiées
+//     (`test_voices.js`) et une librairie de quatorze entrées. « Aucune scène ne l'écrit » ne veut
+//     pas dire « ça ne sert plus » — ça peut vouloir dire « pas encore adopté ».
+// L'écart bible↔code sur `sound` et `voice` est RÉEL et remonté à Romain, non tranché.
+//
+// ⚠️ CETTE LISTE N'A PAS DE DOMICILE DANS LA DONNÉE, et ce n'est pas un oubli : lui en donner un
+// est une décision de structure, posée à Romain le 2026-08-06 et non tranchée. Elle ne peut PAS
+// se déduire des listes existantes — `scale` et `sound` sont des axes de catalogue qui ne sont
+// PAS des clés d'acteur, donc une dérivation serait fausse.
 const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'out', 'sound', 'sounds', 'eval', 'voice']);
 
 /**
@@ -1906,7 +1930,7 @@ function parse(tokens, opts = {}) {
         if (next === T.PERIOD && !peek(1).spaceBefore) {
           // Vérifier qu'on est sur une clé reconnue (sinon, sortir : c'est un
           // symbole, début de règle).
-          const isEntityKey = ACTOR_ENTITY_KEYS.has(key) && key !== 'sounds';
+          const isEntityKey = ACTOR_ENTITY_KEYS.has(key);
           if (!isEntityKey) break;
           advance();           // consume key IDENT
           advance();           // consume PERIOD
