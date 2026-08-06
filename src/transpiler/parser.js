@@ -4808,11 +4808,21 @@ function parse(tokens, opts = {}) {
 
     const name = expect(T.IDENT).value;
     let args = null;
-    // Parse () as template params ONLY if not a runtime qualifier
-    if (at(T.LPAREN) && !isRuntimeQualifier()) {
+    // ARGUMENTS DE GABARIT vs SAC DE RÉGLAGES — c'est l'ESPACE qui tranche, comme partout
+    // ailleurs dans le langage (AST.md, tableau des portées : un suffixe COLLÉ porte sur
+    // l'élément, un suffixe ESPACÉ porte sur la règle). `$Tihai(transpose:-200c)` donne ses
+    // arguments au gabarit ; `$A16 (meter:4/4)` pose un réglage de règle.
+    //
+    // ⚠️ SANS LA CONDITION D'ESPACE, un réglage de règle écrit après une ancre de gabarit
+    // tombait dans la lecture d'arguments ci-dessous. `isRuntimeQualifier()` ne le rattrapait
+    // pas : il exige que le nom soit un contrôle CONNU, et il ne l'est que si la scène a
+    // chargé `@controls` — ce que ces scènes ne font pas. Mesuré : une seule écriture de
+    // l'écosystème donne des arguments à un gabarit, et elle est COLLÉE.
+    if (at(T.LPAREN) && !current().spaceBefore && !isRuntimeQualifier()) {
       args = [];
       advance();
       while (!at(T.RPAREN) && !atEnd()) {
+        const avant = pos;
         let key = null;
         if (at(T.IDENT) && peek(1).type === T.COLON) {
           key = advance().value;
@@ -4823,6 +4833,20 @@ function parse(tokens, opts = {}) {
         else if (at(T.IDENT)) value = { type: 'Literal', value: advance().value };
         args.push({ type: 'Arg', key, value });
         if (at(T.COMMA)) advance();
+        // ⛔ CETTE BOUCLE NE DOIT JAMAIS PIÉTINER. Un jeton qu'aucune branche ne consomme la
+        // faisait tourner SANS FIN en empilant des arguments vides : le compilateur mangeait
+        // toute la mémoire de la machine au lieu de rendre une erreur. Mesuré le 2026-08-06 sur
+        // `$A16 (meter:4/4)` — 6,6 Go en 45 s, session distante perdue. Un refus nommé vaut
+        // toujours mieux qu'une machine à genoux, et il vaut pour TOUT jeton inattendu, pas
+        // seulement pour la barre de fraction qui l'a révélé.
+        if (pos === avant) {
+          throw new ParseError(
+            `'$${name}(…${current().value}…)' : '${current().value}' n'a pas sa place dans les `
+            + `arguments d'un gabarit — ils s'écrivent 'nom:valeur', séparés par des virgules. `
+            + `Pour poser un RÉGLAGE sur la règle, une ESPACE le détache du gabarit `
+            + `('$${name} (${key || 'clé'}:…)')`,
+            current());
+        }
       }
       expect(T.RPAREN);
     }

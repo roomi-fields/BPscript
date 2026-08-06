@@ -33,7 +33,7 @@ const RACINE = path.resolve(ICI, '..');
 const HUB = path.resolve(RACINE, '..', 'hub');
 const DOCS = [
   ['contrat', path.join(HUB, 'contrats', 'bpscript-bpx.md')],
-  ['fiche', path.join(HUB, 'projets', 'bpscript.md')],
+  ['fiche', path.join(HUB, 'projets', 'agents', 'bpscript.md')],
 ];
 
 // ─── 1. SOCLE — refuser de conclure sur du vide ──────────────────────────────────────────────

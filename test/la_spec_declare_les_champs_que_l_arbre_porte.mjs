@@ -57,8 +57,17 @@ function champsDeclares(texte) {
 // ────────────────────────────────────────────────────────────────────────────
 function champsPortes() {
   const vus = new Map(); // nœud -> Map(champ -> occurrences)
+  // ⚠️ SANS CE JEU DE DÉJÀ-VUS, LE MARCHEUR NE TERMINE PAS. L'arbre n'est pas un arbre : des
+  // nœuds y sont PARTAGÉS (une même déclaration référencée depuis plusieurs endroits, un
+  // acteur cité par ses règles). Une descente naïve les reparcourt à chaque chemin qui y mène
+  // — mesuré à la première écriture : 6,6 Go et mort par saturation en 45 s. Le garde était
+  // passé UNE fois au portillon, par chance : c'est le faux vert que je passe mes journées à
+  // chasser, produit par le garde lui-même. Chaque objet n'est compté qu'une fois.
+  const dejaVus = new WeakSet();
   const marcher = (x) => {
     if (!x || typeof x !== 'object') return;
+    if (dejaVus.has(x)) return;
+    dejaVus.add(x);
     if (Array.isArray(x)) { x.forEach(marcher); return; }
     if (typeof x.type === 'string') {
       if (!vus.has(x.type)) vus.set(x.type, new Map());
