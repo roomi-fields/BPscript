@@ -15,7 +15,7 @@ for (const s of ['@core\nS -> C4 D4 E4', '@alphabet.sargam\nS -> sa re ga', 'S -
 
 console.log('\n=== 2. L ARBRE QU IL EN TIRE ===');
 const r = parse('@core\nS -> C4 {A B, C} -\n');
-const regle = r.value.subgrammars[0].rules[0];
+const regle = r.value.rules[0];
 console.log('  regle :', regle.lhs.name, regle.arrow);
 for (const e of regle.rhs) {
   const d = e.$type === 'SymbolRef' ? e.name : e.$type === 'Polymetric'

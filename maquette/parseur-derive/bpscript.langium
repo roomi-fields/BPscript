@@ -17,17 +17,18 @@
 
 grammar BPScript
 
+// ⚠️ PAS DE RÉPÉTITION ENGLOBANTE AU SOMMET. Mesuré à la maquette : avec `subgrammars+=Subgrammar`
+// et `Subgrammar: rules+=Rule+`, TOUTE faute — même au milieu d'un groupe, à la ligne 40 —
+// remontait à « ligne 1, colonne 1 ». Une itération au sommet avale l'échec de ce qu'elle répète.
+// Les règles sont donc filles directes de la scène : chacune échoue à SA place.
 entry Scene:
-    NL* (directives+=Directive NL+ | subgrammars+=Subgrammar)*;
+    NL* (directives+=Directive NL+ | rules+=Rule)*;
 
 // ── La partie déclarative, réduite à l'invocation de librairie ───────────────
 Directive:
     '@' name=ID ('.' target=ID)?;
 
 // ── Les règles de production ────────────────────────────────────────────────
-Subgrammar:
-    rules+=Rule+;
-
 // ⚠️ LA FIN DE LIGNE FAIT PARTIE DE LA GRAMMAIRE. Mesuré à la maquette : avec l'espace entièrement
 // caché, deux règles qui se suivent se fondent en une — le membre droit de la première avale la
 // tête de la seconde, puis la flèche échoue. Le retour à la ligne n'est donc PAS de la mise en

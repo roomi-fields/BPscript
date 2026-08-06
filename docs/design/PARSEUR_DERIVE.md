@@ -128,7 +128,7 @@ dans ce langage, il **termine une règle**. Une fois déclaré, les cinq formes 
 ⚠️ Cette contrainte ne se voyait dans aucun des trois documents. Elle s'est vue à la première
 exécution.
 
-**3. ⚠️ LES MESSAGES D'ERREUR PAR DÉFAUT NE VALENT RIEN — et c'est moi qui avais sur-affirmé.**
+**3. Les messages d'erreur — ⚠️ MA PREMIÈRE CONCLUSION ÉTAIT FAUSSE, DEUX FOIS. Voir plus bas.**
 J'avais écrit à Romain que ces outils donnent « la gestion d'erreur des compilateurs standards :
 position, jetons attendus, reprise ». Mesuré sur trois fautes évidentes :
 
@@ -152,3 +152,63 @@ n'était pas dans mon plan.
 - **Le troisième formalisme monte en importance.** Le catalogue de diagnostics n'est pas un
   complément : c'est la moitié du travail.
 - **Le renommage des nœuds est une frontière**, à annoncer avant d'écrire.
+
+
+---
+
+# Phase 2 bis — je m'étais trompé sur les diagnostics, deux fois
+
+**Mesuré une heure après la première conclusion**, sur les mêmes trois fautes.
+
+J'avais écrit : *« les messages d'erreur par défaut ne valent rien, c'est inutilisable tel quel,
+l'exigence de Romain ne vient pas avec l'outil »*. C'était faux pour **deux raisons distinctes**,
+et aucune des deux n'était l'outil.
+
+## Première erreur : j'ai mesuré les réglages par défaut sans chercher le point d'accroche
+
+L'outil expose `LangiumParserErrorMessageProvider`, fait pour être remplacé. Un **catalogue de
+diagnostics** de vingt lignes — le troisième formalisme du plan, en miniature — suffit à traduire
+« ce que la grammaire attendait » en « ce que l'auteur doit écrire ».
+
+⚠️ **Condamner un outil sur ses défauts sans chercher ses réglages, c'est mesurer sa configuration
+et croire mesurer ses capacités.** Je l'avais écrit à Romain comme un fait.
+
+## Seconde erreur, et c'est la plus instructive : le coupable était MA GRAMMAIRE
+
+Même avec le catalogue branché, les trois fautes rendaient encore le **même message** à la **même
+position « ligne 1, colonne 1 »**. La cause n'était pas dans la traduction des messages : elle
+était dans la **forme de la grammaire**.
+
+J'avais écrit une répétition englobante au sommet — `rules+=Rule+` dans un `Subgrammar`, lui-même
+répété dans la scène. **Une itération au sommet avale l'échec de ce qu'elle répète** : toute faute,
+même à la ligne 40, remonte au premier caractère du fichier. Les règles rendues **filles directes
+de la scène**, chacune échoue à sa place.
+
+## Le résultat, sur les mêmes trois fautes
+
+```
+"S -> "         ligne 1, colonne  6 — il en faut au moins un — attendu : {, -, _, NUMBER, ID
+"S C4 D4"       ligne 1, colonne  3 — aucune écriture connue ne commence ainsi — attendu : ->, <-, <>
+"S -> {A B, C"  ligne 1, colonne 13 — attendu : }
+```
+
+Trois fautes, trois positions, trois messages, avec les jetons attendus. **C'est la gestion
+d'erreur des compilateurs standards**, et elle est atteinte.
+
+## Ce que ça change au plan — dans le bon sens
+
+- **L'exigence de Romain est tenable** : « tout ce qui n'est pas spécifié est en erreur », avec des
+  erreurs explicites. Rien dans la mesure ne s'y oppose.
+- **Le catalogue reste nécessaire** — mais c'est vingt lignes plus une entrée par forme retirée,
+  pas la moitié du travail que j'annonçais.
+- ⚠️ **Et une exigence nouvelle, qu'aucun document ne portait : la QUALITÉ DES DIAGNOSTICS EST UNE
+  PROPRIÉTÉ DE LA GRAMMAIRE.** Une grammaire mal découpée rend des erreurs inutilisables sans que
+  rien ne le signale. Ce sera à garder : un garde qui vérifie qu'une faute est rapportée À SA
+  PLACE, sur un jeu de fautes témoins.
+
+## Vitesse — mesurée, et ce n'est pas un critère
+
+274 scènes, 417 Ko : **1,13 ms par scène** pour l'analyseur engendré, **2,94 ms** pour le parseur
+actuel (qui fait en plus la résolution et le scellement). Les 283 ms cités plus haut sont le temps
+d'ENGENDRER l'analyseur — une étape de construction, faite une fois. La confusion était dans ma
+rédaction.
