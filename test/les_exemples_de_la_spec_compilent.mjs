@@ -175,7 +175,14 @@ const RETARD_REGLES = new Map([
   ['S -> C4:0.5 D4 E4', /ligne non reconnue au niveau des règles/],
   ['Motif -> {C4 D4}:2 E4:0.5', /ligne non reconnue au niveau des règles/],
   ['S -> C4(vel:0.7) D4:0.5 E4 F4 (mode:random)', /ligne non reconnue au niveau des règles/],
-  // (b) le SAC COLLÉ à un groupe ou à un terminal, et le COMPOSANT d'une instance (`lpf1.cutoff`)
+  // (b) LE SAC COLLÉ à un groupe ou à un terminal, avec le COMPOSANT d'une instance.
+  //     ⚠️ CAUSE RÉVISÉE le 2026-08-06 : la FORME est désormais reconnue — `(env1.attack:400)`
+  //     compile et rend `{key:'env1', component:'attack', value:400}`, exactement ce que
+  //     `AST.md` §Setting déclare. Ce qui reste tient à DEUX choses étrangères à la forme :
+  //     l'instance `lpf1` n'est pas déclarée dans l'enveloppe que ce garde fabrique autour d'une
+  //     ligne isolée, et le module `lpf` est absent de `lib/mod.json` (trou de donnée connu, déjà
+  //     inventorié au cliquet du dessus). Le compte ne bouge donc pas, mais il ne dit plus la
+  //     même chose : sans cette note, un lecteur croirait la forme toujours refusée.
   ['S -> {A B C}(lpf1.cutoff:4000)', /Expected arrow/],
   ['S -> C4(lpf1.cutoff:400)', /Expected argument value/],
   ['S -> { C4 D4 }(lpf2.cutoff:800)', /Expected arrow/],

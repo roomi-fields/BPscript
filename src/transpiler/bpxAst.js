@@ -1117,7 +1117,13 @@ function validateReferences(ast) {
   //    adresse ∪ fonction digitale ∪ réglage réservé. Les paires d'occurrence vivent dans
   //    `payload.params` (note ou groupe/règle, foldées par le parser) ET dans les
   //    `SettingBag.pairs`.
-  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k);
+  // Les INSTANCES de module que la scène déclare (`@var lpf1 lpf`) : un réglage peut nommer le
+  // PORT de l'une d'elles (`(lpf1.cutoff:400)`, `AST.md` §Setting). Le nom d'une instance est
+  // choisi par l'auteur — aucun registre de librairie ne peut le connaître, il faut le lire dans
+  // la scène. Sans cela, sept exemples de la bible tombaient sur « attribut inconnu ».
+  const instancesDeclarees = new Set(
+    (ast.vars || []).flatMap((v) => (v && Array.isArray(v.names) ? v.names : [])));
+  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k);
   // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
   //
   // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,

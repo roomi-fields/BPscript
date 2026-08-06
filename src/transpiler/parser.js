@@ -3706,6 +3706,13 @@ function parse(tokens, opts = {}) {
     if (!at(T.LPAREN)) return false;
     const nextTok = peek(1);
     if (nextTok.type !== T.IDENT) return false;
+    // `(lpf1.cutoff:400)` — le COMPOSANT d'une INSTANCE de module. `lpf1` n'est pas un contrôle,
+    // c'est une variable que la scène a déclarée (`@var lpf1 lpf`) : le registre des contrôles ne
+    // peut pas la connaître. `AST.md` déclare ce cas de longue date (`Setting.component` — « le
+    // composant nommé par le point : (cc.98:45), (lpf1.cutoff:400) ») ; seule la reconnaissance
+    // manquait, et sept exemples de la bible tombaient dessus.
+    if (nomsVariables.has(nextTok.value) && peek(2).type === T.PERIOD
+        && peek(3).type === T.IDENT && peek(4).type === T.COLON) return true;
     if (!libCtx.controlNames.has(nextTok.value)) return false;
     // Known control followed by : , ) or . (référence pointée v0.8) = runtime qualifier
     const afterName = peek(2);
@@ -3896,6 +3903,28 @@ function parse(tokens, opts = {}) {
         // OPAQUEMENT par BPx (AST_SPEC §« il ne les interprète jamais »), un champ de plus les
         // traverse donc sans rien casser. C'est le runtime de sortie qui sait qu'un CC a un numéro.
         pairs.push({ key, component, value: valeur, ...sub, ...pos });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
+      // `lpf1.cutoff:400` — le PORT d'une instance de module. Le point nomme le composant, le
+      // deux-points lui affecte une valeur : la règle d'or du langage, appliquée à une instance.
+      // Même forme d'arbre que le contrôleur numéroté `cc.98:45` — `component` porte ce que le
+      // point appelle, jamais ce qui le précède.
+      if (at(T.PERIOD) && nomsVariables.has(key) && peek(1).type === T.IDENT
+          && peek(2).type === T.COLON) {
+        advance();                                   // .
+        const composant = advance().value;           // le port
+        advance();                                   // :
+        if (current().spaceBefore) {
+          throw new ParseError(
+            `'${key}.${composant}: ' — pas d'espace après le deux-points : la valeur commence `
+            + `immédiatement ('${key}.${composant}:${current().value}')`, current());
+        }
+        let valeur;
+        if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
+        else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
+        else valeur = expect(T.IDENT).value;
+        pairs.push({ key, component: composant, value: valeur, ...sub, ...pos });
         if (at(T.COMMA)) advance();
         continue;
       }
