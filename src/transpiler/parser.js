@@ -25,7 +25,23 @@ class ParseError extends Error {
  * (cf. splitAddress). `ch` et `channel` sont synonymes (forme courte/longue). Aligné sur les
  * params de `out.<type>(…)` côté acteur (canal/device/port).
  */
-const ADDRESS_KEYS = new Set(['ch', 'channel', 'device', 'port']);
+/**
+ * Clés d'ADRESSE de sortie — lues dans la DONNÉE (`lib/core.json` schema.addressKeys).
+ * ⚠️ Elles étaient codées en dur ICI en plus d'y être déclarées : deux exemplaires identiques,
+ * donc un double qui n'attendait qu'une divergence. Retiré le 2026-08-06, dans le même geste que
+ * les axes de catalogue, qui avaient déjà payé ce défaut le jour même.
+ */
+let _addressKeys = null;
+function addressKeys() {
+  if (_addressKeys) return _addressKeys;
+  const core = loadLib('core') || {};
+  const keys = core?.schema?.addressKeys;
+  if (!Array.isArray(keys) || keys.length === 0) {
+    throw new Error("lib/core.json schema.addressKeys est vide ou absent — le parseur n'a plus de clés d'adresse");
+  }
+  _addressKeys = new Set(keys);
+  return _addressKeys;
+}
 
 /**
  * CONVENTION — les quatre lectures d'un flux de nombres qu'un `@var` typé peut nommer
@@ -58,7 +74,27 @@ const ACTOR_ENTITY_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'out', 'soun
  * (Romain 2026-07-14, tour [412]) rejette `@axe:<X>` pour chacun — plus jamais d'axe-composant qui
  * tolère l'ancienne forme.
  */
-const CATALOG_AXIS_KEYS = new Set(['alphabet', 'tuning', 'octaves', 'scale', 'sound']);
+/**
+ * Axes dont les valeurs sont des ENTRÉES DE CATALOGUE — lus dans la DONNÉE, jamais listés ici.
+ *
+ * ⚠️ CETTE LISTE ÉTAIT CODÉE EN DUR, EN DOUBLE DE `lib/core.json` schema.catalogAxes. Le schéma
+ * structurel est une donnée depuis le 2026-07-05 (Romain) précisément pour qu'un axe déclaré une
+ * fois vaille partout. Le double a fait exactement ce qu'un double fait : le 2026-08-06, `eval`
+ * a été ajouté à la donnée et n'a rien changé — le parseur lisait toujours ses cinq noms.
+ * ⚠️ Et le défaut était MUET : la déclaration semblait posée, la garde ne mordait pas, et j'ai
+ * conclu « configuration sans effet » sur une mesure qui ne mesurait pas ce que je croyais.
+ */
+let _catalogAxisKeys = null;
+function catalogAxisKeys() {
+  if (_catalogAxisKeys) return _catalogAxisKeys;
+  const core = loadLib('core') || {};
+  const axes = core?.schema?.catalogAxes;
+  if (!Array.isArray(axes) || axes.length === 0) {
+    throw new Error("lib/core.json schema.catalogAxes est vide ou absent — le parseur n'a plus d'axes de catalogue");
+  }
+  _catalogAxisKeys = new Set(axes);
+  return _catalogAxisKeys;
+}
 
 /**
  * Noms de canal de sortie PÉRIMÉS → rejetés fail-loud au parse (décision 2026-07-16, Romain :
@@ -969,7 +1005,7 @@ function parse(tokens, opts = {}) {
     let hasA = false;
     let hasC = false;
     for (const [k, v] of Object.entries(params)) {
-      if (ADDRESS_KEYS.has(k)) { address[k] = v; hasA = true; }
+      if (addressKeys().has(k)) { address[k] = v; hasA = true; }
       else { controls[k] = v; hasC = true; }
     }
     return { address: hasA ? address : null, controls: hasC ? controls : null };
@@ -2108,7 +2144,7 @@ function parse(tokens, opts = {}) {
     // Le `:` n'affecte QUE des valeurs (@tempo:120, @diapason:N…). On REJETTE `@axe:<X>` pour TOUT
     // axe à catalogue, sans trou. Le garde `!subkey` préserve `@alphabet.western:midi` (subkey =
     // composant résolu, puis `:` affecte une valeur). Pour tuning, `@diapason:<N>` porte la freq.
-    if (CATALOG_AXIS_KEYS.has(name) && !subkey && at(T.COLON)) {
+    if (catalogAxisKeys().has(name) && !subkey && at(T.COLON)) {
       const hint = name === 'tuning'
         ? " ; fréquence de référence → '@diapason:<N>' ; tuning personnel → '@mine.<chemin>.<nom>'"
         : '';

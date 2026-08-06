@@ -664,8 +664,18 @@ function describeVocabulary(directives = []) {
   const components = {};
   for (const axis of ctx.catalogAxes) {
     const file = loadLib(axis);
+    // DEUX FORMES DE FICHIER, ET LE CHOIX EST MESURÉ. Les librairies de DONNÉES posent leurs
+    // entrées à la RACINE (`alphabets.json` → western, sargam…) ; celles de CODE les groupent
+    // sous `objects` (`mod.json`, `voices.json`, et `eval.json` depuis le 2026-08-06). Aucun
+    // fichier ne fait les deux — vérifié sur les huit concernés avant d'écrire cette ligne, ce
+    // qui est la raison pour laquelle `objects` peut primer sans rien ambiguïser.
+    // Sans ce cas, un axe de catalogue dont les entrées vivent sous `objects` rendait une liste
+    // VIDE : tout nom y devenait inconnu, ou — pire, et c'est ce qui est arrivé — la déclaration
+    // de l'axe restait sans effet et n'importe quel nom passait en silence.
     components[axis] = file
-      ? Object.keys(file).filter((k) => !k.startsWith('_') && !META.has(k) && isEntry(file[k]))
+      ? (file.objects && isEntry(file.objects)
+          ? Object.keys(file.objects).filter((k) => !k.startsWith('_'))
+          : Object.keys(file).filter((k) => !k.startsWith('_') && !META.has(k) && isEntry(file[k])))
       : [];
   }
   const pick = (def, keys) => {
