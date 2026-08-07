@@ -220,7 +220,6 @@ const RETARD_REGLES = new Map([
   //     donc la suite de la règle reste orpheline. C'est une QUESTION DE SENS posée à Romain —
   //     la ligne manque-t-elle son point d'exclamation, ou un sac séparé est-il légitime au
   //     milieu d'une règle ? — et elle touche toute la famille des instantanés, pas cette clé.
-  ['S -> C4 (rndtime:100) D4 E4', /Expected arrow \(-> <- <>\), got (NEWLINE|COMMENT)/],
 ]);
 
 let regles = 0;
@@ -312,6 +311,9 @@ for (const [ligne] of RETARD_REGLES) {
 // `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` est appliquée, les grammaires de
 // SUBSTITUTION compilent (contexte, joker, dièse). Quatre exemples d'aide sortent pour la même
 // raison, plus bas. Ce sont les cliquets qui l'ont EXIGÉ en rougissant.
+// RESSERRÉ le 2026-08-07 (3e fois) : la ligne `S -> C4 (rndtime:100) D4 E4` de la bible
+// COMPILE — un sac séparé au MILIEU d'une règle est un réglage posé dans le flux (tranché par
+// Romain, « les règles et l'antécédent sont clairs »). Elle sort des DEUX cliquets.
 const RETARD_BLOCS = new Map([
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
@@ -327,7 +329,6 @@ const RETARD_BLOCS = new Map([
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['Motif -> C4 D4 E4 #0', /appel 'accent\(E4\)' : 'accent' n'existe pas —/],
   ['S -> $mel &mel      // deux productions possibles : les deux moities sont toujours identiques #0', /terminal 'mel' non déclaré — absent des alph/],
-  ["S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes #0", /Expected arrow \(-> <- <>\), got (NEWLINE|COMMENT)/],
   ['S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante #0', /terminal 'C4E4G4' non déclaré — absent des a/],
   ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'&mel\(…\/…\)' : '\/' n'a pas sa place dans les /],
 ]);

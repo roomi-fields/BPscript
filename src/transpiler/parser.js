@@ -3589,22 +3589,25 @@ function parse(tokens, opts = {}) {
         continue;
       }
       if (at(T.LBRACKET) && current().spaceBefore) break;
-      // ⚠️ UN SAC SÉPARÉ PAR UNE ESPACE EST TOUJOURS LU COMME UN SUFFIXE DE RÈGLE, MÊME AU MILIEU.
-      // Conséquence : `S -> C4 (rndtime:100) D4 E4` — écrit tel quel dans la bible — casse ici et
-      // laisse `D4 E4` orphelins (« flèche attendue »).
+      // UN SAC SÉPARÉ PAR UNE ESPACE N'EST UN SUFFIXE DE RÈGLE QUE S'IL EST EN FIN DE RÈGLE.
       //
-      // ⚠️ ET JE NE LE CORRIGE PAS, PARCE QUE C'EST UNE QUESTION DE SENS, PAS DE CODE. Le langage
-      // a déjà une écriture pour poser un réglage DANS LE FLUX : le point d'exclamation,
-      // `S -> C4 !(rndtime:100) D4` — qui compile. Deux lectures de la ligne de la bible sont
-      // possibles, et rien ici ne permet de choisir : soit il lui manque son point d'exclamation
-      // (correction de doc), soit un sac séparé au milieu d'une règle est légitime sans lui
-      // (défaut de parseur, et alors le point d'exclamation devient facultatif — ce qui touche
-      // TOUTE la famille des instantanés, pas seulement `rndtime`).
-      // Trancher ça en essayant ce qui compile serait employer un outil qui répond à « est-ce que
-      // ça passe » pour une question qui demande « qu'est-ce que ça veut dire ». Question posée à
-      // Romain le 2026-08-07 ; `isEndOfRhs()` (plus bas, jamais appelée) est le correctif déjà
-      // rédigé qui attend cette réponse.
-      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifierLoose()) break;
+      // ⚠️ TRANCHÉ PAR ROMAIN le 2026-08-07 : « les règles et l'antécédent sont clairs ». Sans ce
+      // départage, `S -> C4 (rndtime:100) D4 E4` — la ligne exacte de la bible — cassait la boucle
+      // au sac et laissait `D4 E4` orphelins (« flèche attendue »). AU MILIEU d'une règle, le même
+      // sac est un réglage POSÉ DANS LE FLUX : il vaut à partir de là, comme dans le moteur natif,
+      // mesuré — `_tempo(1/2) _rndtime(50) _scale(…)` dans `-da.checkNoteOff`.
+      //
+      // ⚠️ ET `isEndOfRhs()` EXISTAIT DÉJÀ, ÉCRITE POUR CE CAS EXACT ET APPELÉE NULLE PART. Un
+      // correctif entièrement rédigé, jamais branché : il ne rougissait pas, il ne servait pas, et
+      // rien ne pouvait le signaler. Une fonction morte est plus discrète qu'un défaut — elle a
+      // l'air d'une couverture.
+      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifierLoose() && isEndOfRhs()) break;
+      // Le même sac, AU MILIEU : un réglage posé dans le flux. Il ne voyage avec aucun terme et ne
+      // se réplique pas — d'où `conjoint: false`, comme un instantané détaché par une espace.
+      if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifierLoose()) {
+        elements.push({ type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: false });
+        continue;
+      }
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
       if (atAny(T.RBRACE, T.COMMA) && isNewRuleAhead()) break;
@@ -3741,18 +3744,35 @@ function parse(tokens, opts = {}) {
     // Scan past the () to see what follows
     let j = pos;
     if (tokens[j]?.type !== T.LPAREN) return false;
-    let depth = 1;
-    j++;
-    while (j < tokens.length && depth > 0) {
-      if (tokens[j].type === T.LPAREN) depth++;
-      else if (tokens[j].type === T.RPAREN) depth--;
+    // ⚠️ PLUSIEURS SACS PEUVENT SE SUIVRE EN SUFFIXE, et il faut les franchir TOUS. Mesuré sur
+    // `cv-adsr.bps` : `Bass -> C2 … (*:cutoff:env1, wave:sawtooth) (weight:50)` — s'arrêter au
+    // premier faisait voir une parenthèse derrière lui, donc « ce n'est pas la fin », donc le
+    // premier sac devenait un contrôle de flux. Sept scènes changeaient d'arbre pour cette seule
+    // raison, après les 91 du défaut précédent : la même correction, mesurée deux fois, a livré
+    // deux défauts distincts. Une seule mesure n'aurait montré que le premier.
+    while (tokens[j]?.type === T.LPAREN) {
+      let depth = 1;
       j++;
+      while (j < tokens.length && depth > 0) {
+        if (tokens[j].type === T.LPAREN) depth++;
+        else if (tokens[j].type === T.RPAREN) depth--;
+        j++;
+      }
     }
-    // After ), what's next?
-    while (j < tokens.length && tokens[j].type === T.NEWLINE) j++;
+    // ⚠️ CETTE FONCTION AVALAIT LA FIN DE LIGNE QU'ELLE DEVAIT DÉTECTER — corrigé le 2026-08-07.
+    // Elle sautait les retours à la ligne AVANT de regarder ce qui suit, donc après
+    // `Up1 -> C4 E4 G4 C5 (vel:55)` elle voyait le nom de la règle SUIVANTE et répondait « non,
+    // ce n'est pas la fin ». Elle ne pouvait rendre vrai qu'en toute fin de fichier.
+    //
+    // C'EST POURQUOI ELLE N'AVAIT JAMAIS ÉTÉ BRANCHÉE : elle ne marchait pas. Une fonction morte
+    // est plus discrète qu'un défaut — elle a l'air d'une couverture, et personne ne la mesure.
+    // Mesuré au moment de la brancher : 91 scènes du corpus changeaient d'arbre, un suffixe de
+    // règle devenant un contrôle de flux. `(vel:55)` cessait d'envelopper la règle pour ne valoir
+    // qu'à partir de là — une modification MUSICALE en silence, sur des scènes qui compilaient.
+    // Seule la comparaison des arbres l'a montrée ; aucun garde n'aurait parlé.
     const nextType = tokens[j]?.type;
-    return !nextType || nextType === T.EOF || nextType === T.SEPARATOR ||
-           nextType === T.LBRACKET || nextType === T.NEWLINE;
+    return !nextType || nextType === T.EOF || nextType === T.NEWLINE ||
+           nextType === T.SEPARATOR || nextType === T.LBRACKET || nextType === T.COMMENT;
   }
 
   function isRuntimeQualifier() {
