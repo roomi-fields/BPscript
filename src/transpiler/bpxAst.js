@@ -703,6 +703,24 @@ function validateTerminals(ast) {
   for (const c of ast.cvInstances || []) if (c && c.name) declared.add(c.name); // `cv NAME : …` → NAME est un modulateur utilisable comme terminal de règle (voix CV)
   for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
   for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
+  // LES NOMS D'HOMOMORPHISME — le nom INVOQUÉ et les ÉTIQUETTES DE SECTION.
+  // ⚠️ `LANGUAGE.md` §« Les tables d'homomorphisme » : « Elle s'applique entre un gabarit maître
+  // et son esclave, dont le NOM SE POSE ENTRE LES DEUX » — `S -> $N14 dhati &N14`. Ce nom n'est
+  // pas une note : c'est le marqueur qui dit quelle table transforme le rejeu. Il était refusé
+  // comme « terminal non déclaré ».
+  //
+  // ⚠️ ET IL Y AVAIT DÉJÀ UNE BRANCHE POUR ÇA, MORTE : le contrôle testait `el.role !==
+  // 'homomorphism'` et RIEN ne posait jamais ce rôle. Deuxième correctif entièrement rédigé et
+  // jamais branché trouvé aujourd'hui, après `isEndOfRhs()`. Une branche morte ne rougit pas, ne
+  // sert pas, et se lit comme une couverture.
+  //
+  // DEUX NOMS, PAS UN : une table à section unique s'invoque par son nom (`@homomorphism.dhati`
+  // → `dhati` dans le flux) et l'arbre la nomme `*` ; une table à sections nommées pose ses
+  // ÉTIQUETTES (`checkhomo` → `*`, `H`, `TR`, et les règles écrivent `S -> $X * TR &X Y`).
+  // N'en déclarer qu'un laisserait l'autre refusé — c'est la faute « on répare la forme qui s'est
+  // montrée » appliquée à un nom.
+  for (const d of ast.directives || []) if (d.name === 'homomorphism' && d.subkey) declared.add(d.subkey);
+  for (const h of ast.homomorphisms || []) if (h && h.name) declared.add(h.name);
   // Motifs temporels (@timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
   for (const d of ast.directives || []) if (d.name === 'timepatterns' && Array.isArray(d.timePatterns)) for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
   // VARIABLES DE TRAVAIL (`@var`, décision Romain 2026-07-27) : des symboles du flux qui ne sont

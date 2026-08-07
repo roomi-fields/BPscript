@@ -321,7 +321,6 @@ const RETARD_BLOCS = new Map([
   //     gabarit maître et son esclave, et le contrôle du vocabulaire le prend pour un
   //     terminal. La bible le décrit (« son nom se pose entre les deux ») ; le parseur ne
   //     range pas encore ce nom parmi les symboles légitimes du flux. Dette suivante.
-  ['@homomorphism.dhati #0', /terminal 'dhati' non déclaré/],
 
   // ⚠️ L'OBJET SONORE COMPOSÉ EST RATTRAPÉ — `|[C4 E4 G4]` compile, et une faute DEDANS crie.
   //     Ce qui reste tient au BLOC, pas à la forme : ses deux lignes illustrent la même
