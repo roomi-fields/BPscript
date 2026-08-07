@@ -1899,9 +1899,25 @@ function parse(tokens, opts = {}) {
         while (!at(T.RPAREN) && !atEnd()) {
           const paramKey = expect(T.IDENT).value;
           expect(T.COLON);
-          const paramVal = at(T.INT) ? Number(advance().value)
-                         : at(T.FLOAT) ? Number(advance().value)
-                         : advance().value;
+          // ⚠️ LE TIRET PASSE DANS UNE VALEUR — partout ailleurs dans le langage, et il ne passait
+          // pas ICI. `(sound:bell-short)` compile, `mon-motif -> C4` compile ; seul le paramètre
+          // d'une clé d'acteur refusait `eval.strudel(bank:dirt-samples)`, alors que
+          // `dirt-samples` est le NOM RÉEL de la banque Strudel. Romain, 2026-08-07 : « pourquoi
+          // il y aurait des endroits où le tiret est accepté et pas d'autres ? pour moi il est
+          // accepté. » Même famille que le sac lu différemment selon sa position, corrigée le
+          // même jour : une valeur se lit JUSQU'À sa virgule ou sa parenthèse fermante, pas
+          // jeton par jeton.
+          let paramVal;
+          if (at(T.INT) || at(T.FLOAT)) {
+            paramVal = Number(advance().value);
+          } else {
+            let brut = '';
+            while (!atEnd() && !at(T.COMMA) && !at(T.RPAREN) && !at(T.NEWLINE)) {
+              brut += advance().value;
+            }
+            if (brut === '') throw new ParseError(`valeur attendue après '${paramKey}:'`, current());
+            paramVal = brut;
+          }
           params[paramKey] = paramVal;
           if (at(T.COMMA)) advance();
         }
@@ -5131,7 +5147,26 @@ function parse(tokens, opts = {}) {
     const num = expect(T.INT).value;
     if (at(T.SLASH) && peek(1).type === T.INT) {
       advance(); // consume SLASH
-      return { type: 'NumericDuration', numerator: Number(num), denominator: Number(expect(T.INT).value) };
+      const den = expect(T.INT).value;
+      // ⚠️ ON NE JUXTAPOSE JAMAIS — L'ESPACE EST OBLIGATOIRE (Romain, 2026-08-07).
+      // Signalé par BPx sur une transcription réelle (watch.bps:16) : une durée fractionnaire
+      // COLLÉE à un chiffre nu donne `2/31/2`, et l'information N'EST PAS DANS LE TEXTE. Le
+      // lecteur de caractères prend les chiffres tant qu'il y en a, donc il voit
+      // `INT(2) SLASH INT(31) SLASH INT(2)` : les mêmes caractères portent au moins trois
+      // découpes, et rien ne dit laquelle. Ce n'est pas une règle d'assemblage qui manque.
+      //
+      // ⚠️ CE REFUS REMPLACE UN MESSAGE QUI N'AIDAIT PERSONNE. Sans lui, la ligne sortait
+      // « ligne non reconnue au niveau des règles » — un constat qui ne nomme ni le lieu, ni la
+      // cause, ni le geste. Un site rouge dont le message ne dit pas quoi faire coûte plus cher
+      // que le défaut lui-même : BPx a dû réduire le cas à quatre sondes pour le nommer.
+      if (at(T.SLASH) && !current().spaceBefore) {
+        throw new ParseError(
+          `'${num}/${den}/…' : deux nombres se touchent, et rien ne dit où le premier finit — `
+          + `'${num}/${den}' suivi d'un chiffre collé se relit '${num}' puis '${String(den).slice(0, 1)}…', `
+          + `ou autrement. On ne juxtapose jamais : séparer par une ESPACE`,
+          current());
+      }
+      return { type: 'NumericDuration', numerator: Number(num), denominator: Number(den) };
     }
     return { type: 'NumericTerminal', kind: 'numeric-terminal', value: Number(num), line: (tok || current()).line };
   }

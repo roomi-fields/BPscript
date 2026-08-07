@@ -1351,7 +1351,12 @@ d'ordonnancement.** Il s'ecrit entre `|[` et `]`, et son contenu se concatene sa
 de terminal unique.
 
 ```bpscript
+@alphabet.western
 S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante
+```
+
+```bpscript
+@alphabet.sargam
 S -> |[sa _ re] ga           // la prolongation etend `sa` a l'interieur de l'objet
 ```
 
@@ -1724,6 +1729,10 @@ plusieurs alternatives, les deux invocations donnent la **meme** -- c'est ce qui
 gabarit de deux invocations libres :
 
 ```bpscript
+@alphabet.western
+mel -> C4 D4
+mel -> E4 F4
+
 S -> $mel &mel      // deux productions possibles : les deux moities sont toujours identiques
 S -> mel mel        // quatre : chaque moitie tire son alternative
 ```
@@ -2076,10 +2085,15 @@ Une déclaration donne à un symbole sa convention de lecture — `signal`, `pit
 « `@var` — déclarer une variable ») ; la sortie se pose sur l'alphabet ou sur l'acteur.
 
 ```bpscript
-@alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio
-@alphabet.tabla:osc              // ceux de tabla sortent par l'OSC
+@actor melodie
+  alphabet.sargam                // les terminaux de sargam sortent par l'audio
+  out.audio
 
-S -> sa dhin
+@actor percussion
+  alphabet.tabla                 // ceux de tabla sortent par l'OSC
+  out.osc
+
+S -> melodie.sa percussion.dhin
 ```
 
 ### Un seul espace de noms

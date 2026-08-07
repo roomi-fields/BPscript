@@ -314,7 +314,17 @@ for (const [ligne] of RETARD_REGLES) {
 // RESSERRÉ le 2026-08-07 (3e fois) : la ligne `S -> C4 (rndtime:100) D4 E4` de la bible
 // COMPILE — un sac séparé au MILIEU d'une règle est un réglage posé dans le flux (tranché par
 // Romain, « les règles et l'antécédent sont clairs »). Elle sort des DEUX cliquets.
+// RESSERRÉ le 2026-08-07 (4e fois) : les TROIS encadrés que la bible n'écrivait pas comme des
+// scènes sont corrigés (Romain : « il faut les corriger ») — un alphabet par encadré, le nom
+// employé y est défini, et la forme à deux alphabets passe par '@actor'. Plus le rang du
+// bloc `@alphabet.western`, decale par la scission du premier.
 const RETARD_BLOCS = new Map([
+  // ⚠️ LE RANG A GLISSÉ, PAS LA CAUSE : scinder l'encadré de l'objet sonore composé en deux a
+  //     décalé les blocs qui commencent par la même ligne. C'est la fragilité d'une clé par
+  //     rang, assumée : elle reste plus stable qu'un numéro de ligne, qui bougerait à CHAQUE
+  //     édition de la bible au lieu d'une fois par scission.
+  ['@alphabet.western #3', /Expected arrow \(-> <- <>\), got LPAREN/],
+
   // ⚠️ LA DIRECTIVE EST RATTRAPÉE, LE BLOC NON — et la cause a changé de nature.
   //     `@homomorphism.dhati` charge désormais sa table (renommage du 2026-08-07). Ce qui
   //     reste est la ligne `S -> $N14 dhati &N14` : le NOM DE LA TABLE se pose entre le
@@ -327,7 +337,6 @@ const RETARD_BLOCS = new Map([
   //     construction dans DEUX alphabets (`C4 E4 G4` en occidental, `sa _ re` en sargam), et
   //     une scène ne déclare qu'un alphabet. Deux illustrations indépendantes dans un même
   //     encadré ne forment pas une scène — même famille que le fragment `S -> mel mel`.
-  ["S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante #0", /dans l'objet sonore composé/],
 
   // ⚠️ REMIS AU RETARD le 2026-08-07, ET DANS L'AUTRE SENS. Ce bloc a COMPILÉ une heure : je
   //     l'avais lu comme « plusieurs alphabets de scène doivent être en portée ». Romain a
@@ -335,12 +344,10 @@ const RETARD_BLOCS = new Map([
   //     sinon c'est explicite ». La bible écrit donc une forme que le langage refuse : c'est
   //     elle qui est à corriger vers `@actor`, et c'est une décision de langage, pas une
   //     déduction. Ce qu'un exemple laisse INFÉRER n'est pas ce qu'il spécifie.
-  ["@alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio #0", /ne déclare qu'UN alphabet/],
 
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ['@alphabet.western #1', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@alphabet.western:audio #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],
   ['@def halo(x) x!tin!ge #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
@@ -348,7 +355,6 @@ const RETARD_BLOCS = new Map([
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['Motif -> C4 D4 E4 #0', /appel 'accent\(E4\)' : 'accent' n'existe pas —/],
-  ['S -> $mel &mel      // deux productions possibles : les deux moities sont toujours identiques #0', /terminal 'mel' non déclaré — absent des alph/],
   ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'&mel\(…\/…\)' : '\/' n'a pas sa place dans les /],
 ]);
 
