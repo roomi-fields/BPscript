@@ -298,6 +298,9 @@ for (const [ligne] of RETARD_REGLES) {
 // traite pas. La clé d'une entrée est la PREMIÈRE LIGNE du bloc suivie de son rang parmi les blocs
 // qui commencent pareil : un numéro de ligne rougirait à chaque édition de la bible, alors que
 // c'est le CONTENU qui doit décider.
+// RESSERRÉ le 2026-08-07 : deux blocs SORTIS d'ici — le sac posé dans le flux `!(…)` se lit
+// désormais sans que `@controls` soit chargé, comme partout ailleurs. C'est le cliquet qui l'a
+// EXIGÉ en rougissant, pas moi qui y ai pensé.
 const RETARD_BLOCS = new Map([
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
@@ -311,8 +314,6 @@ const RETARD_BLOCS = new Map([
   ['@alphabet.western #1', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@alphabet.western:audio #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@core #10', /la règle 'D4' porte le nom d'un TERMINAL de /],
-  ['@core #2', /Expected symbol, \(\.\.\.\) or \[\.\.\.\] after ! at l/],
-  ['@core #4', /Expected symbol, \(\.\.\.\) or \[\.\.\.\] after ! at l/],
   ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],
   ['@def halo(x) x!tin!ge #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@def sombre lpf1 >> vca1 #0', /Expected arrow \(-> <- <>\), got WIRE at line /],

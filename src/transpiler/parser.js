@@ -3770,20 +3770,14 @@ function parse(tokens, opts = {}) {
            afterName.type === T.RPAREN || afterName.type === T.PERIOD;
   }
 
-  // (mode:…) / (weight:…) / (tempx:…)… — un RÉGLAGE RÉSERVÉ (lib/core.json
-  // schema.qualifierKeys) est un mot du LANGAGE, pas un contrôle optionnel de librairie : il doit
-  // être reconnu que `@controls` soit chargé ou non. `isRuntimeQualifier()` ci-dessus dépend de
-  // `libCtx.controlNames`, peuplé UNIQUEMENT par `@controls` — c'est déjà contourné au suffixe de
-  // règle par `isRuntimeQualifierLoose()` (syntaxique, aucune dépendance au registre). Le marqueur
-  // AUTONOME `!(…)` dans le flux n'avait PAS cet assouplissement : `!(mode:random)` sans
-  // `@controls` échouait avec « Expected symbol, (...) or [...] after ! » — un message qui NOMME
-  // '(...)' comme forme attendue puis la refuse. Mesuré par bpx, 117 sites.
-  function isReservedSettingParen() {
-    if (!at(T.LPAREN)) return false;
-    const nextTok = peek(1);
-    return nextTok.type === T.IDENT && libCtx.qualifierKeys.has(nextTok.value)
-        && peek(2).type === T.COLON;
-  }
+  // ⚠️ `isReservedSettingParen()` A VÉCU ICI DU 2026-07 AU 2026-08-07, ET SA DISPARITION EST LA
+  // LEÇON. Il ouvrait le marqueur de flux `!(…)` aux seuls réglages RÉSERVÉS quand `@controls`
+  // n'est pas chargé — un correctif posé sur le cas signalé par bpx (`!(mode:random)`, 117 sites)
+  // et sur lui seul. Il a donc laissé `!(vel:70)` refusé pendant que la même écriture passait en
+  // suffixe de règle et collée à un groupe. Une exception ouverte à la taille du ticket est une
+  // exception qui reste : le balayage syntaxique la remplace pour TOUTE forme de sac, et le
+  // troisième reconnaisseur sort avec elle. On ne garde pas une porte étroite à côté d'une porte
+  // large.
 
   // ⚠️ UN RECONNAISSEUR EST UNE APPROXIMATION DU LECTEUR — ET C'EST LÀ QUE LE TROU VIT.
   //
@@ -4386,9 +4380,21 @@ function parse(tokens, opts = {}) {
         }
         return { type: 'InstantControl', qualifier: parseVitesseParenthese(), conjoint: false };
       }
-      // !(...) → instant runtime control (flux). Le second test admet les réglages RÉSERVÉS
-      // même sans `@controls` (cf. isReservedSettingParen ci-dessus).
-      if (isRuntimeQualifier() || isReservedSettingParen()) {
+      // !(...) → sac posé dans le FLUX. Reconnaissance SYNTAXIQUE, comme le suffixe de règle.
+      //
+      // ⚠️ CE CHEMIN N'AVAIT PAS SUIVI LA CORRECTION DU MATIN, ET MON PROPRE COMMENTAIRE LA
+      // PRESCRIVAIT (`isRuntimeQualifierLoose` : « partout où le sac est séparé par une espace ou
+      // introduit par `!`, aucune ambiguïté ne subsiste, donc la forme seule décide »). Il testait
+      // encore le registre des CONTRÔLES, peuplé par le seul `@controls` — donc sans cette
+      // directive, `S -> C4 !(vel:70) D4` était refusé pendant que `S -> C4 D4 (vel:70)` et
+      // `S -> {C4 D4}(vel:70)` passaient. La même écriture, lue à deux endroits, refusée au
+      // troisième : la définition exacte de l'exception cachée que la bible dit ne pas avoir.
+      // Deux blocs de `LANGUAGE.md` tombaient dessus, et le message accusait le point
+      // d'exclamation alors que le défaut était le registre.
+      //
+      // Après `!`, la parenthèse ne peut être QUE cela : la vitesse et le câblage sont lus
+      // au-dessus, il ne reste aucune autre construction à confondre.
+      if (sacBienForme()) {
         return { type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: collated };
       }
       // ![@seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
