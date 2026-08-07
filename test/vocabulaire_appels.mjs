@@ -165,10 +165,17 @@ for (const forme of [
 // ⚠️ `rotate`/`legato`/`staccato` SORTENT de cette règle aussi depuis le 2026-08-06, même
 // mécanisme, même raison — `rndtime` (usage rule-suffix côté BPx, hors périmètre de cette
 // migration, cf. lib/core.json `_qualifierKeys_doc`) reprend leur place d'exemple ci-dessous.
+// ⚠️ « UN CONTRÔLE MOTEUR DANS LE SAC RUNTIME » A ÉTÉ RETIRÉ D'ICI le 2026-08-07 : cette moitié
+// contredisait la décision `2026-08-02-le-crochet-est-reserve-aux-gardes-les-reglages-passent-
+// en-parentheses.md`, qui dit « TOUT réglage s'écrit entre parenthèses, MOTEUR COMPRIS » et
+// « le signe n'adresse rien : le domaine de la clé le fait ». Un réglage moteur en parenthèses
+// est désormais la forme NORMALE — et c'est celle du moteur natif, mesurée : `_rndtime(50)`
+// posé dans le flux (`-da.checkNoteOff`).
+// L'autre sens RESTE refusé et garde toute sa raison d'être : un réglage de RUNTIME écrit entre
+// crochets n'a nulle part où aller, le crochet ne portant plus que ce qui gouverne la dérivation.
 for (const [forme, quoi] of [
   ['S -> C4 [vel:80]', 'contrôle runtime écrit dans le sac moteur'],
   ['S -> C4 [keyxpand:B3 -1]', 'contrôle de dispatcher dans le sac moteur'],
-  ['S -> C4 !(rndtime:10) D4', 'contrôle moteur écrit dans le sac runtime'],
   ['S -> {C4, D4}[scale:2]', "le `scale` MOTEUR, supprimé le 2026-07-26 : subsumé par la durée collée"],
 ]) {
   ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,

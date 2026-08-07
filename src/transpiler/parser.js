@@ -3589,6 +3589,21 @@ function parse(tokens, opts = {}) {
         continue;
       }
       if (at(T.LBRACKET) && current().spaceBefore) break;
+      // ⚠️ UN SAC SÉPARÉ PAR UNE ESPACE EST TOUJOURS LU COMME UN SUFFIXE DE RÈGLE, MÊME AU MILIEU.
+      // Conséquence : `S -> C4 (rndtime:100) D4 E4` — écrit tel quel dans la bible — casse ici et
+      // laisse `D4 E4` orphelins (« flèche attendue »).
+      //
+      // ⚠️ ET JE NE LE CORRIGE PAS, PARCE QUE C'EST UNE QUESTION DE SENS, PAS DE CODE. Le langage
+      // a déjà une écriture pour poser un réglage DANS LE FLUX : le point d'exclamation,
+      // `S -> C4 !(rndtime:100) D4` — qui compile. Deux lectures de la ligne de la bible sont
+      // possibles, et rien ici ne permet de choisir : soit il lui manque son point d'exclamation
+      // (correction de doc), soit un sac séparé au milieu d'une règle est légitime sans lui
+      // (défaut de parseur, et alors le point d'exclamation devient facultatif — ce qui touche
+      // TOUTE la famille des instantanés, pas seulement `rndtime`).
+      // Trancher ça en essayant ce qui compile serait employer un outil qui répond à « est-ce que
+      // ça passe » pour une question qui demande « qu'est-ce que ça veut dire ». Question posée à
+      // Romain le 2026-08-07 ; `isEndOfRhs()` (plus bas, jamais appelée) est le correctif déjà
+      // rédigé qui attend cette réponse.
       if (at(T.LPAREN) && current().spaceBefore && isRuntimeQualifierLoose()) break;
       if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
       // Unbalanced } or , at top level — embedding pattern
@@ -4021,18 +4036,30 @@ function parse(tokens, opts = {}) {
         if (at(T.COMMA)) advance();
         continue;
       }
-      // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800) : un réglage
-      // RÉSERVÉ (`mode`, `scan`, `weight`, `on_fail`, `tempx`, `meter`) s'écrit désormais en
-      // PARENTHÈSES comme tout réglage — même `tempx`, bien que `lib/controls.json` le déclare
-      // aussi dans sa section `engine`. Cette déclaration ne tranche plus : la nature de réglage
-      // l'emporte sur l'ancienne structure engine/runtime de `controls.json`.
-      if (universeSacs().moteur.has(key) && !libCtx.qualifierKeys.has(key)) {
-        throw new ParseError(
-          `'(${key}:…)' : '${key}' est un contrôle MOTEUR, il s'écrit entre CROCHETS — `
-          + `'[${key}:…]', ou '![${key}:…]' pour le poser dans le flux. Les parenthèses s'adressent `
-          + `au RUNTIME`,
-          keyTok);
-      }
+      // ⚠️ LE REFUS « CE CONTRÔLE EST MOTEUR, IL S'ÉCRIT ENTRE CROCHETS » A ÉTÉ RETIRÉ LE
+      // 2026-08-07, ET IL CONTREDISAIT UNE DÉCISION DATÉE DE CINQ JOURS.
+      //
+      // `hub/decisions/2026-08-02-le-crochet-est-reserve-aux-gardes-les-reglages-passent-en-
+      // parentheses.md` : « **Tout réglage s'écrit entre parenthèses, moteur compris.** » Et :
+      // « Le signe n'adresse rien : le domaine de la clé le fait. » Le code faisait exactement
+      // l'inverse — il se servait du SIGNE pour adresser, et refusait la parenthèse à tout ce que
+      // `lib/controls.json` range dans sa section `engine`.
+      //
+      // Une exemption partielle avait été posée (`qualifierKeys` : mode, scan, weight, on_fail,
+      // meter), donc la décision était connue et appliquée À SIX CLÉS au lieu de la famille. Le
+      // reste — `rndtime` en tête — restait refusé, et la bible l'écrit en parenthèses
+      // (`S -> C4 (rndtime:100) D4 E4`). Une exemption ouverte à la taille des cas du jour est une
+      // exemption qui laisse tout le reste dehors : même faute que `isReservedSettingParen()`,
+      // retirée le même jour, à quelques heures près.
+      //
+      // ⚠️ ET LA FORME EST CELLE DU MOTEUR NATIF, mesuré : `-da.checkNoteOff` écrit
+      // `_rndtime(50) {1/16, C4 - E4 F4}` et `_tempo(1/2) _rndtime(50) _scale(…)` — un contrôle
+      // POSÉ DANS LE FLUX, là où il prend effet. La bible ne s'écarte donc pas de BP3 ; c'est le
+      // refus qui s'écartait des deux.
+      //
+      // CE QUI RESTE REFUSÉ, et c'est une autre famille : les PROCÉDURES de niveau règle
+      // (`goto`, `failed`, `repeat`, `stop`) posées dans le flux — elles ne s'appliquent pas à une
+      // POSITION, elles valent pour la règle entière (`universeRuleScopeControls`, plus haut).
       if (at(T.COLON)) {
         advance();
         // JAMAIS D'ESPACE APRÈS LE DEUX-POINTS (arbitrage Romain 2026-07-26). La valeur commence

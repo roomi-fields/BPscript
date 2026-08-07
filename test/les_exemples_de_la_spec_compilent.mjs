@@ -213,7 +213,14 @@ const RETARD_REGLES = new Map([
   //     MUETTE là-dessus. Question pour Romain ; je ne comble pas un silence par une mesure.
   ['S <> $mel(tempx:1) &mel(tempx:2/3)', /arguments d'un gabarit/],
   // (d) une clé que le parser tient encore pour un contrôle de crochet
-  ['S -> C4 (rndtime:100) D4 E4', /s'écrit entre CROCHETS/],
+  // ⚠️ CAUSE CHANGÉE le 2026-08-07, et le sujet AUSSI. Le refus était « ce contrôle est moteur,
+  //     il s'écrit entre crochets » — retiré : la décision du 2026-08-02 dit l'inverse, et le
+  //     moteur natif écrit `_rndtime(50)` dans le flux. Ce qui reste n'a plus rien à voir avec
+  //     `rndtime` : un sac SÉPARÉ PAR UNE ESPACE au MILIEU d'une règle est lu comme un suffixe,
+  //     donc la suite de la règle reste orpheline. C'est une QUESTION DE SENS posée à Romain —
+  //     la ligne manque-t-elle son point d'exclamation, ou un sac séparé est-il légitime au
+  //     milieu d'une règle ? — et elle touche toute la famille des instantanés, pas cette clé.
+  ['S -> C4 (rndtime:100) D4 E4', /Expected arrow \(-> <- <>\), got (NEWLINE|COMMENT)/],
 ]);
 
 let regles = 0;
@@ -320,7 +327,7 @@ const RETARD_BLOCS = new Map([
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['Motif -> C4 D4 E4 #0', /appel 'accent\(E4\)' : 'accent' n'existe pas —/],
   ['S -> $mel &mel      // deux productions possibles : les deux moities sont toujours identiques #0', /terminal 'mel' non déclaré — absent des alph/],
-  ["S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes #0", /'\(rndtime:…\)' : 'rndtime' est un contrôle MO/],
+  ["S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes #0", /Expected arrow \(-> <- <>\), got (NEWLINE|COMMENT)/],
   ['S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante #0', /terminal 'C4E4G4' non déclaré — absent des a/],
   ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'&mel\(…\/…\)' : '\/' n'a pas sa place dans les /],
 ]);
