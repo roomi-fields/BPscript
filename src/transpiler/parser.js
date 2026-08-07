@@ -3721,6 +3721,15 @@ function parse(tokens, opts = {}) {
     // `(sound.bell_short)`) — décision PM 4, valeur runtime qualifier pointée.
     if (!at(T.LPAREN)) return false;
     const nextTok = peek(1);
+    // LE SUJET DE PORTÉE, COLLÉ — `C4(*:vel:80)`, `{A B}(C2:cutoff:env)`. `LANGUAGE.md` (tableau
+    // des portées) déclare les trois portées d'un sac dans les MÊMES termes, quelle que soit sa
+    // position ; seul le collé les ignorait. Ces deux formes ne peuvent PAS être happées par le
+    // routage appel-de-symbole-vs-sac : l'étoile n'ouvre jamais un argument, et un argument ne
+    // porte jamais DEUX deux-points au même niveau.
+    if (nextTok.type === T.STAR && peek(2).type === T.COLON) return true;
+    if (nextTok.type === T.IDENT && peek(2).type === T.COLON && peek(3).type === T.IDENT
+        && (peek(4).type === T.COLON
+            || (peek(4).type === T.PERIOD && peek(6).type === T.COLON))) return true;
     if (nextTok.type !== T.IDENT) return false;
     // `(lpf1.cutoff:400)` — le COMPOSANT d'une INSTANCE de module. `lpf1` n'est pas un contrôle,
     // c'est une variable que la scène a déclarée (`@var lpf1 lpf`) : le registre des contrôles ne
@@ -3751,56 +3760,78 @@ function parse(tokens, opts = {}) {
         && peek(2).type === T.COLON;
   }
 
-  function isRuntimeQualifierLoose() {
-    // Syntactic check: `(IDENT:value...)` regardless of whether IDENT is a
-    // known control. Used to detect rule-level / standalone runtime qualifiers
-    // that should be opaque (passed through to the dispatcher even when no
-    // @controls lib is loaded). The strict isRuntimeQualifier() is still used
-    // for collé suffix attachment so SymbolCall vs Symbol+suffix routing stays
-    // controlNames-driven.
+  // ⚠️ UN RECONNAISSEUR EST UNE APPROXIMATION DU LECTEUR — ET C'EST LÀ QUE LE TROU VIT.
+  //
+  // `parseRuntimeQualifier()` sait lire CINQ formes d'élément : la clé nue (`velcont`), la clé
+  // valuée (`vel:80`), le contrôleur numéroté (`cc.98:45`), le port d'une instance
+  // (`lpf1.cutoff:400`) et le préfixe de SUJET (`*:…`, `C2:…`). TROIS reconnaisseurs décidaient de
+  // l'appeler — et chacun n'en connaissait qu'un sous-ensemble DIFFÉRENT. D'où des formes acceptées
+  // à un endroit et refusées à un autre, quand `LANGUAGE.md` écrit l'inverse : le sac se comporte à
+  // l'identique dans toutes ses positions, « rien de ce qui est écrit ici ne cache une exception
+  // plus loin ».
+  //
+  // MESURÉ le 2026-08-07, produit croisé 11 formes × 4 positions : 13 cellules rouges, TOUTES de
+  // cette seule cause. Le port d'instance passait collé et échouait en suffixe ; le sujet passait
+  // en suffixe et échouait dans le flux. Corriger cellule par cellule aurait redéplacé le trou —
+  // c'est exactement ce que le commentaire du contrôleur numéroté avait prévu, quatre lignes plus
+  // haut, sans que ça suffise.
+  //
+  // CE BALAYAGE ÉNUMÈRE LA GRAMMAIRE DE L'ÉLÉMENT, UNE FOIS :
+  //     élément  ::= sujet? clé ('.' composant)? (':' valeur)?
+  //     sujet    ::= ('*' | IDENT) ':'      (quand ce qui suit est lui-même une clé valuée)
+  //     composant::= NOMBRE | IDENT
+  // Ajouter une forme au lecteur se reflète ici, donc dans TOUTES les positions du même coup —
+  // au lieu de trois listes à penser au bon moment.
+  function sacBienForme() {
     if (!at(T.LPAREN)) return false;
-    // `(*:cutoff:Env …)` — qualificateur dont la 1re paire porte un sujet '*' (chaque terminal).
-    if (peek(1).type === T.STAR && peek(2).type === T.COLON) return true;
-    if (peek(1).type !== T.IDENT) return false;
-    // `(cc.98:45)` — contrôleur NUMÉROTÉ en contenance. Reconnaissance SYNTAXIQUE, comme le reste
-    // de ce test : `IDENT . NOMBRE :` ne peut être rien d'autre. Sans ce cas, la graphie de Romain
-    // ne marchait qu'en flux `!(…)` — le suffixe de règle butait sur le point et lisait « flèche
-    // attendue ». Les deux régimes doivent l'accepter, sinon on n'aurait déplacé le trou.
-    if (peek(2).type === T.PERIOD && peek(3).type === T.INT && peek(4).type === T.COLON) return true;
-    if (peek(2).type === T.COLON) return true;
-    // CLÉ NUE EN CONTENANCE — `S -> C4 (velcont)`, `S -> C4 (velcont, pitchcont)`.
-    //
-    // Ce test exigeait que la PREMIÈRE paire soit VALUÉE (`peek(2) === COLON`). Un sac dont la
-    // première clé est nue n'était donc pas reconnu comme suffixe de règle, et la ligne sortait
-    // « flèche attendue ». Asymétrie mesurée : `!(velcont)` compile dans le flux, `{C4 D4}(velcont)`
-    // sur un groupe, `C4(velcont)` collé au terminal — mais `C4 (velcont)` en suffixe de règle, non.
-    // Et `(vel:80, velcont)` passait quand `(velcont, vel:80)` échouait : seule la POSITION de la
-    // clé nue décidait.
-    //
-    // La page de référence dit que les quatre signes se comportent à l'identique dans les deux sacs
-    // et à toute profondeur — « rien de ce qui est écrit ici ne cache une exception plus loin ».
-    // Une forme acceptée dans le flux et refusée en contenance EST une exception cachée.
-    //
-    // Reconnaissance SYNTAXIQUE, comme le reste de ce test : on regarde jusqu'à la parenthèse
-    // fermante que TOUT élément est une clé, nue ou valuée. Sans ce balayage, `( IDENT )` happerait
-    // des formes qui n'ont rien d'un sac.
-    if (peek(2).type === T.COMMA || peek(2).type === T.RPAREN) {
-      let j = pos + 1;                       // sur la 1re clé
-      while (j < tokens.length) {
-        if (tokens[j].type !== T.IDENT) return false;
-        j++;
-        if (tokens[j] && tokens[j].type === T.COLON) {        // clé valuée : sauter sa valeur
-          j++;
-          while (j < tokens.length && tokens[j].type !== T.COMMA && tokens[j].type !== T.RPAREN) j++;
-        }
-        if (!tokens[j]) return false;
-        if (tokens[j].type === T.RPAREN) return true;
-        if (tokens[j].type !== T.COMMA) return false;
-        j++;
+    let j = pos + 1;
+    if (!tokens[j] || tokens[j].type === T.RPAREN) return false;   // `()` n'est pas un sac
+    while (j < tokens.length) {
+      // le SUJET — `*:` toujours, `IDENT:` seulement si ce qui suit est une clé elle-même valuée
+      // (deux ':' au même niveau). Le composant pointé compte dans la clé : `C4:env1.attack:400`.
+      if (tokens[j].type === T.STAR && tokens[j + 1] && tokens[j + 1].type === T.COLON) {
+        j += 2;
+      } else if (tokens[j].type === T.IDENT && tokens[j + 1] && tokens[j + 1].type === T.COLON
+                 && tokens[j + 2] && tokens[j + 2].type === T.IDENT) {
+        const apres = (tokens[j + 3] && tokens[j + 3].type === T.PERIOD
+                       && tokens[j + 4] && (tokens[j + 4].type === T.IDENT || tokens[j + 4].type === T.INT))
+                    ? tokens[j + 5] : tokens[j + 3];
+        if (apres && apres.type === T.COLON) j += 2;
       }
-      return false;
+      // la CLÉ
+      if (!tokens[j] || tokens[j].type !== T.IDENT) return false;
+      j++;
+      // le COMPOSANT que le point APPELLE — un numéro (`cc.98`) ou un port nommé (`lpf1.cutoff`)
+      if (tokens[j] && tokens[j].type === T.PERIOD && tokens[j + 1]
+          && (tokens[j + 1].type === T.INT || tokens[j + 1].type === T.IDENT)) j += 2;
+      // la VALEUR que le deux-points AFFECTE — lue jusqu'à la virgule ou la fermante de son niveau
+      if (tokens[j] && tokens[j].type === T.COLON) {
+        j++;
+        let prof = 0;
+        while (j < tokens.length) {
+          const t = tokens[j].type;
+          if (t === T.NEWLINE || t === T.EOF) return false;   // un sac ne franchit pas la ligne
+          if (t === T.LPAREN) prof++;
+          else if (t === T.RPAREN) { if (prof === 0) break; prof--; }
+          else if (t === T.COMMA && prof === 0) break;
+          j++;
+        }
+      }
+      if (!tokens[j]) return false;
+      if (tokens[j].type === T.RPAREN) return true;
+      if (tokens[j].type !== T.COMMA) return false;
+      j++;
     }
     return false;
+  }
+
+  // Le sac en SUFFIXE DE RÈGLE et le marqueur autonome : reconnaissance purement SYNTAXIQUE, sans
+  // dépendance au registre des contrôles (il n'est peuplé que par `@controls`). La distinction
+  // stricte/souple ne sert plus qu'à UNE chose : router `C4(x)` entre appel de symbole et sac
+  // COLLÉ. Partout où le sac est séparé par une espace ou introduit par `!`, aucune ambiguïté ne
+  // subsiste, donc la forme seule décide.
+  function isRuntimeQualifierLoose() {
+    return sacBienForme();
   }
 
   // Lit un littéral d'INTERVALLE MUSICAL pour un contrôle interval-typé (transpose…).
@@ -3872,8 +3903,13 @@ function parse(tokens, opts = {}) {
       let subject = null;
       if (at(T.STAR) && peek(1).type === T.COLON) {
         subject = '*'; advance(); advance(); // * :
-      } else if (at(T.IDENT) && peek(1).type === T.COLON &&
-                 peek(2).type === T.IDENT && peek(3).type === T.COLON) {
+      } else if (at(T.IDENT) && peek(1).type === T.COLON && peek(2).type === T.IDENT
+                 // `C2:cutoff:env` — sujet, clé, valeur. Le composant pointé compte dans la CLÉ :
+                 // `C2:env1.attack:400` désigne le port d'une instance pour les seuls C2, et ne
+                 // se distinguait pas d'un `IDENT:IDENT` ordinaire tant qu'on n'exigeait que le
+                 // deux-points immédiat.
+                 && (peek(3).type === T.COLON
+                     || (peek(3).type === T.PERIOD && peek(5).type === T.COLON))) {
         subject = current().value; advance(); advance(); // <sujet> :
       }
       const keyTok = current();
@@ -3943,6 +3979,20 @@ function parse(tokens, opts = {}) {
         pairs.push({ key, component: composant, value: valeur, ...sub, ...pos });
         if (at(T.COMMA)) advance();
         continue;
+      }
+      // ⚠️ LE POINT SUIVI D'UNE VALEUR NOMME UN COMPOSANT, ET UN COMPOSANT A UN PROPRIÉTAIRE.
+      // `lpf1.cutoff:400` n'a de sens que si `lpf1` est une instance que la scène a déclarée
+      // (`@var lpf1 lpf`, `LANGUAGE.md`) ou un contrôle à composants (`cc.98:45`). Sans l'une des
+      // deux, la lecture tombait dans la référence pointée d'en dessous — qui n'attend PAS de
+      // valeur — puis butait au tour suivant sur « Expected IDENT, got COLON » : un message qui
+      // désigne le deux-points alors que le défaut est le NOM, trois jetons plus tôt. Le langage
+      // refuse la forme ; c'est le message qui ne disait pas laquelle.
+      if (at(T.PERIOD) && peek(1).type === T.IDENT && peek(2).type === T.COLON) {
+        throw new ParseError(
+          `'${key}.${peek(1).value}:…' affecte une valeur au composant '${peek(1).value}' de `
+          + `'${key}' — mais '${key}' n'est ni un contrôle à composants, ni une instance déclarée `
+          + `dans cette scène. Déclarer l'instance d'abord : '@var ${key} <module>'`,
+          keyTok);
       }
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
       if (at(T.PERIOD)) {
@@ -4294,7 +4344,13 @@ function parse(tokens, opts = {}) {
       // jusqu'à la fin du champ (LANGUAGE.md:2254) : elle ne voyage pas avec un terminal et ne
       // se réplique pas avec lui. C'est ce que dit le tableau des portées d'`AST.md` — ❌ en
       // `!accolé`, ✅ en `!inline` seulement. `C4!(/2)` est donc refusé, et nommé.
-      if (at(T.LPAREN) && (peek(1).type === T.SLASH || peek(1).type === T.STAR)) {
+      // ⚠️ L'ÉTOILE SERT DEUX FOIS DANS UN SAC, et le discriminant est ce qui la SUIT : un NOMBRE
+      // en fait une vitesse (`! (*3/2)`), un DEUX-POINTS en fait le sujet « chaque terminal de la
+      // portée » (`!(*:vel:80)`, tableau des portées de `LANGUAGE.md`). Sans ce départage, la
+      // vitesse happait le sujet et le refusait au nom d'une forme qu'il n'avait jamais prétendu
+      // être — c'est la seule position du langage où les deux se rencontrent.
+      if (at(T.LPAREN) && (peek(1).type === T.SLASH
+                           || (peek(1).type === T.STAR && peek(2).type !== T.COLON))) {
         if (collated) {
           throw new ParseError(
             `'!(…)' collé à un terme porte un flux CONJOINT, qui voyage avec ce terme et se `

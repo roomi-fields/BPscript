@@ -181,13 +181,21 @@ const RETARD_REGLES = new Map([
   //     ligne isolée, et le module `lpf` est absent de `lib/mod.json` (trou de donnée connu, déjà
   //     inventorié au cliquet du dessus). Le compte ne bouge donc pas, mais il ne dit plus la
   //     même chose : sans cette note, un lecteur croirait la forme toujours refusée.
-  ['S -> {A B C}(lpf1.cutoff:4000)', /Expected arrow/],
+  //     ⚠️ CAUSE RÉVISÉE UNE SECONDE FOIS le 2026-08-07 (chantier « le sac se lit pareil partout »).
+  //     Le sac COLLÉ À UN GROUPE lit désormais le port d'une instance — ces trois lignes ne butent
+  //     plus sur la FORME. Ce qui reste est la donnée : `lpf1`/`lpf2` ne sont déclarées nulle part
+  //     dans le bloc de la bible que ce garde sait reprendre, parce que le `@var lpf1 lpf` qui les
+  //     précède ne compile pas seul (module `lpf` absent de `lib/mod.json`, trou déjà inventorié au
+  //     cliquet du dessus). Le refus est maintenant NOMMÉ — il dit l'instance manquante au lieu de
+  //     désigner un deux-points. Le compte ne bouge pas, la cause si : sans cette note, un lecteur
+  //     croirait la forme toujours refusée.
+  ['S -> {A B C}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   ['S -> C4(lpf1.cutoff:400)', /Expected argument value/],
-  ['S -> { C4 D4 }(lpf2.cutoff:800)', /Expected arrow/],
+  ['S -> { C4 D4 }(lpf2.cutoff:800)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   ['S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)', /Expected argument value/],
   ['S -> { C4 D4 }(sombre) E4 coupe F4', /Expected arrow/],
   ['S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)', /Expected arrow/],
-  ['S -> {A B}(lpf1.cutoff:4000)', /Expected arrow/],
+  ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
   //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
   // (d') L'EXEMPLE DES PARAMÈTRES D'INVOCATION — et il est plus abîmé qu'il n'en a l'air.
