@@ -1,0 +1,6 @@
+// L'ESSAI, seconde position — le paramètre SÉPARÉ à l'intérieur des parenthèses.
+// Vérifier une forme, c'est essayer ses POSITIONS, pas seulement son orthographe.
+RND
+gram#1[1] S --> (=V8 x) (:V8 x)
+gram#1[2] V8 --> C4 D4
+gram#1[3] V8 --> E4 F4
