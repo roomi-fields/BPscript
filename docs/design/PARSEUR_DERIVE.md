@@ -1,3 +1,26 @@
+> ## ⏸️ CHANTIER MIS EN PAUSE — Romain, 2026-08-07
+>
+> *« Bon ok on va laisser tomber cette approche pour l'instant. »*
+>
+> **Rien de ce document ne décrit du travail en cours.** Tout ce qui suit est une MAQUETTE, isolée
+> dans `maquette/parseur-derive/`, hors de la chaîne de production. Le parseur en place n'a jamais
+> été touché.
+>
+> **Où ça s'est arrêté**, mesuré : la grammaire reconnaît 270 scènes sur 270 et refuse 10
+> contre-exemples sur 10 ; elle engendre un schéma d'arbre de 46 nœuds ; sept natures sur quinze
+> coïncident avec l'arbre de production. **Estimation globale : environ un quart de ce que fait le
+> parseur en place** — la résolution (alphabets, hauteurs, sons, acteurs) n'a pas été commencée.
+>
+> **Ce qui reste utile même si le chantier ne reprend pas** : six propriétés du langage que ce
+> travail a fait apparaître et qu'aucun des trois documents ne portait — la fin de ligne qui
+> termine une règle mais pas un bloc, l'apostrophe et le guillemet dans un nom, la voix qui porte
+> son propre sac, la valeur à plusieurs parties, le crochet à plusieurs mutations, et le fait
+> qu'une tête de règle soit un motif et non un nom. Elles sont vraies du parseur actuel.
+>
+> **Les deux gardes liés** (`la_grammaire_couvre_le_langage_specifie`,
+> `le_schema_d_arbre_engendre_est_confronte`) sautent proprement si la maquette n'est pas
+> engendrée : ils ne coûtent rien à un dépôt qui ne la construit pas.
+
 # Dériver le parseur d'un formalisme — phase 0, la mesure de départ
 
 **Romain, 2026-08-06.** *« Je veux que tu m'écrives un nouveau parseur à zéro qui utilise
