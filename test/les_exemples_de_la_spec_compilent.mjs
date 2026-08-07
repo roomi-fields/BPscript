@@ -318,7 +318,6 @@ const RETARD_BLOCS = new Map([
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ["@alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio #0", /terminal 'dhin' non déclaré — absent des alp/],
   ['@alphabet.western #1', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@alphabet.western:audio #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],

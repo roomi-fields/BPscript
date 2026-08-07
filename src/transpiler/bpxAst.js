@@ -670,9 +670,19 @@ function terminauxEnPortee(ast) {
     return true;
   };
   let aUnAlphabet = false;
-  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  // ⚠️ UNE SCÈNE PEUT EN DÉCLARER PLUSIEURS, et on n'en lisait QU'UN — en silence. La bible
+  // l'écrit (`LANGUAGE.md` §« Déclarer un symbole ») :
+  //     @alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio
+  //     @alphabet.tabla:osc              // ceux de tabla sortent par l'OSC
+  //     S -> sa dhin
+  // `find` prenait le premier, donc `dhin` était refusé comme « terminal non déclaré » alors que
+  // la scène déclare son alphabet deux lignes plus haut. Le second n'était pas REFUSÉ, il était
+  // IGNORÉ : rien ne signalait qu'une déclaration entière ne servait à rien.
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
-  if (sceneAlpha) aUnAlphabet = ajouter(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || aUnAlphabet;
+  const octScene = sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null;
+  for (const d of (ast.directives || []).filter((x) => x.name === 'alphabet' && x.subkey)) {
+    aUnAlphabet = ajouter(d.subkey, octScene) || aUnAlphabet;
+  }
   for (const a of ast.actors || []) {
     const p = a.properties || {};
     if (p.alphabet) aUnAlphabet = ajouter(p.alphabet, p.octaves || null) || aUnAlphabet;
