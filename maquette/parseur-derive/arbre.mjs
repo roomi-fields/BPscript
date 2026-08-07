@@ -38,7 +38,10 @@ const NATURE = {
   ActorKey: 'ActorReference',
   Guard: 'Guard',
   Wildcard: 'Wildcard',
-  Backtick: 'BacktickStandalone',
+  // ⚠️ CORRECTION DE MA TABLE, pas du langage : la production distingue le code ISOLÉ dans le flux
+  // du code ATTACHÉ à une voix. Ma table les confondait, d'où un écart de +829 % que j'ai failli
+  // ranger avec les divergences du langage. Un écart peut venir de l'instrument.
+  Backtick: 'Backtick',
   Scene: 'Scene',
 };
 

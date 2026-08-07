@@ -480,3 +480,35 @@ resteront du code — pilotés par le schéma d'arbre, mais du code.
 
 ⚠️ **Et la mesure est de PREMIER ORDRE** : même distribution ne veut pas dire même arbre.
 L'imbrication n'est pas comparée. Une nature au compte exact peut être placée ailleurs.
+
+
+---
+
+# L'architecture est tranchée — Romain, 2026-08-07
+
+La comparaison des deux arbres a fait apparaître deux endroits où l'analyseur actuel **ne lit pas,
+mais complète et réécrit**. Romain a tranché : **les deux sont voulus, et ils restent.**
+
+| ce que fait l'analyseur actuel | ce qu'en dit Romain |
+|---|---|
+| **inventer un acteur** quand la scène n'en déclare aucun, avec ses défauts | *« j'ai dit plusieurs fois qu'il fallait le faire »* |
+| **transformer `A:1/2` en `{1/2, A}`** avant de rendre l'arbre | *« c'est ma demande, car BPx ne sait pas interpréter ça »* |
+
+**Verdict : *« ok pour avoir des points de code écrit qui continuent à gérer ça ».***
+
+## Ce que ça fixe, et c'est structurant
+
+**Le partage est net, et il ne bougera plus :**
+
+- **la grammaire LIT** — elle reconnaît ce qui est écrit, et refuse le reste ;
+- **du code COMPLÈTE et RÉÉCRIT** — l'acteur implicite, le désucrage de la durée, et tout ce qui
+  fait qu'un arbre porte davantage que son texte.
+
+⚠️ **Ce partage n'était écrit nulle part avant cette mesure.** Je pensais qu'un formalisme
+remplacerait le parseur ; il en remplacera **l'ossature**, et le reste restera du code — mais du
+code dont on sait désormais POURQUOI il existe, ce qui n'était pas le cas ce matin.
+
+⚠️ **Et une conséquence pour la phase 4** : la comparaison d'arbres ne se fera jamais entre l'arbre
+engendré NU et l'arbre de production. Elle se fera **après la passe de complétion**. Comparer
+avant, c'est mesurer un écart voulu et le prendre pour un défaut — l'erreur que j'ai failli
+commettre en présentant ces pourcentages comme des divergences.
