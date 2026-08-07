@@ -70,7 +70,7 @@ const DECLARATIONS = [
   ['controls', '@controls'], ['var', '@var v'],
   ['alias', '@alias g cc:2'], ['mm', '@mm:60'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
-  ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['transcription', '@transcription.dhati'],
+  ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['homomorphism', '@homomorphism.dhati'],
   ['settings', '@settings'], ['filter', '@filter'], ['modulation', '@modulation'], ['ins', '@ins:3'],
   ['test_alphabets', '@test_alphabets.abc'],
 ];

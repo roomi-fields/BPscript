@@ -7,13 +7,13 @@
  * d'un axe figé lu dans l'invocation — il est LU dans le fichier au chargement. L'invocation nomme
  * un fichier et une entrée ; le domaine dit à l'aval dans quel casier ranger l'entrée.
  *
- * SIGNALÉ par Kairos le 2026-07-27 : `lib/transcription.json` ne le déclarait pas. La scène
+ * SIGNALÉ par Kairos le 2026-07-27 : `lib/homomorphism.json` ne le déclarait pas. La scène
  * `transposition1.bps` l'invoque, le fichier existe, l'hôte le fournissait — et Kairos refusait
  * bruyamment de résoudre. Il avait raison : il n'invente pas le domaine d'une librairie qui ne lui
  * appartient pas. Son banc d'iso sur les 75 notes de cette scène était suspendu là-dessus.
  *
  * POURQUOI CE GARDE MESURE SUR LE CORPUS, et pas sur une liste de fichiers. Le trou n'est pas
- * « transcription.json manque un champ », c'est « une librairie peut être invoquée sans qu'on
+ * « homomorphism.json manque un champ », c'est « une librairie peut être invoquée sans qu'on
  * sache où ranger ce qu'elle rend ». Le garde part donc des adresses que les scènes PRODUISENT
  * vraiment : il attrape le jour où une scène invoque un fichier sans domaine, quel qu'il soit.
  * Écrire la liste à la main aurait gardé le fichier du ticket, pas la construction.
@@ -37,6 +37,10 @@
  * scène du corpus ne les invoque aujourd'hui — ce garde rougira le jour où l'une le fera, ce qui
  * est exactement le moment où il faudra trancher.
  */
+// ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
+// la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
+// `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
+// de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 import { fichierDeLAxe } from '../src/transpiler/libs.js';
@@ -48,13 +52,13 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ─── 1. SOCLE — le cas signalé, nommément ────────────────────────────────────────────────────
 // Ancré à part : le garde du corpus ci-dessous rétrécit avec le corpus, celui-ci non.
-ok(LIBS.transcription?.domain === 'transcription',
-   `1. lib/transcription.json doit déclarer son domaine — reçu : ${JSON.stringify(LIBS.transcription?.domain)}`);
+ok(LIBS.homomorphism?.domain === 'homomorphism',
+   `1. lib/homomorphism.json doit déclarer son domaine — reçu : ${JSON.stringify(LIBS.homomorphism?.domain)}`);
 {
-  const o = compileToBPxAST('@core\n@controls\n@alphabet.western:midi\n@transcription.transposition\n@mode:ord\nS -> C4\n');
+  const o = compileToBPxAST('@core\n@controls\n@alphabet.western:midi\n@homomorphism.transposition\n@mode:ord\nS -> C4\n');
   ok((o.errors || []).length === 0,
      `1. la scène qui invoque la table de transposition doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
-  ok((o.ast?.libRefs || []).includes('transcription.transposition'),
+  ok((o.ast?.libRefs || []).includes('homomorphism.transposition'),
      "1. et l'adresse doit sortir — c'est elle que l'aval range par domaine");
 }
 

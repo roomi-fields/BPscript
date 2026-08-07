@@ -349,7 +349,7 @@ function parse(tokens, opts = {}) {
    *
    * Formats:
    *   - 'sections': one decl per section, name = section key ('*', 'm1', 'TR'…)
-   *   - 'mappings': one decl, name = the subkey used to invoke it (@transcription.<subkey>)
+   *   - 'mappings': one decl, name = the subkey used to invoke it (@homomorphism.<subkey>)
    *
    * Identity pairs (a→a) are KEPT (Bernard fidelity).
    * Chain pairs (a→b→c) are already expanded to [a,b],[b,c] in the JSON.
@@ -376,7 +376,7 @@ function parse(tokens, opts = {}) {
     // Build a map from subkey → directive line number
     const lineMap = {};
     for (const dir of (directives || [])) {
-      if (dir.name === 'transcription' && dir.subkey) {
+      if (dir.name === 'homomorphism' && dir.subkey) {
         lineMap[dir.subkey] = dir.line;
       }
     }
@@ -444,7 +444,7 @@ function parse(tokens, opts = {}) {
       soundPrototypes: null,
       soundAssignments: null,
       // Contrat BPx (ast.ts:150-157) : table d'homomorphismes attachée par le parser
-      // après chargement des libs. Vide si aucune directive @transcription.
+      // après chargement des libs. Vide si aucune directive @homomorphism.
       homomorphisms: [],
     };
 
@@ -1421,6 +1421,23 @@ function parse(tokens, opts = {}) {
     // Les deux mots restent dans `schema.reservedDirectives` (`lib/core.json`) — ce refus
     // s'AJOUTE, il ne les en retire pas : c'est ce qui empêche une librairie de déclarer une
     // valeur portant ce nom (cf. `_destinations.transport`/`_destinations.out` du même fichier).
+    // ─── PIERRE TOMBALE — `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07)
+    // « oui on renomme ». La bible n'a JAMAIS écrit que `@homomorphism.<table>` (§« Les tables
+    // d'homomorphisme se déclarent par @homomorphism.<table> ») ; le mot `transcription` n'y
+    // apparaît nulle part. Le code implémentait l'ancien nom et REFUSAIT celui de la référence.
+    //
+    // ⚠️ ET LE RETRAIT SIMPLE AURAIT ÉTÉ MUET, c'est pourquoi ce refus existe : une fois le
+    // chargeur basculé, `@homomorphism.dhati` compilait toujours — en chargeant ZÉRO table. La
+    // scène croyait transformer sa production et ne transformait rien, exactement le défaut payé
+    // sur `@homomorphism.dhinOO` (« la scène croyait charger un homomorphisme et n'en chargeait
+    // AUCUN, depuis des mois »). Un mot retiré sans pierre tombale ne disparaît pas : il devient
+    // inerte, et l'inerte ne se voit pas.
+    if (name === 'transcription') {
+      throw new ParseError(
+        `'@transcription' est REMPLACÉE par '@homomorphism' (décision Romain 2026-08-07) — c'est `
+        + `le seul mot que la référence emploie pour une table de correspondances. Réécrire `
+        + `'@homomorphism${subkey ? '.' + subkey : '.<table>'}'.`, tok);
+    }
     if (name === 'transport') {
       throw new ParseError(
         `'@transport' n'existe plus en directive de scène (décision Romain 2026-08-04) — le mot `

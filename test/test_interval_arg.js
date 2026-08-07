@@ -25,7 +25,7 @@ import { registerAll, registerLib, loadLibsFromDirectives } from '../src/transpi
 
 // ── Pre-register prod libs (no FS in the parser itself) ────
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'transcription']) {
+for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);

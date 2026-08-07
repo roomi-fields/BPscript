@@ -12,13 +12,139 @@
     "SIGNATURE SCELLÉE (Kairos, f00ff29) : (ctx: HomomorphismFnContext) => void — la fonction lit",
     "ctx.symbol + ctx.scope, query ctx.image(nom, sym) (table plate portée OPAQUE par BPx), écrit le",
     "résultat via ctx.setResult. La TABLE reste dans Kairos ; la fonction ne la voit jamais brute",
-    "(PORTER≠RÉSOUDRE). Kairos résout ENSUITE nom→hz/octave du symbole substitué (pont hauteur inchangé)."
+    "(PORTER≠RÉSOUDRE). Kairos résout ENSUITE nom→hz/octave du symbole substitué (pont hauteur inchangé).",
+    "TABLES AJOUTEES ICI le 2026-08-07 (Romain : « oui on renomme ») : la directive du langage est `@homomorphism.<table>` (LANGUAGE.md, seule graphie de la bible) ; `@transcription` etait l'ancien mot et il est SUPPRIME. Les 8 tables viennent de lib/homomorphism.json, DELETE dans le meme mouvement. Un seul mot, un seul fichier : `objects` porte l'applicateur universel, `tables` porte les correspondances symbole->symbole que la scene invoque."
   ],
   "name": "homomorphism",
   "type": "homomorphism",
   "objects": {
     "substitute": {
       "description": "Applicateur universel d'homomorphisme : itère la portée active et substitue chaque symbole par son image dans la table plate (last-write-wins), identité si symbole absent. Image de l'ancien `applyImage` BPx, re-placé en résolution Kairos (décision 2026-07-17). C'est la seule fonction de la lib fournie : elle traite TOUS les homos en portée (multiplicité = empilement, homos différents = séquence)."
+    }
+  },
+  "tables": {
+    "tabla_stroke": {
+      "description": "Tabla open→closed stroke mapping (qa'ida)",
+      "mappings": {
+        "dha": "ta",
+        "dhin": "tin",
+        "ge": "ke",
+        "ghe": "khe",
+        "dhagena": "takena",
+        "dheene": "teene",
+        "dheena": "teena"
+      }
+    },
+    "ruwet_mineur": {
+      "_deprecated": "DÉPRÉCIÉ — utiliser @homomorphism.ruwet section mineur. La paire sol4→mi4 était infidèle à -ho.Ruwet et a été supprimée. Remplacé par ruwet (2026-06-10).",
+      "description": "Ruwet — transformation thème majeur → mineur (DÉPRÉCIÉ)",
+      "mappings": {
+        "fa4": "re4",
+        "la4": "fa4",
+        "sol4": "mi4"
+      }
+    },
+    "ruwet": {
+      "description": "Ruwet — 3 transformations mélodiques (fidèle à bp3-engine/test-data/-ho.Ruwet)",
+      "sections": {
+        "m1": {
+          "la4": "sib4"
+        },
+        "m2": {
+          "la4": "sol4"
+        },
+        "mineur": {
+          "fa4": "re4",
+          "la4": "fa4"
+        }
+      }
+    },
+    "dhati": {
+      "description": "Dhati — homomorphisme tabla (fidèle à -ho.dhati, section *, identités conservées)",
+      "sections": {
+        "*": {
+          "dha": "ta",
+          "ti": "ti",
+          "ge": "ke",
+          "na": "na",
+          "dhee": "tee",
+          "tr": "tr",
+          "kt": "kt"
+        }
+      }
+    },
+    "dhin": {
+      "description": "Dhin -- homomorphisme tabla (fidèle à -ho.dhin--, section *, identités conservées)",
+      "sections": {
+        "*": {
+          "dha": "ta",
+          "ta": "ta",
+          "ti": "ti",
+          "ra": "ra",
+          "na": "na",
+          "ki": "ki",
+          "dhee": "tee",
+          "ne": "ne",
+          "ge": "ke",
+          "ka": "ka",
+          "dhin": "tin"
+        }
+      }
+    },
+    "tryhomomorphism": {
+      "description": "Homomorphisme de test (fidèle à -ho.tryhomomorphism, chaîne c-->fa4-->d dépliée)",
+      "sections": {
+        "*": {
+          "a": "b",
+          "do4": "re4",
+          "c": "fa4",
+          "fa4": "d"
+        }
+      }
+    },
+    "checkhomo": {
+      "description": "Test homomorphism — 3 sections (*, H, TR)",
+      "sections": {
+        "*": {
+          "a": "a'",
+          "a'": "a\"",
+          "b": "b'",
+          "b'": "b"
+        },
+        "H": {
+          "a": "c",
+          "c": "c'",
+          "c'": "a\""
+        },
+        "TR": {
+          "a'": "b'",
+          "b'": "b"
+        }
+      }
+    },
+    "transposition": {
+      "description": "Auto-transposer H. Visser 1997 — homomorphisme à CHAÎNES (fidèle à bp3-engine/test-data/-ho.transposition, section TR, 3 chaînes indexées par profondeur d'invocation)",
+      "sections": {
+        "TR": {
+          "chains": {
+            "C3": [
+              "B3",
+              "F4",
+              "C6"
+            ],
+            "B3": [
+              "C3",
+              "B4",
+              "F6"
+            ],
+            "F4": [
+              "C6",
+              "F2",
+              "B5"
+            ]
+          }
+        }
+      }
     }
   }
 }

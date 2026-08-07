@@ -578,8 +578,12 @@ function loadLibsFromDirectives(directives) {
     if (dir.name === 'octaves' && dir.runtime) {
       ctx._octaveConvention = dir.runtime;
     }
-    // @transcription.xxx — load transcription table (homomorphism)
-    if (dir.name === 'transcription' && dir.subkey && (lib?.mappings || lib?.sections)) {
+    // `@homomorphism.<table>` — charge une table de correspondances symbole → symbole.
+    // ⚠️ LE MOT ÉTAIT `transcription` JUSQU'AU 2026-08-07 (« oui on renomme », Romain). La bible
+    // n'a jamais écrit que `@homomorphism` — `transcription` n'y apparaît nulle part. Le code
+    // implémentait donc l'ancien nom et REFUSAIT celui de la référence : 159 occurrences dans 13
+    // scènes de l'écosystème écrivaient le mot mort, ZÉRO écrivait le bon.
+    if (dir.name === 'homomorphism' && dir.subkey && (lib?.mappings || lib?.sections)) {
       ctx.transcriptions[dir.subkey] = lib;
     }
 

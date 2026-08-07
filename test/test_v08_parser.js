@@ -16,7 +16,7 @@ import { bpsPath, grPath } from './corpus.mjs';
 // ── Pre-register libs (no FS in tests) ─────────────────────
 
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'transcription']) {
+for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -562,16 +562,16 @@ S -> A`);
 section('scene.homomorphisms — contrat BPx');
 
 {
-  // Sans directive @transcription : champ vide ou absent
+  // Sans directive @homomorphism : champ vide ou absent
   const ast = parseSource(`@controls
 S -> A B`);
-  assert('sans @transcription: homomorphisms vide', !ast.homomorphisms || ast.homomorphisms.length === 0);
+  assert('sans @homomorphism: homomorphisms vide', !ast.homomorphisms || ast.homomorphisms.length === 0);
 }
 
 {
-  // @transcription.checkhomo — format sections → 3 décls ('*', 'H', 'TR')
+  // @homomorphism.checkhomo — format sections → 3 décls ('*', 'H', 'TR')
   const ast = parseSource(`@controls
-@transcription.checkhomo
+@homomorphism.checkhomo
 S -> A B`);
   assert('checkhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('checkhomo: 3 décls', ast.homomorphisms?.length === 3);
@@ -590,9 +590,9 @@ S -> A B`);
 }
 
 {
-  // @transcription.dhati — format sections, section '*' avec 7 paires (identités conservées)
+  // @homomorphism.dhati — format sections, section '*' avec 7 paires (identités conservées)
   const ast = parseSource(`@controls
-@transcription.dhati
+@homomorphism.dhati
 S -> dha ti`);
   assert('dhati: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('dhati: 1 décl (section *)', ast.homomorphisms?.length === 1);
@@ -607,9 +607,9 @@ S -> dha ti`);
 }
 
 {
-  // @transcription.dhin — format sections, section '*' avec 11 paires
+  // @homomorphism.dhin — format sections, section '*' avec 11 paires
   const ast = parseSource(`@controls
-@transcription.dhin
+@homomorphism.dhin
 S -> dhin dha`);
   assert('dhin: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('dhin: 1 décl', ast.homomorphisms?.length === 1);
@@ -623,9 +623,9 @@ S -> dhin dha`);
 }
 
 {
-  // @transcription.ruwet — format sections avec m1/m2/mineur
+  // @homomorphism.ruwet — format sections avec m1/m2/mineur
   const ast = parseSource(`@controls
-@transcription.ruwet
+@homomorphism.ruwet
 S -> la4 fa4`);
   assert('ruwet: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('ruwet: 3 décls (m1/m2/mineur)', ast.homomorphisms?.length === 3);
@@ -642,9 +642,9 @@ S -> la4 fa4`);
 }
 
 {
-  // @transcription.tryhomomorphism — chaîne c-->fa4-->d dépliée en [c,fa4],[fa4,d]
+  // @homomorphism.tryhomomorphism — chaîne c-->fa4-->d dépliée en [c,fa4],[fa4,d]
   const ast = parseSource(`@controls
-@transcription.tryhomomorphism
+@homomorphism.tryhomomorphism
 S -> a b c`);
   assert('tryhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('tryhomo: 1 décl', ast.homomorphisms?.length === 1);

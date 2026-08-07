@@ -149,7 +149,7 @@ Deux modules périphériques de `src/transpiler/`, hors de la chaîne de compila
 | Direction (nom) | Propriétaire | Sens | Forme / type exact | Invariant |
 |---|---|---|---|---|
 | `bp3ToScene(grammarText)` sans opts | bp3ToScene.js | BP3 `-gr.` ▶ BPScript | `string` = source `.bps` OU `"NON GÉRÉ: <desc> (<ctx>)"` | round-trip : `compileBPS(bp3ToScene(gr)).grammar` ≡ `gr` (modulo commentaires, refs -se/-al/-ho, espaces) |
-| `bp3ToScene(grammarText,{hoText,hoKey})` | bp3ToScene.js | BP3 +`-ho.` ▶ BPScript | `{ bps:string, transcriptionEntry:object }` | `bps` préfixé `@transcription.<safeHoKey>\n` ; `-`→`O` dans hoKey |
+| `bp3ToScene(grammarText,{hoText,hoKey})` | bp3ToScene.js | BP3 +`-ho.` ▶ BPScript | `{ bps:string, transcriptionEntry:object }` | `bps` préfixé `@homomorphism.<safeHoKey>\n` ; `-`→`O` dans hoKey |
 | `parseHoFile(hoText)` | bp3ToScene.js | BP3 `-ho.` ▶ table | `{ sections:{ [label]:{ [src]:tgt } } }` | chaînes `a-->b-->c` dépliées en paires (a→b)(b→c) ; sections vides supprimées ; label défaut `*` |
 | `BP3_CONTROL_MAP` (interne dérivé) | buildControlMap(lib/controls.json) | autorité contrôles | `Map<bp3tok,{bps,kind:'runtime'\|'engine',noArg:bool}>` | runtime prioritaire en collision ; clé `script` exclue ; controls.json = autorité |
 | stop-and-report | bp3ToScene.js | échec round-trip | retour `string` `"NON GÉRÉ: …"` (par grammaire) | toute construction non fidèle bloque la grammaire ENTIÈRE, jamais d'émission partielle silencieuse |
@@ -411,7 +411,7 @@ BPx ne lit `nature` que pour SON ressort (durée nulle d'un `instant`, classemen
 - Retour SANS opts → `string` (rétrocompatibilité) : soit la source `.bps`, soit
   `"NON GÉRÉ: <description> (<contexte>)"`.
 - Retour AVEC `opts.hoText && opts.hoKey` → `{ bps: string, transcriptionEntry: object }` ;
-  `bps = "@transcription." + hoKey.replace(/-/g,'O') + "\n" + <bps généré>`.
+  `bps = "@homomorphism." + hoKey.replace(/-/g,'O') + "\n" + <bps généré>`.
 
 `parseHoFile(hoText: string)` → `{ sections: Object<string, Object<string,string>> }`
 - `sections[label]` : objet `{ [source]: cible }`. Champs dépliés :

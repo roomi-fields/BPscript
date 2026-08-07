@@ -628,11 +628,14 @@ function bp3ToScene(grammarText, opts) {
   if (opts && opts.hoText && opts.hoKey) {
     // Parsing du fichier -ho
     const transcriptionEntry = parseHoFile(opts.hoText);
-    // Injecter @transcription.hoKey au début du BPS
+    // Injecter `@homomorphism.<clé>` en tête du BPS.
+    // ⚠️ Cet outil ÉMETTAIT `@transcription`, le mot mort depuis le 2026-08-07 : il aurait
+    // fabriqué des scènes refusées au parse, à chaque portage. Un producteur qui écrit un mot
+    // retiré est pire qu'un consommateur qui le lit — il en RECRÉE.
     // Les tirets dans le hoKey sont remplacés par 'O' car le tokenizer BPscript
     // interprèterait '-' comme silence dans un identifiant de directive.
     const safeHoKey = opts.hoKey.replace(/-/g, 'O');
-    const bpsWithHo = `@transcription.${safeHoKey}\n` + bpsLines.join('\n');
+    const bpsWithHo = `@homomorphism.${safeHoKey}\n` + bpsLines.join('\n');
     return { bps: bpsWithHo, transcriptionEntry };
   }
 

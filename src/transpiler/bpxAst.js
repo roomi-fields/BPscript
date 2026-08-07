@@ -603,7 +603,7 @@ function deriveAlphabetFromTuning(ast) {
 // Union des alphabets effectifs = SÛRE (pas de faux positif cross-acteur).
 /**
  * Résolution de l'invocation d'homomorphisme par SYMBOLE NU (ratifié Romain 2026-07-17).
- * Un Symbol de RHS dont le nom = une section d'homomorphisme chargée (@transcription.<X>),
+ * Un Symbol de RHS dont le nom = une section d'homomorphisme chargée (@homomorphism.<X>),
  * et qui n'est NI un non-terminal (LHS de règle) NI un terminal d'alphabet en portée
  * (précédence RATIFIÉE terminal > règle > homo, contrat bpscript-bpx L31), devient un
  * MARQUEUR per-occurrence : on pose `role:'homomorphism'` sur le nœud (type Symbol conservé,
@@ -1250,7 +1250,7 @@ function validateReferences(ast) {
   // 3bis. LIBRAIRIE SANS CATALOGUE — une ENTRÉE INCONNUE y crie aussi (arbitrage architecte
   // 2026-07-27, sur le cas `dhin1`). Les axes à CATALOGUE crient depuis toujours ; les autres —
   // `transcription`, `test_alphabets`, `settings`, `mapping`… — acceptaient n'importe quel nom EN
-  // SILENCE. Payé sur pièce : `@transcription.dhinOO` a traversé toute la migration sans un mot ;
+  // SILENCE. Payé sur pièce : `@homomorphism.dhinOO` a traversé toute la migration sans un mot ;
   // la scène croyait charger un homomorphisme et n'en chargeait AUCUN, depuis des mois.
   //
   // L'ARGUMENT QUI TRANCHE : ne rien pouvoir vérifier n'est pas une raison de ne rien vérifier,

@@ -8,7 +8,7 @@
  * vert pendant tout ce temps — c'est la différence entre un test qui rassure et un test qui
  * mesure. « Accepter n'est pas transmettre. »
  *
- * LA MÊME CAUSE FRAPPAIT `@transcription.X` : l'émetteur d'adresses exigeait un champ `notes`,
+ * LA MÊME CAUSE FRAPPAIT `@homomorphism.X` : l'émetteur d'adresses exigeait un champ `notes`,
  * propre aux alphabets, parce que je l'avais écrit pour eux. Tout ce qui n'était pas un alphabet
  * était donc abandonné en silence. Ce garde couvre TOUS les axes, pas celui du jour.
  *
@@ -17,6 +17,10 @@
  *   entrée inconnue → le compilateur CRIE ;
  *   rien du tout    → interdit, et c'est ce que ce garde attrape.
  */
+// ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
+// la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
+// `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
+// de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { describeVocabulary } from '../src/transpiler/libs.js';
 
@@ -52,9 +56,9 @@ ok(axesVerifies > 0, "1. aucun axe à vérifier — le garde serait creux (l'uni
   const r = compile('@sound.tabla_perc');
   ok((r.ast?.libRefs || []).includes('sound.tabla_perc'),
      "2. '@sound.tabla_perc' doit produire son adresse — 6 scènes du corpus l'invoquent");
-  const t = compile('@transcription.dhati');
-  ok((t.ast?.libRefs || []).includes('transcription.dhati'),
-     "2. '@transcription.dhati' aussi — le filtre qui exigeait un champ d'alphabet l'abandonnait en silence");
+  const t = compile('@homomorphism.dhati');
+  ok((t.ast?.libRefs || []).includes('homomorphism.dhati'),
+     "2. '@homomorphism.dhati' aussi — le filtre qui exigeait un champ d'alphabet l'abandonnait en silence");
 }
 
 // ─── 3. Une entrée INCONNUE crie, sur chaque axe ─────────────────────────────────────────────

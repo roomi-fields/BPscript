@@ -29,7 +29,7 @@ Version 2.0 — 26 mars 2026
 > reste rouge.
 >
 > - Les fichiers -ho. de Bernard sont parsés par `parseHoFile()` dans `bp3ToScene.js` lors
->   de la traduction inverse BP3→BPS ; les entrées sont générées dans `lib/transcription.json`.
+>   de la traduction inverse BP3→BPS ; les entrées sont générées dans `lib/homomorphism.json`.
 > - L'approche **étiquetage `N@terminal`** dans les fichiers -ho — AJOURNÉE, jamais adoptée, et sans rapport avec le suffixe arobase de BPScript (SUPPRIMÉ le 2026-07-28). reste **AJOURNÉE**
 >   (complexité moteur, pas de gain sur le contrat BPx).
 
@@ -152,7 +152,7 @@ Déterminée par la longueur de la chaîne dans l'alphabet :
 - `C3 --> C4 --> C5 --> C6 --> C7` → longueur 5, profondeur max = 4
 - `dha --> ta` → longueur 2, profondeur max = 1
 
-Le transpileur connaît les chaînes (elles viennent de `transcription.json`)
+Le transpileur connaît les chaînes (elles viennent de `homomorphism.json`)
 et génère les entrées pour toutes les profondeurs.
 
 **Choix du séparateur** : `@` éliminé (directive BPScript), `'`/`"` éliminés
@@ -428,7 +428,7 @@ S -> $X * TR &X             →  S --> (= X) * TR (: X)
 
 - `src/transpiler/encoder.js` — générer le -ho. avec étiquettes chainées + transcriptionTable
 - `src/transpiler/index.js` — exposer transcriptionTable dans la sortie de compileBPS()
-- `src/transpiler/libs.js` — charger @transcription depuis transcription.json
+- `src/transpiler/libs.js` — charger `@homomorphism` depuis homomorphism.json
 
 ### Runtime (agent `transpileur`)
 - ~~`src/dispatcher/dispatcher.js` — résolution REPL post-dérivation~~ — **PÉRIMÉ** : ce
@@ -439,7 +439,7 @@ S -> $X * TR &X             →  S --> (= X) * TR (: X)
 - **Aucun changement.** C'est le point.
 
 ### Données
-- `lib/transcription.json` — existe déjà, format OK
+- `lib/homomorphism.json` — existe déjà, format OK
 - `lib/sub.json` — compatibilité arrière (tables compilées Bernard)
 
 ### Tests
@@ -638,7 +638,7 @@ des noms de transcription. Le `*` est un identifiant spécial valide.
 
 **Attention** : ne pas confondre avec des terminaux ou non-terminaux légitimes.
 Les noms de transcription sont des IDENT simples qui correspondent à des sections
-dans `lib/transcription.json` ou `lib/sub.json`. Le parser peut vérifier via
+dans `lib/homomorphism.json` ou `lib/sub.json`. Le parser peut vérifier via
 `libCtx.transcriptions` si le nom est une section connue.
 
 **Stacking** : `**` est un token unique signifiant "appliquer * deux fois".
@@ -806,7 +806,7 @@ Créer `test/grammars/labeling_stack/scene.bps` :
 
 ```bpscript
 @core
-@transcription.checkhomo
+@homomorphism.checkhomo
 gate a:midi
 S -> $X * &X ** &X
 X -> a
@@ -824,7 +824,7 @@ Créer `test/grammars/labeling/scene.bps` :
 
 ```bpscript
 @core
-@transcription.checkhomo
+@homomorphism.checkhomo
 
 gate a:midi
 gate b:midi
@@ -860,5 +860,5 @@ Scènes à valider : `checkhomo`, `dhati`, `ruwet`
 - [INTERFACES_BP3.md](INTERFACES_BP3.md) — Interface WASM in/out
 - [REFERENCE_HO_FORMAT.md](../reference/HO_FORMAT.md) — Format fichier -ho. BP3
 - [BPSCRIPT_AST.md](../spec/AST.md) — AST (champ `transcriptions` sur TemplateSlave)
-- `lib/transcription.json` — Tables de transcription existantes
+- `lib/homomorphism.json` — Tables de transcription existantes
 - `wasm/bp3_api.c` — API WASM (ne pas modifier)

@@ -2,14 +2,14 @@
 /**
  * GARDE — une entrée INCONNUE crie, même dans une librairie SANS CATALOGUE.
  *
- * PAYÉ SUR PIÈCE. `dhin1.bps` invoquait `@transcription.dhinOO`, une entrée qui n'existe pas : la
+ * PAYÉ SUR PIÈCE. `dhin1.bps` invoquait `@homomorphism.dhinOO`, une entrée qui n'existe pas : la
  * librairie nomme `dhin`, la grammaire d'origine déclare son homomorphisme avec deux TIRETS, et la
  * migration les a rendus par deux O. Le compilateur l'a accepté EN SILENCE pendant toute la
  * migration — la scène croyait charger un homomorphisme et n'en chargeait AUCUN. Trouvé le
  * 2026-07-27 par le garde des invocations écrites contre émises, corrigé chez Kanopi (`5dd7798`).
  *
  * POURQUOI LE TROU EXISTAIT : les axes à CATALOGUE (alphabet, tuning, octaves, scale, sound) crient
- * depuis toujours sur une référence inexistante. Les autres — `transcription`, `test_alphabets`,
+ * depuis toujours sur une référence inexistante. Les autres — `homomorphism`, `test_alphabets`,
  * `settings` — n'ont pas de catalogue déclaré, donc rien n'y criait.
  *
  * L'ARGUMENT QUI TRANCHE (architecte 2026-07-27) : **ne rien pouvoir vérifier n'est pas une raison
@@ -20,6 +20,10 @@
  * scènes de BPx) : QUATRE invocations ne résolvent pas, et les quatre sont DÉJÀ refusées
  * aujourd'hui (`@alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute AUCUNE casse.
  */
+// ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
+// la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
+// `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
+// de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
@@ -53,12 +57,12 @@ ok(SANS_CATALOGUE.length >= 2,
 
 // ─── 2. LE CAS SIGNALÉ, nommément ────────────────────────────────────────────────────────────
 {
-  const r = compile('@transcription.dhinOO');
+  const r = compile('@homomorphism.dhinOO');
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-  ok((r.errors || []).length > 0, "2. '@transcription.dhinOO' doit CRIER — c'est le cas qui a fait naître ce garde");
-  ok(msg.includes('dhinOO') && msg.includes('transcription'),
+  ok((r.errors || []).length > 0, "2. '@homomorphism.dhinOO' doit CRIER — c'est le cas qui a fait naître ce garde");
+  ok(msg.includes('dhinOO') && msg.includes('homomorphism'),
      `2. et le refus doit NOMMER l'entrée ET la librairie — reçu : ${msg.slice(0, 120)}`);
-  ok((compile('@transcription.dhin').errors || []).length === 0,
+  ok((compile('@homomorphism.dhin').errors || []).length === 0,
      "2. l'entrée CORRIGÉE doit passer — le cri vise l'inexistant, pas la librairie");
 }
 
@@ -99,7 +103,7 @@ for (const axe of CATALOGUES) {
 // Un nom de directive qui n'est pas une librairie n'a rien à faire ici : c'est une autre faute,
 // avec un autre message. Le cri ne doit pas se mettre à parler à sa place.
 {
-  const r = compile('@transcription.dhin\n@meter:4/4');
+  const r = compile('@homomorphism.dhin\n@meter:4/4');
   ok((r.errors || []).length === 0,
      `5. une directive ordinaire à côté ne doit pas être happée — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

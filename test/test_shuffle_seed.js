@@ -14,7 +14,7 @@ import { registerAll } from '../src/transpiler/libs.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const libs = {};
-for (const n of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'transcription']) {
+for (const n of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[n] = JSON.parse(readFileSync(`lib/${n}.json`, 'utf8'));
 }
 registerAll(libs);

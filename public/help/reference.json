@@ -37,7 +37,7 @@
           "desc": "Set octave convention"
         },
         {
-          "syntax": "@transcription.tabla",
+          "syntax": "@homomorphism.tabla",
           "desc": "Load homomorphism table"
         },
         {
@@ -438,7 +438,7 @@
       "desc": "Set octave naming convention (western, saptak, etc.)"
     },
     "transcription": {
-      "syntax": "@transcription.name",
+      "syntax": "@homomorphism.name",
       "desc": "Load a homomorphism/substitution table for template-based rewriting."
     },
     "timepatterns": {

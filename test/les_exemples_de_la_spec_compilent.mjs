@@ -315,6 +315,14 @@ for (const [ligne] of RETARD_REGLES) {
 // COMPILE — un sac séparé au MILIEU d'une règle est un réglage posé dans le flux (tranché par
 // Romain, « les règles et l'antécédent sont clairs »). Elle sort des DEUX cliquets.
 const RETARD_BLOCS = new Map([
+  // ⚠️ LA DIRECTIVE EST RATTRAPÉE, LE BLOC NON — et la cause a changé de nature.
+  //     `@homomorphism.dhati` charge désormais sa table (renommage du 2026-08-07). Ce qui
+  //     reste est la ligne `S -> $N14 dhati &N14` : le NOM DE LA TABLE se pose entre le
+  //     gabarit maître et son esclave, et le contrôle du vocabulaire le prend pour un
+  //     terminal. La bible le décrit (« son nom se pose entre les deux ») ; le parseur ne
+  //     range pas encore ce nom parmi les symboles légitimes du flux. Dette suivante.
+  ['@homomorphism.dhati #0', /terminal 'dhati' non déclaré/],
+
   // ⚠️ L'OBJET SONORE COMPOSÉ EST RATTRAPÉ — `|[C4 E4 G4]` compile, et une faute DEDANS crie.
   //     Ce qui reste tient au BLOC, pas à la forme : ses deux lignes illustrent la même
   //     construction dans DEUX alphabets (`C4 E4 G4` en occidental, `sa _ re` en sargam), et
@@ -338,7 +346,6 @@ const RETARD_BLOCS = new Map([
   ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],
   ['@def halo(x) x!tin!ge #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@def sombre lpf1 >> vca1 #0', /Expected arrow \(-> <- <>\), got WIRE at line /],
-  ['@homomorphism.dhati #0', /'@homomorphism\.dhati' : l'entrée 'dhati' n'e/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['Motif -> C4 D4 E4 #0', /appel 'accent\(E4\)' : 'accent' n'existe pas —/],
@@ -436,6 +443,10 @@ for (const [ligne] of BASELINE_RATTRAPAGE) {
 // directive ne se débranche pas, la coupure de câblage si. La liste est le REGISTRE de l'état courant, pas une
 // mémoire des mouvements ; ce qui est mort y figure, ce qui vit n'y figure pas.
 const MORTES = [
+  [/@transcription\b/, "'@transcription' — REMPLACÉE par '@homomorphism' le 2026-08-07 (Romain, "
+   + "« oui on renomme ») : la bible n'a jamais écrit que '@homomorphism.<table>'. Les tables ont "
+   + "rejoint lib/homomorphism.json, clé 'tables'", 'exemptable'],
+
   [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
   [/@alias\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "l'alias avec le signe '=' (supprimé de TOUT le langage le 2026-07-27)", 'exemptable'],
   [/@map\s+[A-Za-z_<[]/, "'@map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
