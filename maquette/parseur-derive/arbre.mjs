@@ -41,7 +41,7 @@ const NATURE = {
   // ⚠️ CORRECTION DE MA TABLE, pas du langage : la production distingue le code ISOLÉ dans le flux
   // du code ATTACHÉ à une voix. Ma table les confondait, d'où un écart de +829 % que j'ai failli
   // ranger avec les divergences du langage. Un écart peut venir de l'instrument.
-  Backtick: 'Backtick',
+  Backtick: null,   // voir la correction ci-dessous
   Scene: 'Scene',
 };
 
@@ -52,7 +52,16 @@ function naturesEngendrees(noeud, compte = new Map(), vus = new WeakSet()) {
   if (Array.isArray(noeud)) { for (const x of noeud) naturesEngendrees(x, compte, vus); return compte; }
   const t = noeud.$type;
   if (typeof t === 'string') {
-    const n = NATURE[t];
+    // ⚠️ DEUX CORRECTIONS DE MA TABLE, pas du langage — trouvées en comparant, et nommées comme
+    // telles pour qu'on ne les range pas avec les divergences réelles :
+    //   · un nombre écrit en FRACTION est une DURÉE, pas un terminal. Ma table les confondait,
+    //     d'où −65 % d'un côté et +78 % de l'autre : le même écart, compté deux fois.
+    //   · le bloc de code n'a pas de nature `Backtick` en production — il s'y nomme autrement
+    //     selon qu'il est isolé ou attaché. Le compter ici fabriquait un écart de +999 %.
+    let n = NATURE[t];
+    if (t === 'Nombre' && noeud.denom !== undefined && noeud.denom !== null) n = 'NumericDuration';
+    if (t === 'Duree') compte.set('__DureeCollee', (compte.get('__DureeCollee') || 0) + 1);
+    if (t === 'Backtick') n = null;
     if (n) compte.set(n, (compte.get(n) || 0) + 1);
   }
   for (const [k, v] of Object.entries(noeud)) {
@@ -77,7 +86,35 @@ const { toutesLesScenes } = await import('/home/romi/dev/bp/BPscript/test/corpus
 const INCOMPATIBLES = ['visser-waves', 'koto3', 'dhati2', 'dhin'];
 
 // Les natures que la maquette prétend produire — les seules sur lesquelles la comparaison a un sens.
-const COMPAREES = new Set(Object.values(NATURE));
+const COMPAREES = new Set(Object.values(NATURE).filter(Boolean));
+
+// ── LA PASSE DE COMPLÉTION ──────────────────────────────────────────────────
+// ⚠️ ROMAIN A TRANCHÉ le 2026-08-07 : la grammaire LIT, du code COMPLÈTE et RÉÉCRIT. Les deux
+// complétions ci-dessous sont des DEMANDES explicites, pas des accidents :
+//   · « avoir un acteur par défaut qui soit dans l'arbre même si pas dans la scène — j'ai dit
+//     plusieurs fois qu'il fallait le faire » ;
+//   · « la transformation de A:1/2 en {1/2, A}, c'est ma demande, car BPx ne sait pas
+//     interpréter ça ».
+// Comparer l'arbre engendré NU à l'arbre de production revient donc à mesurer un écart VOULU et
+// à le prendre pour un défaut. La comparaison n'a de sens qu'APRÈS cette passe.
+function completer(compte, arbre) {
+  // 1. L'ACTEUR IMPLICITE — une scène sans acteur déclaré en reçoit un, avec ses références.
+  const acteursDeclares = (arbre.actors || []).length;
+  if (acteursDeclares === 0) {
+    compte.set('ActorDirective', (compte.get('ActorDirective') || 0) + 1);
+    // quatre références par défaut : alphabet, accordage, registres, sortie
+    compte.set('ActorReference', (compte.get('ActorReference') || 0) + 4);
+  }
+  // 2. LE DÉSUCRAGE DE LA DURÉE COLLÉE — `A:1/2` devient `{1/2, A}` : chaque durée collée crée un
+  //    bloc polymétrique et déplace le nombre du côté des durées.
+  // ⚠️ SEULE LA DURÉE COLLÉE crée un bloc — `A:1/2` devient `{1/2, A}`. Une fraction posée SEULE
+  // dans le flux (`A 1/2 B`) est un silence, elle n'emballe rien. Ma première version comptait
+  // les deux, d'où un excès de blocs : la complétion doit reproduire la règle, pas l'approcher.
+  const collees = compte.get('__DureeCollee') || 0;
+  compte.delete('__DureeCollee');
+  if (collees > 0) compte.set('Polymetric', (compte.get('Polymetric') || 0) + collees);
+  return compte;
+}
 
 let scenes = 0;
 const ecart = new Map();   // nature -> { engendre, production }
@@ -88,7 +125,7 @@ for (const [nom, src] of toutesLesScenes()) {
   let p; try { p = compileToBPxAST(src); } catch { continue; }
   if (!p.ast) continue;
   scenes++;
-  const cg = naturesEngendrees(g.value), cp = naturesProduction(p.ast);
+  const cg = completer(naturesEngendrees(g.value), g.value), cp = naturesProduction(p.ast);
   for (const n of COMPAREES) {
     if (!ecart.has(n)) ecart.set(n, { engendre: 0, production: 0 });
     const e = ecart.get(n);

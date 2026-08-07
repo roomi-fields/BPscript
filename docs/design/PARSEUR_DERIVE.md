@@ -512,3 +512,38 @@ code dont on sait désormais POURQUOI il existe, ce qui n'était pas le cas ce m
 engendré NU et l'arbre de production. Elle se fera **après la passe de complétion**. Comparer
 avant, c'est mesurer un écart voulu et le prendre pour un défaut — l'erreur que j'ai failli
 commettre en présentant ces pourcentages comme des divergences.
+
+
+---
+
+# La passe de complétion — l'arbitrage de Romain, mis en œuvre et mesuré
+
+**2026-08-07.** Les deux complétions que Romain a confirmées sont désormais appliquées à l'arbre
+engendré avant comparaison : l'**acteur implicite** et le **désucrage de la durée collée**.
+
+**Résultat immédiat, sur 270 scènes :**
+
+| nature | avant complétion | après |
+|---|---|---|
+| `ActorDirective` | −75 % | **= (282 contre 282)** |
+| `Polymetric` | −12 % | **= (5 723 contre 5 699)** |
+| `ActorReference` | −90 % | +6 % |
+
+**Sept natures sur quinze coïncident à moins de 5 %**, contre cinq avant.
+
+⚠️ **La complétion doit REPRODUIRE la règle, pas l'approcher.** Ma première version créait un bloc
+pour **toute** durée ; or seule la durée **collée** en crée un — une fraction posée seule dans le
+flux (`A 1/2 B`) est un silence, elle n'emballe rien. Le compte est passé de +35 % à l'égalité
+quand j'ai distingué les deux.
+
+⚠️ **Et deux écarts venaient de MA TABLE, pas du langage** — comptés d'abord comme des divergences
+réelles : une fraction est une **durée**, pas un terminal ; et le bloc de code ne porte pas en
+production la nature que je lui prêtais. Le second fabriquait un écart de +999 %.
+
+## Ce qui reste à expliquer
+
+Quatre écarts n'ont pas encore de cause établie : les symboles (−12 %), les prolongations (−14 %),
+les jokers (−39 %), les directives (+54 %) et les gardes (+82 %). ⚠️ **Je ne les explique pas, et
+je ne les range pas** — les trois causes trouvées jusqu'ici étaient toutes soit une complétion
+voulue, soit une erreur de mon instrument. Il serait commode de supposer la même chose ici ; ce
+serait supposer, pas mesurer.
