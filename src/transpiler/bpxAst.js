@@ -21,7 +21,8 @@
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
-import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite } from './actorResolver.js';
+import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
+         sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
@@ -548,13 +549,8 @@ function canonicalizeContexts(ast) {
   }
 }
 
-// Transport par défaut de l'acteur IMPLICITE — lu DANS @core (donnée : `defaults.components
-// .transport`), plus de constante en dur (cascade de défauts, Romain 2026-07-05). Le repli
-// 'audio' n'est atteint QUE si @core est absent/cassé (bug de config) — pas un défaut normal.
-function defaultActorTransport() {
-  const core = loadLib('core');
-  return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
-}
+// `defaultActorTransport` VIT DÉSORMAIS AVEC LES AUTRES CASCADES (actorResolver.js, 2026-08-07) :
+// c'est le niveau 1 de l'axe SORTIE, il n'avait aucune raison d'être seul de son côté.
 
 // Canal de sortie = CANON DIRECT {audio, midi, osc} (EBNF:182), écrit tel quel. Le modèle profils
 // d'environnement (routing.json : studio/live/browser) et sa normalisation de surface (ex-
@@ -851,9 +847,24 @@ function applyDefaultActor(ast) {
     }
     return errors; // au moins un @actor déclaré → pas d'acteur implicite (pas de chevauchement)
   }
-  // Transport de l'acteur implicite : binding de l'alphabet s'il existe, sinon défaut du composant.
-  const transportKey = (alphaBinding && alphaBinding.runtime) || defaultActorTransport();
-  const transport = { type: 'TransportRef', key: transportKey, params: {} };
+  // LA SORTIE DE L'ACTEUR IMPLICITE — cascade complète (`sortieHeritee`), plus une lecture partielle.
+  // ⚠️ CE QUI ÉTAIT ÉCRIT ICI IGNORAIT LA SCÈNE : la clé venait du raccord d'alphabet ou du socle,
+  // jamais de `@out.midi`. La directive était refusée au parse, donc rien ne pouvait le révéler —
+  // et le jour où elle a été acceptée, l'acteur a continué à sortir `audio` sans un mot. Une valeur
+  // par défaut et une valeur IGNORÉE ont exactement la même tête ; c'est pourquoi la cascade est
+  // définie une seule fois, à côté des trois autres axes, et pas reconstituée à chaque appelant.
+  const sortie = sortieHeritee(ast);
+  if (sortie.conflit) {
+    errors.push({
+      message: `deux sorties pour la même scène : '@out.${sortie.conflit.ecrite}' et le raccord `
+             + `'@alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' désignent des `
+             + `canaux différents — les deux écritures disent la MÊME chose, il faut n'en garder `
+             + `qu'une`,
+      line: sortie.conflit.line,
+    });
+  }
+  const transportKey = sortie.key;
+  const transport = { type: 'TransportRef', key: transportKey, params: sortie.params };
   // ⚠️ ET SON ALPHABET — il naissait SANS, et c'était le trou (Romain 2026-07-29, « ça ne devrait
   // JAMAIS ARRIVER »). L'ancien commentaire ici disait « pas d'alphabet : pitch via le résolveur de
   // scène » : il n'existait aucun résolveur de scène en aval pour le remplir, donc l'AST partait
@@ -878,6 +889,16 @@ function applyDefaultActor(ast) {
       properties.tuning = tun;
       references.push({ type: 'ActorReference', category: 'tuning', name: tun, line: 0 });
     }
+  }
+  // L'INTERPRÈTE PAR DÉFAUT — cinquième et dernière des clés d'acteur à descendre (Romain,
+  // 2026-08-07 : « toutes ces directives doivent descendre dans l'acteur implicite »). Il ne
+  // descendait pas DU TOUT : `@eval.strudel` en tête de scène était lu par le validateur et par
+  // personne d'autre. Et il ne dépend PAS de l'alphabet — une scène qui ne joue aucune note
+  // déclare quand même par quoi ses backtiques sont lus — donc il vit hors du bloc ci-dessus.
+  const interprete = evalHerite(ast);
+  if (interprete) {
+    properties.eval = interprete;
+    references.push({ type: 'ActorReference', category: 'eval', name: interprete, line: 0 });
   }
   // ⚠️ IL S'APPELAIT `default` JUSQU'AU 2026-07-30 (décision Romain, en direct :
   // `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`). Son motif n'est pas

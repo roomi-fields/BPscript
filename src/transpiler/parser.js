@@ -1262,7 +1262,7 @@ function parse(tokens, opts = {}) {
   function parseDirective() {
     const tok = expect(T.AT);
     // @+ is a special case — PLUS token instead of IDENT
-    let name, subkey = null;
+    let name, subkey = null, directiveParams = null;
     if (at(T.PLUS)) {
       advance();
       name = '+';
@@ -1310,6 +1310,23 @@ function parse(tokens, opts = {}) {
     if (at(T.PERIOD)) {
       advance();
       subkey = expect(T.IDENT).value;
+    }
+
+    // ─── UNE CLÉ D'ACTEUR PORTE SES PARAMÈTRES, EN DÉFAUT DE SCÈNE AUSSI ──────────────────────
+    // `@out.midi(ch:1)` (`LANGUAGE.md` §« Les cinq clés d'un acteur ») : la même écriture que sous
+    // un `@actor`, à l'étage de la scène. Les paramètres sont lus ICI parce que la clé les porte
+    // partout où elle s'écrit — ils ne dépendent pas de l'endroit. La liste des clés vient de
+    // `lib/core.json` (`schema.actorKeys`), jamais d'une liste en dur.
+    if (subkey && at(T.LPAREN) && !current().spaceBefore && actorKeysData().valides.has(name)) {
+      advance();                                   // (
+      directiveParams = {};
+      while (!at(T.RPAREN) && !atEnd()) {
+        const pk = expect(T.IDENT).value;
+        expect(T.COLON);
+        directiveParams[pk] = at(T.INT) || at(T.FLOAT) ? Number(advance().value) : advance().value;
+        if (at(T.COMMA)) advance();
+      }
+      expect(T.RPAREN);
     }
 
     // ─── PIERRE TOMBALE — `@scene` est SUPPRIMÉE de la graphie (Romain, 2026-07-29) ──────────
@@ -1411,12 +1428,18 @@ function parse(tokens, opts = {}) {
         + `'@actor' : 'out.<canal>' (ex-'transport.<canal>'). `
         + `Exemple : '@actor S\\n  out.audio'.`, tok);
     }
-    if (name === 'out') {
-      throw new ParseError(
-        `'@out' n'est pas une directive de scène (décision Romain 2026-08-04) — 'out' est une clé `
-        + `d'ACTEUR, elle s'écrit 'out.<canal>' à l'intérieur d'un bloc '@actor', jamais en tête `
-        + `de scène. Exemple : '@actor S\\n  out.audio'.`, tok);
-    }
+    // ⚠️ `@out` A ÉTÉ REFUSÉ ICI DU 2026-08-04 AU 2026-08-07, ET LE REFUS ÉTAIT DE MOI.
+    // Il invoquait la décision `2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport`,
+    // qui ne dit PAS ça : elle sort le mot `transport` du langage et pose `in.`/`out.` à sa place.
+    // Tous ses exemples écrivent `out.` sous un acteur, aucun n'interdit le défaut de scène. La
+    // bible, elle, l'ÉCRIT (`LANGUAGE.md` §« Les cinq clés d'un acteur ») :
+    //     @alphabet.sargam          // la scene entiere joue le sargam et sort par le MIDI
+    //     @out.midi(ch:1)
+    //     @actor sitar              // cet acteur affine ce dont il herite
+    // Le défaut mesuré était réel — l'ancien commentaire ci-dessus le dit : `@out.midi` compilait
+    // SANS AUCUN EFFET. J'ai fermé la moitié facile (interdire) au lieu de la vraie (brancher).
+    // Les quatre autres clés d'acteur descendaient déjà en défaut de scène ; `out` était la seule
+    // exception, et elle ne venait d'aucun arbitrage.
 
     // ─── PIERRE TOMBALE — `@in` n'existe plus (Romain, 2026-08-04) ────────────────────────────
     // `hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md`. La bible
@@ -2366,7 +2389,8 @@ function parse(tokens, opts = {}) {
 
         break;
       }
-      const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };
+      const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
+                        ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
       if (assignments.length > 0) {
         // On retourne un nœud composite : le caller détecte AlphabetSoundAssignments
         // et l'ajoute à scene.soundAssignments tout en gardant la Directive.
@@ -2388,7 +2412,8 @@ function parse(tokens, opts = {}) {
       throw new ParseError(`Directive '@${name}' retirée — écrire [@${name}${suggestion}] (bloc de production)`, tok);
     }
 
-    return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers, line: tok.line };
+    return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
+             ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
   }
 
   // ============================================================

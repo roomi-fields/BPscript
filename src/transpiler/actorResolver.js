@@ -159,6 +159,72 @@ function tuningHerite(ast, alphabetKey) {
   return connu(lib && lib.defaultTuning) ? lib.defaultTuning : undefined;
 }
 
+// Transport par défaut de l'acteur IMPLICITE — lu DANS @core (donnée : `defaults.components
+// .transport`), plus de constante en dur (cascade de défauts, Romain 2026-07-05). Le repli
+// 'audio' n'est atteint QUE si @core est absent/cassé (bug de config) — pas un défaut normal.
+function defaultActorTransport() {
+  const core = loadLib('core');
+  return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
+}
+
+/**
+ * LA SORTIE HÉRITÉE — quatrième axe de la cascade, et le plus trompeur des cinq.
+ *
+ * ⚠️ CE QU'IL FAISAIT AVANT LE 2026-08-07, et pourquoi c'est pire qu'un trou. Les trois axes de
+ * hauteur au-dessus sortaient ABSENTS quand la scène ne les écrivait pas — visible. La sortie,
+ * elle, sortait PRÉSENTE et FAUSSE : l'acteur implicite recevait toujours `audio`, le défaut du
+ * socle, même quand la scène écrivait `@out.midi` noir sur blanc. Un consommateur ne pouvait pas
+ * le savoir — une valeur par défaut et une valeur ignorée ont exactement la même tête. C'est le
+ * mode d'échec MUET, celui qu'aucun garde ne signale parce que rien ne manque.
+ *
+ * Et l'écriture était refusée au parse depuis le 2026-08-04, ce qui masquait le reste : on ne
+ * mesure pas la descente d'une directive qu'on interdit d'écrire.
+ *
+ * LA CASCADE, dans l'ordre : ce que la scène écrit (`@out.midi(ch:1)`) → le raccord de sortie posé
+ * sur l'alphabet (`@alphabet.X:midi`, canon 2026-07-05) → le défaut du composant (`lib/core.json`).
+ * Les deux premiers disent LA MÊME CHOSE par deux écritures ; s'ils se contredisent, on refuse en
+ * les nommant tous les deux plutôt que d'en élire un en silence.
+ *
+ * @returns {{key: string, params: object, conflit: object|null}}
+ */
+function sortieHeritee(ast) {
+  const sceneOut = (ast.directives || []).find((d) => d.name === 'out' && d.subkey);
+  const alphaBinding = (ast.directives || []).find((d) => d.name === 'alphabet' && d.runtime);
+  if (sceneOut && alphaBinding && alphaBinding.runtime !== sceneOut.subkey) {
+    return { key: sceneOut.subkey, params: sceneOut.params || {},
+             conflit: { ecrite: sceneOut.subkey, raccord: alphaBinding.runtime,
+                        alphabet: alphaBinding.subkey, line: sceneOut.line || 0 } };
+  }
+  if (sceneOut) return { key: sceneOut.subkey, params: sceneOut.params || {}, conflit: null };
+  if (alphaBinding) return { key: alphaBinding.runtime, params: {}, conflit: null };
+  return { key: defaultActorTransport(), params: {}, conflit: null };
+}
+
+/**
+ * LE LANGAGE D'ÉVALUATION HÉRITÉ — cinquième axe, et il ne descendait pas du tout.
+ *
+ * `@eval.strudel` en tête de scène compilait et n'atteignait jamais l'acteur implicite : la
+ * directive était lue par le validateur et par personne d'autre, exactement le défaut mesuré sur
+ * les registres le 2026-07-29. Une scène sans `@actor` qui déclare son interprète par défaut le
+ * perdait entre le parse et l'arbre.
+ *
+ * ⚠️ ON NE MATÉRIALISE QUE CE QUI RÉSOUT, même règle que pour les registres : un interprète que le
+ * catalogue ne connaît pas n'a aucune valeur effective à porter, et le cri reste sur la directive
+ * plutôt que d'être répété sur sa copie.
+ *
+ * @returns {string|undefined}
+ */
+function evalHerite(ast) {
+  const sceneEval = (ast.directives || []).find((d) => d.name === 'eval' && d.subkey);
+  if (!sceneEval) return undefined;
+  // ⚠️ LE CATALOGUE VIT SOUS `objects`, comme toutes les librairies de ce dépôt — l'interroger à
+  // plat rendait `undefined` pour TOUS les interprètes, y compris ceux qu'il déclare. Le garde
+  // aurait été vert (rien ne descend, rien ne contredit) : c'est l'instrument qui aurait menti.
+  const catalogue = loadLib('eval');
+  const connus = (catalogue && catalogue.objects) || catalogue || {};
+  return connus[sceneEval.subkey] ? sceneEval.subkey : undefined;
+}
+
 /**
  * Resolve actors for the AST.
  *
@@ -403,4 +469,5 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
   }
 }
 
-export { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite };
+export { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
+         sortieHeritee, evalHerite, defaultActorTransport };
