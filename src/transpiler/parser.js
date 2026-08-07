@@ -4296,7 +4296,14 @@ function parse(tokens, opts = {}) {
     // payload est posé par annotateRhsNode (type 'Symbol'). Nom littéral : pas de normalizeName.
     if (at(T.COMPOUND)) {
       const t = advance();
-      return { type: 'Symbol', name: t.value, line: t.line };
+      // ⚠️ LE NOM FORMÉ EST UN TERMINAL, et il était REFUSÉ comme s'il n'en était pas un.
+      // `LANGUAGE.md` §« L'objet sonore composé » : « Le nom ainsi formé se pose dans le flux comme
+      // un terminal ORDINAIRE, et son contenu est opaque à la dérivation : il fait partie du nom. »
+      // Le parseur FORMAIT bien le nom, puis le contrôle du vocabulaire le rejetait — « terminal
+      // 'C4E4G4' non déclaré » — parce qu'aucun alphabet ne porte évidemment le concaténé.
+      // Les PARTIES voyagent avec lui : opaque à la DÉRIVATION ne veut pas dire opaque au contrôle
+      // du vocabulaire, et sans elles une faute de frappe à l'intérieur serait muette.
+      return { type: 'Symbol', name: t.value, compose: t.parties || [], line: t.line };
     }
 
     // Period .

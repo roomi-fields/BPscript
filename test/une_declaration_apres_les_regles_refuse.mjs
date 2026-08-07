@@ -33,13 +33,20 @@ const err = (src) => {
   try { return (compileToBPxAST(src).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
 };
+// ⚠️ LE SOCLE EST CONDITIONNEL DEPUIS LE 2026-08-07 : une scène ne déclare qu'UN alphabet
+// (l'acteur implicite est unique, règle de Romain). Poser `@alphabet.western` autour d'un
+// `@alphabet.sargam` testé fabriquait un refus qui n'a rien à voir avec ce qu'on mesure.
+const socle = (d) => `@core\n${/^@alphabet[.:]/.test(d) ? '' : '@alphabet.western\n'}`;
 const S = '@core\n@alphabet.western\n';
 
 // ── 1. LA MATRICE — chaque déclaration, dans les DEUX positions ──────────────────────────────
 // Une écriture plausible par directive. Elles ne sont pas inventées : chacune est la forme que le
 // parseur accepte AVANT les règles, vérifiée par la moitié « doit passer » de cette même matrice.
 const DECLARATIONS = [
-  ['alphabet', '@alphabet.sargam'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
+  // `western` et non `sargam` : depuis que le socle est conditionnel, la scène ne porte plus que
+  // l'alphabet TESTÉ, et la règle témoin joue `C4`. Mesurer un refus de POSITION ne doit pas
+  // buter sur un vocabulaire qui ne contient pas la note de l'exemple.
+  ['alphabet', '@alphabet.western'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
   ['scan', '@scan:left'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
   // ⚠️⚠️ `transport` ET `out` SONT SORTIS DE LA MATRICE le 2026-08-04, remplacés 1-pour-1 par
   // `scan` et `sound` — le témoin anti-rétrécissement (>= 24) reste tenu, et les deux remplaçants
@@ -70,14 +77,14 @@ const DECLARATIONS = [
 console.log(`[declaration apres regles] ${DECLARATIONS.length} declarations x 2 positions`);
 for (const [nom, forme] of DECLARATIONS) {
   // APRÈS une règle → REFUSÉE, et le refus doit NOMMER la directive et donner la réécriture.
-  const apres = err(`${S}S -> C4\n${forme}\nT -> D4\n`);
+  const apres = err(`${socle(forme)}S -> C4\n${forme}\nT -> D4\n`);
   ok(apres.length >= 1, `1. '@${nom}' après une règle doit être REFUSÉE (elle se perdait en silence)`);
   ok(apres.some((m) => m.includes(`'@${nom}'`)),
     `1. '@${nom}' — le refus doit NOMMER la directive, pas dire « ligne non reconnue » (reçu : ${apres[0]})`);
   ok(apres.some((m) => /avant la première règle/.test(m)),
     `1. '@${nom}' — le refus doit donner la RÉÉCRITURE, sinon il constate sans aider`);
   // AVANT les règles → PASSE. Sans cette moitié, une règle qui refuserait tout aurait l'air juste.
-  ok(err(`${S}${forme}\nS -> C4\n`).length === 0,
+  ok(err(`${socle(forme)}${forme}\nS -> C4\n`).length === 0,
     `1. '@${nom}' AVANT les règles doit PASSER — c'est la moitié qu'on casse sans s'en apercevoir`);
 }
 

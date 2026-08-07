@@ -670,18 +670,16 @@ function terminauxEnPortee(ast) {
     return true;
   };
   let aUnAlphabet = false;
-  // ⚠️ UNE SCÈNE PEUT EN DÉCLARER PLUSIEURS, et on n'en lisait QU'UN — en silence. La bible
-  // l'écrit (`LANGUAGE.md` §« Déclarer un symbole ») :
-  //     @alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio
-  //     @alphabet.tabla:osc              // ceux de tabla sortent par l'OSC
-  //     S -> sa dhin
-  // `find` prenait le premier, donc `dhin` était refusé comme « terminal non déclaré » alors que
-  // la scène déclare son alphabet deux lignes plus haut. Le second n'était pas REFUSÉ, il était
-  // IGNORÉ : rien ne signalait qu'une déclaration entière ne servait à rien.
+  // ⚠️ UNE SCÈNE NE DÉCLARE QU'UN ALPHABET — tranché par Romain le 2026-08-07 : « on ne déclare
+  // pas plusieurs acteurs implicites, un seul ; sinon c'est explicite. » Un acteur porte UN
+  // alphabet et UNE sortie ; deux vocabulaires appellent donc deux acteurs, et deux acteurs se
+  // DÉCLARENT. Le second `@alphabet` de scène est refusé plus bas (`refuserAlphabetsMultiples`),
+  // il n'est plus ignoré en silence — c'est pour ça qu'on lit le premier sans remords.
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
-  const octScene = sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null;
-  for (const d of (ast.directives || []).filter((x) => x.name === 'alphabet' && x.subkey)) {
-    aUnAlphabet = ajouter(d.subkey, octScene) || aUnAlphabet;
+  if (sceneAlpha) {
+    aUnAlphabet = ajouter(sceneAlpha.subkey, sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null)
+                || aUnAlphabet;
   }
   for (const a of ast.actors || []) {
     const p = a.properties || {};
@@ -748,6 +746,26 @@ function validateTerminals(ast) {
   const verifier = (el) => {
     if (!el || typeof el !== 'object') return;
     if (Array.isArray(el)) { el.forEach(verifier); return; }
+    // L'OBJET SONORE COMPOSÉ — `|[C4 E4 G4]` : le nom formé est un terminal, et ce sont ses
+    // PARTIES qui se contrôlent. `LANGUAGE.md` §« L'objet sonore composé » dit que le nom formé
+    // « se pose dans le flux comme un terminal ORDINAIRE » — aucun alphabet ne portera jamais le
+    // concaténé, donc le chercher tel quel refusait toujours. Opaque à la DÉRIVATION ne veut pas
+    // dire opaque au vocabulaire : une faute de frappe à l'intérieur crie, à sa place.
+    if (el.type === 'Symbol' && Array.isArray(el.compose) && el.compose.length) {
+      for (const part of el.compose) {
+        // Silence, prolongation et sous-blocs polymétriques sont ce qui s'écrit à l'intérieur
+        // (bible, même section) : ce ne sont pas des noms à chercher dans un alphabet.
+        if (/^[-_.]+$/.test(part) || /[{},]/.test(part)) continue;
+        if (known.has(part) || declared.has(part) || seen.has(part)) continue;
+        seen.add(part);
+        errors.push({
+          message: `dans l'objet sonore composé '|[…]' : '${part}' n'est déclaré nulle part — `
+                 + `absent des alphabets en portée`,
+          line: el.line,
+        });
+      }
+      return;
+    }
     if (el.type === 'Symbol' && el.name
         && el.role !== 'homomorphism'            // marqueur d'invocation d'homo, pas un terminal
         && !(el.payload && codeVoice.has(el.payload.actor))   // voix-code : terminal arbitraire
@@ -838,6 +856,36 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
   };
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) visiter(r.rhs);
   return errors;
+}
+
+/**
+ * UNE SCÈNE NE DÉCLARE QU'UN ALPHABET — l'acteur implicite est UNIQUE.
+ *
+ * ⚠️ RÈGLE DE ROMAIN, 2026-08-07, mot pour mot : « on ne déclare pas plusieurs acteurs implicites,
+ * un seul ; sinon c'est explicite. » Combinée à « un alphabet par acteur » (même jour), elle ferme
+ * la question : deux vocabulaires — a fortiori liés à deux sorties — demandent deux acteurs, et
+ * deux acteurs se DÉCLARENT.
+ *
+ * ⚠️ AVANT CE REFUS, LE SECOND ALPHABET ÉTAIT IGNORÉ EN SILENCE : le calcul des terminaux lisait
+ * le premier et jetait les autres. Une ligne entière ne servait à rien et rien ne le disait — le
+ * mode d'échec muet, pire qu'un refus. La `LANGUAGE.md` §« Déclarer un symbole » écrit encore la
+ * forme à deux alphabets ; elle est donc à corriger vers `@actor`, et c'est une décision de
+ * langage, pas une déduction : le cliquet des exemples la porte, datée.
+ *
+ * Mesuré avant de livrer : ZÉRO scène du corpus (274) déclare plus d'un `@alphabet`. Ce fail-loud
+ * n'invalide aucune écriture vivante.
+ */
+function refuserAlphabetsMultiples(ast) {
+  const alphabets = (ast?.directives || []).filter((d) => d.name === 'alphabet' && d.subkey);
+  if (alphabets.length <= 1) return [];
+  const second = alphabets[1];
+  return [{
+    message: `une scène ne déclare qu'UN alphabet, et '@alphabet.${second.subkey}' est le `
+           + `${alphabets.length === 2 ? 'second' : alphabets.length + 'e'} — l'acteur implicite `
+           + `est unique et ne porte qu'un vocabulaire. Pour en jouer plusieurs, les déclarer : `
+           + `'@actor <nom>' avec sa clé 'alphabet.<nom>' et sa clé 'out.<canal>', un bloc par voix`,
+    line: second.line || 0,
+  }];
 }
 
 function applyDefaultActor(ast) {
@@ -1814,6 +1862,7 @@ export function compileToBPxAST(source, environnement) {
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
+    result.errors.push(...refuserAlphabetsMultiples(ast));
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)

@@ -84,7 +84,14 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
  */
 function alphabetHerite(ast) {
   const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
-  if (sceneAlpha) return sceneAlpha.subkey;                              // niveau 3 : la scène
+  // ⚠️ ON NE MATÉRIALISE QUE CE QUI RÉSOUT — même règle que pour les registres, et pour la même
+  // raison, mesurée le 2026-08-07 : un `@alphabet.zzz` inexistant était RECOPIÉ sur l'acteur
+  // implicite, et le contrôle des références le refusait DEUX FOIS — une pour la directive, une
+  // pour la copie. Un même défaut qui parle deux fois se lit comme deux défauts ; la scène en a un.
+  // Le cri reste, à sa place, sur la directive.
+  if (sceneAlpha) {
+    return resolveActorAlphabet(sceneAlpha.subkey, ast.directives) ? sceneAlpha.subkey : null;
+  }
   if (ast.libRefs && ast.libRefs.length) return null;                    // hauteur opaque → Kairos (loi 35)
   return loadLib('core')?.defaults?.components?.alphabet || null;        // niveau 1 : socle @core
 }

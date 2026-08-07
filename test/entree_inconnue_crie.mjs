@@ -28,7 +28,13 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (directive) => {
-  try { return compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n${directive}\n@mode:ord\nS -> C4\n`); }
+  // ⚠️ L'ENVELOPPE NE POSE PLUS D'ALPHABET QUAND LA DIRECTIVE TESTÉE EN EST UN (2026-08-07).
+  // Depuis qu'une scène ne peut en déclarer qu'UN (règle de Romain, l'acteur implicite est
+  // unique), fabriquer `@alphabet.western:midi` autour de `@alphabet.zzz` faisait sortir DEUX
+  // erreurs : celle qu'on mesure, et une seconde due à l'instrument. L'enveloppe doit rester
+  // neutre sur l'axe qu'elle mesure.
+  const socle = /^@alphabet[.:]/.test(directive) ? '' : '@alphabet.western:midi\n';
+  try { return compileToBPxAST(`@core\n@controls\n${socle}${directive}\n@mode:ord\nS -> C4\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 

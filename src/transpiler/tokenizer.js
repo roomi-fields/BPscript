@@ -240,7 +240,11 @@ function tokenize(source, opts = {}) {
       let inner = '';
       while (i < source.length && peek() !== ']') inner += advance();
       if (i < source.length) advance(); // ]
+      // Le nom canonique est la suite CONCATÉNÉE ; les PARTIES sont conservées à côté. Sans
+      // elles, une faute de frappe à l'intérieur d'un objet composé serait indétectable — le
+      // nom formé est opaque à la dérivation (bible), pas au contrôle du vocabulaire.
       emit(T.COMPOUND, inner.replace(/\s+/g, ''));
+      tokens[tokens.length - 1].parties = inner.trim().split(/\s+/).filter(Boolean);
       continue;
     }
 
