@@ -272,6 +272,111 @@ for (const [ligne] of RETARD_REGLES) {
      + `ne se resserre jamais n'est qu'un compteur.`);
 }
 
+// ─── 2quater. LE BLOC ENTIER, ET C'EST LA BIBLE QUI DIT LESQUELS ─────────────────────────────
+// ⚠️ CE VOLET RÉPARE LA PORTÉE DES DEUX D'AU-DESSUS, ET LE CHIFFRE LE DIT (mesuré le 2026-08-07).
+// §2 mesure les lignes de DIRECTIVE, §2ter les lignes de RÈGLE — 146 lignes en tout. Mesuré : les
+// mêmes blocs en contiennent 156 que NI l'un NI l'autre ne regarde, parce qu'elles n'ont ni la
+// forme `@mot ` d'une des huit directives listées, ni la forme `Nom ->` d'une règle simple. En
+// sont dehors : `@def`, `@actor`, `@alphabet`, `@init`, `@module`, et toute règle dont la TÊTE est
+// un MOTIF (contexte `(C4) D4 ->`, joker `?1 D4 ->`, ancre `#C4 D4 ->`, garde `[stage==1] S ->`).
+// Répondre « il ne reste rien » sur ces deux volets aurait été un compte juste sur une moitié.
+//
+// ⚠️ ET SURTOUT : LIGNE PAR LIGNE EST LA MAUVAISE UNITÉ. Une ligne de la bible se lit dans son
+// bloc — un `@var` deux lignes plus haut, un `@alphabet` en tête. Les deux volets d'au-dessus
+// reconstituent ce contexte à la main, et ce bricolage EST une source de faux refus (mesuré : sept
+// exemples tombaient sur « attribut inconnu » faute du `@var` qui les précédait). Le bloc entier
+// n'a pas ce problème : c'est l'unité que l'auteur a écrite et que le lecteur recopie.
+//
+// LA PORTÉE, SANS DEVINER : la bible ÉTIQUETTE elle-même ses blocs. On prend les 68 blocs
+// qu'elle déclare `bpscript` — pas ceux qu'on croit reconnaître. C'est la même règle que pour la
+// vérification des messages : « le vérificateur ne devine jamais ce qui est du BPScript dans de la
+// prose ». Les blocs `ebnf`, `json`, `text` et les blocs sans étiquette restent DEHORS, et c'est
+// écrit ici plutôt que sous-entendu.
+//
+// LE RÉGIME EST CELUI DE LA BIBLE : elle est délibérément EN AVANCE. Un bloc refusé dit que le
+// compilateur est en retard — ce volet le CHIFFRE et l'empêche de grandir en silence, il ne le
+// traite pas. La clé d'une entrée est la PREMIÈRE LIGNE du bloc suivie de son rang parmi les blocs
+// qui commencent pareil : un numéro de ligne rougirait à chaque édition de la bible, alors que
+// c'est le CONTENU qui doit décider.
+const RETARD_BLOCS = new Map([
+  ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
+  ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
+  ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
+  ['// « quand D4 suit C4 » : D4 devient G4 #0', /la règle 'D4' porte le nom d'un TERMINAL de /],
+  ['// « quand E4 suit C4 D4 » : E4 devient F4 G4, et le contexte reste ou il est #0', /la règle 'E4' porte le nom d'un TERMINAL de /],
+  ['// « quelque chose, puis D4 » devient G4 #0', /la règle 'D4' porte le nom d'un TERMINAL de /],
+  ['// « quelque chose, puis D4 » devient « D4, puis cette chose » -- la place est PRISE, donc elle bouge #0', /la règle 'D4' porte le nom d'un TERMINAL de /],
+  ['@actor drums  eval.strudel(bank:gm) #0', /chevauchement d'acteurs : un binding de sort/],
+  ["@alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio #0", /terminal 'dhin' non déclaré — absent des alp/],
+  ['@alphabet.western #1', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
+  ['@alphabet.western:audio #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
+  ['@core #10', /la règle 'D4' porte le nom d'un TERMINAL de /],
+  ['@core #2', /Expected symbol, \(\.\.\.\) or \[\.\.\.\] after ! at l/],
+  ['@core #4', /Expected symbol, \(\.\.\.\) or \[\.\.\.\] after ! at l/],
+  ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],
+  ['@def halo(x) x!tin!ge #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
+  ['@def sombre lpf1 >> vca1 #0', /Expected arrow \(-> <- <>\), got WIRE at line /],
+  ['@homomorphism.dhati #0', /'@homomorphism\.dhati' : l'entrée 'dhati' n'e/],
+  ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
+  ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
+  ['Motif -> C4 D4 E4 #0', /appel 'accent\(E4\)' : 'accent' n'existe pas —/],
+  ['S -> $mel &mel      // deux productions possibles : les deux moities sont toujours identiques #0', /terminal 'mel' non déclaré — absent des alph/],
+  ["S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes #0", /'\(rndtime:…\)' : 'rndtime' est un contrôle MO/],
+  ['S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante #0', /terminal 'C4E4G4' non déclaré — absent des a/],
+  ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'&mel\(…\/…\)' : '\/' n'a pas sa place dans les /],
+]);
+
+let blocs = 0;
+const retardBlocsRetrouve = new Set();
+for (const p of SPECS) {
+  if (!existsSync(p)) continue;
+  const nom = path.basename(p);
+  const lignes = readFileSync(p, 'utf8').split('\n');
+  const rangs = new Map();
+  let dans = false, bloc = [];
+  for (const brut of lignes) {
+    if (/^```bpscript\s*$/.test(brut)) { dans = true; bloc = []; continue; }
+    if (dans && /^```\s*$/.test(brut)) {
+      dans = false; blocs++;
+      const src = bloc.join('\n');
+      const tete = (bloc.find((x) => x.trim()) || '').trim();
+      const rang = rangs.get(tete) || 0; rangs.set(tete, rang + 1);
+      const cle = `${tete} #${rang}`;
+      // L'ENVELOPPE, dite ici : un bloc qui pose déjà son socle (`@core`, `@alphabet`) est pris
+      // tel quel ; sinon on lui donne le minimum dérivable. Un bloc sans flèche reçoit un point de
+      // départ pour rester mesurable. Rien de plus — un contexte inventé masquerait de vrais refus.
+      const aSocle = /^@core/m.test(src) || /^@alphabet/m.test(src);
+      const aRegle = /(->|<-|<>)/.test(src);
+      const texte = (aSocle ? '' : '@core\n@controls\n@alphabet.western:midi\n') + src
+                  + (aRegle ? '\n' : '\n@mode:ord\nS -> C4\n');
+      let msg;
+      try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }
+      catch (e) { msg = e.message; }
+      if (!msg) continue;
+      const cause = RETARD_BLOCS.get(cle);
+      if (cause && cause.test(msg)) { retardBlocsRetrouve.add(cle); continue; }
+      ok(false,
+         `2quater. ${nom} : un bloc que la bible déclare BPScript est REFUSÉ, HORS RETARD `
+         + `INVENTORIÉ — « ${cle.slice(0, 60)} » → ${msg.replace(/\s+/g, ' ').slice(0, 110)}. `
+         + `La bible fait foi : soit le parser rattrape le bloc, soit il entre dans RETARD_BLOCS `
+         + `avec sa cause. Un bloc muet est un mensonge que personne ne verra.`);
+      continue;
+    }
+    if (dans) bloc.push(brut);
+  }
+}
+// SOCLE — un extracteur cassé rendrait zéro bloc et passerait au vert en ne mesurant rien.
+ok(blocs >= 60,
+   `2quater. SOCLE : ${blocs} bloc(s) déclarés BPScript extraits des specs — sous ce seuil, `
+   + `l'extracteur ne lit plus les blocs et « aucun refus » ne veut plus rien dire.`);
+// CLIQUET — le retard ne descend jamais tout seul, et il ne remonte pas en silence.
+for (const [cle] of RETARD_BLOCS) {
+  ok(retardBlocsRetrouve.has(cle),
+     `2quater-cliquet. le bloc « ${cle.slice(0, 60)} » est inscrit au retard mais NE REFUSE PLUS `
+     + `avec sa cause (rattrapé par le parser, refusé autrement, ou réécrit dans la bible) — `
+     + `RETIRE-le, daté. Un retard qui ne se resserre jamais n'est qu'un compteur.`);
+}
+
 // ─── 2bis. LA RÉFÉRENCE NE PEUT QUE DESCENDRE, ET À LA MAIN ──────────────────────────────────
 // Le cliquet ne descend jamais tout seul : si le parser rattrape une forme (ou si la ligne
 // disparaît de la doc), BASELINE_RATTRAPAGE doit être resserrée dans le MÊME commit — sinon ce
@@ -494,6 +599,9 @@ if (echecs.length) {
   process.exitCode = 1;
 } else {
   console.log(`✅ les documents enseignent des formes vivantes — ${passe} vérification(s) passée(s) : `
+            + `${blocs} BLOC(S) que la bible déclare BPScript compilés ENTIERS, dont `
+            + `${retardBlocsRetrouve.size} au retard inventorié (${blocs - retardBlocsRetrouve.size} `
+            + `passent), `
             + `${regles} RÈGLE(S) des specs compilées dont ${retardRetrouve.size} en retard `
             + `inventorié (le parser rattrape la bible), `
             + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), ${vusEnEchecConnu.size}/`
