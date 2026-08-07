@@ -547,3 +547,16 @@ les jokers (−39 %), les directives (+54 %) et les gardes (+82 %). ⚠️ **Je 
 je ne les range pas** — les trois causes trouvées jusqu'ici étaient toutes soit une complétion
 voulue, soit une erreur de mon instrument. Il serait commode de supposer la même chose ici ; ce
 serait supposer, pas mesurer.
+
+
+## Les cinq écarts restants — première sonde, et elle ne conclut pas
+
+Sur des scènes **simples**, les trois natures suspectes coïncident **exactement** : directives,
+prolongations et jokers rendent les mêmes comptes des deux côtés.
+
+⚠️ **Donc l'écart ne vient pas d'une règle générale mais de scènes particulières**, et je ne l'ai
+pas localisé. La sonde dit seulement où il n'est PAS.
+
+**Le pas suivant est écrit ici pour qui reprendra** : mesurer l'écart **scène par scène** au lieu
+de l'agréger, et lister les cinq scènes qui contribuent le plus à chaque nature. Un total masque
+toujours sa cause — c'est la même leçon que le motif de refus massif qui tenait à un caractère.
