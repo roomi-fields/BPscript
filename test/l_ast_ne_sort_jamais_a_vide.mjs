@@ -104,10 +104,17 @@ for (const [quoi, src, attendu] of SITUATIONS) {
 // Sans le premier, une régression qui remettrait l'alphabet à vide laisserait tout ce fichier au
 // vert. Sans le second, une cascade qui refuserait tout aurait l'air juste.
 const refusUnicite = (src) => compiler(src).erreurs.filter((m) => /TERMINAL de l'alphabet actif/.test(m));
-ok(refusUnicite('@core\nG4 -> C4 D4').length >= 1,
-  '2. MORD — dans une scène NUE, une règle nommée comme une note est refusée (c\'est tout l\'enjeu : elle passait)');
-ok(refusUnicite('@core\nmotif -> C4 D4').length === 0,
-  '2. SE TAIT — la même scène nue accepte une règle au nom quelconque');
+// ⚠️ LE SUJET DU TÉMOIN A CHANGÉ le 2026-08-07 ET SA FONCTION EST INTACTE. Il prouvait que
+// l'alphabet est bien résolu dans une scène NUE en montrant qu'une TÊTE DE RÈGLE nommée comme une
+// note était refusée — devenu une forme légitime (décision `2026-08-03-une-tete-de-regle-peut-
+// etre-un-terminal`). Ce qu'il faut prouver ici n'est pas ce refus-là : c'est que le vocabulaire
+// EXISTE. Une DÉCLARATION qui heurte un terminal le prouve aussi bien, et elle, elle n'a jamais
+// été levée — la règle d'unicité tient pour ce qui CRÉE un nom.
+ok(refusUnicite('@core\n@macro G4 saw >> audio\nS -> C4').length >= 1,
+  '2. MORD — dans une scène NUE, une DÉCLARATION nommée comme une note est refusée : la preuve que '
+  + "l'alphabet du socle est bien descendu (sans lui, il n'y a rien à heurter)");
+ok(refusUnicite('@core\n@macro grondement saw >> audio\nS -> C4').length === 0,
+  '2. SE TAIT — la même scène nue accepte une déclaration au nom quelconque');
 ok(refusUnicite('@core\n@mine.perso.gamme\nG4 -> C4').length === 0,
   '2. SE TAIT — hauteur opaque : aucun vocabulaire connu ici, donc rien à heurter');
 

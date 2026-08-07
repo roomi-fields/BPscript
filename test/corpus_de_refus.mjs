@@ -66,8 +66,10 @@ const REGLES = [
    S('@alphabet.western:video\nS -> C4'), S('@alphabet.western:midi\nS -> C4'), null],
   ['decision', "un nom déjà pris par une note (2026-07-28)",
    S('@macro G4 saw >> audio\nS -> C4'), S('@macro grondement saw >> audio\nS -> C4'), 'TERMINAL'],
-  ['decision', "une tête de règle nommée comme une note (2026-07-28)",
-   S('G4 -> C4 D4\nS -> G4'), S('motif -> C4 D4\nS -> motif'), 'TERMINAL'],
+  // ⚠️ « une tête de règle nommée comme une note » A ÉTÉ RETIRÉE D'ICI le 2026-08-07 — décision
+  // Romain `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` : c'est le principe même du
+  // mode sub/sub1, une règle de substitution réécrit un terminal. La ligne au-dessus reste : elle
+  // porte une DÉCLARATION (`@macro G4`), qui CRÉE un nom — la règle d'unicité tient pour elle.
   ['decision', "deux déclarations du même nom (2026-07-28)",
    S('@macro x saw >> audio\n@alias x cc:2\nS -> C4'), S('@macro x saw >> audio\n@alias y cc:2\nS -> C4'), 'déjà pris'],
   ['decision', "un câblage écrit dans le flux, non porté par le moteur (2026-07-28)",

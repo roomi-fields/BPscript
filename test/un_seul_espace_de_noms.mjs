@@ -57,11 +57,13 @@ for (const [sorte, ligne] of SORTES) {
 }
 // La TÊTE DE RÈGLE, contre tout le reste — portée globale.
 const TETES_REFUSEES = [
-  ['contre un terminal',  '@core\n@alphabet.western\nG4 -> C4 D4'],
+  // ⚠️ LE TERMINAL ET LA VARIABLE DE TRAVAIL SONT SORTIS D'ICI le 2026-08-07 — décision Romain
+  // `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md`, qui NOMME ses trois formes :
+  // `C4 -> G4`, `?1 D4 -> ?1 E4`, `#K1 #K2 #K3 M -> C4` avec `@var M`. Une règle de SUBSTITUTION
+  // réécrit un terminal : elle en a forcément un en tête, et « la note devient inatteignable » est
+  // ce qu'elle fait EXPRÈS. Elles sont désormais au lot B, celui de ce qui DOIT passer.
   ['contre une macro',    '@core\n@macro motif saw >> audio\nmotif -> C4'],
   ['contre un alias',     '@core\n@alias motif cc:2\nmotif -> C4'],
-  ['contre une variable', '@core\n@var motif\nmotif -> C4'],
-  ['contre une entrée',   '@core\n@var motif in.midi\nmotif -> C4'],
   ['contre un drapeau',   '@core\n@var motif flag: a:1, b:2\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
   ['contre un ACTEUR (l\'amalgame)', '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'],
@@ -82,6 +84,16 @@ const DOIVENT_PASSER = [
    '@core\n@alphabet.simple\nS -> X\nX -> a b\n-----\nX -> c d'],
   ['une PROPRIÉTÉ posée sur un nom existant : gate sur un terminal',
    '@core\n@alphabet.western\n@gate C4:midi\nS -> C4 D4'],
+  // LES TROIS FORMES DE LA DÉCISION DU 2026-08-03, mot pour mot. Elles étaient REFUSÉES ici même
+  // jusqu'au 2026-08-07 : « aucune grammaire de substitution ne compilait en BPScript ».
+  ['une SUBSTITUTION : la tête est un terminal (mode sub/sub1)',
+   '@core\n@alphabet.western\nC4 -> G4\nS -> C4'],
+  ['un JOKER devant un terminal en tête',
+   '@core\n@alphabet.western\n?1 D4 -> ?1 E4\nS -> C4 D4'],
+  ['une tête qui porte le nom d\'une variable de travail',
+   '@core\n@alphabet.western\n@var M\nM -> C4\nS -> M'],
+  ['un CONTEXTE positif devant un terminal en tête',
+   '@core\n@alphabet.western\n(C4) D4 -> G4\nS -> C4 D4'],
   // ⚠️ CES DEUX TÉMOINS ONT ÉTÉ RETIRÉS LE 2026-07-28 AU SOIR, ET C'EST L'INVERSE D'UN
   // RÉTRÉCISSEMENT : ils affirmaient qu'un acteur et sa règle homonyme devaient PASSER. Romain a
   // tranché que c'est une ERREUR GRAVE — l'amalgame d'un nom d'acteur et d'un nom de règle. Les
@@ -138,7 +150,13 @@ for (const [quoi, src] of DOIVENT_PASSER) {
 // Sans eux, une régression qui rendrait la règle muette laisserait tout ce fichier au vert :
 // la moitié « doit passer » passerait encore mieux, et la moitié « doit être refusée » est la
 // seule à mordre. C'est la forme exacte du piège payé sur l'outil de migration aujourd'hui.
-ok(refus('@core\n@alphabet.western\nG4 -> C4').length >= 1,
+// ⚠️ CE TÉMOIN A CHANGÉ DE SUJET le 2026-08-07, ET C'EST LE POINT DÉLICAT. Il prenait pour preuve
+// de morsure `G4 -> C4` — une tête de règle nommée comme une note — devenu une forme LÉGITIME
+// (décision du 2026-08-03). Le garder aurait exigé le refus d'une écriture ratifiée ; le retirer
+// sans le remplacer aurait laissé tout ce fichier vert le jour où la règle deviendrait muette.
+// Le témoin porte donc désormais sur une collision qui, elle, n'a jamais été levée : l'AMALGAME
+// d'un nom d'acteur et d'un nom de règle (« erreur grave », Romain 2026-07-28).
+ok(refus('@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`').length >= 1,
   'TÉMOIN — la règle doit savoir MORDRE (sinon tout ce fichier ment)');
 ok(refus('@core\n@alphabet.western\nmotif -> C4').length === 0,
   'TÉMOIN — et savoir se TAIRE (sinon elle refuserait tout, et mordrait aussi)');

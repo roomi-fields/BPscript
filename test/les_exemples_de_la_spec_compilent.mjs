@@ -301,19 +301,17 @@ for (const [ligne] of RETARD_REGLES) {
 // RESSERRÉ le 2026-08-07 : deux blocs SORTIS d'ici — le sac posé dans le flux `!(…)` se lit
 // désormais sans que `@controls` soit chargé, comme partout ailleurs. C'est le cliquet qui l'a
 // EXIGÉ en rougissant, pas moi qui y ai pensé.
+// RESSERRÉ une seconde fois le 2026-08-07 : CINQ blocs de plus sortis — la décision
+// `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` est appliquée, les grammaires de
+// SUBSTITUTION compilent (contexte, joker, dièse). Quatre exemples d'aide sortent pour la même
+// raison, plus bas. Ce sont les cliquets qui l'ont EXIGÉ en rougissant.
 const RETARD_BLOCS = new Map([
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ['// « quand D4 suit C4 » : D4 devient G4 #0', /la règle 'D4' porte le nom d'un TERMINAL de /],
-  ['// « quand E4 suit C4 D4 » : E4 devient F4 G4, et le contexte reste ou il est #0', /la règle 'E4' porte le nom d'un TERMINAL de /],
-  ['// « quelque chose, puis D4 » devient G4 #0', /la règle 'D4' porte le nom d'un TERMINAL de /],
-  ['// « quelque chose, puis D4 » devient « D4, puis cette chose » -- la place est PRISE, donc elle bouge #0', /la règle 'D4' porte le nom d'un TERMINAL de /],
-  ['@actor drums  eval.strudel(bank:gm) #0', /chevauchement d'acteurs : un binding de sort/],
   ["@alphabet.sargam:audio           // les terminaux de sargam sortent par l'audio #0", /terminal 'dhin' non déclaré — absent des alp/],
   ['@alphabet.western #1', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@alphabet.western:audio #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
-  ['@core #10', /la règle 'D4' porte le nom d'un TERMINAL de /],
   ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],
   ['@def halo(x) x!tin!ge #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
   ['@def sombre lpf1 >> vca1 #0', /Expected arrow \(-> <- <>\), got WIRE at line /],
@@ -343,12 +341,16 @@ for (const p of SPECS) {
       const tete = (bloc.find((x) => x.trim()) || '').trim();
       const rang = rangs.get(tete) || 0; rangs.set(tete, rang + 1);
       const cle = `${tete} #${rang}`;
+      // ⚠️ L'ENVELOPPE POSAIT UN RACCORD DE SORTIE (`@alphabet.western:midi`) ET FABRIQUAIT UN
+      // FAUX REFUS : un bloc qui déclare ses propres `@actor` tombait alors sur « chevauchement
+      // d'acteurs » — un défaut de MON INSTRUMENT, inscrit au cliquet comme s'il venait de la
+      // bible. Le socle donne l'alphabet, il ne choisit pas la sortie.
       // L'ENVELOPPE, dite ici : un bloc qui pose déjà son socle (`@core`, `@alphabet`) est pris
       // tel quel ; sinon on lui donne le minimum dérivable. Un bloc sans flèche reçoit un point de
       // départ pour rester mesurable. Rien de plus — un contexte inventé masquerait de vrais refus.
       const aSocle = /^@core/m.test(src) || /^@alphabet/m.test(src);
       const aRegle = /(->|<-|<>)/.test(src);
-      const texte = (aSocle ? '' : '@core\n@controls\n@alphabet.western:midi\n') + src
+      const texte = (aSocle ? '' : '@core\n@controls\n@alphabet.western\n') + src
                   + (aRegle ? '\n' : '\n@mode:ord\nS -> C4\n');
       let msg;
       try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }
@@ -534,7 +536,6 @@ const CAUSE_SPEED_SUPPRIME = /a été supprimé \(décision 2026-06-26\)/; // [s
 const CAUSE_WEIGHT_PARENTHESES = /'weight' est un réglage, il s'écrit entre PARENTHÈSES/; // même famille que le geste 1 de ce lot
 const CAUSE_AROBASE_OBLIGATOIRE = /sans arobase n'existe plus/; // le cas SIGNALÉ : gate/trigger/cv nus
 const CAUSE_DOLLAR_MACRO_MORTE = /collé à un identifiant interdit en LHS/; // `$lfo(...) = ...` : ancienne forme de CV/macro, `$` n'est plus qu'un gabarit de template
-const CAUSE_NOM_COLLISION_TERMINAL = /porte le nom d'un TERMINAL de l'alphabet actif/; // règles nommées A/B : même défaut que test/transpiler_fixtures/scan_mode.bps (geste 1)
 const CAUSE_MUTATION_MID_RHS_BUG = /Expected arrow \(-> <- <>\), got NEWLINE/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
 const CAUSE_ENVELOPPE_PROSE_LBRACKET = /Expected arrow \(-> <- <>\), got LBRACKET/; // limite d'enveloppe : prose+code sur une ligne
 const CAUSE_ENVELOPPE_PROSE_LPAREN = /Expected arrow \(-> <- <>\), got LPAREN/; // limite d'enveloppe : plusieurs illustrations indépendantes bout à bout
@@ -546,10 +547,6 @@ const BASELINE_RATTRAPAGE_AIDE = new Map([
   ['.keywords.trigger.example', CAUSE_AROBASE_OBLIGATOIRE],
   ['.keywords.cv.example', CAUSE_AROBASE_OBLIGATOIRE],
   ['.symbols.`.example', CAUSE_DOLLAR_MACRO_MORTE],
-  ['.symbols.?.example', CAUSE_NOM_COLLISION_TERMINAL],
-  ['.symbols.-----.example', CAUSE_NOM_COLLISION_TERMINAL],
-  ['.concepts.rewriting.example', CAUSE_NOM_COLLISION_TERMINAL],
-  ['.concepts.sub_grammars.example', CAUSE_NOM_COLLISION_TERMINAL],
   ['.concepts.flags.example', CAUSE_MUTATION_MID_RHS_BUG],
   ['.controls_engine.tempo_ops.ops.[/N].example', CAUSE_ENVELOPPE_PROSE_LBRACKET],
   ['.concepts.control_scoping.example', CAUSE_ENVELOPPE_PROSE_LPAREN],

@@ -1478,37 +1478,59 @@ function refuserNomsEnDouble(ast) {
   // Un drapeau CRÉE un nom (Romain 2026-07-30) — voir la boucle sur `ast.vars` ci-dessus, qui le
   // couvre depuis que `@flag` est tombé (2026-08-05) : `FlagStatesDirective` n'est plus produite.
 
-  // A. Les têtes de règle, contre TOUT LE RESTE — jamais entre elles. Une tête vue plusieurs fois
-  // n'est signalée qu'UNE fois : c'est le même symbole, pas plusieurs fautes.
+  // ⚠️ LES TÊTES DE RÈGLE NE SONT PLUS CONTRÔLÉES ICI — décision Romain du 2026-08-03,
+  // `hub/decisions/2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md`, appliquée le 2026-08-07.
+  //
+  // « Une tête de règle a le droit de porter le nom d'un terminal. Le frontal doit accepter
+  // `C4 -> G4`, `?1 D4 -> ?1 E4`, `#K1 #K2 #K3 M -> C4`. » Le motif est le mécanisme lui-même :
+  // c'est le principe du mode `sub`/`sub1` — une règle de SUBSTITUTION réécrit un terminal, elle a
+  // donc forcément un terminal en tête. Le refus invoquait « la note devient inatteignable », qui
+  // est exactement ce que la substitution fait EXPRÈS.
+  //
+  // ⚠️ ET LA RÈGLE D'UNICITÉ N'EST PAS ROUVERTE — c'est le point à ne pas confondre. Son critère
+  // est l'EFFET (`2026-07-28-unicite-des-noms.md`) : « poser une propriété sur un nom existant
+  // reste permis — aucun nom rival créé ». Une tête de règle ne CRÉE aucun nom, elle pose une
+  // réécriture sur un nom qui existe déjà. C'est le frontal qui la traitait comme une DÉCLARATION ;
+  // l'application était trop large, pas la règle. Tout ce qui déclare vraiment — `@macro`, `@var`,
+  // `@alias`, `@actor`, un objet CV — reste contrôlé au-dessus, y compris contre les terminaux.
+  //
+  // CE QUE ÇA DÉBLOQUE, et ce n'était pas un détail : aucune grammaire de substitution ne compilait
+  // en BPScript. Donc aucun mécanisme de motif — captures, contextes, dièses, gabarits — n'était
+  // mesurable de bout en bout depuis une scène ; il fallait passer par la graphie BP3 et le moteur
+  // natif. C'est le préalable à mesurer l'ISO de ces mécanismes sur la chaîne complète.
+  //
+  // ⚠️ CE QUI RESTE CONTRÔLÉ, ET POURQUOI JE NE SUIS PAS ALLÉ PLUS LOIN. La décision NOMME ses
+  // trois formes : `C4 -> G4` (un terminal), `?1 D4 -> ?1 E4` (un terminal sous un joker),
+  // `#K1 #K2 #K3 M -> C4` avec `@var M` (une variable de travail). Elle lève donc DEUX collisions :
+  // le TERMINAL et la VARIABLE. Elle ne dit rien des autres.
+  //
+  // Or l'AMALGAME acteur / tête de règle a été tranché NEUF JOURS PLUS TÔT, en sens inverse et dans
+  // ces termes : « erreur grave » (Romain, 2026-07-28) — `@actor viz` puis `viz -> <code>` mélange
+  // un nom d'acteur et un nom de règle, et 44 scènes de Kanopi ont été migrées pour l'éliminer.
+  // Ma première écriture retirait le contrôle EN ENTIER, donc levait aussi ce cas-là : c'était
+  // faire dire à une décision plus que ce qu'elle écrit, exactement la faute de la veille sur
+  // `@out`. Je m'en tiens aux deux collisions nommées ; les autres restent, et le résidu
+  // (macro, alias, scène, objet CV — jamais tranchés dans un sens ni dans l'autre) est une
+  // question pour Romain, pas une déduction pour moi.
+  const LEVEES = new Set(['une variable de travail']);
   const tetesVues = new Set();
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
       for (const t of r.lhs || []) {
-        // ⚠️ UN CONTEXTE N'EST PAS UNE TÊTE — il DÉSIGNE un terminal, c'est sa raison d'être.
-        // `#C4 S -> G4` dit « S, à condition de ne pas être précédé de C4 » : le `#C4` NOMME la
-        // note exprès, et cette condition ne peut pas s'écrire autrement. Ma garde lisait le
-        // premier jeton du membre gauche et prenait donc le contexte pour la tête — elle
-        // demandait au contexte de ne pas faire ce pour quoi il existe, et l'auteur n'avait
-        // AUCUNE issue : renommer C4 change la condition, y renoncer supprime le mécanisme.
-        // Mesuré par BPx le 2026-07-28 (contexte de tête ET de queue ; le contexte POSITIF, lui,
-        // ne passe pas par ici — le parser le range dans `rule.contexts`, hors du membre gauche).
+        // Un CONTEXTE n'est pas une tête — il DÉSIGNE un terminal, c'est sa raison d'être.
+        // `#C4 S -> G4` dit « S, à condition de ne pas être précédé de C4 » (mesuré par BPx,
+        // 2026-07-28). Le contexte POSITIF ne passe pas par ici : le parser le range dans
+        // `rule.contexts`, hors du membre gauche.
         if (t?.negated) continue;
         const nom = t?.name;
         if (!nom || tetesVues.has(nom)) continue;
         tetesVues.add(nom);
-        if (creesParDeclaration.has(nom)) {
+        const declare = creesParDeclaration.get(nom);
+        if (declare && !LEVEES.has(declare.sorte)) {
           erreurs.push({
-            message: `la règle '${nom}' porte un nom déjà pris par ${creesParDeclaration.get(nom).sorte} — `
+            message: `la règle '${nom}' porte un nom déjà pris par ${declare.sorte} — `
               + `en lisant '${nom}' dans une séquence, on ne sait plus de quoi on parle. `
               + `Choisir un autre nom pour l'un des deux.`,
-            line: r.line,
-          });
-        } else if (terminaux.has(nom)) {
-          erreurs.push({
-            message: `la règle '${nom}' porte le nom d'un TERMINAL de l'alphabet actif — la note '${nom}' `
-              + `devient inatteignable, et en lisant '${nom}' on ne sait plus si c'est elle ou la règle. `
-              + `Renommer la règle (et TOUS ses emplois : l'outil test/migration_noms.mjs le fait en `
-              + `prouvant que la production ne change pas).`,
             line: r.line,
           });
         }
