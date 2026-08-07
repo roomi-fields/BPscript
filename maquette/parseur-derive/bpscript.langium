@@ -23,8 +23,13 @@ entry Scene:
       | separators+=Separator
       | prods+=ProdLigne
       | gabarits+=EntreeGabarit
+      | orphelins+=BacktickOrphelin
       | rules+=Rule
     )*;
+
+// Un bloc de code seul sur sa ligne, sans règle qui le porte.
+BacktickOrphelin:
+    code=BACKTICK NL*;
 
 ProdLigne:
     directive=ProdDirective NL*;
@@ -110,8 +115,11 @@ ProdNom:
 // ⚠️ UNE TÊTE DE RÈGLE N'EST PAS QU'UN NOM. Mesuré : elle peut être un objet sonore composé
 // (`|a4| -> …`), un gabarit (`$ V1 #tr <> …`), une prolongation, un silence, un joker. C'est un
 // MOTIF à reconnaître dans la dérivation, pas un identifiant.
+// `(A B) X -> D E` — un CONTEXTE POSITIF : ce qui précède doit être présent pour que la règle
+// s'applique, mais n'est pas réécrit.
 Lhs:
-    compose=Compose
+    contexte=ContextePositif
+  | compose=Compose
   | gabarit=SigneGabarit
   | prolongation='_'
   | silence='-'
@@ -137,12 +145,19 @@ OpDrapeau returns string:
 
 // ── Membre droit ────────────────────────────────────────────────────────────
 RhsElement:
-    Attente | AppelLibre | Instant | Etoile | ContexteJoker | Compose | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
+    Cablage | Attente | AppelLibre | Instant | Etoile | ContexteJoker | Compose | GabaritGroupe | Polymetric | Backtick | Rest | Prolongation | Undetermined | Period
   | Wildcard | Nombre | SymbolRef;
 
 // `#?` — un contexte négatif portant sur un joker, en tête comme en membre droit.
+ContextePositif:
+    '(' elements+=RhsElement+ ')';
+
 ContexteJoker:
     negatif='#' (joker='?' (rang=NUMBER)? | silence='-');
+
+// `saw1 >> lpf1 >> out` — le CÂBLAGE posé dans le flux : une chaîne de modules reliés.
+Cablage:
+    depart=ID ('.' portDepart=ID)? etapes+=Branchement+;
 
 // `<!touches.Space` — le point d'attente : le flux suspend jusqu'à l'arrivée du rôle nommé.
 Attente:
@@ -186,7 +201,15 @@ Voice:
 // `{2,~G#5,~B6}` était refusé faute d'admettre le tilde en tête.
 SymbolRef:
     (gabarit=SigneGabarit)? (lien='~')? (negatif='#')? (actor=ID '.')? name=ID
-    (':' duree=Duree)? ('.' numero=NUMBER)? (bags+=SettingBag | crochets+=Guard)* (tie='~')?;
+    (':' duree=Duree)? ('.' numero=NUMBER)?
+    (bags+=SettingBag | crochets+=Guard)* (tie='~')?;
+
+// `mel(2)` — l'APPEL d'un symbole avec ses arguments positionnels.
+// ⚠️ AU MOINS UN ARGUMENT. La première rédaction les rendait facultatifs, et `S -> C4()` — un sac
+// VIDE — passait. C'est le volet B du garde qui l'a attrapé, pas moi : ajouter une construction
+// peut RELÂCHER la grammaire ailleurs, et le compte de scènes acceptées ne le dit jamais.
+ListeArgs:
+    '(' args+=Valeur (',' args+=Valeur)* ')';
 
 SigneGabarit returns string:
     '$' | '&';
@@ -207,8 +230,12 @@ SettingBag:
 // — deux chemins commençant par un identifiant, donc AMBIGU, et l'outil l'a dit deux fois. La
 // paire lit donc ses parties DANS L'ORDRE, et c'est le NOMBRE de deux-points qui décide du sens :
 // deux parties = clé et valeur, trois = sujet, clé et valeur. Aucune alternative à arbitrer.
+// ⚠️ UN SEUL CHEMIN POUR LA PARENTHÈSE COLLÉE. `mel(2)` (appel) et `C4(vel:80)` (réglage) ont la
+// MÊME forme : deux règles concurrentes rendaient la grammaire AMBIGUË, et l'outil l'a dit. Le sac
+// les couvre tous les deux — une paire dont la clé est un NOMBRE et la valeur absente EST un
+// argument positionnel. La distinction est SÉMANTIQUE, pas syntaxique : c'est au code de trancher.
 Paire:
-    (etoile='*' | premier=ID) ('.' (component=ID | numero=NUMBER))?
+    (etoile='*' | premier=ID | positionnel=NUMBER) ('.' (component=ID | numero=NUMBER))?
     (':' deuxieme=Valeur (':' troisieme=Valeur)?)?;
 
 // ⚠️ UNE VALEUR PEUT AVOIR PLUSIEURS PARTIES, séparées par une ESPACE — `(scale:todi_ka_4 0)`,
@@ -232,8 +259,6 @@ Nombre:
 // écrivent `…`:18 — dix-huit battements pour tout le bloc.
 Backtick:      value=BACKTICK (':' duree=Duree)? (bags+=SettingBag)*;
 // Un silence porte son sac comme un terminal : `-(vel:127)`.
-// `>>` branche, `\\>>` coupe — le câblage posé dans le flux.
-Cablage:       source=ID coupe='>>' cible=ID ('.' port=ID)?;
 Rest:          value='-' (bag=SettingBag)?;
 // ⚠️ `|[ do5 _ do5 do5 ]` — l'OBJET SONORE COMPOSÉ : le tube ouvre un bloc dont le contenu est
 // une séquence de terminaux, pas des paires clé-valeur. Mesuré : la lecture par `Guard` échouait

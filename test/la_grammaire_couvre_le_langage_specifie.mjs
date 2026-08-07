@@ -87,7 +87,6 @@ function formesDe(fichier) {
 // SORTIE de la mesure, jamais de tête : c'est exactement ce que ce dépôt appelle « le compte qui
 // flatte devient le dossier ».
 const RETARD_BIBLE = new Map([
-  ["|x| (A) x B -> x $mel &mel [stage+1]", "mesuré le 2026-08-06"],
   ["S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re", "mesuré le 2026-08-06"],
   ["@def fast(x) {x}:2", "mesuré le 2026-08-06"],
   ["@def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`", "mesuré le 2026-08-06"],
@@ -96,14 +95,10 @@ const RETARD_BIBLE = new Map([
   ["(S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))", "mesuré le 2026-08-06"],
   ["S -> sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`) sitar.sa", "mesuré le 2026-08-06"],
   ["S -> sitar.sa sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`)", "mesuré le 2026-08-06"],
-  ["(A B) X -> D E", "mesuré le 2026-08-06"],
   ["Debut -> { A B", "mesuré le 2026-08-06"],
   ["Fin   -> C D }:2", "mesuré le 2026-08-06"],
   ["@def halo(x) x!tin!ge", "mesuré le 2026-08-06"],
   ["@def eclair(x) x!na!ka", "mesuré le 2026-08-06"],
-  ["(C4 D4) E4 -> F4 G4", "mesuré le 2026-08-06"],
-  ["(C4) D4 -> D4 C4", "mesuré le 2026-08-06"],
-  ["(C4)    D4 -> G4", "mesuré le 2026-08-06"],
   ["#(K1 K2 K3) M -> C4", "mesuré le 2026-08-06"],
   ["#_ M -> C4", "mesuré le 2026-08-06"],
   ["S -> sa re ga (on_fail:retry(3))", "mesuré le 2026-08-06"],
