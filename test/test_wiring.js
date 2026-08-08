@@ -259,8 +259,18 @@ S -> A4 prise  B4 C4 D4  lache  E4`;
 // `@def <nom> <cible> >> <cible>`, et le premier palier de `@def` ne lit que la déclaration de
 // terminal. Le réécrire maintenant nommerait une cible inexistante — la faute que j'ai commise
 // ce soir même en posant deux tombales sans réécriture, et que j'ai dû défaire.
-// Il se rebranche avec le palier « branchement » de `@def`. D'ici là il est SUSPENDU, daté et
-// motivé, jamais supprimé : les 135 vérifications qui précèdent, elles, tournent toujours.
+// ⛔ ET SA DATE DE RALLUMAGE A CHANGÉ LE 2026-08-08, IL FAUT LE DIRE ICI. Cette note annonçait
+// « il se rebranche avec le palier branchement de `@def` », ce qui laissait croire à une attente
+// de quelques jours. Le palier « branchement » est du CÂBLAGE : Romain a placé le même soir tout
+// ce qui touche modules et patching au BACKLOG, pour revue avec FaustX (BPS-52). Ce volet
+// n'attend donc PAS un palier à écrire — il attend une REVUE PRODUIT dont la date n'est pas
+// fixée, et c'est une attente d'un autre ordre.
+// ⚠️ Un garde suspendu dont la cause a bougé est pire qu'un garde supprimé : il compte pour un
+// retard connu et court, alors qu'il est devenu long et suspendu à quelqu'un d'autre. « Un
+// cliquet dit *je connais ce retard*, il ne dit pas *quelqu'un est arrêté devant* » — ici il
+// disait en plus une échéance qui n'existe plus.
+// D'ici là il reste SUSPENDU, daté et motivé, jamais supprimé : les 135 vérifications qui
+// précèdent, elles, tournent toujours.
 const VOLET_8_ACTIF = false;
 if (VOLET_8_ACTIF) {
 console.log('\n=== §8. la forme documentée ===');
