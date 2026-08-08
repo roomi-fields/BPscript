@@ -20,7 +20,7 @@
 
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux} from './libs.js';
 import { LIBS } from './libs-data.js';
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
@@ -626,11 +626,11 @@ function resolveHomomorphismMarkers(ast) {
   const terminals = new Set();
   const addAlphabet = (name, octaves) => {
     const lib = resolveActorAlphabet(name, ast.directives);
-    if (!lib || !lib.notes) return;
+    if (!lib || !nomsDeTerminaux(lib)) return;
     for (const t of expandAlphabetTerminals(lib, octaves)) terminals.add(t);
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
       ? Object.keys(lib.alterations) : [''];
-    for (const note of lib.notes) for (const alt of alts) terminals.add(note + alt);
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) terminals.add(note + alt);
   };
   const sa = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   const so = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
@@ -663,11 +663,11 @@ function terminauxEnPortee(ast) {
   const terminaux = new Set();
   const ajouter = (name, octaves) => {
     const lib = resolveActorAlphabet(name, ast.directives);
-    if (!lib || !lib.notes) return false;
+    if (!lib || !nomsDeTerminaux(lib)) return false;
     for (const t of expandAlphabetTerminals(lib, octaves)) terminaux.add(t);
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
       ? Object.keys(lib.alterations) : [''];
-    for (const note of lib.notes) for (const alt of alts) terminaux.add(note + alt); // forme nue
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) terminaux.add(note + alt); // forme nue
     return true;
   };
   let aUnAlphabet = false;
@@ -2033,12 +2033,12 @@ function emitNoteTerminals(ast) {
   const sansHauteur = new Set();
   const verser = (nomAlphabet, octaves) => {
     const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
-    if (!lib || !lib.notes) return;
+    if (!lib || !nomsDeTerminaux(lib)) return;
     const cible = aHauteur(nomAlphabet) ? notes : sansHauteur;
     for (const t of expandAlphabetTerminals(lib, octaves)) cible.add(t);
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
       ? Object.keys(lib.alterations) : [''];
-    for (const note of lib.notes) for (const alt of alts) cible.add(note + alt); // forme nue
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) cible.add(note + alt); // forme nue
   };
   const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));

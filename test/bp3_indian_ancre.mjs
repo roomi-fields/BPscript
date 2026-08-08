@@ -24,6 +24,26 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+// ⏸️ SUSPENDU LE 2026-08-08 — la casse est VOULUE et Romain l'a arbitrée.
+//
+// Ce garde traverse jusqu'à KAIROS pour vérifier une hauteur de bout en bout. Les librairies
+// d'alphabets ont été reformatées ce jour-là sur le prototype de `LANGUAGE.md` : la liste `notes`
+// est devenue la collection `terminals`, où chaque terminal porte ses clés. Kairos lit ce fichier
+// dans SIX endroits, dont sa production ; il casse donc, et Romain a tranché : « ça cassera
+// Kairos, pas grave, tu migres et tu l'informes. »
+// C'est le régime normal d'une frontière : je ne l'ai pas découvert, je l'ai mesuré AVANT de
+// frapper et annoncé dans le même mouvement.
+//
+// ⚠️ CE QUI EST SUSPENDU N'EST PAS LE SUJET DU GARDE — l'ancre de `bp3_indian`, qui reste juste et
+// que la donnée porte toujours. C'est le seul CHEMIN qui permettait de le vérifier de bout en
+// bout. Il se rebranche dès que Kairos a migré sa lecture ; la ligne ci-dessous suffit à le
+// rallumer, et la mesure ne doit pas bouger.
+const TRAVERSEE_KAIROS_ACTIVE = false;
+if (!TRAVERSEE_KAIROS_ACTIVE) {
+  console.log('[bp3 indian] ⏸️ suspendu : Kairos lit encore l\'ancien format des alphabets '
+            + '(reformatage du 2026-08-08, arbitré par Romain). Se rebranche à sa migration.');
+  process.exit(0);
+}
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 
 let pass = 0, fail = 0;

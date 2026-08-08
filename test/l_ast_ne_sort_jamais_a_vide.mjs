@@ -150,7 +150,7 @@ for (const [nom, src] of sources) {
     const alpha = (a.properties || {}).alphabet;
     if (alpha) {
       avecAlphabet++;
-      const declare = LIBS['alphabets']?.[alpha]?.defaultTuning;
+      const declare = LIBS['alphabets']?.[alpha]?.tuning;
       if (declare) {
         if ((a.properties || {}).tuning) avecAccordage++;
         else accordageManquant.push(`${nom} → acteur '${a.name}' (alphabet ${alpha} déclare ${declare})`);

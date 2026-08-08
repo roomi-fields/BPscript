@@ -80,11 +80,15 @@ export function terminauxActifs(ast) {
   const t = new Set();
   const ajouter = (nom, oct) => {
     const lib = resolveActorAlphabet(nom, ast.directives);
-    if (!lib || !lib.notes) return;
+    // ⚠️ FORMAT REFORMATÉ le 2026-08-08 : `notes` est devenue la collection `terminals`.
+    // Cet outil avait sa PROPRE copie de la lecture d'un alphabet — c'est pour ça qu'il a
+    // cassé alors que les onze sites du transpileur, eux, passent par un accès unique.
+    const nomsT = lib && lib.terminals ? Object.keys(lib.terminals) : null;
+    if (!nomsT) return;
     for (const x of expandAlphabetTerminals(lib, oct)) t.add(x);
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
       ? Object.keys(lib.alterations) : [''];
-    for (const n of lib.notes) for (const al of alts) t.add(n + al);   // forme nue
+    for (const n of nomsT) for (const al of alts) t.add(n + al);   // forme nue
   };
   const sa = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   const so = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));

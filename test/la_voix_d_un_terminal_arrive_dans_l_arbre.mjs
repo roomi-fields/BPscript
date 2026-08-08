@@ -93,33 +93,33 @@ for (const [quoi, src, attendu] of CAS) {
 }
 
 // ── C. LA DONNÉE EST VRAIMENT LÀ — socle contre le faux vert ─────────────────────────────────
-// ⚠️ Si les alphabets perdaient leur table de voix, les volets A et B passeraient au vert en ne
-// mesurant plus rien : `null` partout serait « conforme » à une donnée vide.
+// ⚠️ FORMAT REFORMATÉ le 2026-08-08 : la table `voices`, qui associait APRÈS COUP un terminal à
+// une voix, a disparu. La voix est désormais une CLÉ DU TERMINAL — « un terminal est une chose
+// entière », et c'est exactement ce que cette table contournait en le redécoupant par axes.
+// Ce socle lit donc les terminaux, pas une table parallèle. Il garde la même chose : si la donnée
+// perdait ses voix, les volets au-dessus passeraient au vert en ne mesurant plus rien.
 {
-  const avecVoix = Object.entries(LIBS.alphabets || {})
-    .filter(([k, v]) => !k.startsWith('_') && v && typeof v === 'object' && v.voices);
-  ok(avecVoix.length >= 2,
-     `C-SOCLE : ${avecVoix.length} alphabet(s) déclarent une table de voix, 2 au moins attendus `
-     + `(tabla, tryCsoundObjects). Sous ce seuil ce garde ne mesure plus la cascade, il mesure `
-     + `une donnée absente — et il serait vert.`);
-  const tabla = LIBS.alphabets?.tabla?.voices || {};
-  ok(tabla.dha === 'bayan_open',
-     `C-SOCLE : la table de tabla doit toujours associer 'dha' à 'bayan_open' — reçu `
-     + `${JSON.stringify(tabla.dha)}. Le volet A repose sur cette valeur exacte.`);
+  const voixDe = (alpha) => Object.entries(LIBS.alphabets?.[alpha]?.terminals || {})
+    .filter(([, t]) => t && t.voice);
+  const tabla = voixDe('tabla');
+  ok(tabla.length >= 10,
+     `C-SOCLE : ${tabla.length} terminal(aux) de tabla portent une voix, 10 au moins attendus. `
+     + `Sous ce seuil ce garde ne mesure plus rien et il serait vert.`);
+  const dha = LIBS.alphabets?.tabla?.terminals?.dha?.voice;
+  ok(dha === 'bayan_open',
+     `C-SOCLE : le terminal 'dha' de tabla doit porter la voix 'bayan_open' — reçu `
+     + `${JSON.stringify(dha)}.`);
+  const csound = voixDe('tryCsoundObjects');
+  ok(csound.length >= 7,
+     `C-SOCLE : ${csound.length} terminal(aux) de tryCsoundObjects portent une voix, 7 attendus.`);
 }
 
-// ── D. CE QUE LA DONNÉE PORTE, POUR MÉMOIRE — ce n'est plus mon sujet ────────────────────────
-// ⚠️ Ce compteur disait « 15 alphabets attendent une décision de sens ». Romain l'a écarté le
-// 2026-08-08 : « c'est propre à chaque terminal, on a défini un template de terminaux ». La
-// référence le confirme (§« Déclarer un terminal ») — un terminal nomme LUI-MÊME sa voix parmi
-// ses clés, et prend de la scène ce qu'il laisse de côté. Il n'y a donc pas de voix à décider
-// « par alphabet » : il y a des terminaux qui portent leurs clés.
-// Le compte reste imprimé parce qu'il dit l'état de la donnée, sans plus prétendre à une dette.
+// ── D. CE QUE LA DONNÉE PORTE, POUR MÉMOIRE ─────────────────────────────────────────────────
 {
   const tous = Object.entries(LIBS.alphabets || {})
-    .filter(([k, v]) => !k.startsWith('_') && v && typeof v === 'object' && Array.isArray(v.notes));
-  const avec = tous.filter(([, v]) => v.voices);
-  console.log(`   ℹ️ tables de voix en librairie : ${avec.length}/${tous.length} alphabets. `
+    .filter(([k, v]) => !k.startsWith('_') && v && typeof v === 'object' && v.terminals);
+  const avec = tous.filter(([, v]) => Object.values(v.terminals).some((t) => t && t.voice));
+  console.log(`   ℹ️ alphabets dont au moins un terminal porte une voix : ${avec.length}/${tous.length}. `
             + `Résolues par l'aval, pas ici.`);
 }
 

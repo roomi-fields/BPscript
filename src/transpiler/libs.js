@@ -240,11 +240,11 @@ function resolveActorAlphabet(nom, directives) {
  */
 function resolveActorAlphabetSource(nom, directives) {
   const standard = loadLib('alphabet', nom);
-  if (standard && standard.notes) return { entry: standard, lib: null };
+  if (standard && nomsDeTerminaux(standard)) return { entry: standard, lib: null };
   for (const d of directives || []) {
     if (!d || !d.name || d.name === 'alphabet') continue;
     const entry = loadLib(d.name, nom);
-    if (entry && entry.notes) return { entry, lib: d.name };
+    if (entry && nomsDeTerminaux(entry)) return { entry, lib: d.name };
   }
   return null;
 }
@@ -263,6 +263,21 @@ function resolveActorAlphabetSource(nom, directives) {
 function estUneDeclarationDeControle(def) {
   return def !== null && typeof def === 'object' && !Array.isArray(def)
       && 'args' in def && 'description' in def;
+}
+
+/**
+ * LES NOMS DE TERMINAUX D'UN ALPHABET — un seul accès, pour tout le dépôt.
+ *
+ * ⚠️ POURQUOI UNE FONCTION ET NON DOUZE LECTURES. Le format des alphabets a été reformaté le
+ * 2026-08-08 sur le prototype de `LANGUAGE.md` : la liste `notes` est devenue la collection
+ * `terminals`, où chaque terminal porte ses clés — « un terminal est une chose entière »
+ * (décision Romain, 2026-08-01). DOUZE sites lisaient `.notes` en dur ; les remplacer un par un
+ * aurait laissé le prochain changement casser aux douze mêmes endroits, et il aurait fallu les
+ * retrouver. Un seul accès, et le format ne se lit plus qu'ici.
+ */
+function nomsDeTerminaux(alphabetLib) {
+  if (!alphabetLib || !alphabetLib.terminals || typeof alphabetLib.terminals !== 'object') return null;
+  return Object.keys(alphabetLib.terminals);
 }
 
 function loadLibsFromDirectives(directives) {
@@ -485,7 +500,15 @@ function loadLibsFromDirectives(directives) {
     const controlSources = [];
     if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false });
     if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true });
-    if (lib.runtime) {
+    // ⚠️ `runtime` EST UN NOM PARTAGÉ, ET IL FAUT LE DÉSAMBIGUÏSER PAR LA FORME, PAS PAR LE
+    // FICHIER. Dans la librairie des contrôles, c'est une SECTION qui groupe des sous-groupes de
+    // contrôles ; dans un alphabet, c'est la SORTIE PAR DÉFAUT de la collection — une chaîne
+    // (`audio`, `midi`…), telle que le prototype de `LANGUAGE.md` la nomme.
+    // Mesuré le 2026-08-08, au reformatage des alphabets : le chargeur itérait la chaîne `audio`
+    // caractère par caractère et refusait « l'entrée '0' » — une erreur illisible, sur un fichier
+    // parfaitement conforme à la référence.
+    // On teste donc ce que la valeur EST, pas d'où elle vient : une section est un objet.
+    if (lib.runtime && typeof lib.runtime === 'object' && !Array.isArray(lib.runtime)) {
       // Iterate sub-groups: each value that is an object with nested control defs
       for (const [groupName, groupContent] of Object.entries(lib.runtime)) {
         if (groupName === '_comment') continue;
@@ -617,7 +640,7 @@ function loadLibsFromDirectives(directives) {
       }
     }
     // Alphabet libs: defer terminal generation (needs octave convention resolved first)
-    if (lib.notes && Array.isArray(lib.notes)) {
+    if (nomsDeTerminaux(lib)) {
       ctx._alphabets.push(lib);
       // Set default octave convention from alphabet (can be overridden by @octaves)
       if (lib.octaves) ctx._octaveConvention = lib.octaves;
@@ -656,7 +679,7 @@ function loadLibsFromDirectives(directives) {
       const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
         ? Object.keys(lib.alterations)
         : (Array.isArray(lib.alterations) && lib.alterations.length > 0 ? lib.alterations : ['']);
-      for (const note of lib.notes) {
+      for (const note of nomsDeTerminaux(lib)) {
         for (const alt of alts) {
           for (const reg of octaveDef.registers) {
             const noteAlt = note + alt;
@@ -670,7 +693,7 @@ function loadLibsFromDirectives(directives) {
       }
     } else {
       // No octaves — terminals are just the raw notes (e.g. tabla, abc)
-      for (const note of lib.notes) {
+      for (const note of nomsDeTerminaux(lib)) {
         ctx.symbols[note] = { type: 'gate' };
         ctx.alphabetTerminals.push(note);
       }
@@ -777,4 +800,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs, registerLib, registerAll, clearRegistry };
+export { loadLib, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs, registerLib, registerAll, clearRegistry,
+  nomsDeTerminaux,
+};

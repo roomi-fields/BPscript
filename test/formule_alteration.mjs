@@ -38,7 +38,7 @@ function alteredRatio(tuningKey, noteName, alt) {
   const tuning = tunings[tuningKey];
   const alphabet = alphabets[tuning.alphabet];
   const temperament = temperaments[tuning.temperament];
-  const noteIdx = alphabet.notes.indexOf(noteName);
+  const noteIdx = Object.keys(alphabet.terminals || {}).indexOf(noteName);
   if (noteIdx < 0) throw new Error(`note ${noteName} absente de ${tuning.alphabet}`);
   const offset = alt === '' ? 0 : alphabet.alterations[alt];
   if (offset === undefined) throw new Error(`altération ${alt} absente de ${tuning.alphabet}`);

@@ -96,8 +96,9 @@ const compiler = (src) => compileToBPxAST(src);
 // Romain a tranché que la propriété se DÉCLARE (`resolvesPitch`), après que ma mesure ait mis la
 // déduction en défaut sur `shakuhachi`. Ce garde lit désormais ce que la donnée DIT, comme le code.
 const ALPHABETS = Object.entries(LIBS['alphabets'])
-  .filter(([, o]) => o && typeof o === 'object' && !Array.isArray(o) && Array.isArray(o.notes) && o.notes.length)
-  .map(([nom, o]) => [nom, o.notes[0], !!o.resolvesPitch]);
+  .filter(([, o]) => o && typeof o === 'object' && !Array.isArray(o) && o.terminals
+                     && Object.keys(o.terminals).length)
+  .map(([nom, o]) => [nom, Object.keys(o.terminals)[0], !!o.resolvesPitch]);
 console.log(`[arbre note] ${ALPHABETS.length} alphabets de la librairie, lus dans la donnée`);
 for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // On écrit une règle dont la tête n'est PAS une note et dont le corps EST une note de cet
@@ -127,8 +128,9 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
 {
   const parAccordage = [], parRegistres = [];
   for (const [nom, o] of Object.entries(LIBS['alphabets'])) {
-    if (!o || typeof o !== 'object' || Array.isArray(o) || !Array.isArray(o.notes) || !o.notes.length) continue;
-    if (!o.defaultTuning) parAccordage.push(nom);
+    if (!o || typeof o !== 'object' || Array.isArray(o) || !o.terminals
+        || !Object.keys(o.terminals).length) continue;
+    if (!o.tuning) parAccordage.push(nom);
     if (!o.octaves) parRegistres.push(nom);
   }
   const ecart = parRegistres.filter((n) => !parAccordage.includes(n));
@@ -138,9 +140,9 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // Chacun de l'écart a un accordage : le critère des registres les déclasserait à tort.
   for (const nom of ecart) {
     const o = LIBS['alphabets'][nom];
-    ok(!!o.defaultTuning,
+    ok(!!o.tuning,
       `2bis. '${nom}' n'a pas de table de registres mais A un accordage — le critère par les registres le déclasserait`);
-    const premiere = o.notes[0];
+    const premiere = Object.keys(o.terminals)[0];
     const r = compiler(`@core\n@alphabet.${nom}\nmotif -> ${premiere}\nS -> motif`);
     ok((r.ast?.noteTerminals || []).includes(premiere),
       `2bis. '${premiere}' (${nom}) DOIT rester une note — et depuis le 2026-07-30 c'est le champ DÉCLARÉ qui le dit, `
@@ -157,7 +159,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // quelqu'un verra deux critères identiques dans trois mois et conclura qu'ils sont équivalents.
   const divergents = Object.entries(LIBS['alphabets'])
     .filter(([, o]) => o && typeof o === 'object' && Array.isArray(o.notes) && o.notes.length)
-    .filter(([, o]) => !!o.resolvesPitch !== !!o.defaultTuning);
+    .filter(([, o]) => !!o.resolvesPitch !== !!o.tuning);
   ok(divergents.length === 0,
     '2bis. les deux critères coïncident depuis que shakuhachi a son ancre — si un alphabet redivergeait, '
     + `il faudrait le DIRE ici plutôt que de le laisser passer (divergents : ${divergents.map(([n]) => n).join(' ')})`);
@@ -266,7 +268,7 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
   ok(sansAncre.length === 0,
     "3bis. tout alphabet qui DÉCLARE résoudre une hauteur porte une ANCRE COMPLÈTE (nom de référence, "
     + `registre, fréquence) — sinon il annonce une hauteur sans dire où elle commence : ${sansAncre.join(' ')}`);
-  ok(resolvent.every((n) => !!j[n].defaultTuning),
+  ok(resolvent.every((n) => !!j[n].tuning),
     '3bis. et il porte un ACCORDAGE — l\'ancre dit où ça commence, l\'accordage dit comment on avance');
   // ⚠️ ET LA TABLE DE REGISTRES DOIT ÊTRE BRANCHÉE, PAS SEULEMENT NOMMÉE DANS UN COMMENTAIRE.
   // Défaut mesuré par Kairos le 2026-07-30 : `shakuhachi` portait dans sa PROSE « le registre se

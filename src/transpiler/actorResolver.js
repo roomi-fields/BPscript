@@ -11,7 +11,7 @@
  * Called between parser and encoder. If no actors are declared, returns empty tables.
  */
 
-import { loadLib, resolveActorAlphabet } from './libs.js';
+import { loadLib, resolveActorAlphabet, nomsDeTerminaux} from './libs.js';
 
 /**
  * Expand an alphabet lib into a set of terminal names.
@@ -22,7 +22,7 @@ import { loadLib, resolveActorAlphabet } from './libs.js';
  */
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   const terminals = new Set();
-  if (!alphabetLib || !alphabetLib.notes) return terminals;
+  if (!alphabetLib || !nomsDeTerminaux(alphabetLib)) return terminals;
 
   // Resolve octave convention. Décision cles-acteur-six (Romain 2026-06-16) :
   // `@actor X octaves.Y` SURCHARGE la convention de registre ; sinon défaut =
@@ -36,7 +36,7 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
     : (Array.isArray(alphabetLib.alterations) && alphabetLib.alterations.length > 0
         ? alphabetLib.alterations : ['']);
 
-  for (const note of alphabetLib.notes) {
+  for (const note of nomsDeTerminaux(alphabetLib)) {
     if (octaveDef) {
       for (const alt of alts) {
         for (const reg of octaveDef.registers) {
@@ -163,7 +163,9 @@ function tuningHerite(ast, alphabetKey) {
   if (sceneTun) return connu(sceneTun.subkey) ? sceneTun.subkey : undefined;  // niveau 3 : la scène
   if (!alphabetKey) return undefined;
   const lib = resolveActorAlphabet(alphabetKey, ast.directives);              // niveau 2 : l'alphabet
-  return connu(lib && lib.defaultTuning) ? lib.defaultTuning : undefined;
+  // `defaultTuning` a pris le nom que la référence lui donne — `tuning` — au reformatage du
+  // 2026-08-08. Un seul nom pour la même chose, celui de la spécification.
+  return connu(lib && lib.tuning) ? lib.tuning : undefined;
 }
 
 // Transport par défaut de l'acteur IMPLICITE — lu DANS @core (donnée : `defaults.components
@@ -305,7 +307,7 @@ function resolveActors(ast) {
       // `default` synthétique pour la recueillir). On l'ajoute au vocabulaire de l'acteur.
       const alts = alphabetLib.alterations && typeof alphabetLib.alterations === 'object' && !Array.isArray(alphabetLib.alterations)
         ? Object.keys(alphabetLib.alterations) : [''];
-      for (const note of (alphabetLib.notes || [])) for (const alt of alts) terminals.push(note + alt);
+      for (const note of (nomsDeTerminaux(alphabetLib) || [])) for (const alt of alts) terminals.push(note + alt);
     }
 
     actorTable[name] = {
