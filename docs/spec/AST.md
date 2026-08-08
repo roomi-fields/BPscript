@@ -510,7 +510,7 @@ OutTimeObject  { type: "OutTimeObject", name: string }
 
 InstantControl {
   type: "InstantControl"
-  qualifier: SettingBag | SpeedChange
+  qualifier: SettingBag | SpeedChange   // et NON `settings` — la distinction est voulue, voir plus bas
   conjoint: boolean                // true quand le `!` est collé au terminal précédent
 }
 
@@ -523,6 +523,33 @@ SpeedChange {
 
 Le **primaire** donne la position et la durée ; les **secondaires** partagent son instant d'attaque
 et prennent sa durée. Un objet hors-temps tient sa place dans l'ordre joué pour une durée nulle.
+
+### Pourquoi le sac du flux ne porte pas le même nom que les autres
+
+**Décision de Romain, 2026-08-08** : « il faut le distinguer, c'est un contrôle dans le flux, ça
+doit être spécifié. »
+
+Un réglage se pose à cinq endroits, et quatre d'entre eux sont des **portées** : le sac vaut pour
+ce qu'il habille — une note, un groupe, une règle, un bloc — et **son effet s'arrête à ce bord**.
+Le cinquième n'en est pas une : `!(vel:80)` ouvre un **état courant** qui court vers l'avant,
+franchit la fin de sa règle et vaut jusqu'au prochain. La référence l'écrit en toutes lettres
+(`LANGUAGE.md`, « Le sac dans le flux ») : « un sac vaut pour sa portée ; le même sac précédé de
+`!` vaut pour ce qui suit », et sa portée est **par voix**.
+
+**Le champ porte donc un autre nom parce que la chose est autre.** Les quatre portées se rangent
+sous `settings` ; le flux se range sous `qualifier`. Ce n'est pas une irrégularité d'écriture à
+harmoniser : c'est la seule différence qui empêche de traiter les cinq d'un même geste.
+
+Le sceau le dit aussi, et c'est là qu'un lecteur peut le vérifier sans connaître cette page :
+
+| | `payload.containment` | ce que ça veut dire |
+| --- | --- | --- |
+| les quatre portées | `true` | l'effet **s'arrête** au bord de ce qu'il habille |
+| le flux | `false` | l'effet **continue** au-delà, jusqu'au prochain |
+
+⚠️ **Un lecteur qui fusionnerait les cinq sous un seul nom perdrait exactement cette information**,
+et il la perdrait sans erreur : les paires sont les mêmes, la lecture réussit, et un réglage qui
+devait couler s'arrêterait à sa règle. C'est le mode d'échec que ce contrat existe pour empêcher.
 
 `conjoint` porte l'attache que l'espace tranche : collé au terminal précédent, le réglage voyage
 avec lui et se réplique avec lui ; séparé par une espace, il se pose seul dans la séquence. En tête
