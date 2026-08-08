@@ -573,7 +573,7 @@ touche, donc qui le consomme.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason` -- decrites ci-dessous                                                                  |
 | `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `striated` et `smooth` -- si le temps pulse ou coule |
-| `@engine.`  | `mode` · `scan` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
+| `@engine.`  | `scan` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
 
 | cle           | ce qu'elle decale                                                             |
 | ------------- | ----------------------------------------------------------------------------- |
@@ -1019,7 +1019,10 @@ Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time` :
 ```text
 /N   *N     les deux operateurs temporels, inverses l'un de l'autre -- entier, decimal
             ou fraction pour chacun (/2 /1.5 /3/2, *2 *1.5 *3/2)
-mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
+mode        mode du bloc, et du bloc SEUL -- il s'ecrit `@mode:<valeur>` en tete de
+            sous-grammaire et NULLE PART ailleurs : ni en tete de scene, ni sur une regle,
+            ni dans un sac. Il ne change pas en cours de tirage (Romain, 2026-08-08).
+            (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
 weight      poids de la regle, et de la regle SEULE -- un poids de scene n'a pas de sens
             (Romain, 2026-08-08) : le poids arbitre un CHOIX entre regles candidates, il ne

@@ -77,7 +77,6 @@
       "default": "ord",
       "description": "Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.",
       "scope": [
-        "scene",
         "subgrammar"
       ]
     },

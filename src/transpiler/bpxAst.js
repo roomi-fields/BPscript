@@ -1421,8 +1421,15 @@ function validateReferences(ast) {
     // même critère que le chargeur emploie, pas une liste de noms à écarter.
     for (const d of (ast.directives || [])) {
       if (!d || !d.name) continue;
-      if (loadLib(d.name)) continue;          // invocation de librairie, pas un réglage
-      dire(d.name, 'scene', d.line);
+      // ⚠️ UNE CLÉ DE SCÈNE S'ÉCRIT DE DEUX FAÇONS, et je n'en gardais qu'une : nue (`@mm:120`) ou
+      // QUALIFIÉE PAR SON DOMAINE (`@engine.mode:random`, la forme que le tableau des invocations
+      // de la référence emploie). Mesuré le 2026-08-08 : après avoir retiré `mode` des clés de
+      // scène, `@mode` refusait bien — et `@engine.mode` passait toujours. Deux graphies de la même
+      // chose, une seule gardée : le refus se contournait en écrivant le nom complet.
+      const clesEcrites = [];
+      if (!loadLib(d.name)) clesEcrites.push(d.name);   // nue ; une invocation de librairie n'en est pas une
+      if (d.subkey && porteesPermises.has(d.subkey)) clesEcrites.push(d.subkey);  // qualifiée
+      for (const cle of clesEcrites) dire(cle, 'scene', d.line);
     }
     for (const sg of (ast.subgrammars || [])) {
       for (const m of (sg.modifiers || [])) {
