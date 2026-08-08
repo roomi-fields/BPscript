@@ -2284,8 +2284,18 @@ par une espace, comme tout element pose seul dans la sequence.
 
 ```bpscript
 S -> C4 ! (/2) D4 E4              // D4 et E4 vont deux fois plus vite, C4 garde sa duree
-S -> C4 ! (/2) D4 ! (/1) E4       // seul D4 est accelere ; /1 restaure la vitesse d'origine
+S -> C4 ! (/2) D4 ! (/1) E4       // seul D4 est accelere ; /1 rend la vitesse HERITEE du champ
 S -> C4 ! (/2) {D4 E4} F4         // le groupe herite de la vitesse en cours
+```
+
+**`/1` rend l'HERITAGE, pas la valeur 1.** Chaque marqueur se calcule depuis la vitesse que son
+champ lui lègue, jamais depuis celle qui court juste avant lui, jamais depuis 1. Dans l'exemple
+ci-dessus l'héritage vaut 1, donc les deux lectures y donnent le même résultat : il faut un champ
+qui porte déjà une vitesse pour les distinguer.
+
+```bpscript
+S -> ! (/2) C4 ! (/1) D4          // heritage = 1 : C4 va deux fois plus vite, D4 non
+S -> ! (/2) { C4 ! (/1) D4 }      // heritage = 2 : les DEUX vont deux fois plus vite
 ```
 
 **Ce qu'une vitesse couvre en herite** : un groupe qui n'en pose pas garde celle du contexte qui le
