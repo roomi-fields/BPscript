@@ -4,7 +4,6 @@
   "western": {
     "description": "Western chromatic — 7 natural notes, 5 alteration levels",
     "runtime": "audio",
-    "voice": null,
     "tuning": "western_12TET",
     "octaves": "western",
     "diapason": 440,
@@ -31,7 +30,6 @@
   "sargam": {
     "description": "Indian sargam — 7 svaras",
     "runtime": "audio",
-    "voice": null,
     "tuning": "sargam_12TET",
     "octaves": "saptak",
     "diapason": 240,
@@ -56,7 +54,6 @@
   "bp3_indian": {
     "description": "Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) — alphabet de test BP3, à côté des autres (arbitrage Romain 2026-07-19)",
     "runtime": "audio",
-    "voice": null,
     "tuning": "bp3_indian_12TET",
     "octaves": "bp3",
     "diapason": 440,
@@ -83,7 +80,6 @@
   "bp3_english": {
     "description": "Convention de notes ENGLISH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29 : la mécanique n'utilise que des alphabets)",
     "runtime": "audio",
-    "voice": null,
     "tuning": "bp3_english_12TET",
     "octaves": "bp3",
     "diapason": 440,
@@ -111,7 +107,6 @@
   "bp3_fr": {
     "description": "Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)",
     "runtime": "audio",
-    "voice": null,
     "tuning": "bp3_fr_12TET",
     "octaves": "bp3_fr",
     "diapason": 440,
@@ -139,7 +134,6 @@
   "solfege": {
     "description": "Solfège latin — do ré mi fa sol la si",
     "runtime": "audio",
-    "voice": null,
     "tuning": "solfege_12TET",
     "octaves": "western",
     "diapason": 440,
@@ -166,9 +160,7 @@
   "arabic": {
     "description": "Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.",
     "runtime": "audio",
-    "voice": null,
     "tuning": "arabic_24TET",
-    "octaves": null,
     "diapason": 440,
     "resolvesPitch": true,
     "alterations": {
@@ -195,7 +187,6 @@
   "turkish": {
     "description": "Turkish makam — note names from Ottoman/Turkish tradition",
     "runtime": "audio",
-    "voice": null,
     "tuning": "turkish_53TET",
     "octaves": "turkish",
     "diapason": 440,
@@ -233,9 +224,7 @@
   "gamelan_pelog": {
     "description": "Javanese gamelan pelog — 7 tones",
     "runtime": "audio",
-    "voice": null,
     "tuning": "gamelan_pelog",
-    "octaves": null,
     "diapason": 282,
     "resolvesPitch": true,
     "alterations": {},
@@ -254,9 +243,7 @@
   "gamelan_slendro": {
     "description": "Javanese gamelan slendro — 5 tones",
     "runtime": "audio",
-    "voice": null,
     "tuning": "gamelan_slendro",
-    "octaves": null,
     "diapason": 282,
     "resolvesPitch": true,
     "alterations": {},
@@ -273,7 +260,6 @@
   "shakuhachi": {
     "description": "Shakuhachi — 5 base fingerings (Kinko-ryū)",
     "runtime": "audio",
-    "voice": null,
     "tuning": "shakuhachi_12TET",
     "octaves": "shakuhachi",
     "diapason": 293.66,
@@ -302,9 +288,7 @@
   "bohlen_pierce": {
     "description": "Bohlen-Pierce — 13 pitch classes in a tritave",
     "runtime": "audio",
-    "voice": null,
     "tuning": "bohlen_pierce_equal",
-    "octaves": null,
     "diapason": 440,
     "resolvesPitch": true,
     "alterations": {},
@@ -330,10 +314,6 @@
   "tabla": {
     "description": "Tabla bols — percussion syllables (no pitch)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -408,10 +388,6 @@
   "simple": {
     "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -453,7 +429,6 @@
   "shruti23": {
     "description": "22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
     "runtime": "audio",
-    "voice": null,
     "tuning": "shruti23_native",
     "octaves": "saptak_us",
     "diapason": 261.625,
@@ -493,10 +468,6 @@
   "dhadhatite": {
     "description": "Qa'ida « dhadhatite » — bols et ENCHAINEMENTS de cette composition de tabla (sans hauteur)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -515,10 +486,6 @@
   "tryCsoundObjects": {
     "description": "Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {

@@ -5,10 +5,6 @@
   "abc": {
     "description": "Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -45,10 +41,6 @@
   "abc1": {
     "description": "Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -67,10 +59,6 @@
   "conway": {
     "description": "Conway look-and-say sequence digits",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -84,10 +72,6 @@
   "kathak_count": {
     "description": "Kathak counting bols (ek-do-tin)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
@@ -114,10 +98,6 @@
   "structural": {
     "description": "Opaque structural symbols for grammar tests (no pitch, no sound)",
     "runtime": "audio",
-    "voice": null,
-    "tuning": null,
-    "octaves": null,
-    "diapason": null,
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {

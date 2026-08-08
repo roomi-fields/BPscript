@@ -81,6 +81,21 @@ function fautesDe(nom, a) {
     if (cle.startsWith('_')) continue;
     if (!(cle in PROTOTYPE)) f.push(`${nom} : le champ '${cle}' n'est PAS au prototype — un champ hors prototype agrandit la donnée sans que rien ne le lise`);
   }
+  // ⛔ UN CHAMP À SA VALEUR PAR DÉFAUT NE S'ÉCRIT PAS — et le contraire a cassé un voisin.
+  // Ma donnée appliquait DEUX RÉGIMES à la fois : `baseNote` ABSENT sur les collections sans
+  // hauteur, `tuning` PRÉSENT À NUL sur les mêmes. Kairos comparait strictement à « non défini » ;
+  // le nul explicite passait pour une valeur DÉCLARÉE, court-circuitait sa branche sans-hauteur et
+  // faisait jeter sur les quatre alphabets de percussion. Sa phrase, qui est la règle :
+  // « absent et présent-à-nul ne sont pas la même chose pour un consommateur, et un tableau
+  // AVANT/APRÈS de noms de clés ne le distingue pas. »
+  // ⚠️ `resolvesPitch` à faux est l'EXCEPTION NOMMÉE par la référence — « un alphabet de frappes
+  // n'en resout aucune, et l'ecrire evite qu'on lui en invente une » (LANGUAGE.md:878). Écrit
+  // exprès, il ne tombe pas sous cette règle.
+  for (const cle of Object.keys(a)) {
+    if (a[cle] === null) f.push(`${nom} : '${cle}' est écrit à NUL alors qu'un champ à sa valeur par défaut ne s'écrit pas `
+      + `(LANGUAGE.md:830). Absent et présent-à-nul ne sont pas la même chose pour qui lit — deux régimes dans un `
+      + `fichier, c'est une donnée qui dit deux choses à la fois.`);
+  }
   const posees = ANCRE.filter((c) => a[c] !== null && a[c] !== undefined);
   if (posees.length > 0 && posees.length < ANCRE.length)
     f.push(`${nom} : ANCRE À MOITIÉ POSÉE — ${posees.join(', ')} sans ${ANCRE.filter((c) => !posees.includes(c)).join(', ')}. `
@@ -160,7 +175,10 @@ for (const [nomTable, table] of TABLES) {
 // VUE — puis exige qu'un alphabet sain n'en produise AUCUNE. Une règle qui refuserait tout
 // laisserait la première moitié verte ; c'est la seconde qui la démasque.
 {
-  const sain = { name: 'x', description: '', runtime: 'audio', voice: null, tuning: 't', octaves: 'o',
+  // ⚠️ Pas de `voice: null` ici : un champ à sa valeur par défaut ne s'écrit pas — la règle que ce
+  // garde applique désormais. Le témoin sain doit obéir à la règle qu'il sert à prouver, sinon il
+  // devient un contre-exemple qu'on finit par tolérer.
+  const sain = { name: 'x', description: '', runtime: 'audio', tuning: 't', octaves: 'o',
                  diapason: 440, baseNote: 'A', baseRegister: 4, alterations: {}, resolvesPitch: true,
                  terminals: { a: {} } };
   ok(fautesDe('témoin', sain).length === 0,
@@ -177,6 +195,7 @@ for (const [nomTable, table] of TABLES) {
     ['les terminaux en LISTE',           (a) => { a.terminals = ['a', 'b']; },          /doit être une TABLE/],
     ['les altérations en LISTE VIDE',    (a) => { a.alterations = []; },                /doit être une TABLE/],
     ['un diapason en texte',             (a) => { a.diapason = '440'; },                /doit être number/],
+    ['un champ écrit à NUL',             (a) => { a.octaves = null; },                  /écrit à NUL/],
   ];
   for (const [quoi, casser, attendu] of INJECTIONS) {
     const copie = JSON.parse(JSON.stringify(sain));
