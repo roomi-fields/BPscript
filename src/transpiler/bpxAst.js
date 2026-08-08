@@ -720,11 +720,23 @@ function terminauxEnPortee(ast) {
  * du langage, la table n'existe plus, et il n'a rien à la place. La réponse était déjà dans la
  * spécification ; c'est l'implémentation qui manquait.
  *
- * ⚠️ ET LE MÉCANISME EXISTAIT À MOITIÉ, CE QUI EST PIRE QU'ABSENT. Mesuré le 2026-08-08 : DEUX
- * alphabets déclarent déjà leurs voix en donnée — `tabla` associe `dha` à `bayan_open`, et
- * `tryCsoundObjects` ses sept objets. Cette table n'était lue PAR PERSONNE : la seule occurrence
- * de `.voices` dans le code désigne les voix d'un groupe polymétrique, qui n'ont rien à voir.
- * Une donnée écrite, jamais lue, et rien pour le dire — le mode d'échec le plus discret du dépôt.
+ * ⚠️ DEUX ALPHABETS DÉCLARENT DÉJÀ LEURS VOIX EN DONNÉE — `tabla` associe `dha` à `bayan_open`,
+ * `tryCsoundObjects` ses sept objets — et RIEN NE LES LISAIT ICI : la seule occurrence de
+ * `.voices` dans ce dépôt désigne les voix d'un groupe polymétrique, sans rapport.
+ *
+ * ⛔ J'AI ÉCRIT « CETTE TABLE N'EST LUE PAR PERSONNE », ET C'ÉTAIT FAUX. Kairos l'a mesuré et me
+ * l'a rendu : il la lit depuis JUIN — `resoudre-voix.ts:121`, sa voie (b), avec un témoin
+ * bout-en-bout à lui. La donnée n'était pas morte : elle alimentait sa résolution de voix.
+ * J'avais mesuré MON dépôt et conclu pour LE SIEN — la faute exacte que je remonte aux autres,
+ * et la seconde fois de la journée. Ce qui était vrai : rien ne la lisait CHEZ MOI.
+ *
+ * ⚠️ ET ÇA OUVRE UNE QUESTION QUE JE NE TRANCHE PAS, la sienne : NOUS SOMMES DEUX À RÉSOUDRE LE
+ * MÊME BINDING, depuis la même table, avec des précédences DIFFÉRENTES — la sienne va de l'acteur
+ * à l'alphabet, la mienne du terminal à l'alphabet. Un acteur qui nomme une voix et un alphabet
+ * qui en nomme une autre ne donnent pas le même résultat selon le chemin. Aujourd'hui l'écart ne
+ * se voit pas (il ne lit pas encore ce champ) ; le jour où il le lira, il se verra.
+ * Question portée à Romain : QUI résout le binding d'alphabet. Les deux réponses se défendent ;
+ * ce qui ne se défend pas, c'est les deux à la fois.
  *
  * L'ORDRE DE RÉSOLUTION, du plus local au plus général :
  *   1. le terminal le nomme lui-même   (`@def ka  voice.sec`)

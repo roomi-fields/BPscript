@@ -14,13 +14,17 @@
  * la table n'existe plus, et il n'avait rien à la place. La réponse était déjà écrite dans la
  * spécification (§« Déclarer un terminal ») ; c'est l'implémentation qui manquait.
  *
- * ⚠️ ET LE MÉCANISME EXISTAIT À MOITIÉ, CE QUI EST PIRE QU'ABSENT. Mesuré le 2026-08-08 : DEUX
- * alphabets déclaraient déjà leurs voix en donnée — `tabla` associe `dha` à `bayan_open`,
- * `tryCsoundObjects` ses sept objets. **Cette table n'était lue par personne** : la seule
- * occurrence de `.voices` dans le code désigne les voix d'un groupe polymétrique, qui n'ont aucun
- * rapport. Une donnée écrite, jamais lue, et rien pour le dire.
- * C'est le mode d'échec le plus discret du dépôt : pas un refus, pas un silence à l'exécution —
- * une intention posée dans un fichier que personne n'ouvre.
+ * ⚠️ DEUX ALPHABETS DÉCLARAIENT DÉJÀ LEURS VOIX EN DONNÉE — `tabla` associe `dha` à `bayan_open`,
+ * `tryCsoundObjects` ses sept objets — et rien ne les lisait DANS CE DÉPÔT.
+ *
+ * ⛔ J'AVAIS ÉCRIT « CETTE TABLE N'EST LUE PAR PERSONNE ». C'ÉTAIT FAUX, et Kairos me l'a rendu
+ * avec sa mesure : il la lit depuis JUIN (`resoudre-voix.ts:121`), et il en a un témoin
+ * bout-en-bout. J'avais mesuré MON dépôt et conclu pour LE SIEN — la faute que je remonte aux
+ * autres, commise deux fois dans la même journée. Ce qui était vrai, et seulement cela : rien ne
+ * la lisait chez moi.
+ * ⚠️ La leçon n'est pas « vérifier chez le voisin » : c'est qu'une affirmation dont la portée
+ * dépasse ce qu'on a mesuré entre dans le dossier des autres comme une mesure. La mienne était
+ * dans un message ET dans un commit.
  *
  * ⚠️ ET UN TÉMOIN MANQUE, KAIROS L'A MESURÉ POUR MOI : sur ses 204 scènes, la forme à convention
  * (`signal`, `pitch`, `phase`, `logic`) n'est exercée par AUCUNE. Zéro sur 204. Ce garde est donc
