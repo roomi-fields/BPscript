@@ -124,6 +124,9 @@ par les décisions et par Romain, pas par le compilateur.
     · `PARSEUR_DERIVE.md` (chantier « parseur dérivé d'un formalisme » — phase 0, la mesure de
       départ : 56 natures produites, 22 nommées nulle part, et pourquoi `bpscript.grammar` est une
       création et non une reprise)
+    · `PORTEES_DES_CONTROLES.md` (où chaque contrôle a le droit de s'accrocher — les six portées
+      arrêtées, ce que le moteur natif en dit quand on le mesure, et les places encore non
+      instruites)
   - `reference/` — `WASM_HOWTO.md` · `NATIVE_HOWTO.md` · `BP3_FILE_FORMATS.md` · `HO_FORMAT.md`
   - `issues/` — `POLYMAKE_STACK.md` (stack overflow polymétrie imbriquée) · `RNG_PORTABLE.md`
     (portabilité RNG MSVC/glibc) · `TEMPO_OPS_WASM.md` (opérateurs tempo `/N` `\N` `_tempo()` :

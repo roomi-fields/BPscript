@@ -266,24 +266,39 @@ function assertVoiceRef(name, where, token) {
 }
 
 /**
- * Valide le binding alphabet→voix (spec §7 : champ `voices` d'un alphabet = terminal → nom
- * de voix). Chaque nom doit exister dans lib/voices ; chaque terminal mappé doit être une
- * note de l'alphabet. Carte PARTIELLE admise (un terminal sans voix = résolution aval).
+ * Valide que toute voix nommée par un alphabet existe. Carte PARTIELLE admise : un terminal sans
+ * voix se résout en aval, ce n'est pas une faute.
+ *
+ * ⚠️ RÉÉCRIT LE 2026-08-08, ET IL ÉTAIT MORT EN SILENCE. Cette validation lisait `alpha.voices`,
+ * la table qui associait APRÈS COUP un terminal à une voix — supprimée au reformatage du même jour
+ * (« un terminal est une chose entière » : la voix est désormais une CLÉ du terminal). Le champ
+ * n'existant plus, la condition était toujours fausse et **plus aucune voix n'était vérifiée**.
+ * Rien ne le disait : c'est la famille « une propriété absente rend `undefined`, la branche meurt
+ * sans erreur et le code a l'air de marcher ».
+ *
+ * ⚠️ UN DES DEUX CONTRÔLES A DISPARU, ET C'EST UNE BONNE NOUVELLE À NOMMER. Il vérifiait que le
+ * terminal mappé était bien une note de l'alphabet — une faute que seul le format par AXES rendait
+ * possible, puisqu'une table parallèle pouvait nommer n'importe quoi. Dans une collection de
+ * terminaux, le terminal EST dans la table : la classe de faute n'existe plus. Le reformatage ne
+ * déplace pas ce contrôle, il le rend **sans objet**.
+ *
  * Mémoïsé par alphabet (une lib invalide casse au premier usage — donnée curée, fail-loud).
  */
 const _alphabetVoicesChecked = new Set();
 function assertAlphabetVoices(alphabetName, token) {
   if (_alphabetVoicesChecked.has(alphabetName)) return;
   const alpha = loadLib('alphabet', alphabetName);
-  if (alpha && alpha.voices) {
-    for (const [terminal, voiceName] of Object.entries(alpha.voices)) {
-      if (Array.isArray(alpha.notes) && !alpha.notes.includes(terminal)) {
-        throw new ParseError(
-          `alphabet '${alphabetName}' : le binding de voix mappe '${terminal}' qui n'est pas `
-          + `une note de cet alphabet (lib/alphabets.json).`, token,
-        );
+  if (alpha) {
+    for (const [terminal, def] of Object.entries(alpha.terminals || {})) {
+      if (def && def.voice) {
+        assertVoiceRef(def.voice, `alphabet '${alphabetName}', terminal '${terminal}'`, token);
       }
-      assertVoiceRef(voiceName, `alphabet '${alphabetName}', binding '${terminal}'`, token);
+    }
+    // La voix de la COLLECTION — le repli des terminaux qui n'en nomment aucune
+    // (`LANGUAGE.md:880`). Elle est nulle partout aujourd'hui ; le jour où elle ne l'est plus,
+    // elle doit exister comme les autres.
+    if (alpha.voice) {
+      assertVoiceRef(alpha.voice, `alphabet '${alphabetName}', voix de la collection`, token);
     }
   }
   _alphabetVoicesChecked.add(alphabetName);
