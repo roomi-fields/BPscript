@@ -53,9 +53,9 @@ const REGISTRE = [
   // construction elle-même n'est lisible d'aucune façon, ce qui est plus précis : `script(MIDI
   // program 5)` n'est ni un sac (son contenu n'est pas fait de paires) ni un appel (aucune
   // définition ne porte ce nom). Le fait n'a pas bougé : la forme reste supprimée du langage.
-  ['BPScript-tests/alan-dice.bps',      "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
-  ['BPScript-tests/beatrix-dice.bps',   "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
-  ['BPScript-tests/shapes-rhythm.bps',  "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
+  ['BPScript-tests/alan-dice.bps',      "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/beatrix-dice.bps',   "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/shapes-rhythm.bps',  "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
 
   // ── B. LA SCÈNE EST INCOMPLÈTE — un vrai défaut, chez son propriétaire ────────────────────
   // Les trois emploient un vocabulaire qu'elles ne DÉCLARENT pas : `dhadhatite_v2` écrit des bols
@@ -64,9 +64,9 @@ const REGISTRE = [
   // sont pas des témoins : ce sont des scènes à réparer, et elles appartiennent à kanopi.
   // ⚠️ Elles restent ici INSCRITES, pas tolérées : le jour où l'une passe au vert, ce garde le
   // dira, et l'entrée sortira. Une dérogation sans échéance visible est un trou.
-  ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans @alphabet.tabla — scène incomplète', 'kanopi'],
-  ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée', 'kanopi'],
-  ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi'],
+  ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans @alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
+  ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
+  ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────
@@ -100,7 +100,9 @@ for (const [nom, msgs] of refus) {
 }
 
 // ── B. CHAQUE ENTRÉE DU REGISTRE REFUSE ENCORE, ET POUR LA RAISON INSCRITE ────────────────────
-for (const [nom, fragment, raison] of REGISTRE) {
+// ⚠️ ET LE CHAMP EST LU, PAS DÉCORATIF : un registre qui porterait « qui attend » sans jamais
+// l'afficher aurait le défaut qu'il prétend fermer. La sortie le nomme à chaque passage.
+for (const [nom, fragment, raison, , quiAttend] of REGISTRE) {
   const msgs = refus.get(nom);
   ok(!!msgs,
      `B. ${nom} ne refuse PLUS (motif inscrit : ${raison}). C'est peut-être une bonne nouvelle — `
@@ -135,6 +137,11 @@ if (echecs.length) {
   console.error(`❌ le corpus refuse hors du registre : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
+}
+for (const [nom, , raison, , quiAttend] of REGISTRE) {
+  if (quiAttend && !/^PERSONNE/.test(quiAttend)) {
+    console.log(`   ⏳ ${nom.split('/').pop()} — attend : ${quiAttend}`);
+  }
 }
 console.log(`✅ le corpus ne rougit que là où c'est écrit — ${scenes} scène(s) compilées, `
           + `${refus.size} refus, toutes inscrites au registre (${REGISTRE.length} entrées datées), `
