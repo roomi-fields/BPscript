@@ -5081,9 +5081,22 @@ function parse(tokens, opts = {}) {
       dureeCollee = parseColonFrame(tokColon);
     }
 
-    // Setting bag on group: {}(vel:100)
+    // Sac de réglages COLLÉ au groupe : `{A B}(vel:100)`.
+    //
+    // ⚠️ L'ESPACE DÉCIDE DE LA PORTÉE, et ce site ne le consultait pas — il happait TOUT `(…)`
+    // suivant un bloc, collé ou non. `EBNF.md` §4.12 : collé à l'accolade fermante = portée
+    // GROUPE, séparé par une espace en fin de membre droit = portée RÈGLE.
+    //
+    // ⚠️ ET LA CONSÉQUENCE ÉTAIT UNE DÉRIVATION SANS FIN, mesurée par BPx sur `tryRotate.bps:11` :
+    //     N -> N !(rotate:K1) {N 1/2} (weight:5-1)
+    // Le poids atterrissait DANS LE BLOC. Leur chargeur le cherche sur la RÈGLE, ne le trouve pas,
+    // et retombe sur le défaut du moteur d'origine — poids 127, décrément ZÉRO. Avec un décrément
+    // nul le poids ne décroît jamais ; or cette règle est RÉCURSIVE et ce décrément est
+    // précisément ce qui la BORNE. Dérivation tuée à 45 s chez eux, 150 s chez Kairos, quand le
+    // moteur natif termine en 25 ms sur la même grammaire. Un réglage mal aiguillé ne se voit pas
+    // dans l'arbre : il se voit au bout de la chaîne, en temps de calcul infini.
     let settings = null;
-    if (isRuntimeQualifier()) {
+    if (isRuntimeQualifier() && !current().spaceBefore) {
       settings = parseRuntimeQualifier();
     }
 
