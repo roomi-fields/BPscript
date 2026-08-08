@@ -49,12 +49,19 @@ const voix = (r) => (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])
 
 // ── A. LA CASCADE, DU PLUS LOCAL AU PLUS GÉNÉRAL ─────────────────────────────────────────────
 const CAS = [
-  ['l\'ALPHABET nomme la voix (tabla)',
-   '@core\n@alphabet.tabla\nS -> dha ka\n',            [['dha', 'bayan_open'], ['ka', 'bayan_muted']]],
-  ['le TERMINAL la nomme lui-même',
+  ['le TERMINAL la nomme lui-même : je la PORTE',
    '@core\n@alphabet.western\n@def ka  voice.sec\nS -> ka\n', [['ka', 'sec']]],
+  ['deux terminaux nommés',
+   '@core\n@alphabet.western\n@def ka  voice.sec\n@def ko  voice.grave\nS -> ka ko\n',
+   [['ka', 'sec'], ['ko', 'grave']]],
   ['personne ne la nomme : elle reste ABSENTE',
    '@core\n@alphabet.western\nS -> C4\n',              [['C4', null]]],
+  // ⛔ LA TABLE DE L'ALPHABET N'EST PAS RÉSOLUE ICI — Romain, 2026-08-08 : « c'est Kairos, ça
+  // n'est pas ton rôle. » Je l'avais fait, et c'était résoudre à la place de l'aval, qui le fait
+  // depuis juin depuis la même table. Ce cas garde la frontière DANS L'AUTRE SENS : si un jour je
+  // me remets à résoudre, il rougit.
+  ['la table de l\'alphabet reste À RÉSOUDRE en aval',
+   '@core\n@alphabet.tabla\nS -> dha ka\n',            [['dha', null], ['ka', null]]],
 ];
 for (const [quoi, src, attendu] of CAS) {
   const r = compiler(src);
@@ -66,18 +73,22 @@ for (const [quoi, src, attendu] of CAS) {
      + `le dispatch se fait sur rien.`);
 }
 
-// ── B. LE PLUS LOCAL GAGNE — et sans ce volet, on ne saurait pas lequel ──────────────────────
-// ⚠️ `dha` porte une voix DANS l'alphabet tabla. Un `@def` qui le renomme doit l'emporter :
-// c'est le principe d'override que Romain nomme explicitement. Sans ce cas, une cascade qui
-// prendrait TOUJOURS l'alphabet passerait le volet A en entier.
+// ── B. LA FRONTIÈRE — je PORTE ce qui est écrit, je ne RÉSOUS pas ce qui est organisé ───────
+// ⚠️ CE VOLET A CHANGÉ DE SUJET LE 2026-08-08, et c'est la leçon. Il vérifiait une PRÉCÉDENCE
+// entre le `@def` et la table de l'alphabet — donc il gardait une résolution que je n'aurais pas
+// dû écrire. Kairos a mesuré que nous étions DEUX à résoudre le même fait depuis la même table,
+// avec des précédences différentes ; Romain a tranché que c'est son rôle.
+// Ce que ce volet garde désormais est la FRONTIÈRE : une voix ÉCRITE dans la scène est portée
+// telle quelle, une voix ORGANISÉE par un alphabet ne l'est pas. « Porter ≠ résoudre » — la règle
+// que j'oppose aux autres, et que j'avais franchie sans m'en apercevoir.
 {
   const r = compiler('@core\n@alphabet.tabla\n@def dha  voice.dayan_tap\nS -> dha ka\n');
   ok(messages(r) === '', `B. le terminal redéclaré est REFUSÉ : ${messages(r).slice(0, 80)}`);
   if (!messages(r)) {
-    ok(JSON.stringify(voix(r)) === JSON.stringify([['dha', 'dayan_tap'], ['ka', 'bayan_muted']]),
-       `B. le plus local doit GAGNER : 'dha' redéclaré par @def doit porter 'dayan_tap' et 'ka' `
-       + `garder celle de l'alphabet. Reçu : ${JSON.stringify(voix(r))}. Une cascade qui ne `
-       + `distingue pas ses étages n'est pas une cascade, c'est une valeur unique.`);
+    ok(JSON.stringify(voix(r)) === JSON.stringify([['dha', 'dayan_tap'], ['ka', null]]),
+       `B. 'dha' est ÉCRIT par un @def : je le porte. 'ka' n'est nommé que par la table de son `
+       + `alphabet : je ne le résous pas, l'aval le fait. Reçu : ${JSON.stringify(voix(r))}. `
+       + `Si 'ka' porte une voix ici, c'est que je me suis remis à résoudre à la place d'un autre.`);
   }
 }
 
@@ -97,19 +108,19 @@ for (const [quoi, src, attendu] of CAS) {
      + `${JSON.stringify(tabla.dha)}. Le volet A repose sur cette valeur exacte.`);
 }
 
-// ── D. CE QUI RESTE À FAIRE, ÉCRIT PLUTÔT QUE TU ──────────────────────────────────────────────
-// ⚠️ Romain demande la voix dans TOUS les alphabets. Ils sont 17 et DEUX seulement la portent.
-// Donner une voix aux quinze autres est une question de SENS musical — quel son joue un `C4` de
-// l'alphabet occidental ? — et je n'ai aucun outil qui y réponde. Ce compte n'est donc PAS une
-// assertion qui échoue : c'est un COMPTEUR qui rend l'écart visible à chaque passage, pour qu'il
-// ne s'oublie pas. Le jour où les quinze sont renseignés, cette ligne le dira.
+// ── D. CE QUE LA DONNÉE PORTE, POUR MÉMOIRE — ce n'est plus mon sujet ────────────────────────
+// ⚠️ Ce compteur disait « 15 alphabets attendent une décision de sens ». Romain l'a écarté le
+// 2026-08-08 : « c'est propre à chaque terminal, on a défini un template de terminaux ». La
+// référence le confirme (§« Déclarer un terminal ») — un terminal nomme LUI-MÊME sa voix parmi
+// ses clés, et prend de la scène ce qu'il laisse de côté. Il n'y a donc pas de voix à décider
+// « par alphabet » : il y a des terminaux qui portent leurs clés.
+// Le compte reste imprimé parce qu'il dit l'état de la donnée, sans plus prétendre à une dette.
 {
   const tous = Object.entries(LIBS.alphabets || {})
     .filter(([k, v]) => !k.startsWith('_') && v && typeof v === 'object' && Array.isArray(v.notes));
   const avec = tous.filter(([, v]) => v.voices);
-  console.log(`   ⏳ voix par alphabet : ${avec.length}/${tous.length} renseignés — `
-            + `${tous.length - avec.length} attendent une décision de sens (quel son joue leurs `
-            + `terminaux). Compteur, pas échec.`);
+  console.log(`   ℹ️ tables de voix en librairie : ${avec.length}/${tous.length} alphabets. `
+            + `Résolues par l'aval, pas ici.`);
 }
 
 if (echecs.length) {

@@ -371,8 +371,8 @@
           "program"
         ],
         "range": [
-          1,
-          128
+          0,
+          127
         ],
         "default": 0,
         "description": "MIDI Program Change",
@@ -382,7 +382,8 @@
           "rule",
           "flow",
           "scene"
-        ]
+        ],
+        "_range_doc": "PLAGE CORRIGEE le 2026-08-08. Elle valait [1,128] et le defaut 0 tombait HORS d elle — une declaration qui se contredit elle-meme, trouvee par le produit croise controles x portees : l instrument prenait le defaut comme valeur d essai et le controle refusait sa propre valeur. La bonne plage vient du MOTEUR D ORIGINE, mesuree et non deduite : BP3_help.txt, _ins(x), « Range of x is 0..127 ». Le defaut 0 y est donc legitime : c est le programme MIDI 0."
       },
       "mod": {
         "args": [
@@ -742,14 +743,15 @@
           20,
           20000
         ],
-        "default": 0,
+        "default": 20000,
         "description": "Lowpass filter cutoff Hz (Web Audio)",
         "scope": [
           "symbol",
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "_default_doc": "DEFAUT CORRIGE le 2026-08-08. Il valait 0, HORS de sa propre plage [20,20000] — meme defaut que celui d ins, trouve par le meme produit croise. 0 Hz ne veut rien dire pour une coupure passe-bas : ce serait tout couper. Le defaut retenu est la BORNE HAUTE, qui veut dire ce que l absence de reglage doit vouloir dire — un filtre TRANSPARENT, au-dessus de l audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure mieux."
       },
       "filterQ": {
         "args": [

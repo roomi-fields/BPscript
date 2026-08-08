@@ -752,20 +752,23 @@ function poserLaVoixDesTerminaux(ast) {
   for (const d of ast.directives || []) {
     if (d && d.type === 'DefDirective' && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
   }
-  // (2) ce que les alphabets en portée déclarent
-  const parAlphabet = new Map();
-  const lireAlphabet = (nom) => {
-    const lib = resolveActorAlphabet(nom, ast.directives);
-    if (!lib || !lib.voices || typeof lib.voices !== 'object') return;
-    for (const [terminal, voix] of Object.entries(lib.voices)) {
-      if (!parAlphabet.has(terminal)) parAlphabet.set(terminal, voix);
-    }
-  };
-  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
-  if (sceneAlpha) lireAlphabet(sceneAlpha.subkey);
-  for (const a of ast.actors || []) if (a.properties?.alphabet) lireAlphabet(a.properties.alphabet);
-
-  if (!parDef.size && !parAlphabet.size) return;
+  // ⛔ JE NE RÉSOUS PAS LE BINDING D'ALPHABET — Romain, 2026-08-08 : « c'est Kairos, ça n'est pas
+  // ton rôle, tu n'en as pas besoin, c'est son rôle. »
+  //
+  // ⚠️ JE L'AVAIS ÉCRIT, ET C'ÉTAIT PORTER PLUS LOIN QUE MON RÔLE. Ma passe lisait la table
+  // `voices` de l'alphabet et posait le résultat sur le terminal. Kairos fait exactement cela
+  // depuis JUIN, depuis la même table (`resoudre-voix.ts:121`) — nous étions DEUX à résoudre le
+  // même fait, avec des précédences différentes : la sienne va de l'acteur à l'alphabet, la
+  // mienne allait du terminal à l'alphabet. Un acteur qui nomme une voix et un alphabet qui en
+  // nomme une autre ne donnent pas le même résultat selon le chemin. L'écart ne se voyait pas
+  // encore — il ne lit pas ce champ — et se serait vu le jour où il l'aurait lu.
+  // C'est lui qui l'a mesuré et remonté ; la décision est de Romain.
+  //
+  // CE QUI RESTE ICI EST DU PORTAGE, PAS DE LA RÉSOLUTION : une voix ÉCRITE dans la scène par
+  // `@def <nom>  voice.<voix>` est une déclaration de l'auteur, je la transporte telle quelle.
+  // Ce que l'alphabet organise, c'est l'aval qui le résout — « porter ≠ résoudre », et c'est la
+  // règle que je passe mes journées à opposer aux autres.
+  if (!parDef.size) return;
 
   const w = (n, vus = new WeakSet()) => {
     if (!n || typeof n !== 'object' || vus.has(n)) return;
@@ -773,7 +776,7 @@ function poserLaVoixDesTerminaux(ast) {
     if (Array.isArray(n)) { n.forEach((x) => w(x, vus)); return; }
     if (n.payload && n.payload.nature === 'sounding') {
       const nom = typeof n.symbol === 'string' ? n.symbol : n.name;
-      const voix = parDef.get(nom) ?? parAlphabet.get(nom);
+      const voix = parDef.get(nom);
       if (voix !== undefined && n.payload.voice === undefined) n.payload.voice = voix;
     }
     Object.values(n).forEach((v) => w(v, vus));
