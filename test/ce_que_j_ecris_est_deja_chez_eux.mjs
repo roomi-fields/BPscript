@@ -43,14 +43,43 @@ const ATELIER = path.resolve(MOI, '..');
  * rougirait à chaque fichier ajouté chez un voisin serait débranché en une semaine.
  */
 const CONSOMMATEURS = [
-  { depot: 'kanopi', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS' },
-  { depot: 'kairos', lienDirect: false, note: 'importe par chemin relatif — le plus gros lecteur' },
-  { depot: 'BPx', lienDirect: false, note: 'importe par chemin relatif' },
-  { depot: 'bp3-frontend', lienDirect: false, note: 'importe par chemin relatif' },
-  { depot: 'runtime-MIDI', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB' },
-  { depot: 'atlas', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure" },
-  { depot: 'runtime-ui', lienDirect: false, note: "vues de texte : lit l'arbre et ses annotations" },
+  { depot: 'kanopi', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
+    lit: ["l'arbre — deux natures seulement"],
+    porte: ['les CINQ catalogues de hauteur, VERBATIM, jusqu\'à kairos — il ne les ouvre jamais'] },
+  { depot: 'kairos', lienDirect: false, note: 'importe par chemin relatif — le plus gros lecteur',
+    lit: ["l'arbre", 'lib/alphabets.json — 8 fichiers de production, dont la résolution de hauteur'] },
+  { depot: 'BPx', lienDirect: false, note: 'importe par chemin relatif',
+    lit: ["l'arbre — le plus gros consommateur de natures de nœud"] },
+  { depot: 'bp3-frontend', lienDirect: false, note: 'importe par chemin relatif', lit: ["l'arbre"] },
+  { depot: 'runtime-MIDI', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB',
+    lit: ['lib/ en direct'] },
+  { depot: 'atlas', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure",
+    lit: ['le compilateur lui-même'] },
+  { depot: 'runtime-ui', lienDirect: false, note: "vues de texte : lit l'arbre et ses annotations",
+    lit: ["l'arbre et ses annotations"] },
 ];
+
+/**
+ * ⛔ CE QU'UN VOISIN PORTE COMPTE AUTANT QUE CE QU'IL LIT — kanopi, 2026-08-08, et il l'a payé.
+ *
+ * J'ai reformaté les alphabets et prévenu KAIROS, qui les lit. Kanopi ne les lit pas : son passe-plat
+ * prend mes cinq catalogues VERBATIM et les tend à Kairos sans jamais en ouvrir le contenu. Je l'ai
+ * donc écarté de mes destinataires — et **26 de ses bancs sont passés au rouge**, avec un refus qui
+ * venait de Kairos, sur une donnée que kanopi n'a jamais lue.
+ *
+ * ⚠️ LE TROU N'ÉTAIT PAS DANS LA LISTE — ce garde le connaissait, et le classait même comme le plus
+ * exposé. Il était dans la QUESTION que je pose ensuite. J'avais demandé à chacun « que LISEZ-vous ? » ;
+ * kanopi avait répondu « deux natures », et j'en avais conclu — logiquement, et faux — que le reste ne
+ * l'atteignait pas. Sa phrase, que j'adopte :
+ *
+ *   « Un dépôt peut être cassé par une donnée qu'il ne LIT jamais mais qu'il TRANSPORTE. »
+ *
+ * D'où le second axe. `lit` sert à prévoir ce qui CASSE chez lui ; `porte` sert à prévoir ce qui casse
+ * PLUS LOIN À TRAVERS lui — et le porteur doit être prévenu aussi, parce que c'est SON portillon qui
+ * rougit, sans qu'il puisse ni absorber ni traduire : écrire l'adaptateur serait poser chez lui un pont
+ * entre deux voisins.
+ */
+const AXES = ['lit', 'porte'];
 // ⚠️ `runtime-audio` A ÉTÉ RETIRÉ LE 2026-07-30, ET SON RETRAIT EST UNE MESURE, PAS UN OUBLI :
 // ses trois occurrences sont des COMMENTAIRES, dont un qui dit son intention en toutes lettres —
 // « miroir, pour ne pas coupler les dépôts ». Il ne lit pas ma source, il en garde une COPIE.
@@ -132,6 +161,26 @@ for (const c of CONSOMMATEURS) {
       `${c.depot} portait un LIEN vers mon arbre et ne l'a plus — c'est un changement de la nature du `
       + 'risque, pas un détail : sans lien, mes fichiers non commités cessent d\'être chez lui');
   }
+}
+
+// ── CHAQUE VOISIN DIT CE QU'IL PREND, ET PAR QUEL AXE ────────────────────────
+// ⚠️ Sans ce volet, la liste répond « qui me consomme » et pas « qui prévenir quand JE touche à
+// CECI ». C'est la différence entre connaître ses voisins et savoir à qui écrire — et c'est
+// exactement cette différence qui a coûté 26 bancs à kanopi.
+{
+  console.log('   ── ce que chacun prend ──');
+  for (const c of CONSOMMATEURS) {
+    const pris = AXES.flatMap((axe) => (c[axe] || []).map((q) => `${axe === 'porte' ? 'PORTE' : 'lit'} ${q}`));
+    ok(pris.length > 0,
+       `${c.depot} est déclaré consommateur sans dire CE QU'IL PREND. Une liste de noms répond `
+     + `« qui me consomme » ; elle ne répond pas « qui prévenir quand je touche à ceci » — et c'est `
+     + `la seconde question qui envoie le préavis au bon endroit.`);
+    for (const p of pris) console.log(`   ${c.depot.padEnd(14)} ${p}`);
+  }
+  const porteurs = CONSOMMATEURS.filter((c) => (c.porte || []).length > 0);
+  ok(porteurs.length >= 1,
+     `TÉMOIN — plus aucun PORTEUR déclaré. L'axe « transporte » a été trouvé en le payant : s'il se `
+   + `vide, le préavis retombe sur les seuls lecteurs et le trou de kanopi se rouvre.`);
 }
 
 // ── L'AUTRE SENS : un consommateur NOUVEAU doit se déclarer ───────────────────
