@@ -686,7 +686,87 @@ function terminauxEnPortee(ast) {
     const p = a.properties || {};
     if (p.alphabet) aUnAlphabet = ajouter(p.alphabet, p.octaves || null) || aUnAlphabet;
   }
+  // ⛔ UN TERMINAL DÉCLARÉ PAR `@def` ENTRE AU VOCABULAIRE — sinon la directive ne sert à rien.
+  //
+  // `LANGUAGE.md` §« Déclarer un terminal » : « un terminal se déclare avec `@def` et un bloc de
+  // clés ». Une déclaration qui n'ajoute pas son nom au vocabulaire est une porte nommée qui ne
+  // change RIEN : la scène compile la directive, puis refuse le symbole qu'elle vient de déclarer.
+  // Mesuré le 2026-08-08, juste après l'ouverture de `@def` : `@def ka voice.sec` puis `S -> ka`
+  // rendait « terminal 'ka' non déclaré ». La directive était lue, rangée dans l'arbre, et
+  // ignorée du seul contrôle qui la concernait.
+  //
+  // ⚠️ ET C'EST LE CŒUR DU CHANTIER, PAS UN DÉTAIL. Cinq directives sortent du langage, et `@gate`
+  // — 119 lignes sur 14 scènes — déclarait précisément des terminaux avec leur sortie. Sans cette
+  // ligne, la cible de migration accepte la déclaration et refuse l'usage : le pire des deux
+  // mondes, un mur avec une porte peinte dessus.
+  for (const d of ast.directives || []) {
+    if (d && d.type === 'DefDirective' && d.kind === 'terminal' && d.name) terminaux.add(d.name);
+  }
   return { terminaux, aUnAlphabet };
+}
+
+/**
+ * LA VOIX D'UN TERMINAL ARRIVE JUSQU'À L'ARBRE — cascade terminal, puis alphabet.
+ *
+ * ⛔ ACTE DE ROMAIN, 2026-08-08 : « tout est dans les PROPRIÉTÉS DU TERMINAL — ou pas, et c'est
+ * alors résolu par les principes d'override. Et `@def`/`voice` doit AUSSI être correctement
+ * implémenté dans TOUS LES ALPHABETS. »
+ * C'est la suite directe de la décision du 2026-08-01 : « un alphabet est une collection
+ * structurée de terminaux », et `voice` n'est PAS une clé d'acteur — c'est le terminal qui la
+ * porte, et l'alphabet qui les organise.
+ *
+ * ⚠️ CE QUE ÇA DÉBLOQUE, ET C'EST UN AGENT ENTIER ARRÊTÉ DEPUIS QUATRE HEURES. Kairos assurait le
+ * DISPATCH DU SON — quelle voix joue quel symbole — en lisant la table des macros ; `@macro` sort
+ * du langage, la table n'existe plus, et il n'a rien à la place. La réponse était déjà dans la
+ * spécification ; c'est l'implémentation qui manquait.
+ *
+ * ⚠️ ET LE MÉCANISME EXISTAIT À MOITIÉ, CE QUI EST PIRE QU'ABSENT. Mesuré le 2026-08-08 : DEUX
+ * alphabets déclarent déjà leurs voix en donnée — `tabla` associe `dha` à `bayan_open`, et
+ * `tryCsoundObjects` ses sept objets. Cette table n'était lue PAR PERSONNE : la seule occurrence
+ * de `.voices` dans le code désigne les voix d'un groupe polymétrique, qui n'ont rien à voir.
+ * Une donnée écrite, jamais lue, et rien pour le dire — le mode d'échec le plus discret du dépôt.
+ *
+ * L'ORDRE DE RÉSOLUTION, du plus local au plus général :
+ *   1. le terminal le nomme lui-même   (`@def ka  voice.sec`)
+ *   2. son alphabet le nomme pour lui  (`alphabets.json`, table `voices`)
+ * Un terminal qui n'est nommé nulle part ne reçoit RIEN — l'absence reste une absence, et l'aval
+ * la lit comme telle. On n'invente pas une voix par défaut : ce serait le défaut invisible que la
+ * cascade des valeurs de scène a coûté le 2026-07-04.
+ */
+function poserLaVoixDesTerminaux(ast) {
+  if (!ast) return;
+  // (1) ce que les `@def` de la scène déclarent
+  const parDef = new Map();
+  for (const d of ast.directives || []) {
+    if (d && d.type === 'DefDirective' && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
+  }
+  // (2) ce que les alphabets en portée déclarent
+  const parAlphabet = new Map();
+  const lireAlphabet = (nom) => {
+    const lib = resolveActorAlphabet(nom, ast.directives);
+    if (!lib || !lib.voices || typeof lib.voices !== 'object') return;
+    for (const [terminal, voix] of Object.entries(lib.voices)) {
+      if (!parAlphabet.has(terminal)) parAlphabet.set(terminal, voix);
+    }
+  };
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
+  if (sceneAlpha) lireAlphabet(sceneAlpha.subkey);
+  for (const a of ast.actors || []) if (a.properties?.alphabet) lireAlphabet(a.properties.alphabet);
+
+  if (!parDef.size && !parAlphabet.size) return;
+
+  const w = (n, vus = new WeakSet()) => {
+    if (!n || typeof n !== 'object' || vus.has(n)) return;
+    vus.add(n);
+    if (Array.isArray(n)) { n.forEach((x) => w(x, vus)); return; }
+    if (n.payload && n.payload.nature === 'sounding') {
+      const nom = typeof n.symbol === 'string' ? n.symbol : n.name;
+      const voix = parDef.get(nom) ?? parAlphabet.get(nom);
+      if (voix !== undefined && n.payload.voice === undefined) n.payload.voice = voix;
+    }
+    Object.values(n).forEach((v) => w(v, vus));
+  };
+  w(ast.subgrammars);
 }
 
 function validateTerminals(ast) {
@@ -2093,6 +2173,7 @@ export function compileToBPxAST(source, environnement) {
     // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).
     result.errors.push(...refuserNomsEnDouble(ast));
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
+    poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls));
     result.errors.push(...validateModulation(ast, libCtx));
 
