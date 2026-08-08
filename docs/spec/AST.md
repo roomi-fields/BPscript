@@ -761,7 +761,7 @@ réglages que le runtime consomme.
 
 ## Exemple
 
-Source : `[stage==1] S -> sa!dha re (mode:random)`
+Source : `[stage==1] S -> sa!dha re (weight:50)`
 
 ```json
 {

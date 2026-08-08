@@ -1255,7 +1255,46 @@ function validateReferences(ast) {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { for (const el of node) collect(el); return; }
     if (node.payload && node.payload.params) for (const k of Object.keys(node.payload.params)) flag(k, node.line);
-    if (node.type === 'SettingBag' && Array.isArray(node.pairs)) for (const p of node.pairs) flag(p.key, p.line, p.col);
+    // ⚠️ LES DEUX SIGNES, PAS UN SEUL. Le mode s'écrit aussi bien entre parenthèses (`SettingBag`)
+    // qu'entre crochets (`Qualifier`) — et mon premier refus ne visait que le premier. Mesuré dans
+    // la foulée : `S -> C4 [mode:random]` PASSAIT, alors qu'il était refusé la minute d'avant.
+    // J'avais donc fermé la porte d'un côté en en ouvrant une de l'autre, dans le même geste.
+    // C'est la faute « énumérer TOUTES les formes que le parser peut produire », commise en
+    // écrivant le correctif qui la cite.
+    if ((node.type === 'SettingBag' || node.type === 'Qualifier') && Array.isArray(node.pairs)) {
+      for (const p of node.pairs) {
+        if (node.type === 'SettingBag') flag(p.key, p.line, p.col);
+        // ⛔ LE MODE NE CHANGE PAS EN COURS DE TIRAGE — décision de Romain, 2026-08-08.
+        //
+        // Il vaut pour un BLOC et s'écrit `@mode:<valeur>` en tête de sous-grammaire, point. La
+        // forme en sac — suffixe de règle, flux, ou n'importe quelle autre position — est SUPPRIMÉE.
+        //
+        // ⚠️ CE QUI A CONDUIT À CETTE DÉCISION, et c'est une leçon sur les références. La spec
+        // écrivait `S -> A B C (mode:random)` et lui consacrait un paragraphe entier expliquant
+        // qu'un mode écrit sur une règle gouverne le bloc. Mesuré sur les trois sources : le corpus
+        // écrit `@mode` en tête **287 fois** et la forme en sac **ZÉRO** ; le moteur d'origine met
+        // son mode en tête de bloc, seul sur sa ligne, jamais en suffixe. La spec décrivait donc
+        // une forme que ni le moteur ni aucune scène ne connaît — et mon arbre ne l'appliquait
+        // nulle part : le mode restait sur la règle, le bloc restait sans mode.
+        // Romain a tranché en supprimant la forme plutôt qu'en la faisant vivre.
+        // ⚠️ Elle avait essaimé : DIX-SEPT occurrences dans les trois spécifications, alors que je
+        // n'en avais vu qu'une. Un balayage, jamais une correction sur place.
+        //
+        // On refuse ICI, sur l'arbre entier, et non dans une branche du parseur : le mode ne doit
+        // apparaître dans AUCUN sac, quelle qu'en soit la position — règle, groupe, symbole, flux,
+        // accolade fermante. Une garde écrite pour la position qui s'est montrée laisserait vivre
+        // les cinq autres.
+        if (p.key === 'mode') {
+          errors.push({
+            message: `'(mode:…)' n'a plus sa place dans une règle : le mode vaut pour un BLOC et ne `
+              + `change pas en cours de tirage (décision Romain 2026-08-08). L'écrire `
+              + `'@mode:${p.value ?? '<valeur>'}' en tête de la sous-grammaire concernée — une `
+              + `ligne seule, avant ses règles.`,
+            line: p.line, col: p.col,
+          });
+        }
+      }
+    }
     for (const k in node) { if (k !== 'params' && node[k] && typeof node[k] === 'object') collect(node[k]); }
   })(ast.subgrammars);
 

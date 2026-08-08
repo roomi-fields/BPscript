@@ -51,7 +51,11 @@ const runtimeSample = ['vel', 'pan'].filter((k) => !QUALIFIER_KEYS.includes(k));
 // Plancher abaissé de 9 à 8 le 2026-08-06 : `tempx` SUPPRIMÉ du langage (décision Romain,
 // doublon exact de l'opérateur de vitesse, qui s'écrit `! (/N)` dans le flux). Un plancher se
 // baisse à la MAIN, daté et motivé — jamais parce qu'un compte a bougé.
-ok(QUALIFIER_KEYS.length >= 8, `0. schema.qualifierKeys doit rester peuplé — reçu ${QUALIFIER_KEYS.length}`);
+// ⚠️ SEUIL DESCENDU DE 8 À 7 LE 2026-08-08, et la raison est datée : `mode` a été RETIRÉ de
+// `qualifierKeys` sur décision de Romain — « on ne change pas de mode en cours de tirage ».
+// Ce n'est donc pas un socle qu'on baisse pour verdir : c'est le langage qui a perdu une clé
+// de sac, et le socle qui suit. Il garde son office — refuser que la liste se VIDE.
+ok(QUALIFIER_KEYS.length >= 7, `0. schema.qualifierKeys doit rester peuplé — reçu ${QUALIFIER_KEYS.length}`);
 ok(runtimeSample.length === 2, `0. l'échantillon runtime (vel, pan) doit être hors qualifierKeys — reçu ${JSON.stringify(runtimeSample)}`);
 
 function valeurExemple(spec) {
@@ -117,7 +121,10 @@ for (const cle of clesTestees) {
 
 // Plancher 33 -> 30 le 2026-08-06 : `tempx` SUPPRIMÉ du langage (décision Romain — doublon
 // exact de l'opérateur de vitesse). Le produit croisé reste PLEIN, il a une clé de moins.
-ok(cellules === clesTestees.length * 3 && cellules >= 30,
+// Plancher 30 -> 27 le 2026-08-08 : `mode` RETIRÉ des clés de sac (décision Romain — « on ne
+// change pas de mode en cours de tirage »). Même geste, même raison : la matrice reste PLEINE,
+// elle a une clé de moins. Le plancher suit le langage ; il n'est jamais baissé pour verdir.
+ok(cellules === clesTestees.length * 3 && cellules >= 27,
   `la matrice doit être PLEINE — ${cellules} cellule(s) pour ${clesTestees.length} clé(s) × 3 positions`);
 
 // ─── 3. Témoin MORD : une clé qui n'est ni réglage réservé ni contrôle connu reste refusée ─────

@@ -190,7 +190,7 @@ MODE = "ord" | "random" | "lin" | "sub" | "sub1" | "tem" | "poslong" ;
 ```
 
 Les règles d'une même sous-grammaire partagent le mode. Il s'écrit `@mode:<valeur>` en tête, ou
-`(mode:<valeur>)` en suffixe de règle. Deux sous-grammaires sont des **passes successives** : un
+`@mode:<valeur>` en tête de sous-grammaire. Deux sous-grammaires sont des **passes successives** : un
 même nom y est le même symbole, réécrit plus tard.
 
 | Mode      | Stratégie de sélection                           |
@@ -616,7 +616,7 @@ destinataire l'interprète.
 | ----------- | ----------------------------- | -------------------------- |
 | **symbole** | collé au symbole              | `C4(vel:120)`              |
 | **groupe**  | collé au `}`                  | `{A B}(vel:100)`           |
-| **règle**   | espacé, en fin de membre droit | `S -> C4 D4 (mode:random)` |
+| **règle**   | espacé, en fin de membre droit | `S -> C4 D4 (weight:50)`   |
 | **globale** | `@catégorie.clé:valeur`       | `@time.tempo:120`          |
 
 Une paire peut porter un **sujet** devant la clé pour viser plus finement. Le sujet vaut **par

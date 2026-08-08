@@ -37,8 +37,12 @@ const QUALIFIER_KEYS = LIBS.core?.schema?.qualifierKeys || [];
 const ENGINE_SPECS = LIBS.controls?.engine || {};
 
 // ─── 0. Témoin anti-rétrécissement + périmètre EXCLU explicite ───────────────────────────────
-ok(Array.isArray(QUALIFIER_KEYS) && QUALIFIER_KEYS.length >= 8,
-   `0. lib/core.json schema.qualifierKeys doit rester >= 8 entrées — reçu ${JSON.stringify(QUALIFIER_KEYS)}`);
+// ⚠️ SEUIL DESCENDU DE 8 À 7 LE 2026-08-08, et la raison est datée : `mode` a été RETIRÉ de
+// `qualifierKeys` sur décision de Romain — « on ne change pas de mode en cours de tirage ».
+// Ce n'est donc pas un socle qu'on baisse pour verdir : c'est le langage qui a perdu une clé
+// de sac, et le socle qui suit. Il garde son office — refuser que la liste se VIDE.
+ok(Array.isArray(QUALIFIER_KEYS) && QUALIFIER_KEYS.length >= 7,
+   `0. lib/core.json schema.qualifierKeys doit rester >= 7 entrées — reçu ${JSON.stringify(QUALIFIER_KEYS)}`);
 // (plancher 9 -> 8 le 2026-08-06 : `tempx` SUPPRIMÉ, décision Romain — doublon de `! (/N)`)
 for (const exclu of ['goto', 'repeat', 'failed', 'rndtime']) {
   ok(!QUALIFIER_KEYS.includes(exclu),
@@ -105,7 +109,8 @@ for (const cle of QUALIFIER_KEYS) {
   }
 }
 // Plancher 36 -> 32 le 2026-08-06 : `tempx` SUPPRIMÉ (décision Romain). Matrice toujours pleine.
-ok(cellules === QUALIFIER_KEYS.length * 4 && cellules >= 32,
+// Plancher 32 -> 28 le 2026-08-08 : `mode` RETIRÉ des clés de sac (décision Romain). Idem.
+ok(cellules === QUALIFIER_KEYS.length * 4 && cellules >= 28,
    `la matrice doit être PLEINE — ${cellules} cellule(s) pour ${QUALIFIER_KEYS.length} clé(s) × 4 propriétés`);
 
 // ─── 5. Injection — le refus MORD sur une clé migrée, et il se TAIT sur une clé qui ne l'est pas ──

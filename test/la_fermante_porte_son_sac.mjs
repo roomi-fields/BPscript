@@ -97,6 +97,38 @@ for (const [quoi, corps, attendu, pourquoi] of CAS) {
   }
 }
 
+// ── LE SCEAU EST LE MÊME DES DEUX CÔTÉS ─────────────────────────────────────────────────────
+// ⚠️ ROUTER LE SAC NE SUFFISAIT PAS, et c'est BPx qui l'a vu. Le sac arrivait sur la fermante mais
+// NU : sans le sceau (`payload`) que porte celui d'un bloc écrit d'un seul tenant. Or c'est
+// `payload.params` que lit l'extracteur commun — celui par lequel passe déjà le bloc d'un tenant.
+// Sans sceau, l'aval aurait dû emprunter un second chemin pour la même notion : deux
+// implémentations qui dérivent à la première évolution. Ils ont refusé de lire les paires en dur
+// chez eux, et ils avaient raison : le sceau porte la nature et la portée, donc la classification
+// des contrôles, qui vit dans MES librairies.
+// On compare donc les deux sceaux CHAMP À CHAMP, pas leur simple présence.
+{
+  const tenant = compiler('S -> {C4 D4 E4 F4}(vel:50) G4\n');
+  const reparti = compiler('S -> A B\nA -> { C4 D4\nB -> E4 F4 }(vel:50)\n');
+  const sceau = (r, nature) => {
+    let vu = null;
+    const w = (n) => {
+      if (!n || typeof n !== 'object') return;
+      if (Array.isArray(n)) { n.forEach(w); return; }
+      if (n.type === nature && n.settings) vu = n.settings.payload ?? null;
+      Object.values(n).forEach(w);
+    };
+    w(r.ast); return vu;
+  };
+  const a = sceau(tenant, 'Polymetric');
+  const b = sceau(reparti, 'RawBrace');
+  ok(!!b, `le sac de la fermante n'est pas SCELLÉ — il arrive nu. L'aval lit payload.params ; sans `
+        + `lui il doit ouvrir un second chemin pour la même notion, et les deux dérivent.`);
+  ok(JSON.stringify(a) === JSON.stringify(b),
+     `les deux écritures du même bloc doivent porter le MÊME sceau, champ à champ. `
+     + `Un seul tenant → ${JSON.stringify(a)} · réparti → ${JSON.stringify(b)}. `
+     + `Une différence ici, et l'aval traite les deux écritures par deux chemins distincts.`);
+}
+
 // ── TÉMOIN — LE DÉTECTEUR SAIT DISTINGUER LES TROIS PORTEURS ────────────────────────────────
 // ⚠️ Sans lui, un détecteur qui rendrait toujours la même nature passerait la matrice en triomphe.
 {

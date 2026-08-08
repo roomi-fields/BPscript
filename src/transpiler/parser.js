@@ -1014,7 +1014,34 @@ function parse(tokens, opts = {}) {
       return;
     }
 
-    // Tous les autres types (Period, NumericDuration, NilString, RawBrace,
+    // ── Accolade FERMANTE d'un bloc réparti — même scellement que le bloc d'un seul tenant ──
+    //
+    // Le sac collé à une fermante règle LE BLOC (décision Romain, 2026-08-08). Router le sac ne
+    // suffisait pas : il arrivait NU, sans le sceau que porte `Polymetric.settings`.
+    //
+    // ⚠️ POURQUOI CE MANQUE BLOQUAIT L'AVAL, et c'est le bon raisonnement de BPx. L'extracteur
+    // commun lit `payload.params` — c'est PAR LUI que passe le bloc écrit d'un seul tenant. Sans
+    // sceau, le bloc réparti aurait dû emprunter un autre chemin : deux implémentations pour une
+    // même notion, qui dérivent l'une de l'autre à la première évolution. Ils ont refusé de lire
+    // les paires en dur chez eux, et ils ont raison — le sceau porte la NATURE et la PORTÉE, donc
+    // la classification des contrôles, qui vit dans mes librairies. La recoder là-bas serait
+    // exactement le code en dur que le chantier des contrôles cherche à sortir.
+    //
+    // `scope: 'group'` et non `'rule'` : c'est bien le BLOC que ce sac gouverne — un bloc dont
+    // l'ouvrante vit dans une autre règle reste un bloc.
+    if (type === 'RawBrace' && el.settings && typeof el.settings === 'object') {
+      const { address, controls } = splitAddress(extractOccurrenceParams([el.settings]));
+      el.settings.payload = {
+        nature: 'transport-control',
+        containment: true,
+        scope: 'group',
+        ...(controls ? { params: controls } : {}),
+        ...(address ? { address } : {}),
+      };
+      return;
+    }
+
+    // Tous les autres types (Period, NumericDuration, NilString, RawBrace sans sac,
     // Wildcard, Variable, Homomorphism, Wait…) : pas de payload.
   }
 

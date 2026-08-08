@@ -155,7 +155,7 @@ for (const [forme, ou] of [
 // Une garde qui interdirait les valeurs à plusieurs parties casserait ce qu'on vient de construire.
 for (const forme of [
   'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> C4 D4 [goto:3 0]', 'S -> !(scale:just_intonation C4) C4',
-  'S -> !(keyxpand:B3 -1) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 (mode:random, weight:50)',
+  'S -> !(keyxpand:B3 -1) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 (scan:left, weight:50)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quater l'espace ENTRE PARTIES reste légitime : '${forme}' — reçu : ${e.join(' | ')}`);
@@ -213,7 +213,11 @@ for (const forme of [
 // classe plus, sa nature de réglage l'emporte). Le crochet ne garde que trois emplois : garde,
 // affectation de drapeau, rang de gabarit.
 for (const [forme, quoi] of [
-  ['S -> C4 [mode:random]', 'mode : crochets refusés'],
+  // ⚠️ `mode` A CHANGÉ DE STATUT le 2026-08-08 : il n'est plus une clé de sac du tout (décision
+  // Romain). Il reste refusé entre crochets — mais désormais parce qu'il ne s'écrit NULLE PART
+  // dans une règle, et non parce qu'il faudrait des parenthèses. `scan` prend sa place ici :
+  // c'est un réglage qui, lui, s'écrit bien entre parenthèses, ce que ce cas mesure.
+  ['S -> C4 [scan:left]', 'scan : crochets refusés'],
   ['S -> C4 [scan:left]', 'scan : crochets refusés'],
   ['S -> C4 [weight:50]', 'weight : crochets refusés'],
   ['S -> C4 [on_fail:fallback(B)]', 'on_fail : crochets refusés'],
@@ -225,7 +229,7 @@ for (const [forme, quoi] of [
      `§2quinquies bis ${quoi} : le message doit donner la forme du jour — reçu : ${e.join(' | ')}`);
 }
 for (const forme of [
-  'S -> C4 (mode:random)', 'S -> C4 (scan:left)', 'S -> C4 (weight:50)',
+  'S -> C4 (on_fail:skip)', 'S -> C4 (scan:left)', 'S -> C4 (weight:50)',
   'S -> C4 (on_fail:fallback(B))', 'S -> C4 (meter:4+4/6)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
@@ -272,7 +276,7 @@ for (const [forme, quoi] of [
   ['S -> C4 (vel:50 velcont)', 'un élément valué puis une clé nue, sans virgule'],
   ['S -> C4 (wave:sine detune:5)', 'deux éléments, sac runtime'],
   // ⚠️ `mode`/`weight` s'écrivent en PARENTHÈSES depuis la décision 2026-08-02 (LANGUAGE.md:773-800).
-  ['S -> C4 (mode:random weight:50)', 'deux éléments, RÉGLAGES RÉSERVÉS — elles passaient par un autre lecteur, sans aucune garde'],
+  ['S -> C4 (scan:left weight:50)', 'deux éléments, RÉGLAGES RÉSERVÉS — elles passaient par un autre lecteur, sans aucune garde'],
   ['S -> C2 (C2:cutoff: env1)', "espace après le SECOND deux-points (écriture à sujet) — un crible qui ne regarde que le premier le manque"],
   ['S -> C2 (*:cutoff: env1)', 'idem avec le sujet universel'],
 ]) {
@@ -282,7 +286,7 @@ for (const [forme, quoi] of [
 // LES LÉGALES, indiscernables des précédentes au caractère près :
 for (const forme of [
   'S -> {C4 D4}(vel:50, pan:7)', 'S -> C4 (keyxpand:B3 -1)', 'S -> C4 (keymap:C3 C3 C5 C5)',
-  'S -> C4 (vel:50, velcont)', 'S -> C4 (mode:random, weight:50)', 'S -> C2 (C2:cutoff:env1)',
+  'S -> C4 (vel:50, velcont)', 'S -> C4 (scan:left, weight:50)', 'S -> C2 (C2:cutoff:env1)',
   'S -> C2 (*:cutoff:env1)',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);

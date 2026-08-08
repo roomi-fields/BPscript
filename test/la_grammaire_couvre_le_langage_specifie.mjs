@@ -92,7 +92,11 @@ const RETARD_BIBLE = new Map([
   ["@def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`", "mesuré le 2026-08-06"],
   ["-> <- <>       derivation et direction", "mesuré le 2026-08-06"],
   ["=              affectation de drapeau, entre crochets en fin de regle (S -> C4 [stage=2])", "mesuré le 2026-08-06"],
-  ["(S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))", "mesuré le 2026-08-06"],
+  // ⚠️ ENTRÉE RÉÉCRITE le 2026-08-08 : la ligne d'inventaire de la bible illustrait le `!` avec
+  // `!(mode:random)`, une forme désormais supprimée du langage. Elle illustre maintenant
+  // `!(vel:80)`. Le retard porte donc sur le NOUVEAU texte — l'ancien n'existe plus, et une
+  // entrée qui le viserait ne serait jamais rencontrée : un compteur, pas un cliquet.
+  ["(S -> !dha C4) ; devant un reglage, il le pose dans le flux (!(vel:80))", "mesuré le 2026-08-06, texte réécrit le 2026-08-08"],
   ["S -> sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`) sitar.sa", "mesuré le 2026-08-06"],
   ["S -> sitar.sa sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`)", "mesuré le 2026-08-06"],
   ["Debut -> { A B", "mesuré le 2026-08-06"],

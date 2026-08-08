@@ -698,7 +698,7 @@ _              prolongation : etend l'evenement precedent
 ...            repos indetermine, duree calculee par le moteur
 !              simultaneite : ce qui suit partage l'instant d'attaque de l'element qui
                precede (C4!dha) ; sans element devant lui, objet hors-temps de duree nulle
-               (S -> !dha C4) ; devant un reglage, mutation de flux (!(mode:random))
+               (S -> !dha C4) ; devant un reglage, il le pose dans le flux (!(vel:80))
 <!             point d'attente : la derivation attend un trigger entrant, nomme apres le signe
 #              contexte negatif ; #? apparie la frontiere de la chaine
 ?              wildcard : un symbole quelconque
@@ -761,7 +761,7 @@ Ce qu'ils font est decrit dans « Flags ».
 @alphabet.western:audio
 @time.tempo:120
 
-S -> C4(vel:0.7) D4:0.5 E4 F4 (mode:random)
+S -> C4(vel:0.7) D4:0.5 E4 F4 (vel:100)
 ```
 
 Un reglage s'invoque par sa categorie -- `@transpo.`, `@time.`, `@engine.` -- decrite dans
@@ -782,13 +782,13 @@ de la cle** nomme son destinataire.
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
 suite. Un reglage ecrit entre crochets arrete la compilation, et le message donne sa forme : le
-`mode` s'ecrit `(mode:random)`.
+`mode` s'ecrit `@mode:random`, en tete de sous-grammaire.
 
 ```bpscript
 @core
 @alphabet.western:audio
 
-[count-1] S -> C4 D4 (mode:random) [stage=2]
+[count-1] S -> C4 D4 [stage=2]
 ```
 
 **Un signe, une nature.** Ce qui est entre crochets appartient a la **derivation** : un drapeau
@@ -814,7 +814,7 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
 | **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                    |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                          |
-| **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(mode:random)`, `(weight:50)`, `(vel:80)` |
+| **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(weight:50)`, `(vel:80)`, `(pan:20)`      |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
 donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
@@ -1005,7 +1005,6 @@ effet.
 S -> A:0.5 B C                  // A occupe un demi-battement
 
 // Portee regle -- en fin de regle
-S -> A B C (mode:random)        // mode de la sous-grammaire
 Basse -> C2 C2 C3 (weight:50)   // poids de la regle
 Basse -> C2 E2 G2 (weight:inf)  // poids infini : priorite absolue
 
@@ -1215,9 +1214,6 @@ un element sans duree a l'endroit ou il est ecrit.
 | -------- | -------------------------------------------------------------------------------------------------------------------- |
 | `(...)`  | toute sa portee -- regle ou groupe -- les elements ecrits avant elle compris ; l'effet s'arrete au bord de la portee |
 | `!(...)` | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain sac                        |
-
-**Le `mode` porte plus loin que sa place** : ecrit `(mode:<valeur>)` en suffixe de regle, il vaut
-pour la sous-grammaire entiere, dont toutes les regles partagent la strategie de selection.
 
 ```bpscript
 @core
@@ -1876,7 +1872,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `out.midi` |
 | `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`        |
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
-| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(mode:random)`, `(tuning:just)`    |
+| `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(weight:50)`, `(tuning:just)`      |
 | `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `@template` |
 | `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
@@ -1892,7 +1888,7 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 | `@def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
 | `@def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
 | `C4(vel:80)`                | qualificateur du terminal `C4`                            |
-| `C4 D4 (mode:random)`       | qualificateur de la règle entière                         |
+| `C4 D4 (weight:50)`         | qualificateur de la règle entière                         |
 | `C4!(vel:100)`              | flux ancré à `C4`, il voyage avec lui (`conjoint: true`)  |
 | `C4 !(vel:100)`             | flux posé seul dans la séquence (`conjoint: false`)       |
 | `{C4 D4}:2`                 | durée du groupe                                           |
@@ -1904,7 +1900,7 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 @def accent(x) x(vel:120)
 @def souffle (vel:60)
 
-S -> accent(C4) D4 (mode:random)
+S -> accent(C4) D4 (weight:50)
 Motif -> {C4 D4}:2 E4:0.5
 ```
 
@@ -1945,14 +1941,14 @@ Le sujet est à gauche du signe, la valeur à droite.
 | affecter une sortie au sujet par défaut    | `*:midi`                     |
 | poser une propriété sur un nom qui existe  | `@alphabet.tabla:midi`       |
 | réglage global de scène                    | `@time.tempo:120`            |
-| paire clé-valeur dans `()`                 | `(vel:100)`, `(mode:random)` |
+| paire clé-valeur dans `()`                 | `(vel:100)`, `(weight:50)`   |
 | durée, collée à un terminal ou à un groupe | `C4:2`, `{C4 D4}:2`          |
 
 ```text
 @alphabet.tabla:midi
 @time.tempo:120
 
-S -> dha ti (mode:random)
+S -> dha ti (weight:50)
 ```
 
 ### Deux formes déclaratives : créer un nom, poser une propriété
@@ -2345,12 +2341,13 @@ metrique balkanique.
 
 | Niveau             | Question                             | BPScript         | Portee              |
 | ------------------ | ------------------------------------ | ---------------- | ------------------- |
-| **Mode du bloc**   | quelle strategie de selection ?      | `(mode:random)`  | bloc/sous-grammaire |
+| **Mode du bloc**   | quelle strategie de selection ?      | `@mode:random`   | bloc/sous-grammaire |
 | **Scan par regle** | dans quel sens chercher le symbole ? | `(scan:left)`    | regle individuelle  |
 | **Direction**      | la regle se lit dans quel sens ?     | `->`, `<-`, `<>` | regle individuelle  |
 
-Le mode vaut pour un bloc : il s'ecrit `@mode:<valeur>` en tete de sous-grammaire, ou
-`(mode:<valeur>)` en suffixe de regle. Le scan prend `left`, `right` ou `rnd`.
+Le mode vaut pour un bloc et s'ecrit `@mode:<valeur>` en tete de sous-grammaire. **Il ne change
+pas en cours de tirage** : une sous-grammaire garde sa strategie du debut a la fin. Le scan prend
+`left`, `right` ou `rnd`.
 
 | Mode      | Strategie de selection                           |
 | --------- | ------------------------------------------------ |

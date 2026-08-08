@@ -31,7 +31,12 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const compile = (rhs) => compileToBPxAST(`@core\n@alphabet.western:midi\n\nS -> ${rhs}\n`);
 
 // ─── 1. Marqueur autonome !(…) dans le flux, SANS @controls ──────────────────────────────────
-for (const forme of ['mode:random', 'weight:50', 'scan:left', 'on_fail:skip', 'weight:2', 'meter:7/8']) {
+// ⚠️ `mode:random` A ÉTÉ RETIRÉ DE CETTE LISTE le 2026-08-08 — il n'est plus une clé de sac
+// (décision Romain : « on ne change pas de mode en cours de tirage »). Le cobaye historique de
+// ce garde devient donc un cas REFUSÉ ; il est remplacé par `rotate`, qui est mesuré en
+// position flux dans le corpus et couvre la même propriété. Le garde ne perd rien : il vérifie
+// qu'un réglage RÉSERVÉ se lit dans le flux, pas que le mode en soit un.
+for (const forme of ['rotate:2', 'weight:50', 'scan:left', 'on_fail:skip', 'weight:2', 'meter:7/8']) {
   const { ast, errors } = compile(`C4 !(${forme}) D4`);
   ok(errors.length === 0, `1. '!(${forme})' dans le flux (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
