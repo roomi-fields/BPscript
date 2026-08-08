@@ -805,6 +805,28 @@ function parse(tokens, opts = {}) {
       //     OU dans un accord `C4!E4(vel:90)` (le secondaire est toujours un
       //     SymbolCall) — décision frontière R4 (architecte 2026-06-23).
       let params = extractOccurrenceParams(el.suffixQualifiers);
+      // ⛔ LE SAC COLLÉ À UN ÉLÉMENT PORTE SON SCEAU, comme celui d'un groupe et celui d'une règle.
+      //
+      // ⚠️ MESURÉ PAR BPx le 2026-08-08, et c'est le seul point qui les bloquait : sur les CINQ
+      // accrochages d'un sac, trois portaient un `payload` (règle, groupe, fermante) et DEUX n'en
+      // avaient aucun — le sac collé à une note, et le sac posé dans le flux. Or ce sont
+      // précisément les deux endroits où `vel` est le plus écrit du corpus (97 et 322 fois), et
+      // deux des six valeurs du vocabulaire de portée. Sans sceau, la portée reste DÉCLARABLE dans
+      // la librairie mais INVÉRIFIABLE là où elle sert le plus : on peut écrire qu'un réglage vaut
+      // sur un élément, et rien dans l'arbre ne dit qu'un sac donné est sur un élément.
+      // `containment: true` : un sac collé ne déborde pas de ce qu'il habille — même régime que le
+      // groupe et la règle, jamais du flux.
+      for (const sq of (el.suffixQualifiers || [])) {
+        if (!sq || sq.type !== 'SettingBag') continue;
+        const { address: adrSq, controls: ctrlSq } = splitAddress(extractOccurrenceParams([sq]));
+        sq.payload = {
+          nature: 'transport-control',
+          containment: true,
+          scope: 'symbol',
+          ...(ctrlSq ? { params: ctrlSq } : {}),
+          ...(adrSq ? { address: adrSq } : {}),
+        };
+      }
       const argParams = extractSymbolCallParams(el);
       if (argParams !== null) params = { ...(params || {}), ...argParams };
 
@@ -939,6 +961,22 @@ function parse(tokens, opts = {}) {
 
     // ── Contrôle instantané !(…) ou ![@seed] ──────────────────────────
     if (type === 'InstantControl') {
+      // Le sac du flux porte son sceau, lui aussi — voir la note sur le sac collé plus haut :
+      // c'est l'un des deux qui n'en avaient pas, et le plus écrit du corpus (322 occurrences).
+      // ⚠️ `containment: false` ET PAS `true` : c'est toute la différence de ce sac. Il ne borne
+      // rien — il pose un état qui court vers l'avant, au-delà de la fin de sa règle, jusqu'au
+      // prochain. Lui donner la contenance des autres en ferait un réglage local et lui retirerait
+      // sa raison d'être.
+      if (el.qualifier && el.qualifier.type === 'SettingBag') {
+        const { address: adrF, controls: ctrlF } = splitAddress(extractOccurrenceParams([el.qualifier]));
+        el.qualifier.payload = {
+          nature: 'transport-control',
+          containment: false,
+          scope: 'flow',
+          ...(ctrlF ? { params: ctrlF } : {}),
+          ...(adrF ? { address: adrF } : {}),
+        };
+      }
       el.payload = {
         nature: 'instant',
         flux: true,  // se propage aux tokens suivants du même acteur
@@ -3690,13 +3728,17 @@ function parse(tokens, opts = {}) {
       if (at(T.RBRACE)) {
         advance();
         const rawBrace = { type: 'RawBrace', value: '}' };
-        // Suffix qualifier on closing brace: }[speed:N] (no space) — legacy le temps de la migration
-        if (at(T.LBRACKET) && !current().spaceBefore && isPolymetricQualifier()) {
-          rawBrace.qualifiers = [];
-          while (at(T.LBRACKET) && !current().spaceBefore && isPolymetricQualifier()) {
-            rawBrace.qualifiers.push(parseQualifier());
-          }
-        }
+        // ⛔ LA BRANCHE HÉRITÉE `}[speed:N]` EST SUPPRIMÉE — Romain, 2026-08-08, décision
+        // `2026-08-08-duree-bloc-reparti-sur-la-fermante.md` : « je ne veux pas de legacy, c'est
+        // poubelle ». La durée d'un bloc réparti s'écrit `}:N`, sur la fermante, et rien d'autre.
+        //
+        // ⚠️ ELLE ÉTAIT COMMENTÉE « le temps de la migration » — et il n'y a JAMAIS eu de migration
+        // à faire : zéro occurrence dans tout l'atelier, mesuré par BPx puis par moi. Une voie
+        // parallèle ouverte pour un passage qui n'a jamais eu lieu, et qui aurait pu vivre des
+        // années : c'est la forme la plus tenace du legacy, celle qui n'a jamais servi à personne
+        // et que personne ne pense à retirer parce qu'elle ne dérange rien.
+        // BPx a sorti `qualifiers` de son contrat d'entrée dans le même mouvement et LÈVE si un
+        // producteur l'envoie encore — ce qui n'est plus lu doit crier, jamais disparaître.
         // ⛔ LE SAC COLLÉ À LA FERMANTE RÈGLE LE BLOC ENTIER — décision de Romain, portée par BPx
         // le 2026-08-08 avec sa mesure.
         //
@@ -3767,12 +3809,14 @@ function parse(tokens, opts = {}) {
 
       // SUFFIX qualifiers: A[X] or A(X) — no space before [ or (
       // [] and () are ALWAYS suffix (attached to the element that precedes them)
+      let sacsLus = 0;
       while ((at(T.LBRACKET) && !current().spaceBefore) ||
              (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier())) {
         el.suffixQualifiers = el.suffixQualifiers || [];
         if (at(T.LBRACKET)) {
           el.suffixQualifiers.push(parseQualifier());
         } else {
+          refuserSecondSac(++sacsLus, el);
           el.suffixQualifiers.push(parseRuntimeQualifier());
         }
       }
@@ -4918,6 +4962,32 @@ function parse(tokens, opts = {}) {
   }
 
   /**
+   * UN ÉLÉMENT NE PORTE QU'UN SEUL SAC — décision de Romain, 2026-08-08 : « un seul sac, on
+   * interdit deux sacs, on fusionne ».
+   *
+   * ⚠️ LA MESURE QUI L'A DÉCIDÉE : les deux écritures portent exactement la même information dans
+   * deux emballages. `C2(wave:sawtooth)(vel:80)` rend deux sacs d'une paire, `C2(wave:sawtooth,
+   * vel:80)` un sac de deux paires. La virgule sépare déjà les éléments d'un sac ; en coller un
+   * second n'ajoute AUCUNE notion — seulement une seconde façon d'écrire la même chose, et un
+   * tableau là où un objet suffit.
+   *
+   * ⚠️ CE REFUS VISE DEUX SACS DE RÉGLAGES, JAMAIS « DEUX PARENTHÈSES QUI SE SUIVENT » — et la
+   * distinction n'est pas théorique. Kanopi l'a signalée avant que je frappe : `simpletemplates.bps`
+   * écrit `($0 ???)($1 )`, deux parenthèses voisines qui sont une construction de GABARIT et non
+   * des sacs. Un refus posé sur la graphie aurait cassé cette scène. Il est donc posé là où le
+   * lecteur a DÉJÀ reconnu un sac (`isRuntimeQualifier`), et nulle part ailleurs.
+   */
+  function refuserSecondSac(rang, el) {
+    if (rang < 2) return;
+    const nom = el && (el.name || el.symbol) ? `'${el.name || el.symbol}'` : 'cet élément';
+    throw new ParseError(
+      `${nom} porte DEUX sacs de réglages collés — un élément n'en porte qu'un. Réunir les paires `
+      + `dans le même sac : la virgule les sépare, '(clé:valeur, clé:valeur)'. Les deux écritures `
+      + `disaient déjà la même chose ; celle-ci n'en est plus une (décision Romain 2026-08-08).`,
+      current());
+  }
+
+  /**
    * Ce nom a-t-il été DÉCLARÉ comme une définition (`@def`) ? Seul un tel nom peut être APPELÉ.
    *
    * L'ensemble est vide tant que `@def` n'est pas implémenté — et c'est la vérité du langage
@@ -5245,12 +5315,16 @@ function parse(tokens, opts = {}) {
       refuserSuffixeArobase();   // même refus nommé partout où un élément se lit
 
       // SUFFIX qualifiers: A[X] or A(X) — no space before [ or (
+      // Même refus du second sac que dans une règle : l'espace où le défaut vit, pas le site où
+      // il se montre.
+      let sacsLusIci = 0;
       while ((at(T.LBRACKET) && !current().spaceBefore) ||
              (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier())) {
         el.suffixQualifiers = el.suffixQualifiers || [];
         if (at(T.LBRACKET)) {
           el.suffixQualifiers.push(parseQualifier());
         } else {
+          refuserSecondSac(++sacsLusIci, el);
           el.suffixQualifiers.push(parseRuntimeQualifier());
         }
       }

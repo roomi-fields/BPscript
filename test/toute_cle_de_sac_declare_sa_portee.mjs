@@ -1,0 +1,142 @@
+#!/usr/bin/env node
+/**
+ * TOUTE CLÉ QU'ON PEUT ÉCRIRE DANS UN SAC DÉCLARE OÙ ELLE A LE DROIT D'ÊTRE — sans exception.
+ *
+ * FORMALISME ARRÊTÉ PAR ROMAIN le 2026-08-08, en quatre points :
+ *   · une LISTE, jamais une valeur seule — `vel` vaut pour une note, un groupe, une règle, le flux ;
+ *   · un vocabulaire FERMÉ de six mots : scene · subgrammar · rule · group · symbol · flow ;
+ *   · TOUTE clé de sac le déclare, pas seulement les contrôles ;
+ *   · l'ABSENCE est une faute — c'est ce fichier qui la refuse.
+ *
+ * ⚠️ CE QUE CE CHAMP SERT, ET CE QU'IL NE SERT PLUS. L'accrochage dans l'arbre DIT déjà la portée :
+ * un réglage est déposé au bon endroit selon où il est écrit, et l'aval n'a besoin d'aucune
+ * déclaration pour le LOCALISER. Ce champ sert uniquement à VALIDER — l'arbre dit où le réglage
+ * EST, la librairie dit où il A LE DROIT d'être. Sans lui on lit n'importe quel réglage n'importe
+ * où sans pouvoir dire qu'il est mal placé : c'est ce qui a rendu un poids muet pendant quatre
+ * jours, avec le défaut du moteur appliqué à la place, en silence.
+ *
+ * ⚠️ POURQUOI LA PORTÉE VIT DANS LA LIBRAIRIE DE LA CLÉ, ET NON DANS UN FICHIER CENTRAL. **Le sac
+ * ne porte pas que des contrôles.** Mesuré sur les 274 scènes : `cutoff` y est écrit vingt fois et
+ * vient de la librairie des modulations ; `ch` une fois, et vient du socle. Une validation bâtie
+ * sur la seule librairie des contrôles les refuserait à tort. Ce garde balaie donc les TROIS
+ * sources, et il échoue si une quatrième apparaît sans déclarer — c'est le volet C.
+ *
+ * ⚠️ UN SEUL AXE, et c'est une leçon plutôt qu'une simplification. Un second axe était prévu :
+ * « où on a le droit d'écrire » contre « jusqu'où l'effet porte ». Il reposait ENTIÈREMENT sur
+ * `mode` — écrit sur une règle, gouvernant le bloc, selon la spécification. Mesure du 2026-08-08 :
+ * cette forme n'existe ni au moteur d'origine, ni dans une seule des 274 scènes, et mon arbre ne
+ * l'appliquait nulle part. Romain l'a supprimée ; l'axe est parti avec elle. **Un champ conçu pour
+ * un seul cas meurt avec ce cas.**
+ */
+import { LIBS } from '../src/transpiler/libs-data.js';
+
+let passe = 0;
+const echecs = [];
+const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
+
+/** LE VOCABULAIRE — fermé. Une valeur hors de cette liste est une faute, pas une extension. */
+const VOCABULAIRE = ['scene', 'subgrammar', 'rule', 'group', 'symbol', 'flow'];
+
+/** Les clés de sac, par source. Ajouter une source ICI la soumet automatiquement aux trois volets. */
+function toutesLesCles() {
+  const cles = [];
+  // (a) les contrôles
+  const w = (o, chemin) => {
+    for (const [k, v] of Object.entries(o)) {
+      if (!v || typeof v !== 'object') continue;
+      if ('args' in v && 'description' in v) cles.push({ source: `controls.${chemin}`, nom: k, def: v });
+      else w(v, chemin ? `${chemin}.${k}` : k);
+    }
+  };
+  w(LIBS.controls, '');
+  // (b) les entrées de modulation
+  for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
+    if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
+    for (const [k, v] of Object.entries(entrees)) {
+      if (v && typeof v === 'object') cles.push({ source: `modulation.${type}`, nom: k, def: v });
+    }
+  }
+  return cles;
+}
+
+const CLES = toutesLesCles();
+
+// ── A. AUCUNE CLÉ SANS PORTÉE ────────────────────────────────────────────────────────────────
+for (const { source, nom, def } of CLES) {
+  ok(def.scope !== undefined,
+     `A. '${nom}' (${source}) ne déclare AUCUNE portée. L'absence ne peut pas vouloir dire `
+     + `« partout » : elle rendrait toute validation impossible, et c'est l'état qu'on vient de `
+     + `quitter — 57 des 65 contrôles étaient muets.`);
+}
+
+// ── B. LE FORMAT ET LE VOCABULAIRE ───────────────────────────────────────────────────────────
+for (const { source, nom, def } of CLES) {
+  if (def.scope === undefined) continue;
+  ok(Array.isArray(def.scope),
+     `B. '${nom}' (${source}) déclare sa portée en VALEUR SEULE (${JSON.stringify(def.scope)}) et `
+     + `non en liste. Une clé vaut souvent pour plusieurs places — 'vel' en vaut quatre — et un `
+     + `format à une valeur oblige l'aval à tester la forme avant de lire.`);
+  if (!Array.isArray(def.scope)) continue;
+  ok(def.scope.length > 0,
+     `B. '${nom}' (${source}) déclare une liste VIDE. Une clé qui ne peut s'écrire nulle part n'a `
+     + `pas de raison d'être au catalogue.`);
+  for (const s of def.scope) {
+    ok(VOCABULAIRE.includes(s),
+       `B. '${nom}' (${source}) emploie '${s}', hors du vocabulaire fermé `
+       + `(${VOCABULAIRE.join(', ')}). Un mot inventé au coup par coup ramène le désordre que ce `
+       + `vocabulaire ferme : l'ancien champ portait 'seq_prefix', qui n'était pas une portée mais `
+       + `une position dans le texte du moteur d'origine.`);
+  }
+}
+
+// ── C. LES SOURCES SONT TOUTES BALAYÉES ─────────────────────────────────────────────────────
+// ⚠️ Ce volet existe parce que la faute est de N'EN VOIR QU'UNE. Si une librairie se met à porter
+// des clés de sac sans être ici, ce garde ne le dira pas — sauf par ce compte.
+ok(CLES.filter((c) => c.source.startsWith('controls.')).length === 65,
+   `C. ${CLES.filter((c) => c.source.startsWith('controls.')).length} contrôles balayés, 65 attendus. `
+   + `Un extracteur qui en rate rendrait un verdict vert sur une famille qu'il n'a jamais vue.`);
+ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
+   `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `
+   + `balayées, 5 au moins attendues.`);
+ok(Array.isArray(LIBS.core?.schema?.channelParamsScope)
+   && LIBS.core.schema.channelParamsScope.every((s) => VOCABULAIRE.includes(s)),
+   `C. les paramètres d'adresse du socle ne déclarent pas leur portée, ou l'écrivent hors `
+   + `vocabulaire : ${JSON.stringify(LIBS.core?.schema?.channelParamsScope)}. Ils s'écrivent dans `
+   + `un sac ('E4(ch:5)') : la règle vaut pour eux aussi.`);
+
+// ── D. TÉMOIN — LE VOCABULAIRE EST VRAIMENT EMPLOYÉ, PAS DÉCORATIF ──────────────────────────
+// ⚠️ Sans lui, un catalogue qui déclarerait partout la même portée passerait A, B et C en triomphe
+// tout en ne distinguant plus rien. Le champ doit DISCRIMINER, sinon il ne sert qu'à être vert.
+{
+  const employes = new Set(CLES.flatMap((c) => (Array.isArray(c.def.scope) ? c.def.scope : [])));
+  ok(employes.size >= 5,
+     `D-témoin. seuls ${employes.size} des ${VOCABULAIRE.length} mots du vocabulaire sont employés `
+     + `(${[...employes].join(', ')}). Un champ qui déclare la même chose partout ne valide rien.`);
+  const distinctes = new Set(CLES.map((c) => JSON.stringify(c.def.scope)));
+  ok(distinctes.size >= 6,
+     `D-témoin. seules ${distinctes.size} combinaisons de portées distinctes existent. Le champ `
+     + `doit DISTINGUER les familles — le poids ne va que sur une règle, le mode que sur un bloc, `
+     + `l'intensité partout. S'il ne distingue plus, il est décoratif.`);
+  // Les trois cas nommés par une décision ou par la mesure, en clair.
+  const de = (n) => CLES.find((c) => c.nom === n && c.source.startsWith('controls.'))?.def?.scope;
+  ok(JSON.stringify(de('weight')) === JSON.stringify(['rule']),
+     `D. 'weight' doit valoir pour la RÈGLE et elle seule — décision de Romain, 2026-08-08 : `
+     + `« le poids n'a de sens que sur une règle ». Reçu : ${JSON.stringify(de('weight'))}.`);
+  ok(JSON.stringify(de('mode')) === JSON.stringify(['subgrammar']),
+     `D. 'mode' doit valoir pour la SOUS-GRAMMAIRE et elle seule — il ne change pas en cours de `
+     + `tirage (Romain, 2026-08-08). Reçu : ${JSON.stringify(de('mode'))}.`);
+  ok((de('vel') || []).length >= 4,
+     `D. 'vel' doit valoir pour au moins quatre places — c'est l'exemple qui a fait rejeter le `
+     + `format à une valeur. Reçu : ${JSON.stringify(de('vel'))}.`);
+}
+
+if (echecs.length) {
+  console.error(`❌ toute clé de sac déclare sa portée : ${echecs.length} échec(s)`);
+  for (const e of echecs.slice(0, 12)) console.error(`   - ${e}`);
+  if (echecs.length > 12) console.error(`   … et ${echecs.length - 12} autre(s)`);
+  process.exit(1);
+}
+console.log(`✅ toute clé de sac déclare sa portée — ${CLES.length} clés balayées sur trois sources `
+          + `(contrôles, modulations, paramètres d'adresse), vocabulaire fermé de `
+          + `${VOCABULAIRE.length} mots, format liste partout, et le champ DISTINGUE réellement les `
+          + `familles. ${passe} vérification(s) passée(s).`);

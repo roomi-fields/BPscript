@@ -9,11 +9,77 @@
     "Noms de SYNTHÈSE (découplés des noms d'implémentation). NB : 'pan' existe AUSSI comme contrôle",
     "MIDI/musical (0..127) — la résolution des noms doit être PAR TYPE DE SORTIE (cf. CV.md)."
   ],
+  "_scope_doc": "OU UNE ENTREE DE MODULATION A LE DROIT D ETRE ECRITE — meme champ, meme vocabulaire ferme et meme format LISTE que dans lib/controls.json (Romain, 2026-08-08). Ces cles s ecrivent dans un SAC comme les controles : `C4(cutoff:env1)`, `{A B}(lpf1.cutoff:4000)`. ⚠️ POURQUOI LA PORTEE SE DECLARE ICI ET NON DANS UN FICHIER CENTRAL : le sac ne porte pas que des controles. Mesure du 2026-08-08 sur les 274 scenes — `cutoff` y est ecrit 20 fois et vient de CE fichier, `ch` une fois et vient du socle. Une validation batie sur la seule librairie des controles les refuserait A TORT. La portee vit donc a cote de la cle, dans SA librairie. Portee retenue : les quatre places d un reglage de sortie. Une modulation se pose sur une note, sur un groupe, sur une regle, ou dans le flux — comme vel.",
   "audio": {
-    "cutoff":    { "target": "BiquadFilter.frequency", "unit": "Hz",    "range": [20, 20000] },
-    "amplitude": { "target": "GainNode.gain",          "unit": "ratio", "range": [0, 1] },
-    "resonance": { "target": "BiquadFilter.Q",         "unit": "ratio", "range": [0, 30] },
-    "pitch":     { "target": "osc.detune",             "unit": "cents", "range": [-1200, 1200] },
-    "pan":       { "target": "StereoPanner.pan",       "unit": "ratio", "range": [-1, 1] }
+    "cutoff": {
+      "target": "BiquadFilter.frequency",
+      "unit": "Hz",
+      "range": [
+        20,
+        20000
+      ],
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "amplitude": {
+      "target": "GainNode.gain",
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "resonance": {
+      "target": "BiquadFilter.Q",
+      "unit": "ratio",
+      "range": [
+        0,
+        30
+      ],
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "pitch": {
+      "target": "osc.detune",
+      "unit": "cents",
+      "range": [
+        -1200,
+        1200
+      ],
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "pan": {
+      "target": "StereoPanner.pan",
+      "unit": "ratio",
+      "range": [
+        -1,
+        1
+      ],
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    }
   }
 }

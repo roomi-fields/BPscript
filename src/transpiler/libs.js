@@ -568,7 +568,23 @@ function loadLibsFromDirectives(directives) {
           ctx.componentControls.add(name);
         }
         // `scope:"rule"` — la procédure vaut pour la RÈGLE, pas pour un point de la séquence.
-        if (def.scope === 'rule') {
+        // ⚠️ LE CHAMP EST DEVENU UNE LISTE le 2026-08-08 (Romain) : `scope: ['rule']` et non plus
+        // `scope: 'rule'`. Cette comparaison stricte à une chaîne rendait donc FAUX pour tout le
+        // monde, et la famille des procédures de niveau règle se vidait EN SILENCE — le garde qui
+        // la surveille n'a rougi que parce qu'il ancre les quatre noms attendus.
+        // On lit les deux formes le temps que plus rien n'écrive une chaîne : le garde ci-dessus
+        // le dira, et la branche chaîne sort avec la dernière.
+        // ⚠️ DEUX NOTIONS QUE `scope` NE DISTINGUE PAS, et les confondre change le ROUTAGE.
+        // `ruleScopeControls` désigne les PROCÉDURES DU MOTEUR — `_goto`, `_failed`, `_repeat`,
+        // `_stop` — que BPx extrait en métadonnée de règle. Ce n'est PAS « tout contrôle dont la
+        // portée est la règle » : `scan`, `weight`, `on_fail` et `meter` ont la même portée et sont
+        // des ATTRIBUTS STRUCTURELS, pas des procédures — la donnée le dit déjà, ils n'ont AUCUN
+        // champ `bp3` (cf. `_reglages_reserves_doc`), justement parce qu'aucune procédure native ne
+        // leur correspond. Mesuré le 2026-08-08 : en tirant la famille du seul `scope`, les quatre
+        // y sont entrés et le refus de `![scan:…]` s'est mis à parler de procédure de règle.
+        // Le critère joint donc les deux faits que la donnée porte déjà, et ne nomme aucun contrôle.
+        const portees = Array.isArray(def.scope) ? def.scope : (def.scope ? [def.scope] : []);
+        if (portees.length === 1 && portees[0] === 'rule' && typeof def.bp3 === 'string') {
           ctx.ruleScopeControls.add(name);
         }
         // Argument = intervalle musical (fraction/cents/décimal) : la surface lit une

@@ -21,6 +21,7 @@
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames } from './libs.js';
+import { LIBS } from './libs-data.js';
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
@@ -1191,8 +1192,58 @@ function applySceneValues(ast, libCtx) {
  * des libs chargées + du schéma @core → une user library l'étend automatiquement.
  * @returns {Array<{message, line?, col?}>}
  */
+/**
+ * OÙ UN SAC SE TROUVE, LU SUR LE NŒUD QUI LE PORTE — la table qui traduit l'arbre en vocabulaire
+ * de portée. Elle vient de la MESURE des dix porteurs de sac de l'arbre, pas d'une intuition :
+ * un réglage s'accroche aussi à un silence, à une prolongation, à un joker et aux deux membres
+ * d'un gabarit, et tous relèvent de `symbol` — écrire « note » aurait rétréci le vocabulaire sous
+ * l'usage réel. Ajouter un porteur au langage l'inscrit ici, et il est validé aussitôt.
+ */
+const REFUS_HORS_PORTEE_ACTIF = false;   // cf. la note au point de confrontation, plus bas
+const PORTEE_DU_PORTEUR = {
+  Rule: 'rule',
+  Polymetric: 'group', RawBrace: 'group',
+  InstantControl: 'flow',
+  Symbol: 'symbol', SymbolCall: 'symbol', Wildcard: 'symbol', Prolongation: 'symbol',
+  Rest: 'symbol', TemplateMaster: 'symbol', TemplateSlave: 'symbol',
+};
+/** Les mots du vocabulaire, dits en français dans les messages — l'auteur ne lit pas la donnée. */
+const NOM_DE_PLACE = {
+  scene: 'en tête de scène', subgrammar: 'en tête de sous-grammaire', rule: 'sur une règle',
+  group: 'sur un groupe', symbol: 'sur un élément', flow: 'dans le flux',
+};
+
+/**
+ * Les portées permises par clé, ramassées dans TOUTES les librairies qui en portent.
+ * ⚠️ Trois sources, et il faut les trois : le sac ne porte pas que des contrôles. Mesuré sur les
+ * 274 scènes — `cutoff` y est écrit vingt fois et vient de la librairie des modulations, `ch` une
+ * fois et vient du socle. Bâtir sur la seule librairie des contrôles les refuserait à tort.
+ */
+let _porteesPermises = null;
+function chargerPorteesPermises() {
+  if (_porteesPermises) return _porteesPermises;
+  const m = new Map();
+  const w = (o) => {
+    for (const [k, v] of Object.entries(o || {})) {
+      if (!v || typeof v !== 'object') continue;
+      if ('args' in v && 'description' in v) { if (Array.isArray(v.scope)) m.set(k, v.scope); }
+      else w(v);
+    }
+  };
+  w(LIBS.controls);
+  for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
+    if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
+    for (const [k, v] of Object.entries(entrees)) if (v && Array.isArray(v.scope)) m.set(k, v.scope);
+  }
+  const adr = LIBS.core?.schema?.channelParamsScope;
+  if (Array.isArray(adr)) for (const k of (LIBS.core?.schema?.addressKeys || [])) m.set(k, adr);
+  _porteesPermises = m;
+  return m;
+}
+
 function validateReferences(ast) {
   const errors = [];
+  const porteesPermises = chargerPorteesPermises();
   // ⛔ LE VOCABULAIRE D'UNE SCÈNE EST CELUI QU'ELLE INVOQUE (Romain, 2026-08-08) : « invoquer
   // commande, systématiquement — si un mot est inconnu dans le corpus invoqué, alors erreur ».
   //
@@ -1291,6 +1342,48 @@ function validateReferences(ast) {
               + `'@mode:${p.value ?? '<valeur>'}' en tête de la sous-grammaire concernée — une `
               + `ligne seule, avant ses règles.`,
             line: p.line, col: p.col,
+          });
+        }
+      }
+    }
+    // ⛔ UN RÉGLAGE ÉCRIT HORS DE SA PORTÉE EST REFUSÉ — décision de Romain, 2026-08-08 :
+    // « le poids n'a de sens que sur une RÈGLE, et une écriture hors portée doit être REFUSÉE avec
+    // une erreur explicite nommant la ligne, le contrôle et la portée ».
+    //
+    // C'est le seul office de la déclaration de portée. L'accrochage dans l'arbre DIT déjà où le
+    // réglage est ; la librairie dit où il A LE DROIT d'être. Sans cette confrontation, on lit
+    // n'importe quel réglage n'importe où sans jamais pouvoir dire qu'il est mal placé — c'est ce
+    // qui a rendu un poids muet pendant quatre jours, le défaut du moteur appliqué à sa place.
+    //
+    // La place se lit sur le NŒUD QUI PORTE le sac, jamais sur une liste de noms : ajouter un
+    // porteur au langage suffit à l'inscrire ici. Les portées permises viennent de la DONNÉE
+    // (chaque clé, dans SA librairie) — ce code ne nomme aucun contrôle.
+    // ⏸️ REFUS SUSPENDU — les portées déclarées ne sont pas encore INSTRUITES (Romain, 2026-08-08).
+    //
+    // Le mécanisme est complet et mesuré, mais il confronte l'écriture à des portées que j'avais
+    // tirées d'un inventaire d'USAGE. Romain a posé la méthode : « il faut inspecter pour chaque
+    // contrôle, en fonction de ce qu'il EXPRIME, ce qui a du sens ou non » — en restant conforme
+    // aux limites du moteur d'origine QUI FONT SENS, et en étendant délibérément avec le sac collé
+    // et le sac de flux.
+    // Refuser sur des déclarations non fondées casserait des écritures légitimes en se réclamant
+    // d'une règle que personne n'a arrêtée. Le refus se rebranche quand les 70 clés sont instruites
+    // une par une ; d'ici là il ne mord pas, et ce commentaire dit pourquoi plutôt que de le taire.
+    const place = REFUS_HORS_PORTEE_ACTIF ? PORTEE_DU_PORTEUR[node.type] : null;
+    if (place) {
+      for (const sac of [node.settings, node.qualifier, ...(node.suffixQualifiers || [])]) {
+        if (!sac || !Array.isArray(sac.pairs)) continue;
+        for (const p of sac.pairs) {
+          const cle = String(p.key).split('.')[0];
+          const permis = porteesPermises.get(cle);
+          if (!permis || permis.includes(place)) continue;
+          errors.push({
+            message: `'${cle}' ne peut pas s'écrire ${NOM_DE_PLACE[place]} — `
+              + (permis.length === 1
+                  ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}`
+                  : `il vaut ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(', ')}`
+                    + ` ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`)
+              + `. Le déplacer là, ou employer un réglage qui vaut ici.`,
+            line: p.line ?? node.line, col: p.col,
           });
         }
       }

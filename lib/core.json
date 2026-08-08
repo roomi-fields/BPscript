@@ -199,6 +199,13 @@
       "pitch",
       "phase",
       "logic"
+    ],
+    "_channelParamsScope_doc": "OU UN PARAMETRE D ADRESSE A LE DROIT D ETRE ECRIT. Meme champ et meme vocabulaire ferme que lib/controls.json (Romain, 2026-08-08). Ces cles voyagent dans un sac — `E4(ch:5)` surcharge le canal d une occurrence, `out.midi(ch:1)` l adresse d un acteur — et elles ne sont PAS des controles : elles vivent ici, donc leur portee aussi. Portee retenue : symbol, group, rule, flow — les quatre places d un sac dans une regle. La declaration d ADRESSE D ACTEUR (`out.midi(ch:1)`) n est pas une de ces places : elle est ailleurs dans la scene, et ce champ ne la gouverne pas.",
+    "channelParamsScope": [
+      "symbol",
+      "group",
+      "rule",
+      "flow"
     ]
   },
   "defaults": {
