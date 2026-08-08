@@ -3670,9 +3670,36 @@ function parse(tokens, opts = {}) {
             rawBrace.qualifiers.push(parseQualifier());
           }
         }
+        // ⛔ LE SAC COLLÉ À LA FERMANTE RÈGLE LE BLOC ENTIER — décision de Romain, portée par BPx
+        // le 2026-08-08 avec sa mesure.
+        //
+        // `LANGUAGE.md` pose que COLLÉ règle le groupe et ESPACÉ règle la règle ; la branche
+        // équilibrée l'applique depuis le 2026-08-07. La branche DÉSÉQUILIBRÉE — un bloc dont
+        // l'ouvrante et la fermante vivent dans deux règles différentes — ne lisait que le crochet
+        // et la durée. La parenthèse tombait donc dans le sac de fin de règle, et le même bloc
+        // sonnait autrement selon qu'il était écrit d'un tenant ou réparti :
+        //     S -> {C4 D4 E4 F4}(vel:50) G4     → QUATRE notes à 50
+        //     A -> { C4 D4 ⏎ B -> E4 F4 }(vel:50) → DEUX seulement
+        // Mesuré par BPx dans mon propre arbre : le sac arrivait en `Rule.settings` avec
+        // `scope: 'rule'`, et la fermante arrivait NUE. L'information « ce sac était collé au } »
+        // était perdue au parse — donc irrécupérable en aval, quoi que fasse le lecteur.
+        if (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier()) {
+          rawBrace.settings = parseRuntimeQualifier();
+        }
         // Durée collée sur l'accolade fermante d'un embedding inter-règles : }:N (décision 2026-06-26).
-        // Même sémantique que `}[speed:N]` — poussée comme qualifier `speed` (contrat AST), propagée
-        // au `{` correspondant par la 2e passe (annotateUnbalancedBraces). Forme canonique déséquilibrée.
+        // Même sémantique que `}[speed:N]` — poussée comme qualifier `speed` (contrat AST).
+        //
+        // ⚠️ CE COMMENTAIRE ANNONÇAIT UNE SECONDE PASSE, NOMMÉE, QUI N'A JAMAIS EXISTÉ — le dépôt
+        // entier ne portait qu'une occurrence de ce nom : le commentaire lui-même. BPx l'a lu, a
+        // cru le travail fait ailleurs, et la durée était perdue en silence DES DEUX CÔTÉS.
+        // (Le nom n'est pas répété ici, et c'est délibéré : un garde vérifie qu'aucun nom de
+        // fonction cité dans ce fichier n'y est absent — `test/la_fermante_porte_son_sac.mjs`.)
+        // Et elle ne PEUT pas exister au parse : on ne sait pas quelle règle apportera l'ouvrante,
+        // et le tirage peut la fournir ou non — BPx l'a vérifié sur le moteur d'origine, une
+        // grammaire à deux règles alternatives rend un item apparié ET un item non apparié.
+        // ⚠️ Un commentaire qui promet un travail inexistant est pire qu'un trou déclaré : il
+        // éteint la question chez celui qui le lit. Même famille que la fonction morte et la
+        // branche jamais branchée trouvées la veille — sauf qu'ici il n'y avait même pas de code.
         if (at(T.COLON) && !current().spaceBefore && estNombreDeDuree(peek(1))) {
           const tokColon = current();
           advance(); // consume COLON
