@@ -4603,15 +4603,23 @@
     ]
   },
   "bp3_meantone1": {
-    "description": "Scale \"meantone1\" from Bernard Bel / Bol Processor",
+    "description": "Mesotonique au quart de comma syntonique (Pietro Aron, 1523) : la quinte est diminuee d'un quart de comma, la tierce majeure 5/4 et la sixte mineure 8/5 sont pures. Douze degres sur la table C Db D Eb E F Gb G Ab A Bb B.",
     "source": "Bernard Bel / Bol Processor",
-    "divisions": 5,
+    "period_ratio": 2,
+    "divisions": 12,
     "ratios": [
-      "NaN/NaN",
-      "NaN/NaN",
-      "NaN/NaN",
-      "NaN/NaN",
-      "NaN/NaN"
+      1,
+      1.069984,
+      1.118034,
+      1.196279,
+      1.25,
+      1.337481,
+      1.431084,
+      1.495349,
+      1.6,
+      1.671851,
+      1.788854,
+      1.869186
     ]
   },
   "bp3_BACH": {
