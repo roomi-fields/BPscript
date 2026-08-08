@@ -370,10 +370,20 @@ const RETARD_BLOCS = new Map([
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /ne déclare rien|n'est ni un appel de composant/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ['@alphabet.western:audio #0', /ne déclare rien|n'est ni un appel de composant/],
+  // ⚠️ CAUSE RESSERRÉE le 2026-08-08 — le palier STRUCTURE de `@def` a changé le refus de ces
+  //    deux blocs, et le cliquet l'a vu le jour même. C'est ce pour quoi il existe : une cause
+  //    inscrite qui n'est plus la vraie fait passer un retard pour un autre, et le compteur
+  //    reste juste pendant que la raison ment.
+  //    · `@alphabet.western:audio` ne bute plus sur `@def` mais sur la règle du seul acteur
+  //      implicite — cause DÉJÀ écrite douze lignes plus haut, tranchée par Romain le 2026-08-07.
+  //    · `@def sombre lpf1 >> vca1` est un CÂBLAGE : il bute désormais sur `>>`, que rien ne lit
+  //      au niveau des règles. ⛔ Il n'attend PAS un palier de `@def` — il attend la revue du
+  //      patching avec FaustX (règle de Romain, 2026-08-08 : tout ce qui touche modules/patching
+  //      va au backlog). L'y laisser sous une cause de `@def` le ferait rattraper par erreur.
+  ['@alphabet.western:audio #0', /ne déclare qu'UN alphabet/],
   ['@core #5', /ne déclare rien|n'est ni un appel de composant/],
   ['@def halo(x) x!tin!ge #0', /ne déclare rien|n'est ni un appel de composant/],
-  ['@def sombre lpf1 >> vca1 #0', /ne déclare rien|n'est ni un appel de composant/],
+  ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre

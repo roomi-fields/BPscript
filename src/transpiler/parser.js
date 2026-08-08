@@ -2058,6 +2058,54 @@ function parse(tokens, opts = {}) {
           kTok);
       };
 
+      // ── QUEL CORPS ? Le discriminant est la PONCTUATION COLLÉE, pas le nom ──────────────
+      // Une CLÉ porte toujours `.` ou `:` collé — c'est la règle d'or du langage : le point
+      // appelle un composant, le deux-points affecte une valeur. Une STRUCTURE est faite de
+      // termes NUS : `@def cadence sa re ga pa` (`LANGUAGE.md:311`).
+      // ⚠️ Le départage se fait sur ce que le texte PORTE, jamais sur ce que le nom ÉVOQUE : un
+      // terminal peut s'appeler `voice` et une clé porter le nom d'un terminal. Chercher un
+      // vocabulaire ici referait la faute du 2026-07-26 — laisser la donnée décider de la forme.
+      const cleEnTete = () => {
+        if (!at(T.IDENT)) return false;
+        const apres = peek(1);
+        return !!apres && (apres.type === T.PERIOD || apres.type === T.COLON) && !apres.spaceBefore;
+      };
+
+      if (at(T.IDENT) && !cleEnTete()) {
+        // ── UNE STRUCTURE — un nom vaut une suite de termes, qu'on réinvoque d'un mot ────────
+        // `LANGUAGE.md:304` : « `@def` associe un nom a un corps, pour le reinvoquer d'un mot »,
+        // et §« Ce qui se definit est ce qui se reinvoque ».
+        // ⚠️ LE CORPS EST LU PAR LE LECTEUR DE MEMBRE DROIT, celui des règles, et ce n'est pas
+        // une commodité : une structure EST un membre droit. Lui écrire un lecteur à part ferait
+        // diverger deux grammaires pour une seule notion — et c'est déjà arrivé ici, la forme
+        // pointée passant d'un côté et pas de l'autre. Le silence, la prolongation, les groupes
+        // et les qualificatifs marchent donc sans une ligne de plus, parce que ce sont les mêmes.
+        const corps = parseRhsElements();
+        if (corps.length === 0) {
+          throw new ParseError(
+            `'@def ${defName}' : structure vide. Un nom qui ne vaut rien ne se réinvoque pas.`, tok);
+        }
+        // ⛔ UN CORPS DE CODE N'EST PAS UNE STRUCTURE — et sans ce refus il en devenait une.
+        // `@def fondu phase \`js: …\`` (LANGUAGE.md:312) commence lui aussi par un terme nu ; il
+        // tombait donc ici, et l'arbre produit était PLAUSIBLE ET FAUX : `phase` — un TYPE de
+        // signal — devenait un terminal, le code un élément voisin.
+        // ⚠️ C'est exactement ce que le volet D du garde interdit : « un corps qu'on ne sait pas
+        // lire ne doit jamais tomber dans une branche voisine ». Je l'ai créé en ouvrant la
+        // structure, et mesuré dans la foulée — d'où ce refus, jusqu'au palier du code typé.
+        // Le discriminant est la FORME (un backtick est présent), jamais le nom du premier terme :
+        // décider sur un vocabulaire de types ferait dépendre la forme d'une liste de mots.
+        const backtick = corps.find((e) => e && typeof e.type === 'string' && e.type.includes('Backtick'));
+        if (backtick) {
+          throw new ParseError(
+            `'@def ${defName}' porte du CODE, pas une structure — ce palier lit « un nom vaut une `
+            + `suite de termes » ('@def cadence sa re ga pa'). Le corps de code typé `
+            + `('@def ${defName} <type> \`langage: …\`', types 'signal', 'pitch', 'phase', 'logic') `
+            + `n'est PAS encore lu ; il refuse ici plutôt que d'être lu de travers — sans quoi le `
+            + `type deviendrait un terminal et le code un élément voisin.`, tok);
+        }
+        return { type: 'DefDirective', name: defName, kind: 'structure', body: corps, line: tok.line };
+      }
+
       // Les clés qui tiennent sur la MÊME ligne que le nom.
       while (at(T.IDENT)) lireUneCle();
 
@@ -2080,12 +2128,13 @@ function parse(tokens, opts = {}) {
 
       if (lu === 0) {
         throw new ParseError(
-          `'@def ${defName}' ne déclare rien. Ce palier lit la DÉCLARATION DE TERMINAL : un nom `
-          + `puis ses clés, sur la même ligne ('@def ${defName}  voice.sec') ou dans un bloc `
-          + `indenté sous le nom, une clé par ligne. Les autres corps que la spécification `
-          + `décrit — un branchement, une suite de terminaux, du code typé, un préréglage, une `
-          + `transformation paramétrée — ne sont PAS encore lus ; ils le seront, et d'ici là ils `
-          + `refusent ici plutôt que d'être lus de travers.`, tok);
+          `'@def ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
+          + `TERMINAL — un nom puis ses clés, sur la même ligne ('@def ${defName}  voice.sec') ou `
+          + `dans un bloc indenté, une clé par ligne — et la STRUCTURE, un nom qui vaut une suite `
+          + `de termes ('@def ${defName} sa re ga pa'). Les autres corps que la spécification `
+          + `décrit — un branchement, du code typé, un préréglage, une transformation paramétrée `
+          + `ou structurelle — ne sont PAS encore lus ; ils le seront, et d'ici là ils refusent `
+          + `ici plutôt que d'être lus de travers.`, tok);
       }
       return { type: 'DefDirective', name: defName, kind: 'terminal', keys: cles, line: tok.line };
     }

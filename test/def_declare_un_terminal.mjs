@@ -81,9 +81,19 @@ for (const [quoi, corps, attendu] of FORMES) {
 // ⚠️ Sans cette moitié, une lecture qui accepterait n'importe quoi passerait le volet A en
 // triomphe. Et le second cas est le vrai piège : un mot seul, sans point ni deux-points, n'est
 // NI un appel NI une affectation — le laisser passer inventerait une troisième forme.
+// ⚠️ CE VOLET A CHANGÉ DE PORTÉE LE 2026-08-08, ET LE CAS QUI A BOUGÉ EST INSTRUCTIF.
+// Il exigeait que `@def ka voice` REFUSE, comme « une clé ni appelée ni affectée ». Depuis que ce
+// palier lit aussi la STRUCTURE, cette forme n'est plus une faute : c'est une structure d'un seul
+// terme, et le refus aurait interdit `@def bref C4`. Le témoin a donc été DÉPLACÉ, pas supprimé —
+// un mot nu reste une faute **une fois le régime des clés engagé**, sur la ligne (`hz:440 voice`)
+// comme dans le bloc. Mesuré aux deux endroits avant d'y toucher.
+// La leçon : quand un garde tombe en ouvrant une forme, il faut établir si la forme a changé de
+// SENS ou si le code a régressé. Ici la première ; effacer le témoin sans le rejouer ailleurs
+// aurait retiré la garde du régime des clés en croyant suivre une évolution.
 for (const [quoi, corps, fragment] of [
   ['une définition sans rien',        '@def vide',            /ne déclare rien/],
-  ['une clé ni appelée ni affectée',  '@def ka  voice',       /ni un appel de composant ni une affectation/],
+  ['un mot nu APRÈS une clé',         '@def ka  hz:440  voice', /ni un appel de composant ni une affectation/],
+  ['un mot nu dans le BLOC',          '@def ka\n  hz:440\n  voice', /ni un appel de composant ni une affectation/],
   ['un point sans nom derrière',      '@def ka  voice.',      /nom attendu après/],
   ['un deux-points sans valeur',      '@def ka  hz:',         /valeur attendue après/],
   ['aucun nom après la directive',    '@def',                 /doit nommer ce qu'il définit/],
@@ -94,17 +104,70 @@ for (const [quoi, corps, fragment] of [
 }
 
 // ── D. LES CORPS PAS ENCORE LUS REFUSENT, ILS NE SONT PAS LUS DE TRAVERS ─────────────────────
-// ⚠️ La référence décrit six corps ; ce palier n'en lit qu'un. Les cinq autres doivent CRIER —
-// un corps qu'on ne sait pas lire ne doit jamais tomber dans une branche voisine et produire un
-// arbre plausible. C'est la différence entre « pas encore fait » et « faux sans le dire ».
+// ⚠️ La référence décrit SIX corps (`LANGUAGE.md:310-315`) ; ce palier en lit DEUX — la
+// déclaration de terminal et la structure. Les quatre autres doivent CRIER : un corps qu'on ne
+// sait pas lire ne doit jamais tomber dans une branche voisine et produire un arbre plausible.
+// C'est la différence entre « pas encore fait » et « faux sans le dire ».
+//
+// ⛔ ET CE VOLET A ATTRAPÉ EXACTEMENT ÇA, SUR MOI, LE JOUR OÙ LA STRUCTURE A ÉTÉ OUVERTE.
+// `@def fondu phase \`js: …\`` commence lui aussi par un terme nu : il tombait donc dans la
+// branche structure et était ACCEPTÉ. L'arbre produit était plausible et faux — `phase`, qui est
+// un TYPE de signal, devenait un `Symbol` (un terminal), et le code un élément voisin. Rien
+// n'aurait signalé la confusion en aval : un terminal inconnu ressemble à un terminal.
+// Le refus se décide sur la FORME — un backtick est présent — jamais sur le nom du premier terme :
+// décider sur une liste de types ferait dépendre la forme d'un vocabulaire.
 for (const [quoi, corps] of [
   ['un branchement',              '@def souffle lfo1.out >> lpf1.cutoff'],
+  ['du code TYPÉ',                '@def fondu phase `js: (t, dur) => 1 - t / dur`'],
   ['une transformation',          '@def accent(x) x(vel:120)'],
   ['un préréglage',               '@def kick (vel:120)'],
 ]) {
   ok(messages(compiler(corps)) !== '',
      `D. ${quoi} n'est pas encore lu par ce palier — il doit REFUSER, et il passe. Un corps lu de `
      + `travers produit un arbre plausible et faux, ce qui est pire qu'un refus.`);
+}
+
+// ── E. LA STRUCTURE — un nom vaut une suite de termes, qu'on réinvoque d'un mot ──────────────
+// `LANGUAGE.md:304` : « `@def` associe un nom a un corps, pour le reinvoquer d'un mot », et
+// `:311` en donne la forme : `@def cadence sa re ga pa`.
+//
+// ⚠️ LE CORPS EST LU PAR LE LECTEUR DE MEMBRE DROIT DES RÈGLES, et c'est ce que ce volet
+// vérifie : une structure EST un membre droit. Le silence, la prolongation et les qualificatifs
+// y marchent sans une ligne de code de plus — s'ils cessaient de marcher, ce serait le signe
+// qu'un second lecteur a été écrit à côté, et deux grammaires pour une notion divergent toujours.
+{
+  const NATURES = [
+    ['des terminaux nus',           '@def cadence C4 D4 E4',   ['Symbol', 'Symbol', 'Symbol']],
+    ['un silence et une tenue',     '@def motif C4 - D4 _ E4', ['Symbol', 'Rest', 'Symbol', 'Prolongation', 'Symbol']],
+    ['un seul terme',               '@def bref C4',            ['Symbol']],
+  ];
+  for (const [quoi, corps, attendu] of NATURES) {
+    const r = compiler(corps);
+    ok(messages(r) === '', `E. ${quoi} — REFUSÉ : ${messages(r).slice(0, 90)}`);
+    if (messages(r)) continue;
+    const d = defDe(r);
+    ok(d?.kind === 'structure',
+       `E. ${quoi} — la définition doit porter la nature 'structure', reçu ${JSON.stringify(d?.kind)}.`);
+    const natures = (d?.body || []).map((e) => e.type);
+    ok(JSON.stringify(natures) === JSON.stringify(attendu),
+       `E. ${quoi} — attendu ${JSON.stringify(attendu)}, reçu ${JSON.stringify(natures)}. Si le `
+       + `silence ou la prolongation manquent, le corps n'est plus lu par le lecteur des règles.`);
+  }
+
+  // ⚠️ LE DÉPARTAGE SE FAIT SUR LA PONCTUATION COLLÉE, JAMAIS SUR LE NOM. Une clé porte `.` ou
+  // `:` collé ; une structure est faite de termes nus. Ce témoin garde les deux sens — et le
+  // second cas est le piège : un terminal peut porter le nom d'une clé.
+  const CLE = compiler('@def ka  voice.sec');
+  ok(defDe(CLE)?.kind === 'terminal',
+     `E-départage. '@def ka voice.sec' porte une CLÉ (point collé) : nature 'terminal' attendue, `
+     + `reçu ${JSON.stringify(defDe(CLE)?.kind)}.`);
+  const NU = compiler('@def suite voice sec');
+  ok(defDe(NU)?.kind === 'structure',
+     `E-départage. '@def suite voice sec' n'a AUCUNE ponctuation collée : c'est une STRUCTURE, `
+     + `même si son premier terme s'appelle 'voice'. Reçu ${JSON.stringify(defDe(NU)?.kind)}. `
+     + `Décider sur le nom ferait dépendre la forme d'un vocabulaire.`);
+  ok(messages(compiler('@def vide2  ')) !== '',
+     `E-témoin. Une structure vide doit REFUSER — un nom qui ne vaut rien ne se réinvoque pas.`);
 }
 
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
@@ -115,6 +178,7 @@ if (echecs.length) {
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ '@def' déclare un terminal — ${FORMES.length} formes de la référence lues et RANGÉES `
-          + `dans l'arbre, bloc borné par l'indentation, 5 refus nommés et 3 corps pas encore lus `
+console.log(`✅ '@def' déclare un terminal ET une structure — ${FORMES.length} formes de clés + 3 natures `
+          + `de structure lues et RANGÉES dans l'arbre, bloc borné par l'indentation, départage `
+          + `sur la ponctuation collée et non sur le nom, 6 refus nommés et 4 corps pas encore lus `
           + `qui crient au lieu de mentir. ${passe} vérification(s) passée(s).`);
