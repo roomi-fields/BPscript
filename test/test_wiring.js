@@ -245,6 +245,24 @@ const EXEMPLE_DOCUMENTE = `@core
 
 S -> A4 prise  B4 C4 D4  lache  E4`;
 
+// ⏸️ §8 SUSPENDU LE 2026-08-08 — et ce n'est pas un défaut, c'est une frontière qui a bougé.
+//
+// Ce volet fait traverser une scène jusqu'au MOTEUR pour vérifier que le câblage y arrive. Il
+// écrit son exemple avec `@macro` — le mot que Romain a sorti du langage ce jour-là, avec `@gate`,
+// `@trigger`, `@cv` et `@alias`. BPx a publié son refus AVANT que ma pierre tombale ne tombe, et
+// il l'a fait à ma demande : sans lui, une scène qui perd sa table de macros rend le MÊME nombre
+// d'événements sans plus rien armer — Kairos l'a mesuré sur patchbay, huit événements dans les
+// deux cas, quatre armements contre zéro. Un compte qui ne bouge pas ne peut rien crier.
+// Le moteur LÈVE donc désormais sur cet exemple, et c'est le comportement voulu.
+//
+// ⚠️ CE VOLET NE PEUT PAS ÊTRE MIGRÉ AUJOURD'HUI : la forme qui remplace le corps de câblage est
+// `@def <nom> <cible> >> <cible>`, et le premier palier de `@def` ne lit que la déclaration de
+// terminal. Le réécrire maintenant nommerait une cible inexistante — la faute que j'ai commise
+// ce soir même en posant deux tombales sans réécriture, et que j'ai dû défaire.
+// Il se rebranche avec le palier « branchement » de `@def`. D'ici là il est SUSPENDU, daté et
+// motivé, jamais supprimé : les 135 vérifications qui précèdent, elles, tournent toujours.
+const VOLET_8_ACTIF = false;
+if (VOLET_8_ACTIF) {
 console.log('\n=== §8. la forme documentée ===');
 {
   const r = compileToBPxAST(EXEMPLE_DOCUMENTE);
@@ -362,6 +380,8 @@ for (const [ou, src] of OU_LE_SUFFIXE_POUVAIT_S_ECRIRE) {
   ok('§8. le refus du moteur donne la réécriture (écrire dans une macro)',
     refus !== null && /macro/i.test(refus));
 }
+
+}  // fin du volet §8 suspendu
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 if (fail > 0) process.exit(1);

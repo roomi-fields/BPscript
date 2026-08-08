@@ -1981,6 +1981,100 @@ function parse(tokens, opts = {}) {
     // ⚠️ `out` remplace `transport` (Romain, 2026-08-04) — le mot `transport` est SORTI du
     // langage, la direction s'écrit. Le CHAMP interne reste `properties.transport`/`TransportRef`
     // (`references[transport]`) : seul le mot que l'auteur ÉCRIT change, pas le nœud d'arbre.
+    // ═══ `@def` — DÉCLARER UNE DÉFINITION (Romain, 2026-08-08) ═══════════════════════════════
+    //
+    // `LANGUAGE.md` §« `@def` — déclarer une définition » : « `@def` associe un nom à un corps,
+    // pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut ensuite. »
+    // C'est l'un des QUATRE mots du cœur déclaratif, avec `@actor`, `@var` et `@init` — et le
+    // seul qui n'existait pas : mesuré le 2026-08-08, ses NEUF formes étaient refusées, le
+    // parseur ne reconnaissait même pas la directive (« Expected arrow »).
+    //
+    // ⚠️ C'EST LUI QUI DÉBLOQUE TOUT LE RESTE. Cinq directives sortent du langage (`@gate`,
+    // `@trigger`, `@cv`, `@macro`, `@alias`) et leur réécriture passe par ici : à elle seule,
+    // `@gate` pèse 119 lignes sur 14 scènes. Tant que `@def` n'existe pas, poser leur pierre
+    // tombale nommerait une réécriture impossible — la règle que kanopi a demandée et que j'ai
+    // acceptée. L'ordre est donc : cette directive d'abord, les tombales ensuite.
+    //
+    // CE PALIER OUVRE LA DÉCLARATION DE TERMINAL — la forme que la spécification décrit sous
+    // « Déclarer un terminal » : un nom, puis un BLOC DE CLÉS, « sous le nom, une clé par ligne,
+    // ou sur la même ligne quand il tient ». C'est elle qui remplace `@gate`, le plus gros lot.
+    // Les autres corps (branchement, structure, code typé, préréglage, transformation) suivront ;
+    // ils sont REFUSÉS NOMMÉMENT plus bas plutôt que lus de travers — un corps qu'on ne sait pas
+    // lire doit crier, jamais tomber dans une branche voisine.
+    if (name === 'def') {
+      if (!at(T.IDENT)) {
+        throw new ParseError(
+          "'@def' doit nommer ce qu'il définit : '@def <nom> <corps>'. Le nom vient d'abord, ce "
+          + "qu'il vaut ensuite — comme '@var' et '@actor'.", tok);
+      }
+      const defName = expect(T.IDENT).value;
+      const cles = {};
+      let lu = 0;
+
+      // Une clé : `cle.valeur` (référence d'entité) ou `cle:valeur` (affectation).
+      // C'est la règle d'or du langage : le point APPELLE un composant, le deux-points AFFECTE.
+      const lireUneCle = () => {
+        const kTok = current();
+        const cle = expect(T.IDENT).value;
+        if (at(T.PERIOD) && !current().spaceBefore) {
+          advance();
+          if (!at(T.IDENT)) throw new ParseError(`'@def ${defName}' : nom attendu après '${cle}.'`, current());
+          let val = String(advance().value);
+          while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) val += String(advance().value);
+          cles[cle] = { kind: 'ref', value: val };
+          lu++;
+          return;
+        }
+        if (at(T.COLON) && !current().spaceBefore) {
+          advance();
+          if (atEnd() || at(T.NEWLINE)) throw new ParseError(`'@def ${defName}' : valeur attendue après '${cle}:'`, current());
+          let brut = '';
+          while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !(at(T.IDENT) && current().spaceBefore)) {
+            brut += String(advance().value);
+          }
+          cles[cle] = { kind: 'value', value: brut };
+          lu++;
+          return;
+        }
+        throw new ParseError(
+          `'@def ${defName}' : '${cle}' n'est ni un appel de composant ni une affectation. `
+          + `Une clé de terminal s'écrit '${cle}.<nom>' pour appeler un composant, ou `
+          + `'${cle}:<valeur>' pour affecter une valeur — le point appelle, le deux-points affecte.`,
+          kTok);
+      };
+
+      // Les clés qui tiennent sur la MÊME ligne que le nom.
+      while (at(T.IDENT)) lireUneCle();
+
+      // Puis le BLOC : les lignes suivantes, une clé par ligne, tant qu'elles sont INDENTÉES.
+      // ⚠️ L'indentation est ce qui BORNE le bloc — sans elle, la ligne suivante serait avalée,
+      // et une règle écrite juste après deviendrait une clé du terminal, en silence.
+      while (at(T.NEWLINE) || at(T.COMMENT)) {
+        let j = pos;
+        while (tokens[j] && (tokens[j].type === T.NEWLINE || tokens[j].type === T.COMMENT)) j++;
+        const suivant = tokens[j];
+        // L'INDENTATION SE LIT SUR LA COLONNE — le tokenizer ne marque pas les blocs, il donne
+        // `col`. Ma première écriture cherchait un champ `indente` qui n'existe pas : la
+        // condition était donc TOUJOURS fausse et le bloc n'était jamais lu, sans erreur.
+        // Une propriété inventée ne plante pas, elle rend `undefined` — et la branche meurt en
+        // silence. Mesuré et corrigé sur-le-champ ; c'est pour ça que le garde teste le bloc.
+        if (!suivant || suivant.type !== T.IDENT || !(suivant.col > 1)) break;
+        while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+        lireUneCle();
+      }
+
+      if (lu === 0) {
+        throw new ParseError(
+          `'@def ${defName}' ne déclare rien. Ce palier lit la DÉCLARATION DE TERMINAL : un nom `
+          + `puis ses clés, sur la même ligne ('@def ${defName}  voice.sec') ou dans un bloc `
+          + `indenté sous le nom, une clé par ligne. Les autres corps que la spécification `
+          + `décrit — un branchement, une suite de terminaux, du code typé, un préréglage, une `
+          + `transformation paramétrée — ne sont PAS encore lus ; ils le seront, et d'ici là ils `
+          + `refusent ici plutôt que d'être lus de travers.`, tok);
+      }
+      return { type: 'DefDirective', name: defName, kind: 'terminal', keys: cles, line: tok.line };
+    }
+
     if (name === 'actor') {
       const actorName = expect(T.IDENT).value;
       const properties = {};

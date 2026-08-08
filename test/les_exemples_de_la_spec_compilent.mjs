@@ -333,11 +333,19 @@ for (const [ligne] of RETARD_REGLES) {
 // employé y est défini, et la forme à deux alphabets passe par '@actor'. Plus le rang du
 // bloc `@alphabet.western`, decale par la scission du premier.
 const RETARD_BLOCS = new Map([
+  // ⚠️ CAUSES RÉVISÉES LE 2026-08-08 — l'ouverture de `@def`, premier palier. Six blocs de la
+  // référence employaient un corps que ce palier ne lit pas encore : un branchement, une
+  // transformation paramétrée, un préréglage. Ils butaient jusqu'ici sur « Expected arrow », le
+  // parseur ne reconnaissant même pas la directive ; ils refusent désormais EN NOMMANT ce qui
+  // manque — « ne déclare rien » ou « n'est ni un appel de composant ni une affectation ».
+  // Le retard n'a pas bougé d'un pouce : c'est sa CAUSE qui se dit enfin par le bon bout, et
+  // c'est le cliquet qui l'a exigé en rougissant DES DEUX CÔTÉS.
+
   // ⚠️ LE RANG A GLISSÉ, PAS LA CAUSE : scinder l'encadré de l'objet sonore composé en deux a
   //     décalé les blocs qui commencent par la même ligne. C'est la fragilité d'une clé par
   //     rang, assumée : elle reste plus stable qu'un numéro de ligne, qui bougerait à CHAQUE
   //     édition de la bible au lieu d'une fois par scission.
-  ['@alphabet.western #3', /Expected arrow \(-> <- <>\), got LPAREN/],
+  ['@alphabet.western #3', /ne déclare rien|n'est ni un appel de composant/],
 
   // ⚠️ LA DIRECTIVE EST RATTRAPÉE, LE BLOC NON — et la cause a changé de nature.
   //     `@homomorphism.dhati` charge désormais sa table (renommage du 2026-08-07). Ce qui
@@ -360,12 +368,12 @@ const RETARD_BLOCS = new Map([
   //     déduction. Ce qu'un exemple laisse INFÉRER n'est pas ce qu'il spécifie.
 
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /Expected arrow \(-> <- <>\), got LPAREN at lin/],
+  ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /ne déclare rien|n'est ni un appel de composant/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ['@alphabet.western:audio #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
-  ['@core #5', /Expected arrow \(-> <- <>\), got BACKTICK at l/],
-  ['@def halo(x) x!tin!ge #0', /Expected arrow \(-> <- <>\), got LPAREN at lin/],
-  ['@def sombre lpf1 >> vca1 #0', /Expected arrow \(-> <- <>\), got WIRE at line /],
+  ['@alphabet.western:audio #0', /ne déclare rien|n'est ni un appel de composant/],
+  ['@core #5', /ne déclare rien|n'est ni un appel de composant/],
+  ['@def halo(x) x!tin!ge #0', /ne déclare rien|n'est ni un appel de composant/],
+  ['@def sombre lpf1 >> vca1 #0', /ne déclare rien|n'est ni un appel de composant/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
