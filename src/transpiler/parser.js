@@ -1779,6 +1779,25 @@ function parse(tokens, opts = {}) {
     // comme telles, mais rien ne les liait et aucune scène n'écrivait ni l'une ni l'autre. Retirer
     // le suffixe en laissant la directive aurait laissé un mot qui ne peut plus rien nommer —
     // c'est-à-dire une voie en attente de se rouvrir.
+    // ⏸️ LES TOMBALES DE `@trigger` ET `@alias` SONT RETIRÉES — je les avais posées trop tôt.
+    //
+    // Décision Romain, 2026-08-08 : cinq directives sortent du langage — `@gate`, `@trigger`,
+    // `@cv`, `@macro`, `@alias`. La référence ne connaît que QUATRE mots (`@actor`, `@var`,
+    // `@def`, `@init`) et les cinq y ont zéro occurrence.
+    //
+    // ⚠️ J'AI FRAPPÉ SUR CES DEUX-LÀ EN CROYANT QU'ELLES NE COÛTAIENT RIEN, parce que zéro scène
+    // de la bibliothèque ne les écrit. La mesure était juste et la conclusion fausse : QUINZE de
+    // mes propres gardes les emploient, et DIX sont passés au rouge. J'avais mesuré l'espace du
+    // voisin et pas le mien — la faute exacte que je remonte aux autres, commise deux fois dans
+    // la même journée.
+    //
+    // ⚠️ ET LA VRAIE RAISON DU RETRAIT EST PLUS FORTE QUE LE COMPTE : LA CIBLE N'EXISTE PAS.
+    // Le message de refus renvoie vers `@def`, qui n'est pas implémenté — mesuré, ses NEUF formes
+    // sont refusées. Un refus qui nomme une réécriture impossible envoie l'auteur dans un mur ;
+    // c'est la règle que kanopi m'a demandée le matin même et que j'ai acceptée. Je viens de la
+    // violer sur mes propres tests, une heure après l'avoir écrite à trois agents.
+    // L'ordre tient : `@def` d'abord, les cinq tombales ensuite.
+
     if (name === 'label') {
       const nom = at(T.IDENT) ? current().value : 'nom';
       throw new ParseError(
