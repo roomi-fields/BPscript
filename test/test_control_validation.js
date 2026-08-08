@@ -68,10 +68,10 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 // n'écrivait pas la ligne d'invocation. Le test ne mesurait pas mal — il ENCODAIT le défaut, et
 // c'est pire : tant qu'il était vert, personne ne pouvait voir que la validation était facultative.
 //
-// Les contrôles sont désormais intrinsèques (`libs.js`, CONTROLES_INTRINSEQUES) : la même écriture
-// produit le même arbre et subit la même validation, que la ligne soit là ou non.
+// `@core` AMÈNE désormais les contrôles (`lib/core.json`, champ `apporte`) : une scène qui pose son
+// socle en dispose sans les invoquer, et la même écriture subit la même validation des deux côtés.
 {
-  const r = compileToBPxAST('@alphabet.western:audio\nS -> C4 (wave:triangle123)\n');
+  const r = compileToBPxAST('@core\n@alphabet.western:audio\nS -> C4 (wave:triangle123)\n');
   const e = (r.errors || []);
   check(e.length === 1, 'une valeur interdite est refusée MÊME sans @controls, obtenu ' + JSON.stringify(e));
   check(e[0] && /triangle123/.test(e[0].message), 'le refus nomme la valeur fautive');
@@ -79,7 +79,7 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 // 7bis. TÉMOIN — et la valeur LÉGITIME passe toujours. Sans cette moitié, une validation devenue
 // trop sévère (qui refuserait tout) rendrait le cas ci-dessus vert pour la mauvaise raison.
 {
-  const r = compileToBPxAST('@alphabet.western:audio\nS -> C4 (wave:triangle)\n');
+  const r = compileToBPxAST('@core\n@alphabet.western:audio\nS -> C4 (wave:triangle)\n');
   check((r.errors || []).length === 0,
         'une valeur AUTORISÉE passe sans @controls, obtenu ' + JSON.stringify(r.errors));
 }

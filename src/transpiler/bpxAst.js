@@ -1193,9 +1193,15 @@ function applySceneValues(ast, libCtx) {
  */
 function validateReferences(ast) {
   const errors = [];
-  // Univers de référence = MÊME vocabulaire que celui exposé à Kanopi (une seule source
-  // de vérité) : agrégat de TOUTES les libs disponibles. Un mot usable est valide.
-  const vocab = describeVocabulary();
+  // ⛔ LE VOCABULAIRE D'UNE SCÈNE EST CELUI QU'ELLE INVOQUE (Romain, 2026-08-08) : « invoquer
+  // commande, systématiquement — si un mot est inconnu dans le corpus invoqué, alors erreur ».
+  //
+  // ⚠️ CETTE LIGNE DISAIT L'INVERSE, et c'est elle qui laissait tout passer : « agrégat de TOUTES
+  // les libs disponibles. Un mot usable est valide. » Un réglage était donc accepté dès qu'une
+  // librairie du dépôt le déclarait, même si la scène n'en invoquait aucune — l'invocation ne
+  // commandait rien. Les acteurs comptent comme des invocations : ils portent leurs propres
+  // références de librairie (alphabet, accordage, registres).
+  const vocab = describeVocabulary([...(ast.directives || []), ...(ast.actors || [])]);
   const controlNames = new Set(vocab.controls.map((c) => c.name));
   const registry = new Set(vocab.values.map((v) => v.name));
   const modInputs = new Set(vocab.modulationInputs);

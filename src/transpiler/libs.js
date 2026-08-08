@@ -389,10 +389,20 @@ function loadLibsFromDirectives(directives) {
   ctx.controlNames.add('sound');
   ctx.dispatcherOnlyControls.add('sound');
 
-  // ⛔ LES CONTRÔLES SONT INTRINSÈQUES — ils ne s'invoquent pas (Romain, 2026-08-08).
+  // ⛔ INVOQUER COMMANDE — SYSTÉMATIQUEMENT (Romain, 2026-08-08).
   //
-  // « On a dit qu'on supprimait controls et que core intégrait l'appel à controls, que ça ne
-  // servait à rien de tout le temps devoir appeler les deux. »
+  // « Est-ce qu'invoquer une librairie doit commander ce que le langage accepte ? — La réponse est
+  // oui, systématiquement. Et si un mot est inconnu dans le corpus invoqué, alors erreur. »
+  // Avec, le même jour : « on a dit qu'on supprimait controls et que core intégrait l'appel à
+  // controls, que ça ne servait à rien de tout le temps devoir appeler les deux. »
+  //
+  // Les deux phrases se tiennent : `@core` AMÈNE les contrôles, donc une scène qui l'écrit en
+  // dispose sans les invoquer — et une scène qui n'invoque RIEN n'a rien, un réglage y est refusé.
+  // ⚠️ CE N'EST PAS « LES CONTRÔLES SONT TOUJOURS LÀ ». Ma première écriture les chargeait
+  // inconditionnellement : elle fermait bien la brèche de l'arbre, mais elle violait la règle
+  // ci-dessus — l'invocation ne commandait toujours rien, elle était juste devenue inutile.
+  // Le lien vit dans la DONNÉE (`lib/core.json`, champ `apporte`) : ce code ne nomme aucune
+  // librairie, et une librairie ajoutée demain au socle est une entrée JSON.
   //
   // LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ, mesuré le jour même : `@controls` n'apparaît AUCUNE fois
   // dans les trois spécifications (`LANGUAGE.md`, `EBNF.md`, `AST.md`) — `@core` y est écrit
@@ -414,10 +424,17 @@ function loadLibsFromDirectives(directives) {
   // On avait donc réparé l'endroit où le défaut s'était MONTRÉ, pas l'espace où il vivait — et les
   // 61 autres contrôles sont restés dans le trou. La graine en dur disparaît avec ce chargement :
   // la librairie les déclare, plus rien ne les recopie.
-  const CONTROLES_INTRINSEQUES = { type: 'Directive', name: 'controls', subkey: null };
-  const aCharger = (directives || []).some((d) => d && d.name === 'controls')
-    ? directives
-    : [CONTROLES_INTRINSEQUES, ...(directives || [])];
+  const invoquees = new Set((directives || []).map((d) => d && d.name).filter(Boolean));
+  const apportees = [];
+  for (const d of directives || []) {
+    const socle = d && d.name ? loadJsonFile(d.name) : null;
+    for (const nom of (socle && Array.isArray(socle.apporte) ? socle.apporte : [])) {
+      if (invoquees.has(nom)) continue;      // déjà invoquée en propre : rien à ajouter
+      invoquees.add(nom);
+      apportees.push({ type: 'Directive', name: nom, subkey: null });
+    }
+  }
+  const aCharger = apportees.length ? [...apportees, ...(directives || [])] : (directives || []);
 
   for (const dir of aCharger) {
     // @cc directives: user-defined named CC mappings
@@ -675,8 +692,23 @@ function loadLibsFromDirectives(directives) {
  * }}
  */
 function describeVocabulary(directives = []) {
-  // Univers COMPLET : toutes les libs du registre (built-in + user), pas seulement la scène.
-  const allDirs = Object.keys(registry).map((name) => ({ name }));
+  // DEUX QUESTIONS, DEUX PORTÉES — et la signature les distinguait déjà sans que le corps le fasse.
+  //
+  // · SANS directives : « quel est le vocabulaire du langage ? » — le CATALOGUE complet, toutes les
+  //   librairies du registre. C'est ce que Kanopi affiche à l'auteur, et c'est légitime.
+  // · AVEC directives : « qu'est-ce que CETTE scène a le droit d'écrire ? » — les seules librairies
+  //   qu'elle invoque.
+  //
+  // ⚠️ LE PARAMÈTRE EXISTAIT ET ÉTAIT IGNORÉ : le corps reconstruisait l'univers complet dans tous
+  // les cas. Une signature qui accepte un argument sans l'employer est pire qu'une absence — elle
+  // fait croire que la restriction est possible, et personne ne va vérifier. Le contrôle des
+  // références passait donc par ici sans rien restreindre, et son propre commentaire portait la
+  // règle inverse : « agrégat de TOUTES les libs disponibles. Un mot usable est valide. »
+  //
+  // Romain a tranché l'autre sens le 2026-08-08 : « invoquer commande, systématiquement — si un mot
+  // est inconnu dans le corpus invoqué, alors erreur ».
+  const aUneScene = Array.isArray(directives) && directives.length > 0;
+  const allDirs = aUneScene ? directives : Object.keys(registry).map((name) => ({ name }));
   const ctx = loadLibsFromDirectives(allDirs);
   const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
   const META = new Set(['name', 'description', 'version', 'domain']);

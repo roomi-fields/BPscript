@@ -1099,6 +1099,8 @@ Quand un non-terminal se resout **entierement** en reglages, un sac `()` tient l
 RHS et la regle produit des elements de duree nulle :
 
 ```bpscript
+@core
+
 Pull0 -> (pitchbend:0)
 StartPull -> (pitchcont, pitchrange:500, pitchbend:0)
 ```
@@ -1107,7 +1109,7 @@ Une regle porte **un** sac de portee. Pour en poser plusieurs, chacun prend son 
 dans le flux :
 
 ```bpscript
-
+@core
 StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 ```
 
@@ -1218,7 +1220,7 @@ un element sans duree a l'endroit ou il est ecrit.
 pour la sous-grammaire entiere, dont toutes les regles partagent la strategie de selection.
 
 ```bpscript
-
+@core
 // PORTEE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
 Basse -> C2 E2 G2 (wave:sawtooth)
 S -> {C4 E4}(vel:80)                 // C4 et E4 a 80, l'effet reste dans le groupe
@@ -1852,6 +1854,8 @@ ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
 (`spec < CT < signal`) -- cf. « Comment une valeur se resout ».
 
 ```bpscript
+@core
+
 @alphabet.sargam
 
 S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
@@ -2414,6 +2418,8 @@ s'ecoule sur une etendue, la ou le tempo n'en donne qu'une valeur.
 qu'elle produit fait partie de ce qu'on a compose.
 
 ```bpscript
+@core
+
 S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes
 ```
 

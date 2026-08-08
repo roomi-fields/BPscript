@@ -2,6 +2,10 @@
   "name": "core",
   "description": "BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène",
   "version": "0.2.0",
+  "_apporte_doc": "LES LIBRAIRIES QUE @core AMENE AVEC LUI. Decision de Romain, 2026-08-08 : « invoquer commande, systematiquement — si un mot est inconnu dans le corpus invoque, alors erreur », et « core integre l appel a controls, ça ne sert a rien de devoir appeler les deux ». Une scene qui ecrit @core dispose donc des controles sans les invoquer ; une scene qui n invoque RIEN n a rien, et un reglage y est refuse. Le lien vit ICI, en donnee : le chargeur suit ce champ et ne nomme aucune librairie. Avant cette declaration, les controles etaient reconnus quoi qu il arrive — la meme ecriture produisait deux arbres differents selon qu une ligne de tete etait la, et l invocation ne commandait rien.",
+  "apporte": [
+    "controls"
+  ],
   "_defaults_doc": "Cascade de défauts (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). @core est le SOCLE : il porte TOUTES les valeurs par défaut de scène. Multi-niveau : @core → lib invoquée (override) → scène → acteur → occurrence. `components` = composants par défaut par axe (recouverts par @alphabet.X/@tuning.X…). `values` = valeurs scalaires overridables (@diapason:N…) ; `overriddenBy: \"axe.champ\"` = le champ d'un composant invoqué recouvre le défaut. Aucun défaut n'est codé dans le code.",
   "_schema_doc": "SCHÉMA STRUCTUREL du langage (donnée, plus en dur dans le code — Romain 2026-07-05, prépare les user libraries + le partage du vocabulaire à Kanopi). `catalogAxes` = axes d'entité dont les valeurs sont des ENTRÉES DE CATALOGUE (une lib par axe, ex. tunings.json) → référence inexistante = erreur. `addressKeys` = clés d'adresse de sortie (canal/appareil/port). `reservedDirectives` = mots de directive du LANGAGE (non des valeurs de lib).",
   "schema": {

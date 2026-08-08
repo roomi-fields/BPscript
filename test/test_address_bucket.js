@@ -32,7 +32,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 1. override d'adresse pur (ch) → tiroir address, pas de params ───────
 {
-  const a = payloads('sitar -> C4 C4(ch:5)');
+  const a = payloads('@core\nsitar -> C4 C4(ch:5)');
   const p = find(a, 'C4', 1);
   assert('address.ch=5', p?.address?.ch === 5, JSON.stringify(p));
   assert('pas de params (pas de contrôle)', p?.params === undefined, JSON.stringify(p));
@@ -41,7 +41,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 2. contrôle pur (vel) → params, pas de tiroir address ───────────────
 {
-  const a = payloads('sitar -> E4(vel:80)');
+  const a = payloads('@core\nsitar -> E4(vel:80)');
   const p = find(a, 'E4');
   assert('params.vel=80', p?.params?.vel === 80, JSON.stringify(p));
   assert('pas de tiroir address', p?.address === undefined, JSON.stringify(p));
@@ -49,7 +49,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 3. mixte (ch + vel + pan) → SÉPARÉS proprement ──────────────────────
 {
-  const a = payloads('sitar -> G4(ch:2, vel:90, pan:64)');
+  const a = payloads('@core\nsitar -> G4(ch:2, vel:90, pan:64)');
   const p = find(a, 'G4');
   assert('address = {ch:2} seul', p?.address?.ch === 2 && Object.keys(p.address).length === 1, JSON.stringify(p?.address));
   assert('params = {vel,pan} sans ch', p?.params?.vel === 90 && p?.params?.pan === 64 && p?.params?.ch === undefined,
@@ -58,7 +58,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 4. device + port → reconnus comme adresse ───────────────────────────
 {
-  const a = payloads('sitar -> A4(device:reaper, port:57110)');
+  const a = payloads('@core\nsitar -> A4(device:reaper, port:57110)');
   const p = find(a, 'A4');
   assert('address.device=reaper', p?.address?.device === 'reaper', JSON.stringify(p?.address));
   assert('address.port=57110', p?.address?.port === 57110, JSON.stringify(p?.address));
@@ -67,7 +67,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 5. channel (forme longue) = synonyme de ch ──────────────────────────
 {
-  const a = payloads('sitar -> B4(channel:3)');
+  const a = payloads('@core\nsitar -> B4(channel:3)');
   const p = find(a, 'B4');
   assert('channel rangé en address', p?.address?.channel === 3, JSON.stringify(p?.address));
   assert('pas de params', p?.params === undefined);
@@ -75,7 +75,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 6. note nue → aucun tiroir ──────────────────────────────────────────
 {
-  const a = payloads('sitar -> C4');
+  const a = payloads('@core\nsitar -> C4');
   const p = find(a, 'C4');
   assert('note nue : ni address ni params', p?.address === undefined && p?.params === undefined, JSON.stringify(p));
   assert('occurrence absent', p?.occurrence === undefined);
@@ -83,7 +83,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 7. qualifieur de CONTENANCE (règle) {…}(ch:4, vel:70) → adresse + contrôle séparés ─
 {
-  const r = compileToBPxAST('sitar -> {C4 E4}(ch:4, vel:70)');
+  const r = compileToBPxAST('@core\nsitar -> {C4 E4}(ch:4, vel:70)');
   const q = r.ast.subgrammars?.[0]?.rules?.[0]?.settings?.payload;
   assert('contenance : address.ch=4', q?.address?.ch === 4, JSON.stringify(q));
   assert('contenance : params.vel=70 (contrôle reste)', q?.params?.vel === 70, JSON.stringify(q));

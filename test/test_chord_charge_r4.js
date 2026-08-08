@@ -27,7 +27,11 @@ function rule(src) {
   return r.ast.subgrammars[0].rules[0];
 }
 
-const DECLS = '@gate C4:sc\n@gate E4:sc\n';
+// ⚠️ LE SOCLE EST OBLIGATOIRE DEPUIS LE 2026-08-08 (Romain : « invoquer commande,
+// systematiquement »). Ces scenes emploient (vel:…) : elles doivent donc invoquer ce qui le
+// declare. Sans @core elles etaient acceptees parce que TOUTE librairie du depot faisait
+// vocabulaire — l invocation ne commandait rien.
+const DECLS = '@core\n@gate C4:sc\n@gate E4:sc\n';
 
 // ── Forme 1 : contenance de bloc ────────────────────────────────────────
 {
@@ -43,8 +47,8 @@ const DECLS = '@gate C4:sc\n@gate E4:sc\n';
   // n'invoque aucune librairie de contrôles (`@gate` seul) : `vel` n'était donc pas reconnu comme
   // un réglage, le sac collé au `}` n'était pas absorbé par le bloc, et il retombait sur la règle.
   // Le test mesurait la voie SANS contrôles — celle que presque aucune scène réelle n'emprunte.
-  // Depuis que les contrôles sont intrinsèques (`libs.js`, 2026-08-08), il n'y a plus qu'une voie,
-  // et c'est la règle du 2026-08-07 qui s'applique : COLLÉ règle le groupe, ESPACÉ règle la règle.
+  // Depuis que `@core` amène les contrôles (2026-08-08), il n'y a plus qu'une voie, et c'est la
+  // règle du 2026-08-07 qui s'applique : COLLÉ règle le groupe, ESPACÉ règle la règle.
   const rq = poly?.settings;
   assert('F1 contenance sur le BLOC (sac collé à })', rq?.payload?.containment === true,
     JSON.stringify(rq?.payload));
@@ -96,7 +100,7 @@ const DECLS = '@gate C4:sc\n@gate E4:sc\n';
 
 // ── Repliement aussi hors accord : note simple SymbolCall ───────────────
 {
-  const r = rule('@gate C4:sc\nAccord -> C4(vel:80)');
+  const r = rule('@core\n@gate C4:sc\nAccord -> C4(vel:80)');
   const n = r.rhs[0];
   assert('note simple params.vel=80 (repliée)', n?.payload?.params?.vel === 80,
     JSON.stringify(n?.payload));

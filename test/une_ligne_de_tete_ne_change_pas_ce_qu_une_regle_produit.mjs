@@ -16,8 +16,9 @@
  *
  * LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ et personne ne pouvait le voir : `@controls` n'apparaît AUCUNE
  * fois dans les trois spécifications, `@core` quinze fois — mais aucune décision datée ne portait la
- * suppression, donc aucun garde ne pouvait mordre. Les contrôles sont désormais intrinsèques
- * (`libs.js`, CONTROLES_INTRINSEQUES), comme l'étaient déjà `modulation`, `digital` et `settings`.
+ * suppression, donc aucun garde ne pouvait mordre. `@core` AMÈNE désormais les contrôles
+ * (`lib/core.json`, champ `apporte`), et l'invocation commande : une scène qui n'invoque RIEN n'a
+ * rien du tout — Romain, le même jour : « invoquer commande, systématiquement ».
  *
  * ⚠️ ET LE DÉFAUT AVAIT DÉJÀ ÉTÉ PAYÉ UNE FOIS, SUR UNE FAMILLE. Quatre contrôles de sous-grammaire
  * étaient semés en dur dans le chargeur, avec le commentaire qui disait la cause : « silently
@@ -120,6 +121,12 @@ for (const [quoi, src] of [
   ['une clé qui n\'existe nulle part, sans la ligne', '@core\n@alphabet.western\nS -> C4(zzzz:80)\n'],
   ['une VALEUR interdite, avec la ligne',             '@core\n@controls\n@alphabet.western\nS -> C4(wave:zzz)\n'],
   ['une VALEUR interdite, sans la ligne',             '@core\n@alphabet.western\nS -> C4(wave:zzz)\n'],
+  // ⚠️ L'AUTRE MOITIÉ DE LA RÈGLE, et c'est elle qui distingue « les contrôles sont toujours là »
+  // de « invoquer commande ». Une scène qui n'invoque RIEN n'a RIEN : le réglage y est refusé.
+  // Ma première écriture chargeait les contrôles inconditionnellement — le volet A serait passé
+  // au vert, et pourtant l'invocation n'aurait toujours rien commandé.
+  ['un réglage sans AUCUNE invocation',               'S -> C4(vel:80)\n'],
+  ['un réglage sous une librairie qui ne le déclare pas', '@alphabet.western\nS -> C4(vel:80)\n'],
 ]) {
   ok(messages(compiler(src)) !== '',
      `C-témoin. ${quoi} — doit être REFUSÉ et ne l'est plus. La validation ne doit jamais dépendre `
