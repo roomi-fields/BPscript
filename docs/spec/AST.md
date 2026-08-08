@@ -414,7 +414,7 @@ emplacement.
 ```
 LhsElement = Symbol | Wildcard | Context | TemplateAnchor | RawBrace
 
-RhsElement = Symbol | SymbolCall | SymbolWithWait | Rest | Prolongation | UndeterminedRest
+RhsElement = Symbol | SymbolWithWait | Rest | Prolongation | UndeterminedRest
            | Period | NumericDuration | Polymetric
            | SimultaneousGroup | OutTimeObject | InstantControl | Wait
            | Wildcard
@@ -444,7 +444,12 @@ Symbol      { type: "Symbol", name: string, actor: string | null,
               payload: { nature: "sounding" | "var" | "wire" | "wait" },
               role: "homomorphism" | null,
               line: number }
-SymbolCall  { type: "SymbolCall", name: string, actor: string | null, args: Arg[], line: number }
+// `SymbolCall` et son champ `args` sont SUPPRIMÉS de l'arbre — acte de Romain, 2026-08-08.
+// Le champ couvrait DEUX notions sans rapport : des paires nommées, qui sont exactement un sac
+// de réglages, et des arguments POSITIONNELS, qui n'en sont pas. Les paires nommées vont au
+// sac comme partout ailleurs ; le cas positionnel n'a plus aucun producteur vivant — les
+// seules scènes qui l'écrivaient sont les trois refusées pour un mot supprimé du langage.
+// Mesuré avant le retrait : ZÉRO nœud de cette nature dans les 274 scènes du corpus.
 Arg         { type: "Arg", key: string | null, value: Literal | BacktickInline }
 Literal     { type: "Literal", value: number | string }
 ```
