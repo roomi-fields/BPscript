@@ -858,12 +858,24 @@ alphabet pose pour sa collection les proprietes que ses terminaux surchargent :
 
 ```json
 { "name": "", "description": "", "runtime": "audio", "voice": null,
-  "tuning": null, "octaves": null, "diapason": null, "terminals": {} }
+  "tuning": null, "octaves": null, "diapason": null, "baseNote": null, "baseRegister": null,
+  "alterations": {}, "resolvesPitch": false, "terminals": {} }
 ```
 
-`tuning` donne l'accordage par defaut de la collection, `octaves` sa convention de registre et
-`diapason` son ancre de hauteur : c'est de la que vient la hauteur d'un terminal qui n'en nomme
-aucune, et l'acteur qui joue cet alphabet en herite.
+`tuning` donne l'accordage par defaut de la collection, `octaves` sa convention de registre :
+c'est de la que vient la hauteur d'un terminal qui n'en nomme aucune, et l'acteur qui joue cet
+alphabet en herite.
+
+**L'ancre tient en trois champs, et il en faut trois.** `diapason` dit COMBIEN de hertz,
+`baseNote` et `baseRegister` disent SUR QUELLE NOTE ils tombent -- `A` au registre `4` a 440 Hz.
+Le diapason seul ne suffit pas : une frequence sans la note qu'elle designe ne place rien.
+
+`alterations` porte les alterations disponibles et leur ecart -- un demi-ton, un comma, un
+menton haut. Elle appartient a la COLLECTION et non a un terminal : c'est ce qui distingue
+`C#4` de `C4` sans que `C#` ait a se declarer.
+
+`resolvesPitch` dit si cette collection resout une hauteur. Un alphabet de frappes n'en resout
+aucune, et l'ecrire evite qu'on lui en invente une.
 
 Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi`, `osc` et `dmx` ; un
 terminal qui n'en declare pas prend celui de son alphabet, et il en va de meme de sa voix :
