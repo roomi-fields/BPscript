@@ -47,9 +47,15 @@ const REGISTRE = [
   // l'écrivent en toutes lettres dans leur en-tête (« CETTE SCÈNE NE COMPILE PLUS,
   // VOLONTAIREMENT », « c'est un ÉTAT STABLE — pas un chantier oublié »). Leur refus est le
   // comportement attendu ; c'est leur SILENCE qui serait le défaut.
-  ['BPScript-tests/alan-dice.bps',      "'script' n'existe pas", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
-  ['BPScript-tests/beatrix-dice.bps',   "'script' n'existe pas", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
-  ['BPScript-tests/shapes-rhythm.bps',  "'script' n'existe pas", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
+  // ⚠️ MOTIF RÉVISÉ LE 2026-08-08, ET C'EST CE GARDE QUI L'A EXIGÉ. Les trois refusaient toujours,
+  // donc aucun compte ne bougeait — mais elles avaient changé de CAUSE, exactement le mode d'échec
+  // que ce registre vise. Le refus disait « 'script' n'existe pas » ; il dit maintenant pourquoi la
+  // construction elle-même n'est lisible d'aucune façon, ce qui est plus précis : `script(MIDI
+  // program 5)` n'est ni un sac (son contenu n'est pas fait de paires) ni un appel (aucune
+  // définition ne porte ce nom). Le fait n'a pas bougé : la forme reste supprimée du langage.
+  ['BPScript-tests/alan-dice.bps',      "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
+  ['BPScript-tests/beatrix-dice.bps',   "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
+  ['BPScript-tests/shapes-rhythm.bps',  "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi'],
 
   // ── B. LA SCÈNE EST INCOMPLÈTE — un vrai défaut, chez son propriétaire ────────────────────
   // Les trois emploient un vocabulaire qu'elles ne DÉCLARENT pas : `dhadhatite_v2` écrit des bols

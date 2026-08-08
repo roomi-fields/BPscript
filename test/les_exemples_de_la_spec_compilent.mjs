@@ -190,11 +190,25 @@ const RETARD_REGLES = new Map([
   //     désigner un deux-points. Le compte ne bouge pas, la cause si : sans cette note, un lecteur
   //     croirait la forme toujours refusée.
   ['S -> {A B C}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
-  ['S -> C4(lpf1.cutoff:400)', /Expected argument value/],
+  // ⚠️ CAUSES RÉVISÉES LE 2026-08-08 — le chantier « un appel exige une définition déclarée ».
+  // Aucune de ces lignes n'est rattrapée ni cassée : elles refusent toujours, pour la MÊME raison
+  // de fond, mais le compilateur la NOMME désormais au lieu de buter dessus. Un sac n'est plus
+  // reconnu à sa clé mais à sa FORME, donc `(lpf1.cutoff:400)` est lu comme un sac et refusé sur
+  // l'instance manquante — au lieu de partir en appel de fonction et d'échouer sur « Expected
+  // argument value », un message qui ne parlait de rien. C'est le cliquet qui a exigé cette
+  // révision en rougissant des DEUX côtés : ces lignes ne refusaient plus avec leur ancienne cause.
+  ['S -> C4(lpf1.cutoff:400)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   ['S -> { C4 D4 }(lpf2.cutoff:800)', /n'est ni un contrôle à composants, ni une instance déclarée/],
-  ['S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)', /Expected argument value/],
-  ['S -> { C4 D4 }(sombre) E4 coupe F4', /Expected arrow/],
-  ['S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)', /Expected arrow/],
+  ['S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)', /n'est ni un contrôle à composants, ni une instance déclarée/],
+  // SORTIE DU CLIQUET le 2026-08-08 — et c'est le cliquet lui-même qui l'a exigé, en rougissant
+  // du côté « inscrite mais ne refuse plus avec sa cause ».
+  // `S -> { C4 D4 }(sombre) E4 coupe F4` butait sur « Expected arrow » : un refus de FORME, la
+  // parenthèse n'étant pas lue. Elle l'est maintenant, et ce qui reste est un refus de
+  // RÉSOLUTION — `sombre` et `coupe` sont deux `@def` que la directive, non implémentée, ne
+  // déclare jamais. Ce volet écarte les refus de résolution : ils ne disent rien de la forme.
+  // Une entrée qu'on garderait « au cas où » ferait exactement ce que ce cliquet interdit —
+  // compter un retard qui n'existe plus.
+  ['S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
   //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
@@ -211,7 +225,7 @@ const RETARD_REGLES = new Map([
   //     `TemplateMaster.args` est déclaré par la spec et produit par RIEN.
   //     La réparation demande de savoir quel vocabulaire prennent ces paramètres — la bible est
   //     MUETTE là-dessus. Question pour Romain ; je ne comble pas un silence par une mesure.
-  ['S <> $mel(tempx:1) &mel(tempx:2/3)', /arguments d'un gabarit/],
+  ['S <> $mel(tempx:1) &mel(tempx:2/3)', /'tempx' ne s'écrit pas dans une règle/],
   // (d) une clé que le parser tient encore pour un contrôle de crochet
   // ⚠️ CAUSE CHANGÉE le 2026-08-07, et le sujet AUSSI. Le refus était « ce contrôle est moteur,
   //     il s'écrit entre crochets » — retiré : la décision du 2026-08-02 dit l'inverse, et le
@@ -354,8 +368,15 @@ const RETARD_BLOCS = new Map([
   ['@def sombre lpf1 >> vca1 #0', /Expected arrow \(-> <- <>\), got WIRE at line /],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
-  ['Motif -> C4 D4 E4 #0', /appel 'accent\(E4\)' : 'accent' n'existe pas —/],
-  ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'&mel\(…\/…\)' : '\/' n'a pas sa place dans les /],
+  // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
+  // rôles, rôle 4) et que `@def` déclarerait. `@def` n'étant pas implémenté, aucun nom n'est
+  // appelable : la parenthèse est donc lue comme un sac, et `E4` refusé comme clé inconnue.
+  // La cause de fond n'a pas bougé d'un pouce — c'est `@def` qui manque — mais elle se dit
+  // désormais par le bon bout.
+  ['Motif -> C4 D4 E4 #0', /attribut '\(E4:…\)' inconnu/],
+  // RÉVISÉ 2026-08-08 : le bloc porte `(tempx:…)`, un mot RETIRÉ du langage. Le refus le nomme
+  // maintenant au lieu de buter sur la barre de fraction de sa valeur.
+  ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'tempx' ne s'écrit pas dans une règle/],
 ]);
 
 let blocs = 0;

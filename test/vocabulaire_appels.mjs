@@ -45,24 +45,36 @@ ok(universeControlNames().has('ins') && universeControlNames().has('cc') && univ
    '§1 les contrôles nommés qui remplacent script (ins, cc, chan) doivent exister');
 
 // ─── §2. Un appel hors vocabulaire est REFUSÉ, et le message CITE le texte écrit ─────────────
-for (const [appel, ce_que_c_est] of [
-  ['script(MIDI program 5)', 'la forme historique la plus fréquente'],
-  ['script(Beep)', 'un script sans argument numérique'],
-  ['foobar(3)', "un nom quelconque : la règle vaut pour tout le vocabulaire, pas pour 'script' seul"],
+// ⚠️ L'EXIGENCE A ÉTÉ REFORMULÉE LE 2026-08-08, PAS AFFAIBLIE — et la raison est structurelle.
+// Ce volet exigeait que le refus cite l'écriture ENTIÈRE, parce que TOUT `nom(…)` était alors lu
+// comme un appel et refusé d'un bloc. Depuis que la bascule se décide sur le NOM et non sur la clé
+// (`LANGUAGE.md` §« quatre rôles »), deux constructions différentes se cachent sous la même allure :
+//   · `script(MIDI program 5)` n'est lisible NI comme un sac (son contenu n'est pas fait de paires)
+//     NI comme un appel (aucune définition ne porte ce nom) → un seul refus, qui cite tout ;
+//   · `script(Beep)` EST un sac bien formé — une clé nue — posé sur un élément `script` : deux
+//     choses inconnues, donc DEUX refus, chacun nommant la sienne.
+// Exiger « cite l'écriture entière » sur le second réclamerait un message qui ment sur ce qui a été
+// lu. Ce qui compte reste : ça refuse, et TOUT ce qui est fautif est NOMMÉ. C'est ce qu'on mesure.
+for (const [appel, ce_que_c_est, aNommer] of [
+  ['script(MIDI program 5)', 'la forme historique la plus fréquente', ['script(MIDI program 5)']],
+  ['script(Beep)', 'un script sans argument numérique', ['Beep', 'script']],
+  ['foobar(3)', "un nom quelconque : la règle vaut pour tout le vocabulaire, pas pour 'script' seul", ['foobar(3)']],
 ]) {
   const errs = erreursDe(scene(`S -> ${appel} C4`));
   ok(errs.length > 0, `§2 '${appel}' (${ce_que_c_est}) doit être refusé — il est passé en silence`);
-  ok(errs.some((m) => m.includes(appel)),
-     `§2 le message d'erreur doit CITER l'appel tel qu'écrit '${appel}' — reçu : ${errs.join(' | ') || '(aucune erreur)'}`);
+  for (const mot of aNommer) {
+    ok(errs.some((m) => m.includes(mot)),
+       `§2 le refus de '${appel}' doit NOMMER '${mot}' — reçu : ${errs.join(' | ') || '(aucune erreur)'}`);
+  }
 }
 
-// Niché dans un groupe : un appel ne se cache pas derrière des accolades.
-ok(erreursDe(scene('S -> {C4 script(Beep)} D4')).some((m) => m.includes('script(Beep)')),
-   '§2 un appel hors vocabulaire NICHÉ dans un groupe doit être refusé lui aussi');
+// Niché dans un groupe : rien ne se cache derrière des accolades.
+ok(erreursDe(scene('S -> {C4 script(Beep)} D4')).some((m) => m.includes('script')),
+   '§2 un nom hors vocabulaire NICHÉ dans un groupe doit être refusé lui aussi');
 
-// Sans alphabet de notes en portée (scène à gates), le vocabulaire des appels reste vérifié.
-ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n').some((m) => m.includes('script(Beep)')),
-   "§2 un appel hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
+// Sans alphabet de notes en portée (scène à gates), le vocabulaire reste vérifié.
+ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n').some((m) => m.includes('script')),
+   "§2 un nom hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
 
 // ─── §2bis. LE TÉMOIN DE BPx — refermé À LA SOURCE le 2026-07-26 ─────────────────────────────
 // Constat `hub/constats/2026-07-26-controle-non-declare-degenere-en-note.md` (bpx [790]) : sans

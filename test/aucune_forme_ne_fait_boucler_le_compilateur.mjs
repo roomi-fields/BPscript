@@ -84,10 +84,22 @@ if (fils.signal === 'SIGTERM') {
 // ────────────────────────────────────────────────────────────────────────────
 // Le défaut s'est montré sur la barre de fraction. Il pouvait vivre sur TOUT jeton qu'aucune
 // branche ne consomme : on parcourt donc les natures, pas la graphie du jour.
+//
+// ⚠️ CE GARDE MESURAIT « UN ARBRE SORT-IL ? » ET CROYAIT MESURER « EST-CE ACCEPTÉ ? » — le même
+// défaut d'instrument que mon empreinte de corpus, trouvé le même jour (2026-08-08). Le compilateur
+// rend un arbre ET une liste d'erreurs : `$T(k:2)` portait un refus depuis toujours et cette matrice
+// le comptait « compile ». Trois de ses attendus étaient donc faux sans que rien ne le dise.
+// On mesure désormais les ERREURS. Le sujet du fichier — aucune forme ne fait BOUCLER — est mesuré
+// par le chronomètre du sous-processus, pas par cette colonne ; elle ne sert qu'à figer ce que
+// chaque nature de jeton PRODUIT, pour qu'un changement de lecture se voie.
 const JETONS = [
-  { nom: 'entier',        arg: '2',        attendu: 'compile' },
-  { nom: 'nom',           arg: 'x',        attendu: 'compile' },
-  { nom: 'clé:entier',    arg: 'k:2',      attendu: 'compile' },
+  // `$T(2)` : le seul argument qu'un gabarit accepte est son RANG, un entier collé.
+  { nom: 'entier',        arg: '2',        attendu: 'passe'  },
+  // Tout le reste refuse, et pour deux familles de raison : le jeton n'a pas sa place dans des
+  // arguments de gabarit (`/ - * [ { .`), ou la parenthèse est lue comme un sac dont la clé
+  // n'existe pas (`x`, `k:2`, `k:1/2`). Les deux sont des refus NOMMÉS.
+  { nom: 'nom',           arg: 'x',        attendu: 'refus'   },
+  { nom: 'clé:entier',    arg: 'k:2',      attendu: 'refus'   },
   { nom: 'fraction',      arg: '1/2',      attendu: 'refus'   },
   { nom: 'clé:fraction',  arg: 'k:1/2',    attendu: 'refus'   },
   { nom: 'signe moins',   arg: '-',        attendu: 'refus'   },
@@ -111,7 +123,8 @@ const scriptMatrice = `
   const out = [];
   for (const { cle, source } of cas) {
     let verdict;
-    try { const r = compileToBPxAST(source); verdict = r.ast ? 'compile' : 'refus'; }
+    // ⚠️ ON REGARDE LES ERREURS, PAS L'ARBRE : un arbre sort MÊME quand la scène est refusée.
+    try { const r = compileToBPxAST(source); verdict = (r.errors || []).length ? 'refus' : 'passe'; }
     catch { verdict = 'refus'; }
     out.push(cle + '=' + verdict);
   }
@@ -144,9 +157,18 @@ if (filsM.signal === 'SIGTERM' || filsM.status !== 0) {
   }
   dire(fautes.length === 0, fautes.length === 0
     ? `les ${JETONS.length} natures de jeton rendent le verdict attendu en position collée `
-      + `(${JETONS.filter(j => j.attendu === 'compile').length} passent, `
+      + `(${JETONS.filter(j => j.attendu === 'passe').length} passent, `
       + `${JETONS.filter(j => j.attendu === 'refus').length} refusent — les deux sens sont prouvés).`
     : `verdicts inattendus en position collée :\n     ` + fautes.join('\n     '));
+
+  // ⚠️ TÉMOIN DES DEUX SENS — et il vient d'échouer à son office. Le compte au-dessus lisait encore
+  // le mot 'compile', abandonné en corrigeant la mesure : il annonçait « 0 passent » sur une
+  // matrice qui en attend un, et personne n'aurait relevé la phrase. Une matrice qui ne
+  // contiendrait QUE des refus ne prouve rien — un compilateur qui refuserait tout la passerait.
+  dire(JETONS.some(j => j.attendu === 'passe') && JETONS.some(j => j.attendu === 'refus'),
+       `la matrice doit porter les DEUX verdicts — ${JETONS.filter(j => j.attendu === 'passe').length} `
+       + `qui passent, ${JETONS.filter(j => j.attendu === 'refus').length} qui refusent. Avec un seul `
+       + `des deux, elle ne mesure plus une frontière, elle décrit une humeur.`);
 }
 
 process.exit(rouge ? 1 : 0);

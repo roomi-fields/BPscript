@@ -302,7 +302,23 @@ function normalizeName(name) {
 
 function parse(tokens, opts = {}) {
   let pos = 0;
-  let libCtx = { controlNames: new Set(), noArgControls: new Set(), controlMap: {}, symbols: {} };
+  // ⚠️ CET OBJET DOIT PORTER TOUS LES CHAMPS QUE LE PARSEUR LIT, MÊME VIDES. Il vaut pendant la
+  // phase où les DIRECTIVES sont encore en cours de lecture — les librairies ne sont chargées
+  // qu'une fois la tête de scène connue. Il lui manquait la moitié des champs, et l'absence ne se
+  // voyait pas : les chemins qui les lisent n'étaient jamais atteints si tôt. Le jour où l'un l'a
+  // été (2026-08-08, en rendant la reconnaissance d'un sac purement syntaxique), le parseur a
+  // planté sur `Cannot read properties of undefined` — pas un refus, un plantage.
+  // Un objet par défaut incomplet est une bombe à retardement : il attend qu'un chemin change.
+  // La liste vient de la MESURE (`grep libCtx\.` sur ce fichier), pas du souvenir.
+  let libCtx = {
+    controlNames: new Set(), noArgControls: new Set(), bagOnlyControls: new Set(),
+    dispatcherOnlyControls: new Set(), engineControls: new Set(), intervalControls: new Set(),
+    qualifierKeys: new Set(), sceneNames: new Set(),
+    controlMap: {}, controls: {}, symbols: {}, transcriptions: {}, actors: {},
+  };
+  /** Les noms qu'une scène a déclarés par `@def` — les SEULS qui puissent être appelés.
+   *  Vide tant que la directive n'est pas implémentée ; cf. `estUneDefinitionDeclaree`. */
+  const definitionsDeclarees = new Set();
 
   // Noms que LA SCÈNE déclare elle-même. Rempli à la lecture des directives, donc connu avant la
   // première règle (l'en-tête précède toujours les règles). Sert à trancher un homonyme entre un
@@ -3832,11 +3848,25 @@ function parse(tokens, opts = {}) {
     // manquait, et sept exemples de la bible tombaient dessus.
     if (nomsVariables.has(nextTok.value) && peek(2).type === T.PERIOD
         && peek(3).type === T.IDENT && peek(4).type === T.COLON) return true;
-    if (!libCtx.controlNames.has(nextTok.value)) return false;
-    // Known control followed by : , ) or . (référence pointée v0.8) = runtime qualifier
-    const afterName = peek(2);
-    return afterName.type === T.COLON || afterName.type === T.COMMA ||
-           afterName.type === T.RPAREN || afterName.type === T.PERIOD;
+    // ⛔ LE VOCABULAIRE NE DÉCIDE PAS DE LA FORME (2026-08-08).
+    //
+    // Cette ligne exigeait que la clé soit un contrôle CONNU : `if (!libCtx.controlNames.has(…))
+    // return false;`. Un sac dont la clé venait d'une autre librairie n'était donc pas reconnu
+    // COMME SAC — `C4(cutoff:sweep)` (librairie des modulations) partait en appel de fonction, et
+    // avec un élément derrière il faisait échouer la règle sur « Expected arrow », un message qui
+    // ne parle de rien.
+    //
+    // Deux questions étaient confondues en une : « est-ce que ceci EST un sac ? » — affaire de
+    // forme, tranchée par le balayage syntaxique — et « est-ce que cette clé EXISTE ? » — affaire
+    // de vocabulaire, tranchée plus tard, et qui doit REFUSER en nommant la clé, pas faire dévier
+    // la lecture. Une clé inconnue reste refusée : c'est le contrôle des références qui le dit,
+    // avec le bon message.
+    //
+    // ⚠️ C'est le TROISIÈME reconnaisseur de sac à retomber sur la même faute, et le commentaire
+    // ci-dessous la raconte déjà — écrit la veille, en corrigeant les deux premiers. Le savoir
+    // n'a pas suffi : celui-ci ne différait pas par les formes qu'il énumérait, mais par le
+    // CRITÈRE qu'il employait, et c'est pour ça que la relecture ne l'a pas vu.
+    return sacBienForme();
   }
 
   // ⚠️ `isReservedSettingParen()` A VÉCU ICI DU 2026-07 AU 2026-08-07, ET SA DISPARITION EST LA
@@ -4705,15 +4735,55 @@ function parse(tokens, opts = {}) {
         }
       }
 
-      // Runtime qualifier suffix: D4(vel:70) — no space = attached to symbol
-      // Let parseRhsElements handle suffix attachment via spaceBefore
-      // But we must check here to avoid confusing with symbol call
-      if (isRuntimeQualifier() && !current().spaceBefore) {
-        // Return bare symbol — suffix will be attached by parseRhsElements
+      // ⛔ CE QUI DISTINGUE UN APPEL D'UN RÉGLAGE, C'EST LE NOM DEVANT LA PARENTHÈSE —
+      // JAMAIS LA CLÉ QU'ELLE CONTIENT.
+      //
+      // `LANGUAGE.md` §« Les parenthèses — quatre rôles » le pose, et sa règle de désambiguïsation
+      // est POSITIONNELLE puis NOMINALE : « `symbole(` collé, dans une règle = sac de réglages, ou
+      // appel d'une définition ». Un appel, c'est `accent(C4)` où `accent` a été DÉCLARÉ par `@def`
+      // (`LANGUAGE.md:1293`) : le nom est un geste, ce qui suit est ce sur quoi il s'applique.
+      // Un réglage, c'est `C4(vel:120)` : le nom est un élément qui sonne, la parenthèse en décrit
+      // une propriété. L'un FABRIQUE une note, l'autre la DÉCRIT.
+      //
+      // ⚠️ CE CODE TRANCHAIT SUR LA CLÉ — « est-ce que `vel` est un contrôle connu ? » — une question
+      // qui n'a aucun rapport. Deux conséquences mesurées le 2026-08-08 :
+      //   · `C4(cutoff:sweep)` devenait un APPEL alors que `C4` est une note : le seul tort de
+      //     `cutoff` était de vivre dans la librairie des modulations et non dans celle des
+      //     contrôles. Cinq scènes du corpus dans ce cas.
+      //   · la même écriture changeait de nature selon les librairies invoquées — la famille du
+      //     défaut réparé le matin même, par l'autre bout.
+      //
+      // ⚠️ ET IL N'Y A AUJOURD'HUI AUCUNE DÉFINITION POSSIBLE : `@def` n'est pas implémenté (mesuré,
+      // il est refusé « Expected arrow »), donc l'ensemble des noms appelables est VIDE et tout
+      // `nom(` collé dans une règle est un sac de réglages. Le jour où `@def` existera, cette
+      // fonction consultera ses noms — le critère est déjà le bon, seule sa source reste à peupler.
+      if (at(T.LPAREN) && !current().spaceBefore && !isContextLookahead()
+          && !estUneDefinitionDeclaree(name)) {
+        // ⚠️ ET SI CE N'EST PAS NON PLUS UN SAC, ON LE DIT — sinon la parenthèse reste orpheline et
+        // la règle échoue plus loin sur « Expected arrow », un message qui ne parle de rien.
+        // Mesuré : les trois scènes témoins de `script(…)` sont passées de leur refus NOMMÉ à ce
+        // message aveugle. Elles refusaient toujours — donc aucun compte ne bougeait — mais elles
+        // avaient changé de cause. C'est le garde du registre qui l'a vu, pas le portillon.
+        //
+        // ⚠️ DEUX REFUS DISTINCTS, ET LES CONFONDRE ÉCRIT UNE CONTRE-VÉRITÉ. La décision du
+        // 2026-07-26 supprime la forme d'appel D'UN CONTRÔLE (`keymap(C3,C3,C5,C5)`) — « fonction()
+        // n'existe pas ». Elle ne dit RIEN de `accent(C4)`, l'appel d'une définition déclarée, que
+        // `LANGUAGE.md` écrit noir sur blanc (§« quatre rôles », rôle 4). Employer le message de la
+        // décision pour tout nom ferait dire au compilateur que l'appel n'existe pas, alors que la
+        // référence l'écrit — exactement l'inverse de la hiérarchie.
+        if (!sacBienForme()) {
+          if (isControlName(name)) throw new ParseError(refusFormeAppel(name), tok);
+          throw new ParseError(
+            `'${name}(${texteDuSac()})' n'est lisible ni comme un SAC DE RÉGLAGES — son contenu `
+            + `n'est pas fait de paires 'clé:valeur' — ni comme un APPEL : appeler exige une `
+            + `définition déclarée, et aucune ne porte le nom '${name}'. Pour régler '${name}', `
+            + `écrire '${name}(clé:valeur)' ; pour l'appeler, le déclarer d'abord avec `
+            + `'@def ${name}(x) …'`, tok);
+        }
         return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
       }
 
-      // Symbol call: Sa(custom_param:120) — only if collé (no space) and NOT a known runtime control
+      // Appel d'une définition déclarée : `accent(C4)`.
       if (at(T.LPAREN) && !current().spaceBefore && !isContextLookahead()) {
         const node = parseSymbolCall(name, tok);
         if (actor) node.actor = actor;
@@ -4783,7 +4853,7 @@ function parse(tokens, opts = {}) {
     const moteur = libCtx.bp3NativeControls && libCtx.bp3NativeControls.has(name)
                 && !(libCtx.dispatcherOnlyControls && libCtx.dispatcherOnlyControls.has(name));
     const cible = moteur ? `![${name}:…]` : `!(${name}:…)`;
-    return `la forme d'appel '${name}(…)' n'existe pas en BPScript (supprimée le 2026-07-26) — `
+    return `la forme d'appel '${name}(${texteDuSac()})' n'existe pas en BPScript (supprimée le 2026-07-26) — `
       + `écrire '${cible}' pour le poser dans le flux, ou '${moteur ? `[${name}:…]` : `(${name}:…)`}' `
       + `en contenance. Les deux points AFFECTENT la valeur, l'espace en sépare les parties `
       + `('[goto:3 0]'), la virgule sépare les éléments du sac ('(vel:80, pan:64)')`;
@@ -4791,6 +4861,41 @@ function parse(tokens, opts = {}) {
 
   function isControlName(name) {
     return libCtx.controlNames.has(name);
+  }
+
+  /**
+   * Ce nom a-t-il été DÉCLARÉ comme une définition (`@def`) ? Seul un tel nom peut être APPELÉ.
+   *
+   * L'ensemble est vide tant que `@def` n'est pas implémenté — et c'est la vérité du langage
+   * aujourd'hui, pas un raccourci : sans déclaration, aucun nom n'est appelable. Le jour où la
+   * directive existera, ses noms se déclarent ICI et rien d'autre ne bouge.
+   */
+  function estUneDefinitionDeclaree(name) {
+    return definitionsDeclarees.has(name);
+  }
+
+  /**
+   * Le texte ÉCRIT entre la parenthèse courante et sa fermante — pour qu'un refus cite ce que
+   * l'auteur a tapé, pas une abréviation.
+   *
+   * ⚠️ « `script(…)` » ne dit pas à l'auteur OÙ regarder ; « `script(MIDI program 5)` » le pose
+   * sous ses yeux. Le refus venait autrefois d'un étage qui avait les arguments déjà lus ; il vient
+   * maintenant du parseur, avant lecture — reconstituer le texte est le prix pour ne pas dégrader
+   * le message en déplaçant le refus.
+   */
+  function texteDuSac() {
+    if (!at(T.LPAREN)) return '';
+    let j = pos + 1, profondeur = 1;
+    const morceaux = [];
+    while (j < tokens.length && profondeur > 0) {
+      const t = tokens[j];
+      if (t.type === T.LPAREN) profondeur++;
+      else if (t.type === T.RPAREN) { profondeur--; if (!profondeur) break; }
+      else if (t.type === T.NEWLINE || t.type === T.EOF) break;
+      morceaux.push((t.spaceBefore && morceaux.length ? ' ' : '') + (t.value ?? ''));
+      j++;
+    }
+    return morceaux.join('');
   }
 
   // Vrai si le jeton courant peut DÉMARRER un élément RHS (cf. parseRhsElement). Sert à distinguer

@@ -70,8 +70,30 @@ if (existsSync(demosDir)) {
 // Et la porte n'abritait PERSONNE : zéro démo en erreur au moment du retrait. Une dérogation sans
 // bénéficiaire n'est pas une tolérance, c'est un trou. Le registre la remplace — nommée, datée,
 // motivée, avec un témoin qui exige qu'elle serve encore (§ après la boucle).
+//
+// ⚠️ ET LE REGISTRE NE COUVRAIT QUE LES DÉMOS — MESURÉ LE 2026-08-08. Une GRAMMAIRE active en
+// erreur n'avait aucune porte, ce qui semble strict ; en réalité elle n'était jamais examinée,
+// parce que le test d'entrée est `if (!r.ast)` : un arbre sortant AVEC des erreurs passait sans
+// que rien ne les regarde. Deux scènes déclarées « actives » portaient un refus depuis le
+// 2026-07-26 et ce garde était vert. C'est le quatrième garde du dépôt trouvé le même jour à
+// mesurer « un arbre sort-il ? » en croyant mesurer « est-ce accepté ? ».
+// Le registre couvre donc les DEUX familles, avec le même prix d'entrée : nommée, datée, motivée.
 const ERREURS_ADMISES = [
-  // { demo: 'nom.bps', pourquoi: '…', date: '2026-…' }  ← vide, et c'est le bon état
+  // ⚠️ CES DEUX-LÀ SONT DES TÉMOINS VOLONTAIRES, et leurs sources le disent en toutes lettres :
+  // « CETTE SCÈNE NE COMPILE PLUS, VOLONTAIREMENT ». `script(…)` a été supprimé du langage (GO
+  // Romain, 2026-07-26) ; elles gardent la forme morte pour qu'on voie ce qu'elle était. Leur
+  // refus EST le comportement attendu — c'est leur silence qui serait le défaut. Elles restent
+  // marquées « active » dans `grammars.json`, qui sert la parité avec le moteur d'origine et ne
+  // se réconcilie pas avec ce garde : deux questions, deux fichiers.
+  { demo: 'alan-dice', pourquoi: 'témoin volontaire de script(…), supprimé du langage', date: '2026-07-26' },
+  { demo: 'beatrix-dice', pourquoi: 'témoin volontaire de script(…), supprimé du langage', date: '2026-07-26' },
+  // ⚠️ CES DEUX-LÀ NE SONT PAS DES TÉMOINS — ce sont des SCÈNES INCOMPLÈTES, et la distinction
+  // compte : elles emploient des terminaux sans déclarer aucune convention de notes. Elles
+  // appartiennent à kanopi et sont à réparer chez lui ; elles figurent ici pour être VUES, pas
+  // pour être tolérées. Le jour où l'une passe au vert, le témoin ci-dessous exige qu'on l'enlève.
+  // Elles étaient déjà rouges avant le chantier du jour — ce garde ne les regardait simplement pas.
+  { demo: 'trySrand', pourquoi: 'scène incomplète (kanopi) : terminaux nus sans convention de notes déclarée', date: '2026-08-08' },
+  { demo: 'tryCsoundObjects', pourquoi: 'scène incomplète (kanopi) : objets sonores nus sans convention de notes', date: '2026-08-08' },
 ];
 let bad = 0;
 const compileErrors = [];
@@ -79,11 +101,14 @@ const admises = new Set(ERREURS_ADMISES.map((e) => e.demo));
 const admisesServies = new Set();
 for (const { label, file, isDemo } of targets) {
   const r = compileToBPxAST(readFileSync(file, 'utf8'));
-  if (!r.ast) {
+  // ⚠️ ON REGARDE LES ERREURS, PAS SEULEMENT L'ABSENCE D'ARBRE. `compileToBPxAST` rend les deux :
+  // une source refusée peut sortir un arbre quand même, et ce test-ci la laissait alors passer
+  // sans l'examiner (mesuré le 2026-08-08 sur deux grammaires actives).
+  if (!r.ast || (r.errors && r.errors.length)) {
     if (r.errors && r.errors.length) {
       compileErrors.push(`${label} (${r.errors[0].message.split('.')[0]})`);
       const nomDemo = label.replace(/^demo:/, '');
-      if (isDemo && admises.has(nomDemo)) { admisesServies.add(nomDemo); continue; }
+      if (admises.has(nomDemo)) { admisesServies.add(nomDemo); continue; }
       bad++;
       console.error(`✗ ${label} : ${isDemo ? 'démo' : 'grammaire active'} ne compile plus — ${r.errors[0].message}`);
       if (isDemo) {

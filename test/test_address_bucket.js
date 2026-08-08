@@ -83,11 +83,26 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
 
 // ── 7. qualifieur de CONTENANCE (règle) {…}(ch:4, vel:70) → adresse + contrôle séparés ─
 {
+  // ⚠️ LE SAC EST COLLÉ À L'ACCOLADE FERMANTE : il règle donc le GROUPE, pas la règle
+  // (règle du 2026-08-07). Ce test lisait `rules[0].settings` et il avait raison sur l'état
+  // d'alors : `ch` n'étant pas un CONTRÔLE, la parenthèse n'était pas reconnue comme un sac et
+  // retombait sur la règle. Depuis que la reconnaissance est syntaxique et non plus lexicale
+  // (2026-08-08), les deux clés sont lues au même endroit — celui que leur position désigne.
   const r = compileToBPxAST('@core\nsitar -> {C4 E4}(ch:4, vel:70)');
-  const q = r.ast.subgrammars?.[0]?.rules?.[0]?.settings?.payload;
+  const q = r.ast.subgrammars?.[0]?.rules?.[0]?.rhs?.[0]?.settings?.payload;
   assert('contenance : address.ch=4', q?.address?.ch === 4, JSON.stringify(q));
   assert('contenance : params.vel=70 (contrôle reste)', q?.params?.vel === 70, JSON.stringify(q));
-  assert('contenance : containment/scope préservés', q?.containment === true && q?.scope === 'rule', JSON.stringify(q));
+  assert('contenance : containment/scope préservés', q?.containment === true && q?.scope === 'group', JSON.stringify(q));
+  // ⚠️ TÉMOIN DE L'AUTRE MOITIÉ — SÉPARÉ PAR UNE ESPACE, le même sac règle la RÈGLE. Sans lui,
+  // une lecture qui poserait tout sur le groupe passerait les trois lignes ci-dessus.
+  {
+    const r2 = compileToBPxAST('@core\nsitar -> {C4 E4} (ch:4, vel:70)');
+    const q2 = r2.ast.subgrammars?.[0]?.rules?.[0]?.settings?.payload;
+    assert('témoin : sac ESPACÉ → la règle', q2?.params?.vel === 70 && q2?.scope === 'rule',
+      JSON.stringify(q2));
+    assert('témoin : sac ESPACÉ → PAS le groupe', !r2.ast.subgrammars[0].rules[0].rhs[0].settings,
+      JSON.stringify(r2.ast.subgrammars[0].rules[0].rhs[0].settings));
+  }
 }
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
