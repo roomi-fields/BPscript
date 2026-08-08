@@ -122,9 +122,16 @@ ok(Array.isArray(LIBS.core?.schema?.channelParamsScope)
   ok(JSON.stringify(de('weight')) === JSON.stringify(['rule']),
      `D. 'weight' doit valoir pour la RÈGLE et elle seule — décision de Romain, 2026-08-08 : `
      + `« le poids n'a de sens que sur une règle ». Reçu : ${JSON.stringify(de('weight'))}.`);
-  ok(JSON.stringify(de('mode')) === JSON.stringify(['subgrammar']),
-     `D. 'mode' doit valoir pour la SOUS-GRAMMAIRE et elle seule — il ne change pas en cours de `
-     + `tirage (Romain, 2026-08-08). Reçu : ${JSON.stringify(de('mode'))}.`);
+  // ⚠️ AFFIRMATION RESSERRÉE le 2026-08-08, et c'est le TEST qui l'a exigée. J'écrivais « la
+  // sous-grammaire ET ELLE SEULE » ; la référence liste `mode` parmi les clés écrivables en tête
+  // de scène (`LANGUAGE.md:576`), et Romain l'a confirmé. Ce qui est décidé, c'est qu'il ne change
+  // pas EN COURS DE TIRAGE — un défaut de scène que chaque bloc recouvre n'est pas un changement
+  // en cours de tirage. J'avais durci une décision au-delà de ce qu'elle disait.
+  ok(!de('mode').includes('rule') && !de('mode').includes('group') && !de('mode').includes('symbol')
+     && !de('mode').includes('flow'),
+     `D. 'mode' ne doit valoir NI sur une règle, NI sur un groupe, NI sur un élément, NI dans le `
+     + `flux — il ne change pas en cours de tirage (Romain, 2026-08-08). Reçu : `
+     + `${JSON.stringify(de('mode'))}.`);
   ok((de('vel') || []).length >= 4,
      `D. 'vel' doit valoir pour au moins quatre places — c'est l'exemple qui a fait rejeter le `
      + `format à une valeur. Reçu : ${JSON.stringify(de('vel'))}.`);

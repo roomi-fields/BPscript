@@ -573,7 +573,7 @@ touche, donc qui le consomme.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason` -- decrites ci-dessous                                                                  |
 | `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `striated` et `smooth` -- si le temps pulse ou coule |
-| `@engine.`  | `mode` · `scan` · `weight` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
+| `@engine.`  | `mode` · `scan` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
 
 | cle           | ce qu'elle decale                                                             |
 | ------------- | ----------------------------------------------------------------------------- |
@@ -1021,7 +1021,10 @@ Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time` :
             ou fraction pour chacun (/2 /1.5 /3/2, *2 *1.5 *3/2)
 mode        mode du bloc (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
 scan        sens du parcours par regle (left, right, rnd) -- defaut : rnd
-weight      poids de la regle -- un entier, `inf` pour la priorite absolue, ou un K-param
+weight      poids de la regle, et de la regle SEULE -- un poids de scene n'a pas de sens
+            (Romain, 2026-08-08) : le poids arbitre un CHOIX entre regles candidates, il ne
+            se pose donc ni globalement, ni sur un groupe, ni sur un element.
+            Un entier, `inf` pour la priorite absolue, ou un K-param
             (`K1=3` l'initialise, `K1` reprend sa valeur courante) pour une distribution
 on_fail     gestion d'echec (skip, retry(N), fallback(X)) -- defaut : skip
 meter       signature rythmique -- (meter:7/8), (meter:4+4/4)

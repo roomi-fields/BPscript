@@ -74,9 +74,27 @@ const compile = (src) => compileToBPxAST(`${HEAD}${src}\n`);
 
 const clesTestees = [...QUALIFIER_KEYS, ...runtimeSample];
 
+/**
+ * OÙ CETTE CLÉ A LE DROIT D'ÊTRE, d'après la librairie qui la déclare.
+ *
+ * ⚠️ AJOUTÉ le 2026-08-08, et c'est le refus hors portée qui l'a exigé. Ce garde vérifie que le
+ * SIGNE ne route pas le réglage — que `(x)` et `[x]` mènent au même endroit pour une clé donnée.
+ * Il testait chaque clé aux quatre places INDIFFÉREMMENT, ce qui était sans conséquence tant que
+ * toutes les places étaient permises à tout le monde. Depuis que la portée est déclarée et
+ * VALIDÉE, écrire `{C4 D4}(scan:left)` est une faute de langage, pas un cas de routage.
+ * Le garde ne perd rien : le routage se mesure là où la clé a le droit d'être, et nulle part
+ * ailleurs. La liste vient de la DONNÉE — ajouter une portée à une clé étend le test tout seul.
+ */
+const portees = (cle) => {
+  const spec = specDe(cle);
+  return Array.isArray(spec?.scope) ? spec.scope : [];
+};
+const vautIci = (cle, place) => portees(cle).includes(place);
+
 // ─── 1+2. Position RULE : `(clé:val)` → Rule.settings SettingBag, JAMAIS rule.qualifiers ───────
 let cellules = 0;
 for (const cle of clesTestees) {
+  if (!vautIci(cle, 'rule')) continue;
   const valeur = valeurExemple(specDe(cle));
   cellules++;
   const { ast, errors } = compile(`S -> C4 (${cle}:${valeur})`);
@@ -94,6 +112,7 @@ for (const cle of clesTestees) {
 
 // ─── 1bis. Position GROUPE : `{A B}(clé:val)` → Polymetric.settings SettingBag ─────────────────
 for (const cle of clesTestees) {
+  if (!vautIci(cle, 'group')) continue;
   const valeur = valeurExemple(specDe(cle));
   cellules++;
   const { ast, errors } = compile(`S -> {C4 D4}(${cle}:${valeur})`);
@@ -107,6 +126,7 @@ for (const cle of clesTestees) {
 
 // ─── 1ter. Position ÉLÉMENT : `A(clé:val)` collé → suffixQualifiers[i] SettingBag ──────────────
 for (const cle of clesTestees) {
+  if (!vautIci(cle, 'symbol')) continue;
   const valeur = valeurExemple(specDe(cle));
   cellules++;
   const { ast, errors } = compile(`S -> C4(${cle}:${valeur}) D4`);
@@ -124,8 +144,17 @@ for (const cle of clesTestees) {
 // Plancher 30 -> 27 le 2026-08-08 : `mode` RETIRÉ des clés de sac (décision Romain — « on ne
 // change pas de mode en cours de tirage »). Même geste, même raison : la matrice reste PLEINE,
 // elle a une clé de moins. Le plancher suit le langage ; il n'est jamais baissé pour verdir.
-ok(cellules === clesTestees.length * 3 && cellules >= 27,
-  `la matrice doit être PLEINE — ${cellules} cellule(s) pour ${clesTestees.length} clé(s) × 3 positions`);
+// ⚠️ LE PLANCHER COMPTE DÉSORMAIS LES CELLULES PERMISES, pas le produit brut. Depuis que la
+// portée est validée, une clé n'est plus testée aux places où elle n'a pas le droit d'être —
+// `{C4 D4}(scan:left)` est une faute de langage, pas un cas de routage. Le produit croisé reste
+// COMPLET au sens qui compte : toute combinaison (clé × place permise) est exercée. Le compte
+// se calcule sur la donnée, donc il suit toute évolution des portées sans qu'on y pense.
+const cellulesAttendues = clesTestees
+  .reduce((n, cle) => n + ['rule', 'group', 'symbol'].filter((pl) => vautIci(cle, pl)).length, 0);
+ok(cellules === cellulesAttendues && cellules >= 8,
+  `la matrice doit être PLEINE — ${cellules} cellule(s) exercées pour ${cellulesAttendues} `
+  + `attendues (${clesTestees.length} clé(s) × leurs places PERMISES). Un écart veut dire qu'une `
+  + `combinaison légitime n'est plus mesurée.`);
 
 // ─── 3. Témoin MORD : une clé qui n'est ni réglage réservé ni contrôle connu reste refusée ─────
 {

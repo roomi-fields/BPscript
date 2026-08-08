@@ -350,7 +350,7 @@ ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> !(sync:n
 // Une forme acceptée dans le flux et refusée en contenance EST une exception cachée.
 for (const forme of [
   'S -> C4 (velcont)', 'S -> C4 (velcont, pitchcont)', 'S -> C4 (velcont, vel:80)',
-  'S -> C4 (vel:80, velcont)', 'S -> C4 (mute)', 'S -> {C4 D4}(velcont)', 'S -> C4(velcont) D4',
+  'S -> C4 (vel:80, velcont)', 'S -> C4 !(mute)', 'S -> {C4 D4}(velcont)', 'S -> C4(velcont) D4',
   'S -> C4 !(velcont) D4', 'S -> C4 !(velcont, pitchcont) D4',
 ]) {
   const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);

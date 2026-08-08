@@ -74,7 +74,12 @@ for (const mot of SAC_SEUL) {
   ok((nu.errors || []).length > 0, `2bis. '${mot}' nu dans le flux doit REFUSER, pas disparaître`);
   ok(msg.includes(`!(${mot})`), `2bis. le refus de '${mot}' doit donner la RÉÉCRITURE — reçu : ${msg.slice(0, 110)}`);
   // Et son sac reste ouvert, sinon on aurait supprimé le mot au lieu de le ranger.
-  for (const forme of [`@alphabet.simple\nS -> a !(${mot}) b`, `@alphabet.simple\nS -> a(${mot}) b`]) {
+  // ⚠️ LA SECONDE FORME EST TOMBÉE le 2026-08-08. Ce volet vérifiait que le sac de ces mots « reste
+  // ouvert » aux deux places, collée et flux. Romain a tranché depuis que `mute`, `unmute` et
+  // `panic` sont des GESTES : ils arrivent à un instant et ne valent QUE dans le flux. Le collé
+  // n'est donc plus une place légitime, et le mot n'y est pas perdu — il est refusé en nommant
+  // sa place. La propriété que ce volet garde est intacte : le mot n'a pas disparu, il a un sac.
+  for (const forme of [`@alphabet.simple\nS -> a !(${mot}) b`]) {
     const o = compileToBPxAST(`@core\n@controls\n@mode:ord\n${forme}\n`);
     ok((o.errors || []).length === 0,
        `2bis. '${forme}' doit rester valide — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);

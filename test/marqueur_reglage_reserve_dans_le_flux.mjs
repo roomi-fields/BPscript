@@ -16,7 +16,7 @@
  *    les contrôles de `controlNames`, peuplé par `@controls` — les réglages réservés n'y sont
  *    jamais entrés puisqu'ils ne sont PAS des contrôles de librairie facultatifs.
  *
- * 2. `C4(meter:11/5)` COLLÉ à un terminal, sans `@controls` chargé, tombe dans le lecteur
+ * 2. `C4(rndtime:50)` COLLÉ à un terminal, sans `@controls` chargé, tombe dans le lecteur
  *    générique de `parseSymbolCall` (appel de symbole, pas qualifieur runtime reconnu) : celui-ci
  *    lit un entier seul mais n'avale pas le `/5` d'une fraction — la valeur RAPPORT échoue avec
  *    « Expected argument value » là où la même position accepte un entier nu.
@@ -36,7 +36,12 @@ const compile = (rhs) => compileToBPxAST(`@core\n@alphabet.western:midi\n\nS -> 
 // ce garde devient donc un cas REFUSÉ ; il est remplacé par `rotate`, qui est mesuré en
 // position flux dans le corpus et couvre la même propriété. Le garde ne perd rien : il vérifie
 // qu'un réglage RÉSERVÉ se lit dans le flux, pas que le mode en soit un.
-for (const forme of ['rotate:2', 'weight:50', 'scan:left', 'on_fail:skip', 'weight:2', 'meter:7/8']) {
+// ⚠️ LISTE RESSERRÉE le 2026-08-08 : ce garde mesure qu'un réglage RÉSERVÉ se lit DANS LE FLUX.
+// Depuis que la portée est validée, quatre de ses cobayes n'ont pas le droit d'y être — le poids,
+// le scan, la stratégie d'échec et le mètre gouvernent une règle, pas un instant. Les y écrire
+// n'est plus un cas de lecture mais une faute de langage. Restent ceux qui valent dans le flux,
+// et ils suffisent : la propriété mesurée est la LECTURE du sac, pas le nom de la clé.
+for (const forme of ['rotate:2', 'legato:20', 'staccato:96', 'rndtime:50']) {
   const { ast, errors } = compile(`C4 !(${forme}) D4`);
   ok(errors.length === 0, `1. '!(${forme})' dans le flux (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
@@ -54,18 +59,21 @@ for (const forme of ['rotate:2', 'weight:50', 'scan:left', 'on_fail:skip', 'weig
 
 // ─── 2. (meter:N/D) collé à un terminal, SANS @controls ──────────────────────────────────────
 {
-  const { ast, errors } = compile(`C4(meter:11/5) D4`);
-  ok(errors.length === 0, `2. 'C4(meter:11/5)' collé (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
+  const { ast, errors } = compile(`C4(rndtime:50) D4`);
+  ok(errors.length === 0, `2. 'C4(rndtime:50)' collé (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
     const c4 = ast.subgrammars[0].rules[0].rhs[0];
     const valeur = c4.suffixQualifiers?.[0]?.pairs?.[0]?.value ?? c4.args?.[0]?.value?.value;
-    ok(valeur === '11/5', `2. la valeur portée doit être le rapport '11/5' — reçu ${JSON.stringify(valeur)}`);
+    ok(valeur === 50, `2. la valeur portée doit être 50 — reçu ${JSON.stringify(valeur)}`);
   }
 }
 {
   // Non-régression : l'entier collé continue de marcher (c'est lui qui marchait déjà).
-  const { errors } = compile(`C4(weight:2) D4`);
-  ok(errors.length === 0, `2. (non-régression) 'C4(weight:2)' collé (sans @controls) doit rester accepté`);
+  // ⚠️ COBAYE CHANGÉ le 2026-08-08 : ce cas mesure qu'un réglage réservé COLLÉ à une note est lu
+  // sans invoquer la librairie. Il employait le POIDS, qui n'a désormais plus le droit d'être là
+  // (il gouverne une règle). `staccato` porte la même propriété et vaut sur un élément.
+  const { errors } = compile(`C4(staccato:96) D4`);
+  ok(errors.length === 0, `2. (non-régression) 'C4(staccato:96)' collé (sans @controls) doit rester accepté — ${errors.map((e) => e.message).join(' | ')}`);
 }
 
 if (echecs.length) {

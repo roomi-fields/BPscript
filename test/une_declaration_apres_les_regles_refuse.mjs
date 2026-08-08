@@ -47,7 +47,10 @@ const DECLARATIONS = [
   // l'alphabet TESTÉ, et la règle témoin joue `C4`. Mesurer un refus de POSITION ne doit pas
   // buter sur un vocabulaire qui ne contient pas la note de l'exemple.
   ['alphabet', '@alphabet.western'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
-  ['scan', '@scan:left'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
+  // ⚠️ COBAYE CHANGÉ le 2026-08-08 : ce garde mesure la POSITION d'une déclaration dans le
+  // fichier (avant / après les règles), pas la légitimité du mot. `@scan` ne s'écrit plus en
+  // tête de scène depuis que la portée est validée ; `@mm` porte la même propriété et y vaut.
+  ['mm', '@mm:120'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
   // ⚠️⚠️ `transport` ET `out` SONT SORTIS DE LA MATRICE le 2026-08-04, remplacés 1-pour-1 par
   // `scan` et `sound` — le témoin anti-rétrécissement (>= 24) reste tenu, et les deux remplaçants
   // ont été MESURÉS génériques avant d'être choisis (acceptés avant les règles, refusés après),
@@ -71,7 +74,7 @@ const DECLARATIONS = [
   ['alias', '@alias g cc:2'], ['mm', '@mm:60'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
   ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['homomorphism', '@homomorphism.dhati'],
-  ['settings', '@settings'], ['filter', '@filter'], ['modulation', '@modulation'], ['ins', '@ins:3'],
+  ['settings', '@settings'], ['transpose', '@transpose:1/2'], ['modulation', '@modulation'], ['ins', '@ins:3'],
   ['test_alphabets', '@test_alphabets.abc'],
 ];
 console.log(`[declaration apres regles] ${DECLARATIONS.length} declarations x 2 positions`);

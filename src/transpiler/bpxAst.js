@@ -1199,7 +1199,7 @@ function applySceneValues(ast, libCtx) {
  * d'un gabarit, et tous relèvent de `symbol` — écrire « note » aurait rétréci le vocabulaire sous
  * l'usage réel. Ajouter un porteur au langage l'inscrit ici, et il est validé aussitôt.
  */
-const REFUS_HORS_PORTEE_ACTIF = false;   // cf. la note au point de confrontation, plus bas
+const REFUS_HORS_PORTEE_ACTIF = true;   // cf. la note au point de confrontation, plus bas
 const PORTEE_DU_PORTEUR = {
   Rule: 'rule',
   Polymetric: 'group', RawBrace: 'group',
@@ -1390,6 +1390,47 @@ function validateReferences(ast) {
     }
     for (const k in node) { if (k !== 'params' && node[k] && typeof node[k] === 'object') collect(node[k]); }
   })(ast.subgrammars);
+
+  // ── LES DEUX PLACES QUI N'ONT PAS DE SAC : la tête de scène et la tête de sous-grammaire ────
+  //
+  // ⚠️ MON REFUS NE GARDAIT QUE QUATRE PLACES SUR SIX, et c'est le produit croisé qui l'a montré —
+  // 85 cellules « déclaré interdit mais accepté », toutes sur ces deux places. `@weight:50` en tête
+  // de scène passait, `@stop` aussi. J'avais écrit la garde pour les endroits où un sac se pose
+  // dans une règle, c'est-à-dire pour la forme que j'avais sous les yeux ; les deux places qui
+  // s'écrivent AUTREMENT — une directive, un modificateur de mode — n'étaient pas gardées du tout.
+  // C'est la faute « on répare l'endroit où le défaut s'est montré », commise sur une garde dont
+  // c'est précisément le sujet.
+  if (REFUS_HORS_PORTEE_ACTIF) {
+    const dire = (cle, place, line) => {
+      const permis = porteesPermises.get(cle);
+      if (!permis || permis.includes(place)) return;
+      errors.push({
+        message: `'${cle}' ne peut pas s'écrire ${NOM_DE_PLACE[place]} — `
+          + (permis.length === 1
+              ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}`
+              : `il vaut ${permis.slice(0, -1).map((x) => NOM_DE_PLACE[x] ?? x).join(', ')}`
+                + ` ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`)
+          + `. Le déplacer là, ou employer un réglage qui vaut ici.`,
+        line,
+      });
+    };
+    // ⚠️ UNE DIRECTIVE DE TÊTE N'EST PAS TOUJOURS UN RÉGLAGE — et l'homonymie est réelle.
+    // `@mod` INVOQUE la librairie des modulations ; elle ne pose pas le contrôle MIDI `mod`.
+    // Mesuré : sans ce tri, cinq scènes du corpus étaient refusées à tort, toutes pour ce seul
+    // mot. Une invocation se reconnaît à ce qu'un fichier de librairie porte son nom — c'est le
+    // même critère que le chargeur emploie, pas une liste de noms à écarter.
+    for (const d of (ast.directives || [])) {
+      if (!d || !d.name) continue;
+      if (loadLib(d.name)) continue;          // invocation de librairie, pas un réglage
+      dire(d.name, 'scene', d.line);
+    }
+    for (const sg of (ast.subgrammars || [])) {
+      for (const m of (sg.modifiers || [])) {
+        const nom = typeof m === 'string' ? m : (m && m.name);
+        if (nom) dire(nom, 'subgrammar', sg.line);
+      }
+    }
+  }
 
   // 2. Existence d'un COMPOSANT référencé dans un axe à catalogue.
   const checkComponent = (axis, name, line) => {

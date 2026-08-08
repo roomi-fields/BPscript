@@ -68,7 +68,16 @@ function valeurExemple(spec) {
 const compile = (src) => compileToBPxAST(`@core\n@alphabet.western:audio\n\n${src}\n`);
 
 let cellules = 0;
-for (const cle of QUALIFIER_KEYS) {
+// ⚠️ FILTRÉ PAR LA PORTÉE le 2026-08-08. Ce garde mesure que les DEUX SIGNES mènent au même
+// endroit pour une clé donnée. Il exerçait chaque clé à toutes les positions, ce qui était sans
+// conséquence tant qu'aucune n'était interdite. Depuis que la portée est validée, écrire un
+// réordonnancement sur une règle est une faute de langage et non un cas de lecture. La liste
+// vient de la DONNÉE : étendre une portée étend le test tout seul.
+const porteesDe = (cle) => {
+  const eng = LIBS.controls?.engine?.[cle];
+  return Array.isArray(eng?.scope) ? eng.scope : [];
+};
+for (const cle of QUALIFIER_KEYS.filter((c) => porteesDe(c).includes('rule'))) {
   const spec = ENGINE_SPECS[cle];
   const valeur = valeurExemple(spec);
 
@@ -110,7 +119,10 @@ for (const cle of QUALIFIER_KEYS) {
 }
 // Plancher 36 -> 32 le 2026-08-06 : `tempx` SUPPRIMÉ (décision Romain). Matrice toujours pleine.
 // Plancher 32 -> 28 le 2026-08-08 : `mode` RETIRÉ des clés de sac (décision Romain). Idem.
-ok(cellules === QUALIFIER_KEYS.length * 4 && cellules >= 28,
+// Le plancher compte les clés RÉELLEMENT exercées (celles qui valent sur une règle), pas la
+// liste entière — même raison que le filtre ci-dessus, et même calcul depuis la donnée.
+const clesRegle = QUALIFIER_KEYS.filter((c) => porteesDe(c).includes('rule'));
+ok(cellules === clesRegle.length * 4 && cellules >= 12,
    `la matrice doit être PLEINE — ${cellules} cellule(s) pour ${QUALIFIER_KEYS.length} clé(s) × 4 propriétés`);
 
 // ─── 5. Injection — le refus MORD sur une clé migrée, et il se TAIT sur une clé qui ne l'est pas ──
