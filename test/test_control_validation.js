@@ -61,10 +61,27 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
   check(e[0] && e[0].line !== undefined, 'l\'erreur porte une position');
 }
 
-// 7. Sans @controls chargé → pas de validation (aucune erreur)
+// 7. LA VALIDATION NE DÉPEND PLUS D'UNE LIGNE DE TÊTE (Romain, 2026-08-08)
+//
+// ⚠️ CE CAS AFFIRMAIT L'INVERSE, ET IL AVAIT RAISON SUR L'ÉTAT : « sans @controls chargé → pas de
+// validation (aucune erreur) ». Une valeur interdite passait donc SANS UN MOT dès que la scène
+// n'écrivait pas la ligne d'invocation. Le test ne mesurait pas mal — il ENCODAIT le défaut, et
+// c'est pire : tant qu'il était vert, personne ne pouvait voir que la validation était facultative.
+//
+// Les contrôles sont désormais intrinsèques (`libs.js`, CONTROLES_INTRINSEQUES) : la même écriture
+// produit le même arbre et subit la même validation, que la ligne soit là ou non.
 {
   const r = compileToBPxAST('@alphabet.western:audio\nS -> C4 (wave:triangle123)\n');
-  check((r.errors || []).length === 0, 'sans @controls : 0 erreur, obtenu ' + JSON.stringify(r.errors));
+  const e = (r.errors || []);
+  check(e.length === 1, 'une valeur interdite est refusée MÊME sans @controls, obtenu ' + JSON.stringify(e));
+  check(e[0] && /triangle123/.test(e[0].message), 'le refus nomme la valeur fautive');
+}
+// 7bis. TÉMOIN — et la valeur LÉGITIME passe toujours. Sans cette moitié, une validation devenue
+// trop sévère (qui refuserait tout) rendrait le cas ci-dessus vert pour la mauvaise raison.
+{
+  const r = compileToBPxAST('@alphabet.western:audio\nS -> C4 (wave:triangle)\n');
+  check((r.errors || []).length === 0,
+        'une valeur AUTORISÉE passe sans @controls, obtenu ' + JSON.stringify(r.errors));
 }
 
 // 8. Plusieurs valeurs fautives → plusieurs erreurs

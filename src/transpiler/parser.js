@@ -3708,7 +3708,8 @@ function parse(tokens, opts = {}) {
       }
 
       refuserSuffixeArobase();
-      elements.push(el);
+      // Un `!` derrière l'élément ET SON SAC ouvre l'accord (cf. envelopperEnAccord).
+      elements.push(envelopperEnAccord(el, current()));
     }
     return elements;
   }
@@ -4954,6 +4955,31 @@ function parse(tokens, opts = {}) {
     return { type: 'Control', name, args };
   }
 
+  /**
+   * UN `!` QUI SUIT UN ÉLÉMENT DÉJÀ LU EN OUVRE L'ACCORD — y compris quand cet élément porte un
+   * réglage collé.
+   *
+   * ⚠️ CE QUE CETTE FONCTION RÉPARE, ET C'ÉTAIT MUET (mesuré le 2026-08-08). `C4(vel:80)!E4(vel:90)`
+   * ne produisait plus UN accord mais DEUX éléments frères — la seconde note cessait d'attaquer avec
+   * la première. Aucun refus, aucun message : la scène sonnait autrement, voilà tout.
+   *
+   * LA CAUSE, ET ELLE DIT POURQUOI PERSONNE NE L'AVAIT VUE. L'accord n'était construit que sur la
+   * voie de l'APPEL (`parseSymbolCall`, qui lit le `!` juste après ses arguments). Or un élément
+   * suivi d'un sac ne passe par cette voie **que si la clé n'est pas un contrôle connu** : dès
+   * qu'une scène invoquait la librairie des contrôles — 186 des 274 du corpus — `vel` devenait un
+   * réglage, l'élément revenait par la voie du suffixe, et plus rien ne lisait le `!`.
+   * Le seul test qui couvrait la forme (`test_chord_charge_r4.js`) l'écrivait SANS cette invocation :
+   * il gardait donc exactement le cas qui n'arrive presque jamais, et restait vert.
+   *
+   * Le rendre intrinsèque (`libs.js`) supprime la voie de l'appel pour tous les contrôles — sans ce
+   * correctif, le défaut serait devenu universel au lieu d'être fréquent.
+   */
+  function envelopperEnAccord(el, tok) {
+    if (!at(T.BANG) || peek(1).type === T.LPAREN || peek(1).type === T.LBRACKET
+        || fluxIsWiring(pos + 1)) return el;
+    return { type: 'SimultaneousGroup', primary: el, secondaries: lireSecondaires(tok) };
+  }
+
   function parseSimultaneousGroup(primaryName, tok, primaryArgs = null) {
     let primary;
     if (primaryName === 'lambda') {
@@ -4963,6 +4989,11 @@ function parse(tokens, opts = {}) {
     } else {
       primary = { type: 'Symbol', name: normalizeName(primaryName), line: tok.line };
     }
+    return { type: 'SimultaneousGroup', primary, secondaries: lireSecondaires(tok) };
+  }
+
+  /** Les co-attaques d'un accord : `!X`, `!X(…)`, répétés. Partagé par les deux entrées. */
+  function lireSecondaires(tok) {
     const secondaries = [];
 
     while (at(T.BANG)) {
@@ -4976,9 +5007,20 @@ function parse(tokens, opts = {}) {
       // ! is exclusively temporal — only symbols/symbol calls
       if (at(T.IDENT)) {
         const name = advance().value;
-        if (at(T.LPAREN)) {
-          const call = parseSymbolCall(name, tok);
-          secondaries.push(call);
+        // ⚠️ UNE CO-ATTAQUE SE LIT COMME N'IMPORTE QUEL ÉLÉMENT — son sac est un RÉGLAGE, pas un
+        // appel. Mesuré le 2026-08-08 : `C4(vel:80)!E4(vel:90)!G4` rendait un accord IMBRIQUÉ
+        // (E4 devenu appel, absorbant G4 dans un sous-accord) là où `C4!E4!G4` rend trois
+        // co-attaques à PLAT. Les deux écritures disent la même chose musicale ; seule celle qui
+        // porte des réglages changeait de forme. Ce site-ci était le dernier à emprunter encore la
+        // voie de l'appel pour une clé de réglage.
+        if (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier()) {
+          const sec = { type: 'Symbol', name: normalizeName(name), line: tok.line, suffixQualifiers: [] };
+          while (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier()) {
+            sec.suffixQualifiers.push(parseRuntimeQualifier());
+          }
+          secondaries.push(sec);
+        } else if (at(T.LPAREN)) {
+          secondaries.push(parseSymbolCall(name, tok));
         } else {
           secondaries.push({ type: 'Symbol', name: normalizeName(name), line: tok.line });
         }
@@ -4988,7 +5030,7 @@ function parse(tokens, opts = {}) {
       throw new ParseError('Expected symbol after !', current());
     }
 
-    return { type: 'SimultaneousGroup', primary, secondaries };
+    return secondaries;
   }
 
   function hasMatchingBrace() {
@@ -5053,7 +5095,9 @@ function parse(tokens, opts = {}) {
           el.suffixQualifiers.push(parseRuntimeQualifier());
         }
       }
-      currentVoice.push(el);
+      // Même geste DANS un groupe polymétrique : `{C4(vel:80)!E4(vel:90) D4}`. Le brancher au seul
+      // site de la règle aurait réparé l'endroit où le défaut s'est montré, pas l'espace où il vit.
+      currentVoice.push(envelopperEnAccord(el, current()));
 
       // EBNF §4.2: "A (vel:80)" with space = suffix of A if end of voice
       // Attach spaced () as suffix of last element when at end of voice (, or })

@@ -389,22 +389,37 @@ function loadLibsFromDirectives(directives) {
   ctx.controlNames.add('sound');
   ctx.dispatcherOnlyControls.add('sound');
 
-  // Built-in subgrammar-level performance controls (always available, #146).
-  // BP3 engine treats _mm/_striated/_smooth as "performance controls" emitted
-  // on top of the first subgrammar — cf. CompileGrammar.c cases 13 (_mm),
-  // 14 (_striated), 15 (_smooth), and CompileProcs.c GetPerformanceControl.
-  // _destru is the destructuring directive. These are core engine instructions,
-  // not optional library controls, so they must be encodable even when no lib
-  // (e.g. @controls) is referenced. Without this seed, @mm/@striated/@smooth
-  // were silently dropped from the produced BP3 grammar unless @controls was
-  // loaded, breaking oracle reproducibility via compileBPS→wasm (#146 / Front #139).
-  // A loaded lib's `subgrammar` section may still override these defaults below.
-  ctx.subgrammarControls.set('mm', { bp3: '_mm', args: ['bpm'] });
-  ctx.subgrammarControls.set('striated', { bp3: '_striated', args: [] });
-  ctx.subgrammarControls.set('smooth', { bp3: '_smooth', args: [] });
-  ctx.subgrammarControls.set('destru', { bp3: '_destru', args: [] });
+  // ⛔ LES CONTRÔLES SONT INTRINSÈQUES — ils ne s'invoquent pas (Romain, 2026-08-08).
+  //
+  // « On a dit qu'on supprimait controls et que core intégrait l'appel à controls, que ça ne
+  // servait à rien de tout le temps devoir appeler les deux. »
+  //
+  // LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ, mesuré le jour même : `@controls` n'apparaît AUCUNE fois
+  // dans les trois spécifications (`LANGUAGE.md`, `EBNF.md`, `AST.md`) — `@core` y est écrit
+  // quinze fois. C'est le code qui traînait, et rien ne pouvait le dire : aucune décision datée
+  // ne portait la suppression, donc aucun garde ne pouvait mordre.
+  //
+  // ⚠️ CE QUE L'INVOCATION FACULTATIVE COÛTAIT, ET C'EST LE VRAI DÉFAUT. Le même texte produisait
+  // DEUX arbres différents selon qu'une ligne de tête était écrite ou non :
+  //     `S -> C4(vel:80)` AVEC la ligne  → une NOTE portant un RÉGLAGE
+  //     `S -> C4(vel:80)` SANS la ligne  → un APPEL de fonction portant un ARGUMENT
+  // Les deux compilaient. L'écriture ne décidait donc pas de ce qu'elle produit — une déclaration
+  // trois lignes plus haut décidait à sa place. En aval, BPx cherche les réglages là où il les
+  // connaît : sur la seconde forme il ne les trouvait pas, sans erreur, et jouait la note sans son
+  // intensité. Même famille que le poids perdu le matin même.
+  //
+  // ⚠️ ET LE DÉFAUT AVAIT DÉJÀ ÉTÉ PAYÉ UNE FOIS, SUR UNE SEULE FAMILLE. Les quatre contrôles de
+  // sous-grammaire (`mm`, `striated`, `smooth`, `destru`) étaient semés ici EN DUR, avec un
+  // commentaire qui disait exactement la cause : « silently dropped unless @controls was loaded ».
+  // On avait donc réparé l'endroit où le défaut s'était MONTRÉ, pas l'espace où il vivait — et les
+  // 61 autres contrôles sont restés dans le trou. La graine en dur disparaît avec ce chargement :
+  // la librairie les déclare, plus rien ne les recopie.
+  const CONTROLES_INTRINSEQUES = { type: 'Directive', name: 'controls', subkey: null };
+  const aCharger = (directives || []).some((d) => d && d.name === 'controls')
+    ? directives
+    : [CONTROLES_INTRINSEQUES, ...(directives || [])];
 
-  for (const dir of directives) {
+  for (const dir of aCharger) {
     // @cc directives: user-defined named CC mappings
     if (dir.name === 'cc' && dir.ccMappings) {
       for (const cc of dir.ccMappings) {

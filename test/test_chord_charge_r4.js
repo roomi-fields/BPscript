@@ -36,12 +36,29 @@ const DECLS = '@gate C4:sc\n@gate E4:sc\n';
   assert('F1 RHS = Polymetric (bloc)', poly?.type === 'Polymetric', `got ${poly?.type}`);
   const grp = poly?.voices?.[0]?.[0];
   assert('F1 bloc contient un SimultaneousGroup', grp?.type === 'SimultaneousGroup');
-  // La charge est sur le conteneur (qualifieur de règle), PAS sur les notes.
-  const rq = r.settings;
-  assert('F1 contenance sur le conteneur', rq?.payload?.containment === true,
+  // La charge est sur le CONTENEUR — et le conteneur, ici, est le BLOC : le sac est COLLÉ à
+  // l'accolade fermante.
+  //
+  // ⚠️ CE TEST LISAIT `r.settings`, LA RÈGLE, ET IL AVAIT RAISON SUR L'ÉTAT D'ALORS. Sa scène
+  // n'invoque aucune librairie de contrôles (`@gate` seul) : `vel` n'était donc pas reconnu comme
+  // un réglage, le sac collé au `}` n'était pas absorbé par le bloc, et il retombait sur la règle.
+  // Le test mesurait la voie SANS contrôles — celle que presque aucune scène réelle n'emprunte.
+  // Depuis que les contrôles sont intrinsèques (`libs.js`, 2026-08-08), il n'y a plus qu'une voie,
+  // et c'est la règle du 2026-08-07 qui s'applique : COLLÉ règle le groupe, ESPACÉ règle la règle.
+  const rq = poly?.settings;
+  assert('F1 contenance sur le BLOC (sac collé à })', rq?.payload?.containment === true,
     JSON.stringify(rq?.payload));
-  assert('F1 params.vel=90 sur le conteneur', rq?.payload?.params?.vel === 90,
+  assert('F1 params.vel=90 sur le BLOC', rq?.payload?.params?.vel === 90,
     JSON.stringify(rq?.payload?.params));
+  // ⚠️ TÉMOIN DE L'AUTRE MOITIÉ — le même sac SÉPARÉ par une espace règle la RÈGLE, pas le bloc.
+  // Sans lui, une lecture qui poserait TOUT sur le bloc passerait les deux lignes ci-dessus.
+  {
+    const r2 = rule(DECLS + 'Accord -> {C4!E4} (vel:90)');
+    assert('F1-témoin : sac ESPACÉ → la règle', r2?.settings?.payload?.params?.vel === 90,
+      JSON.stringify(r2?.settings?.payload));
+    assert('F1-témoin : sac ESPACÉ → PAS le bloc', !r2?.rhs?.[0]?.settings,
+      JSON.stringify(r2?.rhs?.[0]?.settings));
+  }
   // Les notes de l'accord ne portent PAS d'override d'occurrence.
   assert('F1 C4 sans charge', !grp?.primary?.payload?.params,
     JSON.stringify(grp?.primary?.payload));
@@ -84,9 +101,13 @@ const DECLS = '@gate C4:sc\n@gate E4:sc\n';
   assert('note simple params.vel=80 (repliée)', n?.payload?.params?.vel === 80,
     JSON.stringify(n?.payload));
   assert('note simple occurrence:true', n?.payload?.occurrence === true);
-  // L'arg original est conservé (voie BP3 héritée).
-  assert('args originaux conservés', Array.isArray(n?.args) && n.args.length === 1,
-    JSON.stringify(n?.args));
+  // Le sac d'origine est conservé à côté de la charge repliée — mais dans le champ des RÉGLAGES.
+  // ⚠️ Ce test exigeait `args`, « la voie BP3 héritée ». Cette voie n'existe plus pour un réglage :
+  // depuis que les contrôles sont intrinsèques, `C4(vel:80)` est une NOTE portant un RÉGLAGE, plus
+  // jamais un APPEL portant un ARGUMENT. C'est le champ qui change, pas la donnée.
+  assert('le sac d\'origine est conservé', Array.isArray(n?.suffixQualifiers) && n.suffixQualifiers.length === 1,
+    JSON.stringify(n?.suffixQualifiers));
+  assert('et il n\'y a plus d\'appel', n?.args === undefined, JSON.stringify(n?.args));
 }
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
