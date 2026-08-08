@@ -8,17 +8,30 @@
       "description": "Motifs et échantillons, dans le navigateur.",
       "parameters": {
         "bank": {
-          "description": "La banque d'échantillons que la voix charge. Sans elle, une scène qui emploie des noms d'échantillons se joue en SILENCE — mesuré chez Kanopi : « banque inconnue → son MUET ».",
-          "default": null
+          "description": "La banque d'échantillons que la voix charge. Sans elle, une scène qui emploie des noms d'échantillons se joue en SILENCE — mesuré chez Kanopi : « banque inconnue → son MUET »."
         }
       }
     },
-    "hydra": { "description": "Synthèse visuelle." },
-    "sc": { "description": "SuperCollider — synthèse audio, backend natif." },
-    "js": { "description": "JavaScript évalué par le runtime." },
-    "p5": { "description": "Croquis graphiques p5.js." },
-    "mercury": { "description": "Live coding minimal." },
-    "csound": { "description": "Csound — synthèse, backend natif." },
-    "tidal": { "description": "TidalCycles — motifs, backend natif (SuperDirt)." }
+    "hydra": {
+      "description": "Synthèse visuelle."
+    },
+    "sc": {
+      "description": "SuperCollider — synthèse audio, backend natif."
+    },
+    "js": {
+      "description": "JavaScript évalué par le runtime."
+    },
+    "p5": {
+      "description": "Croquis graphiques p5.js."
+    },
+    "mercury": {
+      "description": "Live coding minimal."
+    },
+    "csound": {
+      "description": "Csound — synthèse, backend natif."
+    },
+    "tidal": {
+      "description": "TidalCycles — motifs, backend natif (SuperDirt)."
+    }
   }
 }
