@@ -504,6 +504,14 @@ function parse(tokens, opts = {}) {
           // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
           for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
         } else if (dir.type === 'DefDirective') {
+          // ⛔ ET LA DEFINITION DEVIENT APPELABLE — l ensemble qui porte la bascule appel/reglage
+          // etait DECLARE ET JAMAIS ALIMENTE : son commentaire disait  vide tant que la directive
+          // n est pas implementee . Elle l est depuis ce matin, et personne n avait rebranche.
+          // ⚠️ SANS ÇA, `accent(E4)` etait lu comme un SAC DE REGLAGES et refuse —  attribut
+          // (E4:…) inconnu . La declaration passait, l appel non : une transformation qu on ne
+          // peut pas appeler ne transforme rien, exactement comme une definition qu on ne peut
+          // pas reinvoquer ne sert a rien (meme defaut, trouve deux fois dans la journee).
+          definitionsDeclarees.add(dir.name);
           // ⛔ UNE DEFINITION EST UN NOM QUE LA SCENE POSSEDE : elle gagne sur un mot homonyme du
           // vocabulaire, comme une variable de travail ou un alias — le plus local l emporte.
           // ⚠️ MESURE DU 2026-08-09 : `@def mapcont drum.on` puis `S -> a mapcont b` rendait
@@ -2062,6 +2070,47 @@ function parse(tokens, opts = {}) {
       // ⚠️ Le départage se fait sur ce que le texte PORTE, jamais sur ce que le nom ÉVOQUE : un
       // terminal peut s'appeler `voice` et une clé porter le nom d'un terminal. Chercher un
       // vocabulaire ici referait la faute du 2026-07-26 — laisser la donnée décider de la forme.
+      // ── DEUX CORPS QUE LA PARENTHESE DEPARTAGE, ET C EST LE COLLAGE QUI TRANCHE ──────────
+      // `LANGUAGE.md`, tableau des signes : « `(x)` COLLE au nom = liste de parametres de la
+      // definition » ; « `(vel:60)` SEPARE du nom = corps de la definition ».
+      // C est la meme regle que partout ailleurs dans le langage — l espace delimite les termes —
+      // et elle suffit a distinguer une TRANSFORMATION PARAMETREE d un PREREGLAGE, sans qu on ait
+      // a deviner d apres le contenu de la parenthese.
+      if (at(T.LPAREN) && !current().spaceBefore) {
+        // TRANSFORMATION PARAMETREE : `@def accent(x) x(vel:120)`
+        advance();
+        const params = [];
+        while (!at(T.RPAREN) && !atEnd()) {
+          if (at(T.IDENT)) params.push(advance().value);
+          else if (at(T.COMMA)) advance();
+          else {
+            throw new ParseError(
+              `'@def ${defName}(…)' : la liste de parametres ne porte que des NOMS, separes par des `
+              + `virgules — recu '${current().value}'.`, current());
+          }
+        }
+        expect(T.RPAREN);
+        if (params.length === 0) {
+          throw new ParseError(
+            `'@def ${defName}()' : une liste de parametres VIDE ne parametre rien. Ecrire `
+            + `'@def ${defName} <corps>' sans parenthese collee, ou nommer au moins un parametre.`, tok);
+        }
+        const corps = parseRhsElements();
+        if (corps.length === 0) {
+          throw new ParseError(
+            `'@def ${defName}(${params.join(', ')})' : transformation sans corps. Ce que la `
+            + `definition FAIT de ses parametres s ecrit apres eux.`, tok);
+        }
+        return { type: 'DefDirective', name: defName, kind: 'transformation',
+                 params, body: corps, line: tok.line };
+      }
+      if (at(T.LPAREN)) {
+        // PREREGLAGE : `@def kick (vel:120)` — la parenthese est SEPAREE, c est un corps.
+        const sac = parseRuntimeQualifier();
+        return { type: 'DefDirective', name: defName, kind: 'prereglage',
+                 settings: sac, line: tok.line };
+      }
+
       const cleEnTete = () => {
         if (!at(T.IDENT)) return false;
         const apres = peek(1);
@@ -5812,7 +5861,8 @@ function parse(tokens, opts = {}) {
           `'${sigil}${nom}(…${current().value}…)' : '${current().value}' n'a pas sa place dans les `
           + `arguments d'un gabarit — ils s'écrivent 'nom:valeur', séparés par des virgules. `
           + `Pour poser un RÉGLAGE sur la règle, une ESPACE le détache du gabarit `
-          + `('${sigil}${nom} (${key || 'clé'}:…)')`,
+          + `('${sigil}${nom} (${key || 'clé'}:…)') ; pour une VITESSE, qui n'est pas une paire, `
+          + `le point d'exclamation la pose dans le flux ('${sigil}${nom} ! (*2/3)')`,
           current());
       }
     }

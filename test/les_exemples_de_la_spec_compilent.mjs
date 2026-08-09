@@ -225,7 +225,12 @@ const RETARD_REGLES = new Map([
   //     `TemplateMaster.args` est déclaré par la spec et produit par RIEN.
   //     La réparation demande de savoir quel vocabulaire prennent ces paramètres — la bible est
   //     MUETTE là-dessus. Question pour Romain ; je ne comble pas un silence par une mesure.
-  ['S <> $mel(tempx:1) &mel(tempx:2/3)', /'tempx' ne s'écrit pas dans une règle/],
+  // ⛔ RETIREE le 2026-08-09 : la bible n ecrit plus `tempx`. Elle enseignait une forme SUPPRIMEE
+  //    par decision datee du 2026-08-06 —  si tempx fait la meme chose que l operateur on le
+  //    supprime et c est tout . Ce n etait donc pas un retard du parseur mais une dette de la
+  //    REFERENCE, et elle se corrige sur la decision, pas sur le code.
+  //    L exemple illustrait  chaque invocation porte ses parametres  : il le fait desormais avec
+  //    un reglage, qui compile. La VITESSE, elle, n est pas une paire — elle se pose dans le flux.
   // (d) une clé que le parser tient encore pour un contrôle de crochet
   // ⚠️ CAUSE CHANGÉE le 2026-08-07, et le sujet AUSSI. Le refus était « ce contrôle est moteur,
   //     il s'écrit entre crochets » — retiré : la décision du 2026-08-02 dit l'inverse, et le
@@ -345,7 +350,6 @@ const RETARD_BLOCS = new Map([
   //     décalé les blocs qui commencent par la même ligne. C'est la fragilité d'une clé par
   //     rang, assumée : elle reste plus stable qu'un numéro de ligne, qui bougerait à CHAQUE
   //     édition de la bible au lieu d'une fois par scission.
-  ['@alphabet.western #3', /ne déclare rien|n'est ni un appel de composant/],
 
   // ⚠️ LA DIRECTIVE EST RATTRAPÉE, LE BLOC NON — et la cause a changé de nature.
   //     `@homomorphism.dhati` charge désormais sa table (renommage du 2026-08-07). Ce qui
@@ -368,7 +372,6 @@ const RETARD_BLOCS = new Map([
   //     déduction. Ce qu'un exemple laisse INFÉRER n'est pas ce qu'il spécifie.
 
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ["// 3. Liste de parametres d'une declaration -- collee au nom #0", /ne déclare rien|n'est ni un appel de composant/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 — le palier STRUCTURE de `@def` a changé le refus de ces
   //    deux blocs, et le cliquet l'a vu le jour même. C'est ce pour quoi il existe : une cause
@@ -380,9 +383,18 @@ const RETARD_BLOCS = new Map([
   //      au niveau des règles. ⛔ Il n'attend PAS un palier de `@def` — il attend la revue du
   //      patching avec FaustX (règle de Romain, 2026-08-08 : tout ce qui touche modules/patching
   //      va au backlog). L'y laisser sous une cause de `@def` le ferait rattraper par erreur.
-  ['@alphabet.western:audio #0', /ne déclare qu'UN alphabet/],
   ['@core #5', /ne déclare rien|n'est ni un appel de composant/],
-  ['@def halo(x) x!tin!ge #0', /ne déclare rien|n'est ni un appel de composant/],
+  // ⚠️ DEUX BLOCS, DEUX CAUSES DISTINCTES (2026-08-09) :
+  //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
+  //    de `@def` que le parseur ne lit pas encore. Il se leve avec ce palier.
+  //  · `@alphabet.western:audio #0` ecrit DEUX alphabets implicites, ce que Romain a interdit le
+  //    2026-08-07. ⛔ J AI TENTE DE LE REECRIRE EN DEUX ACTEURS et ÇA NE MARCHE PAS : la forme
+  //    qualifiee apres le point d exclamation (`melodie.C4!perc.dha`) est refusee — le terme
+  //    apres le `!` n accepte pas de qualification d acteur. La reecriture attend donc une
+  //    DECISION sur la façon d ecrire deux alphabets dans une scene, pas un rattrapage.
+  //    Mesure faite avant de conclure : le bloc entier compile avec deux acteurs TANT QU on ne
+  //    qualifie pas les symboles secondaires — c est cette qualification qui manque.
+  ['@alphabet.western:audio #0', /ne déclare qu'UN alphabet/],
   ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
@@ -394,7 +406,6 @@ const RETARD_BLOCS = new Map([
   ['Motif -> C4 D4 E4 #0', /attribut '\(E4:…\)' inconnu/],
   // RÉVISÉ 2026-08-08 : le bloc porte `(tempx:…)`, un mot RETIRÉ du langage. Le refus le nomme
   // maintenant au lieu de buter sur la barre de fraction de sa valeur.
-  ['S <> $mel &mel                            // $mel capture, &mel rejoue #0', /'tempx' ne s'écrit pas dans une règle/],
 ]);
 
 let blocs = 0;

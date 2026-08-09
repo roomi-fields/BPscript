@@ -119,8 +119,6 @@ for (const [quoi, corps, fragment] of [
 for (const [quoi, corps] of [
   ['un branchement',              '@def souffle lfo1.out >> lpf1.cutoff'],
   ['du code TYPÉ',                '@def fondu phase `js: (t, dur) => 1 - t / dur`'],
-  ['une transformation',          '@def accent(x) x(vel:120)'],
-  ['un préréglage',               '@def kick (vel:120)'],
 ]) {
   ok(messages(compiler(corps)) !== '',
      `D. ${quoi} n'est pas encore lu par ce palier — il doit REFUSER, et il passe. Un corps lu de `
@@ -168,6 +166,54 @@ for (const [quoi, corps] of [
      + `Décider sur le nom ferait dépendre la forme d'un vocabulaire.`);
   ok(messages(compiler('@def vide2  ')) !== '',
      `E-témoin. Une structure vide doit REFUSER — un nom qui ne vaut rien ne se réinvoque pas.`);
+}
+
+// ── F. LES DEUX CORPS QUE LA PARENTHESE DEPARTAGE — et c'est le COLLAGE qui tranche ─────────
+// `LANGUAGE.md`, tableau des signes : « `(x)` COLLÉ au nom = liste de paramètres » ; « `(vel:60)`
+// SÉPARÉ du nom = corps de la définition ». La même règle que partout — l'espace délimite les
+// termes — et elle suffit à distinguer les deux sans deviner d'après le contenu.
+//
+// ⚠️ LA DÉCLARATION NE SUFFIT PAS, ET C'EST LA MOITIÉ QUI MANQUAIT DEUX FOIS AUJOURD'HUI : une
+// transformation qu'on ne peut pas APPELER ne transforme rien, comme une définition qu'on ne peut
+// pas RÉINVOQUER ne sert à rien. L'ensemble qui porte la bascule appel/réglage était déclaré et
+// JAMAIS alimenté — son commentaire disait « vide tant que la directive n'est pas implémentée ».
+// Sans lui, `accent(E4)` était lu comme un sac de réglages et refusé.
+{
+  const PARENTHESE = [
+    ['transformation paramétrée', '@def accent(x) x(vel:120)', 'transformation', ['x']],
+    ['transformation structurelle', '@def fast(x) {x}:2',      'transformation', ['x']],
+    ['deux paramètres',           '@def entre(a, b) a b',      'transformation', ['a', 'b']],
+    ['préréglage',                '@def kick (vel:120)',       'prereglage',     undefined],
+  ];
+  for (const [quoi, corps, nature, params] of PARENTHESE) {
+    const r = compiler(corps);
+    ok(messages(r) === '', `F. ${quoi} — REFUSÉ : ${messages(r).slice(0, 90)}`);
+    if (messages(r)) continue;
+    const d = defDe(r);
+    ok(d?.kind === nature,
+       `F. ${quoi} — nature '${nature}' attendue, reçu ${JSON.stringify(d?.kind)}. Le collage de la `
+       + `parenthèse est le seul discriminant : s'il se perd, les deux corps se confondent.`);
+    if (params) {
+      ok(JSON.stringify(d?.params) === JSON.stringify(params),
+         `F. ${quoi} — paramètres ${JSON.stringify(params)} attendus, reçu ${JSON.stringify(d?.params)}.`);
+    }
+  }
+
+  // ⚠️ L'APPEL — la moitié qui compte. Le bloc EXACT de la référence (`LANGUAGE.md:317-321`).
+  const bloc = compiler('@def kick (vel:120)\n@def accent(x) x(vel:120)\n@def fast(x) {x}:2\n'
+                        + 'Motif -> C4 D4 E4', '\nS -> C4!kick D4 accent(E4) fast(Motif)\n');
+  ok(messages(bloc) === '',
+     `F-APPEL. le bloc de la référence doit compiler ENTIER — reçu : ${messages(bloc).slice(0, 100)}`);
+
+  // Témoins qui mordent, dans les deux sens.
+  for (const [quoi, corps, fragment] of [
+    ['une liste de paramètres VIDE',   '@def rien() C4',        /ne parametre rien/],
+    ['une transformation sans corps',  '@def accent(x)',        /sans corps/],
+    ['un paramètre qui n\'est pas un nom', '@def f(1) C4',      /que des NOMS/],
+  ]) {
+    ok(fragment.test(messages(compiler(corps))),
+       `F-témoin. ${quoi} — doit REFUSER en nommant la faute. Reçu : ${messages(compiler(corps)).slice(0, 90) || 'aucune erreur'}`);
+  }
 }
 
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────

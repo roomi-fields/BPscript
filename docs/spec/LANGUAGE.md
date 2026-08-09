@@ -1776,7 +1776,7 @@ les deux.
 
 ```bpscript
 S <> $mel &mel                            // $mel capture, &mel rejoue
-S <> $mel(tempx:1) &mel(tempx:2/3)        // chaque invocation porte ses parametres
+S <> $mel (vel:80) &mel (vel:40)          // chaque invocation porte ses reglages
 S -> ${$X S &X} &{$X S &X}                // capture un groupe entier
 ```
 
