@@ -383,7 +383,6 @@ const RETARD_BLOCS = new Map([
   //      au niveau des règles. ⛔ Il n'attend PAS un palier de `@def` — il attend la revue du
   //      patching avec FaustX (règle de Romain, 2026-08-08 : tout ce qui touche modules/patching
   //      va au backlog). L'y laisser sous une cause de `@def` le ferait rattraper par erreur.
-  ['@core #5', /ne déclare rien|n'est ni un appel de composant/],
   // ⚠️ DEUX BLOCS, DEUX CAUSES DISTINCTES (2026-08-09) :
   //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
   //    de `@def` que le parseur ne lit pas encore. Il se leve avec ce palier.
@@ -403,6 +402,15 @@ const RETARD_BLOCS = new Map([
   // appelable : la parenthèse est donc lue comme un sac, et `E4` refusé comme clé inconnue.
   // La cause de fond n'a pas bougé d'un pouce — c'est `@def` qui manque — mais elle se dit
   // désormais par le bon bout.
+  // ⚠️ CE N EST PAS UNE FORME MORTE, C EST UN FRAGMENT — cause etablie le 2026-08-09.
+  //    Ce bloc emploie `kick`, `accent` et `fast`, declares dans le bloc PRECEDENT — qui est en
+  //    `text` et non en `bpscript`, precisement parce qu il contient le BRANCHEMENT, au backlog.
+  //    Compile isolement, il ne peut pas connaitre ces noms : l appel `accent(E4)` est alors lu
+  //    comme un sac de reglages, d ou le message sur un attribut inconnu.
+  //    ⛔ LE MESSAGE INSCRIT EST DONC TROMPEUR SI ON LE LIT SEUL : il nomme un symptome de
+  //    l isolement, pas un defaut du langage. Mesure faite : les deux blocs REUNIS compilent.
+  //    Il sort du retard le jour ou le branchement entre au langage et ou les deux blocs
+  //    fusionnent — ou si le garde apprend a chainer un bloc a son voisin.
   ['Motif -> C4 D4 E4 #0', /attribut '\(E4:…\)' inconnu/],
   // RÉVISÉ 2026-08-08 : le bloc porte `(tempx:…)`, un mot RETIRÉ du langage. Le refus le nomme
   // maintenant au lieu de buter sur la barre de fraction de sa valeur.

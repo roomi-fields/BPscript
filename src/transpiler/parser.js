@@ -2084,6 +2084,18 @@ function parse(tokens, opts = {}) {
       // nu, il tombait dans la branche structure et devenait un TERMINAL — un arbre plausible et
       // faux. Le refus posait la question ; c est ici qu elle se resout, sur la meme FORME (un
       // backtick suit) et pas sur le nom du premier terme.
+      // ⚠️ ET LE CODE SANS TYPE — `@def noir `py: d.blackout()`` (LANGUAGE.md:642).
+      // La reference ecrit les DEUX : avec une convention quand le code rend un SIGNAL dont il
+      // faut dire la nature, sans convention quand il nomme simplement un FRAGMENT a rejouer.
+      // Un fragment n a pas de type parce qu il ne rend rien — il agit.
+      // Le departage est la FORME, une fois de plus : ce qui precede le backtick, ou rien.
+      if (at(T.BACKTICK)) {
+        const bt = current();
+        const brut = expect(T.BACKTICK).value;
+        const { tag, code } = splitBacktickTag(brut, bt);
+        return { type: 'DefDirective', name: defName, kind: 'code',
+                 convention: null, tag, code, line: tok.line };
+      }
       if (at(T.IDENT) && varConventions().has(current().value)
           && peek(1) && peek(1).type === T.BACKTICK) {
         const convention = advance().value;
