@@ -542,6 +542,26 @@ function loadLibsFromDirectives(directives) {
     const controlSources = [];
     if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false });
     if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true });
+    // ⛔ LA SECTION `subgrammar` PARTICIPE AUX SACS QUAND SA PORTÉE DÉCLARE LE FLUX — sans cette
+    // ligne, aucun de ses contrôles n'entre dans un sac, quelle que soit sa portée déclarée.
+    //
+    // CE QUE ÇA A COÛTÉ, mesuré le 2026-08-09 : `!(randomize)` refusait pendant que `!(shuffle)`,
+    // `!(retro)` et `!(order)` passaient. Les trois qui marchent vivent sous `engine` ; `randomize`
+    // vit sous `subgrammar`, traitée dix lignes plus haut dans sa propre table et JAMAIS versée ici.
+    // Sa portée déclare pourtant `flow`. Il ne pouvait donc pas s'écrire dans le flux — et il le
+    // pouvait la veille, uniquement parce qu'un DOUBLON `engine.randomize` existait. En supprimant
+    // ce doublon (le même soir, à raison : deux déclarations du même contrôle avec des portées
+    // divergentes), j'ai retiré la seule entrée qui le faisait participer.
+    //
+    // LA LEÇON, ET ELLE VAUT AU-DELÀ D'ICI : un doublon ne fait pas que dupliquer, il COMPENSE.
+    // Celui-ci masquait ce trou depuis toujours ; le dédoublonnage n'a pas créé le défaut, il l'a
+    // découvert. C'est pourquoi la réparation se fait ici et non en restaurant le doublon —
+    // remettre la béquille rendrait le trou invisible pour la prochaine section.
+    if (lib.subgrammar) {
+      const dansLeFlux = Object.fromEntries(Object.entries(lib.subgrammar).filter(
+        ([nom, def]) => nom !== '_comment' && def && Array.isArray(def.scope) && def.scope.includes('flow')));
+      if (Object.keys(dansLeFlux).length) controlSources.push({ source: dansLeFlux, isEngine: true });
+    }
     // ⚠️ `runtime` EST UN NOM PARTAGÉ, ET IL FAUT LE DÉSAMBIGUÏSER PAR LA FORME, PAS PAR LE
     // FICHIER. Dans la librairie des contrôles, c'est une SECTION qui groupe des sous-groupes de
     // contrôles ; dans un alphabet, c'est la SORTIE PAR DÉFAUT de la collection — une chaîne
