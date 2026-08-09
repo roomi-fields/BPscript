@@ -595,7 +595,7 @@ elle est. Le symbole porteur **garde sa nature**, et le point d'attente s'ancre 
 L'adresse dit ce qu'elle **est** par son type : un nombre est le numéro brut de l'appareil, un
 identifiant est l'étiquette produite par la table de correspondance.
 
-### Wildcards et barres
+### Wildcards
 
 ```
 Wildcard { type: "Wildcard", index: number | null }   // `?` nu, ou `?n`
@@ -604,9 +604,6 @@ Wildcard { type: "Wildcard", index: number | null }   // `?` nu, ou `?n`
 `?` désigne une **place**, prend le symbole qui s'y trouve, et cette place est consommée. Le numéro
 lie toutes les occurrences du même numéro dans une règle au même symbole ; le `?` nu prend chaque
 place indépendamment. Une règle en porte jusqu'à 32 numérotés.
-
-Un nom **entre barres** s'abaisse en `Symbol`. Les barres délimitent le nom d'un non-terminal, et
-autorisent une initiale minuscule là où le nom serait pris pour un terminal.
 
 ### Gabarits
 

@@ -56,7 +56,15 @@ for (const [quoi, src, arrive] of LEGITIMES) {
 for (const [quoi, src] of [
   ['après un élément',            'x (A) B -> sa re'],
   ['après deux éléments',         'x B (A) C -> sa re'],
-  ['après un nom entre barres',   '|x| (A) x B -> sa re'],
+  // Le cas « après un nom entre barres » est RETIRÉ le 2026-08-09 : `|x|` est sorti du langage
+  // (Romain, « à sortir de l'EBNF et des scènes BPS mais reste en BP3 »), et il est désormais
+  // refusé plus tôt, par son propre refus nommé. Le garder ici ferait passer ce garde au vert
+  // pour la MAUVAISE raison — un refus compté comme une preuve de la règle du contexte alors
+  // qu'il ne dit rien d'elle. C'est la place couverte, pas le nombre de cas, qui compte.
+  // Deux formes qui ÉLARGISSENT la place couverte au lieu de la remplacer : la règle vaut pour
+  // tout élément de membre gauche, pas pour les seuls symboles nommés.
+  ['après un joker',              '?1 (A) B -> sa re'],
+  ['après un silence',            '- (A) B -> sa re'],
 ]) {
   const msg = messages(compiler(src));
   ok(msg !== '', `B. un contexte ${quoi} doit REFUSER, et il passe. Un arbre que rien en aval ne `

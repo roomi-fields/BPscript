@@ -5959,14 +5959,31 @@ function parse(tokens, opts = {}) {
     return false;
   }
 
+  // LE NOM ENTRE BARRES SORT DU LANGAGE (Romain, 2026-08-09, verbatim : « à sortir de l'EBNF et
+  // des scènes BPS mais reste en BP3 »). La graphie demeure une graphie d'ENTRÉE BP3 — le frontal
+  // continue de la lire et d'en rendre un nom ordinaire — mais une scène BPScript ne l'écrit plus.
+  //
+  // ⚠️ LE GLYPHE EST PARTAGÉ, ET C'EST TOUT LE DANGER DE CE RETRAIT. `|[ … ]` est l'objet sonore
+  // COMPOSÉ, ratifié par Romain le 2026-07-18, et c'est la SEULE barre vivante de tout le corpus
+  // de l'atelier (mesuré : `dhati.bps`, aucune autre scène). Un retrait qui viserait « la barre »
+  // au lieu de « le nom entre barres » emporterait une graphie ratifiée sans que rien ne le dise.
+  // Le départage est ici : `|` suivi d'un IDENT puis d'un `|` est le nom retiré ; `|[` est l'objet
+  // composé, lu ailleurs et intact.
+  //
+  // Le refus NOMME la réécriture plutôt que de disparaître : un mot retiré qu'on cesse simplement
+  // de comprendre laisse l'auteur devant une erreur de syntaxe muette.
   function parseVariable() {
+    const tok = current();
     expect(T.PIPE);
     const name = expect(T.IDENT).value;
     expect(T.PIPE);
-    // Frontière AST (Palier 3) : `|x|` = non-terminal nommé (BP3 T4/GetVar, même
-    // token qu'un non-terminal `S`) → s'abaisse en `Symbol{name}`. `Variable` est
-    // RÉSERVÉ au métavariable `?N` (T6, index requis). Cf. AST_SPEC §1.2.1.
-    return { type: 'Symbol', name };
+    throw new ParseError(
+      `'|${name}|' : le nom entre barres est sorti du langage — écrire '${name}' nu. `
+      + `La graphie reste lisible en entrée BP3, elle ne s'écrit plus dans une scène BPScript. `
+      + `⚠️ Vérifier qu'aucun terminal de l'alphabet en portée ne s'appelle déjà '${name}' : `
+      + `la barre distinguait le non-terminal, le nom nu ne le distingue plus.`,
+      tok,
+    );
   }
 
   function parseWildcard() {

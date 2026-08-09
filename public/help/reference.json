@@ -299,14 +299,6 @@
       ],
       "example": "// CV with JS backtick\n$lfo(freq,depth) = `js: Math.sin(t * freq) * depth`"
     },
-    "|x|": {
-      "name": "Variable (homomorphism)",
-      "category": "advanced",
-      "syntax": "|name|",
-      "description": "Pattern variable for homomorphisms. Captures a symbol and applies a substitution table. Used for context-sensitive rewriting (Chomsky Type 1).",
-      "bp3": "|name|",
-      "example": "// Context-sensitive rule\n|o| |miny| -> |o1| |miny|"
-    },
     "?": {
       "name": "Wildcard",
       "category": "advanced",

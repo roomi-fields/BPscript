@@ -373,7 +373,7 @@ elle qui a rendu le conflit visible.
 La dernière passe a fait tomber une idée que je portais sans l'avoir vérifiée : que le membre
 gauche d'une règle soit un **identifiant**. Mesuré sur le corpus, il peut être :
 
-- un **objet sonore composé** — `|a4| -> |x| |z31|`
+- un **objet sonore composé** — `|[ do5 _ do5 ] -> |[ si4 la4 ]`
 - un **gabarit** — `$ V1 #tr <> $ ti #tr`
 - une **prolongation** ou un **silence** — `re5_r _ G ->`, `#- V1 <>`
 - un **joker**, seul ou groupé — `#? ?1 -> #? ?1`, `#(?1 ?3 ?2 ?4) …`

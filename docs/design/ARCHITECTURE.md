@@ -239,7 +239,6 @@ Source .bps
    │    - Captures ?n → métavariables BP3
    │    - Templates $/& → (=X)/(:X)
    │    - Contextes #() → contextes négatifs BP3
-   │    - Homomorphismes |x| → variables BP3
    │    - Ties ~ → &
    │  Produit : grammaire BP3 + alphabet plat + settings
    │

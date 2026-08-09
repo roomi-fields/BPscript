@@ -329,7 +329,7 @@ Le silence et la prolongation sont des voisins comme les autres, et le symbole s
 ```ebnf
 lhs = lhs_element+ ;
 
-lhs_element = symbol | barred_name | wildcard | context
+lhs_element = symbol | wildcard | context
             | template_anchor                       (* $ nu = ancre de gabarit maître *)
             | "{" | "}" | "," ;                    (* méta-grammaires : accolades terminales *)
 
@@ -356,7 +356,6 @@ element_core = symbol
              | out_time_object
              | instant
              | wait
-             | barred_name
              | wildcard
              | template_master | template_slave | template_anchor
              | homomorphism_marker
@@ -513,14 +512,6 @@ Le type dit ce que l'adresse **est** : un nombre est le numéro brut de l'appare
 est l'étiquette produite par la table de correspondance.
 
 ### 4.7 Les barres — délimiter un nom
-
-```ebnf
-barred_name = "|" , IDENT , "|" ;
-```
-
-Les barres délimitent le **nom** d'un non-terminal : `|x|` désigne le non-terminal appelé `x`, ni
-plus ni moins. Elles servent quand le nom commencerait par une minuscule, là où il serait sinon pris
-pour un terminal. Un nom entre barres est une tête de règle comme une autre.
 
 ### 4.8 Wildcards
 
