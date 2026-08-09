@@ -29,14 +29,41 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 let echecs = 0;
 const ok = (cond, quoi) => { if (!cond) { echecs++; console.log('  ÉCHEC ' + quoi); } };
 
-const scenes = (function walk(d, acc = []) {
+// ── LES DEUX DOMICILES ────────────────────────────────────────────────────────────────────────
+// Les scènes d'exemple du LANGAGE ont quitté ce dépôt : leur domicile est la bibliothèque de
+// Kanopi, parce qu'une scène qui n'y est pas n'est visible dans aucune interface et ne sert donc
+// personne. La GARANTIE, elle, n'a pas déménagé — elle est à moi : une scène qui enseigne écrit la
+// forme du JOUR, et personne d'autre que le compilateur ne peut le dire.
+// ⚠️ CE GARDE LIT DONC CHEZ UN VOISIN. Si le dossier manque, il ÉCHOUE au lieu de se taire : un
+// balayage qui ne trouve pas son sujet mesure zéro scène et rend vert — la famille « verdir sans
+// examiner », fermée neuf fois ici.
+const DOMICILES = [
+  { racine: 'public', socle: 50, quoi: 'les démos de ce dépôt' },
+  { racine: '../kanopi/packages/library/scenes/samples', socle: 30, quoi: 'les scènes de langage, chez Kanopi' },
+];
+
+const walk = (d, acc = []) => {
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     const p = path.join(d, e.name);
     if (e.isDirectory()) walk(p, acc);
     else if (e.name.endsWith('.bps')) acc.push(p);
   }
   return acc;
-})('public');
+};
+
+const scenes = [];
+for (const d of DOMICILES) {
+  if (!fs.existsSync(d.racine)) {
+    console.log(`  ÉCHEC domicile introuvable : '${d.racine}' (${d.quoi}) — ce garde ne peut pas `
+      + `juger ce qu'il ne trouve pas, et se taire ici vaudrait vert sans examen.`);
+    echecs++;
+    continue;
+  }
+  const lot = walk(d.racine);
+  // SOCLE PAR DOMICILE, et non un total : un domicile qui se viderait serait compensé par l'autre.
+  ok(lot.length >= d.socle, `'${d.racine}' s'est vidé : ${lot.length} scène(s), attendu ≥ ${d.socle}`);
+  scenes.push(...lot);
+}
 
 // LES SEULES SCÈNES AUTORISÉES À NE PAS COMPILER — nommées, datées, motivées dans l'inventaire du
 // gel. Toute autre est un défaut : une démo qui n'analyse pas enseigne une forme morte à quiconque
@@ -76,9 +103,9 @@ for (const nom of SUSPENDUES) {
     + `la retirer de la liste et de CE_QUI_DORT.md.`);
 }
 
-// SOCLE ANTI-RÉTRÉCISSEMENT : si `public/` se vidait, ce garde passerait au vert sans avoir rien
-// examiné — la famille « verdir sans examiner », fermée neuf fois dans ce dépôt.
-ok(scenes.length >= 55, `le corpus de démos s'est vidé : ${scenes.length} scène(s), attendu ≥ 55`);
+// SOCLE ANTI-RÉTRÉCISSEMENT — il est POSÉ PAR DOMICILE plus haut, et le total le double ici : les
+// deux dossiers pourraient rétrécir ensemble sans qu'aucun ne franchisse son propre plancher.
+ok(scenes.length >= 85, `le corpus s'est vidé : ${scenes.length} scène(s) au total, attendu ≥ 85`);
 
 // TÉMOIN D'INSTRUMENT : sans lui, un compilateur devenu muet (acceptant tout) rendrait ce garde
 // vert pour la pire des raisons. Une forme retirée DOIT toujours être refusée.
