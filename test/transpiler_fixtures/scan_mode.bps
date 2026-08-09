@@ -2,7 +2,6 @@
 // Vérifie : rule.mode dans l'AST + préfixe LEFT/RIGHT/RND dans le texte BP3
 
 @core
-@controls
 @alphabet.western:midi
 
 // Règle sans scan → mode null (par défaut)

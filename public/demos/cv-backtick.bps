@@ -5,7 +5,6 @@
 // s'accélère à mesure que la phrase avance. C'est la grammaire qui fait la courbe.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:70
 

@@ -6,7 +6,6 @@
 // — pas le code — qui décide quand.
 
 @core
-@controls
 @eval.js
 @alphabet.western:audio
 @tempo:90

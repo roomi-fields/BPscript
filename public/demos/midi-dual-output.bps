@@ -5,7 +5,6 @@
 // puis on déclare les notes aigues en MIDI explicitement
 
 @core
-@controls
 @alphabet.western:audio
 
 @gate C4:midi

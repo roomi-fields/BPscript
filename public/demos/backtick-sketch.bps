@@ -6,7 +6,6 @@
 // Elle montre la syntaxe et la compilation.
 
 @core
-@controls
 @alphabet.western:audio
 
 S -> Intro SC_Part Outro

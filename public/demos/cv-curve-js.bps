@@ -5,7 +5,6 @@
 // dessinerait une courbe, la structure le raconte pas à pas.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:96
 

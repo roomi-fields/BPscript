@@ -5,7 +5,6 @@
 @core
 [@maxitems:0]
 @qclock:3
-@controls
 @alphabet.western:midi
 
 @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2

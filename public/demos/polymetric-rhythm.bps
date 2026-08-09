@@ -2,7 +2,6 @@
 // Démo : polymétrie avec speed, vélocités par voix
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:90
 

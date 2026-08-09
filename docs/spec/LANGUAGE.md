@@ -1771,7 +1771,6 @@ les deux.
 
 ```bpscript
 @core
-@controls
 @alphabet.western
 
 S <> $mel &mel                            // $mel capture, &mel rejoue

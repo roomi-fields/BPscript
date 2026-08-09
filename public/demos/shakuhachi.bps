@@ -3,7 +3,6 @@
 // Pentatonic with meri (flat) and kari (sharp) ornaments
 
 @core
-@controls
 @alphabet.shakuhachi:audio
 @tempo:50
 

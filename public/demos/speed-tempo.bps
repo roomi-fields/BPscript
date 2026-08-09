@@ -8,7 +8,6 @@
 // Le TEMPO (l'allure, l'horloge) est un concept SÉPARÉ : @tempo:72 (global).
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:72
 

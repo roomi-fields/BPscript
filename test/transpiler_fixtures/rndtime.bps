@@ -5,7 +5,6 @@
 //   (même comportement que staccato/legato — suffixe non seq_prefix)
 
 @core
-@controls
 @alphabet.western:midi
 
 @gate A:midi

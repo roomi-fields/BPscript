@@ -6,7 +6,6 @@
 // hasard visite. La pédale reste au centre et sert de repère.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:100
 

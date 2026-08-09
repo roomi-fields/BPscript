@@ -5,7 +5,6 @@
 // — la première mord, la deuxième s'ouvre, la troisième tient. Le hasard les enchaîne.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:132
 
