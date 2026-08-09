@@ -65,7 +65,12 @@ const REGISTRE = [
   // ⚠️ Elles restent ici INSCRITES, pas tolérées : le jour où l'une passe au vert, ce garde le
   // dira, et l'entrée sortira. Une dérogation sans échéance visible est un trou.
   ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans @alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
-  ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
+  // ⚠️ CAUSE RESSERRÉE le 2026-08-08 : cette scène refusait pour ses terminaux nus ; elle
+  //    refuse désormais AVANT, sur un crochet COLLÉ à un élément — forme retirée du langage
+  //    le même jour (arbitrage Romain). La cause inscrite est donc devenue fausse, et le
+  //    cliquet l'a vu : un retard qui garde une cause périmée fait passer un défaut pour un
+  //    autre, et son compte reste juste pendant que sa raison ment.
+  ['BPScript-tests/trySrand.bps',         'crochet COLLÉ', 'un crochet collé à un élément, forme retirée le 2026-08-08', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
   ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
 ];
 

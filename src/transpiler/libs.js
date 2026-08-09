@@ -411,19 +411,15 @@ function loadLibsFromDirectives(directives) {
     ctx._libs['modulation'] = modulationLib;
   }
 
-  // Built-in: cc() generic MIDI CC (always available)
-  ctx.controls['cc'] = { args: ['number', 'value'], range: [0, 127], description: 'Generic MIDI CC', transportGroup: 'midi' };
-  ctx.controlMap['cc'] = '_cc';
-  ctx.controlNames.add('cc');
-  ctx.dispatcherOnlyControls.add('cc');
-
-  // v0.8 — `sound` est une clé runtime_qualifier acceptée pour les overrides
-  // inline (niveau 7 de la cascade : `Sa(sound.bell_short)`). Sémantique : le
-  // dispatcher résout la référence pointée au playback. Décision PM 4.
-  ctx.controls['sound'] = { args: ['value'], description: 'Inline sound override (v0.8)', transportGroup: 'dispatcher' };
-  ctx.controlMap['sound'] = '_sound';
-  ctx.controlNames.add('sound');
-  ctx.dispatcherOnlyControls.add('sound');
+  // ⛔ `cc` ET `sound` SUPPRIMES le 2026-08-08 (Romain :  on supprime les deux controles et le
+  // code correspondant ). Ils etaient AJOUTES ICI, en JavaScript, au lieu d etre declares dans une
+  // librairie -- ils echappaient donc a tout ce que la donnee impose : aucune portee, aucun
+  // destinataire lisible, et AUCUN GARDE ne les voyait. C est ce qui laissait `sound` passer entre
+  // crochets alors que rien ne l y autorisait.
+  // Mesure au moteur natif avant de trancher : ni l un ni l autre n existe en BP3 -- aucun
+  // `_sound`, et la plomberie MIDI du moteur ne porte aucun controle de grammaire `_cc`. Les deux
+  // etaient des inventions BPScript.
+  // Un controle se declare desormais dans la librairie de son destinataire, sans exception.
 
   // ⛔ INVOQUER COMMANDE — SYSTÉMATIQUEMENT (Romain, 2026-08-08).
   //

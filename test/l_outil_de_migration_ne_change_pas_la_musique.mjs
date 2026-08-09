@@ -151,18 +151,37 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
 // tout. Écrire ce qu'un garde NE couvre PAS vaut mieux qu'un vert qui laisse croire qu'il couvre.
 {
   // ⚠️ LE SENS QUI DÉMASQUE L'EXCUSE UNIVERSELLE. Une scène que le moteur ne sait dériver NI
-  // avant NI après (ici `randomize {…}[shuffle]`, la ligne exacte qui bloque `trySrand` dans la
+  // avant NI après (ici `randomize {…}(shuffle)`, la ligne exacte qui bloque `trySrand` dans la
   // bibliothèque) a une cause PROPRE : elle doit rester un vrai refus, jamais « sans référence ».
   // Ce témoin a été RÉÉCRIT : le premier ne passait même pas par la branche testée, donc il
   // restait vert quand je remplaçais la condition par `true`. Un témoin qui n'atteint pas le code
   // qu'il juge est un témoin absent — et il a exactement la même couleur qu'un témoin qui tient.
-  const r = migrerSource('@controls\n@core\n@alphabet.western\n@mode:random\n'
-    + 'S -> A\nA -> randomize {C4 B4 E4}[shuffle]');
-  ok(r.ok === false, '3ante. la scène indérivable des deux côtés reste REFUSÉE');
-  ok(r.referenceIndisponible !== true,
-    `3ante. SE TAIT — et elle n'est PAS excusée en « sans référence » (reçu : ${r.motif})`);
-  ok(/avant ET après/.test(r.motif || ''),
-    '3ante. le motif doit dire que les DEUX côtés sont muets — c\'est ce qui la distingue');
+  // ⛔ VOLET SUSPENDU le 2026-08-08 — il a perdu son SUJET, pas sa valeur.
+  //
+  // Sa scène d'exemple écrivait `randomize` NU dans le flux, forme retirée du langage le même jour
+  // (Romain : « un mot sans rien c'est un terminal, un non-terminal, un nom de règle, mais jamais
+  // une instruction »). Depuis, elle est refusée au PARSEUR : le témoin n'atteint plus le moteur,
+  // donc il ne juge plus l'excuse universelle qu'il est là pour démasquer. Migrée vers la forme
+  // valide, elle devient DÉRIVABLE — et un cas dérivable ne teste pas « indérivable des deux côtés ».
+  //
+  // ⚠️ CE VOLET NE SE BRICOLE PAS. Il lui faut une scène que le moteur ne sait dériver ni avant ni
+  // après, et cela se MESURE contre le moteur — cela ne s'invente pas. Lui coudre un exemple
+  // plausible le rendrait vert sans qu'il garde quoi que ce soit : exactement ce que son propre
+  // commentaire, six lignes plus haut, raconte avoir déjà payé une fois.
+  //
+  // RALLUMAGE : dès qu'une scène indérivable des deux côtés est identifiée PAR MESURE. Le corpus en
+  // portait une — `trySrand` — aujourd'hui refusée au parseur pour son crochet collé ; elle
+  // redeviendra un candidat quand kanopi l'aura migrée.
+  const VOLET_3ANTE_ACTIF = false;
+  if (VOLET_3ANTE_ACTIF) {
+    const r = migrerSource('@controls\n@core\n@alphabet.western\n@mode:random\n'
+      + 'S -> A\nA -> {C4 B4 E4}(shuffle)');
+    ok(r.ok === false, '3ante. la scène indérivable des deux côtés reste REFUSÉE');
+    ok(r.referenceIndisponible !== true,
+      `3ante. SE TAIT — et elle n'est PAS excusée en « sans référence » (reçu : ${r.motif})`);
+    ok(/avant ET après/.test(r.motif || ''),
+      '3ante. le motif doit dire que les DEUX côtés sont muets — c\'est ce qui la distingue');
+  }
 }
 
 // ── 3bis. LE COMPARATEUR SAIT-IL VOIR UNE DIFFÉRENCE ? ───────────────────────

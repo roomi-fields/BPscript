@@ -39,7 +39,17 @@ const SANS_ARGUMENT = [...CTX.noArgControls].sort();
 // dire « s'écrit nu au fil de la séquence » : les contrôles continus hérités de BP3 s'écrivent nus
 // (10 scènes du corpus le font), `mute`/`unmute`/`panic` n'ont jamais eu que la forme du sac.
 // Confondre les deux est CE QUI A TRONQUÉ la démo du patchbay.
-const SAC_SEUL = SANS_ARGUMENT.filter((n) => CTX.bagOnlyControls.has(n));
+// ⚠️ DEUX CHAMPS FERMENT DEUX PORTES DIFFÉRENTES, et les confondre a coûté un aller-retour le
+// 2026-08-08. `sacSeul` ferme la forme NUE (`-> randomize C4`) ; la PORTÉE déclarée ferme les
+// places où le contrôle ne vaut pas (`!(randomize)` dans le flux, quand sa portée est la seule
+// tête de sous-grammaire). J'ai d'abord retiré `sacSeul` en croyant que la portée suffisait :
+// la forme nue s'est rouverte aussitôt. Un contrôle peut donc être fermé DES DEUX CÔTÉS, et ce
+// volet ne doit pas présumer que « interdit nu » implique « valide dans le flux ».
+const VAUT_DANS_LE_FLUX = (n) => {
+  const p = CTX.controls?.[n]?.scope;
+  return Array.isArray(p) ? p.includes('flow') : false;
+};
+const SAC_SEUL = SANS_ARGUMENT.filter((n) => CTX.bagOnlyControls.has(n) && VAUT_DANS_LE_FLUX(n));
 const AVEC_FORME_NUE = SANS_ARGUMENT.filter((n) => !CTX.bagOnlyControls.has(n));
 
 const regleDe = (o) => o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [];

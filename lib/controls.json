@@ -55,7 +55,8 @@
       "description": "Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
       "scope": [
         "subgrammar"
-      ]
+      ],
+      "sacSeul": true
     }
   },
   "engine": {
@@ -265,7 +266,8 @@
       "description": "Re-seed RNG from clock (BP3 _randomize, Encode.c case 50). No arguments.",
       "scope": [
         "subgrammar"
-      ]
+      ],
+      "sacSeul": true
     }
   },
   "runtime": {
@@ -609,27 +611,27 @@
       "_sacSeul_doc": "sacSeul:true = ce controle n'a PAS de forme NUE dans le flux, il ne s'ecrit que dans son sac. A ne pas confondre avec 'sans argument' : les controles continus herites de BP3 (volumecont, pitchcont, mapcont...) sont sans argument ET s'ecrivent nus au fil de la sequence, 10 scenes du corpus le font. mute/unmute/panic, declares le 2026-07-26, n'ont jamais eu que la forme du sac -- leurs descriptions ci-dessous l'ecrivent depuis le premier jour. Faute de le DIRE a la donnee, tout mot sans argument devenait un mot du flux : une scene qui portait deja ce nom (patchbay-demo, macro mute) etait tronquee EN SILENCE, mesure par Kairos le 2026-07-27. Marquage POSITIF, porte par la donnee ; le code ne nomme aucun controle.",
       "mute": {
         "args": [],
-        "sacSeul": true,
         "description": "Coupe le son. Nu, (mute), coupe tout ce qui sonne ; par composant, (mute.all) ou (mute.lead), coupe la cible nommee. Nomme le 2026-07-26 : remplace une des familles que script(...) portait sans nom.",
         "scope": [
           "flow"
-        ]
+        ],
+        "sacSeul": true
       },
       "unmute": {
         "args": [],
-        "sacSeul": true,
         "description": "Retablit le son coupe par mute. Meme graphie : (unmute) ou (unmute.lead).",
         "scope": [
           "flow"
-        ]
+        ],
+        "sacSeul": true
       },
       "panic": {
         "args": [],
-        "sacSeul": true,
         "description": "Arret d'urgence : toutes les notes relachees, tous les controleurs remis a plat. Image de MIDI all notes off. Ne prend aucun argument.",
         "scope": [
           "flow"
-        ]
+        ],
+        "sacSeul": true
       },
       "sync": {
         "args": [

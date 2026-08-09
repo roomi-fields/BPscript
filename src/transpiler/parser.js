@@ -3585,11 +3585,25 @@ function parse(tokens, opts = {}) {
   // RHS Flags [X=N, Y, Z+1]
   // ============================================================
 
-  // Engine qualifier keys that may appear bare (without a value) in [key] brackets.
-  // These must NOT be treated as flags even when followed by ] with no colon.
-  const ENGINE_BARE_KEYS = new Set([
-    'retro', 'shuffle', 'order', 'stop', 'destru', 'striated', 'smooth',
-  ]);
+  /**
+   * UN MOT NU ENTRE CROCHETS EST UN DRAPEAU, SAUF S'IL EST UNE PROCÉDURE DE DÉRIVATION.
+   *
+   * ⛔ REMPLACE UNE LISTE EN DUR de sept noms — `retro shuffle order stop destru striated smooth`
+   * (retirée le 2026-08-08, Romain : « rien de codé en dur, les portées sont déclarées en
+   * librairies et c'est ça la référence »). Elle disait quels mots ne devaient PAS être pris pour
+   * des drapeaux, et elle faisait DOUBLON EN SENS INVERSE avec le champ que la donnée porte déjà :
+   * l'un disait « ce mot ne s'écrit pas nu », l'autre « ces mots s'écrivent nus ». Deux mécanismes
+   * concurrents pour une même question, sans rien qui garantisse qu'ils s'accordent.
+   *
+   * ⚠️ LE CRITÈRE SE MESURE, IL NE SE CHOISIT PAS. Confrontée à la donnée, la liste mélangeait
+   * trois natures que l'arbitrage du jour sépare : `stop` est une PROCÉDURE (portée règle seule) ;
+   * `retro`, `shuffle` et `order` manipulent ce qui est produit (portée groupe/flux) et passent
+   * entre parenthèses ; `destru`, `striated` et `smooth` n'ont AUCUNE portée déclarée — ce sont des
+   * attributs de mode, qui empruntent un tout autre chemin (`@mode:x(…)`) et n'avaient rien à faire
+   * dans une liste de clés de crochet.
+   * Il ne reste donc qu'une famille légitime ici, et la donnée la nomme sans qu'on l'écrive.
+   */
+  const estProcedureNue = (mot) => universeRuleScopeControls().has(mot);
 
   function isFlagBracket() {
     // Lookahead: [ followed by IDENT then = + - , ] (NOT IDENT:value which is a qualifier)
@@ -3600,7 +3614,7 @@ function parse(tokens, opts = {}) {
     // If IDENT followed by : → qualifier, not flag
     if (t2.type === T.COLON) return false;
     // If the key is a known engine bare key → qualifier, not flag
-    if (ENGINE_BARE_KEYS.has(t1.value)) return false;
+    if (estProcedureNue(t1.value)) return false;
     // If IDENT followed by = + - ] , → flag
     if (t2.type === T.EQUALS || t2.type === T.PLUS || t2.type === T.REST ||
         t2.type === T.RBRACKET || t2.type === T.COMMA) return true;
@@ -3984,18 +3998,31 @@ function parse(tokens, opts = {}) {
       const el = parseRhsElement();
       if (!el) break;
 
-      // SUFFIX qualifiers: A[X] or A(X) — no space before [ or (
-      // [] and () are ALWAYS suffix (attached to the element that precedes them)
+      // SACS COLLÉS — `A(X)` seul. Un sac collé s'écrit entre PARENTHÈSES.
+      //
+      // ⛔ LE CROCHET COLLÉ N'EXISTE PLUS — arbitrage de Romain, 2026-08-08. Le tableau de
+      // `LANGUAGE.md` §« Le crochet » donne ses quatre places, et aucune n'est un suffixe
+      // d'élément : le crochet gouverne la DÉRIVATION, qui ne se règle pas note à note.
+      //
+      // ⚠️ CE QUE LA MESURE A MONTRÉ, et qui rend ce refus petit : la place était déjà presque
+      // vide. Sur les huit formes que le parseur peut produire, six refusaient déjà — collé à un
+      // symbole, à un silence, à une prolongation, à un groupe pour une procédure, et les deux
+      // formes de tempo. Il ne restait QUE le groupe et le point d'attente, et une seule scène de
+      // tout l'atelier l'écrivait (`{C3 B3 E3 F3 G3}[shuffle]`).
+      // Aucun DRAPEAU collé n'existe non plus — mesuré sur les trois porteurs : ce refus ne prend
+      // donc la place de personne.
+      //
+      // ⚠️ ET LA RÉÉCRITURE ENRICHIT L'ARBRE au lieu de l'appauvrir, mesuré en comparant les deux
+      // productions : le crochet rendait une paire clé/valeur nue, la parenthèse rend un sac qui
+      // porte sa NATURE, sa PORTÉE et son CONFINEMENT. Ce n'est pas un changement de graphie à
+      // production égale — c'est un gain d'information pour l'aval, et il faut le dire à qui lit.
       let sacsLus = 0;
       while ((at(T.LBRACKET) && !current().spaceBefore) ||
              (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier())) {
+        if (at(T.LBRACKET)) refuserCrochetColle();
         el.suffixQualifiers = el.suffixQualifiers || [];
-        if (at(T.LBRACKET)) {
-          el.suffixQualifiers.push(parseQualifier());
-        } else {
-          refuserSecondSac(++sacsLus, el);
-          el.suffixQualifiers.push(parseRuntimeQualifier());
-        }
+        refuserSecondSac(++sacsLus, el);
+        el.suffixQualifiers.push(parseRuntimeQualifier());
       }
 
       refuserSuffixeArobase();
@@ -5154,6 +5181,35 @@ function parse(tokens, opts = {}) {
    * des sacs. Un refus posé sur la graphie aurait cassé cette scène. Il est donc posé là où le
    * lecteur a DÉJÀ reconnu un sac (`isRuntimeQualifier`), et nulle part ailleurs.
    */
+  /**
+   * ⛔ LE CROCHET COLLÉ À UN ÉLÉMENT N'EXISTE PLUS — arbitrage de Romain, 2026-08-08.
+   *
+   * Le tableau de `LANGUAGE.md` §« Le crochet » donne ses quatre places, et aucune n'est un
+   * suffixe d'élément : le crochet gouverne la DÉRIVATION, qui ne se règle pas note à note.
+   *
+   * ⚠️ CETTE FONCTION EXISTE PARCE QUE LE REFUS AVAIT DEUX SITES JUMEAUX — la lecture d'un
+   * élément de règle et celle d'un élément de groupe polymétrique. Posé sur le premier seul,
+   * il laissait passer `C4<!s1[shuffle]` : la faute du jour, « réparer l'endroit où le défaut
+   * s'est montré au lieu de l'espace où il peut vivre », commise dans le fichier dont le
+   * commentaire voisin dit exactement le contraire. Un seul appelant de plus ailleurs, et le
+   * refus le suit sans qu'on y pense.
+   *
+   * ⚠️ ELLE LIT AVANT DE REFUSER, et cet ordre est une correction : `parseQualifier` porte des
+   * refus NOMMÉS que celui-ci ne sait pas donner (`[shuffle:N]` retiré → la graine s'écrit
+   * `[@seed:N]`). Jeter avant de lire les écrasait — un message précis remplacé par un message
+   * vague est une régression, attrapée deux fois aujourd'hui par un garde du TEXTE du refus.
+   */
+  function refuserCrochetColle() {
+    parseQualifier();
+    throw new ParseError(
+      `un crochet COLLÉ à un élément n'existe plus (décision Romain 2026-08-08) : le crochet `
+      + `gouverne la DÉRIVATION — un test de drapeau, une affectation, une procédure `
+      + `('[goto:…]', '[repeat:…]', '[failed:…]', '[stop]'), un rang de gabarit — et aucune de `
+      + `ces places n'est un suffixe d'élément. Un sac collé s'écrit entre PARENTHÈSES : `
+      + `'…(shuffle)', '…(retro)', '…(vel:80)'.`,
+      current());
+  }
+
   function refuserSecondSac(rang, el) {
     if (rang < 2) return;
     const nom = el && (el.name || el.symbol) ? `'${el.name || el.symbol}'` : 'cet élément';
@@ -5497,13 +5553,10 @@ function parse(tokens, opts = {}) {
       let sacsLusIci = 0;
       while ((at(T.LBRACKET) && !current().spaceBefore) ||
              (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier())) {
+        if (at(T.LBRACKET)) refuserCrochetColle();
         el.suffixQualifiers = el.suffixQualifiers || [];
-        if (at(T.LBRACKET)) {
-          el.suffixQualifiers.push(parseQualifier());
-        } else {
-          refuserSecondSac(++sacsLusIci, el);
-          el.suffixQualifiers.push(parseRuntimeQualifier());
-        }
+        refuserSecondSac(++sacsLusIci, el);
+        el.suffixQualifiers.push(parseRuntimeQualifier());
       }
       // Même geste DANS un groupe polymétrique : `{C4(vel:80)!E4(vel:90) D4}`. Le brancher au seul
       // site de la règle aurait réparé l'endroit où le défaut s'est montré, pas l'espace où il vit.
@@ -5860,8 +5913,13 @@ function parse(tokens, opts = {}) {
         + `n'importe quel événement de ce rôle, et c'est une forme différente, pas un raccourci.`,
         current());
     }
+    // Le point d'attente est le TROISIÈME site où un crochet collé se lisait — après la règle et
+    // le groupe polymétrique. Il a survécu à deux passes parce qu'il n'appelle pas la boucle de
+    // suffixes commune : sa lecture lui est propre. C'est la démonstration de ce que le
+    // commentaire de `refuserCrochetColle` annonce — un refus posé sur les sites qu'on connaît
+    // laisse vivre celui qu'on ne cherchait pas.
     const qualifiers = [];
-    while (at(T.LBRACKET)) qualifiers.push(parseQualifier());
+    if (at(T.LBRACKET)) refuserCrochetColle();
     // ⚠️ LE SAC D'ANNOTATIONS APPARTIENT AU POINT D'ATTENTE, dans TOUTES ses écritures.
     //
     // Mesuré le 2026-07-27 : écrit SEUL (`<!p(chan:1)`) le sac atterrissait sur le point d'attente ;

@@ -135,7 +135,11 @@ const DETTE = new Set([
   'RawBrace.duree',
   'Subgrammar.modifiers',
   // Divers : diagnostic de lint porté sur la règle, étiquette de bloc, suffixes de bloc.
-  'Rule.warnings', 'Polymetric.suffixQualifiers',
+  // ⚠️ `Polymetric.suffixQualifiers` SORTI de la dette le 2026-08-08 : la spec le couvre désormais.
+  // Il y était entré comme « produit mais non déclaré » ; la fermeture du crochet collé a laissé la
+  // seule forme parenthèse, celle que la spec décrit. Le cliquet l'a signalé le jour même — une
+  // dette qui ne se resserre jamais n'est qu'un compteur.
+  'Rule.warnings',
   // (`Polymetric.label` SORTI du cliquet le 2026-08-06 : AST.md le déclare désormais, en même
   //  temps que la correction du champ `frame` qui n'existait pas. Le témoin l'a exigé.)
   // ⚠️ DEUX DETTES QUE LA BIBLE CRÉE, ET C'EST LE BON SENS DE LECTURE (2026-08-06).
