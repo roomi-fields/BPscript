@@ -10,10 +10,6 @@
 > PRODUCTION soit identique, pas la grammaire »). Conformité au moteur natif mesurée sur les
 > **jetons produits** vs baseline native — plus sur un texte de grammaire émis. Voie unique :
 > `compileToBPxAST(source)` → `{ ast, errors, warnings }`.
-
-3 reserved words, 24 symbols, 9 flag operators. Compiles to BP3 grammar format and runs via WASM.
-Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backticks.
-
 ### ⛔⛔ `docs/spec/LANGUAGE.md` EST LA BIBLE — seule référence, cible intransgressible (Romain, 2026-08-06)
 
 > ⛔⛔⛔ **JE N'ÉCRIS PAS DANS CE FICHIER. INTERDICTION FORMELLE DE ROMAIN (2026-08-09)** — « j'interdis
@@ -34,177 +30,17 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 > qu'il n'y était pas la veille ; le journal lui donne raison. **Réparer un exemple est le geste par
 > lequel une forme morte revient dans la référence**, parce qu'il ne se présente jamais comme un
 > changement de langage.
-
-**Une seule autorité sur le langage : `docs/spec/LANGUAGE.md`.** Elle n'est pas une source parmi
-d'autres, elle est LA source. Elle ne se discute pas, elle ne se contourne pas, et rien ne la
-recouvre — ni le code, ni une mesure, ni un dérivé, ni un raisonnement.
-
-**`AST.md` et `EBNF.md` en sont DÉRIVÉS** et normalement alignés sur elle (Romain, 2026-08-06). Un
-dérivé qui la contredit est **FAUX**, et il se corrige **sur elle** — jamais l'inverse, jamais un
-arbitrage entre les deux. Il n'y a pas deux autorités à concilier : il y a une bible et ses copies.
-
-⚠️ **CELA RENVERSE « LE CODE FAIT FOI ».** Le skill `bpscript-oracle` établit une hiérarchie qui
-tranche le *syntaxiquement accepté* ; elle reste juste pour cela et pour rien d'autre. Le
-compilateur répond à « **est-ce que ça compile** », **jamais** à « est-ce que c'est juste ». Donc :
-
-> **Une forme que la bible écrit et que le compilateur refuse dit UNE seule chose : le compilateur
-> est EN RETARD sur la référence.** Pas une divergence à arbitrer, pas un défaut à instruire —
-> **une dette de rattrapage**, et elle est pour moi. La bible est délibérément EN AVANCE sur le
-> parser (elle est remaniée souvent) ; ce décalage est le régime NORMAL, pas une anomalie.
-
-**CE QUI A COÛTÉ CETTE RÈGLE, mesuré le jour même.** Je tenais `AST.md` pour une autorité
-concurrente de la bible, donc tout désaccord entre elles me paraissait demander un arbitrage de
-Romain. J'ai remonté « la vitesse s'écrit `[/2]` dans le code, `(/2)` dans la spec, tranchez » —
-**la bible avait déjà tranché**, §« La vitesse — `! (/N)` dans le flux », et ses **trois exemples**
-de cette section sont refusés par mon parseur (`Expected symbol, (...) or [...] after !`). Un
-simple retard de rattrapage, que j'ai présenté comme un blocage exigeant une décision.
-⚠️ **Le coût réel n'est pas le retard, c'est le faux blocage** : demander un arbitrage déjà rendu
-immobilise Romain sur une question fermée et fait passer une dette de code pour une question de
-langage.
-
-**LE GESTE, à chaque question de langage** : lire la bible AVANT de mesurer le code. Si le code en
-diverge, le code est en dette. Si la bible est muette, c'est une question pour Romain — et
-**seulement dans ce cas**.
-
-⚠️ **MÉCANISATION — et elle est INCOMPLÈTE, ne pas compter dessus.**
-`test/les_exemples_de_la_spec_compilent.mjs` compile les exemples des trois specs et porte un
-cliquet daté des retards connus. **Mesuré le 2026-08-06 : il n'extrait que les lignes de
-DIRECTIVE** (`@macro`, `@var`, `@meter`…) — les exemples de RÈGLE, dont les trois de la vitesse,
-sont **hors de sa portée** et n'ont jamais été mesurés. Tant que sa portée n'est pas élargie aux
-règles, ce garde ne prouve PAS que le code suit la bible.
-
 ### ⛔ JE NE SPÉCULE PAS SUR LE LANGAGE — 3 règles dures (Romain, 2026-07-28)
 
 **Son constat, mot pour mot** : « ton rôle c'est d'être le spécialiste du langage BPScript et tu
 spécules complètement, tu ne le maîtrises pas du tout. » En une journée : une graphie INVENTÉE
 montrée à Romain, des antislashs doublés semés dans quatre documents, une forme documentée qui
 fabrique un son fantôme. Les ressources existaient toutes — je ne les ai pas employées.
-
-1. **AUCUNE forme BPScript ne sort de moi sans être passée au compilateur** — message, doc,
-   rapport, sans exception. L'oracle est `/home/romi/dev/bp/atlas/tools/oracle-bpscript.mjs`
-   (chemin absolu : il sert tout l'écosystème). Si je cite une forme, je peux dire OÙ je l'ai
-   compilée ; si je ne peux pas, **je ne la cite pas**.
-   · Mes DOCUMENTS sont gardés (`test/les_exemples_de_la_spec_compilent.mjs`).
-   · Mes MESSAGES le sont depuis le 2026-07-28 : toute forme s'écrit dans un **bloc indenté de
-     quatre espaces**, et `node test/formes_d_un_message.mjs <brouillon>` les compile AVANT
-     l'envoi. L'indentation n'est pas de la mise en page, c'est ce qui rend la règle VÉRIFIABLE À
-     L'ŒIL — une forme non indentée est une forme non vérifiée. Le vérificateur ne devine jamais
-     ce qui est du BPScript dans de la prose : mes phrases citent des directives en permanence.
-
-2. ⚠️ **UNE QUESTION DE SENS NE SE TRANCHE JAMAIS PAR UNE COMPILATION.** J'ai un outil qui répond
-   à « est-ce que ça compile » et AUCUN qui réponde à « est-ce que ça a un sens » — et j'ai passé
-   la journée à employer le premier pour répondre au second. Le fantôme sonore, la voix de code,
-   la forme au point : chaque fois une compilation réussie transformée en affirmation de sens.
-   C'est le piège que j'avais décrit à l'architecte le matin, commis par moi le soir.
-   **Le sens ne se mesure pas, il se demande** : une décision datée, Atlas, ou Romain. Jamais
-   « ça compile, donc ».
-
-3. **Le skill oracle s'invoque À L'OUVERTURE d'une question de langage**, pas quand je bute — un
-   geste de départ, pas un recours. Et **Atlas est l'autorité documentaire** : quand la question
-   est « que dit la référence », je l'interroge au lieu de reconstituer.
-
-⚠️ **Ce que ces règles NE réparent pas** : elles m'empêchent d'inventer des graphies et
-d'affirmer des formes fausses. Elles ne me donnent pas la maîtrise du langage — elle se construit,
-par les décisions et par Romain, pas par le compilateur.
-
-### Language summary
-- **3 words**: `gate`, `trigger`, `cv` (temporal types)
-- **24 structural symbols**: `@`, `->`, `<-`, `<>`, `{}`, `,`, `()`, `:`, `=`, `[]`, ``` `` ```, `//`, `-`, `_`, `.`, `...`, `!`, `<!`, `#`, `?`, `$`, `&`, `~`, `|`
-- **9 flag operators**: comparison `==`, `!=`, `>`, `<`, `>=`, `<=` + calculation `+`, `-`, `=` (`-`/`=` réutilisent des glyphes aussi structuraux)
-- **7 reserved qualifier keys**: `mode`, `scan`, `weight`, `on_fail`, `tempo`, `meter`, `scale` (`docs/spec/LANGUAGE.md` ; `scan`/`tempo`/`meter` portés par l'AST). `speed` SUPPRIMÉ (2026-06-26) → durée `:` (`{A B}:2`, `A4:1/2`)
-- **Double declaration**: chaque symbole a type temporel + binding runtime (`gate Sa:sc`)
-- Silence `-`, prolongation `_`, période `.` (fragment de durée égale) : identiques en BPScript et BP3
-- `!` = événement simultané (trigger, gate, cv, ou mutation de flag)
-- `[]` = ce qui gouverne la **DÉRIVATION** : un test de drapeau (`[stage==1]`), une affectation
-  (`[stage=2]`), une procédure (`[goto:…]` `[repeat:…]` `[failed:…]` `[stop]`), le rang d'une forme
-  de gabarit (`[3]`) — durée `:` hors `[]`
-- `()` = tout **RÉGLAGE** : ce qui décrit ou manipule ce que la dérivation produit — `vel`, `pan`,
-  `wave`, `shuffle`, `retro`, `order`, `rndtime`… (annotation OPAQUE portée sur l'événement jusqu'au
-  runtime de sortie)
-- Le **signe** dit ce que la chose EST ; le **destinataire** est dit par la librairie où le contrôle
-  est listé, seule source de vérité. Un contrôle exécuté par le moteur s'écrit entre parenthèses
-  quand il manipule ce qui est produit — chantier en cours : migration du sac `[]` vers `()`
-- Backticks : code évalué par le runtime du symbole (implicite) ou tagué (`sc:`, `py:`)
-
-### Architecture
-- `bp3-engine/` — Submodule : moteur BP3 WASM ([roomi-fields/bp3-engine](https://github.com/roomi-fields/bp3-engine))
-- `src/transpiler/` — Parser et compiler
-  - `tokenizer.js` — Source → tokens · `parser.js` — Tokens → AST (Scene, Directive, Rule, CVInstance, Macro, Polymetry)
-  - `bpxAst.js` — Parser → AST canonique (annotations `payload`, validations fail-loud)
-  - `index.js` — Façade : `compileToBPxAST(source)` → `{ ast, errors, warnings }` (voie UNIQUE)
-  - `actorResolver.js` — Résout les acteurs (bindings alphabet/tuning/octaves) · `libs.js` — Library loader (JSON → controls, symbols, CV objects)
-- `src/bpx/` — BPx engine stub (moteur de dérivation nouvelle génération, cf. specs BPX)
-- `lib/` — Librairies JSON (controls, alphabets, tunings, filter, routing…)
-- `dist/` — Build BP3 WASM (bp3.js, bp3.wasm, bp3.data)
-- `docs/` — Documentation (5 dossiers par type)
-  - `spec/` — `LANGUAGE.md` (spéc complète) · `EBNF.md` (grammaire formelle) · `AST.md` (nœuds AST)
-  - `design/` — `ARCHITECTURE.md` (pipeline source→AST→grammaire BP3 + interface WASM) · `ACTOR.md`
-    (acteur=voix : alphabet/tuning/sound/transport/eval, cascade de sortie, voix notes vs code,
-    appareils) · `PITCH.md` (résolution pitch 6 couches : actor→alphabet→octaves→temperament→
-    tuning→resolver) · `SOUNDS.md` (résolution terminaux unifiée : spec < CT < CV cascading) ·
-    `CV.md` (CV/signal : ADSR, LFO, ramp) · `EFFECTS.md` · `HOMOMORPHISMS.md` (étiquetage
-    post-dérivation) · `REPL.md` (adapters, backticks) · `SCENES.md` (hiérarchie de scènes,
-    scoping flags, @scene/@expose/@alias, câblage >>/!>>, sys) · (docs moteur BPx migrées dans le dépôt BPx :
-    `../BPx/docs/ARCHITECTURE.md`, `../BPx/docs/ENGINE_SPEC.md`, `../BPx/docs/IMPLEMENTATION.md`)
-    · `INTERFACES_BP3.md` (interface WASM in/out) · `TEMPORAL_DEFORMATION.md` (constraint solver)
-    · `PARSEUR_DERIVE.md` (chantier « parseur dérivé d'un formalisme » — phase 0, la mesure de
-      départ : 56 natures produites, 22 nommées nulle part, et pourquoi `bpscript.grammar` est une
-      création et non une reprise)
-    · `PORTEES_DES_CONTROLES.md` (où chaque contrôle a le droit de s'accrocher — les six portées
-      arrêtées, ce que le moteur natif en dit quand on le mesure, et les places encore non
-      instruites)
-  - `reference/` — `WASM_HOWTO.md` · `NATIVE_HOWTO.md` · `BP3_FILE_FORMATS.md` · `HO_FORMAT.md`
-  - `issues/` — `POLYMAKE_STACK.md` (stack overflow polymétrie imbriquée) · `RNG_PORTABLE.md`
-    (portabilité RNG MSVC/glibc) · `TEMPO_OPS_WASM.md` (opérateurs tempo `/N` `\N` `_tempo()` :
-    écarts WASM vs natif)
-
 ### Tour de contrôle inter-projets (OBLIGATOIRE) — outil `tour`
+
 Coordination de l'écosystème (BPScript, BPx, bp3-frontend, runtimes, moteur Bernard) : dépôt
 PRIVÉ `/home/romi/dev/bp/hub`. Protocole MÉCANISÉ par le CLI `hub/tour` (plus d'édition markdown
 à la main). Détail : `hub/README.md` (§Le protocole + §Outil tour).
-
-0. **Règle de boucle** (Romain 2026-06-16) : (a) **RÉVEIL = COURRIER D'ABORD** — première action de
-   tout réveil (session ou ping) = `tour inbox`. (b) **RAPPORT AVANT IDLE** — jamais s'arrêter en
-   silence : dernière action = `tour send architecte` avec `FINI: <quoi> + commit` ou
-   `BLOQUÉ: <sur quoi>`.
-0bis. ⛔ **UN ACQUITTEMENT NE SE TRONQUE JAMAIS — règle mécanique, pas vigilance** (payé 3× le
-   2026-07-28, dont deux fois APRÈS l'avoir reconnu). Le geste, vérifiable d'un coup d'œil sur la
-   commande elle-même : **`tour inbox --ack` se lance NU** — aucun tube, aucune redirection, aucun
-   `tail`/`head`/`grep`. Sa sortie EST la lecture ; l'abréger, c'est acquitter sans avoir lu.
-   Corollaire : lire d'abord avec `tour inbox` (sans `--ack`), traiter, puis acquitter nu.
-   ⚠️ **Pourquoi c'est grave et pas une faute de forme** : un message acquitté sans être lu est
-   **indistinguable d'un message traité**. C'est exactement le mode d'échec muet que je passe mes
-   journées à chasser chez les autres, commis sur ma propre boucle — et deux fois sur des messages
-   qui ouvraient un chantier. La parade n'est pas de faire attention : c'est que la commande
-   n'ait pas de tube. (Même famille que « le code de sortie lu après un tube » : la façon
-   d'interroger l'outil détruit l'information.)
-
-1. **Identité** (une fois/session) : `export BP_AGENT=bpscript`.
-2. **Début de session** : `~/dev/bp/hub/tour inbox` + lire `TABLEAU.md` et mes `contrats/`.
-3. **Écrire/arbitrer** : `~/dev/bp/hub/tour send <dest> "msg"` (`architecte` = destinataire valide).
-   Jamais écrire dans ma propre boîte. Marquer lu : `tour inbox --ack`.
-4. **Fin de session** : mettre à jour MOI-MÊME `TABLEAU.md` (ma ligne) et `projets/agents/bpscript.md`.
-   L'architecte ne corrige plus mes pièces, il recadre. Une ligne de tableau **nomme aussi
-   l'EN-ATTENTE** et dit de qui il dépend — une ligne qui ne dit que ce qui est fait laisse croire
-   que le reste avance.
-   *(`baseline-status.json` RETIRÉ le 2026-07-27 : consigne périmée, le fichier n'a jamais existé
-   ici. Trois runtimes en ont un parce qu'ils portent une parité mesurable contre un oracle ; le
-   FRONTAL, lui, a pour baseline son corpus et ses gardes, déjà au portillon. Ne pas fabriquer un
-   fichier vide pour satisfaire une consigne à la lettre.)*
-4bis. **VÉRIFIER LES COMPTES QUI REVIENNENT SUR MON PROPRE TRAVAIL** (2026-07-27). L'architecte
-   compte et remonte toute la journée ; **il est celui qui compte**, donc s'il compte à son
-   avantage — ou au mien — personne ne le verra jamais. Sa propre demande : « continue à me
-   corriger là-dessus, c'est le seul contrôle qui existe ». Payé le jour même : un bilan annonçait
-   « 6 erreurs d'instrument attrapées AVANT envoi » ; **4 attrapées, 2 PARTIES** — et les deux
-   parties sont celles qui l'ont fait agir, rattrapées par BPx et Kanopi, pas par moi.
-   ⚠️ **Un bilan qui flatte devient le dossier.** Relire les chiffres qu'on me renvoie sur moi.
-   ⚠️ **Et CONFIRMER un compte JUSTE, pas seulement corriger un compte faux** — sinon je ne parle
-   de ses comptes que quand ils sont faux, et **mon silence finit par se lire comme un accord**.
-   Un contrôle qui ne parle que pour contredire n'est pas un contrôle, c'est une alarme.
-5. **Décisions transverses** : `decisions/` après arbitrage utilisateur uniquement
-   (`tour decide <slug> -m titre --impacts a,b,c`). `constats/` = un finding écrit UNE fois,
-   référencé ailleurs.
-
 ### ⛔ ON SE PRÉVIENT À L'ÉCRITURE, PAS AU PUSH (règle de Romain, 2026-07-29)
 
 ⚠️ **CETTE SECTION PORTAIT UNE INSTRUCTION FAUSSE JUSQU'AU 2026-07-30** — « dans cet atelier, les
@@ -212,296 +48,46 @@ dépôts consomment la SOURCE l'un de l'autre, pas un paquet publié ». Elle g�
 lien à tous, et elle vivait à l'identique chez cinq agents. **Une doc périmée laisse croire ; une
 instruction périmée FAIT FAIRE** : BPx a publié sans prévenir Kairos parce qu'il avait chez lui une
 phrase qui lui disait que ce cas n'existait pas.
+### Écrire un garde
 
-**LA FRONTIÈRE EST PAR USAGE, PAS PAR VOISIN**, et un même voisin relève souvent des deux régimes :
+- **Réparer l'espace où le défaut peut VIVRE**, jamais l'endroit où il s'est montré. Un balayage a une
+  portée, et ce qui est hors portée survit — écrire la portée **et son complément**.
+- **Un garde s'écrit pour la CONSTRUCTION**, jamais pour la forme signalée. Il énumère toutes les
+  formes que le parser produit, dans **toutes** ses sections : l'énumération est une propriété du
+  garde, pas de sa section la plus récente. Une matrice, pas une liste.
+- **Injecter la faute dans l'ACCUSÉ, puis dans le JUGE** — le rendre constant, aveugle, muet — et
+  exiger que le garde rougisse. Un garde qui ne teste que des cas qui réussissent garde l'accusé.
+- **Une empreinte compare TOUT**, en ne retirant que ce qui est prouvé non-sujet. Choisir les champs
+  comparés, c'est choisir ce qu'on ne verra pas.
+- **Suspecter l'INSTRUMENT avant le sujet** quand un chiffre surprend, et le vérifier **avant**
+  d'envoyer la mesure. Un marcheur trop court, une mauvaise clé, un code de sortie lu après un tube
+  rendent tous un résultat plausible et faux.
+- **Hors portillon veut dire invisible** : un garde qui ne tourne pas au gate ne préviendra jamais.
 
-| ce que le voisin fait de toi | le moment critique |
-| --- | --- |
-| il **importe ta source**, ou l'**ouvre comme du texte** | ta **frappe** |
-| il **exécute ton paquet construit** | ta **publication** |
+### Franchir une frontière
 
-Une modification d'une surface partagée (nom de type d'un nœud d'arbre, champ de contrat, signature
-exportée, graphie du langage) est **en production dès qu'elle atteint ce que le voisin lit** ; le
-push ne fait que la rendre **IRRÉVERSIBLE**. Prévenir « avant de pousser » est la bonne précaution
-**au mauvais moment** quand le voisin lit la source : il est déjà rouge.
-
-⚠️ **ET LE PRÉAVIS DE PUBLICATION NE DÉPEND PAS DE CE QUE TU CHANGES.** Le voisin ne l'attend pas
-pour savoir *quoi* a bougé — il l'attend pour **reposer son point de comparaison** avant que ton
-paquet change sous ses tests. Sans ce mot il ne distingue plus « rien n'a bougé » de « je n'ai pas
-regardé ». **Un changement inoffensif est donc précisément celui qui produit ce faux négatif** —
-c'est l'inverse de l'intuition. Préviens surtout quand tu es sûr que rien ne bouge, et **joins une
-prédiction falsifiable** : « aucune de tes scènes ne doit bouger ; si une bouge, ma mesure est
-fausse ».
-
-**DE QUEL CÔTÉ JE SUIS, MESURÉ ET NON SUPPOSÉ (2026-07-30)** : `package.json` déclare
-`main: src/transpiler/index.js` — mes huit consommateurs lisent donc ma **SOURCE**, aucun n'exécute
-un paquet construit de moi. `dist/` existe mais c'est le build WASM du 19/07, vestige de l'émission
-BP3 supprimée : **zéro fichier de l'atelier le lit**. Mon régime est donc « préavis à la frappe »,
-entièrement — et `test/ce_que_j_ecris_est_deja_chez_eux.mjs` le **mesure** à chaque portillon au
-lieu de le répéter. Le jour où j'exposerai un artefact construit, le second régime s'ajoutera.
-Texte de référence, plus complet et qui bouge : `hub/AGENT_WELCOME.md`.
-
-**LE GESTE** : dès que tu touches une surface partagée, tu préviens ses consommateurs — **avec les
-sites à changer chez eux** — et tu **vérifies qu'ils ont basculé AVANT de pousser**. L'ancien nom
-sort dans le même mouvement ; le garder en parallèle est la bifurcation interdite du 2026-07-19.
-
-⚠️ **CE QUI A DÉCLENCHÉ LA RÈGLE EST DE MOI, et ce n'est pas théorique.** Renommage du type du
-point d'attente poussé à 14h15 ; `LoadGrammarError: Unsupported RHS element type 'SymbolWithWait'`
-chez BPx, **trois bancs rouges chez Kairos, toute la chaîne cessant de charger**. J'avais annoncé
-la précaution — elle portait sur le push. Et j'avais l'accord explicite de BPx, qui m'avait dit
-« poussez d'abord, je suis dans la foulée » avec un raisonnement sur l'ordre de la fenêtre : **leur
-accord était juste sur l'ordre et faux sur le moment**, parce qu'eux aussi pensaient que le push
-était la publication. Un GO reçu ne déplace pas le moment où le mal est fait.
-
-**Corollaire déjà payé le même jour, dans l'autre sens** : mon arbre de travail non committé a
-bloqué Kairos et Kanopi toute une matinée. Même cause exactement — ce que j'écris tourne chez eux.
-Donc : *travailler* sur une surface partagée est déjà un acte public, et la fenêtre stable
-s'annonce avant d'écrire, pas après.
-
-### Un fail-loud de langage est une action de FRONTIÈRE (architecte 2026-07-09)
-Quand une forme jusque-là acceptée devient une erreur, les consommateurs aval **live-importent**
-la source et leur portillon casse en minutes (précédent : chantier durée 2026-07-05, garde des
-clés `[]` 9ec2abc — bpx a découvert le fail-loud à son portillon, sans préavis, deux fois le même
-jour). AVANT/AVEC le commit, envoyer une note `tour` aux consommateurs (**bpx au minimum**,
-**kanopi** si des scènes de la bibliothèque sont touchées) avec : 1. la **liste EXACTE** des formes
-invalidées ; 2. le **commit** ; 3. la **migration attendue**, forme par forme. Corollaire : avant
-de livrer un fail-loud, passer le corpus des consommateurs (`BPx/test/scenes/`) au compilateur et
-compter les casses — ne jamais les laisser les découvrir.
-
-### DÉCLARER UN MOT est une action de frontière — et la casse est MUETTE (payé 2× le 2026-07-26/27)
-Un fail-loud invalide une forme et **crie** ; un mot nouveau ne casse aucune syntaxe, il **CONFISQUE
-un nom** — et toute scène qui portait déjà ce nom est **tronquée en silence**. Côté consommateur,
-rien ne distingue une scène qui a changé d'une scène qui a été amputée : c'est le pire mode d'échec,
-pire que le fail-loud. Donc **même condition de livraison** que ci-dessus : mesurer les corpus
-consommateurs AVANT de déclarer, pas après. Deux occurrences en 24 h, par deux chemins différents :
-1. `mute`/`unmute`/`panic` déclarés sans argument → toute occurrence nue du mot devenait un
-   contrôle ; `patchbay-demo` écrivait 7 mots, il en arrivait 6 (mesuré par Kairos). Piège de fond :
-   **« sans argument » ≠ « s'écrit nu au fil de la séquence »** — les contrôles continus hérités de
-   BP3 s'écrivent nus (10 scènes du corpus), les mots nouveaux non. La donnée doit le DIRE
-   (`sacSeul`). Deux règles en sortent : **le plus local gagne** (une scène qui déclare un nom le
-   possède, et l'ombrage s'ANNONCE), et **un mot rencontré là où il ne peut pas l'être REFUSE**, en
-   donnant la réécriture — il ne disparaît jamais.
-2. Une clé de **documentation** posée dans une section de contrôles est entrée AU VOCABULAIRE comme
-   un contrôle (58 chargés, 57 après correction — le 58e était une ligne de prose). **Un fichier de
-   données n'agrandit pas le langage en le commentant.** Frontière donnée→langage : **liste BLANCHE
-   (exiger la FORME d'une déclaration), jamais liste noire** de noms de clés à exclure — sinon la
-   prochaine clé de commodité rentre pareil. Critère MESURÉ sur l'existant, jamais choisi.
-
-### ⚠️ LA FAUTE DE LA JOURNÉE (6× le 2026-07-27, six habits, une seule cause)
-**On répare l'endroit où le défaut s'est MONTRÉ, pas l'espace où il peut vivre.** Les six habits :
-une garde écrite pour la forme du ticket (×5) · un balayage dont la portée laisse survivre ce qui
-est dehors · **une SECTION corrigée au lieu du DOCUMENT** — une heure après avoir réécrit un bloc
-d'exemples, trois autres exemples de la même directive mentaient encore plus bas dans le fichier,
-et un quatrième dans une autre spec.
-
-**MÉCANISER, pas se souvenir** — chaque fois qu'un défaut se montre, se demander *quel est l'espace
-où il peut vivre*, puis faire parcourir cet espace par une machine :
-- l'espace des FORMES → produit croisé (`test/point_attente_dans_arbre.mjs` §6) ;
-- l'espace des SCÈNES → balayage du corpus, socle qui refuse zéro ;
-- l'espace de la DOC → `test/les_exemples_de_la_spec_compilent.mjs` : extrait les exemples de
-  directive des trois specs et les **COMPILE**. Il a trouvé un mensonge dès son premier passage,
-  que ma correction manuelle une heure plus tôt avait laissé.
-
-**Et la méthode qui a tout trouvé aujourd'hui, chez tous les agents : COMPILER / MESURER, jamais
-RELIRE.** La relecture n'a rien trouvé de la journée.
-
-### Une garde se construit en MATRICE, pas en liste (5× la même faute, mécanisé le 2026-07-27)
-La règle « énumérer TOUTES les formes que le parser peut produire » a été **inscrite le 2026-07-26 et
-repayée le lendemain**. Diagnostic, mesuré : j'avais bien énuméré les sept formes… **pour la
-propriété du jour**. Les sections plus anciennes du même fichier testaient toujours UNE forme.
-**L'énumération était une propriété de la SECTION, pas du garde** — un garde grandit incident par
-incident, et seule la section la plus récente porte l'énumération complète.
-
-⚠️ **Une règle qu'on a écrite et qu'on connaît ne suffit pas** si elle demande d'y penser au bon
-moment. La parade n'est pas plus de discipline, c'est le **PRODUIT CROISÉ** : le garde construit
-`FORMES × PROPRIÉTÉS` lui-même. Ajouter une propriété la teste automatiquement sur toutes les
-formes ; ajouter une forme teste automatiquement toutes les propriétés. Plus rien à penser.
-Modèle : `test/point_attente_dans_arbre.mjs` §6 (7 formes × 5 propriétés = 35 cellules, plus un
-témoin anti-rétrécissement qui échoue si la matrice se vide).
-
-⚠️ **Et chercher par le MOTIF, pas par l'occurrence** : « quoi d'autre se perd entre une forme nue
-et sa forme dérivée ? ». Le balayage a montré que le sac n'était pas PERDU mais **DÉPLACÉ** (porté
-par l'assemblage au lieu du point) — pire à sa façon : rien ne manque, donc rien ne peut le
-signaler ; il faut regarder au bon endroit pour voir que ce n'est pas le bon endroit.
-
-### Fermer une famille : écrire CE QUE LE BALAYAGE N'A PAS COUVERT (payé le 2026-07-27)
-**Un balayage a une PORTÉE, et ce qui est hors portée SURVIT** — y compris à une campagne qui croit
-avoir tout fermé. Le 2026-07-27, la famille « verdir sans avoir rien examiné » a été fermée dans
-sept gardes ; une huitième y a échappé (`order_parity.mjs`, mode campagne : liste **construite** en
-filtrant sur l'existence des fichiers → arborescence absente = `0 OK / 0 DIFF sur 0`, sortie de
-succès). Elle a survécu pour une seule raison : **ce mode n'était pas dans le balayage**.
-⚠️ « Hors portillon » ne veut pas dire inoffensif, ça veut dire **INVISIBLE** : un garde hors gate ne
-rougira jamais pour prévenir. Donc : quand tu fermes une famille, **écris la portée ET son
-complément** — sinon la campagne suivante repart de la même portée et retrouve les mêmes survivants.
-
-**Repayé le lendemain, par le garde écrit pour fermer cette faute même.** Deux survivants d'un coup,
-tous deux hors portée : (a) le garde des exemples de doc balayait **trois fichiers de `docs/spec/`** —
-là où le mensonge s'était montré — pendant qu'un doc de conception enseignait la forme morte **douze
-fois** ; (b) la famille « verdir sans examiner » avait un **neuvième** survivant, une tolérance en
-bloc qui laissait une scène ne pas compiler sans faire rougir, cause écrite en toutes lettres dans
-sa propre sortie. Trois leçons, et la troisième est la vraie :
-- **la portée d'un garde se choisit sur l'ESPACE, jamais sur le fichier où ça s'est vu** ;
-- **une dérogation SANS BÉNÉFICIAIRE est un trou, pas une tolérance** — celle-ci n'abritait
-  personne (zéro source concernée le jour du retrait). Une porte ouverte pour personne s'enlève ;
-  si elle doit rester, c'est un **registre nommé, daté, motivé, avec témoin des deux sens** ;
-- **écrire la règle ne suffit pas, même appliquée le jour même**. Le seul geste qui a trouvé ces
-  deux-là : **injecter la faute et regarder si le garde rougit**. Une portée ne s'inspecte pas en
-  lisant le garde — elle se mesure en le faisant échouer là où on croit qu'il couvre.
-
-### UN GARDE QUI NE TESTE QUE DES CAS QUI RÉUSSISSENT GARDE L'ACCUSÉ, PAS LE JUGE (2026-07-28)
-
-J'ai livré un outil de migration bâti pour parer UN piège précis — un renommage qui change la
-musique en silence — avec un **juge structurellement aveugle à ce piège exact**, et un garde qui le
-déclarait bon. Ses assertions restaient vertes quand je débranchais la comparaison de production,
-parce que **toutes mes scènes d'essai renommaient correctement** : aucune ne pouvait révéler que le
-juge était absent. Corollaire opérationnel : après avoir injecté la faute dans l'ACCUSÉ, injecter
-la faute dans le **JUGE** — le rendre constant, aveugle, muet — et exiger que le garde rougisse.
-
-⚠️ **Et le témoin doit prouver les DEUX SENS : mordre ET se taire.** Une règle qui refuserait tout
-laisse au vert la moitié « doit mordre » ; c'est la moitié « doit passer » qui la démasque. Payé
-deux fois le 2026-07-28 : un témoin prescrit exigeait le refus de deux têtes homonymes dans une
-sous-grammaire — mesuré, il aurait refusé **120 scènes sur 333**, parce qu'une tête répétée est une
-ALTERNATIVE. Il est tombé en le MESURANT, pas en le relisant.
-
-### UNE EMPREINTE BÂTIE SUR DES CHAMPS CHOISIS NE VAUT QUE CE QUE VALAIT LE CHOIX (2026-07-28)
-
-Le comparateur du même outil a été corrigé **trois fois**, et chaque fois j'ai corrigé **le symptôme
-qu'on me montrait** : le rang du symbole (aveugle à un renommage cohérent), puis le nom (aveugle
-aux feuilles qui portent leur note ailleurs). Il a fallu qu'un troisième le mesure autrement pour
-voir que le défaut n'était dans **aucun des deux champs** — il était dans le FAIT DE CHOISIR des
-champs. Corrigé à la racine : on compare **tout**, en ne retirant que ce qui est prouvé non-sujet
-(ici les chronomètres).
-
-⚠️ **Une correction qui suit le rapport reçu reste dans le cadre de ce rapport.** Quand un deuxième
-défaut de la même famille arrive, ne pas le corriger : chercher **ce que les deux ont en commun**.
-Et un juge doit être **aussi discriminant qu'il PEUT l'être**, pas seulement assez pour le défaut
-du jour — s'il devient trop sévère il REFUSE, ce qui se voit et s'inspecte, au lieu de certifier à
-tort, ce qui ne se voit jamais.
-
-⚠️ **Corollaire mesuré** : la garantie d'un outil s'arrête où sa mesure s'arrête. Le mien réécrivait
-le code dans les backticks en déclarant « production identique » — ce qui était VRAI, le code étant
-porté opaque jusqu'au runtime. **Là où on ne peut pas prouver, on ne touche pas** — et on l'écrit.
-
-### L'INSTRUMENT ment plus souvent que le sujet (7× le 2026-07-27)
-Quand un chiffre surprend, **suspecter l'instrument AVANT le sujet** — et le vérifier *avant*
-d'envoyer la mesure, pas après. Les sept formes payées en un jour :
-1. **Trop court** : un marcheur d'arbre qui ne descend pas dans `voices`/`triggers`/`symbol` a
-   rapporté « aucune adresse » et « nature absente » là où elles étaient présentes (3 fois).
-2. **La mauvaise clé** : chercher un CHAMP (`s1_args`) comme si c'était un nom de FICHIER → zéro
-   trouvé, conclusion « la garde lit un niveau inexistant » — 18 entrées le portaient.
-3. **Le mauvais code de sortie** : lire `$?` **après un tube** rend le statut du tube, pas du
-   programme. Un succès annoncé là où le programme échouait. *(Même famille que « le code de sortie
-   d'un outil est une CLAME, pas un oracle » — ici ce n'est même pas l'outil qui ment, c'est la
-   façon de l'interroger.)*
-4. **La mauvaise question** : lire une RESTITUTION en croyant lire une PRODUCTION.
-5. **L'instrument, c'est TA LECTURE de ce qu'un autre a mesuré** (2026-07-27, avec BPx). Ils
-   rapportaient un défaut avec un témoin dont la PHRASE était ambiguë — mais leur paragraphe
-   portait aussi le détail qui tranche (« refusé *avec le message qui explique la forme collée* »,
-   et une seule des deux graphies produit ce message). J'ai conclu « votre témoin est FAUX » sur
-   leur phrase, sans relire leur preuve, qui était juste à côté. Or **un témoin faux est une mesure
-   à refaire ; un témoin mal nommé est une mesure JUSTE à renommer** — je leur ai attribué la
-   première. Pire : l'architecte a repris ma formulation et en a fait le point le plus important de
-   son message, donc **une entrée sur-affirmée est entrée dans son dossier par moi**, exactement le
-   mode d'échec que je dénonçais. Règle symétrique : **quand quelqu'un rapporte une mesure, lire ce
-   qu'il a MESURÉ avant de conclure sur ce qu'il a ÉCRIT.** Et corollaire de leur côté, qu'ils ont
-   inscrit et qui vaut ici : quand deux graphies voisines se comportent différemment, **nommer la
-   forme sans ambiguïté** plutôt que mesurer mieux.
-   ⚠️ **Et les deux règles NE SE SUBSTITUENT PAS** (leur mise au point, et elle est juste) : le même
-   malentendu est passé **deux fois**, par deux défauts différents — d'abord leur phrase qui ne
-   distinguait pas, ensuite ma lecture qui n'est pas allée à la preuve. Chacun a d'abord voulu
-   prendre le tort de l'autre : ils ont refusé que leur formulation « allait bien » sous prétexte
-   que leur preuve rattrapait, j'ai refusé que ma sur-affirmation soit excusée par leur ambiguïté.
-   **Une correction en sa propre faveur se re-mesure comme une correction contre soi** — sinon on
-   négocie un compte au lieu de l'établir.
-Ces erreurs se **refont**, ce ne sont pas des étourderies — et elles sont d'autant plus dangereuses
-qu'elles produisent les mesures qu'on envoie aux autres, qui agissent dessus.
-
-⚠️ **Et deux défauts voisins se MASQUENT mutuellement** (mesuré avec BPx le 2026-07-27, le fait le
-plus instructif de la journée) : leur point d'attente disparaissait de l'arbre dès qu'une règle
-portait un chiffre nu, ce qui cachait mon défaut d'adresse ; mon défaut produisait chez eux des
-éléments fantômes qui ressemblaient à un problème de portage, ce qui cachait le leur. **Aucun des
-deux ne se voyait seul** — d'où la valeur d'une mesure faite depuis l'autre bout de la chaîne, et
-la raison de ne jamais renvoyer un rapport voisin au motif qu'il « ne reproduit pas chez moi ».
-
-**Cette règle est MÉCANISÉE, ne compte pas sur ta mémoire** : `test/un_mot_nouveau_ne_confisque_pas_un_nom.mjs`
-confronte à chaque portillon le vocabulaire aux noms que les 149 scènes/démos DÉCLARENT. Une
-confiscation nouvelle rougit avant le push ; une confiscation assumée s'inscrit dans son registre,
-datée et motivée. Une règle qui exige qu'on y pense au bon moment n'est pas une règle, c'est une
-intention (architecte 2026-07-27) — donc quand une règle demande de la vigilance, **chercher ce qui
-la rend mécanique** : un garde, une forme obligatoire, un champ que la machine relit.
-
-### Écrire dans le dépôt d'un AUTRE : signer, prévenir, ne rien déclarer (payé le 2026-07-27)
-**Une écriture chez un autre n'est LIVRÉE que quand son propriétaire l'a committée** (règle
-architecte 2026-07-27). Tant qu'elle ne l'est pas, elle n'existe pas — ni dans un report, ni dans un
-décompte, ni dans une preuve. Celui qui écrit **prévient et ne déclare rien** ; celui qui possède
-committe dans la foulée ou dit pourquoi il ne peut pas.
-
-**Corollaire de mon côté : SIGNER.** Payé sur `tryTicks` — annotation écrite, rapportée comme
-livrée, **annulée une heure plus tard** par un `git checkout` explicite chez Kanopi parce que
-personne ne la revendiquait. Elle portait sa date et sa raison, pas son auteur. Le même jour, un
-diff sans auteur est apparu dans MON arbre et a coûté deux messages pour établir qu'il ne portait
-aucun sens : **une écriture étrangère anonyme est indistinguable d'un bruit d'outil**, dans les deux
-sens. La règle du propriétaire déplace la preuve ; la signature lui donne de quoi chercher l'auteur
-au lieu de deviner. Les deux ensemble ferment le trou.
-
-⚠️ **Et ne jamais avancer une CAUSE non mesurée dans un report qui, par ailleurs, mesure tout.**
-J'ai transmis « probablement emporté par une opération git » ; c'était une annulation délibérée. Le
-mot « probablement » ne rachète rien — dans un report où le reste est mesuré, une supposition se lit
-comme une mesure.
-
+- **Rendre une forme invalide casse les consommateurs en minutes** : passer leur corpus au
+  compilateur **avant** de livrer, puis les prévenir avec la liste exacte des formes invalidées, le
+  commit, et la migration attendue forme par forme.
+- **Déclarer un mot CONFISQUE un nom**, et la casse est **muette** : toute scène qui portait ce nom
+  est tronquée sans un signe. Même condition de livraison qu'une forme invalidée. Le plus local
+  gagne, l'ombrage s'annonce, et un mot rencontré hors de sa place est **refusé avec sa réécriture**.
+- **Un artefact DÉRIVÉ lu par un autre dépôt est une frontière**, même sans syntaxe touchée. Avant de
+  committer un changement de scène ou de fixture : quel artefact devient faux ? Le régénérer dans le
+  même commit, et **valider sur un lot** — un cas qui reproduit ne prouve rien.
+- **Écrire chez un autre : signer, prévenir, ne rien déclarer.** L'écriture est livrée quand son
+  propriétaire l'a committée, et pas avant.
 ### Changelogs moteur (OBLIGATOIRE)
 Après toute modification dans `bp3-engine/csrc/` :
 - `csrc/bp3/` (moteur Bernard) → mettre à jour `bp3-engine/CHANGELOG_ENGINE.md`
 - `csrc/wasm/` (portage WASM) → mettre à jour `bp3-engine/CHANGELOG_WASM.md`
 - Nouveau bug/issue moteur → ajouter dans `/home/romi/dev/bp/hub/courrier/bernard.md`
 
-### Les ARTEFACTS DÉRIVÉS aussi sont une frontière (pas seulement les fail-loud)
-Tout changement qui rend périmé un artefact DÉRIVÉ lu par d'autres dépôts est une action de
-frontière, même sans syntaxe invalidée. Payé le 2026-07-19 : ajout de `@tempo` à 19 scènes
-(ba8867a) sans fail-loud — BPx lit ces scènes EN DIRECT et leurs snapshots `s5_bps` dérivés,
-restés périmés → 4 tests BPx passés au rouge, chantier calé sans toucher une règle de langage.
-Avant de committer un changement de scène/fixture : **quel artefact dérivé devient faux ?**
-(`snapshots/`, alphabets plats, prototypes, baselines) — le régénérer dans le MÊME commit, ou
-prévenir dans le même geste. ⚠️ Ne jamais régénérer à l'aveugle pour faire verdir : le pipeline
-`s5_bps` était mort depuis l'extraction de Kanopi (dispatcher disparu, l'outil répondait `OK` en
-dégradant sa sortie) — régénérer aurait livré des oracles corrompus, muets. Valider sur un LOT,
-jamais sur un cas (`bells` reproduisait bit-à-bit, 49/51 scènes divergeaient).
-
-### Une garde s'écrit pour la CONSTRUCTION, jamais pour la forme signalée (payé 4× le 2026-07-26/27)
-Une garde écrite en réaction à un cas ne garde que ce cas, reste **verte**, et donne l'illusion que la
-famille est couverte. Quatre fois en deux jours : le filtre d'adresses n'acceptait que les alphabets ;
-la garde des sacs ne voyait que la première paire valuée ; celle de la correspondance ne voyait que la forme
-pointée (un nom nu passait entier) ; celle du point d'attente n'inspectait que le premier niveau du
-membre droit — l'attente **ancrée** vit sous un assemblage, elle était donc invisible (BPx l'a mesurée,
-`e1be673`). Deux règles, non négociables :
-1. **Énumérer TOUTES les formes que le parser peut produire** pour la construction (pour une attente :
-   seule, collée, séparée par une espace, multiple, qualifiée, après un silence, dans un groupe
-   polymétrique), pas la graphie du ticket.
-2. **Descendre jusqu'aux feuilles.** Compter les voisins de surface ne voit pas ce qui vit sous un
-   nœud composite. Corollaire déjà payé ailleurs : chercher au mauvais endroit et conclure à l'absence.
-
-Et **prouver que la garde mord** par injection (retirer le correctif → elle rougit → remettre → verte),
-sinon on ne sait pas si elle garde ou si elle décore.
-
 ### Librairies `lib/` — toute édition passe par le bundle (OBLIGATOIRE)
+
 `src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.json`
 et `lib/digital/*.ts` en sont les sources. Éditer la source sans régénérer crée une divergence
 **silencieuse** (le code lit encore l'ancienne valeur).
-
-    npm run bundle:libs     # régénère
-    npm run bundle:check    # vérifie la fraîcheur (branché dans `npm run arch`, donc au gate)
-
-Règle : toute édition de `lib/*.json` ou `lib/digital/*.ts` ⇒ régénérer ⇒ committer LES DEUX. Le
-portillon mord (vérifié : source éditée sans bundle ⇒ `npm run arch` sort en 1, push bloqué).
-
-⚠️ **Piège distinct que la garde de fraîcheur NE couvre PAS** : lire la *mauvaise* source. Elle
-vérifie que source et bundle sont synchrones, pas qu'on lit le bon des deux. `lib/digital.json` ne
-porte QUE la déclaration (description, rang, paramètres) — les corps vivent dans
-`lib/digital/<nom>.ts` et n'existent que dans le bundle. Un consommateur qui lit le JSON du disque y
-voit des entrées sans `body` et conclut à tort que la lib est vide (payé le 2026-07-18 : le pont de
-mesure lisait le JSON, Kairos criait « déclarée au vocabulaire mais SANS fonction exécutable »).
-**Charger `LIBS['digital']` depuis le bundle, jamais le JSON.**
-
 ### Build & Test
 ```bash
 # OBLIGATOIRE : utiliser build.sh, JAMAIS make directement ni cp manuellement
@@ -513,10 +99,6 @@ mesure lisait le JSON, Kairos criait « déclarée au vocabulaire mais SANS fonc
 3. **La carte d'autorités d'Atlas** (`atlas/carte-autorites/`) pour « où vit l'autorité sur X ? ».
 4. Le **fichier de référence** qu'elle désigne.
 5. **Demander à Atlas** quand l'information reste introuvable.
-
-Ne jamais conclure qu'une information n'existe pas : ne pas trouver renseigne sur la recherche, pas
-sur le monde.
-
 ## ⛔⛔ Trancher un comportement : « comment ça fonctionne en BP3 natif ? »
 
 Toute question de **comportement, de fonction ou de primitive** se tranche d'abord sur le **moteur
@@ -525,13 +107,6 @@ natif BP3**. On couvre **a minima ce que fait le natif**, sauf dérogation expli
 ## ⛔⛔⛔ Le langage ne se définit pas sans Romain
 
 `BPscript/docs/spec/LANGUAGE.md` est la bible du langage.
-
-- **IMPORTANT : interdiction formelle d'y écrire** sans autorisation explicite de Romain, pour le
-  geste précis. Un arbitrage de sa part sur le langage n'autorise pas à écrire dans le fichier.
-- **IMPORTANT : interdiction formelle de définir un élément de langage** sans son autorisation.
-- Un écart entre le code et la bible **se signale avec sa pièce** — `fichier:ligne` des deux côtés —
-  et attend son mot.
-
 ## ⛔ Carte d'autorités — toute modification se signale
 
 Toute modification d'un document de la carte d'autorités est **systématiquement signalée et reportée
@@ -548,7 +123,6 @@ répare**. Aucune solution intermédiaire, aucune voie parallèle, aucune migrat
 - **La librairie d'abord** : ce qui peut se déclarer ou se retrouver en librairie y vit. Une valeur
   écrite en dur dans le code est invisible — personne ne peut la lire ni la surcharger.
 - **Les commentaires sont utiles et proportionnés** : ils disent ce que le code ne montre pas.
-
 ## ⛔ Écrire un document
 
 - **Descriptif et factuel** : le document décrit **ce qui est**, dans son état d'aujourd'hui.
@@ -556,47 +130,10 @@ répare**. Aucune solution intermédiaire, aucune voie parallèle, aucune migrat
   se réécrit en énoncé positif.
 - **Sans justification narrative** : ni « untel a dit », ni « parce que », ni date, ni renvoi à une
   décision, ni contraste avec une forme antérieure. Le pourquoi vit dans sa décision datée.
-
-**Test avant d'écrire une phrase** : un lecteur qui découvre le sujet aujourd'hui y apprend-il
-quelque chose ?
-
 ## ⛔ `LANGUAGE.md` est ma référence unique sur le langage
 
 `BPscript/docs/spec/LANGUAGE.md` **est ce que le code doit dire** : un écart est un **défaut**,
 jamais une préséance à arbitrer. `AST.md` et `EBNF.md` en sont des **dérivés**, jamais des autorités.
-
-cd bp3-engine
-source /home/romi/dev/bp/emsdk/emsdk_env.sh        # PC2 natif (était /mnt/d/... sous WSL)
-./build.sh all                                    # compile 3 targets (linux, windows, wasm)
-./build.sh all --archive --version=v3.4.4-wasm.1  # compile + archive
-cd ..
-
-# Non-régression — LE portillon (branché sur pre-push : un push est refusé s'il mord)
-npm run arch        # garde structurelle + fraîcheur du bundle de librairies
-npm run typecheck   # types des librairies digital/homomorphism
-npm run verify      # conformité AST_SPEC du corpus + émission des opérateurs de tempo
-
-# Suites complémentaires, à la main quand on touche leur surface
-node test/scan_corpus.mjs        # aller-retour BP3 → BPScript → BP3
-node test/voie_b_status.mjs      # comparaison à la baseline native, EN SORTIE DE CHAÎNE
-# Détail : test/README.md
-# CE QUI DORT : test/CE_QUI_DORT.md — inventaire NOMMÉ des gardes suspendus par le gel
-#   modulation/patching (Romain 2026-08-09), fichier par fichier et jamais en compte global :
-#   un compte tolère une compensation, l'inventaire dit LEQUEL. Rallumage au dégel Dedale/FaustX.
-```
-
-> L'ancien pipeline `S0-S5` (`test_all.cjs`, `runner.cjs`, les étapes `sN`) a été **supprimé le
-> 2026-07-19** : plus lancé par rien de vivant, mais restait consultable et se faisait prendre pour
-> la procédure courante.
-
-### BPScript Compilation Pipeline
-```
-Source text → Tokenizer (tokens) → Parser (AST) → AST canonique (bpxAst) → BPx → Kairos → Kronos
-```
-L'étape « Encoder → grammaire BP3 → moteur WASM » a été SUPPRIMÉE le 2026-07-19 : plus d'émission
-de texte BP3. Conformité au moteur natif mesurée sur les **jetons produits**
-(`test/voie_b_status.mjs`, comparaison à la baseline native).
-
 ### Key conventions
 - `[]` = ce qui gouverne la **DÉRIVATION** : test de drapeau, affectation de drapeau, procédure
   (`goto` `repeat` `failed` `stop`), rang de gabarit ; durée `{A B}:2` (hors `[]`)
@@ -612,45 +149,9 @@ de texte BP3. Conformité au moteur natif mesurée sur les **jetons produits**
   compat BP3
 - Block separator : `-----` entre sous-grammaires de modes différents
 
-### Agents — Équipe de développement
-3 agents spécialisés dans `.claude/agents/` :
-- **dev** — Développeur TDD. Code, teste, log dans scratchpad.
-- **reviewer** — Review read-only. Classifie CRITICAL/IMPORTANT/MINOR.
-- **ops** — Build et archive. Activation manuelle, APPROVE requis.
-
-Communication inter-agents via `.claude/scratchpad/` (écrit/lu séquentiellement, aucun contexte
-partagé). Délégation active obligatoire : fichier, ligne, action précise — jamais "fixe le bug" ou
-"basé sur tes recherches". Sous-agents de recherche/tâches simples : Haiku.
-
-### Sources brutes
-`raw/` contient les documents bruts (articles, PDFs, notes, clippings). Ne jamais modifier `raw/`
-automatiquement — espace humain. Pour ingérer : `rtfm sync raw/ --corpus raw`
-
 ### RTFM — Base de connaissances indexée
 
 Ce projet est indexé avec RTFM (MCP server `.mcp.json`).
-
-- Cherche dans RTFM (`rtfm_search`) AVANT Grep/Glob pour toute recherche exploratoire.
-- Utilise `rtfm_expand` pour lire les sections pertinentes avec numéros de ligne.
-- Ne lis jamais un fichier entier si RTFM peut cibler la section.
-- Après modification de fichiers, RTFM se re-synchronise automatiquement.
-
-### Sessions parallèles — Rôles par nom de session
-Si lancé avec un nom de session (`-n`), lire immédiatement les fichiers mémoire correspondants pour
-récupérer tout le contexte accumulé. Après lecture, résumer ce qu'on sait pour confirmer le contexte.
-
-- **`moteur-wasm`** — Moteur BP3 WASM, tests e2e, conformité scènes. Focus : bugs moteur, pipeline
-  WASM (bp3_api.c, stubs), CONFORMITY.md, aux files (`test_wasm_all.js` retiré le 2026-07-19 : la
-  conformité se mesure contre le moteur NATIF, pas WASM — il ne se chargeait plus).
-- **`transpileur`** — Tokenizer, parser, encoder, acteurs, prototypes. Focus : tokenizer.js,
-  parser.js, encoder.js, actorResolver.js, prototypes.js, libs.js, lib/*.json, test/
-- **`architecte`** — Architecte/PM de l'écosystème (orchestration, arbitrages, tour de contrôle).
-  Skill : `.claude/skills/architecte-pm/SKILL.md` ; mémoire : profil_architecte_pm.md
-- **`dev`** — Développeur transpileur (TDD, exécution des ordres de l'architecte). Skill :
-  `.claude/skills/transpiler-dev/SKILL.md` ; mémoire : profil_dev_bpscript.md
-- **`architecture`** — Design langage, pitch, acteurs, REPL, effets. Focus : docs/design/*.md,
-  docs/spec/*.md, lib/alphabets.json, lib/tunings.json, lib/temperaments.json
-
 ## CodeGraph — graphe de code indexé
 
 Ce dépôt est indexé avec CodeGraph (`.codegraph/`). Pour **comprendre ou localiser du code**
@@ -658,7 +159,6 @@ Ce dépôt est indexé avec CodeGraph (`.codegraph/`). Pour **comprendre ou loca
 `codegraph explore "<question | symbole>"` (ou l'outil MCP `codegraph_explore`) **avant** grep/find ou
 la lecture de fichiers. Complémentaire de RTFM : **RTFM** pour le quoi/où documentaire (texte + PDF),
 **CodeGraph** pour la structure d'appel du code. (Index local, non versionné ; cloisonné à ce dépôt.)
-
 ## ⚠️ Sous-agents de dev — modèle imposé : Sonnet 5 (Romain 2026-07-12)
 Quand tu lances un **sous-agent de développement** (outil Agent/Task), choisis **TOUJOURS le
 modèle Sonnet 5** (`claude-sonnet-5`) — jamais un modèle plus lourd par défaut pour ce travail.
