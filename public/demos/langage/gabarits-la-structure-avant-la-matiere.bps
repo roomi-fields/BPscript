@@ -1,3 +1,11 @@
+// @name: Templates — Capture and Replay
+// @tagline: The theme is said once and comes back identical
+// @language: bpscript
+// @outputs: audio
+// @level: advanced
+// @tags: language, derivation
+// @order: 14
+//
 // La structure avant la matière — capturer et rejouer
 //
 // Le dollar CAPTURE une figure au moment où elle est produite ; l'esperluette la REJOUE

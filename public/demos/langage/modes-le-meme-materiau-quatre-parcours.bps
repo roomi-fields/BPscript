@@ -1,3 +1,11 @@
+// @name: Derivation Modes
+// @tagline: One stock of motifs, ordered then drawn
+// @language: bpscript
+// @outputs: audio
+// @level: intermediate
+// @tags: language, derivation, generative
+// @order: 8
+//
 // Le même matériau, quatre parcours — les modes
 //
 // Un mode dit COMMENT la dérivation choisit parmi les règles candidates. Le matériau ne

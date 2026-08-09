@@ -1,3 +1,11 @@
+// @name: Compound Sound Object
+// @tagline: One indivisible cell against a divisible group
+// @language: bpscript
+// @outputs: audio
+// @level: intermediate
+// @tags: language
+// @order: 7
+//
 // Une cellule, un son — l'objet sonore composé
 //
 // La barre suivie d'un crochet fait d'un groupe entier UN SEUL objet sonore : ce qui est

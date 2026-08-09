@@ -1,3 +1,11 @@
+// @name: Simultaneity
+// @tagline: Two voices striking as a single accent
+// @language: bpscript
+// @outputs: audio
+// @level: didactic
+// @tags: language, time
+// @order: 5
+//
 // La frappe commune — ce qui sonne EN MÊME TEMPS
 //
 // Le point d'exclamation lie deux événements en un seul instant. Deux voix qui se

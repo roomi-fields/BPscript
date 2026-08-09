@@ -1,3 +1,11 @@
+// @name: Reading Backwards
+// @tagline: The arrow decides the order the figures unfold
+// @language: bpscript
+// @outputs: audio
+// @level: intermediate
+// @tags: language, derivation
+// @order: 10
+//
 // Lire à l'envers — la direction de dérivation
 //
 // Une règle se lit de gauche à droite par défaut. La flèche inversée la fait dériver

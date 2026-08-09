@@ -1,3 +1,11 @@
+// @name: Ties
+// @tagline: Legato against martelé — one sign, a whole phrasing
+// @language: bpscript
+// @outputs: audio
+// @level: didactic
+// @tags: language, time
+// @order: 4
+//
 // Le son qui tient — la liaison contre la répétition
 //
 // Le tilde lie deux objets sonores : le second ne se rejoue pas, il PROLONGE le premier.

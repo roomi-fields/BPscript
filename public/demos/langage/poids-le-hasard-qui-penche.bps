@@ -1,3 +1,11 @@
+// @name: Weighted Choice
+// @tagline: Rarity is what makes a figure remarkable
+// @language: bpscript
+// @outputs: audio
+// @level: intermediate
+// @tags: language, derivation, generative
+// @order: 9
+//
 // Le hasard qui penche — les poids
 //
 // Quand plusieurs règles peuvent s'appliquer, le tirage les départage. Le poids fait

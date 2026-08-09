@@ -1,3 +1,11 @@
+// @name: Flags — A Piece in Three States
+// @tagline: Form emerging from three rules passing a token
+// @language: bpscript
+// @outputs: audio
+// @level: intermediate
+// @tags: language, derivation
+// @order: 11
+//
 // Une pièce en trois états — les drapeaux font la forme
 //
 // Un drapeau est une mémoire que la dérivation lit et écrit. Ici il tient l'ÉTAT de la

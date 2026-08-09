@@ -1,3 +1,11 @@
+// @name: When a Rule Fails
+// @tagline: A guarded rule steps aside, the piece goes on
+// @language: bpscript
+// @outputs: audio
+// @level: advanced
+// @tags: language, derivation
+// @order: 12
+//
 // Quand une règle ne passe pas — la gestion d'échec
 //
 // Une règle gardée par un drapeau peut ne trouver aucune candidate applicable. Ce qui se

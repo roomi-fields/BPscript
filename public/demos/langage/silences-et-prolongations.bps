@@ -1,3 +1,11 @@
+// @name: Rest, Hold, Divide
+// @tagline: Three signs that shape time without a note
+// @language: bpscript
+// @outputs: audio
+// @level: didactic
+// @tags: language, time
+// @order: 1
+//
 // Ce qui ne sonne pas — silence, prolongation, période
 //
 // Trois signes gouvernent le temps sans produire de note. Le TIRET est un silence : la

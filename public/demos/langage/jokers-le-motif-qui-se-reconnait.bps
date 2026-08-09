@@ -1,3 +1,11 @@
+// @name: Wildcards
+// @tagline: A rule that describes a transformation, not a content
+// @language: bpscript
+// @outputs: audio
+// @level: advanced
+// @tags: language, derivation
+// @order: 13
+//
 // Le motif qui se reconnaît — les jokers
 //
 // Le point d'interrogation prend la place de ce qui s'y trouve. Numéroté, il lie toutes

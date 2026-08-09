@@ -1,3 +1,11 @@
+// @name: Three Against Two
+// @tagline: Voices of different lengths sharing one span
+// @language: bpscript
+// @outputs: audio
+// @level: intermediate
+// @tags: language, polymetric, time
+// @order: 6
+//
 // Trois contre deux — la polymétrie entendue, pas expliquée
 //
 // Les accolades tiennent des voix qui partagent la MÊME durée. Ici trois notes en haut

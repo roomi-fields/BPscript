@@ -1,3 +1,11 @@
+// @name: Cell Duration
+// @tagline: Same span, different note counts
+// @language: bpscript
+// @outputs: audio
+// @level: didactic
+// @tags: language, time
+// @order: 2
+//
 // La cellule qui tient le temps — la durée collée
 //
 // Le deux-points colle une durée à un groupe : le contenu s'étale ou se resserre pour

@@ -1,3 +1,11 @@
+// @name: Subdividing a Beat
+// @tagline: The same cell in two, three and four
+// @language: bpscript
+// @outputs: audio
+// @level: didactic
+// @tags: language, time
+// @order: 3
+//
 // Diviser un temps — la période
 //
 // Le point découpe une durée en fragments ÉGAUX. Ce n'est pas un raccourci d'écriture :
