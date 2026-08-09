@@ -3945,6 +3945,19 @@ function parse(tokens, opts = {}) {
   // LHS elements
   // ============================================================
 
+  /** Vrai si, apres le `(...)` courant, la fleche suit immediatement — donc le contexte FERME
+   *  le membre gauche. Sert a distinguer la queue (legitime) du milieu (refuse). */
+  function finDeMembreGauche() {
+    let j = pos, prof = 0;
+    do {
+      if (tokens[j].type === T.LPAREN) prof++;
+      else if (tokens[j].type === T.RPAREN) prof--;
+      j++;
+    } while (prof > 0 && j < tokens.length);
+    const t = tokens[j] && tokens[j].type;
+    return t === T.ARROW_R || t === T.ARROW_L || t === T.ARROW_BI;
+  }
+
   function parseLhsElements() {
     const elements = [];
     while (!atAny(T.ARROW_R, T.ARROW_L, T.ARROW_BI, T.EOF, T.NEWLINE, T.SEPARATOR)) {
@@ -3957,6 +3970,27 @@ function parse(tokens, opts = {}) {
       } else if (at(T.HASH)) {
         elements.push(parseContext());
       } else if (at(T.LPAREN) && current().spaceBefore && isContextLookahead()) {
+        // ⛔ UN CONTEXTE NE SE POSE QU AUX EXTREMITES DU MEMBRE GAUCHE — decision Romain,
+        // 2026-08-09 :  tu ne dois pas l accepter, d autant qu on l a sorti du langage .
+        //
+        // ⚠️ MESURE DE BPx SUR LE MOTEUR D ORIGINE, qui est l argument : le contexte OUVRE le
+        // membre gauche, derriere le seul prefixe de poids, ou le FERME. Aucune grammaire native
+        // ne le pose APRES un element — assiette : bp3-engine/test-data et le corpus BP3 de
+        // kanopi. Leur falsifiable : une seule grammaire native qui le ferait suffit a rouvrir.
+        // Chez moi, cette place produisait un `Context` AU MILIEU du membre gauche — un arbre que
+        // rien en aval ne sait lire, et que rien ne signalait.
+        // ⚠️ ET LA MESURE QUI M A FAIT CROIRE AU PIRE ETAIT FAUSSE : je regardais le champ
+        // `contexts` et j y voyais ZERO pour les trois formes non-tete, donc  le contexte est
+        // perdu en silence . Il ne l est pas — le contexte DROIT vit dans le membre gauche, par
+        // construction. Chercher au mauvais endroit et conclure a l absence, une fois de plus.
+        if (elements.length > 0 && !finDeMembreGauche()) {
+          throw new ParseError(
+            `un CONTEXTE ne se pose qu aux EXTREMITES du membre gauche — en tete ('(A) x B -> …') `
+            + `ou en queue ('x B (A) -> …'). Ici il suit '${elements.length}' element(s) et en `
+            + `precede d autres : le moteur ne connait pas cette place, et l arbre produit ne `
+            + `serait lisible par personne.`,
+            current());
+        }
         // Right positive context: `Sym (B) -> X`. `(` must have a space before
         // (sinon c'est un runtime qualifier suffixe sur le LHS précédent : `C(vel:80)`).
         // isContextLookahead() vérifie que le `(...)` est suivi de `->`/`<-`/`<>` (pas une
