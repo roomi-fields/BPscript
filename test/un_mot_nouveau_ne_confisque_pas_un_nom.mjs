@@ -40,13 +40,12 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
  * j'assume que ce nom appartienne désormais au langage ».
  */
 const CONFISCATIONS_ASSUMEES = [
-  {
-    scene: 'demo:patchbay-demo.bps',
-    nom: 'mute',
-    date: '2026-07-26',
-    pourquoi: "mot déclaré au vocabulaire du sac ; la démo garde son nom (le plus local gagne) et "
-            + "l'ombrage est annoncé au parse. C'est la collision qui a fait naître ce garde.",
-  },
+  // ⛔ RETIREE le 2026-08-09 : la collision n existe plus, parce que la scene qui la portait ne
+  // compile plus. `patchbay-demo` declare cinq macros, et `@macro` est supprime du langage — elle
+  // est inscrite au registre des refus, en attente de la revue du patching.
+  // ⚠️ CE GARDE L A DIT LUI-MEME, et c est ce qu on lui demande : une derogation dont le
+  // beneficiaire a disparu est un trou, pas une tolerance. Elle sortira du registre le jour ou la
+  // scene reviendra — sous une autre forme, avec peut-etre un autre nom.
 ];
 
 // ─── 1. SOCLE — sans données, ce garde serait creux et vert ──────────────────────────────────

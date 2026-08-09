@@ -2,7 +2,7 @@
 /**
  * GARDE — un nom que LA SCÈNE déclare n'est jamais avalé par un mot du vocabulaire.
  *
- * SIGNALÉ par Kairos le 2026-07-27, sur pièces : `patchbay-demo.bps` déclare `@macro mute` et écrit
+ * SIGNALÉ par Kairos le 2026-07-27, sur pièces : `patchbay-demo.bps` déclare `@def mute` et écrit
  * SEPT mots dans sa règle ; il en arrivait SIX. Zéro erreur, zéro avertissement. Trois de ses bancs
  * d'action glissaient d'un index.
  *
@@ -99,11 +99,11 @@ for (const mot of SAC_SEUL) {
 // ─── 3. AVEC déclaration locale, la scène gagne — sur les SEIZE, pas sur le mot du ticket ────
 for (const mot of SANS_ARGUMENT) {
   const avert = [];
-  const o = compileToBPxAST(`@core\n@controls\n@alphabet.simple\n@macro ${mot} drum.on\n@mode:ord\nS -> a ${mot} b\n`,
+  const o = compileToBPxAST(`@core\n@controls\n@alphabet.simple\n@def ${mot} drum.on\n@mode:ord\nS -> a ${mot} b\n`,
                             { onWarning: (w) => avert.push(w) });
   const r = regleDe(o);
   ok((o.errors || []).length === 0,
-     `3. '@macro ${mot}' doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
+     `3. '@def ${mot}' doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
   ok(r.length === 3,
      `3. '${mot}' déclaré par la scène ne doit PAS être avalé — ${r.length} mot(s) sur 3 dans la règle`);
   ok(r[1]?.type === 'Symbol' && r[1]?.name === mot,
@@ -117,7 +117,18 @@ for (const mot of SANS_ARGUMENT) {
 // ─── 4. LE CAS SIGNALÉ, en entier et sur pièce ───────────────────────────────────────────────
 // Pas une réduction du cas : la démo elle-même, telle qu'elle vit dans le dépôt. Kairos comptait
 // six mots là où elle en écrit sept.
-{
+// ⛔ VOLET SUSPENDU le 2026-08-09 — LE TEMOIN HISTORIQUE NE COMPILE PLUS.
+// C est la scene qui a fait naitre ce garde : Kairos y comptait six mots la ou elle en ecrit sept,
+// parce qu un mot du vocabulaire avalait un nom qu elle declarait. Elle declare ses sept mots avec
+// des macros de CABLAGE, et `@macro` est supprime du langage — elle est inscrite au registre des
+// refus, en attente de la revue du patching.
+// ⚠️ CE QUE CE VOLET AVAIT D IRREMPLAÇABLE : il mesurait la DEMO ELLE-MEME, telle qu elle vit dans
+// le depot, et non une reduction du cas. C est ce qui avait attrape le defaut a l epoque — les
+// volets synthetiques au-dessus, eux, passaient deja.
+// RALLUMAGE : quand la demo sera reecrite avec la forme de cablage qui remplacera les macros. Les
+// trois assertions sont conservees telles quelles pour qu il n y ait rien a reinventer.
+const VOLET_4_ACTIF = false;
+if (VOLET_4_ACTIF) {
   const source = readFileSync(new URL('../public/demos/patchbay-demo.bps', import.meta.url), 'utf8');
   const o = compileToBPxAST(source);
   const r = regleDe(o);
@@ -133,7 +144,7 @@ for (const mot of SANS_ARGUMENT) {
 // Sinon la cascade coûterait le mot au lieu de le partager : deux positions syntaxiques, deux
 // sens, aucun conflit.
 {
-  const o = compileToBPxAST('@core\n@controls\n@alphabet.simple\n@macro mute drum.on\n@mode:ord\nS -> a !(mute) b\n');
+  const o = compileToBPxAST('@core\n@controls\n@alphabet.simple\n@def mute drum.on\n@mode:ord\nS -> a !(mute) b\n');
   ok((o.errors || []).length === 0,
      `5. '!(mute)' doit rester valide malgré la macro homonyme — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

@@ -303,7 +303,7 @@ function loadLibsFromDirectives(directives) {
     dualContextControls: new Set(),  // controls that appear in BOTH engine and runtime — in () always route to _script
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
-    bagOnlyControls: new Set(),  // `sacSeul:true` — aucune forme nue dans le flux, cf. plus bas
+    bagOnlyControls: new Set(),  // `bagOnly:true` — aucune forme nue dans le flux, cf. plus bas
     compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
                                    // virgule appartient à la VALEUR, portée brute en une seule chaîne.
     // ⛔ CES DEUX ENSEMBLES DISENT LE DESTINATAIRE, PAS LE SIGNE (rectifié 2026-08-08, Romain :
@@ -587,7 +587,7 @@ function loadLibsFromDirectives(directives) {
         if (!def.args || def.args.length === 0) {
           ctx.noArgControls.add(name);
         }
-        // `sacSeul:true` — ce contrôle N'A PAS de forme nue dans le flux : il ne s'écrit que dans
+        // `bagOnly:true` — ce contrôle N'A PAS de forme nue dans le flux : il ne s'écrit que dans
         // son sac. Distinction que « sans argument » ne portait PAS, et cette confusion a coûté :
         // les contrôles continus hérités de BP3 (`volumecont`, `pitchcont`, `mapcont`…) s'écrivent
         // bel et bien nus au fil de la séquence — 10 scènes du corpus le font — tandis que
@@ -595,7 +595,7 @@ function loadLibsFromDirectives(directives) {
         // Faute de le dire, tout mot sans argument devenait un mot du flux, et une scène qui
         // portait déjà ce nom était tronquée en silence (mesuré par Kairos, patchbay-demo).
         // Le marquage est POSITIF et porté par la donnée : le code ne nomme aucun contrôle.
-        if (def.sacSeul === true) {
+        if (def.bagOnly === true) {
           ctx.bagOnlyControls.add(name);
         }
         // Contrôle désigné par un NUMÉRO DE COMPOSANT : `(cc.98:45)`. Le point APPELLE le

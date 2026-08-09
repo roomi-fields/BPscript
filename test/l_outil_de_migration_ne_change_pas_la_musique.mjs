@@ -37,7 +37,7 @@ const DETECTION = [
   ['occidental, tête d\'allure SARGAM',           '@core\n@alphabet.western\npa1 -> C4 D4', 0],
   ['sargam, tête d\'allure OCCIDENTALE',          '@core\n@alphabet.sargam\nG4 -> sa re', 0],
   ['occidental, tête sans rapport',               '@core\n@alphabet.western\nmotif -> C4 D4', 0],
-  ['macro nommée comme une note',                 '@core\n@alphabet.western\n@macro C4 saw >> audio\nS -> D4', 1],
+  ['définition nommée comme une note',           '@core\n@alphabet.western\n@def C4 D4 E4\nS -> D4', 1],
 ];
 console.log(`[outil migration] détection : ${DETECTION.length} cas`);
 for (const [nom, src, attendu] of DETECTION) {

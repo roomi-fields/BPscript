@@ -38,7 +38,7 @@ const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 // que la donnée porte toujours. C'est le seul CHEMIN qui permettait de le vérifier de bout en
 // bout. Il se rebranche dès que Kairos a migré sa lecture ; la ligne ci-dessous suffit à le
 // rallumer, et la mesure ne doit pas bouger.
-const TRAVERSEE_KAIROS_ACTIVE = false;
+const TRAVERSEE_KAIROS_ACTIVE = true;
 if (!TRAVERSEE_KAIROS_ACTIVE) {
   console.log('[bp3 indian] ⏸️ suspendu : Kairos lit encore l\'ancien format des alphabets '
             + '(reformatage du 2026-08-08, arbitré par Romain). Se rebranche à sa migration.');

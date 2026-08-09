@@ -248,21 +248,23 @@ for (const forme of ['S -> C4 [tempx:2]', 'S -> C4 (tempx:2)', 'S -> C4 ![tempx:
      `§2quinquies ter '${forme}' : le refus doit nommer la relève '! (/N)' — reçu : ${e.join(' | ')}`);
 }
 
-// ─── §2sexies. AUCUNE SOUS-ZONE N'ECHAPPE À LA RÈGLE ────────────────────────────────────────
-// La déclaration d'un modulateur n'est pas un sac de contrôle : la garde des sacs ne la voyait
-// pas, et l'argument positionnel y a survécu une journée entière au ménage. Mesuré par Atlas.
-// Ce n'est pas la parenthèse qu'on supprime — c'est l'argument dont la PLACE tient lieu de nom.
-{
-  const entete = '@core\n@controls\n@mod\n@alphabet.western:midi\n@mode:ord\n';
-  const positionnel = erreursDe(`${entete}@cv env mod.adsr(5, 120)\nS -> C4\n`);
-  ok(positionnel.length > 0, "§2sexies un argument POSITIONNEL dans une déclaration de modulateur doit être refusé");
-  ok(positionnel.some((m) => /POSITIONNEL/.test(m) && /attack:/.test(m)),
-     `§2sexies le refus doit NOMMER les paramètres attendus — reçu : ${positionnel.join(' | ')}`);
-  ok(erreursDe(`${entete}@cv env mod.adsr(attack:5, decay:120)\nS -> C4\n`).length === 0,
-     '§2sexies la forme NOMMÉE reste la bonne — mod.adsr(attack:5, decay:120)');
-  ok(erreursDe(`@core\n@controls\n@actor v alphabet.western out.midi(ch:3)\n@mode:ord\nS -> v.C4\n`).length === 0,
-     "§2sexies l'instanciation nommée d'un composant reste légitime — out.midi(ch:3)");
-}
+// ⛔ §2sexies SUSPENDU le 2026-08-09 : il mesurait l argument POSITIONNEL dans une declaration de
+// MODULATEUR, et la directive qui la portait est supprimee du langage. Sa forme de remplacement —
+// les valeurs de depart d une instance de module — n est pas encore lue.
+// ⚠️ CE QU IL AVAIT TROUVE MERITE D ETRE GARDE EN MEMOIRE : la declaration d un modulateur n est
+// pas un sac de controle, donc la garde des sacs ne la voyait pas, et l argument positionnel y a
+// survecu une journee entiere au menage general. Mesure par Atlas. C est l exemple type de la
+// SOUS-ZONE qui echappe a une regle qu on croit appliquee partout — a rejouer sur la forme vivante
+// des qu elle existera.
+// ⚠️ ET UNE ASSERTION DU MEME BLOC SURVIT, PARCE QUE SON SUJET N EST PAS LE MODULATEUR :
+// l instanciation NOMMEE d un composant reste legitime. Ma premiere coupure l avait emportee avec
+// le reste — le fichier ne se chargeait meme plus. Une suppression au perimetre du COMMENTAIRE ne
+// distingue pas ce que le bloc contient : c est le meme piege que le code mort et le code vivant
+// dans une meme branche, ce matin.
+// ⚠️ MESURE FAITE AVANT DE LA RALLUMER, et elle a tranche : son porteur non plus n existe pas —
+// le module de sortie n est pas au catalogue. L assertion attendait donc une forme qui ne compile
+// pour AUCUNE directive, ancienne ou nouvelle. Elle repart avec le bloc, et c est la bonne place :
+// la rallumer  parce qu elle a l air independante  aurait fabrique un rouge de plus sans sujet.
 
 // ─── §2septies. LE SAC ÉCRIT AVEC DES ESPACES — la forme que nul crible ne voit ─────────────
 // Constat bpx [806]. `(vel:50 pan:7)` est FAUX (deux ÉLÉMENTS d'un sac) et `(keyxpand:B3 -1)` est

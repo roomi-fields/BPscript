@@ -755,9 +755,9 @@ blank_line  = (* ligne vide ou espaces seuls *) ;
 | `S -> C4 D4 (vel:80)` | `_script(CT 0) C4 D4` | réglage de règle |
 | `{A B}(vel:100)` | `_script(CT 0_s) {A B} _script(CT 0_e)` | réglage de groupe |
 | `!(vel:80)` | `_script(CT n)` | réglage posé dans le flux |
-| `!(retro)` | `_retro` | clé nue : sans parenthèses |
-| `(rotate:2)` | `_rotate(2)` | clé avec valeur : avec parenthèses |
-| `(shuffle)` / `(order)` | `_rndseq` / `_ordseq` | injectés en tête du groupe ou du membre droit |
+| `!(retro)` | `_retro` | clé nue : aucune valeur après le nom |
+| `!(rotate:2)` | `_rotate(2)` | clé avec valeur : la valeur suit le deux-points |
+| `!(shuffle)` / `!(order)` | `_rndseq` / `_ordseq` | posés en tête du groupe ou du membre droit |
 | `!(seed:N)` | `_srand(N)` | re-semence au point d'apparition |
 | `@mode:random` | `RND` | mode du bloc |
 | `(scan:left)` | `LEFT` | sens du parcours |

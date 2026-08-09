@@ -66,7 +66,6 @@ function annotateBackticks(ast) {
   // du code (« pour ne pas avoir à écrire le code dans les règles »). Une écriture qu'on veut
   // légitime ne peut pas être le seul endroit où le langage n'est jamais vérifié.
   // Coût mesuré AVANT : 0 scène sur 442 porte du code dans un corps de macro.
-  for (const m of ast.macros || []) label(m.body);
 
   // 2. Résolution 'auto' → eval de L'ACTEUR QUI QUALIFIE LE BLOC (sur payload.interp).
   //
@@ -90,7 +89,6 @@ function annotateBackticks(ast) {
     }
   };
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) resoudre(rule.rhs);
-  for (const m of ast.macros || []) resoudre(m.body);
 
   // 3. FAIL-LOUD orphelin (décision CV-curve 2026-07-04 + ajustement [299]) : un backtick
   //    de flux resté `interp:'auto'` n'a NI tag NI eval d'acteur en tête → langage inconnu,
@@ -116,7 +114,6 @@ function annotateBackticks(ast) {
   // Même portée que l'étiquetage : un corps de macro est un endroit où du code peut s'écrire,
   // donc un endroit où son langage doit être connu. Il n'a pas de tête de règle dont hériter —
   // le tag est donc, aujourd'hui, la seule façon d'y dire le langage.
-  for (const m of ast.macros || []) scanOrphans(m.body);
   return errors;
 }
 
@@ -796,9 +793,19 @@ function validateTerminals(ast) {
   const declared = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
   for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
-  for (const c of ast.cvInstances || []) if (c && c.name) declared.add(c.name); // `cv NAME : …` → NAME est un modulateur utilisable comme terminal de règle (voix CV)
+  // ⛔ UNE DEFINITION EST UN NOM REINVOCABLE — LANGUAGE.md:304 : « @def associe un nom a un corps,
+  // POUR LE REINVOQUER D UN MOT ». Mesure du 2026-08-09 : `@def m C4 D4` puis `S -> m C4` refusait
+  // — « terminal 'm' non declare ». Le nom etait donc declare et INUTILISABLE : la moitie du sens
+  // de la directive manquait, et le palier ecrit ce matin ne l avait pas vu parce qu il rangeait la
+  // definition dans l arbre sans jamais l invoquer.
+  // ⚠️ TROUVE EN MIGRANT UN GARDE DE PORTEE, pas en ecrivant la directive. Ce recensement est la
+  // seule liste qui autorise un nom dans une regle — et la ligne d a cote recensait encore les
+  // objets CV, section supprimee le jour meme : une liste qui gagne des entrees et n en perd
+  // jamais finit par decrire un langage qui n existe plus.
+  for (const d of ast.directives || []) {
+    if (d && d.type === 'DefDirective' && d.name) declared.add(d.name);
+  }
   for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
-  for (const m of ast.macros || []) if (m && m.name) declared.add(m.name);
   // LES NOMS D'HOMOMORPHISME — le nom INVOQUÉ et les ÉTIQUETTES DE SECTION.
   // ⚠️ `LANGUAGE.md` §« Les tables d'homomorphisme » : « Elle s'applique entre un gabarit maître
   // et son esclave, dont le NOM SE POSE ENTRE LES DEUX » — `S -> $N14 dhati &N14`. Ce nom n'est
@@ -1516,6 +1523,14 @@ function validateReferences(ast) {
     // même critère que le chargeur emploie, pas une liste de noms à écarter.
     for (const d of (ast.directives || [])) {
       if (!d || !d.name) continue;
+      // ⛔ UNE DECLARATION N EST PAS UN USAGE — corrige le 2026-08-09.
+      // `@def mute drum.on` DECLARE un nom ; il n ECRIT pas le controle `mute` en tete de scene.
+      // Ce parcours prenait le `name` de TOUTE directive, donc une declaration dont le nom se
+      // trouve etre celui d un controle se faisait refuser pour une place qu elle n occupe pas.
+      // ⚠️ ET C EST EXACTEMENT LE SUJET DU GARDE QUI L A TROUVE — « le nom declare par la scene
+      // gagne ». La regle etait ecrite, appliquee ailleurs, et ce parcours-ci ne la connaissait
+      // pas : il ne distinguait pas ce qui S ECRIT de ce qui SE DECLARE.
+      if (d.type && d.type !== 'Directive') continue;
       // ⚠️ UNE CLÉ DE SCÈNE S'ÉCRIT DE DEUX FAÇONS, et je n'en gardais qu'une : nue (`@mm:120`) ou
       // QUALIFIÉE PAR SON DOMAINE (`@engine.mode:random`, la forme que le tableau des invocations
       // de la référence emploie). Mesuré le 2026-08-08 : après avoir retiré `mode` des clés de
@@ -1810,7 +1825,6 @@ function refuserNomsEnDouble(ast) {
       });
     }
   };
-  for (const m of ast.macros || []) noter(m?.name, 'une macro', m?.line);
   for (const a of ast.aliases || []) noter(a?.name, 'un alias', a?.line);
   for (const e of ast.inputs || []) noter(e?.name, 'une entrée', e?.line);
   // ⚠️ `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`) depuis le 2026-08-05, pas un nom nu :
@@ -1831,7 +1845,21 @@ function refuserNomsEnDouble(ast) {
   // Kanopi, zéro amalgame restant, mesuré avant de poser ceci.
   for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, 'un acteur', a?.line);
   for (const sc of ast.scenes || []) noter(sc?.name, 'une scène', sc?.line);
-  for (const c of ast.cvInstances || []) noter(c?.name, 'un objet CV', c?.line);
+  // ⚠️ LES DEFINITIONS MANQUAIENT A CE RECENSEMENT, et le trou s est vu le jour ou `@def` a
+  // remplace `@macro` (2026-08-09) : `@var C4 adsr` refusait le conflit de nom, `@def C4 …` passait.
+  // L invariant — un nom ne designe qu UNE chose — etait donc garde pour six sortes de declaration
+  // et pas pour la septieme, la plus recente. Une garde ecrite avant une forme ne la connait pas :
+  // c est a l ajout de la forme qu il faut y penser, et rien ne le rappelle.
+  // ⚠️ ET SEULEMENT CELLES QUI NE DECLARENT PAS UN TERMINAL. Une definition de terminal
+  // (`@def ka voice.sec`) ne PREND pas un nom, elle en CREE un — la recenser comme un conflit
+  // interdisait de declarer quoi que ce soit, et mes deux gardes de `@def` sont tombes dessus
+  // dans la minute. Le conflit ne vaut que pour une definition qui reinvoque autre chose sous
+  // un nom deja porte par un terminal.
+  for (const d of ast.directives || []) {
+    if (d && d.type === 'DefDirective' && d.kind !== 'terminal') {
+      noter(d.name, 'une définition', d.line);
+    }
+  }
   // Un drapeau CRÉE un nom (Romain 2026-07-30) — voir la boucle sur `ast.vars` ci-dessus, qui le
   // couvre depuis que `@flag` est tombé (2026-08-05) : `FlagStatesDirective` n'est plus produite.
 
@@ -1920,7 +1948,6 @@ function validateAliases(ast) {
   // nom nu peut designer, selon SCENES.md §6.1 : un alias declare, un trigger/gate/cv declare, un
   // label pose, une scene, une macro.
   for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
-  for (const m of ast.macros || []) if (m && m.name) connus.add(m.name);
   const verifierNu = (bout, cote, ligne) => {
     if (!bout || bout.kind !== 'alias' || connus.has(bout.name)) return;
     erreurs.push({

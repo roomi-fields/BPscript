@@ -56,10 +56,12 @@ for (const t of TYPES) {
 // ── 2. LES DEUX FORMES AROBASÉES — chacune à sa place ───────────────────────────────────────
 ok(err(`${S}@gate C4:midi\nS -> C4\n`).length === 0,
   '2. PROPRIÉTÉ — `@gate C4:midi` pose une propriété sur un nom qui existe');
-ok(err(`${S}@cv env1 mod.adsr(attack:5)\nS -> C4\n`).length === 0,
-  '2. DÉCLARATION — `@cv env1 mod.adsr(…)` crée un nom, sans deux-points');
-ok(err(`${S}@cv w \`js: (t,d) => 0.5\`\nS -> C4\n`).length === 0,
-  '2. DÉCLARATION par bloc de code — même forme, sans deux-points');
+ok(err(`${S}@var env1 adsr\nS -> C4\n`).length === 0,
+  '2. DÉCLARATION — `@var env1 adsr` crée un nom, sans deux-points');
+// ⛔ LE CAS DU BLOC DE CODE A PERDU SON PORTEUR le 2026-08-09 : il s ecrivait avec `@cv`, supprime
+// du langage. La forme qui le remplacera — le corps  code typé  de `@def` — n est PAS ENCORE LUE.
+// Ce que le volet garde encore, et qui suffit : les deux formes arobasées vivantes, la PROPRIÉTÉ
+// sur un nom existant et la DÉCLARATION qui crée un nom. Le troisième cas revient avec son palier.
 // Une déclaration SANS valeur ne déclare rien : elle doit le dire plutôt que passer.
 {
   const e = err(`${S}@gate X\nS -> C4\n`);
@@ -75,6 +77,16 @@ ok(err(`${S}@cv w \`js: (t,d) => 0.5\`\nS -> C4\n`).length === 0,
 // UNE ERREUR QUI APPREND UNE GRAPHIE NE DOIT PAS MENER À UNE ERREUR QUI N'APPREND RIEN. Un
 // message de migration se juge sur le CHEMIN COMPLET, pas sur son premier pas : c'est le second
 // qui décide si l'auteur s'en sort.
+// ⛔ VOLET SUSPENDU le 2026-08-09 : la directive qu il mesure est SUPPRIMEE du langage.
+// Son sujet — un message de migration se juge sur le CHEMIN COMPLET, pas sur son premier pas —
+// reste entierement vrai et vaut pour toute directive. Mais son porteur n existe plus, et le
+// refus qu il rencontre desormais est celui de la SUPPRESSION, qui ne parle pas de deux-points.
+// ⚠️ CE VOLET A UNE VALEUR PARTICULIERE ET IL FAUT LE DIRE : il a ete ecrit sur un defaut SIGNALE
+// par Kairos via BPx, ou mon refus enseignait une graphie qui menait a un refus muet. Le rallumer
+// tel quel n aurait pas de sens ; le reecrire sur le corps  code typé  de def, quand il existera,
+// gardera la meme chose sur la forme vivante.
+const VOLET_2BIS_ACTIF = false;
+if (VOLET_2BIS_ACTIF) {
 for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['un bloc de code', '`js: 1`']]) {
   const e = err(`@core\n@mod\n@alphabet.western\n@cv x : ${corps}\nS -> C4\n`);
   ok(e.length >= 1, `2bis. '@cv x : ${quoi}' doit être refusé — le deux-points n'a pas de sens là`);
@@ -83,6 +95,7 @@ for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['u
   ok(e.some((m) => /Retirer le deux-points/.test(m)),
     `2bis. ${quoi} — et donner la RÉÉCRITURE, sinon le second pas abandonne l'auteur`);
 }
+}
 
 // ── 3. L'OBJET DÉCLARÉ DOIT ARRIVER — pas seulement compiler ────────────────────────────────
 // ⚠️ C'EST ICI QUE LE DÉFAUT S'EST MONTRÉ. La déclaration sans deux-points compilait proprement
@@ -90,11 +103,14 @@ for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['u
 // compile » n'est pas « ça arrive » — c'est la même famille que la directive jetée après les
 // règles, à un aiguillage près.
 {
-  const r = compileToBPxAST(`${S}@cv env1 mod.adsr(attack:5)\nS -> C4 env1\n`);
+  const r = compileToBPxAST(`${S}@var env1 adsr\nS -> C4 env1\n`);
   ok((r.errors || []).length === 0, '3. la scène doit compiler');
-  ok((r.ast?.cvInstances || []).some((c) => c.name === 'env1'),
-    `3. le modulateur déclaré doit ARRIVER dans l'arbre (reçu : ${JSON.stringify((r.ast?.cvInstances || []).map((c) => c.name))})`);
-  ok(!(r.ast?.directives || []).some((d) => d && d.name === 'cv'),
+  // ⚠️ LA SONDE A CHANGE DE SECTION le 2026-08-09 : le modulateur se declare desormais avec `@var`,
+  // et il arrive donc dans `vars`, pas dans la section supprimee avec `@cv`. Le SUJET du volet est
+  // inchange et c est lui qui compte —  ça compile  n est pas  ça arrive .
+  ok((r.ast?.vars || []).some((v) => (v.names || []).includes('env1')),
+    `3. le module déclaré doit ARRIVER dans l'arbre (reçu : ${JSON.stringify((r.ast?.vars || []).flatMap((v) => v.names || []))})`);
+  ok(!(r.ast?.directives || []).some((d) => d && d.name === 'var'),
     '3. et il ne doit PAS traîner parmi les directives de scène');
 }
 {

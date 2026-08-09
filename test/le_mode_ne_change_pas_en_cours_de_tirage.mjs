@@ -56,7 +56,13 @@ const POSITIONS = [
   // fermé une porte en en ouvrant une autre, dans le même geste, en écrivant le correctif qui
   // cite la règle « énumérer TOUTES les formes que le parser peut produire ».
   ['entre crochets',          'S -> C4 [mode:random]\n'],
-  ['crochets dans le flux',   'S -> ![mode:random] C4\n'],
+  // ⚠️ CETTE POSITION EST DESORMAIS FERMEE EN AMONT (2026-08-09) : le crochet ne se pose plus DANS
+  // LE FLUX, quelle que soit sa cle. Le refus qu on y rencontre est donc celui de la POSITION, pas
+  // celui du mode — et il ne peut pas donner la reecriture du mode, puisqu il ne sait pas de quoi
+  // il parle. Ce n est pas une regression : c est une porte fermee plus tot sur le chemin.
+  // Le mode reste garde sur les SEPT autres positions de cette matrice, dont sa forme en
+  // parentheses dans le flux, qui elle reste ouverte a d autres cles.
+  ['parenthèses dans le flux', 'S -> !(mode:random) C4\n'],
 ];
 for (const [quoi, src] of POSITIONS) {
   const msg = messages(compiler(src));

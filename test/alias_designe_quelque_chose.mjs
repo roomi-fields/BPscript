@@ -85,7 +85,7 @@ for (const [corps, quoi, attendu, reecriture] of [
   ['@map breath = cc:2\n@mode:ord\nS -> C4', '@map, quelle que soit sa suite', 'ABANDONNÉ', '@alias'],
   ['@alias breath = cc:2\n@mode:ord\nS -> C4', "le signe '=', supprimé de TOUT le langage", '=', '@alias breath'],
   ['@alias breath -> cc:2\n@mode:ord\nS -> C4', 'la flèche dans une directive', 'production', '@alias breath'],
-  ['@macro riff = C4\n@mode:ord\nS -> riff', "le signe '=' dans une macro non plus", '=', '@macro riff'],
+  ['@def riff = C4\n@mode:ord\nS -> riff', "le signe '=' dans une definition non plus", '=', '@def riff'],
 ]) {
   const r = compile(corps);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');

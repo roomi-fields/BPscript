@@ -119,7 +119,15 @@ export function collisions(ast) {
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) for (const s of r.lhs || []) noter(s?.name, 'tête de règle');
   }
-  for (const m of ast.macros || []) noter(m?.name, 'macro');
+  // ⛔ LES DEFINITIONS REMPLACENT LES MACROS (2026-08-09) — et l outil ne les voyait pas.
+  // Il recensait `ast.macros`, section supprimee le meme jour : il cherchait donc les collisions
+  // dans une liste desormais TOUJOURS VIDE, et rendait ZERO sur une scene qui en portait une.
+  // ⚠️ UN OUTIL QUI LIT UNE SECTION DISPARUE NE PLANTE PAS, IL REND VIDE — et un compte de
+  // collisions a zero ressemble exactement a  aucune collision . C est le pire endroit pour ce
+  // mode d echec : cet outil tourne sur des depots qui ne sont pas le mien.
+  for (const d of ast.directives || []) {
+    if (d && d.type === 'DefDirective') noter(d.name, 'définition');
+  }
   for (const a of ast.aliases || []) noter(a?.name, 'alias');
   for (const e of ast.inputs || []) noter(e?.name, 'entrée');
   // `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05,

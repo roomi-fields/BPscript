@@ -467,9 +467,7 @@ function parse(tokens, opts = {}) {
       // `labels` SUPPRIMÉ avec '@label' (2026-07-28) : un champ émis et toujours vide fait
       // conclure « cette scène n'étiquette rien » au lieu de « ce canal n'existe plus ».
       declarations: [],
-      macros: [],
       backticks: [],
-      cvInstances: [],
       subgrammars: [],
       // v0.8 — sons (prototypes anonymes + nommés) et affectations sujet→son
       soundPrototypes: null,
@@ -505,13 +503,24 @@ function parse(tokens, opts = {}) {
           // Une variable de travail est un nom que LA SCÈNE possède : elle gagne donc, comme une
           // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
           for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
+        } else if (dir.type === 'DefDirective') {
+          // ⛔ UNE DEFINITION EST UN NOM QUE LA SCENE POSSEDE : elle gagne sur un mot homonyme du
+          // vocabulaire, comme une variable de travail ou un alias — le plus local l emporte.
+          // ⚠️ MESURE DU 2026-08-09 : `@def mapcont drum.on` puis `S -> a mapcont b` rendait
+          // Symbol, CONTROLE, Symbol — le nom declare par la scene se faisait avaler par le
+          // controle homonyme. C est exactement ce que ce recensement existe pour empecher, et il
+          // ne connaissait pas la septieme sorte de declaration, entree le matin meme.
+          // ⚠️ ET ON LA RANGE QUAND MEME — cette branche INTERCEPTE la directive, qui tombait
+          // jusqu ici dans la branche par defaut. Ma premiere version se contentait d ajouter le
+          // nom : la definition disparaissait de l arbre, et six gardes sont tombes dans la minute
+          // en disant la meme chose —  aucun noeud de definition dans l arbre, accepter n est pas
+          // transmettre . Une branche qui capture doit ranger ce qu elle capture.
+          nomsDeclaresLocalement.add(dir.name);
+          scene.directives.push(dir);
         } else if (dir.type === 'AliasDirective') {
           scene.aliases.push(dir);
           // Un alias est un nom que LA SCÈNE possède : il gagne sur un mot homonyme du vocabulaire
           // (cascade, le plus local l'emporte) — même règle que macros et variables de travail.
-          nomsDeclaresLocalement.add(dir.name);
-        } else if (dir.type === 'MacroDirective') {
-          scene.macros.push(dir);
           nomsDeclaresLocalement.add(dir.name);
         } else if (dir.type === 'Declaration') {
           // @gate, @trigger, @cv — prefixed declarations
@@ -566,7 +575,6 @@ function parse(tokens, opts = {}) {
           // directives, donc invisible de tout ce qui le cherche — un objet déclaré que rien
           // ne peut invoquer. Même famille que la directive jetée après les règles, à un
           // aiguillage près.
-          scene.cvInstances.push(dir);
         } else if (dir.type === 'Declaration') {
           scene.declarations.push(dir);   // `@gate Sa:midi` — propriété sur un nom existant
         } else if (dir.name === 'mode' && dir.runtime) {
@@ -602,10 +610,6 @@ function parse(tokens, opts = {}) {
         // mouvement. La pierre tombale ci-dessus suffit.)
       } else if (at(T.BACKTICK)) {
         scene.backticks.push(parseBacktickOrphan());
-      } else if (at(T.IDENT) && isLookaheadMacro()) {
-        const m = parseMacro();
-        scene.macros.push(m);
-        if (m && m.name) nomsDeclaresLocalement.add(m.name);
       } else if (isRuleStart()) {
         break; // Start of rules
       } else {
@@ -1596,6 +1600,7 @@ function parse(tokens, opts = {}) {
           + 'ou le rôle que tient une entrée.', tok);
       }
       const first = expect(T.IDENT).value;
+      refuserLeSigneEgal('var', first);
 
       // @var <rôle> in.<canal> [mapping.<table>] — DÉCLARATION D'UNE ENTRÉE
       //
@@ -1731,62 +1736,22 @@ function parse(tokens, opts = {}) {
 
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)
     if (name === 'macro') {
-      const macroName = expect(T.IDENT).value;
-      const params = [];
-      // LISTE DE PARAMÈTRES — collée au nom, `@macro accent(x) x(vel:120)`. Elle se distingue d'un
-      // corps qui commencerait par une parenthèse (`@macro kick (vel:120)`) par le COLLAGE : la
-      // liste est collée au nom, le corps est séparé par une espace. Même règle que partout
-      // ailleurs — l'espace est le délimiteur de termes.
-      if (at(T.LPAREN) && !current().spaceBefore) {
-        advance(); // consume (
-        while (!at(T.RPAREN) && !atEnd()) {
-          params.push(expect(T.IDENT).value);
-          if (at(T.COMMA)) advance();
-        }
-        expect(T.RPAREN);
-      }
-      // ⚠️ LE SIGNE `=` A DISPARU DE TOUT LE LANGAGE, `@macro` comprise (décision Romain
-      // 2026-07-27, amendement `hub afbd88a`). UNE SEULE FORME PARTOUT — `@<directive> <nom>
-      // <valeur>` : rien à retenir, aucune exception à expliquer.
+      // ⛔ `@macro` EST SUPPRIME DU LANGAGE — Romain, 2026-08-09 : « macro ne reviendra pas, tu
+      // peux le supprimer ». La directive avait ete retiree le 2026-08-08 ; ce qui restait, et qui
+      // etait le vrai defaut, c est que le parseur la LISAIT encore et que l emetteur produisait
+      // toujours sa section. Une directive « retiree » qu'on continue d'accepter n'est pas retiree.
       //
-      // L'ARGUMENT ÉCARTÉ, et il était le mien : « une fois `@alias` disparu, le signe redevient
-      // univoque, donc `@macro` peut le garder ». Romain tranche que ce n'est PAS une information
-      // mais une CONVENTION — et qu'une convention qui ne vaut que pour une directive coûte plus à
-      // retenir qu'elle ne rapporte.
-      //
-      // Tombstone NOMMÉ : sans lui, la ligne retombait sur un message de grammaire illisible.
-      if (at(T.EQUALS)) {
-        throw new ParseError(`@macro ${macroName} : le signe '=' a DISPARU de tout le langage `
-          + `(décision Romain 2026-07-27) — écrire '@macro ${macroName} <corps>', comme toutes les `
-          + `autres directives : le nom, puis la valeur, sans rien entre les deux.`, current());
-      }
-      // Body: câblage (corps avec >>/\>> = voix/patch) ; sinon
-      // substitution existante. Le corps câblage est dispatché par la présence de
-      // l'opérateur de câblage (>> ou \>>) avant le saut de ligne.
-      // parseRhsElements would reject floating () before libCtx is loaded, so handle directly.
-      let body;
-      if (bodyIsWiring()) {
-        body = [parseWiring(tok.line)];
-      } else if (at(T.LPAREN) && peek(1).type === T.IDENT && peek(2).type === T.COLON) {
-        body = [{ type: 'InstantControl', qualifier: parseRuntimeQualifier() }];
-      } else {
-        body = parseRhsElements();
-      }
-      // ⚠️ PÉRIMÈTRE ÉLARGI LE 2026-07-29, sur arbitrage de Romain : « régler un paramètre ne doit
-      // pas avoir de durée ». Le critère n'est donc plus le câblage strict mais CE QUI AGIT SUR UN
-      // MODULE SANS PRODUIRE DE SON — brancher, couper, régler, même traitement.
-      // Deux corps entrent : `Wiring` (`saw >> lpf >> audio`) et l'APPEL-COMPOSANT, un `Symbol` qui
-      // porte un ACTEUR (`lpf.cutoff:12000` → {Symbol, name:cutoff, actor:lpf, value:…}).
-      // C'est l'ACTEUR qui discrimine : un corps de `Symbol` SANS acteur est une macro de
-      // substitution ordinaire, et elle garde sa durée — celle de son contenu (arbitrage Romain).
-      // MESURÉ sur 196 scènes : quatre macros entrent (un câblage, trois réglages), ZÉRO macro
-      // ordinaire n'est touchée. J'avais signalé que mon registre était trop étroit sans l'élargir
-      // moi-même : l'élargissement vient de la décision, pas de mon intuition.
-      const agitSurUnModule = (body || []).some((b) => b
-        && (b.type === 'Wiring' || (b.type === 'Symbol' && b.actor)));
-      if (agitSurUnModule) nomsCablage.add(macroName);
-      else checkMacroParamsUsed(macroName, params, body, tok);
-      return { type: 'MacroDirective', name: macroName, params, body, line: tok.line };
+      // ⚠️ CE REFUS NE NOMME PAS DE REECRITURE, ET C'EST DELIBERE. Les macros du corpus sont du
+      // CABLAGE, dont la forme de remplacement — le corps « branchement » de `@def` — est au
+      // BACKLOG avec le reste du patching. Prescrire une forme que le langage ne lit pas encore
+      // enverrait l'auteur dans un mur : la faute que kanopi a mesuree ce matin sur un autre refus.
+      // Le message dit donc ce qui EST : la directive n'existe plus, et ce qui la remplacera
+      // attend une revue. Mieux vaut un refus honnete qu'une reecriture inventee.
+      throw new ParseError(
+        `'@macro' est supprime du langage (decision Romain, 2026-08-09). Une definition se declare `
+        + `avec '@def'. Les macros de CABLAGE — un branchement, une pose de valeur sur un port, un `
+        + `declenchement — attendent le corps de branchement de '@def', en cours d'arbitrage avec `
+        + `le reste du patching : il n'y a pas de reecriture a leur donner aujourd'hui.`, tok);
     }
 
     // PIERRE TOMBALE — `@label` part AVEC le suffixe qu'elle servait (Romain 2026-07-28). Elle
@@ -1857,7 +1822,23 @@ function parse(tokens, opts = {}) {
     //   · SANS `:` → une DÉCLARATION qui CRÉE un nom (`@cv env1 mod.adsr(…)`), et c'est la
     //     forme unique du langage depuis le 27 juillet : `@<directive> <nom> <valeur>`.
     // Romain généralise aux QUATRE types : « en toute logique les 2 formes s'appliquent aux 4 ».
-    if (name === 'gate' || name === 'trigger' || name === 'cv') {
+    // ⛔ `@cv` EST SUPPRIME DU LANGAGE — decision du 2026-08-08, appliquee le 2026-08-09 sur ordre
+    // de Romain :  tu dois aussi supprimer cv, pas de dette ouverte .
+    // Le vrai defaut n etait pas la directive : c est que le parseur la LISAIT encore et que
+    // l emetteur produisait TOUJOURS sa section depuis sa  suppression . Huit scenes la portaient
+    // sans que rien ne le dise. UNE DIRECTIVE RETIREE QU ON CONTINUE D ACCEPTER N EST PAS RETIREE,
+    // ELLE EST INVISIBLE — et elle le reste jusqu au jour ou un aval cesse de transporter le champ,
+    // ce que BPx vient de faire.
+    // ⚠️ LE REFUS NE PRESCRIT PAS DE REECRITURE : les modulateurs relevent du patching, dont la
+    // forme de remplacement attend la revue FaustX. Prescrire une forme que le langage ne lit pas
+    // encore enverrait l auteur dans un mur.
+    if (name === 'cv') {
+      throw new ParseError(
+        `'@cv' est supprime du langage (decision 2026-08-08). Les modulateurs relevent du patching, `
+        + `dont la forme de remplacement est en cours d arbitrage : il n y a pas de reecriture a `
+        + `donner aujourd hui.`, tok);
+    }
+    if (name === 'gate' || name === 'trigger') {
       const declName = expect(T.IDENT).value;
       if (at(T.COLON)) {                     // PROPRIÉTÉ sur un nom existant
         advance();
@@ -1924,17 +1905,32 @@ function parse(tokens, opts = {}) {
     // la PROJECTION, feuille par feuille, déclenchée par un MOT qui paraît dans le flux. Un alias
     // ne s'écrit jamais comme un mot du flux et n'a ni corps ni paramètres. Ni le même composant,
     // ni le même moment, ni le même déclencheur.
+  /**
+   * ⛔ LE SIGNE `=` EST SUPPRIME DE TOUT LE LANGAGE (decision Romain, 2026-07-27) — et ce refus
+   * doit valoir pour TOUTE directive qui nomme, pas pour celle ou le defaut s est montre.
+   *
+   * ⚠️ IL N EXISTAIT QUE POUR `@alias`. Mesure du 2026-08-09, en reecrivant le garde qui le
+   * surveille : `@alias breath = cc:2` nommait le signe, `@def riff = C4` et `@var riff = C4`
+   * refusaient pour une tout autre raison — l un  ne declare rien , l autre  ligne non reconnue .
+   * L auteur qui gardait le signe par habitude apprenait donc la disparition sur UNE directive et
+   * la cherchait en vain sur les deux autres.
+   * C est le motif de la journee : une garde ecrite pour la forme du ticket, jamais pour l espace.
+   */
+  function refuserLeSigneEgal(directive, nom) {
+    if (!at(T.EQUALS)) return;
+    throw new ParseError(
+      `@${directive} ${nom} : le signe '=' est SUPPRIME de tout le langage (decision Romain `
+      + `2026-07-27) — ecrire '@${directive} ${nom} <valeur>' sans rien entre les deux.`,
+      current());
+  }
+
     if (name === 'alias') {
       if (!at(T.IDENT)) {
         throw new ParseError("@alias doit NOMMER avant de désigner : '@alias <nom> <valeur>' — par "
           + "exemple '@alias frappe kick.vel'. Le nom d'abord, comme toutes les autres directives.", tok);
       }
       const aliasName = advance().value;
-      if (at(T.EQUALS)) {
-        throw new ParseError(`@alias ${aliasName} : le signe '=' est SUPPRIMÉ de tout le langage `
-          + `(décision Romain 2026-07-27) — écrire '@alias ${aliasName} <valeur>' sans rien entre `
-          + `les deux. Le retour de '@alias' ne ramène pas le signe avec lui.`, current());
-      }
+      refuserLeSigneEgal('alias', aliasName);
       if (at(T.ARROW_R) || at(T.ARROW_L) || at(T.ARROW_BI)) {
         throw new ParseError(`@alias ${aliasName} : la flèche n'entre pas dans une directive — elle `
           + `est EXCLUSIVEMENT une règle de production, et ne l'a jamais été d'autre chose. Pour `
@@ -2023,6 +2019,7 @@ function parse(tokens, opts = {}) {
           + "qu'il vaut ensuite — comme '@var' et '@actor'.", tok);
       }
       const defName = expect(T.IDENT).value;
+      refuserLeSigneEgal('def', defName);
       const cles = {};
       let lu = 0;
 
@@ -4567,6 +4564,26 @@ function parse(tokens, opts = {}) {
         // les consommateurs la lisent ainsi. Plusieurs parties = chaîne portée brute, découpée
         // par l'aval qui seul connaît l'opération.
         const val = /^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut;
+        // ⛔ UNE VALEUR DONNÉE À UN CONTRÔLE QUI N'EN PREND PAS EST REFUSÉE. Signalé à BPx pendant
+        // leur migration : `!(order:0)` compilait et portait `0` jusqu'à l'arbre, alors que la
+        // donnée déclare `order` sans aucun argument. Une valeur sans destinataire voyage jusqu'à
+        // l'aval, où rien ne l'attend et où rien ne dit qu'elle ne sert à rien — plus discret
+        // qu'un refus, et plus coûteux, parce que le consommateur peut la lire.
+        // ⚠️ LA RÈGLE ÉTAIT DÉJÀ ÉNONCÉE SIX LIGNES PLUS HAUT, dans le message du sac vide —
+        // « un contrôle sans argument s'écrit nu, sans deux-points » — et n'était appliquée nulle
+        // part. Une règle écrite dans un message d'erreur voisin n'est pas une garde.
+        // ⚠️ ET J'AI MIS QUATRE TENTATIVES À TROUVER CE SITE : j'ai posé cinq refus sur des
+        // `pairs.push` qui ne sont jamais atteints pour cette forme, sans jamais vérifier lequel
+        // s'exécute. Cinq lignes mortes ajoutées en croyant corriger. Ce qui a marché du premier
+        // coup : instrumenter CHAQUE site avec son numéro de ligne et lire lequel parle. Deviner
+        // où passe le code coûte plus cher que le tracer, et laisse des traces derrière soi.
+        if (isNoArgControl(key)) {
+          throw new ParseError(
+            `'(${key}:${brut})' : '${key}' ne prend AUCUN argument — sa déclaration n'en nomme pas. `
+            + `Écrire '${key}' seul. Une valeur posée ici voyagerait jusqu'au runtime sans `
+            + `destinataire, sans que rien ne signale qu'elle ne sert à rien.`,
+            keyTok);
+        }
         pairs.push({ key, value: val, ...sub, ...pos });
       } else {
         // Bare key (no-arg control like velcont, pitchcont)
@@ -4828,37 +4845,52 @@ function parse(tokens, opts = {}) {
         }
         return { type: 'InstantControl', qualifier: { type: 'ProductionInline', directives: dirs } };
       }
-      // ![...] → instant engine control. Un tempo y est RELATIF (décision 2026-06-10).
+      // ⛔ LE CROCHET NE SE POSE PAS DANS LE FLUX — arbitrage de Romain, 2026-08-08 :
+      // « `![Ideas]` dans le flux n'a aucun sens et doit être interdit ».
+      //
+      // Le crochet gouverne la DÉRIVATION, et la dérivation ne se gouverne pas à un instant : ses
+      // quatre places sont la garde, l'affectation, la procédure et le rang — toutes attachées à
+      // une RÈGLE ou à une ligne de gabarit, aucune à une position dans une séquence.
+      //
+      // ⚠️ CE QUI PASSAIT, ET POURQUOI C'EST GRAVE : `![Ideas]` produisait un CONTRÔLE nommé
+      // « Ideas » alors que le même mot, écrit avant la règle, est un DRAPEAU. Le même nom
+      // changeait de nature selon l'endroit, sans un mot — la confiscation de nom qu'on venait de
+      // fermer pour `randomize`, revenue par une autre porte. `![shuffle]`, `![retro]` et
+      // `![order]` passaient de même ; leur forme vivante est la parenthèse, `!(shuffle)`.
+      //
+      // ⚠️ `![@seed:N]` EST TRAITÉ AU-DESSUS et reste : c'est une directive de PRODUCTION, pas un
+      // contrôle — re-semer le tirage à cet instant a un sens, et la branche qui la lit refuse
+      // déjà tout autre nom qu'elle.
       if (at(T.LBRACKET)) {
-        {
-          // Une PROCÉDURE DE NIVEAU RÈGLE (`goto`, `failed`, `repeat`, `stop`) ne s'applique pas
-          // à une POSITION : elle vaut pour la règle entière, et le moteur l'extrait en
-          // MÉTADONNÉE (BPx `mergeQualifierProcedures`, loadGrammar.ts:3996, qui lit
-          // `ast.qualifiers`). L'écrire dans le flux la laisse dans la séquence : elle n'atteint
-          // jamais la règle, et un jeton de contrôle INERTE reste dans la production.
-          //
-          // Mesuré sur `repeat.bps` : `![repeat: K1=3]` laisse `{ctrl}` dans les jetons produits
-          // et `rule.qualifiers` ne porte que `weight` ; `[repeat: K1=3]` fait arriver
-          // `repeat=K1=3` en qualificatif de règle et le jeton inerte disparaît.
-          //
-          // C'est MON erreur de migration du 2026-07-26 : j'ai traduit toute forme d'appel
-          // autonome par `!(…)`/`![…]` — la position — sans distinguer les procédures qui n'en
-          // ont pas. On refuse plutôt qu'on relève en silence : deux écritures pour une même
-          // chose, c'est précisément ce que la décision d'écriture supprime.
-          const q = parseQualifier('relative');
-          const procedure = (q.pairs || []).find((p) => p && universeRuleScopeControls().has(p.key));
-          if (procedure) {
-            throw new ParseError(
-              `'![${procedure.key}: …]' : '${procedure.key}' est une procédure de niveau RÈGLE, elle `
-              + `ne se pose pas dans le flux — elle vaut pour la règle entière. Écrire `
-              + `'[${procedure.key}:${procedure.value === true ? '…' : procedure.value}]' en `
-              + `suffixe de règle. Dans le flux, elle n'atteint jamais la règle et laisse un jeton `
-              + `de contrôle inerte dans la production`,
-              current());
-          }
-          return { type: 'InstantControl', qualifier: q };
+        // ⚠️ LIRE D'ABORD, REFUSER ENSUITE — troisième fois aujourd'hui, et cette fois j'avais
+        // fait pire que doubler un message : en retirant le bloc devenu inatteignable, j'ai
+        // EMPORTÉ AVEC LUI un refus nommé qu'il portait — celui qui explique qu'une procédure de
+        // niveau règle vaut pour la règle entière et ne se pose pas à une position. Le garde des
+        // procédures l'a dit dans l'heure.
+        // ⛔ La leçon n'est pas « relire avant de supprimer » : c'est que du code mort et du code
+        // vivant cohabitaient dans le même bloc, et qu'une suppression au périmètre du bloc ne
+        // pouvait pas les distinguer. Le refus nommé est donc REMONTÉ ici, avant le refus
+        // générique, où il ne dépend plus de la vie d'un bloc voisin.
+        const q = parseQualifier('relative');
+        const procedure = (q.pairs || []).find((p) => p && universeRuleScopeControls().has(p.key));
+        if (procedure) {
+          throw new ParseError(
+            `'![${procedure.key}: …]' : '${procedure.key}' est une procédure de niveau RÈGLE, elle `
+            + `ne se pose pas dans le flux — elle vaut pour la règle entière. Écrire `
+            + `'[${procedure.key}:${procedure.value === true ? '…' : procedure.value}]' en `
+            + `suffixe de règle. Dans le flux, elle n'atteint jamais la règle et laisse un jeton `
+            + `de contrôle inerte dans la production`,
+            current());
         }
+        throw new ParseError(
+          `un crochet ne se pose PAS dans le flux (décision Romain 2026-08-08) : le crochet `
+          + `gouverne la DÉRIVATION — une garde, une affectation de drapeau, une procédure, un rang `
+          + `de gabarit — et rien de cela ne vaut à un instant. Un contrôle posé dans le flux `
+          + `s'écrit entre PARENTHÈSES : '!(shuffle)', '!(retro)', '!(vel:80)'. `
+          + `(Seule '![@seed:N]' reste, parce qu'elle re-sème la production et non la dérivation.)`,
+          current());
       }
+
       // !symbol → out-time object
       if (at(T.IDENT)) {
         const name = advance().value;
@@ -5017,13 +5049,32 @@ function parse(tokens, opts = {}) {
       // ⚠️ ET UN MOT QUI N'A PAS DE FORME NUE REFUSE, il ne disparaît pas. « Sans argument » ne
       // veut pas dire « s'écrit nu au fil de la séquence » : les contrôles continus hérités de BP3
       // s'écrivent nus, `mute`/`unmute`/`panic` non — leur seule graphie est le sac. La donnée le
-      // déclare (`sacSeul`), le code ne nomme aucun contrôle.
+      // déclare (`bagOnly`), le code ne nomme aucun contrôle.
       if (!actor && !at(T.LPAREN) && isControlName(name)
           && libCtx.bagOnlyControls && libCtx.bagOnlyControls.has(name)
           && !nomsDeclaresLocalement.has(name)) {
+        // ⛔ LE MESSAGE LIT LA PORTÉE DÉCLARÉE — il ne prescrit plus une place au hasard.
+        //
+        // ⚠️ MESURÉ PAR KANOPI le 2026-08-09 : ce refus envoyait DANS UN MUR. Il disait « écrire
+        // `!(randomize)` », et `!(randomize)` répondait « ne vaut QUE en tête de sous-grammaire ».
+        // Deux fermetures DIFFÉRENTES — la forme nue et les places — que mon propre commit du
+        // matin disait lire séparément : mon garde les lisait, mon MESSAGE non. Il proposait
+        // exactement la place que l'autre fermait.
+        // C'est le défaut que j'avais nommé la veille — nommer une réécriture sans vérifier
+        // qu'elle existe — reproduit à l'intérieur d'un seul refus.
+        const portees = libCtx.controls?.[name]?.scope;
+        const listePortees = Array.isArray(portees) ? portees : (portees ? [portees] : []);
+        const OU = { scene: 'en tête de scène', subgrammar: 'en tête de sous-grammaire',
+                     rule: 'en suffixe de règle', group: 'sur un groupe',
+                     symbol: 'sur un élément', flow: 'dans le flux' };
+        const places = listePortees.map((p) => OU[p] || p);
+        const commentEcrire = listePortees.includes('flow')
+          ? `écrire '!(${name})' pour le poser au fil de la séquence`
+          : (places.length
+            ? `sa déclaration ne lui donne que ${places.length > 1 ? 'ces places' : 'cette place'} : ${places.join(', ')}`
+            : `sa déclaration ne lui donne aucune place dans une règle`);
         throw new ParseError(
-          `'${name}' n'a pas de forme nue dans le flux — écrire '!(${name})' pour le poser au fil `
-          + `de la séquence, ou '(${name})' en contenance sur un élément. Un mot du vocabulaire `
+          `'${name}' n'a pas de forme nue dans le flux — ${commentEcrire}. Un mot du vocabulaire `
           + `rencontré là où il ne peut pas l'être refuse ; il ne disparaît pas.`, tok);
       }
 
@@ -5148,6 +5199,7 @@ function parse(tokens, opts = {}) {
   function isNoArgControl(name) {
     return libCtx.noArgControls.has(name);
   }
+
 
   /** Message de refus de la forme d'appel — il RÉÉCRIT au lieu de constater. Le sac vient de la
    *  DONNÉE (`libCtx.engineControls`), jamais d'une liste de noms en dur ici. */

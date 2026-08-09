@@ -121,8 +121,7 @@ const DETTE = new Set([
   // rougira si elle survit à son sujet.
   'Rule.qualifiers', 'Polymetric.qualifiers', 'Wait.qualifiers',
   // Champs de la SCÈNE que la spec ne détaille pas encore, nœud par nœud.
-  'Scene.scenes', 'Scene.exposes', 'Scene.inputs', 'Scene.aliases', 'Scene.declarations',
-  'Scene.macros', 'Scene.cvInstances', 'Scene.soundPrototypes', 'Scene.soundAssignments',
+  'Scene.scenes', 'Scene.exposes', 'Scene.inputs', 'Scene.aliases', 'Scene.declarations', 'Scene.soundPrototypes', 'Scene.soundAssignments',
   // Champs de DIRECTIVE et d'ACTEUR portés par l'arbre, absents de leur déclaration.
   'Directive.runtime', 'Directive.aliases', 'Directive.modifiers', 'Directive.timePatterns',
   'ActorDirective.values', 'ActorReference.line', 'ActorDirective.libRefs',
@@ -139,6 +138,10 @@ const DETTE = new Set([
   // Il y était entré comme « produit mais non déclaré » ; la fermeture du crochet collé a laissé la
   // seule forme parenthèse, celle que la spec décrit. Le cliquet l'a signalé le jour même — une
   // dette qui ne se resserre jamais n'est qu'un compteur.
+  // ⚠️ `Scene.macros` et `Scene.cvInstances` SORTIS de la dette le 2026-08-09 : les deux sections
+  // ont ete supprimees de l arbre avec leurs directives. Une dette n a plus lieu d etre quand son
+  // champ n existe plus — la laisser ferait compter comme un retard connu ce qui est un chantier
+  // clos, et le cliquet l a dit dans l heure.
   'Rule.warnings',
   // (`Polymetric.label` SORTI du cliquet le 2026-08-06 : AST.md le déclare désormais, en même
   //  temps que la correction du champ `frame` qui n'existait pas. Le témoin l'a exigé.)

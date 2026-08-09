@@ -110,10 +110,10 @@ const refusUnicite = (src) => compiler(src).erreurs.filter((m) => /TERMINAL de l
 // etre-un-terminal`). Ce qu'il faut prouver ici n'est pas ce refus-là : c'est que le vocabulaire
 // EXISTE. Une DÉCLARATION qui heurte un terminal le prouve aussi bien, et elle, elle n'a jamais
 // été levée — la règle d'unicité tient pour ce qui CRÉE un nom.
-ok(refusUnicite('@core\n@macro G4 saw >> audio\nS -> C4').length >= 1,
+ok(refusUnicite('@core\n@def G4 C4 D4\nS -> C4').length >= 1,
   '2. MORD — dans une scène NUE, une DÉCLARATION nommée comme une note est refusée : la preuve que '
   + "l'alphabet du socle est bien descendu (sans lui, il n'y a rien à heurter)");
-ok(refusUnicite('@core\n@macro grondement saw >> audio\nS -> C4').length === 0,
+ok(refusUnicite('@core\n@def grondement saw >> audio\nS -> C4').length === 0,
   '2. SE TAIT — la même scène nue accepte une déclaration au nom quelconque');
 ok(refusUnicite('@core\n@mine.perso.gamme\nG4 -> C4').length === 0,
   '2. SE TAIT — hauteur opaque : aucun vocabulaire connu ici, donc rien à heurter');

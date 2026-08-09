@@ -85,6 +85,37 @@ const ERREURS_ADMISES = [
   // refus EST le comportement attendu — c'est leur silence qui serait le défaut. Elles restent
   // marquées « active » dans `grammars.json`, qui sert la parité avec le moteur d'origine et ne
   // se réconcilie pas avec ce garde : deux questions, deux fichiers.
+  // ⚠️ UNE SCENE DE LA BIBLIOTHEQUE ATTEND UNE MIGRATION QUI N EST PAS A MOI (2026-08-08).
+  // J en avais inscrit QUATRE ; trois compilaient deja quand le garde les a relues, et il l a dit
+  // dans l heure : « une derogation sans beneficiaire est un trou, pas une tolerance ». Mon
+  // balayage les avait comptees sur un motif texte, sans verifier par COMPILATION que la scene
+  // refusait vraiment -- l instrument, encore, mesure avant le sujet.
+  // Le crochet ne porte plus que ce qui gouverne la DERIVATION (arbitrage Romain) : il ne se colle
+  // plus a un element, et il ne se pose plus dans le flux. Ces quatre-la ecrivent l ancienne forme.
+  // La reecriture est un remplacement de crochets par des parentheses -- meme nom, meme valeur,
+  // meme place -- et elle ENRICHIT l arbre : le crochet rendait une paire nue, la parenthese rend
+  // un sac qui porte sa nature, sa portee et son confinement.
+  // ⛔ QUI ATTEND : kanopi, prevenu A LA FRAPPE avec la liste exacte et la reecriture forme par
+  // forme. Je n ecris pas dans son depot ; ces entrees sortent des qu il a migre, et le temoin
+  // ci-dessous rougira si elles rancissent.
+  { demo: 'trySrand', pourquoi: 'randomize NU dans le flux — forme retiree du langage, kanopi prevenu', date: '2026-08-08' },
+  // ⛔ MA PROPRE DEMO, ET SA REECRITURE N EXISTE PAS ENCORE (2026-08-09). Ses cinq macros sont
+  // TOUTES du cablage — deux branchements, deux poses de valeur sur un port, un declenchement.
+  // Leur forme de remplacement est le corps  branchement  de `@def`, au BACKLOG avec le patching.
+  // ⚠️ J AI D ABORD ESSAYE DE L INSCRIRE ALORS QU ELLE COMPILAIT ENCORE, et ce garde a refuse :
+  //  une derogation sans beneficiaire est un trou, pas une tolerance . Il avait raison — elle
+  // n etait pas en erreur de COMPILATION mais en non-conformite de FORME, et ce registre-ci ne
+  // couvre que la premiere. Elle y entre maintenant que `@macro` refuse vraiment.
+  // ⚠️ ET C EST LA LE VRAI ENSEIGNEMENT : tant que le parseur acceptait une directive declaree
+  // morte, la scene compilait et produisait un champ mort. Une directive  retiree  qu on continue
+  // d accepter n est pas retiree — elle est juste invisible.
+  // ⛔ TROIS DEMOS DE PLUS, MEME CAUSE que patchbay-demo : elles declarent `@cv`, supprime du
+  // langage le 2026-08-09. Les modulateurs relevent du patching, dont la forme de remplacement
+  // attend la revue FaustX. Elles ne se reecrivent pas vers une forme que le langage ne lit pas.
+  { demo: 'cv-adsr.bps', pourquoi: 'declare @cv — modulateur, attend la revue du patching', date: '2026-08-09' },
+  { demo: 'cv-lfo.bps', pourquoi: 'declare @cv — modulateur, attend la revue du patching', date: '2026-08-09' },
+  { demo: 'cv-backtick.bps', pourquoi: 'declare @cv — modulateur, attend la revue du patching', date: '2026-08-09' },
+  { demo: 'patchbay-demo.bps', pourquoi: 'cinq macros de CABLAGE — attend le corps branchement de @def, au backlog (revue FaustX)', date: '2026-08-09' },
   { demo: 'alan-dice', pourquoi: 'témoin volontaire de script(…), supprimé du langage', date: '2026-07-26' },
   { demo: 'beatrix-dice', pourquoi: 'témoin volontaire de script(…), supprimé du langage', date: '2026-07-26' },
   // ⚠️ CES DEUX-LÀ NE SONT PAS DES TÉMOINS — ce sont des SCÈNES INCOMPLÈTES, et la distinction

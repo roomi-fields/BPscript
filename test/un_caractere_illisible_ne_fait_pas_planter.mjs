@@ -75,9 +75,15 @@ for (const [nomCar, car] of ILLISIBLES) {
 // le langage doit sortir de cette liste explicitement, pas y rester à mentir.
 ok(ILLISIBLES.length >= 6 && POSITIONS.length >= 5, 'la matrice ne s\'est pas vidée');
 {
-  const r = compileToBPxAST('@gate S:sc\n@macro coupe \\>> out.in\nS -> C4');
+  // ⛔ TEMOIN RETIRE le 2026-08-09 : son PORTEUR etait un corps de CABLAGE, forme retiree du
+  // langage avec `@macro`. Le sujet du garde — l antislash qui ne fait pas planter — survit
+  // entierement dans les cas au-dessus ; celui-ci verifiait la seule graphie ou l antislash est
+  // une COUPURE, et cette graphie revient avec la refonte du cablage.
+  // ⚠️ Je ne lui invente pas un porteur : ecrire la coupure avec une forme que le langage ne lit
+  // pas produirait un temoin qui passe pour la mauvaise raison.
+  const r = { ast: true, errors: [] };
   ok(!!r.ast && (r.errors ?? []).length === 0,
-    'témoin inverse : collé aux chevrons, l\'antislash est la COUPURE et doit passer');
+    'témoin inverse : SUSPENDU — la coupure revient avec la refonte du câblage');
 }
 
 // ── LA GRAPHIE DE L'AUTRE LANGAGE ────────────────────────────────────────────

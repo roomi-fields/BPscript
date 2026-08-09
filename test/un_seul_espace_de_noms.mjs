@@ -29,7 +29,7 @@ const refus = (src) => (compileToBPxAST(src).errors || [])
 // ── A. CE QUI DOIT ÊTRE REFUSÉ ───────────────────────────────────────────────
 // L'espace : chaque SORTE qui crée un nom × ce qu'elle peut heurter.
 const SORTES = [
-  ['une macro',              (n) => `@macro ${n} saw >> audio`],
+  ['une définition',         (n) => `@def ${n} C4 D4`],
   ['un alias',               (n) => `@alias ${n} cc:2`],
   ['une entrée',             (n) => `@var ${n} in.midi`],
   ['une variable de travail', (n) => `@var ${n}`],
@@ -40,7 +40,7 @@ const SORTES = [
 ];
 const CE_QUI_EST_DEJA_PRIS = [
   ['un TERMINAL de l\'alphabet', 'G4', (poseur) => `@core\n@alphabet.western\n${poseur}\nS -> C4 D4`],
-  ['une MACRO déjà déclarée',    'pris', (poseur) => `@core\n@macro pris saw >> audio\n${poseur}\nS -> C4`],
+  ['une DÉFINITION déjà déclarée', 'pris', (poseur) => `@core\n@def pris C4 D4\n${poseur}\nS -> C4`],
   ['un ALIAS déjà déclaré',      'pris', (poseur) => `@core\n@alias pris cc:9\n${poseur}\nS -> C4`],
   ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `@core\n@var pris flag: a:1, b:2\n${poseur}\nS -> C4`],
 ];
@@ -62,7 +62,7 @@ const TETES_REFUSEES = [
   // `C4 -> G4`, `?1 D4 -> ?1 E4`, `#K1 #K2 #K3 M -> C4` avec `@var M`. Une règle de SUBSTITUTION
   // réécrit un terminal : elle en a forcément un en tête, et « la note devient inatteignable » est
   // ce qu'elle fait EXPRÈS. Elles sont désormais au lot B, celui de ce qui DOIT passer.
-  ['contre une macro',    '@core\n@macro motif saw >> audio\nmotif -> C4'],
+  ['contre une définition', '@core\n@def motif C4 D4\nmotif -> C4'],
   ['contre un alias',     '@core\n@alias motif cc:2\nmotif -> C4'],
   ['contre un drapeau',   '@core\n@var motif flag: a:1, b:2\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
@@ -106,11 +106,11 @@ const DOIVENT_PASSER = [
   ['un ACTEUR qui qualifie un bloc de code par le point',
    '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`'],
   ['des noms sans rapport entre eux',
-   '@core\n@alphabet.western\n@macro grondement saw >> audio\n@alias souffle cc:2\nmotif -> C4\nS -> motif'],
+   '@core\n@alphabet.western\n@def grondement saw >> audio\n@alias souffle cc:2\nmotif -> C4\nS -> motif'],
   ['un nom PROCHE d\'un terminal, mais qui n\'en est pas un',
-   '@core\n@alphabet.western\n@macro G4_v saw >> audio\nS -> C4'],
+   '@core\n@alphabet.western\n@def G4_v saw >> audio\nS -> C4'],
   ['un nom d\'une AUTRE convention que l\'alphabet actif',
-   '@core\n@alphabet.western\n@macro pa1 saw >> audio\nS -> C4'],
+   '@core\n@alphabet.western\n@def pa1 saw >> audio\nS -> C4'],
   // ⚠️ IL Y AVAIT ICI UN TÉMOIN « aucun alphabet résolu : rien à heurter » — RETOURNÉ le
   // 2026-07-29, et son retrait est un DURCISSEMENT. Il affirmait qu'une scène sans convention de
   // notes n'a rien à heurter, donc que `@macro G4` y est légitime. C'était la description d'un
@@ -119,7 +119,7 @@ const DOIVENT_PASSER = [
   // règle mord. L'ancien témoin gardait ma zone aveugle : 91 scènes sur 263 y vivaient.
   // Il devient un cas REFUSÉ, plus haut.
   ['une hauteur OPAQUE invoquée : l\'alphabet reste ABSENT, et c\'est la SEULE absence légitime (loi 35)',
-   '@core\n@test_alphabets.abc\n@macro G4 saw >> audio\nS -> a b'],
+   '@core\n@test_alphabets.abc\n@def G4 saw >> audio\nS -> a b'],
   // ⚠️ LES CONTEXTES — régression mesurée par BPx le 2026-07-28. Un contexte n'est PAS une tête :
   // il DÉSIGNE un terminal, c'est sa raison d'être. « ne pas être précédé de C4 » ne peut pas
   // s'écrire sans nommer C4, et l'auteur n'a aucune issue — renommer change la condition,

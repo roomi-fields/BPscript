@@ -50,7 +50,17 @@ const CONSOMMATEURS = [
     lit: ["l'arbre", 'lib/alphabets.json — 8 fichiers de production, dont la résolution de hauteur'] },
   { depot: 'BPx', lienDirect: false, note: 'importe par chemin relatif',
     lit: ["l'arbre — le plus gros consommateur de natures de nœud"] },
-  { depot: 'bp3-frontend', lienDirect: false, note: 'importe par chemin relatif', lit: ["l'arbre"] },
+  // ⚠️ SA SECONDE SURFACE A ÉTÉ AJOUTÉE LE 2026-08-09, APRÈS QU'IL A PAYÉ SON ABSENCE : neuf bancs
+  // rouges d'un coup, découverts à son portillon sur un travail sans rapport — il a failli accuser
+  // son propre changement. Il lit `lib/alphabets.json` depuis toujours ; mon entrée ne disait que
+  // « l'arbre », donc mon préavis de reformatage est allé à kairos et kanopi, pas à lui.
+  // ⛔ LA LISTE LE CONNAISSAIT. C'est la LIGNE « ce qu'il prend » qui était fausse — le second axe
+  // que j'ai ajouté la veille précisément pour ça, et que j'avais rempli de mémoire au lieu de le
+  // mesurer. Une liste juste sur les noms et fausse sur les surfaces envoie le préavis au bon
+  // dépôt sur le mauvais sujet, ou pas du tout.
+  { depot: 'bp3-frontend', lienDirect: false, note: 'importe par chemin relatif',
+    lit: ["l'arbre", 'lib/alphabets.json et lib/test_alphabets.json — miroir des alphabets, et'
+        + " l'ORDRE des terminaux y porte le sens : il indexe les degrés de l'accordage"] },
   { depot: 'runtime-MIDI', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB',
     lit: ['lib/ en direct'] },
   { depot: 'atlas', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure",

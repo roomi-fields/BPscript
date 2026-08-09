@@ -532,6 +532,30 @@ composant le calcule est une affaire d'architecture, et le nommer ici ferait d'u
 d'architecture un changement de langage. Ce qu'un objet porte, c'est sa **destination** -- le
 runtime de sortie d'un terminal.
 
+#### Le prototype d'un controle
+
+**Un controle se declare sur un prototype**, comme un terminal ou un module. Il porte ce que le
+langage consulte pour decider ou et comment il s'ecrit :
+
+```json
+{ "name": "", "description": "", "scope": [], "args": [], "bagOnly": false, "bp3": null }
+```
+
+`scope` dit **ou il a le droit de s'accrocher**, et porte une liste parce qu'un controle vaut
+souvent a plusieurs places : `scene`, `subgrammar`, `rule`, `group`, `symbol`, `flow`.
+
+`args` dit ce que sa **valeur** porte. Une liste vide veut dire qu'il n'en prend aucune.
+
+`bagOnly` ferme la **forme nue** : le mot ne s'ecrit pas seul au fil d'une sequence. C'est une porte
+distincte de la portee -- `scope` dit les places, `bagOnly` dit la graphie.
+
+`bp3` nomme la **procedure native** qui l'execute, quand un moteur natif la porte.
+
+**La librairie ou un controle est liste dit qui l'EXECUTE**, et rien d'autre. Le signe dit ce que la
+chose EST : le crochet porte ce qui gouverne la derivation -- une garde, une affectation, une
+procedure, un rang --, les parentheses portent tout reglage. Un controle qu'un moteur execute
+s'ecrit donc entre parentheses quand il manipule ce que la derivation produit.
+
 ### Invoquer une librairie
 
 **Une librairie s'invoque par son nom, l'entree apres le point.** C'est la forme unique de tout ce
@@ -780,6 +804,12 @@ marche que ce chemin suit, et le rang d'une forme dans le catalogue. Tout reglag
 | en fin de regle                    | une **affectation** de drapeau : `[stage=2]`                          |
 | en fin de regle                    | une **procedure** de derivation : `[goto:3 0]`, `[repeat:2]`, `[failed:3 2]`, `[stop]` |
 | en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`                     |
+
+**Plusieurs crochets se collent entre eux en fin de regle**, chacun gardant sa nature :
+
+```bpscript
+S -> C4 D4 [stage=2][goto:3 0]
+```
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
 suite ; une procedure deplace la derivation elle-meme -- `goto` l'envoie a une autre regle, `repeat`
@@ -1050,7 +1080,14 @@ seed        graine du tirage
 maxitems    nombre d'items produits
 rndtime     deviation aleatoire des attaques, en millisecondes
 tempo       le metronome de la scene, en battements par minute
+shuffle     brasse les elements d'un groupe -- une graine facultative fige le tirage
+order       remet les elements d'un groupe dans leur ordre d'ecriture
+retro       renverse l'ordre des elements d'un groupe
+rotate      decale les elements d'un groupe d'un nombre de rangs
 ```
+
+**Les quatre derniers manipulent une SUITE d'elements**, et se posent en tete de ce qu'ils
+manipulent : `!(shuffle) {a b c d}`.
 
 Une cle qu'aucune librairie invoquee ne porte arrete la compilation.
 

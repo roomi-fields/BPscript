@@ -64,13 +64,31 @@ const REGISTRE = [
   // sont pas des témoins : ce sont des scènes à réparer, et elles appartiennent à kanopi.
   // ⚠️ Elles restent ici INSCRITES, pas tolérées : le jour où l'une passe au vert, ce garde le
   // dira, et l'entrée sortira. Une dérogation sans échéance visible est un trou.
+  // ⛔ ONZE SCENES QUI ECRIVENT UNE DIRECTIVE SUPPRIMEE LE 2026-08-09 — `@cv` et `@macro`, dont
+  // les modulateurs et le cablage relevent du patching. Leur forme de remplacement — le corps
+  // branchement de `@def` — est au BACKLOG jusqu a la revue FaustX.
+  // ⚠️ ELLES NE SE REECRIVENT PAS AUJOURD HUI, et c est deliberе : reecrire vers une forme que le
+  // langage ne lit pas encore produirait une scene qui compile et n agit pas — precisement le
+  // defaut qui a fait perdre son brassage a trySrand sans qu un seul message ne le dise.
+  // QUI ATTEND : la revue du patching. Les quatre de kanopi sont chez lui, les sept autres a moi.
+  ['cv/cv-adsr.bps',                      'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['cv/cv-lfo.bps',                       'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['synthesis/group-cutoff.bps',          'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['synthesis/superp-cutoff.bps',         'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['synthesis/patchbay.bps',              'supprime du langage', 'declare @macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['public/demos/cv-adsr.bps',            'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['public/demos/cv-lfo.bps',             'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['public/demos/cv-backtick.bps',        'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['public/demos/codevoices/cv-curve-js.bps', 'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['public/demos/patchbay-demo.bps',      'supprime du langage', 'declare @macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['test/fixtures/cv_modulation.bps',     'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans @alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 : cette scène refusait pour ses terminaux nus ; elle
   //    refuse désormais AVANT, sur un crochet COLLÉ à un élément — forme retirée du langage
   //    le même jour (arbitrage Romain). La cause inscrite est donc devenue fausse, et le
   //    cliquet l'a vu : un retard qui garde une cause périmée fait passer un défaut pour un
   //    autre, et son compte reste juste pendant que sa raison ment.
-  ['BPScript-tests/trySrand.bps',         'crochet COLLÉ', 'un crochet collé à un élément, forme retirée le 2026-08-08', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
+  ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée — kanopi a migré le crochet, la cause d origine ressort', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
   ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
 ];
 

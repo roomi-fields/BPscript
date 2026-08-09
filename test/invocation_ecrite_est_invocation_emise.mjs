@@ -63,8 +63,17 @@ for (const nom of nomsBps()) {
     const axe = m[1];
     ecrites++;
     if (AXES_HAUTEUR.has(axe)) continue;             // autre porteur, cf. l'en-tête
+    // ⚠️ `@factory.` EST UN SUCRE NORMALISÉ AU NOM NU — contrat bpscript-bpx.md, et le parseur le
+    // documente : « nom nu et `@factory.` confondus AVANT émission ». Seul `mine.` reste préfixé,
+    // parce que c'est LUI qui porte une information : la librairie personnelle de l'auteur, injectée
+    // par l'hôte. `factory` est la provenance par DÉFAUT, donc implicite.
+    // ⛔ CE GARDE L IGNORAIT et cherchait l'adresse préfixée : il déclarait « écrit et rien ne sort »
+    // sur six scènes de kairos qui sortaient parfaitement, sous leur forme canonique. Un garde qui
+    // ne connaît pas la normalisation de ce qu'il mesure accuse le producteur d'un silence qui
+    // n'existe pas — et c'est le pire faux positif, parce qu'il ressemble au défaut qu'on chasse.
     const adresse = `${axe}.${m[2].replace(/:.*$/, '')}`;
-    if ((o.ast?.libRefs || []).includes(adresse)) { emises++; continue; }
+    const canonique = axe === 'factory' ? adresse.slice('factory.'.length) : adresse;
+    if ((o.ast?.libRefs || []).includes(canonique)) { emises++; continue; }
     const p = { scene: nom, adresse };
     vues.add(cle(p));
     ok(connues.has(cle(p)),

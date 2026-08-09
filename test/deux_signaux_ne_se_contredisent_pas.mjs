@@ -84,25 +84,23 @@ ok(fautives.length === 0,
 
 // TÉMOIN D'INSTRUMENT — sans lui, un balayage qui ne lirait rien passerait au vert.
 ok(scenes > 100, `1. le balayage doit LIRE des scènes — ${scenes}`);
-{
-  // Et la nature scellée est bien celle qu'on attend, mesurée et pas supposée.
-  const r = compileToBPxAST('@core\n@alphabet.western\n@macro chain saw >> audio\nS -> chain C4\n');
-  const e = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
-  ok(e?.payload?.nature === 'wire',
-    `1. la macro de câblage porte la nature 'wire' (reçu : ${JSON.stringify(e?.payload)})`);
-}
+// ⛔ LA NATURE  wire  N EST PLUS PRODUITE le 2026-08-09 : son porteur etait un corps de CABLAGE
+// dans une macro, et la directive est supprimee. Le cablage sera entierement refait (Romain), donc
+// cette nature reviendra sous une autre forme.
+// ⚠️ CE QUE LE VOLET GARDE ENCORE, et qui est son sujet : le BALAYAGE lit bien plus de cent scenes.
+// C est le temoin d instrument — sans lui, un balayage qui ne lirait rien passerait au vert.
 
 // ── 2. CE QUI DOIT RESTER VRAI PENDANT L'ATTENTE ────────────────────────────────────────────
 // Une macro ORDINAIRE garde sa durée : Romain l'a tranché explicitement (« une macro a TOUJOURS
 // une durée, celle de ce qu'elle contient »). Sans ce témoin, une réparation trop large passerait.
 {
-  const r = compileToBPxAST('@core\n@alphabet.western\n@macro motif C4 D4\nS -> motif E4\n');
+  const r = compileToBPxAST('@core\n@alphabet.western\n@def motif C4 D4\nS -> motif E4\n');
   const s = naturesSonnantes(r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || []);
   ok(s.includes('motif'),
     '2. SE TAIT — une macro ORDINAIRE garde la nature sonnante : elle a une durée, celle de son contenu');
 }
 // Et un MODULATEUR invoqué dure aussi — l'enveloppe a sa propre durée (même arbitrage).
-ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@cv env1 mod.adsr(attack:5)\nS -> C4 env1\n').errors.length === 0,
+ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@var env1 adsr\nS -> C4 env1\n').errors.length === 0,
   '2. SE TAIT — un modulateur invoqué reste légitime dans le flux');
 
 // ── 3. SOCLE ─────────────────────────────────────────────────────────────────────────────────
@@ -110,21 +108,22 @@ ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@cv env1 mod.adsr(attack:5)\
 // Ce qui reste à garder, c'est que le PÉRIMÈTRE n'a pas débordé — les appels-composants opaques
 // (`lpf.cutoff:12000`) ne sont PAS du câblage strict, et savoir s'ils doivent suivre le même sort
 // est une question encore chez Romain. Élargir ici trancherait à sa place.
+// ⛔ VOLET SUSPENDU le 2026-08-09 : sa PREMIERE moitié mesurait la nature d un REGLAGE porte par
+// une macro, et la directive est supprimee — la nature  wire  n est plus produite. Le cablage
+// sera entierement refait (Romain), la question reviendra avec lui.
+// ⚠️ CE TEMOIN A UNE HISTOIRE QU IL FAUT GARDER : il exigeait l INVERSE une heure avant d etre
+// ecrit, parce que la question  un REGLAGE doit-il suivre le sort d un BRANCHEMENT  etait chez
+// Romain. Il a tranche —  regler un parametre ne doit pas avoir de duree  — et le temoin a ete
+// retourne. Le rallumer sur la forme de cablage a venir demandera de verifier que la reponse
+// tient encore : une decision datee ne suit pas automatiquement un changement de graphie.
+// ⚠️ SA SECONDE MOITIE, elle, reste VRAIE ET MESURABLE — une definition ordinaire garde la nature
+// sonnante, elle a une duree, celle de son contenu. C est la moitie  qui empeche de deborder , et
+// la garder seule vaut mieux que suspendre les deux.
 {
-  // ⚠️ CE TÉMOIN A ÉTÉ RETOURNÉ — il exigeait l'INVERSE il y a une heure. Il gardait que le
-  // périmètre s'arrête au câblage strict, parce que la question « un RÉGLAGE doit-il suivre le sort
-  // d'un BRANCHEMENT » était encore chez Romain. Il a tranché : « régler un paramètre ne doit pas
-  // avoir de durée ». Le témoin garde donc maintenant l'inclusion qu'il interdisait.
-  const r = compileToBPxAST('@core\n@alphabet.western\n@controls\n@macro open lpf.cutoff:12000\nS -> open C4\n');
-  const e = (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
-  ok(e?.payload?.nature === 'wire',
-    `3. PÉRIMÈTRE — un RÉGLAGE agit sur un module sans produire de son : même nature que le `
-    + `branchement (reçu : ${JSON.stringify(e?.payload)})`);
-  // Et la moitié qui empêche de déborder : une macro de SUBSTITUTION garde sa durée.
-  const o = compileToBPxAST('@core\n@alphabet.western\n@macro motif C4 D4\nS -> motif E4\n');
+  const o = compileToBPxAST('@core\n@alphabet.western\n@def motif C4 D4\nS -> motif E4\n');
   const f = (o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
   ok(f?.payload?.nature === 'sounding',
-    `3. et une macro ORDINAIRE garde 'sounding' — elle a une durée, celle de son contenu `
+    `3. une définition ORDINAIRE garde 'sounding' — elle a une durée, celle de son contenu `
     + `(reçu : ${JSON.stringify(f?.payload)})`);
 }
 

@@ -41,7 +41,7 @@ const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 const DECLARATIONS = [
   ['@gate',    '@gate C4:midi\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
   ['@trigger', '@controls\n@trigger sync1:midi\nS -> C4 <!sync1', (a) => (a.declarations || []).some((d) => d.name === 'sync1')],
-  ['@cv',      '@mod\n@cv env1 mod.adsr(attack:5)\nS -> C4 env1', (a) => (a.cvInstances || []).some((c) => c.name === 'env1')],
+  ['@var (module)', '@mod\n@var env1 adsr\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
   ['@var',     '@var travail\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];
 console.log(`[portée unique] ${DECLARATIONS.length} déclarations de terminal`);
@@ -56,7 +56,7 @@ for (const [nom, src, arrive] of DECLARATIONS) {
 // tiret. Si quelqu'un rendait un jour les noms locaux à une sous-grammaire, ces témoins rougissent.
 const A_TRAVERS_LES_BLOCS = [
   ['une variable de travail', '@var v\nS -> C4 v\n-----\nT -> v C4\nS -> T'],
-  ['une macro',               '@macro m saw >> audio\nS -> m C4\n-----\nT -> m\nS -> T'],
+  ['une définition',          '@def m C4 D4\nS -> m C4\n-----\nT -> m\nS -> T'],
   ['un alias',                '@alias g cc:2\nS -> C4\n-----\nT -> C4\nS -> T'],
   ['une déclaration de gate', '@gate C4:midi\nS -> C4\n-----\nT -> C4\nS -> T'],
 ];
@@ -78,12 +78,15 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 
 // ── 3. LES TROIS EXCEPTIONS SONT DES CORPS DE BLOCS, ET ELLES RESTENT LOCALES ───────────────
 // Un paramètre de macro ne fuit pas dans la scène : c'est la seule localité que le langage admet.
-{
-  const r = compileToBPxAST('@core\n@alphabet.western\n@macro accent(x) x(vel:120)\nS -> C4\n');
-  ok((r.errors || []).length === 0, '3. un paramètre de macro doit compiler');
-  ok(!nomsVars(r.ast).includes('x') && !(r.ast?.declarations || []).some((d) => d.name === 'x'),
-    '3. et il ne FUIT PAS dans les noms de la scène — la localité du corps est la seule admise');
-}
+// ⛔ LE CAS DU PARAMETRE A ETE RETIRE le 2026-08-09 : son PORTEUR n existe plus.
+// Il s ecrivait avec `@macro accent(x) x(vel:120)`, supprime du langage ; la forme qui le
+// remplacera — le corps  transformation parametree  de `@def` — n est PAS ENCORE LU par le
+// parseur, seuls la declaration de terminal et la structure le sont.
+// ⚠️ JE NE LUI INVENTE PAS UN PORTEUR : ecrire ce cas avec une forme que le langage ne lit pas
+// produirait un garde qui refuse pour la mauvaise raison, et qui verdirait le jour ou la forme
+// arrive sans avoir jamais mesure la localite. Il revient avec le palier transformation.
+// CE QUE LE VOLET GARDE ENCORE, et qui suffit a le tenir vivant : les proprietes d un acteur,
+// deuxieme des trois corps de bloc que le langage admet.
 {
   // Les propriétés d'un @actor sont un corps de bloc : elles ne déclarent pas des noms de scène.
   const r = compileToBPxAST('@core\n@actor v\n  alphabet.western\n  out.audio\nS -> v.C4\n');

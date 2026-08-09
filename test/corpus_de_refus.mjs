@@ -47,7 +47,7 @@ const REGLES = [
 
   // ── Décisions datées ───────────────────────────────────────────────────────
   ['decision', "le signe d'égalité dans une directive (2026-07-27)",
-   S('@macro V = C4\nS -> V'), S('@macro V C4\nS -> V'), "'=' a DISPARU"],
+   S('@def V = C4\nS -> V'), S('@def V C4\nS -> V'), "'=' a DISPARU"],
   ['decision', "la directive de correspondance, abandonnée (2026-07-27)",
    S('@map tempo cc:2\nS -> C4'), S('@alias tempo cc:2\nS -> C4'), 'ABANDONNÉ'],
   ['decision', "le suffixe arobase sur un élément (2026-07-28)",
@@ -55,7 +55,7 @@ const REGLES = [
   ['decision', "la directive d'étiquette (2026-07-28)",
    S('@label groove\nS -> C4'), S('S -> groove:{C4 D4}'), 'SUPPRIMÉE'],
   ['decision', "l'ancienne coupure de câblage (2026-07-28)",
-   S('@macro coupe !>> out.in\nS -> coupe'), S('@macro coupe \\>> out.in\nS -> coupe'), "n'est plus la coupure"],
+   S('@def coupe !>> out.in\nS -> coupe'), S('@def coupe \\>> out.in\nS -> coupe'), "n'est plus la coupure"],
   ['decision', "le qualificatif de vitesse, supprimé (2026-06-26)",
    S('S -> {C4 D4}[speed:2]'), S('S -> {C4 D4}:2'), null],
   ['decision', "la forme d'appel d'un contrôle (2026-07-26)",
@@ -65,15 +65,15 @@ const REGLES = [
   ['decision', "un canal de sortie hors de la liste fermée (2026-07-16)",
    S('@alphabet.western:video\nS -> C4'), S('@alphabet.western:midi\nS -> C4'), null],
   ['decision', "un nom déjà pris par une note (2026-07-28)",
-   S('@macro G4 saw >> audio\nS -> C4'), S('@macro grondement saw >> audio\nS -> C4'), 'TERMINAL'],
+   S('@def G4 saw >> audio\nS -> C4'), S('@def grondement saw >> audio\nS -> C4'), 'TERMINAL'],
   // ⚠️ « une tête de règle nommée comme une note » A ÉTÉ RETIRÉE D'ICI le 2026-08-07 — décision
   // Romain `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` : c'est le principe même du
   // mode sub/sub1, une règle de substitution réécrit un terminal. La ligne au-dessus reste : elle
   // porte une DÉCLARATION (`@macro G4`), qui CRÉE un nom — la règle d'unicité tient pour elle.
   ['decision', "deux déclarations du même nom (2026-07-28)",
-   S('@macro x saw >> audio\n@alias x cc:2\nS -> C4'), S('@macro x saw >> audio\n@alias y cc:2\nS -> C4'), 'déjà pris'],
+   S('@def x saw >> audio\n@alias x cc:2\nS -> C4'), S('@def x saw >> audio\n@alias y cc:2\nS -> C4'), 'déjà pris'],
   ['decision', "un câblage écrit dans le flux, non porté par le moteur (2026-07-28)",
-   S('S -> C4 !osc >> filtre D4'), S('@macro v osc >> filtre\nS -> C4!v D4'), null],
+   S('S -> C4 !osc >> filtre D4'), S('@def v osc >> filtre\nS -> C4!v D4'), null],
 
   // ── Formes sans sens ───────────────────────────────────────────────────────
   ['sans-sens', "un caractère qui n'existe pas dans le langage", S('S -> C4 % D4'), S('S -> C4 D4'), 'inattendu'],
@@ -85,12 +85,12 @@ const REGLES = [
   // avoir a ecrire le code dans les regles »). Une ecriture qu on veut legitime ne peut pas etre
   // le seul endroit ou le langage n est jamais verifie.
   ['sans-sens', "un code sans langage DANS UN CORPS DE MACRO",
-   S('@macro forme `note("c3")`\nS -> forme'), S('@macro forme `js: 1 + 1`\nS -> forme'), 'sans langage'],
+   S('@def forme `note("c3")`\nS -> forme'), S('@def forme `js: 1 + 1`\nS -> forme'), 'sans langage'],
   // ⚠️ La voisine valide emploie une MACRO, pas une variable de travail — mesuré : une variable
   // déclarée par '@var' n'est PAS acceptée comme valeur d'alias, alors qu'une macro l'est. Les
   // deux CRÉENT pourtant un nom au sens de la règle d'unicité. Incohérence entre deux de mes
   // propres règles, trouvée par ce corpus ; signalée, PAS corrigée sans arbitrage.
-  ['sans-sens', "un alias qui ne désigne rien", S('@alias g fantome\nS -> C4'), S('@macro reel saw >> audio\n@alias g reel\nS -> C4'), 'ne désigne rien'],
+  ['sans-sens', "un alias qui ne désigne rien", S('@alias g fantome\nS -> C4'), S('@def reel saw >> audio\n@alias g reel\nS -> C4'), 'ne désigne rien'],
   ['sans-sens', "un terminal absent des alphabets en portée", S('S -> zzz'), S('S -> C4'), 'non déclaré'],
   ['sans-sens', "une adresse de point d'attente malformée",
    S('@var touches in.keyboard\nS -> C4 <!touches.60bis D4'), S('@var touches in.keyboard\nS -> C4 <!touches.60 D4'), 'adresse'],

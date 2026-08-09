@@ -74,7 +74,20 @@ for (const nom of nomsBps()) {
   for (const adresse of (o.ast?.libRefs || [])) {
     // L'adresse porte l'AXE, la donnée vit sous le nom du FICHIER : `sound.tabla_perc` habite
     // `sounds.json`. Le passage se fait par la table du chargeur, jamais par une copie ici.
-    const fichier = fichierDeLAxe(String(adresse).split('.')[0]);
+    // ⛔ LA PROVENANCE SE LIT AVANT LE FICHIER — corrigé le 2026-08-09, sur la mesure de kairos.
+    // `factory` désigne le catalogue LIVRÉ, `mine` la librairie PERSONNELLE injectée par l'hôte au
+    // moment de résoudre. Une adresse `mine.…` n'a donc RIEN à faire dans le bundle : son absence
+    // en est la DÉFINITION, pas un défaut.
+    // ⚠️ CETTE GARDE EXIGEAIT LA PRÉSENCE DANS LE BUNDLE SANS DISTINGUER D'OÙ VENAIT L'ADRESSE —
+    // juste pour `factory`, FAUSSE pour `mine`. Six scènes de kairos la faisaient rougir, et je lui
+    // avais demandé de choisir entre deux branches qui étaient toutes deux dans MA prémisse.
+    // ⚠️ ET LE PIÈGE QU'IL A NOMMÉ : `mine` et `factory` peuvent porter le MÊME nom d'entrée — un
+    // alphabet personnel homonyme du catalogue, avec une ancre différente, c'est exactement ce que
+    // son banc éprouve. Le critère est donc la PROVENANCE de l'adresse, JAMAIS le nom du fichier :
+    // une garde qui regarderait le nom verdirait sur la collision au lieu de la voir.
+    const segments = String(adresse).split('.');
+    if (segments[0] === 'mine') continue;          // injectée par l'hôte, absente du bundle par construction
+    const fichier = fichierDeLAxe(segments[0] === 'factory' ? segments[1] : segments[0]);
     if (!invoquees.has(fichier)) invoquees.set(fichier, []);
     invoquees.get(fichier).push(nom);
   }
