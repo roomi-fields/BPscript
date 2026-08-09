@@ -16,6 +16,25 @@ Orchestrates SC, TidalCycles, Python, MIDI, DMX, etc. in a single file via backt
 
 ### ⛔⛔ `docs/spec/LANGUAGE.md` EST LA BIBLE — seule référence, cible intransgressible (Romain, 2026-08-06)
 
+> ⛔⛔⛔ **JE N'ÉCRIS PAS DANS CE FICHIER. INTERDICTION FORMELLE DE ROMAIN (2026-08-09)** — « j'interdis
+> formellement quiconque d'écrire dans ce fichier sans mon autorisation explicite, c'est une faute
+> GRAVE ». Ni ajouter, ni retirer, ni réécrire, ni corriger une forme, **ni ajouter un socle à un
+> exemple qui ne compile pas**. Un arbitrage de Romain sur le langage **n'autorise pas** à toucher le
+> fichier : il faut qu'il autorise le geste, nommément, pour ce changement précis.
+> **À la place** : mesurer, remonter l'écart avec sa pièce (`fichier:ligne` des deux côtés), attendre
+> son mot. Un écart entre le code et la bible reste un **écart signalé**.
+>
+> ⚠️ **CE QUI A COÛTÉ CETTE RÈGLE EST DE MOI, et le mécanisme est plus vicieux que la faute.**
+> J'ai écrit dans ce fichier **sept fois le 2026-08-09**, dont quatre marquées `feat(langage)` — donc
+> des ajouts au langage. Et mon commit `34bc924` (15h30) y a **REMIS `@controls`**, retiré six jours
+> plus tôt : je corrigeais deux exemples qui ne compilaient pas en leur **ajoutant un socle**, et ce
+> socle portait un appel supprimé. Il y est resté sept heures.
+> **Le mot n'est entré par aucune décision — il est entré PAR UN EXEMPLE.** Personne ne l'a décidé,
+> personne ne l'a validé, et la bible l'a enseigné à tous ceux qui l'ouvraient. Romain était certain
+> qu'il n'y était pas la veille ; le journal lui donne raison. **Réparer un exemple est le geste par
+> lequel une forme morte revient dans la référence**, parce qu'il ne se présente jamais comme un
+> changement de langage.
+
 **Une seule autorité sur le langage : `docs/spec/LANGUAGE.md`.** Elle n'est pas une source parmi
 d'autres, elle est LA source. Elle ne se discute pas, elle ne se contourne pas, et rien ne la
 recouvre — ni le code, ni une mesure, ni un dérivé, ni un raisonnement.
