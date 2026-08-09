@@ -501,6 +501,9 @@ npm run verify      # conformité AST_SPEC du corpus + émission des opérateurs
 node test/scan_corpus.mjs        # aller-retour BP3 → BPScript → BP3
 node test/voie_b_status.mjs      # comparaison à la baseline native, EN SORTIE DE CHAÎNE
 # Détail : test/README.md
+# CE QUI DORT : test/CE_QUI_DORT.md — inventaire NOMMÉ des gardes suspendus par le gel
+#   modulation/patching (Romain 2026-08-09), fichier par fichier et jamais en compte global :
+#   un compte tolère une compensation, l'inventaire dit LEQUEL. Rallumage au dégel Dedale/FaustX.
 ```
 
 > L'ancien pipeline `S0-S5` (`test_all.cjs`, `runner.cjs`, les étapes `sN`) a été **supprimé le
