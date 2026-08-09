@@ -1764,9 +1764,11 @@ function parse(tokens, opts = {}) {
       // demandait de les chercher. Le principe de la forme vivante vaut aussi pour le SUJET du
       // refus, pas seulement pour sa reecriture.
       const nomMacro = at(T.IDENT) ? current().value : null;
+      const autresmacro = autresNomsDeLaDirective('macro');
       throw new ParseError(
         `'@macro${nomMacro ? ' ' + nomMacro : ''}' est supprime du langage (decision Romain, `
-        + `2026-08-09). Une definition se declare `
+        + `2026-08-09)${autresmacro.length ? ` — cette scene en declare ${autresmacro.length + 1} : `
+        + `${[nomMacro, ...autresmacro].join(', ')}` : ''}. Une definition se declare `
         + `avec '@def'. Les macros de CABLAGE — un branchement, une pose de valeur sur un port, un `
         + `declenchement — attendent le corps de branchement de '@def', en cours d'arbitrage avec `
         + `le reste du patching : il n'y a pas de reecriture a leur donner aujourd'hui.`, tok);
@@ -1853,9 +1855,11 @@ function parse(tokens, opts = {}) {
     if (name === 'cv') {
       // Le refus nomme ce qu il refuse — meme raison que pour `@macro`, mesuree par kanopi.
       const nomCv = at(T.IDENT) ? current().value : null;
+      const autrescv = autresNomsDeLaDirective('cv');
       throw new ParseError(
-        `'@cv${nomCv ? ' ' + nomCv : ''}' est supprime du langage (decision 2026-08-08). `
-        + `Les modulateurs relevent du patching, `
+        `'@cv${nomCv ? ' ' + nomCv : ''}' est supprime du langage (decision 2026-08-08)`
+        + `${autrescv.length ? ` — cette scene en declare ${autrescv.length + 1} : `
+        + `${[nomCv, ...autrescv].join(', ')}` : ''}. Les modulateurs relevent du patching, `
         + `dont la forme de remplacement est en cours d arbitrage : il n y a pas de reecriture a `
         + `donner aujourd hui.`, tok);
     }
@@ -1937,6 +1941,31 @@ function parse(tokens, opts = {}) {
    * la cherchait en vain sur les deux autres.
    * C est le motif de la journee : une garde ecrite pour la forme du ticket, jamais pour l espace.
    */
+  /**
+   * LES AUTRES NOMS QUE LA MEME DIRECTIVE DECLARE PLUS LOIN, lus dans les jetons restants.
+   *
+   * ⚠️ POURQUOI : un refus s ARRETE au premier cas — c est la nature d une erreur de parse. Kanopi
+   * l a mesure le 2026-08-09 : `superp-cutoff` declare DEUX modulateurs, le refus n en nommait
+   * qu UN, et il n a donc pas retrouve la precision de garde qu il avait avant la suppression.
+   * Il ne demandait rien —  c est votre arbitrage  — mais le gain est pour l AUTEUR avant ses
+   * gardes : devant une scene a quatre modulateurs, savoir qu il y en a quatre change le geste.
+   * Sans ça, il corrige, relance, decouvre le deuxieme, et recommence quatre fois.
+   *
+   * Les jetons sont TOUS la : s arreter au premier est un choix de l erreur, pas une fatalite de
+   * la lecture. On ne change pas la nature du refus — on lui donne ce qu il a deja sous la main.
+   */
+  function autresNomsDeLaDirective(directive) {
+    const noms = [];
+    for (let j = pos; j < tokens.length - 1; j++) {
+      if (tokens[j].type !== T.AT) continue;
+      if (tokens[j + 1] && tokens[j + 1].value === directive
+          && tokens[j + 2] && tokens[j + 2].type === T.IDENT) {
+        noms.push(tokens[j + 2].value);
+      }
+    }
+    return noms;
+  }
+
   function refuserLeSigneEgal(directive, nom) {
     if (!at(T.EQUALS)) return;
     throw new ParseError(
