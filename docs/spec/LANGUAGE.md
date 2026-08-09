@@ -1988,6 +1988,19 @@ références : chacune s'écrit avec le point, sur sa ligne.
 S -> sitar.sa sitar.re sitar.ga
 ```
 
+Un acteur porte `out` **ou** `eval`. `out` nomme la destination vers laquelle sa production est
+routée ; `eval` désigne un producteur qui sort **par ses propres moyens**, avec sa destination déjà
+en lui. Une voix de code n'a donc pas de sortie à router :
+
+```bpscript
+@actor moteur
+  eval.js
+
+@actor cuivres
+  alphabet.western
+  out.midi(ch:2)
+```
+
 ### Le deux-points — lier un sujet à une valeur
 
 Le sujet est à gauche du signe, la valeur à droite.
