@@ -1,5 +1,6 @@
 // @name: Playing a Note
 // @tagline: The same phrase, flat then shaped — velocity and pan
+// @description: Vélocité et panoramique aux trois portées : le terme, le groupe, la règle.
 // @language: bpscript
 // @outputs: audio
 // @level: didactic

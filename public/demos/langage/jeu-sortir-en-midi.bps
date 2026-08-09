@@ -1,5 +1,6 @@
 // @name: Going Out to MIDI
 // @tagline: Channel, program, controller, bend — driving a real device
+// @description: Canal, programme, contrôleur nommé et contrôleur numéroté, pli de hauteur.
 // @language: bpscript
 // @outputs: midi
 // @level: intermediate

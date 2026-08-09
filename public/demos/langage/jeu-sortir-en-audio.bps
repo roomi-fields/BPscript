@@ -1,5 +1,6 @@
 // @name: Going Out to Audio
 // @tagline: Waveform, envelope, filter — building the sound itself
+// @description: Forme d'onde, enveloppe et filtre : fabriquer son son au lieu de le déléguer.
 // @language: bpscript
 // @outputs: audio
 // @level: intermediate

@@ -1,5 +1,6 @@
 // @name: Where a Control Is Written
 // @tagline: One key, four scopes — and the most local one wins
+// @description: La même clé à ses quatre portées : terme, groupe, règle, flux. Le plus local gagne.
 // @language: bpscript
 // @outputs: audio
 // @level: intermediate

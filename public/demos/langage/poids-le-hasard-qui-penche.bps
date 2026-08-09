@@ -1,5 +1,6 @@
 // @name: Weighted Choice
 // @tagline: Rarity is what makes a figure remarkable
+// @description: Les poids du tirage : une figure fréquente, une rare, et ce que la rareté produit.
 // @language: bpscript
 // @outputs: audio
 // @level: intermediate

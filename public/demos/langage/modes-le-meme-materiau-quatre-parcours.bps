@@ -1,5 +1,6 @@
 // @name: Derivation Modes
 // @tagline: One stock of motifs, ordered then drawn
+// @description: Les modes de dérivation : le même stock de motifs, en ordre puis au hasard.
 // @language: bpscript
 // @outputs: audio
 // @level: intermediate

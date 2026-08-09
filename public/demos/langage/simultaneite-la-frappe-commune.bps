@@ -1,5 +1,6 @@
 // @name: Simultaneity
 // @tagline: Two voices striking as a single accent
+// @description: La simultanéité : deux voix qui partagent un instant d'attaque, contre un dialogue.
 // @language: bpscript
 // @outputs: audio
 // @level: didactic

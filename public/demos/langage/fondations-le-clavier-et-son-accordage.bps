@@ -1,5 +1,6 @@
 // @name: Keyboard and Tuning
 // @tagline: The same chord, tempered then just — the third moves
+// @description: Alphabet, accordage, registre et diapason : quatre décisions distinctes. Tempérament égal contre accordage juste.
 // @language: bpscript
 // @outputs: audio
 // @level: didactic

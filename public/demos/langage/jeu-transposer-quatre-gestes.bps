@@ -1,5 +1,6 @@
 // @name: Four Ways to Transpose
 // @tagline: Chromatic, scalar, microtonal, expanded — not the same move
+// @description: Transposition chromatique, scalaire, échelle microtonale, expansion d'intervalles.
 // @language: bpscript
 // @outputs: audio
 // @level: advanced

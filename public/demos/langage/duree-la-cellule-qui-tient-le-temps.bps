@@ -1,5 +1,6 @@
 // @name: Cell Duration
 // @tagline: Same span, different note counts
+// @description: La durée collée à un groupe : deux cellules de longueurs différentes qui durent pareil.
 // @language: bpscript
 // @outputs: audio
 // @level: didactic

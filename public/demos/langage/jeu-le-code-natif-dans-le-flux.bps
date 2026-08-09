@@ -1,5 +1,6 @@
 // @name: Native Code in the Flow
 // @tagline: A backtick is an event — it fires at its own instant
+// @description: Le backtick : du code externe joué à son instant. Tag explicite, ou langage hérité de l'acteur.
 // @language: bpscript
 // @outputs: audio
 // @level: advanced

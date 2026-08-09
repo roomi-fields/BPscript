@@ -1,5 +1,6 @@
 // @name: The Smallest Piece That Sounds
 // @tagline: What a scene declares, and what it inherits
+// @description: Le socle minimal d'une scène : librairie, alphabet, règle de départ. L'acteur implicite et la cascade d'héritage.
 // @language: bpscript
 // @outputs: audio
 // @level: didactic

@@ -1,5 +1,6 @@
 // @name: Several Actors, Two Outputs
 // @tagline: One piece, two destinations — the cascade fills the blanks
+// @description: Deux acteurs, deux sorties : audio interne et appareil MIDI. La cascade de la scène vers ses acteurs.
 // @language: bpscript
 // @outputs: audio, midi
 // @level: intermediate
