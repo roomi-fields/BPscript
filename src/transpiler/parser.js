@@ -5611,7 +5611,24 @@ function parse(tokens, opts = {}) {
 
       // ! is exclusively temporal — only symbols/symbol calls
       if (at(T.IDENT)) {
-        const name = advance().value;
+        let name = advance().value;
+        // ⛔ UNE CO-ATTAQUE PEUT ÊTRE QUALIFIÉE PAR SON ACTEUR — `melodie.C4!perc.dha`.
+        // Ouvert le 2026-08-09, sur décision de Romain : « deux alphabets dans une scène, c'est
+        // deux acteurs nommés ; un alphabet par acteur ». Une scène à deux alphabets s'écrit donc
+        // forcément avec des acteurs, et ses co-attaques traversent les deux — c'est même le cas
+        // que la référence illustre (`S -> C4!dha`, une note et une frappe à la même attaque).
+        // ⚠️ CE SITE LISAIT UN NOM NU ET NE CAPTAIT JAMAIS D'ACTEUR : la qualification marchait
+        // PARTOUT AILLEURS — en tête de règle, dans un groupe, en élément séparé — et tombait
+        // seulement après le point d'exclamation, avec un message qui accusait le terminal
+        // (« terminal 'perc' non déclaré ») au lieu de dire que la place n'accepte pas la forme.
+        // Un refus qui nomme le mauvais coupable envoie chercher le défaut là où il n'est pas.
+        let acteurSec = null;
+        if (at(T.PERIOD) && !current().spaceBefore && peek(1) && peek(1).type === T.IDENT
+            && libCtx.actors && libCtx.actors[name]) {
+          advance();
+          acteurSec = name;
+          name = advance().value;
+        }
         // ⚠️ UNE CO-ATTAQUE SE LIT COMME N'IMPORTE QUEL ÉLÉMENT — son sac est un RÉGLAGE, pas un
         // appel. Mesuré le 2026-08-08 : `C4(vel:80)!E4(vel:90)!G4` rendait un accord IMBRIQUÉ
         // (E4 devenu appel, absorbant G4 dans un sous-accord) là où `C4!E4!G4` rend trois
@@ -5619,7 +5636,7 @@ function parse(tokens, opts = {}) {
         // porte des réglages changeait de forme. Ce site-ci était le dernier à emprunter encore la
         // voie de l'appel pour une clé de réglage.
         if (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier()) {
-          const sec = { type: 'Symbol', name: normalizeName(name), line: tok.line, suffixQualifiers: [] };
+          const sec = { type: 'Symbol', name: normalizeName(name), line: tok.line, suffixQualifiers: [], ...(acteurSec ? { actor: acteurSec } : {}) };
           while (at(T.LPAREN) && !current().spaceBefore && isRuntimeQualifier()) {
             sec.suffixQualifiers.push(parseRuntimeQualifier());
           }
@@ -5627,7 +5644,7 @@ function parse(tokens, opts = {}) {
         } else if (at(T.LPAREN)) {
           secondaries.push(parseSymbolCall(name, tok));
         } else {
-          secondaries.push({ type: 'Symbol', name: normalizeName(name), line: tok.line });
+          secondaries.push({ type: 'Symbol', name: normalizeName(name), line: tok.line, ...(acteurSec ? { actor: acteurSec } : {}) });
         }
         continue;
       }

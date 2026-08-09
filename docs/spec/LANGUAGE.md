@@ -19,7 +19,7 @@
 - [Period notation `.`](#period-notation----fragments-de-duree-egale)
 - [Liaisons `~`](#liaisons----tied-sound-objects)
 - [Wildcards `?`](#wildcards----pattern-matching)
-- [Les barres `|x|`](#les-barres-x----delimiter-un-nom)
+- [Les tables d'homomorphisme](#les-tables-dhomomorphisme)
 - [Contextes `()` et `#`](#contextes-et----conditions-dapplication)
 - [Les gabarits `$` et `&`](#les-gabarits-et----la-structure-dune-production)
 - [Comment une valeur se resout](#comment-une-valeur-se-resout)
@@ -57,6 +57,7 @@ Le vocabulaire est petit et la combinatoire est riche. Comme les echecs : 6 type
 ```bpscript
 @core
 @alphabet.sargam
+@homomorphism.dhati
 
 // Une sequence de notes
 S -> sa re ga pa
@@ -64,8 +65,8 @@ S -> sa re ga pa
 // Polymetrie, simultaneite, silence, prolongation et garde de drapeau
 [stage==1] S -> { sa!dha re!ni, - _ }
 
-// Homomorphisme, contexte, gabarit, mutation de drapeau
-|x| (A) x B -> x $mel &mel [stage+1]
+// Contexte, gabarit, homomorphisme, mutation de drapeau
+(A) B -> $mel dhati &mel [stage+1]
 ```
 
 Le langage est pense pour rester le plus lisible possible : `->` est une fleche, `!` une
@@ -729,7 +730,6 @@ _              prolongation : etend l'evenement precedent
 $              gabarit maitre : capture un motif
 &              gabarit : rejeu d'un motif (esclave)
 ~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
-| |            delimite le nom d'un non-terminal (|x| designe la regle appelee x)
 >> \>>         cablage : brancher un element sur un autre, couper le cable
 |[ ]           objet sonore compose : une suite de notes sur une seule unite d'ordonnancement
 lambda         chaine vide : le non-terminal s'efface, comme sur un membre droit vide
@@ -1436,16 +1436,21 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 `!` accepte **tout ce qui se pose dans le flux** :
 
 ```bpscript
-@alphabet.western:audio
-@alphabet.tabla:osc
+@core
+@actor melodie
+  alphabet.western
+  out.audio
+@actor perc
+  alphabet.tabla
+  out.osc
 @var ramp1 ramp
 @def monte ramp1(from:0, to:255)
 
-S -> dha!tin                       // deux symboles a la meme attaque
-S -> dha!na                        // na prend la duree de dha
-S -> C4!dha!ge [stage=2]    // deux secondaires et une mutation de drapeau
-S -> -!dha                         // le silence porte la position, dha attaque avec lui
-S -> C4!monte                      // monte prend la duree de C4
+S -> perc.dha!perc.tin             // deux symboles a la meme attaque
+S -> perc.dha!perc.na              // na prend la duree de dha
+S -> melodie.C4!perc.dha!perc.ge [stage=2]   // deux secondaires et une mutation de drapeau
+S -> -!perc.dha                    // le silence porte la position, dha attaque avec lui
+S -> melodie.C4!monte              // monte prend la duree de C4
 ```
 
 Regles :
@@ -1627,20 +1632,7 @@ les porte jusqu'au moteur.
 
 ---
 
-## Les barres `|x|` -- delimiter un nom
-
-**Les barres delimitent le NOM d'un non-terminal.** Elles ne quantifient rien et n'apparient rien :
-`|x|` designe le non-terminal appele `x`, ni plus ni moins. Elles servent quand le nom
-commencerait par une minuscule, la ou il serait sinon pris pour un terminal.
-
-```bpscript
-S -> |a| |b|                //  la regle produit deux non-terminaux
-|a| -> C4                   //  C4 D4     chacun se reecrit comme n'importe quelle regle
-|b| -> D4
-```
-
-**Un nom entre barres est une tete de regle comme une autre** -- il se declare a gauche, il se
-reecrit, il disparait de la production.
+## Les tables d'homomorphisme
 
 **Les tables d'homomorphisme se declarent par `@homomorphism.<table>`**, une par nom, chacune
 avec ses sections. Une table porte des correspondances symbole vers symbole, et l'etiquette de la

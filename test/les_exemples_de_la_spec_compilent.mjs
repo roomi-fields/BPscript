@@ -169,6 +169,16 @@ const RE_REGLE = /^[A-Za-z_][\w']*\s*(?:->|<>|<-)\s/;
 // Retard mesuré le 2026-08-06 : 16 règles sur 123, en QUATRE familles. Chaque ligne sort de cette
 // liste le jour où le parser la rattrape — à la main, datée, comme le cliquet du dessus.
 const RETARD_REGLES = new Map([
+  // ⚠️ UNE REGLE QUI NOMME UN ACTEUR DECLARE DANS SON BLOC ne peut pas compiler SEULE — et ce
+  //    garde extrait les regles UNE PAR UNE. Ce n est donc pas une forme morte, c est un effet de
+  //    l INSTRUMENT : le bloc entier compile, mesure faite avant de l inscrire.
+  //    Cause posee le 2026-08-09, quand Romain a tranche  deux alphabets dans une scene, c est
+  //    deux ACTEURS nommes ; un alphabet par acteur . Les regles de ce bloc sont donc toutes
+  //    qualifiees, et la qualification renvoie a une declaration qui vit trois lignes plus haut.
+  //    ⛔ ELLE SORT LE JOUR OU LE GARDE SAIT CHAINER UNE REGLE A SON BLOC — pas avant, et surtout
+  //    pas en desactivant la mesure : un retard dont on ne sait pas s il vise le langage ou
+  //    l instrument est exactement celui qu on finit par croire.
+  ['S -> melodie.C4!monte', /Ambiguous symbol|Acteur inconnu/],
   // (a) la DURÉE COLLÉE décimale — RATTRAPÉE le 2026-08-06, les cinq lignes sont SORTIES d'ici.
   //     Romain : « ces exemples doivent fonctionner, ils sont légitimes ». `0.5` produit
   //     désormais le MÊME arbre que `1/2` — même durée, deux écritures. C'est le cliquet qui a
@@ -386,14 +396,6 @@ const RETARD_BLOCS = new Map([
   // ⚠️ DEUX BLOCS, DEUX CAUSES DISTINCTES (2026-08-09) :
   //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
   //    de `@def` que le parseur ne lit pas encore. Il se leve avec ce palier.
-  //  · `@alphabet.western:audio #0` ecrit DEUX alphabets implicites, ce que Romain a interdit le
-  //    2026-08-07. ⛔ J AI TENTE DE LE REECRIRE EN DEUX ACTEURS et ÇA NE MARCHE PAS : la forme
-  //    qualifiee apres le point d exclamation (`melodie.C4!perc.dha`) est refusee — le terme
-  //    apres le `!` n accepte pas de qualification d acteur. La reecriture attend donc une
-  //    DECISION sur la façon d ecrire deux alphabets dans une scene, pas un rattrapage.
-  //    Mesure faite avant de conclure : le bloc entier compile avec deux acteurs TANT QU on ne
-  //    qualifie pas les symboles secondaires — c est cette qualification qui manque.
-  ['@alphabet.western:audio #0', /ne déclare qu'UN alphabet/],
   ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
