@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -1418,6 +1418,33 @@ function parse(tokens, opts = {}) {
     if (at(T.PERIOD)) {
       advance();
       subkey = expect(T.IDENT).value;
+    }
+
+    // LE PRÉFIXE PAR LA LIBRAIRIE SE RABAT ICI, AU PLUS TÔT — `@core.tempo:120` DEVIENT
+    // `@tempo:120` (Romain, 2026-08-09 : « à étendre à toutes les librairies.directives »).
+    // Le préfixe est une façon d'ÉCRIRE, pas une forme à porter : il ne survit pas dans l'arbre,
+    // donc aucun consommateur n'a de nouvelle nature à lire. Contrepartie exacte de la résolution
+    // par unicité (2026-08-02) — le nom nu vaut quand il est unique, le préfixe nomme
+    // explicitement qui le déclare.
+    //
+    // ⚠️ « AU PLUS TÔT » EST TOUTE LA RÈGLE, et elle a été payée deux fois dans l'heure. Chaque
+    // refus posé sur une directive se garde par `!subkey` : un rabattement placé plus bas laisse
+    // la forme préfixée passer PAR-DESSUS le refus. Mesuré en produit croisé (librairies ×
+    // directives déclarées), rabattement tardif : `@core.seed:120` passait là où `@seed:120` est
+    // refusé depuis le 2026-06-11, et `@core.scene:120` ROUVRAIT `@scene`, supprimée du langage.
+    // DIX-HUIT paires se comportaient autrement que leur nom nu — dix-huit refus contournables en
+    // préfixant. Le cas du jour (`tempo`) n'en montrait aucun : seul le produit croisé les a vus.
+    //
+    // Ce qui se rabat est lu dans la DONNÉE (`directiveDeclareeParLaLibrairie` : `reservedDirectives`,
+    // `values`, `controls`), jamais une liste de paires en dur — une directive ajoutée à une
+    // librairie devient préfixable le jour même. Une invocation de COMPOSANT n'est pas touchée :
+    // `@alphabet.western` ne résout rien par ce chemin (`western` vit dans `alphabets`, pas parmi
+    // les directives déclarées), donc elle poursuit intacte. Un préfixe qui ne résout rien n'est
+    // pas avalé non plus : il tombe dans le refus nommé de `bpxAst`, qui dit quelle entrée manque
+    // et dans quelle librairie.
+    if (subkey && directiveDeclareeParLaLibrairie(name, subkey)) {
+      name = subkey;
+      subkey = null;
     }
 
     // ─── UNE CLÉ D'ACTEUR PORTE SES PARAMÈTRES, EN DÉFAUT DE SCÈNE AUSSI ──────────────────────

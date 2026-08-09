@@ -220,6 +220,31 @@ function loadLib(name, subkey) {
 }
 
 /**
+ * LA LIBRAIRIE `L` DÉCLARE-T-ELLE LA DIRECTIVE `nom` ? — lue dans la DONNÉE, jamais en dur.
+ *
+ * POURQUOI ELLE EXISTE. `loadLib(L, nom)` répond à une autre question : il cherche une ENTRÉE de
+ * catalogue (`@alphabet.sargam`), donc dans `alphabets`/`tables`/`objects`/racine. Une DIRECTIVE
+ * ne vit dans aucun de ces champs — `tempo` est déclaré dans `core.schema.reservedDirectives` —
+ * si bien que `@core.tempo:120` était refusé par le message « l'entrée n'existe pas dans la
+ * librairie » alors que la librairie la déclare bel et bien, deux champs plus loin.
+ *
+ * CE QUE ROMAIN A TRANCHÉ (2026-08-09) : le préfixe est OPTIONNEL, il n'a jamais été INTERDIT, et
+ * il vaut pour TOUTE paire librairie.directive — pas pour le seul tempo. C'est la contrepartie
+ * exacte de la résolution par unicité du 2026-08-02 : le nom nu marche quand il est unique, le
+ * préfixe nomme explicitement qui le déclare. La bible l'écrivait déjà (« le préfixe reste
+ * écrivable partout, y compris là où un nom nu suffirait ») ; il n'était écrivable nulle part.
+ */
+function directiveDeclareeParLaLibrairie(lib, nom) {
+  const file = loadJsonFile(lib);
+  if (!file || !nom) return false;
+  const reserved = (file.schema && file.schema.reservedDirectives) || [];
+  if (Array.isArray(reserved) && reserved.includes(nom)) return true;
+  if (file.values && Object.prototype.hasOwnProperty.call(file.values, nom)) return true;
+  if (file.controls && Object.prototype.hasOwnProperty.call(file.controls, nom)) return true;
+  return false;
+}
+
+/**
  * Résout un alphabet nommé pour une LIAISON D'ACTEUR (`@actor X @alphabet.<nom>`).
  *
  * POURQUOI CETTE FONCTION EXISTE. `loadLib('alphabet', nom)` ne connaît QUE le catalogue standard
@@ -828,6 +853,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
+export { loadLib, directiveDeclareeParLaLibrairie, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };
