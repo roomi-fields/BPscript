@@ -41,8 +41,8 @@ function mmFromAst(a) {
 
 // ── 2. scène déclare @mm → la scène GAGNE (pas d'écrasement) ────────────
 {
-  const ast = compileToBPxAST('@mm:70\nA -> C4', { tempo:90 }).ast;
-  assert('@mm:70 préservé (scène gagne)', mmFromAst(ast) === 70, `got ${mmFromAst(ast)}`);
+  const ast = compileToBPxAST('@tempo:70\nA -> C4', { tempo:90 }).ast;
+  assert('@tempo:70 préservé (scène gagne)', mmFromAst(ast) === 70, `got ${mmFromAst(ast)}`);
   const mmDirs = ast.directives.filter((d) => d.name === 'mm');
   assert('une seule directive @mm (pas de doublon)', mmDirs.length === 1, `got ${mmDirs.length}`);
   assert('pas d injection environnement', !mmDirs.some((d) => d.fromEnvironment));

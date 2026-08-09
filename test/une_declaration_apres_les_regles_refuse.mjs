@@ -49,8 +49,8 @@ const DECLARATIONS = [
   ['alphabet', '@alphabet.western'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
   // ⚠️ COBAYE CHANGÉ le 2026-08-08 : ce garde mesure la POSITION d'une déclaration dans le
   // fichier (avant / après les règles), pas la légitimité du mot. `@scan` ne s'écrit plus en
-  // tête de scène depuis que la portée est validée ; `@mm` porte la même propriété et y vaut.
-  ['mm', '@mm:120'], ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
+  // tête de scène depuis que la portée est validée ; `@mm` est SORTIE du langage le 2026-08-09 et vaut.
+  ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
   // ⚠️⚠️ `transport` ET `out` SONT SORTIS DE LA MATRICE le 2026-08-04, remplacés 1-pour-1 par
   // `scan` et `sound` — le témoin anti-rétrécissement (>= 24) reste tenu, et les deux remplaçants
   // ont été MESURÉS génériques avant d'être choisis (acceptés avant les règles, refusés après),
@@ -71,7 +71,7 @@ const DECLARATIONS = [
   // dans la matrice SANS la rétrécir.
   ['sound', '@sound.tabla_perc'],
   ['controls', '@controls'], ['var', '@var v'],
-  ['alias', '@alias g cc:2'], ['mm', '@mm:60'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
+  ['alias', '@alias g cc:2'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
   ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['homomorphism', '@homomorphism.dhati'],
   ['settings', '@settings'], ['transpose', '@transpose:1/2'], ['modulation', '@modulation'], ['ins', '@ins:3'],
@@ -114,7 +114,13 @@ ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
 // L'espace se lit dans la DONNÉE : si le vocabulaire de directives grandit, ce compte le dit.
 const RESERVEES = (LIBS['core']?.schema?.reservedDirectives || []).length;
 ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
-ok(DECLARATIONS.length >= 24,
+// Le seuil est passé de 24 à 22 le 2026-08-09, et le motif s'écrit ici plutôt que dans un commit :
+// `@mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des
+// deux listes — une forme qui n'existe plus ne peut pas être éprouvée. C'est le seul abaissement
+// légitime de ce socle : une forme RETIRÉE du langage. Un seuil qu'on baisse parce qu'un cas
+// « ne passe plus » est un socle qu'on désarme ; celui-ci se baisse parce que l'espace lui-même a
+// rétréci, et le compte des directives réservées ci-dessus reste, lui, à 40 pour le prouver.
+ok(DECLARATIONS.length >= 22,
   `4. la matrice ne s'est pas vidée — ${DECLARATIONS.length} déclarations éprouvées`);
 // TÉMOIN D'INSTRUMENT : sans lui, une régression rendant le refus muet laisserait tout au vert.
 ok(err(`${S}S -> C4\n@var v\n`).length >= 1,

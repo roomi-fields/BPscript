@@ -525,7 +525,7 @@ section('Rétrocompat : grammaire complète v0.7');
 @core
 @controls
 @alphabet.western:midi
-@mm:60
+@tempo:60
 @striated
 S -> A B C
 A -> C4 D4 E4

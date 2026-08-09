@@ -626,14 +626,25 @@ function parse(tokens, opts = {}) {
       skipNewlines();
     }
 
-    // ALIAS @tempo → @mm (décision Romain 2026-07-05) : `tempo` est la surface préférée,
-    // mais BPx LIT le directive `mm` (nœud tempo NATIF BPScript ; `_mm` est le nœud BP3 du
-    // grammar, hors chemin BPScript). On normalise `tempo`→`mm` sur le DIRECTIVE top-level ET
-    // le modifieur de mode `@mode:X(tempo:N)`, avant tout consommateur (libCtx, encodeur BP3,
-    // AST BPx). Le bloc ENGINE `[tempx:N]` (relatif → `_tempo`, renommé tempo→tempx le
-    // 2026-08-04, décision 2026-08-04-le-multiplicateur-de-vitesse-d-une-regle-s-appelle-tempx)
-    // N'EST PAS un scene.directive : il n'est pas touché. Rétrocompat : @mm continue de
-    // marcher (déprécié-doux).
+    // LA SURFACE ET LE NOM DANS L'ARBRE SONT DEUX OBJETS — et deux décisions qui ne se
+    // contredisent pas (arbitrage architecte 2026-08-09, §38).
+    //
+    // `@mm` SORT DE LA SURFACE : un auteur ne l'écrit plus (décision Romain 2026-06-26, `@mm` →
+    // `@tempo`). Le refus est posé plus bas, à la lecture de la directive.
+    //
+    // LE NOM DANS L'ARBRE NE BOUGE PAS : `tempo` continue de se normaliser en `mm` ici (décision
+    // Romain 2026-07-05), parce que BPx LIT ce nom — douze sites mesurés. Le renommer coûterait
+    // douze rebranchements chez lui pour zéro gain visible par un auteur. Ce n'est donc PAS la
+    // rétrocompat interdite : la rétrocompat, c'était d'accepter encore l'ancienne SURFACE, et
+    // c'est elle qui tombe. Le nom interne est un choix de contrat entre deux dépôts.
+    //
+    // ⚠️ ET LE NOM MOTEUR RESTE UNE GRAPHIE D'ENTRÉE BP3 — mesuré par BPx dans 25 fichiers du
+    // corpus natif. `bp3ToScene` continue de le LIRE ; ce qui change est ce qu'il PRODUIT. Fermer
+    // la surface ne ferme pas la voie native : même motif que le nom entre barres, sorti du
+    // langage le même jour et resté lisible en entrée BP3.
+    //
+    // Le bloc ENGINE `[tempx:N]` (relatif, renommé le 2026-08-04) n'est pas un `scene.directive` :
+    // il n'est pas touché.
     for (const d of scene.directives) {
       if (!d || d.type !== 'Directive') continue;
       if (d.name === 'tempo') d.name = 'mm';
@@ -1481,6 +1492,29 @@ function parse(tokens, opts = {}) {
     // PARTOUT. Et sa réciproque, apprise le même jour et plus vicieuse : chercher les OCCURRENCES
     // dans les données ne trouve pas les LECTEURS — BPx n'avait aucune scène employant `@scene`, et
     // c'est pourtant chez eux que la suppression mord, parce que c'est leur CODE qui lit le champ.
+    // ⛔ PIERRE TOMBALE — `@mm` SORT DE LA SURFACE (Romain 2026-06-26, `@mm` → `@tempo` ; feu de
+    // fermeture 2026-08-09, arbitrage architecte §38). Un auteur écrit `@tempo:N`, et lui seul.
+    //
+    // ⚠️ CE QUI NE SE FERME PAS, ET IL FAUT LE LIRE AVANT DE TOUCHER À CE REFUS :
+    //   · le NOM DANS L'ARBRE reste `mm` — BPx le lit sur douze sites (mesuré). La normalisation
+    //     `tempo` → `mm` vit plus haut dans ce fichier et ne bouge pas.
+    //   · la GRAPHIE NATIVE BP3 reste lisible — 25 fichiers du corpus natif la portent (mesuré par
+    //     BPx). `bp3ToScene` continue de la LIRE ; seul ce qu'il PRODUIT devient `tempo`.
+    // Fermer la surface, ce n'est fermer ni l'une ni l'autre. Même motif que le nom entre barres,
+    // sorti du langage le même jour et resté une graphie d'entrée BP3.
+    //
+    // FRONTIÈRE MESURÉE AVANT LA FRAPPE : zéro fichier de l'atelier ne porte cette directive à
+    // l'instant du commit — BPx avait migré ses 48 scènes le matin même. Le compte de ce chantier
+    // a été faux trois fois avant d'être lu ligne à ligne ; c'est pourquoi cette phrase dit « à
+    // l'instant du commit » et non « nulle part », qui affirmerait plus que ce qui a été mesuré.
+    if (name === 'mm') {
+      throw new ParseError(
+        `'@mm' est SORTIE du langage (décision Romain 2026-06-26) — écrire '@tempo:<N>'. `
+        + `Le métronome de la scène a un seul nom. `
+        + `La graphie reste lisible en ENTRÉE BP3 : ce refus ferme la surface BPScript, pas la `
+        + `voie native.`, tok);
+    }
+
     if (name === 'scene') {
       throw new ParseError(
         `'@scene' est SUPPRIMÉE du langage (décision Romain 2026-07-29) : « on n'a ni la maturité `

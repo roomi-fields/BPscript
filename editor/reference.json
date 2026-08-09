@@ -21,7 +21,7 @@
           "desc": "Load alphabet with output binding"
         },
         {
-          "syntax": "@mm:120",
+          "syntax": "@tempo:120",
           "desc": "Set metronome to 120 BPM"
         },
         {
@@ -53,7 +53,7 @@
           "desc": "Define an actor"
         }
       ],
-      "example": "@core\n@controls\n@alphabet.western:audio\n@mm:120"
+      "example": "@core\n@controls\n@alphabet.western:audio\n@tempo:120"
     },
     "->": {
       "name": "Rule (left to right)",
@@ -418,7 +418,7 @@
       }
     },
     "mm": {
-      "syntax": "@mm:N",
+      "syntax": "@tempo:N",
       "desc": "Set metronome to N BPM (default: 60). Determines the absolute duration of one time unit."
     },
     "tonality": {
