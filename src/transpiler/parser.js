@@ -1755,8 +1755,18 @@ function parse(tokens, opts = {}) {
       // enverrait l'auteur dans un mur : la faute que kanopi a mesuree ce matin sur un autre refus.
       // Le message dit donc ce qui EST : la directive n'existe plus, et ce qui la remplacera
       // attend une revue. Mieux vaut un refus honnete qu'une reecriture inventee.
+      // ⚠️ LE REFUS NOMME CE QU IL REFUSE — mesure de kanopi, 2026-08-09. Mon premier message
+      // disait que la directive est supprimee et POURQUOI il n y a pas de reecriture, mais plus un
+      // mot sur CE QU ELLE PORTAIT. Cinq de ses gardes citaient les noms concernes ; il a du
+      // ELARGIR ses motifs, et un motif elargi est un garde plus faible.
+      // ⛔ ET LE COUT POUR UN AUTEUR EST PLUS GRAND QUE POUR SES GARDES : devant une scene qui
+      // declare quatre modulateurs, l ancien refus disait LEQUEL posait probleme, le nouveau
+      // demandait de les chercher. Le principe de la forme vivante vaut aussi pour le SUJET du
+      // refus, pas seulement pour sa reecriture.
+      const nomMacro = at(T.IDENT) ? current().value : null;
       throw new ParseError(
-        `'@macro' est supprime du langage (decision Romain, 2026-08-09). Une definition se declare `
+        `'@macro${nomMacro ? ' ' + nomMacro : ''}' est supprime du langage (decision Romain, `
+        + `2026-08-09). Une definition se declare `
         + `avec '@def'. Les macros de CABLAGE — un branchement, une pose de valeur sur un port, un `
         + `declenchement — attendent le corps de branchement de '@def', en cours d'arbitrage avec `
         + `le reste du patching : il n'y a pas de reecriture a leur donner aujourd'hui.`, tok);
@@ -1841,8 +1851,11 @@ function parse(tokens, opts = {}) {
     // forme de remplacement attend la revue FaustX. Prescrire une forme que le langage ne lit pas
     // encore enverrait l auteur dans un mur.
     if (name === 'cv') {
+      // Le refus nomme ce qu il refuse — meme raison que pour `@macro`, mesuree par kanopi.
+      const nomCv = at(T.IDENT) ? current().value : null;
       throw new ParseError(
-        `'@cv' est supprime du langage (decision 2026-08-08). Les modulateurs relevent du patching, `
+        `'@cv${nomCv ? ' ' + nomCv : ''}' est supprime du langage (decision 2026-08-08). `
+        + `Les modulateurs relevent du patching, `
         + `dont la forme de remplacement est en cours d arbitrage : il n y a pas de reecriture a `
         + `donner aujourd hui.`, tok);
     }
