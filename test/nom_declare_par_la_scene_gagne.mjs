@@ -56,8 +56,13 @@ const regleDe = (o) => o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [];
 
 // ─── 1. SOCLE — la donnée n'est pas vide, sinon la garde rétrécit avec elle ──────────────────
 // Ce garde est piloté par la donnée : si le chargeur rendait un ensemble vide, les boucles
+// Compte abaissé d'UNE unité le 2026-08-09 : `randomize` était déclaré DEUX FOIS (sections
+// `subgrammar` et `engine`), avec deux portées divergentes — et c'est la plus étroite qui
+// gagnait en silence. Le doublon part, le MOT reste déclaré : aucune confiscation, aucun
+// nom ne quitte le vocabulaire. C'est le seul abaissement légitime de ce socle — une entrée
+// dupliquée qu'on dédoublonne, jamais un cas qui « ne passe plus ».
 // ci-dessous ne vérifieraient RIEN et resteraient vertes. On ancre donc le socle.
-ok(SANS_ARGUMENT.length >= 16,
+ok(SANS_ARGUMENT.length >= 15,
    `1. le vocabulaire doit porter au moins 16 contrôles sans argument — reçu ${SANS_ARGUMENT.length}`);
 for (const attendu of ['mute', 'unmute', 'panic', 'stop']) {
   ok(SANS_ARGUMENT.includes(attendu), `1. '${attendu}' doit être un contrôle sans argument`);

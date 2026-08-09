@@ -465,6 +465,11 @@ function bp3ToScene(grammarText, opts) {
   // ── Phase 3 : sérialiser en BPscript ─────────────────────────────────────
 
   const bpsLines = [];
+  // LES INSTRUCTIONS DE TÊTE DE LA GRAMMAIRE (`_mm(N)`, `_striated`, `_destru`…) sont de portée
+  // SCÈNE, mesurée sur le corpus natif : une seule fois par grammaire, toujours en tête. Elles
+  // se collectent ici pendant qu'on parcourt les sous-grammaires, et se posent EN TÊTE de la
+  // scène produite — jamais accrochées au mode d'une sous-grammaire (Romain, 2026-08-09).
+  const entete = [];
 
   // BOLSIZE : table d'alias pour les terminaux dépassant 30 chars (limite moteur BP3)
   const bolsizeTable = new BolsizeTable();
@@ -529,12 +534,26 @@ function bp3ToScene(grammarText, opts) {
       const bpsMode = BP3_TO_BPS_MODE[sub.mode];
       if (!bpsMode) return `NON GÉRÉ: mode BP3 inconnu "${sub.mode}"`;
 
-      // Construire les modificateurs depuis le preamble
-      const modifiers = extractPreambleModifiers(sub.preamble);
-      if (modifiers.length > 0) {
-        bpsLines.push(`@mode:${bpsMode}(${modifiers.join(',')})`);
-      } else {
-        bpsLines.push(`@mode:${bpsMode}`);
+      // LES INSTRUCTIONS DE TÊTE VONT EN TÊTE DE SCÈNE, UNE PAR LIGNE — « en tête de scène en BP3
+      // et en BPScript comme l'original » (Romain, 2026-08-09).
+      //
+      // ⚠️ CE SITE EST LA CAUSE, PAS UNE VICTIME. Il fabriquait `@mode:<mode>(<liste>)` en accrochant
+      // au mode d'une SOUS-GRAMMAIRE une ligne d'instructions dont la portée est la SCÈNE. Mesuré
+      // sur le corpus natif : le mode est seul sur sa ligne (`ORD`), les instructions sont sur la
+      // LIGNE SUIVANTE (`_mm(88.0000) _striated`), une seule fois par grammaire, jamais dans une
+      // sous-grammaire ultérieure. Le sac n'a donc jamais été une forme du langage : c'était la
+      // signature de ce convertisseur.
+      //
+      // ET C'EST CE QUI EXPLIQUE QUE PERSONNE NE LE CONSOMMAIT. Une place inventée ici n'est
+      // contractée par aucun consommateur en aval — kanopi a mesuré qu'un tempo déclaré dans le sac
+      // rend 60, comme si rien n'était déclaré. Le défaut ne venait ni de lui ni des lecteurs :
+      // il venait d'ici, et il était invisible des deux bouts.
+      const instructions = extractPreambleModifiers(sub.preamble);
+      bpsLines.push(`@mode:${bpsMode}`);
+      for (const instr of instructions) {
+        // `mm:N` devient `@tempo:N` — la surface `@mm` est sortie du langage le 2026-08-09.
+        const m = /^mm:(.+)$/.exec(instr);
+        entete.push(m ? `@tempo:${m[1]}` : `@${instr}`);
       }
 
       // Lignes de preamble qui ne sont PAS des modificateurs connus → conservées verbatim
@@ -635,11 +654,17 @@ function bp3ToScene(grammarText, opts) {
     // Les tirets dans le hoKey sont remplacés par 'O' car le tokenizer BPscript
     // interprèterait '-' comme silence dans un identifiant de directive.
     const safeHoKey = opts.hoKey.replace(/-/g, 'O');
-    const bpsWithHo = `@homomorphism.${safeHoKey}\n` + bpsLines.join('\n');
+    const bpsWithHo = `@homomorphism.${safeHoKey}\n` + enTete().join('\n');
     return { bps: bpsWithHo, transcriptionEntry };
   }
 
-  return bpsLines.join('\n');
+  return enTete().join('\n');
+
+  // Les instructions de tête précèdent tout le reste, dédupliquées : le natif n'en porte qu'un
+  // jeu par grammaire, donc deux sous-grammaires qui répètent `_striated` n'en produisent qu'un.
+  function enTete() {
+    return [...new Set(entete), ...bpsLines];
+  }
 }
 
 // ─── Utilitaires ─────────────────────────────────────────────────────────────

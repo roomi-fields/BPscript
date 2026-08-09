@@ -17,7 +17,8 @@
       "args": [],
       "description": "Destructure composed terminals based on alphabet",
       "scope": [
-        "subgrammar"
+        "subgrammar",
+        "scene"
       ]
     },
     "striated": {
@@ -55,7 +56,8 @@
       "description": "Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
       "scope": [
         "subgrammar",
-        "flow"
+        "flow",
+        "scene"
       ],
       "bagOnly": true
     }
@@ -256,16 +258,6 @@
         "rule",
         "flow"
       ]
-    },
-    "randomize": {
-      "bp3": "_randomize",
-      "args": [],
-      "description": "Re-seed RNG from clock (BP3 _randomize, Encode.c case 50). No arguments.",
-      "scope": [
-        "subgrammar",
-        "flow"
-      ],
-      "bagOnly": true
     }
   },
   "runtime": {
