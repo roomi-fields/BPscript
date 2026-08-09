@@ -6,7 +6,6 @@
 // part — elle émerge de trois règles qui se passent le relais.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:88
 

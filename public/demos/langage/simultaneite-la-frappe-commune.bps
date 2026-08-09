@@ -7,7 +7,6 @@
 // qu'on entend, pas les notes.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:92
 

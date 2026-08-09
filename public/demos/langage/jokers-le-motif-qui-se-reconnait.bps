@@ -6,7 +6,6 @@
 // elle dit « quoi que ce soit, renvoie-le », et la matière traverse.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:100
 

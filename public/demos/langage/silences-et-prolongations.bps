@@ -6,7 +6,6 @@
 // La même mélodie, dite trois fois, avec trois respirations différentes.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:76
 

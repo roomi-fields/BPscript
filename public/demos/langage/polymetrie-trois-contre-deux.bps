@@ -5,7 +5,6 @@
 // C'est le hémiole des musiques d'Afrique de l'Ouest et de Brahms — la même figure.
 
 @core
-@controls
 @alphabet.western:audio
 @tempo:104
 
