@@ -118,7 +118,6 @@ for (const [quoi, corps, fragment] of [
 // décider sur une liste de types ferait dépendre la forme d'un vocabulaire.
 for (const [quoi, corps] of [
   ['un branchement',              '@def souffle lfo1.out >> lpf1.cutoff'],
-  ['du code TYPÉ',                '@def fondu phase `js: (t, dur) => 1 - t / dur`'],
 ]) {
   ok(messages(compiler(corps)) !== '',
      `D. ${quoi} n'est pas encore lu par ce palier — il doit REFUSER, et il passe. Un corps lu de `
@@ -216,6 +215,39 @@ for (const [quoi, corps] of [
   }
 }
 
+// ── G. LE CODE TYPÉ — `@def fondu phase \`js: …\`` ──────────────────────────────────────────
+// `LANGUAGE.md:307` : « Ses types sont ceux des signaux : signal, pitch, phase, logic. »
+// ⚠️ LE TYPE SE LIT DANS LA DONNÉE (`core.json`, les conventions que `@var` consulte déjà) —
+// aucun nom de type n'est écrit dans le parseur. Ajouter une convention à la donnée l'ouvre ici
+// sans toucher au code ; en retirer une la ferme. C'est la leçon de la journée appliquée d'emblée.
+//
+// ⚠️ ET CE CORPS ÉTAIT REFUSÉ PAR LE PALIER STRUCTURE, VOLONTAIREMENT : `phase` est un terme nu,
+// il tombait dans la branche structure et devenait un TERMINAL — un arbre plausible et faux, que
+// rien n'aurait signalé en aval. Le refus posait la question ; ce palier la résout sur la même
+// FORME (un backtick suit), jamais sur le nom du premier terme.
+{
+  const CODE = [
+    ['la forme littérale de la référence', '@def fondu phase `js: (t, dur) => 1 - t / dur`', 'phase', 'js'],
+    ['une autre convention',               '@def g signal `js: 1`',                          'signal', 'js'],
+    ['un autre langage',                   '@def h logic `py: True`',                        'logic', 'py'],
+  ];
+  for (const [quoi, corps, convention, tag] of CODE) {
+    const r = compiler(corps);
+    ok(messages(r) === '', `G. ${quoi} — REFUSÉ : ${messages(r).slice(0, 90)}`);
+    if (messages(r)) continue;
+    const d = defDe(r);
+    ok(d?.kind === 'code' && d?.convention === convention && d?.tag === tag,
+       `G. ${quoi} — attendu code/${convention}/${tag}, reçu `
+       + `${JSON.stringify({ k: d?.kind, c: d?.convention, t: d?.tag })}. Le type et le langage sont `
+       + `deux choses : l'un dit ce que le signal EST, l'autre qui l'exécute.`);
+  }
+  // ⚠️ LE TÉMOIN QUI COMPTE : un type HORS des conventions déclarées ne doit pas passer pour un
+  // code typé — sinon n'importe quel terme nu suivi d'un backtick en deviendrait un.
+  ok(/porte du CODE, pas une structure/.test(messages(compiler('@def h zzz `js: 1`'))),
+     `G-témoin. un type hors des conventions déclarées ne fait PAS un code typé — reçu : `
+     + `${messages(compiler('@def h zzz `js: 1`')).slice(0, 90)}`);
+}
+
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
 ok(FORMES.length >= 4, `SOCLE : ${FORMES.length} formes mesurées, 4 au moins attendues.`);
 
@@ -224,7 +256,8 @@ if (echecs.length) {
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ '@def' déclare un terminal ET une structure — ${FORMES.length} formes de clés + 3 natures `
-          + `de structure lues et RANGÉES dans l'arbre, bloc borné par l'indentation, départage `
-          + `sur la ponctuation collée et non sur le nom, 6 refus nommés et 4 corps pas encore lus `
-          + `qui crient au lieu de mentir. ${passe} vérification(s) passée(s).`);
+console.log(`✅ '@def' lit CINQ des six corps de la référence — terminal, structure, préréglage, `
+          + `transformation (paramétrée et structurelle), code typé ; seul le BRANCHEMENT reste, au `
+          + `backlog avec le patching. Départage sur la PONCTUATION COLLÉE et non sur le nom, type `
+          + `du code lu dans la DONNÉE, bloc borné par l'indentation, et l'APPEL vérifié sur le bloc `
+          + `littéral de la référence. ${passe} vérification(s) passée(s).`);

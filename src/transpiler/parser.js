@@ -2076,6 +2076,23 @@ function parse(tokens, opts = {}) {
       // C est la meme regle que partout ailleurs dans le langage — l espace delimite les termes —
       // et elle suffit a distinguer une TRANSFORMATION PARAMETREE d un PREREGLAGE, sans qu on ait
       // a deviner d apres le contenu de la parenthese.
+      // ── LE CODE TYPE : `@def fondu phase `js: …`` ────────────────────────────────────────
+      // `LANGUAGE.md:307` : « Ses types sont ceux des signaux : signal, pitch, phase, logic. »
+      // Le type se lit dans la DONNEE (`core.json`, schema.varConventions) — la meme liste que
+      // `@var` consulte deja pour ses conventions. Aucun nom de type n est ecrit ici.
+      // ⚠️ CE CORPS ETAIT REFUSE PAR LE PALIER STRUCTURE, et volontairement : `phase` est un terme
+      // nu, il tombait dans la branche structure et devenait un TERMINAL — un arbre plausible et
+      // faux. Le refus posait la question ; c est ici qu elle se resout, sur la meme FORME (un
+      // backtick suit) et pas sur le nom du premier terme.
+      if (at(T.IDENT) && varConventions().has(current().value)
+          && peek(1) && peek(1).type === T.BACKTICK) {
+        const convention = advance().value;
+        const bt = current();
+        const brut = expect(T.BACKTICK).value;
+        const { tag, code } = splitBacktickTag(brut, bt);
+        return { type: 'DefDirective', name: defName, kind: 'code',
+                 convention, tag, code, line: tok.line };
+      }
       if (at(T.LPAREN) && !current().spaceBefore) {
         // TRANSFORMATION PARAMETREE : `@def accent(x) x(vel:120)`
         advance();
