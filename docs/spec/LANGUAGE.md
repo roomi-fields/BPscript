@@ -770,19 +770,22 @@ le recepteur qui leur donne un sens.
 
 ### Le crochet -- ce qui appartient a la derivation
 
-**Le crochet porte ce qui gouverne la derivation elle-meme** : l'etat qui decide de son chemin, et
-le rang d'une forme dans le catalogue. Tout reglage s'ecrit entre **parentheses**, ou le **domaine
-de la cle** nomme son destinataire.
+**Le crochet porte ce qui gouverne la derivation elle-meme** : l'etat qui decide de son chemin, la
+marche que ce chemin suit, et le rang d'une forme dans le catalogue. Tout reglage s'ecrit entre
+**parentheses**, ou le **domaine de la cle** nomme son destinataire.
 
-| place                              | ce qu'il porte                                                |
-| ---------------------------------- | ------------------------------------------------------------- |
-| avant le membre gauche             | un **test** de drapeau : `[stage==1]`, `[Ideas]`, `[count-1]` |
-| en fin de regle                    | une **affectation** de drapeau : `[stage=2]`                  |
-| en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`             |
+| place                              | ce qu'il porte                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| avant le membre gauche             | un **test** de drapeau : `[stage==1]`, `[Ideas]`, `[count-1]`         |
+| en fin de regle                    | une **affectation** de drapeau : `[stage=2]`                          |
+| en fin de regle                    | une **procedure** de derivation : `[goto:3 0]`, `[repeat:2]`, `[failed:3 2]`, `[stop]` |
+| en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`                     |
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
-suite. Un reglage ecrit entre crochets arrete la compilation, et le message donne sa forme : le
-`mode` s'ecrit `@mode:random`, en tete de sous-grammaire.
+suite ; une procedure deplace la derivation elle-meme -- `goto` l'envoie a une autre regle, `repeat`
+la refait, `failed` dit ou aller quand rien ne s'applique, `stop` l'arrete. Un reglage ecrit entre
+crochets arrete la compilation, et le message donne sa forme : le `mode` s'ecrit `@mode:random`, en
+tete de sous-grammaire.
 
 ```bpscript
 @core

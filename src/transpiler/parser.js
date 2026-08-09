@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs } from './libs.js';
+import { loadLib, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
 import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
 
 class ParseError extends Error {
@@ -5970,7 +5970,37 @@ function parse(tokens, opts = {}) {
         + `MOTEUR`,
         tok);
     }
-    if (universeControlNames().has(key)) return;
+    // ⛔ LE CROCHET NE PORTE QUE CE QUI GOUVERNE LA DÉRIVATION — arbitrage de Romain, 2026-08-08.
+    // Le tableau de `LANGUAGE.md` §« Le crochet » compte désormais QUATRE places : un test de
+    // drapeau, une affectation de drapeau, une PROCÉDURE de dérivation, un rang de gabarit.
+    // Un contrôle qui n'est aucune des quatre décrit ce que la dérivation PRODUIT — il s'écrit
+    // entre parenthèses, comme tout réglage.
+    //
+    // LE CRITÈRE VIENT DE LA DONNÉE, ET IL SÉPARE EXACTEMENT LES QUATRE : une procédure de
+    // dérivation est déclarée de portée `rule` SEULE, avec un nom moteur. Mesuré le jour de
+    // l'arbitrage : `failed goto repeat stop` — précisément la liste que Romain a portée au
+    // tableau, sans qu'aucun nom soit écrit ici.
+    // ⚠️ `rndtime` s'en distingue par sa propre déclaration : cinq portées, dont `symbol` et
+    // `group`. Il décrit une propriété de ce qui est produit, pas un chemin de dérivation.
+    //
+    // ⚠️ CE GARDE NE VOIT PAS LES DRAPEAUX, et c'est voulu : il n'est atteint qu'après un
+    // deux-points. `[vel]` nu reste un DRAPEAU nommé « vel », exactement comme `[monDrapeau]` —
+    // mesuré. Un drapeau porte le nom qu'on veut ; le confondre avec un contrôle homonyme
+    // confisquerait des noms d'état à leurs scènes.
+    if (universeControlNames().has(key)) {
+      if (universeRuleScopeControls().has(key)) return;
+      // Un contrôle HORS de sa portée est déjà refusé en aval, avec un message qui donne sa
+      // vraie place. Ne pas doubler ce refus par un message plus vague — mesuré : sans cette
+      // ligne, `[mode:…]` perdait sa réécriture `@mode:…` en tête de sous-grammaire.
+      if (!universeRuleAllowedControls().has(key)) return;
+      throw new ParseError(
+        `'[${key}:…]' : le crochet ne porte que ce qui gouverne la DÉRIVATION — un test de drapeau `
+        + `('[flag]', '[flag==1]'), une affectation ('[flag=1]'), une procédure de dérivation `
+        + `('[goto:…]', '[repeat:…]', '[failed:…]', '[stop]') ou le rang d'une forme de gabarit `
+        + `('[3]'). '${key}' décrit ce que la dérivation PRODUIT : il s'écrit entre PARENTHÈSES `
+        + `(décision Romain 2026-08-08, LANGUAGE.md §« Le crochet »).`,
+        tok);
+    }
     // Ne JAMAIS suggérer « utiliser (clé:…) » : les deux formes ne sont pas des synonymes
     // (constat bpx 2026-07-10). `![rotate:N]` réordonne la séquence (contrôle moteur sériel) ;
     // `(rotate:N)` transpose (paramètre de runtime, opaque). Suivre la suggestion ferait perdre

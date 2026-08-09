@@ -44,14 +44,18 @@ const CONTENANTS = [
   ['événement simultané',              'motif -> C4!%s'],
   ['note ancrée à un point d\'attente', 'motif -> {%s<!s1}'],
   ['groupe avec durée collée',         'motif -> {%s C4}:2'],
-  // ⚠️ L'EXEMPLE A CHANGÉ deux fois. Le 2026-08-05 : `weight` est un RÉGLAGE, il s'écrit
-  // désormais en PARENTHÈSES (décision Romain 2026-08-02, LANGUAGE.md:773-800) — `[weight:…]`
-  // est REFUSÉ, remplacé par `rotate`. Le 2026-08-06 : `rotate` a rejoint la même liste
-  // (usage FLUX uniquement au corpus, sûr côté BPx — cf. lib/core.json `_qualifierKeys_doc`) —
-  // `[rotate:…]` est REFUSÉ à son tour, remplacé par `rndtime` : un contrôle du sac MOTEUR
-  // resté au crochet (lecture dédiée `ast.qualifiers` côté BPx, hors périmètre de cette
-  // migration). Il vérifie la même chose (un sac attaché à un groupe).
-  ['groupe avec sac moteur',           'motif -> {%s C4}[rndtime:2]'],
+  // ⚠️ CE DÉCOR A MIGRÉ TROIS FOIS, ET LE MOTIF VAUT PLUS QUE LA MIGRATION. `weight` (2026-08-05),
+  // puis `rotate` (2026-08-06), puis `rndtime` (2026-08-08) : chaque fois le contrôle choisi pour
+  // illustrer « un sac attaché à un groupe » a fini par être retiré du CROCHET. La cause de fond
+  // est apparue avec l'arbitrage de Romain du 2026-08-08 — le crochet ne porte que ce qui gouverne
+  // la DÉRIVATION, et le tableau de ses places (test, affectation, procédure, rang) ne mentionne
+  // AUCUN crochet collé à un élément ou à un groupe.
+  // ⛔ Chercher un quatrième contrôle serait rejouer la même faute une quatrième fois : le sac
+  // COLLÉ vivant est la PARENTHÈSE. Ce contenant emploie donc la forme vivante, qui vérifie
+  // exactement la même chose — un sac attaché à un groupe, et un terminal dessous.
+  // ⚠️ QUESTION OUVERTE POUR ROMAIN, posée et non tranchée ici : le crochet COLLÉ (portée symbole
+  // ou groupe) existe-t-il encore ? Le tableau des quatre places ne le nomme pas.
+  ['groupe avec sac de réglages',      'motif -> {%s C4}(vel:80)'],
 ];
 console.log(`[terminal sous un groupe] ${CONTENANTS.length} contenants x 2 sens`);
 for (const [quoi, forme] of CONTENANTS) {

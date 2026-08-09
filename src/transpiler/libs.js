@@ -35,6 +35,7 @@ function registerLib(name, data) {
   _universeControls = null;  // le registre a bougé → recalculer l'univers
   _universeComponentControls = null;
   _universeRuleScope = null;
+  _universeRuleAllowed = null;
   _universeSacs = null;
 }
 
@@ -57,6 +58,7 @@ function clearRegistry() {
   _universeControls = null;
   _universeComponentControls = null;
   _universeRuleScope = null;
+  _universeRuleAllowed = null;
   _universeSacs = null;
 }
 
@@ -135,6 +137,16 @@ function universeRuleScopeControls() {
     _universeRuleScope = loadLibsFromDirectives(allDirs).ruleScopeControls;
   }
   return _universeRuleScope;
+}
+
+// Univers des contrôles dont la portée déclarée INCLUT la règle.
+let _universeRuleAllowed = null;
+function universeRuleAllowedControls() {
+  if (!_universeRuleAllowed) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeRuleAllowed = loadLibsFromDirectives(allDirs).ruleAllowedControls;
+  }
+  return _universeRuleAllowed;
 }
 
 // Auto-register the pre-bundled libs at module load (Node AND browser).
@@ -297,6 +309,7 @@ function loadLibsFromDirectives(directives) {
     engineBagControls: new Set(),   // déclarés sous `engine` → sac MOTEUR `[…]`
     runtimeBagControls: new Set(),  // déclarés sous `runtime.*` → sac RUNTIME `(…)`
                                     // « le sac dit QUI REÇOIT » : un contrôle ne vit pas dans les deux.
+    ruleAllowedControls: new Set(), // portée INCLUANT `rule` — voir le commentaire du remplissage
     ruleScopeControls: new Set(),  // PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"` dans la lib) :
                                    // goto, failed, repeat, stop. Elles ne s'appliquent pas à une
                                    // POSITION mais à la RÈGLE entière — le moteur les extrait en
@@ -610,6 +623,17 @@ function loadLibsFromDirectives(directives) {
         if (portees.length === 1 && portees[0] === 'rule' && typeof def.bp3 === 'string') {
           ctx.ruleScopeControls.add(name);
         }
+        // CE QUI A LE DROIT DE S'ÉCRIRE AU NIVEAU D'UNE RÈGLE — portée qui INCLUT `rule`, sans
+        // exiger qu'elle soit seule. Distinct de `ruleScopeControls` : `rndtime` est ici (il vaut
+        // aussi sur un symbole ou un groupe) et n'est pas une procédure.
+        // ⚠️ SERT À NE PAS DOUBLER UN REFUS PLUS PRÉCIS. Le refus du crochet, côté parseur, ne
+        // doit mordre que sur ce que l'aval LAISSE PASSER : un contrôle hors de sa portée est
+        // déjà refusé par la confrontation des portées, avec un message qui donne sa vraie place
+        // (« `@mode:…` en tête de sous-grammaire »). Mesuré le 2026-08-08 : sans cette
+        // restriction, le refus générique du crochet interceptait `mode` en amont et FAISAIT
+        // PERDRE sa réécriture — un message précis remplacé par un message vague est une
+        // régression que seul un garde du message attrape.
+        if (portees.includes('rule')) ctx.ruleAllowedControls.add(name);
         // Argument = intervalle musical (fraction/cents/décimal) : la surface lit une
         // valeur d'intervalle et la porte brute ; la résolution (Kairos) la normalise.
         if (def.argType === 'interval') {
@@ -800,6 +824,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeSacs, registerLib, registerAll, clearRegistry,
+export { loadLib, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

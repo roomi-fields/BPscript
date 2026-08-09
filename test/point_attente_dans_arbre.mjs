@@ -124,8 +124,17 @@ const PROPRIETES = [
   // migration. Sa valeur est ici une CHAÎNE ('2', pas 2) : `@controls` est chargé par ce fichier,
   // donc `rndtime` — déclaré dans `lib/controls.json` — passe par le lecteur brut de
   // `libCtx.controlNames` (parser.js), pas par le lecteur numérique partagé des réglages réservés.
-  ['le sac MOTEUR', '[rndtime:2]',
-    (t) => (t.qualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'rndtime' && p.value === '2')],
+  // ⚠️ CE DÉCOR A MIGRÉ TROIS FOIS POUR LA MÊME RAISON — `weight` (2026-08-05), `rotate`
+  // (2026-08-06), `rndtime` (2026-08-08) : chaque contrôle choisi pour illustrer « un sac collé »
+  // a fini par sortir du CROCHET. La cause de fond est l'arbitrage de Romain du 2026-08-08 — le
+  // crochet ne porte que ce qui gouverne la DÉRIVATION, et le tableau de ses places ne nomme
+  // AUCUN crochet collé à un élément. Chercher un quatrième contrôle rejouerait la faute : le sac
+  // COLLÉ vivant est la PARENTHÈSE, et c'est elle qui est mesurée ici.
+  // La propriété reste la même et c'est tout l'enjeu : le sac doit être porté PAR LE POINT
+  // D'ATTENTE, pas par l'assemblage qui le contient — le défaut « déplacé, pas perdu » du
+  // 2026-07-27, que rien ne signale puisque rien ne manque.
+  ['le sac de RÉGLAGES', '(vel:80)',
+    (t) => (t.suffixQualifiers || []).flatMap((q) => q.pairs || []).some((p) => p.key === 'vel' && p.value === 80)],
   ["l'ADRESSE de sa source", '.60', (t) => t.address === 60],
   ['son NOM', '', (t) => t.name === 'sync1'],
 ];
