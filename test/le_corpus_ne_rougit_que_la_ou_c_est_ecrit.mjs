@@ -76,11 +76,6 @@ const REGISTRE = [
   ['synthesis/group-cutoff.bps',          'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['synthesis/superp-cutoff.bps',         'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['synthesis/patchbay.bps',              'supprime du langage', 'declare @macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['public/demos/cv-adsr.bps',            'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['public/demos/cv-lfo.bps',             'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['public/demos/cv-backtick.bps',        'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['public/demos/codevoices/cv-curve-js.bps', 'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['public/demos/patchbay-demo.bps',      'supprime du langage', 'declare @macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['test/fixtures/cv_modulation.bps',     'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans @alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 : cette scène refusait pour ses terminaux nus ; elle

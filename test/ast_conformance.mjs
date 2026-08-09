@@ -109,13 +109,12 @@ const ERREURS_ADMISES = [
   // ⚠️ ET C EST LA LE VRAI ENSEIGNEMENT : tant que le parseur acceptait une directive declaree
   // morte, la scene compilait et produisait un champ mort. Une directive  retiree  qu on continue
   // d accepter n est pas retiree — elle est juste invisible.
-  // ⛔ TROIS DEMOS DE PLUS, MEME CAUSE que patchbay-demo : elles declarent `@cv`, supprime du
-  // langage le 2026-08-09. Les modulateurs relevent du patching, dont la forme de remplacement
-  // attend la revue FaustX. Elles ne se reecrivent pas vers une forme que le langage ne lit pas.
-  { demo: 'cv-adsr.bps', pourquoi: 'declare @cv — modulateur, attend la revue du patching', date: '2026-08-09' },
-  { demo: 'cv-lfo.bps', pourquoi: 'declare @cv — modulateur, attend la revue du patching', date: '2026-08-09' },
-  { demo: 'cv-backtick.bps', pourquoi: 'declare @cv — modulateur, attend la revue du patching', date: '2026-08-09' },
-  { demo: 'patchbay-demo.bps', pourquoi: 'cinq macros de CABLAGE — attend le corps branchement de @def, au backlog (revue FaustX)', date: '2026-08-09' },
+  // Les quatre démos qui vivaient ici (trois de modulation, une de câblage) sont PARTIES le
+  // 2026-08-09 : trois RÉÉCRITES avec le langage du jour, une SUPPRIMÉE faute de sujet.
+  // ⚠️ Le motif qui les abritait disait « elles ne se réécrivent pas vers une forme que le
+  // langage ne lit pas » — Romain l'a corrigé : « cv n'existe plus, pourquoi tu gèles, il faut
+  // réécrire ». Une démo n'est pas une mesure à préserver, c'est un TEXTE : quand sa forme
+  // meurt, elle se refait. Geler, c'était traiter un exemple comme une relique.
   { demo: 'alan-dice', pourquoi: 'témoin volontaire de script(…), supprimé du langage', date: '2026-07-26' },
   { demo: 'beatrix-dice', pourquoi: 'témoin volontaire de script(…), supprimé du langage', date: '2026-07-26' },
   // ⚠️ CES DEUX-LÀ NE SONT PAS DES TÉMOINS — ce sont des SCÈNES INCOMPLÈTES, et la distinction

@@ -1,16 +1,22 @@
-// Voix de code — COURBE CV en JS (modulation custom).
-// Forme CV : `cv NAME : `tag: code`` — `cv` type le RÔLE (modulation), le tag `js:`
-// type le LANGAGE (obligatoire, orphelin). La courbe (0..1 sur la durée) est
-// déclarée, réutilisable. Branchement AU POINT DE PARAMÈTRE : `C4(cutoff:sweep)`.
-// Décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md.
+// Voix de code — le calcul dans les backticks, l'ordonnancement dans la grammaire
+//
+// BPScript ORDONNANCE, le code CALCULE. La voix de code reçoit son moment de la
+// grammaire ; ce qu'elle fait de ce moment lui appartient. Ici trois cellules
+// appellent le même bout de code à trois instants différents, et c'est la structure
+// — pas le code — qui décide quand.
 
 @core
 @controls
+@eval.js
 @alphabet.western:audio
-@tempo:100
+@tempo:90
 
-@cv sweep `js: (t, dur) => { return 0.5 + 0.5 * Math.sin(2 * Math.PI * t / dur); }`
+S -> Cellule Cellule Cellule
 
-S -> Lead Lead Lead Lead
+-----
 
-Lead -> C4(cutoff:sweep) E4 G4(cutoff:sweep) _ (wave:sawtooth, vel:90)
+@mode:ord
+
+Cellule -> D4 A4 `js: console.log('cellule 1')` (vel:60, wave:sine, attack:6, release:200)
+Cellule -> D4 A4 `js: console.log('cellule 2')` (vel:84, wave:sine, attack:6, release:200)
+Cellule -> D4 A4 `js: console.log('cellule 3')` (vel:108, wave:sine, attack:4, release:240)

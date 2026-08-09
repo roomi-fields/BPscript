@@ -1,0 +1,20 @@
+// Montée — la courbe est ÉCRITE en gradins de vélocité
+//
+// Un crescendo continu se rend en BPScript par des paliers : chaque cellule frappe plus
+// fort que la précédente, et la répétition du motif rend la marche perceptible. Ce que
+// dessinerait une courbe, la structure le raconte pas à pas.
+
+@core
+@controls
+@alphabet.western:audio
+@tempo:96
+
+S -> Montee Montee Sommet
+
+-----
+
+@mode:ord
+
+Montee -> {D3 A3 D4 A4} (wave:triangle, vel:52,  attack:6, release:180)
+Montee -> {D3 A3 D4 A4} (wave:triangle, vel:78,  attack:6, release:180)
+Sommet -> {D3 A3 D4 A4 D5 A4 D4 A3} (wave:triangle, vel:112, attack:4, release:240)
