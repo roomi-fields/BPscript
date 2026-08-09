@@ -808,6 +808,9 @@ marche que ce chemin suit, et le rang d'une forme dans le catalogue. Tout reglag
 **Plusieurs crochets se collent entre eux en fin de regle**, chacun gardant sa nature :
 
 ```bpscript
+@core
+@alphabet.western
+
 S -> C4 D4 [stage=2][goto:3 0]
 ```
 
@@ -1775,6 +1778,10 @@ les formes qu'une grammaire autorise.
 les deux.
 
 ```bpscript
+@core
+@controls
+@alphabet.western
+
 S <> $mel &mel                            // $mel capture, &mel rejoue
 S <> $mel (vel:80) &mel (vel:40)          // chaque invocation porte ses reglages
 S -> ${$X S &X} &{$X S &X}                // capture un groupe entier
