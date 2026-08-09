@@ -45,6 +45,33 @@
 > le document `issues/RNG_PORTABLE.md` qui portait ce détail a été supprimé le 2026-07-31
 > (assainissement doc, chantier clos — `hub/decisions/2026-07-31-refonte-de-la-documentation-sept-formes-un-proprietaire-trois-gardes.md`).
 
+| [GOTO_FAILED_ONFAIL.md](issues/GOTO_FAILED_ONFAIL.md) | Procédures de dérivation `goto`, `failed`, `onfail` : comportement attendu et écarts relevés | Coder ou vérifier une procédure de fin de règle |
+| [S8_ADVANCED_MECHANISMS.md](issues/S8_ADVANCED_MECHANISMS.md) | Mécanismes avancés du palier S8 | Reprendre le palier S8 |
+
+## Conception en attente d'arbitrage
+
+| Document | Contenu |
+|----------|---------|
+| [MARQUEUR_DE_POSITION_SELECTION_DE_REGLE.md](decisions-en-attente/MARQUEUR_DE_POSITION_SELECTION_DE_REGLE.md) | Marqueur de position dans la sélection de règle |
+| [OBJETS_SONORES_SEQUENCES.md](decisions-en-attente/OBJETS_SONORES_SEQUENCES.md) | Objets sonores en séquence |
+| [PARSEUR_DERIVE.md](design/PARSEUR_DERIVE.md) | Parseur dérivé de la grammaire |
+| [PORTEES_DES_CONTROLES.md](design/PORTEES_DES_CONTROLES.md) | Les portées auxquelles un contrôle s'accroche |
+| [SCENE_VALUES_OVERRIDE.md](design/SCENE_VALUES_OVERRIDE.md) | Cascade des valeurs de scène |
+| [GRAMMAIRES_DE_TEST_BP3.md](design/GRAMMAIRES_DE_TEST_BP3.md) | Les grammaires BP3 qui servent de banc |
+| [code-voices-user-doc.md](drafts/code-voices-user-doc.md) | Brouillon d'aide sur les voix de code |
+
+## Le banc
+
+| Document | Contenu |
+|----------|---------|
+| [CE_QUI_DORT.md](../test/CE_QUI_DORT.md) | Les gardes suspendus, et ce qui les réveille |
+| [BASELINE_COVERAGE.md](../test/grammars/BASELINE_COVERAGE.md) | La couverture de référence du corpus de grammaires |
+| [UNSUPPORTED.md](../test/grammars/dhadhatite_v2/UNSUPPORTED.md) | Les formes que `dhadhatite_v2` n'atteint pas |
+
+## Vision
+
+[VISION.md](../VISION.md) — ce que le langage vise.
+
 ## Archive
 
 [LIRE-MOI.md](archive/LIRE-MOI.md) — documents retirés du corpus vivant. **Aucun ne fait autorité.**
