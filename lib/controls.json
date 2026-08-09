@@ -1,7 +1,7 @@
 {
   "domain": "control",
   "name": "controls",
-  "description": "BPscript controls — layered by scope: engine [] / runtime () with transport sub-groups",
+  "description": "BPscript controls. La section ou un controle est liste dit QUI L EXECUTE (engine = le moteur, runtime.* = un runtime de sortie) et rien d autre. Le champ scope dit OU il a le droit de s accrocher, et c est lui seul que le langage consulte ; args dit ce que sa valeur porte ; bagOnly ferme la forme nue.",
   "_argType_doc": {
     "_role": "Comment la SURFACE lit la valeur d'un controle. Absent = lecture ordinaire : la valeur est tokenisee et la virgule SEPARE les arguments. Les valeurs ci-dessous font lire la valeur BRUTE, d'un seul tenant, et laissent l'aval la resoudre — c'est le meme principe dans les deux cas : la surface PORTE, elle n'interprete pas.",
     "interval": "Intervalle musical, 3 formats acceptes : fraction 3/2, cents 700c, decimal 1.5. Porte brut, normalise en ratio par Kairos. Ex. transpose. Lecteur : readIntervalLiteral (parser.js).",
@@ -54,9 +54,10 @@
       "args": [],
       "description": "Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
       "scope": [
-        "subgrammar"
+        "subgrammar",
+        "flow"
       ],
-      "sacSeul": true
+      "bagOnly": true
     }
   },
   "engine": {
@@ -171,10 +172,9 @@
       "bp3": "_retro",
       "args": [],
       "scope": [
-        "group",
         "flow"
       ],
-      "description": "Retrograde — reverse element order in polymetric context. Emitted as prefix inside the group."
+      "description": "Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE."
     },
     "shuffle": {
       "bp3": "_rndseq",
@@ -182,19 +182,17 @@
         "seed"
       ],
       "scope": [
-        "group",
         "flow"
       ],
-      "description": "Shuffle — random reordering of sequence elements. Emitted as prefix inside the group. seed arg → _srand(N) prefix."
+      "description": "Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g)."
     },
     "order": {
       "bp3": "_ordseq",
       "args": [],
       "scope": [
-        "group",
         "flow"
       ],
-      "description": "Order — restore canonical order of sequence elements. Emitted as prefix inside the group."
+      "description": "Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro."
     },
     "rotate": {
       "bp3": "_rotate",
@@ -202,10 +200,9 @@
         "degrees"
       ],
       "scope": [
-        "group",
         "flow"
       ],
-      "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). Emitted as prefix inside the group. Distinct from runtime (rotate) which is a pitch transformation."
+      "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation."
     },
     "staccato": {
       "bp3": "_staccato",
@@ -265,9 +262,10 @@
       "args": [],
       "description": "Re-seed RNG from clock (BP3 _randomize, Encode.c case 50). No arguments.",
       "scope": [
-        "subgrammar"
+        "subgrammar",
+        "flow"
       ],
-      "sacSeul": true
+      "bagOnly": true
     }
   },
   "runtime": {
@@ -608,14 +606,14 @@
           "flow"
         ]
       },
-      "_sacSeul_doc": "sacSeul:true = ce controle n'a PAS de forme NUE dans le flux, il ne s'ecrit que dans son sac. A ne pas confondre avec 'sans argument' : les controles continus herites de BP3 (volumecont, pitchcont, mapcont...) sont sans argument ET s'ecrivent nus au fil de la sequence, 10 scenes du corpus le font. mute/unmute/panic, declares le 2026-07-26, n'ont jamais eu que la forme du sac -- leurs descriptions ci-dessous l'ecrivent depuis le premier jour. Faute de le DIRE a la donnee, tout mot sans argument devenait un mot du flux : une scene qui portait deja ce nom (patchbay-demo, macro mute) etait tronquee EN SILENCE, mesure par Kairos le 2026-07-27. Marquage POSITIF, porte par la donnee ; le code ne nomme aucun controle.",
+      "_bagOnly_doc": "bagOnly:true = ce controle n'a PAS de forme NUE dans le flux, il ne s'ecrit que dans son sac. A ne pas confondre avec 'sans argument' : les controles continus herites de BP3 (volumecont, pitchcont, mapcont...) sont sans argument ET s'ecrivent nus au fil de la sequence, 10 scenes du corpus le font. mute/unmute/panic, declares le 2026-07-26, n'ont jamais eu que la forme du sac -- leurs descriptions ci-dessous l'ecrivent depuis le premier jour. Faute de le DIRE a la donnee, tout mot sans argument devenait un mot du flux : une scene qui portait deja ce nom (patchbay-demo, macro mute) etait tronquee EN SILENCE, mesure par Kairos le 2026-07-27. Marquage POSITIF, porte par la donnee ; le code ne nomme aucun controle.",
       "mute": {
         "args": [],
         "description": "Coupe le son. Nu, (mute), coupe tout ce qui sonne ; par composant, (mute.all) ou (mute.lead), coupe la cible nommee. Nomme le 2026-07-26 : remplace une des familles que script(...) portait sans nom.",
         "scope": [
           "flow"
         ],
-        "sacSeul": true
+        "bagOnly": true
       },
       "unmute": {
         "args": [],
@@ -623,7 +621,7 @@
         "scope": [
           "flow"
         ],
-        "sacSeul": true
+        "bagOnly": true
       },
       "panic": {
         "args": [],
@@ -631,7 +629,7 @@
         "scope": [
           "flow"
         ],
-        "sacSeul": true
+        "bagOnly": true
       },
       "sync": {
         "args": [

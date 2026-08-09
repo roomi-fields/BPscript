@@ -133,7 +133,7 @@
       "mode": "génération (BPx)",
       "mm": "transport (Kronos)",
       "tempo": "transport (Kronos)",
-      "seed": "génération (BPx)",
+      "seed": "génération (BPx) — AVEC valeur (`seed:N`) : le tirage est FIGÉ et reproductible. SANS valeur, ou seed ABSENT de la scène : le tirage est ALÉATOIRE (décision Romain 2026-08-09, « si on ne spécifie pas de graine alors c'est random, c'est la décision et ce que je veux qu'il se produise »). Le moteur ACCEPTE et TRAITE une scène sans graine — ce n'est pas une erreur, c'est le défaut. ⚠️ Poser une graine dans les BANCS DE MESURE est une contrainte de REPRODUCTIBILITÉ des tests, PAS une contrainte du langage : ne pas lire la seconde dans la première. Corrigé côté BPx le 2026-08-09 (853c179) : le semis se faisait sur la SECONDE, donc deux dérivations dans la même seconde n'étaient pas aléatoires du tout.",
       "maxitems": "génération (BPx)",
       "duration": "structure (BPx) — durée collée `:N`",
       "meter": "structure (BPx) — polymétrie",
