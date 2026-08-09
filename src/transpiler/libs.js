@@ -306,9 +306,17 @@ function loadLibsFromDirectives(directives) {
     bagOnlyControls: new Set(),  // `sacSeul:true` — aucune forme nue dans le flux, cf. plus bas
     compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
                                    // virgule appartient à la VALEUR, portée brute en une seule chaîne.
-    engineBagControls: new Set(),   // déclarés sous `engine` → sac MOTEUR `[…]`
-    runtimeBagControls: new Set(),  // déclarés sous `runtime.*` → sac RUNTIME `(…)`
-                                    // « le sac dit QUI REÇOIT » : un contrôle ne vit pas dans les deux.
+    // ⛔ CES DEUX ENSEMBLES DISENT LE DESTINATAIRE, PAS LE SIGNE (rectifié 2026-08-08, Romain :
+    // « le destinataire des contrôles est spécifié dans la LIBRAIRIE dans laquelle le contrôle est
+    // listé, c'est la seule source de vérité »). Leur ancien commentaire — « déclarés sous `engine`
+    // → sac MOTEUR `[…]` » — faisait dire à la librairie COMMENT une chose s'écrit alors qu'elle ne
+    // répond qu'à QUI l'exécute. C'est cette confusion qui a fait croire qu'un contrôle exécuté par
+    // le moteur devait s'écrire entre crochets : `shuffle`, `retro` et `order` sont bien moteur, et
+    // s'écrivent entre PARENTHÈSES parce qu'ils manipulent ce qui est produit.
+    // Le SIGNE dit ce que la chose EST — dérivation ou production. Chantier en cours.
+    engineBagControls: new Set(),   // exécutés par le MOTEUR (déclarés sous `engine`)
+    runtimeBagControls: new Set(),  // exécutés par le RUNTIME (déclarés sous `runtime.*`)
+                                    // Un contrôle ne vit pas dans les deux.
     ruleAllowedControls: new Set(), // portée INCLUANT `rule` — voir le commentaire du remplissage
     ruleScopeControls: new Set(),  // PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"` dans la lib) :
                                    // goto, failed, repeat, stop. Elles ne s'appliquent pas à une

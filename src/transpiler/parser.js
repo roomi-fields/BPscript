@@ -5942,9 +5942,15 @@ function parse(tokens, opts = {}) {
         + `affectation ('[flag=1]'), ou le rang d'une forme de gabarit ('[3]')`,
         tok);
     }
-    // LE SAC DIT QUI REÇOIT — crochets = moteur, parenthèses = runtime. Un contrôle ne vit pas dans
-    // les deux : `lib/controls.json` le déclare par sa STRUCTURE (section `engine` contre section
-    // `runtime.*`), et cette structure fait autorité (décision 2026-06-14, « controls.json EST
+    // ⛔ LA LIBRAIRIE DIT QUI REÇOIT — ELLE NE DIT PAS QUEL SIGNE (rectifié 2026-08-08, Romain).
+    // Ce refus reste juste pour ce qu'il garde — un contrôle de RUNTIME n'a rien à faire dans un
+    // crochet — mais sa raison n'est plus « crochets = moteur » : c'est que le crochet ne porte que
+    // ce qui gouverne la DÉRIVATION. La déduction inverse (« moteur donc crochets ») est morte, et
+    // elle a coûté une soirée de raisonnement faux : `shuffle`, `retro`, `order` sont exécutés par
+    // le moteur ET s'écrivent entre parenthèses.
+    // Un contrôle ne vit pas dans deux librairies : `lib/controls.json` le déclare par sa STRUCTURE
+    // (section `engine` contre section `runtime.*`), et cette structure fait autorité pour le
+    // DESTINATAIRE (décision 2026-06-14, « controls.json EST
     // L'AUTORITÉ ; transpose, rotate, keyxpand, vel… sont des contrôles RUNTIME, appliqués par le
     // DISPATCHER, JAMAIS par le moteur », qui se qualifie elle-même de règle établie).
     // Mesuré au corpus : 76 emplois étaient du mauvais côté, et la MAJORITÉ se trompait pour deux

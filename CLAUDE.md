@@ -96,8 +96,15 @@ par les décisions et par Romain, pas par le compilateur.
 - **Double declaration**: chaque symbole a type temporel + binding runtime (`gate Sa:sc`)
 - Silence `-`, prolongation `_`, période `.` (fragment de durée égale) : identiques en BPScript et BP3
 - `!` = événement simultané (trigger, gate, cv, ou mutation de flag)
-- `[]` = instructions moteur (BP3) : guards, mode, weight, opérateurs tempo (durée `:` hors `[]`)
-- `()` = instructions runtime : vel, pan, wave, attack, release, filter… (annotation OPAQUE portée sur l'événement jusqu'au runtime de sortie)
+- `[]` = ce qui gouverne la **DÉRIVATION** : un test de drapeau (`[stage==1]`), une affectation
+  (`[stage=2]`), une procédure (`[goto:…]` `[repeat:…]` `[failed:…]` `[stop]`), le rang d'une forme
+  de gabarit (`[3]`) — durée `:` hors `[]`
+- `()` = tout **RÉGLAGE** : ce qui décrit ou manipule ce que la dérivation produit — `vel`, `pan`,
+  `wave`, `shuffle`, `retro`, `order`, `rndtime`… (annotation OPAQUE portée sur l'événement jusqu'au
+  runtime de sortie)
+- Le **signe** dit ce que la chose EST ; le **destinataire** est dit par la librairie où le contrôle
+  est listé, seule source de vérité. Un contrôle exécuté par le moteur s'écrit entre parenthèses
+  quand il manipule ce qui est produit — chantier en cours : migration du sac `[]` vers `()`
 - Backticks : code évalué par le runtime du symbole (implicite) ou tagué (`sc:`, `py:`)
 
 ### Architecture
@@ -509,8 +516,10 @@ de texte BP3. Conformité au moteur natif mesurée sur les **jetons produits**
 (`test/voie_b_status.mjs`, comparaison à la baseline native).
 
 ### Key conventions
-- `[]` = instructions MOTEUR, lues/interprétées par BPx (mode, weight, tempo, meter…) ; durée
-  `{A B}:2` (hors `[]`)
+- `[]` = ce qui gouverne la **DÉRIVATION** : test de drapeau, affectation de drapeau, procédure
+  (`goto` `repeat` `failed` `stop`), rang de gabarit ; durée `{A B}:2` (hors `[]`)
+- Le **signe** dit ce que la chose EST ; le **destinataire** est dit par la librairie où le contrôle
+  est listé, seule source de vérité. Chantier en cours : migration du sac `[]` vers `()`.
 - `()` = annotation OPAQUE portée SUR l'événement jusqu'au runtime de sortie (`vel`, `wave`…).
   Dans l'AST : `RuntimeQualifier` en suffixe, `InstantControl` dans le flux. Portée déclarée
   (`payload.scope` : `rule` | `group` | `template`, avec `containment:true`)
