@@ -339,7 +339,7 @@ interface CVLinkPairAST {
 interface DirectiveAST { type:'Directive'; name:string; subkey:string|null; value:number|string|null;
   line:number; fromEnvironment?:boolean; [extension]:unknown; }   // fromEnvironment:true = défaut env injecté
 //   Précédence des directives de PRODUCTION (figée bpscript-bpx.md:37-39) : console/session > scène > défauts.
-//   Surface `[@seed:1, @items:20]` (l'ancienne `@seed:N` est dépréciée douce) — MÊME forme AST (nœuds Directive), rien à changer côté consommateurs.
+//   Surface `@seed:42` / `@items:20` en tête de scène, préfixe optionnel (le bloc `[@…]` est REFUSÉ depuis le 2026-08-10) — MÊME forme AST (nœuds Directive), rien à changer côté consommateurs.
 interface ActorDirective { type:'ActorDirective'; name:string;
   properties?: { alphabet?:string|null; scale?:string|null; sounds?:string|null;
                  transport?:{key:string; params:Record<string,unknown>}|null; eval?:string|null; }; // v0.7

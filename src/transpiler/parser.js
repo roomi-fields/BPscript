@@ -593,8 +593,9 @@ function parse(tokens, opts = {}) {
           scene.directives.push(dir);
         }
       } else if (atProductionBlock()) {
-        // [@seed:1, @items:20] — bloc de production (niveau scène), dans
-        // l'ordre source (l'ordre des directives est sémantique : last wins).
+        // Le bloc `[@…]` en tête de scène est REFUSÉ depuis le 2026-08-10 : il est lu ici pour
+        // que le refus NOMME la clé et donne sa réécriture (`parseProductionBlock`), au lieu de
+        // tomber sur un « crochet inattendu » qui n'apprendrait rien.
         for (const d of parseProductionBlock()) scene.directives.push(d);
       } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
         // ─── PIERRE TOMBALE — L'AROBASE EST OBLIGATOIRE EN PARTIE DÉCLARATIVE ───────────────
@@ -1269,9 +1270,9 @@ function parse(tokens, opts = {}) {
   }
 
   /**
-   * Valeur de directive après ':' — logique PARTAGÉE entre la @-forme
-   * historique (@seed:7) et le bloc de production ([@seed:7]) pour garantir
-   * des nœuds Directive identiques par construction (contrat BPx).
+   * Valeur de directive après ':' — logique PARTAGÉE entre la forme de tête (`@seed:7`) et le
+   * bloc lu dans le flux (`![@seed:7]`) pour garantir des nœuds Directive identiques par
+   * construction (contrat BPx).
    *   INT → value Number (négatif via '-') ; ratio N/M → value String ;
    *   FLOAT → value String brute (sortie BP3 exacte) ; IDENT → champ runtime.
    */
@@ -1341,8 +1342,9 @@ function parse(tokens, opts = {}) {
   }
 
   /**
-   * Bloc de directives de production : `[@seed:1, @items:20]`
-   * (EBNF §production_block, décision 2026-06-11). Niveau scène uniquement.
+   * Bloc de directives de production — REFUSÉ en tête de scène depuis le 2026-08-10, où il ne
+   * subsiste que pour porter son propre refus et la réécriture `@clé:valeur`. Il reste LU dans le
+   * FLUX, où `![@seed:N]` traduit `_srand(N)` du natif.
    * Le `@` est répété sur chaque clé ; chaque clé produit le MÊME nœud
    * Directive que la @-forme historique. Détection sur LBRACKET suivi de AT
    * (un `@` entre crochets était une erreur de syntaxe avant la décision).
@@ -5490,7 +5492,7 @@ function parse(tokens, opts = {}) {
    *
    * ⚠️ ELLE LIT AVANT DE REFUSER, et cet ordre est une correction : `parseQualifier` porte des
    * refus NOMMÉS que celui-ci ne sait pas donner (`[shuffle:N]` retiré → la graine s'écrit
-   * `[@seed:N]`). Jeter avant de lire les écrasait — un message précis remplacé par un message
+   * `@seed:N` en tête, `![@seed:N]` dans le flux). Jeter avant de lire les écrasait — un message précis remplacé par un message
    * vague est une régression, attrapée deux fois aujourd'hui par un garde du TEXTE du refus.
    */
   function refuserCrochetColle() {
@@ -6337,7 +6339,7 @@ function parse(tokens, opts = {}) {
     // `[shuffle:N]` RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
     // re-semer sont deux atomes BP3 distincts. `[shuffle]` (nu) reste = _rndseq.
     if (key === 'shuffle') {
-      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '[@seed:N]' (global) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
+      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '@seed:N' (en tête de scène) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
     }
     // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800). Le crochet ne
     // garde que trois emplois : un test de drapeau (garde), une affectation de drapeau (fin de

@@ -127,7 +127,7 @@ function produceAllB(name) {
         + 'pas un écart de transcription' };
     }
     const session = createSession(out.ast, { seed: 1 });
-    // Le PLAFOND vient de la directive `[@maxitems:N]` de la scène, et BPx l'honore désormais
+    // Le PLAFOND vient de la directive `@maxitems:N` de la scène, et BPx l'honore désormais
     // seul (fix bpx af30c16, vérifié : tryflags2/tryLIN → 25, dhin1 → 20 sans option explicite).
     // Le contournement qui lisait la directive à la main est retiré.
     const r = session.produceAll();

@@ -2,7 +2,7 @@
  * Test : orthogonalité brassage / graine (décision 2026-06-14-shuffle-seed-orthogonaux).
  *
  *   [shuffle]        → _rndseq            (brasser seul, conservé)
- *   [shuffle:N]      → ERREUR             (la graine s'écrit [@seed:N])
+ *   [shuffle:N]      → ERREUR             (la graine s'écrit @seed:N en tête, ![@seed:N] en flux)
  *   ![@seed:N]       → _srand(N)          (re-semence dans le flux ; restreint à seed)
  *   ![@maxitems:N]   → ERREUR             (pas de jeton de flux BP3 hors seed)
  *   ![@seed:1] {…} → _srand(1) … {_rndseq …}  (remplace l'ancien [shuffle:1])

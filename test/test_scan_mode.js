@@ -176,7 +176,7 @@ section('non-régression look-and-say.bps [scan:left] en mode SUB');
 {
   try {
     // Lit la copie AUTORITAIRE (test/grammars/), pas l'ex-copie scenes/ supprimée le 2026-07-19.
-    // Elle porte en plus '[@maxitems:20]', la traduction du réglage natif — donc plus fidèle.
+    // Elle porte en plus '@maxitems:20', la traduction du réglage natif — donc plus fidèle.
     const src = readFileSync(bpsPath('look-and-say'), 'utf8');
     const result = compileToBPxAST(src);
     assert('look-and-say compile sans erreur', result.errors.length === 0,

@@ -22,12 +22,13 @@ export const BP3_OPERATORS = Object.freeze({ plus: '+', fin: ';', star: '*' });
  * PRODUCTION_DIRECTIVES : noms des directives de production (instructions au
  * moteur sur COMMENT produire, pas des éléments de la grammaire).
  *
- * Surface canonique : bloc `[@clé:valeur]` groupable — `[@seed:1, @items:20]`
+ * Surface canonique : `@clé:valeur` en tête de scène, préfixe optionnel — `@seed:42`,
+ * `@engine.seed:42`, `@items:20`. Le bloc `[@…]` est REFUSÉ depuis le 2026-08-10.
  * (décision utilisateur 2026-06-11, hub/decisions/2026-06-11-directives-
  * production-crochets.md, incl. ADDENDUM — durcissement même jour ;
  * EBNF §production_block). Les @-formes historiques (`@seed:N`…) sont REJETÉES
  * à la compilation (ParseError, parser.js:2049-2054) : le message pointe la
- * nouvelle écriture `[@seed:N]`.
+ * nouvelle écriture `@seed:N`.
  *
  * Le routage nom→réglage moteur reste dans lib/settings.json (directive_map) ;
  * cette liste a deux usages distincts dans parser.js : rejeter les @-formes
