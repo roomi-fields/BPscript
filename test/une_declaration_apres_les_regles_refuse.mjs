@@ -74,7 +74,11 @@ const DECLARATIONS = [
   // mais `@controls` reste une ligne SYNTAXIQUEMENT valide (bare directive, comme n'importe quel
   // mot), donc le refus générique « déclaration après les règles » la mord toujours, nommément.
   // Ce cobaye prouve que le refus ne dépend pas d'être une directive CONNUE.
-  ['controls', '@controls'], ['var', '@var v'],
+  // `controls` EST SORTI de la matrice le 2026-08-10 : la librairie a été SCINDÉE par destinataire
+  // (expression, midi, audio, transpo) puis SUPPRIMÉE, et `@core` les apporte toutes. Le mot ne
+  // désigne plus rien. Remplacé 1-pour-1 par `timepatterns`, mesuré générique avant d'être choisi
+  // — accepté avant les règles, refusé après — pour que le socle anti-rétrécissement reste tenu.
+  ['timepatterns', '@timepatterns: t1=1/1'], ['var', '@var v'],
   ['alias', '@alias g cc:2'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
   ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['homomorphism', '@homomorphism.dhati'],

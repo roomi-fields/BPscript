@@ -420,6 +420,21 @@ function loadLibsFromDirectives(directives) {
   for (const lib of Object.values(registry)) {
     const s = lib && lib.schema;
     if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
+    // ⚠️ ET LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Règle 3 de Romain : « tous les
+    // contrôles acceptés AVEC LEURS PORTÉES sont définis dans les librairies uniquement ». Un
+    // contrôle qui déclare `scope` contenant `scene` s'écrit donc en tête, et doit y être reconnu.
+    //
+    // MESURÉ le 2026-08-10 : `striated` et `smooth` portent `scope:["subgrammar","scene"]` dans la
+    // section `subgrammar` de `engine`, et restaient INCONNUS en tête — 24 sources du corpus les
+    // écrivent. Les recopier dans `schema.reservedDirectives` aurait fait DEUX domiciles pour un
+    // nom ; c'est la résolution qui devait apprendre à lire la portée.
+    for (const section of Object.values(lib || {})) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      for (const [nom, def] of Object.entries(section)) {
+        if (nom.startsWith('_') || !def || typeof def !== 'object') continue;
+        if (Array.isArray(def.scope) && def.scope.includes('scene')) ctx.reservedDirectiveNames.add(nom);
+      }
+    }
   }
   ctx.addressKeys = new Set(schema.addressKeys || []);
   // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont

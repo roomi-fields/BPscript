@@ -1625,6 +1625,34 @@ function validateReferences(ast) {
     if (d.subkey && catalogAxes.includes(d.name)) { checkComponent(d.name, d.subkey, d.line); continue; }
     if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name)) {
       errors.push({ message: `valeur '@${d.name}:…' inconnue — non déclarée par une librairie chargée`, line: d.line });
+      continue;
+    }
+    // ⚠️ ET LA FORME NUE AUSSI — c'est la moitié qui avait régressé. Le refus ci-dessus ne mordait
+    // que sur `@X:valeur` : toute directive écrite SANS valeur passait, quel que soit son nom.
+    // Mesuré le 2026-08-10 : `@zorglub42` compilait sans un mot, exactement comme `@sub`.
+    //
+    // C'est la règle 1 de Romain dans son état le plus nu — « tous les mots acceptés par le parseur
+    // doivent venir des librairies invoquées dans la scène ». L'union des vocabulaires ne sert à
+    // rien tant qu'un nom absent de l'union est accepté quand même : le vocabulaire existe, il
+    // n'est simplement pas OPPOSÉ à l'auteur.
+    //
+    // Une invocation de librairie (`@core`, `@alphabet.western`) porte son nom dans le registre ou
+    // un `subkey` — elle ne tombe pas ici.
+    // ⚠️ ET SEULEMENT LES DIRECTIVES QUI INVOQUENT. Une directive qui DÉCLARE (`@def`, `@var`,
+    // `@actor`…) porte le nom que l'AUTEUR crée, pas un mot de librairie : son nœud a son propre
+    // type, et l'aval le lit ainsi. Sans ce filtre, la garde refuse `@def m C4 D4` en accusant
+    // « '@m' n'est déclaré par aucune librairie » — elle reproche à l'auteur d'avoir nommé ce
+    // qu'il déclare. Mesuré le 2026-08-10 : j'ai d'abord pris ce refus pour un défaut du parseur
+    // et je l'ai inscrit au backlog ; c'était la garde qui ne savait pas distinguer.
+    if (d.type && d.type !== 'Directive') continue;
+    if (d.value == null && !d.subkey && !d.runtime
+        && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name)) {
+      errors.push({
+        message: `'@${d.name}' n'est déclaré par aucune librairie chargée — un mot de tête vient `
+               + `d'une librairie invoquée, jamais de nulle part. Invoquer la librairie qui le `
+               + `porte, ou retirer la ligne.`,
+        line: d.line,
+      });
     }
   }
 

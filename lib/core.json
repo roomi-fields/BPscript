@@ -102,6 +102,10 @@
       "transport",
       "sound",
       "eval",
+      "def",
+      "init",
+      "macro",
+      "template",
       "actor",
       "core",
       "ins",
@@ -197,7 +201,8 @@
       "group",
       "rule",
       "flow"
-    ]
+    ],
+    "_reservedDirectives_primitives_doc": "PRIMITIVES DE DECLARATION -- def, actor, var, init, alias, macro, expose, template. Elles DECLARENT des noms que la scene invoque ensuite, et elles sont donc des mots du langage portes par le socle. Romain, 2026-08-10 : « @def est une primitive pour definir des noms qu'on invoque, donc def comme actor var init doivent etre definies dans une librairie » et « @ invoque toujours des elements definis dans des librairies, y'a pas d'exceptions ». QUATRE MANQUAIENT (def, init, macro, template) et le parseur les acceptait en dur : la garde qui refuse un mot de tete inconnu les a fait sortir en rougissant sur des scenes justes."
   },
   "defaults": {
     "components": {
