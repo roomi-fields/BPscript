@@ -289,6 +289,30 @@ function resolveActors(ast) {
       const tun = tuningHerite(ast, alphabetKey);
       if (tun) props.tuning = tun;
     }
+    // ── LES DEUX DERNIÈRES DES CINQ ────────────────────────────────────────────────────────────
+    // LA SORTIE ET L'INTERPRÈTE descendent ici aussi. Ils ne descendaient PAS : un acteur déclaré
+    // sans `out` sortait de l'AST sans aucune sortie, alors que l'acteur IMPLICITE, lui, recevait
+    // ses cinq clés (bpxAst.js:1029-1082). Trois axes sur cinq étaient pliés — nommer un acteur
+    // faisait donc PERDRE ce que ne rien nommer donnait.
+    //
+    // ⚠️ CE QUE ÇA COÛTAIT, MESURÉ SUR PIÈCES : quatre scènes d'exemple de la bibliothèque
+    // compilaient sans une erreur et ne produisaient AUCUN SON — exactement les quatre qui
+    // déclarent un `@actor` sans `out`, zéro contre-exemple dans les deux sens. Le mode d'échec est
+    // le muet : rien ne manque à l'œil, la scène a l'air complète, et l'aval n'a aucun moyen de
+    // savoir qu'une sortie était due. C'est l'invariant du contrat fondateur qui tombe
+    // (atlas/architecture/00-constitution.md:176-178, L35) : « un override RECOUVRE le défaut, il
+    // ne disparaît JAMAIS en silence ».
+    //
+    // La cascade est celle des autres axes — les MÊMES fonctions, définies une seule fois. La
+    // reconstituer ici ferait deux cascades qui divergeraient au premier changement.
+    if (props.transport == null) {
+      const sortie = sortieHeritee(ast);   // scène `@out.X` → raccord d'alphabet → socle @core
+      props.transport = { type: 'TransportRef', key: sortie.key, params: sortie.params };
+    }
+    if (props.eval == null) {
+      const interprete = evalHerite(ast);  // ne dépend pas de l'alphabet : une scène sans note
+      if (interprete) props.eval = interprete;   // déclare quand même par quoi ses backticks se lisent
+    }
 
     // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.
     let terminals = [];
