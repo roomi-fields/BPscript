@@ -22,7 +22,7 @@
  * SILENCIEUSEMENT leur effet moteur côté BPx. Cf. `lib/core.json` `_qualifierKeys_doc` pour le
  * détail ligne par ligne. `shuffle` est un cas distinct : sa forme AVEC VALEUR (`[shuffle:N]`) a
  * été RETIRÉE du langage le 2026-06-14 (la graine s'écrit `@seed:N` en tête de scène depuis le
- * 2026-08-10, `![@seed:N]` dans le flux), donc il n'y a pas de forme
+ * 2026-08-10, `![seed:N]` dans le flux), donc il n'y a pas de forme
  * `(shuffle:N)` à migrer — seule la forme NUE `[shuffle]` (sans deux-points) reste, et elle n'entre
  * pas dans cette matrice (qui porte sur les paires `clé:valeur`).
  */

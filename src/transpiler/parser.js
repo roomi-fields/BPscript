@@ -1271,7 +1271,7 @@ function parse(tokens, opts = {}) {
 
   /**
    * Valeur de directive après ':' — logique PARTAGÉE entre la forme de tête (`@seed:7`) et le
-   * bloc lu dans le flux (`![@seed:7]`) pour garantir des nœuds Directive identiques par
+   * bloc lu dans le flux (`![seed:7]`) pour garantir des nœuds Directive identiques par
    * construction (contrat BPx).
    *   INT → value Number (négatif via '-') ; ratio N/M → value String ;
    *   FLOAT → value String brute (sortie BP3 exacte) ; IDENT → champ runtime.
@@ -1344,7 +1344,7 @@ function parse(tokens, opts = {}) {
   /**
    * Bloc de directives de production — REFUSÉ en tête de scène depuis le 2026-08-10, où il ne
    * subsiste que pour porter son propre refus et la réécriture `@clé:valeur`. Il reste LU dans le
-   * FLUX, où `![@seed:N]` traduit `_srand(N)` du natif.
+   * FLUX, où `![seed:N]` traduit `_srand(N)` du natif.
    * Le `@` est répété sur chaque clé ; chaque clé produit le MÊME nœud
    * Directive que la @-forme historique. Détection sur LBRACKET suivi de AT
    * (un `@` entre crochets était une erreur de syntaxe avant la décision).
@@ -1381,7 +1381,7 @@ function parse(tokens, opts = {}) {
       // LE REFUS EST FRANC ET PORTE SA RÉÉCRITURE, y compris pour un bloc groupé — deux écritures
       // dont une seule est juste est exactement la voie parallèle que la refonte supprime.
       //
-      // ⚠️ ET IL NE COUVRE PAS LE FLUX. `![@seed:N]` traduit `_srand(N)` du natif : elle est
+      // ⚠️ ET IL NE COUVRE PAS LE FLUX. `![seed:N]` traduit `_srand(N)` du natif : elle est
       // PRODUITE par `bp3ToScene.js:915` et LUE par BPx. Romain a parlé de la TÊTE DE SCÈNE ;
       // fermer le flux casserait le portage du natif dans trois dépôts. L'écart est remonté et non
       // tranché — tant qu'il ne l'est pas, cette forme-là vit.
@@ -5078,16 +5078,52 @@ function parse(tokens, opts = {}) {
       if (sacBienForme()) {
         return { type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: collated };
       }
-      // ![@seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
+      // ![seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
       // seul `_srand` existe comme contrôle de flux BP3 (décision 2026-06-14). Émet _srand(N).
-      if (at(T.LBRACKET) && peek(1).type === T.AT) {
-        const dirs = parseProductionBlock(true);   // le flux : `![@seed:N]` y reste, cf. ci-dessous
-        for (const d of dirs) {
-          if (d.name !== 'seed') {
-            throw new ParseError(`![@${d.name}…] : seul @seed a un sens dans le flux (re-semence _srand) ; maxitems/allitems/improvize n'ont pas de contrôle de flux BP3`, current());
-          }
+      // ── LA RE-SEMENCE DANS LE FLUX : `![seed:N]`, SANS AROBASE ────────────────────────────
+      // DÉCISION ROMAIN (2026-08-10), mot pour mot : « 3 je suis d'accord : ![seed:N] dans le
+      // flux ». Le motif, qu'il a validé : le crochet porte ce qui gouverne la DÉRIVATION, et une
+      // re-semence en flux est une PROCÉDURE de dérivation — famille de `goto`, `repeat`,
+      // `failed`, `stop`. L'arobase est réservée au global et à la tête de scène.
+      //
+      // ⚠️ DEUX NATURES, DEUX GRAPHIES, et c'est le fond : `@seed:42` en tête de scène est un
+      // RÉGLAGE DE PRODUCTION ; `![seed:N]` en flux est une PROCÉDURE. Elles cessaient d'être le
+      // même bloc à un signe près, et c'est ce que cette écriture sépare.
+      //
+      // ⚠️ L'OBJET DE L'ARBRE NE CHANGE PAS — question posée par BPx avant que je frappe, et sa
+      // réponse décidait de l'ordre des gestes. `![seed:42]` produit le MÊME `InstantControl` /
+      // `ProductionInline` que `![seed:42]` produisait : son chargeur (loadGrammar.ts:8284) lit
+      // cet objet, pas le texte, donc il n'a rien à frapper. Ce qui a été tranché est la GRAPHIE ;
+      // changer la nature de l'objet serait un second changement, que personne n'a demandé.
+      if (at(T.LBRACKET) && peek(1).type === T.IDENT) {
+        const nom = peek(1).value;
+        if (nom === 'seed') {
+          const ouvre = current();
+          advance();                                   // '['
+          advance();                                   // 'seed'
+          let value = null, runtime = null;
+          if (at(T.COLON)) { advance(); ({ value, runtime } = parseDirectiveColonValue('seed')); }
+          expect(T.RBRACKET);
+          const dirs = [{ type: 'Directive', name: 'seed', subkey: null, runtime, value,
+                          aliases: null, modifiers: null, line: ouvre.line }];
+          return { type: 'InstantControl', qualifier: { type: 'ProductionInline', directives: dirs } };
         }
-        return { type: 'InstantControl', qualifier: { type: 'ProductionInline', directives: dirs } };
+      }
+      // L'ANCIENNE GRAPHIE PORTE SON PROPRE REFUS, avec la réécriture. Sans elle, `![seed:7]`
+      // tomberait sur le refus générique du crochet dans le flux, qui parle d'autre chose.
+      if (at(T.LBRACKET) && peek(1).type === T.AT) {
+        const ouvre = current();
+        const nom = peek(2).type === T.IDENT ? peek(2).value : '…';
+        if (nom === 'seed') {
+          throw new ParseError(
+            `'![@seed:N]' : la re-semence dans le flux s'écrit SANS arobase — '![seed:N]'. `
+            + `Le crochet porte ce qui gouverne la dérivation, et une re-semence en est une `
+            + `procédure ; l'arobase reste à la tête de scène, où '@seed:N' règle la production.`,
+            ouvre);
+        }
+        throw new ParseError(
+          `'![@${nom}…]' : seule la re-semence a un sens dans le flux, et elle s'écrit `
+          + `'![seed:N]' ; '${nom}' se pose en tête de scène, '@${nom}'.`, ouvre);
       }
       // ⛔ LE CROCHET NE SE POSE PAS DANS LE FLUX — arbitrage de Romain, 2026-08-08 :
       // « `![Ideas]` dans le flux n'a aucun sens et doit être interdit ».
@@ -5102,7 +5138,7 @@ function parse(tokens, opts = {}) {
       // fermer pour `randomize`, revenue par une autre porte. `![shuffle]`, `![retro]` et
       // `![order]` passaient de même ; leur forme vivante est la parenthèse, `!(shuffle)`.
       //
-      // ⚠️ `![@seed:N]` EST TRAITÉ AU-DESSUS et reste : c'est une directive de PRODUCTION, pas un
+      // ⚠️ `![seed:N]` EST TRAITÉ AU-DESSUS et reste : c'est une directive de PRODUCTION, pas un
       // contrôle — re-semer le tirage à cet instant a un sens, et la branche qui la lit refuse
       // déjà tout autre nom qu'elle.
       if (at(T.LBRACKET)) {
@@ -5131,7 +5167,7 @@ function parse(tokens, opts = {}) {
           + `gouverne la DÉRIVATION — une garde, une affectation de drapeau, une procédure, un rang `
           + `de gabarit — et rien de cela ne vaut à un instant. Un contrôle posé dans le flux `
           + `s'écrit entre PARENTHÈSES : '!(shuffle)', '!(retro)', '!(vel:80)'. `
-          + `(Seule '![@seed:N]' reste, parce qu'elle re-sème la production et non la dérivation.)`,
+          + `(Seule '![seed:N]' reste, parce qu'elle re-sème la production et non la dérivation.)`,
           current());
       }
 
@@ -5492,7 +5528,7 @@ function parse(tokens, opts = {}) {
    *
    * ⚠️ ELLE LIT AVANT DE REFUSER, et cet ordre est une correction : `parseQualifier` porte des
    * refus NOMMÉS que celui-ci ne sait pas donner (`[shuffle:N]` retiré → la graine s'écrit
-   * `@seed:N` en tête, `![@seed:N]` dans le flux). Jeter avant de lire les écrasait — un message précis remplacé par un message
+   * `@seed:N` en tête, `![seed:N]` dans le flux). Jeter avant de lire les écrasait — un message précis remplacé par un message
    * vague est une régression, attrapée deux fois aujourd'hui par un garde du TEXTE du refus.
    */
   function refuserCrochetColle() {
@@ -6339,7 +6375,7 @@ function parse(tokens, opts = {}) {
     // `[shuffle:N]` RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
     // re-semer sont deux atomes BP3 distincts. `[shuffle]` (nu) reste = _rndseq.
     if (key === 'shuffle') {
-      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '@seed:N' (en tête de scène) ou '![@seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
+      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '@seed:N' (en tête de scène) ou '![seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
     }
     // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800). Le crochet ne
     // garde que trois emplois : un test de drapeau (garde), une affectation de drapeau (fin de

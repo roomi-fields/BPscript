@@ -908,11 +908,11 @@ function emitCallForm(bp3Name, args) {
  * Retourne null si aucun seq_prefix n'est détecté.
  */
 function extractGroupSeqPrefix(inner) {
-  // _srand(N) _rndseq [reste] → préfixe ![@seed:N] (instant, re-semence) + [shuffle]
+  // _srand(N) _rndseq [reste] → préfixe ![seed:N] (instant, re-semence) + [shuffle]
   // sur le groupe (décision 2026-06-14 : la graine s'écrit @seed ; [shuffle:N] retiré).
   const srandRndseq = inner.match(/^_srand\((\d+(?:\/\d+)?)\)\s+_rndseq(?:\s+(.*))?$/);
   if (srandRndseq) {
-    return { prefix: `![@seed:${srandRndseq[1]}]`, qualifier: '[shuffle]', rest: (srandRndseq[2] || '').trim() };
+    return { prefix: `![seed:${srandRndseq[1]}]`, qualifier: '[shuffle]', rest: (srandRndseq[2] || '').trim() };
   }
   // Détecter _rndseq [reste]  (sans _srand → brassage seul)
   const rndseq = inner.match(/^_rndseq(?:\s+(.*))?$/);
@@ -1421,7 +1421,7 @@ function convertBP3TokensToBPS(text, callMode = false, bolsizeTable = null) {
           // Convertir le reste du groupe (après le seq_prefix) sans les contrôles en tête
           const restGroup = seqPfx.rest ? '{' + seqPfx.rest + '}' : '{}';
           const convertedGroup = convertBraceGroup(restGroup, callMode, bolsizeTable);
-          // _srand(N) → ![@seed:N] posé AVANT le groupe ; [shuffle] reste suffixe du groupe.
+          // _srand(N) → ![seed:N] posé AVANT le groupe ; [shuffle] reste suffixe du groupe.
           if (seqPfx.prefix) out.push(seqPfx.prefix);
           out.push(convertedGroup + seqPfx.qualifier);
           continue;

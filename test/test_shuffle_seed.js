@@ -2,10 +2,10 @@
  * Test : orthogonalité brassage / graine (décision 2026-06-14-shuffle-seed-orthogonaux).
  *
  *   [shuffle]        → _rndseq            (brasser seul, conservé)
- *   [shuffle:N]      → ERREUR             (la graine s'écrit @seed:N en tête, ![@seed:N] en flux)
- *   ![@seed:N]       → _srand(N)          (re-semence dans le flux ; restreint à seed)
+ *   [shuffle:N]      → ERREUR             (la graine s'écrit @seed:N en tête, ![seed:N] en flux)
+ *   ![seed:N]       → _srand(N)          (re-semence dans le flux ; restreint à seed)
  *   ![@maxitems:N]   → ERREUR             (pas de jeton de flux BP3 hors seed)
- *   ![@seed:1] {…} → _srand(1) … {_rndseq …}  (remplace l'ancien [shuffle:1])
+ *   ![seed:1] {…} → _srand(1) … {_rndseq …}  (remplace l'ancien [shuffle:1])
  *
  * Run: node test/test_shuffle_seed.js
  */
@@ -42,10 +42,10 @@ console.log('\n=== brassage / graine orthogonaux ===');
   assert('[shuffle:1] : message cite @seed', /@seed/.test((r.errors[0] || {}).message || ''), r.errors);
 }
 
-// ![@seed:N] dans le flux → _srand(N)
+// ![seed:N] dans le flux → _srand(N)
 {
-  const r = compileToBPxAST('@alphabet.simple\n@mode:lin\nS -> a ![@seed:2] b');
-  assert('![@seed:2] : 0 erreur', r.errors.length === 0, r.errors);
+  const r = compileToBPxAST('@alphabet.simple\n@mode:lin\nS -> a ![seed:2] b');
+  assert('![seed:2] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 (émission `_srand(2)`).
 }
 
@@ -55,9 +55,9 @@ console.log('\n=== brassage / graine orthogonaux ===');
   assert('![@maxitems] : erreur (hors seed)', r.errors.length > 0, r.errors);
 }
 
-// Remplacement de [shuffle:1] : ![@seed:1] {…} → _srand(1) … _rndseq
+// Remplacement de [shuffle:1] : ![seed:1] {…} → _srand(1) … _rndseq
 {
-  const r = compileToBPxAST('@controls\n@mode:random\nBrassage -> ![@seed:1] {C4 B4 E4}');
+  const r = compileToBPxAST('@controls\n@mode:random\nBrassage -> ![seed:1] {C4 B4 E4}');
   assert('remplacement : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19. Ce qui RESTE vérifié ici est le
   // point qui compte pour le langage : la forme de remplacement de `[shuffle:1]` COMPILE.
