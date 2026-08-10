@@ -629,38 +629,30 @@ function parse(tokens, opts = {}) {
       skipNewlines();
     }
 
-    // LA SURFACE ET LE NOM DANS L'ARBRE SONT DEUX OBJETS — et deux décisions qui ne se
-    // contredisent pas (arbitrage architecte 2026-08-09, §38).
+    // LE MÉTRONOME PORTE UN SEUL NOM, `tempo`, DE LA SURFACE JUSQU'À L'ARBRE.
     //
-    // `@mm` SORT DE LA SURFACE : un auteur ne l'écrit plus (décision Romain 2026-06-26, `@mm` →
-    // `@tempo`). Le refus est posé plus bas, à la lecture de la directive.
+    // Il en a porté deux jusqu'au 2026-08-10 : l'auteur écrivait `@tempo` et l'arbre portait `mm`,
+    // normalisé ici. Romain a tranché — « même si on garantit la full compatibilité avec
+    // l'historique BP3, notre nominal c'est BPScript ; donc idéalement on devrait avoir tempo
+    // partout sauf dans le frontend BP3 qui devrait traduire mm en tempo ». La traduction change
+    // donc de SENS et de DOMICILE : elle quitte le producteur pour entrer chez qui LIT du natif.
     //
-    // LE NOM DANS L'ARBRE NE BOUGE PAS : `tempo` continue de se normaliser en `mm` ici (décision
-    // Romain 2026-07-05), parce que BPx LIT ce nom — douze sites mesurés. Le renommer coûterait
-    // douze rebranchements chez lui pour zéro gain visible par un auteur. Ce n'est donc PAS la
-    // rétrocompat interdite : la rétrocompat, c'était d'accepter encore l'ancienne SURFACE, et
-    // c'est elle qui tombe. Le nom interne est un choix de contrat entre deux dépôts.
+    // ⚠️ CE QUI RESTE `mm`, ET QUI N'EST PAS LA MÊME CHOSE — deux graphies natives BP3 que ce
+    // renommage ne touche pas, parce qu'elles nomment le moteur et non le langage :
+    //   · `_mm(N)` en RHS, le contrôle natif — `lib/engine.json` le déclare avec `bp3:"_mm"` ;
+    //     25 grammaires du corpus natif l'écrivent (mesuré par bp3-frontend).
+    //   · la SURFACE `@mm`, sortie du langage le 2026-06-26 et refusée plus bas avec sa
+    //     réécriture. Elle reste lisible en ENTRÉE BP3 : fermer la surface ne ferme pas la voie
+    //     native.
+    // Renommer l'une ou l'autre reviendrait à renommer du vocabulaire BP3 au nom de la conformité
+    // BPScript, soit l'inverse exact du geste.
     //
-    // ⚠️ ET LE NOM MOTEUR RESTE UNE GRAPHIE D'ENTRÉE BP3 — mesuré par BPx dans 25 fichiers du
-    // corpus natif. `bp3ToScene` continue de le LIRE ; ce qui change est ce qu'il PRODUIT. Fermer
-    // la surface ne ferme pas la voie native : même motif que le nom entre barres, sorti du
-    // langage le même jour et resté lisible en entrée BP3.
-    //
-    // Le bloc ENGINE `[tempx:N]` (relatif, renommé le 2026-08-04) n'est pas un `scene.directive` :
-    // il n'est pas touché.
-    //
-    // ⚠️ CE SITE EST HORS DU PÉRIMÈTRE DE L'ÉTAPE 3 (mise en conformité des librairies, règle 5).
-    // `tempo → mm` N'EST PAS un contrôle codé en dur par négligence : c'est une RÉCONCILIATION de
-    // convention entre deux mondes — nominal BPScript (l'auteur écrit `tempo`) et historique BP3
-    // (BPx lit `mm`). Romain a tranché la direction inverse (le nominal doit devenir `tempo`
-    // PARTOUT, `bp3-frontend` traduira `mm` → `tempo` à l'entrée) — c'est une FRONTIÈRE
-    // multi-dépôts (BPx, bp3-frontend), portée par l'architecte, hors mandat d'un chantier parseur
-    // seul. Case E (ni A/B/C/D), cf. test/aucun_routage_de_controle_n_est_code_en_dur.mjs, table EN_ARBITRAGE.
-    for (const d of scene.directives) {
-      if (!d || d.type !== 'Directive') continue;
-      if (d.name === 'tempo') d.name = 'mm';
-      if (Array.isArray(d.modifiers)) for (const m of d.modifiers) if (m && m.name === 'tempo') m.name = 'mm';
-    }
+    // L'ORDRE DE BASCULE, ET POURQUOI C'EST CELUI-LÀ. BPx a mesuré chez lui que son chargeur
+    // acceptait DÉJÀ `tempo` — `loadGrammar.ts:1895-1896` s'écrit `case 'tempo': case 'mm':`, en
+    // fall-through, depuis que la surface a basculé en juin ; la branche n'avait jamais servi
+    // puisque je normalisais avant de lui émettre. Émettre `tempo` ne casse donc rien chez lui,
+    // alors que l'ordre inverse — lui d'abord — aurait ouvert une fenêtre où le tempo ne marchait
+    // plus, pour rien. C'est lui qui a demandé à recevoir la frappe en premier.
 
     // Load libraries based on @ directives — determines known controls
     libCtx = loadLibsFromDirectives(scene.directives);
@@ -2823,16 +2815,13 @@ function parse(tokens, opts = {}) {
     // du binding alphabet→voix qu'à la ligne d'acteur (spec §7, champ `voices` de l'alphabet).
     if (name === 'alphabet' && subkey) assertAlphabetVoices(subkey, current());
 
-    // Mode modifiers: @mode:random(destru, smooth, mm:60)
+    // Mode modifiers: @mode:random(destru, smooth, tempo:60)
     let modifiers = null;
     if (name === 'mode' && at(T.LPAREN)) {
       advance();
       modifiers = [];
       while (!at(T.RPAREN) && !atEnd()) {
-        // Alias @mode:X(tempo:N) → mm (BPx lit mm ; cf. normalisation top-level plus haut).
-        // Hors mandat étape 3 (case E) — même motif que le site de tête, voir plus haut.
-        const rawModName = expect(T.IDENT).value;
-        const modName = rawModName === 'tempo' ? 'mm' : rawModName;
+        const modName = expect(T.IDENT).value;
         let modValue = true;
         if (at(T.COLON)) {
           advance();

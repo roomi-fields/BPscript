@@ -20,10 +20,22 @@ function assert(label, cond, extra = '') {
   else { fail++; console.log(`  FAIL: ${label} ${extra}`); }
 }
 
-// Réplique EXACTE de kanopi bpx-adapter.ts `mmFromAst` (le consommateur réel du tempo).
+// Réplique de kanopi `bpx-adapter.ts:mmFromAst` — le consommateur réel du tempo. Le nom de la
+// fonction est celui de l'original, qui l'a gardé après avoir changé le mot qu'il cherche.
+//
+// ⚠️ CETTE RÉPLIQUE AVAIT DIVERGÉ DE SON ORIGINAL, ET C'EST CE QUI A MASQUÉ UN DÉFAUT DE
+// PRODUCTION. Kanopi a migré son lecteur vers `tempo` le 2026-08-09 ; l'arbre, lui, a continué de
+// porter `mm` jusqu'au 2026-08-10. Son lecteur ne trouvait donc plus AUCUN tempo, et gardait
+// silencieusement celui du transport — une scène à 70 se dérivait au tempo courant. Ni son test ni
+// celui-ci ne l'ont vu : les deux répliquaient l'ANCIEN mot, donc les deux mesuraient un lecteur
+// qui n'existait plus.
+//
+// UNE RÉPLIQUE NE PROUVE QUE SA PROPRE FIDÉLITÉ. Recopier un consommateur pour éviter la
+// circularité ne vaut que si la copie suit l'original quand il change — sinon elle devient la
+// chose la plus trompeuse qui soit : un témoin qui atteste d'un accord avec personne.
 function mmFromAst(a) {
   for (const d of a?.directives ?? []) {
-    if (d.name === 'mm' && typeof d.value === 'number' && d.value > 0) return d.value;
+    if (d.name === 'tempo' && typeof d.value === 'number' && d.value > 0) return d.value;
   }
   return undefined;
 }
@@ -32,7 +44,7 @@ function mmFromAst(a) {
 {
   const ast = compileToBPxAST('A -> C4', { tempo:90 }).ast;
   assert('tempo défaut lu par mmFromAst = 90', mmFromAst(ast) === 90, `got ${mmFromAst(ast)}`);
-  const dir = ast.directives.find((d) => d.name === 'mm');
+  const dir = ast.directives.find((d) => d.name === 'tempo');
   assert('directive @mm inscrite', dir != null);
   assert('value = 90 (en dur)', dir?.value === 90);
   assert('provenance fromEnvironment:true', dir?.fromEnvironment === true);
@@ -43,7 +55,7 @@ function mmFromAst(a) {
 {
   const ast = compileToBPxAST('@tempo:70\nA -> C4', { tempo:90 }).ast;
   assert('@tempo:70 préservé (scène gagne)', mmFromAst(ast) === 70, `got ${mmFromAst(ast)}`);
-  const mmDirs = ast.directives.filter((d) => d.name === 'mm');
+  const mmDirs = ast.directives.filter((d) => d.name === 'tempo');
   assert('une seule directive @mm (pas de doublon)', mmDirs.length === 1, `got ${mmDirs.length}`);
   assert('pas d injection environnement', !mmDirs.some((d) => d.fromEnvironment));
 }
@@ -52,7 +64,7 @@ function mmFromAst(a) {
 {
   const ast = compileToBPxAST('@tempo:120\nA -> C4', { tempo:90 }).ast;
   assert('@tempo:120 → pas d injection @mm défaut',
-    !ast.directives.some((d) => d.name === 'mm' && d.fromEnvironment), JSON.stringify(ast.directives));
+    !ast.directives.some((d) => d.name === 'tempo' && d.fromEnvironment), JSON.stringify(ast.directives));
 }
 
 // ── 4. sans environnement → rétrocompatible (rien injecté) ──────────────
@@ -73,7 +85,7 @@ function mmFromAst(a) {
   // 0 est une valeur définie mais invalide comme tempo ; on l'inscrit telle quelle ?
   // Décision : env.tempo != null déclenche l'inscription ; mmFromAst (>0) la rejettera.
   // On documente le comportement plutôt que de le masquer.
-  const dir0 = ast0.directives.find((d) => d.name === 'mm');
+  const dir0 = ast0.directives.find((d) => d.name === 'tempo');
   assert('env.tempo=0 → inscrit mais rejeté par lecteur (>0)', dir0?.value === 0 && mmFromAst(ast0) === undefined);
 
   const astU = compileToBPxAST('A -> C4', { octave: 5 }).ast; // clé non câblée

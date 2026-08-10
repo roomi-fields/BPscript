@@ -22,22 +22,22 @@
 //      qu'un test VIVANT exige le mot 'SUPPRIMÉ', que le refus générique ne porte pas.)
 //   3. LA LISTE FIGÉE DE DIRECTIVES DE PRODUCTION EST SORTIE (`PRODUCTION_DIRECTIVES`, morte).
 //
-// ⚠️ CASE E — HORS DE LA MATRICE A/B/C/D, NOMMÉE ET COMPTÉE À PART (team-lead, 2026-08-10, deux
-// arbitrages successifs). `tempo` → `mm` (parser.js, tête de scène + ses modifiers + `@mode:X
-// (tempo:N)`) n'est PAS un contrôle codé en dur par négligence : BPScript nomme `tempo`, BP3/BPx
-// lisent ENCORE `mm`, et Romain a tranché le SENS de cette traduction le 2026-08-10 — le nom dans
-// l'arbre devient `tempo` PARTOUT, `bp3-frontend` traduira `mm` en entrée. Un premier passage avait
-// rendu ce renommage data-driven (`astName` + `universeDirectiveAstAlias()`) ; le geste a été
-// DÉFAIT — le mécanisme n'avait de sens QUE si l'alias persistait, et Romain vient précisément de
-// le condamner : construire une machinerie de donnée pour porter deux jours un fait qui va
-// disparaître, c'était programmer du code mort. Trois comparaisons littérales NOMMÉES, qui
-// s'effacent d'un bloc à la bascule de BPx, sont la forme juste — frontière multi-dépôts, son
-// propre préavis, portée par l'architecte, hors mandat d'un chantier parseur seul.
+//   4. LE MÉTRONOME PORTE UN SEUL NOM, `tempo`, DE LA SURFACE JUSQU'À L'ARBRE.
 //
-// La table `EN_ARBITRAGE` ci-dessous NOMME les trois sites, comme `CONNUS` le fait dans
-// `test/une_scene_porte_ce_qu_elle_ecrit.mjs:74-77` — et se vérifie dans LES DEUX SENS : la
-// littérale doit être là (sinon l'arbitrage a bougé sans que ce garde le sache), et un
-// `=== 'tempo'` non nommé doit sortir dans EN_ARBITRAGE ou se traiter en case A.
+// ⚠️ CE QUATRIÈME POINT A VÉCU QUELQUES HEURES COMME UNE EXCEPTION NOMMÉE, ET C'EST CE QUI A
+// SERVI. `tempo` → `mm` était une RÉCONCILIATION de convention — l'auteur écrivait `tempo`,
+// l'arbre portait `mm` parce que BPx lisait ce mot — donc ni un contrôle en dur par négligence,
+// ni un mot de structure. Une table `EN_ARBITRAGE` a nommé ses sites le temps que la frontière se
+// règle, sur le motif de `CONNUS` dans `test/une_scene_porte_ce_qu_elle_ecrit.mjs:74-77`. Romain a
+// tranché le 2026-08-10 (« notre nominal c'est BPScript »), BPx a mesuré que son chargeur
+// acceptait déjà `tempo`, la table est sortie et sa vérification en sens inverse a exigé qu'elle
+// sorte — une exception qui survit à sa raison masque la suivante.
+//
+// CE QUI SE VÉRIFIE ICI EST DONC L'ÉTAT FINAL, pas l'exception : l'arbre porte `tempo`, et `mm`
+// n'y apparaît plus comme nom de directive, quelle que soit la porte d'entrée — directive de
+// tête, modificateur de `@mode:X(...)`, ou défaut d'environnement inscrit par le compilateur. Ce
+// dernier est le site que la première mesure avait manqué : il ÉCRIT le nom au lieu de le
+// comparer, donc aucune recherche de comparaison littérale ne pouvait le trouver.
 //
 // MATRICE, PAS UNE LISTE DE CAS : le mécanisme que `libs.js` expose au parseur pour cette étape
 // (`universeSacs().specs.<clé>.values`) est éprouvé dans TOUTES les sections qui le consomment.
@@ -73,39 +73,48 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
    `SOCLE : lib/engine.json engine.scan.values absent ou de forme différente`);
 
 // ────────────────────────────────────────────────────────────────────────────
-// CASE E — `tempo` → `mm` : NOMMÉ, PAS COMPTÉ, ARBITRAGE EN COURS (architecte, hors mandat)
+// 4. LE MÉTRONOME PORTE UN SEUL NOM DANS L'ARBRE — `tempo`, par TOUTES ses portes d'entrée
 // ────────────────────────────────────────────────────────────────────────────
-const EN_ARBITRAGE = new Map([
-  ['parser.js|tête de scène, directive (d.name==="tempo")',
-   { motif: /if\s*\(d\.name === 'tempo'\) d\.name = 'mm';/,
-     raison: "réconciliation nominal BPScript (tempo) / historique BP3 (mm, lu par BPx) — sens de la traduction en arbitrage chez Romain, portée par l'architecte" }],
-  ['parser.js|tête de scène, modifiers de directive (m.name==="tempo")',
-   { motif: /if\s*\(m && m\.name === 'tempo'\) m\.name = 'mm';/,
-     raison: "même réconciliation, même bloc — s'applique aux modificateurs d'une directive (`d.modifiers`)" }],
-  ['parser.js|modificateurs @mode:X(tempo:N) (rawModName==="tempo")',
-   { motif: /rawModName === 'tempo' \? 'mm' : rawModName/,
-     raison: "même réconciliation, troisième site — @mode:X(tempo:N) → mm" }],
-]);
-
+// La portée ET son complément : il ne suffit pas que `tempo` arrive, il faut que `mm` n'arrive
+// PLUS — un renommage qui laisserait une porte ouverte produirait deux noms pour une chose, ce
+// que ce chantier vient précisément de fermer.
 {
-  const parserTxt = readFileSync(path.join(SRC, 'parser.js'), 'utf-8');
-  for (const [cle, { motif, raison }] of EN_ARBITRAGE) {
-    ok(motif.test(parserTxt),
-       `case E '${cle}' (${raison}) : la littérale attendue est INTROUVABLE — soit l'arbitrage a `
-       + `abouti (retirer cette ligne d'EN_ARBITRAGE), soit ce motif de recherche est devenu `
-       + `obsolète (le code a changé de forme sans que la traduction change de sens) : à `
-       + `distinguer avant de conclure.`);
+  // ⚠️ LES DEUX PORTES N'ABOUTISSENT PAS AU MÊME ENDROIT DE L'ARBRE, et une sonde qui ne
+  // regarderait qu'un seul endroit serait verte sans rien prouver de l'autre : une directive de
+  // tête vit dans `ast.directives`, tandis que `@mode:X(...)` est traité à part et dépose ses
+  // modificateurs sur la SOUS-GRAMMAIRE. Chaque porte est donc lue là où elle arrive.
+  const PORTES = [
+    ['directive de tête', '@tempo:120\nS -> C4', (a) => (a?.directives || [])
+      .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
+    ['forme préfixée par sa librairie', '@time.tempo:120\nS -> C4', (a) => (a?.directives || [])
+      .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
+    ['modificateur de @mode:X(...)', '@mode:random(tempo:60)\nS -> C4',
+      (a) => (a?.subgrammars?.[0]?.modifiers || []).map((m) => m && m.name)],
+  ];
+  for (const [quoi, src, lire] of PORTES) {
+    const r = ast(src);
+    const noms = lire(r.ast).filter(Boolean);
+    ok(noms.includes('tempo'),
+       `porte '${quoi}' : l'arbre doit porter le nom 'tempo' ; reçu ${JSON.stringify(noms)}`);
+    ok(!noms.includes('mm'),
+       `porte '${quoi}' : l'arbre ne doit PLUS porter 'mm' — le métronome a un seul nom depuis le `
+       + `2026-08-10 ; reçu ${JSON.stringify(noms)}`);
   }
-  // Une comparaison `=== 'tempo'` qui ne serait dans AUCUN de ces trois sites nommés serait un
-  // QUATRIÈME hardcode de la même famille, ou un vrai contrôle en dur ailleurs — les trois motifs
-  // ci-dessus couvrent la totalité des occurrences mesurée le 2026-08-10 (`grep -c "=== 'tempo'"`
-  // = 3) ; un compte qui grandit sans entrée neuve dans EN_ARBITRAGE doit être remonté, pas absorbé.
-  const occurrences = (parserTxt.match(/===\s*'tempo'/g) || []).length;
-  ok(occurrences === EN_ARBITRAGE.size,
-     `${occurrences} comparaison(s) littérale(s) à 'tempo' trouvée(s) dans parser.js, `
-     + `${EN_ARBITRAGE.size} nommée(s) en case E — un écart signifie un site NON nommé : `
-     + `l'ajouter à EN_ARBITRAGE avec sa raison, ou le traiter en case A s'il n'a rien à voir `
-     + `avec la réconciliation tempo/mm`);
+
+  // LA PORTE QUE LA PREMIÈRE MESURE AVAIT MANQUÉE — le défaut d'ENVIRONNEMENT est ÉCRIT par le
+  // compilateur (`bpxAst.js:applyEnvironmentDefaults`), pas comparé : aucune recherche de
+  // comparaison littérale ne pouvait le trouver, et c'est le garde des défauts d'environnement qui
+  // l'a fait tomber. Il s'éprouve donc ici par la SORTIE, seule façon de voir un nom qu'on écrit.
+  const envAst = compileToBPxAST('S -> C4', { tempo: 90 }).ast;
+  const envDirs = (envAst?.directives || []).filter((d) => d && d.fromEnvironment);
+  ok(envDirs.length === 1 && envDirs[0].name === 'tempo',
+     `porte 'défaut d'environnement' : le compilateur doit INSCRIRE le nom 'tempo' ; reçu `
+     + `${JSON.stringify(envDirs.map((d) => d.name))}`);
+
+  // LA SURFACE RESTE FERMÉE — sans ce témoin, retirer le renommage pourrait rouvrir `@mm`.
+  ok(err('@mm:120\nS -> C4').length >= 1,
+     `TÉMOIN — '@mm:120' reste REFUSÉ en surface (sortie du langage le 2026-06-26) : le nom de `
+     + `l'arbre a changé, pas ce qu'un auteur a le droit d'écrire`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -181,5 +190,6 @@ if (echecs.length) {
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ aucun routage de contrôle codé en dur (hors case E, ${EN_ARBITRAGE.size} nommée(s)) — `
-          + `${passe} vérification(s) : énumération (scan), 1 régression, PRODUCTION_DIRECTIVES sortie.`);
+console.log(`✅ aucun routage de contrôle codé en dur — ${passe} vérification(s) : énumération `
+          + `(scan), 1 régression, PRODUCTION_DIRECTIVES sortie, métronome à un seul nom `
+          + `(4 portes).`);

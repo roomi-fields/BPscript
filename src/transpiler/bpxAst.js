@@ -146,7 +146,7 @@ function annotateBackticks(ast) {
  * - Mécanisme GÉNÉRAL (un seul pour tout défaut), piloté par table.
  * - On ne câble QUE les défauts qui ont un vrai consommateur en aval (sinon on
  *   écrirait une cible que personne ne lit). Aujourd'hui : le TEMPO, lu par l'hôte
- *   et BPx via la directive `@mm` (Kanopi mmFromAst ; BPx loadGrammar). Les autres
+ *   et BPx via la directive `@tempo` (Kanopi ; BPx loadGrammar). Les autres
  *   réglages (octave, division…) s'ajouteront ici dès que leur cible AST + lecteur
  *   seront définis.
  *
@@ -156,12 +156,12 @@ function annotateBackticks(ast) {
 function applyEnvironmentDefaults(ast, env) {
   if (!ast || !env || typeof env !== 'object') return;
 
-  // tempo → directive `@mm` (la SEULE directive de tempo lue en aval). On n'inscrit
-  // le défaut que si la scène ne déclare AUCUN tempo (`@mm` ou `@tempo`).
+  // tempo → directive `@tempo`, le seul nom du métronome depuis le 2026-08-10 (avant cette date
+  // l'arbre portait `mm`). On n'inscrit le défaut que si la scène ne déclare aucun tempo.
   if (env.tempo != null && !hasTempoDirective(ast)) {
     (ast.directives = ast.directives || []).push({
       type: 'Directive',
-      name: 'mm',
+      name: 'tempo',
       subkey: null,
       runtime: null,
       value: env.tempo,
@@ -173,10 +173,10 @@ function applyEnvironmentDefaults(ast, env) {
   }
 }
 
-/** Vrai si la scène déclare déjà un tempo (directive `@mm` ou `@tempo`). */
+/** Vrai si la scène déclare déjà un tempo. Un seul nom depuis le 2026-08-10 : `tempo`. */
 function hasTempoDirective(ast) {
   return (ast.directives || []).some(
-    (d) => d && d.type === 'Directive' && (d.name === 'mm' || d.name === 'tempo')
+    (d) => d && d.type === 'Directive' && d.name === 'tempo'
   );
 }
 
