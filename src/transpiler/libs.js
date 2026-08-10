@@ -246,6 +246,33 @@ function loadLib(name, subkey) {
  * son tour `expression`/`midi`/`audio`/`transpo` — `@core.transpose:2` doit rester valide à
  * DEUX maillons de distance. `vus` protège d'un cycle d'`apporte` mal formé.
  */
+/**
+ * LES PORTÉES DÉCLARÉES d'un mot, cherchées dans TOUTES les librairies du registre et dans TOUTES
+ * leurs sections — ou `null` si aucune ne le déclare.
+ *
+ * ⚠️ LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Le même principe tient déjà la
+ * reconnaissance des mots de tête (voir `loadLibsFromDirectives`) : un mot rangé sous `subgrammar`
+ * mais portant `scope:["scene"]` s'écrit en tête, et l'inverse est vrai aussi. Chercher par section
+ * reviendrait à faire dire à un classement ce que la donnée dit déjà.
+ *
+ * Sert au parseur là où une POSITION doit être validée — les modificateurs de sous-grammaire, qui
+ * n'étaient confrontés à rien avant le 2026-08-10.
+ */
+function porteesDeclarees(nom) {
+  if (!nom) return null;
+  for (const lib of Object.values(registry)) {
+    if (!lib || typeof lib !== 'object') continue;
+    const res = lib.schema && lib.schema.reservedDirectives;
+    if (res && !Array.isArray(res) && res[nom] && Array.isArray(res[nom].scope)) return res[nom].scope;
+    for (const section of Object.values(lib)) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      const def = section[nom];
+      if (def && typeof def === 'object' && Array.isArray(def.scope)) return def.scope;
+    }
+  }
+  return null;
+}
+
 function directiveDeclareeParLaLibrairie(lib, nom) {
   const file = loadJsonFile(lib);
   if (!file || !nom) return false;
@@ -941,6 +968,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, directiveDeclareeParLaLibrairie, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
+export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

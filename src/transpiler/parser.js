@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
 import { BP3_OPERATORS } from './constants.js';
 
 class ParseError extends Error {
@@ -2850,12 +2850,41 @@ function parse(tokens, opts = {}) {
     if (name === 'alphabet' && subkey) assertAlphabetVoices(subkey, current());
 
     // Mode modifiers: @mode:random(destru, smooth, tempo:60)
+    //
+    // ⛔ UN MODIFICATEUR VIENT D'UNE LIBRAIRIE, ET SA PORTÉE DOIT DIRE `subgrammar`.
+    //
+    // ⚠️ CE BLOC N'A RIEN VALIDÉ JUSQU'AU 2026-08-10 : `@mode:ord(zorglub)` passait et entrait
+    // dans l'arbre en `{name:"zorglub"}`. C'est la règle 1 de Romain qui était en défaut ici —
+    // « tous les mots acceptés par le parseur viennent des librairies invoquées dans la scène » —
+    // et le trou s'est découvert par un TÉMOIN D'INSTRUMENT : j'avais lu « `@mode:ord(destru)`
+    // passe » comme une preuve que la portée `subgrammar` fonctionnait, alors que la graphie
+    // acceptait n'importe quel mot. La preuve était creuse, pas le sujet.
+    //
+    // LA PORTÉE FAIT FOI, PAS LA SECTION : un mot est admis ici s'il déclare `subgrammar` dans
+    // SA librairie, où qu'il soit rangé. `tempo` est le contre-exemple qui compte — il déclare
+    // `["scene","flow"]` et n'a donc rien à faire sur un mode, alors que le portage BP3 l'y
+    // écrivait avant sa correction du même jour.
     let modifiers = null;
     if (name === 'mode' && at(T.LPAREN)) {
       advance();
       modifiers = [];
       while (!at(T.RPAREN) && !atEnd()) {
+        const tokModName = current();
         const modName = expect(T.IDENT).value;
+        const portees = porteesDeclarees(modName);
+        if (!portees) {
+          throw new ParseError(
+            `'@mode:${runtime || '…'}(${modName})' : '${modName}' n'est déclaré par aucune `
+            + `librairie chargée. Un modificateur de sous-grammaire est un mot de librairie comme `
+            + `un autre — invoquer celle qui le porte, ou retirer le mot.`, tokModName);
+        }
+        if (!portees.includes('subgrammar')) {
+          throw new ParseError(
+            `'${modName}' ne se pose pas sur une sous-grammaire — sa portée déclarée est `
+            + `${JSON.stringify(portees)}. ${portees.includes('scene')
+              ? `Il s'écrit en tête de scène : '@${modName}${modName === 'tempo' ? ':<N>' : ''}'.`
+              : `Il vaut ${portees.map((p) => `'${p}'`).join(', ')}.`}`, tokModName);
+        }
         let modValue = true;
         if (at(T.COLON)) {
           advance();
@@ -5167,9 +5196,24 @@ function parse(tokens, opts = {}) {
       // `ProductionInline` que `![seed:42]` produisait : son chargeur (loadGrammar.ts:8284) lit
       // cet objet, pas le texte, donc il n'a rien à frapper. Ce qui a été tranché est la GRAPHIE ;
       // changer la nature de l'objet serait un second changement, que personne n'a demandé.
+      // ⚠️ LE MOT EST LU DANS LA LIBRAIRIE, PAS ÉCRIT ICI — mais la PORTÉE ne suffit pas à ouvrir
+      // le crochet, et c'est ce qui interdit de généraliser. `retro`, `shuffle`, `rotate` et
+      // `order` déclarent eux aussi `flow` et s'écrivent `!(retro)`, entre PARENTHÈSES. La portée
+      // dit OÙ un mot vaut, jamais SOUS QUEL SIGNE il s'écrit ; les confondre rendrait `![retro]`
+      // écrivable, ce que personne n'a décidé.
+      // Ce que la donnée gouverne donc ici : `![X]` exige que `X` déclare la portée `flow`. Le
+      // jour où un second mot reçoit le crochet, il s'ajoute par sa donnée et par la liste
+      // ci-dessous, jamais par la donnée seule.
       if (at(T.LBRACKET) && peek(1).type === T.IDENT) {
         const nom = peek(1).value;
-        if (nom === 'seed') {
+        const CROCHET_EN_FLUX = new Set(['seed']);   // graphie ratifiée : `![seed:N]` (Romain)
+        if (CROCHET_EN_FLUX.has(nom) && !directiveDeclareeParLaLibrairie('engine', nom)) {
+          throw new ParseError(
+            `'![${nom}:…]' : '${nom}' n'est plus déclaré par la librairie 'engine'. La re-semence en `
+            + `flux traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie `
+            + `comme tous les autres.`, current());
+        }
+        if (CROCHET_EN_FLUX.has(nom)) {
           const ouvre = current();
           advance();                                   // '['
           advance();                                   // 'seed'

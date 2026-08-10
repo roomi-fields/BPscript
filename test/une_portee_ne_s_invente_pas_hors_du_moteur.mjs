@@ -140,16 +140,21 @@ ok(err('S -> C4 [zorglub]').length === 0,
 // geste du jour : `@destru` en tête est REFUSÉ (section 2, la portée inventée est bien partie), et
 // le PORTAGE pose le mot sur la sous-grammaire (section 3, la divergence avec bp3-frontend est
 // fermée). Le reste est un constat, pas une preuve, et il est écrit comme tel.
+// ⚠️ CE TÉMOIN A ROUGI LE JOUR MÊME, ET C'ÉTAIT SON OFFICE. Il exigeait d'abord que
+// `@mode:ord(zorglub)` PASSE — c'était l'état : les modificateurs de sous-grammaire n'étaient
+// confrontés à aucune librairie, et j'avais écrit « le jour où il se ferme, ce témoin rougit et la
+// section 2 devient une vraie preuve ». Le trou a été refermé quelques heures plus tard (règle 1
+// de Romain), le témoin a rougi, et il dit maintenant l'état neuf. C'est la forme utile d'un
+// témoin : il ne garde pas un acquis, il DATE un état et exige qu'on revienne le relire.
 {
-  const r = compileToBPxAST(`${SOCLE}@mode:ord(zorglub)\nS -> C4`);
-  const mods = (r.ast?.subgrammars?.[0]?.modifiers || []).map((m) => m && m.name);
-  ok((r.errors || []).length === 0 && mods.includes('zorglub'),
-     "4. TÉMOIN — le modificateur de sous-grammaire n'est confronté à AUCUNE librairie : un mot "
-     + "inventé y passe et entre dans l'arbre. C'est un trou de validation SIGNALÉ (règle 1 de "
-     + "Romain : « tous les mots acceptés par le parseur viennent des librairies invoquées »). "
-     + 'Le jour où il se ferme, ce témoin rougit et la section 2 devient une vraie preuve ; '
-     + `reçu erreurs=${JSON.stringify((r.errors || []).map((e) => e.message.slice(0, 40)))} `
-     + `modifiers=${JSON.stringify(mods)}`);
+  const e = err('@mode:ord(zorglub)\nS -> C4');
+  ok(e.length >= 1 && e.some((m) => /aucune librairie/.test(m)),
+     `4. TÉMOIN — un modificateur de sous-grammaire inconnu est REFUSÉ, en nommant la cause ; `
+     + `reçu : ${JSON.stringify(e)}`);
+  const horsPortee = err('@mode:ord(tempo:60)\nS -> C4');
+  ok(horsPortee.some((m) => /portée déclarée/.test(m)),
+     `4. TÉMOIN — un mot DÉCLARÉ mais hors portée est refusé en NOMMANT sa portée : la section 2 `
+     + `mesure donc bien quelque chose ; reçu : ${JSON.stringify(horsPortee)}`);
 }
 
 if (echecs.length) {

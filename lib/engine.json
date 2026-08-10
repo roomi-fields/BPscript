@@ -28,9 +28,10 @@
         ]
       },
       "seed": {
-        "description": "Graine du tirage aleatoire -- @seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed.",
+        "description": "Graine du tirage aleatoire -- @seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed. PORTEE `flow` AJOUTEE le 2026-08-10 : la graine s ecrit AUSSI dans le flux, `![seed:N]` (forme validee par Romain), ou elle traduit le `_srand(N)` natif. La convention `flow` n est pas neuve — `retro`, `shuffle`, `rotate`, `order` et `randomize` la portent deja ; ce qui manquait etait de la declarer pour `seed`, dont le parseur connaissait la graphie sans que la donnee la dise.",
         "scope": [
-          "scene"
+          "scene",
+          "flow"
         ]
       },
       "maxitems": {

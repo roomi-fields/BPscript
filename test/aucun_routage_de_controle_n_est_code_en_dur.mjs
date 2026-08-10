@@ -88,9 +88,15 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
       .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
     ['forme préfixée par sa librairie', '@time.tempo:120\nS -> C4', (a) => (a?.directives || [])
       .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
-    ['modificateur de @mode:X(...)', '@mode:random(tempo:60)\nS -> C4',
-      (a) => (a?.subgrammars?.[0]?.modifiers || []).map((m) => m && m.name)],
   ];
+  // ⚠️ LA TROISIÈME PORTE A ÉTÉ FERMÉE LE 2026-08-10, ET SA DISPARITION SE TIENT ICI. Le
+  // métronome s'écrivait aussi en modificateur de sous-grammaire (`@mode:X(tempo:N)`) ; ce n'est
+  // plus une porte du langage — `tempo` déclare `scope:["scene"]`, et les modificateurs sont
+  // désormais confrontés à leur portée déclarée. La sonde qui la mesurait ne pouvait pas rester
+  // « verte » : elle est devenue le témoin du refus.
+  ok(err('@mode:random(tempo:60)\nS -> C4').some((m) => /portée déclarée/.test(m)),
+     `'@mode:random(tempo:60)' doit être REFUSÉ en nommant la portée déclarée de 'tempo' — reçu : `
+     + `${JSON.stringify(err('@mode:random(tempo:60)\nS -> C4'))}`);
   for (const [quoi, src, lire] of PORTES) {
     const r = ast(src);
     const noms = lire(r.ast).filter(Boolean);
