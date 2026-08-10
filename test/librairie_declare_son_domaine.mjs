@@ -23,22 +23,29 @@
  * attrape le jour où une scène invoque un fichier sans destinataire, quel qu'il soit. Écrire la
  * liste à la main aurait gardé le fichier du ticket, pas la construction.
  *
- * ⚠️ CE QU'IL NE COUVRE PAS ENCORE, et c'est mesuré, pas oublié : QUATRE fichiers du bundle
- * restent invocables sans `resolvedBy` — `core`, `language`, `mapping`, `mod`. `core` ne déclare
- * aucun domaine par nature (atlas/architecture/LIBRAIRIES.md : « core ne déclare aucun domaine : il
- * invoque les librairies du socle et porte les défauts ») — il n'est pas une librairie au sens de
- * la table de découpage. `language` est le schéma machine du COMPILATEUR (BPScript lui-même), pas
- * résolu par un des outils aval nommés. `mapping` et `mod` ont un contenu réel mais AUCUNE source
- * mesurée ne nomme leur résolveur — cf. leur `_resolvedBy_doc` respectif, signalé à Romain.
+ * ⚠️ CE QU'IL NE COUVRE PAS ENCORE, et c'est mesuré, pas oublié : SIX fichiers du bundle restent
+ * invocables sans `resolvedBy` — `core`, `language`, `mapping`, `mod`, `sub`,
+ * `bp3-settings-template`. `core` ne déclare aucun domaine par nature (atlas/architecture/
+ * LIBRAIRIES.md : « core ne déclare aucun domaine : il invoque les librairies du socle et porte
+ * les défauts ») — il n'est pas une librairie au sens de la table de découpage. `language` est le
+ * schéma machine du COMPILATEUR (BPScript lui-même), pas résolu par un des outils aval nommés.
+ * `mapping` et `mod` ont un contenu réel mais AUCUNE source mesurée ne nomme leur résolveur — cf.
+ * leur `_resolvedBy_doc` respectif, signalé à Romain.
  *
- * `sub` (2026-08-10) et `bp3-settings-template` (2026-08-10) sont SORTIS de cette liste — pas
- * parce qu'ils ont trouvé un destinataire, mais parce qu'ils ont été SUPPRIMÉS : zéro consommateur
- * mesuré dans BPscript, BPx, Kairos, Kanopi ni bp3-frontend (recherche par contenu, pas par nom de
- * fichier — `.tables`/`LIBS.sub`/`loadLib('sub'` pour l'un, les clés de settings pour l'autre).
- * `bp3-settings-template.json` a été créé au même commit que `settings.json` (6431dcd) ; c'est ce
- * dernier qui a gagné le rôle vivant (`bp3_defaults`, lu par `bp3_load_settings()`) — l'autre n'a
- * jamais eu de lecteur. Un panneau navigateur de Kanopi le chargeait par son nom jusqu'à l'extraction
- * de Kanopi en dépôt séparé (`9909fb7`, 2026-04-13) ; le dépôt séparé ne l'a jamais repris.
+ * `sub` (Romain, 2026-08-10) : SES 14 TABLES SONT VIVANTES — j'avais conclu « mort » sur une
+ * mesure incomplète (qui charge le FICHIER dans le code), sans voir que le lien passe par le NOM
+ * DES TABLES, référencées par les grammaires BP3 natives (12/14 tables ont un `-gr.*` ou `-da.*`
+ * qui les nomme dans bp3-engine/test-data/) et par les scènes équivalentes. Romain l'a restauré ;
+ * mesure détaillée par table dans le rapport à l'architecte du 2026-08-10 (repris ici : 4 noms
+ * (`checkhomo`, `dhati`, `transposition`, `tryhomomorphism`) existent aussi dans `homomorphism.json`
+ * avec un CONTENU DIFFÉRENT — collision signalée, pas tranchée).
+ *
+ * `bp3-settings-template` (Romain, 2026-08-10) : restauré après lecture de
+ * `hub/constats/2026-08-04-collisions-de-vocabulaire.md:1152-1158`, qui le traite comme un
+ * artefact INTENTIONNEL (le gabarit vide des réglages, à côté de `settings.json` qui les traduit)
+ * et propose un RENOMMAGE (`lib/settings.defaults.json`), jamais une suppression. Aucun lecteur de
+ * code mesuré à ce jour dans BPscript, BPx, Kairos, Kanopi ni bp3-frontend — mais l'absence de
+ * lecteur ne vaut pas mort : cf. `sub`, ci-dessus, même erreur évitée deux fois de suite.
  * `controls.json` n'a PAS de `resolvedBy` de fichier non plus : mesuré comme violant la règle « une
  * librairie, un destinataire » (elle en sert cinq, par sous-groupe), elle porte `resolvedBy` PAR
  * CONTRÔLE au lieu d'un champ de fichier — signalé à Romain, hors périmètre d'une scission
@@ -109,9 +116,9 @@ ok(invoquees.size > 0, '2. le corpus doit invoquer au moins une librairie — si
 // pour autant redevenir un catalogue — les deux questions sont orthogonales. Restent en attente
 // d'une décision de Romain (aucune source mesurée ne nomme leur résolveur, cf. leur propre
 // `_resolvedBy_doc`, ou fichiers orphelins sans consommateur).
-const SANS_RESOLVEDBY_SIGNALE = new Set(['core', 'language', 'mapping', 'mod']);
-ok(SANS_RESOLVEDBY_SIGNALE.size === 4,
-   `2. quatre exceptions sont tolérées, et elles sont nommées — reçu ${SANS_RESOLVEDBY_SIGNALE.size}`);
+const SANS_RESOLVEDBY_SIGNALE = new Set(['core', 'language', 'mapping', 'mod', 'sub', 'bp3-settings-template']);
+ok(SANS_RESOLVEDBY_SIGNALE.size === 6,
+   `2. six exceptions sont tolérées, et elles sont nommées — reçu ${SANS_RESOLVEDBY_SIGNALE.size}`);
 
 for (const [fichier, portees] of [...invoquees].sort()) {
   const lib = LIBS[fichier];
