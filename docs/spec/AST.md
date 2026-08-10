@@ -29,7 +29,7 @@ Scene {
   defs: DefDirective[]
   init: InitEntry[] | null           // le bloc @init ; null si la scène n'en a pas
   subgrammars: Subgrammar[]
-  template: TemplateEntry[] | null   // le catalogue des formes
+  template: { destinataire: 'bpscript' | 'bp3', entrees: TemplateEntry[] } | null   // le catalogue des formes
   homomorphisms: HomomorphismDecl[]
   backticks: BacktickOrphan[]
   libRefs?: string[]                 // invocations par provenance, adresses opaques
@@ -318,11 +318,23 @@ après les itérations appartient à l'alphabet et se joue.
 ### `TemplateEntry`
 
 ```
+template {
+  destinataire: "bpscript" | "bp3"   // en quelle GRAPHIE les lignes sont écrites
+  entrees: TemplateEntry[]
+}
+
 TemplateEntry {
   type: "TemplateEntry"
   line: string                     // la LIGNE ENTIÈRE du catalogue, crochet de rang compris
 }
 ```
+
+**Le destinataire est OBLIGATOIRE, et il n'a pas de défaut.** Deux graphies vivent, chacune dans son
+chemin : une scène BPScript écrit son catalogue en graphie BPScript, un fichier de gabarits natif se
+charge en graphie native. Le glyphe qui décide est le point d'interrogation — **joker** en BPScript,
+**ellipse** en natif. Une ligne dont le destinataire est perdu se lit donc sans lever aucune erreur
+et rend un autre arbre ; un champ optionnel aurait un défaut, et ce défaut serait la devinette qu'on
+ferme.
 
 Une entrée de catalogue se transporte **verbatim** : la ligne entière, non normalisée, sans son
 terminateur de fin de ligne. Les espaces restent — le moteur les ignore lui-même, et les retirer ici

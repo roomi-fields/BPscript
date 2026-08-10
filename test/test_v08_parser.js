@@ -193,19 +193,19 @@ S -> A B C
 @template
 [1] /1 ???
 [2] /1 ???????`);
-  assert('template parsed', Array.isArray(ast.template));
-  assert('2 entries', ast.template?.length === 2);
+  assert('template parsed', Array.isArray(ast.template?.entrees));
+  assert('2 entries', ast.template?.entrees?.length === 2);
   // ⚠️ ASSERTION RETIRÉE le 2026-07-19 : elle vérifiait l'alias `ast.templates`, supprimé
   // (arbitrage Romain — un seul nom canonique, `template` au singulier, AST.md:40).
-  assert('champ canonique `template` présent', Array.isArray(ast.template));
+  assert('champ canonique `template` présent', Array.isArray(ast.template?.entrees));
   // ⚠️ ASSERTIONS RETOURNÉES le 2026-08-10 : l'entrée de catalogue se transporte VERBATIM
   // (forme ratifiée par Romain, BPx AST_SPEC §1.9). Elles mesuraient le DÉCOUPAGE — index et
   // corps — et ce découpage perdait tout : deux entrées écrites rendaient UNE entrée au corps
   // VIDE, sans une erreur. Ce qui se mesure désormais est la seule chose qui compte, la LIGNE.
-  assert('entry 1 line verbatim', ast.template?.[0]?.line === '[1] /1 ???');
-  assert('entry 2 line verbatim', ast.template?.[1]?.line === '[2] /1 ???????');
+  assert('entry 1 line verbatim', ast.template?.entrees?.[0]?.line === '[1] /1 ???');
+  assert('entry 2 line verbatim', ast.template?.entrees?.[1]?.line === '[2] /1 ???????');
   assert('aucun champ dérivé à côté de la ligne',
-    !('index' in (ast.template?.[0] || {})) && !('body' in (ast.template?.[0] || {})));
+    !('index' in (ast.template?.entrees?.[0] || {})) && !('body' in (ast.template?.entrees?.[0] || {})));
 }
 
 // ============================================================
@@ -238,10 +238,10 @@ S -> A
 S -> A
 @template
 [1] /1 ?????`);
-  assert('témoin — @template (singulier) parse toujours', Array.isArray(ast.template));
+  assert('témoin — @template (singulier) parse toujours', Array.isArray(ast.template?.entrees));
   // RETOURNÉ le 2026-08-10 avec le transport verbatim : il n'y a plus de corps découpé à compter,
   // la ligne EST le gabarit. Le témoin garde la même intention — la section se lit toujours.
-  assert('témoin — la ligne est portée verbatim', ast.template?.[0]?.line === '[1] /1 ?????');
+  assert('témoin — la ligne est portée verbatim', ast.template?.entrees?.[0]?.line === '[1] /1 ?????');
 }
 
 // ============================================================
@@ -455,7 +455,7 @@ S -> tabla.dhin tabla.dha
 @template
 [1] /1 ???`);
   assert('actor parsed', ast.actors.length === 1);
-  assert('template parsed', ast.template?.length === 1);
+  assert('template parsed', ast.template?.entrees?.length === 1);
   assert('soundAssignments OK', ast.soundAssignments?.length === 1);
   assert('directives OK', ast.directives.some(d => d.name === 'alphabet' && d.subkey === 'tabla'));
 }

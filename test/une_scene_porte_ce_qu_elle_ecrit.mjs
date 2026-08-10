@@ -53,7 +53,7 @@ const SECTIONS = [
     ecrit: (t) => ((t.split(/^@template\b/m)[1] || '').split('\n').filter((l) => /^\s*\[\d+\]/.test(l)).length),
     // ce que l'arbre porte : les entrées, et le total des éléments de corps
     porte: (ast) => {
-      const tpl = ast?.template || [];
+      const tpl = ast?.template?.entrees || [];
       return { entrees: tpl.length, corps: tpl.reduce((n, e) => n + ((e.body || []).length), 0) };
     },
   },

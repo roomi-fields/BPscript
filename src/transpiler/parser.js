@@ -692,7 +692,21 @@ function parse(tokens, opts = {}) {
     // qu'il retire dans le même mouvement.
     if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'template') {
       const entries = parseTemplateSection();
-      scene.template = entries;
+      // ── LE CATALOGUE PORTE SON DESTINATAIRE ────────────────────────────────────────────────
+      // FORME VALIDÉE PAR ROMAIN le 2026-08-10 (second geste après le transport verbatim) : le
+      // catalogue cesse d'être un tableau nu et devient un objet qui SE DÉCLARE. Les entrées ne
+      // changent pas — la ligne verbatim reste ce qu'elle était ; seul le PORTEUR change de nature.
+      //
+      // ⚠️ POURQUOI CE CHAMP EST OBLIGATOIRE, ET C'EST LE SEUL DÉFAUT SILENCIEUX DE CE CHANTIER :
+      // DEUX GRAPHIES vivent, chacune dans son chemin — une scène BPScript écrit son catalogue en
+      // graphie BPScript, un fichier de gabarits natif se charge en graphie native. Et le GLYPHE
+      // QUI DÉCIDE est le point d'interrogation : joker en BPScript, ELLIPSE en natif. Une ligne
+      // dont le destinataire est perdu se lit donc SANS LEVER AUCUNE ERREUR et rend un AUTRE ARBRE.
+      //
+      // Le champ n'a pas de défaut, et c'est délibéré : un défaut serait exactement la devinette
+      // qu'on ferme. Une scène BPScript écrit toujours 'bpscript' — elle n'a jamais l'autre
+      // destinataire ; 'bp3' est celui d'un catalogue natif chargé tel quel.
+      scene.template = { destinataire: 'bpscript', entrees: entries };
     }
 
     // ── Post-pass : annotation payload (AST_SPEC v1 §2) ───────────────────────

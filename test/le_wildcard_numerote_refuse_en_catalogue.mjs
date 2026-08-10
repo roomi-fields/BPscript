@@ -43,7 +43,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 {
   const src = `@alphabet.western\n\nS -> C4 D4\n\n@template\n[1] /1 ?1 ? .\n`;
   const r = compileToBPxAST(src);
-  const entrees = r.ast?.template || [];
+  const entrees = r.ast?.template?.entrees || [];
   ok((r.errors || []).length === 0,
     `1. la ligne se transporte, elle ne se juge plus ici (reçu ${JSON.stringify(r.errors)})`);
   ok(entrees.length === 1, `1. une ligne de catalogue, une entrée (reçu ${entrees.length})`);
@@ -59,7 +59,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 // La troncature d'origine mangeait la suite en silence. Deux lignes doivent rester deux.
 {
   const r = compileToBPxAST(`@alphabet.western\n\nS -> C4\n\n@template\n[1] ?1 ? .\n[2] a b\n`);
-  const e = r.ast?.template || [];
+  const e = r.ast?.template?.entrees || [];
   ok(e.length === 2, `2. TÉMOIN — deux lignes écrites, deux entrées (reçu ${e.length})`);
   ok(e[1]?.line === '[2] a b', `2. la seconde est intacte (reçu ${JSON.stringify(e[1]?.line)})`);
 }
