@@ -9,7 +9,7 @@
 
 import { T } from './tokenizer.js';
 import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
-import { BP3_OPERATORS, PRODUCTION_DIRECTIVES } from './constants.js';
+import { BP3_OPERATORS } from './constants.js';
 
 class ParseError extends Error {
   constructor(msg, token) {
@@ -648,6 +648,14 @@ function parse(tokens, opts = {}) {
     //
     // Le bloc ENGINE `[tempx:N]` (relatif, renommé le 2026-08-04) n'est pas un `scene.directive` :
     // il n'est pas touché.
+    //
+    // ⚠️ CE SITE EST HORS DU PÉRIMÈTRE DE L'ÉTAPE 3 (mise en conformité des librairies, règle 5).
+    // `tempo → mm` N'EST PAS un contrôle codé en dur par négligence : c'est une RÉCONCILIATION de
+    // convention entre deux mondes — nominal BPScript (l'auteur écrit `tempo`) et historique BP3
+    // (BPx lit `mm`). Romain a tranché la direction inverse (le nominal doit devenir `tempo`
+    // PARTOUT, `bp3-frontend` traduira `mm` → `tempo` à l'entrée) — c'est une FRONTIÈRE
+    // multi-dépôts (BPx, bp3-frontend), portée par l'architecte, hors mandat d'un chantier parseur
+    // seul. Case E (ni A/B/C/D), cf. test/aucun_routage_de_controle_n_est_code_en_dur.mjs, table EN_ARBITRAGE.
     for (const d of scene.directives) {
       if (!d || d.type !== 'Directive') continue;
       if (d.name === 'tempo') d.name = 'mm';
@@ -2607,6 +2615,16 @@ function parse(tokens, opts = {}) {
       // via parse()) :
       //   a. un producteur `eval.<X>` sort en NATIF → il ne porte PAS de sortie routée.
       //   b. `out.video` / `out.visual` n'existent plus (axe visuel SUPPRIMÉ, pas renommé).
+      //
+      // ⚠️ RECLASSÉ (étape 3, mise en conformité des librairies) : j'avais d'abord retiré (b) comme
+      // hardcode redondant avec la LISTE POSITIVE FERMÉE `outChannels()` plus bas — video/visual
+      // n'y figurent déjà pas, donc le refus générique suffit à REFUSER la forme. Mais
+      // `test/test_eval_transport_reject.js:47,52` exige le mot 'SUPPRIMÉ' dans le message, que le
+      // refus générique ('n'est pas une sortie… liste FERMÉE') ne porte pas — un test VIVANT, pas
+      // une intuition. C'est le MÊME contrat que les autres tombstones du fichier (`@mm`, `@scene`,
+      // `@routing`, `@library`, plus bas) : chacun REFUSE un mot qu'un mécanisme générique refuserait
+      // de toute façon (plus vaguement), mais porte SA propre raison datée, nommément testée. video/
+      // visual est de cette famille — case B, pas un contrôle à faire lire par une librairie.
       if (properties.eval && properties.transport) {
         throw new ParseError(
           `acteur '${actorName}' : un producteur 'eval.${properties.eval}' sort en natif — `
@@ -2723,23 +2741,17 @@ function parse(tokens, opts = {}) {
       return parseSoundSection(tok.line, subkey, libVariant);
     }
 
+    // ⚠️ `@duration:16b`/`@duration:8s` (forme dédiée, unité b/s) VIVAIT ICI, EN DUR
+    // (`name === 'duration'`) — RETIRÉE (étape 3, règle 5). `duration` N'EST PLUS UNE DIRECTIVE
+    // DE SCÈNE depuis le 2026-08-04 (Romain, hub/decisions/2026-08-04-la-duree-de-scene-est-
+    // supprimee.md) et n'est déclarée par AUCUNE librairie du registre : construire ce nœud pour
+    // un mot qu'aucune donnée ne reconnaît ne servait plus qu'à parser une forme que la validation
+    // en aval REFUSE de toute façon (`bpxAst.validateReferences` : « valeur '@duration:…' inconnue
+    // — non déclarée par une librairie chargée »). Mesuré avant retrait : `@duration:16` reste
+    // refusé, avec la même conclusion, sans cette branche — cf.
+    // test/une_forme_supprimee_ne_revient_pas_par_une_librairie.mjs.
+    //
     // @timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
-    // @duration:16b or @duration:8s or @duration:4.5s — scene duration hint
-    if (name === 'duration' && at(T.COLON)) {
-      advance();
-      let amount;
-      if (at(T.INT)) amount = Number(advance().value);
-      else if (at(T.FLOAT)) amount = Number(advance().value);
-      else throw new ParseError('Expected number after @duration:', current());
-      // Unit: b (beats) or s (seconds), default b
-      let unit = 'b';
-      if (at(T.IDENT) && (current().value === 'b' || current().value === 's')) {
-        unit = advance().value;
-      }
-      return { type: 'Directive', name, subkey, runtime: null, value: { amount, unit },
-               aliases: null, modifiers: null, line: tok.line };
-    }
-
     if (name === 'timepatterns' && at(T.COLON)) {
       advance();
       const patterns = [];
@@ -2818,6 +2830,7 @@ function parse(tokens, opts = {}) {
       modifiers = [];
       while (!at(T.RPAREN) && !atEnd()) {
         // Alias @mode:X(tempo:N) → mm (BPx lit mm ; cf. normalisation top-level plus haut).
+        // Hors mandat étape 3 (case E) — même motif que le site de tête, voir plus haut.
         const rawModName = expect(T.IDENT).value;
         const modName = rawModName === 'tempo' ? 'mm' : rawModName;
         let modValue = true;
@@ -3777,15 +3790,18 @@ function parse(tokens, opts = {}) {
     // B2 : extraire rule.mode depuis le réglage (scan:left|right|rnd) — écrit en PARENTHÈSES
     // depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800), plus en crochets.
     // (BPx ast.ts:431-449 lit ast.mode : le champ DÉRIVÉ ne change pas, seule sa source le fait.)
-    const VALID_SCAN_MODES = { left: 'left', right: 'right', rnd: 'rnd' };
+    // LES VALEURS VALIDES VIENNENT DE LA DONNÉE (`engine.scan.values`, lib/engine.json) — le
+    // parseur nommait `left`/`right`/`rnd` lui-même (un doublon EXACT de cet enum) ; il lit
+    // désormais celui que la librairie déclare, comme tout contrôle à `values` (étape 3, règle 5).
+    const scanValues = (universeSacs().specs.scan && universeSacs().specs.scan.values) || [];
     let ruleMode = null;
     for (const pair of (settings ? settings.pairs : [])) {
       if (pair.key === 'scan') {
-        if (VALID_SCAN_MODES[pair.value] !== undefined) {
-          ruleMode = VALID_SCAN_MODES[pair.value];
+        if (scanValues.includes(pair.value)) {
+          ruleMode = pair.value;
         } else {
           throw new ParseError(
-            `(scan:${pair.value}) : valeur inconnue (attendu : left, right, rnd)`,
+            `(scan:${pair.value}) : valeur inconnue (attendu : ${scanValues.join(', ')})`,
             { line: tok.line, col: 0 }
           );
         }
@@ -4745,9 +4761,14 @@ function parse(tokens, opts = {}) {
         if (libCtx.qualifierKeys.has(key) && !reglageMultiPartie) {
           const { value, decrement } = readQualifierValue();
           if (value === undefined) {
+            // EXEMPLE DE VALEUR LU DANS LA DONNÉE (`specReglage.values[0]`), jamais un nom en dur
+            // (étape 3, règle 5) — le ternaire `key === 'mode'` était mort : `mode` n'est plus une
+            // `qualifierKey` depuis le 2026-08-08 (décision Romain, `lib/core.json`
+            // schema.qualifierKeys), donc cette branche ne pouvait plus l'atteindre.
+            const exemple = (specReglage && Array.isArray(specReglage.values) && specReglage.values[0]) || '…';
             throw new ParseError(
               `'(${key}:)' n'affecte aucune valeur — le deux-points en attend une (par exemple `
-              + `'(${key}:${key === 'mode' ? 'random' : '…'})')`,
+              + `'(${key}:${exemple})')`,
               keyTok);
           }
           // DEUX ÉLÉMENTS SÉPARÉS PAR UNE ESPACE, SANS VIRGULE — même garde que le résidu `[]`

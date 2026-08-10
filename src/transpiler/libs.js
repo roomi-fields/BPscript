@@ -37,6 +37,8 @@ function registerLib(name, data) {
   _universeRuleScope = null;
   _universeRuleAllowed = null;
   _universeSacs = null;
+  _universeIntervalControls = null;
+  _universeCompositeControls = null;
 }
 
 /**
@@ -60,6 +62,8 @@ function clearRegistry() {
   _universeRuleScope = null;
   _universeRuleAllowed = null;
   _universeSacs = null;
+  _universeIntervalControls = null;
+  _universeCompositeControls = null;
 }
 
 /**

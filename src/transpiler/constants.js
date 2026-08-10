@@ -19,23 +19,14 @@
 export const BP3_OPERATORS = Object.freeze({ plus: '+', fin: ';', star: '*' });
 
 /**
- * PRODUCTION_DIRECTIVES : noms des directives de production (instructions au
- * moteur sur COMMENT produire, pas des éléments de la grammaire).
- *
- * Surface canonique : `@clé:valeur` en tête de scène, préfixe optionnel — `@seed:42`,
- * `@engine.seed:42`, `@items:20`. Le bloc `[@…]` est REFUSÉ depuis le 2026-08-10.
- * (décision utilisateur 2026-06-11, hub/decisions/2026-06-11-directives-
- * production-crochets.md, incl. ADDENDUM — durcissement même jour ;
- * EBNF §production_block). Les @-formes historiques (`@seed:N`…) sont REJETÉES
- * à la compilation (ParseError, parser.js:2049-2054) : le message pointe la
- * nouvelle écriture `@seed:N`.
- *
- * Le routage nom→réglage moteur reste dans lib/settings.json (directive_map) ;
- * cette liste a deux usages distincts dans parser.js : rejeter les @-formes
- * historiques hors bloc (ParseError ci-dessus, parser.js:2049-2054) et avertir
- * (warn(), parser.js:1111-1112) quand une clé utilisée dans le bloc canonique
- * `[@...]` n'en fait pas partie.
+ * ⚠️ `PRODUCTION_DIRECTIVES` VIVAIT ICI — RETIRÉE (étape 3, mise en conformité des librairies,
+ * règle 5 : « aucun contrôle codé en dur dans le parseur »). C'était une liste FIGÉE de cinq noms
+ * (maxitems, items, allitems, all_items, improvize), IMPORTÉE par `parser.js` mais plus CONSULTÉE
+ * nulle part dans son corps — mesuré avant retrait (`grep PRODUCTION_DIRECTIVES src/ test/` :
+ * zéro occurrence hors sa propre déclaration et son import mort). Les deux usages que son
+ * commentaire décrivait (rejet des @-formes historiques, avertissement du bloc `[@...]`) ont été
+ * remplacés depuis par des mécanismes lisant `lib/*.json` (`schema.reservedDirectives`,
+ * `directive_map` de `lib/settings.json`) sans que l'import correspondant soit nettoyé. Les cinq
+ * noms restent des directives VIVANTES — déclarées dans `lib/engine.json` schema.reservedDirectives,
+ * scope `['scene']` — leur acceptation ne dépendait déjà plus de cette liste.
  */
-export const PRODUCTION_DIRECTIVES = Object.freeze([
-  'maxitems', 'items', 'allitems', 'all_items', 'improvize',
-]);
