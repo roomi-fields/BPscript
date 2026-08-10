@@ -763,8 +763,23 @@ function loadLibsFromDirectives(directives) {
         // leur correspond. Mesuré le 2026-08-08 : en tirant la famille du seul `scope`, les quatre
         // y sont entrés et le refus de `![scan:…]` s'est mis à parler de procédure de règle.
         // Le critère joint donc les deux faits que la donnée porte déjà, et ne nomme aucun contrôle.
+        // ⚠️ LE TROISIÈME FAIT, AJOUTÉ LE 2026-08-10 — et il remplace une longueur exacte qui
+        // servait de proxy. Le critère exigeait `portees.length === 1`, ce qui écartait toute
+        // procédure valant AUSSI ailleurs. `destru` en était : le moteur l'arme sur la règle
+        // (Encode.c:408) comme sur la sous-grammaire (CompileGrammar.c:1528), donc sa portée est
+        // `["subgrammar","rule"]` et la longueur le rejetait. `S -> C4 [destru]` tombait alors en
+        // DRAPEAU — homonyme silencieux, puisque le crochet accepte tout mot comme drapeau.
+        // Arbitrage Romain : « la portée règle, c'est un sac en fin de règle pour tous les
+        // contrôles, ça doit être pareil pour destru, voilà comme pour stop ».
+        //
+        // CE QUE LA LONGUEUR PROTÉGEAIT VRAIMENT : que `staccato`, `legato` et `rndtime` n'entrent
+        // pas — ce sont des contrôles de RENDU, pas des procédures de dérivation. Le fait qui les
+        // sépare est déjà dans la donnée, et il est plus juste que la longueur : une PROCÉDURE
+        // n'agit jamais sur un SYMBOLE ni sur un GROUPE, alors que les trois y valent. Le critère
+        // ne nomme donc toujours aucun contrôle — il joint trois faits que la donnée porte.
         const portees = Array.isArray(def.scope) ? def.scope : (def.scope ? [def.scope] : []);
-        if (portees.length === 1 && portees[0] === 'rule' && typeof def.bp3 === 'string') {
+        if (portees.includes('rule') && typeof def.bp3 === 'string'
+            && !portees.includes('symbol') && !portees.includes('group')) {
           ctx.ruleScopeControls.add(name);
         }
         // CE QUI A LE DROIT DE S'ÉCRIRE AU NIVEAU D'UNE RÈGLE — portée qui INCLUT `rule`, sans

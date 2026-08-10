@@ -80,24 +80,43 @@ const err = (src) => {
   ok(err('@mode:ord(destru)\nS -> C4').length === 0,
      `2. '@mode:ord(destru)' doit PASSER — portée 'subgrammar', armée par CompileGrammar.c:1528`);
 
-  // ⚠️ ÉCART SIGNALÉ, MESURÉ ICI PLUTÔT QU'AFFIRMÉ AILLEURS : la portée `rule` est déclarée
-  // (le moteur l'arme, Encode.c:408) et AUCUNE GRAPHIE BPScript ne l'atteint aujourd'hui.
-  //   · `S -> C4 (destru)` → « attribut '(destru:…)' inconnu »
-  //   · `S -> C4 [destru]` → PASSE, mais comme DRAPEAU (`FlagExpr`), pas comme contrôle : le
-  //     crochet accepte n'importe quel mot, `[zorglub]` compris. Une lecture pressée y voit la
-  //     preuve que la portée fonctionne — c'est ce que j'ai cru, et le témoin d'instrument de la
-  //     section 4 est ce qui m'a arrêté.
-  // Ce garde tient donc l'homonymie, pour que personne ne conclue du vert que `rule` est servie.
+  // ⚠️ CETTE SECTION A ÉTÉ RÉÉCRITE LE JOUR MÊME, ET LE GARDE L'AVAIT EXIGÉ. Elle constatait que
+  // la portée `rule` n'avait AUCUNE graphie : `[destru]` passait comme DRAPEAU homonyme et
+  // `(destru)` rendait « attribut inconnu ». Le constat portait sa propre condition de péremption
+  // — « si ça change, la portée a reçu une graphie et cette section est à réécrire ». Romain a
+  // tranché quelques heures après : « la portée règle, c'est un sac en fin de règle pour tous les
+  // contrôles, ça doit être pareil pour destru, voilà comme pour stop ».
+  //
+  // CE QUI MANQUAIT N'ÉTAIT PAS UNE SYNTAXE, mais deux faits de donnée : `destru` vivait dans une
+  // section qui n'alimente aucun sac, et le critère des procédures de règle exigeait une portée
+  // de longueur EXACTEMENT 1 — ce qui écartait toute procédure valant aussi ailleurs.
+  //
+  // LA PREUVE SE FAIT PAR COMPARAISON AVEC `stop`, jamais sur `destru` seul : le crochet accepte
+  // n'importe quel mot comme drapeau, donc « `[destru]` passe » ne prouve rien. Ce qui prouve,
+  // c'est qu'il produise le MÊME OBJET que la procédure de référence.
   {
-    const arbre = compileToBPxAST(`${SOCLE}S -> C4 [destru]`).ast;
-    const regle = arbre?.subgrammars?.[0]?.rules?.[0];
-    const drapeaux = (regle?.flags || []).map((f) => f && f.flag);
-    ok(drapeaux.includes('destru') && (regle?.qualifiers || []).length === 0,
-       `2. '[destru]' est un DRAPEAU, pas un contrôle de règle — si ça change, la portée 'rule' a `
-       + `reçu une graphie et cette section est à réécrire ; reçu flags=${JSON.stringify(drapeaux)} `
-       + `qualifiers=${JSON.stringify(regle?.qualifiers)}`);
-    ok(err('S -> C4 (destru)').length >= 1,
-       `2. et le sac de règle ne la sert pas non plus — la portée 'rule' reste SANS graphie`);
+    const lire = (src) => {
+      const regle = compileToBPxAST(`${SOCLE}${src}`).ast?.subgrammars?.[0]?.rules?.[0];
+      return {
+        cles: (regle?.qualifiers || []).flatMap((q) => (q.pairs || []).map((p) => p.key)),
+        drapeaux: (regle?.flags || []).map((f) => f && f.flag),
+      };
+    };
+    const d = lire('S -> C4 [destru]');
+    const s = lire('S -> C4 [stop]');
+    ok(s.cles.includes('stop'),
+       `2. SOCLE — '[stop]', la procédure de référence, doit être un contrôle de règle ; reçu `
+       + `${JSON.stringify(s)}`);
+    ok(d.cles.includes('destru'),
+       `2. '[destru]' doit être lu comme un CONTRÔLE de règle, comme '[stop]' ; reçu `
+       + `${JSON.stringify(d)}`);
+    ok(d.drapeaux.length === 0,
+       `2. et PLUS comme un drapeau — c'était l'homonymie silencieuse d'avant ; reçu `
+       + `${JSON.stringify(d.drapeaux)}`);
+    // ET LES DEUX NATURES COEXISTENT : recevoir le crochet ne lui retire pas la sous-grammaire.
+    ok(err('@mode:ord(destru)\nS -> C4').length === 0,
+       `2. '@mode:ord(destru)' passe TOUJOURS — la section dit le SAC, la portée dit la POSITION, `
+       + `et les deux natures de 'destru' tiennent ensemble`);
   }
 }
 

@@ -387,10 +387,7 @@
         "rule",
         "flow"
       ]
-    }
-  },
-  "subgrammar": {
-    "_comment": "Procedures de sous-grammaire rapatriees de lib/controls.json (destru, randomize) -- striated/smooth/mm restent dans lib/controls.json : leur destinataire mesure (mm -> transport/Kronos, cf. core.json _destinations) ne correspond pas a BPx, question laissee ouverte pour Romain (cf. rapport). striated/smooth REJOINTS le 2026-08-10 : LIBRAIRIES.md:168 liste « nature du temps » parmi le contenu d'engine. mm REJOINT PRAGMATIQUEMENT (pas par match Atlas — son destinataire mesuré via core.json _destinations est Kronos/time, mais time.json n'est pas dans core.apporte et l'y ajouter rouvrirait '@core.tempo:120' déjà fermé par décision — signalé, non résolu, cf. rapport).",
+    },
     "destru": {
       "bp3": "_destru",
       "args": [],
@@ -398,8 +395,12 @@
       "scope": [
         "subgrammar",
         "rule"
-      ]
-    },
+      ],
+      "_sac_doc": "RANGE DANS LA SECTION `engine` LE 2026-08-10 (arbitrage Romain : « la portee regle, c est un sac en fin de regle pour tous les controles, ca doit etre pareil pour destru, voila comme pour stop »). ⚠️ DEUX CHOSES DIFFERENTES, TOUTES DEUX PORTEES PAR LA DONNEE, et les confondre a coute ce deplacement : la SECTION dit dans quel SAC le mot s ecrit (`engine` -> crochets, `runtime.*` -> parentheses) ; le champ `scope` dit A QUELLE POSITION il vaut. `destru` etait range sous `subgrammar`, qui n alimente aucun sac : `S -> C4 [destru]` etait donc lu comme un DRAPEAU (FlagExpr), homonyme et silencieux, au lieu d un controle de regle. Il garde ses DEUX natures parce que `scope` reste ['subgrammar','rule'] : la validation des modificateurs de sous-grammaire lit la PORTEE, pas la section."
+    }
+  },
+  "subgrammar": {
+    "_comment": "Procedures de sous-grammaire rapatriees de lib/controls.json (destru, randomize) -- striated/smooth/mm restent dans lib/controls.json : leur destinataire mesure (mm -> transport/Kronos, cf. core.json _destinations) ne correspond pas a BPx, question laissee ouverte pour Romain (cf. rapport). striated/smooth REJOINTS le 2026-08-10 : LIBRAIRIES.md:168 liste « nature du temps » parmi le contenu d'engine. mm REJOINT PRAGMATIQUEMENT (pas par match Atlas — son destinataire mesuré via core.json _destinations est Kronos/time, mais time.json n'est pas dans core.apporte et l'y ajouter rouvrirait '@core.tempo:120' déjà fermé par décision — signalé, non résolu, cf. rapport).",
     "randomize": {
       "bp3": "_randomize",
       "args": [],
