@@ -322,11 +322,22 @@ function resolveActors(ast) {
       }
     }
     // ── ET CHAQUE AXE HÉRITÉ S'ANNONCE DANS LES RÉFÉRENCES ────────────────────────────────────
-    // ⚠️ MATÉRIALISER DANS `properties` NE SUFFIT PAS, et c'est ce qui a coûté un tour entier. La
-    // mesure qui l'a montré : trois scènes portaient `properties.transport` et restaient MUETTES ;
-    // les scènes qui sonnaient portaient en plus une `ActorReference` de catégorie `transport`. La
-    // coupure était parfaite dans les deux sens — c'est la RÉFÉRENCE que l'aval lit, pas la
-    // propriété seule.
+    // CE QUI EST MESURÉ : un acteur DÉCLARÉ n'annonçait que ce qui était ÉCRIT sur lui, alors que
+    // les scènes dont l'acteur écrit `out` portent une `ActorReference` de catégorie `transport`,
+    // et que l'acteur implicite en porte une aussi.
+    //
+    // ⚠️ ET CE QUI N'EST PAS MESURÉ, PARCE QUE JE L'AI ÉCRIT ICI COMME UN FAIT ET QUE C'ÉTAIT FAUX :
+    // « c'est la RÉFÉRENCE que l'aval lit, pas la propriété seule ». C'était une DÉDUCTION tirée
+    // d'une corrélation — trois scènes muettes sans référence, trois sonnantes avec — pas une mesure
+    // de l'aval. La corrélation a été défaite le jour même : le silence de ces trois-là venait de la
+    // cascade absente (réparée juste au-dessus) et d'une fenêtre de mesure trop courte chez le
+    // consommateur. PERSONNE n'a montré qu'un aval refuse une propriété non annoncée.
+    //
+    // CE QUI JUSTIFIE QUAND MÊME CE BLOC, et il tient sur ses propres pieds : un axe que la cascade
+    // fournit et qui ne s'annonce pas est une INCOHÉRENCE de cet arbre — l'acteur implicite annonce
+    // ses cinq axes depuis toujours (bpxAst.js:1055-1082), et ce qu'un acteur nommé porte ne peut
+    // pas être plus pauvre que ce que porterait la scène qui n'en déclare aucun. Le prouver
+    // demanderait un témoin qui LIT la référence ; il n'existe pas encore (BACKLOG BPS-60).
     //
     // L'acteur IMPLICITE annonce ses cinq axes depuis toujours (bpxAst.js:1055-1082) ; l'acteur
     // DÉCLARÉ n'annonçait que ce qui était ÉCRIT. Même invariant que pour les propriétés, et même

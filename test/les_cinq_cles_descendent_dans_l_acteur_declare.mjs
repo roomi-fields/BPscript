@@ -93,23 +93,25 @@ for (const c of CLES) {
 }
 
 // ── L'INVARIANT PORTE SUR L'ARBRE ENTIER, PAS SUR LES SEULES PROPRIÉTÉS ──────────────────────
-// ⚠️ CE BLOC EXISTE PARCE QUE CE GARDE A LAISSÉ PASSER LA MOITIÉ DU DÉFAUT (2026-08-10). Il
-// comparait `properties` et s'arrêtait là. Résultat mesuré par kanopi : trois scènes portaient
-// `properties.transport` et restaient MUETTES, pendant que ce garde était vert. Ce que l'aval lit
-// est la RÉFÉRENCE — les scènes qui sonnaient portaient une `ActorReference` de catégorie
-// `transport`, les muettes non ; coupure parfaite dans les deux sens.
+// ⚠️ CE BLOC EXISTE PARCE QUE CE GARDE NE COMPARAIT QUE LES `properties` (2026-08-10) — donc il
+// ne pouvait pas voir qu'un acteur déclaré nu annonçait MOINS de références que l'acteur implicite.
 //
 // UNE EMPREINTE COMPARE TOUT, en retirant seulement ce qui est prouvé hors sujet. Choisir les
-// champs comparés revient à choisir ce qu'on ne verra pas — et ici, ce qu'on n'a pas vu est
-// exactement ce qui faisait la différence entre une scène qui sonne et une scène morte.
+// champs comparés revient à choisir ce qu'on ne verra pas.
+//
+// ⚠️ CE QUE CE GARDE NE PROUVE PAS, et la première version de ce commentaire l'affirmait : que
+// l'aval REFUSE une propriété non annoncée. J'avais tiré cette cause d'une corrélation — trois
+// scènes muettes sans référence, trois sonnantes avec — et la corrélation a été défaite le jour
+// même. Ce qui est gardé ici est un invariant de FORME : les deux chemins d'acteur annoncent la
+// même chose, ou ils ont divergé. Rien de plus, et c'est déjà la raison d'être du bloc.
 {
   const cats = (a) => [...new Set((a.references || []).map((r) => r.category))].sort().join(',');
   const nu = acteur(`${SCENE_COMPLETE}@actor nu\nS -> nu.C4`, 'nu');
   const implicite = acteur(`${SCENE_COMPLETE}S -> C4`, 'scene');
   ok(cats(nu) === cats(implicite),
     `7. LES RÉFÉRENCES aussi — l'acteur IMPLICITE annonce [${cats(implicite)}] et l'acteur DÉCLARÉ `
-    + `NU annonce [${cats(nu)}]. C'est la référence que l'aval lit ; une propriété seule ne suffit `
-    + `pas, et trois scènes muettes l'ont prouvé.`);
+    + `NU annonce [${cats(nu)}]. Les deux chemins doivent annoncer la même chose : ce qu'un acteur `
+    + `nommé porte ne peut pas être plus pauvre que ce que porterait la scène qui n'en déclare aucun.`);
   ok(cats(nu).includes('transport'),
     `7. et 'transport' EST annoncé : reçu [${cats(nu)}]`);
 }
