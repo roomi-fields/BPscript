@@ -263,6 +263,7 @@ function resolveActors(ast) {
     const name = actor.name;
     const props = actor.properties;
     let alphabetKey = props.alphabet;
+    const herite = [];   // les axes que la CASCADE fournit — ils s'annoncent en références plus bas
 
     // Voix-code (eval présent) : porte du code étranger, pas un vocabulaire de notes →
     // alphabet OPTIONNEL (pas d'héritage). Cf. docs/design/ACTOR.md §2.
@@ -278,16 +279,19 @@ function resolveActors(ast) {
     // @core ne s'applique QUE si RIEN n'est invoqué. Une voix-code n'hérite pas (pas de notes).
     if (!alphabetKey && !isCodeVoice) {
       alphabetKey = alphabetHerite(ast);                                  // cascade scène → socle @core
-      if (alphabetKey) props.alphabet = alphabetKey;                      // matérialise l'héritage dans l'AST
+      if (alphabetKey) {
+        props.alphabet = alphabetKey;                                     // matérialise l'héritage dans l'AST
+        herite.push({ category: 'alphabet', name: alphabetKey });
+      }
     }
     // Les REGISTRES et l'ACCORDAGE suivent le même chemin : acteur (déjà là) → scène → alphabet.
     if (props.octaves == null && alphabetKey) {
       const oct = octavesHerite(ast, alphabetKey);
-      if (oct) props.octaves = oct;
+      if (oct) { props.octaves = oct; herite.push({ category: 'octaves', name: oct }); }
     }
     if (props.tuning == null && alphabetKey) {
       const tun = tuningHerite(ast, alphabetKey);
-      if (tun) props.tuning = tun;
+      if (tun) { props.tuning = tun; herite.push({ category: 'tuning', name: tun }); }
     }
     // ── LES DEUX DERNIÈRES DES CINQ ────────────────────────────────────────────────────────────
     // LA SORTIE ET L'INTERPRÈTE descendent ici aussi. Ils ne descendaient PAS : un acteur déclaré
@@ -308,10 +312,35 @@ function resolveActors(ast) {
     if (props.transport == null) {
       const sortie = sortieHeritee(ast);   // scène `@out.X` → raccord d'alphabet → socle @core
       props.transport = { type: 'TransportRef', key: sortie.key, params: sortie.params };
+      herite.push({ category: 'transport', name: sortie.key, params: sortie.params });
     }
     if (props.eval == null) {
       const interprete = evalHerite(ast);  // ne dépend pas de l'alphabet : une scène sans note
-      if (interprete) props.eval = interprete;   // déclare quand même par quoi ses backticks se lisent
+      if (interprete) {                    // déclare quand même par quoi ses backticks se lisent
+        props.eval = interprete;
+        herite.push({ category: 'eval', name: interprete });
+      }
+    }
+    // ── ET CHAQUE AXE HÉRITÉ S'ANNONCE DANS LES RÉFÉRENCES ────────────────────────────────────
+    // ⚠️ MATÉRIALISER DANS `properties` NE SUFFIT PAS, et c'est ce qui a coûté un tour entier. La
+    // mesure qui l'a montré : trois scènes portaient `properties.transport` et restaient MUETTES ;
+    // les scènes qui sonnaient portaient en plus une `ActorReference` de catégorie `transport`. La
+    // coupure était parfaite dans les deux sens — c'est la RÉFÉRENCE que l'aval lit, pas la
+    // propriété seule.
+    //
+    // L'acteur IMPLICITE annonce ses cinq axes depuis toujours (bpxAst.js:1055-1082) ; l'acteur
+    // DÉCLARÉ n'annonçait que ce qui était ÉCRIT. Même invariant que pour les propriétés, et même
+    // motif : ce qu'un acteur nommé porte ne peut pas être plus pauvre que ce que porterait la
+    // scène qui n'en déclare aucun.
+    //
+    // ⚠️ MON PROPRE GARDE NE L'AVAIT PAS VU : il comparait les `properties` des deux chemins et
+    // s'arrêtait là. Une empreinte compare TOUT, en retirant seulement ce qui est prouvé hors
+    // sujet — choisir les champs comparés revient à choisir ce qu'on ne verra pas.
+    for (const ref of herite) {
+      actor.references = actor.references || [];
+      if (!actor.references.some((r) => r.category === ref.category)) {
+        actor.references.push({ type: 'ActorReference', line: actor.line, ...ref });
+      }
     }
 
     // Expand terminals depuis l'alphabet (voix de notes) ; voix-code = pas de terminaux.

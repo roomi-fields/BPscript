@@ -92,6 +92,28 @@ for (const c of CLES) {
     + `'${lire(nu, c)}' : les deux chemins ont divergé.`);
 }
 
+// ── L'INVARIANT PORTE SUR L'ARBRE ENTIER, PAS SUR LES SEULES PROPRIÉTÉS ──────────────────────
+// ⚠️ CE BLOC EXISTE PARCE QUE CE GARDE A LAISSÉ PASSER LA MOITIÉ DU DÉFAUT (2026-08-10). Il
+// comparait `properties` et s'arrêtait là. Résultat mesuré par kanopi : trois scènes portaient
+// `properties.transport` et restaient MUETTES, pendant que ce garde était vert. Ce que l'aval lit
+// est la RÉFÉRENCE — les scènes qui sonnaient portaient une `ActorReference` de catégorie
+// `transport`, les muettes non ; coupure parfaite dans les deux sens.
+//
+// UNE EMPREINTE COMPARE TOUT, en retirant seulement ce qui est prouvé hors sujet. Choisir les
+// champs comparés revient à choisir ce qu'on ne verra pas — et ici, ce qu'on n'a pas vu est
+// exactement ce qui faisait la différence entre une scène qui sonne et une scène morte.
+{
+  const cats = (a) => [...new Set((a.references || []).map((r) => r.category))].sort().join(',');
+  const nu = acteur(`${SCENE_COMPLETE}@actor nu\nS -> nu.C4`, 'nu');
+  const implicite = acteur(`${SCENE_COMPLETE}S -> C4`, 'scene');
+  ok(cats(nu) === cats(implicite),
+    `7. LES RÉFÉRENCES aussi — l'acteur IMPLICITE annonce [${cats(implicite)}] et l'acteur DÉCLARÉ `
+    + `NU annonce [${cats(nu)}]. C'est la référence que l'aval lit ; une propriété seule ne suffit `
+    + `pas, et trois scènes muettes l'ont prouvé.`);
+  ok(cats(nu).includes('transport'),
+    `7. et 'transport' EST annoncé : reçu [${cats(nu)}]`);
+}
+
 // ── LE CAS QUI A COÛTÉ LE SIGNALEMENT — une scène sans AUCUNE directive de sortie ────────────
 // Le socle @core porte le défaut (`defaults.components.transport`), et il doit atteindre l'acteur
 // déclaré comme il atteint l'implicite. C'est la forme exacte des quatre scènes muettes.
