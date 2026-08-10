@@ -8,6 +8,12 @@
 | [EBNF.md](spec/EBNF.md) | Grammaire formelle ISO 14977. Toutes les productions EBNF du langage | Valider la syntaxe, coder le parser, vérifier un edge case grammatical |
 | [AST.md](spec/AST.md) | Nœuds AST : Scene, Directive, Rule, CVInstance, Macro, Polymetry, etc. | Coder des transformations AST, comprendre la sortie du parser |
 
+## Frontières — qui lit ma surface
+
+| Document | Contenu | Quand le lire |
+|----------|---------|---------------|
+| [CONSOMMATEURS.md](CONSOMMATEURS.md) | Les dépôts qui lisent la surface du langage et l'arbre, ce que chacun lit, et comment mesurer son corpus. Les trois informations d'un préavis : la forme qui sort, la forme qui entre, les variantes voisines concernées ou non | Avant de rendre une forme invalide, avant de déclarer un mot, avant de changer un artefact dérivé |
+
 ## design/ — COMMENT c'est construit
 
 | Document | Contenu | Quand le lire |
