@@ -86,7 +86,6 @@
     "reservedDirectives": [
       "mode",
       "mm",
-      "tempo",
       "seed",
       "maxitems",
       "items",

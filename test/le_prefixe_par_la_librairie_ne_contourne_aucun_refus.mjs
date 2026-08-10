@@ -62,8 +62,17 @@ for (const [lib, dir] of paires) {
 
 // LES DEUX SENS DU TÉMOIN. Une règle qui refuserait tout laisserait au vert la moitié « doit
 // mordre » ; c'est la moitié « doit passer » qui la démasque (payé deux fois le 2026-07-28).
-dire(compile('@core.tempo:120').errors.length === 0, '@core.tempo:120 doit être ACCEPTÉ');
-dire(compile('@tempo:120').errors.length === 0, '@tempo:120 doit rester ACCEPTÉ');
+// ⚠️ LA PAIRE DE RÉFÉRENCE A CHANGÉ DE LIBRAIRIE le 2026-08-10, et c'est le cas qui prouve le
+// déménagement : `tempo` a QUITTÉ `core` pour `time` (Romain, « il faut créer toutes les librairies
+// qui manquent » ; atlas/architecture/LIBRAIRIES.md:160-176 le donne pour contenu de `time`, résolue
+// par Kronos). La règle gardée ici n'a pas bougé — le préfixé se comporte comme le nu — c'est son
+// domicile qui a bougé.
+dire(compile('@time.tempo:120').errors.length === 0, '@time.tempo:120 doit être ACCEPTÉ');
+dire(compile('@tempo:120').errors.length === 0, '@tempo:120 doit rester ACCEPTÉ — la moitié nue de la même paire');
+// ET L ANCIEN DOMICILE EST FERMÉ. Sans ce cas, une clé pourrait vivre dans DEUX librairies sans que
+// rien ne le dise : elle se résoudrait alors par celle qu'on interroge en premier, donc par
+// accident, et la règle d'unicité serait morte en silence.
+dire(compile('@core.tempo:120').errors.length > 0, '@core.tempo:120 doit être REFUSÉ — tempo a quitté core');
 dire(compile('@core.scene:120').errors.length > 0, '@core.scene:120 doit être REFUSÉ (@scene est supprimée)');
 // ⚠️ CE CAS A CHANGÉ DE CAMP le 2026-08-10, et le motif compte plus que la ligne : `@seed` n'est
 // plus refusée en tête de scène. Romain : « seed est une directive de scène qui n'a de sens qu'en
