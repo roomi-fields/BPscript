@@ -93,11 +93,6 @@ const REGISTRE = [
   // écrivent déjà les deux, redondance cosmétique qui ne casse rien — hors de ce registre).
   // QUI ATTEND : kanopi, prévenu À LA FRAPPE avec la liste exacte et la réécriture (`@controls` →
   // `@core`, même position).
-  ['BPScript-tests/Mozartexpression.bps', 'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
-  ['BPScript-tests/tryKeyXpand.bps',      'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
-  ['BPScript-tests/tryRagas.bps',         'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
-  ['BPScript-tests/tryShruti.bps',        'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
-  ['BPScript-tests/watch.bps',            'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────

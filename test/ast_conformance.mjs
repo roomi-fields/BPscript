@@ -133,10 +133,6 @@ const ERREURS_ADMISES = [
   // QUI ATTEND : kanopi, prevenu A LA FRAPPE avec la liste exacte et la reecriture (`@controls` →
   // `@core`, meme position). Je n'ecris pas dans son depot ; ces entrees sortent des qu'il a migre,
   // et le temoin plus bas rougira si elles rancissent.
-  { demo: 'tryShruti', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
-  { demo: 'tryKeyXpand', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
-  { demo: 'Mozartexpression', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
-  { demo: 'watch', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
 ];
 let bad = 0;
 const compileErrors = [];

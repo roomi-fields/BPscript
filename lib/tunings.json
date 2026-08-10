@@ -366,5 +366,7 @@
     ],
     "_note": "Les cinq doigtes du registre otsu sonnent RE FA SOL LA DO, soit 0, 3, 5, 7 et 10 demi-tons au-dessus de la fondamentale (sources dans lib/alphabets.json, champ _source_ancre). Le temperament EGAL est le choix coherent avec cette entree : ses alterations meri et kari sont deja exprimees en demi-tons. Un shakuhachi d atelier n est pas exactement tempere — cette table decrit le systeme de notes, pas la facture d un instrument donne."
   },
-  "resolvedBy": "Kairos"
+  "resolvedBy": "Kairos",
+  "resolves": "tuning",
+  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer."
 }
