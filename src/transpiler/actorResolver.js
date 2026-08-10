@@ -446,6 +446,21 @@ function verifierActeursReferences(ast, errors) {
   // désigne rien. Mesuré : cette ligne n'ACCEPTE que des formes jusque-là refusées, elle n'en
   // refuse aucune de nouvelle.
   if (declares.size === 0) declares.add('scene');
+  // ⚠️ UNE TABLE D'HOMOMORPHISME INVOQUÉE PORTE AUSSI UN NOM POINTÉ, et ce n'est pas un acteur.
+  // Forme validée par Romain le 2026-08-10 : `S -> $N14 checkhomo.TR &N14` — la SECTION se désigne
+  // comme tout élément dans un espace de noms, et plusieurs se suivent dans l'ordre où elles
+  // s'appliquent (`checkhomo.* checkhomo.TR`), l'ordre de la séquence portant l'ordre des sections
+  // comme il le fait partout ailleurs. Le natif écrit `* TR` et `TR *` en miroir dans deux règles
+  // de `-gr.checkHomo` : l'ordre est signifiant, il fallait pouvoir le dire.
+  //
+  // La forme NUE de la bible (`$N14 dhati &N14`) reste valide et vaut « toutes les sections de la
+  // table, dans l'ordre du fichier » — aucune scène existante ne bouge.
+  //
+  // Sans cette ligne, `checkhomo.TR` tombait sur « Acteur inconnu » : le renvoi pointé n'a qu'une
+  // lecture ici, et il en a deux dans le langage.
+  for (const d of ast.directives || []) {
+    if (d && d.name === 'homomorphism' && d.subkey) declares.add(d.subkey);
+  }
   const vus = new Set();
 
   const visiter = (elements) => {
