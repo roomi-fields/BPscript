@@ -124,13 +124,17 @@ for (const [corps, quoi, mot] of [
   ok((r.ast?.libRefs || []).includes('mapping.fcb_std'),
      `4. l'adresse de la table doit être ÉMISE — libRefs = ${JSON.stringify(r.ast?.libRefs ?? null)}`);
 }
-// La librairie existe, déclare son domaine, et reste VIDE tant que Romain n'a pas donné de table.
-ok(LIBS.mapping?.domain === 'mapping',
-   `4. lib/mapping.json doit déclarer son domaine — reçu : ${JSON.stringify(LIBS.mapping?.domain)}`);
+// La librairie existe et reste VIDE tant que Romain n'a pas donné de table.
+// ⚠️ 2026-08-10 (mise en conformité des librairies) : `domain` est retiré partout, remplacé par
+// `resolvedBy` — mais lib/mapping.json n'en porte PAS : aucune source mesurée ne nomme l'outil qui
+// résout une table à l'exécution (cf. son `_resolvedBy_doc`), signalé à Romain plutôt qu'inventé.
+// Cette assertion ne teste donc plus qu'un champ ABSENT, ce qui reste vrai des deux côtés du
+// renommage.
 {
-  const entrees = Object.keys(LIBS.mapping || {}).filter((k) => !k.startsWith('_') && k !== 'domain');
+  const entrees = Object.keys(LIBS.mapping || {}).filter((k) => !k.startsWith('_') && k !== 'domain' && k !== 'resolvedBy');
   ok(entrees.length === 0,
-     `4. et rester VIDE de contenu — un contenu de démonstration finirait cité comme référence. Reçu : ${JSON.stringify(entrees)}`);
+     `4. lib/mapping.json doit rester VIDE de contenu — un contenu de démonstration finirait cité `
+     + `comme référence. Reçu : ${JSON.stringify(entrees)}`);
 }
 
 // ─── 5. L'ADRESSE AU POINT D'USAGE — côté droit IDENTIFIANT ──────────────────────────────────

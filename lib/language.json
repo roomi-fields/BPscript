@@ -1,6 +1,7 @@
 {
   "name": "language",
   "description": "BPscript — schéma MACHINE du langage : mots/opérateurs de syntaxe + valeurs autorisées des directives à enum. Autorité UNIQUE du vocabulaire syntaxe pour l'éditeur Kanopi (via describeVocabulary). Distinct des libs de contenu (contrôles/valeurs/catalogues, agrégées à part). Doc humaine : editor/reference.json.",
+  "_resolvedBy_doc": "⚠️ CHAMP resolvedBy NON POSE, SIGNALE (mise en conformite des librairies, Romain 2026-08-10). Ce fichier n'a jamais declare de domain. Son contenu n'est RESOLU par aucun des huit outils nommes dans la decision du jour (BPx/Kairos/Kronos/runtime-MIDI/runtime-audio/Dedale/runtime-codevoices/toutes les sorties) : il est consomme par le COMPILATEUR BPScript lui-meme (describeVocabulary) et par l'editeur Kanopi -- ni l'un ni l'autre n'est un composant aval de derivation/resolution. atlas/architecture/LIBRAIRIES.md n'a pas de ligne pour ce cas. A trancher par Romain : est-ce meme une librairie au sens de la table, ou un schema hors modele ?",
   "version": "0.1.0",
   "directiveValues": {
     "mode": {

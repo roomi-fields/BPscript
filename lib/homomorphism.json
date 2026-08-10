@@ -1,5 +1,4 @@
 {
-  "domain": "homomorphism",
   "_comment": [
     "Bibliothèque de FONCTIONS D'HOMOMORPHISME (substitution de symbole) — domaine 'homomorphism' SÉPARÉ",
     "(décision Romain/architecte 2026-07-17 : BPx = ordonnanceur pur ; la substitution `-ho`/`-al` sort de",
@@ -15,6 +14,7 @@
     "(PORTER≠RÉSOUDRE). Kairos résout ENSUITE nom→hz/octave du symbole substitué (pont hauteur inchangé).",
     "TABLES AJOUTEES ICI le 2026-08-07 (Romain : « oui on renomme ») : la directive du langage est `@homomorphism.<table>` (LANGUAGE.md, seule graphie de la bible) ; `@transcription` etait l'ancien mot et il est SUPPRIME. Les 8 tables viennent de lib/homomorphism.json, DELETE dans le meme mouvement. Un seul mot, un seul fichier : `objects` porte l'applicateur universel, `tables` porte les correspondances symbole->symbole que la scene invoque."
   ],
+  "resolvedBy": "Kairos",
   "name": "homomorphism",
   "type": "homomorphism",
   "objects": {

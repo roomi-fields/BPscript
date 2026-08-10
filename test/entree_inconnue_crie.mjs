@@ -46,9 +46,12 @@ const compile = (directive) => {
 // Piloté par la DONNÉE : le jour où une librairie sans catalogue s'ajoute, elle est couverte sans
 // qu'on touche ce fichier. Une liste écrite à la main ne garderait que les trois du ticket.
 const CATALOGUES = new Set(LIBS.core?.schema?.catalogAxes || []);
+// ⚠️ CRITÈRE MIGRÉ le 2026-08-10 : `lib.domain` (retiré, remplacé par `resolvedBy` — mise en
+// conformité des librairies) faisait le tri entre « vraie librairie à contenu » et schéma/config.
+// `resolvedBy` joue le même rôle ici : un champ de fichier déclaré à la main, opt-in.
 const SANS_CATALOGUE = Object.entries(LIBS)
-  .filter(([nom, lib]) => !CATALOGUES.has(nom) && lib && typeof lib === 'object' && lib.domain)
-  .map(([nom, lib]) => [nom, Object.keys(lib).filter((k) => !k.startsWith('_') && !['name', 'description', 'version', 'domain'].includes(k))])
+  .filter(([nom, lib]) => !CATALOGUES.has(nom) && lib && typeof lib === 'object' && lib.resolvedBy)
+  .map(([nom, lib]) => [nom, Object.keys(lib).filter((k) => !k.startsWith('_') && !['name', 'description', 'version', 'resolvedBy'].includes(k))])
   .filter(([, entrees]) => entrees.length > 0);
 
 ok(CATALOGUES.size >= 5, `1. les axes à catalogue doivent être chargés — reçu ${CATALOGUES.size}`);

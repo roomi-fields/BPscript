@@ -1333,6 +1333,10 @@ function chargerPorteesPermises() {
     }
   };
   w(LIBS.controls);
+  // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
+  // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — leur `scope` doit
+  // continuer à alimenter cette table, sinon `(scan:…)`/`(weight:…)` redeviennent « inconnu ».
+  w(LIBS.engine);
   for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
     if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
     for (const [k, v] of Object.entries(entrees)) if (v && Array.isArray(v.scope)) m.set(k, v.scope);
@@ -2163,7 +2167,10 @@ function retirerArdoiseAlphabet(ast) {
 export function compileToBPxAST(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
-    const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w) });
+    const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w),
+      // La SOURCE accompagne les jetons : une entrée de catalogue de gabarits se transporte
+      // VERBATIM (AST_SPEC §1.9), et aucun jeton ne peut rendre les espaces d'origine.
+      source });
     // Résolution d'acteur (décision 2026-07-03 note-nue, option A) : attribution
     // implicite mono-propriétaire + erreur d'ambiguïté « Use dot notation », MÊME
     // sémantique que la voie héritée, compileBPS (supprimée le 2026-07-19, commit

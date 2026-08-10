@@ -1,6 +1,7 @@
 {
   "name": "sub",
   "description": "Substitution tables from BP3 homomorphisms",
+  "_resolvedBy_doc": "⚠️ CHAMP resolvedBy NON POSE, SIGNALE (mise en conformite des librairies, Romain 2026-08-10). Ce fichier n'a JAMAIS declare de domain et n'a ZERO consommateur mesure dans src/transpiler/ (aucun loadLib('sub'...)/loadJsonFile('sub') -- verifie par grep exhaustif) : ses tables (Ruwet, abc, tabla...) semblent anterieures au mecanisme @homomorphism actuel (lib/homomorphism.json, cle 'tables'), qui les recouvre. Fichier probablement orphelin -- garder ou supprimer est une decision de Romain, pas la mienne.",
   "tables": {
     "Ruwet": {
       "m1": {

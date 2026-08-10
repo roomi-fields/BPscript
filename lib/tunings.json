@@ -1,5 +1,4 @@
 {
-  "domain": "tuning",
   "_comment": [
     "BPscript tunings — concrete scales linking alphabet to temperament.",
     "",
@@ -366,5 +365,6 @@
       10
     ],
     "_note": "Les cinq doigtes du registre otsu sonnent RE FA SOL LA DO, soit 0, 3, 5, 7 et 10 demi-tons au-dessus de la fondamentale (sources dans lib/alphabets.json, champ _source_ancre). Le temperament EGAL est le choix coherent avec cette entree : ses alterations meri et kari sont deja exprimees en demi-tons. Un shakuhachi d atelier n est pas exactement tempere — cette table decrit le systeme de notes, pas la facture d un instrument donne."
-  }
+  },
+  "resolvedBy": "Kairos"
 }

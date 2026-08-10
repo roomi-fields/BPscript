@@ -1,7 +1,8 @@
 {
-  "domain": "control",
   "name": "controls",
-  "description": "BPscript controls. La section ou un controle est liste dit QUI L EXECUTE (engine = le moteur, runtime.* = un runtime de sortie) et rien d autre. Le champ scope dit OU il a le droit de s accrocher, et c est lui seul que le langage consulte ; args dit ce que sa valeur porte ; bagOnly ferme la forme nue.",
+  "description": "BPscript controls — contrôles RUNTIME (résolus par un transport ou un dispatcher aval), groupés par destinataire dans `groups`. Les procédures et attributs structurels du MOTEUR (mode/scan/weight/goto/rndtime...) vivent désormais dans lib/engine.json, seule librairie dont le destinataire est BPx (atlas/architecture/LIBRAIRIES.md:168). Le champ `scope` dit OU un controle a le droit de s'accrocher, et c'est lui seul que le langage consulte ; `args` dit ce que sa valeur porte ; `bagOnly` ferme la forme nue ; `resolvedBy` nomme l'outil qui l'execute.",
+  "_apporte_doc": "`apporte:['engine']` AJOUTE le 2026-08-10 (mise en conformite des librairies). Avant ce chantier, les procedures moteur (mode/scan/weight/goto/retro/shuffle...) vivaient DANS controls.json : une scene qui ecrivait '@controls' seul (sans '@core') les recevait donc de facto. Les avoir deplacees vers lib/engine.json aurait CASSE ces scenes en silence sans ce lien -- mesure sur tryShruti.bps/tryKeyXpand.bps (corpus Kanopi), qui invoquent '@controls' sans '@core' et ecrivent '!(retro)'/'(shuffle:N)'. Meme mecanisme que core.json.apporte : le chargeur suit ce champ, aucune librairie n'est nommee en dur ailleurs.",
+  "apporte": ["engine"],
   "_argType_doc": {
     "_role": "Comment la SURFACE lit la valeur d'un controle. Absent = lecture ordinaire : la valeur est tokenisee et la virgule SEPARE les arguments. Les valeurs ci-dessous font lire la valeur BRUTE, d'un seul tenant, et laissent l'aval la resoudre — c'est le meme principe dans les deux cas : la surface PORTE, elle n'interprete pas.",
     "interval": "Intervalle musical, 3 formats acceptes : fraction 3/2, cents 700c, decimal 1.5. Porte brut, normalise en ratio par Kairos. Ex. transpose. Lecteur : readIntervalLiteral (parser.js).",
@@ -12,15 +13,6 @@
   "_scope_doc": "OU CE CONTROLE A LE DROIT D ETRE ECRIT — une LISTE, jamais une valeur seule. Vocabulaire FERME de six mots, arrete par Romain le 2026-08-08 : scene, subgrammar, rule, group, symbol, flow. L accrochage dans l arbre DIT deja la portee ; cette declaration ne sert donc pas a localiser un reglage mais a REFUSER celui qui est mal place — sans elle on lit n importe quoi n importe ou sans pouvoir le dire (c est ce qui a rendu un poids muet pendant quatre jours). symbol couvre TOUT element du flux, pas seulement une note : un silence, une prolongation, un joker et les deux membres d un gabarit portent aussi un sac (mesure : 10 porteurs dans l arbre). flow = le sac pose avec ! ; ce n est pas une portee au sens de LANGUAGE.md (c est un etat courant, par voix) mais la validation doit pouvoir dire qu un poids n a rien a y faire. L ABSENCE DE CE CHAMP EST UNE FAUTE, gardee : 57 des 65 controles n en portaient aucun, et une absence qui voudrait dire  partout  rendrait toute validation impossible. ⚠️ IL N Y A QU UN SEUL AXE. Un axe  portee d EFFET  distinct de la portee d ECRITURE etait prevu ; il reposait entierement sur mode — ecrit sur une regle, gouvernant le bloc. Mesure du 2026-08-08 : cette forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.",
   "subgrammar": {
     "_comment": "@mode:X(modifier) syntax — emitted as BP3 preamble between mode line and rules",
-    "destru": {
-      "bp3": "_destru",
-      "args": [],
-      "description": "Destructure composed terminals based on alphabet",
-      "scope": [
-        "subgrammar",
-        "scene"
-      ]
-    },
     "striated": {
       "bp3": "_striated",
       "args": [],
@@ -49,218 +41,9 @@
         "subgrammar",
         "scene"
       ]
-    },
-    "randomize": {
-      "bp3": "_randomize",
-      "args": [],
-      "description": "Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
-      "scope": [
-        "subgrammar",
-        "flow",
-        "scene"
-      ],
-      "bagOnly": true
     }
   },
-  "engine": {
-    "_comment": "[] syntax — translated directly to BP3 instructions by the transpiler",
-    "_reglages_reserves_doc": "mode/scan/weight/on_fail/meter -- SANS champ 'bp3' (contrairement aux autres entrees de cette section) : ce ne sont pas des PROCEDURES BP3 (`_nom(args)` recherchees via controlMap), ce sont des attributs STRUCTURELS de la grammaire native (poids litteral `<N>`, suffixe de mode de sous-grammaire, prefixe scan LEFT/RIGHT, signature rythmique) que `bp3ToScene.js` lit/emet par un chemin dedie (formatWeightQualifier, extractScanToken...), pas par la table generique bp3->controle. Leur inventer un nom '_xxx' serait une correspondance FAUSSE. Declarees ici (2026-08-05) pour que `libCtx.controlNames` les reconnaisse -- le routage sac moteur/runtime reste tranche par `libCtx.qualifierKeys` (lib/core.json schema.qualifierKeys), inchange par cet ajout. Textes de description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec gelee, non modifiee).",
-    "mode": {
-      "args": [
-        "mode"
-      ],
-      "values": [
-        "random",
-        "ord",
-        "sub",
-        "sub1",
-        "lin",
-        "tem",
-        "poslong"
-      ],
-      "default": "ord",
-      "description": "Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.",
-      "scope": [
-        "subgrammar"
-      ]
-    },
-    "scan": {
-      "args": [
-        "direction"
-      ],
-      "values": [
-        "left",
-        "right",
-        "rnd"
-      ],
-      "default": "rnd",
-      "description": "Sens du parcours par regle (left, right, rnd) -- defaut : rnd.",
-      "scope": [
-        "scene",
-        "rule"
-      ]
-    },
-    "weight": {
-      "args": [
-        "value"
-      ],
-      "description": "Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.",
-      "scope": [
-        "rule"
-      ]
-    },
-    "on_fail": {
-      "args": [
-        "strategy"
-      ],
-      "default": "skip",
-      "description": "Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.",
-      "scope": [
-        "scene",
-        "rule"
-      ]
-    },
-    "meter": {
-      "args": [
-        "signature"
-      ],
-      "description": "Signature rythmique -- (meter:7/8), (meter:4+4/4).",
-      "scope": [
-        "scene",
-        "rule"
-      ]
-    },
-    "repeat": {
-      "bp3": "_repeat",
-      "scope": [
-        "rule"
-      ],
-      "args": [
-        "expr"
-      ],
-      "description": "Controlled repetition. expr = K-param or K-param=value."
-    },
-    "failed": {
-      "bp3": "_failed",
-      "scope": [
-        "rule"
-      ],
-      "args": [
-        "subgrammar",
-        "rule"
-      ],
-      "description": "Jump on derivation failure."
-    },
-    "stop": {
-      "bp3": "_stop",
-      "scope": [
-        "rule"
-      ],
-      "args": [],
-      "description": "Stop derivation."
-    },
-    "goto": {
-      "bp3": "_goto",
-      "scope": [
-        "rule"
-      ],
-      "args": [
-        "subgrammar",
-        "rule"
-      ],
-      "description": "Jump to specific subgrammar and rule."
-    },
-    "retro": {
-      "bp3": "_retro",
-      "args": [],
-      "scope": [
-        "flow"
-      ],
-      "description": "Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE."
-    },
-    "shuffle": {
-      "bp3": "_rndseq",
-      "args": [
-        "seed"
-      ],
-      "scope": [
-        "flow"
-      ],
-      "description": "Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g)."
-    },
-    "order": {
-      "bp3": "_ordseq",
-      "args": [],
-      "scope": [
-        "flow"
-      ],
-      "description": "Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro."
-    },
-    "rotate": {
-      "bp3": "_rotate",
-      "args": [
-        "degrees"
-      ],
-      "scope": [
-        "flow"
-      ],
-      "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation."
-    },
-    "staccato": {
-      "bp3": "_staccato",
-      "args": [
-        "value"
-      ],
-      "range": [
-        0,
-        127
-      ],
-      "description": "Staccato — shorten note durations (affects temporal structure)",
-      "scope": [
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ]
-    },
-    "legato": {
-      "bp3": "_legato",
-      "args": [
-        "value"
-      ],
-      "range": [
-        0,
-        1000
-      ],
-      "description": "Legato — extend note durations (affects temporal structure)",
-      "_range_doc": "POURCENTAGE D'ALLONGEMENT, pas une valeur MIDI. Mot du moteur (BP3_help.txt:736) : « durations of notes in the following sequence will be increased by x% ». La borne etait 0..127 -- une plage MIDI posee sur un pourcentage, PROUVEE FAUSSE : les donnees de test du moteur natif ecrivent _legato(300). Signale par kanopi le 2026-08-07 (tryShruti.bps:8, un BOURDON, ou un legato au-dela de 100% fait chevaucher les notes tenues -- l'intention meme). Le moteur ne declare AUCUN plafond ; 1000 est un garde-fou de saisie, pas une limite du moteur.",
-      "scope": [
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ]
-    },
-    "rndtime": {
-      "bp3": "_rndtime",
-      "args": [
-        "amount"
-      ],
-      "range": [
-        0,
-        32767
-      ],
-      "description": "Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.",
-      "scope": [
-        "scene",
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ]
-    }
-  },
-  "runtime": {
+  "groups": {
     "_comment": "() syntax — annotation OPAQUE portée SUR l'événement jusqu'au runtime de sortie (audio/midi/osc). Dans l'AST : SettingBag{pairs:[{key,value}]} en suffixe (renommé depuis RuntimeQualifier le 2026-08-06), ou InstantControl dans le flux. Le `_script(CTn)` n'existe QUE dans le texte BP3 hérité (contrôle natif BP3, BP3_help.txt:495) — jamais dans le langage ni dans l'AST. Sub-groups define transport scope.",
     "musical": {
       "_comment": "Transport-agnostic controls — every transport interprets them in its own protocol",
@@ -279,7 +62,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "toutes les sorties"
       },
       "pan": {
         "args": [
@@ -296,7 +80,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "toutes les sorties"
       },
       "rndvel": {
         "args": [
@@ -309,7 +94,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "toutes les sorties"
       },
       "velcont": {
         "args": [],
@@ -319,7 +105,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "toutes les sorties"
       },
       "offvel": {
         "args": [
@@ -336,7 +123,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "toutes les sorties"
       }
     },
     "midi": {
@@ -356,7 +144,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "ins": {
         "args": [
@@ -375,7 +164,8 @@
           "flow",
           "scene"
         ],
-        "_range_doc": "PLAGE CORRIGEE le 2026-08-08. Elle valait [1,128] et le defaut 0 tombait HORS d elle — une declaration qui se contredit elle-meme, trouvee par le produit croise controles x portees : l instrument prenait le defaut comme valeur d essai et le controle refusait sa propre valeur. La bonne plage vient du MOTEUR D ORIGINE, mesuree et non deduite : BP3_help.txt, _ins(x), « Range of x is 0..127 ». Le defaut 0 y est donc legitime : c est le programme MIDI 0."
+        "_range_doc": "PLAGE CORRIGEE le 2026-08-08. Elle valait [1,128] et le defaut 0 tombait HORS d elle — une declaration qui se contredit elle-meme, trouvee par le produit croise controles x portees : l instrument prenait le defaut comme valeur d essai et le controle refusait sa propre valeur. La bonne plage vient du MOTEUR D ORIGINE, mesuree et non deduite : BP3_help.txt, _ins(x), « Range of x is 0..127 ». Le defaut 0 y est donc legitime : c est le programme MIDI 0.",
+        "resolvedBy": "runtime-MIDI"
       },
       "mod": {
         "args": [
@@ -392,7 +182,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "modcont": {
         "args": [],
@@ -402,7 +193,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "pitchbend": {
         "args": [
@@ -419,7 +211,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "pitchrange": {
         "args": [
@@ -432,7 +225,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "pitchcont": {
         "args": [],
@@ -442,7 +236,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "pitchfixed": {
         "args": [],
@@ -452,7 +247,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "keymap": {
         "args": [
@@ -471,7 +267,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "mapstep": {
         "args": [],
@@ -481,7 +278,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "mapcont": {
         "args": [],
@@ -491,7 +289,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "mapfixed": {
         "args": [],
@@ -501,7 +300,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "pressure": {
         "args": [
@@ -518,7 +318,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "press": {
         "args": [
@@ -535,7 +336,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "presscont": {
         "args": [],
@@ -545,7 +347,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "volume": {
         "args": [
@@ -562,7 +365,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "volumecont": {
         "args": [],
@@ -572,7 +376,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "switchon": {
         "args": [
@@ -584,7 +389,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "switchoff": {
         "args": [
@@ -596,7 +402,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "_bagOnly_doc": "bagOnly:true = ce controle n'a PAS de forme NUE dans le flux, il ne s'ecrit que dans son sac. A ne pas confondre avec 'sans argument' : les controles continus herites de BP3 (volumecont, pitchcont, mapcont...) sont sans argument ET s'ecrivent nus au fil de la sequence, 10 scenes du corpus le font. mute/unmute/panic, declares le 2026-07-26, n'ont jamais eu que la forme du sac -- leurs descriptions ci-dessous l'ecrivent depuis le premier jour. Faute de le DIRE a la donnee, tout mot sans argument devenait un mot du flux : une scene qui portait deja ce nom (patchbay-demo, macro mute) etait tronquee EN SILENCE, mesure par Kairos le 2026-07-27. Marquage POSITIF, porte par la donnee ; le code ne nomme aucun controle.",
       "mute": {
@@ -605,7 +412,8 @@
         "scope": [
           "flow"
         ],
-        "bagOnly": true
+        "bagOnly": true,
+        "resolvedBy": "runtime-MIDI"
       },
       "unmute": {
         "args": [],
@@ -613,7 +421,8 @@
         "scope": [
           "flow"
         ],
-        "bagOnly": true
+        "bagOnly": true,
+        "resolvedBy": "runtime-MIDI"
       },
       "panic": {
         "args": [],
@@ -621,7 +430,8 @@
         "scope": [
           "flow"
         ],
-        "bagOnly": true
+        "bagOnly": true,
+        "resolvedBy": "runtime-MIDI"
       },
       "sync": {
         "args": [
@@ -635,7 +445,8 @@
         "description": "Message systeme temps reel de synchronisation : (sync:start), (sync:continue), (sync:stop). Image des messages MIDI Start/Continue/Stop. Remplace script(MIDI send Continue).",
         "scope": [
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       },
       "cc": {
         "component": "number",
@@ -652,7 +463,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-MIDI"
       }
     },
     "audio": {
@@ -674,7 +486,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-audio"
       },
       "attack": {
         "args": [
@@ -691,7 +504,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-audio"
       },
       "release": {
         "args": [
@@ -708,7 +522,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-audio"
       },
       "detune": {
         "args": [
@@ -725,7 +540,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-audio"
       },
       "filter": {
         "args": [
@@ -743,7 +559,8 @@
           "rule",
           "flow"
         ],
-        "_default_doc": "DEFAUT CORRIGE le 2026-08-08. Il valait 0, HORS de sa propre plage [20,20000] — meme defaut que celui d ins, trouve par le meme produit croise. 0 Hz ne veut rien dire pour une coupure passe-bas : ce serait tout couper. Le defaut retenu est la BORNE HAUTE, qui veut dire ce que l absence de reglage doit vouloir dire — un filtre TRANSPARENT, au-dessus de l audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure mieux."
+        "_default_doc": "DEFAUT CORRIGE le 2026-08-08. Il valait 0, HORS de sa propre plage [20,20000] — meme defaut que celui d ins, trouve par le meme produit croise. 0 Hz ne veut rien dire pour une coupure passe-bas : ce serait tout couper. Le defaut retenu est la BORNE HAUTE, qui veut dire ce que l absence de reglage doit vouloir dire — un filtre TRANSPARENT, au-dessus de l audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure mieux.",
+        "resolvedBy": "runtime-audio"
       },
       "filterQ": {
         "args": [
@@ -760,7 +577,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "runtime-audio"
       }
     },
     "dispatcher": {
@@ -777,7 +595,8 @@
           "rule",
           "flow",
           "scene"
-        ]
+        ],
+        "resolvedBy": "Kairos"
       },
       "scale": {
         "args": [
@@ -791,7 +610,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "Kairos"
       },
       "scaleshift": {
         "args": [
@@ -804,7 +624,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "Kairos"
       },
       "chromashift": {
         "args": [
@@ -818,7 +639,8 @@
           "rule",
           "flow",
           "scene"
-        ]
+        ],
+        "resolvedBy": "Kairos"
       },
       "keyxpand": {
         "args": [
@@ -834,7 +656,8 @@
           "group",
           "rule",
           "flow"
-        ]
+        ],
+        "resolvedBy": "Kairos"
       }
     },
     "generic": {

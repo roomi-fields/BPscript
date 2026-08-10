@@ -45,13 +45,14 @@ const CONTROLE_VALIDE = { args: ['value'], description: 'contrôle bien formé' 
 
 // ─── 2. LES TROIS PLACEMENTS, pas celui du ticket ────────────────────────────────────────────
 // Une section de contrôles se déclare de trois façons dans une librairie : `controls`, `engine`,
-// et `runtime` (lui-même en sous-groupes OU à plat). La clé fautive était dans UNE d'entre elles ;
-// garder cette seule-là aurait laissé les autres ouvertes.
+// et `groups` (ex-`runtime`, renommé 2026-08-10 — le nom `runtime` est retiré partout, remplacé
+// par `resolvedBy` ; lui-même en sous-groupes OU à plat). La clé fautive était dans UNE d'entre
+// elles ; garder cette seule-là aurait laissé les autres ouvertes.
 const PLACEMENTS = [
   ['controls', (e) => ({ controls: { vel: CONTROLE_VALIDE, ...e } })],
   ['engine', (e) => ({ engine: { vel: CONTROLE_VALIDE, ...e } })],
-  ['runtime en sous-groupe', (e) => ({ runtime: { musical: { vel: CONTROLE_VALIDE, ...e } } })],
-  ['runtime à plat', (e) => ({ runtime: { vel: CONTROLE_VALIDE, ...e } })],
+  ['groups en sous-groupe', (e) => ({ groups: { musical: { vel: CONTROLE_VALIDE, ...e } } })],
+  ['groups à plat', (e) => ({ groups: { vel: CONTROLE_VALIDE, ...e } })],
 ];
 
 // 2a. La documentation préfixée passe, sous toutes ses formes — c'est la convention du dépôt.

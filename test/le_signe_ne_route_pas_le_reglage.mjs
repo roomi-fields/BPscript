@@ -66,8 +66,12 @@ function valeurExemple(spec) {
   }
   return '3';
 }
-const ENGINE_SPECS = LIBS.controls?.engine || {};
-const specDe = (cle) => ENGINE_SPECS[cle] || (LIBS.controls?.runtime?.midi?.[cle]) || (LIBS.controls?.runtime?.audio?.[cle]);
+// ⚠️ SOURCE DÉPLACÉE le 2026-08-10 : la section `engine` de lib/controls.json a rejoint
+// lib/engine.json (mise en conformité des librairies), et `runtime` (conteneur des sous-groupes
+// midi/audio/musical/dispatcher/generic) est RENOMMÉ `groups` — le nom `runtime` est retiré
+// partout, remplacé par `resolvedBy` qui nomme l'outil directement.
+const ENGINE_SPECS = LIBS.engine?.engine || {};
+const specDe = (cle) => ENGINE_SPECS[cle] || (LIBS.controls?.groups?.midi?.[cle]) || (LIBS.controls?.groups?.audio?.[cle]);
 
 const HEAD = '@core\n@controls\n@alphabet.western:midi\n\n';
 const compile = (src) => compileToBPxAST(`${HEAD}${src}\n`);

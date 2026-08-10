@@ -6,36 +6,414 @@
   "_graphie_doc": "⚠️ UNE LIBRAIRIE DIT QUI EXÉCUTE, JAMAIS COMMENT ÇA S'ÉCRIT. `goto`, `repeat`, `stop` et `failed` sont portés par `engine` ET s'écrivent ENTRE CROCHETS en fin de règle — ce sont des PROCÉDURES de dérivation (LANGUAGE.md:805). Leur appartenance à cette librairie ne déplace pas leur graphie, et l'inverse est vrai aussi : `seed` appartient à `engine` et s'écrit `@seed:42` en tête de scène.",
   "_prefixe_doc": "Le préfixe est OPTIONNEL : `@seed:42` et `@engine.seed:42` désignent la même chose, par la règle d'unicité (atlas/architecture/LIBRAIRIES.md:42). Une clé portée par une seule librairie se résout sans être préfixée.",
   "schema": {
-    "_reservedDirectives_doc": "Les noms que cette librairie déclare. Ils sont écrits ici pour que le préfixe `@engine.<clé>` se résolve, et pour que la clé nue reste reconnue par unicité.",
-    "reservedDirectives": [
-      "mode",
-      "scan",
-      "weight",
-      "seed",
-      "maxitems",
-      "items",
-      "allitems",
-      "all_items",
-      "improvize",
-      "on_fail",
-      "quantization",
-      "qclock",
-      "repeat",
-      "goto",
-      "retro",
-      "shuffle",
-      "rotate",
-      "order",
-      "stop",
-      "failed",
-      "randomize",
-      "rndtime",
-      "destru",
-      "meter",
-      "duration",
-      "timepatterns",
-      "staccato",
-      "legato"
-    ]
+    "_reservedDirectives_doc": "Les noms que cette librairie déclare. Ils sont écrits ici pour que le préfixe `@engine.<clé>` se résolve, et pour que la clé nue reste reconnue par unicité. CHAQUE CLE PORTE DESORMAIS SA description ET SA scope (Romain 2026-08-10, mise en conformite des librairies) -- les 18 qui sont AUSSI des controles de sac (engine/subgrammar ci-dessous) reprennent VERBATIM le scope deja mesure la, sans le re-deriver ; les 10 qui ne s'ecrivent qu'en tete de scene (seed, maxitems, items, allitems, all_items, improvize, quantization, qclock, duration, timepatterns) recoivent scope:['scene'], mesure sur leur propre graphie (settings.json directive_map, parser.js @duration/@timepatterns).",
+    "reservedDirectives": {
+      "mode": {
+        "description": "Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.",
+        "scope": [
+          "subgrammar"
+        ]
+      },
+      "scan": {
+        "description": "Sens du parcours par regle (left, right, rnd) -- defaut : rnd.",
+        "scope": [
+          "scene",
+          "rule"
+        ]
+      },
+      "weight": {
+        "description": "Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.",
+        "scope": [
+          "rule"
+        ]
+      },
+      "seed": {
+        "description": "Graine du tirage aleatoire -- @seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed.",
+        "scope": [
+          "scene"
+        ]
+      },
+      "maxitems": {
+        "description": "Nombre maximum d'items produits par la derivation (BP3 MaxItemsProduce).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "items": {
+        "description": "Alias de maxitems (BP3 MaxItemsProduce).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "allitems": {
+        "description": "Produit tous les items possibles, desactive improvize (BP3 AllItems).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "all_items": {
+        "description": "Alias de allitems (BP3 AllItems).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "improvize": {
+        "description": "Derivation continue sans fin (BP3 Improvize).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "on_fail": {
+        "description": "Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.",
+        "scope": [
+          "scene",
+          "rule"
+        ]
+      },
+      "quantization": {
+        "description": "Resolution temporelle de quantification, en ms (BP3 Quantization).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "qclock": {
+        "description": "Periode du metronome Q (BP3 Qclock).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "repeat": {
+        "description": "Controlled repetition. expr = K-param or K-param=value.",
+        "scope": [
+          "rule"
+        ]
+      },
+      "goto": {
+        "description": "Jump to specific subgrammar and rule.",
+        "scope": [
+          "rule"
+        ]
+      },
+      "retro": {
+        "description": "Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE.",
+        "scope": [
+          "flow"
+        ]
+      },
+      "shuffle": {
+        "description": "Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g).",
+        "scope": [
+          "flow"
+        ]
+      },
+      "rotate": {
+        "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation.",
+        "scope": [
+          "flow"
+        ]
+      },
+      "order": {
+        "description": "Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.",
+        "scope": [
+          "flow"
+        ]
+      },
+      "stop": {
+        "description": "Stop derivation.",
+        "scope": [
+          "rule"
+        ]
+      },
+      "failed": {
+        "description": "Jump on derivation failure.",
+        "scope": [
+          "rule"
+        ]
+      },
+      "randomize": {
+        "description": "Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
+        "scope": [
+          "subgrammar",
+          "flow",
+          "scene"
+        ]
+      },
+      "rndtime": {
+        "description": "Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.",
+        "scope": [
+          "scene",
+          "symbol",
+          "group",
+          "rule",
+          "flow"
+        ]
+      },
+      "destru": {
+        "description": "Destructure composed terminals based on alphabet",
+        "scope": [
+          "subgrammar",
+          "scene"
+        ]
+      },
+      "meter": {
+        "description": "Signature rythmique -- (meter:7/8), (meter:4+4/4).",
+        "scope": [
+          "scene",
+          "rule"
+        ]
+      },
+      "duration": {
+        "description": "Indication de duree de scene -- @duration:16b (temps) ou @duration:8s (secondes).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "timepatterns": {
+        "description": "Motifs temporels nommes -- @timepatterns: t1=1/1, t2=3/2, ... (docs/spec/AST.md:95,111,143).",
+        "scope": [
+          "scene"
+        ]
+      },
+      "staccato": {
+        "description": "Staccato — shorten note durations (affects temporal structure)",
+        "scope": [
+          "symbol",
+          "group",
+          "rule",
+          "flow"
+        ]
+      },
+      "legato": {
+        "description": "Legato — extend note durations (affects temporal structure)",
+        "scope": [
+          "symbol",
+          "group",
+          "rule",
+          "flow"
+        ]
+      }
+    }
+  },
+  "resolvedBy": "BPx",
+  "engine": {
+    "_comment": "[] syntax — translated directly to BP3 instructions by the transpiler",
+    "_reglages_reserves_doc": "mode/scan/weight/on_fail/meter -- SANS champ 'bp3' (contrairement aux autres entrees de cette section) : ce ne sont pas des PROCEDURES BP3 (`_nom(args)` recherchees via controlMap), ce sont des attributs STRUCTURELS de la grammaire native (poids litteral `<N>`, suffixe de mode de sous-grammaire, prefixe scan LEFT/RIGHT, signature rythmique) que `bp3ToScene.js` lit/emet par un chemin dedie (formatWeightQualifier, extractScanToken...), pas par la table generique bp3->controle. Leur inventer un nom '_xxx' serait une correspondance FAUSSE. Declarees ici (2026-08-05) pour que `libCtx.controlNames` les reconnaisse -- le routage sac moteur/runtime reste tranche par `libCtx.qualifierKeys` (lib/core.json schema.qualifierKeys), inchange par cet ajout. Textes de description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec gelee, non modifiee).",
+    "mode": {
+      "args": [
+        "mode"
+      ],
+      "values": [
+        "random",
+        "ord",
+        "sub",
+        "sub1",
+        "lin",
+        "tem",
+        "poslong"
+      ],
+      "default": "ord",
+      "description": "Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.",
+      "scope": [
+        "subgrammar"
+      ]
+    },
+    "scan": {
+      "args": [
+        "direction"
+      ],
+      "values": [
+        "left",
+        "right",
+        "rnd"
+      ],
+      "default": "rnd",
+      "description": "Sens du parcours par regle (left, right, rnd) -- defaut : rnd.",
+      "scope": [
+        "scene",
+        "rule"
+      ]
+    },
+    "weight": {
+      "args": [
+        "value"
+      ],
+      "description": "Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.",
+      "scope": [
+        "rule"
+      ]
+    },
+    "on_fail": {
+      "args": [
+        "strategy"
+      ],
+      "default": "skip",
+      "description": "Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.",
+      "scope": [
+        "scene",
+        "rule"
+      ]
+    },
+    "meter": {
+      "args": [
+        "signature"
+      ],
+      "description": "Signature rythmique -- (meter:7/8), (meter:4+4/4).",
+      "scope": [
+        "scene",
+        "rule"
+      ]
+    },
+    "repeat": {
+      "bp3": "_repeat",
+      "scope": [
+        "rule"
+      ],
+      "args": [
+        "expr"
+      ],
+      "description": "Controlled repetition. expr = K-param or K-param=value."
+    },
+    "failed": {
+      "bp3": "_failed",
+      "scope": [
+        "rule"
+      ],
+      "args": [
+        "subgrammar",
+        "rule"
+      ],
+      "description": "Jump on derivation failure."
+    },
+    "stop": {
+      "bp3": "_stop",
+      "scope": [
+        "rule"
+      ],
+      "args": [],
+      "description": "Stop derivation."
+    },
+    "goto": {
+      "bp3": "_goto",
+      "scope": [
+        "rule"
+      ],
+      "args": [
+        "subgrammar",
+        "rule"
+      ],
+      "description": "Jump to specific subgrammar and rule."
+    },
+    "retro": {
+      "bp3": "_retro",
+      "args": [],
+      "scope": [
+        "flow"
+      ],
+      "description": "Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE."
+    },
+    "shuffle": {
+      "bp3": "_rndseq",
+      "args": [
+        "seed"
+      ],
+      "scope": [
+        "flow"
+      ],
+      "description": "Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g)."
+    },
+    "order": {
+      "bp3": "_ordseq",
+      "args": [],
+      "scope": [
+        "flow"
+      ],
+      "description": "Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro."
+    },
+    "rotate": {
+      "bp3": "_rotate",
+      "args": [
+        "degrees"
+      ],
+      "scope": [
+        "flow"
+      ],
+      "description": "Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation."
+    },
+    "staccato": {
+      "bp3": "_staccato",
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        127
+      ],
+      "description": "Staccato — shorten note durations (affects temporal structure)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "legato": {
+      "bp3": "_legato",
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        1000
+      ],
+      "description": "Legato — extend note durations (affects temporal structure)",
+      "_range_doc": "POURCENTAGE D'ALLONGEMENT, pas une valeur MIDI. Mot du moteur (BP3_help.txt:736) : « durations of notes in the following sequence will be increased by x% ». La borne etait 0..127 -- une plage MIDI posee sur un pourcentage, PROUVEE FAUSSE : les donnees de test du moteur natif ecrivent _legato(300). Signale par kanopi le 2026-08-07 (tryShruti.bps:8, un BOURDON, ou un legato au-dela de 100% fait chevaucher les notes tenues -- l'intention meme). Le moteur ne declare AUCUN plafond ; 1000 est un garde-fou de saisie, pas une limite du moteur.",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "rndtime": {
+      "bp3": "_rndtime",
+      "args": [
+        "amount"
+      ],
+      "range": [
+        0,
+        32767
+      ],
+      "description": "Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.",
+      "scope": [
+        "scene",
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    }
+  },
+  "subgrammar": {
+    "_comment": "Procedures de sous-grammaire rapatriees de lib/controls.json (destru, randomize) -- striated/smooth/mm restent dans lib/controls.json : leur destinataire mesure (mm -> transport/Kronos, cf. core.json _destinations) ne correspond pas a BPx, question laissee ouverte pour Romain (cf. rapport).",
+    "destru": {
+      "bp3": "_destru",
+      "args": [],
+      "description": "Destructure composed terminals based on alphabet",
+      "scope": [
+        "subgrammar",
+        "scene"
+      ]
+    },
+    "randomize": {
+      "bp3": "_randomize",
+      "args": [],
+      "description": "Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
+      "scope": [
+        "subgrammar",
+        "flow",
+        "scene"
+      ],
+      "bagOnly": true
+    }
   }
 }

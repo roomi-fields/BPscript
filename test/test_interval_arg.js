@@ -31,9 +31,11 @@ for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments
 registerAll(libs);
 
 // ── Lib de TEST éphémère : un contrôle interval-typé, sans toucher la prod ──
+// ⚠️ `runtime` RENOMMÉ `groups` le 2026-08-10 (mise en conformité des librairies — le nom
+// `runtime` est retiré partout, remplacé par `resolvedBy` qui nomme l'outil directement).
 registerLib('ivltest', {
   name: 'ivltest', type: 'controls',
-  runtime: { dispatcher: {
+  groups: { dispatcher: {
     ivl: { args: ['interval'], argType: 'interval', default: 0, description: 'test interval control' },
   } },
 });

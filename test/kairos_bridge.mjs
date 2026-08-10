@@ -81,7 +81,8 @@ export function unirCatalogues(base, apport = {}) {
     const a = base[axe] || {};
     const b = apport[axe] || {};
     const collisions = Object.keys(b).filter(
-      (k) => !k.startsWith('_') && k !== 'domain' && Object.prototype.hasOwnProperty.call(a, k),
+      (k) => !k.startsWith('_') && k !== 'domain' && k !== 'resolvedBy'
+          && Object.prototype.hasOwnProperty.call(a, k),
     );
     if (collisions.length) {
       throw new Error(

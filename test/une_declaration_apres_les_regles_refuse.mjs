@@ -112,7 +112,16 @@ ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
 
 // ── 4. SOCLE ET ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────
 // L'espace se lit dans la DONNÉE : si le vocabulaire de directives grandit, ce compte le dit.
-const RESERVEES = (LIBS['core']?.schema?.reservedDirectives || []).length;
+// ⚠️ MESURE ÉTENDUE À L'UNION DU REGISTRE le 2026-08-10 (mise en conformité des librairies).
+// Compter SEUL `core.schema.reservedDirectives` mesurait juste ce fichier — exact tant que lui
+// seul en portait. Les 15 clés qui vivaient EN DOUBLE ici et dans lib/engine.json (mode, seed,
+// maxitems, items, allitems, all_items, improvize, duration, meter, scan, weight, on_fail,
+// quantization, qclock, timepatterns) l'ont QUITTÉ (une clé ne vit que dans UNE librairie) : le
+// vocabulaire RÉEL du langage n'a pas rétréci, il s'est redistribué — c'est l'UNION, pas la seule
+// part de `core`, que ce témoin doit garder. `reservedDirectives` porte deux formes (array plat
+// ou objet {nom:{description,scope}}) ; les deux se comptent par leurs noms.
+const nomsReserves = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
+const RESERVEES = new Set(Object.values(LIBS).flatMap((f) => nomsReserves(f?.schema?.reservedDirectives))).size;
 ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
 // Le seuil est passé de 24 à 22 le 2026-08-09, et le motif s'écrit ici plutôt que dans un commit :
 // `@mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des

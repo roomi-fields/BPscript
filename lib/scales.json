@@ -1,5 +1,4 @@
 {
-  "domain": "scale",
   "_comment": [
     "World music scales library for BPscript.",
     "Organized by culture/tradition.",
@@ -2590,5 +2589,6 @@
       "3/2"
     ],
     "description": "Cins turc (cins_huzzam) — segment pythagoricien exact"
-  }
+  },
+  "resolvedBy": "Kairos"
 }

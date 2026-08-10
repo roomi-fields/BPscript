@@ -40,15 +40,20 @@ const VOCABULAIRE = ['scene', 'subgrammar', 'rule', 'group', 'symbol', 'flow'];
 /** Les clés de sac, par source. Ajouter une source ICI la soumet automatiquement aux trois volets. */
 function toutesLesCles() {
   const cles = [];
-  // (a) les contrôles
-  const w = (o, chemin) => {
+  // (a) les contrôles. `racine` nomme la LIBRAIRIE balayée — jusqu'au 2026-08-10 elle était
+  // toujours 'controls', HARDCODÉE dans le préfixe ; l'ajout de lib/engine.json (procédures
+  // moteur rapatriées) exige de la porter en paramètre plutôt que de la recopier en dur.
+  const w = (o, racine, chemin) => {
     for (const [k, v] of Object.entries(o)) {
       if (!v || typeof v !== 'object') continue;
-      if ('args' in v && 'description' in v) cles.push({ source: `controls.${chemin}`, nom: k, def: v });
-      else w(v, chemin ? `${chemin}.${k}` : k);
+      if ('args' in v && 'description' in v) cles.push({ source: `${racine}.${chemin}`, nom: k, def: v });
+      else w(v, racine, chemin ? `${chemin}.${k}` : k);
     }
   };
-  w(LIBS.controls, '');
+  w(LIBS.controls, 'controls', '');
+  // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
+  // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — même balayage.
+  w(LIBS.engine, 'engine', '');
   // (b) les entrées de modulation
   for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
     if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
@@ -97,9 +102,17 @@ for (const { source, nom, def } of CLES) {
 // nom ne quitte le vocabulaire. C'est le seul abaissement légitime de ce socle — une entrée
 // dupliquée qu'on dédoublonne, jamais un cas qui « ne passe plus ».
 // des clés de sac sans être ici, ce garde ne le dira pas — sauf par ce compte.
-ok(CLES.filter((c) => c.source.startsWith('controls.')).length === 64,
-   `C. ${CLES.filter((c) => c.source.startsWith('controls.')).length} contrôles balayés, 65 attendus. `
-   + `Un extracteur qui en rate rendrait un verdict vert sur une famille qu'il n'a jamais vue.`);
+// ⚠️ COMPTE RÉPARTI SUR DEUX SOURCES le 2026-08-10 : les 18 procédures/attributs MOTEUR
+// (mode/scan/weight/on_fail/meter/repeat/failed/stop/goto/retro/shuffle/order/rotate/staccato/
+// legato/rndtime/destru/randomize) ont rejoint lib/engine.json (une clé ne vit que dans UNE
+// librairie) — 64 - 18 = 46 restent sous `controls.`, 18 apparaissent sous `engine.`.
+ok(CLES.filter((c) => c.source.startsWith('controls.')).length === 46,
+   `C. ${CLES.filter((c) => c.source.startsWith('controls.')).length} contrôles balayés sous `
+   + `'controls.', 46 attendus. Un extracteur qui en rate rendrait un verdict vert sur une famille `
+   + `qu'il n'a jamais vue.`);
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 18,
+   `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
+   + `'engine.', 18 attendus (les procédures moteur rapatriées de lib/controls.json).`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `
    + `balayées, 5 au moins attendues.`);
@@ -123,7 +136,9 @@ ok(Array.isArray(LIBS.core?.schema?.channelParamsScope)
      + `doit DISTINGUER les familles — le poids ne va que sur une règle, le mode que sur un bloc, `
      + `l'intensité partout. S'il ne distingue plus, il est décoratif.`);
   // Les trois cas nommés par une décision ou par la mesure, en clair.
-  const de = (n) => CLES.find((c) => c.nom === n && c.source.startsWith('controls.'))?.def?.scope;
+  // ⚠️ 'weight' et 'mode' vivent sous 'engine.' depuis le 2026-08-10 (rapatriés de
+  // lib/controls.json) — la recherche accepte les deux préfixes, le nom seul les distingue déjà.
+  const de = (n) => CLES.find((c) => c.nom === n && (c.source.startsWith('controls.') || c.source.startsWith('engine.')))?.def?.scope;
   ok(JSON.stringify(de('weight')) === JSON.stringify(['rule']),
      `D. 'weight' doit valoir pour la RÈGLE et elle seule — décision de Romain, 2026-08-08 : `
      + `« le poids n'a de sens que sur une règle ». Reçu : ${JSON.stringify(de('weight'))}.`);

@@ -31,14 +31,14 @@
  *   - Opérateurs BP3 +, ;, * (bare) → noms BPscript plus/fin/star
  *   - lambda (nil) → passé tel quel
  *   - Silence -, prolongation _
- *   - Contrôles BP3 présents dans lib/controls.json (_pitchbend, _volume,
- *     _scale, _tempo, _retro, _legato, …) :
+ *   - Contrôles BP3 présents dans lib/controls.json + lib/engine.json (_pitchbend, _volume,
+ *     _scale, _retro, _legato, …) :
  *       en tête de RHS → suffixe de règle (ctrl:val)   [E2/E3/E3bis]
  *       ailleurs (trailing, milieu, dans {…}) → FORME APPEL ctrl(args)
  *       positionnelle [E4] — la scène charge alors @controls
  *
  * Constructs NON GÉRÉS (stop-and-report par grammaire) :
- *   - Contrôles _xxx absents de lib/controls.json (_srand, _print, …) et _script
+ *   - Contrôles _xxx absents de lib/controls.json + lib/engine.json (_srand, _print, …) et _script
  *   - TEMPLATES: / TIMEPATTERNS: sections (jamais gérées en aller-retour)
  *   - Opérateurs tempo nus /N \N dans le RHS
  *
@@ -54,7 +54,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-// ─── Contrôles BP3 connus (lib/controls.json = autorité engine-vs-runtime) ───
+// ─── Contrôles BP3 connus (lib/controls.json + lib/engine.json = autorité engine-vs-runtime) ───
 //
 // Forme appel (E4) : un contrôle BP3 `_xxx(args)` en position non couverte par
 // les formes existantes (tête de RHS → suffixe de règle) est traduit en forme
@@ -65,6 +65,14 @@ import { dirname, join } from 'node:path';
 const _bp3ToSceneDir = dirname(fileURLToPath(import.meta.url));
 const _controlsLib = JSON.parse(
   readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'controls.json'), 'utf-8')
+);
+// Les procédures MOTEUR (mode/scan/weight/goto/rndtime…) ont rejoint lib/engine.json le
+// 2026-08-10 (mise en conformité des librairies — une clé ne vit que dans UNE librairie).
+// `buildControlMap` a besoin des DEUX sections (`groups` runtime + `engine` moteur), qui
+// vivaient toutes deux dans controls.json avant ce chantier — désormais réparties sur deux
+// fichiers, fusionnées ici pour ce lecteur qui ne passe pas par le registre `libs.js`.
+const _engineLib = JSON.parse(
+  readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'engine.json'), 'utf-8')
 );
 // Alphabets de test : une réf `-ho.<nom>` / `-al.<nom>` en en-tête d'un -gr IMPLIQUE
 // l'alphabet <nom> côté BP3 (GetBols/SEARCHTERMINAL2, CompileGrammar.c:1107-1175). Sans
@@ -84,16 +92,16 @@ const _testAlphabetsLib = JSON.parse(
  *   - collisions runtime/engine (ex: rotate) : runtime prioritaire
  *     (autorité controls.json : transpose/rotate/keyxpand sont runtime).
  */
-function buildControlMap(lib) {
+function buildControlMap(controlsLib, engineLib) {
   const map = new Map();
-  for (const group of Object.values(lib.runtime)) {
+  for (const group of Object.values(controlsLib.groups)) {
     if (typeof group !== 'object' || group === null) continue;  // _comment
     for (const [key, def] of Object.entries(group)) {
       if (key === '_comment' || key === 'script') continue;
       map.set('_' + key, { bps: key, kind: 'runtime', noArg: !(def.args && def.args.length) });
     }
   }
-  for (const [key, def] of Object.entries(lib.engine)) {
+  for (const [key, def] of Object.entries(engineLib.engine)) {
     if (key === '_comment' || !def || !def.bp3) continue;
     if (map.has(def.bp3)) continue;  // runtime prioritaire
     map.set(def.bp3, { bps: key, kind: 'engine', noArg: !(def.args && def.args.length) });
@@ -101,7 +109,7 @@ function buildControlMap(lib) {
   return map;
 }
 
-const BP3_CONTROL_MAP = buildControlMap(_controlsLib);
+const BP3_CONTROL_MAP = buildControlMap(_controlsLib, _engineLib);
 
 // Token contrôle BP3 : _name ou _name(args) (après tokenizeBP3Line, les args
 // arrivent généralement dans un token séparé "(args)" — fusion au cas par cas).

@@ -35,7 +35,10 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const QUALIFIER_KEYS = LIBS.core?.schema?.qualifierKeys || [];
-const ENGINE_SPECS = LIBS.controls?.engine || {};
+// ⚠️ SOURCE DÉPLACÉE le 2026-08-10 : la section `engine` de lib/controls.json (mode/scan/weight/
+// goto/rndtime…) a rejoint lib/engine.json (mise en conformité des librairies — une clé ne vit
+// que dans UNE librairie, seule lib/engine.json a pour destinataire BPx).
+const ENGINE_SPECS = LIBS.engine?.engine || {};
 
 // ─── 0. Témoin anti-rétrécissement + périmètre EXCLU explicite ───────────────────────────────
 // ⚠️ SEUIL DESCENDU DE 8 À 7 LE 2026-08-08, et la raison est datée : `mode` a été RETIRÉ de
@@ -75,7 +78,7 @@ let cellules = 0;
 // réordonnancement sur une règle est une faute de langage et non un cas de lecture. La liste
 // vient de la DONNÉE : étendre une portée étend le test tout seul.
 const porteesDe = (cle) => {
-  const eng = LIBS.controls?.engine?.[cle];
+  const eng = LIBS.engine?.engine?.[cle];
   return Array.isArray(eng?.scope) ? eng.scope : [];
 };
 for (const cle of QUALIFIER_KEYS.filter((c) => porteesDe(c).includes('rule'))) {

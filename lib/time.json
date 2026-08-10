@@ -7,9 +7,15 @@
   "_partage_doc": "Le temps se partage entre deux librairies : `engine` porte le temps CALCULÉ — où tombe chaque événement, une propriété de l'arbre ; `time` porte le temps qui S'ÉCOULE. Le mètre dit où les choses tombent, donc il relève du premier.",
   "_prefixe_doc": "Le préfixe est OPTIONNEL : `@tempo:120` et `@time.tempo:120` désignent la même chose, par la règle d'unicité (atlas/architecture/LIBRAIRIES.md:42). `tempo` n'étant porté que par `time`, la forme nue se résout sans ambiguïté.",
   "schema": {
-    "_reservedDirectives_doc": "Les noms que cette librairie déclare. Ils rendent le préfixe `@time.<clé>` résoluble et la clé nue reconnue par unicité.",
-    "reservedDirectives": [
-      "tempo"
-    ]
-  }
+    "_reservedDirectives_doc": "Les noms que cette librairie déclare. Ils rendent le préfixe `@time.<clé>` résoluble et la clé nue reconnue par unicité. scope AJOUTE (Romain 2026-08-10) : tempo s'ecrit UNIQUEMENT en tete de scene (@tempo:120 / @time.tempo:120), mesure sur atlas/architecture/LIBRAIRIES.md:34.",
+    "reservedDirectives": {
+      "tempo": {
+        "description": "Tempo de la scene, en BPM (BP3 tempo).",
+        "scope": [
+          "scene"
+        ]
+      }
+    }
+  },
+  "resolvedBy": "Kronos"
 }

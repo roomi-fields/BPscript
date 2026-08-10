@@ -249,7 +249,10 @@ for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite
 // « on répare l'endroit où le défaut s'est MONTRÉ, pas l'espace où il peut vivre ».
 for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
   const j = JSON.parse(readFileSync(new URL(fichier, import.meta.url), 'utf-8'));
-  const entrees = Object.keys(j).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  // ⚠️ 'resolvedBy' EXCLU AU MÊME TITRE QUE 'domain' depuis le 2026-08-10 (mise en conformité des
+  // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
+  // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
+  const entrees = Object.keys(j).filter((k) => k !== 'domain' && k !== 'resolvedBy' && !k.startsWith('_'));
   ok(entrees.length > 0, `3bis. ${fichier} doit contenir des entrées (socle : un catalogue vide ne prouve rien)`);
   const sansChamp = entrees.filter((n) => typeof j[n].resolvesPitch !== 'boolean');
   ok(sansChamp.length === 0,
@@ -257,7 +260,10 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
 }
 {
   const j = JSON.parse(readFileSync(new URL('../lib/alphabets.json', import.meta.url), 'utf-8'));
-  const entrees = Object.keys(j).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  // ⚠️ 'resolvedBy' EXCLU AU MÊME TITRE QUE 'domain' depuis le 2026-08-10 (mise en conformité des
+  // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
+  // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
+  const entrees = Object.keys(j).filter((k) => k !== 'domain' && k !== 'resolvedBy' && !k.startsWith('_'));
   // ⚠️ MÊME CONVERSION QU'EN 2bis, et pour la même raison : ce témoin exigeait la divergence, elle a
   // été comblée le 2026-07-30 par l'ancre de shakuhachi. Ce qu'on garde ici est l'INVARIANT qui
   // survit à la coïncidence : tout alphabet qui déclare résoudre une hauteur doit porter une ANCRE
@@ -278,7 +284,7 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
   // LA FORME DE LA FAUTE : la prose dit l'intention, la donnée dit l'état, et personne ne mesure
   // une phrase. En cherchant l'ESPACE plutôt que l'occurrence, `turkish` avait le même défaut.
   const registres = JSON.parse(readFileSync(new URL('../lib/octaves.json', import.meta.url), 'utf-8'));
-  const tables = Object.keys(registres).filter((k) => k !== 'domain' && !k.startsWith('_'));
+  const tables = Object.keys(registres).filter((k) => k !== 'domain' && k !== 'resolvedBy' && !k.startsWith('_'));
   const nonBranches = resolvent.filter((n) => tables.includes(n) && !j[n].octaves);
   ok(nonBranches.length === 0,
     "3bis. une table de registres HOMONYME existe et n'est pas branchée — le nommer dans un "

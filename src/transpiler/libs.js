@@ -224,7 +224,7 @@ function loadLib(name, subkey) {
  *
  * POURQUOI ELLE EXISTE. `loadLib(L, nom)` répond à une autre question : il cherche une ENTRÉE de
  * catalogue (`@alphabet.sargam`), donc dans `alphabets`/`tables`/`objects`/racine. Une DIRECTIVE
- * ne vit dans aucun de ces champs — `tempo` est déclaré dans `core.schema.reservedDirectives` —
+ * ne vit dans aucun de ces champs — `tempo` est déclaré dans `time.schema.reservedDirectives` —
  * si bien que `@core.tempo:120` était refusé par le message « l'entrée n'existe pas dans la
  * librairie » alors que la librairie la déclare bel et bien, deux champs plus loin.
  *
@@ -233,14 +233,31 @@ function loadLib(name, subkey) {
  * exacte de la résolution par unicité du 2026-08-02 : le nom nu marche quand il est unique, le
  * préfixe nomme explicitement qui le déclare. La bible l'écrivait déjà (« le préfixe reste
  * écrivable partout, y compris là où un nom nu suffirait ») ; il n'était écrivable nulle part.
+ *
+ * ⚠️ SUIT LA CHAÎNE `apporte` (2026-08-10, mise en conformité des librairies). `@core` AMÈNE
+ * `engine`/`time` (lib/core.json `apporte`) : `@core.seed:42` doit donc rester une écriture
+ * valide de `@seed:42` MÊME MAINTENANT QUE `seed` a déménagé dans `lib/engine.json` — le préfixe
+ * nomme le POINT D'ENTRÉE que l'auteur invoque, pas forcément le domicile final de la clé.
  */
 function directiveDeclareeParLaLibrairie(lib, nom) {
   const file = loadJsonFile(lib);
   if (!file || !nom) return false;
-  const reserved = (file.schema && file.schema.reservedDirectives) || [];
-  if (Array.isArray(reserved) && reserved.includes(nom)) return true;
-  if (file.values && Object.prototype.hasOwnProperty.call(file.values, nom)) return true;
-  if (file.controls && Object.prototype.hasOwnProperty.call(file.controls, nom)) return true;
+  const declareeIci = (f) => {
+    if (!f) return false;
+    // `reservedDirectives` porte DEUX formes légitimes — array plat (core.json) ou objet
+    // {nom: {description, scope}} (engine.json, time.json, depuis 2026-08-10). Les deux se
+    // consultent par présence du nom, jamais recopiées l'une dans l'autre.
+    const reserved = (f.schema && f.schema.reservedDirectives) || [];
+    if (Array.isArray(reserved) && reserved.includes(nom)) return true;
+    if (!Array.isArray(reserved) && Object.prototype.hasOwnProperty.call(reserved, nom)) return true;
+    if (f.values && Object.prototype.hasOwnProperty.call(f.values, nom)) return true;
+    if (f.controls && Object.prototype.hasOwnProperty.call(f.controls, nom)) return true;
+    return false;
+  };
+  if (declareeIci(file)) return true;
+  for (const apportee of (Array.isArray(file.apporte) ? file.apporte : [])) {
+    if (declareeIci(loadJsonFile(apportee))) return true;
+  }
   return false;
 }
 
@@ -378,7 +395,22 @@ function loadLibsFromDirectives(directives) {
   // catalogue). @core.defaults porte les valeurs/composants par défaut (cascade).
   const coreLib = loadJsonFile('core') || {};
   const schema = coreLib.schema || {};
-  ctx.reservedDirectiveNames = new Set(schema.reservedDirectives || []);
+  // ⚠️ `reservedDirectives` PORTE DEUX FORMES, ET LES DEUX SONT LÉGITIMES (2026-08-10) : `core.json`
+  // le garde en LISTE PLATE (noms seuls — ses ~30 clés d'axe/tombstone n'ont pas encore de scope
+  // mesuré) ; `engine.json`/`time.json` le portent en OBJET `{nom: {description, scope}}` (chaque
+  // clé y porte sa portée, exigé par Romain). `nomsReserves` lit les deux sans en préférer une.
+  const nomsReserves = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
+  // UNION sur TOUTES les librairies du REGISTRE, pas seulement `core` — sinon une clé qui ne vit
+  // QUE dans `engine`/`time` (mode, seed, tempo…) redevient « inconnue » en forme nue dès que
+  // `core.json` ne la duplique plus (2026-08-10, solde des 15 collisions core/engine : une clé ne
+  // vit que dans UNE librairie). Conforme à LIBRAIRIES.md:34 : « les catégories du cœur s'invoquent
+  // directement, sans nommer la librairie qui les porte » — donc TOUJOURS résolues, quelle que soit
+  // l'invocation de la scène, comme `core` l'était déjà seul avant ce chantier.
+  ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
+  for (const lib of Object.values(registry)) {
+    const s = lib && lib.schema;
+    if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
+  }
   ctx.addressKeys = new Set(schema.addressKeys || []);
   // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont
   // pas des contrôles de librairie, le compilateur les comprend lui-même. Toute autre clé
@@ -562,17 +594,14 @@ function loadLibsFromDirectives(directives) {
         ([nom, def]) => nom !== '_comment' && def && Array.isArray(def.scope) && def.scope.includes('flow')));
       if (Object.keys(dansLeFlux).length) controlSources.push({ source: dansLeFlux, isEngine: true });
     }
-    // ⚠️ `runtime` EST UN NOM PARTAGÉ, ET IL FAUT LE DÉSAMBIGUÏSER PAR LA FORME, PAS PAR LE
-    // FICHIER. Dans la librairie des contrôles, c'est une SECTION qui groupe des sous-groupes de
-    // contrôles ; dans un alphabet, c'est la SORTIE PAR DÉFAUT de la collection — une chaîne
-    // (`audio`, `midi`…), telle que le prototype de `LANGUAGE.md` la nomme.
-    // Mesuré le 2026-08-08, au reformatage des alphabets : le chargeur itérait la chaîne `audio`
-    // caractère par caractère et refusait « l'entrée '0' » — une erreur illisible, sur un fichier
-    // parfaitement conforme à la référence.
-    // On teste donc ce que la valeur EST, pas d'où elle vient : une section est un objet.
-    if (lib.runtime && typeof lib.runtime === 'object' && !Array.isArray(lib.runtime)) {
+    // `groups` (ex-`runtime`, RENOMMÉ 2026-08-10 — le nom `runtime` est retiré partout, remplacé
+    // par `resolvedBy` qui nomme l'outil DIRECTEMENT) : la SECTION de `lib/controls.json` qui
+    // groupe ses sous-groupes de contrôles RUNTIME (musical/midi/audio/dispatcher/generic). Ne
+    // collisionne plus avec le champ `runtime` d'un alphabet (sortie par défaut de la collection,
+    // une chaîne — prototype de `LANGUAGE.md`), qui garde son nom : deux notions, deux noms.
+    if (lib.groups && typeof lib.groups === 'object' && !Array.isArray(lib.groups)) {
       // Iterate sub-groups: each value that is an object with nested control defs
-      for (const [groupName, groupContent] of Object.entries(lib.runtime)) {
+      for (const [groupName, groupContent] of Object.entries(lib.groups)) {
         if (groupName === '_comment') continue;
         if (typeof groupContent === 'object' && groupContent !== null && !Array.isArray(groupContent)) {
           // Check if this is a sub-group (has nested objects with 'args' or 'description')
@@ -823,7 +852,7 @@ function describeVocabulary(directives = []) {
   const allDirs = aUneScene ? directives : Object.keys(registry).map((name) => ({ name }));
   const ctx = loadLibsFromDirectives(allDirs);
   const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  const META = new Set(['name', 'description', 'version', 'domain']);
+  const META = new Set(['name', 'description', 'version', 'resolvedBy']);
   const components = {};
   for (const axis of ctx.catalogAxes) {
     const file = loadLib(axis);

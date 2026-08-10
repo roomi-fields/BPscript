@@ -1,5 +1,4 @@
 {
-  "domain": "octaves",
   "_comment": [
     "Octave/register naming conventions for BPscript.",
     "Each convention defines how register (octave) is expressed relative to a note name.",
@@ -157,5 +156,6 @@
     "_note": "Registres du moteur BP3 natif, convention FRENCH. Décalés d'un cran sous 'bp3' (la3 = A4) et prolongés par '000' — l'octave sous '00'. Lecture plus-long-d'abord obligatoire : '000' ne doit jamais être avalé par '00' ni par '0'.",
     "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 + Inits.c:445-530",
     "_provenance": "Donnée fournie VERBATIM par bp3-frontend le 2026-07-29 (courrier [1098]). La note de 'bp3' ci-dessus annonçait déjà ce manque : « le français seul ajoute 000 (non porté ici : seul bp3_indian est servi) »."
-  }
+  },
+  "resolvedBy": "Kairos"
 }

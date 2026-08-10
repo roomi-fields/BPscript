@@ -1,4 +1,5 @@
 {
+  "resolvedBy": "runtime-audio",
   "_comment": [
     "Registre des ENTRÉES DE MODULATION par TYPE DE SORTIE (transport). Une entrée est un point",
     "continu d'une sortie qu'un CV peut piloter, ciblé par 'voix.entree' au point de paramètre :",
