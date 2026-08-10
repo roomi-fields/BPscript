@@ -152,7 +152,7 @@
         "description": "Destructure composed terminals based on alphabet",
         "scope": [
           "subgrammar",
-          "scene"
+          "rule"
         ]
       },
       "meter": {
@@ -396,7 +396,7 @@
       "description": "Destructure composed terminals based on alphabet",
       "scope": [
         "subgrammar",
-        "scene"
+        "rule"
       ]
     },
     "randomize": {
@@ -438,6 +438,7 @@
         "subgrammar",
         "scene"
       ]
-    }
+    },
+    "_destru_portee_doc": "PORTEES CONFORMES AU MOTEUR NATIF, ET S Y LIMITANT (arbitrage Romain 2026-08-10 : « on doit etre conforme a l usage BP3 et s y limiter pour destru »). Le moteur porte `destru` a DEUX niveaux, tous deux lus a la production : la SOUS-GRAMMAIRE, armee par le preambule (CompileGrammar.c:1528, lue Compute.c:225), et la REGLE, armee dans le RHS (Encode.c:408, lue Compute.c:732 sous `mode == PROD && rule.destru`). Le corpus natif le confirme : 3 occurrences, toutes posees APRES le mode d une sous-grammaire et avant ses regles (-gr.tryDESTRU:18, -gr.tryPatternGrammar:12, -gr.tryAllItems0:16), jamais en tete de grammaire. ⚠️ LA PORTEE `scene` ETAIT INVENTEE — aucune branche du moteur ne la porte. Elle rendait `@destru` ecrivable en tete, et c est par la que ma voie de portage BP3 le produisait. Retiree le 2026-08-10. La portee `rule` la remplace : sa graphie EXISTAIT deja (`S -> C4 [destru]`, mesure), seule la donnee ne la declarait pas."
   }
 }

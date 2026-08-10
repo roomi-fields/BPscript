@@ -555,13 +555,26 @@ function bp3ToScene(grammarText, opts) {
       // contractée par aucun consommateur en aval — kanopi a mesuré qu'un tempo déclaré dans le sac
       // rend 60, comme si rien n'était déclaré. Le défaut ne venait ni de lui ni des lecteurs :
       // il venait d'ici, et il était invisible des deux bouts.
+      // ⚠️ CHAQUE INSTRUCTION VA OÙ SA PORTÉE LA MET, ET LA PORTÉE EST DANS LA LIBRAIRIE.
+      //
+      // Une ligne de préambule natif n'a pas une destination unique : `_mm` porte sur la SCÈNE,
+      // `_destru` sur la SOUS-GRAMMAIRE. Les envoyer toutes au même endroit se trompe forcément
+      // sur l'une des deux — et ce fichier s'est trompé dans les deux sens tour à tour, d'abord en
+      // accrochant `_mm` au mode d'une sous-grammaire, ensuite en écrivant `_destru` en tête de
+      // scène. La portée déclarée tranche, plus aucune liste ici.
       const instructions = extractPreambleModifiers(sub.preamble);
-      bpsLines.push(`@mode:${bpsMode}`);
+      const modificateursDeSousGrammaire = [];
       for (const instr of instructions) {
-        // `mm:N` devient `@tempo:N` — la surface `@mm` est sortie du langage le 2026-08-09.
+        // `mm:N` devient `@tempo:N` — le métronome porte un seul nom depuis le 2026-08-10.
         const m = /^mm:(.+)$/.exec(instr);
-        entete.push(m ? `@tempo:${m[1]}` : `@${instr}`);
+        if (m) { entete.push(`@tempo:${m[1]}`); continue; }
+        const nom = instr.replace(/:.*$/, '');
+        if (porteeDeSousGrammaireSeule(nom)) modificateursDeSousGrammaire.push(instr);
+        else entete.push(`@${instr}`);
       }
+      bpsLines.push(modificateursDeSousGrammaire.length
+        ? `@mode:${bpsMode}(${modificateursDeSousGrammaire.join(', ')})`
+        : `@mode:${bpsMode}`);
 
       // Lignes de preamble qui ne sont PAS des modificateurs connus → conservées verbatim
       // (cas rare : _print, _destru, etc. qui ne s'encodent pas comme modificateurs)
@@ -1670,6 +1683,27 @@ function formatWeightQualifier(weightStr) {
 }
 
 // ─── Preamble → modificateurs @mode ──────────────────────────────────────────
+
+/**
+ * Vrai si la LIBRAIRIE déclare ce mot hors de la portée `scene` — donc s'il doit se poser sur la
+ * sous-grammaire et non en tête.
+ *
+ * ⚠️ LA PORTÉE EST LUE, JAMAIS RECOPIÉE ICI. `destru` a perdu sa portée `scene` le 2026-08-10
+ * (arbitrage Romain : « on doit être conforme à l'usage BP3 et s'y limiter »), et le moteur natif
+ * ne la lui a jamais donnée — `CompileGrammar.c:1528` l'arme sur la sous-grammaire,
+ * `Encode.c:408` sur la règle, rien sur la scène. Une liste écrite ici aurait survécu à ce
+ * changement en silence, et ce fichier aurait continué d'émettre une forme refusée.
+ */
+function porteeDeSousGrammaireSeule(nom) {
+  for (const lib of [_lireLib('engine')]) {
+    for (const section of Object.values(lib || {})) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      const def = section[nom];
+      if (def && Array.isArray(def.scope)) return !def.scope.includes('scene');
+    }
+  }
+  return false;
+}
 
 /**
  * Convertit une ligne de preamble BP3 en modificateur BPscript pour @mode:X(...).
