@@ -234,10 +234,13 @@ function loadLib(name, subkey) {
  * préfixe nomme explicitement qui le déclare. La bible l'écrivait déjà (« le préfixe reste
  * écrivable partout, y compris là où un nom nu suffirait ») ; il n'était écrivable nulle part.
  *
- * ⚠️ SUIT LA CHAÎNE `apporte` (2026-08-10, mise en conformité des librairies). `@core` AMÈNE
- * `engine`/`time` (lib/core.json `apporte`) : `@core.seed:42` doit donc rester une écriture
- * valide de `@seed:42` MÊME MAINTENANT QUE `seed` a déménagé dans `lib/engine.json` — le préfixe
- * nomme le POINT D'ENTRÉE que l'auteur invoque, pas forcément le domicile final de la clé.
+ * ⚠️ SUIT LA CHAÎNE `apporte`, TRANSITIVEMENT (2026-08-10, mise en conformité des librairies).
+ * `@core` amène `engine` (lib/core.json `apporte`) : `@core.seed:42` doit donc rester une
+ * écriture valide de `@seed:42` MÊME MAINTENANT QUE `seed` a déménagé dans `lib/engine.json` —
+ * le préfixe nomme le POINT D'ENTRÉE que l'auteur invoque, pas forcément le domicile final de la
+ * clé. TRANSITIF depuis la scission de `controls.json` : `core` amène `controls`, qui amène à
+ * son tour `expression`/`midi`/`audio`/`transpo` — `@core.transpose:2` doit rester valide à
+ * DEUX maillons de distance. `vus` protège d'un cycle d'`apporte` mal formé.
  */
 function directiveDeclareeParLaLibrairie(lib, nom) {
   const file = loadJsonFile(lib);
@@ -255,8 +258,15 @@ function directiveDeclareeParLaLibrairie(lib, nom) {
     return false;
   };
   if (declareeIci(file)) return true;
-  for (const apportee of (Array.isArray(file.apporte) ? file.apporte : [])) {
-    if (declareeIci(loadJsonFile(apportee))) return true;
+  const vus = new Set([lib]);
+  const aTraiter = Array.isArray(file.apporte) ? [...file.apporte] : [];
+  while (aTraiter.length) {
+    const nomLib = aTraiter.shift();
+    if (vus.has(nomLib)) continue;
+    vus.add(nomLib);
+    const f = loadJsonFile(nomLib);
+    if (declareeIci(f)) return true;
+    if (f && Array.isArray(f.apporte)) aTraiter.push(...f.apporte);
   }
   return false;
 }
@@ -513,14 +523,24 @@ function loadLibsFromDirectives(directives) {
   // On avait donc réparé l'endroit où le défaut s'était MONTRÉ, pas l'espace où il vivait — et les
   // 61 autres contrôles sont restés dans le trou. La graine en dur disparaît avec ce chargement :
   // la librairie les déclare, plus rien ne les recopie.
+  // ⚠️ CHAÎNE TRANSITIVE (2026-08-10, scission de controls.json) : un `apporte` peut désormais
+  // en amener un autre — `core` apporte `controls`, qui apporte `expression`/`midi`/`audio`/
+  // `transpo`. Une seule passe s'arrêtait au premier maillon : `@core` seul aurait chargé
+  // `controls` (qui ne porte plus aucun contrôle, juste sa propre chaîne `apporte`) SANS
+  // atteindre les quatre destinataires réels. `invoquees` sert de garde anti-cycle : un nom
+  // déjà vu ne se retraite pas, quelle que soit la profondeur d'où il revient.
   const invoquees = new Set((directives || []).map((d) => d && d.name).filter(Boolean));
   const apportees = [];
-  for (const d of directives || []) {
+  const aTraiter = [...(directives || [])];
+  while (aTraiter.length) {
+    const d = aTraiter.shift();
     const socle = d && d.name ? loadJsonFile(d.name) : null;
     for (const nom of (socle && Array.isArray(socle.apporte) ? socle.apporte : [])) {
-      if (invoquees.has(nom)) continue;      // déjà invoquée en propre : rien à ajouter
+      if (invoquees.has(nom)) continue;      // déjà invoquée en propre (ou apportée) : rien à ajouter
       invoquees.add(nom);
-      apportees.push({ type: 'Directive', name: nom, subkey: null });
+      const nouvelle = { type: 'Directive', name: nom, subkey: null };
+      apportees.push(nouvelle);
+      aTraiter.push(nouvelle);               // sa PROPRE chaîne apporte se résout à son tour
     }
   }
   const aCharger = apportees.length ? [...apportees, ...(directives || [])] : (directives || []);

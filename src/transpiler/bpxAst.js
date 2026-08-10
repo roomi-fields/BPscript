@@ -1332,7 +1332,13 @@ function chargerPorteesPermises() {
       else w(v);
     }
   };
-  w(LIBS.controls);
+  // `controls.json` SCINDÉ le 2026-08-10 (une librairie, un destinataire — LIBRAIRIES.md:213) en
+  // quatre fichiers ; `controls` lui-même n'est plus qu'un stub d'`apporte` (aucun contrôle
+  // propre), donc les QUATRE remplacent l'ancien `w(LIBS.controls)` seul.
+  w(LIBS.expression);
+  w(LIBS.midi);
+  w(LIBS.audio);
+  w(LIBS.transpo);
   // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
   // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — leur `scope` doit
   // continuer à alimenter cette table, sinon `(scan:…)`/`(weight:…)` redeviennent « inconnu ».

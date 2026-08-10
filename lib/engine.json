@@ -394,7 +394,7 @@
     }
   },
   "subgrammar": {
-    "_comment": "Procedures de sous-grammaire rapatriees de lib/controls.json (destru, randomize) -- striated/smooth/mm restent dans lib/controls.json : leur destinataire mesure (mm -> transport/Kronos, cf. core.json _destinations) ne correspond pas a BPx, question laissee ouverte pour Romain (cf. rapport).",
+    "_comment": "Procedures de sous-grammaire rapatriees de lib/controls.json (destru, randomize) -- striated/smooth/mm restent dans lib/controls.json : leur destinataire mesure (mm -> transport/Kronos, cf. core.json _destinations) ne correspond pas a BPx, question laissee ouverte pour Romain (cf. rapport). striated/smooth REJOINTS le 2026-08-10 : LIBRAIRIES.md:168 liste « nature du temps » parmi le contenu d'engine. mm REJOINT PRAGMATIQUEMENT (pas par match Atlas — son destinataire mesuré via core.json _destinations est Kronos/time, mais time.json n'est pas dans core.apporte et l'y ajouter rouvrirait '@core.tempo:120' déjà fermé par décision — signalé, non résolu, cf. rapport).",
     "destru": {
       "bp3": "_destru",
       "args": [],
@@ -414,6 +414,35 @@
         "scene"
       ],
       "bagOnly": true
+    },
+    "striated": {
+      "bp3": "_striated",
+      "args": [],
+      "description": "Striated time (pulsed)",
+      "scope": [
+        "subgrammar",
+        "scene"
+      ]
+    },
+    "smooth": {
+      "bp3": "_smooth",
+      "args": [],
+      "description": "Smooth time (non-pulsed)",
+      "scope": [
+        "subgrammar",
+        "scene"
+      ]
+    },
+    "mm": {
+      "bp3": "_mm",
+      "args": [
+        "bpm"
+      ],
+      "description": "Absolute metronome marking (BPM)",
+      "scope": [
+        "subgrammar",
+        "scene"
+      ]
     }
   }
 }

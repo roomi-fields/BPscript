@@ -31,14 +31,15 @@
  *   - Opérateurs BP3 +, ;, * (bare) → noms BPscript plus/fin/star
  *   - lambda (nil) → passé tel quel
  *   - Silence -, prolongation _
- *   - Contrôles BP3 présents dans lib/controls.json + lib/engine.json (_pitchbend, _volume,
- *     _scale, _retro, _legato, …) :
+ *   - Contrôles BP3 présents dans lib/{expression,midi,audio,transpo,engine}.json (_pitchbend,
+ *     _volume, _scale, _retro, _legato, …) — controls.json n'est plus qu'un stub d'apporte
+ *     (scission 2026-08-10) :
  *       en tête de RHS → suffixe de règle (ctrl:val)   [E2/E3/E3bis]
  *       ailleurs (trailing, milieu, dans {…}) → FORME APPEL ctrl(args)
  *       positionnelle [E4] — la scène charge alors @controls
  *
  * Constructs NON GÉRÉS (stop-and-report par grammaire) :
- *   - Contrôles _xxx absents de lib/controls.json + lib/engine.json (_srand, _print, …) et _script
+ *   - Contrôles _xxx absents de lib/{expression,midi,audio,transpo,engine}.json (_srand, _print, …) et _script
  *   - TEMPLATES: / TIMEPATTERNS: sections (jamais gérées en aller-retour)
  *   - Opérateurs tempo nus /N \N dans le RHS
  *
@@ -63,17 +64,16 @@ import { dirname, join } from 'node:path';
 //   - engine  : _xxx(args) verbatim à la même position
 // La scène générée doit alors charger @controls.
 const _bp3ToSceneDir = dirname(fileURLToPath(import.meta.url));
-const _controlsLib = JSON.parse(
-  readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'controls.json'), 'utf-8')
-);
-// Les procédures MOTEUR (mode/scan/weight/goto/rndtime…) ont rejoint lib/engine.json le
-// 2026-08-10 (mise en conformité des librairies — une clé ne vit que dans UNE librairie).
-// `buildControlMap` a besoin des DEUX sections (`groups` runtime + `engine` moteur), qui
-// vivaient toutes deux dans controls.json avant ce chantier — désormais réparties sur deux
-// fichiers, fusionnées ici pour ce lecteur qui ne passe pas par le registre `libs.js`.
-const _engineLib = JSON.parse(
-  readFileSync(join(_bp3ToSceneDir, '..', '..', 'lib', 'engine.json'), 'utf-8')
-);
+const _libDir = join(_bp3ToSceneDir, '..', '..', 'lib');
+const _lireLib = (nom) => JSON.parse(readFileSync(join(_libDir, `${nom}.json`), 'utf-8'));
+// `controls.json` a été SCINDÉ le 2026-08-10 (mise en conformité des librairies, Romain :
+// « controls.json doit être divisé » — une librairie, un destinataire, LIBRAIRIES.md:213) en
+// quatre fichiers par destinataire — `expression`/`midi`/`audio`/`transpo` — et les procédures
+// MOTEUR (mode/scan/weight/goto/rndtime…) ont rejoint `lib/engine.json` dans le même mouvement.
+// `buildControlMap` a besoin des CINQ sections `controls`/`engine`, réparties sur cinq fichiers
+// désormais — fusionnées ici pour ce lecteur qui ne passe pas par le registre `libs.js`.
+const _runtimeLibs = ['expression', 'midi', 'audio', 'transpo'].map(_lireLib);
+const _engineLib = _lireLib('engine');
 // Alphabets de test : une réf `-ho.<nom>` / `-al.<nom>` en en-tête d'un -gr IMPLIQUE
 // l'alphabet <nom> côté BP3 (GetBols/SEARCHTERMINAL2, CompileGrammar.c:1107-1175). Sans
 // déclaration d'alphabet, BPx ne regroupe pas les LHS multi-caractères (bcd→j) : chaque
@@ -92,12 +92,11 @@ const _testAlphabetsLib = JSON.parse(
  *   - collisions runtime/engine (ex: rotate) : runtime prioritaire
  *     (autorité controls.json : transpose/rotate/keyxpand sont runtime).
  */
-function buildControlMap(controlsLib, engineLib) {
+function buildControlMap(runtimeLibs, engineLib) {
   const map = new Map();
-  for (const group of Object.values(controlsLib.groups)) {
-    if (typeof group !== 'object' || group === null) continue;  // _comment
-    for (const [key, def] of Object.entries(group)) {
-      if (key === '_comment' || key === 'script') continue;
+  for (const lib of runtimeLibs) {
+    for (const [key, def] of Object.entries(lib.controls)) {
+      if (key === '_comment' || key === 'script' || key.startsWith('_')) continue;
       map.set('_' + key, { bps: key, kind: 'runtime', noArg: !(def.args && def.args.length) });
     }
   }
@@ -109,7 +108,7 @@ function buildControlMap(controlsLib, engineLib) {
   return map;
 }
 
-const BP3_CONTROL_MAP = buildControlMap(_controlsLib, _engineLib);
+const BP3_CONTROL_MAP = buildControlMap(_runtimeLibs, _engineLib);
 
 // Token contrôle BP3 : _name ou _name(args) (après tokenizeBP3Line, les args
 // arrivent généralement dans un token séparé "(args)" — fusion au cas par cas).

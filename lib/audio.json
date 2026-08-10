@@ -1,0 +1,127 @@
+{
+  "name": "audio",
+  "description": "Contrôles spécifiques au transport Web Audio — match EXACT LIBRAIRIES.md:173.",
+  "resolvedBy": "runtime-audio",
+  "_scission_doc": "Née le 2026-08-10 de la scission de controls.json (Romain : « controls.json doit être divisé », une librairie = un destinataire, LIBRAIRIES.md:213). Porte le groupe 'audio' ORIGINEL, verbatim.",
+  "_argType_doc": {
+    "_role": "Comment la SURFACE lit la valeur d'un controle. Absent = lecture ordinaire : la valeur est tokenisee et la virgule SEPARE les arguments. Les valeurs ci-dessous font lire la valeur BRUTE, d'un seul tenant, et laissent l'aval la resoudre — c'est le meme principe dans les deux cas : la surface PORTE, elle n'interprete pas.",
+    "interval": "Intervalle musical, 3 formats acceptes : fraction 3/2, cents 700c, decimal 1.5. Porte brut, normalise en ratio par Kairos. Ex. transpose. Lecteur : readIntervalLiteral (parser.js).",
+    "composite": "Valeur en PLUSIEURS parties dont la virgule fait PARTIE INTEGRANTE, ex. keyxpand 'pivot,facteur' -> 'C4,2'. Sans ce marqueur la paire est scindee en deux arguments et le controle ne recoit que sa premiere moitie (l'aval crie alors 'needs a pivot note and a factor'). Lecteur : readCompositeLiteral (parser.js) — lit jusqu'a la parenthese fermante, virgules internes conservees ; BPx re-decoupe, lui seul connait la forme attendue. Ajoute 2026-07-18.",
+    "_ajouter_une_valeur": "Mecanisme DATA-DRIVEN : declarer argType ici, peupler le Set correspondant dans libs.js (loadLibsFromDirectives) et exposer un universe<X>Controls(), puis brancher le lecteur dans parseSymbolCall. Aucune liste de controles codee en dur nulle part."
+  },
+  "_scope_doc": "OU CE CONTROLE A LE DROIT D ETRE ECRIT — une LISTE, jamais une valeur seule. Vocabulaire FERME de six mots, arrete par Romain le 2026-08-08 : scene, subgrammar, rule, group, symbol, flow. L accrochage dans l arbre DIT deja la portee ; cette declaration ne sert donc pas a localiser un reglage mais a REFUSER celui qui est mal place — sans elle on lit n importe quoi n importe ou sans pouvoir le dire (c est ce qui a rendu un poids muet pendant quatre jours). symbol couvre TOUT element du flux, pas seulement une note : un silence, une prolongation, un joker et les deux membres d un gabarit portent aussi un sac (mesure : 10 porteurs dans l arbre). flow = le sac pose avec ! ; ce n est pas une portee au sens de LANGUAGE.md (c est un etat courant, par voix) mais la validation doit pouvoir dire qu un poids n a rien a y faire. L ABSENCE DE CE CHAMP EST UNE FAUTE, gardee : 57 des 65 controles n en portaient aucun, et une absence qui voudrait dire  partout  rendrait toute validation impossible. ⚠️ IL N Y A QU UN SEUL AXE. Un axe  portee d EFFET  distinct de la portee d ECRITURE etait prevu ; il reposait entierement sur mode — ecrit sur une regle, gouvernant le bloc. Mesure du 2026-08-08 : cette forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.",
+  "controls": {
+    "_comment": "Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)",
+    "wave": {
+      "args": [
+        "type"
+      ],
+      "values": [
+        "sine",
+        "triangle",
+        "square",
+        "sawtooth"
+      ],
+      "default": "triangle",
+      "description": "Oscillator waveform (Web Audio)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "audio"
+    },
+    "attack": {
+      "args": [
+        "ms"
+      ],
+      "range": [
+        1,
+        5000
+      ],
+      "default": 20,
+      "description": "Envelope attack in ms (Web Audio)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "audio"
+    },
+    "release": {
+      "args": [
+        "ms"
+      ],
+      "range": [
+        1,
+        5000
+      ],
+      "default": 100,
+      "description": "Envelope release in ms (Web Audio)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "audio"
+    },
+    "detune": {
+      "args": [
+        "cents"
+      ],
+      "range": [
+        -1200,
+        1200
+      ],
+      "default": 0,
+      "description": "Detune in cents (Web Audio)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "audio"
+    },
+    "filter": {
+      "args": [
+        "freq"
+      ],
+      "range": [
+        20,
+        20000
+      ],
+      "default": 20000,
+      "description": "Lowpass filter cutoff Hz (Web Audio)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "_default_doc": "DEFAUT CORRIGE le 2026-08-08. Il valait 0, HORS de sa propre plage [20,20000] — meme defaut que celui d ins, trouve par le meme produit croise. 0 Hz ne veut rien dire pour une coupure passe-bas : ce serait tout couper. Le defaut retenu est la BORNE HAUTE, qui veut dire ce que l absence de reglage doit vouloir dire — un filtre TRANSPARENT, au-dessus de l audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure mieux.",
+      "transportGroup": "audio"
+    },
+    "filterQ": {
+      "args": [
+        "value"
+      ],
+      "range": [
+        0,
+        30
+      ],
+      "default": 1,
+      "description": "Filter resonance Q (Web Audio)",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "audio"
+    }
+  }
+}

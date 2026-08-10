@@ -67,11 +67,12 @@ function valeurExemple(spec) {
   return '3';
 }
 // ⚠️ SOURCE DÉPLACÉE le 2026-08-10 : la section `engine` de lib/controls.json a rejoint
-// lib/engine.json (mise en conformité des librairies), et `runtime` (conteneur des sous-groupes
-// midi/audio/musical/dispatcher/generic) est RENOMMÉ `groups` — le nom `runtime` est retiré
-// partout, remplacé par `resolvedBy` qui nomme l'outil directement.
+// lib/engine.json (mise en conformité des librairies). PUIS controls.json lui-même a été SCINDÉ
+// (Romain : « controls.json doit être divisé », une librairie un destinataire — LIBRAIRIES.md:213)
+// en lib/midi.json / lib/audio.json / lib/expression.json / lib/transpo.json, chacun avec sa
+// propre section `controls` — `controls.json` n'est plus qu'un stub d'`apporte`.
 const ENGINE_SPECS = LIBS.engine?.engine || {};
-const specDe = (cle) => ENGINE_SPECS[cle] || (LIBS.controls?.groups?.midi?.[cle]) || (LIBS.controls?.groups?.audio?.[cle]);
+const specDe = (cle) => ENGINE_SPECS[cle] || (LIBS.midi?.controls?.[cle]) || (LIBS.audio?.controls?.[cle]);
 
 const HEAD = '@core\n@controls\n@alphabet.western:midi\n\n';
 const compile = (src) => compileToBPxAST(`${HEAD}${src}\n`);

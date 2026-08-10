@@ -50,7 +50,9 @@ function toutesLesCles() {
       else w(v, racine, chemin ? `${chemin}.${k}` : k);
     }
   };
-  w(LIBS.controls, 'controls', '');
+  // `controls.json` SCINDÉ le 2026-08-10 (une librairie, un destinataire — LIBRAIRIES.md:213) en
+  // quatre : `controls` lui-même n'est plus qu'un stub d'`apporte`, sans contrôle propre.
+  for (const racine of ['expression', 'midi', 'audio', 'transpo']) w(LIBS[racine], racine, '');
   // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
   // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — même balayage.
   w(LIBS.engine, 'engine', '');
@@ -102,15 +104,24 @@ for (const { source, nom, def } of CLES) {
 // nom ne quitte le vocabulaire. C'est le seul abaissement légitime de ce socle — une entrée
 // dupliquée qu'on dédoublonne, jamais un cas qui « ne passe plus ».
 // des clés de sac sans être ici, ce garde ne le dira pas — sauf par ce compte.
-// ⚠️ COMPTE RÉPARTI SUR DEUX SOURCES le 2026-08-10 : les 18 procédures/attributs MOTEUR
+// ⚠️ COMPTE RÉPARTI SUR CINQ SOURCES le 2026-08-10 : les 18 procédures/attributs MOTEUR
 // (mode/scan/weight/on_fail/meter/repeat/failed/stop/goto/retro/shuffle/order/rotate/staccato/
-// legato/rndtime/destru/randomize) ont rejoint lib/engine.json (une clé ne vit que dans UNE
-// librairie) — 64 - 18 = 46 restent sous `controls.`, 18 apparaissent sous `engine.`.
-ok(CLES.filter((c) => c.source.startsWith('controls.')).length === 46,
-   `C. ${CLES.filter((c) => c.source.startsWith('controls.')).length} contrôles balayés sous `
-   + `'controls.', 46 attendus. Un extracteur qui en rate rendrait un verdict vert sur une famille `
-   + `qu'il n'a jamais vue.`);
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 18,
+// legato/rndtime/destru/randomize) vivent dans lib/engine.json ; les 43 contrôles RUNTIME
+// restants sont désormais scindés en QUATRE fichiers par destinataire (LIBRAIRIES.md:213) :
+// expression (8 : vel/pan/rndvel/velcont/offvel/value/fixed/cont), midi (24), audio (6),
+// transpo (5) — `controls.json` lui-même n'est plus qu'un stub d'`apporte`, zéro contrôle propre.
+const PAR_DESTINATAIRE = { expression: 8, midi: 24, audio: 6, transpo: 5 };
+for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
+  const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
+  ok(n === attendu,
+     `C. ${n} contrôles balayés sous '${racine}.', ${attendu} attendus. Un extracteur qui en `
+     + `rate rendrait un verdict vert sur une famille qu'il n'a jamais vue.`);
+}
+// 18 rapatriés le 2026-08-10 (mode/scan/weight/on_fail/meter/repeat/failed/stop/goto/retro/
+// shuffle/order/rotate/staccato/legato/rndtime/destru/randomize) + 3 rejoints dans la MÊME
+// journée (striated/smooth : « nature du temps », LIBRAIRIES.md:168 ; mm : pragmatique, cf.
+// engine.json subgrammar._comment) = 21.
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 21,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
    + `'engine.', 18 attendus (les procédures moteur rapatriées de lib/controls.json).`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
@@ -136,9 +147,11 @@ ok(Array.isArray(LIBS.core?.schema?.channelParamsScope)
      + `doit DISTINGUER les familles — le poids ne va que sur une règle, le mode que sur un bloc, `
      + `l'intensité partout. S'il ne distingue plus, il est décoratif.`);
   // Les trois cas nommés par une décision ou par la mesure, en clair.
-  // ⚠️ 'weight' et 'mode' vivent sous 'engine.' depuis le 2026-08-10 (rapatriés de
-  // lib/controls.json) — la recherche accepte les deux préfixes, le nom seul les distingue déjà.
-  const de = (n) => CLES.find((c) => c.nom === n && (c.source.startsWith('controls.') || c.source.startsWith('engine.')))?.def?.scope;
+  // ⚠️ 'weight'/'mode' vivent sous 'engine.', 'vel' sous 'expression.' depuis le 2026-08-10
+  // (rapatriement + scission de lib/controls.json) — la recherche accepte les CINQ racines de
+  // contrôles, le nom seul les distingue déjà (une clé ne vit que dans UNE librairie).
+  const RACINES_CONTROLES = ['expression.', 'midi.', 'audio.', 'transpo.', 'engine.'];
+  const de = (n) => CLES.find((c) => c.nom === n && RACINES_CONTROLES.some((r) => c.source.startsWith(r)))?.def?.scope;
   ok(JSON.stringify(de('weight')) === JSON.stringify(['rule']),
      `D. 'weight' doit valoir pour la RÈGLE et elle seule — décision de Romain, 2026-08-08 : `
      + `« le poids n'a de sens que sur une règle ». Reçu : ${JSON.stringify(de('weight'))}.`);
