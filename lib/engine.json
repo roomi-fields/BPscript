@@ -1,0 +1,41 @@
+{
+  "name": "engine",
+  "description": "Les clés que le MOTEUR DE DÉRIVATION consomme — ce qui gouverne comment la production se déroule, par opposition à ce qu'elle produit. Librairie d'EN-TÊTE, résolue par BPx.",
+  "version": "1.0.0",
+  "_autorite_doc": "Le contenu de cette librairie est déclaré par atlas/architecture/LIBRAIRIES.md:168, qui la donne pour nature « en-tête » et pour destinataire BPx. Créée le 2026-08-10 sur autorisation de Romain (« il faut créer cette librairie engine »), en même temps que le passage des directives de production à l'arobase.",
+  "_graphie_doc": "⚠️ UNE LIBRAIRIE DIT QUI EXÉCUTE, JAMAIS COMMENT ÇA S'ÉCRIT. `goto`, `repeat`, `stop` et `failed` sont portés par `engine` ET s'écrivent ENTRE CROCHETS en fin de règle — ce sont des PROCÉDURES de dérivation (LANGUAGE.md:805). Leur appartenance à cette librairie ne déplace pas leur graphie, et l'inverse est vrai aussi : `seed` appartient à `engine` et s'écrit `@seed:42` en tête de scène.",
+  "_prefixe_doc": "Le préfixe est OPTIONNEL : `@seed:42` et `@engine.seed:42` désignent la même chose, par la règle d'unicité (atlas/architecture/LIBRAIRIES.md:42). Une clé portée par une seule librairie se résout sans être préfixée.",
+  "schema": {
+    "_reservedDirectives_doc": "Les noms que cette librairie déclare. Ils sont écrits ici pour que le préfixe `@engine.<clé>` se résolve, et pour que la clé nue reste reconnue par unicité.",
+    "reservedDirectives": [
+      "mode",
+      "scan",
+      "weight",
+      "seed",
+      "maxitems",
+      "items",
+      "allitems",
+      "all_items",
+      "improvize",
+      "on_fail",
+      "quantization",
+      "qclock",
+      "repeat",
+      "goto",
+      "retro",
+      "shuffle",
+      "rotate",
+      "order",
+      "stop",
+      "failed",
+      "randomize",
+      "rndtime",
+      "destru",
+      "meter",
+      "duration",
+      "timepatterns",
+      "staccato",
+      "legato"
+    ]
+  }
+}

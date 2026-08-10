@@ -1366,26 +1366,37 @@ function parse(tokens, opts = {}) {
       // Une autre clé y est parsée (EBNF : IDENT) mais poussée comme Directive
       // SIMPLE — les noms à traitement spécial (@mode, @scene, @duration…)
       // y perdraient leur effet en silence : on avertit.
-      // ⚠️ `seed` A QUITTÉ LE BLOC (décision Romain, 2026-08-10) : « seed est une directive de
-      // scène qui n'a de sens qu'en début de scène donc devrait être appelé par arobase ». La
-      // refonte des trois places (LANGUAGE.md:790-810) donne au crochet QUATRE emplois — test de
-      // drapeau, affectation, procédure de dérivation, rang de catalogue — et `seed` n'est dans
-      // aucun. La décision de juin sur le bloc lui est antérieure.
-      // LE REFUS EST FRANC, PAS UN AVERTISSEMENT : deux écritures dont une seule est juste, c'est
-      // la voie parallèle que cette refonte supprime. Le message porte la réécriture.
-      // ⚠️ ET IL NE COUVRE QUE LA TÊTE DE SCÈNE : `![@seed:N]` dans le flux traduit `_srand(N)` du
-      // natif, il est produit par bp3ToScene.js:915 et lu par BPx — un autre objet, un autre
-      // arbitrage (remonté le 2026-08-10, non tranché).
-      if (name === 'seed' && !dansLeFlux) {
+      // ⚠️ LE BLOC `[@…]` EST SORTI DU LANGAGE EN TÊTE DE SCÈNE (Romain, 2026-08-10) : « ça
+      // s'applique à toutes les directives de production ». Les quatre s'écrivent `@clé:valeur`,
+      // préfixe optionnel — `@seed:42` et `@engine.seed:42` sont la même chose, par la règle
+      // d'unicité.
+      //
+      // LA PIÈCE QUI LE FONDE : `docs/spec/LANGUAGE.md:790-810`, « trois places, trois rôles ». Le
+      // crochet a QUATRE emplois — test de drapeau, affectation, procédure de dérivation, rang de
+      // catalogue — et une instruction sur COMMENT produire n'en est aucun. La décision de juin qui
+      // avait mis ces clés dans le bloc est ANTÉRIEURE à cette refonte.
+      //
+      // LE REFUS EST FRANC ET PORTE SA RÉÉCRITURE, y compris pour un bloc groupé — deux écritures
+      // dont une seule est juste est exactement la voie parallèle que la refonte supprime.
+      //
+      // ⚠️ ET IL NE COUVRE PAS LE FLUX. `![@seed:N]` traduit `_srand(N)` du natif : elle est
+      // PRODUITE par `bp3ToScene.js:915` et LUE par BPx. Romain a parlé de la TÊTE DE SCÈNE ;
+      // fermer le flux casserait le portage du natif dans trois dépôts. L'écart est remonté et non
+      // tranché — tant qu'il ne l'est pas, cette forme-là vit.
+      if (!dansLeFlux) {
+        const ecrit = value !== null && value !== undefined ? `:${value}` : (runtime ? `:${runtime}` : '');
         throw new ParseError(
-          `'[@seed:${value ?? ''}]' : la graine s'écrit '@seed:${value ?? 'N'}' en tête de scène. `
-          + `Le crochet porte ce qui appartient à la DÉRIVATION — un drapeau, une procédure, un `
-          + `rang ; une instruction sur COMMENT produire n'en fait pas partie.`, atTok);
+          `'[@${name}${ecrit}]' : une directive de production s'écrit en tête de scène avec `
+          + `l'arobase — '@${name}${ecrit}'. Un bloc qui groupait plusieurs clés se réécrit en `
+          + `autant de lignes. Le crochet porte ce qui appartient à la DÉRIVATION : un drapeau, `
+          + `une procédure, un rang.`, atTok);
       }
-      // `seed` dans le FLUX ne relève plus de cette liste et n'est pas pour autant une clé
-      // douteuse : c'est la re-semence, seule directive à avoir un contrôle de flux natif.
-      if (!PRODUCTION_DIRECTIVES.includes(name) && !(name === 'seed' && dansLeFlux)) {
-        warn(`Clé '@${name}' hors des directives de production — son effet n'est pas garanti dans un bloc [@…] ; préférer la forme @${name}…`, atTok.line);
+      // DANS LE FLUX, seule la re-semence a un sens : c'est la seule de ces clés à avoir un
+      // contrôle de flux natif (`_srand`).
+      if (name !== 'seed') {
+        throw new ParseError(
+          `'![@${name}…]' : seul '@seed' a un sens dans le flux (re-semence _srand) ; `
+          + `'${name}' se pose en tête de scène, '@${name}'.`, atTok);
       }
       dirs.push({ type: 'Directive', name, subkey: null, runtime, value,
                   aliases: null, modifiers: null, line: atTok.line });
@@ -2891,13 +2902,11 @@ function parse(tokens, opts = {}) {
       return dirNode;
     }
 
-    // Rejet franc (arbitrage utilisateur 2026-06-11, durci le même jour) :
-    // les directives de production s'écrivent en bloc [@clé:valeur] —
-    // la @-forme historique est une erreur qui pointe la nouvelle écriture.
-    if (!subkey && PRODUCTION_DIRECTIVES.includes(name)) {
-      const suggestion = value !== null ? `:${value}` : (runtime ? `:${runtime}` : '');
-      throw new ParseError(`Directive '@${name}' retirée — écrire [@${name}${suggestion}] (bloc de production)`, tok);
-    }
+    // ⚠️ LE REJET DES @-FORMES EST TOMBÉ LE 2026-08-10 : c'est désormais la forme JUSTE. Romain :
+    // « ça s'applique à toutes les directives de production ». Les quatre — seed, items (alias
+    // maxitems), allitems (alias all_items), improvize — s'écrivent `@clé:valeur` en tête de
+    // scène, préfixe optionnel. Le refus a changé de côté : il vit sur le BLOC, dans
+    // `parseProductionBlock`.
 
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
              ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };

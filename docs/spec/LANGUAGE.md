@@ -225,7 +225,7 @@ sur une seule attaque, et le premier terme donne la duree du groupe.
 
 **En tete d'un terme**, il pose dans le flux un element instantane, qui prend effet a l'endroit ou
 il est ecrit : un reglage de sortie `!(vel:80)`, un reglage moteur `!(retro)`, une re-semence
-`!(seed:7)`, un changement de vitesse `! (/2)`. La table complete des lectures du `!` est dans
+`![@seed:7]`, un changement de vitesse `! (/2)`. La table complete des lectures du `!` est dans
 [Table de syntaxe du `!`](#les-operateurs-de-flags).
 
 `<!` suspend le flux jusqu'a l'arrivee d'un **trigger** -- une occurrence entrante nommee. Le nom
@@ -1301,7 +1301,7 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 | `C4 !(...)` **espace**                        | **flux, EVENEMENT SEPARE** -- pose seul dans la sequence                         |
 | `B3!C7` *(`!` entre symboles)*                | **SIMULTANE / accord** -- les deux notes attaquent au meme instant               |
 | `!f` *(en tete, sans primaire)*               | **objet HORS-TEMPS** -- pose seul, sans duree (`OutTimeObject`)                  |
-| `!(seed:N)`                                   | **reglage pose DANS LE FLUX** -- element sans duree (`InstantControl`)           |
+| `![@seed:N]`                                  | **re-semence posee DANS LE FLUX** -- element sans duree (`InstantControl`)       |
 | `C4 !prise` *(nom d'une definition)*          | **ACCORD** -- `prise` y sonne comme co-attaque et l'aval lui cherche une hauteur |
 | `! (/N)` · `! (*N)`                           | **changement de vitesse** pose dans le flux (`SpeedChange`)                     |
 | `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                   |
