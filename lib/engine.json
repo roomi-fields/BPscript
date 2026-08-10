@@ -162,12 +162,6 @@
           "rule"
         ]
       },
-      "duration": {
-        "description": "Indication de duree de scene -- @duration:16b (temps) ou @duration:8s (secondes).",
-        "scope": [
-          "scene"
-        ]
-      },
       "timepatterns": {
         "description": "Motifs temporels nommes -- @timepatterns: t1=1/1, t2=3/2, ... (docs/spec/AST.md:95,111,143).",
         "scope": [
@@ -192,7 +186,8 @@
           "flow"
         ]
       }
-    }
+    },
+    "_duration_retiree_doc": "duration N EST PLUS UNE DIRECTIVE DE SCENE. Arbitrage Romain du 2026-08-04, hub/decisions/2026-08-04-la-duree-de-scene-est-supprimee.md : « on supprime duration ». Le mot ne designe plus que le champ 'duration' du prototype de TERMINAL (docs/spec/LANGUAGE.md:943). ⚠️ LA SUPPRESSION AVAIT RECULE LE 2026-08-10 SANS QUE PERSONNE NE LE VEUILLE : @engine.duration:16 etait REFUSE au 4 aout et est devenu ACCEPTABLE a la naissance de cette librairie, parce que j y ai recopie les cles de la reference sans confronter chacune aux decisions datees. Tenu depuis par test/une_forme_supprimee_ne_revient_pas_par_une_librairie.mjs."
   },
   "resolvedBy": "BPx",
   "engine": {

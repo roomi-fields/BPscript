@@ -79,7 +79,12 @@ const DECLARATIONS = [
   // désigne plus rien. Remplacé 1-pour-1 par `timepatterns`, mesuré générique avant d'être choisi
   // — accepté avant les règles, refusé après — pour que le socle anti-rétrécissement reste tenu.
   ['timepatterns', '@timepatterns: t1=1/1'], ['var', '@var v'],
-  ['alias', '@alias g cc:2'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
+  ['alias', '@alias g cc:2'], ['tempo', '@tempo:90'],
+  // `duration` EST SORTIE de la matrice le 2026-08-10 : Romain l'a supprimée le 2026-08-04
+  // (hub/decisions/2026-08-04-la-duree-de-scene-est-supprimee.md) et elle était revenue par
+  // lib/engine.json à la naissance de cette librairie. Remplacée 1-pour-1 par `randomize`, mesurée
+  // générique avant d'être choisie — acceptée avant les règles, refusée après.
+  ['randomize', '@randomize'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
   ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['homomorphism', '@homomorphism.dhati'],
   ['settings', '@settings'], ['transpose', '@transpose:1/2'], ['modulation', '@modulation'], ['ins', '@ins:3'],
