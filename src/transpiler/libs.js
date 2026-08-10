@@ -273,6 +273,30 @@ function porteesDeclarees(nom) {
   return null;
 }
 
+/**
+ * LE GROUPE D'UNICITÉ d'un mot — le nom du réglage qu'il pose, quand ce réglage ne se pose qu'une
+ * fois par scène — ou `null`. Cherché dans TOUTES les librairies et TOUTES leurs sections, comme
+ * les portées : la section range, la donnée déclare.
+ *
+ * ⚠️ UN GROUPE, PAS UN BOOLÉEN, et c'est le moteur qui l'impose : `_striated` et `_smooth` partagent
+ * un seul compteur (`NotFoundNatureTime`, CompileGrammar.c:1545) parce qu'ils règlent la MÊME chose.
+ * Un `unique:true` par mot aurait laissé passer l'un suivi de l'autre.
+ */
+function groupeDUnicite(nom) {
+  if (!nom) return null;
+  for (const lib of Object.values(registry)) {
+    if (!lib || typeof lib !== 'object') continue;
+    const res = lib.schema && lib.schema.reservedDirectives;
+    if (res && !Array.isArray(res) && res[nom] && res[nom].unicite) return res[nom].unicite;
+    for (const section of Object.values(lib)) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      const def = section[nom];
+      if (def && typeof def === 'object' && def.unicite) return def.unicite;
+    }
+  }
+  return null;
+}
+
 function directiveDeclareeParLaLibrairie(lib, nom) {
   const file = loadJsonFile(lib);
   if (!file || !nom) return false;
@@ -983,6 +1007,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
+export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

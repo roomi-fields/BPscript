@@ -20,7 +20,7 @@
 
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux} from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite} from './libs.js';
 import { LIBS } from './libs-data.js';
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
@@ -1652,6 +1652,54 @@ function validateReferences(ast) {
                + `d'une librairie invoquée, jamais de nulle part. Invoquer la librairie qui le `
                + `porte, ou retirer la ligne.`,
         line: d.line,
+      });
+    }
+  }
+
+  // 4bis. UN RÉGLAGE QUI NE SE POSE QU'UNE FOIS NE SE POSE PAS DEUX — et le groupe est DANS LA
+  //       DONNÉE, jamais ici.
+  //
+  // Le moteur natif tient deux compteurs (CompileGrammar.c:1535-1551) et refuse par `return(7)` :
+  // la grammaire entière ne compile pas. `NotFoundMetronom` couvre `_mm` ; `NotFoundNatureTime` est
+  // PARTAGÉ par `_striated` et `_smooth`, qui tombent dans le même `case` par fall-through.
+  //
+  // ⚠️ C'EST POURQUOI LA DONNÉE NOMME UN GROUPE ET NON UN BOOLÉEN. Un `unique:true` par mot aurait
+  // laissé passer `@striated` suivi de `@smooth` — deux mots différents, un seul réglage : la nature
+  // du temps, qu'on ne règle pas deux fois. C'est le cas qu'une formulation par mot rate, et il a
+  // fallu que bp3-frontend aille lire le C pour qu'il apparaisse : mon signalement d'origine ne
+  // parlait que de deux mots sur trois, et les donnait pour indépendants.
+  //
+  // TOUTES LES POSITIONS COMPTENT DANS LE MÊME SEAU, parce que le natif compte sur la GRAMMAIRE
+  // entière : la tête de scène et les modificateurs de sous-grammaire. Compter la surface à part de
+  // la graphie de sous-grammaire laisserait passer `@tempo:120` suivi de `@mode:ord(mm:90)`.
+  {
+    const groupes = new Map();          // groupe -> [{mot, line}]
+    const noter = (nom, line) => {
+      if (!nom) return;
+      const g = groupeDUnicite(nom);
+      if (!g) return;
+      if (!groupes.has(g)) groupes.set(g, []);
+      groupes.get(g).push({ mot: nom, line });
+    };
+    for (const d of ast.directives || []) {
+      if (!d || (d.type && d.type !== 'Directive')) continue;
+      noter(d.name, d.line);
+      for (const m of d.modifiers || []) noter(m && m.name, d.line);
+    }
+    for (const sg of ast.subgrammars || []) {
+      for (const m of sg.modifiers || []) noter(m && m.name, sg.line);
+    }
+    for (const [groupe, vus] of groupes) {
+      if (vus.length < 2) continue;
+      const mots = [...new Set(vus.map((v) => v.mot))];
+      errors.push({
+        message: `'${groupe}' est réglé ${vus.length} fois (${mots.map((m) => `'${m}'`).join(', ')}) `
+               + `— il ne se règle qu'une fois par scène. `
+               + (mots.length > 1
+                 ? `Ces mots règlent LA MÊME CHOSE : en garder un seul.`
+                 : `Retirer les occurrences en trop.`)
+               + ` Le moteur natif refuse la grammaire entière dans ce cas.`,
+        line: vus[vus.length - 1].line,
       });
     }
   }

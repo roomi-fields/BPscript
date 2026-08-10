@@ -13,7 +13,8 @@
         "description": "Tempo de la scene, en BPM (BP3 tempo).",
         "scope": [
           "scene"
-        ]
+        ],
+        "unicite": "metronome"
       }
     }
   },
