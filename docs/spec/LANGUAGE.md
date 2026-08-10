@@ -564,7 +564,7 @@ qui vit dans un catalogue.
 
 ```text
 @alphabet.sargam
-@tuning.just
+@tuning.western_just
 @octaves.saptak
 @homomorphism.dhati
 ```

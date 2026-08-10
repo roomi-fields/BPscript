@@ -5354,7 +5354,7 @@ function parse(tokens, opts = {}) {
       // Appel d'une définition déclarée : `accent(C4)`.
       if (at(T.LPAREN) && !current().spaceBefore && !isContextLookahead()) {
         const node = parseSymbolCall(name, tok);
-        if (actor) node.actor = actor;
+        if (actor) poserActeur(node, actor);
         return node;
       }
 
@@ -5367,7 +5367,7 @@ function parse(tokens, opts = {}) {
       if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET
           && !fluxIsWiring(pos + 1)) {
         const node = parseSimultaneousGroup(name, tok);
-        if (actor) node.actor = actor;
+        if (actor) poserActeur(node, actor);
         return node;
       }
 
@@ -5707,6 +5707,32 @@ function parse(tokens, opts = {}) {
     if (!at(T.BANG) || peek(1).type === T.LPAREN || peek(1).type === T.LBRACKET
         || fluxIsWiring(pos + 1)) return el;
     return { type: 'SimultaneousGroup', primary: el, secondaries: lireSecondaires(tok) };
+  }
+
+  /**
+   * POSER L'ACTEUR SUR LE TERME, JAMAIS SUR LE GROUPE.
+   *
+   * DÉCISION ROMAIN (2026-08-10), mot pour mot : « c'est correct, ça doit passer, l'acteur doit
+   * être posé sur chaque terminal pas le groupe ».
+   *
+   * ⚠️ CE QUE ÇA RÉPARE, ET LE MODE D'ÉCHEC EST TROMPEUR. `chant.A2!chant.A4` était REFUSÉ
+   * (« Ambiguous symbol "A2" ») alors que `chant.A2` seul passait : l'acteur atterrissait sur le
+   * nœud de la frappe commune, et la résolution ne lit l'acteur que sur les Symbol et SymbolCall
+   * (actorResolver.js:439-442). Le préfixe était donc écrit, présent dans l'arbre, et INVISIBLE —
+   * et le refus accusait l'auteur d'une ambiguïté qu'il avait précisément levée.
+   *
+   * ⚠️ ET LE PRÉFIXE NE SE DISTRIBUE PAS aux co-attaques : le point COLLÉ qualifie le terme auquel
+   * il est collé (LANGUAGE.md, table de l'espace), et chaque terminal porte donc le sien. Un
+   * secondaire écrit nu reste nu — s'il est ambigu, le refus est alors mérité.
+   *
+   * La descente est récursive : un primaire peut lui-même être une frappe commune.
+   */
+  function poserActeur(node, actor) {
+    if (node && node.type === 'SimultaneousGroup' && node.primary) {
+      poserActeur(node.primary, actor);
+      return;
+    }
+    if (node) node.actor = actor;
   }
 
   function parseSimultaneousGroup(primaryName, tok, primaryArgs = null) {

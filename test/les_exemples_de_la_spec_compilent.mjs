@@ -169,16 +169,17 @@ const RE_REGLE = /^[A-Za-z_][\w']*\s*(?:->|<>|<-)\s/;
 // Retard mesuré le 2026-08-06 : 16 règles sur 123, en QUATRE familles. Chaque ligne sort de cette
 // liste le jour où le parser la rattrape — à la main, datée, comme le cliquet du dessus.
 const RETARD_REGLES = new Map([
-  // ⚠️ UNE REGLE QUI NOMME UN ACTEUR DECLARE DANS SON BLOC ne peut pas compiler SEULE — et ce
-  //    garde extrait les regles UNE PAR UNE. Ce n est donc pas une forme morte, c est un effet de
-  //    l INSTRUMENT : le bloc entier compile, mesure faite avant de l inscrire.
-  //    Cause posee le 2026-08-09, quand Romain a tranche  deux alphabets dans une scene, c est
-  //    deux ACTEURS nommes ; un alphabet par acteur . Les regles de ce bloc sont donc toutes
-  //    qualifiees, et la qualification renvoie a une declaration qui vit trois lignes plus haut.
-  //    ⛔ ELLE SORT LE JOUR OU LE GARDE SAIT CHAINER UNE REGLE A SON BLOC — pas avant, et surtout
-  //    pas en desactivant la mesure : un retard dont on ne sait pas s il vise le langage ou
-  //    l instrument est exactement celui qu on finit par croire.
-  ['S -> melodie.C4!monte', /Ambiguous symbol|Acteur inconnu/],
+  // (0) `S -> melodie.C4!monte` — SORTIE le 2026-08-10, RATTRAPEE PAR LE PARSER.
+  //     Elle etait inscrite ici avec la cause /Ambiguous symbol|Acteur inconnu/, et le motif ECRIT
+  //     etait « elle sort le jour ou le garde sait chainer une regle a son bloc ». CE N EST PAS CE
+  //     QUI EST ARRIVE, et le noter compte plus que le compte : le prefixe d acteur etait POSE SUR
+  //     LE GROUPE de la frappe commune au lieu du terme, donc `melodie.C4` perdait son acteur et la
+  //     ligne tombait pour ambiguite. Romain a tranche le 2026-08-10 (« l acteur doit etre pose sur
+  //     chaque terminal pas le groupe »), le parser est corrige, et ce qui reste sur cette ligne
+  //     est un refus de RESOLUTION ordinaire pour une regle isolee — deja couvert plus haut.
+  //     ⚠️ C EST LE CLIQUET QUI L A EXIGEE, pas ma memoire : il a rougi le jour meme de la
+  //     correction en disant qu une exception avait survecu a sa raison. Un retard qui ne se
+  //     resserre jamais n est qu un compteur.
   // (a) la DURÉE COLLÉE décimale — RATTRAPÉE le 2026-08-06, les cinq lignes sont SORTIES d'ici.
   //     Romain : « ces exemples doivent fonctionner, ils sont légitimes ». `0.5` produit
   //     désormais le MÊME arbre que `1/2` — même durée, deux écritures. C'est le cliquet qui a
