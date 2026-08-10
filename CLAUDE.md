@@ -81,6 +81,9 @@ autorité « en attendant ». Face au blocage, j'attends.
 - **Le code mort s'élague** dans le mouvement qui le rend mort. Une branche sans appelant vivant sort.
 - **La librairie d'abord** : ce qui peut se déclarer ou se retrouver en librairie y vit.
 - **Les commentaires sont utiles et proportionnés** : ils disent ce que le code ne montre pas.
+- **Éprouver un témoin de compensation avec une valeur NON NULLE**, et **retirer une conversion de type AVANT de conclure** sur qui porte un écart.
+- **Vérifier le dépôt concerné AU MOMENT du relais**, et qu'un composant abonné est bien **BRANCHÉ** chez qui tient le canal.
+- **Retirer une affirmation du CODE dans le même geste** que du message qui la retire.
 
 ## Écrire un document
 
@@ -94,14 +97,11 @@ backlog, décisions, constats — porte au contraire sa date et sa cause : c'est
 
 ## Écrire un garde
 
-- **Réparer l'espace où le défaut peut vivre**, jamais l'endroit où il s'est montré. Un balayage a
-  une portée : écrire la portée **et son complément**.
+- **Réparer l'espace où le défaut peut vivre**, jamais l'endroit où il s'est montré : écrire la portée **et son complément**.
 - **Un garde s'écrit pour la construction**, jamais pour la forme signalée. Il énumère toutes les
   formes que le parser produit, dans **toutes** ses sections. Une matrice, pas une liste.
-- **Injecter la faute dans l'accusé, puis dans le juge** — le rendre constant, aveugle, muet — et
-  exiger que le garde rougisse.
-- **Une empreinte compare tout**, en retirant seulement ce qui est prouvé hors sujet. Choisir les
-  champs comparés revient à choisir ce qu'on ne verra pas.
+- **Injecter la faute dans l'accusé puis dans le juge**, et exiger que le garde rougisse.
+- **Une empreinte compare tout**, sauf ce qui est prouvé hors sujet : choisir les champs comparés revient à choisir ce qu'on ne verra pas.
 - **Suspecter l'instrument avant le sujet** quand un chiffre surprend, et le vérifier **avant**
   d'envoyer la mesure.
 - **Un garde hors du portillon est invisible** : il ne préviendra jamais. Le portillon est
