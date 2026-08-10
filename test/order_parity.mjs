@@ -27,6 +27,35 @@ const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
 const BP3 = path.resolve(BP3_DIR, 'bp3');
+
+/**
+ * L'ESTAMPILLE D'UN INSTANTANÉ NATIF — version, empreinte du binaire, ET COMMANDE COMPLÈTE.
+ *
+ * RÈGLE DU PROPRIÉTAIRE DE L'ORACLE (bp3-engine, `ORACLE-BINAIRE.md`, étendue aux instantanés le
+ * 2026-08-10) : tout artefact de référence natif se cite version + md5 + commande.
+ *
+ * ⚠️ POURQUOI LA COMMANDE EST DÉTERMINANTE ET NON ACCESSOIRE. Mesuré le 2026-08-10 sur `koto3`,
+ * graine 1, binaire b100125b : à PRODUCTION IDENTIQUE — mêmes 20 items, fichier texte octet pour
+ * octet identique — 28 % des événements se placent à un instant DIFFÉRENT selon les sorties
+ * demandées, et la fin totale passe de 15862 à 17648. Deux instantanés produits par le même binaire
+ * et deux commandes différentes ne sont donc PAS comparables. Sans la commande, un écart de
+ * minutage se lit comme une régression du moteur.
+ *
+ * ⚠️ ET LE NUMÉRO DE VERSION SEUL N'EST PAS UNE EMPREINTE (`ORACLE-BINAIRE.md`, constat #65) :
+ * c'est un `#define`, deux binaires distincts peuvent l'afficher identique. Le md5 est la seule
+ * empreinte de contenu.
+ */
+function estampilleNative(commande) {
+  let version = null, md5 = null;
+  try { version = (execSync(`"${BP3}" --version`, { encoding: 'utf8', timeout: 10000 })
+    .match(/Version\s+([0-9.]+)/) || [])[1] || null; } catch { /* binaire absent → champ nul */ }
+  try { md5 = execSync(`md5sum "${BP3}"`, { encoding: 'utf8', timeout: 10000 }).split(/\s+/)[0]; }
+  catch { /* idem */ }
+  // ⚠️ LES TROIS CHAMPS SONT ÉCRITS MÊME NULS, et c'est délibéré : un instantané qui les porte à
+  // `null` se lit comme NON QUALIFIÉ et se compte (test/un_instantane_natif_se_cite.mjs). Un champ
+  // absent, lui, ne se distingue pas d'un format qui ne l'a jamais eu.
+  return { engineVersion: version, engineMd5: md5, command: commande ?? null };
+}
 const GUARD = path.join(__dirname, 'bp3-guard.sh');   // enveloppe anti-OOM, cf [231]
 const GRAMMARS = JSON.parse(fs.readFileSync(path.join(__dirname, 'grammars', 'grammars.json'), 'utf8'));
 
@@ -138,6 +167,9 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   return args;
 }
 
+// La dernière invocation native, retenue pour l'estampille de l'instantané qu'elle produit.
+let derniereCommande = null;
+
 function nativeOrder(name, opts = {}) {
   const prodFile = path.join('/tmp', `_ord_${name}_prod.txt`);
   try { fs.unlinkSync(prodFile); } catch {}
@@ -145,7 +177,11 @@ function nativeOrder(name, opts = {}) {
   if (!args) return { error: 'args' };
   // Sous le garde anti-OOM : la campagne inclut des grammaires à boucle infinie
   // documentée (PP, checkcontext) — plafond mémoire + victime OOM + timeout.
-  try { execSync(`bash "${GUARD}" "${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
+  // La commande est RETENUE TELLE QU'EXÉCUTÉE — la reconstruire ailleurs ferait diverger la trace
+  // et ce qui a tourné, et c'est précisément ce que l'estampille doit interdire.
+  const commande = `bash "${GUARD}" "${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`;
+  derniereCommande = commande;
+  try { execSync(commande, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
   try { fs.unlinkSync(path.join(TD, `_ord_tmp_${name}.gr`)); } catch {} // temp grammaire normalisée
   if (!fs.existsSync(prodFile)) return { error: 'no output' };
   // Garde anti-démesure : une dérivation non terminante (Improvize, livecode2) peut écrire
@@ -188,6 +224,7 @@ function writeTextOracle(name, tokens) {
     mode:'text',
     tokens: newToks,
     date: new Date().toISOString().slice(0, 10),
+    ...estampilleNative(derniereCommande),
   };
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(snap, null, 2));
@@ -227,6 +264,7 @@ if (SINGLEPLAY) {
       seed: 1,
       count: nat.tokens.length,
       tokens: nat.tokens,
+      ...estampilleNative(derniereCommande),
     };
     const file = path.join(OUT, `${name}.json`);
     fs.writeFileSync(file, JSON.stringify(snap, null, 2));
