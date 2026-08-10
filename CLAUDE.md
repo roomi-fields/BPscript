@@ -5,31 +5,28 @@ Je tiens la grammaire du langage, son transpileur et ses librairies. Voie unique
 
 L'AST est **agnostique du moteur** : sa taxonomie se dit par ce que la chose fait, jamais par un moteur.
 
-## RTFM — base de connaissances indexée
+## L'index d'abord — règle, pas préférence
 
-Ce projet est indexé par RTFM (docs, code, specs, notes).
+Ce dépôt est indexé. Toute investigation **commence** par l'index : `rtfm_search` pour *le quoi* —
+quels fichiers, modules ou notes concernent un sujet ; `codegraph explore "<symbole | question>"`
+pour *l'appel* — symboles, appelants, rayon d'impact. On ne fouille **jamais** le dépôt à la main
+pour **trouver** où une chose vit.
 
-Pour toute **recherche exploratoire** — trouver quels fichiers, modules ou concepts concernent un
-sujet — utiliser `rtfm_search` plutôt que Glob, find, ls ou un Grep large.
+| réflexe | à la place |
+| --- | --- |
+| `grep -r`, `grep --include`, `find`, `ls -R` | `rtfm_search` · `codegraph explore` |
+| `cat`, `head`, `tail`, `sed -n` **sur un fichier** | localiser par l'index, puis lire par l'outil de lecture |
 
-Il rend des chemins de fichiers et des métadonnées de contexte. Ensuite on continue normalement :
-lire les fichiers, chercher les motifs exacts à l'intérieur, éditer.
+**Seuls usages shell légitimes** : `grep <motif> <fichier déjà nommé>` · `sed`/`cat` dans un pipeline
+d'**édition** · le filtrage d'une **sortie de commande**, qui n'est pas un fichier.
 
-## CodeGraph — graphe de code indexé
+Une recherche qui ne trouve rien renseigne sur la recherche : reformuler, jamais retomber sur `grep`.
 
-Ce dépôt est indexé par CodeGraph (`.codegraph/`). Pour **comprendre ou localiser du code** —
-symboles, appelants et appelés, rayon d'impact d'un changement — utiliser
-`codegraph explore "<question | symbole>"` **avant** grep, find ou lecture de fichiers.
-
-RTFM répond au quoi et au où documentaire ; CodeGraph répond à la structure d'appel du code.
-
-## Trouver l'autorité sur un sujet
+## Autorité sur un sujet
 
 1. La **carte d'autorités d'Atlas** (`../atlas/carte-autorites/`) dit où vit l'autorité sur un sujet.
 2. Le **fichier de référence** qu'elle désigne porte la règle.
-3. **Demander à Atlas** quand l'information reste introuvable.
-
-Une recherche qui ne trouve rien renseigne sur la recherche.
+3. **Demander à Atlas** si l'information reste introuvable.
 
 ## Trancher un comportement : « comment ça fonctionne en BP3 natif ? »
 
@@ -70,6 +67,11 @@ Remplacer X par Y = **supprimer X dans le même mouvement**. On migre, on regard
 répare. **Le garde qui le tient** : le portillon échoue si du code voué au retrait garde un appelant
 vivant, et son mordant se prouve par injection.
 
+## ⛔ Une clame qui contredit une mesure que j'ai faite
+
+**Je ne tranche jamais en faveur de la clame** : je rejoue ma mesure et je réponds avec elle. Cela
+vaut d'abord pour ce qui vient de l'architecte — un chiffre reçu ne périme pas un chiffre mesuré.
+
 ## ⛔ Le repli sous pression
 
 Un blocage se solde par **une question, jamais par un contournement**. Sont des replis : un test
@@ -87,9 +89,8 @@ autorité « en attendant ». Face au blocage, j'attends.
 
 ## Écrire un document
 
-Cette section porte sur les **documents de référence**. Un commentaire de code relève de « Coder » :
-il dit ce que le code ne montre pas, y compris ce qui a rendu un seuil nécessaire. Un **registre** —
-backlog, décisions, constats — porte au contraire sa date et sa cause : c'est ce qui le rend lisible.
+Cette section porte sur les **documents de référence**. Un commentaire de code relève de « Coder ».
+Un **registre** — backlog, décisions, constats — porte au contraire sa date et sa cause.
 
 - **Descriptif, factuel, affirmatif** : le document décrit **ce qui est**, dans son état d'aujourd'hui ; la forme négative se réécrit en énoncé positif.
 - **Sans justification narrative** : ni citation d'une personne, ni cause, ni date, ni renvoi à une

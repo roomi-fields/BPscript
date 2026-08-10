@@ -320,17 +320,18 @@ après les itérations appartient à l'alphabet et se joue.
 ```
 TemplateEntry {
   type: "TemplateEntry"
-  index: number                    // le rang dans le catalogue
-  scale: string                    // "/1", "*3/2" — l'échelle ; "/1" quand elle est omise
-  body: TemplateElement[]
+  line: string                     // la LIGNE ENTIÈRE du catalogue, crochet de rang compris
 }
-
-TemplateElement = TemplateSlot | TemplateFragment | TemplateBracket
-
-TemplateSlot { type: "TemplateSlot", count: number }
-TemplateFragment   { type: "TemplateFragment" }
-TemplateBracket  { type: "TemplateBracket", index: number, body: TemplateElement[] }
 ```
+
+Une entrée de catalogue se transporte **verbatim** : la ligne entière, non normalisée, sans son
+terminateur de fin de ligne. Les espaces restent — le moteur les ignore lui-même, et les retirer ici
+serait une perte silencieuse. Le rang n'est pas un champ : le moteur l'extrait de la ligne au
+passage, et deux sources pour la même information ne diraient pas laquelle croire.
+
+**Deux objets portent le mot « gabarit », et ils ne se lisent pas pareil.** Le gabarit d'une RÈGLE
+(`$`, `&`) appartient au langage : il est parsé, et il porte sa structure. L'entrée du CATALOGUE est
+une forme BP3 que le moteur lit lui-même — la découper ici reviendrait à décider à sa place.
 
 Le moteur explore les formes que la grammaire permet et les écrit ici ; le rang est la place dans
 cette énumération, et c'est lui que l'analyse rend pour dire quelle forme a répondu. Le mode `tem`

@@ -317,6 +317,8 @@ function normalizeName(name) {
 
 function parse(tokens, opts = {}) {
   let pos = 0;
+  // Les lignes de la source, pour ce qui se transporte VERBATIM — le catalogue de gabarits.
+  const lignesSource = typeof opts.source === 'string' ? opts.source.split(/\r\n?|\n/) : null;
   // ⚠️ CET OBJET DOIT PORTER TOUS LES CHAMPS QUE LE PARSEUR LIT, MÊME VIDES. Il vaut pendant la
   // phase où les DIRECTIVES sont encore en cours de lecture — les librairies ne sont chargées
   // qu'une fois la tête de scène connue. Il lui manquait la moitié des champs, et l'absence ne se
@@ -3549,29 +3551,41 @@ function parse(tokens, opts = {}) {
       if (atEnd()) break;
       if (!at(T.LBRACKET)) break;
 
-      // [N] scale body
-      expect(T.LBRACKET);
-      const index = Number(expect(T.INT).value);
-      expect(T.RBRACKET);
-
-      // Scale factor: /N or *N/N
-      let scale;
-      if (at(T.SLASH)) {
-        advance();
-        scale = '/' + expect(T.INT).value;
-      } else if (at(T.STAR)) {
-        advance();
-        const num = expect(T.INT).value;
-        expect(T.SLASH);
-        const denom = expect(T.INT).value;
-        scale = '*' + num + '/' + denom;
-      } else {
-        scale = '/1';  // default
+      // ── UNE ENTRÉE DE CATALOGUE SE TRANSPORTE VERBATIM ─────────────────────────────────────
+      // FORME RATIFIÉE PAR ROMAIN (2026-08-10), gravée dans BPx `docs/AST_SPEC.md` §1.9 :
+      // `TemplateEntry { line: string }` — la LIGNE ENTIÈRE, crochet d'index COMPRIS, non
+      // normalisée, sans son terminateur de fin de ligne.
+      //
+      // ⚠️ DEUX OBJETS PORTAIENT UN SEUL MOT, ET C'EST CE QUI A PRODUIT LE DÉFAUT. Le gabarit
+      // d'une RÈGLE (`$`, `&`) est du LANGAGE : il reste parsé, il ne bouge pas. L'entrée du
+      // CATALOGUE est une forme BP3 que le moteur lit lui-même (`ReadTemplate`) — la découper ici
+      // revenait à décider à sa place.
+      //
+      // ⚠️ CE QUE LE DÉCOUPAGE COÛTAIT, MESURÉ : deux entrées écrites rendaient UNE entrée, corps
+      // VIDE, et un champ d'échelle à `/1` que personne n'avait écrit — zéro erreur à chaque fois.
+      // BPx comptait 83 astérisques perdus ; c'était TOUT le corps. Ma propre scène d'exemple, qui
+      // enseigne cette forme, sortait avec un catalogue vide et trois gardes verts.
+      //
+      // ⚠️ ET L'INDEX SORT AUSSI : le moteur l'extrait lui-même de la ligne. Le garder à côté
+      // créerait deux sources pour la même information, et rien ne dirait laquelle croire si elles
+      // divergeaient.
+      //
+      // LES ESPACES RESTENT : le moteur les ignore lui-même. Les retirer ici serait la même perte
+      // silencieuse par une autre porte.
+      const ouvre = current();
+      const brute = lignesSource ? lignesSource[ouvre.line - 1] : null;
+      // On avance jusqu'à la fin de la ligne : la ligne est lue par le consommateur, pas ici.
+      while (!atEnd() && current().line === ouvre.line) advance();
+      // ⚠️ SANS LA SOURCE, ON REFUSE — on ne perd pas l'entrée en silence. C'est le mode d'échec
+      // exact que ce transport répare : un catalogue qui disparaît sans un mot. Un appelant qui
+      // parse sans passer la source doit l'apprendre ici, pas le découvrir en aval.
+      if (brute == null) {
+        throw new ParseError(
+          `le catalogue de gabarits se transporte VERBATIM : le parseur a besoin de la SOURCE pour `
+          + `rendre la ligne telle qu'elle est écrite. L'appelant doit passer 'source' à parse().`,
+          ouvre);
       }
-
-      // Template body — until newline/EOF
-      const body = parseTemplateBody();
-      entries.push({ type: 'TemplateEntry', index, scale, body });
+      entries.push({ type: 'TemplateEntry', line: brute });
       skipNewlines();
     }
     return entries;

@@ -8,6 +8,12 @@
 | [EBNF.md](spec/EBNF.md) | Grammaire formelle ISO 14977. Toutes les productions EBNF du langage | Valider la syntaxe, coder le parser, vérifier un edge case grammatical |
 | [AST.md](spec/AST.md) | Nœuds AST : Scene, Directive, Rule, CVInstance, Macro, Polymetry, etc. | Coder des transformations AST, comprendre la sortie du parser |
 
+## Chantiers — les plans en cours
+
+| Document | Contenu | Quand le lire |
+|----------|---------|---------------|
+| [PLAN_CONFORMITE_LIBRAIRIES.md](PLAN_CONFORMITE_LIBRAIRIES.md) | Les cinq règles de Romain sur les librairies, l'écart mesuré pour chacune, et l'ordre dans lequel il se ferme : les librairies portent ce qu'il faut lire, la résolution suit la cascade, le parseur cesse de nommer les mots, les librairies manquantes naissent | Avant de toucher à `lib/`, à la résolution d'un nom nu, ou à un contrôle cité en dur dans le parseur |
+
 ## Frontières — qui lit ma surface
 
 | Document | Contenu | Quand le lire |

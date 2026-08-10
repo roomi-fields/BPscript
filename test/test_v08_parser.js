@@ -40,7 +40,9 @@ function section(name) {
 }
 
 function parseSource(src) {
-  return parse(tokenize(src));
+  // La SOURCE accompagne les jetons : une entrée de catalogue de gabarits se transporte VERBATIM
+  // (AST_SPEC §1.9), et aucun jeton ne peut rendre les espaces d'origine.
+  return parse(tokenize(src), { source: src });
 }
 
 // CUTOVER graphie 2026-07-14 : renvoie true si `src` est REJETÉ (fail-loud) avec un message
@@ -196,8 +198,14 @@ S -> A B C
   // ⚠️ ASSERTION RETIRÉE le 2026-07-19 : elle vérifiait l'alias `ast.templates`, supprimé
   // (arbitrage Romain — un seul nom canonique, `template` au singulier, AST.md:40).
   assert('champ canonique `template` présent', Array.isArray(ast.template));
-  assert('entry 1 index=1', ast.template?.[0]?.index === 1);
-  assert('entry 1 wildcards=3', ast.template?.[0]?.body?.[0]?.count === 3);
+  // ⚠️ ASSERTIONS RETOURNÉES le 2026-08-10 : l'entrée de catalogue se transporte VERBATIM
+  // (forme ratifiée par Romain, BPx AST_SPEC §1.9). Elles mesuraient le DÉCOUPAGE — index et
+  // corps — et ce découpage perdait tout : deux entrées écrites rendaient UNE entrée au corps
+  // VIDE, sans une erreur. Ce qui se mesure désormais est la seule chose qui compte, la LIGNE.
+  assert('entry 1 line verbatim', ast.template?.[0]?.line === '[1] /1 ???');
+  assert('entry 2 line verbatim', ast.template?.[1]?.line === '[2] /1 ???????');
+  assert('aucun champ dérivé à côté de la ligne',
+    !('index' in (ast.template?.[0] || {})) && !('body' in (ast.template?.[0] || {})));
 }
 
 // ============================================================
@@ -231,7 +239,9 @@ S -> A
 @template
 [1] /1 ?????`);
   assert('témoin — @template (singulier) parse toujours', Array.isArray(ast.template));
-  assert('témoin — count=5', ast.template?.[0]?.body?.[0]?.count === 5);
+  // RETOURNÉ le 2026-08-10 avec le transport verbatim : il n'y a plus de corps découpé à compter,
+  // la ligne EST le gabarit. Le témoin garde la même intention — la section se lit toujours.
+  assert('témoin — la ligne est portée verbatim', ast.template?.[0]?.line === '[1] /1 ?????');
 }
 
 // ============================================================

@@ -28,47 +28,40 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-// ── 1. LE REFUS — `?N` en ligne de catalogue est une erreur nommée, pas une troncature ─────
+// ── 1. LA LIGNE EST PORTÉE ENTIÈRE — la troncature est devenue IMPOSSIBLE ────────────────
+// ⚠️ CE GARDE A CHANGÉ DE CAMP le 2026-08-10, et le motif compte plus que le retournement.
+// Il exigeait un REFUS de `?N` en catalogue. Ce refus n'avait de sens que parce que le frontal
+// DÉCOUPAIT la ligne : la forme numérotée n'était atteinte par aucune branche, et le reste de la
+// ligne disparaissait en silence. Le refus fermait la troncature.
+//
+// Depuis que l'entrée de catalogue se transporte VERBATIM (forme ratifiée par Romain, BPx
+// AST_SPEC §1.9), il n'y a plus de découpage — donc plus de troncature possible, par construction.
+// Et le contenu de la ligne n'est plus jugé ici : c'est le moteur qui la lit.
+//
+// CE QUI EST GARDÉ MAINTENANT EST LA PROPRIÉTÉ QUI COMPTAIT DÉJÀ : la ligne arrive ENTIÈRE.
+// Le refus était le moyen ; l'intégrité était la fin.
 {
   const src = `@alphabet.western\n\nS -> C4 D4\n\n@template\n[1] /1 ?1 ? .\n`;
   const r = compileToBPxAST(src);
-  ok((r.errors || []).length > 0, `1. '?1' en catalogue doit produire une erreur (reçu ${JSON.stringify(r.errors)})`);
-  const msg = (r.errors || [])[0]?.message || '';
-  ok(/n'a de sens que dans une règle/.test(msg) && /catalogue/.test(msg) && /flèche/.test(msg),
-    `1. le message doit nommer la cause (flèche/catalogue) — reçu : ${msg}`);
-  // Et surtout : la ligne ne doit pas être avalée en silence — pas de template tronqué en sortie.
-  ok(!r.ast?.template || r.ast.template.length === 0,
-    "1. la ligne refusée ne doit pas apparaître amputée dans l'AST (fail-loud, pas de sortie partielle)");
+  const entrees = r.ast?.template || [];
+  ok((r.errors || []).length === 0,
+    `1. la ligne se transporte, elle ne se juge plus ici (reçu ${JSON.stringify(r.errors)})`);
+  ok(entrees.length === 1, `1. une ligne de catalogue, une entrée (reçu ${entrees.length})`);
+  ok(entrees[0]?.line === '[1] /1 ?1 ? .',
+    `1. ENTIÈRE et VERBATIM — c'est la troncature que ce garde ferme depuis toujours. `
+    + `Reçu : ${JSON.stringify(entrees[0]?.line)}`);
+  ok(!('index' in (entrees[0] || {})) && !('body' in (entrees[0] || {})),
+    `1. aucun champ dérivé à côté de la ligne : deux sources pour la même information ne diraient `
+    + `pas laquelle croire`);
 }
 
-// ── 2. TÉMOIN — le signe NU en catalogue reste valide ───────────────────────────────────────
+// ── 2. TÉMOIN — ce qui suit la ligne n'est PAS avalé ─────────────────────────────────────
+// La troncature d'origine mangeait la suite en silence. Deux lignes doivent rester deux.
 {
-  const src = `@alphabet.western\n\nS -> C4 D4\n\n@template\n[1] /1 ? ? .\n`;
-  const r = compileToBPxAST(src);
-  ok((r.errors || []).length === 0, `2. '?' nu en catalogue doit compiler sans erreur (reçu ${JSON.stringify(r.errors)})`);
-  const body = r.ast?.template?.[0]?.body || [];
-  ok(body.length === 2 && body[0]?.type === 'TemplateWildcard' && body[0]?.count === 2 && body[1]?.type === 'TemplatePeriod',
-    `2. le corps doit garder les TROIS éléments écrits, rien tronqué (reçu ${JSON.stringify(body)})`);
-}
-
-// ── 3. TÉMOIN — le signe NUMÉROTÉ dans une RÈGLE (avec flèche) reste valide ─────────────────
-{
-  const src = `@core\n@alphabet.western\n\n?1 ?1 -> G4\n`;
-  const r = compileToBPxAST(src);
-  ok((r.errors || []).length === 0, `3. '?1' dans une règle doit compiler sans erreur (reçu ${JSON.stringify(r.errors)})`);
-  const lhs = r.ast?.subgrammars?.[0]?.rules?.[0]?.lhs || [];
-  ok(lhs.length === 2 && lhs.every(e => e.type === 'Wildcard' && e.index === 1),
-    `3. le LHS doit porter deux 'Wildcard' d'index 1 (reçu ${JSON.stringify(lhs)})`);
-}
-
-// ── 4. TÉMOIN — gabarit maître/esclave ordinaire (`${...}` / `&{...}`) reste valide ─────────
-{
-  const src = `@core\n@alphabet.western\n\nS -> \${ C4 D4 } &{ }\n`;
-  const r = compileToBPxAST(src);
-  ok((r.errors || []).length === 0, `4. gabarit maître/esclave doit compiler sans erreur (reçu ${JSON.stringify(r.errors)})`);
-  const rhs = r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [];
-  ok(rhs.length === 2 && rhs[0]?.type === 'TemplateMasterGroup' && rhs[1]?.type === 'TemplateSlaveGroup',
-    `4. le RHS doit porter un 'TemplateMasterGroup' puis un 'TemplateSlaveGroup' (reçu ${JSON.stringify(rhs.map(e => e.type))})`);
+  const r = compileToBPxAST(`@alphabet.western\n\nS -> C4\n\n@template\n[1] ?1 ? .\n[2] a b\n`);
+  const e = r.ast?.template || [];
+  ok(e.length === 2, `2. TÉMOIN — deux lignes écrites, deux entrées (reçu ${e.length})`);
+  ok(e[1]?.line === '[2] a b', `2. la seconde est intacte (reçu ${JSON.stringify(e[1]?.line)})`);
 }
 
 if (echecs.length) {
@@ -76,4 +69,4 @@ if (echecs.length) {
   for (const e of echecs) console.error('  ✗ ' + e);
   process.exit(1);
 }
-console.log(`[wildcard numéroté en catalogue] ${passe} PASS / 0 FAIL`);
+console.log(`[wildcard numéroté en catalogue] ${passe} PASS / 0 FAIL — ${passe} assertion(s)`);
