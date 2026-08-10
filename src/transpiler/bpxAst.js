@@ -957,14 +957,14 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
         // chercher une faute de frappe là où il manque une ligne d'en-tête :
         //   - le nom EXISTE dans le registre des contrôles, mais la scène ne l'a pas importé ;
         //   - le nom n'existe nulle part.
-        // Mesuré le 2026-07-26 sur le témoin de bpx : `ins(12)` sans `@controls` dégénérait en
+        // Mesuré le 2026-07-26 sur le témoin de bpx : `ins(12)` sans `@core` dégénérait en
         // note, et mon premier message affirmait « 'ins' n'existe pas », ce qui est FAUX.
         const auRegistre = universeControlNames().has(n.name);
         errors.push({
           message: auRegistre
             ? `appel '${citer(n)}' : '${n.name}' est un contrôle du registre, mais cette scène ne `
               + `l'a pas importé — il a donc été reclassé en TERMINAL SONNANT, c'est-à-dire en note. `
-              + `Déclarer la librairie de contrôles en tête de scène ('@controls')`
+              + `Déclarer le socle en tête de scène ('@core')`
             : `appel '${citer(n)}' : '${n.name}' n'existe pas — ni contrôle du registre, ni terminal `
               + `des alphabets en portée, ni symbole déclaré. Une fonction générique n'est pas du `
               + `langage : chaque intention porte son nom ('[]' pour le moteur, '()' pour le `

@@ -135,7 +135,7 @@ ok(cellules === clesRegle.length * 4 && cellules >= 12,
   ok(refuse.length > 0, "5. (mord) '[weight:5]' (clé migrée) doit être refusée entre crochets");
   // (se tait) témoin distinct, hors matrice : 'goto' n'est PAS migré (§0), son crochet reste
   // légitime — le refus ne déborde pas sur une clé qui n'a pas changé de sac.
-  const { errors: legitime } = compile(`@controls\nS -> C4 [goto:2 1]`);
+  const { errors: legitime } = compile(`@core\nS -> C4 [goto:2 1]`);
   ok(legitime.length === 0,
      `5. (se tait) '[goto:2 1]' — clé NON migrée — doit rester accepté entre crochets — reçu : `
      + `${legitime.map((e) => e.message).join(' | ')}`);

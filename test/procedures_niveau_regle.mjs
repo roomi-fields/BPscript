@@ -41,7 +41,7 @@ for (const attendu of ['goto', 'failed', 'repeat', 'stop']) {
 
 const compile = (regles) => {
   try {
-    return compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${regles}\n`);
+    return compileToBPxAST(`@core\n@alphabet.western:midi\n@mode:ord\n${regles}\n`);
   } catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 

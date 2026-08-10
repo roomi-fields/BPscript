@@ -10,7 +10,8 @@
  *
  * CE QUE CE GARDE PROUVE, PAR INJECTION DANS LES DEUX SENS (mord + se tait) :
  *  1. Un réglage RÉSERVÉ (`lib/core.json` schema.qualifierKeys) et un contrôle RUNTIME déclaré
- *     (`lib/controls.json`) écrits `(clé:valeur)` produisent TOUJOURS un nœud `SettingBag` —
+ *     (`lib/midi.json`, `lib/audio.json`, `lib/expression.json`, `lib/transpo.json`) écrits
+ *     `(clé:valeur)` produisent TOUJOURS un nœud `SettingBag` —
  *     jamais `Qualifier`, jamais un autre type — quelle que soit la POSITION d'attachement :
  *     `Rule.settings`, `Polymetric.settings`, `suffixQualifiers[i]` (élément).
  *  2. AUCUNE de ces clés n'atterrit dans `rule.qualifiers` (le sac bracket restant, réservé aux
@@ -70,11 +71,12 @@ function valeurExemple(spec) {
 // lib/engine.json (mise en conformité des librairies). PUIS controls.json lui-même a été SCINDÉ
 // (Romain : « controls.json doit être divisé », une librairie un destinataire — LIBRAIRIES.md:213)
 // en lib/midi.json / lib/audio.json / lib/expression.json / lib/transpo.json, chacun avec sa
-// propre section `controls` — `controls.json` n'est plus qu'un stub d'`apporte`.
+// propre section `controls` — puis SUPPRIMÉ (Romain : « tous les appels à cette librairie sont
+// supprimés »), les scènes qui l'invoquaient nue écrivent `@core` désormais.
 const ENGINE_SPECS = LIBS.engine?.engine || {};
 const specDe = (cle) => ENGINE_SPECS[cle] || (LIBS.midi?.controls?.[cle]) || (LIBS.audio?.controls?.[cle]);
 
-const HEAD = '@core\n@controls\n@alphabet.western:midi\n\n';
+const HEAD = '@core\n@alphabet.western:midi\n\n';
 const compile = (src) => compileToBPxAST(`${HEAD}${src}\n`);
 
 const clesTestees = [...QUALIFIER_KEYS, ...runtimeSample];

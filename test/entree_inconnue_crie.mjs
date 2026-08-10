@@ -38,7 +38,7 @@ const compile = (directive) => {
   // erreurs : celle qu'on mesure, et une seconde due à l'instrument. L'enveloppe doit rester
   // neutre sur l'axe qu'elle mesure.
   const socle = /^@alphabet[.:]/.test(directive) ? '' : '@alphabet.western:midi\n';
-  try { return compileToBPxAST(`@core\n@controls\n${socle}${directive}\n@mode:ord\nS -> C4\n`); }
+  try { return compileToBPxAST(`@core\n${socle}${directive}\n@mode:ord\nS -> C4\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 

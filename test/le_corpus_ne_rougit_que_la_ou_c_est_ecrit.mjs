@@ -85,6 +85,19 @@ const REGISTRE = [
   //    autre, et son compte reste juste pendant que sa raison ment.
   ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée — kanopi a migré le crochet, la cause d origine ressort', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
   ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
+
+  // ── C. controls.json SUPPRIMÉ (Romain, 2026-08-10) — cinq scènes écrivaient `@controls` SEUL ──
+  // `@core` amène désormais le même ensemble (`core.apporte`) qu'apportait le stub `@controls` —
+  // la migration est mécanique, une ligne qui devient l'autre. Ces cinq scènes appartiennent à
+  // kanopi et écrivent `@controls` sans `@core` à côté (193 autres scènes de sa bibliothèque
+  // écrivent déjà les deux, redondance cosmétique qui ne casse rien — hors de ce registre).
+  // QUI ATTEND : kanopi, prévenu À LA FRAPPE avec la liste exacte et la réécriture (`@controls` →
+  // `@core`, même position).
+  ['BPScript-tests/Mozartexpression.bps', 'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
+  ['BPScript-tests/tryKeyXpand.bps',      'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
+  ['BPScript-tests/tryRagas.bps',         'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
+  ['BPScript-tests/tryShruti.bps',        'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
+  ['BPScript-tests/watch.bps',            'ni contrôle, ni valeur de librairie', '@controls seul (sans @core), à migrer en @core', 'kanopi', 'kanopi — @controls → @core, même position'],
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────

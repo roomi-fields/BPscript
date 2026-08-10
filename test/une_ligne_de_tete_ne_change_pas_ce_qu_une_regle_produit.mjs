@@ -6,15 +6,15 @@
  * spécifiés, ça ne devrait pas générer un arbre générique, ça devrait générer une erreur ».
  * Mesuré le jour même, le défaut était en réalité plus retors qu'une absence de refus :
  *
- *     `S -> C4(vel:80)` AVEC `@controls`  → une NOTE portant un RÉGLAGE
- *     `S -> C4(vel:80)` SANS `@controls`  → un APPEL de fonction portant un ARGUMENT
+ *     `S -> C4(vel:80)` AVEC `@core`  → une NOTE portant un RÉGLAGE
+ *     `S -> C4(vel:80)` SANS `@core`  → un APPEL de fonction portant un ARGUMENT
  *
  * Les deux compilaient. Ce n'étaient pas deux façons d'écrire la même structure : deux natures de
  * nœud, deux champs. Et ce qui tranchait n'était pas la règle mais une DÉCLARATION DE TÊTE qui ne
  * parle pas d'elle. En aval, BPx cherche les réglages là où il les connaît : sur la seconde forme
  * il ne les trouvait pas, sans erreur, et jouait la note sans son intensité.
  *
- * LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ et personne ne pouvait le voir : `@controls` n'apparaît AUCUNE
+ * LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ et personne ne pouvait le voir : `@core` n'apparaît AUCUNE
  * fois dans les trois spécifications, `@core` quinze fois — mais aucune décision datée ne portait la
  * suppression, donc aucun garde ne pouvait mordre. `@core` AMÈNE désormais les contrôles
  * (`lib/core.json`, champ `apporte`), et l'invocation commande : une scène qui n'invoque RIEN n'a
@@ -22,7 +22,7 @@
  *
  * ⚠️ ET LE DÉFAUT AVAIT DÉJÀ ÉTÉ PAYÉ UNE FOIS, SUR UNE FAMILLE. Quatre contrôles de sous-grammaire
  * étaient semés en dur dans le chargeur, avec le commentaire qui disait la cause : « silently
- * dropped unless @controls was loaded ». On avait réparé l'endroit où le défaut s'était MONTRÉ, pas
+ * dropped unless @core was loaded ». On avait réparé l'endroit où le défaut s'était MONTRÉ, pas
  * l'espace où il vivait ; les 61 autres contrôles y sont restés des mois.
  *
  * CE QUE CE GARDE MESURE, et pourquoi il compare des ARBRES et non des compilations : les deux
@@ -60,7 +60,7 @@ const FORMES = [
   'S -> C4(vel:80) D4(pan:20)',
 ];
 for (const rhs of FORMES) {
-  const avec = compiler(`@core\n@controls\n@alphabet.western\n${rhs}\n`);
+  const avec = compiler(`@core\n@alphabet.western\n${rhs}\n`);
   const sans = compiler(`@core\n@alphabet.western\n${rhs}\n`);
   ok(messages(avec) === '' && messages(sans) === '',
      `A. '${rhs}' est REFUSÉ — avec : ${messages(avec).slice(0, 60) || 'ok'} · `
@@ -117,9 +117,9 @@ for (const [quoi, rhs, notes] of ACCORDS) {
 // ⚠️ Sans cette moitié, un compilateur qui aurait cessé de valider passerait les volets A et B en
 // triomphe : deux arbres identiques et des accords bien formés, mais plus aucun refus.
 for (const [quoi, src] of [
-  ['une clé qui n\'existe nulle part, avec la ligne', '@core\n@controls\n@alphabet.western\nS -> C4(zzzz:80)\n'],
+  ['une clé qui n\'existe nulle part, avec la ligne', '@core\n@alphabet.western\nS -> C4(zzzz:80)\n'],
   ['une clé qui n\'existe nulle part, sans la ligne', '@core\n@alphabet.western\nS -> C4(zzzz:80)\n'],
-  ['une VALEUR interdite, avec la ligne',             '@core\n@controls\n@alphabet.western\nS -> C4(wave:zzz)\n'],
+  ['une VALEUR interdite, avec la ligne',             '@core\n@alphabet.western\nS -> C4(wave:zzz)\n'],
   ['une VALEUR interdite, sans la ligne',             '@core\n@alphabet.western\nS -> C4(wave:zzz)\n'],
   // ⚠️ L'AUTRE MOITIÉ DE LA RÈGLE, et c'est elle qui distingue « les contrôles sont toujours là »
   // de « invoquer commande ». Une scène qui n'invoque RIEN n'a RIEN : le réglage y est refusé.

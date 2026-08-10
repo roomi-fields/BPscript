@@ -37,7 +37,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // L'enveloppe déclare l'instance `env1` : le port d'une instance ne se mesure pas sans elle.
-const P = '@core\n@controls\n@alphabet.western:midi\n@var env1 adsr\n';
+const P = '@core\n@alphabet.western:midi\n@var env1 adsr\n';
 
 // ── LES FORMES — la grammaire d'un élément de sac, énumérée ────────────────────────────────────
 // élément ::= sujet? clé ('.' composant)? (':' valeur)?  — cf. `sacBienForme()` dans parser.js.

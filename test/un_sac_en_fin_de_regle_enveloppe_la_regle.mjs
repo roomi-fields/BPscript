@@ -35,7 +35,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const P = '@core\n@controls\n@alphabet.western\n';
+const P = '@core\n@alphabet.western\n';
 const compiler = (rhs) => {
   // Une règle SUIVANTE est indispensable : le premier défaut ne se voyait QUE lorsqu'un jeton
   // suivait la fin de ligne. Mesurer une règle seule en fin de fichier l'aurait manqué.

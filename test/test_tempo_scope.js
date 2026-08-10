@@ -24,7 +24,7 @@ import { parse } from '../src/transpiler/parser.js';
 import { registerAll } from '../src/transpiler/libs.js';
 
 const libs = {};
-for (const n of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
+for (const n of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[n] = JSON.parse(readFileSync(`lib/${n}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -106,7 +106,7 @@ for (const [quoi, src] of [
       if (Array.isArray(x)) { x.forEach(w); return; } for (const v of Object.values(x)) w(v); };
     w(parse(tokenize(src))); return n;
   };
-  const EN_TETE = '@core\n@controls\n@mode:lin\n';
+  const EN_TETE = '@core\n@mode:lin\n';
   // UN OUVRANT NE PORTE PAS DE TERME : collé ou non, jamais conjoint. Formes COLLÉES — c'est là,
   // et là seulement, que la garde décide quelque chose.
   for (const [quoi, src] of [

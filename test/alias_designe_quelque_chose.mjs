@@ -29,7 +29,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const compile = (corps) => {
-  try { return compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n${corps}\n`); }
+  try { return compileToBPxAST(`@core\n@alphabet.western:midi\n${corps}\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 

@@ -46,11 +46,11 @@
  * et propose un RENOMMAGE (`lib/settings.defaults.json`), jamais une suppression. Aucun lecteur de
  * code mesuré à ce jour dans BPscript, BPx, Kairos, Kanopi ni bp3-frontend — mais l'absence de
  * lecteur ne vaut pas mort : cf. `sub`, ci-dessus, même erreur évitée deux fois de suite.
- * `controls.json` n'a PAS de `resolvedBy` de fichier non plus : mesuré comme violant la règle « une
- * librairie, un destinataire » (elle en sert cinq, par sous-groupe), elle porte `resolvedBy` PAR
- * CONTRÔLE au lieu d'un champ de fichier — signalé à Romain, hors périmètre d'une scission
- * aujourd'hui. Elle est invoquée NUE (`@controls`/`@core`, sans sous-clé) et n'apparaît donc jamais
- * dans les adresses `libRefs` que ce garde mesure — ce n'était déjà pas le cas avant ce chantier.
+ * `controls.json` (Romain, 2026-08-10) : SUPPRIMÉ, pas simplement signalé. Il violait la règle
+ * « une librairie, un destinataire » (elle en servait cinq, par sous-groupe) ; ses quatre
+ * destinations (`expression`, `midi`, `audio`, `transpo`) vivent depuis dans des fichiers séparés,
+ * amenées par `core.apporte`. Toute scène qui écrivait `@controls` NU écrit désormais `@core` NU —
+ * les deux amènent le même ensemble, `@controls` n'était qu'un stub de compatibilité vers lui.
  */
 // ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
 // la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
@@ -70,7 +70,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 ok(LIBS.homomorphism?.resolvedBy === 'Kairos',
    `1. lib/homomorphism.json doit déclarer son destinataire — reçu : ${JSON.stringify(LIBS.homomorphism?.resolvedBy)}`);
 {
-  const o = compileToBPxAST('@core\n@controls\n@alphabet.western:midi\n@homomorphism.transposition\n@mode:ord\nS -> C4\n');
+  const o = compileToBPxAST('@core\n@alphabet.western:midi\n@homomorphism.transposition\n@mode:ord\nS -> C4\n');
   ok((o.errors || []).length === 0,
      `1. la scène qui invoque la table de transposition doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
   ok((o.ast?.libRefs || []).includes('homomorphism.transposition'),

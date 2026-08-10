@@ -10,11 +10,7 @@
       "forms": [
         {
           "syntax": "@core",
-          "desc": "Load core library"
-        },
-        {
-          "syntax": "@controls",
-          "desc": "Load control definitions (vel, pan, wave...)"
+          "desc": "Load core library (brings expression/midi/audio/transpo controls)"
         },
         {
           "syntax": "@alphabet.western:audio",
@@ -53,7 +49,7 @@
           "desc": "Define an actor"
         }
       ],
-      "example": "@core\n@controls\n@alphabet.western:audio\n@tempo:120"
+      "example": "@core\n@alphabet.western:audio\n@tempo:120"
     },
     "->": {
       "name": "Rule (left to right)",
@@ -374,10 +370,6 @@
     "core": {
       "syntax": "@core",
       "desc": "Load core library (required)"
-    },
-    "controls": {
-      "syntax": "@controls",
-      "desc": "Load control definitions — vel, pan, wave, attack, release, etc."
     },
     "alphabet": {
       "syntax": "@alphabet.name:<channel>",

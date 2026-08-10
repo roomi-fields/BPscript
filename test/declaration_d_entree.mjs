@@ -25,7 +25,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const EN_TETE = '@core\n@controls\n@alphabet.western:midi\n';
+const EN_TETE = '@core\n@alphabet.western:midi\n';
 const compile = (corps) => {
   try { return compileToBPxAST(`${EN_TETE}${corps}\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }

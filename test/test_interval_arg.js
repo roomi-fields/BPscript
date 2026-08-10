@@ -25,7 +25,7 @@ import { registerAll, registerLib, loadLibsFromDirectives } from '../src/transpi
 
 // ── Pre-register prod libs (no FS in the parser itself) ────
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
+for (const name of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -91,20 +91,22 @@ assert('guillemets "700c" → nomme les guillemets', /entre guillemets/.test(thr
 assert('guillemets → suggère la forme nue', /forme NUE '700c'/.test(throwsOn(HEAD + 'Tr -> (ivl:"700c")') || ''), throwsOn(HEAD + 'Tr -> (ivl:"700c")'));
 
 // ── 5. ACTIVATION en prod : transpose EST interval-typé (décision 2026-07-11) ──
+// `controls` SUPPRIMÉ le 2026-08-10 (Romain) : `transpose` vit dans `lib/transpo.json`,
+// amené par `@core` comme toute scène réelle l'invoque désormais (core.apporte).
 section('Activation — transpose réel en prod');
-const prodCtx = loadLibsFromDirectives([{ name: 'controls' }]);
+const prodCtx = loadLibsFromDirectives([{ name: 'core' }]);
 assert('intervalControls existe', prodCtx.intervalControls instanceof Set, typeof prodCtx.intervalControls);
 assert('transpose est interval-typé en prod', prodCtx.intervalControls.has('transpose'), `set=${[...prodCtx.intervalControls]}`);
 // transpose de prod : lu comme INTERVALLE (chaîne brute), pas comme entier
 {
-  const ast = parse(tokenize('@controls\n@alphabet.western\n\nTr -> (transpose:-2400c)'));
+  const ast = parse(tokenize('@core\n@alphabet.western\n\nTr -> (transpose:-2400c)'));
   let v;
   JSON.stringify(ast, (k, val) => { if (val && val.key === 'transpose' && v === undefined) v = val.value; return val; });
   assert('transpose:-2400c → "-2400c" (intervalle, chaîne)', v === '-2400c', String(v));
 }
 // @transpose global : émis en chaîne d'intervalle (forme nue), pas en nombre
 {
-  const ast = parse(tokenize('@controls\n@alphabet.western\n@transpose:3/2\n\nS -> C4 D4'));
+  const ast = parse(tokenize('@core\n@alphabet.western\n@transpose:3/2\n\nS -> C4 D4'));
   let v;
   JSON.stringify(ast, (k, val) => { if (val && val.type === 'Directive' && val.name === 'transpose' && v === undefined) v = val.value; return val; });
   assert('@transpose:3/2 global → "3/2" (chaîne)', v === '3/2', String(v));

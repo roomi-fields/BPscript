@@ -73,7 +73,7 @@ ok(SAC_SEUL.length >= 3 && AVEC_FORME_NUE.length >= 10,
 
 // ─── 2. Le mot QUI A une forme nue la garde — le corpus l'écrit ainsi, rien ne bouge ─────────
 for (const mot of AVEC_FORME_NUE) {
-  const o = compileToBPxAST(`@core\n@controls\n@alphabet.simple\n@mode:ord\nS -> a ${mot} b\n`);
+  const o = compileToBPxAST(`@core\n@alphabet.simple\n@mode:ord\nS -> a ${mot} b\n`);
   const r = regleDe(o);
   ok(r[1]?.type === 'Control' && r[1]?.name === mot,
      `2. '${mot}' sans déclaration locale reste un contrôle — reçu : ${JSON.stringify(r.map((e) => e.type))}`);
@@ -84,7 +84,7 @@ for (const mot of AVEC_FORME_NUE) {
 // doit refuser, pas disparaître ». Le refus NOMME la faute et donne la réécriture ; constater
 // sans réécrire laisserait l'auteur deviner.
 for (const mot of SAC_SEUL) {
-  const nu = compileToBPxAST(`@core\n@controls\n@alphabet.simple\n@mode:ord\nS -> a ${mot} b\n`);
+  const nu = compileToBPxAST(`@core\n@alphabet.simple\n@mode:ord\nS -> a ${mot} b\n`);
   const msg = (nu.errors || []).map((e) => e.message || e).join(' | ');
   ok((nu.errors || []).length > 0, `2bis. '${mot}' nu dans le flux doit REFUSER, pas disparaître`);
   ok(msg.includes(`!(${mot})`), `2bis. le refus de '${mot}' doit donner la RÉÉCRITURE — reçu : ${msg.slice(0, 110)}`);
@@ -95,7 +95,7 @@ for (const mot of SAC_SEUL) {
   // n'est donc plus une place légitime, et le mot n'y est pas perdu — il est refusé en nommant
   // sa place. La propriété que ce volet garde est intacte : le mot n'a pas disparu, il a un sac.
   for (const forme of [`@alphabet.simple\nS -> a !(${mot}) b`]) {
-    const o = compileToBPxAST(`@core\n@controls\n@mode:ord\n${forme}\n`);
+    const o = compileToBPxAST(`@core\n@mode:ord\n${forme}\n`);
     ok((o.errors || []).length === 0,
        `2bis. '${forme}' doit rester valide — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
   }
@@ -104,7 +104,7 @@ for (const mot of SAC_SEUL) {
 // ─── 3. AVEC déclaration locale, la scène gagne — sur les SEIZE, pas sur le mot du ticket ────
 for (const mot of SANS_ARGUMENT) {
   const avert = [];
-  const o = compileToBPxAST(`@core\n@controls\n@alphabet.simple\n@def ${mot} drum.on\n@mode:ord\nS -> a ${mot} b\n`,
+  const o = compileToBPxAST(`@core\n@alphabet.simple\n@def ${mot} drum.on\n@mode:ord\nS -> a ${mot} b\n`,
                             { onWarning: (w) => avert.push(w) });
   const r = regleDe(o);
   ok((o.errors || []).length === 0,
@@ -149,7 +149,7 @@ if (VOLET_4_ACTIF) {
 // Sinon la cascade coûterait le mot au lieu de le partager : deux positions syntaxiques, deux
 // sens, aucun conflit.
 {
-  const o = compileToBPxAST('@core\n@controls\n@alphabet.simple\n@def mute drum.on\n@mode:ord\nS -> a !(mute) b\n');
+  const o = compileToBPxAST('@core\n@alphabet.simple\n@def mute drum.on\n@mode:ord\nS -> a !(mute) b\n');
   ok((o.errors || []).length === 0,
      `5. '!(mute)' doit rester valide malgré la macro homonyme — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

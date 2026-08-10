@@ -250,7 +250,6 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 ```bps
 @mod
 @core
-@controls
 @alphabet.western:audio
 
 cv env1 : mod.adsr(attack:10, decay:200, sustain:0.5, release:300)
@@ -264,7 +263,6 @@ Phrase1 -> C3 E3 G3 C4 (*:cutoff: env1, wave:sawtooth)   // env1 relancé À CHA
 ```bps
 @mod
 @core
-@controls
 @alphabet.western:audio
 
 cv wobble : mod.lfo(rate:2, amplitude:0.8, shape:sine)
@@ -278,7 +276,6 @@ Melody -> C4 D4 E4 F4 G4 A4 B4 C5 (amplitude: wobble)     // un LFO continu sur 
 ```bps
 @filter
 @core
-@controls
 @alphabet.western:audio
 
 cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
@@ -297,7 +294,6 @@ Env  -> env2
 ### Backtick CV (live coding)
 ```bps
 @core
-@controls
 @alphabet.western:audio
 
 cv custom : `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`

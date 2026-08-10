@@ -17,7 +17,7 @@ import { bpsPath, grPath } from './corpus.mjs';
 
 // ── Pre-register libs ─────────────────────────────────────────
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings']) {
+for (const name of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -183,7 +183,7 @@ section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
   // ⚠️ `weight` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
   // `![tempx:…]` (crochets) est désormais REFUSÉ. `!(weight:2)` sert la même fonction dans ce test
   // (un AUTRE élément du flux à côté de `scale`, non le sujet mesuré ici).
-  const src = `@controls
+  const src = `@core
 S -> !(weight:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
   // tokenize : pure_minor- doit être IDENT(pure_minor-) et third_meantone IDENT(third_meantone)
   const tokens = toks(src);
@@ -258,7 +258,7 @@ section('Cas 11 : a->b flèche — inchangé');
 // ============================================================
 section('Cas 12 : (weight:50-12) décrement de poids — même lecteur, sac déplacé');
 {
-  const src = `@controls
+  const src = `@core
 S -> A (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];
@@ -277,7 +277,7 @@ S -> A (weight:50-12)`;
 // ============================================================
 section('Cas 13 : mohanam réel [Notes-4] + (weight:50-12) — sac déplacé');
 {
-  const src = `@controls
+  const src = `@core
 [Notes-4] A -> P4 (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];

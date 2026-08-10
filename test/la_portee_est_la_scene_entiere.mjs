@@ -40,7 +40,7 @@ const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 // directives et invisible de tout ce qui cherche un modulateur.
 const DECLARATIONS = [
   ['@gate',    '@gate C4:midi\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
-  ['@trigger', '@controls\n@trigger sync1:midi\nS -> C4 <!sync1', (a) => (a.declarations || []).some((d) => d.name === 'sync1')],
+  ['@trigger', '@core\n@trigger sync1:midi\nS -> C4 <!sync1', (a) => (a.declarations || []).some((d) => d.name === 'sync1')],
   ['@var (module)', '@mod\n@var env1 adsr\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
   ['@var',     '@var travail\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];

@@ -130,7 +130,7 @@ for (const p of SPECS) {
     const ligne = m[1].replace(/\s*\/\/.*/, '').trim();
     exemples++;
     let r;
-    try { r = compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n${ligne}\n@mode:ord\nS -> C4\n`); }
+    try { r = compileToBPxAST(`@core\n@alphabet.western:midi\n${ligne}\n@mode:ord\nS -> C4\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     const echoue = msg !== '' && !REFUS_DE_RESOLUTION.test(msg);
@@ -275,7 +275,7 @@ for (const p of SPECS) {
     // debout d'elles-mêmes.
     if (/^@(var|actor|def|alphabet|tuning|octaves)\b/.test(ligne)) {
       let seule = false;
-      try { seule = (compileToBPxAST(`@core\n@controls\n${ligne}\nS -> C4\n`).errors || []).length === 0; }
+      try { seule = (compileToBPxAST(`@core\n${ligne}\nS -> C4\n`).errors || []).length === 0; }
       catch { seule = false; }
       if (seule) contexte.push(ligne);
       continue;
@@ -283,7 +283,7 @@ for (const p of SPECS) {
     if (!RE_REGLE.test(ligne)) continue;
     regles++;
     let r;
-    try { r = compileToBPxAST(`@core\n@controls\n${contexte.join('\n')}\n${ligne}\n`); }
+    try { r = compileToBPxAST(`@core\n${contexte.join('\n')}\n${ligne}\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     if (msg === '' || REFUS_DE_RESOLUTION.test(msg)) continue;
@@ -335,7 +335,7 @@ for (const [ligne] of RETARD_REGLES) {
 // qui commencent pareil : un numéro de ligne rougirait à chaque édition de la bible, alors que
 // c'est le CONTENU qui doit décider.
 // RESSERRÉ le 2026-08-07 : deux blocs SORTIS d'ici — le sac posé dans le flux `!(…)` se lit
-// désormais sans que `@controls` soit chargé, comme partout ailleurs. C'est le cliquet qui l'a
+// désormais sans que `@core` soit chargé, comme partout ailleurs. C'est le cliquet qui l'a
 // EXIGÉ en rougissant, pas moi qui y ai pensé.
 // RESSERRÉ une seconde fois le 2026-08-07 : CINQ blocs de plus sortis — la décision
 // `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` est appliquée, les grammaires de
@@ -444,7 +444,7 @@ for (const p of SPECS) {
       // départ pour rester mesurable. Rien de plus — un contexte inventé masquerait de vrais refus.
       const aSocle = /^@core/m.test(src) || /^@alphabet/m.test(src);
       const aRegle = /(->|<-|<>)/.test(src);
-      const texte = (aSocle ? '' : '@core\n@controls\n@alphabet.western\n') + src
+      const texte = (aSocle ? '' : '@core\n@alphabet.western\n') + src
                   + (aRegle ? '\n' : '\n@mode:ord\nS -> C4\n');
       let msg;
       try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }
@@ -596,7 +596,7 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
 //      minimal : `S -> <texte>` ;
 //   2. sinon il est pris tel quel ; s'il ne contient aucune flèche (directives seules), on lui donne
 //      un point de départ dérivable (`@mode:ord\nS -> C4`) pour qu'il reste mesurable ;
-//   3. dans tous les cas, un préambule minimal (`@core/@controls/@alphabet.western:midi/@mode:ord`)
+//   3. dans tous les cas, un préambule minimal (`@core/@alphabet.western:midi/@mode:ord`)
 //      est ajouté SAUF si le texte porte déjà `@core` ou `@alphabet`.
 // LIMITE CONNUE, mesurée et non maquillée : deux exemples de `concepts` mélangent PROSE et code sur
 // une même ligne (une flèche anglaise « -> plays C4… », ou plusieurs illustrations indépendantes
@@ -619,7 +619,7 @@ const envelopperAide = (texte) => {
   const aPreambule = /@core|@alphabet/.test(texte);
   const aDeclaration = /^\s*(@|gate\s|trigger\s|cv\s)/m.test(texte);
   const aRegle = /(->|<-|<>)/.test(texte);
-  let scene = aPreambule ? '' : '@core\n@controls\n@alphabet.western:midi\n@mode:ord\n';
+  let scene = aPreambule ? '' : '@core\n@alphabet.western:midi\n@mode:ord\n';
   if (aDeclaration || aRegle) {
     scene += `${texte}\n`;
     if (!aRegle) scene += '@mode:ord\nS -> C4\n';

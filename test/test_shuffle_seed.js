@@ -14,7 +14,7 @@ import { registerAll } from '../src/transpiler/libs.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const libs = {};
-for (const n of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
+for (const n of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[n] = JSON.parse(readFileSync(`lib/${n}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -29,7 +29,7 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // [shuffle] conservé → _rndseq
 {
-  const r = compileToBPxAST('@controls\n@alphabet.simple\n@mode:random\nA -> {a b c}');
+  const r = compileToBPxAST('@core\n@alphabet.simple\n@mode:random\nA -> {a b c}');
   assert('[shuffle] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19 (émission `_rndseq`, absence de
   // `_srand`) — certification grammaire-texte abandonnée, encodeur supprimé.
@@ -37,7 +37,7 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // [shuffle:N] supprimé → erreur pointant @seed
 {
-  const r = compileToBPxAST('@controls\n@alphabet.simple\n@mode:random\nA -> {a b c}[shuffle:1]');
+  const r = compileToBPxAST('@core\n@alphabet.simple\n@mode:random\nA -> {a b c}[shuffle:1]');
   assert('[shuffle:1] : erreur', r.errors.length > 0, r.errors);
   assert('[shuffle:1] : message cite @seed', /@seed/.test((r.errors[0] || {}).message || ''), r.errors);
 }
@@ -57,7 +57,7 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // Remplacement de [shuffle:1] : ![seed:1] {…} → _srand(1) … _rndseq
 {
-  const r = compileToBPxAST('@controls\n@mode:random\nBrassage -> ![seed:1] {C4 B4 E4}');
+  const r = compileToBPxAST('@core\n@mode:random\nBrassage -> ![seed:1] {C4 B4 E4}');
   assert('remplacement : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19. Ce qui RESTE vérifié ici est le
   // point qui compte pour le langage : la forme de remplacement de `[shuffle:1]` COMPILE.

@@ -1,10 +1,12 @@
 // controlValidation.js — Validation sémantique des VALEURS de contrôle runtime.
 //
-// POURQUOI. La librairie @controls (controls.json) est la SOURCE UNIQUE des valeurs
-// permises pour chaque contrôle runtime : liste fermée (`values`, ex. wave) ou plage
-// (`range`, ex. filterQ 0..30, attack 1..5000). Sans garde-fou, `(wave:triangle123)` ou
-// `(filterQ:99)` compilent en silence. Ce module relit l'AST et émet une ERREUR
-// (message + line/col) pour toute valeur hors-liste / hors-plage. Demande Kanopi [113].
+// POURQUOI. Les librairies runtime (`lib/expression.json`, `lib/midi.json`, `lib/audio.json`,
+// `lib/transpo.json` — ex-`controls.json`, scindé et supprimé le 2026-08-10, mise en conformité
+// des librairies) sont la SOURCE UNIQUE des valeurs permises pour chaque contrôle runtime :
+// liste fermée (`values`, ex. wave) ou plage (`range`, ex. filterQ 0..30, attack 1..5000). Sans
+// garde-fou, `(wave:triangle123)` ou `(filterQ:99)` compilent en silence. Ce module relit l'AST
+// et émet une ERREUR (message + line/col) pour toute valeur hors-liste / hors-plage. Demande
+// Kanopi [113].
 //
 // PORTÉE. On ne valide QUE les contrôles présents dans la lib chargée. Un nom inconnu
 // (alias @cc, contrôle custom) est laissé passer — pas de faux positif. Les clés nues

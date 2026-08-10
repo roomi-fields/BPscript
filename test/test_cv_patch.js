@@ -35,7 +35,7 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = '@mod\n@controls\n@alphabet.western:audio\n';
+const HEAD = '@mod\n@core\n@alphabet.western:audio\n';
 function ast(src) { return compileToBPxAST(HEAD + src); }
 function cvs(r) { return (r.ast?.cvInstances || []); }
 

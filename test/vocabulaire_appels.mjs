@@ -32,7 +32,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const scene = (regles) => `@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${regles}\n`;
+const scene = (regles) => `@core\n@alphabet.western:midi\n@mode:ord\n${regles}\n`;
 const erreursDe = (src) => {
   try { return (compileToBPxAST(src).errors || []).map((e) => (typeof e === 'string' ? e : e.message || '')); }
   catch (e) { return ['THROW ' + e.message]; }
@@ -73,7 +73,7 @@ ok(erreursDe(scene('S -> {C4 script(Beep)} D4')).some((m) => m.includes('script'
    '§2 un nom hors vocabulaire NICHÉ dans un groupe doit être refusé lui aussi');
 
 // Sans alphabet de notes en portée (scène à gates), le vocabulaire reste vérifié.
-ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n').some((m) => m.includes('script')),
+ok(erreursDe('@core\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n').some((m) => m.includes('script')),
    "§2 un nom hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
 
 // ─── §2bis. LE TÉMOIN DE BPx — refermé À LA SOURCE le 2026-07-26 ─────────────────────────────
@@ -87,7 +87,7 @@ ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n
 // qui n'existe pas ne doit pas dépendre de ce que la scène a chargé.
 {
   const REGLES = 'S -> ins(12) chan(3) vel(80) C4 D4';
-  for (const [nom, entete] of [['sans import', '@core\n'], ['avec import', '@core\n@controls\n']]) {
+  for (const [nom, entete] of [['sans import', '@core\n'], ['avec import', '@core\n']]) {
     const errs = erreursDe(`${entete}@alphabet.western:midi\n@mode:ord\n${REGLES}\n`);
     ok(errs.length > 0, `§2bis témoin bpx (${nom}) : la forme d'appel doit être refusée`);
     // Deux chemins, deux messages, et c'est correct : AVEC import, le parseur reconnaît le nom
@@ -97,9 +97,9 @@ ok(erreursDe('@core\n@controls\n@gate a:midi\n@mode:ord\nS -> a script(Beep) a\n
        `§2bis témoin bpx (${nom}) : le refus doit être motivé — reçu : ${errs.join(' | ')}`);
   }
   // Et l'écriture qui la remplace passe, elle, dans les deux régimes.
-  ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> !(vel:80) C4 D4\n').length === 0,
+  ok(erreursDe('@core\n@alphabet.western:midi\n@mode:ord\nS -> !(vel:80) C4 D4\n').length === 0,
      '§2bis la nouvelle écriture !(vel:80) doit rester acceptée');
-  ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> C4 D4 (vel:80)\n').length === 0,
+  ok(erreursDe('@core\n@alphabet.western:midi\n@mode:ord\nS -> C4 D4 (vel:80)\n').length === 0,
      '§2bis la contenance (vel:80) doit rester acceptée');
 }
 
@@ -115,7 +115,7 @@ for (const [forme, quoi] of [
   ['S -> ![goto:3, 0] C4', 'liste positionnelle après le deux-points, sac moteur'],
   ['S -> !(keyxpand:(B3, -1)) C4', 'valeur-groupe entre parenthèses (superseded)'],
 ]) {
-  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+  ok(erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
      `§2ter ${quoi} : '${forme.replace('S -> ', '').replace(' C4', '')}' doit être refusé`);
 }
 // Et les écritures ratifiées passent — sinon ce garde interdirait tout, ce qui ne prouverait rien.
@@ -127,7 +127,7 @@ for (const forme of [
   'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> !(cc.98:45) C4', 'S -> C4 D4 (vel:80)',
   'S -> C4 [repeat:K1]', 'S -> !(keyxpand:B3 -1) C4', 'S -> !(legato:100) C4',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2ter l'écriture ratifiée '${forme}' doit être acceptée — reçu : ${e.join(' | ')}`);
 }
 
@@ -148,7 +148,7 @@ for (const [forme, ou] of [
   ['S -> C4 (weight: 50)', 'clé réservée du langage'],
   ['S -> !(cc.98: 45) C4', 'composant numéroté'],
 ]) {
-  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+  ok(erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
      `§2quater ${ou} : l'espace après le deux-points doit être refusé — '${forme.replace('S -> ', '')}'`);
 }
 // ⚠️ LE FAUX POSITIF À NE PAS FABRIQUER : l'espace reste LÉGITIME entre les PARTIES d'une valeur.
@@ -157,7 +157,7 @@ for (const forme of [
   'S -> !(keymap:C3 C3 C5 C5) C4', 'S -> C4 D4 [goto:3 0]', 'S -> !(scale:just_intonation C4) C4',
   'S -> !(keyxpand:B3 -1) C4', 'S -> !(vel:80, pan:64) C4', 'S -> C4 (scan:left, weight:50)',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quater l'espace ENTRE PARTIES reste légitime : '${forme}' — reçu : ${e.join(' | ')}`);
 }
 
@@ -190,7 +190,7 @@ for (const [forme, quoi] of [
   ['S -> C4 [keyxpand:B3 -1]', 'contrôle de dispatcher dans le sac moteur'],
   ['S -> {C4, D4}[scale:2]', "le `scale` MOTEUR, supprimé le 2026-07-26 : subsumé par la durée collée"],
 ]) {
-  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+  ok(erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
      `§2quinquies ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
 }
 // Ce qui reste légitime — dont le `rotate`/`legato` de SÉQUENCE, désormais des RÉGLAGES réservés
@@ -201,7 +201,7 @@ for (const forme of [
   'S -> !(vel:80) C4', 'S -> !(legato:100) C4', 'S -> !(scale:just_intonation C4) C4',
   'S -> {C4 D4}!(rotate:2)',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quinquies '${forme}' doit rester accepté — reçu : ${e.join(' | ')}`);
 }
 
@@ -223,7 +223,7 @@ for (const [forme, quoi] of [
   ['S -> C4 [on_fail:fallback(B)]', 'on_fail : crochets refusés'],
   ['S -> C4 [meter:4+4/6]', 'meter : crochets refusés'],
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length > 0, `§2quinquies bis ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
   ok(e.some((m) => /est un réglage, il s'écrit entre PARENTHÈSES/.test(m)),
      `§2quinquies bis ${quoi} : le message doit donner la forme du jour — reçu : ${e.join(' | ')}`);
@@ -232,7 +232,7 @@ for (const forme of [
   'S -> C4 (on_fail:skip)', 'S -> C4 (scan:left)', 'S -> C4 (weight:50)',
   'S -> C4 (on_fail:fallback(B))', 'S -> C4 (meter:4+4/6)',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2quinquies bis '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
 }
 
@@ -242,7 +242,7 @@ for (const forme of [
 // `(tempx:2)` aurait été accepté et n'aurait plus atteint personne — un doublon bruyant devenu
 // réglage MUET. Il refuse donc dans les DEUX signes, et le message donne l'écriture vivante.
 for (const forme of ['S -> C4 [tempx:2]', 'S -> C4 (tempx:2)', 'S -> C4 ![tempx:2] D4']) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length > 0, `§2quinquies ter '${forme}' doit être REFUSÉ — 'tempx' n'est plus un mot`);
   ok(e.some((m) => /! \(\/N\)/.test(m)),
      `§2quinquies ter '${forme}' : le refus doit nommer la relève '! (/N)' — reçu : ${e.join(' | ')}`);
@@ -282,7 +282,7 @@ for (const [forme, quoi] of [
   ['S -> C2 (C2:cutoff: env1)', "espace après le SECOND deux-points (écriture à sujet) — un crible qui ne regarde que le premier le manque"],
   ['S -> C2 (*:cutoff: env1)', 'idem avec le sujet universel'],
 ]) {
-  ok(erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
+  ok(erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`).length > 0,
      `§2septies ${quoi} : '${forme.replace('S -> ', '')}' doit être refusé`);
 }
 // LES LÉGALES, indiscernables des précédentes au caractère près :
@@ -291,7 +291,7 @@ for (const forme of [
   'S -> C4 (vel:50, velcont)', 'S -> C4 (scan:left, weight:50)', 'S -> C2 (C2:cutoff:env1)',
   'S -> C2 (*:cutoff:env1)',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2septies '${forme}' est LÉGAL et doit passer — reçu : ${e.join(' | ')}`);
 }
 
@@ -311,7 +311,7 @@ for (const [sucre, deplie] of [
   ['A4:1/2 C4', '{1/2, A4} C4'],
 ]) {
   const arbre = (r) => {
-    const o = compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> ${r}\n`);
+    const o = compileToBPxAST(`@core\n@alphabet.western:midi\n@mode:ord\nS -> ${r}\n`);
     return JSON.stringify(o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs);
   };
   ok(arbre(sucre) === arbre(deplie),
@@ -319,7 +319,7 @@ for (const [sucre, deplie] of [
 }
 // Et le mot supprimé ne doit survivre NULLE PART dans l'arbre.
 {
-  const o = compileToBPxAST('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> {C4, D4}:2 A4:3\n');
+  const o = compileToBPxAST('@core\n@alphabet.western:midi\n@mode:ord\nS -> {C4, D4}:2 A4:3\n');
   ok(!JSON.stringify(o.ast?.subgrammars || []).includes('"speed"'),
      "§2octies le mot 'speed', supprimé de la surface, ne doit pas survivre comme clé dans l'arbre");
 }
@@ -334,12 +334,12 @@ for (const forme of [
   '!(mute.all) C4', '!(mute.lead) C4',
   '!(sync:start) C4', '!(sync:continue) C4', '!(sync:stop) C4',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> ${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\nS -> ${forme}\n`);
   ok(e.length === 0, `§2nonies '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
 }
 // La liste fermée des messages de synchronisation mord déjà, sans code neuf : c'est la validation
 // de valeurs du registre qui s'en charge.
-ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> !(sync:nexistepas) C4\n').length > 0,
+ok(erreursDe('@core\n@alphabet.western:midi\n@mode:ord\nS -> !(sync:nexistepas) C4\n').length > 0,
    "§2nonies un message de synchronisation hors de la liste déclarée doit être refusé");
 
 // ─── §2decies. LA CLÉ NUE SE COMPORTE PAREIL DANS LES DEUX RÉGIMES ──────────────────────────
@@ -355,11 +355,11 @@ for (const forme of [
   'S -> C4 (vel:80, velcont)', 'S -> C4 !(mute)', 'S -> {C4 D4}(velcont)', 'S -> C4(velcont) D4',
   'S -> C4 !(velcont) D4', 'S -> C4 !(velcont, pitchcont) D4',
 ]) {
-  const e = erreursDe(`@core\n@controls\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
+  const e = erreursDe(`@core\n@alphabet.western:midi\n@mode:ord\n${forme}\n`);
   ok(e.length === 0, `§2decies '${forme}' doit être accepté — reçu : ${e.join(' | ')}`);
 }
 // Et le balayage ne doit pas happer ce qui n'est PAS un sac de clés.
-ok(erreursDe('@core\n@controls\n@alphabet.western:midi\n@mode:ord\nS -> C4 (vel:50 pan:7)\n').length > 0,
+ok(erreursDe('@core\n@alphabet.western:midi\n@mode:ord\nS -> C4 (vel:50 pan:7)\n').length > 0,
    '§2decies le balayage ne doit pas rendre légal un sac écrit avec des espaces');
 
 // ─── §3. Aucun faux positif : ce qui est légitime passe toujours ─────────────────────────────

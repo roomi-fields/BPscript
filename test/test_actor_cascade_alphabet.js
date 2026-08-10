@@ -26,7 +26,7 @@ function scene(src) {
 
 console.log('\n=== FACTORY : acteur transport-seul HÉRITE l\'alphabet de scène (@alphabet.western) ===');
 {
-  const r = scene('@core\n@controls\n@alphabet.western\n@actor mavoix out.audio\nvoice -> C4 D4\n');
+  const r = scene('@core\n@alphabet.western\n@actor mavoix out.audio\nvoice -> C4 D4\n');
   assert('0 erreur (plus de rejet no-alphabet)', r.errors.length === 0, r.errors.join(' | '));
   assert('alphabet hérité = western', r.alphabet === 'western', String(r.alphabet));
   assert('notes attribuées à mavoix (SONNE)', r.notes.every((n) => n.act === 'mavoix'), JSON.stringify(r.notes));
@@ -34,7 +34,7 @@ console.log('\n=== FACTORY : acteur transport-seul HÉRITE l\'alphabet de scène
 
 console.log('\n=== DÉFAUT @core : aucun alphabet de scène → socle western ===');
 {
-  const r = scene('@core\n@controls\n@actor mavoix out.audio\nvoice -> C4 D4\n');
+  const r = scene('@core\n@actor mavoix out.audio\nvoice -> C4 D4\n');
   assert('0 erreur', r.errors.length === 0, r.errors.join(' | '));
   assert('alphabet = socle @core western', r.alphabet === 'western', String(r.alphabet));
   assert('notes attribuées à mavoix', r.notes.every((n) => n.act === 'mavoix'), JSON.stringify(r.notes));
@@ -42,7 +42,7 @@ console.log('\n=== DÉFAUT @core : aucun alphabet de scène → socle western ==
 
 console.log('\n=== @MINE : hauteur opaque de scène → alphabet ABSENT (Kairos résout), PAS de rejet ===');
 {
-  const r = scene('@core\n@controls\n@mine.ragas.sargam\n@actor mavoix out.audio\nvoice -> sa re\n');
+  const r = scene('@core\n@mine.ragas.sargam\n@actor mavoix out.audio\nvoice -> sa re\n');
   assert('0 erreur (compile, plus de rejet §71)', r.errors.length === 0, r.errors.join(' | '));
   assert('alphabet ABSENT (opaque, loi 35 → aval)', r.alphabet === undefined, String(r.alphabet));
   assert('transport présent (canon audio)', r.transport === 'audio', String(r.transport));
@@ -50,7 +50,7 @@ console.log('\n=== @MINE : hauteur opaque de scène → alphabet ABSENT (Kairos 
 
 console.log('\n=== VOIX-CODE (eval) : PAS d\'héritage d\'alphabet ===');
 {
-  const r = scene('@core\n@controls\n@actor stru eval.strudel\nS -> voix\nvoix -> `strudel: x`\n');
+  const r = scene('@core\n@actor stru eval.strudel\nS -> voix\nvoix -> `strudel: x`\n');
   assert('alphabet ABSENT (voix-code, pas de vocabulaire de notes)', r.alphabet === undefined, String(r.alphabet));
 }
 

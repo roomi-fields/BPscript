@@ -70,6 +70,10 @@ const DECLARATIONS = [
   // lui le comportement générique (accepté-ignoré avant, refusé-nommé après) : il prend la place
   // dans la matrice SANS la rétrécir.
   ['sound', '@sound.tabla_perc'],
+  // ⚠️ `controls` N'EST PLUS UNE DIRECTIVE RÉSERVÉE (controls.json supprimé, Romain 2026-08-10) —
+  // mais `@controls` reste une ligne SYNTAXIQUEMENT valide (bare directive, comme n'importe quel
+  // mot), donc le refus générique « déclaration après les règles » la mord toujours, nommément.
+  // Ce cobaye prouve que le refus ne dépend pas d'être une directive CONNUE.
   ['controls', '@controls'], ['var', '@var v'],
   ['alias', '@alias g cc:2'], ['tempo', '@tempo:90'], ['duration', '@duration:4'],
   ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],

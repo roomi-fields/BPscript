@@ -78,7 +78,7 @@ console.log('\n=== Additif : la garde terminaux LEGACY reste factory-seule ===')
 console.log('\n=== FIX 1 (forme co-signée [338]) : ZÉRO pliage diapason-catalogue pour le canal neutre ===');
 {
   const diapasonOf = (dir) => {
-    const { ast } = compileToBPxAST(`@core\n@controls\n${dir}\nS -> sa re\n`);
+    const { ast } = compileToBPxAST(`@core\n${dir}\nS -> sa re\n`);
     const def = ((ast && ast.actors) || []).find((a) => a.name === 'default') || ((ast && ast.actors) || [])[0];
     return def && def.values && def.values.diapason;
   };

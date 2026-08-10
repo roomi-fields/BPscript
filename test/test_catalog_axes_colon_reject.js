@@ -39,15 +39,15 @@ for (const axis of axes) {
   if (!entry) { assert(`${axis} : au moins une entrée de catalogue`, false, 'catalogue vide'); continue; }
   // Morsure 2 sens sur une entrée RÉELLE du catalogue de l'axe.
   assert(`@${axis}:${entry} (deux-points) → REJET fail-loud`,
-    rejects(`@core\n@controls\n@${axis}:${entry}\nS -> C4\n`, `@${axis}:<X>`));
+    rejects(`@core\n@${axis}:${entry}\nS -> C4\n`, `@${axis}:<X>`));
   assert(`@${axis}.${entry} (point) → ACCEPTÉ (canon)`,
-    accepts(`@core\n@controls\n@${axis}.${entry}\nS -> C4\n`));
+    accepts(`@core\n@${axis}.${entry}\nS -> C4\n`));
 }
 
 // Garde de non-régression : le `:` RESTE le canon des VALEURS (hors-scope du rejet).
 console.log('\n=== Le `:` reste valide pour les VALEURS (jamais rejeté) ===');
 for (const val of ['@tempo:120', '@diapason:432', '@meter:4/4', '@transpose:24']) {
-  assert(`${val} (valeur) → ACCEPTÉ`, accepts(`@core\n@controls\n${val}\nS -> C4\n`), val);
+  assert(`${val} (valeur) → ACCEPTÉ`, accepts(`@core\n${val}\nS -> C4\n`), val);
 }
 
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);

@@ -59,7 +59,7 @@ const REGLES = [
   ['decision', "le qualificatif de vitesse, supprimé (2026-06-26)",
    S('S -> {C4 D4}[speed:2]'), S('S -> {C4 D4}:2'), null],
   ['decision', "la forme d'appel d'un contrôle (2026-07-26)",
-   S('@controls\nS -> C4 vel(80) D4'), S('@controls\nS -> C4 !(vel:80) D4'), null],
+   S('@core\nS -> C4 vel(80) D4'), S('@core\nS -> C4 !(vel:80) D4'), null],
   ['decision', "un canal de sortie périmé (2026-07-16)",
    S('@alphabet.western:browser\nS -> C4'), S('@alphabet.western:audio\nS -> C4'), null],
   ['decision', "un canal de sortie hors de la liste fermée (2026-07-16)",

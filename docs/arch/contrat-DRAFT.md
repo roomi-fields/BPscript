@@ -451,12 +451,13 @@ Sortie BPS — formes de chaque construction gérée (étalon en-tête, vérifi�
 - Préfixe de mètre `N+N/M` → suffixe `[meter:N+N/M]`.
 - BOLSIZE : terminal >30 chars → alias `<24 premiers>X<NNN>` (déterministe, sans collision) + commentaire d'en-tête `// BOLSIZE aliases …`.
 
-Contrôles BP3 de `lib/controls.json` — deux régimes (décidés par `decideRhsControlMode`) :
+Contrôles BP3 de `lib/{expression,midi,audio,transpo,engine}.json` (ex-`controls.json`, scindé et
+supprimé le 2026-08-10) — deux régimes (décidés par `decideRhsControlMode`) :
 - `legacy` (E2/E3/E3bis) : contrôles runtime convertibles UNIQUEMENT en tête du RHS (sans trailing,
   sans `{…}`) → suffixe de règle `(ctrl:val[, ctrl2:val2])`.
 - `call` (E4) : un contrôle en position trailing/milieu/`{…}` OU un contrôle engine → forme appel
   positionnelle `ctrl(args)` à la position exacte ; décision au niveau GRAMMAIRE (dès qu'une règle
-  est en appel, TOUTES le sont) ⇒ la scène émet `@controls` en tête.
+  est en appel, TOUTES le sont) ⇒ la scène émet `@core` en tête.
 - `_srand(N) _rndseq` (tête de groupe `{…}` à une voix) → `![@seed:N]` posé avant le groupe +
   qualifier `[shuffle]` (décision 2026-06-14) ; `_rndseq` seul → `[shuffle]`.
 - Opérateur tempo absolu `/N` (ou `/N/M`) dans RHS → qualifier `[/N]` collé à l'élément suivant (E5).

@@ -30,7 +30,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (directive) => {
   try {
-    return compileToBPxAST(`@core\n@controls\n@alphabet.western:midi\n${directive}\n@mode:ord\nS -> C4\n`);
+    return compileToBPxAST(`@core\n@alphabet.western:midi\n${directive}\n@mode:ord\nS -> C4\n`);
   } catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 

@@ -75,7 +75,7 @@ for (const cle of CLES) {
   if (!q) continue;
   cellules++;
   // La scène pose toujours l'alphabet (sans lui rien ne résout), puis la clé mesurée.
-  const src = '@core\n@controls\n@alphabet.sargam\n'
+  const src = '@core\n@alphabet.sargam\n'
             + (cle === 'alphabet' ? '' : `${q.ecrit}\n`) + 'S -> sa\n';
   const r = compiler(src);
   const msg = messages(r);
@@ -103,7 +103,7 @@ for (const cle of CLES) {
 
 // ── C. LES PARAMÈTRES SUIVENT, ET DEUX SORTIES QUI SE CONTREDISENT REFUSENT ────────────────────
 {
-  const r = compiler('@core\n@controls\n@alphabet.sargam\n@out.midi(ch:1)\nS -> sa\n');
+  const r = compiler('@core\n@alphabet.sargam\n@out.midi(ch:1)\nS -> sa\n');
   ok(messages(r) === '', `C. '@out.midi(ch:1)' est refusé : ${messages(r).slice(0, 100)}`);
   const t = acteurImplicite(r)?.properties?.transport;
   ok(t && t.params && t.params.ch === 1,
@@ -113,7 +113,7 @@ for (const cle of CLES) {
 {
   // Les deux écritures d'une sortie disent la MÊME chose — si elles se contredisent, on refuse en
   // les nommant, plutôt que d'en élire une en silence.
-  const r = compiler('@core\n@controls\n@alphabet.sargam:audio\n@out.midi\nS -> sa\n');
+  const r = compiler('@core\n@alphabet.sargam:audio\n@out.midi\nS -> sa\n');
   ok(/deux sorties pour la même scène/.test(messages(r)),
      `C. '@alphabet.sargam:audio' + '@out.midi' désignent deux canaux différents et l'arbre en `
      + `choisit un SANS RIEN DIRE (${messages(r).slice(0, 80) || 'aucune erreur'}).`);
@@ -125,7 +125,7 @@ for (const cle of CLES) {
 // n'écrit RIEN et où la clé doit quand même valoir quelque chose (`SCENE_DEFAULTS_CASCADE.md` :
 // « un paramètre définissable n'est jamais inexistant »).
 {
-  const r = compiler('@core\n@controls\n@alphabet.sargam\nS -> sa\n');
+  const r = compiler('@core\n@alphabet.sargam\nS -> sa\n');
   ok(messages(r) === '', `D. la scène minimale ne compile pas : ${messages(r).slice(0, 90)}`);
   const p = acteurImplicite(r)?.properties;
   const socle = loadLib('core')?.defaults?.components?.transport;

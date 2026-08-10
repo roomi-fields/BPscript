@@ -36,7 +36,7 @@
  *     (scission 2026-08-10) :
  *       en tête de RHS → suffixe de règle (ctrl:val)   [E2/E3/E3bis]
  *       ailleurs (trailing, milieu, dans {…}) → FORME APPEL ctrl(args)
- *       positionnelle [E4] — la scène charge alors @controls
+ *       positionnelle [E4] — la scène charge alors @core
  *
  * Constructs NON GÉRÉS (stop-and-report par grammaire) :
  *   - Contrôles _xxx absents de lib/{expression,midi,audio,transpo,engine}.json (_srand, _print, …) et _script
@@ -62,7 +62,7 @@ import { dirname, join } from 'node:path';
 // appel BPscript `xxx(args)` à la position exacte du .gr. L'encodeur BP3 (supprimé) émettait :
 //   - runtime : _script(CT n) positionné (résolu via controlTable)
 //   - engine  : _xxx(args) verbatim à la même position
-// La scène générée doit alors charger @controls.
+// La scène générée doit alors charger @core.
 const _bp3ToSceneDir = dirname(fileURLToPath(import.meta.url));
 const _libDir = join(_bp3ToSceneDir, '..', '..', 'lib');
 const _lireLib = (nom) => JSON.parse(readFileSync(join(_libDir, `${nom}.json`), 'utf-8'));
@@ -482,7 +482,7 @@ function bp3ToScene(grammarText, opts) {
   const bolsizeTable = new BolsizeTable();
 
   // E4 — décision au niveau GRAMMAIRE : si une règle exige la forme appel,
-  // la scène charge @controls, et @controls change la position des _script(CT)
+  // la scène charge @core, et cela change la position des _script(CT)
   // émis par la forme suffixe (E2/E3). Les deux formes ne cohabitent donc pas :
   // dès qu'une règle est en forme appel, TOUTES les règles à contrôles le sont.
   let grammarCallMode = false;
@@ -632,7 +632,7 @@ function bp3ToScene(grammarText, opts) {
   }
 
   // E4 : charger la librairie de contrôles pour les formes appel
-  if (grammarCallMode) bpsLines.unshift('@controls');
+  if (grammarCallMode) bpsLines.unshift('@core');
 
   // Déclaration d'alphabet issue des réfs `-ho.`/`-al.` de l'en-tête ([603]). Résolue quand
   // l'alphabet existe en bibliothèque ; sinon on laisse une trace VISIBLE — jamais un drop
@@ -1058,7 +1058,7 @@ function checkRhsForUnsupported(rhs) {
   // decideRhsControlMode valide la représentabilité :
   //   - mode 'legacy' : contrôles runtime en tête → suffixe de règle (inchangé)
   //   - mode 'call'   : positions trailing/milieu/{…} et contrôles engine
-  //                     → forme appel positionnelle (nécessite @controls)
+  //                     → forme appel positionnelle (nécessite @core)
   //   - error         : argument non parsable en forme appel (ex: '+')
   const decision = decideRhsControlMode(rhs);
   if (decision.error) return decision.error;

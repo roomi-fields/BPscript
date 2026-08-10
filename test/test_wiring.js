@@ -39,7 +39,7 @@ function macros(src) {
   // traversait sans un mot parce que la scène n'avait pas de convention de notes en portée.
   // Depuis la cascade @core (2026-07-29), toute scène en a une : le harnais écrit donc une note,
   // et ce qu'il mesure — la forme des corps de macro — n'en dépendait de toute façon pas.
-  const r = compileToBPxAST('@core\n@controls\n' + src + '\nS -> C4');
+  const r = compileToBPxAST('@core\n' + src + '\nS -> C4');
   return { errors: r.errors, macros: r.ast?.macros || [] };
 }
 
@@ -123,7 +123,7 @@ console.log('=== Câblage >> / \\>> ===');
 
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)
 {
-  const r = compileToBPxAST('@core\n@controls\n@macro lead saw >> lpf >> audio\nS -> Sa');
+  const r = compileToBPxAST('@core\n@macro lead saw >> lpf >> audio\nS -> Sa');
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
   // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
   // ancienne assertion : ok('compileBPS ne crashe pas sur un câblage', typeof r.grammar === 'string');
@@ -144,7 +144,7 @@ if (fail > 0) process.exit(1);
 // ============================================================================
 
 function fluxRhs(regle) {
-  const r = compileToBPxAST('@core\n@controls\n' + regle);
+  const r = compileToBPxAST('@core\n' + regle);
   return { errors: r.errors, rhs: r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [] };
 }
 const cablagesDe = (rhs) => rhs.filter((e) => e && e.type === 'Wiring');
@@ -267,7 +267,7 @@ if (typeof Session !== 'function') {
 }
 
 const EXEMPLE_DOCUMENTE = `@core
-@controls
+@core
 @macro prise    pot >> tempo.bpm
 @macro lache    \\>> tempo.bpm
 
@@ -326,7 +326,7 @@ console.log('\n=== §8. la forme documentée ===');
 // mise en garde de la doc devrait être relue.
 console.log('\n=== §8bis. la forme ATTACHÉE — le point d\'application ===');
 {
-  const base = '@core\n@controls\n@macro voix saw >> audio\n';
+  const base = '@core\n@macro voix saw >> audio\n';
   // Collé et espacé sont la MÊME forme : la règle d'espace ne joue que sur `!(…)`.
   const colle = compileToBPxAST(base + 'S -> C4!voix D4');
   const espace = compileToBPxAST(base + 'S -> C4 !voix D4');
@@ -410,7 +410,7 @@ for (const [ou, src] of OU_LE_SUFFIXE_POUVAIT_S_ECRIRE) {
 // chargement. Témoin des deux sens — si le moteur se met à la porter, cette ligne rougit et la
 // doc doit changer le jour même, au lieu de rester périmée sans que rien ne le dise.
 {
-  const r = compileToBPxAST('@core\n@controls\nS -> C4 !lpf \\>> out.in D4');
+  const r = compileToBPxAST('@core\nS -> C4 !lpf \\>> out.in D4');
   ok('§8. la forme DIRECTE est acceptée par le langage', !!r.ast && r.errors.length === 0);
   let refus = null;
   try { new Session(r.ast, {}); } catch (e) { refus = String(e.message); }

@@ -124,6 +124,19 @@ const ERREURS_ADMISES = [
   // Elles étaient déjà rouges avant le chantier du jour — ce garde ne les regardait simplement pas.
   { demo: 'trySrand', pourquoi: 'scène incomplète (kanopi) : terminaux nus sans convention de notes déclarée', date: '2026-08-08' },
   { demo: 'tryCsoundObjects', pourquoi: 'scène incomplète (kanopi) : objets sonores nus sans convention de notes', date: '2026-08-08' },
+  // ⛔ controls.json SUPPRIME (Romain, 2026-08-10 : « on supprime controls.json et tous les
+  // appels a cette librairie sont supprimes »). `@core` amene desormais le meme ensemble
+  // (`core.apporte`) qu'apportait le stub `@controls` — la migration est mecanique, une ligne
+  // qui devient l'autre. Les 45 fixtures de CE depot sont deja migrees ; celles-ci appartiennent
+  // a kanopi et ecrivent `@controls` SEUL, sans `@core` a cote (193 autres scenes kanopi ecrivent
+  // deja les deux, redondance cosmetique qui ne casse rien — hors de ce registre).
+  // QUI ATTEND : kanopi, prevenu A LA FRAPPE avec la liste exacte et la reecriture (`@controls` →
+  // `@core`, meme position). Je n'ecris pas dans son depot ; ces entrees sortent des qu'il a migre,
+  // et le temoin plus bas rougira si elles rancissent.
+  { demo: 'tryShruti', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
+  { demo: 'tryKeyXpand', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
+  { demo: 'Mozartexpression', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
+  { demo: 'watch', pourquoi: 'kanopi : @controls seul (sans @core), a migrer en @core', date: '2026-08-10' },
 ];
 let bad = 0;
 const compileErrors = [];

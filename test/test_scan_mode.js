@@ -22,7 +22,7 @@ import { bpsPath, grPath } from './corpus.mjs';
 
 // ── Pre-register libs ─────────────────────────────────────────
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings']) {
+for (const name of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -61,7 +61,7 @@ function getRule(ast, subIdx, ruleIdx) {
 // ============================================================
 section('(scan:left) → rule.mode = left');
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 X -> M (scan:left)`);
   const rule = getRule(ast, 0, 0);
   assert('règle parsée', rule && rule.type === 'Rule', 'pas de règle');
@@ -79,7 +79,7 @@ X -> M (scan:left)`);
 // ============================================================
 section('(scan:right) → rule.mode = right');
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 X -> M (scan:right)`);
   const rule = getRule(ast, 0, 0);
   assert('rule.mode === "right"', rule && rule.mode === 'right', `mode:${rule && rule.mode}`);
@@ -90,7 +90,7 @@ X -> M (scan:right)`);
 // ============================================================
 section('(scan:rnd) → rule.mode = rnd');
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 X -> M (scan:rnd)`);
   const rule = getRule(ast, 0, 0);
   assert('rule.mode === "rnd"', rule && rule.mode === 'rnd', `mode:${rule && rule.mode}`);
@@ -101,7 +101,7 @@ X -> M (scan:rnd)`);
 // ============================================================
 section('sans (scan:...) → rule.mode = null');
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 X -> M`);
   const rule = getRule(ast, 0, 0);
   assert('rule.mode === null (absent)', rule && rule.mode === null, `mode:${rule && rule.mode}`);
@@ -112,7 +112,7 @@ X -> M`);
 // ============================================================
 section('(scan:diagonal) → ParseError via compileBPS');
 {
-  const src = `@controls
+  const src = `@core
 @alphabet.western:midi
 X -> M (scan:diagonal)`;
   const result = compileToBPxAST(src);
@@ -126,7 +126,7 @@ X -> M (scan:diagonal)`;
 // ============================================================
 section('règle sans + règle avec scan');
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 A -> B
 C -> D (scan:rnd)`);
   const rule1 = getRule(ast, 0, 0);
@@ -140,7 +140,7 @@ C -> D (scan:rnd)`);
 // ============================================================
 section('compileBPS (scan:left) → préfixe LEFT dans BP3');
 {
-  const src = `@controls
+  const src = `@core
 @alphabet.western:midi
 X -> C4 (scan:left)`;
   const result = compileToBPxAST(src);
@@ -156,7 +156,7 @@ X -> C4 (scan:left)`;
 // ============================================================
 section('compileBPS (scan:rnd) → préfixe RND dans BP3');
 {
-  const src = `@controls
+  const src = `@core
 @alphabet.western:midi
 X -> C4 (scan:rnd)`;
   const result = compileToBPxAST(src);

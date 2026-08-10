@@ -16,7 +16,7 @@ import { bpsPath, grPath } from './corpus.mjs';
 // ── Pre-register libs (no FS in tests) ─────────────────────
 
 const libs = {};
-for (const name of ['alphabets', 'controls', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
+for (const name of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
   libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
 }
 registerAll(libs);
@@ -57,7 +57,7 @@ function rejects(src, needle) {
 section('@actor — dot notation v0.8');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @actor sitar
   alphabet.tabla
   tuning.equal_temperament
@@ -82,11 +82,11 @@ section('@actor — entité en `:` REJETÉE (cutover)');
 {
   // `alphabet:tabla`, `tuning:…`, `out:…` = composants mal graphiés → fail-loud.
   assert('alphabet:tabla → REJET',
-    rejects(`@controls\n@actor sitar alphabet:tabla\nS -> A`, "alphabet:…"));
+    rejects(`@core\n@actor sitar alphabet:tabla\nS -> A`, "alphabet:…"));
   assert('tuning:equal_temperament → REJET',
-    rejects(`@controls\n@actor sitar tuning:equal_temperament\nS -> A`, "tuning:…"));
+    rejects(`@core\n@actor sitar tuning:equal_temperament\nS -> A`, "tuning:…"));
   assert('out:midi(ch:3) → REJET',
-    rejects(`@controls\n@actor sitar out:midi(ch:3)\nS -> A`, "out:…"));
+    rejects(`@core\n@actor sitar out:midi(ch:3)\nS -> A`, "out:…"));
 }
 
 // ============================================================
@@ -96,7 +96,7 @@ section('@actor — entité en `:` REJETÉE (cutover)');
 section('@actor — canon dot');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @actor sitar @alphabet.tabla
   out.midi(ch:3)
 S -> A`);
@@ -112,7 +112,7 @@ S -> A`);
 section('@sound — bloc anonyme défaut');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @sound
   { dur:500, alphaMin:80, alphaMax:120 }
 S -> A`);
@@ -132,7 +132,7 @@ S -> A`);
 section('@sound — sons nommés multiples');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @sound
   { dur:500 }
   bell_short { sample:"bell.wav", dur:400 }
@@ -156,7 +156,7 @@ S -> A`);
 section('@sound.libname — lib externe');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @sound.tabla_perc
 S -> A`);
   const dir = ast.directives.find(d => d.name === 'sound');
@@ -171,7 +171,7 @@ S -> A`);
 section('@sound.libname:variant — variante');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @sound.tabla_perc:simplified
 S -> A`);
   const dir = ast.directives.find(d => d.name === 'sound');
@@ -186,7 +186,7 @@ S -> A`);
 section('@template — singulier v0.8');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 S -> A B C
 @template
 [1] /1 ???
@@ -213,7 +213,7 @@ section('@templates — pluriel REFUSÉ');
   // dans l'autre sens.
   let refuse = false, message = '';
   try {
-    parseSource(`@controls
+    parseSource(`@core
 S -> A
 @templates
 [1] /1 ?????`);
@@ -226,7 +226,7 @@ S -> A
 {
   // Témoin : le singulier, lui, passe toujours — sans quoi le test ci-dessus serait vert
   // même si on avait cassé la section template entière.
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 S -> A
 @template
 [1] /1 ?????`);
@@ -241,7 +241,7 @@ S -> A
 section('SoundAssignment dans @actor');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @actor tabla
   alphabet.tabla
   out.midi(ch:10)
@@ -279,7 +279,7 @@ section('sound.X sur un acteur — RETIRE le 2026-08-06');
 {
   let msg = '';
   try {
-    parseSource(`@controls
+    parseSource(`@core
 @actor x
   alphabet.tabla
   sound.bell_short
@@ -296,7 +296,7 @@ S -> A`);
 section('SoundAssignment dans @alphabet.X');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @alphabet.tabla
   *:sound.bell_short
   Sa:sound.drum_kick
@@ -319,7 +319,7 @@ S -> Sa Re Sa`);
 section('Inline Sa(sound.bell_short)');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 S -> Sa(sound.bell_short) Re`);
   const sa = ast.subgrammars[0].rules[0].rhs[0];
   assert('Sa is Symbol', sa.type === 'Symbol' && sa.name === 'Sa');
@@ -337,7 +337,7 @@ S -> Sa(sound.bell_short) Re`);
 section('Inline mixé vel+sound+pan');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 S -> Sa(vel:80, sound.bell, pan:64)`);
   const rq = ast.subgrammars[0].rules[0].rhs[0].suffixQualifiers[0];
   assert('3 pairs', rq.pairs.length === 3);
@@ -353,7 +353,7 @@ S -> Sa(vel:80, sound.bell, pan:64)`);
 section('SoundAssignment inline-props dans @actor');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @actor x
   alphabet.tabla
   Sa:{ dur:300, sample:"x.wav" }
@@ -373,7 +373,7 @@ S -> Sa`);
 section('Booléen nu dans bloc inline');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @sound
   drum { sample:"k.wav", breakTempo, contBeg }
 S -> A`);
@@ -390,7 +390,7 @@ S -> A`);
 section('Commentaires dans @sound');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @sound
   // entrée anonyme
   { dur:500 }
@@ -409,12 +409,12 @@ S -> A`);
 section('Espacement cohérent — *:sound.X');
 
 {
-  const noSpace = parseSource(`@controls
+  const noSpace = parseSource(`@core
 @actor a
   alphabet.tabla
   *:sound.bell
 S -> A`);
-  const withSpace = parseSource(`@controls
+  const withSpace = parseSource(`@core
 @actor a
   alphabet.tabla
   * : sound . bell
@@ -435,7 +435,7 @@ section('Cas migration : forme v0.8 issue du script');
 
 {
   const ast = parseSource(`@core
-@controls
+@core
 @alphabet.tabla:midi
 @actor tabla
   alphabet.tabla
@@ -461,9 +461,9 @@ section('sound sur un acteur — LES DEUX GRAPHIES REFUSENT');
 // — « une graphie morte ne passe pas en silence » — reste, elle porte juste sur les deux formes.
 {
   assert('sounds:tabla_perc (deux-points) → REJET',
-    rejects(`@controls\n@actor t sounds:tabla_perc\nS -> A`, "sounds:…"));
+    rejects(`@core\n@actor t sounds:tabla_perc\nS -> A`, "sounds:…"));
   let msg = '';
-  try { parseSource(`@controls\n@actor t sound.tabla_perc @alphabet.tabla out.midi(ch:1)\nS -> A`); }
+  try { parseSource(`@core\n@actor t sound.tabla_perc @alphabet.tabla out.midi(ch:1)\nS -> A`); }
   catch (e) { msg = e.message; }
   assert('sound.tabla_perc (point) → REJET aussi', msg !== '');
   assert('le refus nomme la cause', /cl[eé] d'acteur/.test(msg));
@@ -480,7 +480,7 @@ section('* dans flux RHS ≠ affectation');
   // Dans un RHS de règle, `*` n'a pas de sens (testons qu'on ne crashe pas).
   // Note : le tokenizer émet T.STAR ; le parser RHS ne le traite pas (skip).
   try {
-    const ast = parseSource(`@controls
+    const ast = parseSource(`@core
 S -> A B`);
     assert('control case parses', ast.subgrammars[0].rules[0].rhs.length === 2);
   } catch (e) {
@@ -501,17 +501,17 @@ section('eval.X harmonisé (PM décision 2)');
   // écrivait les deux ensemble, forme d'avant ce durcissement : il ne rendait donc pas un
   // FAIL, il faisait PLANTER tout le fichier sur une exception non rattrapée — les 172
   // assertions suivantes ne s'exécutaient plus du tout.
-  const ast08 = parseSource(`@controls
+  const ast08 = parseSource(`@core
 @actor a
   alphabet.tabla
   eval.python
 S -> A`);
   assert('v0.8 eval.python parsed', ast08.actors[0].properties.eval === 'python');
   assert('eval + out ensemble → REJET nommé',
-    rejects(`@controls\n@actor a\n  alphabet.tabla\n  out.midi(ch:1)\n  eval.python\nS -> A`, 'out'));
+    rejects(`@core\n@actor a\n  alphabet.tabla\n  out.midi(ch:1)\n  eval.python\nS -> A`, 'out'));
   // CUTOVER : la forme colon `eval:python` (comme alphabet:/out:) est REJETÉE.
   assert('eval:python (colon v0.7) → REJET',
-    rejects(`@controls\n@actor a @alphabet.tabla out.midi(ch:1) eval:python\nS -> A`, "eval:…"));
+    rejects(`@core\n@actor a @alphabet.tabla out.midi(ch:1) eval:python\nS -> A`, "eval:…"));
 }
 
 // ============================================================
@@ -523,7 +523,7 @@ section('Rétrocompat : grammaire complète v0.7');
 {
   const src = `// scene v0.7 typique
 @core
-@controls
+@core
 @alphabet.western:midi
 @tempo:60
 @striated
@@ -547,7 +547,7 @@ C -> B4 C5`;
 section('Actor sans alphabet (parser : properties vide, cascade en aval)');
 
 {
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @actor empty
 S -> A`);
   // Parse OK ; l'actorResolver remplira l'alphabet par cascade (pas d'erreur).
@@ -563,14 +563,14 @@ section('scene.homomorphisms — contrat BPx');
 
 {
   // Sans directive @homomorphism : champ vide ou absent
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 S -> A B`);
   assert('sans @homomorphism: homomorphisms vide', !ast.homomorphisms || ast.homomorphisms.length === 0);
 }
 
 {
   // @homomorphism.checkhomo — format sections → 3 décls ('*', 'H', 'TR')
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @homomorphism.checkhomo
 S -> A B`);
   assert('checkhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
@@ -591,7 +591,7 @@ S -> A B`);
 
 {
   // @homomorphism.dhati — format sections, section '*' avec 7 paires (identités conservées)
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @homomorphism.dhati
 S -> dha ti`);
   assert('dhati: homomorphisms défini', Array.isArray(ast.homomorphisms));
@@ -608,7 +608,7 @@ S -> dha ti`);
 
 {
   // @homomorphism.dhin — format sections, section '*' avec 11 paires
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @homomorphism.dhin
 S -> dhin dha`);
   assert('dhin: homomorphisms défini', Array.isArray(ast.homomorphisms));
@@ -624,7 +624,7 @@ S -> dhin dha`);
 
 {
   // @homomorphism.ruwet — format sections avec m1/m2/mineur
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @homomorphism.ruwet
 S -> la4 fa4`);
   assert('ruwet: homomorphisms défini', Array.isArray(ast.homomorphisms));
@@ -643,7 +643,7 @@ S -> la4 fa4`);
 
 {
   // @homomorphism.tryhomomorphism — chaîne c-->fa4-->d dépliée en [c,fa4],[fa4,d]
-  const ast = parseSource(`@controls
+  const ast = parseSource(`@core
 @homomorphism.tryhomomorphism
 S -> a b c`);
   assert('tryhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
@@ -689,7 +689,7 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@controls\n@alphabet.simple\nS -> a !(pitchbend:+200)');
+    compiled = compileToBPxAST('@core\n@alphabet.simple\nS -> a !(pitchbend:+200)');
   } catch (e) {
     caughtError = e;
   }
@@ -714,7 +714,7 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@controls\nS -> a !(pitchbend:@invalid)');
+    compiled = compileToBPxAST('@core\nS -> a !(pitchbend:@invalid)');
   } catch (e) {
     caughtError = e;
   }
@@ -753,7 +753,7 @@ section('R1 — Noms canoniques BP3_OPERATORS dans l\'AST');
 {
   // @gate star:midi → déclaration acceptée (canal de déclaration) ; l'AST porte
   // le nom d'alias 'star' dans la directive, pas dans les Symbol de règle.
-  const src = `@controls
+  const src = `@core
 @gate star:midi
 S -> star`;
   const ast = parseSource(src);
@@ -778,7 +778,7 @@ S -> star`;
 
 {
   // 'plus' dans une règle → Symbol '*' dans l'AST
-  const src = `@controls
+  const src = `@core
 @gate plus:midi
 S -> plus A`;
   const ast = parseSource(src);
@@ -800,7 +800,7 @@ S -> plus A`;
 
 {
   // 'fin' dans une règle → Symbol ';' dans l'AST
-  const src = `@controls
+  const src = `@core
 @gate fin:midi
 S -> A fin`;
   const ast = parseSource(src);

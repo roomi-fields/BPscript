@@ -29,7 +29,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const EN_TETE = '@core\n@controls\n@alphabet.western:midi\n@trigger sync1:midi\n';
+const EN_TETE = '@core\n@alphabet.western:midi\n@trigger sync1:midi\n';
 // `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05 —
 // une ligne peut nommer PLUSIEURS variables (`names`). On aplatit pour les témoins qui ne
 // vérifient que la PRÉSENCE d'un nom.
