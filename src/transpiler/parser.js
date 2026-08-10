@@ -1351,7 +1351,7 @@ function parse(tokens, opts = {}) {
     return at(T.LBRACKET) && peek(1).type === T.AT;
   }
 
-  function parseProductionBlock() {
+  function parseProductionBlock(dansLeFlux = false) {
     expect(T.LBRACKET);
     const dirs = [];
     while (true) {
@@ -1366,7 +1366,25 @@ function parse(tokens, opts = {}) {
       // Une autre clé y est parsée (EBNF : IDENT) mais poussée comme Directive
       // SIMPLE — les noms à traitement spécial (@mode, @scene, @duration…)
       // y perdraient leur effet en silence : on avertit.
-      if (!PRODUCTION_DIRECTIVES.includes(name)) {
+      // ⚠️ `seed` A QUITTÉ LE BLOC (décision Romain, 2026-08-10) : « seed est une directive de
+      // scène qui n'a de sens qu'en début de scène donc devrait être appelé par arobase ». La
+      // refonte des trois places (LANGUAGE.md:790-810) donne au crochet QUATRE emplois — test de
+      // drapeau, affectation, procédure de dérivation, rang de catalogue — et `seed` n'est dans
+      // aucun. La décision de juin sur le bloc lui est antérieure.
+      // LE REFUS EST FRANC, PAS UN AVERTISSEMENT : deux écritures dont une seule est juste, c'est
+      // la voie parallèle que cette refonte supprime. Le message porte la réécriture.
+      // ⚠️ ET IL NE COUVRE QUE LA TÊTE DE SCÈNE : `![@seed:N]` dans le flux traduit `_srand(N)` du
+      // natif, il est produit par bp3ToScene.js:915 et lu par BPx — un autre objet, un autre
+      // arbitrage (remonté le 2026-08-10, non tranché).
+      if (name === 'seed' && !dansLeFlux) {
+        throw new ParseError(
+          `'[@seed:${value ?? ''}]' : la graine s'écrit '@seed:${value ?? 'N'}' en tête de scène. `
+          + `Le crochet porte ce qui appartient à la DÉRIVATION — un drapeau, une procédure, un `
+          + `rang ; une instruction sur COMMENT produire n'en fait pas partie.`, atTok);
+      }
+      // `seed` dans le FLUX ne relève plus de cette liste et n'est pas pour autant une clé
+      // douteuse : c'est la re-semence, seule directive à avoir un contrôle de flux natif.
+      if (!PRODUCTION_DIRECTIVES.includes(name) && !(name === 'seed' && dansLeFlux)) {
         warn(`Clé '@${name}' hors des directives de production — son effet n'est pas garanti dans un bloc [@…] ; préférer la forme @${name}…`, atTok.line);
       }
       dirs.push({ type: 'Directive', name, subkey: null, runtime, value,
@@ -5052,7 +5070,7 @@ function parse(tokens, opts = {}) {
       // ![@seed:N] → directive de production DANS LE FLUX. Restreint à `seed` :
       // seul `_srand` existe comme contrôle de flux BP3 (décision 2026-06-14). Émet _srand(N).
       if (at(T.LBRACKET) && peek(1).type === T.AT) {
-        const dirs = parseProductionBlock();
+        const dirs = parseProductionBlock(true);   // le flux : `![@seed:N]` y reste, cf. ci-dessous
         for (const d of dirs) {
           if (d.name !== 'seed') {
             throw new ParseError(`![@${d.name}…] : seul @seed a un sens dans le flux (re-semence _srand) ; maxitems/allitems/improvize n'ont pas de contrôle de flux BP3`, current());

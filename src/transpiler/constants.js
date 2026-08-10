@@ -36,5 +36,5 @@ export const BP3_OPERATORS = Object.freeze({ plus: '+', fin: ';', star: '*' });
  * `[@...]` n'en fait pas partie.
  */
 export const PRODUCTION_DIRECTIVES = Object.freeze([
-  'seed', 'maxitems', 'items', 'allitems', 'all_items', 'improvize',
+  'maxitems', 'items', 'allitems', 'all_items', 'improvize',
 ]);

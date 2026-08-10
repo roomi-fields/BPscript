@@ -8,7 +8,8 @@
 // ⚠️ CE QUE CE GARDE EXISTE POUR EMPÊCHER, ET QUI EST ARRIVÉ DEUX FOIS PENDANT L'ÉCRITURE.
 // Chaque refus posé sur une directive se garde par `!subkey` : il ne regarde que la forme NUE.
 // Un rabattement du préfixe placé après ces refus laisse donc la forme préfixée passer PAR-DESSUS.
-// Mesuré : `@core.seed:120` passait là où `@seed:120` est refusé depuis le 2026-06-11, et
+// Mesuré : `@core.seed:120` passait là où `@seed:120` était alors refusé (état du 2026-06-11 ; la
+// graine est revenue à l'arobase le 2026-08-10, et la paire est éprouvée plus bas dans ce sens), et
 // `@core.scene:120` ROUVRAIT `@scene`, SUPPRIMÉE du langage. Dix-huit paires se comportaient
 // autrement que leur nom nu — dix-huit refus contournables en préfixant.
 //
@@ -64,7 +65,15 @@ for (const [lib, dir] of paires) {
 dire(compile('@core.tempo:120').errors.length === 0, '@core.tempo:120 doit être ACCEPTÉ');
 dire(compile('@tempo:120').errors.length === 0, '@tempo:120 doit rester ACCEPTÉ');
 dire(compile('@core.scene:120').errors.length > 0, '@core.scene:120 doit être REFUSÉ (@scene est supprimée)');
-dire(compile('@core.seed:120').errors.length > 0, '@core.seed:120 doit être REFUSÉ (@seed s\'écrit en bloc)');
+// ⚠️ CE CAS A CHANGÉ DE CAMP le 2026-08-10, et le motif compte plus que la ligne : `@seed` n'est
+// plus refusée en tête de scène. Romain : « seed est une directive de scène qui n'a de sens qu'en
+// début de scène donc devrait être appelé par arobase ». Le préfixé DOIT donc passer comme le nu —
+// c'est toujours la même règle qui est gardée ici (préfixé ≡ nu), avec la valeur du jour.
+// Un cas laissé du mauvais côté aurait figé une décision périmée en la faisant garder par un test.
+dire(compile('@core.seed:120').errors.length === 0, '@core.seed:120 doit être ACCEPTÉ (@seed s\'écrit en tête de scène depuis le 2026-08-10)');
+dire(compile('@seed:120').errors.length === 0, '@seed:120 doit être ACCEPTÉ — la moitié nue de la même paire');
+// ET LE BLOC EST FERMÉ, préfixé comme nu : sans ça, la voie parallèle se rouvrirait par le préfixe.
+dire(compile('[@seed:120]\nS -> C4').errors.length > 0, '[@seed:120] doit être REFUSÉ (le crochet ne porte pas la graine)');
 dire(compile('@zzz.tempo:120').errors.length > 0, '@zzz.tempo:120 doit être REFUSÉ (librairie inexistante)');
 dire(compile('@core.zzz:1').errors.length > 0, '@core.zzz:1 doit être REFUSÉ (entrée inexistante)');
 
