@@ -1354,6 +1354,40 @@ function parse(tokens, opts = {}) {
         runtime = v;
       }
     }
+
+    // ⛔ CE QUI RESTE COLLÉ À LA VALEUR N'EST PAS UNE VALEUR — et le taire coûtait le diagnostic.
+    //
+    // `@duration:16b`, `@tempo:120b`, `@items:20s` : la valeur numérique se lit, l'unité collée
+    // reste sur la pile, et la boucle principale la rencontre plus loin comme un symbole égaré. Le
+    // message était donc « Expected arrow (-> <- <>) », À LA LIGNE SUIVANTE — un auteur y lit un
+    // problème de règle alors qu'il a écrit une unité qui n'existe pas, une ligne plus haut.
+    //
+    // ⚠️ LE DÉFAUT N'EST PAS PROPRE À UNE DIRECTIVE, et c'est pourquoi le refus vit ICI plutôt
+    // qu'auprès d'un nom : mesuré le 2026-08-10, il frappait AUSSI `@tempo:120b` — une directive
+    // parfaitement vivante — et `@zorglub:16b`, un nom inconnu qui méritait d'être nommé comme tel.
+    // Le réparer sur `duration` seul aurait réparé l'endroit où il s'est montré, pas l'espace où il
+    // vit.
+    //
+    // CE QUI N'EST PAS TOUCHÉ : aucune forme acceptée ne change. Les graphies collées LÉGITIMES
+    // sont lues plus haut et sortent avant d'arriver ici — le ratio (`3/4`), le mètre additif
+    // (`3+4+2/4`), le littéral d'intervalle, la valeur négative. Ce refus ne voit donc que ce
+    // qu'aucune d'elles n'a su lire.
+    // ⚠️ LE MESSAGE NE CITE PAS DE GRAPHIE, ET C'EST DÉLIBÉRÉ. Ce lecteur sert DEUX écritures —
+    // la directive de tête `@seed:42` et la forme de flux `![seed:42]`. Un message qui citerait
+    // `'@seed:42x'` à qui a écrit `![seed:42x]` l'enverrait chercher une ligne qu'il n'a pas
+    // écrite : mesuré ici même, la première version le faisait.
+    if (!atEnd() && !current().spaceBefore
+        && (at(T.IDENT) || at(T.INT) || at(T.FLOAT))) {
+      const reste = current().value;
+      const ecrit = value != null ? String(value) : (runtime != null ? String(runtime) : '');
+      throw new ParseError(
+        `la valeur de '${dirName}' se lit '${ecrit}', et '${reste}' lui reste collé sans s'y lire. `
+        + `Une valeur de directive est NUE : un nombre, un rapport ('3/4'), ou un nom. Retirer `
+        + `'${reste}' si c'est une unité — aucune directive n'en porte — ou l'espacer si ce qui `
+        + `suit est autre chose.`,
+        current(),
+      );
+    }
     return { value, runtime };
   }
 
