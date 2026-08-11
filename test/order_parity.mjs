@@ -155,7 +155,7 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // se résolvent relativement à ce dossier (sinon ils sont introuvables).
   let gr = fs.readFileSync(grFile, 'utf8').replace(/\r\n?/g, '\n');
   const grNoC = gr.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
-  // CONVENTION DE NOTES — DÉCLARÉE d'abord, reniflée seulement à défaut.
+  // CONVENTION DE NOTES — DÉCLARÉE PAR LA TABLE, reniflée seulement à défaut.
   //
   // On la devinait en cherchant `sa`/`ga` puis `do|re|mi…` dans le corps. L'heuristique
   // tient sur la plupart des grammaires et se trompe précisément là où ça compte : une
@@ -163,12 +163,16 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // comme degré indien et effondre sa production (bp3-engine, baseline v12 : `bells` rend
   // 4 jetons en indian contre 16 en français). Deviner une convention qui CHANGE LA SORTIE
   // est un pari, pas une mesure.
-  // La convention se déclare donc dans `grammars.json` (`note_convention`), et le reniflage
-  // ne sert plus que de défaut pour les grammaires qui ne la déclarent pas.
+  //
+  // ⛔ ELLE VENAIT DE `grammars.json` (`note_convention`) JUSQU'AU 2026-08-11 : une seconde
+  // recopie, à côté du couple, dans le même fichier et pour la même raison. La table la porte
+  // aussi, et MIEUX — 107 conventions déclarées contre mes 97, ZÉRO désaccord, et aucune que je
+  // sois seul à connaître. Une recopie qui n'apporte rien et peut diverger n'a pas de raison de
+  // survivre au couple ; elle part avec lui.
   const DECLAREE = { french: '1', indian: '2', english: '0', keys: '0' };
-  const declaree = (GRAMMARS[name] || {}).note_convention;
-  if (declaree !== undefined && DECLAREE[declaree] === undefined) {
-    throw new Error(`grammars.json ${name}.note_convention = "${declaree}" inconnue (attendu : ${Object.keys(DECLAREE).join(', ')})`);
+  const declaree = coupleDe(name)?.convention ?? undefined;
+  if (declaree !== undefined && declaree !== null && DECLAREE[declaree] === undefined) {
+    throw new Error(`table de correspondance : convention "${declaree}" inconnue pour ${name} (attendu : ${Object.keys(DECLAREE).join(', ')})`);
   }
   const hasIndian = declaree ? declaree === 'indian' : /\b(sa|ga)\d\b/.test(grNoC);
   const hasFrench = declaree ? declaree === 'french' : /\b(do|re|mi|fa|sol|la|si)\d\b/.test(grNoC);

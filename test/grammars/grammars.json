@@ -14,8 +14,7 @@
     "lines": 203,
     "note": "823 MIDI notes. French solfege, 12 subgrammars.",
     "php_ref": {
-      "midi_notes": 823,
-      "note_convention": "french"
+      "midi_notes": 823
     }
   },
   "PP": {
@@ -27,7 +26,6 @@
     "lines": 15,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "grammaire type-0 non terminante: 3/20 items sont terminaux (b b, a a), le reste contient des variables non résolues (X1, YA, YB); 0 notes MIDI"
     },
     "production_mode": "text"
@@ -40,7 +38,6 @@
     "lines": 2,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "No original settings; using -se.koto3 (JSON) as proxy. -al.abc1 provides a',b',c' terminals. Confirmed working: produces 'a\\' a\\' c\\' b' (4 tokens)."
     },
     "production_mode": "text"
@@ -53,7 +50,6 @@
     "lines": 8,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.4 header), no -se reference in grammar"
     },
     "production_mode": "text"
@@ -66,7 +62,6 @@
     "lines": 13,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.4 header), no -se reference in grammar"
     },
     "production_mode": "text"
@@ -81,7 +76,6 @@
     "lines": 24,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 372 tokens."
     },
     "production_mode": "text",
@@ -96,7 +90,6 @@
     "lines": 6,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "terminaux k60/k62/k64/k65: alphabet custom avec préfixe \"k\" cause crash bp.exe v3.4.4 (exit 5); sans alphabet: \"Can't make sense of k60\""
     },
     "production_mode": "text"
@@ -111,7 +104,6 @@
     "lines": 6,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5.2 header), parser fails"
     },
     "production_mode": "midi"
@@ -127,7 +119,6 @@
     "lines": 13,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5 header), parser fails"
     },
     "production_mode": "text"
@@ -142,7 +133,6 @@
     "lines": 20,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 20 tokens."
     },
     "production_mode": "text"
@@ -157,7 +147,6 @@
     "lines": 27,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "HTML file, not a grammar"
     }
   },
@@ -171,7 +160,6 @@
     "lines": 13,
     "php_ref": {
       "midi_notes": 6,
-      "note_convention": "french",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 6 notes."
     },
     "production_mode": "midi"
@@ -186,7 +174,6 @@
     "lines": 7,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy (1 compile error)"
     },
     "production_mode": "midi"
@@ -204,7 +191,6 @@
     "lines": 11,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "uses ¥ (U+00A5) as tie marker (BP2), not recognized by BP3 v3.4.x"
     }
   },
@@ -218,8 +204,7 @@
     ],
     "lines": 3,
     "php_ref": {
-      "midi_notes": 12,
-      "note_convention": "english"
+      "midi_notes": 12
     }
   },
   "csound": {
@@ -250,8 +235,7 @@
     ],
     "lines": 8,
     "php_ref": {
-      "midi_notes": 6,
-      "note_convention": "english"
+      "midi_notes": 6
     },
     "note": "bp3ToScene FIDÈLE confirmé scan 2026-06-10 — sans s0, round-trip 1 ligne significative"
   },
@@ -266,7 +250,6 @@
     "lines": 9,
     "php_ref": {
       "midi_notes": 160,
-      "note_convention": "english",
       "note": "EMPRUNT VERIFIE ET NECESSAIRE — ne pas le retirer par analogie. Ce motif etait ecrit MOT POUR MOT sur tryRotate, ou il etait FAUX (le fichier propre y est en JSON) ; il est VRAI ici. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.tryMIDIfile` est au format BP2.7 et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7 », aucune production ecrite. Un motif partage par deux entrees ne se verifie pas une fois pour les deux."
     }
   },
@@ -282,7 +265,6 @@
     "lines": 73,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy (14 compile errors, -se.checkVolChan missing JSON format)"
     },
     "production_mode": "midi"
@@ -297,7 +279,6 @@
     "lines": 7,
     "php_ref": {
       "midi_notes": 6,
-      "note_convention": "english",
       "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18."
     },
     "production_mode": "midi"
@@ -313,7 +294,6 @@
     "lines": 24,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "boucle infinie: \"Calculation overflow (10000 derivations): task abandoned. Loop?\" — grammaire LIN avec règle de permutation sans convergence"
     },
     "production_mode": "text"
@@ -329,8 +309,7 @@
     "lines": 14,
     "production_mode": "text",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     },
     "note": "Timeout test: produces error message, not real production. bp3ToScene FIDÈLE confirmé scan 2026-06-10 — sans s0, round-trip 4 lignes significatives",
     "reason": "Timeout test grammar. No production output — expected behavior. [constat 2026-04-04]"
@@ -348,7 +327,6 @@
     "lines": 19,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5 header), parser fails"
     },
     "production_mode": "text"
@@ -367,7 +345,6 @@
     "production_mode": "text",
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "1040 octets. Oracle S0 régénéré 2026-07-18 : 360 tokens en mode texte (midi_notes reste 0). Alphabet chargé via -al.abc1 (et non -ho.abc1).",
       "soundobjects": "-so.abc1"
     },
@@ -389,8 +366,7 @@
     "features": [],
     "lines": 16,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "french"
+      "midi_notes": 0
     }
   },
   "gramgene1": {
@@ -405,7 +381,6 @@
     "lines": 30,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 884 tokens."
     },
     "production_mode": "text",
@@ -424,7 +399,6 @@
     "lines": 31,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": null,
       "note": "Reste sur le PROXY -se.koto3. Le vrai -se.koto1 issu de la conversion TRONQUE la production (MaxConsoleTime 1s au lieu de 1000) : 7 tokens au lieu de 72/109. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Bascule suspendue jusqu au correctif de conversion."
     },
     "production_mode": "text"
@@ -441,7 +415,6 @@
     "lines": 30,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": null,
       "note": "Reste sur le PROXY -se.koto3. Le vrai -se.koto1 issu de la conversion TRONQUE la production (MaxConsoleTime 1s au lieu de 1000) : 7 tokens au lieu de 72/109. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Bascule suspendue jusqu au correctif de conversion."
     },
     "production_mode": "text"
@@ -459,7 +432,6 @@
     "lines": 16,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 settings file (not JSON), not compatible with bp.exe v3.4.x"
     }
   },
@@ -473,7 +445,6 @@
     "lines": 53,
     "php_ref": {
       "midi_notes": 392,
-      "note_convention": "english",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 392 notes."
     },
     "production_mode": "midi"
@@ -490,8 +461,7 @@
     ],
     "lines": 16,
     "php_ref": {
-      "midi_notes": 8,
-      "note_convention": "english"
+      "midi_notes": 8
     }
   },
   "Rajeev": {
@@ -506,7 +476,6 @@
     "lines": 47,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5 header), parser fails"
     },
     "production_mode": "text"
@@ -525,8 +494,7 @@
     "lines": 19,
     "production_mode": "text",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     },
     "s1_args": [
       "-so",
@@ -551,7 +519,6 @@
     "note": "Utilise _transpose() et |variables|. Aux réels: -se.transposition et -ho.transposition. BPx grammar. Divergences de hauteur attendues (hors-scope R2 transpose).",
     "php_ref": {
       "midi_notes": 75,
-      "note_convention": "english",
       "note": "Using -se.transposition3 (JSON) as proxy for -se.transposition (BP2 format, incompatible with BP3 v3.4.x parser)"
     }
   },
@@ -581,7 +548,6 @@
     "lines": 79,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "uses -or.cloches (unsupported by BP3), 8 compile errors"
     },
     "production_mode": "midi"
@@ -601,7 +567,6 @@
     "lines": 14,
     "php_ref": {
       "midi_notes": 65,
-      "note_convention": "english",
       "note": "L EMPRUNT A -se.asymmetric1 EST RETIRE — son motif etait faux et il n etait pas neutre. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) ET v3.4.7 (md5 0fa0f3d, le binaire de la baseline), meme resultat : `-se.tryRotate` est en JSON, le binaire l ouvre (« Reading settings file »), et rend 65 jetons. L emprunt porte Improvize=1 + MaxItemsProduce=20 la ou le propre porte 0 : il mettait le moteur en improvisation non-stop et rendait 1300 jetons. Le fige `snapshots/s3_native.json` porte 65 depuis le 2026-07-16 : il avait ete capture avec le reglage PROPRE, et c est le catalogue qui le contredisait."
     }
   },
@@ -617,7 +582,6 @@
     "lines": 21,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5.1 header), parser fails"
     },
     "production_mode": "text"
@@ -632,7 +596,6 @@
     "lines": 17,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 flag syntax (/K1³100/) with non-ASCII char ³ (0xB3), compile errors"
     },
     "production_mode": "midi"
@@ -645,7 +608,6 @@
     "lines": 16,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "HTML file, not a grammar"
     }
   },
@@ -661,8 +623,7 @@
     ],
     "lines": 20,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     },
     "s1_args": [
       "-so",
@@ -674,7 +635,6 @@
     "status": "active",
     "php_ref": {
       "midi_notes": 6,
-      "note_convention": "english",
       "tonality": "-to.tryOneScale"
     },
     "production_mode": "midi",
@@ -721,7 +681,6 @@
     "note": "Indian bols (ek, do, tin...). Needs --indian + explicit -se/-al (header refs EkDoTin, not 12345678).",
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "french",
       "soundobjects": "-so.EkDoTin",
       "note": "Config php_ref complétée 2026-07-18 (BPS-16) : -so.EkDoTin manquait à php_ref alors qu il était déjà dans s1_args → S0 sortait 0. Oracle régénéré : 99 tokens en mode texte (midi_notes reste 0)."
     }
@@ -740,7 +699,6 @@
     "lines": 17,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "Confirmed: 0 errors, 25 text production lines with -se.tryPatternGrammar + -al.tryPatternGrammar. Previous scan used wrong settings."
     },
     "production_mode": "text",
@@ -756,7 +714,6 @@
     "lines": 49,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.3 header), no -se"
     },
     "production_mode": "text"
@@ -771,7 +728,6 @@
     "lines": 49,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.3 header), no -se"
     },
     "production_mode": "text"
@@ -790,7 +746,6 @@
     "note": "Bols talas (dha, tite, dhadha, dheena, teena). Aux réels: -se.dhadhatite et -ho.dhadhatite. BPx grammar.",
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5 Date header), parser treats header as rules, fails"
     }
   },
@@ -809,7 +764,6 @@
     "lines": 40,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": null,
       "note": "Config lot3 après BPE-10 : -se.dhati2 + -al.dhati, aucune convention forcée (grammaire bols-only). Oracle VÉRIFIÉ IDENTIQUE à la référence (80 tokens) avant/après bascule. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Sans effet ici : production courte et sans notes."
     },
     "production_mode": "text"
@@ -829,7 +783,6 @@
     "lines": 39,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": null,
       "note": "Config lot3 après BPE-10 : -se.dhati2 + -al.dhati, aucune convention forcée (grammaire bols-only). Oracle VÉRIFIÉ IDENTIQUE à la référence (80 tokens) avant/après bascule. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Sans effet ici : production courte et sans notes."
     },
     "production_mode": "text"
@@ -848,8 +801,7 @@
     "lines": 25,
     "note": "13 sound-objects native but 0 MIDI notes (text terminals).",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "tryShruti": {
@@ -864,7 +816,6 @@
     ],
     "php_ref": {
       "midi_notes": 79,
-      "note_convention": "indian",
       "tonality": "-to.tryShruti"
     },
     "aux": [
@@ -893,7 +844,6 @@
     "lines": 20,
     "php_ref": {
       "midi_notes": 25,
-      "note_convention": "english",
       "note": "Oracle S0 régénéré en DÉRIVATION SIMPLE 2026-07-18 (arbitrage [615]) : 25 notes sous seed fixe. L ancienne réf 500 était un artefact -o (20x)."
     },
     "production_mode": "midi",
@@ -920,8 +870,7 @@
     "lines": 21,
     "note": "Homomorphism grammar (a,b,c). Needs -ho.abc as alphabet.",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "french"
+      "midi_notes": 0
     }
   },
   "acceleration": {
@@ -935,8 +884,7 @@
     "lines": 28,
     "note": "78 MIDI notes. _transpose(12) + _vel(60..90) recursive acceleration.",
     "php_ref": {
-      "midi_notes": 78,
-      "note_convention": "english"
+      "midi_notes": 78
     }
   },
   "acceleration_v2": {
@@ -948,7 +896,6 @@
     "note": "from -gr.acceleration by Harm Visser, BPscript version with <weight> and <> bidirectional. Integrated 2026-04-26.",
     "php_ref": {
       "midi_notes": 78,
-      "note_convention": "english",
       "note": "Uses same -gr.acceleration as 'acceleration' entry (same oracle)"
     }
   },
@@ -964,7 +911,6 @@
     "lines": 22,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "Oracle S0 régénéré en DÉRIVATION SIMPLE 2026-07-18 (arbitrage [615]) : 2 tokens (i j), == oracle single de bp3-engine. L ancienne réf 40 était un artefact -o (production répétée 20x, ConsoleMain.c:971)."
     },
     "production_mode": "text",
@@ -986,8 +932,7 @@
     ],
     "lines": 9,
     "php_ref": {
-      "midi_notes": 540,
-      "note_convention": "english"
+      "midi_notes": 540
     }
   },
   "tryGOTO": {
@@ -1004,7 +949,6 @@
     "lines": 31,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.5 header), parser fails"
     },
     "production_mode": "text"
@@ -1040,8 +984,7 @@
     "lines": 68,
     "production_mode": "text",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     },
     "s1_args": [],
     "scene_bps": true,
@@ -1080,8 +1023,7 @@
     "lines": 25,
     "note": "RND+templates. Should produce MIDI but 0 notes in test — needs debug.",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "destru": {
@@ -1106,8 +1048,7 @@
     "lines": 23,
     "note": "LIN _destru grammar. Terminals abca/abc/cba/cbbc need -al.abc to be recognized.",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "french"
+      "midi_notes": 0
     }
   },
   "tryKeyXpand": {
@@ -1123,7 +1064,6 @@
     "lines": 30,
     "php_ref": {
       "midi_notes": 91,
-      "note_convention": "english",
       "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. Réglages en ANCIEN FORMAT — convertis par convertOldSettings pour S0."
     },
     "production_mode": "midi"
@@ -1140,8 +1080,7 @@
     ],
     "lines": 20,
     "php_ref": {
-      "midi_notes": 11,
-      "note_convention": "english"
+      "midi_notes": 11
     }
   },
   "check&": {
@@ -1156,7 +1095,6 @@
     "lines": 14,
     "php_ref": {
       "midi_notes": 4,
-      "note_convention": "french",
       "note": "EMPRUNT NECESSAIRE, ne pas le retirer. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.check&` existe mais est au format BP2.7.1, et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7.1 », aucune production ecrite. Deux emprunts de ce catalogue etaient injustifies (tryRotate, MyMelody) et trois sont indispensables : la difference est le FORMAT du fichier propre, pas le resultat. Elle se verifie en une commande, jamais en bloc."
     },
     "production_mode": "midi",
@@ -1175,7 +1113,6 @@
     "lines": 44,
     "php_ref": {
       "midi_notes": 895,
-      "note_convention": "french",
       "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. Réglages en ANCIEN FORMAT — convertis par convertOldSettings pour S0."
     },
     "production_mode": "midi"
@@ -1192,7 +1129,6 @@
     "lines": 92,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "french",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 32 tokens."
     },
     "production_mode": "text"
@@ -1226,8 +1162,7 @@
     "lines": 20,
     "note": "AllItems grammar, produces note names as text",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "all-items1": {
@@ -1244,8 +1179,7 @@
     ],
     "lines": 21,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "MyMelody": {
@@ -1264,7 +1198,6 @@
     "note": "Aux réels: -se.MyMelody et -ho.Frenchnotes. Convention french (do/re/mi/sol).",
     "php_ref": {
       "midi_notes": 31,
-      "note_convention": "french",
       "note": "L EMPRUNT A -se.765432 EST RETIRE. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.MyMelody` est en JSON, le binaire l ouvre, et les DEUX reglages rendent 31 jetons — l emprunt etait sans effet ici, contrairement a celui de tryRotate. On declare donc le fichier que la grammaire porte, sans changer la mesure : le fige `snapshots/s3_native.json` porte deja 31."
     }
   },
@@ -1281,8 +1214,7 @@
     ],
     "lines": 24,
     "php_ref": {
-      "midi_notes": 580,
-      "note_convention": "english"
+      "midi_notes": 580
     }
   },
   "transposition3": {
@@ -1299,8 +1231,7 @@
     "lines": 20,
     "production_mode": "text",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     },
     "note": "Baseline récupérée 2026-06-10 : le fichier grammaire mono-ligne CR (Mac) faussait le snapshot S0 (1 token). s0_snapshot.cjs normalise désormais CR→LF ; bp.exe produit 30 tokens, identiques à s1_native (30/30, vérifié sur bp.exe + bp3 natif)."
   },
@@ -1327,7 +1258,6 @@
     "status": "active",
     "php_ref": {
       "midi_notes": 20,
-      "note_convention": "english",
       "tonality": "-to.tryHarmony"
     },
     "production_mode": "midi",
@@ -1362,8 +1292,7 @@
     "lines": 39,
     "note": "78 MIDI notes (Indian notation, _transpose(-7) applied by native).",
     "php_ref": {
-      "midi_notes": 94,
-      "note_convention": "indian"
+      "midi_notes": 94
     },
     "s4s5_skip": "Settings -se.kss non fidèlement portés par le transpileur: NoteConvention=2(Indian), UseEachSub=0, ResetControllers=1 manquants. Grammaire RND diverge. Scène BPscript correcte."
   },
@@ -1379,7 +1308,6 @@
     "lines": 48,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "french",
       "note": "Récupérée lot3 (bp3-engine 2f01fbb), oracle S0 mesuré 2026-07-18 : 442 tokens."
     },
     "production_mode": "text"
@@ -1403,8 +1331,7 @@
       "-se.Vina"
     ],
     "php_ref": {
-      "midi_notes": 5,
-      "note_convention": "indian"
+      "midi_notes": 5
     }
   },
   "vina2": {
@@ -1425,8 +1352,7 @@
       "-se.Vina"
     ],
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "indian"
+      "midi_notes": 0
     },
     "s4s5_skip": "Mode text + pitchbend/pitchcont: S4 émet contrôles natifs BP3, S5 émet _script(CT N) pour dispatcher. Production identique structurellement."
   },
@@ -1444,8 +1370,7 @@
     "lines": 26,
     "note": "1112 MIDI notes. _transpose/_rotate/_keyxpand. 14s.",
     "php_ref": {
-      "midi_notes": 1112,
-      "note_convention": "english"
+      "midi_notes": 1112
     }
   },
   "asymmetric": {
@@ -1466,8 +1391,7 @@
       "Improvize": "0"
     },
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "checkrests": {
@@ -1480,7 +1404,6 @@
     "lines": 17,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "French solfège (fa5}) with BP2 grouping syntax, 12 compile errors"
     },
     "production_mode": "midi"
@@ -1507,8 +1430,7 @@
     "lines": 56,
     "note": "Bug moteur #32: channel 125 corruption après 15 tokens. S0=266, S1=15.",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "checkAllCsound": {
@@ -1525,7 +1447,6 @@
     "php_errors": 30,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "uses _ins() (Csound-only operator), not supported by BP3 v3.4.4"
     },
     "production_mode": "midi"
@@ -1542,7 +1463,6 @@
     "lines": 55,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "compiles OK but produces 0 MIDI notes (undefined variable A8, no sound-objects)"
     },
     "production_mode": "midi"
@@ -1559,7 +1479,6 @@
     "lines": 47,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "lowercase terminals (a,b,c), 44 compile errors"
     },
     "production_mode": "midi"
@@ -1578,8 +1497,7 @@
     "lines": 52,
     "note": "401 MIDI notes. _transpose(11/5/1/7/6/-11) + _vel. Single note C3 transposed.",
     "php_ref": {
-      "midi_notes": 401,
-      "note_convention": "english"
+      "midi_notes": 401
     }
   },
   "scales": {
@@ -1613,7 +1531,6 @@
     "lines": 58,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 serial operators (_rndseq, _ordseq) and time pattern markers (Æ1, Æ2, Æ3) not supported in BP3. Error code 46: incorrect time pattern name(s). Tested with -se.koto3 + -al.abc."
     },
     "production_mode": "text",
@@ -1632,7 +1549,6 @@
     "lines": 107,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy (18 compile errors, French solfège incompatible)"
     },
     "production_mode": "midi"
@@ -1651,8 +1567,7 @@
     "lines": 80,
     "note": "20 items de bols tabla en mode texte. Certains items contiennent des templates (=X)(:X) non résolus. V.2.9.1 avec -ho.dhin-- comme alphabet.",
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "nadaka": {
@@ -1679,7 +1594,6 @@
     "php_errors": 1,
     "php_ref": {
       "midi_notes": 713,
-      "note_convention": "indian",
       "tonality": "-to.Nadaka",
       "csound": "-cs.Nadaka",
       "note": "Config php_ref complétée 2026-07-18 (BPS-16) ; oracle S0 régénéré avec -so."
@@ -1698,8 +1612,7 @@
     ],
     "lines": 45,
     "php_ref": {
-      "midi_notes": 2085,
-      "note_convention": "english"
+      "midi_notes": 2085
     }
   },
   "vina3": {
@@ -1755,7 +1668,6 @@
     "lines": 38,
     "php_ref": {
       "midi_notes": 42,
-      "note_convention": "english",
       "csound": "-cs.raga",
       "tonality": "-to.raga"
     },
@@ -1776,8 +1688,7 @@
     ],
     "lines": 73,
     "php_ref": {
-      "midi_notes": 365,
-      "note_convention": "english"
+      "midi_notes": 365
     }
   },
   "mohanam": {
@@ -1796,7 +1707,6 @@
     "php_errors": 1,
     "php_ref": {
       "midi_notes": 753,
-      "note_convention": "indian",
       "tonality": "-to.trial.mohanam",
       "csound": "-cs.trial.mohanam",
       "note": "Config php_ref complétée 2026-07-18 (BPS-16) ; oracle S0 régénéré avec -so."
@@ -1818,8 +1728,7 @@
     ],
     "lines": 143,
     "php_ref": {
-      "midi_notes": 2528,
-      "note_convention": "french"
+      "midi_notes": 2528
     }
   },
   "dhati": {
@@ -1837,7 +1746,6 @@
     "lines": 171,
     "php_ref": {
       "midi_notes": 276,
-      "note_convention": "french",
       "note": "491 octets. Oracle S0 régénéré 2026-07-18 avec la config php_ref (dont -so). Le -ho.dhati CASSE (en-tête BP2 \":\") — le bon alphabet est -al.dhati ; pas de -gl.",
       "soundobjects": "-so.dhati"
     },
@@ -1868,7 +1776,6 @@
     "lines": 370,
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "BP2 legacy format (V.2.4 header), 164 compile errors"
     },
     "production_mode": "midi"
@@ -1886,7 +1793,6 @@
     "lines": 387,
     "php_ref": {
       "midi_notes": 251,
-      "note_convention": "french",
       "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. Réglages en ANCIEN FORMAT — convertis par convertOldSettings pour S0."
     },
     "production_mode": "midi"
@@ -1908,8 +1814,7 @@
     ],
     "lines": 373,
     "php_ref": {
-      "midi_notes": 5049,
-      "note_convention": "french"
+      "midi_notes": 5049
     }
   },
   "beatrix-dice": {
@@ -1929,8 +1834,7 @@
     ],
     "lines": 372,
     "php_ref": {
-      "midi_notes": 5049,
-      "note_convention": "french"
+      "midi_notes": 5049
     }
   },
   "mozart-dice": {
@@ -1942,7 +1846,6 @@
     },
     "php_ref": {
       "midi_notes": 10113,
-      "note_convention": "french",
       "tonality": "-to.Mozart"
     },
     "production_mode": "midi",
@@ -1977,8 +1880,7 @@
       "-se.Watch_What_Happens"
     ],
     "php_ref": {
-      "midi_notes": 2105,
-      "note_convention": "english"
+      "midi_notes": 2105
     }
   },
   "dhadhatite_v2": {
@@ -1993,7 +1895,6 @@
     "note": "Partial BPscript transposition of -gr.dhadhatite. Context markers (+/++), template brackets, <-- rule and LHS time-signature not supported. gram#3 V-chain + gram#4 terminals fully translated. See UNSUPPORTED.md.",
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "blocked": "Points to same -gr.dhadhatite as dhadhatite entry. Blocked for the same reasons: 4 compile errors, compound bol terminals missing from alphabet."
     }
   },
@@ -2017,8 +1918,7 @@
     ],
     "lines": 16,
     "php_ref": {
-      "midi_notes": 0,
-      "note_convention": "english"
+      "midi_notes": 0
     }
   },
   "testHO2": {
@@ -2027,7 +1927,6 @@
     "note": "Ajout ISO-100 Phase A.2 (2026-07-16) : fichier -gr. présent dans test-data sans clé registre (orphelin). Jamais passé S1-S3.",
     "php_ref": {
       "midi_notes": 0,
-      "note_convention": "english",
       "note": "Récupérée BPS-19 lot2, oracle S0 mesuré 2026-07-18. production_mode corrigé midi→text (S --> a b c d = symboles de l alphabet abc, aucune note MIDI)."
     }
   },

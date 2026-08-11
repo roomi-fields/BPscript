@@ -45,6 +45,9 @@ const FORMES = [
   { nom: 'reniflage d’un réglage dans un texte',
     motif: /match\s*\(\s*\/\s*-se\\?\./,
     quoi: 'devine un `-se.` en cherchant le nom dans un texte — c’est le mécanisme que la table remplace' },
+  { nom: 'recopie de la convention de notes dans le catalogue',
+    motif: /note_convention/,
+    quoi: "lit `note_convention` — le champ SUPPRIMÉ de grammars.json le 2026-08-11, la table le porte (107 contre 97, zéro désaccord)" },
   { nom: 'reniflage d’un alphabet dans un texte',
     motif: /match\s*\(\s*\/\s*-(?:al|ho)\\?\./,
     quoi: 'devine un `-al.`/`-ho.` en cherchant le nom dans un texte — même mécanisme' },
@@ -79,8 +82,11 @@ for (const f of fichiers) {
   const cat = JSON.parse(fs.readFileSync(path.join(ICI, 'grammars', 'grammars.json'), 'utf8'));
   const restants = [];
   for (const [nom, e] of Object.entries(cat)) {
-    if (!e || typeof e !== 'object' || !e.php_ref) continue;
-    if ('settings' in e.php_ref || 'alphabet' in e.php_ref) restants.push(nom);
+    if (!e || typeof e !== 'object') continue;
+    if ('note_convention' in e) { restants.push(nom); continue; }
+    if (!e.php_ref) continue;
+    if ('settings' in e.php_ref || 'alphabet' in e.php_ref
+      || 'note_convention' in e.php_ref) restants.push(nom);
   }
   ok(restants.length === 0,
     `2. ${restants.length} entrée(s) du catalogue portent encore le couple : `
@@ -110,6 +116,7 @@ for (const f of fichiers) {
     ['reniflage réglage', "const m = gr.match(/-se\\.(\\S+)/);"],
     ['reniflage alphabet', "const m = gr.match(/-al\\.(\\S+)/);"],
     ['reniflage homomorphisme', "const m = txt.match(/-ho\\.(\\S+)/);"],
+    ['recopie de convention', 'const c = GRAMMARS[name].note_convention;'],
   ];
   for (const [quoi, ligne] of FAUX) {
     ok(FORMES.some(({ motif }) => motif.test(ligne)),
