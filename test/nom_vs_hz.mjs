@@ -53,19 +53,30 @@ for (const nom of process.argv.slice(2)) {
   const entete = enteteScene.split('\n').filter((l) => !l.trim().startsWith('@transpose')).join('\n');
 
   const session = createSession(compileToBPxAST(scene).ast, { seed: 1 });
-  const { tokens: mine } = await resoudreViaKairos(session);
+  const { tokens: bruts } = await resoudreViaKairos(session);
+  // Les marqueurs de bloc (`{poly}`, `{ctrl}`) ne sont pas des jetons sonnants : ils décalent
+  // l'appariement rang à rang et font passer TOUTE la suite pour « non résolue » (mesuré sur kss2 :
+  // 2 marqueurs → 79 faux non-résolus). Les retirer ne masque aucun écart — leur présence est un
+  // sujet à part, tenu par la mesure de conformité.
+  const mine = bruts.filter((t) => !/^\{.*\}$/.test(t.token));
 
+  // ⚠️ MON NOM COMPARABLE EST `nomResolu`, JAMAIS `token`. `token` est le terminal ÉCRIT dans la
+  // scène ; `nomResolu` est ce que Kairos a résolu — registre et orthographe compris. Cette sonde
+  // lisait le nu des deux côtés et rendait « 78 noms différents » sur acceleration là où 68 sont
+  // IDENTIQUES une fois résolus : elle transformait un renommage RÉUSSI en écart de convention, et
+  // m'a fait conclure le 2026-08-12 que le renommage de `chromashift` ne se faisait pas. Le nu reste
+  // la clé de la carte des noms NATIFS ci-dessous : ceux-là sont écrits comme terminaux, donc c'est
+  // bien le terminal qui les indexe.
   const nomsRef = [...new Set(refToks.map((t) => t.token))];
-  const nomsMien = [...new Set(mine.map((t) => t.token))];
   const hzRef = await hzDeNoms(nomsRef, entete);
-  const hzMien = {}; for (const t of mine) if (hzMien[t.token] === undefined) hzMien[t.token] = t.hz;
+  const hzMien = {}; for (const t of mine) if (hzMien[t.nomResolu] === undefined) hzMien[t.nomResolu] = t.hz;
 
   const shift = registerShiftFor(nom);
   let memeHz = 0, hzDiff = 0, absent = 0;
   const exemples = [];
   const n = Math.min(refToks.length, mine.length);
   for (let i = 0; i < n; i++) {
-    const a = refToks[i].token, b = mine[i].token;
+    const a = refToks[i].token, b = mine[i].nomResolu;
     if (a === b) continue;
     const ha = hzRef[a], hb = hzMien[b];
     if (typeof ha !== 'number' || typeof hb !== 'number') { absent++; continue; }
