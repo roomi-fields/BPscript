@@ -30,6 +30,7 @@ export const MODULES = new Map([
   ['kairos_bridge.mjs', 'pont vers Kairos/Kronos, importé par les mesures'],
   ['resolve_bin.cjs', 'résolution du tag de binaire, importé par la lane moteur'],
   ['corpus.mjs', 'déclaration UNIQUE de où vit le corpus des 113 (bibliothèque Kanopi), importée par tous ses lecteurs'],
+  ['correspondance.mjs', 'lecteur UNIQUE du couple grammaire↔auxiliaires depuis la table de bp3-engine, importé par les mesures — ce qu il porte est gardé par le_couple_ne_vient_que_de_la_table.mjs, qui est AU portillon'],
 ]);
 /** Ce fichier-ci. */
 export const MOI = 'run_guards.mjs';

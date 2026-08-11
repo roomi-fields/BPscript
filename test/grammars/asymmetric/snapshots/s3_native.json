@@ -101,5 +101,10 @@
         "Improvize=0 (se_overrides du catalogue)"
       ]
     }
-  ]
+  ],
+  "source_du_couple": {
+    "table": "kanopi test-assets/bp3/correspondance.json",
+    "produit_par": "bp3-engine/scripts/table-correspondance.py",
+    "n": 113
+  }
 }

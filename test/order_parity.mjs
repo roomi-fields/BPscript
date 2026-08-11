@@ -15,6 +15,15 @@
 // son assiette par défaut valait TROIS grammaires écrites en dur sur les 27 qu'il pouvait
 // comparer, et que les trois étaient d'accord avec le WASM. Elle suit maintenant les captures.
 //
+// ⚠️ LE COUPLE GRAMMAIRE ↔ AUXILIAIRES VIENT DE LA TABLE DE bp3-engine DEPUIS LE 2026-08-11, et
+// de nulle part ailleurs (`test/correspondance.mjs`). Trois sources le disaient ici : ma recopie
+// dans `grammars.json`, et deux reniflages du CORPS de la grammaire. Les trois sont parties
+// ensemble — un repli aurait servi en silence là où la table n'est pas d'accord.
+// La bascule ne change AUCUNE mesure scellée : 29 sur 29 identiques après. Elle a cassé deux
+// grammaires en chemin, `asymmetric` et `flags`, parce que la table s'interroge par le nom de
+// CORPUS et non par le nom AMONT — production vide, pas erreur. Réparé, et la distinction est
+// écrite dans le module.
+//
 // Sans --write : LECTURE SEULE (validation, gate Romain). Avec --write : pose
 // snapshots/s3_native.json mode 'text'. L'idempotence porte sur la MESURE : jetons identiques →
 // la mesure n'est jamais réécrite, mais les CONDITIONS le sont si le binaire a change — sinon un
@@ -33,6 +42,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tokenizeOrder } from '../src/transpiler/orderTokens.js';
+import { coupleDe, metaTable } from './correspondance.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -210,26 +220,27 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
       } else args.push(a);
     }
   }
-  if (!explicit.has('-se') && gd?.php_ref?.settings) { const m = gd.php_ref?.settings.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
-  // Repli (aligné s3_native.cjs, gap découvert en [435]) : réglages/alphabet référencés
-  // dans le CORPS de la grammaire — beaucoup de clés to_be_tested n'ont ni s1_args ni
-  // php_ref.settings alors que le -se. existe dans test-data.
-  if (!explicit.has('-se') && !args.includes('-se')) { const m = gr.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
-  // ⛔ L'ALPHABET DÉCLARÉ SE PASSE QUEL QUE SOIT SON PRÉFIXE — le motif ne retenait que `-al.` et
-  // laissait tomber en silence les alphabets nommés `-ho.` (`dhin1` déclare `-ho.dhin--`).
-  // MESURÉ le 2026-08-11 : sans `-al`, dhin1 rend une production VIDE ; avec, 341 octets. Mon banc
-  // la comptait donc « non capturable » alors que l'outil de référence du chantier la produisait
-  // — 318 octets le matin même. Le fichier était là, le drapeau existait, seul le motif refusait.
-  // ⚠️ CE N'EST PAS LE CAS QUE LA NOTE CI-DESSOUS ÉCARTE : elle interdit de passer un `-ho` sous le
-  // drapeau `-ho`, ce qui double-charge. Ici le fichier passe sous `-al`, et c'est ce que fait
-  // l'outil de référence.
-  if (!explicit.has('-al') && gd?.php_ref?.alphabet) {
-    const m = gd.php_ref.alphabet.match(/-(?:al|ho)\.\S+/);
-    if (m) { const f = path.join(TD, m[0]); if (fs.existsSync(f)) args.push('-al', f); }
+  // ── LE COUPLE VIENT DE LA TABLE DE CORRESPONDANCE, ET DE NULLE PART AILLEURS ──────────────
+  // ⛔ TROIS SOURCES DISAIENT ÇA ICI JUSQU'AU 2026-08-11, et les trois sont parties ensemble :
+  // ma recopie du couple dans `grammars.json` (`php_ref.settings` / `php_ref.alphabet`), et deux
+  // reniflages du CORPS de la grammaire — un `-se.X` puis un `-al.X` trouvés dans le texte.
+  // Les reniflages étaient le mécanisme que la table existe pour remplacer : deviner le couple
+  // d'après le nom qui traîne. Un repli « au cas où » aurait servi en silence là où la table
+  // n'est pas d'accord, et personne n'aurait su laquelle des deux avait parlé.
+  //
+  // L'ALPHABET SE PASSE QUEL QUE SOIT SON PRÉFIXE — `dhin1` déclare `-ho.dhin--`. MESURÉ le
+  // 2026-08-11 : sans `-al`, dhin1 rend une production VIDE ; avec, 341 octets. Ce n'est pas le
+  // cas que la note plus bas écarte : elle interdit de passer un `-ho` sous le drapeau `-ho`,
+  // ce qui double-charge. Ici le fichier passe sous `-al`, comme le fait l'outil de référence.
+  // ⚠️ LA TABLE S'INTERROGE PAR LE NOM DE CORPUS, PAS PAR LE NOM AMONT — cf. `correspondance.mjs`.
+  const couple = coupleDe(name);
+  if (!explicit.has('-se') && couple?.settings) {
+    const f = path.join(TD, couple.settings);
+    if (fs.existsSync(f)) pushSettings(f);
   }
-  if (!explicit.has('-al') && !args.includes('-al')) {
-    const m = gr.match(/-al\.(\S+)/);
-    if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); }
+  if (!explicit.has('-al') && couple?.alphabet) {
+    const f = path.join(TD, couple.alphabet);
+    if (fs.existsSync(f)) args.push('-al', f);
   }
   // NB : le `-ho.X` (homomorphisme) référencé dans le corps est AUTO-RÉSOLU par bp3 depuis le
   // dossier du -gr (TD) — le passer EN PLUS via `-ho` casse les grammaires qui l'auto-chargent
@@ -258,7 +269,18 @@ function conditionsRejouables(commande) {
     rejouable = rejouable.split(ephemere).join(quoi.source);
     entrees.push({ passe_au_binaire: ephemere, source: quoi.source, transformations: quoi.transformations });
   }
-  return { command: rejouable, entrees: entrees.length ? entrees : null };
+  // ⛔ D'OÙ VIENT LE COUPLE, INSCRIT AVEC LE RESTE. La commande cite les fichiers d'auxiliaires,
+  // elle ne dit pas QUI a désigné ces fichiers-là. Depuis la bascule du 2026-08-11 c'est la table
+  // de correspondance de bp3-engine, et elle seule ; avant, c'était ma recopie plus deux
+  // reniflages du corps. Deux mesures prises de part et d'autre de ce jour ne sont donc pas
+  // comparables sans le savoir — la source du couple est une condition, au même titre que la
+  // graine ou le binaire.
+  const t = metaTable();
+  return {
+    command: rejouable,
+    entrees: entrees.length ? entrees : null,
+    source_du_couple: { table: 'kanopi test-assets/bp3/correspondance.json', produit_par: t.produit_par, n: t.n },
+  };
 }
 
 function nativeOrder(name, opts = {}) {
@@ -324,7 +346,8 @@ function oracleFige(name) {
 /** Les conditions de l'invocation qui vient d'avoir lieu — pour rafraîchir sans re-capturer. */
 function estampilleActuelle() {
   const c = conditionsRejouables(derniereCommande);
-  return { ...estampilleNative(c.command), entrees: c.entrees, date: new Date().toISOString().slice(0, 10) };
+  return { ...estampilleNative(c.command), entrees: c.entrees, source_du_couple: c.source_du_couple,
+    date: new Date().toISOString().slice(0, 10) };
 }
 
 function writeTextOracle(name, tokens) {
@@ -371,7 +394,7 @@ function writeTextOracle(name, tokens) {
     date: new Date().toISOString().slice(0, 10),
     ...(() => { const c = conditionsRejouables(derniereCommande);
         dernieresEntrees = c.entrees;
-        return { ...estampilleNative(c.command), entrees: c.entrees }; })(),
+        return { ...estampilleNative(c.command), entrees: c.entrees, source_du_couple: c.source_du_couple }; })(),
   };
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(snap, null, 2));
@@ -413,7 +436,7 @@ if (SINGLEPLAY) {
       tokens: nat.tokens,
       ...(() => { const c = conditionsRejouables(derniereCommande);
         dernieresEntrees = c.entrees;
-        return { ...estampilleNative(c.command), entrees: c.entrees }; })(),
+        return { ...estampilleNative(c.command), entrees: c.entrees, source_du_couple: c.source_du_couple }; })(),
     };
     const file = path.join(OUT, `${name}.json`);
     fs.writeFileSync(file, JSON.stringify(snap, null, 2));
