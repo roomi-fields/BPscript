@@ -301,7 +301,7 @@
       "note_convention": "english",
       "settings": "-se.asymmetric1",
       "alphabet": null,
-      "note": "Original -se.tryMIDIfile is BP2 format; using -se.asymmetric1 as JSON substitute"
+      "note": "EMPRUNT VERIFIE ET NECESSAIRE — ne pas le retirer par analogie. Ce motif etait ecrit MOT POUR MOT sur tryRotate, ou il etait FAUX (le fichier propre y est en JSON) ; il est VRAI ici. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.tryMIDIfile` est au format BP2.7 et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7 », aucune production ecrite. Un motif partage par deux entrees ne se verifie pas une fois pour les deux."
     }
   },
   "checkVolChan": {
@@ -668,11 +668,11 @@
     ],
     "lines": 14,
     "php_ref": {
-      "midi_notes": 1300,
+      "midi_notes": 65,
       "note_convention": "english",
-      "settings": "-se.asymmetric1",
+      "settings": "-se.tryRotate",
       "alphabet": null,
-      "note": "Original -se.tryRotate is BP2 format; using -se.asymmetric1 as JSON substitute"
+      "note": "L EMPRUNT A -se.asymmetric1 EST RETIRE — son motif etait faux et il n etait pas neutre. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) ET v3.4.7 (md5 0fa0f3d, le binaire de la baseline), meme resultat : `-se.tryRotate` est en JSON, le binaire l ouvre (« Reading settings file »), et rend 65 jetons. L emprunt porte Improvize=1 + MaxItemsProduce=20 la ou le propre porte 0 : il mettait le moteur en improvisation non-stop et rendait 1300 jetons. Le fige `snapshots/s3_native.json` porte 65 depuis le 2026-07-16 : il avait ete capture avec le reglage PROPRE, et c est le catalogue qui le contredisait."
     }
   },
   "trytemplates2": {
@@ -1280,7 +1280,8 @@
       "midi_notes": 4,
       "note_convention": "french",
       "settings": "-se.765432",
-      "alphabet": null
+      "alphabet": null,
+      "note": "EMPRUNT NECESSAIRE, ne pas le retirer. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.check&` existe mais est au format BP2.7.1, et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7.1 », aucune production ecrite. Deux emprunts de ce catalogue etaient injustifies (tryRotate, MyMelody) et trois sont indispensables : la difference est le FORMAT du fichier propre, pas le resultat. Elle se verifie en une commande, jamais en bloc."
     },
     "production_mode": "midi",
     "trou_langage": "bp3ToScene NON GÉRÉ : _& (prolongation liée) — le ~ BPscript exige un symbole porteur, pas une prolongation. Comportement correct, pas un bug. L'argument '+' (_pitchbend(+200)) est lui accepté depuis le fix parseControl du 2026-06-10."
@@ -1394,10 +1395,11 @@
     "lines": 34,
     "note": "Aux réels: -se.MyMelody et -ho.Frenchnotes. Convention french (do/re/mi/sol).",
     "php_ref": {
-      "midi_notes": 28,
+      "midi_notes": 31,
       "note_convention": "french",
-      "settings": "-se.765432",
-      "alphabet": null
+      "settings": "-se.MyMelody",
+      "alphabet": null,
+      "note": "L EMPRUNT A -se.765432 EST RETIRE. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.MyMelody` est en JSON, le binaire l ouvre, et les DEUX reglages rendent 31 jetons — l emprunt etait sans effet ici, contrairement a celui de tryRotate. On declare donc le fichier que la grammaire porte, sans changer la mesure : le fige `snapshots/s3_native.json` porte deja 31."
     }
   },
   "not-reich": {
