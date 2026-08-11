@@ -16,7 +16,9 @@
 // comparer, et que les trois étaient d'accord avec le WASM. Elle suit maintenant les captures.
 //
 // Sans --write : LECTURE SEULE (validation, gate Romain). Avec --write : pose
-// snapshots/s3_native.json mode 'text' (idempotent — jetons identiques → non réécrit).
+// snapshots/s3_native.json mode 'text'. L'idempotence porte sur la MESURE : jetons identiques →
+// la mesure n'est jamais réécrite, mais les CONDITIONS le sont si le binaire a change — sinon un
+// instantané fraîchement revérifié continue de citer une empreinte qui n'existe plus.
 // Référence : hub/constats/2026-06-16-voie-texte-ordre.md.
 //
 // --campaign (ISO-100 A.2b, [433]) : toutes les clés mode TEXTE dont le -gr. existe,
@@ -294,6 +296,12 @@ function oracleFige(name) {
 // Pose l'oracle natif d'ORDRE texte. Anti-dégénéré : refuse 0 jeton ou majorité de
 // noms vides (gamme invalide). Format aligné sur s3_native.cjs (midi) : mode 'text',
 // timings nuls (l'ordre EST l'information).
+/** Les conditions de l'invocation qui vient d'avoir lieu — pour rafraîchir sans re-capturer. */
+function estampilleActuelle() {
+  const c = conditionsRejouables(derniereCommande);
+  return { ...estampilleNative(c.command), entrees: c.entrees, date: new Date().toISOString().slice(0, 10) };
+}
+
 function writeTextOracle(name, tokens) {
   if (!Array.isArray(tokens) || tokens.length === 0) return 'VIDE (non écrit)';
   const empty = tokens.filter((t) => !t || t === '').length;
@@ -307,7 +315,27 @@ function writeTextOracle(name, tokens) {
     try {
       const prev = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (prev.mode === 'midi') return 'ORACLE MIDI en place (non touché)';
-      if (JSON.stringify(prev.tokens) === JSON.stringify(newToks)) return `inchangé — frais confirmé (${newToks.length} jetons)`;
+      if (JSON.stringify(prev.tokens) === JSON.stringify(newToks)) {
+        // ⛔ L'IDEMPOTENCE PORTAIT SUR LES JETONS ET PAS SUR LES CONDITIONS, et c'est un trou.
+        // Un instantané dont la mesure vient d'être CONFIRMÉE sur un binaire neuf continuait de
+        // déclarer l'empreinte d'un binaire qui n'existe plus. Il disait donc moins que ce qu'on
+        // savait de lui, et un lecteur y aurait lu une référence non revérifiée.
+        // MESURÉ le 2026-08-11 : le binaire a été recompilé DEUX FOIS dans la journée sous le même
+        // numéro 3.5.1 — b100125b, puis 3a6fa3e7, puis 9081f9a6. Mes dix instantanés qualifiés
+        // portaient trois empreintes différentes alors que les 27 comparaisons rendaient 0 écart.
+        // On réécrit donc les CONDITIONS quand elles ont bougé, jamais la mesure : c'est
+        // exactement l'annotation sans re-capture que la décision du jour autorise.
+        const neuf = { ...prev, ...estampilleActuelle() };
+        // ⛔ ET LE BLOC QUI DÉCLARE LE TROU S'EN VA QUAND LE TROU EST COMBLÉ. Il dit « aucune
+        // autorité, conditions inconnues » : le laisser sur un instantané qui porte désormais son
+        // binaire, son empreinte et sa commande ferait mentir le fichier CONTRE lui-même, et un
+        // lecteur croirait sur parole la moitié la plus pessimiste. Mon garde l'a attrapé — il
+        // exige que le compte des blocs égale le compte des non-qualifiés.
+        if (neuf.engineVersion && neuf.engineMd5 && neuf.command) delete neuf.conditions_de_mesure;
+        if (JSON.stringify(neuf) === JSON.stringify(prev)) return `inchangé — frais confirmé (${newToks.length} jetons)`;
+        fs.writeFileSync(file, JSON.stringify(neuf, null, 2));
+        return `mesure inchangée (${newToks.length} jetons) — CONDITIONS rafraîchies (binaire ${neuf.engineMd5?.slice(0, 8)})`;
+      }
     } catch { /* illisible → réécrit */ }
   }
   const snap = {

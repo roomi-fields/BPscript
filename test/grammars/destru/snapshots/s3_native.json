@@ -224,15 +224,26 @@
       0
     ]
   ],
-  "date": "2026-06-16",
-  "conditions_de_mesure": {
-    "moteur": "BP3 natif",
-    "binaire_version": null,
-    "binaire_empreinte": null,
-    "commande": null,
-    "graine": null,
-    "producteur": "bp3-engine",
-    "qualifie": false,
-    "portee": "AUCUNE AUTORITE. Les conditions de production sont inconnues : ni binaire, ni empreinte, ni commande, ni graine. Cet instantane temoigne d un etat passe ; il ne tranche aucun desaccord et ne sert pas de reference tant qu il n a pas ete reproduit a un binaire nomme."
-  }
+  "date": "2026-08-11",
+  "engineVersion": "3.5.1",
+  "engineMd5": "9081f9a6d6cd68669e052e22eaf0102d",
+  "command": "bash \"/home/romi/dev/bp/BPscript/test/bp3-guard.sh\" \"/home/romi/dev/bp/bp3-engine/bp3\" \"produce\" \"-e\" \"-gr\" \"/home/romi/dev/bp/bp3-engine/test-data/-gr.tryDESTRU\" \"--seed\" \"1\" \"-se\" \"/home/romi/dev/bp/bp3-engine/test-data/-se.tryDESTRU\" \"-al\" \"/home/romi/dev/bp/bp3-engine/test-data/-al.abc\" \"-so\" \"/home/romi/dev/bp/bp3-engine/test-data/-so.abc\" \"-o\" \"/tmp/_ord_destru_prod.txt\"",
+  "entrees": [
+    {
+      "passe_au_binaire": "/home/romi/dev/bp/bp3-engine/test-data/_ord_tmp_destru.gr",
+      "source": "/home/romi/dev/bp/bp3-engine/test-data/-gr.tryDESTRU",
+      "transformations": [
+        "fins de ligne normalisées en LF"
+      ]
+    },
+    {
+      "passe_au_binaire": "/tmp/_ord_destru_se.json",
+      "source": "/home/romi/dev/bp/bp3-engine/test-data/-se.tryDESTRU",
+      "transformations": [
+        "lu tel quel (JSON)",
+        "ShowGraphic=0",
+        "DisplayItems=1"
+      ]
+    }
+  ]
 }
