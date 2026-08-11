@@ -22,6 +22,9 @@ d'**édition** · le filtrage d'une **sortie de commande**, qui n'est pas un fic
 
 Une recherche qui ne trouve rien renseigne sur la recherche : reformuler, jamais retomber sur `grep`.
 
+**L'index d'un VOISIN se lit par `~/dev/bp/hub/tools/rtfm-tour.sh <dépôt> "<requête>"`** — chaque
+dépôt porte le sien, et `rtfm_search` ne voit que le courant. `--tous` interroge toute la tour.
+
 ## Autorité sur un sujet
 
 1. La **carte d'autorités d'Atlas** (`../atlas/carte-autorites/`) dit où vit l'autorité sur un sujet.
@@ -89,12 +92,11 @@ autorité « en attendant ». Face au blocage, j'attends.
 
 ## Écrire un document
 
-Cette section porte sur les **documents de référence**. Un commentaire de code relève de « Coder ».
-Un **registre** — backlog, décisions, constats — porte au contraire sa date et sa cause.
+Elle porte sur les **documents de référence** ; un commentaire de code relève de « Coder », et un
+**registre** — backlog, décisions, constats — porte au contraire sa date et sa cause.
 
 - **Descriptif, factuel, affirmatif** : le document décrit **ce qui est**, dans son état d'aujourd'hui ; la forme négative se réécrit en énoncé positif.
-- **Sans justification narrative** : ni citation d'une personne, ni cause, ni date, ni renvoi à une
-  décision, ni contraste avec une forme antérieure. Le pourquoi vit dans sa décision datée.
+- **Sans justification narrative** : ni citation, ni cause, ni date, ni renvoi à une décision.
 
 ## Écrire un garde
 
@@ -167,9 +169,7 @@ de ce tableau se lit là-bas**, jamais dans un résumé.
 `lib/digital/*.ts` en sont les sources. Éditer une source et régénérer le bundle se font **dans le
 même mouvement** — sinon le code lit l'ancienne valeur en silence.
 
-## Sous-agents de développement
-
-Un sous-agent de développement se lance **toujours** en `claude-sonnet-5`.
+## Sous-agents de développement — Un sous-agent de développement se lance **toujours** en `claude-sonnet-5`.
 
 ## Backlog
 
