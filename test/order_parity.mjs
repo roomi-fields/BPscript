@@ -106,22 +106,35 @@ function estampilleNative(commande) {
 const GUARD = path.join(__dirname, 'bp3-guard.sh');   // enveloppe anti-OOM, cf [231]
 const GRAMMARS = JSON.parse(fs.readFileSync(path.join(__dirname, 'grammars', 'grammars.json'), 'utf8'));
 
-// Réglages BP2 positionnels → JSON (repris de s3_native.cjs, version compacte).
-function convertOldSettings(c, conv) {
-  const lines = c.split(/\r\n?|\n/);
-  let hdr = 0;
-  while (hdr < lines.length && lines[hdr].trim().startsWith('//')) hdr++;
-  const vals = lines.slice(hdr);
-  if (vals.length < 48) return null;
-  const v = (p) => { const t = (vals[p] || '').trim(); if (!t || t.startsWith('/') || t.startsWith('<')) return null; return isNaN(parseFloat(t)) ? null : t; };
-  const o = {};
-  const set = (k, nm, p, b, u) => { const val = v(p); if (val === null) return; const e = { name: nm, value:val, boolean: b ? '1' : '0' }; if (u) e.unit = u; o[k] = e; };
-  set('Quantization', 'Quantization', 2, false, 'ms'); set('Time_res', 'Time resolution', 3, false, 'ms');
-  set('Improvize', 'Non-stop improvize', 10, true); set('MaxItemsProduce', 'Max items produced', 11, false);
-  set('UseEachSub', 'Play each substitution', 12, true); set('AllItems', 'Produce all items', 13, true);
-  set('MaxConsoleTime', 'Max computation time', 44, false, 'seconds'); set('Seed', 'Seed for randomization', 45, false);
-  o.NoteConvention = { name: 'Note convention', value:conv, boolean: '0' };
-  return o;
+/**
+ * ⛔ UN FICHIER DE RÉGLAGES AU FORMAT BP2 NE SE CONVERTIT PLUS ICI — IL FAIT CRIER LE BANC.
+ *
+ * Ce banc portait une conversion positionnelle des réglages BP2 (une carte champ → numéro de
+ * ligne). Elle est FAUSSE, et c'est l'objet de l'item BPS-24 : mesurée le 2026-08-12 sur les 22
+ * fichiers BP2 de `test-data`, elle rend un temps de calcul maximum de 0 ou 1 seconde sur NEUF
+ * d'entre eux — dont `koto1`, la grammaire par laquelle le défaut a été trouvé — ce qui COUPE la
+ * production ; ailleurs elle lit une graine `0l`, donc une ligne de texte. La carte juste n'est pas
+ * à moi : elle appartient à bp3-engine, propriétaire du format, et la deviner serait pire que de
+ * s'arrêter.
+ *
+ * ⚠️ CE QUE LA MESURE DIT AUSSI, et c'est ce qui rend le refus tenable : AUCUNE grammaire du
+ * catalogue n'emprunte ce chemin aujourd'hui. Zéro sur les 96 de l'assiette scellée (85 réglages en
+ * JSON, 11 sans réglages), zéro sur le catalogue entier, zéro parmi les 10 réglages passés
+ * explicitement. La conversion était donc du code mort qui rendait des valeurs fausses le jour où
+ * il aurait servi — la pire des deux moitiés.
+ *
+ * Le refus remplace la conversion plutôt que de disparaître avec elle : si bp3-engine reverse un
+ * jour un réglage à ce format, le banc doit s'ARRÊTER et le dire, jamais produire sous des valeurs
+ * dégénérées en rendant un vert.
+ */
+function refuserReglagesBP2(fichier) {
+  throw new Error(
+    `[ordre] réglages au format BP2 positionnel : ${fichier}\n`
+    + `   Ce banc ne les convertit plus. La carte champ → ligne qu'il portait rendait un temps de\n`
+    + `   calcul de 0 ou 1 seconde sur 9 des 22 fichiers de ce format (item BPS-24), ce qui coupe la\n`
+    + `   production sans que rien ne le signale. La carte juste appartient à bp3-engine.\n`
+    + `   Attendu : un fichier de réglages au format JSON.`,
+  );
 }
 
 /**
@@ -140,8 +153,10 @@ const derives = new Map();
 
 function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // gd peut être ABSENT de grammars.json (ex. Ruwet, Visser3/5 pour l'oracle single-play,
-  // item ORACLE-SINGLEPLAY-RECONCILE) : on construit alors les args depuis le seul -gr,
-  // les auxiliaires (-se/-al) étant inférés du CORPS de la grammaire (fallbacks plus bas).
+  // item ORACLE-SINGLEPLAY-RECONCILE) : on construit alors les args depuis le seul -gr. Les
+  // auxiliaires (-se/-al) ne s'en trouvent pas moins déclarés — ils viennent de la TABLE DE
+  // CORRESPONDANCE, pas du catalogue, et surtout plus du corps de la grammaire, où on les
+  // reniflait jusqu'au 2026-08-11.
   const gd = GRAMMARS[name] || null;
   if (gd && gd.status === 'excluded' && !allowExcluded) return null;
   const grName = (gd && gd.bernard) || name;
@@ -176,7 +191,9 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   }
   const hasIndian = declaree ? declaree === 'indian' : /\b(sa|ga)\d\b/.test(grNoC);
   const hasFrench = declaree ? declaree === 'french' : /\b(do|re|mi|fa|sol|la|si)\d\b/.test(grNoC);
-  const conv = declaree ? DECLAREE[declaree] : (hasIndian ? '2' : hasFrench ? '1' : '0');
+  // `DECLAREE` ne sert plus qu'à REFUSER une convention que la table nommerait sans que je la
+  // connaisse : le code de convention lui-même n'alimentait que la conversion BP2, retirée. Le
+  // binaire, lui, reçoit la convention par son propre drapeau, juste en dessous.
 
   const tmpGr = path.join(TD, `_ord_tmp_${name}.gr`);
   fs.writeFileSync(tmpGr, gr);
@@ -189,7 +206,8 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   const pushSettings = (file) => {
     if (!fs.existsSync(file)) return;
     const raw = fs.readFileSync(file, 'utf8').trim();
-    let obj = raw.startsWith('{') ? JSON.parse(raw) : convertOldSettings(raw, conv);
+    if (!raw.startsWith('{')) refuserReglagesBP2(file);
+    const obj = JSON.parse(raw);
     if (!obj) return;
     obj.ShowGraphic = { name: 'Show graphic', value:'0' };
     obj.DisplayItems = { name: 'Display final score', value:'1', boolean: '1' };
@@ -201,7 +219,7 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     derives.set(tmpSe, {
       source: file,
       transformations: [
-        raw.startsWith('{') ? 'lu tel quel (JSON)' : `converti depuis le format BP2 positionnel (convention ${conv})`,
+        'lu tel quel (JSON)',
         'ShowGraphic=0', 'DisplayItems=1',
         ...Object.entries(gd?.se_overrides || {}).filter(([k]) => k !== '_comment').map(([k, v]) => `${k}=${v} (se_overrides du catalogue)`),
       ],
