@@ -46,8 +46,7 @@ pour trois fichiers, et c'était vrai pour tous les autres. Après purge, il ne 
 
 | Fichier | Lecteur vivant | Ce qu'il prouve |
 |---|---|---|
-| `s3_timed.json` (50) | `order_parity.mjs:160` | oracle WASM gelé de la parité texte ordre-à-ordre |
-| `s3_native.json` (55) | `order_parity.mjs:175` | ordre natif de référence (posé par `--write`) |
+| `s3_native.json` (55) | `order_parity.mjs` | ordre natif de référence, et TERME DE COMPARAISON du banc depuis le 2026-08-11 (posé par `--write`) |
 | `transposition1/s1_native.json` | `iso_chromashift_12tet.mjs:88` | oracle du décalage chromatique 12-TET |
 
 **Toute autre famille a été supprimée** (`ARCHIVE_*`, `s2_*`, `s5_*`, les `s1_*` des autres

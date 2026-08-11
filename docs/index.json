@@ -1,13 +1,24 @@
 {
   "description": "BPscript documentation index — point d'entrée pour agents et humains",
   "updated": "2026-05-20",
-
   "spec": {
     "description": "Le langage tel qu'il EST — spécifications normatives",
     "files": {
       "LANGUAGE.md": {
         "content": "Spécification complète du langage BPscript",
-        "sections": ["vision", "3 mots / 24 symboles / 9 opérateurs de flags", "types temporels (gate/trigger/cv)", "double déclaration", "[] moteur vs () runtime", "backticks", "flags", "templates", "captures", "homomorphismes", "compilation vers BP3"],
+        "sections": [
+          "vision",
+          "3 mots / 24 symboles / 9 opérateurs de flags",
+          "types temporels (gate/trigger/cv)",
+          "double déclaration",
+          "[] moteur vs () runtime",
+          "backticks",
+          "flags",
+          "templates",
+          "captures",
+          "homomorphismes",
+          "compilation vers BP3"
+        ],
         "use_when": "comprendre la syntaxe, vérifier une construction, coder tokenizer/parser/encoder"
       },
       "EBNF.md": {
@@ -20,23 +31,42 @@
       }
     }
   },
-
   "design": {
     "description": "COMMENT c'est construit — architecture et design technique",
     "files": {
       "ARCHITECTURE.md": {
         "content": "Pipeline de compilation source → tokenizer → parser → encoder → grammaire BP3 + alphabet + prototypes → moteur WASM → timed tokens",
-        "sections": ["pipeline de compilation", "control table", "CV table", "acteurs", "interface WASM"],
+        "sections": [
+          "pipeline de compilation",
+          "control table",
+          "CV table",
+          "acteurs",
+          "interface WASM"
+        ],
         "use_when": "vue d'ensemble du système, comprendre le flux de données"
       },
       "PITCH.md": {
         "content": "Résolution pitch 6 couches",
-        "sections": ["Layer 0 Actor (binding)", "Layer 1 Alphabet", "Layer 2 Octaves", "Layer 3 Temperament", "Layer 4 Tuning", "Layer 5 Resolver", "annexe transposition"],
+        "sections": [
+          "Layer 0 Actor (binding)",
+          "Layer 1 Alphabet",
+          "Layer 2 Octaves",
+          "Layer 3 Temperament",
+          "Layer 4 Tuning",
+          "Layer 5 Resolver",
+          "annexe transposition"
+        ],
         "use_when": "comprendre token→fréquence, coder le resolver, ajouter un alphabet/tuning"
       },
       "SOUNDS.md": {
         "content": "Résolution terminaux unifiée, résolution par transport",
-        "sections": ["3 échelles (spec < CT < CV)", "formats JSON (table, template, paramétrique, par registre, samples)", "résolution par transport (WebAudio/MIDI/OSC)", "dégradation gracieuse", "implémentation (ActorRegistry, SoundsResolver)"],
+        "sections": [
+          "3 échelles (spec < CT < CV)",
+          "formats JSON (table, template, paramétrique, par registre, samples)",
+          "résolution par transport (WebAudio/MIDI/OSC)",
+          "dégradation gracieuse",
+          "implémentation (ActorRegistry, SoundsResolver)"
+        ],
         "use_when": "ajouter un instrument, comprendre cascading, coder un transport"
       },
       "CV.md": {
@@ -49,44 +79,69 @@
       },
       "TEMPORAL_DEFORMATION.md": {
         "content": "Constraint solver pour déformation temporelle en temps réel",
-        "sections": ["structure tree (arbre polymétrique)", "3 modes (span fixe, proportions fixes, contrainte relâchée)", "sources de contrôle (potards, MIDI CC, CV, drag)", "pipeline complet"],
+        "sections": [
+          "structure tree (arbre polymétrique)",
+          "3 modes (span fixe, proportions fixes, contrainte relâchée)",
+          "sources de contrôle (potards, MIDI CC, CV, drag)",
+          "pipeline complet"
+        ],
         "use_when": "coder le constraint solver, comprendre la déformation live"
       },
       "HOMOMORPHISMS.md": {
         "content": "Étiquetage post-dérivation et résolution REPL",
-        "sections": ["format {section}.{depth}%{terminal}", "résolution REPL", "stacking", "instructions agent transpileur", "instructions agent WASM"],
+        "sections": [
+          "format {section}.{depth}%{terminal}",
+          "résolution REPL",
+          "stacking",
+          "instructions agent transpileur",
+          "instructions agent WASM"
+        ],
         "use_when": "coder les homomorphismes, comprendre le labeling"
       },
       "REPL.md": {
         "content": "Architecture backticks et REPL adapters",
-        "sections": ["3 types backtick (orphelin, inline, standalone)", "adapters (SC, Tidal, Python)", "sessions", "timing"],
+        "sections": [
+          "3 types backtick (orphelin, inline, standalone)",
+          "adapters (SC, Tidal, Python)",
+          "sessions",
+          "timing"
+        ],
         "use_when": "coder un adapter REPL, comprendre l'exécution des backticks"
       },
       "SCENES.md": {
         "content": "Hiérarchie de scènes, scoping des flags, communication inter-scènes",
-        "sections": ["@scene directive", "scoping (héritage top-down, @expose, isolation siblings)", "sys acteur auto-exposé", "fan-out CC/OSC", "cycles de feedback"],
+        "sections": [
+          "@scene directive",
+          "scoping (héritage top-down, @expose, isolation siblings)",
+          "sys acteur auto-exposé",
+          "fan-out CC/OSC",
+          "cycles de feedback"
+        ],
         "use_when": "comprendre le modèle multi-scènes, le scoping des flags, la sémantique @scene/@expose/@map"
       },
       "_moteur_bpx": {
         "content": "Docs du moteur BPx migrées dans le dépôt BPx (../../BPx/docs/)",
-        "sections": ["ARCHITECTURE.md (principes/décisions)", "ENGINE_SPEC.md (contrat externe)", "IMPLEMENTATION.md (interne)"],
+        "sections": [
+          "ARCHITECTURE.md (principes/décisions)",
+          "ENGINE_SPEC.md (contrat externe)",
+          "IMPLEMENTATION.md (interne)"
+        ],
         "use_when": "comprendre ou coder le moteur BPx"
       },
       "INTERFACES_BP3.md": {
         "content": "API WASM BP3 complète",
-        "sections": ["fonctions d'entrée (load grammar/alphabet/settings/tonality)", "fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events)", "verbose levels 0/1/2"],
+        "sections": [
+          "fonctions d'entrée (load grammar/alphabet/settings/tonality)",
+          "fonctions de sortie (produce, get_result, get_timed_tokens, get_midi_events)",
+          "verbose levels 0/1/2"
+        ],
         "use_when": "appeler le moteur WASM, comprendre les formats in/out"
       }
     }
   },
-
   "reference": {
     "description": "Guides techniques — COMMENT utiliser",
     "files": {
-      "WASM_HOWTO.md": {
-        "content": "Build et usage WASM (Emscripten SDK, build.sh, API JS)",
-        "use_when": "builder le moteur, debugger WASM"
-      },
       "NATIVE_HOWTO.md": {
         "content": "Build natif Linux (GCC, options CLI, tests S0/S1)",
         "use_when": "compiler bp3 natif, lancer les tests de référence"
@@ -101,7 +156,6 @@
       }
     }
   },
-
   "issues": {
     "description": "Problèmes ouverts",
     "files": {
@@ -112,10 +166,6 @@
       "RNG_PORTABLE.md": {
         "content": "RNG non portable MSVC vs glibc (6 grammaires S0≠S1)",
         "status": "spec prête, implémentation pending"
-      },
-      "TEMPO_OPS_WASM.md": {
-        "content": "Opérateurs tempo /N, \\N, _tempo() : écarts comportementaux WASM vs natif (tests MIDI comparés)",
-        "status": "investigation en cours"
       }
     }
   }

@@ -40,7 +40,6 @@
 
 | Document | Contenu | Quand le lire |
 |----------|---------|---------------|
-| [WASM_HOWTO.md](reference/WASM_HOWTO.md) | Build WASM : Emscripten SDK, build.sh, chargement module, API JS | Builder le moteur, debugger un problème WASM |
 | [NATIVE_HOWTO.md](reference/NATIVE_HOWTO.md) | Build natif Linux : GCC, options CLI, tests S0/S1 | Compiler bp3 natif, lancer les tests de référence |
 | [BP3_FILE_FORMATS.md](reference/BP3_FILE_FORMATS.md) | Formats fichiers BP3 : -gr. (grammaire), -al. (alphabet), -ho. (homomorphisme), -se. (settings), -so. (sound objects), -to. (tonalité), -tb. (tabulature), -cs. (Csound), -gl. (glossaire) | Comprendre un fichier BP3, générer un fichier auxiliaire |
 | [HO_FORMAT.md](reference/HO_FORMAT.md) | Format détaillé -ho. : déclarations de terminaux, homomorphismes, timepatterns, basé sur 38 fichiers d'exemple | Coder la génération de fichiers -ho. |
@@ -50,7 +49,6 @@
 | Document | Contenu | Status |
 |----------|---------|--------|
 | [POLYMAKE_STACK.md](issues/POLYMAKE_STACK.md) | Stack overflow sur polymétrie imbriquée 5+ niveaux (not-reich). Workaround : text only, pas de timing | Non résolu — workaround actif |
-| [TEMPO_OPS_WASM.md](issues/TEMPO_OPS_WASM.md) | Opérateurs tempo `/N`, `\N`, `_tempo()` : écarts comportementaux WASM vs natif (tests MIDI comparés) | Investigation en cours |
 
 > RNG non portable MSVC vs glibc (6 grammaires S0≠S1) : **résolu le 2026-04-02** (LCG portable
 > implémenté, `bp3_random.c`/`.h`, score S0=S1 passé à 26/30 EXACT). Retiré de la table ci-dessus ;

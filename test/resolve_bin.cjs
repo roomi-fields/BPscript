@@ -2,7 +2,7 @@
 /**
  * resolve_bin.cjs — Shared --bin resolution for all test scripts.
  *
- * --bin is MANDATORY. Only accepts version tags (e.g. v3.3.19, v3.3.18-wasm.1).
+ * --bin is MANDATORY. Only accepts version tags (e.g. v3.3.19).
  * Special value "last" reads from bp3-engine/builds/LAST.
  *
  * Resolution: tag → bp3-engine/builds/{tag}/
@@ -65,24 +65,12 @@ function resolveBin(tag, filename) {
   return full;
 }
 
-/**
- * Resolve tag to a WASM directory (for s2/s4/s5).
- * Verifies bp3.js exists in the directory.
- * @param {string} tag - Version tag
- * @returns {string} Full path to directory containing bp3.js
- */
-function resolveDist(tag) {
-  const dir = path.resolve(BUILDS_DIR, tag);
-  if (!fs.existsSync(dir)) {
-    console.error(`--bin: version directory not found: ${dir}`);
-    process.exit(1);
-  }
-  if (!fs.existsSync(path.join(dir, 'bp3.js'))) {
-    console.error(`--bin: bp3.js not found in ${dir}`);
-    process.exit(1);
-  }
-  return dir;
-}
+// `resolveDist` A ÉTÉ SUPPRIMÉ le 2026-08-11, avec son unique appelant
+// (`test/transpiler_fixtures/run.cjs`) : il résolvait un répertoire de build WASM, et le WASM sort
+// de toute la tour (décision de Romain). Son appelant était d'ailleurs mort en silence bien avant —
+// il lisait `r.grammar` et `r.alphabetFile` sur le résultat de `compileToBPxAST`, qui n'a que
+// `ast`, `errors`, `warnings` : il écrivait des fichiers vides sans que rien ne le dise.
+// `resolveBin`, lui, résout le binaire NATIF et reste.
 
 /**
  * Strip --bin and its value from an argv array.
@@ -91,4 +79,4 @@ function stripBinArgs(argv) {
   return argv.filter((a, i, arr) => a !== '--bin' && arr[i - 1] !== '--bin');
 }
 
-module.exports = { requireBinTag, resolveBin, resolveDist, stripBinArgs, BP3_DIR, BUILDS_DIR };
+module.exports = { requireBinTag, resolveBin, stripBinArgs, BP3_DIR, BUILDS_DIR };

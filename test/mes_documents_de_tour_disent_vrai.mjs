@@ -65,9 +65,12 @@ const compteNiveau = (niveau) => {
 };
 ok(compteNiveau('s3_native') > 0, "2. l'arborescence d'oracles doit exister — sinon rien à confronter");
 
+// ⚠️ `s3_timed` A QUITTÉ CETTE LISTE LE 2026-08-11, avec les 50 fichiers qu'il comptait — le WASM
+// sort de toute la tour (décision de Romain). Le laisser ici aurait exigé du contrat qu'il annonce
+// un compte pour un niveau qui n'existe plus : un garde qui réclame la trace d'une chose retirée
+// est exactement la voie parallèle qu'on ne garde pas. Il s'en va dans le même mouvement.
 for (const [niveau, motif] of [
   ['s3_native', /`s3_native\.json`\s*\|\s*\*\*(\d+)\*\*/],
-  ['s3_timed', /`s3_timed\.json`\s*\|\s*\*\*(\d+)\*\*/],
   ['s1_native', /`s1_native\.json`\s*\|\s*\*\*(\d+)\*\*/],
 ]) {
   const m = texte.contrat.match(motif);

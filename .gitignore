@@ -5,7 +5,6 @@ node_modules/
 .claude/scratchpad/
 raw/
 docs/mails/
-*.wasm18
 _test_*
 _archive/
 library.db
