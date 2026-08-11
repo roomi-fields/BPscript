@@ -83,6 +83,20 @@ function convertOldSettings(c, conv) {
   return o;
 }
 
+/**
+ * LES ENTRÉES ÉPHÉMÈRES, ET LEUR SOURCE — pour que la commande gravée SE REJOUE.
+ *
+ * ⛔ CE BANC GRAVAIT UNE COMMANDE QUI NE POUVAIT PAS SE REJOUER, et elle passait pour qualifiée :
+ * elle citait `/tmp/_ord_<nom>_se.json` et un `-gr` temporaire, deux fichiers que ce banc fabrique
+ * puis efface. Les trois champs étaient écrits, aucun n'était nul, et personne n'aurait pu
+ * reproduire la mesure. C'est le cousin du défaut payé par bp3-frontend le 2026-08-11 — là un
+ * champ vide, ici un chemin mort : dans les deux cas la condition a l'apparence d'une condition.
+ *
+ * On mémorise donc, pour chaque dérivé, le fichier SOURCE et ce qu'on lui a fait. La commande
+ * gravée cite les sources ; les transformations sont déclarées à côté, jamais sous-entendues.
+ */
+const derives = new Map();
+
 function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // gd peut être ABSENT de grammars.json (ex. Ruwet, Visser3/5 pour l'oracle single-play,
   // item ORACLE-SINGLEPLAY-RECONCILE) : on construit alors les args depuis le seul -gr,
@@ -121,6 +135,7 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
 
   const tmpGr = path.join(TD, `_ord_tmp_${name}.gr`);
   fs.writeFileSync(tmpGr, gr);
+  derives.set(tmpGr, { source: grFile, transformations: ['fins de ligne normalisées en LF'] });
   const args = ['produce', '-e', '-gr', tmpGr, '--seed', '1'];
   if (hasIndian) args.push('--indian'); else if (hasFrench) args.push('--french');
 
@@ -137,6 +152,15 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     const tmpSe = path.join('/tmp', `_ord_${name}_se.json`);
     fs.writeFileSync(tmpSe, JSON.stringify(obj));
     args.push('-se', tmpSe);
+    // La commande gravée doit citer la SOURCE, pas le dérivé éphémère : cf. `derives`.
+    derives.set(tmpSe, {
+      source: file,
+      transformations: [
+        raw.startsWith('{') ? 'lu tel quel (JSON)' : `converti depuis le format BP2 positionnel (convention ${conv})`,
+        'ShowGraphic=0', 'DisplayItems=1',
+        ...Object.entries(gd?.se_overrides || {}).filter(([k]) => k !== '_comment').map(([k, v]) => `${k}=${v} (se_overrides du catalogue)`),
+      ],
+    });
   };
   if (gd?.s1_args) {
     // s1_args = paires (drapeau, fichier). En BP3 les fichiers AUX commencent
@@ -160,7 +184,18 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // dans le CORPS de la grammaire — beaucoup de clés to_be_tested n'ont ni s1_args ni
   // php_ref.settings alors que le -se. existe dans test-data.
   if (!explicit.has('-se') && !args.includes('-se')) { const m = gr.match(/-se\.(\S+)/); if (m) pushSettings(path.join(TD, `-se.${m[1]}`)); }
-  if (!explicit.has('-al') && gd?.php_ref?.alphabet) { const m = gd.php_ref?.alphabet.match(/-al\.(\S+)/); if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); } }
+  // ⛔ L'ALPHABET DÉCLARÉ SE PASSE QUEL QUE SOIT SON PRÉFIXE — le motif ne retenait que `-al.` et
+  // laissait tomber en silence les alphabets nommés `-ho.` (`dhin1` déclare `-ho.dhin--`).
+  // MESURÉ le 2026-08-11 : sans `-al`, dhin1 rend une production VIDE ; avec, 341 octets. Mon banc
+  // la comptait donc « non capturable » alors que l'outil de référence du chantier la produisait
+  // — 318 octets le matin même. Le fichier était là, le drapeau existait, seul le motif refusait.
+  // ⚠️ CE N'EST PAS LE CAS QUE LA NOTE CI-DESSOUS ÉCARTE : elle interdit de passer un `-ho` sous le
+  // drapeau `-ho`, ce qui double-charge. Ici le fichier passe sous `-al`, et c'est ce que fait
+  // l'outil de référence.
+  if (!explicit.has('-al') && gd?.php_ref?.alphabet) {
+    const m = gd.php_ref.alphabet.match(/-(?:al|ho)\.\S+/);
+    if (m) { const f = path.join(TD, m[0]); if (fs.existsSync(f)) args.push('-al', f); }
+  }
   if (!explicit.has('-al') && !args.includes('-al')) {
     const m = gr.match(/-al\.(\S+)/);
     if (m) { const f = path.join(TD, `-al.${m[1]}`); if (fs.existsSync(f)) args.push('-al', f); }
@@ -175,6 +210,25 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
 
 // La dernière invocation native, retenue pour l'estampille de l'instantané qu'elle produit.
 let derniereCommande = null;
+/** Les entrées éphémères de cette invocation, avec leur source et leurs transformations. */
+let dernieresEntrees = null;
+
+/**
+ * Rend l'estampille REJOUABLE : la commande citant les fichiers SOURCES, et à côté ce qu'on a
+ * fait à chacun. Sans ces deux moitiés la commande gravée ne reproduit rien — un `-se` converti
+ * n'est pas le `-se` du dépôt, et le taire ferait chercher l'écart dans le moteur.
+ */
+function conditionsRejouables(commande) {
+  if (!commande) return { command: null, entrees: null };
+  let rejouable = commande;
+  const entrees = [];
+  for (const [ephemere, quoi] of derives) {
+    if (!commande.includes(ephemere)) continue;
+    rejouable = rejouable.split(ephemere).join(quoi.source);
+    entrees.push({ passe_au_binaire: ephemere, source: quoi.source, transformations: quoi.transformations });
+  }
+  return { command: rejouable, entrees: entrees.length ? entrees : null };
+}
 
 function nativeOrder(name, opts = {}) {
   const prodFile = path.join('/tmp', `_ord_${name}_prod.txt`);
@@ -187,6 +241,7 @@ function nativeOrder(name, opts = {}) {
   // et ce qui a tourné, et c'est précisément ce que l'estampille doit interdire.
   const commande = `bash "${GUARD}" "${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`;
   derniereCommande = commande;
+  dernieresEntrees = null;
   try { execSync(commande, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
   try { fs.unlinkSync(path.join(TD, `_ord_tmp_${name}.gr`)); } catch {} // temp grammaire normalisée
   if (!fs.existsSync(prodFile)) return { error: 'no output' };
@@ -257,7 +312,9 @@ function writeTextOracle(name, tokens) {
     mode:'text',
     tokens: newToks,
     date: new Date().toISOString().slice(0, 10),
-    ...estampilleNative(derniereCommande),
+    ...(() => { const c = conditionsRejouables(derniereCommande);
+        dernieresEntrees = c.entrees;
+        return { ...estampilleNative(c.command), entrees: c.entrees }; })(),
   };
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(snap, null, 2));
@@ -297,7 +354,9 @@ if (SINGLEPLAY) {
       seed: 1,
       count: nat.tokens.length,
       tokens: nat.tokens,
-      ...estampilleNative(derniereCommande),
+      ...(() => { const c = conditionsRejouables(derniereCommande);
+        dernieresEntrees = c.entrees;
+        return { ...estampilleNative(c.command), entrees: c.entrees }; })(),
     };
     const file = path.join(OUT, `${name}.json`);
     fs.writeFileSync(file, JSON.stringify(snap, null, 2));

@@ -4,17 +4,22 @@
   "mode": "text",
   "tokens": [
     [
-      "4+4+4+4/4",
+      "4+4/6",
       0,
       0
     ],
     [
-      "dha",
+      "dhin",
       0,
       0
     ],
     [
-      "ti",
+      "-",
+      0,
+      0
+    ],
+    [
+      "-",
       0,
       0
     ],
@@ -25,11 +30,6 @@
     ],
     [
       "ge",
-      0,
-      0
-    ],
-    [
-      ".",
       0,
       0
     ],
@@ -39,17 +39,37 @@
       0
     ],
     [
+      ".",
+      0,
+      0
+    ],
+    [
       "dha",
       0,
       0
     ],
     [
-      "tr",
+      "-",
       0,
       0
     ],
     [
-      "kt",
+      "-",
+      0,
+      0
+    ],
+    [
+      "dha",
+      0,
+      0
+    ],
+    [
+      "ge",
+      0,
+      0
+    ],
+    [
+      "na",
       0,
       0
     ],
@@ -69,7 +89,7 @@
       0
     ],
     [
-      "dha",
+      "ge",
       0,
       0
     ],
@@ -79,7 +99,27 @@
       0
     ],
     [
+      "na",
+      0,
+      0
+    ],
+    [
+      "ka",
+      0,
+      0
+    ],
+    [
       ".",
+      0,
+      0
+    ],
+    [
+      "dhee",
+      0,
+      0
+    ],
+    [
+      "ne",
       0,
       0
     ],
@@ -109,27 +149,52 @@
       0
     ],
     [
-      "tr",
+      "ta",
       0,
       0
     ],
     [
-      "kt",
+      "ge",
       0,
       0
     ],
     [
-      "dha",
+      "ti",
       0,
       0
     ],
     [
-      "-",
+      "ra",
+      0,
+      0
+    ],
+    [
+      "ki",
+      0,
+      0
+    ],
+    [
+      "ta",
       0,
       0
     ],
     [
       ".",
+      0,
+      0
+    ],
+    [
+      "ge",
+      0,
+      0
+    ],
+    [
+      "na",
+      0,
+      0
+    ],
+    [
+      "-",
       0,
       0
     ],
@@ -149,11 +214,6 @@
       0
     ],
     [
-      "dha",
-      0,
-      0
-    ],
-    [
       ".",
       0,
       0
@@ -169,7 +229,7 @@
       0
     ],
     [
-      "dha",
+      "ge",
       0,
       0
     ],
@@ -179,7 +239,167 @@
       0
     ],
     [
+      "na",
+      0,
+      0
+    ],
+    [
+      "ka",
+      0,
+      0
+    ],
+    [
       ".",
+      0,
+      0
+    ],
+    [
+      "tee",
+      0,
+      0
+    ],
+    [
+      "ne",
+      0,
+      0
+    ],
+    [
+      "tee",
+      0,
+      0
+    ],
+    [
+      "na",
+      0,
+      0
+    ],
+    [
+      "ke",
+      0,
+      0
+    ],
+    [
+      "na",
+      0,
+      0
+    ],
+    [
+      ".",
+      0,
+      0
+    ],
+    [
+      "tin",
+      0,
+      0
+    ],
+    [
+      "-",
+      0,
+      0
+    ],
+    [
+      "-",
+      0,
+      0
+    ],
+    [
+      "ta",
+      0,
+      0
+    ],
+    [
+      "ke",
+      0,
+      0
+    ],
+    [
+      "na",
+      0,
+      0
+    ],
+    [
+      ".",
+      0,
+      0
+    ],
+    [
+      "ta",
+      0,
+      0
+    ],
+    [
+      "-",
+      0,
+      0
+    ],
+    [
+      "-",
+      0,
+      0
+    ],
+    [
+      "ta",
+      0,
+      0
+    ],
+    [
+      "ke",
+      0,
+      0
+    ],
+    [
+      "na",
+      0,
+      0
+    ],
+    [
+      ".",
+      0,
+      0
+    ],
+    [
+      "ta",
+      0,
+      0
+    ],
+    [
+      "ti",
+      0,
+      0
+    ],
+    [
+      "ke",
+      0,
+      0
+    ],
+    [
+      "ke",
+      0,
+      0
+    ],
+    [
+      "na",
+      0,
+      0
+    ],
+    [
+      "ka",
+      0,
+      0
+    ],
+    [
+      ".",
+      0,
+      0
+    ],
+    [
+      "tee",
+      0,
+      0
+    ],
+    [
+      "ne",
       0,
       0
     ],
@@ -214,52 +434,7 @@
       0
     ],
     [
-      "ti",
-      0,
-      0
-    ],
-    [
-      "ta",
-      0,
-      0
-    ],
-    [
-      "ke",
-      0,
-      0
-    ],
-    [
-      ".",
-      0,
-      0
-    ],
-    [
-      "na",
-      0,
-      0
-    ],
-    [
-      "ta",
-      0,
-      0
-    ],
-    [
-      "tr",
-      0,
-      0
-    ],
-    [
-      "kt",
-      0,
-      0
-    ],
-    [
-      ".",
-      0,
-      0
-    ],
-    [
-      "ta",
+      "ge",
       0,
       0
     ],
@@ -269,57 +444,27 @@
       0
     ],
     [
+      "ra",
+      0,
+      0
+    ],
+    [
+      "ki",
+      0,
+      0
+    ],
+    [
       "ta",
       0,
       0
     ],
     [
-      "ke",
-      0,
-      0
-    ],
-    [
       ".",
       0,
       0
     ],
     [
-      "tee",
-      0,
-      0
-    ],
-    [
-      "na",
-      0,
-      0
-    ],
-    [
-      "ke",
-      0,
-      0
-    ],
-    [
-      "na",
-      0,
-      0
-    ],
-    [
-      ".",
-      0,
-      0
-    ],
-    [
-      "tr",
-      0,
-      0
-    ],
-    [
-      "kt",
-      0,
-      0
-    ],
-    [
-      "dha",
+      "dhin",
       0,
       0
     ],
@@ -329,7 +474,7 @@
       0
     ],
     [
-      ".",
+      "-",
       0,
       0
     ],
@@ -349,11 +494,6 @@
       0
     ],
     [
-      "dha",
-      0,
-      0
-    ],
-    [
       ".",
       0,
       0
@@ -369,7 +509,7 @@
       0
     ],
     [
-      "dha",
+      "ge",
       0,
       0
     ],
@@ -379,7 +519,27 @@
       0
     ],
     [
+      "na",
+      0,
+      0
+    ],
+    [
+      "ka",
+      0,
+      0
+    ],
+    [
       ".",
+      0,
+      0
+    ],
+    [
+      "dhee",
+      0,
+      0
+    ],
+    [
+      "ne",
       0,
       0
     ],
@@ -406,19 +566,19 @@
   ],
   "date": "2026-08-11",
   "engineVersion": "3.5.1",
-  "engineMd5": "3a6fa3e745eee5171b277a1dd50f61da",
-  "command": "bash \"/home/romi/dev/bp/BPscript/test/bp3-guard.sh\" \"/home/romi/dev/bp/bp3-engine/bp3\" \"produce\" \"-e\" \"-gr\" \"/home/romi/dev/bp/bp3-engine/test-data/-gr.dhati3\" \"--seed\" \"1\" \"-se\" \"/home/romi/dev/bp/bp3-engine/test-data/-se.dhati2\" \"-al\" \"/home/romi/dev/bp/bp3-engine/test-data/-al.dhati\" \"-o\" \"/tmp/_ord_dhati3_prod.txt\"",
+  "engineMd5": "9081f9a6d6cd68669e052e22eaf0102d",
+  "command": "bash \"/home/romi/dev/bp/BPscript/test/bp3-guard.sh\" \"/home/romi/dev/bp/bp3-engine/bp3\" \"produce\" \"-e\" \"-gr\" \"/home/romi/dev/bp/bp3-engine/test-data/-gr.dhin1\" \"--seed\" \"1\" \"-se\" \"/home/romi/dev/bp/bp3-engine/test-data/-se.dhin--\" \"-al\" \"/home/romi/dev/bp/bp3-engine/test-data/-ho.dhin--\" \"-o\" \"/tmp/_ord_dhin1_prod.txt\"",
   "entrees": [
     {
-      "passe_au_binaire": "/home/romi/dev/bp/bp3-engine/test-data/_ord_tmp_dhati3.gr",
-      "source": "/home/romi/dev/bp/bp3-engine/test-data/-gr.dhati3",
+      "passe_au_binaire": "/home/romi/dev/bp/bp3-engine/test-data/_ord_tmp_dhin1.gr",
+      "source": "/home/romi/dev/bp/bp3-engine/test-data/-gr.dhin1",
       "transformations": [
         "fins de ligne normalisées en LF"
       ]
     },
     {
-      "passe_au_binaire": "/tmp/_ord_dhati3_se.json",
-      "source": "/home/romi/dev/bp/bp3-engine/test-data/-se.dhati2",
+      "passe_au_binaire": "/tmp/_ord_dhin1_se.json",
+      "source": "/home/romi/dev/bp/bp3-engine/test-data/-se.dhin--",
       "transformations": [
         "lu tel quel (JSON)",
         "ShowGraphic=0",
