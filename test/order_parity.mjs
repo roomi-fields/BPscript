@@ -38,7 +38,32 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
-const BP3 = path.resolve(BP3_DIR, 'bp3');
+/**
+ * L'ORACLE DE LA CAMPAGNE EST UN BINAIRE ARCHIVÉ, PAS LE BINAIRE DE TRAVAIL.
+ *
+ * ⛔ POURQUOI CE N'EST PLUS `bp3-engine/bp3`. Ce binaire a été reconstruit QUATRE fois le
+ * 2026-08-11 sous le même numéro 3.5.1, et mes 27 instantanés qualifiés citent une empreinte
+ * (`9081f9a6…`) qui n'existe plus nulle part. Une référence dont le producteur a disparu ne se
+ * rejoue pas : elle ne devient pas fausse, elle devient invérifiable, ce qui est pire parce que
+ * rien ne le signale.
+ *
+ * bp3-engine a figé et nommé l'oracle de campagne le 2026-08-11 (`builds/v3.5.1-iso.1/bp3`,
+ * empreinte `fb6df5ad…`, version 3.5.1 du 11 août 13:16:56, commit 672cd43) et s'engage à ne pas
+ * le reconstruire tant que la campagne mesure. `bp3` de travail porte aujourd'hui le MÊME contenu
+ * — c'est l'ARCHIVE qui fait foi, parce qu'elle seule ne bougera pas sous la mesure.
+ *
+ * ⚠️ ET IL N'Y A PAS DE REPLI SUR LE BINAIRE DE TRAVAIL. Un repli mesurerait contre un moteur non
+ * nommé en croyant mesurer contre l'oracle, et le vert ne dirait pas lequel — exactement le défaut
+ * que bp3-engine a payé le même jour, son script ayant remplacé un binaire EN COURS D'EXÉCUTION,
+ * échoué en silence et mesuré vingt minutes contre l'ancien.
+ */
+const BP3 = path.resolve(BP3_DIR, 'builds', 'v3.5.1-iso.1', 'bp3');
+if (!fs.existsSync(BP3)) {
+  console.error(`❌ oracle de campagne introuvable : ${BP3}\n`
+    + `   Ce banc ne mesure QUE contre l'archive figée par bp3-engine. Il n'y a pas de repli sur\n`
+    + `   'bp3-engine/bp3' : un repli rendrait un vert dont on ignorerait le moteur.`);
+  process.exit(1);
+}
 
 /**
  * L'ESTAMPILLE D'UN INSTANTANÉ NATIF — version, empreinte du binaire, ET COMMANDE COMPLÈTE.

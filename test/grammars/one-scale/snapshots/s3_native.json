@@ -1,0 +1,59 @@
+{
+  "source": "native -o (bp3 Linux, production canonique ordonnée)",
+  "stage": "s3_native",
+  "mode": "text",
+  "tokens": [
+    [
+      "Cj4",
+      0,
+      0
+    ],
+    [
+      "Aj4",
+      0,
+      0
+    ],
+    [
+      "Gj4",
+      0,
+      0
+    ],
+    [
+      "D4",
+      0,
+      0
+    ],
+    [
+      "F4",
+      0,
+      0
+    ],
+    [
+      "E4",
+      0,
+      0
+    ]
+  ],
+  "date": "2026-08-11",
+  "engineVersion": "3.5.1",
+  "engineMd5": "fb6df5ad5ee18a0398ae3cdb1817287d",
+  "command": "bash \"/home/romi/dev/bp/BPscript/test/bp3-guard.sh\" \"/home/romi/dev/bp/bp3-engine/builds/v3.5.1-iso.1/bp3\" \"produce\" \"-e\" \"-gr\" \"/home/romi/dev/bp/bp3-engine/test-data/-gr.tryOneScale\" \"--seed\" \"1\" \"-se\" \"/home/romi/dev/bp/bp3-engine/test-data/-se.tryOneScale\" \"-to\" \"/home/romi/dev/bp/bp3-engine/test-data/-to.tryOneScale\" \"-o\" \"/tmp/_ord_one-scale_prod.txt\"",
+  "entrees": [
+    {
+      "passe_au_binaire": "/home/romi/dev/bp/bp3-engine/test-data/_ord_tmp_one-scale.gr",
+      "source": "/home/romi/dev/bp/bp3-engine/test-data/-gr.tryOneScale",
+      "transformations": [
+        "fins de ligne normalisées en LF"
+      ]
+    },
+    {
+      "passe_au_binaire": "/tmp/_ord_one-scale_se.json",
+      "source": "/home/romi/dev/bp/bp3-engine/test-data/-se.tryOneScale",
+      "transformations": [
+        "lu tel quel (JSON)",
+        "ShowGraphic=0",
+        "DisplayItems=1"
+      ]
+    }
+  ]
+}
