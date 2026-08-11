@@ -1280,7 +1280,7 @@ function convertTemplateToken(tok, isMaster) {
  * Convertit un token de contrôle runtime BP3 en syntaxe BPscript (ctrl:val).
  *
  * Formes supportées :
- *   _transpose(N)   → (transpose:N)
+ *   _transpose(N)   → (chromashift:N)   N = clés chromatiques, cf. le corps
  *   _scale(a,b)     → (scale:a,b)
  *   _pitchrange(N)  → (pitchrange:N)
  *   _pitchbend(N)   → (pitchbend:N)   (N peut être +N ou -N)
@@ -1297,20 +1297,26 @@ function convertRuntimeControlToBPS(tok) {
   // Contrôles sans arguments
   if (tok === '_pitchcont')  return '(pitchcont:1)';
   if (tok === '_volumecont') return '(volumecont:1)';
+  // BP3 _transpose(N) = chromashift(N) sur la grille 12 clés (décision Romain 2026-07-17, option B :
+  // trois gestes — transpose réel / scaleshift diatonique / chromashift chromatique=_transpose BP3).
+  // N = clés chromatiques (Zouleb.c:555-574, key += Round(trans/100)). PAS transpose réel (ratio fixe,
+  // nom PRÉSERVÉ), PAS scaleshift (degrés de mode).
+  //
+  // ⚠️ LE RENOMMAGE S'APPLIQUE À TOUTES LES BRANCHES, et cette ligne répare un trou mesuré le
+  // 2026-08-12 : la branche « token sans parenthèses » composait son nom à part et rendait
+  // `(transpose:1)` — la clé du geste RÉEL, sous laquelle Kairos applique un ratio fixe au lieu du
+  // tuning de la clé d'arrivée (mesuré en intonation juste : jusqu'à 13,7 cents d'écart). Le corpus
+  // des 113 ne porte pas la forme, donc rien ne le montrait ; c'est précisément pourquoi il fallait
+  // le fermer sur l'ESPACE et non sur un cas vu.
+  const nomDeGeste = (n) => (n === 'transpose' ? 'chromashift' : n);
   // Contrôles avec arguments : _name(args)
   const m = tok.match(/^_([a-z]+)\(([^)]*)\)$/);
   if (!m) {
     // Token _name sans "()" — traiter comme no-arg
-    const name = tok.replace(/^_/, '');
-    return `(${name}:1)`;
+    return `(${nomDeGeste(tok.replace(/^_/, ''))}:1)`;
   }
-  const name = m[1];
+  const outName = nomDeGeste(m[1]);
   const args = m[2].trim();
-  // BP3 _transpose(N) = chromashift(N) sur la grille 12 clés (décision Romain 2026-07-17, option B :
-  // trois gestes — transpose réel / scaleshift diatonique / chromashift chromatique=_transpose BP3).
-  // N = demi-tons (Zouleb.c:555-574, key += Round(trans/100)). PAS transpose réel (préserve le nom),
-  // PAS scaleshift (diatonique).
-  const outName = name === 'transpose' ? 'chromashift' : name;
   if (!args) return `(${outName}:0)`;
   return `(${outName}:${args})`;
 }
