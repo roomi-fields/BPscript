@@ -7,9 +7,13 @@
 // ⚠️ CE BANC A COMPARÉ AU WASM (`s3_timed.json`) JUSQU'AU 2026-08-11, deux mois après la
 // décision qui le retire (`decisions/2026-06-14-oracle-natif-trois-voies.md` : ni moteur, ni
 // oracle). Il ne mesurait donc plus une non-régression mais un écart entre un moteur vivant et
-// un portage abandonné. Le pas manquant est celui du PLAN phase A point 3, et il ne pouvait pas
-// se signaler : ce fichier n'est appelé ni par `test/run_guards.mjs`, ni par `package.json`, ni
-// par `.githooks/pre-push`.
+// un portage abandonné — le pas manquant du PLAN phase A point 3.
+//
+// ⚠️ ET IL NE POUVAIT PAS LE SIGNALER, POUR UNE RAISON QUE J'AI D'ABORD MAL NOMMÉE. J'ai rapporté
+// qu'il était hors du portillon ; c'est FAUX, `run_guards.mjs` le lance — il balaie le dossier au
+// lieu de nommer ses gardes, et ma recherche de son NOM n'a rien trouvé. La vraie cause est que
+// son assiette par défaut valait TROIS grammaires écrites en dur sur les 27 qu'il pouvait
+// comparer, et que les trois étaient d'accord avec le WASM. Elle suit maintenant les captures.
 //
 // Sans --write : LECTURE SEULE (validation, gate Romain). Avec --write : pose
 // snapshots/s3_native.json mode 'text' (idempotent — jetons identiques → non réécrit).
@@ -377,7 +381,38 @@ const names = CAMPAIGN
         && (v.production_mode || 'midi') === 'text'
         && fs.existsSync(path.join(TD, `-gr.${v.bernard || k}`)))
       .map(([k]) => k)
-  : targets.length ? targets : ['flags', 'negative-context', 'ek-do-tin'];
+  : targets.length ? targets : parDefaut();
+
+/**
+ * L'ASSIETTE PAR DÉFAUT — TOUT CE QUI PORTE UN ORACLE FIGÉ EN MODE TEXTE.
+ *
+ * ⛔ ELLE VALAIT TROIS NOMS ÉCRITS EN DUR, ET C'EST COMME ÇA QUE LE WASM A SURVÉCU DEUX MOIS À LA
+ * DÉCISION QUI LE RETIRAIT. Ce banc tourne bien à chaque portillon — `run_guards.mjs` balaie le
+ * dossier — mais sans argument il n'examinait que `flags`, `negative-context` et `ek-do-tin`. Les
+ * trois étaient d'accord avec le WASM, donc il passait au vert en mesurant 6 % de ce qu'il pouvait.
+ * Un garde au portillon avec une assiette minuscule trompe PLUS qu'un outil hors portillon : celui
+ * -là ne se donne pas pour un verdict.
+ *
+ * ⚠️ ET LE COÛT NE JUSTIFIAIT RIEN : mesuré le 2026-08-11, les 27 oracles texte passent en 1,4
+ * seconde. Le choix de trois n'avait aucun motif écrit, et aucun motif mesuré.
+ *
+ * LA RÈGLE EST DÉSORMAIS UNE PROPRIÉTÉ, PAS UNE LISTE : si une grammaire porte un oracle figé en
+ * mode texte, elle est comparable — sinon cet oracle ne sert à rien. L'assiette suit donc les
+ * captures, et un oracle neuf entre dans le banc le jour où il est posé, sans qu'on pense à
+ * l'inscrire. `allowExcluded` : un statut `excluded` empêche de CAPTURER en campagne, il n'a
+ * jamais voulu dire qu'on renonce à comparer ce qui est déjà capturé (`PP`, `dhin`).
+ */
+function parDefaut() {
+  const base = path.join(__dirname, 'grammars');
+  const noms = [];
+  for (const d of fs.readdirSync(base)) {
+    const f = path.join(base, d, 'snapshots', 's3_native.json');
+    if (!fs.existsSync(f)) continue;
+    try { if (JSON.parse(fs.readFileSync(f, 'utf8')).mode === 'text') noms.push(d); }
+    catch { /* illisible : c'est le garde des instantanés qui le dit, pas ce banc */ }
+  }
+  return noms.sort();
+}
 
 // ⚠️ SOCLE — REFUSER DE CONCLURE SUR ZÉRO. En mode campagne, la liste est CONSTRUITE en filtrant
 // sur l'existence des fichiers natifs : si l'arborescence disparaît, `names` est VIDE et le verdict
@@ -396,7 +431,8 @@ let pass = 0, fail = 0, horsVoie = 0, sansOracle = 0;
 console.log(`=== Non-régression d'ORDRE (natif -o à l'instant  vs  oracle natif figé, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
 for (const name of names) {
   if (CAMPAIGN && EXCLUDE_TEXT.has(name)) { console.log(`  ${name}: EXCLU (${name === 'look-and-say' ? '#52 build natif faux' : 'famille AllItems, renvoyée BPx'})`); continue; }
-  const nat = nativeOrder(name, { allowExcluded: CAMPAIGN || FORCE });
+  // Un oracle figé vaut jugement de mesurabilité : on compare même une clé `excluded`.
+  const nat = nativeOrder(name, { allowExcluded: true });
   const fige = oracleFige(name);
   if (nat.error) { console.log(`  ${name}: ÉCHEC natif (${nat.error})`); fail++; continue; }
   const a = nat.tokens;
