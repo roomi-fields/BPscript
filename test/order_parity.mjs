@@ -1,9 +1,15 @@
-// order_parity.mjs — Validation de PARITÉ texte « ordre-à-ordre ».
+// order_parity.mjs — NON-RÉGRESSION d'ordre, voie texte.
 //
 // Capture la sortie canonique NATIVE (`bp3 … -o`) pour les grammaires TEXTE,
 // la tokenise avec l'utilitaire d'ordre PARTAGÉ (src/transpiler/orderTokens.js),
-// et la compare jeton-à-jeton à l'oracle WASM gelé (s3_timed.json, reconstruit en
-// rejoignant ses jetons par espaces — le brut WASM = split(' ') de la même chaîne).
+// et la compare jeton-à-jeton à l'ORACLE NATIF FIGÉ (`s3_native.json`, mode 'text').
+//
+// ⚠️ CE BANC A COMPARÉ AU WASM (`s3_timed.json`) JUSQU'AU 2026-08-11, deux mois après la
+// décision qui le retire (`decisions/2026-06-14-oracle-natif-trois-voies.md` : ni moteur, ni
+// oracle). Il ne mesurait donc plus une non-régression mais un écart entre un moteur vivant et
+// un portage abandonné. Le pas manquant est celui du PLAN phase A point 3, et il ne pouvait pas
+// se signaler : ce fichier n'est appelé ni par `test/run_guards.mjs`, ni par `package.json`, ni
+// par `.githooks/pre-push`.
 //
 // Sans --write : LECTURE SEULE (validation, gate Romain). Avec --write : pose
 // snapshots/s3_native.json mode 'text' (idempotent — jetons identiques → non réécrit).
@@ -192,11 +198,38 @@ function nativeOrder(name, opts = {}) {
   return { canonical, tokens: tokenizeOrder(canonical) };
 }
 
-function wasmOrder(name) {
-  const p = path.join(__dirname, 'grammars', name, 'snapshots', 's3_timed.json');
+/**
+ * L'ORACLE FIGÉ — `s3_native.json`, la référence NATIVE, et plus le WASM.
+ *
+ * ⚠️ CE BANC A COMPARÉ LE NATIF AU WASM PENDANT DEUX MOIS APRÈS LA DÉCISION QUI RETIRE LE WASM.
+ * `decisions/2026-06-14-oracle-natif-trois-voies.md` écrit qu'il n'est ni moteur ni oracle, et
+ * `projets/2026-07-16-iso-100-grammaires/PLAN.md` phase A point 3 porte le geste : repointer les
+ * voies sur l'oracle natif ET retirer les étages WASM du harnais. Le pas n'avait jamais été fait
+ * ici, et il ne pouvait pas se signaler tout seul : ce fichier n'est appelé ni par
+ * `test/run_guards.mjs`, ni par `package.json`, ni par `.githooks/pre-push`. Un outil hors du
+ * portillon ne prévient jamais personne — c'est ce qui a laissé le WASM survivre à son retrait.
+ *
+ * CE QUE LE BANC MESURE DÉSORMAIS : le natif produit à l'instant contre le natif FIGÉ. C'est une
+ * non-régression de l'oracle, pas une parité entre deux moteurs. Les deux côtés passent par le
+ * MÊME découpage (`tokenizeOrder`), donc un écart désigne la production, jamais la recette.
+ */
+function oracleFige(name) {
+  const p = path.join(__dirname, 'grammars', name, 'snapshots', 's3_native.json');
   if (!fs.existsSync(p)) return null;
-  const raw = JSON.parse(fs.readFileSync(p, 'utf8')).tokens.map((t) => t[0]).join(' ');
-  return { raw, tokens: tokenizeOrder(raw) };
+  const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+  // ⚠️ UN ORACLE `mode:'midi'` N'EST PAS COMPARABLE ICI, ET LE CROIRE FABRIQUE DES ÉCARTS.
+  // Mesuré à la première exécution de ce banc rebasculé : tryRotate « DIFF @0 instant='6'
+  // figé='E4' », MyMelody « instant='1' figé='mi4' ». Rien n'avait bougé dans le moteur — les
+  // deux côtés ne disaient simplement pas la même chose. Un oracle `midi` est pris par
+  // `--tokensout` et porte les NOTES SONNANTES ; la voie texte lit `-o` et porte la PRODUCTION
+  // CANONIQUE, où les mêmes instants s'écrivent en chiffres et en marqueurs de structure.
+  // L'ancien terme de comparaison ne posait pas ce piège : les `s3_timed` étaient tous d'une
+  // seule espèce. La bascule sur `s3_native`, elle, tombe sur un corpus MIXTE — 22 pris par
+  // `-o`, 33 par `--tokensout`. On refuse donc les seconds au lieu de les comparer de travers :
+  // une comparaison entre deux mesures d'espèces différentes rougit toujours, et pour rien.
+  if (j.mode === 'midi') return { incomparable: 'oracle midi (--tokensout) — ce banc lit la voie texte' };
+  const tokens = j.tokens.map((t) => t[0]);
+  return { tokens, mode: j.mode ?? null };
 }
 
 // Pose l'oracle natif d'ORDRE texte. Anti-dégénéré : refuse 0 jeton ou majorité de
@@ -300,20 +333,27 @@ if (names.length === 0) {
   process.exit(1);
 }
 
-let pass = 0, fail = 0;
-console.log(`=== Parité texte ORDRE-à-ORDRE (natif -o  vs  oracle WASM, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
+let pass = 0, fail = 0, horsVoie = 0, sansOracle = 0;
+console.log(`=== Non-régression d'ORDRE (natif -o à l'instant  vs  oracle natif figé, tokeniseur partagé)${DO_WRITE ? '  [--write]' : ''}${FORCE ? '  [--force natif fait foi]' : ''} ===\n`);
 for (const name of names) {
   if (CAMPAIGN && EXCLUDE_TEXT.has(name)) { console.log(`  ${name}: EXCLU (${name === 'look-and-say' ? '#52 build natif faux' : 'famille AllItems, renvoyée BPx'})`); continue; }
   const nat = nativeOrder(name, { allowExcluded: CAMPAIGN || FORCE });
-  const wasm = wasmOrder(name);
+  const fige = oracleFige(name);
   if (nat.error) { console.log(`  ${name}: ÉCHEC natif (${nat.error})`); fail++; continue; }
   const a = nat.tokens;
-  if (!wasm) {
-    if (DO_WRITE && FORCE) console.log(`  ${name}: pas d'oracle WASM → ${writeTextOracle(name, a)}`);
-    else { console.log(`  ${name}: pas d'oracle WASM`); fail++; }
+  if (!fige) {
+    if (DO_WRITE && FORCE) console.log(`  ${name}: pas d'oracle figé → ${writeTextOracle(name, a)}`);
+    // ⚠️ UNE ABSENCE N'EST PAS UN ÉCART, et les confondre gonfle le compte de rouge : la
+    // première campagne rebasculée affichait « 24 DIFF » dont 22 étaient des oracles MANQUANTS
+    // et 2 seulement de vrais écarts. Un chiffre qui mélange les deux fait chercher une
+    // régression là où il n'y a qu'un trou de corpus.
+    else { console.log(`  ${name}: pas d'oracle figé`); sansOracle++; }
     continue;
   }
-  const b = wasm.tokens;
+  // Ni OK ni DIFF : la question ne se pose pas. Compté à part, jamais silencieux — un cas
+  // écarté qui ne s'affiche pas se lit comme un cas passé.
+  if (fige.incomparable) { console.log(`  ${name}: HORS VOIE — ${fige.incomparable}`); horsVoie++; continue; }
+  const b = fige.tokens;
   let diff = -1;
   const m = Math.max(a.length, b.length);
   for (let i = 0; i < m; i++) { if (a[i] !== b[i]) { diff = i; break; } }
@@ -321,9 +361,9 @@ for (const name of names) {
     const w = DO_WRITE ? ` → ${writeTextOracle(name, a)}` : '';
     console.log(`  ${name}: OK — ${a.length} jetons, ordre identique${w}`); pass++;
   } else {
-    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF @${diff} natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len ${a.length}/${b.length}) — natif fait foi → ${writeTextOracle(name, a)}`); }
-    else { console.log(`  ${name}: DIFF @${diff} — natif=${JSON.stringify(a[diff])} wasm=${JSON.stringify(b[diff])} (len natif=${a.length} wasm=${b.length})`); fail++; }
+    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF @${diff} instant=${JSON.stringify(a[diff])} figé=${JSON.stringify(b[diff])} (len ${a.length}/${b.length}) — natif fait foi → ${writeTextOracle(name, a)}`); }
+    else { console.log(`  ${name}: DIFF @${diff} — instant=${JSON.stringify(a[diff])} figé=${JSON.stringify(b[diff])} (len instant=${a.length} figé=${b.length}${fige.mode ? `, oracle ${fige.mode}` : ''})`); fail++; }
   }
 }
-console.log(`\n${pass} OK / ${fail} DIFF sur ${names.length} grammaire(s) EXAMINÉE(S)`);
+console.log(`\n${pass} OK / ${fail} ÉCART / ${sansOracle} SANS ORACLE / ${horsVoie} HORS VOIE (oracle midi) sur ${names.length} grammaire(s) EXAMINÉE(S)`);
 process.exit(fail ? 1 : 0);
