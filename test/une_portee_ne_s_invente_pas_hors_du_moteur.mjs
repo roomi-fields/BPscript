@@ -18,15 +18,17 @@
  * Arbitrage Romain, 2026-08-10 : « on doit être conforme à l'usage BP3 et s'y limiter pour
  * destru ». La portée `scene` est retirée, `rule` la remplace — sa graphie existait déjà.
  *
- * ⚠️ CE GARDE ÉPROUVE LES DEUX BOUTS, et l'un sans l'autre ne prouverait rien : ce que la DONNÉE
- * déclare, et ce que le PORTAGE en fait. Une donnée juste avec un portage qui l'ignore laisse le
- * défaut entier — c'est exactement l'état d'où l'on vient.
+ * ⚠️ CE GARDE ÉPROUVAIT LES DEUX BOUTS — ce que la DONNÉE déclare, et ce que le PORTAGE en faisait.
+ * Le second bout est parti le 2026-08-12 AVEC SON OBJET : le convertisseur de grammaire native a
+ * été retiré (aucun appelant de production, aucun produit, et sa sortie ne compilait plus — 0 des
+ * 26 grammaires sans scène, 5 sur 40 en témoin non nul). Ce n'est pas une couverture perdue : la
+ * divergence qu'il fermait ne peut plus naître, faute d'une seconde voie pour la porter. Ce qui
+ * reste ici garde ce qui reste : la donnée et la surface.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { bp3ToScene } from '../src/transpiler/bp3ToScene.js';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const LIB = JSON.parse(readFileSync(path.join(ICI, '..', 'lib', 'engine.json'), 'utf-8'));
@@ -120,19 +122,16 @@ const err = (src) => {
   }
 }
 
-// ── 3. LE PORTAGE — ce que ma voie BP3 fait du même mot ──────────────────────────────────────
-// ⚠️ SANS CETTE SECTION, LA DONNÉE POURRAIT ÊTRE JUSTE ET LE PORTAGE FAUX : c'est l'état exact
-// d'avant, et il ne rougissait nulle part.
+// ── 3. LA PLACE DANS L'ARBRE — le mot se pose sur la sous-grammaire, jamais sur la scène ─────
+// ⚠️ CE QUE CETTE SECTION MESURE A CHANGÉ DE SOURCE, PAS D'OBJET. Elle partait d'une grammaire
+// native passée au convertisseur ; celui-ci est retiré, et la scène s'écrit donc directement. La
+// question gardée est la même et elle reste la bonne : le mot atterrit-il au bon endroit de
+// l'arbre. C'est là que se jouait la divergence avec bp3-frontend — deux places pour un même mot
+// rendent deux arbres, et rien ne rougit.
 {
-  const bps = bp3ToScene('ORD\n_mm(88.0000) _striated _destru\ngram#1[1] S --> a b\n');
-  ok(!/^@destru/m.test(bps),
-     `3. le portage ne doit PLUS écrire '@destru' en tête de scène — reçu :\n${bps}`);
-  ok(/@mode:ord\([^)]*destru/.test(bps),
-     `3. '_destru' doit se poser sur la SOUS-GRAMMAIRE, comme dans le natif — reçu :\n${bps}`);
-  ok(/^@tempo:88/m.test(bps),
-     `3. et '_mm(N)', dont la portée EST la scène, reste en tête — reçu :\n${bps}`);
-
-  const r = compileToBPxAST(bps);
+  const r = compileToBPxAST(`${SOCLE}@tempo:88\n@mode:ord(destru)\nS -> C4 E4\n`);
+  ok((r.errors || []).length === 0,
+     `3. la scène doit compiler — reçu : ${JSON.stringify((r.errors || []).map((e) => e.message))}`);
   const mods = (r.ast?.subgrammars?.[0]?.modifiers || []).map((m) => m && m.name);
   ok(mods.includes('destru'),
      `3. l'arbre doit porter 'destru' dans les modificateurs de sous-grammaire — reçu `

@@ -1097,8 +1097,7 @@
       "midi_notes": 4,
       "note": "EMPRUNT NECESSAIRE, ne pas le retirer. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.check&` existe mais est au format BP2.7.1, et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7.1 », aucune production ecrite. Deux emprunts de ce catalogue etaient injustifies (tryRotate, MyMelody) et trois sont indispensables : la difference est le FORMAT du fichier propre, pas le resultat. Elle se verifie en une commande, jamais en bloc."
     },
-    "production_mode": "midi",
-    "trou_langage": "bp3ToScene NON GÉRÉ : _& (prolongation liée) — le ~ BPscript exige un symbole porteur, pas une prolongation. Comportement correct, pas un bug. L'argument '+' (_pitchbend(+200)) est lui accepté depuis le fix parseControl du 2026-06-10."
+    "production_mode": "midi"
   },
   "Djinns": {
     "bernard": "Djinns",

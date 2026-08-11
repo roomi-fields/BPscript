@@ -1431,8 +1431,8 @@ function parse(tokens, opts = {}) {
       // LE REFUS EST FRANC ET PORTE SA RÉÉCRITURE, y compris pour un bloc groupé — deux écritures
       // dont une seule est juste est exactement la voie parallèle que la refonte supprime.
       //
-      // ⚠️ ET IL NE COUVRE PAS LE FLUX. `![seed:N]` traduit `_srand(N)` du natif : elle est
-      // PRODUITE par `bp3ToScene.js:915` et LUE par BPx. Romain a parlé de la TÊTE DE SCÈNE ;
+      // ⚠️ ET IL NE COUVRE PAS LE FLUX. `![seed:N]` traduit `_srand(N)` du natif : deux scènes de
+      // la bibliothèque l'écrivent (mesuré), et BPx la LIT. Romain a parlé de la TÊTE DE SCÈNE ;
       // fermer le flux casserait le portage du natif dans trois dépôts. L'écart est remonté et non
       // tranché — tant qu'il ne l'est pas, cette forme-là vit.
       if (!dansLeFlux) {
@@ -1580,7 +1580,8 @@ function parse(tokens, opts = {}) {
     //   · le NOM DANS L'ARBRE reste `mm` — BPx le lit sur douze sites (mesuré). La normalisation
     //     `tempo` → `mm` vit plus haut dans ce fichier et ne bouge pas.
     //   · la GRAPHIE NATIVE BP3 reste lisible — 25 fichiers du corpus natif la portent (mesuré par
-    //     BPx). `bp3ToScene` continue de la LIRE ; seul ce qu'il PRODUIT devient `tempo`.
+    //     BPx). Elle est lue par le frontal BP3, qui vit chez bp3-frontend ; ce qui s'écrit en
+    //     BPScript, lui, dit `tempo`.
     // Fermer la surface, ce n'est fermer ni l'une ni l'autre. Même motif que le nom entre barres,
     // sorti du langage le même jour et resté une graphie d'entrée BP3.
     //
