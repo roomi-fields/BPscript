@@ -382,23 +382,15 @@ const RETARD_BLOCS = new Map([
   //     elle qui est à corriger vers `@actor`, et c'est une décision de langage, pas une
   //     déduction. Ce qu'un exemple laisse INFÉRER n'est pas ce qu'il spécifie.
 
-  // ⚠️ MÊME FAMILLE QUE L'OBJET SONORE COMPOSÉ ci-dessus — DEUX ILLUSTRATIONS INDÉPENDANTES DANS
-  //    UN MÊME BLOC, pas une scène. L'encadré de « La nature du temps » (LANGUAGE.md:2388-2391)
-  //    montre `@striated` et `@smooth` l'un sous l'autre, chacun avec son commentaire qui nomme un
-  //    répertoire différent — « la musique occidentale, la danse » contre « un alap, un gagaku ».
-  //    Ce sont DEUX exemples, jamais une scène qui règlerait deux fois la nature du temps.
-  //
-  //    LA RÈGLE QUI LE REFUSE VIENT D'ENTRER, et elle est fidèle au moteur : `_striated` et
-  //    `_smooth` partagent UN SEUL compteur (`NotFoundNatureTime`, CompileGrammar.c:1545, les deux
-  //    dans le même `case` par fall-through) et le natif refuse la grammaire ENTIÈRE — `return(7)`.
-  //    Le parseur ne « rattrapera » donc pas ce bloc : le refus est juste, c'est l'encadré qui
-  //    illustre deux options exclusives sans dire qu'elles le sont.
-  //
-  //    ⛔ CE N'EST PAS À MOI DE LE RÉÉCRIRE. La bible ne s'édite que sur autorisation de Romain
-  //    pour le geste précis, et un exemple EST une prescription : le corriger reviendrait à
-  //    trancher, en passant, que ces deux mots peuvent coexister — l'inverse de ce que le moteur
-  //    dit. L'écart est donc MESURÉ et REMONTÉ, avec sa pièce, et il attend son mot.
-  ['@striated                    // la musique occidentale, la danse #0', /'nature-du-temps' est réglé 2 fois/],
+  // ⚠️ L'ENCADRÉ DE « LA NATURE DU TEMPS » EST SORTI DE CE REGISTRE le 2026-08-11, et sa sortie
+  //    est le seul cas de la journée où un retard s'est refermé au lieu de s'expliquer.
+  //    Il montrait `@striated` et `@smooth` l'un sous l'autre — deux illustrations indépendantes
+  //    dans un même bloc — et la règle d'unicité, entrée la veille, le refusait à juste titre : le
+  //    natif partage un compteur entre ces deux mots (`NotFoundNatureTime`, CompileGrammar.c:1545)
+  //    et rejette la grammaire entière.
+  //    Romain a autorisé la réécriture : DEUX SCÈNES à règle IDENTIQUE, seul le mode changeant, et
+  //    la production mesurée en regard. Elles compilent, donc rien à inscrire ici — c'est la
+  //    vérification en sens inverse de ce garde qui a exigé que cette ligne parte.
 
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],

@@ -2385,10 +2385,36 @@ La graphie fractionnaire existe parce qu'un rapport se lit parfois mieux ainsi :
 **Le temps strie pulse ; le temps lisse coule.** L'un donne une grille de battements que le
 metronome engendre, l'autre laisse chaque objet porter sa propre duree.
 
+**Une scene en regle un seul, une seule fois.** `@striated` convient a la musique occidentale et a la
+danse, `@smooth` a un alap, un gagaku, une musique non pulsee.
+
+Les deux scenes qui suivent ne different que par ce mot :
+
 ```bpscript
-@striated                    // la musique occidentale, la danse
-@smooth                      // un alap, un gagaku, une musique non pulsee
+@core
+@alphabet.western
+@tempo:60
+@striated
+S -> C4 - D4 - E4
 ```
+
+```bpscript
+@core
+@alphabet.western
+@tempo:60
+@smooth
+S -> C4 - D4 - E4
+```
+
+Le silence les separe. En temps strie il **occupe sa case** dans la grille, et les notes tombent un
+temps sur deux ; en temps lisse il n'en prend aucune, et les notes se suivent :
+
+| | premiere note | deuxieme | troisieme |
+| --- | --- | --- | --- |
+| `@striated` | 0 - 1000 | 2000 - 3000 | 4000 - 5000 |
+| `@smooth` | 0 - 1000 | 1000 - 2000 | 2000 - 3000 |
+
+C'est **une** difference entre les deux modes, mesurable sur cette scene ; ce n'est pas la seule.
 
 ### Le battement -- `@meter`
 
