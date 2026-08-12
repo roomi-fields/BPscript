@@ -307,52 +307,17 @@ section('flux — marquage !(…) vs Sa(vel:80) attaché');
     `params=${JSON.stringify(sym?.payload?.params)}`);
 }
 
-// ============================================================
-// BUG _xxx(N) — normalisation (spec §4 "Forme exclue")
-// ============================================================
-
-section('BUG _xxx(N) — normalisation vers transport-control');
-
-{
-  // _transpose(2) ne doit PAS produire [Prolongation, Control]
-  // Il doit produire UN SEUL nœud transport-control
-  const ast = parseSource('@core\nS -> _transpose(2)');
-  const elems = rhs0(ast);
-
-  // Aucune Prolongation parasite
-  const hasProlong = elems.some(e => e.type === 'Prolongation');
-  assert('_transpose(2): aucune Prolongation parasite', !hasProlong,
-    `rhs=${JSON.stringify(elems.map(e => e.type+':'+e.name))}`);
-
-  // Un seul nœud
-  assert('_transpose(2): un seul nœud', elems.length === 1,
-    `got ${elems.length} nœuds: ${JSON.stringify(elems.map(e => e.type+':'+e.name))}`);
-
-  // Nature transport-control (c'est une forme runtime normalisée)
-  const ctrl = elems[0];
-  assert('_transpose(2) nature=transport-control', ctrl?.payload?.nature === 'transport-control',
-    `got ${JSON.stringify(ctrl?.payload)}`);
-
-  // Aucune marque BP3 dans l'AST
-  const json = JSON.stringify(ctrl);
-  assert('_transpose(2): pas de _script dans AST', !json.includes('_script'),
-    `json=${json}`);
-  assert('_transpose(2): pas de flavor dans AST', !json.includes('flavor'),
-    `json=${json}`);
-}
+// La section « BUG _xxx(N) — normalisation vers transport-control » vivait ici. Elle mesurait que
+// `_transpose(2)` se normalisait en UN nœud transport-control sans prolongation parasite. Cette
+// normalisation n'existe plus : la graphie native `_nom(…)` est REFUSÉE depuis la décision de
+// Romain du 2026-08-12. Un test qui décrit un comportement supprimé ne se met pas en veille, il
+// s'élague dans le mouvement qui le rend mort — c'est `la_graphie_native_des_controles_ne_compile_pas`
+// qui tient désormais cet espace, refus ET complément (la prolongation, qui s'écrit du même caractère).
 
 {
-  // _vel(80) → idem
-  const ast = parseSource('@core\nS -> _vel(80)');
-  const elems = rhs0(ast);
-  const hasProlong = elems.some(e => e.type === 'Prolongation');
-  assert('_vel(80): aucune Prolongation parasite', !hasProlong,
-    `rhs=${JSON.stringify(elems.map(e => e.type+':'+e.name))}`);
-  assert('_vel(80): un seul nœud', elems.length === 1,
-    `got ${elems.length} nœuds`);
-}
-
-{
+  // Le pendant `_vel(80)` de la section supprimée ci-dessus s'élague pour la même raison : il
+  // mesurait la normalisation d'une graphie qui ne compile plus. Ce qui suit RESTE — la
+  // prolongation, elle, n'a pas bougé, et c'est justement ce que le refus ne doit pas manger.
   // _ seul reste Prolongation
   const ast = parseSource('@core\nS -> A _');
   const elems = rhs0(ast);
@@ -374,7 +339,7 @@ section('Agnosticisme — zéro notion BP3 dans le payload');
 @actor tabla
   out.midi(ch:10)
 S -> { sitar.Sa, tabla.dha(vel:80) }
-S -> !(vel:80) A _transpose(2) - [goto:2 1]`;
+S -> !(vel:80) A !(chromashift:2) - [goto:2 1]`;
   const ast = parseSource(src);
   const json = JSON.stringify(ast);
 

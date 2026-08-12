@@ -4993,21 +4993,52 @@ function parse(tokens, opts = {}) {
       return { type: 'Rest' };
     }
 
-    // Prolongation _ — ou forme legacy _(ident)( normalisée en transport-control (spec §4)
-    // La forme `_(ident)(args)` est héritée du moteur historique pour le transport (BP3 legacy).
-    // Un frontend conforme AST_SPEC v1 §4 n'émet jamais `_(…)` : le `_` est consommé et le
-    // nœud est normalisé en Control de nature transport-control (traité dans le post-pass).
+    // Prolongation _ — et REFUS de la graphie native `_nom(args)`.
+    //
+    // ⛔ LA GRAPHIE `_nom(...)` EST REFUSÉE — décision Romain du 2026-08-12. Ce n'était pas une
+    // tolérance, c'était un CONTOURNEMENT : elle vivait ici, dans le parseur, et la bible ne l'a
+    // jamais mentionnée. Aucune forme du langage n'existe sans sa validation, et celle-ci n'en
+    // avait aucune : elle routait TOUT identifiant collé à un `_` vers un contrôle, sans le
+    // confronter au catalogue. `_xyzzy(1)` compilait exactement comme `_transpose(2)`, avec la
+    // même étiquette — une scène pouvait porter un contrôle inexistant, passer sans un mot et ne
+    // rien produire.
+    //
+    // ⛔ ET C'EST CE MÊME GESTE QUI FERME LES DEUX PORTES. La forme du langage `!(clé:valeur)`
+    // validait DÉJÀ ses noms — `!(xyzzy:1)` était refusé bien avant cette décision. La seule voie
+    // par où un contrôle non déclaré entrait était celle-ci. En la fermant, « un contrôle non
+    // déclaré par une librairie ne compile pas » devient vrai sans exception.
+    //
+    // LE REFUS NOMME LA FORME ATTENDUE, il n'est pas muet : qui écrivait `_vel(120)` lit quoi
+    // écrire à la place. C'est la condition posée par Romain, et c'est ce qui sépare une
+    // migration d'un mur.
     if (at(T.PROLONG)) {
-      // Forme legacy `_name(args)` (transport-control) : le `_` est le PRÉFIXE COLLÉ du contrôle.
-      // On ne la reconnaît QUE si l'IDENT est collé au `_` (pas d'espace) — disambiguation
+      // La graphie ne se reconnaît QUE si l'IDENT est collé au `_` (pas d'espace) — disambiguation
       // collé/espacé, cohérente avec |[…]. Un `_` suivi d'un ESPACE puis d'un contrôle en forme
       // nue (`_ value(…)`, `_ _ vel(…)`) est une PROLONGATION AUTONOME + un contrôle séparé :
-      // sans ce garde, le legacy happait le `_` de prolongation → corruption SILENCIEUSE du
-      // compte de prolongations (constaté kss2 → RNG divergent, tryCsoundObjects → 5 `_` perdus).
+      // sans ce garde, le refus happerait le `_` de prolongation et accuserait la mauvaise ligne.
       if (peek(1).type === T.IDENT && peek(2).type === T.LPAREN && !peek(1).spaceBefore) {
-        advance(); // consomme _
-        const ctrlName = advance().value;
-        return parseControl(ctrlName, tok);
+        const nom = peek(1).value;
+        // LA FORME ATTENDUE SE LIT DANS LE CATALOGUE, ELLE NE SE DÉDUIT PAS DU NOM NATIF.
+        //
+        // Traduire `_nom(…)` en `!(nom:…)` marche pour la plupart des contrôles et MENT pour ceux
+        // que BPScript a renommés : le `_transpose` du natif est `chromashift` ici — la clé
+        // `transpose`, elle, existe AUSSI et désigne un AUTRE geste (transposition réelle, ancre
+        // préservée). Un message qui dirait « écrire !(transpose:…) » ferait changer le geste en
+        // silence, ce qui est précisément le piège que le champ `bp3` des librairies existe pour
+        // fermer. On cherche donc la clé qui DÉCLARE ce nom natif, et on ne retombe sur le nom nu
+        // que si aucune ne le revendique.
+        // ⚠️ ON LIT LA DÉCLARATION, JAMAIS `controlMap` : celui-ci retombe sur `_<clé>` quand une
+        // clé ne déclare rien, si bien que DEUX clés y « revendiquent » `_transpose` — `chromashift`
+        // qui le déclare, et `transpose` qui hérite du défaut calculé sur son propre nom. Chercher
+        // là rendrait la première venue, c'est-à-dire justement celle qu'il ne faut pas nommer.
+        const cle = Object.keys(libCtx.controls || {}).find((k) => libCtx.controls[k].bp3 === `_${nom}`) || nom;
+        const renomme = cle !== nom;
+        throw new ParseError(
+          `la graphie « _${nom}(…) » est celle du moteur natif BP3, elle n'appartient pas à BPScript — `
+          + `écrire « !(${cle}:…) » à la place`
+          + (renomme ? ` (le « _${nom} » natif se dit « ${cle} » en BPScript, et la clé « ${nom} » désigne un AUTRE geste)` : ''),
+          peek(1),
+        );
       }
       advance();
       return { type: 'Prolongation' };
