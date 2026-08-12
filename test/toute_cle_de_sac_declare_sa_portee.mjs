@@ -52,7 +52,10 @@ function toutesLesCles() {
   };
   // `controls.json` SCINDÉ le 2026-08-10 (une librairie, un destinataire — LIBRAIRIES.md:213) en
   // quatre : `controls` lui-même n'est plus qu'un stub d'`apporte`, sans contrôle propre.
-  for (const racine of ['expression', 'midi', 'audio', 'transpo']) w(LIBS[racine], racine, '');
+  // `variation` REJOINT LE BALAYAGE le 2026-08-12 : elle porte les dix-huit modes discrets des
+  // neuf paramètres de jeu, résolus par Kairos. Une source déclarée et non balayée serait muette
+  // pour les trois volets — c'est le compte du volet C qui l'a dit, à sa première omission.
+  for (const racine of ['expression', 'midi', 'audio', 'transpo', 'variation']) w(LIBS[racine], racine, '');
   // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
   // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — même balayage.
   w(LIBS.engine, 'engine', '');
@@ -110,7 +113,24 @@ for (const { source, nom, def } of CLES) {
 // restants sont désormais scindés en QUATRE fichiers par destinataire (LIBRAIRIES.md:213) :
 // expression (8 : vel/pan/rndvel/velcont/offvel/value/fixed/cont), midi (24), audio (6),
 // transpo (5) — `controls.json` lui-même n'est plus qu'un stub d'`apporte`, zéro contrôle propre.
-const PAR_DESTINATAIRE = { expression: 8, midi: 24, audio: 6, transpo: 5 };
+// ⚠️ COMPTES REVUS LE 2026-08-12 — LA FAMILLE DES MODES DE VARIATION (Romain : « on part sur des
+// mots entiers »). Neuf paramètres de jeu portent chacun trois modes — fixe, paliers, continu —
+// soit vingt-sept mots. Les DIX-HUIT discrets se résolvent à la note et vivent désormais dans
+// `lib/variation.json` (destinataire Kairos) ; les NEUF continus exigent des messages pendant la
+// note et vivent dans la librairie de leur paramètre.
+// CE QUI BOUGE, ET POURQUOI CHAQUE MOUVEMENT EST LÉGITIME :
+//   expression 8 → 9   : `pancont` déclaré (le mode manquait).
+//   transpo    5 → 6   : `transposecont` déclaré (le mode manquait).
+//   engine    21 → 22  : `articulcont` déclaré (le mode manquait) ; son paramètre, `legato`/
+//                        `staccato`, vit ici.
+//   midi      24 → 21  : `pitchfixed`, `mapstep`, `mapfixed` DÉMÉNAGENT vers `variation`. Aucun
+//                        nom ne quitte le vocabulaire — c'est un déplacement de domicile, pas un
+//                        retrait, et le garde `la_famille_des_modes_de_variation_est_entiere.mjs`
+//                        exige que les vingt-sept restent écrivables.
+//   variation  0 → 18  : la nouvelle source, INSCRITE ICI — une librairie absente de cette table
+//                        ne serait balayée par personne, et c'est exactement la faute que ce volet
+//                        existe pour empêcher.
+const PAR_DESTINATAIRE = { expression: 9, midi: 21, audio: 6, transpo: 6, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,
@@ -121,9 +141,10 @@ for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
 // shuffle/order/rotate/staccato/legato/rndtime/destru/randomize) + 3 rejoints dans la MÊME
 // journée (striated/smooth : « nature du temps », LIBRAIRIES.md:168 ; mm : pragmatique, cf.
 // engine.json subgrammar._comment) = 21.
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 21,
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 22,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
-   + `'engine.', 18 attendus (les procédures moteur rapatriées de lib/controls.json).`);
+   + `'engine.', 22 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
+   + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici).`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `
    + `balayées, 5 au moins attendues.`);

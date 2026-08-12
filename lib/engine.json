@@ -191,6 +191,20 @@
     "_duration_retiree_doc": "duration N EST PLUS UNE DIRECTIVE DE SCENE. Arbitrage Romain du 2026-08-04, hub/decisions/2026-08-04-la-duree-de-scene-est-supprimee.md : « on supprime duration ». Le mot ne designe plus que le champ 'duration' du prototype de TERMINAL (docs/spec/LANGUAGE.md:943). ⚠️ LA SUPPRESSION AVAIT RECULE LE 2026-08-10 SANS QUE PERSONNE NE LE VEUILLE : @engine.duration:16 etait REFUSE au 4 aout et est devenu ACCEPTABLE a la naissance de cette librairie, parce que j y ai recopie les cles de la reference sans confronter chacune aux decisions datees. Tenu depuis par test/une_forme_supprimee_ne_revient_pas_par_une_librairie.mjs."
   },
   "resolvedBy": "BPx",
+  "_articulcont_doc": "POURQUOI UN MODE DE VARIATION VIT ICI. L'articulation se pose par `legato` et `staccato`, déclarés dans la section `engine` de ce fichier parce qu'ils déforment la DURÉE des notes. Son mode continu suit son paramètre, comme tous les modes continus (`lib/variation.json`, `_partage_doc`). Il est déclaré sous `controls` et non sous `engine` : ses deux frères discrets s'écrivent entre parenthèses comme les vingt-cinq autres mots de mode, et une famille ne se coupe pas en deux graphies. ⚠️ ÉCART SIGNALÉ, NON TOUCHÉ : `legato` et `staccato` restent, eux, dans le sac moteur — ils sont les seuls porteurs de valeur de la famille à ne pas s'écrire comme les huit autres.",
+  "controls": {
+    "articulcont": {
+      "bp3": "_articulcont",
+      "args": [],
+      "description": "Articulation en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, `articulfixed` et `articulstep`, vivent dans `lib/variation.json`. Le comportement natif de ce mot n'est pas tranché : aucun témoin construit sur le moteur v3.5.1-iso.2 n'a fait bouger l'articulation, le mode fixe compris.",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    }
+  },
   "engine": {
     "_comment": "[] syntax — translated directly to BP3 instructions by the transpiler",
     "_reglages_reserves_doc": "mode/scan/weight/on_fail/meter -- SANS champ 'bp3' (contrairement aux autres entrees de cette section) : ce ne sont pas des PROCEDURES BP3 (`_nom(args)` recherchees via controlMap), ce sont des attributs STRUCTURELS de la grammaire native (poids litteral `<N>`, suffixe de mode de sous-grammaire, prefixe scan LEFT/RIGHT, signature rythmique) que le frontal BP3 lit par un chemin dedie, pas par la table generique bp3->controle. Leur inventer un nom '_xxx' serait une correspondance FAUSSE. Declarees ici (2026-08-05) pour que `libCtx.controlNames` les reconnaisse -- le routage sac moteur/runtime reste tranche par `libCtx.qualifierKeys` (lib/core.json schema.qualifierKeys), inchange par cet ajout. Textes de description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec gelee, non modifiee).",

@@ -48,6 +48,18 @@
       ],
       "transportGroup": "expression"
     },
+    "pancont": {
+      "bp3": "_pancont",
+      "args": [],
+      "description": "Panoramique en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets, `panfixed` et `panstep`, vivent dans `lib/variation.json` : Kairos les résout, celui-ci se rend à l'émission.",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "expression"
+    },
     "rndvel": {
       "args": [
         "range"
@@ -63,8 +75,9 @@
       "transportGroup": "expression"
     },
     "velcont": {
+      "bp3": "_velcont",
       "args": [],
-      "description": "Enable continuous velocity interpolation",
+      "description": "Vélocité en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets, `velfixed` et `velstep`, vivent dans `lib/variation.json` : Kairos les résout, celui-ci se rend à l'émission. Mesuré sur le moteur natif v3.5.1-iso.2 : sur la vélocité, le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 415).",
       "scope": [
         "symbol",
         "group",

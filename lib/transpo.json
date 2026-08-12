@@ -27,6 +27,18 @@
       ],
       "transportGroup": "transpo"
     },
+    "transposecont": {
+      "bp3": "_transposecont",
+      "args": [],
+      "description": "Transposition en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, `transposefixed` et `transposestep`, vivent dans `lib/variation.json` ; celui-ci reste ici parce que la transposition se rend chez le même résolveur que son paramètre. Mesuré sur le moteur natif v3.5.1-iso.2 : le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 608).",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "transpo"
+    },
     "scale": {
       "args": [
         "name",
