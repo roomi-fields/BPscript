@@ -14,6 +14,14 @@
  *   référence structurée · candidat structuré   → on CONCLUT
  *   référence plate      · candidat plat        → on conclut
  *   référence plate      · candidat structuré   → on conclut
+ *
+ * ⚠️ ET UNE CINQUIÈME CASE, SECOND DÉFAUT DE LA MÊME PRUDENCE. Mesuré par bp3-frontend sur
+ * `gramgene2` : référence ~60 mots, son rendu s'arrête à 11 et finit sur une suite de tirets. Sa
+ * sortie est plate PARCE QU'ELLE EST TRONQUÉE — la platitude est le symptôme de l'écart, pas une
+ * incapacité à rendre la structure, et renoncer efface la divergence même qu'on cherche.
+ *   référence structurée · candidat plat PLUS COURT → on CONCLUT : c'est une troncature
+ * Une voie qui rend MOINS que la référence a divergé ; seule une voie qui en rend AUTANT, à plat,
+ * se heurte vraiment à un défaut de rendu.
  */
 import { createRequire } from 'node:module';
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -37,6 +45,8 @@ const STRUCTUREE = 'a{- b,a c} d';
 const PLATE = 'a b a c d';
 poser('refStructuree', STRUCTUREE);
 poser('refPlate', PLATE);
+// Le cas mesuré chez bp3-frontend, à sa taille : référence longue et structurée, rendu tronqué.
+poser('refLongue', '{a b,c d} e f g h i j k l m n o p');
 writeFileSync(path.join(racine, 'baseline.json'), JSON.stringify({ grammaires: entrees }));
 
 process.env.BASELINE_DIR = racine;
@@ -62,6 +72,23 @@ verifier(juger('refPlate', 'a b a z d') === DIFF,
   'référence plate + candidat plat différent : le juge conclut DIFF');
 verifier(juger('refPlate', 'a{- b,a c} d') === DIFF,
   'référence plate + candidat structuré : le juge conclut, il ne renonce pas');
+
+// ── LA CINQUIÈME CASE : UN CANDIDAT TRONQUÉ N'EST PAS UNE INCAPACITÉ ──────────────────────────
+// La référence structurée fait 3 mots (`a{-`, `b,a`, `c}`, `d` → 4). Un candidat plat PLUS COURT
+// qu'elle a perdu du contenu : c'est une divergence, et le juge doit la dire.
+verifier(juger('refStructuree', 'a b') === DIFF,
+  "référence structurée + candidat plat PLUS COURT : le juge CONCLUT — la platitude est le "
+  + "symptôme de la troncature, pas une incapacité à rendre la structure");
+verifier(juger('refStructuree', 'a') === DIFF,
+  'un candidat plat réduit à un seul mot : DIFF');
+verifier(J.compare('refLongue', { text: 'a b c ---' }).status === DIFF,
+  'le cas mesuré chez bp3-frontend — référence longue structurée, rendu tronqué à plat : DIFF');
+// ET LE COMPLÉMENT, sans quoi la cinquième case avalerait la prudence entière : un candidat plat
+// AUSSI LONG ou PLUS LONG que la référence reste une incapacité de rendu, et là on renonce.
+verifier(juger('refStructuree', PLATE) === NON_MESURABLE,
+  'candidat plat PLUS LONG que la référence structurée : on renonce toujours — la prudence tient');
+verifier(juger('refStructuree', 'a b a c') === NON_MESURABLE,
+  'candidat plat de MÊME longueur que la référence : on renonce toujours');
 
 // ── LA GRAPHIE NE COMPTE TOUJOURS PAS, ET LA PRUDENCE NE LA MANGE PAS ─────────────────────────
 verifier(juger('refStructuree', 'a { - b , a c } d') === ISO,

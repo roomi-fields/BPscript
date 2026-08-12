@@ -198,6 +198,27 @@ const only = args.filter((a) => !a.startsWith('--'));
 
 const { byName } = loadBaseline();
 exigerCorpus();
+
+/**
+ * BPSCRIPT N'ÉCRIT PAS DE MÉTAGRAMMAIRES — décision Romain du 2026-08-12.
+ *
+ * Ces quatre grammaires natives écrivent leurs terminaux entre apostrophes (`'S'`, `'-->'`, `'X'`)
+ * parce qu'elles PRODUISENT LE TEXTE D'UNE GRAMMAIRE : leur sortie native porte les apostrophes,
+ * elles en font partie. Écrire le texte d'une grammaire n'est pas un objet du langage, et
+ * l'apostrophe n'y entre pas.
+ *
+ * LEUR NON-CONFORMITÉ EST DONC ASSUMÉE, PAS SUBIE. Elles apparaissent au tableau avec ce statut,
+ * et surtout elles n'en DISPARAISSENT pas : une grammaire absente du dénominateur se lit comme un
+ * oubli, alors que celles-ci sont un choix. C'est aussi pourquoi la liste vit ici et non dans le
+ * juge partagé — la voie A parse le `.gr` directement et son sort sur ces quatre lui appartient.
+ */
+const HORS_LANGAGE_PAR_DECISION = {
+  gramgene1: 'métagrammaire — terminaux entre apostrophes',
+  gramgene2: 'métagrammaire — terminaux entre apostrophes',
+  'look-and-say': 'métagrammaire — terminaux entre apostrophes',
+  trytemplates: 'métagrammaire — terminaux entre apostrophes',
+};
+
 const withBps = nomsBps()
   .filter(() => true)
   .filter((d) => byName[d])
@@ -223,7 +244,16 @@ const rows = [];
 // peut pas dire s'il avance est un harnais qui cache ses propres pannes. La ligne part sur
 // stderr pour ne jamais polluer le `--json` de stdout.
 let _rang = 0;
+// Les grammaires écartées PAR DÉCISION passent au tableau sans être mesurées : les mesurer
+// rendrait un DIFF qui se lirait comme un défaut, alors que la forme ne rentre pas.
+for (const [nom, cause] of Object.entries(HORS_LANGAGE_PAR_DECISION)) {
+  if (!byName[nom] || (only.length && !only.includes(nom))) continue;
+  rows.push({ grammaire: nom, modalite: byName[nom].modalite ?? '—', status: 'HORS LANGAGE',
+    detail: `${cause} — BPScript n'écrit pas de métagrammaires (décision Romain 2026-08-12)` });
+}
+
 for (const name of withBps) {
+  if (HORS_LANGAGE_PAR_DECISION[name]) continue;
   process.stderr.write(`[${++_rang}/${withBps.length}] ${name}\n`);
   const ref = byName[name];
   let b = ref.produit && ref.action === 'produce-all'
@@ -247,7 +277,11 @@ if (asJson) {
 } else {
   const tally = {};
   for (const r of rows) tally[r.status] = (tally[r.status] || 0) + 1;
-  console.log(`Voie B — ${rows.length} grammaires avec .bps, EN SORTIE DE CHAÎNE (BPx → Kairos → Kronos)\n`);
+  // Le libellé compte ce qu'il montre : les mesurées ONT une scène, les écartées par décision n'en
+  // ont pas et n'en auront pas. Écrire « grammaires avec .bps » sur le total dirait faux des deux.
+  const nHors = rows.filter((r) => r.status === 'HORS LANGAGE').length;
+  console.log(`Voie B — ${rows.length - nHors} grammaires avec .bps, EN SORTIE DE CHAÎNE (BPx → Kairos → Kronos)`
+    + (nHors ? `, plus ${nHors} écartée(s) PAR DÉCISION` : '') + '\n');
   for (const r of rows) {
     const d = r.detail ? `  ${String(r.detail).slice(0, 70)}` : '';
     console.log(`  ${r.grammaire.padEnd(22)} ${String(r.modalite).padEnd(6)} ${r.status.padEnd(15)}${d}`);

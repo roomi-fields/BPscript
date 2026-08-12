@@ -583,7 +583,16 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
     // prudence juste chez l'un devenait un faux non-mesurable chez l'autre.
     // Il regarde donc LES DEUX CÔTÉS : on ne renonce que si la référence porte la structure ET
     // que le candidat n'en rend aucune.
-    if (SIGNES_DE_STRUCTURE.test(String(ref.text || '')) && !SIGNES_DE_STRUCTURE.test(String(candidate.text || ''))) {
+    //
+    // ⚠️ ET IL NE RENONCE PAS SUR UN CANDIDAT PLUS COURT — second défaut de la même prudence,
+    // mesuré par bp3-frontend sur `gramgene2` : sa référence porte ~60 mots, son rendu s'arrête à
+    // 11 et finit sur une suite de tirets. Sa sortie est plate PARCE QU'ELLE EST TRONQUÉE, et la
+    // platitude est ici le SYMPTÔME de l'écart, pas une incapacité à rendre la structure. Renoncer
+    // là efface la divergence même qu'on cherche. Une voie qui rend MOINS que la référence a
+    // divergé ; seule une voie qui en rend AUTANT, à plat, se heurte vraiment à un défaut de rendu.
+    const candidatPlusCourt = b.length < a.length;
+    if (SIGNES_DE_STRUCTURE.test(String(ref.text || '')) && !SIGNES_DE_STRUCTURE.test(String(candidate.text || ''))
+        && !candidatPlusCourt) {
       return {
         status: NON_MESURABLE, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length,
         detail: 'la référence porte la STRUCTURE (groupes, polymétrie, contrôles imprimés) et la '

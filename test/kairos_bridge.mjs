@@ -221,9 +221,18 @@ export async function resoudreViaKairos(session, opts = {}) {
   // avant l'origine ; `transposition3` 53 contre 52 et UN ; `visser-shapes` 2130 contre 2129 et
   // UN. Trois scènes, trois comptes, trois fois le même écart.
   //
-  // La référence fait foi et elle porte des instants avant zéro (arbitrage Romain 2026-08-12) :
-  // la fenêtre s'ouvre donc des deux côtés. `MIN_SAFE_INTEGER` plutôt qu'un zéro décalé à la
-  // main — une borne choisie sur le décalage observé se périmerait au premier décalage plus grand.
+  // ⛔ ET LA RAISON QUE J'AVAIS ÉCRITE ICI ÉTAIT FAUSSE — je la retire, la fenêtre reste.
+  // J'avais justifié cette ouverture par « la référence fait foi et elle porte des instants avant
+  // zéro ». Le natif n'en porte AUCUN : mesuré par bp3-engine sur le binaire, son premier NoteOn
+  // et son premier événement sont à 0,0 ms. Le -10 vient de l'axe des JETONS, qui est notre propre
+  // ajout et retranche la quantification aux DEUX bornes (TokensOut.c:86). Nos trois mesures
+  // concordantes n'étaient pas trois observations : c'était le même code lu trois fois.
+  //
+  // CE QUI RESTE VRAI, et qui suffit à ouvrir la fenêtre : c'est KAIROS qui publie des scènes
+  // translatées, dont le premier instant est négatif. Lire à partir de zéro coupait ces
+  // événements et me faisait imputer le manque à un désaccord entre mes voisins. La fenêtre ne
+  // fabrique rien — elle cesse de couper. `MIN_SAFE_INTEGER` plutôt qu'un zéro décalé à la main :
+  // une borne choisie sur le décalage observé se périmerait au premier décalage plus grand.
   const evenementsKairos = timeline.query(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
   const rangsAlignes = jetonsBPx.length === evenementsKairos.length;
   const typeParContenu = new Map();
