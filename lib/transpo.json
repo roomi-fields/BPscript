@@ -57,6 +57,7 @@
       "transportGroup": "transpo"
     },
     "chromashift": {
+      "bp3": "_transpose",
       "args": [
         "keys"
       ],

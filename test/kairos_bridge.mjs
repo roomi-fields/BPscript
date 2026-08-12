@@ -176,7 +176,26 @@ export async function resoudreViaKairos(session, opts = {}) {
   // Forme de retour `{ events, totalDurationSec }` (kronos [302], 5ceaeec — la note [301]
   // rendait un tableau nu). La durée totale vient de Kronos : c'est LUI qui résout le temps,
   // la `duration` de la Timeline Kairos est encore en secondes de SCÈNE.
-  const planifie = resolveSchedule(timeline, { derivedTempo: tree.metadata?.tempo });
+  // LA TRONCATURE D'AVANT-ORIGINE SE RECUEILLE EN DONNÉE, PAS SUR LA CONSOLE.
+  //
+  // La tête de lecture de Kronos part de l'origine : tout ce qui la précède n'est jamais
+  // ordonnancé et manque à l'axe SONNANT, dont les bornes viennent de lui. Kronos rend ce fait
+  // bruyant depuis 4601ccd (préavis [1517]) — un avertissement sur la console est exactement ce
+  // qu'on finit par prendre pour du bruit. On le capte donc par son canal, et on le REPASSE au
+  // puits par défaut : capter n'est pas faire taire, et les autres diagnostics ne sont pas à moi.
+  const troncatures = [];
+  const planifie = resolveSchedule(timeline, {
+    derivedTempo: tree.metadata?.tempo,
+    onDiagnostic: (d) => {
+      if (d && d.code === 'content-before-origin') troncatures.push(d);
+      console.warn(`[kronos] ${d?.message ?? JSON.stringify(d)}`);
+    },
+  });
+  const avantOrigine = troncatures.length
+    ? `${troncatures.reduce((n, d) => n + d.count, 0)} événement(s) précèdent l'origine et ne sont PAS `
+      + `ordonnancés (le plus précoce à ${troncatures[0].firstOnset} s de scène) — l'axe sonnant, dont `
+      + 'les bornes viennent de Kronos, est incomplet'
+    : undefined;
 
   // TYPE DÉCLARÉ, REPORTÉ RANG À RANG — et le rang n'est légitime que PROUVÉ.
   //
@@ -192,7 +211,20 @@ export async function resoudreViaKairos(session, opts = {}) {
   // On refuse donc le report quand les comptes ne coïncident pas, plutôt que de le deviner :
   // `type` reste alors ABSENT et `typeIndisponible` dit pourquoi. Une absence déclarée se lit ;
   // un type faux ne se voit pas. Le désaccord de comptes lui-même appartient à BPx et à Kairos.
-  const evenementsKairos = timeline.query(0, Number.MAX_SAFE_INTEGER);
+  // ⚠️ MA FENÊTRE DE LECTURE COMMENÇAIT À ZÉRO, ET C'ÉTAIT ELLE QUI FABRIQUAIT LE DÉSACCORD.
+  //
+  // Kairos publie des scènes ENTIÈREMENT TRANSLATÉES d'un décalage d'origine : leur premier
+  // instant est NÉGATIF. En lisant à partir de 0 je coupais ces événements, puis j'imputais le
+  // manque à un désaccord de comptes entre BPx et Kairos — que j'ai remonté comme tel. C'était
+  // ma fenêtre. Correspondance exacte, mesurée le 2026-08-12 sur l'avertissement de troncature
+  // que Kronos a rendu visible (4601ccd) : `transposition` 150 contre 143 et SEPT événements
+  // avant l'origine ; `transposition3` 53 contre 52 et UN ; `visser-shapes` 2130 contre 2129 et
+  // UN. Trois scènes, trois comptes, trois fois le même écart.
+  //
+  // La référence fait foi et elle porte des instants avant zéro (arbitrage Romain 2026-08-12) :
+  // la fenêtre s'ouvre donc des deux côtés. `MIN_SAFE_INTEGER` plutôt qu'un zéro décalé à la
+  // main — une borne choisie sur le décalage observé se périmerait au premier décalage plus grand.
+  const evenementsKairos = timeline.query(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
   const rangsAlignes = jetonsBPx.length === evenementsKairos.length;
   const typeParContenu = new Map();
   if (rangsAlignes) {
@@ -283,7 +315,7 @@ export async function resoudreViaKairos(session, opts = {}) {
     });
   }
 
-  return { tokens, tousLesJetons, typeIndisponible, duration: planifie.totalDurationSec };
+  return { tokens, tousLesJetons, typeIndisponible, avantOrigine, duration: planifie.totalDurationSec };
 }
 
 /**

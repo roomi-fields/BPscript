@@ -61,7 +61,16 @@ async function produceB(name, modalite) {
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
     const session = createSession(out.ast, { seed: 1 });
-    const { tokens, tousLesJetons, typeIndisponible } = await resoudreViaKairos(session);
+    const { tokens, tousLesJetons, typeIndisponible, avantOrigine } = await resoudreViaKairos(session);
+    // UNE MESURE TRONQUÉE NE REND PAS DE VERDICT SUR L'AXE SONNANT.
+    //
+    // Kronos fait partir sa tête de lecture de l'origine ; une scène translatée d'un décalage
+    // d'origine a des événements AVANT zéro, qui ne sont jamais ordonnancés. Les bornes de l'axe
+    // sonnant venant de lui, il en manque — et un ISO obtenu sur une production amputée est un
+    // vert qui ment. L'axe TEXTE, lui, reste mesurable : il compare des noms, et le flux complet
+    // les porte tous (seules leurs bornes manquent). Où repart la tête est un arbitrage en cours
+    // chez Romain ; d'ici là on le DIT, on ne le devine pas.
+    if (avantOrigine && modalite === 'MIDI') return { nonMesurable: `mesure tronquée — ${avantOrigine}` };
     // ⚠️ LE TYPE VIENT DU PONT, IL NE SE POSE PAS ICI. Ce harnais écrivait `type: 'terminal'` sur
     // chaque jeton avant de les tendre au filtre partagé : le filtre exigeait bien un type, mais
     // celui qu'il lisait était celui que je venais d'inventer, donc son critère était neutralisé.

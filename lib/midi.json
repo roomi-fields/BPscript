@@ -134,6 +134,7 @@
       "transportGroup": "midi"
     },
     "keymap": {
+      "bp3": "_keymap",
       "args": [
         "p1",
         "q1",
@@ -154,6 +155,7 @@
       "transportGroup": "midi"
     },
     "mapstep": {
+      "bp3": "_mapstep",
       "args": [],
       "description": "Key-map interpolation mode: STEP (discrete). BP3 _mapstep (console_strings.json:215, code 1/0 args). Sibling of mapcont/mapfixed — selects how _keymap interpolates.",
       "scope": [
@@ -165,6 +167,7 @@
       "transportGroup": "midi"
     },
     "mapcont": {
+      "bp3": "_mapcont",
       "args": [],
       "description": "Key-map interpolation mode: CONTINUOUS. BP3 _mapcont (console_strings.json:214, code 44/0 args). Sibling of mapstep/mapfixed.",
       "scope": [
@@ -176,6 +179,7 @@
       "transportGroup": "midi"
     },
     "mapfixed": {
+      "bp3": "_mapfixed",
       "args": [],
       "description": "Key-map interpolation mode: FIXED. BP3 _mapfixed (console_strings.json:213, code 64/0 args). Sibling of mapstep/mapcont.",
       "scope": [
