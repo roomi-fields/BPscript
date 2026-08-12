@@ -251,11 +251,63 @@ function normalizeSaptak(token) {
   return registre ? `${registre}_${m[1]}` : token;
 }
 
+/**
+ * DEUX ORTHOGRAPHES D'UNE MÊME HAUTEUR SONT LA MÊME HAUTEUR.
+ *
+ * Arbitrage Romain du 2026-08-12 : « bémol contre dièse à hauteur égale compte CONFORME », et
+ * la scène `.bps` n'a pas à porter le choix d'écriture. Le natif capture `Bb3` là où la chaîne
+ * écrit `A#3` — deux graphies, une seule note.
+ *
+ * On ne compare donc pas les caractères, on compare CE QU'ILS DÉSIGNENT : le nom est ramené à
+ * son rang en demi-tons, celui de la numérotation MIDI (`do4` = `C4` = 60). L'altération est
+ * portée dans le rang, ce qui rend d'un même geste `Cb4` et `B3`, ou `E#4` et `F4`.
+ *
+ * PORTÉE STRICTE, et c'est le point : seuls les noms de note occidentaux ou solfégiques — une
+ * lettre ou un degré, ses altérations, un chiffre d'octave — sont ramenés. Un degré sargam, un
+ * bol, un symbole d'alphabet de test traversent intacts : leur graphie EST leur identité, et les
+ * ramener inventerait des égalités que personne n'a tranchées.
+ */
+const DEMI_TONS = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+const SOLFEGE_VERS_LETTRE = { do: 'c', ré: 'd', re: 'd', mi: 'e', fa: 'f', sol: 'g', la: 'a', si: 'b' };
+const RE_SOLFEGE = /^(do|ré|re|mi|fa|sol|la|si)([#b]*)(-?\d+)$/i;
+const RE_LETTRE = /^([A-Ga-g])([#b]*)(-?\d+)$/;
+function rangEnDemiTons(token) {
+  const s = String(token);
+  let lettre; let alterations; let octave;
+  let m = RE_SOLFEGE.exec(s);
+  if (m) { lettre = SOLFEGE_VERS_LETTRE[m[1].toLowerCase()]; [, , alterations, octave] = m; }
+  else {
+    m = RE_LETTRE.exec(s);
+    if (!m) return null;
+    lettre = m[1].toLowerCase(); [, , alterations, octave] = m;
+  }
+  let alt = 0;
+  for (const c of alterations) alt += c === '#' ? 1 : -1;
+  return 12 * (Number(octave) + 1) + DEMI_TONS[lettre] + alt;
+}
+/** Nom de note → forme canonique de sa HAUTEUR ; tout autre symbole traverse intact. */
+function normalizeEnharmonie(token) {
+  const rang = rangEnDemiTons(token);
+  return rang === null ? token : `demiton:${rang}`;
+}
+
+/**
+ * SIGNES DE STRUCTURE d'une capture texte — accolade et virgule de polymétrie, parenthèse d'un
+ * contrôle imprimé, le contrôle lui-même, et le NOMBRE NU, qui est une valeur de temps : durée,
+ * signature (`4+4/6`), échelle. Leur présence dit que la référence porte une structure, donc que
+ * la comparaison en demande une.
+ *
+ * Le nombre nu n'est un terminal dans AUCUN des alphabets du corpus texte — abc, bols, comptes
+ * kathak, symboles structurels : tous nomment leurs terminaux par des lettres ou des syllabes.
+ * Vérifié sur les captures avant de l'inscrire ici.
+ */
+const SIGNES_DE_STRUCTURE = /[{},()]|_[a-zA-Z]+\(|(?:^|\s)\d+(?:[/+]\d+)*(?=\s|$)/;
+
 /** Texte : on normalise UNIQUEMENT les blancs et les fins de ligne, jamais le contenu. */
 const normText = (s) => String(s).replace(/\r\n?/g, '\n').trim().split(/\s+/).join(' ');
 
 /** Jeton timé → forme comparable stable. */
-const keyTok = (t) => `${normalizeSaptak(t.token)}@${t.start}-${t.end}`;
+const keyTok = (t) => `${normalizeEnharmonie(normalizeSaptak(t.token))}@${t.start}-${t.end}`;
 /** Même clé, SANS correspondance de notation — pour savoir si l'ISO en a eu besoin. */
 const keyBrut = (t) => `${t.token}@${t.start}-${t.end}`;
 
@@ -342,12 +394,24 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
       // FRÉQUENCE. Elle ne l'est pas — le registre et les intervalles le sont, l'absolu non.
       // On le DIT dans le verdict, comme on le fait déjà pour l'alignement de registre C4key :
       // acheter un ISO en taisant ce qu'il recouvre serait aveugler la mesure.
-      const parNotation = (ref.tokens || []).some((t, i) => keyBrut(t) !== keyBrut(candidate.tokens[i]));
-      if (parNotation) {
+      // DEUX CORRESPONDANCES, DEUX VERDICTS — les confondre ferait porter à l'enharmonie une
+      // réserve qui ne la concerne pas. Le saptak garde sa réserve de diapason ; l'enharmonie
+      // n'en a aucune, Romain l'a tranchée « conforme » et la hauteur est la MÊME par
+      // construction. On dit donc laquelle a joué.
+      const parSaptak = (ref.tokens || []).some((t, i) => normalizeSaptak(t.token) !== t.token
+        || normalizeSaptak(candidate.tokens[i].token) !== candidate.tokens[i].token);
+      const parEnharmonie = (ref.tokens || []).some((t, i) => keyBrut(t) !== keyBrut(candidate.tokens[i]));
+      if (parSaptak) {
         return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
           notation: 'saptak', detail: 'ISO à la NOTATION près : registre équivalent (sa4 ↔ madhya_sa, '
             + 'correspondance mesurée). Le diapason reste NON TRANCHÉ — ancre traditionnelle 240 Hz '
             + 'contre ancre occidentale du natif, facteur 0.917 : la hauteur ABSOLUE n\'est pas prouvée identique.' };
+      }
+      if (parEnharmonie) {
+        return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
+          notation: 'enharmonie',
+          detail: 'ISO — orthographes différentes d\'une MÊME hauteur (Bb3 ↔ A#3). La scène ne porte '
+            + 'pas le choix d\'écriture (arbitrage Romain 2026-08-12).' };
       }
       return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
     }
@@ -376,28 +440,30 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
       return { status: NON_MESURABLE, modalite: 'TEXTE', produit: true, n_ref: normText(ref.text || '').split(' ').length, n_cand: 0,
         detail: 'référence TEXTE mais candidat sans texte — modalités non comparables' };
     }
-    const a = normText(ref.text || '').split(' ');
-    const b = normText(candidate.text).split(' ');
+    // Même règle que sur l'axe sonnant : deux orthographes d'une même hauteur sont la même
+    // hauteur (arbitrage Romain 2026-08-12). Tout symbole qui n'est pas un nom de note traverse.
+    const motComparable = (w) => normalizeEnharmonie(normalizeSaptak(w));
+    const a = normText(ref.text || '').split(' ').map(motComparable);
+    const b = normText(candidate.text).split(' ').map(motComparable);
     if (a.length === b.length && a.every((x, i) => x === b[i])) {
       return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
     }
 
-    // RÉFÉRENCE SANS AUCUN SÉPARATEUR : comparer la CHAÎNE, pas le découpage.
+    // LA GRAPHIE D'IMPRESSION NE SE COMPARE PAS — arbitrage Romain du 2026-08-12.
     //
-    // Certaines captures natives écrivent les terminaux ACCOLÉS — `tryGOTO` sort
-    // `abbabaccbccca`, un seul mot. Ma voie rend les mêmes caractères mais séparés, parce que
-    // je joins toujours par une espace. On opposait donc 1 « mot » à 13 : un écart de FORME
-    // compté comme un écart de CONTENU. Signalé par bp3-frontend, vérifié ici sur la capture.
+    // On compare la SUITE DES TERMINAUX et la STRUCTURE ; l'espacement, le collage des signes et
+    // la mise en page ne portent aucune information et restent libres. Le natif écrit
+    // `bcbcbcbcbc` là où je rends `b c b c b c b c b c` : même suite, deux mises en page.
     //
-    // ⚠️ On ne normalise QUE lorsque la référence ne porte AUCUN blanc. Retirer les espaces
-    // des deux côtés systématiquement masquerait les vraies fautes de découpage là où le natif
-    // sépare — ce serait acheter des ISO en aveuglant la mesure.
-    if (a.length === 1 && !/\s/.test(String(ref.text || '').trim())) {
-      const colle = b.join('');
-      if (colle === a[0]) {
-        return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: 1, n_cand: 1,
-          accole: true, detail: `ISO à l'accolement près : la référence écrit les ${b.length} terminaux sans séparateur` };
-      }
+    // Le test précédent ne relâchait l'espacement que si la référence n'avait AUCUN blanc — une
+    // demi-mesure : il attrapait `tryGOTO`, il ratait toute capture qui mélange les deux. La
+    // décision retire la condition, et rien n'est acheté au passage : deux suites de terminaux
+    // différentes restent différentes une fois les blancs ôtés.
+    const sansBlancs = (s) => String(s).replace(/\s+/g, '');
+    if (sansBlancs(ref.text || '') === sansBlancs(candidate.text)) {
+      return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length,
+        graphie: 'espacement', detail: `ISO — même suite de terminaux, mise en page différente (${a.length} mot(s) contre ${b.length}). `
+          + "L'espacement ne se compare pas (arbitrage Romain 2026-08-12)." };
     }
     const shiftT = registerShiftFor(name, baselineDir);
     if (shiftT && shiftApplied) {
@@ -406,6 +472,24 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
         return { status: ISO, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: bn.length,
           renomme: true, shift: shiftT, detail: `ISO au nommage près : registre aligné de ${shiftT} octave(s) (C4key)` };
       }
+    }
+    // LA STRUCTURE FAIT PARTIE DE LA COMPARAISON, ET LE PRODUCTEUR NE LA REND PAS.
+    //
+    // La décision demande de comparer la suite des terminaux ET la structure — groupes,
+    // polymétrie, frontières de bloc. Quand la référence porte cette structure et que la voie
+    // candidate rend une suite plate, on ne compare PAS ce que la règle demande. Rendre DIFF
+    // imputerait à la scène un écart qu'on n'a pas mesuré ; rendre ISO l'achèterait en fermant
+    // les yeux. On le DIT, et la cause est nommée : c'est le rendu de surface qui manque.
+    //
+    // MESURÉ : ni `renderChain` (BPx) ni `rendreChaineFinale` (Kairos) ne restituent la
+    // polymétrie sur le chemin d'énumération — `a{-b,ac}` y revient `a b a c`.
+    if (SIGNES_DE_STRUCTURE.test(String(ref.text || ''))) {
+      return {
+        status: NON_MESURABLE, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length,
+        detail: 'la référence porte la STRUCTURE (groupes, polymétrie, contrôles imprimés) et la '
+          + "comparaison la demande ; le rendu d'énumération ne rend qu'une suite plate de terminaux. "
+          + `Écart de suite, hors structure : ${firstDiff(a, b)}`,
+      };
     }
     return {
       status: DIFF, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length,
@@ -431,7 +515,7 @@ function firstDiff(a, b) {
   return `longueurs différentes : ${a.length} vs ${b.length}`;
 }
 
-module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, printedOnly, printedText, registerShiftFor, normalizeRegister, normalizeSaptak, ISO, DIFF, NON_MESURABLE, ABSENT };
+module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, printedOnly, printedText, registerShiftFor, normalizeRegister, normalizeSaptak, normalizeEnharmonie, rangEnDemiTons, ISO, DIFF, NON_MESURABLE, ABSENT };
 
 // ── CLI de diagnostic ────────────────────────────────────────────────────────
 if (require.main === module) {
