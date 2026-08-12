@@ -312,6 +312,53 @@ const keyTok = (t) => `${normalizeEnharmonie(normalizeSaptak(t.token))}@${t.star
 const keyBrut = (t) => `${t.token}@${t.start}-${t.end}`;
 
 /**
+ * L'AXE SONNANT COMPARE UN ENSEMBLE MINUTE, PAS UNE SUITE — arbitrage Romain du 2026-08-12.
+ *
+ * Ses mots : « ce dont je veux m'assurer, c'est que les MÊMES NOTES soient produites aux MÊMES
+ * INSTANTS avec la MÊME DURÉE. L'ORDRE D'AFFICHAGE N'A AUCUNE IMPORTANCE. » Deux voix simultanées
+ * s'écrivent dans un ordre que le producteur choisit ; ce choix ne s'entend pas.
+ *
+ * ⛔ CE QUE ÇA NE RELÂCHE PAS. Rien sur les instants, rien sur les durées, rien sur les
+ * multiplicités : la clé comparée porte le nom, le début ET la fin, et deux occurrences du même
+ * jeton comptent deux fois — c'est un MULTIENSEMBLE, jamais un ensemble. Une grammaire dont un
+ * seul instant diffère reste divergente. Seul le RANG cesse de compter.
+ *
+ * ⛔ ET ÇA NE VAUT QUE SUR L'AXE SONNANT. Sur l'axe TEXTE, la SUITE des terminaux compte — c'est
+ * une décision distincte, du même jour, qui ne bouge pas.
+ */
+function multiensemble(cles) {
+  const m = new Map();
+  for (const k of cles) m.set(k, (m.get(k) || 0) + 1);
+  return m;
+}
+
+/** Deux multiensembles portent-ils exactement les mêmes éléments, aux mêmes multiplicités ? */
+function memeMultiensemble(a, b) {
+  if (a.length !== b.length) return false;
+  const ma = multiensemble(a); const mb = multiensemble(b);
+  if (ma.size !== mb.size) return false;
+  for (const [k, n] of ma) if (mb.get(k) !== n) return false;
+  return true;
+}
+
+/**
+ * Écart entre deux multiensembles, dit en éléments EN TROP et MANQUANTS.
+ * « La première divergence au rang N » n'a plus de sens quand le rang ne compte pas.
+ */
+function diffMultiensemble(a, b) {
+  const ma = multiensemble(a); const mb = multiensemble(b);
+  const manquants = []; const enTrop = [];
+  for (const [k, n] of ma) { const d = n - (mb.get(k) || 0); if (d > 0) manquants.push(d > 1 ? `${k} ×${d}` : k); }
+  for (const [k, n] of mb) { const d = n - (ma.get(k) || 0); if (d > 0) enTrop.push(d > 1 ? `${k} ×${d}` : k); }
+  const bout = (l) => (l.length > 3 ? `${l.slice(0, 3).join(', ')} … (+${l.length - 3})` : l.join(', '));
+  if (!manquants.length && !enTrop.length) return `comptes différents : ${a.length} vs ${b.length}`;
+  const parts = [];
+  if (manquants.length) parts.push(`${manquants.length} de la référence absent(s) du candidat : ${bout(manquants)}`);
+  if (enTrop.length) parts.push(`${enTrop.length} du candidat absent(s) de la référence : ${bout(enTrop)}`);
+  return parts.join(' · ');
+}
+
+/**
  * Confronte une production candidate à la référence, DANS LA MODALITÉ DÉCLARÉE.
  *
  * @param {string} name        nom de grammaire (clé baseline)
@@ -382,7 +429,7 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
     }
     const a = (ref.tokens || []).map(keyTok);
     const b = candidate.tokens.map(keyTok);
-    if (a.length === b.length && a.every((x, i) => x === b[i])) {
+    if (memeMultiensemble(a, b)) {
       // UN ISO OBTENU PAR CORRESPONDANCE DE NOTATION NE DOIT PAS SE LIRE COMME UN ISO STRICT.
       //
       // `normalizeSaptak` fait coïncider `sa4` et `madhya_sa` : c'est légitime, ils désignent le
@@ -398,9 +445,14 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
       // réserve qui ne la concerne pas. Le saptak garde sa réserve de diapason ; l'enharmonie
       // n'en a aucune, Romain l'a tranchée « conforme » et la hauteur est la MÊME par
       // construction. On dit donc laquelle a joué.
-      const parSaptak = (ref.tokens || []).some((t, i) => normalizeSaptak(t.token) !== t.token
-        || normalizeSaptak(candidate.tokens[i].token) !== candidate.tokens[i].token);
-      const parEnharmonie = (ref.tokens || []).some((t, i) => keyBrut(t) !== keyBrut(candidate.tokens[i]));
+      // CE QUE L'ISO A COÛTÉ SE DIT — et le rang ne servant plus, ces témoins se prennent sur les
+      // multiensembles, jamais sur des paires de même index qui n'ont plus de sens.
+      const changeParSaptak = (l) => l.some((t) => normalizeSaptak(t.token) !== t.token);
+      const parSaptak = changeParSaptak(ref.tokens || []) || changeParSaptak(candidate.tokens);
+      const parEnharmonie = !memeMultiensemble((ref.tokens || []).map(keyBrut), candidate.tokens.map(keyBrut));
+      // L'ORDRE A-T-IL JOUÉ ? Même multiensemble, suites différentes rang à rang. On le DIT, comme
+      // on dit la notation : un ISO qui a demandé un relâchement ne se lit pas comme un ISO strict.
+      const parOrdre = a.some((x, i) => x !== b[i]);
       if (parSaptak) {
         return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
           notation: 'saptak', detail: 'ISO à la NOTATION près : registre équivalent (sa4 ↔ madhya_sa, '
@@ -409,9 +461,16 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
       }
       if (parEnharmonie) {
         return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
-          notation: 'enharmonie',
+          notation: 'enharmonie', ordre: parOrdre ? 'libre' : undefined,
           detail: 'ISO — orthographes différentes d\'une MÊME hauteur (Bb3 ↔ A#3). La scène ne porte '
-            + 'pas le choix d\'écriture (arbitrage Romain 2026-08-12).' };
+            + 'pas le choix d\'écriture (arbitrage Romain 2026-08-12).'
+            + (parOrdre ? ' Ordre d\'affichage différent : les mêmes notes sonnent aux mêmes instants pour les mêmes durées.' : '') };
+      }
+      if (parOrdre) {
+        return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
+          ordre: 'libre',
+          detail: 'ISO — mêmes notes, mêmes instants, mêmes durées ; seul l\'ORDRE D\'AFFICHAGE '
+            + 'diffère, et il ne s\'entend pas (arbitrage Romain 2026-08-12).' };
       }
       return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length, detail: null };
     }
@@ -421,17 +480,22 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
     const shift = registerShiftFor(name, baselineDir);
     if (shift && shiftApplied) {
       const bn = candidate.tokens.map((t) => keyTok({ ...t, token: normalizeRegister(t.token, shift) }));
-      if (a.length === bn.length && a.every((x, i) => x === bn[i])) {
+      if (memeMultiensemble(a, bn)) {
+        // Deux relâchements peuvent se composer, et alors on les nomme TOUS LES DEUX : un ISO qui
+        // a demandé l'alignement de registre ET la liberté d'ordre ne se lit pas comme un ISO strict.
+        const ordreAJoue = a.some((x, i) => x !== bn[i]);
         return { status: ISO, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: bn.length,
-          renomme: true, shift, detail: `ISO au nommage près : registre aligné de ${shift} octave(s) (C4key), Hz identique` };
+          renomme: true, shift, ordre: ordreAJoue ? 'libre' : undefined,
+          detail: `ISO au nommage près : registre aligné de ${shift} octave(s) (C4key), Hz identique`
+            + (ordreAJoue ? ". L'ORDRE D'AFFICHAGE diffère aussi : mêmes notes, mêmes instants, mêmes durées." : '') };
       }
     }
     return {
       status: DIFF, modalite: 'MIDI', produit: true, n_ref: a.length, n_cand: b.length,
       cause: (shift && !shiftApplied) ? 'reglage-c4key-absent' : undefined,
       detail: (shift && !shiftApplied)
-        ? `décalage de registre de ${shift} octave(s) attendu (C4key) mais NON appliqué par la voie : le son est réellement décalé, ce n'est pas un écart de nommage — cause de provisionnement, pas de transcription. ${firstDiff(a, b)}`
-        : firstDiff(a, b),
+        ? `décalage de registre de ${shift} octave(s) attendu (C4key) mais NON appliqué par la voie : le son est réellement décalé, ce n'est pas un écart de nommage — cause de provisionnement, pas de transcription. ${diffMultiensemble(a, b)}`
+        : diffMultiensemble(a, b),
     };
   }
 
@@ -520,7 +584,7 @@ function firstDiff(a, b) {
   return `longueurs différentes : ${a.length} vs ${b.length}`;
 }
 
-module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, printedOnly, printedText, registerShiftFor, normalizeRegister, normalizeSaptak, normalizeEnharmonie, rangEnDemiTons, ISO, DIFF, NON_MESURABLE, ABSENT };
+module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, printedOnly, printedText, registerShiftFor, normalizeRegister, normalizeSaptak, normalizeEnharmonie, rangEnDemiTons, memeMultiensemble, diffMultiensemble, ISO, DIFF, NON_MESURABLE, ABSENT };
 
 // ── CLI de diagnostic ────────────────────────────────────────────────────────
 if (require.main === module) {
