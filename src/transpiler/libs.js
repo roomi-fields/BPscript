@@ -615,10 +615,38 @@ function loadLibsFromDirectives(directives) {
   }
   const aCharger = apportees.length ? [...apportees, ...(directives || [])] : (directives || []);
 
+  // ⛔ UN CONTRÔLE NE SE DÉCLARE QU'UNE FOIS — sinon son DESTINATAIRE est indécidable.
+  //
+  // Le destinataire d'un réglage n'est écrit nulle part sur le réglage : il se lit sur la
+  // librairie qui le déclare (`resolvedBy`). Deux déclarations du même nom dans deux librairies
+  // donnent donc DEUX destinataires pour une seule clé, et le chargeur tranchait en silence — le
+  // dernier fichier chargé écrasait l'autre, sans que l'ordre de chargement soit une décision de
+  // qui que ce soit. Le même mécanisme confisque un nom quand une scène déclare un contrôleur
+  // nommé (`@cc`) qui porte déjà un nom du vocabulaire.
+  //
+  // On refuse BRUYAMMENT plutôt que de choisir. Un choix silencieux ne se voit pas depuis l'aval :
+  // le réglage part au mauvais outil sans erreur, et rien ne rougit le jour où une clé change de
+  // librairie. La tolérance est étroite et nommée : la MÊME section du MÊME fichier peut être
+  // reversée deux fois (une directive écrite deux fois dans une scène), il n'y a alors ni deux
+  // définitions ni deux destinataires.
+  const provenance = new Map();   // nom de contrôle → `<librairie>.<section>`
+  const declarer = (nom, origine) => {
+    const deja = provenance.get(nom);
+    if (deja && deja !== origine) {
+      throw new Error(
+        `le contrôle '${nom}' est déclaré DEUX FOIS — ${deja} et ${origine}. Un contrôle vit dans `
+        + `UNE librairie, celle de son destinataire : deux déclarations donnent deux destinataires `
+        + `pour une seule clé, et le chargeur ne peut pas trancher. Supprimer la déclaration qui `
+        + `n'est pas chez le destinataire, ou renommer l'une des deux.`);
+    }
+    provenance.set(nom, origine);
+  };
+
   for (const dir of aCharger) {
     // @cc directives: user-defined named CC mappings
     if (dir.name === 'cc' && dir.ccMappings) {
       for (const cc of dir.ccMappings) {
+        declarer(cc.name, `le contrôleur nommé '@cc ${cc.name}' de la scène`);
         ctx.controls[cc.name] = {
           args: ['value'], range: [0, 127], default: 0,
           description: `User CC${cc.number}`, transportGroup: 'midi', ccNumber: cc.number
@@ -662,8 +690,8 @@ function loadLibsFromDirectives(directives) {
     // Merge controls — engine (BP3 native) and runtime (dispatcher)
     // Runtime section may contain sub-groups (musical, midi, audio, dispatcher, generic)
     const controlSources = [];
-    if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false });
-    if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true });
+    if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false, section: 'controls' });
+    if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true, section: 'engine' });
     // ⛔ LA SECTION `subgrammar` PARTICIPE AUX SACS QUAND SA PORTÉE DÉCLARE LE FLUX — sans cette
     // ligne, aucun de ses contrôles n'entre dans un sac, quelle que soit sa portée déclarée.
     //
@@ -682,7 +710,7 @@ function loadLibsFromDirectives(directives) {
     if (lib.subgrammar) {
       const dansLeFlux = Object.fromEntries(Object.entries(lib.subgrammar).filter(
         ([nom, def]) => nom !== '_comment' && def && Array.isArray(def.scope) && def.scope.includes('flow')));
-      if (Object.keys(dansLeFlux).length) controlSources.push({ source: dansLeFlux, isEngine: true });
+      if (Object.keys(dansLeFlux).length) controlSources.push({ source: dansLeFlux, isEngine: true, section: 'subgrammar' });
     }
     // `groups` (ex-`runtime`, RENOMMÉ 2026-08-10 — le nom `runtime` est retiré partout, remplacé
     // par `resolvedBy` qui nomme l'outil DIRECTEMENT) : la SECTION de `lib/controls.json` qui
@@ -702,16 +730,16 @@ function loadLibsFromDirectives(directives) {
             // Sub-group: iterate its controls, tag each with transportGroup
             for (const [name, def] of Object.entries(groupContent)) {
               if (name.startsWith('_')) continue;  // clé de DOCUMENTATION, cf. estUneDeclarationDeControle
-              controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false });
+              controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false, section: `groups.${groupName}` });
             }
             continue;
           }
         }
         // Flat control (backwards compat): treat as ungrouped runtime control
-        controlSources.push({ source: { [groupName]: groupContent }, isEngine: false });
+        controlSources.push({ source: { [groupName]: groupContent }, isEngine: false, section: 'groups' });
       }
     }
-    for (const { source, isEngine } of controlSources) {
+    for (const { source, isEngine, section } of controlSources) {
       for (const [name, def] of Object.entries(source)) {
         // ⚠️ FRONTIÈRE DONNÉE → LANGAGE. Un fichier de données ne doit JAMAIS pouvoir agrandir le
         // langage en le commentant. On ne filtrait que la clé `_comment` : la première clé de
@@ -732,6 +760,7 @@ function loadLibsFromDirectives(directives) {
             + `doit se déclarer comme telle — un fichier de données n'agrandit pas le langage en `
             + `le commentant.`);
         }
+        declarer(name, `lib/${dir.name}.json → ${section}`);
         ctx.controls[name] = def;
         ctx.controlMap[name] = def.bp3 || `_${name}`;
         ctx.controlNames.add(name);
