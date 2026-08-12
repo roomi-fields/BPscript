@@ -481,9 +481,14 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
     // imputerait à la scène un écart qu'on n'a pas mesuré ; rendre ISO l'achèterait en fermant
     // les yeux. On le DIT, et la cause est nommée : c'est le rendu de surface qui manque.
     //
-    // MESURÉ : ni `renderChain` (BPx) ni `rendreChaineFinale` (Kairos) ne restituent la
-    // polymétrie sur le chemin d'énumération — `a{-b,ac}` y revient `a b a c`.
-    if (SIGNES_DE_STRUCTURE.test(String(ref.text || ''))) {
+    // ⚠️ CE DÉCLENCHEUR NE REGARDAIT QUE LA RÉFÉRENCE, ET C'ÉTAIT UN DÉFAUT DE JUGE PARTAGÉ.
+    // Il suffisait que le NATIF porte une accolade pour que la prudence tombe — y compris sur une
+    // voie qui rend parfaitement la structure. Mesuré par bp3-frontend : huit de ses verdicts
+    // passaient en non-mesurable alors que sa chaîne rend groupes, imbrication et virgules. Une
+    // prudence juste chez l'un devenait un faux non-mesurable chez l'autre.
+    // Il regarde donc LES DEUX CÔTÉS : on ne renonce que si la référence porte la structure ET
+    // que le candidat n'en rend aucune.
+    if (SIGNES_DE_STRUCTURE.test(String(ref.text || '')) && !SIGNES_DE_STRUCTURE.test(String(candidate.text || ''))) {
       return {
         status: NON_MESURABLE, modalite: 'TEXTE', produit: true, n_ref: a.length, n_cand: b.length,
         detail: 'la référence porte la STRUCTURE (groupes, polymétrie, contrôles imprimés) et la '

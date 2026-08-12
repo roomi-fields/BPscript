@@ -44,7 +44,8 @@ import { empreinteVoisins, exigerVoisinsStables, direEmpreinte } from './emprein
 const require = createRequire(import.meta.url);
 const { compare, loadBaseline, soundingOnly, printedText } = require('./compare_modal.cjs');
 const { compileToBPxAST } = require('../src/transpiler/index.js');
-const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+const { createSession, renderChain } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+const { rendreChaineFinale } = await import('/home/romi/dev/bp/kairos/dist/index.js');
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -156,7 +157,38 @@ function produceAllB(name) {
     // d'énumérer. On réplique ce repli — le traiter en erreur inventerait un échec que le
     // natif n'a pas. (Bug de mon premier câblage : je documentais le repli sans le coder.)
     if (r.refused) return { replie: r.refusedReason || 'raison non déclarée' };
-    return { text: r.items.map((i) => (i.terminals || []).join(' ')).join('\n'), tronque: !!r.truncated };
+    // LA STRUCTURE SE REND PAR LA RÈGLE PUBLIÉE, ET IL FAUT LUI DONNER `chainIds`.
+    //
+    // Je recollais `terminals` avec une espace : une suite PLATE, où la polymétrie, l'imbrication
+    // et les virgules de simultaneité disparaissaient. J'en avais conclu — et écrit — que le
+    // moteur ne savait pas rendre la structure sur ce chemin. C'était faux, et bp3-frontend l'a
+    // réfuté mesure à l'appui : j'appelais le rendu sur `item.ids`. Rejoué sur le même item,
+    // `ids` rend `a b a c` quand `chainIds` rend `a{- b,a c}`. Le rendu existait ; c'est mon
+    // producteur qui ne l'employait pas.
+    //
+    // Repli HONNÊTE et jamais silencieux : si le rendu échoue sur un item, on retombe sur la
+    // suite plate pour CET item et on le dit — une chaîne inventée serait pire que l'aveu.
+    // ⚠️ L'ORDRE N'EST PAS LIBRE, ET JE L'AI PAYÉ. Le résolveur de noms vit dans le contexte de
+    // projection, que BPx refuse de rendre avant une dérivation. J'avais donc appelé `derive()`
+    // AVANT `produceAll()` — et la dérivation CONSOMME du tirage : sur une grammaire à choix,
+    // l'énumération changeait. Mesuré : `tryflags2` passait d'identique à divergente sans qu'une
+    // ligne de la scène ait bougé. On énumère d'abord, on dérive ensuite : les items sont déjà en
+    // main, et le résolveur ne lit que la table de symboles de la grammaire — il ne dépend pas du
+    // tirage. Une dérivation qui échoue ne coûte que le rendu structuré, jamais l'énumération.
+    let resoudreNom;
+    try { session.derive(); resoudreNom = session.buildProjectionContext('chronological').resolveName; }
+    catch (e) {
+      process.stderr.write(`[rendu] ${name} — pas de résolveur de noms (${e.message}) : suite plate\n`);
+      return { text: r.items.map((i) => (i.terminals || []).join(' ')).join('\n'), tronque: !!r.truncated };
+    }
+    const echecs = [];
+    const lignes = r.items.map((it, rang) => {
+      try {
+        return rendreChaineFinale(it.chainIds, it.chainMarkers, resoudreNom, renderChain);
+      } catch (e) { echecs.push(`item ${rang} : ${e.message}`); return (it.terminals || []).join(' '); }
+    });
+    if (echecs.length) process.stderr.write(`[rendu] ${name} — ${echecs.length} item(s) rendus à plat : ${echecs[0]}\n`);
+    return { text: lignes.join('\n'), tronque: !!r.truncated };
   } catch (e) { return { erreur: `énumération : ${e.message}` }; }
 }
 
