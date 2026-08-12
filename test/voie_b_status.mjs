@@ -39,6 +39,7 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
+import { empreinteVoisins, exigerVoisinsStables, direEmpreinte } from './empreinte_voisins.mjs';
 
 const require = createRequire(import.meta.url);
 const { compare, loadBaseline, soundingText } = require('./compare_modal.cjs');
@@ -155,6 +156,13 @@ const withBps = nomsBps()
   .filter((d) => only.length === 0 || only.includes(d))
   .sort();
 
+// ⚠️ LA CHAÎNE MESURÉE VIT CHEZ TROIS VOISINS, DONT DEUX NE VERSIONNENT PAS LEUR BUILD.
+// On relève leur empreinte AVANT le balayage et on la revérifie APRÈS : une campagne à cheval sur
+// une reconstruction rend un effondrement qui n'existe pas (mesuré le 2026-08-12 : 66 « ne produit
+// pas » sur 87, dont 60 dus à `kairos/dist/index.js` disparu en cours de route).
+const _empreinteAvant = empreinteVoisins();
+process.stderr.write(`[chaine] ${direEmpreinte(_empreinteAvant).replace(/\n {2}/g, '\n[chaine] ')}\n`);
+
 const rows = [];
 // PROGRESSION SUR LA SORTIE D ERREUR — pas cosmétique.
 // Cet outil n'imprimait qu'à la toute fin : une exécution de vingt minutes était
@@ -178,6 +186,9 @@ for (const name of withBps) {
   else res = compare(name, b);
   rows.push({ grammaire: name, modalite: ref.modalite ?? '—', ...res });
 }
+
+// Le verdict ne sort QU'APRÈS avoir prouvé que la chaîne n'a pas bougé sous la mesure.
+const _empreinteApres = exigerVoisinsStables(_empreinteAvant);
 
 if (asJson) {
   console.log(JSON.stringify(rows, null, 2));

@@ -115,6 +115,27 @@ export async function resoudreViaKairos(session, opts = {}) {
   // Le BUNDLE, pas le JSON du disque : lui seul porte les corps (cf. en-tête).
   const { LIBS } = require('../src/transpiler/libs-data.js');
   const digitalLib = LIBS.digital;
+  // ⚠️ UNE SCÈNE QUI INVOQUE UN FICHIER DE LIBRAIRIE LE FAIT CHERCHER DANS LE CATALOGUE, PAS DANS
+  // UNE CLÉ DE CONTEXTE À PART. Kairos porte deux mécanismes distincts qui lisent la MÊME librairie
+  // par deux chemins, et n'en câbler qu'un fait TOMBER la scène :
+  //   · `homomorphismeLib` (contexte) alimente le SUBSTITUTEUR d'étiquettes ;
+  //   · `pitchLib['<fichier>']` alimente la RÉSOLUTION DE PROVENANCE, qui honore les déclarations
+  //     que l'arbre porte dans `metadata.sceneLibs` (`homomorphism.dhati`, `settings.notreich`…).
+  // Je ne câblais que le premier, et la provenance REFUSAIT BRUYAMMENT tout fichier invoqué.
+  //
+  // ⚠️ ET LA PORTÉE SE PREND SUR CE QUE LA LIBRAIRIE DÉCLARE, PAS SUR LE NOM QUI A ÉCHOUÉ. Ma
+  // première réparation ne posait que `homomorphism`, parce que c'est le nom que le refus m'avait
+  // montré ; la campagne suivante a fait tomber `settings.notreich` et `sound.tabla_perc` par le
+  // MÊME mécanisme. Le trou n'est pas un fichier, c'est l'ADRESSAGE — d'où un critère et non une
+  // liste : est un fichier de la fabrique de Kairos celui qui DÉCLARE l'axe qu'il alimente
+  // (`resolves`). Offrir les autres est pire que ne rien offrir : `settings` est résolue par BPx,
+  // et la présenter change le refus « fichier introuvable » en « champ resolves ABSENT ». Kairos ne
+  // parse que ce qui est réellement invoqué, donc les fichiers non sollicités ne coûtent rien.
+  // Les six AXES gardent leur contenu de catalogue : ils sont posés à part, et ce sont eux qui font foi.
+  const axes = new Set(FICHIERS_HAUTEUR);
+  for (const [nom, fichier] of Object.entries(LIBS)) {
+    if (!axes.has(nom) && fichier && typeof fichier === 'object' && fichier.resolves) pitchLib[nom] = fichier;
+  }
   // REGISTRE D'HOMOMORPHISME — jumeau structurel de `digitalLib`, et il manquait.
   //
   // Kairos SUBSTITUE l'étiquette à la résolution (modèle carry-only : BPScript porte la
