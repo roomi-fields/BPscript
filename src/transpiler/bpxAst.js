@@ -2072,12 +2072,13 @@ function refuserNomsEnDouble(ast, libCtx) {
   // nom, pas dix déclarations. Et une TÊTE DE RÈGLE n'est pas un rival : elle ne crée aucun nom
   // (décision Romain 2026-08-03), donc `[S=1]` à côté d'une règle `S` n'est pas traité ici.
   //
-  // ⚠️ ET LE CAS DU TERMINAL EST OUVERT, PAS OUBLIÉ. Un drapeau qui porte le nom d'une note de
-  // l'alphabet actif — `[C4=1]`, ou le drapeau `B` de `asymmetric.bps` — n'est PAS refusé ici, et
-  // c'est une retenue mesurée : deux scènes du corpus l'écrivent, et l'ambiguïté que la règle
-  // combat est douteuse pour cette sorte-là, puisque les crochets disent déjà qu'on parle d'un
-  // drapeau. Invalider une forme vivante chez un voisin ne se décide pas ici. Remonté à Romain
-  // avec son coût exact — deux scènes, un drapeau à renommer.
+  // ⚠️ TOUTES LES SORTES, SANS EXCEPTION — arbitrage de Romain, 2026-08-12 : « un drapeau doit
+  // porter uniquement un nom de drapeau ; un drapeau qui porte le nom de n'importe quoi d'autre
+  // devrait générer une erreur ». J'avais laissé passer le TERMINAL, en jugeant l'ambiguïté
+  // douteuse puisque les crochets disent déjà qu'on parle d'un drapeau. Romain a tranché l'inverse
+  // et la règle est plus simple ainsi : la sorte se décide au nom, pas au signe qui l'entoure.
+  // La TÊTE DE RÈGLE y entre aussi — elle ne crée pas de nom (décision 2026-08-03) mais elle en
+  // PORTE un, et un drapeau qui le reprend fait exactement ce que ce refus existe pour empêcher.
   const drapeaux = new Set();
   const collecterDrapeaux = (n) => {
     if (!n || typeof n !== 'object') return;
@@ -2089,6 +2090,14 @@ function refuserNomsEnDouble(ast, libCtx) {
     for (const v of Object.values(n)) collecterDrapeaux(v);
   };
   collecterDrapeaux(ast.subgrammars);
+  // Les têtes de règle, recensées à part : elles ne se heurtent pas ENTRE elles (une tête répétée
+  // est une alternative) mais un drapeau qui reprend l'une d'elles est un vol de nom.
+  const tetesDeRegle = new Map();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
+    for (const t of r.lhs || []) if (t?.name && !t.negated && !tetesDeRegle.has(t.name)) {
+      tetesDeRegle.set(t.name, r.line);
+    }
+  }
   for (const nom of drapeaux) {
     const declare = creesParDeclaration.get(nom);
     if (declare && declare.sorte !== 'un drapeau') {
@@ -2096,6 +2105,22 @@ function refuserNomsEnDouble(ast, libCtx) {
         message: `le drapeau '${nom}' porte un nom déjà pris par ${declare.sorte}`
           + `${declare.line ? ` ligne ${declare.line}` : ''} — un nom ne désigne qu'UNE chose dans `
           + `une scène. Choisir un autre nom pour le drapeau.`,
+      });
+      continue;
+    }
+    if (tetesDeRegle.has(nom)) {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte le nom d'une RÈGLE de la grammaire`
+          + `${tetesDeRegle.get(nom) ? ` ligne ${tetesDeRegle.get(nom)}` : ''} — un nom ne désigne `
+          + `qu'UNE chose dans une scène. Choisir un autre nom pour le drapeau.`,
+      });
+      continue;
+    }
+    if (terminaux.has(nom)) {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte le nom d'un TERMINAL de l'alphabet actif — un nom ne `
+          + `désigne qu'UNE chose dans une scène, et un drapeau ne porte qu'un nom de drapeau. `
+          + `Choisir un autre nom pour le drapeau.`,
       });
       continue;
     }

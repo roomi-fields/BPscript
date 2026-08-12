@@ -3,8 +3,8 @@
  * GARDE — MATRICE : chaque RÉGLAGE RÉSERVÉ (`lib/core.json` schema.qualifierKeys) accepte
  * `(clé:valeur)`, refuse `[clé:valeur]` avec un message qui donne la forme cible, et accepte la
  * forme parenthèse à TOUTES les positions où le crochet vivait — y compris APRÈS une affectation
- * de drapeau en fin de règle (`S -> C4 [B=3] (weight:3)`), une position que le parseur refusait
- * avant ce chantier (« Expected arrow », alors que l'inverse — `(weight:3) [B=3]` — compilait).
+ * de drapeau en fin de règle (`S -> C4 [etape=3] (weight:3)`), une position que le parseur refusait
+ * avant ce chantier (« Expected arrow », alors que l'inverse — `(weight:3) [etape=3]` — compilait).
  *
  * POURQUOI UNE MATRICE, PAS UNE LISTE (règle du dépôt, payée plusieurs fois) : un garde écrit pour
  * la forme du ticket ne garde que cette forme. Les CLÉS et leurs VALEURS D'EXEMPLE viennent de la
@@ -106,18 +106,18 @@ for (const cle of QUALIFIER_KEYS.filter((c) => porteesDe(c).includes('rule'))) {
   // ─── 3. Position : APRÈS une affectation de drapeau en fin de règle ──────────────────────
   cellules++;
   {
-    const { errors } = compile(`S -> C4 [B=3] (${cle}:${valeur})`);
+    const { errors } = compile(`S -> C4 [etape=3] (${cle}:${valeur})`);
     ok(errors.length === 0,
-       `3. '[B=3] (${cle}:${valeur})' (parenthèse APRÈS le crochet) doit compiler — reçu : `
+       `3. '[etape=3] (${cle}:${valeur})' (parenthèse APRÈS le crochet) doit compiler — reçu : `
        + `${errors.map((e) => e.message).join(' | ')}`);
   }
 
   // ─── 4. Position : AVANT une affectation de drapeau (non-régression, l'ordre inverse marchait déjà) ──
   cellules++;
   {
-    const { errors } = compile(`S -> C4 (${cle}:${valeur}) [B=3]`);
+    const { errors } = compile(`S -> C4 (${cle}:${valeur}) [etape=3]`);
     ok(errors.length === 0,
-       `4. '(${cle}:${valeur}) [B=3]' (parenthèse AVANT le crochet) doit compiler — reçu : `
+       `4. '(${cle}:${valeur}) [etape=3]' (parenthèse AVANT le crochet) doit compiler — reçu : `
        + `${errors.map((e) => e.message).join(' | ')}`);
   }
 }

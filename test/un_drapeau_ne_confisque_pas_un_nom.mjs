@@ -19,8 +19,8 @@
  *   2. les formes légitimes restent ACCEPTÉES — c'est le complément, sans quoi le garde décrirait
  *      un langage plus étroit que le vrai : un nom neuf, un nom nu (forme vivante, vingt usages
  *      dans le corpus), un drapeau déclaré par `@var`, et le même drapeau muté dans dix règles ;
- *   3. le cas du TERMINAL est écrit ici comme il est — ACCEPTÉ, en attente d'arbitrage. Un garde
- *      qui tairait ce trou laisserait croire la famille close.
+ *   3. les deux autres sortes — un TERMINAL de l'alphabet actif, une TÊTE DE RÈGLE — sont refusées
+ *      elles aussi : « un drapeau ne porte qu'un nom de drapeau » (Romain, 2026-08-12).
  *
  * INJECTION dans l'ACCUSÉ (le vocabulaire réel, un réglage pris comme drapeau) et dans le JUGE
  * (la comparaison de sortes rejouée isolée).
@@ -73,12 +73,20 @@ for (const [quoi, src] of LEGITIMES) {
   ok(e.length === 0, `2. ${quoi} doit rester ACCEPTÉ — refusé : ${String(e[0]?.message ?? e[0]).slice(0, 110)}`);
 }
 
-// ─── 3. LE TROU, ÉCRIT COMME IL EST — le terminal n'est PAS refusé, en attente d'arbitrage ───
-// Deux scènes du corpus écrivent un drapeau qui porte un nom de note. Le jour où Romain tranche,
-// c'est CETTE assertion qui rougit — elle est le rappel, pas un oubli.
-ok(refusDeDrapeau(`${TETE}S -> C4 [C4=1]\n`).length === 0,
-   '3. un drapeau portant le nom d\'un TERMINAL est encore accepté — si ce garde rougit, c\'est que '
-   + 'le cas a été tranché : retirer cette assertion et poser le refus');
+// ─── 3. LES DEUX AUTRES SORTES — terminal et tête de règle ───────────────────────────────────
+// « Un drapeau doit porter uniquement un nom de drapeau ; un drapeau qui porte le nom de n'importe
+// quoi d'autre devrait générer une erreur » (Romain, 2026-08-12). Le TERMINAL avait d'abord été
+// laissé passer — l'ambiguïté paraissait douteuse puisque les crochets disent déjà qu'on parle
+// d'un drapeau. Romain a tranché l'inverse : la sorte se décide au NOM, pas au signe qui l'entoure.
+for (const [sorte, src] of [
+  ['un TERMINAL, muté', `${TETE}S -> C4 [C4=1]\n`],
+  ['un TERMINAL, nom nu', `${TETE}S -> C4 [C4]\n`],
+  ['un TERMINAL, en garde', `${TETE}[C4] S -> D4\nS -> E4\n`],
+  ['une TÊTE DE RÈGLE, mutée', `${TETE}S -> Motif [Motif=1]\nMotif -> C4\n`],
+  ['une TÊTE DE RÈGLE, nom nu', `${TETE}S -> Motif [Motif]\nMotif -> C4\n`],
+]) {
+  ok(refusDeDrapeau(src).length > 0, `3. un drapeau qui reprend ${sorte} doit être refusé`);
+}
 
 // ─── 4. INJECTION DANS LE JUGE — la comparaison de sortes, rejouée isolée ────────────────────
 const juger = (nom, sortesPrises) => sortesPrises.get(nom) ?? null;
