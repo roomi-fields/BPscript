@@ -72,7 +72,7 @@
         ]
       },
       "quantization": {
-        "description": "Resolution temporelle de quantification, en ms (BP3 Quantization).",
+        "description": "Tolerance de placement en ms (BP3 Quantization). N'EST PAS une grille : mesure sur le moteur natif, aucune borne d'evenement ne tombe sur un multiple de cette valeur. Elle est comparee au pas interne u de la piece et rend un facteur de regroupement k = floor(valeur/u)+1, que le moteur annonce (compression rate). k=1 : sortie inchangee a l'octet. k>1 : les instants sont refondus sur une table plus grossiere — des evenements distincts partagent des bornes, la piece s'allonge, le depart quitte zero.",
         "scope": [
           "scene"
         ]
