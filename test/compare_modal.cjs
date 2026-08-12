@@ -374,36 +374,14 @@ function compare(name, candidate, baselineDir = BASELINE_DIR) {
   const ref = referenceFor(name, baselineDir);
   if (!ref) return { status: ABSENT, modalite: null, detail: 'absente de la baseline' };
 
-  // RÉFÉRENCE DONT LE PROPRIÉTAIRE ANNONCE QU'ELLE EST FAUSSE — on ne publie pas contre elle.
-  //
-  // Préavis bp3-engine du 2026-08-12 : ses captures de `PP` et de `check&` reposent sur un fichier
-  // de réglages EMPRUNTÉ, que la grammaire ne déclare pas. Mesuré chez lui, binaire gelé, une
-  // variable déplacée à la fois : `PP` porte des instants divisés par 6,67 (X1 600-750 au lieu de
-  // 4000-5000), `check&` accorde une octave EN DESSOUS de ce que la grammaire déclare (220 Hz
-  // contre 440), durées multipliées par trois. Romain a levé le gel pour ces DEUX entrées, et pour
-  // rien d'autre ; les 94 autres restent scellées.
-  //
-  // Publier un verdict contre une référence dont le propriétaire vient de dire qu'elle est fausse
-  // rendrait un chiffre qu'on sait périmé — dans un sens comme dans l'autre : un DIFF imputerait à
-  // la scène l'écart du réglage emprunté, un ISO consacrerait le mauvais instant. La suspension vit
-  // ICI, dans la pièce PARTAGÉE, pour la raison qui vaut depuis le début : les deux voies comparent
-  // contre les mêmes deux entrées, et une seule qui suspendrait laisserait l'autre publier.
-  //
-  // LEVÉE : le second courrier de bp3-engine, qui annonce le geste fait et les nouvelles empreintes.
-  // Rien ici ne se retire sans lui — et alors les deux entrées sortent de cette liste, pas une.
-  const REFERENCES_EN_REVISION = {
-    PP: 'réglages empruntés — instants divisés par 6,67 (X1 600-750 au lieu de 4000-5000)',
-    'check&': "réglages empruntés — accord une octave en dessous (220 Hz contre 440), durées ×3",
-  };
-  if (Object.prototype.hasOwnProperty.call(REFERENCES_EN_REVISION, name)) {
-    return {
-      status: NON_MESURABLE, modalite: ref.modalite, produit: !!ref.produit,
-      n_ref: ref.produit ? sizeOf(ref) : 0, n_cand: candidate ? sizeOf(candidate) : 0,
-      reference_en_revision: true,
-      detail: `référence en cours de révision par bp3-engine (préavis du 2026-08-12) — ${REFERENCES_EN_REVISION[name]}. `
-        + 'Comparer contre elle rendrait un chiffre déjà su faux.',
-    };
-  }
+  // Une suspension nommée a vécu ici, du 2026-08-12 après-midi au soir : `PP` et `check&`, dont
+  // bp3-engine annonçait que les captures reposaient sur un fichier de réglages EMPRUNTÉ. Elle est
+  // RETIRÉE, et pour les deux raisons opposées qu'elle prévoyait — c'est ce qui la rend morte, pas
+  // une décision de confort. `PP` est recapturée sur le moteur décompensé et produit à nouveau ;
+  // `check&` est sortie de l'assiette, et la baseline v15 la déclare elle-même « ne produit pas »
+  // avec sa cause écrite par son propriétaire. Le juge la traite donc par le chemin qui existait
+  // déjà, sans rien de particulier.
+  // Une suspension est une porte de sortie : elle ne survit pas à sa cause. Son garde part avec.
 
   // La référence est DÉCLARÉE mais son relevé n'existe pas : on ne peut RIEN conclure. Ce cas
   // doit rester visiblement distinct d'un vrai écart — le confondre avec un DIFF, c'est imputer
