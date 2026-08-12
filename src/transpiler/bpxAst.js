@@ -28,6 +28,75 @@ import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
 /**
+ * DÉPLIE LES DÉFINITIONS DE COMMODITÉ — une FORME ne franchit pas la frontière de l'arbre.
+ *
+ * CE QUI PASSAIT, mesuré le 2026-08-12. Une scène qui écrit `@def kick (vel:120)` puis pose `kick`
+ * dans son flux produisait un SYMBOLE OPAQUE nommé `kick`, étiqueté `nature:'sounding'`. Trois
+ * conséquences, toutes silencieuses : le réglage canonique `vel` n'apparaissait nulle part, donc
+ * son destinataire non plus ; un consommateur lisait `kick` comme une NOTE à jouer ; et aucun des
+ * cinq voisins ne lit `DefDirective` — la définition n'était donc résolue par PERSONNE.
+ *
+ * LA RÈGLE, ET ELLE VAUT AU-DELÀ DE `@def` (question de Romain, 2026-08-12, sur les librairies de
+ * forme) : tout ce qui est une commodité d'écriture se déplie ICI, avant l'arbre. L'arbre ne porte
+ * que le vocabulaire canonique, et tout ce qui est en aval — la table des destinataires, les
+ * gardes, les consommateurs — s'indexe dessus sans cas particulier. Une forme sert à écrire, elle
+ * ne voyage pas.
+ *
+ * ⚠️ TOUTES LES DÉFINITIONS NE SONT PAS DU SUCRE, et les confondre effacerait des choses réelles.
+ * Se déplient : le PRÉRÉGLAGE (`kind:'prereglage'`), qui n'est qu'un sac de réglages nommé.
+ * Ne se déplient pas : un TERMINAL déclaré (`@def ka voice.sec`) — il CRÉE un nom et doit
+ * survivre —, une définition de CODE, un CÂBLAGE. Le tri se lit sur `kind`, jamais sur la forme
+ * du corps.
+ *
+ * LA CIBLE EST CELLE QU'ÉCRIRAIT LA MAIN : `kick` devient exactement ce que produit `!(vel:120)`
+ * au même endroit — un `InstantControl` portant le sac. Fabriquer une forme intermédiaire ferait
+ * de la définition une troisième écriture, alors qu'elle n'en est qu'un raccourci.
+ */
+function deplierLesDefinitions(ast) {
+  const prereglages = new Map();
+  for (const d of ast.directives || []) {
+    if (d && d.type === 'DefDirective' && d.kind === 'prereglage' && d.settings) {
+      prereglages.set(d.name, d.settings);
+    }
+  }
+  if (!prereglages.size) return;
+
+  const sacDeplie = (settings, line) => {
+    const pairs = (settings.pairs || []).map((p) => ({ ...p }));
+    const params = {};
+    for (const p of pairs) params[p.key] = p.value;
+    return {
+      type: 'InstantControl',
+      qualifier: {
+        type: 'SettingBag',
+        pairs,
+        payload: { nature: 'transport-control', containment: false, scope: 'flow', params },
+      },
+      conjoint: false,
+      payload: { nature: 'instant', flux: true, conjoint: false },
+      line,
+    };
+  };
+
+  // Le remplacement se fait DANS les tableaux qui portent les éléments : un préréglage posé nu
+  // est un élément de séquence, et c'est son conteneur qui doit le voir changer de nature.
+  const remplacer = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) {
+      for (let i = 0; i < n.length; i++) {
+        const el = n[i];
+        if (el && el.type === 'Symbol' && prereglages.has(el.name)) {
+          n[i] = sacDeplie(prereglages.get(el.name), el.line);
+        } else remplacer(el);
+      }
+      return;
+    }
+    for (const v of Object.values(n)) remplacer(v);
+  };
+  remplacer(ast.subgrammars);
+}
+
+/**
  * POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE.
  *
  * CE QUE ÇA RÉPARE. Un sac de réglages voyageait avec sa NATURE et sa PORTÉE, jamais avec sa
@@ -2422,6 +2491,10 @@ export function compileToBPxAST(source, environnement) {
       ...(ast.actors || []),
     ];
     const libCtx = loadLibsFromDirectives(directives);
+    // Les commodités d'écriture se déplient AVANT tout le reste de cette séquence : le destinataire
+    // qui suit, la validation des contrôles et le recensement des noms doivent tous voir le
+    // vocabulaire CANONIQUE, jamais le raccourci.
+    deplierLesDefinitions(ast);
     // Le destinataire de chaque réglage, posé sur son sac — une seule passe, après le chargement
     // des librairies qui seul connaît la table (cf. l'en-tête de la fonction).
     poserLeDestinataireDesReglages(ast, libCtx);
