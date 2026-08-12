@@ -1926,7 +1926,7 @@ function emitActorLibRefs(ast) {
  * n'en crée pas non plus : comme `declarations` (gate/trigger/cv), c'est une propriété posée sur
  * un nom existant, pas une création.
  */
-function refuserNomsEnDouble(ast) {
+function refuserNomsEnDouble(ast, libCtx) {
   const erreurs = [];
   const { terminaux } = terminauxEnPortee(ast);
 
@@ -2052,6 +2052,60 @@ function refuserNomsEnDouble(ast) {
           });
         }
       }
+    }
+  }
+
+  // ⛔ UN DRAPEAU CRÉE UN NOM, MÊME SANS `@var` — et ce nom était pris à n'importe qui, en silence.
+  //
+  // CE QUI PASSAIT, mesuré : `S -> C4 [velcont]` compile. `velcont` est un RÉGLAGE du vocabulaire,
+  // et le sac de drapeaux en faisait un drapeau sans un mot. Idem pour `[C4]`, le nom d'un
+  // terminal de l'alphabet actif. Le sac de drapeaux acceptait TOUT NOM, quelle que soit la sorte
+  // à laquelle il appartenait déjà — c'est la seule porte du langage qui restait ouverte, quand
+  // `@var`, `@alias`, `@actor`, `@def` et les objets CV sont contrôlés depuis longtemps.
+  //
+  // LA RÈGLE EST CELLE DE LA BIBLE, appliquée à une sorte qui y échappait : les noms de toutes les
+  // sortes vivent dans le même espace, chacun n'appartient qu'à une seule, et le contrôle a lieu à
+  // la déclaration. Un drapeau se déclare par `@var … flag` OU par sa première mutation — les deux
+  // créent le nom, donc les deux se contrôlent.
+  //
+  // ⚠️ CE QUI N'EST PAS REFUSÉ, ET C'EST DÉLIBÉRÉ. Le même drapeau muté dans dix règles reste UN
+  // nom, pas dix déclarations. Et une TÊTE DE RÈGLE n'est pas un rival : elle ne crée aucun nom
+  // (décision Romain 2026-08-03), donc `[S=1]` à côté d'une règle `S` n'est pas traité ici.
+  //
+  // ⚠️ ET LE CAS DU TERMINAL EST OUVERT, PAS OUBLIÉ. Un drapeau qui porte le nom d'une note de
+  // l'alphabet actif — `[C4=1]`, ou le drapeau `B` de `asymmetric.bps` — n'est PAS refusé ici, et
+  // c'est une retenue mesurée : deux scènes du corpus l'écrivent, et l'ambiguïté que la règle
+  // combat est douteuse pour cette sorte-là, puisque les crochets disent déjà qu'on parle d'un
+  // drapeau. Invalider une forme vivante chez un voisin ne se décide pas ici. Remonté à Romain
+  // avec son coût exact — deux scènes, un drapeau à renommer.
+  const drapeaux = new Set();
+  const collecterDrapeaux = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { n.forEach(collecterDrapeaux); return; }
+    // DEUX NŒUDS POUR UNE MÊME SORTE, et n'en voir qu'un laissait la moitié de l'espace ouverte :
+    // `FlagExpr` est la MUTATION en fin de règle, `Guard` est le TEST devant le membre gauche.
+    // Les deux nomment un drapeau, donc les deux confisquent un nom.
+    if ((n.type === 'FlagExpr' || n.type === 'Guard') && typeof n.flag === 'string') drapeaux.add(n.flag);
+    for (const v of Object.values(n)) collecterDrapeaux(v);
+  };
+  collecterDrapeaux(ast.subgrammars);
+  for (const nom of drapeaux) {
+    const declare = creesParDeclaration.get(nom);
+    if (declare && declare.sorte !== 'un drapeau') {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte un nom déjà pris par ${declare.sorte}`
+          + `${declare.line ? ` ligne ${declare.line}` : ''} — un nom ne désigne qu'UNE chose dans `
+          + `une scène. Choisir un autre nom pour le drapeau.`,
+      });
+      continue;
+    }
+    if (libCtx?.controlNames?.has(nom)) {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte le nom d'un RÉGLAGE du vocabulaire — le sac de `
+          + `drapeaux en ferait un drapeau sans un mot, et le réglage deviendrait inatteignable `
+          + `sous ce nom. Choisir un autre nom pour le drapeau.`,
+      });
+      continue;
     }
   }
   return erreurs;
@@ -2351,7 +2405,7 @@ export function compileToBPxAST(source, environnement) {
     // Le nom d'une macro se vérifie ICI, avec les terminaux de règle : même question, même
     // définition, et les acteurs sont pliés à ce stade (avant, `ast.actors` est encore vide —
     // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).
-    result.errors.push(...refuserNomsEnDouble(ast));
+    result.errors.push(...refuserNomsEnDouble(ast, libCtx));
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls));

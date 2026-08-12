@@ -63,6 +63,17 @@ const CONSOMMATEURS = [
         + " l'ORDRE des terminaux y porte le sens : il indexe les degrés de l'accordage"] },
   { depot: 'runtime-MIDI', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB',
     lit: ['lib/ en direct'] },
+  // ⚠️ UNE SECONDE INSTANCE DU MÊME VOISIN, ET ELLE NE SE DEVINE PAS. Un agent qui compile publie
+  // DEUX dépôts — un de développement, un de PRODUCTION — et le second lit mes catalogues comme le
+  // premier. Il est apparu sur le disque le 2026-08-12 ; c'est ce garde qui l'a vu, pas moi.
+  // Ce qu'il lit, mesuré dans sa source et non supposé : un INSTANTANÉ de `lib/`, empreinté fichier
+  // par fichier chez lui (`src/data/_bundle.js`). Une frappe chez moi ne l'atteint donc pas à la
+  // seconde comme un lien vif — elle le laisse sur une copie qui DIVERGE en silence jusqu'à ce
+  // qu'il la reprenne. C'est le cas le plus traître de la liste : rien ne casse, tout ment.
+  { depot: 'runtime-MIDI-prod', lienDirect: false,
+    note: "instance de PRODUCTION de runtime-MIDI : lit un INSTANTANÉ de lib/, empreinté chez lui — "
+        + 'une frappe chez moi ne le corrige pas, elle le périme',
+    lit: ['un instantané de lib/ (catalogues bruts)'] },
   { depot: 'atlas', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure",
     lit: ['le compilateur lui-même'] },
   { depot: 'runtime-ui', lienDirect: false, note: "vues de texte : lit l'arbre et ses annotations",
