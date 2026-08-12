@@ -150,6 +150,16 @@ export async function resoudreViaKairos(session, opts = {}) {
   const homomorphismeLib = LIBS.homomorphism;
 
   const tree = session.derive().tree;
+  // ⚠️ LE TYPE DÉCLARÉ SE PREND ICI, ET NULLE PART AILLEURS EN AVAL. La règle de comparaison
+  // (décision Romain du 2026-08-12) dit que ce qui compte comme terminal se prend sur le TYPE
+  // DÉCLARÉ, jamais sur la durée. BPx le déclare — `terminal`, `rest`, `control` — et c'est le seul
+  // étage de la chaîne à le faire : Kairos garde le jeton et perd le type, Kronos retire ensuite les
+  // silences. Sans ce relevé, mon point de mesure n'a AUCUN critère et je filtrerais sur la graphie
+  // du jeton, ce qui n'est ni la durée ni le type.
+  const jetonsBPx = (() => {
+    const tt = session.emit('timed-tokens');
+    return Array.isArray(tt) ? tt : (tt && tt.tokens) || [];
+  })();
   const contexte = {
     ...session.buildProjectionContext(opts.ordre || 'chronological'),
     pitchLib,
@@ -167,6 +177,33 @@ export async function resoudreViaKairos(session, opts = {}) {
   // rendait un tableau nu). La durée totale vient de Kronos : c'est LUI qui résout le temps,
   // la `duration` de la Timeline Kairos est encore en secondes de SCÈNE.
   const planifie = resolveSchedule(timeline, { derivedTempo: tree.metadata?.tempo });
+
+  // TYPE DÉCLARÉ, REPORTÉ RANG À RANG — et le rang n'est légitime que PROUVÉ.
+  //
+  // La Timeline de Kairos et les jetons timés de BPx décrivent la même dérivation dans le même
+  // ordre : mesuré sur le corpus, 64 grammaires sur 70 s'apparient rang à rang avec le MÊME jeton.
+  // Les six autres se répartissent en deux familles, et elles ne se traitent pas pareil :
+  //   · quatre voient le JETON changer sans que le rang bouge — c'est le travail de Kairos, qui
+  //     substitue l'étiquette (`a` → `do4`) ou renomme après transposition. L'appariement tient.
+  //   · deux ont un ÉVÉNEMENT DE MOINS chez Kairos que chez BPx (`transposition3` 52 contre 53,
+  //     `visser-shapes` 2129 contre 2130). Là, le rang MENT à partir du décrochage, et poser le
+  //     type sur la feuille suivante serait un instrument qui se trompe en silence sur toute la
+  //     queue de la scène.
+  // On refuse donc le report quand les comptes ne coïncident pas, plutôt que de le deviner :
+  // `type` reste alors ABSENT et `typeIndisponible` dit pourquoi. Une absence déclarée se lit ;
+  // un type faux ne se voit pas. Le désaccord de comptes lui-même appartient à BPx et à Kairos.
+  const evenementsKairos = timeline.query(0, Number.MAX_SAFE_INTEGER);
+  const rangsAlignes = jetonsBPx.length === evenementsKairos.length;
+  const typeParContenu = new Map();
+  if (rangsAlignes) {
+    for (let i = 0; i < evenementsKairos.length; i += 1) {
+      const c = evenementsKairos[i].content;
+      if (c) typeParContenu.set(c, jetonsBPx[i].type);
+    }
+  }
+  const typeIndisponible = rangsAlignes ? undefined
+    : `BPx rend ${jetonsBPx.length} jetons, Kairos ${evenementsKairos.length} événements — le report du `
+      + 'type déclaré rang à rang mentirait à partir du décrochage';
 
   const tokens = [];
   for (const e of planifie.events) {
@@ -212,9 +249,41 @@ export async function resoudreViaKairos(session, opts = {}) {
       // première réparation lisait `.erreur` et rendait `undefined` sur les 28 refus : un instrument
       // réparé de travers ment aussi bien qu'un instrument cassé.
       erreurHauteur: c.pitchError,
+      // ⚠️ LE TYPE DÉCLARÉ, À CÔTÉ du reste — même discipline que `nomResolu` à côté du nu. C'est
+      // le CRITÈRE de la règle 3 : `terminal` sonne, `rest` occupe du temps sans sonner, `control`
+      // n'est un terminal sur aucun axe. Absent quand le report n'a pas pu être prouvé sûr.
+      type: typeParContenu.get(c),
     });
   }
-  return { tokens, duration: planifie.totalDurationSec };
+
+  // ⚠️ LE FLUX COMPLET, À CÔTÉ DU FLUX PLANIFIÉ — parce que l'axe TEXTE a besoin de ce que le
+  // planifié n'a plus. Kronos ordonnance ce qui s'exécute et RETIRE les silences (mesuré : Alarm 33
+  // événements Kairos pour 31 planifiés, ek-do-tin 89 pour 78). Or l'axe TEXTE se définit comme « ce
+  // que le natif imprime, silences compris » : sept captures textuelles natives en portent, jusqu'à
+  // 652 sur 3860. Les chercher dans le planifié serait les chercher là où ils n'existent plus.
+  // `tokens` garde donc son contrat — le flux ORDONNANCÉ, ce que les lecteurs existants indexent —
+  // et le flux complet vient à côté, jamais à la place. Les instants viennent du planifié par
+  // IDENTITÉ de contenu (mesuré : 100 % des événements planifiés se retrouvent ainsi, sur toutes les
+  // scènes éprouvées) ; ce qui n'est pas ordonnancé n'en a pas, et on n'en invente pas.
+  const instantsParContenu = new Map();
+  for (const e of planifie.events) if (e.content) instantsParContenu.set(e.content, e);
+  const tousLesJetons = [];
+  for (const ev of evenementsKairos) {
+    const c = ev.content;
+    if (!c || c.token === undefined) continue;
+    const planifiee = instantsParContenu.get(c);
+    tousLesJetons.push({
+      token: c.token,
+      nomResolu: nomComparable(c),
+      type: typeParContenu.get(c),
+      start: planifiee ? Math.round(planifiee.onset * 1000) : undefined,
+      end: planifiee ? Math.round((planifiee.onset + planifiee.duration) * 1000) : undefined,
+      hz: c.pitch ? c.pitch.hz : undefined,
+      erreurHauteur: c.pitchError,
+    });
+  }
+
+  return { tokens, tousLesJetons, typeIndisponible, duration: planifie.totalDurationSec };
 }
 
 /**

@@ -42,7 +42,7 @@ import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 import { empreinteVoisins, exigerVoisinsStables, direEmpreinte } from './empreinte_voisins.mjs';
 
 const require = createRequire(import.meta.url);
-const { compare, loadBaseline, soundingText } = require('./compare_modal.cjs');
+const { compare, loadBaseline, soundingOnly, printedText } = require('./compare_modal.cjs');
 const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
@@ -61,7 +61,13 @@ async function produceB(name, modalite) {
   } catch (e) { return { erreur: `compilation : ${e.message}` }; }
   try {
     const session = createSession(out.ast, { seed: 1 });
-    const { tokens } = await resoudreViaKairos(session);
+    const { tokens, tousLesJetons, typeIndisponible } = await resoudreViaKairos(session);
+    // ⚠️ LE TYPE VIENT DU PONT, IL NE SE POSE PAS ICI. Ce harnais écrivait `type: 'terminal'` sur
+    // chaque jeton avant de les tendre au filtre partagé : le filtre exigeait bien un type, mais
+    // celui qu'il lisait était celui que je venais d'inventer, donc son critère était neutralisé.
+    // Conséquence mesurée : les marqueurs de bloc que BPx type `control` entraient dans la
+    // comparaison et faisaient diverger `bells`, `kss2` et `templates` AU RANG 0.
+    if (typeIndisponible) return { nonMesurable: `type déclaré non reportable — ${typeIndisponible}` };
     // La scène déclare-t-elle avoir appliqué le décalage de registre ? Le comparateur
     // n'a le droit de normaliser un NOM que si la voie ATTESTE que le SON est déjà juste
     // (règle [642]) : sans cette attestation, normaliser masquerait un vrai défaut.
@@ -74,10 +80,15 @@ async function produceB(name, modalite) {
     // un écart d'octave à une hauteur JUSTE. Le pont expose les deux ; ici, et ici seulement, on
     // prend le résolu. Repli sur l'écrit quand il n'y a pas de hauteur (percussion : le nu EST le nom).
     const nom = (t) => t.nomResolu ?? t.token;
+    const comparable = (t) => ({ type: t.type, token: nom(t), start: t.start, end: t.end });
+    // AXE SONNANT pour la modalité MIDI, AXE TEXTE pour la modalité TEXTE — les deux périmètres
+    // vivent chez le juge partagé, et chacun se prend sur le TYPE DÉCLARÉ que le pont reporte.
+    // L'axe texte se sert du flux COMPLET : Kronos ordonnance ce qui s'exécute et retire les
+    // silences, or c'est précisément ce que le natif imprime.
     if (modalite === 'MIDI') {
-      return { shiftApplied, tokens: tokens.map((t) => ({ token: nom(t), start: t.start, end: t.end })) };
+      return { shiftApplied, tokens: soundingOnly(tokens.map(comparable)) };
     }
-    return { shiftApplied, text: soundingText(tokens.map((t) => ({ type: 'terminal', token: nom(t) }))) };
+    return { shiftApplied, text: printedText(tousLesJetons.map(comparable)) };
   } catch (e) { return { erreur: `chaîne : ${e.message}` }; }
 }
 

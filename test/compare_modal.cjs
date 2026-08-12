@@ -142,9 +142,37 @@ function soundingOnly(tokens) {
     .map((t) => ({ token: t.token, start: t.start, end: t.end }));
 }
 
-/** Même périmètre, rendu en TEXTE (modalité TEXTE). */
+/** Même périmètre, rendu en TEXTE. */
 function soundingText(tokens) {
   return soundingOnly(tokens).map((t) => t.token).join(' ');
+}
+
+/**
+ * PÉRIMÈTRE DE L'AXE TEXTE — ce que le moteur natif IMPRIME, silences compris.
+ *
+ * La décision du 2026-08-12 sépare deux axes, et un seul périmètre ne peut pas les servir tous les
+ * deux : l'axe SONNANT ne retient que ce qui sonne, l'axe TEXTE retient aussi ce que le natif
+ * écrit sans le faire sonner. Mesuré sur les captures natives : 7 des 37 grammaires textuelles
+ * impriment des silences ou des prolongations — jusqu'à 652 sur 3860 (`dhin`). Leur appliquer le
+ * périmètre sonnant creuse un déficit égal, exactement, au nombre de silences imprimés.
+ *
+ * LE CRITÈRE EST LE TYPE DÉCLARÉ, comme sur l'autre axe : `terminal` et `rest` s'impriment,
+ * `control` non — un marqueur de bloc n'est un terminal sur aucun axe. Jamais la durée : un silence
+ * qui occupe du temps et une prolongation de durée nulle portent le MÊME type et se traitent pareil.
+ *
+ * Les deux périmètres vivent ICI, dans la pièce partagée, pour la raison qui vaut depuis le début :
+ * deux voies qui définiraient chacune ce qui compte rendraient leurs statuts silencieusement
+ * incomparables. Une seule définition, deux axes — comme la décision les nomme.
+ */
+function printedOnly(tokens) {
+  return (tokens || [])
+    .filter((t) => t && (t.type === 'terminal' || t.type === 'rest'))
+    .map((t) => ({ token: t.token, start: t.start, end: t.end }));
+}
+
+/** Même périmètre, rendu en TEXTE (modalité TEXTE). */
+function printedText(tokens) {
+  return printedOnly(tokens).map((t) => t.token).join(' ');
 }
 
 /**
@@ -403,7 +431,7 @@ function firstDiff(a, b) {
   return `longueurs différentes : ${a.length} vs ${b.length}`;
 }
 
-module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, registerShiftFor, normalizeRegister, normalizeSaptak, ISO, DIFF, NON_MESURABLE, ABSENT };
+module.exports = { compare, referenceFor, loadBaseline, soundingOnly, soundingText, printedOnly, printedText, registerShiftFor, normalizeRegister, normalizeSaptak, ISO, DIFF, NON_MESURABLE, ABSENT };
 
 // ── CLI de diagnostic ────────────────────────────────────────────────────────
 if (require.main === module) {
