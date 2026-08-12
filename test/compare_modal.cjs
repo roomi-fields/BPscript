@@ -631,7 +631,11 @@ if (require.main === module) {
   const arg = process.argv[2];
   const { byName, meta } = loadBaseline();
   if (!arg || arg === '--list') {
-    console.log(`baseline ${meta.date} · ${meta.binaire} · seed ${meta.seed} · ${meta.n} grammaires`);
+    // `n` est le nombre d'ENTRÉES du fichier, pas l'ASSIETTE. Les deux diffèrent — des entrées y
+    // figurent que le natif ne produit pas. L'assiette est déclarée par bp3-engine, qui EST la
+    // référence : on la lit chez lui, on ne la recalcule pas ici. Un compte affiché sans son nom
+    // exact se lit comme l'autre, et c'est ainsi qu'on remesure sans le vouloir ce qu'on devrait lire.
+    console.log(`baseline ${meta.date} · ${meta.binaire} · seed ${meta.seed} · ${meta.n} entrées déclarées`);
     const mods = {};
     for (const e of Object.values(byName)) {
       const k = e.produit ? e.modalite : 'ne produit pas';

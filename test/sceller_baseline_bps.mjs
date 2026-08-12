@@ -43,10 +43,24 @@ const SORTIE = path.join(ICI, 'baseline-bps', 'baseline.json');
 // ── L'ASSIETTE — scellée par le propriétaire de la référence, jamais reconstruite ────────────
 const scelle = JSON.parse(fs.readFileSync(path.join(NATIVE, 'SCELLE.json'), 'utf8'));
 const native = JSON.parse(fs.readFileSync(path.join(NATIVE, 'baseline.json'), 'utf8'));
+// ⛔ L'ASSIETTE EST CE QUE LE SCELLÉ PORTE, ET SON COMPTE NE SE VÉRIFIE PAS ICI.
+//
+// Ce contrôle exigeait 96. Il refusait donc de tourner le jour où le propriétaire rescellait —
+// et il a refusé : Romain a retiré cinq grammaires dont le fichier de réglages déclaré est
+// illisible par le moteur, l'assiette est passée à 91, et ce producteur s'est arrêté sur un
+// chiffre écrit chez moi. Un compte attendu en dur EST une contre-mesure de la référence : il
+// dit « je sais combien tu en as » à celui qui seul le sait. bp3-engine est la référence, son
+// chiffre fait foi, et on ne le remesure pas (arbitrage 2026-08-12).
+//
+// CE QUI RESTE CONTRÔLÉ, et qui n'est pas un compte : que la liste EXISTE et ne soit pas vide.
+// Une assiette absente ferait produire une baseline sur rien, en silence — c'est le seul cas où
+// ce producteur doit s'arrêter, et il ne devine toujours aucune assiette.
+// Le nom du champ appartient au propriétaire ; il porte encore le compte d'origine et ce n'est
+// pas à moi de le renommer.
 const ASSIETTE = scelle.preuve.reproductibles_96;
-if (!Array.isArray(ASSIETTE) || ASSIETTE.length !== 96) {
-  console.error(`❌ l'assiette scellée n'en porte pas 96 mais ${ASSIETTE?.length}. `
-    + `Ce producteur ne devine pas une assiette : il s'arrête.`);
+if (!Array.isArray(ASSIETTE) || ASSIETTE.length === 0) {
+  console.error("❌ l'assiette scellée est absente ou vide. Ce producteur ne devine pas une "
+    + "assiette : il s'arrête.");
   process.exit(1);
 }
 
