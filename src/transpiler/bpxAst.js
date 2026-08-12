@@ -28,6 +28,52 @@ import { validateControls } from './controlValidation.js';
 import { validateModulation } from './modulationValidation.js';
 
 /**
+ * POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE.
+ *
+ * CE QUE ÇA RÉPARE. Un sac de réglages voyageait avec sa NATURE et sa PORTÉE, jamais avec sa
+ * DESTINATION : `!(vel:50)` arrivait en aval indistinguable de `!(chan:3)` et de
+ * `!(transpose:3/2)`, alors que les trois vont à trois outils différents — toutes les sorties, le
+ * runtime MIDI, Kairos. Seul le NOM de la clé les séparait, donc tout consommateur devait
+ * redeviner la destination avec une table recopiée chez lui. Une table recopiée dérive : le jour
+ * où une clé change de librairie, rien ne rougit et le réglage part au mauvais destinataire SANS
+ * ERREUR. L'information existait pourtant depuis toujours, dans le champ `resolvedBy` de la
+ * librairie déclarante — elle s'arrêtait au chargeur.
+ *
+ * LA FORME EST UNE TABLE, PAS UNE VALEUR, et la mesure l'impose : un sac unique peut mélanger
+ * les destinataires — `!(vel:50, transpose:3/2, volume:90)` en réunit trois. Une valeur seule
+ * aurait donc obligé à en choisir une et à taire les autres. `resolvedBy` est parallèle à
+ * `params`, clé pour clé.
+ *
+ * LE NOM EST CELUI DE LA SOURCE, délibérément : la librairie écrit `resolvedBy`, le sac écrit
+ * `resolvedBy`, la valeur est portée VERBATIM. Aucune traduction, donc aucune table de
+ * correspondance à tenir entre deux vocabulaires.
+ *
+ * ⚠️ CE QUI N'EST PAS ANNOTÉ EST UNE ABSENCE ASSUMÉE, JAMAIS UNE INVENTION. Un contrôleur nommé
+ * par la scène (`@cc mon_nom:98`) n'est déclaré par aucune librairie : il n'a pas de destinataire
+ * lisible, et sa clé reste donc hors de la table plutôt que d'en recevoir un supposé. Le trou est
+ * visible, ce qui est le but.
+ */
+function poserLeDestinataireDesReglages(ast, libCtx) {
+  const table = libCtx?.controlResolvedBy || {};
+  const vu = new Set();
+  const walk = (n) => {
+    if (!n || typeof n !== 'object' || vu.has(n)) return;
+    vu.add(n);
+    if (Array.isArray(n)) { for (const x of n) walk(x); return; }
+    const params = n.payload && n.payload.params;
+    if (params && typeof params === 'object') {
+      const dest = {};
+      for (const cle of Object.keys(params)) {
+        if (table[cle]) dest[cle] = table[cle];
+      }
+      if (Object.keys(dest).length) n.payload.resolvedBy = dest;
+    }
+    for (const v of Object.values(n)) walk(v);
+  };
+  walk(ast);
+}
+
+/**
  * Annote les backticks (voix de code) SUR LE NŒUD — pas de table parallèle (directive
  * Romain 2026-06-17, confirmée BPx + Kanopi). Chaque nœud backtick porte :
  *   - `_btName` : étiquette unique (compteur PROPRE, ordre du document, indépendant de
@@ -2297,6 +2343,9 @@ export function compileToBPxAST(source, environnement) {
       ...(ast.actors || []),
     ];
     const libCtx = loadLibsFromDirectives(directives);
+    // Le destinataire de chaque réglage, posé sur son sac — une seule passe, après le chargement
+    // des librairies qui seul connaît la table (cf. l'en-tête de la fonction).
+    poserLeDestinataireDesReglages(ast, libCtx);
     result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
     result.errors.push(...validateReferences(ast)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
     // Le nom d'une macro se vérifie ICI, avec les terminaux de règle : même question, même

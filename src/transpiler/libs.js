@@ -403,6 +403,14 @@ function loadLibsFromDirectives(directives) {
   const ctx = {
     controls: {},       // name → { bp3, args, ... }
     controlMap: {},     // name → bp3 name (e.g. "vel" → "_vel")
+    // ⛔ LE DESTINATAIRE D'UN CONTRÔLE — nom → l'outil qui le RÉSOUT, verbatim depuis le champ
+    // `resolvedBy` de la librairie qui le déclare. C'est le principe de découpage des librairies
+    // (une librairie, un destinataire) rendu LISIBLE : sans cette table, l'information s'arrêtait
+    // au chargeur et l'aval devait redeviner la destination à partir du nom de la clé, avec une
+    // table recopiée chez lui — qui dérive en silence le jour où une clé change de librairie.
+    // La valeur n'est jamais traduite ni interprétée ici : elle est portée telle qu'elle est
+    // écrite, et c'est le consommateur qui sait ce qu'il en fait.
+    controlResolvedBy: {},
     controlNames: new Set(),
     bp3NativeControls: new Set(),  // controls BP3 understands natively (no "transport" field)
     seqPrefixControls: new Set(),  // engine controls with scope:"seq_prefix" — emitted as prefix inside group/sequence
@@ -763,6 +771,10 @@ function loadLibsFromDirectives(directives) {
         declarer(name, `lib/${dir.name}.json → ${section}`);
         ctx.controls[name] = def;
         ctx.controlMap[name] = def.bp3 || `_${name}`;
+        // Le destinataire se lit sur le FICHIER, jamais sur l'entrée chargée : une invocation à
+        // sous-clé (`@tuning.just`) rend une entrée du catalogue, qui ne porte pas ce champ.
+        const destinataire = (loadJsonFile(dir.name) || {}).resolvedBy;
+        if (destinataire) ctx.controlResolvedBy[name] = destinataire;
         ctx.controlNames.add(name);
         // Engine section = BP3 native (temporal/structural: goto, tempo, repeat...)
         // Runtime section = dispatcher (sound/performance: vel, chan, wave...)
