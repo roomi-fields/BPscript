@@ -33,6 +33,16 @@ Version 2.0 — 26 mars 2026
 > - L'approche **étiquetage `N@terminal`** dans les fichiers -ho — AJOURNÉE, jamais adoptée, et sans rapport avec le suffixe arobase de BPScript (SUPPRIMÉ le 2026-07-28). reste **AJOURNÉE**
 >   (complexité moteur, pas de gain sur le contrat BPx).
 
+> ⚠️ **« BP3 WASM » / « moteur-wasm » ci-dessous nomment une cible qui n'existe plus.** Le portage
+> du moteur BP3 en WebAssembly est sorti de toute la tour le 2026-08-11 — il n'est plus ni moteur
+> ni oracle, et il sort du code de construction, des artefacts, des bancs, de la doc et des
+> backlogs. Le diagramme de « Impact sur le pipeline », la sous-section « Fichiers impactés >
+> Moteur WASM » et toute la section « Instructions d'implémentation » (agent `moteur-wasm`,
+> validations via `bp3_load_alphabet()`/`bp3_get_timed_tokens()`) décrivent un plan d'agents de
+> mars 2026 déjà rendu sans objet par le retrait de l'émission de grammaire BP3 (note ci-dessus,
+> 2026-07-19), puis par le retrait du portage lui-même. Elles sont conservées telles quelles comme
+> compte rendu de design daté — réécrire une vision datée falsifierait ce qu'elle a été.
+
 ---
 
 ## Principe fondamental
@@ -861,4 +871,3 @@ Scènes à valider : `checkhomo`, `dhati`, `ruwet`
 - [REFERENCE_HO_FORMAT.md](../reference/HO_FORMAT.md) — Format fichier -ho. BP3
 - [BPSCRIPT_AST.md](../spec/AST.md) — AST (champ `transcriptions` sur TemplateSlave)
 - `lib/homomorphism.json` — Tables de transcription existantes
-- `wasm/bp3_api.c` — API WASM (ne pas modifier)

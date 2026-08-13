@@ -3,6 +3,15 @@
 Date: 2026-03-24 (maj 2026-04-07)
 Statut: non resolu — workaround en place (texte sans timings)
 
+> ⚠️ **Retiré, 2026-08-11.** Le portage du moteur BP3 en WebAssembly, seul concerné par ce crash
+> (limite de la pile V8 sous Emscripten, absente en C natif), est sorti de toute la tour : il
+> n'est plus ni moteur ni oracle, et il sort du code de construction, des artefacts, des bancs,
+> de la doc et des backlogs. Le crash décrit ci-dessous ne peut plus se produire — il n'y a plus
+> de build WASM à faire crasher — et les solutions A à D n'ont plus de cible. Le contenu est
+> conservé tel quel comme compte rendu daté (mars-avril 2026) : il documente une analyse de coût
+> de récursion (V8/Emscripten vs C natif) qui reste instructive, mais ne décrit pas un défaut
+> actif du dépôt.
+
 ## Symptome
 
 Les grammaires avec polymetries imbriquees sur 4-5+ niveaux crashent en WASM

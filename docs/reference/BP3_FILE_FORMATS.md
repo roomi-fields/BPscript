@@ -3,6 +3,15 @@
 > Compiled from bolprocessor.org documentation (56 pages scraped March 2026)
 > and code inspection of BP3 WASM engine.
 
+> ⚠️ **« BP3 WASM » ci-dessous nomme une cible qui n'existe plus.** Le portage du moteur BP3 en
+> WebAssembly est sorti de toute la tour le 2026-08-11 — il n'est plus ni moteur ni oracle, et il
+> sort du code de construction, des artefacts, des bancs, de la doc et des backlogs. Les mentions
+> « BP3 WASM » et les lignes **WASM status** ci-dessous sont des mesures datées de mars 2026,
+> prises via ce portage : elles décrivent quels formats de fichiers BP3 chargeaient sous ce build
+> précis, et sont conservées telles quelles comme compte rendu de test historique — réécrire
+> chaque mesure la falsifierait. Elles ne sont pas rejouées contre l'oracle natif ; un format
+> marqué ✅ ou ❌ ici ne dit rien de son état aujourd'hui.
+
 ---
 
 ## Overview
