@@ -343,6 +343,21 @@ function parse(tokens, opts = {}) {
   // mot du vocabulaire et une déclaration locale — cf. `estDeclareLocalement`.
   const nomsDeclaresLocalement = new Set();
 
+  /**
+   * LES ACTEURS, CONNUS AU FIL DE LA LECTURE — et pas seulement à la fin.
+   *
+   * ⚠️ CE QUI NE MARCHAIT PAS, mesuré le 2026-08-13. `libCtx.actors` n'est rempli qu'APRÈS que
+   * toutes les directives sont lues (`libCtx = loadLibsFromDirectives(...)` remplace l'objet
+   * entier). Or un CORPS DE `@def` est lu PENDANT cette phase : au moment où le parser rencontre
+   * `@def halo(x) x!perc.tin`, il ne sait pas encore que `perc` est un acteur, donc il lit
+   * `perc.tin` comme un terminal nommé `perc` et la scène sort « terminal 'perc' non déclaré ».
+   * La MÊME ligne écrite dans une règle passe, parce qu'une règle est lue après.
+   *
+   * Le point décide donc sur CETTE table, remplie à la lecture de chaque `@actor`. L'ordre reste
+   * celui du langage : un acteur se déclare avant d'être employé.
+   */
+  const acteursDeclares = new Set();
+
   // VARIABLES DE TRAVAIL déclarées par `@var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
   const nomsVariables = new Set();
@@ -538,6 +553,7 @@ function parse(tokens, opts = {}) {
           scene.declarations.push(dir);
         } else if (dir.type === 'ActorDirective') {
           scene.actors.push(dir);
+          if (dir.name) acteursDeclares.add(dir.name);
           // v0.8: soundAssignments collectées dans le bloc @actor sont remontées
           // top-level avec scope { kind:"actor", name:<actorName> }.
           if (dir.soundAssignments && dir.soundAssignments.length > 0) {
@@ -928,7 +944,17 @@ function parse(tokens, opts = {}) {
     const substituer = (n) => {
       if (!n || typeof n !== 'object') return;
       if (Array.isArray(n)) { n.forEach(substituer); return; }
-      if (n.type === 'Symbol' && valeurs.has(n.name)) n.name = valeurs.get(n.name);
+      if (n.type === 'Symbol' && valeurs.has(n.name)) {
+        // ⚠️ UN ARGUMENT QUALIFIÉ SE SÉPARE EN ACTEUR ET TERMINAL, il ne devient pas un nom à
+        // rallonge. `halo(melodie.C4)` doit poser `Symbol{actor:'melodie', name:'C4'}` — ce que
+        // produit `melodie.C4` écrit en direct. Sans cette séparation, l'arbre portait un terminal
+        // littéralement nommé « melodie.C4 », refusé comme absent des alphabets : le dépliage
+        // rendait alors un arbre DIFFÉRENT de l'écriture directe, ce que le garde interdit.
+        const brut = valeurs.get(n.name);
+        const point = brut.indexOf('.');
+        if (point > 0) { n.actor = brut.slice(0, point); n.name = brut.slice(point + 1); }
+        else n.name = brut;
+      }
       for (const v of Object.values(n)) substituer(v);
     };
     const corps = copieProfonde(def.body);
@@ -5618,7 +5644,7 @@ function parse(tokens, opts = {}) {
       // Cette forme rend les deux : le point qualifie le bloc comme il qualifie une note
       // (`sitar.Sa`), l'acteur garde son nom, et la règle n'est qu'une règle.
       if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.BACKTICK
-          && libCtx.actors && libCtx.actors[name]) {
+          && ((libCtx.actors && libCtx.actors[name]) || acteursDeclares.has(name))) {
         advance();                                  // le point
         const raw = advance().value;                // le bloc
         const t = tryBacktickTag(raw);
@@ -5629,7 +5655,7 @@ function parse(tokens, opts = {}) {
       }
 
       const gluedMember = at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT;
-      const knownActor = gluedMember && libCtx.actors && libCtx.actors[name];
+      const knownActor = gluedMember && ((libCtx.actors && libCtx.actors[name]) || acteursDeclares.has(name));
       const opaqueComponent = gluedMember && !knownActor && !peek(1).spaceBefore;
       let componentOpaque = false;
       if (knownActor || opaqueComponent) {
@@ -6022,7 +6048,22 @@ function parse(tokens, opts = {}) {
       } else if (at(T.FLOAT)) {
         value = { type: 'Literal', value: Number(advance().value) };
       } else if (at(T.IDENT)) {
-        value = { type: 'Literal', value: advance().value };
+        // ── UN NOM QUALIFIÉ PAR SON ACTEUR EST UN NOM ────────────────────────────────────────
+        // `halo(melodie.C4)` : le point DÉSIGNE un terminal vu à travers un acteur, c'est la
+        // règle d'or du langage. Sans ce recollage, l'argument s'arrêtait à `melodie` et la
+        // parenthèse butait sur le point — « Expected argument value » sur une forme que le
+        // langage écrit partout ailleurs.
+        //
+        // ⚠️ MESURÉ LE 2026-08-13 en réécrivant l'exemple `halo` de la bible avec des acteurs :
+        // c'est le SEUL endroit du langage où un terminal ne pouvait pas porter son acteur. Une
+        // scène à deux alphabets ne peut nommer ses terminaux QUE par leur acteur ; le site
+        // d'argument était donc fermé à toute scène qui en déclare plus d'un.
+        let nom = advance().value;
+        while (at(T.PERIOD) && peek(1).type === T.IDENT && !current().spaceBefore) {
+          advance();
+          nom += `.${advance().value}`;
+        }
+        value = { type: 'Literal', value: nom };
       } else {
         // Nommer l'APPELÉ : sans lui, un appel dont un argument n'est pas une valeur ne dit ni
         // qui il est ni pourquoi il échoue. Cas mesuré (2026-07-26) : `script(MIDI controller #98
@@ -6211,7 +6252,7 @@ function parse(tokens, opts = {}) {
         // Un refus qui nomme le mauvais coupable envoie chercher le défaut là où il n'est pas.
         let acteurSec = null;
         if (at(T.PERIOD) && !current().spaceBefore && peek(1) && peek(1).type === T.IDENT
-            && libCtx.actors && libCtx.actors[name]) {
+            && ((libCtx.actors && libCtx.actors[name]) || acteursDeclares.has(name))) {
           advance();
           acteurSec = name;
           name = advance().value;

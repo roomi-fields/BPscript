@@ -106,7 +106,31 @@
         "flow"
       ],
       "transportGroup": "expression"
+    },
+    "articulcont": {
+      "bp3": "_articulcont",
+      "args": [],
+      "description": "Articulation en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, `articulfixed` et `articulstep`, vivent dans `lib/variation.json`. Le comportement natif de ce mot n'est pas tranché : aucun témoin construit sur le moteur v3.5.1-iso.2 n'a fait bouger l'articulation, le mode fixe compris.",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
+    },
+    "transposecont": {
+      "bp3": "_transposecont",
+      "args": [],
+      "description": "Transposition en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, `transposefixed` et `transposestep`, vivent dans `lib/variation.json` ; celui-ci reste ici parce que la transposition se rend chez le même résolveur que son paramètre. Mesuré sur le moteur natif v3.5.1-iso.2 : le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 608).",
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ],
+      "transportGroup": "transpo"
     }
   },
-  "_forme_generique_retiree_doc": "LA GRAPHIE GENERIQUE value/fixed/cont EST RETIREE le 2026-08-13, arbitrage Romain. Elle cassait DEUX canons du langage : `!(cont:slide)` inversait le sujet et la valeur -- le deux-points LIE UN SUJET A UNE VALEUR, or le sujet ecrit etait `cont` et la valeur etait le parametre -- et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux termes dont le premier est un nom. FORME CANONIQUE : le PARAMETRE devient la cle et le mode se COLLE a lui, exactement la construction des vingt-sept mots des neuf parametres de jeu. `!(slide:101)`, `!(slidecont)`, `!(slidestep)`, `!(slidefixed)`. Le parametre se DECLARE : `@var slide signal`, un flux de nombres sans convention de lecture. Sans declaration le nom est refuse, et c est le but -- un mot inconnu ne devient pas un parametre par accident. Le destinataire cesse d etre emprunte : il vient de la declaration du parametre, pas de cette librairie."
+  "_forme_generique_retiree_doc": "LA GRAPHIE GENERIQUE value/fixed/cont EST RETIREE le 2026-08-13, arbitrage Romain. Elle cassait DEUX canons du langage : `!(cont:slide)` inversait le sujet et la valeur -- le deux-points LIE UN SUJET A UNE VALEUR, or le sujet ecrit etait `cont` et la valeur etait le parametre -- et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux termes dont le premier est un nom. FORME CANONIQUE : le PARAMETRE devient la cle et le mode se COLLE a lui, exactement la construction des vingt-sept mots des neuf parametres de jeu. `!(slide:101)`, `!(slidecont)`, `!(slidestep)`, `!(slidefixed)`. Le parametre se DECLARE : `@var slide signal`, un flux de nombres sans convention de lecture. Sans declaration le nom est refuse, et c est le but -- un mot inconnu ne devient pas un parametre par accident. Le destinataire cesse d etre emprunte : il vient de la declaration du parametre, pas de cette librairie.",
+  "_continus_doc": "LES NEUF MODES CONTINUS PARTENT AUX SORTIES, SANS EXCEPTION (arbitrage Romain, 2026-08-13, relaye par l architecte) : « la destination suit la NATURE du mot, pas le comportement du moteur ». Un mode continu exige des messages intermediaires PENDANT la note, a une cadence — c est celui qui sonne qui les emet. articulcont vivait chez engine (BPx) et transposecont chez transpo (Kairos) : ni l un ni l autre n est une sortie, et le moteur comme le resolveur d arbre travaillent NOTE A NOTE. Ils rejoignent velcont et pancont dans expression, dont le destinataire est la classe « toutes les sorties » — un mode continu vaut pour toute sortie, aucune ne le reclame en propre. Les sept autres continus etaient deja chez une sortie."
 }

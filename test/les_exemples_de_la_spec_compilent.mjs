@@ -408,18 +408,6 @@ const RETARD_BLOCS = new Map([
   //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
   //    de `@def` que le parseur ne lit pas encore. Il se leve avec ce palier.
   ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
-  // ⚠️ ENTRÉ LE 2026-08-13, ET LA CAUSE N'EST PAS CELLE QU'ON LIT DANS LE MESSAGE. Le bloc
-  //    `@def halo(x) x!tin!ge` mêle DEUX alphabets — `tin`, `ge`, `na`, `ka` sont des frappes de
-  //    tabla, `C4 D4 E4` des notes occidentales — et une scène ne déclare qu'un alphabet, l'acteur
-  //    implicite étant unique. Le socle manquant ne se pose donc PAS : lui donner le tabla lui
-  //    retire l'occidental, et lui donner les deux est refusé.
-  //    MÊME FAMILLE ET MÊME PRÉCÉDENT que le bloc remis au retard le 2026-08-07 : « la bible écrit
-  //    une forme que le langage refuse, c'est elle qui est à corriger vers `@actor`, et c'est une
-  //    décision de langage, pas une déduction ». Romain a autorisé le socle ; le socle ne suffit
-  //    pas, et la réécriture vers `@actor` change l'exemple ET son expansion écrite en commentaire.
-  //    RÉVÉLÉ PAR LE DÉPLIAGE DES FORMES : le corps d'une définition n'était jamais validé tant
-  //    qu'il ne devenait pas du vrai contenu d'arbre. Le bloc passait au vert sans rien prouver.
-  ['@def halo(x) x!tin!ge #0', /terminal 'tin' non déclaré — absent des alphabets en portée/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre

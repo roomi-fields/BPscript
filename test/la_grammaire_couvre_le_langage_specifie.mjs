@@ -101,12 +101,17 @@ const RETARD_BIBLE = new Map([
   ["S -> sitar.sa sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`)", "mesuré le 2026-08-06"],
   ["Debut -> { A B", "mesuré le 2026-08-06"],
   ["Fin   -> C D }:2", "mesuré le 2026-08-06"],
-  ["@def halo(x) x!tin!ge", "mesuré le 2026-08-06"],
-  ["@def eclair(x) x!na!ka", "mesuré le 2026-08-06"],
   ["#(K1 K2 K3) M -> C4", "mesuré le 2026-08-06"],
   ["#_ M -> C4", "mesuré le 2026-08-06"],
   ["S -> sa re ga (on_fail:retry(3))", "mesuré le 2026-08-06"],
   ["T -> ma pa (on_fail:fallback(ALT))", "mesuré le 2026-08-06"],
+  // ⚠️ TEXTE REECRIT le 2026-08-13, CAUSE INCHANGEE. J'ai reecrit l'exemple `halo` de LANGUAGE.md
+  //    avec des acteurs (autorisation de Romain pour ce geste precis) : le bloc melait DEUX
+  //    alphabets sans acteur, ce que le langage refuse. Les deux lignes portent donc un nouveau
+  //    texte, et la cause d'origine n'a pas bouge d'un pouce — cette grammaire n'a AUCUNE regle
+  //    `@def`, mesure : zero occurrence du mot dans le fichier. C'est le meme retard, pas un neuf.
+  ["@def halo(x) x!perc.tin!perc.ge", "mesuré le 2026-08-06, texte réécrit le 2026-08-13"],
+  ["@def eclair(x) x!perc.na!perc.ka", "mesuré le 2026-08-06, texte réécrit le 2026-08-13"],
 ]);
 
 const formes = formesDe('LANGUAGE.md');

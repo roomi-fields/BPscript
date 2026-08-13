@@ -136,7 +136,12 @@ for (const { source, nom, def } of CLES) {
 //     clé et lui COLLE son mode (`!(slide:101)`, `!(slidecont)`), la même construction que les
 //     vingt-sept mots ; le paramètre se déclare par `@var <nom> signal`. Ces trois clés ne sont donc
 //     plus des contrôles de librairie : le nom vient de la SCÈNE.
-const PAR_DESTINATAIRE = { expression: 6, midi: 21, audio: 6, transpo: 6, variation: 18 };
+//   expression 6 → 8, transpo 6 → 5, engine 22 → 21 : `articulcont` et `transposecont` DEPLACES le
+//     2026-08-13 vers expression. Arbitrage Romain : « les continus partent aux RUNTIMES, sans
+//     exception ; la destination suit la NATURE du mot ». Ils vivaient chez engine (BPx) et transpo
+//     (Kairos) — or ni le moteur ni le resolveur d arbre ne SONNENT, et un mode continu se definit
+//     par des messages intermediaires PENDANT la note.
+const PAR_DESTINATAIRE = { expression: 8, midi: 21, audio: 6, transpo: 5, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,
@@ -147,7 +152,7 @@ for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
 // shuffle/order/rotate/staccato/legato/rndtime/destru/randomize) + 3 rejoints dans la MÊME
 // journée (striated/smooth : « nature du temps », LIBRAIRIES.md:168 ; mm : pragmatique, cf.
 // engine.json subgrammar._comment) = 21.
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 22,
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 21,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
    + `'engine.', 22 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
    + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici).`);

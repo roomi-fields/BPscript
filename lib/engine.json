@@ -192,19 +192,6 @@
   },
   "resolvedBy": "BPx",
   "_articulcont_doc": "POURQUOI UN MODE DE VARIATION VIT ICI. L'articulation se pose par `legato` et `staccato`, déclarés dans la section `engine` de ce fichier parce qu'ils déforment la DURÉE des notes ; le destinataire de ce fichier est donc aussi le leur. Le mode continu suit son paramètre, comme tous les modes continus (`lib/variation.json`, `_partage_doc`) : il vit ici. Il est rangé sous `controls` par uniformité avec ses vingt-six frères, tous déclarés dans une section `controls` — y compris ceux qui portent un mot du moteur, comme les trois modes de la carte de touches. ⚠️ LA SECTION NE COMMANDE PAS LE SIGNE, et le croire serait une faute : depuis la décision de Romain du 2026-08-02, c'est le DOMAINE DE LA CLÉ qui adresse le destinataire, pas le sac. Mesuré : `legato`, déclaré sous `engine`, s'écrit `(legato:20)` et se fait REFUSER entre crochets, avec sa réécriture. Les crochets ne portent aucun réglage — ils portent les drapeaux de fin de règle, qui acceptent n'importe quel nom.",
-  "controls": {
-    "articulcont": {
-      "bp3": "_articulcont",
-      "args": [],
-      "description": "Articulation en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, `articulfixed` et `articulstep`, vivent dans `lib/variation.json`. Le comportement natif de ce mot n'est pas tranché : aucun témoin construit sur le moteur v3.5.1-iso.2 n'a fait bouger l'articulation, le mode fixe compris.",
-      "scope": [
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ]
-    }
-  },
   "engine": {
     "_comment": "[] syntax — translated directly to BP3 instructions by the transpiler",
     "_reglages_reserves_doc": "mode/scan/weight/on_fail/meter -- SANS champ 'bp3' (contrairement aux autres entrees de cette section) : ce ne sont pas des PROCEDURES BP3 (`_nom(args)` recherchees via controlMap), ce sont des attributs STRUCTURELS de la grammaire native (poids litteral `<N>`, suffixe de mode de sous-grammaire, prefixe scan LEFT/RIGHT, signature rythmique) que le frontal BP3 lit par un chemin dedie, pas par la table generique bp3->controle. Leur inventer un nom '_xxx' serait une correspondance FAUSSE. Declarees ici (2026-08-05) pour que `libCtx.controlNames` les reconnaisse -- le routage sac moteur/runtime reste tranche par `libCtx.qualifierKeys` (lib/core.json schema.qualifierKeys), inchange par cet ajout. Textes de description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec gelee, non modifiee).",

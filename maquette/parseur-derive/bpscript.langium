@@ -177,7 +177,13 @@ GabaritGroupe:
 
 // `!(vel:80)` runtime · `! (/2)` vitesse · `![retro]` moteur · `![@seed:1]` production · `!nom`
 Instant:
-    '!' (speed=Speed | bag=SettingBag | prod=ProdDirective | crochet=Guard | name=ID);
+    '!' (speed=Speed | bag=SettingBag | prod=ProdDirective | crochet=Guard | name=NomQualifie);
+
+// Un terminal peut se nommer A TRAVERS SON ACTEUR : `!perc.tin`. Le point designe un element dans
+// un espace de noms, et une scene a deux alphabets ne peut nommer ses terminaux QUE comme ça —
+// LANGUAGE.md, « Grouper des evenements simultanes dans une definition ».
+NomQualifie returns string:
+    ID ('.' ID)*;
 
 Speed:
     '(' op=OpVitesse value=NUMBER ('/' denom=NUMBER)? ')';

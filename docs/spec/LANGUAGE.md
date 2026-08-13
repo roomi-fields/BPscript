@@ -1470,13 +1470,21 @@ des evenements destines a SC, Python, Processing, DMX.
 Un ensemble d'evenements simultanes qui revient souvent se factorise dans une definition :
 
 ```bpscript
-@def halo(x) x!tin!ge
-@def eclair(x) x!na!ka
+@actor melodie
+  alphabet.western
+@actor perc
+  alphabet.tabla
 
-S -> halo(C4) eclair(D4) halo(E4)
+@def halo(x) x!perc.tin!perc.ge
+@def eclair(x) x!perc.na!perc.ka
+
+S -> halo(melodie.C4) eclair(melodie.D4) halo(melodie.E4)
 // Expansion :
-// C4!tin!ge D4!na!ka E4!tin!ge
+// melodie.C4!perc.tin!perc.ge melodie.D4!perc.na!perc.ka melodie.E4!perc.tin!perc.ge
 ```
+
+Les frappes et les notes viennent de deux alphabets, donc de deux acteurs : une scene n'en declare
+qu'un implicitement, et chaque terminal se nomme a travers le sien.
 
 ### `<!` -- le point d'attente
 

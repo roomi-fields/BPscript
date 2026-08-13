@@ -71,14 +71,40 @@ for (const p of PARAMETRES) for (const m of MODES) {
 }
 
 // ─── 2. CHAQUE MOT EST RANGÉ CHEZ SON RÉSOLVEUR ──────────────────────────────────────────────
+//
+// ⚠️ CE VOLET TENAIT UNE RÈGLE QUE ROMAIN A REMPLACÉE le 2026-08-13, et il l'a fallu dire plutôt
+// que l'ajuster. Il exigeait que le continu vive dans la librairie de SON PARAMÈTRE — d'où
+// `articulcont` chez `engine` (BPx) et `transposecont` chez `transpo` (Kairos). L'arbitrage :
+// « les contrôles continus partent aux RUNTIMES, SANS EXCEPTION ; la destination suit la NATURE du
+// mot, pas le comportement du moteur ». Or ni le moteur ni le résolveur d'arbre ne SONNENT — tous
+// deux travaillent note à note, et un mode continu se définit par des messages intermédiaires
+// PENDANT la note. La règle exacte est donc : un mode continu vit dans une librairie dont le
+// destinataire est une SORTIE.
+//
+// Les modes discrets ne bougent pas : ils se résolvent à la note, donc chez Kairos (`variation`).
+const SORTIES = new Set(['toutes les sorties', 'runtime-MIDI', 'runtime-audio', 'runtime-OSC',
+                         'runtime-codevoices']);
 for (const p of PARAMETRES) for (const m of MODES) {
   const n = mot(p, m);
   const d = declarations.get(n);
   if (!d) continue;   // déjà signalé en 1
-  ok(d.lib === libAttendue(p, m),
-     `2. '${n}' est déclaré dans lib/${d.lib}.json ; il doit vivre dans lib/${libAttendue(p, m)}.json — `
-     + `${m === 'cont' ? 'le continu suit son paramètre (celui qui sonne le rend)' : 'les modes discrets se résolvent à la note, donc chez Kairos'}`);
+  if (m === 'cont') {
+    ok(SORTIES.has(d.resolvedBy),
+       `2. '${n}' est déclaré dans lib/${d.lib}.json, dont le destinataire est `
+       + `'${d.resolvedBy}' — un mode CONTINU part à une SORTIE, sans exception (arbitrage Romain, `
+       + `2026-08-13) : il exige des messages intermédiaires pendant la note, et ni le moteur ni le `
+       + `résolveur d'arbre ne sonnent.`);
+  } else {
+    ok(d.lib === 'variation',
+       `2. '${n}' est déclaré dans lib/${d.lib}.json ; il doit vivre dans lib/variation.json — `
+       + `les modes discrets se résolvent à la note, donc chez Kairos`);
+  }
 }
+// TÉMOIN D'INSTRUMENT — la liste des sorties doit EXCLURE le moteur et le résolveur, sinon le
+// volet accepterait exactement ce que l'arbitrage refuse.
+ok(!SORTIES.has('BPx') && !SORTIES.has('Kairos'),
+   "2. TÉMOIN : ni 'BPx' ni 'Kairos' ne comptent comme une sortie — sans quoi ce volet validerait "
+   + "le rangement que Romain vient d'écarter");
 ok(LIBS.variation?.resolvedBy === 'Kairos',
    `2. lib/variation.json doit déclarer Kairos comme destinataire (déclaré : ${LIBS.variation?.resolvedBy})`);
 
