@@ -275,6 +275,14 @@ spec (défaut) < CT override < CV modulation
 - Le CT `(decay: 50)` override ponctuellement → kick court
 - Le CV `env1 = filter.adsr(...)` module `filter` continûment
 
+> **Forme gelée, 2026-08-13.** La ligne ci-dessus porte une graphie que le langage ne lit plus :
+> `@cv` est supprimé depuis le 2026-08-08, les modulateurs relèvent du patching, et le patching est
+> gelé depuis le 2026-08-09. Elle reste ici DATÉE et visible plutôt que migrée : il n'y a pas de
+> graphie de remplacement à écrire tant que le chantier n'est pas ouvert, et en inventer une ferait
+> de ce document une seconde autorité. Le `filter.` qui préfixe `adsr` désigne une librairie CV qui
+> n'existe plus — `adsr` vit dans `lib/mod.json` — ; le second `filter`, lui, est le contrôle audio
+> modulé, et il est juste. La cascade que ce paragraphe décrit ne dépend pas de la graphie.
+
 Même modèle que CSS : user-agent defaults < stylesheet < inline style.
 
 ### Règle de priorité pour `freq`
