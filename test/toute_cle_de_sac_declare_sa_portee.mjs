@@ -72,7 +72,26 @@ function toutesLesCles() {
 const CLES = toutesLesCles();
 
 // ── A. AUCUNE CLÉ SANS PORTÉE ────────────────────────────────────────────────────────────────
+//
+// ⚠️ UNE EXEMPTION, ET UNE SEULE, POSÉE LE 2026-08-13 AVEC SA RAISON. Une entrée qui porte
+// `bpscript: false` déclare un geste que le MOTEUR exécute, pour que le frontal BP3 puisse le
+// router — elle N'EST PAS un mot du langage et une scène qui l'écrit est refusée. Or une portée dit
+// OÙ un mot a le droit d'être ÉCRIT : exiger une portée d'un mot qui ne s'écrit nulle part n'a pas
+// de sens, et lui en donner une serait pire — ça affirmerait un droit d'écriture que le vocabulaire
+// refuse par ailleurs.
+// Ce n'est donc pas un desserrage : c'est la même règle, appliquée à ce qui la concerne. Le témoin
+// ci-dessous vérifie que l'exemption reste ÉTROITE — elle ne couvre que les entrées marquées, et il
+// doit y en avoir, sinon elle serait une porte ouverte sur rien.
+const exemptees = CLES.filter(({ def }) => def.bpscript === false);
+ok(exemptees.length > 0,
+   "A. l'exemption doit couvrir au moins une entrée — sinon elle est une porte ouverte que rien "
+   + "n'emprunte, et c'est le moment de la retirer");
+ok(exemptees.every(({ def }) => typeof def.bp3 === 'string' && def.bp3),
+   'A. toute entrée exemptée doit porter sa graphie NATIVE — elle est déclarée POUR le routage, une '
+   + 'exemption sans graphie ne déclarerait rien du tout');
+
 for (const { source, nom, def } of CLES) {
+  if (def.bpscript === false) continue;   // ne s'écrit nulle part : cf. l'exemption ci-dessus
   ok(def.scope !== undefined,
      `A. '${nom}' (${source}) ne déclare AUCUNE portée. L'absence ne peut pas vouloir dire `
      + `« partout » : elle rendrait toute validation impossible, et c'est l'état qu'on vient de `
@@ -141,7 +160,13 @@ for (const { source, nom, def } of CLES) {
 //     exception ; la destination suit la NATURE du mot ». Ils vivaient chez engine (BPx) et transpo
 //     (Kairos) — or ni le moteur ni le resolveur d arbre ne SONNENT, et un mode continu se definit
 //     par des messages intermediaires PENDANT la note.
-const PAR_DESTINATAIRE = { expression: 8, midi: 21, audio: 6, transpo: 5, variation: 18 };
+//   expression 8 → 12 : `value`, `fixed`, `cont` et `step` REVIENNENT le 2026-08-13, mais comme
+//     GESTES DE ROUTAGE (`bpscript: false`) et non comme mots du langage. Ils portent leur graphie
+//     native pour que le frontal BP3 puisse traduire une grammaire native — le binaire les exécute
+//     et six grammaires du corpus les écrivent — et ils restent REFUSÉS dans une scène. Le compte
+//     de ce volet mesure ce que la LIBRAIRIE déclare, les deux métiers confondus ; c'est le volet A
+//     qui sépare, en exemptant les marqués de la portée.
+const PAR_DESTINATAIRE = { expression: 12, midi: 21, audio: 6, transpo: 5, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

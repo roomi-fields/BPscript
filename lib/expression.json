@@ -129,8 +129,41 @@
         "flow"
       ],
       "transportGroup": "transpo"
+    },
+    "value": {
+      "bp3": "_value",
+      "bpscript": false,
+      "args": [
+        "param"
+      ],
+      "description": "Geste NATIF : donne une valeur a un parametre de performance nomme. En BPScript la forme est `!(<param>:<valeur>)` apres `@var <param> signal` -- le parametre est la CLE, cf. arbitrage du 2026-08-13."
+    },
+    "fixed": {
+      "bp3": "_fixed",
+      "bpscript": false,
+      "args": [
+        "param"
+      ],
+      "description": "Geste NATIF : le parametre nomme NE VARIE PAS. En BPScript : `!(<param>fixed)`, le mode colle au parametre."
+    },
+    "cont": {
+      "bp3": "_cont",
+      "bpscript": false,
+      "args": [
+        "param"
+      ],
+      "description": "Geste NATIF : le parametre nomme varie CONTINUMENT. En BPScript : `!(<param>cont)`."
+    },
+    "step": {
+      "bp3": "_step",
+      "bpscript": false,
+      "args": [
+        "param"
+      ],
+      "description": "Geste NATIF : le parametre nomme varie PAR PALIERS. En BPScript : `!(<param>step)`. Jamais declare comme mot du langage -- il entre ici par la porte du routage, pas par celle du vocabulaire."
     }
   },
   "_forme_generique_retiree_doc": "LA GRAPHIE GENERIQUE value/fixed/cont EST RETIREE le 2026-08-13, arbitrage Romain. Elle cassait DEUX canons du langage : `!(cont:slide)` inversait le sujet et la valeur -- le deux-points LIE UN SUJET A UNE VALEUR, or le sujet ecrit etait `cont` et la valeur etait le parametre -- et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux termes dont le premier est un nom. FORME CANONIQUE : le PARAMETRE devient la cle et le mode se COLLE a lui, exactement la construction des vingt-sept mots des neuf parametres de jeu. `!(slide:101)`, `!(slidecont)`, `!(slidestep)`, `!(slidefixed)`. Le parametre se DECLARE : `@var slide signal`, un flux de nombres sans convention de lecture. Sans declaration le nom est refuse, et c est le but -- un mot inconnu ne devient pas un parametre par accident. Le destinataire cesse d etre emprunte : il vient de la declaration du parametre, pas de cette librairie.",
-  "_continus_doc": "LES NEUF MODES CONTINUS PARTENT AUX SORTIES, SANS EXCEPTION (arbitrage Romain, 2026-08-13, relaye par l architecte) : « la destination suit la NATURE du mot, pas le comportement du moteur ». Un mode continu exige des messages intermediaires PENDANT la note, a une cadence — c est celui qui sonne qui les emet. articulcont vivait chez engine (BPx) et transposecont chez transpo (Kairos) : ni l un ni l autre n est une sortie, et le moteur comme le resolveur d arbre travaillent NOTE A NOTE. Ils rejoignent velcont et pancont dans expression, dont le destinataire est la classe « toutes les sorties » — un mode continu vaut pour toute sortie, aucune ne le reclame en propre. Les sept autres continus etaient deja chez une sortie."
+  "_continus_doc": "LES NEUF MODES CONTINUS PARTENT AUX SORTIES, SANS EXCEPTION (arbitrage Romain, 2026-08-13, relaye par l architecte) : « la destination suit la NATURE du mot, pas le comportement du moteur ». Un mode continu exige des messages intermediaires PENDANT la note, a une cadence — c est celui qui sonne qui les emet. articulcont vivait chez engine (BPx) et transposecont chez transpo (Kairos) : ni l un ni l autre n est une sortie, et le moteur comme le resolveur d arbre travaillent NOTE A NOTE. Ils rejoignent velcont et pancont dans expression, dont le destinataire est la classe « toutes les sorties » — un mode continu vaut pour toute sortie, aucune ne le reclame en propre. Les sept autres continus etaient deja chez une sortie.",
+  "_gestes_natifs_doc": "QUATRE ENTREES PORTENT `bpscript: false` : elles declarent un geste que le MOTEUR execute, pour que le frontal BP3 puisse le router, sans en faire un mot du langage. Leur graphie BPScript est ailleurs -- le parametre est la cle et le mode s y colle (`!(slide:101)`, `!(slidecont)`), arbitrage Romain du 2026-08-13. Les ecrire dans une scene reste REFUSE."
 }

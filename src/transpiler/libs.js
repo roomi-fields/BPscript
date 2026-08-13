@@ -775,6 +775,26 @@ function loadLibsFromDirectives(directives) {
             + `le commentant.`);
         }
         declarer(name, `lib/${dir.name}.json → ${section}`);
+        // ⛔ UN GESTE DÉCLARÉ POUR LE ROUTAGE N'EST PAS UN MOT DU LANGAGE ──────────────────────
+        // RATIFIÉ PAR ROMAIN le 2026-08-13. Mes librairies ont DEUX MÉTIERS et ne savaient en dire
+        // qu'un : elles portent le VOCABULAIRE BPScript — ce qu'un auteur écrit — ET l'AUTORITÉ DE
+        // ROUTAGE que le frontal BP3 interroge pour traduire une grammaire native. Toute entrée
+        // chargée entrait au vocabulaire, donc déclarer un geste le rendait forcément écrivable.
+        //
+        // CE QUE ÇA A COÛTÉ, le jour même : en retirant `value`, `fixed` et `cont` du langage —
+        // leur graphie cassait deux canons, le paramètre est désormais la clé — j'ai retiré du même
+        // geste la correspondance dont le frontal avait besoin. Le binaire les exécute toujours et
+        // SIX grammaires du corpus les écrivent : il s'est retrouvé sans autorité sur des gestes
+        // que le moteur fait.
+        //
+        // `bpscript: false` sépare les deux métiers. L'entrée remplit la graphie native et le
+        // destinataire — le frontal route — mais son nom N'ENTRE PAS au vocabulaire : une scène qui
+        // l'écrit est refusée comme avant. L'absence cesse d'être muette : un mot que je ne déclare
+        // pas du tout est un TROU, un mot marqué ainsi est une DÉCISION.
+        // Le frontal BP3 lit le BUNDLE, pas ce contexte : l'entrée reste dans la donnée, avec sa
+        // graphie native — c'est tout ce dont il a besoin. Ici, on sort AVANT que le nom n'entre
+        // dans `ctx.controls`, la table sur laquelle le vocabulaire du langage est construit.
+        if (def.bpscript === false) continue;
         ctx.controls[name] = def;
         ctx.controlMap[name] = def.bp3 || `_${name}`;
         // Le destinataire se lit sur le FICHIER, jamais sur l'entrée chargée : une invocation à
