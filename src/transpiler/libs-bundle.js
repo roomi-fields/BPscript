@@ -55,6 +55,92 @@ function captureDigitalBodies(dir) {
 }
 captureDigitalBodies(LIB_DIR);
 
+// ── LES LIBRAIRIES ÉCRITES EN BPSCRIPT ───────────────────────────────────────────────────────
+// Une librairie se dit dans le langage qu'elle sert : `lib/<nom>.bps` porte ses contrôles en `@def`,
+// et le bundle les convertit en la MÊME forme que les `.json`. Le runtime ne change donc pas d'un
+// octet — les consommateurs lisent le bundle, comme avant. C'est le même geste que la capture des
+// corps de fonctions digitales juste au-dessus : l'AUTHORING change, la donnée publiée ne bouge pas.
+//
+// LA CONVERSION, ET ELLE NE DEVINE RIEN :
+//   · le `@def` qui porte le NOM DU FICHIER déclare le fichier — resolvedBy, name, description ;
+//   · tous les autres sont des contrôles ;
+//   · une valeur en backtick `txt:` rend son texte — c'est la seule graphie du langage qui délimite
+//     une phrase, ratifiée le 2026-08-13 ;
+//   · un nombre écrit devient un nombre.
+//
+// ⚠️ LES CLÉS-LISTES SONT NOMMÉES, ET C'EST UNE PROPRIÉTÉ DE LA DONNÉE, PAS UNE DEVINETTE. `args`,
+// `values`, `scope` et `range` sont des listes PAR NATURE — un contrôle a zéro, un ou plusieurs
+// arguments ; une portée est un ensemble de places ; une plage a deux bornes. Une valeur à une
+// seule partie y reste donc une liste d'un élément, sans quoi `args:type` rendrait une chaîne là où
+// tout le reste de la donnée porte un tableau, et chaque lecteur devrait gérer les deux.
+const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
+const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type']);
+
+function valeurDeCle(v) {
+  const brut = v && v.kind === 'value' ? v.value : (v && v.value);
+  const un = (x) => {
+    if (typeof x !== 'string') return x;
+    const t = x.match(/^txt:\s*([\s\S]*)$/);   // backtick typé : `txt: une phrase`
+    if (t) return t[1];
+    return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : x;
+  };
+  return Array.isArray(brut) ? brut.map(un) : un(brut);
+}
+
+// ⚠️ LA CIRCULARITÉ EST RÉELLE ET SE RÉSOUT EN DEUX TEMPS, jamais par un second lecteur.
+// Le bundle a besoin du TRANSPILEUR pour lire une librairie en BPScript ; le transpileur a besoin du
+// BUNDLE pour son vocabulaire. Écrire un petit lecteur de `@def` ici règlerait la boucle en une
+// minute — et créerait une SECONDE GRAMMAIRE, exactement ce que la demande de Romain exclut :
+// « je veux que ton interpréteur interprète le contenu des librairies de la même façon qu'il
+// interprète le contenu des scènes ».
+// On écrit donc d'abord le bundle des `.json` SEULS sur le disque, puis on charge le transpileur —
+// qui trouve alors un bundle valide — et on relit les `.bps` avec LUI. Un seul interprète, deux passes.
+async function collectBps(dir, prefix, compileToBPxAST) {
+  for (const entry of readdirSync(dir).sort()) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) { await collectBps(full, prefix + entry + '/', compileToBPxAST); continue; }
+    if (!entry.endsWith('.bps')) continue;
+    const nom = prefix + entry.replace('.bps', '');
+    const r = compileToBPxAST(readFileSync(full, 'utf-8'));
+    if ((r.errors || []).length) {
+      console.error(`[bundle] ⛔ lib/${entry} NE COMPILE PAS : ${r.errors[0].message}`);
+      process.exitCode = 1;
+      continue;
+    }
+    const lib = { controls: {} };
+    for (const d of (r.ast.directives || [])) {
+      if (d.type !== 'DefDirective' || !d.keys) continue;
+      const cible = d.name === entry.replace('.bps', '') ? lib : (lib.controls[d.name] = {});
+      for (const [cle, v] of Object.entries(d.keys)) {
+        let val = valeurDeCle(v);
+        if (CLES_LISTES.has(cle) && !Array.isArray(val)) val = [val];
+        if (cible === lib && !CHAMPS_DE_FICHIER.has(cle)) {
+          console.error(`[bundle] ⛔ lib/${entry} : '${cle}' n'est pas un champ de FICHIER `
+            + `(${[...CHAMPS_DE_FICHIER].join(', ')}). Un contrôle se déclare par son propre '@def'.`);
+          process.exitCode = 1;
+          continue;
+        }
+        cible[cle] = val;
+      }
+    }
+    if (!Object.keys(lib.controls).length) delete lib.controls;
+    libs[nom] = lib;
+  }
+}
+
+
+// ── LE TRANSPILEUR LIT LES `.bps` ────────────────────────────────────────────────────────────
+// ⚠️ CE GÉNÉRATEUR N'ÉCRIT JAMAIS SUR LE DISQUE — il rend son résultat sur la sortie standard, et
+// c'est ce qui rend le garde de fraîcheur possible : il RELANCE ce générateur et compare à ce qui
+// est commité. Ma première version écrivait un bundle intermédiaire dans `libs-data.js` pour casser
+// la circularité — elle DÉTRUISAIT donc le bundle commité au moment même où on le vérifiait, et le
+// garde comparait le frais à ce qu'il venait lui-même d'écraser.
+// La circularité n'a pas besoin de ça : le bundle COMMITÉ suffit à charger le transpileur. Il est
+// peut-être périmé pour d'autres librairies, mais un fichier de librairie ne déclare aucun `@core`
+// et n'a donc besoin d'AUCUN vocabulaire pour être lu.
+const { compileToBPxAST } = await import('./index.js');
+await collectBps(LIB_DIR, '', compileToBPxAST);
+
 // Output as ES module
 let output = '// Auto-generated by libs-bundle.js — do not edit\n';
 output += '// Contains all lib/*.json data for browser use\n\n';

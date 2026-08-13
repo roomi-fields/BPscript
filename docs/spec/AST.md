@@ -155,12 +155,20 @@ résolution la laisse telle quelle.
 DefDirective {
   type: "DefDirective"
   name: string
+  kind: "terminal" | "structure" | "prereglage" | "transformation" | "code"
   params: string[]                 // [] quand la définition n'en prend pas
   convention: "signal" | "pitch" | "phase" | "logic" | null
-  body: DefBody
+  keys: { [nom]: { kind: "value" | "ref", value: string | string[] } }   // corps `terminal`
+  settings: SettingBag             // corps `prereglage`
+  body: RhsElement[]               // corps `structure` et `transformation`
   line: number
 }
 
+// ⚠️ LE CORPS EST PLAT, PAS IMBRIQUÉ. La forme `DefBody` ci-dessous décrivait un corps rangé sous un
+// champ `body` discriminé par `kind` ; le parser porte `kind` À LA RACINE et le contenu dans le champ
+// qui lui correspond — `keys`, `settings` ou `body` selon la sorte. Les deux disent la même chose ;
+// c'est le TYPE qui était en retard sur le code, et un dérivé se fait correspondre. La table
+// ci-dessous reste comme lecture des CINQ SORTES et de ce que chacune porte.
 DefBody =
     { kind: "terminal", proto: TerminalProto }         // @def cloche  degree:0  voice.sombre
   | { kind: "patch",    expr: PatchExpr }              // @def sombre lpf1 >> vca1

@@ -6,6 +6,7 @@
  * Run: node test/test_v08_parser.js
  */
 
+import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
 import { readFileSync } from 'fs';
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
@@ -17,7 +18,12 @@ import { bpsPath, grPath } from './corpus.mjs';
 
 const libs = {};
 for (const name of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
-  libs[name] = JSON.parse(readFileSync(`lib/${name}.json`, 'utf8'));
+  // ⚠️ LA DONNÉE SE LIT AU BUNDLE, JAMAIS SUR LE DISQUE — et c'est l'avertissement que porte déjà
+  // `lib/digital.json` : « un CONSOMMATEUR doit charger depuis le BUNDLE, jamais lire ce JSON sur le
+  // disque ». Depuis le 2026-08-13 une librairie peut s'écrire en BPScript (`lib/audio.bps`) : lire
+  // `lib/<nom>.json` fait alors tomber le test sur un fichier absent, et lui ferait rater la donnée
+  // si le fichier existait encore par ailleurs. Le bundle est la source unique des consommateurs.
+  libs[name] = BUNDLED[name];
 }
 registerAll(libs);
 

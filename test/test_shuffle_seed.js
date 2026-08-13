@@ -1,3 +1,4 @@
+import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
 /**
  * Test : orthogonalité brassage / graine (décision 2026-06-14-shuffle-seed-orthogonaux).
  *
@@ -15,7 +16,7 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const libs = {};
 for (const n of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
-  libs[n] = JSON.parse(readFileSync(`lib/${n}.json`, 'utf8'));
+  libs[n] = BUNDLED[n];
 }
 registerAll(libs);
 

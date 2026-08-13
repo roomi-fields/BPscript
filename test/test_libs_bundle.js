@@ -26,9 +26,17 @@ function collect(dir, prefix) {
   for (const entry of readdirSync(dir).sort()) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) { collect(full, prefix + entry + '/'); continue; }
-    if (!entry.endsWith('.json')) continue;
-    const key = prefix + entry.replace('.json', '');
+    // ⚠️ DEUX EXTENSIONS DEPUIS LE 2026-08-13, et n'en compter qu'une rendait ce garde AVEUGLE :
+    // une librairie s'écrit désormais en BPScript (`lib/audio.bps`) aussi bien qu'en JSON. Ne lire
+    // que le `.json` faisait sortir « EN TROP dans le bundle : audio » — le garde accusait le
+    // bundle d'un excès qui était son propre angle mort.
+    if (!entry.endsWith('.json') && !entry.endsWith('.bps')) continue;
+    const key = prefix + entry.replace(/\.(json|bps)$/, '');
     if (key === 'tuning') continue; // 177 Ko, non utilisé par le transpileur
+    // Une librairie en BPScript n'est pas du JSON : son CONTENU se vérifie par la régénération
+    // (`bundle:check`, qui relance le générateur et compare au commité), pas ici. Ce garde-ci tient
+    // la LISTE DES CLÉS — que le bundle porte exactement les librairies présentes sur le disque.
+    if (entry.endsWith('.bps')) { expected[key] = null; continue; }
     expected[key] = JSON.parse(readFileSync(full, 'utf-8'));
   }
 }
@@ -58,6 +66,7 @@ const problems = [];
 // 1. Chaque fichier disque doit être dans le bundle, à l'identique.
 for (const [key, data] of Object.entries(expected)) {
   if (!(key in LIBS)) { problems.push(`MANQUE du bundle : "${key}"`); failed++; continue; }
+  if (data === null) continue;   // librairie en BPScript : contenu vérifié par la régénération
   if (JSON.stringify(LIBS[key]) !== JSON.stringify(data)) { problems.push(`PÉRIMÉ : "${key}" diffère du disque`); failed++; }
 }
 // 2. Pas de clé fantôme dans le bundle (sauf tuning volontairement exclu).
@@ -65,7 +74,7 @@ for (const key of Object.keys(LIBS)) {
   if (!(key in expected) && key !== 'tuning') { problems.push(`EN TROP dans le bundle : "${key}"`); failed++; }
 }
 
-console.log(`\n=== Bundle libs-data.js vs lib/*.json ===`);
+console.log(`\n=== Bundle libs-data.js vs lib/*.json + lib/*.bps ===`);
 console.log(`Clés disque (hors tuning) : ${Object.keys(expected).length} | clés bundle : ${Object.keys(LIBS).length}`);
 if (failed === 0) {
   console.log(`Résultat : ${Object.keys(expected).length} PASS, 0 FAIL (bundle à jour)`);

@@ -1,3 +1,4 @@
+import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
 /**
  * Test : l'OPÉRATEUR DE VITESSE — une seule écriture, et elle est RELATIVE.
  *
@@ -25,7 +26,7 @@ import { registerAll } from '../src/transpiler/libs.js';
 
 const libs = {};
 for (const n of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engine', 'octaves', 'tunings', 'temperaments', 'settings', 'homomorphism']) {
-  libs[n] = JSON.parse(readFileSync(`lib/${n}.json`, 'utf8'));
+  libs[n] = BUNDLED[n];
 }
 registerAll(libs);
 
