@@ -106,50 +106,7 @@
         "flow"
       ],
       "transportGroup": "expression"
-    },
-    "value": {
-      "bp3": "_value",
-      "args": [
-        "param",
-        "amount"
-      ],
-      "description": "Continuous sound object parameter value",
-      "scope": [
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ],
-      "transportGroup": "expression"
-    },
-    "fixed": {
-      "bp3": "_fixed",
-      "args": [
-        "param",
-        "amount"
-      ],
-      "description": "Fixed sound object parameter value",
-      "scope": [
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ],
-      "transportGroup": "expression"
-    },
-    "cont": {
-      "bp3": "_cont",
-      "args": [
-        "param"
-      ],
-      "description": "Enable continuous mode for a parameter",
-      "scope": [
-        "symbol",
-        "group",
-        "rule",
-        "flow"
-      ],
-      "transportGroup": "expression"
     }
-  }
+  },
+  "_forme_generique_retiree_doc": "LA GRAPHIE GENERIQUE value/fixed/cont EST RETIREE le 2026-08-13, arbitrage Romain. Elle cassait DEUX canons du langage : `!(cont:slide)` inversait le sujet et la valeur -- le deux-points LIE UN SUJET A UNE VALEUR, or le sujet ecrit etait `cont` et la valeur etait le parametre -- et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux termes dont le premier est un nom. FORME CANONIQUE : le PARAMETRE devient la cle et le mode se COLLE a lui, exactement la construction des vingt-sept mots des neuf parametres de jeu. `!(slide:101)`, `!(slidecont)`, `!(slidestep)`, `!(slidefixed)`. Le parametre se DECLARE : `@var slide signal`, un flux de nombres sans convention de lecture. Sans declaration le nom est refuse, et c est le but -- un mot inconnu ne devient pas un parametre par accident. Le destinataire cesse d etre emprunte : il vient de la declaration du parametre, pas de cette librairie."
 }

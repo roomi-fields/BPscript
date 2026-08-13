@@ -130,7 +130,13 @@ for (const { source, nom, def } of CLES) {
 //   variation  0 → 18  : la nouvelle source, INSCRITE ICI — une librairie absente de cette table
 //                        ne serait balayée par personne, et c'est exactement la faute que ce volet
 //                        existe pour empêcher.
-const PAR_DESTINATAIRE = { expression: 9, midi: 21, audio: 6, transpo: 6, variation: 18 };
+//   expression 9 → 6   : `value`, `fixed` et `cont` RETIRÉS le 2026-08-13, arbitrage Romain. Leur
+//     graphie cassait deux canons — `!(cont:slide)` inversait le sujet et la valeur, et
+//     `!(value:slide 101)` cachait le sujet DANS la valeur. La forme canonique met le PARAMÈTRE en
+//     clé et lui COLLE son mode (`!(slide:101)`, `!(slidecont)`), la même construction que les
+//     vingt-sept mots ; le paramètre se déclare par `@var <nom> signal`. Ces trois clés ne sont donc
+//     plus des contrôles de librairie : le nom vient de la SCÈNE.
+const PAR_DESTINATAIRE = { expression: 6, midi: 21, audio: 6, transpo: 6, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

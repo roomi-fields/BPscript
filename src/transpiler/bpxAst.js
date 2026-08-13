@@ -1449,7 +1449,30 @@ function validateReferences(ast, libCtx = {}) {
   // la scène. Sans cela, sept exemples de la bible tombaient sur « attribut inconnu ».
   const instancesDeclarees = new Set(
     (ast.vars || []).flatMap((v) => (v && Array.isArray(v.names) ? v.names : [])));
-  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k);
+
+  // ── LE MODE D'UN PARAMÈTRE DÉCLARÉ — `slidecont`, `slidestep`, `slidefixed` ─────────────────
+  // FORME RATIFIÉE PAR ROMAIN le 2026-08-13, et c'est la MÊME construction que les vingt-sept mots
+  // des neuf paramètres de jeu : le mode se COLLE au nom du paramètre, et le collage réunit deux
+  // termes en un seul. `velstep` et `slidestep` ne sont pas deux graphies, c'est la même.
+  //
+  // ⚠️ CE QU'ELLE REMPLACE, ET POURQUOI L'ANCIENNE ÉTAIT FAUSSE. On écrivait `!(cont:slide)` :
+  // le `:` LIE UN SUJET À UNE VALEUR, or le sujet écrit était `cont` et la « valeur » était
+  // `slide` — l'inverse du sens. Et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux
+  // termes dont le premier est un nom. Aucune des deux ne dit de quoi on parle en tête de clé.
+  // La forme canonique remet le paramètre en clé : `!(slide:101)` et `!(slidecont)`.
+  //
+  // LE PARAMÈTRE DOIT ÊTRE DÉCLARÉ (`@var slide signal` — « un flux de nombres, sans convention de
+  // lecture », LANGUAGE.md). Sans déclaration le nom est refusé, et c'est le but : un mot inconnu
+  // collé à `cont` ne doit pas devenir un paramètre par accident.
+  const MODES = ['fixed', 'step', 'cont'];
+  const signauxDeclares = new Set(
+    (ast.vars || [])
+      .filter((v) => v && v.varType && v.varType.kind === 'convention')
+      .flatMap((v) => (Array.isArray(v.names) ? v.names : [])));
+  const estModeDeParametre = (k) => MODES.some((mode) =>
+    k.endsWith(mode) && signauxDeclares.has(k.slice(0, -mode.length)));
+
+  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k) || estModeDeParametre(k);
   // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
   //
   // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,
