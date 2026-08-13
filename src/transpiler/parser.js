@@ -2453,7 +2453,7 @@ function parse(tokens, opts = {}) {
 
       // Une clé : `cle.valeur` (référence d'entité) ou `cle:valeur` (affectation).
       // C'est la règle d'or du langage : le point APPELLE un composant, le deux-points AFFECTE.
-      const lireUneCle = () => {
+      const lireUneCle = (dansUnBloc = false) => {
         const kTok = current();
         const cle = expect(T.IDENT).value;
         if (at(T.PERIOD) && !current().spaceBefore) {
@@ -2468,11 +2468,43 @@ function parse(tokens, opts = {}) {
         if (at(T.COLON) && !current().spaceBefore) {
           advance();
           if (atEnd() || at(T.NEWLINE)) throw new ParseError(`'@def ${defName}' : valeur attendue après '${cle}:'`, current());
-          let brut = '';
-          while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !(at(T.IDENT) && current().spaceBefore)) {
-            brut += String(advance().value);
+          // ── UNE VALEUR VA JUSQU'AU BOUT DE LA LIGNE, ET L'ESPACE EN SÉPARE LES PARTIES ────────
+          // C'est la règle du langage — « l'espace ne sépare que les PARTIES d'une valeur » — et ce
+          // lecteur ne la tenait PAS. Il s'arrêtait au premier IDENT espacé et laissait le reste
+          // pendre : `scope:symbol group` sortait « Expected arrow », un refus qui accuse la ligne
+          // SUIVANTE. Pire, un NOMBRE espacé ne l'arrêtait pas : `range:0 127` était CONCATÉNÉ en
+          // « 0127 » — une corruption SILENCIEUSE, la plus chère des deux.
+          //
+          // Les parties sont donc gardées comme telles : une seule reste une chaîne (rien ne change
+          // pour `bp3:_vel`), plusieurs deviennent une LISTE — la forme que les librairies portent
+          // déjà pour `range` et `scope`. Un nombre reste un nombre.
+          // ⚠️ SUR UNE MÊME LIGNE, L'ESPACE SÉPARE DEUX CHOSES — et les confondre casse une forme
+          // vivante de la bible. `@def sirene hz:440 voice.sec` porte DEUX CLÉS ; `range:0 127`
+          // porte UNE clé à deux parties. Le discriminant est le CANON, pas une heuristique : un
+          // mot espacé suivi de `:` ou de `.` ouvre une NOUVELLE CLÉ — le deux-points affecte, le
+          // point appelle un composant — tandis qu'un mot espacé suivi de rien de tel est la partie
+          // suivante de la valeur en cours.
+          // ⛔ LES PARTIES MULTIPLES SONT CELLES DU BLOC, ET LA LIGNE EST LA FRONTIÈRE.
+          // Sur une MÊME ligne, `hz:440 voice` et `scope:symbol group` ont EXACTEMENT la même forme :
+          // rien ne les distingue sans connaître la clé. Or un mot nu après une clé est une faute
+          // DATÉE — témoin déplacé le 2026-08-08 après mesure aux deux endroits — et une valeur à
+          // plusieurs parties est ce dont une librairie a besoin. Les deux ne peuvent pas coexister
+          // sur une ligne ; ils coexistent très bien de part et d'autre d'un saut de ligne.
+          // Une clé écrite SUR SA PROPRE LIGNE porte donc des parties ; une clé écrite à la suite
+          // d'une autre n'en porte pas, et le mot nu qui la suit reste refusé.
+          const ouvreUneCle = () => at(T.IDENT) && current().spaceBefore
+            && (!dansUnBloc || peek(1).type === T.COLON || peek(1).type === T.PERIOD);
+          const parties = [];
+          let courante = '';
+          while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !ouvreUneCle()) {
+            if (courante !== '' && current().spaceBefore) { parties.push(courante); courante = ''; }
+            courante += String(advance().value);
           }
-          cles[cle] = { kind: 'value', value: brut };
+          if (courante !== '') parties.push(courante);
+          // LES PARTIES RESTENT DES CHAÎNES, comme avant : typer les nombres ici changerait l'arbre
+          // de TOUTES les clés existantes — `register:5` passerait de '5' à 5 — et c'est une autre
+          // question que celle des parties. Une seule chose bouge à la fois.
+          cles[cle] = { kind: 'value', value: parties.length === 1 ? parties[0] : parties };
           lu++;
           return;
         }
@@ -2618,7 +2650,7 @@ function parse(tokens, opts = {}) {
         // silence. Mesuré et corrigé sur-le-champ ; c'est pour ça que le garde teste le bloc.
         if (!suivant || suivant.type !== T.IDENT || !(suivant.col > 1)) break;
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
-        lireUneCle();
+        lireUneCle(true);   // dans le BLOC : une clé par ligne, donc des parties multiples
       }
 
       if (lu === 0) {

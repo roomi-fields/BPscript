@@ -4,6 +4,25 @@ Version 1.0 — mars 2026
 
 Ce document spécifie l'interface complète entre BPScript (JavaScript) et le moteur BP3 (WebAssembly). C'est le contrat entre le transpileur/dispatcher et le moteur d'ordonnancement.
 
+> ⚠️ **Ce document spécifie une interface RETIRÉE, 2026-08-13.** Le portage du moteur BP3 en
+> WebAssembly est sorti de toute la tour le 2026-08-11 : il n'est plus ni moteur ni oracle, et il
+> sort du code de construction, des artefacts, des bancs, de la doc et des backlogs. **Aucune des
+> fonctions décrites ci-dessous n'existe** — ni `bp3_init()`, ni `bp3_load_grammar()`, ni
+> `bp3_get_timed_tokens()`.
+>
+> **Ce qui tient le rôle aujourd'hui** : la voie unique de compilation est `compileToBPxAST`, et
+> **BPx** dérive depuis l'arbre. Il n'y a plus d'interface en fonctions à appeler : le transpileur
+> rend un ARBRE, et le moteur le lit. Le contrat n'a donc pas changé de forme — il a changé de
+> nature.
+>
+> **Pourquoi ce document reste** : c'est une spécification datée de mars 2026, citée par cinq autres
+> documents. La réécrire falsifierait ce qui a été contracté ; la supprimer orphelinerait ses
+> citations. Elle est conservée comme contrat historique — utile pour lire les décisions qui s'y
+> réfèrent, inutilisable comme mode d'emploi.
+>
+> **À ne pas confondre** : les moteurs INVITÉS chargés en WebAssembly dans le navigateur — Strudel,
+> Csound, Faust — sont vivants et hors de ce retrait.
+
 ## Principe
 
 BP3 est un **ordonnanceur symbolique pur**. Il reçoit des noms, les dérive selon les règles de grammaire, résout la polymétrie, et retourne les noms horodatés. Il ne sait pas ce que les noms signifient — pas de MIDI, pas de son, pas d'interprétation.
