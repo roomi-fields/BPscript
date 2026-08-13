@@ -250,6 +250,16 @@ const RETARD_REGLES = new Map([
   //     donc la suite de la règle reste orpheline. C'est une QUESTION DE SENS posée à Romain —
   //     la ligne manque-t-elle son point d'exclamation, ou un sac séparé est-il légitime au
   //     milieu d'une règle ? — et elle touche toute la famille des instantanés, pas cette clé.
+  // ⚠️ ENTRÉES DU 2026-08-13 — `patch:` EST UN TAG QUE LA LIBRAIRIE DES ÉVALUATEURS NE DÉCLARE PAS,
+  //    et c'est VOULU. Depuis ce jour un tag de backtick est confronté à `lib/eval.json` : une
+  //    coquille (`jss:`) ne peut plus créer un interprète fantôme en silence. `patch` n'y figure
+  //    pas parce que le câblage PASSE À FaustX, étiqueté `fx:` — « patch: disparaît » (arbitrage
+  //    Romain relayé le 2026-08-13) — et que le chantier du patching est GELÉ depuis le
+  //    2026-08-09. Déclarer `patch` pour verdir réinscrirait au vocabulaire une forme dont le
+  //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
+  //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
+  ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4', /nomme un évaluateur qui n'est pas déclaré/],
+  ['S -> C4 `patch: saw1 \\>> lpf1` D4', /nomme un évaluateur qui n'est pas déclaré/],
 ]);
 
 let regles = 0;
@@ -407,6 +417,15 @@ const RETARD_BLOCS = new Map([
   // ⚠️ DEUX BLOCS, DEUX CAUSES DISTINCTES (2026-08-09) :
   //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
   //    de `@def` que le parseur ne lit pas encore. Il se leve avec ce palier.
+  // ⚠️ ENTRÉES DU 2026-08-13 — `patch:` EST UN TAG QUE LA LIBRAIRIE DES ÉVALUATEURS NE DÉCLARE PAS,
+  //    et c'est VOULU. Depuis ce jour un tag de backtick est confronté à `lib/eval.json` : une
+  //    coquille (`jss:`) ne peut plus créer un interprète fantôme en silence. `patch` n'y figure
+  //    pas parce que le câblage PASSE À FaustX, étiqueté `fx:` — « patch: disparaît » (arbitrage
+  //    Romain relayé le 2026-08-13) — et que le chantier du patching est GELÉ depuis le
+  //    2026-08-09. Déclarer `patch` pour verdir réinscrirait au vocabulaire une forme dont le
+  //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
+  //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
+  ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4 #0', /nomme un évaluateur qui n'est pas déclaré/],
   ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],

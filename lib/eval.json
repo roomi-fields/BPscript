@@ -32,6 +32,9 @@
     },
     "tidal": {
       "description": "TidalCycles — motifs, backend natif (SuperDirt)."
+    },
+    "txt": {
+      "description": "Texte litteral, evalue par personne. Porte une PHRASE la ou le langage n a pas de caractere d echappement : une description de librairie, un libelle. Ratifie par Romain le 2026-08-13 -- le backtick tague est la seule graphie du depot qui delimite un contenu libre, et lui en ajouter un tag coute moins qu inventer un signe."
     }
   }
 }

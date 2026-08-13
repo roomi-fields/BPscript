@@ -1515,6 +1515,31 @@ function validateReferences(ast, libCtx = {}) {
     });
   };
 
+  // ── UN TAG DE BACKTICK NOMME UN ÉVALUATEUR DÉCLARÉ, PAS N'IMPORTE QUEL MOT ──────────────────
+  // ⚠️ CE QUI PASSAIT : `` `zz: du code` `` compilait. Le lecteur de tag ne vérifiait que sa FORME
+  // — une expression régulière « une lettre puis des caractères de mot » — jamais son appartenance
+  // à une liste. Une COQUILLE (`jss:` pour `js:`) créait donc un interprète fantôme EN SILENCE, et
+  // la scène compilait : le code partait à un évaluateur qui n'existe pas, sans une erreur. Même
+  // famille que le drapeau qui confisquait un nom, réparé le 2026-08-12.
+  //
+  // LA LISTE EST UNE DONNÉE, jamais un tableau en dur : `lib/eval.json` déclare les évaluateurs et
+  // `core` l'apporte depuis le 2026-08-13, pour qu'une scène ordinaire l'ait en portée. Ajouter un
+  // langage se fait donc dans la librairie, et ce refus le suit sans une ligne de code.
+  const evaluateurs = new Set((vocab.components && vocab.components.eval) || []);
+  const tagsVus = new Set();
+  const verifierTag = (tag, line, col) => {
+    if (typeof tag !== 'string' || !tag || evaluateurs.has(tag) || tagsVus.has(tag)) return;
+    tagsVus.add(tag);
+    errors.push({
+      message: `'\`${tag}: …\`' nomme un évaluateur qui n'est pas déclaré. Un tag de backtick désigne `
+        + `QUI exécute le code, et la liste vit dans la librairie 'eval' : `
+        + `${[...evaluateurs].sort().join(', ')}. Une coquille y créerait un interprète fantôme, et `
+        + `la scène compilerait sans que le code parte nulle part.`,
+      line,
+      col,
+    });
+  };
+
   const vus = new Map();
   const flag = (key, line, col) => {
     if (knownParamKey(key)) return;
@@ -1531,6 +1556,9 @@ function validateReferences(ast, libCtx = {}) {
   (function collect(node) {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { for (const el of node) collect(el); return; }
+    if (typeof node.tag === 'string' && typeof node.code === 'string') {
+      verifierTag(node.tag, node.line, node.col);
+    }
     if (node.payload && node.payload.params) {
       // ⚠️ L'AMBIGUÏTÉ SE JUGE SUR LA FORME ÉCRITE, JAMAIS SUR LE REPLI. `payload.params` est
       // keyé par le nom CANONIQUE du contrôle : le préfixe qui levait l'ambiguïté n'y figure
