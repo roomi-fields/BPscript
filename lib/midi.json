@@ -153,7 +153,7 @@
     "mapcont": {
       "bp3": "_mapcont",
       "args": [],
-      "description": "Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont (console_strings.json:214, code 44/0 args). Ses deux frères discrets, `mapfixed` et `mapstep`, vivent dans `lib/variation.json` : Kairos les résout, ce runtime rend celui-ci.",
+      "description": "Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont (console_strings.json:214, code 44/0 args). Ses deux frères discrets vivent dans `lib/variation.json` ; leur destinataire se lit sur le champ `resolvedBy` de ce fichier-là, jamais ici.",
       "scope": [
         "symbol",
         "group",

@@ -53,7 +53,7 @@
     "pancont": {
       "bp3": "_pancont",
       "args": [],
-      "description": "Panoramique en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets, `panfixed` et `panstep`, vivent dans `lib/variation.json` : Kairos les résout, celui-ci se rend à l'émission.",
+      "description": "Panoramique en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets vivent dans `lib/variation.json` ; leur destinataire se lit sur le champ `resolvedBy` de ce fichier-là, jamais ici.",
       "scope": [
         "symbol",
         "group",
@@ -80,7 +80,7 @@
     "velcont": {
       "bp3": "_velcont",
       "args": [],
-      "description": "Vélocité en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets, `velfixed` et `velstep`, vivent dans `lib/variation.json` : Kairos les résout, celui-ci se rend à l'émission. Mesuré sur le moteur natif v3.5.1-iso.2 : sur la vélocité, le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 415).",
+      "description": "Vélocité en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets vivent dans `lib/variation.json` ; leur destinataire se lit sur le champ `resolvedBy` de ce fichier-là, jamais ici. Mesuré sur le moteur natif v3.5.1-iso.2 : sur la vélocité, le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 415).",
       "scope": [
         "symbol",
         "group",

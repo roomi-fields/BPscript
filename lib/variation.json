@@ -3,129 +3,210 @@
   "description": "Modes de variation DISCRETS des paramètres de jeu — fixe et paliers. Entre deux valeurs écrites d'un même paramètre, le mode dit si la première TIENT jusqu'à la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se résolvent à la note, donc avant qu'un son ne soit émis : ils appartiennent à Kairos. Le troisième mode — continu — glisse PENDANT les notes, par messages intermédiaires : il ne peut être rendu que par celui qui émet, et il vit donc dans la librairie de son paramètre.",
   "version": "0.1.0",
   "resolvedBy": "Kairos",
-  "_partage_doc": "POURQUOI LES TROIS MODES D'UN MÊME PARAMÈTRE NE VIVENT PAS DANS LE MÊME FICHIER. Une librairie déclare UN destinataire et un seul, et le destinataire d'un mode est celui qui le RÉSOUT : le fixe et les paliers se calculent note à note, à la dérivation, donc chez Kairos ; le continu exige des messages intermédiaires pendant la note, à une cadence, donc chez celui qui sonne — la sortie audio pour la vélocité, le runtime MIDI pour le volume, Kairos lui-même pour la transposition. Un paramètre tient donc dans deux fichiers, et c'est la règle qui le veut : elle range par destinataire, jamais par paramètre.",
+  "_partage_doc": "POURQUOI LES TROIS MODES D UN MEME PARAMETRE NE VIVENT PAS DANS LE MEME FICHIER. Une librairie declare UN destinataire par DEFAUT, et une entree peut le SURCHARGER depuis le 2026-08-13. Le partage suit l ARBITRAGE DE ROMAIN, sans exception ni axe a part : tout mode DISCRET va a son RESOLVEUR -- il se calcule note a note, a la derivation -- et tout mode CONTINU va a un RUNTIME, car il exige des messages intermediaires PENDANT la note, a une cadence, donc chez celui qui SONNE. ⚠️ CE CHAMP A PORTE UNE PHRASE FAUSSE jusqu au 2026-08-13 : il ecrivait que le continu de transposition revenait a Kairos. Kairos n est PAS un runtime, et l arbitrage ne souffre aucune exception. Trouve par runtime-MIDI, qui a refuse de trancher entre deux textes qui ne pouvaient pas rester cote a cote. ⛔ ET LA LEÇON PORTE AU-DELA DE CETTE PHRASE : une prose de librairie qui NOMME un destinataire est une SECONDE AUTORITE a cote du champ resolvedBy. Le champ fait foi ; cette prose dit le PRINCIPE du partage, jamais l affectation d un mot.",
   "_famille_doc": "NEUF PARAMÈTRES, TROIS MODES CHACUN — vélocité, modulation, pitchbend, pression, volume, articulation, panoramique, carte de touches, transposition. Les vingt-sept mots existent au moteur natif ; les dix-huit discrets sont ici, les neuf continus dans la librairie de leur paramètre. Le mot se lit d'un seul tenant, le paramètre puis son mode — la forme du moteur, arrêtée par Romain le 2026-08-12.",
   "_defaut_doc": "LE FIXE EST LE DÉFAUT, mesuré sur le code du moteur et non sur son aide, qui se contredit : un paramètre non déclaré tient sa valeur écrite. Le mot fixe ne se contente donc pas d'arrêter une variation en cours, il REMET dans cet état — sans lui, un glissement court jusqu'à la prochaine valeur écrite.",
   "_mesure_doc": "CE QUE LE MOTEUR NATIF REND, mesuré sur le binaire v3.5.1-iso.2, six notes de 20 à 120 : en fixe 20 20 20 20 20 120, en paliers 20 40 60 80 100 120. Sur la VÉLOCITÉ et la TRANSPOSITION, le mode continu rend des octets IDENTIQUES aux paliers — le mot pose son étiquette et le moteur porte la mention 'not implemented' (FillPhaseDiagram.c:415, :608). Sur le volume et le panoramique, continu et paliers diffèrent bel et bien. L'articulation n'est pas tranchée : aucun témoin construit ne l'a fait bouger, fixe compris.",
   "_scope_doc": "Les dix-huit mots portent la même portée que les modes déjà déclarés dans les autres librairies : ils s'écrivent partout où un réglage de jeu s'écrit — sur un symbole, sur un groupe, sur une règle, et dans le flux.",
   "controls": {
     "_comment": "Modes discrets — un mot par (paramètre, mode), sans argument. Le mot natif est porté verbatim par `bp3`.",
-
     "velfixed": {
       "bp3": "_velfixed",
       "args": [],
       "description": "Vélocité en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "velstep": {
       "bp3": "_velstep",
       "args": [],
       "description": "Vélocité PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "modfixed": {
       "bp3": "_modfixed",
       "args": [],
       "description": "Modulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "modstep": {
       "bp3": "_modstep",
       "args": [],
       "description": "Modulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "pitchfixed": {
       "bp3": "_pitchfixed",
       "args": [],
       "description": "Pitchbend en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "pitchstep": {
       "bp3": "_pitchstep",
       "args": [],
       "description": "Pitchbend PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "pressfixed": {
       "bp3": "_pressfixed",
       "args": [],
       "description": "Pression en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "presstep": {
       "bp3": "_presstep",
       "args": [],
       "description": "Pression PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "volumefixed": {
       "bp3": "_volumefixed",
       "args": [],
       "description": "Volume en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "volumestep": {
       "bp3": "_volumestep",
       "args": [],
       "description": "Volume PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "articulfixed": {
       "bp3": "_articulfixed",
       "args": [],
       "description": "Articulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net. L'articulation se pose par `legato` et `staccato`.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "articulstep": {
       "bp3": "_articulstep",
       "args": [],
       "description": "Articulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "panfixed": {
       "bp3": "_panfixed",
       "args": [],
       "description": "Panoramique en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "panstep": {
       "bp3": "_panstep",
       "args": [],
       "description": "Panoramique PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "mapfixed": {
       "bp3": "_mapfixed",
       "args": [],
       "description": "Carte de touches en mode FIXE — la carte écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "mapstep": {
       "bp3": "_mapstep",
       "args": [],
       "description": "Carte de touches PAR PALIERS — la carte glisse de note en note entre deux cartes écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
-
     "transposefixed": {
       "bp3": "_transposefixed",
       "args": [],
       "description": "Transposition en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     },
     "transposestep": {
       "bp3": "_transposestep",
       "args": [],
       "description": "Transposition PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
-      "scope": ["symbol", "group", "rule", "flow"]
+      "scope": [
+        "symbol",
+        "group",
+        "rule",
+        "flow"
+      ]
     }
   }
 }
