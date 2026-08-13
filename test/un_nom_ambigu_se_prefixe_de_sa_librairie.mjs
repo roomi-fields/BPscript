@@ -143,6 +143,44 @@ for (const [ou, src] of [
      `6. 'expression.pan' doit porter le destinataire d'expression — reçu ${JSON.stringify(lire(`${TETE}S -> C4(expression.pan:20)\n`))}`);
 }
 
+// ─── 6bis. LE PRÉFIXE N'EST PAS UNE SECONDE GRAMMAIRE — il accepte TOUT ce que le nu accepte ──
+// ⚠️ CE VOLET EXISTE PARCE QUE J'AVAIS ÉCRIT LA SECONDE GRAMMAIRE. Ma première version lisait la
+// valeur DANS sa propre branche, et ne connaissait donc que les valeurs simples :
+// `transpo.transpose:3/2` butait sur la barre de fraction — l'intervalle a son propre lecteur —
+// et `variation.velstep`, une clé SANS valeur, n'était pas reconnue du tout. Le préfixe se
+// consomme maintenant AVANT toute lecture, et tout ce qui suit passe par les mêmes lecteurs.
+//
+// LA MESURE EST UNE PARITÉ, pas une liste de cas qui marchent : pour chaque forme, l'écriture nue
+// et l'écriture préfixée doivent rendre le MÊME verdict. Y compris quand les deux ÉCHOUENT — une
+// parité qui n'exigerait que le succès laisserait le préfixe diverger sur les refus.
+{
+  clearRegistry();
+  registerAll(LIBS);
+  const PAIRES = [
+    ['une valeur entière',        'vel:100',            'expression.vel:100'],
+    ['une valeur nommée',         'wave:triangle',      'audio.wave:triangle'],
+    ['un intervalle en fraction', 'transpose:3/2',      'transpo.transpose:3/2'],
+    ['un intervalle en cents',    'transpose:700c',     'transpo.transpose:700c'],
+    ['une clé SANS valeur',       'velstep',            'variation.velstep'],
+    ['un réglage moteur',         'rndtime:100',        'engine.rndtime:100'],
+    ['une valeur composite',      'keyxpand:C4,2',      'transpo.keyxpand:C4,2'],
+  ];
+  for (const [quoi, nu, prefixe] of PAIRES) {
+    const a = erreursDe(`${TETE}S -> C4(${nu})\n`).length > 0;
+    const b = erreursDe(`${TETE}S -> C4(${prefixe})\n`).length > 0;
+    ok(a === b,
+       `6bis. '${quoi}' : la forme préfixée doit rendre le MÊME verdict que la nue — `
+       + `'${nu}' ${a ? 'refusé' : 'accepté'} mais '${prefixe}' ${b ? 'refusé' : 'accepté'}`);
+  }
+  // TÉMOIN D'INSTRUMENT — la liste doit contenir au moins un cas qui PASSE et un qui ÉCHOUE dans
+  // les deux formes, sinon la parité se vérifierait sur un seul régime.
+  ok(erreursDe(`${TETE}S -> C4(vel:100)\n`).length === 0,
+     '6bis. TÉMOIN : au moins une paire doit être acceptée des deux côtés');
+  ok(erreursDe(`${TETE}S -> C4(keyxpand:C4,2)\n`).length > 0,
+     "6bis. TÉMOIN : au moins une paire doit être refusée des deux côtés — sans quoi la parité ne "
+     + "s'éprouve que sur le succès et laisse le préfixe diverger sur les refus");
+}
+
 // ─── 7. RETOUR À L'ÉTAT RÉEL — un garde ne laisse pas son témoin derrière lui ────────────────
 clearRegistry();
 registerAll(LIBS);

@@ -4872,10 +4872,33 @@ function parse(tokens, opts = {}) {
         subject = current().value; advance(); advance(); // <sujet> :
       }
       const keyTok = current();
-      const key = expect(T.IDENT).value;
+      let key = expect(T.IDENT).value;
+      // ── `<librairie>.<contrôle>` — LE PRÉFIXE SE CONSOMME ICI, AVANT TOUTE LECTURE ───────────
+      // RÈGLE DE ROMAIN (2026-08-13), déjà écrite dans `EBNF.md:153` : « Le préfixe est optionnel :
+      // un nom nu passe s'il vit dans une seule librairie invoquée. Porté par deux, la compilation
+      // s'arrête et nomme les deux candidats. »
+      //
+      // ⚠️ J'AVAIS ÉCRIT UNE BRANCHE À PART QUI RELISAIT LA VALEUR ELLE-MÊME, et c'était une
+      // SECONDE GRAMMAIRE : elle ne connaissait que les valeurs simples, donc
+      // `transpo.transpose:3/2` butait sur la barre de fraction (l'intervalle a son propre lecteur)
+      // et `variation.velstep` — une clé SANS valeur — n'était pas reconnue du tout. La forme
+      // préfixée doit accepter TOUT ce que la forme nue accepte ; le seul moyen de le garantir est
+      // qu'elle passe par les MÊMES lecteurs. On consomme donc le préfixe, on garde le nom du
+      // contrôle comme clé, et tout ce qui suit se lit comme d'habitude.
+      //
+      // Le discriminant est le NOM À GAUCHE — une librairie chargée, jamais une instance déclarée
+      // par la scène : `lpf1.cutoff:400` reste un accès au port d'une instance.
+      let libDuReglage = null;
+      if (at(T.PERIOD) && peek(1).type === T.IDENT && !nomsVariables.has(key)
+          && Object.prototype.hasOwnProperty.call(
+               libCtx.controlsQualified || {}, `${key}.${peek(1).value}`)) {
+        libDuReglage = key;
+        advance();                       // .
+        key = advance().value;           // le contrôle
+      }
       refuserTempx(key, keyTok, '(');
       const pos = { line: keyTok.line, col: keyTok.col };
-      const sub = subject !== null ? { subject } : {};
+      const sub = { ...(subject !== null ? { subject } : {}), ...(libDuReglage ? { lib: libDuReglage } : {}) };
       // CONTRÔLEUR NUMÉROTÉ — `cc.98:45` (graphie tranchée par Romain le 2026-07-26).
       // La règle d'or du langage appliquée à un cas qui n'avait pas été traité : le point APPELLE
       // le composant (le contrôleur numéro 98), les deux points AFFECTENT la valeur. Le langage
@@ -4936,41 +4959,6 @@ function parse(tokens, opts = {}) {
         else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
         else valeur = expect(T.IDENT).value;
         pairs.push({ key, component: composant, value: valeur, ...sub, ...pos });
-        if (at(T.COMMA)) advance();
-        continue;
-      }
-      // ── `<librairie>.<contrôle>:valeur` — LA FORME QUI LÈVE UNE AMBIGUÏTÉ ────────────────────
-      // RÈGLE DE ROMAIN (2026-08-13) : deux librairies peuvent déclarer le même contrôle, et
-      // l'appel se préfixe alors du nom de la librairie. La forme existe TOUJOURS, pas seulement
-      // en cas de conflit — `expression.vel:100` s'écrit même quand `vel` seul suffit. Une graphie
-      // qui n'apparaîtrait qu'au moment du conflit serait un mode de secours, donc une seconde
-      // grammaire à tenir.
-      //
-      // ⚠️ CE TEST PASSE AVANT celui du composant, et l'ordre est le sujet : `audio.pan:0.5` a la
-      // forme exacte d'un accès au port d'une instance, et tombait donc dans le refus d'en
-      // dessous — « 'audio' n'est ni un contrôle à composants, ni une instance déclarée ». Le
-      // discriminant est le NOM À GAUCHE : une librairie chargée, jamais une instance de la scène.
-      if (at(T.PERIOD) && peek(1).type === T.IDENT && peek(2).type === T.COLON
-          && !nomsVariables.has(key)
-          && Object.prototype.hasOwnProperty.call(
-               libCtx.controlsQualified || {}, `${key}.${peek(1).value}`)) {
-        const qualifie = `${key}.${peek(1).value}`;
-        advance();                                   // .
-        const controle = advance().value;            // le contrôle
-        advance();                                   // :
-        if (current().spaceBefore) {
-          throw new ParseError(
-            `'${qualifie}: ' — pas d'espace après le deux-points : la valeur commence `
-            + `immédiatement ('${qualifie}:${current().value}')`, current());
-        }
-        let valeur;
-        if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
-        else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
-        else valeur = expect(T.IDENT).value;
-        // LE PRÉFIXE NE VOYAGE PAS : il désigne QUELLE déclaration on veut, et une fois désignée
-        // l'arbre porte le contrôle canonique et son destinataire — comme un `@def` qui se déplie.
-        // `lib` reste sur la paire pour que le destinataire se pose sans redeviner.
-        pairs.push({ key: controle, lib: key, value: valeur, ...sub, ...pos });
         if (at(T.COMMA)) advance();
         continue;
       }
