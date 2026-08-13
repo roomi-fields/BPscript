@@ -55,6 +55,7 @@ import { validateModulation } from './modulationValidation.js';
  */
 function poserLeDestinataireDesReglages(ast, libCtx) {
   const table = libCtx?.controlResolvedBy || {};
+  const tableQualifiee = libCtx?.controlQualifiedResolvedBy || {};
   const vu = new Set();
   const walk = (n) => {
     if (!n || typeof n !== 'object' || vu.has(n)) return;
@@ -62,9 +63,22 @@ function poserLeDestinataireDesReglages(ast, libCtx) {
     if (Array.isArray(n)) { for (const x of n) walk(x); return; }
     const params = n.payload && n.payload.params;
     if (params && typeof params === 'object') {
+      // ⚠️ LE PRÉFIXE DÉCIDE DU DESTINATAIRE, ET C'EST TOUT CE POUR QUOI IL EXISTE. La table par nom
+      // NU rend la déclaration chargée en DERNIER : `expression.pan` en recevait le destinataire
+      // d'`audio`, donc la scène compilait et le réglage partait quand même au mauvais outil — un
+      // préfixe accepté et ignoré, le pire des deux mondes. Trouvé par le garde en naissant.
+      // Les paires portent `lib` quand l'auteur l'a écrit ; on les lit sur le nœud ET sur ses sacs
+      // collés, un sac portant ses propres paires repliées.
+      const origine = new Map();
+      const noter = (liste) => { for (const pr of liste || []) if (pr && pr.lib) origine.set(pr.key, pr.lib); };
+      noter(n.pairs);
+      for (const sq of (n.suffixQualifiers || [])) noter(sq && sq.pairs);
       const dest = {};
       for (const cle of Object.keys(params)) {
-        if (table[cle]) dest[cle] = table[cle];
+        const lib = origine.get(cle);
+        const qualifie = lib ? tableQualifiee[`${lib}.${cle}`] : undefined;
+        if (qualifie) dest[cle] = qualifie;
+        else if (table[cle]) dest[cle] = table[cle];
       }
       if (Object.keys(dest).length) n.payload.resolvedBy = dest;
     }
@@ -1399,7 +1413,7 @@ function chargerPorteesPermises() {
   return m;
 }
 
-function validateReferences(ast) {
+function validateReferences(ast, libCtx = {}) {
   const errors = [];
   const porteesPermises = chargerPorteesPermises();
   // ⛔ LE VOCABULAIRE D'UNE SCÈNE EST CELUI QU'ELLE INVOQUE (Romain, 2026-08-08) : « invoquer
@@ -1447,6 +1461,37 @@ function validateReferences(ast) {
   // Mesuré : `(mysteryParam:42)` rendait 2 erreurs, `(cutof:env1)` en rendait 3.
   //
   // On déduplique donc par CLÉ, et on garde la position dès qu'un des passages la porte.
+  // ⛔ UN NOM QUE DEUX LIBRAIRIES DÉCLARENT NE S'ÉCRIT PAS NU — il ne dit pas de quoi on parle.
+  //
+  // RÈGLE DE ROMAIN (2026-08-13) : deux déclarations d'un même contrôle sont permises, et l'appel
+  // se préfixe alors `<librairie>.<contrôle>`. Le refus porte donc sur l'APPEL AMBIGU, jamais sur
+  // la déclaration — c'est l'inverse de ce que j'avais écrit le 2026-08-12.
+  //
+  // ⚠️ CE QUE ÇA REMPLACE EST UN CHOIX SILENCIEUX, et c'est le seul mode d'échec qui compte ici :
+  // sans ce refus, le chargeur garde la DERNIÈRE déclaration lue et le réglage part au destinataire
+  // de celle-là. Mesuré en posant un `pan` de témoin dans `audio.json` : `(pan:20)` était jugé sur
+  // la plage d'`audio` (-1..1) et sortait « hors plage », alors que l'auteur écrivait le `pan` de
+  // `expression` (0..127). Aucune erreur ne nommait l'ambiguïté ; l'ordre de chargement décidait.
+  //
+  // LE REFUS PORTE SA RÉÉCRITURE — la liste des préfixes possibles, nommés. Un refus qui dit
+  // seulement « ambigu » laisse l'auteur chercher quelles librairies se disputent le nom.
+  const ambigus = libCtx.ambiguousControls || new Set();
+  const prefixesDe = (nom) => Object.keys(libCtx.controlsQualified || {})
+    .filter((q) => q.endsWith(`.${nom}`)).sort();
+  const vusAmbigus = new Set();
+  const signalerAmbiguite = (key, line, col) => {
+    if (!ambigus.has(key) || vusAmbigus.has(key)) return;
+    vusAmbigus.add(key);
+    const choix = prefixesDe(key);
+    errors.push({
+      message: `'${key}' est déclaré par ${choix.length} librairies et ne peut pas s'écrire NU — `
+        + `il ne dit pas de quel '${key}' on parle, et le destinataire du réglage en dépend. `
+        + `Écrire ${choix.map((c) => `'${c}:…'`).join(' ou ')}.`,
+      line,
+      col,
+    });
+  };
+
   const vus = new Map();
   const flag = (key, line, col) => {
     if (knownParamKey(key)) return;
@@ -1463,7 +1508,24 @@ function validateReferences(ast) {
   (function collect(node) {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { for (const el of node) collect(el); return; }
-    if (node.payload && node.payload.params) for (const k of Object.keys(node.payload.params)) flag(k, node.line);
+    if (node.payload && node.payload.params) {
+      // ⚠️ L'AMBIGUÏTÉ SE JUGE SUR LA FORME ÉCRITE, JAMAIS SUR LE REPLI. `payload.params` est
+      // keyé par le nom CANONIQUE du contrôle : le préfixe qui levait l'ambiguïté n'y figure
+      // plus, et juger ici accuserait `audio.pan:0.5` d'être écrit nu. On lit donc les sacs
+      // COLLÉS à ce nœud pour savoir si la clé y est arrivée préfixée.
+      // DEUX SOURCES, et n'en lire qu'une laissait passer le cas le plus courant : un SAC porte
+      // lui-même un `payload.params` replié de SES PROPRES paires — il n'a pas de
+      // `suffixQualifiers`, il EST le qualifieur. Ne regarder que les sacs collés accusait donc
+      // tout sac préfixé d'être écrit nu.
+      const prefixees = new Set();
+      const noter = (liste) => { for (const pr of liste || []) if (pr && pr.lib) prefixees.add(pr.key); };
+      noter(node.pairs);
+      for (const sq of (node.suffixQualifiers || [])) noter(sq && sq.pairs);
+      for (const k of Object.keys(node.payload.params)) {
+        if (!prefixees.has(k)) signalerAmbiguite(k, node.line);
+        flag(k, node.line);
+      }
+    }
     // ⚠️ LES DEUX SIGNES, PAS UN SEUL. Le mode s'écrit aussi bien entre parenthèses (`SettingBag`)
     // qu'entre crochets (`Qualifier`) — et mon premier refus ne visait que le premier. Mesuré dans
     // la foulée : `S -> C4 [mode:random]` PASSAIT, alors qu'il était refusé la minute d'avant.
@@ -1472,7 +1534,11 @@ function validateReferences(ast) {
     // écrivant le correctif qui la cite.
     if ((node.type === 'SettingBag' || node.type === 'Qualifier') && Array.isArray(node.pairs)) {
       for (const p of node.pairs) {
-        if (node.type === 'SettingBag') flag(p.key, p.line, p.col);
+        if (node.type === 'SettingBag') {
+          // Une paire ÉCRITE sans préfixe : c'est ici, et seulement ici, que l'ambiguïté se voit.
+          if (!p.lib) signalerAmbiguite(p.key, p.line, p.col);
+          flag(p.key, p.line, p.col);
+        }
         // ⛔ LE MODE NE CHANGE PAS EN COURS DE TIRAGE — décision de Romain, 2026-08-08.
         //
         // Il vaut pour un BLOC et s'écrit `@mode:<valeur>` en tête de sous-grammaire, point. La
@@ -2429,14 +2495,14 @@ export function compileToBPxAST(source, environnement) {
     // des librairies qui seul connaît la table (cf. l'en-tête de la fonction).
     poserLeDestinataireDesReglages(ast, libCtx);
     result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
-    result.errors.push(...validateReferences(ast)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
+    result.errors.push(...validateReferences(ast, libCtx)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
     // Le nom d'une macro se vérifie ICI, avec les terminaux de règle : même question, même
     // définition, et les acteurs sont pliés à ce stade (avant, `ast.actors` est encore vide —
     // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).
     result.errors.push(...refuserNomsEnDouble(ast, libCtx));
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     poserLaVoixDesTerminaux(ast);
-    result.errors.push(...validateControls(ast, libCtx.controls));
+    result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
     result.errors.push(...validateModulation(ast, libCtx));
 
     // LE DIAGNOSTIC PRÉCIS SUBSUME LE GÉNÉRIQUE (arbitrage architecte [778]).

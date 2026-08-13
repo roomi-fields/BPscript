@@ -37,14 +37,18 @@ function collectQualifierPairs(node, out) {
  * @param {object} controls map name → def (libCtx.controls), porte values / range.
  * @returns {Array<{message:string, line?:number, col?:number}>}
  */
-export function validateControls(ast, controls) {
+export function validateControls(ast, controls, qualifies = {}) {
   if (!controls) return [];
   const pairs = [];
   collectQualifierPairs(ast, pairs);
   const errors = [];
 
   for (const p of pairs) {
-    const def = controls[p.key];
+    // ⚠️ UNE PAIRE PRÉFIXÉE SE VALIDE SUR LA DÉCLARATION QU'ELLE DÉSIGNE, pas sur la table par nom
+    // nu — sinon deux librairies qui portent le même contrôle partagent la plage de la DERNIÈRE
+    // chargée, et `expression.pan:20` sortait « hors plage (-1..1) » en étant jugé par `audio`.
+    // Le nom nu ne peut pas trancher ici : c'est précisément ce que le préfixe existe pour dire.
+    const def = (p.lib && qualifies[`${p.lib}.${p.key}`]) || controls[p.key];
     if (!def) continue;                 // contrôle hors-lib → pas notre autorité
     if (p.value === true) continue;     // clé nue (velcont, pitchcont…)
     const where = { line: p.line, col: p.col };

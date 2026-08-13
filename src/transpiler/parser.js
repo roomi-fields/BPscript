@@ -332,6 +332,7 @@ function parse(tokens, opts = {}) {
     dispatcherOnlyControls: new Set(), engineControls: new Set(), intervalControls: new Set(),
     qualifierKeys: new Set(), sceneNames: new Set(),
     controlMap: {}, controls: {}, symbols: {}, transcriptions: {}, actors: {},
+    controlsQualified: {}, controlQualifiedResolvedBy: {}, ambiguousControls: new Set(),
   };
   /** Les noms qu'une scène a déclarés par `@def` — les SEULS qui puissent être appelés.
    *  Vide tant que la directive n'est pas implémentée ; cf. `estUneDefinitionDeclaree`. */
@@ -4935,6 +4936,41 @@ function parse(tokens, opts = {}) {
         else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
         else valeur = expect(T.IDENT).value;
         pairs.push({ key, component: composant, value: valeur, ...sub, ...pos });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
+      // ── `<librairie>.<contrôle>:valeur` — LA FORME QUI LÈVE UNE AMBIGUÏTÉ ────────────────────
+      // RÈGLE DE ROMAIN (2026-08-13) : deux librairies peuvent déclarer le même contrôle, et
+      // l'appel se préfixe alors du nom de la librairie. La forme existe TOUJOURS, pas seulement
+      // en cas de conflit — `expression.vel:100` s'écrit même quand `vel` seul suffit. Une graphie
+      // qui n'apparaîtrait qu'au moment du conflit serait un mode de secours, donc une seconde
+      // grammaire à tenir.
+      //
+      // ⚠️ CE TEST PASSE AVANT celui du composant, et l'ordre est le sujet : `audio.pan:0.5` a la
+      // forme exacte d'un accès au port d'une instance, et tombait donc dans le refus d'en
+      // dessous — « 'audio' n'est ni un contrôle à composants, ni une instance déclarée ». Le
+      // discriminant est le NOM À GAUCHE : une librairie chargée, jamais une instance de la scène.
+      if (at(T.PERIOD) && peek(1).type === T.IDENT && peek(2).type === T.COLON
+          && !nomsVariables.has(key)
+          && Object.prototype.hasOwnProperty.call(
+               libCtx.controlsQualified || {}, `${key}.${peek(1).value}`)) {
+        const qualifie = `${key}.${peek(1).value}`;
+        advance();                                   // .
+        const controle = advance().value;            // le contrôle
+        advance();                                   // :
+        if (current().spaceBefore) {
+          throw new ParseError(
+            `'${qualifie}: ' — pas d'espace après le deux-points : la valeur commence `
+            + `immédiatement ('${qualifie}:${current().value}')`, current());
+        }
+        let valeur;
+        if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
+        else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
+        else valeur = expect(T.IDENT).value;
+        // LE PRÉFIXE NE VOYAGE PAS : il désigne QUELLE déclaration on veut, et une fois désignée
+        // l'arbre porte le contrôle canonique et son destinataire — comme un `@def` qui se déplie.
+        // `lib` reste sur la paire pour que le destinataire se pose sans redeviner.
+        pairs.push({ key: controle, lib: key, value: valeur, ...sub, ...pos });
         if (at(T.COMMA)) advance();
         continue;
       }

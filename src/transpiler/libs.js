@@ -411,6 +411,13 @@ function loadLibsFromDirectives(directives) {
     // La valeur n'est jamais traduite ni interprétée ici : elle est portée telle qu'elle est
     // écrite, et c'est le consommateur qui sait ce qu'il en fait.
     controlResolvedBy: {},
+    // `<librairie>.<contrôle>` → la déclaration, pour lever l'ambiguïté quand deux librairies
+    // portent le même nom (règle Romain 2026-08-13). Toujours peuplé, ambiguïté ou non : la forme
+    // préfixée s'écrit et se lit dans les deux cas, elle n'est pas un mode de secours.
+    controlsQualified: {},
+    controlQualifiedResolvedBy: {},
+    // Les noms qu'au moins DEUX librairies déclarent — écrits nus, ils sont refusés.
+    ambiguousControls: new Set(),
     controlNames: new Set(),
     bp3NativeControls: new Set(),  // controls BP3 understands natively (no "transport" field)
     seqPrefixControls: new Set(),  // engine controls with scope:"seq_prefix" — emitted as prefix inside group/sequence
@@ -623,31 +630,30 @@ function loadLibsFromDirectives(directives) {
   }
   const aCharger = apportees.length ? [...apportees, ...(directives || [])] : (directives || []);
 
-  // ⛔ UN CONTRÔLE NE SE DÉCLARE QU'UNE FOIS — sinon son DESTINATAIRE est indécidable.
+  // ⛔ DEUX DÉCLARATIONS D'UN MÊME CONTRÔLE SONT PERMISES — ET L'APPEL SE PRÉFIXE ALORS.
   //
-  // Le destinataire d'un réglage n'est écrit nulle part sur le réglage : il se lit sur la
-  // librairie qui le déclare (`resolvedBy`). Deux déclarations du même nom dans deux librairies
-  // donnent donc DEUX destinataires pour une seule clé, et le chargeur tranchait en silence — le
-  // dernier fichier chargé écrasait l'autre, sans que l'ordre de chargement soit une décision de
-  // qui que ce soit. Le même mécanisme confisque un nom quand une scène déclare un contrôleur
-  // nommé (`@cc`) qui porte déjà un nom du vocabulaire.
+  // RÈGLE DE ROMAIN (2026-08-13) : « on peut avoir deux déclarations d'un même contrôle, et à ce
+  // moment-là on a l'obligation de l'appeler en préfixant `<nom de la librairie>.<contrôle>` ».
   //
-  // On refuse BRUYAMMENT plutôt que de choisir. Un choix silencieux ne se voit pas depuis l'aval :
-  // le réglage part au mauvais outil sans erreur, et rien ne rougit le jour où une clé change de
-  // librairie. La tolérance est étroite et nommée : la MÊME section du MÊME fichier peut être
-  // reversée deux fois (une directive écrite deux fois dans une scène), il n'y a alors ni deux
-  // définitions ni deux destinataires.
-  const provenance = new Map();   // nom de contrôle → `<librairie>.<section>`
+  // CE QUE J'AVAIS ÉCRIT, ET QUI ÉTAIT FAUX : un refus DUR à la déclaration. Le raisonnement se
+  // tenait — le destinataire d'un réglage se lit sur la librairie qui le déclare, donc deux
+  // déclarations donnent deux destinataires — mais la conclusion était l'inverse de la règle. Ce
+  // n'est pas la DÉCLARATION qui est indécidable, c'est l'APPEL NU : `pan` seul, quand deux
+  // librairies le déclarent, ne dit pas de quel `pan` on parle. `audio.pan` et `midi.pan` le
+  // disent, et ce sont deux contrôles légitimes avec deux destinataires.
+  //
+  // CE QUI RESTE REFUSÉ, ET C'EST LE VRAI DÉFAUT : le chargeur ne tranche JAMAIS en silence. Une
+  // clé ambiguë écrite nue est refusée AVEC SA RÉÉCRITURE, la liste des préfixes possibles.
+  // Un choix silencieux ne se voit pas depuis l'aval — le réglage part au mauvais outil sans
+  // erreur, et rien ne rougit le jour où une clé change de librairie.
+  //
+  // LA TOLÉRANCE inchangée : la MÊME section du MÊME fichier peut être reversée deux fois (une
+  // directive écrite deux fois dans une scène) ; il n'y a alors ni deux définitions ni deux
+  // destinataires, donc aucune ambiguïté à lever.
+  const provenance = new Map();   // nom de contrôle → Set des origines `lib/<x>.json → <section>`
   const declarer = (nom, origine) => {
-    const deja = provenance.get(nom);
-    if (deja && deja !== origine) {
-      throw new Error(
-        `le contrôle '${nom}' est déclaré DEUX FOIS — ${deja} et ${origine}. Un contrôle vit dans `
-        + `UNE librairie, celle de son destinataire : deux déclarations donnent deux destinataires `
-        + `pour une seule clé, et le chargeur ne peut pas trancher. Supprimer la déclaration qui `
-        + `n'est pas chez le destinataire, ou renommer l'une des deux.`);
-    }
-    provenance.set(nom, origine);
+    if (!provenance.has(nom)) provenance.set(nom, new Set());
+    provenance.get(nom).add(origine);
   };
 
   for (const dir of aCharger) {
@@ -775,6 +781,11 @@ function loadLibsFromDirectives(directives) {
         // sous-clé (`@tuning.just`) rend une entrée du catalogue, qui ne porte pas ce champ.
         const destinataire = (loadJsonFile(dir.name) || {}).resolvedBy;
         if (destinataire) ctx.controlResolvedBy[name] = destinataire;
+        // LA FORME PRÉFIXÉE EXISTE TOUJOURS, pas seulement en cas d'ambiguïté : `expression.vel`
+        // s'écrit et se lit même quand `vel` seul suffit. Une graphie qui n'apparaîtrait qu'au
+        // moment du conflit serait un mode de secours, donc une seconde grammaire.
+        ctx.controlsQualified[`${dir.name}.${name}`] = def;
+        if (destinataire) ctx.controlQualifiedResolvedBy[`${dir.name}.${name}`] = destinataire;
         ctx.controlNames.add(name);
         // Engine section = BP3 native (temporal/structural: goto, tempo, repeat...)
         // Runtime section = dispatcher (sound/performance: vel, chan, wave...)
@@ -946,6 +957,14 @@ function loadLibsFromDirectives(directives) {
         ctx.alphabetTerminals.push(note);
       }
     }
+  }
+
+  // ── LES NOMS AMBIGUS, une fois TOUTES les librairies chargées ────────────────────────────────
+  // Le calcul ne peut pas se faire au fil de la boucle : une clé n'est ambiguë que par rapport à
+  // ce qui sera chargé APRÈS elle, et le savoir à mi-parcours ferait dépendre le refus de l'ordre
+  // de chargement — exactement l'arbitraire que ce mécanisme remplace.
+  for (const [nom, origines] of provenance) {
+    if (origines.size > 1) ctx.ambiguousControls.add(nom);
   }
 
   return ctx;
