@@ -18,9 +18,18 @@
  * ne documente PAS `_mapfixed`, `_mapstep` ni `_mapcont` — j'en ai conclu une minute que je les
  * avais déclarés à tort. La SOURCE les porte (cinq occurrences chacun) : c'est l'aide qui est
  * incomplète. Le juge est donc la TABLE DES MOTS du moteur, jamais sa documentation.
- * Le témoin qui a tranché : `_bidon`, un mot inventé, est ACCEPTÉ sans erreur par le binaire — le
- * moteur crée un paramètre de performance pour tout mot souligné inconnu. « Ça compile » ne prouve
- * donc rien ici, et une mesure qui s'y fierait aurait validé n'importe quoi.
+ *
+ * ⚠️ ET J'AI ÉCRIT ICI UNE AFFIRMATION FAUSSE, retirée le 2026-08-13 après réfutation par le frontal
+ * BP3, qui l'a rejouée avec un meilleur protocole. J'avais écrit que le binaire ACCEPTE tout mot
+ * souligné, `_bidon` compris. C'EST FAUX : le moteur refuse `_bidon` comme `_cresc`, une erreur,
+ * code 15. Mon harnais n'avait AUCUN TÉMOIN DE CONTRÔLE — pas de grammaire connue-bonne pour
+ * prouver qu'il mesurait quelque chose — et il lisait le mauvais canal : la sortie du moteur va
+ * dans le fichier `-o`, pas dans le flux que je filtrais. Il rendait donc « aucune erreur » pour
+ * TOUT, y compris pour les mots valides. Rejoué avec un témoin nu qui passe et la sortie lue au bon
+ * endroit : `_bidon` et `_cresc` rougissent, `_step`, `_fixed`, `_value`, `_mapstep` et `_keymap`
+ * passent et sont réémis.
+ * LA LEÇON EST L'INVERSE DE CELLE QUE J'AVAIS TIRÉE : « ça compile » EST un témoin ici, et c'est un
+ * instrument sans témoin de contrôle qui ne prouve rien.
  *
  * LA RÈGLE QUE CE GARDE TIENT : tout contrôle dont la table native porte le geste `_<nom>` le
  * DÉCLARE explicitement. L'absence du champ cesse alors d'être ambiguë — elle ne peut plus dire
