@@ -755,31 +755,46 @@ function parse(tokens, opts = {}) {
    * le faisait : le nom sortait en symbole opaque étiqueté SONNANT, donc lu en aval comme une note.
    *
    * ⚠️ TOUTES LES DÉFINITIONS NE SONT PAS DU SUCRE, et les confondre effacerait des choses réelles.
-   * Se déplie le PRÉRÉGLAGE (`@def kick (vel:120)`), qui n'est qu'un sac de réglages nommé.
+   * Se déplient les trois sortes qui n'ajoutent QUE de l'écriture :
+   *   `prereglage`      `@def kick (vel:120)`        un sac de réglages nommé ;
+   *   `structure`       `@def cadence sa re ga pa`   une suite de termes nommée ;
+   *   `transformation`  `@def accent(x) x(vel:120)`  une suite de termes nommée, à trous.
    * Ne se déplient pas : un TERMINAL déclaré (`@def ka voice.sec`) — il CRÉE un nom et doit
-   * survivre —, une définition de CODE, un CÂBLAGE. Le tri se lit sur `kind`, jamais sur la forme
-   * du corps.
+   * survivre —, une définition de CODE, un CÂBLAGE, une INVOCATION DE MODULE.
    *
-   * LA STRUCTURE (`@def cadence sa re ga pa`) et la TRANSFORMATION (`@def accent(x) x(vel:120)`)
-   * NE SE DÉPLIENT PAS ENCORE, et l'écrire ici est le sujet : leur dépliage est mesuré et prêt,
-   * mais il change le NOMBRE d'unités d'ordonnancement — `@def motif C4 D4` puis `motif E4` porte
-   * deux éléments sonnants aujourd'hui, trois une fois déplié à plat, et le rythme n'est pas le
-   * même. La forme canonique se décide entre `C4 D4 E4` et `|[C4 D4] E4` ; c'est du langage, donc
-   * de Romain. En attente de son mot.
+   * LA MACRO SE CONFORME À LA RÉÉCRITURE (arbitrage Romain, 2026-08-13) : le corps entre dans la
+   * règle ÉLÉMENT PAR ÉLÉMENT, il ne forme pas de groupe, et le nom occupe la durée de ce qu'il
+   * contient. `@def motif C4 D4` puis `motif E4` donne donc `C4 D4 E4`.
    *
-   * LA CIBLE EST CELLE QU'ÉCRIRAIT LA MAIN : `kick` devient EXACTEMENT ce que produit `!(vel:120)`
-   * au même endroit. D'où le moment choisi — avant la pose des sceaux, jamais après : ce qui sort
+   * LA CIBLE EST CELLE QU'ÉCRIRAIT LA MAIN : `accent(C4)` devient EXACTEMENT ce que produit
+   * `C4(vel:120)` au même endroit. D'où le moment choisi — avant la pose des sceaux, jamais après : ce qui sort
    * d'ici est décoré par le MÊME code que l'écriture directe, au lieu d'une copie de cette
    * décoration écrite à la main plus loin. Deux décorations pour une notion divergent, et la
    * seconde ne rougirait pas le jour où la première change.
    *
-   * LA SORTE SE LIT SUR LA FORME DE L'USAGE, et l'écart se refuse au lieu de se deviner : un
-   * préréglage se pose nu, il ne s'appelle pas.
    */
   function deplierLesCommodites(scene) {
+    // ⛔ UNE INVOCATION DE MODULE N'EST PAS UNE STRUCTURE, et sans ce tri elle se dépliait.
+    // `@var ramp1 ramp` puis `@def monte ramp1(from:0, to:255)` (LANGUAGE.md, « `!` accepte tout ce
+    // qui se pose dans le flux ») : le parser type `monte` en STRUCTURE parce que le corps commence
+    // par un terme nu. Or `ramp1` est une INSTANCE DE MODULE déclarée, `from` et `to` sont ses
+    // ports, et l'invocation est une CHOSE — elle ne se déplie pas. Le défaut était muet tant que
+    // rien ne se dépliait ; il devient une erreur de compilation dès que le corps devient du vrai
+    // contenu d'arbre.
+    const modules = new Set();
+    for (const v of scene.vars || []) {
+      if (v?.varType?.kind === 'module') for (const n of v.names || []) modules.add(n);
+    }
+    const inviteUnModule = (corps) => (corps || []).some(
+      (el) => el && (el.type === 'Symbol' || el.type === 'SymbolCall') && modules.has(el.name));
+
     const formes = new Map();
     for (const d of scene.directives || []) {
-      if (d && d.type === 'DefDirective' && d.kind === 'prereglage') formes.set(d.name, d);
+      if (!d || d.type !== 'DefDirective') continue;
+      if (d.kind === 'prereglage') { formes.set(d.name, d); continue; }
+      if (d.kind === 'structure' || d.kind === 'transformation') {
+        if (!inviteUnModule(d.body)) formes.set(d.name, d);
+      }
     }
     if (!formes.size) return;
 
@@ -788,40 +803,136 @@ function parse(tokens, opts = {}) {
     // balayant l'arbre entier je remplaçais la TÊTE de la règle par le corps de la définition — la
     // règle perdait son nom et le conflit ne se déclarait plus. Une forme s'emploie là où un terme
     // s'emploie ; une tête de règle n'est pas un emploi, c'est une déclaration.
+    //
+    // ⚠️ LE DÉPLIAGE SE REJOUE JUSQU'AU POINT FIXE, parce qu'une forme peut en contenir une autre.
+    // La borne n'est pas une prudence : sans elle, `@def a b` + `@def b a` boucle sans fin, et un
+    // compilateur qui ne rend jamais la main est pire qu'un refus.
+    const membresDroits = [];
     for (const sg of scene.subgrammars || []) {
-      for (const rule of sg.rules || []) if (rule && rule.rhs) remplacerDans(rule.rhs, formes);
+      for (const rule of sg.rules || []) if (rule && rule.rhs) membresDroits.push(rule.rhs);
+    }
+    for (let tour = 32; ; tour--) {
+      if (!remplacerDans(membresDroits, formes, tour)) break;
     }
   }
 
-  /** Remplace, DANS les tableaux qui portent les éléments, chaque usage d'une forme par son corps.
-   *  C'est le conteneur qui doit voir l'élément changer de nature, d'où le travail sur le tableau. */
-  function remplacerDans(n, formes) {
-    if (!n || typeof n !== 'object') return;
+  /**
+   * Remplace, DANS les tableaux qui portent les éléments, chaque usage d'une forme par son corps.
+   * C'est le conteneur qui doit voir l'élément changer de nature — et parfois de NOMBRE, une
+   * structure valant plusieurs termes.
+   *
+   * LE CORPS ENTRE DANS LA RÈGLE ÉLÉMENT PAR ÉLÉMENT, il ne forme PAS de groupe (arbitrage Romain,
+   * 2026-08-13, « une macro se conforme à la réécriture ») : `@def motif C4 D4` puis `motif E4`
+   * donne `C4 D4 E4`, et `motif` occupe la durée de ce qu'il contient.
+   */
+  function remplacerDans(n, formes, reste) {
+    if (!n || typeof n !== 'object') return false;
     if (Array.isArray(n)) {
+      let bouge = false;
       for (let i = 0; i < n.length; i++) {
         const el = n[i];
-        const def = (el && typeof el === 'object' && el.name) ? formes.get(el.name) : undefined;
-        if (def && el.type === 'SymbolCall') {
-          throw new ParseError(
-            `'${el.name}' est un préréglage : il se pose NU, sans arguments. Écrire '${el.name}'. `
-            + `Une liste de paramètres se déclare avec le nom ('@def ${el.name}(x) …'), et alors `
-            + `seulement l'appel en porte.`, { line: el.line ?? 0, col: el.col ?? 0 });
-        }
-        if (def && el.type === 'Symbol') {
-          // Le nœud EXACT que produit `!(vel:120)` écrit à la même place — pas une forme voisine :
-          // fabriquer un intermédiaire ferait de la définition une TROISIÈME écriture, alors
-          // qu'elle n'en est qu'un raccourci.
-          n[i] = {
-            type: 'InstantControl',
-            qualifier: JSON.parse(JSON.stringify(def.settings)),
-            conjoint: false,
-            line: el.line,
-          };
-        } else remplacerDans(el, formes);
+        const sortie = (el && typeof el === 'object' && el.name) ? corpsPour(el, formes) : null;
+        if (sortie) {
+          if (!reste) {
+            throw new ParseError(
+              `'${el.name}' se déplie sans fin — une définition finit par se réinvoquer elle-même. `
+              + `Une forme qui se contient ne se déplie pas.`, jetonDe(el));
+          }
+          n.splice(i, 1, ...sortie);
+          i += sortie.length - 1;
+          bouge = true;
+        } else if (remplacerDans(el, formes, reste)) bouge = true;
       }
-      return;
+      return bouge;
     }
-    for (const v of Object.values(n)) remplacerDans(v, formes);
+    let bouge = false;
+    for (const v of Object.values(n)) if (remplacerDans(v, formes, reste)) bouge = true;
+    return bouge;
+  }
+
+  const jetonDe = (el) => ({ line: el?.line ?? 0, col: el?.col ?? 0 });
+  const copieProfonde = (n) => JSON.parse(JSON.stringify(n));
+
+  /**
+   * Ce qu'un usage devient — une liste d'éléments, qui prend sa place dans la séquence.
+   * LA SORTE SE LIT SUR LA FORME DE L'USAGE, et l'écart se refuse au lieu de se deviner : une
+   * transformation s'appelle avec ses arguments, un préréglage et une structure se posent nus.
+   */
+  function corpsPour(el, formes) {
+    const def = formes.get(el.name);
+    if (!def) return null;
+
+    if (el.type === 'SymbolCall') {
+      if (def.kind !== 'transformation') {
+        throw new ParseError(
+          `'${el.name}' est ${def.kind === 'prereglage' ? 'un préréglage' : 'une structure'} : il se `
+          + `pose NU, sans arguments. Écrire '${el.name}'. Une liste de paramètres se déclare avec `
+          + `le nom ('@def ${el.name}(x) …'), et alors seulement l'appel en porte.`, jetonDe(el));
+      }
+      return corpsSubstitue(def, el);
+    }
+    if (el.type !== 'Symbol') return null;
+    if (def.kind === 'transformation') {
+      throw new ParseError(
+        `'${el.name}' est une transformation sur ${def.params.join(', ')} : elle s'appelle avec ses `
+        + `arguments. Écrire '${el.name}(${def.params.map(() => '…').join(', ')})'. Posé nu, le nom `
+        + `sortirait de l'arbre en terminal et sonnerait.`, jetonDe(el));
+    }
+    if (def.kind === 'prereglage') {
+      // Le nœud EXACT que produit `!(vel:120)` écrit à la même place — pas une forme voisine :
+      // fabriquer un intermédiaire ferait de la définition une TROISIÈME écriture, alors qu'elle
+      // n'en est qu'un raccourci.
+      return [{
+        type: 'InstantControl',
+        qualifier: copieProfonde(def.settings),
+        conjoint: false,
+        line: el.line,
+      }];
+    }
+    return copieProfonde(def.body);
+  }
+
+  /** Le corps d'une transformation, ses paramètres remplacés par les arguments de l'appel. */
+  function corpsSubstitue(def, appel) {
+    const args = appel.args || [];
+    const nommes = args.filter((a) => a && a.key != null);
+    if (nommes.length) {
+      throw new ParseError(
+        `'${def.name}(…)' : un argument de transformation se donne par POSITION, jamais par nom — `
+        + `reçu '${nommes[0].key}:'. Écrire '${def.name}(${def.params.map(() => '…').join(', ')})', `
+        + `les paramètres dans l'ordre de la définition (${def.params.join(', ')}).`, jetonDe(appel));
+    }
+    if (args.length !== def.params.length) {
+      throw new ParseError(
+        `'${def.name}' se définit sur ${def.params.length} paramètre(s) (${def.params.join(', ')}) `
+        + `et s'appelle ici avec ${args.length} argument(s). Une transformation appelée de travers `
+        + `laisserait un paramètre non substitué dans l'arbre, sous la forme d'un terminal qui `
+        + `sonnerait.`, jetonDe(appel));
+    }
+    const valeurs = new Map();
+    def.params.forEach((p, i) => {
+      const v = args[i]?.value;
+      // Le site d'appel ne lit qu'un TERME NU : c'est ce que le langage accepte aujourd'hui, et ce
+      // qu'un argument d'une autre forme produirait ne se devine pas — il se refuse.
+      if (!v || v.type !== 'Literal' || (typeof v.value !== 'string' && typeof v.value !== 'number')) {
+        throw new ParseError(
+          `'${def.name}(…)' : l'argument '${p}' n'est pas un terme. Un argument de transformation `
+          + `est un NOM (un terminal, une tête de règle), écrit nu.`, jetonDe(appel));
+      }
+      valeurs.set(p, String(v.value));
+    });
+    // La substitution porte sur le NOM du symbole, et sur lui seul : tout ce qui est accroché au
+    // paramètre dans le corps — sac collé, liaison, groupe qui l'entoure — appartient à la
+    // DÉFINITION et reste en place. C'est ce qui fait que `x(vel:120)` rend `C4(vel:120)`.
+    const substituer = (n) => {
+      if (!n || typeof n !== 'object') return;
+      if (Array.isArray(n)) { n.forEach(substituer); return; }
+      if (n.type === 'Symbol' && valeurs.has(n.name)) n.name = valeurs.get(n.name);
+      for (const v of Object.values(n)) substituer(v);
+    };
+    const corps = copieProfonde(def.body);
+    substituer(corps);
+    return corps;
   }
 
   // ============================================================

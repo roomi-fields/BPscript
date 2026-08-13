@@ -93,11 +93,25 @@ ok(scenes > 100, `1. le balayage doit LIRE des scènes — ${scenes}`);
 // ── 2. CE QUI DOIT RESTER VRAI PENDANT L'ATTENTE ────────────────────────────────────────────
 // Une macro ORDINAIRE garde sa durée : Romain l'a tranché explicitement (« une macro a TOUJOURS
 // une durée, celle de ce qu'elle contient »). Sans ce témoin, une réparation trop large passerait.
+//
+// ⚠️ CE VOLET PINÇAIT LE MÉCANISME, PAS LA RÈGLE, et il a fallu l'arbitrage du 2026-08-13 pour
+// les séparer. Il exigeait que le NOM `motif` reste dans l'arbre avec la nature sonnante — c'était
+// la façon dont la macro avait une durée du temps où elle traversait, et personne en aval ne la
+// dépliait. Romain a tranché la RÈGLE : « la macro se conforme à la réécriture », le corps entre
+// dans la règle ÉLÉMENT PAR ÉLÉMENT, il ne forme pas de groupe, et `motif` occupe la durée de ce
+// qu'il contient. La bible l'écrivait déjà en toutes lettres à côté d'un autre exemple :
+// « Expansion : C4!tin!ge D4!na!ka E4!tin!ge ».
+// Ce qui est exigé ici est donc PLUS FORT qu'avant — la durée exacte, terme par terme, au lieu
+// d'un nom présent.
 {
   const r = compileToBPxAST('@core\n@alphabet.western\n@def motif C4 D4\nS -> motif E4\n');
   const s = naturesSonnantes(r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || []);
-  ok(s.includes('motif'),
-    '2. SE TAIT — une macro ORDINAIRE garde la nature sonnante : elle a une durée, celle de son contenu');
+  ok(JSON.stringify(s) === JSON.stringify(['C4', 'D4', 'E4']),
+    '2. une macro ORDINAIRE a la durée de ce qu\'elle contient — `@def motif C4 D4` puis `motif E4` '
+    + `porte TROIS éléments sonnants, C4 D4 E4, et pas le nom 'motif' (reçu ${JSON.stringify(s)})`);
+  ok(!s.includes('motif'),
+    "2. le nom d'une macro ne franchit pas la frontière de l'arbre — sonnant, il serait joué comme "
+    + 'une note qu\'aucun alphabet ne porte');
 }
 // Et un MODULATEUR invoqué dure aussi — l'enveloppe a sa propre durée (même arbitrage).
 ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@var env1 adsr\nS -> C4 env1\n').errors.length === 0,

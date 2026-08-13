@@ -408,6 +408,18 @@ const RETARD_BLOCS = new Map([
   //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
   //    de `@def` que le parseur ne lit pas encore. Il se leve avec ce palier.
   ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
+  // ⚠️ ENTRÉ LE 2026-08-13, ET LA CAUSE N'EST PAS CELLE QU'ON LIT DANS LE MESSAGE. Le bloc
+  //    `@def halo(x) x!tin!ge` mêle DEUX alphabets — `tin`, `ge`, `na`, `ka` sont des frappes de
+  //    tabla, `C4 D4 E4` des notes occidentales — et une scène ne déclare qu'un alphabet, l'acteur
+  //    implicite étant unique. Le socle manquant ne se pose donc PAS : lui donner le tabla lui
+  //    retire l'occidental, et lui donner les deux est refusé.
+  //    MÊME FAMILLE ET MÊME PRÉCÉDENT que le bloc remis au retard le 2026-08-07 : « la bible écrit
+  //    une forme que le langage refuse, c'est elle qui est à corriger vers `@actor`, et c'est une
+  //    décision de langage, pas une déduction ». Romain a autorisé le socle ; le socle ne suffit
+  //    pas, et la réécriture vers `@actor` change l'exemple ET son expansion écrite en commentaire.
+  //    RÉVÉLÉ PAR LE DÉPLIAGE DES FORMES : le corps d'une définition n'était jamais validé tant
+  //    qu'il ne devenait pas du vrai contenu d'arbre. Le bloc passait au vert sans rien prouver.
+  ['@def halo(x) x!tin!ge #0', /terminal 'tin' non déclaré — absent des alphabets en portée/],
   ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
@@ -452,9 +464,15 @@ for (const p of SPECS) {
       // L'ENVELOPPE, dite ici : un bloc qui pose déjà son socle (`@core`, `@alphabet`) est pris
       // tel quel ; sinon on lui donne le minimum dérivable. Un bloc sans flèche reçoit un point de
       // départ pour rester mesurable. Rien de plus — un contexte inventé masquerait de vrais refus.
-      const aSocle = /^@core/m.test(src) || /^@alphabet/m.test(src);
+      // ⚠️ LES DEUX MORCEAUX DU SOCLE SE POSENT SÉPARÉMENT, et les confondre fabriquait un second
+      // faux refus : un bloc qui déclarait SON alphabet était pris pour socle complet, donc privé
+      // de `@core` — et son `(vel:120)` sortait « attribut inconnu » alors que la bible est juste.
+      // « Un exemple qui emploie les défauts de core n'a pas à les déclarer » (Romain, 2026-08-13).
+      // Le défaut ne se voyait pas tant qu'un corps de définition n'était jamais validé.
+      const aCore = /^@core/m.test(src);
+      const aAlphabet = /^@alphabet/m.test(src);
       const aRegle = /(->|<-|<>)/.test(src);
-      const texte = (aSocle ? '' : '@core\n@alphabet.western\n') + src
+      const texte = (aCore ? '' : '@core\n') + (aAlphabet ? '' : '@alphabet.western\n') + src
                   + (aRegle ? '\n' : '\n@mode:ord\nS -> C4\n');
       let msg;
       try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }

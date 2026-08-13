@@ -15,13 +15,25 @@
  * aval — la table des destinataires, les autres gardes, les consommateurs — s'indexe dessus sans
  * cas particulier. Une forme sert à écrire ; elle ne voyage pas.
  *
+ * LES TROIS SORTES QUI SE DÉPLIENT, et elles n'ajoutent QUE de l'écriture :
+ *   `prereglage`      `@def kick (vel:120)`        un sac de réglages nommé ;
+ *   `structure`       `@def cadence sa re ga pa`   une suite de termes nommée ;
+ *   `transformation`  `@def accent(x) x(vel:120)`  une suite de termes nommée, à trous.
+ * LA MACRO SE CONFORME À LA RÉÉCRITURE (arbitrage Romain, 2026-08-13) : le corps entre dans la
+ * règle ÉLÉMENT PAR ÉLÉMENT, il ne forme pas de groupe, et le nom occupe la durée de ce qu'il
+ * contient. La bible l'écrit : « Expansion : C4!tin!ge D4!na!ka E4!tin!ge ».
+ *
  * CE QU'IL MESURE, EN MATRICE — la sorte de définition × ce que l'arbre doit en garder :
  *   1. le nom du préréglage a DISPARU des symboles de l'arbre ;
  *   2. le réglage CANONIQUE est là, avec sa valeur ;
  *   3. son DESTINATAIRE est là, identique à celui qu'aurait la forme écrite en direct ;
  *   4. l'arbre déplié est INDISCERNABLE de celui de l'écriture directe — la comparaison porte sur
- *      la structure entière, pas sur les champs que j'aurais choisis ;
- *   5. ce qui n'est PAS du sucre survit : un terminal déclaré garde son nom.
+ *      la structure entière, pas sur les champs que j'aurais choisis. HUIT lignes : les trois
+ *      sortes, un paramètre répété, une forme dans une forme, un groupe, un silence ;
+ *   5. ce qui n'est PAS du sucre survit : un terminal déclaré et une INVOCATION DE MODULE gardent
+ *      leur nom ;
+ *   6. le dépliage ne sort pas du MEMBRE DROIT — une tête de règle est une déclaration ;
+ *   7. SEPT écarts d'emploi sont refusés avec leur réécriture, jamais devinés.
  *
  * INJECTION dans l'ACCUSÉ (dépliage neutralisé) et dans le JUGE (la comparaison rejouée isolée).
  */
@@ -90,6 +102,45 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
   }
 }
 
+// ─── 5bis. LA MATRICE DES TROIS SORTES × LES PLACES OÙ UN TERME SE POSE ──────────────────────
+// « La macro se conforme à la réécriture » (arbitrage Romain, 2026-08-13) : le corps entre dans la
+// règle ÉLÉMENT PAR ÉLÉMENT, il ne forme pas de groupe, et le nom occupe la durée de ce qu'il
+// contient. Chaque ligne compare l'écriture avec la forme à l'écriture SANS elle, sur l'empreinte
+// ENTIÈRE : c'est la seule comparaison qui ne laisse pas choisir ce qu'on ne verra pas.
+for (const [quoi, avecForme, enDirect] of [
+  ['préréglage',                 `@def kick (vel:120)\n\nS -> kick C4\n`,        `S -> !(vel:120) C4\n`],
+  ['transformation, 1 paramètre', `@def accent(x) x(vel:120)\n\nS -> accent(C4)\n`, `S -> C4(vel:120)\n`],
+  ['transformation, 2 paramètres', `@def duo(a,b) a!b\n\nS -> duo(C4,E4)\n`,      `S -> C4!E4\n`],
+  ['paramètre RÉPÉTÉ dans le corps', `@def echo(x) x x\n\nS -> echo(C4)\n`,       `S -> C4 C4\n`],
+  ['structure posée nue',        `@def cadence C4 D4 E4\n\nS -> cadence\n`,      `S -> C4 D4 E4\n`],
+  ['structure sous un groupe',   `@def cadence C4 D4\n\nS -> {cadence, E4}\n`,   `S -> {C4 D4, E4}\n`],
+  ['une forme DANS une forme',   `@def a C4 D4\n@def b a E4\n\nS -> b\n`,        `S -> C4 D4 E4\n`],
+  ['structure à silence et prolongation', `@def creux C4 - _\n\nS -> creux D4\n`, `S -> C4 - _ D4\n`],
+]) {
+  const g = arbreDe(`${TETE}${avecForme}`);
+  const d = arbreDe(`${TETE}${enDirect}`);
+  if (g.erreurs.length || d.erreurs.length) {
+    ok(false, `5bis. ${quoi} : les deux écritures doivent compiler (${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
+    continue;
+  }
+  ok(empreinte(g.ast.subgrammars) === empreinte(d.ast.subgrammars),
+     `5bis. ${quoi} — l'arbre déplié doit être INDISCERNABLE de l'écriture directe`);
+}
+
+// ─── 5ter. UNE INVOCATION DE MODULE N'EST PAS UNE STRUCTURE ──────────────────────────────────
+// `@var ramp1 ramp` puis `@def monte ramp1(from:0, to:255)` : le corps commence par un terme nu,
+// donc le parser type `monte` en STRUCTURE. Mais `ramp1` est une INSTANCE DE MODULE déclarée,
+// `from` et `to` sont ses ports, et une invocation est une CHOSE — elle ne se déplie pas. Le
+// défaut était muet tant que rien ne se dépliait ; il devient une erreur de compilation dès que le
+// corps devient du vrai contenu d'arbre.
+{
+  const t = arbreDe('@core\n@alphabet.western\n@var ramp1 ramp\n@def monte ramp1(from:0, to:255)\n\nS -> C4!monte\n');
+  ok(t.erreurs.length === 0,
+     `5ter. une invocation de module nommée par @def ne doit PAS se déplier (${t.erreurs[0]?.message})`);
+  ok(symbolesDe(t.ast?.subgrammars).includes('monte'),
+     "5ter. le nom de l'invocation de module reste dans l'arbre — ce n'est pas du sucre");
+}
+
 // ─── 6. LE DÉPLIAGE NE SORT PAS DU MEMBRE DROIT ──────────────────────────────────────────────
 // ⚠️ CE VOLET EXISTE PARCE QUE J'AI CRÉÉ LE DÉFAUT et qu'il était silencieux : en balayant l'arbre
 // entier, le dépliage remplaçait la TÊTE d'une règle nommée comme la forme — la règle perdait son
@@ -106,10 +157,22 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
 // Un préréglage se pose NU. Appelé avec des arguments, il ne se devine pas : il se refuse, avec
 // sa réécriture. Sans ce refus, `kick(C4)` traversait l'arbre en appel opaque étiqueté SONNANT —
 // le mode d'échec que ce garde tient tout entier.
-{
-  const t = arbreDe(`${TETE}@def kick (vel:120)\n\nS -> kick(C4)\n`);
-  ok(t.erreurs.some((e) => /est un préréglage : il se pose NU/.test(String(e.message))),
-     '7. un préréglage APPELÉ avec des arguments doit être refusé, avec sa réécriture');
+// LA MATRICE DES ÉCARTS — chaque façon d'employer une forme de travers, et le refus qui l'attend.
+// Sans eux, l'écart traversait l'arbre en appel opaque étiqueté SONNANT : le mode d'échec que ce
+// garde tient tout entier.
+for (const [ecart, src, motif] of [
+  ['un préréglage APPELÉ',        `@def kick (vel:120)\n\nS -> kick(C4)\n`,       /est un préréglage : il se pose NU/],
+  ['une structure APPELÉE',       `@def cadence C4 D4\n\nS -> cadence(E4)\n`,     /est une structure : il se pose NU/],
+  ['une transformation POSÉE NUE', `@def accent(x) x(vel:120)\n\nS -> accent\n`,  /est une transformation sur x/],
+  ['un argument DE TROP',         `@def accent(x) x(vel:120)\n\nS -> accent(C4, D4)\n`, /1 paramètre\(s\).*2 argument\(s\)/],
+  ['un argument NOMMÉ',           `@def accent(x) x(vel:120)\n\nS -> accent(x: C4)\n`, /par POSITION, jamais par nom/],
+  ['une forme qui SE contient',   `@def a C4 a\n\nS -> a\n`,                      /se déplie sans fin/],
+  ['deux formes qui se contiennent', `@def a b\n@def b a\n\nS -> a\n`,            /se déplie sans fin/],
+]) {
+  const t = arbreDe(`${TETE}${src}`);
+  ok(t.erreurs.some((e) => motif.test(String(e.message))),
+     `7. ${ecart} doit être refusé, avec sa réécriture (reçu : `
+     + `${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 70)))})`);
 }
 
 // ─── 8. LE COMPLÉMENT — la forme se déplie PARTOUT où un terme se pose ───────────────────────
