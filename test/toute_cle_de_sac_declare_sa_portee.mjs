@@ -177,9 +177,14 @@ for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
 // shuffle/order/rotate/staccato/legato/rndtime/destru/randomize) + 3 rejoints dans la MÊME
 // journée (striated/smooth : « nature du temps », LIBRAIRIES.md:168 ; mm : pragmatique, cf.
 // engine.json subgrammar._comment) = 21.
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 21,
+//   engine 21 → 23 le 2026-08-13 : `srand` et `print` entrent comme GESTES DE ROUTAGE
+//     (`bpscript: false`), à la demande du frontal BP3 qui les routait en allowlist depuis juin.
+//     Ce sont deux contrats BP3 réels que le corpus écrit et que le vocabulaire BPScript n'a aucune
+//     raison d'accueillir — `srand` réamorce l'aléa DANS LE FLUX (BPScript n'expose que le réglage
+//     de scène `seed`), `print` écrit dans une fenêtre de trace que BPScript n'a pas.
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 23,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
-   + `'engine.', 22 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
+   + `'engine.', 23 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
    + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici).`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `
