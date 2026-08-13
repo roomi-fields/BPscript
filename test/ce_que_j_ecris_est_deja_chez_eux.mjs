@@ -44,7 +44,7 @@ const ATELIER = path.resolve(MOI, '..');
  * rougirait à chaque fichier ajouté chez un voisin serait débranché en une semaine.
  */
 const CONSOMMATEURS = [
-  { depot: 'kanopi', mode: 'paquet', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
+  { depot: 'kanopi', mode: 'nomme', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
     lit: ["l'arbre — deux natures seulement"],
     porte: ['les CINQ catalogues de hauteur, VERBATIM, jusqu\'à kairos — il ne les ouvre jamais'] },
   // ⚠️ SA LECTURE A CHANGÉ DE NATURE LE 2026-08-13, sur arbitrage de Romain, et c'est ce garde qui
@@ -132,6 +132,7 @@ const AXES = ['lit', 'porte'];
  *                 SANS le casser : il continue, sur moins de données. Le plus dangereux des trois.
  *   · `arbre`   — il ne lit que l'AST, jamais mes librairies. Une bascule ne l'atteint pas.
  */
+const GREP = existsSync('/usr/bin/grep') ? '/usr/bin/grep' : 'grep';
 const MODES = new Set(['paquet', 'nomme', 'enumere', 'arbre']);
 // ⚠️ `runtime-audio` A ÉTÉ RETIRÉ LE 2026-07-30, ET SON RETRAIT EST UNE MESURE, PAS UN OUBLI :
 // ses trois occurrences sont des COMMENTAIRES, dont un qui dit son intention en toutes lettres —
@@ -281,6 +282,56 @@ for (const c of CONSOMMATEURS) {
       + `(${[...formats].join(', ')}) : une bascule le rend aveugle SANS le casser — il continue `
       + 'sur moins de données et son portillon reste vert. Il doit lire le PAQUET, qui rend les '
       + 'deux graphies sous une seule forme.');
+  }
+
+  // ⛔ CE QU UN VOISIN NOMME DOIT EXISTER — et ce volet remplace une PROMESSE par une MESURE.
+  // Kanopi m'a demandé « un mot AVANT de toucher à l'une de ces cinq », parce qu'il importe
+  // `bpscript/lib/alphabets.json` et quatre autres EN DUR, statiquement. Sa construction tombe à
+  // l'instant où l'un de ces fichiers change de format. Tenir cette promesse de mémoire, c'est
+  // exactement ce que j'ai raté ce soir avec bp3-frontend.
+  // ⚠️ ET SA DEMANDE A CORRIGÉ MA DÉCLARATION : je l'avais classé « lit le paquet ». Il NOMME.
+  // Je décrivais son régime sans l'avoir mesuré, dans l'axe même que je venais d'ajouter pour
+  // cesser de le faire.
+  for (const c of CONSOMMATEURS) {
+    if (c.mode !== 'nomme' || !presents.includes(c.depot)) continue;
+    let cites = [];
+    try {
+      const sortie = execFileSync('bash', ['-c',
+        // ⚠️ UNE MENTION N'EST PAS UN LIEN — Kairos, 2026-07-30, et je viens de le réapprendre.
+        // Ma première version extrayait tout `lib/x.json` du dépôt : elle accusait TROIS voisins
+        // de casser sur des fichiers supprimés depuis des semaines, cités dans des commentaires
+        // ou des références mortes. Un rouge qui désigne un innocent est pire qu'un vert.
+        // On ne garde donc que les LECTURES : un import, un require, une ouverture de fichier.
+        // ⚠️ ET LE BALAYAGE PASSE PAR `find`, comme la fonction voisine : un `grep -r` sur la
+        // racine d'un voisin rend VIDE en silence — son `node_modules` porte un lien vers MON
+        // dépôt. Le zéro que j'ai lu une minute n'était pas une absence, c'était l'instrument.
+        // ⚠️ ET UN SECOND ZÉRO VENAIT DU MÊME ENDROIT : j'avais écrit une classe pour dire « le
+        // reste de la ligne ». En expression régulière étendue, la séquence d'échappement d'un
+        // saut de ligne n'en est pas une dans une classe — elle y désigne le backslash et la
+        // lettre N. Le motif refusait donc toute ligne contenant un « n », c'est-à-dire toutes.
+        // Grep travaille par ligne : le point suffit, et la classe était du zèle.
+        `find ${JSON.stringify(path.join(ATELIER, c.depot))} `
+        + "\\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' -o -name '*.svelte' \\) "
+        // ⛔ ET ON EXCLUT LES DOSSIERS CACHÉS, parce qu'un voisin y range une COPIE DE MOI.
+        // Kairos porte `.traducteur/` — un instantané vendu de mon transpileur, bundle compris.
+        // Mes cinq  fichiers qu'il nomme et que je ne porte plus  y étaient TOUS : je lisais mon
+        // propre code chez lui et je l'en accusais. Un garde qui trouve sa propre trace chez le
+        // voisin mesure son reflet, pas le voisin.
+        + "-not -path '*/node_modules/*' -not -path '*/dist/*' -not -path '*/.*/*' 2>/dev/null "
+        + `| xargs ${GREP} -hE "(import|require|readFileSync|loadJson).*lib/[a-zA-Z_-]+\\.json" 2>/dev/null `
+        + `| ${GREP} -vE "^\\s*(//|\\*)" | ${GREP} -oE "lib/[a-zA-Z_-]+\\.json" | sort -u`,
+      ], { encoding: 'utf-8' });
+      cites = [...new Set(sortie.split('\n').filter(Boolean).map((l) => l.trim()))];
+    } catch { /* rien */ }
+    const absents = cites.filter((f) => !existsSync(path.join(MOI, f)));
+    ok(absents.length === 0,
+      `${c.depot} NOMME ${absents.length} fichier(s) que je ne porte plus (${absents.join(', ')}) : `
+      + 'sa construction tombe à l\'instant. Un voisin qui nomme se casse à la SUPPRESSION comme au '
+      + 'changement de FORMAT — le prévenir de mémoire ne tient pas, c\'est ce garde qui le tient.');
+    if (cites.length) {
+      console.log(`   ${' '.repeat(14)} ${c.depot} nomme ${cites.length} fichier(s) : `
+        + `${cites.map((f) => f.replace('lib/', '')).join(' ')}`);
+    }
   }
 
   // ⚠️ ET LE PAQUET DOIT DIRE TOUTES MES LIBRAIRIES, quel que soit leur format — sinon la lecture
