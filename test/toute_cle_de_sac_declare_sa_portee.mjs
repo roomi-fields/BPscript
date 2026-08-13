@@ -166,7 +166,12 @@ for (const { source, nom, def } of CLES) {
 //     et six grammaires du corpus les écrivent — et ils restent REFUSÉS dans une scène. Le compte
 //     de ce volet mesure ce que la LIBRAIRIE déclare, les deux métiers confondus ; c'est le volet A
 //     qui sépare, en exemptant les marqués de la portée.
-const PAR_DESTINATAIRE = { expression: 12, midi: 21, audio: 6, transpo: 5, variation: 18 };
+//   expression 12 → 13, midi 21 → 25 : LES CINQ CADENCES ENTRENT le 2026-08-13, par la décision de
+//   Romain sur le continu. Une cadence vit où vit son continu, donc chez le même destinataire :
+//   `panrate` rejoint `pancont` dans `expression`, et `volumerate`, `modrate`, `pitchrate`,
+//   `pressrate` rejoignent leurs continus dans `midi`. Ce plancher monte parce que la famille a
+//   grandi — il ne se règle JAMAIS sur ce que l'extracteur rend, sinon il cesserait de mesurer.
+const PAR_DESTINATAIRE = { expression: 13, midi: 25, audio: 6, transpo: 5, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

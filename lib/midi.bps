@@ -205,3 +205,67 @@
   scope:symbol group rule flow
   transportGroup:midi
 
+// VOLUMERATE · LA CADENCE DU CONTINU DE VOLUME. Elle se declare parametre par parametre, et vaut
+// CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
+// 2026-08-13 : le continu voyage en SUITE DE VALEURS produite en amont a cadence fixe, et le
+// runtime la convertit vers la sienne -- il decime ou il lisse, il ne decide d aucune courbe.
+// ⚠️ AUCUNE PLAGE DECLAREE TANT QUE LE PLAFOND N EST PAS MESURE. La decision dit qu une cadence
+//    au-dela du plafond est refusee en nommant sa cause ; ce plafond se mesure sur le moteur
+//    natif, demande en cours chez bp3-engine. Ecrire une borne raisonnee ici serait inventer la
+//    limite que le garde devra faire respecter.
+@def volumerate
+  bp3:_volumerate
+  args:hz
+  default:50
+  description:`txt: Cadence des valeurs intermediaires du continu de volume, en valeurs par seconde. Defaut 50, comme le moteur natif.`
+  scope:symbol group rule flow
+  transportGroup:midi
+
+// MODRATE · LA CADENCE DU CONTINU DE MODULATION. Elle se declare parametre par parametre, et vaut
+// CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
+// 2026-08-13 : le continu voyage en SUITE DE VALEURS produite en amont a cadence fixe, et le
+// runtime la convertit vers la sienne -- il decime ou il lisse, il ne decide d aucune courbe.
+// ⚠️ AUCUNE PLAGE DECLAREE TANT QUE LE PLAFOND N EST PAS MESURE. La decision dit qu une cadence
+//    au-dela du plafond est refusee en nommant sa cause ; ce plafond se mesure sur le moteur
+//    natif, demande en cours chez bp3-engine. Ecrire une borne raisonnee ici serait inventer la
+//    limite que le garde devra faire respecter.
+@def modrate
+  bp3:_modrate
+  args:hz
+  default:50
+  description:`txt: Cadence des valeurs intermediaires du continu de modulation, en valeurs par seconde. Defaut 50, comme le moteur natif.`
+  scope:symbol group rule flow
+  transportGroup:midi
+
+// PITCHRATE · LA CADENCE DU CONTINU DE HAUTEUR. Elle se declare parametre par parametre, et vaut
+// CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
+// 2026-08-13 : le continu voyage en SUITE DE VALEURS produite en amont a cadence fixe, et le
+// runtime la convertit vers la sienne -- il decime ou il lisse, il ne decide d aucune courbe.
+// ⚠️ AUCUNE PLAGE DECLAREE TANT QUE LE PLAFOND N EST PAS MESURE. La decision dit qu une cadence
+//    au-dela du plafond est refusee en nommant sa cause ; ce plafond se mesure sur le moteur
+//    natif, demande en cours chez bp3-engine. Ecrire une borne raisonnee ici serait inventer la
+//    limite que le garde devra faire respecter.
+@def pitchrate
+  bp3:_pitchrate
+  args:hz
+  default:50
+  description:`txt: Cadence des valeurs intermediaires du continu de hauteur, en valeurs par seconde. Defaut 50, comme le moteur natif.`
+  scope:symbol group rule flow
+  transportGroup:midi
+
+// PRESSRATE · LA CADENCE DU CONTINU DE PRESSION. Elle se declare parametre par parametre, et vaut
+// CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
+// 2026-08-13 : le continu voyage en SUITE DE VALEURS produite en amont a cadence fixe, et le
+// runtime la convertit vers la sienne -- il decime ou il lisse, il ne decide d aucune courbe.
+// ⚠️ AUCUNE PLAGE DECLAREE TANT QUE LE PLAFOND N EST PAS MESURE. La decision dit qu une cadence
+//    au-dela du plafond est refusee en nommant sa cause ; ce plafond se mesure sur le moteur
+//    natif, demande en cours chez bp3-engine. Ecrire une borne raisonnee ici serait inventer la
+//    limite que le garde devra faire respecter.
+@def pressrate
+  bp3:_pressrate
+  args:hz
+  default:50
+  description:`txt: Cadence des valeurs intermediaires du continu de pression, en valeurs par seconde. Defaut 50, comme le moteur natif.`
+  scope:symbol group rule flow
+  transportGroup:midi
+
