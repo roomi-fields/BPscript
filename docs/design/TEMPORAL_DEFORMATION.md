@@ -10,6 +10,18 @@ Version 1.0 — 26 mars 2026
 > complet) décrivent l'intention de design de mars 2026 ; elles ne désignent plus un composant
 > du dépôt.
 
+> ⚠️ **« BP3 WASM » ci-dessous nomme une cible qui n'existe plus** : le portage du moteur BP3 en
+> WebAssembly est sorti de toute la tour le 2026-08-11 — il n'est plus ni moteur ni oracle, et il
+> sort du code de construction, des artefacts, des bancs, de la doc et des backlogs. La couche 1 de
+> ce document, « STRUCTURE (BP3 WASM) », est aujourd'hui tenue par **BPx**, qui ordonnance depuis
+> l'arbre. Les six mentions (couche 1, pipeline, phases 2 et 3, callbacks) décrivent l'intention de
+> design de mars 2026 et sont conservées telles quelles : réécrire une vision datée falsifierait ce
+> qu'elle a été. Le raisonnement du solveur ne dépend pas de la cible.
+>
+> **À ne pas confondre** : les moteurs INVITÉS chargés en WebAssembly dans le navigateur — Strudel,
+> Csound, Faust — sont vivants et hors de ce retrait. Un balayage sur le seul mot « WASM » les
+> emporte avec le reste.
+
 ## Vision
 
 BP3 est un compilateur de structures temporelles. Il produit un résultat statique.
