@@ -308,9 +308,9 @@
       }
     },
     "abc2": {
-      "description": "Porté depuis bp3-engine/test-data/-ho.abc2 le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
+      "description": "Porté depuis bp3-engine/test-data/-ho.abc2 le 2026-08-13. ⚠️ La section est `sync` et non `*` : le fichier écrit `*` puis `sync` sans séparateur entre les deux, et une ÉTIQUETTE QUI SUIT UNE ÉTIQUETTE LA REMPLACE — le natif n'ouvre une section que sur un séparateur. J'avais d'abord lu `sync` comme un MODIFICATEUR de la section courante ; c'était une invention, le mot `sync` n'existe nulle part dans la source du moteur. Corrigé sur signalement de bp3-frontend, dont le critère vient du moteur.",
       "sections": {
-        "*": {
+        "sync": {
           "chains": {
             "a": [
               "a'"
@@ -390,8 +390,7 @@
             "z": [
               "z'"
             ]
-          },
-          "sync": true
+          }
         }
       }
     },
