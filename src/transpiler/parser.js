@@ -468,6 +468,10 @@ function parse(tokens, opts = {}) {
     const scene = {
       type: 'Scene',
       directives: [],
+      // `init: InitEntry[] | null` (AST.md:30) — NULL quand la scène n'en a pas, et non `undefined`
+      // ni un tableau vide : « elle n'en a pas » et « elle en a un vide » doivent rester
+      // distinguables par l'aval.
+      init: null,
       actors: [],
       scenes: [],
       exposes: [],
@@ -551,6 +555,10 @@ function parse(tokens, opts = {}) {
         } else if (dir.type === 'Declaration') {
           // @gate, @trigger, @cv — prefixed declarations
           scene.declarations.push(dir);
+        } else if (dir.type === 'InitDirective') {
+          // `init` vit à la RACINE de la scène, comme `vars` et `actors` — AST.md:30. Un consommateur
+          // cherche l'état de départ là, pas au fond de la liste des directives.
+          scene.init = [...(scene.init || []), ...dir.entrees];
         } else if (dir.type === 'ActorDirective') {
           scene.actors.push(dir);
           if (dir.name) acteursDeclares.add(dir.name);
@@ -2624,6 +2632,68 @@ function parse(tokens, opts = {}) {
           + `ici plutôt que d'être lus de travers.`, tok);
       }
       return { type: 'DefDirective', name: defName, kind: 'terminal', keys: cles, line: tok.line };
+    }
+
+    // ── `@init` — L'ÉTAT DE DÉPART DE LA SCÈNE ────────────────────────────────────────────────
+    // LANGUAGE.md, « @init -- l'etat de depart » : « `@init` porte ce qui existe au démarrage de la
+    // scène et n'appartient à aucune déclaration : le branchement initial, le code lancé une fois,
+    // les valeurs de départ. Ce qui appartient à une chose s'initialise DANS sa déclaration — un
+    // flag écrit son état de départ là où il naît. `@init` recueille ce qui ne se rattache à rien. »
+    //
+    // ⚠️ CE QUI PASSAIT AVANT, ET C'EST LE PIRE DES SILENCES : `@init` seul COMPILAIT et ne portait
+    // RIEN — il tombait dans la lecture des directives génériques, qui avale un nom et s'arrête.
+    // Une scène pouvait donc écrire son état de départ et le voir disparaître sans une erreur. Un
+    // corps, lui, était refusé (« Expected arrow ») : la moitié muette, la moitié bruyante.
+    //
+    // ⛔ LE BRANCHEMENT N'EST PAS LU ICI, ET C'EST UNE DÉCISION DE ROMAIN (2026-08-13) : la forme du
+    // câblage passe à FaustX et le chantier est GELÉ depuis le 2026-08-09. Écrire un lecteur pour
+    // `saw1 >> lpf1` reviendrait à figer une graphie dont le remplacement est décidé. Il est donc
+    // REFUSÉ EN LE DISANT, plutôt qu'avalé — un refus nommé vaut mieux qu'un silence, et il tombera
+    // de lui-même quand le chantier s'ouvrira.
+    if (name === 'init') {
+      // LA FORME DE L'ARBRE EST CELLE QUE LA SPEC ÉCRIT : `init: InitEntry[] | null`, un tableau
+      // PLAT (AST.md:30, :201-204). Pas de `{codes, valeurs}` de mon invention — une seconde forme
+      // obligerait chaque consommateur à connaître la mienne en plus de celle qui est publiée.
+      const entrees = [];
+      while (!atEnd()) {
+        while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+        if (atEnd()) break;
+        // LE CODE LANCÉ UNE FOIS — un backtick TAGUÉ. Le tag est obligatoire ici : `@init` est un
+        // site ORPHELIN, aucun acteur ne l'entoure, donc aucun langage ne peut s'hériter.
+        if (at(T.BACKTICK)) {
+          const tok2 = current();
+          const t = splitBacktickTag(advance().value, tok2);
+          // `BacktickOrphan` est le type que la spec nomme (AST.md:657) — pas un type à moi.
+          entrees.push({ type: 'BacktickOrphan', tag: t.tag, code: t.code, line: tok2.line });
+          continue;
+        }
+        // LES VALEURS DE DÉPART — la même graphie qu'ailleurs, `!(clé:valeur)` ou `(clé:valeur)`.
+        if (at(T.BANG) || at(T.LPAREN)) {
+          if (at(T.BANG)) advance();
+          // ⚠️ ÉCART SIGNALÉ, ET LA BIBLE TRANCHE. `LANGUAGE.md` écrit que `@init` porte « les
+          // valeurs de départ » ; `AST.md` définit `InitEntry = PatchExpr | BacktickOrphan` et n'a
+          // pas de troisième variante. AST.md est un DÉRIVÉ de LANGUAGE.md : c'est donc le TYPE qui
+          // est en retard, pas la prose. Le sac est porté tel quel, et l'écart est remonté à Romain.
+          entrees.push(parseRuntimeQualifier());
+          continue;
+        }
+        // ⛔ LE CÂBLAGE, REFUSÉ EN LE NOMMANT — jamais avalé.
+        // ⚠️ LE CÂBLAGE PORTE DEUX JETONS, pas un : brancher `>>` et COUPER `\>>`. N'en guetter
+        // qu'un laissait la coupure tomber dans « Expected arrow », un refus qui ne dit pas la
+        // vraie cause — trouvé par le garde en naissant.
+        const versCablage = (t) => t === T.WIRE || t === T.WIRE_CUT;
+        if ((at(T.IDENT) && (versCablage(peek(1).type) || versCablage(peek(2).type)))
+            || versCablage(current().type)) {
+          throw new ParseError(
+            `'@init' : le BRANCHEMENT ne se lit pas encore. La forme du câblage passe à FaustX `
+            + `(décision Romain, 2026-08-13) et le chantier du patching est gelé depuis le `
+            + `2026-08-09 ; écrire un lecteur maintenant figerait une graphie dont le remplacement `
+            + `est décidé. '@init' lit aujourd'hui le CODE lancé une fois (backtick tagué) et les `
+            + `VALEURS de départ ('!(clé:valeur)').`, current());
+        }
+        break;   // ni code, ni valeur, ni câblage : le bloc est fini
+      }
+      return { type: 'InitDirective', entrees, line: tok.line };
     }
 
     if (name === 'actor') {

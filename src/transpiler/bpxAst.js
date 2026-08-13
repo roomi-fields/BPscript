@@ -1665,6 +1665,12 @@ function validateReferences(ast, libCtx = {}) {
     }
     for (const k in node) { if (k !== 'params' && node[k] && typeof node[k] === 'object') collect(node[k]); }
   })(ast.subgrammars);
+  // ⚠️ LE CONTRÔLE DES TAGS NE S'ARRÊTE PAS AUX SOUS-GRAMMAIRES. `@init` porte du code hors de
+  // toute règle : un tag inconnu y passait, alors qu'il est refusé partout ailleurs. Trouvé par le
+  // garde de l'état de départ. On repasse sur `init` — les autres volets, eux, n'ont rien à y voir.
+  for (const e of (ast.init || [])) {
+    if (e && typeof e.tag === 'string' && typeof e.code === 'string') verifierTag(e.tag, e.line, e.col);
+  }
 
   // ── LES DEUX PLACES QUI N'ONT PAS DE SAC : la tête de scène et la tête de sous-grammaire ────
   //
