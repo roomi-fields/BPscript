@@ -779,7 +779,21 @@ function loadLibsFromDirectives(directives) {
         ctx.controlMap[name] = def.bp3 || `_${name}`;
         // Le destinataire se lit sur le FICHIER, jamais sur l'entrée chargée : une invocation à
         // sous-clé (`@tuning.just`) rend une entrée du catalogue, qui ne porte pas ce champ.
-        const destinataire = (loadJsonFile(dir.name) || {}).resolvedBy;
+        // ── LE DESTINATAIRE SE SURCHARGE : le fichier donne le DÉFAUT, l'entrée TRANCHE ───────
+        // RÈGLE DE ROMAIN (2026-08-13) : « si je définis le destinataire pour la librairie, c'est le
+        // défaut de la librairie ; si je le définis sur le contrôle, c'est celui du contrôle qui
+        // surcharge. » Même principe que partout ailleurs dans le langage — le plus LOCAL gagne.
+        //
+        // ⚠️ CE QUE ÇA RÉPARE, ET LE CAS EST D'AUJOURD'HUI. Sans surcharge, un fichier ne porte
+        // qu'UN destinataire, donc un contrôle dont le résolveur diffère de ses frères doit CHANGER
+        // DE FICHIER. C'est ce qui est arrivé ce matin à `articulcont` et `transposecont` : les
+        // modes continus partent aux sorties, or ils vivaient chez `engine` (BPx) et `transpo`
+        // (Kairos) — j'ai dû les déménager loin de leur paramètre pour respecter la règle. Avec la
+        // surcharge, ils seraient restés auprès de leurs frères en nommant leur propre destinataire.
+        // Le rangement cesse d'être dicté par une contrainte de fichier.
+        const parDefaut = (loadJsonFile(dir.name) || {}).resolvedBy;
+        const destinataire = (typeof def.resolvedBy === 'string' && def.resolvedBy)
+          ? def.resolvedBy : parDefaut;
         if (destinataire) ctx.controlResolvedBy[name] = destinataire;
         // LA FORME PRÉFIXÉE EXISTE TOUJOURS, pas seulement en cas d'ambiguïté : `expression.vel`
         // s'écrit et se lit même quand `vel` seul suffit. Une graphie qui n'apparaîtrait qu'au
