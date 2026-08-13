@@ -90,13 +90,48 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
   }
 }
 
-// ─── 6. INJECTION DANS LE JUGE — la comparaison rejouée isolée ───────────────────────────────
+// ─── 6. LE DÉPLIAGE NE SORT PAS DU MEMBRE DROIT ──────────────────────────────────────────────
+// ⚠️ CE VOLET EXISTE PARCE QUE J'AI CRÉÉ LE DÉFAUT et qu'il était silencieux : en balayant l'arbre
+// entier, le dépliage remplaçait la TÊTE d'une règle nommée comme la forme — la règle perdait son
+// nom, et le conflit de noms, qui est refusé, ne se déclarait plus. Une forme s'emploie là où un
+// terme s'emploie ; une tête de règle n'est pas un emploi, c'est une déclaration.
+{
+  const t = arbreDe(`${TETE}@def kick (vel:120)\n\nkick -> C4\nS -> kick\n`);
+  ok(t.erreurs.some((e) => /nom déjà pris par une définition/.test(String(e.message))),
+     "6. une TÊTE DE RÈGLE homonyme d'une forme doit rester un conflit de noms REFUSÉ — le "
+     + `dépliage ne doit pas l'effacer en la réécrivant (reçu : ${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 60)))})`);
+}
+
+// ─── 7. LA SORTE SE LIT SUR LA FORME DE L'USAGE ──────────────────────────────────────────────
+// Un préréglage se pose NU. Appelé avec des arguments, il ne se devine pas : il se refuse, avec
+// sa réécriture. Sans ce refus, `kick(C4)` traversait l'arbre en appel opaque étiqueté SONNANT —
+// le mode d'échec que ce garde tient tout entier.
+{
+  const t = arbreDe(`${TETE}@def kick (vel:120)\n\nS -> kick(C4)\n`);
+  ok(t.erreurs.some((e) => /est un préréglage : il se pose NU/.test(String(e.message))),
+     '7. un préréglage APPELÉ avec des arguments doit être refusé, avec sa réécriture');
+}
+
+// ─── 8. LE COMPLÉMENT — la forme se déplie PARTOUT où un terme se pose ───────────────────────
+// Écrire la portée sans son complément décrirait un langage plus étroit que le vrai : une forme
+// posée sous un groupe polymétrique est un emploi comme un autre, et elle s'y déplie.
+{
+  const g = arbreDe(`${TETE}@def kick (vel:120)\n\nS -> {kick C4, D4}\n`);
+  const d = arbreDe(`${TETE}S -> {!(vel:120) C4, D4}\n`);
+  ok(g.erreurs.length === 0 && d.erreurs.length === 0,
+     `8. les deux écritures groupées doivent compiler (${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
+  ok(empreinte(g.ast.subgrammars) === empreinte(d.ast.subgrammars),
+     '8. une forme posée SOUS UN GROUPE se déplie comme ailleurs — même empreinte que l\'écriture '
+     + 'directe au même endroit');
+}
+
+// ─── 9. INJECTION DANS LE JUGE — la comparaison rejouée isolée ───────────────────────────────
 ok(empreinte({ a: 1, line: 9 }) === empreinte({ a: 1, line: 4 }),
-   '6. (se tait) deux positions différentes ne doivent pas séparer deux arbres identiques');
+   '9. (se tait) deux positions différentes ne doivent pas séparer deux arbres identiques');
 ok(empreinte({ a: 1 }) !== empreinte({ a: 2 }),
-   '6. (mord) une valeur différente doit séparer deux arbres');
+   '9. (mord) une valeur différente doit séparer deux arbres');
 ok(empreinte({ a: 1 }) !== empreinte({ a: 1, b: 1 }),
-   '6. (mord) un champ EN PLUS doit séparer deux arbres — comparer les seuls champs communs '
+   '9. (mord) un champ EN PLUS doit séparer deux arbres — comparer les seuls champs communs '
    + 'laisserait passer tout ce que le dépliage ajoute en trop');
 
 if (echecs.length) {

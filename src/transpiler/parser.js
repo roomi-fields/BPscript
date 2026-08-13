@@ -709,6 +709,13 @@ function parse(tokens, opts = {}) {
       scene.template = { destinataire: 'bpscript', entrees: entries };
     }
 
+    // ── Post-pass : DÉPLIAGE DES COMMODITÉS D'ÉCRITURE ────────────────────────
+    // AVANT la pose des sceaux, et c'est la seule place juste : ce qui sort du dépliage est alors
+    // décoré par LE MÊME code que l'écriture directe, au lieu d'une copie de cette décoration
+    // écrite à la main plus loin — deux décorations pour une notion divergent, et la seconde ne
+    // rougirait pas le jour où la première change.
+    deplierLesCommodites(scene);
+
     // ── Post-pass : annotation payload (AST_SPEC v1 §2) ───────────────────────
     // Parcourt récursivement tous les éléments RHS et attache un `payload` à
     // chaque nœud annatable. Le payload est ADDITIF (l'encodeur BP3 ignore les
@@ -733,6 +740,88 @@ function parse(tokens, opts = {}) {
     }
 
     return scene;
+  }
+
+  // ============================================================
+  // Post-pass dépliage des commodités d'écriture (`@def`)
+  // ============================================================
+
+  /**
+   * DÉPLIE TOUTE COMMODITÉ D'ÉCRITURE AVANT L'ARBRE — une forme sert à écrire, elle ne voyage pas.
+   *
+   * L'arbre ne porte que le vocabulaire CANONIQUE : tout ce qui est en aval — la table des
+   * destinataires, les gardes, les cinq voisins — s'y indexe sans un seul cas particulier. Une
+   * définition qui traversait laissait à CHAQUE consommateur le soin de la redéplier, et aucun ne
+   * le faisait : le nom sortait en symbole opaque étiqueté SONNANT, donc lu en aval comme une note.
+   *
+   * ⚠️ TOUTES LES DÉFINITIONS NE SONT PAS DU SUCRE, et les confondre effacerait des choses réelles.
+   * Se déplie le PRÉRÉGLAGE (`@def kick (vel:120)`), qui n'est qu'un sac de réglages nommé.
+   * Ne se déplient pas : un TERMINAL déclaré (`@def ka voice.sec`) — il CRÉE un nom et doit
+   * survivre —, une définition de CODE, un CÂBLAGE. Le tri se lit sur `kind`, jamais sur la forme
+   * du corps.
+   *
+   * LA STRUCTURE (`@def cadence sa re ga pa`) et la TRANSFORMATION (`@def accent(x) x(vel:120)`)
+   * NE SE DÉPLIENT PAS ENCORE, et l'écrire ici est le sujet : leur dépliage est mesuré et prêt,
+   * mais il change le NOMBRE d'unités d'ordonnancement — `@def motif C4 D4` puis `motif E4` porte
+   * deux éléments sonnants aujourd'hui, trois une fois déplié à plat, et le rythme n'est pas le
+   * même. La forme canonique se décide entre `C4 D4 E4` et `|[C4 D4] E4` ; c'est du langage, donc
+   * de Romain. En attente de son mot.
+   *
+   * LA CIBLE EST CELLE QU'ÉCRIRAIT LA MAIN : `kick` devient EXACTEMENT ce que produit `!(vel:120)`
+   * au même endroit. D'où le moment choisi — avant la pose des sceaux, jamais après : ce qui sort
+   * d'ici est décoré par le MÊME code que l'écriture directe, au lieu d'une copie de cette
+   * décoration écrite à la main plus loin. Deux décorations pour une notion divergent, et la
+   * seconde ne rougirait pas le jour où la première change.
+   *
+   * LA SORTE SE LIT SUR LA FORME DE L'USAGE, et l'écart se refuse au lieu de se deviner : un
+   * préréglage se pose nu, il ne s'appelle pas.
+   */
+  function deplierLesCommodites(scene) {
+    const formes = new Map();
+    for (const d of scene.directives || []) {
+      if (d && d.type === 'DefDirective' && d.kind === 'prereglage') formes.set(d.name, d);
+    }
+    if (!formes.size) return;
+
+    // ⛔ LE DÉPLIAGE NE TOUCHE QUE LE MEMBRE DROIT, et le membre gauche est le contre-exemple qui
+    // l'exige : `@def motif C4 D4` puis `motif -> C4` est un CONFLIT DE NOMS, refusé ailleurs. En
+    // balayant l'arbre entier je remplaçais la TÊTE de la règle par le corps de la définition — la
+    // règle perdait son nom et le conflit ne se déclarait plus. Une forme s'emploie là où un terme
+    // s'emploie ; une tête de règle n'est pas un emploi, c'est une déclaration.
+    for (const sg of scene.subgrammars || []) {
+      for (const rule of sg.rules || []) if (rule && rule.rhs) remplacerDans(rule.rhs, formes);
+    }
+  }
+
+  /** Remplace, DANS les tableaux qui portent les éléments, chaque usage d'une forme par son corps.
+   *  C'est le conteneur qui doit voir l'élément changer de nature, d'où le travail sur le tableau. */
+  function remplacerDans(n, formes) {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) {
+      for (let i = 0; i < n.length; i++) {
+        const el = n[i];
+        const def = (el && typeof el === 'object' && el.name) ? formes.get(el.name) : undefined;
+        if (def && el.type === 'SymbolCall') {
+          throw new ParseError(
+            `'${el.name}' est un préréglage : il se pose NU, sans arguments. Écrire '${el.name}'. `
+            + `Une liste de paramètres se déclare avec le nom ('@def ${el.name}(x) …'), et alors `
+            + `seulement l'appel en porte.`, { line: el.line ?? 0, col: el.col ?? 0 });
+        }
+        if (def && el.type === 'Symbol') {
+          // Le nœud EXACT que produit `!(vel:120)` écrit à la même place — pas une forme voisine :
+          // fabriquer un intermédiaire ferait de la définition une TROISIÈME écriture, alors
+          // qu'elle n'en est qu'un raccourci.
+          n[i] = {
+            type: 'InstantControl',
+            qualifier: JSON.parse(JSON.stringify(def.settings)),
+            conjoint: false,
+            line: el.line,
+          };
+        } else remplacerDans(el, formes);
+      }
+      return;
+    }
+    for (const v of Object.values(n)) remplacerDans(v, formes);
   }
 
   // ============================================================
