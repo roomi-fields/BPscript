@@ -46,8 +46,15 @@ const CONSOMMATEURS = [
   { depot: 'kanopi', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
     lit: ["l'arbre — deux natures seulement"],
     porte: ['les CINQ catalogues de hauteur, VERBATIM, jusqu\'à kairos — il ne les ouvre jamais'] },
-  { depot: 'kairos', lienDirect: false, note: 'importe par chemin relatif — le plus gros lecteur',
-    lit: ["l'arbre", 'lib/alphabets.json — 8 fichiers de production, dont la résolution de hauteur'] },
+  // ⚠️ SA LECTURE A CHANGÉ DE NATURE LE 2026-08-13, sur arbitrage de Romain, et c'est ce garde qui
+  // l'a rendue visible : il déclarait « 8 fichiers de PRODUCTION » et mesurait zéro. La lecture
+  // n'était pas perdue, elle avait MIGRÉ — ses quarante bancs lisaient mes librairies et mon
+  // traducteur DANS MON ARBRE DE TRAVAIL, ils lisent désormais `git show HEAD:lib/*.json`.
+  // ⛔ ET LA CONSÉQUENCE RENVERSE MA FRONTIÈRE AVEC LUI : ce n'est plus ma FRAPPE qui l'atteint,
+  // c'est mon COMMIT — un fichier enregistré et non poussé est déjà chez lui. Le préavis se donne
+  // donc AVANT de committer, pas avant de pousser. Vérifié sur pièce chez lui, pas sur parole.
+  { depot: 'kairos', lienDirect: false, note: 'lit mon DERNIER COMMIT (git show HEAD:) — plus mon arbre de travail',
+    lit: ["l'arbre", 'lib/*.json au dernier commit — 8 fichiers, tous des BANCS depuis le 2026-08-13'] },
   { depot: 'BPx', lienDirect: false, note: 'importe par chemin relatif',
     lit: ["l'arbre — le plus gros consommateur de natures de nœud"] },
   // ⚠️ SA SECONDE SURFACE A ÉTÉ AJOUTÉE LE 2026-08-09, APRÈS QU'IL A PAYÉ SON ABSENCE : neuf bancs
@@ -120,9 +127,43 @@ const echecs = [];
 const ok = (c, q) => { if (c) passe++; else echecs.push(q); };
 
 /** Fichiers d'un dépôt qui référencent ce dépôt-ci. */
+// ⛔ LES MOTIFS DISENT UN RÉGIME D'ACCÈS, PAS UNE GRAPHIE D'IMPORT — élargi le 2026-08-13.
+// Ce garde ne connaissait que l'import PAR CHEMIN (`BPscript/lib`, `from 'bpscript`). Kairos a
+// basculé ses quarante bancs sur `execFileSync('git', ['show', 'HEAD:lib/x.json'], {cwd:
+// BPSCRIPT})`, où BPSCRIPT vaut `../../BPscript/` : mon chemin n'apparaît PLUS EN CLAIR, et le
+// garde est passé de « le plus gros lecteur » à ZÉRO sans qu'une seule lecture disparaisse.
+// Il a rougi — c'est ce qui a rendu la bascule visible — mais son message accusait le VOISIN
+// (« ne lit plus rien, retire-le ») alors que la faute était à MES MOTIFS.
+// ⚠️ ET LES DEUX RÉGIMES N'ONT PAS LA MÊME FRONTIÈRE, c'est tout l'enjeu de les séparer :
+//   · PAR CHEMIN ou par LIEN → ma FRAPPE les atteint. Je préviens avant d'enregistrer.
+//   · AU COMMIT (`git show HEAD:`) → mon COMMIT les atteint, poussé ou non. Je préviens AVANT DE
+//     COMMITTER — un fichier enregistré est déjà chez eux, et `git push` n'y change rien.
+// Les confondre ferait donner le bon préavis au mauvais moment.
+const MOTIFS = [
+  { nom: 'par chemin', regex: "BPscript/lib\\|BPscript/src\\|from 'bpscript\\|require('bpscript\\|\\.\\./BPscript" },
+  // ⚠️ SEUL `HEAD:` SIGNE LA LECTURE AU COMMIT. Ma première version rangeait `../BPscript` ici et
+  // annonçait 94 lecteurs-au-commit chez BPx : une racine relative est un import PAR CHEMIN, pas
+  // une lecture au commit. Un motif trop large ne rend pas le garde plus prudent, il lui fait
+  // dire une chose fausse — et ici, donner le préavis au mauvais moment.
+  // ⚠️ PAS DE BACKTICK DANS UN MOTIF : il traverse `bash -c` en substitution de commande et casse
+  // la ligne. Trouvé en le mettant.
+  { nom: 'au commit', regex: 'HEAD:lib/\\|HEAD:src/\\|HEAD:dist/' },
+];
+
 function lecteurs(depot) {
   const racine = path.join(ATELIER, depot);
   if (!existsSync(racine)) return null;
+  return MOTIFS.reduce((t, m) => t + comptePour(racine, m.regex), 0);
+}
+
+/** Le détail par régime — ce qui dit QUAND prévenir, pas seulement QUI. */
+function regimes(depot) {
+  const racine = path.join(ATELIER, depot);
+  if (!existsSync(racine)) return {};
+  return Object.fromEntries(MOTIFS.map((m) => [m.nom, comptePour(racine, m.regex)]));
+}
+
+function comptePour(racine, motif) {
   try {
     // ⚠️ ON NE COMPTE QUE LES LIGNES DE CODE, PAS LES MENTIONS EN COMMENTAIRE. Sans le filtre,
     // ce garde annonçait un PLAFOND présenté comme un compte : Kairos a mesuré chez lui que sur
@@ -133,7 +174,7 @@ function lecteurs(depot) {
     const trouves = execFileSync('bash', ['-c',
       `find ${JSON.stringify(racine)} \\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \\) `
       + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' 2>/dev/null "
-      + "| while read f; do grep -H \"BPscript/lib\\|BPscript/src\\|from 'bpscript\\|require('bpscript\" \"$f\" 2>/dev/null "
+      + `| while read f; do grep -H ${JSON.stringify(motif)} "$f" 2>/dev/null `
       + "| grep -qv \"^[^:]*: *\\(//\\|\\*\\)\" && echo \"$f\"; done | wc -l",
     ], { encoding: 'utf-8' });
     return parseInt(trouves.trim(), 10) || 0;
@@ -173,10 +214,21 @@ for (const c of CONSOMMATEURS) {
   }
   const n = lecteurs(c.depot);
   const lien = lienVersMoi(c.depot);
-  console.log(`   ${c.depot.padEnd(14)} ${String(n).padStart(3)} fichier(s)${lien ? '  + LIEN DIRECT vers mon arbre de travail' : ''}`);
+  const r = regimes(c.depot);
+  const detail = Object.entries(r).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${k}`).join(', ');
+  console.log(`   ${c.depot.padEnd(14)} ${String(n).padStart(3)} fichier(s)`
+    + `${detail ? `  (${detail})` : ''}${lien ? '  + LIEN DIRECT vers mon arbre de travail' : ''}`);
   ok(n > 0 || lien,
-    `${c.depot} est déclaré consommateur mais ne lit plus rien — si c'est vrai, le RETIRER de la liste `
-    + '(une entrée sans réalité rend le garde décoratif)');
+    `${c.depot} est déclaré consommateur mais ne lit plus rien — AVANT DE LE RETIRER, vérifier que `
+    + 'ce ne sont pas MES MOTIFS qui sont périmés : un voisin qui change de régime d\'accès (import '
+    + 'par chemin → lecture au commit) disparaît de ce compte sans perdre une seule lecture. '
+    + 'C\'est arrivé le 2026-08-13 avec kairos, et le message accusait le voisin.');
+  // ⚠️ CE QUI CHANGE LE MOMENT DU PRÉAVIS — un lecteur AU COMMIT est atteint par `git commit`,
+  // pas par `git push`. Le dire ici, sinon la liste répond « qui » sans répondre « quand ».
+  if ((r['au commit'] || 0) > 0) {
+    console.log(`   ${' '.repeat(14)} ⚠️ ${c.depot} lit AU COMMIT — mon enregistrement l'atteint, `
+      + 'poussé ou non : le préavis se donne AVANT de committer');
+  }
   if (c.lienDirect) {
     ok(lien,
       `${c.depot} portait un LIEN vers mon arbre et ne l'a plus — c'est un changement de la nature du `
