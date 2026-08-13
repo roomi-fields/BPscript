@@ -131,6 +131,52 @@ for (const [fichier, portees] of [...invoquees].sort()) {
      + `(décision Romain 2026-08-10, remplace 2026-07-13)`);
 }
 
+// ─── 3. LA RÈGLE DE ROMAIN (2026-08-13) — QUI PORTE DES CONTRÔLES DÉCLARE SON DESTINATAIRE ──
+// « Les librairies qui déclarent leur destinataire doivent être toutes celles qui contiennent des
+// contrôles ; core est une librairie qui normalement n'embarque que des valeurs par défaut et des
+// appels à d'autres librairies, donc normal pour lui. »
+//
+// ⚠️ CE VOLET NE RECOUVRE PAS LE PRÉCÉDENT, et c'est pour ça qu'il existe. Le volet 2 mesure les
+// librairies qu'une SCÈNE invoque : une librairie de contrôles n'est jamais invoquée par son nom —
+// elle arrive par la chaîne `apporte` de `core` — donc aucune des sept n'y passait. Une huitième
+// pouvait naître sans destinataire sans que rien ne rougisse, et ses contrôles seraient arrivés en
+// aval sans qu'on sache qui les résout.
+//
+// LA PORTÉE S'ÉCRIT AVEC SON COMPLÉMENT : les librairies SANS contrôles sont comptées, pour qu'un
+// fichier qui en gagne un soit forcé de trancher au lieu de glisser dans l'exception.
+{
+  const SECTIONS_DE_CONTROLES = ['controls', 'engine', 'subgrammar'];
+  const compteDeControles = (lib) => SECTIONS_DE_CONTROLES.reduce((n, sec) => {
+    const c = lib && lib[sec];
+    return n + (c && typeof c === 'object'
+      ? Object.keys(c).filter((k) => !k.startsWith('_')).length : 0);
+  }, 0);
+
+  let avecControles = 0;
+  let sansControles = 0;
+  for (const [nom, lib] of Object.entries(LIBS)) {
+    if (!lib || typeof lib !== 'object') continue;
+    const n = compteDeControles(lib);
+    if (n === 0) { sansControles++; continue; }
+    avecControles++;
+    ok(typeof lib.resolvedBy === 'string' && lib.resolvedBy.length > 0,
+       `3. '${nom}' déclare ${n} contrôle(s) et NE NOMME PAS son destinataire — ses réglages `
+       + `arriveraient en aval sans qu'on sache qui les résout, et aucune exception ne couvre une `
+       + `librairie de contrôles (règle Romain 2026-08-13)`);
+  }
+  // TÉMOINS D'INSTRUMENT, dans les deux sens : un balayage qui ne verrait aucune librairie de
+  // contrôles passerait au vert en ne mesurant rien, et un balayage qui les verrait TOUTES
+  // signalerait que le critère ne discrimine pas.
+  ok(avecControles >= 5,
+     `3. TÉMOIN : au moins cinq librairies portent des contrôles — vu ${avecControles}`);
+  ok(sansControles > 0,
+     `3. TÉMOIN : des librairies SANS contrôle doivent exister — sinon le critère ne discrimine `
+     + `rien (vu ${sansControles})`);
+  ok(compteDeControles(LIBS.core) === 0,
+     "3. TÉMOIN NOMMÉ PAR ROMAIN : `core` n'embarque que des valeurs par défaut et des appels à "
+     + "d'autres librairies — s'il portait un contrôle, l'exception qui le couvre serait fausse");
+}
+
 if (echecs.length) {
   console.error(`❌ destinataire des librairies : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);

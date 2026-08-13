@@ -205,10 +205,52 @@ for (const c of CONSOMMATEURS) {
 }
 
 // ── L'AUTRE SENS : un consommateur NOUVEAU doit se déclarer ───────────────────
+/**
+ * ⚠️ UN ARBRE DE TRAVAIL N'EST PAS UN CONSOMMATEUR NEUF, et le confondre transforme ce garde en
+ * corvée qui rougit à chaque lot. `BPx-lot61` a été signalé comme dépôt non déclaré le
+ * 2026-08-13 : c'est une SECONDE COPIE DE TRAVAIL de BPx, sur la branche d'un lot. Inscrire son
+ * nom aurait réparé l'endroit où le défaut s'est montré — et `BPx-lot62` aurait rougi le
+ * lendemain.
+ *
+ * LE CRITÈRE EST MESURÉ, PAS DEVINÉ : `git rev-parse --git-common-dir` rend le dépôt PARTAGÉ. Pour
+ * un arbre de travail il pointe dans le répertoire du dépôt principal ; pour un dépôt à part
+ * entière il rend son propre `.git`. Un nom qui commence par celui d'un consommateur ne prouverait
+ * rien — un vrai dépôt neuf pourrait s'appeler ainsi.
+ */
+function depotPartageAvec(depot) {
+  const racine = path.join(ATELIER, depot);
+  try {
+    const commun = execFileSync('git', ['-C', racine, 'rev-parse', '--git-common-dir'],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (!commun || commun === '.git') return null;      // dépôt à part entière
+    const absolu = path.resolve(racine, commun);
+    for (const c of CONSOMMATEURS) {
+      if (absolu.startsWith(path.join(ATELIER, c.depot) + path.sep)) return c.depot;
+    }
+    return null;
+  } catch { return null; }
+}
+
 const declares = new Set(CONSOMMATEURS.map((c) => c.depot));
+const arbresDeTravail = [];
 const nouveaux = presents
   .filter((d) => d !== path.basename(MOI) && !declares.has(d))
-  .filter((d) => lecteurs(d) > 0 || lienVersMoi(d));
+  .filter((d) => lecteurs(d) > 0 || lienVersMoi(d))
+  .filter((d) => {
+    const parent = depotPartageAvec(d);
+    if (parent) { arbresDeTravail.push(`${d} → ${parent}`); return false; }
+    return true;
+  });
+// Le garde DIT ce qu'il a écarté : un arbre de travail passé sous silence se lit comme « rien
+// trouvé », et le jour où le critère se trompe personne ne le verra.
+if (arbresDeTravail.length) {
+  console.log(`[chez eux] arbre(s) de travail rattaché(s) à un consommateur déjà déclaré : `
+    + `${arbresDeTravail.join(', ')}`);
+}
+// TÉMOIN D'INSTRUMENT — le critère doit savoir dire NON, sinon il écarterait tout.
+ok(depotPartageAvec(path.basename(MOI)) === null,
+   "l'écart des arbres de travail doit rendre `null` sur un dépôt à part entière — sinon il "
+   + 'écarterait aussi un vrai consommateur neuf');
 ok(nouveaux.length === 0,
   `DÉPÔT(S) qui lisent ce dépôt sans être déclarés ici : ${nouveaux.join(' ')} — les inscrire, `
   + 'sinon la prochaine surface partagée sera modifiée sans que personne sache qui elle atteint');
