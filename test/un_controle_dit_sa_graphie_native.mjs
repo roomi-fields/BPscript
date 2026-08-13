@@ -46,7 +46,13 @@
  * rejouée isolée).
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
+
+// Le bundle que TOUS les consommateurs chargent — la seule assiette qui dise le vocabulaire réel.
+const _req = createRequire(import.meta.url);
+const _d = _req('../src/transpiler/libs-data.js');
+const BUNDLE = _d.LIBS || _d.default || _d;
 
 let passe = 0;
 const echecs = [];
@@ -78,9 +84,17 @@ const SANS_GESTE_NATIF = new Set([
 ]);
 
 // ─── 0. SOCLE — refuser de conclure sur du vide ──────────────────────────────────────────────
+// ⛔ CE GARDE LIT LE BUNDLE, PAS LES FICHIERS DU DISQUE — corrigé le 2026-08-13, et c'est la
+// conversion des librairies en BPScript qui l'a démasqué : il balayait `lib/*.json`, donc le jour
+// où quatre librairies sont passées en `.bps` il a vu son assiette fondre de 79 contrôles à 23 et
+// s'est arrêté sur son propre socle. Il a bien fait de s'arrêter — mais il aurait pu, avec un
+// seuil moins exigeant, continuer en silence sur un tiers du vocabulaire.
+// C'EST MA PROPRE RÈGLE QU'IL ENFREIGNAIT : `src/transpiler/libs-data.js` est ce que TOUS les
+// consommateurs chargent ; un garde qui lit la source du disque mesure autre chose que ce qui part
+// chez les voisins. La source a deux graphies, le bundle une seule — et c'est le bundle qui fait foi.
 const controles = [];
-for (const f of readdirSync(LIB).filter((x) => x.endsWith('.json'))) {
-  const j = JSON.parse(readFileSync(join(LIB, f), 'utf8'));
+for (const [nomLib, j] of Object.entries(BUNDLE)) {
+  const f = `${nomLib}.lib`;
   for (const section of SECTIONS) {
     const c = j[section];
     if (!c || typeof c !== 'object') continue;

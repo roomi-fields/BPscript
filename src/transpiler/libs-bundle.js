@@ -82,6 +82,12 @@ function valeurDeCle(v) {
     if (typeof x !== 'string') return x;
     const t = x.match(/^txt:\s*([\s\S]*)$/);   // backtick typé : `txt: une phrase`
     if (t) return t[1];
+    // ⚠️ LE BOOLÉEN EST TYPÉ, et son absence était bloquante : `bpscript:false` rendait la CHAÎNE
+    // 'false', qui est vraie. Les six gestes natifs déclarés pour le seul routage seraient
+    // rentrés dans le vocabulaire du langage — l'inverse exact de ce que leur champ déclare, et
+    // en silence, parce qu'une chaîne non vide passe tous les tests de présence.
+    if (x === 'true') return true;
+    if (x === 'false') return false;
     return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : x;
   };
   return Array.isArray(brut) ? brut.map(un) : un(brut);
@@ -123,6 +129,12 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         cible[cle] = val;
       }
     }
+    // ⚠️ UNE LISTE VIDE N'A PAS DE GRAPHIE, et l'absence de `args` n'en a jamais eu d'autre sens.
+    // Mesure du 2026-08-13 : sur les 64 contrôles du bundle, ZÉRO n'omet `args` et 31 le portent
+    // vide. L'absence est donc libre, et la source `.bps` s'en sert pour dire « aucun argument ».
+    // C'est une correspondance de LECTURE, pas une forme du langage : rien de nouveau ne s'écrit
+    // dans une scène. La preuve n'est pas ce raisonnement mais l'ÉGALITÉ du bundle avant/après.
+    for (const c of Object.values(lib.controls)) if (c.args === undefined) c.args = [];
     if (!Object.keys(lib.controls).length) delete lib.controls;
     libs[nom] = lib;
   }

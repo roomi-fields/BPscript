@@ -1,0 +1,149 @@
+// LA LIBRAIRIE « expression » — écrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, les consommateurs ne
+// voient aucun changement. C'est l'AUTHORING qui change, pas la donnée.
+//
+// ⚠️ LA DOCUMENTATION EST UN COMMENTAIRE, plus une clé `_xxx_doc` dans la donnée : un
+//    commentaire ne voyage pas jusqu'aux consommateurs, une clé si.
+
+// SCISSION
+// Née le 2026-08-10 de la scission de controls.json (Romain : « controls.json doit être divisé
+// », une librairie = un destinataire, LIBRAIRIES.md:213). Porte le groupe 'musical' ORIGINEL
+// (vel/pan/rndvel/velcont/offvel, match EXACT de LIBRAIRIES.md:171) et le groupe 'generic'
+// (value/fixed/cont, 'Sound object parameter controls — transport-agnostic, forwarded as-is'
+// depuis leur création le 2026-04-09, commit 535c2a0) : la MÊME propriété distinctive que celle
+// qui range 'expression' à part dans la table — aucun transport ne les réclame en propre, ils
+// voyagent jusqu'à celui qui sonne.
+
+// SCOPE
+// OU CE CONTROLE A LE DROIT D ETRE ECRIT — une LISTE, jamais une valeur seule. Vocabulaire
+// FERME de six mots, arrete par Romain le 2026-08-08 : scene, subgrammar, rule, group, symbol,
+// flow. L accrochage dans l arbre DIT deja la portee ; cette declaration ne sert donc pas a
+// localiser un reglage mais a REFUSER celui qui est mal place — sans elle on lit n importe quoi
+// n importe ou sans pouvoir le dire (c est ce qui a rendu un poids muet pendant quatre jours).
+// symbol couvre TOUT element du flux, pas seulement une note : un silence, une prolongation, un
+// joker et les deux membres d un gabarit portent aussi un sac (mesure : 10 porteurs dans l
+// arbre). flow = le sac pose avec ! ; ce n est pas une portee au sens de LANGUAGE.md (c est un
+// etat courant, par voix) mais la validation doit pouvoir dire qu un poids n a rien a y faire.
+// L ABSENCE DE CE CHAMP EST UNE FAUTE, gardee : 57 des 65 controles n en portaient aucun, et
+// une absence qui voudrait dire partout rendrait toute validation impossible. ⚠️ IL N Y A QU UN
+// SEUL AXE. Un axe portee d EFFET distinct de la portee d ECRITURE etait prevu ; il reposait
+// entierement sur mode — ecrit sur une regle, gouvernant le bloc. Mesure du 2026-08-08 : cette
+// forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
+// appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
+
+// FORME GENERIQUE RETIREE
+// LA GRAPHIE GENERIQUE value/fixed/cont EST RETIREE le 2026-08-13, arbitrage Romain. Elle
+// cassait DEUX canons du langage : `!(cont:slide)` inversait le sujet et la valeur -- le
+// deux-points LIE UN SUJET A UNE VALEUR, or le sujet ecrit etait `cont` et la valeur etait le
+// parametre -- et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux termes dont le
+// premier est un nom. FORME CANONIQUE : le PARAMETRE devient la cle et le mode se COLLE a lui,
+// exactement la construction des vingt-sept mots des neuf parametres de jeu. `!(slide:101)`,
+// `!(slidecont)`, `!(slidestep)`, `!(slidefixed)`. Le parametre se DECLARE : `@var slide
+// signal`, un flux de nombres sans convention de lecture. Sans declaration le nom est refuse,
+// et c est le but -- un mot inconnu ne devient pas un parametre par accident. Le destinataire
+// cesse d etre emprunte : il vient de la declaration du parametre, pas de cette librairie.
+
+// CONTINUS
+// LES NEUF MODES CONTINUS PARTENT AUX SORTIES, SANS EXCEPTION (arbitrage Romain, 2026-08-13,
+// relaye par l architecte) : « la destination suit la NATURE du mot, pas le comportement du
+// moteur ». Un mode continu exige des messages intermediaires PENDANT la note, a une cadence —
+// c est celui qui sonne qui les emet. articulcont vivait chez engine (BPx) et transposecont
+// chez transpo (Kairos) : ni l un ni l autre n est une sortie, et le moteur comme le resolveur
+// d arbre travaillent NOTE A NOTE. Ils rejoignent velcont et pancont dans expression, dont le
+// destinataire est la classe « toutes les sorties » — un mode continu vaut pour toute sortie,
+// aucune ne le reclame en propre. Les sept autres continus etaient deja chez une sortie.
+
+// GESTES NATIFS
+// QUATRE ENTREES PORTENT `bpscript: false` : elles declarent un geste que le MOTEUR execute,
+// pour que le frontal BP3 puisse le router, sans en faire un mot du langage. Leur graphie
+// BPScript est ailleurs -- le parametre est la cle et le mode s y colle (`!(slide:101)`,
+// `!(slidecont)`), arbitrage Romain du 2026-08-13. Les ecrire dans une scene reste REFUSE.
+
+@def expression
+  resolvedBy:`txt: toutes les sorties`
+  name:expression
+  description:`txt: Contrôles qui décrivent COMMENT on joue une note, valables pour TOUTE sortie — pas un transport précis (LIBRAIRIES.md:171,217-219 : « expression ne fait pas exception… c'est UNE destination, une classe nommée par ce qu'elle décrit »).`
+
+// _comment : Sound object parameter controls — transport-agnostic, forwarded as-is
+
+@def vel
+  bp3:_vel
+  args:value
+  range:0 127
+  default:64
+  description:`txt: Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity`
+  scope:symbol group rule flow
+  transportGroup:expression
+
+@def pan
+  bp3:_pan
+  args:value
+  range:0 127
+  default:64
+  description:`txt: Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10`
+  scope:symbol group rule flow
+  transportGroup:expression
+
+@def pancont
+  bp3:_pancont
+  description:`txt: Panoramique en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets vivent dans lib/variation.json ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.`
+  scope:symbol group rule flow
+  transportGroup:expression
+
+@def rndvel
+  bp3:_rndvel
+  args:range
+  default:0
+  description:`txt: Random velocity +/-range`
+  scope:symbol group rule flow
+  transportGroup:expression
+
+@def velcont
+  bp3:_velcont
+  description:`txt: Vélocité en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets vivent dans lib/variation.json ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici. Mesuré sur le moteur natif v3.5.1-iso.2 : sur la vélocité, le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 415).`
+  scope:symbol group rule flow
+  transportGroup:expression
+
+@def offvel
+  args:value
+  range:0 127
+  default:64
+  description:`txt: NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)`
+  scope:symbol group rule flow
+  transportGroup:expression
+
+@def articulcont
+  bp3:_articulcont
+  description:`txt: Articulation en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, articulfixed et articulstep, vivent dans lib/variation.json. Le comportement natif de ce mot n'est pas tranché : aucun témoin construit sur le moteur v3.5.1-iso.2 n'a fait bouger l'articulation, le mode fixe compris.`
+  scope:symbol group rule flow
+
+@def transposecont
+  bp3:_transposecont
+  description:`txt: Transposition en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, transposefixed et transposestep, vivent dans lib/variation.json ; celui-ci reste ici parce que la transposition se rend chez le même résolveur que son paramètre. Mesuré sur le moteur natif v3.5.1-iso.2 : le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 608).`
+  scope:symbol group rule flow
+  transportGroup:transpo
+
+@def value
+  bp3:_value
+  bpscript:false
+  args:param
+  description:`txt: Geste NATIF : donne une valeur a un parametre de performance nomme. En BPScript la forme est !(<param>:<valeur>) apres @var <param> signal -- le parametre est la CLE, cf. arbitrage du 2026-08-13.`
+
+@def fixed
+  bp3:_fixed
+  bpscript:false
+  args:param
+  description:`txt: Geste NATIF : le parametre nomme NE VARIE PAS. En BPScript : !(<param>fixed), le mode colle au parametre.`
+
+@def cont
+  bp3:_cont
+  bpscript:false
+  args:param
+  description:`txt: Geste NATIF : le parametre nomme varie CONTINUMENT. En BPScript : !(<param>cont).`
+
+@def step
+  bp3:_step
+  bpscript:false
+  args:param
+  description:`txt: Geste NATIF : le parametre nomme varie PAR PALIERS. En BPScript : !(<param>step). Jamais declare comme mot du langage -- il entre ici par la porte du routage, pas par celle du vocabulaire.`
+
