@@ -31,6 +31,7 @@
  */
 import { readdirSync, existsSync, lstatSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
@@ -43,7 +44,7 @@ const ATELIER = path.resolve(MOI, '..');
  * rougirait à chaque fichier ajouté chez un voisin serait débranché en une semaine.
  */
 const CONSOMMATEURS = [
-  { depot: 'kanopi', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
+  { depot: 'kanopi', mode: 'paquet', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
     lit: ["l'arbre — deux natures seulement"],
     porte: ['les CINQ catalogues de hauteur, VERBATIM, jusqu\'à kairos — il ne les ouvre jamais'] },
   // ⚠️ SA LECTURE A CHANGÉ DE NATURE LE 2026-08-13, sur arbitrage de Romain, et c'est ce garde qui
@@ -53,9 +54,9 @@ const CONSOMMATEURS = [
   // ⛔ ET LA CONSÉQUENCE RENVERSE MA FRONTIÈRE AVEC LUI : ce n'est plus ma FRAPPE qui l'atteint,
   // c'est mon COMMIT — un fichier enregistré et non poussé est déjà chez lui. Le préavis se donne
   // donc AVANT de committer, pas avant de pousser. Vérifié sur pièce chez lui, pas sur parole.
-  { depot: 'kairos', lienDirect: false, note: 'lit mon DERNIER COMMIT (git show HEAD:) — plus mon arbre de travail',
+  { depot: 'kairos', mode: 'nomme', lienDirect: false, note: 'lit mon DERNIER COMMIT (git show HEAD:) — plus mon arbre de travail',
     lit: ["l'arbre", 'lib/*.json au dernier commit — 8 fichiers, tous des BANCS depuis le 2026-08-13'] },
-  { depot: 'BPx', lienDirect: false, note: 'importe par chemin relatif',
+  { depot: 'BPx', mode: 'arbre', lienDirect: false, note: 'importe par chemin relatif',
     lit: ["l'arbre — le plus gros consommateur de natures de nœud"] },
   // ⚠️ SA SECONDE SURFACE A ÉTÉ AJOUTÉE LE 2026-08-09, APRÈS QU'IL A PAYÉ SON ABSENCE : neuf bancs
   // rouges d'un coup, découverts à son portillon sur un travail sans rapport — il a failli accuser
@@ -65,10 +66,10 @@ const CONSOMMATEURS = [
   // que j'ai ajouté la veille précisément pour ça, et que j'avais rempli de mémoire au lieu de le
   // mesurer. Une liste juste sur les noms et fausse sur les surfaces envoie le préavis au bon
   // dépôt sur le mauvais sujet, ou pas du tout.
-  { depot: 'bp3-frontend', lienDirect: false, note: 'importe par chemin relatif',
+  { depot: 'bp3-frontend', mode: 'paquet', lienDirect: false, note: 'importe par chemin relatif',
     lit: ["l'arbre", 'lib/alphabets.json et lib/test_alphabets.json — miroir des alphabets, et'
         + " l'ORDRE des terminaux y porte le sens : il indexe les degrés de l'accordage"] },
-  { depot: 'runtime-MIDI', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB',
+  { depot: 'runtime-MIDI', mode: 'nomme', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB',
     lit: ['lib/ en direct'] },
   // ⚠️ UNE SECONDE INSTANCE DU MÊME VOISIN, ET ELLE NE SE DEVINE PAS. Un agent qui compile publie
   // DEUX dépôts — un de développement, un de PRODUCTION — et le second lit mes catalogues comme le
@@ -77,13 +78,13 @@ const CONSOMMATEURS = [
   // par fichier chez lui (`src/data/_bundle.js`). Une frappe chez moi ne l'atteint donc pas à la
   // seconde comme un lien vif — elle le laisse sur une copie qui DIVERGE en silence jusqu'à ce
   // qu'il la reprenne. C'est le cas le plus traître de la liste : rien ne casse, tout ment.
-  { depot: 'runtime-MIDI-prod', lienDirect: false,
+  { depot: 'runtime-MIDI-prod', mode: 'nomme', lienDirect: false,
     note: "instance de PRODUCTION de runtime-MIDI : lit un INSTANTANÉ de lib/, empreinté chez lui — "
         + 'une frappe chez moi ne le corrige pas, elle le périme',
     lit: ['un instantané de lib/ (catalogues bruts)'] },
-  { depot: 'atlas', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure",
+  { depot: 'atlas', mode: 'arbre', lienDirect: false, note: "l'oracle du langage et les outils de doc compilent avec MON compilateur — une forme que je refuse casse sa mesure",
     lit: ['le compilateur lui-même'] },
-  { depot: 'runtime-ui', lienDirect: false, note: "vues de texte : lit l'arbre et ses annotations",
+  { depot: 'runtime-ui', mode: 'arbre', lienDirect: false, note: "vues de texte : lit l'arbre et ses annotations",
     lit: ["l'arbre et ses annotations"] },
 ];
 
@@ -108,6 +109,30 @@ const CONSOMMATEURS = [
  * entre deux voisins.
  */
 const AXES = ['lit', 'porte'];
+
+/**
+ * ⛔ LE MODE DE LECTURE — POSÉ LE 2026-08-13 APRÈS AVOIR CASSÉ UN VOISIN EN SILENCE.
+ *
+ * J'ai converti quatre librairies de JSON vers BPScript. Avant de pousser j'ai cherché qui NOMMAIT
+ * les quatre fichiers supprimés : personne. C'était vrai, et ça ne prouvait rien — bp3-frontend ne
+ * les nommait pas, il les ÉNUMÉRAIT, et quarante-sept gestes natifs sont sortis de son contrôle de
+ * conformité d'un coup.
+ *
+ * CHERCHER QUI CITE UN NOM NE TROUVE JAMAIS QUI BALAYE UN DOSSIER. Une sonde ne couvre pas la
+ * forme d'accès qu'elle n'imagine pas, et « aucun consommateur ne nomme ce fichier » est une
+ * réponse à une question que je ne m'étais pas posée.
+ *
+ * D'où ce troisième axe : le mode dit ce qui CASSE le voisin, et donc ce que je dois vérifier
+ * avant de livrer.
+ *   · `paquet`  — il charge `src/transpiler/libs-data.js`. INSENSIBLE au format de mes sources ;
+ *                 sensible à un bundle non régénéré.
+ *   · `nomme`   — il cite `lib/<x>.json` en clair. Une SUPPRESSION le casse ; un changement de
+ *                 format aussi. C'est le seul mode qu'une recherche de nom trouve.
+ *   · `enumere` — il balaye `lib/` et filtre par extension. Une BASCULE DE FORMAT le rend aveugle
+ *                 SANS le casser : il continue, sur moins de données. Le plus dangereux des trois.
+ *   · `arbre`   — il ne lit que l'AST, jamais mes librairies. Une bascule ne l'atteint pas.
+ */
+const MODES = new Set(['paquet', 'nomme', 'enumere', 'arbre']);
 // ⚠️ `runtime-audio` A ÉTÉ RETIRÉ LE 2026-07-30, ET SON RETRAIT EST UNE MESURE, PAS UN OUBLI :
 // ses trois occurrences sont des COMMENTAIRES, dont un qui dit son intention en toutes lettres —
 // « miroir, pour ne pas coupler les dépôts ». Il ne lit pas ma source, il en garde une COPIE.
@@ -234,6 +259,40 @@ for (const c of CONSOMMATEURS) {
       `${c.depot} portait un LIEN vers mon arbre et ne l'a plus — c'est un changement de la nature du `
       + 'risque, pas un détail : sans lien, mes fichiers non commités cessent d\'être chez lui');
   }
+}
+
+// ── CHAQUE VOISIN DIT COMMENT IL LIT, ET CE MODE EST OPPOSABLE ───────────────
+// ⚠️ SANS CET AXE, LA LISTE RÉPOND « QUI » ET « QUOI » SANS RÉPONDRE « CE QUI LE CASSE ».
+{
+  const formats = new Set(readdirSync(path.join(MOI, 'lib'))
+    .filter((f) => /\.(json|bps)$/.test(f)).map((f) => f.split('.').pop()));
+  ok(formats.size >= 1, 'MODE — SOCLE : le dossier lib/ doit porter au moins un format');
+
+  for (const c of CONSOMMATEURS) {
+    ok(MODES.has(c.mode),
+      `${c.depot} ne déclare pas COMMENT il lit (${[...MODES].join(', ')}) — sans ce mot je ne `
+      + 'sais pas ce qui le casse, et je vérifierai la mauvaise chose avant de livrer');
+
+    // ⛔ LE VOLET QUI MORD, et celui qui manquait ce soir : une bascule de format rend AVEUGLE
+    // celui qui énumère, sans le casser. Il continue sur moins de données, et son garde reste
+    // vert. Tant que `lib/` porte DEUX formats, aucun consommateur ne peut énumérer sans risque.
+    ok(!(c.mode === 'enumere' && formats.size > 1),
+      `${c.depot} ÉNUMÈRE lib/ alors que le dossier porte ${formats.size} formats `
+      + `(${[...formats].join(', ')}) : une bascule le rend aveugle SANS le casser — il continue `
+      + 'sur moins de données et son portillon reste vert. Il doit lire le PAQUET, qui rend les '
+      + 'deux graphies sous une seule forme.');
+  }
+
+  // ⚠️ ET LE PAQUET DOIT DIRE TOUTES MES LIBRAIRIES, quel que soit leur format — sinon la lecture
+  // au paquet déplace le silence d'un cran au lieu de le fermer (témoin posé par bp3-frontend).
+  const surDisque = readdirSync(path.join(MOI, 'lib'))
+    .filter((f) => /\.(json|bps)$/.test(f)).map((f) => f.replace(/\.(json|bps)$/, ''));
+  const _p = createRequire(import.meta.url)('../src/transpiler/libs-data.js');
+  const paquet = _p.LIBS || _p.default || _p;
+  const manquantes = surDisque.filter((n) => !(n in paquet));
+  ok(manquantes.length === 0,
+    `le PAQUET ne porte pas ${manquantes.length} librairie(s) présente(s) sur disque `
+    + `(${manquantes.join(', ')}) : qui lit le paquet lirait une autorité amputée, sans un rouge`);
 }
 
 // ── CHAQUE VOISIN DIT CE QU'IL PREND, ET PAR QUEL AXE ────────────────────────
