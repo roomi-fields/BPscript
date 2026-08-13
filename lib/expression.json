@@ -13,6 +13,7 @@
   "controls": {
     "_comment": "Sound object parameter controls — transport-agnostic, forwarded as-is",
     "vel": {
+      "bp3": "_vel",
       "args": [
         "value"
       ],
@@ -31,6 +32,7 @@
       "transportGroup": "expression"
     },
     "pan": {
+      "bp3": "_pan",
       "args": [
         "value"
       ],
@@ -61,6 +63,7 @@
       "transportGroup": "expression"
     },
     "rndvel": {
+      "bp3": "_rndvel",
       "args": [
         "range"
       ],
@@ -105,6 +108,7 @@
       "transportGroup": "expression"
     },
     "value": {
+      "bp3": "_value",
       "args": [
         "param",
         "amount"
@@ -119,6 +123,7 @@
       "transportGroup": "expression"
     },
     "fixed": {
+      "bp3": "_fixed",
       "args": [
         "param",
         "amount"
@@ -133,6 +138,7 @@
       "transportGroup": "expression"
     },
     "cont": {
+      "bp3": "_cont",
       "args": [
         "param"
       ],

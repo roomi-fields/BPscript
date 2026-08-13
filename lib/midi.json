@@ -13,6 +13,7 @@
   "controls": {
     "_comment": "MIDI-specific controls — only meaningful for MIDI transport",
     "chan": {
+      "bp3": "_chan",
       "args": [
         "channel"
       ],
@@ -31,6 +32,7 @@
       "transportGroup": "midi"
     },
     "ins": {
+      "bp3": "_ins",
       "args": [
         "program"
       ],
@@ -51,6 +53,7 @@
       "transportGroup": "midi"
     },
     "mod": {
+      "bp3": "_mod",
       "args": [
         "value"
       ],
@@ -69,6 +72,7 @@
       "transportGroup": "midi"
     },
     "modcont": {
+      "bp3": "_modcont",
       "args": [],
       "description": "Enable continuous modulation interpolation (CC1)",
       "scope": [
@@ -80,6 +84,7 @@
       "transportGroup": "midi"
     },
     "pitchbend": {
+      "bp3": "_pitchbend",
       "args": [
         "value"
       ],
@@ -98,6 +103,7 @@
       "transportGroup": "midi"
     },
     "pitchrange": {
+      "bp3": "_pitchrange",
       "args": [
         "cents"
       ],
@@ -112,6 +118,7 @@
       "transportGroup": "midi"
     },
     "pitchcont": {
+      "bp3": "_pitchcont",
       "args": [],
       "description": "Enable continuous pitch bend interpolation",
       "scope": [
@@ -174,6 +181,7 @@
       "transportGroup": "midi"
     },
     "press": {
+      "bp3": "_press",
       "args": [
         "value"
       ],
@@ -192,6 +200,7 @@
       "transportGroup": "midi"
     },
     "presscont": {
+      "bp3": "_presscont",
       "args": [],
       "description": "Enable continuous channel pressure interpolation",
       "scope": [
@@ -203,6 +212,7 @@
       "transportGroup": "midi"
     },
     "volume": {
+      "bp3": "_volume",
       "args": [
         "value"
       ],
@@ -221,6 +231,7 @@
       "transportGroup": "midi"
     },
     "volumecont": {
+      "bp3": "_volumecont",
       "args": [],
       "description": "Enable continuous volume interpolation",
       "scope": [
@@ -232,6 +243,7 @@
       "transportGroup": "midi"
     },
     "switchon": {
+      "bp3": "_switchon",
       "args": [
         "channel"
       ],
@@ -245,6 +257,7 @@
       "transportGroup": "midi"
     },
     "switchoff": {
+      "bp3": "_switchoff",
       "args": [
         "channel"
       ],
