@@ -30,41 +30,34 @@ That power has always been locked behind a dense, archaic syntax and a 1990s C c
 ## Setup
 
 ```bash
-git clone --recursive https://github.com/roomi-fields/BPscript.git
+git clone https://github.com/roomi-fields/BPscript.git
 cd BPScript
+npm install
 
-# Recompile the engine (requires Emscripten + GCC + mingw)
-cd bp3-engine
-source /path/to/emsdk/emsdk_env.sh
-./build.sh all --archive --version=v3.4.4-wasm.1
-cd ..
-
-# Run the regression gate (also wired to pre-push)
-npm run arch && npm run typecheck && npm run verify
+# Run the regression gate (single definition, also wired to pre-push)
+npm run verify
 ```
 
 ## Structure
 
 ```
-bp3-engine/          BP3 WASM engine (submodule roomi-fields/bp3-engine, branch wasm)
 src/
-  transpiler/        Tokenizer, parser, encoder (BPScript → BP3 grammar)
-  bpx/               BPx engine stub (next-generation derivation engine)
-lib/                 JSON libraries (controls, alphabets, tunings, filter, routing)
-dist/                BP3 WASM binaries (bp3.js, bp3.wasm, bp3.data)
-test/                Test infrastructure S0→S5 (36 reference grammars)
+  transpiler/        Tokenizer, parser, AST emitter (compileToBPxAST)
+lib/                 JSON libraries — controls, alphabets, tunings, temperaments,
+                     octaves, scales, homomorphisms, voices, modulation
+test/                Guards and reference grammars
 docs/                Specification, design, and reference documentation
-scenes/              Example .bps files
+public/demos/        Example .bps scenes
 ```
 
 ## Pipeline
 
 ```
-Source .bps → Tokenizer → Parser (AST) → Encoder → BP3 grammar + alphabet + prototypes
-                                                          ↓
-                                              BP3 WASM engine (produce)
-                                                          ↓
-                                                    Timed tokens
+Source .bps → Tokenizer → Parser → AST (compileToBPxAST)
+                                          ↓
+                                   BPx (derivation)
+                                          ↓
+                                    Timed tokens
 ```
 
 The timed tokens are the language's output. A downstream runtime (scheduler, audio,
