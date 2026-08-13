@@ -145,8 +145,215 @@
           }
         }
       }
+    },
+    "Ruwet": {
+      "m1": {
+        "la4": "sib4"
+      },
+      "m2": {
+        "la4": "sol4"
+      },
+      "mineur": {
+        "fa4": "re4",
+        "la4": "fa4"
+      }
+    },
+    "abc": {
+      "default": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'",
+        "e": "e'",
+        "f": "f'",
+        "g": "g'",
+        "h": "h'",
+        "i": "i'",
+        "j": "j'",
+        "k": "k'",
+        "l": "l'",
+        "m": "m'",
+        "n": "n'",
+        "o": "o'",
+        "p": "p'",
+        "q": "q'",
+        "r": "r'",
+        "s": "s'",
+        "t": "t'",
+        "u": "u'",
+        "v": "v'",
+        "w": "w'",
+        "x": "x'",
+        "y": "y'",
+        "z": "z'"
+      },
+      "TR": {
+        "a": "b",
+        "b": "c",
+        "c": "d"
+      }
+    },
+    "abc1": {
+      "chik": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'"
+      },
+      "e": {
+        "f": "f'",
+        "g": "g'"
+      }
+    },
+    "abc2": {
+      "default": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'",
+        "e": "e'",
+        "f": "f'",
+        "g": "g'",
+        "h": "h'",
+        "i": "i'",
+        "j": "j'",
+        "k": "k'",
+        "l": "l'",
+        "m": "m'",
+        "n": "n'",
+        "o": "o'",
+        "p": "p'",
+        "q": "q'",
+        "r": "r'",
+        "s": "s'",
+        "t": "t'",
+        "u": "u'",
+        "v": "v'",
+        "w": "w'",
+        "x": "x'",
+        "y": "y'",
+        "z": "z'"
+      }
+    },
+    "abc3": {
+      "default": {
+        "a": "a'",
+        "b": "b'",
+        "c": "c'",
+        "d": "d'",
+        "e": "e'",
+        "f": "f'",
+        "g": "g'",
+        "h": "h'",
+        "i": "i'",
+        "j": "j'",
+        "k": "k'",
+        "l": "l'",
+        "m": "m'",
+        "n": "n'",
+        "o": "o'",
+        "p": "p'",
+        "q": "q'",
+        "r": "r'",
+        "s": "s'",
+        "t": "t'",
+        "u": "u'",
+        "v": "v'",
+        "w": "w'",
+        "x": "x'",
+        "y": "y'",
+        "z": "z'"
+      },
+      "TR": {
+        "a": "b",
+        "b": "c",
+        "c": "d"
+      }
+    },
+    "cloches1": {
+      "description": "Cloches — homomorphisme à CHAÎNES, fidèle à bp3-engine/test-data/-ho.cloches1 (section TR, 4 chaînes indexées par profondeur d'invocation). ⚠️ PORTÉ À NOUVEAU LE 2026-08-10 : la version précédente APLATISSAIT les chaînes en paires — elle gardait le premier maillon de chaque ligne et perdait les suivants, soit 15 maillons sur 19. Une chaîne ne dit pas « do3 devient mib3 » : elle dit « au premier appel mib3, au deuxième fa#3, au troisième la4 » — l'aplatir change le sens, pas seulement la quantité.",
+      "sections": {
+        "TR": {
+          "chains": {
+            "do3": [
+              "mib3",
+              "fa#3",
+              "la4",
+              "do4",
+              "mib4",
+              "fa#4",
+              "la5"
+            ],
+            "sol3": [
+              "si4",
+              "re#4",
+              "sol4",
+              "si5"
+            ],
+            "re3": [
+              "mi4",
+              "fab4",
+              "fa3",
+              "fa4"
+            ],
+            "mi3": [
+              "re4",
+              "reb3",
+              "do#4"
+            ]
+          },
+          "terminaux_sans_image": [
+            "re5",
+            "mi5"
+          ]
+        }
+      }
+    },
+    "dhadhatite": {
+      "default": {
+        "dha": "ta",
+        "ti": "ti",
+        "te": "te",
+        "na": "na",
+        "dhee": "tee",
+        "tr": "tr"
+      }
+    },
+    "dhin--": {
+      "default": {
+        "dha": "ta",
+        "ta": "ta",
+        "ti": "ti",
+        "ra": "ra",
+        "na": "na",
+        "ki": "ki",
+        "dhee": "tee",
+        "ne": "ne",
+        "ge": "ke",
+        "ka": "ka",
+        "dhin": "tin"
+      }
+    },
+    "tabla": {
+      "default": {
+        "dha": "ta",
+        "dhin": "tin",
+        "dhee": "tee",
+        "ge": "ke"
+      }
+    },
+    "trial.mohanam": {
+      "trn": {
+        "sa6": "ga6",
+        "re6": "pa6",
+        "ga6": "dha6",
+        "pa6": "sa7",
+        "dha6": "re7",
+        "sa7": "ga7"
+      }
     }
   },
   "resolves": "homomorphism",
-  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer."
+  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer.",
+  "_portees_de_sub_doc": "DIX TABLES PORTEES DEPUIS lib/sub.json le 2026-08-13, arbitrage Romain, et sub.json est supprime dans le meme mouvement : Ruwet, abc, abc1, abc2, abc3, cloches1, dhadhatite, dhin--, tabla, trial.mohanam. ⚠️ LE LIEN PASSE PAR LE NOM DE LA TABLE, jamais par un appel de fonction : une grammaire BP3 native reference le nom, et la scene equivalente le reprend. Chercher QUI CHARGE LE FICHIER rend zero et fait conclure a tort que les tables sont mortes -- erreur commise le 2026-08-10 puis REFAITE le 2026-08-13, corrigee les deux fois par Romain. Les noms sont donc la surface : les renommer casse les grammaires natives qui les citent."
 }
