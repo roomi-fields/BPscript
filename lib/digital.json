@@ -77,11 +77,6 @@
           "description": "La chaîne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
         }
       }
-    },
-    "rotate": {
-      "description": "TOMBSTONE de migration : rotate-HAUTEUR a été renommé scaleshift (décision 2026-07-11, transposition scalaire). Cette entrée existe pour qu'une scène NON MIGRÉE reçoive un cri LOCAL nommé au lieu d'un contrôle qui dort. À retirer une fois tout le corpus migré.",
-      "rank": 10,
-      "params": {}
     }
   },
   "resolves": "function",
