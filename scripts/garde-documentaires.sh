@@ -25,9 +25,29 @@ racine="$(git rev-parse --show-toplevel)"
 hub="$(cd "$racine/.." && pwd)/hub"
 moi="$(basename "$racine")"
 
-if [ ! -f "$hub/tools/garde-navigation.py" ]; then
-  echo "✗ gardes documentaires INEXÉCUTABLES — hub introuvable à $hub" >&2
+# ⛔ CHAQUE OUTIL SE SONDE PAR SON NOM — corrigé le 2026-08-14, et c'était une faiblesse HÉRITÉE.
+# Ma première version sondait UN fichier et en appelait DEUX : `garde-copies.py` absent laissait la
+# sonde PASSER, et l'appel cassait sur un « can't open file » sans cause. Symétriquement, l'absence
+# du seul `garde-navigation.py` accusait « hub introuvable » alors que le dossier était là.
+# Je l'avais reprise du bloc de l'architecte via le dépôt témoin. Formulation de dedale, qui l'a
+# payée la même heure : « le défaut corrigé dans un outil survit dans son jumeau, et j'étais le
+# jumeau. » Copier un maillon copie aussi ce qu'il a de faux.
+# LE DOSSIER ABSENT ET L'OUTIL ABSENT SONT DEUX PANNES DIFFÉRENTES, et le manquant se NOMME.
+OUTILS="garde-navigation.py garde-copies.py"
+
+if [ ! -d "$hub/tools" ]; then
+  echo "✗ gardes documentaires INEXÉCUTABLES — dossier introuvable : $hub/tools" >&2
   echo "  Ces gardes ne se sautent pas : sans eux, le portillon n'est pas complet." >&2
+  exit 1
+fi
+
+manque=""
+for outil in $OUTILS; do
+  [ -f "$hub/tools/$outil" ] || manque="$manque $outil"
+done
+if [ -n "$manque" ]; then
+  echo "✗ gardes documentaires INEXÉCUTABLES — absent(s) de $hub/tools :$manque" >&2
+  echo "  Le dossier partagé est là ; ce sont les outils qui manquent." >&2
   exit 1
 fi
 
