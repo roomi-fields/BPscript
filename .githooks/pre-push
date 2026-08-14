@@ -14,26 +14,11 @@ if [ "${maj:-0}" -lt 20 ]; then echo "[gate] ERREUR : Node 20+ requis (actuel $(
 echo "[gate] node $(node -v) — npm run verify (definition UNIQUE du gate)…"
 npm run verify --silent
 echo "[gate] vert — push autorise."
-# --- gardes documentaires du hub (deployer-gardes.sh) ---
-# Source unique : hub/tools/. Jamais copiés ici — quinze copies divergeraient.
-__hub="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)/hub"
-__moi="$(basename "$(git rev-parse --show-toplevel)")"
-# Chaque outil se sonde PAR SON NOM, et le manquant SE NOMME. Sonder un seul fichier puis en appeler
-# deux fait accuser un "hub introuvable" quand le hub est la, et casse sur une erreur d interpreteur
-# brute quand c est l autre qui manque. Mesure par bp3-frontend, runtime-ui et dedale le 2026-08-14.
-__manque=""
-for __g in garde-navigation.py garde-copies.py; do
-  [ -f "$__hub/tools/$__g" ] || __manque="$__manque $__g"
-done
-if [ ! -d "$__hub/tools" ]; then
-  echo "✗ gardes documentaires INEXÉCUTABLES — dossier introuvable : $__hub/tools" >&2
-  echo "  Ces gardes ne se sautent pas : sans eux, la poussée n est pas vérifiée." >&2
-  exit 1
-elif [ -n "$__manque" ]; then
-  echo "✗ gardes documentaires INEXÉCUTABLES — absent(s) de $__hub/tools :$__manque" >&2
-  echo "  Le dossier partagé est là ; ce sont les outils qui manquent." >&2
-  exit 1
-fi
-python3 "$__hub/tools/garde-navigation.py" --depot "$__moi" || exit 1
-python3 "$__hub/tools/garde-copies.py"      --depot "$__moi" || exit 1
-# --- fin gardes documentaires ---
+# ⛔ LES GARDES DOCUMENTAIRES NE VIVENT PLUS ICI — ils sont dans `verify`, appelés par
+# `scripts/garde-documentaires.sh` (bascule tranchée par Romain le 2026-08-14).
+# Ce bloc greffé les lançait au PUSH SEULEMENT : « verify vert » ne valait donc pas « portillon
+# vert », et deux crochets d'un même dépôt pouvaient être à des niveaux différents sans que rien
+# ne le dise. Le retirer d'ici les met au même niveau, quel que soit le crochet qui appelle verify.
+# ⚠️ ET LE RETRAIT SE COMMITE, il ne se laisse pas dans l'arbre de travail : tant que mon HISTOIRE
+# portait le bloc, remplacer X par Y n'avait supprimé X nulle part. Mesure avant de le dire fait :
+# les gardes s'exécutaient DEUX fois par poussée — un doublon ne se voit pas au code de sortie.
