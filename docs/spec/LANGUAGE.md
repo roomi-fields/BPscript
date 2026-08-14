@@ -280,6 +280,18 @@ l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
 @var pivot
 ```
 
+Le nom porte sa **valeur de depart**, collee a son deux-points. Le sujet de l'affectation est le
+**nom**, jamais le type.
+
+```text
+@var grain:0.5 signal
+@var hauteur:C4 pitch
+@var a:1, b:2
+```
+
+Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit le mot `flag` et enumere
+ses etats ; celui d'une valeur de depart suit le nom.
+
 | type          | ce que la variable porte                                                                        |
 | ------------- | ----------------------------------------------------------------------------------------------- |
 | `flag`        | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent                         |
@@ -357,7 +369,7 @@ d'accordage et de registres, `hz` la donne directement.
 ### `@init` -- l'etat de depart
 
 `@init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le
-branchement initial, le code lance une fois, les valeurs de depart.
+branchement initial et le code lance une fois.
 
 ```text
 @var saw1 saw
