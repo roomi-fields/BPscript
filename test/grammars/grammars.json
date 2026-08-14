@@ -241,7 +241,7 @@
   },
   "tryMIDIfile": {
     "bernard": "tryMIDIfile",
-    "status": "to_be_tested",
+    "status": "excluded",
     "production_mode": "midi",
     "aux": [
       "se"
@@ -251,7 +251,8 @@
     "php_ref": {
       "midi_notes": 160,
       "note": "EMPRUNT VERIFIE ET NECESSAIRE — ne pas le retirer par analogie. Ce motif etait ecrit MOT POUR MOT sur tryRotate, ou il etait FAUX (le fichier propre y est en JSON) ; il est VRAI ici. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.tryMIDIfile` est au format BP2.7 et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7 », aucune production ecrite. Un motif partage par deux entrees ne se verifie pas une fois pour les deux."
-    }
+    },
+    "reason": "Reglages declares ILLISIBLES par le moteur : la table de bp3-engine resout cette grammaire vers un fichier -se au format BP2 positionnel, et sa conversion a ete ANNULEE (bp3-engine cf53c6e, « la conversion des reglages etait defectueuse »). Mesure du 2026-08-14 : 22 des 143 fichiers -se sont encore en ancien format, et CINQ grammaires y pointent -- celle-ci en fait partie. Elles sont sorties de l assiette scellee par l ARBITRAGE DE ROMAIN du 2026-08-12, precisement pour cette raison. ⛔ CE N EST PAS UN SAUT : la carte champ-vers-ligne qui lisait ce format rendait un temps de calcul de 0 ou 1 seconde sur NEUF fichiers sur 22 -- elle coupe la production sans que rien ne le signale. Un vert obtenu sur elle serait pire qu un rouge. [constat 2026-08-14]"
   },
   "checkVolChan": {
     "bernard": "checkVolChan",
@@ -389,7 +390,7 @@
   },
   "koto1": {
     "bernard": "koto1",
-    "status": "active",
+    "status": "excluded",
     "aux": [
       "se"
     ],
@@ -401,11 +402,12 @@
       "midi_notes": 0,
       "note": "Reste sur le PROXY -se.koto3. Le vrai -se.koto1 issu de la conversion TRONQUE la production (MaxConsoleTime 1s au lieu de 1000) : 7 tokens au lieu de 72/109. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Bascule suspendue jusqu au correctif de conversion."
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "reason": "Reglages declares ILLISIBLES par le moteur : la table de bp3-engine resout cette grammaire vers un fichier -se au format BP2 positionnel, et sa conversion a ete ANNULEE (bp3-engine cf53c6e, « la conversion des reglages etait defectueuse »). Mesure du 2026-08-14 : 22 des 143 fichiers -se sont encore en ancien format, et CINQ grammaires y pointent -- celle-ci en fait partie. Elles sont sorties de l assiette scellee par l ARBITRAGE DE ROMAIN du 2026-08-12, precisement pour cette raison. ⛔ CE N EST PAS UN SAUT : la carte champ-vers-ligne qui lisait ce format rendait un temps de calcul de 0 ou 1 seconde sur NEUF fichiers sur 22 -- elle coupe la production sans que rien ne le signale. Un vert obtenu sur elle serait pire qu un rouge. [constat 2026-08-14]"
   },
   "koto2": {
     "bernard": "koto2",
-    "status": "active",
+    "status": "excluded",
     "aux": [
       "se"
     ],
@@ -417,7 +419,8 @@
       "midi_notes": 0,
       "note": "Reste sur le PROXY -se.koto3. Le vrai -se.koto1 issu de la conversion TRONQUE la production (MaxConsoleTime 1s au lieu de 1000) : 7 tokens au lieu de 72/109. ⚠ Le fichier converti porte des valeurs DÉGÉNÉRÉES (MaxConsoleTime 1s, A4freq 10Hz, C4key 10, DeftVelocity/Volume 10) — signalé à bp3-engine. Bascule suspendue jusqu au correctif de conversion."
     },
-    "production_mode": "text"
+    "production_mode": "text",
+    "reason": "Reglages declares ILLISIBLES par le moteur : la table de bp3-engine resout cette grammaire vers un fichier -se au format BP2 positionnel, et sa conversion a ete ANNULEE (bp3-engine cf53c6e, « la conversion des reglages etait defectueuse »). Mesure du 2026-08-14 : 22 des 143 fichiers -se sont encore en ancien format, et CINQ grammaires y pointent -- celle-ci en fait partie. Elles sont sorties de l assiette scellee par l ARBITRAGE DE ROMAIN du 2026-08-12, precisement pour cette raison. ⛔ CE N EST PAS UN SAUT : la carte champ-vers-ligne qui lisait ce format rendait un temps de calcul de 0 ou 1 seconde sur NEUF fichiers sur 22 -- elle coupe la production sans que rien ne le signale. Un vert obtenu sur elle serait pire qu un rouge. [constat 2026-08-14]"
   },
   "simpletemplates": {
     "bernard": "simpletemplates",
@@ -504,7 +507,7 @@
   },
   "transposition1": {
     "bernard": "transposition1",
-    "status": "to_be_tested",
+    "status": "excluded",
     "scene_bps": true,
     "production_mode": "midi",
     "aux": [
@@ -520,7 +523,8 @@
     "php_ref": {
       "midi_notes": 75,
       "note": "Using -se.transposition3 (JSON) as proxy for -se.transposition (BP2 format, incompatible with BP3 v3.4.x parser)"
-    }
+    },
+    "reason": "Reglages declares ILLISIBLES par le moteur : la table de bp3-engine resout cette grammaire vers un fichier -se au format BP2 positionnel, et sa conversion a ete ANNULEE (bp3-engine cf53c6e, « la conversion des reglages etait defectueuse »). Mesure du 2026-08-14 : 22 des 143 fichiers -se sont encore en ancien format, et CINQ grammaires y pointent -- celle-ci en fait partie. Elles sont sorties de l assiette scellee par l ARBITRAGE DE ROMAIN du 2026-08-12, precisement pour cette raison. ⛔ CE N EST PAS UN SAUT : la carte champ-vers-ligne qui lisait ce format rendait un temps de calcul de 0 ou 1 seconde sur NEUF fichiers sur 22 -- elle coupe la production sans que rien ne le signale. Un vert obtenu sur elle serait pire qu un rouge. [constat 2026-08-14]"
   },
   "bells": {
     "bernard": "bells",
@@ -1085,7 +1089,7 @@
   },
   "check&": {
     "bernard": "check&",
-    "status": "to_be_tested",
+    "status": "excluded",
     "aux": [
       "se"
     ],
@@ -1097,7 +1101,8 @@
       "midi_notes": 4,
       "note": "EMPRUNT NECESSAIRE, ne pas le retirer. Mesure du 2026-08-11, bp3 v3.5.1 (md5 b100125b) : `-se.check&` existe mais est au format BP2.7.1, et le binaire le REFUSE — « Could not parse JSON settings: // Bol Processor version BP2.7.1 », aucune production ecrite. Deux emprunts de ce catalogue etaient injustifies (tryRotate, MyMelody) et trois sont indispensables : la difference est le FORMAT du fichier propre, pas le resultat. Elle se verifie en une commande, jamais en bloc."
     },
-    "production_mode": "midi"
+    "production_mode": "midi",
+    "reason": "Reglages declares ILLISIBLES par le moteur : la table de bp3-engine resout cette grammaire vers un fichier -se au format BP2 positionnel, et sa conversion a ete ANNULEE (bp3-engine cf53c6e, « la conversion des reglages etait defectueuse »). Mesure du 2026-08-14 : 22 des 143 fichiers -se sont encore en ancien format, et CINQ grammaires y pointent -- celle-ci en fait partie. Elles sont sorties de l assiette scellee par l ARBITRAGE DE ROMAIN du 2026-08-12, precisement pour cette raison. ⛔ CE N EST PAS UN SAUT : la carte champ-vers-ligne qui lisait ce format rendait un temps de calcul de 0 ou 1 seconde sur NEUF fichiers sur 22 -- elle coupe la production sans que rien ne le signale. Un vert obtenu sur elle serait pire qu un rouge. [constat 2026-08-14]"
   },
   "Djinns": {
     "bernard": "Djinns",

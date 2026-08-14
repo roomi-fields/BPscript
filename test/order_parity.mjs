@@ -509,7 +509,24 @@ function parDefaut() {
     try { if (JSON.parse(fs.readFileSync(f, 'utf8')).mode === 'text') noms.push(d); }
     catch { /* illisible : c'est le garde des instantanés qui le dit, pas ce banc */ }
   }
-  return noms.sort();
+  // ⛔ L'ASSIETTE HONORE LE STATUT DU CATALOGUE, ET ELLE DIT CE QU'ELLE ÉCARTE.
+  // Elle se construisait sur les seuls instantanés, sans consulter `grammars.json` : une grammaire
+  // déclarée hors mesure y rentrait quand même. Le 2026-08-14, bp3-engine a ANNULÉ la conversion
+  // des réglages (cf53c6e) et CINQ grammaires se sont retrouvées à pointer vers un fichier `-se` au
+  // format BP2 — que ce banc refuse de lire, à raison. Elles sont sorties de l'assiette scellée par
+  // l'arbitrage de Romain du 2026-08-12, précisément parce que leurs réglages sont illisibles.
+  // ⚠️ CE N'EST PAS UN SAUT SILENCIEUX : l'écart est IMPRIMÉ avec son compte et sa cause. Un banc
+  // qui rétrécit son assiette sans le dire se lit comme un banc qui a tout couvert.
+  const ecartes = noms.filter((n) => GRAMMARS[n] && GRAMMARS[n].status === 'excluded');
+  if (ecartes.length) {
+    console.log(`[ordre] assiette : ${noms.length - ecartes.length} grammaire(s) sur ${noms.length} — `
+      + `${ecartes.length} écartée(s) par le catalogue : ${ecartes.join(', ')}`);
+    for (const n of ecartes) {
+      const r = (GRAMMARS[n].reason || '').split('.')[0];
+      console.log(`         ${n} — ${r}`);
+    }
+  }
+  return noms.filter((n) => !ecartes.includes(n)).sort();
 }
 
 // ⚠️ SOCLE — REFUSER DE CONCLURE SUR ZÉRO. En mode campagne, la liste est CONSTRUITE en filtrant
