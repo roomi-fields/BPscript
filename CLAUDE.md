@@ -105,6 +105,8 @@ Elle porte sur les **documents de référence** ; un commentaire de code relève
   formes que le parser produit, dans **toutes** ses sections. Une matrice, pas une liste.
 - **Injecter la faute dans l'accusé puis dans le juge**, et exiger que le garde rougisse.
 - **Une empreinte compare tout**, sauf ce qui est prouvé hors sujet : choisir les champs comparés revient à choisir ce qu'on ne verra pas.
+- **Une absence n'est une preuve que si le périmètre de recherche est établi.** Dire où l'on a cherché,
+  avant de conclure que la chose n'existe pas.
 - **Suspecter l'instrument avant le sujet** quand un chiffre surprend, et le vérifier **avant**
   d'envoyer la mesure.
 - **Un garde hors du portillon est invisible** : il ne préviendra jamais. Le portillon est
