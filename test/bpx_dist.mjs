@@ -21,8 +21,18 @@
  * pas en cause et chez qui regarder.
  */
 import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const BPX_DIST = '/home/romi/dev/bp/BPx/dist/index.js';
+// ⛔ LE CHEMIN SE DERIVE DE MA RACINE, IL NE S ECRIT PAS EN ABSOLU. Un chemin absolu ne se declare
+// nulle part et ne se voit qu au moment ou il ECHOUE, sur une machine qui n est pas celle ou il a
+// ete ecrit. Trouve par atlas en cherchant QUI il lisait : douze sites en absolu chez lui, dont son
+// oracle et deux etapes de son portillon — aucun ne l aurait dit autrement qu en echouant.
+// Mesure chez moi le 2026-08-14 : 39 fichiers, dont SIX au portillon. Celui-ci est la porte unique
+// de sept bancs, donc le plus rentable a fermer.
+const ATELIER = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+export const BPX_DIST = join(ATELIER, 'BPx', 'dist', 'index.js');
 
 /** Importe l'artefact de BPx, ou échoue en disant à qui appartient la panne. */
 export async function importerBPx() {
