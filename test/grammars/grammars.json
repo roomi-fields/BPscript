@@ -1242,7 +1242,7 @@
   "major-minor": {
     "bernard": "tryMajorMinor",
     "status": "to_be_tested",
-    "reason": "Needs -cs.Mozart tonality, grammar doesn't compile without it. S1=error messages, S2=0. [constat 2026-04-04] Exclusion baseline native maintenue 2026-06-10 : l'original BP3 ne produit toujours pas d'oracle S0/S1.",
+    "reason": "⚠️ RAISON MORTE, MESUREE LE 2026-08-14 — elle disait « needs -cs.Mozart tonality, grammar doesn t compile without it, S1=error messages, S2=0 » et datait du 2026-04-04. REJEU : la grammaire produit 31 jetons et son ordre est IDENTIQUE a l oracle natif. Elle compile et elle produit. ⛔ CE QUI L A MAINTENUE QUATRE MOIS : rien ne relit une raison. Elle a ete reconduite le 2026-06-10 (« l original BP3 ne produit toujours pas d oracle ») sans etre rejouee — une reconduction lit la prose, elle ne remesure pas la cause. Trouve en appliquant a ma famille la discipline de bp3-engine : chercher AVEC UN DENOMINATEUR au lieu de corriger le cas signale. Son statut `to_be_tested` reste : entrer dans l assiette est le geste de Romain, pas le mien. [constat 2026-08-14]",
     "aux": [
       "se"
     ],
