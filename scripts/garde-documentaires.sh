@@ -51,5 +51,11 @@ if [ -n "$manque" ]; then
   exit 1
 fi
 
-python3 "$hub/tools/garde-navigation.py" --depot "$moi"
-python3 "$hub/tools/garde-copies.py"      --depot "$moi"
+# ⛔ LA SONDE ET L'APPEL BOUCLENT SUR LA MÊME VARIABLE — forme de runtime-MIDI, prise le 2026-08-14.
+# Ma version corrigée sondait chaque outil par son nom mais APPELAIT deux lignes écrites à part : elle
+# réparait le défaut et laissait la porte par où il revient — un troisième garde ajouté demain à
+# l'appel et pas à la sonde, et l'écart renaît, identique.
+# Réparer la famille, et fermer la porte : c'est la directive 12 poussée jusqu'au bout.
+for outil in $OUTILS; do
+  python3 "$hub/tools/$outil" --depot "$moi"
+done
