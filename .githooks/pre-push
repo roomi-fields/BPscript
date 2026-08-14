@@ -18,15 +18,22 @@ echo "[gate] vert — push autorise."
 # Source unique : hub/tools/. Jamais copiés ici — quinze copies divergeraient.
 __hub="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)/hub"
 __moi="$(basename "$(git rev-parse --show-toplevel)")"
-if [ -f "$__hub/tools/garde-navigation.py" ]; then
-  python3 "$__hub/tools/garde-navigation.py" --depot "$__moi" || exit 1
-  python3 "$__hub/tools/garde-copies.py"      --depot "$__moi" || exit 1
-else
-  # Un garde desarme par une absence de dossier est invisible : la poussee passait au vert sans que les
-  # deux gardes documentaires aient tourne. Signale par runtime-in le 2026-08-14 ; le meme avertissement
-  # muet vivait dans les quinze portillons.
-  echo "✗ gardes documentaires INEXÉCUTABLES — hub introuvable à $__hub" >&2
-  echo "  Ces gardes ne se sautent pas : sans eux, la poussée nest pas vérifiée." >&2
+# Chaque outil se sonde PAR SON NOM, et le manquant SE NOMME. Sonder un seul fichier puis en appeler
+# deux fait accuser un "hub introuvable" quand le hub est la, et casse sur une erreur d interpreteur
+# brute quand c est l autre qui manque. Mesure par bp3-frontend, runtime-ui et dedale le 2026-08-14.
+__manque=""
+for __g in garde-navigation.py garde-copies.py; do
+  [ -f "$__hub/tools/$__g" ] || __manque="$__manque $__g"
+done
+if [ ! -d "$__hub/tools" ]; then
+  echo "✗ gardes documentaires INEXÉCUTABLES — dossier introuvable : $__hub/tools" >&2
+  echo "  Ces gardes ne se sautent pas : sans eux, la poussée n est pas vérifiée." >&2
+  exit 1
+elif [ -n "$__manque" ]; then
+  echo "✗ gardes documentaires INEXÉCUTABLES — absent(s) de $__hub/tools :$__manque" >&2
+  echo "  Le dossier partagé est là ; ce sont les outils qui manquent." >&2
   exit 1
 fi
+python3 "$__hub/tools/garde-navigation.py" --depot "$__moi" || exit 1
+python3 "$__hub/tools/garde-copies.py"      --depot "$__moi" || exit 1
 # --- fin gardes documentaires ---

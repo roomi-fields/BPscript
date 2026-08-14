@@ -9,14 +9,15 @@
     "typecheck": "npm run typecheck:digital && npm run typecheck:homomorphism",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
-    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs",
+    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js.tmp && mv src/transpiler/libs-data.js.tmp src/transpiler/libs-data.js && npm run bundle:types --silent",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
     "guards": "node test/run_guards.mjs",
     "gate:install": "install -m 755 scripts/pre-push .git/hooks/pre-push && echo \"[gate] hook installe depuis scripts/pre-push (versionne)\"",
     "bundle:types": "node src/transpiler/libs-types.js > src/transpiler/libs-data.d.ts.tmp && mv src/transpiler/libs-data.d.ts.tmp src/transpiler/libs-data.d.ts",
-    "fiche:etat": "node scripts/fiche-etat.mjs > baseline-status.json.tmp && mv baseline-status.json.tmp baseline-status.json"
+    "fiche:etat": "node scripts/fiche-etat.mjs > baseline-status.json.tmp && mv baseline-status.json.tmp baseline-status.json",
+    "garde:documentaires": "bash scripts/garde-documentaires.sh"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
