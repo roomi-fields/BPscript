@@ -14,7 +14,7 @@
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
     "guards": "node test/run_guards.mjs",
-    "gate:install": "install -m 755 scripts/pre-push .git/hooks/pre-push && echo \"[gate] hook installe depuis scripts/pre-push (versionne)\"",
+    "gate:install": "git config core.hooksPath .githooks && echo \"[gate] core.hooksPath=.githooks — git execute .githooks/pre-push (versionne, executable)\"",
     "bundle:types": "node src/transpiler/libs-types.js > src/transpiler/libs-data.d.ts.tmp && mv src/transpiler/libs-data.d.ts.tmp src/transpiler/libs-data.d.ts",
     "fiche:etat": "node scripts/fiche-etat.mjs > baseline-status.json.tmp && mv baseline-status.json.tmp baseline-status.json",
     "garde:documentaires": "bash scripts/garde-documentaires.sh"
