@@ -1,11 +1,11 @@
 {
  "_comment": "Baseline de la voie .bps sur l'assiette des 96 natives scellées. Produite par test/sceller_baseline_bps.mjs ; la MESURE vient de test/voie_b_status.mjs, jamais d'ici.",
  "version": "v1",
- "date": "2026-08-12",
+ "date": "2026-08-14",
  "assiette": {
   "source": "bp3-engine/baseline-native/SCELLE.json → preuve.reproductibles_96",
   "reference_native": "baseline-native v15 → v15",
-  "n": 91
+  "n": 96
  },
  "conditions_de_mesure": {
   "oracle": "bp3-engine/builds/v3.5.1-iso.1/bp3",
@@ -18,11 +18,11 @@
   "action_repliquee": "la même que le natif : single (une réalisation, graine posée) ou produce-all (énumération), selon le champ `action` de la baseline native"
  },
  "bilan": {
-  "scenes_presentes": 82,
-  "scenes_absentes": 9,
-  "PLANTE": 7,
-  "PRODUIT": 33,
-  "PRODUCTION IDENTIQUE": 32,
+  "scenes_presentes": 86,
+  "scenes_absentes": 10,
+  "PLANTE": 9,
+  "PRODUIT": 34,
+  "PRODUCTION IDENTIQUE": 33,
   "hors_les_trois_etats": 10
  },
  "grammaires": [
@@ -204,6 +204,15 @@
   },
   {
    "grammaire": "blurb",
+   "scene_bps": false,
+   "etat": null,
+   "hors_etats": "SCENE ABSENTE DU CORPUS",
+   "detail": null,
+   "modalite": "MIDI",
+   "action": "single"
+  },
+  {
+   "grammaire": "check&",
    "scene_bps": false,
    "etat": null,
    "hors_etats": "SCENE ABSENTE DU CORPUS",
@@ -486,6 +495,28 @@
    "n_candidat": 20
   },
   {
+   "grammaire": "koto1",
+   "scene_bps": true,
+   "etat": "PLANTE",
+   "hors_etats": null,
+   "detail": "chaîne : SUB Insert: wildcard substitution misses instan[2]",
+   "modalite": "TEXTE",
+   "action": "single",
+   "n_reference": null,
+   "n_candidat": null
+  },
+  {
+   "grammaire": "koto2",
+   "scene_bps": true,
+   "etat": "PLANTE",
+   "hors_etats": null,
+   "detail": "chaîne : SUB Insert: wildcard substitution misses instan[0]",
+   "modalite": "TEXTE",
+   "action": "single",
+   "n_reference": null,
+   "n_candidat": null
+  },
+  {
    "grammaire": "koto3",
    "scene_bps": true,
    "etat": "PRODUIT",
@@ -717,6 +748,17 @@
    "n_candidat": 15
   },
   {
+   "grammaire": "transposition1",
+   "scene_bps": true,
+   "etat": "PRODUCTION IDENTIQUE",
+   "hors_etats": null,
+   "detail": null,
+   "modalite": "MIDI",
+   "action": "single",
+   "n_reference": 75,
+   "n_candidat": 75
+  },
+  {
    "grammaire": "transposition3",
    "scene_bps": true,
    "etat": null,
@@ -801,6 +843,17 @@
    "action": "produce-all",
    "n_reference": 25,
    "n_candidat": 457
+  },
+  {
+   "grammaire": "tryMIDIfile",
+   "scene_bps": true,
+   "etat": "PRODUIT",
+   "hors_etats": null,
+   "detail": "décalage de registre de 1 octave(s) attendu (C4key) mais NON appliqué par la voie : le son est réellement décalé, ce n'est pas un écart de nommage — cause de provisionnement, pas de transcription. 8 de la référence absent(s) du candidat : demiton:57@0-1000, demiton:55@1000-2000, demiton:60@2000-3000 … (+5) · 8 du candidat absent(s) de la référence : demiton:69@0-1000, demiton:67@1000-2000, demiton:72@2000-3000 … (+5)",
+   "modalite": "MIDI",
+   "action": "single",
+   "n_reference": 8,
+   "n_candidat": 8
   },
   {
    "grammaire": "tryObjects",
@@ -992,7 +1045,7 @@
    "scene_bps": true,
    "etat": "PRODUIT",
    "hors_etats": null,
-   "detail": "1152 de la référence absent(s) du candidat : demiton:48@10-1010, demiton:62@2010-2343, demiton:54@2343-2677 … (+1149) · 1152 du candidat absent(s) de la référence : demiton:70@0-1000, demiton:56@2000-2333, demiton:64@2333-2667 … (+1149)",
+   "detail": "1152 de la référence absent(s) du candidat : demiton:48@10-1010, demiton:62@2010-2343, demiton:54@2343-2677 … (+1149) · 1152 du candidat absent(s) de la référence : demiton:48@0-1000, demiton:62@2000-2333, demiton:54@2333-2667 … (+1149)",
    "modalite": "MIDI",
    "action": "single",
    "n_reference": 1152,
