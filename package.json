@@ -15,7 +15,8 @@
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
     "guards": "node test/run_guards.mjs",
     "gate:install": "install -m 755 scripts/pre-push .git/hooks/pre-push && echo \"[gate] hook installe depuis scripts/pre-push (versionne)\"",
-    "bundle:types": "node src/transpiler/libs-types.js > src/transpiler/libs-data.d.ts.tmp && mv src/transpiler/libs-data.d.ts.tmp src/transpiler/libs-data.d.ts"
+    "bundle:types": "node src/transpiler/libs-types.js > src/transpiler/libs-data.d.ts.tmp && mv src/transpiler/libs-data.d.ts.tmp src/transpiler/libs-data.d.ts",
+    "fiche:etat": "node scripts/fiche-etat.mjs > baseline-status.json.tmp && mv baseline-status.json.tmp baseline-status.json"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",

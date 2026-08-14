@@ -151,13 +151,19 @@
 // CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
 // 2026-08-13 : le continu voyage en SUITE DE VALEURS produite en amont a cadence fixe, et le
 // runtime la convertit vers la sienne -- il decime ou il lisse, il ne decide d aucune courbe.
-// ⚠️ AUCUNE PLAGE DECLAREE TANT QUE LE PLAFOND N EST PAS MESURE. La decision dit qu une cadence
-//    au-dela du plafond est refusee en nommant sa cause ; ce plafond se mesure sur le moteur
-//    natif, demande en cours chez bp3-engine. Ecrire une borne raisonnee ici serait inventer la
-//    limite que le garde devra faire respecter.
+// PLAGE 0..1000, BORNES INCLUSES — mesuree par bp3-engine le 2026-08-14 sur le binaire natif
+// v3.5.1-iso.2 (CompileProcs.c:1149-1173, la MEME condition pour les cinq). C est un REFUS, pas un
+// ecretage : 1001 arrete la compilation en nommant sa cause. L unite est bien des emissions par
+// seconde — l ecart mesure vaut 1000/cadence millisecondes sur toute la plage, et les cinq sorties
+// se comportent identiquement. Le defaut de 50 est confirme par un temoin : avec ou sans le mot,
+// 152 messages et 20 ms d ecart, exactement.
+// ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
+//    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
+//    Romain — je porte le natif, je ne retranche pas de mon propre chef.
 @def panrate
   bp3:_panrate
   args:hz
+  range:0 1000
   default:50
   description:`txt: Cadence des valeurs intermediaires du continu de panoramique, en valeurs par seconde. Defaut 50, comme le moteur natif.`
   scope:symbol group rule flow
