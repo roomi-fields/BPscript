@@ -20,10 +20,11 @@
  *   (C) le registre '00' est une octave sous '0' (quirk d'octave BP3, lecture plus-long-d'abord).
  */
 import { createRequire } from 'node:module';
+import { importerBPx } from './bpx_dist.mjs';
 
 const require = createRequire(import.meta.url);
 const { compileToBPxAST } = require('../src/transpiler/index.js');
-const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+const { createSession } = await importerBPx();
 // ⏸️ SUSPENDU LE 2026-08-08 — la casse est VOULUE et Romain l'a arbitrée.
 //
 // Ce garde traverse jusqu'à KAIROS pour vérifier une hauteur de bout en bout. Les librairies

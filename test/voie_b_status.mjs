@@ -40,11 +40,12 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
 import { empreinteVoisins, exigerVoisinsStables, direEmpreinte } from './empreinte_voisins.mjs';
+import { importerBPx } from './bpx_dist.mjs';
 
 const require = createRequire(import.meta.url);
 const { compare, loadBaseline, soundingOnly, printedText } = require('./compare_modal.cjs');
 const { compileToBPxAST } = require('../src/transpiler/index.js');
-const { createSession, renderChain } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+const { createSession, renderChain } = await importerBPx();
 const { rendreChaineFinale } = await import('/home/romi/dev/bp/kairos/dist/index.js');
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 

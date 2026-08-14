@@ -13,11 +13,12 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
+import { importerBPx } from './bpx_dist.mjs';
 
 const require = createRequire(import.meta.url);
 const { compileToBPxAST } = require('../src/transpiler/index.js');
 const { referenceFor, registerShiftFor } = require('./compare_modal.cjs');
-const { createSession } = await import('/home/romi/dev/bp/BPx/dist/index.js');
+const { createSession } = await importerBPx();
 const { resoudreViaKairos } = await import('./kairos_bridge.mjs');
 
 const GR = path.join(path.resolve(path.dirname(new URL(import.meta.url).pathname), '..'), 'test', 'grammars');
