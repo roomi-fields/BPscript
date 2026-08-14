@@ -29,10 +29,13 @@
   "exports": {
     ".": "./src/transpiler/index.js",
     "./src/transpiler/index.js": "./src/transpiler/index.js",
-    "./src/transpiler/libs-data.js": "./src/transpiler/libs-data.js",
     "./src/transpiler/orderTokens.js": "./src/transpiler/orderTokens.js",
     "./public/editor/bpscript-lang.js": "./public/editor/bpscript-lang.js",
     "./package.json": "./package.json",
-    "./src/transpiler/libs-data.d.ts": "./src/transpiler/libs-data.d.ts"
+    "./src/transpiler/libs-data.d.ts": "./src/transpiler/libs-data.d.ts",
+    "./src/transpiler/libs-data.js": {
+      "types": "./src/transpiler/libs-data.d.ts",
+      "default": "./src/transpiler/libs-data.js"
+    }
   }
 }
