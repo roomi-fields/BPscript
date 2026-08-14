@@ -83,13 +83,20 @@ export function convertir(nom, j) {
   }
   out.push('');
 
-  // ── UN BLOC PAR CONTRÔLE ──
-  for (const [nomC, def] of Object.entries(j.controls || {})) {
+  // ── UN BLOC PAR MOT, DANS CHACUNE DE SES SECTIONS ──
+  // ⛔ UNE LIBRAIRIE PEUT PORTER SON VOCABULAIRE EN PLUSIEURS SECTIONS. `engine` en a QUATRE, et les
+  // fusionner changerait la donnée : quatre lecteurs de `src/` les distinguent. Chaque `@def` porte
+  // donc sa `section`, que le générateur du paquet lit pour le ranger — et qui ne se publie pas.
+  const SECTIONS = ['controls', 'engine', 'subgrammar', 'schema.reservedDirectives'];
+  const lire = (chemin) => chemin.split('.').reduce((o, k) => (o || {})[k], j) || {};
+  for (const sec of SECTIONS) {
+  for (const [nomC, def] of Object.entries(lire(sec))) {
     if (typeof def !== 'object' || def === null) { out.push(...enCommentaire(`${nomC} : ${def}`), ''); continue; }
     for (const [k, v] of Object.entries(def)) {
       if (k.startsWith('_') && typeof v === 'string') out.push(...enCommentaire(`${nomC} · ${v}`));
     }
     out.push(`@def ${nomC}`);
+    if (sec !== 'controls') out.push(`  section:${sec}`);
     for (const [k, v] of Object.entries(def)) {
       if (k.startsWith('_')) continue;
       // Une liste VIDE s'écrit en n'écrivant pas la clé — le bundle la rétablit (cf. libs-bundle.js).
@@ -97,6 +104,7 @@ export function convertir(nom, j) {
       try { out.push(`  ${k}:${rendValeur(k, v, nomC)}`); } catch (e) { refus.push(e.message); }
     }
     out.push('');
+  }
   }
   return { texte: out.join('\n'), refus };
 }

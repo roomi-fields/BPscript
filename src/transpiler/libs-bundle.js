@@ -122,8 +122,28 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     const lib = { controls: {} };
     for (const d of (r.ast.directives || [])) {
       if (d.type !== 'DefDirective' || !d.keys) continue;
-      const cible = d.name === entry.replace('.bpsl', '') ? lib : (lib.controls[d.name] = {});
+      // ⛔ UNE CLÉ `section` DIT OÙ LE MOT SE RANGE — posée le 2026-08-14 pour la bascule d'`engine`.
+      // Les cinq premières librairies n'avaient qu'une section, `controls`. `engine` en porte QUATRE :
+      // `controls`, `engine`, `subgrammar` et `schema.reservedDirectives`. Sans ce mot, la conversion
+      // les FUSIONNERAIT en une seule et changerait la donnée — quatre lecteurs de mon propre `src/`
+      // les distinguent, et le garde des graphies natives balaye les trois premières nommément.
+      // ⚠️ CE N'EST PAS UNE FORME DU LANGAGE, c'est une correspondance de LECTURE : `section` est une
+      // clé ordinaire de `@def`, que le langage accepte déjà, et rien de nouveau ne s'écrit dans une
+      // scène. Même geste que l'absence d'`args` qui vaut liste vide. La preuve reste l'ÉGALITÉ du
+      // paquet avant et après, pas ce raisonnement.
+      // Le chemin est POINTÉ : `schema.reservedDirectives` se lit comme une descente.
+      const chemin = d.keys && d.keys.section ? valeurDeCle(d.keys.section) : 'controls';
+      let cible;
+      if (d.name === entry.replace('.bpsl', '')) {
+        cible = lib;
+      } else {
+        let ou = lib;
+        const parts = String(chemin).split('.');
+        for (const seg of parts) { ou[seg] = ou[seg] || {}; ou = ou[seg]; }
+        cible = (ou[d.name] = {});
+      }
       for (const [cle, v] of Object.entries(d.keys)) {
+        if (cle === 'section') continue;   // elle ROUTE, elle ne se publie pas
         let val = valeurDeCle(v);
         if (CLES_LISTES.has(cle) && !Array.isArray(val)) val = [val];
         if (cible === lib && !CHAMPS_DE_FICHIER.has(cle)) {
@@ -140,7 +160,20 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     // vide. L'absence est donc libre, et la source `.bps` s'en sert pour dire « aucun argument ».
     // C'est une correspondance de LECTURE, pas une forme du langage : rien de nouveau ne s'écrit
     // dans une scène. La preuve n'est pas ce raisonnement mais l'ÉGALITÉ du bundle avant/après.
-    for (const c of Object.values(lib.controls)) if (c.args === undefined) c.args = [];
+    // ⚠️ ET LA RESTAURATION VAUT POUR TOUTES LES SECTIONS, pas seulement `controls` — trouvé en
+    // convertissant `engine` : sept mots de `engine` et `subgrammar` perdaient leur `args` vide,
+    // parce que cette boucle ne connaissait qu'une section. Le routage par `section` a rendu le
+    // défaut visible ; il vivait déjà, latent, en attendant une deuxième section.
+    // ⚠️ ET PAS `schema.reservedDirectives` : ses entrées n'ont JAMAIS porté d'`args`. Ma première
+    // version l'y incluait et AJOUTAIT le champ à ses 27 mots — ajouter une valeur est un
+    // changement de donnée autant qu'en retirer un, et c'est la comparaison avant/après qui l'a
+    // dit, pas la lecture. Une directive réservée déclare un NOM et sa portée, pas une signature.
+    const sections = [lib.controls, lib.engine, lib.subgrammar].filter(Boolean);
+    for (const sec of sections) {
+      for (const c of Object.values(sec)) {
+        if (c && typeof c === 'object' && c.args === undefined && ('bp3' in c || 'description' in c)) c.args = [];
+      }
+    }
     if (!Object.keys(lib.controls).length) delete lib.controls;
     libs[nom] = lib;
   }

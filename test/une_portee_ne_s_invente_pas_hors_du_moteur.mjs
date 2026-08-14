@@ -26,12 +26,24 @@
  * reste ici garde ce qui reste : la donnée et la surface.
  */
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const LIB = JSON.parse(readFileSync(path.join(ICI, '..', 'lib', 'engine.json'), 'utf-8'));
+// ⛔ CE GARDE LIT LE PAQUET, PAS UN FICHIER NOMMÉ — corrigé le 2026-08-14 quand `engine` est passée
+// en `.bpsl`. Il ouvrait `lib/engine.json` par son nom et s'est arrêté sur une erreur d'ouverture.
+// C'est le piège annoncé, sous sa forme la plus directe : la bascule des cinq avait aveuglé un
+// lecteur qui ÉNUMÉRAIT `lib/*.json` ; celui-ci NOMMAIT le fichier, et le nom est aussi mouvant que
+// l'extension. `src/transpiler/libs-data.js` est ce que tous les consommateurs chargent, et il rend
+// les deux graphies sous une seule forme.
+// ⚠️ MESURE DE LA FAMILLE, faite avant de corriger le cas : 54 fichiers NOMMENT un `lib/*.json`,
+// mais DEUX seulement en OUVRENT un. Les 52 autres le citent en commentaire — une mention n'est pas
+// un lien, et corriger les 54 aurait été réparer 52 choses qui ne cassent pas.
+const _req = createRequire(import.meta.url);
+const _d = _req('../src/transpiler/libs-data.js');
+const LIB = (_d.LIBS || _d.default || _d).engine;
 
 let passe = 0;
 const echecs = [];
