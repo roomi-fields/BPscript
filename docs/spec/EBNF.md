@@ -44,8 +44,12 @@ n'écrit pas, il l'hérite de la scène. Le point appelle le composant, et les p
 parenthèses en donnent l'adresse.
 
 ```ebnf
-var_directive = "@" , "var" , IDENT , var_type              (* @var lpf1 lpf *)
-              | "@" , "var" , IDENT , { "," , IDENT } ;     (* @var pivot   @var z1, z2, z3 *)
+var_directive = "@" , "var" , var_nom , var_type            (* @var lpf1 lpf *)
+              | "@" , "var" , var_nom , { "," , var_nom } ; (* @var pivot   @var z1, z2, z3 *)
+
+(* Le nom porte sa valeur de depart, COLLEE a son deux-points. Le sujet est le nom, jamais
+   le type : "@var grain signal:0.5" lierait la valeur a "signal" et se lit faux. *)
+var_nom       = IDENT , [ ":" , ( INT | FLOAT | IDENT ) ] ; (* @var grain:0.5 signal *)
 
 var_type = "flag" , ":" , flag_state , { "," , flag_state }  (* @var section flag: calm:1, full:2 *)
          | "in" , "." , IN_CHANNEL                           (* @var touches in.keyboard *)

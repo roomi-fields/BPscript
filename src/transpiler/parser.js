@@ -1986,6 +1986,41 @@ function parse(tokens, opts = {}) {
           + 'ou le rôle que tient une entrée.', tok);
       }
       const first = expect(T.IDENT).value;
+
+      // ⛔ LE NOM PORTE SA VALEUR DE DÉPART — voie A, arbitrage de Romain du 2026-08-13.
+      // « init, c'est var plus une affectation. » L'affectation manquait : mesuré le même jour,
+      // `@init grain:0.5`, le bloc `@init` indenté et `@var grain signal:0.5` étaient REFUSÉS tous
+      // les trois. Aucune forme ne donnait une valeur de départ à une variable déclarée.
+      // LE SUJET DU DEUX-POINTS EST LE NOM, jamais le type : `@var grain:0.5 signal` se lit
+      // « grain vaut 0.5, et c'est un signal ». La graphie `@var grain signal:0.5` a été écartée
+      // parce qu'elle lie la valeur à `signal` — elle dirait « signal vaut 0.5 », ce qui est faux.
+      // ⚠️ AUCUN CONFLIT AVEC LE DRAPEAU : `@var section flag: calm:1` porte son deux-points APRÈS
+      // le mot `flag`, jamais après le nom. Les deux se distinguent sur la position, pas sur une
+      // convention — et c'est ce qui rend la lecture sûre.
+      // ⛔ LA VALEUR EST COLLÉE AU SIGNE, et c'est le canon du langage qui le dit : « espace sépare
+      // deux termes ; leur collage les réunit en un seul ». Sans cette contrainte,
+      // `@var grain: signal` prenait `signal` pour la VALEUR — la variable démarrait à la chaîne
+      // « signal » et perdait son type, sans un signe. Trouvé par le garde, pas en raisonnant :
+      // c'est le seul endroit où la voie A pouvait avaler un mot qui ne lui appartient pas.
+      const lireValeurDeDepart = () => {
+        if (!at(T.COLON)) return null;
+        advance();
+        const t = current();
+        if (t.spaceBefore) {
+          throw new ParseError(`@var ${first}: une valeur de départ se COLLE à son signe — `
+            + `'${first}:<valeur>', jamais '${first}: <valeur>'. L'espace sépare deux termes, le `
+            + `collage les réunit ; détaché, '${t.value ?? t.type}' se lirait comme le TYPE de la `
+            + `variable et la valeur disparaîtrait sans un signe.`, t);
+        }
+        if (at(T.INT) || at(T.FLOAT)) { advance(); return Number(t.value); }
+        if (at(T.IDENT)) { advance(); return t.value; }
+        throw new ParseError(`@var ${first} : une valeur de départ se pose après ':' — un nombre `
+          + `ou un nom. Reçu '${t.value ?? t.type}'.`, t);
+      };
+      const valeurDeDepart = lireValeurDeDepart();
+      const avecDepart = (d) => (valeurDeDepart === null
+        ? d
+        : { ...d, initial: [{ name: first, value: valeurDeDepart }] });
       refuserLeSigneEgal('var', first);
 
       // @var <rôle> in.<canal> [mapping.<table>] — DÉCLARATION D'UNE ENTRÉE
@@ -2089,13 +2124,13 @@ function parse(tokens, opts = {}) {
             throw new ParseError(`@var ${first} flag : au moins un état est requis — `
               + `'@var ${first} flag: <nom>:<entier>, ...'.`, typeTok);
           }
-          return { type: 'VarDirective', names: [first], varType: { kind: 'flag', states }, line: tok.line };
+          return avecDepart({ type: 'VarDirective', names: [first], varType: { kind: 'flag', states }, line: tok.line });
         }
 
         if (varConventions().has(typeWord)) {
           advance();
-          return { type: 'VarDirective', names: [first],
-                   varType: { kind: 'convention', convention: typeWord }, line: tok.line };
+          return avecDepart({ type: 'VarDirective', names: [first],
+                   varType: { kind: 'convention', convention: typeWord }, line: tok.line });
         }
 
         // Reste des IDENT nus : un MODULE — une INSTANCE de ce module (`@var lpf1 lpf`). Résolu
@@ -2110,14 +2145,31 @@ function parse(tokens, opts = {}) {
             + `Rien ne se résout par défaut en silence : une entrée absente du catalogue se nomme, `
             + `elle ne s'invente pas.`, typeTok);
         }
-        return { type: 'VarDirective', names: [first],
-                 varType: { kind: 'module', module: typeWord }, line: tok.line };
+        return avecDepart({ type: 'VarDirective', names: [first],
+                 varType: { kind: 'module', module: typeWord }, line: tok.line });
       }
 
       // Forme nue : VARIABLES DE TRAVAIL, sans type — un nom, ou plusieurs séparés par des virgules.
+      // ⚠️ CHAQUE NOM D'UNE LISTE PORTE SA PROPRE VALEUR : `@var a:1, b:2`. Une valeur unique
+      // partagée par la liste serait une invention — la ligne énumère des variables distinctes.
       const noms = [first];
-      while (at(T.COMMA) && advance()) noms.push(expect(T.IDENT).value);
-      return { type: 'VarDirective', names: noms, varType: null, line: tok.line };
+      const departs = valeurDeDepart === null ? [] : [{ name: first, value: valeurDeDepart }];
+      while (at(T.COMMA) && advance()) {
+        const n = expect(T.IDENT).value;
+        noms.push(n);
+        if (at(T.COLON)) {
+          advance();
+          const t = current();
+          if (at(T.INT) || at(T.FLOAT)) { advance(); departs.push({ name: n, value: Number(t.value) }); }
+          else if (at(T.IDENT)) { advance(); departs.push({ name: n, value: t.value }); }
+          else {
+            throw new ParseError(`@var ${n} : une valeur de départ se pose après ':' — un nombre `
+              + `ou un nom. Reçu '${t.value ?? t.type}'.`, t);
+          }
+        }
+      }
+      const nu = { type: 'VarDirective', names: noms, varType: null, line: tok.line };
+      return departs.length ? { ...nu, initial: departs } : nu;
     }
 
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)

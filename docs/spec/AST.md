@@ -123,6 +123,7 @@ VarDirective {
   type: "VarDirective"
   names: string[]                  // un nom, ou plusieurs quand la ligne les énumère
   varType: VarType | null          // null = une variable sans type
+  initial?: { name: string, value: number | string }[]   // les valeurs de départ écrites
   line: number
 }
 
@@ -134,6 +135,10 @@ VarType =
 ```
 
 Une variable porte un **type** qui dit ce qu'elle est. Le nom vient d'abord, le type ensuite.
+
+Le nom porte sa **valeur de départ**, collée à son deux-points : `@var grain:0.5 signal`. Le sujet
+de l'affectation est le nom, jamais le type. Le champ `initial` est absent quand la ligne n'écrit
+aucune valeur, et il porte une entrée par nom qui en écrit une — `@var a:1, b:2` en pose deux.
 
 | type          | ce que la variable porte                                                            |
 | ------------- | ----------------------------------------------------------------------------------- |
