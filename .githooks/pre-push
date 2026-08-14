@@ -14,7 +14,6 @@ if [ "${maj:-0}" -lt 20 ]; then echo "[gate] ERREUR : Node 20+ requis (actuel $(
 echo "[gate] node $(node -v) — npm run verify (definition UNIQUE du gate)…"
 npm run verify --silent
 echo "[gate] vert — push autorise."
-
 # --- gardes documentaires du hub (deployer-gardes.sh) ---
 # Source unique : hub/tools/. Jamais copiés ici — quinze copies divergeraient.
 __hub="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)/hub"
@@ -23,6 +22,11 @@ if [ -f "$__hub/tools/garde-navigation.py" ]; then
   python3 "$__hub/tools/garde-navigation.py" --depot "$__moi" || exit 1
   python3 "$__hub/tools/garde-copies.py"      --depot "$__moi" || exit 1
 else
-  echo "⚠️  gardes documentaires NON EXÉCUTÉS — hub introuvable à $__hub"
+  # Un garde desarme par une absence de dossier est invisible : la poussee passait au vert sans que les
+  # deux gardes documentaires aient tourne. Signale par runtime-in le 2026-08-14 ; le meme avertissement
+  # muet vivait dans les quinze portillons.
+  echo "✗ gardes documentaires INEXÉCUTABLES — hub introuvable à $__hub" >&2
+  echo "  Ces gardes ne se sautent pas : sans eux, la poussée nest pas vérifiée." >&2
+  exit 1
 fi
 # --- fin gardes documentaires ---
