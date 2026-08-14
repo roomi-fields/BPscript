@@ -10,11 +10,12 @@
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
     "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs",
-    "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js.tmp && mv src/transpiler/libs-data.js.tmp src/transpiler/libs-data.js",
+    "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js.tmp && mv src/transpiler/libs-data.js.tmp src/transpiler/libs-data.js && npm run bundle:types --silent",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
     "guards": "node test/run_guards.mjs",
-    "gate:install": "install -m 755 scripts/pre-push .git/hooks/pre-push && echo \"[gate] hook installe depuis scripts/pre-push (versionne)\""
+    "gate:install": "install -m 755 scripts/pre-push .git/hooks/pre-push && echo \"[gate] hook installe depuis scripts/pre-push (versionne)\"",
+    "bundle:types": "node src/transpiler/libs-types.js > src/transpiler/libs-data.d.ts.tmp && mv src/transpiler/libs-data.d.ts.tmp src/transpiler/libs-data.d.ts"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
@@ -24,5 +25,14 @@
     "langium": "^4.3.1",
     "langium-cli": "^4.3.0",
     "typescript": "^6.0.3"
+  },
+  "exports": {
+    ".": "./src/transpiler/index.js",
+    "./src/transpiler/index.js": "./src/transpiler/index.js",
+    "./src/transpiler/libs-data.js": "./src/transpiler/libs-data.js",
+    "./src/transpiler/orderTokens.js": "./src/transpiler/orderTokens.js",
+    "./public/editor/bpscript-lang.js": "./public/editor/bpscript-lang.js",
+    "./package.json": "./package.json",
+    "./src/transpiler/libs-data.d.ts": "./src/transpiler/libs-data.d.ts"
   }
 }

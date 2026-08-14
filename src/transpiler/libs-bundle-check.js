@@ -25,4 +25,20 @@ if (fresh !== committed) {
   );
   process.exit(1);
 }
-console.log('[bundle:check] ✓ libs-data.js à jour vs les sources lib/.');
+// ⛔ LE TYPE PUBLIÉ SE VÉRIFIE COMME LA DONNÉE — posé le 2026-08-14 avec `libs-data.d.ts`.
+// Kanopi a demandé que la porte officielle publie sa FORME, et il a refusé de la recopier chez lui :
+// « une surface publiée se DÉRIVE, jamais ne se recopie ». Un type dérivé qu'on ne vérifie pas
+// dérive exactement comme la copie qu'on voulait éviter — il décrirait une donnée d'hier en ayant
+// l'air d'être la source de vérité, et le contrôle de types du voisin passerait au vert sur du faux.
+const typesGen = join(__dirname, 'libs-types.js');
+const typesPath = join(__dirname, 'libs-data.d.ts');
+const typesFresh = execFileSync(process.execPath, [typesGen], { encoding: 'utf-8' });
+const typesCommitted = readFileSync(typesPath, 'utf-8');
+if (typesFresh !== typesCommitted) {
+  console.error(
+    '[bundle:check] ✗ src/transpiler/libs-data.d.ts est PÉRIMÉ vs le paquet.\n' +
+    '               Régénère : `npm run bundle:libs` (puis commit).',
+  );
+  process.exit(1);
+}
+console.log('[bundle:check] ✓ libs-data.js et libs-data.d.ts à jour vs les sources lib/.');
