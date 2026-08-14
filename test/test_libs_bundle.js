@@ -27,16 +27,16 @@ function collect(dir, prefix) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) { collect(full, prefix + entry + '/'); continue; }
     // ⚠️ DEUX EXTENSIONS DEPUIS LE 2026-08-13, et n'en compter qu'une rendait ce garde AVEUGLE :
-    // une librairie s'écrit désormais en BPScript (`lib/audio.bps`) aussi bien qu'en JSON. Ne lire
+    // une librairie s'écrit désormais en BPScript (`lib/audio.bpsl`) aussi bien qu'en JSON. Ne lire
     // que le `.json` faisait sortir « EN TROP dans le bundle : audio » — le garde accusait le
     // bundle d'un excès qui était son propre angle mort.
-    if (!entry.endsWith('.json') && !entry.endsWith('.bps')) continue;
-    const key = prefix + entry.replace(/\.(json|bps)$/, '');
+    if (!entry.endsWith('.json') && !entry.endsWith('.bpsl')) continue;
+    const key = prefix + entry.replace(/\.(json|bpsl)$/, '');
     if (key === 'tuning') continue; // 177 Ko, non utilisé par le transpileur
     // Une librairie en BPScript n'est pas du JSON : son CONTENU se vérifie par la régénération
     // (`bundle:check`, qui relance le générateur et compare au commité), pas ici. Ce garde-ci tient
     // la LISTE DES CLÉS — que le bundle porte exactement les librairies présentes sur le disque.
-    if (entry.endsWith('.bps')) { expected[key] = null; continue; }
+    if (entry.endsWith('.bpsl')) { expected[key] = null; continue; }
     expected[key] = JSON.parse(readFileSync(full, 'utf-8'));
   }
 }

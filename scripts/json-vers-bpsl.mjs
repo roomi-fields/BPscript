@@ -110,6 +110,6 @@ if (cible) {
     for (const r of refus) console.error(`   - ${r}`);
     process.exit(1);
   }
-  writeFileSync(`lib/${cible}.bps`, texte + '\n');
-  console.log(`✅ lib/${cible}.bps écrit (${Object.keys(j.controls || {}).length} contrôles)`);
+  writeFileSync(`lib/${cible}.bpsl`, texte + '\n');
+  console.log(`✅ lib/${cible}.bpsl écrit (${Object.keys(j.controls || {}).length} contrôles)`);
 }

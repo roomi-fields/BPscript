@@ -56,8 +56,14 @@ function captureDigitalBodies(dir) {
 captureDigitalBodies(LIB_DIR);
 
 // ── LES LIBRAIRIES ÉCRITES EN BPSCRIPT ───────────────────────────────────────────────────────
-// Une librairie se dit dans le langage qu'elle sert : `lib/<nom>.bps` porte ses contrôles en `@def`,
-// et le bundle les convertit en la MÊME forme que les `.json`. Le runtime ne change donc pas d'un
+// Une librairie se dit dans le langage qu'elle sert : `lib/<nom>.bpsl` porte ses contrôles en `@def`,
+// et le bundle les convertit en la MÊME forme que les `.json`.
+//
+// ⛔ L'EXTENSION EST `.bpsl`, PAS `.bps` — décision de Romain, 2026-08-14. Une SCÈNE s'écrit `.bps`,
+// et les deux se lisent avec le MÊME compilateur : sans extension propre, rien ne distinguait une
+// librairie d'une scène par son nom. La mesure qui l'a montré : chercher qui référence `.bps` chez
+// les voisins rendait 222 fichiers sur sept dépôts — tous des lecteurs de SCÈNES. Une question sur
+// les librairies ne pouvait pas trouver sa réponse dans ce bruit. Le runtime ne change donc pas d'un
 // octet — les consommateurs lisent le bundle, comme avant. C'est le même geste que la capture des
 // corps de fonctions digitales juste au-dessus : l'AUTHORING change, la donnée publiée ne bouge pas.
 //
@@ -105,8 +111,8 @@ async function collectBps(dir, prefix, compileToBPxAST) {
   for (const entry of readdirSync(dir).sort()) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) { await collectBps(full, prefix + entry + '/', compileToBPxAST); continue; }
-    if (!entry.endsWith('.bps')) continue;
-    const nom = prefix + entry.replace('.bps', '');
+    if (!entry.endsWith('.bpsl')) continue;
+    const nom = prefix + entry.replace('.bpsl', '');
     const r = compileToBPxAST(readFileSync(full, 'utf-8'));
     if ((r.errors || []).length) {
       console.error(`[bundle] ⛔ lib/${entry} NE COMPILE PAS : ${r.errors[0].message}`);
@@ -116,7 +122,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     const lib = { controls: {} };
     for (const d of (r.ast.directives || [])) {
       if (d.type !== 'DefDirective' || !d.keys) continue;
-      const cible = d.name === entry.replace('.bps', '') ? lib : (lib.controls[d.name] = {});
+      const cible = d.name === entry.replace('.bpsl', '') ? lib : (lib.controls[d.name] = {});
       for (const [cle, v] of Object.entries(d.keys)) {
         let val = valeurDeCle(v);
         if (CLES_LISTES.has(cle) && !Array.isArray(val)) val = [val];
