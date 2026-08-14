@@ -221,8 +221,6 @@ Une librairie de **vocabulaire** s'écrit en BPScript (`.bpsl`), lue par le comp
   d'éditeur. Mes sources de librairie ne sont pas importables — sans quoi ma structure de fichiers
   est une interface publique que je ne contrôle pas.
 
-## Sous-agents de développement — Un sous-agent de développement se lance **toujours** en `claude-sonnet-5`.
-
 
 ## Backlog
 
