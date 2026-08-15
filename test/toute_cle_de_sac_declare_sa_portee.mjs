@@ -177,7 +177,9 @@ for (const { source, nom, def } of CLES) {
 //   `fadeout`, et les sept mots des quatre gestes de fin et de relance. Le plancher monte parce que
 //   la famille a grandi — il ne se règle JAMAIS sur ce que l'extracteur rend, sinon il cesserait de
 //   mesurer.
-const PAR_DESTINATAIRE = { expression: 14, midi: 36, audio: 6, transpo: 5, variation: 18 };
+//   midi 36 -> 37 : `keepcontrols` entre le 2026-08-15, quand Romain a donne une PAIRE au
+//   quatrieme geste — la regle des deux noms positifs vaut pour les quatre, pas pour trois.
+const PAR_DESTINATAIRE = { expression: 14, midi: 37, audio: 6, transpo: 5, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

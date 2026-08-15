@@ -89,6 +89,9 @@ const SANS_GESTE_NATIF = new Set([
   // à l'intérieur d'un même lot qui prouve que la liste est mesurée et pas décidée en bloc.
   'rate', 'fadeout',
   'resetnotes', 'letring', 'strikeagain', 'sustain', 'pedalrelease', 'pedalhold', 'resetcontrols',
+  // `keepcontrols` REJOINT SES SEPT FRERES le 2026-08-15, quand Romain a donne une paire au
+  // quatrieme geste. Mesure refaite sur la table pour lui seul : `_keepcontrols` en est absent.
+  'keepcontrols',
 ]);
 
 /**

@@ -166,7 +166,10 @@ restaurer();
   ok(ctx.controlsQualified['expression.volume'].default === undefined,
      "5e. la DÉCLARATION de l'interface ne porte AUCUNE valeur par défaut — elle décrit le mot, "
      + '`midi_default` donne la valeur');
-  ok(ctx.controls.volume && ctx.controls.volume.default === 100,
+  // ⚠️ 90, PAS 100. La declaration portait 100 depuis toujours ; la mesure de runtime-MIDI sur les
+  // sources du moteur dit 90. Deplacer la valeur dans la librairie des defauts a ete l occasion de
+  // la confronter — une valeur recopiee de proche en proche ne se verifie jamais toute seule.
+  ok(ctx.controls.volume && ctx.controls.volume.default === 90,
      "5e. et la valeur arrive quand même à la forme nue, reversée par la librairie des défauts — "
      + `sinon l'aide de l'éditeur perd un champ qu'elle affichait. Vu : ${ctx.controls.volume?.default}`);
   ok(ctx.ambiguousControls.size === 0,

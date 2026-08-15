@@ -354,6 +354,15 @@
 // Diagnostic de runtime-MIDI, arbitre par Romain le 2026-08-15. Elles decrivent ce que le moteur
 // natif sait faire et que le langage ne savait pas nommer.
 //
+// LES PLAGES SONT MESUREES PAR runtime-MIDI sur les sources C, binaire empreinte 372dd047, et le
+// MOTEUR LES NOMME AVANT D ABANDONNER : « Volume controller is 0..127 » (CompileProcs.c:1176),
+// « rate range is 0..1000 samples/sec » (:1151-1171). Ce n est PAS un ecretage — la compilation
+// S ARRETE. Chaque borne y est ecrite deux fois, forme litterale et forme a parametre, concordantes.
+// ⚠️ RESERVE, reportee telle quelle : `rate` est borne 0..1000 PAR LE MOT, pas par le reglage --
+// SamplingRate est lu sans aucun controle (SaveLoads1.c:697). Meme grandeur, la borne vient du mot.
+// `fadeout` ne porte pas de plage : sa seule condition mesuree est qu une valeur <= 0 eteint le
+// fondu, ce qui est une semantique et non une borne.
+//
 // LA GRAPHIE NATIVE EST MESUREE, PAS DEDUITE. Table des mots du moteur (StringLists.h, 83 entrees) :
 // `_volumecontrol` et `_pancontrol` Y SONT, les neuf autres n en font pas partie -- ce sont des
 // PREFERENCES du moteur, pas des gestes du flux. Les neuf sont donc inscrits nommement parmi les
@@ -370,7 +379,8 @@
 // pressrate d un seul mot, la ou chacun se regle aussi separement.
 @def rate
   args:hz
-  description:`txt: Cadence des valeurs intermédiaires de TOUS les flux continus, en valeurs par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.`
+  range:0 1000
+  description:`txt: Cadence des valeurs intermédiaires de TOUS les flux continus, en émissions par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.`
   scope:scene
   transportGroup:midi
 
@@ -379,6 +389,7 @@
 @def volumecontrol
   bp3:_volumecontrol
   args:controller
+  range:0 127
   description:`txt: Numéro du contrôleur MIDI qui porte le volume. Image de VolumeController au moteur natif. Le canal se dit dans le même sac : !(chan:3, volumecontrol:11).`
   scope:symbol group rule flow scene
   transportGroup:midi
@@ -387,6 +398,7 @@
 @def pancontrol
   bp3:_pancontrol
   args:controller
+  range:0 127
   description:`txt: Numéro du contrôleur MIDI qui porte le panoramique. Image de PanoramicController au moteur natif. Le canal se dit dans le même sac : !(chan:3, pancontrol:11).`
   scope:symbol group rule flow scene
   transportGroup:midi
@@ -394,55 +406,88 @@
 // FADEOUT · L EXTINCTION DE FIN.
 @def fadeout
   args:duration
-  description:`txt: Extinction du son à la fin de la performance. Image de EndFadeOut au moteur natif.`
+  description:`txt: Extinction du son à la fin de la performance, en SECONDES. Une valeur inférieure ou égale à zéro supprime le fondu. Image de EndFadeOut au moteur natif.`
   scope:scene
   transportGroup:midi
 
 // ═══ LES QUATRE GESTES DE FIN ET DE RELANCE ═══
-// SANS ARGUMENT, PORTEE SCENE, ET DEUX NOMS POSITIFS PAR PAIRE — jamais un nom et sa negation.
-// Meme construction que `striated`/`smooth` : les deux mots d une paire partagent un groupe
-// d unicite, donc ecrire les deux est refuse au lieu de laisser le dernier gagner en silence.
-// Le mot marque ← est ce que le moteur natif fait ; son frere est l autre choix, nomme.
+// QUATRE PAIRES, HUIT MOTS, DEUX NOMS POSITIFS PAR PAIRE — jamais un nom et sa negation. Les deux
+// mots d une paire partagent un groupe d unicite, donc les ecrire tous les deux est refuse en les
+// nommant, au lieu de laisser le dernier gagner en silence. Meme construction que striated/smooth.
+//
+// LE CRITERE DE ROMAIN, ET IL A CORRIGE UNE PREMISSE FAUSSE. On avait d abord donne une paire aux
+// seuls gestes « vrais au natif », et resetcontrols devait rester seul. runtime-MIDI a refute sur
+// pieces : resetnotes est FAUX au natif lui aussi. Le vrai critere est ailleurs — des que le defaut
+// est CONFIGURABLE en direct par l interface, une scene doit pouvoir dire le CONTRAIRE de ce qui
+// est configure. Omettre le mot HERITE du reglage ; ca ne le nie pas. Donc quatre paires.
+//
+// LA PORTEE EST : TETE DE SCENE, ACTEUR, ET FLUX. Romain : « oui configurables aussi par acteurs,
+// mais il faut que ces controles soient aussi activables dans la scene en !(...) ». La cascade
+// ordinaire fait le reste — la scene pose, l acteur surcharge, le flux surcharge encore :
+//     @midi.resetnotes          toute la piece coupe a l arret
+//     @actor nappe
+//       midi.letring            sauf la nappe
+//     S -> C4 !(letring) D4     et au fil du flux
+//
+// `bagOnly:true` — LEUR SEULE GRAPHIE DANS LE FLUX EST LE SAC. Sans lui, un mot sans argument
+// devient un mot du flux et une scene qui portait deja ce nom est tronquee EN SILENCE. Meme
+// marquage que mute/unmute/panic. Mesure : il ne gouverne QUE la forme nue dans une regle, la tete
+// de scene passe par un autre chemin — les deux cohabitent, verifie au compilateur.
+//
+// LES DEFAUTS VIVENT DANS `midi_default`, avec leur cause quand elle n est pas evidente.
 
 @def resetnotes
-  description:`txt: À la fin de la scène, éteindre ce qui sonne encore. Comportement du moteur natif.`
-  scope:scene
+  description:`txt: À la fin de la scène, éteindre ce qui sonne encore.`
+  scope:flow scene
+  bagOnly:true
   unicite:fin-de-scene
   transportGroup:midi
 
 @def letring
   description:`txt: À la fin de la scène, laisser sonner ce qui sonne encore.`
-  scope:scene
+  scope:flow scene
+  bagOnly:true
   unicite:fin-de-scene
   transportGroup:midi
 
 @def strikeagain
-  description:`txt: Une note déjà tenue qu'on rejoue est RELANCÉE — nouveau NoteOn. Comportement du moteur natif.`
-  scope:scene
+  description:`txt: Une note déjà tenue qu'on rejoue est RELANCÉE — nouveau NoteOn.`
+  scope:flow scene
+  bagOnly:true
   unicite:note-rejouee
   transportGroup:midi
 
 @def sustain
   description:`txt: Une note déjà tenue qu'on rejoue reste TENUE — aucun nouveau NoteOn.`
-  scope:scene
+  scope:flow scene
+  bagOnly:true
   unicite:note-rejouee
   transportGroup:midi
 
 @def pedalrelease
-  description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne est relâché puis represse. Comportement du moteur natif.`
-  scope:scene
+  description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne est relâché puis repressé.`
+  scope:flow scene
+  bagOnly:true
   unicite:interrupteur-rejoue
   transportGroup:midi
 
 @def pedalhold
   description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne garde son état.`
-  scope:scene
+  scope:flow scene
+  bagOnly:true
   unicite:interrupteur-rejoue
   transportGroup:midi
 
-// RESETCONTROLS · SEUL, SANS PAIRE, et l asymetrie est voulue : il n est pas vrai au moteur natif.
-// Une scene l ARME, elle ne le retire pas — il n y a donc pas d autre choix a nommer.
 @def resetcontrols
   description:`txt: À la fin de la scène, remettre les contrôleurs à plat.`
-  scope:scene
+  scope:flow scene
+  bagOnly:true
+  unicite:fin-des-controleurs
+  transportGroup:midi
+
+@def keepcontrols
+  description:`txt: À la fin de la scène, laisser les contrôleurs dans l'état où la scène les a mis.`
+  scope:flow scene
+  bagOnly:true
+  unicite:fin-des-controleurs
   transportGroup:midi
