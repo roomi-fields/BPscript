@@ -418,6 +418,15 @@ function loadLibsFromDirectives(directives) {
     controlQualifiedResolvedBy: {},
     // Les noms qu'au moins DEUX librairies déclarent — écrits nus, ils sont refusés.
     ambiguousControls: new Set(),
+    // ── L'INTERFACE ET SA RÉALISATION ────────────────────────────────────────────────────────
+    // `<librairie>.<contrôle>` de l'INTERFACE → les qualifiés qui la RÉALISENT. Doctrine de
+    // Romain : « MIDI a toutes ses primitives, et `expression` est un sur-ensemble d'appel
+    // générique qui va appeler les primitives d'expression du runtime sous-jacent quel qu'il
+    // soit ». Un mot déclaré des deux côtés n'est donc pas une paire d'homonymes : il y a UNE
+    // entrée publique — l'interface — et des réalisations qu'on vise par leur préfixe.
+    realisations: {},
+    // Le qualifié de la réalisation → le qualifié de l'interface qu'elle réalise (l'inverse).
+    realisePar: {},
     controlNames: new Set(),
     bp3NativeControls: new Set(),  // controls BP3 understands natively (no "transport" field)
     seqPrefixControls: new Set(),  // engine controls with scope:"seq_prefix" — emitted as prefix inside group/sequence
@@ -820,6 +829,15 @@ function loadLibsFromDirectives(directives) {
         // moment du conflit serait un mode de secours, donc une seconde grammaire.
         ctx.controlsQualified[`${dir.name}.${name}`] = def;
         if (destinataire) ctx.controlQualifiedResolvedBy[`${dir.name}.${name}`] = destinataire;
+        // `realises:<librairie>.<contrôle>` — cette déclaration RÉALISE une interface générique.
+        // On enregistre le lien dans les deux sens ; sa VALIDITÉ se vérifie une fois toutes les
+        // librairies chargées, parce qu'une interface peut se déclarer après sa réalisation et
+        // qu'un refus qui dépendrait de l'ordre de chargement serait l'arbitraire qu'on combat.
+        if (typeof def.realises === 'string' && def.realises) {
+          const qual = `${dir.name}.${name}`;
+          ctx.realisePar[qual] = def.realises;
+          (ctx.realisations[def.realises] = ctx.realisations[def.realises] || []).push(qual);
+        }
         ctx.controlNames.add(name);
         // Engine section = BP3 native (temporal/structural: goto, tempo, repeat...)
         // Runtime section = dispatcher (sound/performance: vel, chan, wave...)
@@ -993,12 +1011,51 @@ function loadLibsFromDirectives(directives) {
     }
   }
 
+  // ── UN `realises` POINTE UN MOT QUI EXISTE, ou la librairie est refusée ──────────────────────
+  // FAIL-LOUD, à la déclaration : une réalisation qui vise une interface absente est un mot que
+  // rien ne rend public. Sans ce refus, `midi.volume` réaliserait `expression.volme` et la faute
+  // resterait muette — la réalisation cesserait simplement de lever l'ambiguïté, ce qui se lit
+  // comme « deux homonymes » et pas comme « une coquille ».
+  for (const [qual, cible] of Object.entries(ctx.realisePar)) {
+    if (!ctx.controlsQualified[cible]) {
+      throw new Error(
+        `'${qual}' déclare 'realises:${cible}', et '${cible}' n'est déclaré nulle part. Une `
+        + `réalisation vise une interface EXISTANTE, écrite '<librairie>.<contrôle>'.`);
+    }
+    if (cible === qual) {
+      throw new Error(
+        `'${qual}' déclare se réaliser lui-même. Une réalisation vise l'interface d'une AUTRE `
+        + `librairie — celle que l'auteur écrit, quand la réalisation est celle du runtime actif.`);
+    }
+  }
+
   // ── LES NOMS AMBIGUS, une fois TOUTES les librairies chargées ────────────────────────────────
   // Le calcul ne peut pas se faire au fil de la boucle : une clé n'est ambiguë que par rapport à
   // ce qui sera chargé APRÈS elle, et le savoir à mi-parcours ferait dépendre le refus de l'ordre
   // de chargement — exactement l'arbitraire que ce mécanisme remplace.
+  //
+  // ⛔ UNE INTERFACE ET SES RÉALISATIONS NE SONT PAS DES HOMONYMES. Deux déclarations d'un même
+  // nom SANS `realises` restent une erreur, inchangée. Avec `realises`, il n'y a qu'UNE entrée
+  // publique — l'interface — et la forme nue y résout PAR CONSTRUCTION, jamais par une règle de
+  // priorité : on n'arbitre pas entre deux candidats, il n'y en a qu'un.
+  //
+  // ⚠️ ET LA FORME NUE DOIT RÉSOUDRE VERS L'INTERFACE, PAS VERS LA DERNIÈRE LUE. `ctx.controls`
+  // se remplit au fil du chargement, dernière écriture gagnante : sans cette reprise, `volume` nu
+  // porterait la déclaration de `midi` — sa plage, son défaut et SON DESTINATAIRE — alors que
+  // l'écriture générique doit partir au runtime actif quel qu'il soit. C'est exactement le choix
+  // silencieux que la règle d'ambiguïté existe pour interdire.
   for (const [nom, origines] of provenance) {
-    if (origines.size > 1) ctx.ambiguousControls.add(nom);
+    if (origines.size <= 1) continue;
+    const quals = Object.keys(ctx.controlsQualified).filter((q) => q.slice(q.indexOf('.') + 1) === nom);
+    const interfaces = quals.filter((q) => !ctx.realisePar[q]);
+    const realisations = quals.filter((q) => ctx.realisePar[q]);
+    const toutesVersLaMeme = realisations.length > 0 && interfaces.length === 1
+      && realisations.every((q) => ctx.realisePar[q] === interfaces[0]);
+    if (!toutesVersLaMeme) { ctx.ambiguousControls.add(nom); continue; }
+    ctx.controls[nom] = ctx.controlsQualified[interfaces[0]];
+    ctx.controlMap[nom] = ctx.controls[nom].bp3 || `_${nom}`;
+    const dest = ctx.controlQualifiedResolvedBy[interfaces[0]];
+    if (dest) ctx.controlResolvedBy[nom] = dest;
   }
 
   return ctx;
