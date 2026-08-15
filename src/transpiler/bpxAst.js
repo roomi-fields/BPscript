@@ -1634,6 +1634,49 @@ function validateReferences(ast, libCtx = {}) {
     });
   };
 
+  // ── UN MOT GÉNÉRIQUE ÉCRIT POUR UNE SORTIE QUI NE LE RÉALISE PAS ────────────────────────────
+  // RÈGLE DE ROMAIN (2026-08-15) : « si certains sont en attente d'une implémentation, il faut
+  // mettre l'implémentation au backlog et s'assurer qu'on a un message d'erreur si on l'utilise ».
+  //
+  // ⛔ C'EST UN REFUS D'USAGE, PAS DE DÉCLARATION, et la distinction porte tout le mécanisme. Le
+  // chargeur refuse déjà une déclaration incohérente — un `implements` qui pointe dans le vide.
+  // Ici, la déclaration est juste et c'est l'ÉCRITURE qui n'a nulle part où aller : `!(volume:90)`
+  // chez un acteur qui sort en `audio`, quand seul `midi` réalise `volume`. Sans ce refus, le mot
+  // compile et ne fait RIEN — le défaut que le langage refuse partout ailleurs.
+  //
+  // LE CANAL D'UNE RÉALISATION EST LE NOM DE SA LIBRAIRIE, quand ce nom est un canal déclaré
+  // (`midi.volume` → canal `midi`). Aucun nom n'est écrit ici : le catalogue des canaux et les
+  // liens de réalisation sont tous deux de la donnée.
+  const canauxDeclares = new Set(Object.keys(LIBS.core?.schema?.channels || {}));
+  const realisationsPar = {};      // nom nu → Set des canaux qui le réalisent
+  for (const [face, reals] of Object.entries(libCtx.implementations || {})) {
+    const nom = face.slice(face.indexOf('.') + 1);
+    const canaux = new Set(reals.map((q) => q.slice(0, q.indexOf('.'))).filter((l) => canauxDeclares.has(l)));
+    if (canaux.size > 0) realisationsPar[nom] = canaux;
+  }
+  // LES SORTIES ACTIVES DE LA SCÈNE. `applyDefaultActor` a déjà tourné : `ast.actors` est peuplé,
+  // acteur implicite compris, et chacun porte sa clé de transport. Une scène peut en avoir
+  // plusieurs — c'est le cas réel de Kanopi, qui joue MIDI et audio ensemble.
+  const sortiesActives = [...new Set((ast.actors || [])
+    .map((a) => a && a.properties && a.properties.transport && a.properties.transport.key)
+    .filter((k) => typeof k === 'string' && canauxDeclares.has(k)))];
+  const vusSansRealisation = new Set();
+  const signalerRealisationManquante = (key, line, col) => {
+    const canaux = realisationsPar[key];
+    if (!canaux || vusSansRealisation.has(key) || sortiesActives.length === 0) return;
+    const orphelines = sortiesActives.filter((s) => !canaux.has(s));
+    if (orphelines.length === 0) return;
+    vusSansRealisation.add(key);
+    errors.push({
+      message: `'${key}' est un mot GÉNÉRIQUE : chaque sortie déclare comment elle le réalise, et `
+        + `${orphelines.map((s) => `'${s}'`).join(' et ')} ne le réalise${orphelines.length > 1 ? 'nt' : ''} `
+        + `pas. Écrit ici, il ne ferait rien. Réalisé aujourd'hui par : `
+        + `${[...canaux].sort().map((c) => `'${c}.${key}'`).join(', ')}.`,
+      line,
+      col,
+    });
+  };
+
   // ── UN TAG DE BACKTICK NOMME UN ÉVALUATEUR DÉCLARÉ, PAS N'IMPORTE QUEL MOT ──────────────────
   // ⚠️ CE QUI PASSAIT : `` `zz: du code` `` compilait. Le lecteur de tag ne vérifiait que sa FORME
   // — une expression régulière « une lettre puis des caractères de mot » — jamais son appartenance
@@ -1692,7 +1735,7 @@ function validateReferences(ast, libCtx = {}) {
       noter(node.pairs);
       for (const sq of (node.suffixQualifiers || [])) noter(sq && sq.pairs);
       for (const k of Object.keys(node.payload.params)) {
-        if (!prefixees.has(k)) signalerAmbiguite(k, node.line);
+        if (!prefixees.has(k)) { signalerAmbiguite(k, node.line); signalerRealisationManquante(k, node.line); }
         flag(k, node.line);
       }
     }
@@ -1706,7 +1749,7 @@ function validateReferences(ast, libCtx = {}) {
       for (const p of node.pairs) {
         if (node.type === 'SettingBag') {
           // Une paire ÉCRITE sans préfixe : c'est ici, et seulement ici, que l'ambiguïté se voit.
-          if (!p.lib) signalerAmbiguite(p.key, p.line, p.col);
+          if (!p.lib) { signalerAmbiguite(p.key, p.line, p.col); signalerRealisationManquante(p.key, p.line, p.col); }
           flag(p.key, p.line, p.col);
         }
         // ⛔ LE MODE NE CHANGE PAS EN COURS DE TIRAGE — décision de Romain, 2026-08-08.

@@ -85,3 +85,28 @@
   scope:symbol group rule flow
   transportGroup:audio
 
+
+// VOLUME · LA REALISATION AUDIO DE L INTERFACE GENERIQUE. `expression.volume` est le mot que
+// l auteur ecrit ; celui-ci est ce que la sortie audio en fait — le gain d ACTEUR, un etage
+// permanent entre les voix d un acteur et le maitre. Grandeur : un gain LINEAIRE, unite ratio.
+// Mesure de runtime-audio, rendu par rendu hors-ligne a travers son vrai adaptateur.
+//
+// ⛔ LA PLAGE EST 0..127, ET C EST DELIBERE malgre un gain qui vit en ratio. La forme nue
+// `!(volume:90)` resout vers l INTERFACE, dont la plage est 0..127 ; une realisation declaree
+// 0..1 rendrait `volume:90` HORS PLAGE des qu un acteur sort en audio. La conversion vers le
+// ratio appartient au runtime et n a pas a se lire dans la librairie.
+//
+// ⚠️ ET SA LOI DE CONVERSION EST RAISONNEE, PAS MESUREE — runtime-audio le dit lui-meme : aucun
+// oracle natif n existe pour cette courbe, le moteur d origine sort `_volume` sur le controleur 7
+// et c est un synthe EXTERNE qui fabrique le son. Elle vaut (v/127) au carre, convention General
+// MIDI. Le mot repose la-dessus, et la librairie ne le cache pas.
+//
+// AUCUNE VALEUR PAR DEFAUT, comme l interface et pour sa raison : les defauts vivent dans la
+// librairie d environnement de chaque sortie.
+@def volume
+  implements:expression.volume
+  args:value
+  range:0 127
+  description:`txt: Gain d'acteur — un étage permanent entre les voix d'un acteur et le maître. Le runtime audio convertit cette valeur en gain linéaire.`
+  scope:symbol group rule flow scene
+  transportGroup:audio
