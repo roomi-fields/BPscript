@@ -549,9 +549,10 @@ const MORTES = [
    + "rejoint lib/homomorphism.json, clé 'tables'", 'exemptable'],
 
   [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
-  [/@alias\s+[A-Za-z_][A-Za-z0-9_]*\s*=/, "l'alias avec le signe '=' (supprimé de TOUT le langage le 2026-07-27)", 'exemptable'],
+  [/@alias\b/, "'@alias' — SORTI du langage le 2026-08-15 : '@def' porte ce qu'il faisait, un nom "
+   + "associé à un corps qu'on réinvoque", 'exemptable'],
   [/@map\s+[A-Za-z_<[]/, "'@map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
-   + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@alias'", 'exemptable'],
+   + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@def'", 'exemptable'],
   [/\\\\>>/, "l'antislash DOUBLE — le signe de coupure n'en porte qu'UN. Deux se glissent "
    + "quand on recopie une chaine de code dans de la prose, et le lecteur recopie ce qu'il "
    + "voit : ca ne compile pas", 'absolue'],

@@ -79,7 +79,7 @@ const DECLARATIONS = [
   // désigne plus rien. Remplacé 1-pour-1 par `timepatterns`, mesuré générique avant d'être choisi
   // — accepté avant les règles, refusé après — pour que le socle anti-rétrécissement reste tenu.
   ['timepatterns', '@timepatterns: t1=1/1'], ['var', '@var v'],
-  ['alias', '@alias g cc:2'], ['tempo', '@tempo:90'],
+  ['tempo', '@tempo:90'],
   // `duration` EST SORTIE de la matrice le 2026-08-10 : Romain l'a supprimée le 2026-08-04
   // (hub/decisions/2026-08-04-la-duree-de-scene-est-supprimee.md) et elle était revenue par
   // lib/engine.json à la naissance de cette librairie. Remplacée 1-pour-1 par `randomize`, mesurée
@@ -142,7 +142,10 @@ ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RE
 // légitime de ce socle : une forme RETIRÉE du langage. Un seuil qu'on baisse parce qu'un cas
 // « ne passe plus » est un socle qu'on désarme ; celui-ci se baisse parce que l'espace lui-même a
 // rétréci, et le compte des directives réservées ci-dessus reste, lui, à 40 pour le prouver.
-ok(DECLARATIONS.length >= 22,
+// PLANCHER ABAISSÉ DE 22 À 21 le 2026-08-15, SCIEMMENT : `@alias` sort du langage et sa ligne
+// quitte la matrice. Il ne se règle JAMAIS sur ce que la matrice rend — il descend d'un cran quand
+// un mot sort, jamais parce qu'un extracteur a cessé de voir.
+ok(DECLARATIONS.length >= 21,
   `4. la matrice ne s'est pas vidée — ${DECLARATIONS.length} déclarations éprouvées`);
 // TÉMOIN D'INSTRUMENT : sans lui, une régression rendant le refus muet laisserait tout au vert.
 ok(err(`${S}S -> C4\n@var v\n`).length >= 1,

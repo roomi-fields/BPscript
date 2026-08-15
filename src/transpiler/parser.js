@@ -488,7 +488,9 @@ function parse(tokens, opts = {}) {
       // par les chevrons. Un champ ÉMIS ET TOUJOURS VIDE n'est pas neutre — un consommateur qui le
       // lit conclut « cette scène ne câble rien » au lieu de « ce canal n'existe plus ». On
       // supprime la donnée avec le mot, dans le même mouvement, sans voie parallèle.
-      aliases: [],
+      // `aliases` SUPPRIMÉ le 2026-08-15, par la même règle et pour la même raison : `@alias` sort
+      // du langage, donc son champ sort avec lui. Mesuré avant : aucun consommateur sur les 24
+      // dépôts, et aucune scène du périmètre ne l'écrivait.
       // `labels` SUPPRIMÉ avec '@label' (2026-07-28) : un champ émis et toujours vide fait
       // conclure « cette scène n'étiquette rien » au lieu de « ce canal n'existe plus ».
       declarations: [],
@@ -550,11 +552,6 @@ function parse(tokens, opts = {}) {
           // transmettre . Une branche qui capture doit ranger ce qu elle capture.
           nomsDeclaresLocalement.add(dir.name);
           scene.directives.push(dir);
-        } else if (dir.type === 'AliasDirective') {
-          scene.aliases.push(dir);
-          // Un alias est un nom que LA SCÈNE possède : il gagne sur un mot homonyme du vocabulaire
-          // (cascade, le plus local l'emporte) — même règle que macros et variables de travail.
-          nomsDeclaresLocalement.add(dir.name);
         } else if (dir.type === 'Declaration') {
           // @gate, @trigger, @cv — prefixed declarations
           scene.declarations.push(dir);
@@ -1443,87 +1440,6 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   /**
-   * Parse la VALEUR d'un `@alias` : cc:N, osc:/path, <!trigger, [flag], un nom, ou un nom pointé
-   * (`kick.vel`, `sys.tempo`, `verse.X`). Rend un descripteur `{ kind, … }`.
-   *
-   * ⚠️ CE QUE CETTE FONCTION N'A PAS CHANGÉ le 2026-07-27 au soir, et pourquoi. `@map` est abandonné
-   * et `@alias` revient à sa place : c'est un RENOMMAGE de la directive, pas une refonte de ce
-   * qu'elle peut désigner. L'espace de valeurs reste EXACTEMENT celui d'avant — restreindre serait
-   * trancher, et deux des restrictions envisageables sont justement des QUESTIONS OUVERTES chez
-   * Romain (le numéro de contrôleur brut comme source, qu'il a déclaré hors langage mais dont le
-   * retrait reste à confirmer ; et où s'écrit un câblage de contrôle). Je ne rétrécis pas une
-   * directive sur une déduction : coût mesuré du statu quo = nul, aucune pièce n'écrit ces formes.
-   */
-  function parseAliasValue() {
-    // <!trigger
-    if (at(T.TRIGGER_IN)) {
-      advance();
-      const trigName = expect(T.IDENT).value;
-      return { kind: 'trigger', name: trigName };
-    }
-    // [flag] or actor.flag
-    if (at(T.LBRACKET)) {
-      advance();
-      const flagName = expect(T.IDENT).value;
-      expect(T.RBRACKET);
-      return { kind: 'flag', name: flagName };
-    }
-    // cc:N or cc:N(params) or osc:/path or osc:/path(params) or named-cc alias
-    if (at(T.IDENT)) {
-      const id = advance().value;
-      if (id === 'cc' && at(T.COLON)) {
-        advance();
-        const number = Number(expect(T.INT).value);
-        const params = at(T.LPAREN) ? parseAliasParams() : null;
-        return { kind: 'cc', number, params };
-      }
-      if (id === 'osc' && at(T.COLON)) {
-        advance();
-        // OSC address: /path/segments — SLASH followed by IDENT or INT
-        let address = '';
-        while (at(T.SLASH)) {
-          advance();
-          const seg = at(T.IDENT) ? advance().value : at(T.INT) ? advance().value : '';
-          address += '/' + seg;
-        }
-        const params = at(T.LPAREN) ? parseAliasParams() : null;
-        return { kind: 'osc', address, params };
-      }
-      // sys.command, scene.command, or actor.flag
-      if (at(T.PERIOD) && peek(1).type === T.IDENT) {
-        advance();
-        const secondId = advance().value;
-        if (id === 'sys') {
-          // sys is reserved — always a system command
-          return { kind: 'sys', scene: null, command: secondId };
-        }
-        // Generic scoped reference — encoder resolves using scene/actor context
-        return { kind: 'scoped', scope: id, name: secondId };
-      }
-      // Named CC alias (e.g. "breath" from @cc breath:2)
-      return { kind: 'alias', name: id };
-    }
-    throw new ParseError("@alias : valeur attendue — un nom ('kick.vel'), un point d'attente ('<!depart'), un drapeau ('[tension]'), 'cc:N' ou 'osc:/chemin'.", current());
-  }
-
-  /** Paramètres facultatifs `(clé:valeur, …)` d'une valeur d'alias. */
-  function parseAliasParams() {
-    expect(T.LPAREN);
-    const params = {};
-    while (!at(T.RPAREN) && !atEnd()) {
-      const key = expect(T.IDENT).value;
-      expect(T.COLON);
-      const val = at(T.INT) ? Number(advance().value)
-                : at(T.FLOAT) ? Number(advance().value)
-                : advance().value;
-      params[key] = val;
-      if (at(T.COMMA)) advance();
-    }
-    expect(T.RPAREN);
-    return params;
-  }
-
-  /**
    * Valeur de directive après ':' — logique PARTAGÉE entre la forme de tête (`@seed:7`) et le
    * bloc lu dans le flux (`![seed:7]`) pour garantir des nœuds Directive identiques par
    * construction (contrat BPx).
@@ -2237,7 +2153,7 @@ function parse(tokens, opts = {}) {
         `'@label' est SUPPRIMÉE du langage (décision Romain 2026-07-28), en même temps que le `
         + `suffixe '@${nom}' qu'elle servait à déclarer. Pour ASSOCIER un geste à un élément dans `
         + `la production : le point d'exclamation ('C4!${nom}'). Pour NOMMER quelque chose dans la `
-        + `partie déclarative : '@macro ${nom} <corps>' ou '@alias ${nom} <valeur>'.`, tok);
+        + `partie déclarative : '@def ${nom} <corps>'.`, tok);
     }
 
     // ─── @wire — LE CÂBLAGE INITIAL (Romain, 2026-07-29) ─────────────────────────────────────
@@ -2343,31 +2259,17 @@ function parse(tokens, opts = {}) {
     if (name === 'map') {
       throw new ParseError("'@map' est ABANDONNÉ (décision Romain 2026-07-27, le soir) — le câblage "
         + "passe par les chevrons '>>' et '\\>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
-        + "ce qu'une directive ne sait pas faire. Pour ÉTIQUETER un nom ou DÉSIGNER des éléments "
-        + "marqués, écrire '@alias <nom> <valeur>'. Pour attendre un geste, rien à câbler : "
+        + "ce qu'une directive ne sait pas faire. Pour DÉSIGNER une chose d'un nom, écrire "
+        + "'@def <nom> <corps>'. Pour attendre un geste, rien à câbler : "
         + "'@var <rôle> in.<canal>' puis l'adresse collée au point d'attente.", tok);
     }
 
-    // @alias <nom> <valeur> — DÉSIGNER : donner un nom à une chose technique ou répétitive, ou
-    // désigner ensemble les éléments marqués d'un label (`kick.vel`).
-    //
-    // ⚠️ `@alias` REVIENT le 2026-07-27 au soir, après avoir été absorbé le matin même. Ce n'est pas
-    // une rétrocompatibilité : c'est la directive qui reste quand le CÂBLAGE en sort. Elle DÉSIGNE,
-    // elle ne branche pas — brancher est le geste des chevrons.
-    //
-    // LE SIGNE '=' NE REVIENT PAS AVEC ELLE. Cette partie du matin tient (décision Romain,
-    // uniformité déclarative) : une seule forme dans tout le langage, `@directive <nom> <valeur>`.
-    //
-    // ⚠️ CE QUE ÇA N'EST PAS — question posée DEUX fois par Romain, donc fermée ici : ce n'est pas
-    // une MACRO. Une macro s'écrit DANS LA MUSIQUE, à sa place dans la règle, et Kairos la résout à
-    // la PROJECTION, feuille par feuille, déclenchée par un MOT qui paraît dans le flux. Un alias
-    // ne s'écrit jamais comme un mot du flux et n'a ni corps ni paramètres. Ni le même composant,
-    // ni le même moment, ni le même déclencheur.
   /**
    * ⛔ LE SIGNE `=` EST SUPPRIME DE TOUT LE LANGAGE (decision Romain, 2026-07-27) — et ce refus
    * doit valoir pour TOUTE directive qui nomme, pas pour celle ou le defaut s est montre.
    *
-   * ⚠️ IL N EXISTAIT QUE POUR `@alias`. Mesure du 2026-08-09, en reecrivant le garde qui le
+   * ⚠️ IL EST NE POUR `@alias`, sorti du langage le 2026-08-15 ; il vaut desormais pour `@var` et
+   * `@def`, les deux directives qui nomment. Mesure du 2026-08-09, en reecrivant le garde qui le
    * surveille : `@alias breath = cc:2` nommait le signe, `@def riff = C4` et `@var riff = C4`
    * refusaient pour une tout autre raison — l un  ne declare rien , l autre  ligne non reconnue .
    * L auteur qui gardait le signe par habitude apprenait donc la disparition sur UNE directive et
@@ -2406,22 +2308,6 @@ function parse(tokens, opts = {}) {
       + `2026-07-27) — ecrire '@${directive} ${nom} <valeur>' sans rien entre les deux.`,
       current());
   }
-
-    if (name === 'alias') {
-      if (!at(T.IDENT)) {
-        throw new ParseError("@alias doit NOMMER avant de désigner : '@alias <nom> <valeur>' — par "
-          + "exemple '@alias frappe kick.vel'. Le nom d'abord, comme toutes les autres directives.", tok);
-      }
-      const aliasName = advance().value;
-      refuserLeSigneEgal('alias', aliasName);
-      if (at(T.ARROW_R) || at(T.ARROW_L) || at(T.ARROW_BI)) {
-        throw new ParseError(`@alias ${aliasName} : la flèche n'entre pas dans une directive — elle `
-          + `est EXCLUSIVEMENT une règle de production, et ne l'a jamais été d'autre chose. Pour `
-          + `désigner : '@alias ${aliasName} <valeur>'. Pour BRANCHER : les chevrons '>>'.`, current());
-      }
-      const source = parseAliasValue();
-      return { type: 'AliasDirective', name: aliasName, source, line: tok.line };
-    }
 
     // @cc breath:2, expression:11 — named MIDI CC declarations
     if (name === 'cc') {
@@ -5379,7 +5265,7 @@ function parse(tokens, opts = {}) {
       + `2026-07-28). Deux écritures le remplacent, selon ce qu'on voulait faire. Pour ASSOCIER `
       + `un geste à un élément DANS LA PRODUCTION : le point d'exclamation, `
       + `'C4!${nom}' — le geste se déclenche à l'instant du terminal sans occuper de pas. Pour `
-      + `DÉCLARER UNE ÉTIQUETTE : la partie déclarative, une macro ou un alias.`, current());
+      + `DÉCLARER UNE ÉTIQUETTE : la partie déclarative, par '@def'.`, current());
   }
 
   function parseRhsElement() {

@@ -184,7 +184,7 @@ function annotateBackticks(ast) {
  *   - backticks → nœuds (`_btName`, `code` en tête ; `payload.interp` + `payload.nature:'code'`) ;
  *   - drapeaux nommés → `ast.vars` (`VarDirective` de `varType.kind === 'flag'`, ex-`@flag`) ;
  *   - librairies → directives d'invocation (`@alphabet.X`, `@tuning.Y`…) ;
- *   - scènes/expose/alias/tempo → `ast.scenes` / `ast.exposes` / `ast.aliases` / `@mm` ;
+ *   - scènes/expose/tempo → `ast.scenes` / `ast.exposes` / `@mm` ;
  *   - acteurs (transport/alphabet/eval) → `ast.actors[].references` (ActorReference) ;
  *   - payload par token (nature/actor/params/flux) → posé par le parser.
  *
@@ -225,7 +225,6 @@ function applyEnvironmentDefaults(ast, env) {
       subkey: null,
       runtime: null,
       value: env.tempo,
-      aliases: null,
       modifiers: null,
       fromEnvironment: true,   // provenance : défaut d'environnement, pas déclaré dans la source
       line: 0,
@@ -2027,33 +2026,6 @@ function emitActorLibRefs(ast) {
  * Une règle qui porte déjà un mètre n'est PAS touchée : c'est le recouvrement.
  */
 /**
- * GARDE DE `@alias` — une valeur PORTÉE doit nommer quelque chose de déclaré.
- *
- * MESURÉ le 2026-07-26 (signalé par bp3-frontend) : une correspondance dont la portée était un mot
- * INVENTÉ compilait. La directive arrive pourtant bien dans l'arbre — dans son canal propre, pas dans
- * `ast.directives`, ce qui avait fait conclure à tort qu'elle ne portait rien. Le défaut n'est donc
- * pas un silence de transport : c'est l'ABSENCE DE VALIDATION du référent. N'importe quel mot passait.
- *
- * ⚠️ L'incident date d'avant le 2026-07-27 et se lisait alors dans une écriture à flèche. Elle
- * n'est pas reproduite ici : la flèche est une règle de PRODUCTION et ne l'a jamais été d'autre
- * chose, donc la citer même au passé donnerait à recopier une faute (règle Romain, 2026-07-27).
- *
- * CE QUI EST DÉCLARABLE, selon `docs/design/SCENES.md` §6.1-6.2 — on ne crée aucune forme, on
- * vérifie celles qui existent :
- *   `verse.kick`  → `verse` est une SCÈNE déclarée (`@scene verse`) ;
- *   `groove.vel`  → `groove` est l'ÉTIQUETTE d'un groupe polymétrique (`groove:{…}`) ;
- *     ⚠️ le SUFFIXE arobase qui posait une étiquette sur un élément est SUPPRIMÉ depuis le
- *     2026-07-28 — il ne se cite pas, même pour expliquer sa disparition : associer dans la
- *     production se fait avec le point d'exclamation, déclarer se fait en déclaratif ;
- *   `*.kick.vel`  → toutes les scènes.
- * Un mot qui n'est aucun des trois ne désigne rien, et le taire fabrique une correspondance morte.
- *
- * ⚠️ CE QUE CETTE GARDE NE FAIT PAS : elle ne dit pas COMMENT une note entrante se déclare comme
- * source (`@alias note.C#2`). C'est une forme à créer, et cette question est chez Romain. Ici on
- * ferme le silence, on ne remplit pas le vide : `note.C#2` tombe donc, faute de référent déclaré,
- * et c'est le bon comportement tant que la forme n'existe pas.
- */
-/**
  * GARDE — UN SEUL ESPACE DE NOMS. Rien ne peut porter le nom d'autre chose.
  *
  * Règle de Romain (2026-07-28) : « il ne faut AUCUNE AMBIGUÏTÉ POSSIBLE. RIEN ne peut avoir des
@@ -2122,7 +2094,6 @@ function refuserNomsEnDouble(ast, libCtx) {
       });
     }
   };
-  for (const a of ast.aliases || []) noter(a?.name, 'un alias', a?.line);
   for (const e of ast.inputs || []) noter(e?.name, 'une entrée', e?.line);
   // ⚠️ `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`) depuis le 2026-08-05, pas un nom nu :
   // une ligne peut en porter PLUSIEURS (`names`). Un drapeau (Romain 2026-07-30, `varType.kind ===
@@ -2298,55 +2269,6 @@ function refuserNomsEnDouble(ast, libCtx) {
       continue;
     }
   }
-  return erreurs;
-}
-
-function validateAliases(ast) {
-  const erreurs = [];
-  if (!(ast.aliases || []).length) return erreurs;
-  const connus = new Set(['*']);
-  for (const sc of ast.scenes || []) if (sc && sc.name) connus.add(sc.name);
-  // Les ENTRÉES déclarées (`@in <rôle> …`) sont des portées légitimes pour une source : c'est
-  // exactement ce que `@alias depart touches.z` désigne — le rôle `touches`, et son étiquette `z`.
-  for (const e of ast.inputs || []) if (e && e.name) connus.add(e.name);
-  const collecterLabels = (n) => {
-    if (!n || typeof n !== 'object') return;
-    if (Array.isArray(n)) { n.forEach(collecterLabels); return; }
-    // Depuis le retrait du suffixe arobase (2026-07-28), la SEULE source d'étiquette est le
-    // groupe polymétrique préfixé par deux-points (`groove:{…}`) — autre graphie, même champ.
-    // C'est ce qui reste de vivant sous ce parcours ; sans lui il n'aurait plus rien à collecter.
-    if (typeof n.label === 'string' && n.label) connus.add(n.label);
-    for (const k in n) if (n[k] && typeof n[k] === 'object') collecterLabels(n[k]);
-  };
-  collecterLabels(ast.subgrammars);
-  // Une extremite NUE est lue comme un ALIAS : un nom seul. Elle n'etait validee par rien — deux
-  // mots entierement inventes passaient entiers. Mesure d'Atlas confirmee le 2026-07-26. Ce qu'un
-  // nom nu peut designer, selon SCENES.md §6.1 : un alias declare, un trigger/gate/cv declare, un
-  // label pose, une scene, une macro.
-  for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
-  const verifierNu = (bout, cote, ligne) => {
-    if (!bout || bout.kind !== 'alias' || connus.has(bout.name)) return;
-    erreurs.push({
-      message: `'@alias' : ${cote} '${bout.name}' ne désigne rien — un nom nu doit être une ENTRÉE `
-        + `déclarée ('@in ${bout.name} transport.<canal>'), un trigger ou un gate déclaré, un label `
-        + `posé sur un élément, une scène ou une macro`
-        + ([...connus].length ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
-      line: ligne,
-    });
-  };
-  const verifier = (bout, cote, ligne) => {
-    verifierNu(bout, cote, ligne);
-    if (!bout || bout.kind !== 'scoped' || connus.has(bout.scope)) return;
-    erreurs.push({
-      message: `'@alias' : ${cote} '${bout.scope}.${bout.name}' ne désigne rien — '${bout.scope}' n'est `
-        + `ni une scène déclarée, ni une étiquette de groupe polymétrique (\`${bout.scope}:{…}\`), ni '*'`
-        + (connus.size > 1 ? ` ; connus ici : ${[...connus].filter((x) => x !== '*').join(', ') || '(aucun)'}` : ''),
-      line: ligne,
-    });
-  };
-  // Une liaison porte désormais UN NOM et UNE SOURCE (décision 2026-07-27) : il n'y a plus de
-  // « cible » à vérifier — le nom EST la cible, et il est créé par la déclaration elle-même.
-  for (const a of ast.aliases) verifier(a.source, 'la valeur', a.line);
   return erreurs;
 }
 
@@ -2571,7 +2493,6 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
-    result.errors.push(...validateAliases(ast));  // `@alias` : une valeur portée doit nommer un référent déclaré
     emitNoteTerminals(ast);          // l'arbre dit LUI-MÊME quels noms sont des notes (ordre architecte 2026-07-29)
     emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
     result.ast = ast;

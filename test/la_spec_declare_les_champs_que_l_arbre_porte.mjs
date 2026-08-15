@@ -121,7 +121,7 @@ const DETTE = new Set([
   // rougira si elle survit à son sujet.
   'Rule.qualifiers', 'Polymetric.qualifiers', 'Wait.qualifiers',
   // Champs de la SCÈNE que la spec ne détaille pas encore, nœud par nœud.
-  'Scene.scenes', 'Scene.exposes', 'Scene.inputs', 'Scene.aliases', 'Scene.declarations', 'Scene.soundPrototypes', 'Scene.soundAssignments',
+  'Scene.scenes', 'Scene.exposes', 'Scene.inputs', 'Scene.declarations', 'Scene.soundPrototypes', 'Scene.soundAssignments',
   // Champs de DIRECTIVE et d'ACTEUR portés par l'arbre, absents de leur déclaration.
   'Directive.runtime', 'Directive.aliases', 'Directive.modifiers', 'Directive.timePatterns',
   'ActorDirective.values', 'ActorReference.line', 'ActorDirective.libRefs',

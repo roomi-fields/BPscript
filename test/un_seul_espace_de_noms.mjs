@@ -30,7 +30,6 @@ const refus = (src) => (compileToBPxAST(src).errors || [])
 // L'espace : chaque SORTE qui crée un nom × ce qu'elle peut heurter.
 const SORTES = [
   ['une définition',         (n) => `@def ${n} C4 D4`],
-  ['un alias',               (n) => `@alias ${n} cc:2`],
   ['une entrée',             (n) => `@var ${n} in.midi`],
   ['une variable de travail', (n) => `@var ${n}`],
   // Décision Romain 2026-07-30 (`hub/decisions/2026-07-30-trois-arbitrages-nature-fabrique-
@@ -41,7 +40,6 @@ const SORTES = [
 const CE_QUI_EST_DEJA_PRIS = [
   ['un TERMINAL de l\'alphabet', 'G4', (poseur) => `@core\n@alphabet.western\n${poseur}\nS -> C4 D4`],
   ['une DÉFINITION déjà déclarée', 'pris', (poseur) => `@core\n@def pris C4 D4\n${poseur}\nS -> C4`],
-  ['un ALIAS déjà déclaré',      'pris', (poseur) => `@core\n@alias pris cc:9\n${poseur}\nS -> C4`],
   ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `@core\n@var pris flag: a:1, b:2\n${poseur}\nS -> C4`],
 ];
 console.log(`[un seul espace de noms] ${SORTES.length} sortes × ${CE_QUI_EST_DEJA_PRIS.length} conflits`);
@@ -63,7 +61,6 @@ const TETES_REFUSEES = [
   // réécrit un terminal : elle en a forcément un en tête, et « la note devient inatteignable » est
   // ce qu'elle fait EXPRÈS. Elles sont désormais au lot B, celui de ce qui DOIT passer.
   ['contre une définition', '@core\n@def motif C4 D4\nmotif -> C4'],
-  ['contre un alias',     '@core\n@alias motif cc:2\nmotif -> C4'],
   ['contre un drapeau',   '@core\n@var motif flag: a:1, b:2\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
   ['contre un ACTEUR (l\'amalgame)', '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'],
@@ -106,7 +103,7 @@ const DOIVENT_PASSER = [
   ['un ACTEUR qui qualifie un bloc de code par le point',
    '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`'],
   ['des noms sans rapport entre eux',
-   '@core\n@alphabet.western\n@def grondement saw >> audio\n@alias souffle cc:2\nmotif -> C4\nS -> motif'],
+   '@core\n@alphabet.western\n@def grondement saw >> audio\n@def souffle perc.tin\nmotif -> C4\nS -> motif'],
   ['un nom PROCHE d\'un terminal, mais qui n\'en est pas un',
    '@core\n@alphabet.western\n@def G4_v saw >> audio\nS -> C4'],
   ['un nom d\'une AUTRE convention que l\'alphabet actif',
@@ -160,6 +157,9 @@ ok(refus('@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'
   'TÉMOIN — la règle doit savoir MORDRE (sinon tout ce fichier ment)');
 ok(refus('@core\n@alphabet.western\nmotif -> C4').length === 0,
   'TÉMOIN — et savoir se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
+// PLANCHERS INCHANGÉS APRÈS LE RETRAIT D'`@alias` (2026-08-15) : la sorte et le conflit qu'il
+// portait sortent tous deux, et les seuils restent au-dessus de ce qui subsiste. Ils ne se règlent
+// jamais sur ce que les matrices rendent — ils disent ce qu'on refuse de descendre en dessous.
 ok(SORTES.length >= 4 && CE_QUI_EST_DEJA_PRIS.length >= 3 && DOIVENT_PASSER.length >= 12,
   'les matrices ne se sont pas vidées');
 

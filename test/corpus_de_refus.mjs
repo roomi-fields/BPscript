@@ -48,8 +48,6 @@ const REGLES = [
   // ── Décisions datées ───────────────────────────────────────────────────────
   ['decision', "le signe d'égalité dans une directive (2026-07-27)",
    S('@def V = C4\nS -> V'), S('@def V C4\nS -> V'), "'=' a DISPARU"],
-  ['decision', "la directive de correspondance, abandonnée (2026-07-27)",
-   S('@map tempo cc:2\nS -> C4'), S('@alias tempo cc:2\nS -> C4'), 'ABANDONNÉ'],
   ['decision', "le suffixe arobase sur un élément (2026-07-28)",
    S('S -> C4@kick D4'), S('S -> C4 D4'), 'SUPPRIMÉ'],
   ['decision', "la directive d'étiquette (2026-07-28)",
@@ -70,8 +68,6 @@ const REGLES = [
   // Romain `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` : c'est le principe même du
   // mode sub/sub1, une règle de substitution réécrit un terminal. La ligne au-dessus reste : elle
   // porte une DÉCLARATION (`@macro G4`), qui CRÉE un nom — la règle d'unicité tient pour elle.
-  ['decision', "deux déclarations du même nom (2026-07-28)",
-   S('@def x saw >> audio\n@alias x cc:2\nS -> C4'), S('@def x saw >> audio\n@alias y cc:2\nS -> C4'), 'déjà pris'],
   ['decision', "un câblage écrit dans le flux, non porté par le moteur (2026-07-28)",
    S('S -> C4 !osc >> filtre D4'), S('@def v osc >> filtre\nS -> C4!v D4'), null],
 
@@ -90,7 +86,6 @@ const REGLES = [
   // déclarée par '@var' n'est PAS acceptée comme valeur d'alias, alors qu'une macro l'est. Les
   // deux CRÉENT pourtant un nom au sens de la règle d'unicité. Incohérence entre deux de mes
   // propres règles, trouvée par ce corpus ; signalée, PAS corrigée sans arbitrage.
-  ['sans-sens', "un alias qui ne désigne rien", S('@alias g fantome\nS -> C4'), S('@def reel saw >> audio\n@alias g reel\nS -> C4'), 'ne désigne rien'],
   ['sans-sens', "un terminal absent des alphabets en portée", S('S -> zzz'), S('S -> C4'), 'non déclaré'],
   ['sans-sens', "une adresse de point d'attente malformée",
    S('@var touches in.keyboard\nS -> C4 <!touches.60bis D4'), S('@var touches in.keyboard\nS -> C4 <!touches.60 D4'), 'adresse'],

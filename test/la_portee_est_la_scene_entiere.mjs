@@ -57,7 +57,6 @@ for (const [nom, src, arrive] of DECLARATIONS) {
 const A_TRAVERS_LES_BLOCS = [
   ['une variable de travail', '@var v\nS -> C4 v\n-----\nT -> v C4\nS -> T'],
   ['une définition',          '@def m C4 D4\nS -> m C4\n-----\nT -> m\nS -> T'],
-  ['un alias',                '@alias g cc:2\nS -> C4\n-----\nT -> C4\nS -> T'],
   ['une déclaration de gate', '@gate C4:midi\nS -> C4\n-----\nT -> C4\nS -> T'],
 ];
 for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
@@ -97,7 +96,10 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 
 // ── 4. SOCLE ET TÉMOINS D'INSTRUMENT ────────────────────────────────────────────────────────
 ok(DECLARATIONS.length === 4, `4. les QUATRE déclarations doivent être éprouvées — ${DECLARATIONS.length}`);
-ok(A_TRAVERS_LES_BLOCS.length >= 4, '4. la matrice des traversées ne s\'est pas vidée');
+// PLANCHER ABAISSÉ DE 4 À 3 le 2026-08-15, SCIEMMENT : `@alias` sort du langage, donc son témoin
+// sort de la matrice. Un plancher qui suit ce que l'extracteur rend ne mesure plus rien ; celui-ci
+// se déplace par une décision, et la décision est écrite ici.
+ok(A_TRAVERS_LES_BLOCS.length >= 3, '4. la matrice des traversées ne s\'est pas vidée');
 // TÉMOIN — le garde doit savoir MORDRE : un nom JAMAIS déclaré reste refusé, séparateur ou pas.
 ok(err('S -> C4\n-----\nT -> zzz\nS -> T').length >= 1,
   '4. TÉMOIN — un nom jamais déclaré reste refusé après un séparateur (sinon ce fichier ne prouve rien)');

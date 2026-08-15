@@ -128,7 +128,6 @@ export function collisions(ast) {
   for (const d of ast.directives || []) {
     if (d && d.type === 'DefDirective') noter(d.name, 'définition');
   }
-  for (const a of ast.aliases || []) noter(a?.name, 'alias');
   for (const e of ast.inputs || []) noter(e?.name, 'entrée');
   // `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05,
   // pas un nom nu — une ligne peut en porter PLUSIEURS (`names`).
