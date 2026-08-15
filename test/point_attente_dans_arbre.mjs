@@ -22,7 +22,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const rhs = (regle) => {
-  const o = compileToBPxAST(`@core\n@alphabet.western:midi\n@trigger sync1:midi\n@mode:ord\n${regle}\n`);
+  const o = compileToBPxAST(`@core\n@alphabet.western:midi\n@trigger sync1:midi\n@trigger sync2:midi\n@mode:ord\n${regle}\n`);
   return { err: o.errors || [], rhs: o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [] };
 };
 

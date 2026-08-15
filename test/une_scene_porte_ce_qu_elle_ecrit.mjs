@@ -63,9 +63,17 @@ const SECTIONS = [
     porte: (ast) => ({ entrees: (ast?.actors || []).filter((a) => a.name !== 'scene').length, corps: 1 }),
   },
   {
+    // ⚠️ `@var` ÉCRIT DEUX CHOSES ET L'ARBRE LES RANGE À DEUX ENDROITS. `@var <nom> <convention>`
+    // est une VARIABLE DE TRAVAIL et vit dans `ast.vars` ; `@var <rôle> in.<canal>` est une ENTRÉE
+    // et vit dans `ast.inputs` — un `InDirective`, depuis la décision Romain du 2026-08-04 qui a
+    // fait remplacer `@in` par `@var … in.<canal>`.
+    // CE GARDE NE COMPTAIT QUE LE PREMIER : une scène qui déclare une entrée « écrivait 1 variable
+    // et l'arbre en portait 0 ». Trouvé le 2026-08-15, quand Kanopi a déclaré le point d'attente
+    // de sa scène d'enseignement — la migration d'un voisin a révélé mon angle mort, pas un défaut
+    // chez lui. Le compte porte donc sur LES DEUX destinations, comme le mot les porte.
     quoi: 'variables',
     ecrit: (t) => (t.match(/^@var\b/gm) || []).length,
-    porte: (ast) => ({ entrees: (ast?.vars || []).length, corps: 1 }),
+    porte: (ast) => ({ entrees: (ast?.vars || []).length + (ast?.inputs || []).length, corps: 1 }),
   },
 ];
 
