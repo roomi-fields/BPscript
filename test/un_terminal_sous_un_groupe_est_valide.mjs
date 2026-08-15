@@ -31,7 +31,7 @@ const err = (src) => {
   try { return (compileToBPxAST(src).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
 };
-const S = '@core\n@alphabet.western:midi\n@trigger s1:midi\n@mode:ord\n';
+const S = '@core\n@alphabet.western:midi\n@var s1 in.midi\n@mode:ord\n';
 
 // ── 1. LA MATRICE — chaque CONTENANT × (inconnu refusé / connu accepté) ─────────────────────
 // `%s` reçoit le terminal. Les formes viennent de ce que le parser produit, pas de mon souvenir.

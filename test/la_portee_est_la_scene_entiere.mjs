@@ -16,7 +16,7 @@
  * POINT 1 — PORTÉE UNIQUE. Aucun nom n'est local à une sous-grammaire. Les trois seules exceptions
  * sont des CORPS DE BLOCS : propriétés d'un `@actor`, affectations de son d'un `@alphabet.X`,
  * paramètres d'une `@macro`.
- * POINT 5 — LES QUATRE DÉCLARATIONS DE TERMINAL RESTENT : `@gate X:cible`, `@trigger X:cible`,
+ * POINT 5 — LES QUATRE DÉCLARATIONS DE TERMINAL RESTENT : `@gate X:cible`, `@var X in.midi`,
  * `@cv X:cible`, `@var X`. Romain : « on garde les 4, ils ont bien leur utilité ». C'est la voie
  * qui permet de déclarer un terminal DIRECTEMENT dans la scène sans passer par un alphabet — et
  * c'est ce qui a sauvé `@var`, dont la suppression avait été proposée puis retirée.
@@ -40,7 +40,11 @@ const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 // directives et invisible de tout ce qui cherche un modulateur.
 const DECLARATIONS = [
   ['@gate',    '@gate C4:midi\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
-  ['@trigger', '@core\n@trigger sync1:midi\nS -> C4 <!sync1', (a) => (a.declarations || []).some((d) => d.name === 'sync1')],
+  // ⚠️ LE MOT A CHANGÉ, PAS LA PORTÉE. `@trigger` est sorti du langage le 2026-08-15 — il était
+  // absent de la bible depuis toujours — et `@var <rôle> in.<canal>` est la forme qui déclare ce
+  // qu'un point d'attente attend (décision du 2026-08-04). Le nom arrive donc dans `inputs`, pas
+  // dans `declarations` : c'est le MÊME fait mesuré au bon endroit de l'arbre.
+  ['@var … in.<canal>', '@core\n@var sync1 in.midi\nS -> C4 <!sync1', (a) => (a.inputs || []).some((d) => d.name === 'sync1')],
   ['@var (module)', '@mod\n@var env1 adsr\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
   ['@var',     '@var travail\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];

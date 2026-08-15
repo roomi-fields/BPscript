@@ -207,7 +207,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // Descendre jusqu'aux FEUILLES : un nom sous un groupe ou sous une note ancrée compte autant
   // qu'un voisin de surface. Faute payée quatre fois en juillet — compter la surface ne voit pas
   // ce qui vit sous un nœud composite.
-  const r = compiler('@core\n@alphabet.western:midi\n@trigger sync1:midi\nS -> {C4 E4} G4<!sync1');
+  const r = compiler('@core\n@alphabet.western:midi\n@var sync1 in.midi\nS -> {C4 E4} G4<!sync1');
   for (const n of ['C4', 'E4', 'G4']) {
     ok((r.ast?.noteTerminals || []).includes(n),
       `3. '${n}' sous un groupe ou une note ancrée doit être vu (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);

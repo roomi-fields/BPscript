@@ -1802,17 +1802,6 @@ function parse(tokens, opts = {}) {
         tok);
     }
 
-    // @expose [intensity] [energy] — expose flags to parent scene
-    if (name === 'expose') {
-      const flags = [];
-      while (at(T.LBRACKET)) {
-        advance();
-        flags.push(expect(T.IDENT).value);
-        expect(T.RBRACKET);
-      }
-      return { type: 'ExposeDirective', flags, line: tok.line };
-    }
-
     // ─── PIERRE TOMBALE — `@transport`/`@out` ne sont PAS des directives de scène (Romain,
     // 2026-08-04) ─────────────────────────────────────────────────────────────────────────────
     // Signalé par Atlas, mesuré avant correction : le tombstone `transport` posé DANS un bloc
@@ -2156,30 +2145,6 @@ function parse(tokens, opts = {}) {
         + `partie déclarative : '@def ${nom} <corps>'.`, tok);
     }
 
-    // ─── @wire — LE CÂBLAGE INITIAL (Romain, 2026-07-29) ─────────────────────────────────────
-    //
-    //     @wire saw >> lpf >> audio
-    //
-    // Il pose l'ÉTAT DE DÉPART du branchement ; le flux le modifie ensuite avec les chevrons
-    // existants (`>>` brancher, `\>>` couper). Ça ne rouvre PAS la directive de correspondance
-    // abandonnée le 2026-07-27 : l'argument qui l'avait tuée était qu'UNE DIRECTIVE NE SE
-    // DÉBRANCHE PAS — or un câblage INITIAL n'a pas à se débrancher, c'est précisément sa
-    // définition.
-    //
-    // ⚠️ LE NŒUD N'EST PAS NEUF — c'est le `Wiring` que produisent déjà les corps de macro, à
-    // l'identique. Inventer un second nœud pour le même fait aurait été une seconde source de
-    // vérité, et c'est la faute que j'ai payée le matin même en fondant `noteTerminals` avec
-    // `alphabetTerminals`. Un même fait, un même nœud.
-    //
-    // ⚠️ ET IL VIT À LA RACINE, PAS DANS `directives` — demandé par BPx, qui a mesuré avant que
-    // j'écrive : sans champ propre, leur repli attrape-tout le collerait sur CHAQUE FEUILLE. Le
-    // risque n'était pas la casse (leurs trois formes d'essai chargent vertes) mais le PLACEMENT
-    // SILENCIEUX. `scene.wires` le met là où vivent déjà les acteurs et la config de hauteur.
-    // ABSENT ≠ VIDE, comme `libRefs` : le champ est OMIS quand la scène ne câble rien.
-    // On REND le nœud et l'appelant le range : `scene` n'est pas dans la portée ici, et le même
-    // aiguillage sert déjà au modulateur `@cv`. Un seul mécanisme de routage, pas deux.
-    if (name === 'wire') return parseWiring(tok.line);
-
     // @gate Sa:midi · @cv env1 mod.adsr(…) — LE DEUX-POINTS TRANCHE (Romain, 2026-07-29).
     //
     // ⚠️ CE N'EST PAS UN ÉLARGISSEMENT, C'EST LE RETRAIT D'UNE DEVINETTE. Le compilateur
@@ -2212,7 +2177,7 @@ function parse(tokens, opts = {}) {
         + `dont la forme de remplacement est en cours d arbitrage : il n y a pas de reecriture a `
         + `donner aujourd hui.`, tok);
     }
-    if (name === 'gate' || name === 'trigger') {
+    if (name === 'gate') {
       const declName = expect(T.IDENT).value;
       if (at(T.COLON)) {                     // PROPRIÉTÉ sur un nom existant
         advance();
@@ -2308,21 +2273,6 @@ function parse(tokens, opts = {}) {
       + `2026-07-27) — ecrire '@${directive} ${nom} <valeur>' sans rien entre les deux.`,
       current());
   }
-
-    // @cc breath:2, expression:11 — named MIDI CC declarations
-    if (name === 'cc') {
-      if (at(T.COLON)) advance();  // optional colon: @cc: breath:2 or @cc breath:2
-      const ccMappings = [];
-      while (at(T.IDENT)) {
-        const ccName = advance().value;
-        expect(T.COLON);
-        const ccNumber = Number(expect(T.INT).value);
-        ccMappings.push({ name: ccName, number: ccNumber });
-        if (at(T.COMMA)) advance();
-      }
-      return { type: 'Directive', name, subkey, runtime: null, value: null, aliases: null,
-               modifiers: null, ccMappings, line: tok.line };
-    }
 
     // ─── PIERRE TOMBALE — `@flag` (directive de tête de scène) n'existe plus (référence
     // 2026-08-05) ─────────────────────────────────────────────────────────────────────────────

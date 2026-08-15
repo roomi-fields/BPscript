@@ -33,7 +33,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ── 1. LE NOUVEAU NOM EST CELUI QUI SORT ────────────────────────────────────────────────────
-const S = '@core\n@alphabet.western:midi\n@trigger sync1:midi\n@mode:ord\n';
+const S = '@core\n@alphabet.western:midi\n@var sync1 in.midi\n@mode:ord\n';
 const rhs0 = (regle) => compileToBPxAST(`${S}${regle}\n`).ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
 {
   const seul = rhs0('S -> <!sync1 C4');
