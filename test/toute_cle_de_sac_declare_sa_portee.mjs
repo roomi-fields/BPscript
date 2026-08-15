@@ -194,11 +194,32 @@ ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 23,
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `
    + `balayées, 5 au moins attendues.`);
-ok(Array.isArray(LIBS.core?.schema?.channelParamsScope)
-   && LIBS.core.schema.channelParamsScope.every((s) => VOCABULAIRE.includes(s)),
-   `C. les paramètres d'adresse du socle ne déclarent pas leur portée, ou l'écrivent hors `
-   + `vocabulaire : ${JSON.stringify(LIBS.core?.schema?.channelParamsScope)}. Ils s'écrivent dans `
-   + `un sac ('E4(ch:5)') : la règle vaut pour eux aussi.`);
+// ── LES CLÉS D'ADRESSE, UNE PAR UNE ─────────────────────────────────────────────────────────
+// Elles ont quitté le socle le 2026-08-15 pour la librairie du canal qui les porte, et leur portée
+// a cessé d'être une LISTE UNIQUE (`channelParamsScope`) pour devenir un champ SUR CHAQUE CLÉ.
+// Ce volet suit le déménagement, et il en profite pour balayer les cinq déclarations au lieu du
+// seul tableau qui les gouvernait toutes — une clé sans portée ne peut plus se cacher derrière ses
+// sœurs. Le balayage lit TOUTES les librairies : le domicile est une donnée, pas un nom en dur.
+{
+  const adresses = [];
+  for (const [nomLib, lib] of Object.entries(LIBS)) {
+    const cles = lib?.schema?.addressKeys;
+    if (!cles || Array.isArray(cles) || typeof cles !== 'object') continue;
+    for (const [nom, def] of Object.entries(cles)) {
+      if (nom.startsWith('_')) continue;
+      adresses.push({ nom, def, source: `${nomLib}.schema.addressKeys` });
+    }
+  }
+  ok(adresses.length >= 5,
+     `C. ${adresses.length} clé(s) d'adresse balayée(s), 5 au moins attendues — un balayage qui `
+     + `rend zéro mesure sa propre recherche, pas la donnée.`);
+  for (const { nom, def, source } of adresses) {
+    ok(Array.isArray(def.scope) && def.scope.length > 0 && def.scope.every((s) => VOCABULAIRE.includes(s)),
+       `C. la clé d'adresse '${nom}' (${source}) ne déclare pas sa portée, ou l'écrit hors `
+       + `vocabulaire : ${JSON.stringify(def.scope)}. Elle s'écrit dans un sac ('E4(ch:5)') : la `
+       + `règle vaut pour elle aussi.`);
+  }
+}
 
 // ── D. TÉMOIN — LE VOCABULAIRE EST VRAIMENT EMPLOYÉ, PAS DÉCORATIF ──────────────────────────
 // ⚠️ Sans lui, un catalogue qui déclarerait partout la même portée passerait A, B et C en triomphe

@@ -32,6 +32,52 @@
   name:midi
   description:`txt: Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.`
 
+// ═══ LES CLES D ADRESSE ═══
+// OU VA L EVENEMENT, ou D OU VIENT celui qu un point d attente ecoute. Elles vivaient dans
+// lib/core.json schema.addressKeys ; Romain les a envoyees ici le 2026-08-15 -- « dans midi ».
+// Le socle n a plus a nommer une adresse : le destinataire se lit sur le resolvedBy de ce
+// fichier, comme pour tout le reste, au lieu d une legende tenue a part dans le schema.
+//
+// LE PARSEUR LES RANGE DANS UN TIROIR DEDIE, `payload.address`, distinct des controles : `E4(ch:5)`
+// surcharge le canal d une occurrence, il ne joue pas plus fort. Ce tri se lit sur cette liste et
+// sur rien d autre.
+//
+// LA PORTEE EST SUR CHAQUE CLE, plus dans une liste unique du schema. L ancienne forme
+// (`channelParamsScope`) donnait la MEME portee aux cinq et n avait nulle part ou en dire une
+// autre ; le jour ou une cle en demande une differente, elle l ecrit ici. Les quatre places
+// retenues sont celles d un sac dans une regle : symbol, group, rule, flow. La declaration d
+// ADRESSE D ACTEUR (`out.midi(ch:1)`) n est pas une de ces places -- elle est ailleurs dans la
+// scene, et ce champ ne la gouverne pas.
+//
+// ⚠️ `port` ET `device` NE SONT PAS PROPRES AU MIDI, et le fait est signale : une sortie OSC
+// s adresse aussi par un port. Ils suivent la decision telle qu elle est rendue ; leur domicile
+// definitif appartient a Romain le jour ou un second canal declarera les siens.
+
+@def ch
+  section:schema.addressKeys
+  description:`txt: Canal d'adresse, forme courte de channel.`
+  scope:symbol group rule flow
+
+@def channel
+  section:schema.addressKeys
+  description:`txt: Canal d'adresse, forme longue de ch.`
+  scope:symbol group rule flow
+
+@def device
+  section:schema.addressKeys
+  description:`txt: Appareil visé par l'adresse.`
+  scope:symbol group rule flow
+
+@def note
+  section:schema.addressKeys
+  description:`txt: Numéro de note d'une adresse — la source qu'un point d'attente écoute, l'événement qu'une occurrence vise.`
+  scope:symbol group rule flow
+
+@def port
+  section:schema.addressKeys
+  description:`txt: Port visé par l'adresse.`
+  scope:symbol group rule flow
+
 // _comment : MIDI-specific controls — only meaningful for MIDI transport
 
 @def chan

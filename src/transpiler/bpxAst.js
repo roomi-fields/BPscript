@@ -1407,8 +1407,19 @@ function chargerPorteesPermises() {
     if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
     for (const [k, v] of Object.entries(entrees)) if (v && Array.isArray(v.scope)) m.set(k, v.scope);
   }
-  const adr = LIBS.core?.schema?.channelParamsScope;
-  if (Array.isArray(adr)) for (const k of (LIBS.core?.schema?.addressKeys || [])) m.set(k, adr);
+  // ── UNE CLÉ D'ADRESSE PORTE SA PROPRE PORTÉE, comme tout le reste du vocabulaire ────────────
+  // Elles ont quitté le socle le 2026-08-15 (décision Romain : « dans midi ») pour la librairie du
+  // canal qui les porte. Leur portée les suit : elle vivait dans une liste unique du schéma
+  // (`channelParamsScope`), qui donnait la MÊME portée aux cinq et n'avait nulle part où en dire
+  // une autre. Chaque clé la déclare désormais elle-même, et ce code ne nomme aucune clé.
+  for (const lib of Object.values(LIBS)) {
+    const cles = lib?.schema?.addressKeys;
+    if (!cles || Array.isArray(cles) || typeof cles !== 'object') continue;
+    for (const [k, def] of Object.entries(cles)) {
+      if (k.startsWith('_') || !def || !Array.isArray(def.scope)) continue;
+      m.set(k, def.scope);
+    }
+  }
   _porteesPermises = m;
   return m;
 }

@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys } from './libs.js';
 import { BP3_OPERATORS } from './constants.js';
 
 class ParseError extends Error {
@@ -26,21 +26,24 @@ class ParseError extends Error {
  * synonymes (forme courte/longue). Aligné sur les params de `out.<type>(…)` côté acteur.
  */
 /**
- * Clés d'ADRESSE — lues dans la DONNÉE (`lib/core.json` schema.addressKeys).
+ * Clés d'ADRESSE — lues dans la DONNÉE, en UNION sur tout le registre.
  * ⚠️ Elles étaient codées en dur ICI en plus d'y être déclarées : deux exemplaires identiques,
  * donc un double qui n'attendait qu'une divergence. Retiré le 2026-08-06, dans le même geste que
  * les axes de catalogue, qui avaient déjà payé ce défaut le jour même.
+ *
+ * ⚠️ ET LA MÉMOÏSATION LOCALE EST PARTIE AVEC LE DOMICILE (2026-08-15). Elle ne se réinitialisait
+ * JAMAIS : un registre rechargé — ce que fait tout banc qui fabrique une librairie — laissait le
+ * parseur sur les clés de la toute première lecture. Tant qu'elles vivaient dans un fichier unique
+ * et immuable, personne ne le voyait. `universeAddressKeys` mémoïse au bon endroit : là où le
+ * registre sait qu'il a bougé.
  */
-let _addressKeys = null;
 function addressKeys() {
-  if (_addressKeys) return _addressKeys;
-  const core = loadLib('core') || {};
-  const keys = core?.schema?.addressKeys;
-  if (!Array.isArray(keys) || keys.length === 0) {
-    throw new Error("lib/core.json schema.addressKeys est vide ou absent — le parseur n'a plus de clés d'adresse");
+  const keys = universeAddressKeys();
+  if (!keys || keys.size === 0) {
+    throw new Error("aucune clé d'adresse déclarée dans les librairies — le parseur ne peut plus "
+      + "distinguer une adresse d'un contrôle (elles vivent dans `midi`, section schema.addressKeys)");
   }
-  _addressKeys = new Set(keys);
-  return _addressKeys;
+  return keys;
 }
 
 /**

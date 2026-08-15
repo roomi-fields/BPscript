@@ -10,14 +10,19 @@
  * `channel` y était déclaré depuis toujours, `note` ne l'était nulle part. La forme entière tombait
  * donc sur « attribut '(note:…)' inconnu » — le langage savait, personne n'avait déclaré le mot.
  *
- * CE QUE CE GARDE TIENT, et c'est le point : les clés sont une DONNÉE (`lib/core.json`
- * schema.addressKeys). Retirer `note` de la donnée doit rendre la forme ratifiée impossible, et
- * c'est exactement ce que le volet 3 exige en le retirant EN MÉMOIRE.
+ * LE DOMICILE, tranché par Romain le même jour : les cinq clés — `ch`, `channel`, `device`,
+ * `note`, `port` — vivent dans `midi`, section `schema.addressKeys`, chacune avec sa portée. Elles
+ * ont quitté `core.json` dans le même mouvement, et le volet 0 exige ce RETRAIT autant que
+ * l'arrivée : deux domiciles pour un mot passeraient inaperçus, puisque la résolution lit l'UNION
+ * du registre.
+ *
+ * CE QUE CE GARDE TIENT, et c'est le point : les clés sont une DONNÉE. Retirer `note` de cette
+ * donnée doit rendre la forme ratifiée impossible — volet 3, en mémoire.
  *
  * PORTÉE ET COMPLÉMENT. Le garde couvre les DEUX écritures (collée et espacée), les DEUX clés
  * seules, les deux formes déjà vivantes qu'il ne doit pas casser (nue, positionnelle), la forme
- * allégée par `@def` — et son complément : une COQUILLE doit rester refusée, sinon déclarer un mot
- * aurait ouvert la porte à tous.
+ * allégée par `@def`, l'application de la PORTÉE déclarée — et son complément : une COQUILLE doit
+ * rester refusée, sinon déclarer un mot aurait ouvert la porte à tous.
  *
  * INJECTION dans l'ACCUSÉ (la clé retirée de la donnée) et dans le JUGE.
  */
@@ -44,12 +49,24 @@ registerAll(LIBS);
 const cles = describeVocabulary().addressKeys || [];
 for (const mot of ['note', 'channel']) {
   ok(cles.includes(mot),
-     `0. SOCLE : '${mot}' doit être déclaré en clé d'adresse (lib/core.json schema.addressKeys) — `
-     + `vues : ${cles.join(', ')}`);
+     `0. SOCLE : '${mot}' doit être déclaré en clé d'adresse — vues : ${cles.join(', ')}`);
 }
-ok(Object.keys(LIBS.core.schema._destinations || {}).includes('note'),
-   "0. SOCLE : 'note' doit porter sa destination dans `_destinations` — la légende annonce couvrir "
-   + 'CHAQUE mot des clés d\'adresse, et une entrée manquante la rend fausse en silence');
+// ⛔ AUCUNE VOIE PARALLÈLE. Les cinq clés ont quitté le socle pour `midi` le 2026-08-15 (décision
+// Romain). Si elles revenaient dans `core`, les deux déclarations coexisteraient sans que rien ne
+// rougisse — l'union du registre les accepterait toutes les deux, et le domicile deviendrait une
+// question d'opinion. Ce volet exige le RETRAIT autant que l'ARRIVÉE.
+ok(LIBS.core.schema.addressKeys === undefined,
+   "0. le SOCLE ne doit plus porter de clé d'adresse — deux domiciles pour un mot, et l'union du "
+   + 'registre le cacherait');
+ok(LIBS.core.schema.channelParamsScope === undefined,
+   "0. et la portée d'adresse ne doit plus vivre dans une liste unique du socle : chaque clé porte "
+   + 'la sienne');
+const chezMidi = (LIBS.midi.schema || {}).addressKeys || {};
+for (const mot of ['ch', 'channel', 'device', 'note', 'port']) {
+  ok(Array.isArray((chezMidi[mot] || {}).scope) && chezMidi[mot].scope.length > 0,
+     `0. '${mot}' doit être déclaré dans 'midi' AVEC sa portée — sans portée, un réglage mal placé `
+     + 'ne peut plus être refusé');
+}
 
 // ─── 1. LES FORMES RATIFIÉES COMPILENT ──────────────────────────────────────────────────────
 const FORMES = [
@@ -87,13 +104,25 @@ for (const [quoi, cle] of [
      `2. ${quoi} ('${cle}') doit rester refusée — sinon toute clé passe au point d'attente`);
 }
 
+// ─── 2bis. LA PORTÉE DÉCLARÉE EST APPLIQUÉE, ET SON REFUS NOMME LES PLACES ──────────────────
+// La portée d'une clé d'adresse a cessé d'être une liste unique du socle pour devenir un champ
+// SUR CHAQUE CLÉ (2026-08-15). Sans ce volet, la table pouvait se vider sans qu'un seul garde ne
+// rougisse : mesuré en la coupant — les cinq clés devenaient écrivables n'importe où, et la seule
+// erreur restante était le refus générique d'une valeur inconnue, qui ne dit pas la même chose.
+for (const cle of ['ch', 'channel', 'device', 'note', 'port']) {
+  const m = erreursDe(`@core\n@${cle}:5\nS -> C4\n`).map((e) => String(e.message)).join(' | ');
+  ok(/ne peut pas s'écrire en tête de scène/.test(m),
+     `2bis. '${cle}' écrit en TÊTE DE SCÈNE doit être refusé au nom de sa portée déclarée — reçu : `
+     + `${m.slice(0, 120)}`);
+}
+
 // ─── 3. INJECTION DANS L'ACCUSÉ — la clé retirée de la DONNÉE, la forme retombe ─────────────
 // ⚠️ EN MÉMOIRE, jamais sur le disque : une librairie modifiée sur disque atteint mes
 // consommateurs à la seconde où je l'enregistre.
 {
-  const ampute = JSON.parse(JSON.stringify(LIBS.core));
-  ampute.schema.addressKeys = ampute.schema.addressKeys.filter((k) => k !== 'note');
-  registerLib('core', ampute);
+  const ampute = JSON.parse(JSON.stringify(LIBS.midi));
+  delete ampute.schema.addressKeys.note;
+  registerLib('midi', ampute);
   ok(refusDAttribut('@core\nS -> C4 <! in.midi(note:60)\n').length > 0,
      "3. (mord) `note` retiré de la donnée doit faire retomber la forme sur « attribut inconnu » — "
      + 'sinon la clé est reconnue ailleurs qu\'en librairie, et la donnée ne commande rien');
@@ -131,7 +160,7 @@ ok(juger('velocity', declarees), '4. (mord) un mot plausible non déclaré rougi
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné dix-sept parce qu'une boucle s'est vidée.
-const TOTAL_ATTENDU = 21;
+const TOTAL_ATTENDU = 32;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 

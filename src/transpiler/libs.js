@@ -39,6 +39,7 @@ function registerLib(name, data) {
   _universeSacs = null;
   _universeIntervalControls = null;
   _universeCompositeControls = null;
+  _universeAddressKeys = null;
 }
 
 /**
@@ -64,6 +65,7 @@ function clearRegistry() {
   _universeSacs = null;
   _universeIntervalControls = null;
   _universeCompositeControls = null;
+  _universeAddressKeys = null;
 }
 
 /**
@@ -114,6 +116,19 @@ function universeComponentControls() {
     _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
   }
   return _universeComponentControls;
+}
+
+// Univers des CLÉS D'ADRESSE — elles vivent dans la librairie du canal qui les porte (`midi`
+// depuis le 2026-08-15, décision Romain), et le parseur les lit AVANT que le libCtx de la scène
+// soit chargé : `E4(ch:5)` doit se ranger dans le tiroir adresse dès l'analyse, quelle que soit
+// l'invocation de la scène. Même mécanisme que les univers ci-dessus — la donnée déclare.
+let _universeAddressKeys = null;
+function universeAddressKeys() {
+  if (!_universeAddressKeys) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeAddressKeys = loadLibsFromDirectives(allDirs).addressKeys;
+  }
+  return _universeAddressKeys;
 }
 
 // Univers des SACS — quel contrôle s'écrit entre crochets, lequel entre parenthèses. La donnée
@@ -424,9 +439,9 @@ function loadLibsFromDirectives(directives) {
     // générique qui va appeler les primitives d'expression du runtime sous-jacent quel qu'il
     // soit ». Un mot déclaré des deux côtés n'est donc pas une paire d'homonymes : il y a UNE
     // entrée publique — l'interface — et des réalisations qu'on vise par leur préfixe.
-    realisations: {},
+    implementations: {},
     // Le qualifié de la réalisation → le qualifié de l'interface qu'elle réalise (l'inverse).
-    realisePar: {},
+    implementedInterface: {},
     controlNames: new Set(),
     bp3NativeControls: new Set(),  // controls BP3 understands natively (no "transport" field)
     seqPrefixControls: new Set(),  // engine controls with scope:"seq_prefix" — emitted as prefix inside group/sequence
@@ -479,9 +494,10 @@ function loadLibsFromDirectives(directives) {
 
   // SOCLE @core + SCHÉMA du langage — chargés en DONNÉE, plus aucune liste en dur (Romain
   // 2026-07-05, prépare user libraries + partage du vocabulaire à Kanopi). @core.schema
-  // déclare : `reservedDirectives` (mots de directive du langage, non-valeurs), `addressKeys`
-  // (clés d'adresse d'un point de sortie ou d'entrée), `catalogAxes` (axes dont les valeurs sont des entrées de
-  // catalogue). @core.defaults porte les valeurs/composants par défaut (cascade).
+  // déclare : `reservedDirectives` (mots de directive du langage, non-valeurs), `catalogAxes`
+  // (axes dont les valeurs sont des entrées de catalogue). @core.defaults porte les
+  // valeurs/composants par défaut (cascade). Les CLÉS D'ADRESSE ont quitté le socle le
+  // 2026-08-15 : elles vivent chez le canal qui les porte, et se lisent en union du registre.
   const coreLib = loadJsonFile('core') || {};
   const schema = coreLib.schema || {};
   // ⚠️ `reservedDirectives` PORTE DEUX FORMES, ET LES DEUX SONT LÉGITIMES (2026-08-10) : `core.json`
@@ -496,9 +512,17 @@ function loadLibsFromDirectives(directives) {
   // directement, sans nommer la librairie qui les porte » — donc TOUJOURS résolues, quelle que soit
   // l'invocation de la scène, comme `core` l'était déjà seul avant ce chantier.
   ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
+  ctx.addressKeys = new Set();
   for (const lib of Object.values(registry)) {
     const s = lib && lib.schema;
     if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
+    // ── LES CLÉS D'ADRESSE VIVENT CHEZ LE CANAL QUI LES PORTE ────────────────────────────────
+    // Décision de Romain (2026-08-15) : `ch`, `channel`, `device`, `port` et `note` quittent le
+    // socle pour `midi`. Le destinataire cesse donc d'être écrit dans une légende du schéma — il
+    // se lit sur le `resolvedBy` de la librairie qui les déclare, comme pour tout le reste.
+    // Même UNION que les directives réservées, et pour la même raison : une clé qui ne vit que
+    // dans `midi` doit rester résolue quelle que soit l'invocation de la scène.
+    if (s && s.addressKeys) for (const n of nomsReserves(s.addressKeys)) ctx.addressKeys.add(n);
     // ⚠️ ET LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Règle 3 de Romain : « tous les
     // contrôles acceptés AVEC LEURS PORTÉES sont définis dans les librairies uniquement ». Un
     // contrôle qui déclare `scope` contenant `scene` s'écrit donc en tête, et doit y être reconnu.
@@ -515,7 +539,6 @@ function loadLibsFromDirectives(directives) {
       }
     }
   }
-  ctx.addressKeys = new Set(schema.addressKeys || []);
   // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont
   // pas des contrôles de librairie, le compilateur les comprend lui-même. Toute autre clé
   // dans `[]` est une erreur de compilation (ibid.) — cf. checkQualifierKey() du parser.
@@ -829,14 +852,14 @@ function loadLibsFromDirectives(directives) {
         // moment du conflit serait un mode de secours, donc une seconde grammaire.
         ctx.controlsQualified[`${dir.name}.${name}`] = def;
         if (destinataire) ctx.controlQualifiedResolvedBy[`${dir.name}.${name}`] = destinataire;
-        // `realises:<librairie>.<contrôle>` — cette déclaration RÉALISE une interface générique.
+        // `implements:<librairie>.<contrôle>` — cette déclaration RÉALISE une interface générique.
         // On enregistre le lien dans les deux sens ; sa VALIDITÉ se vérifie une fois toutes les
         // librairies chargées, parce qu'une interface peut se déclarer après sa réalisation et
         // qu'un refus qui dépendrait de l'ordre de chargement serait l'arbitraire qu'on combat.
-        if (typeof def.realises === 'string' && def.realises) {
+        if (typeof def.implements === 'string' && def.implements) {
           const qual = `${dir.name}.${name}`;
-          ctx.realisePar[qual] = def.realises;
-          (ctx.realisations[def.realises] = ctx.realisations[def.realises] || []).push(qual);
+          ctx.implementedInterface[qual] = def.implements;
+          (ctx.implementations[def.implements] = ctx.implementations[def.implements] || []).push(qual);
         }
         ctx.controlNames.add(name);
         // Engine section = BP3 native (temporal/structural: goto, tempo, repeat...)
@@ -1011,15 +1034,15 @@ function loadLibsFromDirectives(directives) {
     }
   }
 
-  // ── UN `realises` POINTE UN MOT QUI EXISTE, ou la librairie est refusée ──────────────────────
+  // ── UN `implements` POINTE UN MOT QUI EXISTE, ou la librairie est refusée ──────────────────────
   // FAIL-LOUD, à la déclaration : une réalisation qui vise une interface absente est un mot que
   // rien ne rend public. Sans ce refus, `midi.volume` réaliserait `expression.volme` et la faute
   // resterait muette — la réalisation cesserait simplement de lever l'ambiguïté, ce qui se lit
   // comme « deux homonymes » et pas comme « une coquille ».
-  for (const [qual, cible] of Object.entries(ctx.realisePar)) {
+  for (const [qual, cible] of Object.entries(ctx.implementedInterface)) {
     if (!ctx.controlsQualified[cible]) {
       throw new Error(
-        `'${qual}' déclare 'realises:${cible}', et '${cible}' n'est déclaré nulle part. Une `
+        `'${qual}' déclare 'implements:${cible}', et '${cible}' n'est déclaré nulle part. Une `
         + `réalisation vise une interface EXISTANTE, écrite '<librairie>.<contrôle>'.`);
     }
     if (cible === qual) {
@@ -1035,7 +1058,7 @@ function loadLibsFromDirectives(directives) {
   // de chargement — exactement l'arbitraire que ce mécanisme remplace.
   //
   // ⛔ UNE INTERFACE ET SES RÉALISATIONS NE SONT PAS DES HOMONYMES. Deux déclarations d'un même
-  // nom SANS `realises` restent une erreur, inchangée. Avec `realises`, il n'y a qu'UNE entrée
+  // nom SANS `implements` restent une erreur, inchangée. Avec `implements`, il n'y a qu'UNE entrée
   // publique — l'interface — et la forme nue y résout PAR CONSTRUCTION, jamais par une règle de
   // priorité : on n'arbitre pas entre deux candidats, il n'y en a qu'un.
   //
@@ -1047,10 +1070,10 @@ function loadLibsFromDirectives(directives) {
   for (const [nom, origines] of provenance) {
     if (origines.size <= 1) continue;
     const quals = Object.keys(ctx.controlsQualified).filter((q) => q.slice(q.indexOf('.') + 1) === nom);
-    const interfaces = quals.filter((q) => !ctx.realisePar[q]);
-    const realisations = quals.filter((q) => ctx.realisePar[q]);
-    const toutesVersLaMeme = realisations.length > 0 && interfaces.length === 1
-      && realisations.every((q) => ctx.realisePar[q] === interfaces[0]);
+    const interfaces = quals.filter((q) => !ctx.implementedInterface[q]);
+    const implementations = quals.filter((q) => ctx.implementedInterface[q]);
+    const toutesVersLaMeme = implementations.length > 0 && interfaces.length === 1
+      && implementations.every((q) => ctx.implementedInterface[q] === interfaces[0]);
     if (!toutesVersLaMeme) { ctx.ambiguousControls.add(nom); continue; }
     ctx.controls[nom] = ctx.controlsQualified[interfaces[0]];
     ctx.controlMap[nom] = ctx.controls[nom].bp3 || `_${nom}`;
@@ -1158,6 +1181,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, registerLib, registerAll, clearRegistry,
+export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };
