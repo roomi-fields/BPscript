@@ -2,7 +2,7 @@
 /**
  * GARDE — un POINT D'ATTENTE qualifie son adresse par des clés déclarées.
  *
- * LA FORME, tranchée par Romain le 2026-08-15 : `<! in.midi(note:60, channel:3)` — le point
+ * LA FORME, tranchée par Romain le 2026-08-15 : `<!in.midi(note:60, channel:3)` — le point
  * d'attente nomme la source qu'il écoute par des paires `clé:valeur`, et une définition (`@def`)
  * en factorise l'écriture.
  *
@@ -19,7 +19,12 @@
  * CE QUE CE GARDE TIENT, et c'est le point : les clés sont une DONNÉE. Retirer `note` de cette
  * donnée doit rendre la forme ratifiée impossible — volet 3, en mémoire.
  *
- * PORTÉE ET COMPLÉMENT. Le garde couvre les DEUX écritures (collée et espacée), les DEUX clés
+ * ⚠️ LA FORME ESPACÉE EST SORTIE LE SOIR MÊME. `<! in.midi(…)` compilait le matin ; Romain a
+ * tranché qu'aucun espace ne s'intercale entre le point d'attente et sa racine — ils forment un
+ * seul terme. Ce garde couvrait les DEUX écritures ; il n'en couvre plus qu'une, et c'est le garde
+ * `un_point_d_attente_nomme_ce_qu_il_attend.mjs` qui tient le refus de l'autre.
+ *
+ * PORTÉE ET COMPLÉMENT. Le garde couvre les DEUX clés
  * seules, les deux formes déjà vivantes qu'il ne doit pas casser (nue, positionnelle), la forme
  * allégée par `@def`, l'application de la PORTÉE déclarée — et son complément : une COQUILLE doit
  * rester refusée, sinon déclarer un mot aurait ouvert la porte à tous.
@@ -70,11 +75,10 @@ for (const mot of ['ch', 'channel', 'device', 'note', 'port']) {
 
 // ─── 1. LES FORMES RATIFIÉES COMPILENT ──────────────────────────────────────────────────────
 const FORMES = [
-  ['directe, signe collé',   '@core\nS -> C4 <!in.midi(note:60, channel:3)\n'],
-  ['directe, signe espacé',  '@core\nS -> C4 <! in.midi(note:60, channel:3)\n'],
-  ['la note seule',          '@core\nS -> C4 <! in.midi(note:60)\n'],
-  ['le canal seul',          '@core\nS -> C4 <! in.midi(channel:3)\n'],
-  ['allégée par @def',       '@core\n@def pedale(x) x <! in.midi(note:60, channel:3)\nS -> pedale(C4)\n'],
+  ['directe',                '@core\nS -> C4 <!in.midi(note:60, channel:3)\n'],
+  ['la note seule',          '@core\nS -> C4 <!in.midi(note:60)\n'],
+  ['le canal seul',          '@core\nS -> C4 <!in.midi(channel:3)\n'],
+  ['allégée par @def',       '@core\n@def pedale(x) x <!in.midi(note:60, channel:3)\nS -> pedale(C4)\n'],
 ];
 for (const [quoi, src] of FORMES) {
   const errs = erreursDe(src);
@@ -100,7 +104,7 @@ for (const [quoi, cle] of [
   ['une coquille sur channel',  'chanel'],
   ['un mot plausible',          'velocity'],
 ]) {
-  ok(refusDAttribut(`@core\nS -> C4 <! in.midi(${cle}:60)\n`).length > 0,
+  ok(refusDAttribut(`@core\nS -> C4 <!in.midi(${cle}:60)\n`).length > 0,
      `2. ${quoi} ('${cle}') doit rester refusée — sinon toute clé passe au point d'attente`);
 }
 
@@ -123,12 +127,12 @@ for (const cle of ['ch', 'channel', 'device', 'note', 'port']) {
   const ampute = JSON.parse(JSON.stringify(LIBS.midi));
   delete ampute.schema.addressKeys.note;
   registerLib('midi', ampute);
-  ok(refusDAttribut('@core\nS -> C4 <! in.midi(note:60)\n').length > 0,
+  ok(refusDAttribut('@core\nS -> C4 <!in.midi(note:60)\n').length > 0,
      "3. (mord) `note` retiré de la donnée doit faire retomber la forme sur « attribut inconnu » — "
      + 'sinon la clé est reconnue ailleurs qu\'en librairie, et la donnée ne commande rien');
   clearRegistry();
   registerAll(LIBS);
-  ok(erreursDe('@core\nS -> C4 <! in.midi(note:60)\n').length === 0,
+  ok(erreursDe('@core\nS -> C4 <!in.midi(note:60)\n').length === 0,
      '3. après restauration, la forme doit repasser — sinon la mutilation fuit sur la suite');
 }
 
@@ -143,7 +147,7 @@ ok(juger('velocity', declarees), '4. (mord) un mot plausible non déclaré rougi
 // ─── 5. À L'ARRIVÉE — les paires atteignent l'arbre, portées par le point d'attente ──────────
 // Un refus levé ne prouve rien de ce que l'aval reçoit : « compile » n'est pas « arrive ».
 {
-  const arbre = compileToBPxAST('@core\nS -> C4 <! in.midi(note:60, channel:3)\n').ast;
+  const arbre = compileToBPxAST('@core\nS -> C4 <!in.midi(note:60, channel:3)\n').ast;
   const attentes = [];
   (function marcher(n) {
     if (!n || typeof n !== 'object') return;
@@ -160,7 +164,7 @@ ok(juger('velocity', declarees), '4. (mord) un mot plausible non déclaré rougi
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné dix-sept parce qu'une boucle s'est vidée.
-const TOTAL_ATTENDU = 32;
+const TOTAL_ATTENDU = 31;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 

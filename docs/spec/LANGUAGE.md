@@ -149,6 +149,7 @@ refusee.
 ```bpscript
 @core
 @alphabet.sargam
+@var depart in.midi
 
 @actor sitar1
   tuning.sargam_22shruti
@@ -237,6 +238,8 @@ Ecrit apres une note, il s'ancre sur elle : la note sonne, puis la suite attend.
 @actor sitar1
   alphabet.sargam
   out.audio
+@var depart in.midi
+
 @actor tabla1
   alphabet.tabla
   out.midi(ch:10)
@@ -1514,9 +1517,35 @@ S -> C4!E4<!sync1 D4 E4      // joue C4 + E4, attend sync1, puis D4
 ```
 
 `@var <role> in.<canal>` nomme dans la scene le **role** que tient l'entree. L'appareil qui remplit
-ce role s'y associe hors de la scene. L'adresse de la source se colle au point d'attente --
-`<!sync1.60` ecoute le numero 60 de l'entree `sync1` -- et les points d'attente se chainent :
-`<!sync1<!sync2`.
+ce role s'y associe hors de la scene. Les points d'attente se chainent : `<!sync1<!sync2`.
+
+**La racine d'un point d'attente se declare.** Un nom qu'aucune entree, variable, porte ni acteur
+de la scene ne porte est refuse. Sans cette exigence, une coquille -- `<!depart` contre `<!depatr`
+-- fabrique une seconde attente que rien ne vient satisfaire, et la derivation s'arrete sans un
+signe.
+
+**Rien ne s'intercale entre le signe et sa racine** : ils forment un seul terme. `<!sync1` s'ecrit
+colle ; `<! sync1` est refuse.
+
+#### Trois niveaux de precision
+
+Un point d'attente attend un **evenement**. La declaration dit d'ou il vient, la qualification dit
+lequel exactement.
+
+| ecriture                          | ce qui leve le point                            |
+| --------------------------------- | ----------------------------------------------- |
+| `<!sync1`                         | tout evenement du role `sync1`                   |
+| `<!sync1.60`                      | l'adresse 60 de ce role                          |
+| `<!in.midi(note:60, channel:3)`   | l'evenement pleinement qualifie, sans role       |
+
+La racine est donc **un role declare** ou **une direction**. Une direction nomme le canal lui-meme
+et ne se declare pas : `<!in.midi` ecoute l'entree MIDI directement.
+
+#### Ce qui leve un point non qualifie
+
+Un evenement leve le point quand il **ne ramene pas sa valeur a zero** : une note jouee, une pedale
+enfoncee, un controleur qui monte. Un relachement -- fin de note, pedale relevee, controleur
+retombe a zero -- ne leve rien, et rearme le point quand la source est une porte.
 
 **Un canal declare les directions qu'il porte**, et la direction s'ecrit : `in.` pour ce qui entre,
 `out.` pour ce qui sort. Un seul catalogue, lu des deux bouts.

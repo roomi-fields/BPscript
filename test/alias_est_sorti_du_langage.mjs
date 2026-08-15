@@ -12,9 +12,13 @@
  *   · `[drapeau]` échouait des DEUX côtés — employer le nom était refusé ;
  *   · un nom pointé, un sac, une séquence : `@def` est plus large ;
  *   · `<!point` — le seul cas où l'alias compilait ET s'employait… et il ne DÉSIGNAIT rien pour
- *     autant : `<!depart` compile À L'IDENTIQUE sans aucune déclaration, parce qu'un point
- *     d'attente accepte n'importe quel nom. Le volet 3 tient cette mesure, qui est la raison pour
- *     laquelle le retrait ne perd RIEN.
+ *     autant : `<!depart` compilait À L'IDENTIQUE sans aucune déclaration, parce qu'un point
+ *     d'attente acceptait n'importe quel nom. C'est la raison pour laquelle le retrait n'a rien
+ *     perdu.
+ *     ⚠️ ET CETTE MESURE A ÉTÉ RENDUE CADUQUE LE SOIR MÊME, par la décision qu'elle a provoquée :
+ *     Romain a tranché qu'un point d'attente DOIT être déclaré (« sinon on ne sait pas ce qu'on
+ *     attend »). Le volet 3 mesure donc désormais le contraire — un nom non déclaré est REFUSÉ —
+ *     et c'est le garde `un_point_d_attente_nomme_ce_qu_il_attend.mjs` qui tient la règle.
  * Et `ast.aliases` n'avait aucun consommateur sur les vingt-quatre dépôts.
  *
  * ⛔ PAS DE PIERRE TOMBALE — règle de Romain du même jour : « dans le parseur la règle devrait être
@@ -66,12 +70,16 @@ for (const [quoi, ligne] of FORMES) {
      `2. et le refus ne doit pas NOMMER '@alias' — reçu : ${duMotSorti}`);
 }
 
-// ── 3. LA MESURE QUI FONDE LE RETRAIT : l'alias ne DÉSIGNAIT rien ───────────────────────────
-// Un point d'attente accepte n'importe quel nom. `<!depart` compilait donc à l'identique avec ou
-// sans sa déclaration, et le nœud portait `depart` des deux côtés — jamais la cible `sync1`.
-// C'est ce qui rend le retrait sans perte, et c'est la seule chose qu'il faut pouvoir rejouer.
+// ── 3. CE QUE L'ALIAS NE DÉSIGNAIT PAS, MESURÉ SUR LA RÈGLE D'AUJOURD'HUI ───────────────────
+// ⚠️ CE VOLET A ÉTÉ RETOURNÉ LE SOIR DU 2026-08-15, ET SON PROPRE AVERTISSEMENT L'AVAIT PRÉVU : il
+// exigeait qu'un point d'attente NON DÉCLARÉ compile, et disait « si cela cessait d'être vrai, la
+// question se rouvre, et ce garde doit être relu avant d'être réparé ». Elle s'est rouverte le
+// jour même — Romain a tranché qu'un point d'attente doit être déclaré — et le garde est relu, pas
+// rafistolé.
+// CE QU'IL MESURE MAINTENANT : la déclaration qui compte est celle de l'ENTRÉE, jamais un alias.
+// Le nœud porte le nom écrit, et rien d'autre ne l'a jamais résolu.
 {
-  const r = compileToBPxAST(`${T}S -> C4 <!depart D4\n`);
+  const r = compileToBPxAST(`${T}@var depart in.midi\nS -> C4 <!depart D4\n`);
   const attentes = [];
   (function marcher(n) {
     if (!n || typeof n !== 'object') return;
@@ -80,9 +88,8 @@ for (const [quoi, ligne] of FORMES) {
     for (const k in n) marcher(n[k]);
   })(r.ast);
   ok((r.errors ?? []).length === 0 && attentes.length === 1 && attentes[0] === 'depart',
-     `3. un point d'attente NON DÉCLARÉ compile et porte son propre nom — vu ${JSON.stringify(attentes)}. `
-     + `Si cela cessait d'être vrai, la question « faut-il déclarer un point d'attente » se rouvre, `
-     + `et ce garde doit être relu avant d'être réparé.`);
+     `3. un point d'attente DÉCLARÉ PAR SON ENTRÉE compile et porte son propre nom — vu `
+     + `${JSON.stringify(attentes)}`);
 }
 
 // ── 4. L'ARBRE NE PORTE PLUS LE CHAMP ───────────────────────────────────────────────────────

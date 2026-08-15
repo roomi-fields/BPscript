@@ -1454,6 +1454,84 @@ function chargerPorteesPermises() {
   return _porteesPermises;
 }
 
+/**
+ * ⛔ UN POINT D'ATTENTE NOMME CE QU'IL ATTEND, ET CE NOM SE DÉCLARE.
+ *
+ * DÉCISION DE ROMAIN, 2026-08-15 : « oui il doit être déclaré, sinon on ne sait pas ce qu'on
+ * attend ». La forme de déclaration existe depuis le 2026-08-04 — `@var <nom> in.<canal>` — et
+ * c'est son EXIGENCE qui manquait, pas sa graphie.
+ *
+ * CE QUI PASSAIT : `<!depart` et `<!depatr` étaient deux points d'attente valides et sans rapport,
+ * en silence. Une coquille ne casse rien — elle fabrique une seconde attente que rien ne viendra
+ * jamais satisfaire, et la dérivation s'arrête pour toujours sans un mot.
+ *
+ * ⛔ LE REFUS PORTE SUR LA RACINE, ADRESSÉE OU NON — une seule règle, pas deux. Dans `<!p.60`, `p`
+ * est le RÔLE et `.60` est l'ADRESSE : c'est `p` qui se déclare, jamais l'adresse
+ * (`LANGUAGE.md:1517` : « l'adresse de la source se colle au point d'attente — `<!sync1.60` écoute
+ * le numéro 60 de l'entrée `sync1` »). Romain, même jour : « bien oui, sinon comment on sait ce
+ * qu'est `p` ? ».
+ *
+ * CE QUI COMPTE COMME DÉCLARATION : tout ce qui CRÉE le nom dans la scène — une entrée
+ * (`@var <rôle> in.<canal>`), une variable de travail, une déclaration de porte ou de trigger, un
+ * acteur. On ne restreint pas à la seule entrée : la question est « ce nom existe-t-il », pas
+ * « par quel mot ».
+ *
+ * ⛔ DEUX RACINES, ET CE NE SONT PAS DEUX FORMES RIVALES — arbitrage de Romain, 2026-08-15 : « un
+ * point de synchronisation, dans tous les cas, attend un ÉVÉNEMENT. Un événement peut être
+ * déclenché par une infinité de choses. » La DÉCLARATION dit D'OÙ ça vient, la QUALIFICATION dit
+ * QUOI exactement, et ce sont deux questions :
+ *     <!sync1                        tout événement de `sync1` lève le point
+ *     <!sync1.60                     seulement l'adresse 60
+ *     <!in.midi(note:60, channel:3)  pleinement qualifié, sans passer par un rôle
+ * La racine est donc SOIT un rôle déclaré, SOIT une DIRECTION — et une direction n'a rien à
+ * déclarer, elle nomme le canal lui-même. La liste des directions se lit dans la DONNÉE (les mots
+ * de direction du socle) : aucun nom n'est écrit ici, et le jour où une direction s'ajoute, ce
+ * refus la suit sans une ligne.
+ */
+function refuserAttenteNonDeclaree(ast) {
+  const connus = new Set();
+  for (const i of (ast.inputs || [])) for (const n of (i.names || (i.name ? [i.name] : []))) connus.add(n);
+  for (const v of (ast.vars || [])) for (const n of (v.names || [])) connus.add(n);
+  for (const d of (ast.declarations || [])) if (d && d.name) connus.add(d.name);
+  for (const a of (ast.actors || [])) if (a && a.name) connus.add(a.name);
+
+  // LES MOTS DE DIRECTION, DÉRIVÉS DU CATALOGUE DES CANAUX : chaque canal déclare les directions
+  // qu'il autorise (`midi: {in:true, out:true}`), donc les mots de direction sont exactement les
+  // champs booléens que ce catalogue emploie. Aucun nom n'est écrit ici, et le jour où une
+  // direction s'ajoute au catalogue, ce refus la suit sans une ligne.
+  // ⚠️ ET LA DÉRIVATION NE PASSE PAS PAR `reservedDirectives` : cette liste porte `transport`, un
+  // mot RETIRÉ du langage, dont la légende parle encore de direction. On aurait exempté une racine
+  // morte. Le catalogue, lui, ne décrit que ce qui existe.
+  const directions = new Set();
+  for (const canal of Object.values(LIBS.core?.schema?.channels || {})) {
+    if (!canal || typeof canal !== 'object') continue;
+    for (const [cle, valeur] of Object.entries(canal)) {
+      if (typeof valeur === 'boolean' && valeur === true && cle !== 'writable') directions.add(cle);
+    }
+  }
+
+  const erreurs = [];
+  const vus = new Set();
+  (function marcher(n) {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { for (const e of n) marcher(e); return; }
+    if (n.type === 'Wait' && typeof n.name === 'string'
+        && !connus.has(n.name) && !directions.has(n.name) && !vus.has(n.name)) {
+      vus.add(n.name);
+      erreurs.push({
+        message: `'<!${n.name}' attend un signal que rien ne déclare — aucune entrée, variable, `
+          + `porte ni acteur de cette scène ne porte le nom '${n.name}'. Le déclarer : `
+          + `'@var ${n.name} in.<canal>'. Sans déclaration, une coquille fabrique une SECONDE `
+          + `attente que rien ne viendra satisfaire, et la dérivation s'arrête pour toujours `
+          + `sans un mot.`,
+        line: n.line,
+      });
+    }
+    for (const k in n) marcher(n[k]);
+  })(ast);
+  return erreurs;
+}
+
 function validateReferences(ast, libCtx = {}) {
   const errors = [];
   const porteesPermises = chargerPorteesPermises();
@@ -2524,6 +2602,7 @@ export function compileToBPxAST(source, environnement) {
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
     result.errors.push(...validateModulation(ast, libCtx));
+    result.errors.push(...refuserAttenteNonDeclaree(ast));  // un point d'attente nomme ce qu'il attend
 
     // LE DIAGNOSTIC PRÉCIS SUBSUME LE GÉNÉRIQUE (arbitrage architecte [778]).
     //

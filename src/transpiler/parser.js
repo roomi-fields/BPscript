@@ -6690,6 +6690,23 @@ function parse(tokens, opts = {}) {
 
   function parseWait() {
     expect(T.TRIGGER_IN);
+    // ⛔ RIEN NE S'INTERCALE ENTRE LE SIGNE ET SA RACINE — arbitrage de Romain, 2026-08-15 :
+    // « attention à l'espace, on a un langage dans lequel les espaces ont du sens, et a priori il
+    // n'en faut pas dans ce cas-là ».
+    //
+    // CE QUI PASSAIT : `<! in.midi(…)` et `<!in.midi(…)` compilaient TOUS LES DEUX, et rendaient le
+    // même arbre. Deux graphies pour une chose, dans un langage où l'espace SÉPARE deux termes —
+    // c'est ce qu'on ferme partout ailleurs. Le point d'attente et le nom qu'il attend forment
+    // UN SEUL TERME (`LANGUAGE.md`, tableau des signes accolés).
+    //
+    // Mesuré avant le refus : ZÉRO scène du périmètre — 885 fichiers, seize dépôts — n'écrit la
+    // forme espacée. Le refus n'invalide aucune écriture vivante.
+    if (at(T.IDENT) && current().spaceBefore) {
+      throw new ParseError(
+        `'<! ${current().value}' : rien ne s'intercale entre le point d'attente et ce qu'il `
+        + `attend — ils forment un seul terme. Écrire '<!${current().value}'.`,
+        current());
+    }
     const name = expect(T.IDENT).value;
     // ADRESSE DE LA SOURCE, collée au point de réception — symétrique de l'adresse de destination
     // collée au terminal (`sitar1.Sa`). Décision Romain 2026-07-27 : une entrée se route PAR LE NOM,
