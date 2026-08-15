@@ -1,15 +1,15 @@
 {
   "component": "BPScript — le langage, son transpileur et ses librairies",
-  "updated": "2026-08-14",
-  "commit": "a738836",
+  "updated": "2026-08-15",
+  "commit": "6a89f95",
   "derivee": "baseline-status.json est GÉNÉRÉE par scripts/fiche-etat.mjs — ne pas éditer à la main.",
   "voie_de_compilation": "compileToBPxAST — voie unique, l'AST est agnostique du moteur",
   "corpus": {
     "total": 114,
     "parStatut": {
-      "active": 59,
-      "excluded": 17,
-      "to_be_tested": 36,
+      "active": 61,
+      "excluded": 12,
+      "to_be_tested": 39,
       "skip": 1,
       "partial": 1
     },
@@ -29,7 +29,7 @@
       "beatrix-dice": "active",
       "bells": "skip",
       "blurb": "to_be_tested",
-      "check&": "excluded",
+      "check&": "to_be_tested",
       "checkAllCsound": "to_be_tested",
       "checkBT": "to_be_tested",
       "checkcontext": "excluded",
@@ -62,8 +62,8 @@
       "graphics": "active",
       "harmony": "active",
       "keys": "to_be_tested",
-      "koto1": "excluded",
-      "koto2": "excluded",
+      "koto1": "active",
+      "koto2": "active",
       "koto3": "active",
       "kss2": "active",
       "livecode1": "active",
@@ -94,7 +94,7 @@
       "testTie7": "to_be_tested",
       "time-patterns": "active",
       "transposition": "excluded",
-      "transposition1": "excluded",
+      "transposition1": "to_be_tested",
       "transposition3": "active",
       "tryAllItems0": "active",
       "tryAllItems1": "active",
@@ -108,7 +108,7 @@
       "tryKeyMap": "active",
       "tryKeyXpand": "active",
       "tryLIN": "excluded",
-      "tryMIDIfile": "excluded",
+      "tryMIDIfile": "to_be_tested",
       "tryObjects": "active",
       "tryPatternGrammar": "to_be_tested",
       "tryRagas": "to_be_tested",
@@ -131,18 +131,19 @@
     }
   },
   "portillon": {
-    "verts": 140,
+    "verts": 141,
     "echecs": 0,
-    "assertions": 5851
+    "assertions": 5876
   },
   "librairies": {
     "vocabulaire_en_bpscript": [
       "audio",
+      "engine",
       "expression",
       "midi",
       "transpo",
       "variation"
     ],
-    "catalogues_en_json": 20
+    "catalogues_en_json": 19
   }
 }
