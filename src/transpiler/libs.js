@@ -1105,6 +1105,46 @@ function loadLibsFromDirectives(directives) {
     if (dest) ctx.controlResolvedBy[nom] = dest;
   }
 
+  // ── LES VALEURS PAR DÉFAUT VIENNENT DE LEUR PROPRE LIBRAIRIE ────────────────────────────────
+  // Décision de Romain (2026-08-15) : « core.json doit appeler une librairie midi default qui
+  // stipule tout l'environnement par défaut », et « les défauts sont dans la librairie
+  // midi-default, ça sera modifié dans le live par les contrôles de volume de l'UI ».
+  //
+  // DEUX QUESTIONS, DEUX FICHIERS. La déclaration d'un mot dit CE QU'IL EST — arguments, plage,
+  // portée, graphie native ; la librairie de défauts dit QUELLE VALEUR IL PORTE quand personne ne
+  // l'écrit. La première est une propriété du langage ; la seconde est un réglage d'environnement,
+  // que l'interface modifie en direct.
+  //
+  // ⚠️ LA SURFACE PUBLIÉE NE BOUGE PAS, ET C'EST LA CONDITION DU DÉPLACEMENT : la valeur est
+  // reversée ici sur `controls[…].default`, donc un consommateur qui lit le vocabulaire voit
+  // exactement ce qu'il voyait. Kanopi affiche ce champ dans l'aide de son éditeur — mesuré avant
+  // d'écrire (lang-bpscript.ts:48). C'est l'AUTORITÉ qui se déplace, pas la forme.
+  //
+  // AUCUN NOM DE LIBRAIRIE ICI : toute librairie du registre peut porter une section
+  // `controlDefaults`, et le jour où `audio-default` naîtra, elle sera lue sans une ligne de code.
+  //
+  // ⚠️ CE BLOC PASSE APRÈS LA RÉSOLUTION DES INTERFACES, et l'ordre est mesuré. Placé avant, la
+  // reprise de la forme nue vers l'interface ÉCRASAIT la valeur : `volume` nu ressortait sans
+  // défaut, alors qu'il en portait un la veille — une régression muette pour l'aide de l'éditeur.
+  //
+  // ⛔ ET LA QUESTION QUE CET ORDRE LAISSE OUVERTE, signalée : le défaut d'un mot GÉNÉRIQUE dépend
+  // du runtime actif, que le vocabulaire ne connaît pas. Aujourd'hui un seul environnement en
+  // déclare un, donc la lecture est sans ambiguïté ; le jour où `audio-default` donnera une autre
+  // valeur à `volume`, il faudra dire laquelle le vocabulaire publie.
+  for (const lib of Object.values(registry)) {
+    const valeurs = lib && lib.controlDefaults;
+    if (!valeurs || typeof valeurs !== 'object' || Array.isArray(valeurs)) continue;
+    for (const [nom, valeur] of Object.entries(valeurs)) {
+      if (nom.startsWith('_')) continue;
+      const def = ctx.controls[nom];
+      // Une valeur pour un mot que la scène n'a pas en portée n'est pas une faute : la librairie
+      // des défauts décrit l'environnement entier, la scène n'en invoque qu'une partie.
+      if (!def || typeof def !== 'object') continue;
+      ctx.controls[nom] = { ...def, default: valeur };
+    }
+  }
+
+
   return ctx;
 }
 

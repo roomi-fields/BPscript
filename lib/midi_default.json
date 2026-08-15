@@ -1,0 +1,22 @@
+{
+  "name": "midi_default",
+  "description": "L'ENVIRONNEMENT MIDI PAR DÉFAUT — la valeur que porte chaque mot de `midi` tant qu'une scène n'en écrit pas d'autre.",
+  "version": "0.1.0",
+  "resolvedBy": "runtime-MIDI",
+
+  "_controlDefaults_doc": "LA VALEUR PAR DÉFAUT VIT ICI, PLUS SUR LA DÉCLARATION DU MOT. Décision de Romain, 2026-08-15 : « core.json doit appeler une librairie midi default qui stipule tout l'environnement par défaut ainsi que la librairie midi standard », et « les défauts sont dans la librairie midi-default, ça sera modifié dans le live par les contrôles de volume de l'UI ».\n\nDEUX QUESTIONS, DEUX FICHIERS. `lib/midi.bpsl` dit CE QU'UN MOT EST — ses arguments, sa plage, sa portée, sa graphie native ; ce fichier-ci dit QUELLE VALEUR IL PORTE quand personne ne l'écrit. La première est une propriété du langage, stable ; la seconde est un réglage d'environnement, que l'interface modifie en direct. Les tenir dans le même fichier revenait à mêler une définition et une préférence.\n\nLA SURFACE PUBLIÉE NE CHANGE PAS : le chargeur reverse ces valeurs sur `controls[…].default`, donc un consommateur qui lit le vocabulaire voit exactement ce qu'il voyait. Le déplacement est un déplacement d'AUTORITÉ, pas de forme.\n\n⚠️ CE FICHIER EST INCOMPLET, ET SON MANQUE EST NOMMÉ. Les quatre mots entrés le 2026-08-15 — `rate`, `volumecontrol`, `pancontrol`, `fadeout` — n'y figurent pas : leurs constantes natives ont été mesurées par runtime-MIDI et ne sont pas parvenues ici. Les supposer serait les inventer, et une valeur par défaut inventée est indiscernable d'une valeur mesurée pour qui la lit. Elles entreront quand la mesure arrivera.\n\n⚠️ `ins` NON PLUS, ET POUR UNE AUTRE RAISON. Sa CONVENTION est mesurée — on numérote depuis 1 (cf. lib/midi.bpsl) — mais la valeur de départ du moteur ne l'est pas : `CurrentMIDIprogram` est initialisé à zéro, ce qui vaut « aucun programme envoyé », et zéro tombe hors de la plage 1..128. Un défaut de 1 serait le premier programme, pas le défaut mesuré. Même règle : on ne suppose pas.",
+
+  "controlDefaults": {
+    "chan": 1,
+    "mod": 0,
+    "pitchbend": 0,
+    "pitchrange": 200,
+    "pressure": 0,
+    "press": 0,
+    "volume": 100,
+    "volumerate": 50,
+    "modrate": 50,
+    "pitchrate": 50,
+    "pressrate": 50
+  }
+}

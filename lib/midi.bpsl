@@ -84,23 +84,33 @@
   bp3:_chan
   args:channel
   range:1 16
-  default:1
   description:`txt: MIDI channel`
   scope:symbol group rule flow
   transportGroup:midi
 
-// ins · PLAGE CORRIGEE le 2026-08-08. Elle valait [1,128] et le defaut 0 tombait HORS d elle —
-// une declaration qui se contredit elle-meme, trouvee par le produit croise controles x portees
-// : l instrument prenait le defaut comme valeur d essai et le controle refusait sa propre
-// valeur. La bonne plage vient du MOTEUR D ORIGINE, mesuree et non deduite : BP3_help.txt,
-// _ins(x), « Range of x is 0..127 ». Le defaut 0 y est donc legitime : c est le programme MIDI
-// 0.
+// ins · LA CONVENTION EST CELLE DU NATIF : ON NUMEROTE DEPUIS 1. Arbitrage de Romain, 2026-08-15,
+// et mesure refaite sur les SOURCES du moteur avant d ecrire :
+//     Inits.c:128        ProgNrFrom = 1   (« This has changed with version 2.7.3 »)
+//     SaveLoads1.c:588   ProgNrFrom = 1
+//     ScriptUtils.c:1006 e.data2 = <valeur ecrite> - ProgNrFrom      -> l octet du fil vaut x-1
+//     DisplayArg.c:1853  affiche  <octet> + ProgNrFrom               -> le retour est symetrique
+// Aucune ligne vivante du moteur ne donne une autre valeur a ProgNrFrom. L auteur ecrit donc
+// 1..128, et le fil porte 0..127.
+//
+// ⚠️ CE QUI ETAIT ECRIT ICI VENAIT DE L AIDE DU MOTEUR, ET L AIDE N EST PAS LE JUGE. La declaration
+// valait 0..127 depuis le 2026-08-08 sur la foi de BP3_help.txt, « _ins(x), Range of x is 0..127 ».
+// C est la meme lecon que celle deja payee sur _mapfixed/_mapstep/_mapcont, absents de l aide et
+// bien presents dans la source : la TABLE et le CODE font foi, la documentation non.
+//
+// ⚠️ ET LA PIECE CITEE DANS LA CONSIGNE POINTE DU CODE MORT — signale, pas suivi. MIDIfiles.c:1147
+// garde bien `w > 0 && w <= 128` et emet `w - 1`, mais son tableau `CurrentMIDIprogram` n est
+// AFFECTE nulle part dans les sources vivantes : il est mis a zero dans Inits.c:131 et lu la, point.
+// La conclusion tient par les quatre pieces ci-dessus, pas par celle-la.
 @def ins
   bp3:_ins
   args:program
-  range:0 127
-  default:0
-  description:`txt: MIDI Program Change`
+  range:1 128
+  description:`txt: MIDI Program Change. L'auteur écrit le numéro de programme à partir de 1, comme le moteur d'origine ; l'octet transmis vaut ce numéro moins un.`
   scope:symbol group rule flow scene
   transportGroup:midi
 
@@ -108,7 +118,6 @@
   bp3:_mod
   args:value
   range:0 127
-  default:0
   description:`txt: MIDI Modulation (CC1)`
   scope:symbol group rule flow
   transportGroup:midi
@@ -123,7 +132,6 @@
   bp3:_pitchbend
   args:value
   range:-8192 8191
-  default:0
   description:`txt: MIDI Pitch Bend`
   scope:symbol group rule flow
   transportGroup:midi
@@ -131,7 +139,6 @@
 @def pitchrange
   bp3:_pitchrange
   args:cents
-  default:200
   description:`txt: Pitch bend range in cents`
   scope:symbol group rule flow
   transportGroup:midi
@@ -159,7 +166,6 @@
 @def pressure
   args:value
   range:0 127
-  default:0
   description:`txt: MIDI Channel Pressure (aftertouch)`
   scope:symbol group rule flow
   transportGroup:midi
@@ -168,7 +174,6 @@
   bp3:_press
   args:value
   range:0 127
-  default:0
   description:`txt: MIDI Channel Pressure (alias for pressure)`
   scope:symbol group rule flow
   transportGroup:midi
@@ -192,7 +197,6 @@
   bp3:_volume
   args:value
   range:0 127
-  default:100
   description:`txt: MIDI Volume (CC7)`
   scope:symbol group rule flow scene
   transportGroup:midi
@@ -277,7 +281,6 @@
   bp3:_volumerate
   args:hz
   range:0 1000
-  default:50
   description:`txt: Cadence des valeurs intermediaires du continu de volume, en valeurs par seconde. Defaut 50, comme le moteur natif.`
   scope:symbol group rule flow
   transportGroup:midi
@@ -299,7 +302,6 @@
   bp3:_modrate
   args:hz
   range:0 1000
-  default:50
   description:`txt: Cadence des valeurs intermediaires du continu de modulation, en valeurs par seconde. Defaut 50, comme le moteur natif.`
   scope:symbol group rule flow
   transportGroup:midi
@@ -321,7 +323,6 @@
   bp3:_pitchrate
   args:hz
   range:0 1000
-  default:50
   description:`txt: Cadence des valeurs intermediaires du continu de hauteur, en valeurs par seconde. Defaut 50, comme le moteur natif.`
   scope:symbol group rule flow
   transportGroup:midi
@@ -343,7 +344,6 @@
   bp3:_pressrate
   args:hz
   range:0 1000
-  default:50
   description:`txt: Cadence des valeurs intermediaires du continu de pression, en valeurs par seconde. Defaut 50, comme le moteur natif.`
   scope:symbol group rule flow
   transportGroup:midi

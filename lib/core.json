@@ -11,7 +11,8 @@
     "transpo",
     "engine",
     "variation",
-    "eval"
+    "eval",
+    "midi_default"
   ],
   "_defaults_doc": "Cascade de défauts (docs/design/SCENE_DEFAULTS_CASCADE.md, Romain 2026-07-04). @core est le SOCLE : il porte TOUTES les valeurs par défaut de scène. Multi-niveau : @core → lib invoquée (override) → scène → acteur → occurrence. `components` = composants par défaut par axe (recouverts par @alphabet.X/@tuning.X…). `values` = valeurs scalaires overridables (@diapason:N…) ; `overriddenBy: \"axe.champ\"` = le champ d'un composant invoqué recouvre le défaut. Aucun défaut n'est codé dans le code.",
   "_schema_doc": "SCHÉMA STRUCTUREL du langage (donnée, plus en dur dans le code — Romain 2026-07-05, prépare les user libraries + le partage du vocabulaire à Kanopi). `catalogAxes` = axes d'entité dont les valeurs sont des ENTRÉES DE CATALOGUE (une lib par axe, ex. tunings.json) → référence inexistante = erreur. Les CLÉS D'ADRESSE ont quitté ce schéma le 2026-08-15 (décision Romain, « dans midi ») : elles vivent dans la librairie du canal qui les porte, section `schema.addressKeys`, chacune avec sa portée — le socle ne nomme plus d'adresse, et leur destinataire se lit sur le `resolvedBy` de leur librairie au lieu d'une légende tenue ici. `reservedDirectives` = mots de directive du LANGAGE (non des valeurs de lib).",

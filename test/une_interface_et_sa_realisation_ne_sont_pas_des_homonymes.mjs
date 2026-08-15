@@ -143,10 +143,19 @@ restaurer();
   const ctx = loadLibsFromDirectives([{ name: 'core' }]);
   ok(ctx.implementedInterface['midi.volume'] === 'expression.volume',
      `5a. 'midi.volume' doit réaliser 'expression.volume' — vu : ${ctx.implementedInterface['midi.volume']}`);
-  ok(ctx.controls.volume === ctx.controlsQualified['expression.volume'],
-     "5b. `volume` nu doit résoudre vers l'INTERFACE, dans les librairies RÉELLES et pas seulement "
-     + 'sur les fixtures — sinon un réglage générique part au runtime MIDI même quand ce n\'est pas '
-     + 'lui qui sonne');
+  // ⚠️ LA COMPARAISON PORTE SUR LE CONTENU, PAS SUR L'IDENTITÉ D'OBJET, et le distinguo a été payé :
+  // la librairie des défauts reverse sa valeur en RECONSTRUISANT la déclaration (`{...def, default}`),
+  // donc l'égalité de référence est fausse alors que la résolution est juste. Un garde qui compare
+  // des adresses mémoire mesure le chemin, pas le résultat.
+  ok(ctx.controls.volume
+     && ctx.controls.volume.transportGroup === ctx.controlsQualified['expression.volume'].transportGroup
+     && ctx.controls.volume.description === ctx.controlsQualified['expression.volume'].description,
+     "5b. `volume` nu doit résoudre vers la déclaration de l'INTERFACE, dans les librairies RÉELLES "
+     + "et pas seulement sur les fixtures — sinon un réglage générique part au runtime MIDI même "
+     + `quand ce n'est pas lui qui sonne. Vu : ${JSON.stringify(ctx.controls.volume)}`);
+  ok(ctx.controls.volume && ctx.controls.volume.bp3 === undefined,
+     "5b. et il ne doit PAS porter la graphie native de la réalisation — la viser demande de la "
+     + 'préfixer');
   ok(ctx.controlResolvedBy.volume === 'toutes les sorties',
      `5c. et son destinataire est celui de l'interface — vu : ${ctx.controlResolvedBy.volume}`);
   ok(ctx.controlQualifiedResolvedBy['midi.volume'] === 'runtime-MIDI',
@@ -155,8 +164,11 @@ restaurer();
   // existera. Romain : « les défauts sont dans la librairie midi-default, ça sera modifié dans le
   // live par les contrôles de volume de l'UI ».
   ok(ctx.controlsQualified['expression.volume'].default === undefined,
-     "5e. l'interface ne porte AUCUNE valeur par défaut — elle décrit le mot, `midi-default` donne "
-     + 'la valeur');
+     "5e. la DÉCLARATION de l'interface ne porte AUCUNE valeur par défaut — elle décrit le mot, "
+     + '`midi_default` donne la valeur');
+  ok(ctx.controls.volume && ctx.controls.volume.default === 100,
+     "5e. et la valeur arrive quand même à la forme nue, reversée par la librairie des défauts — "
+     + `sinon l'aide de l'éditeur perd un champ qu'elle affichait. Vu : ${ctx.controls.volume?.default}`);
   ok(ctx.ambiguousControls.size === 0,
      `5f. et aucun nom n'est ambigu dans les librairies réelles — vus : ${[...ctx.ambiguousControls].join(', ')}`);
 }
@@ -177,7 +189,7 @@ restaurer();
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné douze parce qu'un bloc s'est tu.
-const TOTAL_ATTENDU = 23;
+const TOTAL_ATTENDU = 25;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 
