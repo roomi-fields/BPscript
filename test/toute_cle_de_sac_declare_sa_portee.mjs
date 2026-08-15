@@ -171,7 +171,13 @@ for (const { source, nom, def } of CLES) {
 //   `panrate` rejoint `pancont` dans `expression`, et `volumerate`, `modrate`, `pitchrate`,
 //   `pressrate` rejoignent leurs continus dans `midi`. Ce plancher monte parce que la famille a
 //   grandi — il ne se règle JAMAIS sur ce que l'extracteur rend, sinon il cesserait de mesurer.
-const PAR_DESTINATAIRE = { expression: 13, midi: 25, audio: 6, transpo: 5, variation: 18 };
+//   expression 13 → 14, midi 25 → 36 : LE 2026-08-15, chantier des primitives MIDI. `expression`
+//   accueille UN mot, `volume`, l'INTERFACE générique que chaque sortie réalise. `midi` en accueille
+//   ONZE : la cadence commune `rate`, les deux contrôleurs `volumecontrol`/`pancontrol`, l'extinction
+//   `fadeout`, et les sept mots des quatre gestes de fin et de relance. Le plancher monte parce que
+//   la famille a grandi — il ne se règle JAMAIS sur ce que l'extracteur rend, sinon il cesserait de
+//   mesurer.
+const PAR_DESTINATAIRE = { expression: 14, midi: 36, audio: 6, transpo: 5, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

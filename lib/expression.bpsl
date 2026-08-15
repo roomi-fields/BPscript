@@ -66,13 +66,31 @@
 
 // _comment : Sound object parameter controls — transport-agnostic, forwarded as-is
 
+// L INTERFACE GENERIQUE DU VOLUME. Doctrine de Romain, 2026-08-15 : « on va mettre un volume dans
+// expression ainsi que dans audio, OSC... donc on applique le principe qu on a defini ». C est le
+// mot que l auteur ecrit ; chaque sortie le REALISE a sa facon, en declarant
+// `implements:expression.volume`. Aujourd hui seul `midi` le realise.
+// ⚠️ ELLE NE PORTE PAS DE VALEUR PAR DEFAUT, ET C EST LA REGLE : « les defauts sont dans la
+// librairie midi-default, ca sera modifie dans le live par les controles de volume de l UI »
+// (Romain, meme jour). Ni l interface ni la realisation ne portent la valeur ; elles decrivent le
+// mot.
+@def volume
+  args:value
+  range:0 127
+  description:`txt: Volume d'une voix. MIDI le réalise en CC7 ; chaque sortie déclare sa réalisation.`
+  scope:symbol group rule flow scene
+  transportGroup:expression
+
+// PORTEE ETENDUE A LA SCENE le 2026-08-15 pour `vel` et `pan` (Romain, « ok pour les extensions de
+// portee ») : DeftVelocity et DeftPanoramic sont des defauts de scene au moteur natif, et il ne
+// manquait que le mot `scene` dans leur portee pour qu ils s ecrivent en tete.
 @def vel
   bp3:_vel
   args:value
   range:0 127
   default:64
   description:`txt: Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity`
-  scope:symbol group rule flow
+  scope:symbol group rule flow scene
   transportGroup:expression
 
 @def pan
@@ -81,7 +99,7 @@
   range:0 127
   default:64
   description:`txt: Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10`
-  scope:symbol group rule flow
+  scope:symbol group rule flow scene
   transportGroup:expression
 
 @def pancont

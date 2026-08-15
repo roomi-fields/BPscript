@@ -179,13 +179,22 @@
   scope:symbol group rule flow
   transportGroup:midi
 
+// VOLUME · LA REALISATION MIDI DE L INTERFACE GENERIQUE. `expression.volume` est le mot que
+// l auteur ecrit ; celui-ci est ce que le runtime MIDI en fait. Doctrine de Romain, 2026-08-15 :
+// « MIDI a toutes ses primitives, et expression est un sur-ensemble d appel generique qui va
+// appeler les primitives d expression du runtime sous-jacent quel qu il soit. »
+//   !(volume:90)        l interface -- le runtime actif la realise
+//   !(midi.volume:90)   cette declaration-ci, visee directement
+// PORTEE ETENDUE A LA SCENE le 2026-08-15 (Romain, « ok pour les extensions de portee ») :
+// DeftVolume est un defaut de scene au moteur natif, il s ecrit donc aussi en tete.
 @def volume
+  implements:expression.volume
   bp3:_volume
   args:value
   range:0 127
   default:100
   description:`txt: MIDI Volume (CC7)`
-  scope:symbol group rule flow
+  scope:symbol group rule flow scene
   transportGroup:midi
 
 @def volumecont
@@ -339,3 +348,101 @@
   scope:symbol group rule flow
   transportGroup:midi
 
+
+
+// ═══ LES ONZE PRIMITIVES QUI MANQUAIENT ═══
+// Diagnostic de runtime-MIDI, arbitre par Romain le 2026-08-15. Elles decrivent ce que le moteur
+// natif sait faire et que le langage ne savait pas nommer.
+//
+// LA GRAPHIE NATIVE EST MESUREE, PAS DEDUITE. Table des mots du moteur (StringLists.h, 83 entrees) :
+// `_volumecontrol` et `_pancontrol` Y SONT, les neuf autres n en font pas partie -- ce sont des
+// PREFERENCES du moteur, pas des gestes du flux. Les neuf sont donc inscrits nommement parmi les
+// controles sans geste natif, et les deux le declarent.
+//
+// ⚠️ LEURS PLAGES ET LEURS VALEURS PAR DEFAUT NE SONT PAS ECRITES ICI, ET C EST DELIBERE. Les
+// constantes natives ont ete mesurees par runtime-MIDI et ne me sont pas parvenues ; les deduire
+// serait les inventer. Les defauts vivent de toute facon dans `midi-default` (Romain : « les
+// defauts sont dans la librairie midi-default »). Une declaration sans plage decrit le mot sans
+// mentir sur ses bornes ; une plage supposee refuserait des valeurs justes ou en accepterait de
+// fausses, sans que rien ne le dise.
+
+// RATE · LA CADENCE COMMUNE DES CINQ FLUX CONTINUS. Elle meut volumerate, modrate, pitchrate et
+// pressrate d un seul mot, la ou chacun se regle aussi separement.
+@def rate
+  args:hz
+  description:`txt: Cadence des valeurs intermédiaires de TOUS les flux continus, en valeurs par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.`
+  scope:scene
+  transportGroup:midi
+
+// VOLUMECONTROL · QUEL CONTROLEUR PORTE LE VOLUME. Le numero est une DONNEE de la scene, plus une
+// valeur ecrite en dur dans un runtime.
+@def volumecontrol
+  bp3:_volumecontrol
+  args:controller
+  description:`txt: Numéro du contrôleur MIDI qui porte le volume. Image de VolumeController au moteur natif. Le canal se dit dans le même sac : !(chan:3, volumecontrol:11).`
+  scope:symbol group rule flow scene
+  transportGroup:midi
+
+// PANCONTROL · QUEL CONTROLEUR PORTE LE PANORAMIQUE. Meme construction que volumecontrol.
+@def pancontrol
+  bp3:_pancontrol
+  args:controller
+  description:`txt: Numéro du contrôleur MIDI qui porte le panoramique. Image de PanoramicController au moteur natif. Le canal se dit dans le même sac : !(chan:3, pancontrol:11).`
+  scope:symbol group rule flow scene
+  transportGroup:midi
+
+// FADEOUT · L EXTINCTION DE FIN.
+@def fadeout
+  args:duration
+  description:`txt: Extinction du son à la fin de la performance. Image de EndFadeOut au moteur natif.`
+  scope:scene
+  transportGroup:midi
+
+// ═══ LES QUATRE GESTES DE FIN ET DE RELANCE ═══
+// SANS ARGUMENT, PORTEE SCENE, ET DEUX NOMS POSITIFS PAR PAIRE — jamais un nom et sa negation.
+// Meme construction que `striated`/`smooth` : les deux mots d une paire partagent un groupe
+// d unicite, donc ecrire les deux est refuse au lieu de laisser le dernier gagner en silence.
+// Le mot marque ← est ce que le moteur natif fait ; son frere est l autre choix, nomme.
+
+@def resetnotes
+  description:`txt: À la fin de la scène, éteindre ce qui sonne encore. Comportement du moteur natif.`
+  scope:scene
+  unicite:fin-de-scene
+  transportGroup:midi
+
+@def letring
+  description:`txt: À la fin de la scène, laisser sonner ce qui sonne encore.`
+  scope:scene
+  unicite:fin-de-scene
+  transportGroup:midi
+
+@def strikeagain
+  description:`txt: Une note déjà tenue qu'on rejoue est RELANCÉE — nouveau NoteOn. Comportement du moteur natif.`
+  scope:scene
+  unicite:note-rejouee
+  transportGroup:midi
+
+@def sustain
+  description:`txt: Une note déjà tenue qu'on rejoue reste TENUE — aucun nouveau NoteOn.`
+  scope:scene
+  unicite:note-rejouee
+  transportGroup:midi
+
+@def pedalrelease
+  description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne est relâché puis represse. Comportement du moteur natif.`
+  scope:scene
+  unicite:interrupteur-rejoue
+  transportGroup:midi
+
+@def pedalhold
+  description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne garde son état.`
+  scope:scene
+  unicite:interrupteur-rejoue
+  transportGroup:midi
+
+// RESETCONTROLS · SEUL, SANS PAIRE, et l asymetrie est voulue : il n est pas vrai au moteur natif.
+// Une scene l ARME, elle ne le retire pas — il n y a donc pas d autre choix a nommer.
+@def resetcontrols
+  description:`txt: À la fin de la scène, remettre les contrôleurs à plat.`
+  scope:scene
+  transportGroup:midi

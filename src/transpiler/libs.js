@@ -1039,8 +1039,32 @@ function loadLibsFromDirectives(directives) {
   // rien ne rend public. Sans ce refus, `midi.volume` réaliserait `expression.volme` et la faute
   // resterait muette — la réalisation cesserait simplement de lever l'ambiguïté, ce qui se lit
   // comme « deux homonymes » et pas comme « une coquille ».
+  //
+  // ⚠️ LA CIBLE SE CHERCHE DANS TOUT LE REGISTRE, PAS DANS CE QUE LA SCÈNE A INVOQUÉ, et la
+  // distinction est bloquante : « cette interface existe-t-elle » est une propriété de la DONNÉE,
+  // « la scène l'a-t-elle en portée » est une autre question. Ma première version lisait les
+  // contrôles CHARGÉS — donc convertir `lib/midi.bpsl` en bundle refusait le fichier, parce que
+  // `expression` n'était pas invoquée par lui : une librairie devenait illisible à cause d'une
+  // déclaration parfaitement juste.
+  const declareDansLeRegistre = (qualifie) => {
+    const point = qualifie.indexOf('.');
+    if (point < 0) return false;
+    const lib = registry[qualifie.slice(0, point)];
+    const nom = qualifie.slice(point + 1);
+    if (!lib || typeof lib !== 'object') return false;
+    for (const section of Object.values(lib)) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      if (section[nom] && typeof section[nom] === 'object') return true;
+      // Les contrôles GROUPÉS (`groups.<groupe>.<nom>`) — une descente de plus, pas deux.
+      for (const sous of Object.values(section)) {
+        if (sous && typeof sous === 'object' && !Array.isArray(sous) && sous[nom]
+            && typeof sous[nom] === 'object' && ('args' in sous[nom] || 'description' in sous[nom])) return true;
+      }
+    }
+    return false;
+  };
   for (const [qual, cible] of Object.entries(ctx.implementedInterface)) {
-    if (!ctx.controlsQualified[cible]) {
+    if (!declareDansLeRegistre(cible)) {
       throw new Error(
         `'${qual}' déclare 'implements:${cible}', et '${cible}' n'est déclaré nulle part. Une `
         + `réalisation vise une interface EXISTANTE, écrite '<librairie>.<contrôle>'.`);

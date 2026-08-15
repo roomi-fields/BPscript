@@ -21,11 +21,9 @@
  * plage, le défaut et le destinataire de la RÉALISATION — un réglage générique partirait au
  * runtime MIDI même quand ce n'est pas lui qui sonne, sans une erreur. Volet 2c.
  *
- * ⛔ LES FIXTURES SONT FABRIQUÉES EN MÉMOIRE, jamais sur le disque : mes librairies sont lues
- * VIVANTES par mes consommateurs, et aucune paire interface/réalisation n'est déclarée
- * aujourd'hui — la question du DÉFAUT porté par l'interface n'est pas tranchée. Ce garde prouve
- * donc le mécanisme sans engager le vocabulaire, et il tiendra tel quel le jour où une vraie
- * paire sera déclarée.
+ * ⛔ LE MÉCANISME SE PROUVE SUR DES FIXTURES FABRIQUÉES EN MÉMOIRE, jamais sur le disque : mes
+ * librairies sont lues VIVANTES par mes consommateurs. Les volets 0 à 4 n'engagent donc aucun mot
+ * du vocabulaire ; le volet 5 mesure à part la SEULE paire réellement déclarée, `volume`.
  *
  * INJECTION dans l'ACCUSÉ (le `implements` retiré, la cible faussée) et dans le JUGE.
  */
@@ -135,17 +133,32 @@ const restaurer = () => { clearRegistry(); registerAll(LIBS); };
      '4. un mot déclaré une SEULE fois résout vers sa propre déclaration, sans ambiguïté');
 }
 
-// ── 5. LE VOCABULAIRE RÉEL NE BOUGE PAS ─────────────────────────────────────────────────────
-// Aucune paire n'est déclarée aujourd'hui : le mécanisme entre sans rien changer au corpus.
+// ── 5. LA PREMIÈRE PAIRE RÉELLE — `volume` ──────────────────────────────────────────────────
+// ⚠️ CE VOLET EXIGEAIT L'INVERSE JUSQU'AU 2026-08-15 : « aucune réalisation n'est déclarée
+// aujourd'hui ». Il a fait son office — la première paire est entrée SCIEMMENT, en le faisant
+// rougir, au lieu d'apparaître en aval. Romain a tranché le point qui bloquait (« les défauts sont
+// dans la librairie midi-default ») ; le volet bascule et décrit maintenant la paire déclarée.
 restaurer();
 {
   const ctx = loadLibsFromDirectives([{ name: 'core' }]);
-  ok(Object.keys(ctx.implementedInterface).length === 0,
-     `5a. aucune réalisation n'est déclarée aujourd'hui — vues : ${Object.keys(ctx.implementedInterface).join(', ')}. `
-     + "Le jour où une paire sera déclarée, ce volet dira laquelle et il faudra le mettre à jour "
-     + 'sciemment, pas la découvrir en aval');
+  ok(ctx.implementedInterface['midi.volume'] === 'expression.volume',
+     `5a. 'midi.volume' doit réaliser 'expression.volume' — vu : ${ctx.implementedInterface['midi.volume']}`);
+  ok(ctx.controls.volume === ctx.controlsQualified['expression.volume'],
+     "5b. `volume` nu doit résoudre vers l'INTERFACE, dans les librairies RÉELLES et pas seulement "
+     + 'sur les fixtures — sinon un réglage générique part au runtime MIDI même quand ce n\'est pas '
+     + 'lui qui sonne');
+  ok(ctx.controlResolvedBy.volume === 'toutes les sorties',
+     `5c. et son destinataire est celui de l'interface — vu : ${ctx.controlResolvedBy.volume}`);
+  ok(ctx.controlQualifiedResolvedBy['midi.volume'] === 'runtime-MIDI',
+     '5d. la forme préfixée garde le sien');
+  // ⛔ L'INTERFACE NE PORTE PAS DE DÉFAUT, et la réalisation non plus le jour où `midi-default`
+  // existera. Romain : « les défauts sont dans la librairie midi-default, ça sera modifié dans le
+  // live par les contrôles de volume de l'UI ».
+  ok(ctx.controlsQualified['expression.volume'].default === undefined,
+     "5e. l'interface ne porte AUCUNE valeur par défaut — elle décrit le mot, `midi-default` donne "
+     + 'la valeur');
   ok(ctx.ambiguousControls.size === 0,
-     `5b. et aucun nom n'est ambigu dans les librairies réelles — vus : ${[...ctx.ambiguousControls].join(', ')}`);
+     `5f. et aucun nom n'est ambigu dans les librairies réelles — vus : ${[...ctx.ambiguousControls].join(', ')}`);
 }
 
 // ── 6. INJECTION DANS LE JUGE — la décision rejouée isolée ──────────────────────────────────
@@ -164,7 +177,7 @@ restaurer();
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné douze parce qu'un bloc s'est tu.
-const TOTAL_ATTENDU = 19;
+const TOTAL_ATTENDU = 23;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 

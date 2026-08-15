@@ -81,7 +81,36 @@ const SANS_GESTE_NATIF = new Set([
   // LA LEÇON : un mot présent dans la table ne dit pas QUELLE clé en est l'image. L'état ne dit
   // jamais l'intention, et un nom voisin ne vaut pas équivalence.
   'transpose',
+  // ── LES NEUF PRIMITIVES MIDI ENTRÉES LE 2026-08-15, mesurées sur la table AVANT d'être écrites
+  // ici. `rate` et `fadeout` sont des PRÉFÉRENCES du moteur (SamplingRate, EndFadeOut), pas des
+  // gestes du flux ; les sept mots des quatre gestes de fin et de relance non plus. Aucun des neuf
+  // n'apparaît dans les 83 entrées de `StringLists.h` — et leurs deux frères de la même livraison,
+  // `volumecontrol` et `pancontrol`, Y SONT et déclarent donc leur graphie. C'est cette DIFFÉRENCE
+  // à l'intérieur d'un même lot qui prouve que la liste est mesurée et pas décidée en bloc.
+  'rate', 'fadeout',
+  'resetnotes', 'letring', 'strikeagain', 'sustain', 'pedalrelease', 'pedalhold', 'resetcontrols',
 ]);
+
+/**
+ * LES INTERFACES — un mot générique n'a PAS de geste natif, et ce n'est pas une exception : c'est
+ * sa définition. `expression.volume` est le mot que l'auteur écrit ; le geste natif `_volume` est
+ * porté par sa RÉALISATION, `midi.volume`, qui le déclare. Le lui faire déclarer aussi ferait deux
+ * clés pour un seul geste natif — ce qu'un garde voisin refuse, à raison.
+ *
+ * ⚠️ ET CE N'EST PAS UNE INSCRIPTION DANS LA LISTE CI-DESSUS. Y mettre `volume` affirmerait que le
+ * mot n'a AUCUN geste natif, ce qui est faux : il en a un, ailleurs. La propriété se lit dans la
+ * donnée — être la cible d'un `implements` — et non dans une liste tenue à la main.
+ */
+const INTERFACES = new Set();
+for (const lib of Object.values(BUNDLE)) {
+  for (const section of ['controls', 'engine', 'subgrammar']) {
+    for (const def of Object.values((lib && lib[section]) || {})) {
+      if (def && typeof def === 'object' && typeof def.implements === 'string') {
+        INTERFACES.add(def.implements.slice(def.implements.indexOf('.') + 1));
+      }
+    }
+  }
+}
 
 // ─── 0. SOCLE — refuser de conclure sur du vide ──────────────────────────────────────────────
 // ⛔ CE GARDE LIT LE BUNDLE, PAS LES FICHIERS DU DISQUE — corrigé le 2026-08-13, et c'est la
@@ -111,9 +140,14 @@ ok(controles.some((c) => c.ou.endsWith('/engine')),
    + 'du moteur hors de toute vérification');
 
 // ─── 1. LA RÈGLE — chaque contrôle tranche, aucun ne se tait ─────────────────────────────────
+// ⚠️ UNE INTERFACE EST EXEMPTÉE, ET LE VOLET 1bis TIENT SA CONTREPARTIE : elle ne peut pas se
+// taire ET n'avoir aucune réalisation qui parle. Sans ce second volet, l'exemption serait une
+// porte ouverte — il suffirait de se déclarer interface pour n'avoir plus rien à dire.
+const interfacesVues = [];
 for (const { nom, def, ou } of controles) {
   const dit = typeof def.bp3 === 'string' && def.bp3.length > 0;
   const sans = SANS_GESTE_NATIF.has(nom);
+  if (INTERFACES.has(nom) && !dit) { interfacesVues.push(nom); continue; }
   ok(dit !== sans,
      dit && sans
        ? `1. '${nom}' (${ou}) déclare la graphie native '${def.bp3}' ET figure parmi les contrôles `
@@ -121,6 +155,27 @@ for (const { nom, def, ou } of controles) {
        : `1. '${nom}' (${ou}) ne dit RIEN : ni graphie native déclarée, ni inscription parmi les `
          + `contrôles qui n'en ont pas. Le chargeur retombera sur '_${nom}', et ce repli est juste `
          + 'pour les uns et faux pour les autres — le lecteur ne peut pas les séparer.');
+}
+
+// ─── 1bis. UNE INTERFACE MUETTE A UNE RÉALISATION QUI PARLE ──────────────────────────────────
+// La contrepartie de l'exemption. Une interface ne dit pas le geste natif ; au moins une de ses
+// réalisations doit le dire, sinon le geste n'est déclaré NULLE PART et l'exemption a servi à
+// cacher exactement ce que ce garde existe pour empêcher.
+for (const nom of interfacesVues) {
+  const realisations = [];
+  for (const [nomLib, lib] of Object.entries(BUNDLE)) {
+    for (const section of SECTIONS) {
+      const def = (lib && lib[section] || {})[nom];
+      if (def && typeof def.implements === 'string') realisations.push({ nomLib, def });
+    }
+  }
+  ok(realisations.length > 0,
+     `1bis. '${nom}' est exempté comme INTERFACE mais rien ne le réalise — l'exemption ne tient que `
+     + 'par ses réalisations');
+  ok(realisations.some((r) => typeof r.def.bp3 === 'string' && r.def.bp3.length > 0)
+     || SANS_GESTE_NATIF.has(nom),
+     `1bis. aucune réalisation de '${nom}' ne déclare de graphie native, et le mot ne figure pas `
+     + `parmi ceux qui n'en ont pas — le geste natif ne serait déclaré nulle part`);
 }
 
 // ─── 2. LA GRAPHIE DÉCLARÉE A LA FORME D'UNE GRAPHIE NATIVE ──────────────────────────────────

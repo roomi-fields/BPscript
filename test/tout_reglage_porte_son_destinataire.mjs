@@ -51,6 +51,13 @@ for (const [nomLib, lib] of Object.entries(LIBS)) {
   for (const section of ['controls', 'engine', 'subgrammar']) {
     for (const [n, d] of Object.entries(lib[section] || {})) {
       if (n.startsWith('_') || !d || typeof d !== 'object' || !('args' in d) || !('description' in d)) continue;
+      // ⛔ UNE RÉALISATION NE DIT PAS LE DESTINATAIRE DE LA FORME NUE. `midi.volume` déclare
+      // `implements:expression.volume` : le mot que l'auteur écrit NU est l'interface, et il part au
+      // destinataire de l'interface — « toutes les sorties » — pas au runtime de la réalisation.
+      // Viser la réalisation demande de la préfixer, et c'est là qu'elle garde le sien.
+      // Sans ce saut, cette table attendrait `runtime-MIDI` pour `volume` et accuserait le
+      // chargeur de faire exactement ce que la doctrine demande.
+      if (typeof d.implements === 'string') continue;
       destinataireAttendu[n] = { destinataire: lib.resolvedBy, lib: nomLib };
     }
   }
@@ -89,13 +96,33 @@ ok(mesures >= 40,
 
 // ─── 2. UN SAC MÉLANGÉ REND UN DESTINATAIRE PAR CLÉ ──────────────────────────────────────────
 {
-  const sac = sacDe(compileToBPxAST(scene('vel:50, transpose:3/2, volume:90')).ast);
+  // ⚠️ `volume` A QUITTÉ CE TRIO le 2026-08-15, et c'est le garde qui l'a exigé. Il y tenait le
+  // rôle du mot MIDI ; devenu l'INTERFACE générique, il rend « toutes les sorties » comme `vel` —
+  // le trio ne comptait plus que DEUX destinataires distincts et le volet rougissait à raison.
+  // `chan` reprend le rôle : il est resté propre à `midi`, et le volet mesure toujours ce qu'il
+  // dit mesurer — trois librairies, trois destinataires.
+  const sac = sacDe(compileToBPxAST(scene('vel:50, transpose:3/2, chan:2')).ast);
   ok(sac?.resolvedBy?.vel === destinataireAttendu.vel.destinataire, '2. le sac mélangé rend le destinataire de vel');
   ok(sac?.resolvedBy?.transpose === destinataireAttendu.transpose.destinataire, '2. le sac mélangé rend le destinataire de transpose');
-  ok(sac?.resolvedBy?.volume === destinataireAttendu.volume.destinataire, '2. le sac mélangé rend le destinataire de volume');
+  ok(sac?.resolvedBy?.chan === destinataireAttendu.chan.destinataire, '2. le sac mélangé rend le destinataire de chan');
   ok(new Set(Object.values(sac?.resolvedBy || {})).size === 3,
      `2. trois librairies dans un sac doivent rendre TROIS destinataires distincts `
      + `(reçu ${JSON.stringify(sac?.resolvedBy)}) — une valeur unique en tairait deux`);
+}
+
+// ─── 2bis. UNE INTERFACE PART AU DESTINATAIRE DE L'INTERFACE, SA RÉALISATION AU SIEN ─────────
+// Le volet que le chantier des primitives MIDI a rendu nécessaire. C'est le mode d'échec le plus
+// discret du mécanisme : sans reprise, la forme nue emporterait le destinataire de la DERNIÈRE
+// déclaration lue, et un réglage générique partirait au runtime MIDI même quand ce n'est pas lui
+// qui sonne — sans une erreur.
+{
+  const nu = sacDe(compileToBPxAST(scene('volume:90')).ast);
+  ok(nu?.resolvedBy?.volume === 'toutes les sorties',
+     `2bis. 'volume' NU part au destinataire de l'interface — reçu ${JSON.stringify(nu?.resolvedBy)}`);
+  const prefixe = sacDe(compileToBPxAST(scene('midi.volume:90')).ast);
+  ok(prefixe?.resolvedBy?.['midi.volume'] === 'runtime-MIDI'
+     || prefixe?.resolvedBy?.volume === 'runtime-MIDI',
+     `2bis. 'midi.volume' PRÉFIXÉ part à runtime-MIDI — reçu ${JSON.stringify(prefixe?.resolvedBy)}`);
 }
 
 // ─── 3. INJECTION DANS L'ACCUSÉ — une librairie sans destinataire, puis avec un autre ────────
