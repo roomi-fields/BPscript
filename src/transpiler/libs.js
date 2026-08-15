@@ -471,7 +471,7 @@ function loadLibsFromDirectives(directives) {
   // SOCLE @core + SCHÉMA du langage — chargés en DONNÉE, plus aucune liste en dur (Romain
   // 2026-07-05, prépare user libraries + partage du vocabulaire à Kanopi). @core.schema
   // déclare : `reservedDirectives` (mots de directive du langage, non-valeurs), `addressKeys`
-  // (clés d'adresse de sortie), `catalogAxes` (axes dont les valeurs sont des entrées de
+  // (clés d'adresse d'un point de sortie ou d'entrée), `catalogAxes` (axes dont les valeurs sont des entrées de
   // catalogue). @core.defaults porte les valeurs/composants par défaut (cascade).
   const coreLib = loadJsonFile('core') || {};
   const schema = coreLib.schema || {};

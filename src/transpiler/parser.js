@@ -19,14 +19,14 @@ class ParseError extends Error {
 }
 
 /**
- * Schéma des CLÉS D'ADRESSE de sortie (KAI-9 / GAP#2, décision 2026-06-26).
- * Une clé d'override qui désigne OÙ va l'événement (canal/device/port) — par opposition
- * à un contrôle d'expression (vel/pan/wave…). Sépare `payload.address` de `payload.params`
- * (cf. splitAddress). `ch` et `channel` sont synonymes (forme courte/longue). Aligné sur les
- * params de `out.<type>(…)` côté acteur (canal/device/port).
+ * Schéma des CLÉS D'ADRESSE (KAI-9 / GAP#2, décision 2026-06-26).
+ * Une clé d'override qui désigne OÙ va l'événement, ou D'OÙ vient celui qu'un point d'attente
+ * écoute (canal/device/port/note) — par opposition à un contrôle d'expression (vel/pan/wave…).
+ * Sépare `payload.address` de `payload.params` (cf. splitAddress). `ch` et `channel` sont
+ * synonymes (forme courte/longue). Aligné sur les params de `out.<type>(…)` côté acteur.
  */
 /**
- * Clés d'ADRESSE de sortie — lues dans la DONNÉE (`lib/core.json` schema.addressKeys).
+ * Clés d'ADRESSE — lues dans la DONNÉE (`lib/core.json` schema.addressKeys).
  * ⚠️ Elles étaient codées en dur ICI en plus d'y être déclarées : deux exemplaires identiques,
  * donc un double qui n'attendait qu'une divergence. Retiré le 2026-08-06, dans le même geste que
  * les axes de catalogue, qui avaient déjà payé ce défaut le jour même.
