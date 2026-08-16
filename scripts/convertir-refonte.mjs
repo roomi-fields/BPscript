@@ -135,6 +135,12 @@ export function convertir(source, nomFichier = '(entrée)') {
         for (const n of r.split(',').map((x) => x.trim()).filter(Boolean)) {
           sortie.push(`symbol ${n}`); notes.mecanique++;
         }
+      } else if ((f = r.match(/^([\w-]+)\s+(`.*`)\s*$/))) {
+        // ⛔ LE TYPE `code` — tranché le 2026-08-16, et c'est ma propre mesure qui a ouvert la
+        // question : la décision demandait « si `var wobble \`js: …\`` est vivant ». Il l'est,
+        // deux scènes le portent. Le type ne prend PAS d'arguments et ne s'invoque pas — c'est
+        // ce qui le sépare de `def`, dont la parenthèse collée change le résultat.
+        sortie.push(`code ${f[1]} ${f[2]}`); notes.mecanique++;
       } else {
         sortie.push(l); marque('DECISION', l, i, "forme de `@var` hors des cinq emplois mesurés");
       }
