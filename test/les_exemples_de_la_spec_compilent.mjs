@@ -600,7 +600,14 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
     return n;
   })(DOCS);
   const ecartes = totalMd - TOUS.length;
-  ok(ecartes <= 3,
+  // ⚠️ PLAFOND PORTÉ DE 3 À 4 LE 2026-08-16, avec sa cause. Le quatrième écarté est
+  // `docs/archive/58-demos-archivees-supprimees.md` — le compte rendu des 58 démos supprimées ce
+  // jour-là. Il cite `@map`, `@scene` et `@controls`, TROIS FORMES MORTES que le compilateur refuse
+  // en nommant leur décision : c'est précisément ce qu'un compte rendu d'archive doit porter, et
+  // le réécrire pour qu'il compile falsifierait l'histoire qu'il consigne.
+  // Ce plafond monte parce que la population a grandi ; il ne se règle JAMAIS sur ce que le
+  // balayage rend, sinon il cesse de mesurer.
+  ok(ecartes <= 4,
      `4. trop de documents écartés du balayage — ${ecartes} sur ${totalMd}. La seule raison admise `
      + `est « c'est un compte rendu archivé, le réécrire falsifierait l'histoire ». Si l'écart `
      + `grandit, c'est qu'on écarte pour ne pas corriger.`);

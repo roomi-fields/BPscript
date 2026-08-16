@@ -32,14 +32,16 @@ const DEPOT = path.resolve(ICI, '..');
  * LE REGISTRE DES DÉROGATIONS. Chaque entrée dit QUI, DEPUIS QUAND et POURQUOI. Sans motif écrit,
  * une exclusion devient un trou que personne ne rouvre.
  */
-const HORS_PORTEE_ASSUME = [
-  {
-    motif: /(^|\/)_archive\//,
-    depuis: '2026-07-29',
-    pourquoi: 'Archive gelée : ces scènes ne sont plus maintenues et portent des formes mortes '
-      + 'DÉLIBÉRÉMENT — les vérifier reviendrait à exiger qu\'une archive suive le langage vivant.',
-  },
-];
+const HORS_PORTEE_ASSUME = [];
+// ⛔ LA DÉROGATION `_archive/` EST RETIRÉE LE 2026-08-16 — elle n'a plus AUCUN bénéficiaire.
+// Elle couvrait les 58 démos de `_archive/web/demos/`, supprimées le jour même sur arbitrage de
+// Romain : un fichier ignoré par git reste INDEXÉ et LU, et 53 des 58 différaient de leur homonyme
+// suivi, donc l'archive enseignait une seconde graphie pendant une migration.
+// ⚠️ C'EST MON PROPRE GESTE QUI L'A VIDÉE, et ce garde me l'a dit dans la minute. Le registre est
+// donc vide, et c'est l'état juste : « une porte ouverte pour personne n'est pas une tolérance,
+// c'est un trou par lequel la prochaine famille entrera sans bruit » — sa phrase, écrite le jour de
+// sa naissance quand il a mordu sur son auteur. Il vient de mordre une troisième fois, sur moi.
+// Ce qu'a emporté la suppression est consigné dans `docs/archive/58-demos-archivees-supprimees.md`.
 // ⚠️ DEUX DÉROGATIONS ONT ÉTÉ RETIRÉES LE JOUR MÊME OÙ CE GARDE A ÉTÉ ÉCRIT — instantanés de
 // mesure et dépendances installées. Je les avais posées par prudence ; le garde a mesuré qu'AUCUN
 // fichier n'en relevait et a refusé de les laisser. C'est son second sens, et il a mordu sur son
