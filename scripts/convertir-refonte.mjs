@@ -49,10 +49,13 @@ const POSES = new Set([
 /** Les types qui remplacent `@var <nom> <type>` — conventions, drapeau, entrée, module. */
 const CONVENTIONS = new Set(['signal', 'pitch', 'phase', 'logic']);
 
+/** Les cinq mots SORTIS du langage — leur ligne se retire, elle ne se convertit pas. */
+const SORTIS = new Set(['macro', 'template', 'mine', 'factory']);
+
 export function convertir(source, nomFichier = '(entrée)') {
   const lignes = source.split('\n');
   const sortie = [];
-  const notes = { mecanique: 0, decision: [], refus: [] };
+  const notes = { mecanique: 0, decision: [], refus: [], retraits: [] };
   let delimiteurPose = false;
   let vuDeclaration = false;
   const estLibrairie = nomFichier.endsWith('.bpsl');
@@ -122,6 +125,16 @@ export function convertir(source, nomFichier = '(entrée)') {
         sortie.push(`${f[2]} ${f[1]}`); notes.mecanique++;   // instance d'un module du catalogue
       } else if (/^[\w-]+$/.test(r)) {
         sortie.push(`symbol ${r}`); notes.mecanique++;        // une variable sans type
+      } else if (/^[\w-]+(\s*,\s*[\w-]+)+$/.test(r)) {
+        // ⛔ UNE LISTE DE NOMS SANS TYPE — tranchée le 2026-08-16 « selon ce que les noms
+        // désignent ». Mesuré sur la seule scène qui la porte (`tryhomomorphism.bps`) :
+        // `S -> a b c $X * &X` les écrit DANS LE FLUX, et la table d'homomorphisme les traduit
+        // (`a-->b`, `c-->fa4`). Ils ne sonnent pas — ce sont des opérandes, à côté desquels
+        // `do4`, `mi4`, `fa4` sont, eux, des notes. C'est la définition même de `symbol` :
+        // « s'écrit dans le flux, ne sonne pas, l'aval le porte opaquement ».
+        for (const n of r.split(',').map((x) => x.trim()).filter(Boolean)) {
+          sortie.push(`symbol ${n}`); notes.mecanique++;
+        }
       } else {
         sortie.push(l); marque('DECISION', l, i, "forme de `@var` hors des cinq emplois mesurés");
       }
@@ -132,11 +145,13 @@ export function convertir(source, nomFichier = '(entrée)') {
     if (mot === 'gate') {
       const g = reste.trim().match(/^([^\s:]+)\s*:\s*([\w-]+)\s*$/);
       if (g) {
+        // ⛔ LA QUESTION QUI MARQUAIT CES LIGNES EST TRANCHÉE (2026-08-16) : la clé `reads`
+        // N'EXISTE PAS. bp3-engine a mesuré sur le binaire natif — SEGMENTED sur 38 alphabets
+        // sur 38, zéro composed, et les NOTES ne passent pas par l'alphabet du tout : `do5`
+        // sonne sans aucun fichier d'alphabet, la composition est un CALCUL. Une clé qui vaut
+        // la même chose partout ne porte rien. La traduction est donc purement mécanique.
         sortie.push(`terminal ${g[1]}(out.${g[2]})`);
         notes.mecanique++;
-        marque('DECISION', l, i,
-          "la déclaration est peut-être INUTILE — l'alphabet la génère ou la segmente ; la clé "
-          + '`reads` qui trancherait n\'existe dans aucune donnée et sa valeur a été DÉDUITE');
       } else { sortie.push(l); marque('REFUS', l, i, "`@gate` sans la forme `<nom>:<canal>`"); }
       continue;
     }
@@ -150,13 +165,13 @@ export function convertir(source, nomFichier = '(entrée)') {
       continue;
     }
 
-    // ── @macro : le mot est SORTI du langage le 2026-08-09 ──────────────────────────────────
-    if (mot === 'macro') {
-      sortie.push(l);
-      marque('DECISION', l, i, '`@macro` est SORTI du langage (2026-08-09) — que devient un fichier '
-        + 'qui en porte encore ? Ce n\'est pas une conversion, c\'est un retrait.');
-      continue;
-    }
+    // ── CINQ MOTS SORTENT DU LANGAGE — la ligne se SUPPRIME, elle ne se traduit pas ────────
+    // Décision du 2026-08-16. `macro` était sorti le 2026-08-09 ; `mine` et `factory` l'étaient
+    // depuis le 2026-07-13 — « REMPLACÉE : la provenance ne figure plus dans l'invocation » —
+    // et vingt occurrences traînaient encore. Un retrait acté qui n'avait jamais été exécuté.
+    // ⚠️ SUPPRIMER N'EST PAS CONVERTIR : ces lignes ne comptent pas comme une transformation,
+    // elles comptent comme un RETRAIT, et le rapport les nomme séparément.
+    if (SORTIS.has(mot)) { notes.retraits.push({ ligne: i + 1, mot, texte: nu }); continue; }
 
     // ── invocation d'une librairie : un mot seul, éventuellement pointé ─────────────────────
     const racine = mot;
