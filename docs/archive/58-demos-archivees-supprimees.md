@@ -38,6 +38,18 @@ Ce qui l'a rattrapée n'est pas une relecture : c'est d'avoir **comparé la list
 mesurée** avant de supprimer. Une consignation qu'on ne confronte pas ne consigne rien — elle
 rassure.
 
+## L'index qui les décrivait, supprimé le 2026-08-16
+
+`_archive/web/demos/index.json` décrivait **56 des 58**. Le geste qui a supprimé les démos l'a rendu
+mort ; il est parti le même jour, et le dossier avec lui.
+
+Ses 56 entrées ont été **confrontées à la liste ci-dessous avant la suppression** : 46 s'y retrouvent
+sous leur nom entier, 10 sous un identifiant court — `tuto-01` pour `tuto-01-first-note`. Aucune
+entrée hors de la liste.
+
+`_archive/web/scenes-index.json` **reste** : ses 44 entrées sont toutes vivantes au registre du
+corpus.
+
 ## Les 58 noms — pris sur le disque, comparés après écriture
 
 ```
