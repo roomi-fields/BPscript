@@ -15,7 +15,17 @@
  *    réussi. Un algorithme qui rebrousse chemin donnerait un résultat DIFFÉRENT du natif sur ce
  *    cas précis, et identique partout ailleurs — c'est pourquoi il fallait le fabriquer.
  *
- * 2. ELLE PORTE SUR LES TERMINAUX DE L'ALPHABET EN PORTÉE — sur le natif, `genagedhatrkt` rend
+ * 2. UN MOT TIENT ENTIÈREMENT DANS UN SEUL ALPHABET, jamais sur l'union des vocabulaires en
+ *    portée — décision de Romain du 2026-08-16. Sous un acteur de tabla et un acteur occidental,
+ *    `taC4` est REFUSÉ : `ta` est un bol, `C4` une note, et le mot mêlerait deux langues. L'union
+ *    répond à « ce nom est-il connu » ; la segmentation pose « ce mot tient-il dans un
+ *    vocabulaire », et la même donnée ne répond pas aux deux questions.
+ *
+ *    Un mot lisible dans DEUX alphabets ne se produit pas au corpus — mesuré le 2026-08-16 : une
+ *    seule scène porte deux alphabets, et elle ne segmente rien. Le premier alphabet qui lit le mot
+ *    entier gagne, et rien n'est construit pour un cas qui n'existe pas.
+ *
+ * 3. ELLE PORTE SUR LES TERMINAUX DE L'ALPHABET EN PORTÉE — sur le natif, `genagedhatrkt` rend
  *    `ge na ge dha tr kt`, parce que `gena` et `dhatrkt` n'y sont pas des bols.
  *
  *    ⚠️ NOTRE ALPHABET `tabla` LES DÉCLARE ENCORE, et le plus long préfixe les prend : le même nom
@@ -23,10 +33,10 @@
  *    ferme quand les dix-sept composés sortent de l'alphabet et que `dhee`, `tee` et `tr` y entrent.
  *    Une passe correcte sur un alphabet faux donne un résultat faux, et c'est ici qu'on le lit.
  *
- * 3. UN NOM INSEGMENTABLE EST REFUSÉ, et le natif le dit en toutes lettres — « Can't make sense
+ * 4. UN NOM INSEGMENTABLE EST REFUSÉ, et le natif le dit en toutes lettres — « Can't make sense
  *    of "a" ». C'est le reste non consommé qu'il nomme, pas le mot entier.
  *
- * 4. ELLE S'APPLIQUE À LA COMPILATION, PAS AU JEU. Une règle dont le membre gauche vise un
+ * 5. ELLE S'APPLIQUE À LA COMPILATION, PAS AU JEU. Une règle dont le membre gauche vise un
  *    SOUS-BOL mord : `na ti --> na trkt` attrape le `na` qui est le troisième bol de `dhagena`.
  *    Le nom collé n'est un mot pour personne — il est dissous avant que la grammaire travaille.
  *

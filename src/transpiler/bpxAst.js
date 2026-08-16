@@ -718,13 +718,21 @@ function resolveHomomorphismMarkers(ast) {
  */
 function terminauxEnPortee(ast) {
   const terminaux = new Set();
+  // ⛔ UN PAQUET PAR ALPHABET, EN PLUS DE L'UNION. La validation demande « ce nom est-il connu »,
+  // et l'union y répond. La SEGMENTATION demande autre chose : « ce mot tient-il dans UN
+  // vocabulaire » — décision de Romain du 2026-08-16, un mot se segmente entièrement dans un seul
+  // alphabet. Sur l'union, `taC4` se lirait `ta` (tabla) + `C4` (occidental), un mot construit avec
+  // des morceaux de deux langues.
+  const paquets = [];
   const ajouter = (name, octaves) => {
     const lib = resolveActorAlphabet(name, ast.directives);
     if (!lib || !nomsDeTerminaux(lib)) return false;
-    for (const t of expandAlphabetTerminals(lib, octaves)) terminaux.add(t);
+    const paquet = new Set();
+    for (const t of expandAlphabetTerminals(lib, octaves)) { terminaux.add(t); paquet.add(t); }
     const alts = lib.alterations && typeof lib.alterations === 'object' && !Array.isArray(lib.alterations)
       ? Object.keys(lib.alterations) : [''];
-    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) terminaux.add(note + alt); // forme nue
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) { terminaux.add(note + alt); paquet.add(note + alt); } // forme nue
+    paquets.push(paquet);
     return true;
   };
   let aUnAlphabet = false;
@@ -756,10 +764,16 @@ function terminauxEnPortee(ast) {
   // — 119 lignes sur 14 scènes — déclarait précisément des terminaux avec leur sortie. Sans cette
   // ligne, la cible de migration accepte la déclaration et refuse l'usage : le pire des deux
   // mondes, un mur avec une porte peinte dessus.
+  // Un terminal declare par `@def` appartient a la SCENE, pas a un alphabet : il est en portee
+  // partout, donc il rejoint chaque paquet. Un mot peut le meler aux bols de l'alphabet actif sans
+  // pour autant traverser deux alphabets.
   for (const d of ast.directives || []) {
-    if (d && d.type === 'DefDirective' && d.kind === 'terminal' && d.name) terminaux.add(d.name);
+    if (d && d.type === 'DefDirective' && d.kind === 'terminal' && d.name) {
+      terminaux.add(d.name);
+      for (const paquet of paquets) paquet.add(d.name);
+    }
   }
-  return { terminaux, aUnAlphabet };
+  return { terminaux, aUnAlphabet, paquets };
 }
 
 /**
@@ -909,7 +923,7 @@ function nomsDeclares(ast) {
  * scène serait refusée sur un nom que la segmentation sait lire. Le refus qui subsiste après elle
  * est le bon — c'est celui du reste inconsommable, que le natif nomme aussi.
  */
-function segmenterLesTerminaux(ast, known) {
+function segmenterLesTerminaux(ast, known, paquets) {
   const intouchables = nomsDeclares(ast);
   const dansUneListe = (liste) => {
     if (!Array.isArray(liste)) return liste;
@@ -917,7 +931,11 @@ function segmenterLesTerminaux(ast, known) {
     for (const el of liste) {
       if (el && el.type === 'Symbol' && el.name && !known.has(el.name) && !intouchables.has(el.name)
           && el.role !== 'homomorphism' && !(Array.isArray(el.compose) && el.compose.length)) {
-        const r = segmenter(el.name, known);
+        // Le premier alphabet qui lit le mot ENTIER gagne. Un mot lisible dans DEUX alphabets
+        // n'existe pas au corpus (mesure du 2026-08-16, une seule scene porte deux alphabets et
+        // elle ne segmente rien) : rien n'est construit pour un cas qui n'existe pas.
+        let r = null;
+        for (const paquet of paquets) { r = segmenter(el.name, paquet); if (r && r.parts) break; }
         if (r && r.parts) {
           for (const part of r.parts) sortie.push({ ...el, name: part, segmenteDe: el.name });
           continue;
@@ -2720,7 +2738,7 @@ export function compileToBPxAST(source, environnement) {
     result.errors.push(...refuserNomsEnDouble(ast, libCtx));
     // La segmentation passe AVANT la validation : un nom qu'elle sait lire ne doit pas être
     // refusé pour n'avoir pas été déclaré.
-    { const { terminaux } = terminauxEnPortee(ast); segmenterLesTerminaux(ast, terminaux); }
+    { const { terminaux, paquets } = terminauxEnPortee(ast); segmenterLesTerminaux(ast, terminaux, paquets); }
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));

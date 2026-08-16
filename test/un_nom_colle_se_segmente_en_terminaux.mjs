@@ -137,8 +137,34 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
      + `invoquer une segmentation qui n'a rien commencé.`);
 }
 
+// ── E. ELLE NE TRAVERSE PAS LES ALPHABETS — un mot tient dans UN vocabulaire ─────────────────
+// Décision de Romain, 2026-08-16 : un mot se segmente ENTIÈREMENT dans un seul alphabet.
+//
+// ⚠️ CE VOLET GARDE UN DÉFAUT QUI A VÉCU DANS LA PREMIÈRE LIVRAISON. La passe travaillait sur
+// l'UNION des terminaux en portée — la même que la validation consulte — et `taC4` s'y lisait `ta`
+// (tabla) + `C4` (occidental) : un mot construit avec des morceaux de deux langues. L'union répond
+// à « ce nom est-il connu » ; la segmentation pose une autre question, « ce mot tient-il dans un
+// vocabulaire », et la même donnée ne répond pas aux deux.
+{
+  const DEUX = '@core\n@actor perc alphabet.tabla\n@actor lahra alphabet.western\n';
+  const cheval = compileToBPxAST(`${DEUX}S -> taC4\n`);
+  ok((cheval.errors || []).length > 0,
+     `E. un mot À CHEVAL sur deux alphabets doit être REFUSÉ — 'taC4' mêle un bol et une note. `
+     + `Reçu : ${JSON.stringify(((cheval.ast?.subgrammars?.[0]?.rules?.[0]?.rhs) || []).map((x) => x.name))}.`);
+
+  // ⚠️ ET L'AUTRE MOITIÉ : refuser la traversée ne doit pas fermer la segmentation quand DEUX
+  // alphabets sont en portée. Sans ce témoin, une passe qui abandonnerait des qu'il y a deux
+  // alphabets passerait la ligne du dessus en triomphe.
+  const propre = compileToBPxAST(`${DEUX}S -> taka\n`);
+  ok((propre.errors || []).length === 0
+     && JSON.stringify(((propre.ast?.subgrammars?.[0]?.rules?.[0]?.rhs) || []).map((x) => x.name)) === JSON.stringify(['ta', 'ka']),
+     `E. avec DEUX alphabets en portée, un mot qui tient dans UN d'eux se segmente quand même — `
+     + `'taka' doit rendre ['ta','ka']. Reçu ${JSON.stringify(((propre.ast?.subgrammars?.[0]?.rules?.[0]?.rhs) || []).map((x) => x.name))} `
+     + `(${messages(propre).slice(0, 60)}).`);
+}
+
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
-ok(passe >= 30, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
+ok(passe >= 32, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
 
 if (echecs.length) {
   console.error(`❌ un nom collé se segmente en terminaux : ${echecs.length} échec(s)`);
@@ -146,6 +172,7 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`✅ La segmentation suit le natif — plus long préfixe, glouton, SANS retour arrière `
-          + `(cas décisif sur alphabet fabriqué), branchée AVANT la validation, et descendue dans `
-          + `les six contenants du parseur. Elle épargne les noms déclarés et les terminaux, et son `
-          + `refus nomme le RESTE inconsommé. ${passe} vérification(s) passée(s).`);
+          + `(cas décisif sur alphabet fabriqué), branchée AVANT la validation, descendue dans les `
+          + `six contenants du parseur, et confinée à UN alphabet — un mot à cheval est refusé. Elle `
+          + `épargne les noms déclarés et les terminaux, et son refus nomme le RESTE inconsommé. `
+          + `${passe} vérification(s) passée(s).`);
