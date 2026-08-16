@@ -924,18 +924,36 @@ function nomsDeclares(ast) {
  * est le bon — c'est celui du reste inconsommable, que le natif nomme aussi.
  */
 function segmenterLesTerminaux(ast, known, paquets) {
-  const intouchables = nomsDeclares(ast);
+  // Le premier alphabet qui lit le mot ENTIER gagne. Un mot lisible dans DEUX alphabets n'existe
+  // pas au corpus (mesure du 2026-08-16) : rien n'est construit pour un cas qui n'existe pas.
+  const lire = (nom) => {
+    let echec = null;
+    for (const paquet of paquets) {
+      const r = segmenter(nom, paquet);
+      if (r && r.parts) return r;
+      // ⚠️ LE RESTE DU PREMIER ALPHABET EST CONSERVÉ : c'est lui que le refus doit nommer, et le
+      // jeter rendrait le message muet sur ce qui manque. Un échec n'est pas une absence de mesure.
+      if (r && r.reste && !echec) echec = r;
+    }
+    return echec;
+  };
+  // ⛔ LA SEGMENTATION GAGNE SUR LA DÉCLARATION PAR POSITION — décision de Romain, 2026-08-16.
+  // Un nom qui SE SEGMENTE est une suite de terminaux, des deux côtés de la flèche : `taka -> dha`
+  // est `ta ka -> dha`. Un nom qui NE se segmente pas reste déclaré par sa position, et sa casse
+  // n'y change rien : `zzz -> dha` crée toujours le non-terminal `zzz`.
+  //
+  // ⚠️ C'EST LA MOITIÉ DU NATIF QU'ON PREND, ET L'AUTRE QU'ON REFUSE. Au moteur natif, c'est la
+  // CASSE qui porte la nature — minuscule terminal, majuscule non-terminal. On ne suit pas : faire
+  // porter la nature à une convention typographique ferait changer un nom de nature par un simple
+  // renommage.
+  const intouchables = new Set([...nomsDeclares(ast)].filter((n) => !lire(n)?.parts));
   const dansUneListe = (liste) => {
     if (!Array.isArray(liste)) return liste;
     const sortie = [];
     for (const el of liste) {
       if (el && el.type === 'Symbol' && el.name && !known.has(el.name) && !intouchables.has(el.name)
           && el.role !== 'homomorphism' && !(Array.isArray(el.compose) && el.compose.length)) {
-        // Le premier alphabet qui lit le mot ENTIER gagne. Un mot lisible dans DEUX alphabets
-        // n'existe pas au corpus (mesure du 2026-08-16, une seule scene porte deux alphabets et
-        // elle ne segmente rien) : rien n'est construit pour un cas qui n'existe pas.
-        let r = null;
-        for (const paquet of paquets) { r = segmenter(el.name, paquet); if (r && r.parts) break; }
+        const r = lire(el.name);
         if (r && r.parts) {
           for (const part of r.parts) sortie.push({ ...el, name: part, segmenteDe: el.name });
           continue;
@@ -959,14 +977,12 @@ function segmenterLesTerminaux(ast, known, paquets) {
     return el;
   };
   for (const sg of ast.subgrammars || []) {
-    // ⛔ LE MEMBRE DROIT SEULEMENT — et l'absence du membre GAUCHE est une question ouverte, pas
-    // un oubli. La mesure de bp3-engine porte sur le flux : un nom collé y est dissous avant que la
-    // grammaire travaille, et une règle qui vise `na` attrape le troisième bol de `dhagena`. Rien
-    // n'y dit qu'un membre gauche ÉCRIT collé se découpe à son tour.
-    // Et la brancher serait INERTE de toute façon : tout nom de membre gauche entre au recensement
-    // des déclarés, donc aucun ne passerait. Une branche qui ne peut pas mordre se lit comme une
-    // couverture — celle-ci attend l'arbitrage plutôt que de faire semblant.
-    for (const r of sg.rules || []) if (Array.isArray(r.rhs)) r.rhs = dansUneListe(r.rhs);
+    for (const r of sg.rules || []) {
+      if (Array.isArray(r.rhs)) r.rhs = dansUneListe(r.rhs);
+      // LES DEUX CÔTÉS DE LA FLÈCHE — l'écriture collée est une commodité de saisie, pas une
+      // notion de membre droit. Une règle qui vise `taka` vise les deux bols que ce nom désigne.
+      if (Array.isArray(r.lhs)) r.lhs = dansUneListe(r.lhs);
+    }
   }
 }
 

@@ -109,10 +109,17 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
 // ── D. LES TÉMOINS QUI MORDENT — ce que la passe doit ÉPARGNER et REFUSER ────────────────────
 // ⚠️ SANS EUX, UNE PASSE QUI DÉCOUPE TOUT PASSERAIT LES TROIS VOLETS EN TRIOMPHE.
 {
-  // Un nom DÉCLARÉ n'est pas un mot collé : le découper le ferait disparaître de sa grammaire.
-  const nt = compiler('S -> taka\n-----\ntaka -> dha\n');
-  ok(messages(nt) === '' && JSON.stringify(noms(nt)) === JSON.stringify(['taka']),
-     `D-témoin. un NON-TERMINAL nommé 'taka' doit rester ENTIER — reçu ${JSON.stringify(noms(nt))} `
+  // Un nom déclaré qui NE se segmente PAS reste entier : la segmentation porte sur l'alphabet.
+  //
+  // ⚠️ CE TÉMOIN A CHANGÉ DE SUJET LE 2026-08-16, ET LE DÉPLACEMENT EST INSTRUCTIF. Il exigeait
+  // qu'un non-terminal nommé `taka` reste ENTIER — ce qui était vrai tant que la position seule
+  // déclarait. La décision de Romain du même jour renverse ce cas précis : un nom SEGMENTABLE posé
+  // à gauche est une suite, `taka -> dha` vaut `ta ka -> dha`. La règle que le témoin gardait n'a
+  // pas disparu, son sujet a changé — elle vit maintenant sur un nom insegmentable. Effacer le
+  // témoin sans le rejouer ici aurait retiré la garde de l'épargne en croyant suivre une décision.
+  const nt = compiler('S -> zzz\n-----\nzzz -> dha\n');
+  ok(messages(nt) === '' && JSON.stringify(noms(nt)) === JSON.stringify(['zzz']),
+     `D-témoin. un NON-TERMINAL INSEGMENTABLE doit rester ENTIER — reçu ${JSON.stringify(noms(nt))} `
      + `(${messages(nt).slice(0, 60)}). La segmentation porte sur l'alphabet, pas sur les noms `
      + `qu'une grammaire s'est donnés.`);
 
@@ -163,8 +170,64 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
      + `(${messages(propre).slice(0, 60)}).`);
 }
 
+// ── F. LES DEUX CÔTÉS DE LA FLÈCHE — la segmentation gagne sur la déclaration par position ───
+// Décision de Romain, 2026-08-16 (`hub/decisions/2026-08-16-un-non-terminal-se-declare-par-sa-
+// position-la-casse-ne-porte-rien.md`). Un nom qui SE SEGMENTE est une suite de terminaux, à
+// gauche comme à droite ; un nom qui NE se segmente pas reste déclaré par sa position.
+//
+// ⚠️ ET LA CASSE NE PORTE RIEN, C'EST LA MOITIÉ DU NATIF QU'ON REFUSE. Au moteur natif, une
+// minuscule initiale fait un terminal et une majuscule un non-terminal. Le suivre ferait changer
+// un nom de nature par un simple renommage. Le témoin sur `Zzz` garde ce refus : sans lui, une
+// implémentation qui recopierait la règle native passerait tout le reste du volet.
+{
+  const SG = (regle) => `@core\n@alphabet.tabla\nS -> dha\n-----\n${regle}\n`;
+  const lhsDe = (r, i = 1) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.lhs) || []).map((e) => e.name);
+
+  const suite = compileToBPxAST(SG('taka -> dha'));
+  ok(JSON.stringify(lhsDe(suite)) === JSON.stringify(['ta', 'ka']),
+     `F. un membre gauche SEGMENTABLE devient une SUITE — 'taka -> dha' doit porter ['ta','ka'] à `
+     + `gauche, reçu ${JSON.stringify(lhsDe(suite))} (${messages(suite).slice(0, 60)}).`);
+
+  // ⛔ LE CAS DÉCISIF DE LA CASSE — un nom SEGMENTABLE à initiale MAJUSCULE.
+  //
+  // ⚠️ IL A FALLU LE CHERCHER, ET SON ABSENCE RENDAIT LE VOLET AVEUGLE. Mon premier témoin sur la
+  // casse posait `Zzz`, qui n'est segmentable dans aucun alphabet : il est épargné de toute façon,
+  // donc une implémentation qui ferait porter la nature à la casse le passait EN VERT. L'injection
+  // ne mordait pas — et une injection qui ne mord pas se suspecte elle-même, jamais le code.
+  // `C4D4` sous alphabet occidental départage : deux notes collées, initiale majuscule. Il DOIT se
+  // segmenter, ce qu'une règle fondée sur la casse refuserait.
+  const casse = compileToBPxAST('@core\n@alphabet.western\nS -> E4\n-----\nC4D4 -> E4\n');
+  ok(JSON.stringify(lhsDe(casse)) === JSON.stringify(['C4', 'D4']),
+     `F. la CASSE ne porte rien : 'C4D4 -> E4' est SEGMENTABLE malgré sa majuscule initiale et doit `
+     + `porter ['C4','D4'], reçu ${JSON.stringify(lhsDe(casse))}. C'est la moitié du natif qu'on `
+     + `refuse — au moteur, une majuscule ferait un non-terminal.`);
+
+  for (const [quoi, nom] of [['minuscule', 'zzz'], ['MAJUSCULE', 'Zzz']]) {
+    const r = compileToBPxAST(SG(`${nom} -> dha`));
+    ok(messages(r) === '' && JSON.stringify(lhsDe(r)) === JSON.stringify([nom]),
+       `F. un membre gauche INSEGMENTABLE reste un non-terminal, ${quoi} comprise — '${nom}' doit `
+       + `rester entier, reçu ${JSON.stringify(lhsDe(r))}. La casse ne porte rien : la faire porter `
+       + `ferait changer un nom de nature par un simple renommage.`);
+  }
+
+  // Un membre gauche peut porter PLUSIEURS éléments, et la passe ne doit pas y toucher.
+  const multi = compileToBPxAST(SG('na V V -> dha'));
+  ok(JSON.stringify(lhsDe(multi)) === JSON.stringify(['na', 'V', 'V']),
+     `F. un membre gauche à plusieurs termes reste intact — reçu ${JSON.stringify(lhsDe(multi))}.`);
+
+  // ⚠️ LE TÉMOIN QUI COMPTE : un nom segmentable ne peut PLUS servir de non-terminal. C'est le coût
+  // de la décision, et il doit se voir — mesuré sur le corpus avant de graver : UNE ligne, `trkt`
+  // dans `dhati2`, et sa conversion garde le compte des unités des deux côtés.
+  const perdu = compileToBPxAST(`@core\n@alphabet.tabla\nS -> taka\n-----\ntaka -> dha\n`);
+  const rhs0 = ((perdu.ast?.subgrammars?.[0]?.rules?.[0]?.rhs) || []).map((e) => e.name);
+  ok(JSON.stringify(rhs0) === JSON.stringify(['ta', 'ka']),
+     `F-témoin. 'taka' posé à gauche ne le déclare plus : son emploi à DROITE se segmente aussi. `
+     + `Reçu ${JSON.stringify(rhs0)}. S'il restait entier, un même nom serait une suite d'un côté `
+     + `et un nom de l'autre.`);
+}
+
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
-ok(passe >= 32, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
+ok(passe >= 37, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
 
 if (echecs.length) {
   console.error(`❌ un nom collé se segmente en terminaux : ${echecs.length} échec(s)`);
@@ -174,5 +237,7 @@ if (echecs.length) {
 console.log(`✅ La segmentation suit le natif — plus long préfixe, glouton, SANS retour arrière `
           + `(cas décisif sur alphabet fabriqué), branchée AVANT la validation, descendue dans les `
           + `six contenants du parseur, et confinée à UN alphabet — un mot à cheval est refusé. Elle `
+          + `vaut DES DEUX CÔTÉS de la flèche et gagne sur la déclaration par position, sans que la `
+          + `CASSE porte rien. Elle `
           + `épargne les noms déclarés et les terminaux, et son refus nomme le RESTE inconsommé. `
           + `${passe} vérification(s) passée(s).`);
