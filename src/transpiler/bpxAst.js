@@ -22,6 +22,7 @@ import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite} from './libs.js';
 import { LIBS } from './libs-data.js';
+import { segmenter } from './segmentation.js';
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
@@ -840,14 +841,16 @@ function poserLaVoixDesTerminaux(ast) {
   w(ast.subgrammars);
 }
 
-function validateTerminals(ast) {
-  if (!ast) return [];
-  const errors = [];
-  const codeVoice = new Set((ast.actors || []).filter((a) => (a.properties || {}).eval).map((a) => a.name));
-
-  // Vocabulaire VALIDE = terminaux de TOUS les alphabets effectifs (octaviés + formes nues).
-  const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
-  known.add('lambda');
+/**
+ * LE RECENSEMENT DES NOMS DÉCLARÉS — non-terminaux, définitions, scènes, homomorphismes, motifs
+ * temporels, variables de travail.
+ *
+ * ⚠️ IL EST PARTAGÉ PAR LA VALIDATION ET PAR LA SEGMENTATION, et le partage est le fond du geste :
+ * la segmentation doit ÉPARGNER ces noms. Un non-terminal qui s'appelle `taka` n'est pas un mot
+ * collé de l'alphabet — le découper le ferait disparaître de sa propre grammaire, sans un signe.
+ * Deux recensements côte à côte divergeraient au premier nom ajouté à l'un.
+ */
+function nomsDeclares(ast) {
   // Symboles DÉCLARÉS : non-terminaux (LHS), déclarations gate/trigger/cv, scènes, homomorphismes.
   const declared = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
@@ -892,6 +895,72 @@ function validateTerminals(ast) {
   // ⚠️ `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le
   // 2026-08-05, pas ses noms nus — une ligne peut en porter PLUSIEURS (`names`).
   for (const v of ast.vars || []) for (const n of v?.names || []) declared.add(n);
+  return declared;
+}
+
+/**
+ * LA PASSE DE SEGMENTATION — elle transforme l'arbre AVANT qu'il soit validé.
+ *
+ * Un nom collé n'est un mot pour personne : il est dissous avant que la grammaire travaille
+ * (mesure de bp3-engine sur le binaire natif). Un nœud devient donc N nœuds, et c'est une
+ * transformation de STRUCTURE — pas une commodité d'affichage.
+ *
+ * ⚠️ ELLE PASSE AVANT `validateTerminals`, et l'ordre est le fond du geste : validée d'abord, la
+ * scène serait refusée sur un nom que la segmentation sait lire. Le refus qui subsiste après elle
+ * est le bon — c'est celui du reste inconsommable, que le natif nomme aussi.
+ */
+function segmenterLesTerminaux(ast, known) {
+  const intouchables = nomsDeclares(ast);
+  const dansUneListe = (liste) => {
+    if (!Array.isArray(liste)) return liste;
+    const sortie = [];
+    for (const el of liste) {
+      if (el && el.type === 'Symbol' && el.name && !known.has(el.name) && !intouchables.has(el.name)
+          && el.role !== 'homomorphism' && !(Array.isArray(el.compose) && el.compose.length)) {
+        const r = segmenter(el.name, known);
+        if (r && r.parts) {
+          for (const part of r.parts) sortie.push({ ...el, name: part, segmenteDe: el.name });
+          continue;
+        }
+        // Insegmentable : le nœud reste tel quel et c'est `validateTerminals` qui refuse — mais il
+        // refusera EN NOMMANT LE RESTE, que la segmentation est seule à connaître.
+        if (r && r.reste) el.resteDeSegmentation = r.reste;
+      }
+      sortie.push(descendre(el));
+    }
+    return sortie;
+  };
+  const CONTENANTS = ['voices', 'elements', 'content', 'symbol', 'triggers', 'primary', 'secondaries'];
+  const descendre = (el) => {
+    if (!el || typeof el !== 'object') return el;
+    // ⚠️ UNE LISTE DE LISTES. Les voix d'une polymétrie sont des TABLEAUX, pas des nœuds : sans
+    // cette ligne la descente s'arrête au premier tableau imbriqué et le nom collé survit sous le
+    // groupe. Trouvé par la matrice des contenants, pas par le cas qui se montrait.
+    if (Array.isArray(el)) return dansUneListe(el);
+    for (const k of CONTENANTS) if (Array.isArray(el[k])) el[k] = dansUneListe(el[k]);
+    return el;
+  };
+  for (const sg of ast.subgrammars || []) {
+    // ⛔ LE MEMBRE DROIT SEULEMENT — et l'absence du membre GAUCHE est une question ouverte, pas
+    // un oubli. La mesure de bp3-engine porte sur le flux : un nom collé y est dissous avant que la
+    // grammaire travaille, et une règle qui vise `na` attrape le troisième bol de `dhagena`. Rien
+    // n'y dit qu'un membre gauche ÉCRIT collé se découpe à son tour.
+    // Et la brancher serait INERTE de toute façon : tout nom de membre gauche entre au recensement
+    // des déclarés, donc aucun ne passerait. Une branche qui ne peut pas mordre se lit comme une
+    // couverture — celle-ci attend l'arbitrage plutôt que de faire semblant.
+    for (const r of sg.rules || []) if (Array.isArray(r.rhs)) r.rhs = dansUneListe(r.rhs);
+  }
+}
+
+function validateTerminals(ast) {
+  if (!ast) return [];
+  const errors = [];
+  const codeVoice = new Set((ast.actors || []).filter((a) => (a.properties || {}).eval).map((a) => a.name));
+
+  // Vocabulaire VALIDE = terminaux de TOUS les alphabets effectifs (octaviés + formes nues).
+  const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
+  known.add('lambda');
+  const declared = nomsDeclares(ast);
 
   errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
   if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider sur les symboles NUS
@@ -951,7 +1020,15 @@ function validateTerminals(ast) {
         && !(el.payload && codeVoice.has(el.payload.actor))   // voix-code : terminal arbitraire
         && !known.has(el.name) && !declared.has(el.name) && !seen.has(el.name)) {
       seen.add(el.name);
-      errors.push({ message: `terminal '${el.name}' non déclaré — absent des alphabets en portée`, line: el.line });
+      // ⛔ LE REFUS NOMME LE RESTE, PAS LE MOT. La segmentation est passée avant et a buté sur un
+      // bout précis ; c'est lui qui manque à l'alphabet, et le natif le dit ainsi — « Can't make
+      // sense of "a" ». Dire le mot entier envoie chercher un terminal qui n'a jamais eu à exister.
+      errors.push({
+        message: el.resteDeSegmentation && el.resteDeSegmentation !== el.name
+          ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${el.resteDeSegmentation}', absent des alphabets en portée`
+          : `terminal '${el.name}' non déclaré — absent des alphabets en portée`,
+        line: el.line,
+      });
     }
     for (const k of COMPOSITES) if (el[k]) verifier(el[k]);
   };
@@ -2641,6 +2718,9 @@ export function compileToBPxAST(source, environnement) {
     // définition, et les acteurs sont pliés à ce stade (avant, `ast.actors` est encore vide —
     // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).
     result.errors.push(...refuserNomsEnDouble(ast, libCtx));
+    // La segmentation passe AVANT la validation : un nom qu'elle sait lire ne doit pas être
+    // refusé pour n'avoir pas été déclaré.
+    { const { terminaux } = terminauxEnPortee(ast); segmenterLesTerminaux(ast, terminaux); }
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
