@@ -940,6 +940,65 @@ S -> sa re ga
 
 La sortie d'un terminal vaut pour toute la scene.
 
+#### Un nom colle se lit comme une suite de terminaux
+
+**Un nom que l'alphabet ne porte pas se decoupe en ses terminaux.** L'ecriture collee est une
+commodite de saisie : `taka` est la suite `ta ka`, deux terminaux, et le nom colle n'est un mot pour
+personne.
+
+```bpscript
+@core
+@alphabet.tabla
+
+S -> taka
+```
+
+**La regle est le plus long prefixe, gloutonne, sans retour arriere.** A chaque position, le plus
+long terminal qui commence la est pris, et la lecture ne revient jamais sur un choix fait. Sur un
+alphabet qui porte `ta`, `tak` et `ka`, le nom `takka` rend `tak ka` ; le nom `taka` est refuse --
+`tak` est pris, il reste `a`, et la lecture `ta ka` qui aurait reussi n'est pas essayee.
+
+**Un mot tient entierement dans un seul alphabet.** Quand plusieurs alphabets sont en portee, le
+premier qui lit le mot entier le rend ; un nom fait de morceaux pris dans deux alphabets est refuse.
+
+**Un nom qui ne se decoupe pas est refuse, et le refus nomme le reste non consomme** -- la partie du
+nom sur laquelle la lecture s'arrete, jamais le nom entier.
+
+**Le decoupage vaut des deux cotes de la fleche**, et il l'emporte sur la declaration par position :
+un nom qui se decoupe est une suite, la ou un nom qui ne se decoupe pas devient un non-terminal.
+
+```bpscript
+@core
+@alphabet.tabla
+
+S -> ta ka
+-----
+taka -> dha
+```
+
+Le membre gauche de la regle est la suite `ta ka` : elle attrape les deux terminaux que la premiere
+sous-grammaire produit.
+
+```bpscript
+@core
+@alphabet.tabla
+
+S -> zzz
+-----
+zzz -> dha
+```
+
+Ici `zzz` ne se decoupe sur aucun terminal : il est un non-terminal, declare par son apparition dans
+la regle. **La casse ne porte rien** -- une majuscule initiale ne fait pas un non-terminal, une
+minuscule ne fait pas un terminal.
+
+**Le decoupage se fait a la compilation**, avant que les regles s'appliquent, et **un terminal
+declare garde son nom** : il porte sa voix et ne se redecoupe pas.
+
+**Les notes ne passent pas par ce chemin.** La composition d'une note -- base, alteration, registre
+-- est un calcul, et les deux mecanismes s'empilent : un nom que le calcul de note n'a pas resolu et
+que l'alphabet ne porte pas se decoupe.
+
 #### Le prototype d'un langage backtique
 
 **Un langage backtique se declare en librairie comme tout le reste** -- un prototype avec ses defauts,

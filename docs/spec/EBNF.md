@@ -412,7 +412,19 @@ compound_sound_object = "|[" , sound_atom , { sound_atom } , "]" ;
 sound_atom            = symbol | prolongation | polymetric ;
 ```
 
-Un terminal qualifié par son acteur s'écrit `acteur.terminal`. Un **objet sonore composé** est une
+Un terminal qualifié par son acteur s'écrit `acteur.terminal`.
+
+**Un `symbol` dont le nom n'appartient à aucun alphabet en portée se lit comme une suite de
+terminaux** : `taka` vaut `ta ka` là où l'alphabet porte `ta` et `ka`. La grammaire ne distingue pas
+les deux écritures — le découpage se fait après l'analyse syntaxique, au plus long préfixe et sans
+retour arrière, à l'intérieur d'un seul alphabet. Un nom qui ne se découpe pas et qu'aucun alphabet
+ne porte est un **non-terminal**, déclaré par son apparition dans une règle ; la casse ne distingue
+ni l'un ni l'autre.
+
+Cette lecture vaut des deux côtés de la flèche : une tête de règle écrite `taka` est la séquence
+`ta ka`.
+
+Un **objet sonore composé** est une
 suite de notes et de prolongations occupant **une** unité d'ordonnancement : son contenu est
 concaténé sans blancs en un nom de terminal unique, et la prolongation y étend la note précédente
 à l'intérieur de l'objet.

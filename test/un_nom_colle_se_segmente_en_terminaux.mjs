@@ -226,8 +226,46 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
      + `et un nom de l'autre.`);
 }
 
+// ── G. L'ARBRE NE PORTE AUCUNE TRACE DE LA PASSE — ce que j'expose est déclaré ───────────────
+// ⚠️ LA PASSE A POSÉ DEUX CHAMPS SUR LES NŒUDS AVANT D'ÊTRE RELUE : `segmenteDe` sur chaque nœud
+// issu d'un découpage, `resteDeSegmentation` sur un nom refusé. Les deux SORTAIENT dans l'arbre
+// livré à BPx et Kairos — une surface publiée que ni `AST.md` ni `LANGUAGE.md` ne décrivent. Un
+// champ qui traverse la frontière sans y être déclaré est une interface qu'on ne contrôle pas.
+// Le reste inconsommé vit maintenant hors des nœuds, et le refus le nomme toujours.
+{
+  const CHAMPS = ['segmenteDe', 'resteDeSegmentation'];
+  const parcourir = (r) => {
+    const vus = new Set();
+    const w = (el) => {
+      if (!el || typeof el !== 'object') return;
+      if (Array.isArray(el)) { el.forEach(w); return; }
+      for (const c of CHAMPS) if (c in el) vus.add(c);
+      for (const k of ['voices', 'elements', 'content', 'symbol', 'triggers', 'primary', 'secondaries']) w(el[k]);
+    };
+    for (const sg of r.ast?.subgrammars || []) for (const rg of sg.rules || []) { w(rg.rhs); w(rg.lhs); }
+    return vus;
+  };
+  for (const [quoi, source] of [
+    ['un nom découpé',   'S -> taka\n'],
+    ['un membre gauche', 'S -> dha\n-----\ntaka -> dha\n'],
+    ['un nom refusé',    'S -> dhaXY\n'],
+  ]) {
+    const vus = parcourir(compiler(source));
+    ok(vus.size === 0,
+       `G. ${quoi} — l'arbre porte ${JSON.stringify([...vus])}, un champ que la frontière ne déclare `
+       + `pas. La trace de la passe reste chez la passe.`);
+  }
+
+  // ⚠️ ET LA MOITIÉ QUI EMPÊCHE DE « RÉPARER » EN JETANT L'INFORMATION : le refus doit toujours
+  // nommer le reste. Sortir le champ de l'arbre sans le conserver ailleurs rendrait ce volet vert
+  // et le message muet.
+  ok(/segmentation bloquée sur 'XY'/.test(messages(compiler('S -> dhaXY\n'))),
+     `G. le refus nomme toujours le reste alors que l'arbre n'en porte rien — sinon l'information a `
+     + `été jetée au lieu d'être déplacée.`);
+}
+
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
-ok(passe >= 37, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
+ok(passe >= 41, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
 
 if (echecs.length) {
   console.error(`❌ un nom collé se segmente en terminaux : ${echecs.length} échec(s)`);

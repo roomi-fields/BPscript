@@ -23,6 +23,11 @@ import { parse, ParseError } from './parser.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite} from './libs.js';
 import { LIBS } from './libs-data.js';
 import { segmenter } from './segmentation.js';
+
+// ⛔ LE RESTE INCONSOMMÉ NE VOYAGE PAS DANS L'ARBRE. La segmentation le connaît, le refus le nomme,
+// et entre les deux il vit ICI — hors des nœuds. Un champ posé sur un nœud SORT chez BPx et Kairos :
+// ce serait une surface publiée que rien ne déclare, et ce que j'expose est déclaré.
+const restesDeSegmentation = new WeakMap();
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
@@ -955,12 +960,12 @@ function segmenterLesTerminaux(ast, known, paquets) {
           && el.role !== 'homomorphism' && !(Array.isArray(el.compose) && el.compose.length)) {
         const r = lire(el.name);
         if (r && r.parts) {
-          for (const part of r.parts) sortie.push({ ...el, name: part, segmenteDe: el.name });
+          for (const part of r.parts) sortie.push({ ...el, name: part });
           continue;
         }
         // Insegmentable : le nœud reste tel quel et c'est `validateTerminals` qui refuse — mais il
         // refusera EN NOMMANT LE RESTE, que la segmentation est seule à connaître.
-        if (r && r.reste) el.resteDeSegmentation = r.reste;
+        if (r && r.reste) restesDeSegmentation.set(el, r.reste);
       }
       sortie.push(descendre(el));
     }
@@ -1057,9 +1062,10 @@ function validateTerminals(ast) {
       // ⛔ LE REFUS NOMME LE RESTE, PAS LE MOT. La segmentation est passée avant et a buté sur un
       // bout précis ; c'est lui qui manque à l'alphabet, et le natif le dit ainsi — « Can't make
       // sense of "a" ». Dire le mot entier envoie chercher un terminal qui n'a jamais eu à exister.
+      const reste = restesDeSegmentation.get(el);
       errors.push({
-        message: el.resteDeSegmentation && el.resteDeSegmentation !== el.name
-          ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${el.resteDeSegmentation}', absent des alphabets en portée`
+        message: reste && reste !== el.name
+          ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${reste}', absent des alphabets en portée`
           : `terminal '${el.name}' non déclaré — absent des alphabets en portée`,
         line: el.line,
       });
