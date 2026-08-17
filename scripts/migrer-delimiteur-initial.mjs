@@ -40,6 +40,19 @@ export function migrer(source) {
   const iSep = lignes.findIndex((x) => /^-{5,}\s*$/.test(x.trim()));
   if (iSep >= 0 && iSep < iFleche) return { texte: source, fait: false, raison: 'délimiteur initial déjà présent' };
 
+  // ⛔ LES MODES SE FILTRENT ET SE REPOSENT APRES LE DELIMITEUR — et une COUPURE A LEUR
+  // POSITION a ete essayee puis rejetee sur mesure.
+  //
+  // La coupure en place preserve l'ordre du texte, mais elle laisse `@var` APRES le delimiteur,
+  // ou le parser le refuse : « '@var' est ecrit APRES des regles ». Trois scenes du corpus de
+  // Kanopi cessaient de compiler. Le filtrage, lui, les garde vertes.
+  //
+  // ⚠️ CE QUI A ETE SIGNALE COMME UN CHANGEMENT D'ARBRE N'EN EST PAS UN, mesure sur les trois
+  // cas (`vina`, `vina2`, `vina3`) : hors numeros de ligne, l'arbre est IDENTIQUE, et `ast.vars`
+  // porte les memes noms avant et apres. `@var` vit a la RACINE de la scene — jamais dans une
+  // sous-grammaire — donc il ne peut pas « changer de cote ». Ce qui bouge, ce sont les numeros
+  // de LIGNE, parce que le filtrage deplace reellement deux lignes l'une par rapport a l'autre.
+  // Une empreinte qui compare les numeros de ligne voit donc une difference reelle et sans effet.
   const tete = lignes.slice(0, iFleche);
   const modes = tete.filter((x) => /^\s*@mode\b/.test(x));
   const preambule = tete.filter((x) => !/^\s*@mode\b/.test(x));
