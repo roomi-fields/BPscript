@@ -592,10 +592,7 @@ qui vit dans un catalogue.
 | `voice`         | des realisations sonores : le code qui synthetise, ou le preset d'un appareil                                                   |
 | `sound`         | des prototypes d'objet sonore : ce que le moteur a le droit de comprimer, d'etirer, de tronquer pour faire tenir une polymetrie |
 | `homomorphism`  | des tables de correspondance symbole vers symbole, appliquees a la derivation                                                   |
-| `module`        | des modules de signal : leurs ports, leurs conventions et leur traitement                                                       |
-| `patch`         | le langage de cablage des backtiques `patch:`                                                                                   |
 | `eval`          | les langages backtiques externes -- `sc`, `js`, `strudel`, `hydra`                                                              |
-| `devices`       | les appareils de sortie : les directions qu'un canal porte, et ses valeurs par defaut                                          |
 
 Le catalogue complet, avec la nature de chaque librairie et le composant qui la resout, vit dans
 `atlas/architecture/LIBRAIRIES.md`.

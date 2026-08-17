@@ -139,8 +139,7 @@ library_invocation = "@" , "core"
 
 entry_name = ( letter | digit ) , { letter | digit | "_" | "#" | "-" } ;   (* 12TET, 22shruti *)
 
-LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism"
-           | "module" | "patch" | "eval" | "devices" ;
+LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism" | "eval" ;
 RUNTIME    = "audio" | "midi" | "osc" | "dmx" ;
 provenance = "factory" | "mine" ;
 path_seg   = ( IDENT | INT ) , { IDENT | INT } ;
@@ -717,9 +716,10 @@ fermante vers l'ouvrante correspondante.
 ## Couche 5 — Lexèmes
 
 ```ebnf
-IDENT       = letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" }
-            | letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" } ,
-              "-" , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | "-" } ;
+IDENT       = letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | marque }
+            | letter , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | marque } ,
+              "-" , { letter | digit | ( "_" , ( letter | digit ) ) | "#" | marque | "-" } ;
+marque      = "'" | '"' ;   (* la prime et la seconde, à la suite d'une lettre *)
 INT         = digit+ ;
 FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
@@ -733,6 +733,12 @@ letter      = "a"-"z" | "A"-"Z" ;
 digit       = "0"-"9" ;
 blank_line  = (* ligne vide ou espaces seuls *) ;
 ```
+
+**L'apostrophe et le guillemet appartiennent au nom**, à la suite d'une lettre : `a'`, `a''`, `a"`,
+`A'16`, `a'_b`. Ils se lisent comme n'importe quelle lettre du nom. Un nom qui **commence** par l'un
+d'eux est refusé, de même qu'après un chiffre.
+
+Un alphabet peut donc déclarer `a`, `a'` et `a"` comme trois terminaux distincts.
 
 **Contraintes lexicales.**
 
