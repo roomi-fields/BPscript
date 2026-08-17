@@ -384,6 +384,32 @@ function parse(tokens, opts = {}) {
     if (tok.type !== type) throw new ParseError(`Expected ${type}, got ${tok.type} (${tok.value})`, tok);
     return advance();
   }
+  /**
+   * LE NOM D'UNE ENTRÉE DE LIBRAIRIE — il peut COMMENCER PAR UN CHIFFRE.
+   *
+   * `@temperaments.12TET`, `@temperaments.22shruti` : les accordages et tempéraments portent des
+   * noms d'usage qui commencent par leur nombre de degrés. Le tokenizer les rend en DEUX jetons
+   * collés — `INT(12)` puis `IDENT(TET)` — et ce lecteur les recolle tant qu'ils se touchent.
+   *
+   * ⛔ CE N'EST PAS UN IDENT, ET C'EST VOULU. `IDENT` sert aussi aux acteurs, aux variables, aux
+   * définitions et aux terminaux ; l'élargir ferait entrer les chiffres dans toutes ces places d'un
+   * coup. La référence porte donc une production DISTINCTE (`entry_name`), et elle ne vaut qu'ici.
+   *
+   * ⚠️ ET CETTE LECTURE EXISTAIT DÉJÀ, EN UN SEUL EXEMPLAIRE MAL PLACÉ : le canal de provenance
+   * (`@factory.`/`@mine.`) la portait, avec `12TET` et `22shruti` nommés dans son commentaire. Elle
+   * manquait à l'invocation DIRECTE — d'où une garde de Kairos passant par la provenance pour
+   * atteindre un tempérament, faute d'autre voie. Deux endroits lisaient un nom d'entrée, un seul
+   * savait le lire ; il n'y en a plus qu'un.
+   */
+  function lireNomDEntree(tok) {
+    if (!at(T.IDENT) && !at(T.INT)) {
+      throw new ParseError(`Expected ${T.IDENT}, got ${current().type} (${current().value})`, tok || current());
+    }
+    let nom = String(advance().value);
+    while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) nom += String(advance().value);
+    return nom;
+  }
+
   function at(type) { return current().type === type; }
   function atAny(...types) { return types.includes(current().type); }
   function skipNewlines() { while (at(T.NEWLINE) || at(T.COMMENT)) advance(); }
@@ -1637,17 +1663,9 @@ function parse(tokens, opts = {}) {
       // Un segment recolle les IDENT/INT collés (sans espace) : tirets (`mes-` + `svaras`)
       // ET entrées NUMÉRIQUES (`12` + `TET` → `12TET`, `22` + `shruti` — les accordages
       // commencent souvent par un chiffre : 12TET, 22shruti). FIX 2 architecte [394].
-      const readSeg = () => {
-        if (!at(T.IDENT) && !at(T.INT)) {
-          throw new ParseError(
-            `invocation de librairie malformee '@${name}' — segment de nom attendu ` +
-            `(ex. @${name}.<chemin-fichier>.<entree>)`, tok);
-        }
-        let s = String(advance().value);
-        while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) s += String(advance().value);
-        return s;
-      };
-      while (at(T.PERIOD)) { advance(); segs.push(readSeg()); }
+      // Le même lecteur qu'une invocation directe — la copie qui vivait ici a été retirée dans le
+      // mouvement qui l'a rendue commune : deux lecteurs d'un même nom divergent au premier ajout.
+      while (at(T.PERIOD)) { advance(); segs.push(lireNomDEntree(tok)); }
       if (segs.length < 2) {
         throw new ParseError(
           `invocation de librairie malformee '@${name}' — attendu ` +
@@ -1663,7 +1681,7 @@ function parse(tokens, opts = {}) {
     // @alphabet.western — dot accessor for subkey within a lib
     if (at(T.PERIOD)) {
       advance();
-      subkey = expect(T.IDENT).value;
+      subkey = lireNomDEntree(tok);
     }
 
     // LE PRÉFIXE PAR LA LIBRAIRIE SE RABAT ICI, AU PLUS TÔT — `@core.tempo:120` DEVIENT

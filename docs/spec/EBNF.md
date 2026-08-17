@@ -134,8 +134,10 @@ Ce langage s'écrit à deux emplacements : nommé dans un `@def`, littéral dans
 
 ```ebnf
 library_invocation = "@" , "core"
-                   | "@" , LIBRARY , "." , IDENT , [ ":" , RUNTIME ]
+                   | "@" , LIBRARY , "." , entry_name , [ ":" , RUNTIME ]
                    | "@" , provenance , "." , path_seg , "." , path_seg , { "." , path_seg } ;
+
+entry_name = ( letter | digit ) , { letter | digit | "_" | "#" | "-" } ;   (* 12TET, 22shruti *)
 
 LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism"
            | "module" | "patch" | "eval" | "devices" ;
@@ -146,6 +148,12 @@ path_seg   = ( IDENT | INT ) , { IDENT | INT } ;
 setting_invocation = "@" , [ CATEGORY , "." ] , IDENT , [ ":" , value ] ;
 CATEGORY = "transpo" | "time" | "engine" ;
 ```
+
+**Le nom d'une entrée peut commencer par un chiffre.** `entry_name` est une production distincte
+de `IDENT` : les accordages et les tempéraments portent des noms d'usage qui commencent par leur
+nombre de degrés — `@temperaments.12TET`, `@temperaments.22shruti`. La règle ne vaut qu'ici : un
+acteur, une variable, une définition et un terminal restent des `IDENT`, et commencent donc par une
+lettre.
 
 Une librairie s'invoque par son nom, l'entrée après le point : c'est la forme unique de tout ce qui
 vit dans un catalogue. `@core` apporte le socle ; une scène qui ne l'écrit pas n'a aucun défaut.
