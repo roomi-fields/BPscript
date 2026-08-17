@@ -180,6 +180,45 @@
     },
     "_note": "Reproduction FIDELE d'un fichier natif, pour que la grammaire `-gr.dhati` tourne AS-IS. Ce catalogue ne se compose pas : il recopie. Un bol atomique qui manquerait a une grammaire se declare ICI, jamais dans `alphabets`, dont le contenu suit la musicologie."
   },
+  "checkhomo": {
+    "description": "Les sept termes de l'alphabet natif `-al.checkhomo`",
+    "runtime": "audio",
+    "resolvesPitch": false,
+    "alterations": {},
+    "terminals": {
+      "a": {},
+      "a'": {},
+      "a\"": {},
+      "b": {},
+      "b'": {},
+      "c": {},
+      "c'": {}
+    },
+    "_note": "Reproduction FIDELE du fichier natif, lue en SOUMETTANT chaque candidat au moteur plutot qu'en interpretant le format. LES MARQUEURS DE SECTION NE SONT PAS DES TERMES : le compilateur d'alphabet enregistre les siens comme terminaux, ce qui se prouve sur un alphabet FABRIQUE — avec la ligne de marqueur il est accepte, sans elle il ne l'est pas. Les VARIABLES sont ecartees par le meme controle : repassees sur un alphabet fabrique qui ne les contient pas, elles passent quand meme. `a`, `a'` et `a\"` sont TROIS termes distincts : l'apostrophe et le guillemet font partie du nom parce que l'alphabet les declare. `H`, `TR` et `OCT` sont des VARIABLES, ecartees."
+  },
+  "dhin": {
+    "description": "Les quatorze bols de l'alphabet natif `-al.dhin--`",
+    "runtime": "audio",
+    "resolvesPitch": false,
+    "alterations": {},
+    "terminals": {
+      "dha": {},
+      "ta": {},
+      "ti": {},
+      "ra": {},
+      "na": {},
+      "ki": {},
+      "dhee": {},
+      "tee": {},
+      "ne": {},
+      "ge": {},
+      "ke": {},
+      "ka": {},
+      "dhin": {},
+      "tin": {}
+    },
+    "_note": "Reproduction FIDELE du fichier natif, lue en SOUMETTANT chaque candidat au moteur plutot qu'en interpretant le format. LES MARQUEURS DE SECTION NE SONT PAS DES TERMES : le compilateur d'alphabet enregistre les siens comme terminaux, ce qui se prouve sur un alphabet FABRIQUE — avec la ligne de marqueur il est accepte, sans elle il ne l'est pas. Les VARIABLES sont ecartees par le meme controle : repassees sur un alphabet fabrique qui ne les contient pas, elles passent quand meme. `-al.dhin--` et `-ho.dhin--` sont le MEME FICHIER — 247 octets, meme empreinte — retenus par le registre pour deux grammaires. Une seule entree les sert."
+  },
   "resolvedBy": "Kairos",
   "resolves": "alphabet",
   "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer."
