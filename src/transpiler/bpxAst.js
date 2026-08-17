@@ -756,6 +756,24 @@ function terminauxEnPortee(ast) {
     const p = a.properties || {};
     if (p.alphabet) aUnAlphabet = ajouter(p.alphabet, p.octaves || null) || aUnAlphabet;
   }
+  // ⛔ UNE INVOCATION MET SON VOCABULAIRE EN PORTEE — une seule ligne suffit.
+  //
+  // `@test_alphabets.abc` DESACTIVAIT la validation au lieu de l'activer : la scene sortait avec
+  // ZERO terminal, `validateTerminals` revenait avant tout controle, et n'importe quel symbole
+  // passait. Il fallait ecrire `@alphabet.abc` EN PLUS, ce que rien ne justifiait — le nom du
+  // fichier et celui de l'entree disent deja tout.
+  //
+  // ⚠️ ET LA SECONDE LIGNE COUTAIT DEUX FOIS : elle faisait REFUSER la projection chez Kairos
+  // (collision de domaine, deux surfaces pour un seul slot) tout en donnant un faux vert ici.
+  // Une ligne qui repare la compilation et casse la projection n'est pas une contrainte, c'est le
+  // symptome d'un defaut.
+  //
+  // `ajouter` refuse une entree sans terminaux : `@sound.X`, `@homomorphism.X` et `@eval.X` ne
+  // mettent donc RIEN en portee, et ce qui EST un alphabet en charge un.
+  for (const ref of ast.libRefs || []) {
+    const parts = String(ref).split('.');
+    aUnAlphabet = ajouter(parts[parts.length - 1], sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || aUnAlphabet;
+  }
   // ⛔ UN TERMINAL DÉCLARÉ PAR `@def` ENTRE AU VOCABULAIRE — sinon la directive ne sert à rien.
   //
   // `LANGUAGE.md` §« Déclarer un terminal » : « un terminal se déclare avec `@def` et un bloc de
