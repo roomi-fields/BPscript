@@ -249,46 +249,6 @@
       12
     ]
   },
-  "western_meantone_dt": {
-    "description": "Western diatonic in meantone continuum — generator morphable in real-time",
-    "alphabet": "western",
-    "temperament": "meantone",
-    "degrees": [
-      0,
-      2,
-      4,
-      -1,
-      1,
-      3,
-      5
-    ],
-    "_degrees_explained": "C=0g, D=2g, E=4g, F=-1g, G=1g, A=3g, B=5g (chain of fifths)",
-    "alterations": {
-      "#": "100c",
-      "b": "-100c",
-      "##": "200c",
-      "bb": "-200c"
-    }
-  },
-  "sargam_meantone_dt": {
-    "description": "Indian sargam in meantone continuum — same mapping as western, different names",
-    "alphabet": "sargam",
-    "temperament": "meantone",
-    "degrees": [
-      0,
-      2,
-      4,
-      -1,
-      1,
-      3,
-      5
-    ],
-    "_degrees_explained": "sa=0g, re=2g, ga=4g, ma=-1g, pa=1g, dha=3g, ni=5g",
-    "alterations": {
-      "komal": "-100c",
-      "tivra": "100c"
-    }
-  },
   "shruti23_native": {
     "description": "22-shruti nommé BP3 — 23 degrés sur le tempérament bp3_shruti23_native (table native -to.tryShruti verbatim, 729/512). Distinct de bp3_grama (Arnold).",
     "alphabet": "shruti23",
