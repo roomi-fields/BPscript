@@ -1,0 +1,10 @@
+// LA LIBRAIRIE « sounds » — ecrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MEME donnee, champ par champ.
+
+@def sounds
+  resolvedBy:BPx
+  resolves:sound
+  name:sounds
+
+@def tabla_perc
+  description:`txt: Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe.`

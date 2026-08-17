@@ -22,12 +22,14 @@
  * reproduira : un canal peut exister dans l'architecture avant d'avoir sa graphie.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { LIBS } from '../src/transpiler/libs-data.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const CORE_PATH = path.join(ICI, '..', 'lib', 'core.json');
+// La donnee se prend dans le BUNDLE : il rend la meme chose quel que soit le format de la source.
+const CORE = LIBS.core;
 
 let passe = 0;
 const echecs = [];
@@ -74,7 +76,7 @@ function verifierDirection(canal, direction, channels, motDirection) {
 }
 
 // ─── CHARGE LE CATALOGUE DEPUIS LA DONNÉE (pas une liste réécrite ici) ───────────────────────
-const core = JSON.parse(fs.readFileSync(CORE_PATH, 'utf8'));
+const core = CORE;
 const channels = core.schema.channels;
 
 // ─── TÉMOIN ANTI-RÉTRÉCISSEMENT : le catalogue doit couvrir les 5 canaux attendus par la tâche ─

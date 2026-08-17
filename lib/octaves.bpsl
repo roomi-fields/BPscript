@@ -1,0 +1,90 @@
+// LA LIBRAIRIE « octaves » — ecrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MEME donnee, champ par champ.
+
+// CE QUE COLLECTIONNE CETTE LIBRAIRIE
+// Octave/register naming conventions for BPscript.
+// Each convention defines how register (octave) is expressed relative to a note name.
+// 
+// Fields:
+//   position  — 'prefix' or 'suffix' (where the register marker goes)
+//   separator — string between note and register marker (empty = concatenated).
+//               NEVER a space: a space is BPscript's token delimiter, so 'taar sa'
+//               would split into two terminals (the register prefix torn from the
+//               svara). Prefix conventions use '_' — already absorbed inside an
+//               identifier by the tokenizer (tokenizer.js:259), same glue char as
+//               the 'arrows' convention. Notation: 'taar_sa', 'tiz_re' (TAAR-TOK).
+//   registers — ordered list from lowest to highest, '' = no marker (default register)
+//   default   — index in registers[] for the 'home' register
+// 
+// NOT INCLUDED due to BPscript syntax conflicts:
+//   - Helmholtz (C, c, c', c'') — uses case distinction, too fragile
+//   - Lilypond (c,, c, c c' c'') — comma ',' conflicts with polymetry separator
+//   - Jianpu/Chinese cipher (dots above/below) — '.' conflicts with period notation
+//   For these conventions, 'arrows' (_v/_^) is proposed as a compatible substitute.
+
+@def octaves
+  resolvedBy:Kairos
+  resolves:octaves
+
+@def western
+  position:suffix
+  separator:`txt: `
+  registers:`txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
+  default:4
+
+@def arrows
+  position:suffix
+  separator:_
+  registers:vv v `txt: ` `txt: ^` `txt: ^^`
+  default:2
+
+@def saptak
+  position:prefix
+  separator:_
+  registers:mandra madhya taar
+  default:1
+
+@def turkish
+  position:prefix
+  separator:_
+  registers:`txt: ` tiz
+  default:0
+
+@def gamelan
+  position:prefix
+  separator:_
+  registers:ageng tengah alit
+  default:1
+
+@def shakuhachi
+  position:prefix
+  separator:_
+  registers:otsu kan daikan
+  default:0
+
+@def korean
+  position:prefix
+  separator:_
+  registers:tak jung cheong
+  default:1
+// Registre numérique en SUFFIXE séparé par '_' (sa_4, r1_4) — convention native -to.tryShruti (22-shruti). Distinct de 'saptak' (préfixe mandra/madhya/taar).
+
+@def saptak_us
+  position:suffix
+  separator:_
+  registers:`txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
+  default:4
+// Registres du moteur BP3 natif, conventions ENGLISH/FRENCH/INDIAN. Identique à 'western' SAUF le registre '00' — une octave SOUS '0' (quirk d'octave BP3 [79]). Le marqueur se lit en plus-long-d'abord : '00' ne doit jamais être avalé par '0'. Le français seul ajoute '000' (non porté ici : seul bp3_indian est servi).
+
+@def bp3
+  position:suffix
+  separator:`txt: `
+  registers:`txt: 00` `txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
+  default:5
+// Registres du moteur BP3 natif, convention FRENCH. Décalés d'un cran sous 'bp3' (la3 = A4) et prolongés par '000' — l'octave sous '00'. Lecture plus-long-d'abord obligatoire : '000' ne doit jamais être avalé par '00' ni par '0'.
+
+@def bp3_fr
+  position:suffix
+  separator:`txt: `
+  registers:`txt: 000` `txt: 00` `txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8`
+  default:5

@@ -253,8 +253,8 @@ for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite
 // ⚠️ LES DEUX CATALOGUES, PAS SEULEMENT CELUI OÙ LE DÉFAUT S'EST MONTRÉ. `test_alphabets.json`
 // porte cinq entrées de plus ; les omettre laisserait la moitié de l'espace sans garde — la faute
 // « on répare l'endroit où le défaut s'est MONTRÉ, pas l'espace où il peut vivre ».
-for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
-  const j = JSON.parse(readFileSync(new URL(fichier, import.meta.url), 'utf-8'));
+for (const fichier of ['alphabets', 'test_alphabets']) {
+  const j = LIBS[fichier];   // le BUNDLE : il rend la meme donnee quel que soit le format de la source
   // ⚠️ 'resolvedBy' EXCLU AU MÊME TITRE QUE 'domain' depuis le 2026-08-10 (mise en conformité des
   // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
   // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
@@ -265,7 +265,7 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
     `3bis. ${fichier} : TOUTE entrée déclare resolvesPitch — sans lui le code devine (manquant : ${sansChamp.join(' ')})`);
 }
 {
-  const j = JSON.parse(readFileSync(new URL('../lib/alphabets.json', import.meta.url), 'utf-8'));
+  const j = LIBS.alphabets;   // le BUNDLE, jamais un chemin de fichier
   // ⚠️ 'resolvedBy' EXCLU AU MÊME TITRE QUE 'domain' depuis le 2026-08-10 (mise en conformité des
   // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
   // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
@@ -289,7 +289,9 @@ for (const fichier of ['../lib/alphabets.json', '../lib/test_alphabets.json']) {
   // PERTE SILENCIEUSE — le jeton à registre ne sonnait pas faux, il ne sonnait pas.
   // LA FORME DE LA FAUTE : la prose dit l'intention, la donnée dit l'état, et personne ne mesure
   // une phrase. En cherchant l'ESPACE plutôt que l'occurrence, `turkish` avait le même défaut.
-  const registres = JSON.parse(readFileSync(new URL('../lib/octaves.json', import.meta.url), 'utf-8'));
+  // ⚠️ LA DONNEE SE PREND DANS LE BUNDLE, jamais a un chemin de fichier : un catalogue qui passe
+  // en `.bpsl` fait casser net un lecteur qui construit `lib/<axe>.json`.
+  const registres = LIBS.octaves;
   const tables = Object.keys(registres).filter((k) => !META_FICHIER.has(k) && !k.startsWith('_'));
   const nonBranches = resolvent.filter((n) => tables.includes(n) && !j[n].octaves);
   ok(nonBranches.length === 0,
