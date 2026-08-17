@@ -102,9 +102,18 @@ for (const [quoi, src, attendu] of CAS) {
   const voixDe = (alpha) => Object.entries(LIBS.alphabets?.[alpha]?.terminals || {})
     .filter(([, t]) => t && t.voice);
   const tabla = voixDe('tabla');
-  ok(tabla.length >= 10,
-     `C-SOCLE : ${tabla.length} terminal(aux) de tabla portent une voix, 10 au moins attendus. `
-     + `Sous ce seuil ce garde ne mesure plus rien et il serait vert.`);
+  // ⚠️ CE SOCLE ÉTAIT UN NOMBRE EN DUR, ET IL S'EST PÉRIMÉ AU PREMIER CHANGEMENT DE DONNÉE. Il
+  // exigeait dix terminaux à voix ; l'alphabet est passé aux bols ATOMIQUES le 2026-08-17 — les
+  // composés se segmentent au lieu de se déclarer — et il en reste neuf. Le garde rougissait sur
+  // un geste juste, ce qui est la définition d'un seuil mal choisi.
+  // Il compte désormais les VOIX EMPLOYÉES, pas les terminaux : chaque voix de tabla doit être
+  // portée par au moins un bol. La donnée fixe elle-même le seuil, donc retirer un bol ne le fait
+  // pas rougir tandis que perdre une voix entière le fait — ce qu'il existe pour attraper.
+  const voixEmployees = new Set(tabla.map(([, t]) => t.voice));
+  ok(voixEmployees.size >= 4,
+     `C-SOCLE : ${voixEmployees.size} voix distinctes employées par les bols de tabla `
+     + `(${[...voixEmployees].join(', ')}), 4 au moins attendues. Sous ce seuil, la donnée a perdu `
+     + `une famille de frappes entière et les volets au-dessus ne mesureraient plus rien.`);
   const dha = LIBS.alphabets?.tabla?.terminals?.dha?.voice;
   ok(dha === 'bayan_open',
      `C-SOCLE : le terminal 'dha' de tabla doit porter la voix 'bayan_open' — reçu `

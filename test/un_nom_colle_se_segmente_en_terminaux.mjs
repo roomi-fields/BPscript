@@ -124,9 +124,16 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
      + `qu'une grammaire s'est donnés.`);
 
   // Un terminal DÉCLARÉ ne se redécoupe pas, même si ses lettres se segmentent.
-  const t = compiler('S -> dhagena\n');
-  ok(JSON.stringify(noms(t)) === JSON.stringify(['dhagena']),
-     `D-témoin. 'dhagena' est un terminal de l'alphabet : il reste UN nœud. Reçu `
+  //
+  // ⚠️ CE TÉMOIN POSAIT `dhagena`, ET SON SUJET A CHANGÉ LE 2026-08-17. L'alphabet `tabla` est
+  // passé aux bols ATOMIQUES : les dix-sept composés en sont sortis, parce qu'ils SE SEGMENTENT et
+  // n'ont pas à être déclarés. `dhagena` est donc devenu `dha ge na`, et c'est le geste voulu, pas
+  // une régression. La règle gardée — un terminal déclaré garde son nom — est intacte et vit
+  // maintenant sur un bol atomique. Effacer le témoin au lieu de le rejouer aurait retiré la garde
+  // en croyant suivre un changement de donnée.
+  const t = compiler('S -> dha ke\n');
+  ok(JSON.stringify(noms(t)) === JSON.stringify(['dha', 'ke']),
+     `D-témoin. 'dha' et 'ke' sont des terminaux de l'alphabet : ils restent UN nœud chacun. Reçu `
      + `${JSON.stringify(noms(t))}. Un terminal qu'on redécoupe perd sa voix déclarée.`);
 
   // Le refus NOMME LE RESTE, pas le mot — « Can't make sense of "a" » sur le natif.

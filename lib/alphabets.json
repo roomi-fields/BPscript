@@ -311,78 +311,53 @@
     "_note": "BP uses its own letter naming. No standard alteration system."
   },
   "tabla": {
-    "description": "Tabla bols — percussion syllables (no pitch)",
+    "description": "Bols de tabla — les syllabes ATOMIQUES, celles qu'aucune autre ne compose",
     "runtime": "audio",
     "resolvesPitch": false,
     "alterations": {},
     "terminals": {
-      "dhin": {
-        "voice": "bayan_open"
-      },
       "dha": {
         "voice": "bayan_open"
-      },
-      "ge": {
-        "voice": "bayan_open"
-      },
-      "ghe": {
-        "voice": "bayan_open"
-      },
-      "ka": {
-        "voice": "bayan_muted"
-      },
-      "ke": {
-        "voice": "bayan_muted"
-      },
-      "na": {
-        "voice": "dayan_ring"
       },
       "ta": {
         "voice": "dayan_tap"
       },
-      "ti": {
-        "voice": "dayan_tap"
+      "dhin": {
+        "voice": "bayan_open"
       },
       "tin": {
         "voice": "dayan_ring"
       },
-      "tun": {
+      "dhee": {},
+      "tee": {},
+      "ge": {
+        "voice": "bayan_open"
+      },
+      "ke": {
+        "voice": "bayan_muted"
+      },
+      "ra": {},
+      "tr": {},
+      "kt": {},
+      "ti": {
+        "voice": "dayan_tap"
+      },
+      "ne": {},
+      "na": {
         "voice": "dayan_ring"
       },
-      "dhagena": {},
-      "tirakita": {},
-      "dheene": {},
-      "dheena": {},
-      "teene": {},
-      "teena": {},
-      "gena": {},
-      "kena": {},
-      "tage": {},
-      "dhati": {},
-      "tite": {},
-      "dhadha": {},
-      "dhage": {},
-      "trkt": {},
-      "kt": {},
-      "tidha": {},
-      "dhati_bol": {},
-      "teenake": {},
-      "dheenage": {},
-      "dhatrkt": {},
-      "trktdha": {},
-      "teenakena": {},
-      "dheenagena": {},
-      "ek": {},
-      "do": {},
-      "char": {},
-      "panch": {},
-      "che": {},
-      "sat": {},
-      "at": {}
+      "tk": {},
+      "dhr": {},
+      "ng": {},
+      "gr": {},
+      "te": {},
+      "tt": {},
+      "ki": {},
+      "ka": {
+        "voice": "bayan_muted"
+      }
     },
-    "_note": "Percussion alphabet — no pitch resolution (pas de tuning → pas de hauteur, spec LANG-SONS §2). Le champ 'voices' = BINDING alphabet→voix (LANG-SONS-2, [438]) : terminal → nom de voix de lib/voices. Carte PARTIELLE assumée : un bol non mappé n'a pas de voix par l'alphabet (résolution aval ; réalisation manquante pour le runtime cible = refus à l'eval, spec §3).",
-    "_ajouts_2026_07_29": "dhadha et tite AJOUTES le 2026-07-29 (GO Romain, critere « on ne denature pas l'alphabet tabla : si ce sont des percus de tabla on peut les ajouter, sinon alphabet distinct »). JUGE SUR LA DONNEE, pas sur la commodite : les composes deja presents ici font AU PLUS 2 unites et 10 caracteres (tidha 2/5, dhagena 1/7, teenakena 2/9, dheenagena 2/10). dhadha (dha+dha, 2 unites, 6 car.) et tite (ti+te, 2 unites, 4 car.) tombent tous deux DANS cette forme. TROIS AUTRES ONT ETE REFUSES ICI et vivent dans l'alphabet 'dhadhatite' : dhadhateena (3 unites, 11 car.) et deux enchainements de 6 unites / 21-22 car. — au-dela de tout ce que tabla porte. ⚠️ dhadhateena est le cas sur lequel j'ai HESITE et je le dis : il n'est qu'un cran au-dessus (3 unites contre 2, 11 car. contre 10). C'est la DONNEE qui l'a mis dehors, pas la commodite — l'y mettre aurait justement simplifie mon travail en reduisant l'alphabet a creer.",
-    "_manque_signale": "⚠️ 'te' est un bol declare par le moteur natif (bp3-ctests/-al.dhadhatite : dha, ti, te, na, dhee, tr) et ABSENT de cet alphabet, alors que 'ta', 'ti', 'tin', 'tun' y sont. Signale et NON ajoute : aucune scene ne l'emploie seul aujourd'hui, et enrichir un alphabet partage sans consommateur est une speculation. A trancher si une scene en a besoin."
+    "_note": "Alphabet de percussion : aucune hauteur a resoudre, donc aucun tuning. Le champ `voice` lie un terminal a une voix de `lib/voices.json`.\nCONTENU : les vingt bols de l'alphabet natif le plus complet du corpus, plus `ki` et `ka`, declares par `-al.dhin--` et `-al.kathak`. Tous sont INDIVISIBLES : aucun ne se decoupe sur les autres, mesure bol par bol en le retirant de la liste.\nUN BOL COMPOSE NE SE DECLARE PAS — il se segmente. `dhagena` est `dha ge na`, `tirakita` est `ti ra ki ta` ; les declarer ferait deux sources pour un meme son.\nSEPT BOLS SONNENT au moteur natif — dha, na, tee, ta, ge, kt par les prototypes de `dhati`, et `tin` par ceux d'`EkDoTin`. LES TREIZE AUTRES SONT MUETS, et c'est un ETAT : le fichier de sons de tabla n'existe pas dans le corpus natif. Un bol muet reste atomique.\n`ghe` et `tun` SORTENT : aucun des soixante-et-un alphabets du corpus ne les declare, et le moteur les refuse a la compilation. Ni atomiques ni composes — inexistants."
   },
   "simple": {
     "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",
