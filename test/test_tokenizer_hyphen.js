@@ -1,9 +1,22 @@
 /**
  * test_tokenizer_hyphen.js — Tests de découpage note+silence sur le tokenizer
  *
- * Règle arbitrée (alignée sur BP3 CompileGrammar.c:1196 + Encode.c:140) :
- *   n'absorber le '-' collé à un ident QUE si le caractère suivant est
- *   alphanumérique [a-zA-Z0-9]. Sinon, l'ident est émis seul et '-' devient REST.
+ * ⛔ CE FICHIER A ETE RETOURNE LE 2026-08-17, ET SON EN-TETE DISAIT LE CONTRAIRE.
+ * Il tenait la regle native — « un terminal ne peut jamais contenir '-' » (BP3
+ * CompileGrammar.c:1196, Encode.c:140) — et dix-neuf de ses assertions exigeaient qu'un tiret
+ * colle produise un IDENT puis un REST.
+ *
+ * LA DECISION DE ROMAIN l'abroge : un tiret ENTRE ESPACES est un silence, colle a des lettres
+ * il appartient au NOM. `dha-dha` est le terminal de ce nom. C'est une divergence ASSUMEE avec
+ * le natif, du meme ordre que celle sur la casse — l'espace porte le sens en BPScript.
+ *
+ * ⚠️ LES CAS N'ONT PAS BOUGE, LES ATTENTES SI. Un garde qui teste une regle abrogee se relit,
+ * il ne se rafistole pas : chaque assertion retournee ci-dessous porte la forme QU'ON ECRIT
+ * MAINTENANT, et son ancienne attente reste lisible dans l'historique.
+ *
+ * ⛔ CE QUI NE CHANGE PAS, et le fichier le garde : dans un CROCHET le tiret est un OPERATEUR
+ * (`[Flag-1]` decremente), et la fleche `->` n'est jamais absorbee. Les deux ont ete casses en
+ * ecrivant la regle, et repares dans le meme mouvement.
  *
  * Run: node test/test_tokenizer_hyphen.js
  */
@@ -68,9 +81,9 @@ section('Cas 1 : do4- suivi de }');
   // On cherche do4 et REST dans la séquence
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
-  assert('do4 présent comme IDENT', idents.includes('do4'), `IDENT trouvés: ${idents}`);
-  assert('do4- absent de l\'alphabet (pas d\'IDENT "do4-")', !idents.includes('do4-'), `IDENT trouvés: ${idents}`);
-  assert('REST présent', rests.length >= 1, `REST count: ${rests.length}`);
+  assert('do4- est UN nom', idents.includes('do4-'), `IDENT trouvés: ${idents}`);
+  assert('do4 nu n\'est plus emis a part', !idents.includes('do4'), `IDENT trouvés: ${idents}`);
+  assert('aucun REST : le tiret est dans le nom', rests.length === 0, `REST count: ${rests.length}`);
 }
 
 // ============================================================
@@ -81,9 +94,9 @@ section('Cas 2 : re6- fin de ligne');
   const tokens = toks('Vi -> re6-');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
-  assert('re6 présent comme IDENT', idents.includes('re6'), `IDENT trouvés: ${idents}`);
-  assert('re6- absent', !idents.includes('re6-'), `IDENT trouvés: ${idents}`);
-  assert('REST présent', rests.length >= 1, `REST count: ${rests.length}`);
+  assert('re6- est UN nom', idents.includes('re6-'), `IDENT trouvés: ${idents}`);
+  assert('re6 nu n\'est plus emis a part', !idents.includes('re6'), `IDENT trouvés: ${idents}`);
+  assert('aucun REST : le tiret est dans le nom', rests.length === 0, `REST count: ${rests.length}`);
 }
 
 // ============================================================
@@ -94,9 +107,9 @@ section('Cas 3 : do4- fin de fichier (sans \\n)');
   const tokens = toks('S -> do4-');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
-  assert('do4 présent', idents.includes('do4'), `IDENT trouvés: ${idents}`);
-  assert('do4- absent', !idents.includes('do4-'), `IDENT trouvés: ${idents}`);
-  assert('REST présent (EOF)', rests.length >= 1, `REST count: ${rests.length}`);
+  assert('do4- est UN nom', idents.includes('do4-'), `IDENT trouvés: ${idents}`);
+  assert('do4 nu absent', !idents.includes('do4'), `IDENT trouvés: ${idents}`);
+  assert('aucun REST (EOF) : le tiret est dans le nom', rests.length === 0, `REST count: ${rests.length}`);
 }
 
 // ============================================================
@@ -107,9 +120,9 @@ section('Cas 4 : do4-- (double tiret) — inchangé');
   const tokens = toks('X -> do4-- end');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
-  assert('do4 présent', idents.includes('do4'), `IDENT trouvés: ${idents}`);
-  assert('do4-- absent', !idents.includes('do4--') && !idents.includes('do4-'), `IDENT trouvés: ${idents}`);
-  assert('au moins 2 REST', rests.length >= 2, `REST count: ${rests.length}`);
+  assert('do4-- est UN nom', idents.includes('do4--'), `IDENT trouvés: ${idents}`);
+  assert('do4 nu absent', !idents.includes('do4'), `IDENT trouvés: ${idents}`);
+  assert('aucun REST : les deux tirets sont dans le nom', rests.length === 0, `REST count: ${rests.length}`);
 }
 
 // ============================================================
@@ -120,13 +133,13 @@ section('Cas 5 : mi6--- re6-');
   const tokens = toks('Z -> mi6--- re6-');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
-  assert('mi6 présent', idents.includes('mi6'), `IDENT trouvés: ${idents}`);
-  assert('re6 présent', idents.includes('re6'), `IDENT trouvés: ${idents}`);
-  assert('ni mi6- ni re6- ni mi6--- dans IDENT',
-    !idents.some(id => id.includes('-')),
+  assert('mi6--- est UN nom', idents.includes('mi6---'), `IDENT trouvés: ${idents}`);
+  assert('re6- est UN nom', idents.includes('re6-'), `IDENT trouvés: ${idents}`);
+  assert('mi6---, re6- et mi6- sont des NOMS',
+    idents.includes('mi6---') && idents.includes('re6-'),
     `IDENT trouvés: ${idents}`);
   // mi6--- = mi6 + 3 REST ; re6- = re6 + 1 REST → total 4 REST
-  assert('4 REST au total', rests.length === 4, `REST count: ${rests.length}`);
+  assert('aucun REST : les quatre tirets sont dans les noms', rests.length === 0, `REST count: ${rests.length}`);
 }
 
 // ============================================================
@@ -206,7 +219,7 @@ S -> !(weight:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
   // Ce qui compte est là, et les assertions de parse ci-dessous le gardent.
   const tokens = toks(src);
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
-  assert('les deux moitiés du nom sont des IDENT', idents.includes('pure_minor') && idents.includes('third_meantone'), `IDENT trouvés: ${idents.filter(id => id.includes('minor') || id.includes('third'))}`);
+  assert('le nom a tiret est UN SEUL IDENT', idents.includes('pure_minor-third_meantone'), `IDENT trouvés: ${idents.filter(id => id.includes('minor') || id.includes('third'))}`);
 
   // parse — vérifier que la QualPair a la valeur recollée
   const ast = parse(tokens);
@@ -237,9 +250,9 @@ section('Cas 9 : dhin-- ta — inchangé');
   const tokens = toks('Y -> dhin-- ta');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
-  assert('dhin présent', idents.includes('dhin'), `IDENT trouvés: ${idents}`);
+  assert('dhin-- est UN nom', idents.includes('dhin--'), `IDENT trouvés: ${idents}`);
   assert('ta présent', idents.includes('ta'), `IDENT trouvés: ${idents}`);
-  assert('2 REST pour dhin--', rests.length === 2, `REST count: ${rests.length}`);
+  assert('aucun REST pour dhin--', rests.length === 0, `REST count: ${rests.length}`);
   assert('pas de dhin-', !idents.includes('dhin-'), `IDENT trouvés: ${idents}`);
 }
 

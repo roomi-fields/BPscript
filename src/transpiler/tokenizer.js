@@ -118,35 +118,7 @@ const KEYWORDS = {
   'lambda': T.LAMBDA,
 };
 
-/**
- * Pre-scan: collect all LHS identifiers (non-terminals) that contain '-'.
- * These need to be tokenized as single IDENT tokens.
- * BP3 allows '-' in non-terminal names but not in terminals (Bernard Bel convention).
- */
-function prescanHyphenatedNonTerminals(source) {
-  const ids = new Set();
-  // Match LHS symbols before arrows: word-word -> or word-word <-
-  // Also handle multi-symbol LHS: contextual rules with multiple symbols before ->
-  const arrowRe = /^.*?(?:->|<-|<>)/gm;
-  let m;
-  while ((m = arrowRe.exec(source)) !== null) {
-    // Strip guard brackets [..] before scanning — K1-1 inside guards is NOT a non-terminal
-    const lhs = m[0].replace(/->|<-|<>/, '').replace(/\[[^\]]*\]/g, '').trim();
-    // Extract identifiers containing '-' from the LHS
-    // Match sequences of alphanumeric/_ chars joined by hyphens: Tr-11, my-var-3
-    const identRe = /[a-zA-Z][a-zA-Z0-9_#'"]*(?:-[a-zA-Z0-9_#'"]+)+/g;
-    let im;
-    while ((im = identRe.exec(lhs)) !== null) {
-      ids.add(im[0]);
-    }
-  }
-  return ids;
-}
-
 function tokenize(source, opts = {}) {
-  // Collect hyphenated non-terminals from LHS pre-scan
-  const hyphenatedIds = opts.hyphenatedIds || prescanHyphenatedNonTerminals(source);
-
   const tokens = [];
   let i = 0;
   let line = 1;
@@ -162,6 +134,12 @@ function tokenize(source, opts = {}) {
     return source.substring(i, i + str.length) === str;
   }
   let _spaceBefore = true;  // track whitespace before current token (start of line = true)
+  // ⛔ DANS UN CROCHET, LE TIRET EST UN OPERATEUR, PAS UNE LETTRE. Le crochet porte ce qui
+  // conditionne la derivation — `[Flag-1]` DECREMENTE un drapeau, `[Notes-4]` le compare. Le
+  // collage y ferait un nom `Flag-1` et le decrement disparaitrait sans un refus. Cette
+  // distinction existait deja avant la decision du 2026-08-17 ; elle n'est pas neuve, elle est
+  // PRESERVEE. Le tiret du FLUX est une lettre, celui du CROCHET reste un signe.
+  let _profCrochet = 0;
 
   function emit(type, value) {
     tokens.push({ type, value, line, col: col - (value ? value.length : 0), spaceBefore: _spaceBefore });
@@ -327,6 +305,8 @@ function tokenize(source, opts = {}) {
     };
 
     if (singles[ch]) {
+      if (ch === '[') _profCrochet++;
+      if (ch === ']') _profCrochet = Math.max(0, _profCrochet - 1);
       advance();
       emit(singles[ch], ch);
       continue;
@@ -371,21 +351,27 @@ function tokenize(source, opts = {}) {
           break;
         }
       }
-      // Check for hyphenated identifier:
-      // 1. Hyphenated non-terminal (pre-scanned): A8-2, my-var — IDENT unique
-      // 2. Flag decrement / qualifier value: K1-1, pure_minor-third_meantone
-      //    BP3 rule (CompileGrammar.c:1196): un terminal ne peut jamais contenir '-'.
-      //    Encode.c:140 : un '-' dans le texte de règle → silence autonome (SEARCHTERMINAL2).
-      //    On n'absorbe le '-' collé que si le caractère suivant est alphanumérique
-      //    [a-zA-Z0-9], pour préserver les décréments de flag [K1-1] (IDENT "K1-" + INT)
-      //    et les valeurs de qualifier (pure_minor-third_meantone).
-      //    "do4-" (fin de mot) → IDENT(do4) + REST séparé (parité BP3).
-      if (peek() === '-') {
-        let candidate = id;
-        let savedI = i, savedLine = line, savedCol = col;
-        // Try consuming hyphen(s) and following chars for hyphenated non-terminals
-        while (peek() === '-') {
-          candidate += advance(); // consume -
+      // ── LE TIRET COLLE EST UNE LETTRE DU NOM ──────────────────────────────────────────
+      // Decision Romain, 2026-08-17 : un tiret ENTRE ESPACES est un silence ; colle a des
+      // lettres, il appartient au nom. `dha-dha` est le terminal de ce nom, `dha - dha` est
+      // deux bols separes par un silence.
+      //
+      // ⛔ CE QUI A ETE RETIRE ICI, ET POURQUOI CE N'EST PAS UNE SIMPLIFICATION. La condition
+      // consultait une liste de noms PRE-SCANNES sur les membres GAUCHES : le meme texte se
+      // lisait donc de deux façons selon qu'un membre gauche l'avait declare ou non. Mesure du
+      // jour : `Tr-11 -> a` rendait UN symbole `Tr-11`, et `S -> Tr-11` rendait `Tr` silence
+      // `11`. Le tokenizer dependait de ce qu'il avait deja lu ailleurs dans le fichier ; la
+      // regle aligne la droite sur la gauche et le rend local.
+      //
+      // ⚠️ ET L'ESPACE PORTE LE SENS, comme pour le point d'exclamation colle ou espace. C'est
+      // une divergence ASSUMEE avec le moteur natif, du meme ordre que celle sur la casse : le
+      // natif ne met jamais de tiret dans un terminal. Rayon mesure avant la frappe — DEUX
+      // scenes du corpus de 397 y perdaient leur silence, reecrites dans le meme mouvement.
+      // ⛔ UNE FLECHE N'EST PAS UN TIRET DE NOM : `a->b` porte `->`, et l'absorber rendait
+      // `IDENT(a-) GT(>) IDENT(b)` — la regle perdait sa fleche sans un refus.
+      if (peek() === '-' && peek(1) !== '>' && _profCrochet === 0) {
+        while (peek() === '-' && peek(1) !== '>') {
+          id += advance();
           while (i < source.length && (
             (peek() >= 'a' && peek() <= 'z') ||
             (peek() >= 'A' && peek() <= 'Z') ||
@@ -393,31 +379,8 @@ function tokenize(source, opts = {}) {
             peek() === '_' || peek() === '#' ||
             peek() === "'" || peek() === '"'
           )) {
-            candidate += advance();
+            id += advance();
           }
-        }
-        if (hyphenatedIds.has(candidate)) {
-          id = candidate; // accept the hyphenated non-terminal form
-        } else {
-          // rollback — not a known non-terminal
-          i = savedI; line = savedLine; col = savedCol;
-          // ⛔ LE TIRET NE SE COLLE JAMAIS A UN NOM — mesure de bp3-engine sur le binaire
-          // natif : `dha- dha` et `dha - dha` rendent EXACTEMENT la même chose. Le silence
-          // est prouvé sur le TEMPS et non sur le texte — `dha dha` place le second à 4000
-          // tics, `dha - dha` à 8000, `dha -- dha` à 12000, et `dha- dha` à 8000 comme la
-          // forme espacée. Un tiret prend une unité et ne sonne pas.
-          //
-          // ⚠️ IL SE COLLAIT quand un alphanumérique suivait, et `dhin1` en portait
-          // quarante et un mots — `dha--`, `gena-`, jusqu'à cinquante-huit caractères. Ils
-          // sortaient en un seul nom que rien ne pouvait lire. Le cas décisif du natif,
-          // `tagetirakitagena-dhagenadhatigegenakadheenedheenagena`, rend une SEULE suite
-          // où le tiret est un item comme les autres, pas une frontière.
-          //
-          // ⚠️ ET LE COLLAGE SERVAIT AILLEURS : un nom d'ENTREE de librairie peut porter un
-          // tiret — `@temperaments.bp3_Bohlen-Pierce`, neuf entrées du bundle. Ce n'est pas
-          // le tokenizer qui les recolle désormais, c'est `lireNomDEntree` : le détachement
-          // vaut pour le FLUX, où le tiret est un silence, jamais pour une ADRESSE, où il
-          // fait partie du nom.
         }
       }
       // Emit ident (keyword or plain)
