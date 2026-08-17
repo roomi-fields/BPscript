@@ -41,6 +41,7 @@
   name:engine
   description:`txt: Les clés que le MOTEUR DE DÉRIVATION consomme — ce qui gouverne comment la production se déroule, par opposition à ce qu'elle produit. Librairie d'EN-TÊTE, résolue par BPx.`
   version:1.0.0
+  section:controls
 
 @def srand
   bp3:_srand

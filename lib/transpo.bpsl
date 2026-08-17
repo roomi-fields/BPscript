@@ -36,6 +36,7 @@
   resolvedBy:Kairos
   name:transpo
   description:`txt: Transformations de hauteur résolues par Kairos.`
+  section:controls
 
 // _comment : Resolved by the dispatcher before reaching any transport — musical transformations
 

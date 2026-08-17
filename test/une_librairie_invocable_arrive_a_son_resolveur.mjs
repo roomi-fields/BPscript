@@ -29,10 +29,12 @@ const verifier = (cond, quoi) => { if (cond) { ok += 1; } else { ko += 1; consol
 
 /** Le catalogue que le pont compose réellement, sans passer par Kairos. */
 async function catalogueDuPont() {
-  const { unirCatalogues } = await import('./kairos_bridge.mjs');
-  const AXES = ['alphabets', 'tunings', 'temperaments', 'scales', 'octaves', 'test_alphabets'];
-  const lire = (n) => JSON.parse(readFileSync(path.join(ROOT, 'lib', `${n}.json`), 'utf-8'));
-  const cat = unirCatalogues(Object.fromEntries(AXES.map((n) => [n, lire(n)])), {});
+  // ⚠️ LA LISTE VIENT DU PONT et la DONNEE vient du BUNDLE : recopiee ici, la liste divergeait au
+  // premier axe ajoute, et un chemin `lib/<axe>.json` cassait net des qu'un catalogue changeait de
+  // format. Le bundle rend la meme donnee quelle que soit la source.
+  const { unirCatalogues, FICHIERS_HAUTEUR } = await import('./kairos_bridge.mjs');
+  const AXES = FICHIERS_HAUTEUR;
+  const cat = unirCatalogues(Object.fromEntries(AXES.map((n) => [n, LIBS[n]])), {});
   const axes = new Set(AXES);
   for (const [nom, f] of Object.entries(LIBS)) {
     if (!axes.has(nom) && f && typeof f === 'object' && f.resolves) cat[nom] = f;

@@ -80,7 +80,11 @@ captureDigitalBodies(LIB_DIR);
 // seule partie y reste donc une liste d'un élément, sans quoi `args:type` rendrait une chaîne là où
 // tout le reste de la donnée porte un tableau, et chaque lecteur devrait gérer les deux.
 const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
-const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type']);
+// ⚠️ `section` DIT OU LES ENTREES DE CE FICHIER SE RANGENT, en un endroit. Sans lui, le
+// generateur DEVINAIT — `controls` par defaut — et le silence voulait dire deux choses
+// opposees : `controls` pour une librairie de controles, la RACINE pour un catalogue.
+// Une convention implicite qui decide a la place de la donnee est le defaut qu'on retire.
+const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section']);
 
 function valeurDeCle(v) {
   const brut = v && v.kind === 'value' ? v.value : (v && v.value);
@@ -120,6 +124,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
       continue;
     }
     const lib = { controls: {} };
+    let sectionDuFichier = null;
     for (const d of (r.ast.directives || [])) {
       if (d.type !== 'DefDirective' || !d.keys) continue;
       // ⛔ UNE CLÉ `section` DIT OÙ LE MOT SE RANGE — posée le 2026-08-14 pour la bascule d'`engine`.
@@ -132,18 +137,25 @@ async function collectBps(dir, prefix, compileToBPxAST) {
       // scène. Même geste que l'absence d'`args` qui vaut liste vide. La preuve reste l'ÉGALITÉ du
       // paquet avant et après, pas ce raisonnement.
       // Le chemin est POINTÉ : `schema.reservedDirectives` se lit comme une descente.
-      const chemin = d.keys && d.keys.section ? valeurDeCle(d.keys.section) : 'controls';
+      // Le chemin vient de l'entree, sinon du FICHIER, sinon la RACINE. Plus aucun defaut
+      // implicite : une librairie qui ne dit rien range ses entrees comme sa source.
+      const chemin = d.keys && d.keys.section ? valeurDeCle(d.keys.section)
+        : sectionDuFichier;
       let cible;
       if (d.name === entry.replace('.bpsl', '')) {
         cible = lib;
       } else {
         let ou = lib;
-        const parts = String(chemin).split('.');
-        for (const seg of parts) { ou[seg] = ou[seg] || {}; ou = ou[seg]; }
+        if (chemin) {
+          for (const seg of String(chemin).split('.')) { ou[seg] = ou[seg] || {}; ou = ou[seg]; }
+        }
         cible = (ou[d.name] = {});
       }
       for (const [cle, v] of Object.entries(d.keys)) {
-        if (cle === 'section') continue;   // elle ROUTE, elle ne se publie pas
+        // `section` ROUTE, elle ne se publie JAMAIS — ni sur une entree, ni sur le fichier.
+        // Sur le fichier elle dit le rangement par defaut de ses entrees ; on la retient a
+        // part pour que la donnee publiee reste celle de la source, octet pour octet.
+        if (cle === 'section') { if (cible === lib) sectionDuFichier = valeurDeCle(v); continue; }
         let val = valeurDeCle(v);
         if (CLES_LISTES.has(cle) && !Array.isArray(val)) val = [val];
         if (cible === lib && !CHAMPS_DE_FICHIER.has(cle)) {

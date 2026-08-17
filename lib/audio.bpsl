@@ -28,6 +28,7 @@
   name:audio
   resolvedBy:`txt: runtime-audio`
   description:`txt: Contrôles spécifiques au transport Web Audio — match EXACT LIBRAIRIES.md:173.`
+  section:controls
 
 // Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)
 @def wave

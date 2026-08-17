@@ -50,6 +50,7 @@
   name:variation
   description:`txt: Modes de variation DISCRETS des paramètres de jeu — fixe et paliers. Entre deux valeurs écrites d'un même paramètre, le mode dit si la première TIENT jusqu'à la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se résolvent à la note, donc avant qu'un son ne soit émis : ils appartiennent à Kairos. Le troisième mode — continu — glisse PENDANT les notes, par messages intermédiaires : il ne peut être rendu que par celui qui émet, et il vit donc dans la librairie de son paramètre.`
   version:0.1.0
+  section:controls
 
 // _comment : Modes discrets — un mot par (paramètre, mode), sans argument. Le mot natif est
 // porté verbatim par `bp3`.

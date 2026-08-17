@@ -62,11 +62,18 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
  * ne produisait aucune hauteur — le fichier n'arrivait simplement jamais jusqu'à Kairos. Le
  * symptôme sortait tout en bas de la chaîne, très loin de sa cause, qui était ici.
  */
-const FICHIERS_HAUTEUR = ['alphabets', 'tunings', 'temperaments', 'scales', 'octaves', 'test_alphabets'];
+export const FICHIERS_HAUTEUR = ['alphabets', 'tunings', 'temperaments', 'scales', 'octaves', 'test_alphabets'];
 
 function catalaguesDeBase() {
-  const lire = (nom) => JSON.parse(readFileSync(path.join(ROOT, 'lib', `${nom}.json`), 'utf-8'));
-  return Object.fromEntries(FICHIERS_HAUTEUR.map((n) => [n, lire(n)]));
+  // ⚠️ LA DONNEE SE PREND DANS LE BUNDLE, jamais a un chemin de fichier. Ce lecteur construisait
+  // `lib/<axe>.json` : le jour ou un catalogue est passe en `.bpsl`, il a casse net. Le bundle est
+  // la surface publiee — il rend la meme donnee quel que soit le format de la source.
+  return Object.fromEntries(FICHIERS_HAUTEUR.map((n) => {
+    const { LIBS } = require('../src/transpiler/libs-data.js');
+    const lib = LIBS[n];
+    if (!lib) throw new Error(`kairos_bridge : l'axe '${n}' est absent du bundle des librairies.`);
+    return [n, lib];
+  }));
 }
 
 /**
