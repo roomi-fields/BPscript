@@ -5,6 +5,7 @@
 @alphabet.western:midi
 
 // Règle sans scan → mode null (par défaut)
+-----
 X -> C4
 
 // Règle avec (scan:left) → mode 'left', préfixe LEFT dans BP3

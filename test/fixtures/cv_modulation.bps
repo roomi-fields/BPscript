@@ -7,6 +7,7 @@
 @cv env2 mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
 
 // (3) Voix Env parallèle dérivable
+-----
 S -> {Bass Bass, Env Env}
 
 // (2) Branchement au point de paramètre : (cutoff: Env) — value=Env identifiant brut

@@ -5,6 +5,7 @@
 @core
 @alphabet.western:midi
 
+-----
 @mode:ord
 S -> Hit(vel:80) Hit(vel:60)
 Hit -> -

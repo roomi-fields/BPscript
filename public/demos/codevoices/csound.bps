@@ -11,6 +11,7 @@
 
 @actor synth  eval.csound
 
+-----
 S -> synth_r synth_r synth_r synth_r
 
 synth_r -> synth.`instr 1

@@ -9,6 +9,7 @@
 @alphabet.western:audio
 @tempo:100
 
+-----
 S -> {G2 _ _ _ G2 _ _ _ (vel:60, wave:triangle, pan:64), Arp Arp}
 
 -----

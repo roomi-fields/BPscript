@@ -6,6 +6,7 @@
 @tempo:100
 
 // Niveau 1: melodie vs basse
+-----
 S -> Intro {Melodie, Basse} Coda
 
 Intro -> C4 E4 G4

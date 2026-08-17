@@ -6,5 +6,6 @@
 @core
 @alphabet.western:midi
 
+-----
 @mode:ord
 S -> C4 C4 (vel:80)

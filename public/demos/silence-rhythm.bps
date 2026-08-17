@@ -3,6 +3,7 @@
 @core
 @alphabet.western:audio
 
+-----
 S -> Pattern Pattern Pattern Coda
 
 Pattern -> C4 - E4 -(vel:80) G4 C5 - - (vel:100)

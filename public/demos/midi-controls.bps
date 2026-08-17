@@ -4,6 +4,7 @@
 @core
 @alphabet.western:midi
 
+-----
 S -> PanSweep ModWheel
 
 // Pan de gauche à droite

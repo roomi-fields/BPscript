@@ -3,6 +3,7 @@
 @core
 @alphabet.western:audio
 
+-----
 S -> Arp1 Arp2 Arp3 Final
 
 Arp1 -> C4 E4 G4 C5(vel:70) G4 E4 C4 - (vel:100)

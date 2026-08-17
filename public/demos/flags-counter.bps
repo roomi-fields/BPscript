@@ -7,6 +7,7 @@
 @alphabet.western:audio
 
 // Init : compteur à 4
+-----
 S -> Phrase [count=4]
 
 -----

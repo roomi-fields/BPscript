@@ -12,5 +12,6 @@
 @gate C:midi
 @gate D:midi
 
+-----
 @mode:ord
 S -> A(rndtime:10) B {A B C D}(rndtime:20)
