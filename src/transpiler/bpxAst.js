@@ -2051,10 +2051,29 @@ function validateReferences(ast, libCtx = {}) {
   // démos, scènes de BPx) : QUATRE invocations ne résolvent pas, et les quatre sont déjà refusées
   // aujourd'hui (`@alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute donc AUCUNE casse.
   const libExiste = (nom) => !!loadLib(nom);
+  const motsDuLangage = new Set(loadLib('core')?.schema?.reservedDirectives || []);
   for (const d of ast.directives || []) {
     if (!d || !d.name || !d.subkey) continue;
     if (catalogAxes.includes(d.name)) continue;   // déjà couvert par checkComponent, ci-dessous
-    if (!libExiste(d.name)) continue;             // pas une librairie : autre faute, autre message
+    // ⛔ UN AXE QUE PERSONNE NE SERT EST REFUSE. Cette ligne disait « pas une librairie : autre
+    // faute, autre message » — et AUCUN autre message n'existait. `@module.adsr`, `@patch.x`,
+    // `@devices.x` passaient donc en silence, et `@zzzinvente.quoi` aussi : le trou n'etait pas de
+    // trois noms, il etait OUVERT A L'INFINI. Mesure du 2026-08-17, cas fabrique par l'architecte.
+    //
+    // ⚠️ RIEN N'EST EN DUR NI D'UN COTE NI DE L'AUTRE. Les trois noms venaient de la SPEC, jamais
+    // du code — il ne les a jamais connus. Et ce qui est epargne ici se lit dans la DONNEE : les
+    // mots du langage que `core.schema.reservedDirectives` recense, dont `out`, `in` et `var`, qui
+    // portent une sous-cle sans etre des invocations de librairie.
+    if (!libExiste(d.name)) {
+      if (motsDuLangage.has(d.name)) continue;
+      errors.push({
+        message: `'@${d.name}.${d.subkey}' : aucune librairie ne sert l'axe '${d.name}'. Une `
+               + `invocation dont l'axe n'est porte par aucune donnee ne charge RIEN, et rien ne `
+               + `distingue ce silence d'une scene qui n'a pas declare.`,
+        line: d.line,
+      });
+      continue;
+    }
     if (loadLib(d.name, d.subkey)) continue;
     errors.push({
       message: `'@${d.name}.${d.subkey}' : l'entrée '${d.subkey}' n'existe pas dans la librairie `
