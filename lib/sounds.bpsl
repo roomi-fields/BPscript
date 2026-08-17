@@ -1,5 +1,9 @@
-// LA LIBRAIRIE « sounds » — ecrite dans le langage qu'elle sert.
-// Convertie depuis le JSON : le bundle en rend la MEME donnee, champ par champ.
+// LA LIBRAIRIE « sounds » — écrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+//
+// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+//    voyage pas jusqu'aux consommateurs, une clé si.
 
 @def sounds
   resolvedBy:BPx
@@ -8,3 +12,4 @@
 
 @def tabla_perc
   description:`txt: Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe.`
+

@@ -1,18 +1,15 @@
 // LA LIBRAIRIE « scales » — écrite dans le langage qu'elle sert.
-// Convertie depuis le JSON : le bundle en rend la MÊME donnée, octet pour octet.
-// C'est l'AUTHORING qui change, jamais la donnée que les consommateurs lisent.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
 //
-// ⚠️ LA DOCUMENTATION EST UN COMMENTAIRE, plus une clé `_xxx_doc` dans la donnée : un
-//    commentaire ne voyage pas jusqu'aux consommateurs, une clé si.
+// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+//    voyage pas jusqu'aux consommateurs, une clé si.
 
-// CE QUE COLLECTIONNE CETTE LIBRAIRIE
-// World music scales library for BPscript.
-// Organized by culture/tradition.
-// 
-// Temperament-based scales use 'degrees' as step positions within the grid.
-// Ratio-based scales use 'ratios' with exact fractions or cent strings.
-// Scales with different ascending/descending use 'ascending' and 'descending'.
-// Arabic maqams composed from jins use 'compose' and 'junction'.
+// COMMENT
+// World music scales library for BPscript. Organized by culture/tradition. Temperament-based
+// scales use 'degrees' as step positions within the grid. Ratio-based scales use 'ratios' with
+// exact fractions or cent strings. Scales with different ascending/descending use 'ascending'
+// and 'descending'. Arabic maqams composed from jins use 'compose' and 'junction'.
 
 @def scales
   resolvedBy:Kairos
@@ -904,14 +901,16 @@
   ratios:1 100c 200c 300c 400c 500c 600c 700c 800c 900c 1000c 1100c
   notes_count:12
 
-// Ratios are partials 8-15 normalized to 8. The 11th and 13th harmonics give the characteristic non-12-TET intervals.
+// spectral_harmonic_8 · Ratios are partials 8-15 normalized to 8. The 11th and 13th harmonics
+// give the characteristic non-12-TET intervals.
 @def spectral_harmonic_8
   description:`txt: Spectral scale (harmonics 8-16) — Grisey, Murail. Natural harmonic series from 8th partial.`
   culture:contemporary
   ratios:1 9/8 10/8 11/8 12/8 13/8 14/8 15/8
   notes_count:8
 
-// Selected partials from the series: 8,9,10,11,12,13,14,15 = odd harmonics emphasized.
+// spectral_harmonic_16 · Selected partials from the series: 8,9,10,11,12,13,14,15 = odd
+// harmonics emphasized.
 @def spectral_harmonic_16
   description:`txt: Spectral scale (harmonics 1-16) — full harmonic series. Grisey Partiels, Haas.`
   culture:contemporary
@@ -925,14 +924,16 @@
   degrees:0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
   notes_count:24
 
-// Lydian b7. Natural harmonic approximation: partials 8-14. Also called "overtone scale".
+// bartok_acoustic · Lydian b7. Natural harmonic approximation: partials 8-14. Also called
+// "overtone scale".
 @def bartok_acoustic
   description:`txt: Bartók scale / Acoustic scale / Lydian Dominant — Overtone scale (Bartók, Debussy).`
   culture:contemporary
   ratios:1 9/8 5/4 45/32 3/2 5/3 9/5
   notes_count:7
 
-// Derived from the "Prometheus chord" (quartal harmony based on tritone). Close to Messiaen mode 1 but with different emphasis.
+// scriabin_mystic_chord · Derived from the "Prometheus chord" (quartal harmony based on
+// tritone). Close to Messiaen mode 1 but with different emphasis.
 @def scriabin_mystic_chord
   description:`txt: Scriabin Mystic Chord / Prometheus scale — C F# Bb E A D as scale. Scriabin late works.`
   culture:contemporary
@@ -945,49 +946,54 @@
   ratios:1 100c 400c 500c 800c 900c
   notes_count:6
 
-// From Nicolas Slonimsky "Thesaurus of Scales". Coltrane studied this extensively.
+// slonimsky_1 · From Nicolas Slonimsky "Thesaurus of Scales". Coltrane studied this
+// extensively.
 @def slonimsky_1
   description:`txt: Slonimsky scale 1 — Symmetric division of octave in minor thirds + chromatic fill. Used by Coltrane.`
   culture:contemporary
   ratios:1 100c 300c 400c 600c 700c 900c 1000c
   notes_count:8
 
-// 11-limit just intonation. Partch designed custom instruments for this tuning.
+// harry_partch_43 · 11-limit just intonation. Partch designed custom instruments for this
+// tuning.
 @def harry_partch_43
   description:`txt: Harry Partch 43-tone scale — 11-limit just intonation. Microtonal pioneer.`
   culture:contemporary
   ratios:1 81/80 33/32 21/20 16/15 12/11 11/10 10/9 9/8 8/7 7/6 32/27 6/5 11/9 5/4 14/11 9/7 21/16 4/3 27/20 11/8 7/5 10/7 16/11 40/27 3/2 32/21 14/9 11/7 8/5 18/11 5/3 27/16 12/7 7/4 16/9 9/5 20/11 11/6 15/8 40/21 64/33 160/81
   notes_count:43
 
-// The octave (1200c) is NOT a step in this scale. Step size chosen for good approximation of 3/2 (9 steps = 702c).
+// wendy_carlos_alpha · The octave (1200c) is NOT a step in this scale. Step size chosen for
+// good approximation of 3/2 (9 steps = 702c).
 @def wendy_carlos_alpha
   description:`txt: Wendy Carlos Alpha — 15.385 steps per octave (78c per step). Non-octave scale.`
   culture:contemporary
   ratios:1 78c 156c 234c 312c 390c 468c 546c 624c 702c 780c 858c 936c 1014c 1092c
   notes_count:15
 
-// Optimized for good 3/2 (11 steps ≈ 701.6c) and 5/4 (6 steps ≈ 382.7c).
+// wendy_carlos_beta · Optimized for good 3/2 (11 steps ≈ 701.6c) and 5/4 (6 steps ≈ 382.7c).
 @def wendy_carlos_beta
   description:`txt: Wendy Carlos Beta — 18.809 steps per octave (63.8c per step). Non-octave scale.`
   culture:contemporary
   ratios:1 63.8c 127.6c 191.3c 255.1c 318.9c 382.7c 446.5c 510.3c 574.0c 637.8c 701.6c 765.4c 829.2c 893.0c 956.8c 1020.5c 1084.3c
   notes_count:18
 
-// The added major 7th creates a chromatic passing tone between b7 and root, keeping chord tones on downbeats.
+// bebop_dominant · The added major 7th creates a chromatic passing tone between b7 and root,
+// keeping chord tones on downbeats.
 @def bebop_dominant
   description:`txt: Bebop Dominant — Mixolydian + passing natural 7th. The quintessential bebop scale (Charlie Parker, Dizzy Gillespie).`
   culture:jazz
   ratios:1 9/8 5/4 4/3 3/2 5/3 9/5 15/8
   notes_count:8
 
-// Added #5/b6 between 5th and 6th. Keeps 1-3-5-7 on downbeats in eighth note lines.
+// bebop_major · Added #5/b6 between 5th and 6th. Keeps 1-3-5-7 on downbeats in eighth note
+// lines.
 @def bebop_major
   description:`txt: Bebop Major — Ionian + passing #5. Barry Harris method.`
   culture:jazz
   ratios:1 9/8 5/4 4/3 3/2 800c 5/3 15/8
   notes_count:8
 
-// Chromatic passing tone between b3 and 4. Used over minor 7th chords.
+// bebop_dorian · Chromatic passing tone between b3 and 4. Used over minor 7th chords.
 @def bebop_dorian
   description:`txt: Bebop Dorian — Dorian + passing major 3rd. Minor bebop scale.`
   culture:jazz
@@ -1000,7 +1006,7 @@
   ratios:1 9/8 6/5 4/3 3/2 800c 5/3 15/8
   notes_count:8
 
-// All tensions altered: b9 #9 b5 #5. The defining sound of post-bop.
+// altered · All tensions altered: b9 #9 b5 #5. The defining sound of post-bop.
 @def altered
   description:`txt: Altered scale / Super Locrian — 7th mode of melodic minor. Essential for V7alt chords (Coltrane, Shorter, Henderson).`
   culture:jazz
@@ -1013,7 +1019,8 @@
   ratios:1 9/8 5/4 600c 800c 5/3 15/8
   notes_count:7
 
-// Same as bartok_acoustic. Also called "overtone scale". Characteristic of Coltrane ballads and Herbie Hancock.
+// lydian_dominant · Same as bartok_acoustic. Also called "overtone scale". Characteristic of
+// Coltrane ballads and Herbie Hancock.
 @def lydian_dominant
   description:`txt: Lydian Dominant / Lydian b7 — 4th mode of melodic minor. Dominant sound with #4. (= Bartók acoustic scale).`
   culture:jazz
@@ -1044,7 +1051,8 @@
   ratios:1 6/5 4/3 3/2 9/5
   notes_count:5
 
-// Also called "dominant pentatonic" or "Mixolydian pentatonic". Core of Coltrane Changes sound.
+// coltrane_pentatonic · Also called "dominant pentatonic" or "Mixolydian pentatonic". Core of
+// Coltrane Changes sound.
 @def coltrane_pentatonic
   description:`txt: Coltrane Pentatonic — 1 2 3 5 b7. Dominant pentatonic used by Coltrane on V7 chords.`
   culture:jazz
@@ -1063,14 +1071,16 @@
   ratios:1 16/15 4/3 3/2 9/5
   notes_count:5
 
-// Two augmented triads a semitone apart. Same as Messiaen mode 3 subset. Only 4 transpositions.
+// augmented_scale · Two augmented triads a semitone apart. Same as Messiaen mode 3 subset. Only
+// 4 transpositions.
 @def augmented_scale
   description:`txt: Augmented scale — Symmetric scale alternating m3 and H. Coltrane, Thelonious Monk.`
   culture:jazz
   ratios:1 6/5 5/4 3/2 8/5 15/8
   notes_count:6
 
-// C E G + F# A# C# = all notes of two V7 chords a tritone apart. Foundation of tritone substitution.
+// tritone_dominant · C E G + F# A# C# = all notes of two V7 chords a tritone apart. Foundation
+// of tritone substitution.
 @def tritone_dominant
   description:`txt: Tritone scale (dominant) — Two major triads a tritone apart. Mark Levine, modern jazz.`
   culture:jazz
@@ -1145,7 +1155,8 @@
   compose:jins_bayati jins_nahawand
   junction:3/2
 
-// Saba has 3 jins. Junction points: first at ~4th diminished, second at ~minor 7th.
+// maqam_saba · Saba has 3 jins. Junction points: first at ~4th diminished, second at ~minor
+// 7th.
 @def maqam_saba
   description:`txt: Maqam Saba — Saba (bas) + Hijaz (haut) + Rast (très haut, 3 jins) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].`
   culture:arabic
@@ -1242,3 +1253,4 @@
   system:pythagorean
   ratios:`txt: 1` 2187/2048 32/27 4/3 3/2
   description:`txt: Cins turc (cins_huzzam) — segment pythagoricien exact`
+
