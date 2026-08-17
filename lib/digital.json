@@ -1,21 +1,4 @@
 {
-  "_comment": [
-    "⚠ CE FICHIER NE PORTE PAS LES CORPS. La verite d'une manipulation est lib/digital/<nom>.ts (vrai .ts type contre le SDK Kairos) ; l'etape de bundle en capte le SOURCE et l'injecte dans src/transpiler/libs-data.js. Un CONSOMMATEUR doit donc charger LIBS['digital'] DEPUIS LE BUNDLE, jamais lire ce JSON sur le disque : il y verrait des entrees sans 'body' et croirait la lib vide. Piege paye le 2026-07-18 — mon pont de mesure lisait ce fichier, Kairos criait 'declaree au vocabulaire mais SANS fonction executable', et j'en ai conclu a tort que les corps manquaient. La garde de fraicheur (libs-bundle-check.js) ne protege PAS de ca : elle verifie que source et bundle sont SYNCHRONES, pas qu'on lit le bon des deux.",
-    "Bibliothèque de FONCTIONS DIGITALES (manipulations non-temporelles) — jumeau DIGITAL des objets",
-    "CV (lib/mod.json) : même structure {type, objects}, mais le comportement = VRAI CODE TS réalisé par",
-    "KAIROS (vs courbe déclarative réalisée par le runtime audio). Spec : docs/design/DIGITAL_FUNCTIONS.md.",
-    "Jeu FOURNI (lecture seule) ; perso/communautaire = surcharge hôte via registerLib (3 provenances).",
-    "Chaque fonction : { rank (ordre d'application, tri croissant, défaut 100), params (liaison : chaque",
-    "param porte `from` = source dans la valeur du contrôle ('value' = scalaire ; autre = champ objet) et",
-    "`coerce` = 'raw' | 'interval-ratio' (chaîne d'intervalle 3-formats → ratio) | 'token-step' (token → pas",
-    "de grille)). Le dispatch générique de Kairos lit rank + params ; il n'y a AUCUN nom de fonction en dur",
-    "chez lui. Le `body` (code TS) n'est PAS ici : authoring F1 = un VRAI .ts TYPÉ dans lib/digital/<fn>.ts",
-    "(contre le SDK @kairos/core, types DigitalFnObject/DigitalParamDecl), dont libs-bundle.js capte le",
-    "SOURCE en `body` dans libs-data.js. Type-check : `npm run typecheck:digital`.",
-    "SIGNATURE SCELLÉE (Romain) : (ctx: DigitalFnContext) => void — la fonction MODIFIE ctx.target (une",
-    "COPIE préparée par Kairos, JAMAIS l'arbre réel ; Kairos seul applique le résultat à la sortie",
-    "canonique). body capté = TS SOURCE, transpilé au load par Kairos (sucrase)."
-  ],
   "resolvedBy": "Kairos",
   "name": "digital",
   "type": "digital",
@@ -79,6 +62,5 @@
       }
     }
   },
-  "resolves": "function",
-  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer."
+  "resolves": "function"
 }

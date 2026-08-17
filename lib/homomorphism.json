@@ -1,19 +1,4 @@
 {
-  "_comment": [
-    "Bibliothèque de FONCTIONS D'HOMOMORPHISME (substitution de symbole) — domaine 'homomorphism' SÉPARÉ",
-    "(décision Romain/architecte 2026-07-17 : BPx = ordonnanceur pur ; la substitution `-ho`/`-al` sort de",
-    "BPx et rejoint la RÉSOLUTION Kairos, via librairie façon `digital`/`mod`). Jumelle structurelle de",
-    "lib/digital.json : { name, type, objects } — mais le contrat Kairos (HomomorphismFnObject) ne porte",
-    "QUE { body, description } (l'applicateur est UNIVERSEL, sans params : il lit la portée + les tables).",
-    "Le `body` (code TS) n'est PAS ici : authoring F1 = un VRAI .ts TYPÉ dans lib/homomorphism/<fn>.ts",
-    "(contre le SDK @kairos/core, type HomomorphismFn), dont libs-bundle.js capte le SOURCE en `body` dans",
-    "libs-data.js. Type-check : `npm run typecheck:homomorphism`.",
-    "SIGNATURE SCELLÉE (Kairos, f00ff29) : (ctx: HomomorphismFnContext) => void — la fonction lit",
-    "ctx.symbol + ctx.scope, query ctx.image(nom, sym) (table plate portée OPAQUE par BPx), écrit le",
-    "résultat via ctx.setResult. La TABLE reste dans Kairos ; la fonction ne la voit jamais brute",
-    "(PORTER≠RÉSOUDRE). Kairos résout ENSUITE nom→hz/octave du symbole substitué (pont hauteur inchangé).",
-    "TABLES AJOUTEES ICI le 2026-08-07 (Romain : « oui on renomme ») : la directive du langage est `@homomorphism.<table>` (LANGUAGE.md, seule graphie de la bible) ; `@transcription` etait l'ancien mot et il est SUPPRIME. Les 8 tables viennent de lib/homomorphism.json, DELETE dans le meme mouvement. Un seul mot, un seul fichier : `objects` porte l'applicateur universel, `tables` porte les correspondances symbole->symbole que la scene invoque."
-  ],
   "resolvedBy": "Kairos",
   "name": "homomorphism",
   "type": "homomorphism",
@@ -36,7 +21,6 @@
       }
     },
     "ruwet_mineur": {
-      "_deprecated": "DÉPRÉCIÉ — utiliser @homomorphism.ruwet section mineur. La paire sol4→mi4 était infidèle à -ho.Ruwet et a été supprimée. Remplacé par ruwet (2026-06-10).",
       "description": "Ruwet — transformation thème majeur → mineur (DÉPRÉCIÉ)",
       "mappings": {
         "fa4": "re4",
@@ -595,7 +579,5 @@
       }
     }
   },
-  "resolves": "homomorphism",
-  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer.",
-  "_portees_de_sub_doc": "DIX TABLES PORTEES DEPUIS lib/sub.json le 2026-08-13, arbitrage Romain, et sub.json est supprime dans le meme mouvement : Ruwet, abc, abc1, abc2, abc3, cloches1, dhadhatite, dhin--, tabla, trial.mohanam. ⚠️ LE LIEN PASSE PAR LE NOM DE LA TABLE, jamais par un appel de fonction : une grammaire BP3 native reference le nom, et la scene equivalente le reprend. Chercher QUI CHARGE LE FICHIER rend zero et fait conclure a tort que les tables sont mortes -- erreur commise le 2026-08-10 puis REFAITE le 2026-08-13, corrigee les deux fois par Romain. Les noms sont donc la surface : les renommer casse les grammaires natives qui les citent."
+  "resolves": "homomorphism"
 }

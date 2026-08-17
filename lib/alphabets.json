@@ -1,5 +1,4 @@
 {
-  "_format_doc": "FORMAT REFORMATE le 2026-08-08 sur le PROTOTYPE de LANGUAGE.md — « un alphabet est une collection structuree de terminaux » (decision Romain 2026-08-01). Le prototype fait DOUZE champs : { name, description, runtime, voice, tuning, octaves, diapason, baseNote, baseRegister, alterations, resolvesPitch, terminals }. CE QUI A CHANGE : la liste `notes` devient la collection `terminals`, ou CHAQUE TERMINAL PORTE SES CLES — c est le point de la decision, « un terminal est une chose entiere », et le format par AXES le decoupait. La table `voices`, qui associait apres coup un terminal a une voix, disparait : la voix est desormais une cle du terminal. `defaultTuning` prend le nom que la reference lui donne, `tuning`. `runtime` et `voice` sont les defauts de la COLLECTION, que ses terminaux surchargent — c est le repli de LANGUAGE.md:880. UN CHAMP ABSENT VAUT SON DEFAUT (LANGUAGE.md:830) : un alphabet de frappes n ecrit pas `baseNote: null`, il n ecrit rien. L ANCRE TIENT EN TROIS CHAMPS ET IL EN FAUT TROIS — `diapason` dit COMBIEN de hertz, `baseNote`/`baseRegister` disent SUR QUELLE NOTE ils tombent ; une ancre a moitie posee donne une hauteur fausse sans rien dire, et `test/un_alphabet_tient_son_prototype.mjs` la refuse. `alterations` appartient a la COLLECTION et non a un terminal : c est ce qui distingue C#4 de C4 sans que C# ait a se declarer. `resolvesPitch` dit si la collection resout une hauteur, et il vaut exactement « l ancre est complete ».",
   "western": {
     "description": "Western chromatic — 7 natural notes, 5 alteration levels",
     "runtime": "audio",
@@ -100,8 +99,7 @@
       "B": {}
     },
     "_note": "⚠️ CE N'EST PAS 'western'. Même jeu de naturelles, mais les REGISTRES sont ceux du natif : l'octave −1 s'écrit '00' et non '-1' (table 'bp3', lue plus-long-d'abord). baseRegister 5 = le registre '4' de cette table → A4 = 440 Hz. Les alternantes du natif (B#/Db/Eb/Fb/E#/Gb/Ab/Bb/Cb) s'expriment par la carte d'altérations ; les deux quirks de bord (B# → classe 0 registre +1, Cb → classe 11 registre −1) relèvent du repli générique de degré.",
-    "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530 (SetNoteNames, registres et quirks d'octave)",
-    "_provenance": "Donnée fournie VERBATIM par bp3-frontend le 2026-07-29 (courrier [1098], son banc test/alphabet_librairie.test.ts, commit 52d6638). NON refabriquée ici — ordre de l'architecte : il la possède depuis [79], la refabriquer aurait créé une seconde source pour la même table. Sa vérification : 223 noms de part et d'autre, ZÉRO désaccord, bp3_indian inclus dans le lot POUR VALIDER LE MODÈLE et pas seulement sa transcription."
+    "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530 (SetNoteNames, registres et quirks d'octave)"
   },
   "bp3_fr": {
     "description": "Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)",
@@ -127,8 +125,7 @@
       "si": {}
     },
     "_note": "⚠️ CE N'EST PAS 'solfege'. Même jeu de naturelles, mais le natif NOMME ses registres un cran plus bas : la3 = A4 = 440 Hz (là où 'solfege' pose la4). D'où une table de registres PROPRE ('bp3_fr'), qui ajoute '000' sous '00' — le français est la seule convention native à descendre si bas. Traduire une grammaire française vers 'solfege' la déplacerait d'une octave entière.",
-    "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530 (SetNoteNames, registres et quirks d'octave)",
-    "_provenance": "Donnée fournie VERBATIM par bp3-frontend le 2026-07-29 (courrier [1098]). Voir bp3_english. Défaut qu'ils ont trouvé en la vérifiant et qu'on ne recopie donc pas : ils acceptaient l'alternante de la classe 0 tout en bas du clavier (si#-3), qui réclame un registre SOUS le plus bas de la table native — corrigé chez eux avant l'envoi."
+    "_source": "bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530 (SetNoteNames, registres et quirks d'octave)"
   },
   "solfege": {
     "description": "Solfège latin — do ré mi fa sol la si",
@@ -217,8 +214,7 @@
       "mahur": {},
       "gerdaniye": {}
     },
-    "_note": "Turkish makam uses many more note names than 7. This is a representative subset. Full system has named pitches for each of the 53 commas in common use.",
-    "_lien_octaves": "TABLE DE REGISTRES BRANCHEE le 2026-07-30, dans le meme balayage que shakuhachi. lib/octaves.json definit turkish (prefixe tiz, separateur souligne) depuis toujours et AUCUN alphabet ne la pointait — meme defaut exactement, trouve en cherchant l ESPACE plutot que l occurrence apres la mesure de Kairos sur shakuhachi. EFFET SUR LA PRODUCTION : NUL, mesure — zero scene de l atelier declare alphabet.turkish et aucun jeton tiz_ n est ecrit nulle part. Le defaut etait LATENT ici aussi."
+    "_note": "Turkish makam uses many more note names than 7. This is a representative subset. Full system has named pitches for each of the 53 commas in common use."
   },
   "gamelan_pelog": {
     "description": "Javanese gamelan pelog — 7 tones",
@@ -278,11 +274,7 @@
       "ri": {}
     },
     "_note": "meri = lowered (chin down), kari = raised (chin up). Additional fingerings exist but vary by school.",
-    "_ancre": "ANCRE AJOUTEE le 2026-07-30 (demande Romain : recherche musicologique pour les alphabets qui n en ont pas). Le shakuhachi STANDARD est le 1.8 shaku, et sa fondamentale — tous trous bouches, angle de souffle normal — est RE4 = 293,66 Hz. Le registre qui va de ro a ri se nomme OTSU, index 0 de lib/octaves.json (registres otsu/kan/daikan). Donc : le ro du registre otsu vaut 293,66 Hz, exactement comme western dit que le A du registre 4 vaut 440.",
-    "_source_ancre": "Wikipedia, article Shakuhachi (« A 1.8 shakuhachi produces D4, D above Middle C, 293.66 Hz, as its fundamental » ; « Five tone holes enable musicians to play the notes D-F-G-A-C-D » ; registres « otsu », « kan », « dai-kan ») et shakuhachi.com / Chikushin, qui NOMMENT chaque doigte : ro (d′), tsu (f′), re (g′), chi (a′), ri (c″), et precisent que la plage ro-ri se nomme OTSU quelle que soit la longueur de l instrument. DEUX sources independantes concordent sur les cinq hauteurs — la premiere donne la fondamentale et l ensemble des notes, la seconde l appariement nom par nom, qui est ce qui evite une TRANSPOSITION silencieuse.",
-    "_lien_octaves": "⚠️ CE CHAMP MANQUAIT ET MA PROSE AFFIRMAIT LE CONTRAIRE (corrige le 2026-07-30, defaut mesure par Kairos). Le champ _ancre ci-dessus ECRIVAIT deja que le registre se nomme otsu et pointait lib/octaves.json — mais aucun champ ne BRANCHAIT la table. Mesure de Kairos par son chemin de production : ro rendait 293,66 et otsu_ro, kan_ro, daikan_ro rendaient NULL. Un seul champ manquant, et le retablissement complet une fois pose : 293,66 / 587,32 / 1174,64. PERTE SILENCIEUSE, pas hauteur fausse : kan_ro ne sonnait pas faux, il ne sonnait pas. LA FORME DE LA FAUTE : la PROSE dit l intention, la DONNEE dit l etat — personne ne mesure une phrase.",
-    "_imprecision": "DECISION DATEE, ROMAIN 2026-07-30 (hub/decisions/2026-07-30-shakuhachi-l-inflexion-vaut-un-demi-ton-et-l-imprecision-s-ecrit.md) : ON RETIENT LE DEMI-TON. Ses mots : « ok on fait +1/2 -1/2 avec un commentaire sur l imprecision (simple) ». ⚠️ LES VALEURS CI-DESSUS EXPRIMENT DEJA DES DEMI-TONS — meri -1 et kari 1 valent exactement ce qui est decide ; les ecrire -0.5 et 0.5 TRANSPOSERAIT L INSTRUMENT. Mesure en sortie de chaine par Kairos : ro_meri 277,18 Hz et ro_kari 311,12 Hz de part et d autre de 293,66, soit un demi-ton de chaque cote. CE QUE LA DONNEE NE DIT PAS, ET C EST VOULU : l inflexion reelle au menton est CONTINUE et les sources la donnent  jusqu a un ton entier ou plus . La donnee porte l inflexion NOTEE du repertoire, pas l amplitude du souffle. La question est CLOSE, pas pendante — ne pas la rouvrir en lisant les sources.",
-    "_modelisation": "⚠️ CET ALPHABET EST NOUVEAU, PAS UNE TRANSCRIPTION (mesure de l architecte, 2026-07-30). Aucune grammaire native ne l emploie ; dans tout le corpus de Bernard le mot shakuhachi n apparait que comme le TIMBRE General MIDI 66 affecte a un canal (D50: I-66, dans -gr.keys et -gr.checkrests), sans aucun rapport avec ces cinq doigtes. IL N Y A DONC AUCUN ORACLE A EGALER : les valeurs de cette entree sont un CHOIX DE MODELISATION, pas une conformite — raison pour laquelle elles se tranchent avec Romain et pas par une mesure."
+    "_source_ancre": "Wikipedia, article Shakuhachi (« A 1.8 shakuhachi produces D4, D above Middle C, 293.66 Hz, as its fundamental » ; « Five tone holes enable musicians to play the notes D-F-G-A-C-D » ; registres « otsu », « kan », « dai-kan ») et shakuhachi.com / Chikushin, qui NOMMENT chaque doigte : ro (d′), tsu (f′), re (g′), chi (a′), ri (c″), et precisent que la plage ro-ri se nomme OTSU quelle que soit la longueur de l instrument. DEUX sources independantes concordent sur les cinq hauteurs — la premiere donne la fondamentale et l ensemble des notes, la seconde l appariement nom par nom, qui est ce qui evite une TRANSPOSITION silencieuse."
   },
   "bohlen_pierce": {
     "description": "Bohlen-Pierce — 13 pitch classes in a tritave",
@@ -401,8 +393,7 @@
       "c1": {},
       "d1": {}
     },
-    "_note": "Alphabet ABSTRAIT : aucune hauteur, aucun accordage. Il existe pour que les scenes de test structurelles (derivation, polymetrie, homomorphismes) restent abstraites tout en satisfaisant le garde des terminaux. Ne jamais lui ajouter de diapason/baseNote : un symbole de 'simple' ne sonne pas, il structure.",
-    "_note_litteraux_bpx": "'Z' (majuscule), 'filler' (multi-caractere), 'b1'/'c1'/'d1' (lettre+chiffre) sont des terminaux atypiques declares a la demande de BPx : ce sont des NOMS LITTERAUX de fixtures BPx validees contre des oracles BP3 FIGES (m6_09_sub_multipass_weight -> Z ; m8_0x -> filler ; ord_left/right/rnd -> b1/c1/d1). BP3 ne partitionne pas terminal/non-terminal par la casse mais par CLASSE declaree (GetVar) ; renommer casserait la comparaison byte-exacte a l'oracle. Ce sont des noms, PAS une convention d'octave : la purete abstraite de 'simple' (aucune hauteur) est preservee. L'oracle fait foi. (notes BPx [367]/[374], 2026-07-11)."
+    "_note": "Alphabet ABSTRAIT : aucune hauteur, aucun accordage. Il existe pour que les scenes de test structurelles (derivation, polymetrie, homomorphismes) restent abstraites tout en satisfaisant le garde des terminaux. Ne jamais lui ajouter de diapason/baseNote : un symbole de 'simple' ne sonne pas, il structure."
   },
   "shruti23": {
     "description": "22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
@@ -458,7 +449,6 @@
       "teena": {},
       "tite": {}
     },
-    "_note": "⚠️ POURQUOI UN ALPHABET DISTINCT PLUTOT QUE D'ELARGIR 'tabla' — critere de Romain, 2026-07-29 : « on ne denature pas l'alphabet tabla ; si ce sont des percus de tabla on peut les ajouter, sinon alphabet distinct ». Trois des terminaux de cette qa'ida ne sont pas des FRAPPES mais des ENCHAINEMENTS : dhadhatitedhadhadheena se decompose en SIX unites (dha+dhati+te+dha+dha+dheena) et compte 22 caracteres, la ou le plus long compose de tabla en fait 2 et 10. Les y ranger aurait fait entrer des phrases de qa'ida dans le vocabulaire de TOUTE scene de tabla. Les deux qui SONT des frappes (dhadha, tite) ont ete ajoutes a 'tabla' dans le meme mouvement, et figurent ici aussi parce que cette scene les emploie. AUCUN accordage : une qa'ida ne resout pas de hauteur, comme 'tabla'.",
     "_source": "Vocabulaire releve AU COMPILATEUR sur kanopi .../BPScript-tests/dhadhatite_v2.bps (8 terminaux employes, membres droits, non-terminaux exclus). L'alphabet natif bp3-ctests/-al.dhadhatite ne declare que six bols SIMPLES (dha, ti, te, na, dhee, tr) et AUCUN des enchainements : la scene .bps le dit elle-meme en commentaire — « dhadhateena is NOT in gram#4 terminals, it is a composite bol »."
   },
   "tryCsoundObjects": {
@@ -489,11 +479,8 @@
         "voice": "dummy_csound_midiobject"
       }
     },
-    "_note": "⚠️ SES VOIX SONT DES SUBSTITUTS ASSUMES, PAS LES SONS D ORIGINE (ordre Romain, 2026-07-29 : « prenons des sons dummy juste pour VALIDER LE MODELE »). L objectif de cette entree n est PAS que la scene sonne juste — c est que la CHAINE tienne : un alphabet d objets sonores, ses terminaux lies a des voix, et la scene qui compile et derive. Les sept NOMS, eux, sont VERBATIM du natif (-al.tryCsoundObjects : « a b c d e f midiobject », sous le commentaire « the alphabet of terminal symbols which are also used as labels of sound-object instances »). Les noms sont une traduction ; les sons ne le sont pas encore.",
-    "_dummy": "REMPLACER LES VOIX EST UN CHANGEMENT DE DONNEE, PAS DE STRUCTURE : le portage reel n aura qu a reecrire les entrees `dummy_csound_*` de lib/voices.json, sans toucher a cette entree ni aux scenes. C est la condition posee par l architecte, l investigation du portage etant en cours chez bp3-frontend. Ce que le portage devra decoder : -so.tryCsoundObjects, 440 lignes, 22 prototypes pour ces 7 noms — un FLUX DE NOMBRES, zero ligne de csound lisible (mesure 2026-07-29). L orchestre existe et tient en 44 lignes (BP2test.orc, UN instrument).",
     "_source": "bp3-ctests/-al.tryCsoundObjects (noms, verbatim) · -so.tryCsoundObjects (prototypes, non portes)"
   },
   "resolvedBy": "Kairos",
-  "resolves": "alphabet",
-  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer."
+  "resolves": "alphabet"
 }

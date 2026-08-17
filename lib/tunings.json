@@ -1,16 +1,4 @@
 {
-  "_comment": [
-    "BPscript tunings — concrete scales linking alphabet to temperament.",
-    "",
-    "Each tuning specifies:",
-    "  temperament  — reference to temperaments.json",
-    "  degrees      — which steps in the temperament grid the alphabet notes land on",
-    "                  (ordered to match the notes[] array in the alphabet)",
-    "  alterations  — UNIQUEMENT pour les tempéraments PARAMÉTRIQUES (décalage en cents dans l'espace du générateur). Les tempéraments à TABLE (grille de ratios) N'EN PORTENT PLUS : l'altération y est CALCULÉE PAR FORMULE (décision Romain 2026-07-17) en indexant la grille du tempérament au pas altéré = degré + OFFSET d'altération de l'ALPHABET (lib/alphabets.json). Ex. Db juste = D(pas 2) + b(−1) → grille[1] = 16/15 CALCULÉ. L'ancien ratio fixe (#=25/24) était DEAD DATA (le résolveur à table l'ignorait) et a été retiré (dedup). Cf. test/formule_alteration.mjs.",
-    "",
-    "Legacy BP3 scales (162 gammes plates Bernard) vivent en grilles bp3_* dans temperaments.json ; l'ex-fichier lib/tuning.json a été retiré (mort). Provenance : scripts/convert-tonality.js (trace BP3 -to.*).",
-    "L'ANCRE (diapason/baseNote/baseRegister) vit sur l'ALPHABET (lib/alphabets.json), pas ici — elle est invariante par alphabet (cf. docs/design/SCENE_DEFAULTS_CASCADE.md). Un accordage ne la redeclare qu'en override exceptionnel (pitch historique)."
-  ],
   "western_12TET": {
     "description": "Standard Western equal temperament",
     "alphabet": "western",
@@ -109,8 +97,7 @@
       7,
       9,
       11
-    ],
-    "_provenance": "bp3-frontend, courrier [1098] du 2026-07-29 — verbatim."
+    ]
   },
   "bp3_fr_12TET": {
     "description": "Convention de notes FRENCH du moteur BP3 natif, en 12-TET",
@@ -125,8 +112,7 @@
       9,
       11
     ],
-    "_note": "Mêmes degrés que bp3_english — c'est l'ANCRE qui distingue (la3 = 440 Hz), pas la grille. BP3 RENOMME le clavier, il ne le transpose pas.",
-    "_provenance": "bp3-frontend, courrier [1098] du 2026-07-29 — verbatim."
+    "_note": "Mêmes degrés que bp3_english — c'est l'ANCRE qui distingue (la3 = 440 Hz), pas la grille. BP3 RENOMME le clavier, il ne le transpose pas."
   },
   "sargam_22shruti": {
     "description": "Indian sargam in 22-shruti system — full microtonal resolution",
@@ -263,7 +249,6 @@
       12
     ]
   },
-  "_comment_raga_deplacees": "Les ragas (raga_bhairav, raga_yaman) ont été DÉPLACÉES vers scales.json (décision Romain 2026-07-17, MODELE-RAGA) : une raga n'est PAS un accordage — c'est un mode mélodique dont l'aspect GAMME (aroha/avaroha) vit dans scales.json et l'aspect ACCORDAGE (intonation) est le tempérament référencé. Aucune raga en tunings.json.",
   "_comment_parametric": "=== PARAMETRIC TUNINGS (Dynamic Tonality) === degrees = generator counts, not step indices.",
   "western_meantone_dt": {
     "description": "Western diatonic in meantone continuum — generator morphable in real-time",
@@ -367,6 +352,5 @@
     "_note": "Les cinq doigtes du registre otsu sonnent RE FA SOL LA DO, soit 0, 3, 5, 7 et 10 demi-tons au-dessus de la fondamentale (sources dans lib/alphabets.json, champ _source_ancre). Le temperament EGAL est le choix coherent avec cette entree : ses alterations meri et kari sont deja exprimees en demi-tons. Un shakuhachi d atelier n est pas exactement tempere — cette table decrit le systeme de notes, pas la facture d un instrument donne."
   },
   "resolvedBy": "Kairos",
-  "resolves": "tuning",
-  "_resolves_doc": "L'AXE que cette librairie resout — ce QUOI, la ou 'resolvedBy' dit le QUI. Nom pose avec Kairos le 2026-08-10 par delegation de Romain (« je laisse BPScript et Kairos decider »), en remplacement de 'domain'. Il vit DANS le fichier parce qu'un fichier a nom libre (@mine.tempers.douze) n'a aucune table externe qui puisse dire son axe — mesure de Kairos, decision ef75ec6 non revoquee. Un axe peut porter DEUX fichiers (alphabet : alphabets et test_alphabets) : une table 1:1 nom-de-fichier vers axe ne peut donc pas le remplacer."
+  "resolves": "tuning"
 }

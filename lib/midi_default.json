@@ -3,11 +3,7 @@
   "description": "L'ENVIRONNEMENT MIDI PAR DÉFAUT — la valeur que porte chaque mot de `midi` tant qu'une scène n'en écrit pas d'autre.",
   "version": "0.2.0",
   "resolvedBy": "runtime-MIDI",
-
-  "_controlDefaults_doc": "LA VALEUR PAR DÉFAUT VIT ICI, PLUS SUR LA DÉCLARATION DU MOT. Décision de Romain, 2026-08-15 : « core.json doit appeler une librairie midi default qui stipule tout l'environnement par défaut ainsi que la librairie midi standard », et « les défauts sont dans la librairie midi-default, ça sera modifié dans le live par les contrôles de volume de l'UI ».\n\nDEUX QUESTIONS, DEUX FICHIERS. `lib/midi.bpsl` dit CE QU'UN MOT EST — ses arguments, sa plage, sa portée, sa graphie native ; ce fichier-ci dit QUELLE VALEUR IL PORTE quand personne ne l'écrit. La première est une propriété du langage, stable ; la seconde est un réglage d'environnement, que l'interface modifie en direct.\n\nLA SURFACE PUBLIÉE NE CHANGE PAS : le chargeur reverse ces valeurs sur `controls[…].default`, donc un consommateur qui lit le vocabulaire voit exactement ce qu'il voyait. Le déplacement est un déplacement d'AUTORITÉ, pas de forme.\n\nLES VALEURS SONT MESURÉES sur les sources C du moteur par runtime-MIDI, binaire empreinté 372dd047. Aucune n'est déduite.\n\n⚠️ `ins` N'A PAS DE DÉFAUT, ET C'EST UNE MESURE, PAS UN OUBLI. La valeur de départ du moteur vaut zéro — `CurrentMIDIprogram` initialisé à zéro, ce qui signifie « aucun programme envoyé » — et zéro tombe HORS de la plage 1..128 que la convention native impose. Le compilateur natif refuse `_ins(0)` lui-même (« must be strictly positive », CompileProcs.c:1071 et :1185). Il n'y a donc pas de programme par défaut : il y a une absence d'envoi. Écrire 1 nommerait le premier programme à la place de cette absence.",
-
   "_gestes_doc": "LES QUATRE GESTES SONT DES PAIRES, ET LES HUIT MOTS SONT DÉCLARÉS ICI, chacun avec sa valeur. Écrire les deux côtés plutôt que le seul mot actif rend le fichier lisible sans le déplier mentalement, et un garde exige qu'exactement UN mot par paire soit vrai.\n\n⛔ `resetcontrols` VAUT FAUX, ET LA CAUSE COMPTE AUTANT QUE LA VALEUR. `Inits.c:212` le met à VRAI au démarrage, puis `SaveLoads1.c:584` le remet à FAUX au début de CHAQUE chargement de réglages — et une scène charge toujours ses réglages. Le cas VRAI n'existe donc que dans une exécution qui n'en charge aucun, ce qui n'arrive pas en usage. Sans cette phrase, quelqu'un relira `Inits.c:212` dans six mois et « corrigera » cette ligne en croyant réparer.\n\n`resetnotes` vaut FAUX aussi : aucun site du moteur ne l'arme (`Inits.c:207`, périmètre les 54 fichiers de source/BP3). C'est la mesure qui a fait tomber la première règle de découpage des paires — celle qui réservait une paire aux seuls gestes vrais au natif.",
-
   "controlDefaults": {
     "chan": 1,
     "mod": 0,
@@ -24,7 +20,6 @@
     "volumecontrol": 7,
     "pancontrol": 10,
     "fadeout": 2.0,
-
     "resetnotes": false,
     "letring": true,
     "strikeagain": true,

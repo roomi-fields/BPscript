@@ -1,7 +1,6 @@
 {
   "name": "mod",
   "type": "cv",
-  "_resolvedBy_doc": "⚠️ CHAMP resolvedBy NON POSE, SIGNALE plutot qu'invente (mise en conformite des librairies, Romain 2026-08-10). Cette librairie declarait 'domain':'modulator', retire dans le meme mouvement -- mais aucune source mesuree ne nomme UN outil qui echantillonne la courbe : sa propre doc dit seulement « le renderer est generique », sans le nommer, et atlas/architecture/LIBRAIRIES.md n'a pas de ligne pour ce contenu (le prototype 'module' qu'il decrit, resolu par Dedale, ne correspond pas -- mod.json n'a ni ports ni passthrough). A trancher par Romain.",
   "_comment_curve": [
     "Chaque objet CV porte sa COURBE en librairie (zéro built-in moteur) — le renderer est générique",
     "et lit `curve` sample-par-sample sans rien savoir de l'ADSR/LFO. Conventions :",

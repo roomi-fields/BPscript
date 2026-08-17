@@ -2,12 +2,10 @@
   "name": "time",
   "description": "Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.",
   "version": "1.0.0",
-  "_autorite_doc": "Contenu déclaré par atlas/architecture/LIBRAIRIES.md:160-176, qui donne `time` pour nature « en-tête », pour destinataire Kronos, et pour contenu `tempo`. Créée le 2026-08-10 sur autorisation de Romain (« il faut créer toutes les librairies qui manquent »).",
   "_frontiere_doc": "⚠️ `tempo` A QUITTÉ `core` DANS LE MÊME MOUVEMENT. La même référence écrit que le tempo entre dans `time` en quittant `core`, parce qu'une librairie est liée à UN outil et que `core` est central. Laisser les deux le porter rendrait le nom ambigu, ce que la règle d'unicité refuse — et une clé qui vit dans deux domiciles se résout par celui qu'on interroge en premier, donc par accident.",
   "_partage_doc": "Le temps se partage entre deux librairies : `engine` porte le temps CALCULÉ — où tombe chaque événement, une propriété de l'arbre ; `time` porte le temps qui S'ÉCOULE. Le mètre dit où les choses tombent, donc il relève du premier.",
   "_prefixe_doc": "Le préfixe est OPTIONNEL : `@tempo:120` et `@time.tempo:120` désignent la même chose, par la règle d'unicité (atlas/architecture/LIBRAIRIES.md:42). `tempo` n'étant porté que par `time`, la forme nue se résout sans ambiguïté.",
   "schema": {
-    "_reservedDirectives_doc": "Les noms que cette librairie déclare. Ils rendent le préfixe `@time.<clé>` résoluble et la clé nue reconnue par unicité. scope AJOUTE (Romain 2026-08-10) : tempo s'ecrit UNIQUEMENT en tete de scene (@tempo:120 / @time.tempo:120), mesure sur atlas/architecture/LIBRAIRIES.md:34. Pas de `astName` : le renommage `tempo`→`mm` dans l'arbre est un fait EN VOIE DE DISPARITION (Romain, 2026-08-10 — le nom devient `tempo` PARTOUT, `bp3-frontend` traduira à l'entrée) — construire une machinerie de donnée pour un fait condamné à s'effacer aurait été du code mort. Les trois sites qui l'appliquent encore sont des littérales NOMMÉES (case E, hors mandat étape 3) dans `parser.js`, cf. `test/aucun_routage_de_controle_n_est_code_en_dur.mjs` table EN_ARBITRAGE — ils s'effacent d'un bloc à la bascule de BPx, geste de l'architecte.",
     "reservedDirectives": {
       "tempo": {
         "description": "Tempo de la scene, en BPM (BP3 tempo).",

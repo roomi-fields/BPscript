@@ -1,16 +1,5 @@
 {
   "resolvedBy": "runtime-audio",
-  "_comment": [
-    "Registre des ENTRÉES DE MODULATION par TYPE DE SORTIE (transport). Une entrée est un point",
-    "continu d'une sortie qu'un CV peut piloter, ciblé par 'voix.entree' au point de paramètre :",
-    "  Bass -> C2 E2 (cutoff: env1)   // env1 (CV normalisé 0..1) module la coupure de la sortie de Bass",
-    "Contrat : la source est un CV NORMALISÉ 0..1 ; l'ÉCHANTILLONNAGE de la courbe et le MAPPAGE",
-    "0..1 -> plage se font EN AVAL (dispatcher/runtime), pas dans le moteur ni le transpileur.",
-    "Source de vérité = le runtime qui implémente le type de sortie (audio = implémentation Web Audio de Kanopi, vérifié 2026-06-20 ; clé renommée webaudio→audio au canon 2026-07-16).",
-    "Noms de SYNTHÈSE (découplés des noms d'implémentation). NB : 'pan' existe AUSSI comme contrôle",
-    "MIDI/musical (0..127) — la résolution des noms doit être PAR TYPE DE SORTIE (cf. CV.md)."
-  ],
-  "_scope_doc": "OU UNE ENTREE DE MODULATION A LE DROIT D ETRE ECRITE — meme champ, meme vocabulaire ferme et meme format LISTE que dans lib/controls.json (Romain, 2026-08-08). Ces cles s ecrivent dans un SAC comme les controles : `C4(cutoff:env1)`, `{A B}(lpf1.cutoff:4000)`. ⚠️ POURQUOI LA PORTEE SE DECLARE ICI ET NON DANS UN FICHIER CENTRAL : le sac ne porte pas que des controles. Mesure du 2026-08-08 sur les 274 scenes — `cutoff` y est ecrit 20 fois et vient de CE fichier, `ch` une fois et vient du socle. Une validation batie sur la seule librairie des controles les refuserait A TORT. La portee vit donc a cote de la cle, dans SA librairie. Portee retenue : les quatre places d un reglage de sortie. Une modulation se pose sur une note, sur un groupe, sur une regle, ou dans le flux — comme vel.",
   "audio": {
     "cutoff": {
       "target": "BiquadFilter.frequency",

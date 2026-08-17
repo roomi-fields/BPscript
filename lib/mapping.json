@@ -5,9 +5,5 @@
     "  numero de note, de controleur, de touche  →  le nom qu'on ecrit dans la scene.",
     "Invoquee sur une declaration d'entree : `@in pedale transport.midi mapping.<nom>`,",
     "puis employee au point d'usage : `<!pedale.<etiquette>`."
-  ],
-  "_resolvedBy_doc": "⚠️ CHAMP resolvedBy NON POSE, SIGNALE plutot qu'invente (mise en conformite des librairies, Romain 2026-08-10 : resolvedBy remplace domain/runtime partout). Cette librairie declarait 'domain':'mapping' (decision Romain 2026-07-13, hub ef75ec6), retire dans le meme mouvement -- mais AUCUNE source mesuree (code, Atlas LIBRAIRIES.md, hub) ne nomme l'outil qui RESOUT une table a l'execution : la validation de forme vit dans bpxAst.js (BPScript), et la resolution effective de l'evenement d'entree -> etiquette n'a pas d'implementation aval mesuree aujourd'hui. A trancher par Romain.",
-  "_vocabulaire_doc": "C'EST LA TABLE QUI DECLARE SON VOCABULAIRE, pas la scene (decision Romain 2026-07-27). Une table peut nommer ses etiquettes d'apres un alphabet -- pour ecrire `sa` plutot qu'un numero -- SANS que cela implique la moindre resolution de hauteur : l'alphabet n'est ici qu'un reservoir de noms. La scene ne repete donc jamais l'alphabet sur une entree, et le compilateur le REFUSE si elle essaie.",
-  "_vide_doc": "⚠️ CETTE LIBRAIRIE EST DELIBEREMENT VIDE DE CONTENU. Aucune table n'y sera ecrite tant que Romain n'en aura pas donne une VRAIE (arbitrage architecte 2026-07-27, sur ma reserve) : un contenu de demonstration fabrique pour faire vivre la piece finirait cite comme une reference, et une fausse table de pedalier vaut moins que pas de table du tout. Le fichier existe pour que le domaine et la place soient poses, pas pour meubler.",
-  "_pas_de_defaut_doc": "AUCUNE TABLE PAR DEFAUT, aucune identite livree d'office (decision Romain 2026-07-27, point 4). Une entree declaree SANS table s'ecrit en adresses nues, et c'est EXPLICITE dans la scene -- ce qui est le but. Poser une identite implicite rendrait indistinguables « je n'ai pas de table » et « ma table ne fait rien »."
+  ]
 }
