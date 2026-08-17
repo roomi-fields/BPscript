@@ -1653,7 +1653,11 @@ function parse(tokens, opts = {}) {
       // @gate, @trigger, @cv — keywords used as directive names
       name = advance().value;
     } else {
-      name = expect(T.IDENT).value;
+      // ⚠️ LE NOM D'UNE LIBRAIRIE PEUT PORTER UN TIRET, au meme titre qu'un nom d'entree —
+      // `@ragas-tunings.sargam_12TET`. Le tokenizer detache le tiret partout depuis qu'il est un
+      // SILENCE dans le flux ; ici il fait partie du nom, et `lireNomDEntree` le recolle. Le defaut
+      // etait MASQUE par le prefixe de provenance, qui lisait le chemin par sa propre voie.
+      name = lireNomDEntree(tok);
     }
     // Invocation par PROVENANCE (chantier libs-provenance, décision hub ef75ec6 ;
     // contrat contrats/bpscript-bpx.md §libRefs) : `@factory.<chemin-fichier>.<entrée>` et

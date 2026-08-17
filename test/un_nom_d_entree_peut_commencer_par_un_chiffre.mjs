@@ -83,6 +83,22 @@ const compiler = (tete) => {
   }
 }
 
+// ── D-bis. LE NOM DE LA LIBRAIRIE PORTE AUSSI UN TIRET ──────────────────────────────────────
+// ⚠️ TROUVE PAR KANOPI EN RETIRANT LE PREFIXE DE PROVENANCE, qui le masquait. Le tokenizer detache
+// le tiret partout depuis qu'il est un SILENCE dans le flux ; dans un nom de librairie il est une
+// lettre. `@ragas-tunings.X` cassait a l'ANALYSE — « Expected arrow, got PERIOD » — au lieu d'etre
+// LU puis refuse pour son axe. La difference compte : un refus syntaxique envoie corriger une
+// graphie juste.
+{
+  const msg = messages(compiler('@ragas-tunings.sargam_12TET'));
+  ok(!/Expected/.test(msg),
+     `D-bis. '@ragas-tunings.X' doit etre LU, pas casser a l'analyse. Reçu : ${msg.slice(0, 100)}. `
+     + `Un refus syntaxique sur un nom valide envoie l'auteur corriger ce qui est juste.`);
+  ok(/aucune librairie ne sert l'axe 'ragas-tunings'/.test(msg),
+     `D-bis. le refus doit nommer l'axe ENTIER, tiret compris — reçu : ${msg.slice(0, 100)}. `
+     + `S'il nomme 'ragas' seul, le tiret a coupe le nom.`);
+}
+
 // ── D. UN SEUL LECTEUR — la voie directe et le canal de provenance lisent pareil ─────────────
 // ⚠️ CE VOLET GARDE LA CAUSE, PAS LE SYMPTÔME. La lecture vivait dans le canal de provenance et
 // manquait à la voie directe : deux endroits pour un même nom, un seul qui savait le lire.
