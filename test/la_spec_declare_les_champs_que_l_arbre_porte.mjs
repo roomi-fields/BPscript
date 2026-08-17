@@ -124,7 +124,7 @@ const DETTE = new Set([
   'Scene.scenes', 'Scene.exposes', 'Scene.inputs', 'Scene.declarations', 'Scene.soundPrototypes', 'Scene.soundAssignments',
   // Champs de DIRECTIVE et d'ACTEUR portés par l'arbre, absents de leur déclaration.
   'Directive.runtime', 'Directive.aliases', 'Directive.modifiers', 'Directive.timePatterns',
-  'ActorDirective.values', 'ActorReference.line', 'ActorDirective.libRefs',
+  'ActorDirective.values', 'ActorReference.line',
   // ⚠️ `RawBrace.duree` — l'arbre porte un champ FRANÇAIS là où `AST.md` déclare `frame` pour la
   //    même chose : la durée collée d'une accolade déséquilibrée, propagée depuis la fermante.
   //    Deux noms pour une notion. ⚠️ Celui-ci N'EST PAS le `Polymetric.frame` corrigé le

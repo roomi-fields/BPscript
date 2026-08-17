@@ -772,6 +772,11 @@ function terminauxEnPortee(ast) {
   // mettent donc RIEN en portee, et ce qui EST un alphabet en charge un.
   for (const ref of ast.libRefs || []) {
     const parts = String(ref).split('.');
+    // ⚠️ L'ENTREE SE CHERCHE DANS LA LIBRAIRIE INVOQUEE, jamais partout. Sans cette borne,
+    // `@homomorphism.dhati` chargeait l'alphabet `dhati` du catalogue de test — un nom porte par
+    // deux librairies de natures differentes, et la mise en portee prenait la mauvaise.
+    const lib = loadLib(parts.slice(0, -1).join('.'), parts[parts.length - 1]);
+    if (!lib || !nomsDeTerminaux(lib)) continue;
     aUnAlphabet = ajouter(parts[parts.length - 1], sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || aUnAlphabet;
   }
   // ⛔ UN TERMINAL DÉCLARÉ PAR `@def` ENTRE AU VOCABULAIRE — sinon la directive ne sert à rien.

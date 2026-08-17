@@ -173,14 +173,32 @@ function universeRuleAllowedControls() {
 // populated from libs-data.js, so loadJsonFile never needs the filesystem.
 registerAll(BUNDLED_LIBS);
 
-// Canonical filenames (directive name → JSON file name)
-// `tuning` → tunings.json = le CATALOGUE servi (PITCH_LIB). Avant cet alias,
-// loadLib('tuning', X) tombait sur lib/tuning.json (héritage Bernard, gammes sous
-// .scales) et ne résolvait JAMAIS rien — la résolution d'accordage était 100 %
-// aval (Kairos). L'alias ouvre l'accès transpileur au catalogue (SCENE_VALUES).
-// `scale` → scales.json : axe-composant à catalogue (domain:scale) promu au CUTOVER universel
-// (Romain 2026-07-14, tour [412]) — ouvre l'accès transpileur pour valider `@scale.<nom>`.
-const fileAliases = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales', sound: 'sounds' };
+/**
+ * LE MOT SOUS LEQUEL UNE LIBRAIRIE S'INVOQUE — lu dans SA donnee, jamais ecrit ici.
+ *
+ * Chaque fichier declare son mot par `resolves`. La table qui suit est DERIVEE de ces
+ * declarations, reconstruite a chaque appel : ajouter une librairie qui declare son mot la rend
+ * invocable le jour meme, sans toucher au code.
+ *
+ * ⛔ ELLE ETAIT ECRITE EN DUR, ET QUATRE LIGNES DECIDAIENT DE TOUT. `alphabet: 'alphabets'`,
+ * `tuning: 'tunings'`, `scale: 'scales'`, `sound: 'sounds'` — et rien d'autre. `temperament`,
+ * `voice` et `octave` n'existaient pas comme mots d'invocation pour une seule raison : personne
+ * n'avait ecrit leur ligne. Ce n'etait pas un catalogue, c'etait un oubli a quatre entrees.
+ *
+ * ⚠️ UN MOT PEUT DESIGNER PLUSIEURS FICHIERS, et c'est voulu : `alphabets.json` et
+ * `test_alphabets.json` declarent tous deux `alphabet`. Aucun nom d'entree n'est porte par les
+ * deux — mesure du 2026-08-17, zero collision — donc la recherche les parcourt dans l'ordre.
+ */
+function motsDInvocation() {
+  const table = new Map();
+  for (const [fichier, lib] of Object.entries(registry)) {
+    const mot = lib && typeof lib === 'object' ? lib.resolves : null;
+    if (!mot) continue;
+    if (!table.has(mot)) table.set(mot, []);
+    table.get(mot).push(fichier);
+  }
+  return table;
+}
 
 /**
  * L'axe nommé dans une invocation → le FICHIER qui le sert. Exporté parce que l'adresse produite
@@ -189,11 +207,12 @@ const fileAliases = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales',
  * rouvrirait l'écart entre ce qu'on invoque et ce qu'on charge.
  */
 function fichierDeLAxe(axe) {
-  return fileAliases[axe] || axe;
+  const fichiers = motsDInvocation().get(axe);
+  return fichiers && fichiers.length ? fichiers[0] : axe;
 }
 
 function loadJsonFile(name) {
-  const canonical = fileAliases[name] || name;
+  const canonical = fichierDeLAxe(name);
   if (cache[canonical]) return cache[canonical];
 
   // Try registry first (canonical then original name)
@@ -217,6 +236,18 @@ function loadJsonFile(name) {
  */
 function loadLib(name, subkey) {
   if (subkey) {
+    // ⛔ UN MOT PEUT DESIGNER PLUSIEURS FICHIERS — `alphabets.json` et `test_alphabets.json`
+    // declarent tous deux `alphabet`. On les parcourt donc TOUS, dans l'ordre, jusqu'a celui qui
+    // porte l'entree. Ne lire que le premier laisserait la moitie du mot inatteignable, et le
+    // refus dirait « introuvable dans le catalogue » pour une entree qui existe a cote.
+    const fichiers = motsDInvocation().get(name);
+    if (fichiers && fichiers.length > 1) {
+      for (const f of fichiers) {
+        const lib = loadJsonFile(f);
+        const e = lib && (lib.alphabets?.[subkey] || lib.tables?.[subkey] || lib.objects?.[subkey] || lib[subkey]);
+        if (e) return e;
+      }
+    }
     const file = loadJsonFile(name);
     if (file) {
       // Look for subkey in known collection fields, or directly on root.
