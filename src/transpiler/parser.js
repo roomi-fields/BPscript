@@ -2478,6 +2478,11 @@ function parse(tokens, opts = {}) {
         advance();
         const params = [];
         while (!at(T.RPAREN) && !atEnd()) {
+          // La forme longue s'écrit sur plusieurs lignes — c'est une DÉCLARATION. Le flux d'une
+          // règle garde sa lecture : une règle finit à la ligne, et l'y autoriser changerait ce
+          // que la partie production sait borner.
+          while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+          if (at(T.RPAREN) || atEnd()) break;
           if (at(T.IDENT)) params.push(advance().value);
           else if (at(T.COMMA)) advance();
           else {
@@ -2660,6 +2665,11 @@ function parse(tokens, opts = {}) {
         expect(T.LPAREN);
         const params = {};
         while (!at(T.RPAREN) && !atEnd()) {
+          // La forme longue s'écrit sur plusieurs lignes, parenthèse ouvrante et fermante
+          // (décision Romain, 2026-08-15) — ici comme dans tout autre sac. Réparer le seul
+          // endroit où le refus s'est montré laisserait la même faute vivre à côté.
+          while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+          if (at(T.RPAREN) || atEnd()) break;
           const paramKey = expect(T.IDENT).value;
           expect(T.COLON);
           // ⚠️ LE TIRET PASSE DANS UNE VALEUR — partout ailleurs dans le langage, et il ne passait
@@ -4897,6 +4907,14 @@ function parse(tokens, opts = {}) {
     expect(T.LPAREN);
     const pairs = [];
     while (!at(T.RPAREN) && !atEnd()) {
+      // ── LA FORME LONGUE S'ÉCRIT SUR PLUSIEURS LIGNES, PARENTHÈSE OUVRANTE ET FERMANTE ───────
+      // Décision Romain du 2026-08-15, et c'est la parenthèse — jamais l'indentation — qui borne
+      // un corps : un mot déclaré sans argument vaut sa présence (`letring`), donc un dernier mot
+      // seul doit rester distinguable de la fin du bloc. La fermante le dit, un retour à la ligne
+      // non. Le saut vit AU SOMMET de la boucle pour couvrir tous ses points de reprise : posé
+      // après une seule virgule, il aurait laissé les autres formes refuser un retour à la ligne.
+      while (at(T.NEWLINE) || at(T.COMMENT)) advance();
+      if (at(T.RPAREN) || atEnd()) break;
       // Préfixe de SUJET (cible) devant le contrôle (décision Romain 2026-06-21,
       // cohérent avec l'existant `*:sound.X`) :
       //   `*:cutoff:Env`   → sujet '*' = chaque terminal de la portée  (par note)
