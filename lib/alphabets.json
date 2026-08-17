@@ -329,7 +329,9 @@
         "voice": "dayan_ring"
       },
       "dhee": {},
-      "tee": {},
+      "tee": {
+        "voice": "dayan_open"
+      },
       "ge": {
         "voice": "bayan_open"
       },
@@ -338,7 +340,9 @@
       },
       "ra": {},
       "tr": {},
-      "kt": {},
+      "kt": {
+        "voice": "dayan_dry"
+      },
       "ti": {
         "voice": "dayan_tap"
       },
@@ -357,7 +361,7 @@
         "voice": "bayan_muted"
       }
     },
-    "_note": "Alphabet de percussion : aucune hauteur a resoudre, donc aucun tuning. Le champ `voice` lie un terminal a une voix de `lib/voices.json`.\nCONTENU : les vingt bols de l'alphabet natif le plus complet du corpus, plus `ki` et `ka`, declares par `-al.dhin--` et `-al.kathak`. Tous sont INDIVISIBLES : aucun ne se decoupe sur les autres, mesure bol par bol en le retirant de la liste.\nUN BOL COMPOSE NE SE DECLARE PAS — il se segmente. `dhagena` est `dha ge na`, `tirakita` est `ti ra ki ta` ; les declarer ferait deux sources pour un meme son.\nSEPT BOLS SONNENT au moteur natif — dha, na, tee, ta, ge, kt par les prototypes de `dhati`, et `tin` par ceux d'`EkDoTin`. LES TREIZE AUTRES SONT MUETS, et c'est un ETAT : le fichier de sons de tabla n'existe pas dans le corpus natif. Un bol muet reste atomique.\n`ghe` et `tun` SORTENT : aucun des soixante-et-un alphabets du corpus ne les declare, et le moteur les refuse a la compilation. Ni atomiques ni composes — inexistants."
+    "_note": "Alphabet de percussion : aucune hauteur a resoudre, donc aucun tuning. Le champ `voice` lie un terminal a une voix de `lib/voices.json`.\nCONTENU : les vingt bols de l'alphabet natif le plus complet du corpus, plus `ki` et `ka`, declares par `-al.dhin--` et `-al.kathak`. Tous sont INDIVISIBLES : aucun ne se decoupe sur les autres, mesure bol par bol en le retirant de la liste.\nUN BOL COMPOSE NE SE DECLARE PAS — il se segmente. `dhagena` est `dha ge na`, `tirakita` est `ti ra ki ta` ; les declarer ferait deux sources pour un meme son.\nSEPT BOLS SONNENT au moteur natif — dha, na, tee, ta, ge, kt par les prototypes de `dhati`, et `tin` par ceux d'`EkDoTin` — les sept portent une voix. LES TREIZE AUTRES SONT MUETS, et c'est un ETAT : le fichier de sons de tabla n'existe pas dans le corpus natif. Un bol muet reste atomique.\n`ghe` et `tun` SORTENT : aucun des soixante-et-un alphabets du corpus ne les declare, et le moteur les refuse a la compilation. Ni atomiques ni composes — inexistants."
   },
   "simple": {
     "description": "Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",

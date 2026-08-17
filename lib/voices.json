@@ -16,7 +16,8 @@
     "device, elle SPÉCIALISE l'universelle homonyme (cascade fin > général, résolue en AVAL/Kairos).",
     "La HAUTEUR n'est PAS ici (spec §2) : elle est STRUCTURELLE (alphabet+tuning). Une voix",
     "UTILISE `pitch` si la résolution en fournit une (son backtick le référence, ou non) —",
-    "aucun flag 'pitched'."
+    "aucun flag 'pitched'.",
+    "LES COMPOSANTES DE `dayan_dry` ET `dayan_open` SONT DERIVEES DE LA MESURE NATIVE, pas choisies : les touches MIDI que le moteur emet pour `kt` (74, 71) et pour `tee` (67, 71, 72, 74) donnent 587/494 Hz et 392/494/523/587 Hz. Le champ dit un TIMBRE, jamais un nombre de notes -- une realisation a plusieurs frappes reste UN bol, et faire porter une sequence au champ melangerait l'identite du bol et sa realisation (backlog LAN-38). L'enveloppe suit le voisinage : seche comme `dayan_tap` pour la frappe des deux mains, tenue plus longue pour la frappe ouverte."
   ],
   "objects": {
     "wobble": {
@@ -43,6 +44,12 @@
     },
     "dayan_tap": {
       "audio": "`js: noise() >> hpf(1200) >> adsr(decay:60ms)`"
+    },
+    "dayan_dry": {
+      "audio": "`js: (sin(494) | sin(587)) >> adsr(decay:60ms)`"
+    },
+    "dayan_open": {
+      "audio": "`js: (sin(392) | sin(494) | sin(523) | sin(587)) >> adsr(decay:220ms)`"
     },
     "dummy_csound_a": {
       "audio": "`js: sin(220) >> adsr(decay:200ms)`",
