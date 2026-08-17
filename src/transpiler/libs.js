@@ -404,6 +404,16 @@ function resolveActorAlphabet(nom, directives) {
  * endroit : dupliquer la recherche ici serait rouvrir l'écart entre validation et résolution.
  */
 function resolveActorAlphabetSource(nom, directives) {
+  // ⛔ QUEL FICHIER A SERVI — l'adresse d'acteur en depend, et un mot en designe plusieurs.
+  // `alphabet` est declare par `alphabets.json` ET `test_alphabets.json` : dire seulement « le
+  // catalogue standard » perdrait le fichier, et l'aval ne saurait plus quel nom il a resolu.
+  // Le premier fichier du mot est le catalogue de reference ; les suivants portent leur nom.
+  const fichiers = motsDInvocation().get('alphabet') || [];
+  for (let i = 0; i < fichiers.length; i++) {
+    const e = loadJsonFile(fichiers[i]);
+    const entry = e && (e.alphabets?.[nom] || e[nom]);
+    if (entry && nomsDeTerminaux(entry)) return { entry, lib: i === 0 ? null : fichiers[i] };
+  }
   const standard = loadLib('alphabet', nom);
   if (standard && nomsDeTerminaux(standard)) return { entry: standard, lib: null };
   for (const d of directives || []) {

@@ -86,6 +86,8 @@ ActorDirective {
     eval: string | null           // le langage par défaut de ses backticks
   }
   references: ActorReference[]
+  libRefs?: string[]              // l'ADRESSE de l'alphabet — `<librairie>.<entrée>`, quand le
+                                  // nom seul ne dit pas quel fichier le sert
   synthetic?: true
   line: number
 }
