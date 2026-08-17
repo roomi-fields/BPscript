@@ -162,10 +162,17 @@ M <- V A'16-2`;
 section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
 {
   const tokens = toks('[K1-1] Head -> Head a [Atrans, A-1]');
-  // K1- doit être un IDENT, 1 un INT
+  // ⚠️ CES DEUX ASSERTIONS TESTAIENT LA FORME DU JETON, PAS L'EFFET, et le déplacement du
+  // 2026-08-17 est instructif. Elles exigeaient `IDENT("K1-")` — le tokenizer collait alors le
+  // tiret suivi d'un alphanumérique. Il ne le colle plus : au natif, un tiret est un SILENCE et
+  // `dha- dha` rend exactement `dha - dha`, mesuré sur le TEMPS et non sur le texte.
+  // LE DÉCRÉMENT N'EST PAS CASSÉ POUR AUTANT — les vingt scènes du corpus qui en portent un
+  // restent vertes, et les assertions de PARSE ci-dessous le prouvent : c'est là que le sens vit.
+  // Un garde qui grave une forme intermédiaire rougit sur un geste juste ; celui-ci garde
+  // désormais que le décrément se LIT, quelle que soit la découpe qui l'a produit.
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
-  assert('K1- présent comme IDENT (décrément)', idents.includes('K1-'), `IDENT trouvés: ${idents}`);
-  assert('A- présent comme IDENT (décrément)', idents.includes('A-'), `IDENT trouvés: ${idents}`);
+  assert('le nom du flag reste un IDENT', idents.includes('K1') && idents.includes('A'), `IDENT trouvés: ${idents}`);
+  assert('le tiret est un jeton SÉPARÉ', tokens.some((t) => t.type === T.REST), `types: ${[...new Set(tokens.map(t=>t.type))]}`);
 
   // Parse — vérifier que Guard et FlagExpr sont bien formés
   const ast = parse(tokens);
@@ -191,10 +198,15 @@ section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
   // (un AUTRE élément du flux à côté de `scale`, non le sujet mesuré ici).
   const src = `@core
 S -> !(weight:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
-  // tokenize : pure_minor- doit être IDENT(pure_minor-) et third_meantone IDENT(third_meantone)
+  // ⚠️ CETTE ASSERTION TESTAIT LE JETON, PAS L'EFFET — même déplacement que le cas 7, le
+  // 2026-08-17. Elle exigeait `IDENT("pure_minor-")`, produit par un tokenizer qui collait le
+  // tiret suivi d'un alphanumérique ; il ne le colle plus, le tiret étant un SILENCE au natif.
+  // LA VALEUR SURVIT INTACTE POUR AUTANT : mesuré, l'arbre porte bien
+  // `pure_minor-third_meantone` — c'est le lecteur de réglages qui la recolle, pas le tokenizer.
+  // Ce qui compte est là, et les assertions de parse ci-dessous le gardent.
   const tokens = toks(src);
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
-  assert('pure_minor- présent (absorption avant alnum)', idents.includes('pure_minor-'), `IDENT trouvés: ${idents.filter(id => id.includes('minor') || id.includes('third'))}`);
+  assert('les deux moitiés du nom sont des IDENT', idents.includes('pure_minor') && idents.includes('third_meantone'), `IDENT trouvés: ${idents.filter(id => id.includes('minor') || id.includes('third'))}`);
 
   // parse — vérifier que la QualPair a la valeur recollée
   const ast = parse(tokens);

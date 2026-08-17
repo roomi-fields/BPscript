@@ -401,17 +401,23 @@ function tokenize(source, opts = {}) {
         } else {
           // rollback — not a known non-terminal
           i = savedI; line = savedLine; col = savedCol;
-          // BP3 : un terminal ne contient jamais '-' (GetBol, CompileGrammar.c:1196) ;
-          // un '-' en fin de mot est un silence séparé que le moteur pèle
-          // (Encode.c:140 -> SEARCHTERMINAL2). On n'absorbe le '-' collé que
-          // s'il est suivi d'un alphanumérique : décrément de flag [K1-1]
-          // (IDENT "K1-" + INT) et valeurs à tiret (pure_minor-third_meantone).
-          // "do4-" / "re6-" => IDENT + REST (deux tokens, parité BP3).
-          const after = peek(1);
-          if (peek() === '-' && after !== '>' && after !== '-' &&
-              after !== undefined && /[a-zA-Z0-9]/.test(after)) {
-            id += advance();
-          }
+          // ⛔ LE TIRET NE SE COLLE JAMAIS A UN NOM — mesure de bp3-engine sur le binaire
+          // natif : `dha- dha` et `dha - dha` rendent EXACTEMENT la même chose. Le silence
+          // est prouvé sur le TEMPS et non sur le texte — `dha dha` place le second à 4000
+          // tics, `dha - dha` à 8000, `dha -- dha` à 12000, et `dha- dha` à 8000 comme la
+          // forme espacée. Un tiret prend une unité et ne sonne pas.
+          //
+          // ⚠️ IL SE COLLAIT quand un alphanumérique suivait, et `dhin1` en portait
+          // quarante et un mots — `dha--`, `gena-`, jusqu'à cinquante-huit caractères. Ils
+          // sortaient en un seul nom que rien ne pouvait lire. Le cas décisif du natif,
+          // `tagetirakitagena-dhagenadhatigegenakadheenedheenagena`, rend une SEULE suite
+          // où le tiret est un item comme les autres, pas une frontière.
+          //
+          // ⚠️ ET LE COLLAGE SERVAIT AILLEURS : un nom d'ENTREE de librairie peut porter un
+          // tiret — `@temperaments.bp3_Bohlen-Pierce`, neuf entrées du bundle. Ce n'est pas
+          // le tokenizer qui les recolle désormais, c'est `lireNomDEntree` : le détachement
+          // vaut pour le FLUX, où le tiret est un silence, jamais pour une ADRESSE, où il
+          // fait partie du nom.
         }
       }
       // Emit ident (keyword or plain)

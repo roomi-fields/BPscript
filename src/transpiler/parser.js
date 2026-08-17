@@ -406,7 +406,10 @@ function parse(tokens, opts = {}) {
       throw new ParseError(`Expected ${T.IDENT}, got ${current().type} (${current().value})`, tok || current());
     }
     let nom = String(advance().value);
-    while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) nom += String(advance().value);
+    // ⚠️ LE TIRET FAIT PARTIE D'UN NOM D'ENTREE, et il est ici le SEUL endroit où il le
+    // fait : le tokenizer le détache partout ailleurs, parce qu'il y est un silence.
+    // `@temperaments.bp3_Bohlen-Pierce` — neuf entrées du bundle en portent un.
+    while ((at(T.IDENT) || at(T.INT) || at(T.REST)) && !current().spaceBefore) nom += String(advance().value);
     return nom;
   }
 
