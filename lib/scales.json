@@ -1395,7 +1395,6 @@
     ],
     "notes_count": 7
   },
-  "_comment_handpan": "Handpan scales — common tunings for hang/handpan instruments. 12-TET semitone-based ratios.",
   "handpan_kurd": {
     "description": "Kurd — Aeolian / Natural Minor. The most popular handpan scale worldwide.",
     "culture": "handpan",
@@ -1640,7 +1639,6 @@
     "notes_count": 6,
     "layout": "D3 A3 C4 D4 E4 F4 G4 B4 C5"
   },
-  "_comment_flamenco": "Flamenco scales — Spanish/Andalusian tradition.",
   "flamenco_phrygian": {
     "description": "Flamenco mode / Phrygian Dominant — the defining sound of flamenco. Hijaz maqam equivalent.",
     "culture": "flamenco",
@@ -1711,7 +1709,6 @@
     ],
     "notes_count": 7
   },
-  "_comment_contemporary": "Contemporary and experimental scales — Messiaen, Boulez, spectral, serial.",
   "messiaen_mode1": {
     "description": "Messiaen mode 1 — Whole tone scale (6 equal divisions). Debussy, Messiaen.",
     "culture": "contemporary",
@@ -2057,7 +2054,6 @@
     "notes_count": 18,
     "_note": "Optimized for good 3/2 (11 steps ≈ 701.6c) and 5/4 (6 steps ≈ 382.7c)."
   },
-  "_comment_jazz": "Jazz scales — bebop, modal jazz, post-bop, fusion.",
   "bebop_dominant": {
     "description": "Bebop Dominant — Mixolydian + passing natural 7th. The quintessential bebop scale (Charlie Parker, Dizzy Gillespie).",
     "culture": "jazz",

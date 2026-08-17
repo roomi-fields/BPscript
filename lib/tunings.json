@@ -249,7 +249,6 @@
       12
     ]
   },
-  "_comment_parametric": "=== PARAMETRIC TUNINGS (Dynamic Tonality) === degrees = generator counts, not step indices.",
   "western_meantone_dt": {
     "description": "Western diatonic in meantone continuum — generator morphable in real-time",
     "alphabet": "western",

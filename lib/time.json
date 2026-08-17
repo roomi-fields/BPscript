@@ -2,9 +2,6 @@
   "name": "time",
   "description": "Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.",
   "version": "1.0.0",
-  "_frontiere_doc": "⚠️ `tempo` A QUITTÉ `core` DANS LE MÊME MOUVEMENT. La même référence écrit que le tempo entre dans `time` en quittant `core`, parce qu'une librairie est liée à UN outil et que `core` est central. Laisser les deux le porter rendrait le nom ambigu, ce que la règle d'unicité refuse — et une clé qui vit dans deux domiciles se résout par celui qu'on interroge en premier, donc par accident.",
-  "_partage_doc": "Le temps se partage entre deux librairies : `engine` porte le temps CALCULÉ — où tombe chaque événement, une propriété de l'arbre ; `time` porte le temps qui S'ÉCOULE. Le mètre dit où les choses tombent, donc il relève du premier.",
-  "_prefixe_doc": "Le préfixe est OPTIONNEL : `@tempo:120` et `@time.tempo:120` désignent la même chose, par la règle d'unicité (atlas/architecture/LIBRAIRIES.md:42). `tempo` n'étant porté que par `time`, la forme nue se résout sans ambiguïté.",
   "schema": {
     "reservedDirectives": {
       "tempo": {

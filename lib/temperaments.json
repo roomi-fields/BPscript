@@ -284,7 +284,6 @@
       1.741
     ]
   },
-  "_comment_parametric": "=== PARAMETRIC TEMPERAMENTS (Dynamic Tonality) === Generator is a continuous variable, ratios computed from mapping.",
   "meantone": {
     "type": "parametric",
     "description": "Meantone family — syntonic comma (81/80) tempered out. Generator ≈ fifth. Includes 12-TET, Pythagorean, 1/4-comma, 1/3-comma, etc.",
