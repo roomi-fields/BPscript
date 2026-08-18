@@ -2,9 +2,23 @@
 >
 > *« Bon ok on va laisser tomber cette approche pour l'instant. »*
 >
-> **Rien de ce document ne décrit du travail en cours.** Tout ce qui suit est une MAQUETTE, isolée
-> dans `maquette/parseur-derive/`, hors de la chaîne de production. Le parseur en place n'a jamais
-> été touché.
+> ## 🗄️ MAQUETTE ARCHIVÉE — Romain, 2026-08-18
+>
+> *« la maquette doit être archivée et pouvoir être rappelée si on réactive le chantier, mais
+> probablement qu'à ce moment-là on pourra tout simplement la ressusciter du git history au lieu
+> de la garder pour rien, donc ne garder que le doc suffit. »*
+>
+> **`maquette/parseur-derive/` est SUPPRIMÉE du dépôt**, avec les deux gardes qui en dépendaient
+> (`la_grammaire_couvre_le_langage_specifie`, `le_schema_d_arbre_engendre_est_confronte`) : un
+> garde dont l'objet n'existe plus saute proprement, et se lit comme un contrôle qu'il n'exerce
+> pas. Ce document reste ; il est tout ce que le chantier a laissé.
+>
+> **OÙ LA RETROUVER** : le commit qui la supprime est le dernier à la porter — `git show <ce
+> commit>` en rend l'arbre entier, `git checkout <ce commit>^ -- maquette/parseur-derive` la
+> ressuscite telle quelle. Le numéro est celui du commit qui porte cette ligne.
+>
+> **Rien de ce document ne décrit du travail en cours.** Tout ce qui suit décrivait une MAQUETTE
+> hors de la chaîne de production. Le parseur en place n'a jamais été touché.
 >
 > **Où ça s'est arrêté**, mesuré : la grammaire reconnaît 270 scènes sur 270 et refuse 10
 > contre-exemples sur 10 ; elle engendre un schéma d'arbre de 46 nœuds ; sept natures sur quinze

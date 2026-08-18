@@ -7,7 +7,7 @@
  * règle.
  *
  * ⛔ INSÉRER LA LIGNE SEULE CASSE 93 SCÈNES EN SILENCE, et c'est la raison d'être de ce script.
- * `@mode:ord` vit dans la tête de scène et alimente la PREMIÈRE sous-grammaire. Avec un délimiteur
+ * `mode:ord` vit dans la tête de scène et alimente la PREMIÈRE sous-grammaire. Avec un délimiteur
  * devant, celle-ci commence APRÈS lui et ne le reçoit plus : son mode passe à `null`, l'arbre
  * change, et RIEN ne rougit. Le mode appartient à la sous-grammaire, pas au préambule — il doit
  * donc suivre le délimiteur, pas le précéder.
@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 /**
  * Où commence la production — la première ligne qui porte une flèche.
  *
- * ⚠️ LE COMMENTAIRE DE FIN DE LIGNE SE RETIRE AUSSI. `@tempo:150  // … -> period` porte une
+ * ⚠️ LE COMMENTAIRE DE FIN DE LIGNE SE RETIRE AUSSI. `tempo:150  // … -> period` porte une
  * FLÈCHE dans son commentaire ; un détecteur qui ne retire que les lignes commençant par `//`
  * y voit la première règle et insère le délimiteur AVANT la tête de scène.
  */
@@ -43,13 +43,13 @@ export function migrer(source) {
   // ⛔ LES MODES SE FILTRENT ET SE REPOSENT APRES LE DELIMITEUR — et une COUPURE A LEUR
   // POSITION a ete essayee puis rejetee sur mesure.
   //
-  // La coupure en place preserve l'ordre du texte, mais elle laisse `@var` APRES le delimiteur,
-  // ou le parser le refuse : « '@var' est ecrit APRES des regles ». Trois scenes du corpus de
+  // La coupure en place preserve l'ordre du texte, mais elle laisse `var` APRES le delimiteur,
+  // ou le parser le refuse : « 'var' est ecrit APRES des regles ». Trois scenes du corpus de
   // Kanopi cessaient de compiler. Le filtrage, lui, les garde vertes.
   //
   // ⚠️ CE QUI A ETE SIGNALE COMME UN CHANGEMENT D'ARBRE N'EN EST PAS UN, mesure sur les trois
   // cas (`vina`, `vina2`, `vina3`) : hors numeros de ligne, l'arbre est IDENTIQUE, et `ast.vars`
-  // porte les memes noms avant et apres. `@var` vit a la RACINE de la scene — jamais dans une
+  // porte les memes noms avant et apres. `var` vit a la RACINE de la scene — jamais dans une
   // sous-grammaire — donc il ne peut pas « changer de cote ». Ce qui bouge, ce sont les numeros
   // de LIGNE, parce que le filtrage deplace reellement deux lignes l'une par rapport a l'autre.
   // Une empreinte qui compare les numeros de ligne voit donc une difference reelle et sans effet.

@@ -83,7 +83,7 @@ export function convertir(source, nomFichier = '(entrée)') {
     const l = lignes[i];
     const nu = l.trim();
 
-    // Commentaires et lignes vides traversent VERBATIM — y compris les métadonnées `// @name:`,
+    // Commentaires et lignes vides traversent VERBATIM — y compris les métadonnées `// name:`,
     // dont la décision note qu'elles sont le SEUL endroit où l'arobase survit.
     // ⚠️ LE DÉLIMITEUR SE POSE AVANT LES COMMENTAIRES QUI OUVRENT LA SECTION, pas après : le bloc
     // « --- Sous-grammaire 1 --- » DÉCRIT la section, il lui appartient. Ma première version le
@@ -111,7 +111,7 @@ export function convertir(source, nomFichier = '(entrée)') {
     if (!m) { sortie.push(l); marque('REFUS', l, i, "ligne ouverte par '@' sans nom lisible"); continue; }
     const [, mot, reste] = m;
 
-    // ── @var <nom> <type> → <type> <nom> ────────────────────────────────────────────────────
+    // ── var <nom> <type> → <type> <nom> ────────────────────────────────────────────────────
     if (mot === 'var') {
       const r = reste.trim();
       let f;
@@ -147,7 +147,7 @@ export function convertir(source, nomFichier = '(entrée)') {
       continue;
     }
 
-    // ── @gate <nom>:<canal> → terminal <nom>(out.<canal>) ───────────────────────────────────
+    // ── gate <nom>:<canal> → terminal <nom>(out.<canal>) ───────────────────────────────────
     if (mot === 'gate') {
       const g = reste.trim().match(/^([^\s:]+)\s*:\s*([\w-]+)\s*$/);
       if (g) {
@@ -162,7 +162,7 @@ export function convertir(source, nomFichier = '(entrée)') {
       continue;
     }
 
-    // ── @actor <nom> <producteurs…> → actor <nom>(<producteurs…>) ───────────────────────────
+    // ── actor <nom> <producteurs…> → actor <nom>(<producteurs…>) ───────────────────────────
     if (mot === 'actor') {
       const a = reste.trim().match(/^([\w-]+)\s*(.*)$/);
       if (a && a[2]) { sortie.push(`actor ${a[1]}(${a[2].trim()})`); notes.mecanique++; }
@@ -186,12 +186,12 @@ export function convertir(source, nomFichier = '(entrée)') {
     // ── pose d'une valeur sur un nom connu ──────────────────────────────────────────────────
     if (POSES.has(racine)) { sortie.push(nu.slice(1)); notes.mecanique++; continue; }
 
-    // ── `@def` DANS UNE LIBRAIRIE : le mot devient le TYPE de ce qu'il déclare ──────────────
+    // ── `def` DANS UNE LIBRAIRIE : le mot devient le TYPE de ce qu'il déclare ──────────────
     // ⛔ LES QUATRE TYPES SE LISENT DANS LA DONNÉE, ils ne se devinent pas :
     //     `bpscript:false`            → `native`      — aucune forme BPScript, il traduit
     //     `section:schema.addressKeys`→ `addresskey`  — il atterrit dans `payload.address`
     //     une clé `scope`             → `control`     — il module
-    //     le `@def` qui porte le NOM DU FICHIER → `destination` — il porte `resolvedBy`
+    //     le `def` qui porte le NOM DU FICHIER → `destination` — il porte `resolvedBy`
     // Mesuré sur les six librairies : 142 déclarations, 142 classées, ZÉRO orpheline —
     //     destination 6 · native 6 · addresskey 5 · control 125.
     if (racine === 'def' && estLibrairie) {

@@ -85,7 +85,9 @@ function enCommentaire(texte, largeur = 96) {
  * parenthèse sera tranché, cette fonction seule change, et les vingt fichiers se régénèrent.
  */
 function ecrireEntree(nom, lignesDeCles) {
-  return [`@def ${nom}`, ...lignesDeCles.map((l) => `  ${l}`)];
+  // L'arobase est SORTIE du langage (decision Romain, 2026-08-18) : une librairie s'ecrit dans la
+  // graphie de la tete de scene, et la tete de scene ne la porte plus.
+  return [`def ${nom}`, ...lignesDeCles.map((l) => `  ${l}`)];
 }
 
 /**
