@@ -36,12 +36,12 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (corps) => {
-  try { return compileToBPxAST(`@core\n${corps}\n`); }
+  try { return compileToBPxAST(`core\n${corps}\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
-const sceneOut = (canal) => `@actor v\n  alphabet.western\n  out.${canal}\n@mode:ord\nS -> v.C4`;
-const sceneIn = (canal) => `@var x in.${canal}\n@mode:ord\nS -> C4`;
+const sceneOut = (canal) => `actor v\n  alphabet.western\n  out.${canal}\nmode:ord\n-----\nS -> v.C4`;
+const sceneIn = (canal) => `in.${canal} x\nmode:ord\n-----\nS -> C4`;
 
 // Mot que porte le message quand un canal EST une direction mais reste fermé à l'écriture —
 // DISTINCT de `motDirection` ('n'est pas une sortie'/'n'est pas une entrée'), qui nommerait une

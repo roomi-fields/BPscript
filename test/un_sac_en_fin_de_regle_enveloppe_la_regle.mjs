@@ -35,11 +35,11 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const P = '@core\n@alphabet.western\n';
+const P = 'core\nalphabet.western\n-----\n';
 const compiler = (rhs) => {
   // Une règle SUIVANTE est indispensable : le premier défaut ne se voyait QUE lorsqu'un jeton
   // suivait la fin de ligne. Mesurer une règle seule en fin de fichier l'aurait manqué.
-  try { return compileToBPxAST(`${P}${rhs}\nAutre -> C4\n`); }
+  try { return compileToBPxAST(`${P}${rhs}\n-----\nAutre -> C4\n`); }
   catch (e) { return { errors: [{ message: e.message }] }; }
 };
 const messages = (r) => (r.errors || []).map((e) => e.message || e).join(' | ');

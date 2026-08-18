@@ -2,9 +2,9 @@
 // C4(vel:80) must transpile to `_script(CT n) C4 _script(CT n_e)`,
 // not the opaque `C4#vel#80` that BP3 rejects.
 
-@core
-@alphabet.western:midi
+core
+alphabet.western:midi
 
 -----
-@mode:ord
+mode:ord
 S -> C4(vel:80) C4(vel:60)

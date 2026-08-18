@@ -26,7 +26,7 @@ const G = (name) => readFileSync(bpsPath(name), 'utf-8');
 let pass = 0, fail = 0;
 const ok = (cond, msg) => { if (cond) { pass++; console.log('  OK   ' + msg); } else { fail++; console.log('  FAIL ' + msg); } };
 
-// --- Collecte des valeurs chromashift émises dans un AST (InstantControl + directive @chromashift) ---
+// --- Collecte des valeurs chromashift émises dans un AST (InstantControl + directive chromashift) ---
 function chromashiftValues(ast) {
   const vals = [];
   (function walk(n) {
@@ -56,22 +56,22 @@ console.log('=== (A) Émission chromashift:N (les 3 scènes) ===');
   const { ast, errors } = compileToBPxAST(G('kss2'));
   const v = chromashiftValues(ast);
   ok(v.includes(-7), 'kss2 émet chromashift:-7 — got ' + JSON.stringify(v));
-  // Ex-bloqueur octave-sargam LEVÉ : `@octaves.western` déclaré (routage kairos [402]/[521]) → sa6/re6…
+  // Ex-bloqueur octave-sargam LEVÉ : `octaves.western` déclaré (routage kairos [402]/[521]) → sa6/re6…
   // résolvent l'octave (plus de saptak par défaut). Le scène compile désormais SANS terminal non déclaré.
   const sargamErr = errors.filter((e) => /terminal '(sa|re|ga|pa|dha|ni)\d' non déclaré/.test(e.message || ''));
-  ok(sargamErr.length === 0, 'kss2 compile sans terminal sargam non déclaré (@octaves.western) — got ' + sargamErr.length);
+  ok(sargamErr.length === 0, 'kss2 compile sans terminal sargam non déclaré (octaves.western) — got ' + sargamErr.length);
 }
 {
   const { ast, errors } = compileToBPxAST(G('mohanam'));
   ok(errors.length === 0, 'mohanam compile sans erreur (octaves.western → sa6 résolu)');
   const v = chromashiftValues(ast);
-  ok(v.includes(-24), 'mohanam émet @chromashift:-24 — got ' + JSON.stringify(v));
+  ok(v.includes(-24), 'mohanam émet chromashift:-24 — got ' + JSON.stringify(v));
 }
 
 // ============================================================
 // (B) ISO 12-TET — transposition1 préfixe chromashift-PUR vs oracle natif (byte-identique)
 // ============================================================
-console.log('=== (B) ISO 12-TET vs oracle natif — transposition1 (préfixe pur, @mode:ord) ===');
+console.log('=== (B) ISO 12-TET vs oracle natif — transposition1 (préfixe pur, mode:ord) ===');
 
 // Le 1er `${|A1|}` est AVANT tout `TR` → chromashift SEUL (aucun homomorphisme).
 // |A1| -> {Tr0 M1. Tr1 M1 Tr7 M1 Tr0 M1 Tr7 M1}, M1 -> C3 B3 F4, Tr{0,1,7}=chromashift{0,11,5}.

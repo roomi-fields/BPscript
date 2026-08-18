@@ -9,7 +9,7 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = '@mod\n@core\n@alphabet.western:audio\n@var env1 adsr\n';
+const HEAD = 'mod\ncore\nalphabet.western:audio\nadsr env1\n-----\n';
 function bassPairs(rhsLine) {
   const r = compileToBPxAST(HEAD + 'S -> Bass\n' + rhsLine + '\n');
   if (r.errors && r.errors.length) return { err: r.errors };

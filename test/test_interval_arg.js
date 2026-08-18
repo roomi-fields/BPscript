@@ -53,7 +53,7 @@ function assert(label, cond, details) {
 }
 function section(name) { console.log(`\n=== ${name} ===`); }
 
-const HEAD = '@ivltest\n@alphabet.western\n\n';
+const HEAD = 'ivltest\nalphabet.western\n\n';
 
 // Récupère la 1re valeur portée pour la clé 'ivl' dans l'AST (SettingBag.pairs).
 function ivlValue(src) {
@@ -71,51 +71,51 @@ function throwsOn(src) {
 
 // ── 1. Les trois formats portent la CHAÎNE BRUTE ─────────
 section('Formats valides — valeur portée brute');
-assert('fraction 3/2', ivlValue(HEAD + 'Tr -> (ivl:3/2)') === '3/2', String(ivlValue(HEAD + 'Tr -> (ivl:3/2)')));
-assert('cents 700c', ivlValue(HEAD + 'Tr -> (ivl:700c)') === '700c', String(ivlValue(HEAD + 'Tr -> (ivl:700c)')));
-assert('décimal 1.5', ivlValue(HEAD + 'Tr -> (ivl:1.5)') === '1.5', String(ivlValue(HEAD + 'Tr -> (ivl:1.5)')));
-assert('entier nu = ratio 2', ivlValue(HEAD + 'Tr -> (ivl:2)') === '2', String(ivlValue(HEAD + 'Tr -> (ivl:2)')));
+assert('fraction 3/2', ivlValue(HEAD + '-----\nTr -> (ivl:3/2)') === '3/2', String(ivlValue(HEAD + '-----\nTr -> (ivl:3/2)')));
+assert('cents 700c', ivlValue(HEAD + '-----\nTr -> (ivl:700c)') === '700c', String(ivlValue(HEAD + '-----\nTr -> (ivl:700c)')));
+assert('décimal 1.5', ivlValue(HEAD + '-----\nTr -> (ivl:1.5)') === '1.5', String(ivlValue(HEAD + '-----\nTr -> (ivl:1.5)')));
+assert('entier nu = ratio 2', ivlValue(HEAD + '-----\nTr -> (ivl:2)') === '2', String(ivlValue(HEAD + '-----\nTr -> (ivl:2)')));
 
 // ── 2. Signe négatif (intervalle descendant) : cents & décimal ──
 section('Intervalle descendant');
-assert('cents négatifs -200c', ivlValue(HEAD + 'S -> C4 !(ivl:-200c) D4') === '-200c', String(ivlValue(HEAD + 'S -> C4 !(ivl:-200c) D4')));
-assert('décimal négatif -1.5', ivlValue(HEAD + 'Tr -> (ivl:-1.5)') === '-1.5', String(ivlValue(HEAD + 'Tr -> (ivl:-1.5)')));
+assert('cents négatifs -200c', ivlValue(HEAD + '-----\nS -> C4 !(ivl:-200c) D4') === '-200c', String(ivlValue(HEAD + '-----\nS -> C4 !(ivl:-200c) D4')));
+assert('décimal négatif -1.5', ivlValue(HEAD + '-----\nTr -> (ivl:-1.5)') === '-1.5', String(ivlValue(HEAD + '-----\nTr -> (ivl:-1.5)')));
 
 // ── 3. Positions : autonome, simultané, suffixe, multi-pair ──
 section('Positions de contrôle');
-assert('suffixe C4(ivl:3/2)', ivlValue(HEAD + 'S -> C4(ivl:3/2) D4') === '3/2', String(ivlValue(HEAD + 'S -> C4(ivl:3/2) D4')));
-assert('multi-pair s\'arrête à la virgule', ivlValue(HEAD + 'S -> C4(ivl:700c,vel:80) D4') === '700c', String(ivlValue(HEAD + 'S -> C4(ivl:700c,vel:80) D4')));
+assert('suffixe C4(ivl:3/2)', ivlValue(HEAD + '-----\nS -> C4(ivl:3/2) D4') === '3/2', String(ivlValue(HEAD + '-----\nS -> C4(ivl:3/2) D4')));
+assert('multi-pair s\'arrête à la virgule', ivlValue(HEAD + '-----\nS -> C4(ivl:700c,vel:80) D4') === '700c', String(ivlValue(HEAD + '-----\nS -> C4(ivl:700c,vel:80) D4')));
 
 // ── 4. Malformé → CRIE en nommant la faute (L26, pas de repli) ──
 section('Malformé — le compilateur crie');
-assert('non-nombre foo', /Intervalle malforme/.test(throwsOn(HEAD + 'Tr -> (ivl:foo)') || ''), throwsOn(HEAD + 'Tr -> (ivl:foo)'));
-assert('dénominateur manquant 3/', /denominateur/.test(throwsOn(HEAD + 'Tr -> (ivl:3/)') || ''), throwsOn(HEAD + 'Tr -> (ivl:3/)'));
-assert('unité inconnue 3x', /unite inconnue/.test(throwsOn(HEAD + 'Tr -> (ivl:3x)') || ''), throwsOn(HEAD + 'Tr -> (ivl:3x)'));
-assert('fraction négative -3/2', /fraction ne se note pas negative/.test(throwsOn(HEAD + 'Tr -> (ivl:-3/2)') || ''), throwsOn(HEAD + 'Tr -> (ivl:-3/2)'));
+assert('non-nombre foo', /Intervalle malforme/.test(throwsOn(HEAD + '-----\nTr -> (ivl:foo)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:foo)'));
+assert('dénominateur manquant 3/', /denominateur/.test(throwsOn(HEAD + '-----\nTr -> (ivl:3/)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:3/)'));
+assert('unité inconnue 3x', /unite inconnue/.test(throwsOn(HEAD + '-----\nTr -> (ivl:3x)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:3x)'));
+assert('fraction négative -3/2', /fraction ne se note pas negative/.test(throwsOn(HEAD + '-----\nTr -> (ivl:-3/2)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:-3/2)'));
 // Guillemets : la forme canonique est NUE — le message nomme les guillemets, PAS les formats (msg [379])
-assert('guillemets "700c" → nomme les guillemets', /entre guillemets/.test(throwsOn(HEAD + 'Tr -> (ivl:"700c")') || ''), throwsOn(HEAD + 'Tr -> (ivl:"700c")'));
-assert('guillemets → suggère la forme nue', /forme NUE '700c'/.test(throwsOn(HEAD + 'Tr -> (ivl:"700c")') || ''), throwsOn(HEAD + 'Tr -> (ivl:"700c")'));
+assert('guillemets "700c" → nomme les guillemets', /entre guillemets/.test(throwsOn(HEAD + '-----\nTr -> (ivl:"700c")') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:"700c")'));
+assert('guillemets → suggère la forme nue', /forme NUE '700c'/.test(throwsOn(HEAD + '-----\nTr -> (ivl:"700c")') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:"700c")'));
 
 // ── 5. ACTIVATION en prod : transpose EST interval-typé (décision 2026-07-11) ──
 // `controls` SUPPRIMÉ le 2026-08-10 (Romain) : `transpose` vit dans `lib/transpo.json`,
-// amené par `@core` comme toute scène réelle l'invoque désormais (core.apporte).
+// amené par `core` comme toute scène réelle l'invoque désormais (core.apporte).
 section('Activation — transpose réel en prod');
 const prodCtx = loadLibsFromDirectives([{ name: 'core' }]);
 assert('intervalControls existe', prodCtx.intervalControls instanceof Set, typeof prodCtx.intervalControls);
 assert('transpose est interval-typé en prod', prodCtx.intervalControls.has('transpose'), `set=${[...prodCtx.intervalControls]}`);
 // transpose de prod : lu comme INTERVALLE (chaîne brute), pas comme entier
 {
-  const ast = parse(tokenize('@core\n@alphabet.western\n\nTr -> (transpose:-2400c)'));
+  const ast = parse(tokenize('core\nalphabet.western\n\n-----\nTr -> (transpose:-2400c)'));
   let v;
   JSON.stringify(ast, (k, val) => { if (val && val.key === 'transpose' && v === undefined) v = val.value; return val; });
   assert('transpose:-2400c → "-2400c" (intervalle, chaîne)', v === '-2400c', String(v));
 }
-// @transpose global : émis en chaîne d'intervalle (forme nue), pas en nombre
+// transpose global : émis en chaîne d'intervalle (forme nue), pas en nombre
 {
-  const ast = parse(tokenize('@core\n@alphabet.western\n@transpose:3/2\n\nS -> C4 D4'));
+  const ast = parse(tokenize('core\nalphabet.western\ntranspose:3/2\n\n-----\nS -> C4 D4'));
   let v;
   JSON.stringify(ast, (k, val) => { if (val && val.type === 'Directive' && val.name === 'transpose' && v === undefined) v = val.value; return val; });
-  assert('@transpose:3/2 global → "3/2" (chaîne)', v === '3/2', String(v));
+  assert('transpose:3/2 global → "3/2" (chaîne)', v === '3/2', String(v));
 }
 
 // ── Bilan ─────────────────────────────────────────────────

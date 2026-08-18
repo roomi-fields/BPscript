@@ -1,9 +1,9 @@
-// Canon '@alphabet.X:<sortie>' = transport de l'ACTEUR IMPLICITE + SUPPRESSION browser/webaudio/routing.
+// Canon 'alphabet.X:<sortie>' = transport de l'ACTEUR IMPLICITE + SUPPRESSION browser/webaudio/routing.
 // Chantier hub [421]/[423] ; décision 2026-07-16-sortie-acteur-implicite-browser-audio-routing-obsolete.
-//   - '@alphabet.X:<sortie>' nomme le transport de l'acteur implicite (décision 2026-07-05 §2 ;
+//   - 'alphabet.X:<sortie>' nomme le transport de l'acteur implicite (décision 2026-07-05 §2 ;
 //     bpxAst.applyDefaultActor). Canal canonique = {audio, midi, osc} (EBNF:182).
 //   - browser/webaudio SUPPRIMÉS : REJET fail-loud au parse (PAS de normalisation — Romain 2026-07-16).
-//   - routing.json SUPPRIMÉ (les deux copies) ; @routing rejeté au parse.
+//   - routing.json SUPPRIMÉ (les deux copies) ; routing rejeté au parse.
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { existsSync } from 'fs';
 
@@ -21,17 +21,17 @@ function rejects(src, needle, label) {
   check(errors.length > 0 && hit, `${label} — REJET fail-loud (${needle}) ; obtenu ${JSON.stringify(errors.map((e) => e.message))}`);
 }
 
-// --- '@alphabet.X:<sortie>' CANON : le binding est le transport de l'acteur implicite ---
+// --- 'alphabet.X:<sortie>' CANON : le binding est le transport de l'acteur implicite ---
 for (const chan of ['audio', 'midi', 'osc']) {
-  const { key, errors } = transportKey(`@alphabet.western:${chan}\nS -> C`);
-  check(errors.length === 0, `@alphabet.western:${chan} compile sans erreur : ${JSON.stringify(errors)}`);
-  check(key === chan, `@alphabet.western:${chan} → acteur implicite transport '${chan}', obtenu '${key}'`);
+  const { key, errors } = transportKey(`alphabet.western:${chan}\n-----\nS -> C`);
+  check(errors.length === 0, `alphabet.western:${chan} compile sans erreur : ${JSON.stringify(errors)}`);
+  check(key === chan, `alphabet.western:${chan} → acteur implicite transport '${chan}', obtenu '${key}'`);
 }
 
 // --- Noms PÉRIMÉS browser/webaudio → REJETÉS (pas normalisés) ---
-rejects('@alphabet.western:browser\nS -> C', 'PÉRIMÉ', '@alphabet.western:browser');
-rejects('@actor v alphabet.western out.browser\nS -> v.C', 'PÉRIMÉ', 'out.browser');
-rejects('@actor v alphabet.western out.webaudio\nS -> v.C', 'PÉRIMÉ', 'out.webaudio');
+rejects('alphabet.western:browser\n-----\nS -> C', 'PÉRIMÉ', 'alphabet.western:browser');
+rejects('actor v alphabet.western out.browser\n-----\nS -> v.C', 'PÉRIMÉ', 'out.browser');
+rejects('actor v alphabet.western out.webaudio\n-----\nS -> v.C', 'PÉRIMÉ', 'out.webaudio');
 
 // --- LISTE POSITIVE FERMÉE (addendum ratifié Romain 2026-07-16 : « on n'autorise que les 3
 // qu'on connaît ») : tout suffixe ∉ {audio, midi, osc} → rejet, sur LES DEUX voies. ':sc'
@@ -49,24 +49,24 @@ function acceptsBothPaths(src, label) {
     check(errors.length === 0, `${label} — voie ${path} sans erreur : ${JSON.stringify(errors)}`);
   }
 }
-rejectsBothPaths('@alphabet.western:sc\nS -> C', 'ABOLI', ':sc (ancien sucre transport+eval)');
-rejectsBothPaths('@alphabet.western:video\nS -> C', 'liste positive', ':video');
-rejectsBothPaths('@alphabet.western:foo\nS -> C', 'liste positive', ':foo (inconnu)');
+rejectsBothPaths('alphabet.western:sc\n-----\nS -> C', 'ABOLI', ':sc (ancien sucre transport+eval)');
+rejectsBothPaths('alphabet.western:video\n-----\nS -> C', 'liste positive', ':video');
+rejectsBothPaths('alphabet.western:foo\n-----\nS -> C', 'liste positive', ':foo (inconnu)');
 for (const chan of ['audio', 'midi', 'osc']) {
-  acceptsBothPaths(`@alphabet.western:${chan}\nS -> C`, `:${chan} (liste positive)`);
+  acceptsBothPaths(`alphabet.western:${chan}\n-----\nS -> C`, `:${chan} (liste positive)`);
 }
 
-// --- @routing SUPPRIMÉ → rejeté au parse ---
-rejects('@routing.studio\n@alphabet.western\nS -> C', "@routing", '@routing.studio');
-rejects('@routing\n@alphabet.western\nS -> C', "@routing", '@routing (nu)');
+// --- routing SUPPRIMÉ → rejeté au parse ---
+rejects('routing.studio\nalphabet.western\n-----\nS -> C', "routing", 'routing.studio');
+rejects('routing\nalphabet.western\n-----\nS -> C', "routing", 'routing (nu)');
 
 // --- Canon direct inchangé (non-régression) ---
 for (const chan of ['audio', 'midi', 'osc']) {
-  const { key } = transportKey(`@actor v alphabet.western out.${chan}\nS -> v.C`);
+  const { key } = transportKey(`actor v alphabet.western out.${chan}\n-----\nS -> v.C`);
   check(key === chan, `out.${chan} (canon) inchangé, obtenu '${key}'`);
 }
 {
-  const { key } = transportKey('@actor v alphabet.western out.midi(ch:3)\nS -> v.C');
+  const { key } = transportKey('actor v alphabet.western out.midi(ch:3)\n-----\nS -> v.C');
   check(key === 'midi', `out.midi(ch:3) → 'midi', obtenu '${key}'`);
 }
 

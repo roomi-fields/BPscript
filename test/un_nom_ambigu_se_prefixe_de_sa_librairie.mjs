@@ -40,7 +40,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western\n';
+const TETE = 'core\nalphabet.western\n-----\n';
 const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };

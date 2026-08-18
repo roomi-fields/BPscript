@@ -94,31 +94,52 @@ ok(TOUS.length >= 25,
 // main, daté. L'élargir l'est tout autant : y ajouter une ligne, avec sa cause. Rien ne bouge tout
 // seul.
 const DIRECTIVES = ['macro', 'alias', 'in', 'var', 'label', 'expose', 'meter', 'duration'];
-const RE = new RegExp(`^(@(?:${DIRECTIVES.join('|')})\\s[^\\n]*)$`, 'gm');
+// ⛔ LE MOTIF PORTAIT L'AROBASE, ET IL A RENDU ZÉRO EN SILENCE. Elle est sortie du langage le
+// 2026-08-17 et la bible n'en écrit plus une seule : `^@var …` ne pouvait plus rien capturer, et
+// ce volet annonçait « la doc n'a plus d'exemple à mesurer » là où elle en porte vingt-six.
+//
+// ⚠️ ET LE MOTIF NU NE SUFFIT PAS — c'est pourquoi la portée est BORNÉE AUX BLOCS. Sans arobase,
+// `^meter\s…` attrape la ligne de GLOSSAIRE « meter   signature rythmique — (meter:7/8) » et
+// `^duration\s…` attrape une règle EBNF. Trois faux positifs mesurés, qui seraient tous refusés
+// pour leur forme et auraient fait rougir le garde sur de la prose. La bible ÉTIQUETTE ses blocs :
+// on ne lit que ce qu'elle déclare `bpscript`, exactement comme le volet des blocs plus bas.
+const RE = new RegExp(`^((?:${DIRECTIVES.join('|')})\\s[^\\n]*)$`, 'gm');
+/** Les blocs que la bible étiquette `bpscript`, concaténés — la seule portée où une ligne de
+ *  directive est une DIRECTIVE et non une entrée de glossaire. */
+const blocsBpscript = (texte) => {
+  const out = [];
+  let dans = false;
+  for (const brut of texte.split('\n')) {
+    if (/^```bpscript\s*$/.test(brut)) { dans = true; continue; }
+    if (dans && /^```/.test(brut)) { dans = false; continue; }
+    if (dans) out.push(brut);
+  }
+  return out.join('\n');
+};
 // Un refus de RÉSOLUTION (l'entrée n'existe pas dans une librairie, le nom ne désigne rien) n'est
 // PAS une faute de forme : un exemple de doc nomme des choses qui ne vivent pas dans la scène
 // minimale qu'on lui fabrique. On ne garde que ce qui est refusé pour sa FORME.
 const REFUS_DE_RESOLUTION = /ne désigne rien|n'existe pas|introuvable|non déclaré|jamais posé/;
 
-// RÉFÉRENCE — resserrée le 2026-08-05 (dev, palier « `@var` porte son type jusqu'à l'arbre »).
+// RÉFÉRENCE — resserrée le 2026-08-05 (dev, palier « `var` porte son type jusqu'à l'arbre »).
 // `Scene.vars` porte désormais la directive ENTIÈRE (`VarDirective`, `AST.md:119-150`) et le
 // parser sait lire les six familles de `var_type` (`EBNF.md:47-57`) : flag, les quatre conventions
 // (signal/pitch/phase/logic) et un IDENT nu résolu contre le catalogue `lib/mod.json`. Sept des
 // neuf formes AUTREFOIS refusées faute de flèche COMPILENT désormais et SORTENT du cliquet :
-// `@var section flag: …`, `grain signal`, `hauteur pitch`, `rotation phase`, `porte logic`,
+// `var section flag: …`, `grain signal`, `hauteur pitch`, `rotation phase`, `porte logic`,
 // `ramp1 ramp` (module `ramp` au catalogue), `env1 adsr` (module `adsr` au catalogue).
 //
 // CE QUI RESTE, ET POUR UNE AUTRE RAISON : `lpf`/`saw`/`vca` sont des devices RÉELS que la
 // référence emploie en exemple, mais `lib/mod.json` ne porte que `adsr`/`lfo`/`ramp` — un trou de
 // DONNÉE connu et assumé (traité dans un lot séparé), pas une faute de forme. La cause n'est donc
 // plus « il manque la flèche » mais « le module est absent du catalogue » — le message du parser
-// le dit explicitement (`@var lpf1 lpf : 'lpf' est absent du catalogue de modules…`).
+// le dit explicitement (`var lpf1 lpf : 'lpf' est absent du catalogue de modules…`).
 const CAUSE_MODULE_ABSENT_DU_CATALOGUE = /est absent du catalogue de modules/;
 const BASELINE_RATTRAPAGE = new Map([
-  ['@var lpf1 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['@var saw1 saw', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['@var lpf2 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['@var vca1 vca', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['symbol lpf1 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['symbol saw1 saw', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['symbol lpf2 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['symbol vca1 vca', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
 ]);
 
 let exemples = 0;
@@ -126,11 +147,11 @@ const vusEnEchecConnu = new Set(); // lignes de la référence retrouvées en é
 for (const p of SPECS) {
   if (!existsSync(p)) continue;
   const nom = path.basename(p);
-  for (const m of readFileSync(p, 'utf8').matchAll(RE)) {
+  for (const m of blocsBpscript(readFileSync(p, 'utf8')).matchAll(RE)) {
     const ligne = m[1].replace(/\s*\/\/.*/, '').trim();
     exemples++;
     let r;
-    try { r = compileToBPxAST(`@core\n@alphabet.western:midi\n${ligne}\n@mode:ord\nS -> C4\n`); }
+    try { r = compileToBPxAST(`core\nalphabet.western:midi\n${ligne}\nmode:ord\n-----\nS -> C4\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     const echoue = msg !== '' && !REFUS_DE_RESOLUTION.test(msg);
@@ -154,7 +175,7 @@ ok(exemples >= 8,
 
 // ─── 2ter. LES EXEMPLES DE RÈGLE — la portée qui manquait ────────────────────────────────────
 // ⚠️ CE VOLET EST UNE RÉPARATION DE PORTÉE, ET ELLE A ÉTÉ MESURÉE, PAS DEVINÉE (2026-08-06).
-// Jusqu'ici ce garde n'extrayait que les lignes de DIRECTIVE (`@macro`, `@var`…). Les exemples de
+// Jusqu'ici ce garde n'extrayait que les lignes de DIRECTIVE (`macro`, `var`…). Les exemples de
 // RÈGLE — la matière même du langage — n'ont JAMAIS été mesurés. Conséquence directe : les trois
 // exemples de la section « La vitesse » de la bible sont refusés par le parser depuis qu'elle a
 // été réécrite, et rien ne l'a jamais dit. Le garde était vert et ne prouvait pas ce qu'on croyait
@@ -195,7 +216,7 @@ const RETARD_REGLES = new Map([
   //     ⚠️ CAUSE RÉVISÉE UNE SECONDE FOIS le 2026-08-07 (chantier « le sac se lit pareil partout »).
   //     Le sac COLLÉ À UN GROUPE lit désormais le port d'une instance — ces trois lignes ne butent
   //     plus sur la FORME. Ce qui reste est la donnée : `lpf1`/`lpf2` ne sont déclarées nulle part
-  //     dans le bloc de la bible que ce garde sait reprendre, parce que le `@var lpf1 lpf` qui les
+  //     dans le bloc de la bible que ce garde sait reprendre, parce que le `var lpf1 lpf` qui les
   //     précède ne compile pas seul (module `lpf` absent de `lib/mod.json`, trou déjà inventorié au
   //     cliquet du dessus). Le refus est maintenant NOMMÉ — il dit l'instance manquante au lieu de
   //     désigner un deux-points. Le compte ne bouge pas, la cause si : sans cette note, un lecteur
@@ -215,7 +236,7 @@ const RETARD_REGLES = new Map([
   // du côté « inscrite mais ne refuse plus avec sa cause ».
   // `S -> { C4 D4 }(sombre) E4 coupe F4` butait sur « Expected arrow » : un refus de FORME, la
   // parenthèse n'étant pas lue. Elle l'est maintenant, et ce qui reste est un refus de
-  // RÉSOLUTION — `sombre` et `coupe` sont deux `@def` que la directive, non implémentée, ne
+  // RÉSOLUTION — `sombre` et `coupe` sont deux `def` que la directive, non implémentée, ne
   // déclare jamais. Ce volet écarte les refus de résolution : ils ne disent rien de la forme.
   // Une entrée qu'on garderait « au cas où » ferait exactement ce que ce cliquet interdit —
   // compter un retard qui n'existe plus.
@@ -268,7 +289,7 @@ for (const p of SPECS) {
   if (!existsSync(p)) continue;
   const nom = path.basename(p);
   // ⚠️ UNE RÈGLE SE LIT AVEC LE CONTEXTE DE SON BLOC, pas nue. Mesuré le 2026-08-06 : sept
-  // exemples tombaient sur « attribut inconnu » parce que le `@var lpf1 lpf` qui les précède DANS
+  // exemples tombaient sur « attribut inconnu » parce que le `var lpf1 lpf` qui les précède DANS
   // LE MÊME BLOC était jeté par ce garde. La forme était juste ; l'instrument la mesurait sans
   // son contexte, alors qu'un lecteur de la doc voit les deux lignes ensemble.
   // On ne prend QUE les déclarations du bloc COURANT : rien de fabriqué, rien d'emprunté à un
@@ -285,7 +306,7 @@ for (const p of SPECS) {
     // debout d'elles-mêmes.
     if (/^@(var|actor|def|alphabet|tuning|octaves)\b/.test(ligne)) {
       let seule = false;
-      try { seule = (compileToBPxAST(`@core\n${ligne}\nS -> C4\n`).errors || []).length === 0; }
+      try { seule = (compileToBPxAST(`core\n${ligne}\n-----\nS -> C4\n`).errors || []).length === 0; }
       catch { seule = false; }
       if (seule) contexte.push(ligne);
       continue;
@@ -293,7 +314,7 @@ for (const p of SPECS) {
     if (!RE_REGLE.test(ligne)) continue;
     regles++;
     let r;
-    try { r = compileToBPxAST(`@core\n${contexte.join('\n')}\n${ligne}\n`); }
+    try { r = compileToBPxAST(`core\n-----\n${contexte.join('\n')}\n${ligne}\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     if (msg === '' || REFUS_DE_RESOLUTION.test(msg)) continue;
@@ -426,9 +447,9 @@ const RETARD_BLOCS = new Map([
   //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
   //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
   ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4 #0', /nomme un évaluateur qui n'est pas déclaré/],
-  ['@def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
-  ['@var lpf1 lpf #0', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
-  ['@var lpf1 lpf #1', /@var lpf1 lpf : 'lpf' est absent du catalogu/],
+  ['def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
+  ['symbol lpf1 lpf #0', /var lpf1 lpf : 'lpf' est absent du catalogu/],
+  ['symbol lpf1 lpf #1', /var lpf1 lpf : 'lpf' est absent du catalogu/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
   // rôles, rôle 4) et que `@def` déclarerait. `@def` n'étant pas implémenté, aucun nom n'est
   // appelable : la parenthèse est donc lue comme un sac, et `E4` refusé comme clé inconnue.
@@ -476,11 +497,18 @@ for (const p of SPECS) {
       // de `@core` — et son `(vel:120)` sortait « attribut inconnu » alors que la bible est juste.
       // « Un exemple qui emploie les défauts de core n'a pas à les déclarer » (Romain, 2026-08-13).
       // Le défaut ne se voyait pas tant qu'un corps de définition n'était jamais validé.
-      const aCore = /^@core/m.test(src);
-      const aAlphabet = /^@alphabet/m.test(src);
+      const aCore = /^core/m.test(src);
+      const aAlphabet = /^alphabet/m.test(src);
       const aRegle = /(->|<-|<>)/.test(src);
-      const texte = (aCore ? '' : '@core\n') + (aAlphabet ? '' : '@alphabet.western\n') + src
-                  + (aRegle ? '\n' : '\n@mode:ord\nS -> C4\n');
+      // ⛔ LE SOCLE EST UNE SEULE PARTIE DÉCLARATIVE, SUIVIE D'UN SEUL DÉLIMITEUR. Il en posait
+      // deux — `core`, `-----`, puis `alphabet.western`, `-----` — ce qui plaçait l'alphabet APRÈS
+      // des règles et fabriquait 57 faux refus imputés à la bible. Les deux morceaux se posent
+      // toujours séparément (un bloc peut porter l'un sans l'autre), mais le délimiteur, lui, est
+      // unique et ne se pose que si le bloc n'a pas déjà le sien.
+      const aDelimiteur = /^-----/m.test(src);
+      const socle = (aCore ? '' : 'core\n') + (aAlphabet ? '' : 'alphabet.western\n');
+      const texte = socle + (aRegle && !aDelimiteur ? '-----\n' : '') + src
+                  + (aRegle ? '\n' : '\nmode:ord\n-----\nS -> C4\n');
       let msg;
       try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }
       catch (e) { msg = e.message; }
@@ -544,24 +572,24 @@ for (const [ligne] of BASELINE_RATTRAPAGE) {
 // directive ne se débranche pas, la coupure de câblage si. La liste est le REGISTRE de l'état courant, pas une
 // mémoire des mouvements ; ce qui est mort y figure, ce qui vit n'y figure pas.
 const MORTES = [
-  [/@transcription\b/, "'@transcription' — REMPLACÉE par '@homomorphism' le 2026-08-07 (Romain, "
-   + "« oui on renomme ») : la bible n'a jamais écrit que '@homomorphism.<table>'. Les tables ont "
+  [/^[ \t]*transcription[.\s]/m, "'transcription' — REMPLACÉE par 'homomorphism' le 2026-08-07 (Romain, "
+   + "« oui on renomme ») : la bible n'a jamais écrit que 'homomorphism.<table>'. Les tables ont "
    + "rejoint lib/homomorphism.json, clé 'tables'", 'exemptable'],
 
-  [/@macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
-  [/@alias\b/, "'@alias' — SORTI du langage le 2026-08-15 : '@def' porte ce qu'il faisait, un nom "
+  [/macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
+  [/^[ \t]*alias\s+[A-Za-z_]/m, "'alias' — SORTI du langage le 2026-08-15 : 'def' porte ce qu'il faisait, un nom "
    + "associé à un corps qu'on réinvoque", 'exemptable'],
-  [/@map\s+[A-Za-z_<[]/, "'@map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
-   + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, '@def'", 'exemptable'],
+  [/map\s+[A-Za-z_<[]/, "'map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
+   + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, 'def'", 'exemptable'],
   [/\\\\>>/, "l'antislash DOUBLE — le signe de coupure n'en porte qu'UN. Deux se glissent "
    + "quand on recopie une chaine de code dans de la prose, et le lecteur recopie ce qu'il "
    + "voit : ca ne compile pas", 'absolue'],
   [/(?<![\\`])!>>/, "'!>>' — l'ancienne coupure de câblage, remplacée par '\\>>' le 2026-07-28 : le "
    + "point d'exclamation ne dit QUE l'instantané, il ne dit plus la coupure", 'exemptable'],
-  [/[A-Za-z0-9_)}]@[A-Za-z_][A-Za-z0-9_]*/, "le SUFFIXE arobase collé à un élément (C4@kick) — "
+  [/[A-Za-z0-9_)}]@[A-Za-z_][A-Za-z0-9_]*/, "le SUFFIXE arobase collé à un élément (C4kick) — "
    + "SUPPRIMÉ le 2026-07-28 : associer dans la production se fait avec le point d'exclamation, "
    + "déclarer une étiquette se fait dans la partie déclarative", 'exemptable'],
-  [/@label\s+[A-Za-z_]/, "'@label' — SUPPRIMÉE le 2026-07-28 avec le suffixe qu'elle déclarait", 'exemptable'],
+  [/^[ \t]*label\s+[A-Za-z_]/m, "'label' — SUPPRIMÉE le 2026-07-28 avec le suffixe qu'elle déclarait", 'exemptable'],
   [/@(?:map|alias)\s+[^\n|]*(->|<->|<-)/,
    "la flèche employée comme CÂBLAGE — elle ne se cite jamais, même au passé pour expliquer sa "
    + "disparition : nommer la fonction en français ('un contrôleur règle le tempo pendant que ça "
@@ -602,7 +630,7 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
   const ecartes = totalMd - TOUS.length;
   // ⚠️ PLAFOND PORTÉ DE 3 À 4 LE 2026-08-16, avec sa cause. Le quatrième écarté est
   // `docs/archive/58-demos-archivees-supprimees.md` — le compte rendu des 58 démos supprimées ce
-  // jour-là. Il cite `@map`, `@scene` et `@controls`, TROIS FORMES MORTES que le compilateur refuse
+  // jour-là. Il cite `map`, `scene` et `controls`, TROIS FORMES MORTES que le compilateur refuse
   // en nommant leur décision : c'est précisément ce qu'un compte rendu d'archive doit porter, et
   // le réécrire pour qu'il compile falsifierait l'histoire qu'il consigne.
   // Ce plafond monte parce que la population a grandi ; il ne se règle JAMAIS sur ce que le
@@ -638,9 +666,9 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
 //      flèche de règle (`->`, `<-`, `<>`), il est traité comme une RHS nue et rattaché à un symbole
 //      minimal : `S -> <texte>` ;
 //   2. sinon il est pris tel quel ; s'il ne contient aucune flèche (directives seules), on lui donne
-//      un point de départ dérivable (`@mode:ord\nS -> C4`) pour qu'il reste mesurable ;
-//   3. dans tous les cas, un préambule minimal (`@core/@alphabet.western:midi/@mode:ord`)
-//      est ajouté SAUF si le texte porte déjà `@core` ou `@alphabet`.
+//      un point de départ dérivable (`mode:ord\n-----\nS -> C4`) pour qu'il reste mesurable ;
+//   3. dans tous les cas, un préambule minimal (`core/alphabet.western:midi/mode:ord`)
+//      est ajouté SAUF si le texte porte déjà `core` ou `alphabet`.
 // LIMITE CONNUE, mesurée et non maquillée : deux exemples de `concepts` mélangent PROSE et code sur
 // une même ligne (une flèche anglaise « -> plays C4… », ou plusieurs illustrations indépendantes
 // bout à bout) — l'enveloppe les prend pour une seule règle et le refus qui en sort teste
@@ -659,13 +687,13 @@ const collecterExamples = (o, chemin, out) => {
 };
 
 const envelopperAide = (texte) => {
-  const aPreambule = /@core|@alphabet/.test(texte);
+  const aPreambule = /core|alphabet/.test(texte);
   const aDeclaration = /^\s*(@|gate\s|trigger\s|cv\s)/m.test(texte);
   const aRegle = /(->|<-|<>)/.test(texte);
-  let scene = aPreambule ? '' : '@core\n@alphabet.western:midi\n@mode:ord\n';
+  let scene = aPreambule ? '' : 'core\nalphabet.western:midi\nmode:ord\n-----\n';
   if (aDeclaration || aRegle) {
     scene += `${texte}\n`;
-    if (!aRegle) scene += '@mode:ord\nS -> C4\n';
+    if (!aRegle) scene += 'mode:ord\n-----\nS -> C4\n';
   } else {
     scene += `S -> ${texte}\n`;
   }

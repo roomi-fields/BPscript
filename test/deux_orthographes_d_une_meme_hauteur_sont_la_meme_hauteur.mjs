@@ -73,7 +73,7 @@ verifier(normalizeEnharmonie('sa4') !== normalizeEnharmonie('re4'), 'sa4 et re4 
   const faux = { name: '—', modalite: 'MIDI', produit: true, tokens: [{ token: 'Bb3', ...bornes }] };
   // On se sert du chemin public : une baseline factice n'existe pas ici, donc on éprouve
   // directement l'invariant que `compare` consomme — deux clés de comparaison égales.
-  const cle = (t) => `${normalizeEnharmonie(t.token)}@${t.start}-${t.end}`;
+  const cle = (t) => `${normalizeEnharmonie(t.token)}${t.start}-${t.end}`;
   verifier(cle(faux.tokens[0]) === cle({ token: 'A#3', ...bornes }),
     'la clé de comparaison du juge ne distingue pas Bb3 de A#3 à bornes égales');
   // INJECTION : on décale d'un demi-ton et on exige que la clé CHANGE.

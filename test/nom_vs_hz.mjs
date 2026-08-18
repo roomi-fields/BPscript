@@ -29,7 +29,7 @@ async function hzDeNoms(noms, entete) {
   const lot = 60; // les règles très longues ralentissent la dérivation
   for (let i = 0; i < noms.length; i += lot) {
     const tranche = noms.slice(i, i + lot);
-    const src = `${entete}\nS -> ${tranche.join(' ')}\n`;
+    const src = `${entete}\n-----\nS -> ${tranche.join(' ')}\n`;
     const out = compileToBPxAST(src);
     if (out.errors.length) { for (const n of tranche) carte[n] = `ERR:${out.errors[0].message.slice(0, 30)}`; continue; }
     const s = createSession(out.ast, { seed: 1 });
@@ -47,7 +47,7 @@ for (const nom of process.argv.slice(2)) {
   // En-tête de la scène (tout ce qui précède la 1re règle) : même alphabet, même accordage,
   // même transposition — sinon je comparerais deux résolutions différentes.
   const enteteScene = scene.split('\n').filter((l) => l.trim().startsWith('@')).join('\n');
-  // ⚠️ La référence se résout SANS @transpose. Le natif a DÉJÀ appliqué son C4key : le nom
+  // ⚠️ La référence se résout SANS transpose. Le natif a DÉJÀ appliqué son C4key : le nom
   // qu'il écrit (do3) est le nom RENUMÉROTÉ, il sonne tel quel. Lui appliquer ma transposition
   // le décalerait une seconde fois — j'ai failli conclure « 818 erreurs de résolution » sur ce
   // seul artefact de sonde.

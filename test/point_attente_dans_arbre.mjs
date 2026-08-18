@@ -22,7 +22,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const rhs = (regle) => {
-  const o = compileToBPxAST(`@core\n@alphabet.western:midi\n@var sync1 in.midi\n@var sync2 in.midi\n@mode:ord\n${regle}\n`);
+  const o = compileToBPxAST(`core\nalphabet.western:midi\nin.midi sync1\nin.midi sync2\nmode:ord\n-----\n${regle}\n`);
   return { err: o.errors || [], rhs: o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [] };
 };
 
@@ -121,7 +121,7 @@ const PROPRIETES = [
   // sûr côté BPx, cf. lib/core.json `_qualifierKeys_doc`) — `[rotate:…]` est REFUSÉ à son tour,
   // remplacé par `rndtime` : un contrôle du sac MOTEUR resté au crochet parce qu'il porte
   // `scope:"rule"`-adjacent une lecture dédiée côté BPx (`ast.qualifiers`), non couverte par la
-  // migration. Sa valeur est ici une CHAÎNE ('2', pas 2) : `@core` est chargé par ce fichier,
+  // migration. Sa valeur est ici une CHAÎNE ('2', pas 2) : `core` est chargé par ce fichier,
   // donc `rndtime` — déclaré dans `lib/controls.json` — passe par le lecteur brut de
   // `libCtx.controlNames` (parser.js), pas par le lecteur numérique partagé des réglages réservés.
   // ⚠️ CE DÉCOR A MIGRÉ TROIS FOIS POUR LA MÊME RAISON — `weight` (2026-08-05), `rotate`

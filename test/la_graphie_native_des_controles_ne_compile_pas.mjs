@@ -31,7 +31,7 @@ const { compileToBPxAST } = require('../src/transpiler/index.js');
 let ok = 0; let ko = 0;
 const verifier = (cond, quoi) => { if (cond) { ok += 1; } else { ko += 1; console.error(`FAIL — ${quoi}`); } };
 
-const SOCLE = '@core\n@alphabet.western:midi\n\n';
+const SOCLE = 'core\nalphabet.western:midi\n-----\n\n';
 const compile = (regle) => compileToBPxAST(SOCLE + regle + '\n');
 const refuse = (regle) => compile(regle).errors;
 

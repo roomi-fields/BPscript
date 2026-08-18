@@ -3,9 +3,9 @@
 // runtime qualifier opaque to BP3 (key:value passed to dispatcher).
 // Currently fails when `vel` is not in libCtx.controlNames.
 
-@core
-@alphabet.western:midi
+core
+alphabet.western:midi
 
 -----
-@mode:ord
+mode:ord
 S -> C4 C4 (vel:80)

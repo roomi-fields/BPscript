@@ -1,5 +1,5 @@
 // Garde-fou : `octaves` = 6e clé d'entité d'acteur (décision cles-acteur-six, Romain 2026-06-16).
-// `@actor X octaves.Y` SURCHARGE la convention de registre ; défaut = héritée de l'alphabet.
+// `actor X octaves.Y` SURCHARGE la convention de registre ; défaut = héritée de l'alphabet.
 // Résolu en amont (actorResolver) : ne traverse pas l'AST vers BPx.
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
@@ -15,10 +15,11 @@ function resolve(src) {
 
 // 1. Parser : octaves.Y est reconnu comme clé d'entité (properties.octaves)
 {
-  const { ast } = resolve(`@actor sitar
+  const { ast } = resolve(`actor sitar
   alphabet.sargam
   octaves.arrows
   out.audio
+-----
 S -> sitar.sa`);
   const a = ast.actors.find((x) => x.name === 'sitar');
   check(!!a, 'acteur sitar parsé');
@@ -28,9 +29,10 @@ S -> sitar.sa`);
 
 // 2. Défaut : sans octaves, hérite de la convention de l'alphabet (sargam → saptak, préfixe)
 {
-  const { res } = resolve(`@actor sitar
+  const { res } = resolve(`actor sitar
   alphabet.sargam
   out.audio
+-----
 S -> sitar.sa`);
   check(res.errors.length === 0, 'résolution sans erreur (défaut) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;
@@ -45,10 +47,11 @@ S -> sitar.sa`);
 
 // 3. Surcharge : octaves.arrows change la convention de registre (suffixe _, vv/v//^/^^)
 {
-  const { res } = resolve(`@actor sitar
+  const { res } = resolve(`actor sitar
   alphabet.sargam
   octaves.arrows
   out.audio
+-----
 S -> sitar.sa`);
   check(res.errors.length === 0, 'résolution sans erreur (surcharge) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;

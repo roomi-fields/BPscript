@@ -110,7 +110,7 @@ verifier(J.compare('suite', { text: 'a c b d' }).status === DIFF,
 {
   // Faute 1 — le juge D'AVANT : comparer rang à rang. Il rendrait DIFF sur la permutation.
   const rangARang = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
-  const cle = (t) => `${t.token}@${t.start}-${t.end}`;
+  const cle = (t) => `${t.token}${t.start}-${t.end}`;
   const permute = permuter(REF, 1, 2);
   verifier(!rangARang(REF.map(cle), permute.map(cle)) && juger('accord', permute).status === ISO,
     'le juge rang-à-rang aurait rendu DIFF là où le juge corrigé rend ISO : le relâchement mord');

@@ -31,43 +31,43 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
 // s'appelle normalement en notation pointée remonte en `@`. Le nom donne à l'auteur de quoi
 // DÉSIGNER ce qui n'appartient à personne — et `scene.C4` doit donc être ACCEPTÉ, ce que le seul
 // renommage ne suffisait pas à faire (l'acteur naît après la validation des renvois pointés).
-// ── 1. scène sans @actor → un acteur `scene` transport audio, synthetic ─
+// ── 1. scène sans actor → un acteur `scene` transport audio, synthetic ─
 {
-  const a = actors('A -> C4');
+  const a = actors('-----\nA -> C4');
   assert('un seul acteur', a.length === 1, JSON.stringify(a.map((x) => x.name)));
   const d = a[0];
   assert('nom = scene', d.name === 'scene');
   assert('transport.key = audio', d.properties?.transport?.key === 'audio', JSON.stringify(d.properties?.transport));
   assert('reference transport = audio', d.references?.find((r) => r.category === 'transport')?.name === 'audio');
   assert('marqué synthetic:true', d.synthetic === true);
-  // La scène ne déclare aucune convention de notes → elle HÉRITE du socle @core, et l'AST le DIT.
-  assert('alphabet hérité du socle @core', d.properties?.alphabet === 'western', JSON.stringify(d.properties));
+  // La scène ne déclare aucune convention de notes → elle HÉRITE du socle core, et l'AST le DIT.
+  assert('alphabet hérité du socle core', d.properties?.alphabet === 'western', JSON.stringify(d.properties));
   assert('la référence d alphabet suit la propriété',
     d.references?.find((r) => r.category === 'alphabet')?.name === 'western', JSON.stringify(d.references));
 }
 
-// ── 2. scène solfège sans @actor → aussi un default, alphabet DÉCLARÉ ─────
+// ── 2. scène solfège sans actor → aussi un default, alphabet DÉCLARÉ ─────
 // ⚠️ Cette scène témoin écrivait `do4 re4 mi4` SANS déclarer le solfège, et passait : le
 // compilateur ne validait rien faute d'alphabet en portée. Elle déclare maintenant ce qu'elle
 // veut dire. Ce n'est pas une concession au garde — c'était une scène incomplète, et le
 // compilateur le disait à personne.
 {
-  const a = actors('@tempo:60\n@alphabet.solfege\nGamme -> do4 re4 mi4');
+  const a = actors('tempo:60\nalphabet.solfege\n-----\nGamme -> do4 re4 mi4');
   assert('acteur implicite injecté même avec directives', a.length === 1 && a[0].name === 'scene', JSON.stringify(a));
   assert('alphabet de scène hérité par l acteur implicite', a[0].properties?.alphabet === 'solfege');
 }
 
-// ── 3. scène AVEC @actor → PAS de default, pas de synthetic ──────────────
+// ── 3. scène AVEC actor → PAS de default, pas de synthetic ──────────────
 {
-  const a = actors('@actor sitar out.midi(ch:3)\nsitar -> C4');
+  const a = actors('actor sitar out.midi(ch:3)\n-----\nsitar -> C4');
   assert('un acteur déclaré', a.length === 1 && a[0].name === 'sitar');
   assert('pas synthetic', a[0].synthetic !== true);
   assert('pas d acteur implicite ajouté', !a.some((x) => x.name === 'scene' && x.synthetic));
 }
 
-// ── 4. plusieurs @actor → aucun default ─────────────────────────────────
+// ── 4. plusieurs actor → aucun default ─────────────────────────────────
 {
-  const a = actors('@actor a1 out.midi(ch:1)\n@actor a2 out.osc(device:x)\na1 -> C4\na2 -> E4');
+  const a = actors('actor a1 out.midi(ch:1)\nactor a2 out.osc(device:x)\n-----\na1 -> C4\na2 -> E4');
   assert('2 acteurs déclarés, pas d acteur implicite', a.length === 2 && !a.some((x) => x.synthetic));
 }
 
@@ -80,19 +80,19 @@ if (fail > 0) process.exit(1);
 // exactement ce que la décision veut permettre — « la réponse est la notation pointée, pas la
 // forme nue en @ ». Ces témoins gardent le BUT, pas seulement le nom.
 {
-  const r = compileToBPxAST('@core\n@alphabet.western\nS -> scene.C4');
+  const r = compileToBPxAST('core\nalphabet.western\n-----\nS -> scene.C4');
   assert('scene.C4 est ACCEPTÉ quand aucun acteur n est déclaré',
     (r.errors || []).length === 0, JSON.stringify(r.errors));
 }
 {
   // ET « si et seulement si » : quand la scène déclare ses acteurs, il n'y a PAS d'acteur
   // implicite — `scene.X` doit rester refusé, sinon on offre un nom qui ne désigne rien.
-  const r = compileToBPxAST('@core\n@alphabet.western\n@actor v\n  out.midi\nS -> scene.C4');
+  const r = compileToBPxAST('core\nalphabet.western\nactor v\n  out.midi\n-----\nS -> scene.C4');
   assert('scene.X reste REFUSÉ quand des acteurs sont déclarés',
     (r.errors || []).some((e) => /Acteur inconnu/.test(e.message || '')), JSON.stringify(r.errors));
 }
 {
-  const r = compileToBPxAST('@core\n@alphabet.western\nS -> C4');
+  const r = compileToBPxAST('core\nalphabet.western\n-----\nS -> C4');
   assert('l ancien nom default ne revient nulle part',
     !(r.ast.actors || []).some((a) => a.name === 'default'), JSON.stringify(r.ast.actors));
 }

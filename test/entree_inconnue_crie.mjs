@@ -20,8 +20,8 @@
  * scènes de BPx) : QUATRE invocations ne résolvent pas, et les quatre sont DÉJÀ refusées
  * aujourd'hui (`@alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute AUCUNE casse.
  */
-// ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
-// la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
+// ⚠️ `transcription` est REMPLACÉE par `homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
+// la bible n'a jamais écrit que `homomorphism.<table>`. Les tables ont rejoint
 // `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
@@ -34,11 +34,11 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const compile = (directive) => {
   // ⚠️ L'ENVELOPPE NE POSE PLUS D'ALPHABET QUAND LA DIRECTIVE TESTÉE EN EST UN (2026-08-07).
   // Depuis qu'une scène ne peut en déclarer qu'UN (règle de Romain, l'acteur implicite est
-  // unique), fabriquer `@alphabet.western:midi` autour de `@alphabet.zzz` faisait sortir DEUX
+  // unique), fabriquer `alphabet.western:midi` autour de `alphabet.zzz` faisait sortir DEUX
   // erreurs : celle qu'on mesure, et une seconde due à l'instrument. L'enveloppe doit rester
   // neutre sur l'axe qu'elle mesure.
-  const socle = /^@alphabet[.:]/.test(directive) ? '' : '@alphabet.western:midi\n';
-  try { return compileToBPxAST(`@core\n${socle}${directive}\n@mode:ord\nS -> C4\n`); }
+  const socle = /^alphabet[.:]/.test(directive) ? '' : 'alphabet.western:midi\n';
+  try { return compileToBPxAST(`core\n${socle}${directive}\nmode:ord\n-----\nS -> C4\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
@@ -60,20 +60,20 @@ ok(SANS_CATALOGUE.length >= 2,
 
 // ─── 2. LE CAS SIGNALÉ, nommément ────────────────────────────────────────────────────────────
 {
-  const r = compile('@homomorphism.dhinOO');
+  const r = compile('homomorphism.dhinOO');
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-  ok((r.errors || []).length > 0, "2. '@homomorphism.dhinOO' doit CRIER — c'est le cas qui a fait naître ce garde");
+  ok((r.errors || []).length > 0, "2. 'homomorphism.dhinOO' doit CRIER — c'est le cas qui a fait naître ce garde");
   ok(msg.includes('dhinOO') && msg.includes('homomorphism'),
      `2. et le refus doit NOMMER l'entrée ET la librairie — reçu : ${msg.slice(0, 120)}`);
-  ok((compile('@homomorphism.dhin').errors || []).length === 0,
+  ok((compile('homomorphism.dhin').errors || []).length === 0,
      "2. l'entrée CORRIGÉE doit passer — le cri vise l'inexistant, pas la librairie");
 }
 
 // ─── 3. TOUTE librairie sans catalogue, pas celle du ticket ──────────────────────────────────
 for (const [lib, entrees] of SANS_CATALOGUE) {
-  const r = compile(`@${lib}.zzz_nexiste_pas_9`);
+  const r = compile(`${lib}.zzz_nexiste_pas_9`);
   ok((r.errors || []).length > 0,
-     `3. '@${lib}.<inconnu>' doit CRIER — une invocation qui ne résout rien est indistinguable, `
+     `3. '${lib}.<inconnu>' doit CRIER — une invocation qui ne résout rien est indistinguable, `
      + `côté consommateur, d'une scène qui n'a rien déclaré`);
   // Et une entrée VRAIE de la même librairie passe : on garde l'inexistant, pas la librairie.
   // Une entrée VRAIE passe — on garde l'inexistant, pas la librairie. On choisit un nom qui soit
@@ -81,17 +81,17 @@ for (const [lib, entrees] of SANS_CATALOGUE) {
   // pas s'écrire nues dans une directive, ce qui est une autre limite, pas celle qu'on garde ici.
   const nommable = entrees.find((e) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(e));
   if (nommable) {
-    const bonne = compile(`@${lib}.${nommable}`);
+    const bonne = compile(`${lib}.${nommable}`);
     ok((bonne.errors || []).length === 0,
-       `3. mais '@${lib}.${nommable}' doit passer — reçu : ${(bonne.errors || []).map((e) => e.message || e).join(' | ')}`);
+       `3. mais '${lib}.${nommable}' doit passer — reçu : ${(bonne.errors || []).map((e) => e.message || e).join(' | ')}`);
   }
 }
 
 // ─── 4. LES AXES À CATALOGUE criaient DÉJÀ — on ne les a pas dédoublés ───────────────────────
 for (const axe of CATALOGUES) {
-  const r = compile(`@${axe}.zzz_nexiste_pas_9`);
+  const r = compile(`${axe}.zzz_nexiste_pas_9`);
   const msgs = (r.errors || []).map((e) => e.message || e);
-  ok(msgs.length > 0, `4. '@${axe}.<inconnu>' doit toujours crier`);
+  ok(msgs.length > 0, `4. '${axe}.<inconnu>' doit toujours crier`);
   // UNE SEULE fois SUR CETTE FAUTE — deux messages sur la même question voudraient dire deux
   // validations concurrentes. Les erreurs EN CASCADE (un axe cassé fait tomber la validation des
   // terminaux qui en dépendent) sont légitimes et ne comptent pas ici : mesuré sur `octaves`, où
@@ -106,7 +106,7 @@ for (const axe of CATALOGUES) {
 // Un nom de directive qui n'est pas une librairie n'a rien à faire ici : c'est une autre faute,
 // avec un autre message. Le cri ne doit pas se mettre à parler à sa place.
 {
-  const r = compile('@homomorphism.dhin\n@meter:4/4');
+  const r = compile('homomorphism.dhin\nmeter:4/4');
   ok((r.errors || []).length === 0,
      `5. une directive ordinaire à côté ne doit pas être happée — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }
@@ -122,7 +122,7 @@ for (const axe of CATALOGUES) {
 // ON NE RETIRE PAS UN TÉMOIN QUAND LE TROU SE COMBLE, ON LE RETOURNE : il gardait l'absence, il
 // garde maintenant la présence.
 {
-  const r = compile('@var p in.midi mapping.fcb_std');
+  const r = compile('in.midi p mapping.fcb_std');
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok((r.errors || []).length > 0,
      "6. une table INEXISTANTE doit crier comme n'importe quelle entrée inconnue — aucune exemption");
@@ -133,7 +133,7 @@ for (const axe of CATALOGUES) {
 }
 // Sans table, rien ne crie : le cri vise l'inexistant, pas la déclaration d'entrée.
 {
-  const r = compile('@var p in.midi');
+  const r = compile('in.midi p');
   ok((r.errors || []).length === 0,
      `6. une entrée SANS table doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

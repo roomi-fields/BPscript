@@ -41,7 +41,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
  */
 const CONFISCATIONS_ASSUMEES = [
   // ⛔ RETIREE le 2026-08-09 : la collision n existe plus, parce que la scene qui la portait ne
-  // compile plus. `patchbay-demo` declare cinq macros, et `@macro` est supprime du langage — elle
+  // compile plus. `patchbay-demo` declare cinq macros, et `macro` est supprime du langage — elle
   // est inscrite au registre des refus, en attente de la revue du patching.
   // ⚠️ CE GARDE L A DIT LUI-MEME, et c est ce qu on lui demande : une derogation dont le
   // beneficiaire a disparu est un trou, pas une tolerance. Elle sortira du registre le jour ou la

@@ -62,11 +62,11 @@ const refus = (src) => (compileToBPxAST(src).errors || [])
 // L'espace des SITUATIONS, pas la graphie du ticket : ce qui varie, c'est d'où vient l'alphabet et
 // où se trouve la macro par rapport à lui.
 const AMBIGUES = [
-  ['alphabet de scène, macro après',  '@core\n@alphabet.western\n@macro G4 saw >> audio\nS -> C4 D4'],
-  ['alphabet de scène, macro AVANT',  '@core\n@macro G4 saw >> audio\n@alphabet.western\nS -> C4 D4'],
-  ['macro jamais employée',           '@core\n@alphabet.western\n@macro G4 saw >> audio\nS -> C4'],
-  ['deux macros, une seule fautive',  '@core\n@alphabet.western\n@macro sain saw >> audio\n@macro G4 saw >> audio\nS -> C4'],
-  ['alphabet porté par un acteur',    '@core\n@actor v\n  alphabet.western\n  out.audio\n@macro G4 saw >> audio\nS -> v.C4'],
+  ['alphabet de scène, macro après',  'core\nalphabet.western\nmacro G4 saw >> audio\n-----\nS -> C4 D4'],
+  ['alphabet de scène, macro AVANT',  'core\nmacro G4 saw >> audio\nalphabet.western\n-----\nS -> C4 D4'],
+  ['macro jamais employée',           'core\nalphabet.western\nmacro G4 saw >> audio\n-----\nS -> C4'],
+  ['deux macros, une seule fautive',  'core\nalphabet.western\nmacro sain saw >> audio\nmacro G4 saw >> audio\n-----\nS -> C4'],
+  ['alphabet porté par un acteur',    'core\nactor v\n  alphabet.western\n  out.audio\nmacro G4 saw >> audio\n-----\nS -> v.C4'],
 ];
 const PROPRIETES = [
   ['est refusée', (r) => r.length >= 1],
@@ -84,16 +84,16 @@ for (const [nom, src] of AMBIGUES) {
 // TÉMOINS QUE LA RÈGLE N'EMPORTE PAS LES CAS VALIDES. Un refus qui déborde est une régression,
 // pas une garde — et il ne se verrait QUE par ces lignes-ci.
 const LEGITIMES = [
-  ['un mot du geste',                 '@core\n@alphabet.western\n@macro grondement saw >> audio\nS -> C4 D4'],
-  ['un nom PROCHE d\'un terminal',    '@core\n@alphabet.western\n@macro G4_v saw >> audio\nS -> C4 D4'],
-  ['un terminal d\'un AUTRE alphabet','@core\n@alphabet.western\n@macro sa saw >> audio\nS -> C4 D4'],
+  ['un mot du geste',                 'core\nalphabet.western\nmacro grondement saw >> audio\n-----\nS -> C4 D4'],
+  ['un nom PROCHE d\'un terminal',    'core\nalphabet.western\nmacro G4_v saw >> audio\n-----\nS -> C4 D4'],
+  ['un terminal d\'un AUTRE alphabet','core\nalphabet.western\nmacro sa saw >> audio\n-----\nS -> C4 D4'],
   // ⚠️ UN TÉMOIN « aucun alphabet résolu » VIVAIT ICI — RETIRÉ le 2026-07-29, et son retrait
-  // DURCIT la règle. Il affirmait qu'une scène sans convention de notes laisse `@macro G4`
+  // DURCIT la règle. Il affirmait qu'une scène sans convention de notes laisse `macro G4`
   // légitime : c'était la description de ma zone aveugle, pas d'une règle. Depuis la cascade
-  // @core, une scène qui se tait hérite de `western`, donc `G4` y est une note et la règle mord.
+  // core, une scène qui se tait hérite de `western`, donc `G4` y est une note et la règle mord.
   // Ce qui reste légitime, c'est la hauteur OPAQUE — et elle, elle est testée ci-dessous.
   ['hauteur OPAQUE invoquée : l\'alphabet est ABSENT pour de vrai (loi 35)',
-   '@core\n@mine.perso.gamme\n@macro G4 saw >> audio\nS -> C4 D4'],
+   'core\nmine.perso.gamme\nmacro G4 saw >> audio\n-----\nS -> C4 D4'],
 ];
 for (const [nom, src] of LEGITIMES) ok(refus(src).length === 0, `LÉGITIME ${nom} — doit passer`);
 
@@ -110,8 +110,8 @@ for (const [nom, src] of LEGITIMES) ok(refus(src).length === 0, `LÉGITIME ${nom
 // où il tient la distinction ratifiée (une PROPRIÉTÉ posée sur un nom existant reste permise).
 // Retirer un témoin est un rétrécissement : il se justifie, il ne se fait pas en silence.
 const COUVERTES_AILLEURS = [
-  ['un alias nommé comme une note',      '@core\n@alphabet.western\n@alias G4 cc:2\nS -> C4 D4'],
-  ['une variable nommée comme une note', '@core\n@alphabet.western\n@var G4\nS -> C4 G4'],
+  ['un alias nommé comme une note',      'core\nalphabet.western\nalias G4 cc:2\n-----\nS -> C4 D4'],
+  ['une variable nommée comme une note', 'core\nalphabet.western\nsymbol G4\n-----\nS -> C4 G4'],
 ];
 for (const [nom, src] of COUVERTES_AILLEURS) {
   ok(refus(src).length >= 1,

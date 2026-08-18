@@ -27,7 +27,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compiler = (corps) => {
-  try { return compileToBPxAST(`@core\n@alphabet.tabla\n${corps}`); }
+  try { return compileToBPxAST(`core\nalphabet.tabla\n-----\n${corps}`); }
   catch (e) { return { errors: [{ message: e.message }] }; }
 };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
@@ -160,7 +160,7 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
 // à « ce nom est-il connu » ; la segmentation pose une autre question, « ce mot tient-il dans un
 // vocabulaire », et la même donnée ne répond pas aux deux.
 {
-  const DEUX = '@core\n@actor perc alphabet.tabla\n@actor lahra alphabet.western\n';
+  const DEUX = 'core\nactor perc alphabet.tabla\nactor lahra alphabet.western\n-----\n';
   const cheval = compileToBPxAST(`${DEUX}S -> taC4\n`);
   ok((cheval.errors || []).length > 0,
      `E. un mot À CHEVAL sur deux alphabets doit être REFUSÉ — 'taC4' mêle un bol et une note. `
@@ -187,7 +187,7 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
 // un nom de nature par un simple renommage. Le témoin sur `Zzz` garde ce refus : sans lui, une
 // implémentation qui recopierait la règle native passerait tout le reste du volet.
 {
-  const SG = (regle) => `@core\n@alphabet.tabla\nS -> dha\n-----\n${regle}\n`;
+  const SG = (regle) => `core\nalphabet.tabla\n-----\nS -> dha\n-----\n${regle}\n`;
   const lhsDe = (r, i = 1) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.lhs) || []).map((e) => e.name);
 
   const suite = compileToBPxAST(SG('taka -> dha'));
@@ -203,7 +203,7 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
   // ne mordait pas — et une injection qui ne mord pas se suspecte elle-même, jamais le code.
   // `C4D4` sous alphabet occidental départage : deux notes collées, initiale majuscule. Il DOIT se
   // segmenter, ce qu'une règle fondée sur la casse refuserait.
-  const casse = compileToBPxAST('@core\n@alphabet.western\nS -> E4\n-----\nC4D4 -> E4\n');
+  const casse = compileToBPxAST('core\nalphabet.western\n-----\nS -> E4\n-----\nC4D4 -> E4\n');
   ok(JSON.stringify(lhsDe(casse)) === JSON.stringify(['C4', 'D4']),
      `F. la CASSE ne porte rien : 'C4D4 -> E4' est SEGMENTABLE malgré sa majuscule initiale et doit `
      + `porter ['C4','D4'], reçu ${JSON.stringify(lhsDe(casse))}. C'est la moitié du natif qu'on `
@@ -225,7 +225,7 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
   // ⚠️ LE TÉMOIN QUI COMPTE : un nom segmentable ne peut PLUS servir de non-terminal. C'est le coût
   // de la décision, et il doit se voir — mesuré sur le corpus avant de graver : UNE ligne, `trkt`
   // dans `dhati2`, et sa conversion garde le compte des unités des deux côtés.
-  const perdu = compileToBPxAST(`@core\n@alphabet.tabla\nS -> taka\n-----\ntaka -> dha\n`);
+  const perdu = compileToBPxAST(`core\nalphabet.tabla\n-----\nS -> taka\n-----\ntaka -> dha\n`);
   const rhs0 = ((perdu.ast?.subgrammars?.[0]?.rules?.[0]?.rhs) || []).map((e) => e.name);
   ok(JSON.stringify(rhs0) === JSON.stringify(['ta', 'ka']),
      `F-témoin. 'taka' posé à gauche ne le déclare plus : son emploi à DROITE se segmente aussi. `

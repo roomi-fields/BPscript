@@ -42,7 +42,7 @@ for (const attendu of ['goto', 'failed', 'repeat', 'stop']) {
 
 const compile = (regles) => {
   try {
-    return compileToBPxAST(`@core\n@alphabet.western:midi\n@mode:ord\n${regles}\n`);
+    return compileToBPxAST(`core\nalphabet.western:midi\nmode:ord\n-----\n${regles}\n`);
   } catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
@@ -71,7 +71,7 @@ for (const [nom, valeur] of [['repeat', '3'], ['goto', '2 1'], ['failed', '2 1']
 // Une garde qui lit l'arbre voit une forme bien construite ; seule la production dit si la
 // procédure a eu lieu. On charge BPx s'il est là ; sinon on le DIT, on ne fait pas semblant.
 {
-  const grammaire = 'S -> X\nX -> a X [repeat:3]\nX -> b\na -> C4\nb -> D4';
+  const grammaire = 'S -> X\n-----\nX -> a X [repeat:3]\nX -> b\na -> C4\nb -> D4';
   const r = compile(grammaire);
   ok((r.errors || []).length === 0, `3. le témoin doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   let session = null;

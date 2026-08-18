@@ -26,16 +26,16 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
-const compiler = (tete) => compileToBPxAST(`@core\n@alphabet.western\n${tete}\nS -> C4\n`);
+const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n-----\nS -> C4\n`);
 
 // ── A. UN AXE SANS DONNÉE EST REFUSÉ, ET LE REFUS LE NOMME ──────────────────────────────────
 // ⚠️ Les trois premiers viennent de la spec, le quatrième est FABRIQUÉ — c'est lui qui prouve que
 // la règle porte sur l'espace et non sur une liste.
 {
   for (const axe of ['module', 'patch', 'devices', 'zzzinvente', 'quoiquecesoit']) {
-    const msg = messages(compiler(`@${axe}.nimporte`));
+    const msg = messages(compiler(`${axe}.nimporte`));
     ok(new RegExp(`aucune librairie ne sert l'axe '${axe}'`).test(msg),
-       `A. '@${axe}.nimporte' doit REFUSER en nommant l'axe. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
+       `A. '${axe}.nimporte' doit REFUSER en nommant l'axe. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
   }
 }
 
@@ -54,9 +54,9 @@ const compiler = (tete) => compileToBPxAST(`@core\n@alphabet.western\n${tete}\nS
     const axe = ALIAS[nom] || nom;
     if (axe === 'alphabet') continue;   // une scène ne déclare qu'un alphabet — testé au volet C
     verifies++;
-    const msg = messages(compiler(`@${axe}.${entrees[0]}`));
+    const msg = messages(compiler(`${axe}.${entrees[0]}`));
     ok(!/aucune librairie ne sert/.test(msg),
-       `B. '@${axe}.${entrees[0]}' est servi par le bundle : il ne doit PAS tomber sous ce refus. `
+       `B. '${axe}.${entrees[0]}' est servi par le bundle : il ne doit PAS tomber sous ce refus. `
        + `Reçu : ${msg.slice(0, 90)}`);
   }
   ok(verifies >= 10,
@@ -64,18 +64,18 @@ const compiler = (tete) => compileToBPxAST(`@core\n@alphabet.western\n${tete}\nS
 }
 
 // ── C. LES MOTS DU LANGAGE SONT ÉPARGNÉS, ET LA LISTE EST DANS LA DONNÉE ────────────────────
-// ⚠️ SANS CE VOLET, un refus trop large casserait `@out.midi` — une clé d'ACTEUR qui porte une
+// ⚠️ SANS CE VOLET, un refus trop large casserait `out.midi` — une clé d'ACTEUR qui porte une
 // sous-clé sans être une invocation de librairie.
 {
   const mots = LIBS.core?.schema?.reservedDirectives || [];
   ok(Array.isArray(mots) && mots.length > 10,
      `C. 'core.schema.reservedDirectives' doit vivre dans la DONNÉE — reçu ${JSON.stringify(mots).slice(0, 60)}.`);
   ok(mots.includes('out'),
-     `C. 'out' doit être recensé parmi les mots du langage — sinon '@out.midi' tombe sous le refus.`);
+     `C. 'out' doit être recensé parmi les mots du langage — sinon 'out.midi' tombe sous le refus.`);
 
-  const sortie = compileToBPxAST('@core\n@alphabet.western\n@out.midi\nS -> C4\n');
+  const sortie = compileToBPxAST('core\nalphabet.western\nout.midi\n-----\nS -> C4\n');
   ok(messages(sortie) === '',
-     `C. '@out.midi' est une clé d'ACTEUR, pas une invocation de librairie : elle doit passer. `
+     `C. 'out.midi' est une clé d'ACTEUR, pas une invocation de librairie : elle doit passer. `
      + `Reçu : ${messages(sortie).slice(0, 90)}`);
 
   // ⚠️ LE VOLET PORTE SUR TOUS LES MOTS RECENSÉS, PAS SUR `out` SEUL, et c'est une injection qui
@@ -87,7 +87,7 @@ const compiler = (tete) => compileToBPxAST(`@core\n@alphabet.western\n${tete}\nS
   let epargnes = 0;
   for (const mot of mots) {
     if (LIBS[ALIAS_FICHIER[mot] || mot]) continue;         // servi par une librairie : autre cas
-    const msg = messages(compiler(`@${mot}.zzz`));
+    const msg = messages(compiler(`${mot}.zzz`));
     if (!msg) epargnes++;
     ok(!/aucune librairie ne sert/.test(msg),
        `C. '${mot}' est un mot du LANGAGE recensé par la donnée : il ne doit jamais tomber sous le `
@@ -98,14 +98,14 @@ const compiler = (tete) => compileToBPxAST(`@core\n@alphabet.western\n${tete}\nS
      `C. ${epargnes} mots du langage épargnés seulement — sous ce seuil, le volet ne mesure plus la `
      + `donnée mais un cas particulier.`);
 
-  const alpha = compileToBPxAST('@core\n@alphabet.western\nS -> C4\n');
-  ok(messages(alpha) === '', `C. '@alphabet.western' passe toujours — reçu : ${messages(alpha).slice(0, 80)}`);
+  const alpha = compileToBPxAST('core\nalphabet.western\n-----\nS -> C4\n');
+  ok(messages(alpha) === '', `C. 'alphabet.western' passe toujours — reçu : ${messages(alpha).slice(0, 80)}`);
 }
 
 // ── D. LA VALIDATION D'ENTRÉE N'A PAS BOUGÉ — le refus voisin garde son message ─────────────
 // Un axe SERVI dont l'entrée manque crie autrement : c'est l'entrée qu'il nomme, pas l'axe.
 {
-  const msg = messages(compiler('@temperaments.nexistepasdutout'));
+  const msg = messages(compiler('temperaments.nexistepasdutout'));
   ok(/l'entrée 'nexistepasdutout' n'existe pas/.test(msg),
      `D. un axe servi dont l'entrée manque doit nommer L'ENTRÉE, pas l'axe — les deux refus se `
      + `distinguent. Reçu : ${msg.slice(0, 100)}`);

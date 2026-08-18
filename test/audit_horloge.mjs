@@ -6,7 +6,7 @@
  * au `CorrectionFactor` omis chez BPx — À TORT. Cause réelle : le natif tourne avec `-se.cloches`
  * (Pclock=2, Qclock=5 → période 2/5 s = 400 ms), ma scène ne déclarait aucun tempo, BPx tombait
  * sur son défaut 60 BPM (1000 ms), et 1000/400 = 2.5 exactement. Transcription incomplète, pas
- * bug moteur. Déclarer `@tempo:150` a suffi : bells est passée ISO.
+ * bug moteur. Déclarer `tempo:150` a suffi : bells est passée ISO.
  *
  * Le modèle l'exige : **la Voie B est autosuffisante**. L'horloge du natif doit vivre DANS la
  * scène (`@tempo`/`@mm`), jamais dépendre d'un `-se` BP3 qu'on ne lit pas.
@@ -55,7 +55,7 @@ function declareParLaScene(nom) {
   if (!existsSync(p)) return null;
   const src = readFileSync(p, 'utf-8');
   const lire = (mot) => {
-    const m = src.match(new RegExp(`^@${mot}\\s*:\\s*([0-9./]+)`, 'm'));
+    const m = src.match(new RegExp(`^${mot}\\s*:\\s*([0-9./]+)`, 'm'));
     return m ? m[1] : undefined;
   };
   return { tempo:lire('tempo'), mm: lire('mm'), quantization: lire('quantization'), qclock: lire('qclock') };

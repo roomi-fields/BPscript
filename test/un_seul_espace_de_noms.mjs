@@ -29,18 +29,18 @@ const refus = (src) => (compileToBPxAST(src).errors || [])
 // ── A. CE QUI DOIT ÊTRE REFUSÉ ───────────────────────────────────────────────
 // L'espace : chaque SORTE qui crée un nom × ce qu'elle peut heurter.
 const SORTES = [
-  ['une définition',         (n) => `@def ${n} C4 D4`],
-  ['une entrée',             (n) => `@var ${n} in.midi`],
-  ['une variable de travail', (n) => `@var ${n}`],
+  ['une définition',         (n) => `def ${n} C4 D4`],
+  ['une entrée',             (n) => `in.midi ${n}`],
+  ['une variable de travail', (n) => `symbol ${n}`],
   // Décision Romain 2026-07-30 (`hub/decisions/2026-07-30-trois-arbitrages-nature-fabrique-
   // drapeaux.md`) : un drapeau CRÉE un nom, comme les quatre sortes ci-dessus — c'était un TROU,
   // pas un espace séparé légitime.
-  ['un drapeau',             (n) => `@var ${n} flag: a:1, b:2`],
+  ['un drapeau',             (n) => `flag ${n}(a:1, b:2)`],
 ];
 const CE_QUI_EST_DEJA_PRIS = [
-  ['un TERMINAL de l\'alphabet', 'G4', (poseur) => `@core\n@alphabet.western\n${poseur}\nS -> C4 D4`],
-  ['une DÉFINITION déjà déclarée', 'pris', (poseur) => `@core\n@def pris C4 D4\n${poseur}\nS -> C4`],
-  ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `@core\n@var pris flag: a:1, b:2\n${poseur}\nS -> C4`],
+  ['un TERMINAL de l\'alphabet', 'G4', (poseur) => `core\nalphabet.western\n${poseur}\n-----\nS -> C4 D4`],
+  ['une DÉFINITION déjà déclarée', 'pris', (poseur) => `core\ndef pris C4 D4\n${poseur}\n-----\nS -> C4`],
+  ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `core\nflag pris(a:1, b:2)\n${poseur}\n-----\nS -> C4`],
 ];
 console.log(`[un seul espace de noms] ${SORTES.length} sortes × ${CE_QUI_EST_DEJA_PRIS.length} conflits`);
 for (const [sorte, ligne] of SORTES) {
@@ -57,14 +57,14 @@ for (const [sorte, ligne] of SORTES) {
 const TETES_REFUSEES = [
   // ⚠️ LE TERMINAL ET LA VARIABLE DE TRAVAIL SONT SORTIS D'ICI le 2026-08-07 — décision Romain
   // `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md`, qui NOMME ses trois formes :
-  // `C4 -> G4`, `?1 D4 -> ?1 E4`, `#K1 #K2 #K3 M -> C4` avec `@var M`. Une règle de SUBSTITUTION
+  // `C4 -> G4`, `?1 D4 -> ?1 E4`, `#K1 #K2 #K3 M -> C4` avec `var M`. Une règle de SUBSTITUTION
   // réécrit un terminal : elle en a forcément un en tête, et « la note devient inatteignable » est
   // ce qu'elle fait EXPRÈS. Elles sont désormais au lot B, celui de ce qui DOIT passer.
-  ['contre une définition', '@core\n@def motif C4 D4\nmotif -> C4'],
-  ['contre un drapeau',   '@core\n@var motif flag: a:1, b:2\nmotif -> C4'],
+  ['contre une définition', 'core\ndef motif C4 D4\n-----\nmotif -> C4'],
+  ['contre un drapeau',   'core\nflag motif(a:1, b:2)\n-----\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
-  ['contre un ACTEUR (l\'amalgame)', '@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`'],
-  ['contre un acteur de notes',      '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  out.audio\nS -> v\nv -> C4 D4'],
+  ['contre un ACTEUR (l\'amalgame)', 'core\nactor viz  eval.hydra\n-----\nS -> viz\nviz -> `hydra: osc(4).out()`'],
+  ['contre un acteur de notes',      'core\nalphabet.western\nactor v\n  alphabet.western\n  out.audio\n-----\nS -> v\nv -> C4 D4'],
 ];
 for (const [quoi, src] of TETES_REFUSEES) {
   const r = refus(src);
@@ -76,66 +76,66 @@ for (const [quoi, src] of TETES_REFUSEES) {
 // Chacune de ces lignes est une forme RATIFIÉE. Si l'une rougit, la règle a débordé.
 const DOIVENT_PASSER = [
   ['une tête RÉPÉTÉE = les alternatives d\'une règle (120 scènes sur 333 en vivent)',
-   '@core\n@alphabet.simple\nS -> X\nX -> a b\nX -> c d'],
+   'core\nalphabet.simple\n-----\nS -> X\nX -> a b\nX -> c d'],
   ['la même tête dans DEUX sous-grammaires = deux passes successives',
-   '@core\n@alphabet.simple\nS -> X\nX -> a b\n-----\nX -> c d'],
+   'core\nalphabet.simple\n-----\nS -> X\nX -> a b\n-----\nX -> c d'],
   ['une PROPRIÉTÉ posée sur un nom existant : gate sur un terminal',
-   '@core\n@alphabet.western\n@gate C4:midi\nS -> C4 D4'],
+   'core\nalphabet.western\ngate C4:midi\n-----\nS -> C4 D4'],
   // LES TROIS FORMES DE LA DÉCISION DU 2026-08-03, mot pour mot. Elles étaient REFUSÉES ici même
   // jusqu'au 2026-08-07 : « aucune grammaire de substitution ne compilait en BPScript ».
   ['une SUBSTITUTION : la tête est un terminal (mode sub/sub1)',
-   '@core\n@alphabet.western\nC4 -> G4\nS -> C4'],
+   'core\nalphabet.western\n-----\nC4 -> G4\nS -> C4'],
   ['un JOKER devant un terminal en tête',
-   '@core\n@alphabet.western\n?1 D4 -> ?1 E4\nS -> C4 D4'],
+   'core\nalphabet.western\n?1 D4 -> ?1 E4\n-----\nS -> C4 D4'],
   ['une tête qui porte le nom d\'une variable de travail',
-   '@core\n@alphabet.western\n@var M\nM -> C4\nS -> M'],
+   'core\nalphabet.western\nsymbol M\n-----\nM -> C4\nS -> M'],
   ['un CONTEXTE positif devant un terminal en tête',
-   '@core\n@alphabet.western\n(C4) D4 -> G4\nS -> C4 D4'],
+   'core\nalphabet.western\n(C4) D4 -> G4\n-----\nS -> C4 D4'],
   // ⚠️ CES DEUX TÉMOINS ONT ÉTÉ RETIRÉS LE 2026-07-28 AU SOIR, ET C'EST L'INVERSE D'UN
   // RÉTRÉCISSEMENT : ils affirmaient qu'un acteur et sa règle homonyme devaient PASSER. Romain a
   // tranché que c'est une ERREUR GRAVE — l'amalgame d'un nom d'acteur et d'un nom de règle. Les
   // garder aurait fait rougir la règle qu'ils étaient censés protéger. Ils deviennent des cas
   // REFUSÉS, plus bas.
   ['une voix de code à la forme RATIFIÉE : le code annonce son langage',
-   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> `hydra: osc(4).out()`'],
+   'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> `hydra: osc(4).out()`'],
   // La forme décidée par Romain le 2026-07-28 : l'acteur QUALIFIE le bloc par le point, à droite,
   // là où il qualifie déjà une note. Elle donne le langage ET l'identité de la voix.
   ['un ACTEUR qui qualifie un bloc de code par le point',
-   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`'],
+   'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`'],
   ['des noms sans rapport entre eux',
-   '@core\n@alphabet.western\n@def grondement saw >> audio\n@def souffle perc.tin\nmotif -> C4\nS -> motif'],
+   'core\nalphabet.western\ndef grondement saw >> audio\ndef souffle perc.tin\n-----\nmotif -> C4\nS -> motif'],
   ['un nom PROCHE d\'un terminal, mais qui n\'en est pas un',
-   '@core\n@alphabet.western\n@def G4_v saw >> audio\nS -> C4'],
+   'core\nalphabet.western\ndef G4_v saw >> audio\n-----\nS -> C4'],
   ['un nom d\'une AUTRE convention que l\'alphabet actif',
-   '@core\n@alphabet.western\n@def pa1 saw >> audio\nS -> C4'],
+   'core\nalphabet.western\ndef pa1 saw >> audio\n-----\nS -> C4'],
   // ⚠️ IL Y AVAIT ICI UN TÉMOIN « aucun alphabet résolu : rien à heurter » — RETOURNÉ le
   // 2026-07-29, et son retrait est un DURCISSEMENT. Il affirmait qu'une scène sans convention de
-  // notes n'a rien à heurter, donc que `@macro G4` y est légitime. C'était la description d'un
-  // TROU, pas d'une règle : depuis la cascade @core (SCENE_DEFAULTS_CASCADE.md, ratifié
+  // notes n'a rien à heurter, donc que `macro G4` y est légitime. C'était la description d'un
+  // TROU, pas d'une règle : depuis la cascade core (SCENE_DEFAULTS_CASCADE.md, ratifié
   // 2026-07-04), une scène qui se tait HÉRITE de `western` — donc `G4` y est bien une note, et la
   // règle mord. L'ancien témoin gardait ma zone aveugle : 91 scènes sur 263 y vivaient.
   // Il devient un cas REFUSÉ, plus haut.
   ['une hauteur OPAQUE invoquée : l\'alphabet reste ABSENT, et c\'est la SEULE absence légitime (loi 35)',
-   '@core\n@test_alphabets.abc\n@def G4 saw >> audio\nS -> a b'],
+   'core\ntest_alphabets.abc\ndef G4 saw >> audio\n-----\nS -> a b'],
   // ⚠️ LES CONTEXTES — régression mesurée par BPx le 2026-07-28. Un contexte n'est PAS une tête :
   // il DÉSIGNE un terminal, c'est sa raison d'être. « ne pas être précédé de C4 » ne peut pas
   // s'écrire sans nommer C4, et l'auteur n'a aucune issue — renommer change la condition,
   // renoncer supprime le mécanisme. Ma garde lisait le premier jeton du membre gauche.
   ['un contexte NÉGATIF en tête désigne un terminal, et c\'est son rôle',
-   '@core\n@alphabet.western:midi\n@mode:sub\n#C4 S -> G4\nS -> C4 D4 E4'],
+   'core\nalphabet.western:midi\nmode:sub\n#C4 S -> G4\n-----\nS -> C4 D4 E4'],
   ['un contexte négatif en QUEUE aussi',
-   '@core\n@alphabet.western:midi\n@mode:sub\nS #C4 -> G4\nS -> C4 D4 E4'],
+   'core\nalphabet.western:midi\nmode:sub\nS #C4 -> G4\n-----\nS -> C4 D4 E4'],
   ['plusieurs contextes négatifs',
-   '@core\n@alphabet.western:midi\n@mode:sub\n#C4 #D4 S -> G4\nS -> C4 D4'],
+   'core\nalphabet.western:midi\nmode:sub\n#C4 #D4 S -> G4\n-----\nS -> C4 D4'],
   ['un contexte POSITIF, que le parser range ailleurs',
-   '@core\n@alphabet.western:midi\n@mode:sub\n(C4) S -> G4\nS -> C4 D4'],
+   'core\nalphabet.western:midi\nmode:sub\n(C4) S -> G4\n-----\nS -> C4 D4'],
   // ⚠️ LES DRAPEAUX — décision Romain 2026-07-30. Le nom qui entre dans l'espace de noms est le
   // drapeau LUI-MÊME (`section`) ; ses ÉTATS (`calm`, `full`…) sont des étiquettes internes, pas
   // des noms globaux — les y faire entrer déborderait la règle.
   ['un ÉTAT de drapeau qui porte le nom d\'un terminal : ce n\'est pas un nom global',
-   '@core\n@alphabet.western\n@var section flag: C4:1, D4:2\nS -> C4'],
+   'core\nalphabet.western\nflag section(C4:1, D4:2)\n-----\nS -> C4'],
   ['un drapeau LU plusieurs fois en garde : une lecture ne crée rien',
-   '@core\n@alphabet.simple\n@var section flag: calm:1, full:2\n[section==calm] S -> X\n'
+   'core\nalphabet.simple\nflag section(calm:1, full:2)\n[section==calm] S -> X\n'
    + '[section==full] S -> X\n[section==calm] X -> a'],
 ];
 for (const [quoi, src] of DOIVENT_PASSER) {
@@ -153,11 +153,11 @@ for (const [quoi, src] of DOIVENT_PASSER) {
 // sans le remplacer aurait laissé tout ce fichier vert le jour où la règle deviendrait muette.
 // Le témoin porte donc désormais sur une collision qui, elle, n'a jamais été levée : l'AMALGAME
 // d'un nom d'acteur et d'un nom de règle (« erreur grave », Romain 2026-07-28).
-ok(refus('@core\n@actor viz  eval.hydra\nS -> viz\nviz -> `hydra: osc(4).out()`').length >= 1,
+ok(refus('core\nactor viz  eval.hydra\n-----\nS -> viz\nviz -> `hydra: osc(4).out()`').length >= 1,
   'TÉMOIN — la règle doit savoir MORDRE (sinon tout ce fichier ment)');
-ok(refus('@core\n@alphabet.western\nmotif -> C4').length === 0,
+ok(refus('core\nalphabet.western\n-----\nmotif -> C4').length === 0,
   'TÉMOIN — et savoir se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
-// PLANCHERS INCHANGÉS APRÈS LE RETRAIT D'`@alias` (2026-08-15) : la sorte et le conflit qu'il
+// PLANCHERS INCHANGÉS APRÈS LE RETRAIT D'`alias` (2026-08-15) : la sorte et le conflit qu'il
 // portait sortent tous deux, et les seuils restent au-dessus de ce qui subsiste. Ils ne se règlent
 // jamais sur ce que les matrices rendent — ils disent ce qu'on refuse de descendre en dessous.
 ok(SORTES.length >= 4 && CE_QUI_EST_DEJA_PRIS.length >= 3 && DOIVENT_PASSER.length >= 12,

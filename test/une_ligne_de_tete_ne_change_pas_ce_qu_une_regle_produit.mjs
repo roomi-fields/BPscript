@@ -60,8 +60,8 @@ const FORMES = [
   'S -> C4(vel:80) D4(pan:20)',
 ];
 for (const rhs of FORMES) {
-  const avec = compiler(`@core\n@alphabet.western\n${rhs}\n`);
-  const sans = compiler(`@core\n@alphabet.western\n${rhs}\n`);
+  const avec = compiler(`core\nalphabet.western\n-----\n${rhs}\n`);
+  const sans = compiler(`core\nalphabet.western\n-----\n${rhs}\n`);
   ok(messages(avec) === '' && messages(sans) === '',
      `A. '${rhs}' est REFUSÉ — avec : ${messages(avec).slice(0, 60) || 'ok'} · `
      + `sans : ${messages(sans).slice(0, 60) || 'ok'}`);
@@ -93,7 +93,7 @@ const accordDe = (n) => {
   return null;
 };
 for (const [quoi, rhs, notes] of ACCORDS) {
-  const r = compiler(`@core\n@alphabet.western\n${rhs}\n`);
+  const r = compiler(`core\nalphabet.western\n-----\n${rhs}\n`);
   ok(messages(r) === '', `B. '${rhs}' est REFUSÉ : ${messages(r).slice(0, 70)}`);
   if (messages(r)) continue;
   const g = accordDe(r.ast.subgrammars[0].rules[0].rhs[0]);
@@ -117,16 +117,16 @@ for (const [quoi, rhs, notes] of ACCORDS) {
 // ⚠️ Sans cette moitié, un compilateur qui aurait cessé de valider passerait les volets A et B en
 // triomphe : deux arbres identiques et des accords bien formés, mais plus aucun refus.
 for (const [quoi, src] of [
-  ['une clé qui n\'existe nulle part, avec la ligne', '@core\n@alphabet.western\nS -> C4(zzzz:80)\n'],
-  ['une clé qui n\'existe nulle part, sans la ligne', '@core\n@alphabet.western\nS -> C4(zzzz:80)\n'],
-  ['une VALEUR interdite, avec la ligne',             '@core\n@alphabet.western\nS -> C4(wave:zzz)\n'],
-  ['une VALEUR interdite, sans la ligne',             '@core\n@alphabet.western\nS -> C4(wave:zzz)\n'],
+  ['une clé qui n\'existe nulle part, avec la ligne', 'core\nalphabet.western\n-----\nS -> C4(zzzz:80)\n'],
+  ['une clé qui n\'existe nulle part, sans la ligne', 'core\nalphabet.western\n-----\nS -> C4(zzzz:80)\n'],
+  ['une VALEUR interdite, avec la ligne',             'core\nalphabet.western\n-----\nS -> C4(wave:zzz)\n'],
+  ['une VALEUR interdite, sans la ligne',             'core\nalphabet.western\n-----\nS -> C4(wave:zzz)\n'],
   // ⚠️ L'AUTRE MOITIÉ DE LA RÈGLE, et c'est elle qui distingue « les contrôles sont toujours là »
   // de « invoquer commande ». Une scène qui n'invoque RIEN n'a RIEN : le réglage y est refusé.
   // Ma première écriture chargeait les contrôles inconditionnellement — le volet A serait passé
   // au vert, et pourtant l'invocation n'aurait toujours rien commandé.
   ['un réglage sans AUCUNE invocation',               'S -> C4(vel:80)\n'],
-  ['un réglage sous une librairie qui ne le déclare pas', '@alphabet.western\nS -> C4(vel:80)\n'],
+  ['un réglage sous une librairie qui ne le déclare pas', 'alphabet.western\n-----\nS -> C4(vel:80)\n'],
 ]) {
   ok(messages(compiler(src)) !== '',
      `C-témoin. ${quoi} — doit être REFUSÉ et ne l'est plus. La validation ne doit jamais dépendre `

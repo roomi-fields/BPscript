@@ -38,10 +38,10 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western\n';
+const TETE = 'core\nalphabet.western\n';
 const varsDe = (ligne) => {
   let r;
-  try { r = compileToBPxAST(`${TETE}${ligne}\n\nS -> C4\n`); } catch (e) { return { erreur: e.message }; }
+  try { r = compileToBPxAST(`${TETE}${ligne}\n\n-----\nS -> C4\n`); } catch (e) { return { erreur: e.message }; }
   if ((r.errors ?? []).length) return { erreur: r.errors[0].message };
   return ((r.ast ?? r).vars || [])[0] || {};
 };
@@ -49,7 +49,7 @@ const refuse = (ligne) => Boolean(varsDe(ligne).erreur);
 
 // ─── 0. SOCLE — une variable SANS valeur ne change pas de forme ──────────────────────────────
 {
-  const v = varsDe('@var grain signal');
+  const v = varsDe('signal grain');
   ok(!v.erreur && !('initial' in v),
      '0. SOCLE : une variable sans valeur de départ ne doit porter AUCUN champ `initial` — tout '
      + `l'aval lit \`vars\` depuis toujours (reçu ${JSON.stringify(v)})`);
@@ -57,14 +57,14 @@ const refuse = (ligne) => Boolean(varsDe(ligne).erreur);
      `0. SOCLE : le type doit rester lu (reçu ${JSON.stringify(v.varType)})`);
 }
 
-// ─── 1. LES QUATRE FAMILLES DE `@var` ACCEPTENT UNE VALEUR ───────────────────────────────────
+// ─── 1. LES QUATRE FAMILLES DE `var` ACCEPTENT UNE VALEUR ───────────────────────────────────
 // La portée s'écrit avec son complément : si une seule famille la portait, la forme serait une
 // exception au lieu d'être la règle, et la suivante repartirait de zéro.
 for (const [quoi, ligne, attendu] of [
-  ['une convention',      '@var grain:0.5 signal',  { name: 'grain', value: 0.5 }],
-  ['une note',            '@var hauteur:C4 pitch',  { name: 'hauteur', value: 'C4' }],
-  ['un entier',           '@var n:3 signal',        { name: 'n', value: 3 }],
-  ['une variable nue',    '@var compteur:7',        { name: 'compteur', value: 7 }],
+  ['une convention',      'signal grain:0.5',  { name: 'grain', value: 0.5 }],
+  ['une note',            'pitch hauteur:C4',  { name: 'hauteur', value: 'C4' }],
+  ['un entier',           'signal n:3',        { name: 'n', value: 3 }],
+  ['une variable nue',    'symbol compteur:7',        { name: 'compteur', value: 7 }],
 ]) {
   const v = varsDe(ligne);
   ok(!v.erreur && JSON.stringify(v.initial) === JSON.stringify([attendu]),
@@ -72,36 +72,43 @@ for (const [quoi, ligne, attendu] of [
      + `${v.erreur ? `REFUS « ${v.erreur.slice(0, 60)} »` : JSON.stringify(v.initial)}`);
 }
 
-// ─── 2. LE SUJET EST LE NOM — la graphie concurrente est REFUSÉE ─────────────────────────────
-ok(refuse('@var grain signal:0.5'),
-   "2. `@var grain signal:0.5` doit être REFUSÉ : le deux-points lierait la valeur à `signal`, "
-   + "donc il dirait « signal vaut 0.5 ». Le sujet d'une affectation est le NOM.");
+// ─── 2. LE SUJET EST LE NOM — les deux graphies concurrentes sont REFUSÉES ───────────────────
+// ⚠️ CETTE SECTION A CHANGÉ DE CIBLE LE 2026-08-18, ET SON OBJET N'A PAS BOUGÉ. Elle refusait
+// `signal grain:0.5` — la graphie concurrente TANT QUE le nom venait en tête (`var grain signal`).
+// Depuis que le TYPE vient en tête, c'est cette ligne-là qui est la forme ratifiée, et la section
+// 1 ci-dessus l'exige. La concurrente est désormais celle qui lie la valeur au TYPE.
+ok(refuse('signal:0.5 grain'),
+   "2. `signal:0.5 grain` doit être REFUSÉ : le deux-points y lierait la valeur au TYPE, donc il "
+   + "dirait « signal vaut 0.5 ». Le sujet d'une affectation est le NOM.");
+// ET LA VALEUR SE COLLE À SON SIGNE — détachée, elle se lirait comme un second terme.
+ok(refuse('signal grain: 0.5'),
+   "2. `signal grain: 0.5` doit être REFUSÉ : l'espace sépare deux termes, le collage les réunit.");
 
 // ─── 3. LA VOIE B RESTE FERMÉE — une seule porte pour une valeur de départ ───────────────────
 for (const [quoi, scene] of [
-  ['sur la ligne', '@var grain signal\n@init grain:0.5'],
-  ['en bloc',      '@var grain signal\n@init\n  grain:0.5'],
+  ['sur la ligne', 'signal grain\n-----\ninit grain:0.5'],
+  ['en bloc',      'signal grain\n-----\ninit\n  grain:0.5'],
 ]) {
   ok(refuse(scene),
-     `3. \`@init\` ${quoi} ne doit PAS accepter une valeur : deux graphies pour une valeur de `
-     + 'départ seraient la voie parallèle qu\'on s\'interdit. `@init` garde le code lancé une fois.');
+     `3. \`init\` ${quoi} ne doit PAS accepter une valeur : deux graphies pour une valeur de `
+     + 'départ seraient la voie parallèle qu\'on s\'interdit. `init` garde le code lancé une fois.');
 }
 
 // ─── 4. LE DRAPEAU N'EST PAS TOUCHÉ — témoin, pas évidence ───────────────────────────────────
 {
-  const v = varsDe('@var section flag: calm:1, full:2');
+  const v = varsDe('flag section(calm:1, full:2)');
   ok(!v.erreur && v.varType?.kind === 'flag' && v.varType.states.length === 2 && !('initial' in v),
-     '4. `@var section flag: calm:1, full:2` : le deux-points du drapeau vient APRÈS le mot `flag` '
+     '4. `flag section(calm:1, full:2)` : le deux-points du drapeau vient APRÈS le mot `flag` '
      + `et ne doit RIEN initialiser (reçu ${JSON.stringify(v.varType)}, initial=${JSON.stringify(v.initial)})`);
 }
 
 // ─── 5. CHAQUE NOM D'UNE LISTE PORTE LA SIENNE ───────────────────────────────────────────────
 {
-  const v = varsDe('@var a:1, b:2');
+  const v = varsDe('symbol a:1, b:2');
   ok(JSON.stringify(v.initial) === JSON.stringify([{ name: 'a', value: 1 }, { name: 'b', value: 2 }]),
-     `5. '@var a:1, b:2' doit rendre DEUX valeurs distinctes — une valeur partagée serait une `
+     `5. 'symbol a:1, b:2' doit rendre DEUX valeurs distinctes — une valeur partagée serait une `
      + `invention (reçu ${JSON.stringify(v.initial)})`);
-  const m = varsDe('@var a:1, b');
+  const m = varsDe('symbol a:1, b');
   ok(JSON.stringify(m.initial) === JSON.stringify([{ name: 'a', value: 1 }])
      && JSON.stringify(m.names) === JSON.stringify(['a', 'b']),
      `5. un nom SANS valeur dans une liste qui en porte reste déclaré et n'en reçoit aucune `
@@ -109,8 +116,8 @@ for (const [quoi, scene] of [
 }
 
 // ─── 6. UNE VALEUR ABSENTE APRÈS LE SIGNE EST REFUSÉE, EN NOMMANT SA CAUSE ───────────────────
-ok(refuse('@var grain: signal'),
-   '6. `@var grain:` sans valeur doit être refusé — un deux-points qui n\'affecte rien passerait '
+ok(refuse('symbol grain: signal'),
+   '6. `symbol grain:` sans valeur doit être refusé — un deux-points qui n\'affecte rien passerait '
    + 'pour une déclaration ordinaire et la valeur disparaîtrait sans un signe.');
 
 // ─── 7. INJECTION DANS LE JUGE — la décision rejouée isolée ──────────────────────────────────

@@ -29,8 +29,8 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const compiler = (corps, suite = '\nS -> C4\n') => {
-  try { return compileToBPxAST(`@core\n@alphabet.western\n${corps}${suite}`); }
+const compiler = (corps, suite = '\n-----\nS -> C4\n') => {
+  try { return compileToBPxAST(`core\nalphabet.western\n${corps}${suite}`); }
   catch (e) { return { errors: [{ message: e.message }] }; }
 };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
@@ -39,10 +39,10 @@ const defDe = (r) => (r.ast?.directives || []).find((d) => d.type === 'DefDirect
 // ── A. LES FORMES QUE LA RÉFÉRENCE ÉCRIT ─────────────────────────────────────────────────────
 // Les deux premières sont ses exemples LITTÉRAUX ; les suivantes couvrent la même construction.
 const FORMES = [
-  ['une clé qui APPELLE un composant',  '@def ka  voice.sec',                    { voice: 'sec' }],
-  ['une clé qui AFFECTE une valeur',    '@def muet  sounding:false',             { sounding: 'false' }],
-  ['deux clés sur la même ligne',       '@def sirene  hz:440  voice.sec',        { hz: '440', voice: 'sec' }],
-  ['un bloc indenté, une clé par ligne','@def cloche\n  register:5\n  degree:0', { register: '5', degree: '0' }],
+  ['une clé qui APPELLE un composant',  'def ka  voice.sec',                    { voice: 'sec' }],
+  ['une clé qui AFFECTE une valeur',    'def muet  sounding:false',             { sounding: 'false' }],
+  ['deux clés sur la même ligne',       'def sirene  hz:440  voice.sec',        { hz: '440', voice: 'sec' }],
+  ['un bloc indenté, une clé par ligne','def cloche\n  register:5\n  degree:0', { register: '5', degree: '0' }],
 ];
 for (const [quoi, corps, attendu] of FORMES) {
   const r = compiler(corps);
@@ -63,7 +63,7 @@ for (const [quoi, corps, attendu] of FORMES) {
 // Et si la lecture du bloc mourait (le cas de la propriété inventée), ce volet le dirait aussi :
 // les deux fautes se voient ici et nulle part ailleurs.
 {
-  const r = compiler('@def cloche\n  register:5\nS -> C4 D4\n', '');
+  const r = compiler('def cloche\n  register:5\n-----\nS -> C4 D4\n', '');
   ok(messages(r) === '', `B. un bloc suivi d'une règle est REFUSÉ : ${messages(r).slice(0, 80)}`);
   const d = defDe(r);
   ok(d && Object.keys(d.keys || {}).length === 1,
@@ -82,21 +82,21 @@ for (const [quoi, corps, attendu] of FORMES) {
 // triomphe. Et le second cas est le vrai piège : un mot seul, sans point ni deux-points, n'est
 // NI un appel NI une affectation — le laisser passer inventerait une troisième forme.
 // ⚠️ CE VOLET A CHANGÉ DE PORTÉE LE 2026-08-08, ET LE CAS QUI A BOUGÉ EST INSTRUCTIF.
-// Il exigeait que `@def ka voice` REFUSE, comme « une clé ni appelée ni affectée ». Depuis que ce
+// Il exigeait que `def ka voice` REFUSE, comme « une clé ni appelée ni affectée ». Depuis que ce
 // palier lit aussi la STRUCTURE, cette forme n'est plus une faute : c'est une structure d'un seul
-// terme, et le refus aurait interdit `@def bref C4`. Le témoin a donc été DÉPLACÉ, pas supprimé —
+// terme, et le refus aurait interdit `def bref C4`. Le témoin a donc été DÉPLACÉ, pas supprimé —
 // un mot nu reste une faute **une fois le régime des clés engagé**, sur la ligne (`hz:440 voice`)
 // comme dans le bloc. Mesuré aux deux endroits avant d'y toucher.
 // La leçon : quand un garde tombe en ouvrant une forme, il faut établir si la forme a changé de
 // SENS ou si le code a régressé. Ici la première ; effacer le témoin sans le rejouer ailleurs
 // aurait retiré la garde du régime des clés en croyant suivre une évolution.
 for (const [quoi, corps, fragment] of [
-  ['une définition sans rien',        '@def vide',            /ne déclare rien/],
-  ['un mot nu APRÈS une clé',         '@def ka  hz:440  voice', /ni un appel de composant ni une affectation/],
-  ['un mot nu dans le BLOC',          '@def ka\n  hz:440\n  voice', /ni un appel de composant ni une affectation/],
-  ['un point sans nom derrière',      '@def ka  voice.',      /nom attendu après/],
-  ['un deux-points sans valeur',      '@def ka  hz:',         /valeur attendue après/],
-  ['aucun nom après la directive',    '@def',                 /doit nommer ce qu'il définit/],
+  ['une définition sans rien',        'def vide',            /ne déclare rien/],
+  ['un mot nu APRÈS une clé',         'def ka  hz:440  voice', /ni un appel de composant ni une affectation/],
+  ['un mot nu dans le BLOC',          'def ka\n  hz:440\n  voice', /ni un appel de composant ni une affectation/],
+  ['un point sans nom derrière',      'def ka  voice.',      /nom attendu après/],
+  ['un deux-points sans valeur',      'def ka  hz:',         /valeur attendue après/],
+  ['aucun nom après la directive',    'def',                 /doit nommer ce qu'il définit/],
 ]) {
   const msg = messages(compiler(corps));
   ok(fragment.test(msg),
@@ -110,14 +110,14 @@ for (const [quoi, corps, fragment] of [
 // C'est la différence entre « pas encore fait » et « faux sans le dire ».
 //
 // ⛔ ET CE VOLET A ATTRAPÉ EXACTEMENT ÇA, SUR MOI, LE JOUR OÙ LA STRUCTURE A ÉTÉ OUVERTE.
-// `@def fondu phase \`js: …\`` commence lui aussi par un terme nu : il tombait donc dans la
+// `def fondu phase \`js: …\`` commence lui aussi par un terme nu : il tombait donc dans la
 // branche structure et était ACCEPTÉ. L'arbre produit était plausible et faux — `phase`, qui est
 // un TYPE de signal, devenait un `Symbol` (un terminal), et le code un élément voisin. Rien
 // n'aurait signalé la confusion en aval : un terminal inconnu ressemble à un terminal.
 // Le refus se décide sur la FORME — un backtick est présent — jamais sur le nom du premier terme :
 // décider sur une liste de types ferait dépendre la forme d'un vocabulaire.
 for (const [quoi, corps] of [
-  ['un branchement',              '@def souffle lfo1.out >> lpf1.cutoff'],
+  ['un branchement',              'def souffle lfo1.out >> lpf1.cutoff'],
 ]) {
   ok(messages(compiler(corps)) !== '',
      `D. ${quoi} n'est pas encore lu par ce palier — il doit REFUSER, et il passe. Un corps lu de `
@@ -125,8 +125,8 @@ for (const [quoi, corps] of [
 }
 
 // ── E. LA STRUCTURE — un nom vaut une suite de termes, qu'on réinvoque d'un mot ──────────────
-// `LANGUAGE.md:304` : « `@def` associe un nom a un corps, pour le reinvoquer d'un mot », et
-// `:311` en donne la forme : `@def cadence sa re ga pa`.
+// `LANGUAGE.md:304` : « `def` associe un nom a un corps, pour le reinvoquer d'un mot », et
+// `:311` en donne la forme : `def cadence sa re ga pa`.
 //
 // ⚠️ LE CORPS EST LU PAR LE LECTEUR DE MEMBRE DROIT DES RÈGLES, et c'est ce que ce volet
 // vérifie : une structure EST un membre droit. Le silence, la prolongation et les qualificatifs
@@ -134,9 +134,9 @@ for (const [quoi, corps] of [
 // qu'un second lecteur a été écrit à côté, et deux grammaires pour une notion divergent toujours.
 {
   const NATURES = [
-    ['des terminaux nus',           '@def cadence C4 D4 E4',   ['Symbol', 'Symbol', 'Symbol']],
-    ['un silence et une tenue',     '@def motif C4 - D4 _ E4', ['Symbol', 'Rest', 'Symbol', 'Prolongation', 'Symbol']],
-    ['un seul terme',               '@def bref C4',            ['Symbol']],
+    ['des terminaux nus',           'def cadence C4 D4 E4',   ['Symbol', 'Symbol', 'Symbol']],
+    ['un silence et une tenue',     'def motif C4 - D4 _ E4', ['Symbol', 'Rest', 'Symbol', 'Prolongation', 'Symbol']],
+    ['un seul terme',               'def bref C4',            ['Symbol']],
   ];
   for (const [quoi, corps, attendu] of NATURES) {
     const r = compiler(corps);
@@ -154,16 +154,16 @@ for (const [quoi, corps] of [
   // ⚠️ LE DÉPARTAGE SE FAIT SUR LA PONCTUATION COLLÉE, JAMAIS SUR LE NOM. Une clé porte `.` ou
   // `:` collé ; une structure est faite de termes nus. Ce témoin garde les deux sens — et le
   // second cas est le piège : un terminal peut porter le nom d'une clé.
-  const CLE = compiler('@def ka  voice.sec');
+  const CLE = compiler('def ka  voice.sec');
   ok(defDe(CLE)?.kind === 'terminal',
-     `E-départage. '@def ka voice.sec' porte une CLÉ (point collé) : nature 'terminal' attendue, `
+     `E-départage. 'def ka voice.sec' porte une CLÉ (point collé) : nature 'terminal' attendue, `
      + `reçu ${JSON.stringify(defDe(CLE)?.kind)}.`);
-  const NU = compiler('@def suite voice sec');
+  const NU = compiler('def suite voice sec');
   ok(defDe(NU)?.kind === 'structure',
-     `E-départage. '@def suite voice sec' n'a AUCUNE ponctuation collée : c'est une STRUCTURE, `
+     `E-départage. 'def suite voice sec' n'a AUCUNE ponctuation collée : c'est une STRUCTURE, `
      + `même si son premier terme s'appelle 'voice'. Reçu ${JSON.stringify(defDe(NU)?.kind)}. `
      + `Décider sur le nom ferait dépendre la forme d'un vocabulaire.`);
-  ok(messages(compiler('@def vide2  ')) !== '',
+  ok(messages(compiler('def vide2  ')) !== '',
      `E-témoin. Une structure vide doit REFUSER — un nom qui ne vaut rien ne se réinvoque pas.`);
 }
 
@@ -179,10 +179,10 @@ for (const [quoi, corps] of [
 // Sans lui, `accent(E4)` était lu comme un sac de réglages et refusé.
 {
   const PARENTHESE = [
-    ['transformation paramétrée', '@def accent(x) x(vel:120)', 'transformation', ['x']],
-    ['transformation structurelle', '@def fast(x) {x}:2',      'transformation', ['x']],
-    ['deux paramètres',           '@def entre(a, b) a b',      'transformation', ['a', 'b']],
-    ['préréglage',                '@def kick (vel:120)',       'prereglage',     undefined],
+    ['transformation paramétrée', 'def accent(x) x(vel:120)', 'transformation', ['x']],
+    ['transformation structurelle', 'def fast(x) {x}:2',      'transformation', ['x']],
+    ['deux paramètres',           'def entre(a, b) a b',      'transformation', ['a', 'b']],
+    ['préréglage',                'def kick (vel:120)',       'prereglage',     undefined],
   ];
   for (const [quoi, corps, nature, params] of PARENTHESE) {
     const r = compiler(corps);
@@ -199,25 +199,25 @@ for (const [quoi, corps] of [
   }
 
   // ⚠️ L'APPEL — la moitié qui compte. Le bloc EXACT de la référence (`LANGUAGE.md:317-321`).
-  const bloc = compiler('@def kick (vel:120)\n@def accent(x) x(vel:120)\n@def fast(x) {x}:2\n'
-                        + 'Motif -> C4 D4 E4', '\nS -> C4!kick D4 accent(E4) fast(Motif)\n');
+  const bloc = compiler('def kick (vel:120)\ndef accent(x) x(vel:120)\ndef fast(x) {x}:2\n-----\n'
+                        + 'Motif -> C4 D4 E4', '\n-----\nS -> C4!kick D4 accent(E4) fast(Motif)\n');
   ok(messages(bloc) === '',
      `F-APPEL. le bloc de la référence doit compiler ENTIER — reçu : ${messages(bloc).slice(0, 100)}`);
 
   // Témoins qui mordent, dans les deux sens.
   for (const [quoi, corps, fragment] of [
-    ['une liste de paramètres VIDE',   '@def rien() C4',        /ne parametre rien/],
-    ['une transformation sans corps',  '@def accent(x)',        /sans corps/],
-    ['un paramètre qui n\'est pas un nom', '@def f(1) C4',      /que des NOMS/],
+    ['une liste de paramètres VIDE',   'def rien() C4',        /ne parametre rien/],
+    ['une transformation sans corps',  'def accent(x)',        /sans corps/],
+    ['un paramètre qui n\'est pas un nom', 'def f(1) C4',      /que des NOMS/],
   ]) {
     ok(fragment.test(messages(compiler(corps))),
        `F-témoin. ${quoi} — doit REFUSER en nommant la faute. Reçu : ${messages(compiler(corps)).slice(0, 90) || 'aucune erreur'}`);
   }
 }
 
-// ── G. LE CODE TYPÉ — `@def fondu phase \`js: …\`` ──────────────────────────────────────────
+// ── G. LE CODE TYPÉ — `def fondu phase \`js: …\`` ──────────────────────────────────────────
 // `LANGUAGE.md:307` : « Ses types sont ceux des signaux : signal, pitch, phase, logic. »
-// ⚠️ LE TYPE SE LIT DANS LA DONNÉE (`core.json`, les conventions que `@var` consulte déjà) —
+// ⚠️ LE TYPE SE LIT DANS LA DONNÉE (`core.json`, les conventions que `var` consulte déjà) —
 // aucun nom de type n'est écrit dans le parseur. Ajouter une convention à la donnée l'ouvre ici
 // sans toucher au code ; en retirer une la ferme. C'est la leçon de la journée appliquée d'emblée.
 //
@@ -227,9 +227,9 @@ for (const [quoi, corps] of [
 // FORME (un backtick suit), jamais sur le nom du premier terme.
 {
   const CODE = [
-    ['la forme littérale de la référence', '@def fondu phase `js: (t, dur) => 1 - t / dur`', 'phase', 'js'],
-    ['une autre convention',               '@def g signal `js: 1`',                          'signal', 'js'],
-    ['un autre langage',                   '@def h logic `py: True`',                        'logic', 'py'],
+    ['la forme littérale de la référence', 'def fondu phase `js: (t, dur) => 1 - t / dur`', 'phase', 'js'],
+    ['une autre convention',               'def g signal `js: 1`',                          'signal', 'js'],
+    ['un autre langage',                   'def h logic `py: True`',                        'logic', 'py'],
   ];
   for (const [quoi, corps, convention, tag] of CODE) {
     const r = compiler(corps);
@@ -243,20 +243,20 @@ for (const [quoi, corps] of [
   }
   // ⚠️ LE TÉMOIN QUI COMPTE : un type HORS des conventions déclarées ne doit pas passer pour un
   // code typé — sinon n'importe quel terme nu suivi d'un backtick en deviendrait un.
-  ok(/porte du CODE, pas une structure/.test(messages(compiler('@def h zzz `js: 1`'))),
+  ok(/porte du CODE, pas une structure/.test(messages(compiler('def h zzz `js: 1`'))),
      `G-témoin. un type hors des conventions déclarées ne fait PAS un code typé — reçu : `
-     + `${messages(compiler('@def h zzz `js: 1`')).slice(0, 90)}`);
+     + `${messages(compiler('def h zzz `js: 1`')).slice(0, 90)}`);
 }
 
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
 ok(FORMES.length >= 4, `SOCLE : ${FORMES.length} formes mesurées, 4 au moins attendues.`);
 
 if (echecs.length) {
-  console.error(`❌ @def déclare un terminal : ${echecs.length} échec(s)`);
+  console.error(`❌ def déclare un terminal : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ '@def' lit CINQ des six corps de la référence — terminal, structure, préréglage, `
+console.log(`✅ 'def' lit CINQ des six corps de la référence — terminal, structure, préréglage, `
           + `transformation (paramétrée et structurelle), code typé ; seul le BRANCHEMENT reste, au `
           + `backlog avec le patching. Départage sur la PONCTUATION COLLÉE et non sur le nom, type `
           + `du code lu dans la DONNÉE, bloc borné par l'indentation, et l'APPEL vérifié sur le bloc `

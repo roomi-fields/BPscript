@@ -3,8 +3,8 @@
 //
 // Ce test itère l'AUTORITÉ MACHINE des axes-composants (describeVocabulary().components, dérivée
 // de lib/core.json schema.catalogAxes) et prouve, pour CHACUN, la morsure 2 sens :
-//   - `@axe:<entrée>`  (deux-points) → REJETÉ fail-loud  (l'opérande est un nom de catalogue)
-//   - `@axe.<entrée>`  (point)       → ACCEPTÉ            (canon)
+//   - `axe:<entrée>`  (deux-points) → REJETÉ fail-loud  (l'opérande est un nom de catalogue)
+//   - `axe.<entrée>`  (point)       → ACCEPTÉ            (canon)
 // Si un jour on AJOUTE un axe à catalogue (core.json) sans que le parser le rejette en `:`, ce
 // test ÉCHOUE — on ne retrouvera plus jamais un axe-composant oublié qui tolère l'ancienne forme.
 //
@@ -38,16 +38,16 @@ for (const axis of axes) {
   const entry = (components[axis] || [])[0];
   if (!entry) { assert(`${axis} : au moins une entrée de catalogue`, false, 'catalogue vide'); continue; }
   // Morsure 2 sens sur une entrée RÉELLE du catalogue de l'axe.
-  assert(`@${axis}:${entry} (deux-points) → REJET fail-loud`,
-    rejects(`@core\n@${axis}:${entry}\nS -> C4\n`, `@${axis}:<X>`));
-  assert(`@${axis}.${entry} (point) → ACCEPTÉ (canon)`,
-    accepts(`@core\n@${axis}.${entry}\nS -> C4\n`));
+  assert(`${axis}:${entry} (deux-points) → REJET fail-loud`,
+    rejects(`core\n${axis}:${entry}\n-----\nS -> C4\n`, `${axis}:<X>`));
+  assert(`${axis}.${entry} (point) → ACCEPTÉ (canon)`,
+    accepts(`core\n${axis}.${entry}\n-----\nS -> C4\n`));
 }
 
 // Garde de non-régression : le `:` RESTE le canon des VALEURS (hors-scope du rejet).
 console.log('\n=== Le `:` reste valide pour les VALEURS (jamais rejeté) ===');
-for (const val of ['@tempo:120', '@diapason:432', '@meter:4/4', '@transpose:24']) {
-  assert(`${val} (valeur) → ACCEPTÉ`, accepts(`@core\n${val}\nS -> C4\n`), val);
+for (const val of ['tempo:120', 'diapason:432', 'meter:4/4', 'transpose:24']) {
+  assert(`${val} (valeur) → ACCEPTÉ`, accepts(`core\n${val}\n-----\nS -> C4\n`), val);
 }
 
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);

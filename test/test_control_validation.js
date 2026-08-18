@@ -1,6 +1,6 @@
 // Garde-fou : validation des VALEURS de contrôle contre les librairies runtime.
 // `lib/expression.json`, `lib/midi.json`, `lib/audio.json`, `lib/transpo.json` (amenées par
-// `@core.apporte`, mise en conformité des librairies, 2026-08-10) sont la SOURCE UNIQUE des
+// `core.apporte`, mise en conformité des librairies, 2026-08-10) sont la SOURCE UNIQUE des
 // valeurs permises :
 //   - contrôle à liste fermée (wave:sine|triangle|square|sawtooth) → valeur hors-liste = ERREUR
 //   - contrôle à plage (filterQ 0..30, attack 1..5000, vel 0..127…)   → valeur hors-plage = ERREUR
@@ -10,7 +10,7 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = '@core\n@alphabet.western:audio\n';
+const HEAD = 'core\nalphabet.western:audio\n-----\n';
 function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 1. Valeur hors-liste (enum) → erreur ciblée sur 'wave'
@@ -50,11 +50,11 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 // 6. Contrôle inconnu → ERREUR NOMMÉE (fail-loud)
 //
 // Ce bloc exigeait l'inverse : qu'un attribut inconnu soit IGNORÉ, pour ne pas faire de faux
-// positif sur les alias `@cc` et les contrôles custom. Le vocabulaire est désormais fermé et
+// positif sur les alias `cc` et les contrôles custom. Le vocabulaire est désormais fermé et
 // vérifié (contrôles ∪ valeurs de librairie ∪ entrées de modulation ∪ adresses ∪ fonctions
 // digitales), aligné sur les librairies runtime (expression/midi/audio/transpo) comme autorité —
 // un mot hors de cet univers est une faute, pas une extension.
-// Le motif d'origine du test a été VÉRIFIÉ et ne tient plus : `@alias cc74 = cc:74` suivi de
+// Le motif d'origine du test a été VÉRIFIÉ et ne tient plus : `alias cc74 = cc:74` suivi de
 // `(cc74:42)` est accepté. Le mécanisme d'alias survit ; seul l'inconnu pur est refusé.
 {
   const e = errs('S -> C4 (mysteryParam:42)\n');
@@ -65,15 +65,15 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 
 // 7. LA VALIDATION NE DÉPEND PLUS D'UNE LIGNE DE TÊTE (Romain, 2026-08-08)
 //
-// ⚠️ CE CAS AFFIRMAIT L'INVERSE, ET IL AVAIT RAISON SUR L'ÉTAT : « sans @controls chargé → pas de
+// ⚠️ CE CAS AFFIRMAIT L'INVERSE, ET IL AVAIT RAISON SUR L'ÉTAT : « sans controls chargé → pas de
 // validation (aucune erreur) ». Une valeur interdite passait donc SANS UN MOT dès que la scène
 // n'écrivait pas la ligne d'invocation. Le test ne mesurait pas mal — il ENCODAIT le défaut, et
 // c'est pire : tant qu'il était vert, personne ne pouvait voir que la validation était facultative.
 //
-// `@core` AMÈNE désormais les contrôles (`lib/core.json`, champ `apporte`) : une scène qui pose son
+// `core` AMÈNE désormais les contrôles (`lib/core.json`, champ `apporte`) : une scène qui pose son
 // socle en dispose sans les invoquer, et la même écriture subit la même validation des deux côtés.
 {
-  const r = compileToBPxAST('@core\n@alphabet.western:audio\nS -> C4 (wave:triangle123)\n');
+  const r = compileToBPxAST('core\nalphabet.western:audio\n-----\nS -> C4 (wave:triangle123)\n');
   const e = (r.errors || []);
   check(e.length === 1, 'une valeur interdite est refusée avec @core seul, obtenu ' + JSON.stringify(e));
   check(e[0] && /triangle123/.test(e[0].message), 'le refus nomme la valeur fautive');
@@ -81,7 +81,7 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 // 7bis. TÉMOIN — et la valeur LÉGITIME passe toujours. Sans cette moitié, une validation devenue
 // trop sévère (qui refuserait tout) rendrait le cas ci-dessus vert pour la mauvaise raison.
 {
-  const r = compileToBPxAST('@core\n@alphabet.western:audio\nS -> C4 (wave:triangle)\n');
+  const r = compileToBPxAST('core\nalphabet.western:audio\n-----\nS -> C4 (wave:triangle)\n');
   check((r.errors || []).length === 0,
         'une valeur AUTORISÉE passe avec @core seul, obtenu ' + JSON.stringify(r.errors));
 }

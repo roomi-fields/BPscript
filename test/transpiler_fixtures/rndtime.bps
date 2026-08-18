@@ -4,14 +4,14 @@
 // Cas 2 : sur un groupe   → {A B C D}(rndtime:10) → {A B C D} _rndtime(10)
 //   (même comportement que staccato/legato — suffixe non seq_prefix)
 
-@core
-@alphabet.western:midi
+core
+alphabet.western:midi
 
-@gate A:midi
-@gate B:midi
-@gate C:midi
-@gate D:midi
+gate A:midi
+gate B:midi
+gate C:midi
+gate D:midi
 
 -----
-@mode:ord
+mode:ord
 S -> A(rndtime:10) B {A B C D}(rndtime:20)

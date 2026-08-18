@@ -56,14 +56,14 @@ console.log('\n=== L\'opérateur de vitesse : une écriture, une portée ===');
 const refuse = (src) => { try { parse(tokenize(src)); return null; } catch (e) { return e.message; } };
 
 // LA SEULE ÉCRITURE — celle de la bible (LANGUAGE.md:1249, :2259-2261).
-assert("! (/2) → relative", scopeOf('@mode:lin\nS -> a ! (/2) b') === 'relative', scopeOf('@mode:lin\nS -> a ! (/2) b'));
-assert("! (*3/2) → relative", scopeOf('@mode:lin\nS -> a ! (*3/2) b') === 'relative', scopeOf('@mode:lin\nS -> a ! (*3/2) b'));
+assert("! (/2) → relative", scopeOf('mode:lin\n-----\nS -> a ! (/2) b') === 'relative', scopeOf('mode:lin\n-----\nS -> a ! (/2) b'));
+assert("! (*3/2) → relative", scopeOf('mode:lin\n-----\nS -> a ! (*3/2) b') === 'relative', scopeOf('mode:lin\n-----\nS -> a ! (*3/2) b'));
 
 // LES TROIS POSITIONS EN CROCHETS SONT RETIRÉES — et le refus nomme la relève.
 for (const [quoi, src] of [
-  ['flux',              '@mode:lin\nS -> a ![/2] b'],
-  ['suffixe d\'élément', '@mode:lin\nS -> a[/2] b'],
-  ['suffixe de règle',   '@mode:lin\nS -> a b [/2]'],
+  ['flux',              'mode:lin\n-----\nS -> a ![/2] b'],
+  ['suffixe d\'élément', 'mode:lin\n-----\nS -> a[/2] b'],
+  ['suffixe de règle',   'mode:lin\n-----\nS -> a b [/2]'],
 ]) {
   const m = refuse(src);
   assert(`[/2] en ${quoi} → refusé`, m !== null, m);
@@ -73,7 +73,7 @@ for (const [quoi, src] of [
 // TÉMOIN DE LA PERTE — aucune écriture ne produit plus `absolute`. S'il rougit, c'est qu'une
 // porte s'est rouverte : à décider, pas à absorber.
 {
-  const src = '@mode:lin\nS -> a ! (/2) b ! (*3) c';
+  const src = 'mode:lin\n-----\nS -> a ! (/2) b ! (*3) c';
   const tops = findTempoOps(parse(tokenize(src)));
   assert("aucune écriture ne rend 'absolute'", tops.length === 2 && tops.every(t => t.scope === 'relative'),
     tops.map(t => t.scope));
@@ -107,7 +107,7 @@ for (const [quoi, src] of [
       if (Array.isArray(x)) { x.forEach(w); return; } for (const v of Object.values(x)) w(v); };
     w(parse(tokenize(src))); return n;
   };
-  const EN_TETE = '@core\n@mode:lin\n';
+  const EN_TETE = 'core\nmode:lin\n-----\n';
   // UN OUVRANT NE PORTE PAS DE TERME : collé ou non, jamais conjoint. Formes COLLÉES — c'est là,
   // et là seulement, que la garde décide quelque chose.
   for (const [quoi, src] of [
@@ -125,13 +125,13 @@ for (const [quoi, src] of [
 
   // LA VITESSE refuse le conjoint : elle passe après un ouvrant, elle tombe après un terme.
   for (const [quoi, src] of [
-    ['accolade', '@mode:lin\nS -> {!(/2) a, b}'],
-    ['virgule',  '@mode:lin\nS -> {a,!(/2) b}'],
-    ['fleche',   '@mode:lin\nS -> !(/2) a'],
+    ['accolade', 'mode:lin\n-----\nS -> {!(/2) a, b}'],
+    ['virgule',  'mode:lin\n-----\nS -> {a,!(/2) b}'],
+    ['fleche',   'mode:lin\n-----\nS -> !(/2) a'],
   ]) assert(`vitesse collee a une ${quoi} : acceptee`, refuse(src) === null, refuse(src));
   for (const [quoi, src] of [
-    ['terminal', '@mode:lin\nS -> a!(/2) b'],
-    ['groupe',   '@mode:lin\nS -> {a}!(/2) b'],
+    ['terminal', 'mode:lin\n-----\nS -> a!(/2) b'],
+    ['groupe',   'mode:lin\n-----\nS -> {a}!(/2) b'],
   ]) assert(`vitesse collee a un ${quoi} : refusee`, refuse(src) !== null);
 }
 

@@ -56,30 +56,30 @@ ok(SOCLE_CORE.alphabet === 'western',
 // `null` = la valeur doit être ABSENTE, et l'absence est alors une VALEUR, pas un trou.
 const SITUATIONS = [
   ['scène nue : elle hérite du socle @core',
-   '@core\nS -> C4 D4', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
+   'core\n-----\nS -> C4 D4', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
   ['la scène déclare son alphabet : il gagne sur le socle',
-   '@core\n@alphabet.sargam\nS -> sa re', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
+   'core\nalphabet.sargam\n-----\nS -> sa re', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Un alphabet SANS registres : l'absence est le sens (« notes nues »), pas un défaut à combler.
   ['un alphabet sans registres reste sans registres (tabla : 39 frappes nues)',
-   '@core\n@alphabet.tabla\nS -> dha', { alphabet: 'tabla', octaves: null, tuning: null }],
+   'core\nalphabet.tabla\n-----\nS -> dha', { alphabet: 'tabla', octaves: null, tuning: null }],
   ['la scène déclare des registres : ils gagnent sur ceux de l\'alphabet',
-   '@core\n@alphabet.sargam\n@octaves.saptak\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
+   'core\nalphabet.sargam\noctaves.saptak\n-----\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   ['un acteur déclaré porte les siens',
-   '@core\n@actor voix\n  alphabet.sargam\n  out.audio\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
+   'core\nactor voix\n  alphabet.sargam\n  out.audio\n-----\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Les deux SEULES absences légitimes.
   ['hauteur OPAQUE : l\'alphabet reste ABSENT, Kairos le remplit (loi 35)',
-   '@core\n@mine.perso.gamme\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
+   'core\nmine.perso.gamme\n-----\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
   ['invocation par le canal NEUTRE : ABSENT aussi — le socle ne recouvre jamais un composant invoqué',
-   '@core\n@test_alphabets.abc\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
+   'core\ntest_alphabets.abc\n-----\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
   ['une VOIX-CODE n\'a pas de vocabulaire de notes : ABSENT',
-   '@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: null, octaves: null, tuning: null }],
-  // ⚠️ L'ACCORDAGE vient de l'ALPHABET, jamais du socle @core (Romain 2026-07-29). J'avais laissé
+   'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: null, octaves: null, tuning: null }],
+  // ⚠️ L'ACCORDAGE vient de l'ALPHABET, jamais du socle core (Romain 2026-07-29). J'avais laissé
   // cet axe à vide sur 230 scènes en refusant de poser western_12TET sur du sargam — le refus
   // était juste, et la réponse est que je n'ai jamais à le poser : l'alphabet le déclare.
   ['un alphabet non occidental porte SON accordage, pas celui du socle',
-   '@core\n@alphabet.gamelan_pelog\nS -> nem', { alphabet: 'gamelan_pelog', octaves: null, tuning: 'gamelan_pelog' }],
+   'core\nalphabet.gamelan_pelog\n-----\nS -> nem', { alphabet: 'gamelan_pelog', octaves: null, tuning: 'gamelan_pelog' }],
   ['la scène peut surcharger l\'accordage de l\'alphabet',
-   '@core\n@alphabet.western\n@tuning.western_just\nS -> C4', { alphabet: 'western', octaves: 'western', tuning: 'western_just' }],
+   'core\nalphabet.western\ntuning.western_just\n-----\nS -> C4', { alphabet: 'western', octaves: 'western', tuning: 'western_just' }],
 ];
 const PROPRIETES = [
   ['la scène compile', (o) => o.erreurs.length === 0],
@@ -110,12 +110,12 @@ const refusUnicite = (src) => compiler(src).erreurs.filter((m) => /TERMINAL de l
 // etre-un-terminal`). Ce qu'il faut prouver ici n'est pas ce refus-là : c'est que le vocabulaire
 // EXISTE. Une DÉCLARATION qui heurte un terminal le prouve aussi bien, et elle, elle n'a jamais
 // été levée — la règle d'unicité tient pour ce qui CRÉE un nom.
-ok(refusUnicite('@core\n@def G4 C4 D4\nS -> C4').length >= 1,
+ok(refusUnicite('core\ndef G4 C4 D4\n-----\nS -> C4').length >= 1,
   '2. MORD — dans une scène NUE, une DÉCLARATION nommée comme une note est refusée : la preuve que '
   + "l'alphabet du socle est bien descendu (sans lui, il n'y a rien à heurter)");
-ok(refusUnicite('@core\n@def grondement saw >> audio\nS -> C4').length === 0,
+ok(refusUnicite('core\ndef grondement saw >> audio\n-----\nS -> C4').length === 0,
   '2. SE TAIT — la même scène nue accepte une déclaration au nom quelconque');
-ok(refusUnicite('@core\n@mine.perso.gamme\nG4 -> C4').length === 0,
+ok(refusUnicite('core\nmine.perso.gamme\n-----\nG4 -> C4').length === 0,
   '2. SE TAIT — hauteur opaque : aucun vocabulaire connu ici, donc rien à heurter');
 
 // ── 3. LE BALAYAGE — l'ESPACE, pas mes exemples ─────────────────────────────────────────────

@@ -68,7 +68,7 @@ const jetons = (s) => {
 {
   const seul = jetons('S -> Tr-11');
   const avecDeclaration = (() => {
-    const t = tokenize('Tr-11 -> a\nS -> Tr-11\n').filter((x) => x.type !== 'NEWLINE' && x.type !== 'EOF');
+    const t = tokenize('Tr-11 -> a\n-----\nS -> Tr-11\n').filter((x) => x.type !== 'NEWLINE' && x.type !== 'EOF');
     const i = t.findIndex((x, k) => k > 2 && x.type === 'IDENT' && x.value === 'S');
     return t.slice(i).map((x) => `${x.type}(${x.value})`).join(' ');
   })();
@@ -84,7 +84,7 @@ const jetons = (s) => {
 // Accepter n'est pas lire : une graphie qui compile en rendant autre chose est pire qu'un refus.
 {
   const droite = (src) => {
-    const a = parse(tokenize(`@core\n@alphabet.simple\n${src}\n`));
+    const a = parse(tokenize(`core\nalphabet.simple\n-----\n${src}\n`));
     const r = (a.subgrammars || []).flatMap((g) => g.rules || []);
     return (r[0]?.rhs || r[0]?.right || []).map((e) => e.type).join('·');
   };

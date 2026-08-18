@@ -34,7 +34,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western\n';
+const TETE = 'core\nalphabet.western\n';
 const arbreDe = (src) => {
   try { const r = compileToBPxAST(src); return { e: r.errors ?? [], ast: r.ast ?? r }; }
   catch (x) { return { e: [{ message: x.message }], ast: null }; }
@@ -42,17 +42,17 @@ const arbreDe = (src) => {
 
 // ─── 0. TÉMOIN — l'absence se dit `null`, pas un tableau vide ────────────────────────────────
 {
-  const t = arbreDe(`${TETE}\nS -> C4\n`);
-  ok(t.e.length === 0, `0. la scène sans @init doit compiler (${t.e[0]?.message})`);
+  const t = arbreDe(`${TETE}\n-----\nS -> C4\n`);
+  ok(t.e.length === 0, `0. la scène sans init doit compiler (${t.e[0]?.message})`);
   ok(t.ast.init === null,
-     `0. sans @init, l'arbre porte null — pas un tableau vide, sinon « la scène n'en a pas » et `
+     `0. sans init, l'arbre porte null — pas un tableau vide, sinon « la scène n'en a pas » et `
      + `« elle en a un vide » deviennent indistinguables (reçu ${JSON.stringify(t.ast.init)})`);
 }
 
 // ─── 1. LE CODE LANCÉ UNE FOIS ATTEINT L'ARBRE ───────────────────────────────────────────────
 {
-  const t = arbreDe(`${TETE}@init\n  \`js: setup()\`\n\nS -> C4\n`);
-  ok(t.e.length === 0, `1. @init avec du code doit compiler (${t.e[0]?.message})`);
+  const t = arbreDe(`${TETE}init\n  \`js: setup()\`\n\n-----\nS -> C4\n`);
+  ok(t.e.length === 0, `1. init avec du code doit compiler (${t.e[0]?.message})`);
   ok(Array.isArray(t.ast?.init) && t.ast.init.length === 1,
      `1. l'arbre doit porter UNE entrée (reçu ${JSON.stringify(t.ast?.init)})`);
   const c = t.ast?.init?.[0];
@@ -63,8 +63,8 @@ const arbreDe = (src) => {
 
 // ─── 2. LES VALEURS DE DÉPART AUSSI ──────────────────────────────────────────────────────────
 {
-  const t = arbreDe(`${TETE}@init\n  !(vel:100)\n\nS -> C4\n`);
-  ok(t.e.length === 0, `2. @init avec une valeur doit compiler (${t.e[0]?.message})`);
+  const t = arbreDe(`${TETE}init\n  !(vel:100)\n\n-----\nS -> C4\n`);
+  ok(t.e.length === 0, `2. init avec une valeur doit compiler (${t.e[0]?.message})`);
   const v = t.ast?.init?.[0];
   ok(v?.type === 'SettingBag' && v.pairs?.[0]?.key === 'vel' && v.pairs[0].value === 100,
      `2. la valeur de départ doit atteindre l'arbre avec sa clé et sa valeur (reçu ${JSON.stringify(v)})`);
@@ -74,7 +74,7 @@ const arbreDe = (src) => {
 // Un tableau plat garde l'ordre ; deux tiroirs séparés l'auraient perdu, et l'ordre d'un état de
 // départ compte — poser une valeur avant ou après avoir lancé le code n'est pas la même chose.
 {
-  const t = arbreDe(`${TETE}@init\n  !(vel:100)\n  \`js: setup()\`\n\nS -> C4\n`);
+  const t = arbreDe(`${TETE}init\n  !(vel:100)\n  \`js: setup()\`\n\n-----\nS -> C4\n`);
   ok(t.e.length === 0, `3. les deux ensemble doivent compiler (${t.e[0]?.message})`);
   ok(t.ast?.init?.length === 2
      && t.ast.init[0].type === 'SettingBag' && t.ast.init[1].type === 'BacktickOrphan',
@@ -82,40 +82,34 @@ const arbreDe = (src) => {
      + `${JSON.stringify((t.ast?.init || []).map((x) => x.type))})`);
 }
 
-// ─── 4. LE CÂBLAGE EST REFUSÉ EN LE NOMMANT — jamais avalé ───────────────────────────────────
-for (const [quoi, corps] of [
-  ['un branchement simple',   'saw1 >> lpf1'],
-  ['une chaîne',              'saw1 >> lpf1 >> out'],
-  ['une coupure',             'saw1 \\>> lpf1'],
-]) {
-  const t = arbreDe(`${TETE}@var saw1 lfo\n@init\n  ${corps}\n\nS -> C4\n`);
-  ok(t.e.some((x) => /le BRANCHEMENT ne se lit pas encore/.test(String(x.message))),
-     `4. ${quoi} doit être REFUSÉ en nommant la cause — le chantier du patching est gelé, et un `
-     + `silence ici rendrait l'état de départ à moitié muet (reçu : `
-     + `${JSON.stringify(t.e.map((x) => String(x.message).slice(0, 60)))})`);
-}
+// ⛔ LA SECTION 4 — LE CABLAGE — EST RETIREE. Le mecanisme sort du langage (Romain,
+// 2026-08-18 : « modulation et cablage ils sont obsoletes, ils vont etre remplaces par FauxtX »).
+// Elle exigeait que `saw1 >> lpf1` soit REFUSE « en nommant la cause » ; il n y a plus ni signe
+// ni cause a nommer — un cablage s ecrit comme n importe quel mot inconnu. Ce qui reste de ce
+// fichier porte l ETAT DE DEPART, qui ne bouge pas.
 
-// ─── 5. LE TAG RESTE OBLIGATOIRE — `@init` est un site ORPHELIN ──────────────────────────────
+
+// ─── 5. LE TAG RESTE OBLIGATOIRE — `init` est un site ORPHELIN ──────────────────────────────
 // Aucun acteur ne l'entoure, donc aucun langage ne peut s'hériter : un backtick nu n'a pas
 // d'interprète, et l'accepter le ferait partir nulle part.
 {
-  const t = arbreDe(`${TETE}@init\n  \`setup()\`\n\nS -> C4\n`);
+  const t = arbreDe(`${TETE}init\n  \`setup()\`\n\n-----\nS -> C4\n`);
   ok(t.e.length > 0,
-     '5. un backtick SANS tag doit être refusé dans @init — aucun acteur ne l\'entoure, donc aucun '
+     '5. un backtick SANS tag doit être refusé dans init — aucun acteur ne l\'entoure, donc aucun '
      + 'langage ne peut s\'hériter');
 }
 // Et un tag inconnu reste refusé, comme partout : la liste des évaluateurs vaut ici aussi.
 {
-  const t = arbreDe(`${TETE}@init\n  \`zz: setup()\`\n\nS -> C4\n`);
+  const t = arbreDe(`${TETE}init\n  \`zz: setup()\`\n\n-----\nS -> C4\n`);
   ok(t.e.some((x) => /évaluateur qui n'est pas déclaré/.test(String(x.message))),
-     "5. un tag INCONNU doit être refusé dans @init comme ailleurs — le contrôle des évaluateurs "
+     "5. un tag INCONNU doit être refusé dans init comme ailleurs — le contrôle des évaluateurs "
      + "ne s'arrête pas à la porte de cette directive");
 }
 
 // ─── 6. INJECTION DANS LE JUGE — la décision rejouée isolée ──────────────────────────────────
 const juger = (entrees) => (entrees === null ? 'absent' : `${entrees.length} entrée(s)`);
 ok(juger(null) === 'absent', '6. (se tait) null se lit « absent »');
-ok(juger([]) === '0 entrée(s)', '6. (mord) un @init vide est PRÉSENT et vide, pas absent');
+ok(juger([]) === '0 entrée(s)', '6. (mord) un init vide est PRÉSENT et vide, pas absent');
 ok(juger([1, 2]) === '2 entrée(s)', '6. (mord) le compte suit les entrées');
 
 if (echecs.length) {

@@ -35,16 +35,16 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western\n';
-const DECL = `${TETE}@var slide signal\n\n`;
+const TETE = 'core\nalphabet.western\n';
+const DECL = `${TETE}signal slide\n-----\n`;
 const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 
 // ─── 0. TÉMOIN — la scène de base compile, sinon le garde mesure autre chose ─────────────────
-ok(erreursDe(`${TETE}S -> C4\n`).length === 0, '0. TÉMOIN : la scène nue doit compiler');
+ok(erreursDe(`${TETE}-----\nS -> C4\n`).length === 0, '0. TÉMOIN : la scène nue doit compiler');
 ok(erreursDe(`${DECL}S -> C4\n`).length === 0,
-   "0. TÉMOIN : `@var slide signal` seul doit compiler — c'est la déclaration, pas un emploi");
+   "0. TÉMOIN : `signal slide` seul doit compiler — c'est la déclaration, pas un emploi");
 
 // ─── 1. DÉCLARÉ — les quatre écritures passent, aux positions où un réglage se pose ──────────
 for (const [quoi, src] of [
@@ -64,10 +64,10 @@ for (const [quoi, src] of [
 // Sans ce volet, n'importe quel mot collé à `cont` deviendrait un paramètre, et une coquille
 // créerait un paramètre fantôme EN SILENCE — la casse la plus chère, celle qui ne se voit pas.
 for (const [quoi, src] of [
-  ['la valeur',        `${TETE}S -> !(slide:101) C4\n`],
-  ['le mode continu',  `${TETE}S -> !(slidecont) C4\n`],
-  ['le mode paliers',  `${TETE}S -> !(slidestep) C4\n`],
-  ['le mode fixe',     `${TETE}S -> !(slidefixed) C4\n`],
+  ['la valeur',        `${TETE}-----\nS -> !(slide:101) C4\n`],
+  ['le mode continu',  `${TETE}-----\nS -> !(slidecont) C4\n`],
+  ['le mode paliers',  `${TETE}-----\nS -> !(slidestep) C4\n`],
+  ['le mode fixe',     `${TETE}-----\nS -> !(slidefixed) C4\n`],
 ]) {
   ok(erreursDe(src).length > 0,
      `2. ${quoi} sur un paramètre NON déclaré doit être refusé — sinon une coquille crée un `
@@ -96,7 +96,7 @@ for (const [quoi, src] of [
 // Si la règle s'était élargie jusqu'à tout accepter, ce volet passerait aussi ; c'est le volet 2
 // qui l'en empêche. Les deux ensemble disent la portée ET son complément.
 for (const mot of ['velstep', 'velcont', 'volumefixed', 'pancont', 'transposestep']) {
-  ok(erreursDe(`${TETE}S -> !(${mot}) C4\n`).length === 0,
+  ok(erreursDe(`${TETE}-----\nS -> !(${mot}) C4\n`).length === 0,
      `5. '${mot}', un des vingt-sept mots des neuf paramètres, doit compiler SANS déclaration — `
      + "il vient d'une librairie, pas de la scène");
 }

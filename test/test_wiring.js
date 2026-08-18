@@ -26,7 +26,7 @@ if (GEL_MODULATION_PATCHING) {
   process.exit(0);
 }
 
-// test_wiring.js — Câblage : opérateurs >> / \>> , corps de @macro ET flux d'une règle.
+// test_wiring.js — Câblage : opérateurs >> / \>> , corps de macro ET flux d'une règle.
 // Vérifie le PARSER/AST (PORTER≠RÉSOUDRE : BPScript émet le Wiring, l'aval résout).
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
@@ -37,9 +37,9 @@ function ok(name, cond) { if (cond) { pass++; console.log('  ✓', name); } else
 function macros(src) {
   // ⚠️ LA RÈGLE DE CE HARNAIS ÉCRIVAIT `S -> lead` — un symbole qu'AUCUN cas ne déclare, et qui
   // traversait sans un mot parce que la scène n'avait pas de convention de notes en portée.
-  // Depuis la cascade @core (2026-07-29), toute scène en a une : le harnais écrit donc une note,
+  // Depuis la cascade core (2026-07-29), toute scène en a une : le harnais écrit donc une note,
   // et ce qu'il mesure — la forme des corps de macro — n'en dépendait de toute façon pas.
-  const r = compileToBPxAST('@core\n' + src + '\nS -> C4');
+  const r = compileToBPxAST('core\n-----\n' + src + '\n-----\nS -> C4');
   return { errors: r.errors, macros: r.ast?.macros || [] };
 }
 
@@ -47,7 +47,7 @@ console.log('=== Câblage >> / \\>> ===');
 
 // 1. Série simple : saw >> lpf >> audio
 {
-  const { errors, macros: m } = macros('@macro lead saw >> lpf >> audio');
+  const { errors, macros: m } = macros('macro lead saw >> lpf >> audio');
   ok('série 3 étages, 0 erreur', errors.length === 0 && m[0].body[0].type === 'Wiring');
   ok('3 étages câblés', eq(m[0].body[0].stages.map((s) => s.module), ['saw', 'lpf', 'audio']));
   ok('aucun cut sur une série', m[0].body[0].stages.every((s) => s.cut === false));
@@ -55,7 +55,7 @@ console.log('=== Câblage >> / \\>> ===');
 
 // 2. Ports + valeurs (ref, backtick, nombre)
 {
-  const { macros: m } = macros('@macro v saw.freq: pitch >> lpf.cutoff:`js: lfo(2)` >> audio');
+  const { macros: m } = macros('macro v saw.freq: pitch >> lpf.cutoff:`js: lfo(2)` >> audio');
   const s = m[0].body[0].stages;
   ok('port adressé par le point', s[0].module === 'saw' && s[0].port === 'freq');
   ok('valeur ref (pitch)', eq(s[0].value, { kind: 'ref', name: 'pitch' }));
@@ -65,27 +65,27 @@ console.log('=== Câblage >> / \\>> ===');
 
 // 3. Valeur nombre + unité
 {
-  const { macros: m } = macros('@macro d env.decay: 350ms >> audio');
+  const { macros: m } = macros('macro d env.decay: 350ms >> audio');
   ok('valeur nombre + unité', eq(m[0].body[0].stages[0].value, { kind: 'number', value:350, unit: 'ms' }));
 }
 
 // 4. Débranchement \>> (patchbay dynamique)
 {
-  const { errors, macros: m } = macros('@macro mute \\>> out.in');
+  const { errors, macros: m } = macros('macro mute \\>> out.in');
   ok('\\>> = Wiring cut, 0 erreur', errors.length === 0 && m[0].body[0].type === 'Wiring' && m[0].body[0].cut === true);
   ok('cible du cut', m[0].body[0].stages[0].module === 'out' && m[0].body[0].stages[0].port === 'in');
 }
 
 // 5. Cut en milieu de chaîne : a >> b \>> c
 {
-  const { macros: m } = macros('@macro cx a >> b \\>> c');
+  const { macros: m } = macros('macro cx a >> b \\>> c');
   const s = m[0].body[0].stages;
   ok('lien >> non-cut, lien \\>> cut', s[1].cut === false && s[2].cut === true);
 }
 
-// 6. Substitution INCHANGÉE (corps sans >> ni point glué = ancien @macro)
+// 6. Substitution INCHANGÉE (corps sans >> ni point glué = ancien macro)
 {
-  const { errors, macros: m } = macros('@macro accent(x) x(vel:120)');
+  const { errors, macros: m } = macros('macro accent(x) x(vel:120)');
   ok('substitution reste RhsElement (pas Wiring)', errors.length === 0 && m[0].body[0].type !== 'Wiring');
 }
 
@@ -93,37 +93,37 @@ console.log('=== Câblage >> / \\>> ===');
 // Le parser NE CLASSE PAS son-vs-substitution : le point glué → même nœud que actor.terminal
 // (Symbol{name,actor}), OPAQUE ; la classe (module/acteur/homo) est décidée à la RÉSOLUTION.
 {
-  const trig = macros('@macro strike drum.on');
+  const trig = macros('macro strike drum.on');
   const b = trig.macros[0].body[0];
   ok('drum.on → appel-composant Symbol{name:on, actor:drum}, PAS Wiring',
     b.type === 'Symbol' && b.name === 'on' && b.actor === 'drum' && trig.errors.length === 0);
-  const cv = macros('@macro open lpf.cutoff:8000');
+  const cv = macros('macro open lpf.cutoff:8000');
   ok('lpf.cutoff:8000 → composant opaque (pas Wiring), 0 erreur',
     cv.macros[0].body[0].type !== 'Wiring' && cv.errors.length === 0);
-  const spaced = macros('@macro per A . B');
+  const spaced = macros('macro per A . B');
   ok('point ESPACÉ (A . B) = notation période inchangée',
     spaced.macros[0].body.map((e) => e.type).join(',') === 'Symbol,Period,Symbol');
-  const wire = macros('@macro w a >> b');
+  const wire = macros('macro w a >> b');
   ok('SEUL >> fait un Wiring', wire.macros[0].body[0].type === 'Wiring');
 }
 
 // 6c. Champ VALEUR sur appel-composant opaque (§4/§9 activés [502]) — cv-set/ref/backtick.
 {
-  const num = macros('@macro open lpf.cutoff:8000');
+  const num = macros('macro open lpf.cutoff:8000');
   ok('cv-set number → Symbol.value {kind:number}', eq(num.macros[0].body[0].value, { kind: 'number', value:8000 })
     && num.macros[0].body[0].actor === 'lpf' && num.macros[0].body[0].name === 'cutoff');
-  const ref = macros('@macro f saw.freq: pitch');
+  const ref = macros('macro f saw.freq: pitch');
   ok('valeur ref (saw.freq: pitch) parse (bug corrigé) → {kind:ref}', ref.errors.length === 0
     && eq(ref.macros[0].body[0].value, { kind: 'ref', name: 'pitch' }));
-  const bt = macros('@macro c lpf.cutoff:`js: lfo(2)`');
+  const bt = macros('macro c lpf.cutoff:`js: lfo(2)`');
   ok('valeur backtick typée', bt.macros[0].body[0].value.kind === 'backtick' && bt.macros[0].body[0].value.tag === 'js');
-  const trig = macros('@macro s drum.on');
+  const trig = macros('macro s drum.on');
   ok('appel sans valeur (trig) → pas de champ value', trig.macros[0].body[0].value === undefined);
 }
 
 // 7. BP3 byte : un câblage n'apparaît pas dans la grammaire BP3 (feature BPScript/BPx)
 {
-  const r = compileToBPxAST('@core\n@macro lead saw >> lpf >> audio\nS -> Sa');
+  const r = compileToBPxAST('core\nmacro lead saw >> lpf >> audio\n-----\nS -> Sa');
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 — la certification grammaire-texte est
   // abandonnée (arbitrage Romain) et l'encodeur supprimé : il n'y a plus de texte à vérifier.
   // ancienne assertion : ok('compileBPS ne crashe pas sur un câblage', typeof r.grammar === 'string');
@@ -144,7 +144,7 @@ if (fail > 0) process.exit(1);
 // ============================================================================
 
 function fluxRhs(regle) {
-  const r = compileToBPxAST('@core\n' + regle);
+  const r = compileToBPxAST('core\n-----\n' + regle);
   return { errors: r.errors, rhs: r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [] };
 }
 const cablagesDe = (rhs) => rhs.filter((e) => e && e.type === 'Wiring');
@@ -205,10 +205,10 @@ ok('§7. la matrice ne s\'est pas vidée', FORMES_FLUX.length >= 11 && PROPRIETE
 // là où on l'a vue. Et le refus doit NOMMER la disparition ET donner la réécriture : un refus
 // qui constate sans corriger renvoie lire la spec pour une faute d'un caractère.
 const OU_ELLE_POUVAIT_S_ECRIRE = [
-  ['dans un corps de macro',      '@core\n@macro mute !>> out.in\nS -> mute'],
-  ['au milieu d\'une chaîne',     '@core\n@macro cx a >> b !>> c\nS -> cx'],
-  ['dans le flux d\'une règle',   '@core\nS -> C4 !>> out.in D4'],
-  ['en tête de règle',            '@core\nS -> !>> out.in'],
+  ['dans un corps de macro',      'core\nmacro mute !>> out.in\n-----\nS -> mute'],
+  ['au milieu d\'une chaîne',     'core\nmacro cx a >> b !>> c\n-----\nS -> cx'],
+  ['dans le flux d\'une règle',   'core\n-----\nS -> C4 !>> out.in D4'],
+  ['en tête de règle',            'core\n-----\nS -> !>> out.in'],
 ];
 console.log('\n=== §7bis. \'!>>\' a disparu ===');
 for (const [ou, src] of OU_ELLE_POUVAIT_S_ECRIRE) {
@@ -267,28 +267,28 @@ if (typeof Session !== 'function') {
 }
 
 const EXEMPLE_DOCUMENTE = `@core
-@core
-@macro prise    pot >> tempo.bpm
-@macro lache    \\>> tempo.bpm
+core
+macro prise    pot >> tempo.bpm
+macro lache    \\>> tempo.bpm
 
 S -> A4 prise  B4 C4 D4  lache  E4`;
 
 // ⏸️ §8 SUSPENDU LE 2026-08-08 — et ce n'est pas un défaut, c'est une frontière qui a bougé.
 //
 // Ce volet fait traverser une scène jusqu'au MOTEUR pour vérifier que le câblage y arrive. Il
-// écrit son exemple avec `@macro` — le mot que Romain a sorti du langage ce jour-là, avec `@gate`,
-// `@trigger`, `@cv` et `@alias`. BPx a publié son refus AVANT que ma pierre tombale ne tombe, et
+// écrit son exemple avec `macro` — le mot que Romain a sorti du langage ce jour-là, avec `gate`,
+// `trigger`, `cv` et `alias`. BPx a publié son refus AVANT que ma pierre tombale ne tombe, et
 // il l'a fait à ma demande : sans lui, une scène qui perd sa table de macros rend le MÊME nombre
 // d'événements sans plus rien armer — Kairos l'a mesuré sur patchbay, huit événements dans les
 // deux cas, quatre armements contre zéro. Un compte qui ne bouge pas ne peut rien crier.
 // Le moteur LÈVE donc désormais sur cet exemple, et c'est le comportement voulu.
 //
 // ⚠️ CE VOLET NE PEUT PAS ÊTRE MIGRÉ AUJOURD'HUI : la forme qui remplace le corps de câblage est
-// `@def <nom> <cible> >> <cible>`, et le premier palier de `@def` ne lit que la déclaration de
+// `def <nom> <cible> >> <cible>`, et le premier palier de `def` ne lit que la déclaration de
 // terminal. Le réécrire maintenant nommerait une cible inexistante — la faute que j'ai commise
 // ce soir même en posant deux tombales sans réécriture, et que j'ai dû défaire.
 // ⛔ ET SA DATE DE RALLUMAGE A CHANGÉ LE 2026-08-08, IL FAUT LE DIRE ICI. Cette note annonçait
-// « il se rebranche avec le palier branchement de `@def` », ce qui laissait croire à une attente
+// « il se rebranche avec le palier branchement de `def` », ce qui laissait croire à une attente
 // de quelques jours. Le palier « branchement » est du CÂBLAGE : Romain a placé le même soir tout
 // ce qui touche modules et patching au BACKLOG, pour revue avec FaustX (BPS-52). Ce volet
 // n'attend donc PAS un palier à écrire — il attend une REVUE PRODUIT dont la date n'est pas
@@ -311,7 +311,7 @@ console.log('\n=== §8. la forme documentée ===');
     rhs.length === 7 && rhs.every((e) => e.type === 'Symbol'));
   ok('§8. et les deux noms de macro y sont', ['prise', 'lache'].every((n) => rhs.some((e) => e.name === n)));
   // Le corps de macro ne porte PAS le signe d'instantané — le piège mesuré par BPx.
-  const avecSigne = compileToBPxAST(EXEMPLE_DOCUMENTE.replace('@macro lache    \\>>', '@macro lache    !\\>>'));
+  const avecSigne = compileToBPxAST(EXEMPLE_DOCUMENTE.replace('macro lache    \\>>', 'macro lache    !\\>>'));
   ok('§8. le signe DANS un corps de macro ne passe pas (piège documenté)', !avecSigne.ast);
   let charge = null;
   try { new Session(r.ast, {}); charge = true; } catch (e) { charge = String(e.message); }
@@ -326,7 +326,7 @@ console.log('\n=== §8. la forme documentée ===');
 // mise en garde de la doc devrait être relue.
 console.log('\n=== §8bis. la forme ATTACHÉE — le point d\'application ===');
 {
-  const base = '@core\n@macro voix saw >> audio\n';
+  const base = 'core\nmacro voix saw >> audio\n';
   // Collé et espacé sont la MÊME forme : la règle d'espace ne joue que sur `!(…)`.
   const colle = compileToBPxAST(base + 'S -> C4!voix D4');
   const espace = compileToBPxAST(base + 'S -> C4 !voix D4');
@@ -367,14 +367,14 @@ console.log('\n=== §8bis. la forme ATTACHÉE — le point d\'application ===');
 // donnerait qu'une moitié laisserait choisir au hasard.
 console.log('\n=== §8ter. le suffixe arobase a disparu ===');
 const OU_LE_SUFFIXE_POUVAIT_S_ECRIRE = [
-  ['sur un terminal',            '@core\nS -> C4@kick D4'],
-  ['sur un groupe',              '@core\nS -> {C4 D4}@groove'],
-  ['sur une variable',           '@core\n@var a\nS -> C4 a@lbl'],
-  ['en fin de règle',            '@core\nS -> C4 D4@fin'],
-  ['dans une voix polymétrique', '@core\nS -> {C4@kick D4, E4}'],
-  ['dans un groupe de gabarit maître',  '@core\nS -> ${C4@kick D4}'],
-  ['dans un groupe de gabarit esclave', '@core\nS -> &{C4@kick D4}'],
-  ['la directive elle-même',     '@core\n@label groove\nS -> C4 D4'],
+  ['sur un terminal',            'core\n-----\nS -> C4@kick D4'],
+  ['sur un groupe',              'core\n-----\nS -> {C4 D4}@groove'],
+  ['sur une variable',           'core\nsymbol a\n-----\nS -> C4 a@lbl'],
+  ['en fin de règle',            'core\n-----\nS -> C4 D4@fin'],
+  ['dans une voix polymétrique', 'core\n-----\nS -> {C4@kick D4, E4}'],
+  ['dans un groupe de gabarit maître',  'core\n-----\nS -> ${C4@kick D4}'],
+  ['dans un groupe de gabarit esclave', 'core\n-----\nS -> &{C4@kick D4}'],
+  ['la directive elle-même',     'core\nlabel groove\n-----\nS -> C4 D4'],
 ];
 // ⚠️ CETTE LISTE EST L'ESPACE, PAS LE TICKET. Écrite d'abord avec le seul flux de premier niveau,
 // elle laissait TROIS positions refuser par un message générique — voix polymétrique et les deux
@@ -392,7 +392,7 @@ for (const [ou, src] of OU_LE_SUFFIXE_POUVAIT_S_ECRIRE) {
 // Le champ quitte l'arbre AVEC le mot : un champ émis et toujours vide fait conclure « cette scène
 // n'étiquette rien » au lieu de « ce canal n'existe plus ».
 {
-  const r = compileToBPxAST('@core\nS -> C4 D4');
+  const r = compileToBPxAST('core\n-----\nS -> C4 D4');
   ok('§8ter. le champ des étiquettes a quitté l\'arbre', r.ast?.labels === undefined);
   ok('§8ter. et aucun élément ne porte plus d\'étiquette',
     !JSON.stringify(r.ast?.subgrammars ?? {}).includes('"label"'));
@@ -400,7 +400,7 @@ for (const [ou, src] of OU_LE_SUFFIXE_POUVAIT_S_ECRIRE) {
 // TÉMOIN INVERSE — l'étiquette de GROUPE polymétrique est une AUTRE graphie et elle RESTE.
 // Sans lui, un retrait trop large passerait pour un succès.
 {
-  const r = compileToBPxAST('@core\nS -> groove:{C4 D4, E4}');
+  const r = compileToBPxAST('core\n-----\nS -> groove:{C4 D4, E4}');
   ok('§8ter. l\'étiquette de groupe polymétrique (deux-points) survit', !!r.ast && r.errors.length === 0);
   ok('§8ter. et elle porte bien son nom',
     r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0]?.label === 'groove');
@@ -410,7 +410,7 @@ for (const [ou, src] of OU_LE_SUFFIXE_POUVAIT_S_ECRIRE) {
 // chargement. Témoin des deux sens — si le moteur se met à la porter, cette ligne rougit et la
 // doc doit changer le jour même, au lieu de rester périmée sans que rien ne le dise.
 {
-  const r = compileToBPxAST('@core\nS -> C4 !lpf \\>> out.in D4');
+  const r = compileToBPxAST('core\n-----\nS -> C4 !lpf \\>> out.in D4');
   ok('§8. la forme DIRECTE est acceptée par le langage', !!r.ast && r.errors.length === 0);
   let refus = null;
   try { new Session(r.ast, {}); } catch (e) { refus = String(e.message); }

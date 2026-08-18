@@ -2,10 +2,10 @@
 // Hit(vel:80) must transpile to `_script(CT n) Hit _script(CT n_e)` and
 // the rewrite `Hit -> -` must still fire (NOT `Hit#vel#80` opaque terminal).
 
-@core
-@alphabet.western:midi
+core
+alphabet.western:midi
 
 -----
-@mode:ord
+mode:ord
 S -> Hit(vel:80) Hit(vel:60)
 Hit -> -

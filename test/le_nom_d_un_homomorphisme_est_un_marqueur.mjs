@@ -37,13 +37,13 @@ const DOIVENT_PASSER = [
   // sont des bols de tabla. Le garde était vert AVEC ET SANS le correctif : il mesurait
   // l'alphabet, pas le mécanisme. Trouvé en injectant la faute, jamais en le relisant.
   ['le nom INVOQUÉ, entre maître et esclave',
-   '@core\n@alphabet.tabla\n@homomorphism.tryhomomorphism\nN14 -> dha\nS -> $N14 tryhomomorphism &N14\n'],
+   'core\nalphabet.tabla\nhomomorphism.tryhomomorphism\n-----\nN14 -> dha\nS -> $N14 tryhomomorphism &N14\n'],
   ['le même nom, posé seul dans le flux',
-   '@core\n@alphabet.tabla\n@homomorphism.tryhomomorphism\nS -> dha tryhomomorphism dha\n'],
+   'core\nalphabet.tabla\nhomomorphism.tryhomomorphism\n-----\nS -> dha tryhomomorphism dha\n'],
   ['une seconde table, invoquée par son nom',
-   '@core\n@alphabet.tabla\n@homomorphism.transposition\nS -> dha transposition dha\n'],
+   'core\nalphabet.tabla\nhomomorphism.transposition\n-----\nS -> dha transposition dha\n'],
   ['deux tables invoquées : les deux noms sont lisibles',
-   '@core\n@alphabet.tabla\n@homomorphism.tryhomomorphism\n@homomorphism.transposition\n'
+   'core\nalphabet.tabla\nhomomorphism.tryhomomorphism\nhomomorphism.transposition\n-----\n'
    + 'S -> dha tryhomomorphism transposition dha\n'],
 ];
 for (const [quoi, src] of DOIVENT_PASSER) {
@@ -56,15 +56,15 @@ for (const [quoi, src] of DOIVENT_PASSER) {
 // passerait le volet A en triomphe. C'est elle qui démasque.
 const DOIVENT_REFUSER = [
   ['un nom qui n\'est ni une note ni une table',
-   '@core\n@alphabet.tabla\n@homomorphism.dhati\nN14 -> dha\nS -> $N14 zzz &N14\n'],
+   'core\nalphabet.tabla\nhomomorphism.dhati\n-----\nN14 -> dha\nS -> $N14 zzz &N14\n'],
   // ⚠️ TÉMOIN CHOISI AVEC SOIN : `dhati` est AUSSI un bol de tabla (41 terminaux), donc une scène
   // qui l'écrit sans invoquer la table compile — et pour une bonne raison, pas par laxisme.
   // Mesurer avec lui aurait accusé le code d'un défaut qu'il n'a pas. Le témoin emploie donc un
   // nom de table qui n'est terminal de rien.
   ['une table NON invoquée par la scène',
-   '@core\n@alphabet.tabla\nN14 -> dha\nS -> $N14 tryhomomorphism &N14\n'],
+   'core\nalphabet.tabla\n-----\nN14 -> dha\nS -> $N14 tryhomomorphism &N14\n'],
   ['une étiquette de section d\'une AUTRE table, non invoquée',
-   '@core\n@alphabet.tabla\n@homomorphism.dhati\nS -> dha TR dha\n'],
+   'core\nalphabet.tabla\nhomomorphism.dhati\n-----\nS -> dha TR dha\n'],
 ];
 for (const [quoi, src] of DOIVENT_REFUSER) {
   const msg = messages(compiler(src));

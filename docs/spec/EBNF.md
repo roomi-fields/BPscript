@@ -16,7 +16,7 @@ scene = { declarative_line } , subgrammar+ , [ template_section ] ;
 declarative_line = library_invocation
                  | setting_invocation
                  | actor_directive
-                 | var_directive
+                 | declaration_typee
                  | def_directive
                  | init_directive
                  | backtick_orphan
@@ -39,43 +39,42 @@ actor_key = ACTOR_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;   (* out.midi(c
 ACTOR_KEY = "alphabet" | "tuning" | "octaves" | "out" | "eval" ;
 ```
 
-`@actor` déclare **qui joue**. Chacune des cinq clés se lit dans un catalogue ; ce que l'acteur
+`actor` déclare **qui joue**. Chacune des cinq clés se lit dans un catalogue ; ce que l'acteur
 n'écrit pas, il l'hérite de la scène. Le point appelle le composant, et les paramètres entre
 parenthèses en donnent l'adresse.
 
 ```ebnf
-var_directive = "@" , "var" , var_nom , var_type            (* @var lpf1 lpf *)
-              | "@" , "var" , var_nom , { "," , var_nom } ; (* @var pivot   @var z1, z2, z3 *)
+declaration_typee = "flag"   , IDENT , "(" , flag_state , { "," , flag_state } , ")"
+                  | "in" , "." , IN_CHANNEL , IDENT , [ "mapping" , "." , IDENT ]
+                  | CONVENTION , nom_pose
+                  | IDENT , nom_pose            (* un module du catalogue : ramp r1 *)
+                  | "symbol" , nom_pose , { "," , nom_pose } ;
 
 (* Le nom porte sa valeur de depart, COLLEE a son deux-points. Le sujet est le nom, jamais
-   le type : "@var grain signal:0.5" lierait la valeur a "signal" et se lit faux. *)
-var_nom       = IDENT , [ ":" , ( INT | FLOAT | IDENT ) ] ; (* @var grain:0.5 signal *)
-
-var_type = "flag" , ":" , flag_state , { "," , flag_state }  (* @var section flag: calm:1, full:2 *)
-         | "in" , "." , IN_CHANNEL                           (* @var touches in.keyboard *)
-         | CONVENTION                                        (* @var hauteur pitch *)
-         | IDENT ;                                           (* @var lpf1 lpf — un module *)
+   le type : "signal:0.5 grain" lierait la valeur a "signal" et se lit faux. *)
+nom_pose   = IDENT , [ ":" , ( INT | FLOAT | IDENT ) ] ;   (* signal grain:0.5 *)
 
 CONVENTION = "signal" | "pitch" | "phase" | "logic" ;
 IN_CHANNEL = "midi" | "osc" | "keyboard" ;
 flag_state = IDENT , ":" , INT ;
 ```
 
-`@var` déclare **une variable** : un nom qui porte une valeur ou un état. Le nom vient d'abord, le
-type ensuite. Un flag déclare ses états en même temps que lui-même, et une règle s'y conditionne
-ensuite par leur nom. Une entrée nomme un **rôle** ; l'appareil qui le remplit s'y associe hors de
-la scène. Une variable sans type est un symbole du flux qui n'est ni une note ni un nom de règle.
+**Le type vient en tete, le nom ensuite.** Un drapeau declare ses etats entre parentheses, et une
+regle s y conditionne ensuite par leur nom. Une entree nomme un **role** ; l appareil qui le remplit
+s y associe hors de la scene, et sa table se nomme par le point. `symbol` declare un symbole du flux
+qui n est ni une note ni un nom de regle. Un mot du catalogue de modules declare une **instance** de
+ce module.
 
 ```ebnf
 def_directive = "@" , "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
-def_body = terminal_block            (* @def cloche  degree:0  voice.sombre *)
-         | patch_expr                (* @def sombre lpf1 >> vca1 *)
-         | setting_bag               (* @def kick (vel:120) *)
-         | backtick_inline           (* @def fondu phase `js: (t, dur) => 1 - t / dur` *)
-         | rhs ;                     (* @def cadence sa re ga pa   @def accent(x) x(vel:120) *)
+def_body = terminal_block            (* def cloche  degree:0  voice.sombre *)
+         | patch_expr                (* def sombre lpf1 >> vca1 *)
+         | setting_bag               (* def kick (vel:120) *)
+         | backtick_inline           (* def fondu phase `js: (t, dur) => 1 - t / dur` *)
+         | rhs ;                     (* def cadence sa re ga pa   def accent(x) x(vel:120) *)
 
 terminal_block = terminal_key+ ;     (* une clé par ligne, ou sur la même ligne *)
 
@@ -86,7 +85,7 @@ TERMINAL_REF   = "tuning" | "octaves" | "out" | "voice" ;
 TERMINAL_VALUE = "degree" | "register" | "hz" | "sounding" | "duration" ;
 ```
 
-`@def` déclare **une définition** : un nom associé à un corps qu'on réinvoque d'un mot. Le nom vient
+`def` déclare **une définition** : un nom associé à un corps qu'on réinvoque d'un mot. Le nom vient
 d'abord, ce qu'il vaut ensuite. La liste de paramètres se **colle** au nom ; un corps qui commence
 par une parenthèse en est séparé par une espace. Le nom se pose ensuite à sa place dans une règle.
 
@@ -104,7 +103,7 @@ init_directive = "@" , "init" , NEWLINE , init_entry+ ;
 init_entry = patch_expr | backtick_orphan ;
 ```
 
-`@init` déclare **l'état de départ** de la scène : ce qui existe au démarrage et appartient à la
+`init` déclare **l'état de départ** de la scène : ce qui existe au démarrage et appartient à la
 scène entière — le branchement initial, le code lancé une fois, les valeurs de départ. Ce qui
 appartient à une chose s'initialise dans sa déclaration.
 
@@ -128,7 +127,7 @@ sortie de l'acteur, dont le canal est celui que l'acteur déclare.
 Un module a une entrée et une sortie de signal par défaut ; quand elles suffisent, la chaîne
 s'écrit sans les nommer. Quand il y en a plusieurs, le câblage les nomme avec le point.
 
-Ce langage s'écrit à deux emplacements : nommé dans un `@def`, littéral dans un backtick `patch:`.
+Ce langage s'écrit à deux emplacements : nommé dans un `def`, littéral dans un backtick `patch:`.
 
 ### Invoquer une librairie, invoquer un réglage
 
@@ -150,15 +149,15 @@ CATEGORY = "transpo" | "time" | "engine" ;
 
 **Le nom d'une entrée peut commencer par un chiffre.** `entry_name` est une production distincte
 de `IDENT` : les accordages et les tempéraments portent des noms d'usage qui commencent par leur
-nombre de degrés — `@temperaments.12TET`, `@temperaments.22shruti`. La règle ne vaut qu'ici : un
+nombre de degrés — `temperaments.12TET`, `temperaments.22shruti`. La règle ne vaut qu'ici : un
 acteur, une variable, une définition et un terminal restent des `IDENT`, et commencent donc par une
 lettre.
 
 Une librairie s'invoque par son nom, l'entrée après le point : c'est la forme unique de tout ce qui
-vit dans un catalogue. `@core` apporte le socle ; une scène qui ne l'écrit pas n'a aucun défaut.
+vit dans un catalogue. `core` apporte le socle ; une scène qui ne l'écrit pas n'a aucun défaut.
 
 Un réglage s'écrit par sa catégorie, l'entrée après le point. La catégorie dit à quoi le réglage
-touche, donc qui le consomme : `@transpo.` la hauteur, `@time.` le temps qui s'écoule, `@engine.`
+touche, donc qui le consomme : `transpo.` la hauteur, `time.` le temps qui s'écoule, `engine.`
 le temps calculé et la dérivation.
 
 **Le préfixe est optionnel** : un nom nu passe s'il vit dans une seule librairie invoquée. Porté par
@@ -200,8 +199,8 @@ mode_line  = "@" , "mode" , ":" , MODE ;
 MODE = "ord" | "random" | "lin" | "sub" | "sub1" | "tem" | "poslong" ;
 ```
 
-Les règles d'une même sous-grammaire partagent le mode. Il s'écrit `@mode:<valeur>` en tête, ou
-`@mode:<valeur>` en tête de sous-grammaire. Deux sous-grammaires sont des **passes successives** : un
+Les règles d'une même sous-grammaire partagent le mode. Il s'écrit `mode:<valeur>` en tête, ou
+`mode:<valeur>` en tête de sous-grammaire. Deux sous-grammaires sont des **passes successives** : un
 même nom y est le même symbole, réécrit plus tard.
 
 | Mode      | Stratégie de sélection                           |
@@ -218,7 +217,7 @@ En mode `sub` et `sub1`, les symboles du membre gauche sont eux aussi des termin
 après les itérations appartient à l'alphabet et se joue. Une **tête de règle** peut donc y être un
 terminal, puisqu'elle le réécrit.
 
-### Le catalogue des formes — `@template`
+### Le catalogue des formes — `template`
 
 ```ebnf
 template_section = "@" , "template" , NEWLINE , template_entry+ ;
@@ -579,7 +578,7 @@ emplois du signe : collé à un identifiant, `$X` nomme un gabarit ; suivi d'une
 homomorphism_marker = IDENT ;      (* $N14 dhati &N14 — le nom de la table, entre les deux *)
 ```
 
-Une **table d'homomorphisme** s'invoque par `@homomorphism.<table>`, une par nom, chacune avec ses
+Une **table d'homomorphisme** s'invoque par `homomorphism.<table>`, une par nom, chacune avec ses
 sections. Elle porte des correspondances symbole vers symbole, et l'étiquette de la section est le
 nom de l'homomorphisme. Elle s'applique **entre un gabarit maître et son esclave**, dont le nom se
 pose entre les deux : l'esclave rejoue alors le maître transformé par la table.
@@ -631,7 +630,7 @@ destinataire l'interprète.
 | **symbole** | collé au symbole              | `C4(vel:120)`              |
 | **groupe**  | collé au `}`                  | `{A B}(vel:100)`           |
 | **règle**   | espacé, en fin de membre droit | `S -> C4 D4 (weight:50)`   |
-| **globale** | `@catégorie.clé:valeur`       | `@time.tempo:120`          |
+| **globale** | `catégorie.clé:valeur`       | `time.tempo:120`          |
 
 Une paire peut porter un **sujet** devant la clé pour viser plus finement. Le sujet vaut **par
 paire** : sans sujet, la portée elle-même comme unité ; `*` désigne chaque terminal de la portée ;
@@ -780,7 +779,7 @@ Un alphabet peut donc déclarer `a`, `a'` et `a"` comme trois terminaux distinct
 | `!(rotate:2)` | `_rotate(2)` | clé avec valeur : la valeur suit le deux-points |
 | `!(shuffle)` / `!(order)` | `_rndseq` / `_ordseq` | posés en tête du groupe ou du membre droit |
 | `!(seed:N)` | `_srand(N)` | re-semence au point d'apparition |
-| `@mode:random` | `RND` | mode du bloc |
+| `mode:random` | `RND` | mode du bloc |
 | `(scan:left)` | `LEFT` | sens du parcours |
 | `(weight:50)` / `(weight:inf)` | `<50>` / `<inf>` | poids |
 | `(meter:4+4/6)` | `4+4/6` avant le membre droit | signature rythmique |
@@ -790,7 +789,7 @@ Un alphabet peut donc déclarer `a`, `a'` et `a"` comme trois terminaux distinct
 | `-----` | `-----` | séparateur de sous-grammaires |
 | `lambda` | `lambda` | chaîne vide |
 | `<!sync1` | `<<W1>>` | point d'attente |
-| `@template` | `TEMPLATES:` | catalogue des formes |
+| `template` | `TEMPLATES:` | catalogue des formes |
 | `?` / `????` | `_` / `____` | terminal effacé, dans un gabarit |
 | `($0 ???)` | `(@0 ___)` | groupe apparié, dans un gabarit |
 | `/1` | `*1/1` | échelle, dans un gabarit |

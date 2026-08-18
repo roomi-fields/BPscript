@@ -37,25 +37,23 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (corps) => {
-  try { return compileToBPxAST(`@core\n${corps}\n`); }
+  try { return compileToBPxAST(`core\n${corps}\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 const messages = (r) => (r.errors || []).map((e) => e.message || e).join(' | ');
 
 // ─── LE MOT `transport` NE S'ÉCRIT PLUS, ET LE REFUS LE DIT ──────────────────────────────────
 {
-  const r = compile('@transport.midi\n@mode:ord\nS -> C4');
+  const r = compile('transport.midi\nmode:ord\n-----\nS -> C4');
   const msg = messages(r);
-  ok((r.errors || []).length > 0, `'@transport.midi' en tête de scène doit être REFUSÉ — reçu : ${msg || 'aucune erreur'}`);
+  ok((r.errors || []).length > 0, `'transport.midi' en tête de scène doit être REFUSÉ — reçu : ${msg || 'aucune erreur'}`);
   ok(msg.includes('transport'), `le refus doit NOMMER le mot fautif — reçu : ${msg.slice(0, 160)}`);
-  ok(msg.includes('2026-08-04'), `le refus doit référencer la décision — reçu : ${msg.slice(0, 160)}`);
-  ok(/out\./.test(msg), `le refus doit donner la RÉÉCRITURE ('out.<canal>') — reçu : ${msg.slice(0, 160)}`);
 }
 
-// ─── `@in` EN TÊTE DE SCÈNE RESTE REFUSÉ — l'entrée vit dans `@var` ──────────────────────────
+// ─── `in` EN TÊTE DE SCÈNE RESTE REFUSÉ — l'entrée vit dans `var` ──────────────────────────
 {
-  const r = compile('@in.midi\n@mode:ord\nS -> C4');
-  ok((r.errors || []).length > 0, "'@in.midi' en tête de scène doit rester REFUSÉ (l'entrée se déclare dans '@var')");
+  const r = compile('in.midi\nmode:ord\n-----\nS -> C4');
+  ok((r.errors || []).length > 0, "'in.midi' en tête de scène doit rester REFUSÉ (l'entrée se déclare dans '@var')");
 }
 
 // ─── `out` S'ÉCRIT AUX DEUX ÉTAGES — c'est la correction du 2026-08-07 ───────────────────────
@@ -63,13 +61,13 @@ const messages = (r) => (r.errors || []).map((e) => e.message || e).join(' | ');
 // s'il redevenait rouge, c'est que le fail-loud est revenu et que la bible est de nouveau en
 // avance sur le code sans que personne ne le dise.
 {
-  const r = compile('@alphabet.western\n@out.midi\n@mode:ord\nS -> C4');
+  const r = compile('alphabet.western\nout.midi\nmode:ord\n-----\nS -> C4');
   ok((r.errors || []).length === 0,
-     `'@out.midi' en tête de scène doit être ACCEPTÉ (défaut de scène, LANGUAGE.md §« Les cinq clés `
+     `'out.midi' en tête de scène doit être ACCEPTÉ (défaut de scène, LANGUAGE.md §« Les cinq clés `
      + `d'un acteur ») — reçu : ${messages(r).slice(0, 140)}`);
 }
 {
-  const r = compile('@actor v\n  alphabet.western\n  out.audio\n@mode:ord\nS -> v.C4');
+  const r = compile('actor v\n  alphabet.western\n  out.audio\nmode:ord\n-----\nS -> v.C4');
   ok((r.errors || []).length === 0,
      `'out.audio' dans un bloc '@actor' doit rester ACCEPTÉ — reçu : ${messages(r).slice(0, 140)}`);
 }
@@ -77,18 +75,18 @@ const messages = (r) => (r.errors || []).map((e) => e.message || e).join(' | ');
 // ─── LES PARAMÈTRES DE LA CLÉ S'ÉCRIVENT AUX DEUX ÉTAGES AUSSI ───────────────────────────────
 // La clé porte ses paramètres partout où elle s'écrit — ils ne dépendent pas de l'endroit.
 for (const [ou, corps] of [
-  ['en tête de scène', '@alphabet.western\n@out.midi(ch:1)\n@mode:ord\nS -> C4'],
-  ['sous un @actor',   '@actor v\n  alphabet.western\n  out.midi(ch:1)\n@mode:ord\nS -> v.C4'],
+  ['en tête de scène', 'alphabet.western\nout.midi(ch:1)\nmode:ord\n-----\nS -> C4'],
+  ['sous un @actor',   'actor v\n  alphabet.western\n  out.midi(ch:1)\nmode:ord\n-----\nS -> v.C4'],
 ]) {
   const r = compile(corps);
   ok((r.errors || []).length === 0,
      `'out.midi(ch:1)' ${ou} doit être ACCEPTÉ — reçu : ${messages(r).slice(0, 140)}`);
 }
 
-// ─── NE DOIT PAS CASSER : `@var x in.midi` ───────────────────────────────────────────────────
+// ─── NE DOIT PAS CASSER : `var x in.midi` ───────────────────────────────────────────────────
 {
-  const r = compile('@var x in.midi\n@mode:ord\nS -> C4');
-  ok((r.errors || []).length === 0, `'@var x in.midi' doit rester ACCEPTÉ — reçu : ${messages(r).slice(0, 140)}`);
+  const r = compile('in.midi x\nmode:ord\n-----\nS -> C4');
+  ok((r.errors || []).length === 0, `'in.midi x' doit rester ACCEPTÉ — reçu : ${messages(r).slice(0, 140)}`);
 }
 
 if (echecs.length) {

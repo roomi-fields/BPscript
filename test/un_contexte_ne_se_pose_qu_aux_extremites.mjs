@@ -24,7 +24,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compiler = (regle) => {
-  try { return compileToBPxAST(`@core\n@alphabet.sargam\n${regle}\nS -> sa\n`); }
+  try { return compileToBPxAST(`core\nalphabet.sargam\n-----\n${regle}\n-----\nS -> sa\n`); }
   catch (e) { return { errors: [{ message: e.message }] }; }
 };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');

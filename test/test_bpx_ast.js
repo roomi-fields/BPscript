@@ -15,7 +15,7 @@ function backtickNodes(ast) {
 
 // 1. Résultat = ARBRE SEUL, aucune table parallèle, aucun artefact BP3
 {
-  const r = compileToBPxAST('@core\nS -> C4 D4');
+  const r = compileToBPxAST('core\n-----\nS -> C4 D4');
   check(!!r.ast, 'ast présent');
   check(JSON.stringify(Object.keys(r).sort()) === JSON.stringify(['ast', 'errors', 'warnings']),
     'résultat = { ast, errors, warnings } SEULEMENT, obtenu ' + JSON.stringify(Object.keys(r)));
@@ -26,7 +26,7 @@ function backtickNodes(ast) {
 
 // 2. Backticks : tout SUR LE NŒUD (_btName + code + interp), pas de table
 {
-  const r = compileToBPxAST('@core\nS -> C4 `sc: synth(1)` `note("c2")`');
+  const r = compileToBPxAST('core\n-----\nS -> C4 `sc: synth(1)` `note("c2")`');
   const bts = backtickNodes(r.ast);
   check(bts.length === 2, 'deux nœuds backtick, obtenu ' + bts.length);
   check(bts.every((n) => n._btName), 'tous _btName posés sur les nœuds');
@@ -41,61 +41,61 @@ function backtickNodes(ast) {
   // ⚠️ LA SOURCE DE L'HÉRITAGE A CHANGÉ LE 2026-07-28 : le langage venait du nom de la TÊTE DE
   // RÈGLE, ce qui obligeait à nommer une règle comme un acteur — l'amalgame refusé depuis. Il
   // vient désormais de l'acteur qui QUALIFIE le bloc par le point, là où il qualifie déjà une note.
-  const r = compileToBPxAST('@actor stru\n  eval.strudel\nS -> voix\nvoix -> stru.`note("c2")`');
+  const r = compileToBPxAST('actor stru\n  eval.strudel\n-----\nS -> voix\nvoix -> stru.`note("c2")`');
   const bt = backtickNodes(r.ast)[0];
   check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval de l'acteur qui qualifie) : " + JSON.stringify(bt && bt.payload));
   check(bt && bt.actor === 'stru', "et le bloc porte l'IDENTITÉ de la voix, que le tag seul ne donne pas : " + JSON.stringify(bt && bt.actor));
 }
 
-// 4. flagStates LU depuis `@var <nom> flag: ...` (ex-`@flag`, tombée le 2026-08-05 — `@flag` n'est
+// 4. flagStates LU depuis `var <nom> flag: ...` (ex-`flag`, tombée le 2026-08-05 — `flag` n'est
 // plus une directive de tête de scène, EBNF.md:29-33 : quatre mots déclaratifs seulement).
 {
-  const r = compileToBPxAST('@var section flag: calm:1, full:2\n@core\nS -> C4');
+  const r = compileToBPxAST('flag section(calm:1, full:2)\ncore\n-----\nS -> C4');
   const vd = (r.ast.vars || []).find((v) => v.names?.[0] === 'section' && v.varType?.kind === 'flag');
-  check(!!vd, "directive @var section flag: présente dans l'arbre");
+  check(!!vd, "directive var section flag: présente dans l'arbre");
   const m = Object.fromEntries((vd?.varType?.states || []).map((s) => [s.name, s.value]));
   check(m.calm === 1 && m.full === 2, 'états lisibles depuis la directive : ' + JSON.stringify(m));
 }
 
 // 5. LA BANQUE D'ÉCHANTILLONS EST LUE SUR L'ACTEUR, PAS SUR UNE DIRECTIVE DE SCÈNE.
-// ⚠️ CE CAS A CHANGÉ DE SUJET le 2026-08-06 : `@library.<moteur> "<banque>"` est SUPPRIMÉE
+// ⚠️ CE CAS A CHANGÉ DE SUJET le 2026-08-06 : `library.<moteur> "<banque>"` est SUPPRIMÉE
 // (décision Romain — « bank est intrinsèque à strudel, c'est pas générique »). La banque est
 // devenue un paramètre propre de l'entrée `strudel` de `lib/eval.json`, et se pose sur l'acteur.
 // Le test ne disparaît pas avec la directive : c'est la même question — la banque est-elle
 // LISIBLE DANS L'ARBRE, sans table annexe ? — posée au nouvel endroit.
 {
-  const r = compileToBPxAST('@core\n@actor drums  eval.strudel(bank:gm)\nS -> drums_r\ndrums_r -> drums.`s("bd")`');
+  const r = compileToBPxAST('core\nactor drums  eval.strudel(bank:gm)\n-----\nS -> drums_r\ndrums_r -> drums.`s("bd")`');
   const a = (r.ast.actors || []).find((x) => x.name === 'drums');
   const bank = a?.properties?.entityParams?.eval?.bank;
   check(bank === 'gm', 'banque lisible sur l acteur : ' + JSON.stringify(a?.properties?.entityParams));
 }
 
 // 6. acteurs : references[] (ActorReference)
-// ⚠️ CE CAS PORTAIT AUSSI UNE ASSERTION SUR `ast.scenes`, RETIRÉE le 2026-07-29 : `@scene` est
+// ⚠️ CE CAS PORTAIT AUSSI UNE ASSERTION SUR `ast.scenes`, RETIRÉE le 2026-07-29 : `scene` est
 // SUPPRIMÉE du langage (décision Romain, « on n'a ni la maturité ni le besoin de déclarer des
 // sous-scènes »). Le témoin est devenu un cas REFUSÉ, plus bas — le garder aurait fait rougir la
 // pierre tombale qu'il aurait dû protéger.
 {
-  const r = compileToBPxAST('@actor tabla\n  @alphabet.tabla\n  out.midi(ch:10)\nS -> tabla.Sa');
+  const r = compileToBPxAST('actor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> tabla.Sa');
   const tr = r.ast.actors[0].references?.find((x) => x.category === 'transport');
   check(tr?.type === 'ActorReference' && tr?.name === 'midi' && tr?.params?.ch === 10,
     'ActorReference transport sur le nœud acteur : ' + JSON.stringify(tr));
 }
 
-// 6bis. `@scene` est REFUSÉE, et le refus NOMME la faute — il ne dit pas « ligne non reconnue ».
+// 6bis. `scene` est REFUSÉE, et le refus NOMME la faute — il ne dit pas « ligne non reconnue ».
 {
-  const r = compileToBPxAST('@core\n@alphabet.western\n@scene verse "verse.bps"\nS -> C4');
+  const r = compileToBPxAST('core\nalphabet.western\n-----\nscene verse "verse.bps"\n-----\nS -> C4');
   const msgs = (r.errors || []).map((e) => e.message ?? String(e));
-  check(msgs.some((m) => /'@scene' est SUPPRIMÉE/.test(m)),
-    '@scene doit être refusée en NOMMANT la suppression : ' + JSON.stringify(msgs));
+  check(msgs.some((m) => /'scene' est SUPPRIMÉE/.test(m)),
+    'scene doit être refusée en NOMMANT la suppression : ' + JSON.stringify(msgs));
   check(msgs.some((m) => /sous-scènes/.test(m)),
-    '@scene — le refus doit dire POURQUOI, pas seulement refuser : ' + JSON.stringify(msgs));
+    'scene — le refus doit dire POURQUOI, pas seulement refuser : ' + JSON.stringify(msgs));
 }
 
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom
-// (`@var <nom> flag: ...`, ex-`@flag` tombée le 2026-08-05)
+// (`var <nom> flag: ...`, ex-`flag` tombée le 2026-08-05)
 {
-  const r = compileToBPxAST('@var section flag: calm:1, full:2\n[section==calm] S -> A\n[section==full] S -> Two\nA -> C4\nTwo -> C4 C4');
+  const r = compileToBPxAST('flag section(calm:1, full:2)\n-----\n[section==calm] S -> A\n[section==full] S -> Two\n-----\nA -> C4\nTwo -> C4 C4');
   const guards = [];
   for (const sg of r.ast.subgrammars) for (const rule of sg.rules) {
     const gg = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
@@ -105,7 +105,7 @@ function backtickNodes(ast) {
   check(guards.some((g) => g.flag === 'section' && g.value === 2), 'garde [section==full] résolue à 2 dans l\'AST');
   check(!guards.some((g) => typeof g.value === 'string'), 'aucun nom d\'état non résolu (que des entiers)');
   // IDENT NON déclaré = reste string (référence à un autre drapeau, fidèle BP3)
-  const r2 = compileToBPxAST('@var section flag: calm:1\n[section==other] S -> A\nA -> C4');
+  const r2 = compileToBPxAST('flag section(calm:1)\n-----\n[section==other] S -> A\n-----\nA -> C4');
   check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'other', 'IDENT non déclaré reste string (réf drapeau)');
 }
 

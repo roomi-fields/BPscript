@@ -35,9 +35,9 @@ const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && 
     const entrees = entreesDe(lib);
     if (!entrees.length) continue;
     verifies++;
-    const r = compileToBPxAST(`@core\n@alphabet.western\n@${lib.resolves}.${entrees[0]}\nS -> C4\n`);
+    const r = compileToBPxAST(`core\nalphabet.western\n${lib.resolves}.${entrees[0]}\n-----\nS -> C4\n`);
     ok(!/aucune librairie ne sert/.test(messages(r)),
-       `A. '${fichier}' déclare 'resolves: ${lib.resolves}' : '@${lib.resolves}.${entrees[0]}' doit `
+       `A. '${fichier}' déclare 'resolves: ${lib.resolves}' : '${lib.resolves}.${entrees[0]}' doit `
        + `être servi. Reçu : ${messages(r).slice(0, 90)}`);
   }
   ok(verifies >= 9,
@@ -49,9 +49,9 @@ const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && 
 {
   for (const [mot, entree] of [['alphabet', 'western'], ['tuning', 'western_12TET'],
                                ['octaves', 'western'], ['settings', 'test1']]) {
-    const r = compileToBPxAST(`@core\n@alphabet.western\n@${mot}.${entree}\nS -> C4\n`);
+    const r = compileToBPxAST(`core\nalphabet.western\n${mot}.${entree}\n-----\nS -> C4\n`);
     ok(!/aucune librairie ne sert/.test(messages(r)),
-       `B. '@${mot}.${entree}' doit être servi — le mot suit la donnée, pas une règle de nombre. `
+       `B. '${mot}.${entree}' doit être servi — le mot suit la donnée, pas une règle de nombre. `
        + `Reçu : ${messages(r).slice(0, 80)}`);
   }
 }
@@ -74,9 +74,9 @@ const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && 
   // une entrée du SECOND fichier, invoquée par le mot commun.
   const second = porteurs[1];
   const entreeDuSecond = entreesDe(LIBS[second])[0];
-  const r = compileToBPxAST(`@core\n@alphabet.${entreeDuSecond}\nS -> C4\n`);
+  const r = compileToBPxAST(`core\nalphabet.${entreeDuSecond}\n-----\nS -> C4\n`);
   ok(!/introuvable dans le catalogue|aucune librairie ne sert/.test(messages(r)),
-     `C. '@alphabet.${entreeDuSecond}' vit dans '${second}', le SECOND fichier du mot : il doit être `
+     `C. 'alphabet.${entreeDuSecond}' vit dans '${second}', le SECOND fichier du mot : il doit être `
      + `atteint. Reçu : ${messages(r).slice(0, 90)}. Une table qui ne garde que le premier fichier `
      + `passe les volets qui lisent la donnée, et rate celui-ci.`);
 

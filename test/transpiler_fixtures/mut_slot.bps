@@ -1,7 +1,7 @@
 // Mutation en fin de règle : occupe-t-elle un slot temporel ?
-@core
+core
 -----
-@mode:ord
+mode:ord
 S -> Sa Re [count=2]
 Sa -> -
 Re -> -

@@ -42,7 +42,7 @@ const sacDe = (ast) => {
   return trouve;
 };
 
-const scene = (corps) => `@core\n@alphabet.western:midi\n\nS -> !(${corps}) C4\n`;
+const scene = (corps) => `core\nalphabet.western:midi\n\n-----\nS -> !(${corps}) C4\n`;
 
 // ─── LA TABLE ATTENDUE — lue sur les librairies, jamais recopiée ici ─────────────────────────
 const destinataireAttendu = {};

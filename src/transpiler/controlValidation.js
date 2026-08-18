@@ -9,7 +9,7 @@
 // Kanopi [113].
 //
 // PORTÉE. On ne valide QUE les contrôles présents dans la lib chargée. Un nom inconnu
-// (alias @cc, contrôle custom) est laissé passer — pas de faux positif. Les clés nues
+// (alias cc, contrôle custom) est laissé passer — pas de faux positif. Les clés nues
 // (velcont…) et les valeurs non numériques face à une plage sont ignorées.
 //
 // L'AST n'est PAS modifié (contrat BPx) : on lit, on retourne une liste d'erreurs.
@@ -40,7 +40,7 @@ function collectQualifierPairs(node, out) {
 /**
  * ⛔ LA TÊTE DE SCÈNE EST UNE PLACE D'ÉCRITURE COMME UNE AUTRE — Romain, 2026-08-15, « à corriger ».
  *
- * CE QUI PASSAIT : `@vel:200`, `@midi.ins:129` et `@midi.rate:1001` COMPILAIENT, alors que
+ * CE QUI PASSAIT : `vel:200`, `midi.ins:129` et `midi.rate:1001` COMPILAIENT, alors que
  * `!(vel:200)` était refusé en nommant la plage. La collecte ci-dessus ne ramasse que les paires
  * d'un SAC (`SettingBag`) ; une directive de tête n'est pas un sac, c'est un nœud `Directive`. La
  * validation ne voyait donc jamais la moitié des écritures.
@@ -49,12 +49,12 @@ function collectQualifierPairs(node, out) {
  * scène. Leurs bornes — mesurées sur les sources du moteur, que le natif fait respecter en
  * ARRÊTANT la compilation — ne mordaient nulle part. Des plages déclarées qui ne validaient rien.
  *
- * LA FORME EST NORMALISÉE AVANT D'ARRIVER ICI : `@midi.rate:50` rend `{name:'rate', value:50}`,
+ * LA FORME EST NORMALISÉE AVANT D'ARRIVER ICI : `midi.rate:50` rend `{name:'rate', value:50}`,
  * préfixe résolu. On lit donc le même couple clé/valeur que dans un sac, et le juge est le même —
  * un seul endroit décide ce qu'une valeur a le droit d'être.
  *
  * UNE DIRECTIVE QUI N'EST PAS UN CONTRÔLE PASSE SANS BRUIT : la validation ne connaît que les mots
- * de la librairie chargée (`if (!def) continue`), et `@alphabet.western` ou `@core` n'en sont pas.
+ * de la librairie chargée (`if (!def) continue`), et `alphabet.western` ou `core` n'en sont pas.
  */
 function collectDirectiveValues(ast, out) {
   for (const d of (ast && ast.directives) || []) {

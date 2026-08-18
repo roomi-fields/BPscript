@@ -75,10 +75,10 @@ for (const mot of ['ch', 'channel', 'device', 'note', 'port']) {
 
 // ─── 1. LES FORMES RATIFIÉES COMPILENT ──────────────────────────────────────────────────────
 const FORMES = [
-  ['directe',                '@core\nS -> C4 <!in.midi(note:60, channel:3)\n'],
-  ['la note seule',          '@core\nS -> C4 <!in.midi(note:60)\n'],
-  ['le canal seul',          '@core\nS -> C4 <!in.midi(channel:3)\n'],
-  ['allégée par @def',       '@core\n@def pedale(x) x <!in.midi(note:60, channel:3)\nS -> pedale(C4)\n'],
+  ['directe',                'core\n-----\nS -> C4 <!in.midi(note:60, channel:3)\n'],
+  ['la note seule',          'core\n-----\nS -> C4 <!in.midi(note:60)\n'],
+  ['le canal seul',          'core\n-----\nS -> C4 <!in.midi(channel:3)\n'],
+  ['allégée par def',       'core\ndef pedale(x) x <!in.midi(note:60, channel:3)\n-----\nS -> pedale(C4)\n'],
 ];
 for (const [quoi, src] of FORMES) {
   const errs = erreursDe(src);
@@ -90,8 +90,8 @@ for (const [quoi, src] of FORMES) {
 // Déclarer un mot ne doit rien retrancher : l'attente nue et l'adresse positionnelle compilaient
 // avant ce geste, et une régression de leur côté serait muette.
 for (const [quoi, src] of [
-  ['l\'attente nue',            '@core\nS -> C4 <!in.midi\n'],
-  ['l\'adresse positionnelle',  '@core\nS -> C4 <!in.midi.60\n'],
+  ['l\'attente nue',            'core\n-----\nS -> C4 <!in.midi\n'],
+  ['l\'adresse positionnelle',  'core\n-----\nS -> C4 <!in.midi.60\n'],
 ]) {
   ok(erreursDe(src).length === 0, `1bis. ${quoi} doit continuer de compiler`);
 }
@@ -104,7 +104,7 @@ for (const [quoi, cle] of [
   ['une coquille sur channel',  'chanel'],
   ['un mot plausible',          'velocity'],
 ]) {
-  ok(refusDAttribut(`@core\nS -> C4 <!in.midi(${cle}:60)\n`).length > 0,
+  ok(refusDAttribut(`core\n-----\nS -> C4 <!in.midi(${cle}:60)\n`).length > 0,
      `2. ${quoi} ('${cle}') doit rester refusée — sinon toute clé passe au point d'attente`);
 }
 
@@ -114,7 +114,7 @@ for (const [quoi, cle] of [
 // rougisse : mesuré en la coupant — les cinq clés devenaient écrivables n'importe où, et la seule
 // erreur restante était le refus générique d'une valeur inconnue, qui ne dit pas la même chose.
 for (const cle of ['ch', 'channel', 'device', 'note', 'port']) {
-  const m = erreursDe(`@core\n@${cle}:5\nS -> C4\n`).map((e) => String(e.message)).join(' | ');
+  const m = erreursDe(`core\n${cle}:5\n-----\nS -> C4\n`).map((e) => String(e.message)).join(' | ');
   ok(/ne peut pas s'écrire en tête de scène/.test(m),
      `2bis. '${cle}' écrit en TÊTE DE SCÈNE doit être refusé au nom de sa portée déclarée — reçu : `
      + `${m.slice(0, 120)}`);
@@ -127,12 +127,12 @@ for (const cle of ['ch', 'channel', 'device', 'note', 'port']) {
   const ampute = JSON.parse(JSON.stringify(LIBS.midi));
   delete ampute.schema.addressKeys.note;
   registerLib('midi', ampute);
-  ok(refusDAttribut('@core\nS -> C4 <!in.midi(note:60)\n').length > 0,
+  ok(refusDAttribut('core\n-----\nS -> C4 <!in.midi(note:60)\n').length > 0,
      "3. (mord) `note` retiré de la donnée doit faire retomber la forme sur « attribut inconnu » — "
      + 'sinon la clé est reconnue ailleurs qu\'en librairie, et la donnée ne commande rien');
   clearRegistry();
   registerAll(LIBS);
-  ok(erreursDe('@core\nS -> C4 <!in.midi(note:60)\n').length === 0,
+  ok(erreursDe('core\n-----\nS -> C4 <!in.midi(note:60)\n').length === 0,
      '3. après restauration, la forme doit repasser — sinon la mutilation fuit sur la suite');
 }
 
@@ -147,7 +147,7 @@ ok(juger('velocity', declarees), '4. (mord) un mot plausible non déclaré rougi
 // ─── 5. À L'ARRIVÉE — les paires atteignent l'arbre, portées par le point d'attente ──────────
 // Un refus levé ne prouve rien de ce que l'aval reçoit : « compile » n'est pas « arrive ».
 {
-  const arbre = compileToBPxAST('@core\nS -> C4 <!in.midi(note:60, channel:3)\n').ast;
+  const arbre = compileToBPxAST('core\n-----\nS -> C4 <!in.midi(note:60, channel:3)\n').ast;
   const attentes = [];
   (function marcher(n) {
     if (!n || typeof n !== 'object') return;

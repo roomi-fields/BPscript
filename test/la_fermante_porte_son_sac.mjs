@@ -32,7 +32,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const P = '@core\n@alphabet.western\n';
+const P = 'core\nalphabet.western\n-----\n';
 const compiler = (corps) => {
   try { return compileToBPxAST(P + corps); } catch (e) { return { errors: [{ message: e.message }] }; }
 };
@@ -60,15 +60,15 @@ const CAS = [
    'S -> {C4 D4 E4 F4}(vel:50) G4\n', ['Polymetric'],
    'le sac collé à la fermante règle le BLOC'],
   ['bloc RÉPARTI, sac COLLÉ à la fermante',
-   'S -> A B G4\nA -> { C4 D4\nB -> E4 F4 }(vel:50)\n', ['RawBrace'],
+   'S -> A B G4\n-----\nA -> { C4 D4\nB -> E4 F4 }(vel:50)\n', ['RawBrace'],
    'la fermante doit PORTER le sac — sinon l\'information disparaît de l\'arbre et le bloc réparti '
    + 'ne sonne pas comme le bloc écrit d\'un tenant'],
   ['bloc RÉPARTI, sac SÉPARÉ par une espace',
-   'S -> A B G4\nA -> { C4 D4\nB -> E4 F4 } (vel:50)\n', ['Rule'],
+   'S -> A B G4\n-----\nA -> { C4 D4\nB -> E4 F4 } (vel:50)\n', ['Rule'],
    'séparé par une espace, il règle la RÈGLE — c\'est l\'autre moitié de la règle générale, et '
    + 'sans elle un correctif qui poserait TOUT sur la fermante passerait pour juste'],
   ['bloc RÉPARTI, sac collé PUIS un autre espacé',
-   'S -> A B\nA -> { C4 D4\nB -> E4 F4 }(vel:50) (pan:20)\n', ['RawBrace'],
+   'S -> A B\n-----\nA -> { C4 D4\nB -> E4 F4 }(vel:50) (pan:20)\n', ['RawBrace'],
    'les deux coexistent : le collé au bloc, l\'espacé à la règle'],
 ];
 for (const [quoi, corps, attendu, pourquoi] of CAS) {
@@ -85,13 +85,16 @@ for (const [quoi, corps, attendu, pourquoi] of CAS) {
 // ── LE SAC N'ÉCRASE PAS LA DURÉE, ET RÉCIPROQUEMENT ──────────────────────────────────────────
 // La fermante portait déjà sa durée ; le sac s'ajoute, il ne prend pas sa place.
 {
-  const r = compiler('S -> A B\nA -> { C4 D4\nB -> E4 F4 }:2\n');
+  const r = compiler('S -> A B\n-----\nA -> { C4 D4\nB -> E4 F4 }:2\n');
   ok(messages(r) === '', `la durée collée à la fermante est REFUSÉE : ${messages(r).slice(0, 70)}`);
   if (!messages(r)) {
     // ⚠️ LA PREMIÈRE `RawBrace` EST L'OUVRANTE — ce garde cherchait celle-là et accusait le code
     // d'avoir perdu la durée. L'instrument ment plus souvent que le sujet, y compris quand c'est
     // le mien et qu'il vient d'être écrit.
-    const rb = r.ast.subgrammars[0].rules.flatMap((x) => x.rhs)
+    // ⛔ TOUTES LES SOUS-GRAMMAIRES, pas la premiere : le delimiteur initial est obligatoire
+    // depuis le 2026-08-17, donc la passe qui porte la fermante n est plus forcement `[0]`.
+    // Chercher dans une seule passe fait rendre `undefined` a un garde qui a raison sur le fond.
+    const rb = r.ast.subgrammars.flatMap((g) => g.rules).flatMap((x) => x.rhs)
       .find((e) => e.type === 'RawBrace' && e.value === '}');
     ok(rb && rb.duree, `la fermante doit toujours porter sa DURÉE — reçu ${JSON.stringify(rb)}`);
   }
@@ -108,7 +111,7 @@ for (const [quoi, corps, attendu, pourquoi] of CAS) {
 // On compare donc les deux sceaux CHAMP À CHAMP, pas leur simple présence.
 {
   const tenant = compiler('S -> {C4 D4 E4 F4}(vel:50) G4\n');
-  const reparti = compiler('S -> A B\nA -> { C4 D4\nB -> E4 F4 }(vel:50)\n');
+  const reparti = compiler('S -> A B\n-----\nA -> { C4 D4\nB -> E4 F4 }(vel:50)\n');
   const sceau = (r, nature) => {
     let vu = null;
     const w = (n) => {

@@ -32,7 +32,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western:midi\n\n';
+const TETE = 'core\nalphabet.western:midi\n-----\n\n';
 const erreursDe = (src) => (compileToBPxAST(src).errors ?? []);
 const refusDeDrapeau = (src) => erreursDe(src).filter((e) => /le drapeau '/.test(String(e.message)));
 
@@ -49,8 +49,8 @@ for (const n of VOLES) {
     ['en fin de règle, muté', `${TETE}S -> C4 [${n}=1]\n`],
     ['en fin de règle, incrémenté', `${TETE}S -> C4 [${n}+1]\n`],
     ['en fin de règle, nom nu', `${TETE}S -> C4 [${n}]\n`],
-    ['en garde devant le membre gauche', `${TETE}[${n}] S -> C4\nS -> D4\n`],
-    ['en garde, comparé', `${TETE}[${n}==1] S -> C4\nS -> D4\n`],
+    ['en garde devant le membre gauche', `${TETE}[${n}] S -> C4\n-----\nS -> D4\n`],
+    ['en garde, comparé', `${TETE}[${n}==1] S -> C4\n-----\nS -> D4\n`],
     ['mêlé à un drapeau légitime', `${TETE}S -> C4 [stage=1, ${n}=2]\n`],
   ];
   for (const [ou, src] of positions) {
@@ -64,9 +64,9 @@ const LEGITIMES = [
   ['un nom neuf, muté', `${TETE}S -> C4 [zz_drapeau_neuf=1]\n`],
   ['un nom neuf, nu (forme vivante du corpus)', `${TETE}S -> C4 [zz_drapeau_neuf]\n`],
   ['plusieurs mutations dans un sac', `${TETE}S -> C4 [stage=1, count=4]\n`],
-  ['une garde devant le membre gauche', `${TETE}[Ideas] S -> C4\nS -> D4\n`],
-  ['un drapeau déclaré par @var, puis muté', `${TETE}@var section flag: calm:1, full:2\n\nS -> C4 [section=1]\n`],
-  ['le MÊME drapeau muté dans deux règles', `${TETE}S -> C4 [count-1]\nS -> D4 [count-1]\n`],
+  ['une garde devant le membre gauche', `${TETE}[Ideas] S -> C4\n-----\nS -> D4\n`],
+  ['un drapeau déclaré par var, puis muté', 'core\nalphabet.western:midi\nflag section(calm:1, full:2)\n-----\nS -> C4 [section=1]\n'],
+  ['le MÊME drapeau muté dans deux règles', `${TETE}S -> C4 [count-1]\n-----\nS -> D4 [count-1]\n`],
 ];
 for (const [quoi, src] of LEGITIMES) {
   const e = erreursDe(src);
@@ -81,9 +81,9 @@ for (const [quoi, src] of LEGITIMES) {
 for (const [sorte, src] of [
   ['un TERMINAL, muté', `${TETE}S -> C4 [C4=1]\n`],
   ['un TERMINAL, nom nu', `${TETE}S -> C4 [C4]\n`],
-  ['un TERMINAL, en garde', `${TETE}[C4] S -> D4\nS -> E4\n`],
-  ['une TÊTE DE RÈGLE, mutée', `${TETE}S -> Motif [Motif=1]\nMotif -> C4\n`],
-  ['une TÊTE DE RÈGLE, nom nu', `${TETE}S -> Motif [Motif]\nMotif -> C4\n`],
+  ['un TERMINAL, en garde', `${TETE}[C4] S -> D4\n-----\nS -> E4\n`],
+  ['une TÊTE DE RÈGLE, mutée', `${TETE}S -> Motif [Motif=1]\n-----\nMotif -> C4\n`],
+  ['une TÊTE DE RÈGLE, nom nu', `${TETE}S -> Motif [Motif]\n-----\nMotif -> C4\n`],
 ]) {
   ok(refusDeDrapeau(src).length > 0, `3. un drapeau qui reprend ${sorte} doit être refusé`);
 }

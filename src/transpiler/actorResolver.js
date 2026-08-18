@@ -25,7 +25,7 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   if (!alphabetLib || !nomsDeTerminaux(alphabetLib)) return terminals;
 
   // Resolve octave convention. Décision cles-acteur-six (Romain 2026-06-16) :
-  // `@actor X octaves.Y` SURCHARGE la convention de registre ; sinon défaut =
+  // `actor X octaves.Y` SURCHARGE la convention de registre ; sinon défaut =
   // convention héritée de l'alphabet (alphabetLib.octaves).
   const octaveConvention = octavesOverride != null ? octavesOverride : alphabetLib.octaves;
   const octaveDef = octaveConvention ? loadLib('octaves')?.[octaveConvention] : null;
@@ -85,7 +85,7 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
 function alphabetHerite(ast) {
   const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   // ⚠️ ON NE MATÉRIALISE QUE CE QUI RÉSOUT — même règle que pour les registres, et pour la même
-  // raison, mesurée le 2026-08-07 : un `@alphabet.zzz` inexistant était RECOPIÉ sur l'acteur
+  // raison, mesurée le 2026-08-07 : un `alphabet.zzz` inexistant était RECOPIÉ sur l'acteur
   // implicite, et le contrôle des références le refusait DEUX FOIS — une pour la directive, une
   // pour la copie. Un même défaut qui parle deux fois se lit comme deux défauts ; la scène en a un.
   // Le cri reste, à sa place, sur la directive.
@@ -93,13 +93,13 @@ function alphabetHerite(ast) {
     return resolveActorAlphabet(sceneAlpha.subkey, ast.directives) ? sceneAlpha.subkey : null;
   }
   if (ast.libRefs && ast.libRefs.length) return null;                    // hauteur opaque → Kairos (loi 35)
-  return loadLib('core')?.defaults?.components?.alphabet || null;        // niveau 1 : socle @core
+  return loadLib('core')?.defaults?.components?.alphabet || null;        // niveau 1 : socle core
 }
 
 /**
  * LA CONVENTION DE REGISTRES HÉRITÉE — même cascade, deuxième axe (2026-07-29).
  *
- * Elle sortait à vide dans 251 scènes sur 263, y compris quand la scène ÉCRIT `@octaves.saptak`
+ * Elle sortait à vide dans 251 scènes sur 263, y compris quand la scène ÉCRIT `octaves.saptak`
  * noir sur blanc : la directive était lue par le validateur de terminaux et par PERSONNE d'autre,
  * donc l'arbre ne la portait nulle part. Deux définitions de « quels sont les terminaux ici » qui
  * ne lisaient pas les mêmes registres — la famille de défaut que je paie le plus souvent.
@@ -119,7 +119,7 @@ function alphabetHerite(ast) {
 function octavesHerite(ast, alphabetKey) {
   // ⚠️ ON NE MATÉRIALISE QUE CE QUI RÉSOUT, et ce n'est pas de la prudence : une convention que le
   // catalogue ne connaît pas n'a AUCUNE valeur effective à porter. Sans ce filtre, un
-  // `@octaves.nexistepas` était recopié sur l'acteur et le validateur de références le refusait
+  // `octaves.nexistepas` était recopié sur l'acteur et le validateur de références le refusait
   // DEUX FOIS — une pour la directive, une pour la copie. Un même défaut qui parle deux fois se
   // lit comme deux défauts ; la scène en a un. Le cri reste, à sa place, sur la directive.
   const connu = (nom) => !!(nom && loadLib('octaves')?.[nom]);
@@ -168,9 +168,9 @@ function tuningHerite(ast, alphabetKey) {
   return connu(lib && lib.tuning) ? lib.tuning : undefined;
 }
 
-// Transport par défaut de l'acteur IMPLICITE — lu DANS @core (donnée : `defaults.components
+// Transport par défaut de l'acteur IMPLICITE — lu DANS core (donnée : `defaults.components
 // .transport`), plus de constante en dur (cascade de défauts, Romain 2026-07-05). Le repli
-// 'audio' n'est atteint QUE si @core est absent/cassé (bug de config) — pas un défaut normal.
+// 'audio' n'est atteint QUE si core est absent/cassé (bug de config) — pas un défaut normal.
 function defaultActorTransport() {
   const core = loadLib('core');
   return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
@@ -182,15 +182,15 @@ function defaultActorTransport() {
  * ⚠️ CE QU'IL FAISAIT AVANT LE 2026-08-07, et pourquoi c'est pire qu'un trou. Les trois axes de
  * hauteur au-dessus sortaient ABSENTS quand la scène ne les écrivait pas — visible. La sortie,
  * elle, sortait PRÉSENTE et FAUSSE : l'acteur implicite recevait toujours `audio`, le défaut du
- * socle, même quand la scène écrivait `@out.midi` noir sur blanc. Un consommateur ne pouvait pas
+ * socle, même quand la scène écrivait `out.midi` noir sur blanc. Un consommateur ne pouvait pas
  * le savoir — une valeur par défaut et une valeur ignorée ont exactement la même tête. C'est le
  * mode d'échec MUET, celui qu'aucun garde ne signale parce que rien ne manque.
  *
  * Et l'écriture était refusée au parse depuis le 2026-08-04, ce qui masquait le reste : on ne
  * mesure pas la descente d'une directive qu'on interdit d'écrire.
  *
- * LA CASCADE, dans l'ordre : ce que la scène écrit (`@out.midi(ch:1)`) → le raccord de sortie posé
- * sur l'alphabet (`@alphabet.X:midi`, canon 2026-07-05) → le défaut du composant (`lib/core.json`).
+ * LA CASCADE, dans l'ordre : ce que la scène écrit (`out.midi(ch:1)`) → le raccord de sortie posé
+ * sur l'alphabet (`alphabet.X:midi`, canon 2026-07-05) → le défaut du composant (`lib/core.json`).
  * Les deux premiers disent LA MÊME CHOSE par deux écritures ; s'ils se contredisent, on refuse en
  * les nommant tous les deux plutôt que d'en élire un en silence.
  *
@@ -212,9 +212,9 @@ function sortieHeritee(ast) {
 /**
  * LE LANGAGE D'ÉVALUATION HÉRITÉ — cinquième axe, et il ne descendait pas du tout.
  *
- * `@eval.strudel` en tête de scène compilait et n'atteignait jamais l'acteur implicite : la
+ * `eval.strudel` en tête de scène compilait et n'atteignait jamais l'acteur implicite : la
  * directive était lue par le validateur et par personne d'autre, exactement le défaut mesuré sur
- * les registres le 2026-07-29. Une scène sans `@actor` qui déclare son interprète par défaut le
+ * les registres le 2026-07-29. Une scène sans `actor` qui déclare son interprète par défaut le
  * perdait entre le parse et l'arbre.
  *
  * ⚠️ ON NE MATÉRIALISE QUE CE QUI RÉSOUT, même règle que pour les registres : un interprète que le
@@ -271,14 +271,14 @@ function resolveActors(ast) {
 
     // RESOLVER-CASCADE-ALPHABET (modèle Romain 2026-07-13) : la cascade de défauts s'applique
     // AUSSI à l'alphabet — « PAS D'ALPHABET » N'EXISTE PAS. Un acteur sans alphabet HÉRITE :
-    // scène (@alphabet.X) → sinon socle @core (western, lib/core.json defaults.components). On ne
+    // scène (alphabet.X) → sinon socle core (western, lib/core.json defaults.components). On ne
     // REJETTE JAMAIS pour 'no alphabet' (le rejet violait la cascade — bug §71 : bloquait le son
     // d'une scène + acteur transport-seul). Loi 35 : si la scène INVOQUE une hauteur OPAQUE
-    // (@mine./@factory. libRef, résolue par Kairos), l'alphabet reste ABSENT ici (l'aval le
-    // remplit — @mine/@factory n'est qu'un préfixe de PROVENANCE, décision 2026-07-13) ; le socle
-    // @core ne s'applique QUE si RIEN n'est invoqué. Une voix-code n'hérite pas (pas de notes).
+    // (mine./factory. libRef, résolue par Kairos), l'alphabet reste ABSENT ici (l'aval le
+    // remplit — mine/factory n'est qu'un préfixe de PROVENANCE, décision 2026-07-13) ; le socle
+    // core ne s'applique QUE si RIEN n'est invoqué. Une voix-code n'hérite pas (pas de notes).
     if (!alphabetKey && !isCodeVoice) {
-      alphabetKey = alphabetHerite(ast);                                  // cascade scène → socle @core
+      alphabetKey = alphabetHerite(ast);                                  // cascade scène → socle core
       if (alphabetKey) {
         props.alphabet = alphabetKey;                                     // matérialise l'héritage dans l'AST
         herite.push({ category: 'alphabet', name: alphabetKey });
@@ -301,7 +301,7 @@ function resolveActors(ast) {
     //
     // ⚠️ CE QUE ÇA COÛTAIT, MESURÉ SUR PIÈCES : quatre scènes d'exemple de la bibliothèque
     // compilaient sans une erreur et ne produisaient AUCUN SON — exactement les quatre qui
-    // déclarent un `@actor` sans `out`, zéro contre-exemple dans les deux sens. Le mode d'échec est
+    // déclarent un `actor` sans `out`, zéro contre-exemple dans les deux sens. Le mode d'échec est
     // le muet : rien ne manque à l'œil, la scène a l'air complète, et l'aval n'a aucun moyen de
     // savoir qu'une sortie était due. C'est l'invariant du contrat fondateur qui tombe
     // (atlas/architecture/00-constitution.md:176-178, L35) : « un override RECOUVRE le défaut, il
@@ -310,7 +310,7 @@ function resolveActors(ast) {
     // La cascade est celle des autres axes — les MÊMES fonctions, définies une seule fois. La
     // reconstituer ici ferait deux cascades qui divergeraient au premier changement.
     if (props.transport == null) {
-      const sortie = sortieHeritee(ast);   // scène `@out.X` → raccord d'alphabet → socle @core
+      const sortie = sortieHeritee(ast);   // scène `out.X` → raccord d'alphabet → socle core
       props.transport = { type: 'TransportRef', key: sortie.key, params: sortie.params };
       herite.push({ category: 'transport', name: sortie.key, params: sortie.params });
     }
@@ -431,13 +431,13 @@ function resolveActors(ast) {
  * Rayon de casse mesuré AVANT durcissement (règle de frontière, CLAUDE.md) : 0 sur les 93
  * scènes de `test/grammars`, et sur les 188 `.bps` du corpus BPx les 2 seules scènes à
  * notation pointée (`kai9_actor_address`, `kai10_pitch_config`) DÉCLARENT leurs acteurs
- * (`@actor bass…`, `@actor lead…`) — donc aucune ne casse.
+ * (`actor bass…`, `actor lead…`) — donc aucune ne casse.
  */
 function verifierActeursReferences(ast, errors) {
   const declares = new Set((ast.actors || []).map((a) => a.name));
   // ⚠️ L'ACTEUR IMPLICITE N'EXISTE PAS ENCORE ICI, et c'est un ORDRE DE PASSES, pas un oubli :
   // il est fabriqué plus loin (`applyDefaultActor`, bpxAst.js) quand la scène ne déclare aucun
-  // `@actor`. Sans cette ligne, `scene.C4` était refusé par « Acteur inconnu » alors que `scene`
+  // `actor`. Sans cette ligne, `scene.C4` était refusé par « Acteur inconnu » alors que `scene`
   // est précisément le nom que la décision du 2026-07-30 donne pour pouvoir le DÉSIGNER —
   // « la réponse est la notation pointée, pas la forme nue en @ ». Le renommage seul ne suffisait
   // donc pas : il fallait aussi que la validation sache que ce nom sera là.
@@ -474,7 +474,7 @@ function verifierActeursReferences(ast, errors) {
           : "Cette scène ne déclare aucun acteur.";
         errors.push({
           message: `Acteur inconnu '${el.actor}' dans '${el.actor}.${el.name}'`
-            + ` — un renvoi pointé doit nommer un acteur déclaré par @actor. ${connus}`,
+            + ` — un renvoi pointé doit nommer un acteur déclaré par actor. ${connus}`,
           line: el.line,
         });
       }

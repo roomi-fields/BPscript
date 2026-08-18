@@ -83,8 +83,6 @@ const T = Object.freeze({
   // Flag operators (7)
   EQ:           'EQ',          // ==
   NEQ:          'NEQ',         // !=
-  WIRE:         'WIRE',        // >> (câbler série — LANG-SONS §9)
-  WIRE_CUT:     'WIRE_CUT',    // \>> (couper un câble — l'antislash BARRE le fil, Romain 2026-07-28)
   GT:           'GT',          // >
   LT:           'LT',         // <
   GTE:          'GTE',         // >=
@@ -189,7 +187,7 @@ function tokenize(source, opts = {}) {
       continue;
     }
 
-    // Quoted string — "file.bps" (for @scene paths)
+    // Quoted string — "file.bps" (for scene paths)
     if (ch === '"') {
       advance(); // opening "
       let str = '';
@@ -263,31 +261,12 @@ function tokenize(source, opts = {}) {
 
     if (ch === '-' && peek(1) === '>') { advance(); advance(); emit(T.ARROW_R, '->'); continue; }
 
-    // Câblage : `>>` câble, `\>>` coupe. Munch maximal AVANT `>=`.
-    if (ch === '>' && peek(1) === '>') { advance(); advance(); emit(T.WIRE, '>>'); continue; }
     if (ch === '>' && peek(1) === '=') { advance(); advance(); emit(T.GTE, '>='); continue; }
     if (ch === '>') { advance(); emit(T.GT, '>'); continue; }
 
     if (ch === '=' && peek(1) === '=') { advance(); advance(); emit(T.EQ, '=='); continue; }
 
-    // La coupure s'écrit `\>>` — l'antislash BARRE le fil. Il a été choisi (Romain 2026-07-28)
-    // parce qu'il était le SEUL caractère encore sans aucun sens dans le langage : `|` ouvre déjà
-    // une variable, `/` est l'opérateur d'échelle et de tempo. Zéro collision, par mesure.
-    if (ch === '\\' && peek(1) === '>' && peek(2) === '>') {
-      advance(); advance(); advance(); emit(T.WIRE_CUT, '\\>>'); continue;
-    }
 
-    // PIERRE TOMBALE — `!>>` a été la coupure jusqu'au 2026-07-28. Il part parce qu'il faisait
-    // porter DEUX sens au point d'exclamation, qui signifie déjà « instantané, durée zéro » : dans
-    // `!eltA!>>eltB` le même signe disait l'instant puis la coupure. Refusé ICI, au découpage, pour
-    // que le message soit le même partout où la forme pouvait s'écrire — corps de macro comme flux.
-    if (ch === '!' && peek(1) === '>' && peek(2) === '>') {
-      throw new LexError(
-        `'!>>' n'est plus la coupure de câblage (décision Romain 2026-07-28) — écrire '\\>>', avec `
-        + `un antislash : la barre BARRE le fil. Le point d'exclamation gardait deux sens, celui de `
-        + `l'instantané et celui de la coupure, et '!eltA!>>eltB' ne se lisait plus. `
-        + `Ligne ${line}, colonne ${col}.`, line, col);
-    }
     if (ch === '!' && peek(1) === '=') { advance(); advance(); emit(T.NEQ, '!='); continue; }
 
     // Tempo operator: * (multiply duration)

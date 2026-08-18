@@ -102,21 +102,21 @@ for (const [groupe, mots] of gestesMidi) {
 // ACTEUR ne passe pas aujourd'hui et c'est signalé à part — une clé d'acteur est une liste fermée.
 for (const [, mots] of gestesMidi) {
   const nom = mots[0].nom;
-  ok(erreursDe(`@core\n@midi.${nom}\nS -> C4\n`).length === 0,
-     `3. '@midi.${nom}' en tête de scène doit compiler`);
-  ok(erreursDe(`@core\nS -> C4 !(${nom}) D4\n`).length === 0,
+  ok(erreursDe(`core\nmidi.${nom}\n-----\nS -> C4\n`).length === 0,
+     `3. 'midi.${nom}' en tête de scène doit compiler`);
+  ok(erreursDe(`core\n-----\nS -> C4 !(${nom}) D4\n`).length === 0,
      `3. '!(${nom})' dans le flux doit compiler — Romain l'a demandé nommément`);
   // Le complément : un geste n'est PAS une propriété d'une note, et il n'a pas de forme nue.
-  ok(erreursDe(`@core\nS -> C4(${nom})\n`).length > 0,
+  ok(erreursDe(`core\n-----\nS -> C4(${nom})\n`).length > 0,
      `3. 'C4(${nom})' doit être REFUSÉ — un geste ne se pose pas sur un élément`);
-  ok(erreursDe(`@core\nS -> C4 ${nom} D4\n`).length > 0,
+  ok(erreursDe(`core\n-----\nS -> C4 ${nom} D4\n`).length > 0,
      `3. la forme NUE de '${nom}' dans le flux doit être REFUSÉE — sans quoi une scène qui portait `
      + `déjà ce nom est tronquée en silence`);
 }
 
 // ── 4. LES DEUX MOTS D'UNE PAIRE NE S'ÉCRIVENT PAS ENSEMBLE ─────────────────────────────────
 for (const [groupe, mots] of gestesMidi) {
-  const msg = erreursDe(`@core\n@midi.${mots[0].nom}\n@midi.${mots[1].nom}\nS -> C4\n`)
+  const msg = erreursDe(`core\nmidi.${mots[0].nom}\nmidi.${mots[1].nom}\n-----\nS -> C4\n`)
     .map((e) => String(e.message)).join(' | ');
   ok(new RegExp(groupe).test(msg) && msg.includes(mots[0].nom) && msg.includes(mots[1].nom),
      `4. écrire les DEUX mots de '${groupe}' doit être refusé en NOMMANT les deux — reçu : `

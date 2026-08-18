@@ -43,7 +43,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western:midi\n\n';
+const TETE = 'core\nalphabet.western:midi\n';
 const arbreDe = (src) => {
   const r = compileToBPxAST(src);
   return { erreurs: r.errors ?? [], ast: r.ast ?? r };
@@ -67,7 +67,7 @@ const sacsDe = (n, acc = []) => {
 const empreinte = (n) => JSON.stringify(n, (k, v) => (k === 'line' || k === 'col' ? undefined : v));
 
 // ─── 0. Témoin anti-rétrécissement — l'écriture directe rend bien ce qu'on va comparer ───────
-const direct = arbreDe(`${TETE}S -> !(vel:120) C4\n`);
+const direct = arbreDe(`${TETE}-----\nS -> !(vel:120) C4\n`);
 ok(direct.erreurs.length === 0, `0. l'écriture directe doit compiler (${direct.erreurs[0]?.message})`);
 const sacsDirect = sacsDe(direct.ast.subgrammars);
 ok(sacsDirect.length === 1 && sacsDirect[0].params.vel === 120,
@@ -76,7 +76,7 @@ ok(sacsDirect[0].resolvedBy?.vel === 'toutes les sorties',
    `0. l'écriture directe doit porter son destinataire — reçu ${JSON.stringify(sacsDirect[0].resolvedBy)}`);
 
 // ─── 1 à 4. LE PRÉRÉGLAGE DÉPLIÉ ─────────────────────────────────────────────────────────────
-const deplie = arbreDe(`${TETE}@def kick (vel:120)\n\nS -> kick C4\n`);
+const deplie = arbreDe(`${TETE}def kick (vel:120)\n\n-----\nS -> kick C4\n`);
 ok(deplie.erreurs.length === 0, `1. le préréglage doit compiler (${deplie.erreurs[0]?.message})`);
 ok(!symbolesDe(deplie.ast.subgrammars).includes('kick'),
    "1. le nom 'kick' ne doit plus figurer dans les symboles de l'arbre — une forme ne franchit pas "
@@ -93,7 +93,7 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
 // ─── 5. CE QUI N'EST PAS DU SUCRE SURVIT ─────────────────────────────────────────────────────
 // Un terminal déclaré CRÉE un nom : le déplier l'effacerait. Le tri se lit sur la sorte.
 {
-  const t = arbreDe('@core\n@alphabet.western:midi\n@def ka voice.sec\n\nS -> ka\n');
+  const t = arbreDe('core\nalphabet.western:midi\ndef ka voice.sec\n-----\nS -> ka\n');
   if (t.erreurs.length) {
     ok(false, `5. la déclaration de terminal doit compiler (${t.erreurs[0]?.message})`);
   } else {
@@ -108,17 +108,17 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
 // contient. Chaque ligne compare l'écriture avec la forme à l'écriture SANS elle, sur l'empreinte
 // ENTIÈRE : c'est la seule comparaison qui ne laisse pas choisir ce qu'on ne verra pas.
 for (const [quoi, avecForme, enDirect] of [
-  ['préréglage',                 `@def kick (vel:120)\n\nS -> kick C4\n`,        `S -> !(vel:120) C4\n`],
-  ['transformation, 1 paramètre', `@def accent(x) x(vel:120)\n\nS -> accent(C4)\n`, `S -> C4(vel:120)\n`],
-  ['transformation, 2 paramètres', `@def duo(a,b) a!b\n\nS -> duo(C4,E4)\n`,      `S -> C4!E4\n`],
-  ['paramètre RÉPÉTÉ dans le corps', `@def echo(x) x x\n\nS -> echo(C4)\n`,       `S -> C4 C4\n`],
-  ['structure posée nue',        `@def cadence C4 D4 E4\n\nS -> cadence\n`,      `S -> C4 D4 E4\n`],
-  ['structure sous un groupe',   `@def cadence C4 D4\n\nS -> {cadence, E4}\n`,   `S -> {C4 D4, E4}\n`],
-  ['une forme DANS une forme',   `@def a C4 D4\n@def b a E4\n\nS -> b\n`,        `S -> C4 D4 E4\n`],
-  ['structure à silence et prolongation', `@def creux C4 - _\n\nS -> creux D4\n`, `S -> C4 - _ D4\n`],
+  ['préréglage',                 `def kick (vel:120)\n\n-----\nS -> kick C4\n`,        `S -> !(vel:120) C4\n`],
+  ['transformation, 1 paramètre', `def accent(x) x(vel:120)\n\n-----\nS -> accent(C4)\n`, `S -> C4(vel:120)\n`],
+  ['transformation, 2 paramètres', `def duo(a,b) a!b\n\n-----\nS -> duo(C4,E4)\n`,      `S -> C4!E4\n`],
+  ['paramètre RÉPÉTÉ dans le corps', `def echo(x) x x\n\n-----\nS -> echo(C4)\n`,       `S -> C4 C4\n`],
+  ['structure posée nue',        `def cadence C4 D4 E4\n\n-----\nS -> cadence\n`,      `S -> C4 D4 E4\n`],
+  ['structure sous un groupe',   `def cadence C4 D4\n\n-----\nS -> {cadence, E4}\n`,   `S -> {C4 D4, E4}\n`],
+  ['une forme DANS une forme',   `def a C4 D4\ndef b a E4\n\n-----\nS -> b\n`,        `S -> C4 D4 E4\n`],
+  ['structure à silence et prolongation', `def creux C4 - _\n\n-----\nS -> creux D4\n`, `S -> C4 - _ D4\n`],
 ]) {
   const g = arbreDe(`${TETE}${avecForme}`);
-  const d = arbreDe(`${TETE}${enDirect}`);
+  const d = arbreDe(`${TETE}-----\n${enDirect}`);
   if (g.erreurs.length || d.erreurs.length) {
     ok(false, `5bis. ${quoi} : les deux écritures doivent compiler (${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
     continue;
@@ -128,15 +128,15 @@ for (const [quoi, avecForme, enDirect] of [
 }
 
 // ─── 5ter. UNE INVOCATION DE MODULE N'EST PAS UNE STRUCTURE ──────────────────────────────────
-// `@var ramp1 ramp` puis `@def monte ramp1(from:0, to:255)` : le corps commence par un terme nu,
+// `var ramp1 ramp` puis `def monte ramp1(from:0, to:255)` : le corps commence par un terme nu,
 // donc le parser type `monte` en STRUCTURE. Mais `ramp1` est une INSTANCE DE MODULE déclarée,
 // `from` et `to` sont ses ports, et une invocation est une CHOSE — elle ne se déplie pas. Le
 // défaut était muet tant que rien ne se dépliait ; il devient une erreur de compilation dès que le
 // corps devient du vrai contenu d'arbre.
 {
-  const t = arbreDe('@core\n@alphabet.western\n@var ramp1 ramp\n@def monte ramp1(from:0, to:255)\n\nS -> C4!monte\n');
+  const t = arbreDe('core\nalphabet.western\nramp ramp1\ndef monte ramp1(from:0, to:255)\n\n-----\nS -> C4!monte\n');
   ok(t.erreurs.length === 0,
-     `5ter. une invocation de module nommée par @def ne doit PAS se déplier (${t.erreurs[0]?.message})`);
+     `5ter. une invocation de module nommée par def ne doit PAS se déplier (${t.erreurs[0]?.message})`);
   ok(symbolesDe(t.ast?.subgrammars).includes('monte'),
      "5ter. le nom de l'invocation de module reste dans l'arbre — ce n'est pas du sucre");
 }
@@ -147,7 +147,7 @@ for (const [quoi, avecForme, enDirect] of [
 // nom, et le conflit de noms, qui est refusé, ne se déclarait plus. Une forme s'emploie là où un
 // terme s'emploie ; une tête de règle n'est pas un emploi, c'est une déclaration.
 {
-  const t = arbreDe(`${TETE}@def kick (vel:120)\n\nkick -> C4\nS -> kick\n`);
+  const t = arbreDe(`${TETE}def kick (vel:120)\n\n-----\nkick -> C4\nS -> kick\n`);
   ok(t.erreurs.some((e) => /nom déjà pris par une définition/.test(String(e.message))),
      "6. une TÊTE DE RÈGLE homonyme d'une forme doit rester un conflit de noms REFUSÉ — le "
      + `dépliage ne doit pas l'effacer en la réécrivant (reçu : ${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 60)))})`);
@@ -161,13 +161,13 @@ for (const [quoi, avecForme, enDirect] of [
 // Sans eux, l'écart traversait l'arbre en appel opaque étiqueté SONNANT : le mode d'échec que ce
 // garde tient tout entier.
 for (const [ecart, src, motif] of [
-  ['un préréglage APPELÉ',        `@def kick (vel:120)\n\nS -> kick(C4)\n`,       /est un préréglage : il se pose NU/],
-  ['une structure APPELÉE',       `@def cadence C4 D4\n\nS -> cadence(E4)\n`,     /est une structure : il se pose NU/],
-  ['une transformation POSÉE NUE', `@def accent(x) x(vel:120)\n\nS -> accent\n`,  /est une transformation sur x/],
-  ['un argument DE TROP',         `@def accent(x) x(vel:120)\n\nS -> accent(C4, D4)\n`, /1 paramètre\(s\).*2 argument\(s\)/],
-  ['un argument NOMMÉ',           `@def accent(x) x(vel:120)\n\nS -> accent(x: C4)\n`, /par POSITION, jamais par nom/],
-  ['une forme qui SE contient',   `@def a C4 a\n\nS -> a\n`,                      /se déplie sans fin/],
-  ['deux formes qui se contiennent', `@def a b\n@def b a\n\nS -> a\n`,            /se déplie sans fin/],
+  ['un préréglage APPELÉ',        `def kick (vel:120)\n\n-----\nS -> kick(C4)\n`,       /est un préréglage : il se pose NU/],
+  ['une structure APPELÉE',       `def cadence C4 D4\n\n-----\nS -> cadence(E4)\n`,     /est une structure : il se pose NU/],
+  ['une transformation POSÉE NUE', `def accent(x) x(vel:120)\n\n-----\nS -> accent\n`,  /est une transformation sur x/],
+  ['un argument DE TROP',         `def accent(x) x(vel:120)\n\n-----\nS -> accent(C4, D4)\n`, /1 paramètre\(s\).*2 argument\(s\)/],
+  ['un argument NOMMÉ',           `def accent(x) x(vel:120)\n\n-----\nS -> accent(x: C4)\n`, /par POSITION, jamais par nom/],
+  ['une forme qui SE contient',   `def a C4 a\n\n-----\nS -> a\n`,                      /se déplie sans fin/],
+  ['deux formes qui se contiennent', `def a b\ndef b a\n\n-----\nS -> a\n`,            /se déplie sans fin/],
 ]) {
   const t = arbreDe(`${TETE}${src}`);
   ok(t.erreurs.some((e) => motif.test(String(e.message))),
@@ -179,8 +179,8 @@ for (const [ecart, src, motif] of [
 // Écrire la portée sans son complément décrirait un langage plus étroit que le vrai : une forme
 // posée sous un groupe polymétrique est un emploi comme un autre, et elle s'y déplie.
 {
-  const g = arbreDe(`${TETE}@def kick (vel:120)\n\nS -> {kick C4, D4}\n`);
-  const d = arbreDe(`${TETE}S -> {!(vel:120) C4, D4}\n`);
+  const g = arbreDe(`${TETE}def kick (vel:120)\n\n-----\nS -> {kick C4, D4}\n`);
+  const d = arbreDe(`${TETE}-----\nS -> {!(vel:120) C4, D4}\n`);
   ok(g.erreurs.length === 0 && d.erreurs.length === 0,
      `8. les deux écritures groupées doivent compiler (${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
   ok(empreinte(g.ast.subgrammars) === empreinte(d.ast.subgrammars),

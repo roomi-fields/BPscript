@@ -132,7 +132,7 @@ const scriptMatrice = `
 `;
 const cas = [];
 for (const p of POSITIONS) for (const j of JETONS)
-  cas.push({ cle: `${p.nom}/${j.nom}`, source: `@core\n${p.forme(j.arg)}\n` });
+  cas.push({ cle: `${p.nom}/${j.nom}`, source: `core\n-----\n${p.forme(j.arg)}\n` });
 
 const filsM = spawnSync(process.execPath,
   ['--max-old-space-size=512', '--input-type=module', '-e', scriptMatrice],

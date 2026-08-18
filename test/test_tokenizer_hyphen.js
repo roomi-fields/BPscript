@@ -209,7 +209,8 @@ section('Cas 8 : qualifier pure_minor-third_meantone — inchangé');
   // ⚠️ `weight` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) —
   // `![tempx:…]` (crochets) est désormais REFUSÉ. `!(weight:2)` sert la même fonction dans ce test
   // (un AUTRE élément du flux à côté de `scale`, non le sujet mesuré ici).
-  const src = `@core
+  const src = `core
+-----
 S -> !(weight:2) !(scale:pure_minor-third_meantone 0) Up_Down`;
   // ⚠️ CETTE ASSERTION TESTAIT LE JETON, PAS L'EFFET — même déplacement que le cas 7, le
   // 2026-08-17. Elle exigeait `IDENT("pure_minor-")`, produit par un tokenizer qui collait le
@@ -289,7 +290,8 @@ section('Cas 11 : a->b flèche — inchangé');
 // ============================================================
 section('Cas 12 : (weight:50-12) décrement de poids — même lecteur, sac déplacé');
 {
-  const src = `@core
+  const src = `core
+-----
 S -> A (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];
@@ -308,7 +310,8 @@ S -> A (weight:50-12)`;
 // ============================================================
 section('Cas 13 : mohanam réel [Notes-4] + (weight:50-12) — sac déplacé');
 {
-  const src = `@core
+  const src = `core
+-----
 [Notes-4] A -> P4 (weight:50-12)`;
   const ast = parse(toks(src));
   const rule = ast.subgrammars && ast.subgrammars[0] && ast.subgrammars[0].rules && ast.subgrammars[0].rules[0];

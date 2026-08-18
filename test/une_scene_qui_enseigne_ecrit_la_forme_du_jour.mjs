@@ -109,7 +109,7 @@ ok(scenes.length >= 85, `le corpus s'est vidé : ${scenes.length} scène(s) au t
 
 // TÉMOIN D'INSTRUMENT : sans lui, un compilateur devenu muet (acceptant tout) rendrait ce garde
 // vert pour la pire des raisons. Une forme retirée DOIT toujours être refusée.
-const temoin = compileToBPxAST('@mm:60\nS -> C4 D4');
+const temoin = compileToBPxAST('mm:60\n-----\nS -> C4 D4');
 ok(temoin.errors.length >= 1,
   'TÉMOIN — une forme retirée du langage doit être REFUSÉE ; le compilateur ne mord plus.');
 

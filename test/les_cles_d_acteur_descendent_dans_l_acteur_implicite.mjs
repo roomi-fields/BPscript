@@ -54,11 +54,11 @@ const acteurImplicite = (r) => (r.ast && r.ast.actors && r.ast.actors[0]) || nul
 // ⚠️ `out` atterrit sur `properties.transport` : le mot ÉCRIT a changé le 2026-08-04, le CHAMP
 // interne non. Cette asymétrie est déclarée ici plutôt que découverte par un lecteur.
 const OU = {
-  alphabet: { ecrit: '@alphabet.sargam',        champ: 'alphabet',  categorie: 'alphabet', attendu: 'sargam' },
-  tuning:   { ecrit: '@tuning.sargam_22shruti', champ: 'tuning',    categorie: 'tuning',   attendu: 'sargam_22shruti' },
-  octaves:  { ecrit: '@octaves.saptak',         champ: 'octaves',   categorie: 'octaves',  attendu: 'saptak' },
-  out:      { ecrit: '@out.midi',               champ: 'transport', categorie: 'transport', attendu: 'midi' },
-  eval:     { ecrit: '@eval.strudel',           champ: 'eval',      categorie: 'eval',     attendu: 'strudel' },
+  alphabet: { ecrit: 'alphabet.sargam',        champ: 'alphabet',  categorie: 'alphabet', attendu: 'sargam' },
+  tuning:   { ecrit: 'tuning.sargam_22shruti', champ: 'tuning',    categorie: 'tuning',   attendu: 'sargam_22shruti' },
+  octaves:  { ecrit: 'octaves.saptak',         champ: 'octaves',   categorie: 'octaves',  attendu: 'saptak' },
+  out:      { ecrit: 'out.midi',               champ: 'transport', categorie: 'transport', attendu: 'midi' },
+  eval:     { ecrit: 'eval.strudel',           champ: 'eval',      categorie: 'eval',     attendu: 'strudel' },
 };
 /** La valeur portée par la propriété, quelle que soit sa forme (chaîne ou référence). */
 const valeurDe = (props, champ) => {
@@ -75,8 +75,8 @@ for (const cle of CLES) {
   if (!q) continue;
   cellules++;
   // La scène pose toujours l'alphabet (sans lui rien ne résout), puis la clé mesurée.
-  const src = '@core\n@alphabet.sargam\n'
-            + (cle === 'alphabet' ? '' : `${q.ecrit}\n`) + 'S -> sa\n';
+  const src = 'core\nalphabet.sargam\n'
+            + (cle === 'alphabet' ? '' : `${q.ecrit}\n`) + '-----\nS -> sa\n';
   const r = compiler(src);
   const msg = messages(r);
   ok(msg === '', `A. '${q.ecrit}' est REFUSÉ en défaut de scène : ${msg.replace(/\s+/g, ' ').slice(0, 100)}`);
@@ -103,19 +103,19 @@ for (const cle of CLES) {
 
 // ── C. LES PARAMÈTRES SUIVENT, ET DEUX SORTIES QUI SE CONTREDISENT REFUSENT ────────────────────
 {
-  const r = compiler('@core\n@alphabet.sargam\n@out.midi(ch:1)\nS -> sa\n');
-  ok(messages(r) === '', `C. '@out.midi(ch:1)' est refusé : ${messages(r).slice(0, 100)}`);
+  const r = compiler('core\nalphabet.sargam\nout.midi(ch:1)\n-----\nS -> sa\n');
+  ok(messages(r) === '', `C. 'out.midi(ch:1)' est refusé : ${messages(r).slice(0, 100)}`);
   const t = acteurImplicite(r)?.properties?.transport;
   ok(t && t.params && t.params.ch === 1,
-     `C. les paramètres de '@out.midi(ch:1)' ne descendent pas : ${JSON.stringify(t)}. La clé les `
-     + `porte sous un '@actor' ; elle doit les porter partout où elle s'écrit.`);
+     `C. les paramètres de 'out.midi(ch:1)' ne descendent pas : ${JSON.stringify(t)}. La clé les `
+     + `porte sous un 'actor' ; elle doit les porter partout où elle s'écrit.`);
 }
 {
   // Les deux écritures d'une sortie disent la MÊME chose — si elles se contredisent, on refuse en
   // les nommant, plutôt que d'en élire une en silence.
-  const r = compiler('@core\n@alphabet.sargam:audio\n@out.midi\nS -> sa\n');
+  const r = compiler('core\nalphabet.sargam:audio\nout.midi\n-----\nS -> sa\n');
   ok(/deux sorties pour la même scène/.test(messages(r)),
-     `C. '@alphabet.sargam:audio' + '@out.midi' désignent deux canaux différents et l'arbre en `
+     `C. 'alphabet.sargam:audio' + 'out.midi' désignent deux canaux différents et l'arbre en `
      + `choisit un SANS RIEN DIRE (${messages(r).slice(0, 80) || 'aucune erreur'}).`);
 }
 
@@ -125,12 +125,12 @@ for (const cle of CLES) {
 // n'écrit RIEN et où la clé doit quand même valoir quelque chose (`SCENE_DEFAULTS_CASCADE.md` :
 // « un paramètre définissable n'est jamais inexistant »).
 {
-  const r = compiler('@core\n@alphabet.sargam\nS -> sa\n');
+  const r = compiler('core\nalphabet.sargam\n-----\nS -> sa\n');
   ok(messages(r) === '', `D. la scène minimale ne compile pas : ${messages(r).slice(0, 90)}`);
   const p = acteurImplicite(r)?.properties;
   const socle = loadLib('core')?.defaults?.components?.transport;
   ok(valeurDe(p, 'transport') === socle,
-     `D-témoin. sans '@out', la sortie devrait valoir le défaut du socle ('${socle}') et vaut `
+     `D-témoin. sans 'out', la sortie devrait valoir le défaut du socle ('${socle}') et vaut `
      + `'${valeurDe(p, 'transport')}'. Une cascade qui ne rend rien quand la scène se tait n'est `
      + `pas une cascade, c'est une recopie.`);
   ok(valeurDe(p, 'alphabet') === 'sargam',

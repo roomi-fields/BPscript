@@ -14,7 +14,7 @@
 // dépendre de la résolution du transport.
 //
 // PORTÉE PAR TYPE DE SORTIE. Quand le type de sortie de la voix est résoluble (le transport de
-// l'acteur ou le binding `@alphabet.X:<sortie>` EST le canal canonique depuis 2026-07-16), on
+// l'acteur ou le binding `alphabet.X:<sortie>` EST le canal canonique depuis 2026-07-16), on
 // valide contre les entrées de CE type ; sinon (ou un seul type connu) on valide contre l'union de
 // toutes les entrées connues (attrape la faute, sans faux positif). L'AST n'est pas modifié.
 
@@ -76,7 +76,7 @@ function modulationSourceSymbols(ast) {
 }
 
 /**
- * Type de sortie de la scène (best-effort) : le binding `@alphabet.X:<sortie>` ou le
+ * Type de sortie de la scène (best-effort) : le binding `alphabet.X:<sortie>` ou le
  * `transport.<sortie>` d'un acteur EST le canal canonique (audio/midi/osc) — depuis la suppression
  * de routing.json (2026-07-16), le nom de transport EST le type, plus d'indirection par profil.
  * Retourne null si non résoluble (→ l'appelant retombe sur l'union des entrées de modulation).

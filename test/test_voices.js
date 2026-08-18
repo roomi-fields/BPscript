@@ -26,7 +26,7 @@ const erreurs = (src) => {
 
 console.log('--- 1. `voice.<nom>` sur un acteur REFUSE, et le refus dit où la voix vit ---');
 {
-  const e = erreurs('@core\n@actor lead  alphabet.western voice.wobble out.audio\nS -> C4\n');
+  const e = erreurs('core\nactor lead  alphabet.western voice.wobble out.audio\n-----\nS -> C4\n');
   check(e.length > 0, 'voice.wobble sur un acteur doit être REFUSÉ');
   check(e.some((m) => /voix s'attache au TERMINAL/.test(m)),
         'le refus doit nommer la relève, pas dire « flèche attendue » : ' + e.join(' | ').slice(0, 120));
@@ -37,7 +37,7 @@ console.log('--- 2. TOUTE clé hors liste refuse — liste blanche, pas liste no
 // accepté ». Une liste noire ne ferme que ce qu'on a pensé à y mettre ; ce témoin passe donc par
 // une clé que PERSONNE n'a jamais écrite — une faute de frappe.
 {
-  const e = erreurs('@core\n@actor lead  alphabt.western\nS -> C4\n');
+  const e = erreurs('core\nactor lead  alphabt.western\n-----\nS -> C4\n');
   check(e.length > 0, "une clé inconnue (faute de frappe) doit REFUSER, pas finir le bloc en silence");
   check(e.some((m) => /n'est pas une clé d'acteur/.test(m)), 'le refus la nomme : ' + e.join(' | ').slice(0, 100));
 }
@@ -45,9 +45,9 @@ console.log('--- 2. TOUTE clé hors liste refuse — liste blanche, pas liste no
 console.log('--- 3. LES CINQ CLÉS VIVANTES passent — la moitié qui doit se taire ---');
 // Sans ce cas, une règle qui refuserait TOUT resterait verte.
 {
-  const e = erreurs('@core\n@actor lead  alphabet.western tuning.western_12TET octaves.western out.audio\nS -> C4\n');
+  const e = erreurs('core\nactor lead  alphabet.western tuning.western_12TET octaves.western out.audio\n-----\nS -> C4\n');
   check(e.length === 0, 'les clés valides doivent passer : ' + e.join(' | ').slice(0, 120));
-  const e2 = erreurs('@core\n@actor d  eval.strudel(bank:gm)\nS -> d_r\nd_r -> d.`s("bd")`\n');
+  const e2 = erreurs('core\nactor d  eval.strudel(bank:gm)\n-----\nS -> d_r\nd_r -> d.`s("bd")`\n');
   check(e2.length === 0, 'eval avec son paramètre propre doit passer : ' + e2.join(' | ').slice(0, 120));
 }
 

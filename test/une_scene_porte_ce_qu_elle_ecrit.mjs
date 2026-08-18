@@ -49,8 +49,8 @@ ok(scenes.length >= 85, `le corpus s'est vidé : ${scenes.length} scène(s), att
 const SECTIONS = [
   {
     quoi: 'catalogue de gabarits',
-    // ce que l'auteur écrit : les lignes de rang sous `@template`
-    ecrit: (t) => ((t.split(/^@template\b/m)[1] || '').split('\n').filter((l) => /^\s*\[\d+\]/.test(l)).length),
+    // ce que l'auteur écrit : les lignes de rang sous `template`
+    ecrit: (t) => ((t.split(/^template\b/m)[1] || '').split('\n').filter((l) => /^\s*\[\d+\]/.test(l)).length),
     // ce que l'arbre porte : les entrées, et le total des éléments de corps
     porte: (ast) => {
       const tpl = ast?.template?.entrees || [];
@@ -59,30 +59,30 @@ const SECTIONS = [
   },
   {
     quoi: 'acteurs',
-    ecrit: (t) => (t.match(/^@actor\b/gm) || []).length,
+    ecrit: (t) => (t.match(/^actor\b/gm) || []).length,
     porte: (ast) => ({ entrees: (ast?.actors || []).filter((a) => a.name !== 'scene').length, corps: 1 }),
   },
   {
-    // ⚠️ `@var` ÉCRIT DEUX CHOSES ET L'ARBRE LES RANGE À DEUX ENDROITS. `@var <nom> <convention>`
-    // est une VARIABLE DE TRAVAIL et vit dans `ast.vars` ; `@var <rôle> in.<canal>` est une ENTRÉE
+    // ⚠️ `var` ÉCRIT DEUX CHOSES ET L'ARBRE LES RANGE À DEUX ENDROITS. `var <nom> <convention>`
+    // est une VARIABLE DE TRAVAIL et vit dans `ast.vars` ; `var <rôle> in.<canal>` est une ENTRÉE
     // et vit dans `ast.inputs` — un `InDirective`, depuis la décision Romain du 2026-08-04 qui a
-    // fait remplacer `@in` par `@var … in.<canal>`.
+    // fait remplacer `in` par `var … in.<canal>`.
     // CE GARDE NE COMPTAIT QUE LE PREMIER : une scène qui déclare une entrée « écrivait 1 variable
     // et l'arbre en portait 0 ». Trouvé le 2026-08-15, quand Kanopi a déclaré le point d'attente
     // de sa scène d'enseignement — la migration d'un voisin a révélé mon angle mort, pas un défaut
     // chez lui. Le compte porte donc sur LES DEUX destinations, comme le mot les porte.
     quoi: 'variables',
-    ecrit: (t) => (t.match(/^@var\b/gm) || []).length,
+    ecrit: (t) => (t.match(/^var\b/gm) || []).length,
     porte: (ast) => ({ entrees: (ast?.vars || []).length + (ast?.inputs || []).length, corps: 1 }),
   },
 ];
 
 // ⚠️ LE DÉFAUT CONNU EST NOMMÉ, PAS COMPTÉ. Une exception qui vit dans un total se fond dedans ;
 // nommée, elle EXIGE d'être retirée le jour où elle est réparée — et ce garde le vérifie plus bas.
-const CONNUS = new Map([
-  ['catalogue-de-gabarits-les-rangs.bps|catalogue de gabarits',
-   'BPS-64 — parser.js:3574 rend UNE entrée sur deux et un corps VIDE. Défaut d\'émission, pas de la scène.'],
-]);
+// BPS-64 EST SORTI DE CETTE LISTE : le lecteur du catalogue se lisait sous `@template` et n'avait
+// pas été migré quand l'arobase est sortie du langage. Migré sur la forme nue, la section émet
+// désormais TOUTES ses entrées — mesuré trois écrites, trois émises, corps verbatim.
+const CONNUS = new Map([]);
 
 const ecarts = [];
 for (const p of scenes) {

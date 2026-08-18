@@ -17,8 +17,8 @@
  *   entrée inconnue → le compilateur CRIE ;
  *   rien du tout    → interdit, et c'est ce que ce garde attrape.
  */
-// ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
-// la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
+// ⚠️ `transcription` est REMPLACÉE par `homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
+// la bible n'a jamais écrit que `homomorphism.<table>`. Les tables ont rejoint
 // `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
@@ -30,7 +30,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const compile = (directive) => {
   try {
-    return compileToBPxAST(`@core\n@alphabet.western:midi\n${directive}\n@mode:ord\nS -> C4\n`);
+    return compileToBPxAST(`core\nalphabet.western:midi\n${directive}\nmode:ord\n-----\nS -> C4\n`);
   } catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
@@ -44,38 +44,38 @@ for (const [axe, entrees] of Object.entries(composants)) {
   if (AUTRE_CANAL.has(axe) || !entrees || entrees.length === 0) continue;
   axesVerifies++;
   const entree = entrees[0];
-  const r = compile(`@${axe}.${entree}`);
-  ok((r.errors || []).length === 0, `1. '@${axe}.${entree}' doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
+  const r = compile(`${axe}.${entree}`);
+  ok((r.errors || []).length === 0, `1. '${axe}.${entree}' doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   ok((r.ast?.libRefs || []).includes(`${axe}.${entree}`),
-     `1. '@${axe}.${entree}' doit PRODUIRE l'adresse '${axe}.${entree}' — libRefs = ${JSON.stringify(r.ast?.libRefs || null)}`);
+     `1. '${axe}.${entree}' doit PRODUIRE l'adresse '${axe}.${entree}' — libRefs = ${JSON.stringify(r.ast?.libRefs || null)}`);
 }
 ok(axesVerifies > 0, "1. aucun axe à vérifier — le garde serait creux (l'univers des composants est vide ?)");
 
 // ─── 2. Le cas qui a motivé le garde, nommé explicitement ────────────────────────────────────
 {
-  const r = compile('@sound.tabla_perc');
+  const r = compile('sound.tabla_perc');
   ok((r.ast?.libRefs || []).includes('sound.tabla_perc'),
-     "2. '@sound.tabla_perc' doit produire son adresse — 6 scènes du corpus l'invoquent");
-  const t = compile('@homomorphism.dhati');
+     "2. 'sound.tabla_perc' doit produire son adresse — 6 scènes du corpus l'invoquent");
+  const t = compile('homomorphism.dhati');
   ok((t.ast?.libRefs || []).includes('homomorphism.dhati'),
-     "2. '@homomorphism.dhati' aussi — le filtre qui exigeait un champ d'alphabet l'abandonnait en silence");
+     "2. 'homomorphism.dhati' aussi — le filtre qui exigeait un champ d'alphabet l'abandonnait en silence");
 }
 
 // ─── 3. Une entrée INCONNUE crie, sur chaque axe ─────────────────────────────────────────────
 for (const axe of Object.keys(composants)) {
-  const r = compile(`@${axe}.nexistepas_${axe}`);
+  const r = compile(`${axe}.nexistepas_${axe}`);
   ok((r.errors || []).length > 0,
-     `3. '@${axe}.nexistepas' doit CRIER — une référence inexistante n'est jamais un silence`);
+     `3. '${axe}.nexistepas' doit CRIER — une référence inexistante n'est jamais un silence`);
 }
 
 // ─── 4. Le point APPELLE, le deux-points AFFECTE — sur chaque axe, sans trou ─────────────────
 for (const [axe, entrees] of Object.entries(composants)) {
   if (!entrees || entrees.length === 0) continue;
-  const r = compile(`@${axe}:${entrees[0]}`);
+  const r = compile(`${axe}:${entrees[0]}`);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-  ok((r.errors || []).length > 0, `4. '@${axe}:<X>' doit être refusé — ':' n'affecte pas un composant`);
-  ok(msg.includes(`@${axe}:`),
-     `4. le refus de '@${axe}:<X>' doit NOMMER la faute et donner la réécriture — reçu : ${msg.slice(0, 120)}`);
+  ok((r.errors || []).length > 0, `4. '${axe}:<X>' doit être refusé — ':' n'affecte pas un composant`);
+  ok(msg.includes(`${axe}:`),
+     `4. le refus de '${axe}:<X>' doit NOMMER la faute et donner la réécriture — reçu : ${msg.slice(0, 120)}`);
 }
 
 if (echecs.length) {

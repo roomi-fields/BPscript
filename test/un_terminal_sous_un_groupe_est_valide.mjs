@@ -31,7 +31,7 @@ const err = (src) => {
   try { return (compileToBPxAST(src).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
 };
-const S = '@core\n@alphabet.western:midi\n@var s1 in.midi\n@mode:ord\n';
+const S = 'core\nalphabet.western:midi\nin.midi s1\nmode:ord\n-----\n';
 
 // ── 1. LA MATRICE — chaque CONTENANT × (inconnu refusé / connu accepté) ─────────────────────
 // `%s` reçoit le terminal. Les formes viennent de ce que le parser produit, pas de mon souvenir.
@@ -60,31 +60,31 @@ const CONTENANTS = [
 console.log(`[terminal sous un groupe] ${CONTENANTS.length} contenants x 2 sens`);
 for (const [quoi, forme] of CONTENANTS) {
   // INCONNU → doit être REFUSÉ, et le refus doit NOMMER le terminal.
-  const e = err(S + forme.replace('%s', 'zzz') + '\nS -> motif\n');
+  const e = err(S + forme.replace('%s', 'zzz') + '\n-----\nS -> motif\n');
   ok(e.some((m) => /terminal 'zzz' non déclaré/.test(m)),
     `1. ${quoi} : un terminal inconnu doit être REFUSÉ et NOMMÉ (reçu : ${e[0] ?? 'rien'})`);
   // CONNU → doit PASSER. Sans cette moitié, un validateur qui refuserait tout aurait l'air juste.
-  ok(err(S + forme.replace('%s', 'C4') + '\nS -> motif\n').length === 0,
+  ok(err(S + forme.replace('%s', 'C4') + '\n-----\nS -> motif\n').length === 0,
     `1. ${quoi} : une NOTE au même endroit doit passer — c'est la moitié qu'on casse`);
 }
 
 // ── 2. CE QUI N'EST PAS UN TERMINAL NE DOIT PAS ÊTRE ACCUSÉ ─────────────────────────────────
 // Un validateur qui descend voit des nœuds que le premier niveau lui cachait : il doit continuer
 // de distinguer ce qui est un terminal de ce qui n'en est pas un.
-ok(err('@core\n@alphabet.western\n@var travail\nmotif -> {travail C4}\nS -> motif\n').length === 0,
+ok(err('core\nalphabet.western\nsymbol travail\n-----\nmotif -> {travail C4}\nS -> motif\n').length === 0,
   '2. une VARIABLE DE TRAVAIL sous un groupe n\'est pas un terminal inconnu');
-ok(err('@core\n@alphabet.western\nmotif -> {sous C4}\nsous -> D4\nS -> motif\n').length === 0,
+ok(err('core\nalphabet.western\n-----\nmotif -> {sous C4}\nsous -> D4\nS -> motif\n').length === 0,
   '2. un NON-TERMINAL sous un groupe non plus');
-ok(err('@core\n@actor viz  eval.hydra\nmotif -> {viz.`osc(4).out()`}\nS -> motif\n').length === 0,
+ok(err('core\nactor viz  eval.hydra\n-----\nmotif -> {viz.`osc(4).out()`}\n-----\nS -> motif\n').length === 0,
   '2. un BLOC DE CODE sous un groupe non plus — une voix-code a un vocabulaire arbitraire');
-ok(err('@core\n@alphabet.western\nmotif -> {- _ C4}\nS -> motif\n').length === 0,
+ok(err('core\nalphabet.western\n-----\nmotif -> {- _ C4}\nS -> motif\n').length === 0,
   '2. un SILENCE et une PROLONGATION sous un groupe non plus');
 
 // ── 3. SOCLE ET ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────
 ok(CONTENANTS.length >= 9, `3. la matrice ne s'est pas vidée — ${CONTENANTS.length} contenants`);
-ok(err(S + 'motif -> {zzz}\nS -> motif\n').length >= 1,
+ok(err(S + 'motif -> {zzz}\n-----\nS -> motif\n').length >= 1,
   '3. TÉMOIN — la descente doit MORDRE (c\'est le cas exact qui a vécu des mois)');
-ok(err(S + 'motif -> {C4}\nS -> motif\n').length === 0,
+ok(err(S + 'motif -> {C4}\n-----\nS -> motif\n').length === 0,
   '3. TÉMOIN — et se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
 
 if (echecs.length) {

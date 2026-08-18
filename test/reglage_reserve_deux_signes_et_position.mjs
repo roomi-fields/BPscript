@@ -21,7 +21,7 @@
  * `ast.runtimeQualifier` le 2026-08-06 — même nœud, même lieu, nouveau nom). Les migrer romprait
  * SILENCIEUSEMENT leur effet moteur côté BPx. Cf. `lib/core.json` `_qualifierKeys_doc` pour le
  * détail ligne par ligne. `shuffle` est un cas distinct : sa forme AVEC VALEUR (`[shuffle:N]`) a
- * été RETIRÉE du langage le 2026-06-14 (la graine s'écrit `@seed:N` en tête de scène depuis le
+ * été RETIRÉE du langage le 2026-06-14 (la graine s'écrit `seed:N` en tête de scène depuis le
  * 2026-08-10, `![seed:N]` dans le flux), donc il n'y a pas de forme
  * `(shuffle:N)` à migrer — seule la forme NUE `[shuffle]` (sans deux-points) reste, et elle n'entre
  * pas dans cette matrice (qui porte sur les paires `clé:valeur`).
@@ -69,7 +69,7 @@ function valeurExemple(spec) {
   return '3';
 }
 
-const compile = (src) => compileToBPxAST(`@core\n@alphabet.western:audio\n\n${src}\n`);
+const compile = (src) => compileToBPxAST(`core\nalphabet.western:audio\n-----\n\n${src}\n`);
 
 let cellules = 0;
 // ⚠️ FILTRÉ PAR LA PORTÉE le 2026-08-08. Ce garde mesure que les DEUX SIGNES mènent au même
@@ -135,7 +135,7 @@ ok(cellules === clesRegle.length * 4 && cellules >= 12,
   ok(refuse.length > 0, "5. (mord) '[weight:5]' (clé migrée) doit être refusée entre crochets");
   // (se tait) témoin distinct, hors matrice : 'goto' n'est PAS migré (§0), son crochet reste
   // légitime — le refus ne déborde pas sur une clé qui n'a pas changé de sac.
-  const { errors: legitime } = compile(`@core\nS -> C4 [goto:2 1]`);
+  const { errors: legitime } = compile(`S -> C4 [goto:2 1]`);
   ok(legitime.length === 0,
      `5. (se tait) '[goto:2 1]' — clé NON migrée — doit rester accepté entre crochets — reçu : `
      + `${legitime.map((e) => e.message).join(' | ')}`);
@@ -151,8 +151,8 @@ ok(cellules === clesRegle.length * 4 && cellules >= 12,
   ok(errors.length === 0, `6b. affectation de drapeau en fin de règle '[stage=2]' doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
 }
 {
-  const { errors } = compileToBPxAST(`@core\n@alphabet.western\n\nS -> C4 D4\n\n@template\n[1] /1 ??\n`);
-  ok(errors.length === 0, `6c. rang de gabarit '[1]' en tête de ligne '@template' doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
+  const { errors } = compileToBPxAST(`core\nalphabet.western\n\n-----\nS -> C4 D4\n\ntemplate\n[1] /1 ??\n`);
+  ok(errors.length === 0, `6c. rang de gabarit '[1]' en tête de ligne 'template' doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
 }
 
 if (echecs.length) {

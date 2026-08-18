@@ -104,7 +104,7 @@ ok(scenes > 100, `1. le balayage doit LIRE des scènes — ${scenes}`);
 // Ce qui est exigé ici est donc PLUS FORT qu'avant — la durée exacte, terme par terme, au lieu
 // d'un nom présent.
 {
-  const r = compileToBPxAST('@core\n@alphabet.western\n@def motif C4 D4\nS -> motif E4\n');
+  const r = compileToBPxAST('core\nalphabet.western\ndef motif C4 D4\n-----\nS -> motif E4\n');
   const s = naturesSonnantes(r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || []);
   ok(JSON.stringify(s) === JSON.stringify(['C4', 'D4', 'E4']),
     '2. une macro ORDINAIRE a la durée de ce qu\'elle contient — `@def motif C4 D4` puis `motif E4` '
@@ -114,7 +114,7 @@ ok(scenes > 100, `1. le balayage doit LIRE des scènes — ${scenes}`);
     + 'une note qu\'aucun alphabet ne porte');
 }
 // Et un MODULATEUR invoqué dure aussi — l'enveloppe a sa propre durée (même arbitrage).
-ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@var env1 adsr\nS -> C4 env1\n').errors.length === 0,
+ok(compileToBPxAST('core\nalphabet.western\nmod\nadsr env1\n-----\nS -> C4 env1\n').errors.length === 0,
   '2. SE TAIT — un modulateur invoqué reste légitime dans le flux');
 
 // ── 3. SOCLE ─────────────────────────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ ok(compileToBPxAST('@core\n@alphabet.western\n@mod\n@var env1 adsr\nS -> C4 env1
 // sonnante, elle a une duree, celle de son contenu. C est la moitie  qui empeche de deborder , et
 // la garder seule vaut mieux que suspendre les deux.
 {
-  const o = compileToBPxAST('@core\n@alphabet.western\n@def motif C4 D4\nS -> motif E4\n');
+  const o = compileToBPxAST('core\nalphabet.western\ndef motif C4 D4\n-----\nS -> motif E4\n');
   const f = (o.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])[0];
   ok(f?.payload?.nature === 'sounding',
     `3. une définition ORDINAIRE garde 'sounding' — elle a une durée, celle de son contenu `

@@ -1,7 +1,7 @@
 // Référence sans mutation
-@core
+core
 -----
-@mode:ord
+mode:ord
 S -> Sa Re
 Sa -> -
 Re -> -

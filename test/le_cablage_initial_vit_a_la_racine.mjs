@@ -53,11 +53,11 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
-const c = (src) => compileToBPxAST(`@core\n@alphabet.western\n${src}`);
+const c = (src) => compileToBPxAST(`core\nalphabet.western\n${src}`);
 
 // ── 1. LE CÂBLAGE ARRIVE, À LA RACINE, ET SOUS LE NŒUD DÉJÀ CONNU ───────────────────────────
 {
-  const r = c('@wire saw >> lpf >> audio\nS -> C4 D4\n');
+  const r = c('wire saw >> lpf >> audio\n-----\nS -> C4 D4\n');
   ok((r.errors || []).length === 0, `1. '@wire' doit compiler — ${(r.errors || []).map((e) => e.message)[0] ?? ''}`);
   ok(Array.isArray(r.ast?.wires) && r.ast.wires.length === 1, '1. il arrive dans scene.wires, à la RACINE');
   ok(r.ast?.wires?.[0]?.type === 'Wiring', '1. et sous le nœud DÉJÀ connu — pas un second nœud pour le même fait');
@@ -71,24 +71,24 @@ const c = (src) => compileToBPxAST(`@core\n@alphabet.western\n${src}`);
 ok(c('S -> C4\n').ast?.wires === undefined,
   '2. une scène qui ne câble rien n\'a PAS de champ vide — absent, comme libRefs');
 {
-  const r = c('@wire saw >> audio\n@wire lfo >> lpf.cutoff\nS -> C4\n');
+  const r = c('wire saw >> audio\nwire lfo >> lpf.cutoff\n-----\nS -> C4\n');
   ok(r.ast?.wires?.length === 2, '2. deux câblages s\'accumulent dans l\'ordre source');
   ok(r.ast.wires[1].stages?.[1]?.port === 'cutoff', '2. et le PORT adressé par le point arrive avec');
 }
 
 // ── 3. CE QUI NE DOIT PAS AVOIR BOUGÉ ────────────────────────────────────────────────────────
-// Le même nœud sert au corps de macro depuis toujours : si `@wire` l'avait détourné, cette moitié
+// Le même nœud sert au corps de macro depuis toujours : si `wire` l'avait détourné, cette moitié
 // tomberait. C'est elle qui prouve qu'on a réutilisé au lieu de dupliquer.
 {
-  const r = c('@macro chain saw >> audio\nS -> chain C4\n');
+  const r = c('macro chain saw >> audio\n-----\nS -> chain C4\n');
   ok(r.ast?.macros?.[0]?.body?.[0]?.type === 'Wiring', '3. SE TAIT — le corps de macro produit toujours son Wiring');
   ok(r.ast?.wires === undefined, '3. et une macro de câblage ne remplit PAS scene.wires — deux portes, un nœud');
 }
-ok(c('@wire saw \\>> audio\nS -> C4\n').ast?.wires?.[0]?.stages?.[1]?.cut === true,
+ok(c('wire saw \\>> audio\n-----\nS -> C4\n').ast?.wires?.[0]?.stages?.[1]?.cut === true,
   '3. la COUPURE reste lisible dans un câblage initial (la graphie ne change pas)');
 
 // ── 4. SOCLE ─────────────────────────────────────────────────────────────────────────────────
-ok(c('@wire saw >> audio\nS -> C4\n').ast?.wires?.[0]?.stages?.length === 2,
+ok(c('wire saw >> audio\n-----\nS -> C4\n').ast?.wires?.[0]?.stages?.length === 2,
   '4. TÉMOIN — le garde doit savoir LIRE un câblage (sinon tout ce fichier ment)');
 ok(c('S -> C4\n').ast?.wires === undefined,
   '4. TÉMOIN — et savoir se taire quand il n\'y en a pas');

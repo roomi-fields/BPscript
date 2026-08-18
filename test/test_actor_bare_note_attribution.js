@@ -26,7 +26,7 @@ function notesActors(src) {
 
 console.log('\n=== Note NUE attribuée à l\'acteur explicite (via payload.actor, canal existant) ===');
 {
-  const { out, errors } = notesActors('@core\n@actor voice @alphabet.sargam out.audio\nS -> sa re\n');
+  const { out, errors } = notesActors('core\nactor voice @alphabet.sargam out.audio\n-----\nS -> sa re\n');
   assert('compile sans erreur', errors.length === 0, errors.join(' | '));
   assert('note nue sa → payload.actor = voice', out.find((n) => n.name === 'sa')?.actor === 'voice', JSON.stringify(out));
   assert('note nue re → payload.actor = voice', out.find((n) => n.name === 're')?.actor === 'voice', JSON.stringify(out));
@@ -36,16 +36,16 @@ console.log('\n=== Note NUE attribuée à l\'acteur explicite (via payload.actor
 
 console.log('\n=== Note altérée nue (komal) aussi attribuée ===');
 {
-  const { out } = notesActors('@core\n@actor voice @alphabet.sargam out.audio\nS -> rekomal ga\n');
+  const { out } = notesActors('core\nactor voice @alphabet.sargam out.audio\n-----\nS -> rekomal ga\n');
   assert('rekomal → voice', out.find((n) => n.name === 'rekomal')?.actor === 'voice', JSON.stringify(out));
   assert('ga → voice', out.find((n) => n.name === 'ga')?.actor === 'voice', JSON.stringify(out));
 }
 
 console.log('\n=== Non-régression : scène IMPLICITE (acteur default synthétique) inchangée ===');
 {
-  // Sans @actor, l'acteur 'default' est synthétique et n'a pas d'alphabet → notes nues NON attribuées
+  // Sans actor, l'acteur 'default' est synthétique et n'a pas d'alphabet → notes nues NON attribuées
   // (orphelines, recueillies par le default en aval). Comportement inchangé par le fix.
-  const { out } = notesActors('@alphabet.sargam:audio\nS -> sa re\n');
+  const { out } = notesActors('alphabet.sargam:audio\n-----\nS -> sa re\n');
   assert('implicite : sa reste non attribué (default sink, inchangé)', out.find((n) => n.name === 'sa')?.actor === undefined, JSON.stringify(out));
 }
 

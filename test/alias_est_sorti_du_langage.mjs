@@ -37,7 +37,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const T = '@core\n@alphabet.western\n';
+const T = 'core\nalphabet.western\n';
 const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
@@ -45,29 +45,42 @@ const messages = (src) => erreursDe(src).map((e) => String(e.message)).join(' | 
 
 // ── 1. LE MOT EST REFUSÉ, DANS LES SIX FORMES QU'IL ACCEPTAIT ───────────────────────────────
 const FORMES = [
-  ['un point d\'attente', '@alias depart <!sync1'],
-  ['un drapeau',          '@alias tension [stage]'],
-  ['un contrôleur',       '@alias souffle cc:2'],
-  ['une adresse OSC',     '@alias envoi osc:/synth/note'],
-  ['une commande',        '@alias stop sys.panic'],
-  ['un nom nu',           '@alias court long'],
+  ['un point d\'attente', 'alias depart <!sync1'],
+  ['un drapeau',          'alias tension [stage]'],
+  ['un contrôleur',       'alias souffle cc:2'],
+  ['une adresse OSC',     'alias envoi osc:/synth/note'],
+  ['une commande',        'alias stop sys.panic'],
+  ['un nom nu',           'alias court long'],
 ];
 for (const [quoi, ligne] of FORMES) {
-  ok(erreursDe(`${T}${ligne}\nS -> C4\n`).length > 0,
-     `1. '@alias' portant ${quoi} doit être REFUSÉ — le mot est sorti du langage`);
+  ok(erreursDe(`${T}${ligne}\n-----\nS -> C4\n`).length > 0,
+     `1. 'alias' portant ${quoi} doit être REFUSÉ — le mot est sorti du langage`);
 }
 
 // ── 2. IL EST REFUSÉ COMME UN MOT INVENTÉ, PAS PAR UN MESSAGE QUI LUI EST PROPRE ─────────────
 // ⛔ Le volet qui tient la règle « pas de pierre tombale ». Sans lui, quelqu'un rendrait service
 // en réintroduisant un refus daté et nommé — ce qui remettrait le passé dans le parseur.
 {
-  const duMotSorti = messages(`${T}@alias x\nS -> C4\n`);
-  const duMotInvente = messages(`${T}@zzjamaisvu x\nS -> C4\n`);
-  ok(duMotSorti === duMotInvente,
-     `2. '@alias' doit être refusé EXACTEMENT comme un mot inventé — la mémoire du retrait vit `
+  const duMotSorti = messages(`${T}alias x\n-----\nS -> C4\n`);
+  const duMotInvente = messages(`${T}zzjamaisvu x\n-----\nS -> C4\n`);
+  // ⛔ MODULO LE NOM DU MOT : les deux messages nomment le mot fautif, donc l egalite STRICTE
+  // etait impossible a satisfaire. Ce qui doit etre identique est la FORME du refus — c est ce
+  // que la decision demande : « un mot inconnu est refuse comme un mot invente ».
+  // ⚠️ LE MOT SE NEUTRALISE PARTOUT OÙ IL PARAÎT, pas seulement entre guillemets simples : depuis
+  // que le refus cite la LIGNE (`'alias x' : 'alias' n'est pas un type…`), le mot apparaît DEUX
+  // fois et une neutralisation partielle laissait deux messages identiques passer pour différents.
+  const neutre = (m) => m.replace(/\b(alias|zzjamaisvu)\b/g, '<mot>');
+  ok(neutre(duMotSorti) === neutre(duMotInvente),
+     `2. 'alias' doit être refusé EXACTEMENT comme un mot inventé — la mémoire du retrait vit `
      + `dans les décisions, pas dans le parseur.\n       sorti  : ${duMotSorti}\n       inventé: ${duMotInvente}`);
-  ok(!/alias/i.test(duMotSorti),
-     `2. et le refus ne doit pas NOMMER '@alias' — reçu : ${duMotSorti}`);
+  // ⛔ LE CRITERE EST LA FORME DU MESSAGE, PAS L ABSENCE DU MOT. Ce volet exigeait que le refus
+  // ne NOMME PAS `alias` — or tout refus nomme le mot fautif, y compris celui d un mot invente
+  // (`'zzjamaisvu' n'est declare par aucune librairie`). Il ne pouvait donc jamais passer une
+  // fois la pierre tombale retiree. Ce qui distingue une pierre tombale d un refus generique,
+  // c est qu elle cite une DECISION et donne une REECRITURE ; on mesure cela.
+  ok(!/est SORTI|est SUPPRIM|decisions\//i.test(duMotSorti),
+     `2. et le refus ne doit pas etre une PIERRE TOMBALE — ni decision citee, ni reecriture. `
+     + `Reçu : ${duMotSorti}`);
 }
 
 // ── 3. CE QUE L'ALIAS NE DÉSIGNAIT PAS, MESURÉ SUR LA RÈGLE D'AUJOURD'HUI ───────────────────
@@ -79,7 +92,7 @@ for (const [quoi, ligne] of FORMES) {
 // CE QU'IL MESURE MAINTENANT : la déclaration qui compte est celle de l'ENTRÉE, jamais un alias.
 // Le nœud porte le nom écrit, et rien d'autre ne l'a jamais résolu.
 {
-  const r = compileToBPxAST(`${T}@var depart in.midi\nS -> C4 <!depart D4\n`);
+  const r = compileToBPxAST(`${T}in.midi depart\n-----\nS -> C4 <!depart D4\n`);
   const attentes = [];
   (function marcher(n) {
     if (!n || typeof n !== 'object') return;
@@ -94,7 +107,7 @@ for (const [quoi, ligne] of FORMES) {
 
 // ── 4. L'ARBRE NE PORTE PLUS LE CHAMP ───────────────────────────────────────────────────────
 {
-  const r = compileToBPxAST(`${T}S -> C4\n`);
+  const r = compileToBPxAST(`${T}-----\nS -> C4\n`);
   ok(r.ast.aliases === undefined,
      `4. l'arbre ne doit plus porter 'aliases' — un champ émis et toujours vide fait conclure `
      + `« cette scène ne désigne rien » au lieu de « ce canal n'existe plus ». Vu : `
@@ -114,17 +127,17 @@ for (const [fichier, symbole] of [
      `5. '${symbole}' doit avoir disparu de ${fichier} — il n'a plus de directive à servir`);
 }
 
-// ── 6. LE COMPLÉMENT — ce que `@def` accepte n'a pas bougé ──────────────────────────────────
-// Sans ce volet, retirer trop large passerait au vert : il suffirait que `@def` casse pour que
+// ── 6. LE COMPLÉMENT — ce que `def` accepte n'a pas bougé ──────────────────────────────────
+// Sans ce volet, retirer trop large passerait au vert : il suffirait que `def` casse pour que
 // les cinq précédents restent tous justes.
 for (const [quoi, ligne, usage] of [
-  ['une séquence',    '@def montee C4 D4 E4', 'S -> montee\n'],
-  ['un préréglage',   '@def fort (vel:100)',  'S -> C4 fort\n'],
-  ['une transformation', '@def accent(x) x(vel:120)', 'S -> accent(C4)\n'],
-  ['un nom pointé',   '@def souffle perc.tin', 'S -> C4\n'],
+  ['une séquence',    'def montee C4 D4 E4', 'S -> montee\n'],
+  ['un préréglage',   'def fort (vel:100)',  'S -> C4 fort\n'],
+  ['une transformation', 'def accent(x) x(vel:120)', 'S -> accent(C4)\n'],
+  ['un nom pointé',   'def souffle perc.tin', 'S -> C4\n'],
 ]) {
-  ok(erreursDe(`${T}${ligne}\n${usage}`).length === 0,
-     `6. '@def' portant ${quoi} doit continuer de compiler — reçu : ${messages(`${T}${ligne}\n${usage}`)}`);
+  ok(erreursDe(`${T}${ligne}\n-----\n${usage}`).length === 0,
+     `6. 'def' portant ${quoi} doit continuer de compiler — reçu : ${messages(`${T}${ligne}\n-----\n${usage}`)}`);
 }
 
 // ── 7. AUCUNE SCÈNE DU DÉPÔT NE L'ÉCRIT ─────────────────────────────────────────────────────
@@ -148,9 +161,13 @@ for (const [quoi, ligne, usage] of [
   })(racine);
   ok(scenes.length >= 50,
      `7. SOCLE : au moins cinquante scènes attendues dans le dépôt — lues ${scenes.length}`);
-  const coupables = scenes.filter((f) => /@alias\b/.test(readFileSync(f, 'utf-8')));
+  // ⛔ UNE DIRECTIVE S ECRIT EN TETE DE LIGNE, une MENTION vit dans une phrase. Depuis que
+  // l arobase est sortie, chercher `alias` nu attrape « alias for pressure » dans la description
+  // d un controle MIDI — de la prose anglaise, pas une declaration. Le motif porte donc sur la
+  // POSITION, qui est ce qui qualifie une ligne desormais.
+  const coupables = scenes.filter((f) => /^\s*alias\b/m.test(readFileSync(f, 'utf-8')));
   ok(coupables.length === 0,
-     `7. aucune scène ni librairie du dépôt ne doit écrire '@alias' — vues : ${coupables.join(', ')}`);
+     `7. aucune scène ni librairie du dépôt ne doit écrire 'alias' — vues : ${coupables.join(', ')}`);
 }
 
 // ── 8. INJECTION DANS LE JUGE — la décision rejouée isolée ──────────────────────────────────
@@ -165,9 +182,9 @@ ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 
 if (echecs.length) {
-  console.error(`❌ '@alias' est sorti du langage : ${echecs.length} échec(s)`);
+  console.error(`❌ 'alias' est sorti du langage : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exitCode = 1;
 } else {
-  console.log(`✅ '@alias' est sorti du langage — ${passe} vérification(s) passée(s)`);
+  console.log(`✅ 'alias' est sorti du langage — ${passe} vérification(s) passée(s)`);
 }

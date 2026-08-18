@@ -72,11 +72,11 @@ function valeurExemple(spec) {
 // (Romain : « controls.json doit être divisé », une librairie un destinataire — LIBRAIRIES.md:213)
 // en lib/midi.json / lib/audio.json / lib/expression.json / lib/transpo.json, chacun avec sa
 // propre section `controls` — puis SUPPRIMÉ (Romain : « tous les appels à cette librairie sont
-// supprimés »), les scènes qui l'invoquaient nue écrivent `@core` désormais.
+// supprimés »), les scènes qui l'invoquaient nue écrivent `core` désormais.
 const ENGINE_SPECS = LIBS.engine?.engine || {};
 const specDe = (cle) => ENGINE_SPECS[cle] || (LIBS.midi?.controls?.[cle]) || (LIBS.audio?.controls?.[cle]);
 
-const HEAD = '@core\n@alphabet.western:midi\n\n';
+const HEAD = 'core\nalphabet.western:midi\n-----\n\n';
 const compile = (src) => compileToBPxAST(`${HEAD}${src}\n`);
 
 const clesTestees = [...QUALIFIER_KEYS, ...runtimeSample];

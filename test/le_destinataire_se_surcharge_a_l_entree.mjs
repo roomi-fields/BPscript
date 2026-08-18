@@ -39,7 +39,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western\n';
+const TETE = 'core\nalphabet.western\n-----\n';
 /** Le destinataire que l'ARBRE porte pour une clé — la seule mesure qui compte, l'aval ne lit que ça. */
 const destinataireDe = (src, cle) => {
   let r; try { r = compileToBPxAST(src); } catch { return '(refusé)'; }

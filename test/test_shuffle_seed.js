@@ -30,35 +30,35 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // [shuffle] conservé → _rndseq
 {
-  const r = compileToBPxAST('@core\n@alphabet.simple\n@mode:random\nA -> {a b c}');
+  const r = compileToBPxAST('core\nalphabet.simple\nmode:random\n-----\nA -> {a b c}');
   assert('[shuffle] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19 (émission `_rndseq`, absence de
   // `_srand`) — certification grammaire-texte abandonnée, encodeur supprimé.
 }
 
-// [shuffle:N] supprimé → erreur pointant @seed
+// [shuffle:N] supprimé → erreur pointant seed
 {
-  const r = compileToBPxAST('@core\n@alphabet.simple\n@mode:random\nA -> {a b c}[shuffle:1]');
+  const r = compileToBPxAST('core\nalphabet.simple\nmode:random\n-----\nA -> {a b c}[shuffle:1]');
   assert('[shuffle:1] : erreur', r.errors.length > 0, r.errors);
-  assert('[shuffle:1] : message cite @seed', /@seed/.test((r.errors[0] || {}).message || ''), r.errors);
+  assert('[shuffle:1] : message cite seed', /seed/.test((r.errors[0] || {}).message || ''), r.errors);
 }
 
 // ![seed:N] dans le flux → _srand(N)
 {
-  const r = compileToBPxAST('@alphabet.simple\n@mode:lin\nS -> a ![seed:2] b');
+  const r = compileToBPxAST('alphabet.simple\nmode:lin\n-----\nS -> a ![seed:2] b');
   assert('![seed:2] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 (émission `_srand(2)`).
 }
 
 // ![@<autre>] dans le flux → erreur (seul seed a un sens en flux)
 {
-  const r = compileToBPxAST('@alphabet.simple\n@mode:lin\nS -> a ![@maxitems:3] b');
-  assert('![@maxitems] : erreur (hors seed)', r.errors.length > 0, r.errors);
+  const r = compileToBPxAST('alphabet.simple\nmode:lin\n-----\nS -> a ![maxitems:3] b');
+  assert('![maxitems] : erreur (hors seed)', r.errors.length > 0, r.errors);
 }
 
 // Remplacement de [shuffle:1] : ![seed:1] {…} → _srand(1) … _rndseq
 {
-  const r = compileToBPxAST('@core\n@mode:random\nBrassage -> ![seed:1] {C4 B4 E4}');
+  const r = compileToBPxAST('core\nmode:random\n-----\nBrassage -> ![seed:1] {C4 B4 E4}');
   assert('remplacement : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ DEUX ASSERTIONS DE TEXTE BP3 RETIRÉES le 2026-07-19. Ce qui RESTE vérifié ici est le
   // point qui compte pour le langage : la forme de remplacement de `[shuffle:1]` COMPILE.

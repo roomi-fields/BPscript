@@ -78,7 +78,6 @@
     ],
     "reservedDirectives": [
       "scale",
-      "flag",
       "alphabet",
       "tuning",
       "octaves",
@@ -99,8 +98,6 @@
       "filter",
       "modulation",
       "diapason",
-      "var",
-      "in",
       "out"
     ],
     "actorKeys": [
@@ -114,6 +111,11 @@
       "sound",
       "sounds",
       "voice"
+    ],
+    "_declarationTypes_doc": "LES MOTS QUI OUVRENT UNE DECLARATION PAR LE TYPE et que rien d autre ne derive. Les CONVENTIONS (varConventions) et les MODULES (lib/mod.json objects) en ouvrent une aussi, et se lisent la ou ils sont deja declares ; ces deux-la n ont pas d autre domicile. `flag` porte ses etats entre parentheses, `symbol` ne porte aucun type.",
+    "declarationTypes": [
+      "flag",
+      "symbol"
     ],
     "varConventions": [
       "signal",

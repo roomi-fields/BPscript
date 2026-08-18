@@ -43,13 +43,13 @@ const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
        + `parce qu'un mot absorbé par le vocabulaire reste accepté quoi qu'il arrive.`);
     if (!sonde) continue;
 
-    const bon = compileToBPxAST(`@core\n@test_alphabets.${nom}\nS -> ${[...T][0]}\n`);
+    const bon = compileToBPxAST(`core\ntest_alphabets.${nom}\n-----\nS -> ${[...T][0]}\n`);
     ok(messages(bon) === '',
-       `A. '@test_alphabets.${nom}' SEULE doit accepter ses propres mots — reçu : ${messages(bon).slice(0, 80)}`);
+       `A. 'test_alphabets.${nom}' SEULE doit accepter ses propres mots — reçu : ${messages(bon).slice(0, 80)}`);
 
-    const mauvais = compileToBPxAST(`@core\n@test_alphabets.${nom}\nS -> ${sonde}\n`);
+    const mauvais = compileToBPxAST(`core\ntest_alphabets.${nom}\n-----\nS -> ${sonde}\n`);
     ok(messages(mauvais) !== '',
-       `A. '@test_alphabets.${nom}' SEULE doit REFUSER '${sonde}', insegmentable sur ses `
+       `A. 'test_alphabets.${nom}' SEULE doit REFUSER '${sonde}', insegmentable sur ses `
        + `${T.size} termes. Il passe — donc la validation ne tourne pas, et cette scène n'est `
        + `contrôlée par rien.`);
   }
@@ -60,17 +60,17 @@ const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
 // triomphe — et donnerait à une scène le vocabulaire d'une palette de sons.
 {
   // ⚠️ LE CAS SE PREND SANS AUTRE ALPHABET, et c'est la seule forme qui discrimine. Ma première
-  // écriture posait `@alphabet.western` à côté : l'alphabet y était déjà, donc une passe qui aurait
+  // écriture posait `alphabet.western` à côté : l'alphabet y était déjà, donc une passe qui aurait
   // chargé N'IMPORTE QUELLE invocation passait le volet EN VERT. L'injection ne mordait pas — et
   // c'était le volet qui était creux, pas l'injection.
   // Invoquée SEULE, une entrée sans terminaux laisse le vocabulaire tel qu'il était ; la charger
   // rendrait la scène validée contre un ensemble VIDE, où même `C4` serait refusé.
   for (const [quoi, directive] of [
-    ['une palette de percussions', '@sound.tabla_perc'],
-    ['une table de réécriture',    '@homomorphism.dhati'],
-    ['un langage d\'évaluation',   '@eval.strudel'],
+    ['une palette de percussions', 'sound.tabla_perc'],
+    ['une table de réécriture',    'homomorphism.dhati'],
+    ['un langage d\'évaluation',   'eval.strudel'],
   ]) {
-    const r = compileToBPxAST(`@core\n${directive}\nS -> C4\n`);
+    const r = compileToBPxAST(`core\n${directive}\n-----\nS -> C4\n`);
     ok(messages(r) === '',
        `B. ${quoi} ne porte aucun terminal : l'invoquer SEULE ne doit rien mettre en portée. `
        + `Reçu : ${messages(r).slice(0, 80)} — si 'C4' est refusé, la scène est validée contre un `
@@ -80,10 +80,10 @@ const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
 
 // ── C. LA DIRECTIVE D'AXE CONTINUE DE MARCHER — l'une n'exclut pas l'autre ───────────────────
 {
-  const r = compileToBPxAST('@core\n@alphabet.tabla\nS -> dha\n');
+  const r = compileToBPxAST('core\nalphabet.tabla\n-----\nS -> dha\n');
   ok(messages(r) === '',
-     `C. '@alphabet.tabla' pose toujours son alphabet — reçu : ${messages(r).slice(0, 80)}`);
-  const deux = compileToBPxAST('@core\n@test_alphabets.abc\n@alphabet.abc\nS -> a\n');
+     `C. 'alphabet.tabla' pose toujours son alphabet — reçu : ${messages(r).slice(0, 80)}`);
+  const deux = compileToBPxAST('core\ntest_alphabets.abc\nalphabet.abc\n-----\nS -> a\n');
   ok(messages(deux) === '',
      `C. les DEUX lignes ensemble restent acceptées — la seconde devient inutile, pas interdite. `
      + `Reçu : ${messages(deux).slice(0, 80)}`);

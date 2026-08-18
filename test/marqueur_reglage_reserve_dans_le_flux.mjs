@@ -28,9 +28,9 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const compile = (rhs) => compileToBPxAST(`@core\n@alphabet.western:midi\n\nS -> ${rhs}\n`);
+const compile = (rhs) => compileToBPxAST(`core\nalphabet.western:midi\n\n-----\nS -> ${rhs}\n`);
 
-// ─── 1. Marqueur autonome !(…) dans le flux, SANS @controls ──────────────────────────────────
+// ─── 1. Marqueur autonome !(…) dans le flux, SANS controls ──────────────────────────────────
 // ⚠️ `mode:random` A ÉTÉ RETIRÉ DE CETTE LISTE le 2026-08-08 — il n'est plus une clé de sac
 // (décision Romain : « on ne change pas de mode en cours de tirage »). Le cobaye historique de
 // ce garde devient donc un cas REFUSÉ ; il est remplacé par `rotate`, qui est mesuré en
@@ -57,7 +57,7 @@ for (const forme of ['rotate:2', 'legato:20', 'staccato:96', 'rndtime:50']) {
   ok(errors.length > 0, `1. (témoin) '!(zzz_pas_un_reglage:1)' doit rester refusé — une clé inconnue n'est ni un réglage réservé ni un contrôle`);
 }
 
-// ─── 2. (meter:N/D) collé à un terminal, SANS @controls ──────────────────────────────────────
+// ─── 2. (meter:N/D) collé à un terminal, SANS controls ──────────────────────────────────────
 {
   const { ast, errors } = compile(`C4(rndtime:50) D4`);
   ok(errors.length === 0, `2. 'C4(rndtime:50)' collé (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);

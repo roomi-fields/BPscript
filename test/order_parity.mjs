@@ -571,8 +571,8 @@ for (const name of names) {
     const w = DO_WRITE ? ` → ${writeTextOracle(name, a)}` : '';
     console.log(`  ${name}: OK — ${a.length} jetons, ordre identique${w}`); pass++;
   } else {
-    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF @${diff} instant=${JSON.stringify(a[diff])} figé=${JSON.stringify(b[diff])} (len ${a.length}/${b.length}) — natif fait foi → ${writeTextOracle(name, a)}`); }
-    else { console.log(`  ${name}: DIFF @${diff} — instant=${JSON.stringify(a[diff])} figé=${JSON.stringify(b[diff])} (len instant=${a.length} figé=${b.length}${fige.mode ? `, oracle ${fige.mode}` : ''})`); fail++; }
+    if (DO_WRITE && FORCE) { console.log(`  ${name}: DIFF ${diff} instant=${JSON.stringify(a[diff])} figé=${JSON.stringify(b[diff])} (len ${a.length}/${b.length}) — natif fait foi → ${writeTextOracle(name, a)}`); }
+    else { console.log(`  ${name}: DIFF ${diff} — instant=${JSON.stringify(a[diff])} figé=${JSON.stringify(b[diff])} (len instant=${a.length} figé=${b.length}${fige.mode ? `, oracle ${fige.mode}` : ''})`); fail++; }
   }
 }
 console.log(`\n${pass} OK / ${fail} ÉCART / ${sansOracle} SANS ORACLE / ${horsVoie} HORS VOIE (oracle midi) sur ${names.length} grammaire(s) EXAMINÉE(S)`);

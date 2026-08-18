@@ -24,7 +24,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
 const compiler = (tete) => {
-  try { return compileToBPxAST(`@core\n${tete}\nS -> C4\n`); }
+  try { return compileToBPxAST(`core\n${tete}\n-----\nS -> C4\n`); }
   catch (e) { return { errors: [{ message: e.message }] }; }
 };
 
@@ -41,9 +41,9 @@ const compiler = (tete) => {
      `A. aucune entrée à chiffre dans le bundle — le garde serait creux. S'il n'y en a plus, c'est `
      + `la donnée qui a changé, et ce garde doit le dire au lieu de verdir sur zéro.`);
   for (const [lib, entree] of aChiffre) {
-    const r = compiler(`@${lib}.${entree}`);
+    const r = compiler(`${lib}.${entree}`);
     ok(messages(r) === '',
-       `A. '@${lib}.${entree}' doit être ACCEPTÉ — reçu : ${messages(r).slice(0, 90)}`);
+       `A. '${lib}.${entree}' doit être ACCEPTÉ — reçu : ${messages(r).slice(0, 90)}`);
   }
 }
 
@@ -52,9 +52,9 @@ const compiler = (tete) => {
 // A en triomphe. Le refus doit NOMMER l'entrée manquante — s'il parlait de forme, il enverrait
 // l'auteur corriger une graphie qui est juste.
 {
-  const msg = messages(compiler('@temperaments.12zzz'));
+  const msg = messages(compiler('temperaments.12zzz'));
   ok(/12zzz/.test(msg),
-     `B. '@temperaments.12zzz' doit REFUSER en nommant l'entrée absente. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
+     `B. 'temperaments.12zzz' doit REFUSER en nommant l'entrée absente. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
   ok(!/Expected/.test(msg),
      `B. le refus ne doit PAS être une faute de forme — reçu : ${msg.slice(0, 100)}. La graphie est `
      + `valide ; c'est l'entrée qui n'existe pas.`);
@@ -72,9 +72,9 @@ const compiler = (tete) => {
 // bien faire. Injectée sur les acteurs, elle fait rougir ce volet.
 {
   for (const [quoi, tete] of [
-    ['un acteur',      '@actor 1perc @alphabet.western out.midi'],
-    ['une variable',   '@var 2pivot'],
-    ['une définition', '@def 3cloche  register:5'],
+    ['un acteur',      'actor 1perc alphabet.western out.midi'],
+    ['une variable',   'symbol 2pivot'],
+    ['une définition', 'def 3cloche  register:5'],
   ]) {
     ok(messages(compiler(tete)) !== '',
        `C. ${quoi} dont le nom commence par un chiffre doit rester REFUSÉ — la production neuve ne `
@@ -86,13 +86,13 @@ const compiler = (tete) => {
 // ── D-bis. LE NOM DE LA LIBRAIRIE PORTE AUSSI UN TIRET ──────────────────────────────────────
 // ⚠️ TROUVE PAR KANOPI EN RETIRANT LE PREFIXE DE PROVENANCE, qui le masquait. Le tokenizer detache
 // le tiret partout depuis qu'il est un SILENCE dans le flux ; dans un nom de librairie il est une
-// lettre. `@ragas-tunings.X` cassait a l'ANALYSE — « Expected arrow, got PERIOD » — au lieu d'etre
+// lettre. `ragas-tunings.X` cassait a l'ANALYSE — « Expected arrow, got PERIOD » — au lieu d'etre
 // LU puis refuse pour son axe. La difference compte : un refus syntaxique envoie corriger une
 // graphie juste.
 {
-  const msg = messages(compiler('@ragas-tunings.sargam_12TET'));
+  const msg = messages(compiler('ragas-tunings.sargam_12TET'));
   ok(!/Expected/.test(msg),
-     `D-bis. '@ragas-tunings.X' doit etre LU, pas casser a l'analyse. Reçu : ${msg.slice(0, 100)}. `
+     `D-bis. 'ragas-tunings.X' doit etre LU, pas casser a l'analyse. Reçu : ${msg.slice(0, 100)}. `
      + `Un refus syntaxique sur un nom valide envoie l'auteur corriger ce qui est juste.`);
   ok(/aucune librairie ne sert l'axe 'ragas-tunings'/.test(msg),
      `D-bis. le refus doit nommer l'axe ENTIER, tiret compris — reçu : ${msg.slice(0, 100)}. `
@@ -103,8 +103,8 @@ const compiler = (tete) => {
 // ⚠️ CE VOLET GARDE LA CAUSE, PAS LE SYMPTÔME. La lecture vivait dans le canal de provenance et
 // manquait à la voie directe : deux endroits pour un même nom, un seul qui savait le lire.
 {
-  const direct = compiler('@temperaments.12TET');
-  const provenance = compiler('@factory.temperaments.12TET');
+  const direct = compiler('temperaments.12TET');
+  const provenance = compiler('factory.temperaments.12TET');
   ok(messages(direct) === '' && messages(provenance) === '',
      `D. les deux voies doivent lire le même nom — direct : ${messages(direct).slice(0, 50) || 'ok'} · `
      + `provenance : ${messages(provenance).slice(0, 50) || 'ok'}. Si l'une passe et pas l'autre, `

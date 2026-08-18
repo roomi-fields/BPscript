@@ -41,9 +41,9 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = '@core\n@alphabet.western\n';
+const TETE = 'core\nalphabet.western\n';
 const clesDe = (corps) => {
-  let r; try { r = compileToBPxAST(`${TETE}@def k\n${corps}\n\nS -> C4\n`); } catch (e) { return { erreur: e.message }; }
+  let r; try { r = compileToBPxAST(`${TETE}def k\n${corps}\n\n-----\nS -> C4\n`); } catch (e) { return { erreur: e.message }; }
   if ((r.errors ?? []).length) return { erreur: r.errors[0].message };
   const d = ((r.ast ?? r).directives || []).find((x) => x.type === 'DefDirective');
   return d ? Object.fromEntries(Object.entries(d.keys || {}).map(([c, v]) => [c, v.value])) : {};
@@ -91,7 +91,7 @@ for (const [quoi, corps, cle, attendu] of [
 // Sans cette borne, une valeur qui court jusqu'au bout de sa ligne pourrait courir plus loin, et
 // la règle écrite juste après deviendrait une clé, en silence.
 {
-  let r; try { r = compileToBPxAST(`${TETE}@def k\n  bp3:_k\n\nS -> C4 D4\n`); } catch (e) { r = { errors: [{ message: e.message }] }; }
+  let r; try { r = compileToBPxAST(`${TETE}def k\n  bp3:_k\n\n-----\nS -> C4 D4\n`); } catch (e) { r = { errors: [{ message: e.message }] }; }
   ok((r.errors ?? []).length === 0, `4. la règle qui suit le bloc doit rester une règle (${r.errors?.[0]?.message})`);
   const rhs = r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [];
   ok(rhs.length === 2,

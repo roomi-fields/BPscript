@@ -27,7 +27,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const err = (src) => {
-  try { return (compileToBPxAST(`@core\n@alphabet.western\n${src}`).errors || []).map((e) => e.message ?? String(e)); }
+  try { return (compileToBPxAST(`core\nalphabet.western\n${src}`).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
 };
 // `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05,
@@ -36,21 +36,21 @@ const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 
 // ── 1. LES QUATRE DÉCLARATIONS — chacune déclare, et son nom est UTILISABLE dans le flux ────
 // Il ne suffit pas qu'elles compilent : le nom doit ARRIVER quelque part. « Ça compile » n'est pas
-// « ça arrive » — c'est le défaut trouvé le matin même sur `@cv` sans deux-points, rangé parmi les
+// « ça arrive » — c'est le défaut trouvé le matin même sur `cv` sans deux-points, rangé parmi les
 // directives et invisible de tout ce qui cherche un modulateur.
 const DECLARATIONS = [
-  ['@gate',    '@gate C4:midi\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
-  // ⚠️ LE MOT A CHANGÉ, PAS LA PORTÉE. `@trigger` est sorti du langage le 2026-08-15 — il était
-  // absent de la bible depuis toujours — et `@var <rôle> in.<canal>` est la forme qui déclare ce
+  ['@gate',    'gate C4:midi\n-----\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
+  // ⚠️ LE MOT A CHANGÉ, PAS LA PORTÉE. `trigger` est sorti du langage le 2026-08-15 — il était
+  // absent de la bible depuis toujours — et `var <rôle> in.<canal>` est la forme qui déclare ce
   // qu'un point d'attente attend (décision du 2026-08-04). Le nom arrive donc dans `inputs`, pas
   // dans `declarations` : c'est le MÊME fait mesuré au bon endroit de l'arbre.
-  ['@var … in.<canal>', '@core\n@var sync1 in.midi\nS -> C4 <!sync1', (a) => (a.inputs || []).some((d) => d.name === 'sync1')],
-  ['@var (module)', '@mod\n@var env1 adsr\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
-  ['@var',     '@var travail\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
+  ['in.<canal> …', 'core\nin.midi sync1\n-----\nS -> C4 <!sync1', (a) => (a.inputs || []).some((d) => d.name === 'sync1')],
+  ['<module> <nom>', 'mod\nadsr env1\n-----\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
+  ['@var',     'symbol travail\n-----\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];
 console.log(`[portée unique] ${DECLARATIONS.length} déclarations de terminal`);
 for (const [nom, src, arrive] of DECLARATIONS) {
-  const r = compileToBPxAST(`@core\n@alphabet.western\n${src}\n`);
+  const r = compileToBPxAST(`core\nalphabet.western\n${src}\n`);
   ok((r.errors || []).length === 0, `1. '${nom}' doit compiler — ${(r.errors || []).map((e) => e.message)[0] ?? ''}`);
   ok(r.ast ? arrive(r.ast) : false, `1. '${nom}' — le nom déclaré doit ARRIVER dans l'arbre, pas seulement compiler`);
 }
@@ -59,9 +59,9 @@ for (const [nom, src, arrive] of DECLARATIONS) {
 // C'est le cœur du point 1 : un nom déclaré avant le premier bloc vaut encore après le cinquième
 // tiret. Si quelqu'un rendait un jour les noms locaux à une sous-grammaire, ces témoins rougissent.
 const A_TRAVERS_LES_BLOCS = [
-  ['une variable de travail', '@var v\nS -> C4 v\n-----\nT -> v C4\nS -> T'],
-  ['une définition',          '@def m C4 D4\nS -> m C4\n-----\nT -> m\nS -> T'],
-  ['une déclaration de gate', '@gate C4:midi\nS -> C4\n-----\nT -> C4\nS -> T'],
+  ['une variable de travail', 'symbol v\n-----\nS -> C4 v\n-----\nT -> v C4\nS -> T'],
+  ['une définition',          'def m C4 D4\n-----\nS -> m C4\n-----\nT -> m\nS -> T'],
+  ['une déclaration de gate', 'gate C4:midi\n-----\nS -> C4\n-----\nT -> C4\nS -> T'],
 ];
 for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
   ok(err(src).length === 0,
@@ -69,11 +69,11 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 }
 // Et une TÊTE de règle traverse aussi — c'est ce qui fait de deux sous-grammaires deux PASSES.
 // ⚠️ CE TÉMOIN A ÉTÉ RÉÉCRIT : mon premier jet passait par `err()`, qui préfixe déjà
-// `@alphabet.western`, et j'y ajoutais `@alphabet.simple`. DEUX alphabets déclarés, le premier
+// `alphabet.western`, et j'y ajoutais `alphabet.simple`. DEUX alphabets déclarés, le premier
 // gagne, donc mes terminaux abstraits sortaient inconnus — et j'ai failli lire ça comme une
 // portée qui coupe. L'instrument, encore : un témoin qui hérite d'un préfixe qu'il ne voit pas.
 {
-  const r = compileToBPxAST('@core\n@alphabet.simple\nS -> X\nX -> a b\n-----\nX -> c d\n');
+  const r = compileToBPxAST('core\nalphabet.simple\n-----\nS -> X\nX -> a b\n-----\nX -> c d\n');
   ok((r.errors || []).length === 0,
     `2. la même tête dans deux sous-grammaires reste légitime — deux passes, pas deux portées `
     + `(reçu : ${(r.errors || []).map((e) => e.message)[0] ?? ''})`);
@@ -82,8 +82,8 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 // ── 3. LES TROIS EXCEPTIONS SONT DES CORPS DE BLOCS, ET ELLES RESTENT LOCALES ───────────────
 // Un paramètre de macro ne fuit pas dans la scène : c'est la seule localité que le langage admet.
 // ⛔ LE CAS DU PARAMETRE A ETE RETIRE le 2026-08-09 : son PORTEUR n existe plus.
-// Il s ecrivait avec `@macro accent(x) x(vel:120)`, supprime du langage ; la forme qui le
-// remplacera — le corps  transformation parametree  de `@def` — n est PAS ENCORE LU par le
+// Il s ecrivait avec `macro accent(x) x(vel:120)`, supprime du langage ; la forme qui le
+// remplacera — le corps  transformation parametree  de `def` — n est PAS ENCORE LU par le
 // parseur, seuls la declaration de terminal et la structure le sont.
 // ⚠️ JE NE LUI INVENTE PAS UN PORTEUR : ecrire ce cas avec une forme que le langage ne lit pas
 // produirait un garde qui refuse pour la mauvaise raison, et qui verdirait le jour ou la forme
@@ -91,8 +91,8 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 // CE QUE LE VOLET GARDE ENCORE, et qui suffit a le tenir vivant : les proprietes d un acteur,
 // deuxieme des trois corps de bloc que le langage admet.
 {
-  // Les propriétés d'un @actor sont un corps de bloc : elles ne déclarent pas des noms de scène.
-  const r = compileToBPxAST('@core\n@actor v\n  alphabet.western\n  out.audio\nS -> v.C4\n');
+  // Les propriétés d'un actor sont un corps de bloc : elles ne déclarent pas des noms de scène.
+  const r = compileToBPxAST('core\nactor v\n  alphabet.western\n  out.audio\n-----\nS -> v.C4\n');
   ok((r.errors || []).length === 0, '3. les propriétés d\'un @actor doivent compiler');
   ok(!nomsVars(r.ast).includes('alphabet'),
     '3. et elles ne fuient pas non plus — un mot de propriété n\'est pas un nom de scène');
@@ -100,7 +100,7 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 
 // ── 4. SOCLE ET TÉMOINS D'INSTRUMENT ────────────────────────────────────────────────────────
 ok(DECLARATIONS.length === 4, `4. les QUATRE déclarations doivent être éprouvées — ${DECLARATIONS.length}`);
-// PLANCHER ABAISSÉ DE 4 À 3 le 2026-08-15, SCIEMMENT : `@alias` sort du langage, donc son témoin
+// PLANCHER ABAISSÉ DE 4 À 3 le 2026-08-15, SCIEMMENT : `alias` sort du langage, donc son témoin
 // sort de la matrice. Un plancher qui suit ce que l'extracteur rend ne mesure plus rien ; celui-ci
 // se déplace par une décision, et la décision est écrite ici.
 ok(A_TRAVERS_LES_BLOCS.length >= 3, '4. la matrice des traversées ne s\'est pas vidée');

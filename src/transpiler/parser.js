@@ -107,6 +107,28 @@ function varConventions() {
 }
 
 /**
+ * LES MOTS QUI OUVRENT UNE DÉCLARATION PAR LE TYPE, et que rien d'autre ne dérive — `flag`,
+ * `symbol`. Les CONVENTIONS et les MODULES en ouvrent une aussi, et se lisent là où ils sont déjà
+ * déclarés : `varConventions` pour les unes, le catalogue `mod` pour les autres. Recopier ces deux
+ * listes ici rouvrirait l'écart entre ce que le parseur accepte et ce que la donnée déclare.
+ */
+let _typesDeclaratifs = null;
+function typesDeclaratifs() {
+  if (_typesDeclaratifs) return _typesDeclaratifs;
+  const c = ((loadLib('core') || {}).schema || {}).declarationTypes;
+  if (!Array.isArray(c) || c.length === 0) {
+    throw new Error("lib/core.json schema.declarationTypes est vide ou absent");
+  }
+  _typesDeclaratifs = new Set(c);
+  return _typesDeclaratifs;
+}
+
+/** Les modules du catalogue — une instance se déclare en écrivant son module en tête. */
+function modulesDuCatalogue() {
+  return new Set(Object.keys(loadLib('mod')?.objects || {}));
+}
+
+/**
  * Axes à CATALOGUE au niveau SCÈNE (directive `axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
  * de catalogue (une lib par axe) — donc un COMPOSANT, nommé avec `.`. DOIT rester le miroir de
  * `lib/core.json` schema.catalogAxes (garde anti-dérive : test/test_catalog_axes_colon_reject.js
@@ -1627,7 +1649,209 @@ function parse(tokens, opts = {}) {
     return dirs;
   }
 
+  /**
+   * ⛔ LE TYPE VIENT EN TÊTE, LE NOM ENSUITE — décision Romain du 2026-08-16
+   * (`hub/decisions/2026-08-16-le-langage-perd-var-et-l-arobase-trois-mots-un-delimiteur.md:20-28`),
+   * précisée le même jour pour l'entrée (`…-quatre-types-un-enum-et-le-prototypal-pur.md:123` :
+   * « une entrée s'écrit `in.midi sync1`, symétrique de `out.midi(ch:1)` »).
+   *
+   *     flag    section(intro:1, drop:2)
+   *     signal  grain:0.5
+   *     symbol  x
+   *     in.midi sync1
+   *     ramp    r1                        une instance d'un module du catalogue
+   *
+   * ⚠️ L'ARBRE NE BOUGE PAS. Ces cinq lignes émettent EXACTEMENT les nœuds que `var` émettait —
+   * `InDirective` pour l'entrée, `VarDirective` pour les quatre autres, mêmes champs, même place.
+   * C'est ce qui rend la bascule indépendante de la forme d'arbre : aucun consommateur ne change.
+   *
+   * ⚠️ LE POINT QUALIFIE LE TYPE, il ne nomme pas une librairie : `in.midi` est un type d'entrée,
+   * comme `out.midi` est une clé d'acteur. La lecture passe donc AVANT celle d'une directive
+   * ordinaire, qui prendrait `in` pour un nom de librairie et `midi` pour une entrée de catalogue.
+   *
+   * Rend `null` quand la ligne n'ouvre pas une déclaration par le type — la lecture ordinaire
+   * reprend alors la main sans avoir consommé un seul jeton.
+   */
+  function lireDeclarationParLeType() {
+    if (!at(T.IDENT)) return null;
+    const tok = current();
+    const mot = tok.value;
+
+    // ── L'ENTRÉE — `in.<canal> <rôle> [mapping.<table>]` ────────────────────────────────────
+    // Les trois contraintes de la décision du 2026-07-27 ne bougent pas : aucun nom de port,
+    // aucun alphabet, aucune table par défaut. Elles changent seulement de côté de la ligne.
+    if (mot === 'in' && peek(1).type === T.PERIOD && !peek(1).spaceBefore
+        && peek(2).type === T.IDENT) {
+      advance(); advance();                        // in .
+      const canal = expect(T.IDENT).value;
+      if (at(T.LPAREN)) {
+        throw new ParseError(`'in.${canal}(…)' est refusé — une entrée ne porte AUCUN nom de `
+          + `port. Un nom de port vient du système et change de machine en machine ; la scène `
+          + `nomme un RÔLE, l'utilisateur associe l'appareil, et l'association vit hors de la `
+          + `scène.`, tok);
+      }
+      // LISTE FERMÉE PROPRE AUX ENTRÉES (`lib/core.json` schema.channels).
+      if (!inChannels().has(canal)) {
+        throw new ParseError(`'${canal}' n'est pas une entrée — les canaux d'entrée sont `
+          + `${[...inChannels()].join(', ')}. La liste est FERMÉE.`, tok);
+      }
+      if (!at(T.IDENT)) {
+        throw new ParseError(`'in.${canal}' doit nommer le RÔLE que tient l'entrée — `
+          + `'in.${canal} <rôle>'. Le type vient en tête, le nom ensuite.`, current());
+      }
+      const roleName = advance().value;
+      let table = null;
+      while (at(T.IDENT)) {
+        const cle = advance().value;
+        if (!at(T.PERIOD)) {
+          throw new ParseError(`in.${canal} ${roleName} : '${cle}' doit APPELER un composant avec `
+            + `un point ('mapping.<table>') — le point APPELLE, les deux points AFFECTENT.`, tok);
+        }
+        advance();
+        const valeur = expect(T.IDENT).value;
+        if (cle === 'mapping') {
+          table = valeur;
+        } else if (cle === 'alphabet') {
+          throw new ParseError(`in.${canal} ${roleName} : une entrée ne porte AUCUN alphabet. Il `
+            + `n'y a rien à résoudre en entrée — l'événement est DISCRET, pas un signal à `
+            + `interpréter. C'est la TABLE (mapping.<nom>) qui déclare le vocabulaire où les `
+            + `étiquettes puisent, et elle le fait en librairie, pas dans la scène.`, tok);
+        } else {
+          throw new ParseError(`in.${canal} ${roleName} : propriété '${cle}' inconnue — une `
+            + `entrée déclare son canal et, facultativement, sa table ('mapping.<table>'). `
+            + `Rien d'autre.`, tok);
+        }
+      }
+      // Aucune table par défaut : `mapping` reste null quand rien n'est déclaré.
+      return { type: 'InDirective', name: roleName, transport: canal, mapping: table, line: tok.line };
+    }
+
+    // ── LES QUATRE AUTRES TYPES ────────────────────────────────────────────────────────────
+    // ⛔ `var` GARDE SON REFUS À LUI, et il doit passer AVANT celui-ci. Le mot n'est plus déclaré
+    // nulle part depuis qu'il a quitté la liste réservée : il tomberait donc dans le refus
+    // générique ci-dessous, qui énumère les types au lieu de donner la réécriture ligne par ligne.
+    // Mesuré sur le corpus : 18 scènes reçoivent ce refus, c'est celui qui leur sert.
+    if (mot === 'var') return null;
+    const modules = modulesDuCatalogue();
+    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !modules.has(mot)) {
+      // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
+      // `lpf lpf1` tombe dans « n'est déclaré par aucune librairie chargée » et envoie l'auteur
+      // chercher une librairie au lieu de lui dire que le mot n'est pas un type. La condition est
+      // ÉTROITE : le mot n'est déclaré NULLE PART — ni comme directive de tête (`actor`, `def`,
+      // `init`…), ni par une portée de librairie — et un nom nu le suit. Tout le reste poursuit
+      // sa lecture ordinaire, sans un jeton consommé.
+      // ⛔ ET LA CONDITION EST « LA LIGNE ENTIÈRE », pas « le jeton suivant ». Ma première écriture
+      // se contentait d'un IDENT après le mot : elle a AVALÉ les refus de `cv env1 mod.adsr(…)` et
+      // de `macro lead toto` — deux mots sortis dont la cause était inscrite au registre du corpus,
+      // et qui ont changé de message sans changer de couleur. Six scènes touchées, vues par le
+      // garde du corpus et pas autrement. Une déclaration par le type, c'est UN type et UN nom, un
+      // point final : tout ce qui déborde appartient à une autre lecture.
+      const finDeLigne = peek(2).type === T.NEWLINE || peek(2).type === T.EOF
+        || peek(2).type === T.COMMENT;
+      if (peek(1).type === T.IDENT && finDeLigne && !directiveDeclareeParLaLibrairie('core', mot)
+          && porteesDeclarees(mot) === null) {
+        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type. Un type en `
+          + `tête vient des conventions (${[...varConventions()].join(', ')}), du catalogue de `
+          + `modules (${[...modules].join(', ')}), ou des types de base `
+          + `(${[...typesDeclaratifs()].join(', ')}, in.<canal>).`, tok);
+      }
+      return null;
+    }
+    // ⚠️ UN TYPE SANS NOM N'EST PAS UNE DÉCLARATION, et ne doit pas en devenir une par accident :
+    // `signal:0.5` affecte une valeur à un mot, ce n'est pas `signal grain:0.5`. On ne prend la
+    // ligne que si un NOM suit, et on refuse en le nommant si le type est seul sur sa ligne.
+    if (peek(1).type !== T.IDENT) {
+      if (peek(1).type === T.NEWLINE || peek(1).type === T.EOF) {
+        throw new ParseError(`'${mot}' doit nommer ce qu'il déclare — le type vient en tête, le `
+          + `nom ensuite ('${mot} <nom>').`, tok);
+      }
+      return null;
+    }
+    advance();                                     // le type
+    const premier = expect(T.IDENT).value;
+
+    // ── LE DRAPEAU — `flag <nom>(<état>:<entier>, …)` ──────────────────────────────────────
+    // La parenthèse porte ce qui appartient à ce qui la précède : les états appartiennent au
+    // drapeau. C'est le même geste que `actor basse(out.midi(ch:1))`, aucun signe nouveau.
+    if (mot === 'flag') {
+      if (!at(T.LPAREN)) {
+        throw new ParseError(`flag ${premier} : un drapeau nomme ses états entre parenthèses — `
+          + `'flag ${premier}(<nom>:<entier>, …)'. La parenthèse porte ce qui appartient à ce `
+          + `qui la précède.`, current());
+      }
+      advance();
+      const states = [];
+      while (!at(T.RPAREN) && !atEnd()) {
+        const stName = expect(T.IDENT).value;
+        if (!at(T.COLON)) {
+          throw new ParseError(`flag ${premier} : l'état '${stName}' doit porter sa valeur `
+            + `entière après ':' — '${stName}:<entier>'.`, current());
+        }
+        advance();
+        states.push({ name: stName, value: Number(expect(T.INT).value) });
+        if (at(T.COMMA)) advance();
+      }
+      expect(T.RPAREN);
+      if (!states.length) {
+        throw new ParseError(`flag ${premier} : au moins un état est requis — `
+          + `'flag ${premier}(<nom>:<entier>, …)'.`, tok);
+      }
+      return { type: 'VarDirective', names: [premier], varType: { kind: 'flag', states },
+               line: tok.line };
+    }
+
+    // ── LA VALEUR DE DÉPART, COLLÉE À SON SIGNE ────────────────────────────────────────────
+    // « espace sépare deux termes ; leur collage les réunit en un seul ». Détachée, la valeur se
+    // lirait comme un second terme et disparaîtrait sans un signe.
+    const lireDepart = (nom) => {
+      if (!at(T.COLON)) return null;
+      advance();
+      const t = current();
+      if (t.spaceBefore) {
+        throw new ParseError(`${mot} ${nom}: une valeur de départ se COLLE à son signe — `
+          + `'${nom}:<valeur>', jamais '${nom}: <valeur>'. L'espace sépare deux termes, le `
+          + `collage les réunit.`, t);
+      }
+      if (at(T.INT) || at(T.FLOAT)) { advance(); return Number(t.value); }
+      if (at(T.IDENT)) { advance(); return t.value; }
+      throw new ParseError(`${mot} ${nom} : une valeur de départ se pose après ':' — un nombre ou `
+        + `un nom. Reçu '${t.value ?? t.type}'.`, t);
+    };
+    const departs = [];
+    const d0 = lireDepart(premier);
+    if (d0 !== null) departs.push({ name: premier, value: d0 });
+
+    // ── LA CONVENTION et LE MODULE — un seul nom ───────────────────────────────────────────
+    if (varConventions().has(mot) || modules.has(mot)) {
+      const varType = varConventions().has(mot)
+        ? { kind: 'convention', convention: mot }
+        : { kind: 'module', module: mot };
+      const d = { type: 'VarDirective', names: [premier], varType, line: tok.line };
+      return departs.length ? { ...d, initial: departs } : d;
+    }
+
+    // ── `symbol` — un nom, ou plusieurs séparés par des virgules ───────────────────────────
+    // ⚠️ CHAQUE NOM PORTE SA PROPRE VALEUR : `symbol a:1, b:2`. Une valeur unique partagée par la
+    // liste serait une invention — la ligne énumère des symboles distincts.
+    const noms = [premier];
+    while (at(T.COMMA) && advance()) {
+      const n = expect(T.IDENT).value;
+      noms.push(n);
+      const dn = lireDepart(n);
+      if (dn !== null) departs.push({ name: n, value: dn });
+    }
+    const nu = { type: 'VarDirective', names: noms, varType: null, line: tok.line };
+    return departs.length ? { ...nu, initial: departs } : nu;
+  }
+
   function parseDirective() {
+    // ── LE TYPE EN TÊTE PASSE AVANT TOUT — sa lecture ne consomme rien quand la ligne n'en est
+    // pas une, et elle DOIT précéder la lecture ordinaire : `in.midi sync1` se lirait sinon comme
+    // une invocation de catalogue, et `flag section(…)` comme une directive inconnue.
+    {
+      const parLeType = lireDeclarationParLeType();
+      if (parLeType) return parLeType;
+    }
     // ── L AROBASE EST SORTIE DU LANGAGE ──────────────────────────────────────────────────────
     // `hub/decisions/2026-08-17-factory-et-mine-sortent-du-langage.md`, section « Amendement du
     // 2026-08-17 — l arobase sort de partout ». ⛔ LE NOM DU FICHIER, PAS LA DATE SEULE : j avais
@@ -1890,199 +2114,24 @@ function parse(tokens, opts = {}) {
     // (flag, signal, pitch, phase, logic, module — table « `var` — déclarer une variable »). CE
     // CHANTIER (transport → in/out) n'ajoute QUE la forme d'entrée `<rôle> in.<canal>`, ex-`in` —
     // les autres types restent hors périmètre, non implémentés ici.
+    // ⛔ `var` EST SORTI DU LANGAGE — décision Romain du 2026-08-16, appliquée le 2026-08-18.
+    // Le TYPE vient en tête, le nom ensuite : ce que `var` portait se répartit sur des types, et
+    // chacun est un mot que la donnée déclare. Le lecteur vit dans `lireDeclarationParLeType`.
+    //
+    // ⚠️ CE REFUS EST NOMMÉ, ET C'EST DÉLIBÉRÉ. La règle générale veut qu'un mot sorti tombe dans
+    // le refus d'un mot inventé ; celle des frontières veut qu'une forme invalidée soit « refusée
+    // avec sa réécriture ». `var` est écrit chez un consommateur et quatre fois dans la bible :
+    // un refus muet lui ferait chercher une librairie manquante au lieu de lui donner la ligne à
+    // écrire. Il n'accepte rien — il refuse en enseignant.
     if (name === 'var') {
-      if (!at(T.IDENT)) {
-        throw new ParseError("var doit nommer au moins un symbole : 'var A8', 'var a, b, c' "
-          + "pour plusieurs, ou déclarer une entrée : 'var <rôle> in.<canal>'. Ce sont des "
-          + "variables de travail — des symboles du flux qui ne sont l'écriture d'aucune note, "
-          + 'ou le rôle que tient une entrée.', tok);
-      }
-      const first = expect(T.IDENT).value;
-
-      // ⛔ LE NOM PORTE SA VALEUR DE DÉPART — voie A, arbitrage de Romain du 2026-08-13.
-      // « init, c'est var plus une affectation. » L'affectation manquait : mesuré le même jour,
-      // `init grain:0.5`, le bloc `init` indenté et `var grain signal:0.5` étaient REFUSÉS tous
-      // les trois. Aucune forme ne donnait une valeur de départ à une variable déclarée.
-      // LE SUJET DU DEUX-POINTS EST LE NOM, jamais le type : `var grain:0.5 signal` se lit
-      // « grain vaut 0.5, et c'est un signal ». La graphie `var grain signal:0.5` a été écartée
-      // parce qu'elle lie la valeur à `signal` — elle dirait « signal vaut 0.5 », ce qui est faux.
-      // ⚠️ AUCUN CONFLIT AVEC LE DRAPEAU : `var section flag: calm:1` porte son deux-points APRÈS
-      // le mot `flag`, jamais après le nom. Les deux se distinguent sur la position, pas sur une
-      // convention — et c'est ce qui rend la lecture sûre.
-      // ⛔ LA VALEUR EST COLLÉE AU SIGNE, et c'est le canon du langage qui le dit : « espace sépare
-      // deux termes ; leur collage les réunit en un seul ». Sans cette contrainte,
-      // `var grain: signal` prenait `signal` pour la VALEUR — la variable démarrait à la chaîne
-      // « signal » et perdait son type, sans un signe. Trouvé par le garde, pas en raisonnant :
-      // c'est le seul endroit où la voie A pouvait avaler un mot qui ne lui appartient pas.
-      const lireValeurDeDepart = () => {
-        if (!at(T.COLON)) return null;
-        advance();
-        const t = current();
-        if (t.spaceBefore) {
-          throw new ParseError(`var ${first}: une valeur de départ se COLLE à son signe — `
-            + `'${first}:<valeur>', jamais '${first}: <valeur>'. L'espace sépare deux termes, le `
-            + `collage les réunit ; détaché, '${t.value ?? t.type}' se lirait comme le TYPE de la `
-            + `variable et la valeur disparaîtrait sans un signe.`, t);
-        }
-        if (at(T.INT) || at(T.FLOAT)) { advance(); return Number(t.value); }
-        if (at(T.IDENT)) { advance(); return t.value; }
-        throw new ParseError(`@var ${first} : une valeur de départ se pose après ':' — un nombre `
-          + `ou un nom. Reçu '${t.value ?? t.type}'.`, t);
-      };
-      const valeurDeDepart = lireValeurDeDepart();
-      const avecDepart = (d) => (valeurDeDepart === null
-        ? d
-        : { ...d, initial: [{ name: first, value: valeurDeDepart }] });
-      refuserLeSigneEgal('var', first);
-
-      // @var <rôle> in.<canal> [mapping.<table>] — DÉCLARATION D'UNE ENTRÉE
-      //
-      // Décision Romain 2026-07-27 (`hub/decisions/2026-07-27-forme-des-entrees-in-mapping-adresse-
-      // nue.md`), en conséquence de la symétrie entrée/sortie du même jour : une sortie est routée
-      // PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une entrée l'est de la même façon, au point
-      // de RÉCEPTION — le point d'attente. Pas de directive de routage, pas de flèche. Réécrite en
-      // `var` par la décision du 2026-08-04 (transport → in/out), qui abandonne `in`.
-      //
-      // TROIS CONTRAINTES, chacune refusée bruyamment plus bas :
-      //  1. AUCUN NOM DE PORT. La scène nomme un RÔLE ; le nom d'un port vient du système et change
-      //     de machine en machine — une scène qui le porterait ne s'ouvrirait plus ailleurs.
-      //     L'association rôle → appareil réel vit HORS de la scène.
-      //  2. AUCUN ALPHABET. Il n'y a RIEN à résoudre en entrée : l'événement est DISCRET (Romain :
-      //     « si sur mon entrée je fais un glissando, ça va activer au croisement de la fréquence ?
-      //     on attend un événement DISCRET, pas un traitement de signal »). Le mécanisme est
-      //     événement brut → table → étiquette interne ; l'alphabet n'est qu'un réservoir de NOMS où
-      //     les étiquettes puisent, et c'est LA TABLE qui le déclare, en librairie.
-      //  3. AUCUNE TABLE PAR DÉFAUT. Sans table déclarée on écrit des adresses nues, et c'est
-      //     EXPLICITE dans la scène — poser une identité implicite rendrait indistinguables « je
-      //     n'ai pas de table » et « ma table ne fait rien ».
-      if (at(T.IDENT) && current().value === 'in' && peek(1).type === T.PERIOD && !peek(1).spaceBefore) {
-        const roleName = first;
-        advance(); // in
-        advance(); // .
-        const canal = expect(T.IDENT).value;
-        // ⚠️ CONTRAINTE 1 — un nom de port dans la scène est REFUSÉ, pas ignoré.
-        if (at(T.LPAREN)) {
-          throw new ParseError(`@var ${roleName} : 'in.${canal}(…)' est refusé — une entrée `
-            + `ne porte AUCUN nom de port. Un nom de port vient du système et change de machine `
-            + `en machine ; la scène nomme un RÔLE, l'utilisateur associe l'appareil, et `
-            + `l'association vit hors de la scène.`, tok);
-        }
-        // LISTE FERMÉE PROPRE AUX ENTRÉES — voir `inChannels`/`lib/core.json` schema.channels :
-        // le clavier y entre (décision Romain 2026-07-26, trois périphériques d'entrée nommés)
-        // et NULLE PART ailleurs. On n'a relâché aucune règle en fusionnant les catalogues.
-        if (!inChannels().has(canal)) {
-          throw new ParseError(`@var ${roleName} : '${canal}' n'est pas une entrée — les canaux `
-            + `d'entrée sont ${[...inChannels()].join(', ')}. La liste est FERMÉE.`, tok);
-        }
-        let table = null;
-        while (at(T.IDENT)) {
-          const cle = advance().value;
-          if (!at(T.PERIOD)) {
-            throw new ParseError(`@var ${roleName} : '${cle}' doit APPELER un composant avec un `
-              + `point ('mapping.<table>') — le point APPELLE, les deux points AFFECTENT.`, tok);
-          }
-          advance();
-          const valeur = expect(T.IDENT).value;
-          if (cle === 'mapping') {
-            table = valeur;
-          } else if (cle === 'alphabet') {
-            // ⚠️ CONTRAINTE 2 — et c'est la correction la plus importante de la décision.
-            throw new ParseError(`@var ${roleName} : une entrée ne porte AUCUN alphabet. Il n'y a `
-              + `rien à résoudre en entrée — l'événement est DISCRET, pas un signal à interpréter. `
-              + `C'est la TABLE (mapping.<nom>) qui déclare le vocabulaire où les étiquettes `
-              + `puisent, et elle le fait en librairie, pas dans la scène.`, tok);
-          } else {
-            throw new ParseError(`@var ${roleName} : propriété '${cle}' inconnue — une entrée `
-              + `déclare son canal ('in.<canal>') et, facultativement, sa table `
-              + `('mapping.<table>'). Rien d'autre.`, tok);
-          }
-        }
-        // CONTRAINTE 3 : `table` reste null quand rien n'est déclaré. On n'invente AUCUN défaut.
-        return { type: 'InDirective', name: roleName, transport: canal, mapping: table, line: tok.line };
-      }
-
-      // @var <nom> <var_type> — UNE VARIABLE TYPÉE (EBNF.md:47-57, AST.md:119-150, référence
-      // 2026-08-05). Le nom vient d'abord, le type ensuite. Trois familles, dans l'ordre où la
-      // grammaire les distingue :
-      //   1. "flag" ":" flag_state {"," flag_state}   — un drapeau et ses états nommés
-      //   2. CONVENTION ("signal"|"pitch"|"phase"|"logic")  — un flux lu selon une convention
-      //   3. IDENT nu                                  — une INSTANCE d'un module du catalogue
-      // La forme SANS type (un nom seul, ou une liste séparée par des virgules) reste plus bas.
-      if (at(T.IDENT)) {
-        const typeTok = current();
-        const typeWord = typeTok.value;
-
-        if (typeWord === 'flag') {
-          advance();
-          if (!at(T.COLON)) {
-            throw new ParseError(`@var ${first} flag : un drapeau nomme ses états après un ':' — `
-              + `'var ${first} flag: <nom>:<entier>, ...'. Le deux-points AFFECTE, ici il introduit `
-              + `l'énumération des états.`, typeTok);
-          }
-          advance(); // :
-          const states = [];
-          while (at(T.IDENT)) {
-            const stName = advance().value;
-            if (!at(T.COLON)) {
-              throw new ParseError(`@var ${first} flag : l'état '${stName}' doit porter sa valeur `
-                + `entière après ':' — '${stName}:<entier>'.`, typeTok);
-            }
-            advance(); // :
-            const stVal = Number(expect(T.INT).value);
-            states.push({ name: stName, value: stVal });
-            if (at(T.COMMA)) advance();
-          }
-          if (!states.length) {
-            throw new ParseError(`var ${first} flag : au moins un état est requis — `
-              + `'var ${first} flag: <nom>:<entier>, ...'.`, typeTok);
-          }
-          return avecDepart({ type: 'VarDirective', names: [first], varType: { kind: 'flag', states }, line: tok.line });
-        }
-
-        if (varConventions().has(typeWord)) {
-          advance();
-          return avecDepart({ type: 'VarDirective', names: [first],
-                   varType: { kind: 'convention', convention: typeWord }, line: tok.line });
-        }
-
-        // Reste des IDENT nus : un MODULE — une INSTANCE de ce module (`var lpf1 lpf`). Résolu
-        // contre le catalogue `lib/mod.json`. « Une entrée introuvable est nommée. RIEN NE SE
-        // RÉSOUT PAR DÉFAUT EN SILENCE » (LANGUAGE.md) — vaut pour un module comme pour un
-        // alphabet : un IDENT absent du catalogue est REFUSÉ, jamais accepté à l'aveugle.
-        advance();
-        const modules = loadLib('mod')?.objects || {};
-        if (!Object.prototype.hasOwnProperty.call(modules, typeWord)) {
-          throw new ParseError(`@var ${first} ${typeWord} : '${typeWord}' est absent du catalogue `
-            + `de modules ('lib/mod.json') — modules connus : ${Object.keys(modules).join(', ') || '(aucun)'}. `
-            + `Rien ne se résout par défaut en silence : une entrée absente du catalogue se nomme, `
-            + `elle ne s'invente pas.`, typeTok);
-        }
-        return avecDepart({ type: 'VarDirective', names: [first],
-                 varType: { kind: 'module', module: typeWord }, line: tok.line });
-      }
-
-      // Forme nue : VARIABLES DE TRAVAIL, sans type — un nom, ou plusieurs séparés par des virgules.
-      // ⚠️ CHAQUE NOM D'UNE LISTE PORTE SA PROPRE VALEUR : `var a:1, b:2`. Une valeur unique
-      // partagée par la liste serait une invention — la ligne énumère des variables distinctes.
-      const noms = [first];
-      const departs = valeurDeDepart === null ? [] : [{ name: first, value: valeurDeDepart }];
-      while (at(T.COMMA) && advance()) {
-        const n = expect(T.IDENT).value;
-        noms.push(n);
-        if (at(T.COLON)) {
-          advance();
-          const t = current();
-          if (at(T.INT) || at(T.FLOAT)) { advance(); departs.push({ name: n, value: Number(t.value) }); }
-          else if (at(T.IDENT)) { advance(); departs.push({ name: n, value: t.value }); }
-          else {
-            throw new ParseError(`@var ${n} : une valeur de départ se pose après ':' — un nombre `
-              + `ou un nom. Reçu '${t.value ?? t.type}'.`, t);
-          }
-        }
-      }
-      const nu = { type: 'VarDirective', names: noms, varType: null, line: tok.line };
-      return departs.length ? { ...nu, initial: departs } : nu;
+      const suite = at(T.IDENT) ? ` ${current().value}` : '';
+      throw new ParseError(
+        `'var${suite}' : le mot 'var' est SORTI du langage. Le TYPE vient en tête, le nom ensuite `
+        + `— 'flag section(intro:1, drop:2)', 'signal grain:0.5', 'symbol x', 'in.midi sync1', `
+        + `'ramp r1' pour une instance de module. Chaque type est un mot déclaré en librairie.`,
+        tok);
     }
+
 
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)
     

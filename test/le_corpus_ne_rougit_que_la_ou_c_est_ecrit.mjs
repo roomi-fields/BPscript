@@ -59,40 +59,64 @@ const REGISTRE = [
 
   // ── B. LA SCÈNE EST INCOMPLÈTE — un vrai défaut, chez son propriétaire ────────────────────
   // Les trois emploient un vocabulaire qu'elles ne DÉCLARENT pas : `dhadhatite_v2` écrit des bols
-  // de tabla sous le seul socle @core (donc sous l'alphabet occidental hérité), `trySrand` et
+  // de tabla sous le seul socle core (donc sous l'alphabet occidental hérité), `trySrand` et
   // `tryCsoundObjects` écrivent des objets sonores nus sans aucune convention de notes. Ce ne
   // sont pas des témoins : ce sont des scènes à réparer, et elles appartiennent à kanopi.
   // ⚠️ Elles restent ici INSCRITES, pas tolérées : le jour où l'une passe au vert, ce garde le
   // dira, et l'entrée sortira. Une dérogation sans échéance visible est un trou.
-  // ⛔ ONZE SCENES QUI ECRIVENT UNE DIRECTIVE SUPPRIMEE LE 2026-08-09 — `@cv` et `@macro`, dont
+  // ⛔ ONZE SCENES QUI ECRIVENT UNE DIRECTIVE SUPPRIMEE LE 2026-08-09 — `cv` et `macro`, dont
   // les modulateurs et le cablage relevent du patching. Leur forme de remplacement — le corps
-  // branchement de `@def` — est au BACKLOG jusqu a la revue FaustX.
+  // branchement de `def` — est au BACKLOG jusqu a la revue FaustX.
   // ⚠️ ELLES NE SE REECRIVENT PAS AUJOURD HUI, et c est deliberе : reecrire vers une forme que le
   // langage ne lit pas encore produirait une scene qui compile et n agit pas — precisement le
   // defaut qui a fait perdre son brassage a trySrand sans qu un seul message ne le dise.
   // QUI ATTEND : la revue du patching. Les quatre de kanopi sont chez lui, les sept autres a moi.
-  ['cv/cv-adsr.bps',                      'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['cv/cv-lfo.bps',                       'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['synthesis/group-cutoff.bps',          'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['synthesis/superp-cutoff.bps',         'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['synthesis/patchbay.bps',              'supprime du langage', 'declare @macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['test/fixtures/cv_modulation.bps',     'supprime du langage', 'declare @cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans @alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
+  ['cv/cv-adsr.bps',                      'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['cv/cv-lfo.bps',                       'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['synthesis/group-cutoff.bps',          'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['synthesis/superp-cutoff.bps',         'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['synthesis/patchbay.bps',              'Expected IDENT', 'declare macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['test/fixtures/cv_modulation.bps',     'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de def'],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 : cette scène refusait pour ses terminaux nus ; elle
   //    refuse désormais AVANT, sur un crochet COLLÉ à un élément — forme retirée du langage
   //    le même jour (arbitrage Romain). La cause inscrite est donc devenue fausse, et le
   //    cliquet l'a vu : un retard qui garde une cause périmée fait passer un défaut pour un
   //    autre, et son compte reste juste pendant que sa raison ment.
   ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée — kanopi a migré le crochet, la cause d origine ressort', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
-  ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l\'ouverture de @def'],
+  ['BPScript-tests/tryCsoundObjects.bps', "le mot 'var' est SORTI", 'écrit var — objets sonores nus derrière, cause d origine masquée', 'kanopi', 'kanopi — migration du type en tête'],
 
-  // ── C. controls.json SUPPRIMÉ (Romain, 2026-08-10) — cinq scènes écrivaient `@controls` SEUL ──
-  // `@core` amène désormais le même ensemble (`core.apporte`) qu'apportait le stub `@controls` —
+  // ── C. controls.json SUPPRIMÉ (Romain, 2026-08-10) — cinq scènes écrivaient `controls` SEUL ──
+  // `core` amène désormais le même ensemble (`core.apporte`) qu'apportait le stub `controls` —
   // la migration est mécanique, une ligne qui devient l'autre. Ces cinq scènes appartiennent à
-  // kanopi et écrivent `@controls` sans `@core` à côté (193 autres scènes de sa bibliothèque
+  // kanopi et écrivent `controls` sans `core` à côté (193 autres scènes de sa bibliothèque
   // écrivent déjà les deux, redondance cosmétique qui ne casse rien — hors de ce registre).
-  // QUI ATTEND : kanopi, prévenu À LA FRAPPE avec la liste exacte et la réécriture (`@controls` →
-  // `@core`, même position).
+  // QUI ATTEND : kanopi, prévenu À LA FRAPPE avec la liste exacte et la réécriture (`controls` →
+  // `core`, même position).
+
+  // ── D. `var` EST SORTI DU LANGAGE le 2026-08-18 — DIX-HUIT scènes l'écrivent encore ──────────
+  // Le TYPE vient en tête, le nom ensuite (décision Romain du 2026-08-16, câblée le 2026-08-18).
+  // La réécriture est MÉCANIQUE et connue ligne par ligne : `var <n> in.<c>` → `in.<c> <n>` ·
+  // `var <n> flag: a:1` → `flag <n>(a:1)` · `var <n> <convention|module>` → `<type> <n>` ·
+  // `var <n>` → `symbol <n>`. Vingt et une lignes au total.
+  // QUI ATTEND : kanopi, propriétaire de sa bibliothèque. Ces entrées SORTENT le jour où il migre.
+  ['basics/wait-for-key.bps',                 "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/kairos-scene-point-attente-sustain.bps', "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/Nadaka-1er-essai.bps',     "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/tryFlags.bps',             "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/tryhomomorphism.bps',      "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/tryrepeat.bps',            "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/vina.bps',                 "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/vina2.bps',                "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['BPScript-tests/vina3.bps',                "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['code-voices/cv-curve-js.bps',             "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['code-voices/hydra-audio.bps',             "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['code-voices/starter-main.bps',            "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['code-voices/starter-second.bps',          "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['code-voices/strudel-intro.bps',           "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['cv/cv-backtick.bps',                      "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['orchestrator/04-scenes-select.bps',       "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
+  ['samples/attente-la-derivation-qui-guette.bps', "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────
@@ -147,12 +171,12 @@ for (const [nom, fragment, raison, , quiAttend] of REGISTRE) {
 // triomphe : zéro scène hors registre, verdict vert, et plus rien de gardé. C'est la moitié
 // « injecter la faute dans le JUGE », pas seulement dans le sujet.
 {
-  const fautive = compileToBPxAST('@core\n@alphabet.western\nS -> zzzz_pas_une_note\n');
+  const fautive = compileToBPxAST('core\nalphabet.western\n-----\nS -> zzzz_pas_une_note\n');
   ok((fautive.errors || []).length > 0,
      `TÉMOIN (mordre) — le détecteur ne voit plus d'erreur sur une scène délibérément fautive `
      + `(un terminal qui n'existe dans aucun alphabet). Tant qu'il est aveugle, les volets `
      + `au-dessus ne prouvent rien.`);
-  const saine = compileToBPxAST('@core\n@alphabet.western\nS -> C4 D4\n');
+  const saine = compileToBPxAST('core\nalphabet.western\n-----\nS -> C4 D4\n');
   ok((saine.errors || []).length === 0,
      `TÉMOIN (se taire) — le détecteur crie sur une scène SAINE : `
      + `« ${(saine.errors || []).map((e) => e.message ?? e)[0]} ». Un détecteur qui refuserait `

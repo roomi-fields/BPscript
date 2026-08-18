@@ -33,7 +33,7 @@ function collect(dir, prefix) {
 collect(LIB_DIR, '');
 
 // Capture des corps de FONCTIONS DIGITALES : lib/<name>/<fn>.ts → libs[<name>].objects[<fn>].body.
-// L'authoring est un VRAI .ts TYPÉ (F1, contre @kairos/core, vérifié par `npm run typecheck:digital`) ;
+// L'authoring est un VRAI .ts TYPÉ (F1, contre kairos/core, vérifié par `npm run typecheck:digital`) ;
 // le bundle en capte le SOURCE, que Kairos transpile (sucrase, strip des `import type`) et exécute au
 // load. Source de vérité = le .ts (pas une chaîne dans le .json). Cf. docs/design/DIGITAL_FUNCTIONS.md.
 function captureDigitalBodies(dir) {
@@ -56,7 +56,7 @@ function captureDigitalBodies(dir) {
 captureDigitalBodies(LIB_DIR);
 
 // ── LES LIBRAIRIES ÉCRITES EN BPSCRIPT ───────────────────────────────────────────────────────
-// Une librairie se dit dans le langage qu'elle sert : `lib/<nom>.bpsl` porte ses contrôles en `@def`,
+// Une librairie se dit dans le langage qu'elle sert : `lib/<nom>.bpsl` porte ses contrôles en `def`,
 // et le bundle les convertit en la MÊME forme que les `.json`.
 //
 // ⛔ L'EXTENSION EST `.bpsl`, PAS `.bps` — décision de Romain, 2026-08-14. Une SCÈNE s'écrit `.bps`,
@@ -68,7 +68,7 @@ captureDigitalBodies(LIB_DIR);
 // corps de fonctions digitales juste au-dessus : l'AUTHORING change, la donnée publiée ne bouge pas.
 //
 // LA CONVERSION, ET ELLE NE DEVINE RIEN :
-//   · le `@def` qui porte le NOM DU FICHIER déclare le fichier — resolvedBy, name, description ;
+//   · le `def` qui porte le NOM DU FICHIER déclare le fichier — resolvedBy, name, description ;
 //   · tous les autres sont des contrôles ;
 //   · une valeur en backtick `txt:` rend son texte — c'est la seule graphie du langage qui délimite
 //     une phrase, ratifiée le 2026-08-13 ;
@@ -105,7 +105,7 @@ function valeurDeCle(v) {
 
 // ⚠️ LA CIRCULARITÉ EST RÉELLE ET SE RÉSOUT EN DEUX TEMPS, jamais par un second lecteur.
 // Le bundle a besoin du TRANSPILEUR pour lire une librairie en BPScript ; le transpileur a besoin du
-// BUNDLE pour son vocabulaire. Écrire un petit lecteur de `@def` ici règlerait la boucle en une
+// BUNDLE pour son vocabulaire. Écrire un petit lecteur de `def` ici règlerait la boucle en une
 // minute — et créerait une SECONDE GRAMMAIRE, exactement ce que la demande de Romain exclut :
 // « je veux que ton interpréteur interprète le contenu des librairies de la même façon qu'il
 // interprète le contenu des scènes ».
@@ -133,7 +133,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
       // les FUSIONNERAIT en une seule et changerait la donnée — quatre lecteurs de mon propre `src/`
       // les distinguent, et le garde des graphies natives balaye les trois premières nommément.
       // ⚠️ CE N'EST PAS UNE FORME DU LANGAGE, c'est une correspondance de LECTURE : `section` est une
-      // clé ordinaire de `@def`, que le langage accepte déjà, et rien de nouveau ne s'écrit dans une
+      // clé ordinaire de `def`, que le langage accepte déjà, et rien de nouveau ne s'écrit dans une
       // scène. Même geste que l'absence d'`args` qui vaut liste vide. La preuve reste l'ÉGALITÉ du
       // paquet avant et après, pas ce raisonnement.
       // Le chemin est POINTÉ : `schema.reservedDirectives` se lit comme une descente.
@@ -160,7 +160,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         if (CLES_LISTES.has(cle) && !Array.isArray(val)) val = [val];
         if (cible === lib && !CHAMPS_DE_FICHIER.has(cle)) {
           console.error(`[bundle] ⛔ lib/${entry} : '${cle}' n'est pas un champ de FICHIER `
-            + `(${[...CHAMPS_DE_FICHIER].join(', ')}). Un contrôle se déclare par son propre '@def'.`);
+            + `(${[...CHAMPS_DE_FICHIER].join(', ')}). Un contrôle se déclare par son propre 'def'.`);
           process.exitCode = 1;
           continue;
         }
@@ -199,7 +199,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
 // la circularité — elle DÉTRUISAIT donc le bundle commité au moment même où on le vérifiait, et le
 // garde comparait le frais à ce qu'il venait lui-même d'écraser.
 // La circularité n'a pas besoin de ça : le bundle COMMITÉ suffit à charger le transpileur. Il est
-// peut-être périmé pour d'autres librairies, mais un fichier de librairie ne déclare aucun `@core`
+// peut-être périmé pour d'autres librairies, mais un fichier de librairie ne déclare aucun `core`
 // et n'a donc besoin d'AUCUN vocabulaire pour être lu.
 const { compileToBPxAST } = await import('./index.js');
 await collectBps(LIB_DIR, '', compileToBPxAST);

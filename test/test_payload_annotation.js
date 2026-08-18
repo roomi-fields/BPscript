@@ -62,11 +62,12 @@ function rhs0(ast) {
 section('§2.1 — multi-acteur (sitar ch:1, tabla ch:10)');
 
 {
-  const src = `@core
-@actor sitar
+  const src = `core
+actor sitar
   out.midi(ch:1)
-@actor tabla
+actor tabla
   out.midi(ch:10)
+-----
 S -> { sitar.Sa, tabla.dha(vel:80) }`;
 
   const ast = parseSource(src);
@@ -127,7 +128,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // Symbol simple → 'sounding'
-  const ast = parseSource('@core\nS -> A');
+  const ast = parseSource('core\n-----\nS -> A');
   const sym = rhs0(ast)[0];
   assert('Symbol nature=sounding', sym.payload?.nature === 'sounding',
     `got ${JSON.stringify(sym.payload)}`);
@@ -135,7 +136,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // Rest → 'rest'
-  const ast = parseSource('@core\nS -> -');
+  const ast = parseSource('core\n-----\nS -> -');
   const rest = rhs0(ast)[0];
   assert('Rest nature=rest', rest.payload?.nature === 'rest',
     `got ${JSON.stringify(rest.payload)}`);
@@ -143,7 +144,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // Prolongation _ → 'prolongation'
-  const ast = parseSource('@core\nS -> A _');
+  const ast = parseSource('core\n-----\nS -> A _');
   const elems = rhs0(ast);
   const prolong = elems[1];
   assert('Prolongation nature=prolongation', prolong.payload?.nature === 'prolongation',
@@ -152,7 +153,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // UndeterminedRest ... → 'rest'
-  const ast = parseSource('@core\nS -> ...');
+  const ast = parseSource('core\n-----\nS -> ...');
   const ur = rhs0(ast)[0];
   assert('UndeterminedRest nature=rest', ur.payload?.nature === 'rest',
     `got ${JSON.stringify(ur.payload)}`);
@@ -160,7 +161,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // InstantControl !(vel:80) → 'instant'
-  const ast = parseSource('@core\nS -> !(vel:80)');
+  const ast = parseSource('core\n-----\nS -> !(vel:80)');
   const ic = rhs0(ast)[0];
   assert('InstantControl nature=instant', ic.payload?.nature === 'instant',
     `got ${JSON.stringify(ic.payload)}`);
@@ -168,7 +169,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // InstantControl !(vel:80) → flux:true
-  const ast = parseSource('@core\nS -> !(vel:80)');
+  const ast = parseSource('core\n-----\nS -> !(vel:80)');
   const ic = rhs0(ast)[0];
   assert('InstantControl flux=true', ic.payload?.flux === true,
     `got flux=${ic.payload?.flux}`);
@@ -179,9 +180,9 @@ section('nature — couverture des types de nœuds RHS');
   //   C4!(...) COLLÉ  → conjoint=true (ancré au terminal précédent)
   //   C4 !(...) ESPACÉ → conjoint=false (événement séparé)
   //   !(...) en tête (pas de terminal avant) → conjoint=false
-  const colle = rhs0(parseSource('@core\nS -> C4!(vel:80) E4'));
-  const espace = rhs0(parseSource('@core\nS -> C4 !(vel:80) E4'));
-  const tete = rhs0(parseSource('@core\nS -> !(vel:80) C4'));
+  const colle = rhs0(parseSource('core\n-----\nS -> C4!(vel:80) E4'));
+  const espace = rhs0(parseSource('core\n-----\nS -> C4 !(vel:80) E4'));
+  const tete = rhs0(parseSource('core\n-----\nS -> !(vel:80) C4'));
   const icColle = colle.find((e) => e.type === 'InstantControl');
   const icEspace = espace.find((e) => e.type === 'InstantControl');
   const icTete = tete.find((e) => e.type === 'InstantControl');
@@ -195,7 +196,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // Frontière intacte : B3!C7 (! entre symboles) = SimultaneousGroup, PAS un flux
-  const r = rhs0(parseSource('@core\nS -> B3!C7'));
+  const r = rhs0(parseSource('core\n-----\nS -> B3!C7'));
   assert('B3!C7 → SimultaneousGroup (inchangé)', r[0]?.type === 'SimultaneousGroup',
     `got ${r[0]?.type}`);
 }
@@ -205,7 +206,7 @@ section('nature — couverture des types de nœuds RHS');
   // (comportement parser : break sur LPAREN spaceBefore). Un `(...)` nu = CONTENANCE
   // (concept neuf BPScript, décision Romain 2026-06-20) : structurel, confiné, NE déborde PAS
   // → tagué `containment:true scope:'rule'` (PAS flux). Seul `!(...)` porte flux:true.
-  const ast = parseSource('@core\nS -> (vel:80)');
+  const ast = parseSource('core\n-----\nS -> (vel:80)');
   const rule = ast.subgrammars[0].rules[0];
   assert('(vel:80) standalone → settings de règle (pas rhs)',
     rule.settings?.type === 'SettingBag',
@@ -219,7 +220,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // Control moteur sans arg (engine-control) : stop, striated, retro...
-  const ast = parseSource('@core\nS -> A stop');
+  const ast = parseSource('core\n-----\nS -> A stop');
   const elems = rhs0(ast);
   const stopCtrl = elems.find(e => e.type === 'Control' && e.name === 'stop');
   assert('Control moteur (stop) présent', stopCtrl !== undefined,
@@ -236,7 +237,7 @@ section('nature — couverture des types de nœuds RHS');
   // n'atteint jamais la règle et laisse un jeton de contrôle inerte dans la production.
   // Ce qu'on vérifie : elle arrive au NIVEAU RÈGLE, ses deux valeurs restent séparées par
   // l'espace, et elle ne traîne pas dans la séquence.
-  const ast = parseSource('@core\nS -> A [goto:2 1]');
+  const ast = parseSource('core\n-----\nS -> A [goto:2 1]');
   const regle = ast.subgrammars[0].rules[0];
   const paire = (regle.qualifiers || []).flatMap((q) => q.pairs || []).find((p) => p.key === 'goto');
   assert('[goto:2 1] atteint le niveau RÈGLE', paire !== undefined,
@@ -249,7 +250,7 @@ section('nature — couverture des types de nœuds RHS');
 
 {
   // Control runtime (vel) posé explicitement → transport-control
-  const ast = parseSource('@core\nS -> A !(vel:80) B');
+  const ast = parseSource('core\n-----\nS -> A !(vel:80) B');
   const elems = rhs0(ast);
   const velCtrl = elems.find(e => e.type === 'Control' && e.name === 'vel');
   if (velCtrl) {
@@ -268,7 +269,7 @@ section('nature — couverture des types de nœuds RHS');
 // ============================================================
 section('ActorDirective.references[] (forme canonique, lue par le dispatcher)');
 {
-  const ast = parseSource(`@actor tabla\n  @alphabet.tabla\n  out.midi(ch:10)\nS -> tabla.Sa`);
+  const ast = parseSource(`actor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> tabla.Sa`);
   const actor = ast.actors[0];
   const refs = actor.references;
   assert('references[] présent', Array.isArray(refs) && refs.length >= 2, `got ${JSON.stringify(refs)}`);
@@ -291,7 +292,7 @@ section('flux — marquage !(…) vs Sa(vel:80) attaché');
 
 {
   // !(vel:80) standalone → flux:true
-  const ast = parseSource('@core\nS -> !(vel:80)');
+  const ast = parseSource('core\n-----\nS -> !(vel:80)');
   const ic = rhs0(ast)[0];
   assert('!(vel:80) flux=true', ic.payload?.flux === true,
     `got payload=${JSON.stringify(ic.payload)}`);
@@ -300,7 +301,7 @@ section('flux — marquage !(…) vs Sa(vel:80) attaché');
 {
   // Sa avec suffixQualifier collé → pas de flux (override d'occurrence)
   // Sa(vel:80) est parsé en Symbol avec suffixQualifiers, payload plié
-  const ast = parseSource('@core\nS -> A(vel:80)');
+  const ast = parseSource('core\n-----\nS -> A(vel:80)');
   const elems = rhs0(ast);
   const sym = elems.find(e => e.type === 'Symbol' || e.type === 'SymbolCall');
   assert('A(vel:80) produit un Symbol/SymbolCall', sym !== undefined,
@@ -325,7 +326,7 @@ section('flux — marquage !(…) vs Sa(vel:80) attaché');
   // mesurait la normalisation d'une graphie qui ne compile plus. Ce qui suit RESTE — la
   // prolongation, elle, n'a pas bougé, et c'est justement ce que le refus ne doit pas manger.
   // _ seul reste Prolongation
-  const ast = parseSource('@core\nS -> A _');
+  const ast = parseSource('core\n-----\nS -> A _');
   const elems = rhs0(ast);
   const prolong = elems.find(e => e.type === 'Prolongation');
   assert('_ seul reste Prolongation', prolong !== undefined,
@@ -339,11 +340,12 @@ section('flux — marquage !(…) vs Sa(vel:80) attaché');
 section('Agnosticisme — zéro notion BP3 dans le payload');
 
 {
-  const src = `@core
-@actor sitar
+  const src = `core
+actor sitar
   out.midi(ch:1)
-@actor tabla
+actor tabla
   out.midi(ch:10)
+-----
 S -> { sitar.Sa, tabla.dha(vel:80) }
 S -> !(vel:80) A !(chromashift:2) - [goto:2 1]`;
   const ast = parseSource(src);
@@ -364,7 +366,7 @@ S -> !(vel:80) A !(chromashift:2) - [goto:2 1]`;
 section('OutTimeObject → nature sounding');
 
 {
-  const ast = parseSource('@core\nS -> !mysym');
+  const ast = parseSource('core\n-----\nS -> !mysym');
   const elems = rhs0(ast);
   const oto = elems.find(e => e.type === 'OutTimeObject');
   assert('OutTimeObject présent', oto !== undefined,
@@ -380,7 +382,7 @@ section('OutTimeObject → nature sounding');
 section('Tie nodes → nature sounding');
 
 {
-  const ast = parseSource('@core\nS -> A~ ~B~ ~C');
+  const ast = parseSource('core\n-----\nS -> A~ ~B~ ~C');
   const elems = rhs0(ast);
   const tieStart = elems.find(e => e.type === 'TieStart');
   const tieCont = elems.find(e => e.type === 'TieContinue');
@@ -406,7 +408,7 @@ section('Tie nodes → nature sounding');
 section('Polymetric — les voix sont annotées récursivement');
 
 {
-  const ast = parseSource('@core\nS -> { A B, C - }');
+  const ast = parseSource('core\n-----\nS -> { A B, C - }');
   const poly = rhs0(ast)[0];
   assert('Polymetric présent', poly?.type === 'Polymetric', poly?.type);
 

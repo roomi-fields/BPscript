@@ -62,7 +62,7 @@ if (existsSync(demosDir)) {
 //
 // ⚠️ LA TOLÉRANCE EN BLOC A ÉTÉ SUPPRIMÉE le 2026-07-27, sur mesure. Une démo qui ne compilait pas
 // passait, quelle que soit la raison — la ligne était seulement JOURNALISÉE. Mesuré par injection :
-// une forme MORTE (`@alias`, supprimée le jour même) ajoutée à une démo laissait le portillon VERT,
+// une forme MORTE (`alias`, supprimée le jour même) ajoutée à une démo laissait le portillon VERT,
 // avec sa cause écrite en toutes lettres dans la sortie. C'est la famille « verdir sans avoir
 // examiné », fermée dans sept gardes le même jour — celui-ci était le huitième survivant, et il a
 // survécu pour la raison habituelle : il n'était pas dans la portée du balayage.
@@ -101,11 +101,11 @@ const ERREURS_ADMISES = [
   { demo: 'trySrand', pourquoi: 'randomize NU dans le flux — forme retiree du langage, kanopi prevenu', date: '2026-08-08' },
   // ⛔ MA PROPRE DEMO, ET SA REECRITURE N EXISTE PAS ENCORE (2026-08-09). Ses cinq macros sont
   // TOUTES du cablage — deux branchements, deux poses de valeur sur un port, un declenchement.
-  // Leur forme de remplacement est le corps  branchement  de `@def`, au BACKLOG avec le patching.
+  // Leur forme de remplacement est le corps  branchement  de `def`, au BACKLOG avec le patching.
   // ⚠️ J AI D ABORD ESSAYE DE L INSCRIRE ALORS QU ELLE COMPILAIT ENCORE, et ce garde a refuse :
   //  une derogation sans beneficiaire est un trou, pas une tolerance . Il avait raison — elle
   // n etait pas en erreur de COMPILATION mais en non-conformite de FORME, et ce registre-ci ne
-  // couvre que la premiere. Elle y entre maintenant que `@macro` refuse vraiment.
+  // couvre que la premiere. Elle y entre maintenant que `macro` refuse vraiment.
   // ⚠️ ET C EST LA LE VRAI ENSEIGNEMENT : tant que le parseur acceptait une directive declaree
   // morte, la scene compilait et produisait un champ mort. Une directive  retiree  qu on continue
   // d accepter n est pas retiree — elle est juste invisible.
@@ -125,13 +125,13 @@ const ERREURS_ADMISES = [
   { demo: 'trySrand', pourquoi: 'scène incomplète (kanopi) : terminaux nus sans convention de notes déclarée', date: '2026-08-08' },
   { demo: 'tryCsoundObjects', pourquoi: 'scène incomplète (kanopi) : objets sonores nus sans convention de notes', date: '2026-08-08' },
   // ⛔ controls.json SUPPRIME (Romain, 2026-08-10 : « on supprime controls.json et tous les
-  // appels a cette librairie sont supprimes »). `@core` amene desormais le meme ensemble
-  // (`core.apporte`) qu'apportait le stub `@controls` — la migration est mecanique, une ligne
+  // appels a cette librairie sont supprimes »). `core` amene desormais le meme ensemble
+  // (`core.apporte`) qu'apportait le stub `controls` — la migration est mecanique, une ligne
   // qui devient l'autre. Les 45 fixtures de CE depot sont deja migrees ; celles-ci appartiennent
-  // a kanopi et ecrivent `@controls` SEUL, sans `@core` a cote (193 autres scenes kanopi ecrivent
+  // a kanopi et ecrivent `controls` SEUL, sans `core` a cote (193 autres scenes kanopi ecrivent
   // deja les deux, redondance cosmetique qui ne casse rien — hors de ce registre).
-  // QUI ATTEND : kanopi, prevenu A LA FRAPPE avec la liste exacte et la reecriture (`@controls` →
-  // `@core`, meme position). Je n'ecris pas dans son depot ; ces entrees sortent des qu'il a migre,
+  // QUI ATTEND : kanopi, prevenu A LA FRAPPE avec la liste exacte et la reecriture (`controls` →
+  // `core`, meme position). Je n'ecris pas dans son depot ; ces entrees sortent des qu'il a migre,
   // et le temoin plus bas rougira si elles rancissent.
 ];
 let bad = 0;

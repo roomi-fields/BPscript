@@ -52,7 +52,7 @@ const ok = (cond, msg) => { if (cond) { pass++; console.log('  OK   ' + msg); } 
 
 /** Hz de chaque nom, résolus par LE catalogue de la scène — jamais recalculés ici. */
 async function hz(entete, noms) {
-  const out = compileToBPxAST(`${entete}\n@gate S:audio\nS -> ${noms.join(' ')}\n`);
+  const out = compileToBPxAST(`${entete}\nout.audio\n-----\nS -> ${noms.join(' ')}\n`);
   if (out.errors.length) throw new Error(`${entete} : ${out.errors[0].message}`);
   const { tokens } = await resoudreViaKairos(createSession(out.ast, { seed: 1 }));
   const carte = {};
@@ -62,8 +62,8 @@ async function hz(entete, noms) {
 
 // --- (A) BP3 renomme le clavier, il ne le transpose pas -----------------------------------
 // dha/A = classe 9, sa/C = classe 0, ga/E = classe 4. Mêmes touches, deux nommages.
-const ind = await hz('@alphabet.bp3_indian', ['sa4', 'dha4', 'ga4', 'sa5', 'sa0', 'sa00']);
-const occ = await hz('@alphabet.western', ['C4', 'A4', 'E4', 'C5']);
+const ind = await hz('alphabet.bp3_indian', ['sa4', 'dha4', 'ga4', 'sa5', 'sa0', 'sa00']);
+const occ = await hz('alphabet.western', ['C4', 'A4', 'E4', 'C5']);
 
 for (const [i, o] of [['sa4', 'C4'], ['dha4', 'A4'], ['ga4', 'E4'], ['sa5', 'C5']]) {
   ok(Number.isFinite(ind[i]) && Math.abs(ind[i] - occ[o]) < 1e-6,
@@ -73,7 +73,7 @@ ok(Math.abs(ind.dha4 - 440) < 1e-6, `l'ancre porte sur la classe 9 : dha4 = ${Nu
 
 // --- (B) Témoin : l'alphabet sargam traditionnel est DISTINCT ------------------------------
 // Sans ce témoin, (A) passerait aussi si les deux alphabets avaient fusionné par accident.
-const trad = await hz('@alphabet.sargam', ['sa', 'dha']);
+const trad = await hz('alphabet.sargam', ['sa', 'dha']);
 ok(Math.abs(trad.sa - 240) < 1e-6, `témoin — sargam traditionnel garde son ancre : sa = ${Number(trad.sa).toFixed(3)} Hz (attendu 240)`);
 ok(Math.abs(trad.sa - ind.sa4) > 1,
   `témoin — les deux alphabets NE sont PAS redondants : sargam sa=${Number(trad.sa).toFixed(3)} contre bp3_indian sa4=${Number(ind.sa4).toFixed(3)} (rapport ${(trad.sa / ind.sa4).toFixed(4)})`);

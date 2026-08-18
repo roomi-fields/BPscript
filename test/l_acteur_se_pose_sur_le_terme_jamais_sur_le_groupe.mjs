@@ -31,7 +31,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // DEUX acteurs qui revendiquent le même clavier : sans préfixe, chaque note est ambiguë. C'est ce
 // qui rend la mesure possible — un préfixe perdu se voit immédiatement.
-const S = '@core\n@alphabet.western\n@actor chant\n  out.audio\n@actor basse\n  out.midi(ch:2)\n';
+const S = 'core\nalphabet.western\nactor chant\n  out.audio\nactor basse\n  out.midi(ch:2)\n-----\n';
 const err = (flux) => {
   try { return (compileToBPxAST(S + `S -> ${flux}`).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }

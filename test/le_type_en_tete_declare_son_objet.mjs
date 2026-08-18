@@ -29,9 +29,9 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const EN_TETE = '@core\n@alphabet.western:midi\n';
+const EN_TETE = 'core\nalphabet.western:midi\n';
 const compile = (ligne) => {
-  try { return compileToBPxAST(`${EN_TETE}${ligne}\n@mode:ord\nS -> C4\n`); }
+  try { return compileToBPxAST(`${EN_TETE}${ligne}\nmode:ord\n-----\nS -> C4\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 const msgs = (r) => (r.errors || []).map((e) => e.message ?? String(e));
@@ -40,23 +40,23 @@ const vd = (r) => (r.ast?.vars || [])[0] || null;
 
 // ─── 1. LES HUIT FORMES DE LA RÉFÉRENCE COMPILENT, ET LE NŒUD PRODUIT CORRESPOND À AST.md ────
 const FORMES = [
-  ['@var section flag: calm:1, full:2', 'un drapeau et ses états nommés',
+  ['flag section(calm:1, full:2)', 'un drapeau et ses états nommés',
     (n) => n?.names?.[0] === 'section'
       && n?.varType?.kind === 'flag'
       && JSON.stringify(n.varType.states) === JSON.stringify([{ name: 'calm', value: 1 }, { name: 'full', value: 2 }])],
-  ['@var touches in.keyboard', 'une entrée (déjà portée — InDirective, hors `ast.vars`)',
+  ['in.keyboard touches', 'une entrée (déjà portée — InDirective, hors `ast.vars`)',
     null, (r) => (r.ast?.inputs || []).some((i) => i.name === 'touches' && i.transport === 'keyboard')],
-  ['@var grain signal', 'la convention signal',
+  ['signal grain', 'la convention signal',
     (n) => n?.names?.[0] === 'grain' && n?.varType?.kind === 'convention' && n.varType.convention === 'signal'],
-  ['@var hauteur pitch', 'la convention pitch',
+  ['pitch hauteur', 'la convention pitch',
     (n) => n?.names?.[0] === 'hauteur' && n?.varType?.kind === 'convention' && n.varType.convention === 'pitch'],
-  ['@var rotation phase', 'la convention phase',
+  ['phase rotation', 'la convention phase',
     (n) => n?.names?.[0] === 'rotation' && n?.varType?.kind === 'convention' && n.varType.convention === 'phase'],
-  ['@var porte logic', 'la convention logic',
+  ['logic porte', 'la convention logic',
     (n) => n?.names?.[0] === 'porte' && n?.varType?.kind === 'convention' && n.varType.convention === 'logic'],
-  ['@var ramp1 ramp', 'un module DU CATALOGUE (`ramp` vit dans lib/mod.json)',
+  ['ramp ramp1', 'un module DU CATALOGUE (`ramp` vit dans lib/mod.json)',
     (n) => n?.names?.[0] === 'ramp1' && n?.varType?.kind === 'module' && n.varType.module === 'ramp'],
-  ['@var pivot', 'un nom seul, sans type',
+  ['symbol pivot', 'un nom seul, sans type',
     (n) => JSON.stringify(n?.names) === JSON.stringify(['pivot']) && n?.varType === null],
 ];
 for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
@@ -71,7 +71,7 @@ for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
 }
 // La forme à plusieurs noms — distincte du tableau ci-dessus car elle porte PLUSIEURS `names`.
 {
-  const r = compile('@var z1, z2, z3');
+  const r = compile('symbol z1, z2, z3');
   ok((r.errors || []).length === 0, `1. une liste de noms séparés par des virgules doit compiler — reçu : ${msgs(r).join(' | ')}`);
   const n = vd(r);
   ok(!!n && JSON.stringify(n.names) === JSON.stringify(['z1', 'z2', 'z3']) && n.varType === null,
@@ -79,13 +79,16 @@ for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
 }
 
 // ─── 2. LES TROIS REFUS, AVEC LEUR MESSAGE ENTIER ─────────────────────────────────────────────
+// ⚠️ LES TROIS REFUS ONT CHANGÉ DE FORME LE 2026-08-18, PAS D'OBJET. Le TYPE vient désormais en
+// tête : ce qui était refusé en seconde position l'est en première, et les états d'un drapeau
+// passent du deux-points aux parenthèses.
 const REFUS = [
-  ['@flag section: calm:1', "'@flag' n'existe plus en directive de tête de scène",
-    /n'est pas une directive de tête de scène/],
-  ['@var x zorglub', "un IDENT qui ne désigne RIEN de connu — refusé comme un module absent",
-    /'zorglub' est absent du catalogue de modules/],
-  ['@var x lpf', "un module RÉEL mais absent des données (trou de catalogue connu)",
-    /'lpf' est absent du catalogue de modules/],
+  ['flag section', "un drapeau sans ses états — la parenthèse porte ce qui appartient au drapeau",
+    /entre parenthèses/],
+  ['zorglub x', "un mot en tête qui ne désigne RIEN de connu",
+    /'zorglub' n'est pas un type/],
+  ['lpf lpf1', "un module RÉEL mais absent des données (trou de catalogue connu)",
+    /'lpf' n'est pas un type/],
 ];
 for (const [ligne, quoi, attendu] of REFUS) {
   const r = compile(ligne);
@@ -93,27 +96,32 @@ for (const [ligne, quoi, attendu] of REFUS) {
   ok(msgs(r).some((m) => attendu.test(m)),
     `2. ${quoi} : le message doit correspondre à ${attendu} — reçu : ${msgs(r).join(' | ').slice(0, 160)}`);
 }
-// Le message des deux refus de module doit dire « absent du catalogue », JAMAIS « type inconnu » —
-// exigence explicite : les deux causes sont mécaniquement le MÊME refus (lookup `lib/mod.json`),
-// et le message ne doit pas prétendre distinguer ce qu'il ne distingue pas.
+// ⛔ LE REFUS NE PRÉTEND PAS DISTINGUER CE QU'IL NE DISTINGUE PAS. Un module absent du catalogue
+// et un mot inventé sont mécaniquement le MÊME cas — aucun n'est un type déclaré —, et le message
+// est donc le même pour les deux. Ce qu'il DOIT faire, c'est ÉNUMÉRER les types connus : sans cette
+// liste, l'auteur apprend seulement que son mot est faux, jamais lequel écrire.
 {
-  const rLpf = compile('@var x lpf');
-  const rZorglub = compile('@var x zorglub');
-  ok(!msgs(rLpf).some((m) => /type inconnu/.test(m)),
-    "2. le refus d'un module absent du catalogue ne doit JAMAIS dire 'type inconnu'");
-  ok(!msgs(rZorglub).some((m) => /type inconnu/.test(m)),
-    "2. le refus d'un IDENT qui ne désigne rien ne doit JAMAIS dire 'type inconnu' non plus");
+  const rLpf = compile('lpf lpf1');
+  const rZorglub = compile('zorglub x');
+  for (const [r, quoi] of [[rLpf, 'un module absent du catalogue'], [rZorglub, 'un mot inventé']]) {
+    ok(msgs(r).some((m) => /signal, pitch, phase, logic/.test(m) && /adsr, lfo, ramp/.test(m)
+                        && /flag, symbol, in\.<canal>/.test(m)),
+      `2. le refus ${quoi} doit ÉNUMÉRER les types connus — reçu : ${msgs(r).join(' | ').slice(0, 160)}`);
+  }
+  ok(msgs(rLpf)[0] && msgs(rZorglub)[0]
+     && msgs(rLpf)[0].replace(/lpf1?/g, '<x>') === msgs(rZorglub)[0].replace(/zorglub|\bx\b/g, '<x>'),
+    "2. et les deux refus doivent être le MÊME message : le compilateur ne sait pas les distinguer");
 }
 
 // ─── 3. TÉMOINS D'INSTRUMENT — le garde sait MORDRE et sait se TAIRE ──────────────────────────
 // Sans eux, une régression qui rendrait ce fichier muet le laisserait vert par accident.
 {
-  const doitMordre = compile('@var x flag sans_deux_points:1'); // 'flag' sans ':' — forme fautive
+  const doitMordre = compile('flag sans_parentheses'); // un drapeau sans ses états — forme fautive
   ok((doitMordre.errors || []).length > 0,
-    "3. TÉMOIN — 'flag' sans deux-points doit être refusé (sinon ce fichier ne prouve rien)");
+    "3. TÉMOIN — un drapeau sans ses états doit être refusé (sinon ce fichier ne prouve rien)");
 }
 {
-  const doitSeTaire = compile('@var env1 adsr'); // module réellement au catalogue
+  const doitSeTaire = compile('adsr env1'); // module réellement au catalogue
   ok((doitSeTaire.errors || []).length === 0,
     "3. TÉMOIN — un module RÉELLEMENT au catalogue doit compiler (sinon le refus mord à l'aveugle)");
 }
@@ -121,9 +129,9 @@ ok(FORMES.length === 8, `3. les HUIT formes de la référence doivent être épr
 ok(REFUS.length === 3, `3. les TROIS refus doivent être éprouvés — ${REFUS.length}`);
 
 if (echecs.length) {
-  console.error(`❌ @var porte son type : ${echecs.length} échec(s)`);
+  console.error(`❌ le type en tête porte son objet : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exitCode = 1;
 } else {
-  console.log(`✅ @var porte son type jusqu'à l'arbre — ${passe} vérification(s) passée(s)`);
+  console.log(`✅ le type en tête porte son objet jusqu'à l'arbre — ${passe} vérification(s) passée(s)`);
 }

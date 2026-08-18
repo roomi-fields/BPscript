@@ -50,9 +50,9 @@ for (const canal of ['midi', 'audio']) {
 
 // ── 1. LES SORTIES QUI RÉALISENT PASSENT ────────────────────────────────────────────────────
 for (const [quoi, src] of [
-  ['une sortie midi',   '@core\n@alphabet.western:midi\nS -> C4 !(volume:90)\n'],
-  ['une sortie audio',  '@core\n@alphabet.western:audio\nS -> C4 !(volume:90)\n'],
-  ['la sortie par défaut', '@core\n@alphabet.western\nS -> C4 !(volume:90)\n'],
+  ['une sortie midi',   'core\nalphabet.western:midi\n-----\nS -> C4 !(volume:90)\n'],
+  ['une sortie audio',  'core\nalphabet.western:audio\n-----\nS -> C4 !(volume:90)\n'],
+  ['la sortie par défaut', 'core\nalphabet.western\n-----\nS -> C4 !(volume:90)\n'],
 ]) {
   ok(erreursDe(src).length === 0,
      `1. ${quoi} doit compiler — reçu : ${erreursDe(src).map((e) => e.message).join(' | ').slice(0, 100)}`);
@@ -60,7 +60,7 @@ for (const [quoi, src] of [
 
 // ── 2. UNE SORTIE QUI NE RÉALISE PAS EST REFUSÉE, EN LA NOMMANT ─────────────────────────────
 {
-  const src = '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  out.osc\nS -> v.C4 !(volume:90)\n';
+  const src = 'core\nalphabet.western\nactor v\n  alphabet.western\n  out.osc\n-----\nS -> v.C4 !(volume:90)\n';
   const m = refusGenerique(src);
   ok(m.length > 0, "2. une sortie qui ne réalise pas le mot doit être REFUSÉE");
   ok(m.length > 0 && /osc/.test(m[0].message),
@@ -75,7 +75,7 @@ for (const [quoi, src] of [
 // et couper un seul laissait l'autre le lever. Un garde qui ne teste qu'une place croit tenir le
 // mécanisme alors qu'il tient une moitié. Les deux places sont donc mesurées.
 {
-  const A = '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  out.osc\n';
+  const A = 'core\nalphabet.western\nactor v\n  alphabet.western\n  out.osc\n-----\n';
   ok(refusGenerique(`${A}S -> v.C4 !(volume:90)\n`).length > 0,
      "2bis. dans le FLUX — le sac posé avec '!' doit être refusé");
   ok(refusGenerique(`${A}S -> v.C4(volume:90)\n`).length > 0,
@@ -85,15 +85,15 @@ for (const [quoi, src] of [
 // ── 3. LA FORME PRÉFIXÉE ÉCHAPPE AU REFUS — elle vise une réalisation, pas l'interface ───────
 // Le complément : viser directement `midi.volume` est légitime même sur une scène qui ne sort pas
 // en MIDI, parce que l'auteur a dit EXPLICITEMENT ce qu'il vise.
-ok(erreursDe('@core\n@alphabet.western:audio\nS -> C4 !(midi.volume:90)\n').length === 0,
+ok(erreursDe('core\nalphabet.western:audio\n-----\nS -> C4 !(midi.volume:90)\n').length === 0,
    "3. la forme PRÉFIXÉE doit passer — la viser directement est ce qu'elle sert à faire");
 
 // ── 4. LE COMPLÉMENT — un mot qui n'est PAS générique n'est pas touché ──────────────────────
 // Sans ce volet, un refus trop large refuserait tout mot écrit sur toute sortie, et les trois
 // précédents resteraient verts.
 for (const [quoi, src] of [
-  ['un contrôle propre à une sortie', '@core\n@alphabet.western:midi\nS -> C4 !(chan:3)\n'],
-  ['un contrôle d\'expression sans réalisation', '@core\n@alphabet.western:audio\nS -> C4 !(vel:90)\n'],
+  ['un contrôle propre à une sortie', 'core\nalphabet.western:midi\n-----\nS -> C4 !(chan:3)\n'],
+  ['un contrôle d\'expression sans réalisation', 'core\nalphabet.western:audio\n-----\nS -> C4 !(vel:90)\n'],
 ]) {
   ok(refusGenerique(src).length === 0, `4. ${quoi} ne doit pas être touché`);
 }
@@ -105,11 +105,11 @@ for (const [quoi, src] of [
   const ampute = JSON.parse(JSON.stringify(LIBS.audio));
   delete ampute.controls.volume;
   clearRegistry(); registerAll(LIBS); registerLib('audio', ampute);
-  ok(refusGenerique('@core\n@alphabet.western:audio\nS -> C4 !(volume:90)\n').length > 0,
+  ok(refusGenerique('core\nalphabet.western:audio\n-----\nS -> C4 !(volume:90)\n').length > 0,
      "5. (mord) `audio.volume` retiré de la donnée doit faire retomber la scène audio sur le refus — "
      + "c'est l'état exact d'hier, où ce garde invalidait quatre scènes de kairos et kanopi");
   clearRegistry(); registerAll(LIBS);
-  ok(erreursDe('@core\n@alphabet.western:audio\nS -> C4 !(volume:90)\n').length === 0,
+  ok(erreursDe('core\nalphabet.western:audio\n-----\nS -> C4 !(volume:90)\n').length === 0,
      '5. après restauration, la scène audio repasse — sinon la mutilation fuit sur la suite');
 }
 

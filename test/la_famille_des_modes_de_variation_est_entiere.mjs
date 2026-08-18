@@ -112,8 +112,8 @@ ok(LIBS.variation?.resolvedBy === 'Kairos',
 for (const p of PARAMETRES) for (const m of MODES) {
   const n = mot(p, m);
   for (const [ou, src] of [
-    ['dans le flux', `@core\n@alphabet.western:midi\n\nS -> !(${n}) C4\n`],
-    ['sur un symbole', `@core\n@alphabet.western:midi\n\nS -> C4(${n})\n`],
+    ['dans le flux', `core\nalphabet.western:midi\n\n-----\nS -> !(${n}) C4\n`],
+    ['sur un symbole', `core\nalphabet.western:midi\n\n-----\nS -> C4(${n})\n`],
   ]) {
     const r = compileToBPxAST(src);
     const errs = r.errors ?? [];

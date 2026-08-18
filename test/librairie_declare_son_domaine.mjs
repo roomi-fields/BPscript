@@ -52,8 +52,8 @@
  * amenées par `core.apporte`. Toute scène qui écrivait `@controls` NU écrit désormais `@core` NU —
  * les deux amènent le même ensemble, `@controls` n'était qu'un stub de compatibilité vers lui.
  */
-// ⚠️ `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
-// la bible n'a jamais écrit que `@homomorphism.<table>`. Les tables ont rejoint
+// ⚠️ `transcription` est REMPLACÉE par `homomorphism` (Romain, 2026-08-07, « oui on renomme ») :
+// la bible n'a jamais écrit que `homomorphism.<table>`. Les tables ont rejoint
 // `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
@@ -70,7 +70,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 ok(LIBS.homomorphism?.resolvedBy === 'Kairos',
    `1. lib/homomorphism.json doit déclarer son destinataire — reçu : ${JSON.stringify(LIBS.homomorphism?.resolvedBy)}`);
 {
-  const o = compileToBPxAST('@core\n@alphabet.western:midi\n@homomorphism.transposition\n@mode:ord\nS -> C4\n');
+  const o = compileToBPxAST('core\nalphabet.western:midi\nhomomorphism.transposition\nmode:ord\n-----\nS -> C4\n');
   ok((o.errors || []).length === 0,
      `1. la scène qui invoque la table de transposition doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
   ok((o.ast?.libRefs || []).includes('homomorphism.transposition'),

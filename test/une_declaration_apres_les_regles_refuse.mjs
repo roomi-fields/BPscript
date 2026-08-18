@@ -34,10 +34,12 @@ const err = (src) => {
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
 };
 // ⚠️ LE SOCLE EST CONDITIONNEL DEPUIS LE 2026-08-07 : une scène ne déclare qu'UN alphabet
-// (l'acteur implicite est unique, règle de Romain). Poser `@alphabet.western` autour d'un
-// `@alphabet.sargam` testé fabriquait un refus qui n'a rien à voir avec ce qu'on mesure.
-const socle = (d) => `@core\n${/^@alphabet[.:]/.test(d) ? '' : '@alphabet.western\n'}`;
-const S = '@core\n@alphabet.western\n';
+// (l'acteur implicite est unique, règle de Romain). Poser `alphabet.western` autour d'un
+// `alphabet.sargam` testé fabriquait un refus qui n'a rien à voir avec ce qu'on mesure.
+// ⚠️ LE SOCLE NE PORTE PAS LE DÉLIMITEUR : c'est le site d'emploi qui le pose, parce que la
+// position de la déclaration éprouvée est PRÉCISÉMENT ce qu'on mesure — avant ou après lui.
+const socle = (d) => `core\n${/^alphabet[.:]/.test(d) ? '' : 'alphabet.western\n'}`;
+const S = 'core\nalphabet.western\n-----\n';
 
 // ── 1. LA MATRICE — chaque déclaration, dans les DEUX positions ──────────────────────────────
 // Une écriture plausible par directive. Elles ne sont pas inventées : chacune est la forme que le
@@ -46,15 +48,15 @@ const DECLARATIONS = [
   // `western` et non `sargam` : depuis que le socle est conditionnel, la scène ne porte plus que
   // l'alphabet TESTÉ, et la règle témoin joue `C4`. Mesurer un refus de POSITION ne doit pas
   // buter sur un vocabulaire qui ne contient pas la note de l'exemple.
-  ['alphabet', '@alphabet.western'], ['tuning', '@tuning.western_just'], ['octaves', '@octaves.bp3'],
+  ['alphabet', 'alphabet.western'], ['tuning', 'tuning.western_just'], ['octaves', 'octaves.bp3'],
   // ⚠️ COBAYE CHANGÉ le 2026-08-08 : ce garde mesure la POSITION d'une déclaration dans le
-  // fichier (avant / après les règles), pas la légitimité du mot. `@scan` ne s'écrit plus en
-  // tête de scène depuis que la portée est validée ; `@mm` est SORTIE du langage le 2026-08-09 et vaut.
-  ['eval', '@eval.sc'], ['actor', '@actor v\n  out.audio'],
+  // fichier (avant / après les règles), pas la légitimité du mot. `scan` ne s'écrit plus en
+  // tête de scène depuis que la portée est validée ; `mm` est SORTIE du langage le 2026-08-09 et vaut.
+  ['eval', 'eval.sc'], ['actor', 'actor v\n  out.audio'],
   // ⚠️⚠️ `transport` ET `out` SONT SORTIS DE LA MATRICE le 2026-08-04, remplacés 1-pour-1 par
   // `scan` et `sound` — le témoin anti-rétrécissement (>= 24) reste tenu, et les deux remplaçants
   // ont été MESURÉS génériques avant d'être choisis (acceptés avant les règles, refusés après),
-  // pas supposés tels. Raison de leur sortie : Atlas a signalé que `@transport.midi` en tête de
+  // pas supposés tels. Raison de leur sortie : Atlas a signalé que `transport.midi` en tête de
   // scène compilait SANS ERREUR alors que le mot a quitté le langage — mesuré, la directive
   // orpheline ne produisait AUCUN effet (l'acteur implicite gardait `audio` avec ou sans elle).
   // Le trou était PRÉEXISTANT, pas ouvert par le renommage : il n'avait simplement jamais été
@@ -62,64 +64,64 @@ const DECLARATIONS = [
   // générique à éprouver ici — leur refus est gardé par
   // `test/transport_et_out_ne_sont_pas_des_directives_de_scene.mjs`.
   // ⚠️ `in` REMPLACÉ par `out` dans la matrice le 2026-08-04 (in/out remplacent transport, ligne
-  // réservée ajoutée avec le mot) : `@in` seul est désormais un TOMBSTONE INCONDITIONNEL (refusé
+  // réservée ajoutée avec le mot) : `in` seul est désormais un TOMBSTONE INCONDITIONNEL (refusé
   // dans LES DEUX positions, avant comme après les règles — cf. `test/declaration_d_entree.mjs`),
   // pas une déclaration mal placée. La prémisse de cette matrice (« la forme PASSE avant les
   // règles ») ne tient plus pour ce mot précis — la déclaration d'entrée s'écrit maintenant
-  // '@var <rôle> in.<canal>', couverte par la ligne 'var'. `out`, mot NOUVEAU du même jour, garde
+  // 'in.<canal> <rôle>', couverte par la ligne 'symbol'. `out`, mot NOUVEAU du même jour, garde
   // lui le comportement générique (accepté-ignoré avant, refusé-nommé après) : il prend la place
   // dans la matrice SANS la rétrécir.
-  ['sound', '@sound.tabla_perc'],
+  ['sound', 'sound.tabla_perc'],
   // ⚠️ `controls` N'EST PLUS UNE DIRECTIVE RÉSERVÉE (controls.json supprimé, Romain 2026-08-10) —
-  // mais `@controls` reste une ligne SYNTAXIQUEMENT valide (bare directive, comme n'importe quel
+  // mais `controls` reste une ligne SYNTAXIQUEMENT valide (bare directive, comme n'importe quel
   // mot), donc le refus générique « déclaration après les règles » la mord toujours, nommément.
   // Ce cobaye prouve que le refus ne dépend pas d'être une directive CONNUE.
   // `controls` EST SORTI de la matrice le 2026-08-10 : la librairie a été SCINDÉE par destinataire
-  // (expression, midi, audio, transpo) puis SUPPRIMÉE, et `@core` les apporte toutes. Le mot ne
+  // (expression, midi, audio, transpo) puis SUPPRIMÉE, et `core` les apporte toutes. Le mot ne
   // désigne plus rien. Remplacé 1-pour-1 par `timepatterns`, mesuré générique avant d'être choisi
   // — accepté avant les règles, refusé après — pour que le socle anti-rétrécissement reste tenu.
-  ['timepatterns', '@timepatterns: t1=1/1'], ['var', '@var v'],
-  ['tempo', '@tempo:90'],
+  ['timepatterns', 'timepatterns: t1=1/1'], ['symbol', 'symbol v'],
+  ['tempo', 'tempo:90'],
   // `duration` EST SORTIE de la matrice le 2026-08-10 : Romain l'a supprimée le 2026-08-04
   // (hub/decisions/2026-08-04-la-duree-de-scene-est-supprimee.md) et elle était revenue par
   // lib/engine.json à la naissance de cette librairie. Remplacée 1-pour-1 par `randomize`, mesurée
   // générique avant d'être choisie — acceptée avant les règles, refusée après.
-  ['randomize', '@randomize'],
-  ['meter', '@meter:4'], ['quantization', '@quantization:50'], ['qclock', '@qclock:10'],
-  ['transpose', '@transpose:2'], ['diapason', '@diapason:442'], ['homomorphism', '@homomorphism.dhati'],
-  ['settings', '@settings'], ['transpose', '@transpose:1/2'], ['modulation', '@modulation'], ['ins', '@ins:3'],
-  ['test_alphabets', '@test_alphabets.abc'],
+  ['randomize', 'randomize'],
+  ['meter', 'meter:4'], ['quantization', 'quantization:50'], ['qclock', 'qclock:10'],
+  ['transpose', 'transpose:2'], ['diapason', 'diapason:442'], ['homomorphism', 'homomorphism.dhati'],
+  ['settings', 'settings'], ['transpose', 'transpose:1/2'], ['modulation', 'modulation'], ['ins', 'ins:3'],
+  ['test_alphabets', 'test_alphabets.abc'],
 ];
 console.log(`[declaration apres regles] ${DECLARATIONS.length} declarations x 2 positions`);
 for (const [nom, forme] of DECLARATIONS) {
   // APRÈS une règle → REFUSÉE, et le refus doit NOMMER la directive et donner la réécriture.
-  const apres = err(`${socle(forme)}S -> C4\n${forme}\nT -> D4\n`);
-  ok(apres.length >= 1, `1. '@${nom}' après une règle doit être REFUSÉE (elle se perdait en silence)`);
-  ok(apres.some((m) => m.includes(`'@${nom}'`)),
-    `1. '@${nom}' — le refus doit NOMMER la directive, pas dire « ligne non reconnue » (reçu : ${apres[0]})`);
+  const apres = err(`${socle(forme)}-----\nS -> C4\n${forme}\n-----\nT -> D4\n`);
+  ok(apres.length >= 1, `1. '${nom}' après une règle doit être REFUSÉE (elle se perdait en silence)`);
+  ok(apres.some((m) => m.includes(`'${nom}'`)),
+    `1. '${nom}' — le refus doit NOMMER la directive, pas dire « ligne non reconnue » (reçu : ${apres[0]})`);
   ok(apres.some((m) => /avant la première règle/.test(m)),
-    `1. '@${nom}' — le refus doit donner la RÉÉCRITURE, sinon il constate sans aider`);
+    `1. '${nom}' — le refus doit donner la RÉÉCRITURE, sinon il constate sans aider`);
   // AVANT les règles → PASSE. Sans cette moitié, une règle qui refuserait tout aurait l'air juste.
-  ok(err(`${socle(forme)}${forme}\nS -> C4\n`).length === 0,
-    `1. '@${nom}' AVANT les règles doit PASSER — c'est la moitié qu'on casse sans s'en apercevoir`);
+  ok(err(`${socle(forme)}${forme}\n-----\nS -> C4\n`).length === 0,
+    `1. '${nom}' AVANT les règles doit PASSER — c'est la moitié qu'on casse sans s'en apercevoir`);
 }
 
-// ── 2. `@mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────
+// ── 2. `mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────
 // 67 scènes du corpus sur 263 en vivent. Ce témoin est la preuve que la règle ne déborde pas.
-ok(err(`${S}S -> C4\n@mode:sub\nT -> D4\n`).length === 0,
-  '2. SE TAIT — `@mode` après une règle gouverne la sous-grammaire suivante, et doit passer');
+ok(err(`${S}S -> C4\nmode:sub\n-----\nT -> D4\n`).length === 0,
+  '2. SE TAIT — `mode` après une règle gouverne la sous-grammaire suivante, et doit passer');
 {
-  const r = compileToBPxAST(`${S}S -> C4\n@mode:sub\nT -> D4\n`);
+  const r = compileToBPxAST(`${S}S -> C4\nmode:sub\n-----\nT -> D4\n`);
   ok((r.ast?.subgrammars || []).some((g) => g.mode === 'sub'),
     '2. et il AGIT — sinon il « passerait » en ne faisant rien, ce qui est le défaut qu\'on répare');
 }
-ok(err(`${S}S -> C4\n-----\n@mode:lin\nT -> D4\n`).length === 0,
-  '2. SE TAIT — `@mode` après un séparateur de bloc aussi');
+ok(err(`${S}S -> C4\n-----\nmode:lin\nT -> D4\n`).length === 0,
+  '2. SE TAIT — `mode` après un séparateur de bloc aussi');
 
 // ── 3. LE REFUS NE DÉBORDE PAS SUR LES AUTRES FORMES DE FIN DE SCÈNE ─────────────────────────
-// La section `@template` vient APRÈS toutes les sous-grammaires : c'est sa place, pas une faute.
-ok(err(`${S}S -> C4\n@template\n  t1 = C4 D4\n`).length === 0,
-  '3. SE TAIT — la section `@template` se place après les règles, c\'est sa définition');
+// La section `template` vient APRÈS toutes les sous-grammaires : c'est sa place, pas une faute.
+ok(err(`${S}S -> C4\ntemplate\n  t1 = C4 D4\n`).length === 0,
+  '3. SE TAIT — la section `template` se place après les règles, c\'est sa définition');
 ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
   '3. SE TAIT — un séparateur de bloc n\'est pas une directive');
 
@@ -137,18 +139,18 @@ const nomsReserves = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
 const RESERVEES = new Set(Object.values(LIBS).flatMap((f) => nomsReserves(f?.schema?.reservedDirectives))).size;
 ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
 // Le seuil est passé de 24 à 22 le 2026-08-09, et le motif s'écrit ici plutôt que dans un commit :
-// `@mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des
+// `mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des
 // deux listes — une forme qui n'existe plus ne peut pas être éprouvée. C'est le seul abaissement
 // légitime de ce socle : une forme RETIRÉE du langage. Un seuil qu'on baisse parce qu'un cas
 // « ne passe plus » est un socle qu'on désarme ; celui-ci se baisse parce que l'espace lui-même a
 // rétréci, et le compte des directives réservées ci-dessus reste, lui, à 40 pour le prouver.
-// PLANCHER ABAISSÉ DE 22 À 21 le 2026-08-15, SCIEMMENT : `@alias` sort du langage et sa ligne
+// PLANCHER ABAISSÉ DE 22 À 21 le 2026-08-15, SCIEMMENT : `alias` sort du langage et sa ligne
 // quitte la matrice. Il ne se règle JAMAIS sur ce que la matrice rend — il descend d'un cran quand
 // un mot sort, jamais parce qu'un extracteur a cessé de voir.
 ok(DECLARATIONS.length >= 21,
   `4. la matrice ne s'est pas vidée — ${DECLARATIONS.length} déclarations éprouvées`);
 // TÉMOIN D'INSTRUMENT : sans lui, une régression rendant le refus muet laisserait tout au vert.
-ok(err(`${S}S -> C4\n@var v\n`).length >= 1,
+ok(err(`${S}S -> C4\nsymbol v\n`).length >= 1,
   '4. TÉMOIN — la règle doit savoir MORDRE même en toute fin de scène (aucune règle après)');
 
 if (echecs.length) {

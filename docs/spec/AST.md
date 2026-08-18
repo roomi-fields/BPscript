@@ -27,7 +27,7 @@ Scene {
   actors: ActorDirective[]
   vars: VarDirective[]
   defs: DefDirective[]
-  init: InitEntry[] | null           // le bloc @init ; null si la scène n'en a pas
+  init: InitEntry[] | null           // le bloc init ; null si la scène n'en a pas
   subgrammars: Subgrammar[]
   template: { destinataire: 'bpscript' | 'bp3', entrees: TemplateEntry[] } | null   // le catalogue des formes
   homomorphisms: HomomorphismDecl[]
@@ -138,9 +138,9 @@ VarType =
 
 Une variable porte un **type** qui dit ce qu'elle est. Le nom vient d'abord, le type ensuite.
 
-Le nom porte sa **valeur de départ**, collée à son deux-points : `@var grain:0.5 signal`. Le sujet
+Le nom porte sa **valeur de départ**, collée à son deux-points : `signal grain:0.5`. Le sujet
 de l'affectation est le nom, jamais le type. Le champ `initial` est absent quand la ligne n'écrit
-aucune valeur, et il porte une entrée par nom qui en écrit une — `@var a:1, b:2` en pose deux.
+aucune valeur, et il porte une entrée par nom qui en écrit une — `symbol a:1, b:2` en pose deux.
 
 | type          | ce que la variable porte                                                            |
 | ------------- | ----------------------------------------------------------------------------------- |
@@ -177,11 +177,11 @@ DefDirective {
 // c'est le TYPE qui était en retard sur le code, et un dérivé se fait correspondre. La table
 // ci-dessous reste comme lecture des CINQ SORTES et de ce que chacune porte.
 DefBody =
-    { kind: "terminal", proto: TerminalProto }         // @def cloche  degree:0  voice.sombre
-  | { kind: "patch",    expr: PatchExpr }              // @def sombre lpf1 >> vca1
-  | { kind: "setting",  bag: SettingBag }              // @def kick (vel:120)
-  | { kind: "code",     backtick: BacktickInline }     // @def fondu phase `js: …`
-  | { kind: "elements", body: RhsElement[] }           // @def cadence sa re ga pa
+    { kind: "terminal", proto: TerminalProto }         // def cloche  degree:0  voice.sombre
+  | { kind: "patch",    expr: PatchExpr }              // def sombre lpf1 >> vca1
+  | { kind: "setting",  bag: SettingBag }              // def kick (vel:120)
+  | { kind: "code",     backtick: BacktickInline }     // def fondu phase `js: …`
+  | { kind: "elements", body: RhsElement[] }           // def cadence sa re ga pa
 
 TerminalProto {
   runtime: string | null           // le canal de sortie
@@ -206,7 +206,7 @@ code. Chacun peut rester vide, et toutes les combinaisons ont un sens.
 Sa hauteur vit dans ses champs : `degree` et `register` la font résoudre par les librairies, `hz` la
 donne directement.
 
-`@def` associe un nom à un corps, pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut
+`def` associe un nom à un corps, pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut
 ensuite. La liste de paramètres se distingue d'un corps entre parenthèses par le **collage** :
 collée au nom c'est une liste, séparée par une espace c'est le corps.
 
@@ -219,9 +219,9 @@ brancher, couper et régler agissent sur un module sans produire de son, donc sa
 InitEntry = PatchExpr | BacktickOrphan
 ```
 
-`@init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le
+`init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le
 branchement initial, le code lancé une fois, les valeurs de départ. Ce qui appartient à une chose
-s'initialise dans sa déclaration ; `@init` recueille ce qui appartient à la scène entière.
+s'initialise dans sa déclaration ; `init` recueille ce qui appartient à la scène entière.
 
 ### Le langage de patch
 

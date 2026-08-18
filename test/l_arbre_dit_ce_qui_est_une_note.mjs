@@ -71,19 +71,19 @@ const compiler = (src) => compileToBPxAST(src);
 // Un champ absent dit « je ne sais pas » ; une liste vide dit « aucun nom de cette scène n'est une
 // note ». Les confondre ferait lire mon silence comme un fait, ce qui est le pire des deux.
 {
-  const r = compiler('@core\n@mine.perso.gamme\nS -> C4');
+  const r = compiler('core\nmine.perso.gamme\n-----\nS -> C4');
   ok(r.ast?.noteTerminals === undefined,
     `1. hauteur OPAQUE : le champ doit être ABSENT, pas vide (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
   ok(r.ast?.alphabetTerminals === undefined, '1. hauteur OPAQUE : alphabetTerminals ABSENT aussi');
 }
 {
-  const r = compiler('@core\n@actor viz  eval.hydra\nS -> voix\nvoix -> viz.`osc(4).out()`');
+  const r = compiler('core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`');
   ok(r.ast?.noteTerminals === undefined,
     `1. VOIX-CODE pure : ABSENT — un bloc de code n'est pas une note (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
 }
 {
   // Un alphabet est en portée et la scène n'écrit aucune note : c'est un FAIT, donc une liste vide.
-  const r = compiler('@core\n@alphabet.western\n@var travail\nS -> travail');
+  const r = compiler('core\nalphabet.western\nsymbol travail\n-----\nS -> travail');
   ok(Array.isArray(r.ast?.noteTerminals) && r.ast.noteTerminals.length === 0,
     `1. alphabet en portée mais aucune note écrite : liste VIDE, pas absente (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
   ok(Array.isArray(r.ast?.alphabetTerminals),
@@ -109,7 +109,7 @@ console.log(`[arbre note] ${ALPHABETS.length} alphabets de la librairie, lus dan
 for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // On écrit une règle dont la tête n'est PAS une note et dont le corps EST une note de cet
   // alphabet-là. Le fait attendu ne dépend d'aucune convention BP3 : il n'y en a pas ici.
-  const r = compiler(`@core\n@alphabet.${nom}\nmotif -> ${premiereNote}\nS -> motif`);
+  const r = compiler(`core\nalphabet.${nom}\n-----\nmotif -> ${premiereNote}\nS -> motif`);
   ok((r.errors || []).length === 0,
     `2. ${nom} : la scène témoin doit compiler — ${(r.errors || []).map((e) => e.message).slice(0, 1)}`);
   // Le champ dépend de ce que l'alphabet DÉCLARE, pas de mon opinion sur l'instrument.
@@ -149,7 +149,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     ok(!!o.tuning,
       `2bis. '${nom}' n'a pas de table de registres mais A un accordage — le critère par les registres le déclasserait`);
     const premiere = Object.keys(o.terminals)[0];
-    const r = compiler(`@core\n@alphabet.${nom}\nmotif -> ${premiere}\nS -> motif`);
+    const r = compiler(`core\nalphabet.${nom}\n-----\nmotif -> ${premiere}\nS -> motif`);
     ok((r.ast?.noteTerminals || []).includes(premiere),
       `2bis. '${premiere}' (${nom}) DOIT rester une note — et depuis le 2026-07-30 c'est le champ DÉCLARÉ qui le dit, `
       + 'ni l\'accordage ni les registres ; ces cinq-là restent le témoin que deux déductions plausibles divergent');
@@ -175,15 +175,15 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // et on exige que le code suive la DÉCLARATION. C'est la seule façon de prouver ce qu'il lit.
   {
     // ⚠️ CE TÉMOIN A TROUVÉ AUTRE CHOSE EN ÉCHOUANT, ET C'EST POURQUOI IL RESTE. Je l'avais écrit
-    // avec `@test_declaration_prime.faux` — une LIBRAIRIE inexistante — en supposant qu'elle serait
+    // avec `test_declaration_prime.faux` — une LIBRAIRIE inexistante — en supposant qu'elle serait
     // refusée. Mesuré : elle passe en SILENCE (0 erreur), alors qu'un ALPHABET inexistant est refusé
     // avec un message clair. Deux portes voisines, une seule fermée. Inscrit BPS-42 ; le témoin
     // emploie désormais la forme dont le refus est prouvé, sinon il ne prouve rien.
-    const temoin = compiler('@core\n@alphabet.nexistepas\nmotif -> C4\nS -> motif');
+    const temoin = compiler('core\nalphabet.nexistepas\n-----\nmotif -> C4\nS -> motif');
     const nom = 'western';
     const sauvegarde = LIBS['alphabets'][nom].resolvesPitch;
     LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: false };
-    const r = compiler(`@core\n@alphabet.${nom}\nmotif -> C4\nS -> motif`);
+    const r = compiler(`core\nalphabet.${nom}\n-----\nmotif -> C4\nS -> motif`);
     LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: sauvegarde };
     ok((r.ast?.alphabetTerminals || []).includes('C4') && !(r.ast?.noteTerminals || []).includes('C4'),
       "2bis. LE CODE SUIT LA DÉCLARATION, PAS L'ACCORDAGE : western privé de resolvesPitch se déclasse, "
@@ -199,7 +199,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
 // lecture de STRUCTURE les éléments qui sont des notes. Une tête de règle qui porte un nom de note
 // doit donc y figurer — c'est exactement le cas qui l'intéresse.
 {
-  const r = compiler('@core\n@alphabet.western\nG4 -> C4 D4');
+  const r = compiler('core\nalphabet.western\n-----\nG4 -> C4 D4');
   ok((r.ast?.noteTerminals || []).includes('G4'),
     `3. une TÊTE DE RÈGLE nommée comme une note doit être marquée (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
 }
@@ -207,7 +207,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   // Descendre jusqu'aux FEUILLES : un nom sous un groupe ou sous une note ancrée compte autant
   // qu'un voisin de surface. Faute payée quatre fois en juillet — compter la surface ne voit pas
   // ce qui vit sous un nœud composite.
-  const r = compiler('@core\n@alphabet.western:midi\n@var sync1 in.midi\nS -> {C4 E4} G4<!sync1');
+  const r = compiler('core\nalphabet.western:midi\nin.midi sync1\n-----\nS -> {C4 E4} G4<!sync1');
   for (const n of ['C4', 'E4', 'G4']) {
     ok((r.ast?.noteTerminals || []).includes(n),
       `3. '${n}' sous un groupe ou une note ancrée doit être vu (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
@@ -217,7 +217,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
 }
 {
   // Ce n'est PAS le catalogue : seuls les noms PRÉSENTS dans la scène (décision 2026-07-28).
-  const r = compiler('@core\n@alphabet.western\nS -> C4');
+  const r = compiler('core\nalphabet.western\n-----\nS -> C4');
   const l = r.ast?.noteTerminals || [];
   ok(l.length === 1 && l[0] === 'C4',
     `3. la liste porte ce que la SCÈNE écrit, pas le catalogue de l'alphabet (reçu ${l.length} entrée(s))`);
@@ -232,7 +232,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
 // une ancre, pas une nature. Le garde qui exigeait l'inverse gardait donc le défaut.
 // Le critère n'est plus déduit : l'alphabet DÉCLARE `resolvesPitch`.
 for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite', 'dha']]) {
-  const r = compiler(`@core\n@alphabet.${alpha}\nmotif -> ${terminal}\nS -> motif`);
+  const r = compiler(`core\nalphabet.${alpha}\n-----\nmotif -> ${terminal}\nS -> motif`);
   ok(!(r.ast?.noteTerminals || []).includes(terminal),
     `3bis. ${alpha} ne résout aucune hauteur : '${terminal}' ne doit PAS être annoncé comme note`);
   ok((r.ast?.alphabetTerminals || []).includes(terminal),
@@ -242,7 +242,7 @@ for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite
 // SANS porter d'accordage doit quand même sortir en NOTE. Sans ce témoin, un retour au critère
 // déduit repasserait au vert sans que rien ne le dise.
 {
-  const r = compiler('@core\n@alphabet.shakuhachi\nmotif -> ro\nS -> motif');
+  const r = compiler('core\nalphabet.shakuhachi\n-----\nmotif -> ro\nS -> motif');
   ok((r.ast?.noteTerminals || []).includes('ro'),
     "3bis. shakuhachi DÉCLARE résoudre une hauteur : 'ro' est une NOTE, même sans accordage");
   ok(!(r.ast?.alphabetTerminals || []).includes('ro'),
@@ -302,8 +302,8 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
 }
 {
   // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.
-  const r = compiler('@core\n@actor perc\n  alphabet.tabla\n  out.audio\n'
-    + '@actor n\n  alphabet.western\n  out.audio\nmotif -> dha C4\nS -> motif');
+  const r = compiler('core\nactor perc\n  alphabet.tabla\n  out.audio\n'
+    + 'actor n\n  alphabet.western\n  out.audio\n-----\nmotif -> dha C4\nS -> motif');
   ok((r.ast?.noteTerminals || []).join() === 'C4' && (r.ast?.alphabetTerminals || []).join() === 'dha',
     `3bis. deux vocabulaires : chacun dans son champ (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
 }

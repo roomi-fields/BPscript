@@ -59,17 +59,18 @@ function rejects(src, needle) {
 }
 
 // ============================================================
-// 1. @actor — dot notation (v0.8 canonique)
+// 1. actor — dot notation (v0.8 canonique)
 // ============================================================
 
-section('@actor — dot notation v0.8');
+section('actor — dot notation v0.8');
 
 {
-  const ast = parseSource(`@core
-@actor sitar
+  const ast = parseSource(`core
+actor sitar
   alphabet.tabla
   tuning.equal_temperament
   out.midi(ch:3, vel:100)
+-----
 S -> A`);
   const actor = ast.actors[0];
   assert('actor name parsed', actor.name === 'sitar');
@@ -82,31 +83,32 @@ S -> A`);
 }
 
 // ============================================================
-// 2. @actor — CUTOVER 2026-07-14 : l'ancienne forme d'entité en `:` est REJETÉE
+// 2. actor — CUTOVER 2026-07-14 : l'ancienne forme d'entité en `:` est REJETÉE
 // ============================================================
 
-section('@actor — entité en `:` REJETÉE (cutover)');
+section('actor — entité en `:` REJETÉE (cutover)');
 
 {
   // `alphabet:tabla`, `tuning:…`, `out:…` = composants mal graphiés → fail-loud.
   assert('alphabet:tabla → REJET',
-    rejects(`@core\n@actor sitar alphabet:tabla\nS -> A`, "alphabet:…"));
+    rejects(`core\nactor sitar alphabet:tabla\n-----\nS -> A`, "alphabet:…"));
   assert('tuning:equal_temperament → REJET',
-    rejects(`@core\n@actor sitar tuning:equal_temperament\nS -> A`, "tuning:…"));
+    rejects(`core\nactor sitar tuning:equal_temperament\n-----\nS -> A`, "tuning:…"));
   assert('out:midi(ch:3) → REJET',
-    rejects(`@core\n@actor sitar out:midi(ch:3)\nS -> A`, "out:…"));
+    rejects(`core\nactor sitar out:midi(ch:3)\n-----\nS -> A`, "out:…"));
 }
 
 // ============================================================
-// 3. @actor — CANON dot pur (alphabet.X + out.X)
+// 3. actor — CANON dot pur (alphabet.X + out.X)
 // ============================================================
 
-section('@actor — canon dot');
+section('actor — canon dot');
 
 {
-  const ast = parseSource(`@core
-@actor sitar @alphabet.tabla
+  const ast = parseSource(`core
+actor sitar alphabet.tabla
   out.midi(ch:3)
+-----
 S -> A`);
   const actor = ast.actors[0];
   assert('alphabet via dot', actor.properties.alphabet === 'tabla');
@@ -114,15 +116,16 @@ S -> A`);
 }
 
 // ============================================================
-// 4. @sound — bloc anonyme par défaut
+// 4. sound — bloc anonyme par défaut
 // ============================================================
 
-section('@sound — bloc anonyme défaut');
+section('sound — bloc anonyme défaut');
 
 {
-  const ast = parseSource(`@core
-@sound
+  const ast = parseSource(`core
+sound
   { dur:500, alphaMin:80, alphaMax:120 }
+-----
 S -> A`);
   assert('soundPrototypes is array', Array.isArray(ast.soundPrototypes));
   assert('1 prototype', ast.soundPrototypes.length === 1);
@@ -134,18 +137,19 @@ S -> A`);
 }
 
 // ============================================================
-// 5. @sound — sons nommés multiples
+// 5. sound — sons nommés multiples
 // ============================================================
 
-section('@sound — sons nommés multiples');
+section('sound — sons nommés multiples');
 
 {
-  const ast = parseSource(`@core
-@sound
+  const ast = parseSource(`core
+sound
   { dur:500 }
   bell_short { sample:"bell.wav", dur:400 }
   bell_long  { sample:"bell.wav", dur:1200, coverEnd:true }
   drum_kick  { sample:"kick.wav", dur:200, breakTempo }
+-----
 S -> A`);
   assert('4 prototypes', ast.soundPrototypes.length === 4);
   const [anon, bs, bl, dk] = ast.soundPrototypes;
@@ -158,29 +162,31 @@ S -> A`);
 }
 
 // ============================================================
-// 6. @sound.libname — référence à une lib externe
+// 6. sound.libname — référence à une lib externe
 // ============================================================
 
-section('@sound.libname — lib externe');
+section('sound.libname — lib externe');
 
 {
-  const ast = parseSource(`@core
-@sound.tabla_perc
+  const ast = parseSource(`core
+sound.tabla_perc
+-----
 S -> A`);
   const dir = ast.directives.find(d => d.name === 'sound');
-  assert('directive @sound captured', !!dir);
+  assert('directive sound captured', !!dir);
   assert('subkey=tabla_perc', dir?.subkey === 'tabla_perc');
 }
 
 // ============================================================
-// 7. @sound.libname:variant — variante de lib
+// 7. sound.libname:variant — variante de lib
 // ============================================================
 
-section('@sound.libname:variant — variante');
+section('sound.libname:variant — variante');
 
 {
-  const ast = parseSource(`@core
-@sound.tabla_perc:simplified
+  const ast = parseSource(`core
+sound.tabla_perc:simplified
+-----
 S -> A`);
   const dir = ast.directives.find(d => d.name === 'sound');
   assert('subkey=tabla_perc', dir?.subkey === 'tabla_perc');
@@ -188,15 +194,16 @@ S -> A`);
 }
 
 // ============================================================
-// 8. @template (singulier) — section template v0.8
+// 8. template (singulier) — section template v0.8
 // ============================================================
 
-section('@template — singulier v0.8');
+section('template — singulier v0.8');
 
 {
-  const ast = parseSource(`@core
+  const ast = parseSource(`core
+-----
 S -> A B C
-@template
+template
 [1] /1 ???
 [2] /1 ???????`);
   assert('template parsed', Array.isArray(ast.template?.entrees));
@@ -215,10 +222,10 @@ S -> A B C
 }
 
 // ============================================================
-// 9. @templates (pluriel) — REFUSÉ depuis le 2026-07-19
+// 9. templates (pluriel) — REFUSÉ depuis le 2026-07-19
 // ============================================================
 
-section('@templates — pluriel REFUSÉ');
+section('templates — pluriel REFUSÉ');
 
 {
   // Ce test disait l'inverse jusqu'au 2026-07-19 : il PROUVAIT que l'alias marchait, et c'est
@@ -227,42 +234,45 @@ section('@templates — pluriel REFUSÉ');
   // dans l'autre sens.
   let refuse = false, message = '';
   try {
-    parseSource(`@core
+    parseSource(`core
+-----
 S -> A
-@templates
+templates
 [1] /1 ?????`);
   } catch (e) { refuse = true; message = e.message; }
-  assert('@templates est REFUSÉ (plus aucun alias survivant)', refuse);
+  assert('templates est REFUSÉ (plus aucun alias survivant)', refuse);
   // Le message doit NOMMER la migration : un « attendu template » ressemblerait à une coquille.
-  assert('le refus nomme la forme de remplacement', /@template'? \(singulier\)/.test(message));
+  assert('le refus nomme la forme de remplacement', /template'? \(singulier\)/.test(message));
 }
 
 {
   // Témoin : le singulier, lui, passe toujours — sans quoi le test ci-dessus serait vert
   // même si on avait cassé la section template entière.
-  const ast = parseSource(`@core
+  const ast = parseSource(`core
+-----
 S -> A
-@template
+template
 [1] /1 ?????`);
-  assert('témoin — @template (singulier) parse toujours', Array.isArray(ast.template?.entrees));
+  assert('témoin — template (singulier) parse toujours', Array.isArray(ast.template?.entrees));
   // RETOURNÉ le 2026-08-10 avec le transport verbatim : il n'y a plus de corps découpé à compter,
   // la ligne EST le gabarit. Le témoin garde la même intention — la section se lit toujours.
   assert('témoin — la ligne est portée verbatim', ast.template?.entrees?.[0]?.line === '[1] /1 ?????');
 }
 
 // ============================================================
-// 10. SoundAssignment dans @actor — *:sound.X et Sa:sound.Y
+// 10. SoundAssignment dans actor — *:sound.X et Sa:sound.Y
 // ============================================================
 
-section('SoundAssignment dans @actor');
+section('SoundAssignment dans actor');
 
 {
-  const ast = parseSource(`@core
-@actor tabla
+  const ast = parseSource(`core
+actor tabla
   alphabet.tabla
   out.midi(ch:10)
   *:sound.tabla_perc
   Sa:sound.drum_kick
+-----
 S -> A`);
   assert('soundAssignments top-level', Array.isArray(ast.soundAssignments));
   assert('2 assignments', ast.soundAssignments.length === 2);
@@ -295,10 +305,11 @@ section('sound.X sur un acteur — RETIRE le 2026-08-06');
 {
   let msg = '';
   try {
-    parseSource(`@core
-@actor x
+    parseSource(`core
+actor x
   alphabet.tabla
   sound.bell_short
+-----
 S -> A`);
   } catch (e) { msg = e.message; }
   assert('sound.X sur un acteur est REFUSE', msg !== '');
@@ -306,17 +317,18 @@ S -> A`);
 }
 
 // ============================================================
-// 12. SoundAssignment dans @alphabet.X
+// 12. SoundAssignment dans alphabet.X
 // ============================================================
 
-section('SoundAssignment dans @alphabet.X');
+section('SoundAssignment dans alphabet.X');
 
 {
-  const ast = parseSource(`@core
-@alphabet.tabla
+  const ast = parseSource(`core
+alphabet.tabla
   *:sound.bell_short
   Sa:sound.drum_kick
   Re:sound.bell_long
+-----
 S -> Sa Re Sa`);
   assert('3 assignments', ast.soundAssignments?.length === 3);
   const [a1, a2, a3] = ast.soundAssignments;
@@ -335,7 +347,8 @@ S -> Sa Re Sa`);
 section('Inline Sa(sound.bell_short)');
 
 {
-  const ast = parseSource(`@core
+  const ast = parseSource(`core
+-----
 S -> Sa(sound.bell_short) Re`);
   const sa = ast.subgrammars[0].rules[0].rhs[0];
   assert('Sa is Symbol', sa.type === 'Symbol' && sa.name === 'Sa');
@@ -353,7 +366,8 @@ S -> Sa(sound.bell_short) Re`);
 section('Inline mixé vel+sound+pan');
 
 {
-  const ast = parseSource(`@core
+  const ast = parseSource(`core
+-----
 S -> Sa(vel:80, sound.bell, pan:64)`);
   const rq = ast.subgrammars[0].rules[0].rhs[0].suffixQualifiers[0];
   assert('3 pairs', rq.pairs.length === 3);
@@ -363,16 +377,17 @@ S -> Sa(vel:80, sound.bell, pan:64)`);
 }
 
 // ============================================================
-// 15. Inline anonyme — Sa:{ dur:300 } dans @actor
+// 15. Inline anonyme — Sa:{ dur:300 } dans actor
 // ============================================================
 
-section('SoundAssignment inline-props dans @actor');
+section('SoundAssignment inline-props dans actor');
 
 {
-  const ast = parseSource(`@core
-@actor x
+  const ast = parseSource(`core
+actor x
   alphabet.tabla
   Sa:{ dur:300, sample:"x.wav" }
+-----
 S -> Sa`);
   const sa = ast.soundAssignments?.[0];
   assert('1 assignment', ast.soundAssignments?.length === 1);
@@ -389,9 +404,10 @@ S -> Sa`);
 section('Booléen nu dans bloc inline');
 
 {
-  const ast = parseSource(`@core
-@sound
+  const ast = parseSource(`core
+sound
   drum { sample:"k.wav", breakTempo, contBeg }
+-----
 S -> A`);
   const cfg = ast.soundPrototypes[0].config;
   assert('breakTempo=true (nu)', cfg.breakTempo === true);
@@ -400,18 +416,19 @@ S -> A`);
 }
 
 // ============================================================
-// 17. Commentaires `//` dans bloc @sound
+// 17. Commentaires `//` dans bloc sound
 // ============================================================
 
-section('Commentaires dans @sound');
+section('Commentaires dans sound');
 
 {
-  const ast = parseSource(`@core
-@sound
+  const ast = parseSource(`core
+sound
   // entrée anonyme
   { dur:500 }
   // bell explicite
   bell { sample:"b.wav" }
+-----
 S -> A`);
   assert('2 prototypes (comments ignored)', ast.soundPrototypes.length === 2);
   assert('1st anonymous', ast.soundPrototypes[0].name === null);
@@ -425,15 +442,17 @@ S -> A`);
 section('Espacement cohérent — *:sound.X');
 
 {
-  const noSpace = parseSource(`@core
-@actor a
+  const noSpace = parseSource(`core
+actor a
   alphabet.tabla
   *:sound.bell
+-----
 S -> A`);
-  const withSpace = parseSource(`@core
-@actor a
+  const withSpace = parseSource(`core
+actor a
   alphabet.tabla
   * : sound . bell
+-----
 S -> A`);
   assert('no-space: 1 assignment', noSpace.soundAssignments?.length === 1);
   assert('with-space: 1 assignment', withSpace.soundAssignments?.length === 1);
@@ -450,15 +469,16 @@ S -> A`);
 section('Cas migration : forme v0.8 issue du script');
 
 {
-  const ast = parseSource(`@core
-@core
-@alphabet.tabla:midi
-@actor tabla
+  const ast = parseSource(`core
+core
+alphabet.tabla:midi
+actor tabla
   alphabet.tabla
   out.midi(ch:10)
   *:sound.tabla_perc
+-----
 S -> tabla.dhin tabla.dha
-@template
+template
 [1] /1 ???`);
   assert('actor parsed', ast.actors.length === 1);
   assert('template parsed', ast.template?.entrees?.length === 1);
@@ -477,9 +497,9 @@ section('sound sur un acteur — LES DEUX GRAPHIES REFUSENT');
 // — « une graphie morte ne passe pas en silence » — reste, elle porte juste sur les deux formes.
 {
   assert('sounds:tabla_perc (deux-points) → REJET',
-    rejects(`@core\n@actor t sounds:tabla_perc\nS -> A`, "sounds:…"));
+    rejects(`core\nactor t sounds:tabla_perc\n-----\nS -> A`, "sounds:…"));
   let msg = '';
-  try { parseSource(`@core\n@actor t sound.tabla_perc @alphabet.tabla out.midi(ch:1)\nS -> A`); }
+  try { parseSource(`core\nactor t sound.tabla_perc alphabet.tabla out.midi(ch:1)\n-----\nS -> A`); }
   catch (e) { msg = e.message; }
   assert('sound.tabla_perc (point) → REJET aussi', msg !== '');
   assert('le refus nomme la cause', /cl[eé] d'acteur/.test(msg));
@@ -492,11 +512,12 @@ section('sound sur un acteur — LES DEUX GRAPHIES REFUSENT');
 section('* dans flux RHS ≠ affectation');
 
 {
-  // Le `*` n'est valide en sujet d'affectation que dans un body @actor/@alphabet.
+  // Le `*` n'est valide en sujet d'affectation que dans un body actor/alphabet.
   // Dans un RHS de règle, `*` n'a pas de sens (testons qu'on ne crashe pas).
   // Note : le tokenizer émet T.STAR ; le parser RHS ne le traite pas (skip).
   try {
-    const ast = parseSource(`@core
+    const ast = parseSource(`core
+-----
 S -> A B`);
     assert('control case parses', ast.subgrammars[0].rules[0].rhs.length === 2);
   } catch (e) {
@@ -517,17 +538,18 @@ section('eval.X harmonisé (PM décision 2)');
   // écrivait les deux ensemble, forme d'avant ce durcissement : il ne rendait donc pas un
   // FAIL, il faisait PLANTER tout le fichier sur une exception non rattrapée — les 172
   // assertions suivantes ne s'exécutaient plus du tout.
-  const ast08 = parseSource(`@core
-@actor a
+  const ast08 = parseSource(`core
+actor a
   alphabet.tabla
   eval.python
+-----
 S -> A`);
   assert('v0.8 eval.python parsed', ast08.actors[0].properties.eval === 'python');
   assert('eval + out ensemble → REJET nommé',
-    rejects(`@core\n@actor a\n  alphabet.tabla\n  out.midi(ch:1)\n  eval.python\nS -> A`, 'out'));
+    rejects(`core\nactor a\n  alphabet.tabla\n  out.midi(ch:1)\n  eval.python\n-----\nS -> A`, 'out'));
   // CUTOVER : la forme colon `eval:python` (comme alphabet:/out:) est REJETÉE.
   assert('eval:python (colon v0.7) → REJET',
-    rejects(`@core\n@actor a @alphabet.tabla out.midi(ch:1) eval:python\nS -> A`, "eval:…"));
+    rejects(`core\nactor a alphabet.tabla out.midi(ch:1) eval:python\n-----\nS -> A`, "eval:…"));
 }
 
 // ============================================================
@@ -538,11 +560,12 @@ section('Rétrocompat : grammaire complète v0.7');
 
 {
   const src = `// scene v0.7 typique
-@core
-@core
-@alphabet.western:midi
-@tempo:60
-@striated
+core
+core
+alphabet.western:midi
+tempo:60
+striated
+-----
 S -> A B C
 A -> C4 D4 E4
 B -> F4 G4 A4
@@ -556,15 +579,16 @@ C -> B4 C5`;
 
 // ============================================================
 // 23. Actor sans alphabet : le PARSER laisse properties vide ; l'actorResolver REMPLIT
-//     l'alphabet par cascade (acteur→scène→@core), il ne REJETTE JAMAIS (modèle Romain
+//     l'alphabet par cascade (acteur→scène→core), il ne REJETTE JAMAIS (modèle Romain
 //     2026-07-13, RESOLVER-CASCADE-ALPHABET) — cf. test_actor_cascade_alphabet.js.
 // ============================================================
 
 section('Actor sans alphabet (parser : properties vide, cascade en aval)');
 
 {
-  const ast = parseSource(`@core
-@actor empty
+  const ast = parseSource(`core
+actor empty
+-----
 S -> A`);
   // Parse OK ; l'actorResolver remplira l'alphabet par cascade (pas d'erreur).
   assert('parses (resolver fills alphabet by cascade)', ast.actors[0].name === 'empty');
@@ -578,16 +602,18 @@ S -> A`);
 section('scene.homomorphisms — contrat BPx');
 
 {
-  // Sans directive @homomorphism : champ vide ou absent
-  const ast = parseSource(`@core
+  // Sans directive homomorphism : champ vide ou absent
+  const ast = parseSource(`core
+-----
 S -> A B`);
-  assert('sans @homomorphism: homomorphisms vide', !ast.homomorphisms || ast.homomorphisms.length === 0);
+  assert('sans homomorphism: homomorphisms vide', !ast.homomorphisms || ast.homomorphisms.length === 0);
 }
 
 {
-  // @homomorphism.checkhomo — format sections → 3 décls ('*', 'H', 'TR')
-  const ast = parseSource(`@core
-@homomorphism.checkhomo
+  // homomorphism.checkhomo — format sections → 3 décls ('*', 'H', 'TR')
+  const ast = parseSource(`core
+homomorphism.checkhomo
+-----
 S -> A B`);
   assert('checkhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('checkhomo: 3 décls', ast.homomorphisms?.length === 3);
@@ -606,9 +632,10 @@ S -> A B`);
 }
 
 {
-  // @homomorphism.dhati — format sections, section '*' avec 7 paires (identités conservées)
-  const ast = parseSource(`@core
-@homomorphism.dhati
+  // homomorphism.dhati — format sections, section '*' avec 7 paires (identités conservées)
+  const ast = parseSource(`core
+homomorphism.dhati
+-----
 S -> dha ti`);
   assert('dhati: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('dhati: 1 décl (section *)', ast.homomorphisms?.length === 1);
@@ -623,9 +650,10 @@ S -> dha ti`);
 }
 
 {
-  // @homomorphism.dhin — format sections, section '*' avec 11 paires
-  const ast = parseSource(`@core
-@homomorphism.dhin
+  // homomorphism.dhin — format sections, section '*' avec 11 paires
+  const ast = parseSource(`core
+homomorphism.dhin
+-----
 S -> dhin dha`);
   assert('dhin: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('dhin: 1 décl', ast.homomorphisms?.length === 1);
@@ -639,9 +667,10 @@ S -> dhin dha`);
 }
 
 {
-  // @homomorphism.ruwet — format sections avec m1/m2/mineur
-  const ast = parseSource(`@core
-@homomorphism.ruwet
+  // homomorphism.ruwet — format sections avec m1/m2/mineur
+  const ast = parseSource(`core
+homomorphism.ruwet
+-----
 S -> la4 fa4`);
   assert('ruwet: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('ruwet: 3 décls (m1/m2/mineur)', ast.homomorphisms?.length === 3);
@@ -658,9 +687,10 @@ S -> la4 fa4`);
 }
 
 {
-  // @homomorphism.tryhomomorphism — chaîne c-->fa4-->d dépliée en [c,fa4],[fa4,d]
-  const ast = parseSource(`@core
-@homomorphism.tryhomomorphism
+  // homomorphism.tryhomomorphism — chaîne c-->fa4-->d dépliée en [c,fa4],[fa4,d]
+  const ast = parseSource(`core
+homomorphism.tryhomomorphism
+-----
 S -> a b c`);
   assert('tryhomo: homomorphisms défini', Array.isArray(ast.homomorphisms));
   assert('tryhomo: 1 décl', ast.homomorphisms?.length === 1);
@@ -705,7 +735,7 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@core\n@alphabet.simple\nS -> a !(pitchbend:+200)');
+    compiled = compileToBPxAST('core\nalphabet.simple\n-----\nS -> a !(pitchbend:+200)');
   } catch (e) {
     caughtError = e;
   }
@@ -730,13 +760,13 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   let compiled;
   let caughtError = null;
   try {
-    compiled = compileToBPxAST('@core\nS -> a !(pitchbend:@invalid)');
+    compiled = compileToBPxAST('core\n-----\nS -> a !(pitchbend:invalid)');
   } catch (e) {
     caughtError = e;
   }
   // Le résultat peut être : une erreur dans compiled.errors, ou une ParseError catchée,
   // mais jamais un gel du process.
-  assert('!(pitchbend:@invalid) ne gèle pas (résultat défini)',
+  assert('!(pitchbend:invalid) ne gèle pas (résultat défini)',
     compiled !== undefined || caughtError !== null,
     'compileBPS a gelé (undefined sans exception)');
 }
@@ -767,13 +797,14 @@ section('Encoder — tempo absolu A[/N] → /N A (bare, absolu + persistant)');
 section('R1 — Noms canoniques BP3_OPERATORS dans l\'AST');
 
 {
-  // @gate star:midi → déclaration acceptée (canal de déclaration) ; l'AST porte
+  // gate star:midi → déclaration acceptée (canal de déclaration) ; l'AST porte
   // le nom d'alias 'star' dans la directive, pas dans les Symbol de règle.
-  const src = `@core
-@gate star:midi
+  const src = `core
+gate star:midi
+-----
 S -> star`;
   const ast = parseSource(src);
-  assert('R1: @gate star déclaration sans erreur', !ast.errors?.length);
+  assert('R1: gate star déclaration sans erreur', !ast.errors?.length);
 
   // Le Symbol dans la règle doit porter le nom canonique '*', PAS 'star'
   function findSymbolNames(node, out = []) {
@@ -794,8 +825,9 @@ S -> star`;
 
 {
   // 'plus' dans une règle → Symbol '*' dans l'AST
-  const src = `@core
-@gate plus:midi
+  const src = `core
+gate plus:midi
+-----
 S -> plus A`;
   const ast = parseSource(src);
   function findSymbolNames(node, out = []) {
@@ -816,8 +848,9 @@ S -> plus A`;
 
 {
   // 'fin' dans une règle → Symbol ';' dans l'AST
-  const src = `@core
-@gate fin:midi
+  const src = `core
+gate fin:midi
+-----
 S -> A fin`;
   const ast = parseSource(src);
   function findSymbolNames(node, out = []) {

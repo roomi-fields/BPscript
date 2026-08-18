@@ -1,8 +1,8 @@
 // scan_mode.bps — Fixture pour le test du qualificateur (scan:...)
 // Vérifie : rule.mode dans l'AST + préfixe LEFT/RIGHT/RND dans le texte BP3
 
-@core
-@alphabet.western:midi
+core
+alphabet.western:midi
 
 // Règle sans scan → mode null (par défaut)
 -----

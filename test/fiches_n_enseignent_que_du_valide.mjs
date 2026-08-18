@@ -27,7 +27,7 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 import { universeControlNames } from '../src/transpiler/libs.js';
 
 const NOMS = universeControlNames();
-const EN_TETE = '@core\n@alphabet.western:midi\n@mode:ord\n';
+const EN_TETE = 'core\nalphabet.western:midi\nmode:ord\n-----\n';
 
 /** Compile un extrait dans les DEUX régimes ; il suffit qu'un des deux l'accepte pour qu'il soit
  *  une graphie vivante (un contrôle de flux n'a pas à compiler en contenance et réciproquement). */

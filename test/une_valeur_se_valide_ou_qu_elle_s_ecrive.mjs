@@ -8,7 +8,7 @@
  *
  * ═══ A. LA TÊTE DE SCÈNE EST UNE PLACE D'ÉCRITURE COMME UNE AUTRE
  *
- * CE QUI PASSAIT : `@vel:200` COMPILAIT, alors que `!(vel:200)` était refusé en nommant la plage.
+ * CE QUI PASSAIT : `vel:200` COMPILAIT, alors que `!(vel:200)` était refusé en nommant la plage.
  * La collecte des valeurs ne ramassait que les paires d'un SAC ; une directive de tête n'est pas
  * un sac. La validation ne voyait donc jamais la moitié des écritures.
  *
@@ -23,9 +23,9 @@
  * 0..127) et une CIBLE où un CV se branche (`(pan: env1)`, entrée de modulation −1..1). La table
  * des portées les confondait, et la boucle des modulations passant en dernier, l'entrée ÉCRASAIT
  * le contrôle. Résultat mesuré : `pan` avait reçu `scene` dans sa déclaration, sur arbitrage de
- * Romain, et `@pan:64` restait refusé en récitant les places de l'AUTRE `pan`.
+ * Romain, et `pan:64` restait refusé en récitant les places de l'AUTRE `pan`.
  *
- * ⛔ CE QUE CE GARDE TIENT, ET SON COMPLÉMENT. Il ne suffit pas que `@pan:64` passe : il faut aussi
+ * ⛔ CE QUE CE GARDE TIENT, ET SON COMPLÉMENT. Il ne suffit pas que `pan:64` passe : il faut aussi
  * qu'un nom qui n'appartient QU'aux modulations garde SA portée. Sinon la séparation serait un
  * desserrage — tout deviendrait écrivable partout, et le garde serait vert en décrivant un langage
  * plus large que le vrai.
@@ -57,23 +57,23 @@ const MOTS = [
   ['chan',           17,    3],
 ];
 for (const [mot, mauvaise, bonne] of MOTS) {
-  ok(horsPlage(`@core\n@midi.${mot}:${mauvaise}\nS -> C4\n`).length > 0
-     || horsPlage(`@core\n@${mot}:${mauvaise}\nS -> C4\n`).length > 0,
+  ok(horsPlage(`core\nmidi.${mot}:${mauvaise}\n-----\nS -> C4\n`).length > 0
+     || horsPlage(`core\n${mot}:${mauvaise}\n-----\nS -> C4\n`).length > 0,
      `A1. '${mot}:${mauvaise}' en TÊTE DE SCÈNE doit être refusé en nommant la plage — c'est la `
      + `place qui échappait à la validation`);
-  ok(erreursDe(`@core\nS -> C4 !(${mot}:${mauvaise})\n`).length > 0,
+  ok(erreursDe(`core\n-----\nS -> C4 !(${mot}:${mauvaise})\n`).length > 0,
      `A1. '${mot}:${mauvaise}' dans un SAC doit rester refusé`);
-  ok(erreursDe(`@core\nS -> C4 !(${mot}:${bonne})\n`).length === 0,
+  ok(erreursDe(`core\n-----\nS -> C4 !(${mot}:${bonne})\n`).length === 0,
      `A1. '${mot}:${bonne}' dans un sac doit passer — le complément, sans quoi ce garde décrirait `
      + `un langage qui refuse tout`);
 }
 
 // ── A2. LES DEUX MOTS QUI NE S'ÉCRIVENT QU'EN TÊTE — le cas qui a rendu la faute bloquante ───
 for (const [mot, mauvaise, bonne] of [['rate', 1001, 50]]) {
-  ok(horsPlage(`@core\n@midi.${mot}:${mauvaise}\nS -> C4\n`).length > 0,
+  ok(horsPlage(`core\nmidi.${mot}:${mauvaise}\n-----\nS -> C4\n`).length > 0,
      `A2. '${mot}' ne s'écrit QU'en tête de scène : sa plage doit y mordre, sinon elle ne mord `
      + `nulle part`);
-  ok(erreursDe(`@core\n@midi.${mot}:${bonne}\nS -> C4\n`).length === 0,
+  ok(erreursDe(`core\nmidi.${mot}:${bonne}\n-----\nS -> C4\n`).length === 0,
      `A2. '${mot}:${bonne}' doit passer`);
 }
 
@@ -81,28 +81,28 @@ for (const [mot, mauvaise, bonne] of [['rate', 1001, 50]]) {
 // Le complément d'A1 : la validation ne connaît que les mots de la librairie. Une directive de
 // tête qui n'en est pas ne doit pas se mettre à rougir parce qu'on a élargi la collecte.
 for (const [quoi, src] of [
-  ['un composant de catalogue', '@core\n@alphabet.western\nS -> C4\n'],
-  ['un mot nu',                 '@core\n@midi.letring\nS -> C4\n'],
-  ['le socle lui-même',         '@core\nS -> C4\n'],
+  ['un composant de catalogue', 'core\nalphabet.western\n-----\nS -> C4\n'],
+  ['un mot nu',                 'core\nmidi.letring\n-----\nS -> C4\n'],
+  ['le socle lui-même',         'core\n-----\nS -> C4\n'],
 ]) {
   ok(erreursDe(src).length === 0, `A3. ${quoi} doit continuer de compiler`);
 }
 
 // ── B1. `pan` ACCEPTE LA TÊTE DE SCÈNE, comme `vel` et `volume` ─────────────────────────────
 for (const mot of ['pan', 'vel', 'volume']) {
-  ok(horsPortee(`@core\n@${mot}:64\nS -> C4\n`).length === 0,
-     `B1. '@${mot}:64' en tête de scène doit être accepté — sa portée déclarée le permet, et rien `
+  ok(horsPortee(`core\n${mot}:64\n-----\nS -> C4\n`).length === 0,
+     `B1. '${mot}:64' en tête de scène doit être accepté — sa portée déclarée le permet, et rien `
      + `d'autre ne doit la recouvrir`);
 }
 
 // ── B2. LE COMPLÉMENT — un nom PROPRE aux modulations garde SA portée ───────────────────────
 // Sans ce volet, séparer les tables aurait pu rendre tout écrivable partout, et B1 serait vert
 // pour la mauvaise raison.
-ok(horsPortee('@core\n@cutoff:400\nS -> C4\n').length > 0,
+ok(horsPortee('core\ncutoff:400\n-----\nS -> C4\n').length > 0,
    "B2. 'cutoff' n'appartient QU'aux entrées de modulation : sa portée doit continuer de refuser "
    + 'la tête de scène. La séparation donne le dernier mot au contrôle, elle ne supprime pas la '
    + 'portée des modulations.');
-ok(erreursDe('@core\nS -> C4(cutoff:400)\n').length === 0,
+ok(erreursDe('core\n-----\nS -> C4(cutoff:400)\n').length === 0,
    "B2. et 'cutoff' doit rester écrivable là où sa portée l'autorise");
 
 // ── B3. LES DEUX FAMILLES SONT TENUES SÉPARÉMENT DANS LA DONNÉE ─────────────────────────────

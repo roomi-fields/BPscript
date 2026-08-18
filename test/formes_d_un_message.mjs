@@ -65,7 +65,7 @@ if (!blocs.length) {
 // Une forme citée est souvent un FRAGMENT (une règle seule, une directive seule) : on l'enveloppe
 // dans la plus petite scène qui lui donne un sens, et on le DIT. Un fragment qui ne compile pas
 // seul n'est pas forcément faux — mais il ne doit pas sortir sans qu'on sache lequel des deux.
-const SOCLE = '@core\n@alphabet.western\n';
+const SOCLE = 'core\nalphabet.western\n-----\n';
 let echecs = 0;
 for (const b of blocs) {
   const texte = b.lignes.join('\n').trim();

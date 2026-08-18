@@ -50,18 +50,18 @@ const voix = (r) => (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])
 // ── A. LA CASCADE, DU PLUS LOCAL AU PLUS GÉNÉRAL ─────────────────────────────────────────────
 const CAS = [
   ['le TERMINAL la nomme lui-même : je la PORTE',
-   '@core\n@alphabet.western\n@def ka  voice.sec\nS -> ka\n', [['ka', 'sec']]],
+   'core\nalphabet.western\ndef ka  voice.sec\n-----\nS -> ka\n', [['ka', 'sec']]],
   ['deux terminaux nommés',
-   '@core\n@alphabet.western\n@def ka  voice.sec\n@def ko  voice.grave\nS -> ka ko\n',
+   'core\nalphabet.western\ndef ka  voice.sec\ndef ko  voice.grave\n-----\nS -> ka ko\n',
    [['ka', 'sec'], ['ko', 'grave']]],
   ['personne ne la nomme : elle reste ABSENTE',
-   '@core\n@alphabet.western\nS -> C4\n',              [['C4', null]]],
+   'core\nalphabet.western\n-----\nS -> C4\n',              [['C4', null]]],
   // ⛔ LA TABLE DE L'ALPHABET N'EST PAS RÉSOLUE ICI — Romain, 2026-08-08 : « c'est Kairos, ça
   // n'est pas ton rôle. » Je l'avais fait, et c'était résoudre à la place de l'aval, qui le fait
   // depuis juin depuis la même table. Ce cas garde la frontière DANS L'AUTRE SENS : si un jour je
   // me remets à résoudre, il rougit.
   ['la table de l\'alphabet reste À RÉSOUDRE en aval',
-   '@core\n@alphabet.tabla\nS -> dha ka\n',            [['dha', null], ['ka', null]]],
+   'core\nalphabet.tabla\n-----\nS -> dha ka\n',            [['dha', null], ['ka', null]]],
 ];
 for (const [quoi, src, attendu] of CAS) {
   const r = compiler(src);
@@ -75,14 +75,14 @@ for (const [quoi, src, attendu] of CAS) {
 
 // ── B. LA FRONTIÈRE — je PORTE ce qui est écrit, je ne RÉSOUS pas ce qui est organisé ───────
 // ⚠️ CE VOLET A CHANGÉ DE SUJET LE 2026-08-08, et c'est la leçon. Il vérifiait une PRÉCÉDENCE
-// entre le `@def` et la table de l'alphabet — donc il gardait une résolution que je n'aurais pas
+// entre le `def` et la table de l'alphabet — donc il gardait une résolution que je n'aurais pas
 // dû écrire. Kairos a mesuré que nous étions DEUX à résoudre le même fait depuis la même table,
 // avec des précédences différentes ; Romain a tranché que c'est son rôle.
 // Ce que ce volet garde désormais est la FRONTIÈRE : une voix ÉCRITE dans la scène est portée
 // telle quelle, une voix ORGANISÉE par un alphabet ne l'est pas. « Porter ≠ résoudre » — la règle
 // que j'oppose aux autres, et que j'avais franchie sans m'en apercevoir.
 {
-  const r = compiler('@core\n@alphabet.tabla\n@def dha  voice.dayan_tap\nS -> dha ka\n');
+  const r = compiler('core\nalphabet.tabla\ndef dha  voice.dayan_tap\n-----\nS -> dha ka\n');
   ok(messages(r) === '', `B. le terminal redéclaré est REFUSÉ : ${messages(r).slice(0, 80)}`);
   if (!messages(r)) {
     ok(JSON.stringify(voix(r)) === JSON.stringify([['dha', 'dayan_tap'], ['ka', null]]),

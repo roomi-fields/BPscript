@@ -41,19 +41,19 @@ const acteur = (src, nom) => {
 };
 
 // La scène écrit LES CINQ, pour qu'aucune ne puisse « passer » par hasard faute de source.
-const SCENE_COMPLETE = '@core\n@alphabet.western\n@out.midi(ch:5)\n@eval.strudel\n'
-                     + '@tuning.western_just\n@octaves.bp3\n';
+const SCENE_COMPLETE = 'core\nalphabet.western\nout.midi(ch:5)\neval.strudel\n'
+                     + 'tuning.western_just\noctaves.bp3\n';
 
 // LES CINQ CLÉS — nom dans l'arbre, valeur attendue quand la scène la porte, et une écriture
 // d'acteur qui la RECOUVRE avec une autre valeur.
 // ⚠️ `alphabet` porte sa PROPRE scène témoin, et ce n'est pas une commodité : l'accordage et le
 // registre APPARTIENNENT à un alphabet, et le compilateur refuse `alphabet.sargam` sous un
-// `@tuning.western_just` de scène — à raison. Éprouver l'override d'alphabet sous la scène complète
+// `tuning.western_just` de scène — à raison. Éprouver l'override d'alphabet sous la scène complète
 // mesurerait ce refus de cohérence, pas la descente de la clé. L'instrument se règle sur ce qu'il
 // veut voir ; sinon il rend un rouge qui parle d'autre chose.
 const CLES = [
   { cle: 'alphabet',  herite: 'western',        ecrit: 'alphabet.sargam',       recouvre: 'sargam',
-    scene: '@core\n@alphabet.western\n@out.midi(ch:5)\n@eval.strudel\n', terminal: 'sa' },
+    scene: 'core\nalphabet.western\nout.midi(ch:5)\neval.strudel\n', terminal: 'sa' },
   { cle: 'tuning',    herite: 'western_just',   ecrit: 'tuning.western_12TET',  recouvre: 'western_12TET' },
   { cle: 'octaves',   herite: 'bp3',            ecrit: 'octaves.western',       recouvre: 'western' },
   { cle: 'transport', herite: 'midi',           ecrit: 'out.audio',             recouvre: 'audio',
@@ -68,7 +68,7 @@ console.log(`[cinq cles] ${CLES.length} cles x 3 positions`);
 for (const c of CLES) {
   const scene = c.scene || SCENE_COMPLETE;
   // 1. HÉRITÉE — l'acteur nu reçoit ce que la scène écrit. C'est la moitié qui était CASSÉE.
-  const nu = acteur(`${scene}@actor nu\nS -> nu.C4`, 'nu');
+  const nu = acteur(`${scene}actor nu\n-----\nS -> nu.C4`, 'nu');
   ok(!nu.erreur && !nu.absent, `1. '${c.cle}' — la scène témoin doit compiler (reçu : ${nu.erreur})`);
   ok(lire(nu, c) === c.herite,
     `1. '${c.cle}' doit DESCENDRE dans un acteur déclaré nu : attendu '${c.herite}', reçu `
@@ -77,7 +77,7 @@ for (const c of CLES) {
   // 2. ÉCRITE — un override RECOUVRE. Sans cette moitié, un pliage qui écraserait tout aurait
   //    l'air juste : les deux fautes rendent la même clé « présente ».
   if (c.ecrit) {
-    const perso = acteur(`${scene}@actor perso\n  ${c.ecrit}\nS -> perso.${c.terminal || 'C4'}`, 'perso');
+    const perso = acteur(`${scene}actor perso\n  ${c.ecrit}\n-----\nS -> perso.${c.terminal || 'C4'}`, 'perso');
     ok(lire(perso, c) === c.recouvre,
       `2. '${c.cle}' — ce que l'acteur ÉCRIT gagne sur la scène : attendu '${c.recouvre}', reçu `
       + `'${lire(perso, c)}'`);
@@ -86,7 +86,7 @@ for (const c of CLES) {
   // 3. L'ACTEUR IMPLICITE EST L'ÉTALON — un acteur nommé nu porte EXACTEMENT ce que porterait la
   //    scène qui n'en déclare aucun. C'est l'invariant sous sa forme la plus dure : les deux
   //    chemins passent par les mêmes cascades, donc ils ne peuvent pas diverger.
-  const implicite = acteur(`${scene}S -> C4`, 'scene');
+  const implicite = acteur(`${scene}-----\nS -> C4`, 'scene');
   ok(lire(implicite, c) === lire(nu, c),
     `3. '${c.cle}' — l'acteur IMPLICITE porte '${lire(implicite, c)}' et l'acteur DÉCLARÉ NU porte `
     + `'${lire(nu, c)}' : les deux chemins ont divergé.`);
@@ -106,8 +106,8 @@ for (const c of CLES) {
 // même chose, ou ils ont divergé. Rien de plus, et c'est déjà la raison d'être du bloc.
 {
   const cats = (a) => [...new Set((a.references || []).map((r) => r.category))].sort().join(',');
-  const nu = acteur(`${SCENE_COMPLETE}@actor nu\nS -> nu.C4`, 'nu');
-  const implicite = acteur(`${SCENE_COMPLETE}S -> C4`, 'scene');
+  const nu = acteur(`${SCENE_COMPLETE}actor nu\n-----\nS -> nu.C4`, 'nu');
+  const implicite = acteur(`${SCENE_COMPLETE}-----\nS -> C4`, 'scene');
   ok(cats(nu) === cats(implicite),
     `7. LES RÉFÉRENCES aussi — l'acteur IMPLICITE annonce [${cats(implicite)}] et l'acteur DÉCLARÉ `
     + `NU annonce [${cats(nu)}]. Les deux chemins doivent annoncer la même chose : ce qu'un acteur `
@@ -117,11 +117,11 @@ for (const c of CLES) {
 }
 
 // ── LE CAS QUI A COÛTÉ LE SIGNALEMENT — une scène sans AUCUNE directive de sortie ────────────
-// Le socle @core porte le défaut (`defaults.components.transport`), et il doit atteindre l'acteur
+// Le socle core porte le défaut (`defaults.components.transport`), et il doit atteindre l'acteur
 // déclaré comme il atteint l'implicite. C'est la forme exacte des quatre scènes muettes.
 {
-  const S = '@core\n@alphabet.western\n';
-  const a = acteur(`${S}@actor tempere\n  tuning.western_12TET\nS -> tempere.C4`, 'tempere');
+  const S = 'core\nalphabet.western\n';
+  const a = acteur(`${S}actor tempere\n  tuning.western_12TET\n-----\nS -> tempere.C4`, 'tempere');
   ok(a.properties?.transport?.key === 'audio',
     `4. LE CAS MESURÉ — un acteur qui n'écrit QUE son accordage doit recevoir la sortie du socle : `
     + `reçu ${JSON.stringify(a.properties?.transport)}. C'est cette absence qui rendait quatre `
@@ -131,8 +131,8 @@ for (const c of CLES) {
 // ── DEUX ACTEURS, DEUX HÉRITAGES INDÉPENDANTS ────────────────────────────────────────────────
 // Un pliage écrit sur l'objet partagé au lieu de chaque acteur passerait tout ce qui précède.
 {
-  const src = '@core\n@alphabet.western\n@out.midi(ch:2)\n'
-            + '@actor suit\n@actor propre\n  out.audio\nS -> suit.C4 propre.E4';
+  const src = 'core\nalphabet.western\nout.midi(ch:2)\n'
+            + 'actor suit\nactor propre\n  out.audio\n-----\nS -> suit.C4 propre.E4';
   ok(acteur(src, 'suit').properties?.transport?.key === 'midi',
     "5. deux acteurs — celui qui n'écrit rien garde la sortie de la scène");
   ok(acteur(src, 'propre').properties?.transport?.key === 'audio',
@@ -142,7 +142,7 @@ for (const c of CLES) {
 // ── TÉMOIN D'INSTRUMENT ───────────────────────────────────────────────────────────────────────
 // Sans lui, un pliage devenu constant (posant 'audio' partout) rendrait tout le fichier vert.
 {
-  const a = acteur('@core\n@alphabet.western\n@out.midi(ch:9)\n@actor nu\nS -> nu.C4', 'nu');
+  const a = acteur('core\nalphabet.western\nout.midi(ch:9)\nactor nu\n-----\nS -> nu.C4', 'nu');
   ok(a.properties?.transport?.key === 'midi' && a.properties?.transport?.params?.ch === 9,
     `6. TÉMOIN — la sortie héritée porte AUSSI ses réglages : reçu `
     + `${JSON.stringify(a.properties?.transport)}. Un pliage constant serait invisible sans ça.`);

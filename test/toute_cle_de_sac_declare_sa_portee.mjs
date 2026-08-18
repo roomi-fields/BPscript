@@ -153,7 +153,7 @@ for (const { source, nom, def } of CLES) {
 //     graphie cassait deux canons — `!(cont:slide)` inversait le sujet et la valeur, et
 //     `!(value:slide 101)` cachait le sujet DANS la valeur. La forme canonique met le PARAMÈTRE en
 //     clé et lui COLLE son mode (`!(slide:101)`, `!(slidecont)`), la même construction que les
-//     vingt-sept mots ; le paramètre se déclare par `@var <nom> signal`. Ces trois clés ne sont donc
+//     vingt-sept mots ; le paramètre se déclare par `var <nom> signal`. Ces trois clés ne sont donc
 //     plus des contrôles de librairie : le nom vient de la SCÈNE.
 //   expression 6 → 8, transpo 6 → 5, engine 22 → 21 : `articulcont` et `transposecont` DEPLACES le
 //     2026-08-13 vers expression. Arbitrage Romain : « les continus partent aux RUNTIMES, sans

@@ -29,7 +29,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const EN_TETE = '@core\n@alphabet.western:midi\n@var sync1 in.midi\n';
+const EN_TETE = 'core\nalphabet.western:midi\nin.midi sync1\n';
 // `ast.vars` porte la DIRECTIVE ENTIÈRE (`VarDirective`, AST.md:119-150) depuis le 2026-08-05 —
 // une ligne peut nommer PLUSIEURS variables (`names`). On aplatit pour les témoins qui ne
 // vérifient que la PRÉSENCE d'un nom.
@@ -57,9 +57,9 @@ const toutesLesFeuilles = (ast) => {
 
 // ─── 1. LA GRAPHIE — telle que validée, et rien de plus ──────────────────────────────────────
 for (const [corps, quoi, attendus] of [
-  ['@var v8\n@mode:ord\nS -> C4 v8', 'un symbole seul', ['v8']],
-  ['@var a, b, c\n@mode:ord\nS -> C4 a b c', 'une liste séparée par des virgules', ['a', 'b', 'c']],
-  ['@var a\n@var b\n@mode:ord\nS -> C4 a b', "deux lignes qui S'ACCUMULENT (elles ne se remplacent pas)", ['a', 'b']],
+  ['symbol v8\nmode:ord\n-----\nS -> C4 v8', 'un symbole seul', ['v8']],
+  ['symbol a, b, c\nmode:ord\n-----\nS -> C4 a b c', 'une liste séparée par des virgules', ['a', 'b', 'c']],
+  ['symbol a\nsymbol b\nmode:ord\n-----\nS -> C4 a b', "deux lignes qui S'ACCUMULENT (elles ne se remplacent pas)", ['a', 'b']],
 ]) {
   const r = compile(corps);
   ok((r.errors || []).length === 0,
@@ -70,21 +70,21 @@ for (const [corps, quoi, attendus] of [
 }
 // Pas de deux-points : on ÉNUMÈRE, on n'affecte pas. La forme fautive ne doit pas se glisser.
 {
-  const r = compile('@var: a\n@mode:ord\nS -> C4 a');
-  ok((r.errors || []).length > 0, "1. '@var:' doit être refusé — le deux-points AFFECTE, ici on énumère");
+  const r = compile('var: a\nmode:ord\n-----\nS -> C4 a');
+  ok((r.errors || []).length > 0, "1. 'var:' doit être refusé — le deux-points AFFECTE, ici on énumère");
 }
 {
-  const r = compile('@var\n@mode:ord\nS -> C4');
+  const r = compile('var\nmode:ord\n-----\nS -> C4');
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-  ok((r.errors || []).length > 0, '1. un @var sans nom doit être refusé');
-  ok(msg.includes('@var'), `1. et le refus doit NOMMER la directive et donner la forme — reçu : ${msg.slice(0, 110)}`);
+  ok((r.errors || []).length > 0, '1. un var sans nom doit être refusé');
+  ok(msg.includes('var'), `1. et le refus doit NOMMER la directive et donner la forme — reçu : ${msg.slice(0, 110)}`);
 }
 
 // ─── 2. LA PORTE NE DÉSARME PAS LE MUR ───────────────────────────────────────────────────────
 // Le point de bascule de la voie retenue : ce qui n'est déclaré NULLE PART crie toujours.
 {
-  const r = compile('@var a\n@mode:ord\nS -> C4 a zzzz9');
-  ok((r.errors || []).length > 0, "2. un symbole NON déclaré doit toujours CRIER, même quand la scène porte un @var");
+  const r = compile('symbol a\nmode:ord\n-----\nS -> C4 a zzzz9');
+  ok((r.errors || []).length > 0, "2. un symbole NON déclaré doit toujours CRIER, même quand la scène porte un var");
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok(msg.includes('zzzz9') && !msg.includes("'a'"),
      `2. et le refus vise la coquille, PAS la variable déclarée — reçu : ${msg.slice(0, 120)}`);
@@ -96,18 +96,18 @@ for (const [corps, quoi, attendus] of [
 // accordée, groupée, qualifiée, étiquetée, durée, ou vivre dans une autre sous-grammaire — et la
 // forme dérivée perd volontiers ce que la forme nue porte (payé sur l'attente ancrée le 25).
 for (const [corps, quoi] of [
-  ['@var a\n@mode:ord\nS -> a C4', 'nue au fil de la règle'],
-  ['@var a\n@mode:ord\nS -> a~ C4', 'LIÉE — le nom vit dans un autre champ'],
-  ['@var a\n@mode:ord\nS -> a~ ~a C4', 'liée des deux côtés'],
-  ['@var a\n@mode:ord\nS -> a<!sync1 C4', 'ANCRÉE à un point d\'attente'],
-  ['@var a\n@mode:ord\nS -> C4!a', 'SECONDAIRE d\'un événement simultané'],
-  ['@var a\n@mode:ord\nS -> a!C4', 'PRIMAIRE d\'un événement simultané'],
-  ['@var a\n@mode:ord\nS -> {C4 a}', 'dans un groupe polymétrique'],
-  ['@var a\n@mode:ord\nS -> a(vel:80) C4', 'porteuse d\'une annotation runtime'],
-  ['@var a\n@mode:ord\nS -> groove:{C4 a, D4}', 'dans un groupe étiqueté'],
-  ['@var a\n@mode:ord\nS -> a:2 C4', 'porteuse d\'une durée'],
-  ['@var a\n@mode:ord\nS -> a a a', 'répétée'],
-  ['@var a\n@mode:ord\nS -> C4\n-----\n@mode:ord\nT -> a', 'dans une AUTRE sous-grammaire'],
+  ['symbol a\nmode:ord\n-----\nS -> a C4', 'nue au fil de la règle'],
+  ['symbol a\nmode:ord\n-----\nS -> a~ C4', 'LIÉE — le nom vit dans un autre champ'],
+  ['symbol a\nmode:ord\n-----\nS -> a~ ~a C4', 'liée des deux côtés'],
+  ['symbol a\nmode:ord\n-----\nS -> a<!sync1 C4', 'ANCRÉE à un point d\'attente'],
+  ['symbol a\nmode:ord\n-----\nS -> C4!a', 'SECONDAIRE d\'un événement simultané'],
+  ['symbol a\nmode:ord\n-----\nS -> a!C4', 'PRIMAIRE d\'un événement simultané'],
+  ['symbol a\nmode:ord\n-----\nS -> {C4 a}', 'dans un groupe polymétrique'],
+  ['symbol a\nmode:ord\n-----\nS -> a(vel:80) C4', 'porteuse d\'une annotation runtime'],
+  ['symbol a\nmode:ord\n-----\nS -> groove:{C4 a, D4}', 'dans un groupe étiqueté'],
+  ['symbol a\nmode:ord\n-----\nS -> a:2 C4', 'porteuse d\'une durée'],
+  ['symbol a\nmode:ord\n-----\nS -> a a a', 'répétée'],
+  ['symbol a\nmode:ord\n-----\nS -> C4\n-----\nmode:ord\nT -> a', 'dans une AUTRE sous-grammaire'],
 ]) {
   const r = compile(corps);
   ok((r.errors || []).length === 0,
@@ -127,7 +127,7 @@ for (const [corps, quoi] of [
 
 // ─── 4. Une note reste une NOTE — on n'a pas déteint sur le voisinage ────────────────────────
 {
-  const r = compile('@var a\n@mode:ord\nS -> C4 a D4~ E4!F4');
+  const r = compile('symbol a\nmode:ord\n-----\nS -> C4 a D4~ E4!F4');
   const notes = toutesLesFeuilles(r.ast).filter((f) => f.nom !== 'a');
   ok(notes.length >= 4, `4. les notes voisines doivent toutes arriver — ${notes.length} trouvée(s)`);
   ok(notes.every((f) => f.nature === 'sounding'),
@@ -137,7 +137,7 @@ for (const [corps, quoi] of [
 // ─── 5. Le nom d'une variable APPARTIENT à la scène ──────────────────────────────────────────
 // Même règle que pour une macro : le plus local gagne, et un mot du vocabulaire ne le confisque pas.
 {
-  const r = compile('@var mute\n@mode:ord\nS -> C4 mute D4');
+  const r = compile('symbol mute\nmode:ord\n-----\nS -> C4 mute D4');
   ok((r.errors || []).length === 0,
      `5. une variable homonyme d'un mot du vocabulaire doit passer — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   const vues = toutesLesFeuilles(r.ast).filter((f) => f.nom === 'mute');
@@ -150,5 +150,5 @@ if (echecs.length) {
   for (const e of echecs) console.error(`   - ${e}`);
   process.exitCode = 1;
 } else {
-  console.log(`✅ variables de travail @var — ${passe} vérification(s) passée(s)`);
+  console.log(`✅ variables de travail var — ${passe} vérification(s) passée(s)`);
 }

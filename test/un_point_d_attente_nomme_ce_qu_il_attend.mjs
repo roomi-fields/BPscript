@@ -34,7 +34,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const T = '@core\n@alphabet.western\n';
+const T = 'core\nalphabet.western\n';
 const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
@@ -50,7 +50,7 @@ const GRAPHIES = [
   ['adressée',   'S -> C4 <!depart.60 D4'],
 ];
 for (const [quoi, ligne] of GRAPHIES) {
-  const m = refus(`${T}${ligne}\n`);
+  const m = refus(`${T}-----\n${ligne}\n`);
   ok(m.length > 0, `1. la graphie ${quoi} non déclarée doit être REFUSÉE`);
   ok(m.length > 0 && /depart/.test(m[0].message),
      `1. et le refus doit NOMMER le nom attendu — reçu : ${m[0] && m[0].message.slice(0, 90)}`);
@@ -60,14 +60,14 @@ for (const [quoi, ligne] of GRAPHIES) {
 // Le complément, et c'est la moitié qu'on casse : un refus trop large refuserait aussi la forme
 // juste, et les six vérifications ci-dessus resteraient vertes.
 for (const [quoi, ligne] of GRAPHIES) {
-  ok(erreursDe(`${T}@var depart in.midi\n${ligne}\n`).length === 0,
+  ok(erreursDe(`${T}in.midi depart\n-----\n${ligne}\n`).length === 0,
      `2. la graphie ${quoi} DÉCLARÉE doit compiler — reçu : `
-     + `${erreursDe(`${T}@var depart in.midi\n${ligne}\n`).map((e) => e.message).join(' | ').slice(0, 90)}`);
+     + `${erreursDe(`${T}in.midi depart\n-----\n${ligne}\n`).map((e) => e.message).join(' | ').slice(0, 90)}`);
 }
 
 // ── 3. LA COQUILLE — le cas qui motive tout le geste ────────────────────────────────────────
 {
-  const m = refus(`${T}@var depart in.midi\nS -> C4 <!depatr D4\n`);
+  const m = refus(`${T}in.midi depart\n-----\nS -> C4 <!depatr D4\n`);
   ok(m.length > 0 && /depatr/.test(m[0].message),
      `3. une COQUILLE sur un nom déclaré doit être refusée en nommant le nom FAUTIF, pas le juste `
      + `— c'est elle qui fabriquait une seconde attente que rien ne satisfait`);
@@ -77,11 +77,11 @@ for (const [quoi, ligne] of GRAPHIES) {
 // ⚠️ CE VOLET NE DÉFEND PAS LA DÉFINITION LARGE, IL LA REND VISIBLE. Si Romain la resserre à la
 // seule entrée, ces trois lignes rougissent et disent exactement ce qui change.
 for (const [quoi, declaration] of [
-  ["une ENTRÉE",              '@var depart in.midi'],
-  ["une variable de travail", '@var depart'],
-  ["un acteur",               '@actor depart\n  alphabet.western\n  out.midi'],
+  ["une ENTRÉE",              'in.midi depart'],
+  ["une variable de travail", 'symbol depart'],
+  ["un acteur",               'actor depart\n  alphabet.western\n  out.midi'],
 ]) {
-  ok(erreursDe(`${T}${declaration}\nS -> C4 <!depart D4\n`).length === 0,
+  ok(erreursDe(`${T}${declaration}\n-----\nS -> C4 <!depart D4\n`).length === 0,
      `4. la définition LARGE accepte ${quoi} — si ce volet rougit, la définition a été resserrée, `
      + `et c'est peut-être voulu : relire avant de réparer`);
 }
@@ -91,10 +91,10 @@ for (const [quoi, declaration] of [
 // déclenché par une infinité de choses. » La DÉCLARATION dit d'où ça vient, la QUALIFICATION dit
 // quoi exactement : ce sont deux questions, pas deux formes rivales.
 for (const [quoi, src] of [
-  ['le rôle seul',        `${T}@var sync1 in.midi\nS -> C4 <!sync1 D4\n`],
-  ['le rôle adressé',     `${T}@var sync1 in.midi\nS -> C4 <!sync1.60 D4\n`],
-  ['la direction, pleinement qualifiée', '@core\nS -> C4 <!in.midi(note:60, channel:3)\n'],
-  ['la direction, nue',   '@core\nS -> C4 <!in.midi\n'],
+  ['le rôle seul',        `${T}in.midi sync1\n-----\nS -> C4 <!sync1 D4\n`],
+  ['le rôle adressé',     `${T}in.midi sync1\n-----\nS -> C4 <!sync1.60 D4\n`],
+  ['la direction, pleinement qualifiée', 'core\n-----\nS -> C4 <!in.midi(note:60, channel:3)\n'],
+  ['la direction, nue',   'core\n-----\nS -> C4 <!in.midi\n'],
 ]) {
   ok(erreursDe(src).length === 0,
      `4bis. ${quoi} doit compiler — reçu : ${erreursDe(src).map((e) => e.message).join(' | ').slice(0, 90)}`);
@@ -103,7 +103,7 @@ for (const [quoi, src] of [
 // direction. `transport` est sorti du langage le 2026-08-04 ; sa légende parle encore de direction,
 // et une dérivation par cette légende l'aurait exempté. Le catalogue des canaux, lui, ne décrit que
 // ce qui existe — ce volet tient ce choix de dérivation.
-ok(refus(`${T}S -> C4 <!transport D4\n`).length > 0,
+ok(refus(`${T}-----\nS -> C4 <!transport D4\n`).length > 0,
    "4bis. un mot RETIRÉ du langage n'est pas une direction : '<!transport' doit être refusé");
 
 // ── 4ter. RIEN NE S'INTERCALE ENTRE LE SIGNE ET SA RACINE ───────────────────────────────────
@@ -111,8 +111,8 @@ ok(refus(`${T}S -> C4 <!transport D4\n`).length > 0,
 // Les deux graphies compilaient et rendaient le MÊME arbre — deux écritures pour une chose, dans un
 // langage où l'espace SÉPARE deux termes. Mesuré avant le refus : zéro scène du périmètre l'écrit.
 for (const [quoi, src] of [
-  ['un rôle',      `${T}@var sync1 in.midi\nS -> C4 <! sync1 D4\n`],
-  ['une direction', '@core\nS -> C4 <! in.midi(note:60)\n'],
+  ['un rôle',      `${T}in.midi sync1\n-----\nS -> C4 <! sync1 D4\n`],
+  ['une direction', 'core\n-----\nS -> C4 <! in.midi(note:60)\n'],
 ]) {
   const m = erreursDe(src).filter((e) => /rien ne s'intercale/.test(String(e.message)));
   ok(m.length > 0, `4ter. l'espace après '<!' devant ${quoi} doit être REFUSÉ`);
@@ -120,17 +120,17 @@ for (const [quoi, src] of [
 
 // ── 5. LE COMPLÉMENT — une scène sans point d'attente n'est pas touchée ─────────────────────
 for (const [quoi, src] of [
-  ['une scène ordinaire',        `${T}S -> C4 D4 E4\n`],
-  ['une entrée déclarée non employée', `${T}@var depart in.midi\nS -> C4 D4\n`],
+  ['une scène ordinaire',        `${T}-----\nS -> C4 D4 E4\n`],
+  ['une entrée déclarée non employée', `${T}in.midi depart\n-----\nS -> C4 D4\n`],
 ]) {
   ok(erreursDe(src).length === 0, `5. ${quoi} doit compiler`);
 }
 
 // ── 6. À L'ARRIVÉE — le nœud porte le nom déclaré ───────────────────────────────────────────
-// « Compile » n'est pas « désigne » : c'est la leçon du retrait d'`@alias`, où une déclaration
+// « Compile » n'est pas « désigne » : c'est la leçon du retrait d'`alias`, où une déclaration
 // compilait de bout en bout sans que l'arbre en porte la moindre trace.
 {
-  const r = compileToBPxAST(`${T}@var depart in.midi\nS -> C4 <!depart.60 D4\n`);
+  const r = compileToBPxAST(`${T}in.midi depart\n-----\nS -> C4 <!depart.60 D4\n`);
   const attentes = [];
   (function marcher(n) {
     if (!n || typeof n !== 'object') return;

@@ -3,7 +3,7 @@
  * LE MODE VAUT POUR UN BLOC, ET IL NE CHANGE PAS EN COURS DE TIRAGE.
  *
  * DÉCISION DE ROMAIN, 2026-08-08 : « on ne change pas de mode en cours de tirage, on supprime cette
- * partie ». Le mode s'écrit `@mode:<valeur>` en tête de sous-grammaire — une ligne seule, avant ses
+ * partie ». Le mode s'écrit `mode:<valeur>` en tête de sous-grammaire — une ligne seule, avant ses
  * règles — et nulle part ailleurs.
  *
  * ⚠️ CE QUE CETTE DÉCISION A COÛTÉ À ÉTABLIR, ET LA LEÇON EST SUR LES RÉFÉRENCES. La spécification
@@ -35,7 +35,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const P = '@core\n@alphabet.western\n';
+const P = 'core\nalphabet.western\n-----\n';
 const compiler = (s) => {
   try { return compileToBPxAST(P + s); } catch (e) { return { errors: [{ message: e.message }] }; }
 };
@@ -48,7 +48,7 @@ const POSITIONS = [
   ['posé dans le flux',       'S -> !(mode:random) C4\n'],
   ['collé à une note',        'S -> C4(mode:random) D4\n'],
   ['collé à un groupe',       'S -> {C4 D4}(mode:random)\n'],
-  ['collé à une fermante',    'S -> A B\nA -> { C4\nB -> D4 }(mode:random)\n'],
+  ['collé à une fermante',    'S -> A B\n-----\nA -> { C4\nB -> D4 }(mode:random)\n'],
   ['collé à un silence',      'S -> C4 -(mode:random) D4\n'],
   // ⚠️ LES DEUX SIGNES. Mon premier refus ne visait que les parenthèses ; mesuré dans la foulée,
   // `S -> C4 [mode:random]` PASSAIT — refusé la minute d'avant, accepté après mon correctif,
@@ -66,18 +66,18 @@ const POSITIONS = [
 ];
 for (const [quoi, src] of POSITIONS) {
   const msg = messages(compiler(src));
-  ok(/n'a plus sa place|@mode/.test(msg),
+  ok(/n'a plus sa place|mode/.test(msg),
      `A. ${quoi} — '(mode:…)' doit être REFUSÉ et ne l'est pas (${msg.slice(0, 70) || 'aucune erreur'}). `
      + `Une garde écrite pour la seule position du ticket laisse vivre les cinq autres.`);
-  ok(/@mode:/.test(msg),
-     `A. ${quoi} — le refus doit donner la RÉÉCRITURE ('@mode:…' en tête de sous-grammaire). `
+  ok(/mode:/.test(msg),
+     `A. ${quoi} — le refus doit donner la RÉÉCRITURE ('mode:…' en tête de sous-grammaire). `
      + `Un refus qui ne dit pas quoi écrire à la place envoie l'auteur dans un mur.`);
 }
 
 // ── B. TÉMOIN QUI MORD — la forme VIVANTE passe, et les autres réglages aussi ────────────────
 // ⚠️ Sans cette moitié, un compilateur qui refuserait tout sac passerait le volet A en triomphe.
 for (const [quoi, src] of [
-  ['@mode en tête de sous-grammaire',   '@mode:random\nS -> C4 D4\n'],
+  ['mode en tête de sous-grammaire',   'mode:random\n-----\nS -> C4 D4\n'],
   ['un autre réglage en fin de règle',  'S -> C4 D4 (weight:50)\n'],
   ['un autre réglage dans le flux',     'S -> !(vel:80) C4\n'],
   ['un autre réglage collé à une note', 'S -> C4(vel:80) D4\n'],

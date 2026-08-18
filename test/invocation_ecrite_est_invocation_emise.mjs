@@ -44,7 +44,7 @@ const { bps: nbCorpus } = exigerCorpus();
 ok(nbCorpus > 40, `1. le corpus doit fournir de quoi mesurer — ${nbCorpus} scène(s)`);
 
 // ─── 2. Écrites contre émises, scène par scène ───────────────────────────────────────────────
-const RE_INVOCATION = /^@([a-z_][a-z0-9_]*)\.([A-Za-z0-9_.-]+)/gm;
+const RE_INVOCATION = /^([a-z_][a-z0-9_]*)\.([A-Za-z0-9_.-]+)/gm;
 const cle = (p) => `${p.scene}::${p.adresse}`;
 const connues = new Set(PERTES_CONNUES.map(cle));
 
@@ -63,8 +63,8 @@ for (const nom of nomsBps()) {
     const axe = m[1];
     ecrites++;
     if (AXES_HAUTEUR.has(axe)) continue;             // autre porteur, cf. l'en-tête
-    // ⚠️ `@factory.` EST UN SUCRE NORMALISÉ AU NOM NU — contrat bpscript-bpx.md, et le parseur le
-    // documente : « nom nu et `@factory.` confondus AVANT émission ». Seul `mine.` reste préfixé,
+    // ⚠️ `factory.` EST UN SUCRE NORMALISÉ AU NOM NU — contrat bpscript-bpx.md, et le parseur le
+    // documente : « nom nu et `factory.` confondus AVANT émission ». Seul `mine.` reste préfixé,
     // parce que c'est LUI qui porte une information : la librairie personnelle de l'auteur, injectée
     // par l'hôte. `factory` est la provenance par DÉFAUT, donc implicite.
     // ⛔ CE GARDE L IGNORAIT et cherchait l'adresse préfixée : il déclarait « écrit et rien ne sort »

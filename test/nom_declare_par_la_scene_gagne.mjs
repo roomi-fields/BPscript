@@ -73,7 +73,7 @@ ok(SAC_SEUL.length >= 3 && AVEC_FORME_NUE.length >= 10,
 
 // ─── 2. Le mot QUI A une forme nue la garde — le corpus l'écrit ainsi, rien ne bouge ─────────
 for (const mot of AVEC_FORME_NUE) {
-  const o = compileToBPxAST(`@core\n@alphabet.simple\n@mode:ord\nS -> a ${mot} b\n`);
+  const o = compileToBPxAST(`core\nalphabet.simple\nmode:ord\n-----\nS -> a ${mot} b\n`);
   const r = regleDe(o);
   ok(r[1]?.type === 'Control' && r[1]?.name === mot,
      `2. '${mot}' sans déclaration locale reste un contrôle — reçu : ${JSON.stringify(r.map((e) => e.type))}`);
@@ -84,7 +84,7 @@ for (const mot of AVEC_FORME_NUE) {
 // doit refuser, pas disparaître ». Le refus NOMME la faute et donne la réécriture ; constater
 // sans réécrire laisserait l'auteur deviner.
 for (const mot of SAC_SEUL) {
-  const nu = compileToBPxAST(`@core\n@alphabet.simple\n@mode:ord\nS -> a ${mot} b\n`);
+  const nu = compileToBPxAST(`core\nalphabet.simple\nmode:ord\n-----\nS -> a ${mot} b\n`);
   const msg = (nu.errors || []).map((e) => e.message || e).join(' | ');
   ok((nu.errors || []).length > 0, `2bis. '${mot}' nu dans le flux doit REFUSER, pas disparaître`);
   ok(msg.includes(`!(${mot})`), `2bis. le refus de '${mot}' doit donner la RÉÉCRITURE — reçu : ${msg.slice(0, 110)}`);
@@ -94,8 +94,8 @@ for (const mot of SAC_SEUL) {
   // `panic` sont des GESTES : ils arrivent à un instant et ne valent QUE dans le flux. Le collé
   // n'est donc plus une place légitime, et le mot n'y est pas perdu — il est refusé en nommant
   // sa place. La propriété que ce volet garde est intacte : le mot n'a pas disparu, il a un sac.
-  for (const forme of [`@alphabet.simple\nS -> a !(${mot}) b`]) {
-    const o = compileToBPxAST(`@core\n@mode:ord\n${forme}\n`);
+  for (const forme of [`alphabet.simple\n-----\nS -> a !(${mot}) b`]) {
+    const o = compileToBPxAST(`core\nmode:ord\n${forme}\n`);
     ok((o.errors || []).length === 0,
        `2bis. '${forme}' doit rester valide — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
   }
@@ -104,11 +104,11 @@ for (const mot of SAC_SEUL) {
 // ─── 3. AVEC déclaration locale, la scène gagne — sur les SEIZE, pas sur le mot du ticket ────
 for (const mot of SANS_ARGUMENT) {
   const avert = [];
-  const o = compileToBPxAST(`@core\n@alphabet.simple\n@def ${mot} drum.on\n@mode:ord\nS -> a ${mot} b\n`,
+  const o = compileToBPxAST(`core\nalphabet.simple\ndef ${mot} drum.on\nmode:ord\n-----\nS -> a ${mot} b\n`,
                             { onWarning: (w) => avert.push(w) });
   const r = regleDe(o);
   ok((o.errors || []).length === 0,
-     `3. '@def ${mot}' doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
+     `3. 'def ${mot}' doit compiler — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
   ok(r.length === 3,
      `3. '${mot}' déclaré par la scène ne doit PAS être avalé — ${r.length} mot(s) sur 3 dans la règle`);
   ok(r[1]?.type === 'Symbol' && r[1]?.name === mot,
@@ -125,7 +125,7 @@ for (const mot of SANS_ARGUMENT) {
 // ⛔ VOLET SUSPENDU le 2026-08-09 — LE TEMOIN HISTORIQUE NE COMPILE PLUS.
 // C est la scene qui a fait naitre ce garde : Kairos y comptait six mots la ou elle en ecrit sept,
 // parce qu un mot du vocabulaire avalait un nom qu elle declarait. Elle declare ses sept mots avec
-// des macros de CABLAGE, et `@macro` est supprime du langage — elle est inscrite au registre des
+// des macros de CABLAGE, et `macro` est supprime du langage — elle est inscrite au registre des
 // refus, en attente de la revue du patching.
 // ⚠️ CE QUE CE VOLET AVAIT D IRREMPLAÇABLE : il mesurait la DEMO ELLE-MEME, telle qu elle vit dans
 // le depot, et non une reduction du cas. C est ce qui avait attrape le defaut a l epoque — les
@@ -149,7 +149,7 @@ if (VOLET_4_ACTIF) {
 // Sinon la cascade coûterait le mot au lieu de le partager : deux positions syntaxiques, deux
 // sens, aucun conflit.
 {
-  const o = compileToBPxAST('@core\n@alphabet.simple\n@def mute drum.on\n@mode:ord\nS -> a !(mute) b\n');
+  const o = compileToBPxAST('core\nalphabet.simple\ndef mute drum.on\nmode:ord\n-----\nS -> a !(mute) b\n');
   ok((o.errors || []).length === 0,
      `5. '!(mute)' doit rester valide malgré la macro homonyme — reçu : ${(o.errors || []).map((e) => e.message || e).join(' | ')}`);
 }

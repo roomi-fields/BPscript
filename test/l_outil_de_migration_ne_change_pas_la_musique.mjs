@@ -32,12 +32,12 @@ if (!await chargerMoteur()) {
 // ── 1. TROUVER, ET NE PAS INVENTER ───────────────────────────────────────────
 // L'espace : la convention active × ce à quoi le nom ressemble.
 const DETECTION = [
-  ['occidental, tête nommée comme une note',      '@core\n@alphabet.western\nG4 -> C4 D4', 1],
-  ['sargam, tête nommée comme une note',          '@core\n@alphabet.sargam\nsa -> re ga', 1],
-  ['occidental, tête d\'allure SARGAM',           '@core\n@alphabet.western\npa1 -> C4 D4', 0],
-  ['sargam, tête d\'allure OCCIDENTALE',          '@core\n@alphabet.sargam\nG4 -> sa re', 0],
-  ['occidental, tête sans rapport',               '@core\n@alphabet.western\nmotif -> C4 D4', 0],
-  ['définition nommée comme une note',           '@core\n@alphabet.western\n@def C4 D4 E4\nS -> D4', 1],
+  ['occidental, tête nommée comme une note',      'core\nalphabet.western\n-----\nG4 -> C4 D4', 1],
+  ['sargam, tête nommée comme une note',          'core\nalphabet.sargam\n-----\nsa -> re ga', 1],
+  ['occidental, tête d\'allure SARGAM',           'core\nalphabet.western\n-----\npa1 -> C4 D4', 0],
+  ['sargam, tête d\'allure OCCIDENTALE',          'core\nalphabet.sargam\n-----\nG4 -> sa re', 0],
+  ['occidental, tête sans rapport',               'core\nalphabet.western\n-----\nmotif -> C4 D4', 0],
+  ['définition nommée comme une note',           'core\nalphabet.western\ndef C4 D4 E4\n-----\nS -> D4', 1],
 ];
 console.log(`[outil migration] détection : ${DETECTION.length} cas`);
 for (const [nom, src, attendu] of DETECTION) {
@@ -87,8 +87,8 @@ const BACKTICKS = [
   // CITATION de la grammaire native se mette à suivre nos renommages. Une citation qui change
   // avec nous n'est plus une citation, elle devient un faux témoin — et c'est justement sur ces
   // conversions que la comparaison au natif doit rester lisible.
-  ['un commentaire n\'est pas touché',   '// D est la tête\nD -> C4',  'D', 'D_r', '// D est la tête\nD_r -> C4'],
-  ['une citation du natif est intacte',  '// natif : D --> C4\nD -> C4', 'D', 'D_r', '// natif : D --> C4\nD_r -> C4'],
+  ['un commentaire n\'est pas touché',   '// D est la tête\n-----\nD -> C4',  'D', 'D_r', '// D est la tête\n-----\nD_r -> C4'],
+  ['une citation du natif est intacte',  '// natif : D --> C4\n-----\nD -> C4', 'D', 'D_r', '// natif : D --> C4\n-----\nD_r -> C4'],
   ['un commentaire en fin de ligne',     'D -> C4   // D ici\n',        'D', 'D_r', 'D_r -> C4   // D ici\n'],
 ];
 console.log(`[outil migration] backticks : ${BACKTICKS.length} cas`);
@@ -101,7 +101,7 @@ for (const [nom, avant, de, vers, attendu] of BACKTICKS) {
 // Une scène où le renommage est sûr doit passer AVEC preuve de production identique ; une scène
 // sans collision ne doit rien changer ; une déclaration qui pose une propriété sur un nom existant
 // ne doit RIEN déclencher.
-const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 A4';
+const SCENE_A_MIGRER = 'core\nalphabet.western\n-----\nS -> A B\nA -> C4 D4\nB -> E4 A4';
 {
   const r = migrerSource(SCENE_A_MIGRER);
   ok(r.ok === true, '3. une scène migrable doit être acceptée');
@@ -114,13 +114,13 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   ok(collisions(compileToBPxAST(r.source).ast).size === 0, '3. zéro collision restante');
 }
 {
-  const r = migrerSource('@core\n@alphabet.western\nS -> motif\nmotif -> C4 D4');
+  const r = migrerSource('core\nalphabet.western\n-----\nS -> motif\nmotif -> C4 D4');
   ok(r.ok && r.aucunChangement, '3. une scène sans collision ne doit rien changer');
 }
 {
-  // `@gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant — ratifié Romain 2026-07-28. Ce témoin
+  // `gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant — ratifié Romain 2026-07-28. Ce témoin
   // garde la distinction : elle ne crée pas de nom rival, donc l'outil ne doit rien y toucher.
-  const r = migrerSource('@core\n@alphabet.western\n@gate C4:midi\nS -> C4 D4');
+  const r = migrerSource('core\nalphabet.western\ngate C4:midi\n-----\nS -> C4 D4');
   ok(r.ok && r.aucunChangement,
     '3. une déclaration qui pose une PROPRIÉTÉ sur un nom existant ne doit RIEN déclencher');
 }
@@ -174,8 +174,8 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   // redeviendra un candidat quand kanopi l'aura migrée.
   const VOLET_3ANTE_ACTIF = false;
   if (VOLET_3ANTE_ACTIF) {
-    const r = migrerSource('@core\n@alphabet.western\n@mode:random\n'
-      + 'S -> A\nA -> {C4 B4 E4}(shuffle)');
+    const r = migrerSource('core\nalphabet.western\nmode:random\n-----\n'
+      + 'S -> A\n-----\nA -> {C4 B4 E4}(shuffle)');
     ok(r.ok === false, '3ante. la scène indérivable des deux côtés reste REFUSÉE');
     ok(r.referenceIndisponible !== true,
       `3ante. SE TAIT — et elle n'est PAS excusée en « sans référence » (reçu : ${r.motif})`);
@@ -195,9 +195,9 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
 // renommage, y compris celui qui change la pièce.
 {
   const { production } = await import('./migration_noms.mjs');
-  const a1 = production('@core\n@alphabet.western\nS -> C4 D4');
-  const a2 = production('@core\n@alphabet.western\nS -> C4 D4 E4');
-  const a3 = production('@core\n@alphabet.western\nS -> C4 D4');
+  const a1 = production('core\nalphabet.western\n-----\nS -> C4 D4');
+  const a2 = production('core\nalphabet.western\n-----\nS -> C4 D4 E4');
+  const a3 = production('core\nalphabet.western\n-----\nS -> C4 D4');
   ok(!a1.erreur && !a2.erreur, '3bis. les deux productions témoins doivent se dériver');
   ok(a1.jetons !== a2.jetons, '3bis. le comparateur doit VOIR deux pièces différentes');
   ok(a1.jetons === a3.jetons, '3bis. et rendre identiques deux pièces identiques');
@@ -207,8 +207,8 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   // Et la propriété de bout en bout : une source dont la production DIFFÉRERAIT doit être refusée.
   // On la fabrique en renommant à moitié — le cas exact du piège annoncé par l'architecte.
   const { production } = await import('./migration_noms.mjs');
-  const complet = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 A4';
-  const moitie  = '@core\n@alphabet.western\nS -> A_r B\nA -> C4 D4\nB -> E4 A4';  // la tête n'est plus atteinte
+  const complet = 'core\nalphabet.western\n-----\nS -> A B\nA -> C4 D4\nB -> E4 A4';
+  const moitie  = 'core\nalphabet.western\n-----\nS -> A_r B\nA -> C4 D4\nB -> E4 A4';  // la tête n'est plus atteinte
   const p1 = production(complet), p2 = production(moitie);
   ok(p1.jetons !== p2.jetons || !!p2.erreur,
     '3bis. un renommage À MOITIÉ doit se voir — production différente ou scène refusée');
@@ -224,8 +224,8 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
 // Le témoin ci-dessous est le SEUL qui aurait attrapé ça.
 {
   const { production } = await import('./migration_noms.mjs');
-  const avant = '@core\n@alphabet.western\nS -> A#5 C4';
-  const apres = '@core\n@alphabet.western\nS -> B5 C4';     // une NOTE en remplace une autre
+  const avant = 'core\nalphabet.western\n-----\nS -> A#5 C4';
+  const apres = 'core\nalphabet.western\n-----\nS -> B5 C4';     // une NOTE en remplace une autre
   const p1 = production(avant), p2 = production(apres);
   ok(!p1.erreur && !p2.erreur, '3ter. les deux témoins doivent se dériver');
   ok(p1.jetons !== p2.jetons,
@@ -236,16 +236,16 @@ const SCENE_A_MIGRER = '@core\n@alphabet.western\nS -> A B\nA -> C4 D4\nB -> E4 
   // a été un rang (aveugle au renommage cohérent), puis un nom (aveugle aux feuilles qui portent
   // leur note ailleurs — Kanopi a pu remplacer E2 par C7 sans que le verdict bouge). C'est le même
   // défaut deux fois : une empreinte bâtie sur des champs CHOISIS ne vaut que le choix.
-  const h1 = production('@core\n@alphabet.western\nS -> E2 C4');
-  const h2 = production('@core\n@alphabet.western\nS -> C7 C4');
+  const h1 = production('core\nalphabet.western\n-----\nS -> E2 C4');
+  const h2 = production('core\nalphabet.western\n-----\nS -> C7 C4');
   ok(h1.jetons !== h2.jetons, '3ter. remplacer E2 par C7 doit se VOIR — le juge ne choisit plus ses champs');
-  const h3 = production('@core\n@alphabet.western\nS -> E2 C4');
+  const h3 = production('core\nalphabet.western\n-----\nS -> E2 C4');
   ok(h1.jetons === h3.jetons, '3ter. et deux dérivations identiques restent identiques (pas de bruit)');
 }
 {
   // De bout en bout : une scène dont la tête heurte une note, ET qui contient une altération.
   // C'est la forme exacte des scènes cassées chez BPx.
-  const r = migrerSource('@core\n@alphabet.western\nS -> A B\nA -> C4 A#5\nB -> E4 F#2');
+  const r = migrerSource('core\nalphabet.western\n-----\nS -> A B\nA -> C4 A#5\nB -> E4 F#2');
   ok(r.ok === true, '3ter. la scène doit être migrable');
   ok(/A#5/.test(r.source || '') && /F#2/.test(r.source || ''),
     '3ter. les notes altérées doivent être INTACTES — A#5 et F#2 tels quels');
@@ -261,18 +261,18 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // La scène d'essai déclare l'acteur SANS moteur d'évaluation : depuis que l'acteur peut
   // qualifier un bloc par le point, un acteur À moteur rend la source invalide autrement (le bloc
   // n'a plus de langage) et l'outil refuserait pour cette raison-là, pas pour l'amalgame.
-  const AMALGAME = '@core\n@alphabet.western\n@actor drums\n  alphabet.western\n  out.audio\nS -> drums\ndrums -> C4 D4';
+  const AMALGAME = 'core\nalphabet.western\nactor drums\n  alphabet.western\n  out.audio\n-----\nS -> drums\ndrums -> C4 D4';
   const r = migrerSource(AMALGAME);
   ok(r.ok === true, '3quater. une scène à l\'amalgame doit être migrable');
   ok(!/^drums\s*->/m.test(r.source || ''), '3quater. la tête ne porte plus le nom de l\'acteur');
-  ok(/@actor\s+drums/.test(r.source || ''), '3quater. mais l\'ACTEUR garde son nom — c\'est la règle qui cède');
+  ok(/actor\s+drums/.test(r.source || ''), '3quater. mais l\'ACTEUR garde son nom — c\'est la règle qui cède');
   ok(!/^drums\s*->/m.test(r.source || ''), '3quater. et plus aucune règle ne porte le nom de l\'acteur');
   const apres = compileToBPxAST(r.source || '');
   ok(!!apres.ast && apres.errors.length === 0, '3quater. la scène migrée compile sans erreur');
   // Le second geste est-il vraiment indispensable ? On le prouve en ne faisant que le premier.
   // Sur une voix de CODE, renommer la tête seule casse : le bloc perd son langage. C'est pourquoi
   // l'outil pose aussi le tag — et c'est aussi ce qui a motivé la forme `acteur.<bloc>`.
-  const codeTeteSeule = '@core\n@actor d  eval.strudel\nS -> d_r\nd_r -> `note("c3")`';
+  const codeTeteSeule = 'core\nactor d  eval.strudel\n-----\nS -> d_r\nd_r -> `note("c3")`';
   ok((compileToBPxAST(codeTeteSeule).errors || []).length >= 1,
     '3quater. sur une voix de code, renommer la TÊTE SEULE casse — d\'où le tag');
   // ⚠️ CE TÉMOIN A ÉTÉ RETOURNÉ, ET LA DISTINCTION MÉRITE D'ÊTRE GARDÉE. Kanopi avait raison :
@@ -282,11 +282,11 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // L'outil doit donc migrer tout ce que la règle refuse, sinon il migre MOINS qu'elle ne refuse
   // et la différence tombe sur l'auteur, sans outil pour l'aider.
   // Ici : on renomme, et on ne pose AUCUN tag — il n'y a pas de code à qualifier.
-  const sansEval = '@core\n@alphabet.western\n@actor v\n  alphabet.western\n  out.audio\nS -> v\nv -> C4 D4';
+  const sansEval = 'core\nalphabet.western\nactor v\n  alphabet.western\n  out.audio\n-----\nS -> v\nv -> C4 D4';
   const r2 = migrerSource(sansEval);
   ok(r2.ok && !r2.aucunChangement, '3quater. un acteur SANS moteur est migré aussi (la règle le refuse)');
   ok(!/`/.test(r2.source || ''), '3quater. et AUCUN tag n\'y est posé — il n\'y a pas de code');
-  ok(/@actor v/.test(r2.source || ''), '3quater. l\'acteur y garde également son nom');
+  ok(/actor v/.test(r2.source || ''), '3quater. l\'acteur y garde également son nom');
 }
 {
   // ⚠️ LE POINT QUE L'ARCHITECTE A DEMANDÉ DE SOIGNER, dans les DEUX SENS. L'identifiant généré du
@@ -296,13 +296,13 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   const { production } = await import('./migration_noms.mjs');
   // Les deux écritures VIVANTES du même bloc : l'acteur qui qualifie, et le tag. Elles ne
   // diffèrent que par l'identifiant généré — c'est lui qu'on neutralise.
-  const avant = production('@core\n@actor d  eval.strudel\nS -> voix\nvoix -> d.`note("c3")`');
-  const apres = production('@core\n@actor d  eval.strudel\nS -> voix\nvoix -> `strudel: note("c3")`');
+  const avant = production('core\nactor d  eval.strudel\n-----\nS -> voix\nvoix -> d.`note("c3")`');
+  const apres = production('core\nactor d  eval.strudel\n-----\nS -> voix\nvoix -> `strudel: note("c3")`');
   ok(!avant.erreur && !apres.erreur, '3quater. les deux témoins doivent se dériver');
   ok(avant.jetons === apres.jetons,
     '3quater. l\'identifiant généré est NEUTRALISÉ — la migration ne change pas la production');
-  const h1 = production('@core\n@alphabet.western\nS -> E2 C4');
-  const h2 = production('@core\n@alphabet.western\nS -> C7 C4');
+  const h1 = production('core\nalphabet.western\n-----\nS -> E2 C4');
+  const h2 = production('core\nalphabet.western\n-----\nS -> C7 C4');
   ok(h1.jetons !== h2.jetons,
     '3quater. ET une HAUTEUR qui change reste VUE — la neutralisation n\'a pas aveuglé la clé');
 }
@@ -313,7 +313,7 @@ ok(DETECTION.length >= 6 && VOISINS.length >= 10 && BACKTICKS.length >= 6,
 {
   // Et que l'outil sait encore VOIR : sans ce témoin, une régression qui viderait la détection
   // rendrait « aucune collision partout » et tout ce fichier passerait au vert.
-  const { ast } = compileToBPxAST('@core\n@alphabet.western\nG4 -> C4');
+  const { ast } = compileToBPxAST('core\nalphabet.western\n-----\nG4 -> C4');
   ok(terminauxActifs(ast).size > 100, '4. l\'alphabet occidental doit rendre ses terminaux (témoin d\'instrument)');
 }
 

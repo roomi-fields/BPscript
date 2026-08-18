@@ -38,7 +38,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const S = '@core\n@alphabet.western\n@homomorphism.checkhomo\n';
+const S = 'core\nalphabet.western\nhomomorphism.checkhomo\n-----\n';
 const err = (flux) => {
   try { return (compileToBPxAST(S + flux).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }

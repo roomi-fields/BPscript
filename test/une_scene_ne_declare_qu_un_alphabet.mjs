@@ -37,19 +37,19 @@ const messages = (r) => (r.errors || []).map((e) => e.message || e).join(' | ');
 // ── A. LE SECOND ALPHABET DE SCÈNE EST REFUSÉ, ET LE REFUS DONNE LA RÉÉCRITURE ────────────────
 const DOIVENT_REFUSER = [
   ['deux alphabets avec leurs sorties (la forme de la bible)',
-   '@core\n@alphabet.sargam:audio\n@alphabet.tabla:osc\nS -> sa dhin\n'],
+   'core\nalphabet.sargam:audio\nalphabet.tabla:osc\n-----\nS -> sa dhin\n'],
   ['deux alphabets sans sortie',
-   '@core\n@alphabet.sargam\n@alphabet.tabla\nS -> sa dhin\n'],
+   'core\nalphabet.sargam\nalphabet.tabla\n-----\nS -> sa dhin\n'],
   ['trois alphabets',
-   '@core\n@alphabet.sargam\n@alphabet.tabla\n@alphabet.western\nS -> sa dhin C4\n'],
+   'core\nalphabet.sargam\nalphabet.tabla\nalphabet.western\n-----\nS -> sa dhin C4\n'],
 ];
 for (const [quoi, src] of DOIVENT_REFUSER) {
   const msg = messages(compiler(src));
   ok(/ne déclare qu'UN alphabet/.test(msg),
      `A. ${quoi} — doit être REFUSÉ (reçu : ${msg.slice(0, 90) || 'aucune erreur'}). Un second `
      + `alphabet ACCEPTÉ serait ignoré en silence, ce qui est pire qu'un refus.`);
-  ok(/@actor/.test(msg),
-     `A. ${quoi} — le refus doit donner la RÉÉCRITURE ('@actor'), pas seulement constater. Un mot `
+  ok(/actor/.test(msg),
+     `A. ${quoi} — le refus doit donner la RÉÉCRITURE ('actor'), pas seulement constater. Un mot `
      + `refusé sans son remplacement laisse l'auteur sans issue.`);
 }
 
@@ -57,14 +57,14 @@ for (const [quoi, src] of DOIVENT_REFUSER) {
 // ⚠️ La moitié qui démasque : une règle qui refuserait TOUTE scène passerait le volet A entier.
 const DOIVENT_PASSER = [
   ['un seul alphabet — le cas ordinaire',
-   '@core\n@alphabet.sargam\nS -> sa re\n'],
+   'core\nalphabet.sargam\n-----\nS -> sa re\n'],
   ['un alphabet avec sa sortie',
-   '@core\n@alphabet.sargam:audio\nS -> sa re\n'],
+   'core\nalphabet.sargam:audio\n-----\nS -> sa re\n'],
   ['LA VOIE EXPLICITE — deux vocabulaires, deux acteurs déclarés, deux sorties',
-   '@core\n@actor v1\n  alphabet.sargam\n  out.audio\n@actor v2\n  alphabet.tabla\n  out.osc\n'
-   + 'S -> v1.sa v2.dhin\n'],
+   'core\nactor v1\n  alphabet.sargam\n  out.audio\nactor v2\n  alphabet.tabla\n  out.osc\n'
+   + '-----\nS -> v1.sa v2.dhin\n'],
   ['aucun alphabet — la scène hérite du socle',
-   '@core\nS -> C4 D4\n'],
+   'core\n-----\nS -> C4 D4\n'],
 ];
 for (const [quoi, src] of DOIVENT_PASSER) {
   const msg = messages(compiler(src));
@@ -78,12 +78,15 @@ for (const [quoi, src] of DOIVENT_PASSER) {
 let multi = 0;
 const coupables = [];
 for (const [nom, src] of toutesLesScenes()) {
-  const n = src.split('\n').filter((l) => /^\s*@alphabet[.:]/.test(l)).length;
+  // ⛔ L'ALPHABET DE SCÈNE SE COMPTE EN COLONNE 1. Un alphabet INDENTÉ appartient à un acteur —
+  // c'est la voie explicite que le cas B ci-dessus valide, et l'accepter ici accusait une scène
+  // parfaitement écrite. La règle porte sur ce que LA SCÈNE déclare, pas sur ses acteurs.
+  const n = src.split('\n').filter((l) => /^alphabet[.:]/.test(l)).length;
   if (n > 1) { multi++; coupables.push(nom); }
 }
 ok(multi === 0,
-   `C. ${multi} scène(s) du corpus déclarent plus d'un '@alphabet' et sont donc REFUSÉES par ce `
-   + `fail-loud : ${coupables.slice(0, 4).join(', ')}. Les migrer vers '@actor' AVANT de garder `
+   `C. ${multi} scène(s) du corpus déclarent plus d'un 'alphabet' et sont donc REFUSÉES par ce `
+   + `fail-loud : ${coupables.slice(0, 4).join(', ')}. Les migrer vers 'actor' AVANT de garder `
    + `ce refus — on ne laisse pas un consommateur le découvrir à son portillon.`);
 
 if (echecs.length) {
