@@ -86,12 +86,13 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
   const PORTES = [
     ['directive de tête', 'tempo:120\n-----\nS -> C4', (a) => (a?.directives || [])
       .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
-    ['forme préfixée par sa librairie', 'engine.tempo:120\n-----\nS -> C4', (a) => (a?.directives || [])
+    ['forme préfixée par sa librairie', 'time.tempo:120\n-----\nS -> C4', (a) => (a?.directives || [])
       .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
     // ⚠️ LA TROISIÈME PORTE EST REVENUE LE 2026-08-18, ET AVEC LE MÊME NOM. `mm` est sorti du
     // langage sur arbitrage de Romain ; son câblage natif (`bp3:_mm`) et sa portée `subgrammar`
-    // sont passés à `tempo`, qui s'écrit donc aux DEUX places. Cette ligne mesurait auparavant
-    // le REFUS du modificateur — elle mesure maintenant qu'il aboutit, et sous le nom unique.
+    // sont passés à `tempo`, dans le domicile que la bible lui donne — `lib/time.json`. Le mot
+    // s'écrit donc aux DEUX places. Cette ligne mesurait auparavant le REFUS du modificateur —
+    // elle mesure maintenant qu'il aboutit, et sous le nom unique.
     ['modificateur de sous-grammaire', 'mode:random(tempo:60)\n-----\nS -> C4',
       (a) => (a?.subgrammars || []).flatMap((s) => (s.modifiers || []).map((m) => m && m.name))],
   ];

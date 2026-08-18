@@ -120,7 +120,7 @@ const SCENE_A_MIGRER = 'core\nalphabet.western\n-----\nS -> A B\nA -> C4 D4\nB -
 {
   // `gate Sa:sc` pose une PROPRIÉTÉ sur un nom existant — ratifié Romain 2026-07-28. Ce témoin
   // garde la distinction : elle ne crée pas de nom rival, donc l'outil ne doit rien y toucher.
-  const r = migrerSource('core\nalphabet.western\ngate C4:midi\n-----\nS -> C4 D4');
+  const r = migrerSource('core\nalphabet.western\nC4:midi\n-----\nS -> C4 D4');
   ok(r.ok && r.aucunChangement,
     '3. une déclaration qui pose une PROPRIÉTÉ sur un nom existant ne doit RIEN déclencher');
 }

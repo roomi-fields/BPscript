@@ -12,10 +12,10 @@
 // NB : Tidal/SC exigent un backend natif (SuperDirt) — cette démo montre la FORME
 // des voix ; en navigateur elle ne sonne pas (pas de serveur SC).
 
-@core
-@tempo:120
+core
+tempo:120
 
-@actor beat  eval.tidal
+actor beat  eval.tidal
 
 -----
 S -> beat_r beat_r beat_r `sc: Synth.new(\ping)`

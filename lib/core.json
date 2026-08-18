@@ -8,6 +8,7 @@
     "audio",
     "transpo",
     "engine",
+    "time",
     "variation",
     "eval",
     "midi_default"

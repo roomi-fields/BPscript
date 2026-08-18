@@ -1,7 +1,7 @@
 // Canon — motif en canon avec décalage
 
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 -----
 S -> {Motif Motif (vel:90), - - Motif Motif (vel:70)}

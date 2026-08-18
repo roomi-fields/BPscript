@@ -55,11 +55,12 @@ Le langage connait quatre mots et fait une chose : ordonner dans le temps.
 Le vocabulaire est petit et la combinatoire est riche. Comme les echecs : 6 types de pieces, complexite infinie.
 
 ```bpscript
-@core
-@alphabet.sargam
-@homomorphism.dhati
+core
+alphabet.sargam
+homomorphism.dhati
 
 // Une sequence de notes
+-----
 S -> sa re ga pa
 
 // Polymetrie, simultaneite, silence, prolongation et garde de drapeau
@@ -96,24 +97,25 @@ pour tout ce qu'il contient.
 | --------- | ------------------------------------------------ | ------------------------------------------ |
 | global    | les défauts communs a toutes les scenes d'un son | `lib/core.json`                            |
 | librairie | les defauts d'un alphabet, d'un tuning, d'un son | `lib/*.json`                               |
-| scene     | ce dont heritent tous les acteurs                | `@alphabet.sargam`, `@time.tempo:90`       |
-| acteur    | ce que cet acteur emploie                        | `@actor sitar1` + `tuning.sargam_22shruti` |
+| scene     | ce dont heritent tous les acteurs                | `alphabet.sargam`, `time.tempo:90`       |
+| acteur    | ce que cet acteur emploie                        | `actor sitar1` + `tuning.sargam_22shruti` |
 | regle     | ce qui vaut pour toute la production             | `S -> sa re (vel:70)`                      |
 | terme     | ce qui vaut pour ce terme                        | `sa(vel:100)`                              |
 
 ```bpscript
-@core
-@alphabet.sargam
+core
+alphabet.sargam
 
-@actor sitar1
+actor sitar1
   tuning.sargam_22shruti
 
+-----
 S -> sitar1.sa sitar1.re(vel:100) ga (vel:70)
 ```
 
 Cas d'usage mesures dans cet exemple :
-- `@alphabet.sargam` seul donne a la scene sa convention de registre (`saptak`), son temperament
-  (`sargam_12TET`) et son canal de sortie (`audio`, fourni par `@core`).
+- `alphabet.sargam` seul donne a la scene sa convention de registre (`saptak`), son temperament
+  (`sargam_12TET`) et son canal de sortie (`audio`, fourni par `core`).
 - `sitar1` ne nomme que son temperament : il recoit l'alphabet de la scene et la convention de
   registre de l'alphabet, et emploie `sargam_22shruti` pour lui seul.
 - `(vel:100)` colle a `re` vaut pour ce terme ; `(vel:70)` en fin de regle vaut pour la regle.
@@ -147,13 +149,14 @@ refusee.
 | `<!depart`             | le point d'attente et le nom qu'il attend forment un seul terme              |
 
 ```bpscript
-@core
-@alphabet.sargam
-@var depart in.midi
+core
+alphabet.sargam
+var depart in.midi
 
-@actor sitar1
+actor sitar1
   tuning.sargam_22shruti
 
+-----
 S -> T U sitar1.sa(vel:100) taar_sa {re ga}:2 pa:2
 T -> sa re (vel:70)
 U -> sa!(vel:70) re !(vel:100) ga . dha <!depart ni [stage=1]
@@ -183,14 +186,15 @@ Il prend deux formes :
   symbole qui le porte ; il herite du tag de ce symbole.
 
 ```bpscript
-@core
-@alphabet.sargam
+core
+alphabet.sargam
 
 // Autonome, en tete de scene : prepare le moteur au chargement
 `sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
 
 // Autonome dans le flux : joue son code a son instant, comme une note
 // Inline dans un parametre : evalue par l'interpreter du symbole
+-----
 S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 ```
 
@@ -213,7 +217,7 @@ comme toute declaration du langage.
 cablage y entre. La derivation, elle, produit de la matiere -- `S -> saw1 >> lpf1` arrete la
 compilation.
 
-**Le meme langage sert dans un `@def`** : ce qu'on reinvoque se nomme, ce qu'on ecrit une fois
+**Le meme langage sert dans un `def`** : ce qu'on reinvoque se nomme, ce qu'on ecrit une fois
 reste litteral. Un seul langage, deux emplacements.
 
 ### Simultaneite `!` et synchronisation `<!`
@@ -234,16 +238,17 @@ attendu se colle au signe.
 Ecrit apres une note, il s'ancre sur elle : la note sonne, puis la suite attend.
 
 ```bpscript
-@core
-@actor sitar1
+core
+actor sitar1
   alphabet.sargam
   out.audio
-@var depart in.midi
+var depart in.midi
 
-@actor tabla1
+actor tabla1
   alphabet.tabla
   out.midi(ch:10)
 
+-----
 S -> !(vel:80) sitar1.sa!tin!na <!depart sitar1.re
 ```
 
@@ -262,34 +267,34 @@ categorie de reglages.
 
 | mot      | ce qu'il fait                                                          |
 | -------- | ---------------------------------------------------------------------- |
-| `@actor` | declare **qui joue** : un acteur, son alphabet, sa sortie              |
-| `@var`   | declare **une variable** : un nom qui porte une valeur ou un etat      |
-| `@def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque |
-| `@init`  | declare **l'etat de depart** de la scene                               |
+| `actor` | declare **qui joue** : un acteur, son alphabet, sa sortie              |
+| `var`   | declare **une variable** : un nom qui porte une valeur ou un etat      |
+| `def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque |
+| `init`  | declare **l'etat de depart** de la scene                               |
 
-### `@var` -- declarer une variable
+### `var` -- declarer une variable
 
 Une variable porte un **type** qui dit ce qu'elle est. **Le nom vient d'abord, le type ensuite** --
-l'ordre de toute declaration, `@def` et `@actor` comme celle-ci.
+l'ordre de toute declaration, `def` et `actor` comme celle-ci.
 
 ```text
-@var section flag: calm:1, full:2
-@var touches in.keyboard
-@var grain signal
-@var hauteur pitch
-@var rotation phase
-@var porte logic
-@var lpf1 lpf
-@var pivot
+var section flag: calm:1, full:2
+var touches in.keyboard
+var grain signal
+var hauteur pitch
+var rotation phase
+var porte logic
+var lpf1 lpf
+var pivot
 ```
 
 Le nom porte sa **valeur de depart**, collee a son deux-points. Le sujet de l'affectation est le
 **nom**, jamais le type.
 
 ```text
-@var grain:0.5 signal
-@var hauteur:C4 pitch
-@var a:1, b:2
+var grain:0.5 signal
+var hauteur:C4 pitch
+var a:1, b:2
 ```
 
 Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit le mot `flag` et enumere
@@ -317,18 +322,18 @@ role s'ouvre partout. Le flux attend un trigger de ce role avec le point d'atten
 **Une variable sans type** existe pour etre ecrite dans une regle sans sonner : un pivot de
 grammaire, un jalon de structure. **Une ligne en declare plusieurs**, separees par la virgule. Elle porte son seul nom, et l'aval la transporte tel quel.
 
-### `@def` -- declarer une definition
+### `def` -- declarer une definition
 
-`@def` associe un nom a un corps, pour le reinvoquer d'un mot. **Le nom vient d'abord, ce qu'il vaut
+`def` associe un nom a un corps, pour le reinvoquer d'un mot. **Le nom vient d'abord, ce qu'il vaut
 ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`.
 
 ```text
-@def souffle lfo1.out >> lpf1.cutoff       // un branchement
-@def cadence sa re ga pa                  // une structure de terminaux
-@def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
-@def kick (vel:120)                       // un prereglage
-@def accent(x) x(vel:120)                 // une transformation parametree
-@def fast(x) {x}:2                        // une transformation structurelle
+def souffle lfo1.out >> lpf1.cutoff       // un branchement
+def cadence sa re ga pa                  // une structure de terminaux
+def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
+def kick (vel:120)                       // un prereglage
+def accent(x) x(vel:120)                 // une transformation parametree
+def fast(x) {x}:2                        // une transformation structurelle
 ```
 
 Le nom se pose ensuite a sa place dans une regle :
@@ -343,20 +348,20 @@ puisqu'il vaut pour l'endroit ou il est ecrit.
 
 #### Declarer un terminal
 
-**Un terminal se declare avec `@def` et un bloc de cles**, celles du prototype d'un terminal. Le
+**Un terminal se declare avec `def` et un bloc de cles**, celles du prototype d'un terminal. Le
 bloc s'ecrit sous le nom, une cle par ligne, ou sur la meme ligne quand il tient :
 
 ```text
-@def cloche
+def cloche
   tuning.western_12TET
   octaves.western
   register:5
   degree:0
   voice.sombre
 
-@def ka  voice.sec
-@def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`
-@def muet  sounding:false
+def ka  voice.sec
+def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`
+def muet  sounding:false
 ```
 
 **Le point appelle un composant, le deux-points affecte une valeur** -- la convention du langage,
@@ -369,25 +374,25 @@ hauteur, sa sortie et sa voix, et prend de la scene ce qu'il laisse de cote.
 **Sa hauteur s'ecrit dans ses cles** : `degree` et `register` la font resoudre par les librairies
 d'accordage et de registres, `hz` la donne directement.
 
-### `@init` -- l'etat de depart
+### `init` -- l'etat de depart
 
-`@init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le
+`init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le
 branchement initial et le code lance une fois.
 
 ```text
-@var saw1 saw
-@var lpf1 lpf
+var saw1 saw
+var lpf1 lpf
 
-@init
+init
   saw1 >> lpf1 >> out
   `sc: SynthDef(\grain, { |freq| ... }).add`
 ```
 
 Ce qui appartient a une chose s'initialise **dans sa declaration** -- un flag ecrit son etat de
-depart la ou il nait. `@init` recueille ce qui ne se rattache a rien : un branchement relie des
+depart la ou il nait. `init` recueille ce qui ne se rattache a rien : un branchement relie des
 modules deja declares, il n'appartient a aucun d'eux.
 
-### `@actor` -- declarer qui joue
+### `actor` -- declarer qui joue
 
 Un acteur porte cinq cles. Chacune se lit dans un catalogue, et ce qui n'est pas ecrit, l'acteur
 l'herite de la scene.
@@ -405,10 +410,10 @@ sont les siennes.
 | `eval`      | le langage par defaut de ses backticks, quand le backtick ne le nomme pas |
 
 ```text
-@alphabet.sargam          // la scene entiere joue le sargam et sort par le MIDI
-@out.midi(ch:1)
+alphabet.sargam          // la scene entiere joue le sargam et sort par le MIDI
+out.midi(ch:1)
 
-@actor sitar              // cet acteur affine ce dont il herite
+actor sitar              // cet acteur affine ce dont il herite
   tuning.sargam_22shruti
   out.audio
 ```
@@ -420,9 +425,9 @@ Un **module** est une fonction : une ou plusieurs **entrees**, du code, une ou p
 s'invoquent comme tout le reste.
 
 ```text
-@module.saw
-@module.lpf
-@module.adsr
+module.saw
+module.lpf
+module.adsr
 ```
 
 **Un seul signal, des conventions de lecture.** Un signal est un flux de nombres, et la convention
@@ -456,7 +461,7 @@ a besoin, chaque instance portant ses propres valeurs de port.
 Un filtre passe-bas nomme `lpf` en librairie s'instancie avant de servir : la scene ecrit
 
 ```text
-@var lpf1 lpf
+var lpf1 lpf
 ```
 
 et c'est `lpf1` qui se cable et se regle. **Une instance est une variable** : son comportement vient
@@ -578,10 +583,10 @@ s'ecrit donc entre parentheses quand il manipule ce que la derivation produit.
 qui vit dans un catalogue.
 
 ```text
-@alphabet.sargam
-@tuning.western_just
-@octaves.saptak
-@homomorphism.dhati
+alphabet.sargam
+tuning.western_just
+octaves.saptak
+homomorphism.dhati
 ```
 
 | librairie       | ce qu'elle collectionne                                                                                                         |
@@ -608,9 +613,9 @@ touche, donc qui le consomme.
 
 | categorie   | ce qu'elle regle                                                                                                                                             |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason` -- decrites ci-dessous                                                                  |
-| `@time.`    | `tempo` -- le metronome de la scene, en battements par minute · `striated` et `smooth` -- si le temps pulse ou coule |
-| `@engine.`  | `scan` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
+| `transpo.` | `transpose` · `scaleshift` · `chromashift` · `keyxpand` · `diapason` -- decrites ci-dessous                                                                  |
+| `time.`    | `tempo` -- le metronome de la scene, en battements par minute · `striated` et `smooth` -- si le temps pulse ou coule |
+| `engine.`  | `scan` · `seed` · `maxitems` · `on_fail` · `meter` · `rndtime` · `quantization` · `qclock` · `timepatterns` · les operateurs `/` et `*` |
 
 | cle           | ce qu'elle decale                                                             |
 | ------------- | ----------------------------------------------------------------------------- |
@@ -625,9 +630,9 @@ chaque evenement, une propriete de l'arbre ; `time` porte le temps qui **s'ecoul
 ou les choses tombent, donc il releve du premier.
 
 ```text
-@time.tempo:120
-@engine.seed:42
-@transpo.diapason:442
+time.tempo:120
+engine.seed:42
+transpo.diapason:442
 ```
 
 **La duree d'une scene suit son contenu** : le nombre de termes derives et le tempo courant.
@@ -644,8 +649,8 @@ instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 [Backticks](#backticks----code-natif-dans-le-flux)).
 
 ```bpscript
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 // En tete de scene : chaque moteur de code prepare ses objets au chargement
 `sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
@@ -653,8 +658,9 @@ instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 `py: import dmx; d = dmx.open()`
 
 // Une definition nomme un fragment de code ; son nom se pose nu dans le flux
-@def noir `py: d.blackout()`
+def noir `py: d.blackout()`
 
+-----
 S -> Section [stage=1]
 
 -----
@@ -681,12 +687,12 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 
 | Mot      | Ce qu'il declare                  |
 | -------- | --------------------------------- |
-| `@actor` | qui joue                          |
-| `@var`   | qu'un nom existe, et de quel type |
-| `@def`   | qu'un nom vaut un corps           |
-| `@init`  | l'etat de depart de la scene      |
+| `actor` | qui joue                          |
+| `var`   | qu'un nom existe, et de quel type |
+| `def`   | qu'un nom vaut un corps           |
+| `init`  | l'etat de depart de la scene      |
 
-**Un mot de section** : `@template` ouvre le catalogue des formes, en fin de scene.
+**Un mot de section** : `template` ouvre le catalogue des formes, en fin de scene.
 
 **Six types de variable**, que le parser doit connaitre pour lire la ligne qui les porte :
 
@@ -699,7 +705,7 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | `phase`  | un signal lu comme une position dans un cycle  |
 | `logic`  | un signal lu comme un etat haut ou bas         |
 
-Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `@var`
+Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `var`
 peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie.
 
 **Deux mots de direction**, `in` et `out`, qui nomment par ou une chose entre ou sort :
@@ -716,12 +722,11 @@ librairie invoquee arrete la compilation, et le message le nomme.
 ### Les symboles structurels
 
 ```text
-@              directive de declaration, en tete de scene
 -> <- <>       derivation et direction
 -----          separateur de sous-grammaires : la passe suivante commence
 { , }          polymetrie et groupement temporel
 ( )            reglages (portees symbole, regle, groupe) et contexte de regle
-:              affectation : lie un sujet a une valeur (@alphabet.sargam:audio, *:vel:80)
+:              affectation : lie un sujet a une valeur (alphabet.sargam:audio, *:vel:80)
 *              sujet universel d'une affectation -- tous les terminaux de la portee
                (*:vel:80, *:sombre) ; dans une vitesse, ralentit (! (*2), ! (*3/2))
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [stage=2])
@@ -793,14 +798,14 @@ Ce qu'ils font est decrit dans « Flags ».
 - `()` = **les reglages** : le domaine de la cle nomme leur destinataire
 
 ```text
-@core
-@alphabet.western:audio
-@time.tempo:120
+core
+alphabet.western:audio
+time.tempo:120
 
 S -> C4(vel:0.7) D4:0.5 E4 F4 (vel:100)
 ```
 
-Un reglage s'invoque par sa categorie -- `@transpo.`, `@time.`, `@engine.` -- decrite dans
+Un reglage s'invoque par sa categorie -- `transpo.`, `time.`, `engine.` -- decrite dans
 « Invoquer un reglage ». Les nombres (`0.7`, `120`, `5ms`) sont transportes tels quels : c'est
 le recepteur qui leur donne un sens.
 
@@ -815,27 +820,29 @@ marche que ce chemin suit, et le rang d'une forme dans le catalogue. Tout reglag
 | avant le membre gauche             | un **test** de drapeau : `[stage==1]`, `[Ideas]`, `[count-1]`         |
 | en fin de regle                    | une **affectation** de drapeau : `[stage=2]`                          |
 | en fin de regle                    | une **procedure** de derivation : `[goto:3 0]`, `[repeat:2]`, `[failed:3 2]`, `[stop]` |
-| en tete d'une ligne de `@template` | le **rang** d'une forme dans le catalogue : `[3]`                     |
+| en tete d'une ligne de `template` | le **rang** d'une forme dans le catalogue : `[3]`                     |
 
 **Plusieurs crochets se collent entre eux en fin de regle**, chacun gardant sa nature :
 
 ```bpscript
-@core
-@alphabet.western
+core
+alphabet.western
 
+-----
 S -> C4 D4 [stage=2][goto:3 0]
 ```
 
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
 suite ; une procedure deplace la derivation elle-meme -- `goto` l'envoie a une autre regle, `repeat`
 la refait, `failed` dit ou aller quand rien ne s'applique, `stop` l'arrete. Un reglage ecrit entre
-crochets arrete la compilation, et le message donne sa forme : le `mode` s'ecrit `@mode:random`, en
+crochets arrete la compilation, et le message donne sa forme : le `mode` s'ecrit `mode:random`, en
 tete de sous-grammaire.
 
 ```bpscript
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
+-----
 [count-1] S -> C4 D4 [stage=2]
 ```
 
@@ -860,12 +867,12 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 
 | Categorie        | Declaration                              | Role                                           | Exemples                                   |
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
-| **Non-terminal** | le nom d'une regle (son LHS), ou `@var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                    |
+| **Non-terminal** | le nom d'une regle (son LHS), ou `var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                    |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                          |
 | **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(weight:50)`, `(vel:80)`, `(pan:20)`      |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
-donc declare par son membre gauche, ou bien `@var` le declare -- c'est le cas des non-terminaux
+donc declare par son membre gauche, ou bien `var` le declare -- c'est le cas des non-terminaux
 intermediaires, qui n'ont pas de regle a leur nom. Un non-terminal vit le temps de la derivation :
 son role est d'etre reecrit, et les regles le remplacent par des terminaux. La derivation s'acheve
 sur des terminaux, seuls porteurs d'une sortie.
@@ -929,9 +936,10 @@ Le deux-points affecte donc le **runtime de sortie**, pris parmi `audio`, `midi`
 terminal qui n'en declare pas prend celui de son alphabet, et il en va de meme de sa voix :
 
 ```bpscript
-@core
-@alphabet.sargam:audio
+core
+alphabet.sargam:audio
 
+-----
 S -> sa re ga
 ```
 
@@ -944,9 +952,10 @@ commodite de saisie : `taka` est la suite `ta ka`, deux terminaux, et le nom col
 personne.
 
 ```bpscript
-@core
-@alphabet.tabla
+core
+alphabet.tabla
 
+-----
 S -> taka
 ```
 
@@ -965,9 +974,10 @@ nom sur laquelle la lecture s'arrete, jamais le nom entier.
 un nom qui se decoupe est une suite, la ou un nom qui ne se decoupe pas devient un non-terminal.
 
 ```bpscript
-@core
-@alphabet.tabla
+core
+alphabet.tabla
 
+-----
 S -> ta ka
 -----
 taka -> dha
@@ -977,9 +987,10 @@ Le membre gauche de la regle est la suite `ta ka` : elle attrape les deux termin
 sous-grammaire produit.
 
 ```bpscript
-@core
-@alphabet.tabla
+core
+alphabet.tabla
 
+-----
 S -> zzz
 -----
 zzz -> dha
@@ -1047,9 +1058,9 @@ qu'il ajoute.
 Un declenchement est une transition d'un etat bistable, donc un `logic` : une meme convention
 couvre l'etat tenu et l'impulsion.
 
-Ces quatre conventions typent les ports des modules, les variables `@var` et les definitions
-`@def`. Le principe et les ports sont decrits dans « Les modules -- ce qu'on cable », les
-variables dans « `@var` -- declarer une variable ».
+Ces quatre conventions typent les ports des modules, les variables `var` et les definitions
+`def`. Le principe et les ports sont decrits dans « Les modules -- ce qu'on cable », les
+variables dans « `var` -- declarer une variable ».
 
 ---
 
@@ -1058,17 +1069,18 @@ variables dans « `@var` -- declarer une variable ».
 BPScript transporte les parametres jusqu'au runtime, qui les interprete.
 
 ```bpscript
-@core
+core
 
 // SuperCollider definit les parametres dans un SynthDef
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
 
 // L'acteur dit qui joue et quel moteur de code evalue ses backticks
-@actor sitar
+actor sitar
   alphabet.sargam
   eval.sc
 
 // Les parametres partent tels quels vers SuperCollider
+-----
 S -> sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`) sitar.sa
 ```
 
@@ -1082,7 +1094,7 @@ sa(vel:`rrand(40,127)`)                      backtick inline -- l'interpreter de
 
 Un backtick qui tient sa propre place -- en tete de scene ou dans le flux d'une regle -- est
 **autonome** : son langage se nomme, soit par un tag dans le bloc (`` `js: …` ``), soit par un
-acteur qui le qualifie avec le point (`` drums.`…` ``, declare par `@actor drums eval.<moteur>`).
+acteur qui le qualifie avec le point (`` drums.`…` ``, declare par `actor drums eval.<moteur>`).
 La regle vaut aux deux emplacements.
 
 Pour BPScript, `vel` est un nom qu'il porte, `120` une valeur qu'il transporte, et
@@ -1095,13 +1107,14 @@ cette valeur, pour cette occurrence. La regle complete est decrite dans « Comme
 resout ».
 
 ```bpscript
-@core
+core
 
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
-@actor sitar
+actor sitar
   alphabet.sargam
   eval.sc
 
+-----
 S -> sitar.sa sitar.sa(vel:120) sitar.sa(vel:`rrand(40,127)`)
 //         ^ herite         ^ litteral            ^ evalue par SuperCollider
 ```
@@ -1138,7 +1151,7 @@ Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time` :
 ```text
 /N   *N     les deux operateurs temporels, inverses l'un de l'autre -- entier, decimal
             ou fraction pour chacun (/2 /1.5 /3/2, *2 *1.5 *3/2)
-mode        mode du bloc, et du bloc SEUL -- il s'ecrit `@mode:<valeur>` en tete de
+mode        mode du bloc, et du bloc SEUL -- il s'ecrit `mode:<valeur>` en tete de
             sous-grammaire et NULLE PART ailleurs : ni en tete de scene, ni sur une regle,
             ni dans un sac. Il ne change pas en cours de tirage (Romain, 2026-08-08).
             (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord
@@ -1230,8 +1243,9 @@ Quand un non-terminal se resout **entierement** en reglages, un sac `()` tient l
 RHS et la regle produit des elements de duree nulle :
 
 ```bpscript
-@core
+core
 
+-----
 Pull0 -> (pitchbend:0)
 StartPull -> (pitchcont, pitchrange:500, pitchbend:0)
 ```
@@ -1240,7 +1254,8 @@ Une regle porte **un** sac de portee. Pour en poser plusieurs, chacun prend son 
 dans le flux :
 
 ```bpscript
-@core
+core
+-----
 StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 ```
 
@@ -1250,7 +1265,7 @@ StartPull -> !(pitchcont) !(pitchrange:500) !(pitchbend:0)
 
 | Portee      | Syntaxe          | Exemple           |
 | ----------- | ---------------- | ----------------- |
-| **globale** | `@cle:valeur`    | `@time.tempo:120` |
+| **globale** | `cle:valeur`    | `time.tempo:120` |
 | **groupe**  | `{}(cle:valeur)` | `{A B}(vel:80)`   |
 | **regle**   | `(cle:valeur)`   | `C2 C2 (vel:100)` |
 | **symbole** | `(cle:valeur)`   | `C4(vel:120)`     |
@@ -1290,9 +1305,10 @@ fait resonner l'accord, le second fait resonner chaque note.
 sa portee en donne l'etendue.
 
 ```bpscript
-@var lpf1 lpf
-@var lpf2 lpf
+var lpf1 lpf
+var lpf2 lpf
 
+-----
 S -> C4(lpf1.cutoff:400)              // un calque sur une note
 S -> { C4 D4 }(lpf2.cutoff:800)       // un calque sur un groupe
 S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)   // les deux : C4 traverse le sien, puis celui du groupe
@@ -1306,9 +1322,10 @@ S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)   // les deux : C4 traverse le 
 | nu dans le flux `coupe` | un **geste** -- il change la topologie a cet instant, et ca reste apres lui |
 
 ```bpscript
-@def sombre lpf1 >> vca1
-@def coupe  saw1 \>> lpf1
+def sombre lpf1 >> vca1
+def coupe  saw1 \>> lpf1
 
+-----
 S -> { C4 D4 }(sombre) E4 coupe F4
 ```
 
@@ -1318,20 +1335,21 @@ Un cable se coupe pendant que ca joue ; une portee, elle, se referme.
 toute definition ; son nom et ceux de ses modules s'emploient ensuite dans les regles :
 
 ```bpscript
-@var lpf1 lpf
-@var vca1 vca
-@def sombre lpf1 >> vca1
+var lpf1 lpf
+var vca1 vca
+def sombre lpf1 >> vca1
 
+-----
 S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)
 ```
 
 **Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backtiques
-`patch:`. Un seul langage, deux emplacements : nomme dans un `@def`, litteral dans une regle.
+`patch:`. Un seul langage, deux emplacements : nomme dans un `def`, litteral dans une regle.
 
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
-une librairie de modules est une collection de `@def`, comme un alphabet est une collection de
+une librairie de modules est une collection de `def`, comme un alphabet est une collection de
 terminaux. Ce qui s'invoque dans une regle est **l'instance** : la scene ecrit
-`@var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
+`var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
 
 **Ce que le calque devient a l'execution** -- exemplaires, ordre de traversee, fin de vie,
 rechargement a chaud -- est decrit dans `dedale/docs/LE-CALQUE.md`.
@@ -1348,8 +1366,9 @@ un element sans duree a l'endroit ou il est ecrit.
 | `!(...)` | les elements qui suivent dans l'ordre joue, au-dela des bords de regle, jusqu'au prochain sac                        |
 
 ```bpscript
-@core
+core
 // PORTEE -- (...) : les TROIS notes en sawtooth, l'effet reste dans Basse
+-----
 Basse -> C2 E2 G2 (wave:sawtooth)
 S -> {C4 E4}(vel:80)                 // C4 et E4 a 80, l'effet reste dans le groupe
 
@@ -1418,9 +1437,10 @@ S -> {A B}(lpf1.cutoff:4000)          // groupe : le filtre couvre tout le group
 
 ```bpscript
 // 3. Liste de parametres d'une declaration -- collee au nom
-@def accent(x) x(vel:120)
+def accent(x) x(vel:120)
 
 // 4. Argument d'un appel de definition
+-----
 S -> accent(C4) E4
 ```
 
@@ -1428,7 +1448,7 @@ La regle de desambiguation est positionnelle :
 - `symbole(` colle, dans une regle = sac de reglages, ou appel d'une definition
 - `(` en fin de RHS = sac de reglages de portee regle
 - `{}(` apres un groupe = sac de reglages de portee groupe
-- `@directive nom(` colle au nom = liste de parametres d'une declaration
+- `directive nom(` colle au nom = liste de parametres d'une declaration
 - `(` en tete de regle, avant le LHS et la fleche = contexte
 
 Une procedure moteur prend elle aussi son argument entre parentheses, a l'interieur du sac `()` :
@@ -1481,12 +1501,14 @@ d'ordonnancement.** Il s'ecrit entre `|[` et `]`, et son contenu se concatene sa
 de terminal unique.
 
 ```bpscript
-@alphabet.western
+alphabet.western
+-----
 S -> |[C4 E4 G4] D4          // les trois notes occupent une position, D4 la suivante
 ```
 
 ```bpscript
-@alphabet.sargam
+alphabet.sargam
+-----
 S -> |[sa _ re] ga           // la prolongation etend `sa` a l'interieur de l'objet
 ```
 
@@ -1507,16 +1529,17 @@ Tout ce qui suit `!` se declenche **au meme instant**.
 `!` accepte **tout ce qui se pose dans le flux** :
 
 ```bpscript
-@core
-@actor melodie
+core
+actor melodie
   alphabet.western
   out.audio
-@actor perc
+actor perc
   alphabet.tabla
   out.osc
-@var ramp1 ramp
-@def monte ramp1(from:0, to:255)
+var ramp1 ramp
+def monte ramp1(from:0, to:255)
 
+-----
 S -> perc.dha!perc.tin             // deux symboles a la meme attaque
 S -> perc.dha!perc.na              // na prend la duree de dha
 S -> melodie.C4!perc.dha!perc.ge [stage=2]   // deux secondaires et une mutation de drapeau
@@ -1541,14 +1564,15 @@ des evenements destines a SC, Python, Processing, DMX.
 Un ensemble d'evenements simultanes qui revient souvent se factorise dans une definition :
 
 ```bpscript
-@actor melodie
+actor melodie
   alphabet.western
-@actor perc
+actor perc
   alphabet.tabla
 
-@def halo(x) x!perc.tin!perc.ge
-@def eclair(x) x!perc.na!perc.ka
+def halo(x) x!perc.tin!perc.ge
+def eclair(x) x!perc.na!perc.ka
 
+-----
 S -> halo(melodie.C4) eclair(melodie.D4) halo(melodie.E4)
 // Expansion :
 // melodie.C4!perc.tin!perc.ge melodie.D4!perc.na!perc.ka melodie.E4!perc.tin!perc.ge
@@ -1563,16 +1587,17 @@ qu'un implicitement, et chaque terminal se nomme a travers le sien.
 duree zero.
 
 ```bpscript
-@alphabet.western:audio
-@var sync1 in.midi
+alphabet.western:audio
+var sync1 in.midi
 
+-----
 S -> -<!sync1 C4 D4 E4       // attend en silence, puis joue
 S -> C4<!sync1 D4 E4         // joue C4, attend, puis continue
 S -> <!sync1 C4 D4 E4        // attend seul puis demarre
 S -> C4!E4<!sync1 D4 E4      // joue C4 + E4, attend sync1, puis D4
 ```
 
-`@var <role> in.<canal>` nomme dans la scene le **role** que tient l'entree. L'appareil qui remplit
+`var <role> in.<canal>` nomme dans la scene le **role** que tient l'entree. L'appareil qui remplit
 ce role s'y associe hors de la scene. Les points d'attente se chainent : `<!sync1<!sync2`.
 
 **La racine d'un point d'attente se declare.** Un nom qu'aucune entree, variable, porte ni acteur
@@ -1701,12 +1726,13 @@ meme symbole. Le `?` nu prend chaque place independamment.
 etre un terminal, puisqu'elle le reecrit :
 
 ```bpscript
-@core
-@alphabet.western
+core
+alphabet.western
 
+-----
 S -> C4 D4 C4
 -----
-@mode:sub1
+mode:sub1
 ?1 D4 ?1 -> ?1 G4 ?1        //  C4 D4 C4  ->  C4 G4 C4
 ```
 
@@ -1739,13 +1765,14 @@ les porte jusqu'au moteur.
 
 ## Les tables d'homomorphisme
 
-**Les tables d'homomorphisme se declarent par `@homomorphism.<table>`**, une par nom, chacune
+**Les tables d'homomorphisme se declarent par `homomorphism.<table>`**, une par nom, chacune
 avec ses sections. Une table porte des correspondances symbole vers symbole, et l'etiquette de la
 section est le nom de l'homomorphisme.
 
 ```bpscript
-@homomorphism.dhati
+homomorphism.dhati
 
+-----
 S -> $N14 dhati &N14
 ```
 
@@ -1803,9 +1830,10 @@ sans comparer les deux cotes de la fleche.
 symbole. C'est ce qui le separe d'un contexte positif : `(X)` regarde sans prendre, `#X` prend.
 
 ```bpscript
-@var z1, z2, z3
+var z1, z2, z3
 
 // « trois choses, sauf K1 K2 K3, puis M M » deviennent « z1 z2 z3 M M »
+-----
 #K1 #K2 #K3 M M -> z1 z2 z3 M M   //  M K2 K3 K1 M M  ->  M z1 z2 z3 M M
 ```
 
@@ -1875,9 +1903,10 @@ les formes qu'une grammaire autorise.
 les deux.
 
 ```bpscript
-@core
-@alphabet.western
+core
+alphabet.western
 
+-----
 S <> $mel &mel                            // $mel capture, &mel rejoue
 S <> $mel (vel:80) &mel (vel:40)          // chaque invocation porte ses reglages
 S -> ${$X S &X} &{$X S &X}                // capture un groupe entier
@@ -1888,7 +1917,8 @@ plusieurs alternatives, les deux invocations donnent la **meme** -- c'est ce qui
 gabarit de deux invocations libres :
 
 ```bpscript
-@alphabet.western
+alphabet.western
+-----
 mel -> C4 D4
 mel -> E4 F4
 
@@ -1912,18 +1942,19 @@ L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace tranc
 emplois du signe : colle a un identifiant, `$X` nomme un gabarit ; suivi d'une espace, `$` ancre --
 cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a sa fermeture.
 
-### `@template` -- le catalogue des formes
+### `template` -- le catalogue des formes
 
 **Le catalogue porte les memes gabarits, un par ligne.** Le moteur derive une production, en efface
 les terminaux, et ecrit ce qui reste : c'est la meme operation que `$mel`, appliquee a une production
 entiere plutot qu'a un groupe. La section se place apres les regles, en fin de scene.
 
 ```bpscript
-@alphabet.western
+alphabet.western
 
+-----
 S -> C4 D4
 
-@template
+template
 [1] /1 ??
 [2] *3/2 ?.?
 [3] /1 ($0 ?)($1 )
@@ -1946,12 +1977,13 @@ Le mode `tem` fait l'appariement structurel sur ce catalogue, dans l'ordre des r
 tete de sous-grammaire ou en suffixe de regle.
 
 ```bpscript
-@alphabet.sargam
-@mode:tem
+alphabet.sargam
+mode:tem
 
+-----
 S -> sa re ga
 
-@template
+template
 [1] /1 ???
 ```
 
@@ -1977,8 +2009,9 @@ son alphabet tient les autres de la **cascade**, qui remonte jusqu'aux defauts
 de la librairie -- **l'exemple ci-dessous montre les deux a l'oeuvre** :
 
 ```bpscript
-@alphabet.sargam
+alphabet.sargam
 
+-----
 S -> sa re ga
 ```
 
@@ -1986,16 +2019,17 @@ L'acteur de scene resolu prend l'alphabet `sargam`, le registre `saptak`,
 l'accordage `sargam_12TET`, le canal `audio` et un diapason de 240 Hz :
 l'entree `sargam` de `lib/alphabets.json` porte la convention de registre,
 l'accordage par defaut et l'ancre de hauteur, et l'acteur en herite.
-`@actor X octaves.Y` change le registre pour cet acteur ; les autres cles
+`actor X octaves.Y` change le registre pour cet acteur ; les autres cles
 restent celles heritees.
 
 **Une cle d'acteur porte les parametres propres a l'entree qu'elle nomme.** Ils s'ecrivent entre
 parentheses, apres le point, et chaque entree declare les siens en librairie.
 
 ```bpscript
-@actor drums  eval.strudel(bank:gm)
-@actor lead  out.midi(ch:3)
+actor drums  eval.strudel(bank:gm)
+actor lead  out.midi(ch:3)
 
+-----
 S -> drums_r
 drums_r -> drums.`s("bd*4")`
 ```
@@ -2011,10 +2045,11 @@ ecrite a l'occurrence, puis vers l'objet temporel continu qui le pilote
 (`spec < CT < signal`) -- cf. « Comment une valeur se resout ».
 
 ```bpscript
-@core
+core
 
-@alphabet.sargam
+alphabet.sargam
 
+-----
 S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
 ```
 
@@ -2028,14 +2063,14 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 
 | Signe      | Sens                                      | Exemple                                           |
 | ---------- | ----------------------------------------- | ------------------------------------------------- |
-| espace     | sépare deux termes                        | `@def souffle (vel:60)`                           |
-| collage    | réunit deux termes en un seul             | `@def accent(x) x(vel:120)`                       |
+| espace     | sépare deux termes                        | `def souffle (vel:60)`                           |
+| collage    | réunit deux termes en un seul             | `def accent(x) x(vel:120)`                       |
 | `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `out.midi` |
-| `:`        | lie un sujet à une valeur                 | `dha:midi`, `@time.tempo:120`, `(vel:100)`        |
+| `:`        | lie un sujet à une valeur                 | `dha:midi`, `time.tempo:120`, `(vel:100)`        |
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(weight:50)`, `(tuning:just)`      |
-| `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `@template` |
-| `@`        | ouvre une ligne de la partie déclarative  | `@actor`, `@alphabet.tabla`, `@def`               |
+| `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `template` |
+| `@`        | ouvre une ligne de la partie déclarative  | `actor`, `alphabet.tabla`, `def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
 | `>>` `\>>` | brancher un câble, le couper              | `saw1 >> lpf1 >> out`                           |
 
@@ -2046,8 +2081,8 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 
 | Écriture                    | Lecture                                                   |
 | --------------------------- | --------------------------------------------------------- |
-| `@def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
-| `@def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
+| `def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
+| `def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
 | `C4(vel:80)`                | qualificateur du terminal `C4`                            |
 | `C4 D4 (weight:50)`         | qualificateur de la règle entière                         |
 | `C4!(vel:100)`              | flux ancré à `C4`, il voyage avec lui (`conjoint: true`)  |
@@ -2057,10 +2092,11 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 | `C4 D4 . E4 F4 G4`          | point isolé = frontière entre fragments de durée égale    |
 
 ```bpscript
-@alphabet.western
-@def accent(x) x(vel:120)
-@def souffle (vel:60)
+alphabet.western
+def accent(x) x(vel:120)
+def souffle (vel:60)
 
+-----
 S -> accent(C4) D4 (weight:50)
 Motif -> {C4 D4}:2 E4:0.5
 ```
@@ -2074,7 +2110,7 @@ catégories de librairie (`alphabet`, `tuning`, `octaves`, `out`, `eval`,
 | Emploi                                                    | Écriture                                                  |
 | --------------------------------------------------------- | --------------------------------------------------------- |
 | entité de librairie                                       | `alphabet.sargam`, `tuning.sargam_22shruti`, `module.lpf` |
-| directive qui charge une entrée d'un fichier de librairie | `@alphabet.tabla`, `@homomorphism.dhati`                  |
+| directive qui charge une entrée d'un fichier de librairie | `alphabet.tabla`, `homomorphism.dhati`                  |
 | terminal vu à travers un acteur                           | `sitar.sa`                                                |
 | port d'un module                                          | `lpf.cutoff`                                              |
 | frontière entre fragments, point isolé                    | `C4 D4 . E4 F4 G4`                                        |
@@ -2083,12 +2119,13 @@ Les cinq clés d'un acteur — `alphabet`, `tuning`, `octaves`, `out`, `eval` �
 références : chacune s'écrit avec le point, sur sa ligne.
 
 ```bpscript
-@alphabet.sargam
-@actor sitar
+alphabet.sargam
+actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
   out.midi(ch:3, vel:100)
 
+-----
 S -> sitar.sa sitar.re sitar.ga
 ```
 
@@ -2097,10 +2134,10 @@ routée ; `eval` désigne un producteur qui sort **par ses propres moyens**, ave
 en lui. Une voix de code n'a donc pas de sortie à router :
 
 ```bpscript
-@actor moteur
+actor moteur
   eval.js
 
-@actor cuivres
+actor cuivres
   alphabet.western
   out.midi(ch:2)
 ```
@@ -2113,14 +2150,14 @@ Le sujet est à gauche du signe, la valeur à droite.
 | ------------------------------------------ | ---------------------------- |
 | affecter une sortie à un terminal          | `dha:midi`                   |
 | affecter une sortie au sujet par défaut    | `*:midi`                     |
-| poser une propriété sur un nom qui existe  | `@alphabet.tabla:midi`       |
-| réglage global de scène                    | `@time.tempo:120`            |
+| poser une propriété sur un nom qui existe  | `alphabet.tabla:midi`       |
+| réglage global de scène                    | `time.tempo:120`            |
 | paire clé-valeur dans `()`                 | `(vel:100)`, `(weight:50)`   |
 | durée, collée à un terminal ou à un groupe | `C4:2`, `{C4 D4}:2`          |
 
 ```text
-@alphabet.tabla:midi
-@time.tempo:120
+alphabet.tabla:midi
+time.tempo:120
 
 S -> dha ti (weight:50)
 ```
@@ -2136,9 +2173,10 @@ dit laquelle des deux formes on écrit.
 | `@<directive> <nom>:<cible>`  | pose une **propriété** sur un nom qui existe déjà |
 
 ```bpscript
-@alphabet.western:midi     // propriété : les terminaux de western sortent en MIDI
-@var env1 adsr             // déclaration : env1 est un nom neuf, une instance d'adsr
+alphabet.western:midi     // propriété : les terminaux de western sortent en MIDI
+var env1 adsr             // déclaration : env1 est un nom neuf, une instance d'adsr
 
+-----
 S -> C4 D4
 ```
 
@@ -2150,7 +2188,7 @@ les terminaux héritent du territoire, la cascade tranche quand les deux écrive
 
 ### Séparation des territoires
 
-- **Déclarer** — `@alphabet.X`, `@actor X`, `@var`, `@def` : ce que l'on écrit une
+- **Déclarer** — `alphabet.X`, `actor X`, `var`, `def` : ce que l'on écrit une
   fois et que l'on réutilise.
 - **Affecter** — `*:midi`, `Y:osc` : depuis le territoire d'origine du sujet,
   c'est-à-dire l'alphabet ou l'acteur où il est déclaré, ou l'occurrence dans une règle.
@@ -2170,7 +2208,8 @@ modifie pendant la dérivation. Les neuf opérateurs qui le lisent et l'écriven
 **Test** (opérateur de comparaison) :
 
 ```bpscript
-@alphabet.sargam
+alphabet.sargam
+-----
 [stage==1] S -> sa re ga pa       // active quand stage vaut 1
 [count>3]  S -> ga pa             // active quand count dépasse 3
 ```
@@ -2178,7 +2217,8 @@ modifie pendant la dérivation. Les neuf opérateurs qui le lisent et l'écriven
 **Test et mutation** (opérateur arithmétique) :
 
 ```bpscript
-@alphabet.sargam
+alphabet.sargam
+-----
 [Ideas-1] S -> Motif S            // décrémente Ideas, active tant qu'il reste positif
 [NumR+1] S -> S                   // incrémente NumR, active tant qu'il reste positif
 Motif -> sa re ga
@@ -2196,14 +2236,15 @@ La garde est déclarative : la règle **existe** quand la condition est vraie.
 Les neuf à l'œuvre dans une scène :
 
 ```bpscript
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
+-----
 S -> Loop [stage=1, count=4]
 
 -----
 
-@mode:random
+mode:random
 [count-1]  Loop -> C4 Loop
 [count>0]  Loop -> D4 Loop
 [count>=2] Loop -> E4 Loop
@@ -2220,7 +2261,8 @@ au déclenchement de la règle, pendant la dérivation ; sa position se lit dans
 séquence jouée reste inchangée.
 
 ```bpscript
-@alphabet.sargam
+alphabet.sargam
+-----
 S -> Motif Cadence [count-1]                 // une mutation
 S -> Motif Motif [stage=1] [count=2]         // plusieurs mutations
 Motif -> sa re
@@ -2236,8 +2278,8 @@ un déclenchement dans le temps ; `[stage=2]` est entre crochets, donc une mutat
 ### Exemple : une pièce en trois étapes
 
 ```text
-@alphabet.sargam
-@time.tempo:60
+alphabet.sargam
+time.tempo:60
 
 [stage==1] S -> alap S
 [stage==2] S -> jor S
@@ -2255,18 +2297,19 @@ jhala -> {sa re ga pa dha ni sa}:4
 ### Déclarer un symbole : convention de lecture et sortie
 
 Une déclaration donne à un symbole sa convention de lecture — `signal`, `pitch`, `phase` ou
-`logic` — et la sortie qui le prend en charge. La convention s'écrit avec `@var` et `@def` (cf.
-« `@var` — déclarer une variable ») ; la sortie se pose sur l'alphabet ou sur l'acteur.
+`logic` — et la sortie qui le prend en charge. La convention s'écrit avec `var` et `def` (cf.
+« `var` — déclarer une variable ») ; la sortie se pose sur l'alphabet ou sur l'acteur.
 
 ```bpscript
-@actor melodie
+actor melodie
   alphabet.sargam                // les terminaux de sargam sortent par l'audio
   out.audio
 
-@actor percussion
+actor percussion
   alphabet.tabla                 // ceux de tabla sortent par l'OSC
   out.osc
 
+-----
 S -> melodie.sa percussion.dhin
 ```
 
@@ -2294,20 +2337,20 @@ est le même symbole, réécrit plus tard.
 
 ### Câbler : `>>` et `\>>`
 
-`>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `@init`. Un chaînage nommé se déclare
-avec `@def`, et son nom se pose **nu** dans le flux ; le compilateur marque alors cet élément de la
+`>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `init`. Un chaînage nommé se déclare
+avec `def`, et son nom se pose **nu** dans le flux ; le compilateur marque alors cet élément de la
 nature « câblage », que l'aval traite comme telle.
 
 ```text
-@alphabet.western
-@var saw1 saw
-@var lpf1 lpf
+alphabet.western
+var saw1 saw
+var lpf1 lpf
 
-@init
+init
   saw1 >> lpf1 >> out
 
-@def ouvre lpf1.cutoff:12000
-@def coupe saw1 \>> lpf1
+def ouvre lpf1.cutoff:12000
+def coupe saw1 \>> lpf1
 
 S -> C4 ouvre D4 coupe E4
 ```
@@ -2319,7 +2362,7 @@ régler.
 Sans nombre, le câble en porte une.
 
 ```text
-@init
+init
   saw1 8>> lpf1 8>> out       // huit voix jusqu'à la sortie
   lfo1 >> lpf1.cutoff         // une seule voix pilote la coupure des huit
 ```
@@ -2329,14 +2372,14 @@ première, un port à plusieurs voix alimenté en une seule diffuse cette valeur
 largeur écrite qui dépasse ce que le port accepte se ramène à ce nombre. Ce que chaque port accepte
 se lit dans son champ `voices`.
 
-**Le corps d'un `@def` de câblage est écrit dans le langage de patch**, celui-là même que porte un
+**Le corps d'un `def` de câblage est écrit dans le langage de patch**, celui-là même que porte un
 backtick `patch:`. Un câblage qu'on ne réinvoque pas s'écrit donc **littéralement dans la règle** :
 
 ```text
 S -> C4 `patch: saw1 \>> lpf1` D4
 ```
 
-Un seul langage, deux emplacements : nommé dans un `@def`, littéral dans un backtick. Le backtick
+Un seul langage, deux emplacements : nommé dans un `def`, littéral dans un backtick. Le backtick
 y entre comme terminal, et un terminal se pose dans une règle.
 
 ---
@@ -2350,24 +2393,24 @@ ce qu'est un filtre passe-bas, le calcul d'une enveloppe vivent en librairie, av
 
 ### Invoquer
 
-**`@core` apporte le socle.** Une scene qui l'ecrit recoit les librairies de base et leurs valeurs
+**`core` apporte le socle.** Une scene qui l'ecrit recoit les librairies de base et leurs valeurs
 par defaut. Sans lui, les valeurs attendues restent **non initialisees**, et la compilation s'arrete
 en nommant celle qui manque.
 
 **La directive nomme la librairie, le point designe l'entree.**
 
 ```text
-@alphabet.sargam:midi        // l'entree `sargam` de la librairie des alphabets, raccordee au MIDI
-@tuning.sargam_22shruti      // l'accordage des degres
-@octaves.saptak              // la convention de registre
-@module.lpf                  // un module de signal
+alphabet.sargam:midi        // l'entree `sargam` de la librairie des alphabets, raccordee au MIDI
+tuning.sargam_22shruti      // l'accordage des degres
+octaves.saptak              // la convention de registre
+module.lpf                  // un module de signal
 ```
 
 **Le deux-points affecte une valeur** — pour un alphabet et ses terminaux, c'est le runtime de
 sortie, pris parmi `audio`, `midi`, `osc` et `dmx`.
 
-**La notation pointee n'est obligatoire qu'en cas d'homonymie.** `@tempo:120` suffit tant qu'une
-seule librairie invoquee porte ce nom ; on ecrit `@time.tempo:120` le jour ou deux le portent.
+**La notation pointee n'est obligatoire qu'en cas d'homonymie.** `tempo:120` suffit tant qu'une
+seule librairie invoquee porte ce nom ; on ecrit `time.tempo:120` le jour ou deux le portent.
 La categorie dit alors a quoi le reglage touche.
 
 ### Le prefixe est optionnel -- un nom se resout par unicite
@@ -2397,7 +2440,7 @@ et un champ n'existe que si sa notion s'applique.
 qui permet au moteur de rester vide de toute specificite : ajouter un filtre n'ajoute pas une ligne
 au moteur, il ajoute une entree a une librairie.
 
-**Une entree introuvable est nommee** : `@alphabet.raga` repond « alphabet 'raga' introuvable dans
+**Une entree introuvable est nommee** : `alphabet.raga` repond « alphabet 'raga' introuvable dans
 le catalogue ». Rien ne se resout par defaut en silence.
 
 ### Deux origines, trois moments
@@ -2420,19 +2463,19 @@ ecrit.
 
 | Ce qu'on veut dire                   | Comment ca s'ecrit               |
 | ------------------------------------ | -------------------------------- |
-| l'horloge de la scene                | `@tempo:120`, en tete            |
+| l'horloge de la scene                | `tempo:120`, en tete            |
 | ce que dure un element ou un groupe  | le deux-points colle -- `C4:0.5` |
 | accelerer ou ralentir a partir d'ici | `! (/2)`, dans le flux           |
-| est-ce que ca pulse                  | `@striated` · `@smooth`          |
-| comment on bat                       | `@meter:4/4`                     |
+| est-ce que ca pulse                  | `striated` · `smooth`          |
+| comment on bat                       | `meter:4/4`                     |
 
-### L'horloge -- `@tempo`
+### L'horloge -- `tempo`
 
 **Le tempo se pose en tete de scene, en battements par minute.** C'est l'horloge, celle qu'on
 partage avec le monde exterieur : elle vaut pour la piece entiere.
 
 ```bpscript
-@tempo:120
+tempo:120
 ```
 
 Ce qui varie d'un passage a l'autre est une **vitesse**, et elle a sa propre ecriture.
@@ -2485,29 +2528,31 @@ vite, et les deux ecrivent le meme rapport dans un sens ou dans l'autre.
 La graphie fractionnaire existe parce qu'un rapport se lit parfois mieux ainsi : `*2/3` vaut
 `/1.5`, une fois et demie plus vite.
 
-### La nature du temps -- `@striated` et `@smooth`
+### La nature du temps -- `striated` et `smooth`
 
 **Le temps strie pulse ; le temps lisse coule.** L'un donne une grille de battements que le
 metronome engendre, l'autre laisse chaque objet porter sa propre duree.
 
-**Une scene en regle un seul, une seule fois.** `@striated` convient a la musique occidentale et a la
-danse, `@smooth` a un alap, un gagaku, une musique non pulsee.
+**Une scene en regle un seul, une seule fois.** `striated` convient a la musique occidentale et a la
+danse, `smooth` a un alap, un gagaku, une musique non pulsee.
 
 Les deux scenes qui suivent ne different que par ce mot :
 
 ```bpscript
-@core
-@alphabet.western
-@tempo:60
-@striated
+core
+alphabet.western
+tempo:60
+striated
+-----
 S -> C4 - D4 - E4
 ```
 
 ```bpscript
-@core
-@alphabet.western
-@tempo:60
-@smooth
+core
+alphabet.western
+tempo:60
+smooth
+-----
 S -> C4 - D4 - E4
 ```
 
@@ -2516,20 +2561,20 @@ temps sur deux ; en temps lisse il n'en prend aucune, et les notes se suivent :
 
 | | premiere note | deuxieme | troisieme |
 | --- | --- | --- | --- |
-| `@striated` | 0 - 1000 | 2000 - 3000 | 4000 - 5000 |
-| `@smooth` | 0 - 1000 | 1000 - 2000 | 2000 - 3000 |
+| `striated` | 0 - 1000 | 2000 - 3000 | 4000 - 5000 |
+| `smooth` | 0 - 1000 | 1000 - 2000 | 2000 - 3000 |
 
 C'est **une** difference entre les deux modes, mesurable sur cette scene ; ce n'est pas la seule.
 
-### Le battement -- `@meter`
+### Le battement -- `meter`
 
 **Le metre dit comment on bat.** Il s'adresse a qui joue et a qui affiche : quatre temps par mesure,
 sept croches, ou un cycle inegal.
 
 ```bpscript
-@meter:4/4                   // quatre temps
-@meter:7/8                   // sept croches
-@meter:3+4+2/4               // un cycle de neuf temps, battu 3 puis 4 puis 2
+meter:4/4                   // quatre temps
+meter:7/8                   // sept croches
+meter:3+4+2/4               // un cycle de neuf temps, battu 3 puis 4 puis 2
 ```
 
 **La forme additive structure aussi la production** : elle decoupe le cycle en groupes inegaux et y
@@ -2541,11 +2586,11 @@ metrique balkanique.
 
 | Niveau             | Question                             | BPScript         | Portee              |
 | ------------------ | ------------------------------------ | ---------------- | ------------------- |
-| **Mode du bloc**   | quelle strategie de selection ?      | `@mode:random`   | bloc/sous-grammaire |
+| **Mode du bloc**   | quelle strategie de selection ?      | `mode:random`   | bloc/sous-grammaire |
 | **Scan par regle** | dans quel sens chercher le symbole ? | `(scan:left)`    | regle individuelle  |
 | **Direction**      | la regle se lit dans quel sens ?     | `->`, `<-`, `<>` | regle individuelle  |
 
-Le mode vaut pour un bloc et s'ecrit `@mode:<valeur>` en tete de sous-grammaire. **Il ne change
+Le mode vaut pour un bloc et s'ecrit `mode:<valeur>` en tete de sous-grammaire. **Il ne change
 pas en cours de tirage** : une sous-grammaire garde sa strategie du debut a la fin. Le scan prend
 `left`, `right` ou `rnd`.
 
@@ -2569,8 +2614,9 @@ reste apres les iterations appartient a l'alphabet et se joue.
 | `<>`      | **production et analyse** -- la regle vaut dans les deux sens   |
 
 ```bpscript
-@alphabet.sargam
-@mode:random
+alphabet.sargam
+mode:random
+-----
 S -> sa re (scan:left)
 S <- ga ma
 S <> pa dha
@@ -2581,11 +2627,12 @@ S <> pa dha
 ## Gestion d'echec -- `on_fail`
 
 Trois strategies : `skip`, `retry(N)`, `fallback(X)`. La strategie de scene s'ecrit
-`@on_fail:<strategie>` ; la forme avec argument s'ecrit en suffixe de regle.
+`on_fail:<strategie>` ; la forme avec argument s'ecrit en suffixe de regle.
 
 ```bpscript
-@alphabet.sargam
-@on_fail:skip                              // strategie de scene
+alphabet.sargam
+on_fail:skip                              // strategie de scene
+-----
 S -> sa re ga (on_fail:retry(3))           // cette regle : reessayer 3 fois
 T -> ma pa (on_fail:fallback(ALT))         // cette regle : basculer vers ALT
 ALT -> dha ni
@@ -2615,8 +2662,9 @@ s'ecoule sur une etendue, la ou le tempo n'en donne qu'une valeur.
 qu'elle produit fait partie de ce qu'on a compose.
 
 ```bpscript
-@core
+core
 
+-----
 S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecondes
 ```
 

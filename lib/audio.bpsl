@@ -24,14 +24,14 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
-@def audio
+def audio
   name:audio
   resolvedBy:`txt: runtime-audio`
   description:`txt: Contrôles spécifiques au transport Web Audio — match EXACT LIBRAIRIES.md:173.`
   section:controls
 
 // Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)
-@def wave
+def wave
   args:type
   values:sine triangle square sawtooth
   default:triangle
@@ -39,7 +39,7 @@
   scope:symbol group rule flow
   transportGroup:audio
 
-@def attack
+def attack
   args:ms
   range:1 5000
   default:20
@@ -47,7 +47,7 @@
   scope:symbol group rule flow
   transportGroup:audio
 
-@def release
+def release
   args:ms
   range:1 5000
   default:100
@@ -55,7 +55,7 @@
   scope:symbol group rule flow
   transportGroup:audio
 
-@def detune
+def detune
   args:cents
   range:-1200 1200
   default:0
@@ -70,7 +70,7 @@
 // audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web
 // Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure
 // mieux.
-@def filter
+def filter
   args:freq
   range:20 20000
   default:20000
@@ -78,7 +78,7 @@
   scope:symbol group rule flow
   transportGroup:audio
 
-@def filterQ
+def filterQ
   args:value
   range:0 30
   default:1
@@ -104,7 +104,7 @@
 //
 // AUCUNE VALEUR PAR DEFAUT, comme l interface et pour sa raison : les defauts vivent dans la
 // librairie d environnement de chaque sortie.
-@def volume
+def volume
   implements:expression.volume
   args:value
   range:0 127

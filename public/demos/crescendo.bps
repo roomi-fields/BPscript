@@ -1,7 +1,7 @@
 // Crescendo — dynamique progressive
 
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 -----
 S -> Up Down

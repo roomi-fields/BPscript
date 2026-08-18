@@ -73,7 +73,7 @@ ok(erreursDe(scene('-----\nS -> {C4 script(Beep)} D4')).some((m) => m.includes('
    '§2 un nom hors vocabulaire NICHÉ dans un groupe doit être refusé lui aussi');
 
 // Sans alphabet de notes en portée (scène à gates), le vocabulaire reste vérifié.
-ok(erreursDe('core\ngate a:midi\nmode:ord\n-----\nS -> a script(Beep) a\n').some((m) => m.includes('script')),
+ok(erreursDe('core\na:midi\nmode:ord\n-----\nS -> a script(Beep) a\n').some((m) => m.includes('script')),
    "§2 un nom hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
 
 // ─── §2bis. LE TÉMOIN DE BPx — refermé À LA SOURCE le 2026-07-26 ─────────────────────────────

@@ -4,16 +4,16 @@
 // sa propre enveloppe, et c'est le CONTRASTE entre les phrases qui fait respirer la ligne
 // — la première mord, la deuxième s'ouvre, la troisième tient. Le hasard les enchaîne.
 
-@core
-@alphabet.western:audio
-@tempo:132
+core
+alphabet.western:audio
+tempo:132
 
 -----
 S -> Phrase Phrase Phrase Phrase
 
 -----
 
-@mode:random
+mode:random
 
 // Trois enveloppes, trois caractères. Le filtre s'ouvre et se referme d'une phrase à l'autre.
 Phrase -> C2 C2 D#2 C2 (wave:sawtooth, vel:100, attack:2,  release:40,  weight:40)

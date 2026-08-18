@@ -1,0 +1,21 @@
+{
+  "name": "time",
+  "description": "Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.",
+  "version": "1.0.0",
+  "_tempo_doc": "LE MÉTRONOME PORTE UN SEUL NOM ET UN SEUL DOMICILE. Il s'écrit aux DEUX places que le moteur natif lui donne — la tête de scène ('tempo:120') et le modificateur de sous-grammaire ('mode:ord(tempo:90)') —, d'où la section 'subgrammar' et la double portée. Le champ 'bp3' porte le nom NATIF, '_mm' : c'est lui qui traduit, et le frontal BP3 le lit. Le groupe d'unicité 'metronome' compte les deux graphies ensemble ; sans lui, 'tempo:120' suivi de 'mode:ord(tempo:90)' réglerait deux fois la même chose en silence, ce que le moteur natif refuse par return(7).",
+  "subgrammar": {
+    "tempo": {
+      "bp3": "_mm",
+      "args": [
+        "bpm"
+      ],
+      "description": "Metronome absolu de la scene ou de la sous-grammaire, en BPM.",
+      "scope": [
+        "subgrammar",
+        "scene"
+      ],
+      "unicite": "metronome"
+    }
+  },
+  "resolvedBy": "Kronos"
+}

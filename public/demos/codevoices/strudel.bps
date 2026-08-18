@@ -5,13 +5,13 @@
 // 2026-07-28. Un producteur `eval.<langage>` sort en natif : il ne porte PAS de `transport`.
 // (Forme TAGUÉE, sans acteur : `strudel: note("c2 eb2")` — elle donne le langage seul, pas
 // l'identité, et le bloc reste un orphelin assumé.)
-// Motif SYNTHÉ (sonne sans réseau) ; pour des samples : `@library.strudel "dirt-samples"`
+// Motif SYNTHÉ (sonne sans réseau) ; pour des samples : `library.strudel "dirt-samples"`
 // puis `s("bd sd hh hh")`. Décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md + [299].
 
-@core
-@tempo:120
+core
+tempo:120
 
-@actor bass  eval.strudel
+actor bass  eval.strudel
 
 -----
 S -> bass_r bass_r bass_r bass_r

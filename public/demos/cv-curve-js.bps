@@ -4,16 +4,16 @@
 // fort que la précédente, et la répétition du motif rend la marche perceptible. Ce que
 // dessinerait une courbe, la structure le raconte pas à pas.
 
-@core
-@alphabet.western:audio
-@tempo:96
+core
+alphabet.western:audio
+tempo:96
 
 -----
 S -> Montee Montee Sommet
 
 -----
 
-@mode:ord
+mode:ord
 
 Montee -> {D3 A3 D4 A4} (wave:triangle, vel:52,  attack:6, release:180)
 Montee -> {D3 A3 D4 A4} (wave:triangle, vel:78,  attack:6, release:180)

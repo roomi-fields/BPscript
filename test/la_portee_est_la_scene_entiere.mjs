@@ -39,7 +39,7 @@ const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 // « ça arrive » — c'est le défaut trouvé le matin même sur `cv` sans deux-points, rangé parmi les
 // directives et invisible de tout ce qui cherche un modulateur.
 const DECLARATIONS = [
-  ['@gate',    'gate C4:midi\n-----\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
+  ['@gate',    'C4:midi\n-----\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
   // ⚠️ LE MOT A CHANGÉ, PAS LA PORTÉE. `trigger` est sorti du langage le 2026-08-15 — il était
   // absent de la bible depuis toujours — et `var <rôle> in.<canal>` est la forme qui déclare ce
   // qu'un point d'attente attend (décision du 2026-08-04). Le nom arrive donc dans `inputs`, pas
@@ -61,7 +61,7 @@ for (const [nom, src, arrive] of DECLARATIONS) {
 const A_TRAVERS_LES_BLOCS = [
   ['une variable de travail', 'symbol v\n-----\nS -> C4 v\n-----\nT -> v C4\nS -> T'],
   ['une définition',          'def m C4 D4\n-----\nS -> m C4\n-----\nT -> m\nS -> T'],
-  ['une déclaration de gate', 'gate C4:midi\n-----\nS -> C4\n-----\nT -> C4\nS -> T'],
+  ['une déclaration de gate', 'C4:midi\n-----\nS -> C4\n-----\nT -> C4\nS -> T'],
 ];
 for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
   ok(err(src).length === 0,

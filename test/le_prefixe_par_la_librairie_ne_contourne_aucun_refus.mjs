@@ -66,16 +66,16 @@ for (const [lib, dir] of paires) {
 
 // LES DEUX SENS DU TÉMOIN. Une règle qui refuserait tout laisserait au vert la moitié « doit
 // mordre » ; c'est la moitié « doit passer » qui la démasque (payé deux fois le 2026-07-28).
-// ⚠️ LA PAIRE DE RÉFÉRENCE A CHANGÉ DE LIBRAIRIE DEUX FOIS, et la règle gardée ici n'a bougé ni
-// l'une ni l'autre fois — le préfixé se comporte comme le nu, c'est le domicile qui voyage.
-// `tempo` a quitté `core` pour `time` le 2026-08-10, puis `time` pour `engine` le 2026-08-18 :
-// `mm` est sorti du langage sur arbitrage de Romain, et le métronome a repris son câblage natif
-// là où il vivait. `time` était vide après ce départ, elle est supprimée avec lui.
-dire(compile('engine.tempo:120').errors.length === 0, 'engine.tempo:120 doit être ACCEPTÉ');
+// ⚠️ LA PAIRE DE RÉFÉRENCE A CHANGÉ DE LIBRAIRIE le 2026-08-10 — `tempo` a quitté `core` pour
+// `time` —, et la règle gardée ici n'a pas bougé : le préfixé se comporte comme le nu, c'est le
+// domicile qui voyage. Le 2026-08-18, `mm` est sorti du langage et `tempo` a repris son câblage
+// natif SANS quitter `time` : la bible désigne ce domicile en quatorze endroits, et la bible est
+// ce que le code doit dire.
+dire(compile('time.tempo:120').errors.length === 0, 'time.tempo:120 doit être ACCEPTÉ');
 dire(compile('tempo:120').errors.length === 0, 'tempo:120 doit rester ACCEPTÉ — la moitié nue de la même paire');
-// ET LE PRÉFIXE SUIT LA CHAÎNE `apporte`, TRANSITIVEMENT — `core` amène `engine`, donc `core.tempo`
+// ET LE PRÉFIXE SUIT LA CHAÎNE `apporte`, TRANSITIVEMENT — `core` amène `time`, donc `core.tempo`
 // vaut : le préfixe nomme le POINT D'ENTRÉE invoqué, pas le domicile final de la clé.
-dire(compile('core.tempo:120').errors.length === 0, 'core.tempo:120 doit être ACCEPTÉ — core amène engine');
+dire(compile('core.tempo:120').errors.length === 0, 'core.tempo:120 doit être ACCEPTÉ — core amène time');
 // ET UNE LIBRAIRIE QUI NE LA PORTE PAS, PAS MÊME PAR SA CHAÎNE, REFUSE. Sans ce cas, une clé
 // pourrait vivre dans DEUX librairies sans que rien ne le dise : elle se résoudrait par celle
 // qu'on interroge en premier, donc par accident, et la règle d'unicité serait morte en silence.

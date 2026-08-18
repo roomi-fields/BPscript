@@ -5,17 +5,17 @@
 // appellent le même bout de code à trois instants différents, et c'est la structure
 // — pas le code — qui décide quand.
 
-@core
-@eval.js
-@alphabet.western:audio
-@tempo:90
+core
+eval.js
+alphabet.western:audio
+tempo:90
 
 -----
 S -> Cellule Cellule Cellule
 
 -----
 
-@mode:ord
+mode:ord
 
 Cellule -> D4 A4 `js: console.log('cellule 1')` (vel:60, wave:sine, attack:6, release:200)
 Cellule -> D4 A4 `js: console.log('cellule 2')` (vel:84, wave:sine, attack:6, release:200)

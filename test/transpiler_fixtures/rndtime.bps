@@ -7,10 +7,10 @@
 core
 alphabet.western:midi
 
-gate A:midi
-gate B:midi
-gate C:midi
-gate D:midi
+A:midi
+B:midi
+C:midi
+D:midi
 
 -----
 mode:ord

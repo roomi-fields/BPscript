@@ -31,7 +31,12 @@ function rule(src) {
 // systematiquement »). Ces scenes emploient (vel:…) : elles doivent donc invoquer ce qui le
 // declare. Sans core elles etaient acceptees parce que TOUTE librairie du depot faisait
 // vocabulaire — l invocation ne commandait rien.
-const DECLS = 'core\n-----\ngate C4:sc\ngate E4:sc\n';
+// ⚠️ DEUX CHOSES ONT CHANGÉ AVEC LA SORTIE DE `gate`, le 2026-08-18, et une seule se voit.
+// La graphie d'abord : un terminal se déclare `<nom>:<canal>` directement. La POSITION ensuite —
+// ces deux lignes vivaient APRÈS le délimiteur, où `gate` les rendait lisibles ; depuis que c'est
+// la position qui qualifie, elles déclarent AVANT. Et le canal doit en être un : `sc` nommait un
+// interpréteur, pas une sortie.
+const DECLS = 'core\nC4:midi\nE4:midi\n-----\n';
 
 // ── Forme 1 : contenance de bloc ────────────────────────────────────────
 {
@@ -100,7 +105,7 @@ const DECLS = 'core\n-----\ngate C4:sc\ngate E4:sc\n';
 
 // ── Repliement aussi hors accord : note simple SymbolCall ───────────────
 {
-  const r = rule('core\ngate C4:sc\n-----\nAccord -> C4(vel:80)');
+  const r = rule('core\nC4:midi\n-----\nAccord -> C4(vel:80)');
   const n = r.rhs[0];
   assert('note simple params.vel=80 (repliée)', n?.payload?.params?.vel === 80,
     JSON.stringify(n?.payload));

@@ -80,7 +80,7 @@ const DOIVENT_PASSER = [
   ['la même tête dans DEUX sous-grammaires = deux passes successives',
    'core\nalphabet.simple\n-----\nS -> X\nX -> a b\n-----\nX -> c d'],
   ['une PROPRIÉTÉ posée sur un nom existant : gate sur un terminal',
-   'core\nalphabet.western\ngate C4:midi\n-----\nS -> C4 D4'],
+   'core\nalphabet.western\nC4:midi\n-----\nS -> C4 D4'],
   // LES TROIS FORMES DE LA DÉCISION DU 2026-08-03, mot pour mot. Elles étaient REFUSÉES ici même
   // jusqu'au 2026-08-07 : « aucune grammaire de substitution ne compilait en BPScript ».
   ['une SUBSTITUTION : la tête est un terminal (mode sub/sub1)',

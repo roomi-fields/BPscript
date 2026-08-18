@@ -1672,6 +1672,42 @@ function parse(tokens, opts = {}) {
    * Rend `null` quand la ligne n'ouvre pas une déclaration par le type — la lecture ordinaire
    * reprend alors la main sans avoir consommé un seul jeton.
    */
+  /**
+   * ⛔ UN TERMINAL SE DÉCLARE PAR `<nom>:<canal>`, DIRECTEMENT — arbitrage Romain du 2026-08-18,
+   * ses mots : « la déclaration de terminal s'écrit a:midi directement, sans gate ».
+   *
+   * ⚠️ CE QUI NE MARCHAIT PAS, mesuré avant la frappe. La ligne PASSAIT l'analyse — elle produisait
+   * une directive ORDINAIRE `{name:'a', runtime:'midi'}` rangée parmi les réglages de tête — mais
+   * le contrôle des terminaux ne lit pas ce canal-là. Une règle qui employait `a` sortait donc
+   * « terminal 'a' non déclaré », et le refus était IDENTIQUE avec et sans la ligne : le pire état
+   * possible, où l'auteur croit avoir déclaré et où rien ne le détrompe.
+   *
+   * LE CÔTÉ QUI CONSOMME EXISTAIT DÉJÀ : `nomsDeclares` (bpxAst.js) alimente l'ensemble des noms
+   * déclarés depuis `ast.declarations`. C'est le côté qui PRODUIT qui était parti avec les mots
+   * `gate`, `trigger` et `cv` — `parseDeclaration` n'avait plus aucun appelant et vient de sortir.
+   *
+   * ⚠️ LE DISCRIMINANT EST LE CANAL, PAS LE NOM. Une tête de scène est pleine de `<mot>:<valeur>` —
+   * `tempo:120`, `seed:42`, `mode:ord`. Ce qui distingue une déclaration de terminal est que sa
+   * valeur est un CANAL DE SORTIE déclaré (`lib/core.json` schema.channels), et que son sujet n'est
+   * déclaré par AUCUNE librairie. Sans cette borne, une faute de frappe sur un réglage
+   * (`tempoo:120`) deviendrait un terminal au lieu d'être refusée.
+   */
+  function lireDeclarationDeTerminal() {
+    if (!at(T.IDENT) || peek(1).type !== T.COLON || peek(2).type !== T.IDENT) return null;
+    const finDeLigne = peek(3).type === T.NEWLINE || peek(3).type === T.EOF
+      || peek(3).type === T.COMMENT;
+    if (!finDeLigne) return null;
+    const tok = current();
+    const nom = tok.value;
+    const canal = peek(2).value;
+    if (!outChannels().has(canal)) return null;
+    // Un mot que le vocabulaire déclare garde sa lecture de réglage — `eval:X`, `sound:X`… La
+    // question se pose dans les deux sens, donc les deux lecteurs sont interrogés.
+    if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie('core', nom)) return null;
+    advance(); advance(); advance();               // nom : canal
+    return { type: 'Declaration', name: nom, runtime: canal, line: tok.line };
+  }
+
   function lireDeclarationParLeType() {
     if (!at(T.IDENT)) return null;
     const tok = current();
@@ -1851,6 +1887,8 @@ function parse(tokens, opts = {}) {
     {
       const parLeType = lireDeclarationParLeType();
       if (parLeType) return parLeType;
+      const unTerminal = lireDeclarationDeTerminal();
+      if (unTerminal) return unTerminal;
     }
     // ── L AROBASE EST SORTIE DU LANGAGE ──────────────────────────────────────────────────────
     // `hub/decisions/2026-08-17-factory-et-mine-sortent-du-langage.md`, section « Amendement du
@@ -3201,98 +3239,14 @@ function parse(tokens, opts = {}) {
              ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
   }
 
-  // ============================================================
-  // CV Instances — déclaration descriptive : `cv env1 : mod.adsr(...)`
-  // (parsée dans parseDeclaration via parseCVModulator ; branchement au point de paramètre)
-  // ============================================================
+  // ⛔ `parseDeclaration`, `isCVModulatorBody` ET `parseCVModulator` SONT SORTIES LE 2026-08-18.
+  // La première lisait `gate|trigger|cv <nom> : <runtime>` et les deux autres n'étaient appelées
+  // que par elle. Les trois mots sont sortis du langage ; la déclaration de terminal s'écrit
+  // désormais `<nom>:<canal>` — `lireDeclarationDeTerminal`, plus haut, qui émet le MÊME nœud
+  // `Declaration`. Le code mort s'élague dans le mouvement qui le rend mort, et un lecteur sans
+  // appelant en fait partie : gardé « au cas où », il fige une graphie que plus rien ne produit.
+  // Le modulateur CV relève du patching, et sa forme se rouvrira avec lui, pas avant.
 
-  // ============================================================
-  // Declarations
-  // ============================================================
-
-  function parseDeclaration() {
-    const tok = current();
-    const temporalType = advance().value; // gate | trigger | cv
-    const name = expect(T.IDENT).value;
-    expect(T.COLON);
-    // Déclaration de MODULATEUR CV (design Romain 2026-06-20) : `cv env1 : mod.adsr(...)` ou
-    // `cv env1 : `js: …``. Purement descriptive — AUCUNE cible/route (le branchement se fait
-    // au point de paramètre `(cutoff: env1)`). À distinguer de la double-déclaration temporelle
-    // `cv ramp:sc` (type temporel + runtime) par le lookahead : lib.type( … ) ou backtick.
-    if (temporalType === 'cv' && isCVModulatorBody()) {
-      return parseCVModulator(name, tok);
-    }
-    const runtime = expect(T.IDENT).value;
-    return { type: 'Declaration', temporalType, name, runtime, line: tok.line };
-  }
-
-  /** Le corps après `cv NAME :` est-il un modulateur (lib.type(...) ou backtick) ? */
-  function isCVModulatorBody() {
-    if (at(T.BACKTICK)) return true;
-    // IDENT . IDENT (   → lib.objectType(params)
-    return at(T.IDENT) && peek(1).type === T.PERIOD &&
-           peek(2).type === T.IDENT && peek(3).type === T.LPAREN;
-  }
-
-  /**
-   * Parse le corps d'un modulateur CV : `mod.adsr(params)` ou backtick inline.
-   * Forme déclarative pure : pas de cible, pas de sortie (résolus au branchement).
-   * @returns CVInstance { name, lib, objectType, args, namedArgs, code }
-   */
-  function parseCVModulator(name, tok) {
-    // Backtick : `cv custom : `js: …`` — tag OBLIGATOIRE (langage de la courbe).
-    if (at(T.BACKTICK)) {
-      const btTok = current();
-      const { tag, code } = splitBacktickTag(advance().value, btTok);
-      return {
-        type: 'CVInstance', name,
-        lib: null, objectType: 'backtick', args: [], namedArgs: {},
-        tag, code, line: tok.line,
-      };
-    }
-    // lib.objectType(args…)
-    const lib = expect(T.IDENT).value;
-    expect(T.PERIOD);
-    const objectType = expect(T.IDENT).value;
-    expect(T.LPAREN);
-    const args = [];
-    const namedArgs = {};
-    while (!at(T.RPAREN) && !atEnd()) {
-      if (at(T.IDENT) && peek(1).type === T.COLON) {
-        const key = advance().value;
-        advance(); // :
-        const val = at(T.INT) ? Number(advance().value) :
-                    at(T.FLOAT) ? Number(advance().value) :
-                    at(T.IDENT) ? advance().value :
-                    advance().value;
-        namedArgs[key] = val;
-      } else {
-        // ARGUMENT POSITIONNEL — refusé, comme partout ailleurs dans le langage (décision Romain
-        // 2026-07-26). Cette sous-zone y avait échappé : la déclaration d'un modulateur n'est pas
-        // un sac de contrôle, donc la garde des sacs ne la voyait pas. Aucune sous-zone du langage
-        // n'échappe à la règle.
-        // ⚠️ La forme NOMMÉE reste la bonne — `mod.adsr(attack:5, decay:150)`, comme
-        // `out.midi(ch:3)`. Ce n'est pas la parenthèse qu'on supprime, c'est l'argument dont
-        // la place tient lieu de nom. Mesuré : le corpus n'écrit QUE la forme nommée, 0 positionnel.
-        const t = current();
-        // Les paramètres vivent sous `objects.<type>.parameters` (lib/mod.json) ; on les nomme dans
-        // le message pour que l'utilisateur n'ait pas à les deviner. Silencieux si la lib n'est pas
-        // chargée — un message générique vaut mieux qu'un message faux.
-        const defObj = loadLib(lib)?.objects?.[objectType] || loadLib(lib, objectType);
-        const params = Object.keys(defObj?.parameters || {});
-        throw new ParseError(
-          `'${lib}.${objectType}(${t.value}…)' : argument POSITIONNEL — sa place tient lieu de nom. `
-          + `Nommer chaque paramètre : '${lib}.${objectType}(`
-          + `${params.length ? params.slice(0, 2).map((k) => `${k}:…`).join(', ') + (params.length > 2 ? ', …' : '') : 'nom:valeur'})'`,
-          t);
-      }
-      if (at(T.COMMA)) advance();
-    }
-    expect(T.RPAREN);
-    return {
-      type: 'CVInstance', name, lib, objectType, args, namedArgs, code: null, line: tok.line,
-    };
-  }
 
   // ============================================================
   // Câblage (modules à ports, opérateurs >> / \>>) — corps de @macro ET flux d'une règle

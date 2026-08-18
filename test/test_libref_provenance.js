@@ -18,11 +18,11 @@ function assert(label, cond, detail) {
   else { ko++; console.log(`KO  ${label}${detail !== undefined ? '  → ' + detail : ''}`); }
 }
 function astOf(dir) {
-  const { ast } = compileToBPxAST(`${dir}\ngate T:sc\n-----\nT -> T5\nT5 -> C4 D4\n`);
+  const { ast } = compileToBPxAST(`${dir}\nT:midi\n-----\nT -> T5\nT5 -> C4 D4\n`);
   return ast || {};
 }
 function errsOf(dir) {
-  const { errors } = compileToBPxAST(`${dir}\ngate T:sc\n-----\nT -> T5\nT5 -> C4 D4\n`);
+  const { errors } = compileToBPxAST(`${dir}\nT:midi\n-----\nT -> T5\nT5 -> C4 D4\n`);
   return (errors || []).map((e) => e.message);
 }
 

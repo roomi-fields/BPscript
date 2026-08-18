@@ -800,7 +800,7 @@ section('R1 — Noms canoniques BP3_OPERATORS dans l\'AST');
   // gate star:midi → déclaration acceptée (canal de déclaration) ; l'AST porte
   // le nom d'alias 'star' dans la directive, pas dans les Symbol de règle.
   const src = `core
-gate star:midi
+star:midi
 -----
 S -> star`;
   const ast = parseSource(src);
@@ -826,7 +826,7 @@ S -> star`;
 {
   // 'plus' dans une règle → Symbol '*' dans l'AST
   const src = `core
-gate plus:midi
+plus:midi
 -----
 S -> plus A`;
   const ast = parseSource(src);
@@ -849,7 +849,7 @@ S -> plus A`;
 {
   // 'fin' dans une règle → Symbol ';' dans l'AST
   const src = `core
-gate fin:midi
+fin:midi
 -----
 S -> A fin`;
   const ast = parseSource(src);

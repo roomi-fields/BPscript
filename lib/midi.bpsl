@@ -27,7 +27,7 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
-@def midi
+def midi
   resolvedBy:runtime-MIDI
   name:midi
   description:`txt: Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.`
@@ -54,34 +54,34 @@
 // s adresse aussi par un port. Ils suivent la decision telle qu elle est rendue ; leur domicile
 // definitif appartient a Romain le jour ou un second canal declarera les siens.
 
-@def ch
+def ch
   section:schema.addressKeys
   description:`txt: Canal d'adresse, forme courte de channel.`
   scope:symbol group rule flow
 
-@def channel
+def channel
   section:schema.addressKeys
   description:`txt: Canal d'adresse, forme longue de ch.`
   scope:symbol group rule flow
 
-@def device
+def device
   section:schema.addressKeys
   description:`txt: Appareil visé par l'adresse.`
   scope:symbol group rule flow
 
-@def note
+def note
   section:schema.addressKeys
   description:`txt: Numéro de note d'une adresse — la source qu'un point d'attente écoute, l'événement qu'une occurrence vise.`
   scope:symbol group rule flow
 
-@def port
+def port
   section:schema.addressKeys
   description:`txt: Port visé par l'adresse.`
   scope:symbol group rule flow
 
 // _comment : MIDI-specific controls — only meaningful for MIDI transport
 
-@def chan
+def chan
   bp3:_chan
   args:channel
   range:1 16
@@ -107,7 +107,7 @@
 // garde bien `w > 0 && w <= 128` et emet `w - 1`, mais son tableau `CurrentMIDIprogram` n est
 // AFFECTE nulle part dans les sources vivantes : il est mis a zero dans Inits.c:131 et lu la, point.
 // La conclusion tient par les quatre pieces ci-dessus, pas par celle-la.
-@def ins
+def ins
   bp3:_ins
   args:program
   range:1 128
@@ -115,7 +115,7 @@
   scope:symbol group rule flow scene
   transportGroup:midi
 
-@def mod
+def mod
   bp3:_mod
   args:value
   range:0 127
@@ -123,13 +123,13 @@
   scope:symbol group rule flow
   transportGroup:midi
 
-@def modcont
+def modcont
   bp3:_modcont
   description:`txt: Enable continuous modulation interpolation (CC1)`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def pitchbend
+def pitchbend
   bp3:_pitchbend
   args:value
   range:-8192 8191
@@ -137,20 +137,20 @@
   scope:symbol group rule flow
   transportGroup:midi
 
-@def pitchrange
+def pitchrange
   bp3:_pitchrange
   args:cents
   description:`txt: Pitch bend range in cents`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def pitchcont
+def pitchcont
   bp3:_pitchcont
   description:`txt: Enable continuous pitch bend interpolation`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def keymap
+def keymap
   bp3:_keymap
   args:p1 q1 p2 q2
   range:0 127
@@ -158,20 +158,20 @@
   scope:symbol group rule flow
   transportGroup:midi
 
-@def mapcont
+def mapcont
   bp3:_mapcont
   description:`txt: Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont (console_strings.json:214, code 44/0 args). Ses deux frères discrets vivent dans lib/variation.json ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def pressure
+def pressure
   args:value
   range:0 127
   description:`txt: MIDI Channel Pressure (aftertouch)`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def press
+def press
   bp3:_press
   args:value
   range:0 127
@@ -179,7 +179,7 @@
   scope:symbol group rule flow
   transportGroup:midi
 
-@def presscont
+def presscont
   bp3:_presscont
   description:`txt: Enable continuous channel pressure interpolation`
   scope:symbol group rule flow
@@ -193,7 +193,7 @@
 //   !(midi.volume:90)   cette declaration-ci, visee directement
 // PORTEE ETENDUE A LA SCENE le 2026-08-15 (Romain, « ok pour les extensions de portee ») :
 // DeftVolume est un defaut de scene au moteur natif, il s ecrit donc aussi en tete.
-@def volume
+def volume
   implements:expression.volume
   bp3:_volume
   args:value
@@ -202,20 +202,20 @@
   scope:symbol group rule flow scene
   transportGroup:midi
 
-@def volumecont
+def volumecont
   bp3:_volumecont
   description:`txt: Enable continuous volume interpolation`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def switchon
+def switchon
   bp3:_switchon
   args:channel
   description:`txt: Enable MIDI switch channel`
   scope:symbol group rule flow
   transportGroup:midi
 
-@def switchoff
+def switchoff
   bp3:_switchoff
   args:channel
   description:`txt: Disable MIDI switch channel`
@@ -232,32 +232,32 @@
 // par Kairos le 2026-07-27. Marquage POSITIF, porte par la donnee ; le code ne nomme aucun
 // controle.
 
-@def mute
+def mute
   description:`txt: Coupe le son. Nu, (mute), coupe tout ce qui sonne ; par composant, (mute.all) ou (mute.lead), coupe la cible nommee. Nomme le 2026-07-26 : remplace une des familles que script(...) portait sans nom.`
   scope:flow
   bagOnly:true
   transportGroup:midi
 
-@def unmute
+def unmute
   description:`txt: Retablit le son coupe par mute. Meme graphie : (unmute) ou (unmute.lead).`
   scope:flow
   bagOnly:true
   transportGroup:midi
 
-@def panic
+def panic
   description:`txt: Arret d'urgence : toutes les notes relachees, tous les controleurs remis a plat. Image de MIDI all notes off. Ne prend aucun argument.`
   scope:flow
   bagOnly:true
   transportGroup:midi
 
-@def sync
+def sync
   args:message
   values:start continue stop
   description:`txt: Message systeme temps reel de synchronisation : (sync:start), (sync:continue), (sync:stop). Image des messages MIDI Start/Continue/Stop. Remplace script(MIDI send Continue).`
   scope:flow
   transportGroup:midi
 
-@def cc
+def cc
   component:number
   args:value
   range:0 127
@@ -278,7 +278,7 @@
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-@def volumerate
+def volumerate
   bp3:_volumerate
   args:hz
   range:0 1000
@@ -299,7 +299,7 @@
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-@def modrate
+def modrate
   bp3:_modrate
   args:hz
   range:0 1000
@@ -320,7 +320,7 @@
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-@def pitchrate
+def pitchrate
   bp3:_pitchrate
   args:hz
   range:0 1000
@@ -341,7 +341,7 @@
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-@def pressrate
+def pressrate
   bp3:_pressrate
   args:hz
   range:0 1000
@@ -378,7 +378,7 @@
 
 // RATE · LA CADENCE COMMUNE DES CINQ FLUX CONTINUS. Elle meut volumerate, modrate, pitchrate et
 // pressrate d un seul mot, la ou chacun se regle aussi separement.
-@def rate
+def rate
   args:hz
   range:0 1000
   description:`txt: Cadence des valeurs intermédiaires de TOUS les flux continus, en émissions par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.`
@@ -387,7 +387,7 @@
 
 // VOLUMECONTROL · QUEL CONTROLEUR PORTE LE VOLUME. Le numero est une DONNEE de la scene, plus une
 // valeur ecrite en dur dans un runtime.
-@def volumecontrol
+def volumecontrol
   bp3:_volumecontrol
   args:controller
   range:0 127
@@ -396,7 +396,7 @@
   transportGroup:midi
 
 // PANCONTROL · QUEL CONTROLEUR PORTE LE PANORAMIQUE. Meme construction que volumecontrol.
-@def pancontrol
+def pancontrol
   bp3:_pancontrol
   args:controller
   range:0 127
@@ -405,7 +405,7 @@
   transportGroup:midi
 
 // FADEOUT · L EXTINCTION DE FIN.
-@def fadeout
+def fadeout
   args:duration
   description:`txt: Extinction du son à la fin de la performance, en SECONDES. Une valeur inférieure ou égale à zéro supprime le fondu. Image de EndFadeOut au moteur natif.`
   scope:scene
@@ -425,8 +425,8 @@
 // LA PORTEE EST : TETE DE SCENE, ACTEUR, ET FLUX. Romain : « oui configurables aussi par acteurs,
 // mais il faut que ces controles soient aussi activables dans la scene en !(...) ». La cascade
 // ordinaire fait le reste — la scene pose, l acteur surcharge, le flux surcharge encore :
-//     @midi.resetnotes          toute la piece coupe a l arret
-//     @actor nappe
+//     midi.resetnotes          toute la piece coupe a l arret
+//     actor nappe
 //       midi.letring            sauf la nappe
 //     S -> C4 !(letring) D4     et au fil du flux
 //
@@ -437,56 +437,56 @@
 //
 // LES DEFAUTS VIVENT DANS `midi_default`, avec leur cause quand elle n est pas evidente.
 
-@def resetnotes
+def resetnotes
   description:`txt: À la fin de la scène, éteindre ce qui sonne encore.`
   scope:flow scene
   bagOnly:true
   unicite:fin-de-scene
   transportGroup:midi
 
-@def letring
+def letring
   description:`txt: À la fin de la scène, laisser sonner ce qui sonne encore.`
   scope:flow scene
   bagOnly:true
   unicite:fin-de-scene
   transportGroup:midi
 
-@def strikeagain
+def strikeagain
   description:`txt: Une note déjà tenue qu'on rejoue est RELANCÉE — nouveau NoteOn.`
   scope:flow scene
   bagOnly:true
   unicite:note-rejouee
   transportGroup:midi
 
-@def sustain
+def sustain
   description:`txt: Une note déjà tenue qu'on rejoue reste TENUE — aucun nouveau NoteOn.`
   scope:flow scene
   bagOnly:true
   unicite:note-rejouee
   transportGroup:midi
 
-@def pedalrelease
+def pedalrelease
   description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne est relâché puis repressé.`
   scope:flow scene
   bagOnly:true
   unicite:interrupteur-rejoue
   transportGroup:midi
 
-@def pedalhold
+def pedalhold
   description:`txt: Un interrupteur déjà enfoncé qu'on ré-actionne garde son état.`
   scope:flow scene
   bagOnly:true
   unicite:interrupteur-rejoue
   transportGroup:midi
 
-@def resetcontrols
+def resetcontrols
   description:`txt: À la fin de la scène, remettre les contrôleurs à plat.`
   scope:flow scene
   bagOnly:true
   unicite:fin-des-controleurs
   transportGroup:midi
 
-@def keepcontrols
+def keepcontrols
   description:`txt: À la fin de la scène, laisser les contrôleurs dans l'état où la scène les a mis.`
   scope:flow scene
   bagOnly:true

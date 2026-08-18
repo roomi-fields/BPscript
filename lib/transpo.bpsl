@@ -9,7 +9,7 @@
 // Née le 2026-08-10 de la scission de controls.json (groupe 'dispatcher'). LIBRAIRIES.md:170
 // nomme pour ce contenu : transpose · chromashift · scaleshift · keyxpand · diapason. ÉCART
 // SIGNALÉ (pas résolu ici, cf. rapport) : `diapason` vit dans core.json
-// (defaults.values.diapason + reservedDirectives, directive @diapason:N de tête de scène) et
+// (defaults.values.diapason + reservedDirectives, directive diapason:N de tête de scène) et
 // n'a jamais été un contrôle de sac — le déplacer casserait sa graphie sans que la référence
 // tranche la nouvelle. `scale` (microtonal, dispatcher d'origine) reste ICI : Atlas ne
 // l'énumère pas dans transpo, mais aucune autre ligne ne le réclame et son destinataire mesuré
@@ -32,7 +32,7 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
-@def transpo
+def transpo
   resolvedBy:Kairos
   name:transpo
   description:`txt: Transformations de hauteur résolues par Kairos.`
@@ -40,14 +40,14 @@
 
 // _comment : Resolved by the dispatcher before reaching any transport — musical transformations
 
-@def transpose
+def transpose
   args:interval
   argType:interval
   description:`txt: Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.`
   scope:symbol group rule flow scene
   transportGroup:transpo
 
-@def scale
+def scale
   bp3:_scale
   args:name blockkey
   default:0,0
@@ -55,14 +55,14 @@
   scope:symbol group rule flow
   transportGroup:transpo
 
-@def scaleshift
+def scaleshift
   args:degrees
   default:0
   description:`txt: Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control.`
   scope:symbol group rule flow
   transportGroup:transpo
 
-@def chromashift
+def chromashift
   bp3:_transpose
   args:keys
   default:0
@@ -75,7 +75,7 @@
 // scindee : keyxpand ne recevait que le pivot, et l'aval criait (BPx/dist/index.js:5945
 // 'keyxpand needs a pivot note and a factor'). Meme mecanisme data-driven que
 // argType:'interval' (transpose) : la surface porte brut, l'aval resout.
-@def keyxpand
+def keyxpand
   bp3:_keyxpand
   args:pivot factor
   default:0,1

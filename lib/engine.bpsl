@@ -203,17 +203,14 @@ def destru
 // _comment : Procedures de sous-grammaire — ce qui s ecrit APRES le mode d une sous-grammaire et
 // gouverne son deroulement : la re-semence, la nature du temps, le metronome.
 //
-// ⛔ LE METRONOME PORTE UN SEUL NOM, `tempo`, ET IL EST ICI — arbitrage Romain du 2026-08-18,
-// « il ne reste que _mm en BP3, pas de mm en BPScript, remplace par tempo ». Le mot `mm` est
-// SORTI du langage ; `bp3:_mm` reste, parce que `_mm` est le nom NATIF et que c est justement ce
-// champ qui traduit. Une seule declaration porte donc les deux graphies du reglage : la tete de
-// scene (`tempo:120`) et le modificateur de sous-grammaire (`mode:ord(tempo:90)`).
+// ⛔ LE METRONOME N EST PAS ICI, ET C EST `lib/time.json` QUI LE PORTE — avec son cablage natif
+// `_mm`, sa double portee et son groupe d unicite. Le mot `mm` est SORTI du langage le 2026-08-18
+// sur arbitrage de Romain ; son remplacant `tempo` a repris tout son cablage, mais dans le domicile
+// que la bible lui donne en quatorze endroits. `core` amene `time`, donc `tempo:120` s ecrit nu.
 //
-// ⚠️ CE QUE CE DEPLACEMENT DEFAIT : `tempo` etait declare par `lib/time.json`, dont le champ
-// `resolvedBy` nomme Kronos, tandis qu`engine` nomme BPx. Mesure avant la frappe : `resolvedBy`
-// n atteint l arbre QUE par les sacs de reglages poses sur un noeud (`poserLeDestinataireDesReglages`,
-// bpxAst.js) ; une directive de tete et un modificateur de sous-grammaire n en portent aucun.
-// Le destinataire du metronome n a donc jamais voyage, et ce deplacement ne change aucun champ emis.
+// ⚠️ CE QUI RESTE ICI, ET QUI EST LA MEME QUESTION : `striated` et `smooth` partagent le groupe
+// `nature-du-temps`. Le groupe du metronome vit chez `time` ; les groupes se comptent a travers
+// TOUTES les librairies, pas fichier par fichier.
 
 def randomize
   section:subgrammar
@@ -236,14 +233,6 @@ def smooth
   scope:subgrammar scene
   unicite:nature-du-temps
 
-def tempo
-  section:subgrammar
-  bp3:_mm
-  args:bpm
-  description:`txt: Metronome absolu de la scene ou de la sous-grammaire, en BPM.`
-  scope:subgrammar scene
-  unicite:metronome
-
 // _destru_portee_doc : PORTEES CONFORMES AU MOTEUR NATIF, ET S Y LIMITANT (arbitrage Romain
 // 2026-08-10 : « on doit etre conforme a l usage BP3 et s y limiter pour destru »). Le moteur
 // porte `destru` a DEUX niveaux, tous deux lus a la production : la SOUS-GRAMMAIRE, armee par
@@ -262,9 +251,9 @@ def tempo
 // case par fall-through. Un `_striated` suivi d un `_smooth` est donc refuse AUSSI : ils
 // reglent LA MEME CHOSE, la nature du temps, et on ne la regle pas deux fois. Un booleen
 // `unique:true` par mot aurait rate ce cas — c est la raison du champ NOMME. Le refus natif n
-// est pas un avertissement : `return(7)`, la grammaire entiere ne compile pas. Le groupe couvre
-// les DEUX graphies du meme mot, la tete de scene et le modificateur de sous-grammaire : sans
-// lui, 'tempo:120' suivi de 'mode:ord(tempo:90)' reglerait deux fois le metronome en silence.
+// est pas un avertissement : `return(7)`, la grammaire entiere ne compile pas. Le metronome porte
+// le meme mecanisme depuis `lib/time.json`, sur ses DEUX graphies — la tete de scene et le
+// modificateur de sous-grammaire —, et son groupe se compte avec ceux d ici.
 
 def mode
   section:schema.reservedDirectives

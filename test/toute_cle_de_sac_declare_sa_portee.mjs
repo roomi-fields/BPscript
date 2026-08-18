@@ -190,17 +190,20 @@ for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
      + `rate rendrait un verdict vert sur une famille qu'il n'a jamais vue.`);
 }
 // 18 rapatriés le 2026-08-10 (mode/scan/weight/on_fail/meter/repeat/failed/stop/goto/retro/
-// shuffle/order/rotate/staccato/legato/rndtime/destru/randomize) + 3 rejoints dans la MÊME
-// journée (striated/smooth : « nature du temps », LIBRAIRIES.md:168 ; mm : pragmatique, cf.
-// engine.json subgrammar._comment) = 21.
+// shuffle/order/rotate/staccato/legato/rndtime/destru/randomize) + 2 rejoints dans la MÊME
+// journée (striated/smooth : « nature du temps », LIBRAIRIES.md:168) = 20.
+//   ⚠️ `mm` Y AVAIT REJOINT LE MÊME JOUR, par pragmatisme et non par autorité — son destinataire
+//     mesuré était Kronos. Il en est reparti le 2026-08-18 : le mot est SORTI du langage, son
+//     remplaçant `tempo` a repris tout son câblage, et il l'a repris dans `lib/time.json`, le
+//     domicile que la bible lui donne en quatorze endroits. Le compte passe donc de 24 à 23.
 //   engine 21 → 23 le 2026-08-13 : `srand` et `print` entrent comme GESTES DE ROUTAGE
 //     (`bpscript: false`), à la demande du frontal BP3 qui les routait en allowlist depuis juin.
 //     Ce sont deux contrats BP3 réels que le corpus écrit et que le vocabulaire BPScript n'a aucune
 //     raison d'accueillir — `srand` réamorce l'aléa DANS LE FLUX (BPScript n'expose que le réglage
 //     de scène `seed`), `print` écrit dans une fenêtre de trace que BPScript n'a pas.
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 23,
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 22,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
-   + `'engine.', 23 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
+   + `'engine.', 22 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
    + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici).`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `

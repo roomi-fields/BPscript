@@ -47,19 +47,25 @@ const S = 'core\nalphabet.western\n';
 // ARRIVER dans l'arbre (§3) sont deux règles que la sortie de l'arobase ne touche pas.
 
 // ── 2. LES DEUX FORMES AROBASÉES — chacune à sa place ───────────────────────────────────────
-ok(err(`${S}gate C4:midi\n-----\nS -> C4\n`).length === 0,
-  '2. PROPRIÉTÉ — `gate C4:midi` pose une propriété sur un nom qui existe');
+ok(err(`${S}C4:midi\n-----\nS -> C4\n`).length === 0,
+  '2. PROPRIÉTÉ — `C4:midi` pose une propriété sur un nom qui existe');
 ok(err(`${S}adsr env1\n-----\nS -> C4\n`).length === 0,
   '2. DÉCLARATION — `adsr env1` crée un nom, sans deux-points');
 // ⛔ LE CAS DU BLOC DE CODE A PERDU SON PORTEUR le 2026-08-09 : il s ecrivait avec `cv`, supprime
 // du langage. La forme qui le remplacera — le corps  code typé  de `def` — n est PAS ENCORE LUE.
 // Ce que le volet garde encore, et qui suffit : les deux formes arobasées vivantes, la PROPRIÉTÉ
 // sur un nom existant et la DÉCLARATION qui crée un nom. Le troisième cas revient avec son palier.
-// Une déclaration SANS valeur ne déclare rien : elle doit le dire plutôt que passer.
+// Un nom SEUL en tête ne déclare rien : il doit être refusé plutôt que passer.
+// ⚠️ LE MOTIF ATTENDU A CHANGÉ AVEC LE PORTEUR, le 2026-08-18. Ce cas s'écrivait `gate X` — le mot
+// portait l'intention de déclarer, et son refus pouvait dire « sans valeur, tu ne déclares rien ».
+// `gate` est sorti : `X` seul n'est plus une déclaration incomplète, c'est un mot de tête que rien
+// ne déclare, et c'est ce que le refus dit. Exiger l'ancien motif ferait redemander un message que
+// plus aucune forme ne justifie.
 {
-  const e = err(`${S}gate X\n-----\nS -> C4\n`);
-  ok(e.length >= 1, '2. `gate X` sans valeur ne déclare rien et doit être refusé');
-  ok(e.some((m) => /ne déclare rien/.test(m)), '2. et le refus doit dire POURQUOI');
+  const e = err(`${S}X\n-----\nS -> C4\n`);
+  ok(e.length >= 1, '2. `X` seul ne déclare rien et doit être refusé');
+  ok(e.some((m) => /déclaré par aucune librairie/.test(m)),
+     `2. et le refus doit dire POURQUOI — reçu : ${e.join(' | ').slice(0, 120)}`);
 }
 
 // ── 2bis. LE DEUXIÈME PAS DE LA MIGRATION — là où on abandonne l'auteur ─────────────────────
@@ -107,7 +113,7 @@ for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['u
     '3. et il ne doit PAS traîner parmi les directives de scène');
 }
 {
-  const r = compileToBPxAST(`${S}gate C4:midi\n-----\nS -> C4\n`);
+  const r = compileToBPxAST(`${S}C4:midi\n-----\nS -> C4\n`);
   ok((r.ast?.declarations || []).some((d) => d.name === 'C4' && d.runtime === 'midi'),
     `3. la PROPRIÉTÉ doit arriver dans les déclarations (reçu : ${JSON.stringify(r.ast?.declarations)})`);
 }
@@ -119,7 +125,7 @@ for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['u
 // la règle abrogée, il ne restait qu'une contradiction. Ce qui les remplace éprouve ce qui VIT.
 ok(err(`${S}symbol v\n-----\nS -> C4 v\n`).length === 0,
   '4. la déclaration d\'une variable de travail passe — forme unique depuis le 2026-08-18');
-ok(err(`${S}gate C4:midi\n-----\nS -> C4\n`).length === 0,
+ok(err(`${S}C4:midi\n-----\nS -> C4\n`).length === 0,
   '4. TÉMOIN — une propriété posée par le DEUX-POINTS passe, c\'est la règle que ce fichier tient');
 
 if (echecs.length) {

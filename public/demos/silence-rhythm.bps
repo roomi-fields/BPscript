@@ -1,7 +1,7 @@
 // Silence Rhythm — motif rythmique avec silences
 
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 -----
 S -> Pattern Pattern Pattern Coda

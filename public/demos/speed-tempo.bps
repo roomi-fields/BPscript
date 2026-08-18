@@ -5,11 +5,11 @@
 //   - sur une note  : A4:1/2          → croche  (A4:1 = noire, A4:2 = blanche)
 // ⚠️ le ':' doit être COLLÉ : `{...}:2`, `A4:1/2`. Espacé (`A4 1/2`) = ancien sens (silence).
 //
-// Le TEMPO (l'allure, l'horloge) est un concept SÉPARÉ : @tempo:72 (global).
+// Le TEMPO (l'allure, l'horloge) est un concept SÉPARÉ : tempo:72 (global).
 
-@core
-@alphabet.western:audio
-@tempo:72
+core
+alphabet.western:audio
+tempo:72
 
 // Normal, puis groupe au cadre 2, puis au cadre 1/2, puis des durées par note
 -----

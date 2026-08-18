@@ -20,47 +20,47 @@
 // period notation For these conventions, 'arrows' (_v/_^) is proposed as a compatible
 // substitute.
 
-@def octaves
+def octaves
   resolvedBy:Kairos
   resolves:octaves
 
-@def western
+def western
   position:suffix
   separator:`txt: `
   registers:`txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
   default:4
 
-@def arrows
+def arrows
   position:suffix
   separator:_
   registers:vv v `txt: ` `txt: ^` `txt: ^^`
   default:2
 
-@def saptak
+def saptak
   position:prefix
   separator:_
   registers:mandra madhya taar
   default:1
 
-@def turkish
+def turkish
   position:prefix
   separator:_
   registers:`txt: ` tiz
   default:0
 
-@def gamelan
+def gamelan
   position:prefix
   separator:_
   registers:ageng tengah alit
   default:1
 
-@def shakuhachi
+def shakuhachi
   position:prefix
   separator:_
   registers:otsu kan daikan
   default:0
 
-@def korean
+def korean
   position:prefix
   separator:_
   registers:tak jung cheong
@@ -68,7 +68,7 @@
 
 // saptak_us · Registre numérique en SUFFIXE séparé par '_' (sa_4, r1_4) — convention native
 // -to.tryShruti (22-shruti). Distinct de 'saptak' (préfixe mandra/madhya/taar).
-@def saptak_us
+def saptak_us
   position:suffix
   separator:_
   registers:`txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
@@ -79,7 +79,7 @@
 // plus-long-d'abord : '00' ne doit jamais être avalé par '0'. Le français seul ajoute '000'
 // (non porté ici : seul bp3_indian est servi).
 // bp3 · bp3-engine/csrc/bp3/Inits.c:451-497 (tables d'octaves natives)
-@def bp3
+def bp3
   position:suffix
   separator:`txt: `
   registers:`txt: 00` `txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
@@ -89,7 +89,7 @@
 // = A4) et prolongés par '000' — l'octave sous '00'. Lecture plus-long-d'abord obligatoire :
 // '000' ne doit jamais être avalé par '00' ni par '0'.
 // bp3_fr · bp3-engine/csrc/bp3 -BP3main.h:136-147 + Inits.c:445-530
-@def bp3_fr
+def bp3_fr
   position:suffix
   separator:`txt: `
   registers:`txt: 000` `txt: 00` `txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8`

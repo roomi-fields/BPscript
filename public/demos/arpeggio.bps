@@ -1,7 +1,7 @@
 // Arpeggio — accords arpégés avec vélocité
 
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 -----
 S -> Arp1 Arp2 Arp3 Final

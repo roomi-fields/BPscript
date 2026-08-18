@@ -5,11 +5,11 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-@def sounds
+def sounds
   resolvedBy:BPx
   resolves:sound
   name:sounds
 
-@def tabla_perc
+def tabla_perc
   description:`txt: Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe.`
 
