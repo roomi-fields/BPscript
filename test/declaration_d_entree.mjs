@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GARDE — `@var <rôle> in.<canal>` déclare une ENTRÉE : un RÔLE, son canal, et facultativement
+ * GARDE — `in.<canal> <rôle>` déclare une ENTRÉE : un RÔLE, son canal, et facultativement
  * sa table (ex-`@in`, absorbée dans `@var` le 2026-08-04 — décision Romain, in/out remplacent
  * transport, hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md).
  *

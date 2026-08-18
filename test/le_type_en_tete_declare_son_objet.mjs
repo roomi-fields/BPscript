@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * GARDE — `@var` PORTE SON TYPE JUSQU'À L'ARBRE (EBNF.md:47-57, AST.md:119-150, 2026-08-05).
+ * GARDE — LE TYPE EN TÊTE PORTE SON OBJET JUSQU'À L'ARBRE (EBNF.md, AST.md:119-150).
+ * Le mot `var` est sorti le 2026-08-18 ; ce que ce fichier garde n'a pas bougé — un type déclaré,
+ * un nom, et la nature qui voyage jusqu'au consommateur.
  *
  * ⚠️ CE QUE LE PARSER PERDAIT AVANT CE CHANTIER : chaque `@var` était réduit à ses noms nus
  * (`Scene.vars: string[]`), quel que soit le type écrit derrière — le `varType` n'avait nulle

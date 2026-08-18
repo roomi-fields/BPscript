@@ -53,7 +53,7 @@ const messages = (r) => (r.errors || []).map((e) => e.message || e).join(' | ');
 // ─── `in` EN TÊTE DE SCÈNE RESTE REFUSÉ — l'entrée vit dans `var` ──────────────────────────
 {
   const r = compile('in.midi\nmode:ord\n-----\nS -> C4');
-  ok((r.errors || []).length > 0, "'in.midi' en tête de scène doit rester REFUSÉ (l'entrée se déclare dans '@var')");
+  ok((r.errors || []).length > 0, "'in.midi' seul en tête de scène doit rester REFUSÉ — le canal engage, le RÔLE manque");
 }
 
 // ─── `out` S'ÉCRIT AUX DEUX ÉTAGES — c'est la correction du 2026-08-07 ───────────────────────

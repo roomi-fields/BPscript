@@ -39,14 +39,14 @@ const nomsVars = (ast) => (ast?.vars || []).flatMap((v) => v?.names || []);
 // « ça arrive » — c'est le défaut trouvé le matin même sur `cv` sans deux-points, rangé parmi les
 // directives et invisible de tout ce qui cherche un modulateur.
 const DECLARATIONS = [
-  ['@gate',    'C4:midi\n-----\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
+  ['<nom>:<canal>', 'C4:midi\n-----\nS -> C4',                        (a) => (a.declarations || []).some((d) => d.name === 'C4')],
   // ⚠️ LE MOT A CHANGÉ, PAS LA PORTÉE. `trigger` est sorti du langage le 2026-08-15 — il était
   // absent de la bible depuis toujours — et `var <rôle> in.<canal>` est la forme qui déclare ce
   // qu'un point d'attente attend (décision du 2026-08-04). Le nom arrive donc dans `inputs`, pas
   // dans `declarations` : c'est le MÊME fait mesuré au bon endroit de l'arbre.
   ['in.<canal> …', 'core\nin.midi sync1\n-----\nS -> C4 <!sync1', (a) => (a.inputs || []).some((d) => d.name === 'sync1')],
   ['<module> <nom>', 'mod\nadsr env1\n-----\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
-  ['@var',     'symbol travail\n-----\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
+  ['symbol',       'symbol travail\n-----\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];
 console.log(`[portée unique] ${DECLARATIONS.length} déclarations de terminal`);
 for (const [nom, src, arrive] of DECLARATIONS) {
