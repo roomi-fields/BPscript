@@ -126,7 +126,7 @@ L'espace separe deux termes du flux. Ce qui est **colle** a un terme appartient 
 gouverne ; ce qui en est **separe par un espace** est un terme, ou une portee, a part.
 
 Les operateurs qui **relient** deux termes se lisent de la meme facon avec ou sans espace autour :
-la fleche `->`, la simultaneite `!`, le cablage `>>` et sa coupure `\>>`, le point d'attente `<!`.
+la fleche `->`, la simultaneite `!`, le point d'attente `<!`.
 `S->sa!re` et `S -> sa ! re` donnent le meme arbre.
 
 Les signes qui **qualifient** un terme se collent a lui : le point `.`, le deux-points `:`, les
@@ -328,7 +328,6 @@ grammaire, un jalon de structure. **Une ligne en declare plusieurs**, separees p
 ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`.
 
 ```text
-def souffle lfo1.out >> lpf1.cutoff       // un branchement
 def cadence sa re ga pa                  // une structure de terminaux
 def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
 def kick (vel:120)                       // un prereglage
@@ -747,7 +746,6 @@ _              prolongation : etend l'evenement precedent
 $              gabarit maitre : capture un motif
 &              gabarit : rejeu d'un motif (esclave)
 ~              liaison d'objets sonores (C4~ debut, ~C4 fin, ~C4~ continuation)
->> \>>         cablage : brancher un element sur un autre, couper le cable
 |[ ]           objet sonore compose : une suite de notes sur une seule unite d'ordonnancement
 lambda         chaine vide : le non-terminal s'efface, comme sur un membre droit vide
 ```
@@ -2072,7 +2070,6 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `template` |
 | `@`        | ouvre une ligne de la partie déclarative  | `actor`, `alphabet.tabla`, `def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
-| `>>` `\>>` | brancher un câble, le couper              | `saw1 >> lpf1 >> out`                           |
 
 ### L'espace, délimiteur de termes
 
