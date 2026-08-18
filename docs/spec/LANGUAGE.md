@@ -151,7 +151,7 @@ refusee.
 ```bpscript
 core
 alphabet.sargam
-var depart in.midi
+in.midi depart
 
 actor sitar1
   tuning.sargam_22shruti
@@ -242,7 +242,7 @@ core
 actor sitar1
   alphabet.sargam
   out.audio
-var depart in.midi
+in.midi depart
 
 actor tabla1
   alphabet.tabla
@@ -1588,7 +1588,7 @@ duree zero.
 
 ```bpscript
 alphabet.western:audio
-var sync1 in.midi
+in.midi sync1
 
 -----
 S -> -<!sync1 C4 D4 E4       // attend en silence, puis joue

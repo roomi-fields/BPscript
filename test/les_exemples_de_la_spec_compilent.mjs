@@ -136,10 +136,10 @@ const REFUS_DE_RESOLUTION = /ne désigne rien|n'existe pas|introuvable|non décl
 // le dit explicitement (`var lpf1 lpf : 'lpf' est absent du catalogue de modules…`).
 const CAUSE_MODULE_ABSENT_DU_CATALOGUE = /est absent du catalogue de modules/;
 const BASELINE_RATTRAPAGE = new Map([
-  ['symbol lpf1 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['symbol saw1 saw', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['symbol lpf2 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['symbol vca1 vca', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['var lpf1 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['var saw1 saw', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['var lpf2 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
+  ['var vca1 vca', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
 ]);
 
 let exemples = 0;
@@ -304,7 +304,12 @@ for (const p of SPECS) {
     // faisait alors ÉCHOUER quatre règles qui passaient auparavant. Une déclaration qui ne
     // compile pas seule n'est pas un contexte utilisable : on ne garde que celles qui tiennent
     // debout d'elles-mêmes.
-    if (/^@(var|actor|def|alphabet|tuning|octaves)\b/.test(ligne)) {
+    // ⛔ CE FILTRE CHERCHAIT L AROBASE, ET IL NE RETENAIT PLUS RIEN. Le signe est sorti du langage
+    // le 2026-08-17 : aucune ligne declarative ne commence par lui, donc le contexte etait TOUJOURS
+    // vide et les quatre regles du point d attente tombaient sur « attend un signal que rien ne
+    // declare ». Un filtre qui ne matche rien ressemble exactement a un bloc sans declaration.
+    // La liste suit les mots vivants : les cinq types en tete (2026-08-16) et les mots de structure.
+    if (/^(actor|def|alphabet|tuning|octaves|symbol|flag|signal|pitch|phase|logic|in\.)/.test(ligne)) {
       let seule = false;
       try { seule = (compileToBPxAST(`core\n${ligne}\n-----\nS -> C4\n`).errors || []).length === 0; }
       catch { seule = false; }
@@ -314,7 +319,9 @@ for (const p of SPECS) {
     if (!RE_REGLE.test(ligne)) continue;
     regles++;
     let r;
-    try { r = compileToBPxAST(`core\n-----\n${contexte.join('\n')}\n${ligne}\n`); }
+    // ⛔ LE CONTEXTE DECLARE, DONC IL PASSE AVANT LE DELIMITEUR. Il etait pose APRES, ou une
+    // declaration ne declare plus rien depuis que c est la POSITION qui qualifie la ligne.
+    try { r = compileToBPxAST(`core\n${contexte.join('\n')}\n-----\n${ligne}\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     if (msg === '' || REFUS_DE_RESOLUTION.test(msg)) continue;
@@ -448,8 +455,8 @@ const RETARD_BLOCS = new Map([
   //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
   ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4 #0', /nomme un évaluateur qui n'est pas déclaré/],
   ['def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
-  ['symbol lpf1 lpf #0', /var lpf1 lpf : 'lpf' est absent du catalogu/],
-  ['symbol lpf1 lpf #1', /var lpf1 lpf : 'lpf' est absent du catalogu/],
+  ['var lpf1 lpf #0', /var lpf1 lpf : 'lpf' est absent du catalogu/],
+  ['var lpf1 lpf #1', /var lpf1 lpf : 'lpf' est absent du catalogu/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
   // rôles, rôle 4) et que `@def` déclarerait. `@def` n'étant pas implémenté, aucun nom n'est
   // appelable : la parenthèse est donc lue comme un sac, et `E4` refusé comme clé inconnue.
