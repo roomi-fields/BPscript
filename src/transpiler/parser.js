@@ -2071,12 +2071,15 @@ function parse(tokens, opts = {}) {
 
     let runtime = null, value = null, aliases = null;
 
-    // @scene verse "verse.bps" — child scene declaration
-    if (name === 'scene') {
-      const sceneName = expect(T.IDENT).value;
-      const file = expect(T.STRING).value;
-      return { type: 'SceneDirective', name: sceneName, file, line: tok.line };
-    }
+    // ⛔ LE LECTEUR DE `scene` EST RETIRE LE 2026-08-19, et la decision a treize semaines : Romain,
+    // le 2026-07-29, « je propose de LAISSER scenes dans BPx, ça peut servir plus tard, mais on le
+    // retire du RESTE ». Le RESTE, c'est ici. La pierre tombale etait ecrite, le lecteur ne l'avait
+    // jamais suivie : `scene verse "verse.bps"` compilait encore et posait son noeud.
+    //
+    // ⚠️ LE CHAMP `ast.scenes` RESTE, vide — c'est la moitie que Romain garde pour BPx, qui le LIT
+    // a trois endroits. Retirer le champ AVEC le lecteur ferait plus que la decision ne dit.
+    // MESURE AVANT LA COUPE : ZERO fichier de la tour ecrit cette directive — tous les `.bps` et
+    // `.gr` des vingt-quatre depots, liens symboliques non suivis. Aucune scene ne tombe avec.
 
     // ⛔ PIERRE TOMBALE — `library` est SUPPRIMÉE du langage (décision Romain 2026-08-06).
     //

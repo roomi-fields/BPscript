@@ -268,33 +268,33 @@ categorie de reglages.
 | mot      | ce qu'il fait                                                          |
 | -------- | ---------------------------------------------------------------------- |
 | `actor` | declare **qui joue** : un acteur, son alphabet, sa sortie              |
-| `var`   | declare **une variable** : un nom qui porte une valeur ou un etat      |
+| *le type en tete* | declare **une variable** : le type, puis le nom qu'il donne      |
 | `def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque |
 | `init`  | declare **l'etat de depart** de la scene                               |
 
-### `var` -- declarer une variable
+### Le type en tete -- declarer une variable
 
-Une variable porte un **type** qui dit ce qu'elle est. **Le nom vient d'abord, le type ensuite** --
-l'ordre de toute declaration, `def` et `actor` comme celle-ci.
+Une variable porte un **type** qui dit ce qu'elle est. **Le type vient en tete, le nom ensuite** --
+l'ordre de toute declaration, `def` et `actor` comme celle-ci. Le point qualifie le type.
 
 ```text
-var section flag: calm:1, full:2
-var touches in.keyboard
-var grain signal
-var hauteur pitch
-var rotation phase
-var porte logic
-var lpf1 lpf
-var pivot
+flag section(calm:1, full:2)
+in.keyboard touches
+signal grain
+pitch hauteur
+phase rotation
+logic porte
+lpf lpf1
+symbol pivot
 ```
 
 Le nom porte sa **valeur de depart**, collee a son deux-points. Le sujet de l'affectation est le
 **nom**, jamais le type.
 
 ```text
-var grain:0.5 signal
-var hauteur:C4 pitch
-var a:1, b:2
+signal grain:0.5
+pitch hauteur:C4
+symbol a:1, b:2
 ```
 
 Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit le mot `flag` et enumere
@@ -380,8 +380,8 @@ d'accordage et de registres, `hz` la donne directement.
 branchement initial et le code lance une fois.
 
 ```text
-var saw1 saw
-var lpf1 lpf
+saw saw1
+lpf lpf1
 
 init
   saw1 >> lpf1 >> out
@@ -461,7 +461,7 @@ a besoin, chaque instance portant ses propres valeurs de port.
 Un filtre passe-bas nomme `lpf` en librairie s'instancie avant de servir : la scene ecrit
 
 ```text
-var lpf1 lpf
+lpf lpf1
 ```
 
 et c'est `lpf1` qui se cable et se regle. **Une instance est une variable** : son comportement vient
@@ -688,7 +688,7 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | Mot      | Ce qu'il declare                  |
 | -------- | --------------------------------- |
 | `actor` | qui joue                          |
-| `var`   | qu'un nom existe, et de quel type |
+| *le type en tete* | qu'un nom existe, et de quel type |
 | `def`   | qu'un nom vaut un corps           |
 | `init`  | l'etat de depart de la scene      |
 
@@ -705,7 +705,7 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | `phase`  | un signal lu comme une position dans un cycle  |
 | `logic`  | un signal lu comme un etat haut ou bas         |
 
-Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Un `var`
+Les quatre derniers sont les **conventions de lecture d'un signal**, detaillees plus bas. Une declaration
 peut aussi porter le nom d'un **module** pour type -- celui-la vient d'une librairie.
 
 **Deux mots de direction**, `in` et `out`, qui nomment par ou une chose entre ou sort :
@@ -867,12 +867,12 @@ Une scene contient trois categories de symboles, que le compilateur reconnait a 
 
 | Categorie        | Declaration                              | Role                                           | Exemples                                   |
 | ---------------- | ---------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
-| **Non-terminal** | le nom d'une regle (son LHS), ou `var`  | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                    |
+| **Non-terminal** | le nom d'une regle (son LHS), ou `symbol` | variable de grammaire, se reecrit et disparait | S, Intro, Motif, R1, P4                  |
 | **Terminal**     | explicite (un alphabet, une declaration) | symbole de sortie, atteint un runtime          | `sa`, `C4`, `dha`                          |
 | **Reglage**      | une cle d'une librairie invoquee         | decrit une propriete, zero duree               | `(weight:50)`, `(vel:80)`, `(pan:20)`      |
 
 **Rien n'est implicite.** Un non-terminal se declare de deux facons : il est le nom d'une regle,
-donc declare par son membre gauche, ou bien `var` le declare -- c'est le cas des non-terminaux
+donc declare par son membre gauche, ou bien `symbol` le declare -- c'est le cas des non-terminaux
 intermediaires, qui n'ont pas de regle a leur nom. Un non-terminal vit le temps de la derivation :
 son role est d'etre reecrit, et les regles le remplacent par des terminaux. La derivation s'acheve
 sur des terminaux, seuls porteurs d'une sortie.
@@ -1058,9 +1058,9 @@ qu'il ajoute.
 Un declenchement est une transition d'un etat bistable, donc un `logic` : une meme convention
 couvre l'etat tenu et l'impulsion.
 
-Ces quatre conventions typent les ports des modules, les variables `var` et les definitions
+Ces quatre conventions typent les ports des modules, les variables declarees et les definitions
 `def`. Le principe et les ports sont decrits dans « Les modules -- ce qu'on cable », les
-variables dans « `var` -- declarer une variable ».
+variables dans « Le type en tete -- declarer une variable ».
 
 ---
 
@@ -1305,8 +1305,8 @@ fait resonner l'accord, le second fait resonner chaque note.
 sa portee en donne l'etendue.
 
 ```bpscript
-var lpf1 lpf
-var lpf2 lpf
+lpf lpf1
+lpf lpf2
 
 -----
 S -> C4(lpf1.cutoff:400)              // un calque sur une note
@@ -1335,8 +1335,8 @@ Un cable se coupe pendant que ca joue ; une portee, elle, se referme.
 toute definition ; son nom et ceux de ses modules s'emploient ensuite dans les regles :
 
 ```bpscript
-var lpf1 lpf
-var vca1 vca
+lpf lpf1
+vca vca1
 def sombre lpf1 >> vca1
 
 -----
@@ -1349,7 +1349,7 @@ S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)
 **Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
 une librairie de modules est une collection de `def`, comme un alphabet est une collection de
 terminaux. Ce qui s'invoque dans une regle est **l'instance** : la scene ecrit
-`var lpf1 lpf`, puis `{A B}(lpf1.cutoff:4000)`.
+`lpf lpf1`, puis `{A B}(lpf1.cutoff:4000)`.
 
 **Ce que le calque devient a l'execution** -- exemplaires, ordre de traversee, fin de vie,
 rechargement a chaud -- est decrit dans `dedale/docs/LE-CALQUE.md`.
@@ -1536,7 +1536,7 @@ actor melodie
 actor perc
   alphabet.tabla
   out.osc
-var ramp1 ramp
+ramp ramp1
 def monte ramp1(from:0, to:255)
 
 -----
@@ -1597,7 +1597,7 @@ S -> <!sync1 C4 D4 E4        // attend seul puis demarre
 S -> C4!E4<!sync1 D4 E4      // joue C4 + E4, attend sync1, puis D4
 ```
 
-`var <role> in.<canal>` nomme dans la scene le **role** que tient l'entree. L'appareil qui remplit
+`in.<canal> <role>` nomme dans la scene le **role** que tient l'entree. L'appareil qui remplit
 ce role s'y associe hors de la scene. Les points d'attente se chainent : `<!sync1<!sync2`.
 
 **La racine d'un point d'attente se declare.** Un nom qu'aucune entree, variable, porte ni acteur
@@ -1830,7 +1830,7 @@ sans comparer les deux cotes de la fleche.
 symbole. C'est ce qui le separe d'un contexte positif : `(X)` regarde sans prendre, `#X` prend.
 
 ```bpscript
-var z1, z2, z3
+symbol z1, z2, z3
 
 // « trois choses, sauf K1 K2 K3, puis M M » deviennent « z1 z2 z3 M M »
 -----
@@ -2174,7 +2174,7 @@ dit laquelle des deux formes on écrit.
 
 ```bpscript
 alphabet.western:midi     // propriété : les terminaux de western sortent en MIDI
-var env1 adsr             // déclaration : env1 est un nom neuf, une instance d'adsr
+adsr env1                 // déclaration : env1 est un nom neuf, une instance d'adsr
 
 -----
 S -> C4 D4
@@ -2188,7 +2188,7 @@ les terminaux héritent du territoire, la cascade tranche quand les deux écrive
 
 ### Séparation des territoires
 
-- **Déclarer** — `alphabet.X`, `actor X`, `var`, `def` : ce que l'on écrit une
+- **Déclarer** — `alphabet.X`, `actor X`, le type en tête, `def` : ce que l'on écrit une
   fois et que l'on réutilise.
 - **Affecter** — `*:midi`, `Y:osc` : depuis le territoire d'origine du sujet,
   c'est-à-dire l'alphabet ou l'acteur où il est déclaré, ou l'occurrence dans une règle.
@@ -2297,8 +2297,8 @@ jhala -> {sa re ga pa dha ni sa}:4
 ### Déclarer un symbole : convention de lecture et sortie
 
 Une déclaration donne à un symbole sa convention de lecture — `signal`, `pitch`, `phase` ou
-`logic` — et la sortie qui le prend en charge. La convention s'écrit avec `var` et `def` (cf.
-« `var` — déclarer une variable ») ; la sortie se pose sur l'alphabet ou sur l'acteur.
+`logic` — et la sortie qui le prend en charge. La convention s'écrit en tête et avec `def` (cf.
+« Le type en tête — déclarer une variable ») ; la sortie se pose sur l'alphabet ou sur l'acteur.
 
 ```bpscript
 actor melodie
@@ -2343,8 +2343,8 @@ nature « câblage », que l'aval traite comme telle.
 
 ```text
 alphabet.western
-var saw1 saw
-var lpf1 lpf
+saw saw1
+lpf lpf1
 
 init
   saw1 >> lpf1 >> out

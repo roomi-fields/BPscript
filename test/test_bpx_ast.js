@@ -82,14 +82,27 @@ function backtickNodes(ast) {
     'ActorReference transport sur le nœud acteur : ' + JSON.stringify(tr));
 }
 
-// 6bis. `scene` est REFUSÉE, et le refus NOMME la faute — il ne dit pas « ligne non reconnue ».
+// 6bis. `scene` est REFUSÉE, et elle l'est COMME UN MOT INVENTÉ.
+// ⚠️ CE VOLET EXIGEAIT UN REFUS NOMMÉ, ET C'ÉTAIT LE BON TEST JUSQU'AU 2026-08-19. Ce jour-là le
+// LECTEUR de `scene` a été retiré — la décision de Romain du 2026-07-29 (« on le retire du reste »)
+// avait treize semaines et n'avait jamais été appliquée : la pierre tombale était écrite en
+// commentaire et la graphie compilait toujours, posant son nœud. Depuis le 2026-08-15, un mot sorti
+// tombe dans le refus d'un mot inventé ; c'est donc cette identité-là qui se garde.
+// ⛔ ET LA SCÈNE D'ESSAI A CHANGÉ DE PLACE : elle écrivait la ligne APRÈS le délimiteur, où le
+// refus qui mord est celui de la POSITION. Une déclaration se mesure là où elle déclare.
 {
-  const r = compileToBPxAST('core\nalphabet.western\n-----\nscene verse "verse.bps"\n-----\nS -> C4');
-  const msgs = (r.errors || []).map((e) => e.message ?? String(e));
-  check(msgs.some((m) => /'scene' est SUPPRIMÉE/.test(m)),
-    'scene doit être refusée en NOMMANT la suppression : ' + JSON.stringify(msgs));
-  check(msgs.some((m) => /sous-scènes/.test(m)),
-    'scene — le refus doit dire POURQUOI, pas seulement refuser : ' + JSON.stringify(msgs));
+  const scene = (mot) => `core\nalphabet.western\n${mot} verse "verse.bps"\n-----\nS -> C4`;
+  const msgs = (compileToBPxAST(scene('scene')).errors || []).map((e) => e.message ?? String(e));
+  const invente = (compileToBPxAST(scene('zorglubinvente')).errors || []).map((e) => e.message ?? String(e));
+  check(msgs.length > 0, 'scene doit être REFUSÉE : ' + JSON.stringify(msgs));
+  const nu = (l) => l.join(' | ').replace(/at line \d+:\d+/g, '').trim();
+  check(nu(msgs) === nu(invente),
+    'scene doit refuser comme un mot INVENTÉ, mot pour mot : ' + JSON.stringify(msgs));
+  // ET LE CHAMP RESTE, VIDE — c'est la moitié que Romain garde pour BPx, qui le lit.
+  const ok = compileToBPxAST('core\nalphabet.western\n-----\nS -> C4');
+  check(Array.isArray(ok.ast?.scenes) && ok.ast.scenes.length === 0,
+    "`ast.scenes` doit rester un tableau VIDE — le lecteur sort, le champ reste : "
+    + JSON.stringify(ok.ast?.scenes));
 }
 
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom
