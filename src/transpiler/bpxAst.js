@@ -16,7 +16,7 @@
 //
 // L'AST porte déjà (depuis le parser) : payload par token (nature/actor/params/flux) +
 // références d'acteur canoniques (ActorReference[]). Les consommateurs lisent directement
-// les nœuds/directives (backticks sur le nœud ; @flag/@library/@scene/@mm dans les directives).
+// les nœuds/directives (backticks sur le nœud ; les réglages de tête dans les directives).
 
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
@@ -55,7 +55,7 @@ import { validateModulation } from './modulationValidation.js';
  * correspondance à tenir entre deux vocabulaires.
  *
  * ⚠️ CE QUI N'EST PAS ANNOTÉ EST UNE ABSENCE ASSUMÉE, JAMAIS UNE INVENTION. Un contrôleur nommé
- * par la scène (`@cc mon_nom:98`) n'est déclaré par aucune librairie : il n'a pas de destinataire
+ * par la scène (`cc mon_nom:98`) n'est déclaré par aucune librairie : il n'a pas de destinataire
  * lisible, et sa clé reste donc hors de la table plutôt que d'en recevoir un supposé. Le trou est
  * visible, ce qui est le but.
  */
@@ -103,7 +103,7 @@ function poserLeDestinataireDesReglages(ast, libCtx) {
  *   - `payload` : DONNÉE D'ÉVÉNEMENT de la voix de code (KAI-9, point de bascule unique aligné
  *     bpx + Kairos) — `{ nature:'code', interp }`. L'`interp` est l'interpréteur : tag explicite
  *     (`sc: …`, `py: …`) sinon 'auto' ; un backtick NON tagué hérite de l'`eval` de l'acteur en
- *     tête de sa règle (`@actor drums eval.strudel` → 'strudel'). Scellé DANS LE PAYLOAD (pas en
+ *     tête de sa règle (`actor drums eval.strudel` → 'strudel'). Scellé DANS LE PAYLOAD (pas en
  *     tête de nœud) : c'est ce qui VOYAGE dans la dérivation jusqu'à Kairos, qui matérialise
  *     event.output = { runtime:'code', device:interp }. BPx porte le payload opaque ; Kairos le lit.
  */
@@ -167,7 +167,7 @@ function annotateBackticks(ast) {
         errors.push({
           message: `Backtick sans langage — il doit être connu, jamais deviné. Deux façons de le `
                  + `dire : un TAG dans le bloc (\`js: …\`), ou un ACTEUR qui qualifie le bloc par le `
-                 + `point (\`drums.\`…\`\`, avec '@actor drums eval.<moteur>'). Le second porte AUSSI `
+                 + `point (\`drums.\`…\`\`, avec 'actor drums eval.<moteur>'). Le second porte AUSSI `
                  + `l'identité de la voix, que le tag seul ne donne pas.`,
           line: el.line,
         });
@@ -189,8 +189,8 @@ function annotateBackticks(ast) {
  * Les consommateurs lisent directement les nœuds/directives :
  *   - backticks → nœuds (`_btName`, `code` en tête ; `payload.interp` + `payload.nature:'code'`) ;
  *   - drapeaux nommés → `ast.vars` (`VarDirective` de `varType.kind === 'flag'`, ex-`@flag`) ;
- *   - librairies → directives d'invocation (`@alphabet.X`, `@tuning.Y`…) ;
- *   - scènes/expose/tempo → `ast.scenes` / `ast.exposes` / `@mm` ;
+ *   - librairies → directives d'invocation (`alphabet.X`, `tuning.Y`…) ;
+ *   - scènes/expose/tempo → `ast.scenes` / `ast.exposes` / `tempo` ;
  *   - acteurs (transport/alphabet/eval) → `ast.actors[].references` (ActorReference) ;
  *   - payload par token (nature/actor/params/flux) → posé par le parser.
  *
@@ -212,7 +212,7 @@ function annotateBackticks(ast) {
  * - Mécanisme GÉNÉRAL (un seul pour tout défaut), piloté par table.
  * - On ne câble QUE les défauts qui ont un vrai consommateur en aval (sinon on
  *   écrirait une cible que personne ne lit). Aujourd'hui : le TEMPO, lu par l'hôte
- *   et BPx via la directive `@tempo` (Kanopi ; BPx loadGrammar). Les autres
+ *   et BPx via la directive `tempo` (Kanopi ; BPx loadGrammar). Les autres
  *   réglages (octave, division…) s'ajouteront ici dès que leur cible AST + lecteur
  *   seront définis.
  *
@@ -222,8 +222,8 @@ function annotateBackticks(ast) {
 function applyEnvironmentDefaults(ast, env) {
   if (!ast || !env || typeof env !== 'object') return;
 
-  // tempo → directive `@tempo`, le seul nom du métronome depuis le 2026-08-10 (avant cette date
-  // l'arbre portait `mm`). On n'inscrit le défaut que si la scène ne déclare aucun tempo.
+  // tempo → directive `tempo`, le seul nom du métronome depuis le 2026-08-10 (avant cette date
+  // le métronome porte un seul nom). On n'inscrit le défaut que si la scène ne déclare aucun tempo.
   if (env.tempo != null && !hasTempoDirective(ast)) {
     (ast.directives = ast.directives || []).push({
       type: 'Directive',
@@ -267,7 +267,7 @@ function hasTempoDirective(ast) {
 //
 //   REMOTE (mécanisme B — RuleContextAST sur rule.contexts) :
 //     `(X)` / `(X Y)` / `#(X Y)` de tête → reste sur rule.contexts, enrichi
-//       `elements` TYPÉS (canonique) + GARDE `symbols` (@deprecated) en MIROIR
+//       `elements` TYPÉS (canonique) + GARDE `symbols` (deprecated) en MIROIR
 //       transitoire : le BPx vivant pré-Palier-4 lit encore `symbols` → la
 //       parité reste verte avec l'adaptateur en place (double-émission).
 //     mi-LHS → ContextAST{negated, elements} EN PLACE (la position porte le
@@ -641,7 +641,7 @@ function canonicalizeContexts(ast) {
 // DÉRIVATION alphabet ← accordage (bug 1.1, Romain 2026-07-05) : un accordage déclare son
 // alphabet (`tunings.json` Y.alphabet). Quand un accordage est invoqué SANS alphabet, l'alphabet
 // EFFECTIF se DÉRIVE de l'accordage (cascade), il n'est JAMAIS un western caché. Rendu EXPLICITE
-// dans l'AST (acteur : `props.alphabet` ; scène : injection d'une directive `@alphabet.Y.alphabet`).
+// dans l'AST (acteur : `props.alphabet` ; scène : injection d'une directive `alphabet.Y.alphabet`).
 function deriveAlphabetFromTuning(ast) {
   if (!ast) return;
   const tuningAlpha = (tname) => { const t = loadLib('tuning', tname); return (t && t.alphabet) || null; };
@@ -661,7 +661,7 @@ function deriveAlphabetFromTuning(ast) {
 
 // FAIL-LOUD terminaux (bug 1.1 couche 2, Romain 2026-07-05) : le vocabulaire UTILISÉ (les
 // terminaux des règles) doit être DÉCLARÉ par un alphabet en portée. Un terminal-note qui
-// n'appartient à aucun alphabet effectif (ex. `C4` dans une scène `@alphabet.sargam`), et qui
+// n'appartient à aucun alphabet effectif (ex. `C4` dans une scène `alphabet.sargam`), et qui
 // n'est ni un non-terminal, ni un symbole déclaré, ni du code → CRIE à la compilation.
 // Union des alphabets effectifs = SÛRE (pas de faux positif cross-acteur).
 /**
@@ -744,7 +744,7 @@ function terminauxEnPortee(ast) {
   // ⚠️ UNE SCÈNE NE DÉCLARE QU'UN ALPHABET — tranché par Romain le 2026-08-07 : « on ne déclare
   // pas plusieurs acteurs implicites, un seul ; sinon c'est explicite. » Un acteur porte UN
   // alphabet et UNE sortie ; deux vocabulaires appellent donc deux acteurs, et deux acteurs se
-  // DÉCLARENT. Le second `@alphabet` de scène est refusé plus bas (`refuserAlphabetsMultiples`),
+  // DÉCLARENT. Le second `alphabet` de scène est refusé plus bas (`refuserAlphabetsMultiples`),
   // il n'est plus ignoré en silence — c'est pour ça qu'on lit le premier sans remords.
   const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
@@ -758,9 +758,9 @@ function terminauxEnPortee(ast) {
   }
   // ⛔ UNE INVOCATION MET SON VOCABULAIRE EN PORTEE — une seule ligne suffit.
   //
-  // `@test_alphabets.abc` DESACTIVAIT la validation au lieu de l'activer : la scene sortait avec
+  // `test_alphabets.abc` DESACTIVAIT la validation au lieu de l'activer : la scene sortait avec
   // ZERO terminal, `validateTerminals` revenait avant tout controle, et n'importe quel symbole
-  // passait. Il fallait ecrire `@alphabet.abc` EN PLUS, ce que rien ne justifiait — le nom du
+  // passait. Il fallait ecrire `alphabet.abc` EN PLUS, ce que rien ne justifiait — le nom du
   // fichier et celui de l'entree disent deja tout.
   //
   // ⚠️ ET LA SECONDE LIGNE COUTAIT DEUX FOIS : elle faisait REFUSER la projection chez Kairos
@@ -768,31 +768,31 @@ function terminauxEnPortee(ast) {
   // Une ligne qui repare la compilation et casse la projection n'est pas une contrainte, c'est le
   // symptome d'un defaut.
   //
-  // `ajouter` refuse une entree sans terminaux : `@sound.X`, `@homomorphism.X` et `@eval.X` ne
+  // `ajouter` refuse une entree sans terminaux : `sound.X`, `homomorphism.X` et `eval.X` ne
   // mettent donc RIEN en portee, et ce qui EST un alphabet en charge un.
   for (const ref of ast.libRefs || []) {
     const parts = String(ref).split('.');
     // ⚠️ L'ENTREE SE CHERCHE DANS LA LIBRAIRIE INVOQUEE, jamais partout. Sans cette borne,
-    // `@homomorphism.dhati` chargeait l'alphabet `dhati` du catalogue de test — un nom porte par
+    // `homomorphism.dhati` chargeait l'alphabet `dhati` du catalogue de test — un nom porte par
     // deux librairies de natures differentes, et la mise en portee prenait la mauvaise.
     const lib = loadLib(parts.slice(0, -1).join('.'), parts[parts.length - 1]);
     if (!lib || !nomsDeTerminaux(lib)) continue;
     aUnAlphabet = ajouter(parts[parts.length - 1], sceneOct ? (sceneOct.subkey || sceneOct.runtime) : null) || aUnAlphabet;
   }
-  // ⛔ UN TERMINAL DÉCLARÉ PAR `@def` ENTRE AU VOCABULAIRE — sinon la directive ne sert à rien.
+  // ⛔ UN TERMINAL DÉCLARÉ PAR `def` ENTRE AU VOCABULAIRE — sinon la directive ne sert à rien.
   //
-  // `LANGUAGE.md` §« Déclarer un terminal » : « un terminal se déclare avec `@def` et un bloc de
+  // `LANGUAGE.md` §« Déclarer un terminal » : « un terminal se déclare avec `def` et un bloc de
   // clés ». Une déclaration qui n'ajoute pas son nom au vocabulaire est une porte nommée qui ne
   // change RIEN : la scène compile la directive, puis refuse le symbole qu'elle vient de déclarer.
-  // Mesuré le 2026-08-08, juste après l'ouverture de `@def` : `@def ka voice.sec` puis `S -> ka`
+  // Mesuré le 2026-08-08, juste après l'ouverture de `def` : `def ka voice.sec` puis `S -> ka`
   // rendait « terminal 'ka' non déclaré ». La directive était lue, rangée dans l'arbre, et
   // ignorée du seul contrôle qui la concernait.
   //
-  // ⚠️ ET C'EST LE CŒUR DU CHANTIER, PAS UN DÉTAIL. Cinq directives sortent du langage, et `@gate`
+  // ⚠️ ET C'EST LE CŒUR DU CHANTIER, PAS UN DÉTAIL. Cinq directives sortent du langage, et `gate`
   // — 119 lignes sur 14 scènes — déclarait précisément des terminaux avec leur sortie. Sans cette
   // ligne, la cible de migration accepte la déclaration et refuse l'usage : le pire des deux
   // mondes, un mur avec une porte peinte dessus.
-  // Un terminal declare par `@def` appartient a la SCENE, pas a un alphabet : il est en portee
+  // Un terminal declare par `def` appartient a la SCENE, pas a un alphabet : il est en portee
   // partout, donc il rejoint chaque paquet. Un mot peut le meler aux bols de l'alphabet actif sans
   // pour autant traverser deux alphabets.
   for (const d of ast.directives || []) {
@@ -808,14 +808,14 @@ function terminauxEnPortee(ast) {
  * LA VOIX D'UN TERMINAL ARRIVE JUSQU'À L'ARBRE — cascade terminal, puis alphabet.
  *
  * ⛔ ACTE DE ROMAIN, 2026-08-08 : « tout est dans les PROPRIÉTÉS DU TERMINAL — ou pas, et c'est
- * alors résolu par les principes d'override. Et `@def`/`voice` doit AUSSI être correctement
+ * alors résolu par les principes d'override. Et `def`/`voice` doit AUSSI être correctement
  * implémenté dans TOUS LES ALPHABETS. »
  * C'est la suite directe de la décision du 2026-08-01 : « un alphabet est une collection
  * structurée de terminaux », et `voice` n'est PAS une clé d'acteur — c'est le terminal qui la
  * porte, et l'alphabet qui les organise.
  *
  * ⚠️ CE QUE ÇA DÉBLOQUE, ET C'EST UN AGENT ENTIER ARRÊTÉ DEPUIS QUATRE HEURES. Kairos assurait le
- * DISPATCH DU SON — quelle voix joue quel symbole — en lisant la table des macros ; `@macro` sort
+ * DISPATCH DU SON — quelle voix joue quel symbole — en lisant la table des macros ; `macro` sort
  * du langage, la table n'existe plus, et il n'a rien à la place. La réponse était déjà dans la
  * spécification ; c'est l'implémentation qui manquait.
  *
@@ -838,7 +838,7 @@ function terminauxEnPortee(ast) {
  * ce qui ne se défend pas, c'est les deux à la fois.
  *
  * L'ORDRE DE RÉSOLUTION, du plus local au plus général :
- *   1. le terminal le nomme lui-même   (`@def ka  voice.sec`)
+ *   1. le terminal le nomme lui-même   (`def ka  voice.sec`)
  *   2. son alphabet le nomme pour lui  (`alphabets.json`, table `voices`)
  * Un terminal qui n'est nommé nulle part ne reçoit RIEN — l'absence reste une absence, et l'aval
  * la lit comme telle. On n'invente pas une voix par défaut : ce serait le défaut invisible que la
@@ -846,7 +846,7 @@ function terminauxEnPortee(ast) {
  */
 function poserLaVoixDesTerminaux(ast) {
   if (!ast) return;
-  // (1) ce que les `@def` de la scène déclarent
+  // (1) ce que les `def` de la scène déclarent
   const parDef = new Map();
   for (const d of ast.directives || []) {
     if (d && d.type === 'DefDirective' && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
@@ -864,7 +864,7 @@ function poserLaVoixDesTerminaux(ast) {
   // C'est lui qui l'a mesuré et remonté ; la décision est de Romain.
   //
   // CE QUI RESTE ICI EST DU PORTAGE, PAS DE LA RÉSOLUTION : une voix ÉCRITE dans la scène par
-  // `@def <nom>  voice.<voix>` est une déclaration de l'auteur, je la transporte telle quelle.
+  // `def <nom>  voice.<voix>` est une déclaration de l'auteur, je la transporte telle quelle.
   // Ce que l'alphabet organise, c'est l'aval qui le résout — « porter ≠ résoudre », et c'est la
   // règle que je passe mes journées à opposer aux autres.
   if (!parDef.size) return;
@@ -897,8 +897,8 @@ function nomsDeclares(ast) {
   const declared = new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
   for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
-  // ⛔ UNE DEFINITION EST UN NOM REINVOCABLE — LANGUAGE.md:304 : « @def associe un nom a un corps,
-  // POUR LE REINVOQUER D UN MOT ». Mesure du 2026-08-09 : `@def m C4 D4` puis `S -> m C4` refusait
+  // ⛔ UNE DEFINITION EST UN NOM REINVOCABLE — LANGUAGE.md:304 : « def associe un nom a un corps,
+  // POUR LE REINVOQUER D UN MOT ». Mesure du 2026-08-09 : `def m C4 D4` puis `S -> m C4` refusait
   // — « terminal 'm' non declare ». Le nom etait donc declare et INUTILISABLE : la moitie du sens
   // de la directive manquait, et le palier ecrit ce matin ne l avait pas vu parce qu il rangeait la
   // definition dans l arbre sans jamais l invoquer.
@@ -921,16 +921,16 @@ function nomsDeclares(ast) {
   // jamais branché trouvé aujourd'hui, après `isEndOfRhs()`. Une branche morte ne rougit pas, ne
   // sert pas, et se lit comme une couverture.
   //
-  // DEUX NOMS, PAS UN : une table à section unique s'invoque par son nom (`@homomorphism.dhati`
+  // DEUX NOMS, PAS UN : une table à section unique s'invoque par son nom (`homomorphism.dhati`
   // → `dhati` dans le flux) et l'arbre la nomme `*` ; une table à sections nommées pose ses
   // ÉTIQUETTES (`checkhomo` → `*`, `H`, `TR`, et les règles écrivent `S -> $X * TR &X Y`).
   // N'en déclarer qu'un laisserait l'autre refusé — c'est la faute « on répare la forme qui s'est
   // montrée » appliquée à un nom.
   for (const d of ast.directives || []) if (d.name === 'homomorphism' && d.subkey) declared.add(d.subkey);
   for (const h of ast.homomorphisms || []) if (h && h.name) declared.add(h.name);
-  // Motifs temporels (@timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
+  // Motifs temporels (timepatterns: t1=…) : symboles de flux, pas des terminaux de note.
   for (const d of ast.directives || []) if (d.name === 'timepatterns' && Array.isArray(d.timePatterns)) for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
-  // VARIABLES DE TRAVAIL (`@var`, décision Romain 2026-07-27) : des symboles du flux qui ne sont
+  // VARIABLES DE TRAVAIL (`var`, décision Romain 2026-07-27) : des symboles du flux qui ne sont
   // l'écriture d'aucune note. Elles entrent ici — dans les noms DÉCLARÉS, à côté des non-terminaux
   // — et non dans le vocabulaire d'un alphabet : elles n'ont pas de hauteur, elles ont un NOM.
   // Le refus ne s'affaiblit pas, il gagne une porte nommée : un symbole non déclaré crie toujours.
@@ -1156,14 +1156,14 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
         // chercher une faute de frappe là où il manque une ligne d'en-tête :
         //   - le nom EXISTE dans le registre des contrôles, mais la scène ne l'a pas importé ;
         //   - le nom n'existe nulle part.
-        // Mesuré le 2026-07-26 sur le témoin de bpx : `ins(12)` sans `@core` dégénérait en
+        // Mesuré le 2026-07-26 sur le témoin de bpx : `ins(12)` sans `core` dégénérait en
         // note, et mon premier message affirmait « 'ins' n'existe pas », ce qui est FAUX.
         const auRegistre = universeControlNames().has(n.name);
         errors.push({
           message: auRegistre
             ? `appel '${citer(n)}' : '${n.name}' est un contrôle du registre, mais cette scène ne `
               + `l'a pas importé — il a donc été reclassé en TERMINAL SONNANT, c'est-à-dire en note. `
-              + `Déclarer le socle en tête de scène ('@core')`
+              + `Déclarer le socle en tête de scène ('core')`
             : `appel '${citer(n)}' : '${n.name}' n'existe pas — ni contrôle du registre, ni terminal `
               + `des alphabets en portée, ni symbole déclaré. Une fonction générique n'est pas du `
               + `langage : chaque intention porte son nom ('[]' pour le moteur, '()' pour le `
@@ -1189,10 +1189,10 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
  * ⚠️ AVANT CE REFUS, LE SECOND ALPHABET ÉTAIT IGNORÉ EN SILENCE : le calcul des terminaux lisait
  * le premier et jetait les autres. Une ligne entière ne servait à rien et rien ne le disait — le
  * mode d'échec muet, pire qu'un refus. La `LANGUAGE.md` §« Déclarer un symbole » écrit encore la
- * forme à deux alphabets ; elle est donc à corriger vers `@actor`, et c'est une décision de
+ * forme à deux alphabets ; elle est donc à corriger vers `actor`, et c'est une décision de
  * langage, pas une déduction : le cliquet des exemples la porte, datée.
  *
- * Mesuré avant de livrer : ZÉRO scène du corpus (274) déclare plus d'un `@alphabet`. Ce fail-loud
+ * Mesuré avant de livrer : ZÉRO scène du corpus (274) déclare plus d'un `alphabet`. Ce fail-loud
  * n'invalide aucune écriture vivante.
  */
 function refuserAlphabetsMultiples(ast) {
@@ -1200,10 +1200,10 @@ function refuserAlphabetsMultiples(ast) {
   if (alphabets.length <= 1) return [];
   const second = alphabets[1];
   return [{
-    message: `une scène ne déclare qu'UN alphabet, et '@alphabet.${second.subkey}' est le `
+    message: `une scène ne déclare qu'UN alphabet, et 'alphabet.${second.subkey}' est le `
            + `${alphabets.length === 2 ? 'second' : alphabets.length + 'e'} — l'acteur implicite `
            + `est unique et ne porte qu'un vocabulaire. Pour en jouer plusieurs, les déclarer : `
-           + `'@actor <nom>' avec sa clé 'alphabet.<nom>' et sa clé 'out.<canal>', un bloc par voix`,
+           + `'actor <nom>' avec sa clé 'alphabet.<nom>' et sa clé 'out.<canal>', un bloc par voix`,
     line: second.line || 0,
   }];
 }
@@ -1211,10 +1211,10 @@ function refuserAlphabetsMultiples(ast) {
 function applyDefaultActor(ast) {
   if (!ast) return [];
   const errors = [];
-  // Le binding de sortie de l'alphabet de scène (`@alphabet.X:midi` → runtime:'midi') est la
+  // Le binding de sortie de l'alphabet de scène (`alphabet.X:midi` → runtime:'midi') est la
   // clé de connexion transport (+eval) de l'UNIQUE acteur implicite (AST.md:94). Décision Romain
-  // 2026-07-05 (acteur unique implicite) : sans @actor, ce binding renseigne le transport de
-  // l'acteur synthétique ; AVEC un @actor, c'est un CHEVAUCHEMENT interdit (implicite XOR explicite).
+  // 2026-07-05 (acteur unique implicite) : sans actor, ce binding renseigne le transport de
+  // l'acteur synthétique ; AVEC un actor, c'est un CHEVAUCHEMENT interdit (implicite XOR explicite).
   const alphaBinding = (ast.directives || []).find((d) => d.name === 'alphabet' && d.runtime);
   if ((ast.actors || []).length > 0) {
     if (alphaBinding) {
@@ -1223,19 +1223,19 @@ function applyDefaultActor(ast) {
         line: alphaBinding.line || 0,
       });
     }
-    return errors; // au moins un @actor déclaré → pas d'acteur implicite (pas de chevauchement)
+    return errors; // au moins un actor déclaré → pas d'acteur implicite (pas de chevauchement)
   }
   // LA SORTIE DE L'ACTEUR IMPLICITE — cascade complète (`sortieHeritee`), plus une lecture partielle.
   // ⚠️ CE QUI ÉTAIT ÉCRIT ICI IGNORAIT LA SCÈNE : la clé venait du raccord d'alphabet ou du socle,
-  // jamais de `@out.midi`. La directive était refusée au parse, donc rien ne pouvait le révéler —
+  // jamais de `out.midi`. La directive était refusée au parse, donc rien ne pouvait le révéler —
   // et le jour où elle a été acceptée, l'acteur a continué à sortir `audio` sans un mot. Une valeur
   // par défaut et une valeur IGNORÉE ont exactement la même tête ; c'est pourquoi la cascade est
   // définie une seule fois, à côté des trois autres axes, et pas reconstituée à chaque appelant.
   const sortie = sortieHeritee(ast);
   if (sortie.conflit) {
     errors.push({
-      message: `deux sorties pour la même scène : '@out.${sortie.conflit.ecrite}' et le raccord `
-             + `'@alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' désignent des `
+      message: `deux sorties pour la même scène : 'out.${sortie.conflit.ecrite}' et le raccord `
+             + `'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' désignent des `
              + `canaux différents — les deux écritures disent la MÊME chose, il faut n'en garder `
              + `qu'une`,
       line: sortie.conflit.line,
@@ -1247,9 +1247,9 @@ function applyDefaultActor(ast) {
   // JAMAIS ARRIVER »). L'ancien commentaire ici disait « pas d'alphabet : pitch via le résolveur de
   // scène » : il n'existait aucun résolveur de scène en aval pour le remplir, donc l'AST partait
   // muet et le consommateur devait deviner. La cascade est la MÊME que pour un acteur déclaré
-  // (`alphabetHerite`, définie une seule fois) : scène → socle @core, ABSENT si la hauteur est
+  // (`alphabetHerite`, définie une seule fois) : scène → socle core, ABSENT si la hauteur est
   // opaque. Une voix-code pure n'est pas concernée : elle n'a pas d'alphabet DÉCLARÉ ici, et
-  // l'acteur implicite n'existe que faute de tout @actor — il n'y a donc aucun eval à hériter.
+  // l'acteur implicite n'existe que faute de tout actor — il n'y a donc aucun eval à hériter.
   const alphabetKey = alphabetHerite(ast);
   const properties = { transport };
   const references = [{ type: 'ActorReference', category: 'transport', name: transportKey, line: 0 }];
@@ -1261,7 +1261,7 @@ function applyDefaultActor(ast) {
       properties.octaves = oct;
       references.push({ type: 'ActorReference', category: 'octaves', name: oct, line: 0 });
     }
-    // L'ACCORDAGE vient de l'ALPHABET, jamais du socle @core (Romain 2026-07-29).
+    // L'ACCORDAGE vient de l'ALPHABET, jamais du socle core (Romain 2026-07-29).
     const tun = tuningHerite(ast, alphabetKey);
     if (tun) {
       properties.tuning = tun;
@@ -1270,7 +1270,7 @@ function applyDefaultActor(ast) {
   }
   // L'INTERPRÈTE PAR DÉFAUT — cinquième et dernière des clés d'acteur à descendre (Romain,
   // 2026-08-07 : « toutes ces directives doivent descendre dans l'acteur implicite »). Il ne
-  // descendait pas DU TOUT : `@eval.strudel` en tête de scène était lu par le validateur et par
+  // descendait pas DU TOUT : `eval.strudel` en tête de scène était lu par le validateur et par
   // personne d'autre. Et il ne dépend PAS de l'alphabet — une scène qui ne joue aucune note
   // déclare quand même par quoi ses backtiques sont lus — donc il vit hors du bloc ci-dessus.
   const interprete = evalHerite(ast);
@@ -1293,7 +1293,7 @@ function applyDefaultActor(ast) {
     references,
     // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
     // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
-    synthetic: true, // acteur implicite (aucun @actor déclaré) — panneau Acteurs vide
+    synthetic: true, // acteur implicite (aucun actor déclaré) — panneau Acteurs vide
     line: 0,
   }];
   return errors;
@@ -1323,12 +1323,12 @@ function applySceneValues(ast, libCtx) {
    * Une valeur NUMÉRIQUE écrite en décimal arrivait ici en CHAÎNE — et deux choses en
    * découlaient, dont une bien pire que l'autre.
    *
-   * 1. `@diapason:261.63` était plié tel quel : l'arbre portait `"261.63"`, et Kairos le
+   * 1. `diapason:261.63` était plié tel quel : l'arbre portait `"261.63"`, et Kairos le
    *    refusait à juste titre (« un diapason est un nombre fini > 0 »). L'entier `262`, lui,
    *    passait. Une scène pouvait donc déclarer un diapason parfaitement valide et être
    *    rejetée en aval pour une raison de TYPE, sans que rien ne le dise ici.
    * 2. Plus grave : le contrôle de plage ci-dessous ne s'applique QUE si la valeur est déjà un
-   *    nombre. Une chaîne le traversait sans être vérifiée — `@diapason:"99999"` passait le
+   *    nombre. Une chaîne le traversait sans être vérifiée — `diapason:"99999"` passait le
    *    domaine. Le garde existait et ne mordait pas sur la moitié des entrées.
    *
    * On convertit donc avant de valider, pour les valeurs dont la spec déclare une PLAGE
@@ -1358,22 +1358,22 @@ function applySceneValues(ast, libCtx) {
     return true;
   };
 
-  // Niveau SCÈNE : @nom:valeur (forme deux-points = valeur, règle ':'/'.')
+  // Niveau SCÈNE : nom:valeur (forme deux-points = valeur, règle ':'/'.')
   const sceneVals = {};
   for (const d of ast.directives || []) {
     const spec = registry[d.name];
     if (!spec) continue;
     if (d.value == null) {
-      errors.push({ message: `'@${d.name}' attend une VALEUR (ex. @${d.name}:440) — pas un nom`, line: d.line });
+      errors.push({ message: `'${d.name}' attend une VALEUR (ex. @${d.name}:440) — pas un nom`, line: d.line });
       continue;
     }
     const valeur = versNombre(spec, d.value);
     if (checkDomain(d.name, spec, valeur, d.line)) sceneVals[d.name] = valeur;
   }
 
-  // Composant d'un AXE déclaré au niveau SCÈNE, lu en forme POINT uniquement (`@tuning.X`
+  // Composant d'un AXE déclaré au niveau SCÈNE, lu en forme POINT uniquement (`tuning.X`
   // → `subkey`). SÉMANTIQUE `.`/`:` (Romain) : `.` APPELLE un composant, `:` affecte une
-  // VALEUR. Un accordage est un COMPOSANT → point. `@tuning:X` (deux-points) = forme v0.7
+  // VALEUR. Un accordage est un COMPOSANT → point. `tuning:X` (deux-points) = forme v0.7
   // PÉRIMÉE (affecterait une « valeur » à un axe de composant, non-sens) : NON accommodée
   // ici — elle relève de la migration v0.7→v0.8, pas d'un chemin de code.
   const defaultComponents = (libCtx && libCtx.defaultComponents) || {};
@@ -1382,19 +1382,19 @@ function applySceneValues(ast, libCtx) {
     return d ? d.subkey : undefined;
   };
   // Défaut EFFECTIF (niveaux 2-1) : `spec.overriddenBy = "axe.champ"` = le champ du composant
-  // EFFECTIF de l'axe (acteur ?? scène ?? défaut @core) donne le défaut. RÈGLE DURE (kairos [310]) :
+  // EFFECTIF de l'axe (acteur ?? scène ?? défaut core) donne le défaut. RÈGLE DURE (kairos [310]) :
   // si un composant est en portée mais NON RÉSOLU, on renvoie `undefined` (valeur ABSENTE, l'aval
   // résout) — JAMAIS un littéral global par-dessus un composant déclaré. Un `spec.default` littéral
   // n'est le socle QUE pour une valeur SANS composant (pas d'`overriddenBy`, ex. tempo).
   // RÈGLE DE CASCADE (loi 35, constitution:175 ; docs/design/SCENE_DEFAULTS_CASCADE.md, Romain
   // 2026-07-04) : « un pli qui ne sait PAS résoudre le composant INVOQUÉ laisse la valeur ABSENTE,
-  // le résolveur (Kairos) la remplit depuis la lib invoquée ». Le socle @core (defaultComponents,
+  // le résolveur (Kairos) la remplit depuis la lib invoquée ». Le socle core (defaultComponents,
   // lu depuis lib/core.json `defaults.components` — PAS un hardcode) ne s'applique QUE si AUCUN
   // composant n'est invoqué (scène nue). Un axe d'ancre est « invoqué » si un DIRECTIVE legacy le
-  // nomme (@alphabet.X/@tuning.X) OU si une invocation par le canal NEUTRE (libRefs) porte
+  // nomme (alphabet.X/tuning.X) OU si une invocation par le canal NEUTRE (libRefs) porte
   // l'identité de hauteur — opaque ici (domaine déclaré DANS le fichier, résolu chez Kairos, L27).
   // Jamais le socle par-dessus un composant invoqué (même classe que le bug diapason 2026-07-04
-  // où @core écrasait le composant déclaré). FIX [394]/[395].
+  // où core écrasait le composant déclaré). FIX [394]/[395].
   const hasNeutralPitch = !!(ast.libRefs && ast.libRefs.length);
   const cascadeDefault = (spec, props) => {
     if (spec.overriddenBy) {
@@ -1410,7 +1410,7 @@ function applySceneValues(ast, libCtx) {
           // Axe INVOQUÉ (directive legacy OU canal neutre) mais NON résolu ici → ABSENT (Kairos remplit).
           const axisInvoked = (ast.directives || []).some((x) => x.name === axis) || hasNeutralPitch;
           if (axisInvoked) { anyAxisDeclared = true; continue; }
-          compName = defaultComponents[axis]; // AUCUN composant invoqué (scène nue) → socle @core
+          compName = defaultComponents[axis]; // AUCUN composant invoqué (scène nue) → socle core
         }
         if (compName) {
           const comp = loadLib(axis, compName);
@@ -1425,7 +1425,7 @@ function applySceneValues(ast, libCtx) {
   };
 
   // Niveau ACTEUR : pli dans la déclaration (jamais de recopie par token). Cascade complète
-  // par valeur : acteur (4) → scène (3) → composant invoqué (2) → socle @core (1).
+  // par valeur : acteur (4) → scène (3) → composant invoqué (2) → socle core (1).
   for (const actor of ast.actors || []) {
     const props = actor.properties || {};
     const eParams = props.entityParams || {};
@@ -1456,7 +1456,7 @@ function applySceneValues(ast, libCtx) {
         if (params && params[name] != null) v = params[name]; // niveau 4 acteur
       }
       if (v === undefined && sceneVals[name] !== undefined) v = sceneVals[name]; // niveau 3 scène
-      if (v === undefined) v = cascadeDefault(spec, props); // niveaux 2-1 (composant invoqué → socle @core)
+      if (v === undefined) v = cascadeDefault(spec, props); // niveaux 2-1 (composant invoqué → socle core)
       if (v === undefined) continue;
       v = versNombre(spec, v);
       if (checkDomain(name, spec, v, actor.line)) vals[name] = v;
@@ -1486,8 +1486,8 @@ function applySceneValues(ast, libCtx) {
 /**
  * FAIL-FAST à la COMPILATION (règle Romain 2026-07-04, langages bien faits) : toute
  * référence dont l'info est disponible ici DOIT être vérifiée ici, pas reportée à la
- * dérivation. Une référence — VALEUR (`@X:v`, occurrence `(k:v)`) ou COMPOSANT
- * (`@alphabet.X`, `@tuning.X`, `@octaves.X`) — qui n'existe pas dans les librairies
+ * dérivation. Une référence — VALEUR (`X:v`, occurrence `(k:v)`) ou COMPOSANT
+ * (`alphabet.X`, `tuning.X`, `octaves.X`) — qui n'existe pas dans les librairies
  * chargées → ERREUR CLAIRE (nom fautif). Kairos garde son filet défensif en aval.
  * ZÉRO HARDCODE : tout le vocabulaire (contrôles/valeurs/fonctions/adresses/axes) vient
  * des libs chargées + du schéma @core → une user library l'étend automatiquement.
@@ -1531,7 +1531,7 @@ const NOM_DE_PLACE = {
  * CE QUE LA TABLE UNIQUE FAISAIT : la boucle des modulations passait APRÈS celle des contrôles,
  * donc la portée de l'entrée de modulation ÉCRASAIT celle du contrôle, dernière écriture gagnante.
  * Mesuré le 2026-08-15 : `pan` avait bien reçu `scene` dans sa déclaration — sur arbitrage de
- * Romain — et `@pan:64` en tête de scène restait refusé, en récitant les quatre places de l'AUTRE
+ * Romain — et `pan:64` en tête de scène restait refusé, en récitant les quatre places de l'AUTRE
  * `pan`. Ni l'auteur ni le mainteneur n'avaient de quoi comprendre le refus.
  *
  * Une entrée de modulation n'a aucune raison de gouverner où un CONTRÔLE s'écrit. Les deux tables
@@ -1563,7 +1563,7 @@ function chargerPorteesPermises() {
   w(LIBS.audio);
   w(LIBS.transpo);
   // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
-  // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — leur `scope` doit
+  // lib/engine.bpsl le 2026-08-10 (une clé ne vit que dans UNE librairie) — leur `scope` doit
   // continuer à alimenter cette table, sinon `(scan:…)`/`(weight:…)` redeviennent « inconnu ».
   w(LIBS.engine);
   for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
@@ -1598,7 +1598,7 @@ function chargerPorteesPermises() {
  * ⛔ UN POINT D'ATTENTE NOMME CE QU'IL ATTEND, ET CE NOM SE DÉCLARE.
  *
  * DÉCISION DE ROMAIN, 2026-08-15 : « oui il doit être déclaré, sinon on ne sait pas ce qu'on
- * attend ». La forme de déclaration existe depuis le 2026-08-04 — `@var <nom> in.<canal>` — et
+ * attend ». La forme de déclaration existe depuis le 2026-08-04 — `var <nom> in.<canal>` — et
  * c'est son EXIGENCE qui manquait, pas sa graphie.
  *
  * CE QUI PASSAIT : `<!depart` et `<!depatr` étaient deux points d'attente valides et sans rapport,
@@ -1612,7 +1612,7 @@ function chargerPorteesPermises() {
  * qu'est `p` ? ».
  *
  * CE QUI COMPTE COMME DÉCLARATION : tout ce qui CRÉE le nom dans la scène — une entrée
- * (`@var <rôle> in.<canal>`), une variable de travail, une déclaration de porte ou de trigger, un
+ * (`var <rôle> in.<canal>`), une variable de travail, une déclaration de porte ou de trigger, un
  * acteur. On ne restreint pas à la seule entrée : la question est « ce nom existe-t-il », pas
  * « par quel mot ».
  *
@@ -1661,7 +1661,7 @@ function refuserAttenteNonDeclaree(ast) {
       erreurs.push({
         message: `'<!${n.name}' attend un signal que rien ne déclare — aucune entrée, variable, `
           + `porte ni acteur de cette scène ne porte le nom '${n.name}'. Le déclarer : `
-          + `'@var ${n.name} in.<canal>'. Sans déclaration, une coquille fabrique une SECONDE `
+          + `'var ${n.name} in.<canal>'. Sans déclaration, une coquille fabrique une SECONDE `
           + `attente que rien ne viendra satisfaire, et la dérivation s'arrête pour toujours `
           + `sans un mot.`,
         line: n.line,
@@ -1702,7 +1702,7 @@ function validateReferences(ast, libCtx = {}) {
   //    adresse ∪ fonction digitale ∪ réglage réservé. Les paires d'occurrence vivent dans
   //    `payload.params` (note ou groupe/règle, foldées par le parser) ET dans les
   //    `SettingBag.pairs`.
-  // Les INSTANCES de module que la scène déclare (`@var lpf1 lpf`) : un réglage peut nommer le
+  // Les INSTANCES de module que la scène déclare (`var lpf1 lpf`) : un réglage peut nommer le
   // PORT de l'une d'elles (`(lpf1.cutoff:400)`, `AST.md` §Setting). Le nom d'une instance est
   // choisi par l'auteur — aucun registre de librairie ne peut le connaître, il faut le lire dans
   // la scène. Sans cela, sept exemples de la bible tombaient sur « attribut inconnu ».
@@ -1720,7 +1720,7 @@ function validateReferences(ast, libCtx = {}) {
   // termes dont le premier est un nom. Aucune des deux ne dit de quoi on parle en tête de clé.
   // La forme canonique remet le paramètre en clé : `!(slide:101)` et `!(slidecont)`.
   //
-  // LE PARAMÈTRE DOIT ÊTRE DÉCLARÉ (`@var slide signal` — « un flux de nombres, sans convention de
+  // LE PARAMÈTRE DOIT ÊTRE DÉCLARÉ (`var slide signal` — « un flux de nombres, sans convention de
   // lecture », LANGUAGE.md). Sans déclaration le nom est refusé, et c'est le but : un mot inconnu
   // collé à `cont` ne doit pas devenir un paramètre par accident.
   const MODES = ['fixed', 'step', 'cont'];
@@ -1894,13 +1894,13 @@ function validateReferences(ast, libCtx = {}) {
         }
         // ⛔ LE MODE NE CHANGE PAS EN COURS DE TIRAGE — décision de Romain, 2026-08-08.
         //
-        // Il vaut pour un BLOC et s'écrit `@mode:<valeur>` en tête de sous-grammaire, point. La
+        // Il vaut pour un BLOC et s'écrit `mode:<valeur>` en tête de sous-grammaire, point. La
         // forme en sac — suffixe de règle, flux, ou n'importe quelle autre position — est SUPPRIMÉE.
         //
         // ⚠️ CE QUI A CONDUIT À CETTE DÉCISION, et c'est une leçon sur les références. La spec
         // écrivait `S -> A B C (mode:random)` et lui consacrait un paragraphe entier expliquant
         // qu'un mode écrit sur une règle gouverne le bloc. Mesuré sur les trois sources : le corpus
-        // écrit `@mode` en tête **287 fois** et la forme en sac **ZÉRO** ; le moteur d'origine met
+        // écrit `mode` en tête **287 fois** et la forme en sac **ZÉRO** ; le moteur d'origine met
         // son mode en tête de bloc, seul sur sa ligne, jamais en suffixe. La spec décrivait donc
         // une forme que ni le moteur ni aucune scène ne connaît — et mon arbre ne l'appliquait
         // nulle part : le mode restait sur la règle, le bloc restait sans mode.
@@ -1916,7 +1916,7 @@ function validateReferences(ast, libCtx = {}) {
           errors.push({
             message: `'(mode:…)' n'a plus sa place dans une règle : le mode vaut pour un BLOC et ne `
               + `change pas en cours de tirage (décision Romain 2026-08-08). L'écrire `
-              + `'@mode:${p.value ?? '<valeur>'}' en tête de la sous-grammaire concernée — une `
+              + `'mode:${p.value ?? '<valeur>'}' en tête de la sous-grammaire concernée — une `
               + `ligne seule, avant ses règles.`,
             line: p.line, col: p.col,
           });
@@ -1967,7 +1967,7 @@ function validateReferences(ast, libCtx = {}) {
     }
     for (const k in node) { if (k !== 'params' && node[k] && typeof node[k] === 'object') collect(node[k]); }
   })(ast.subgrammars);
-  // ⚠️ LE CONTRÔLE DES TAGS NE S'ARRÊTE PAS AUX SOUS-GRAMMAIRES. `@init` porte du code hors de
+  // ⚠️ LE CONTRÔLE DES TAGS NE S'ARRÊTE PAS AUX SOUS-GRAMMAIRES. `init` porte du code hors de
   // toute règle : un tag inconnu y passait, alors qu'il est refusé partout ailleurs. Trouvé par le
   // garde de l'état de départ. On repasse sur `init` — les autres volets, eux, n'ont rien à y voir.
   for (const e of (ast.init || [])) {
@@ -1977,8 +1977,8 @@ function validateReferences(ast, libCtx = {}) {
   // ── LES DEUX PLACES QUI N'ONT PAS DE SAC : la tête de scène et la tête de sous-grammaire ────
   //
   // ⚠️ MON REFUS NE GARDAIT QUE QUATRE PLACES SUR SIX, et c'est le produit croisé qui l'a montré —
-  // 85 cellules « déclaré interdit mais accepté », toutes sur ces deux places. `@weight:50` en tête
-  // de scène passait, `@stop` aussi. J'avais écrit la garde pour les endroits où un sac se pose
+  // 85 cellules « déclaré interdit mais accepté », toutes sur ces deux places. `weight:50` en tête
+  // de scène passait, `stop` aussi. J'avais écrit la garde pour les endroits où un sac se pose
   // dans une règle, c'est-à-dire pour la forme que j'avais sous les yeux ; les deux places qui
   // s'écrivent AUTREMENT — une directive, un modificateur de mode — n'étaient pas gardées du tout.
   // C'est la faute « on répare l'endroit où le défaut s'est montré », commise sur une garde dont
@@ -1998,24 +1998,24 @@ function validateReferences(ast, libCtx = {}) {
       });
     };
     // ⚠️ UNE DIRECTIVE DE TÊTE N'EST PAS TOUJOURS UN RÉGLAGE — et l'homonymie est réelle.
-    // `@mod` INVOQUE la librairie des modulations ; elle ne pose pas le contrôle MIDI `mod`.
+    // `mod` INVOQUE la librairie des modulations ; elle ne pose pas le contrôle MIDI `mod`.
     // Mesuré : sans ce tri, cinq scènes du corpus étaient refusées à tort, toutes pour ce seul
     // mot. Une invocation se reconnaît à ce qu'un fichier de librairie porte son nom — c'est le
     // même critère que le chargeur emploie, pas une liste de noms à écarter.
     for (const d of (ast.directives || [])) {
       if (!d || !d.name) continue;
       // ⛔ UNE DECLARATION N EST PAS UN USAGE — corrige le 2026-08-09.
-      // `@def mute drum.on` DECLARE un nom ; il n ECRIT pas le controle `mute` en tete de scene.
+      // `def mute drum.on` DECLARE un nom ; il n ECRIT pas le controle `mute` en tete de scene.
       // Ce parcours prenait le `name` de TOUTE directive, donc une declaration dont le nom se
       // trouve etre celui d un controle se faisait refuser pour une place qu elle n occupe pas.
       // ⚠️ ET C EST EXACTEMENT LE SUJET DU GARDE QUI L A TROUVE — « le nom declare par la scene
       // gagne ». La regle etait ecrite, appliquee ailleurs, et ce parcours-ci ne la connaissait
       // pas : il ne distinguait pas ce qui S ECRIT de ce qui SE DECLARE.
       if (d.type && d.type !== 'Directive') continue;
-      // ⚠️ UNE CLÉ DE SCÈNE S'ÉCRIT DE DEUX FAÇONS, et je n'en gardais qu'une : nue (`@mm:120`) ou
-      // QUALIFIÉE PAR SON DOMAINE (`@engine.mode:random`, la forme que le tableau des invocations
+      // ⚠️ UNE CLÉ DE SCÈNE S'ÉCRIT DE DEUX FAÇONS, et je n'en gardais qu'une : nue (`tempo:120`) ou
+      // QUALIFIÉE PAR SON DOMAINE (`engine.mode:random`, la forme que le tableau des invocations
       // de la référence emploie). Mesuré le 2026-08-08 : après avoir retiré `mode` des clés de
-      // scène, `@mode` refusait bien — et `@engine.mode` passait toujours. Deux graphies de la même
+      // scène, `mode` refusait bien — et `engine.mode` passait toujours. Deux graphies de la même
       // chose, une seule gardée : le refus se contournait en écrivant le nom complet.
       const clesEcrites = [];
       if (!loadLib(d.name)) clesEcrites.push(d.name);   // nue ; une invocation de librairie n'en est pas une
@@ -2035,7 +2035,7 @@ function validateReferences(ast, libCtx = {}) {
     if (!name) return;
     if (componentExists(axis, name)) return;
     // Un alphabet peut vivre HORS du catalogue standard, dans une librairie que la scène a
-    // elle-même déclarée (`@test_alphabets` par exemple). La validation doit donc poser la MÊME
+    // elle-même déclarée (`test_alphabets` par exemple). La validation doit donc poser la MÊME
     // question que la résolution — sinon elle refuse un nom que le resolveur sait charger, et on
     // a deux vérités sur « cet alphabet existe-t-il ».
     if (axis === 'alphabet' && resolveActorAlphabet(name, ast.directives)) return;
@@ -2045,7 +2045,7 @@ function validateReferences(ast, libCtx = {}) {
   // 3bis. LIBRAIRIE SANS CATALOGUE — une ENTRÉE INCONNUE y crie aussi (arbitrage architecte
   // 2026-07-27, sur le cas `dhin1`). Les axes à CATALOGUE crient depuis toujours ; les autres —
   // `transcription`, `test_alphabets`, `settings`, `mapping`… — acceptaient n'importe quel nom EN
-  // SILENCE. Payé sur pièce : `@homomorphism.dhinOO` a traversé toute la migration sans un mot ;
+  // SILENCE. Payé sur pièce : `homomorphism.dhinOO` a traversé toute la migration sans un mot ;
   // la scène croyait charger un homomorphisme et n'en chargeait AUCUN, depuis des mois.
   //
   // L'ARGUMENT QUI TRANCHE : ne rien pouvoir vérifier n'est pas une raison de ne rien vérifier,
@@ -2054,15 +2054,15 @@ function validateReferences(ast, libCtx = {}) {
   //
   // FRONTIÈRE MESURÉE AVANT DE LIVRER, sur 447 fichiers de scène (bibliothèque Kanopi entière,
   // démos, scènes de BPx) : QUATRE invocations ne résolvent pas, et les quatre sont déjà refusées
-  // aujourd'hui (`@alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute donc AUCUNE casse.
+  // aujourd'hui (`alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute donc AUCUNE casse.
   const libExiste = (nom) => !!loadLib(nom);
   const motsDuLangage = new Set(loadLib('core')?.schema?.reservedDirectives || []);
   for (const d of ast.directives || []) {
     if (!d || !d.name || !d.subkey) continue;
     if (catalogAxes.includes(d.name)) continue;   // déjà couvert par checkComponent, ci-dessous
     // ⛔ UN AXE QUE PERSONNE NE SERT EST REFUSE. Cette ligne disait « pas une librairie : autre
-    // faute, autre message » — et AUCUN autre message n'existait. `@module.adsr`, `@patch.x`,
-    // `@devices.x` passaient donc en silence, et `@zzzinvente.quoi` aussi : le trou n'etait pas de
+    // faute, autre message » — et AUCUN autre message n'existait. `module.adsr`, `patch.x`,
+    // `devices.x` passaient donc en silence, et `zzzinvente.quoi` aussi : le trou n'etait pas de
     // trois noms, il etait OUVERT A L'INFINI. Mesure du 2026-08-17, cas fabrique par l'architecte.
     //
     // ⚠️ RIEN N'EST EN DUR NI D'UN COTE NI DE L'AUTRE. Les trois noms venaient de la SPEC, jamais
@@ -2072,7 +2072,7 @@ function validateReferences(ast, libCtx = {}) {
     if (!libExiste(d.name)) {
       if (motsDuLangage.has(d.name)) continue;
       errors.push({
-        message: `'@${d.name}.${d.subkey}' : aucune librairie ne sert l'axe '${d.name}'. Une `
+        message: `'${d.name}.${d.subkey}' : aucune librairie ne sert l'axe '${d.name}'. Une `
                + `invocation dont l'axe n'est porte par aucune donnee ne charge RIEN, et rien ne `
                + `distingue ce silence d'une scene qui n'a pas declare.`,
         line: d.line,
@@ -2081,7 +2081,7 @@ function validateReferences(ast, libCtx = {}) {
     }
     if (loadLib(d.name, d.subkey)) continue;
     errors.push({
-      message: `'@${d.name}.${d.subkey}' : l'entrée '${d.subkey}' n'existe pas dans la librairie `
+      message: `'${d.name}.${d.subkey}' : l'entrée '${d.subkey}' n'existe pas dans la librairie `
              + `'${d.name}'. Une invocation qui ne résout rien est indistinguable, côté `
              + `consommateur, d'une scène qui n'a rien déclaré — elle ne peut donc pas être acceptée `
              + `en silence.`,
@@ -2102,7 +2102,7 @@ function validateReferences(ast, libCtx = {}) {
     if (!e || !e.mapping) continue;
     if (loadLib('mapping', e.mapping)) continue;
     errors.push({
-      message: `'@in ${e.name} … mapping.${e.mapping}' : la table '${e.mapping}' n'existe pas dans `
+      message: `'in ${e.name} … mapping.${e.mapping}' : la table '${e.mapping}' n'existe pas dans `
              + `la librairie 'mapping'. Une entrée qui invoque une table inexistante croirait `
              + `traduire et ne traduirait rien. Sans table, écrire l'entrée seule et employer des `
              + `adresses nues ('<!${e.name}.60').`,
@@ -2110,35 +2110,35 @@ function validateReferences(ast, libCtx = {}) {
     });
   }
 
-  // 3. Directives de scène : invocation de composant (@axis.X) OU override de valeur (@X:v).
+  // 3. Directives de scène : invocation de composant (axis.X) OU override de valeur (X:v).
   for (const d of ast.directives || []) {
     if (d.subkey && catalogAxes.includes(d.name)) { checkComponent(d.name, d.subkey, d.line); continue; }
     if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name)) {
-      errors.push({ message: `valeur '@${d.name}:…' inconnue — non déclarée par une librairie chargée`, line: d.line });
+      errors.push({ message: `valeur '${d.name}:…' inconnue — non déclarée par une librairie chargée`, line: d.line });
       continue;
     }
     // ⚠️ ET LA FORME NUE AUSSI — c'est la moitié qui avait régressé. Le refus ci-dessus ne mordait
-    // que sur `@X:valeur` : toute directive écrite SANS valeur passait, quel que soit son nom.
-    // Mesuré le 2026-08-10 : `@zorglub42` compilait sans un mot, exactement comme `@sub`.
+    // que sur `X:valeur` : toute directive écrite SANS valeur passait, quel que soit son nom.
+    // Mesuré le 2026-08-10 : `zorglub42` compilait sans un mot, exactement comme `sub`.
     //
     // C'est la règle 1 de Romain dans son état le plus nu — « tous les mots acceptés par le parseur
     // doivent venir des librairies invoquées dans la scène ». L'union des vocabulaires ne sert à
     // rien tant qu'un nom absent de l'union est accepté quand même : le vocabulaire existe, il
     // n'est simplement pas OPPOSÉ à l'auteur.
     //
-    // Une invocation de librairie (`@core`, `@alphabet.western`) porte son nom dans le registre ou
+    // Une invocation de librairie (`core`, `alphabet.western`) porte son nom dans le registre ou
     // un `subkey` — elle ne tombe pas ici.
-    // ⚠️ ET SEULEMENT LES DIRECTIVES QUI INVOQUENT. Une directive qui DÉCLARE (`@def`, `@var`,
-    // `@actor`…) porte le nom que l'AUTEUR crée, pas un mot de librairie : son nœud a son propre
-    // type, et l'aval le lit ainsi. Sans ce filtre, la garde refuse `@def m C4 D4` en accusant
-    // « '@m' n'est déclaré par aucune librairie » — elle reproche à l'auteur d'avoir nommé ce
+    // ⚠️ ET SEULEMENT LES DIRECTIVES QUI INVOQUENT. Une directive qui DÉCLARE (`def`, `var`,
+    // `actor`…) porte le nom que l'AUTEUR crée, pas un mot de librairie : son nœud a son propre
+    // type, et l'aval le lit ainsi. Sans ce filtre, la garde refuse `def m C4 D4` en accusant
+    // « 'm' n'est déclaré par aucune librairie » — elle reproche à l'auteur d'avoir nommé ce
     // qu'il déclare. Mesuré le 2026-08-10 : j'ai d'abord pris ce refus pour un défaut du parseur
     // et je l'ai inscrit au backlog ; c'était la garde qui ne savait pas distinguer.
     if (d.type && d.type !== 'Directive') continue;
     if (d.value == null && !d.subkey && !d.runtime
         && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name)) {
       errors.push({
-        message: `'@${d.name}' n'est déclaré par aucune librairie chargée — un mot de tête vient `
+        message: `'${d.name}' n'est déclaré par aucune librairie chargée — un mot de tête vient `
                + `d'une librairie invoquée, jamais de nulle part. Invoquer la librairie qui le `
                + `porte, ou retirer la ligne.`,
         line: d.line,
@@ -2154,14 +2154,14 @@ function validateReferences(ast, libCtx = {}) {
   // PARTAGÉ par `_striated` et `_smooth`, qui tombent dans le même `case` par fall-through.
   //
   // ⚠️ C'EST POURQUOI LA DONNÉE NOMME UN GROUPE ET NON UN BOOLÉEN. Un `unique:true` par mot aurait
-  // laissé passer `@striated` suivi de `@smooth` — deux mots différents, un seul réglage : la nature
+  // laissé passer `striated` suivi de `smooth` — deux mots différents, un seul réglage : la nature
   // du temps, qu'on ne règle pas deux fois. C'est le cas qu'une formulation par mot rate, et il a
   // fallu que bp3-frontend aille lire le C pour qu'il apparaisse : mon signalement d'origine ne
   // parlait que de deux mots sur trois, et les donnait pour indépendants.
   //
   // TOUTES LES POSITIONS COMPTENT DANS LE MÊME SEAU, parce que le natif compte sur la GRAMMAIRE
   // entière : la tête de scène et les modificateurs de sous-grammaire. Compter la surface à part de
-  // la graphie de sous-grammaire laisserait passer `@tempo:120` suivi de `@mode:ord(mm:90)`.
+  // la graphie de sous-grammaire laisserait passer `tempo:120` suivi de `mode:ord(tempo:90)`.
   {
     const groupes = new Map();          // groupe -> [{mot, line}]
     const noter = (nom, line) => {
@@ -2225,7 +2225,7 @@ function validateReferences(ast, libCtx = {}) {
  * LE TROU QU'ELLE COMBLE. Une liaison d'acteur sort en NOM NU : `actors.bols.alphabet = 'abc'`.
  * Ce nom ne dit pas d'où il vient. Tant que l'entrée est au catalogue standard, l'aval s'en
  * sort — il la retrouve par son nom. Mais quand elle vient d'une librairie DÉCLARÉE PAR LA
- * SCÈNE (`@test_alphabets.abc`), le nom nu est une impasse : Kairos ne connaît pas `abc`, et
+ * SCÈNE (`test_alphabets.abc`), le nom nu est une impasse : Kairos ne connaît pas `abc`, et
  * il ne DOIT pas le deviner — il lit le domaine déclaré DANS le fichier, il ne l'infère jamais
  * d'une adresse. Sans provenance, sa seule issue serait de renifler, c'est-à-dire d'inventer.
  *
@@ -2235,7 +2235,7 @@ function validateReferences(ast, libCtx = {}) {
  * bruit là où il n'y a pas de question. Champ OMIS si vide, jamais `[]` (patron `cvInstances`).
  *
  * POURQUOI CE N'EST PAS LE MIROIR DE LA PORTÉE SCÈNE. `ast.libRefs` naît des invocations par
- * provenance (`@factory.` / `@mine.`) — mesuré sur le corpus des 95 : ZÉRO scène en émet. Le
+ * provenance (`factory.` / `mine.`) — mesuré sur le corpus des 95 : ZÉRO scène en émet. Le
  * canal existe et il est testé (`test_libref_provenance.js`), mais aucune scène ne l'emprunte.
  * Rien à recopier vers l'acteur, donc : l'adresse ne se transporte pas d'en haut, elle se
  * DÉRIVE de la résolution — d'où `resolveActorAlphabetSource`, qui répond « d'où vient-il »
@@ -2269,7 +2269,7 @@ function emitActorLibRefs(ast) {
 /**
  * PORTÉE SCÈNE — un alphabet déclaré par une LIBRAIRIE doit sortir sur l'axe `alphabet`.
  *
- * LE DÉFAUT QUE ÇA CORRIGE, mesuré : une scène qui écrit `@test_alphabets.structural` déclare bien
+ * LE DÉFAUT QUE ÇA CORRIGE, mesuré : une scène qui écrit `test_alphabets.structural` déclare bien
  * un alphabet — `lib/core.json` le dit noir sur blanc, `test_alphabets` = « référence-librairie,
  * MÊME AXE CATALOGUE que `alphabet` ». Mais j'émettais la directive sous le NOM DE SA LIBRAIRIE, et
  * l'aval ne lit que `name === 'alphabet'` (`BPx/src/session.ts:2124`) : l'alphabet n'arrivait donc
@@ -2277,8 +2277,8 @@ function emitActorLibRefs(ast) {
  * `scenePitch {tokens:[…]}` — sans rien. Et pour Kairos, « scène sans alphabet » et « scène dont
  * l'alphabet ne m'est pas parvenu » sont indistinguables : il devinait, et donnait 440 Hz au
  * symbole STRUCTUREL `A` d'une grammaire qui se déclare « test de grammaire pure ».
- * Rayon mesuré avant correctif : 10 scènes sur 95, et TOUTES en `@test_alphabets.X` — aucune scène
- * en `@alphabet.X` n'était touchée.
+ * Rayon mesuré avant correctif : 10 scènes sur 95, et TOUTES en `test_alphabets.X` — aucune scène
+ * en `alphabet.X` n'était touchée.
  *
  * L'ADRESSE, PAS L'ARDOISE — même règle qu'en portée acteur (`emitActorLibRefs`) et même raison :
  * un nom nu n'est cherché que dans le catalogue STANDARD, donc il ne mènerait nulle part ; seule
@@ -2300,7 +2300,7 @@ function emitActorLibRefs(ast) {
  * POURQUOI L'ÉMETTRE SUR LA RÈGLE plutôt que de laisser la directive de scène parler : le
  * consommateur lit le mètre dans les QUALIFICATIFS DE LA RÈGLE (BPx `loadGrammar.ts:4136-4143`,
  * `parseMeterSignature`), jamais dans les directives. Une directive de scène qui n'atteint aucune
- * règle n'atteint personne — c'était l'état mesuré : `@meter:4/4` compilait et n'était consommé
+ * règle n'atteint personne — c'était l'état mesuré : `meter:4/4` compilait et n'était consommé
  * par rien.
  *
  * Une règle qui porte déjà un mètre n'est PAS touchée : c'est le recouvrement.
@@ -2336,8 +2336,8 @@ function emitActorLibRefs(ast) {
  * déduplication des noms ». C'était un TROU, pas un espace séparé légitime — mesuré sur les 272
  * scènes du corpus : 3 portent un drapeau, toutes nommées `section`, zéro homonymie, donc le
  * corpus ne bouge pas en fermant le trou. Ce qui crée le nom, c'est le drapeau LUI-MÊME
- * (`@var section flag: …`, ex-`@flag section: …` — la forme de tête de scène est tombée le
- * 2026-08-05), PAS ses états : `calm`/`full` dans `@var section flag: calm:1, full:2` ne sont
+ * (`var section flag: …`, ex-`flag section: …` — la forme de tête de scène est tombée le
+ * 2026-08-05), PAS ses états : `calm`/`full` dans `var section flag: calm:1, full:2` ne sont
  * que des étiquettes internes au drapeau, jamais des noms globaux — les y faire entrer
  * déborderait la règle. Une LECTURE du drapeau (`[section==calm]`, une mutation `[section=full]`)
  * n'en crée pas non plus : comme `declarations` (gate/trigger/cv), c'est une propriété posée sur
@@ -2384,7 +2384,7 @@ function refuserNomsEnDouble(ast, libCtx) {
     for (const n of v?.names || []) noter(n, sorte, v?.line);
   }
   // ⚠️ L'ACTEUR EST LÀ, ET IL Y EST REVENU LE 2026-07-28 AU SOIR. Je l'en avais écarté le matin,
-  // en croyant protéger la voix de code : `@actor viz eval.hydra` puis `viz -> <code>` était la
+  // en croyant protéger la voix de code : `actor viz eval.hydra` puis `viz -> <code>` était la
   // forme du corpus, et je l'avais remontée comme un « conflit dans la décision » à arbitrer.
   // Romain a tranché l'inverse, et il avait raison depuis le début : cette écriture AMALGAME un
   // nom d'acteur et un nom de règle, et c'est précisément ce que la règle existe pour interdire.
@@ -2393,14 +2393,14 @@ function refuserNomsEnDouble(ast, libCtx) {
   // Kanopi, zéro amalgame restant, mesuré avant de poser ceci.
   for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, 'un acteur', a?.line);
   for (const sc of ast.scenes || []) noter(sc?.name, 'une scène', sc?.line);
-  // ⚠️ LES DEFINITIONS MANQUAIENT A CE RECENSEMENT, et le trou s est vu le jour ou `@def` a
-  // remplace `@macro` (2026-08-09) : `@var C4 adsr` refusait le conflit de nom, `@def C4 …` passait.
+  // ⚠️ LES DEFINITIONS MANQUAIENT A CE RECENSEMENT, et le trou s est vu le jour ou `def` a
+  // remplace `macro` (2026-08-09) : `var C4 adsr` refusait le conflit de nom, `def C4 …` passait.
   // L invariant — un nom ne designe qu UNE chose — etait donc garde pour six sortes de declaration
   // et pas pour la septieme, la plus recente. Une garde ecrite avant une forme ne la connait pas :
   // c est a l ajout de la forme qu il faut y penser, et rien ne le rappelle.
   // ⚠️ ET SEULEMENT CELLES QUI NE DECLARENT PAS UN TERMINAL. Une definition de terminal
-  // (`@def ka voice.sec`) ne PREND pas un nom, elle en CREE un — la recenser comme un conflit
-  // interdisait de declarer quoi que ce soit, et mes deux gardes de `@def` sont tombes dessus
+  // (`def ka voice.sec`) ne PREND pas un nom, elle en CREE un — la recenser comme un conflit
+  // interdisait de declarer quoi que ce soit, et mes deux gardes de `def` sont tombes dessus
   // dans la minute. Le conflit ne vaut que pour une definition qui reinvoque autre chose sous
   // un nom deja porte par un terminal.
   for (const d of ast.directives || []) {
@@ -2409,7 +2409,7 @@ function refuserNomsEnDouble(ast, libCtx) {
     }
   }
   // Un drapeau CRÉE un nom (Romain 2026-07-30) — voir la boucle sur `ast.vars` ci-dessus, qui le
-  // couvre depuis que `@flag` est tombé (2026-08-05) : `FlagStatesDirective` n'est plus produite.
+  // couvre depuis que `flag` est tombé (2026-08-05) : `FlagStatesDirective` n'est plus produite.
 
   // ⚠️ LES TÊTES DE RÈGLE NE SONT PLUS CONTRÔLÉES ICI — décision Romain du 2026-08-03,
   // `hub/decisions/2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md`, appliquée le 2026-08-07.
@@ -2424,8 +2424,8 @@ function refuserNomsEnDouble(ast, libCtx) {
   // est l'EFFET (`2026-07-28-unicite-des-noms.md`) : « poser une propriété sur un nom existant
   // reste permis — aucun nom rival créé ». Une tête de règle ne CRÉE aucun nom, elle pose une
   // réécriture sur un nom qui existe déjà. C'est le frontal qui la traitait comme une DÉCLARATION ;
-  // l'application était trop large, pas la règle. Tout ce qui déclare vraiment — `@macro`, `@var`,
-  // `@alias`, `@actor`, un objet CV — reste contrôlé au-dessus, y compris contre les terminaux.
+  // l'application était trop large, pas la règle. Tout ce qui déclare vraiment — `macro`, `var`,
+  // `alias`, `actor`, un objet CV — reste contrôlé au-dessus, y compris contre les terminaux.
   //
   // CE QUE ÇA DÉBLOQUE, et ce n'était pas un détail : aucune grammaire de substitution ne compilait
   // en BPScript. Donc aucun mécanisme de motif — captures, contextes, dièses, gabarits — n'était
@@ -2434,15 +2434,15 @@ function refuserNomsEnDouble(ast, libCtx) {
   //
   // ⚠️ CE QUI RESTE CONTRÔLÉ, ET POURQUOI JE NE SUIS PAS ALLÉ PLUS LOIN. La décision NOMME ses
   // trois formes : `C4 -> G4` (un terminal), `?1 D4 -> ?1 E4` (un terminal sous un joker),
-  // `#K1 #K2 #K3 M -> C4` avec `@var M` (une variable de travail). Elle lève donc DEUX collisions :
+  // `#K1 #K2 #K3 M -> C4` avec `var M` (une variable de travail). Elle lève donc DEUX collisions :
   // le TERMINAL et la VARIABLE. Elle ne dit rien des autres.
   //
   // Or l'AMALGAME acteur / tête de règle a été tranché NEUF JOURS PLUS TÔT, en sens inverse et dans
-  // ces termes : « erreur grave » (Romain, 2026-07-28) — `@actor viz` puis `viz -> <code>` mélange
+  // ces termes : « erreur grave » (Romain, 2026-07-28) — `actor viz` puis `viz -> <code>` mélange
   // un nom d'acteur et un nom de règle, et 44 scènes de Kanopi ont été migrées pour l'éliminer.
   // Ma première écriture retirait le contrôle EN ENTIER, donc levait aussi ce cas-là : c'était
   // faire dire à une décision plus que ce qu'elle écrit, exactement la faute de la veille sur
-  // `@out`. Je m'en tiens aux deux collisions nommées ; les autres restent, et le résidu
+  // `out`. Je m'en tiens aux deux collisions nommées ; les autres restent, et le résidu
   // (macro, alias, scène, objet CV — jamais tranchés dans un sens ni dans l'autre) est une
   // question pour Romain, pas une déduction pour moi.
   const LEVEES = new Set(['une variable de travail']);
@@ -2471,17 +2471,17 @@ function refuserNomsEnDouble(ast, libCtx) {
     }
   }
 
-  // ⛔ UN DRAPEAU CRÉE UN NOM, MÊME SANS `@var` — et ce nom était pris à n'importe qui, en silence.
+  // ⛔ UN DRAPEAU CRÉE UN NOM, MÊME SANS `var` — et ce nom était pris à n'importe qui, en silence.
   //
   // CE QUI PASSAIT, mesuré : `S -> C4 [velcont]` compile. `velcont` est un RÉGLAGE du vocabulaire,
   // et le sac de drapeaux en faisait un drapeau sans un mot. Idem pour `[C4]`, le nom d'un
   // terminal de l'alphabet actif. Le sac de drapeaux acceptait TOUT NOM, quelle que soit la sorte
   // à laquelle il appartenait déjà — c'est la seule porte du langage qui restait ouverte, quand
-  // `@var`, `@alias`, `@actor`, `@def` et les objets CV sont contrôlés depuis longtemps.
+  // `var`, `alias`, `actor`, `def` et les objets CV sont contrôlés depuis longtemps.
   //
   // LA RÈGLE EST CELLE DE LA BIBLE, appliquée à une sorte qui y échappait : les noms de toutes les
   // sortes vivent dans le même espace, chacun n'appartient qu'à une seule, et le contrôle a lieu à
-  // la déclaration. Un drapeau se déclare par `@var … flag` OU par sa première mutation — les deux
+  // la déclaration. Un drapeau se déclare par `var … flag` OU par sa première mutation — les deux
   // créent le nom, donc les deux se contrôlent.
   //
   // ⚠️ CE QUI N'EST PAS REFUSÉ, ET C'EST DÉLIBÉRÉ. Le même drapeau muté dans dix règles reste UN
@@ -2686,14 +2686,14 @@ function emitSceneLibRefs(ast) {
     const entree = loadLib(d.name, d.subkey);
     if (!entree) continue;
     // ⚠️ Le filtre exigeait `entree.notes` — il ne laissait donc passer QUE les alphabets, pour
-    // lesquels je l'avais écrit. `@sound.tabla_perc` résolvait sans rien émettre : l'invocation
+    // lesquels je l'avais écrit. `sound.tabla_perc` résolvait sans rien émettre : l'invocation
     // était acceptée et ne PRODUISAIT rien. Accepter n'est pas transmettre — c'est le même défaut
     // que la directive de mètre qui parlait dans le vide. Corrigé le 2026-07-26 : toute entrée
     // résoluble émet son adresse, quel que soit ce qu'elle contient.
     const adresse = `${d.name}.${d.subkey}`;
     if (!refs.includes(adresse)) refs.push(adresse);
   }
-  // TABLE DE CORRESPONDANCE d'une ENTRÉE (`@in pedale transport.midi mapping.<table>`). C'est une
+  // TABLE DE CORRESPONDANCE d'une ENTRÉE (`in pedale transport.midi mapping.<table>`). C'est une
   // invocation de librairie comme une autre : son ADRESSE doit sortir, sinon la scène « déclare »
   // une table que l'aval ne voit jamais. Accepter n'est pas transmettre.
   //
@@ -2756,13 +2756,13 @@ export function compileToBPxAST(source, environnement) {
     // JOUR MÊME. La cascade d'alphabet (`alphabetHerite`) laisse la valeur ABSENTE quand la scène
     // invoque une hauteur OPAQUE — c'est la loi 35, la seule absence légitime. Elle lit ça dans
     // `ast.libRefs`… qui était rempli DEUX PASSES PLUS BAS pour les invocations de SCÈNE. Une
-    // scène `@test_alphabets.abc` recevait donc le socle @core PAR-DESSUS son alphabet invoqué,
+    // scène `test_alphabets.abc` recevait donc le socle core PAR-DESSUS son alphabet invoqué,
     // et ses terminaux `a b c` étaient refusés comme inconnus. C'est très exactement le bug
     // diapason du 2026-07-04 (« jamais le socle par-dessus un composant invoqué »), rejoué sur un
     // autre axe. Trouvé par un témoin que j'écrivais pour AUTRE CHOSE : l'ordre des passes est
     // une donnée du calcul, pas de la mise en page.
     emitSceneLibRefs(ast);         // invocations de librairie en portée SCÈNE — AVANT toute cascade qui les lit
-    deriveAlphabetFromTuning(ast); // alphabet ← accordage quand @alphabet absent (bug 1.1) — AVANT resolveActors
+    deriveAlphabetFromTuning(ast); // alphabet ← accordage quand alphabet absent (bug 1.1) — AVANT resolveActors
     result.errors.push(...resolveActors(ast).errors);
     // Une macro ne peut pas porter le nom d'un terminal de l'alphabet actif (Romain 2026-07-28).
 
@@ -2774,10 +2774,10 @@ export function compileToBPxAST(source, environnement) {
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
     emitNoteTerminals(ast);          // l'arbre dit LUI-MÊME quels noms sont des notes (ordre architecte 2026-07-29)
-    emitSceneMeter(ast);             // `@meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
+    emitSceneMeter(ast);             // `meter` de scène → défaut sur chaque règle qui n'en porte pas (cascade par portée)
     result.ast = ast;
 
-    // Validation sémantique des valeurs de contrôle contre la lib @controls
+    // Validation sémantique des valeurs de contrôle contre la lib controls
     // (source unique des valeurs/plages permises). Erreurs non fatales : l'AST reste
     // produit, Kanopi affiche les erreurs en rouge à l'éval. Cf. controlValidation.js.
     const directives = [

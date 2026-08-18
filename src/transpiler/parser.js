@@ -47,9 +47,9 @@ function addressKeys() {
 }
 
 /**
- * CONVENTION — les quatre lectures d'un flux de nombres qu'un `@var` typé peut nommer
+ * CONVENTION — les quatre lectures d'un flux de nombres qu'un `var` typé peut nommer
  * (EBNF.md:55 : `CONVENTION = "signal" | "pitch" | "phase" | "logic"`). Partagée par `@var` et
- * `@def` (`def_directive`, EBNF.md:66), qui portent les mêmes quatre mots.
+ * `def` (`def_directive`, EBNF.md:66), qui portent les mêmes quatre mots.
  */
 
 
@@ -107,11 +107,11 @@ function varConventions() {
 }
 
 /**
- * Axes à CATALOGUE au niveau SCÈNE (directive `@axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
+ * Axes à CATALOGUE au niveau SCÈNE (directive `axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
  * de catalogue (une lib par axe) — donc un COMPOSANT, nommé avec `.`. DOIT rester le miroir de
  * `lib/core.json` schema.catalogAxes (garde anti-dérive : test/test_catalog_axes_colon_reject.js
  * itère describeVocabulary().components et prouve que CHACUN rejette le `:`). Le CUTOVER universel
- * (Romain 2026-07-14, tour [412]) rejette `@axe:<X>` pour chacun — plus jamais d'axe-composant qui
+ * (Romain 2026-07-14, tour [412]) rejette `axe:<X>` pour chacun — plus jamais d'axe-composant qui
  * tolère l'ancienne forme.
  */
 /**
@@ -168,7 +168,7 @@ function channelCatalog() {
 
 /**
  * LISTE POSITIVE FERMÉE des canaux de SORTIE (`out.<canal>` sur un @actor, ou le raccord
- * `@alphabet.X:<sortie>` de l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on
+ * `alphabet.X:<sortie>` de l'acteur implicite). Addendum ratifié Romain 2026-07-16 (« on
  * n'autorise que ceux qu'on connaît ») : suffixe ∉ schema.channels{out:true} → rejet fail-loud.
  * `dmx` y est entré le 2026-08-04 (catalogue unique `lib/core.json`, légitime même sans runtime
  * dmx encore écrit). `text` y est PRÉSENT (il porte `out:true`, routé comme les autres sorties) —
@@ -184,10 +184,10 @@ function outChannels() {
 }
 
 /**
- * LISTE POSITIVE FERMÉE des canaux d'ENTRÉE (`@var <rôle> in.<canal>`) — DISTINCTE de celle des
+ * LISTE POSITIVE FERMÉE des canaux d'ENTRÉE (`var <rôle> in.<canal>`) — DISTINCTE de celle des
  * sorties, et c'est délibéré. La décision Romain du 2026-07-26 nomme TROIS périphériques
  * d'entrée — MIDI, OSC, CLAVIER. Le clavier entre donc ici et NULLE PART ailleurs :
- * `@alphabet.X:keyboard` reste refusé, une sortie clavier n'a pas de sens. Préservée à
+ * `alphabet.X:keyboard` reste refusé, une sortie clavier n'a pas de sens. Préservée à
  * l'identique de l'ancienne `inputTransportChannels`, dérivée du catalogue unifié.
  */
 let _inChannels = null;
@@ -311,7 +311,7 @@ function assertAlphabetVoices(alphabetName, token) {
  * Normalise le nom d'un Symbol : si le nom est une clé de BP3_OPERATORS
  * (star→'*', plus→'+', fin→';'), retourne l'opérateur canonique BP3.
  * Cela garantit que l'AST reflète ce que BP3 aurait compilé (R1).
- * La déclaration `@gate star:midi` reste valide — seul le NOM porté par
+ * La déclaration `gate star:midi` reste valide — seul le NOM porté par
  * les Symbol nodes de règle est normalisé ici.
  */
 function normalizeName(name) {
@@ -337,7 +337,7 @@ function parse(tokens, opts = {}) {
     controlMap: {}, controls: {}, symbols: {}, transcriptions: {}, actors: {},
     controlsQualified: {}, controlQualifiedResolvedBy: {}, ambiguousControls: new Set(),
   };
-  /** Les noms qu'une scène a déclarés par `@def` — les SEULS qui puissent être appelés.
+  /** Les noms qu'une scène a déclarés par `def` — les SEULS qui puissent être appelés.
    *  Vide tant que la directive n'est pas implémentée ; cf. `estUneDefinitionDeclaree`. */
   const definitionsDeclarees = new Set();
 
@@ -351,17 +351,17 @@ function parse(tokens, opts = {}) {
    *
    * ⚠️ CE QUI NE MARCHAIT PAS, mesuré le 2026-08-13. `libCtx.actors` n'est rempli qu'APRÈS que
    * toutes les directives sont lues (`libCtx = loadLibsFromDirectives(...)` remplace l'objet
-   * entier). Or un CORPS DE `@def` est lu PENDANT cette phase : au moment où le parser rencontre
-   * `@def halo(x) x!perc.tin`, il ne sait pas encore que `perc` est un acteur, donc il lit
+   * entier). Or un CORPS DE `def` est lu PENDANT cette phase : au moment où le parser rencontre
+   * `def halo(x) x!perc.tin`, il ne sait pas encore que `perc` est un acteur, donc il lit
    * `perc.tin` comme un terminal nommé `perc` et la scène sort « terminal 'perc' non déclaré ».
    * La MÊME ligne écrite dans une règle passe, parce qu'une règle est lue après.
    *
-   * Le point décide donc sur CETTE table, remplie à la lecture de chaque `@actor`. L'ordre reste
+   * Le point décide donc sur CETTE table, remplie à la lecture de chaque `actor`. L'ordre reste
    * celui du langage : un acteur se déclare avant d'être employé.
    */
   const acteursDeclares = new Set();
 
-  // VARIABLES DE TRAVAIL déclarées par `@var`. Sous-ensemble du précédent, tenu à part parce
+  // VARIABLES DE TRAVAIL déclarées par `var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
   const nomsVariables = new Set();
   // Les noms de MACRO dont le corps est un CÂBLAGE. Rempli à la déclaration, lu au moment où la
@@ -387,7 +387,7 @@ function parse(tokens, opts = {}) {
   /**
    * LE NOM D'UNE ENTRÉE DE LIBRAIRIE — il peut COMMENCER PAR UN CHIFFRE.
    *
-   * `@temperaments.12TET`, `@temperaments.22shruti` : les accordages et tempéraments portent des
+   * `temperaments.12TET`, `temperaments.22shruti` : les accordages et tempéraments portent des
    * noms d'usage qui commencent par leur nombre de degrés. Le tokenizer les rend en DEUX jetons
    * collés — `INT(12)` puis `IDENT(TET)` — et ce lecteur les recolle tant qu'ils se touchent.
    *
@@ -396,7 +396,7 @@ function parse(tokens, opts = {}) {
    * coup. La référence porte donc une production DISTINCTE (`entry_name`), et elle ne vaut qu'ici.
    *
    * ⚠️ ET CETTE LECTURE EXISTAIT DÉJÀ, EN UN SEUL EXEMPLAIRE MAL PLACÉ : le canal de provenance
-   * (`@factory.`/`@mine.`) la portait, avec `12TET` et `22shruti` nommés dans son commentaire. Elle
+   * (`factory.`/`mine.`) la portait, avec `12TET` et `22shruti` nommés dans son commentaire. Elle
    * manquait à l'invocation DIRECTE — d'où une garde de Kairos passant par la provenance pour
    * atteindre un tempérament, faute d'autre voie. Deux endroits lisaient un nom d'entrée, un seul
    * savait le lire ; il n'y en a plus qu'un.
@@ -408,12 +408,28 @@ function parse(tokens, opts = {}) {
     let nom = String(advance().value);
     // ⚠️ LE TIRET FAIT PARTIE D'UN NOM D'ENTREE, et il est ici le SEUL endroit où il le
     // fait : le tokenizer le détache partout ailleurs, parce qu'il y est un silence.
-    // `@temperaments.bp3_Bohlen-Pierce` — neuf entrées du bundle en portent un.
+    // `temperaments.bp3_Bohlen-Pierce` — neuf entrées du bundle en portent un.
     while ((at(T.IDENT) || at(T.INT) || at(T.REST)) && !current().spaceBefore) nom += String(advance().value);
     return nom;
   }
 
   function at(type) { return current().type === type; }
+  /**
+   * LA LIGNE COURANTE PORTE-T-ELLE UNE FLECHE ?
+   *
+   * ⛔ L AROBASE SORTIE, PLUS RIEN NE DISTINGUE UNE DIRECTIVE D UNE REGLE AU PREMIER JETON.
+   * En tete de sous-grammaire, `mode:lin` et `S -> C4` commencent tous deux par un IDENT. Le
+   * discriminant est la FLECHE : une regle en porte une, une declaration jamais. On regarde donc
+   * jusqu au prochain saut de ligne, sans consommer.
+   */
+  function ligneSansFleche() {
+    for (let j = pos; j < tokens.length; j++) {
+      const t = tokens[j];
+      if (t.type === T.NEWLINE || t.type === T.EOF) return true;
+      if (t.type === T.ARROW_R || t.type === T.ARROW_L || t.type === T.ARROW_BI) return false;
+    }
+    return true;
+  }
   function atAny(...types) { return types.includes(current().type); }
   function skipNewlines() { while (at(T.NEWLINE) || at(T.COMMENT)) advance(); }
   function atEnd() { return at(T.EOF); }
@@ -507,20 +523,20 @@ function parse(tokens, opts = {}) {
       actors: [],
       scenes: [],
       exposes: [],
-      // VARIABLES DE TRAVAIL déclarées par `@var` — noms de symboles qui ne sont l'écriture
+      // VARIABLES DE TRAVAIL déclarées par `var` — noms de symboles qui ne sont l'écriture
       // d'aucune note (décision Romain 2026-07-27, voie 3).
       vars: [],
-      // ENTRÉES déclarées par `@var <rôle> in.<canal>` (ex-`@in`, décision Romain 2026-08-04) —
+      // ENTRÉES déclarées par `var <rôle> in.<canal>` (ex-`in`, décision Romain 2026-08-04) —
       // un rôle, son canal, sa table éventuelle (décision Romain 2026-07-27, symétrie entrée/sortie).
       inputs: [],
-      // `maps` SUPPRIMÉ le 2026-07-27 au soir, avec le mot : `@map` est abandonné, le câblage passe
+      // `maps` SUPPRIMÉ le 2026-07-27 au soir, avec le mot : `map` est abandonné, le câblage passe
       // par les chevrons. Un champ ÉMIS ET TOUJOURS VIDE n'est pas neutre — un consommateur qui le
       // lit conclut « cette scène ne câble rien » au lieu de « ce canal n'existe plus ». On
       // supprime la donnée avec le mot, dans le même mouvement, sans voie parallèle.
-      // `aliases` SUPPRIMÉ le 2026-08-15, par la même règle et pour la même raison : `@alias` sort
+      // `aliases` SUPPRIMÉ le 2026-08-15, par la même règle et pour la même raison : `alias` sort
       // du langage, donc son champ sort avec lui. Mesuré avant : aucun consommateur sur les 24
       // dépôts, et aucune scène du périmètre ne l'écrivait.
-      // `labels` SUPPRIMÉ avec '@label' (2026-07-28) : un champ émis et toujours vide fait
+      // `labels` SUPPRIMÉ avec 'label' (2026-07-28) : un champ émis et toujours vide fait
       // conclure « cette scène n'étiquette rien » au lieu de « ce canal n'existe plus ».
       declarations: [],
       backticks: [],
@@ -538,11 +554,32 @@ function parse(tokens, opts = {}) {
     // Parse header: directives, declarations, macros, backticks
     let initialMode = null;
     let initialModifiers = null;
+    let premiereLigne = true;
     while (!atEnd() && !at(T.SEPARATOR)) {
       skipNewlines();
       if (atEnd()) break;
 
-      if (at(T.AT)) {
+      // ⛔ AVANT LE DELIMITEUR, TOUTE LIGNE DECLARE. Le signe qui distinguait une directive a
+      // disparu ; c est la POSITION qui le fait. Un backtick orphelin et un bloc de production
+      // gardent leur lecture propre, testes avant.
+      // ⛔ UNE REGLE AVANT LE DELIMITEUR : c est le DELIMITEUR qui manque, et le refus doit le
+      // dire. Sans ce message, la premiere regle se lit comme une declaration et sort un
+      // « Expected IDENT, got ARROW_R » qui n apprend rien — le pire refus possible pendant une
+      // migration, parce qu il accuse la ligne au lieu de nommer ce qui manque.
+      // ⛔ UNE SCENE DE PRODUCTION SEULE NE PORTE AUCUN DELIMITEUR — decision du 2026-08-16 :
+      // « production seule : aucun `-----`, une fleche des la premiere ligne significative ».
+      // Le delimiteur SEPARE deux parties ; sans partie declarative il n a rien a separer.
+      // Ma premiere ecriture l exigeait des qu une regle apparaissait, donc elle refusait une
+      // scene entierement legitime — et le refus disait « il manque le delimiteur » a une scene
+      // qui n en veut pas.
+      if (premiereLigne && !ligneSansFleche()) break;
+      if (!at(T.BACKTICK) && !atProductionBlock() && !ligneSansFleche()) {
+        throw new ParseError(
+          `une regle est ecrite AVANT le delimiteur : il manque la ligne '-----' entre la partie `
+          + `declarative et la production. Depuis que l arobase est sortie, c est la POSITION qui `
+          + `qualifie une ligne — avant le '-----' elle declare, apres elle produit.`, current());
+      }
+      if (!at(T.BACKTICK) && !atProductionBlock()) {
         const dir = parseDirective();
         if (dir.type === 'SceneDirective') {
           scene.scenes.push(dir);
@@ -551,7 +588,7 @@ function parse(tokens, opts = {}) {
         } else if (dir.type === 'InDirective') {
           scene.inputs = [...(scene.inputs || []), dir];
         } else if (dir.type === 'VarDirective') {
-          // Les lignes s'ACCUMULENT — plusieurs `@var` ne se remplacent pas, elles s'ajoutent.
+          // Les lignes s'ACCUMULENT — plusieurs `var` ne se remplacent pas, elles s'ajoutent.
           // `scene.vars` porte la DIRECTIVE ENTIÈRE (AST.md:28, `vars: VarDirective[]`), pas ses
           // noms nus réduits en chaînes — sinon le type (`varType`) n'a nulle part où survivre
           // jusqu'à l'arbre (décision Romain, référence EBNF.md:47-57, 2026-08-05).
@@ -570,7 +607,7 @@ function parse(tokens, opts = {}) {
           definitionsDeclarees.add(dir.name);
           // ⛔ UNE DEFINITION EST UN NOM QUE LA SCENE POSSEDE : elle gagne sur un mot homonyme du
           // vocabulaire, comme une variable de travail ou un alias — le plus local l emporte.
-          // ⚠️ MESURE DU 2026-08-09 : `@def mapcont drum.on` puis `S -> a mapcont b` rendait
+          // ⚠️ MESURE DU 2026-08-09 : `def mapcont drum.on` puis `S -> a mapcont b` rendait
           // Symbol, CONTROLE, Symbol — le nom declare par la scene se faisait avaler par le
           // controle homonyme. C est exactement ce que ce recensement existe pour empecher, et il
           // ne connaissait pas la septieme sorte de declaration, entree le matin meme.
@@ -626,21 +663,8 @@ function parse(tokens, opts = {}) {
           // Adresse canonique opaque ; ordre source préservé ; dédup en fin de parseScene ;
           // champ OMIS si vide (jamais `[]`) — contrat bpscript-bpx.md §libRefs.
           (scene.libRefs || (scene.libRefs = [])).push(dir.address);
-        } else if (dir.type === 'Wiring') {
-          // `@wire saw >> lpf >> audio` — le CÂBLAGE INITIAL vit à la RACINE, pas dans
-          // `directives` : demandé par BPx, qui a mesuré avant que j'écrive. Sans champ propre,
-          // leur repli attrape-tout le collerait sur CHAQUE FEUILLE — le risque n'était pas la
-          // casse mais le PLACEMENT SILENCIEUX. ABSENT ≠ VIDE, comme `libRefs`.
-          (scene.wires || (scene.wires = [])).push(dir);
-        } else if (dir.type === 'CVInstance') {
-          // `@cv env1 mod.adsr(…)` — une DÉCLARATION qui crée un nom, pas une directive de
-          // scène. Elle vit dans `cvInstances`, comme la forme nue le faisait avant sa
-          // suppression : sans ce routage, le modulateur était parsé puis rangé parmi les
-          // directives, donc invisible de tout ce qui le cherche — un objet déclaré que rien
-          // ne peut invoquer. Même famille que la directive jetée après les règles, à un
-          // aiguillage près.
         } else if (dir.type === 'Declaration') {
-          scene.declarations.push(dir);   // `@gate Sa:midi` — propriété sur un nom existant
+          scene.declarations.push(dir);   // `gate Sa:midi` — propriété sur un nom existant
         } else if (dir.name === 'mode' && dir.runtime) {
           // @mode:X is a block directive, not a lib directive
           initialMode = dir.runtime;
@@ -653,62 +677,23 @@ function parse(tokens, opts = {}) {
         // que le refus NOMME la clé et donne sa réécriture (`parseProductionBlock`), au lieu de
         // tomber sur un « crochet inattendu » qui n'apprendrait rien.
         for (const d of parseProductionBlock()) scene.directives.push(d);
-      } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
-        // ─── PIERRE TOMBALE — L'AROBASE EST OBLIGATOIRE EN PARTIE DÉCLARATIVE ───────────────
-        // Décision Romain, 2026-07-29. La forme NUE (`gate Sa:midi`, `cv env1 : …`) est
-        // SUPPRIMÉE, pas dépréciée : ma grammaire l'annonçait comme « format legacy toujours
-        // supporté », donc c'était de la rétrocompatibilité conservée, et elle tombe sous la
-        // règle du 2026-07-19. Une partie déclarative se lit à l'œil quand toutes ses lignes
-        // commencent par le même signe ; une exception par type le défait.
-        // FRONTIÈRE MESURÉE AVANT LIVRAISON : 12 scènes sur 263, 27 occurrences.
-        const nu = current();
-        throw new ParseError(
-          `'${nu.value}' sans arobase n'existe plus (décision Romain 2026-07-29) — la partie `
-          + `déclarative s'écrit TOUJOURS avec l'arobase : '@${nu.value} …'. `
-          + `Et depuis la même décision, le DEUX-POINTS tranche : '@${nu.value} <nom>:<cible>' pose `
-          + `une PROPRIÉTÉ sur un nom qui existe, '@${nu.value} <nom> <valeur>' DÉCLARE un nom neuf.`,
-          nu,
-        );
-        // (Le corps de l'ancienne voie a été SUPPRIMÉ ici, pas neutralisé : signalé par bpx, et
-        // ils ont raison — un `else if (false)` avec le code derrière est littéralement la forme
-        // que la règle anti-rétrocompat du 2026-07-19 veut voir disparaître dans le même
-        // mouvement. La pierre tombale ci-dessus suffit.)
-      } else if (at(T.BACKTICK)) {
-        scene.backticks.push(parseBacktickOrphan());
-      } else if (isRuleStart()) {
-        break; // Start of rules
       } else {
-        break;
+        scene.backticks.push(parseBacktickOrphan());
       }
+      premiereLigne = false;
       skipNewlines();
     }
 
-    // LE MÉTRONOME PORTE UN SEUL NOM, `tempo`, DE LA SURFACE JUSQU'À L'ARBRE.
+    // LE MÉTRONOME PORTE UN SEUL NOM, `tempo`, DE LA SURFACE JUSQU'À L'ARBRE — et aucune
+    // normalisation ne vit plus ici : la donnée le déclare une fois, sous ce nom, dans la section
+    // `subgrammar` d'`engine` (`lib/engine.bpsl`). Il s'écrit en tête de scène ET en modificateur
+    // de sous-grammaire, parce que le natif a les deux places.
     //
-    // Il en a porté deux jusqu'au 2026-08-10 : l'auteur écrivait `@tempo` et l'arbre portait `mm`,
-    // normalisé ici. Romain a tranché — « même si on garantit la full compatibilité avec
-    // l'historique BP3, notre nominal c'est BPScript ; donc idéalement on devrait avoir tempo
-    // partout sauf dans le frontend BP3 qui devrait traduire mm en tempo ». La traduction change
-    // donc de SENS et de DOMICILE : elle quitte le producteur pour entrer chez qui LIT du natif.
-    //
-    // ⚠️ CE QUI RESTE `mm`, ET QUI N'EST PAS LA MÊME CHOSE — deux graphies natives BP3 que ce
-    // renommage ne touche pas, parce qu'elles nomment le moteur et non le langage :
-    //   · `_mm(N)` en RHS, le contrôle natif — `lib/engine.json` le déclare avec `bp3:"_mm"` ;
-    //     25 grammaires du corpus natif l'écrivent (mesuré par bp3-frontend).
-    //   · la SURFACE `@mm`, sortie du langage le 2026-06-26 et refusée plus bas avec sa
-    //     réécriture. Elle reste lisible en ENTRÉE BP3 : fermer la surface ne ferme pas la voie
-    //     native.
-    // Renommer l'une ou l'autre reviendrait à renommer du vocabulaire BP3 au nom de la conformité
-    // BPScript, soit l'inverse exact du geste.
-    //
-    // L'ORDRE DE BASCULE, ET POURQUOI C'EST CELUI-LÀ. BPx a mesuré chez lui que son chargeur
-    // acceptait DÉJÀ `tempo` — `loadGrammar.ts:1895-1896` s'écrit `case 'tempo': case 'mm':`, en
-    // fall-through, depuis que la surface a basculé en juin ; la branche n'avait jamais servi
-    // puisque je normalisais avant de lui émettre. Émettre `tempo` ne casse donc rien chez lui,
-    // alors que l'ordre inverse — lui d'abord — aurait ouvert une fenêtre où le tempo ne marchait
-    // plus, pour rien. C'est lui qui a demandé à recevoir la frappe en premier.
+    // ⚠️ CE QUI RESTE `mm` NOMME LE MOTEUR, PAS LE LANGAGE : `_mm(N)`, le contrôle natif, que la
+    // donnée porte en `bp3:_mm` et que 25 grammaires du corpus natif écrivent. Le frontal BP3 le
+    // lit et le traduit ; le renommer serait renommer du vocabulaire BP3 au nom de BPScript.
 
-    // Load libraries based on @ directives — determines known controls
+    // Load libraries based on the head directives — determines known controls
     libCtx = loadLibsFromDirectives(scene.directives);
 
     // Build scene.homomorphisms (contrat BPx ast.ts:150-157) from loaded
@@ -732,9 +717,9 @@ function parse(tokens, opts = {}) {
     // Parse subgrammars
     scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
 
-    // Parse optional @template section (SINGULIER — seule graphie acceptée).
-    // ⚠️ La graphie plurielle `@templates` (v0.7) est REFUSÉE depuis le 2026-07-19. bpx a migré
-    // ses scènes vers `@template` et retiré ses alias ; plus aucun consommateur ne l'écrit.
+    // Parse optional template section (SINGULIER, NU — seule graphie acceptée).
+    // ⚠️ La graphie plurielle `templates` (v0.7) est REFUSÉE depuis le 2026-07-19. bpx a migré
+    // ses scènes vers `template` et retiré ses alias ; plus aucun consommateur ne l'écrit.
     // Un alias qui survit à ses derniers usagers est du poison différé, pas de la prudence.
     skipNewlines();
     scene.template = null;
@@ -744,7 +729,7 @@ function parse(tokens, opts = {}) {
     // retrait : aucun consommateur ne lisait `scene.templates` — ni Kanopi, ni Kairos, ni
     // les runtimes, ni bp3-frontend ; seul BPx avait un repli `ast.template ?? ast.templates`,
     // qu'il retire dans le même mouvement.
-    if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'template') {
+    if (at(T.IDENT) && current().value === 'template') {
       const entries = parseTemplateSection();
       // ── LE CATALOGUE PORTE SON DESTINATAIRE ────────────────────────────────────────────────
       // FORME VALIDÉE PAR ROMAIN le 2026-08-10 (second geste après le transport verbatim) : le
@@ -797,7 +782,7 @@ function parse(tokens, opts = {}) {
   }
 
   // ============================================================
-  // Post-pass dépliage des commodités d'écriture (`@def`)
+  // Post-pass dépliage des commodités d'écriture (`def`)
   // ============================================================
 
   /**
@@ -810,15 +795,15 @@ function parse(tokens, opts = {}) {
    *
    * ⚠️ TOUTES LES DÉFINITIONS NE SONT PAS DU SUCRE, et les confondre effacerait des choses réelles.
    * Se déplient les trois sortes qui n'ajoutent QUE de l'écriture :
-   *   `prereglage`      `@def kick (vel:120)`        un sac de réglages nommé ;
-   *   `structure`       `@def cadence sa re ga pa`   une suite de termes nommée ;
-   *   `transformation`  `@def accent(x) x(vel:120)`  une suite de termes nommée, à trous.
-   * Ne se déplient pas : un TERMINAL déclaré (`@def ka voice.sec`) — il CRÉE un nom et doit
+   *   `prereglage`      `def kick (vel:120)`        un sac de réglages nommé ;
+   *   `structure`       `def cadence sa re ga pa`   une suite de termes nommée ;
+   *   `transformation`  `def accent(x) x(vel:120)`  une suite de termes nommée, à trous.
+   * Ne se déplient pas : un TERMINAL déclaré (`def ka voice.sec`) — il CRÉE un nom et doit
    * survivre —, une définition de CODE, un CÂBLAGE, une INVOCATION DE MODULE.
    *
    * LA MACRO SE CONFORME À LA RÉÉCRITURE (arbitrage Romain, 2026-08-13) : le corps entre dans la
    * règle ÉLÉMENT PAR ÉLÉMENT, il ne forme pas de groupe, et le nom occupe la durée de ce qu'il
-   * contient. `@def motif C4 D4` puis `motif E4` donne donc `C4 D4 E4`.
+   * contient. `def motif C4 D4` puis `motif E4` donne donc `C4 D4 E4`.
    *
    * LA CIBLE EST CELLE QU'ÉCRIRAIT LA MAIN : `accent(C4)` devient EXACTEMENT ce que produit
    * `C4(vel:120)` au même endroit. D'où le moment choisi — avant la pose des sceaux, jamais après : ce qui sort
@@ -829,7 +814,7 @@ function parse(tokens, opts = {}) {
    */
   function deplierLesCommodites(scene) {
     // ⛔ UNE INVOCATION DE MODULE N'EST PAS UNE STRUCTURE, et sans ce tri elle se dépliait.
-    // `@var ramp1 ramp` puis `@def monte ramp1(from:0, to:255)` (LANGUAGE.md, « `!` accepte tout ce
+    // `var ramp1 ramp` puis `def monte ramp1(from:0, to:255)` (LANGUAGE.md, « `!` accepte tout ce
     // qui se pose dans le flux ») : le parser type `monte` en STRUCTURE parce que le corps commence
     // par un terme nu. Or `ramp1` est une INSTANCE DE MODULE déclarée, `from` et `to` sont ses
     // ports, et l'invocation est une CHOSE — elle ne se déplie pas. Le défaut était muet tant que
@@ -853,13 +838,13 @@ function parse(tokens, opts = {}) {
     if (!formes.size) return;
 
     // ⛔ LE DÉPLIAGE NE TOUCHE QUE LE MEMBRE DROIT, et le membre gauche est le contre-exemple qui
-    // l'exige : `@def motif C4 D4` puis `motif -> C4` est un CONFLIT DE NOMS, refusé ailleurs. En
+    // l'exige : `def motif C4 D4` puis `motif -> C4` est un CONFLIT DE NOMS, refusé ailleurs. En
     // balayant l'arbre entier je remplaçais la TÊTE de la règle par le corps de la définition — la
     // règle perdait son nom et le conflit ne se déclarait plus. Une forme s'emploie là où un terme
     // s'emploie ; une tête de règle n'est pas un emploi, c'est une déclaration.
     //
     // ⚠️ LE DÉPLIAGE SE REJOUE JUSQU'AU POINT FIXE, parce qu'une forme peut en contenir une autre.
-    // La borne n'est pas une prudence : sans elle, `@def a b` + `@def b a` boucle sans fin, et un
+    // La borne n'est pas une prudence : sans elle, `def a b` + `def b a` boucle sans fin, et un
     // compilateur qui ne rend jamais la main est pire qu'un refus.
     const membresDroits = [];
     for (const sg of scene.subgrammars || []) {
@@ -876,7 +861,7 @@ function parse(tokens, opts = {}) {
    * structure valant plusieurs termes.
    *
    * LE CORPS ENTRE DANS LA RÈGLE ÉLÉMENT PAR ÉLÉMENT, il ne forme PAS de groupe (arbitrage Romain,
-   * 2026-08-13, « une macro se conforme à la réécriture ») : `@def motif C4 D4` puis `motif E4`
+   * 2026-08-13, « une macro se conforme à la réécriture ») : `def motif C4 D4` puis `motif E4`
    * donne `C4 D4 E4`, et `motif` occupe la durée de ce qu'il contient.
    */
   function remplacerDans(n, formes, reste) {
@@ -921,7 +906,7 @@ function parse(tokens, opts = {}) {
         throw new ParseError(
           `'${el.name}' est ${def.kind === 'prereglage' ? 'un préréglage' : 'une structure'} : il se `
           + `pose NU, sans arguments. Écrire '${el.name}'. Une liste de paramètres se déclare avec `
-          + `le nom ('@def ${el.name}(x) …'), et alors seulement l'appel en porte.`, jetonDe(el));
+          + `le nom ('def ${el.name}(x) …'), et alors seulement l'appel en porte.`, jetonDe(el));
       }
       return corpsSubstitue(def, el);
     }
@@ -1008,7 +993,7 @@ function parse(tokens, opts = {}) {
    * Modifie les nœuds en place (payload additif).
    */
   function annotateScene(scene) {
-    // États de drapeau nommés (`@var section flag: calm:1, full:2` — ex-`@flag`, tombée le
+    // États de drapeau nommés (`var section flag: calm:1, full:2` — ex-`flag`, tombée le
     // 2026-08-05) résolus DANS L'AST : une garde `[scene==calm]` ou une mutation `[scene=calm]`
     // portant un alias DÉCLARÉ voit sa `value` résolue en ENTIER (calm → 1). Un IDENT NON déclaré
     // reste tel quel (référence à un autre drapeau, fidèle BP3). Indispensable à la voie AST
@@ -1152,7 +1137,7 @@ function parse(tokens, opts = {}) {
       // GAP#2 : la charge se range en DEUX tiroirs — `address` (canal/device/port, lu par
       // Kairos pour matérialiser event.output) et `params` (contrôles vel/pan/wave…).
       const { address, controls } = splitAddress(params);
-      // ⚠️ UNE VARIABLE DE TRAVAIL N'EST PAS UNE NOTE, et sa nature doit le dire — sinon `@var`
+      // ⚠️ UNE VARIABLE DE TRAVAIL N'EST PAS UNE NOTE, et sa nature doit le dire — sinon `var`
       // serait une porte nommée qui ne change RIEN : la scène compilerait et l'aval continuerait
       // d'inventer une hauteur pour un symbole qui n'en a pas. C'est le défaut mesuré par Kairos
       // sur `Nadaka-1er-essai` : le symbole `A8` sortait SONNANT, et sa résolution lui donnait
@@ -1183,7 +1168,7 @@ function parse(tokens, opts = {}) {
       //
       // LE NOM EST DE MOI, et la frontière a été posée le jour même : la GRAPHIE (ce que l'auteur
       // écrit) est à Romain, un NOM INTERNE D'AST ne l'est pas. `wire` parce que la directive
-      // s'appelle `@wire` et le nœud `Wiring` — un même fait, un même mot, la discipline qui m'a
+      // s'appelle `wire` et le nœud `Wiring` — un même fait, un même mot, la discipline qui m'a
       // fait réutiliser le nœud existant au lieu d'en créer un second.
       //
       // ⚠️ PÉRIMÈTRE VOLONTAIREMENT ÉTROIT : le câblage STRICT, corps de type `Wiring`. Les
@@ -1309,7 +1294,7 @@ function parse(tokens, opts = {}) {
 
     // ── Câblage posé dans le flux (`!osc >> filtre`, `!\>> out.in`) ───
     // Même nature que les autres instantanés : ZÉRO DURÉE, jamais un pas (Romain 2026-07-28).
-    // Un câblage écrit dans un corps de `@macro` ne passe pas ici — cette annotation ne parcourt
+    // Un câblage écrit dans un corps de `macro` ne passe pas ici — cette annotation ne parcourt
     // que les membres droits — et il reste donc sans `payload`, comme avant.
     if (type === 'Wiring') {
       el.payload = { nature: 'instant', flux: true };
@@ -1469,7 +1454,7 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   /**
-   * Valeur de directive après ':' — logique PARTAGÉE entre la forme de tête (`@seed:7`) et le
+   * Valeur de directive après ':' — logique PARTAGÉE entre la forme de tête (`seed:7`) et le
    * bloc lu dans le flux (`![seed:7]`) pour garantir des nœuds Directive identiques par
    * construction (contrat BPx).
    *   INT → value Number (négatif via '-') ; ratio N/M → value String ;
@@ -1490,18 +1475,18 @@ function parse(tokens, opts = {}) {
     }
     if (at(T.INT)) {
       const num = advance().value;
-      // MÈTRE ADDITIF — `@meter:3+4+2/4`, la graphie de BP3 reprise telle quelle (décision Romain
+      // MÈTRE ADDITIF — `meter:3+4+2/4`, la graphie de BP3 reprise telle quelle (décision Romain
       // 2026-07-26, `hub/decisions/2026-07-26-trois-manques-du-temps-…`) : des sections de 3, 4 et
       // 2 battements. Motif : « c'est plus clair à comprendre ».
       //
       // ⚠️ LE `+` VIT ICI DANS UN SECOND RÔLE — séparateur de sections, alors qu'il est opérateur
       // de drapeau ailleurs. C'est un ÉCART ASSUMÉ à « un signe, un rôle », pas un oubli : deux
-      // options étaient posées, Atlas recommandait `@meter:3 4 2/4` (application littérale de la
+      // options étaient posées, Atlas recommandait `meter:3 4 2/4` (application littérale de la
       // règle), et Romain a tranché pour la fidélité à BP3 au nom de la lisibilité. À NE PAS
       // « corriger » plus tard au nom de la règle générale — l'exception est datée et motivée.
       //
       // La forme additive était déjà lue dans le sac moteur (`[meter:4+4/6]`) ; seule la directive
-      // `@meter` la refusait, alors qu'elle est le point d'entrée naturel.
+      // `meter` la refusait, alors qu'elle est le point d'entrée naturel.
       if (at(T.PLUS) && peek(1).type === T.INT) {
         let sections = `${negative ? '-' : ''}${num}`;
         while (at(T.PLUS) && peek(1).type === T.INT) {
@@ -1540,14 +1525,14 @@ function parse(tokens, opts = {}) {
 
     // ⛔ CE QUI RESTE COLLÉ À LA VALEUR N'EST PAS UNE VALEUR — et le taire coûtait le diagnostic.
     //
-    // `@duration:16b`, `@tempo:120b`, `@items:20s` : la valeur numérique se lit, l'unité collée
+    // `duration:16b`, `tempo:120b`, `items:20s` : la valeur numérique se lit, l'unité collée
     // reste sur la pile, et la boucle principale la rencontre plus loin comme un symbole égaré. Le
     // message était donc « Expected arrow (-> <- <>) », À LA LIGNE SUIVANTE — un auteur y lit un
     // problème de règle alors qu'il a écrit une unité qui n'existe pas, une ligne plus haut.
     //
     // ⚠️ LE DÉFAUT N'EST PAS PROPRE À UNE DIRECTIVE, et c'est pourquoi le refus vit ICI plutôt
-    // qu'auprès d'un nom : mesuré le 2026-08-10, il frappait AUSSI `@tempo:120b` — une directive
-    // parfaitement vivante — et `@zorglub:16b`, un nom inconnu qui méritait d'être nommé comme tel.
+    // qu'auprès d'un nom : mesuré le 2026-08-10, il frappait AUSSI `tempo:120b` — une directive
+    // parfaitement vivante — et `zorglub:16b`, un nom inconnu qui méritait d'être nommé comme tel.
     // Le réparer sur `duration` seul aurait réparé l'endroit où il s'est montré, pas l'espace où il
     // vit.
     //
@@ -1556,8 +1541,8 @@ function parse(tokens, opts = {}) {
     // (`3+4+2/4`), le littéral d'intervalle, la valeur négative. Ce refus ne voit donc que ce
     // qu'aucune d'elles n'a su lire.
     // ⚠️ LE MESSAGE NE CITE PAS DE GRAPHIE, ET C'EST DÉLIBÉRÉ. Ce lecteur sert DEUX écritures —
-    // la directive de tête `@seed:42` et la forme de flux `![seed:42]`. Un message qui citerait
-    // `'@seed:42x'` à qui a écrit `![seed:42x]` l'enverrait chercher une ligne qu'il n'a pas
+    // la directive de tête `seed:42` et la forme de flux `![seed:42]`. Un message qui citerait
+    // `'seed:42x'` à qui a écrit `![seed:42x]` l'enverrait chercher une ligne qu'il n'a pas
     // écrite : mesuré ici même, la première version le faisait.
     if (!atEnd() && !current().spaceBefore
         && (at(T.IDENT) || at(T.INT) || at(T.FLOAT))) {
@@ -1576,7 +1561,7 @@ function parse(tokens, opts = {}) {
 
   /**
    * Bloc de directives de production — REFUSÉ en tête de scène depuis le 2026-08-10, où il ne
-   * subsiste que pour porter son propre refus et la réécriture `@clé:valeur`. Il reste LU dans le
+   * subsiste que pour porter son propre refus et la réécriture `clé:valeur`. Il reste LU dans le
    * FLUX, où `![seed:N]` traduit `_srand(N)` du natif.
    * Le `@` est répété sur chaque clé ; chaque clé produit le MÊME nœud
    * Directive que la @-forme historique. Détection sur LBRACKET suivi de AT
@@ -1602,8 +1587,8 @@ function parse(tokens, opts = {}) {
       // SIMPLE — les noms à traitement spécial (@mode, @scene, @duration…)
       // y perdraient leur effet en silence : on avertit.
       // ⚠️ LE BLOC `[@…]` EST SORTI DU LANGAGE EN TÊTE DE SCÈNE (Romain, 2026-08-10) : « ça
-      // s'applique à toutes les directives de production ». Les quatre s'écrivent `@clé:valeur`,
-      // préfixe optionnel — `@seed:42` et `@engine.seed:42` sont la même chose, par la règle
+      // s'applique à toutes les directives de production ». Les quatre s'écrivent `clé:valeur`,
+      // préfixe optionnel — `seed:42` et `engine.seed:42` sont la même chose, par la règle
       // d'unicité.
       //
       // LA PIÈCE QUI LE FONDE : `docs/spec/LANGUAGE.md:790-810`, « trois places, trois rôles ». Le
@@ -1621,8 +1606,8 @@ function parse(tokens, opts = {}) {
       if (!dansLeFlux) {
         const ecrit = value !== null && value !== undefined ? `:${value}` : (runtime ? `:${runtime}` : '');
         throw new ParseError(
-          `'[@${name}${ecrit}]' : une directive de production s'écrit en tête de scène avec `
-          + `l'arobase — '@${name}${ecrit}'. Un bloc qui groupait plusieurs clés se réécrit en `
+          `'[${name}${ecrit}]' : une directive de production s'écrit en tête de scène, avant le `
+          + `délimiteur — '${name}${ecrit}'. Un bloc qui groupait plusieurs clés se réécrit en `
           + `autant de lignes. Le crochet porte ce qui appartient à la DÉRIVATION : un drapeau, `
           + `une procédure, un rang.`, atTok);
       }
@@ -1630,8 +1615,8 @@ function parse(tokens, opts = {}) {
       // contrôle de flux natif (`_srand`).
       if (name !== 'seed') {
         throw new ParseError(
-          `'![@${name}…]' : seul '@seed' a un sens dans le flux (re-semence _srand) ; `
-          + `'${name}' se pose en tête de scène, '@${name}'.`, atTok);
+          `'![${name}…]' : seul 'seed' a un sens dans le flux (re-semence _srand) ; `
+          + `'${name}' se pose en tête de scène, '${name}'.`, atTok);
       }
       dirs.push({ type: 'Directive', name, subkey: null, runtime, value,
                   aliases: null, modifiers: null, line: atTok.line });
@@ -1643,7 +1628,31 @@ function parse(tokens, opts = {}) {
   }
 
   function parseDirective() {
-    const tok = expect(T.AT);
+    // ── L AROBASE EST SORTIE DU LANGAGE ──────────────────────────────────────────────────────
+    // `hub/decisions/2026-08-17-factory-et-mine-sortent-du-langage.md`, section « Amendement du
+    // 2026-08-17 — l arobase sort de partout ». ⛔ LE NOM DU FICHIER, PAS LA DATE SEULE : j avais
+    // cite « 2026-08-18 », Atlas a liste `hub/decisions/` a cette date, n a rien trouve, et a
+    // conclu que la decision n existait pas — il a refuse de migrer ses 211 arobases et son
+    // portillon est reste rouge. Une date se recopie de travers, un nom de fichier traverse.
+    // « on enleve tous les arobases et c est tout ». La forme est la ligne PRIVEE de son
+    // arobase, rien d autre : `core`, `alphabet.western`, `tempo:360`, `mode:lin`.
+    //
+    // ⛔ CE QUI QUALIFIE UNE LIGNE EST DESORMAIS SA POSITION : avant le delimiteur elle DECLARE,
+    // apres elle PRODUIT. C est ce qui rend le delimiteur obligatoire, et c est pourquoi son
+    // insertion (etape A) devait passer d abord — sans lui, une production entiere se lirait
+    // comme une suite de declarations.
+    //
+    // ⛔ PAS DE VOIE PARALLELE : la forme a arobase est REFUSEE, pas toleree. Un parseur qui
+    // accepterait les deux ne refermerait jamais la migration.
+    const tok = current();
+    if (at(T.AT)) {
+      const apres = peek(1);
+      throw new ParseError(
+        `l'arobase est SORTIE du langage (decision Romain, `
+        + `hub/decisions/2026-08-17-factory-et-mine-sortent-du-langage.md) — ecrire `
+        + `'${apres && apres.value ? apres.value : '<directive>'}' sans elle. Ce qui qualifie une `
+        + `ligne est sa POSITION : avant le '-----' elle declare, apres elle produit.`, tok);
+    }
     // @+ is a special case — PLUS token instead of IDENT
     let name, subkey = null, directiveParams = null;
     if (at(T.PLUS)) {
@@ -1654,14 +1663,14 @@ function parse(tokens, opts = {}) {
       name = advance().value;
     } else {
       // ⚠️ LE NOM D'UNE LIBRAIRIE PEUT PORTER UN TIRET, au meme titre qu'un nom d'entree —
-      // `@ragas-tunings.sargam_12TET`. Le tokenizer detache le tiret partout depuis qu'il est un
+      // `ragas-tunings.sargam_12TET`. Le tokenizer detache le tiret partout depuis qu'il est un
       // SILENCE dans le flux ; ici il fait partie du nom, et `lireNomDEntree` le recolle. Le defaut
       // etait MASQUE par le prefixe de provenance, qui lisait le chemin par sa propre voie.
       name = lireNomDEntree(tok);
     }
     // Invocation par PROVENANCE (chantier libs-provenance, décision hub ef75ec6 ;
-    // contrat contrats/bpscript-bpx.md §libRefs) : `@factory.<chemin-fichier>.<entrée>` et
-    // `@mine.<chemin-fichier>.<entrée>`. `factory`/`mine` sont des préfixes RÉSERVÉS. Le
+    // contrat contrats/bpscript-bpx.md §libRefs) : `factory.<chemin-fichier>.<entrée>` et
+    // `mine.<chemin-fichier>.<entrée>`. `factory`/`mine` sont des préfixes RÉSERVÉS. Le
     // domaine est déclaré DANS le fichier — on ne le connaît PAS ici (L27 : on PORTE opaque,
     // Kairos résout). Découpage POSITIONNEL : dernier segment = entrée ; le milieu = chemin.
     // → canal NEUTRE `ast.libRefs` (adresse canonique opaque), PAS un slot legacy.
@@ -1675,13 +1684,13 @@ function parse(tokens, opts = {}) {
       while (at(T.PERIOD)) { advance(); segs.push(lireNomDEntree(tok)); }
       if (segs.length < 2) {
         throw new ParseError(
-          `invocation de librairie malformee '@${name}' — attendu ` +
+          `invocation de librairie malformee '${name}' — attendu ` +
           `@${name}.<chemin-fichier>.<entree> (ex. @${name === 'mine' ? 'mine.ragas.mes-svaras.sa' : 'alphabet.sargam'})`,
           tok
         );
       }
-      // Adresse canonique OPAQUE : `mine.` préfixe le perso ; le sucre `@factory.` est NORMALISÉ
-      // au nu (nom nu et `@factory.` confondus AVANT émission — contrat bpscript-bpx.md).
+      // Adresse canonique OPAQUE : `mine.` préfixe le perso ; le sucre `factory.` est NORMALISÉ
+      // au nu (nom nu et `factory.` confondus AVANT émission — contrat bpscript-bpx.md).
       const address = name === 'mine' ? `mine.${segs.join('.')}` : segs.join('.');
       return { type: 'LibRef', address, provenance: name, line: tok.line };
     }
@@ -1691,8 +1700,8 @@ function parse(tokens, opts = {}) {
       subkey = lireNomDEntree(tok);
     }
 
-    // LE PRÉFIXE PAR LA LIBRAIRIE SE RABAT ICI, AU PLUS TÔT — `@core.tempo:120` DEVIENT
-    // `@tempo:120` (Romain, 2026-08-09 : « à étendre à toutes les librairies.directives »).
+    // LE PRÉFIXE PAR LA LIBRAIRIE SE RABAT ICI, AU PLUS TÔT — `core.tempo:120` DEVIENT
+    // `tempo:120` (Romain, 2026-08-09 : « à étendre à toutes les librairies.directives »).
     // Le préfixe est une façon d'ÉCRIRE, pas une forme à porter : il ne survit pas dans l'arbre,
     // donc aucun consommateur n'a de nouvelle nature à lire. Contrepartie exacte de la résolution
     // par unicité (2026-08-02) — le nom nu vaut quand il est unique, le préfixe nomme
@@ -1701,15 +1710,15 @@ function parse(tokens, opts = {}) {
     // ⚠️ « AU PLUS TÔT » EST TOUTE LA RÈGLE, et elle a été payée deux fois dans l'heure. Chaque
     // refus posé sur une directive se garde par `!subkey` : un rabattement placé plus bas laisse
     // la forme préfixée passer PAR-DESSUS le refus. Mesuré en produit croisé (librairies ×
-    // directives déclarées), rabattement tardif : `@core.seed:120` passait là où `@seed:120` est
-    // refusé depuis le 2026-06-11, et `@core.scene:120` ROUVRAIT `@scene`, supprimée du langage.
+    // directives déclarées), rabattement tardif : `core.seed:120` passait là où `seed:120` est
+    // refusé depuis le 2026-06-11, et `core.scene:120` ROUVRAIT `scene`, supprimée du langage.
     // DIX-HUIT paires se comportaient autrement que leur nom nu — dix-huit refus contournables en
     // préfixant. Le cas du jour (`tempo`) n'en montrait aucun : seul le produit croisé les a vus.
     //
     // Ce qui se rabat est lu dans la DONNÉE (`directiveDeclareeParLaLibrairie` : `reservedDirectives`,
     // `values`, `controls`), jamais une liste de paires en dur — une directive ajoutée à une
     // librairie devient préfixable le jour même. Une invocation de COMPOSANT n'est pas touchée :
-    // `@alphabet.western` ne résout rien par ce chemin (`western` vit dans `alphabets`, pas parmi
+    // `alphabet.western` ne résout rien par ce chemin (`western` vit dans `alphabets`, pas parmi
     // les directives déclarées), donc elle poursuit intacte. Un préfixe qui ne résout rien n'est
     // pas avalé non plus : il tombe dans le refus nommé de `bpxAst`, qui dit quelle entrée manque
     // et dans quelle librairie.
@@ -1719,8 +1728,8 @@ function parse(tokens, opts = {}) {
     }
 
     // ─── UNE CLÉ D'ACTEUR PORTE SES PARAMÈTRES, EN DÉFAUT DE SCÈNE AUSSI ──────────────────────
-    // `@out.midi(ch:1)` (`LANGUAGE.md` §« Les cinq clés d'un acteur ») : la même écriture que sous
-    // un `@actor`, à l'étage de la scène. Les paramètres sont lus ICI parce que la clé les porte
+    // `out.midi(ch:1)` (`LANGUAGE.md` §« Les cinq clés d'un acteur ») : la même écriture que sous
+    // un `actor`, à l'étage de la scène. Les paramètres sont lus ICI parce que la clé les porte
     // partout où elle s'écrit — ils ne dépendent pas de l'endroit. La liste des clés vient de
     // `lib/core.json` (`schema.actorKeys`), jamais d'une liste en dur.
     if (subkey && at(T.LPAREN) && !current().spaceBefore && actorKeysData().valides.has(name)) {
@@ -1735,7 +1744,7 @@ function parse(tokens, opts = {}) {
       expect(T.RPAREN);
     }
 
-    // ─── PIERRE TOMBALE — `@scene` est SUPPRIMÉE de la graphie (Romain, 2026-07-29) ──────────
+    // ─── PIERRE TOMBALE — `scene` est SUPPRIMÉE de la graphie (Romain, 2026-07-29) ──────────
     // Ses mots : « on n'a ni la maturité ni le besoin de déclarer des sous-scènes », puis, une fois
     // la pièce sur la table : « je propose de LAISSER scenes dans BPx, ça peut servir plus tard,
     // mais on le retire du RESTE ».
@@ -1750,48 +1759,36 @@ function parse(tokens, opts = {}) {
     //
     // LA LEÇON, ET ELLE VAUT AU-DELÀ D'ICI : UN ZÉRO CHEZ UN CONSOMMATEUR N'EST PAS UN ZÉRO
     // PARTOUT. Et sa réciproque, apprise le même jour et plus vicieuse : chercher les OCCURRENCES
-    // dans les données ne trouve pas les LECTEURS — BPx n'avait aucune scène employant `@scene`, et
+    // dans les données ne trouve pas les LECTEURS — BPx n'avait aucune scène employant `scene`, et
     // c'est pourtant chez eux que la suppression mord, parce que c'est leur CODE qui lit le champ.
-    // ⛔ PIERRE TOMBALE — `@mm` SORT DE LA SURFACE (Romain 2026-06-26, `@mm` → `@tempo` ; feu de
-    // fermeture 2026-08-09, arbitrage architecte §38). Un auteur écrit `@tempo:N`, et lui seul.
-    //
-    // ⚠️ CE QUI NE SE FERME PAS, ET IL FAUT LE LIRE AVANT DE TOUCHER À CE REFUS :
-    //   · le NOM DANS L'ARBRE reste `mm` — BPx le lit sur douze sites (mesuré). La normalisation
-    //     `tempo` → `mm` vit plus haut dans ce fichier et ne bouge pas.
-    //   · la GRAPHIE NATIVE BP3 reste lisible — 25 fichiers du corpus natif la portent (mesuré par
-    //     BPx). Elle est lue par le frontal BP3, qui vit chez bp3-frontend ; ce qui s'écrit en
-    //     BPScript, lui, dit `tempo`.
-    // Fermer la surface, ce n'est fermer ni l'une ni l'autre. Même motif que le nom entre barres,
-    // sorti du langage le même jour et resté une graphie d'entrée BP3.
-    //
-    // FRONTIÈRE MESURÉE AVANT LA FRAPPE : zéro fichier de l'atelier ne porte cette directive à
-    // l'instant du commit — BPx avait migré ses 48 scènes le matin même. Le compte de ce chantier
-    // a été faux trois fois avant d'être lu ligne à ligne ; c'est pourquoi cette phrase dit « à
-    // l'instant du commit » et non « nulle part », qui affirmerait plus que ce qui a été mesuré.
-    if (name === 'mm') {
-      throw new ParseError(
-        `'@mm' est SORTIE du langage (décision Romain 2026-06-26) — écrire '@tempo:<N>'. `
-        + `Le métronome de la scène a un seul nom. `
-        + `La graphie reste lisible en ENTRÉE BP3 : ce refus ferme la surface BPScript, pas la `
-        + `voie native.`, tok);
-    }
-
-    if (name === 'scene') {
-      throw new ParseError(
-        `'@scene' est SUPPRIMÉE du langage (décision Romain 2026-07-29) : « on n'a ni la maturité `
-        + `ni le besoin de déclarer des sous-scènes ». Une scène ne déclare plus de sous-scènes — `
-        + `la composition multi-scène, si elle revient, se fera hors du langage.`, tok);
-    }
+    // ⛔ `mm` N'A PLUS DE PIERRE TOMBALE ICI, et c'est une décision : le mot est sorti du langage
+    // le 2026-08-18, et la règle de `hub/decisions/2026-08-15-un-type-se-declare-en-librairie…`
+    // veut qu'un mot sorti soit refusé comme un mot inventé. Le témoin qui le prouve compare son
+    // refus à celui de `zorglub` et exige qu'ils soient identiques.
 
     // TOMBSTONE : la feature @routing (profils d'environnement studio/live/browser + routingTable
     // Z1 #105) est SUPPRIMÉE (décision 2026-07-16, Romain : modèle d'environnements abandonné —
     // ce n'était pas le moteur BP3 mais une feature de notre transpileur). Rejet nommé plutôt
     // qu'un silence : le canal de sortie se déclare par `out.<audio|midi|osc>` sur l'acteur.
+    // ⛔ PAS DE PIERRE TOMBALE POUR `alias`, `speed` NI `template` — et c'est une decision, pas
+    // un oubli : `hub/decisions/2026-08-15-un-type-se-declare-en-librairie-object-def-var-init.md`
+    // dit « Elles sortent SANS PIERRE TOMBALE — un mot inconnu est refuse comme un mot invente. »
+    //
+    // ⚠️ JE LES AVAIS POSEES, PUIS RETIREES LE MEME JOUR. Le refus qu'elles remplaçaient a un
+    // vrai cout — un auteur qui ecrit `alias` lit qu'il lui manque une librairie et part en
+    // chercher une — mais la regle prime, et `alias_est_sorti_du_langage.mjs` la MESURE : il
+    // compare ce refus a celui d'un mot invente et exige qu'ils soient IDENTIQUES.
+    //
+    // La question reste ouverte chez Romain : la regle est ecrite pour cinq mots que la reference
+    // n'a JAMAIS decrits, alors que ces trois-la etaient dans la bible et largement ecrits. Les
+    // sept pierres tombales existantes (`mm`, `scene`, `transport`, `library`, `in`, `macro`,
+    // `flag`) sont dans le meme cas et leur sort se tranche avec.
+
     if (name === 'routing') {
       throw new ParseError(
-        `'@routing' n'existe plus — la feature de profils d'environnement (studio/live/browser) a `
+        `'routing' n'existe plus — la feature de profils d'environnement (studio/live/browser) a `
         + `été SUPPRIMÉE (2026-07-16). Le canal de sortie se déclare par 'out.<audio|midi|osc>' `
-        + `sur l'acteur (ou '@alphabet.X:<sortie>' pour l'acteur implicite).`,
+        + `sur l'acteur (ou 'alphabet.X:<sortie>' pour l'acteur implicite).`,
         tok,
       );
     }
@@ -1805,12 +1802,12 @@ function parse(tokens, opts = {}) {
       return { type: 'SceneDirective', name: sceneName, file, line: tok.line };
     }
 
-    // ⛔ PIERRE TOMBALE — `@library` est SUPPRIMÉE du langage (décision Romain 2026-08-06).
+    // ⛔ PIERRE TOMBALE — `library` est SUPPRIMÉE du langage (décision Romain 2026-08-06).
     //
     // POURQUOI ELLE PART. C'était la seule des quinze librairies dont ce qui suit le point n'était
     // pas l'ENTRÉE du catalogue mais le MOTEUR, l'entrée venant après entre guillemets : trois
     // pièces là où toutes les autres en ont deux. Mesuré avant de trancher : sa forme nue
-    // `@library.strudel` — celle que la bible imprimait — ne compilait même pas.
+    // `library.strudel` — celle que la bible imprimait — ne compilait même pas.
     //
     // CE QUI LA REMPLACE : la banque est un paramètre INTRINSÈQUE du moteur, déclaré sur l'entrée
     // `strudel` de `lib/eval.json` (Romain : « bank est intrinsèque à strudel, c'est pas
@@ -1818,53 +1815,40 @@ function parse(tokens, opts = {}) {
     // existait déjà, c'est celle de `out.midi(ch:3)`. Gain de passage : deux voix Strudel peuvent
     // désormais porter deux banques différentes dans une même scène, ce que la directive de scène
     // rendait impossible.
-    if (name === 'library') {
-      throw new ParseError(
-        `'@library' est SUPPRIMÉE du langage (décision Romain 2026-08-06) : la banque n'est pas une `
-        + `librairie, c'est un paramètre du moteur qui la charge. Elle se pose sur l'acteur — `
-        + `'@actor <nom> eval.${subkey || '<moteur>'}(bank:<banque>)'. Deux voix du même moteur `
-        + `peuvent ainsi porter deux banques différentes`,
-        tok);
-    }
+    
 
-    // ─── PIERRE TOMBALE — `@transport`/`@out` ne sont PAS des directives de scène (Romain,
+    // ─── PIERRE TOMBALE — `transport`/`out` ne sont PAS des directives de scène (Romain,
     // 2026-08-04) ─────────────────────────────────────────────────────────────────────────────
     // Signalé par Atlas, mesuré avant correction : le tombstone `transport` posé DANS un bloc
-    // `@actor` (plus bas, `actorKeysData()`) ne couvrait pas l'écriture en TÊTE de scène —
-    // `@transport.midi` et `@out.midi` compilaient tous les deux SANS ERREUR et SANS AUCUN EFFET
+    // `actor` (plus bas, `actorKeysData()`) ne couvrait pas l'écriture en TÊTE de scène —
+    // `transport.midi` et `out.midi` compilaient tous les deux SANS ERREUR et SANS AUCUN EFFET
     // (l'acteur implicite garde `{type:'TransportRef', key:'audio'}` quoi qu'on écrive : la
-    // directive produisait un nœud que rien ne consomme). Le trou est PRÉEXISTANT — `@transport`
+    // directive produisait un nœud que rien ne consomme). Le trou est PRÉEXISTANT — `transport`
     // compilait déjà avant le lot de renommage du 2026-08-04, ce n'est pas une régression de ce
     // lot, c'est ce que ce lot aurait dû fermer.
     //
     // Les deux mots restent dans `schema.reservedDirectives` (`lib/core.json`) — ce refus
     // s'AJOUTE, il ne les en retire pas : c'est ce qui empêche une librairie de déclarer une
     // valeur portant ce nom (cf. `_destinations.transport`/`_destinations.out` du même fichier).
-    // ─── PIERRE TOMBALE — `@transcription` est REMPLACÉE par `@homomorphism` (Romain, 2026-08-07)
-    // « oui on renomme ». La bible n'a JAMAIS écrit que `@homomorphism.<table>` (§« Les tables
+    // ─── PIERRE TOMBALE — `transcription` est REMPLACÉE par `homomorphism` (Romain, 2026-08-07)
+    // « oui on renomme ». La bible n'a JAMAIS écrit que `homomorphism.<table>` (§« Les tables
     // d'homomorphisme se déclarent par @homomorphism.<table> ») ; le mot `transcription` n'y
     // apparaît nulle part. Le code implémentait l'ancien nom et REFUSAIT celui de la référence.
     //
     // ⚠️ ET LE RETRAIT SIMPLE AURAIT ÉTÉ MUET, c'est pourquoi ce refus existe : une fois le
-    // chargeur basculé, `@homomorphism.dhati` compilait toujours — en chargeant ZÉRO table. La
+    // chargeur basculé, `homomorphism.dhati` compilait toujours — en chargeant ZÉRO table. La
     // scène croyait transformer sa production et ne transformait rien, exactement le défaut payé
-    // sur `@homomorphism.dhinOO` (« la scène croyait charger un homomorphisme et n'en chargeait
+    // sur `homomorphism.dhinOO` (« la scène croyait charger un homomorphisme et n'en chargeait
     // AUCUN, depuis des mois »). Un mot retiré sans pierre tombale ne disparaît pas : il devient
     // inerte, et l'inerte ne se voit pas.
     if (name === 'transcription') {
       throw new ParseError(
-        `'@transcription' est REMPLACÉE par '@homomorphism' (décision Romain 2026-08-07) — c'est `
+        `'transcription' est REMPLACÉE par 'homomorphism' (décision Romain 2026-08-07) — c'est `
         + `le seul mot que la référence emploie pour une table de correspondances. Réécrire `
-        + `'@homomorphism${subkey ? '.' + subkey : '.<table>'}'.`, tok);
+        + `'homomorphism${subkey ? '.' + subkey : '.<table>'}'.`, tok);
     }
-    if (name === 'transport') {
-      throw new ParseError(
-        `'@transport' n'existe plus en directive de scène (décision Romain 2026-08-04) — le mot `
-        + `'transport' est SORTI du langage. La direction se déclare sur l'acteur, dans un bloc `
-        + `'@actor' : 'out.<canal>' (ex-'transport.<canal>'). `
-        + `Exemple : '@actor S\\n  out.audio'.`, tok);
-    }
-    // ⚠️ `@out` A ÉTÉ REFUSÉ ICI DU 2026-08-04 AU 2026-08-07, ET LE REFUS ÉTAIT DE MOI.
+    
+    // ⚠️ `out` A ÉTÉ REFUSÉ ICI DU 2026-08-04 AU 2026-08-07, ET LE REFUS ÉTAIT DE MOI.
     // Il invoquait la décision `2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport`,
     // qui ne dit PAS ça : elle sort le mot `transport` du langage et pose `in.`/`out.` à sa place.
     // Tous ses exemples écrivent `out.` sous un acteur, aucun n'interdit le défaut de scène. La
@@ -1872,22 +1856,17 @@ function parse(tokens, opts = {}) {
     //     @alphabet.sargam          // la scene entiere joue le sargam et sort par le MIDI
     //     @out.midi(ch:1)
     //     @actor sitar              // cet acteur affine ce dont il herite
-    // Le défaut mesuré était réel — l'ancien commentaire ci-dessus le dit : `@out.midi` compilait
+    // Le défaut mesuré était réel — l'ancien commentaire ci-dessus le dit : `out.midi` compilait
     // SANS AUCUN EFFET. J'ai fermé la moitié facile (interdire) au lieu de la vraie (brancher).
     // Les quatre autres clés d'acteur descendaient déjà en défaut de scène ; `out` était la seule
     // exception, et elle ne venait d'aucun arbitrage.
 
-    // ─── PIERRE TOMBALE — `@in` n'existe plus (Romain, 2026-08-04) ────────────────────────────
+    // ─── PIERRE TOMBALE — `in` n'existe plus (Romain, 2026-08-04) ────────────────────────────
     // `hub/decisions/2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport.md`. La bible
     // (`docs/spec/LANGUAGE.md` §« @var — déclarer une variable ») écrivait déjà `@var <rôle>
     // in.<canal>` : ce n'était pas une nouvelle forme, c'est le code qui divergeait. La déclaration
-    // d'entrée vit désormais dans `@var`, avec les autres variables — voir plus bas.
-    if (name === 'in') {
-      throw new ParseError(
-        `'@in' n'existe plus (décision Romain 2026-08-04) — la direction s'écrit : `
-        + `'@var <rôle> in.<canal>' remplace '@in <rôle> transport.<canal>'. `
-        + `Exemple : '@var pedale in.midi mapping.fcb_std'.`, tok);
-    }
+    // d'entrée vit désormais dans `var`, avec les autres variables — voir plus bas.
+    
 
     // @var A8   /   @var a, b, c — VARIABLES DE TRAVAIL
     // @var touches in.keyboard    — DÉCLARATION D'UNE ENTRÉE
@@ -1903,18 +1882,18 @@ function parse(tokens, opts = {}) {
     // une COQUILLE reste attrapée (elle n'est déclarée nulle part), un symbole VOULU passe.
     //
     // LA GRAPHIE ne crée aucune syntaxe : pas de deux-points parce qu'on ÉNUMÈRE sans affecter
-    // (règle de Romain du 2026-07-26, comme `@expose`/`@label`) ; la virgule sépare des éléments de
+    // (règle de Romain du 2026-07-26, comme `expose`/`label`) ; la virgule sépare des éléments de
     // même rang, exactement comme dans un sac ; plusieurs lignes s'ACCUMULENT, comme plusieurs
     // invocations de librairie.
     //
-    // ⚠️ PÉRIMÈTRE (2026-08-04) : `docs/spec/LANGUAGE.md` documente un `@var` typé bien plus large
-    // (flag, signal, pitch, phase, logic, module — table « `@var` — déclarer une variable »). CE
-    // CHANTIER (transport → in/out) n'ajoute QUE la forme d'entrée `<rôle> in.<canal>`, ex-`@in` —
+    // ⚠️ PÉRIMÈTRE (2026-08-04) : `docs/spec/LANGUAGE.md` documente un `var` typé bien plus large
+    // (flag, signal, pitch, phase, logic, module — table « `var` — déclarer une variable »). CE
+    // CHANTIER (transport → in/out) n'ajoute QUE la forme d'entrée `<rôle> in.<canal>`, ex-`in` —
     // les autres types restent hors périmètre, non implémentés ici.
     if (name === 'var') {
       if (!at(T.IDENT)) {
-        throw new ParseError("@var doit nommer au moins un symbole : '@var A8', '@var a, b, c' "
-          + "pour plusieurs, ou déclarer une entrée : '@var <rôle> in.<canal>'. Ce sont des "
+        throw new ParseError("var doit nommer au moins un symbole : 'var A8', 'var a, b, c' "
+          + "pour plusieurs, ou déclarer une entrée : 'var <rôle> in.<canal>'. Ce sont des "
           + "variables de travail — des symboles du flux qui ne sont l'écriture d'aucune note, "
           + 'ou le rôle que tient une entrée.', tok);
       }
@@ -1922,17 +1901,17 @@ function parse(tokens, opts = {}) {
 
       // ⛔ LE NOM PORTE SA VALEUR DE DÉPART — voie A, arbitrage de Romain du 2026-08-13.
       // « init, c'est var plus une affectation. » L'affectation manquait : mesuré le même jour,
-      // `@init grain:0.5`, le bloc `@init` indenté et `@var grain signal:0.5` étaient REFUSÉS tous
+      // `init grain:0.5`, le bloc `init` indenté et `var grain signal:0.5` étaient REFUSÉS tous
       // les trois. Aucune forme ne donnait une valeur de départ à une variable déclarée.
-      // LE SUJET DU DEUX-POINTS EST LE NOM, jamais le type : `@var grain:0.5 signal` se lit
-      // « grain vaut 0.5, et c'est un signal ». La graphie `@var grain signal:0.5` a été écartée
+      // LE SUJET DU DEUX-POINTS EST LE NOM, jamais le type : `var grain:0.5 signal` se lit
+      // « grain vaut 0.5, et c'est un signal ». La graphie `var grain signal:0.5` a été écartée
       // parce qu'elle lie la valeur à `signal` — elle dirait « signal vaut 0.5 », ce qui est faux.
-      // ⚠️ AUCUN CONFLIT AVEC LE DRAPEAU : `@var section flag: calm:1` porte son deux-points APRÈS
+      // ⚠️ AUCUN CONFLIT AVEC LE DRAPEAU : `var section flag: calm:1` porte son deux-points APRÈS
       // le mot `flag`, jamais après le nom. Les deux se distinguent sur la position, pas sur une
       // convention — et c'est ce qui rend la lecture sûre.
       // ⛔ LA VALEUR EST COLLÉE AU SIGNE, et c'est le canon du langage qui le dit : « espace sépare
       // deux termes ; leur collage les réunit en un seul ». Sans cette contrainte,
-      // `@var grain: signal` prenait `signal` pour la VALEUR — la variable démarrait à la chaîne
+      // `var grain: signal` prenait `signal` pour la VALEUR — la variable démarrait à la chaîne
       // « signal » et perdait son type, sans un signe. Trouvé par le garde, pas en raisonnant :
       // c'est le seul endroit où la voie A pouvait avaler un mot qui ne lui appartient pas.
       const lireValeurDeDepart = () => {
@@ -1940,7 +1919,7 @@ function parse(tokens, opts = {}) {
         advance();
         const t = current();
         if (t.spaceBefore) {
-          throw new ParseError(`@var ${first}: une valeur de départ se COLLE à son signe — `
+          throw new ParseError(`var ${first}: une valeur de départ se COLLE à son signe — `
             + `'${first}:<valeur>', jamais '${first}: <valeur>'. L'espace sépare deux termes, le `
             + `collage les réunit ; détaché, '${t.value ?? t.type}' se lirait comme le TYPE de la `
             + `variable et la valeur disparaîtrait sans un signe.`, t);
@@ -1962,7 +1941,7 @@ function parse(tokens, opts = {}) {
       // nue.md`), en conséquence de la symétrie entrée/sortie du même jour : une sortie est routée
       // PAR LE NOM, AU POINT OÙ ELLE SERT (`sitar1.Sa`) ; une entrée l'est de la même façon, au point
       // de RÉCEPTION — le point d'attente. Pas de directive de routage, pas de flèche. Réécrite en
-      // `@var` par la décision du 2026-08-04 (transport → in/out), qui abandonne `@in`.
+      // `var` par la décision du 2026-08-04 (transport → in/out), qui abandonne `in`.
       //
       // TROIS CONTRAINTES, chacune refusée bruyamment plus bas :
       //  1. AUCUN NOM DE PORT. La scène nomme un RÔLE ; le nom d'un port vient du système et change
@@ -2037,7 +2016,7 @@ function parse(tokens, opts = {}) {
           advance();
           if (!at(T.COLON)) {
             throw new ParseError(`@var ${first} flag : un drapeau nomme ses états après un ':' — `
-              + `'@var ${first} flag: <nom>:<entier>, ...'. Le deux-points AFFECTE, ici il introduit `
+              + `'var ${first} flag: <nom>:<entier>, ...'. Le deux-points AFFECTE, ici il introduit `
               + `l'énumération des états.`, typeTok);
           }
           advance(); // :
@@ -2054,8 +2033,8 @@ function parse(tokens, opts = {}) {
             if (at(T.COMMA)) advance();
           }
           if (!states.length) {
-            throw new ParseError(`@var ${first} flag : au moins un état est requis — `
-              + `'@var ${first} flag: <nom>:<entier>, ...'.`, typeTok);
+            throw new ParseError(`var ${first} flag : au moins un état est requis — `
+              + `'var ${first} flag: <nom>:<entier>, ...'.`, typeTok);
           }
           return avecDepart({ type: 'VarDirective', names: [first], varType: { kind: 'flag', states }, line: tok.line });
         }
@@ -2066,7 +2045,7 @@ function parse(tokens, opts = {}) {
                    varType: { kind: 'convention', convention: typeWord }, line: tok.line });
         }
 
-        // Reste des IDENT nus : un MODULE — une INSTANCE de ce module (`@var lpf1 lpf`). Résolu
+        // Reste des IDENT nus : un MODULE — une INSTANCE de ce module (`var lpf1 lpf`). Résolu
         // contre le catalogue `lib/mod.json`. « Une entrée introuvable est nommée. RIEN NE SE
         // RÉSOUT PAR DÉFAUT EN SILENCE » (LANGUAGE.md) — vaut pour un module comme pour un
         // alphabet : un IDENT absent du catalogue est REFUSÉ, jamais accepté à l'aveugle.
@@ -2083,7 +2062,7 @@ function parse(tokens, opts = {}) {
       }
 
       // Forme nue : VARIABLES DE TRAVAIL, sans type — un nom, ou plusieurs séparés par des virgules.
-      // ⚠️ CHAQUE NOM D'UNE LISTE PORTE SA PROPRE VALEUR : `@var a:1, b:2`. Une valeur unique
+      // ⚠️ CHAQUE NOM D'UNE LISTE PORTE SA PROPRE VALEUR : `var a:1, b:2`. Une valeur unique
       // partagée par la liste serait une invention — la ligne énumère des variables distinctes.
       const noms = [first];
       const departs = valeurDeDepart === null ? [] : [{ name: first, value: valeurDeDepart }];
@@ -2106,47 +2085,18 @@ function parse(tokens, opts = {}) {
     }
 
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)
-    if (name === 'macro') {
-      // ⛔ `@macro` EST SUPPRIME DU LANGAGE — Romain, 2026-08-09 : « macro ne reviendra pas, tu
-      // peux le supprimer ». La directive avait ete retiree le 2026-08-08 ; ce qui restait, et qui
-      // etait le vrai defaut, c est que le parseur la LISAIT encore et que l emetteur produisait
-      // toujours sa section. Une directive « retiree » qu'on continue d'accepter n'est pas retiree.
-      //
-      // ⚠️ CE REFUS NE NOMME PAS DE REECRITURE, ET C'EST DELIBERE. Les macros du corpus sont du
-      // CABLAGE, dont la forme de remplacement — le corps « branchement » de `@def` — est au
-      // BACKLOG avec le reste du patching. Prescrire une forme que le langage ne lit pas encore
-      // enverrait l'auteur dans un mur : la faute que kanopi a mesuree ce matin sur un autre refus.
-      // Le message dit donc ce qui EST : la directive n'existe plus, et ce qui la remplacera
-      // attend une revue. Mieux vaut un refus honnete qu'une reecriture inventee.
-      // ⚠️ LE REFUS NOMME CE QU IL REFUSE — mesure de kanopi, 2026-08-09. Mon premier message
-      // disait que la directive est supprimee et POURQUOI il n y a pas de reecriture, mais plus un
-      // mot sur CE QU ELLE PORTAIT. Cinq de ses gardes citaient les noms concernes ; il a du
-      // ELARGIR ses motifs, et un motif elargi est un garde plus faible.
-      // ⛔ ET LE COUT POUR UN AUTEUR EST PLUS GRAND QUE POUR SES GARDES : devant une scene qui
-      // declare quatre modulateurs, l ancien refus disait LEQUEL posait probleme, le nouveau
-      // demandait de les chercher. Le principe de la forme vivante vaut aussi pour le SUJET du
-      // refus, pas seulement pour sa reecriture.
-      const nomMacro = at(T.IDENT) ? current().value : null;
-      const autresmacro = autresNomsDeLaDirective('macro');
-      throw new ParseError(
-        `'@macro${nomMacro ? ' ' + nomMacro : ''}' est supprime du langage (decision Romain, `
-        + `2026-08-09)${autresmacro.length ? ` — cette scene en declare ${autresmacro.length + 1} : `
-        + `${[nomMacro, ...autresmacro].join(', ')}` : ''}. Une definition se declare `
-        + `avec '@def'. Les macros de CABLAGE — un branchement, une pose de valeur sur un port, un `
-        + `declenchement — attendent le corps de branchement de '@def', en cours d'arbitrage avec `
-        + `le reste du patching : il n'y a pas de reecriture a leur donner aujourd'hui.`, tok);
-    }
+    
 
-    // PIERRE TOMBALE — `@label` part AVEC le suffixe qu'elle servait (Romain 2026-07-28). Elle
+    // PIERRE TOMBALE — `label` part AVEC le suffixe qu'elle servait (Romain 2026-07-28). Elle
     // DÉCLARAIT un nom que le suffixe APPLIQUAIT : ce sont bien deux choses distinctes, mesurées
     // comme telles, mais rien ne les liait et aucune scène n'écrivait ni l'une ni l'autre. Retirer
     // le suffixe en laissant la directive aurait laissé un mot qui ne peut plus rien nommer —
     // c'est-à-dire une voie en attente de se rouvrir.
-    // ⏸️ LES TOMBALES DE `@trigger` ET `@alias` SONT RETIRÉES — je les avais posées trop tôt.
+    // ⏸️ LES TOMBALES DE `trigger` ET `alias` SONT RETIRÉES — je les avais posées trop tôt.
     //
-    // Décision Romain, 2026-08-08 : cinq directives sortent du langage — `@gate`, `@trigger`,
-    // `@cv`, `@macro`, `@alias`. La référence ne connaît que QUATRE mots (`@actor`, `@var`,
-    // `@def`, `@init`) et les cinq y ont zéro occurrence.
+    // Décision Romain, 2026-08-08 : cinq directives sortent du langage — `gate`, `trigger`,
+    // `cv`, `macro`, `alias`. La référence ne connaît que QUATRE mots (`actor`, `var`,
+    // `def`, `init`) et les cinq y ont zéro occurrence.
     //
     // ⚠️ J'AI FRAPPÉ SUR CES DEUX-LÀ EN CROYANT QU'ELLES NE COÛTAIENT RIEN, parce que zéro scène
     // de la bibliothèque ne les écrit. La mesure était juste et la conclusion fausse : QUINZE de
@@ -2155,19 +2105,19 @@ function parse(tokens, opts = {}) {
     // la même journée.
     //
     // ⚠️ ET LA VRAIE RAISON DU RETRAIT EST PLUS FORTE QUE LE COMPTE : LA CIBLE N'EXISTE PAS.
-    // Le message de refus renvoie vers `@def`, qui n'est pas implémenté — mesuré, ses NEUF formes
+    // Le message de refus renvoie vers `def`, qui n'est pas implémenté — mesuré, ses NEUF formes
     // sont refusées. Un refus qui nomme une réécriture impossible envoie l'auteur dans un mur ;
     // c'est la règle que kanopi m'a demandée le matin même et que j'ai acceptée. Je viens de la
     // violer sur mes propres tests, une heure après l'avoir écrite à trois agents.
-    // L'ordre tient : `@def` d'abord, les cinq tombales ensuite.
+    // L'ordre tient : `def` d'abord, les cinq tombales ensuite.
 
     if (name === 'label') {
       const nom = at(T.IDENT) ? current().value : 'nom';
       throw new ParseError(
-        `'@label' est SUPPRIMÉE du langage (décision Romain 2026-07-28), en même temps que le `
-        + `suffixe '@${nom}' qu'elle servait à déclarer. Pour ASSOCIER un geste à un élément dans `
+        `'label' est SUPPRIMÉE du langage (décision Romain 2026-07-28), en même temps que le `
+        + `suffixe '${nom}' qu'elle servait à déclarer. Pour ASSOCIER un geste à un élément dans `
         + `la production : le point d'exclamation ('C4!${nom}'). Pour NOMMER quelque chose dans la `
-        + `partie déclarative : '@def ${nom} <corps>'.`, tok);
+        + `partie déclarative : 'def ${nom} <corps>'.`, tok);
     }
 
     // @gate Sa:midi · @cv env1 mod.adsr(…) — LE DEUX-POINTS TRANCHE (Romain, 2026-07-29).
@@ -2177,63 +2127,19 @@ function parse(tokens, opts = {}) {
     // est-ce `lib.type(…)` ou un bloc de code ?). C'est exactement le mécanisme qui a condamné
     // le signe `=` le 27 juillet — un mot dont le sens dépend du contexte. Désormais la
     // PRÉSENCE du deux-points décide, et rien d'autre :
-    //   · AVEC `:` → une PROPRIÉTÉ posée sur un nom qui existe déjà (`@gate Sa:midi`) ;
-    //   · SANS `:` → une DÉCLARATION qui CRÉE un nom (`@cv env1 mod.adsr(…)`), et c'est la
+    //   · AVEC `:` → une PROPRIÉTÉ posée sur un nom qui existe déjà (`gate Sa:midi`) ;
+    //   · SANS `:` → une DÉCLARATION qui CRÉE un nom (`cv env1 mod.adsr(…)`), et c'est la
     //     forme unique du langage depuis le 27 juillet : `@<directive> <nom> <valeur>`.
     // Romain généralise aux QUATRE types : « en toute logique les 2 formes s'appliquent aux 4 ».
-    // ⛔ `@cv` EST SUPPRIME DU LANGAGE — decision du 2026-08-08, appliquee le 2026-08-09 sur ordre
+    // ⛔ `cv` EST SUPPRIME DU LANGAGE — decision du 2026-08-08, appliquee le 2026-08-09 sur ordre
     // de Romain :  tu dois aussi supprimer cv, pas de dette ouverte .
     // Le vrai defaut n etait pas la directive : c est que le parseur la LISAIT encore et que
     // l emetteur produisait TOUJOURS sa section depuis sa  suppression . Huit scenes la portaient
     // sans que rien ne le dise. UNE DIRECTIVE RETIREE QU ON CONTINUE D ACCEPTER N EST PAS RETIREE,
     // ELLE EST INVISIBLE — et elle le reste jusqu au jour ou un aval cesse de transporter le champ,
     // ce que BPx vient de faire.
-    // ⚠️ LE REFUS NE PRESCRIT PAS DE REECRITURE : les modulateurs relevent du patching, dont la
-    // forme de remplacement attend la revue FaustX. Prescrire une forme que le langage ne lit pas
-    // encore enverrait l auteur dans un mur.
-    if (name === 'cv') {
-      // Le refus nomme ce qu il refuse — meme raison que pour `@macro`, mesuree par kanopi.
-      const nomCv = at(T.IDENT) ? current().value : null;
-      const autrescv = autresNomsDeLaDirective('cv');
-      throw new ParseError(
-        `'@cv${nomCv ? ' ' + nomCv : ''}' est supprime du langage (decision 2026-08-08)`
-        + `${autrescv.length ? ` — cette scene en declare ${autrescv.length + 1} : `
-        + `${[nomCv, ...autrescv].join(', ')}` : ''}. Les modulateurs relevent du patching, `
-        + `dont la forme de remplacement est en cours d arbitrage : il n y a pas de reecriture a `
-        + `donner aujourd hui.`, tok);
-    }
-    if (name === 'gate') {
-      const declName = expect(T.IDENT).value;
-      if (at(T.COLON)) {                     // PROPRIÉTÉ sur un nom existant
-        advance();
-        // ⚠️ SAUF SI CE QUI SUIT EST UN CORPS DE MODULATEUR — signalé par kairos via bpx, et le
-        // défaut est de moi : mon refus de la forme nue ENSEIGNE que le deux-points pose une
-        // propriété. Qui migre `cv env1 : mod.adsr(…)` en lisant ce message garde donc
-        // naturellement le deux-points… et tombait sur « ligne non reconnue au niveau des
-        // règles », un générique qui ne dit plus rien du modulateur.
-        // UNE ERREUR QUI APPREND UNE GRAPHIE NE DOIT PAS MENER À UNE ERREUR QUI N'APPREND RIEN :
-        // c'est le deuxième pas de la migration, et c'est là qu'on abandonne l'auteur.
-        if (isCVModulatorBody()) {
-          throw new ParseError(
-            `'@${name} ${declName} : …' — le deux-points n'a pas de sens ici : ce qui suit DÉCLARE `
-            + `un modulateur, ça ne pose pas une propriété sur un nom qui existe. Retirer le `
-            + `deux-points : '@${name} ${declName} <valeur>'. `
-            + `(Le deux-points ne sert qu'à la forme '@${name} <nom>:<cible>', qui vise un nom déjà là.)`,
-            tok,
-          );
-        }
-        const runtime = expect(T.IDENT).value;
-        return { type: 'Declaration', temporalType: name, name: declName, runtime, line: tok.line };
-      }
-      if (name === 'cv') return parseCVModulator(declName, tok);   // DÉCLARATION d'un modulateur
-      throw new ParseError(
-        `'@${name} ${declName}' sans valeur ne déclare rien. Écrire '@${name} ${declName}:<cible>' `
-        + `pour poser une propriété sur un nom qui existe, ou donner une valeur pour en créer un.`,
-        tok,
-      );
-    }
 
-    // ─── PIERRE TOMBALE — `@map` est ABANDONNÉ (décision Romain 2026-07-27 au soir) ───────────
+    // ─── PIERRE TOMBALE — `map` est ABANDONNÉ (décision Romain 2026-07-27 au soir) ───────────
     // `hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`
     //
     // L'ARGUMENT QUI A TRANCHÉ, et il n'était dans aucun inventaire : **une directive ne se
@@ -2243,24 +2149,24 @@ function parse(tokens, opts = {}) {
     // puissante : c'est la moins puissante qui part.
     //
     // ⚠️ ET LA LEÇON DE MÉTHODE, qui est de moi : mon inventaire du matin comparait cette directive
-    // à `@macro` et concluait JUSTE sur ce couple — il ne l'avait jamais comparée au CÂBLAGE, qui
+    // à `macro` et concluait JUSTE sur ce couple — il ne l'avait jamais comparée au CÂBLAGE, qui
     // était pourtant le geste qu'elle finissait par faire. Une comparaison bien menée sur le
     // mauvais couple donne une réponse correcte et sans valeur.
     if (name === 'map') {
-      throw new ParseError("'@map' est ABANDONNÉ (décision Romain 2026-07-27, le soir) — le câblage "
+      throw new ParseError("'map' est ABANDONNÉ (décision Romain 2026-07-27, le soir) — le câblage "
         + "passe par les chevrons '>>' et '\\>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
         + "ce qu'une directive ne sait pas faire. Pour DÉSIGNER une chose d'un nom, écrire "
-        + "'@def <nom> <corps>'. Pour attendre un geste, rien à câbler : "
-        + "'@var <rôle> in.<canal>' puis l'adresse collée au point d'attente.", tok);
+        + "'def <nom> <corps>'. Pour attendre un geste, rien à câbler : "
+        + "'var <rôle> in.<canal>' puis l'adresse collée au point d'attente.", tok);
     }
 
   /**
    * ⛔ LE SIGNE `=` EST SUPPRIME DE TOUT LE LANGAGE (decision Romain, 2026-07-27) — et ce refus
    * doit valoir pour TOUTE directive qui nomme, pas pour celle ou le defaut s est montre.
    *
-   * ⚠️ IL EST NE POUR `@alias`, sorti du langage le 2026-08-15 ; il vaut desormais pour `@var` et
-   * `@def`, les deux directives qui nomment. Mesure du 2026-08-09, en reecrivant le garde qui le
-   * surveille : `@alias breath = cc:2` nommait le signe, `@def riff = C4` et `@var riff = C4`
+   * ⚠️ IL EST NE POUR `alias`, sorti du langage le 2026-08-15 ; il vaut desormais pour `var` et
+   * `def`, les deux directives qui nomment. Mesure du 2026-08-09, en reecrivant le garde qui le
+   * surveille : `alias breath = cc:2` nommait le signe, `def riff = C4` et `var riff = C4`
    * refusaient pour une tout autre raison — l un  ne declare rien , l autre  ligne non reconnue .
    * L auteur qui gardait le signe par habitude apprenait donc la disparition sur UNE directive et
    * la cherchait en vain sur les deux autres.
@@ -2295,24 +2201,18 @@ function parse(tokens, opts = {}) {
     if (!at(T.EQUALS)) return;
     throw new ParseError(
       `@${directive} ${nom} : le signe '=' est SUPPRIME de tout le langage (decision Romain `
-      + `2026-07-27) — ecrire '@${directive} ${nom} <valeur>' sans rien entre les deux.`,
+      + `2026-07-27) — ecrire '${directive} ${nom} <valeur>' sans rien entre les deux.`,
       current());
   }
 
-    // ─── PIERRE TOMBALE — `@flag` (directive de tête de scène) n'existe plus (référence
+    // ─── PIERRE TOMBALE — `flag` (directive de tête de scène) n'existe plus (référence
     // 2026-08-05) ─────────────────────────────────────────────────────────────────────────────
     // La référence ne connaît que QUATRE mots déclaratifs — `actor`, `var`, `def`, `init`
     // (EBNF.md:29-33, `docs/spec/LANGUAGE.md` §« Quatre mots »). Un drapeau n'en est pas un
-    // cinquième : c'est une VARIABLE, comme les autres, qui se déclare par `@var` (EBNF.md:47-57,
+    // cinquième : c'est une VARIABLE, comme les autres, qui se déclare par `var` (EBNF.md:47-57,
     // `var_type = "flag" , ":" , flag_state, ...`). La forme unique est désormais
-    // `@var <nom> flag: <état>:<entier>, ...`.
-    if (name === 'flag') {
-      throw new ParseError(
-        `'@flag' n'est pas une directive de tête de scène — un drapeau se déclare par `
-        + `'@var <nom> flag: <état>:<entier>, ...', comme toute variable (le nom vient d'abord, `
-        + `le type ensuite). Exemple : '@var section flag: calm:1, full:2' remplace `
-        + `'@flag section: calm:1, full:2'.`, tok);
-    }
+    // `var <nom> flag: <état>:<entier>, ...`.
+    
 
     // @actor name <body>
     //
@@ -2336,30 +2236,30 @@ function parse(tokens, opts = {}) {
     // ⚠️ `out` remplace `transport` (Romain, 2026-08-04) — le mot `transport` est SORTI du
     // langage, la direction s'écrit. Le CHAMP interne reste `properties.transport`/`TransportRef`
     // (`references[transport]`) : seul le mot que l'auteur ÉCRIT change, pas le nœud d'arbre.
-    // ═══ `@def` — DÉCLARER UNE DÉFINITION (Romain, 2026-08-08) ═══════════════════════════════
+    // ═══ `def` — DÉCLARER UNE DÉFINITION (Romain, 2026-08-08) ═══════════════════════════════
     //
-    // `LANGUAGE.md` §« `@def` — déclarer une définition » : « `@def` associe un nom à un corps,
+    // `LANGUAGE.md` §« `def` — déclarer une définition » : « `def` associe un nom à un corps,
     // pour le réinvoquer d'un mot. Le nom vient d'abord, ce qu'il vaut ensuite. »
-    // C'est l'un des QUATRE mots du cœur déclaratif, avec `@actor`, `@var` et `@init` — et le
+    // C'est l'un des QUATRE mots du cœur déclaratif, avec `actor`, `var` et `init` — et le
     // seul qui n'existait pas : mesuré le 2026-08-08, ses NEUF formes étaient refusées, le
     // parseur ne reconnaissait même pas la directive (« Expected arrow »).
     //
-    // ⚠️ C'EST LUI QUI DÉBLOQUE TOUT LE RESTE. Cinq directives sortent du langage (`@gate`,
-    // `@trigger`, `@cv`, `@macro`, `@alias`) et leur réécriture passe par ici : à elle seule,
-    // `@gate` pèse 119 lignes sur 14 scènes. Tant que `@def` n'existe pas, poser leur pierre
+    // ⚠️ C'EST LUI QUI DÉBLOQUE TOUT LE RESTE. Cinq directives sortent du langage (`gate`,
+    // `trigger`, `cv`, `macro`, `alias`) et leur réécriture passe par ici : à elle seule,
+    // `gate` pèse 119 lignes sur 14 scènes. Tant que `def` n'existe pas, poser leur pierre
     // tombale nommerait une réécriture impossible — la règle que kanopi a demandée et que j'ai
     // acceptée. L'ordre est donc : cette directive d'abord, les tombales ensuite.
     //
     // CE PALIER OUVRE LA DÉCLARATION DE TERMINAL — la forme que la spécification décrit sous
     // « Déclarer un terminal » : un nom, puis un BLOC DE CLÉS, « sous le nom, une clé par ligne,
-    // ou sur la même ligne quand il tient ». C'est elle qui remplace `@gate`, le plus gros lot.
+    // ou sur la même ligne quand il tient ». C'est elle qui remplace `gate`, le plus gros lot.
     // Les autres corps (branchement, structure, code typé, préréglage, transformation) suivront ;
     // ils sont REFUSÉS NOMMÉMENT plus bas plutôt que lus de travers — un corps qu'on ne sait pas
     // lire doit crier, jamais tomber dans une branche voisine.
     if (name === 'def') {
       if (!at(T.IDENT)) {
         throw new ParseError(
-          "'@def' doit nommer ce qu'il définit : '@def <nom> <corps>'. Le nom vient d'abord, ce "
+          "'def' doit nommer ce qu'il définit : 'def <nom> <corps>'. Le nom vient d'abord, ce "
           + "qu'il vaut ensuite — comme '@var' et '@actor'.", tok);
       }
       const defName = expect(T.IDENT).value;
@@ -2374,7 +2274,7 @@ function parse(tokens, opts = {}) {
         const cle = expect(T.IDENT).value;
         if (at(T.PERIOD) && !current().spaceBefore) {
           advance();
-          if (!at(T.IDENT)) throw new ParseError(`'@def ${defName}' : nom attendu après '${cle}.'`, current());
+          if (!at(T.IDENT)) throw new ParseError(`'def ${defName}' : nom attendu après '${cle}.'`, current());
           let val = String(advance().value);
           while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) val += String(advance().value);
           cles[cle] = { kind: 'ref', value: val };
@@ -2383,7 +2283,7 @@ function parse(tokens, opts = {}) {
         }
         if (at(T.COLON) && !current().spaceBefore) {
           advance();
-          if (atEnd() || at(T.NEWLINE)) throw new ParseError(`'@def ${defName}' : valeur attendue après '${cle}:'`, current());
+          if (atEnd() || at(T.NEWLINE)) throw new ParseError(`'def ${defName}' : valeur attendue après '${cle}:'`, current());
           // ── UNE VALEUR VA JUSQU'AU BOUT DE LA LIGNE, ET L'ESPACE EN SÉPARE LES PARTIES ────────
           // C'est la règle du langage — « l'espace ne sépare que les PARTIES d'une valeur » — et ce
           // lecteur ne la tenait PAS. Il s'arrêtait au premier IDENT espacé et laissait le reste
@@ -2395,7 +2295,7 @@ function parse(tokens, opts = {}) {
           // pour `bp3:_vel`), plusieurs deviennent une LISTE — la forme que les librairies portent
           // déjà pour `range` et `scope`. Un nombre reste un nombre.
           // ⚠️ SUR UNE MÊME LIGNE, L'ESPACE SÉPARE DEUX CHOSES — et les confondre casse une forme
-          // vivante de la bible. `@def sirene hz:440 voice.sec` porte DEUX CLÉS ; `range:0 127`
+          // vivante de la bible. `def sirene hz:440 voice.sec` porte DEUX CLÉS ; `range:0 127`
           // porte UNE clé à deux parties. Le discriminant est le CANON, pas une heuristique : un
           // mot espacé suivi de `:` ou de `.` ouvre une NOUVELLE CLÉ — le deux-points affecte, le
           // point appelle un composant — tandis qu'un mot espacé suivi de rien de tel est la partie
@@ -2425,7 +2325,7 @@ function parse(tokens, opts = {}) {
           return;
         }
         throw new ParseError(
-          `'@def ${defName}' : '${cle}' n'est ni un appel de composant ni une affectation. `
+          `'def ${defName}' : '${cle}' n'est ni un appel de composant ni une affectation. `
           + `Une clé de terminal s'écrit '${cle}.<nom>' pour appeler un composant, ou `
           + `'${cle}:<valeur>' pour affecter une valeur — le point appelle, le deux-points affecte.`,
           kTok);
@@ -2434,7 +2334,7 @@ function parse(tokens, opts = {}) {
       // ── QUEL CORPS ? Le discriminant est la PONCTUATION COLLÉE, pas le nom ──────────────
       // Une CLÉ porte toujours `.` ou `:` collé — c'est la règle d'or du langage : le point
       // appelle un composant, le deux-points affecte une valeur. Une STRUCTURE est faite de
-      // termes NUS : `@def cadence sa re ga pa` (`LANGUAGE.md:311`).
+      // termes NUS : `def cadence sa re ga pa` (`LANGUAGE.md:311`).
       // ⚠️ Le départage se fait sur ce que le texte PORTE, jamais sur ce que le nom ÉVOQUE : un
       // terminal peut s'appeler `voice` et une clé porter le nom d'un terminal. Chercher un
       // vocabulaire ici referait la faute du 2026-07-26 — laisser la donnée décider de la forme.
@@ -2444,15 +2344,15 @@ function parse(tokens, opts = {}) {
       // C est la meme regle que partout ailleurs dans le langage — l espace delimite les termes —
       // et elle suffit a distinguer une TRANSFORMATION PARAMETREE d un PREREGLAGE, sans qu on ait
       // a deviner d apres le contenu de la parenthese.
-      // ── LE CODE TYPE : `@def fondu phase `js: …`` ────────────────────────────────────────
+      // ── LE CODE TYPE : `def fondu phase `js: …`` ────────────────────────────────────────
       // `LANGUAGE.md:307` : « Ses types sont ceux des signaux : signal, pitch, phase, logic. »
       // Le type se lit dans la DONNEE (`core.json`, schema.varConventions) — la meme liste que
-      // `@var` consulte deja pour ses conventions. Aucun nom de type n est ecrit ici.
+      // `var` consulte deja pour ses conventions. Aucun nom de type n est ecrit ici.
       // ⚠️ CE CORPS ETAIT REFUSE PAR LE PALIER STRUCTURE, et volontairement : `phase` est un terme
       // nu, il tombait dans la branche structure et devenait un TERMINAL — un arbre plausible et
       // faux. Le refus posait la question ; c est ici qu elle se resout, sur la meme FORME (un
       // backtick suit) et pas sur le nom du premier terme.
-      // ⚠️ ET LE CODE SANS TYPE — `@def noir `py: d.blackout()`` (LANGUAGE.md:642).
+      // ⚠️ ET LE CODE SANS TYPE — `def noir `py: d.blackout()`` (LANGUAGE.md:642).
       // La reference ecrit les DEUX : avec une convention quand le code rend un SIGNAL dont il
       // faut dire la nature, sans convention quand il nomme simplement un FRAGMENT a rejouer.
       // Un fragment n a pas de type parce qu il ne rend rien — il agit.
@@ -2474,7 +2374,7 @@ function parse(tokens, opts = {}) {
                  convention, tag, code, line: tok.line };
       }
       if (at(T.LPAREN) && !current().spaceBefore) {
-        // TRANSFORMATION PARAMETREE : `@def accent(x) x(vel:120)`
+        // TRANSFORMATION PARAMETREE : `def accent(x) x(vel:120)`
         advance();
         const params = [];
         while (!at(T.RPAREN) && !atEnd()) {
@@ -2487,27 +2387,27 @@ function parse(tokens, opts = {}) {
           else if (at(T.COMMA)) advance();
           else {
             throw new ParseError(
-              `'@def ${defName}(…)' : la liste de parametres ne porte que des NOMS, separes par des `
+              `'def ${defName}(…)' : la liste de parametres ne porte que des NOMS, separes par des `
               + `virgules — recu '${current().value}'.`, current());
           }
         }
         expect(T.RPAREN);
         if (params.length === 0) {
           throw new ParseError(
-            `'@def ${defName}()' : une liste de parametres VIDE ne parametre rien. Ecrire `
-            + `'@def ${defName} <corps>' sans parenthese collee, ou nommer au moins un parametre.`, tok);
+            `'def ${defName}()' : une liste de parametres VIDE ne parametre rien. Ecrire `
+            + `'def ${defName} <corps>' sans parenthese collee, ou nommer au moins un parametre.`, tok);
         }
         const corps = parseRhsElements();
         if (corps.length === 0) {
           throw new ParseError(
-            `'@def ${defName}(${params.join(', ')})' : transformation sans corps. Ce que la `
+            `'def ${defName}(${params.join(', ')})' : transformation sans corps. Ce que la `
             + `definition FAIT de ses parametres s ecrit apres eux.`, tok);
         }
         return { type: 'DefDirective', name: defName, kind: 'transformation',
                  params, body: corps, line: tok.line };
       }
       if (at(T.LPAREN)) {
-        // PREREGLAGE : `@def kick (vel:120)` — la parenthese est SEPAREE, c est un corps.
+        // PREREGLAGE : `def kick (vel:120)` — la parenthese est SEPAREE, c est un corps.
         const sac = parseRuntimeQualifier();
         return { type: 'DefDirective', name: defName, kind: 'prereglage',
                  settings: sac, line: tok.line };
@@ -2521,7 +2421,7 @@ function parse(tokens, opts = {}) {
 
       if (at(T.IDENT) && !cleEnTete()) {
         // ── UNE STRUCTURE — un nom vaut une suite de termes, qu'on réinvoque d'un mot ────────
-        // `LANGUAGE.md:304` : « `@def` associe un nom a un corps, pour le reinvoquer d'un mot »,
+        // `LANGUAGE.md:304` : « `def` associe un nom a un corps, pour le reinvoquer d'un mot »,
         // et §« Ce qui se definit est ce qui se reinvoque ».
         // ⚠️ LE CORPS EST LU PAR LE LECTEUR DE MEMBRE DROIT, celui des règles, et ce n'est pas
         // une commodité : une structure EST un membre droit. Lui écrire un lecteur à part ferait
@@ -2531,10 +2431,10 @@ function parse(tokens, opts = {}) {
         const corps = parseRhsElements();
         if (corps.length === 0) {
           throw new ParseError(
-            `'@def ${defName}' : structure vide. Un nom qui ne vaut rien ne se réinvoque pas.`, tok);
+            `'def ${defName}' : structure vide. Un nom qui ne vaut rien ne se réinvoque pas.`, tok);
         }
         // ⛔ UN CORPS DE CODE N'EST PAS UNE STRUCTURE — et sans ce refus il en devenait une.
-        // `@def fondu phase \`js: …\`` (LANGUAGE.md:312) commence lui aussi par un terme nu ; il
+        // `def fondu phase \`js: …\`` (LANGUAGE.md:312) commence lui aussi par un terme nu ; il
         // tombait donc ici, et l'arbre produit était PLAUSIBLE ET FAUX : `phase` — un TYPE de
         // signal — devenait un terminal, le code un élément voisin.
         // ⚠️ C'est exactement ce que le volet D du garde interdit : « un corps qu'on ne sait pas
@@ -2545,9 +2445,9 @@ function parse(tokens, opts = {}) {
         const backtick = corps.find((e) => e && typeof e.type === 'string' && e.type.includes('Backtick'));
         if (backtick) {
           throw new ParseError(
-            `'@def ${defName}' porte du CODE, pas une structure — ce palier lit « un nom vaut une `
-            + `suite de termes » ('@def cadence sa re ga pa'). Le corps de code typé `
-            + `('@def ${defName} <type> \`langage: …\`', types 'signal', 'pitch', 'phase', 'logic') `
+            `'def ${defName}' porte du CODE, pas une structure — ce palier lit « un nom vaut une `
+            + `suite de termes » ('def cadence sa re ga pa'). Le corps de code typé `
+            + `('def ${defName} <type> \`langage: …\`', types 'signal', 'pitch', 'phase', 'logic') `
             + `n'est PAS encore lu ; il refuse ici plutôt que d'être lu de travers — sans quoi le `
             + `type deviendrait un terminal et le code un élément voisin.`, tok);
         }
@@ -2576,10 +2476,10 @@ function parse(tokens, opts = {}) {
 
       if (lu === 0) {
         throw new ParseError(
-          `'@def ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
-          + `TERMINAL — un nom puis ses clés, sur la même ligne ('@def ${defName}  voice.sec') ou `
+          `'def ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
+          + `TERMINAL — un nom puis ses clés, sur la même ligne ('def ${defName}  voice.sec') ou `
           + `dans un bloc indenté, une clé par ligne — et la STRUCTURE, un nom qui vaut une suite `
-          + `de termes ('@def ${defName} sa re ga pa'). Les autres corps que la spécification `
+          + `de termes ('def ${defName} sa re ga pa'). Les autres corps que la spécification `
           + `décrit — un branchement, du code typé, un préréglage, une transformation paramétrée `
           + `ou structurelle — ne sont PAS encore lus ; ils le seront, et d'ici là ils refusent `
           + `ici plutôt que d'être lus de travers.`, tok);
@@ -2587,13 +2487,13 @@ function parse(tokens, opts = {}) {
       return { type: 'DefDirective', name: defName, kind: 'terminal', keys: cles, line: tok.line };
     }
 
-    // ── `@init` — L'ÉTAT DE DÉPART DE LA SCÈNE ────────────────────────────────────────────────
-    // LANGUAGE.md, « @init -- l'etat de depart » : « `@init` porte ce qui existe au démarrage de la
+    // ── `init` — L'ÉTAT DE DÉPART DE LA SCÈNE ────────────────────────────────────────────────
+    // LANGUAGE.md, « @init -- l'etat de depart » : « `init` porte ce qui existe au démarrage de la
     // scène et n'appartient à aucune déclaration : le branchement initial, le code lancé une fois,
     // les valeurs de départ. Ce qui appartient à une chose s'initialise DANS sa déclaration — un
-    // flag écrit son état de départ là où il naît. `@init` recueille ce qui ne se rattache à rien. »
+    // flag écrit son état de départ là où il naît. `init` recueille ce qui ne se rattache à rien. »
     //
-    // ⚠️ CE QUI PASSAIT AVANT, ET C'EST LE PIRE DES SILENCES : `@init` seul COMPILAIT et ne portait
+    // ⚠️ CE QUI PASSAIT AVANT, ET C'EST LE PIRE DES SILENCES : `init` seul COMPILAIT et ne portait
     // RIEN — il tombait dans la lecture des directives génériques, qui avale un nom et s'arrête.
     // Une scène pouvait donc écrire son état de départ et le voir disparaître sans une erreur. Un
     // corps, lui, était refusé (« Expected arrow ») : la moitié muette, la moitié bruyante.
@@ -2611,7 +2511,7 @@ function parse(tokens, opts = {}) {
       while (!atEnd()) {
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
         if (atEnd()) break;
-        // LE CODE LANCÉ UNE FOIS — un backtick TAGUÉ. Le tag est obligatoire ici : `@init` est un
+        // LE CODE LANCÉ UNE FOIS — un backtick TAGUÉ. Le tag est obligatoire ici : `init` est un
         // site ORPHELIN, aucun acteur ne l'entoure, donc aucun langage ne peut s'hériter.
         if (at(T.BACKTICK)) {
           const tok2 = current();
@@ -2623,7 +2523,7 @@ function parse(tokens, opts = {}) {
         // LES VALEURS DE DÉPART — la même graphie qu'ailleurs, `!(clé:valeur)` ou `(clé:valeur)`.
         if (at(T.BANG) || at(T.LPAREN)) {
           if (at(T.BANG)) advance();
-          // ⚠️ ÉCART SIGNALÉ, ET LA BIBLE TRANCHE. `LANGUAGE.md` écrit que `@init` porte « les
+          // ⚠️ ÉCART SIGNALÉ, ET LA BIBLE TRANCHE. `LANGUAGE.md` écrit que `init` porte « les
           // valeurs de départ » ; `AST.md` définit `InitEntry = PatchExpr | BacktickOrphan` et n'a
           // pas de troisième variante. AST.md est un DÉRIVÉ de LANGUAGE.md : c'est donc le TYPE qui
           // est en retard, pas la prose. Le sac est porté tel quel, et l'écart est remonté à Romain.
@@ -2634,16 +2534,6 @@ function parse(tokens, opts = {}) {
         // ⚠️ LE CÂBLAGE PORTE DEUX JETONS, pas un : brancher `>>` et COUPER `\>>`. N'en guetter
         // qu'un laissait la coupure tomber dans « Expected arrow », un refus qui ne dit pas la
         // vraie cause — trouvé par le garde en naissant.
-        const versCablage = (t) => t === T.WIRE || t === T.WIRE_CUT;
-        if ((at(T.IDENT) && (versCablage(peek(1).type) || versCablage(peek(2).type)))
-            || versCablage(current().type)) {
-          throw new ParseError(
-            `'@init' : le BRANCHEMENT ne se lit pas encore. La forme du câblage passe à FaustX `
-            + `(décision Romain, 2026-08-13) et le chantier du patching est gelé depuis le `
-            + `2026-08-09 ; écrire un lecteur maintenant figerait une graphie dont le remplacement `
-            + `est décidé. '@init' lit aujourd'hui le CODE lancé une fois (backtick tagué) et les `
-            + `VALEURS de départ ('!(clé:valeur)').`, current());
-        }
         break;   // ni code, ni valeur, ni câblage : le bloc est fini
       }
       return { type: 'InitDirective', entrees, line: tok.line };
@@ -2749,13 +2639,13 @@ function parse(tokens, opts = {}) {
         }
 
         // LAN-8 (canon graphie bindings d'acteur — décision hub 2026-06-26 + invocation
-        // 2026-07-13) : l'alphabet SUR LA LIGNE D'ACTEUR s'écrit `@alphabet.<nom>` — le `.`
+        // 2026-07-13) : l'alphabet SUR LA LIGNE D'ACTEUR s'écrit `alphabet.<nom>` — le `.`
         // APPELLE le composant. C'est le SUCRE FACTORY legacy (fichier `alphabet`, entrée
         // <nom>) : canal legacy, `properties.alphabet` résolu au compile (note attribution
-        // inchangée). Les provenances `@factory.`/`@mine.` NE se posent PAS sur la ligne
+        // inchangée). Les provenances `factory.`/`mine.` NE se posent PAS sur la ligne
         // d'acteur : une hauteur perso est un libRef de SCÈNE + un acteur transport-seul
         // (décision 2026-07-13 §Raccord sortie). On les laisse donc au parseur de directives
-        // (on ROMPT ici) → `@mine.…` devient une directive de scène, exactement le modèle §71.
+        // (on ROMPT ici) → `mine.…` devient une directive de scène, exactement le modèle §71.
         if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === 'alphabet'
             && peek(2).type === T.PERIOD && !peek(2).spaceBefore) {
           advance(); // @
@@ -2765,6 +2655,12 @@ function parse(tokens, opts = {}) {
           continue;
         }
 
+        // ⛔ UNE LIGNE NON INDENTEE FERME LE BLOC D ACTEUR — c est l arobase qui le faisait.
+        // Avant, `@chromashift:-24` apres un acteur commençait par un jeton AT, donc la garde
+        // `!at(T.IDENT)` sortait de la boucle. Sans elle, `chromashift` est un IDENT comme une
+        // cle d acteur : le bloc l avale, puis casse sur sa valeur negative — « Expected IDENT,
+        // got REST ». Le bloc se borne donc comme celui de `def` : par l INDENTATION.
+        if (at(T.IDENT) && current().col === 1 && current().line > tok.line) break;
         if (!at(T.IDENT)) break;
 
         const key = current().value;
@@ -2903,8 +2799,8 @@ function parse(tokens, opts = {}) {
       // n'y figurent déjà pas, donc le refus générique suffit à REFUSER la forme. Mais
       // `test/test_eval_transport_reject.js:47,52` exige le mot 'SUPPRIMÉ' dans le message, que le
       // refus générique ('n'est pas une sortie… liste FERMÉE') ne porte pas — un test VIVANT, pas
-      // une intuition. C'est le MÊME contrat que les autres tombstones du fichier (`@mm`, `@scene`,
-      // `@routing`, `@library`, plus bas) : chacun REFUSE un mot qu'un mécanisme générique refuserait
+      // une intuition. C'est le MÊME contrat que les autres tombstones du fichier (`mm`, `scene`,
+      // `routing`, `library`, plus bas) : chacun REFUSE un mot qu'un mécanisme générique refuserait
       // de toute façon (plus vaguement), mais porte SA propre raison datée, nommément testée. video/
       // visual est de cette famille — case B, pas un contrôle à faire lire par une librairie.
       if (properties.eval && properties.transport) {
@@ -2939,7 +2835,7 @@ function parse(tokens, opts = {}) {
       // pas une sortie » (keyboard ne porte que l'entrée). Ferme le trou hérité de l'ancien
       // `transport.<X>` explicite, qui acceptait tout IDENT libre côté @actor (device @devices,
       // résolu aval) : la fusion des deux catalogues applique désormais la MÊME liste fermée
-      // aux deux formes (@actor explicite ET raccord `@alphabet.X:<sortie>` implicite).
+      // aux deux formes (@actor explicite ET raccord `alphabet.X:<sortie>` implicite).
       if (properties.transport && !outChannels().has(properties.transport.key)) {
         throw new ParseError(
           `acteur '${actorName}' : '${properties.transport.key}' n'est pas une sortie — les `
@@ -2997,16 +2893,16 @@ function parse(tokens, opts = {}) {
       };
     }
 
-    // `@sound:<X>` — REFUS, comme pour tout axe à catalogue. Ce cas doit être traité ICI, AVANT la
-    // section déclarative : `@sound` est à la fois un axe-composant et un mot de SECTION, et le
+    // `sound:<X>` — REFUS, comme pour tout axe à catalogue. Ce cas doit être traité ICI, AVANT la
+    // section déclarative : `sound` est à la fois un axe-composant et un mot de SECTION, et le
     // chemin de la section happait le `:` sans passer par la garde universelle plus bas. Résultat
-    // mesuré : `@sound:tabla_perc` sortait un « ligne non reconnue » générique là où `@alphabet:X`
+    // mesuré : `sound:tabla_perc` sortait un « ligne non reconnue » générique là où `alphabet:X`
     // nomme la faute et donne la réécriture. Un refus qui ne nomme pas la cause vaut à peine mieux
     // qu'un silence — c'est la leçon de la journée, appliquée à ma propre addition.
     if (name === 'sound' && !subkey && at(T.COLON) && peek(1).type === T.IDENT
         && (describeVocabulary().components.sound || []).includes(peek(1).value)) {
       throw new ParseError(
-        `'@sound:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '@sound.<nom>' `
+        `'sound:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris 'sound.<nom>' `
         + `(règle : ':' affecte, '.' appelle).`,
         tok);
     }
@@ -3014,7 +2910,7 @@ function parse(tokens, opts = {}) {
     // @sound [.libname[:variant]] [{ ... }|name { ... }]+ — bloc déclaratif (v0.8)
     if (name === 'sound') {
       // À ce point, `subkey` a déjà absorbé `.libname` si présent.
-      // Variante éventuelle après : `@sound.libname:variant`.
+      // Variante éventuelle après : `sound.libname:variant`.
       let libVariant = null;
       if (subkey && at(T.COLON)) {
         advance();
@@ -3023,13 +2919,13 @@ function parse(tokens, opts = {}) {
       return parseSoundSection(tok.line, subkey, libVariant);
     }
 
-    // ⚠️ `@duration:16b`/`@duration:8s` (forme dédiée, unité b/s) VIVAIT ICI, EN DUR
+    // ⚠️ `duration:16b`/`duration:8s` (forme dédiée, unité b/s) VIVAIT ICI, EN DUR
     // (`name === 'duration'`) — RETIRÉE (étape 3, règle 5). `duration` N'EST PLUS UNE DIRECTIVE
     // DE SCÈNE depuis le 2026-08-04 (Romain, hub/decisions/2026-08-04-la-duree-de-scene-est-
     // supprimee.md) et n'est déclarée par AUCUNE librairie du registre : construire ce nœud pour
     // un mot qu'aucune donnée ne reconnaît ne servait plus qu'à parser une forme que la validation
-    // en aval REFUSE de toute façon (`bpxAst.validateReferences` : « valeur '@duration:…' inconnue
-    // — non déclarée par une librairie chargée »). Mesuré avant retrait : `@duration:16` reste
+    // en aval REFUSE de toute façon (`bpxAst.validateReferences` : « valeur 'duration:…' inconnue
+    // — non déclarée par une librairie chargée »). Mesuré avant retrait : `duration:16` reste
     // refusé, avec la même conclusion, sans cette branche — cf.
     // test/une_forme_supprimee_ne_revient_pas_par_une_librairie.mjs.
     //
@@ -3051,16 +2947,16 @@ function parse(tokens, opts = {}) {
     }
 
     // CUTOVER graphie UNIVERSEL (Romain 2026-07-14, tour [412]) : un axe-COMPOSANT (opérande =
-    // nom d'entrée de catalogue : alphabet/tuning/octaves/scale) se NOMME avec `.` — `@axe.<nom>`.
-    // Le `:` n'affecte QUE des valeurs (@tempo:120, @diapason:N…). On REJETTE `@axe:<X>` pour TOUT
-    // axe à catalogue, sans trou. Le garde `!subkey` préserve `@alphabet.western:midi` (subkey =
-    // composant résolu, puis `:` affecte une valeur). Pour tuning, `@diapason:<N>` porte la freq.
+    // nom d'entrée de catalogue : alphabet/tuning/octaves/scale) se NOMME avec `.` — `axe.<nom>`.
+    // Le `:` n'affecte QUE des valeurs (@tempo:120, @diapason:N…). On REJETTE `axe:<X>` pour TOUT
+    // axe à catalogue, sans trou. Le garde `!subkey` préserve `alphabet.western:midi` (subkey =
+    // composant résolu, puis `:` affecte une valeur). Pour tuning, `diapason:<N>` porte la freq.
     if (catalogAxisKeys().has(name) && !subkey && at(T.COLON)) {
       const hint = name === 'tuning'
-        ? " ; fréquence de référence → '@diapason:<N>' ; tuning personnel → '@mine.<chemin>.<nom>'"
+        ? " ; fréquence de référence → 'diapason:<N>' ; tuning personnel → 'mine.<chemin>.<nom>'"
         : '';
       throw new ParseError(
-        `'@${name}:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '@${name}.<nom>' `
+        `'${name}:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '@${name}.<nom>' `
         + `(règle : ':' affecte, '.' appelle)${hint}.`,
         current(),
       );
@@ -3071,31 +2967,31 @@ function parse(tokens, opts = {}) {
       ({ value, runtime } = parseDirectiveColonValue(name));
     }
 
-    // '@alphabet.X:<sortie>' = sortie de l'acteur implicite (canon, décision 2026-07-05 ;
+    // 'alphabet.X:<sortie>' = sortie de l'acteur implicite (canon, décision 2026-07-05 ;
     // applyDefaultActor lit directive.runtime). LISTE POSITIVE FERMÉE (addendum ratifié Romain
     // 2026-07-16, « on n'autorise que les 3 qu'on connaît ») : suffixe ∉ {audio, midi, osc} →
     // REJET fail-loud. Couvre les périmés browser/webaudio (hint dédié), l'ancien sucre ':sc'
     // (= transport+eval sc, ABOLI par l'addendum), :video, :foo…
     if (name === 'alphabet' && subkey && runtime && !outChannels().has(runtime)) {
       const hint = deprecatedTransports().has(runtime)
-        ? ` '${runtime}' est un canal PÉRIMÉ (modèle profils d'environnement abandonné 2026-07-16) — écris '@alphabet.${subkey}:audio'.`
+        ? ` '${runtime}' est un canal PÉRIMÉ (modèle profils d'environnement abandonné 2026-07-16) — écris 'alphabet.${subkey}:audio'.`
         : runtime === 'sc'
-          ? ` L'ancien sucre ':sc' (= transport+eval sc) est ABOLI — un eval se déclare sur un @actor ('eval.<X>') ; le raccord de l'acteur implicite ne nomme qu'un canal.`
+          ? ` L'ancien sucre ':sc' (= transport+eval sc) est ABOLI — un eval se déclare sur un actor ('eval.<X>') ; le raccord de l'acteur implicite ne nomme qu'un canal.`
           : '';
       throw new ParseError(
-        `'@alphabet.${subkey}:${runtime}' refusé — le raccord de sortie de l'acteur implicite `
+        `'alphabet.${subkey}:${runtime}' refusé — le raccord de sortie de l'acteur implicite `
         + `n'accepte que {audio, midi, osc} (liste positive fermée, décision 2026-07-16).${hint}`,
         current(),
       );
     }
-    // DIRECTION ≠ ÉCRITURE, même règle qu'au raccord explicite `@actor … out.<canal>` ci-dessus :
+    // DIRECTION ≠ ÉCRITURE, même règle qu'au raccord explicite `actor … out.<canal>` ci-dessus :
     // un canal peut être une sortie du catalogue (vérifié juste au-dessus) et rester refusé à
     // l'écriture ('text', routé mais sans point d'écriture en scène). Le refus NOMME la vraie
     // raison, jamais « n'est pas une sortie ».
     if (name === 'alphabet' && subkey && runtime && outChannels().has(runtime)
         && !writableChannels().has(runtime)) {
       throw new ParseError(
-        `'@alphabet.${subkey}:${runtime}' refusé — ce canal est une DESTINATION de l'architecture, `
+        `'alphabet.${subkey}:${runtime}' refusé — ce canal est une DESTINATION de l'architecture, `
         + `routée comme les autres sorties, mais son ÉCRITURE dans une scène attend encore son `
         + `appareil dédié.`,
         current(),
@@ -3109,10 +3005,10 @@ function parse(tokens, opts = {}) {
     //
     // ⛔ UN MODIFICATEUR VIENT D'UNE LIBRAIRIE, ET SA PORTÉE DOIT DIRE `subgrammar`.
     //
-    // ⚠️ CE BLOC N'A RIEN VALIDÉ JUSQU'AU 2026-08-10 : `@mode:ord(zorglub)` passait et entrait
+    // ⚠️ CE BLOC N'A RIEN VALIDÉ JUSQU'AU 2026-08-10 : `mode:ord(zorglub)` passait et entrait
     // dans l'arbre en `{name:"zorglub"}`. C'est la règle 1 de Romain qui était en défaut ici —
     // « tous les mots acceptés par le parseur viennent des librairies invoquées dans la scène » —
-    // et le trou s'est découvert par un TÉMOIN D'INSTRUMENT : j'avais lu « `@mode:ord(destru)`
+    // et le trou s'est découvert par un TÉMOIN D'INSTRUMENT : j'avais lu « `mode:ord(destru)`
     // passe » comme une preuve que la portée `subgrammar` fonctionnait, alors que la graphie
     // acceptait n'importe quel mot. La preuve était creuse, pas le sujet.
     //
@@ -3130,7 +3026,7 @@ function parse(tokens, opts = {}) {
         const portees = porteesDeclarees(modName);
         if (!portees) {
           throw new ParseError(
-            `'@mode:${runtime || '…'}(${modName})' : '${modName}' n'est déclaré par aucune `
+            `'mode:${runtime || '…'}(${modName})' : '${modName}' n'est déclaré par aucune `
             + `librairie chargée. Un modificateur de sous-grammaire est un mot de librairie comme `
             + `un autre — invoquer celle qui le porte, ou retirer le mot.`, tokModName);
         }
@@ -3138,7 +3034,12 @@ function parse(tokens, opts = {}) {
           throw new ParseError(
             `'${modName}' ne se pose pas sur une sous-grammaire — sa portée déclarée est `
             + `${JSON.stringify(portees)}. ${portees.includes('scene')
-              ? `Il s'écrit en tête de scène : '@${modName}${modName === 'tempo' ? ':<N>' : ''}'.`
+              // ⛔ LA RÉÉCRITURE DONNE LA FORME VIVANTE, et elle a survécu à DEUX retraits sous
+              // cette seule ligne : l'arobase, sortie du langage le 2026-08-17, et le nom `tempo`
+              // écrit EN DUR pour lui coller ':<N>' — devenu inatteignable le 2026-08-18, quand le
+              // métronome a gagné la portée `subgrammar`. Un refus qui enseigne une forme morte
+              // coûte plus que pas de refus du tout.
+              ? `Il s'écrit en tête de scène : '${modName}'.`
               : `Il vaut ${portees.map((p) => `'${p}'`).join(', ')}.`}`, tokModName);
         }
         let modValue = true;
@@ -3166,7 +3067,7 @@ function parse(tokens, opts = {}) {
       expect(T.RPAREN);
     }
 
-    // v0.8 — corps de `@alphabet.X` : peut contenir des `*:sound.X` et
+    // v0.8 — corps de `alphabet.X` : peut contenir des `*:sound.X` et
     // `Sa:sound.X` (sound_assignment) et le binding `notes: Sa Re ga ...`.
     // EBNF Couche 1 § alphabet_section (étendu v0.8).
     // Sortie : tableau d'AlphabetSoundAssignments si présents.
@@ -3243,7 +3144,7 @@ function parse(tokens, opts = {}) {
 
     // ⚠️ LE REJET DES @-FORMES EST TOMBÉ LE 2026-08-10 : c'est désormais la forme JUSTE. Romain :
     // « ça s'applique à toutes les directives de production ». Les quatre — seed, items (alias
-    // maxitems), allitems (alias all_items), improvize — s'écrivent `@clé:valeur` en tête de
+    // maxitems), allitems (alias all_items), improvize — s'écrivent `clé:valeur` en tête de
     // scène, préfixe optionnel. Le refus a changé de côté : il vit sur le BLOC, dans
     // `parseProductionBlock`.
 
@@ -3483,7 +3384,7 @@ function parse(tokens, opts = {}) {
    * n'apparaît JAMAIS dans le corps est MALFORMÉE — jamais un `continue` silencieux
    * qui la transforme en note muette. Une macro est une SUBSTITUTION TEXTUELLE
    * (EBNF §macro, l.59/273 ; « les params doivent apparaître dans le rhs », cf.
-   * `@macro accent(x)=x(vel:120)`). Le cas vécu `wobble(Bass, browser) = \`courbe\``
+   * `macro accent(x)=x(vel:120)`). Le cas vécu `wobble(Bass, browser) = \`courbe\``
    * (forme CV/signal `name(cible, transport)=courbe`) n'est PAS une macro valide :
    * sa syntaxe est en attente d'arbitrage Romain (A/B) — d'ici là, elle CRIE.
    */
@@ -3540,7 +3441,7 @@ function parse(tokens, opts = {}) {
    * Décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md + AJUSTEMENT [299] :
    * le langage doit TOUJOURS être connu (tag OU eval d'acteur déclaré, jamais deviné) ;
    * hors acteur-à-eval, seul le tag le donne → erreur claire sinon. Les backticks de
-   * FLUX (RHS/arg) sous un `@actor …eval.X` héritent de X (résolu en aval, annotateBackticks).
+   * FLUX (RHS/arg) sous un `actor …eval.X` héritent de X (résolu en aval, annotateBackticks).
    */
   function splitBacktickTag(raw, tok) {
     const t = tryBacktickTag(raw);
@@ -3641,7 +3542,7 @@ function parse(tokens, opts = {}) {
   }
 
   /**
-   * Parse la section `@sound` (ou `@sound.libname[:variant]`).
+   * Parse la section `sound` (ou `sound.libname[:variant]`).
    *
    * Forme EBNF v0.8 :
    *   sound_section = "@" "sound" [ "." IDENT [ ":" IDENT ] ] NEWLINE sound_entry+
@@ -3649,18 +3550,18 @@ function parse(tokens, opts = {}) {
    *   anonymous_prototype = "{" prop_pairs "}"
    *   named_prototype     = IDENT "{" prop_pairs "}"
    *
-   * À l'entrée : tous les tokens jusqu'au `@sound` + subkey éventuel + variant
+   * À l'entrée : tous les tokens jusqu'au `sound` + subkey éventuel + variant
    * éventuel ont été consommés. On parse maintenant le bloc d'entrées qui suit.
    */
   function parseSoundSection(line, lib, libVariant) {
     const prototypes = [];
 
-    // Si lib spécifiée : `@sound.libname` charge une lib externe ; aucun
+    // Si lib spécifiée : `sound.libname` charge une lib externe ; aucun
     // bloc inline obligatoire. On accepte des entrées si elles existent
     // (ex : surcharge locale après chargement).
     // Sinon : bloc inline obligatoire (sons anonymes/nommés).
 
-    // Sauter le NEWLINE après `@sound` ou `@sound.lib`.
+    // Sauter le NEWLINE après `sound` ou `sound.lib`.
     while (at(T.NEWLINE) || at(T.COMMENT)) advance();
 
     // Boucle d'entrées : tant qu'on voit `{` (anonyme) ou `IDENT {` (nommé).
@@ -3744,27 +3645,30 @@ function parse(tokens, opts = {}) {
       }
 
       // Parse @mode:X(modifiers) directive at the start of a sub-grammar block
-      // Stop if @template — that's a separate section after all subgrammars
+      // Stop if template — that's a separate section after all subgrammars
       // `currentMode` ne porte QUE le @mode du bloc courant : il est remis à zéro à la fin
       // de chaque sous-grammaire (voir plus bas). On le lit ici parce que le @mode de la
       // PREMIÈRE sous-grammaire est consommé en amont, hors de la boucle @ ci-dessous.
       let blockMode = currentMode;
       let blockModifiers = currentModifiers;
-      while (at(T.AT)) {
+      // ⛔ UNE TETE DE SOUS-GRAMMAIRE SE RECONNAIT A L ABSENCE DE FLECHE, plus a l arobase.
+      // `mode:lin` pose le mode de la passe ; `S -> C4` la produit. Depuis que l arobase est
+      // sortie, les deux commencent par un IDENT et seule la fleche les departage.
+      while (!atEnd() && !at(T.SEPARATOR) && !at(T.NEWLINE) && ligneSansFleche()) {
         // La section template est en SINGULIER, sans alias (cf. parseScene).
-        if (peek(1).type === T.IDENT && peek(1).value === 'template') break;
+        if (at(T.IDENT) && current().value === 'template') break;
         // Refus NOMMÉ de l'ex-graphie plurielle : c'est ICI qu'on la voit passer. Sans ce
         // branchement, elle tomberait dans le rejet générique des directives inconnues et
         // rendrait « ligne non reconnue » — un message qui ressemble à une coquille et n'aide
         // personne à migrer.
-        if (peek(1).type === T.IDENT && peek(1).value === 'templates') {
-          throw new ParseError(`'@templates' (pluriel, v0.7) n'existe plus — écrire '@template' (singulier)`, peek(1));
+        if (at(T.IDENT) && current().value === 'templates') {
+          throw new ParseError(`'templates' (pluriel, v0.7) n'existe plus — écrire 'template' (singulier)`, current());
         }
         const dirTok = current();
-        // Le NOM se lit sur le jeton, pas sur le nœud produit : certaines directives (`@var`…)
+        // Le NOM se lit sur le jeton, pas sur le nœud produit : certaines directives (`var`…)
         // rendent un nœud sans champ `name`, et le message annonçait alors « @undefined » — un
         // refus qui ne nomme pas la faute vaut à peine mieux qu'un silence.
-        const dirNom = peek(1) && peek(1).value ? String(peek(1).value) : '?';
+        const dirNom = current() && current().value ? String(current().value) : '?';
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
           blockMode = dir.runtime;  // @mode:random → runtime='random'
@@ -3775,28 +3679,28 @@ function parse(tokens, opts = {}) {
           // ⚠️ ELLES ÉTAIENT PARSÉES PUIS JETÉES — SANS UN MOT (Romain, 2026-07-29).
           //
           // Ce `while` lisait toute directive posée entre deux blocs de règles et ne gardait que
-          // `@mode`. Les autres étaient construites, puis abandonnées ici même : l'auteur écrivait
-          // `@var v` ou `@alphabet.sargam`, la scène compilait sans une erreur, et RIEN n'avait été
+          // `mode`. Les autres étaient construites, puis abandonnées ici même : l'auteur écrivait
+          // `var v` ou `alphabet.sargam`, la scène compilait sans une erreur, et RIEN n'avait été
           // déclaré. C'est le mode d'échec de la flèche du moteur historique, en pire — là au moins
           // ça ne compilait pas.
           //
           // MESURÉ, ET C'EST L'ESPACE QUI COMPTE, PAS LA FORME DU TICKET : le signalement portait
-          // sur `@var`. Le balayage des directives réservées en trouve VINGT-QUATRE dans le même
+          // sur `var`. Le balayage des directives réservées en trouve VINGT-QUATRE dans le même
           // cas — alphabet, tuning, octaves, transport, eval, actor, controls, var, in, alias, mm,
           // tempo, duration, meter, quantization, qclock, transpose, diapason, transcription,
           // settings, filter, modulation, ins, test_alphabets. Garder la seule forme signalée aurait
           // laissé vivre les vingt-trois autres.
           //
-          // ⚠️ ET `@mode` RESTE LÉGITIME ICI, ce n'est pas une exception de complaisance : il porte
+          // ⚠️ ET `mode` RESTE LÉGITIME ICI, ce n'est pas une exception de complaisance : il porte
           // le mode de la sous-grammaire QUI SUIT, et 67 scènes du corpus sur 263 en vivent. Un
           // refus en bloc les aurait toutes cassées — la même faute que le témoin qui aurait refusé
           // 120 scènes sur 333 le 2026-07-28. Le corpus a été mesuré AVANT d'écrire ce refus : une
           // seule scène y perd quelque chose (`bells.bps`, trois directives aujourd'hui muettes).
           throw new ParseError(
-            `'@${dirNom}' est écrit APRÈS des règles, et à cette place il ne déclare RIEN : `
+            `'${dirNom}' est écrit APRÈS des règles, et à cette place il ne déclare RIEN : `
             + `il était accepté puis jeté en silence. Les déclarations précèdent les règles — `
             + `remonter cette ligne avant la première règle de la scène. `
-            + `(Seul '@mode' se place ici : il gouverne la sous-grammaire qui suit.)`,
+            + `(Seul 'mode' se place ici : il gouverne la sous-grammaire qui suit.)`,
             dirTok,
           );
         }
@@ -3809,6 +3713,16 @@ function parse(tokens, opts = {}) {
         if (++ruleSafety > 200) throw new ParseError('Rule parse loop safety limit', current());
         skipNewlines();
         if (atEnd() || at(T.SEPARATOR)) break;
+        // ⛔ LA SECTION `template` BORNE LE BLOC DE RÈGLES, et c'est l'arobase qui le faisait :
+        // `@template` ne pouvait pas être une tête de règle, `template` nu le peut. Sans cette
+        // sortie, la section est happée comme une règle et la scène tombe sur « Expected arrow ».
+        if (at(T.IDENT) && current().value === 'template') break;
+        // ⛔ UNE DÉCLARATION POSÉE ENTRE DEUX RÈGLES REND LA MAIN À LA BOUCLE DE DIRECTIVES, qui
+        // seule porte le refus NOMMÉ (« … est écrit APRÈS des règles »). C'est l'arobase qui
+        // faisait cette sortie : `@alphabet` n'ouvrait pas une règle, `alphabet.western` l'ouvre,
+        // et les vingt-quatre directives tombaient toutes sur « Expected arrow, got PERIOD ».
+        // La flèche est le seul départage restant, comme en tête de sous-grammaire.
+        if (rules.length && ligneSansFleche()) break;
         if (isRuleStart()) {
           rules.push(parseRule());
         } else {
@@ -3817,7 +3731,7 @@ function parse(tokens, opts = {}) {
           // sortait, `rules` restait vide, la grammaire disparaissait sans une erreur).
           // Erreur franche — même parti que le bloc de production `[@…]` ci-dessus.
           if (!atEnd() && !at(T.SEPARATOR) && !at(T.AT)) {
-            throw new ParseError(`ligne non reconnue au niveau des règles : attendu une règle, '@directive', '-----' ou la fin de la scène`, current());
+            throw new ParseError(`ligne non reconnue au niveau des règles : attendu une règle, 'directive', '-----' ou la fin de la scène`, current());
           }
           break;
         }
@@ -3840,7 +3754,12 @@ function parse(tokens, opts = {}) {
         // continue ; le `break` ne subsiste que pour la vraie fin de scène, ci-dessous.
         advance();
         skipNewlines();
-        currentMode = null;
+        // ⛔ LE MODE SURVIT À UN BLOC VIDE, et c'est la moitié qui manquait au non-héritage :
+        // un bloc sans règle ne CONSOMME rien, donc le `mode` qu'il porte gouverne la
+        // sous-grammaire suivante — c'est sa définition. Le remettre à zéro ici rendait
+        // `mode:sub` posé après une règle silencieusement inopérant : il compilait, et n'agissait
+        // pas. Le non-héritage reste tenu par le reset d'un bloc qui a RÉELLEMENT porté des
+        // règles, plus bas.
         continue;
       } else {
         break; // Plus de règles ET plus de séparateur → fin légitime de la scène.
@@ -3869,14 +3788,13 @@ function parse(tokens, opts = {}) {
   // ============================================================
 
   function parseTemplateSection() {
-    expect(T.AT);       // @
-    const kw = expect(T.IDENT);    // template — SINGULIER, sans alias
-    // Le refus NOMMÉ de l'ex-graphie plurielle ne vit PAS ici : `@templates` n'atteint jamais
+    const kw = expect(T.IDENT);    // template — SINGULIER, sans alias, et NU : l'arobase est sortie du langage
+    // Le refus NOMMÉ de l'ex-graphie plurielle ne vit PAS ici : `templates` n'atteint jamais
     // cette fonction (l'appelant ne l'invoque que sur `template`). Il est posé dans la boucle
     // de sous-grammaires, seul point où la forme est réellement vue. Écrit ici, il aurait été
     // du code mort qui rassure — le contraire d'un fail-loud.
     if (kw.value !== 'template') {
-      throw new ParseError(`Expected 'template' after @`, kw);
+      throw new ParseError(`Expected 'template'`, kw);
     }
     skipNewlines();
 
@@ -4073,7 +3991,7 @@ function parse(tokens, opts = {}) {
     // opérateur de tempo — aucune de ces natures n'est un `Setting` au sens `AST.md:642-659`
     // (cf. rapport de session : `qualifiers` n'a PAS été plié dans `SettingBag`, ambiguïté
     // remontée plutôt que tranchée).
-    // Loose check : accepte les clés opaques même sans `@controls` chargé (EBNF couche 3).
+    // Loose check : accepte les clés opaques même sans `controls` chargé (EBNF couche 3).
     let settings = null;
     const qualifiers = [];
     const flags = [];
@@ -4098,7 +4016,7 @@ function parse(tokens, opts = {}) {
     // B2 : extraire rule.mode depuis le réglage (scan:left|right|rnd) — écrit en PARENTHÈSES
     // depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800), plus en crochets.
     // (BPx ast.ts:431-449 lit ast.mode : le champ DÉRIVÉ ne change pas, seule sa source le fait.)
-    // LES VALEURS VALIDES VIENNENT DE LA DONNÉE (`engine.scan.values`, lib/engine.json) — le
+    // LES VALEURS VALIDES VIENNENT DE LA DONNÉE (`engine.scan.values`, lib/engine.bpsl) — le
     // parseur nommait `left`/`right`/`rnd` lui-même (un doublon EXACT de cet enum) ; il lit
     // désormais celui que la librairie déclare, comme tout contrôle à `values` (étape 3, règle 5).
     const scanValues = (universeSacs().specs.scan && universeSacs().specs.scan.values) || [];
@@ -4158,7 +4076,7 @@ function parse(tokens, opts = {}) {
    * trois natures que l'arbitrage du jour sépare : `stop` est une PROCÉDURE (portée règle seule) ;
    * `retro`, `shuffle` et `order` manipulent ce qui est produit (portée groupe/flux) et passent
    * entre parenthèses ; `destru`, `striated` et `smooth` n'ont AUCUNE portée déclarée — ce sont des
-   * attributs de mode, qui empruntent un tout autre chemin (`@mode:x(…)`) et n'avaient rien à faire
+   * attributs de mode, qui empruntent un tout autre chemin (`mode:x(…)`) et n'avaient rien à faire
    * dans une liste de clés de crochet.
    * Il ne reste donc qu'une famille légitime ici, et la donnée la nomme sans qu'on l'écrive.
    */
@@ -4737,7 +4655,7 @@ function parse(tokens, opts = {}) {
             || (peek(4).type === T.PERIOD && peek(6).type === T.COLON))) return true;
     if (nextTok.type !== T.IDENT) return false;
     // `(lpf1.cutoff:400)` — le COMPOSANT d'une INSTANCE de module. `lpf1` n'est pas un contrôle,
-    // c'est une variable que la scène a déclarée (`@var lpf1 lpf`) : le registre des contrôles ne
+    // c'est une variable que la scène a déclarée (`var lpf1 lpf`) : le registre des contrôles ne
     // peut pas la connaître. `AST.md` déclare ce cas de longue date (`Setting.component` — « le
     // composant nommé par le point : (cc.98:45), (lpf1.cutoff:400) ») ; seule la reconnaissance
     // manquait, et sept exemples de la bible tombaient dessus.
@@ -4765,7 +4683,7 @@ function parse(tokens, opts = {}) {
   }
 
   // ⚠️ `isReservedSettingParen()` A VÉCU ICI DU 2026-07 AU 2026-08-07, ET SA DISPARITION EST LA
-  // LEÇON. Il ouvrait le marqueur de flux `!(…)` aux seuls réglages RÉSERVÉS quand `@controls`
+  // LEÇON. Il ouvrait le marqueur de flux `!(…)` aux seuls réglages RÉSERVÉS quand `controls`
   // n'est pas chargé — un correctif posé sur le cas signalé par bpx (`!(mode:random)`, 117 sites)
   // et sur lui seul. Il a donc laissé `!(vel:70)` refusé pendant que la même écriture passait en
   // suffixe de règle et collée à un groupe. Une exception ouverte à la taille du ticket est une
@@ -4839,7 +4757,7 @@ function parse(tokens, opts = {}) {
   }
 
   // Le sac en SUFFIXE DE RÈGLE et le marqueur autonome : reconnaissance purement SYNTAXIQUE, sans
-  // dépendance au registre des contrôles (il n'est peuplé que par `@controls`). La distinction
+  // dépendance au registre des contrôles (il n'est peuplé que par `controls`). La distinction
   // stricte/souple ne sert plus qu'à UNE chose : router `C4(x)` entre appel de symbole et sac
   // COLLÉ. Partout où le sac est séparé par une espace ou introduit par `!`, aucune ambiguïté ne
   // subsiste, donc la forme seule décide.
@@ -5026,7 +4944,7 @@ function parse(tokens, opts = {}) {
       }
       // ⚠️ LE POINT SUIVI D'UNE VALEUR NOMME UN COMPOSANT, ET UN COMPOSANT A UN PROPRIÉTAIRE.
       // `lpf1.cutoff:400` n'a de sens que si `lpf1` est une instance que la scène a déclarée
-      // (`@var lpf1 lpf`, `LANGUAGE.md`) ou un contrôle à composants (`cc.98:45`). Sans l'une des
+      // (`var lpf1 lpf`, `LANGUAGE.md`) ou un contrôle à composants (`cc.98:45`). Sans l'une des
       // deux, la lecture tombait dans la référence pointée d'en dessous — qui n'attend PAS de
       // valeur — puis butait au tour suivant sur « Expected IDENT, got COLON » : un message qui
       // désigne le deux-points alors que le défaut est le NOM, trois jetons plus tôt. Le langage
@@ -5035,7 +4953,7 @@ function parse(tokens, opts = {}) {
         throw new ParseError(
           `'${key}.${peek(1).value}:…' affecte une valeur au composant '${peek(1).value}' de `
           + `'${key}' — mais '${key}' n'est ni un contrôle à composants, ni une instance déclarée `
-          + `dans cette scène. Déclarer l'instance d'abord : '@var ${key} <module>'`,
+          + `dans cette scène. Déclarer l'instance d'abord : 'var ${key} <module>'`,
           keyTok);
       }
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
@@ -5093,7 +5011,7 @@ function parse(tokens, opts = {}) {
         // (`Expected IDENT, got INT`). Ces clés tombent donc dans le lecteur générique
         // multi-parties plus bas (celui qui sert déjà `keyxpand`), piloté par la DONNÉE
         // (`args.length`), jamais par un nom en dur — et lu à l'échelle de l'UNIVERS
-        // (`universeSacs().specs`) pour rester disponible sans `@controls`, comme tout réglage
+        // (`universeSacs().specs`) pour rester disponible sans `controls`, comme tout réglage
         // réservé.
         const specReglage = universeSacs().specs && universeSacs().specs[key];
         const reglageMultiPartie = specReglage && Array.isArray(specReglage.args) && specReglage.args.length > 1;
@@ -5126,7 +5044,7 @@ function parse(tokens, opts = {}) {
         }
         // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
         // Univers du registre (pas seulement le libCtx de la scène) : un mot USABLE est valide
-        // qu'on ait chargé @controls ou non — cohérent avec la directive globale et le garde des `[]`.
+        // qu'on ait chargé controls ou non — cohérent avec la directive globale et le garde des `[]`.
         if ((libCtx.intervalControls && libCtx.intervalControls.has(key)) || universeIntervalControls().has(key)) {
           pairs.push({ key, value: readIntervalLiteral(key), ...sub, ...pos });
           if (at(T.COMMA)) advance();
@@ -5236,7 +5154,7 @@ function parse(tokens, opts = {}) {
     return libCtx.controlNames.has(nextTok.value);
   }
 
-  // PIERRE TOMBALE — le suffixe arobase (`C4@kick`, `{A B}@groove`) est SUPPRIMÉ du langage
+  // PIERRE TOMBALE — le suffixe arobase (`C4kick`, `{A B}groove`) est SUPPRIMÉ du langage
   // (Romain, 2026-07-28 : « on supprime, tu n'as pas pu me prouver que ça avait une utilité
   // quelconque »). Son motif, mot pour mot : ASSOCIER DANS LA PRODUCTION se fait déjà avec le
   // point d'exclamation ; DÉCLARER UNE ÉTIQUETTE se fait dans la partie déclarative. Deux voies
@@ -5254,11 +5172,11 @@ function parse(tokens, opts = {}) {
     if (!at(T.AT) || current().spaceBefore) return;
     const nom = peek(1).type === T.IDENT ? peek(1).value : 'nom';
     throw new ParseError(
-      `le suffixe '@${nom}' collé à un élément est SUPPRIMÉ du langage (décision Romain `
+      `le suffixe '${nom}' collé à un élément est SUPPRIMÉ du langage (décision Romain `
       + `2026-07-28). Deux écritures le remplacent, selon ce qu'on voulait faire. Pour ASSOCIER `
       + `un geste à un élément DANS LA PRODUCTION : le point d'exclamation, `
       + `'C4!${nom}' — le geste se déclenche à l'instant du terminal sans occuper de pas. Pour `
-      + `DÉCLARER UNE ÉTIQUETTE : la partie déclarative, par '@def'.`, current());
+      + `DÉCLARER UNE ÉTIQUETTE : la partie déclarative, par 'def'.`, current());
   }
 
   function parseRhsElement() {
@@ -5485,7 +5403,7 @@ function parse(tokens, opts = {}) {
       // ⚠️ CE CHEMIN N'AVAIT PAS SUIVI LA CORRECTION DU MATIN, ET MON PROPRE COMMENTAIRE LA
       // PRESCRIVAIT (`isRuntimeQualifierLoose` : « partout où le sac est séparé par une espace ou
       // introduit par `!`, aucune ambiguïté ne subsiste, donc la forme seule décide »). Il testait
-      // encore le registre des CONTRÔLES, peuplé par le seul `@controls` — donc sans cette
+      // encore le registre des CONTRÔLES, peuplé par le seul `controls` — donc sans cette
       // directive, `S -> C4 !(vel:70) D4` était refusé pendant que `S -> C4 D4 (vel:70)` et
       // `S -> {C4 D4}(vel:70)` passaient. La même écriture, lue à deux endroits, refusée au
       // troisième : la définition exacte de l'exception cachée que la bible dit ne pas avoir.
@@ -5505,7 +5423,7 @@ function parse(tokens, opts = {}) {
       // re-semence en flux est une PROCÉDURE de dérivation — famille de `goto`, `repeat`,
       // `failed`, `stop`. L'arobase est réservée au global et à la tête de scène.
       //
-      // ⚠️ DEUX NATURES, DEUX GRAPHIES, et c'est le fond : `@seed:42` en tête de scène est un
+      // ⚠️ DEUX NATURES, DEUX GRAPHIES, et c'est le fond : `seed:42` en tête de scène est un
       // RÉGLAGE DE PRODUCTION ; `![seed:N]` en flux est une PROCÉDURE. Elles cessaient d'être le
       // même bloc à un signe près, et c'est ce que cette écriture sépare.
       //
@@ -5550,14 +5468,14 @@ function parse(tokens, opts = {}) {
         const nom = peek(2).type === T.IDENT ? peek(2).value : '…';
         if (nom === 'seed') {
           throw new ParseError(
-            `'![@seed:N]' : la re-semence dans le flux s'écrit SANS arobase — '![seed:N]'. `
+            `'![seed:N]' : la re-semence dans le flux s'écrit SANS arobase — '![seed:N]'. `
             + `Le crochet porte ce qui gouverne la dérivation, et une re-semence en est une `
-            + `procédure ; l'arobase reste à la tête de scène, où '@seed:N' règle la production.`,
+            + `procédure ; l'arobase reste à la tête de scène, où 'seed:N' règle la production.`,
             ouvre);
         }
         throw new ParseError(
-          `'![@${nom}…]' : seule la re-semence a un sens dans le flux, et elle s'écrit `
-          + `'![seed:N]' ; '${nom}' se pose en tête de scène, '@${nom}'.`, ouvre);
+          `'![${nom}…]' : seule la re-semence a un sens dans le flux, et elle s'écrit `
+          + `'![seed:N]' ; '${nom}' se pose en tête de scène, '${nom}'.`, ouvre);
       }
       // ⛔ LE CROCHET NE SE POSE PAS DANS LE FLUX — arbitrage de Romain, 2026-08-08 :
       // « `![Ideas]` dans le flux n'a aucun sens et doit être interdit ».
@@ -5748,7 +5666,7 @@ function parse(tokens, opts = {}) {
       // Control without args: striated, smooth, destru, stop
       //
       // ⚠️ LA DÉCLARATION DE LA SCÈNE PASSE AVANT LE MOT DU VOCABULAIRE. Mesuré par Kairos le
-      // 2026-07-27 : `patchbay-demo.bps` déclare `@macro mute` et écrit sept mots dans sa règle ;
+      // 2026-07-27 : `patchbay-demo.bps` déclare `macro mute` et écrit sept mots dans sa règle ;
       // il en arrivait SIX. Le mot y devenait un contrôle sans un mot d'erreur, parce que j'ai
       // déclaré `mute`/`unmute`/`panic` sans argument le 2026-07-26 — un mot jusque-là libre est
       // devenu un mot du vocabulaire, et toute scène qui le portait déjà a été tronquée en
@@ -5807,7 +5725,7 @@ function parse(tokens, opts = {}) {
       //
       // `LANGUAGE.md` §« Les parenthèses — quatre rôles » le pose, et sa règle de désambiguïsation
       // est POSITIONNELLE puis NOMINALE : « `symbole(` collé, dans une règle = sac de réglages, ou
-      // appel d'une définition ». Un appel, c'est `accent(C4)` où `accent` a été DÉCLARÉ par `@def`
+      // appel d'une définition ». Un appel, c'est `accent(C4)` où `accent` a été DÉCLARÉ par `def`
       // (`LANGUAGE.md:1293`) : le nom est un geste, ce qui suit est ce sur quoi il s'applique.
       // Un réglage, c'est `C4(vel:120)` : le nom est un élément qui sonne, la parenthèse en décrit
       // une propriété. L'un FABRIQUE une note, l'autre la DÉCRIT.
@@ -5820,9 +5738,9 @@ function parse(tokens, opts = {}) {
       //   · la même écriture changeait de nature selon les librairies invoquées — la famille du
       //     défaut réparé le matin même, par l'autre bout.
       //
-      // ⚠️ ET IL N'Y A AUJOURD'HUI AUCUNE DÉFINITION POSSIBLE : `@def` n'est pas implémenté (mesuré,
+      // ⚠️ ET IL N'Y A AUJOURD'HUI AUCUNE DÉFINITION POSSIBLE : `def` n'est pas implémenté (mesuré,
       // il est refusé « Expected arrow »), donc l'ensemble des noms appelables est VIDE et tout
-      // `nom(` collé dans une règle est un sac de réglages. Le jour où `@def` existera, cette
+      // `nom(` collé dans une règle est un sac de réglages. Le jour où `def` existera, cette
       // fonction consultera ses noms — le critère est déjà le bon, seule sa source reste à peupler.
       if (at(T.LPAREN) && !current().spaceBefore && !isContextLookahead()
           && !estUneDefinitionDeclaree(name)) {
@@ -5845,7 +5763,7 @@ function parse(tokens, opts = {}) {
             + `n'est pas fait de paires 'clé:valeur' — ni comme un APPEL : appeler exige une `
             + `définition déclarée, et aucune ne porte le nom '${name}'. Pour régler '${name}', `
             + `écrire '${name}(clé:valeur)' ; pour l'appeler, le déclarer d'abord avec `
-            + `'@def ${name}(x) …'`, tok);
+            + `'def ${name}(x) …'`, tok);
         }
         return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
       }
@@ -5962,7 +5880,7 @@ function parse(tokens, opts = {}) {
    *
    * ⚠️ ELLE LIT AVANT DE REFUSER, et cet ordre est une correction : `parseQualifier` porte des
    * refus NOMMÉS que celui-ci ne sait pas donner (`[shuffle:N]` retiré → la graine s'écrit
-   * `@seed:N` en tête, `![seed:N]` dans le flux). Jeter avant de lire les écrasait — un message précis remplacé par un message
+   * `seed:N` en tête, `![seed:N]` dans le flux). Jeter avant de lire les écrasait — un message précis remplacé par un message
    * vague est une régression, attrapée deux fois aujourd'hui par un garde du TEXTE du refus.
    */
   function refuserCrochetColle() {
@@ -5987,9 +5905,9 @@ function parse(tokens, opts = {}) {
   }
 
   /**
-   * Ce nom a-t-il été DÉCLARÉ comme une définition (`@def`) ? Seul un tel nom peut être APPELÉ.
+   * Ce nom a-t-il été DÉCLARÉ comme une définition (`def`) ? Seul un tel nom peut être APPELÉ.
    *
-   * L'ensemble est vide tant que `@def` n'est pas implémenté — et c'est la vérité du langage
+   * L'ensemble est vide tant que `def` n'est pas implémenté — et c'est la vérité du langage
    * aujourd'hui, pas un raccourci : sans déclaration, aucun nom n'est appelable. Le jour où la
    * directive existera, ses noms se déclarent ICI et rien d'autre ne bouge.
    */
@@ -6644,7 +6562,7 @@ function parse(tokens, opts = {}) {
     // ⚠️ SANS LA CONDITION D'ESPACE, un réglage de règle écrit après une ancre de gabarit
     // tombait dans la lecture d'arguments ci-dessous. `isRuntimeQualifier()` ne le rattrapait
     // pas : il exige que le nom soit un contrôle CONNU, et il ne l'est que si la scène a
-    // chargé `@controls` — ce que ces scènes ne font pas. Mesuré : une seule écriture de
+    // chargé `controls` — ce que ces scènes ne font pas. Mesuré : une seule écriture de
     // l'écosystème donne des arguments à un gabarit, et elle est COLLÉE.
     if (at(T.LPAREN) && !current().spaceBefore && !isRuntimeQualifier()) {
       args = lireArgumentsDeGabarit('$', name);
@@ -6805,10 +6723,10 @@ function parse(tokens, opts = {}) {
   // flux `![…]`, préfixe, polymétrie) : parseQualifier est le passage obligé de toutes.
   // Loi : « Toute clé non reservee dans [] est une erreur de compilation »
   // (docs/spec/LANGUAGE.md:486). L'univers vient de la DONNÉE, jamais d'une liste en dur :
-  // contrôles de TOUTES les libs du REGISTRE + @core.schema.qualifierKeys.
+  // contrôles de TOUTES les libs du REGISTRE + core.schema.qualifierKeys.
   // L'univers est celui du registre, PAS des seules libs chargées par la scène : `[rotate:2]`
-  // reste une clé connue dans une scène sans `@controls` (cas des scènes de BPx). Exiger
-  // `@controls` pour employer un contrôle serait une décision de SURFACE, non tranchée — le
+  // reste une clé connue dans une scène sans `controls` (cas des scènes de BPx). Exiger
+  // `controls` pour employer un contrôle serait une décision de SURFACE, non tranchée — le
   // garde ne rejette donc QUE l'inconnu, sans reclasser ni restreindre aucune clé existante.
   // ⛔ PIERRE TOMBALE PARTAGÉE — `tempx` est SUPPRIMÉ du langage (décision Romain 2026-08-06,
   // hub/decisions/2026-08-06-tempx-est-supprime-doublon-exact-de-l-operateur-de-vitesse.md) :
@@ -6827,7 +6745,7 @@ function parse(tokens, opts = {}) {
       + `'${key}' ne s'écrit pas dans une règle — le multiplicateur de vitesse EST l'opérateur, `
       + `et il se pose dans le flux : '! (/N)' ralentit, '! (*N/M)' écrit la même chose en `
       + `fraction inverse (décision Romain 2026-08-06). Le métronome de la scène, lui, s'écrit `
-      + `en tête : '@tempo:120'`,
+      + `en tête : 'tempo:120'`,
       tok);
   }
 
@@ -6841,11 +6759,11 @@ function parse(tokens, opts = {}) {
     // `[shuffle:N]` RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
     // re-semer sont deux atomes BP3 distincts. `[shuffle]` (nu) reste = _rndseq.
     if (key === 'shuffle') {
-      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit '@seed:N' (en tête de scène) ou '![seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
+      throw new ParseError(`'[shuffle:N]' retiré — la graine s'écrit 'seed:N' (en tête de scène) ou '![seed:N]' (dans le flux) ; '[shuffle]' brasse seul`, tok);
     }
     // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800). Le crochet ne
     // garde que trois emplois : un test de drapeau (garde), une affectation de drapeau (fin de
-    // règle), un rang de forme (`@template`). Un RÉGLAGE — même réservé au langage — décrit une
+    // règle), un rang de forme (`template`). Un RÉGLAGE — même réservé au langage — décrit une
     // propriété PRODUITE, et le domaine de sa clé suffit à le router : il s'écrit désormais entre
     // PARENTHÈSES, dans TOUS les cas, sans exception pour les mots réservés `mode`/`scan`/
     // `weight`/`on_fail`/`tempx`/`meter`. L'ancien raisonnement « tempx est un contrôle MOTEUR
@@ -6914,7 +6832,7 @@ function parse(tokens, opts = {}) {
       if (universeRuleScopeControls().has(key)) return;
       // Un contrôle HORS de sa portée est déjà refusé en aval, avec un message qui donne sa
       // vraie place. Ne pas doubler ce refus par un message plus vague — mesuré : sans cette
-      // ligne, `[mode:…]` perdait sa réécriture `@mode:…` en tête de sous-grammaire.
+      // ligne, `[mode:…]` perdait sa réécriture `mode:…` en tête de sous-grammaire.
       if (!universeRuleAllowedControls().has(key)) return;
       throw new ParseError(
         `'[${key}:…]' : le crochet ne porte que ce qui gouverne la DÉRIVATION — un test de drapeau `

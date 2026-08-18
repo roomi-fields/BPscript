@@ -16,10 +16,10 @@
 // `failed` sont portés par `engine` ET s'écrivent ENTRE CROCHETS en fin de règle — ce sont des
 // PROCÉDURES de dérivation (LANGUAGE.md:805). Leur appartenance à cette librairie ne déplace
 // pas leur graphie, et l'inverse est vrai aussi : `seed` appartient à `engine` et s'écrit
-// `@seed:42` en tête de scène.
+// `seed:42` en tête de scène.
 
 // PREFIXE
-// Le préfixe est OPTIONNEL : `@seed:42` et `@engine.seed:42` désignent la même chose, par la
+// Le préfixe est OPTIONNEL : `seed:42` et `engine.seed:42` désignent la même chose, par la
 // règle d'unicité (atlas/architecture/LIBRAIRIES.md:42). Une clé portée par une seule librairie
 // se résout sans être préfixée.
 
@@ -36,20 +36,20 @@
 // se fait REFUSER entre crochets, avec sa réécriture. Les crochets ne portent aucun réglage —
 // ils portent les drapeaux de fin de règle, qui acceptent n'importe quel nom.
 
-@def engine
+def engine
   resolvedBy:BPx
   name:engine
   description:`txt: Les clés que le MOTEUR DE DÉRIVATION consomme — ce qui gouverne comment la production se déroule, par opposition à ce qu'elle produit. Librairie d'EN-TÊTE, résolue par BPx.`
   version:1.0.0
   section:controls
 
-@def srand
+def srand
   bp3:_srand
   bpscript:false
   args:seed
   description:`txt: Geste NATIF : reamorce le generateur aleatoire EN COURS de derivation. ⚠️ BPScript PORTE CE GESTE, contrairement a ce que ce champ a affirme jusqu au 2026-08-13 : la re-semence en flux s ecrit ![seed:42] (nee le 2026-08-10, commit 750d457, qui lui a retire son arobase). Mesure : elle compile et atteint l arbre en InstantControl porteur de flux:true, distincte du reglage de scene @seed:42. La prose disait ici que BPScript n exposait que la graine de scene, qui  n est pas le meme geste  -- c etait FAUX, et cette phrase est la raison pour laquelle ce mot est reste hors du vocabulaire. Le champ bpscript n est PAS touche : declarer un mot du langage est un arbitrage de Romain, jamais une consequence de ma mesure.`
 
-@def print
+def print
   bp3:_print
   bpscript:false
   description:`txt: Geste NATIF : affiche la chaine de travail dans la fenetre de trace du moteur d origine. BPScript n a pas cette fenetre et n a aucune raison d exposer le mot ; il est declare pour que le frontal BP3 puisse router les grammaires qui l ecrivent.`
@@ -67,7 +67,7 @@
 // cet ajout. Textes de description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec
 // gelee, non modifiee).
 
-@def mode
+def mode
   section:engine
   args:mode
   values:random ord sub sub1 lin tem poslong
@@ -75,7 +75,7 @@
   description:`txt: Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.`
   scope:subgrammar
 
-@def scan
+def scan
   section:engine
   args:direction
   values:left right rnd
@@ -83,79 +83,79 @@
   description:`txt: Sens du parcours par regle (left, right, rnd) -- defaut : rnd.`
   scope:scene rule
 
-@def weight
+def weight
   section:engine
   args:value
   description:`txt: Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.`
   scope:rule
 
-@def on_fail
+def on_fail
   section:engine
   args:strategy
   default:skip
   description:`txt: Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.`
   scope:scene rule
 
-@def meter
+def meter
   section:engine
   args:signature
   description:`txt: Signature rythmique -- (meter:7/8), (meter:4+4/4).`
   scope:scene rule
 
-@def repeat
+def repeat
   section:engine
   bp3:_repeat
   scope:rule
   args:expr
   description:`txt: Controlled repetition. expr = K-param or K-param=value.`
 
-@def failed
+def failed
   section:engine
   bp3:_failed
   scope:rule
   args:subgrammar rule
   description:`txt: Jump on derivation failure.`
 
-@def stop
+def stop
   section:engine
   bp3:_stop
   scope:rule
   description:`txt: Stop derivation.`
 
-@def goto
+def goto
   section:engine
   bp3:_goto
   scope:rule
   args:subgrammar rule
   description:`txt: Jump to specific subgrammar and rule.`
 
-@def retro
+def retro
   section:engine
   bp3:_retro
   scope:flow
   description:`txt: Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE.`
 
-@def shuffle
+def shuffle
   section:engine
   bp3:_rndseq
   args:seed
   scope:flow
   description:`txt: Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g).`
 
-@def order
+def order
   section:engine
   bp3:_ordseq
   scope:flow
   description:`txt: Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.`
 
-@def rotate
+def rotate
   section:engine
   bp3:_rotate
   args:degrees
   scope:flow
   description:`txt: Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation.`
 
-@def staccato
+def staccato
   section:engine
   bp3:_staccato
   args:value
@@ -169,7 +169,7 @@
 // natif ecrivent _legato(300). Signale par kanopi le 2026-08-07 (tryShruti.bps:8, un BOURDON,
 // ou un legato au-dela de 100% fait chevaucher les notes tenues -- l'intention meme). Le moteur
 // ne declare AUCUN plafond ; 1000 est un garde-fou de saisie, pas une limite du moteur.
-@def legato
+def legato
   section:engine
   bp3:_legato
   args:value
@@ -177,7 +177,7 @@
   description:`txt: Legato — extend note durations (affects temporal structure)`
   scope:symbol group rule flow
 
-@def rndtime
+def rndtime
   section:engine
   bp3:_rndtime
   args:amount
@@ -194,47 +194,53 @@
 // donc lu comme un DRAPEAU (FlagExpr), homonyme et silencieux, au lieu d un controle de regle.
 // Il garde ses DEUX natures parce que `scope` reste ['subgrammar','rule'] : la validation des
 // modificateurs de sous-grammaire lit la PORTEE, pas la section.
-@def destru
+def destru
   section:engine
   bp3:_destru
   description:`txt: Destructure composed terminals based on alphabet`
   scope:subgrammar rule
 
-// _comment : Procedures de sous-grammaire rapatriees de lib/controls.json (destru, randomize)
-// -- striated/smooth/mm restent dans lib/controls.json : leur destinataire mesure (mm ->
-// transport/Kronos, cf. core.json _destinations) ne correspond pas a BPx, question laissee
-// ouverte pour Romain (cf. rapport). striated/smooth REJOINTS le 2026-08-10 : LIBRAIRIES.md:168
-// liste « nature du temps » parmi le contenu d'engine. mm REJOINT PRAGMATIQUEMENT (pas par
-// match Atlas — son destinataire mesuré via core.json _destinations est Kronos/time, mais
-// time.json n'est pas dans core.apporte et l'y ajouter rouvrirait '@core.tempo:120' déjà fermé
-// par décision — signalé, non résolu, cf. rapport).
+// _comment : Procedures de sous-grammaire — ce qui s ecrit APRES le mode d une sous-grammaire et
+// gouverne son deroulement : la re-semence, la nature du temps, le metronome.
+//
+// ⛔ LE METRONOME PORTE UN SEUL NOM, `tempo`, ET IL EST ICI — arbitrage Romain du 2026-08-18,
+// « il ne reste que _mm en BP3, pas de mm en BPScript, remplace par tempo ». Le mot `mm` est
+// SORTI du langage ; `bp3:_mm` reste, parce que `_mm` est le nom NATIF et que c est justement ce
+// champ qui traduit. Une seule declaration porte donc les deux graphies du reglage : la tete de
+// scene (`tempo:120`) et le modificateur de sous-grammaire (`mode:ord(tempo:90)`).
+//
+// ⚠️ CE QUE CE DEPLACEMENT DEFAIT : `tempo` etait declare par `lib/time.json`, dont le champ
+// `resolvedBy` nomme Kronos, tandis qu`engine` nomme BPx. Mesure avant la frappe : `resolvedBy`
+// n atteint l arbre QUE par les sacs de reglages poses sur un noeud (`poserLeDestinataireDesReglages`,
+// bpxAst.js) ; une directive de tete et un modificateur de sous-grammaire n en portent aucun.
+// Le destinataire du metronome n a donc jamais voyage, et ce deplacement ne change aucun champ emis.
 
-@def randomize
+def randomize
   section:subgrammar
   bp3:_randomize
   description:`txt: Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)`
   scope:subgrammar flow scene
   bagOnly:true
 
-@def striated
+def striated
   section:subgrammar
   bp3:_striated
   description:`txt: Striated time (pulsed)`
   scope:subgrammar scene
   unicite:nature-du-temps
 
-@def smooth
+def smooth
   section:subgrammar
   bp3:_smooth
   description:`txt: Smooth time (non-pulsed)`
   scope:subgrammar scene
   unicite:nature-du-temps
 
-@def mm
+def tempo
   section:subgrammar
   bp3:_mm
   args:bpm
-  description:`txt: Absolute metronome marking (BPM)`
+  description:`txt: Metronome absolu de la scene ou de la sous-grammaire, en BPM.`
   scope:subgrammar scene
   unicite:metronome
 
@@ -246,7 +252,7 @@
 // confirme : 3 occurrences, toutes posees APRES le mode d une sous-grammaire et avant ses
 // regles (-gr.tryDESTRU:18, -gr.tryPatternGrammar:12, -gr.tryAllItems0:16), jamais en tete de
 // grammaire. ⚠️ LA PORTEE `scene` ETAIT INVENTEE — aucune branche du moteur ne la porte. Elle
-// rendait `@destru` ecrivable en tete, et c est par la que ma voie de portage BP3 le
+// rendait `destru` ecrivable en tete, et c est par la que ma voie de portage BP3 le
 // produisait. Retiree le 2026-08-10. La portee `rule` la remplace : sa graphie EXISTAIT deja
 // (`S -> C4 [destru]`, mesure), seule la donnee ne la declarait pas.
 
@@ -256,142 +262,141 @@
 // case par fall-through. Un `_striated` suivi d un `_smooth` est donc refuse AUSSI : ils
 // reglent LA MEME CHOSE, la nature du temps, et on ne la regle pas deux fois. Un booleen
 // `unique:true` par mot aurait rate ce cas — c est la raison du champ NOMME. Le refus natif n
-// est pas un avertissement : `return(7)`, la grammaire entiere ne compile pas. `tempo` porte le
-// meme groupe `metronome` depuis lib/time.json : c est la SURFACE du meme reglage, et compter
-// separement la surface et la graphie de sous-grammaire laisserait passer '@tempo:120' suivi de
-// '@mode:ord(mm:90)'.
+// est pas un avertissement : `return(7)`, la grammaire entiere ne compile pas. Le groupe couvre
+// les DEUX graphies du meme mot, la tete de scene et le modificateur de sous-grammaire : sans
+// lui, 'tempo:120' suivi de 'mode:ord(tempo:90)' reglerait deux fois le metronome en silence.
 
-@def mode
+def mode
   section:schema.reservedDirectives
   description:`txt: Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.`
   scope:subgrammar
 
-@def scan
+def scan
   section:schema.reservedDirectives
   description:`txt: Sens du parcours par regle (left, right, rnd) -- defaut : rnd.`
   scope:scene rule
 
-@def weight
+def weight
   section:schema.reservedDirectives
   description:`txt: Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.`
   scope:rule
 
-@def seed
+def seed
   section:schema.reservedDirectives
   description:`txt: Graine du tirage aleatoire -- @seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed. PORTEE flow AJOUTEE le 2026-08-10 : la graine s ecrit AUSSI dans le flux, ![seed:N] (forme validee par Romain), ou elle traduit le _srand(N) natif. La convention flow n est pas neuve — retro, shuffle, rotate, order et randomize la portent deja ; ce qui manquait etait de la declarer pour seed, dont le parseur connaissait la graphie sans que la donnee la dise.`
   scope:scene flow
 
-@def maxitems
+def maxitems
   section:schema.reservedDirectives
   description:`txt: Nombre maximum d'items produits par la derivation (BP3 MaxItemsProduce).`
   scope:scene
 
-@def items
+def items
   section:schema.reservedDirectives
   description:`txt: Alias de maxitems (BP3 MaxItemsProduce).`
   scope:scene
 
-@def allitems
+def allitems
   section:schema.reservedDirectives
   description:`txt: Produit tous les items possibles, desactive improvize (BP3 AllItems).`
   scope:scene
 
-@def all_items
+def all_items
   section:schema.reservedDirectives
   description:`txt: Alias de allitems (BP3 AllItems).`
   scope:scene
 
-@def improvize
+def improvize
   section:schema.reservedDirectives
   description:`txt: Derivation continue sans fin (BP3 Improvize).`
   scope:scene
 
-@def on_fail
+def on_fail
   section:schema.reservedDirectives
   description:`txt: Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.`
   scope:scene rule
 
-@def quantization
+def quantization
   section:schema.reservedDirectives
   description:`txt: Tolerance de placement en ms (BP3 Quantization). N'EST PAS une grille : mesure sur le moteur natif, aucune borne d'evenement ne tombe sur un multiple de cette valeur. Elle est comparee au pas interne u de la piece et rend un facteur de regroupement k = floor(valeur/u)+1, que le moteur annonce (compression rate). k=1 : sortie inchangee a l'octet. k>1 : les instants sont refondus sur une table plus grossiere — des evenements distincts partagent des bornes, la piece s'allonge, le depart quitte zero.`
   scope:scene
 
-@def qclock
+def qclock
   section:schema.reservedDirectives
   description:`txt: Periode du metronome Q (BP3 Qclock).`
   scope:scene
 
-@def repeat
+def repeat
   section:schema.reservedDirectives
   description:`txt: Controlled repetition. expr = K-param or K-param=value.`
   scope:rule
 
-@def goto
+def goto
   section:schema.reservedDirectives
   description:`txt: Jump to specific subgrammar and rule.`
   scope:rule
 
-@def retro
+def retro
   section:schema.reservedDirectives
   description:`txt: Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE.`
   scope:flow
 
-@def shuffle
+def shuffle
   section:schema.reservedDirectives
   description:`txt: Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g).`
   scope:flow
 
-@def rotate
+def rotate
   section:schema.reservedDirectives
   description:`txt: Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation.`
   scope:flow
 
-@def order
+def order
   section:schema.reservedDirectives
   description:`txt: Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.`
   scope:flow
 
-@def stop
+def stop
   section:schema.reservedDirectives
   description:`txt: Stop derivation.`
   scope:rule
 
-@def failed
+def failed
   section:schema.reservedDirectives
   description:`txt: Jump on derivation failure.`
   scope:rule
 
-@def randomize
+def randomize
   section:schema.reservedDirectives
   description:`txt: Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)`
   scope:subgrammar flow scene
 
-@def rndtime
+def rndtime
   section:schema.reservedDirectives
   description:`txt: Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.`
   scope:scene symbol group rule flow
 
-@def destru
+def destru
   section:schema.reservedDirectives
   description:`txt: Destructure composed terminals based on alphabet`
   scope:subgrammar rule
 
-@def meter
+def meter
   section:schema.reservedDirectives
   description:`txt: Signature rythmique -- (meter:7/8), (meter:4+4/4).`
   scope:scene rule
 
-@def timepatterns
+def timepatterns
   section:schema.reservedDirectives
   description:`txt: Motifs temporels nommes -- @timepatterns: t1=1/1, t2=3/2, ... (docs/spec/AST.md:95,111,143).`
   scope:scene
 
-@def staccato
+def staccato
   section:schema.reservedDirectives
   description:`txt: Staccato — shorten note durations (affects temporal structure)`
   scope:symbol group rule flow
 
-@def legato
+def legato
   section:schema.reservedDirectives
   description:`txt: Legato — extend note durations (affects temporal structure)`
   scope:symbol group rule flow

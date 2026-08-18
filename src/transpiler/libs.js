@@ -71,8 +71,8 @@ function clearRegistry() {
 /**
  * Noms de contrôles de l'UNIVERS — toutes les libs du registre (built-in + user), et non les
  * seules libs que la scène a chargées via ses directives. Sert au garde des clés `[]` : un
- * `[rotate:2]` est une clé CONNUE du langage même dans une scène qui ne déclare pas `@controls`.
- * (Savoir si `@controls` doit être exigé pour l'employer est une question de surface, non tranchée.)
+ * `[rotate:2]` est une clé CONNUE du langage même dans une scène qui ne déclare pas `controls`.
+ * (Savoir si `controls` doit être exigé pour l'employer est une question de surface, non tranchée.)
  */
 let _universeControls = null;
 function universeControlNames() {
@@ -84,7 +84,7 @@ function universeControlNames() {
 }
 
 // Contrôles interval-typés de l'UNIVERS (marqués `argType:"interval"` dans une lib). Sert au parseur
-// AVANT que le libCtx de la scène soit chargé : une directive globale `@transpose:-2400c` doit lire
+// AVANT que le libCtx de la scène soit chargé : une directive globale `transpose:-2400c` doit lire
 // une valeur d'INTERVALLE (chaîne brute) dès l'analyse des directives, avant tout consommateur.
 let _universeIntervalControls = null;
 function universeIntervalControls() {
@@ -139,9 +139,9 @@ function universeSacs() {
     const allDirs = Object.keys(registry).map((name) => ({ name }));
     const c = loadLibsFromDirectives(allDirs);
     // `specs` : la déclaration COMPLÈTE (args, values, range…) de l'UNIVERS, indépendante de
-    // `@controls` — un réglage réservé (qualifierKeys) est un mot du LANGAGE, il doit savoir
+    // `controls` — un réglage réservé (qualifierKeys) est un mot du LANGAGE, il doit savoir
     // combien de PARTIES sa valeur porte (`goto`/`failed` : 2 ; `weight`/`rotate`… : 1) que la
-    // scène ait chargé `@controls` ou non. Même principe que les univers ci-dessus.
+    // scène ait chargé `controls` ou non. Même principe que les univers ci-dessus.
     _universeSacs = { moteur: c.engineBagControls, runtime: c.runtimeBagControls, specs: c.controls };
   }
   return _universeSacs;
@@ -273,9 +273,9 @@ function loadLib(name, subkey) {
  * LA LIBRAIRIE `L` DÉCLARE-T-ELLE LA DIRECTIVE `nom` ? — lue dans la DONNÉE, jamais en dur.
  *
  * POURQUOI ELLE EXISTE. `loadLib(L, nom)` répond à une autre question : il cherche une ENTRÉE de
- * catalogue (`@alphabet.sargam`), donc dans `alphabets`/`tables`/`objects`/racine. Une DIRECTIVE
- * ne vit dans aucun de ces champs — `tempo` est déclaré dans `time.schema.reservedDirectives` —
- * si bien que `@core.tempo:120` était refusé par le message « l'entrée n'existe pas dans la
+ * catalogue (`alphabet.sargam`), donc dans `alphabets`/`tables`/`objects`/racine. Une DIRECTIVE
+ * ne vit dans aucun de ces champs — `tempo` est déclaré dans la section `subgrammar` d'`engine` —
+ * si bien que `core.tempo:120` était refusé par le message « l'entrée n'existe pas dans la
  * librairie » alors que la librairie la déclare bel et bien, deux champs plus loin.
  *
  * CE QUE ROMAIN A TRANCHÉ (2026-08-09) : le préfixe est OPTIONNEL, il n'a jamais été INTERDIT, et
@@ -285,11 +285,11 @@ function loadLib(name, subkey) {
  * écrivable partout, y compris là où un nom nu suffirait ») ; il n'était écrivable nulle part.
  *
  * ⚠️ SUIT LA CHAÎNE `apporte`, TRANSITIVEMENT (2026-08-10, mise en conformité des librairies).
- * `@core` amène `engine` (lib/core.json `apporte`) : `@core.seed:42` doit donc rester une
- * écriture valide de `@seed:42` MÊME MAINTENANT QUE `seed` a déménagé dans `lib/engine.json` —
+ * `core` amène `engine` (lib/core.json `apporte`) : `core.seed:42` doit donc rester une
+ * écriture valide de `seed:42` MÊME MAINTENANT QUE `seed` a déménagé dans `lib/engine.bpsl` —
  * le préfixe nomme le POINT D'ENTRÉE que l'auteur invoque, pas forcément le domicile final de la
  * clé. TRANSITIF depuis la scission de `controls.json` : `core` amène `controls`, qui amène à
- * son tour `expression`/`midi`/`audio`/`transpo` — `@core.transpose:2` doit rester valide à
+ * son tour `expression`/`midi`/`audio`/`transpo` — `core.transpose:2` doit rester valide à
  * DEUX maillons de distance. `vus` protège d'un cycle d'`apporte` mal formé.
  */
 /**
@@ -349,13 +349,24 @@ function directiveDeclareeParLaLibrairie(lib, nom) {
   const declareeIci = (f) => {
     if (!f) return false;
     // `reservedDirectives` porte DEUX formes légitimes — array plat (core.json) ou objet
-    // {nom: {description, scope}} (engine.json, time.json, depuis 2026-08-10). Les deux se
+    // {nom: {description, scope}} (engine, depuis 2026-08-10). Les deux se
     // consultent par présence du nom, jamais recopiées l'une dans l'autre.
     const reserved = (f.schema && f.schema.reservedDirectives) || [];
     if (Array.isArray(reserved) && reserved.includes(nom)) return true;
     if (!Array.isArray(reserved) && Object.prototype.hasOwnProperty.call(reserved, nom)) return true;
     if (f.values && Object.prototype.hasOwnProperty.call(f.values, nom)) return true;
     if (f.controls && Object.prototype.hasOwnProperty.call(f.controls, nom)) return true;
+    // ⚠️ LA PORTÉE FAIT FOI, PAS LA SECTION — même lecture que `porteesDeclarees` et
+    // `groupeDUnicite`, et ce lecteur-ci était le seul des trois à l'ignorer. L'écart ne se voyait
+    // pas tant qu'aucune directive de tête ne vivait hors de `reservedDirectives` ; le jour où le
+    // métronome a rejoint la section `subgrammar` d'`engine` (2026-08-18), `engine.tempo:120` est
+    // devenu « l'entrée n'existe pas dans la librairie » alors que la librairie la déclare, une
+    // section plus loin. C'est exactement la panne que ce fichier documente pour `core.tempo:120`.
+    for (const section of Object.values(f)) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      const def = section[nom];
+      if (def && typeof def === 'object' && Array.isArray(def.scope)) return true;
+    }
     return false;
   };
   if (declareeIci(file)) return true;
@@ -373,10 +384,10 @@ function directiveDeclareeParLaLibrairie(lib, nom) {
 }
 
 /**
- * Résout un alphabet nommé pour une LIAISON D'ACTEUR (`@actor X @alphabet.<nom>`).
+ * Résout un alphabet nommé pour une LIAISON D'ACTEUR (`actor X alphabet.<nom>`).
  *
  * POURQUOI CETTE FONCTION EXISTE. `loadLib('alphabet', nom)` ne connaît QUE le catalogue standard
- * (`alphabets.json`). Or une scène peut déclarer d'autres librairies d'alphabets — `@test_alphabets`
+ * (`alphabets.json`). Or une scène peut déclarer d'autres librairies d'alphabets — `test_alphabets`
  * en est une — et leurs entrées étaient alors INATTEIGNABLES depuis un acteur : la scène savait les
  * résoudre, l'acteur non. `tryKeyMap` est tombé exactement là (terminaux `a`/`b` de
  * `test_alphabets.abc`, inatteignables une fois passés par un acteur).
@@ -516,7 +527,7 @@ function loadLibsFromDirectives(directives) {
                                   // decimal 1.5) — marqués `argType:"interval"` dans la lib. La valeur est
                                   // portée BRUTE (chaîne) et résolue en aval par normalizeRatio (Kairos).
     symbols: {},        // name → { type, ... }
-    alphabetTerminals: [],  // terminaux issus des SEULS alphabets (sans @core etc.) —
+    alphabetTerminals: [],  // terminaux issus des SEULS alphabets (sans core etc.) —
                             // porte du découpeur mono-char (bpxAst.js, flip Palier 4 étape A)
     cvObjects: {},      // "lib.type" → def (e.g. "mod.adsr" → { parameters, ... })
     _libs: {},          // directive name → raw lib data (for generator access)
@@ -533,17 +544,17 @@ function loadLibsFromDirectives(directives) {
     valueRegistryErrors: [],  // collisions de noms (réservés/contrôles) — remontées à l'émission
   };
 
-  // SOCLE @core + SCHÉMA du langage — chargés en DONNÉE, plus aucune liste en dur (Romain
-  // 2026-07-05, prépare user libraries + partage du vocabulaire à Kanopi). @core.schema
+  // SOCLE core + SCHÉMA du langage — chargés en DONNÉE, plus aucune liste en dur (Romain
+  // 2026-07-05, prépare user libraries + partage du vocabulaire à Kanopi). core.schema
   // déclare : `reservedDirectives` (mots de directive du langage, non-valeurs), `catalogAxes`
-  // (axes dont les valeurs sont des entrées de catalogue). @core.defaults porte les
+  // (axes dont les valeurs sont des entrées de catalogue). core.defaults porte les
   // valeurs/composants par défaut (cascade). Les CLÉS D'ADRESSE ont quitté le socle le
   // 2026-08-15 : elles vivent chez le canal qui les porte, et se lisent en union du registre.
   const coreLib = loadJsonFile('core') || {};
   const schema = coreLib.schema || {};
   // ⚠️ `reservedDirectives` PORTE DEUX FORMES, ET LES DEUX SONT LÉGITIMES (2026-08-10) : `core.json`
   // le garde en LISTE PLATE (noms seuls — ses ~30 clés d'axe/tombstone n'ont pas encore de scope
-  // mesuré) ; `engine.json`/`time.json` le portent en OBJET `{nom: {description, scope}}` (chaque
+  // mesuré) ; `engine` le porte en OBJET `{nom: {description, scope}}` (chaque
   // clé y porte sa portée, exigé par Romain). `nomsReserves` lit les deux sans en préférer une.
   const nomsReserves = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
   // UNION sur TOUTES les librairies du REGISTRE, pas seulement `core` — sinon une clé qui ne vit
@@ -601,8 +612,8 @@ function loadLibsFromDirectives(directives) {
     }
   };
 
-  // @core.defaults.values : valeurs socle (diapason…) au registre (le nom `diapason` est
-  // dans reservedDirectives pour bloquer une collision de lib, mais le socle @core le pose ici).
+  // core.defaults.values : valeurs socle (diapason…) au registre (le nom `diapason` est
+  // dans reservedDirectives pour bloquer une collision de lib, mais le socle core le pose ici).
   if (coreLib.defaults && coreLib.defaults.values) {
     for (const [vname, spec] of Object.entries(coreLib.defaults.values)) {
       if (vname.startsWith('_') || !spec || typeof spec !== 'object') continue;
@@ -611,7 +622,7 @@ function loadLibsFromDirectives(directives) {
   }
 
   // Fonctions DIGITALES/dispatcher (transpose, rotate, keyxpand…) — toujours disponibles,
-  // indépendantes de @controls. Source : digital.json (générique — une fonction ajoutée = reconnue).
+  // indépendantes de controls. Source : digital.json (générique — une fonction ajoutée = reconnue).
   const digitalLib = loadJsonFile('digital');
   ctx.digitalFunctions = new Set(Object.keys((digitalLib && digitalLib.objects) || {}));
 
@@ -620,7 +631,7 @@ function loadLibsFromDirectives(directives) {
   if (settingsLib) ctx._libs['settings'] = settingsLib;
 
   // Registre des ENTRÉES DE MODULATION par type de sortie (lib/modulation.json) — toujours
-  // disponible (intrinsèque, pas besoin de @modulation). Utilisé pour valider les noms écrits
+  // disponible (intrinsèque, pas besoin de modulation). Utilisé pour valider les noms écrits
   // au point de branchement `(cutoff: env1)`. modulationInputs : { type → Set(noms) } ;
   // modulationInputsAll : union de tous les noms (fallback quand le type de sortie n'est pas résolu).
   ctx.modulationInputs = {};
@@ -653,7 +664,7 @@ function loadLibsFromDirectives(directives) {
   // Avec, le même jour : « on a dit qu'on supprimait controls et que core intégrait l'appel à
   // controls, que ça ne servait à rien de tout le temps devoir appeler les deux. »
   //
-  // Les deux phrases se tiennent : `@core` AMÈNE les contrôles, donc une scène qui l'écrit en
+  // Les deux phrases se tiennent : `core` AMÈNE les contrôles, donc une scène qui l'écrit en
   // dispose sans les invoquer — et une scène qui n'invoque RIEN n'a rien, un réglage y est refusé.
   // ⚠️ CE N'EST PAS « LES CONTRÔLES SONT TOUJOURS LÀ ». Ma première écriture les chargeait
   // inconditionnellement : elle fermait bien la brèche de l'arbre, mais elle violait la règle
@@ -661,8 +672,8 @@ function loadLibsFromDirectives(directives) {
   // Le lien vit dans la DONNÉE (`lib/core.json`, champ `apporte`) : ce code ne nomme aucune
   // librairie, et une librairie ajoutée demain au socle est une entrée JSON.
   //
-  // LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ, mesuré le jour même : `@controls` n'apparaît AUCUNE fois
-  // dans les trois spécifications (`LANGUAGE.md`, `EBNF.md`, `AST.md`) — `@core` y est écrit
+  // LA RÉFÉRENCE ÉTAIT DÉJÀ DE CE CÔTÉ, mesuré le jour même : `controls` n'apparaît AUCUNE fois
+  // dans les trois spécifications (`LANGUAGE.md`, `EBNF.md`, `AST.md`) — `core` y est écrit
   // quinze fois. C'est le code qui traînait, et rien ne pouvait le dire : aucune décision datée
   // ne portait la suppression, donc aucun garde ne pouvait mordre.
   //
@@ -676,14 +687,14 @@ function loadLibsFromDirectives(directives) {
   // intensité. Même famille que le poids perdu le matin même.
   //
   // ⚠️ ET LE DÉFAUT AVAIT DÉJÀ ÉTÉ PAYÉ UNE FOIS, SUR UNE SEULE FAMILLE. Les quatre contrôles de
-  // sous-grammaire (`mm`, `striated`, `smooth`, `destru`) étaient semés ici EN DUR, avec un
-  // commentaire qui disait exactement la cause : « silently dropped unless @controls was loaded ».
+  // sous-grammaire (`tempo`, `striated`, `smooth`, `destru`) étaient semés ici EN DUR, avec un
+  // commentaire qui disait exactement la cause : « silently dropped unless controls was loaded ».
   // On avait donc réparé l'endroit où le défaut s'était MONTRÉ, pas l'espace où il vivait — et les
   // 61 autres contrôles sont restés dans le trou. La graine en dur disparaît avec ce chargement :
   // la librairie les déclare, plus rien ne les recopie.
   // ⚠️ CHAÎNE TRANSITIVE (2026-08-10, scission de controls.json) : un `apporte` peut désormais
   // en amener un autre — `core` apporte `controls`, qui apporte `expression`/`midi`/`audio`/
-  // `transpo`. Une seule passe s'arrêtait au premier maillon : `@core` seul aurait chargé
+  // `transpo`. Une seule passe s'arrêtait au premier maillon : `core` seul aurait chargé
   // `controls` (qui ne porte plus aucun contrôle, juste sa propre chaîne `apporte`) SANS
   // atteindre les quatre destinataires réels. `invoquees` sert de garde anti-cycle : un nom
   // déjà vu ne se retraite pas, quelle que soit la profondeur d'où il revient.
@@ -730,10 +741,10 @@ function loadLibsFromDirectives(directives) {
   };
 
   for (const dir of aCharger) {
-    // @cc directives: user-defined named CC mappings
+    // cc directives: user-defined named CC mappings
     if (dir.name === 'cc' && dir.ccMappings) {
       for (const cc of dir.ccMappings) {
-        declarer(cc.name, `le contrôleur nommé '@cc ${cc.name}' de la scène`);
+        declarer(cc.name, `le contrôleur nommé 'cc ${cc.name}' de la scène`);
         ctx.controls[cc.name] = {
           args: ['value'], range: [0, 127], default: 0,
           description: `User CC${cc.number}`, transportGroup: 'midi', ccNumber: cc.number
@@ -745,7 +756,7 @@ function loadLibsFromDirectives(directives) {
       continue;
     }
 
-    // SCENE_VALUES : les références d'entité d'un @actor (alphabet/tuning/octaves)
+    // SCENE_VALUES : les références d'entité d'un actor (alphabet/tuning/octaves)
     // touchent leurs fichiers-catalogues → leurs sections `values` entrent au registre
     // (sinon une scène 100 % acteurs n'aurait aucun registre). Le fichier est chargé,
     // pas l'entrée — la résolution du composant reste à l'émission/en aval.
@@ -759,14 +770,14 @@ function loadLibsFromDirectives(directives) {
     }
 
     const lib = loadLib(dir.name, dir.subkey);
-    // Section `values` du FICHIER de la directive (ex. @tuning.X → tunings.json),
+    // Section `values` du FICHIER de la directive (ex. tuning.X → tunings.json),
     // même si l'entrée subkey n'existe pas (le registre est au niveau fichier).
     mergeValueRegistry(loadJsonFile(dir.name), dir.name);
     if (!lib) continue;
     const libKey = dir.subkey ? `${dir.name}.${dir.subkey}` : dir.name;
     ctx._libs[libKey] = lib;
 
-    // Merge subgrammar-level directives (destru, striated, smooth, mm)
+    // Merge subgrammar-level directives (destru, striated, smooth, tempo)
     if (lib.subgrammar) {
       for (const [name, def] of Object.entries(lib.subgrammar)) {
         if (name === '_comment') continue;
@@ -871,7 +882,7 @@ function loadLibsFromDirectives(directives) {
         ctx.controls[name] = def;
         ctx.controlMap[name] = def.bp3 || `_${name}`;
         // Le destinataire se lit sur le FICHIER, jamais sur l'entrée chargée : une invocation à
-        // sous-clé (`@tuning.just`) rend une entrée du catalogue, qui ne porte pas ce champ.
+        // sous-clé (`tuning.just`) rend une entrée du catalogue, qui ne porte pas ce champ.
         // ── LE DESTINATAIRE SE SURCHARGE : le fichier donne le DÉFAUT, l'entrée TRANCHE ───────
         // RÈGLE DE ROMAIN (2026-08-13) : « si je définis le destinataire pour la librairie, c'est le
         // défaut de la librairie ; si je le définis sur le contrôle, c'est celui du contrôle qui
@@ -980,7 +991,7 @@ function loadLibsFromDirectives(directives) {
         // ⚠️ SERT À NE PAS DOUBLER UN REFUS PLUS PRÉCIS. Le refus du crochet, côté parseur, ne
         // doit mordre que sur ce que l'aval LAISSE PASSER : un contrôle hors de sa portée est
         // déjà refusé par la confrontation des portées, avec un message qui donne sa vraie place
-        // (« `@mode:…` en tête de sous-grammaire »). Mesuré le 2026-08-08 : sans cette
+        // (« `mode:…` en tête de sous-grammaire »). Mesuré le 2026-08-08 : sans cette
         // restriction, le refus générique du crochet interceptait `mode` en amont et FAISAIT
         // PERDRE sa réécriture — un message précis remplacé par un message vague est une
         // régression que seul un garde du message attrape.
@@ -1017,16 +1028,16 @@ function loadLibsFromDirectives(directives) {
     // Alphabet libs: defer terminal generation (needs octave convention resolved first)
     if (nomsDeTerminaux(lib)) {
       ctx._alphabets.push(lib);
-      // Set default octave convention from alphabet (can be overridden by @octaves)
+      // Set default octave convention from alphabet (can be overridden by octaves)
       if (lib.octaves) ctx._octaveConvention = lib.octaves;
     }
-    // @octaves:xxx — override octave convention
+    // octaves:xxx — override octave convention
     if (dir.name === 'octaves' && dir.runtime) {
       ctx._octaveConvention = dir.runtime;
     }
-    // `@homomorphism.<table>` — charge une table de correspondances symbole → symbole.
+    // `homomorphism.<table>` — charge une table de correspondances symbole → symbole.
     // ⚠️ LE MOT ÉTAIT `transcription` JUSQU'AU 2026-08-07 (« oui on renomme », Romain). La bible
-    // n'a jamais écrit que `@homomorphism` — `transcription` n'y apparaît nulle part. Le code
+    // n'a jamais écrit que `homomorphism` — `transcription` n'y apparaît nulle part. Le code
     // implémentait donc l'ancien nom et REFUSAIT celui de la référence : 159 occurrences dans 13
     // scènes de l'écosystème écrivaient le mot mort, ZÉRO écrivait le bon.
     if (dir.name === 'homomorphism' && dir.subkey && (lib?.mappings || lib?.sections)) {
@@ -1043,7 +1054,7 @@ function loadLibsFromDirectives(directives) {
   }
 
   // Generate terminals from deferred alphabets (after all directives processed)
-  // Octave convention is now fully resolved (alphabet default + @octaves override)
+  // Octave convention is now fully resolved (alphabet default + octaves override)
   const octaveDef = ctx._octaveConvention
     ? loadLib('octaves')?.[ctx._octaveConvention]
     : null;
@@ -1212,7 +1223,7 @@ function loadLibsFromDirectives(directives) {
  *   addressKeys: string[],
  *   qualifierKeys: string[],                   // réglages réservés (mode/scan/weight/on_fail/tempx/meter), écrits en '()'
  *   modulationInputs: string[],
- *   directiveValues: { [directive:string]: {description?, values: [{name, description?}]} },  // enums (@mode:…, @scan:…)
+ *   directiveValues: { [directive:string]: {description?, values: [{name, description?}]} },  // enums (mode:…, scan:…)
  *   syntaxWords: { [word:string]: {kind, description?, syntax?} }                              // gate/trigger/cv/lambda, ->/<-/<>
  * }}
  */

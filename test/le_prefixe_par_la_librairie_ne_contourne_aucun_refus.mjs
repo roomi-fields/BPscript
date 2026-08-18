@@ -8,9 +8,9 @@
 // ⚠️ CE QUE CE GARDE EXISTE POUR EMPÊCHER, ET QUI EST ARRIVÉ DEUX FOIS PENDANT L'ÉCRITURE.
 // Chaque refus posé sur une directive se garde par `!subkey` : il ne regarde que la forme NUE.
 // Un rabattement du préfixe placé après ces refus laisse donc la forme préfixée passer PAR-DESSUS.
-// Mesuré : `@core.seed:120` passait là où `@seed:120` était alors refusé (état du 2026-06-11 ; la
+// Mesuré : `core.seed:120` passait là où `seed:120` était alors refusé (état du 2026-06-11 ; la
 // graine est revenue à l'arobase le 2026-08-10, et la paire est éprouvée plus bas dans ce sens), et
-// `@core.scene:120` ROUVRAIT `@scene`, SUPPRIMÉE du langage. Dix-huit paires se comportaient
+// `core.scene:120` ROUVRAIT `scene`, SUPPRIMÉE du langage. Dix-huit paires se comportaient
 // autrement que leur nom nu — dix-huit refus contournables en préfixant.
 //
 // ⚠️ ET LE CAS DU JOUR N'EN MONTRAIT AUCUN. `tempo` se comportait parfaitement, préfixé comme nu :
@@ -19,8 +19,8 @@
 // mais construit LIBRAIRIES × DIRECTIVES DÉCLARÉES lui-même. Une directive ajoutée à une librairie
 // est testée le jour même, sans que personne ait à y penser.
 //
-// LA PROPRIÉTÉ, une seule et elle est totale : pour toute paire déclarée, `@lib.dir:v` se comporte
-// EXACTEMENT comme `@dir:v` — accepté si l'un l'est, refusé PAR LE MÊME REFUS sinon. On ne compare
+// LA PROPRIÉTÉ, une seule et elle est totale : pour toute paire déclarée, `lib.dir:v` se comporte
+// EXACTEMENT comme `dir:v` — accepté si l'un l'est, refusé PAR LE MÊME REFUS sinon. On ne compare
 // pas « les deux échouent » (ce serait vrai de deux refus sans rapport) mais l'identité du message,
 // aux positions près : c'est ce qui distingue « le préfixe se résout » de « le préfixe casse ».
 
@@ -34,12 +34,12 @@ const dire = (ok, quoi) => { if (!ok) { echecs++; console.log('  ÉCHEC ' + quoi
 // reste du message doit être identique — c'est le juge, et il est aussi discriminant qu'il peut
 // l'être. Un juge qui ne comparerait que le NOMBRE d'erreurs certifierait deux refus étrangers.
 const norm = (m) => m.replace(/at line \d+:\d+/, '').replace(/\s+/g, ' ').trim();
-const compile = (src) => compileToBPxAST(src + '\nS -> C4 D4');
+const compile = (src) => compileToBPxAST(src + '\n-----\nS -> C4 D4');
 
 // LA MATRICE SE CONSTRUIT DEPUIS LA DONNÉE, jamais une liste de paires écrite à la main.
 // ⚠️ `reservedDirectives` PORTE DEUX FORMES depuis le 2026-08-10 (mise en conformité des
-// librairies) : array plat (core.json) ou objet {nom: {description, scope}} (engine.json,
-// time.json — chaque clé y porte sa portée). Les deux se lisent par leurs NOMS.
+// librairies) : array plat (core.json) ou objet {nom: {description, scope}} (engine — chaque clé y
+// porte sa portée). Les deux se lisent par leurs NOMS.
 const paires = [];
 for (const [lib, data] of Object.entries(LIBS)) {
   const rd = (data.schema && data.schema.reservedDirectives) || [];
@@ -53,47 +53,50 @@ for (const [lib, data] of Object.entries(LIBS)) {
 dire(paires.length >= 40, `la matrice s'est vidée : ${paires.length} paires (attendu ≥ 40)`);
 
 for (const [lib, dir] of paires) {
-  const prefixe = compile(`@${lib}.${dir}:120`);
-  const nu = compile(`@${dir}:120`);
+  const prefixe = compile(`${lib}.${dir}:120`);
+  const nu = compile(`${dir}:120`);
   const memeCompte = prefixe.errors.length === nu.errors.length;
   const memeRefus = !prefixe.errors.length
     || (nu.errors.length && norm(prefixe.errors[0].message) === norm(nu.errors[0].message));
   dire(memeCompte && memeRefus,
-    `@${lib}.${dir} ne se comporte pas comme @${dir} — `
+    `${lib}.${dir} ne se comporte pas comme ${dir} — `
     + `préfixé: ${prefixe.errors[0] ? norm(prefixe.errors[0].message).slice(0, 60) : 'accepté'} | `
     + `nu: ${nu.errors[0] ? norm(nu.errors[0].message).slice(0, 60) : 'accepté'}`);
 }
 
 // LES DEUX SENS DU TÉMOIN. Une règle qui refuserait tout laisserait au vert la moitié « doit
 // mordre » ; c'est la moitié « doit passer » qui la démasque (payé deux fois le 2026-07-28).
-// ⚠️ LA PAIRE DE RÉFÉRENCE A CHANGÉ DE LIBRAIRIE le 2026-08-10, et c'est le cas qui prouve le
-// déménagement : `tempo` a QUITTÉ `core` pour `time` (Romain, « il faut créer toutes les librairies
-// qui manquent » ; atlas/architecture/LIBRAIRIES.md:160-176 le donne pour contenu de `time`, résolue
-// par Kronos). La règle gardée ici n'a pas bougé — le préfixé se comporte comme le nu — c'est son
-// domicile qui a bougé.
-dire(compile('@time.tempo:120').errors.length === 0, '@time.tempo:120 doit être ACCEPTÉ');
-dire(compile('@tempo:120').errors.length === 0, '@tempo:120 doit rester ACCEPTÉ — la moitié nue de la même paire');
-// ET L ANCIEN DOMICILE EST FERMÉ. Sans ce cas, une clé pourrait vivre dans DEUX librairies sans que
-// rien ne le dise : elle se résoudrait alors par celle qu'on interroge en premier, donc par
-// accident, et la règle d'unicité serait morte en silence.
-dire(compile('@core.tempo:120').errors.length > 0, '@core.tempo:120 doit être REFUSÉ — tempo a quitté core');
-dire(compile('@core.scene:120').errors.length > 0, '@core.scene:120 doit être REFUSÉ (@scene est supprimée)');
-// ⚠️ CE CAS A CHANGÉ DE CAMP le 2026-08-10, et le motif compte plus que la ligne : `@seed` n'est
+// ⚠️ LA PAIRE DE RÉFÉRENCE A CHANGÉ DE LIBRAIRIE DEUX FOIS, et la règle gardée ici n'a bougé ni
+// l'une ni l'autre fois — le préfixé se comporte comme le nu, c'est le domicile qui voyage.
+// `tempo` a quitté `core` pour `time` le 2026-08-10, puis `time` pour `engine` le 2026-08-18 :
+// `mm` est sorti du langage sur arbitrage de Romain, et le métronome a repris son câblage natif
+// là où il vivait. `time` était vide après ce départ, elle est supprimée avec lui.
+dire(compile('engine.tempo:120').errors.length === 0, 'engine.tempo:120 doit être ACCEPTÉ');
+dire(compile('tempo:120').errors.length === 0, 'tempo:120 doit rester ACCEPTÉ — la moitié nue de la même paire');
+// ET LE PRÉFIXE SUIT LA CHAÎNE `apporte`, TRANSITIVEMENT — `core` amène `engine`, donc `core.tempo`
+// vaut : le préfixe nomme le POINT D'ENTRÉE invoqué, pas le domicile final de la clé.
+dire(compile('core.tempo:120').errors.length === 0, 'core.tempo:120 doit être ACCEPTÉ — core amène engine');
+// ET UNE LIBRAIRIE QUI NE LA PORTE PAS, PAS MÊME PAR SA CHAÎNE, REFUSE. Sans ce cas, une clé
+// pourrait vivre dans DEUX librairies sans que rien ne le dise : elle se résoudrait par celle
+// qu'on interroge en premier, donc par accident, et la règle d'unicité serait morte en silence.
+dire(compile('midi.tempo:120').errors.length > 0, 'midi.tempo:120 doit être REFUSÉ — midi ne porte pas le métronome');
+dire(compile('core.scene:120').errors.length > 0, 'core.scene:120 doit être REFUSÉ (scene est supprimée)');
+// ⚠️ CE CAS A CHANGÉ DE CAMP le 2026-08-10, et le motif compte plus que la ligne : `seed` n'est
 // plus refusée en tête de scène. Romain : « seed est une directive de scène qui n'a de sens qu'en
 // début de scène donc devrait être appelé par arobase ». Le préfixé DOIT donc passer comme le nu —
 // c'est toujours la même règle qui est gardée ici (préfixé ≡ nu), avec la valeur du jour.
 // Un cas laissé du mauvais côté aurait figé une décision périmée en la faisant garder par un test.
-dire(compile('@core.seed:120').errors.length === 0, '@core.seed:120 doit être ACCEPTÉ (@seed s\'écrit en tête de scène depuis le 2026-08-10)');
-dire(compile('@seed:120').errors.length === 0, '@seed:120 doit être ACCEPTÉ — la moitié nue de la même paire');
+dire(compile('core.seed:120').errors.length === 0, 'core.seed:120 doit être ACCEPTÉ (seed s\'écrit en tête de scène depuis le 2026-08-10)');
+dire(compile('seed:120').errors.length === 0, 'seed:120 doit être ACCEPTÉ — la moitié nue de la même paire');
 // ET LE BLOC EST FERMÉ, préfixé comme nu : sans ça, la voie parallèle se rouvrirait par le préfixe.
-dire(compile('[@seed:120]\nS -> C4').errors.length > 0, '[@seed:120] doit être REFUSÉ (le crochet ne porte pas la graine)');
-dire(compile('@zzz.tempo:120').errors.length > 0, '@zzz.tempo:120 doit être REFUSÉ (librairie inexistante)');
-dire(compile('@core.zzz:1').errors.length > 0, '@core.zzz:1 doit être REFUSÉ (entrée inexistante)');
+dire(compile('[seed:120]\n-----\nS -> C4').errors.length > 0, '[seed:120] doit être REFUSÉ (le crochet ne porte pas la graine)');
+dire(compile('zzz.tempo:120').errors.length > 0, 'zzz.tempo:120 doit être REFUSÉ (librairie inexistante)');
+dire(compile('core.zzz:1').errors.length > 0, 'core.zzz:1 doit être REFUSÉ (entrée inexistante)');
 
 // L'INVOCATION DE COMPOSANT N'EST PAS UNE DIRECTIVE PRÉFIXÉE et ne doit pas être avalée par le
 // rabattement : `western` vit dans `alphabets`, pas parmi les directives déclarées par `alphabet`.
-dire(compile('@alphabet.western').errors.length === 0, '@alphabet.western doit rester ACCEPTÉ');
-dire(compile('@out.midi(ch:1)').errors.length === 0, '@out.midi(ch:1) doit rester ACCEPTÉ');
+dire(compile('alphabet.western').errors.length === 0, 'alphabet.western doit rester ACCEPTÉ');
+dire(compile('out.midi(ch:1)').errors.length === 0, 'out.midi(ch:1) doit rester ACCEPTÉ');
 
 console.log(echecs === 0
   ? `✅ le préfixe par la librairie ne contourne aucun refus (${paires.length} paires × identité du refus, + 8 témoins)`

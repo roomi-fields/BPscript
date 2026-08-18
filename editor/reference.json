@@ -2,55 +2,6 @@
   "_version": "1.1",
   "_description": "BPscript complete reference — derived from BPSCRIPT_EBNF.md. Used for Help panel, hover tooltips, and autocompletion.",
   "symbols": {
-    "@": {
-      "name": "Directive",
-      "category": "structure",
-      "syntax": "@ name[.subkey][:binding]",
-      "description": "Configures the compilation environment. Loads libraries, sets parameters, defines actors.",
-      "forms": [
-        {
-          "syntax": "@core",
-          "desc": "Load core library (brings expression/midi/audio/transpo controls)"
-        },
-        {
-          "syntax": "@alphabet.western:audio",
-          "desc": "Load alphabet with output binding"
-        },
-        {
-          "syntax": "@tempo:120",
-          "desc": "Set metronome to 120 BPM"
-        },
-        {
-          "syntax": "@mode:random",
-          "desc": "Set derivation mode for next sub-grammar"
-        },
-        {
-          "syntax": "@tonality.just_C",
-          "desc": "Load tonality/tuning file"
-        },
-        {
-          "syntax": "@octaves:western",
-          "desc": "Set octave convention"
-        },
-        {
-          "syntax": "@homomorphism.tabla",
-          "desc": "Load homomorphism table"
-        },
-        {
-          "syntax": "@timepatterns: t1=1/1, t2=3/2",
-          "desc": "Define time patterns"
-        },
-        {
-          "syntax": "@+",
-          "desc": "Append rules to previous sub-grammar"
-        },
-        {
-          "syntax": "@actor sitar alphabet.sargam out.midi",
-          "desc": "Define an actor"
-        }
-      ],
-      "example": "@core\n@alphabet.western:audio\n@tempo:120"
-    },
     "->": {
       "name": "Rule (left to right)",
       "category": "rules",
@@ -146,7 +97,7 @@
       "category": "time",
       "syntax": "<!name",
       "description": "Synchronization point: waits for an external signal before continuing. Used for inter-process coordination.",
-      "example": "@var sync1 in.midi\nS -> C4 D4 <!sync1 E4 F4\n// waits for sync1 signal after D4"
+      "example": "var sync1 in.midi\n-----\nS -> C4 D4 <!sync1 E4 F4\n// waits for sync1 signal after D4"
     },
     "{,}": {
       "name": "Polymetric group",
@@ -207,7 +158,7 @@
       "forms": [
         {
           "syntax": "[mode:random]",
-          "desc": "Set derivation mode (on @mode directive)"
+          "desc": "Set derivation mode (on mode directive)"
         },
         {
           "syntax": "[weight:50]",
@@ -272,7 +223,7 @@
           "desc": "Scan direction: right to left"
         }
       ],
-      "example": "@mode:random\nS -> A B [weight:70]\nS -> C D [weight:30]"
+      "example": "mode:random\n-----\nS -> A B [weight:70]\nS -> C D [weight:30]"
     },
     "`": {
       "name": "Backtick (embedded code)",
@@ -301,7 +252,7 @@
       "syntax": "? or ?N",
       "description": "Matches any single terminal. ?N is a numbered wildcard: same number, same symbol. Used in SUB/SUB1 mode patterns.",
       "bp3": "?",
-      "example": "@mode:sub1\nA ?1 B -> A ?1 C\n// replace B after any symbol with C"
+      "example": "mode:sub1\n-----\nA ?1 B -> A ?1 C\n// replace B after any symbol with C"
     },
     "$": {
       "name": "Template master",
@@ -331,8 +282,8 @@
       "name": "Sub-grammar separator",
       "category": "structure",
       "syntax": "-----  (5 or more dashes)",
-      "description": "Separates sub-grammar blocks. Each block can have its own derivation mode (@mode). Rules in different blocks are processed sequentially.",
-      "example": "@mode:ord\nS -> A B\n\n-----\n\n@mode:random\nA -> C4 D4\nA -> E4 F4"
+      "description": "Separates sub-grammar blocks. Each block can have its own derivation mode (mode). Rules in different blocks are processed sequentially.",
+      "example": "mode:ord\n-----\nS -> A B\n\n-----\n\nmode:random\nA -> C4 D4\nA -> E4 F4"
     }
   },
   "keywords": {
@@ -355,7 +306,7 @@
       "category": "declarations",
       "syntax": "cv name : mod.type(params)",
       "description": "Declares a continuous-value modulator (ADSR, LFO, ramp), purely descriptive — no target on the declaration. Branch it at a parameter point with (input: name), e.g. (cutoff: env1). The value of a parameter can be any derivable grammar symbol.",
-      "example": "cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)\nS -> Bass\nBass -> C2 E2 (cutoff: env1, wave:square)"
+      "example": "cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)\n-----\nS -> Bass\nBass -> C2 E2 (cutoff: env1, wave:square)"
     },
     "lambda": {
       "name": "Lambda (empty string)",
@@ -363,16 +314,16 @@
       "syntax": "S -> lambda  or  S ->",
       "description": "Erases the non-terminal (epsilon production). The symbol disappears from the sequence. An empty RHS has the same effect.",
       "bp3": "*",
-      "example": "// Probabilistic erasure\n@mode:random\nA -> C4 D4 [weight:80]\nA -> lambda [weight:20]"
+      "example": "// Probabilistic erasure\nmode:random\n-----\nA -> C4 D4 [weight:80]\nA -> lambda [weight:20]"
     }
   },
   "directives": {
     "core": {
-      "syntax": "@core",
+      "syntax": "core",
       "desc": "Load core library (required)"
     },
     "alphabet": {
-      "syntax": "@alphabet.name:<channel>",
+      "syntax": "alphabet.name:<channel>",
       "desc": "Load a note alphabet with output binding",
       "subkeys": {
         "western": "C D E F G A B with #/b alterations and octave numbers",
@@ -391,7 +342,7 @@
       }
     },
     "mode": {
-      "syntax": "@mode:value[(modifier)]",
+      "syntax": "mode:value[(modifier)]",
       "desc": "Set derivation mode for the next sub-grammar block",
       "values": {
         "ord": "Ordered — rules applied sequentially (default)",
@@ -406,35 +357,35 @@
         "destru": "Destructure compound terminals based on alphabet",
         "striated": "Pulsed/striated time",
         "smooth": "Smooth/continuous time",
-        "mm:N": "Metronome marking in BPM"
+        "tempo:N": "Metronome absolu, en BPM"
       }
     },
-    "mm": {
-      "syntax": "@tempo:N",
+    "tempo": {
+      "syntax": "tempo:N",
       "desc": "Set metronome to N BPM (default: 60). Determines the absolute duration of one time unit."
     },
     "tonality": {
-      "syntax": "@tonality.name",
+      "syntax": "tonality.name",
       "desc": "Load a tonality/tuning file for microtonal pitch resolution."
     },
     "octaves": {
-      "syntax": "@octaves:convention",
+      "syntax": "octaves:convention",
       "desc": "Set octave naming convention (western, saptak, etc.)"
     },
     "transcription": {
-      "syntax": "@homomorphism.name",
+      "syntax": "homomorphism.name",
       "desc": "Load a homomorphism/substitution table for template-based rewriting."
     },
     "timepatterns": {
-      "syntax": "@timepatterns: name=num/den, ...",
+      "syntax": "timepatterns: name=num/den, ...",
       "desc": "Define named time patterns with rational durations."
     },
     "actor": {
-      "syntax": "@actor name key:value ...",
+      "syntax": "actor name key:value ...",
       "desc": "Define an actor: bundles alphabet + scale + output + sounds into a named entity."
     },
     "template": {
-      "syntax": "@template",
+      "syntax": "template",
       "desc": "Begin template section. Templates define structural constraints for TEM mode. SINGULIER : la graphie plurielle '@templates' (v0.7) est refusée depuis le 2026-07-19."
     }
   },
@@ -663,7 +614,7 @@
     "flags": {
       "title": "Flags and guards",
       "desc": "Flags are integer variables that control rule selection. Guards [flag==value] test flags before applying a rule. Mutations [flag=value] modify flags in the RHS. This enables controlled repetition, form structure, and conditional logic.",
-      "example": "// Count to 3 then stop\n[count<3] S -> C4 [count+1] S\n[count==3] S -> G4"
+      "example": "// Count to 3 then stop\n-----\n[count<3] S -> C4 [count+1] S\n[count==3] S -> G4"
     },
     "control_scoping": {
       "title": "Control scoping: [] vs ()",
@@ -673,7 +624,7 @@
     "sub_grammars": {
       "title": "Sub-grammars",
       "desc": "A scene can have multiple sub-grammar blocks separated by -----. Each block has its own derivation mode. Rules are processed block by block: block 1 rewrites first, then block 2 rewrites what remains, etc.",
-      "example": "@mode:ord\nS -> A B\n-----\n@mode:random\nA -> C4 D4\nA -> E4 F4\n-----\nB -> G4 A4"
+      "example": "mode:ord\n-----\nS -> A B\n-----\nmode:random\nA -> C4 D4\nA -> E4 F4\n-----\nB -> G4 A4"
     },
     "flat_alphabet": {
       "title": "Flat alphabet (no OCT)",

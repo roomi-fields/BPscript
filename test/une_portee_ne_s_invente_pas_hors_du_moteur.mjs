@@ -49,7 +49,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const SOCLE = '@core\n@alphabet.western\n';
+const SOCLE = 'core\nalphabet.western\n';
 const err = (src) => {
   try { return (compileToBPxAST(SOCLE + src).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
@@ -87,12 +87,12 @@ const err = (src) => {
 
 // ── 2. LA SURFACE — chaque graphie est acceptée là où la portée la met, refusée ailleurs ─────
 {
-  ok(err('@destru\nS -> C4').length >= 1,
-     "2. '@destru' en tête de scène doit être REFUSÉ — la portée 'scene' n'existe pas au moteur");
-  ok(err('@destru\nS -> C4').some((m) => /sous-grammaire|règle/.test(m)),
-     `2. et le refus doit dire OÙ le mot vaut ; reçu : ${err('@destru\nS -> C4')[0]}`);
-  ok(err('@mode:ord(destru)\nS -> C4').length === 0,
-     `2. '@mode:ord(destru)' doit PASSER — portée 'subgrammar', armée par CompileGrammar.c:1528`);
+  ok(err('destru\n-----\nS -> C4').length >= 1,
+     "2. 'destru' en tête de scène doit être REFUSÉ — la portée 'scene' n'existe pas au moteur");
+  ok(err('destru\n-----\nS -> C4').some((m) => /sous-grammaire|règle/.test(m)),
+     `2. et le refus doit dire OÙ le mot vaut ; reçu : ${err('destru\n-----\nS -> C4')[0]}`);
+  ok(err('mode:ord(destru)\n-----\nS -> C4').length === 0,
+     `2. 'mode:ord(destru)' doit PASSER — portée 'subgrammar', armée par CompileGrammar.c:1528`);
 
   // ⚠️ CETTE SECTION A ÉTÉ RÉÉCRITE LE JOUR MÊME, ET LE GARDE L'AVAIT EXIGÉ. Elle constatait que
   // la portée `rule` n'avait AUCUNE graphie : `[destru]` passait comme DRAPEAU homonyme et
@@ -116,8 +116,8 @@ const err = (src) => {
         drapeaux: (regle?.flags || []).map((f) => f && f.flag),
       };
     };
-    const d = lire('S -> C4 [destru]');
-    const s = lire('S -> C4 [stop]');
+    const d = lire('-----\nS -> C4 [destru]');
+    const s = lire('-----\nS -> C4 [stop]');
     ok(s.cles.includes('stop'),
        `2. SOCLE — '[stop]', la procédure de référence, doit être un contrôle de règle ; reçu `
        + `${JSON.stringify(s)}`);
@@ -128,8 +128,8 @@ const err = (src) => {
        `2. et PLUS comme un drapeau — c'était l'homonymie silencieuse d'avant ; reçu `
        + `${JSON.stringify(d.drapeaux)}`);
     // ET LES DEUX NATURES COEXISTENT : recevoir le crochet ne lui retire pas la sous-grammaire.
-    ok(err('@mode:ord(destru)\nS -> C4').length === 0,
-       `2. '@mode:ord(destru)' passe TOUJOURS — la section dit le SAC, la portée dit la POSITION, `
+    ok(err('mode:ord(destru)\n-----\nS -> C4').length === 0,
+       `2. 'mode:ord(destru)' passe TOUJOURS — la section dit le SAC, la portée dit la POSITION, `
        + `et les deux natures de 'destru' tiennent ensemble`);
   }
 }
@@ -141,7 +141,7 @@ const err = (src) => {
 // l'arbre. C'est là que se jouait la divergence avec bp3-frontend — deux places pour un même mot
 // rendent deux arbres, et rien ne rougit.
 {
-  const r = compileToBPxAST(`${SOCLE}@tempo:88\n@mode:ord(destru)\nS -> C4 E4\n`);
+  const r = compileToBPxAST(`${SOCLE}tempo:88\nmode:ord(destru)\n-----\nS -> C4 E4\n`);
   ok((r.errors || []).length === 0,
      `3. la scène doit compiler — reçu : ${JSON.stringify((r.errors || []).map((e) => e.message))}`);
   const mods = (r.ast?.subgrammars?.[0]?.modifiers || []).map((m) => m && m.name);
@@ -158,30 +158,34 @@ const err = (src) => {
 // que `[zorglub]` soit REFUSÉ — elle a échoué, et cet échec a révélé que le crochet accepte tout
 // mot comme drapeau, donc que ma preuve de la portée `rule` (section 2) était verte pour la
 // mauvaise raison. Un témoin qui rougit n'accuse pas toujours le sujet : ici il accusait la mesure.
-ok(err('S -> C4 [zorglub]').length === 0,
+ok(err('-----\nS -> C4 [zorglub]').length === 0,
    "4. TÉMOIN — le crochet accepte tout mot comme drapeau : c'est CE FAIT qui interdit de lire "
    + "'[destru] passe' comme une preuve de portée. S'il se met à refuser, le crochet a été "
    + 'restreint et la section 2 doit être relue.');
 // ⚠️ ET LE SECOND TÉMOIN A MORDU AUSSI, sur la seconde preuve. J'attendais que le modificateur de
-// sous-grammaire VALIDE ses noms — il ne les valide pas : `@mode:ord(zorglub)` passe et entre dans
-// l'arbre en `{name:"zorglub"}`. Donc « `@mode:ord(destru)` passe » ne prouvait pas davantage que
+// sous-grammaire VALIDE ses noms — il ne les valide pas : `mode:ord(zorglub)` passe et entre dans
+// l'arbre en `{name:"zorglub"}`. Donc « `mode:ord(destru)` passe » ne prouvait pas davantage que
 // « `[destru]` passe » : les deux graphies acceptent n'importe quel mot.
 // CE QUI EST RÉELLEMENT PROUVÉ DANS CE FICHIER se réduit donc à deux choses, et elles suffisent au
-// geste du jour : `@destru` en tête est REFUSÉ (section 2, la portée inventée est bien partie), et
+// geste du jour : `destru` en tête est REFUSÉ (section 2, la portée inventée est bien partie), et
 // le PORTAGE pose le mot sur la sous-grammaire (section 3, la divergence avec bp3-frontend est
 // fermée). Le reste est un constat, pas une preuve, et il est écrit comme tel.
 // ⚠️ CE TÉMOIN A ROUGI LE JOUR MÊME, ET C'ÉTAIT SON OFFICE. Il exigeait d'abord que
-// `@mode:ord(zorglub)` PASSE — c'était l'état : les modificateurs de sous-grammaire n'étaient
+// `mode:ord(zorglub)` PASSE — c'était l'état : les modificateurs de sous-grammaire n'étaient
 // confrontés à aucune librairie, et j'avais écrit « le jour où il se ferme, ce témoin rougit et la
 // section 2 devient une vraie preuve ». Le trou a été refermé quelques heures plus tard (règle 1
 // de Romain), le témoin a rougi, et il dit maintenant l'état neuf. C'est la forme utile d'un
 // témoin : il ne garde pas un acquis, il DATE un état et exige qu'on revienne le relire.
 {
-  const e = err('@mode:ord(zorglub)\nS -> C4');
+  const e = err('mode:ord(zorglub)\n-----\nS -> C4');
   ok(e.length >= 1 && e.some((m) => /aucune librairie/.test(m)),
      `4. TÉMOIN — un modificateur de sous-grammaire inconnu est REFUSÉ, en nommant la cause ; `
      + `reçu : ${JSON.stringify(e)}`);
-  const horsPortee = err('@mode:ord(tempo:60)\nS -> C4');
+  // ⚠️ CE TÉMOIN PORTAIT `tempo`, QUI A CESSÉ DE CONVENIR le 2026-08-18 : le métronome a gagné la
+  // portée `subgrammar` en reprenant le câblage de `mm`, sorti du langage. Un témoin de « déclaré
+  // mais hors portée » doit nommer un mot que la donnée tient HORS de la sous-grammaire ;
+  // `quantization` est déclaré `["scene"]` et le reste.
+  const horsPortee = err('mode:ord(quantization:60)\n-----\nS -> C4');
   ok(horsPortee.some((m) => /portée déclarée/.test(m)),
      `4. TÉMOIN — un mot DÉCLARÉ mais hors portée est refusé en NOMMANT sa portée : la section 2 `
      + `mesure donc bien quelque chose ; reçu : ${JSON.stringify(horsPortee)}`);

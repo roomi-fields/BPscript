@@ -15,10 +15,10 @@
 //   1. ÉNUMÉRATION DE VALEUR d'un réglage réservé (`engine.<clé>.values`, ex. scan → left/right/rnd) :
 //      injecter une énumération différente et vérifier que le parseur ACCEPTE les valeurs neuves
 //      ET REFUSE les anciennes — la preuve qu'aucune copie locale ne subsiste en parallèle.
-//   2. RÉGRESSION — `@duration`, retirée parce qu'elle faisait double emploi avec un refus
+//   2. RÉGRESSION — `duration`, retirée parce qu'elle faisait double emploi avec un refus
 //      générique déjà data-driven (aucune librairie ne déclare plus 'duration'), reste REFUSÉE.
 //      (`out.video`/`out.visual` NE SONT PAS ici : reclassés en tombstone légitime — case B, comme
-//      `@mm`/`@scene`/`@routing`/`@library` — après que `test_eval_transport_reject.js` a montré
+//      `mm`/`scene`/`routing`/`library` — après que `test_eval_transport_reject.js` a montré
 //      qu'un test VIVANT exige le mot 'SUPPRIMÉ', que le refus générique ne porte pas.)
 //   3. LA LISTE FIGÉE DE DIRECTIVES DE PRODUCTION EST SORTIE (`PRODUCTION_DIRECTIVES`, morte).
 //
@@ -35,7 +35,7 @@
 //
 // CE QUI SE VÉRIFIE ICI EST DONC L'ÉTAT FINAL, pas l'exception : l'arbre porte `tempo`, et `mm`
 // n'y apparaît plus comme nom de directive, quelle que soit la porte d'entrée — directive de
-// tête, modificateur de `@mode:X(...)`, ou défaut d'environnement inscrit par le compilateur. Ce
+// tête, modificateur de `mode:X(...)`, ou défaut d'environnement inscrit par le compilateur. Ce
 // dernier est le site que la première mesure avait manqué : il ÉCRIT le nom au lieu de le
 // comparer, donc aucune recherche de comparaison littérale ne pouvait le trouver.
 //
@@ -57,7 +57,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
-const SOCLE = '@core\n@alphabet.western\n';
+const SOCLE = 'core\nalphabet.western\n';
 const err = (src) => {
   try { return (compileToBPxAST(SOCLE + src).errors || []).map((e) => e.message ?? String(e)); }
   catch (e) { return ['JETÉ : ' + String(e.message)]; }
@@ -81,22 +81,20 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
 {
   // ⚠️ LES DEUX PORTES N'ABOUTISSENT PAS AU MÊME ENDROIT DE L'ARBRE, et une sonde qui ne
   // regarderait qu'un seul endroit serait verte sans rien prouver de l'autre : une directive de
-  // tête vit dans `ast.directives`, tandis que `@mode:X(...)` est traité à part et dépose ses
+  // tête vit dans `ast.directives`, tandis que `mode:X(...)` est traité à part et dépose ses
   // modificateurs sur la SOUS-GRAMMAIRE. Chaque porte est donc lue là où elle arrive.
   const PORTES = [
-    ['directive de tête', '@tempo:120\nS -> C4', (a) => (a?.directives || [])
+    ['directive de tête', 'tempo:120\n-----\nS -> C4', (a) => (a?.directives || [])
       .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
-    ['forme préfixée par sa librairie', '@time.tempo:120\nS -> C4', (a) => (a?.directives || [])
+    ['forme préfixée par sa librairie', 'engine.tempo:120\n-----\nS -> C4', (a) => (a?.directives || [])
       .flatMap((d) => [d.name, ...((d.modifiers || []).map((m) => m && m.name))])],
+    // ⚠️ LA TROISIÈME PORTE EST REVENUE LE 2026-08-18, ET AVEC LE MÊME NOM. `mm` est sorti du
+    // langage sur arbitrage de Romain ; son câblage natif (`bp3:_mm`) et sa portée `subgrammar`
+    // sont passés à `tempo`, qui s'écrit donc aux DEUX places. Cette ligne mesurait auparavant
+    // le REFUS du modificateur — elle mesure maintenant qu'il aboutit, et sous le nom unique.
+    ['modificateur de sous-grammaire', 'mode:random(tempo:60)\n-----\nS -> C4',
+      (a) => (a?.subgrammars || []).flatMap((s) => (s.modifiers || []).map((m) => m && m.name))],
   ];
-  // ⚠️ LA TROISIÈME PORTE A ÉTÉ FERMÉE LE 2026-08-10, ET SA DISPARITION SE TIENT ICI. Le
-  // métronome s'écrivait aussi en modificateur de sous-grammaire (`@mode:X(tempo:N)`) ; ce n'est
-  // plus une porte du langage — `tempo` déclare `scope:["scene"]`, et les modificateurs sont
-  // désormais confrontés à leur portée déclarée. La sonde qui la mesurait ne pouvait pas rester
-  // « verte » : elle est devenue le témoin du refus.
-  ok(err('@mode:random(tempo:60)\nS -> C4').some((m) => /portée déclarée/.test(m)),
-     `'@mode:random(tempo:60)' doit être REFUSÉ en nommant la portée déclarée de 'tempo' — reçu : `
-     + `${JSON.stringify(err('@mode:random(tempo:60)\nS -> C4'))}`);
   for (const [quoi, src, lire] of PORTES) {
     const r = ast(src);
     const noms = lire(r.ast).filter(Boolean);
@@ -111,15 +109,15 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
   // compilateur (`bpxAst.js:applyEnvironmentDefaults`), pas comparé : aucune recherche de
   // comparaison littérale ne pouvait le trouver, et c'est le garde des défauts d'environnement qui
   // l'a fait tomber. Il s'éprouve donc ici par la SORTIE, seule façon de voir un nom qu'on écrit.
-  const envAst = compileToBPxAST('S -> C4', { tempo: 90 }).ast;
+  const envAst = compileToBPxAST('-----\nS -> C4', { tempo: 90 }).ast;
   const envDirs = (envAst?.directives || []).filter((d) => d && d.fromEnvironment);
   ok(envDirs.length === 1 && envDirs[0].name === 'tempo',
      `porte 'défaut d'environnement' : le compilateur doit INSCRIRE le nom 'tempo' ; reçu `
      + `${JSON.stringify(envDirs.map((d) => d.name))}`);
 
-  // LA SURFACE RESTE FERMÉE — sans ce témoin, retirer le renommage pourrait rouvrir `@mm`.
-  ok(err('@mm:120\nS -> C4').length >= 1,
-     `TÉMOIN — '@mm:120' reste REFUSÉ en surface (sortie du langage le 2026-06-26) : le nom de `
+  // LA SURFACE RESTE FERMÉE — sans ce témoin, retirer le renommage pourrait rouvrir `mm`.
+  ok(err('mm:120\n-----\nS -> C4').length >= 1,
+     `TÉMOIN — 'mm:120' reste REFUSÉ en surface (sortie du langage le 2026-06-26) : le nom de `
      + `l'arbre a changé, pas ce qu'un auteur a le droit d'écrire`);
 }
 
@@ -130,8 +128,8 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
   const engineOriginal = LIBS.engine;
   try {
     // TÉMOIN — AVANT injection.
-    ok(err('S -> C4 (scan:left)').length === 0, `TÉMOIN — '(scan:left)' doit compiler AVANT injection`);
-    ok(err('S -> C4 (scan:nord)').length >= 1, `TÉMOIN — '(scan:nord)' doit être refusé AVANT injection (hors énumération)`);
+    ok(err('-----\nS -> C4 (scan:left)').length === 0, `TÉMOIN — '(scan:left)' doit compiler AVANT injection`);
+    ok(err('-----\nS -> C4 (scan:nord)').length >= 1, `TÉMOIN — '(scan:nord)' doit être refusé AVANT injection (hors énumération)`);
 
     // INJECTION — une énumération DIFFÉRENTE, disjointe de l'ancienne. Si le parseur portait
     // encore sa propre copie ({left,right,rnd}), 'nord' resterait refusé ET 'left' resterait
@@ -140,31 +138,31 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
     modifie.engine.scan.values = ['nord', 'sud'];
     registerLib('engine', modifie);
 
-    ok(err('S -> C4 (scan:nord)').length === 0,
+    ok(err('-----\nS -> C4 (scan:nord)').length === 0,
        `INJECTION — '(scan:nord)' doit désormais PASSER (valeur ajoutée par la donnée injectée) ; `
-       + `reçu : ${JSON.stringify(err('S -> C4 (scan:nord)'))}`);
-    ok(err('S -> C4 (scan:left)').length >= 1,
+       + `reçu : ${JSON.stringify(err('-----\nS -> C4 (scan:nord)'))}`);
+    ok(err('-----\nS -> C4 (scan:left)').length >= 1,
        `INJECTION — '(scan:left)' doit désormais être REFUSÉ ('left' n'est plus dans l'énumération `
        + `injectée) ; si ça passe encore, le parseur garde sa propre copie de l'ancienne liste`);
 
-    const rNord = ast('S -> C4 (scan:nord)');
+    const rNord = ast('-----\nS -> C4 (scan:nord)');
     const mode = rNord.ast?.subgrammars?.[0]?.rules?.[0]?.mode;
     ok(mode === 'nord', `INJECTION — 'rule.mode' doit porter la valeur INJECTÉE 'nord' ; reçu '${mode}'`);
   } finally {
     registerLib('engine', engineOriginal);
   }
-  ok(err('S -> C4 (scan:left)').length === 0, `RETRAIT — '(scan:left)' repasse après restauration`);
-  ok(err('S -> C4 (scan:nord)').length >= 1, `RETRAIT — '(scan:nord)' redevient refusé après restauration`);
+  ok(err('-----\nS -> C4 (scan:left)').length === 0, `RETRAIT — '(scan:left)' repasse après restauration`);
+  ok(err('-----\nS -> C4 (scan:nord)').length >= 1, `RETRAIT — '(scan:nord)' redevient refusé après restauration`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// 2. RÉGRESSION — un hardcode retiré (branche dédiée à `@duration`) reste un REFUS, sous le
+// 2. RÉGRESSION — un hardcode retiré (branche dédiée à `duration`) reste un REFUS, sous le
 //    mécanisme générique (aucune librairie ne déclare plus 'duration' — cf. le garde dédié
 //    `une_forme_supprimee_ne_revient_pas_par_une_librairie.mjs`, éprouvé sur les 3 graphies).
 // ────────────────────────────────────────────────────────────────────────────
 {
-  ok(err('@duration:16\nS -> C4').length >= 1,
-     `'@duration:16' doit rester REFUSÉ ('duration' n'est déclarée par aucune librairie) — `
+  ok(err('duration:16\n-----\nS -> C4').length >= 1,
+     `'duration:16' doit rester REFUSÉ ('duration' n'est déclarée par aucune librairie) — `
      + `la forme dédiée en dur a été retirée, pas le refus`);
 }
 
@@ -186,8 +184,8 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
   // Les cinq clés qu'elle portait restent des directives VIVANTES, déclarées en librairie —
   // leur retrait n'a pas dû faire sortir les mots du langage avec la liste qui les recopiait.
   for (const clé of ['seed', 'items', 'maxitems', 'allitems', 'all_items', 'improvize']) {
-    ok(err(`@${clé}:1\nS -> C4`).length === 0,
-       `'@${clé}:1' doit rester ACCEPTÉ — retirer la liste figée ne doit pas retirer le mot`);
+    ok(err(`${clé}:1\n-----\nS -> C4`).length === 0,
+       `'${clé}:1' doit rester ACCEPTÉ — retirer la liste figée ne doit pas retirer le mot`);
   }
 }
 
