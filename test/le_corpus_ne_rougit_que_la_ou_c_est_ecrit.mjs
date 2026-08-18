@@ -84,7 +84,16 @@ const REGISTRE = [
   //    cliquet l'a vu : un retard qui garde une cause périmée fait passer un défaut pour un
   //    autre, et son compte reste juste pendant que sa raison ment.
   ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée — kanopi a migré le crochet, la cause d origine ressort', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
-  ['BPScript-tests/tryCsoundObjects.bps', "le mot 'var' est SORTI", 'écrit var — objets sonores nus derrière, cause d origine masquée', 'kanopi', 'kanopi — migration du type en tête'],
+  // ⚠️ CAUSE RESSERRÉE le 2026-08-19, ET C'EST LE CLIQUET QUI L'A VU. `var` masquait la cause
+  // d'origine ; kanopi a migré, et la scène refuse de nouveau pour ce qu'elle est — des objets
+  // sonores nus sans convention de notes déclarée. Le compte n'a pas bougé, la raison si.
+  ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l ouverture de def'],
+  // ⛔ DEUX SCÈNES QUE LA MIGRATION DE KANOPI N'A PAS PRISES, mesurées le 2026-08-19 : leur `var`
+  // est suivi d'un BACKTICK, pas d'un type. La réécriture est la même que les dix-huit autres —
+  // `var <nom> \`code\`` devient `symbol <nom> \`code\`` —, et elle est ÉPROUVÉE : la forme compile
+  // et le backtick arrive dans l'arbre. Signalé à l'architecte le jour même.
+  ['code-voices/cv-curve-js.bps',          "le mot 'var' est SORTI", 'écrit var devant un backtick — la migration de kanopi ne les a pas pris', 'kanopi', 'kanopi — symbol <nom> `code`'],
+  ['cv/cv-backtick.bps',                   "le mot 'var' est SORTI", 'écrit var devant un backtick — la migration de kanopi ne les a pas pris', 'kanopi', 'kanopi — symbol <nom> `code`'],
 
   // ── C. controls.json SUPPRIMÉ (Romain, 2026-08-10) — cinq scènes écrivaient `controls` SEUL ──
   // `core` amène désormais le même ensemble (`core.apporte`) qu'apportait le stub `controls` —
@@ -94,38 +103,13 @@ const REGISTRE = [
   // QUI ATTEND : kanopi, prévenu À LA FRAPPE avec la liste exacte et la réécriture (`controls` →
   // `core`, même position).
 
-  // ── D. `var` EST SORTI DU LANGAGE le 2026-08-18 — DIX-HUIT scènes l'écrivent encore ──────────
-  // Le TYPE vient en tête, le nom ensuite (décision Romain du 2026-08-16, câblée le 2026-08-18).
-  // La réécriture est MÉCANIQUE et connue ligne par ligne : `var <n> in.<c>` → `in.<c> <n>` ·
-  // `var <n> flag: a:1` → `flag <n>(a:1)` · `var <n> <convention|module>` → `<type> <n>` ·
-  // `var <n>` → `symbol <n>`. Vingt et une lignes au total.
-  // QUI ATTEND : kanopi, propriétaire de sa bibliothèque. Ces entrées SORTENT le jour où il migre.
-  ['basics/wait-for-key.bps',                 "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/kairos-scene-point-attente-sustain.bps', "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/Nadaka-1er-essai.bps',     "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/tryFlags.bps',             "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/tryhomomorphism.bps',      "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/tryrepeat.bps',            "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/vina.bps',                 "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/vina2.bps',                "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['BPScript-tests/vina3.bps',                "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['code-voices/cv-curve-js.bps',             "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['code-voices/hydra-audio.bps',             "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['code-voices/starter-main.bps',            "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['code-voices/starter-second.bps',          "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['code-voices/strudel-intro.bps',           "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['cv/cv-backtick.bps',                      "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['orchestrator/04-scenes-select.bps',       "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-  ['samples/attente-la-derivation-qui-guette.bps', "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
-
-  // ── E. `gate` EST SORTI, ET SES TREIZE SCÈNES SONT MIGRÉES ──────────────────────────────────
-  // Elles ont été inscrites ici le 2026-08-18 avec leur réécriture — un mot retiré par ligne — et
-  // kanopi a migré dans la nuit. Les treize compilent : leurs entrées SORTENT le jour même, parce
-  // qu'un cliquet qui ne se desserre jamais certifie un état qui n'existe plus.
-  // ⚠️ ET CE QUE LEUR PASSAGE AU VERT A RÉVÉLÉ ne se lisait dans aucun compte : `koto3` dérivait
-  // 26 % plus court, sans une erreur. Son nœud de déclaration avait perdu `temporalType`, que BPx
-  // exige pour compter un nom parmi les terminaux d'alphabet. Fermé par
-  // `une_declaration_de_terminal_porte_son_type_temporel.mjs`, qui mord par injection.
+  // ── D. `var` EST SORTI, ET SES DIX-HUIT SCÈNES SONT MIGRÉES ─────────────────────────────────
+  // Inscrites le 2026-08-18 avec leur réécriture ligne à ligne — 21 lignes, quatre formes — et
+  // kanopi a migré dans la nuit. Les dix-huit compilent : leurs entrées SORTENT le jour même.
+  // ⛔ ET LEUR PASSAGE AU VERT A DÉCOUVERT UN FAUX POSITIF chez un autre garde : `in.midi sustain`
+  // était lu comme une INVOCATION de librairie qui n'émettait rien, alors que le point y qualifie
+  // un TYPE et que l'entrée voyage par `ast.inputs`. Une forme neuve traverse les gardes écrits
+  // pour l'ancienne, et c'est en la voyant compiler qu'on l'apprend — jamais avant.
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────

@@ -28,6 +28,20 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const AXES_HAUTEUR = new Set(['alphabet', 'tuning', 'octaves', 'scale']);
 
 /**
+ * ⛔ LE POINT NE FAIT PAS TOUJOURS UNE INVOCATION — depuis le 2026-08-16 il QUALIFIE AUSSI UN TYPE.
+ * `in.midi sustain` n'invoque aucune librairie : c'est le type d'une entrée, et il voyage par
+ * `ast.inputs`. Ce garde le lisait comme une adresse de catalogue, ne la trouvait pas dans le canal
+ * neutre, et accusait la scène d'un silence qui n'existait pas — le pire faux positif, celui qui
+ * ressemble au défaut qu'on chasse. Même motif que `factory.` deux paragraphes plus haut : un garde
+ * qui ne connaît pas la nature de ce qu'il mesure accuse le producteur.
+ *
+ * ⚠️ SA VÉRIFICATION VIT AILLEURS, ET C'EST POURQUOI L'EXCLUSION NE CREUSE RIEN :
+ * `declaration_d_entree.mjs` éprouve les trois canaux d'entrée et exige que chacun ARRIVE dans
+ * `ast.inputs`, avec son rôle et sa table. Exclure ici, c'est renvoyer à qui mesure, pas taire.
+ */
+const TYPES_QUALIFIES_PAR_LE_POINT = new Set(['in', 'out']);
+
+/**
  * PERTES CONNUES, datées et motivées — pas un tapis sous lequel glisser les suivantes.
  * Y ajouter une ligne vaut « j'ai mesuré la cause et je l'assume en attendant l'arbitrage ».
  */
@@ -63,6 +77,7 @@ for (const nom of nomsBps()) {
     const axe = m[1];
     ecrites++;
     if (AXES_HAUTEUR.has(axe)) continue;             // autre porteur, cf. l'en-tête
+    if (TYPES_QUALIFIES_PAR_LE_POINT.has(axe)) continue;   // un TYPE, pas une invocation
     // ⚠️ `factory.` EST UN SUCRE NORMALISÉ AU NOM NU — contrat bpscript-bpx.md, et le parseur le
     // documente : « nom nu et `factory.` confondus AVANT émission ». Seul `mine.` reste préfixé,
     // parce que c'est LUI qui porte une information : la librairie personnelle de l'auteur, injectée

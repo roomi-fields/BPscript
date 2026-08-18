@@ -135,11 +135,12 @@ const REFUS_DE_RESOLUTION = /ne désigne rien|n'existe pas|introuvable|non décl
 // plus « il manque la flèche » mais « le module est absent du catalogue » — le message du parser
 // le dit explicitement (`var lpf1 lpf : 'lpf' est absent du catalogue de modules…`).
 const CAUSE_MODULE_ABSENT_DU_CATALOGUE = /est absent du catalogue de modules/;
+// ⛔ LES QUATRE LIGNES `var … <module>` SONT SORTIES LE 2026-08-19 : la bible ne les ecrit plus,
+// elle ecrit `lpf lpf1`, `saw saw1`, `vca vca1`. Le cliquet a rougi le jour meme en disant qu elles
+// ne refusaient plus avec leur cause — c est son office, et il se resserre a la main, date.
+// LE TROU DE DONNEE, LUI, N A PAS BOUGE : les trois modules restent absents de `lib/mod.json`. Il
+// est desormais porte par les BLOCS (`RETARD_BLOCS`), la ou la bible les ecrit.
 const BASELINE_RATTRAPAGE = new Map([
-  ['var lpf1 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['var saw1 saw', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['var lpf2 lpf', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
-  ['var vca1 vca', CAUSE_MODULE_ABSENT_DU_CATALOGUE],
 ]);
 
 let exemples = 0;
@@ -169,9 +170,23 @@ for (const p of SPECS) {
   }
 }
 
-ok(exemples >= 8,
-   `2. il faut des exemples à mesurer — ${exemples} trouvé(s). Si ce compte s'effondre, ce n'est `
-   + `pas que la doc est devenue parfaite : c'est que le garde ne la lit plus.`);
+// ⛔ LE SOCLE NE COMPTE PLUS LES FORMES MORTES, IL COMPTE CE QUE L'EXTRACTEUR LIT.
+// Il exigeait huit lignes portant l'un des huit mots retirés. Le 2026-08-19, la bible a cessé d'en
+// écrire UN SEUL — et le garde a déclaré « le garde ne la lit plus » sur un zéro qui était sa
+// propre victoire. Un socle qui exige la présence du défaut rougit le jour où le défaut disparaît.
+//
+// CE QUI SE MESURE À LA PLACE : le volume que l'extracteur voit. Si les blocs `bpscript` cessent
+// d'être lus, CE compte s'effondre — et c'est la seule chose qu'un socle de non-vacuité doit dire.
+// Le zéro de formes mortes est vérifié à part, sur la source, pour qu'il reste un fait et non un
+// silence : 490 lignes lues, zéro portant l'un des huit mots.
+{
+  const lignesLues = SPECS.filter((p) => existsSync(p))
+    .reduce((n, p) => n + blocsBpscript(readFileSync(p, 'utf8')).split('\n').filter((l) => l.trim()).length, 0);
+  ok(lignesLues >= 200,
+     `2. SOCLE — l'extracteur doit LIRE les blocs de la bible : ${lignesLues} ligne(s) vues. Sous ce `
+     + `seuil il ne les lit plus, et son verdict ne vaut rien. (Formes mortes trouvées : ${exemples} — `
+     + `un zéro y est le but, pas une panne.)`);
+}
 
 // ─── 2ter. LES EXEMPLES DE RÈGLE — la portée qui manquait ────────────────────────────────────
 // ⚠️ CE VOLET EST UNE RÉPARATION DE PORTÉE, ET ELLE A ÉTÉ MESURÉE, PAS DEVINÉE (2026-08-06).
@@ -454,9 +469,13 @@ const RETARD_BLOCS = new Map([
   //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
   //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
   ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4 #0', /nomme un évaluateur qui n'est pas déclaré/],
-  ['def sombre lpf1 >> vca1 #0', /ligne non reconnue au niveau des règles/],
-  ['var lpf1 lpf #0', /var lpf1 lpf : 'lpf' est absent du catalogu/],
-  ['var lpf1 lpf #1', /var lpf1 lpf : 'lpf' est absent du catalogu/],
+  // ⚠️ TROIS CLES SUIVENT LA BIBLE, QUI A MIGRE LE 2026-08-19. Les blocs ne portent plus `var`,
+  //    ils portent le type en tete — et leur CAUSE a change avec : ce n est plus un mot mort, c est
+  //    un module absent du catalogue. Le cablage, lui, est SORTI du langage le 2026-08-18 : son
+  //    bloc reste au retard jusqu a l arbitrage de Romain sur les six sections qui le decrivent.
+  ['def sombre lpf1 >> vca1 #0', /Caractère inattendu|n'est pas un type/],
+  ['lpf lpf1 #0', /'lpf' n'est pas un type/],
+  ['lpf lpf1 #1', /'lpf' n'est pas un type/],
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
   // rôles, rôle 4) et que `@def` déclarerait. `@def` n'étant pas implémenté, aucun nom n'est
   // appelable : la parenthèse est donc lue comme un sac, et `E4` refusé comme clé inconnue.
@@ -586,7 +605,12 @@ const MORTES = [
   [/macro\s+[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s*=/, "la macro avec le signe '=' (supprimé le 2026-07-27)", 'exemptable'],
   [/^[ \t]*alias\s+[A-Za-z_]/m, "'alias' — SORTI du langage le 2026-08-15 : 'def' porte ce qu'il faisait, un nom "
    + "associé à un corps qu'on réinvoque", 'exemptable'],
-  [/map\s+[A-Za-z_<[]/, "'map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
+  // ⛔ CE MOTIF ETAIT TROP LARGE, ET IL CONDAMNAIT DU VIVANT. `map\s+` attrapait « remap encodeur
+  //    nomme→ordre declare » et « le dispatcher utilise le map pour retrouver » : deux emplois du
+  //    mot francais, aucun de la DIRECTIVE. Resserre a la POSITION de directive — en tete de ligne,
+  //    comme `alias` et `transcription` deux lignes plus haut, qui avaient deja paye ce prix.
+  //    UN MOTIF TROP ETROIT REND UN ZERO MUET, UN MOTIF TROP LARGE REND UN CONDAMNE INNOCENT.
+  [/^[ \t]*map\s+[A-Za-z_<[]/m, "'map' — ABANDONNÉ le 2026-07-27 au soir : le câblage passe par '>>' et "
    + "'\\>>', qui savent aussi débrancher pendant que ça joue ; pour désigner, 'def'", 'exemptable'],
   [/\\\\>>/, "l'antislash DOUBLE — le signe de coupure n'en porte qu'UN. Deux se glissent "
    + "quand on recopie une chaine de code dans de la prose, et le lecteur recopie ce qu'il "
@@ -693,35 +717,41 @@ const collecterExamples = (o, chemin, out) => {
   return out;
 };
 
+// ⛔ CETTE ENVELOPPE POSAIT SON DELIMITEUR AVANT L EXEMPLE, et depuis que c est la POSITION qui
+// qualifie une ligne, tout exemple commençant par une DECLARATION tombait sur « écrit APRÈS des
+// règles ». Mesuré sur l aide du point d attente : `in.midi sync1` refusait DANS l enveloppe et
+// passait hors d elle. Le socle se pose donc avant, et le delimiteur ne se pose QUE si l exemple
+// n a pas le sien — meme regle que l enveloppe des blocs de la bible, corrigee le meme jour.
+// ⚠️ ET LE TEST DE DECLARATION CHERCHAIT L AROBASE plus trois mots SORTIS du langage : il ne
+// reconnaissait plus rien. La liste suit les mots vivants.
 const envelopperAide = (texte) => {
   const aPreambule = /core|alphabet/.test(texte);
-  const aDeclaration = /^\s*(@|gate\s|trigger\s|cv\s)/m.test(texte);
+  const aDeclaration = /^\s*(actor|def|init|symbol|flag|signal|pitch|phase|logic|in\.)/m.test(texte);
   const aRegle = /(->|<-|<>)/.test(texte);
-  let scene = aPreambule ? '' : 'core\nalphabet.western:midi\nmode:ord\n-----\n';
+  const aDelimiteur = /^-----/m.test(texte);
+  const socle = aPreambule ? '' : 'core\nalphabet.western:midi\n';
   if (aDeclaration || aRegle) {
-    scene += `${texte}\n`;
-    if (!aRegle) scene += 'mode:ord\n-----\nS -> C4\n';
-  } else {
-    scene += `S -> ${texte}\n`;
+    return socle + (aRegle && !aDelimiteur ? '-----\n' : '') + `${texte}\n`
+         + (aRegle ? '' : 'mode:ord\n-----\nS -> C4\n');
   }
-  return scene;
+  return `${socle}-----\nS -> ${texte}\n`;
 };
 
 // Causes NOMMÉES — chaque entrée de BASELINE_RATTRAPAGE_AIDE en porte une, jamais un motif vague.
 const CAUSE_SPEED_SUPPRIME = /a été supprimé \(décision 2026-06-26\)/; // [speed:N] retiré, pas migré
 const CAUSE_WEIGHT_PARENTHESES = /'weight' est un réglage, il s'écrit entre PARENTHÈSES/; // même famille que le geste 1 de ce lot
 const CAUSE_AROBASE_OBLIGATOIRE = /sans arobase n'existe plus/; // le cas SIGNALÉ : gate/trigger/cv nus
-const CAUSE_DOLLAR_MACRO_MORTE = /collé à un identifiant interdit en LHS/; // `$lfo(...) = ...` : ancienne forme de CV/macro, `$` n'est plus qu'un gabarit de template
-const CAUSE_MUTATION_MID_RHS_BUG = /Expected arrow \(-> <- <>\), got NEWLINE/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
+const CAUSE_DOLLAR_MACRO_MORTE = /Expected IDENT, got DOLLAR/; // `$lfo(...) = ...` : ancienne forme de CV/macro, `$` n'est plus qu'un gabarit de template
+const CAUSE_MUTATION_MID_RHS_BUG = /écrit APRÈS des règles/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
 const CAUSE_ENVELOPPE_PROSE_LBRACKET = /Expected arrow \(-> <- <>\), got LBRACKET/; // limite d'enveloppe : prose+code sur une ligne
-const CAUSE_ENVELOPPE_PROSE_LPAREN = /Expected arrow \(-> <- <>\), got LPAREN/; // limite d'enveloppe : plusieurs illustrations indépendantes bout à bout
+const CAUSE_ENVELOPPE_PROSE_LPAREN = /Expected IDENT, got INT/; // limite d'enveloppe : plusieurs illustrations indépendantes bout à bout
+// ⛔ TROIS ENTREES SORTENT LE 2026-08-19 : `gate`, `trigger` et `cv` ne sont plus des mots de
+// l aide d editeur, parce qu ils ne sont plus des mots du langage. Une aide qui les decrivait
+// enseignait trois formes mortes a qui ouvrait l editeur.
 const BASELINE_RATTRAPAGE_AIDE = new Map([
   ['.symbols.[speed:N].example', CAUSE_SPEED_SUPPRIME],
   ['.symbols.[].example', CAUSE_WEIGHT_PARENTHESES],
   ['.keywords.lambda.example', CAUSE_WEIGHT_PARENTHESES],
-  ['.keywords.gate.example', CAUSE_AROBASE_OBLIGATOIRE],
-  ['.keywords.trigger.example', CAUSE_AROBASE_OBLIGATOIRE],
-  ['.keywords.cv.example', CAUSE_AROBASE_OBLIGATOIRE],
   ['.symbols.`.example', CAUSE_DOLLAR_MACRO_MORTE],
   ['.concepts.flags.example', CAUSE_MUTATION_MID_RHS_BUG],
   ['.controls_engine.tempo_ops.ops.[/N].example', CAUSE_ENVELOPPE_PROSE_LBRACKET],
@@ -753,8 +783,12 @@ for (const f of AIDE_FICHIERS) {
        + `attendu, AJOUTE-le à BASELINE_RATTRAPAGE_AIDE avec sa cause ; sinon c'est une forme morte.`);
   }
 }
-ok(exemplesAide >= 60,
-   `5. il faut des exemples d'aide à mesurer (2 fichiers × ~33) — ${exemplesAide} trouvé(s). Un `
+// ⚠️ LE SEUIL A BAISSE DE 60 A 54 LE 2026-08-19, ET C EST UN RETRAIT VOULU : trois mots sortis du
+// langage — `gate`, `trigger`, `cv` — ont perdu leur entree d aide, dans les DEUX fichiers, soit six
+// exemples. Un socle qui garde son ancien seuil apres une suppression deliberee rougit sur le geste
+// qu on vient de faire. Il reste ce qu il doit etre : un refus de conclure sur du vide.
+ok(exemplesAide >= 54,
+   `5. il faut des exemples d'aide à mesurer (2 fichiers × ~28) — ${exemplesAide} trouvé(s). Un `
    + `effondrement ne veut pas dire que l'aide est devenue parfaite : le garde ne la lit plus.`);
 // Le cliquet ne descend qu'à la main, même règle qu'en §2bis : chaque entrée doit se retrouver EN
 // ÉCHEC dans les DEUX fichiers balayés, pas un seul — sinon soit le parser a rattrapé la forme dans
