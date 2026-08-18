@@ -20,6 +20,7 @@
  * graphies — nue, préfixée par sa librairie, et dans le flux. Une seule graphie gardée laisserait
  * les autres rentrer, et c'est exactement par la graphie PRÉFIXÉE que `duration` est revenue.
  */
+import { LIBS } from '../src/transpiler/libs-data.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let passe = 0;
@@ -36,9 +37,10 @@ const err = (src) => {
 // forme sort du langage — c'est le prix d'une suppression, et il est d'une ligne.
 const SUPPRIMEES = [
   { mot: 'duration', valeur: '16', decision: '2026-08-04 — la durée de scène est supprimée',
-    // `duration` survit comme CHAMP d'un prototype de terminal : c'est un autre objet, et le
-    // garde ne doit pas le confondre avec la directive.
-    survit: 'le champ `duration` du prototype de terminal (LANGUAGE.md:943)' },
+    // `duration` est DÉCRITE par la bible comme un champ de prototype de terminal (889, 1017,
+    // 1025) — un autre objet que la directive. Aucune librairie ne l'écrit : le volet de fin le
+    // mesure et le dit.
+    survit: 'le champ `duration` du prototype de terminal, décrit par LANGUAGE.md:1025' },
   { mot: 'mm', valeur: '60', decision: '2026-06-26, appliqué le 2026-08-18 — un seul nom, `tempo`',
     refusGenerique: true },
   { mot: 'scene', valeur: '120', decision: 'la hiérarchie de scènes est supprimée' },
@@ -90,15 +92,35 @@ for (const f of SUPPRIMEES) {
     'TÉMOIN — `engine.seed:42` PASSE : le préfixe par la librairie reste ouvert aux formes VIVANTES');
 }
 
-// ── ET LE MOT QUI SURVIT AILLEURS N'EST PAS CONFONDU ─────────────────────────────────────────
-// `duration` reste un CHAMP de prototype de terminal. Une suppression porte sur une GRAPHIE, pas
-// sur un mot : confondre les deux ferait retirer ce qui vit encore.
+// ── ET LE MOT QUI SURVIT AILLEURS ─────────────────────────────────────────────────────────────
+// ⛔ CE VOLET MESURAIT UNE FORME QUI N EXISTE NULLE PART. Il compilait `def cloche note duration:2`
+// et exigeait que le refus ne nomme pas `duration` — mais cette ligne n'a jamais été une graphie :
+// ni `note` ni `duration` ne sont des terminaux, et le refus les nommait TOUS LES DEUX, à juste
+// titre. Une assertion qui interdit un MOT dans un message interdit aussi les refus légitimes qui
+// le nomment.
+//
+// CE QUI SE MESURE VRAIMENT, et c'est la question que ce fichier pose : une forme supprimée peut-
+// elle revenir PAR LA DONNÉE ? Pour `duration`, la réponse se lit dans le bundle, pas dans une
+// scène — et elle est nette.
+//
+// ⚠️ ÉCART SIGNALÉ, NON COMBLÉ : `LANGUAGE.md` décrit `duration` comme un champ de PROTOTYPE DE
+// TERMINAL (lignes 889, 1017, 1025) ; AUCUNE librairie n'écrit ce champ aujourd'hui. La bible
+// décrit une forme que la donnée ne porte pas encore. Remonté à l'architecte le 2026-08-19 ; ce
+// garde le CONSTATE plutôt que de le taire, et il rougira le jour où la donnée l'écrira — ce sera
+// alors le moment de rouvrir la question, avec la forme sous les yeux.
 {
-  const r = compileToBPxAST(`${SOCLE}def cloche note duration:2\n-----\nS -> cloche`);
-  const msg = (r.errors || []).map((e) => e.message).join(' | ');
-  ok(!/'duration'/.test(msg),
-    `le champ 'duration' d'un terminal n'est pas la directive supprimée — il ne doit pas être `
-    + `accusé à sa place (reçu : ${msg.slice(0, 120)})`);
+  const champs = [];
+  const marche = (o, chemin) => {
+    if (!o || typeof o !== 'object') return;
+    if (!Array.isArray(o) && Object.prototype.hasOwnProperty.call(o, 'duration')) champs.push(chemin);
+    for (const [k, v] of Object.entries(o)) if (v && typeof v === 'object') marche(v, `${chemin}.${k}`);
+  };
+  for (const [nom, lib] of Object.entries(LIBS)) marche(lib, nom);
+  ok(champs.length === 0,
+    `la directive 'duration' ne doit revenir par AUCUNE librairie — ${champs.length} entrée(s) `
+    + `portent le champ : ${champs.slice(0, 4).join(', ')}. Si c'est un prototype de terminal `
+    + `légitime, la question se rouvre avec la forme sous les yeux ; en attendant, c'est la porte `
+    + `par laquelle une forme supprimée rentre.`);
 }
 
 if (echecs.length) {

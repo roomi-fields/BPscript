@@ -57,10 +57,21 @@ const banqueDe = (ast, acteur) =>
 // 5. LA PIERRE TOMBALE — la forme supprimée refuse, et NOMME sa relève. Sans ce cas, la
 //    directive pourrait revenir en silence par une régression du parseur.
 {
+  // ⚠️ CE VOLET EXIGEAIT UNE PIERRE TOMBALE QUI N EXISTE PLUS, et son absence est une DÉCISION :
+  // `hub/decisions/2026-08-15-un-type-se-declare-en-librairie-object-def-var-init.md` veut qu un
+  // mot sorti tombe dans le refus d un mot INVENTÉ, sans message dédié. Le refus nommé de
+  // `library` a donc été retiré ; ce qui se garde ici est qu elle REFUSE, et qu elle refuse comme
+  // un mot que personne n a jamais écrit.
   const r = compileToBPxAST('library.strudel "dirt-samples"\ncore\n-----\nS -> C4\n');
   const msg = (r.errors || []).map((e) => e.message).join(' | ');
   check((r.errors || []).length > 0, 'library doit être REFUSÉE');
-  check(/eval\.strudel\(bank:/.test(msg), 'le refus donne la forme vivante : ' + msg.slice(0, 120));
+  const invente = compileToBPxAST('zorglubaxe.strudel "dirt-samples"\ncore\n-----\nS -> C4\n');
+  const msgInvente = (invente.errors || []).map((e) => e.message).join(' | ');
+  // ⚠️ LA POSITION SE NEUTRALISE AVEC LE NOM : deux axes de longueurs différentes décalent la
+  // colonne, et comparer les messages bruts ferait échouer deux refus rigoureusement identiques.
+  const nu = (m, axe) => m.replace(new RegExp(axe, 'g'), '<axe>').replace(/at line \d+:\d+/, '').trim();
+  check(nu(msg, 'library') === nu(msgInvente, 'zorglubaxe'),
+    'library doit refuser comme un axe INVENTÉ, mot pour mot : ' + msg.slice(0, 100));
 }
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);

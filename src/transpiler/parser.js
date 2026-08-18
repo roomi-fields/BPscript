@@ -2091,7 +2091,10 @@ function parse(tokens, opts = {}) {
     // existait déjà, c'est celle de `out.midi(ch:3)`. Gain de passage : deux voix Strudel peuvent
     // désormais porter deux banques différentes dans une même scène, ce que la directive de scène
     // rendait impossible.
-    
+    //
+    // ⛔ ET LE REFUS NOMMÉ A ÉTÉ RETIRÉ le 2026-08-15 : la décision de ce jour veut qu'un mot sorti
+    // tombe dans le refus d'un mot INVENTÉ. `library` refuse donc comme un axe que personne n'a
+    // écrit, et `test_library.js` compare les deux messages mot pour mot.
 
     // ─── PIERRE TOMBALE — `transport`/`out` ne sont PAS des directives de scène (Romain,
     // 2026-08-04) ─────────────────────────────────────────────────────────────────────────────

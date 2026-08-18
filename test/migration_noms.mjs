@@ -341,7 +341,12 @@ function migrerAmalgame(source, ast, suffixe) {
     let cible = `${nom}${suffixe}`;
     let n = 2;
     while (new RegExp(`(^|[^A-Za-z0-9_])${cible}(?![A-Za-z0-9_])`).test(source)) cible = `${nom}${suffixe}${n++}`;
-    migre = migre.split('\n').map((l) => (l.trimStart().startsWith('@actor')
+    // ⛔ CE TEST CHERCHAIT L AROBASE, ET IL N EPARGNAIT PLUS RIEN. Le signe est sorti du langage
+    //    le 2026-08-17 : une declaration s ecrit `actor drums`, donc la ligne n a plus jamais ete
+    //    reconnue — l ACTEUR se faisait renommer avec la regle, et l outil refusait sa propre
+    //    migration en constatant que la production avait change. Septieme fois de la journee qu un
+    //    filtre cherche un signe retire et ressemble a un sujet qui n existe pas.
+    migre = migre.split('\n').map((l) => (l.trimStart().startsWith('actor')
       ? l
       : l.replace(new RegExp(`(^|[^A-Za-z0-9_])${nom}(?![A-Za-z0-9_.])`, 'g'), `$1${cible}`))).join('\n');
     gestes.push({ de: nom, vers: cible, sortes: [moteur ? `voix de code ${moteur}` : 'acteur'] });
