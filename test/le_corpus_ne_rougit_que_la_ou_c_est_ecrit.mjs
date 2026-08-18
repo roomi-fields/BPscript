@@ -118,27 +118,14 @@ const REGISTRE = [
   ['orchestrator/04-scenes-select.bps',       "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
   ['samples/attente-la-derivation-qui-guette.bps', "le mot 'var' est SORTI", 'écrit var — le type vient en tête depuis le 2026-08-18', 'kanopi', 'kanopi — migration mécanique'],
 
-  // ── E. `gate` EST SORTI DU LANGAGE — TREIZE scènes l'écrivent encore ─────────────────────────
-  // Un terminal se déclare `<nom>:<canal>` DIRECTEMENT depuis le 2026-08-18 (arbitrage Romain :
-  // « la déclaration de terminal s'écrit a:midi directement, sans gate »). La réécriture est d'un
-  // mot RETIRÉ par ligne, rien d'autre.
-  // ⛔ ÉPROUVÉE AVANT D'ÊTRE ANNONCÉE, sur les scènes elles-mêmes : les quinze qui écrivaient
-  // `gate` compilent TOUTES, sans une erreur, une fois le mot retiré. Deux d'entre elles étaient
-  // à moi et sont déjà migrées ; les treize d'ici appartiennent à kanopi.
-  // QUI ATTEND : kanopi. Ces entrées SORTENT le jour où il migre.
-  ['BPScript-tests/asymmetric.bps',           "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/asymmetric1.bps',          "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/dhati.bps',                "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/ek-do-tin.bps',            "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/flags.bps',                "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/koto1.bps',                "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/koto2.bps',                "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/koto3.bps',                "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/repeat.bps',               "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/tryflags2.bps',            "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/tryLIN.bps',               "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['BPScript-tests/tryObjects.bps',           "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
-  ['midi/midi-dual-output.bps',               "'gate' n'est déclaré par aucune librairie", 'écrit gate — un terminal se déclare <nom>:<canal> depuis le 2026-08-18', 'kanopi', 'kanopi — un mot à retirer par ligne'],
+  // ── E. `gate` EST SORTI, ET SES TREIZE SCÈNES SONT MIGRÉES ──────────────────────────────────
+  // Elles ont été inscrites ici le 2026-08-18 avec leur réécriture — un mot retiré par ligne — et
+  // kanopi a migré dans la nuit. Les treize compilent : leurs entrées SORTENT le jour même, parce
+  // qu'un cliquet qui ne se desserre jamais certifie un état qui n'existe plus.
+  // ⚠️ ET CE QUE LEUR PASSAGE AU VERT A RÉVÉLÉ ne se lisait dans aucun compte : `koto3` dérivait
+  // 26 % plus court, sans une erreur. Son nœud de déclaration avait perdu `temporalType`, que BPx
+  // exige pour compter un nom parmi les terminaux d'alphabet. Fermé par
+  // `une_declaration_de_terminal_porte_son_type_temporel.mjs`, qui mord par injection.
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────

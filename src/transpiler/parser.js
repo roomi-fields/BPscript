@@ -1705,7 +1705,21 @@ function parse(tokens, opts = {}) {
     // question se pose dans les deux sens, donc les deux lecteurs sont interrogés.
     if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie('core', nom)) return null;
     advance(); advance(); advance();               // nom : canal
-    return { type: 'Declaration', name: nom, runtime: canal, line: tok.line };
+    // ⛔ `temporalType` SURVIT AU MOT `gate`, ET C'EST UNE FRONTIÈRE, PAS UNE GRAPHIE. Le champ est
+    // DÉCLARÉ REQUIS par le contrat de BPx (`types/ast.ts` : `temporalType: 'gate' | 'trigger'`) et
+    // il y est LU : `loadGrammar.ts:1613` ne collecte un nom parmi les TERMINAUX D'ALPHABET que si
+    // `decl.temporalType === 'gate'`.
+    //
+    // ⚠️ CE QUE SON ABSENCE A COÛTÉ, mesuré : ma première écriture l'omettait, et l'arbre dérivé de
+    // `koto3` a maigri de 26 % — SANS UNE ERREUR. Ses terminaux déclarés cessaient d'être des
+    // terminaux d'alphabet chez BPx, ce qui se voit sur l'objet hors-temps (`Y -> !f`) et nulle part
+    // ailleurs : douze scènes sur treize rendaient un arbre identique. Une perte SILENCIEUSE de
+    // production, exactement le mode d'échec qu'un refus n'attrape jamais.
+    //
+    // ⚠️ ET LE MOT `trigger` N'A PLUS DE GRAPHIE : `<nom>:<canal>` ne distingue pas les deux types
+    // temporels. On émet donc `gate`, le seul que BPx collecte, et l'écart est SIGNALÉ — inventer
+    // une graphie pour le second serait définir du langage.
+    return { type: 'Declaration', temporalType: 'gate', name: nom, runtime: canal, line: tok.line };
   }
 
   function lireDeclarationParLeType() {
