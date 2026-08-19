@@ -1236,7 +1236,7 @@ function applyDefaultActor(ast) {
   if ((ast.actors || []).length > 0) {
     if (alphaBinding) {
       errors.push({
-        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (@alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) désigne un acteur implicite, incompatible avec un @actor explicite — choisis l'un OU l'autre`,
+        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) désigne un acteur implicite, incompatible avec un 'actor' explicite — choisis l'un OU l'autre`,
         line: alphaBinding.line || 0,
       });
     }

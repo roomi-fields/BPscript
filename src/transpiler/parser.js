@@ -2321,7 +2321,7 @@ function parse(tokens, opts = {}) {
   function refuserLeSigneEgal(directive, nom) {
     if (!at(T.EQUALS)) return;
     throw new ParseError(
-      `@${directive} ${nom} : le signe '=' est SUPPRIME de tout le langage (decision Romain `
+      `${directive} ${nom} : le signe '=' est SUPPRIME de tout le langage (decision Romain `
       + `2026-07-27) — ecrire '${directive} ${nom} <valeur>' sans rien entre les deux.`,
       current());
   }

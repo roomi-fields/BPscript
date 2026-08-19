@@ -206,16 +206,33 @@ const SOURCES = ['parser.js', 'bpxAst.js', 'tokenizer.js']
 function messagesEcrits(chemin) {
   const texte = readFileSync(chemin, 'utf-8');
   const out = [];
-  const RE = /new (?:Parse|Lex)Error\(/g;
+  // ⛔ UN REFUS S ECRIT DE DEUX FAÇONS, ET JE N EN BALAYAIS QU UNE. `new ParseError(…)` JETTE ;
+  // `errors.push({ message: … })` POUSSE dans le canal. Mesuré le 2026-08-19, sur signalement de
+  // BPx qui avait lu un message écrivant une forme morte que ce garde déclarait propre :
+  //     parser.js   143 jets ·  0 poussées
+  //     bpxAst.js     1 jet   · 41 poussées
+  // Ce garde couvrait donc UN refus sur QUARANTE-DEUX dans l'émetteur. Un garde écrit pour une
+  // CONSTRUCTION ne couvre pas l'ESPACE des refus — c'est le motif de la journée, appliqué à
+  // moi-même : un motif identifie une chaîne, pas une forme.
+  const RE = /new (?:Parse|Lex)Error\(|\bmessage:\s*(?=[`'"])/g;
   let m;
   while ((m = RE.exec(texte)) !== null) {
-    let prof = 1, i = m.index + m[0].length;
-    while (i < texte.length && prof > 0) {
-      if (texte[i] === '(') prof++;
-      else if (texte[i] === ')') prof--;
-      i++;
+    const jet = m[0].startsWith('new');
+    let prof = jet ? 1 : 0, i = m.index + m[0].length;
+    if (jet) {
+      while (i < texte.length && prof > 0) {
+        if (texte[i] === '(') prof++;
+        else if (texte[i] === ')') prof--;
+        i++;
+      }
+      out.push(texte.slice(m.index + m[0].length, i - 1));
+      continue;
     }
-    out.push(texte.slice(m.index + m[0].length, i - 1));
+    // Une poussée : le message est le littéral qui suit, jusqu'à son délimiteur de fermeture.
+    const delim = texte[i];
+    let j = i + 1;
+    while (j < texte.length && !(texte[j] === delim && texte[j - 1] !== '\\')) j++;
+    out.push(texte.slice(i, j + 1));
   }
   // La table des caractères étrangers du découpeur porte ses messages en données, hors d'un `throw`.
   for (const t of texte.matchAll(/\[\s*'(?:\\.|[^'])*'\s*,\s*("(?:\\.|[^"])*")\s*\]/g)) out.push(t[1]);
@@ -252,7 +269,12 @@ for (const chemin of SOURCES) {
       // et rend « terminal non déclaré » — donc l exemption absolvait une prescription morte, et
       // mon injection ne mordait plus. Ce qui atteste une forme est le refus d une ENTREE DE
       // CATALOGUE, jamais celui d un terminal : le second dit qu on a lu autre chose.
-      const RESOLUTION = /(introuvable dans le catalogue|référence inexistante)/i;
+      // ⛔ ET UN REFUS QUI ENUMERE SA LISTE FERMEE ATTESTE AUSSI LA FORME. « 'x' n'est pas une
+      // sortie — les canaux de sortie sont audio, midi… » dit que `out.<X>` a ete LUE : c'est
+      // l'ENTREE qui est fausse, et elle l'est parce que MON GABARIT a instancie `<X>` avec un nom
+      // de son. Un gabarit a valeur unique sert deux sens ; sans cette distinction le garde
+      // condamne une forme vivante a cause de son propre exemple.
+      const RESOLUTION = /(introuvable dans le catalogue|référence inexistante|La liste est FERMÉE)/i;
       const motNu = /^[\wà-ÿ-]+$/i.test(f);
       const vivante = motNu
         ? !essais.every((e) => e.length > 0 && MORT.test(e[0]))
