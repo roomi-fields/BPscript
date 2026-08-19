@@ -20,7 +20,7 @@ La cartographie (PAS 1) a révélé une symétrie qu'on exploite ici : une fonct
 | Cible | un **signal** | la **hauteur canonique** (puis d'autres valeurs) |
 | Forme de lib | `{type:'cv', objects:{adsr:{parameters,input,output,curve}}}` | `{type:'digital', objects:{transpose:{params,body}}}` |
 
-Source du jumeau analogique : `lib/mod.json` (`{type:'cv', objects:{adsr,lfo,ramp}}`), `docs/design/CV.md`.
+Source du jumeau analogique : `lib/mod.json` (`{type:'cv', objects:{adsr,lfo,ramp}}`), `docs/archive/CV.md` (⛔ archivé).
 Première fonction visée : `transpose` (décalage de N pas de grille) ; puis `register_shift` (décalage
 de N périodes/registres). `transpose`, `keyxpand`, `rotate` sont désormais des **libs digitales
 réalisées** (`lib/digital/*.ts` + `lib/digital.json`, captées dans `libs-data.js`). Côté Kairos, le

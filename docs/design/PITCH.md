@@ -2,7 +2,7 @@
 
 > Voir aussi : [ARCHITECTURE.md](ARCHITECTURE.md) pour le pipeline compile/runtime,
 > [SOUNDS.md](SOUNDS.md) pour le cascade spec < CT < CV,
-> [CV.md](CV.md) pour les objets signal (ADSR, LFO, ramp).
+> les objets signal (ADSR, LFO, ramp) sont sortis du langage le 2026-08-08.
 
 ## Vue d'ensemble
 

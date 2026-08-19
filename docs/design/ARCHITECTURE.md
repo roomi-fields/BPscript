@@ -647,7 +647,7 @@ Ancien fichier préservé pour compatibilité BP3 :
 
 - [../spec/LANGUAGE.md](../spec/LANGUAGE.md) — Spécification du langage (vision, syntaxe, types, symboles, opérateurs, compilation BP3)
 - [PITCH.md](PITCH.md) — Architecture 6 couches pitch (acteur, alphabet, octaves, tempérament, tuning, resolver) + annexe transposition
-- [CV.md](CV.md) — CV / signal objects
+- [CV.md](../archive/CV.md) — ⛔ ARCHIVÉ : `cv` est sorti du langage le 2026-08-08
 - [REPL.md](REPL.md) — Architecture des backticks et REPL adapters
 - [EFFECTS.md](EFFECTS.md) — Effets et signal processing
 - [SOUNDS.md](SOUNDS.md) — Système sounds (spec < CT < CV cascading)

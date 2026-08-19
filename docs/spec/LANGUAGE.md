@@ -2596,7 +2596,7 @@ S -> C4 (rndtime:100) D4 E4  // les attaques se decalent jusqu'a cent millisecon
 - [EBNF.md](EBNF.md) — grammaire formelle EBNF
 - [AST.md](AST.md) — structure de l'AST
 - [ARCHITECTURE.md](../design/ARCHITECTURE.md) — architecture technique
-- [CV.md](../design/CV.md) — objets de signal
+- [CV.md](../archive/CV.md) — objets de signal, sortis du langage le 2026-08-08
 - [PITCH.md](../design/PITCH.md) — architecture 5 couches de hauteur
 - [HOMOMORPHISMS.md](../design/HOMOMORPHISMS.md) — homomorphismes
 

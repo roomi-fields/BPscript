@@ -69,10 +69,6 @@
         ],
         "use_when": "ajouter un instrument, comprendre cascading, coder un transport"
       },
-      "CV.md": {
-        "content": "Objets CV temporels : ADSR, LFO, ramp, routage par cible",
-        "use_when": "ajouter un type de CV, comprendre le routage modulation"
-      },
       "EFFECTS.md": {
         "content": "Effets et signal processing — pas de patching dans BPscript",
         "use_when": "comprendre la frontière BPscript/runtime pour les effets"
@@ -166,6 +162,15 @@
       "RNG_PORTABLE.md": {
         "content": "RNG non portable MSVC vs glibc (6 grammaires S0≠S1)",
         "status": "spec prête, implémentation pending"
+      }
+    }
+  },
+  "archive": {
+    "description": "Documents retirés du corpus vivant — ils ne décrivent plus le langage ni le produit, et aucun ne fait autorité. Conservés pour mémoire.",
+    "files": {
+      "CV.md": {
+        "content": "⛔ ARCHIVÉ — objets CV : `cv` est sorti du langage le 2026-08-08",
+        "use_when": "comprendre comment la modulation était pensée avant son retrait"
       }
     }
   }

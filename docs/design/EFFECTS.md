@@ -1,6 +1,6 @@
 # Effets et signal processing — pas de patching dans BPScript
 
-> Voir aussi : [DESIGN_CV.md](CV.md) pour les objets CV,
+> Voir aussi :
 > [DESIGN_REPL.md](REPL.md) pour les backticks qui configurent le graphe audio.
 
 ## Principe

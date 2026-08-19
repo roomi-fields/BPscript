@@ -661,9 +661,14 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
   // jour-là. Il cite `map`, `scene` et `controls`, TROIS FORMES MORTES que le compilateur refuse
   // en nommant leur décision : c'est précisément ce qu'un compte rendu d'archive doit porter, et
   // le réécrire pour qu'il compile falsifierait l'histoire qu'il consigne.
+  // ⚠️ PORTÉ DE 4 À 5 LE 2026-08-19, avec sa cause. Le cinquième est `docs/archive/CV.md`, ARCHIVÉ
+  // ce jour-là sur décision de l'architecte : son sujet — `cv` — est sorti du langage le
+  // 2026-08-08, et le document entier le décrit. Il n'a PAS été réécrit, et c'est délibéré : un
+  // document d'archive garde la forme de son époque, c'est tout son intérêt. Le sujet revient avec
+  // FauxtX, et celui qui l'ouvrira voudra lire comment il était pensé.
   // Ce plafond monte parce que la population a grandi ; il ne se règle JAMAIS sur ce que le
   // balayage rend, sinon il cesse de mesurer.
-  ok(ecartes <= 4,
+  ok(ecartes <= 5,
      `4. trop de documents écartés du balayage — ${ecartes} sur ${totalMd}. La seule raison admise `
      + `est « c'est un compte rendu archivé, le réécrire falsifierait l'histoire ». Si l'écart `
      + `grandit, c'est qu'on écarte pour ne pas corriger.`);
