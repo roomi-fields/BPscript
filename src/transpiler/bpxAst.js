@@ -1661,7 +1661,7 @@ function refuserAttenteNonDeclaree(ast) {
       erreurs.push({
         message: `'<!${n.name}' attend un signal que rien ne déclare — aucune entrée, variable, `
           + `porte ni acteur de cette scène ne porte le nom '${n.name}'. Le déclarer : `
-          + `'var ${n.name} in.<canal>'. Sans déclaration, une coquille fabrique une SECONDE `
+          + `'in.<canal> ${n.name}'. Sans déclaration, une coquille fabrique une SECONDE `
           + `attente que rien ne viendra satisfaire, et la dérivation s'arrête pour toujours `
           + `sans un mot.`,
         line: n.line,

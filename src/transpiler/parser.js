@@ -2367,7 +2367,7 @@ function parse(tokens, opts = {}) {
       if (!at(T.IDENT)) {
         throw new ParseError(
           "'def' doit nommer ce qu'il définit : 'def <nom> <corps>'. Le nom vient d'abord, ce "
-          + "qu'il vaut ensuite — comme '@var' et '@actor'.", tok);
+          + "qu'il vaut ensuite — comme 'actor'.", tok);
       }
       const defName = expect(T.IDENT).value;
       refuserLeSigneEgal('def', defName);
@@ -4976,7 +4976,7 @@ function parse(tokens, opts = {}) {
         throw new ParseError(
           `'${key}.${peek(1).value}:…' affecte une valeur au composant '${peek(1).value}' de `
           + `'${key}' — mais '${key}' n'est ni un contrôle à composants, ni une instance déclarée `
-          + `dans cette scène. Déclarer l'instance d'abord : 'var ${key} <module>'`,
+          + `dans cette scène. Déclarer l'instance d'abord : '<module> ${key}'`,
           keyTok);
       }
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
