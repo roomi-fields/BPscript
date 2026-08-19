@@ -752,9 +752,8 @@ dans les deux, sa place tranche lequel des deux roles il tient.
 
 Ce qu'ils font est decrit dans « Flags ».
 
-### Trois places, trois roles
+### Deux places, deux roles
 
-- `@` = **global** : environnement, imports, configuration de la scene
 - `[]` = **la derivation** : un drapeau qui la conditionne, un rang qui designe une de ses formes
 - `()` = **les reglages** : le domaine de la cle nomme leur destinataire
 
@@ -1974,7 +1973,6 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(weight:50)`, `(tuning:just)`      |
 | `[]`       | ce qui appartient a la derivation         | `[stage==1]`, `[stage=2]`, `[3]` dans `template` |
-| `@`        | ouvre une ligne de la partie déclarative  | `actor`, `alphabet.tabla`, `def`               |
 | `->`       | règle de production                       | `S -> C4 D4`                                      |
 
 ### L'espace, délimiteur de termes
@@ -2067,13 +2065,13 @@ S -> dha ti (weight:50)
 
 ### Deux formes déclaratives : créer un nom, poser une propriété
 
-Toute ligne de la partie déclarative s'ouvre par l'arobase, et la présence du deux-points
-dit laquelle des deux formes on écrit.
+C'est la **position** qui qualifie une ligne : avant le delimiteur elle declare, apres elle
+produit. La presence du deux-points dit laquelle des deux formes declaratives on ecrit.
 
-| Forme                         | Effet                                             |
-| ----------------------------- | ------------------------------------------------- |
-| `@<directive> <nom> <valeur>` | **crée** un nom                                   |
-| `@<directive> <nom>:<cible>`  | pose une **propriété** sur un nom qui existe déjà |
+| Forme                     | Effet                                             |
+| ------------------------- | ------------------------------------------------- |
+| `<type> <nom> <valeur>`   | **crée** un nom                                   |
+| `<nom>:<cible>`           | pose une **propriété** sur un nom qui existe déjà |
 
 ```bpscript
 alphabet.western:midi     // propriété : les terminaux de western sortent en MIDI

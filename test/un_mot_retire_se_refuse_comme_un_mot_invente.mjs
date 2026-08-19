@@ -197,6 +197,45 @@ for (const [mot, decision] of MOTS_RETIRES) {
   }
 }
 
+// ── LE SIXIÈME DOMICILE — LA PROSE DES SPECS ────────────────────────────────────────────────
+// ⛔ TROUVÉ PAR BPx LE 2026-08-19, ET AUCUN DE MES GARDES NE POUVAIT LE VOIR. Trois passages de
+// LANGUAGE.md disaient encore que l'arobase ouvre une ligne déclarative — dont deux CONTREDITS PAR
+// LEUR PROPRE EXEMPLE, dans la cellule d'à côté ou le bloc juste dessous. L'oracle compile les
+// BLOCS ; le volet du dessus lit les PRODUCTIONS ; la PROSE n'était lue par rien.
+//
+// Une phrase de spec est une prescription au même titre qu'un exemple : c'est même la seule que
+// beaucoup de lecteurs lisent. Et elle survit d'autant mieux qu'elle est juste à côté d'un exemple
+// qui la dément — l'exemple change, la phrase reste.
+//
+// ⚠️ ON NE LIT QUE CE QUI PRESCRIT, PAS CE QUI RACONTE. Un signe cité entre accents graves dans une
+// table de correspondances avec un AUTRE langage n'est pas une prescription de celui-ci.
+{
+  const SPECS = ['LANGUAGE.md', 'AST.md', 'EBNF.md'];
+  let lignesLues = 0;
+  const coupables = [];
+  for (const nom of SPECS) {
+    const texte = readFileSync(new URL('../docs/spec/' + nom, import.meta.url), 'utf-8');
+    let dansUnBloc = null;
+    texte.split('\n').forEach((ligne, i) => {
+      const fence = ligne.match(/^```(\w*)/);
+      if (fence) { dansUnBloc = dansUnBloc === null ? (fence[1] || 'nu') : null; return; }
+      // Un bloc de code est jugé par l'oracle (bpscript) ou appartient à un autre langage (bp3).
+      if (dansUnBloc !== null) return;
+      lignesLues++;
+      // L'arobase PRESCRITE : collée à un mot, hors d'une table de correspondance native.
+      if (!/(^|[\s(`|])@[a-z]/.test(ligne)) return;
+      if (/\bBP3\b|natif|native/i.test(ligne)) return;   // une correspondance avec l'autre langage
+      coupables.push(`${nom}:${i + 1} — ${ligne.trim().slice(0, 88)}`);
+    });
+  }
+  ok(lignesLues >= 2000,
+    `7. ${lignesLues} ligne(s) de prose lues dans ${SPECS.length} specs — sous ce seuil, la lecture `
+    + `ne reconnaît plus la prose et ce volet devient un ensemble vide.`);
+  ok(coupables.length === 0,
+    `7. ${coupables.length} phrase(s) de spec écrivent l'arobase, sortie du langage le 2026-08-16 :\n`
+    + `       ${coupables.slice(0, 8).join('\n       ')}`);
+}
+
 // ── LE COMPLÉMENT — CE QUI DOIT ENCORE VIVRE ────────────────────────────────────────────────
 // ⛔ SANS LUI, UN COMPILATEUR QUI REFUSERAIT TOUT PASSERAIT CE GARDE EN TRIOMPHE. Plusieurs mots
 // retirés portent une NOTION vivante, ou partagent leur nom avec un axe de catalogue : le retrait
