@@ -14,7 +14,7 @@ S -> {G2 _ _ _ G2 _ _ _ (vel:60, wave:triangle, pan:64), Arp Arp}
 
 -----
 
-mode:random
+mode:rnd
 
 // Quatre positions, du plus à gauche au plus à droite : le balayage naît du tirage.
 Arp -> G4 B4 D5 G5 (pan:10,  wave:sine, vel:75, attack:5, release:200, weight:40)

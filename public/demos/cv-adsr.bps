@@ -13,7 +13,7 @@ S -> Phrase Phrase Phrase Phrase
 
 -----
 
-mode:random
+mode:rnd
 
 // Trois enveloppes, trois caractères. Le filtre s'ouvre et se referme d'une phrase à l'autre.
 Phrase -> C2 C2 D#2 C2 (wave:sawtooth, vel:100, attack:2,  release:40,  weight:40)
