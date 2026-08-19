@@ -73,21 +73,32 @@ console.log('\n=== CUTOVER : l\'ancienne forme d\'entité en `:` CRIE désormais
   assert('le message pointe le canon `out.<nom>`', msg.includes("out.<nom>"), msg);
 }
 
-console.log('\n=== TOMBSTONE : le mot `transport` (ex-canon) n\'existe plus, `.` comme `:` ===');
+console.log('\n=== `transport` NE MARCHE PLUS sur un acteur, `.` comme `:` ===');
 {
-  // Décision Romain 2026-08-04 : `transport` est SORTI du langage, `out` le remplace. Les deux
-  // formes crient désormais le MÊME message de migration, pas le refus `:` générique ci-dessus.
-  assert('transport.audio → REJET fail-loud (mot sorti du langage)',
-    cries('core\nactor voice alphabet.sargam transport.audio\n-----\nS -> sa\n', "n'existe plus"),
-    "attendu ParseError \"transport' n'existe plus\"");
-  assert('transport:audio → REJET fail-loud (mot sorti du langage)',
-    cries('core\nactor voice alphabet.sargam transport:audio\n-----\nS -> sa\n', "n'existe plus"),
-    "attendu ParseError \"transport' n'existe plus\"");
-  // Le message pointe la migration vers `out.<canal>`.
+  // Décision Romain 2026-08-04 : `transport` est SORTI du langage, `out` le remplace.
+  //
+  // ⛔ CE QUE CE VOLET EXIGEAIT, ET QUI ÉTAIT LA FAUTE : il réclamait le TEXTE du message, et ce
+  // texte ÉCRIVAIT le mot retiré. Un garde qui impose qu'un message nomme un mot sorti oblige le
+  // code à le garder — il transforme la trace en obligation. La règle (Romain, 2026-08-18) ne
+  // laisse vivre que « les gardes qui vérifient que le mot NE MARCHE PLUS ».
+  //
+  // Ce qui se mesure ici est donc le REFUS, et le témoin qui le rend concluant est un mot INVENTÉ
+  // à la même place : sans lui, un compilateur qui refuserait toute clé d'acteur passerait ce
+  // volet en triomphe.
+  for (const graphie of ['transport.audio', 'transport:audio']) {
+    assert(`${graphie} → REJET fail-loud (mot sorti du langage)`,
+      cries(`core\nactor voice alphabet.sargam ${graphie}\n-----\nS -> sa\n`, ''),
+      `attendu un refus sur '${graphie}'`);
+  }
+  assert('TÉMOIN — une clé d\'acteur VALIDE passe toujours',
+    !cries('core\nactor voice alphabet.sargam out.audio\n-----\nS -> sa\n', ''),
+    'out.audio doit rester accepté — sinon le refus ci-dessus ne prouve rien');
+  // Le refus enseigne la clé VIVANTE, jamais celle qui est sortie.
   let msg = '';
   try { parse(tokenize('core\nactor voice transport.audio\n-----\nS -> sa\n')); }
   catch (e) { msg = e.message; }
-  assert('le message pointe la migration `out.<canal>`', msg.includes('out.<canal>'), msg);
+  assert('le refus enseigne la clé vivante `out.<canal>`', msg.includes('out.<canal>'), msg);
+  assert('et il n\'ÉCRIT PAS le mot sorti', !msg.includes('transport'), msg);
 }
 
 console.log('\n=== NON-RÉGRESSION : le `:` reste valide pour AFFECTER une valeur ===');

@@ -1852,11 +1852,10 @@ function parse(tokens, opts = {}) {
     }
 
     // ── LES QUATRE AUTRES TYPES ────────────────────────────────────────────────────────────
-    // ⛔ `var` GARDE SON REFUS À LUI, et il doit passer AVANT celui-ci. Le mot n'est plus déclaré
-    // nulle part depuis qu'il a quitté la liste réservée : il tomberait donc dans le refus
-    // générique ci-dessous, qui énumère les types au lieu de donner la réécriture ligne par ligne.
-    // Mesuré sur le corpus : 18 scènes reçoivent ce refus, c'est celui qui leur sert.
-    if (mot === 'var') return null;
+    // ⛔ UNE EXCEPTION CODÉE EN DUR VIVAIT ICI, et elle a survécu à l'écriteau qu'elle servait.
+    // Un mot retiré sortait de ce chemin par son nom, pour tomber dans un refus à lui. L'écriteau
+    // parti, l'exception restait — et elle envoyait ce mot dans un refus MOINS BON que le refus
+    // ordinaire, qui énumère les types acceptés. Un détour nommé se retire avec sa destination.
     const modules = modulesDuCatalogue();
     if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !modules.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
@@ -2139,15 +2138,6 @@ function parse(tokens, opts = {}) {
     // sept pierres tombales existantes (`mm`, `scene`, `transport`, `library`, `in`, `macro`,
     // `flag`) sont dans le meme cas et leur sort se tranche avec.
 
-    if (name === 'routing') {
-      throw new ParseError(
-        `'routing' n'existe plus — la feature de profils d'environnement (studio/live/browser) a `
-        + `été SUPPRIMÉE (2026-07-16). Le canal de sortie se déclare par 'out.<audio|midi|osc>' `
-        + `sur l'acteur (ou 'alphabet.X:<sortie>' pour l'acteur implicite).`,
-        tok,
-      );
-    }
-
     let runtime = null, value = null, aliases = null;
 
     // ⛔ LE LECTEUR DE `scene` EST RETIRE LE 2026-08-19, et la decision a treize semaines : Romain,
@@ -2202,13 +2192,6 @@ function parse(tokens, opts = {}) {
     // sur `homomorphism.dhinOO` (« la scène croyait charger un homomorphisme et n'en chargeait
     // AUCUN, depuis des mois »). Un mot retiré sans pierre tombale ne disparaît pas : il devient
     // inerte, et l'inerte ne se voit pas.
-    if (name === 'transcription') {
-      throw new ParseError(
-        `'transcription' est REMPLACÉE par 'homomorphism' (décision Romain 2026-08-07) — c'est `
-        + `le seul mot que la référence emploie pour une table de correspondances. Réécrire `
-        + `'homomorphism${subkey ? '.' + subkey : '.<table>'}'.`, tok);
-    }
-    
     // ⚠️ `out` A ÉTÉ REFUSÉ ICI DU 2026-08-04 AU 2026-08-07, ET LE REFUS ÉTAIT DE MOI.
     // Il invoquait la décision `2026-08-04-la-direction-s-ecrit-in-et-out-remplacent-transport`,
     // qui ne dit PAS ça : elle sort le mot `transport` du langage et pose `in.`/`out.` à sa place.
@@ -2260,16 +2243,6 @@ function parse(tokens, opts = {}) {
     // avec sa réécriture ». `var` est écrit chez un consommateur et quatre fois dans la bible :
     // un refus muet lui ferait chercher une librairie manquante au lieu de lui donner la ligne à
     // écrire. Il n'accepte rien — il refuse en enseignant.
-    if (name === 'var') {
-      const suite = at(T.IDENT) ? ` ${current().value}` : '';
-      throw new ParseError(
-        `'var${suite}' : le mot 'var' est SORTI du langage. Le TYPE vient en tête, le nom ensuite `
-        + `— 'flag section(intro:1, drop:2)', 'signal grain:0.5', 'symbol x', 'in.midi sync1', `
-        + `'ramp r1' pour une instance de module. Chaque type est un mot déclaré en librairie.`,
-        tok);
-    }
-
-
     // @macro kick = (vel:120) or @macro accent(x) = x(vel:120)
     
 
@@ -2296,15 +2269,6 @@ function parse(tokens, opts = {}) {
     // c'est la règle que kanopi m'a demandée le matin même et que j'ai acceptée. Je viens de la
     // violer sur mes propres tests, une heure après l'avoir écrite à trois agents.
     // L'ordre tient : `def` d'abord, les cinq tombales ensuite.
-
-    if (name === 'label') {
-      const nom = at(T.IDENT) ? current().value : 'nom';
-      throw new ParseError(
-        `'label' est SUPPRIMÉE du langage (décision Romain 2026-07-28), en même temps que le `
-        + `suffixe '${nom}' qu'elle servait à déclarer. Pour ASSOCIER un geste à un élément dans `
-        + `la production : le point d'exclamation ('C4!${nom}'). Pour NOMMER quelque chose dans la `
-        + `partie déclarative : 'def ${nom} <corps>'.`, tok);
-    }
 
     // ⛔ UNE DIRECTIVE RETIREE QU ON CONTINUE D ACCEPTER N EST PAS RETIREE, ELLE EST INVISIBLE.
     // Mesure du 2026-08-09 : huit scenes portaient une directive « supprimee » que le parseur
@@ -2823,9 +2787,8 @@ function parse(tokens, opts = {}) {
         // au lieu de crier. `out` porte désormais la direction de sortie.
         if (key === 'transport' && (next === T.PERIOD || next === T.COLON) && !peek(1).spaceBefore) {
           throw new ParseError(
-            `acteur '${actorName}' : 'transport' n'existe plus (décision Romain 2026-08-04) — la `
-            + `direction s'écrit : 'out.<canal>' remplace 'transport.<canal>'. `
-            + `Exemple : 'out.audio', 'out.midi(ch:3)'.`,
+            `acteur '${actorName}' : cette clé n'existe pas. La direction de sortie s'écrit `
+            + `'out.<canal>' — par exemple 'out.audio' ou 'out.midi(ch:3)'.`,
             current(),
           );
         }

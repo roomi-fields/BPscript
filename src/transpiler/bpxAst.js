@@ -2162,6 +2162,32 @@ function validateReferences(ast, libCtx = {}) {
       errors.push({ message: `valeur '${d.name}:…' inconnue — non déclarée par une librairie chargée`, line: d.line });
       continue;
     }
+    // ⛔ ET LA TROISIÈME GRAPHIE — `<clé>:<mot>` — TOMBAIT DANS UN TROISIÈME SILENCE.
+    //
+    // Le refus du dessus lit `value`, qui ne porte QUE les nombres. Quand ce qui suit le deux-points
+    // est un mot, le lecteur le range dans `runtime` — la graphie d'un canal de sortie
+    // (`alphabet.western:audio`) — et plus rien ne regardait le nom de la clé. Mesuré le 2026-08-19 :
+    // `zorglubinvente:studio` compilait SANS UN MOT et posait sa ligne dans l'arbre, quand
+    // `zorglubinvente:64` était refusé. Un même mot inventé, deux sorts, selon ce qu'on écrit après.
+    //
+    // ⚠️ C'EST LE TROISIÈME CAS DE LA MÊME FAMILLE, et les deux premiers sont réparés juste ici :
+    // `X:<nombre>` au-dessus, la forme NUE au-dessous, le 2026-08-10. Chacun a été trouvé par la
+    // casse suivante, jamais par la relecture du voisin — parce que trois graphies portent la même
+    // faute et qu'une réparation écrite pour l'une ne dit rien des deux autres.
+    //
+    // ⚠️ ET LE CANAL DE SORTIE PASSE, parce que sa clé est un AXE DE CATALOGUE : `alphabet.western`
+    // porte un `subkey` et sort deux lignes plus haut. La forme visée n'a pas de sous-clé — un nom
+    // seul, suivi d'un mot, que rien ne déclare.
+    if (d.subkey == null && d.runtime != null
+        && !registry.has(d.name) && !reserved.has(d.name)) {
+      errors.push({
+        message: `'${d.name}:${d.runtime}' : '${d.name}' n'est déclaré par aucune librairie chargée. `
+               + `Une ligne de tête qu'aucune donnée ne porte ne règle rien — elle serait lue, `
+               + `écrite dans l'arbre, et sans effet.`,
+        line: d.line,
+      });
+      continue;
+    }
     // ⚠️ ET LA FORME NUE AUSSI — c'est la moitié qui avait régressé. Le refus ci-dessus ne mordait
     // que sur `X:valeur` : toute directive écrite SANS valeur passait, quel que soit son nom.
     // Mesuré le 2026-08-10 : `zorglub42` compilait sans un mot, exactement comme `sub`.
