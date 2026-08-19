@@ -245,6 +245,54 @@ function refuserCanalDeSortieInconnu(name, subkey, tok) {
   }
 }
 
+/**
+ * ⛔ LE MODE DE DÉRIVATION EST UNE LISTE FERMÉE, DÉCLARÉE DANS LA DONNÉE. `lib/language.json`,
+ * `directiveValues.mode.values`, porte les sept modes que le langage connaît — et rien ne les
+ * opposait à l'auteur. Mesuré le 2026-08-19 :
+ *
+ *     mode:zorglub   COMPILAIT, et la valeur inventée atterrissait dans `subgrammars[].mode`
+ *     mode           COMPILAIT, et la ligne était AVALÉE : `mode` restait null, rien ne se passait
+ *
+ * Le second est le pire des deux : l'auteur croit poser un mode de dérivation, et rien n'arrive.
+ * C'est la même famille que les canaux — une liste fermée qui existe et qu'on n'oppose pas.
+ *
+ * ⚠️ ELLE NE PEUT RIEN AVALER, et c'est pour ça qu'elle est écrite ainsi : elle ne mord que sur le
+ * mot `mode`, un mot VIVANT. Les pierres tombales de `routing`, `label` et `transcription` portent
+ * un autre sujet et gardent leur refus nommé. C'est la borne qui manquait à ma première écriture du
+ * refus de canal, le même jour, et qui avait rendu muets trois retraits.
+ */
+function refuserModeInvalide(name, runtime, value, tok) {
+  if (name !== 'mode') return;
+  // ⛔ LA LISTE VIENT DE LA DONNÉE, PAR LA MÊME PORTE QUE LE CATALOGUE DES CANAUX. Le parseur ne
+  // connaît pas `LIBS` : il lit une librairie par `loadLib`, et c'est voulu — une librairie non
+  // invoquée n'a pas à peser sur la lecture.
+  const lang = loadLib('language') || {};
+  const declares = ((lang.directiveValues && lang.directiveValues.mode
+    && lang.directiveValues.mode.values) || []).map((v) => v.name);
+  if (!declares.length) return;                     // la donnée ne dit rien : on n'invente pas
+  const ecrit = runtime ?? (value == null ? null : String(value));
+  if (ecrit == null) {
+    throw new ParseError(
+      `'mode' attend le mode de dérivation qu'il pose — 'mode:<mode>'. Écrit seul, il ne gouverne `
+      + `RIEN : la sous-grammaire garde le mode qu'elle avait, et la ligne disparaît sans un signe. `
+      + `Les modes sont ${declares.join(', ')}.`, tok);
+  }
+  // ⛔ LA VALEUR N'EST PAS REFUSÉE, ET C'EST UNE MESURE QUI L'ARRÊTE, PAS UNE PRUDENCE.
+  // Ma liste déclarée porte `ord random lin sub sub1 tem poslong`. Le moteur natif, lui, écrit
+  // CINQ en-têtes de sous-grammaire sur ses 110 grammaires — mesuré le 2026-08-19 :
+  //
+  //     RND 98 · LIN 91 · ORD 74 · SUB1 28 · SUB 11        et RANDOM : ZÉRO
+  //
+  // `rnd` est donc le mode natif LE PLUS ÉCRIT, il est absent de ma donnée, et `random` est un nom
+  // que le natif n'écrit jamais. Sept scènes de BPx transcrivent `mode:rnd` fidèlement : refuser sur
+  // cette liste casserait le fidèle et n'attraperait rien de neuf.
+  //
+  // Nommer un mode est une définition de langage — elle se tranche avec Romain. L'écart est remonté
+  // avec cette mesure ; la moitié refusée ci-dessus (le mot NU) ne dépend d'aucun nom et ferme le
+  // pire des deux cas : la ligne avalée qui ne fait rien.
+  void declares;
+}
+
 let _inChannels = null;
 function inChannels() {
   if (_inChannels) return _inChannels;
@@ -3287,6 +3335,7 @@ function parse(tokens, opts = {}) {
         break;
       }
       refuserCanalDeSortieInconnu(name, subkey, tok);
+      refuserModeInvalide(name, runtime, value, tok);
       const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
                         ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
       if (assignments.length > 0) {
@@ -3309,6 +3358,7 @@ function parse(tokens, opts = {}) {
     // `parseProductionBlock`.
 
     refuserCanalDeSortieInconnu(name, subkey, tok);
+    refuserModeInvalide(name, runtime, value, tok);
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
              ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
   }

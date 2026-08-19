@@ -51,10 +51,19 @@ const SECTIONS = [
     quoi: 'catalogue de gabarits',
     // ce que l'auteur écrit : les lignes de rang sous `template`
     ecrit: (t) => ((t.split(/^template\b/m)[1] || '').split('\n').filter((l) => /^\s*\[\d+\]/.test(l)).length),
-    // ce que l'arbre porte : les entrées, et le total des éléments de corps
+    // ⛔ CE QUE L'ARBRE PORTE SE LIT SUR LE CHAMP QUE L'ÉMISSION EMPLOIE, PAS SUR CELUI QU'ELLE
+    // EMPLOYAIT. Cette sonde comptait `body` ; le catalogue transporte la LIGNE BRUTE — la forme
+    // que BPx a demandée et que le parseur émet (`TemplateEntry {line}`). Elle rendait donc « corps
+    // 0 » sur des entrées PLEINES, et mon propre commentaire disait déjà « corps verbatim » quatre
+    // lignes plus bas : le texte savait ce que le code ne mesurait plus.
+    //
+    // ⚠️ ET ELLE EST RESTÉE VERTE PAR ABSENCE DE CAS. Aucune scène du corpus n'écrivait de
+    // catalogue ; Kanopi en a ajouté une (`c41aded`), lue en source vive, et l'écart s'est montré
+    // dans la minute. Un garde qui n'a rien à mesurer ne dit pas qu'il ne mesure rien.
     porte: (ast) => {
       const tpl = ast?.template?.entrees || [];
-      return { entrees: tpl.length, corps: tpl.reduce((n, e) => n + ((e.body || []).length), 0) };
+      const plein = (e) => (e.body || []).length > 0 || (typeof e.line === 'string' && e.line.trim() !== '');
+      return { entrees: tpl.length, corps: tpl.filter(plein).length };
     },
   },
   {

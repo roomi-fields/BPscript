@@ -141,6 +141,36 @@ for (const nom of CONTROLES_DE_PORTEE) {
     `1bis. '${nom}' — le refus doit dire OÙ le mot vit, sinon il ferme une porte sans en ouvrir une`);
 }
 
+// ── 1ter. `mode` ÉCRIT SEUL NE GOUVERNE RIEN, ET IL EST REFUSÉ ──────────────────────────────
+// ⛔ IL ÉTAIT AVALÉ EN SILENCE : l'auteur écrivait `mode`, croyait poser un mode de dérivation, et
+// la sous-grammaire gardait le sien. Le pire des deux cas mesurés le 2026-08-19 — pire que la valeur
+// inventée, parce qu'il ne laisse RIEN, pas même une valeur fausse dans l'arbre.
+// PÉRIMÈTRE mesuré avant le refus : 838 fichiers `.bps`/`.bpsl` de la tour, ZÉRO `mode` nu.
+for (const [ou, src] of [
+  ['en tête de scène',  `${socle('mode')}mode\n-----\nS -> C4\n`],
+  ['après une règle',   `${S}S -> C4\nmode\n-----\nT -> D4\n`],
+]) {
+  const e = err(src);
+  ok(e.length >= 1, `1ter. 'mode' écrit SEUL ${ou} doit être REFUSÉ — il ne gouverne rien`);
+  ok(e.some((m) => /attend le mode de dérivation/.test(m)),
+    `1ter. 'mode' seul ${ou} — le refus doit dire ce qu'il attend et donner la forme (reçu : ${e[0]?.slice(0, 100)})`);
+}
+// ⚠️ ET LA VALEUR N'EST PAS REFUSÉE — c'est une MESURE qui l'arrête, pas un oubli. Le moteur natif
+// écrit CINQ en-têtes sur ses 110 grammaires — RND 98 · LIN 91 · ORD 74 · SUB1 28 · SUB 11 — et
+// `random`, que ma donnée déclare, n'y paraît JAMAIS. `rnd`, le plus écrit, manque à ma donnée.
+// Ce témoin fige l'écart pour qu'il ne se referme pas en silence : le jour où la donnée porte `rnd`,
+// il rougit et la question se reprend avec Romain.
+{
+  const langue = LIBS.language?.directiveValues?.mode?.values || [];
+  const noms = langue.map((v) => v.name);
+  ok(!noms.includes('rnd'),
+    `1ter. la donnée porte désormais 'rnd' — l'écart avec le natif est comblé, et le refus de la `
+    + `VALEUR de mode peut être repris. Retirer ce témoin, avec la décision qui nomme les modes.`);
+  ok(err(`${socle('mode')}mode:zorglub\n-----\nS -> C4\n`).length === 0,
+    `1ter. la valeur de mode est ENCORE acceptée telle quelle — si elle est désormais refusée, la `
+    + `décision existe, et ce témoin sort avec elle.`);
+}
+
 // ── 2. `mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────
 // 67 scènes du corpus sur 263 en vivent. Ce témoin est la preuve que la règle ne déborde pas.
 ok(err(`${S}S -> C4\nmode:sub\n-----\nT -> D4\n`).length === 0,
