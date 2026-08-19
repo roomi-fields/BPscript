@@ -614,6 +614,9 @@ function parse(tokens, opts = {}) {
   // Couche 1 — Scene
   // ============================================================
 
+  /** De quel côté du délimiteur on lit — le déclaratif d'abord, la production ensuite. */
+  let enDeclaratif = false;
+
   function parseScene() {
     const scene = {
       type: 'Scene',
@@ -663,6 +666,11 @@ function parse(tokens, opts = {}) {
 
     skipNewlines();
 
+    // ⛔ LE DÉLIMITEUR DIT DANS QUEL MONDE ON EST — décision Romain, 2026-08-19. Dans le
+    // DÉCLARATIF, seule la virgule sépare ; l'espace n'y sépare rien, il est de la mise en forme,
+    // comme l'indentation. Dans le FLUX rien ne change : l'espace y sépare les termes.
+    // Le même lecteur de sac sert les deux côtés, donc il doit savoir de quel côté il lit.
+    enDeclaratif = true;
     // Parse header: directives, declarations, macros, backticks
     let initialMode = null;
     let initialModifiers = null;
@@ -827,6 +835,7 @@ function parse(tokens, opts = {}) {
     }
 
     // Parse subgrammars
+    enDeclaratif = false;
     scene.subgrammars = parseSubgrammars(initialMode, initialModifiers);
 
     // Parse optional template section (SINGULIER, NU — seule graphie acceptée).
@@ -5187,7 +5196,21 @@ function parse(tokens, opts = {}) {
           // cherchant à désigner un composant sans connaître le point : elle doit tomber, sinon
           // elle fabrique la valeur muette « 98:45 » que personne en aval ne sait relire.
           if (at(T.COLON) && !deuxPointsEnTrop) deuxPointsEnTrop = current();
-          if (parts.length > 0 && current().spaceBefore) parts.push(' ');
+          if (parts.length > 0 && current().spaceBefore) {
+            // ⛔ UNE VALEUR N'A QU'UNE PARTIE DANS LE DÉCLARATIF. Plusieurs parties sont plusieurs
+            // valeurs, et plusieurs valeurs s'écrivent par une parenthèse et des noms. Le refus
+            // porte sa RÉÉCRITURE : un mot hors de sa place se refuse avec la forme qui le remplace.
+            if (enDeclaratif) {
+              throw new ParseError(
+                `'${key}:${parts.join('')} ${current().value}…' : dans la partie DÉCLARATIVE, seule `
+                + `la virgule sépare — l'espace n'y sépare rien. Une valeur n'a qu'UNE partie ; `
+                + `plusieurs parties sont plusieurs valeurs, et elles s'écrivent par une parenthèse `
+                + `et des noms : '${key}(${parts.join('')}, ${current().value}…)'. Dans le FLUX, `
+                + `après le délimiteur, l'espace sépare les termes comme avant.`,
+                current());
+            }
+            parts.push(' ');
+          }
           texteSeul = (jetons === 0 && at(T.STRING)) ? current().value : null;
           jetons++;
           parts.push(advance().value);

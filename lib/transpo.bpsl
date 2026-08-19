@@ -43,7 +43,7 @@ def transpo (resolvedBy:Kairos, name:transpo, description:`txt: Transformations 
 
 def transpose (args(interval), argType:interval, description:`txt: Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.`, scope(symbol, group, rule, flow, scene), transportGroup:transpo)
 
-def scale (bp3:_scale, args(name, blockkey), default:0 0, description:`txt: Microtonal scale — name + base note. (scale:0 0) revient au temperament egal. Graphie : la virgule separe les ELEMENTS du sac, l'espace separe les PARTIES d'une valeur (decision Romain 2026-07-26) -- le nom et la note de base sont deux parties d'une meme valeur.`, scope(symbol, group, rule, flow), transportGroup:transpo)
+def scale (bp3:_scale, args(name, blockkey), default(name:0, blockkey:0), description:`txt: Microtonal scale — name + base note. (scale:0 0) revient au temperament egal. Le nom et la note de base sont DEUX valeurs, separees par la virgule dans le declaratif et par l'espace dans le flux.`, scope(symbol, group, rule, flow), transportGroup:transpo)
 
 def scaleshift (args(degrees), default:0, description:`txt: Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control.`, scope(symbol, group, rule, flow), transportGroup:transpo)
 
@@ -53,5 +53,5 @@ def chromashift (bp3:_transpose, args(keys), default:0, description:`txt: Chroma
 // ESPACE — decision Romain 2026-07-26 : la virgule separe les ELEMENTS d'un sac, l'espace separe
 // les PARTIES d'une valeur. C'est ce qu'un auteur ecrit deja, et ce que la documentation des
 // fonctions digitales prescrit (DIGITAL_FUNCTIONS.md:147).
-def keyxpand (bp3:_keyxpand, args(pivot, factor), default:0 1, description:`txt: Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.`, scope(symbol, group, rule, flow), transportGroup:transpo)
+def keyxpand (bp3:_keyxpand, args(pivot, factor), default(pivot:0, factor:1), description:`txt: Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.`, scope(symbol, group, rule, flow), transportGroup:transpo)
 

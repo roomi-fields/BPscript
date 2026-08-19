@@ -79,14 +79,21 @@ for (const [ligne, nom, clesAttendues] of [
     + `${JSON.stringify(corpsDe(v))}`);
 }
 
-// ── 2. LES DEUX NATURES DE MEMBRE COHABITENT DANS LE MÊME CORPS ─────────────────────────────
+// ── 2. UN COUPLE ET UNE SUITE COHABITENT DANS LE MÊME CORPS ─────────────────────────────────
+// ⛔ CE VOLET A ÉCRIT UNE FORME MORTE PENDANT UNE HEURE : il posait
+// `scope:symbol group rule flow` — une valeur en quatre parties — et l'exigeait entière. Romain a
+// tranché le même soir que dans le déclaratif SEULE LA VIRGULE SÉPARE. Un garde qui certifie la
+// forme qu'on vient de retirer la maintient en vie mieux qu'un oubli.
 {
-  const { erreurs, vars } = lire('control vel(args:value, scope:symbol group rule flow)');
-  ok(erreurs.length === 0, `2. un corps mêlant clés et valeurs à plusieurs parties doit compiler — ${erreurs[0]}`);
+  const { erreurs, vars } = lire('control vel(args:value, scope(symbol, group, rule, flow))');
+  ok(erreurs.length === 0, `2. un corps mêlant un couple et une suite doit compiler — ${erreurs[0]}`);
   const v = vars[0];
-  ok(valeurDe(v, 'args') === 'value', `2. la clé à une partie reste intacte — reçu ${JSON.stringify(valeurDe(v, 'args'))}`);
-  ok(valeurDe(v, 'scope') === 'symbol group rule flow',
-    `2. la valeur à plusieurs PARTIES arrive entière — reçu ${JSON.stringify(valeurDe(v, 'scope'))}`);
+  ok(valeurDe(v, 'args') === 'value', `2. le couple reste intact — reçu ${JSON.stringify(valeurDe(v, 'args'))}`);
+  ok(corpsDe({ settings: valeurDe(v, 'scope') }).join() === 'symbol,group,rule,flow',
+    `2. la suite arrive entière et dans son ordre — reçu ${JSON.stringify(valeurDe(v, 'scope'))}`);
+  // Et la forme d'hier est REFUSÉE ici comme partout dans le déclaratif.
+  ok(lire('control vel(args:value, scope:symbol group rule flow)').erreurs.length >= 1,
+    '2. la valeur à plusieurs parties doit être REFUSÉE dans un corps de type — l\'espace n\'y sépare rien');
 }
 {
   // La récursivité descend d'un niveau ici comme ailleurs — un seul lecteur de sac.
