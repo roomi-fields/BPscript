@@ -105,8 +105,8 @@ Listées sans création de scene.bps (pas d'oracle natif, pas de promotion possi
 
 | Grammaire | BPS produit | Notes |
 |---|---|---|
-| testHO2 | `@mode:random\nS -> a b c d` | 2 lignes sig. — pas de dossier test/grammars/ |
-| testNC1 | `@controls\n@mode:random\nS -> {legato(20) ...}` | 2 lignes sig. — pas de dossier |
+| testHO2 | `@mode:rnd\nS -> a b c d` | 2 lignes sig. — pas de dossier test/grammars/ |
+| testNC1 | `@controls\n@mode:rnd\nS -> {legato(20) ...}` | 2 lignes sig. — pas de dossier |
 
 ---
 

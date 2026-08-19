@@ -3212,7 +3212,7 @@ function parse(tokens, opts = {}) {
     // du binding alphabet→voix qu'à la ligne d'acteur (spec §7, champ `voices` de l'alphabet).
     if (name === 'alphabet' && subkey) assertAlphabetVoices(subkey, current());
 
-    // Mode modifiers: @mode:random(destru, smooth, tempo:60)
+    // Mode modifiers: @mode:rnd(destru, smooth, tempo:60)
     //
     // ⛔ UN MODIFICATEUR VIENT D'UNE LIBRAIRIE, ET SA PORTÉE DOIT DIRE `subgrammar`.
     //
@@ -3802,7 +3802,7 @@ function parse(tokens, opts = {}) {
         const dirNom = current() && current().value ? String(current().value) : '?';
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
-          blockMode = dir.runtime;  // @mode:random → runtime='random'
+          blockMode = dir.runtime;  // @mode:rnd → runtime='rnd'
           currentMode = blockMode;  // portée du bloc courant seulement (pas d'héritage)
           blockModifiers = dir.modifiers || null;
           currentModifiers = blockModifiers;
