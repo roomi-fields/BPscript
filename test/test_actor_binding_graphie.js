@@ -7,7 +7,7 @@
 //                                   PAS une valeur ; corrige b489933 qui l'avait mis en `:`)
 // `out` remplace `transport` (décision Romain 2026-08-04, in/out remplacent transport) : seul
 // le mot ÉCRIT change, le champ interne reste `properties.transport`.
-// Les provenances factory./mine. NE se posent PAS sur la ligne d'acteur : une hauteur perso
+// La provenance `factory.` NE se pose PAS sur la ligne d'acteur : une hauteur
 // est un libRef de SCÈNE + un acteur sortie-seule (2026-07-13 §Raccord sortie).
 //
 // CUTOVER (zéro rétrocompat, non-négociable Romain) : les formes d'entité en `:` (alphabet:X,
@@ -44,11 +44,15 @@ console.log('\n=== CANON : alphabet.<nom> + out.<canal>(…) ===');
   assert('out.midi(ch:3) → params.ch = 3 (composant + params)', a.properties.transport?.params?.ch === 3, JSON.stringify(a.properties.transport));
 }
 
-console.log('\n=== §71 : mine.* NON posé sur la ligne d\'acteur → libRef de SCÈNE ===');
+console.log('\n=== §71 : une provenance NON posée sur la ligne d\'acteur → libRef de SCÈNE ===');
 {
-  const ast = parse(tokenize('core\nactor voice out.audio\nmine.ragas.sargam\n-----\nS -> sa\n'));
+  // ⚠️ CE VOLET S'ÉPROUVAIT SUR `mine.`, SORTI DU LANGAGE LE 2026-08-19. Il migre sur `factory.`,
+  // qui porte le MÊME mécanisme — et l'adresse émise change avec lui : `factory.` est un sucre
+  // NORMALISÉ au nu, là où `mine.` préfixait. Ce que le volet mesure ne bouge pas : une provenance
+  // écrite en tête de scène est une référence de SCÈNE, jamais une clé d'acteur.
+  const ast = parse(tokenize('core\nactor voice out.audio\nfactory.ragas.sargam\n-----\nS -> sa\n'));
   assert('acteur sortie-seule : properties.alphabet ABSENT', ast.actors[0].properties.alphabet === undefined, JSON.stringify(ast.actors[0].properties.alphabet));
-  assert('mine.ragas.sargam → libRef de scène', JSON.stringify(ast.libRefs) === '["mine.ragas.sargam"]', JSON.stringify(ast.libRefs));
+  assert('factory.ragas.sargam → libRef de scène, adresse NUE', JSON.stringify(ast.libRefs) === '["ragas.sargam"]', JSON.stringify(ast.libRefs));
 }
 
 console.log('\n=== CUTOVER : l\'ancienne forme d\'entité en `:` CRIE désormais ===');

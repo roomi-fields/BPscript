@@ -81,6 +81,12 @@ const REGISTRE = [
   ['synthesis/superp-cutoff.bps',         'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['synthesis/patchbay.bps',              'Expected IDENT', 'declare macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['test/fixtures/cv_modulation.bps',     'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  // ⚠️ LES SIX SCÈNES DE PROVENANCE PERSONNELLE N'ONT JAMAIS TENU UNE LIGNE ICI. Je les ai
+  //    inscrites le 2026-08-19 en retirant `mine` du langage (Romain : « SI, mine SORT ! »), et
+  //    Kanopi les avait SUPPRIMÉES avant que mon garde ne tourne — sa consigne était du même
+  //    quart d'heure. Le registre a refusé les six dans la foulée : « inscrite mais ne refuse
+  //    plus ». C'est exactement ce pour quoi il existe, et c'est la lecture en SOURCE VIVE qui
+  //    rend l'aller-retour visible à la minute.
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 : cette scène refusait pour ses terminaux nus ; elle
   //    refuse désormais AVANT, sur un crochet COLLÉ à un élément — forme retirée du langage
   //    le même jour (arbitrage Romain). La cause inscrite est donc devenue fausse, et le

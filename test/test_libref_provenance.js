@@ -8,7 +8,12 @@
 // Émission : ast.libRefs (scène, frère de cvInstances) — adresses canoniques opaques.
 //   - nu alphabet.X          → canal LEGACY (slot inchangé), PAS de libRefs.
 //   - factory.<chemin>.<e>   → NEUTRE, adresse NUE (sucre factory. normalisé).
-//   - mine.<chemin>.<e>      → NEUTRE, adresse préfixée 'mine.'.
+//
+// ⛔ `mine.` A QUITTÉ CE BANC LE 2026-08-19 : le mot est sorti du langage (Romain, « SI, mine
+// SORT ! Maintenant ! »), et il se refuse désormais comme un mot inventé. Ce qu'il éprouvait — une
+// provenance portée OPAQUE jusqu'à Kairos — reste éprouvé par `factory.`, qui porte le même
+// mécanisme. Ce qui disparaît avec lui est la seule chose qui lui était propre : l'adresse
+// PRÉFIXÉE. `factory.` normalise au nu, il n'y a plus de forme préfixée à mesurer.
 
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
@@ -43,24 +48,26 @@ console.log('\n=== Forme 2 : factory. → NEUTRE (adresse nue, sucre normalisé)
   assert('factory. : AUCUN slot legacy alphabet', slots.length === 0, JSON.stringify(slots));
 }
 
-console.log('\n=== Forme 3 : mine.chemin.entrée → NEUTRE (préfixe mine.) ===');
+console.log('\n=== Forme 3 : le TIRET recollé dans un segment de chemin ===');
 {
-  const ast = astOf('mine.ragas.mes-svaras.sa');
-  assert('mine.ragas.mes-svaras.sa → libRefs=["mine.ragas.mes-svaras.sa"] (tiret recollé)',
-    JSON.stringify(ast.libRefs) === '["mine.ragas.mes-svaras.sa"]', JSON.stringify(ast.libRefs));
+  // Le recollage d'un segment (`mes-` + `svaras`) était mesuré sur `mine.` ; il se mesure sur
+  // `factory.`, qui lit le même segment par le même lecteur.
+  const ast = astOf('factory.ragas.mes-svaras.sa');
+  assert('factory.ragas.mes-svaras.sa → libRefs=["ragas.mes-svaras.sa"] (tiret recollé)',
+    JSON.stringify(ast.libRefs) === '["ragas.mes-svaras.sa"]', JSON.stringify(ast.libRefs));
 }
 
 console.log('\n=== Dédup + ordre source préservé ===');
 {
-  const ast = astOf('mine.ragas.sa\nmine.ragas.sa\nfactory.tuning.just_intonation');
-  assert('dédup + ordre : ["mine.ragas.sa","tuning.just_intonation"]',
-    JSON.stringify(ast.libRefs) === '["mine.ragas.sa","tuning.just_intonation"]', JSON.stringify(ast.libRefs));
+  const ast = astOf('factory.ragas.sa\nfactory.ragas.sa\nfactory.tuning.just_intonation');
+  assert('dédup + ordre : ["ragas.sa","tuning.just_intonation"]',
+    JSON.stringify(ast.libRefs) === '["ragas.sa","tuning.just_intonation"]', JSON.stringify(ast.libRefs));
 }
 
 console.log('\n=== Malformé → CRIE en nommant la faute ===');
 {
-  assert('mine seul (entrée sans fichier) crie',
-    /invocation de librairie malformee 'mine'/.test(errsOf('mine.sa').join(' | ') || ''), errsOf('mine.sa').join(' | '));
+  assert('factory.sa (entrée sans fichier) crie',
+    /invocation de librairie malformee 'factory'/.test(errsOf('factory.sa').join(' | ') || ''), errsOf('factory.sa').join(' | '));
   assert('factory seul crie',
     /invocation de librairie malformee 'factory'/.test(errsOf('factory').join(' | ') || ''), errsOf('factory').join(' | '));
 }
@@ -70,9 +77,9 @@ console.log('\n=== Additif : la garde terminaux LEGACY reste factory-seule ===')
   // nu alphabet.sargam + terminaux hors-sargam → la garde fail-loud (Romain 2026-07-05) DOIT crier (legacy intact).
   const errsLegacy = errsOf('alphabet.sargam');
   assert('legacy : garde terminaux fire (C4 hors sargam)', errsLegacy.some((m) => /terminal 'C4'/.test(m)), errsLegacy.join(' | '));
-  // mine.* (alphabet perso, opaque) : PAS de garde terminaux chez moi (Kairos valide à la résolution).
-  const errsMine = errsOf('mine.ragas.mes-svaras.sa');
-  assert('mine.* : PAS de garde terminaux au compile (opaque)', !errsMine.some((m) => /terminal/.test(m)), errsMine.join(' | '));
+  // une provenance OPAQUE : PAS de garde terminaux chez moi (Kairos valide à la résolution).
+  const errsProv = errsOf('factory.ragas.mes-svaras.sa');
+  assert('provenance : PAS de garde terminaux au compile (opaque)', !errsProv.some((m) => /terminal/.test(m)), errsProv.join(' | '));
 }
 
 console.log('\n=== FIX 1 (forme co-signée [338]) : ZÉRO pliage diapason-catalogue pour le canal neutre ===');
@@ -82,9 +89,9 @@ console.log('\n=== FIX 1 (forme co-signée [338]) : ZÉRO pliage diapason-catalo
     const def = ((ast && ast.actors) || []).find((a) => a.name === 'default') || ((ast && ast.actors) || [])[0];
     return def && def.values && def.values.diapason;
   };
-  assert('mine.* : diapason NON plié (absent → Kairos résout l\'ancre perso)', diapasonOf('mine.ragas.sargam') === undefined, String(diapasonOf('mine.ragas.sargam')));
+  assert('provenance : diapason NON plié (absent → Kairos résout l\'ancre)', diapasonOf('factory.ragas.sargam') === undefined, String(diapasonOf('factory.ragas.sargam')));
   assert('factory.* : diapason NON plié (absent)', diapasonOf('factory.alphabet.sargam') === undefined, String(diapasonOf('factory.alphabet.sargam')));
-  assert('diapason:432 EXPLICITE prime toujours (même avec mine.*)', diapasonOf('mine.ragas.sargam\ndiapason:432') === 432, String(diapasonOf('mine.ragas.sargam\ndiapason:432')));
+  assert('diapason:432 EXPLICITE prime toujours (même avec une provenance)', diapasonOf('factory.ragas.sargam\ndiapason:432') === 432, String(diapasonOf('factory.ragas.sargam\ndiapason:432')));
   assert('LEGACY alphabet.sargam : ancre 240 INCHANGÉE (legacy intact)', diapasonOf('alphabet.sargam') === 240, String(diapasonOf('alphabet.sargam')));
   // Non-régression cascade : une scène NUE (aucun composant invoqué) plie TOUJOURS le socle core.
   // La règle générale ne sur-supprime PAS — le socle ne saute QUE si un composant est invoqué.
@@ -96,9 +103,9 @@ console.log('\n=== FIX 2 : entrée d\'invocation commençant par un CHIFFRE (acc
   const a1 = astOf('factory.temperaments.12TET');
   assert('factory.temperaments.12TET parse → libRefs=["temperaments.12TET"]',
     JSON.stringify(a1.libRefs) === '["temperaments.12TET"]', JSON.stringify(a1.libRefs));
-  const a2 = astOf('mine.ragas.22shruti');
-  assert('mine.ragas.22shruti parse → libRefs=["mine.ragas.22shruti"]',
-    JSON.stringify(a2.libRefs) === '["mine.ragas.22shruti"]', JSON.stringify(a2.libRefs));
+  const a2 = astOf('factory.ragas.22shruti');
+  assert('factory.ragas.22shruti parse → libRefs=["ragas.22shruti"]',
+    JSON.stringify(a2.libRefs) === '["ragas.22shruti"]', JSON.stringify(a2.libRefs));
 }
 
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);

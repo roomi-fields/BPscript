@@ -68,7 +68,7 @@ const SITUATIONS = [
    'core\nactor voix\n  alphabet.sargam\n  out.audio\n-----\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Les deux SEULES absences légitimes.
   ['hauteur OPAQUE : l\'alphabet reste ABSENT, Kairos le remplit (loi 35)',
-   'core\nmine.perso.gamme\n-----\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
+   'core\nfactory.perso.gamme\n-----\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
   ['invocation par le canal NEUTRE : ABSENT aussi — le socle ne recouvre jamais un composant invoqué',
    'core\ntest_alphabets.abc\n-----\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
   ['une VOIX-CODE n\'a pas de vocabulaire de notes : ABSENT',
@@ -115,7 +115,7 @@ ok(refusUnicite('core\ndef G4 C4 D4\n-----\nS -> C4').length >= 1,
   + "l'alphabet du socle est bien descendu (sans lui, il n'y a rien à heurter)");
 ok(refusUnicite('core\ndef grondement saw >> audio\n-----\nS -> C4').length === 0,
   '2. SE TAIT — la même scène nue accepte une déclaration au nom quelconque');
-ok(refusUnicite('core\nmine.perso.gamme\n-----\nG4 -> C4').length === 0,
+ok(refusUnicite('core\nfactory.perso.gamme\n-----\nG4 -> C4').length === 0,
   '2. SE TAIT — hauteur opaque : aucun vocabulaire connu ici, donc rien à heurter');
 
 // ── 3. LE BALAYAGE — l'ESPACE, pas mes exemples ─────────────────────────────────────────────
