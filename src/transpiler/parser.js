@@ -5185,6 +5185,7 @@ function parse(tokens, opts = {}) {
         //            choses, et un lecteur qui les confond en perd une.
         let jetons = 0;
         let texteSeul = null;
+        let backtickSeul = null;
         while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
           // Un contrôle qui n'attend QU'UNE partie ne peut pas en avaler une seconde : ce qui suit
           // est un autre ÉLÉMENT du sac, et il lui manque sa virgule.
@@ -5212,6 +5213,7 @@ function parse(tokens, opts = {}) {
             parts.push(' ');
           }
           texteSeul = (jetons === 0 && at(T.STRING)) ? current().value : null;
+          backtickSeul = (jetons === 0 && at(T.BACKTICK)) ? current().value : null;
           jetons++;
           parts.push(advance().value);
         }
@@ -5243,8 +5245,25 @@ function parse(tokens, opts = {}) {
         // les consommateurs la lisent ainsi. Plusieurs parties = chaîne portée brute, découpée
         // par l'aval qui seul connaît l'opération. Un TEXTE délimité échappe à la coercition :
         // ce que les guillemets portent est du texte, y compris quand il ressemble à un nombre.
-        const val = texteSeul !== null && jetons === 1 ? texteSeul
-          : (/^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut);
+        // ⛔ L'ÉTIQUETTE D'UN BACKTICK SE LIT LÀ OÙ IL EST ÉCRIT, y compris dans une valeur.
+        // Elle ne l'était PAS ici : `x:`sc: a+1`` rendait le texte « sc: a+1 », étiquette comprise,
+        // et le backtick n'était donc lu comme du code à AUCUN degré dans une valeur déclarative.
+        // Le générateur de librairies retirait le préfixe `txt:` lui-même, à un étage plus bas :
+        // c'est le même travail, fait au mauvais endroit et par un seul des lecteurs.
+        // Mesure avant la bascule : 361 valeurs en backtick dans les neuf sources de librairie,
+        // TOUTES étiquetées `txt`, et ZÉRO valeur déclarative en backtick dans les 69 scènes.
+        let val;
+        if (jetons === 1 && backtickSeul !== null) {
+          const t = tryBacktickTag(backtickSeul);
+          // `txt:` DÉLIMITE UNE PHRASE — sa valeur est son texte. Toute autre étiquette nomme un
+          // LANGAGE : la valeur porte alors le code et son interprète, comme partout ailleurs.
+          val = !t ? backtickSeul
+            : (t.tag === 'txt' ? t.code
+              : { type: 'BacktickInline', code: t.code, tag: t.tag });
+        } else {
+          val = texteSeul !== null && jetons === 1 ? texteSeul
+            : (/^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut);
+        }
         // ⛔ UNE VALEUR DONNÉE À UN CONTRÔLE QUI N'EN PREND PAS EST REFUSÉE. Signalé à BPx pendant
         // leur migration : `!(order:0)` compilait et portait `0` jusqu'à l'arbre, alors que la
         // donnée déclare `order` sans aucun argument. Une valeur sans destinataire voyage jusqu'à
