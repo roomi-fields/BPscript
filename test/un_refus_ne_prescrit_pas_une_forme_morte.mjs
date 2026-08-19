@@ -27,7 +27,12 @@
  * Une prescription que la table de gabarits ne sait pas instancier est DITE, jamais sautée : un
  * garde qui s'exempte en silence certifie ce qu'il n'a pas regardé.
  */
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
+
+const RACINE_SRC = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'transpiler');
 
 let passe = 0;
 const echecs = [];
@@ -76,7 +81,12 @@ const GABARITS = [
   [/<chemin-?fichier>/g, 'ragas'], [/<entree>/g, 'sa'], [/<chemin>/g, 'ragas'],
   [/<corps>/g, '(vel:100)'], [/<valeur>/g, '1'], [/<type>/g, 'symbol'],
 ];
-const instanciable = (f) => !/<[^>]*>/.test(f.replace(/<!/g, ''));
+// ⛔ UN GABARIT NE PORTE PAS TOUJOURS SES CHEVRONS. Un message ecrit `{A B}:N` ou `[weight:N]` :
+// `A`, `B` et `N` sont des METAVARIABLES nues, que rien ne distingue d un symbole reel. Compilees
+// telles quelles elles echouent sur un terminal non declare, et le garde accuse une prescription
+// vivante. Une forme qui en porte est DITE non instanciable, jamais jugee et jamais sautee.
+const METAVARIABLE = /(^|[\s{(\[:,])[A-Z]([\s}\])\.:,]|$)/;
+const instanciable = (f) => !/<[^>]*>/.test(f.replace(/<!/g, '')) && !METAVARIABLE.test(f);
 
 // ⛔ LA POSITION QUALIFIE LA LIGNE, et un message ne la dit pas. `template` nomme une SECTION,
 // `in.midi x` une DÉCLARATION, `![srand]` un geste de FLUX : jugée à la mauvaise place, une forme
@@ -102,11 +112,20 @@ const PLACES = [
 // réécriture donnée par un refus.
 const MARQUEURS = /(déclarer|écrire|écris|s'écrit|écrit|remplace|employer|utiliser|pour [A-ZÀ-Ý]|exemple|à la place)[^']{0,60}$/i;
 
+// ⛔ ET UN MESSAGE QUI CONTRASTE DEUX FORMES EN CITE UNE MORTE JUSTE APRES LA VIVANTE :
+// « 'out.<canal>' remplace 'transport.<canal>' ». Prendre toutes les citations qui suivent un
+// marqueur faisait donc juger la forme ENTERREE comme un conseil — quatre faux rouges sur cinq a
+// ma premiere passe. La convention de mes messages met la forme a ECRIRE en premier : le garde ne
+// retient donc que la PREMIERE citation apres chaque marqueur.
 const formesCitees = (m) => {
   const out = [];
+  let dernierMarqueur = -1;
   for (let i = 0; i < m.length; i++) {
     if (m[i] !== "'" || (i > 0 && /[\wà-ÿ]/i.test(m[i - 1]))) continue;   // élision, pas ouverture
-    if (!MARQUEURS.test(m.slice(Math.max(0, i - 70), i))) continue;      // citation, pas conseil
+    const debut = Math.max(0, i - 70);
+    if (!MARQUEURS.test(m.slice(debut, i))) continue;                     // citation, pas conseil
+    if (debut <= dernierMarqueur) continue;              // deja servi : la suivante contraste
+    dernierMarqueur = i;
     for (let j = i + 1; j < m.length && j < i + 80; j++) {
       if (m[j] === '\n') break;
       if (m[j] !== "'") continue;
@@ -162,6 +181,95 @@ for (const [quoi, src] of REFUS) {
     }
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// VOLET 2 — TOUS LES REFUS QUE LE CODE ÉCRIT, ET PAS SEULEMENT CEUX QU'UNE SCÈNE ATTEINT
+//
+// ⛔ CE QUI A COÛTÉ CE VOLET. Le corpus du dessus est une LISTE, écrite à la main, refus par refus.
+// Le 2026-08-19, le refus de la directive de correspondance prescrivait TROIS formes mortes d'un
+// coup — les deux signes du câblage et une déclaration sortie trois jours plus tôt. Ce garde était
+// VERT dessus : il examinait vingt-quatre refus, et celui-là n'en faisait pas partie. Un garde vert
+// par absence de cas ressemble trait pour trait à un garde qui a mesuré.
+//
+// Le corpus par scène garde sa valeur — il prouve qu'un refus est ATTEIGNABLE. Ce volet-ci prouve
+// autre chose : qu'AUCUN message écrit dans le transpileur n'enseigne une forme morte, qu'une scène
+// sache l'atteindre ou non. Un message est le troisième domicile d'un mot retiré, et rien ne le
+// compile — c'est ce fichier ou rien.
+//
+// ⚠️ ET IL SE DÉRIVE DU SOURCE, jamais d'une énumération : ajouter un refus au parser l'inscrit ici
+// sans que personne ait à y penser au bon moment.
+const SOURCES = ['parser.js', 'bpxAst.js', 'tokenizer.js']
+  .map((f) => join(RACINE_SRC, f));
+
+/** Les messages littéraux d'un fichier : le contenu de chaque `new ParseError(...)` / `LexError`,
+ *  parenthèses comptées, interpolations neutralisées. */
+function messagesEcrits(chemin) {
+  const texte = readFileSync(chemin, 'utf-8');
+  const out = [];
+  const RE = /new (?:Parse|Lex)Error\(/g;
+  let m;
+  while ((m = RE.exec(texte)) !== null) {
+    let prof = 1, i = m.index + m[0].length;
+    while (i < texte.length && prof > 0) {
+      if (texte[i] === '(') prof++;
+      else if (texte[i] === ')') prof--;
+      i++;
+    }
+    out.push(texte.slice(m.index + m[0].length, i - 1));
+  }
+  // La table des caractères étrangers du découpeur porte ses messages en données, hors d'un `throw`.
+  for (const t of texte.matchAll(/\[\s*'(?:\\.|[^'])*'\s*,\s*("(?:\\.|[^"])*")\s*\]/g)) out.push(t[1]);
+  return out.map((brut) => brut
+    .replace(/\$\{[^}]*\}/g, 'X')       // interpolation → un nom neutre
+    .replace(/\\'/g, "'")
+    .replace(/\\n/g, ' ')
+    .replace(/[`"]/g, '')
+    .replace(/\s*\+\s*/g, '')           // concaténation de littéraux : le message est continu
+    .replace(/\s+/g, ' '));
+}
+
+let messagesLus = 0;
+for (const chemin of SOURCES) {
+  for (const message of messagesEcrits(chemin)) {
+    messagesLus++;
+    for (const forme of formesCitees(message)) {
+      const tete = forme.replace(/^[^\wà-ÿ<]*/, '').split(/[\s.:(\[]/)[0];
+      if (!tete || tete === 'X') continue;                  // une interpolation, pas une forme
+      if (!/^[a-zà-ÿ][\wà-ÿ-]*$/i.test(tete)) continue;
+      let f = forme;
+      for (const [g, v] of GABARITS) f = f.replace(g, v);
+      f = f.replace(/,?\s*…/g, '').replace(/\bX\b/g, 'x').trim();
+      if (!instanciable(f)) { nonInstanciables.push(`${chemin.split('/').pop()} → « ${forme} »`); continue; }
+      examinees++;
+      const essais = PLACES.map((place) => compile(place(f)));
+      const MORT = /(est SORTI|n'existe plus|est SUPPRIMÉE?|déclaré par aucune librairie|n'est pas un type)/i;
+      // ⛔ UN REFUS DE RESOLUTION ATTESTE LA FORME. « sound 'x' introuvable dans le catalogue » ne
+      // dit pas que `sound.<nom>` est morte : il dit que l entree nommee n existe pas — donc que la
+      // forme a ete LUE. Mon gabarit remplace `<nom>` par un nom qui n est dans aucun catalogue ;
+      // sans cette distinction, le garde condamne une forme vivante a cause de son propre exemple.
+      // ⛔ ET L EXEMPTION EST ETROITE, MESUREE PAR INJECTION. Ma premiere ecriture disait
+      // « introuvable | non déclaré | inconnu » : dans le flux, `var x` se lit comme DEUX symboles
+      // et rend « terminal non déclaré » — donc l exemption absolvait une prescription morte, et
+      // mon injection ne mordait plus. Ce qui atteste une forme est le refus d une ENTREE DE
+      // CATALOGUE, jamais celui d un terminal : le second dit qu on a lu autre chose.
+      const RESOLUTION = /(introuvable dans le catalogue|référence inexistante)/i;
+      const motNu = /^[\wà-ÿ-]+$/i.test(f);
+      const vivante = motNu
+        ? !essais.every((e) => e.length > 0 && MORT.test(e[0]))
+        : essais.some((e) => e.length === 0 || RESOLUTION.test(e[0]));
+      ok(vivante,
+        `PRESCRIPTION MORTE dans ${chemin.split('/').pop()} — un refus dit d'écrire « ${forme} », `
+        + `et cette forme est REFUSÉE AUX QUATRE PLACES : ${essais[0][0]?.slice(0, 130)}. `
+        + `Le message est écrit dans le code, qu'une scène sache l'atteindre ou non.`);
+    }
+  }
+}
+
+// ⛔ LE BALAYAGE DOIT AVOIR TROUVÉ DES MESSAGES — sinon l'extraction a cessé de reconnaître un
+// refus, et tout ce volet est un ensemble vide qui a la tête d'un succès.
+ok(messagesLus >= 100,
+  `le balayage du source n'a lu que ${messagesLus} message(s) de refus dans ${SOURCES.length} `
+  + `fichiers — l'extraction ne reconnaît plus la forme d'un refus.`);
 
 // ⛔ UN GARDE QUI A EXAMINÉ ZÉRO N'A RIEN PROUVÉ.
 ok(examinees >= 9,
