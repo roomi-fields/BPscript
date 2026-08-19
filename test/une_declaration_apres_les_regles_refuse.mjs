@@ -155,20 +155,29 @@ for (const [ou, src] of [
   ok(e.some((m) => /attend le mode de dérivation/.test(m)),
     `1ter. 'mode' seul ${ou} — le refus doit dire ce qu'il attend et donner la forme (reçu : ${e[0]?.slice(0, 100)})`);
 }
-// ⚠️ ET LA VALEUR N'EST PAS REFUSÉE — c'est une MESURE qui l'arrête, pas un oubli. Le moteur natif
-// écrit CINQ en-têtes sur ses 110 grammaires — RND 98 · LIN 91 · ORD 74 · SUB1 28 · SUB 11 — et
-// `random`, que ma donnée déclare, n'y paraît JAMAIS. `rnd`, le plus écrit, manque à ma donnée.
-// Ce témoin fige l'écart pour qu'il ne se referme pas en silence : le jour où la donnée porte `rnd`,
-// il rougit et la question se reprend avec Romain.
+// ⚠️ ET LA VALEUR N'EST TOUJOURS PAS REFUSÉE — le blocage a CHANGÉ DE NATURE le 2026-08-19, il n'a
+// pas disparu. La donnée disait `random` là où le natif écrit `rnd` ; Romain a tranché, la donnée
+// est corrigée, et le refus était prêt. La mesure du périmètre l'a arrêté une seconde fois :
+//
+//     285 SITES ÉCRIVENT `mode:random` — kanopi 113 · kairos 92 · BPx 69 · moi 11
+//     et ils marchent parce que BPx ABSORBE l'alias : `loadGrammar.ts:4111`,
+//     `if (mode === 'random') return 'rnd';` — « the BPScript-spec alias for BP3's RNDtype »
+//
+// Le retrait a donc DEUX domiciles, comme tout retrait : ma porte, et son normaliseur. Câbler le
+// refus seul casserait 285 sites dans quatre dépôts, dans la minute, pendant que l'alias survivrait
+// chez lui en voie parallèle. Le préavis et la migration précèdent la frappe.
+//
+// CE TÉMOIN GARDE LES DEUX CONDITIONS. Il rougit le jour où l'une tombe, pour que le refus soit
+// repris — et pas le jour où quelqu'un l'oublie.
 {
-  const langue = LIBS.language?.directiveValues?.mode?.values || [];
-  const noms = langue.map((v) => v.name);
-  ok(!noms.includes('rnd'),
-    `1ter. la donnée porte désormais 'rnd' — l'écart avec le natif est comblé, et le refus de la `
-    + `VALEUR de mode peut être repris. Retirer ce témoin, avec la décision qui nomme les modes.`);
+  const noms = (LIBS.language?.directiveValues?.mode?.values || []).map((v) => v.name);
+  ok(noms.includes('rnd') && !noms.includes('random'),
+    `1ter. la donnée doit porter 'rnd' et PLUS 'random' — le natif déclare sept ABRÉVIATIONS `
+    + `(-BP3.h:879), et 'random' était le seul mot entier, donc le seul nom que la donnée s'était `
+    + `donné. Reçu : ${noms.join(', ')}`);
   ok(err(`${socle('mode')}mode:zorglub\n-----\nS -> C4\n`).length === 0,
-    `1ter. la valeur de mode est ENCORE acceptée telle quelle — si elle est désormais refusée, la `
-    + `décision existe, et ce témoin sort avec elle.`);
+    `1ter. la valeur de mode est REFUSÉE — si c'est voulu, alors les 285 sites qui écrivent `
+    + `'mode:random' ont migré ET l'absorption de BPx est tombée. Retirer ce témoin avec eux.`);
 }
 
 // ── 2. `mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────
