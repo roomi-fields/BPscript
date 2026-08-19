@@ -51,8 +51,8 @@ choisi), pas en constante de fichier. Une valeur simple déclarerait `default` d
 ### 3.2 Registre (chargement — générique)
 
 `libs.js` collecte l'union des sections `values` des librairies chargées →
-`ctx.valueRegistry` (nom → spec). Noms de directives moteur (`mode`, `@mm`,
-`seed`…) réservés et exclus (vérifié au chargement). Un nom ne peut pas être à la
+`ctx.valueRegistry` (nom → spec). Noms de directives moteur (`mode`, `seed`, `tempo`…)
+réservés et exclus (vérifié au chargement). Un nom ne peut pas être à la
 fois valeur portée et réglage moteur (§3.7).
 
 ### 3.3 Surface (3 niveaux, cascade complète dès la V1)
