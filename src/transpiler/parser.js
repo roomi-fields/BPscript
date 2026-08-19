@@ -471,11 +471,6 @@ function parse(tokens, opts = {}) {
   // VARIABLES DE TRAVAIL déclarées par `var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
   const nomsVariables = new Set();
-  // Les noms de MACRO dont le corps est un CÂBLAGE. Rempli à la déclaration, lu au moment où la
-  // nature d'un symbole de flux se décide — les déclarations précèdent les règles (fail-loud du
-  // 2026-07-29), donc l'information est là quand on en a besoin, sans passe supplémentaire.
-  const nomsCablage = new Set();
-
   // Avertissements non fatals (ex. dépréciation des @-formes de production).
   // Canal séparé des erreurs : remonté via opts.onWarning (compileBPS →
   // result.warnings), jamais dans l'AST (contrat BPx : AST inchangé).
@@ -1270,31 +1265,16 @@ function parse(tokens, opts = {}) {
       // porte. On lit donc les deux, pas celle du cas qu'on vient d'écrire.
       const nomPorte = typeof el.symbol === 'string' ? el.symbol : el.name;
       const estVariable = nomsVariables.has(nomPorte);
-      // ⚠️ LE CÂBLAGE NE SONNE PAS, ET IL NE DOIT PAS DURER (Romain, 2026-07-29 : « une macro de
-      // câblage est juste, et elle doit avoir une place SANS DURÉE dans la production »).
+      // ⚠️ LA NATURE DIT SI LE SYMBOLE SONNE, et l'aval la suit sans la rejuger (contrat
+      // d'opacité : les consommateurs portent, ils ne fabriquent pas). Deux valeurs seulement —
+      // un nom déclaré comme variable de travail, tout le reste sonnant.
       //
-      // CE QUE ÇA COÛTAIT, mesuré des deux bouts et pas déduit : BPx émettait `chain@0-500` en
-      // TERMINAL et repoussait C4 de 0 à 500 — à 120 au tempo, UN TEMPS ENTIER de musique avalé.
-      // Sur `patchbay.bps`, 8 jetons sur 8 sont des macros, ZÉRO note : 100 % de la pièce.
-      //
-      // ⚠️ ET LA CAUSE ÉTAIT UNE CONTRADICTION ENTRE DEUX DE MES PROPRES SIGNAUX : je publiais
-      // `noteTerminals` SANS ce nom — donc je disais moi-même qu'il ne sonne pas — et je posais
-      // `nature:'sounding'` DESSUS. BPx suit la nature (contrat d'opacité, ils portent et ne
-      // fabriquent pas) : ils ne pouvaient qu'émettre un sonnant. L'information juste circulait
-      // déjà jusqu'à eux par `scene.macros`, contredite par le champ qu'ils sont obligés de suivre.
-      //
-      // LE NOM EST DE MOI, et la frontière a été posée le jour même : la GRAPHIE (ce que l'auteur
-      // écrit) est à Romain, un NOM INTERNE D'AST ne l'est pas. `wire` parce que la directive
-      // s'appelle `wire` et le nœud `Wiring` — un même fait, un même mot, la discipline qui m'a
-      // fait réutiliser le nœud existant au lieu d'en créer un second.
-      //
-      // ⚠️ PÉRIMÈTRE VOLONTAIREMENT ÉTROIT : le câblage STRICT, corps de type `Wiring`. Les
-      // appels-composants opaques (`lpf.cutoff:12000`) N'Y SONT PAS — ils ne sonnent pas non plus
-      // et durent aussi, mais savoir si un RÉGLAGE doit suivre le même sort que le BRANCHEMENT est
-      // une question ouverte chez Romain. Élargir ici trancherait à sa place.
-      const estCablage = nomsCablage.has(nomPorte);
+      // ⚠️ ET UNE NATURE QUI CONTREDIT UN AUTRE DE MES SIGNAUX COÛTE UN TEMPS ENTIER DE MUSIQUE :
+      // publier un nom HORS de `noteTerminals` — donc dire qu'il ne sonne pas — tout en posant
+      // `sounding` dessus a fait émettre un terminal de 500 ms là où rien ne devait durer.
+      // Les deux signaux se lisent ensemble ; l'aval n'a pas à départager mes contradictions.
       el.payload = {
-        nature: estCablage ? 'wire' : (estVariable ? 'var' : 'sounding'),
+        nature: estVariable ? 'var' : 'sounding',
         ...(actor !== undefined ? { actor } : {}),
         ...(controls !== null ? { params: controls } : {}),
         ...(address !== null ? { address } : {}),
@@ -1406,15 +1386,6 @@ function parse(tokens, opts = {}) {
         // Présent seulement pour les `!(...)` runtime (qui portent ce flag) ; absent sinon.
         ...(el.conjoint !== undefined ? { conjoint: el.conjoint } : {}),
       };
-      return;
-    }
-
-    // ── Câblage posé dans le flux (`!osc >> filtre`, `!\>> out.in`) ───
-    // Même nature que les autres instantanés : ZÉRO DURÉE, jamais un pas (Romain 2026-07-28).
-    // Un câblage écrit dans un corps de `macro` ne passe pas ici — cette annotation ne parcourt
-    // que les membres droits — et il reste donc sans `payload`, comme avant.
-    if (type === 'Wiring') {
-      el.payload = { nature: 'instant', flux: true };
       return;
     }
 
@@ -2335,45 +2306,16 @@ function parse(tokens, opts = {}) {
         + `partie déclarative : 'def ${nom} <corps>'.`, tok);
     }
 
-    // @gate Sa:midi · @cv env1 mod.adsr(…) — LE DEUX-POINTS TRANCHE (Romain, 2026-07-29).
+    // ⛔ UNE DIRECTIVE RETIREE QU ON CONTINUE D ACCEPTER N EST PAS RETIREE, ELLE EST INVISIBLE.
+    // Mesure du 2026-08-09 : huit scenes portaient une directive « supprimee » que le parseur
+    // lisait toujours et dont l emetteur produisait toujours la section, sans que rien ne le dise.
+    // Le retrait ne vaut que le jour ou la lecture s arrete, pas le jour ou la decision tombe.
     //
-    // ⚠️ CE N'EST PAS UN ÉLARGISSEMENT, C'EST LE RETRAIT D'UNE DEVINETTE. Le compilateur
-    // distinguait ces deux formes d'après ce qui SUIVAIT le deux-points (`isCVModulatorBody` :
-    // est-ce `lib.type(…)` ou un bloc de code ?). C'est exactement le mécanisme qui a condamné
-    // le signe `=` le 27 juillet — un mot dont le sens dépend du contexte. Désormais la
-    // PRÉSENCE du deux-points décide, et rien d'autre :
-    //   · AVEC `:` → une PROPRIÉTÉ posée sur un nom qui existe déjà (`gate Sa:midi`) ;
-    //   · SANS `:` → une DÉCLARATION qui CRÉE un nom (`cv env1 mod.adsr(…)`), et c'est la
-    //     forme unique du langage depuis le 27 juillet : `@<directive> <nom> <valeur>`.
-    // Romain généralise aux QUATRE types : « en toute logique les 2 formes s'appliquent aux 4 ».
-    // ⛔ `cv` EST SUPPRIME DU LANGAGE — decision du 2026-08-08, appliquee le 2026-08-09 sur ordre
-    // de Romain :  tu dois aussi supprimer cv, pas de dette ouverte .
-    // Le vrai defaut n etait pas la directive : c est que le parseur la LISAIT encore et que
-    // l emetteur produisait TOUJOURS sa section depuis sa  suppression . Huit scenes la portaient
-    // sans que rien ne le dise. UNE DIRECTIVE RETIREE QU ON CONTINUE D ACCEPTER N EST PAS RETIREE,
-    // ELLE EST INVISIBLE — et elle le reste jusqu au jour ou un aval cesse de transporter le champ,
-    // ce que BPx vient de faire.
-
-    // ─── PIERRE TOMBALE — `map` est ABANDONNÉ (décision Romain 2026-07-27 au soir) ───────────
-    // `hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`
-    //
-    // L'ARGUMENT QUI A TRANCHÉ, et il n'était dans aucun inventaire : **une directive ne se
-    // débranche pas.** La coupure de câblage coupe un câble PENDANT QUE ÇA JOUE, et le branchement se reconfigure
-    // au fil de la pièce ; aucune déclaration ne sait faire ça, et il n'existe pas de
-    // « dé-déclaration ». Deux écritures pour brancher A sur B, dont l'une strictement moins
-    // puissante : c'est la moins puissante qui part.
-    //
-    // ⚠️ ET LA LEÇON DE MÉTHODE, qui est de moi : mon inventaire du matin comparait cette directive
-    // à `macro` et concluait JUSTE sur ce couple — il ne l'avait jamais comparée au CÂBLAGE, qui
-    // était pourtant le geste qu'elle finissait par faire. Une comparaison bien menée sur le
-    // mauvais couple donne une réponse correcte et sans valeur.
-    if (name === 'map') {
-      throw new ParseError("'map' est ABANDONNÉ (décision Romain 2026-07-27, le soir) — le câblage "
-        + "passe par les chevrons '>>' et '\\>>', qui savent aussi DÉBRANCHER pendant que ça joue, "
-        + "ce qu'une directive ne sait pas faire. Pour DÉSIGNER une chose d'un nom, écrire "
-        + "'def <nom> <corps>'. Pour attendre un geste, rien à câbler : "
-        + "'var <rôle> in.<canal>' puis l'adresse collée au point d'attente.", tok);
-    }
+    // ⛔ ET IL NE RESTE AUCUN REFUS NOMME DERRIERE UN MOT RETIRE. Un refus qui donne la reecriture
+    // publie la forme qu il nomme : le message est le troisieme domicile d un mot sorti, apres le
+    // parser et les librairies, et rien ne compile un message. Un mot retire se refuse donc
+    // EXACTEMENT comme un mot invente — c est la regle du 2026-08-18, et elle se mesure en
+    // comparant le refus du mot sorti a celui d un mot qui n a jamais existe.
 
   /**
    * ⛔ LE SIGNE `=` EST SUPPRIME DE TOUT LE LANGAGE (decision Romain, 2026-07-27) — et ce refus
@@ -2713,11 +2655,9 @@ function parse(tokens, opts = {}) {
     // Une scène pouvait donc écrire son état de départ et le voir disparaître sans une erreur. Un
     // corps, lui, était refusé (« Expected arrow ») : la moitié muette, la moitié bruyante.
     //
-    // ⛔ LE BRANCHEMENT N'EST PAS LU ICI, ET C'EST UNE DÉCISION DE ROMAIN (2026-08-13) : la forme du
-    // câblage passe à FaustX et le chantier est GELÉ depuis le 2026-08-09. Écrire un lecteur pour
-    // `saw1 >> lpf1` reviendrait à figer une graphie dont le remplacement est décidé. Il est donc
-    // REFUSÉ EN LE DISANT, plutôt qu'avalé — un refus nommé vaut mieux qu'un silence, et il tombera
-    // de lui-même quand le chantier s'ouvrira.
+    // ⛔ `init` PORTE DEUX ENTRÉES, ET DEUX SEULEMENT : un backtick TAGUÉ et un sac de valeurs.
+    // Ce qu'il recueillait de plus est sorti du langage le 2026-08-18 ; la boucle s'arrête sur
+    // tout le reste, et la ligne tombe alors dans le refus ordinaire d'une forme inconnue.
     if (name === 'init') {
       // LA FORME DE L'ARBRE EST CELLE QUE LA SPEC ÉCRIT : `init: InitEntry[] | null`, un tableau
       // PLAT (AST.md:30, :201-204). Pas de `{codes, valeurs}` de mon invention — une seconde forme
@@ -2745,11 +2685,7 @@ function parse(tokens, opts = {}) {
           entrees.push(parseRuntimeQualifier());
           continue;
         }
-        // ⛔ LE CÂBLAGE, REFUSÉ EN LE NOMMANT — jamais avalé.
-        // ⚠️ LE CÂBLAGE PORTE DEUX JETONS, pas un : brancher `>>` et COUPER `\>>`. N'en guetter
-        // qu'un laissait la coupure tomber dans « Expected arrow », un refus qui ne dit pas la
-        // vraie cause — trouvé par le garde en naissant.
-        break;   // ni code, ni valeur, ni câblage : le bloc est fini
+        break;   // ni code, ni valeur : le bloc est fini
       }
       return { type: 'InitDirective', entrees, line: tok.line };
     }
@@ -3380,47 +3316,16 @@ function parse(tokens, opts = {}) {
   // Le modulateur CV relève du patching, et sa forme se rouvrira avec lui, pas avant.
 
 
-  // ============================================================
-  // Câblage (modules à ports, opérateurs >> / \>>) — corps de @macro ET flux d'une règle
-  // ============================================================
-
-  // Le corps d'un @macro est un CÂBLAGE (Wiring) ssi il porte >> ou \>> avant le saut de ligne.
-  // Le parser NE CLASSE PAS son-vs-substitution (décision [489], PORTER≠RÉSOUDRE) : hors câblage,
-  // le corps est émis STRUCTUREL et OPAQUE (appel-composant via le point, ou symboles nus) ; la
-  // classe (module=son / acteur=hauteur / homo=substitution) est décidée à la RÉSOLUTION (aval).
-  // Un `!` du FLUX ouvre-t-il un câblage ? On regarde ce qui suit, jusqu'à la fin de l'élément.
-  //
-  // La borne est le POINT D'EXCLAMATION SUIVANT autant que la fin de ligne : sans elle,
-  // `C4 !dha !osc >> filtre` lirait le premier `!dha` comme le début d'un câblage, parce qu'un
-  // chevron traîne plus loin sur la ligne. Chaque instantané s'arrête où commence le suivant.
-  function fluxIsWiring(from = pos) {
-    if (tokens[from]?.type === T.WIRE_CUT) return true;   // `!\>> out.in` — coupure sans étage amont
-    let j = from;
-    while (j < tokens.length) {
-      const t = tokens[j].type;
-      if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR || t === T.COMMENT) return false;
-      if (t === T.BANG) return false;  // l'élément suivant commence : ce `!`-ci n'était pas un câblage
-      if (t === T.WIRE || t === T.WIRE_CUT) return true;
-      j++;
-    }
-    return false;
-  }
-
-  function bodyIsWiring() {
-    if (at(T.WIRE) || at(T.WIRE_CUT)) return true;
-    let j = pos;
-    while (j < tokens.length) {
-      const t = tokens[j].type;
-      if (t === T.NEWLINE || t === T.EOF || t === T.SEPARATOR) return false;
-      if (t === T.WIRE || t === T.WIRE_CUT) return true;
-      j++;
-    }
-    return false;
-  }
-
-  // Valeur affectée à un port (`: <valeur>`) : nombre (+unité collée), référence
-  // (ident, ex. `pitch`), ou backtick typé (ex. `` `js: lfo(2)` ``).
-  function parseWireValue() {
+  /**
+   * LA VALEUR POSÉE SUR LE MEMBRE D'UN COMPOSANT — `lpf.cutoff: 8000`, `saw.freq: pitch`,
+   * `env.decay: 350ms`. Nombre (avec son unité collée), référence nue, ou backtick typé.
+   *
+   * PORTER ≠ RÉSOUDRE : la classe de la valeur — réglage, déclenchement, hauteur — se décide à
+   * la résolution, en aval, sur le catalogue de ports. Ici on lit la forme et on la porte telle
+   * quelle. Le refus reste NU : il ne peut pas proposer de réécriture sans en publier une, et
+   * ce qui s'écrivait à cette place avec un chevron est sorti du langage le 2026-08-18.
+   */
+  function lireValeurDeMembre() {
     if (at(T.BACKTICK)) {
       const raw = advance().value;
       const t = tryBacktickTag(raw);
@@ -3432,40 +3337,7 @@ function parse(tokens, opts = {}) {
       return { kind: 'number', value: n };
     }
     if (at(T.IDENT)) return { kind: 'ref', name: advance().value };
-    throw new ParseError('valeur de câblage attendue après « : »', current());
-  }
-
-  // Un étage de câblage : `module (. port)? (: valeur)?`. `cut` = le lien qui l'atteint
-  // est un `\>>` (débranchement) plutôt qu'un `>>` (câbler).
-  function parseWireStage(cut) {
-    const line = current().line;
-    const module = expect(T.IDENT).value;
-    let port = null, value = null;
-    if (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT) {
-      advance(); // consume PERIOD
-      port = advance().value;
-    }
-    if (at(T.COLON) && !current().spaceBefore) {
-      advance(); // consume COLON
-      value = parseWireValue();
-    }
-    return { module, port, value, cut };
-  }
-
-  // Câblage complet : `[\>>] stage ((>> | \>>) stage)*`. Une LIGNE = une chaîne série
-  // (longueur quelconque, précision Romain) ; le multi-ligne (plusieurs @macro du même
-  // nom) sert au parallélisme. `>>` câble, `\>>` coupe (patchbay dynamique).
-  function parseWiring(line) {
-    const stages = [];
-    let cut = false;
-    if (at(T.WIRE_CUT)) { cut = true; advance(); }
-    stages.push(parseWireStage(cut));
-    while (at(T.WIRE) || at(T.WIRE_CUT)) {
-      const linkCut = at(T.WIRE_CUT);
-      advance();
-      stages.push(parseWireStage(linkCut));
-    }
-    return { type: 'Wiring', cut, stages, line };
+    throw new ParseError('valeur attendue après « : »', current());
   }
 
   // ============================================================
@@ -5524,18 +5396,6 @@ function parse(tokens, opts = {}) {
       const collated = !current().spaceBefore && precedent !== undefined
                     && !OUVRANTS.has(precedent.type);
       advance();
-      // `!osc >> filtre` / `!\>> out.in` → CÂBLAGE posé DANS LE FLUX.
-      //
-      // Décidé par Romain le 2026-07-28, sur sa propre écriture `!eltA\>>eltB` : un câblage
-      // N'OCCUPE PAS DE TEMPS — il se pose en instantané dans une règle, et c'est le point
-      // d'exclamation qui le dit, comme pour tout ce qui est dans le flux sans prendre un pas.
-      // Il devient un ÉLÉMENT DE SÉQUENCE À PART ENTIÈRE : le précédent est uniforme sur tous
-      // les autres contrôles du langage, aucun n'est une marque accrochée à son voisin.
-      // Le MULTIPLE ne demande aucun séparateur — chaque câblage porte SON point d'exclamation
-      // et ils se suivent (`!a >> b !c >> d`), exactement comme s'enchaînent les instantanés.
-      if (fluxIsWiring()) {
-        return parseWiring(tok.line);
-      }
       // ! (/N) · ! (*N/M) → CHANGEMENT DE VITESSE posé dans le flux.
       // La bible en donne l'écriture et la place : LANGUAGE.md:1249 (« ! (/N) · ! (*N/M) —
       // changement de vitesse posé dans le flux ») et :2267 (« /N accélère, et *N/M écrit la
@@ -5790,7 +5650,7 @@ function parse(tokens, opts = {}) {
       // content.action, catalogue de ports). PORTER≠RÉSOUDRE : je ne classe pas, je porte la valeur.
       if (componentOpaque && at(T.COLON) && !current().spaceBefore) {
         advance(); // consume COLON
-        const value = parseWireValue();
+        const value = lireValeurDeMembre();
         return { type: 'Symbol', name: normalizeName(name), line: tok.line, actor, value };
       }
 
@@ -5941,12 +5801,7 @@ function parse(tokens, opts = {}) {
 
       // Simultaneous: Sa!dha!phase=2
       // But NOT !() or ![] — those are standalone InstantControls for the next iteration
-      // NI un CÂBLAGE (`C4 !osc >> filtre`) : le `!` y ouvre un élément à part entière, qu'on
-      // laisse au tour suivant de la boucle du flux. Sans ce test, l'accord avalait le premier
-      // étage puis butait sur le chevron, et la ligne tombait sur un refus GÉNÉRIQUE — un
-      // câblage lu comme un accord, exactement le mode d'échec payé en juillet sur `!(…)`.
-      if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET
-          && !fluxIsWiring(pos + 1)) {
+      if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
         const node = parseSimultaneousGroup(name, tok);
         if (actor) poserActeur(node, actor);
         return node;
@@ -6207,8 +6062,7 @@ function parse(tokens, opts = {}) {
     // le lire comme un accord fait échouer la ligne sur « symbole attendu après ! ».
     // Payé le 2026-07-26 : la migration du corpus pose des `!(…)` partout, et une scène tombait
     // sur cette lecture — donc pour une raison FAUSSE, masquant celle qu'on voulait lui voir.
-    if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET
-        && !fluxIsWiring(pos + 1)) {
+    if (at(T.BANG) && peek(1).type !== T.LPAREN && peek(1).type !== T.LBRACKET) {
       return parseSimultaneousGroup(name, tok, args);
     }
 
@@ -6300,8 +6154,7 @@ function parse(tokens, opts = {}) {
    * correctif, le défaut serait devenu universel au lieu d'être fréquent.
    */
   function envelopperEnAccord(el, tok) {
-    if (!at(T.BANG) || peek(1).type === T.LPAREN || peek(1).type === T.LBRACKET
-        || fluxIsWiring(pos + 1)) return el;
+    if (!at(T.BANG) || peek(1).type === T.LPAREN || peek(1).type === T.LBRACKET) return el;
     return { type: 'SimultaneousGroup', primary: el, secondaries: lireSecondaires(tok) };
   }
 
@@ -6348,11 +6201,6 @@ function parse(tokens, opts = {}) {
     const secondaries = [];
 
     while (at(T.BANG)) {
-      // Un `!` qui ouvre un CÂBLAGE n'est pas un secondaire d'accord : `C4 !dha !osc >> filtre`
-      // est un accord PUIS un câblage, deux éléments frères. Sans ce test, l'accord absorbait
-      // `!osc` et butait sur le chevron — le premier `!` était bien lu, c'est le DEUXIÈME qui
-      // se perdait. La garde du haut ne suffisait pas : elle ne voit que l'entrée dans l'accord.
-      if (fluxIsWiring(pos + 1)) break;
       advance(); // !
 
       // ! is exclusively temporal — only symbols/symbol calls

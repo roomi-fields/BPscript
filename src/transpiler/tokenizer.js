@@ -39,10 +39,10 @@ const CARACTERES_CONNUS_MAIS_ETRANGERS = new Map([
   ["'", "BPScript n'a pas de littéral entre guillemets — un terminal s'écrit nu (X, pas 'X')."],
   ['"', "BPScript n'a pas de littéral entre guillemets — un terminal s'écrit nu (X, pas \"X\")."],
   [';', "le séparateur de séquence de BP2 n'existe pas — une règle par ligne."],
-  // ⚠️ CE MESSAGE PUBLIAIT UNE FORME MORTE : il donnait la coupure de câblage `\\>>` comme le seul
-  // emploi de l'antislash, alors que le câblage est sorti du langage le 2026-08-18. Un refus qui
-  // nomme une forme la ressuscite pour son lecteur — c'est le troisième domicile d'un mot retiré,
-  // après le parser et les librairies.
+  // ⚠️ CETTE ENTRÉE DONNAIT UNE RÉÉCRITURE, ET LA RÉÉCRITURE ÉTAIT MORTE. Un refus qui nomme une
+  // forme la ressuscite pour son lecteur : c'est le troisième domicile d'un mot retiré, après le
+  // parser et les librairies, et aucun garde ne compile un message. Le refus reste NU tant qu'il
+  // n'a pas de réécriture vivante à donner.
   ['\\', "l'antislash n'a aucun emploi dans le langage."],
   ['%', "le pourcentage n'est pas un signe du langage — un poids s'écrit '[weight:N]'."],
 ]);

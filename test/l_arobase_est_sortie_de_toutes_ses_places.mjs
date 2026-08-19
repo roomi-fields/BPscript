@@ -40,7 +40,7 @@ const PLACES = [
   ['la section des gabarits',     `${T}-----\nS -> C4\n@template\n? -> C4\n`],
 ];
 
-console.log(`[arobase] ${PLACES.length} places + le suffixe + ${3} témoins`);
+console.log(`[arobase] ${PLACES.length} places de tête + les positions du suffixe + 3 témoins`);
 
 for (const [quoi, src] of PLACES) {
   const e = err(src);
@@ -56,16 +56,33 @@ for (const [quoi, src] of PLACES) {
 // ── 2. LA HUITIÈME PLACE — LE SUFFIXE, SORTI PAR SA PROPRE DÉCISION ─────────────────────────
 // ⛔ ELLE NE DOIT PAS RENDRE LE MÊME MESSAGE. Le suffixe collé à un élément est sorti le
 // 2026-07-28, presque trois semaines avant l'arobase. Deux retraits, deux causes.
-{
-  const e = err(`${T}-----\nS -> C4@lent\n`);
-  ok(e.length >= 1, "2. le suffixe collé `C4@lent` doit être REFUSÉ");
+//
+// ⛔ ET LE SUFFIXE S'ÉCRIT À SEPT POSITIONS, PAS À UNE. Quatre endroits du parser lisent un
+// élément et un seul portait la pierre tombale : la forme disparaissait bien partout, mais trois
+// positions — la voix polymétrique et les deux groupes de gabarit — refusaient par un message
+// GÉNÉRIQUE, donc sans rien réapprendre au lecteur. Une seule position mesurée n'aurait jamais
+// montré l'écart : c'est la matrice qui l'a trouvé, pas la relecture.
+const POSITIONS_DU_SUFFIXE = [
+  ['sur un terminal',                   `${T}-----\nS -> C4@kick D4\n`],
+  ['sur un groupe',                     `${T}-----\nS -> {C4 D4}@groove\n`],
+  ['sur une variable',                  `${T}symbol a\n-----\nS -> C4 a@lbl\n`],
+  ['en fin de règle',                   `${T}-----\nS -> C4 D4@fin\n`],
+  ['dans une voix polymétrique',        `${T}-----\nS -> {C4@kick D4, E4}\n`],
+  ['dans un groupe de gabarit maître',  `${T}-----\nS -> \${C4@kick D4}\n`],
+  ['dans un groupe de gabarit esclave', `${T}-----\nS -> &{C4@kick D4}\n`],
+];
+for (const [ou, src] of POSITIONS_DU_SUFFIXE) {
+  const e = err(src);
+  ok(e.length >= 1, `2. le suffixe ${ou} doit être REFUSÉ`);
   ok(e.some((m) => /suffixe/.test(m)),
-    `2. le suffixe collé — le refus doit NOMMER le suffixe, qui est ce qui sort ici `
+    `2. le suffixe ${ou} — le refus doit NOMMER le suffixe, qui est ce qui sort ici `
     + `(reçu : ${e[0]?.slice(0, 110)})`);
   ok(!e.some((m) => /l'arobase est SORTIE du langage/.test(m)),
-    `2. le suffixe collé ne doit PAS être refusé au nom de l'arobase : il est sorti par sa propre `
+    `2. le suffixe ${ou} ne doit PAS être refusé au nom de l'arobase : il est sorti par sa propre `
     + `décision, le 2026-07-28. Un seul message pour deux retraits fait disparaître l'un des deux.`);
 }
+// TÉMOIN ANTI-RÉTRÉCISSEMENT : une matrice vidée passerait en silence.
+ok(POSITIONS_DU_SUFFIXE.length >= 7, '2. la matrice des positions ne s\'est pas vidée');
 
 // ── 3. LE COMPLÉMENT — les mêmes lignes SANS arobase doivent PASSER ──────────────────────────
 // Sans lui, un refus qui mordrait tout aurait exactement la même tête.
