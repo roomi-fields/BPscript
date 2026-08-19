@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys } from './libs.js';
 import { BP3_OPERATORS } from './constants.js';
 
 class ParseError extends Error {
@@ -4769,15 +4769,6 @@ function parse(tokens, opts = {}) {
   //   fraction 3/2 · cents 700c · décimal 1.5 (un entier nu = ratio brut, 2 = octave).
   // La valeur est portée BRUTE (chaîne) ; la résolution (Kairos, normalizeRatio) la normalise.
   // Malformé → crie en NOMMANT la faute (pas de repli silencieux, L26).
-  /** Lit une valeur COMPOSITE brute jusqu'à la parenthèse fermante : les virgules
-   *  INTERNES sont conservées (elles font partie de la valeur, ex. `C4,2`). L'aval
-   *  (BPx puis Kairos) la re-découpe, lui seul connaît la forme attendue. */
-  function readCompositeLiteral() {
-    let out = '';
-    while (!at(T.RPAREN) && !atEnd()) out += advance().value;
-    return out;
-  }
-
   function readIntervalLiteral(ctrlName) {
     const startTok = current();
     const bad = (why) => {
@@ -5981,14 +5972,7 @@ function parse(tokens, opts = {}) {
       // arg positionnel), soit `Sym(transpose:3/2)` (clé interval-typée). Lu comme INTERVALLE, porté brut.
       const intervalHere = (key && universeIntervalControls().has(key))
                         || (!key && universeIntervalControls().has(name));
-      // Valeur COMPOSITE (`keyxpand:C4,2`) : la virgule appartient à la VALEUR. Sans ce cas,
-      // la liste d'arguments la consomme comme séparateur et le contrôle ne reçoit que sa
-      // première moitié — l'aval criait alors « needs a pivot note and a factor ».
-      const compositeHere = (key && universeCompositeControls().has(key))
-                         || (!key && universeCompositeControls().has(name));
-      if (compositeHere) {
-        value = { type: 'Literal', value: readCompositeLiteral() };
-      } else if (intervalHere) {
+      if (intervalHere) {
         value = { type: 'Literal', value: readIntervalLiteral(key || name) };
       } else if (at(T.BACKTICK)) {
         // Valeur calculée : taggée si tag présent, sinon héritage (résolu en aval).

@@ -38,7 +38,6 @@ function registerLib(name, data) {
   _universeRuleAllowed = null;
   _universeSacs = null;
   _universeIntervalControls = null;
-  _universeCompositeControls = null;
   _universeAddressKeys = null;
   _universeReservedDirectives = null;
 }
@@ -65,7 +64,6 @@ function clearRegistry() {
   _universeRuleAllowed = null;
   _universeSacs = null;
   _universeIntervalControls = null;
-  _universeCompositeControls = null;
   _universeAddressKeys = null;
   _universeReservedDirectives = null;
 }
@@ -95,18 +93,6 @@ function universeIntervalControls() {
     _universeIntervalControls = loadLibsFromDirectives(allDirs).intervalControls;
   }
   return _universeIntervalControls;
-}
-
-// Contrôles à valeur COMPOSITE de l'UNIVERS (marqués `argType:"composite"`). Même besoin que les
-// interval-typés : le parseur doit savoir AVANT le libCtx de la scène que la virgule de
-// `keyxpand:C4,2` appartient à la VALEUR et ne sépare pas deux arguments.
-let _universeCompositeControls = null;
-function universeCompositeControls() {
-  if (!_universeCompositeControls) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
-    _universeCompositeControls = loadLibsFromDirectives(allDirs).compositeControls;
-  }
-  return _universeCompositeControls;
 }
 
 // Univers des contrôles désignés par un NUMÉRO DE COMPOSANT (`cc.98:45`). Même mécanisme que
@@ -525,8 +511,6 @@ function loadLibsFromDirectives(directives) {
     subgrammarControls: new Map(),  // subgrammar-level directives: name → { bp3, args }
     noArgControls: new Set(),
     bagOnlyControls: new Set(),  // `bagOnly:true` — aucune forme nue dans le flux, cf. plus bas
-    compositeControls: new Set(),  // controls whose value is COMPOSITE (`pivot,facteur`) : la
-                                   // virgule appartient à la VALEUR, portée brute en une seule chaîne.
     // ⛔ CES DEUX ENSEMBLES DISENT LE DESTINATAIRE, PAS LE SIGNE (rectifié 2026-08-08, Romain :
     // « le destinataire des contrôles est spécifié dans la LIBRAIRIE dans laquelle le contrôle est
     // listé, c'est la seule source de vérité »). Leur ancien commentaire — « déclarés sous `engine`
@@ -1024,13 +1008,6 @@ function loadLibsFromDirectives(directives) {
         if (def.argType === 'interval') {
           ctx.intervalControls.add(name);
         }
-        // Argument COMPOSITE (ex. keyxpand `pivot,facteur`) : la virgule appartient à la
-        // VALEUR, pas à la liste d'arguments. Sans ce marqueur la paire est scindée et le
-        // contrôle ne reçoit que sa première moitié. Même principe que `interval` : porté
-        // brut par la surface, découpé par l'aval qui en connaît la forme.
-        if (def.argType === 'composite') {
-          ctx.compositeControls.add(name);
-        }
       }
     }
 
@@ -1320,6 +1297,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
+export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };
