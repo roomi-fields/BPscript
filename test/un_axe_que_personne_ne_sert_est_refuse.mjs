@@ -94,7 +94,13 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
        + `refus d'axe. Reçu : ${msg.slice(0, 90)}. Une liste écrite dans le code au lieu de la `
        + `donnée en épargnerait moins que la donnée n'en recense.`);
   }
-  ok(epargnes >= 5,
+  // ⚠️ SEUIL DESCENDU DE 5 À 4 LE 2026-08-19, À LA MAIN ET SUR MESURE. `out` a quitté les épargnés :
+  // la sortie de SCÈNE (`out.<canal>` en tête, sans acteur) acceptait un canal inventé, alors que
+  // la forme d'acteur le refusait depuis le 2026-08-04. La quatrième case de la liste fermée est
+  // fermée, donc `out.zzz` porte désormais un message — et c'est le bon : il NOMME la direction,
+  // jamais « aucune librairie ne sert », ce que le volet juste au-dessus vérifie mot pour mot.
+  // Le seuil suit le fait ; il ne le précède pas.
+  ok(epargnes >= 4,
      `C. ${epargnes} mots du langage épargnés seulement — sous ce seuil, le volet ne mesure plus la `
      + `donnée mais un cas particulier.`);
 

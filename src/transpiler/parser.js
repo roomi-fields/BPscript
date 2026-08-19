@@ -212,6 +212,39 @@ function outChannels() {
  * `alphabet.X:keyboard` reste refusé, une sortie clavier n'a pas de sens. Préservée à
  * l'identique de l'ancienne `inputTransportChannels`, dérivée du catalogue unifié.
  */
+/**
+ * ⛔ LA LISTE FERMÉE DE SORTIE VALAIT SUR TROIS CASES SUR QUATRE. Un canal de sortie inconnu était
+ * refusé chez un `actor`, une entrée inconnue était refusée en tête de scène — mais la SORTIE de
+ * scène, `out.<canal>`, ne passait par aucune des deux. `out.zorglub` compilait, et `out.keyboard`
+ * aussi, alors que la forme d'acteur le refuse en nommant sa direction.
+ *
+ * ⚠️ CE QUI L'A RÉVÉLÉ N'EST PAS CE QU'ON M'A SIGNALÉ. BPx a remonté « une scène invoque une entrée
+ * de librairie absente et rien ne le dit », avec trois références. Rejouées chez moi, les trois
+ * EXISTENT — son instrument lisait `LIBS.<axe>` à la racine, alors qu'une section sert un axe par
+ * son champ `resolves` (`sounds` sert `sound`) et que les homomorphismes vivent sous `tables`.
+ * Les six axes de catalogue refusaient déjà une entrée inventée, nommément. En fabriquant le cas
+ * pour le vérifier, c'est CETTE case-ci qui s'est ouverte.
+ *
+ * PÉRIMÈTRE MESURÉ AVANT DE CÂBLER LE REFUS : 829 scènes `.bps` de toute la tour, 55 invocations
+ * `in.`/`out.`, ZÉRO sur un canal inconnu. Le refus ne casse aucune scène vivante.
+ *
+ * Le message reprend mot pour mot celui de la forme d'acteur : deux graphies d'une même règle
+ * doivent refuser de la même façon, sinon l'auteur apprend deux langages.
+ */
+function refuserCanalDeSortieInconnu(name, subkey, tok) {
+  if (name !== 'out' || !subkey) return;
+  if (!outChannels().has(subkey)) {
+    throw new ParseError(
+      `'${subkey}' n'est pas une sortie — les canaux de sortie sont `
+      + `${[...outChannels()].join(', ')}. La liste est FERMÉE.`, tok);
+  }
+  if (!writableChannels().has(subkey)) {
+    throw new ParseError(
+      `'out.${subkey}' est refusé — ce canal est une DESTINATION de l'architecture, routée comme `
+      + `les autres sorties, mais son ÉCRITURE dans une scène attend encore son appareil dédié.`, tok);
+  }
+}
+
 let _inChannels = null;
 function inChannels() {
   if (_inChannels) return _inChannels;
@@ -3244,6 +3277,7 @@ function parse(tokens, opts = {}) {
 
         break;
       }
+      refuserCanalDeSortieInconnu(name, subkey, tok);
       const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
                         ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
       if (assignments.length > 0) {
@@ -3265,6 +3299,7 @@ function parse(tokens, opts = {}) {
     // scène, préfixe optionnel. Le refus a changé de côté : il vit sur le BLOC, dans
     // `parseProductionBlock`.
 
+    refuserCanalDeSortieInconnu(name, subkey, tok);
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
              ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
   }

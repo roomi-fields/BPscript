@@ -40,7 +40,19 @@ const compile = (corps) => {
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
-const sceneOut = (canal) => `actor v\n  alphabet.western\n  out.${canal}\nmode:ord\n-----\nS -> v.C4`;
+// ⛔ CE TÉMOIN S'APPELAIT `sceneOut` ET BÂTISSAIT UN BLOC D'ACTEUR. Le nom mentait, et c'est
+// exactement par là que le trou a survécu : la sortie de SCÈNE — `out.<canal>` en tête, sans
+// acteur — n'était éprouvée par personne, et elle acceptait `out.zorglub` comme `out.keyboard`.
+// La forme d'acteur, elle, refusait les deux depuis le 2026-08-04.
+//
+// ⚠️ UN GARDE NOMMÉ POUR UNE FORME QU'IL N'EXERCE PAS EST PIRE QU'UN GARDE ABSENT : il occupe la
+// place. Les DEUX graphies passent désormais dans la même matrice, et le message doit être le
+// MÊME — deux écritures d'une seule règle qui refusent différemment enseignent deux langages.
+const GRAPHIES_OUT = {
+  acteur: (canal) => `actor v\n  alphabet.western\n  out.${canal}\nmode:ord\n-----\nS -> v.C4`,
+  scene: (canal) => `alphabet.western\nout.${canal}\nmode:ord\n-----\nS -> C4`,
+};
+const sceneOut = GRAPHIES_OUT.acteur;
 const sceneIn = (canal) => `in.${canal} x\nmode:ord\n-----\nS -> C4`;
 
 // Mot que porte le message quand un canal EST une direction mais reste fermé à l'écriture —
@@ -56,13 +68,13 @@ const MOT_ECRITURE_FERMEE = 'ÉCRITURE';
  *    fermée (DIRECTION ≠ ÉCRITURE, jamais « n'est pas une sortie », qui serait faux) ;
  *  - le canal porte la direction et `writable:true` → ACCEPTÉ.
  */
-function verifierDirection(canal, direction, channels, motDirection) {
-  const scene = direction === 'out' ? sceneOut(canal) : sceneIn(canal);
+function verifierDirection(canal, direction, channels, motDirection, graphie = 'acteur') {
+  const scene = direction === 'out' ? GRAPHIES_OUT[graphie](canal) : sceneIn(canal);
   const r = compile(scene);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   const porteDirection = !!(channels[canal] && channels[canal][direction]);
   const ecrivable = !!(channels[canal] && channels[canal].writable);
-  const label = `${direction}.${canal}`;
+  const label = `${direction}.${canal} (graphie ${direction === 'out' ? graphie : 'scène'})`;
   if (porteDirection && ecrivable) {
     ok((r.errors || []).length === 0, `'${label}' doit être ACCEPTÉ — reçu : ${msg.slice(0, 200)}`);
   } else if (porteDirection && !ecrivable) {
@@ -97,16 +109,31 @@ ok(!!(channels.text && channels.text.writable === false), "'text' doit rester NO
 
 // ─── MATRICE : CHAQUE CANAL DU CATALOGUE × {out, in} ─────────────────────────────────────────
 for (const canal of Object.keys(channels)) {
-  verifierDirection(canal, 'out', channels, "n'est pas une sortie");
+  for (const graphie of Object.keys(GRAPHIES_OUT)) {
+    verifierDirection(canal, 'out', channels, "n'est pas une sortie", graphie);
+  }
   verifierDirection(canal, 'in', channels, "n'est pas une entrée");
 }
 
 // ─── HORS CATALOGUE : la liste reste FERMÉE ──────────────────────────────────────────────────
+// LES DEUX GRAPHIES, et le message COMPARÉ mot pour mot entre elles.
 {
-  const r = compile(sceneOut('inconnu'));
-  const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-  ok((r.errors || []).length > 0, "'out.inconnu' doit être REFUSÉ (liste fermée)");
-  ok(msg.includes("n'est pas une sortie"), `'out.inconnu' refusé mais sans nommer la direction — reçu : ${msg.slice(0, 200)}`);
+  const messages = {};
+  for (const graphie of Object.keys(GRAPHIES_OUT)) {
+    const r = compile(GRAPHIES_OUT[graphie]('inconnu'));
+    const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
+    messages[graphie] = msg;
+    ok((r.errors || []).length > 0, `'out.inconnu' (graphie ${graphie}) doit être REFUSÉ (liste fermée)`);
+    ok(msg.includes("n'est pas une sortie"),
+      `'out.inconnu' (graphie ${graphie}) refusé mais sans nommer la direction — reçu : ${msg.slice(0, 200)}`);
+  }
+  // ⛔ LE REFUS DOIT DIRE LA MÊME CHOSE DES DEUX CÔTÉS, à l'attribution d'acteur près. Sans cette
+  // comparaison, une graphie peut refuser pour une raison et l'autre pour une autre, et les deux
+  // volets ci-dessus resteraient verts.
+  const noyau = (m) => m.replace(/^acteur '[^']*' : /, '').replace(/ at line \d+:\d+/, '').trim();
+  ok(noyau(messages.acteur) === noyau(messages.scene),
+    `les deux graphies de 'out.inconnu' doivent refuser par le MÊME message — acteur : `
+    + `« ${noyau(messages.acteur).slice(0, 90)} » · scène : « ${noyau(messages.scene).slice(0, 90)} »`);
 }
 
 // ─── DMX SPÉCIFIQUEMENT ATTENDU EN SORTIE (item 2 de la tâche) ───────────────────────────────
