@@ -70,9 +70,9 @@ def print
 def mode
   section:engine
   args:mode
-  values:random ord sub sub1 lin tem poslong
+  values:rnd ord sub sub1 lin tem poslong
   default:ord
-  description:`txt: Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.`
+  description:`txt: Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.`
   scope:subgrammar
 
 def scan
@@ -257,7 +257,7 @@ def smooth
 
 def mode
   section:schema.reservedDirectives
-  description:`txt: Mode de derivation du bloc/sous-grammaire (random, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.`
+  description:`txt: Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.`
   scope:subgrammar
 
 def scan
