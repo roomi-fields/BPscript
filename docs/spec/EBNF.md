@@ -71,7 +71,6 @@ def_directive = "@" , "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
 def_body = terminal_block            (* def cloche  degree:0  voice.sombre *)
-         | patch_expr                (* def sombre lpf1 >> vca1 *)
          | setting_bag               (* def kick (vel:120) *)
          | backtick_inline           (* def fondu phase `js: (t, dur) => 1 - t / dur` *)
          | rhs ;                     (* def cadence sa re ga pa   def accent(x) x(vel:120) *)
@@ -100,34 +99,12 @@ d'accordage et de registres, `hz` la donne directement.
 ```ebnf
 init_directive = "@" , "init" , NEWLINE , init_entry+ ;
 
-init_entry = patch_expr | backtick_orphan ;
+init_entry = backtick_orphan ;
 ```
 
 `init` déclare **l'état de départ** de la scène : ce qui existe au démarrage et appartient à la
-scène entière — le branchement initial, le code lancé une fois, les valeurs de départ. Ce qui
+scène entière — le code lancé une fois et les valeurs de départ. Ce qui
 appartient à une chose s'initialise dans sa déclaration.
-
-### Le langage de patch
-
-```ebnf
-patch_expr = patch_chain | patch_switch | port_assignment ;
-
-patch_chain     = patch_node , { wire_op , patch_node } ;
-wire_op         = [ INT ] , ( ">>" | "\>>" ) ;        (* le nombre donne la largeur : 8>> *)
-patch_node      = "out" | IDENT , [ "." , IDENT ] ;    (* lpf1   lpf1.cutoff   out *)
-patch_switch    = IDENT , ( "switchon" | "switchoff" ) ;
-port_assignment = IDENT , "." , IDENT , ":" , value ;  (* lpf1.cutoff:400 *)
-```
-
-Le langage du câblage porte tout ce qui touche à la gestion du patch : brancher, couper,
-neutraliser, affecter une valeur à un port. Un nombre devant les chevrons donne la largeur du
-câble ; sans nombre, le câble en porte une. Le puits d'une chaîne s'écrit `out` — il désigne la
-sortie de l'acteur, dont le canal est celui que l'acteur déclare.
-
-Un module a une entrée et une sortie de signal par défaut ; quand elles suffisent, la chaîne
-s'écrit sans les nommer. Quand il y en a plusieurs, le câblage les nomme avec le point.
-
-Ce langage s'écrit à deux emplacements : nommé dans un `def`, littéral dans un backtick `patch:`.
 
 ### Invoquer une librairie, invoquer un réglage
 

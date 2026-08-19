@@ -169,8 +169,7 @@ Le sens de chaque signe accole -- le point, le deux-points, l'etoile -- est deta
 
 Un backtick porte du code, et **le tag en tete est une adresse** : il nomme le langage, et le
 langage nomme son interprete -- exactement comme le domaine d'une cle. Les langages externes
-s'ecrivent `sc:`, `py:`, `tidal:`, `strudel:`, `hydra:` ; **`patch:` est le langage du cablage**, et
-son interprete lui est propre.
+s'ecrivent `sc:`, `py:`, `tidal:`, `strudel:`, `hydra:`.
 
 **Chaque langage se declare en librairie** -- voir « Le prototype d'un langage backtique ». C'est la
 qu'il dit s'il sonne et s'il occupe du temps ; une occurrence
@@ -197,28 +196,6 @@ alphabet.sargam
 -----
 S -> sa(vel:`rrand(40,127)`) `sc: i = i + 1` re
 ```
-
-#### Le langage de patch
-
-**`patch:` est le langage du cablage.** Il s'ecrit dans une regle comme tout backtick : **muet, et
-de duree nulle**.
-
-```bpscript
-S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4
-```
-
-Il porte **tout ce qui touche a la gestion du patch** : brancher `>>`, couper `\>>`, neutraliser
-`switchon` / `switchoff`, affecter une valeur a un port (`lpf1.cutoff:400`).
-
-**Il manipule le patch ; les declarations vivent en tete de scene** -- creer une instance s'y ecrit,
-comme toute declaration du langage.
-
-**Un backtick est un terminal, et un terminal se pose dans une regle** : c'est a ce titre que le
-cablage y entre. La derivation, elle, produit de la matiere -- `S -> saw1 >> lpf1` arrete la
-compilation.
-
-**Le meme langage sert dans un `def`** : ce qu'on reinvoque se nomme, ce qu'on ecrit une fois
-reste litteral. Un seul langage, deux emplacements.
 
 ### Simultaneite `!` et synchronisation `<!`
 
@@ -359,7 +336,7 @@ def cloche
   voice.sombre
 
 def ka  voice.sec
-def sirene  hz:440  voice.`js: saw(pitch) >> lpf(cutoff) >> out`
+def sirene  hz:440
 def muet  sounding:false
 ```
 
@@ -375,21 +352,16 @@ d'accordage et de registres, `hz` la donne directement.
 
 ### `init` -- l'etat de depart
 
-`init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le
-branchement initial et le code lance une fois.
+`init` porte ce qui existe au demarrage de la scene et n'appartient a aucune declaration : le code
+lance une fois.
 
 ```text
-saw saw1
-lpf lpf1
-
 init
-  saw1 >> lpf1 >> out
   `sc: SynthDef(\grain, { |freq| ... }).add`
 ```
 
 Ce qui appartient a une chose s'initialise **dans sa declaration** -- un flag ecrit son etat de
-depart la ou il nait. `init` recueille ce qui ne se rattache a rien : un branchement relie des
-modules deja declares, il n'appartient a aucun d'eux.
+depart la ou il nait. `init` recueille ce qui ne se rattache a rien.
 
 ### `actor` -- declarer qui joue
 
@@ -1017,7 +989,7 @@ temps ? ».
 
 | champ         | ce qu'il porte                                                       |
 | ------------- | -------------------------------------------------------------------- |
-| `name`        | le tag ecrit devant le deux-points -- `sc`, `js`, `strudel`, `patch` |
+| `name`        | le tag ecrit devant le deux-points -- `sc`, `js`, `strudel`          |
 | `description` | a quoi sert ce langage                                               |
 | `sounding`    | ce que ce langage produit par defaut, sonnant ou non                 |
 | `duration`    | la duree par defaut de ce qu'il produit                              |
@@ -1030,8 +1002,6 @@ qu'il y rend.
 **Un seul prototype pour les deux emplois.** Le meme `sc:` s'ecrit autonome dans le flux et en ligne
 dans un parametre ; ce qui varie d'un langage a l'autre, ce sont ses defauts, et une occurrence les
 surcharge avec un sac : `` `sc: i = i + 1`(sounding:false) ``.
-
-**`patch` declare `sounding` faux et `duration` nulle**, toujours.
 
 Chaque terminal employe dans une regle est declare, et le compilateur nomme celui qui manque :
 
@@ -1395,10 +1365,10 @@ portee est **par voix** : un flux pose dans une voix reste dans cette voix.
 | `!=` *(dans une garde)*                       | **comparaison de difference**, pendant de `==`                                   |
 
 C'est ce qui **suit** le `!` qui decide de la lecture. Le `!` lui-meme dit l'instantane, duree
-zero ; la coupure de cablage s'ecrit `\>>`. `!=` forme un jeton unique, comme `==` ou `>=`.
+zero. `!=` forme un jeton unique, comme `==` ou `>=`.
 
-Ecrit `C4 !prise`, le nom d'un cablage devient une co-attaque de l'accord : l'aval lui cherche une
-hauteur et un son sort.
+Ecrit `C4 !prise`, le nom d'une definition devient une co-attaque de l'accord : l'aval lui cherche
+une hauteur et un son sort.
 
 **L'espace tranche l'attache de `!(...)`** -- application de la convention generale de l'espace,
 delimiteur de termes : colle au terminal precedent, le reglage voyage avec lui ; separe par une
@@ -2331,53 +2301,6 @@ Les têtes de règle se rencontrent librement **entre elles**. Une tête répét
 **alternative** : le choix et les poids en découlent, et c'est le mécanisme même d'une
 grammaire stochastique. Deux sous-grammaires sont des **passes successives** — un même nom y
 est le même symbole, réécrit plus tard.
-
-### Câbler : `>>` et `\>>`
-
-`>>` branche, `\>>` coupe. Le câblage initial s'écrit dans `init`. Un chaînage nommé se déclare
-avec `def`, et son nom se pose **nu** dans le flux ; le compilateur marque alors cet élément de la
-nature « câblage », que l'aval traite comme telle.
-
-```text
-alphabet.western
-saw saw1
-lpf lpf1
-
-init
-  saw1 >> lpf1 >> out
-
-def ouvre lpf1.cutoff:12000
-def coupe saw1 \>> lpf1
-
-S -> C4 ouvre D4 coupe E4
-```
-
-Le même traitement vaut pour les trois gestes qui agissent sur un module : brancher, couper,
-régler.
-
-**Un nombre devant les chevrons donne la largeur du câble** — `8>>` relie huit voix d'un coup.
-Sans nombre, le câble en porte une.
-
-```text
-init
-  saw1 8>> lpf1 8>> out       // huit voix jusqu'à la sortie
-  lfo1 >> lpf1.cutoff         // une seule voix pilote la coupure des huit
-```
-
-**Une inadéquation de largeur s'adapte** : un port à une voix prend la
-première, un port à plusieurs voix alimenté en une seule diffuse cette valeur sur toutes, et une
-largeur écrite qui dépasse ce que le port accepte se ramène à ce nombre. Ce que chaque port accepte
-se lit dans son champ `voices`.
-
-**Le corps d'un `def` de câblage est écrit dans le langage de patch**, celui-là même que porte un
-backtick `patch:`. Un câblage qu'on ne réinvoque pas s'écrit donc **littéralement dans la règle** :
-
-```text
-S -> C4 `patch: saw1 \>> lpf1` D4
-```
-
-Un seul langage, deux emplacements : nommé dans un `def`, littéral dans un backtick. Le backtick
-y entre comme terminal, et un terminal se pose dans une règle.
 
 ---
 

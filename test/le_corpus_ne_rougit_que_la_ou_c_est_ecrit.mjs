@@ -40,6 +40,10 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
  * Chaque entrée : [scène, fragment attendu dans le refus, la raison, qui en est propriétaire].
  * Deux familles, et elles ne se traitent pas pareil.
  */
+// ⚠️ DESSERRÉ À LA MAIN LE 2026-08-19, sur mesure et non sur impression. `dhadhatite_v2.bps`
+// COMPILE désormais : Kanopi a réécrit ses bols composés en `def`, comme Romain l'a arbitré ce
+// jour. `cv-curve-js.bps` et `cv-backtick.bps` n'existent PLUS chez lui — supprimés, pas migrés ;
+// leur entrée certifiait un refus sur des fichiers absents.
 const REGISTRE = [
   // ── A. LE REFUS EST VOULU, ET LA SCÈNE LE DIT ELLE-MÊME ───────────────────────────────────
   // `script(...)` a été SUPPRIMÉ du langage (GO Romain, 2026-07-26) : une fonction générique
@@ -77,7 +81,6 @@ const REGISTRE = [
   ['synthesis/superp-cutoff.bps',         'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['synthesis/patchbay.bps',              'Expected IDENT', 'declare macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
   ['test/fixtures/cv_modulation.bps',     'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['BPScript-tests/dhadhatite_v2.bps',    'non déclaré', 'bols de tabla sans alphabet.tabla — scène incomplète', 'kanopi', 'kanopi — il instruit après l\'ouverture de def'],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 : cette scène refusait pour ses terminaux nus ; elle
   //    refuse désormais AVANT, sur un crochet COLLÉ à un élément — forme retirée du langage
   //    le même jour (arbitrage Romain). La cause inscrite est donc devenue fausse, et le
@@ -92,8 +95,6 @@ const REGISTRE = [
   // est suivi d'un BACKTICK, pas d'un type. La réécriture est la même que les dix-huit autres —
   // `var <nom> \`code\`` devient `symbol <nom> \`code\`` —, et elle est ÉPROUVÉE : la forme compile
   // et le backtick arrive dans l'arbre. Signalé à l'architecte le jour même.
-  ['code-voices/cv-curve-js.bps',          "le mot 'var' est SORTI", 'écrit var devant un backtick — la migration de kanopi ne les a pas pris', 'kanopi', 'kanopi — symbol <nom> `code`'],
-  ['cv/cv-backtick.bps',                   "le mot 'var' est SORTI", 'écrit var devant un backtick — la migration de kanopi ne les a pas pris', 'kanopi', 'kanopi — symbol <nom> `code`'],
 
   // ── C. controls.json SUPPRIMÉ (Romain, 2026-08-10) — cinq scènes écrivaient `controls` SEUL ──
   // `core` amène désormais le même ensemble (`core.apporte`) qu'apportait le stub `controls` —

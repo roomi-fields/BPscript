@@ -294,8 +294,6 @@ const RETARD_REGLES = new Map([
   //    2026-08-09. Déclarer `patch` pour verdir réinscrirait au vocabulaire une forme dont le
   //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
   //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
-  ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4', /nomme un évaluateur qui n'est pas déclaré/],
-  ['S -> C4 `patch: saw1 \\>> lpf1` D4', /nomme un évaluateur qui n'est pas déclaré/],
 ]);
 
 let regles = 0;
@@ -468,7 +466,6 @@ const RETARD_BLOCS = new Map([
   //    2026-08-09. Déclarer `patch` pour verdir réinscrirait au vocabulaire une forme dont le
   //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
   //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
-  ['S -> C4 `patch: saw1 >> lpf1` D4 `patch: lpf1 switchoff` E4 #0', /nomme un évaluateur qui n'est pas déclaré/],
   // ⚠️ TROIS CLES SUIVENT LA BIBLE, QUI A MIGRE LE 2026-08-19. Les blocs ne portent plus `var`,
   //    ils portent le type en tete — et leur CAUSE a change avec : ce n est plus un mot mort, c est
   //    un module absent du catalogue. Le cablage, lui, est SORTI du langage le 2026-08-18 : son
