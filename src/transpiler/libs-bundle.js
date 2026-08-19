@@ -111,6 +111,15 @@ function valeurDeCle(v) {
 // interprète le contenu des scènes ».
 // On écrit donc d'abord le bundle des `.json` SEULS sur le disque, puis on charge le transpileur —
 // qui trouve alors un bundle valide — et on relit les `.bps` avec LUI. Un seul interprète, deux passes.
+/** Un sac imbriqué devient un objet — une parenthèse, un niveau. */
+function sacEnObjet(sac) {
+  const out = {};
+  for (const p of sac.pairs || []) {
+    out[p.key] = (p.value && p.value.type === 'SettingBag') ? sacEnObjet(p.value) : p.value;
+  }
+  return out;
+}
+
 async function collectBps(dir, prefix, compileToBPxAST) {
   for (const entry of readdirSync(dir).sort()) {
     const full = join(dir, entry);
@@ -125,8 +134,36 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     }
     const lib = { controls: {} };
     let sectionDuFichier = null;
+    // ⛔ UNE DÉCLARATION S'ÉCRIT SOUS DEUX FORMES, ET LE LECTEUR DOIT LES DEUX. Le corps INDENTÉ
+    // rend `keys` ; le corps entre PARENTHÈSES rend `settings`. La seconde est celle que Romain a
+    // tranchée le 2026-08-19 — « je m'oppose formellement à toute forme de parsing en fonction de
+    // l'indentation » — et la première s'éteint avec la réécriture des neuf librairies.
+    //
+    // ⛔ SANS CETTE LECTURE, RÉÉCRIRE UNE LIBRAIRIE LA VIDE EN SILENCE : le `continue` du dessous
+    // sautait toute déclaration sans `keys`, donc toutes celles écrites en parenthèses, et le
+    // bundle sortait avec une librairie vide sans un mot. C'est le mode d'échec exact du chantier —
+    // une graphie acceptée qui ne porte rien — et il se serait produit AU GÉNÉRATEUR, où aucun
+    // refus du compilateur ne l'aurait vu : le fichier compile parfaitement.
+    //
+    // Les deux formes se ramènent ici à la MÊME structure `{clé: valeur}` : une seule suite de
+    // lecture derrière, jamais deux branches à tenir en parallèle.
+    const clesDeLaDeclaration = (d) => {
+      if (d.keys) return d.keys;
+      if (!d.settings || !Array.isArray(d.settings.pairs)) return null;
+      const out = {};
+      for (const p of d.settings.pairs) {
+        // Une valeur qui est elle-même un sac descend d'un niveau — la récursivité par la
+        // parenthèse, lue depuis le 2026-08-19.
+        out[p.key] = (p.value && p.value.type === 'SettingBag')
+          ? { kind: 'value', value: sacEnObjet(p.value) }
+          : { kind: 'value', value: p.value };
+      }
+      return out;
+    };
     for (const d of (r.ast.defs || [])) {
-      if (d.type !== 'DefDirective' || !d.keys) continue;
+      if (d.type !== 'DefDirective') continue;
+      d.keys = clesDeLaDeclaration(d);
+      if (!d.keys) continue;
       // ⛔ UNE CLÉ `section` DIT OÙ LE MOT SE RANGE — posée le 2026-08-14 pour la bascule d'`engine`.
       // Les cinq premières librairies n'avaient qu'une section, `controls`. `engine` en porte QUATRE :
       // `controls`, `engine`, `subgrammar` et `schema.reservedDirectives`. Sans ce mot, la conversion

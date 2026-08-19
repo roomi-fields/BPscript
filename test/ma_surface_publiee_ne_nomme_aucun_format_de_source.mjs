@@ -49,6 +49,17 @@ console.log(`[surface] ${fichiersDeLib.length} fichiers de lib, ${formats.length
   for (const a of attendus) ok(presents.has(a), `1. la librairie '${a}' existe en fichier et MANQUE au bundle`);
   for (const p of presents) ok(attendus.has(p), `1. le bundle porte '${p}', qui n'a aucun fichier source`);
   ok(attendus.size >= 25, `1. le garde doit avoir EXAMINÉ des librairies (${attendus.size} trouvée(s))`);
+  // ⛔ ET UNE CLÉ PRÉSENTE NE PROUVE PAS UN CONTENU. Ce volet comptait les clés du bundle et
+  // n'aurait pas vu une librairie SORTIE VIDE — le mode d'échec exact de la réécriture des neuf
+  // fichiers : le générateur ne lisait qu'une des deux graphies de déclaration, donc réécrire un
+  // fichier le vidait EN SILENCE, sans qu'aucun refus du compilateur ne le voie (le fichier
+  // compile parfaitement). La plus petite librairie légitime pèse 214 caractères ; une coquille
+  // vide en pèse 15.
+  for (const [nom, contenu] of Object.entries(LIBS)) {
+    ok(JSON.stringify(contenu ?? {}).length >= 100,
+      `1. la librairie '${nom}' est PRESQUE VIDE dans le bundle — une clé présente ne prouve pas `
+      + `un contenu. Vérifier que le générateur sait lire la graphie de sa source.`);
+  }
 }
 
 // ── 2. AUCUN FORMAT DE SOURCE N'EST NOMMÉ DANS CE QUE JE PUBLIE ─────────────────────────────
