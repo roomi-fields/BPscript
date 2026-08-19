@@ -157,10 +157,6 @@
       "description": "BP3 engine instructions. Controls derivation, weights, tempo operators, flags. Distinct from () runtime controls.",
       "forms": [
         {
-          "syntax": "[mode:random]",
-          "desc": "Set derivation mode (on mode directive)"
-        },
-        {
           "syntax": "[weight:50]",
           "desc": "Rule weight for random selection",
           "bp3": "<50>"
@@ -223,7 +219,7 @@
           "desc": "Scan direction: right to left"
         }
       ],
-      "example": "mode:random\n-----\nS -> A B [weight:70]\nS -> C D [weight:30]"
+      "example": "mode:rnd\n-----\nS -> A B [weight:70]\nS -> C D [weight:30]"
     },
     "`": {
       "name": "Backtick (embedded code)",
@@ -283,7 +279,7 @@
       "category": "structure",
       "syntax": "-----  (5 or more dashes)",
       "description": "Separates sub-grammar blocks. Each block can have its own derivation mode (mode). Rules in different blocks are processed sequentially.",
-      "example": "mode:ord\n-----\nS -> A B\n\n-----\n\nmode:random\nA -> C4 D4\nA -> E4 F4"
+      "example": "mode:ord\n-----\nS -> A B\n\n-----\n\nmode:rnd\nA -> C4 D4\nA -> E4 F4"
     }
   },
   "keywords": {
@@ -293,7 +289,7 @@
       "syntax": "S -> lambda  or  S ->",
       "description": "Erases the non-terminal (epsilon production). The symbol disappears from the sequence. An empty RHS has the same effect.",
       "bp3": "*",
-      "example": "// Probabilistic erasure\nmode:random\n-----\nA -> C4 D4 [weight:80]\nA -> lambda [weight:20]"
+      "example": "// Probabilistic erasure\nmode:rnd\n-----\nA -> C4 D4 [weight:80]\nA -> lambda [weight:20]"
     }
   },
   "directives": {
@@ -603,7 +599,7 @@
     "sub_grammars": {
       "title": "Sub-grammars",
       "desc": "A scene can have multiple sub-grammar blocks separated by -----. Each block has its own derivation mode. Rules are processed block by block: block 1 rewrites first, then block 2 rewrites what remains, etc.",
-      "example": "mode:ord\n-----\nS -> A B\n-----\nmode:random\nA -> C4 D4\nA -> E4 F4\n-----\nB -> G4 A4"
+      "example": "mode:ord\n-----\nS -> A B\n-----\nmode:rnd\nA -> C4 D4\nA -> E4 F4\n-----\nB -> G4 A4"
     },
     "flat_alphabet": {
       "title": "Flat alphabet (no OCT)",

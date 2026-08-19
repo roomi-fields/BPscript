@@ -756,7 +756,7 @@ Un alphabet peut donc déclarer `a`, `a'` et `a"` comme trois terminaux distinct
 | `!(rotate:2)` | `_rotate(2)` | clé avec valeur : la valeur suit le deux-points |
 | `!(shuffle)` / `!(order)` | `_rndseq` / `_ordseq` | posés en tête du groupe ou du membre droit |
 | `!(seed:N)` | `_srand(N)` | re-semence au point d'apparition |
-| `mode:random` | `RND` | mode du bloc |
+| `mode:rnd` | `RND` | mode du bloc |
 | `(scan:left)` | `LEFT` | sens du parcours |
 | `(weight:50)` / `(weight:inf)` | `<50>` / `<inf>` | poids |
 | `(meter:4+4/6)` | `4+4/6` avant le membre droit | signature rythmique |

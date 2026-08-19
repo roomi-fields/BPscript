@@ -159,7 +159,12 @@ for (const [ou, src] of [
 // pas disparu. La donnée disait `random` là où le natif écrit `rnd` ; Romain a tranché, la donnée
 // est corrigée, et le refus était prêt. La mesure du périmètre l'a arrêté une seconde fois :
 //
-//     285 SITES ÉCRIVENT `mode:random` — kanopi 113 · kairos 92 · BPx 69 · moi 11
+//     LES SITES QUI ÉCRIVENT `mode:random`, mesurés CHEZ CHACUN le 2026-08-19 :
+//         kanopi 166 (68 fichiers) · BPx 106 (40) · bpscript 70 (32) · kairos 134, TOUS des copies
+//     ⚠️ Le premier compte diffusé — « 285, kanopi 113 · kairos 92 · BPx 69 · moi 11 » — était faux
+//     dans sa répartition, et mon propre 11 ne voyait que mes SCÈNES : j'en porte 70, dont 13 en
+//     scène et le reste en bancs, en aide d'éditeur et en spec. Un compte pris chez l'autre est un
+//     ordre de grandeur ; le compte juste est celui qu'on mesure chez soi.
 //     et ils marchent parce que BPx ABSORBE l'alias : `loadGrammar.ts:4111`,
 //     `if (mode === 'random') return 'rnd';` — « the BPScript-spec alias for BP3's RNDtype »
 //

@@ -84,7 +84,7 @@ const LEGITIMES = [
   ['un rapport', 'meter:3/4'],
   ['un mètre additif', 'meter:3+4+2/4'],
   ['une valeur négative', 'transpose:-24'],
-  ['un nom', 'mode:random'],
+  ['un nom', 'mode:rnd'],
   ['une graine nue', 'seed:42'],
   ['la forme de flux', 'S -> ![seed:42] C4'],
 ];

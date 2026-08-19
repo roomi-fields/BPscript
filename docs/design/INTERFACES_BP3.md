@@ -119,7 +119,7 @@ gram#N[M] LHS --> RHS
 
 | BPScript | BP3 |
 |----------|-----|
-| `[mode:random]` | `RND` (mode de sous-grammaire) |
+| `[mode:rnd]` | `RND` (mode de sous-grammaire) |
 | `[weight:50]` | `<50>` |
 | `[/2]` | `/2` (opérateur temporel) |
 | `@tempo:120` | `_mm(120)` |

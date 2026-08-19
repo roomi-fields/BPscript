@@ -93,7 +93,7 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
     // sont passés à `tempo`, dans le domicile que la bible lui donne — `lib/time.json`. Le mot
     // s'écrit donc aux DEUX places. Cette ligne mesurait auparavant le REFUS du modificateur —
     // elle mesure maintenant qu'il aboutit, et sous le nom unique.
-    ['modificateur de sous-grammaire', 'mode:random(tempo:60)\n-----\nS -> C4',
+    ['modificateur de sous-grammaire', 'mode:rnd(tempo:60)\n-----\nS -> C4',
       (a) => (a?.subgrammars || []).flatMap((s) => (s.modifiers || []).map((m) => m && m.name))],
   ];
   for (const [quoi, src, lire] of PORTES) {

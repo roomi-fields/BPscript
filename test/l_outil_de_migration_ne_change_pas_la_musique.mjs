@@ -174,7 +174,7 @@ const SCENE_A_MIGRER = 'core\nalphabet.western\n-----\nS -> A B\nA -> C4 D4\nB -
   // redeviendra un candidat quand kanopi l'aura migrée.
   const VOLET_3ANTE_ACTIF = false;
   if (VOLET_3ANTE_ACTIF) {
-    const r = migrerSource('core\nalphabet.western\nmode:random\n-----\n'
+    const r = migrerSource('core\nalphabet.western\nmode:rnd\n-----\n'
       + 'S -> A\n-----\nA -> {C4 B4 E4}(shuffle)');
     ok(r.ok === false, '3ante. la scène indérivable des deux côtés reste REFUSÉE');
     ok(r.referenceIndisponible !== true,

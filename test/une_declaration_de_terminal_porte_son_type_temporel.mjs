@@ -75,7 +75,7 @@ for (const [canal, motif, pourquoi] of [
 // `koto3` est la seule scène du corpus dont un terminal déclaré est employé en objet hors-temps.
 // C'est ce qui l'a distinguée des douze autres, et c'est donc ce cas-là qui se garde ici.
 {
-  const r = compile('f:midi\n-----\nmode:random\nY -> !f\nS -> Y');
+  const r = compile('f:midi\n-----\nmode:rnd\nY -> !f\nS -> Y');
   ok((r.errors || []).length === 0,
      `2. un terminal déclaré employé en OBJET HORS-TEMPS doit compiler — reçu : `
      + `${(r.errors || []).map((e) => e.message).join(' | ').slice(0, 100)}`);

@@ -44,25 +44,25 @@ const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
 // ── A. TOUTES LES POSITIONS D'UN SAC REFUSENT LE MODE ────────────────────────────────────────
 // Ajouter une position la teste automatiquement. Ce sont les six endroits où un sac peut se poser.
 const POSITIONS = [
-  ['suffixe de règle',        'S -> C4 D4 (mode:random)\n'],
-  ['posé dans le flux',       'S -> !(mode:random) C4\n'],
-  ['collé à une note',        'S -> C4(mode:random) D4\n'],
-  ['collé à un groupe',       'S -> {C4 D4}(mode:random)\n'],
-  ['collé à une fermante',    'S -> A B\n-----\nA -> { C4\nB -> D4 }(mode:random)\n'],
-  ['collé à un silence',      'S -> C4 -(mode:random) D4\n'],
+  ['suffixe de règle',        'S -> C4 D4 (mode:rnd)\n'],
+  ['posé dans le flux',       'S -> !(mode:rnd) C4\n'],
+  ['collé à une note',        'S -> C4(mode:rnd) D4\n'],
+  ['collé à un groupe',       'S -> {C4 D4}(mode:rnd)\n'],
+  ['collé à une fermante',    'S -> A B\n-----\nA -> { C4\nB -> D4 }(mode:rnd)\n'],
+  ['collé à un silence',      'S -> C4 -(mode:rnd) D4\n'],
   // ⚠️ LES DEUX SIGNES. Mon premier refus ne visait que les parenthèses ; mesuré dans la foulée,
   // `S -> C4 [mode:random]` PASSAIT — refusé la minute d'avant, accepté après mon correctif,
   // parce que retirer `mode` des clés réservées l'avait sorti du garde des crochets. J'avais
   // fermé une porte en en ouvrant une autre, dans le même geste, en écrivant le correctif qui
   // cite la règle « énumérer TOUTES les formes que le parser peut produire ».
-  ['entre crochets',          'S -> C4 [mode:random]\n'],
+  ['entre crochets',          'S -> C4 [mode:rnd]\n'],
   // ⚠️ CETTE POSITION EST DESORMAIS FERMEE EN AMONT (2026-08-09) : le crochet ne se pose plus DANS
   // LE FLUX, quelle que soit sa cle. Le refus qu on y rencontre est donc celui de la POSITION, pas
   // celui du mode — et il ne peut pas donner la reecriture du mode, puisqu il ne sait pas de quoi
   // il parle. Ce n est pas une regression : c est une porte fermee plus tot sur le chemin.
   // Le mode reste garde sur les SEPT autres positions de cette matrice, dont sa forme en
   // parentheses dans le flux, qui elle reste ouverte a d autres cles.
-  ['parenthèses dans le flux', 'S -> !(mode:random) C4\n'],
+  ['parenthèses dans le flux', 'S -> !(mode:rnd) C4\n'],
 ];
 for (const [quoi, src] of POSITIONS) {
   const msg = messages(compiler(src));
@@ -77,7 +77,7 @@ for (const [quoi, src] of POSITIONS) {
 // ── B. TÉMOIN QUI MORD — la forme VIVANTE passe, et les autres réglages aussi ────────────────
 // ⚠️ Sans cette moitié, un compilateur qui refuserait tout sac passerait le volet A en triomphe.
 for (const [quoi, src] of [
-  ['mode en tête de sous-grammaire',   'mode:random\n-----\nS -> C4 D4\n'],
+  ['mode en tête de sous-grammaire',   'mode:rnd\n-----\nS -> C4 D4\n'],
   ['un autre réglage en fin de règle',  'S -> C4 D4 (weight:50)\n'],
   ['un autre réglage dans le flux',     'S -> !(vel:80) C4\n'],
   ['un autre réglage collé à une note', 'S -> C4(vel:80) D4\n'],
