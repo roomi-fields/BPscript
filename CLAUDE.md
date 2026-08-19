@@ -208,7 +208,6 @@ de ce tableau se lit là-bas**, jamais dans un résumé.
 | `_` | prolongation — elle étend l'événement précédent |
 | `~` | liaison d'objets sonores — `C4~` début, `~C4` fin, `~C4~` continuation |
 | `\|[ ]` | objet sonore composé : une suite de notes sur une seule unité d'ordonnancement |
-| `>>` `\>>` | câblage : brancher un élément sur un autre, couper le câble |
 | `lambda` | chaîne vide : le non-terminal s'efface, comme sur un membre droit vide |
 | `...` | repos indéterminé, de durée calculée par le moteur |
 | `!` | simultanéité : ce qui suit partage l'instant d'attaque de ce qui précède |

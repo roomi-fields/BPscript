@@ -2679,9 +2679,9 @@ function parse(tokens, opts = {}) {
         if (at(T.BANG) || at(T.LPAREN)) {
           if (at(T.BANG)) advance();
           // ⚠️ ÉCART SIGNALÉ, ET LA BIBLE TRANCHE. `LANGUAGE.md` écrit que `init` porte « les
-          // valeurs de départ » ; `AST.md` définit `InitEntry = PatchExpr | BacktickOrphan` et n'a
-          // pas de troisième variante. AST.md est un DÉRIVÉ de LANGUAGE.md : c'est donc le TYPE qui
-          // est en retard, pas la prose. Le sac est porté tel quel, et l'écart est remonté à Romain.
+          // valeurs de départ » ; `AST.md` ne définit qu'une variante d'entrée, le backtick
+          // orphelin. AST.md est un DÉRIVÉ de LANGUAGE.md : c'est donc le TYPE qui est en retard,
+          // pas la prose. Le sac est porté tel quel, et l'écart est remonté à Romain.
           entrees.push(parseRuntimeQualifier());
           continue;
         }
@@ -4980,7 +4980,7 @@ function parse(tokens, opts = {}) {
       }
       // ⚠️ LE POINT SUIVI D'UNE VALEUR NOMME UN COMPOSANT, ET UN COMPOSANT A UN PROPRIÉTAIRE.
       // `lpf1.cutoff:400` n'a de sens que si `lpf1` est une instance que la scène a déclarée
-      // (`var lpf1 lpf`, `LANGUAGE.md`) ou un contrôle à composants (`cc.98:45`). Sans l'une des
+      // par son type en tête (`lfo osc1`) ou un contrôle à composants (`cc.98:45`). Sans l'une des
       // deux, la lecture tombait dans la référence pointée d'en dessous — qui n'attend PAS de
       // valeur — puis butait au tour suivant sur « Expected IDENT, got COLON » : un message qui
       // désigne le deux-points alors que le défaut est le NOM, trois jetons plus tôt. Le langage

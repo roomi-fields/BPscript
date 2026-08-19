@@ -359,7 +359,7 @@ L'espace sépare deux termes du flux. Ce qui est **collé** à un terme appartie
 gouverne ; ce qui en est **séparé par un espace** est un terme, ou une portée, à part.
 
 Les opérateurs qui **relient** deux termes se lisent de la même façon avec ou sans espace autour :
-la flèche `->`, la simultanéité `!`, le câblage `>>` et sa coupure `\>>`, le point d'attente `<!`.
+la flèche `->`, la simultanéité `!`, le point d'attente `<!`.
 `S->sa!re` et `S -> sa ! re` donnent le même arbre.
 
 Les signes qui **qualifient** un terme se collent à lui : le point `.`, le deux-points `:`, les
@@ -673,8 +673,6 @@ le qualifie par le point.
 **En ligne** — le backtick occupe un paramètre et rend une valeur, évaluée par l'`interpreter` du
 symbole qui le porte ; il hérite du tag de ce symbole. Un langage employable en ligne le déclare en
 librairie, avec la convention de ce qu'il rend.
-
-`patch:` est le langage du câblage : il agit sur la topologie des modules, muet et de durée nulle.
 
 ### 4.15 Accolades brutes
 

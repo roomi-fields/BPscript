@@ -214,9 +214,6 @@ donne directement.
 ensuite. La liste de paramètres se distingue d'un corps entre parenthèses par le **collage** :
 collée au nom c'est une liste, séparée par une espace c'est le corps.
 
-Un nom dont le corps est un `PatchExpr` porte la nature **`wire`** dans le flux, et non `sounding` :
-brancher, couper et régler agissent sur un module sans produire de son, donc sans durée.
-
 ### `InitEntry`
 
 ```
@@ -445,8 +442,8 @@ Le champ `actor` est rempli par le point explicite — `sitar.sa` —, ou par la
 seul acteur porte ce symbole. Il vaut `null` pour un non-terminal, qui n'a pas d'acteur.
 
 **La nature dit ce que le jeton est pour le temps**, et la liste est fermée : `sounding` pour ce qui
-sonne, `var` pour une variable sans type, `wire` pour un nom dont le corps est un câblage, `wait`
-pour un point d'attente. Elle vit dans `payload`, sur le nœud posé dans le flux.
+sonne, `var` pour une variable sans type, `wait` pour un point d'attente. Elle vit dans `payload`,
+sur le nœud posé dans le flux.
 
 **Le rôle** vaut `homomorphism` sur le symbole dont le nom est celui d'une section chargée, et
 `null` sur tout autre symbole.

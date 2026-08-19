@@ -389,130 +389,7 @@ actor sitar              // cet acteur affine ce dont il herite
   out.audio
 ```
 
-### Les modules -- ce qu'on cable
-
-Un **module** est une fonction : une ou plusieurs **entrees**, du code, une ou plusieurs
-**sorties**. C'est un module eurorack ecrit en code. Les modules vivent dans une librairie et
-s'invoquent comme tout le reste.
-
-```text
-module.saw
-module.lpf
-module.adsr
-```
-
-**Un seul signal, des conventions de lecture.** Un signal est un flux de nombres, et la convention
-dit **comment le recepteur le lit** -- une hauteur se transpose, une phase s'enroule, un etat
-logique se seuille. Tout se branche partout : la convention s'applique a la reception.
-
-**`signal` est le cas ordinaire** -- un flux de nombres que le recepteur lit tel quel.
-
-**Chaque port est type.** Un port porte la **convention** selon laquelle son contenu se lit :
-`signal`, `pitch`, `phase` ou `logic`. Le type d'un port dit ce qu'on a le droit d'y brancher, et le
-compilateur le verifie.
-
-**Un module a une entree et une sortie de signal par defaut.** Quand elles suffisent, la chaine
-s'ecrit sans les nommer :
-
-```text
-saw1 >> lpf1 >> out
-```
-
-**Quand il y en a plusieurs, le cablage les nomme**, avec le point :
-
-```text
-saw1.freq >> lpf1.cutoff
-env1.out >> lpf1.cutoff
-```
-
-Un module est un **prototype** : il se declare une fois et s'instancie autant de fois qu'une piece en
-a besoin, chaque instance portant ses propres valeurs de port.
-
-**La librairie declare le TYPE, la scene declare l'INSTANCE, et c'est l'instance qu'on invoque.**
-Un filtre passe-bas nomme `lpf` en librairie s'instancie avant de servir : la scene ecrit
-
-```text
-lpf lpf1
-```
-
-et c'est `lpf1` qui se cable et se regle. **Une instance est une variable** : son comportement vient
-de son type. Deux filtres dans une piece
-sont deux instances nommees, chacune avec ses valeurs de port.
-
-#### Le prototype d'un module
-
-**Les noms de champs sont en anglais** -- c'est du code. La prose qui les decrit reste en francais.
-
-```json
-{
-  "name": "",
-  "category": "",
-  "description": "",
-  "ports": {},
-  "code": ""
-}
-```
-
-**Trois sous-prototypes** couvrent les formes possibles. Chacun **ajoute** les champs de son cas.
-
-| sous-prototype  | ce qu'il a                     | ce qu'il ajoute                            |
-| --------------- | ------------------------------ | ------------------------------------------ |
-| **`source`**    | des sorties seulement          | `defaultOut`                               |
-| **`processor`** | des entrées **et** des sorties | `defaultIn` · `defaultOut` · `passthrough` |
-| **`sink`**      | des entrées seulement          | `defaultIn`                                |
-
-Un oscillateur, du bruit, un LFO sont des **sources**. Un filtre, un amplificateur, une enveloppe
-sont des **traitements**. La sortie `out` est un **puits**.
-
-**Le puits d'une chaine s'ecrit `out`.** Il designe la sortie de l'acteur, dont le canal --
-`audio`, `midi`, `osc` ou `dmx` -- est celui que l'acteur declare.
-
-**Le sous-prototype est structurel, la catégorie est descriptive.** Le premier dit ce que le module
-peut recevoir et rendre ; la seconde le range et le rend trouvable. Un LFO et un oscillateur ont
-deux catégories et la même forme.
-
-| champ                               | ce qu'il porte                                                                                                                 |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `name` · `category` · `description` | identité, famille, prose d'aide                                                                                                |
-| `ports`                             | les ports du module, par leur nom                                                                                              |
-| `defaultIn` · `defaultOut`          | le port qu'un câblage vise sans le nommer : `saw1 >> lpf1` relie la sortie par défaut de l'un à l'entrée par défaut de l'autre |
-| `passthrough`                       | `{ "<sortie>": "<entrée>" }` — le chemin que le signal emprunte quand le module est court-circuité                             |
-| `code`                              | le traitement                                                                                                                  |
-
-#### Le prototype d'un port
-
-```json
-{
-  "direction": "in",
-  "convention": "signal",
-  "voices": 1,
-  "range": null,
-  "unit": null,
-  "description": ""
-}
-```
-
-**Une entrée ajoute `default`** — la valeur qu'elle prend si rien n'est branché. C'est le champ que
-les librairies portent pour les paramètres d'un module : un paramètre et une entrée non branchée
-sont la même chose.
-
-| champ            | ce qu'il porte                                                                  |
-| ---------------- | ------------------------------------------------------------------------------- |
-| `direction`      | `in` ou `out`                                                                   |
-| `convention`     | comment le contenu du port se lit : `signal`, `pitch`, `phase`, `logic`         |
-| `voices`         | combien de **voix** ce port accepte — `1` pour une seule, `8` pour jusqu'à huit |
-| `range` · `unit` | les bornes et l'unité du signal attendu                                         |
-| `default`        | *(entrée seulement)* la valeur prise quand rien n'est branché                   |
-
-**Les conventions.** `signal` est un flux de nombres que le récepteur lit tel quel — le cas
-courant. `pitch` se lit comme une hauteur, en logarithmique : 1,0 vaut une octave. `phase` se lit comme une position dans un cycle entre 0 et 1 ;
-ce qui dépasse s'enroule. `logic` se lit comme un état haut ou bas, dont ce sont les **transitions**
-qui font événement.
-
-**Un paramètre est une entrée** avec un `default` et rien de branché. Régler est un cas particulier de
-brancher.
-
-**La polyphonie appartient au port** : un filtre traite huit voix tout en gardant une seule coupure.
+### Les prototypes de donnee
 
 **Ces prototypes vivent avec les autres.** Un module, un port, un terminal, un alphabet suivent le meme
 mecanisme : un socle, et un champ qui n'existe que si sa notion s'applique. La ou les formes se
@@ -523,7 +400,6 @@ de leur cas ; la ou elles se distinguent par des axes independants, le socle les
 composant le calcule est une affaire d'architecture, et le nommer ici ferait d'un changement
 d'architecture un changement de langage. Ce qu'un objet porte, c'est sa **destination** -- le
 runtime de sortie d'un terminal.
-
 #### Le prototype d'un controle
 
 **Un controle se declare sur un prototype**, comme un terminal ou un module. Il porte ce que le
@@ -1027,8 +903,8 @@ Un declenchement est une transition d'un etat bistable, donc un `logic` : une me
 couvre l'etat tenu et l'impulsion.
 
 Ces quatre conventions typent les ports des modules, les variables declarees et les definitions
-`def`. Le principe et les ports sont decrits dans « Les modules -- ce qu'on cable », les
-variables dans « Le type en tete -- declarer une variable ».
+`def`, dont elles sont les types. Les variables sont decrites dans « Le type en tete -- declarer
+une variable », les definitions dans « `def` -- declarer une definition ».
 
 ---
 
@@ -1266,61 +1142,6 @@ deux-points introduit le sujet dans les deux cas.
 **La difference est musicale.** Un traitement partage melange les terminaux avant de
 les traiter ; un traitement par terminal en donne un a chacun. Sur un filtre resonant, le premier
 fait resonner l'accord, le second fait resonner chaque note.
-
-### Appliquer un module
-
-**Un module invoque dans un sac s'insere entre le terminal et sa sortie.** C'est un **calque**, et
-sa portee en donne l'etendue.
-
-```bpscript
-lpf lpf1
-lpf lpf2
-
------
-S -> C4(lpf1.cutoff:400)              // un calque sur une note
-S -> { C4 D4 }(lpf2.cutoff:800)       // un calque sur un groupe
-S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)   // les deux : C4 traverse le sien, puis celui du groupe
-```
-
-**Le meme nom pose un calque ou un geste, selon l'endroit ou il est ecrit :**
-
-| Ecriture                | Ce que ca fait                                                              |
-| ----------------------- | --------------------------------------------------------------------------- |
-| dans un sac `(sombre)`  | un **calque** -- il vit sur la portee, il nait et meurt avec elle           |
-| nu dans le flux `coupe` | un **geste** -- il change la topologie a cet instant, et ca reste apres lui |
-
-```bpscript
-def sombre lpf1 >> vca1
-def coupe  saw1 \>> lpf1
-
------
-S -> { C4 D4 }(sombre) E4 coupe F4
-```
-
-Un cable se coupe pendant que ca joue ; une portee, elle, se referme.
-
-**Les modules d'un chainage restent des instances nommees.** Un chainage se declare en tete, comme
-toute definition ; son nom et ceux de ses modules s'emploient ensuite dans les regles :
-
-```bpscript
-lpf lpf1
-vca vca1
-def sombre lpf1 >> vca1
-
------
-S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)
-```
-
-**Le corps d'un chainage est ecrit dans le langage de patch** -- le meme que celui des backtiques
-`patch:`. Un seul langage, deux emplacements : nomme dans un `def`, litteral dans une regle.
-
-**Un module de librairie et un chainage de scene sont la meme chose**, declaree par le meme mot :
-une librairie de modules est une collection de `def`, comme un alphabet est une collection de
-terminaux. Ce qui s'invoque dans une regle est **l'instance** : la scene ecrit
-`lpf lpf1`, puis `{A B}(lpf1.cutoff:4000)`.
-
-**Ce que le calque devient a l'execution** -- exemplaires, ordre de traversee, fin de vie,
-rechargement a chaud -- est decrit dans `dedale/docs/LE-CALQUE.md`.
 
 ### Le sac dans le flux : `!()`
 
@@ -2307,7 +2128,7 @@ est le même symbole, réécrit plus tard.
 ## Les librairies
 
 **Le langage connait la mecanique ; les librairies apportent tout le reste.** Un moteur sait
-deriver une grammaire, instancier un module, relier des ports, echantillonner un signal. Le sargam,
+deriver une grammaire, instancier un module, echantillonner un signal. Le sargam,
 ce qu'est un filtre passe-bas, le calcul d'une enveloppe vivent en librairie, avec leur description
 **et leur code**.
 

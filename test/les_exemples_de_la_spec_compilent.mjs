@@ -244,9 +244,17 @@ const RETARD_REGLES = new Map([
   // l'instance manquante — au lieu de partir en appel de fonction et d'échouer sur « Expected
   // argument value », un message qui ne parlait de rien. C'est le cliquet qui a exigé cette
   // révision en rougissant des DEUX côtés : ces lignes ne refusaient plus avec leur ancienne cause.
-  ['S -> C4(lpf1.cutoff:400)', /n'est ni un contrôle à composants, ni une instance déclarée/],
-  ['S -> { C4 D4 }(lpf2.cutoff:800)', /n'est ni un contrôle à composants, ni une instance déclarée/],
-  ['S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)', /n'est ni un contrôle à composants, ni une instance déclarée/],
+  // SORTIES DU CLIQUET LE 2026-08-19 — quatre lignes ont quitté la bible avec la section qui les
+  // portait, « Appliquer un module ». La modulation et le câblage sortent du langage (Romain,
+  // 2026-08-18) et Romain a tranché la purge des modules le lendemain : les sections du modèle de
+  // patch sont supprimées, donc ces lignes ne sont plus des exemples en retard — elles ne sont
+  // plus des exemples du tout. C'est le cliquet qui l'a exigé, en rougissant du côté « inscrite
+  // mais ne refuse plus avec sa cause » : une entrée gardée « au cas où » compterait un retard
+  // qui n'existe plus.
+  //     'S -> C4(lpf1.cutoff:400)'
+  //     'S -> { C4 D4 }(lpf2.cutoff:800)'
+  //     'S -> { C4(lpf1.cutoff:400) D4 }(lpf2.cutoff:800)'
+  //     'S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)'
   // SORTIE DU CLIQUET le 2026-08-08 — et c'est le cliquet lui-même qui l'a exigé, en rougissant
   // du côté « inscrite mais ne refuse plus avec sa cause ».
   // `S -> { C4 D4 }(sombre) E4 coupe F4` butait sur « Expected arrow » : un refus de FORME, la
@@ -255,7 +263,6 @@ const RETARD_REGLES = new Map([
   // déclare jamais. Ce volet écarte les refus de résolution : ils ne disent rien de la forme.
   // Une entrée qu'on garderait « au cas où » ferait exactement ce que ce cliquet interdit —
   // compter un retard qui n'existe plus.
-  ['S -> {C4 D4}(sombre) E4(lpf1.cutoff:400)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
   // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
   //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
@@ -466,13 +473,12 @@ const RETARD_BLOCS = new Map([
   //    2026-08-09. Déclarer `patch` pour verdir réinscrirait au vocabulaire une forme dont le
   //    retrait est décidé ; la bible l'écrit encore, et c'est ELLE qui bougera quand le chantier
   //    s'ouvrira. Retard avec sa cause, pas une exception de convenance.
-  // ⚠️ TROIS CLES SUIVENT LA BIBLE, QUI A MIGRE LE 2026-08-19. Les blocs ne portent plus `var`,
-  //    ils portent le type en tete — et leur CAUSE a change avec : ce n est plus un mot mort, c est
-  //    un module absent du catalogue. Le cablage, lui, est SORTI du langage le 2026-08-18 : son
-  //    bloc reste au retard jusqu a l arbitrage de Romain sur les six sections qui le decrivent.
-  ['def sombre lpf1 >> vca1 #0', /Caractère inattendu|n'est pas un type/],
-  ['lpf lpf1 #0', /'lpf' n'est pas un type/],
-  ['lpf lpf1 #1', /'lpf' n'est pas un type/],
+  // ⚠️ TROIS CLES SORTENT DU CLIQUET LE 2026-08-19 — et l arbitrage attendu est TOMBE. Romain a
+  //    tranche la purge du cablage ET des modules ; les sections qui portaient ces trois blocs sont
+  //    supprimees de la bible. Un bloc qui n existe plus n est pas un retard, et le cliquet a rougi
+  //    du cote « inscrit mais ne refuse plus avec sa cause » des que la coupe a ete faite.
+  //        'def sombre lpf1 >> vca1 #0'   le corps de cablage
+  //        'lpf lpf1 #0' · 'lpf lpf1 #1'  l instanciation d un module absent du catalogue
   // RÉVISÉ 2026-08-08 : `accent(E4)` est l'APPEL D'UNE DÉFINITION, que la bible écrit (§quatre
   // rôles, rôle 4) et que `@def` déclarerait. `@def` n'étant pas implémenté, aucun nom n'est
   // appelable : la parenthèse est donc lue comme un sac, et `E4` refusé comme clé inconnue.
