@@ -79,7 +79,7 @@ captureDigitalBodies(LIB_DIR);
 // arguments ; une portée est un ensemble de places ; une plage a deux bornes. Une valeur à une
 // seule partie y reste donc une liste d'un élément, sans quoi `args:type` rendrait une chaîne là où
 // tout le reste de la donnée porte un tableau, et chaque lecteur devrait gérer les deux.
-const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
+const CLES_LISTES = new Set(['args', 'values', 'scope', 'range', 'registers']);
 // ⚠️ `section` DIT OU LES ENTREES DE CE FICHIER SE RANGENT, en un endroit. Sans lui, le
 // generateur DEVINAIT — `controls` par defaut — et le silence voulait dire deux choses
 // opposees : `controls` pour une librairie de controles, la RACINE pour un catalogue.
@@ -87,6 +87,8 @@ const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
 const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section']);
 
 function valeurDeCle(v) {
+  // Une SUITE arrive typée membre par membre — elle sort telle quelle.
+  if (v && v.kind === 'suite') return v.value;
   const brut = v && v.kind === 'value' ? v.value : (v && v.value);
   const un = (x) => {
     if (typeof x !== 'string') return x;
@@ -124,6 +126,11 @@ function valeurDeCle(v) {
 // ⛔ ET UN MEMBRE PORTEUR EST REFUSÉ, JAMAIS AVALÉ : dans une clé-liste, seul le rang compte, donc
 // une valeur écrite sur un membre n'a nulle part où aller. La perdre en silence est le mode d'échec
 // exact du chantier — une graphie acceptée qui ne porte rien.
+// ⛔ ET LA NATURE D'UN MEMBRE SE LIT SUR SA MARQUE, JAMAIS SUR SON TEXTE. Depuis le 2026-08-19 un
+// membre est un nom, un nombre ou un texte entre guillemets — et `"0"` et `0` s'écrivent pareil une
+// fois la clé posée. Un registre nommé « 0 » ressortirait donc en NOMBRE si on relisait son texte,
+// et la donnée publiée changerait de type sans un mot. Le parseur marque le membre texte ; on lit
+// la marque.
 function suite(sac, fichier, declaration, cle) {
   const porteurs = (sac.pairs || []).filter((p) => p.value !== true);
   if (porteurs.length) {
@@ -132,7 +139,8 @@ function suite(sac, fichier, declaration, cle) {
       + `valeur. Une clé-liste ne lit que le RANG ; cette valeur serait perdue sans un mot.`);
     process.exitCode = 1;
   }
-  return (sac.pairs || []).map((p) => p.key);
+  return (sac.pairs || []).map((p) => (p.texte ? p.key
+    : (/^-?\d+(\.\d+)?$/.test(p.key) ? Number(p.key) : p.key)));
 }
 
 /** Un sac imbriqué devient un objet — une parenthèse, un niveau. */
@@ -179,7 +187,12 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         // Une valeur qui est elle-même un sac descend d'un niveau — la récursivité par la
         // parenthèse, lue depuis le 2026-08-19.
         out[p.key] = (p.value && p.value.type === 'SettingBag')
-          ? { kind: 'value', value: CLES_LISTES.has(p.key) ? suite(p.value, entry, d.name, p.key) : sacEnObjet(p.value) }
+          ? (CLES_LISTES.has(p.key)
+              // ⛔ UNE SUITE EST DÉJÀ TYPÉE MEMBRE PAR MEMBRE : la repasser à la coercition
+              // générique retypera le texte « 0 » en nombre, et le geste de `suite` sera défait
+              // au maillon suivant. Elle passe donc par un `kind` à elle, et sort verbatim.
+              ? { kind: 'suite', value: suite(p.value, entry, d.name, p.key) }
+              : { kind: 'value', value: sacEnObjet(p.value) })
           : { kind: 'value', value: p.value };
       }
       return out;

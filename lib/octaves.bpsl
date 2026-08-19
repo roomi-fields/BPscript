@@ -4,6 +4,19 @@
 //
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
+//
+// ⛔ LE CORPS SE DÉLIMITE PAR LA PARENTHÈSE, ET LA VIRGULE SÉPARE. Décisions Romain, 2026-08-19 :
+//    l'indentation ne porte rien, et dans le déclaratif l'espace ne sépare rien non plus — c'est
+//    de la mise en forme. Une LISTE s'écrit par une parenthèse, et la parenthèse PRÉSERVE L'ORDRE
+//    de ce qu'on y écrit.
+//
+// ⛔ C'EST LE FICHIER QUI ÉPROUVE CETTE PRÉSERVATION, pas seulement l'outil : `default` désigne un
+//    registre PAR SON RANG — `saptak` porte `default:1`, qui est `madhya`, le deuxième des trois.
+//    Une suite rendue dans un autre ordre ne casse rien de visible : elle désigne un AUTRE registre.
+//
+// ⛔ UN REGISTRE EST UN TEXTE, ET IL S'ÉCRIT ENTRE GUILLEMETS quand il n'est pas un nom : les dix
+//    registres occidentaux sont les textes « 0 » à « 9 », jamais les nombres 0 à 9. Le vide s'écrit
+//    `""` — le délimiteur, sans rien dedans.
 
 // COMMENT
 // Octave/register naming conventions for BPscript. Each convention defines how register
@@ -20,78 +33,36 @@
 // period notation For these conventions, 'arrows' (_v/_^) is proposed as a compatible
 // substitute.
 
-def octaves
-  resolvedBy:Kairos
-  resolves:octaves
+def octaves (resolvedBy:Kairos, resolves:octaves)
 
-def western
-  position:suffix
-  separator:`txt: `
-  registers:`txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
-  default:4
+def western (position:suffix, separator:"", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:4)
 
-def arrows
-  position:suffix
-  separator:_
-  registers:vv v `txt: ` `txt: ^` `txt: ^^`
-  default:2
+def arrows (position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:2)
 
-def saptak
-  position:prefix
-  separator:_
-  registers:mandra madhya taar
-  default:1
+def saptak (position:prefix, separator:"_", registers(mandra, madhya, taar), default:1)
 
-def turkish
-  position:prefix
-  separator:_
-  registers:`txt: ` tiz
-  default:0
+def turkish (position:prefix, separator:"_", registers("", tiz), default:0)
 
-def gamelan
-  position:prefix
-  separator:_
-  registers:ageng tengah alit
-  default:1
+def gamelan (position:prefix, separator:"_", registers(ageng, tengah, alit), default:1)
 
-def shakuhachi
-  position:prefix
-  separator:_
-  registers:otsu kan daikan
-  default:0
+def shakuhachi (position:prefix, separator:"_", registers(otsu, kan, daikan), default:0)
 
-def korean
-  position:prefix
-  separator:_
-  registers:tak jung cheong
-  default:1
+def korean (position:prefix, separator:"_", registers(tak, jung, cheong), default:1)
 
 // saptak_us · Registre numérique en SUFFIXE séparé par '_' (sa_4, r1_4) — convention native
 // -to.tryShruti (22-shruti). Distinct de 'saptak' (préfixe mandra/madhya/taar).
-def saptak_us
-  position:suffix
-  separator:_
-  registers:`txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
-  default:4
+def saptak_us (position:suffix, separator:"_", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:4)
 
 // bp3 · Registres du moteur BP3 natif, conventions ENGLISH/FRENCH/INDIAN. Identique à 'western'
 // SAUF le registre '00' — une octave SOUS '0' (quirk d'octave BP3 [79]). Le marqueur se lit en
 // plus-long-d'abord : '00' ne doit jamais être avalé par '0'. Le français seul ajoute '000'
 // (non porté ici : seul bp3_indian est servi).
 // bp3 · bp3-engine/csrc/bp3/Inits.c:451-497 (tables d'octaves natives)
-def bp3
-  position:suffix
-  separator:`txt: `
-  registers:`txt: 00` `txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8` `txt: 9`
-  default:5
+def bp3 (position:suffix, separator:"", registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:5)
 
 // bp3_fr · Registres du moteur BP3 natif, convention FRENCH. Décalés d'un cran sous 'bp3' (la3
 // = A4) et prolongés par '000' — l'octave sous '00'. Lecture plus-long-d'abord obligatoire :
 // '000' ne doit jamais être avalé par '00' ni par '0'.
 // bp3_fr · bp3-engine/csrc/bp3 -BP3main.h:136-147 + Inits.c:445-530
-def bp3_fr
-  position:suffix
-  separator:`txt: `
-  registers:`txt: 000` `txt: 00` `txt: 0` `txt: 1` `txt: 2` `txt: 3` `txt: 4` `txt: 5` `txt: 6` `txt: 7` `txt: 8`
-  default:5
+def bp3_fr (position:suffix, separator:"", registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"), default:5)
 

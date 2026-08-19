@@ -4890,6 +4890,31 @@ function parse(tokens, opts = {}) {
         subject = current().value; advance(); advance(); // <sujet> :
       }
       const keyTok = current();
+      // ── UN MEMBRE ACCEPTE CE QU'UNE VALEUR ACCEPTE AILLEURS ──────────────────────────────────
+      // Décision Romain, 2026-08-19, posée comme un RETRAIT DE RESTRICTION et non comme trois
+      // ajouts : le membre était le seul endroit du langage qui n'acceptait qu'un nom. Il accepte
+      // désormais un nom, un nombre, ou un texte entre guillemets — `range(0, 127)`,
+      // `registers("0", "1")`, et le vide `""`.
+      //
+      // ⚠️ LE NOMBRE PORTE SON SIGNE. `range(-1200, 1200)` vit dans la donnée d'aujourd'hui ; le
+      // moins est un jeton à part, et l'oublier aurait rendu la borne basse illisible — ou pire,
+      // lisible comme deux membres.
+      //
+      // ⛔ ET LE MEMBRE TEXTE SE MARQUE, parce que sa NATURE ne se relit pas dans son texte :
+      // `"0"` et `0` s'écrivent pareil une fois la clé posée. Sans cette marque, un registre nommé
+      // « 0 » ressortirait en nombre, et la donnée publiée changerait de type sans un mot.
+      if (!at(T.IDENT) && (at(T.INT) || at(T.FLOAT) || at(T.STRING)
+                           || (at(T.REST) && (peek(1).type === T.INT || peek(1).type === T.FLOAT)
+                               && !peek(1).spaceBefore))) {
+        const signe = at(T.REST) ? advance().value : '';
+        const t = advance();
+        pairs.push({ key: signe + t.value, value: true,
+                     ...(t.type === T.STRING ? { texte: true } : {}),
+                     ...(subject !== null ? { subject } : {}),
+                     line: keyTok.line, col: keyTok.col });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
       let key = expect(T.IDENT).value;
       // ── `<librairie>.<contrôle>` — LE PRÉFIXE SE CONSOMME ICI, AVANT TOUTE LECTURE ───────────
       // RÈGLE DE ROMAIN (2026-08-13), déjà écrite dans `EBNF.md:153` : « Le préfixe est optionnel :
@@ -5140,6 +5165,17 @@ function parse(tokens, opts = {}) {
         const parts = [];
         let deuxPointsEnTrop = null;
         let elementAvale = null;
+        // ⛔ UN TEXTE ENTRE GUILLEMETS RESTE UN TEXTE, et le VIDE est une valeur. Décision Romain,
+        // 2026-08-19 : « le vide s'écrit comme un texte vide — le délimiteur, sans rien dedans ».
+        // Deux défauts se ferment ici, tous deux MUETS :
+        //   `x:"0"`  rendait le NOMBRE 0 — les guillemets s'effaçaient avec le type qu'ils portent,
+        //            et `registers("0", "1")` aurait publié des nombres là où la donnée porte des
+        //            noms de registre ;
+        //   `x:""`   était refusé comme « n'affecte aucune valeur » — le lecteur ne distinguait pas
+        //            ce qui n'est PAS ÉCRIT de ce qui est écrit VIDE. Le nul et l'absence sont deux
+        //            choses, et un lecteur qui les confond en perd une.
+        let jetons = 0;
+        let texteSeul = null;
         while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
           // Un contrôle qui n'attend QU'UNE partie ne peut pas en avaler une seconde : ce qui suit
           // est un autre ÉLÉMENT du sac, et il lui manque sa virgule.
@@ -5152,6 +5188,8 @@ function parse(tokens, opts = {}) {
           // elle fabrique la valeur muette « 98:45 » que personne en aval ne sait relire.
           if (at(T.COLON) && !deuxPointsEnTrop) deuxPointsEnTrop = current();
           if (parts.length > 0 && current().spaceBefore) parts.push(' ');
+          texteSeul = (jetons === 0 && at(T.STRING)) ? current().value : null;
+          jetons++;
           parts.push(advance().value);
         }
         const brut = parts.join('');
@@ -5171,16 +5209,19 @@ function parse(tokens, opts = {}) {
             + `parties, l'espace les sépare`,
             deuxPointsEnTrop);
         }
-        if (brut === '') {
+        if (jetons === 0) {
           throw new ParseError(
             `'(${key}:)' n'affecte aucune valeur — le deux-points en attend une (par exemple `
-            + `'(${key}:80)'), et un contrôle sans argument s'écrit nu, sans deux-points`,
+            + `'(${key}:80)'), et un contrôle sans argument s'écrit nu, sans deux-points. Un texte `
+            + `VIDE s'écrit '${key}:""' : le délimiteur, sans rien dedans`,
             keyTok);
         }
         // Une valeur d'UNE SEULE partie numérique reste un NOMBRE (`vel:80` → 80, `pan:-1` → -1) :
         // les consommateurs la lisent ainsi. Plusieurs parties = chaîne portée brute, découpée
-        // par l'aval qui seul connaît l'opération.
-        const val = /^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut;
+        // par l'aval qui seul connaît l'opération. Un TEXTE délimité échappe à la coercition :
+        // ce que les guillemets portent est du texte, y compris quand il ressemble à un nombre.
+        const val = texteSeul !== null && jetons === 1 ? texteSeul
+          : (/^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut);
         // ⛔ UNE VALEUR DONNÉE À UN CONTRÔLE QUI N'EN PREND PAS EST REFUSÉE. Signalé à BPx pendant
         // leur migration : `!(order:0)` compilait et portait `0` jusqu'à l'arbre, alors que la
         // donnée déclare `order` sans aucun argument. Une valeur sans destinataire voyage jusqu'à

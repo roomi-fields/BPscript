@@ -83,17 +83,26 @@ for (const fichier of sources) {
     // générateur la refuse déjà bruyamment si un membre porte une valeur.
     for (const l of corps.matchAll(/(?:^|,\s*)(\w+)\(([^()]*)\)/g)) {
       const [, cle, membres] = l;
-      const ecrits = membres.split(',').map((x) => x.trim()).filter(Boolean);
-      if (!ecrits.length || ecrits.some((x) => x.includes(':'))) continue;   // pas une liste
+      const bruts = membres.split(',').map((x) => x.trim()).filter((x) => x !== '');
+      if (!bruts.length || bruts.some((x) => x.includes(':'))) continue;   // pas une liste
+      // ⛔ UN MEMBRE PORTE SA NATURE, ET LE GARDE LA LIT COMME LE COMPILATEUR : un texte entre
+      // guillemets reste un TEXTE — `"0"` n'est pas 0 —, un nombre nu devient un NOMBRE, un nom
+      // reste son nom. Comparer les seuls textes laisserait passer un registre « 0 » publié en
+      // nombre, et c'est exactement le type qui casserait la résolution de hauteur.
+      const ecrits = bruts.map((x) => {
+        const t = x.match(/^"([\s\S]*)"$/);
+        if (t) return t[1];
+        return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : x;
+      });
       const rendue = publiee[cle];
       listes++;
       ok(Array.isArray(rendue),
         `B. ${nomLib}.${nomDecl}.${cle} doit être publiée comme une SUITE — reçu ${JSON.stringify(rendue)}`);
       ok(JSON.stringify(rendue) === JSON.stringify(ecrits),
-        `B. ${nomLib}.${nomDecl}.${cle} : la donnée publiée doit être la suite ÉCRITE, dans son ordre. `
-        + `écrit ${JSON.stringify(ecrits)} · publié ${JSON.stringify(rendue)}`);
-      const trie = [...ecrits].sort();
-      if (JSON.stringify(trie) !== JSON.stringify(ecrits)) ordreNonTrivial++;
+        `B. ${nomLib}.${nomDecl}.${cle} : la donnée publiée doit être la suite ÉCRITE, dans son ordre `
+        + `ET dans ses types. écrit ${JSON.stringify(ecrits)} · publié ${JSON.stringify(rendue)}`);
+      const trie = [...ecrits].map(String).sort();
+      if (JSON.stringify(trie) !== JSON.stringify(ecrits.map(String))) ordreNonTrivial++;
     }
   }
 }
@@ -105,6 +114,42 @@ ok(listes >= 18, `B. le garde doit avoir examiné des listes publiées, pas seul
 ok(ordreNonTrivial >= 1,
   `B-témoin. aucune des ${listes} listes examinées n'a un ordre distinct de son tri alphabétique — `
   + `le volet B ne distinguerait pas un lecteur qui trie d'un lecteur qui préserve.`);
+
+// ── C. LE RANG DÉSIGNE — ce que la décision exigeait, et ce qu'un vert sur la seule présence
+//        des membres ne prouverait pas ────────────────────────────────────────────────────────
+// ⛔ `octaves` ADRESSE SES REGISTRES PAR LEUR RANG : `default` est un INDICE dans la suite. Compter
+// les membres, ou les retrouver tous, ne dit RIEN sur ce que `default` désigne. Le garde lit donc
+// la désignation elle-même, convention par convention.
+{
+  let designations = 0;
+  let videAuRang = 0;
+  for (const [nom, conv] of Object.entries(LIBS.octaves || {})) {
+    if (!conv || typeof conv !== 'object' || !Array.isArray(conv.registers)) continue;
+    designations++;
+    const d = conv.default;
+    ok(Number.isInteger(d) && d >= 0 && d < conv.registers.length,
+      `C. octaves.${nom} : 'default' (${JSON.stringify(d)}) doit être un RANG de la suite de `
+      + `${conv.registers.length} registres`);
+    ok(typeof conv.registers[d] === 'string',
+      `C. octaves.${nom} : le registre désigné par le rang ${d} doit être un TEXTE — reçu `
+      + `${JSON.stringify(conv.registers[d])}`);
+    if (conv.registers[d] === '') videAuRang++;
+  }
+  ok(designations >= 10, `C. le garde doit voir les conventions d'octaves — ${designations} vue(s)`);
+  // Les trois désignations que la décision cite ou que la donnée rend fragiles.
+  ok(LIBS.octaves?.saptak?.registers?.[LIBS.octaves.saptak.default] === 'madhya',
+    `C. octaves.saptak : 'default:1' doit désigner 'madhya', le DEUXIÈME des trois — c'est le cas `
+    + `qui a fait trancher l'ordre. Reçu `
+    + `${JSON.stringify(LIBS.octaves?.saptak?.registers?.[LIBS.octaves?.saptak?.default])}`);
+  ok(LIBS.octaves?.western?.registers?.[LIBS.octaves.western.default] === '4',
+    `C. octaves.western : le registre par défaut doit être le TEXTE '4', jamais le nombre 4 — reçu `
+    + `${JSON.stringify(LIBS.octaves?.western?.registers?.[LIBS.octaves?.western?.default])}`);
+  // ⛔ LE MEMBRE VIDE TIENT SA PLACE. Deux conventions désignent par défaut un registre écrit SANS
+  // marqueur ; le retirer de la suite décalerait tous les rangs suivants d'un cran, en silence.
+  ok(videAuRang >= 2,
+    `C. au moins deux conventions doivent désigner par défaut un registre VIDE — il occupe un RANG, `
+    + `et le retirer décalerait tous les suivants. Reçu ${videAuRang}`);
+}
 
 console.log(`[ordre] ${listes} liste(s) publiée(s) examinée(s), dont ${ordreNonTrivial} d'ordre non trivial`);
 
