@@ -16,23 +16,7 @@ Séparation des responsabilités :
 | **BPScript** (grammaire) | quand et comment les paramètres changent | `lpf.cutoff: ramp(200, 4000)` |
 | **BP3** (moteur) | calcul des durées et de la synchronisation | polymétrie mélodie + courbe de filtre |
 
-> ⚠️ **PÉRIMÉ depuis le 2026-07-27/29** (paragraphe non retouché depuis le 2026-07-16). Le câblage
-> vit désormais dans le langage via deux mécanismes ratifiés et implémentés : (1) les chevrons `>>`
-> (brancher) / `\>>` (couper), utilisables uniquement dans le corps d'un `@macro`, dont le nom
-> circule ensuite dans le flux — décidé le 2026-07-27
-> (`hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`),
-> mesuré et documenté en détail dans [SCENES.md](SCENES.md) §6.3-6.4 ; (2) la directive
-> `@wire saw >> lpf >> audio` pour l'état de départ du câblage à la racine de la scène — décidée et
-> implémentée le 2026-07-29 (`hub/decisions/2026-07-29-les-formes-declaratives-de-bpscript.md` §6,
-> `BPscript/docs/spec/AST.md` champ `wires?`, `BPscript/src/transpiler/parser.js` commit `ea29f24`,
-> garde `test/le_cablage_initial_vit_a_la_racine.mjs` — 13/13 vert). Reste vrai : le chevron ne
-> s'écrit jamais dans le membre droit d'une dérivation (`S -> saw >> lpf` est refusé), donc
-> l'essentiel de la thèse de ce fichier (le graphe audio DSP fin — serial/parallèle/send-return,
-> ordre de chaîne — reste au runtime) tient toujours ; seule l'affirmation absolue « aucun `>`,
-> zéro mot en plus » est à corriger.
-
-Les effets sont pilotés avec les mécanismes existants : CV, polymétrie, notation dot — et,
-depuis le 2026-07-27/29, le câblage initial (`@wire`, `>>`/`\>>`).
+Les effets sont pilotés avec les mécanismes existants : polymétrie et notation dot.
 
 ---
 
@@ -125,14 +109,12 @@ Avec acteur → dédié à cet acteur. Sur une occurrence → dédié à ce term
 ## Ce que BPScript NE fait PAS
 
 - **Pas de câblage DSP fin** (serial/parallèle/send-return, ordre de chaîne) — ça reste dans le
-  runtime ; le câblage **initial**, lui, est depuis le 2026-07-27/29 un concept de langage
-  (`@wire`, `>>`/`\>>` — cf. bandeau plus haut)
+  runtime
 - **Pas d'ordre de chaîne** — serial/parallèle/send-return, c'est le runtime
 - **Pas de DSP** — BPScript ne traite pas le signal
 - **Pas de bus** — la granularité de sortie suit la cascade scène → acteur → terminal (voir [ACTOR.md](ACTOR.md) §4)
-- **Nouveau mot-clé pour le câblage initial** — depuis le 2026-07-27/29, les chevrons `>>`/`\>>`
-  (dans un `@macro`) et la directive `@wire` sont des concepts de langage dédiés ; le reste (DSP
-  fin) passe toujours par la notation dot + polymétrie + CV, sans mot-clé supplémentaire
+- **Aucun mot-clé de câblage** — le graphe passe par la notation dot et la polymétrie, sans mot
+  supplémentaire
 
 ---
 
@@ -203,6 +185,4 @@ Le cutoff du filtre et le temps du delay sont pilotés par BPScript en polymétr
    avec une enveloppe ADSR".
 
 4. **Zéro complexité ajoutée** pour le graphe DSP fin (serial/parallèle/send-return, ordre de
-   chaîne) — celui-là reste au runtime, sans nouveau symbole. Le câblage initial, lui, est depuis
-   le 2026-07-27/29 un concept de langage (`>>`/`\>>`, `@wire` — cf. bandeau plus haut) ; ce point 4
-   ne vaut donc plus que pour la partie DSP, pas pour le câblage initial.
+   chaîne) — celui-là reste au runtime, sans nouveau symbole.
