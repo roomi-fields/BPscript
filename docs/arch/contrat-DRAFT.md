@@ -29,7 +29,7 @@
 | Tokenisation | texte → flux de jetons | `tokenizer.js` |
 | Analyse | jetons → AST (charge opaque par token : nature/acteur/params/flux) | `parser.js` (autorité) |
 | Annotation des voix de code | étiquette + `payload.interp/nature` sur les nœuds backtick ; `auto`→`eval` de l'acteur | `bpxAst.js` |
-| Défauts d'environnement | inscrit EN DUR dans l'AST les réglages absents (aujourd'hui : tempo `@mm`) | `bpxAst.js` |
+| Défauts d'environnement | inscrit EN DUR dans l'AST les réglages absents (aujourd'hui : `tempo`) | `bpxAst.js` |
 | Acteur implicite | matérialise l'acteur `scene` dans l'AST si aucun `actor` (LAN-5/KAI-9 ; renommé `default`→`scene` le 2026-07-30, `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`) | `bpxAst.js` |
 | Validation sémantique | valeurs de contrôle + noms de modulation contre les libs (erreurs non fatales) | `controlValidation.js`, `modulationValidation.js`, `libs.js` |
 
@@ -96,7 +96,7 @@ Le transpileur a **quatre frontières** :
 |---|---|---|---|---|
 | `source` | Kanopi ▶ bpxAst.js | entrant | `string` (texte `.bps`) | seule vérité du contenu ; texte brut non pré-mâché |
 | `environnement?` | Kanopi ▶ bpxAst.js | entrant | `{ tempo?, octave?, division?, … }` (défauts) | optionnel ; Kanopi NE TOUCHE JAMAIS l'AST → changer un défaut = re-transpiler |
-| défaut `tempo` | environnement → `applyEnvironmentDefaults` | entrant→injecté | nombre | injecté EN DUR en `@mm` SEULEMENT si aucun `@mm`/`@tempo` déclaré |
+| défaut `tempo` | environnement → `applyEnvironmentDefaults` | entrant→injecté | nombre | injecté EN DUR en `tempo` SEULEMENT si aucun `tempo` déclaré |
 | défaut transport acteur | `DEFAULT_ACTOR_TRANSPORT='audio'` (constante TODO) | entrant (en dur, hôte) | `'audio'` | LAN-5 : à lire depuis la conf éditable Kanopi (❓ Romain) |
 
 #### 3.1.B — Frontière SORTIE : `SceneAST` émis vers BPx (frontière reine, côté producteur) ⚙️
@@ -115,13 +115,13 @@ Le transpileur a **quatre frontières** :
 | `errors` | controlValidation + modulationValidation + ParseError | sortant | `Array<{message, line?, col?}>` | NON fatal : l'AST reste produit même avec erreurs (affichées en rouge à l'éval) |
 | `warnings` | parser (`onWarning`) | sortant | `Array<{type:'warning', message, line?}>` | formes dépréciées (ex. `seed:N` historique) ; canal séparé d'`errors` |
 | `scene.type` | parser | sortant | littéral `'Scene'` | discriminant fixe |
-| `scene.directives` | parser | sortant | `DirectiveAST[]` (requis) | `@tempo`/`@mm`/`@duration`/`@flag`/`@library`… |
+| `scene.directives` | parser | sortant | `DirectiveAST[]` (requis) | `tempo`/`seed`/`alphabet`… |
 | `scene.subgrammars` | parser | sortant | `SubgrammarAST[]` (requis, ≥1) | cœur dérivé ; BPx rejette `length===0` |
 | `scene.actors?` | parser + applyDefaultActor | sortant | `ActorDirective[]` (`references: ActorReference[]` v0.8) | cascade statique scène→acteur pliée ; défaut canal = `ActorReference.params` ; acteur `scene` synthétique injecté si aucun `actor` (renommé `default`→`scene` le 2026-07-30) |
 | `scene.soundPrototypes?` | parser | sortant | `SoundPrototypeAST[]` | déclare un son |
 | `scene.soundAssignments?` | parser | sortant | `SoundAssignmentAST[]` | sujet→son, cascade |
 | `scene.template? / templates?` | parser | sortant | `TemplateEntryAST[]\|null` (alias : MÊME tableau, pas de copie) | v0.8 singulier, v0.7 pluriel en repli |
-| `scene.declarations?` | parser | sortant | `DeclarationAST[]` | `@gate/@trigger/@cv` ; BPx ne lit que `temporalType`+`name` |
+| `scene.declarations?` | parser | sortant | `DeclarationAST[]` | `<nom>:<canal>` ; BPx ne lit que `temporalType`+`name` |
 | `scene.cvInstances?` | parser | sortant | `CVInstanceAST[]` | BPx ne lit que `name` ; reste **opaque** (R2) |
 | `scene.homomorphisms?` | parser/encoder | sortant | `HomomorphismDeclAST[]` `[{type:'Homomorphism',name,pairs:[[src,dst]…],line}]` | chaînes **dépliées** en paires 1-pas, identité **conservée** ; noms canon. `*`/`+`/`;` |
 | `scene.backticks?` | parser (`parseBacktickOrphan`) | sortant | `BacktickOrphanAST[]` (section de scène) | voix de code STANDALONE de tête ; HORS union RHS ; opaque |
@@ -129,7 +129,7 @@ Le transpileur a **quatre frontières** :
 | `payload` (par nœud RHS sonnant/contrôle) | parser `annotateScene` / bpxAst `annotateBackticks` | sortant | forme conventionnelle `TokenPayload` (voir §3.2.B) | **opaque** : BPx porte EN ORDRE, n'interprète que `nature` (son ressort) |
 | `TempoOp.scope` | parser | sortant | `'absolute'\|'relative'` | `![/N]`→relatif ; `A[/N]`/`[/N]` règle→absolu ; BPx LIT (ne devine plus) |
 | graine au point `![seed:N]` | parser | sortant | `InstantControl{qualifier:ProductionInline[Directive{name:'seed',value:N}]}` | toute clé ≠ `seed` **rejetée au parse** → `_srand(N)` en aval |
-| `@mm` d'environnement | bpxAst `applyEnvironmentDefaults` | sortant | `Directive{name:'mm', value:tempo, fromEnvironment:true, line:0}` | injecté EN DUR SEULEMENT si aucun `@mm`/`@tempo` déclaré (l'AST se suffit) |
+| `tempo` d'environnement | bpxAst `applyEnvironmentDefaults` | sortant | `Directive{name:'tempo', value:tempo, fromEnvironment:true, line:0}` | injecté EN DUR SEULEMENT si aucun `tempo` déclaré (l'AST se suffit) |
 | forme `_(…)` héritée | — | exclusion | **jamais émise** | normalisée en `(…)` (`transport-control`) avant l'AST |
 | `Wait`/`SymbolWithWait` | parser | sortant (hors union) | `WaitAST`/`SymbolWithWaitAST` | réécrits en sentinelles côté BPx AVANT dérivation ; jamais vus par la dérivation |
 
@@ -178,7 +178,7 @@ Deux modules périphériques de `src/transpiler/`, hors de la chaîne de compila
 compileToBPxAST(
   source: string,                 // texte .bps brut
   environnement?: {               // défauts portés par Kanopi (hôte) — tous optionnels
-    tempo?: number;               // → @mm injecté EN DUR si aucun @mm/@tempo
+    tempo?: number;               // → `tempo` injecté EN DUR si aucun `tempo`
     octave?: number;              // défaut d'octave (réservé)
     division?: number;            // défaut de division (réservé)
     [k: string]: unknown;
@@ -250,7 +250,7 @@ interface QualPairAST { type:'QualPair'; key:string; value: string|number|boolea
 interface TempoOpAST  { type:'TempoOp'; operator:'/'|'*'; value: number|string; scope?:'absolute'|'relative'; }
 interface SuffixQualifierAST { type:'Qualifier'; pairs: QualPairAST[]; tempoOp?: TempoOpAST|null; } // suffixe APRÈS un RHS ; BPx ne lit que tempoOp
 ```
-> Note : les états de drapeau nommés (`@flag scene: calm:1`) sont **résolus en entier DANS l'AST** par `annotateScene` (une garde `[scene==calm]` voit `value` → `1`) ; un ident non déclaré reste tel quel (fidèle BP3).
+> Note : les états de drapeau nommés (`flag scene(calm:1)`) sont **résolus en entier DANS l'AST** par `annotateScene` (une garde `[scene==calm]` voit `value` → `1`) ; un ident non déclaré reste tel quel (fidèle BP3).
 
 ##### Union LHS — `LhsElementAST` (8 membres)
 `SymbolAST`(`Sa`, `negated`) · `WildcardAST`(`?`) · `VariableAST`(`?N`, 1..32) · `ContextAST`(`(X Y)`/`#(X Y)`) · `TemplateAnchorAST`(`$` nu) · `RawBraceAST`(`) ( { } , + *`) · `RestAST`(`-` terminal gauche) · `ProlongationAST`(`_` terminal gauche).
@@ -498,7 +498,7 @@ NON GÉRÉ (retour `"NON GÉRÉ: …"`, par grammaire) — déclencheurs exacts 
 1. **`payload.transport` (étalon) vs `payload.address` + `occurrence` (code) — ÉCART DE FORME.** `AST_SPEC §2` documente `transport?: string` (override de destination, chaîne plate). Le transpileur **n'émet PAS** `transport` : il range l'override d'occurrence en **deux tiroirs** — `address: {ch|channel|device|port}` (objet, GAP#2, lu par **Kairos** pour matérialiser `event.output`) + `params` (contrôles) — et pose `occurrence:true`. Le consommateur réel BPx s'aligne déjà dessus (producer-side `BPscript/docs/arch/contrat-DRAFT.md:44` liste `payload{nature, actor?, params?, address?, interp?, occurrence?}`). **L'étalon `AST_SPEC §2` reste à amender** (le `transport?: string` y est encore décrit comme « syntaxe non définie, backlog A2 »).
 2. **`payload.nature:'code'` (backticks) HORS énumération de l'étalon.** L'enum `TokenPayload.nature` d'`AST_SPEC §2` = `sounding|transport-control|engine-control|instant|prolongation|rest` ; et `§4` classe la voix de code en `sounding`. Le code émet réellement `nature:'code'` (KAI-9, `bpxAst.js:52`, point de bascule aligné BPx+Kairos). **Écart enum à entériner** dans l'étalon (additif).
 3. **`payload.scope:'rule'|'group'`** sur la contenance : champ producteur additif non listé explicitement dans l'enum de `§4.1` (qui décrit la contenance par profondeur). Additif compatible.
-4. **Défauts d'environnement injectés DANS l'AST** (`applyEnvironmentDefaults` → `@mm` avec `fromEnvironment:true` ; `applyDefaultActor` → acteur `scene` `synthetic:true` [renommé `default`→`scene` le 2026-07-30], transport `audio`) : faits de SORTIE réels (LAN-5/KAI-9) **absents de l'étalon `AST_SPEC`**. À documenter (le `DEFAULT_ACTOR_TRANSPORT='audio'` est une constante TODO à déplacer en conf Kanopi).
+4. **Défauts d'environnement injectés DANS l'AST** (`applyEnvironmentDefaults` → `tempo` avec `fromEnvironment:true` ; `applyDefaultActor` → acteur `scene` `synthetic:true` [renommé `default`→`scene` le 2026-07-30], transport `audio`) : faits de SORTIE réels (LAN-5/KAI-9) **absents de l'étalon `AST_SPEC`**. À documenter (le `DEFAULT_ACTOR_TRANSPORT='audio'` est une constante TODO à déplacer en conf Kanopi).
 5. **En-tête `index.js:7` périmé** : décrit encore `compileToBPxAST → {ast, backticks, flagStates, libraries}`. La sortie réelle est `{ast, errors, warnings}` (`bpxAst.js:180`). Commentaire à corriger (déjà flaggé dans le brouillon producteur). **Vérifié au code** : `index.js:7` dit bien `{ ast, backticks, flagStates, libraries, … }`, `bpxAst.js:180` renvoie `{ ast, errors, warnings }`.
 6. **`scene.backticks` (`BacktickOrphanAST`)** : section de scène émise (voix de code standalone de tête), **hors union RHS** de `§1.3` ; voyage opaque via `[extension]`. À mentionner dans l'étalon.
 
@@ -584,7 +584,7 @@ Consolidation des écarts surfacés en §3.3 et §4. Aucun n'est tranché ici : 
 | E1 | override de destination | `address:{ch\|channel\|device\|port}` + `params` + `occurrence:true` (`bpxAst`/`parser`) | `AST_SPEC §2` décrit `transport?:string` (« syntaxe non définie, backlog A2 ») | amender l'étalon ; BPx déjà aligné | ❓ Romain (amender AST_SPEC) |
 | E2 | enum `nature` | émet `nature:'code'` pour backticks (`bpxAst.js:52`) | enum étalon sans `'code'` ; `§4` classe en `sounding` | entériner additif `'code'` | ❓ Romain (additif) |
 | E3 | `payload.scope` | `scope:'rule'\|'group'` sur la contenance | non listé explicitement dans l'enum `§4.1` | additif compatible à documenter | 🔶 proposé |
-| E4 | défauts injectés DANS l'AST | `@mm fromEnvironment:true` ; acteur `scene synthetic:true` (renommé `default`→`scene` le 2026-07-30), transport `'audio'` | absents de `AST_SPEC` | documenter ; déplacer `DEFAULT_ACTOR_TRANSPORT` en conf Kanopi | ❓ Romain (LAN-5) |
+| E4 | défauts injectés DANS l'AST | `tempo fromEnvironment:true` ; acteur `scene synthetic:true` (renommé `default`→`scene` le 2026-07-30), transport `'audio'` | absents de `AST_SPEC` | documenter ; déplacer `DEFAULT_ACTOR_TRANSPORT` en conf Kanopi | ❓ Romain (LAN-5) |
 | E5 | en-tête `index.js:7` périmé | sortie réelle `{ast, errors, warnings}` (`bpxAst.js:180`) | commentaire dit `{ast, backticks, flagStates, libraries}` | corriger le commentaire | ⚙️ correction documentaire |
 | E6 | `scene.backticks` | section `BacktickOrphanAST` émise (voix de code de tête) | hors union RHS `§1.3` ; non mentionnée | mentionner dans l'étalon (voyage opaque `[extension]`) | 🔶 proposé |
 | E7 | en-tête `bp3ToScene` `/N` | code E5 gère `/N`→`X[/N]` | en-tête liste `/N` en NON GÉRÉ | retirer `/N` de la liste (lignes 36-37) | ⚙️ correction documentaire |
@@ -599,7 +599,7 @@ Consolidation des écarts surfacés en §3.3 et §4. Aucun n'est tranché ici : 
 
 1. **Override de destination (E1)** — entériner que le transpileur émet `address:{…}` + `params` + `occurrence:true` (et JAMAIS `transport:string`), et faire **amender `AST_SPEC §2`** en conséquence (le `transport?:string` y reste décrit comme backlog A2). BPx est déjà aligné côté consommateur.
 2. **Voix de code `nature:'code'` (E2)** — entériner l'ajout additif de `'code'` à l'enum `TokenPayload.nature` de l'étalon (point de bascule KAI-9 déjà aligné BPx+Kairos).
-3. **Défauts injectés dans l'AST + transport en dur (E4)** — valider que les défauts d'environnement (`@mm fromEnvironment`) et l'acteur `scene` synthétique (renommé `default`→`scene` le 2026-07-30) appartiennent à la **forme de sortie** (donc à documenter dans l'étalon) ; et trancher LAN-5 : déplacer `DEFAULT_ACTOR_TRANSPORT='audio'` (constante TODO) vers la **conf éditable Kanopi**.
+3. **Défauts injectés dans l'AST + transport en dur (E4)** — valider que les défauts d'environnement (`tempo fromEnvironment`) et l'acteur `scene` synthétique (renommé `default`→`scene` le 2026-07-30) appartiennent à la **forme de sortie** (donc à documenter dans l'étalon) ; et trancher LAN-5 : déplacer `DEFAULT_ACTOR_TRANSPORT='audio'` (constante TODO) vers la **conf éditable Kanopi**.
 4. **`orderTokens.js` (E9)** — confirmer/infirmer le second consommateur hors dépôt (runtime texte Kanopi). S'il est confirmé : garder + exporter. Sinon : retirer (code mort).
 5. **`bp3ToScene.js` (E10)** — acter le statut de l'île sens-inverse : **vivant utilitaire** (gardé hors flux, couvert par tests) ou **à archiver**.
 6. **`constants.js` partagé (E11)** — arbitrer le placement de la table d'opérateurs partagée entre `parser` (frontal propre) et `encoder` (legacy BP3) : infra neutre extraite, ou rester côté legacy ? La part BP3 ne doit pas remonter dans le frontal propre.
