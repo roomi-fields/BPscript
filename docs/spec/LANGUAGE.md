@@ -805,7 +805,7 @@ S -> C4 D4 [stage=2][goto:3 0]
 Une garde decide si la regle s'applique a cette derivation ; une affectation change l'etat pour la
 suite ; une procedure deplace la derivation elle-meme -- `goto` l'envoie a une autre regle, `repeat`
 la refait, `failed` dit ou aller quand rien ne s'applique, `stop` l'arrete. Un reglage ecrit entre
-crochets arrete la compilation, et le message donne sa forme : le `mode` s'ecrit `mode:random`, en
+crochets arrete la compilation, et le message donne sa forme : le `mode` s'ecrit `mode:rnd`, en
 tete de sous-grammaire.
 
 ```bpscript
@@ -2211,7 +2211,7 @@ S -> Loop [stage=1, count=4]
 
 -----
 
-mode:random
+mode:rnd
 [count-1]  Loop -> C4 Loop
 [count>0]  Loop -> D4 Loop
 [count>=2] Loop -> E4 Loop
@@ -2506,7 +2506,7 @@ metrique balkanique.
 
 | Niveau             | Question                             | BPScript         | Portee              |
 | ------------------ | ------------------------------------ | ---------------- | ------------------- |
-| **Mode du bloc**   | quelle strategie de selection ?      | `mode:random`   | bloc/sous-grammaire |
+| **Mode du bloc**   | quelle strategie de selection ?      | `mode:rnd`       | bloc/sous-grammaire |
 | **Scan par regle** | dans quel sens chercher le symbole ? | `(scan:left)`    | regle individuelle  |
 | **Direction**      | la regle se lit dans quel sens ?     | `->`, `<-`, `<>` | regle individuelle  |
 
@@ -2535,7 +2535,7 @@ reste apres les iterations appartient a l'alphabet et se joue.
 
 ```bpscript
 alphabet.sargam
-mode:random
+mode:rnd
 -----
 S -> sa re (scan:left)
 S <- ga ma
