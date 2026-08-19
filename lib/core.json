@@ -116,7 +116,13 @@
     "_declarationTypes_doc": "LES MOTS QUI OUVRENT UNE DECLARATION PAR LE TYPE et que rien d autre ne derive. Les CONVENTIONS (varConventions) et les MODULES (lib/mod.json objects) en ouvrent une aussi, et se lisent la ou ils sont deja declares ; ces deux-la n ont pas d autre domicile. `flag` porte ses etats entre parentheses, `symbol` ne porte aucun type.",
     "declarationTypes": [
       "flag",
-      "symbol"
+      "symbol",
+      "control",
+      "addresskey",
+      "native",
+      "destination",
+      "enum",
+      "object"
     ],
     "varConventions": [
       "signal",

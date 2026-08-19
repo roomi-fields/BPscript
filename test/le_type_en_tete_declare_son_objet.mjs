@@ -26,6 +26,7 @@
  * deux cas : « absent du catalogue », jamais « type inconnu » (qui ne distinguerait rien de plus).
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { LIBS } from '../src/transpiler/libs-data.js';
 
 let passe = 0;
 const echecs = [];
@@ -105,10 +106,21 @@ for (const [ligne, quoi, attendu] of REFUS) {
 {
   const rLpf = compile('lpf lpf1');
   const rZorglub = compile('zorglub x');
+  // ⛔ LA LISTE ATTENDUE SE LIT DANS LA DONNÉE, elle ne se recopie pas ici. Elle était écrite en
+  // dur — « flag, symbol, in.<canal> » — et le 2026-08-19 elle est devenue FAUSSE sans que rien ne
+  // la corrige : cinq types nouveaux sont entrés dans `core.json` et ce garde a rougi en accusant
+  // le MESSAGE, qui avait raison. Un garde qui recopie une liste devient sa concurrente.
+  const TYPES_DECLARES = LIBS.core?.schema?.declarationTypes || [];
+  ok(TYPES_DECLARES.length >= 8,
+    `2. les types déclaratifs doivent se lire dans la donnée — reçu ${JSON.stringify(TYPES_DECLARES)}`);
   for (const [r, quoi] of [[rLpf, 'un module absent du catalogue'], [rZorglub, 'un mot inventé']]) {
-    ok(msgs(r).some((m) => /signal, pitch, phase, logic/.test(m) && /adsr, lfo, ramp/.test(m)
-                        && /flag, symbol, in\.<canal>/.test(m)),
-      `2. le refus ${quoi} doit ÉNUMÉRER les types connus — reçu : ${msgs(r).join(' | ').slice(0, 160)}`);
+    const m = msgs(r).join(' | ');
+    ok(/signal, pitch, phase, logic/.test(m) && /adsr, lfo, ramp/.test(m) && /in\.<canal>/.test(m),
+      `2. le refus ${quoi} doit ÉNUMÉRER les conventions, les modules et le canal d'entrée — reçu : ${m.slice(0, 160)}`);
+    const manquants = TYPES_DECLARES.filter((t) => !m.includes(t));
+    ok(manquants.length === 0,
+      `2. le refus ${quoi} doit nommer CHAQUE type déclaré dans la donnée — manque(nt) `
+      + `${JSON.stringify(manquants)}. Reçu : ${m.slice(0, 200)}`);
   }
   ok(msgs(rLpf)[0] && msgs(rZorglub)[0]
      && msgs(rLpf)[0].replace(/lpf1?/g, '<x>') === msgs(rZorglub)[0].replace(/zorglub|\bx\b/g, '<x>'),

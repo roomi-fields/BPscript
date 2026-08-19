@@ -1548,6 +1548,28 @@ function parse(tokens, opts = {}) {
    *   INT → value Number (négatif via '-') ; ratio N/M → value String ;
    *   FLOAT → value String brute (sortie BP3 exacte) ; IDENT → champ runtime.
    */
+  /**
+   * ⛔ UNE VALEUR PEUT COMMENCER PAR UN TIRET BAS — décision Romain, 2026-08-19 : « les fonctions
+   * BP3 commencent par un tiret bas, c'est leur convention », et ce n'est donc pas au parseur de la
+   * refuser. Renommer une procédure native pour contourner le refus mentirait sur ce que le moteur
+   * porte.
+   *
+   * ⚠️ LE TIRET BAS EST UN SIGNE DU FLUX — la PROLONGATION — et le tokenizer le détache partout.
+   * Il ne se recolle donc PAS au tokenizer, où il changerait le sens d'un `_` écrit dans une
+   * production : il se recolle là où une VALEUR est attendue, et là seulement. Mesure du corpus
+   * avant d'écrire : 71 tirets bas collés à un nom, tous dans des valeurs de librairie, ZÉRO dans
+   * les scènes.
+   *
+   * Rend le nom recollé, ou null si ce qui est là n'en est pas un — sans consommer un jeton.
+   */
+  function lireNomATiretBas() {
+    if (!at(T.PROLONG)) return null;
+    const suite = peek(1);
+    if (!suite || suite.type !== T.IDENT || suite.spaceBefore) return null;
+    advance();
+    return '_' + advance().value;
+  }
+
   function parseDirectiveColonValue(dirName) {
     let value = null, runtime = null;
     // Directive interval-typée (ex. @transpose global) : lire un littéral d'INTERVALLE et le porter
@@ -1598,9 +1620,10 @@ function parse(tokens, opts = {}) {
     } else if (at(T.FLOAT)) {
       const raw = advance().value;
       value = raw;  // Preserve raw float string for exact BP3 output (e.g. 60.0000)
-    } else if (at(T.IDENT)) {
-      // Could be runtime or string value
-      const v = advance().value;
+    } else if (at(T.IDENT) || (at(T.PROLONG) && peek(1)?.type === T.IDENT && !peek(1).spaceBefore)) {
+      // Could be runtime or string value. Un nom à tiret bas se lit comme le même nom sans lui —
+      // même branche, même champ : le tiret bas cesse d'être refusé, il ne devient pas une forme.
+      const v = lireNomATiretBas() ?? advance().value;
       // Check for ratio like 7/8
       if (at(T.SLASH) && peek(1).type === T.INT) {
         advance(); // /
@@ -1924,6 +1947,29 @@ function parse(tokens, opts = {}) {
                line: tok.line };
     }
 
+    // ── LE CORPS ENTRE PARENTHÈSES — LA MÊME PARENTHÈSE QU'AILLEURS ────────────────────────
+    // Décision Romain, 2026-08-16 : les quatre types et le mécanisme d'énumération s'écrivent avec
+    // la parenthèse, « la forme du langage, celle qui porte ce qui appartient à ce qui la précède » :
+    //     enum valuetype(value, range, param, hz)
+    //     control sync(args:message, scope:flow)
+    //
+    // ⛔ C'ÉTAIT LA POSITION QUI BLOQUAIT, PAS LE MOT. La récursivité par la parenthèse était lue
+    // DANS un sac depuis le 2026-08-19 et refusée EN TÊTE DE LIGNE — `enum valuetype(value, range)`
+    // sortait « Expected COLON, got COMMA », un refus qui accuse la virgule alors que la faute est
+    // qu'aucun lecteur de corps n'était branché ici.
+    //
+    // ⚠️ LE CORPS EST LU PAR LE LECTEUR DE SAC, celui du `def` et des qualificatifs de flux — jamais
+    // par un lecteur à lui. Deux lecteurs d'une même parenthèse divergent au premier ajout, et la
+    // demande de Romain l'exclut : un seul interprète pour tout ce que le langage écrit.
+    //
+    // ⚠️ UN NOM NU Y ARRIVE DONC AVEC LA VALEUR DES CLÉS SANS ARGUMENT, et l'ORDRE d'écriture est
+    // préservé — c'est ce qui fait qu'une seule forme sert la suite et l'ensemble.
+    if (typesDeclaratifs().has(mot) && at(T.LPAREN)) {
+      const sac = parseRuntimeQualifier();
+      return { type: 'VarDirective', names: [premier], varType: { kind: 'type', type: mot },
+               settings: sac, line: tok.line };
+    }
+
     // ── LA VALEUR DE DÉPART, COLLÉE À SON SIGNE ────────────────────────────────────────────
     // « espace sépare deux termes ; leur collage les réunit en un seul ». Détachée, la valeur se
     // lirait comme un second terme et disparaîtrait sans un signe.
@@ -1938,6 +1984,8 @@ function parse(tokens, opts = {}) {
       }
       if (at(T.INT) || at(T.FLOAT)) { advance(); return Number(t.value); }
       if (at(T.IDENT)) { advance(); return t.value; }
+      const aTiretBas = lireNomATiretBas();
+      if (aTiretBas !== null) return aTiretBas;
       throw new ParseError(`${mot} ${nom} : une valeur de départ se pose après ':' — un nombre ou `
         + `un nom. Reçu '${t.value ?? t.type}'.`, t);
     };
