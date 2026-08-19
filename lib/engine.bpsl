@@ -47,7 +47,7 @@ def srand
   bp3:_srand
   bpscript:false
   args:seed
-  description:`txt: Geste NATIF : reamorce le generateur aleatoire EN COURS de derivation. ⚠️ BPScript PORTE CE GESTE, contrairement a ce que ce champ a affirme jusqu au 2026-08-13 : la re-semence en flux s ecrit ![seed:42] (nee le 2026-08-10, commit 750d457, qui lui a retire son arobase). Mesure : elle compile et atteint l arbre en InstantControl porteur de flux:true, distincte du reglage de scene @seed:42. La prose disait ici que BPScript n exposait que la graine de scene, qui  n est pas le meme geste  -- c etait FAUX, et cette phrase est la raison pour laquelle ce mot est reste hors du vocabulaire. Le champ bpscript n est PAS touche : declarer un mot du langage est un arbitrage de Romain, jamais une consequence de ma mesure.`
+  description:`txt: Geste NATIF : reamorce le generateur aleatoire EN COURS de derivation. ⚠️ BPScript PORTE CE GESTE, contrairement a ce que ce champ a affirme jusqu au 2026-08-13 : la re-semence en flux s ecrit ![seed:42] (nee le 2026-08-10, commit 750d457, qui lui a retire son arobase). Mesure : elle compile et atteint l arbre en InstantControl porteur de flux:true, distincte du reglage de scene seed:42. La prose disait ici que BPScript n exposait que la graine de scene, qui  n est pas le meme geste  -- c etait FAUX, et cette phrase est la raison pour laquelle ce mot est reste hors du vocabulaire. Le champ bpscript n est PAS touche : declarer un mot du langage est un arbitrage de Romain, jamais une consequence de ma mesure.`
 
 def print
   bp3:_print
@@ -272,7 +272,7 @@ def weight
 
 def seed
   section:schema.reservedDirectives
-  description:`txt: Graine du tirage aleatoire -- @seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed. PORTEE flow AJOUTEE le 2026-08-10 : la graine s ecrit AUSSI dans le flux, ![seed:N] (forme validee par Romain), ou elle traduit le _srand(N) natif. La convention flow n est pas neuve — retro, shuffle, rotate, order et randomize la portent deja ; ce qui manquait etait de la declarer pour seed, dont le parseur connaissait la graphie sans que la donnee la dise.`
+  description:`txt: Graine du tirage aleatoire -- seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed. PORTEE flow AJOUTEE le 2026-08-10 : la graine s ecrit AUSSI dans le flux, ![seed:N] (forme validee par Romain), ou elle traduit le _srand(N) natif. La convention flow n est pas neuve — retro, shuffle, rotate, order et randomize la portent deja ; ce qui manquait etait de la declarer pour seed, dont le parseur connaissait la graphie sans que la donnee la dise.`
   scope:scene flow
 
 def maxitems
@@ -377,7 +377,7 @@ def meter
 
 def timepatterns
   section:schema.reservedDirectives
-  description:`txt: Motifs temporels nommes -- @timepatterns: t1=1/1, t2=3/2, ... (docs/spec/AST.md:95,111,143).`
+  description:`txt: Un motif temporel est un rapport de duree qui porte un nom -- timepatterns: t1=1/1, t2=3/2, ... Il se declare en tete, son nom s ecrit ensuite dans une expression polymetrique, et il occupe le temps sans sonner. LANGUAGE.md, section Les motifs temporels.`
   scope:scene
 
 def staccato

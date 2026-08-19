@@ -3,7 +3,7 @@
     "BPscript mapping tables — tables de correspondance des ENTREES.",
     "Une table traduit un evenement BRUT d'un peripherique en ETIQUETTE INTERNE :",
     "  numero de note, de controleur, de touche  →  le nom qu'on ecrit dans la scene.",
-    "Invoquee sur une declaration d'entree : `@in pedale transport.midi mapping.<nom>`,",
+    "Invoquee sur une declaration d'entree : `in.midi pedale mapping.<nom>`,",
     "puis employee au point d'usage : `<!pedale.<etiquette>`."
   ]
 }

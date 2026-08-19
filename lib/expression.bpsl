@@ -146,7 +146,7 @@ def value
   bp3:_value
   bpscript:false
   args:param
-  description:`txt: Geste NATIF : donne une valeur a un parametre de performance nomme. En BPScript la forme est !(<param>:<valeur>) apres @var <param> signal -- le parametre est la CLE, cf. arbitrage du 2026-08-13.`
+  description:`txt: Geste NATIF : donne une valeur a un parametre de performance nomme. En BPScript la forme est !(<param>:<valeur>), le parametre etant declare par son TYPE en tete -- signal <param> -- et il est la CLE, cf. arbitrage du 2026-08-13.`
 
 def fixed
   bp3:_fixed

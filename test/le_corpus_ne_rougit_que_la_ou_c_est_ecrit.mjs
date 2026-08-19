@@ -68,19 +68,19 @@ const REGISTRE = [
   // sont pas des témoins : ce sont des scènes à réparer, et elles appartiennent à kanopi.
   // ⚠️ Elles restent ici INSCRITES, pas tolérées : le jour où l'une passe au vert, ce garde le
   // dira, et l'entrée sortira. Une dérogation sans échéance visible est un trou.
-  // ⛔ ONZE SCENES QUI ECRIVENT UNE DIRECTIVE SUPPRIMEE LE 2026-08-09 — `cv` et `macro`, dont
-  // les modulateurs et le cablage relevent du patching. Leur forme de remplacement — le corps
-  // branchement de `def` — est au BACKLOG jusqu a la revue FaustX.
-  // ⚠️ ELLES NE SE REECRIVENT PAS AUJOURD HUI, et c est deliberе : reecrire vers une forme que le
-  // langage ne lit pas encore produirait une scene qui compile et n agit pas — precisement le
-  // defaut qui a fait perdre son brassage a trySrand sans qu un seul message ne le dise.
-  // QUI ATTEND : la revue du patching. Les quatre de kanopi sont chez lui, les sept autres a moi.
-  ['cv/cv-adsr.bps',                      'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['cv/cv-lfo.bps',                       'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['synthesis/group-cutoff.bps',          'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['synthesis/superp-cutoff.bps',         'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['synthesis/patchbay.bps',              'Expected IDENT', 'declare macro — attend la revue du patching', 'FaustX', 'BACKLOG'],
-  ['test/fixtures/cv_modulation.bps',     'Expected IDENT', 'declare cv — attend la revue du patching', 'FaustX', 'BACKLOG'],
+  // ⛔ CINQ SCENES QUI ECRIVENT UNE FORME SORTIE DU LANGAGE, ET ELLES NE SONT PLUS « EN ATTENTE ».
+  // Leur mecanisme — les modulateurs nommes et le branchement — est SORTI le 2026-08-18, decision
+  // de Romain. Une scene qui l ecrit ne patiente donc pas : elle est MORTE, et son sort appartient
+  // a son proprietaire. La colonne qui nommait un remplacant a ete retiree le 2026-08-19 : aucun
+  // remplacant ne s ecrit nulle part tant que son chantier n est pas ouvert.
+  // ⚠️ ELLES NE SE REECRIVENT PAS ICI : elles sont a kanopi. Ce qui etait a MOI est parti avec son
+  // sujet — `test/fixtures/cv_modulation.bps`, supprimee le meme jour, une fixture dont la forme
+  // ACTEE n existe plus. Le code mort s elague dans le mouvement qui le rend mort.
+  ['cv/cv-adsr.bps',                      'Expected IDENT', 'ecrit un modulateur nomme, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
+  ['cv/cv-lfo.bps',                       'Expected IDENT', 'ecrit un modulateur nomme, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
+  ['synthesis/group-cutoff.bps',          'Expected IDENT', 'ecrit un modulateur nomme, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
+  ['synthesis/superp-cutoff.bps',         'Expected IDENT', 'ecrit un modulateur nomme, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
+  ['synthesis/patchbay.bps',              'Expected IDENT', 'ecrit un branchement, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
   // ⚠️ LES SIX SCÈNES DE PROVENANCE PERSONNELLE N'ONT JAMAIS TENU UNE LIGNE ICI. Je les ai
   //    inscrites le 2026-08-19 en retirant `mine` du langage (Romain : « SI, mine SORT ! »), et
   //    Kanopi les avait SUPPRIMÉES avant que mon garde ne tourne — sa consigne était du même

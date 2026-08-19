@@ -2505,8 +2505,25 @@ celles-ci existent pour ce qu'elles seules permettent.
 
 ### Les motifs temporels
 
-**Une courbe de temps plutot qu'une pulsation reguliere.** Un motif temporel decrit comment le temps
-s'ecoule sur une etendue, la ou le tempo n'en donne qu'une valeur.
+**Un motif temporel est un rapport de duree qui porte un nom.** Il se declare en tete, et son nom
+s'ecrit ensuite dans une expression polymetrique.
+
+```bpscript
+core
+alphabet.western
+smooth
+timepatterns: t1=1/1, t2=3/2, t3=4/3, t4=1/2
+-----
+S -> {t1 t3 t4, C4 D4 E4 F4}
+```
+
+**Le premier champ donne la grille, les autres s'y repartissent.** Les proportions 1, 4/3 et 1/2
+dessinent une pulsation irreguliere et exacte ; les quatre notes du second champ s'y posent.
+
+**Un motif temporel occupe le temps sans sonner.** Il porte une duree et une structure, et n'emet
+aucune note.
+
+**Chaque nom employe se declare.** Un nom absent de la declaration est un terminal inconnu.
 
 ### La vitesse absolue
 

@@ -143,7 +143,7 @@
           "tuning.diapason",
           "alphabet.diapason"
         ],
-        "description": "Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `@alphabet.X` ?? alphabet par défaut @core `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Overridable @diapason:N (scène) / (diapason:N) (occurrence). Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)."
+        "description": "Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `alphabet.X` ?? alphabet par défaut `core`, `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Surchargeable par `diapason:N` en tête de scène, ou `(diapason:N)` sur une occurrence. Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)."
       }
     }
   },
