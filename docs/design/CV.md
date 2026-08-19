@@ -103,7 +103,7 @@ réarmement-enveloppes) — la **syntaxe** fait foi ici (EBNF `runtime_qualifier
 ```bps
 S -> {Bass Bass Bass Bass, Env Env Env Env}     // deux voix parallèles, alignées par la polymétrie
 -----
-@mode:rnd
+mode:rnd
 Bass -> C2 C2 C3 C2 - C2 Eb2 C2 (cutoff: Env, wave:square, vel:120) [weight:40]
 Bass -> C2 - Eb2 F2 F#2 F2 Eb2 - (cutoff: Env, wave:triangle, vel:60) [weight:30]
 Env  -> env1
@@ -283,7 +283,7 @@ cv env2 : mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
 
 S -> {Bass Bass Bass Bass, Env Env Env Env}
 -----
-@mode:rnd
+mode:rnd
 Bass -> C2 C2 C3 C2 - C2 Eb2 C2 (cutoff: Env, wave:square, vel:120) [weight:40]
 Bass -> C2 - Eb2 F2 F#2 F2 Eb2 - (cutoff: Env, wave:triangle, vel:60) [weight:30]
 Bass -> C2 C2 C2 - G2 - Eb2 C2 (cutoff: Env, wave:sawtooth, vel:100)

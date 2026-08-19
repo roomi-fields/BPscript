@@ -13,7 +13,7 @@
     "TEMPLATES section (old BP3 bracket format)"
   ],
   "supported_features": [
-    "6 sub-grammars with correct mode directives (@mode:rnd, @mode:lin, @mode:ord)",
+    "6 sub-grammars with correct mode directives (mode:rnd, mode:lin, mode:ord)",
     "Weights [weight:N] for all rules",
     "<> bidirectional direction (approximation of BP3 <->)",
     "V-chain non-terminals V2..V15 (gram#3)",

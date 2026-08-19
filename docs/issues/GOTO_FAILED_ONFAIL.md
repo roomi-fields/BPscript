@@ -70,7 +70,7 @@ L'encodeur n'a **aucun** code traitant `on_fail` / `retry` / `fallback` /
 5. **`on_fail:skip`** : trancher son sort. En BP3, échec = "essaie la candidate
    suivante" est déjà le défaut → `skip` est soit un no-op, soit à retirer.
 6. **`on_fail:retry(N)`** : pas de primitive moteur (≠ `_repeat`), sens uniquement
-   sous `@mode:rnd`. → reporter à BPx (voir `../BPx/backlog/boolean-guards.md`
+   sous `mode:rnd`. → reporter à BPx (voir `../BPx/backlog/boolean-guards.md`
    pour le pattern "fonctionnalité qui ne mappe pas sur BP3 → BPx").
 
 ## Doc à corriger une fois traité

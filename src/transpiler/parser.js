@@ -3212,7 +3212,7 @@ function parse(tokens, opts = {}) {
     // du binding alphabet→voix qu'à la ligne d'acteur (spec §7, champ `voices` de l'alphabet).
     if (name === 'alphabet' && subkey) assertAlphabetVoices(subkey, current());
 
-    // Mode modifiers: @mode:rnd(destru, smooth, tempo:60)
+    // Mode modifiers: mode:rnd(destru, smooth, tempo:60)
     //
     // ⛔ UN MODIFICATEUR VIENT D'UNE LIBRAIRIE, ET SA PORTÉE DOIT DIRE `subgrammar`.
     //
@@ -3802,7 +3802,7 @@ function parse(tokens, opts = {}) {
         const dirNom = current() && current().value ? String(current().value) : '?';
         const dir = parseDirective();
         if (dir.name === 'mode' && dir.runtime) {
-          blockMode = dir.runtime;  // @mode:rnd → runtime='rnd'
+          blockMode = dir.runtime;  // mode:rnd → runtime='rnd'
           currentMode = blockMode;  // portée du bloc courant seulement (pas d'héritage)
           blockModifiers = dir.modifiers || null;
           currentModifiers = blockModifiers;
@@ -3900,7 +3900,7 @@ function parse(tokens, opts = {}) {
       // (RNDtype) à CHAQUE sous-grammaire et ne l'écrase que si un mot-clé de mode est
       // présent — CompileGrammar.c:1427 (défaut) puis :1488 (override conditionnel),
       // zéro héritage inter-bloc. Laisser `currentMode` persister faisait fuiter le mode
-      // d'un bloc @mode:ord vers les blocs SUIVANTS sans @mode, qui doivent rester au
+      // d'un bloc mode:ord vers les blocs SUIVANTS sans mode, qui doivent rester au
       // défaut. Mesuré sur asymmetric1 : sous-gram 6 en ORD au lieu de RND décalait les
       // tirages aléatoires. Réfute « ORD explicite ≡ héritage implicite » (bpx [613]).
       currentMode = null;
