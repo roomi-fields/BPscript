@@ -434,23 +434,6 @@
     },
     "_anchor_note": "Ancre = tonique sa_4 = 261.625 Hz (native -to.tryShruti). Registre en suffixe séparé par '_' (sa_4, r1_4) — convention 'saptak_us'."
   },
-  "dhadhatite": {
-    "description": "Qa'ida « dhadhatite » — bols et ENCHAINEMENTS de cette composition de tabla (sans hauteur)",
-    "runtime": "audio",
-    "resolvesPitch": false,
-    "alterations": {},
-    "terminals": {
-      "dha": {},
-      "dhadha": {},
-      "dhadhateena": {},
-      "dhadhatitedhadhadheena": {},
-      "dhadhatitedhadhateena": {},
-      "dheena": {},
-      "teena": {},
-      "tite": {}
-    },
-    "_source": "Vocabulaire releve AU COMPILATEUR sur kanopi .../BPScript-tests/dhadhatite_v2.bps (8 terminaux employes, membres droits, non-terminaux exclus). L'alphabet natif bp3-ctests/-al.dhadhatite ne declare que six bols SIMPLES (dha, ti, te, na, dhee, tr) et AUCUN des enchainements : la scene .bps le dit elle-meme en commentaire — « dhadhateena is NOT in gram#4 terminals, it is a composite bol »."
-  },
   "tryCsoundObjects": {
     "description": "Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)",
     "runtime": "audio",

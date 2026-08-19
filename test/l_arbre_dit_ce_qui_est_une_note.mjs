@@ -231,7 +231,11 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
 // altérations *meri* et *kari* valent un demi-ton. Il RÉSOUT une hauteur ; ce qui lui manque est
 // une ancre, pas une nature. Le garde qui exigeait l'inverse gardait donc le défaut.
 // Le critère n'est plus déduit : l'alphabet DÉCLARE `resolvesPitch`.
-for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhadhatite', 'dha']]) {
+// ⚠️ `dhadhatite` A ÉTÉ RETIRÉ LE 2026-08-19 — l'entrée déclarait des ENCHAÎNEMENTS comme bols,
+// relevés au compilateur sur une scène et non sur l'instrument natif. Son témoin est remplacé par
+// `dhati`, du même domaine et de même nature : la matrice ne rétrécit pas d'un cas parce qu'une
+// donnée a disparu, sans quoi un retrait ferait tomber une couverture sans que rien ne le dise.
+for (const [alpha, terminal] of [['tabla', 'dha'], ['simple', 'a'], ['dhati', 'dha']]) {
   const r = compiler(`core\nalphabet.${alpha}\n-----\nmotif -> ${terminal}\nS -> motif`);
   ok(!(r.ast?.noteTerminals || []).includes(terminal),
     `3bis. ${alpha} ne résout aucune hauteur : '${terminal}' ne doit PAS être annoncé comme note`);
