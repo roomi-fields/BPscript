@@ -4878,6 +4878,35 @@ function parse(tokens, opts = {}) {
       refuserTempx(key, keyTok, '(');
       const pos = { line: keyTok.line, col: keyTok.col };
       const sub = { ...(subject !== null ? { subject } : {}), ...(libDuReglage ? { lib: libDuReglage } : {}) };
+      // ── UNE CLÉ OUVRE UNE PARENTHÈSE — LA VALEUR EST UN OBJET ────────────────────────────────
+      //
+      // Décision Romain, 2026-08-19 : la récursivité des librairies s'exprime par les parenthèses
+      // et le point ; l'indentation ne porte rien. Et le DEUX-POINTS DISPARAÎT DEVANT UNE
+      // PARENTHÈSE — un signe, un rôle : le deux-points AFFECTE une valeur simple, la parenthèse
+      // PORTE ce qui appartient à ce qui la précède.
+      //
+      //     range(min:16, max:8000)
+      //     terminals(dha(voice:bayan_open), ta(voice:dayan_tap))
+      //
+      // ⛔ LA PARENTHÈSE GLOBALE PORTAIT DÉJÀ UN CORPS, ET C'EST TOUT CE QUI MANQUAIT. `def fort
+      // (vel:100, dur:2)` rendait déjà ses deux couples structurés ; ce que le lecteur ne savait
+      // pas faire, c'est qu'une CLÉ en ouvre une à son tour. Le geste est donc une RÉCURSION sur
+      // le lecteur existant, pas une seconde grammaire — et c'est ce qui garantit qu'un niveau
+      // profond accepte exactement ce qu'un niveau plat accepte.
+      //
+      // ⛔ ET CE QUI RENDAIT LE SUJET URGENT N'ÉTAIT PAS L'ABSENCE, C'ÉTAIT LE SILENCE VOISIN :
+      // écrite avec le deux-points dans un corps indenté, `range:(16, 8000)` COMPILAIT et rendait
+      // deux morceaux de texte — `["(16,", "8000)"]` — parce que ce qui suit un deux-points y est
+      // découpé aux espaces. Une graphie acceptée qui ne porte rien perd la donnée sans un mot.
+      // La forme sans deux-points sort de ce chemin par construction : elle est lue ici, ou
+      // refusée. Jamais avalée.
+      //
+      // Le collage est exigé : `range (16, 8000)` séparé par une espace n'appartient pas à `range`.
+      if (at(T.LPAREN) && !current().spaceBefore) {
+        pairs.push({ key, value: parseRuntimeQualifier(), ...sub, ...pos });
+        if (at(T.COMMA)) advance();
+        continue;
+      }
       // CONTRÔLEUR NUMÉROTÉ — `cc.98:45` (graphie tranchée par Romain le 2026-07-26).
       // La règle d'or du langage appliquée à un cas qui n'avait pas été traité : le point APPELLE
       // le composant (le contrôleur numéro 98), les deux points AFFECTENT la valeur. Le langage
