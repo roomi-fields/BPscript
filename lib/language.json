@@ -11,7 +11,7 @@
           "description": "Ordonné — règles appliquées séquentiellement (défaut)"
         },
         {
-          "name": "random",
+          "name": "rnd",
           "description": "Aléatoire — sélection pondérée"
         },
         {
