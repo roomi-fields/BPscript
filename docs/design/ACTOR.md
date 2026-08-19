@@ -13,7 +13,7 @@ Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes 
 
 | Propriété | Rôle | Référence |
 |---|---|---|
-| `alphabet` | vocabulaire de symboles — **hérité par cascade** (acteur → scène `alphabet.X` → socle core), JAMAIS requis (modèle Romain 2026-07-13) ; si la scène invoque une hauteur opaque `@mine.`/`factory.`, l'alphabet reste résolu en aval (Kairos) | `lib/alphabets.json` |
+| `alphabet` | vocabulaire de symboles — **hérité par cascade** (acteur → scène `alphabet.X` → socle core), JAMAIS requis (modèle Romain 2026-07-13) ; si la scène invoque une hauteur opaque `factory.`, l'alphabet reste résolu en aval (Kairos) | `lib/alphabets.json` |
 | `tuning` | tempérament / accordage (ex-`scale`) | `lib/tunings.json` |
 | `octaves` | convention de registre / notation — **défaut hérité de l'alphabet**, surchargeable par acteur | `lib/octaves.json` |
 | `sound` | son par défaut de l'acteur — **producteur PAR SYMBOLE** (banque, ou prospectif backtick-synthé) | `sound` |
@@ -134,20 +134,6 @@ sur ce type.
 > Ouvert (backlog B2/B3) : format de la librairie `@devices` (désormais **audio/midi/osc seulement**,
 > plus le visuel), appareil par défaut, et la clause d'interface des runtimes encapsulés (« comment
 > j'expose ma sortie pour transport » + typage de la voix).
-
-### Librairie de runtime (`@library.<moteur>`)
-
-Un moteur (`eval`) peut avoir besoin d'une **librairie de runtime** (banque d'échantillons,
-presets…) chargée avant exécution. Elle se déclare en en-tête, **liée au moteur**, et est **partagée
-par toutes les voix de ce moteur** :
-
-```bpscript
-@library.strudel "dirt-samples"
-```
-
-Le nom est une **chaîne** (convention B5 : un nom = IDENT | chaîne ; chaîne ici car tiret / ressource
-externe). BPScript ne fait que **porter** le nom ; le chargement réel est résolu en aval
-(Kanopi/workspace). Exposé dans `compileBPS().libraries` (`{ strudel: ["dirt-samples"] }`).
 
 La **sortie** (paramètres de rendu : vélocité, pan, canal, params de transport…) suit une cascade à
 **trois niveaux**, l'override le plus fin l'emportant. Elle est **distincte** de la cascade des sons

@@ -192,8 +192,7 @@ par les consommateurs :
   l'`interp` (interpréteur de la voix de code) vit dans `payload` (`{nature:'code', interp}`), donnée
   d'événement qui voyage jusqu'à Kairos (KAI-9) ; `interp`
   (tag explicite ou hérité de l'`eval` de l'acteur) — annotés par `bpxAst.js`, **pas de table** ;
-- **drapeaux nommés** → directives `@flag` ; **librairies** → directives `@library` ;
-  **scènes/expose/alias** → `ast.scenes`/`ast.exposes`/`ast.aliases` ; **tempo** → `@mm`.
+- **scènes/expose** → `ast.scenes`/`ast.exposes`.
 
 Les anciennes tables latérales (`backticks`/`flagStates`/`libraries`/`sceneTable`/`mapTable`/
 `exposeTable`) étaient des vues redondantes (vestiges BP3) : supprimées de cette voie. Cf. spec
