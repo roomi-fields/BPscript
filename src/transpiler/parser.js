@@ -2045,12 +2045,16 @@ function parse(tokens, opts = {}) {
       name = lireNomDEntree(tok);
     }
     // Invocation par PROVENANCE (chantier libs-provenance, décision hub ef75ec6 ;
-    // contrat contrats/bpscript-bpx.md §libRefs) : `factory.<chemin-fichier>.<entrée>` et
-    // `mine.<chemin-fichier>.<entrée>`. `factory`/`mine` sont des préfixes RÉSERVÉS. Le
+    // contrat contrats/bpscript-bpx.md §libRefs) : `factory.<chemin-fichier>.<entrée>`. Le
     // domaine est déclaré DANS le fichier — on ne le connaît PAS ici (L27 : on PORTE opaque,
     // Kairos résout). Découpage POSITIONNEL : dernier segment = entrée ; le milieu = chemin.
     // → canal NEUTRE `ast.libRefs` (adresse canonique opaque), PAS un slot legacy.
-    if (name === 'factory' || name === 'mine') {
+    //
+    // ⛔ `mine` EST SORTI LE 2026-08-19, sur décision de Romain : « il n'existe pas encore, on
+    // verra plus tard. SI, mine SORT ! Maintenant ! » Il ne laisse AUCUNE trace ici — ni branche,
+    // ni message dédié, ni renvoi : un mot retiré se refuse comme un mot inventé. Le seul reste
+    // est un garde qui vérifie qu'il ne marche plus.
+    if (name === 'factory') {
       const segs = [];
       // Un segment recolle les IDENT/INT collés (sans espace) : tirets (`mes-` + `svaras`)
       // ET entrées NUMÉRIQUES (`12` + `TET` → `12TET`, `22` + `shruti` — les accordages
@@ -2061,13 +2065,13 @@ function parse(tokens, opts = {}) {
       if (segs.length < 2) {
         throw new ParseError(
           `invocation de librairie malformee '${name}' — attendu ` +
-          `@${name}.<chemin-fichier>.<entree> (ex. @${name === 'mine' ? 'mine.ragas.mes-svaras.sa' : 'alphabet.sargam'})`,
+          `${name}.<chemin-fichier>.<entree> (ex. alphabet.sargam)`,
           tok
         );
       }
-      // Adresse canonique OPAQUE : `mine.` préfixe le perso ; le sucre `factory.` est NORMALISÉ
-      // au nu (nom nu et `factory.` confondus AVANT émission — contrat bpscript-bpx.md).
-      const address = name === 'mine' ? `mine.${segs.join('.')}` : segs.join('.');
+      // Adresse canonique OPAQUE : le sucre `factory.` est NORMALISÉ au nu (nom nu et `factory.`
+      // confondus AVANT émission — contrat bpscript-bpx.md).
+      const address = segs.join('.');
       return { type: 'LibRef', address, provenance: name, line: tok.line };
     }
     // @alphabet.western — dot accessor for subkey within a lib
@@ -3160,7 +3164,7 @@ function parse(tokens, opts = {}) {
     // composant résolu, puis `:` affecte une valeur). Pour tuning, `diapason:<N>` porte la freq.
     if (catalogAxisKeys().has(name) && !subkey && at(T.COLON)) {
       const hint = name === 'tuning'
-        ? " ; fréquence de référence → 'diapason:<N>' ; tuning personnel → 'mine.<chemin>.<nom>'"
+        ? " ; fréquence de référence → 'diapason:<N>'"
         : '';
       throw new ParseError(
         `'${name}:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '${name}.<nom>' `

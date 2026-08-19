@@ -44,6 +44,12 @@ const SUPPRIMEES = [
   { mot: 'mm', valeur: '60', decision: '2026-06-26, appliqué le 2026-08-18 — un seul nom, `tempo`',
     refusGenerique: true },
   { mot: 'scene', valeur: '120', decision: 'la hiérarchie de scènes est supprimée' },
+  { mot: 'mine', valeur: '1', decision: '2026-08-19 — Romain : « SI, mine SORT ! Maintenant ! »',
+    refusGenerique: true,
+    // ⛔ SA FORME VIVE ÉTAIT COMPOSÉE — `mine.<chemin-fichier>.<entrée>` — donc les trois graphies
+    // du socle ne suffisent pas : elles n'auraient jamais atteint la branche qui le lisait. Le
+    // volet dédié ci-dessous éprouve la forme qu'il portait réellement.
+    composee: 'ragas.mes-svaras.sa' },
 ];
 
 console.log(`[forme supprimée] ${SUPPRIMEES.length} forme(s) x 3 graphies`);
@@ -83,6 +89,33 @@ for (const f of SUPPRIMEES) {
       + `'${nu(f.mot)}' contre '${nu('zorglubinvente')}'`);
   }
 }
+
+// ── LA FORME COMPOSÉE — celle que le mot portait réellement ──────────────────────────────────
+// ⛔ UN MOT DONT LA GRAPHIE EST COMPOSÉE NE SE GARDE PAS PAR SA FORME NUE. `mine` ne s'écrivait
+// jamais seul : il préfixait un chemin de fichier personnel. Les trois graphies du socle
+// n'atteignaient donc pas la branche qui le lisait, et le garde aurait été vert sans rien mesurer.
+//
+// ⚠️ ET SON REFUS DOIT ÊTRE CELUI D'UN MOT INVENTÉ, mot pour mot : la décision du 2026-08-19 dit
+// « pas de message dédié, pas de renvoi, pas de trace dans le code ». Un refus qui le nommerait
+// encore le ferait vivre à moitié — refusé en surface, connu du compilateur.
+for (const f of SUPPRIMEES.filter((x) => x.composee)) {
+  const nu = (m) => (err(`${m}.${f.composee}\n-----\nS -> C4`)[0] || '')
+    .replace(new RegExp(m, 'g'), '<mot>').replace(/at line \d+:\d+/, '').trim();
+  ok(err(`${f.mot}.${f.composee}\n-----\nS -> C4`).length >= 1,
+    `'${f.mot}.${f.composee}' doit être REFUSÉ — supprimé (${f.decision})`);
+  ok(nu(f.mot) === nu('zorglubinvente'),
+    `le refus de '${f.mot}.<chemin>' doit être celui d'un mot INVENTÉ, mot pour mot — reçu `
+    + `'${nu(f.mot)}' contre '${nu('zorglubinvente')}'`);
+}
+
+// ── LE COMPLÉMENT DE LA PROVENANCE — `factory.` VIT ENCORE, et le garde le DIT ────────────────
+// ⚠️ IL PORTE LE MÊME MÉCANISME que `mine` et la même décision datée le nomme
+// (`2026-08-17-factory-et-mine-sortent-du-langage.md`). Il n'est pas sorti aujourd'hui : la
+// consigne du 2026-08-19 ne nomme que `mine`, et élargir une directive en silence est interdit.
+// Ce témoin fige l'écart — le jour où `factory` sort, il rougit et sort avec lui.
+ok(err('factory.ragas.mes-svaras.sa\n-----\nS -> C4').length === 0,
+  "TÉMOIN — `factory.<chemin>.<entrée>` COMPILE encore. S'il est désormais refusé, `factory` est "
+  + "sorti à son tour : retirer ce témoin, et l'inscrire au registre des mots sortis.");
 
 // ── LA MOITIÉ « DOIT PASSER » — sans elle, une règle qui refuserait tout aurait l'air juste ───
 {
