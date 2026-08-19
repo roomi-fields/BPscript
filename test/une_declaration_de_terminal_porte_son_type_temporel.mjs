@@ -21,6 +21,8 @@
  * graphie inventée. Le jour où le second type revient, ce garde dit où le poser.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { LIBS } from '../src/transpiler/libs-data.js';
+const CORE = LIBS.core;
 
 let passe = 0;
 const echecs = [];
@@ -32,8 +34,14 @@ const compile = (src) => compileToBPxAST(SOCLE + src);
 // ── 1. LE CHAMP EST LÀ, SUR CHAQUE CANAL DE SORTIE ───────────────────────────────────────────
 // Une matrice, pas un cas : le nœud se construit dans UNE branche, mais un canal est lu dans la
 // donnée et rien ne garantit qu'ils passent tous par elle.
-const CANAUX = ['midi', 'audio', 'osc', 'dmx', 'text'];
-console.log(`[type temporel] ${CANAUX.length} canaux de sortie x la forme déclarée`);
+// ⚠️ `text` A QUITTÉ CETTE LISTE LE 2026-08-19, ET C'EST UN DURCISSEMENT. Il PORTE la direction de
+// sortie mais son ÉCRITURE est fermée (`schema.channels.text.writable === false`) : la forme
+// d'acteur `out.text` le refuse depuis le 2026-08-04, la déclaration de terminal l'acceptait. Une
+// liste écrite à la main gardait l'incohérence — elle se DÉRIVE désormais de la donnée, et `text`
+// devient un cas de REFUS nommé plus bas, pas un cas absent.
+const CANAUX = Object.entries(CORE.schema.channels)
+  .filter(([, c]) => c && c.out && c.writable).map(([n]) => n);
+console.log(`[type temporel] ${CANAUX.length} canaux de sortie ÉCRIVABLES x la forme déclarée`);
 for (const canal of CANAUX) {
   const r = compile(`zz:${canal}\n-----\nS -> zz`);
   const d = (r.ast?.declarations || [])[0];
@@ -43,6 +51,24 @@ for (const canal of CANAUX) {
   ok(d && d.temporalType === 'gate',
      `1. 'zz:${canal}' doit porter temporalType 'gate' — BPx ne collecte un terminal d'alphabet `
      + `qu'à cette condition (loadGrammar.ts:1613). Reçu ${JSON.stringify(d && d.temporalType)}`);
+}
+
+// ── 1bis. LES CANAUX QUI NE S'ÉCRIVENT PAS — refusés, chacun par SA cause ───────────────────
+// La matrice ci-dessus a perdu `text` en se dérivant ; elle ne rétrécit pas pour autant — il
+// revient ici, du côté du refus. Trois causes distinctes, et le refus doit dire LAQUELLE : le
+// canal n'existe pas · il existe mais ne sort pas · il sort mais ne s'écrit pas encore.
+for (const [canal, motif, pourquoi] of [
+  ['zorglub',  /n'existe pas/,          "le canal n'existe pas"],
+  ['keyboard', /n'est pas une sortie/,  'le canal existe mais ne porte que l\'entrée'],
+  ['text',     /ÉCRITURE/,              "le canal sort, mais son écriture attend son appareil"],
+]) {
+  const r = compile(`zz:${canal}\n-----\nS -> zz`);
+  const msg = (r.errors || []).map((e) => e.message).join(' | ');
+  ok((r.errors || []).length > 0, `1bis. 'zz:${canal}' doit être REFUSÉ — ${pourquoi}`);
+  ok(motif.test(msg), `1bis. 'zz:${canal}' — le refus doit dire QUE ${pourquoi} (reçu : ${msg.slice(0, 110)})`);
+  ok(!/terminal 'zz' non déclaré/.test(msg),
+     `1bis. 'zz:${canal}' accuse le TERMINAL alors que la faute est sur le CANAL — c'est le défaut `
+     + `réparé le 2026-08-19 (reçu : ${msg.slice(0, 110)})`);
 }
 
 // ── 2. L'OBJET HORS-TEMPS — le seul endroit où l'absence se voyait ───────────────────────────

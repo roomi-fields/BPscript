@@ -1743,7 +1743,16 @@ function parse(tokens, opts = {}) {
     const tok = current();
     const nom = tok.value;
     const canal = peek(2).value;
-    if (!outChannels().has(canal)) return null;
+    // ⛔ ICI ON NE JETTE PAS, ET C'EST UNE LEÇON PAYÉE DEUX FOIS. Ma première écriture refusait le
+    // canal inconnu depuis ce lecteur — et elle est passée DEVANT les pierres tombales : `routing:studio`,
+    // `label:x` et `transcription:x` ont perdu leur refus nommé pour « le canal 'studio' n'existe pas ».
+    // Trois retraits rendus muets par une borne trop gourmande, exactement la faute du 2026-08-18 où
+    // « n'est pas un type » avalait les refus de `cv` et `macro`.
+    //
+    // CE LECTEUR REND DONC `null` COMME AVANT, la lecture ordinaire garde ses refus nommés, et la
+    // précision sur le canal se pose LÀ OÙ LE MESSAGE FAUX EST ÉMIS — au refus du terminal, dans
+    // `bpxAst.js`. Réparer un message à son point d'émission ne peut rien avaler.
+    if (!outChannels().has(canal) || !writableChannels().has(canal)) return null;
     // Un mot que le vocabulaire déclare garde sa lecture de réglage — `eval:X`, `sound:X`… La
     // question se pose dans les deux sens, donc les deux lecteurs sont interrogés.
     if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie('core', nom)) return null;
@@ -3106,7 +3115,7 @@ function parse(tokens, opts = {}) {
         ? " ; fréquence de référence → 'diapason:<N>' ; tuning personnel → 'mine.<chemin>.<nom>'"
         : '';
       throw new ParseError(
-        `'${name}:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '@${name}.<nom>' `
+        `'${name}:<X>' refusé — ':' n'affecte pas de valeur à un composant. Écris '${name}.<nom>' `
         + `(règle : ':' affecte, '.' appelle)${hint}.`,
         current(),
       );

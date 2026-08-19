@@ -48,9 +48,14 @@ const compile = (corps) => {
 // ⚠️ UN GARDE NOMMÉ POUR UNE FORME QU'IL N'EXERCE PAS EST PIRE QU'UN GARDE ABSENT : il occupe la
 // place. Les DEUX graphies passent désormais dans la même matrice, et le message doit être le
 // MÊME — deux écritures d'une seule règle qui refusent différemment enseignent deux langages.
+// ⚠️ ET UNE TROISIÈME GRAPHIE EST ENTRÉE LE 2026-08-19 : la DÉCLARATION DE TERMINAL, `<nom>:<canal>`.
+// Elle laissait passer `a:text` (canal fermé à l'écriture) et rendait, sur `a:zorglub`, un refus qui
+// accusait le TERMINAL au lieu du CANAL. Trois écritures d'une même liste fermée, trois fois la même
+// exigence — et c'est la troisième fois que la même case se rouvre à une place qu'on n'éprouvait pas.
 const GRAPHIES_OUT = {
   acteur: (canal) => `actor v\n  alphabet.western\n  out.${canal}\nmode:ord\n-----\nS -> v.C4`,
   scene: (canal) => `alphabet.western\nout.${canal}\nmode:ord\n-----\nS -> C4`,
+  terminal: (canal) => `alphabet.western\nzz:${canal}\nmode:ord\n-----\nS -> zz`,
 };
 const sceneOut = GRAPHIES_OUT.acteur;
 const sceneIn = (canal) => `in.${canal} x\nmode:ord\n-----\nS -> C4`;
@@ -124,8 +129,13 @@ for (const canal of Object.keys(channels)) {
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     messages[graphie] = msg;
     ok((r.errors || []).length > 0, `'out.inconnu' (graphie ${graphie}) doit être REFUSÉ (liste fermée)`);
-    ok(msg.includes("n'est pas une sortie"),
-      `'out.inconnu' (graphie ${graphie}) refusé mais sans nommer la direction — reçu : ${msg.slice(0, 200)}`);
+    // ⚠️ CE QUE LE REFUS DOIT DIRE DÉPEND DE LA GRAPHIE, ET C'EST VOULU. Sur `out.<canal>` la
+    // direction est ÉCRITE, donc un nom inconnu se refuse par elle. Sur `<nom>:<canal>` la direction
+    // n'est écrite nulle part : le refus doit d'abord dire que le canal N'EXISTE PAS, sans quoi il
+    // reprocherait une direction à un mot qui n'est pas un canal du tout.
+    const attendu = graphie === 'terminal' ? "n'existe pas" : "n'est pas une sortie";
+    ok(msg.includes(attendu),
+      `'out.inconnu' (graphie ${graphie}) refusé mais sans dire « ${attendu} » — reçu : ${msg.slice(0, 200)}`);
   }
   // ⛔ LE REFUS DOIT DIRE LA MÊME CHOSE DES DEUX CÔTÉS, à l'attribution d'acteur près. Sans cette
   // comparaison, une graphie peut refuser pour une raison et l'autre pour une autre, et les deux
@@ -134,6 +144,15 @@ for (const canal of Object.keys(channels)) {
   ok(noyau(messages.acteur) === noyau(messages.scene),
     `les deux graphies de 'out.inconnu' doivent refuser par le MÊME message — acteur : `
     + `« ${noyau(messages.acteur).slice(0, 90)} » · scène : « ${noyau(messages.scene).slice(0, 90)} »`);
+  // ⛔ LA DÉCLARATION DE TERMINAL DIT DE PLUS QUE LE CANAL N'EXISTE PAS. Les deux autres graphies
+  // n'ont qu'un refus de DIRECTION ; celle-ci sépare « ce canal n'existe pas » de « il n'a pas cette
+  // direction », parce qu'un nom inventé y ressemble à une faute de frappe sur un réglage. Deux
+  // causes distinctes valent mieux qu'un message unique — c'est la leçon du suffixe et de l'arobase.
+  ok(/n'existe pas/.test(messages.terminal),
+    `'zz:inconnu' doit dire que le CANAL n'existe pas — reçu : ${messages.terminal.slice(0, 120)}`);
+  ok(!/terminal 'zz' non déclaré/.test(messages.terminal),
+    `'zz:inconnu' accuse encore le TERMINAL alors que la faute est sur le CANAL — c'est le défaut `
+    + `réparé le 2026-08-19 (reçu : ${messages.terminal.slice(0, 120)})`);
 }
 
 // ─── DMX SPÉCIFIQUEMENT ATTENDU EN SORTIE (item 2 de la tâche) ───────────────────────────────

@@ -1086,10 +1086,27 @@ function validateTerminals(ast) {
       // bout précis ; c'est lui qui manque à l'alphabet, et le natif le dit ainsi — « Can't make
       // sense of "a" ». Dire le mot entier envoie chercher un terminal qui n'a jamais eu à exister.
       const reste = restesDeSegmentation.get(el);
+      // ⛔ ET SI L'AUTEUR A ÉCRIT LA DÉCLARATION, LA FAUTE EST SUR SON CANAL, PAS SUR LE TERMINAL.
+      // `a:zorglub` rendait « terminal 'a' non déclaré » : la ligne cessait d'être lue comme une
+      // déclaration parce que `zorglub` n'est pas un canal, et l'auteur cherchait sa faute sur `a`.
+      // La liste des canaux est FERMÉE partout ailleurs — chez l'acteur depuis le 2026-08-04, sur la
+      // sortie de scène depuis le 2026-08-19 — elle ne l'était pas ici, et le refus accusait le
+      // mauvais terme.
+      //
+      // ⚠️ LA PRÉCISION SE POSE ICI, AU POINT D'ÉMISSION, et pas dans le lecteur de déclaration :
+      // une borne posée là-bas est passée DEVANT les pierres tombales et a rendu muets les refus
+      // nommés de `routing`, `label` et `transcription`. Un message réparé où il est écrit ne peut
+      // rien avaler.
+      const ligne = (ast.directives || []).find((d) =>
+        d && d.type === 'Directive' && d.name === el.name && typeof d.runtime === 'string');
+      const cause = ligne && canalFautif(ligne.runtime);
       errors.push({
-        message: reste && reste !== el.name
-          ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${reste}', absent des alphabets en portée`
-          : `terminal '${el.name}' non déclaré — absent des alphabets en portée`,
+        message: cause
+          ? `'${el.name}:${ligne.runtime}' déclare un terminal, et ${cause} La déclaration s'écrit `
+            + `'<nom>:<canal>' — le terminal n'est pas en cause.`
+          : reste && reste !== el.name
+            ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${reste}', absent des alphabets en portée`
+            : `terminal '${el.name}' non déclaré — absent des alphabets en portée`,
         line: el.line,
       });
     }
@@ -1670,6 +1687,23 @@ function refuserAttenteNonDeclaree(ast) {
     for (const k in n) marcher(n[k]);
   })(ast);
   return erreurs;
+}
+
+/**
+ * Des TROIS façons dont un canal peut être fautif, laquelle ? Le catalogue des canaux est la seule
+ * source ; aucun nom n'est écrit ici. Rend `null` quand le canal est bon — c'est alors une vraie
+ * faute de terminal.
+ */
+function canalFautif(canal) {
+  const cat = LIBS.core?.schema?.channels || {};
+  const c = cat[canal];
+  if (!c) return `le canal '${canal}' n'existe pas — les canaux sont ${Object.keys(cat).join(', ')}. `
+    + `La liste est FERMÉE.`;
+  if (!c.out) return `'${canal}' n'est pas une sortie — un terminal sonne, il ne se lit pas. Les `
+    + `canaux de sortie sont ${Object.keys(cat).filter((k) => cat[k].out).join(', ')}.`;
+  if (!c.writable) return `'${canal}' est une DESTINATION de l'architecture, routée comme les autres `
+    + `sorties, mais son ÉCRITURE dans une scène attend encore son appareil dédié.`;
+  return null;
 }
 
 function validateReferences(ast, libCtx = {}) {

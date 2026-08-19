@@ -41,58 +41,81 @@ const err = (src) => {
 const socle = (d) => `core\n${/^alphabet[.:]/.test(d) ? '' : 'alphabet.western\n'}`;
 const S = 'core\nalphabet.western\n-----\n';
 
-// ── 1. LA MATRICE — chaque déclaration, dans les DEUX positions ──────────────────────────────
-// Une écriture plausible par directive. Elles ne sont pas inventées : chacune est la forme que le
-// parseur accepte AVANT les règles, vérifiée par la moitié « doit passer » de cette même matrice.
-const DECLARATIONS = [
-  // `western` et non `sargam` : depuis que le socle est conditionnel, la scène ne porte plus que
-  // l'alphabet TESTÉ, et la règle témoin joue `C4`. Mesurer un refus de POSITION ne doit pas
-  // buter sur un vocabulaire qui ne contient pas la note de l'exemple.
-  ['alphabet', 'alphabet.western'], ['tuning', 'tuning.western_just'], ['octaves', 'octaves.bp3'],
-  // ⚠️ COBAYE CHANGÉ le 2026-08-08 : ce garde mesure la POSITION d'une déclaration dans le
-  // fichier (avant / après les règles), pas la légitimité du mot. `scan` ne s'écrit plus en
-  // tête de scène depuis que la portée est validée ; `mm` est SORTIE du langage le 2026-08-09 et vaut.
-  ['eval', 'eval.sc'], ['actor', 'actor v\n  out.audio'],
-  // ⚠️⚠️ `transport` ET `out` SONT SORTIS DE LA MATRICE le 2026-08-04, remplacés 1-pour-1 par
-  // `scan` et `sound` — le témoin anti-rétrécissement (>= 24) reste tenu, et les deux remplaçants
-  // ont été MESURÉS génériques avant d'être choisis (acceptés avant les règles, refusés après),
-  // pas supposés tels. Raison de leur sortie : Atlas a signalé que `transport.midi` en tête de
-  // scène compilait SANS ERREUR alors que le mot a quitté le langage — mesuré, la directive
-  // orpheline ne produisait AUCUN effet (l'acteur implicite gardait `audio` avec ou sans elle).
-  // Le trou était PRÉEXISTANT, pas ouvert par le renommage : il n'avait simplement jamais été
-  // fermé. Les deux sont désormais des TOMBSTONES INCONDITIONNELS, donc sans comportement
-  // générique à éprouver ici — leur refus est gardé par
-  // `test/transport_et_out_ne_sont_pas_des_directives_de_scene.mjs`.
-  // ⚠️ `in` REMPLACÉ par `out` dans la matrice le 2026-08-04 (in/out remplacent transport, ligne
-  // réservée ajoutée avec le mot) : `in` seul est désormais un TOMBSTONE INCONDITIONNEL (refusé
-  // dans LES DEUX positions, avant comme après les règles — cf. `test/declaration_d_entree.mjs`),
-  // pas une déclaration mal placée. La prémisse de cette matrice (« la forme PASSE avant les
-  // règles ») ne tient plus pour ce mot précis — la déclaration d'entrée s'écrit maintenant
-  // 'in.<canal> <rôle>', couverte par la ligne 'symbol'. `out`, mot NOUVEAU du même jour, garde
-  // lui le comportement générique (accepté-ignoré avant, refusé-nommé après) : il prend la place
-  // dans la matrice SANS la rétrécir.
-  ['sound', 'sound.tabla_perc'],
-  // ⚠️ `controls` N'EST PLUS UNE DIRECTIVE RÉSERVÉE (controls.json supprimé, Romain 2026-08-10) —
-  // mais `controls` reste une ligne SYNTAXIQUEMENT valide (bare directive, comme n'importe quel
-  // mot), donc le refus générique « déclaration après les règles » la mord toujours, nommément.
-  // Ce cobaye prouve que le refus ne dépend pas d'être une directive CONNUE.
-  // `controls` EST SORTI de la matrice le 2026-08-10 : la librairie a été SCINDÉE par destinataire
-  // (expression, midi, audio, transpo) puis SUPPRIMÉE, et `core` les apporte toutes. Le mot ne
-  // désigne plus rien. Remplacé 1-pour-1 par `timepatterns`, mesuré générique avant d'être choisi
-  // — accepté avant les règles, refusé après — pour que le socle anti-rétrécissement reste tenu.
-  ['timepatterns', 'timepatterns: t1=1/1'], ['symbol', 'symbol v'],
-  ['tempo', 'tempo:90'],
-  // `duration` EST SORTIE de la matrice le 2026-08-10 : Romain l'a supprimée le 2026-08-04
-  // (hub/decisions/2026-08-04-la-duree-de-scene-est-supprimee.md) et elle était revenue par
-  // lib/engine.json à la naissance de cette librairie. Remplacée 1-pour-1 par `randomize`, mesurée
-  // générique avant d'être choisie — acceptée avant les règles, refusée après.
-  ['randomize', 'randomize'],
-  ['meter', 'meter:4'], ['quantization', 'quantization:50'], ['qclock', 'qclock:10'],
-  ['transpose', 'transpose:2'], ['diapason', 'diapason:442'], ['homomorphism', 'homomorphism.dhati'],
-  ['settings', 'settings'], ['transpose', 'transpose:1/2'], ['modulation', 'modulation'], ['ins', 'ins:3'],
-  ['test_alphabets', 'test_alphabets.abc'],
-];
-console.log(`[declaration apres regles] ${DECLARATIONS.length} declarations x 2 positions`);
+// ── 1. LA MATRICE, DÉRIVÉE DE LA DONNÉE ─────────────────────────────────────────────────────
+// ⛔ ELLE ÉTAIT UNE LISTE ÉCRITE À LA MAIN — vingt et une entrées choisies, qui nommaient QUINZE
+// des vingt-deux mots réservés de `core`. Sept n'y passaient jamais, et l'union sur TOUTES les
+// librairies en compte QUARANTE-NEUF : la matrice en éprouvait moins de la moitié. Le sujet était
+// bon (mesuré le 2026-08-19 : 47 refus nommés, 2 refus légitimes, 1 passage légitime) — c'est
+// l'INSTRUMENT qui ne suivait pas sa source, et un garde qui ne se dérive pas de sa donnée pourrit
+// sans le dire.
+//
+// CE QUI SE DÉRIVE : la LISTE des mots, de `reservedDirectives` sur toutes les librairies.
+// CE QUI SE DÉCLARE : leur FAMILLE, ci-dessous, par leur nom. Sans quoi le garde photographierait
+// le comportement au lieu de l'exiger — un mot qui changerait de camp serait simplement reclassé.
+//
+// ⛔ ET L'UNION DOIT ÊTRE EXACTEMENT COUVERTE, dans les deux sens : un mot réservé qu'aucune
+// famille ne nomme fait ÉCHOUER le garde, et une famille qui nomme un mot sorti de l'union le fait
+// échouer aussi. C'est la règle du 2026-08-19 : une exemption qui ne désigne plus rien de vivant
+// n'est pas neutre, elle est un trou au nom de quelqu'un.
+
+// LES TROIS FAMILLES, mesurées mot par mot le 2026-08-19 sur `compileToBPxAST`.
+
+// (a) LES DÉCLARATIONS DE TÊTE — elles PASSENT avant les règles, et sont REFUSÉES-NOMMÉES après.
+//     C'est le sujet de ce garde : la position qualifie la ligne.
+const FORME = {
+  // Trois seulement ont besoin d'une écriture : nues, elles manquent leur nom ou leur valeur.
+  // Le reste s'éprouve NU — et c'est voulu : une forme écrite à la main est une forme qu'on choisit.
+  actor: 'actor v\n  out.audio',
+  def: 'def k (vel:120)',
+  diapason: 'diapason:442',
+};
+
+// (b) LES CONTRÔLES DE PORTÉE — refusés EN TÊTE, avec un message qui dit OÙ ils vivent. Leur refus
+//     tient à leur PORTÉE, pas à leur position, donc la prémisse de la matrice ne vaut pas pour eux.
+const CONTROLES_DE_PORTEE = new Set([
+  'destru', 'failed', 'filter', 'goto', 'legato', 'order', 'repeat', 'retro', 'rotate',
+  'scaleshift', 'shuffle', 'staccato', 'stop', 'weight',
+]);
+
+// (c) `mode` — LE SEUL MOT QUI PASSE DANS LES DEUX POSITIONS, et c'est sa définition : il gouverne
+//     la sous-grammaire QUI SUIT. 67 scènes du corpus sur 263 en vivent.
+const LEGITIME_APRES = new Set(['mode']);
+
+// ⛔ ET CETTE TROISIÈME FAMILLE SE NOMME AUSSI. Mon premier jet la calculait comme « tout ce qui
+// n'est ni contrôle de portée ni `mode` » — donc un mot réservé NEUF y tombait tout seul, et le
+// contrôle d'orphelins ne pouvait RIEN trouver : il comparait l'union à une famille dérivée de
+// l'union. INJECTION FAITE, ELLE N'A PAS MORDU : `zorglubinvente` ajouté aux mots réservés est
+// passé au vert. Une couverture qui se calcule depuis ce qu'elle couvre photographie l'état ; elle
+// ne l'exige pas.
+const DECLARATIONS_DE_TETE = new Set([
+  'actor', 'all_items', 'allitems', 'alphabet', 'chromashift', 'core', 'def', 'diapason', 'eval',
+  'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
+  'octaves', 'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scale', 'scan',
+  'seed', 'settings', 'sound', 'sounds', 'test_alphabets', 'timepatterns', 'transpose', 'tuning',
+]);
+
+const nomsReserves0 = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
+const UNION = [...new Set(Object.values(LIBS).flatMap((f) => nomsReserves0(f?.schema?.reservedDirectives)))].sort();
+const DECLARATIONS = [...DECLARATIONS_DE_TETE].sort().map((m) => [m, FORME[m] || m]);
+
+console.log(`[declaration apres regles] union ${UNION.length} mots · ${DECLARATIONS.length} declarations `
+  + `x 2 positions · ${CONTROLES_DE_PORTEE.size} controles de portee · ${LEGITIME_APRES.size} legitime(s) apres`);
+
+// ⛔ LES DEUX SENS DE LA COUVERTURE.
+{
+  const classes = new Set([...CONTROLES_DE_PORTEE, ...LEGITIME_APRES, ...DECLARATIONS_DE_TETE]);
+  const orphelins = UNION.filter((m) => !classes.has(m));
+  ok(orphelins.length === 0,
+    `0. ${orphelins.length} mot(s) réservé(s) qu'aucune famille ne nomme : ${orphelins.join(', ')}. `
+    + `Un mot neuf doit être CLASSÉ, jamais éprouvé par défaut — sinon la matrice grandit sans que `
+    + `personne n'ait regardé ce que le mot fait.`);
+  const fantomes = [...CONTROLES_DE_PORTEE, ...LEGITIME_APRES, ...DECLARATIONS_DE_TETE, ...Object.keys(FORME)]
+    .filter((m) => !UNION.includes(m));
+  ok(fantomes.length === 0,
+    `0. ${fantomes.length} mot(s) nommé(s) par une famille et ABSENT(S) de l'union : ${fantomes.join(', ')}. `
+    + `Une exemption qui ne désigne plus rien de vivant est un trou au nom de quelqu'un.`);
+}
+
 for (const [nom, forme] of DECLARATIONS) {
   // APRÈS une règle → REFUSÉE, et le refus doit NOMMER la directive et donner la réécriture.
   const apres = err(`${socle(forme)}-----\nS -> C4\n${forme}\n-----\nT -> D4\n`);
@@ -104,6 +127,18 @@ for (const [nom, forme] of DECLARATIONS) {
   // AVANT les règles → PASSE. Sans cette moitié, une règle qui refuserait tout aurait l'air juste.
   ok(err(`${socle(forme)}${forme}\n-----\nS -> C4\n`).length === 0,
     `1. '${nom}' AVANT les règles doit PASSER — c'est la moitié qu'on casse sans s'en apercevoir`);
+}
+
+// ── 1bis. LES CONTRÔLES DE PORTÉE — refusés EN TÊTE, et le refus DIT OÙ ILS VIVENT ───────────
+// Sans ce volet, on pourrait les exempter en silence et croire la matrice complète. Ils sont
+// éprouvés, simplement sur une autre exigence : leur refus doit nommer leur portée.
+for (const nom of CONTROLES_DE_PORTEE) {
+  const tete = err(`${socle(nom)}${nom}\n-----\nS -> C4\n`);
+  ok(tete.length >= 1, `1bis. '${nom}' est un contrôle de PORTÉE : il doit être REFUSÉ en tête de scène`);
+  ok(tete.some((m) => m.includes(`'${nom}'`) && /ne peut pas s'écrire en tête de scène/.test(m)),
+    `1bis. '${nom}' — le refus doit NOMMER le mot et dire qu'il ne s'écrit pas en tête (reçu : ${tete[0]?.slice(0, 100)})`);
+  ok(tete.some((m) => /il (vaut|ne vaut)/.test(m)),
+    `1bis. '${nom}' — le refus doit dire OÙ le mot vit, sinon il ferme une porte sans en ouvrir une`);
 }
 
 // ── 2. `mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────
@@ -144,11 +179,18 @@ ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RE
 // légitime de ce socle : une forme RETIRÉE du langage. Un seuil qu'on baisse parce qu'un cas
 // « ne passe plus » est un socle qu'on désarme ; celui-ci se baisse parce que l'espace lui-même a
 // rétréci, et le compte des directives réservées ci-dessus reste, lui, à 40 pour le prouver.
-// PLANCHER ABAISSÉ DE 22 À 21 le 2026-08-15, SCIEMMENT : `alias` sort du langage et sa ligne
-// quitte la matrice. Il ne se règle JAMAIS sur ce que la matrice rend — il descend d'un cran quand
-// un mot sort, jamais parce qu'un extracteur a cessé de voir.
-ok(DECLARATIONS.length >= 21,
-  `4. la matrice ne s'est pas vidée — ${DECLARATIONS.length} déclarations éprouvées`);
+// ⛔ LE PLANCHER PORTE DÉSORMAIS SUR L'UNION, PAS SUR LA MATRICE. La matrice se dérive de l'union :
+// un plancher posé sur elle mesurerait sa propre soustraction. C'est l'UNION qui dit la taille du
+// vocabulaire, et c'est elle qui doit refuser de rétrécir sans qu'on le sache.
+// Mesure du 2026-08-19 : 49 mots à l'union, 34 déclarations, 14 contrôles de portée, 1 légitime
+// après. Le plancher descend d'un cran quand un mot SORT du langage, jamais parce qu'un extracteur
+// a cessé de voir.
+ok(UNION.length >= 49,
+  `4. le vocabulaire réservé ne s'est pas vidé — ${UNION.length} mot(s) à l'union des librairies`);
+ok(DECLARATIONS_DE_TETE.size + CONTROLES_DE_PORTEE.size + LEGITIME_APRES.size === UNION.length,
+  `4. les trois familles doivent PARTITIONNER l'union — ${DECLARATIONS.length} + `
+  + `${CONTROLES_DE_PORTEE.size} + ${LEGITIME_APRES.size} contre ${UNION.length}. Un mot compté deux `
+  + `fois ou pas du tout rend le compte juste et la couverture fausse.`);
 // TÉMOIN D'INSTRUMENT : sans lui, une régression rendant le refus muet laisserait tout au vert.
 ok(err(`${S}S -> C4\nsymbol v\n`).length >= 1,
   '4. TÉMOIN — la règle doit savoir MORDRE même en toute fin de scène (aucune règle après)');
