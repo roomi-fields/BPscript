@@ -40,6 +40,7 @@ function registerLib(name, data) {
   _universeIntervalControls = null;
   _universeCompositeControls = null;
   _universeAddressKeys = null;
+  _universeReservedDirectives = null;
 }
 
 /**
@@ -66,6 +67,7 @@ function clearRegistry() {
   _universeIntervalControls = null;
   _universeCompositeControls = null;
   _universeAddressKeys = null;
+  _universeReservedDirectives = null;
 }
 
 /**
@@ -123,6 +125,27 @@ function universeComponentControls() {
 // soit chargé : `E4(ch:5)` doit se ranger dans le tiroir adresse dès l'analyse, quelle que soit
 // l'invocation de la scène. Même mécanisme que les univers ci-dessus — la donnée déclare.
 let _universeAddressKeys = null;
+let _universeReservedDirectives = null;
+/**
+ * TOUS LES MOTS DE DIRECTIVE DU LANGAGE, quelle que soit la librairie qui les déclare.
+ *
+ * ⛔ LA PORTE EXISTE PARCE QUE LA LISTE A DEUX DOMICILES, ET DEUX FORMES. `core` la porte en LISTE
+ * PLATE, `engine` en OBJET `{nom: {description, scope}}`. Un lecteur qui vise l'un des deux par son
+ * nom n'obtient pas l'autre — et n'obtient même pas la même STRUCTURE. Mesuré le 2026-08-19 : un
+ * lecteur écrit sur `core` seul traitait les vingt-sept mots d'`engine` comme des mots inconnus, et
+ * leur rendait « aucune librairie ne sert cet axe » — c'est-à-dire le refus d'un mot inventé, pour
+ * des mots du langage.
+ *
+ * Le nombre de domiciles est une affaire de DONNÉE, jamais de lecteur : cette porte fait l'union.
+ */
+function universeReservedDirectives() {
+  if (!_universeReservedDirectives) {
+    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    _universeReservedDirectives = loadLibsFromDirectives(allDirs).reservedDirectiveNames;
+  }
+  return _universeReservedDirectives;
+}
+
 function universeAddressKeys() {
   if (!_universeAddressKeys) {
     const allDirs = Object.keys(registry).map((name) => ({ name }));
@@ -1297,6 +1320,6 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, registerLib, registerAll, clearRegistry,
+export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeCompositeControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

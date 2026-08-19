@@ -2112,8 +2112,21 @@ function validateReferences(ast, libCtx = {}) {
     //
     // ⚠️ RIEN N'EST EN DUR NI D'UN COTE NI DE L'AUTRE. Les trois noms venaient de la SPEC, jamais
     // du code — il ne les a jamais connus. Et ce qui est epargne ici se lit dans la DONNEE : les
-    // mots du langage que `core.schema.reservedDirectives` recense, dont `out`, `in` et `var`, qui
-    // portent une sous-cle sans etre des invocations de librairie.
+    // mots du langage que les librairies recensent, dont `out` et `in`, qui portent une sous-cle
+    // sans etre des invocations de librairie.
+    //
+    // ⛔ CE LECTEUR VISE `core` PAR SON NOM, ET CE N'EST PAS UN OUBLI — C'EST UN DEFAUT SIGNALE.
+    // La liste a DEUX domiciles et DEUX formes : il connait donc 22 mots sur 67, et rend aux 45
+    // autres « aucune librairie ne sert cet axe », c'est-a-dire le refus d'un mot INVENTE pour des
+    // mots du langage. `seed.x` envoie son auteur chercher une librairie.
+    //
+    // ⛔ ET LE BRANCHER SUR LA PORTE `universeReservedDirectives` LE REND PIRE, MESURE LE
+    // 2026-08-19 : `seed.x`, `meter.x` et `timepatterns.x` se mettent alors a COMPILER. L'exemption
+    // est aveugle — elle epargne le mot sans que personne ne juge la SOUS-CLE — et `out`/`in` ne
+    // s'en tirent que parce qu'un autre juge les rattrape ensuite. Un message imparfait qui REFUSE
+    // vaut mieux qu'un message parfait qui AVALE.
+    // Ce qui manque est un juge pour « un mot du langage suivi d'une sous-cle qu'il n'admet pas » :
+    // remonte a l'architecte, pas bricole ici.
     if (!libExiste(d.name)) {
       if (motsDuLangage.has(d.name)) continue;
       errors.push({
