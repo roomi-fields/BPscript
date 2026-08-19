@@ -277,20 +277,24 @@ function refuserModeInvalide(name, runtime, value, tok) {
       + `RIEN : la sous-grammaire garde le mode qu'elle avait, et la ligne disparaît sans un signe. `
       + `Les modes sont ${declares.join(', ')}.`, tok);
   }
-  // ⛔ LA VALEUR N'EST PAS REFUSÉE, ET C'EST UNE MESURE QUI L'ARRÊTE, PAS UNE PRUDENCE.
-  // Ma liste déclarée porte `ord random lin sub sub1 tem poslong`. Le moteur natif, lui, écrit
-  // CINQ en-têtes de sous-grammaire sur ses 110 grammaires — mesuré le 2026-08-19 :
+  // ⛔ ET LA VALEUR EST REFUSÉE DEPUIS LE 2026-08-19, EN DERNIER DES TROIS ÉTAPES. Elle ne pouvait
+  // pas l'être avant, et deux mesures successives l'ont arrêtée :
   //
-  //     RND 98 · LIN 91 · ORD 74 · SUB1 28 · SUB 11        et RANDOM : ZÉRO
+  //   1. LA DONNÉE MENTAIT. Elle portait `random` là où le natif écrit `rnd` — le seul MOT ENTIER
+  //      d'une liste dont les sept noms sont des ABRÉVIATIONS (`-BP3.h:879`), donc le seul nom que
+  //      la donnée s'était donné. Sur les 110 grammaires natives : RND 98 · LIN 91 · ORD 74 ·
+  //      SUB1 28 · SUB 11, et RANDOM ZÉRO.
+  //   2. LA TOUR L'ÉCRIVAIT, ET BPx L'ABSORBAIT. 419 sites dans quatre dépôts écrivaient
+  //      `mode:random`, et ils ne compilaient pas par droit : `loadGrammar.ts:4111` normalisait
+  //      l'alias. Le retrait avait DEUX domiciles — ma porte et son normaliseur.
   //
-  // `rnd` est donc le mode natif LE PLUS ÉCRIT, il est absent de ma donnée, et `random` est un nom
-  // que le natif n'écrit jamais. Sept scènes de BPx transcrivent `mode:rnd` fidèlement : refuser sur
-  // cette liste casserait le fidèle et n'attraperait rien de neuf.
-  //
-  // Nommer un mode est une définition de langage — elle se tranche avec Romain. L'écart est remonté
-  // avec cette mesure ; la moitié refusée ci-dessus (le mot NU) ne dépend d'aucun nom et ferme le
-  // pire des deux cas : la ligne avalée qui ne fait rien.
-  void declares;
+  // Refuser avant l'un ou l'autre aurait cassé le FIDÈLE pendant que l'infidèle passait. Les sites
+  // ont migré, l'alias est sorti, le refus part en dernier — c'est tout le sens de cet ordre.
+  if (!declares.includes(ecrit)) {
+    throw new ParseError(
+      `'mode:${ecrit}' : '${ecrit}' n'est pas un mode de dérivation — les modes sont `
+      + `${declares.join(', ')}. La liste est FERMÉE.`, tok);
+  }
 }
 
 let _inChannels = null;

@@ -155,34 +155,35 @@ for (const [ou, src] of [
   ok(e.some((m) => /attend le mode de dérivation/.test(m)),
     `1ter. 'mode' seul ${ou} — le refus doit dire ce qu'il attend et donner la forme (reçu : ${e[0]?.slice(0, 100)})`);
 }
-// ⚠️ ET LA VALEUR N'EST TOUJOURS PAS REFUSÉE — le blocage a CHANGÉ DE NATURE le 2026-08-19, il n'a
-// pas disparu. La donnée disait `random` là où le natif écrit `rnd` ; Romain a tranché, la donnée
-// est corrigée, et le refus était prêt. La mesure du périmètre l'a arrêté une seconde fois :
+// ⛔ ET LA VALEUR EST REFUSÉE DEPUIS LE 2026-08-19, en dernier des trois étapes de la migration.
+// Ce témoin ne mesurait pas le refus : il gardait les DEUX CONDITIONS qui l'empêchaient. Elles sont
+// tombées, et il est RETOURNÉ plutôt que jeté — le geste de BPx sur son propre test d'alias : « un
+// retrait dont rien ne prouve qu'il a eu lieu se défait tout seul. »
 //
-//     LES SITES QUI ÉCRIVENT `mode:random`, mesurés CHEZ CHACUN le 2026-08-19 :
-//         kanopi 166 (68 fichiers) · BPx 106 (40) · bpscript 70 (32) · kairos 134, TOUS des copies
-//     ⚠️ Le premier compte diffusé — « 285, kanopi 113 · kairos 92 · BPx 69 · moi 11 » — était faux
-//     dans sa répartition, et mon propre 11 ne voyait que mes SCÈNES : j'en porte 70, dont 13 en
-//     scène et le reste en bancs, en aide d'éditeur et en spec. Un compte pris chez l'autre est un
-//     ordre de grandeur ; le compte juste est celui qu'on mesure chez soi.
-//     et ils marchent parce que BPx ABSORBE l'alias : `loadGrammar.ts:4111`,
-//     `if (mode === 'random') return 'rnd';` — « the BPScript-spec alias for BP3's RNDtype »
-//
-// Le retrait a donc DEUX domiciles, comme tout retrait : ma porte, et son normaliseur. Câbler le
-// refus seul casserait 285 sites dans quatre dépôts, dans la minute, pendant que l'alias survivrait
-// chez lui en voie parallèle. Le préavis et la migration précèdent la frappe.
-//
-// CE TÉMOIN GARDE LES DEUX CONDITIONS. Il rougit le jour où l'une tombe, pour que le refus soit
-// repris — et pas le jour où quelqu'un l'oublie.
+// CE QUI L'AVAIT BLOQUÉ, et pourquoi l'ordre comptait :
+//   1. la donnée portait `random` là où le natif écrit `rnd` — le seul MOT ENTIER d'une liste de
+//      sept ABRÉVIATIONS, donc le seul nom qu'elle s'était donné ;
+//   2. 419 sites de la tour l'écrivaient, et BPx ABSORBAIT l'alias (`loadGrammar.ts:4111`).
+// Refuser avant l'une ou l'autre aurait cassé le FIDÈLE pendant que l'infidèle passait.
 {
   const noms = (LIBS.language?.directiveValues?.mode?.values || []).map((v) => v.name);
   ok(noms.includes('rnd') && !noms.includes('random'),
     `1ter. la donnée doit porter 'rnd' et PLUS 'random' — le natif déclare sept ABRÉVIATIONS `
-    + `(-BP3.h:879), et 'random' était le seul mot entier, donc le seul nom que la donnée s'était `
-    + `donné. Reçu : ${noms.join(', ')}`);
-  ok(err(`${socle('mode')}mode:zorglub\n-----\nS -> C4\n`).length === 0,
-    `1ter. la valeur de mode est REFUSÉE — si c'est voulu, alors les 285 sites qui écrivent `
-    + `'mode:random' ont migré ET l'absorption de BPx est tombée. Retirer ce témoin avec eux.`);
+    + `(-BP3.h:879). Reçu : ${noms.join(', ')}`);
+  // LE RETRAIT SE PROUVE : la valeur sortie est refusée…
+  const refusRandom = err(`${socle('mode')}mode:random\n-----\nS -> C4\n`);
+  ok(refusRandom.length >= 1,
+    `1ter. 'mode:random' doit être REFUSÉ — la valeur est sortie le 2026-08-19, les 419 sites de la `
+    + `tour ont migré et l'absorption de BPx est tombée`);
+  ok(refusRandom.some((m) => /'random' n'est pas un mode/.test(m)),
+    `1ter. le refus doit nommer la VALEUR, pas la clé — reçu : ${refusRandom[0]?.slice(0, 110)}`);
+  // …ET LE TÉMOIN QUI L'EMPÊCHE D'ÊTRE VRAI POUR RIEN. Sans lui, un refus qui tomberait sur TOUS
+  // les modes serait vert exactement de la même façon.
+  for (const m of ['ord', 'rnd', 'lin', 'sub', 'sub1', 'tem', 'poslong']) {
+    ok(err(`${socle('mode')}mode:${m}\n-----\nS -> C4\n`).length === 0,
+      `1ter. TÉMOIN — 'mode:${m}' doit PASSER : un refus généralisé à tous les modes verdirait ce `
+      + `volet à l'identique`);
+  }
 }
 
 // ── 2. `mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────
