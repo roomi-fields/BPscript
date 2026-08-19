@@ -21,14 +21,30 @@ import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 import { bpsPath, aBps } from './corpus.mjs';
+import { importerBPx } from './bpx_dist.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
-const VALIDATOR_MODULE = process.argv[2]
-  ? pathToFileURL(path.resolve(process.argv[2])).href
-  : pathToFileURL(path.join(ROOT, '..', 'BPx', 'dist', 'index.js')).href;
+// La surcharge de développement seule garde un chemin explicite ; le défaut passe par la porte.
+const VALIDATOR_MODULE = process.argv[2] ? pathToFileURL(path.resolve(process.argv[2])).href : null;
 
-const { validateSceneAST } = await import(VALIDATOR_MODULE);
+// ⛔ ET IL PASSE PAR LA PORTE UNIQUE, `bpx_dist.mjs`. Il ne le faisait pas : il résolvait le chemin
+// lui-même, donc il jetait un `ERR_MODULE_NOT_FOUND` brut là où les sept autres bancs nomment déjà
+// le voisin. J'ai écrit cette porte le 2026-08-14 en tirant la leçon de ce rouge intermittent, et
+// je ne suis pas allé vérifier qu'elle était le SEUL chemin — j'ai ensuite rapporté DEUX FOIS la
+// même intermittence comme « non reproduite », faute d'un message qui la nomme.
+//
+// ⚠️ UNE PORTE QUI N'EST PAS L'UNIQUE ENTRÉE N'EST PAS UNE PORTE. Fermer l'espace, ce n'est pas
+// écrire la porte : c'est vérifier qu'aucun mur n'est resté ouvert à côté.
+let validateSceneAST;
+try {
+  ({ validateSceneAST } = process.argv[2]
+    ? await import(VALIDATOR_MODULE)      // surcharge de développement, chemin explicite
+    : await importerBPx());
+} catch (e) {
+  console.error(`[ast-conformance] ${String(e && e.message)}`);
+  process.exit(1);
+}
 if (typeof validateSceneAST !== 'function') {
   console.error(`[ast-conformance] validateSceneAST introuvable dans ${VALIDATOR_MODULE}`
     + ' — dist BPx périmée ? (npm run build côté BPx)');

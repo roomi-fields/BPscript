@@ -29,6 +29,7 @@ if (GEL_MODULATION_PATCHING) {
 // test_wiring.js — Câblage : opérateurs >> / \>> , corps de macro ET flux d'une règle.
 // Vérifie le PARSER/AST (PORTER≠RÉSOUDRE : BPScript émet le Wiring, l'aval résout).
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
+import { importerBPx } from './bpx_dist.mjs';
 
 let pass = 0, fail = 0;
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -255,14 +256,15 @@ for (const [nom, src, attendu] of INTACTS) {
 // langage), ni saut silencieux (qui verdirait sans rien examiner — la famille fermée le 2026-07-27).
 let Session;
 try {
-  ({ Session } = await import('../../BPx/dist/index.js'));
+  // ⛔ PAR LA PORTE UNIQUE : elle nomme le voisin, son fichier et la reconstruction probable.
+  ({ Session } = await importerBPx());
 } catch (e) {
-  console.error('§8 — dist BPx introuvable ou illisible : `npm run build` côté BPx. '
-    + 'Ce n\'est PAS un défaut du langage. (' + String(e.message).slice(0, 100) + ')');
+  console.error('§8 — ' + String(e.message));
   process.exit(1);
 }
 if (typeof Session !== 'function') {
-  console.error('§8 — `Session` absente de la dist BPx : dist périmée ? (npm run build côté BPx)');
+  console.error('§8 — la porte a rendu un artefact sans `Session` : construction périmée chez le '
+    + 'voisin. Ce n\'est PAS un défaut du langage.');
   process.exit(1);
 }
 

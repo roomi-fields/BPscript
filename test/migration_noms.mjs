@@ -49,6 +49,7 @@
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { importerBPx } from './bpx_dist.mjs';
 import { pathToFileURL } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { expandAlphabetTerminals } from '../src/transpiler/actorResolver.js';
@@ -59,14 +60,19 @@ const GRAINE = 12345;   // fixe : deux dérivations ne sont comparables qu'à ti
 
 /** Le moteur, chargé au besoin. Absent ⇒ on le DIT et on ne migre rien (jamais en silence). */
 let Session = null;
+export let echecDuMoteur = null;
 export async function chargerMoteur(chemin) {
-  const url = chemin
-    ? pathToFileURL(path.resolve(chemin)).href
-    : pathToFileURL(path.join(path.dirname(new URL(import.meta.url).pathname), '..', '..', 'BPx', 'dist', 'index.js')).href;
+  // ⛔ PAR LA PORTE UNIQUE (`bpx_dist.mjs`), jamais par un chemin à soi. Ce site en gardait un, et
+  // c'est ainsi qu'un artefact absent chez le voisin ressemblait à une panne d'ici.
   try {
-    ({ Session } = await import(url));
+    ({ Session } = chemin ? await import(pathToFileURL(path.resolve(chemin)).href) : await importerBPx());
     return typeof Session === 'function';
-  } catch { return false; }
+  } catch (e) {
+    // ⛔ NE PAS AVALER CE QUE LA PORTE DIT. Ce `catch` rendait `false` en silence, et l'appelant
+    // réécrivait un message à lui — la cause nommée par la porte se perdait juste ici.
+    echecDuMoteur = String(e && e.message);
+    return false;
+  }
 }
 
 /**
@@ -479,7 +485,7 @@ if (estPrincipal) {
     process.exit(2);
   }
   if (!await chargerMoteur()) {
-    console.error('Le moteur (BPx dist) est introuvable : `npm run build` côté BPx.');
+    console.error(echecDuMoteur || 'Le moteur est introuvable, sans cause rapportée.');
     console.error('SANS LUI, AUCUNE MIGRATION — la production ne peut pas être comparée, et un');
     console.error('renommage non vérifié change la musique en silence. Refus délibéré.');
     process.exit(1);
