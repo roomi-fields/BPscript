@@ -139,51 +139,51 @@ for (const nom of CONTROLES_DE_PORTEE) {
     `1bis. '${nom}' — le refus doit NOMMER le mot et dire qu'il ne s'écrit pas en tête (reçu : ${tete[0]?.slice(0, 100)})`);
   ok(tete.some((m) => /il (vaut|ne vaut)/.test(m)),
     `1bis. '${nom}' — le refus doit dire OÙ le mot vit, sinon il ferme une porte sans en ouvrir une`);
+
+  // ⛔ ET LA MÊME CASE APRÈS LES RÈGLES, QUI N'ÉTAIT ÉPROUVÉE PAR PERSONNE. Atlas l'a mesurée le
+  // 2026-08-19 : `destru` y recevait « remonter cette ligne AVANT la première règle de la scène »,
+  // c'est-à-dire en tête de scène — que le refus juste au-dessus refuse. LES DEUX MESSAGES
+  // S'ENVOYAIENT L'UN VERS L'AUTRE, et un lecteur qui les suit tourne en rond.
+  //
+  // Ma matrice n'éprouvait ces quatorze mots QU'EN TÊTE DE SCÈNE : elle les avait bien sortis des
+  // déclarations, et n'avait rien mis à la place pour l'autre position. Une famille exemptée d'un
+  // volet doit être éprouvée dans l'autre, sinon l'exemption est un trou.
+  const apresRegles = err(`${S}S -> C4\n${nom}\n-----\nT -> D4\n`);
+  ok(apresRegles.length >= 1, `1bis. '${nom}' écrit SEUL après des règles doit être REFUSÉ`);
+  ok(!apresRegles.some((m) => /avant la première règle de la scène/.test(m)),
+    `1bis. '${nom}' — le refus ne doit PAS renvoyer en tête de scène : le refus voisin l'y refuse, `
+    + `et les deux messages s'enverraient l'un vers l'autre (reçu : ${apresRegles[0]?.slice(0, 110)})`);
+  ok(apresRegles.some((m) => /il vaut/i.test(m)),
+    `1bis. '${nom}' — le refus doit dire OÙ il vit, avec la FORME qui l'écrit (reçu : ${apresRegles[0]?.slice(0, 110)})`);
 }
 
-// ── 1ter. `mode` ÉCRIT SEUL NE GOUVERNE RIEN, ET IL EST REFUSÉ ──────────────────────────────
-// ⛔ IL ÉTAIT AVALÉ EN SILENCE : l'auteur écrivait `mode`, croyait poser un mode de dérivation, et
-// la sous-grammaire gardait le sien. Le pire des deux cas mesurés le 2026-08-19 — pire que la valeur
-// inventée, parce qu'il ne laisse RIEN, pas même une valeur fausse dans l'arbre.
-// PÉRIMÈTRE mesuré avant le refus : 838 fichiers `.bps`/`.bpsl` de la tour, ZÉRO `mode` nu.
-for (const [ou, src] of [
-  ['en tête de scène',  `${socle('mode')}mode\n-----\nS -> C4\n`],
-  ['après une règle',   `${S}S -> C4\nmode\n-----\nT -> D4\n`],
-]) {
-  const e = err(src);
-  ok(e.length >= 1, `1ter. 'mode' écrit SEUL ${ou} doit être REFUSÉ — il ne gouverne rien`);
-  ok(e.some((m) => /attend le mode de dérivation/.test(m)),
-    `1ter. 'mode' seul ${ou} — le refus doit dire ce qu'il attend et donner la forme (reçu : ${e[0]?.slice(0, 100)})`);
-}
-// ⛔ ET LA VALEUR EST REFUSÉE DEPUIS LE 2026-08-19, en dernier des trois étapes de la migration.
-// Ce témoin ne mesurait pas le refus : il gardait les DEUX CONDITIONS qui l'empêchaient. Elles sont
-// tombées, et il est RETOURNÉ plutôt que jeté — le geste de BPx sur son propre test d'alias : « un
-// retrait dont rien ne prouve qu'il a eu lieu se défait tout seul. »
+// ── 1quater. LA PLACE QUE LES REFUS NOMMENT DOIT ACCEPTER LE MOT ─────────────────────────────
+// ⛔ « Un refus qui donne une réécriture PUBLIE une forme » — leçon du 2026-08-19 au matin. Ces deux
+// refus nomment une PLACE ; le garde l'instancie et la compile. Sans ce volet, ils pourraient
+// envoyer l'auteur vers un endroit qui le refuse à son tour — c'est exactement le cercle qu'Atlas a
+// trouvé, et il vivait entre deux messages dont chacun, seul, avait l'air juste.
 //
-// CE QUI L'AVAIT BLOQUÉ, et pourquoi l'ordre comptait :
-//   1. la donnée portait `random` là où le natif écrit `rnd` — le seul MOT ENTIER d'une liste de
-//      sept ABRÉVIATIONS, donc le seul nom qu'elle s'était donné ;
-//   2. 419 sites de la tour l'écrivaient, et BPx ABSORBAIT l'alias (`loadGrammar.ts:4111`).
-// Refuser avant l'une ou l'autre aurait cassé le FIDÈLE pendant que l'infidèle passait.
-{
-  const noms = (LIBS.language?.directiveValues?.mode?.values || []).map((v) => v.name);
-  ok(noms.includes('rnd') && !noms.includes('random'),
-    `1ter. la donnée doit porter 'rnd' et PLUS 'random' — le natif déclare sept ABRÉVIATIONS `
-    + `(-BP3.h:879). Reçu : ${noms.join(', ')}`);
-  // LE RETRAIT SE PROUVE : la valeur sortie est refusée…
-  const refusRandom = err(`${socle('mode')}mode:random\n-----\nS -> C4\n`);
-  ok(refusRandom.length >= 1,
-    `1ter. 'mode:random' doit être REFUSÉ — la valeur est sortie le 2026-08-19, les 419 sites de la `
-    + `tour ont migré et l'absorption de BPx est tombée`);
-  ok(refusRandom.some((m) => /'random' n'est pas un mode/.test(m)),
-    `1ter. le refus doit nommer la VALEUR, pas la clé — reçu : ${refusRandom[0]?.slice(0, 110)}`);
-  // …ET LE TÉMOIN QUI L'EMPÊCHE D'ÊTRE VRAI POUR RIEN. Sans lui, un refus qui tomberait sur TOUS
-  // les modes serait vert exactement de la même façon.
-  for (const m of ['ord', 'rnd', 'lin', 'sub', 'sub1', 'tem', 'poslong']) {
-    ok(err(`${socle('mode')}mode:${m}\n-----\nS -> C4\n`).length === 0,
-      `1ter. TÉMOIN — 'mode:${m}' doit PASSER : un refus généralisé à tous les modes verdirait ce `
-      + `volet à l'identique`);
-  }
+// ⚠️ ET LE GÉNÉRATEUR DE FORMES M'A TROMPÉ AVANT LE SUJET : il n'essayait que `(mot:1)`, alors que
+// `order` et `retro` NE PRENNENT AUCUN ARGUMENT — `!(order)` compile, `!(order:1)` est refusé en le
+// disant. J'ai conclu « AUCUNE forme ne compile » sur quatre mots avant de rouvrir. Une place se
+// prouve avec TOUTES ses graphies, sinon c'est l'instrument qui rend le verdict.
+const FORMES_DE_PLACE = {
+  'sur une règle':             (m) => [`${S}S -> C4 D4 (${m})\n`, `${S}S -> C4 D4 (${m}:1)\n`],
+  'dans le flux':              (m) => [`${S}S -> C4 !(${m}) D4\n`, `${S}S -> C4 !(${m}:1) D4\n`],
+  'sur un élément':            (m) => [`${S}S -> C4(${m}) D4\n`, `${S}S -> C4(${m}:1) D4\n`],
+  'sur un groupe':             (m) => [`${S}S -> {C4 D4}(${m})\n`, `${S}S -> {C4 D4}(${m}:1)\n`],
+  'en tête de sous-grammaire': (m) => [`${S}S -> C4\n-----\nmode:rnd(${m})\nT -> D4\n`],
+};
+for (const nom of CONTROLES_DE_PORTEE) {
+  const refus = err(`${socle(nom)}${nom}\n-----\nS -> C4\n`)[0] || '';
+  const places = Object.keys(FORMES_DE_PLACE).filter((p) => refus.includes(p));
+  ok(places.length >= 1,
+    `1quater. le refus de '${nom}' ne nomme AUCUNE place connue — il ferme sans ouvrir `
+    + `(reçu : ${refus.slice(0, 110)})`);
+  const compile = places.some((p) => FORMES_DE_PLACE[p](nom).some((src) => err(src).length === 0));
+  ok(compile,
+    `1quater. '${nom}' — le refus nomme ${places.join(' / ')}, et AUCUNE graphie de ces places ne `
+    + `compile. Un refus qui envoie vers un endroit qui le refuse aussi fait tourner l'auteur en rond.`);
 }
 
 // ── 2. `mode` EST LA SEULE LÉGITIME À CETTE PLACE ───────────────────────────────────────────

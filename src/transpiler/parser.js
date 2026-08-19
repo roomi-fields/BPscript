@@ -3831,6 +3831,35 @@ function parse(tokens, opts = {}) {
           // refus en bloc les aurait toutes cassées — la même faute que le témoin qui aurait refusé
           // 120 scènes sur 333 le 2026-07-28. Le corpus a été mesuré AVANT d'écrire ce refus : une
           // seule scène y perd quelque chose (`bells.bps`, trois directives aujourd'hui muettes).
+          // ⛔ ET CE REFUS NE VAUT PAS POUR UN CONTRÔLE DE PORTÉE. Atlas a mesuré le 2026-08-19 que
+          // `destru` recevait ici « remonter cette ligne avant la première règle de la scène » —
+          // c'est-à-dire EN TÊTE DE SCÈNE, où un AUTRE refus le renvoie en tête de sous-grammaire.
+          // Les deux messages s'envoyaient l'un vers l'autre, et un lecteur qui les suit tourne en
+          // rond. La cause : ce refus traite toute ligne comme une DÉCLARATION mal placée, alors
+          // qu'un contrôle de portée n'est pas une déclaration — sa donnée dit où il vit, et
+          // `scene` n'en fait pas partie.
+          //
+          // ⚠️ LA BORNE VIENT DE LA DONNÉE, pas d'une liste : un mot dont les portées déclarées
+          // EXCLUENT `scene` ne peut pas être « remonté avant la première règle ». On lui rend sa
+          // propre cause, avec la forme qui l'écrit.
+          // ⚠️ ET LA BORNE A UNE SECONDE MOITIÉ, PAYÉE DANS LA MINUTE : `scale` a des portées qui
+          // excluent `scene` — c'est un contrôle de flux — ET c'est un AXE DE CATALOGUE, donc
+          // `scale.raga_bhairav` se déclare bien en tête. Ma première écriture lui donnait le
+          // message du réglage et lui retirait le sien. Un mot peut être les deux ; ce qui décide
+          // est qu'il soit DÉCLARABLE, et la donnée le dit par `catalogAxes`.
+          const axes = new Set((loadLib('core')?.schema?.catalogAxes) || []);
+          const porteesDuMot = porteesDeclarees(dirNom);
+          if (porteesDuMot && !porteesDuMot.includes('scene') && !axes.has(dirNom)) {
+            const PLACE = { subgrammar: 'en tête de sous-grammaire, dans la parenthèse du mode '
+                            + '(`mode:<mode>(<réglage>)`)', rule: 'sur une règle', group: 'sur un groupe',
+                            symbol: 'sur un élément', flow: 'dans le flux' };
+            const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
+            throw new ParseError(
+              `'${dirNom}' n'est pas une déclaration : c'est un réglage, et il ne s'écrit pas seul `
+              + `sur une ligne. Il vaut ${ou.length === 1 ? ou[0] : ou.slice(0, -1).join(', ') + ' ou ' + ou[ou.length - 1]}.`,
+              dirTok,
+            );
+          }
           throw new ParseError(
             `'${dirNom}' est écrit APRÈS des règles, et à cette place il ne déclare RIEN : `
             + `il était accepté puis jeté en silence. Les déclarations précèdent les règles — `

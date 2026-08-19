@@ -1526,9 +1526,20 @@ const PORTEE_DU_PORTEUR = {
   Rest: 'symbol', TemplateMaster: 'symbol', TemplateSlave: 'symbol',
 };
 /** Les mots du vocabulaire, dits en français dans les messages — l'auteur ne lit pas la donnée. */
+/**
+ * ⛔ UNE PLACE SE NOMME PAR SA FORME QUAND LE NOM SEUL NE SUFFIT PAS À L'ÉCRIRE. Atlas a mesuré le
+ * 2026-08-19 que `destru` recevait « il vaut en tête de sous-grammaire ou sur une règle » — et que
+ * l'écrire NU en tête de sous-grammaire était refusé à son tour, par un AUTRE message qui le
+ * renvoyait en tête de scène, que le premier refuse. **Les deux messages s'envoyaient l'un vers
+ * l'autre, et aucun ne nommait la seule place qui marche.**
+ *
+ * En tête de sous-grammaire, un réglage ne s'écrit pas seul : il vit dans la parenthèse du mode —
+ * `mode:rnd(destru)`. Nommer la place sans nommer la forme envoie l'auteur écrire ce qui sera
+ * refusé. Un refus qui donne une réécriture doit donner une réécriture QUI COMPILE.
+ */
 const NOM_DE_PLACE = {
-  scene: 'en tête de scène', subgrammar: 'en tête de sous-grammaire', rule: 'sur une règle',
-  group: 'sur un groupe', symbol: 'sur un élément', flow: 'dans le flux',
+  scene: 'en tête de scène', subgrammar: 'en tête de sous-grammaire, dans la parenthèse du mode (`mode:<mode>(<réglage>)`)',
+  rule: 'sur une règle', group: 'sur un groupe', symbol: 'sur un élément', flow: 'dans le flux',
 };
 
 /**
