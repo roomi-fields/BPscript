@@ -18,6 +18,7 @@ declarative_line = library_invocation
                  | actor_directive
                  | declaration_typee
                  | def_directive
+                 | object_directive
                  | init_directive
                  | backtick_orphan
                  | comment | blank_line ;
@@ -46,14 +47,22 @@ parenthèses en donnent l'adresse.
 ```ebnf
 declaration_typee = "flag"   , IDENT , "(" , flag_state , { "," , flag_state } , ")"
                   | "in" , "." , IN_CHANNEL , IDENT , [ "mapping" , "." , IDENT ]
+                  | "symbol" , nom_pose , { "," , nom_pose }
                   | CONVENTION , nom_pose
                   | IDENT , nom_pose            (* un module du catalogue : ramp r1 *)
-                  | "symbol" , nom_pose , { "," , nom_pose } ;
+                  | TYPE_DECLARE , IDENT , setting_bag ;
+
+(* TYPE_DECLARE — un type que la DONNEE declare : `core`, schema.declarationTypes. AUCUN NOM
+   N EST ECRIT ICI : une production est une prescription, et une liste ecrite a deux endroits en
+   fait un second domicile. Les branches ci-dessus lisent les types dont le corps a une forme
+   propre ; celle-ci lit ceux dont le corps est un sac. *)
+TYPE_DECLARE = IDENT ;
 
 (* Le nom porte sa valeur de depart, COLLEE a son deux-points. Le sujet est le nom, jamais
    le type : "signal:0.5 grain" lierait la valeur a "signal" et se lit faux. *)
-nom_pose   = IDENT , [ ":" , ( INT | FLOAT | IDENT ) ] ;   (* signal grain:0.5 *)
+nom_pose   = IDENT , [ ":" , ( INT | FLOAT | NOM ) ] ;   (* signal grain:0.5 *)
 
+NOM        = [ "_" ] , IDENT ;   (* une valeur porte le tiret bas des gestes natifs *)
 CONVENTION = "signal" | "pitch" | "phase" | "logic" ;
 IN_CHANNEL = "midi" | "osc" | "keyboard" ;
 flag_state = IDENT , ":" , INT ;
@@ -66,6 +75,10 @@ qui n est ni une note ni un nom de regle. Un mot du catalogue de modules declare
 ce module.
 
 ```ebnf
+object_directive = "object" , IDENT , setting_bag ;
+
+(* `object` nomme une RACINE : le premier objet d une famille, celui qui ne derive de rien. *)
+
 def_directive = "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
@@ -586,18 +599,31 @@ Efface le non-terminal. Un membre droit vide fait la même chose.
 setting_bag = "(" , setting , { "," , setting } , ")" ;
 
 setting = [ subject , ":" ] , KEY , [ "." , ( IDENT | INT ) ] , ":" , raw_value  (* clé et valeur *)
-        | [ subject , ":" ] , KEY ;                                             (* clé nue *)
+        | [ subject , ":" ] , KEY , setting_bag                                 (* la parenthèse COLLÉE *)
+        | membre ;                                                              (* membre nu *)
 
 subject   = "*" | IDENT ;
-raw_value = (* tout texte jusqu'au prochain "," ou au délimiteur fermant *) ;
+membre    = KEY | INT | FLOAT | TEXTE ;
+raw_value = NOM | INT | FLOAT | TEXTE | backtick_inline ;
+TEXTE     = '"' , { caractère } , '"' ;
 ```
 
 **Le nom d'un réglage suffit à savoir où il va.** Chaque nom appartient à une librairie, et chaque
 librairie a un destinataire : le nom du réglage porte le sien. Une clé
 qu'aucune librairie invoquée ne porte arrête la compilation.
 
-Tout ce qui suit le `:` jusqu'au prochain `,` ou au délimiteur fermant est la **valeur brute** : le
-destinataire l'interprète.
+Une parenthèse **collée** à une clé descend d'un niveau, sans limite de profondeur, et elle
+**préserve l'ordre** de ce qu'elle porte. Une seule forme sert donc la suite et l'ensemble : un
+ensemble est une suite dont personne ne lit le rang.
+
+Un **membre** est un nom, un nombre, ou un texte entre guillemets. Le vide s'écrit `""`. Rien entre
+deux virgules est refusé.
+
+**Dans la partie déclarative, seule la virgule sépare** : une valeur n'a qu'une partie. Plusieurs
+parties sont plusieurs valeurs, et elles s'écrivent par une parenthèse et des noms. Après le
+délimiteur, l'espace sépare les termes.
+
+Une valeur commence par un **tiret bas** quand elle nomme un geste du moteur natif.
 
 **La place du sac donne la portée** :
 
@@ -635,7 +661,7 @@ Elles vivent dans la librairie `engine`, sauf `tempo` qui vit dans `time`.
 
 ```
 /N   *N     les deux opérateurs temporels — fraction (*3/2) et décimal (/1.5) admis
-mode        mode du bloc (ord, random, lin, sub, sub1, tem, poslong) — défaut : ord
+mode        mode du bloc (ord, rnd, lin, sub, sub1, tem, poslong) — défaut : ord
 scan        sens du parcours par règle (left, right, rnd) — défaut : rnd
 weight      poids de la règle (entier, K-param, ou inf) — à zéro, la règle est écartée
 on_fail     gestion d'échec (skip, retry(N), fallback(X)) — défaut : skip

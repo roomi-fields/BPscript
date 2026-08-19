@@ -263,6 +263,12 @@ phase rotation
 logic porte
 lpf lpf1
 symbol pivot
+control vel(args:value, scope(symbol, group, rule, flow))
+addresskey ch(scope(flow))
+native srand(bp3:_srand)
+destination midi(resolvedBy:runtime-MIDI, version:"1.0.0")
+enum message(start, continue, stop)
+object racine(a:1)
 ```
 
 Le nom porte sa **valeur de depart**, collee a son deux-points. Le sujet de l'affectation est le
@@ -275,7 +281,11 @@ symbol a:1, b:2
 ```
 
 Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit le mot `flag` et enumere
-ses etats ; celui d'une valeur de depart suit le nom.
+ses etats ; celui d'une valeur de depart suit le nom. Une valeur commence par un tiret bas quand elle
+nomme un geste du moteur natif.
+
+Un type porte son corps entre parentheses. Le corps est un sac de reglages : des couples, des membres
+nus, et des parentheses qui descendent d'un niveau.
 
 | type          | ce que la variable porte                                                                        |
 | ------------- | ----------------------------------------------------------------------------------------------- |
@@ -286,6 +296,12 @@ ses etats ; celui d'une valeur de depart suit le nom.
 | `phase`       | un signal lu comme une **position dans un cycle**, entre 0 et 1 : ce qui depasse **s'enroule**  |
 | `logic`       | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
 | un **module** | une **instance** de ce module -- `lpf1` de type `lpf` ; elle ne porte aucun corps propre        |
+| `control`     | ce qui **module** un jeu -- il porte sa portee d'ecriture                                       |
+| `addresskey`  | ce qui **route** -- il atterrit dans l'adresse du signal                                        |
+| `native`      | ce qui **traduit** un geste du moteur natif                                                     |
+| `destination` | qui **resout** une librairie entiere                                                            |
+| `enum`        | un **vocabulaire ferme** : la suite des valeurs qu'une cle accepte                              |
+| `object`      | la **racine** d'une famille -- le premier objet, celui qui ne derive de rien                    |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
 **Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
