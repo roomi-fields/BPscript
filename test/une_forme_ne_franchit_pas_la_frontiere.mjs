@@ -153,6 +153,42 @@ for (const [quoi, avecForme, enDirect] of [
      + `dépliage ne doit pas l'effacer en la réécrivant (reçu : ${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 60)))})`);
 }
 
+// ─── 6bis. ⛔ UNE RÈGLE N'A DE NOM QUE SI SON MEMBRE GAUCHE EST UN SEUL SYMBOLE ──────────────
+// Le contrat ne porte aucun champ `name` sur une règle (`AST.md`, `Rule` : `lhs: LhsElement[]`),
+// et la bible dit que « le membre gauche est réécrit en membre droit » — une SÉQUENCE, jamais un
+// identifiant. Le contrôle de collision parcourait pourtant CHAQUE élément du membre gauche et
+// l'accusait comme une tête.
+//
+// ⚠️ CE QUE ÇA A COÛTÉ, et c'est BPx qui l'a isolé au cas minimal le 2026-08-19 : la règle
+// CONTEXTUELLE `M trkt <> trkt M` — `-gr.dhati2:28` de Bernard, que le natif compile sans réserve
+// — était REFUSÉE dès que `trkt` devenait une définition. Le même mot passait à DROITE et tombait
+// à GAUCHE. Il a laissé la scène rouge plutôt que de renommer un symbole de la grammaire : le
+// renommage aurait réparé au point d'observation.
+//
+// LA MATRICE EST LA POSITION, parce que c'est là que l'écart vivait — et son COMPLÉMENT avec :
+// une tête unique reste contrôlée, sinon lever le contrôle passerait pour l'avoir borné.
+{
+  const D = `${TETE}def trkt tr kt\n-----\n`;
+  const collision = (regle) => arbreDe(D + regle + '\n').erreurs
+    .some((e) => /nom déjà pris par une définition/.test(String(e.message)));
+  for (const [quoi, regle, attendu] of [
+    ['membre DROIT, deux symboles à gauche',     'V V <> trkt',      false],
+    ['membre DROIT, un symbole à gauche',        'S <> trkt',        false],
+    ['membre GAUCHE SEUL — la règle A un nom',   'trkt <> dha',      true],
+    ['membre GAUCHE en SÉQUENCE contextuelle',   'M trkt <> trkt M', false],
+    ['séquence en production',                   'M trkt -> dha',    false],
+    ['séquence de trois',                        'M trkt V -> dha',  false],
+    // ⚠️ LE CONTEXTE NIÉ NE COMPTE PAS COMME UN SYMBOLE DE TÊTE : `#K M -> C4` porte deux entrées
+    // dans `lhs` pour UNE seule tête. Compter `lhs.length` aurait exempté en silence la forme que
+    // la décision du 2026-07-28 nomme — le contrôle doit tenir ici.
+    ['une tête unique derrière un contexte nié', '#dha trkt -> dha', true],
+  ]) {
+    ok(collision(regle) === attendu,
+       `6bis. « ${regle} » — collision ${attendu ? 'ATTENDUE' : 'INTERDITE'} : une règle n'a de nom `
+       + `que si son membre gauche est un seul symbole (${quoi})`);
+  }
+}
+
 // ─── 7. LA SORTE SE LIT SUR LA FORME DE L'USAGE ──────────────────────────────────────────────
 // Un préréglage se pose NU. Appelé avec des arguments, il ne se devine pas : il se refuse, avec
 // sa réécriture. Sans ce refus, `kick(C4)` traversait l'arbre en appel opaque étiqueté SONNANT —

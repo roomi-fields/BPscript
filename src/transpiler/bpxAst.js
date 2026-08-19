@@ -2449,12 +2449,26 @@ function refuserNomsEnDouble(ast, libCtx) {
   const tetesVues = new Set();
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
-      for (const t of r.lhs || []) {
-        // Un CONTEXTE n'est pas une tête — il DÉSIGNE un terminal, c'est sa raison d'être.
-        // `#C4 S -> G4` dit « S, à condition de ne pas être précédé de C4 » (mesuré par BPx,
-        // 2026-07-28). Le contexte POSITIF ne passe pas par ici : le parser le range dans
-        // `rule.contexts`, hors du membre gauche.
-        if (t?.negated) continue;
+      // ⛔ UNE RÈGLE N'A DE NOM QUE SI SON MEMBRE GAUCHE EST UN SEUL SYMBOLE. Le contrat ne porte
+      // aucun champ `name` sur une règle (`AST.md`, `Rule` : `lhs: LhsElement[]`), et la bible dit
+      // que « le membre gauche est réécrit en membre droit » — une SÉQUENCE, jamais un identifiant.
+      //
+      // ⚠️ CE QUE CETTE BOUCLE FAISAIT, et c'est BPx qui l'a isolé au cas minimal le 2026-08-19 :
+      // elle parcourait CHAQUE élément du membre gauche et l'accusait comme une tête de règle. Sur
+      // une règle CONTEXTUELLE — `M trkt <> trkt M`, `-gr.dhati2:28` de Bernard — il n'y a rien à
+      // collisionner : `trkt` y est une OCCURRENCE dans une séquence, pas une déclaration. La
+      // mesure de BPx est nette et se rejoue à l'identique : le même mot passe à DROITE et tombe
+      // à GAUCHE, ce qui n'a de sens pour aucune règle du langage.
+      //
+      // Le natif compile cette règle sans réserve. Refuser la scène aurait demandé à BPx de
+      // renommer un symbole de la grammaire de Bernard — réparer au point d'observation.
+      //
+      // ⚠️ ON COMPTE LES ÉLÉMENTS NON NIÉS, jamais `lhs.length` : `#K1 #K2 #K3 M -> C4` porte
+      // quatre entrées pour une seule tête, et le compte brut aurait exempté en silence la forme
+      // que la décision du 2026-07-28 nomme.
+      const tetes = (r.lhs || []).filter((t) => t && !t.negated);
+      if (tetes.length !== 1) continue;
+      for (const t of tetes) {
         const nom = t?.name;
         if (!nom || tetesVues.has(nom)) continue;
         tetesVues.add(nom);
