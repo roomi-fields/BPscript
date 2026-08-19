@@ -20,6 +20,7 @@
  * AVALÉ EN SILENCE — le lecteur rangeait le second dans le champ d'un canal de sortie et plus rien
  * ne regardait la clé. Une seule graphie mesurée aurait déclaré le retrait fait.
  */
+import { readFileSync } from 'node:fs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let passe = 0;
@@ -144,6 +145,55 @@ for (const [mot, decision] of MOTS_RETIRES) {
       `'${mot}' écrit « ${nomGraphie} » reçoit un refus PROPRE, pas celui d'un mot inventé.\n`
       + `      retiré  : ${eRetire[0]?.slice(0, 150)}\n`
       + `      inventé : ${eInvente[0]?.slice(0, 150)}`);
+  }
+}
+
+// ── LE CINQUIÈME DOMICILE — LES PRODUCTIONS DE LA GRAMMAIRE ÉCRITE ──────────────────────────
+// ⛔ RIEN NE COMPILE UNE PRODUCTION EBNF. L'oracle juge les blocs `bpscript` ; les blocs `ebnf` ne
+// sont pas des scènes, donc aucun garde ne les regardait. Mesuré le 2026-08-19 : `EBNF.md` déclarait
+// encore `MODE = "ord" | "random" | …` — la valeur sortie le matin même — et
+// `provenance = "factory" | "mine"`, alors que `mine.` est refusé depuis le 2026-08-17.
+//
+// Un littéral d'EBNF est une PRESCRIPTION au même titre qu'un exemple : il dit ce que le langage
+// accepte. C'est le cinquième domicile d'un mot retiré, après le parser, la liste réservée, les
+// messages de refus et les descriptions de librairie.
+//
+// ⚠️ ET LA MESURE PORTE SUR LES LITTÉRAUX, PAS SUR LA PROSE. Un mot retiré se cite légitimement dans
+// une phrase qui explique ce qui a changé ; ce qui ne se cite pas, c'est une production qui le
+// DÉCLARE comme forme acceptée. On ne lit donc que l'intérieur des blocs `ebnf`, et dans ces blocs
+// que ce qui est entre guillemets.
+{
+  const ebnf = readFileSync(new URL('../docs/spec/EBNF.md', import.meta.url), 'utf-8');
+  const blocs = [...ebnf.matchAll(/```ebnf\n([\s\S]*?)```/g)].map((m) => m[1]);
+  ok(blocs.length >= 10,
+    `5. ${blocs.length} bloc(s) de production lus dans EBNF.md — sous ce seuil, l'extraction ne `
+    + `reconnaît plus une production et ce volet devient un ensemble vide.`);
+  // ⛔ UN MOT SORT D'UNE PLACE, JAMAIS DE TOUTES SES PLACES — et l'EBNF distingue les deux par sa
+  // propre convention. Une production dont le membre gauche est en MAJUSCULES énumère les VALEURS
+  // d'un ensemble : `MODE = "ord" | "sub" | …` déclare des valeurs de mode, `TERMINAL_VALUE` des
+  // clés de terminal. Une production en minuscules déclare une FORME du langage.
+  //
+  // Mesuré : `mode:sub` COMPILE et `def cloche duration:2` COMPILE, alors que le mot de tête `sub`
+  // est remplacé par `homomorphism` et que la durée de SCÈNE est supprimée. Ma première écriture
+  // les accusait tous les deux — elle jugeait le MOT là où il fallait juger sa PLACE.
+  const litteraux = new Set();
+  const valeurs = new Set();
+  for (const b of blocs) {
+    for (const ligne of b.split('\n')) {
+      const gauche = ligne.match(/^\s*([A-Za-z_][\w]*)\s*=/);
+      const cible = (gauche && gauche[1] === gauche[1].toUpperCase()) ? valeurs : litteraux;
+      for (const m of ligne.matchAll(/"([A-Za-z][\w.-]*)"/g)) cible.add(m[1]);
+    }
+  }
+  ok(litteraux.size >= 15,
+    `5. ${litteraux.size} littéral(aux) de FORME extrait(s) — l'extraction s'est vidée`);
+  ok(valeurs.size >= 20,
+    `5. ${valeurs.size} littéral(aux) de VALEUR extrait(s) — la distinction s'est effondrée, et `
+    + `tout serait jugé comme une forme.`);
+  for (const [mot] of MOTS_RETIRES) {
+    ok(!litteraux.has(mot),
+      `5. la grammaire écrite DÉCLARE '${mot}' comme forme acceptée, alors qu'il est sorti du `
+      + `langage. Une production est une prescription : rien ne la compile, et elle enseigne.`);
   }
 }
 

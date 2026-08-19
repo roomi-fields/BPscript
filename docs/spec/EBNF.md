@@ -32,7 +32,7 @@ Le cœur déclaratif tient en quatre mots. Tout le reste s'écrit en invoquant u
 catégorie de réglages.
 
 ```ebnf
-actor_directive = "@" , "actor" , IDENT , NEWLINE , actor_key+ ;
+actor_directive = "actor" , IDENT , NEWLINE , actor_key+ ;
 
 actor_key = ACTOR_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;   (* out.midi(ch:3) *)
 
@@ -66,7 +66,7 @@ qui n est ni une note ni un nom de regle. Un mot du catalogue de modules declare
 ce module.
 
 ```ebnf
-def_directive = "@" , "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
+def_directive = "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
@@ -97,7 +97,7 @@ Sa hauteur s'écrit dans ses clés : `degree` et `register` la font résoudre pa
 d'accordage et de registres, `hz` la donne directement.
 
 ```ebnf
-init_directive = "@" , "init" , NEWLINE , init_entry+ ;
+init_directive = "init" , NEWLINE , init_entry+ ;
 
 init_entry = backtick_orphan ;
 ```
@@ -109,18 +109,18 @@ appartient à une chose s'initialise dans sa déclaration.
 ### Invoquer une librairie, invoquer un réglage
 
 ```ebnf
-library_invocation = "@" , "core"
-                   | "@" , LIBRARY , "." , entry_name , [ ":" , RUNTIME ]
-                   | "@" , provenance , "." , path_seg , "." , path_seg , { "." , path_seg } ;
+library_invocation = "core"
+                   | LIBRARY , "." , entry_name , [ ":" , RUNTIME ]
+                   | provenance , "." , path_seg , "." , path_seg , { "." , path_seg } ;
 
 entry_name = ( letter | digit ) , { letter | digit | "_" | "#" | "-" } ;   (* 12TET, 22shruti *)
 
 LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism" | "eval" ;
 RUNTIME    = "audio" | "midi" | "osc" | "dmx" ;
-provenance = "factory" | "mine" ;
+provenance = "factory" ;
 path_seg   = ( IDENT | INT ) , { IDENT | INT } ;
 
-setting_invocation = "@" , [ CATEGORY , "." ] , IDENT , [ ":" , value ] ;
+setting_invocation = [ CATEGORY , "." ] , IDENT , [ ":" , value ] ;
 CATEGORY = "transpo" | "time" | "engine" ;
 ```
 
@@ -171,9 +171,9 @@ subgrammar = [ mode_line ] , rule+ , [ separator ] ;
 
 separator  = "-----" , { "-" } ;           (* 5+ tirets : la passe suivante commence *)
 
-mode_line  = "@" , "mode" , ":" , MODE ;
+mode_line  = "mode" , ":" , MODE ;
 
-MODE = "ord" | "random" | "lin" | "sub" | "sub1" | "tem" | "poslong" ;
+MODE = "ord" | "rnd" | "lin" | "sub" | "sub1" | "tem" | "poslong" ;
 ```
 
 Les règles d'une même sous-grammaire partagent le mode. Il s'écrit `mode:<valeur>` en tête, ou
@@ -197,7 +197,7 @@ terminal, puisqu'elle le réécrit.
 ### Le catalogue des formes — `template`
 
 ```ebnf
-template_section = "@" , "template" , NEWLINE , template_entry+ ;
+template_section = "template" , NEWLINE , template_entry+ ;
 
 template_entry   = "[" , INT , "]" , [ scale_factor ] , template_body ;
 
@@ -235,9 +235,8 @@ ARROW = "->" | "<-" | "<>" ;
 | `<-`      | **analyse** — la séquence droite est réduite au symbole gauche  |
 | `<>`      | **production et analyse** — la règle vaut dans les deux sens    |
 
-### Trois places, trois rôles
+### Deux places, deux rôles
 
-- `@` = le **global** : environnement, imports, configuration de la scène.
 - `[]` = la **dérivation** : un drapeau qui la conditionne, un rang qui désigne une de ses formes.
 - `()` = les **réglages** : le domaine de la clé nomme leur destinataire.
 
