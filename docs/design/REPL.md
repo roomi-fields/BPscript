@@ -105,9 +105,9 @@ Pas de lien avec `on_fail` (qui est pour les échecs de dérivation BP3).
 Une session par **interpréteur** (`eval.`), pas par acteur.
 
 ```
-@actor sitar1  ... eval.sc
-@actor sitar2  ... eval.sc
-@actor tabla   ... eval.python
+actor sitar1  ... eval.sc
+actor sitar2  ... eval.sc
+actor tabla   ... eval.python
 ```
 
 → **1** session `sc` (partagée par sitar1 et sitar2), **1** session `python`.

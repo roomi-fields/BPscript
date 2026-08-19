@@ -27,12 +27,12 @@ Transport (runtime)    interprète les clés connues, ignore le reste
   Scène BPScript                  Moteur BP3              Dispatcher + Acteurs
   ───────────────                 ──────────              ────────────────────
 
-  @actor sitar
+  actor sitar
     alphabet.sargam
     tuning.sargam_22shruti                                 ┌─────────────┐
     transport.audio            ──── compile ────→       │ Acteur      │
                                                            │ "sitar"     │
-  @actor tabla                                             ├─────────────┤
+  actor tabla                                             ├─────────────┤
     alphabet.tabla                                         │ Alphabet    │
     sounds.tabla_perc                                      │ Tuning      │
     transport.audio                                     │ Sounds      │
@@ -202,7 +202,7 @@ Comportement :
 ## L'acteur lie tout
 
 ```
-@actor NAME
+actor NAME
   alphabet.X
   [tuning.Y]
   [octaves.O]
@@ -227,23 +227,23 @@ documenté dans `ACTOR.md` ; canon des clés : `docs/spec/EBNF.md:179` (`ACTOR_E
 Exemples :
 
 ```
-@actor sitar
+actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
   transport.audio
 
-@actor tabla
+actor tabla
   alphabet.tabla
   sounds.tabla_perc
   transport.audio
 
-@actor piano
+actor piano
   alphabet.western
   tuning.western_12TET
   sounds.piano_timbre
   transport.audio
 
-@actor drums
+actor drums
   alphabet.tabla
   sounds.tabla_gm
   transport.midi
@@ -509,7 +509,7 @@ Les contrôles se résolvent par priorité croissante :
 | Niveau | Source | Exemple |
 |--------|--------|---------|
 | 1. Default | `controls.json` (valeur `default` du sous-groupe) | `vel: 64` |
-| 2. Acteur | `@actor X transport.midi(ch:3, vel:100)` | `vel: 100, ch: 3` |
+| 2. Acteur | `actor X transport.midi(ch:3, vel:100)` | `vel: 100, ch: 3` |
 | 3. Séquence | `(vel:120)` inline dans le RHS | `vel: 120` |
 
 Le plus spécifique gagne. Un contrôle non-overridé conserve sa valeur du niveau précédent.
@@ -661,7 +661,7 @@ lib/
                     ┌──────────────────────────────────────────────────┐
                     │                   BPScript                       │
                     │                                                  │
-                    │  @actor piano                                     │
+                    │  actor piano                                     │
                     │    alphabet.western                               │
                     │    tuning.western_12TET                           │
                     │    sounds.piano_timbre                            │
@@ -935,14 +935,14 @@ web/index.html
 ```
 
 - Charge les fichiers sounds au startup : `lib/sounds/*.json`
-- Cree un ActorRegistry depuis les directives `@actor`
-- Pour le mode legacy (pas d'@actor), cree un acteur implicite depuis @alphabet + @tuning
+- Cree un ActorRegistry depuis les directives `actor`
+- Pour le mode legacy (pas d'actor), cree un acteur implicite depuis alphabet + tuning
 
 ```javascript
 function _createActorRegistry() {
   const registry = new ActorRegistry();
 
-  // Implicit actor from @alphabet/@tuning directives (legacy mode)
+  // Implicit actor from alphabet/tuning directives (legacy mode)
   const alphabetKey = ...;  // from directives
   const tuningKey = ...;
   const soundsKey = ...;
@@ -984,9 +984,9 @@ function _createActorRegistry() {
 2. Le Resolver merge tuning (freq) + sounds (timbre)
 3. Tester : piano grave != piano aigu
 
-#### Phase 3 — ActorRegistry + @actor (deux sessions)
+#### Phase 3 — ActorRegistry + actor (deux sessions)
 
-1. Parser `@actor` dans le parser
+1. Parser `actor` dans le parser
 2. Creer `src/dispatcher/actorRegistry.js`
 3. Le dispatcher route par acteur via terminalMap
 4. Tester : scene avec sitar + tabla simultanes
@@ -1011,6 +1011,6 @@ function _createActorRegistry() {
 ### Compatibilite
 
 - **Aucun changement aux fichiers existants** (alphabets, tunings, temperaments)
-- **Les scenes sans @actor continuent de fonctionner** (acteur implicite depuis @alphabet)
+- **Les scenes sans actor continuent de fonctionner** (acteur implicite depuis alphabet)
 - **Le fallback percussion hash est remplace** par le SoundsResolver
 - **Les CV continuent de fonctionner** (chemin separe via cvTable/sendCV)

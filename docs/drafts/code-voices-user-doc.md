@@ -18,7 +18,7 @@ Le langage d'un backtick est fixé de **deux** façons, jamais par supposition :
 
 - **Tag explicite** en tête du backtick : `` `strudel: s("bd sd")` ``. Le tag (`strudel`,
   `js`, `sc`, `hydra`, `p5`, `csound`, `mercury`, `tidal`…) est la **clé d'interprète**.
-- **Héritage** de l'`eval` d'un acteur : sous un `@actor … eval.X`, un backtick dans une
+- **Héritage** de l'`eval` d'un acteur : sous un `actor … eval.X`, un backtick dans une
   règle de cet acteur **hérite** de `X` — le tag devient facultatif.
 
 Un backtick **sans tag ET hors acteur à `eval`** (backtick isolé au niveau scène, courbe
@@ -26,7 +26,7 @@ CV, ou flux sans acteur) déclenche une **erreur claire** : le langage serait in
 tag explicite **surcharge** un `eval` hérité (ex. une courbe `js:` dans une voix `strudel`).
 
 ```
-@actor drums  eval.strudel  transport.osc
+actor drums  eval.strudel  transport.osc
 
 S -> drums drums drums drums
 drums -> `s("bd sd hh hh")`        // hérite « strudel » de l'acteur drums
@@ -105,7 +105,7 @@ l'horloge, le code exprime le rythme **relativement**. « Un DAW pour live-codeu
 | Forme | Exemple | Langage donné par |
 |---|---|---|
 | Tag explicite (flux) | `` `sc: Synth.new` `` | le tag |
-| Héritage d'acteur | `@actor v eval.tidal` puis `v -> \`d1 $ …\`` | l'`eval` de l'acteur |
+| Héritage d'acteur | `actor v eval.tidal` puis `v -> \`d1 $ …\`` | l'`eval` de l'acteur |
 | Override sur héritage | dans une voix `strudel`, `` `js: 1+1` `` | le tag (prioritaire) |
 | Courbe CV | `` cv w : `js: (t,dur)=>…` `` | le tag (obligatoire) |
 | Branchement CV | `C4(cutoff:w)` | — (réfère la courbe `w`) |

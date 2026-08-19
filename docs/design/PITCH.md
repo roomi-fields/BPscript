@@ -79,19 +79,19 @@ L'alphabet seul ne suffit pas comme unité de résolution — il manque le **con
 L'acteur est l'unité qui lie toutes les couches de résolution ensemble :
 
 ```
-@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  out.audio
-@actor sitar2  alphabet.sargam  tuning.sargam_12TET    octaves.saptak  out.midi(ch:3)
-@actor tabla   alphabet.tabla_bols  out.midi(ch:10)
-@actor lights  alphabet.dmx_fixtures  out.dmx
+actor sitar1  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  out.audio
+actor sitar2  alphabet.sargam  tuning.sargam_12TET    octaves.saptak  out.midi(ch:3)
+actor tabla   alphabet.tabla_bols  out.midi(ch:10)
+actor lights  alphabet.dmx_fixtures  out.dmx
 ```
 
 Un acteur = **alphabet + tuning + octaves + out + eval** (cinq clés, voir tableau ci-dessous).
 C'est le contexte complet de résolution d'un symbole.
 
-### Syntaxe de la directive `@actor`
+### Syntaxe de la directive `actor`
 
 ```
-@actor <nom>  <clé.valeur>  <clé.valeur>  ...
+actor <nom>  <clé.valeur>  <clé.valeur>  ...
 ```
 
 | Clé | Obligatoire | Valeur | Exemple |
@@ -104,7 +104,7 @@ C'est le contexte complet de résolution d'un symbole.
 
 Si `tuning` est omis → pas de résolution de fréquence (percussions, DMX, etc.).
 Si `octaves` est omis → convention **héritée de l'alphabet** de l'acteur (`lib/alphabets.json`).
-`@actor X octaves.Y` surcharge cette notation de registre pour l'acteur. `octaves` est une étape de
+`actor X octaves.Y` surcharge cette notation de registre pour l'acteur. `octaves` est une étape de
 résolution distincte, rattachée au vocabulaire de symboles (alphabet), pas au `tuning`.
 Si `eval` est omis → pas de REPL (`null`) ; les backticks de cet acteur ne sont pas évalués.
 
@@ -130,11 +130,11 @@ et avec BPScript lui-même (`alphabet.western`, `actor sitar` avec sa clé `alph
 
 ### Import en bloc
 
-Un `@actor` avec un alphabet importe tous les symboles de cet alphabet,
+Un `actor` avec un alphabet importe tous les symboles de cet alphabet,
 liés à cet acteur :
 
 ```
-@actor sitar1  alphabet.sargam  tuning.sargam_22shruti  out.audio
+actor sitar1  alphabet.sargam  tuning.sargam_22shruti  out.audio
 
 // Tous les symboles de sargam (sa, re, ga, ma, pa, dha, ni) sont
 // automatiquement disponibles via sitar1.sa, sitar1.re, etc.
@@ -192,8 +192,8 @@ Si un symbole est utilisé **sans** préfixe acteur, le compilateur cherche un
 acteur non ambigu. Si plusieurs acteurs contiennent ce symbole → erreur :
 
 ```
-@actor sitar1  alphabet.sargam  ...
-@actor sitar2  alphabet.sargam  ...
+actor sitar1  alphabet.sargam  ...
+actor sitar2  alphabet.sargam  ...
 
 Sa Re Ga Pa    // ❌ Erreur : 'Sa' est dans sitar1 et sitar2 — préciser l'acteur
 sitar1.Sa sitar1.Re sitar1.Ga sitar1.Pa   // ✓ OK
@@ -202,8 +202,8 @@ sitar1.Sa sitar1.Re sitar1.Ga sitar1.Pa   // ✓ OK
 Si un seul acteur contient le symbole → résolution implicite :
 
 ```
-@actor sitar1  alphabet.sargam  ...
-@actor tabla   alphabet.tabla_bols  ...
+actor sitar1  alphabet.sargam  ...
+actor tabla   alphabet.tabla_bols  ...
 
 Sa Re Ga Pa    // ✓ OK — seul sitar1 a ces symboles
 tin ta ke      // ✓ OK — seul tabla a ces symboles
@@ -213,11 +213,11 @@ tin ta ke      // ✓ OK — seul tabla a ces symboles
 
 #### Tokenizer
 
-Le tokenizer reconnaît `@actor` comme une directive. Le reste de la ligne
+Le tokenizer reconnaît `actor` comme une directive. Le reste de la ligne
 est parsé comme des références `clé.valeur` séparées par des espaces.
 
 ```
-@actor sitar  alphabet.sargam  tuning.sargam_22shruti  out.audio
+actor sitar  alphabet.sargam  tuning.sargam_22shruti  out.audio
 │      │      │                │                        │
 DIRECTIVE      IDENT            PAIR                     PAIR
        NAME
@@ -300,18 +300,18 @@ détail de la cascade de sortie.
 
 ### Relation avec les concepts existants
 
-#### Remplacement de `@alphabet.X:runtime`
+#### Remplacement de `alphabet.X:runtime`
 
 L'ancienne syntaxe :
 ```
-@alphabet.raga:supercollider
-@alphabet.western:midi
+alphabet.raga:supercollider
+alphabet.western:midi
 ```
 
 Devient :
 ```
-@actor melodie  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  out.osc(port:57110)  eval.sclang
-@actor keys     alphabet.western  tuning.western_12TET   octaves.western  out.midi(ch:1)
+actor melodie  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  out.osc(port:57110)  eval.sclang
+actor keys     alphabet.western  tuning.western_12TET   octaves.western  out.midi(ch:1)
 ```
 
 Plus verbeux mais plus explicite — chaque dimension est nommée.
@@ -321,12 +321,12 @@ Plus verbeux mais plus explicite — chaque dimension est nommée.
 Si un seul acteur suffit et qu'on veut rester concis :
 
 ```
-@actor default  alphabet.western  tuning.western_12TET  out.audio
+actor default  alphabet.western  tuning.western_12TET  out.audio
 ```
 
 Ou une syntaxe courte possible (à discuter) :
 ```
-@actor default  western  12TET  audio
+actor default  western  12TET  audio
 ```
 
 #### Backticks et acteurs
@@ -334,7 +334,7 @@ Ou une syntaxe courte possible (à discuter) :
 Les backticks attachés à un symbole utilisent l'`eval` de l'acteur du symbole :
 
 ```
-@actor mel  alphabet.sargam  out.osc  eval.sclang
+actor mel  alphabet.sargam  out.osc  eval.sclang
 
 Sa(vel:`rrand(40,127)`)   // Sa est dans mel → eval = sclang → SC évalue
 ```
@@ -348,9 +348,9 @@ Les backticks orphelins gardent le tag obligatoire :
 
 ```
 // Acteurs
-@actor sitar   alphabet.sargam       tuning.sargam_22shruti  octaves.saptak  out.osc(port:57110) eval.sclang
-@actor tabla   alphabet.tabla_bols   out.midi(ch:10)
-@actor lights  alphabet.dmx_cues     out.dmx
+actor sitar   alphabet.sargam       tuning.sargam_22shruti  octaves.saptak  out.osc(port:57110) eval.sclang
+actor tabla   alphabet.tabla_bols   out.midi(ch:10)
+actor lights  alphabet.dmx_cues     out.dmx
 
 // Inits
 `sc: SynthDef(\sitar, { |freq, vel=80| ... }).add`
@@ -741,7 +741,7 @@ Le generator peut varier en temps réel via un signal.
 > périmé : `src/dispatcher/resolver.js`.)
 
 Le resolver est **instancié par acteur** (voir Layer 0 ci-dessus).
-Chaque acteur (`@actor`) porte son propre contexte de résolution
+Chaque acteur (`actor`) porte son propre contexte de résolution
 (alphabet + octaves + tuning + tempérament).
 
 Lit les 4 fichiers et résout un token BPScript en fréquence.
@@ -890,7 +890,7 @@ diapason:442            → fréquence de référence à 442
 
 Les lignes de tête du source BPScript configurent les couches.
 Le tuning référence son tempérament → le chargement est transitif.
-`@tuning:442` permet de changer la fréquence de base sans changer le tuning
+`tuning:442` permet de changer la fréquence de base sans changer le tuning
 (arbitrage Romain 2026-06-26 : `:` affecte une valeur).
 
 ### Cycle de vie des données

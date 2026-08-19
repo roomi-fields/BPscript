@@ -438,7 +438,7 @@ S -> $X * TR &X             →  S --> (= X) * TR (: X)
 
 - `src/transpiler/encoder.js` — générer le -ho. avec étiquettes chainées + transcriptionTable
 - `src/transpiler/index.js` — exposer transcriptionTable dans la sortie de compileBPS()
-- `src/transpiler/libs.js` — charger `@homomorphism` depuis homomorphism.json
+- `src/transpiler/libs.js` — charger `homomorphism` depuis homomorphism.json
 
 ### Runtime (agent `transpileur`)
 - ~~`src/dispatcher/dispatcher.js` — résolution REPL post-dérivation~~ — **PÉRIMÉ** : ce
@@ -815,8 +815,8 @@ Les étiquettes ne portent pas le prefix `bol` (elles ont été générées sans
 Créer `test/grammars/labeling_stack/scene.bps` :
 
 ```bpscript
-@core
-@homomorphism.checkhomo
+core
+homomorphism.checkhomo
 gate a:midi
 S -> $X * &X ** &X
 X -> a
@@ -833,8 +833,8 @@ Vérifier :
 Créer `test/grammars/labeling/scene.bps` :
 
 ```bpscript
-@core
-@homomorphism.checkhomo
+core
+homomorphism.checkhomo
 
 gate a:midi
 gate b:midi

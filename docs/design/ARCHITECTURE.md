@@ -104,9 +104,9 @@ L'acteur est le concept qui lie toutes les couches de données ensemble.
 Chaque acteur porte son propre contexte de résolution :
 
 ```
-@actor sitar   alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
-@actor tabla   alphabet.tabla_bols  transport.midi(ch:10)
-@actor lights  alphabet.dmx_cues  transport.osc
+actor sitar   alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
+actor tabla   alphabet.tabla_bols  transport.midi(ch:10)
+actor lights  alphabet.dmx_cues  transport.osc
 ```
 
 **Actor = alphabet + tuning + octaves + transport + eval**
@@ -149,7 +149,7 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
 ### Qui charge quoi
 
 ```
-@actor sitar  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
+actor sitar  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
        │         │                  │                      │                │
        │         │                  │                      │                └→ canal canonique (audio/midi/osc, librairie @devices à venir)
        │         │                  │                      └→ octaves.json["saptak"]
@@ -506,7 +506,7 @@ Le modèle de **profils d'environnement** (`lib/routing.json` : studio/live/brow
 `hub/decisions/2026-07-16-sortie-acteur-implicite-browser-audio-routing-obsolete.md`, Romain).
 Le canal de sortie s'écrit **directement au canon** sur l'acteur — `transport.audio` /
 `transport.midi(ch:N)` / `transport.osc(…)` — ou via le binding de l'acteur implicite
-`@alphabet.X:<sortie>`. Les noms `browser`/`webaudio` sont rejetés fail-loud au parse.
+`alphabet.X:<sortie>`. Les noms `browser`/`webaudio` sont rejetés fail-loud au parse.
 La configuration de connexion (hôtes, ports, appareils) relève de l'hôte (Kanopi) et de la
 future librairie `@devices` (backlog B2), plus d'un fichier de profils du langage.
 

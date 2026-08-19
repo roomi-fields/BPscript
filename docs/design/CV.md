@@ -179,7 +179,7 @@ et leur **type/plage**. Bass n'a pas de propriété `cutoff` — `Bass.cutoff` e
 résolution**, pas un accès membre :
 
 ```
-Bass → joue l'alphabet western → @alphabet.western:audio → transport audio
+Bass → joue l'alphabet western → alphabet.western:audio → transport audio
        → la sortie audio expose { cutoff: Hz 20–20000, amplitude: 0–1, resonance: 0–30, … }
 .cutoff → est-ce une entrée de CETTE sortie ?  oui → valide ; sinon → erreur (line/col)
 ```
@@ -249,8 +249,8 @@ BPScript ne sait pas ce qu'il y a dedans. C'est une étiquette avec une durée e
 ### ADSR par note (acid bass) — sujet `*` = chaque terminal
 ```bps
 @mod
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 cv env1 : mod.adsr(attack:10, decay:200, sustain:0.5, release:300)
 
@@ -262,8 +262,8 @@ Phrase1 -> C3 E3 G3 C4 (*:cutoff: env1, wave:sawtooth)   // env1 relancé À CHA
 ### LFO signal sur amplitude — sans sujet = sur la voix
 ```bps
 @mod
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 cv wobble : mod.lfo(rate:2, amplitude:0.8, shape:sine)
 
@@ -275,8 +275,8 @@ Melody -> C4 D4 E4 F4 G4 A4 B4 C5 (amplitude: wobble)     // un LFO continu sur 
 ### Choix dérivé de modulation (voix parallèle)
 ```bps
 @filter
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 cv env1 : mod.adsr(attack:500, decay:2000, sustain:0.6, release:400)
 cv env2 : mod.adsr(attack:300, decay:1000, sustain:0.6, release:400)
@@ -293,8 +293,8 @@ Env  -> env2
 
 ### Backtick CV (live coding)
 ```bps
-@core
-@alphabet.western:audio
+core
+alphabet.western:audio
 
 cv custom : `js: (t, dur) => Math.sin(t / dur * Math.PI * 8) * 0.5 + 0.5`
 

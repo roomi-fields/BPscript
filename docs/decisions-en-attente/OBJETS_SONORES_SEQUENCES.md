@@ -81,7 +81,7 @@ Vérifié piste par piste, comme demandé :
 | `voices.json` → `audio:` | backtick typé `js:`/`faust:` — le code **synthétise** | ❌ synthèse, pas rejeu |
 | `voices.json` → `device:` | `{preset, params}` — on **sélectionne** un patch | ❌ et le commentaire est explicite : « on ne synthétise pas sur MIDI » |
 | **Modules** (spec §8, ratifiés) | fonction à ports typés, DSP embarqué (genish/Faust/csound/VCV) — le module **calcule** | ❌ calcul, pas événements stockés |
-| `@sound.X` | référence-librairie vers le registre ci-dessus | ❌ ne crée pas de contenu |
+| `sound.X` | référence-librairie vers le registre ci-dessus | ❌ ne crée pas de contenu |
 | Backticks | portent du **calcul** — « BPScript ordonnance, le backtick calcule » | ❌ par principe |
 
 **Le modèle sait synthétiser, sélectionner un patch, et calculer. Il ne sait pas rejouer une suite

@@ -69,7 +69,7 @@ ord, sub, 1 vs 3 symboles, couverture complète des symboles, pattern koto3
 `?1 ?1 -> ?1` sur seed `a a`. Le wildcard **ne s'arme pas** en grammaire isolée.
 
 Dans koto3 il marche au sein d'une dérivation SUB complète (gram#2 SUB atteint
-après un gram#1 RND qui sème, `@improvize`, K-params, poids, clôture de règles).
+après un gram#1 RND qui sème, `improvize`, K-params, poids, clôture de règles).
 **Précondition exacte non isolée.**
 
 **À faire** : dérivation tracée (`trace_produce`) sur un wildcard minimal, ou

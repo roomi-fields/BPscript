@@ -75,7 +75,7 @@ parallèle à la mélodie. BP3 calcule la synchronisation.
 **Syntaxe :** `actor.effect.param(valeur)`
 
 ```
-@actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.audio
+actor sitar  alphabet.sargam  tuning.sargam_22shruti  transport.audio
 
 // Phase 1 : mélodie + filtre qui s'ouvre
 phrase1 -> { Sa Re Ga(vel:120) Pa Dha Ni Sa_^ _ , sitar.lpf.cutoff(ramp(200, 4000)) }
@@ -141,7 +141,7 @@ Avec acteur → dédié à cet acteur. Sur une occurrence → dédié à ce term
 ### Filtre qui s'ouvre sur un raga
 
 ```
-@actor sitar  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
+actor sitar  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.audio
 
 `js:
   const lpf = ctx.createBiquadFilter();
@@ -162,7 +162,7 @@ en parallèle avec la mélodie. BP3 synchronise les deux voix.
 ### Multi-effets temporels avec SuperCollider
 
 ```
-@actor sitar  alphabet.sargam  transport.osc  eval.sclang
+actor sitar  alphabet.sargam  transport.osc  eval.sclang
 
 `sc:
   ~bus = Bus.audio(s, 2);

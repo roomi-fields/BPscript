@@ -8,7 +8,7 @@ compilation (`compileBPS`) et lecture du moteur BP3 (`Compute.c`, `ProduceItems.
 ## Résumé
 
 Les primitives de saut de dérivation existent **côté moteur BP3** et sont
-**déclarées dans la lib** (`@core`/controls), mais **aucune syntaxe BPScript ne les
+**déclarées dans la lib** (`core`/controls), mais **aucune syntaxe BPScript ne les
 compile correctement**. Ni l'abstraction lisible `on_fail`, ni le passe-plat brut
 `goto()` / `failed()`.
 
@@ -44,7 +44,7 @@ comme des terminaux sonores minuscules. **Bug concret, le plus simple à corrige
 
 ### 2. Abstraction `on_fail` — non branchée
 
-- `@on_fail:skip` (directive globale) : parsée, **inerte** (aucune émission encodeur).
+- `on_fail:skip` (directive globale) : parsée, **inerte** (aucune émission encodeur).
 - `[on_fail:retry(3)]` / `[on_fail:fallback(X)]` (forme locale, préfixe de règle) :
   **suppriment la règle silencieusement** — grammaire vide, aucune erreur. Même
   classe de bug que `[weight:N]` en préfixe de règle (cf. crochet non-garde en
@@ -77,4 +77,4 @@ L'encodeur n'a **aucun** code traitant `on_fail` / `retry` / `fallback` /
 
 `docs/spec/*` (EBNF/LANGUAGE) : l'encadré « État actuel » de `on_fail` doit dire
 que les jetons sont parsés mais que **rien ne compile vers `_goto`/`_failed`**, que
-`@on_fail:skip` est inerte et que la forme locale supprime la règle (bug).
+`on_fail:skip` est inerte et que la forme locale supprime la règle (bug).

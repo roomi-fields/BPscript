@@ -13,11 +13,11 @@ Un acteur lie six propriétés. Le niveau « voix » intermédiaire d'anciennes 
 
 | Propriété | Rôle | Référence |
 |---|---|---|
-| `alphabet` | vocabulaire de symboles — **hérité par cascade** (acteur → scène `@alphabet.X` → socle @core), JAMAIS requis (modèle Romain 2026-07-13) ; si la scène invoque une hauteur opaque `@mine.`/`@factory.`, l'alphabet reste résolu en aval (Kairos) | `lib/alphabets.json` |
+| `alphabet` | vocabulaire de symboles — **hérité par cascade** (acteur → scène `alphabet.X` → socle core), JAMAIS requis (modèle Romain 2026-07-13) ; si la scène invoque une hauteur opaque `@mine.`/`factory.`, l'alphabet reste résolu en aval (Kairos) | `lib/alphabets.json` |
 | `tuning` | tempérament / accordage (ex-`scale`) | `lib/tunings.json` |
 | `octaves` | convention de registre / notation — **défaut hérité de l'alphabet**, surchargeable par acteur | `lib/octaves.json` |
-| `sound` | son par défaut de l'acteur — **producteur PAR SYMBOLE** (banque, ou prospectif backtick-synthé) | `@sound` |
-| `transport` | **canal de sortie** de NOTRE production (`audio`/`midi`/`osc`) — **optionnel**, défaut cascade @core `audio` ; **ABSENT (interdit) sur un acteur `eval`** (il sort en natif) | librairie `@devices` |
+| `sound` | son par défaut de l'acteur — **producteur PAR SYMBOLE** (banque, ou prospectif backtick-synthé) | `sound` |
+| `transport` | **canal de sortie** de NOTRE production (`audio`/`midi`/`osc`) — **optionnel**, défaut cascade core `audio` ; **ABSENT (interdit) sur un acteur `eval`** (il sort en natif) | librairie `@devices` |
 | `eval` | **producteur embarqué autonome** (`strudel`/`hydra`/`p5`/`csound`/`mercury`) : produit + sort en **natif** ; absence d'`eval` ⇒ producteur **défaut `js`** (notre code) | — |
 | `voice` | **le SON de l'acteur** (LANG-SONS-2, GO Romain [438] 2026-07-16, spec `hub/projets/2026-06-24-lang-sons-spec/README.md`) : son de base + contrôles, réalisé **par-runtime** (`audio:` backtick typé synthétisé par runtime-audio ; `device:` preset MIDI/OSC). La **hauteur n'y vit pas** (structurelle : alphabet+tuning, spec §2) — `voice.X` sans tuning = percussion, valide. Binding par-terminal via le champ `voices` de l'alphabet (ex. tabla). NB : distinct de l'ancienne « voix intermédiaire » supprimée (ici acteur = voix ; `voice` = son SON). | `lib/voices.json` |
 
@@ -44,7 +44,7 @@ renommé (résout la question « video vs visual »).
 Déclaration (les références d'entité utilisent `.`) :
 
 ```bpscript
-@actor sitar
+actor sitar
   alphabet.sargam
   tuning.sargam_22shruti
   transport.audio
@@ -55,7 +55,7 @@ Dans les règles, un terminal se qualifie par son acteur en **dot notation** : `
 
 `octaves` est une **étape de résolution distincte** (la notation du registre, `lib/octaves.json`),
 rattachée au vocabulaire de symboles : par défaut un acteur **hérite** de la convention de son
-alphabet ; `@actor X octaves.Y` la **surcharge** (ex. écrire du sargam avec des marqueurs d'octave
+alphabet ; `actor X octaves.Y` la **surcharge** (ex. écrire du sargam avec des marqueurs d'octave
 occidentaux). Décision *cles-acteur-six* (Romain 2026-06-16).
 
 ## 2. Voix de notes vs voix de code
@@ -72,7 +72,7 @@ une voix de code SANS `eval` (producteur défaut `js`) et une voix de notes util
 | Contenu | terminaux résolus en hauteurs/sons | code étranger en backtick | code étranger en backtick |
 | Producteur | alphabet→`sound` | `eval.strudel`/`hydra`/`p5`/`csound`… | `js` (implicite, notre code) |
 | Sortie | **notre** `transport` (audio/midi/osc) | **NATIVE** (son propre audio/canvas) — **pas de transport** | **notre** `transport` |
-| Exemple | `S -> sitar.Sa sitar.Re` | `@actor viz eval.hydra` / `viz -> ` `` `osc(4)` `` | `@actor v` / `v -> ` `` `js: out(...)` `` |
+| Exemple | `S -> sitar.Sa sitar.Re` | `actor viz eval.hydra` / `viz -> ` `` `osc(4)` `` | `actor v` / `v -> ` `` `js: out(...)` `` |
 
 **Ce qui est transporté = seulement NOTRE production** (voix de notes + producteur défaut `js`). Sa
 sortie est **placée** par le dispatcher dans le temps vers le `transport` de la voix. Une voix `eval.<X>`
@@ -121,7 +121,7 @@ serait indéfinie.
 ## 3. Appareils (`transport`)
 
 `transport` est le **canal de NOTRE sortie** : il pointe un appareil typé d'une librairie `@devices`,
-et ne concerne **QUE nos runtimes** — `audio`, `midi`, `osc` (défaut cascade @core = `audio`). Un
+et ne concerne **QUE nos runtimes** — `audio`, `midi`, `osc` (défaut cascade core = `audio`). Un
 appareil porte un type de sortie (notes, signal, OSC…) ; la compatibilité voix → appareil se vérifie
 sur ce type.
 

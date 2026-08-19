@@ -30,7 +30,7 @@
 | Analyse | jetons → AST (charge opaque par token : nature/acteur/params/flux) | `parser.js` (autorité) |
 | Annotation des voix de code | étiquette + `payload.interp/nature` sur les nœuds backtick ; `auto`→`eval` de l'acteur | `bpxAst.js` |
 | Défauts d'environnement | inscrit EN DUR dans l'AST les réglages absents (aujourd'hui : tempo `@mm`) | `bpxAst.js` |
-| Acteur implicite | matérialise l'acteur `scene` dans l'AST si aucun `@actor` (LAN-5/KAI-9 ; renommé `default`→`scene` le 2026-07-30, `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`) | `bpxAst.js` |
+| Acteur implicite | matérialise l'acteur `scene` dans l'AST si aucun `actor` (LAN-5/KAI-9 ; renommé `default`→`scene` le 2026-07-30, `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`) | `bpxAst.js` |
 | Validation sémantique | valeurs de contrôle + noms de modulation contre les libs (erreurs non fatales) | `controlValidation.js`, `modulationValidation.js`, `libs.js` |
 
 **Résolution (RESOLUTION)** — sert l'AST, jamais l'ancien format dans la voie propre :
@@ -113,11 +113,11 @@ Le transpileur a **quatre frontières** :
 | `compileToBPxAST(source, env?)` | bpxAst.js → BPx | BPScript ▶ BPx | `{ ast: SceneAST\|null, errors: [], warnings: [] }` | point d'émission UNIQUE de la voie propre ; n'appelle JAMAIS encoder.js (loi BPx-only) |
 | `ast` (= `SceneAST`) | parser+bpxAst | sortant | `{type:'Scene', directives[], subgrammars[], …}` conforme `AST_SPEC v1.2` | un SEUL objet traverse ; agnostique moteur ; source unique (zéro table parallèle) |
 | `errors` | controlValidation + modulationValidation + ParseError | sortant | `Array<{message, line?, col?}>` | NON fatal : l'AST reste produit même avec erreurs (affichées en rouge à l'éval) |
-| `warnings` | parser (`onWarning`) | sortant | `Array<{type:'warning', message, line?}>` | formes dépréciées (ex. `@seed:N` historique) ; canal séparé d'`errors` |
+| `warnings` | parser (`onWarning`) | sortant | `Array<{type:'warning', message, line?}>` | formes dépréciées (ex. `seed:N` historique) ; canal séparé d'`errors` |
 | `scene.type` | parser | sortant | littéral `'Scene'` | discriminant fixe |
 | `scene.directives` | parser | sortant | `DirectiveAST[]` (requis) | `@tempo`/`@mm`/`@duration`/`@flag`/`@library`… |
 | `scene.subgrammars` | parser | sortant | `SubgrammarAST[]` (requis, ≥1) | cœur dérivé ; BPx rejette `length===0` |
-| `scene.actors?` | parser + applyDefaultActor | sortant | `ActorDirective[]` (`references: ActorReference[]` v0.8) | cascade statique scène→acteur pliée ; défaut canal = `ActorReference.params` ; acteur `scene` synthétique injecté si aucun `@actor` (renommé `default`→`scene` le 2026-07-30) |
+| `scene.actors?` | parser + applyDefaultActor | sortant | `ActorDirective[]` (`references: ActorReference[]` v0.8) | cascade statique scène→acteur pliée ; défaut canal = `ActorReference.params` ; acteur `scene` synthétique injecté si aucun `actor` (renommé `default`→`scene` le 2026-07-30) |
 | `scene.soundPrototypes?` | parser | sortant | `SoundPrototypeAST[]` | déclare un son |
 | `scene.soundAssignments?` | parser | sortant | `SoundAssignmentAST[]` | sujet→son, cascade |
 | `scene.template? / templates?` | parser | sortant | `TemplateEntryAST[]\|null` (alias : MÊME tableau, pas de copie) | v0.8 singulier, v0.7 pluriel en repli |
@@ -128,7 +128,7 @@ Le transpileur a **quatre frontières** :
 | `scene[extension]` | parser | sortant | `unknown` (scenes/exposes/maps/aliases/labels/macros/flagStates) | sections non portées : conservées **opaques** |
 | `payload` (par nœud RHS sonnant/contrôle) | parser `annotateScene` / bpxAst `annotateBackticks` | sortant | forme conventionnelle `TokenPayload` (voir §3.2.B) | **opaque** : BPx porte EN ORDRE, n'interprète que `nature` (son ressort) |
 | `TempoOp.scope` | parser | sortant | `'absolute'\|'relative'` | `![/N]`→relatif ; `A[/N]`/`[/N]` règle→absolu ; BPx LIT (ne devine plus) |
-| graine au point `![@seed:N]` | parser | sortant | `InstantControl{qualifier:ProductionInline[Directive{name:'seed',value:N}]}` | toute clé ≠ `seed` **rejetée au parse** → `_srand(N)` en aval |
+| graine au point `![seed:N]` | parser | sortant | `InstantControl{qualifier:ProductionInline[Directive{name:'seed',value:N}]}` | toute clé ≠ `seed` **rejetée au parse** → `_srand(N)` en aval |
 | `@mm` d'environnement | bpxAst `applyEnvironmentDefaults` | sortant | `Directive{name:'mm', value:tempo, fromEnvironment:true, line:0}` | injecté EN DUR SEULEMENT si aucun `@mm`/`@tempo` déclaré (l'AST se suffit) |
 | forme `_(…)` héritée | — | exclusion | **jamais émise** | normalisée en `(…)` (`transport-control`) avant l'AST |
 | `Wait`/`SymbolWithWait` | parser | sortant (hors union) | `WaitAST`/`SymbolWithWaitAST` | réécrits en sentinelles côté BPx AVANT dérivation ; jamais vus par la dérivation |
@@ -149,7 +149,7 @@ Deux modules périphériques de `src/transpiler/`, hors de la chaîne de compila
 | Direction (nom) | Propriétaire | Sens | Forme / type exact | Invariant |
 |---|---|---|---|---|
 | `bp3ToScene(grammarText)` sans opts | bp3ToScene.js | BP3 `-gr.` ▶ BPScript | `string` = source `.bps` OU `"NON GÉRÉ: <desc> (<ctx>)"` | round-trip : `compileBPS(bp3ToScene(gr)).grammar` ≡ `gr` (modulo commentaires, refs -se/-al/-ho, espaces) |
-| `bp3ToScene(grammarText,{hoText,hoKey})` | bp3ToScene.js | BP3 +`-ho.` ▶ BPScript | `{ bps:string, transcriptionEntry:object }` | `bps` préfixé `@homomorphism.<safeHoKey>\n` ; `-`→`O` dans hoKey |
+| `bp3ToScene(grammarText,{hoText,hoKey})` | bp3ToScene.js | BP3 +`-ho.` ▶ BPScript | `{ bps:string, transcriptionEntry:object }` | `bps` préfixé `homomorphism.<safeHoKey>\n` ; `-`→`O` dans hoKey |
 | `parseHoFile(hoText)` | bp3ToScene.js | BP3 `-ho.` ▶ table | `{ sections:{ [label]:{ [src]:tgt } } }` | chaînes `a-->b-->c` dépliées en paires (a→b)(b→c) ; sections vides supprimées ; label défaut `*` |
 | `BP3_CONTROL_MAP` (interne dérivé) | buildControlMap(lib/controls.json) | autorité contrôles | `Map<bp3tok,{bps,kind:'runtime'\|'engine',noArg:bool}>` | runtime prioritaire en collision ; clé `script` exclue ; controls.json = autorité |
 | stop-and-report | bp3ToScene.js | échec round-trip | retour `string` `"NON GÉRÉ: …"` (par grammaire) | toute construction non fidèle bloque la grammaire ENTIÈRE, jamais d'émission partielle silencieuse |
@@ -312,7 +312,7 @@ interface ControlAST { type:'Control'; name:string; args: string[]; payload?:Tok
 interface ProductionInlineDirectiveAST { name:string; value:number; }
 interface ProductionInlineQualifierAST { type:'ProductionInline'; directives: ProductionInlineDirectiveAST[]; }
 interface InstantControlAST { type:'InstantControl'; qualifier: unknown; conjoint?:boolean; payload?:TokenPayload; line?:number; }
-//   qualifier = Qualifier(![…] engine) | RuntimeQualifier(!(…) runtime) | ProductionInline(![@seed:N]).
+//   qualifier = Qualifier(![…] engine) | RuntimeQualifier(!(…) runtime) | ProductionInline(![seed:N]).
 //   payload.nature = 'instant', flux:true, conjoint? (collé C4!(…) ancré / espacé séparé).
 ```
 
@@ -339,13 +339,13 @@ interface CVLinkPairAST {
 interface DirectiveAST { type:'Directive'; name:string; subkey:string|null; value:number|string|null;
   line:number; fromEnvironment?:boolean; [extension]:unknown; }   // fromEnvironment:true = défaut env injecté
 //   Précédence des directives de PRODUCTION (figée bpscript-bpx.md:37-39) : console/session > scène > défauts.
-//   Surface `@seed:42` / `@items:20` en tête de scène, préfixe optionnel (le bloc `[@…]` est REFUSÉ depuis le 2026-08-10) — MÊME forme AST (nœuds Directive), rien à changer côté consommateurs.
+//   Surface `seed:42` / `items:20` en tête de scène, préfixe optionnel (le bloc `[@…]` est REFUSÉ depuis le 2026-08-10) — MÊME forme AST (nœuds Directive), rien à changer côté consommateurs.
 interface ActorDirective { type:'ActorDirective'; name:string;
   properties?: { alphabet?:string|null; scale?:string|null; sounds?:string|null;
                  transport?:{key:string; params:Record<string,unknown>}|null; eval?:string|null; }; // v0.7
   references?: ActorReference[];                  // v0.8
   assignments?: SoundAssignmentAST[]; soundAssignments?: SoundAssignmentAST[]|null;
-  synthetic?: boolean;                            // true = acteur 'scene' implicite (aucun @actor déclaré ; renommé default→scene le 2026-07-30)
+  synthetic?: boolean;                            // true = acteur 'scene' implicite (aucun actor déclaré ; renommé default→scene le 2026-07-30)
   line: number; }
 interface ActorReference { type:'ActorReference'; category:'alphabet'|'tuning'|'transport'|'sound'|string;
   name:string; variant?:string|null; params?:Record<string,unknown>|null; line?:number; }
@@ -411,7 +411,7 @@ BPx ne lit `nature` que pour SON ressort (durée nulle d'un `instant`, classemen
 - Retour SANS opts → `string` (rétrocompatibilité) : soit la source `.bps`, soit
   `"NON GÉRÉ: <description> (<contexte>)"`.
 - Retour AVEC `opts.hoText && opts.hoKey` → `{ bps: string, transcriptionEntry: object }` ;
-  `bps = "@homomorphism." + hoKey.replace(/-/g,'O') + "\n" + <bps généré>`.
+  `bps = "homomorphism." + hoKey.replace(/-/g,'O') + "\n" + <bps généré>`.
 
 `parseHoFile(hoText: string)` → `{ sections: Object<string, Object<string,string>> }`
 - `sections[label]` : objet `{ [source]: cible }`. Champs dépliés :
@@ -434,7 +434,7 @@ Constantes/maps internes de la frontière (formes exactes) :
 - `convertRuntimeControlToBPS(tok)` → `'(name:val)'` | `'(name:1)'` (no-arg) | `'(name:0)'` (args vide) | `null`.
 
 Sortie BPS — formes de chaque construction gérée (étalon en-tête, vérifiées au code) :
-- Modes : `@mode:<bpsMode>` ou `@mode:<bpsMode>(<modifiers>)` (modifiers issus du preamble).
+- Modes : `mode:<bpsMode>` ou `mode:<bpsMode>(<modifiers>)` (modifiers issus du preamble).
 - Poids `<N>`/`<N-D>`/`<inf>`/`<KN=N>` → suffixe `[weight:N]` / `[weight:N-D]` / `[weight:inf]` / `[weight:K..]`.
 - Scan `LEFT`/`RIGHT` → suffixe `[scan:left]` / `[scan:right]`.
 - Gardes LHS `/flag=N/` (test) → `[flag==N]` ; `/flag+N/ /flag-N/` (mutation) → `[flag+N] [flag-N]` ;
@@ -457,8 +457,8 @@ supprimé le 2026-08-10) — deux régimes (décidés par `decideRhsControlMode`
   sans `{…}`) → suffixe de règle `(ctrl:val[, ctrl2:val2])`.
 - `call` (E4) : un contrôle en position trailing/milieu/`{…}` OU un contrôle engine → forme appel
   positionnelle `ctrl(args)` à la position exacte ; décision au niveau GRAMMAIRE (dès qu'une règle
-  est en appel, TOUTES le sont) ⇒ la scène émet `@core` en tête.
-- `_srand(N) _rndseq` (tête de groupe `{…}` à une voix) → `![@seed:N]` posé avant le groupe +
+  est en appel, TOUTES le sont) ⇒ la scène émet `core` en tête.
+- `_srand(N) _rndseq` (tête de groupe `{…}` à une voix) → `![seed:N]` posé avant le groupe +
   qualifier `[shuffle]` (décision 2026-06-14) ; `_rndseq` seul → `[shuffle]`.
 - Opérateur tempo absolu `/N` (ou `/N/M`) dans RHS → qualifier `[/N]` collé à l'élément suivant (E5).
 
@@ -491,7 +491,7 @@ NON GÉRÉ (retour `"NON GÉRÉ: …"`, par grammaire) — déclencheurs exacts 
 #### 3.3.B — Frontière SORTIE : code BPScript ↔ étalon `AST_SPEC v1.2` ↔ consommateur réel BPx
 
 **Conforme / aligné ✅ :**
-- Union RHS (27) et LHS (8), atomes, ties, polymétrie, accord, gabarits, sections de tête, homomorphismes (dépliés, identité conservée), `TempoOp.scope`, graine `![@seed:N]` restreinte à `seed`, exclusion de `_(…)`, hors-union `Wait`/`SymbolWithWait` : **émis tels que figés** par l'étalon et consommés par `loadGrammar` (frontière A §3.2.A). Vérifié : tous les `type:` de l'union sont effectivement émis par `parser.js`.
+- Union RHS (27) et LHS (8), atomes, ties, polymétrie, accord, gabarits, sections de tête, homomorphismes (dépliés, identité conservée), `TempoOp.scope`, graine `![seed:N]` restreinte à `seed`, exclusion de `_(…)`, hors-union `Wait`/`SymbolWithWait` : **émis tels que figés** par l'étalon et consommés par `loadGrammar` (frontière A §3.2.A). Vérifié : tous les `type:` de l'union sont effectivement émis par `parser.js`.
 - `containment` + régime structurel/séquentiel : aligné sur `AST_SPEC §4.1` (décision 2026-06-20) ; le `flux:true` jadis posé sur un `(…)` nu est bien **corrigé** en `containment`.
 
 **Écarts signalés (à porter à l'attention de l'architecte) 🔶/❓ :**
@@ -510,7 +510,7 @@ NON GÉRÉ (retour `"NON GÉRÉ: …"`, par grammaire) — déclencheurs exacts 
 | Séparateurs `{ } & / ,` | listés en-tête | `SEPARATORS` identique | runtime texte Kanopi (hors dépôt) à coordonner ICI | ACCORD code↔étalon ; consommateur 2 non vérifiable dans le dépôt |
 | `bp3ToScene` modes/poids/scan/gardes/flèches/séparateurs | en-tête « Constructs gérés » | conforme | tests `test_bp3_to_scene.cjs`, `test_bolsize_alias.js` | ACCORD |
 | Opérateurs tempo `/N \N` | en-tête : `/N \N` listés NON GÉRÉS | code E5 : `/N`→`X[/N]` (GÉRÉ), seul `\N` bloque | tests | **ÉCART** : en-tête périmé (dit `/N` non géré alors qu'il l'est) |
-| `_srand` | en-tête : `_srand` listé NON GÉRÉ | code : `_srand(N)`→`![@seed:N]`+`[shuffle]` (GÉRÉ) | tests | **ÉCART** : en-tête périmé |
+| `_srand` | en-tête : `_srand` listé NON GÉRÉ | code : `_srand(N)`→`![seed:N]`+`[shuffle]` (GÉRÉ) | tests | **ÉCART** : en-tête périmé |
 | Sections `TEMPLATES:` / `TIMEPATTERNS:` | en-tête : NON GÉRÉ | collectées en segments mais NON émises (bloc no-op) | tests | ACCORD (différé, jamais émis) |
 | Place dans le flux | — | `bp3ToScene` = île ; aucun importeur interne | UNIQUEMENT tests | conforme `contrat-DRAFT` (INVERSE = outil) + anomalie #2 carte-reel |
 | `orderTokens` importeurs | en-tête : 2 consommateurs | 0 importeur de production | seul `order_parity.mjs` (1 des 2) ; runtime Kanopi hors dépôt | conforme anomalie #1 « module pendant » ; statut garder/exporter/retirer = ❓ à arbitrer (contrat-DRAFT) |
@@ -588,7 +588,7 @@ Consolidation des écarts surfacés en §3.3 et §4. Aucun n'est tranché ici : 
 | E5 | en-tête `index.js:7` périmé | sortie réelle `{ast, errors, warnings}` (`bpxAst.js:180`) | commentaire dit `{ast, backticks, flagStates, libraries}` | corriger le commentaire | ⚙️ correction documentaire |
 | E6 | `scene.backticks` | section `BacktickOrphanAST` émise (voix de code de tête) | hors union RHS `§1.3` ; non mentionnée | mentionner dans l'étalon (voyage opaque `[extension]`) | 🔶 proposé |
 | E7 | en-tête `bp3ToScene` `/N` | code E5 gère `/N`→`X[/N]` | en-tête liste `/N` en NON GÉRÉ | retirer `/N` de la liste (lignes 36-37) | ⚙️ correction documentaire |
-| E8 | en-tête `bp3ToScene` `_srand` | code gère `_srand(N)`→`![@seed:N]`+`[shuffle]` | en-tête liste `_srand` en NON GÉRÉ | retirer `_srand` de la liste (ligne 35) | ⚙️ correction documentaire |
+| E8 | en-tête `bp3ToScene` `_srand` | code gère `_srand(N)`→`![seed:N]`+`[shuffle]` | en-tête liste `_srand` en NON GÉRÉ | retirer `_srand` de la liste (ligne 35) | ⚙️ correction documentaire |
 | E9 | `orderTokens.js` pendant | 0 importeur de production ; 1 des 2 consommateurs déclarés présent (`order_parity.mjs`) | en-tête annonce 2 consommateurs | confirmer le consommateur hors dépôt (runtime texte Kanopi), sinon retirer (code mort) | ❓ Romain (garder/exporter/retirer) |
 | E10 | `bp3ToScene.js` île | atteint seulement par tests, aucun importeur interne | `contrat-DRAFT` : INVERSE = outil | acter le statut : vivant utilitaire vs. archiver | ❓ Romain |
 | E11 | `constants.js` partagé | table d'opérateurs BP3 importée par `parser` (FRONTAL) ET `encoder` (SORTIE_BP3) | crée une flèche `SORTIE_BP3→FRONTAL` | arbitrer le placement (infra neutre vs. legacy) ; la part BP3 ne doit pas remonter dans le frontal | ❓ Romain |
