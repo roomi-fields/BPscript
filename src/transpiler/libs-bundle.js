@@ -125,7 +125,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     }
     const lib = { controls: {} };
     let sectionDuFichier = null;
-    for (const d of (r.ast.directives || [])) {
+    for (const d of (r.ast.defs || [])) {
       if (d.type !== 'DefDirective' || !d.keys) continue;
       // ⛔ UNE CLÉ `section` DIT OÙ LE MOT SE RANGE — posée le 2026-08-14 pour la bascule d'`engine`.
       // Les cinq premières librairies n'avaient qu'une section, `controls`. `engine` en porte QUATRE :

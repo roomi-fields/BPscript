@@ -538,6 +538,16 @@ function parse(tokens, opts = {}) {
     const scene = {
       type: 'Scene',
       directives: [],
+      // ⛔ LES DÉFINITIONS ONT LEUR PROPRE CHAMP, `defs: DefDirective[]` (AST.md:29), et elles
+      // vivaient dans `directives`. La branche qui les range le disait elle-même : elle les avait
+      // d'abord laissées tomber, six gardes étaient tombés en disant « accepter n'est pas
+      // transmettre », et elles ont été poussées dans le SEAU LE PLUS PROCHE au lieu de leur
+      // domicile contracté. Six gardes verts ne disent pas qu'un nœud est au bon endroit.
+      // ⚠️ CE QUI L'A RÉVÉLÉ : le validateur de BPx, qui exige que `directives` ne porte QUE des
+      // `Directive`. `dhati.bps` y émettait 39 `DefDirective` — la scène de tabla, celle-là même
+      // dont Romain vient d'arbitrer la réécriture en `def`. Toute la migration à venir passait
+      // par ce champ.
+      defs: [],
       // `init: InitEntry[] | null` (AST.md:30) — NULL quand la scène n'en a pas, et non `undefined`
       // ni un tableau vide : « elle n'en a pas » et « elle en a un vide » doivent rester
       // distinguables par l'aval.
@@ -639,7 +649,7 @@ function parse(tokens, opts = {}) {
           // en disant la meme chose —  aucun noeud de definition dans l arbre, accepter n est pas
           // transmettre . Une branche qui capture doit ranger ce qu elle capture.
           nomsDeclaresLocalement.add(dir.name);
-          scene.directives.push(dir);
+          scene.defs.push(dir);
         } else if (dir.type === 'Declaration') {
           // @gate, @trigger, @cv — prefixed declarations
           scene.declarations.push(dir);
@@ -850,7 +860,7 @@ function parse(tokens, opts = {}) {
       (el) => el && (el.type === 'Symbol' || el.type === 'SymbolCall') && modules.has(el.name));
 
     const formes = new Map();
-    for (const d of scene.directives || []) {
+    for (const d of scene.defs || []) {
       if (!d || d.type !== 'DefDirective') continue;
       if (d.kind === 'prereglage') { formes.set(d.name, d); continue; }
       if (d.kind === 'structure' || d.kind === 'transformation') {

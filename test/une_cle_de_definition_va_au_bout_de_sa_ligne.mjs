@@ -45,7 +45,7 @@ const TETE = 'core\nalphabet.western\n';
 const clesDe = (corps) => {
   let r; try { r = compileToBPxAST(`${TETE}def k\n${corps}\n\n-----\nS -> C4\n`); } catch (e) { return { erreur: e.message }; }
   if ((r.errors ?? []).length) return { erreur: r.errors[0].message };
-  const d = ((r.ast ?? r).directives || []).find((x) => x.type === 'DefDirective');
+  const d = ((r.ast ?? r).defs || []).find((x) => x.type === 'DefDirective');
   return d ? Object.fromEntries(Object.entries(d.keys || {}).map(([c, v]) => [c, v.value])) : {};
 };
 

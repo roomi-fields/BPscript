@@ -34,7 +34,7 @@ const compiler = (corps, suite = '\n-----\nS -> C4\n') => {
   catch (e) { return { errors: [{ message: e.message }] }; }
 };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
-const defDe = (r) => (r.ast?.directives || []).find((d) => d.type === 'DefDirective');
+const defDe = (r) => (r.ast?.defs || []).find((d) => d.type === 'DefDirective');
 
 // ── A. LES FORMES QUE LA RÉFÉRENCE ÉCRIT ─────────────────────────────────────────────────────
 // Les deux premières sont ses exemples LITTÉRAUX ; les suivantes couvrent la même construction.

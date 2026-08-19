@@ -125,7 +125,11 @@ export function collisions(ast) {
   // ⚠️ UN OUTIL QUI LIT UNE SECTION DISPARUE NE PLANTE PAS, IL REND VIDE — et un compte de
   // collisions a zero ressemble exactement a  aucune collision . C est le pire endroit pour ce
   // mode d echec : cet outil tourne sur des depots qui ne sont pas le mien.
-  for (const d of ast.directives || []) {
+  // ⚠️ ET C'EST LA DEUXIÈME FOIS, sur le même outil et par la même cause. Il lisait `ast.macros`,
+  // puis `ast.directives` — deux sections où les définitions n'étaient plus. Le 2026-08-19 elles ont
+  // rejoint `defs`, leur domicile contracté (AST.md:29). Une section qui déménage ne casse rien
+  // ici : elle rend VIDE, et zéro collision ressemble exactement à aucune collision.
+  for (const d of ast.defs || []) {
     if (d && d.type === 'DefDirective') noter(d.name, 'définition');
   }
   for (const e of ast.inputs || []) noter(e?.name, 'entrée');
@@ -134,7 +138,6 @@ export function collisions(ast) {
   for (const v of ast.vars || []) for (const n of v?.names || []) noter(n, 'variable de travail');
   for (const a of ast.actors || []) if (!a.synthetic) noter(a?.name, 'acteur');
   for (const s of ast.scenes || []) noter(s?.name, 'scène');
-  for (const c of ast.cvInstances || []) noter(c?.name, 'objet CV');
   return trouve;
 }
 

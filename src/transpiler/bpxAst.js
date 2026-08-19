@@ -795,7 +795,7 @@ function terminauxEnPortee(ast) {
   // Un terminal declare par `def` appartient a la SCENE, pas a un alphabet : il est en portee
   // partout, donc il rejoint chaque paquet. Un mot peut le meler aux bols de l'alphabet actif sans
   // pour autant traverser deux alphabets.
-  for (const d of ast.directives || []) {
+  for (const d of ast.defs || []) {
     if (d && d.type === 'DefDirective' && d.kind === 'terminal' && d.name) {
       terminaux.add(d.name);
       for (const paquet of paquets) paquet.add(d.name);
@@ -848,7 +848,7 @@ function poserLaVoixDesTerminaux(ast) {
   if (!ast) return;
   // (1) ce que les `def` de la scène déclarent
   const parDef = new Map();
-  for (const d of ast.directives || []) {
+  for (const d of ast.defs || []) {
     if (d && d.type === 'DefDirective' && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
   }
   // ⛔ JE NE RÉSOUS PAS LE BINDING D'ALPHABET — Romain, 2026-08-08 : « c'est Kairos, ça n'est pas
@@ -906,7 +906,7 @@ function nomsDeclares(ast) {
   // seule liste qui autorise un nom dans une regle — et la ligne d a cote recensait encore les
   // objets CV, section supprimee le jour meme : une liste qui gagne des entrees et n en perd
   // jamais finit par decrire un langage qui n existe plus.
-  for (const d of ast.directives || []) {
+  for (const d of ast.defs || []) {
     if (d && d.type === 'DefDirective' && d.name) declared.add(d.name);
   }
   for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
@@ -2403,7 +2403,7 @@ function refuserNomsEnDouble(ast, libCtx) {
   // interdisait de declarer quoi que ce soit, et mes deux gardes de `def` sont tombes dessus
   // dans la minute. Le conflit ne vaut que pour une definition qui reinvoque autre chose sous
   // un nom deja porte par un terminal.
-  for (const d of ast.directives || []) {
+  for (const d of ast.defs || []) {
     if (d && d.type === 'DefDirective' && d.kind !== 'terminal') {
       noter(d.name, 'une définition', d.line);
     }

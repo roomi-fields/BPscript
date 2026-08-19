@@ -168,6 +168,8 @@ DefDirective {
   keys: { [nom]: { kind: "value" | "ref", value: string | string[] } }   // corps `terminal`
   settings: SettingBag             // corps `prereglage`
   body: RhsElement[]               // corps `structure` et `transformation`
+  tag: string                      // corps `code` — le langage écrit devant le deux-points : "js"
+  code: string                     // corps `code` — le texte du backtick, opaque pour BPScript
   line: number
 }
 
@@ -178,7 +180,6 @@ DefDirective {
 // ci-dessous reste comme lecture des CINQ SORTES et de ce que chacune porte.
 DefBody =
     { kind: "terminal", proto: TerminalProto }         // def cloche  degree:0  voice.sombre
-  | { kind: "patch",    expr: PatchExpr }              // def sombre lpf1 >> vca1
   | { kind: "setting",  bag: SettingBag }              // def kick (vel:120)
   | { kind: "code",     backtick: BacktickInline }     // def fondu phase `js: …`
   | { kind: "elements", body: RhsElement[] }           // def cadence sa re ga pa
@@ -216,57 +217,12 @@ brancher, couper et régler agissent sur un module sans produire de son, donc sa
 ### `InitEntry`
 
 ```
-InitEntry = PatchExpr | BacktickOrphan
+InitEntry = BacktickOrphan
 ```
 
-`init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le
-branchement initial, le code lancé une fois, les valeurs de départ. Ce qui appartient à une chose
+`init` porte ce qui existe au démarrage de la scène et n'appartient à aucune déclaration : le code
+lancé une fois et les valeurs de départ. Ce qui appartient à une chose
 s'initialise dans sa déclaration ; `init` recueille ce qui appartient à la scène entière.
-
-### Le langage de patch
-
-```
-PatchExpr = PatchChain | PatchSwitch | PortAssignment
-
-PatchChain {
-  type: "PatchChain"
-  nodes: PatchNode[]               // les étages, dans l'ordre écrit
-  links: PatchLink[]               // un de moins que d'étages
-}
-
-PatchNode {
-  type: "PatchNode"
-  name: string                     // "lpf1", ou "out" pour le puits
-  port: string | null              // le port nommé : lpf1.cutoff
-}
-
-PatchLink {
-  type: "PatchLink"
-  cut: boolean                     // false = brancher `>>`, true = couper `\>>`
-  width: number                    // la largeur du câble ; 1 quand aucun nombre n'est écrit
-}
-
-PatchSwitch {
-  type: "PatchSwitch"
-  target: string
-  on: boolean                      // switchon / switchoff
-}
-
-PortAssignment {
-  type: "PortAssignment"
-  target: string                   // l'instance
-  port: string
-  value: string | number
-}
-```
-
-Le puits d'une chaîne s'écrit `out` : il désigne la sortie de l'acteur, dont le canal est celui que
-l'acteur déclare. Un module a une entrée et une sortie par défaut ; quand elles suffisent, la chaîne
-se lit sans les nommer, et `port` vaut `null`.
-
-**Une inadéquation de largeur s'adapte** : un port à une voix prend la première, un port à plusieurs
-voix alimenté en une seule diffuse cette valeur sur toutes, et une largeur qui dépasse ce que le
-port accepte se ramène à ce nombre.
 
 ### `Directive` — invocations de librairie et de réglage
 
