@@ -9,6 +9,9 @@ et les deux n'ont pas à coïncider.
 
 ## Conventions
 
+- **L'arbre n'a de sens qu'à erreurs nulles.** `compileToBPxAST` rend `{ ast, errors, warnings }` ;
+  ce qui établit le succès est l'**absence d'erreur**, jamais la présence d'un arbre. Un refus peut
+  rendre un arbre complet, et cet arbre décrit une scène que le compilateur a refusée.
 - Chaque nœud porte un `type` et les propriétés de sa sorte.
 - La position source — ligne, colonne — est attachée à chaque nœud, pour les messages.
 - `null` marque une propriété absente. **Absent et vide disent deux choses** : un champ omis dit
