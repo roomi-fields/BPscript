@@ -111,6 +111,30 @@ function valeurDeCle(v) {
 // interprète le contenu des scènes ».
 // On écrit donc d'abord le bundle des `.json` SEULS sur le disque, puis on charge le transpileur —
 // qui trouve alors un bundle valide — et on relit les `.bps` avec LUI. Un seul interprète, deux passes.
+// ⛔ UNE PARENTHÈSE PRÉSERVE L'ORDRE DE CE QU'ON Y ÉCRIT — arbitrage Romain, 2026-08-19. Une seule
+// forme sert la SUITE et l'ENSEMBLE : un ensemble est une suite dont personne ne lit le rang. Ce que
+// la donnée exigeait : `octaves.saptak` adresse ses registres PAR LEUR RANG — `default:1` désigne
+// madhya, le deuxième des trois — donc sans l'ordre cette valeur ne désigne plus rien.
+//
+// ⛔ LA SUITE SE PREND SUR `pairs`, JAMAIS SUR UN OBJET INTERMÉDIAIRE. Un objet JavaScript réordonne
+// ses clés entières AVANT toutes les autres : `{"0":…,"1":…}` sort en ordre numérique quoi qu'on
+// écrive, et le rang serait rendu par le moteur d'exécution au lieu de la source. Le tableau des
+// couples est la seule lecture qui rend ce qui a été écrit.
+//
+// ⛔ ET UN MEMBRE PORTEUR EST REFUSÉ, JAMAIS AVALÉ : dans une clé-liste, seul le rang compte, donc
+// une valeur écrite sur un membre n'a nulle part où aller. La perdre en silence est le mode d'échec
+// exact du chantier — une graphie acceptée qui ne porte rien.
+function suite(sac, fichier, declaration, cle) {
+  const porteurs = (sac.pairs || []).filter((p) => p.value !== true);
+  if (porteurs.length) {
+    console.error(`[bundle] ⛔ lib/${fichier} · ${declaration} : '${cle}' est une clé-liste — ses `
+      + `membres sont des noms nus, et ${porteurs.map((p) => `'${p.key}'`).join(', ')} porte(nt) une `
+      + `valeur. Une clé-liste ne lit que le RANG ; cette valeur serait perdue sans un mot.`);
+    process.exitCode = 1;
+  }
+  return (sac.pairs || []).map((p) => p.key);
+}
+
 /** Un sac imbriqué devient un objet — une parenthèse, un niveau. */
 function sacEnObjet(sac) {
   const out = {};
@@ -155,7 +179,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         // Une valeur qui est elle-même un sac descend d'un niveau — la récursivité par la
         // parenthèse, lue depuis le 2026-08-19.
         out[p.key] = (p.value && p.value.type === 'SettingBag')
-          ? { kind: 'value', value: sacEnObjet(p.value) }
+          ? { kind: 'value', value: CLES_LISTES.has(p.key) ? suite(p.value, entry, d.name, p.key) : sacEnObjet(p.value) }
           : { kind: 'value', value: p.value };
       }
       return out;
