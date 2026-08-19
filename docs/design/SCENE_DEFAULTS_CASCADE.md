@@ -39,9 +39,9 @@ frontend **plie** la cascade STATIQUE (niveaux 1-4) dans la déclaration d'acteu
 l'occurrence (niveau 5) reste par-nœud (`payload.params`). L'arbre porte l'**effectif** — l'aval
 (Kairos) le lit, **sans aucun défaut en dur** (le `?? 440` de Kairos disparaît).
 
-## Schéma @core (`lib/core.json`)
+## Schéma de `core` (`lib/core.json`)
 
-@core porte les valeurs ET leur spec (domaine). Un `overriddenBy` optionnel dit quel CHAMP d'une lib
+`core` porte les valeurs ET leur spec (domaine). Un `overriddenBy` optionnel dit quel CHAMP d'une lib
 invoquée recouvre le défaut (le mécanisme reste générique) :
 
 ```json

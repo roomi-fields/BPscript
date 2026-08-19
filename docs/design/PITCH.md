@@ -126,7 +126,7 @@ lights.spot          // spot résolu via lights (dmx)
 
 Convention : le conteneur précède le contenu (`actor.terminal`), cohérent avec
 la notation standard dans tous les langages (`module.symbol`, `namespace.class`)
-et avec BPScript lui-même (`@alphabet.western`, `@actor sitar alphabet.sargam`).
+et avec BPScript lui-même (`alphabet.western`, `actor sitar` avec sa clé `alphabet.sargam`).
 
 ### Import en bloc
 
@@ -881,14 +881,14 @@ Les 6 couches sont consommées à **deux moments** par **deux modules** différe
 ### Chargement et configuration
 
 ```
-@alphabet.western        → charge alphabet.json["western"]
-@octaves.arrows          → charge octaves.json["arrows"]
-@tuning.western_just     → charge tunings.json["western_just"]
-                            → charge automatiquement temperaments.json["just_5limit"]
-@tuning:442              → override baseHz = 442
+alphabet.western        → charge alphabet.json["western"]
+octaves.arrows          → charge octaves.json["arrows"]
+tuning.western_just     → charge tunings.json["western_just"]
+                           → charge automatiquement temperaments.json["just_5limit"]
+diapason:442            → fréquence de référence à 442
 ```
 
-Les directives `@` dans le source BPScript configurent les couches.
+Les lignes de tête du source BPScript configurent les couches.
 Le tuning référence son tempérament → le chargement est transitif.
 `@tuning:442` permet de changer la fréquence de base sans changer le tuning
 (arbitrage Romain 2026-06-26 : `:` affecte une valeur).
