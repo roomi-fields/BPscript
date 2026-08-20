@@ -135,8 +135,8 @@
     "components": {
       "alphabet": "western",
       "tuning": "western_12TET",
-      "octaves": "western",
-      "transport": "audio"
+      "transport": "audio",
+      "eval": "js"
     },
     "values": {
       "diapason": {

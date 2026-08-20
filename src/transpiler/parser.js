@@ -2538,7 +2538,7 @@ function parse(tokens, opts = {}) {
       if (at(T.BACKTICK)) {
         const bt = current();
         const brut = expect(T.BACKTICK).value;
-        const { tag, code } = splitBacktickTag(brut, bt);
+        const { tag, code } = splitBacktickTag(brut);
         return { type: 'DefDirective', name: defName, kind: 'code',
                  convention: null, tag, code, line: tok.line };
       }
@@ -2547,7 +2547,7 @@ function parse(tokens, opts = {}) {
         const convention = advance().value;
         const bt = current();
         const brut = expect(T.BACKTICK).value;
-        const { tag, code } = splitBacktickTag(brut, bt);
+        const { tag, code } = splitBacktickTag(brut);
         return { type: 'DefDirective', name: defName, kind: 'code',
                  convention, tag, code, line: tok.line };
       }
@@ -2691,7 +2691,7 @@ function parse(tokens, opts = {}) {
         // site ORPHELIN, aucun acteur ne l'entoure, donc aucun langage ne peut s'hériter.
         if (at(T.BACKTICK)) {
           const tok2 = current();
-          const t = splitBacktickTag(advance().value, tok2);
+          const t = splitBacktickTag(advance().value);
           // `BacktickOrphan` est le type que la spec nomme (AST.md:657) — pas un type à moi.
           entrees.push({ type: 'BacktickOrphan', tag: t.tag, code: t.code, line: tok2.line });
           continue;
@@ -3463,29 +3463,27 @@ function parse(tokens, opts = {}) {
   }
 
   /**
-   * Comme `tryBacktickTag`, mais le tag est OBLIGATOIRE : sites ORPHELINS où AUCUN
-   * héritage de langage n'est possible (backtick top-level, courbe `cv NAME : …`).
-   * Décision hub 2026-07-04-cv-curve-syntaxe-backtick-type.md + AJUSTEMENT [299] :
-   * le langage doit TOUJOURS être connu (tag OU eval d'acteur déclaré, jamais deviné) ;
-   * hors acteur-à-eval, seul le tag le donne → erreur claire sinon. Les backticks de
-   * FLUX (RHS/arg) sous un `actor …eval.X` héritent de X (résolu en aval, annotateBackticks).
+   * Sépare le tag du code sur les sites SANS ACTEUR — backtick de tête de scène, définition de
+   * code, courbe `cv NAME : …`. Le tag y est FACULTATIF, et rend `null` quand il est absent.
+   *
+   * ⛔ CE LECTEUR EXIGEAIT LE TAG, ET C'ÉTAIT UN SECOND MOTEUR DE REFUS. Le langage vient
+   * désormais de la place la plus proche qui le nomme — l'acteur, la scène, puis le socle, où
+   * `core` porte `js`. Un langage DÉCLARÉ est connu : la règle « jamais deviné » est satisfaite,
+   * pas contournée. Le refus est SUPPRIMÉ, pas désactivé.
+   *
+   * ⚠️ ET LA RÉSOLUTION VIT EN AVAL, EN UN SEUL LIEU (`annotateBackticks`). Ce lecteur voit la
+   * scène ligne par ligne : une ligne `eval.<moteur>` écrite APRÈS un backtick lui serait
+   * invisible, et « le plus proche l'emporte » deviendrait « le plus haut dans le fichier
+   * l'emporte » — que personne n'a décidé. L'aval voit la scène entière.
    */
-  function splitBacktickTag(raw, tok) {
-    const t = tryBacktickTag(raw);
-    if (!t) {
-      throw new ParseError(
-        `Backtick orphelin sans tag de langage : \`${raw.slice(0, 30)}${raw.length > 30 ? '…' : ''}\` — le `
-        + `TAG d'interprète est OBLIGATOIRE hors voix-code d'acteur (ex. \`js: …\`, \`sc: …\`, `
-        + `\`python: …\`). Jamais de langage deviné (décision CV-curve 2026-07-04 + [299]).`,
-        tok);
-    }
-    return t;
+  function splitBacktickTag(raw) {
+    return tryBacktickTag(raw) || { tag: null, code: raw.trim() };
   }
 
   function parseBacktickOrphan() {
     const tok = current();
     const raw = expect(T.BACKTICK).value;
-    const { tag, code } = splitBacktickTag(raw, tok);
+    const { tag, code } = splitBacktickTag(raw);
     return { type: 'BacktickOrphan', tag, code, line: tok.line };
   }
 

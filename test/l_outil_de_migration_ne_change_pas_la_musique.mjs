@@ -272,9 +272,30 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // Le second geste est-il vraiment indispensable ? On le prouve en ne faisant que le premier.
   // Sur une voix de CODE, renommer la tête seule casse : le bloc perd son langage. C'est pourquoi
   // l'outil pose aussi le tag — et c'est aussi ce qui a motivé la forme `acteur.<bloc>`.
+  //
+  // ⛔ ET CE VOLET MESURAIT UN REFUS, QUI N'EXISTE PLUS. Depuis que le socle nomme un langage
+  // (`core` porte `js`), un bloc qui perd son acteur ne crie plus : il TOMBE SUR LE SOCLE et part
+  // en `js` là où l'auteur écrivait du `strudel`. La casse est la même ; ce qui a disparu, c'est
+  // le bruit qu'elle faisait. On mesure donc la SUBSTITUTION, qui est ce qui se passe réellement —
+  // et c'est un témoin plus fort qu'un refus, parce qu'il nomme la valeur fausse au lieu de
+  // constater qu'on s'est arrêté.
   const codeTeteSeule = 'core\nactor d  eval.strudel\n-----\nS -> d_r\nd_r -> `note("c3")`';
-  ok((compileToBPxAST(codeTeteSeule).errors || []).length >= 1,
-    '3quater. sur une voix de code, renommer la TÊTE SEULE casse — d\'où le tag');
+  const casse = compileToBPxAST(codeTeteSeule);
+  const langages = [];
+  const relever = (o) => {
+    if (!o || typeof o !== 'object') return;
+    if (Array.isArray(o)) { o.forEach(relever); return; }
+    if (/^Backtick/.test(o.type || '')) langages.push(o.payload?.interp ?? o.tag ?? null);
+    Object.values(o).forEach(relever);
+  };
+  relever(casse.ast?.subgrammars);
+  ok(langages.length === 1 && langages[0] !== 'strudel',
+    `3quater. sur une voix de code, renommer la TÊTE SEULE casse — le bloc perd 'strudel'. Reçu `
+    + `${JSON.stringify(langages)}`);
+  ok(langages[0] === 'js',
+    `3quater. et il tombe SILENCIEUSEMENT sur le socle 'js' — reçu ${JSON.stringify(langages[0])}. `
+    + `C'est le prix du langage par défaut, et c'est pourquoi l'outil DOIT poser le tag : sans lui, `
+    + `rien ne signale plus que le bloc a changé d'interprète.`);
   // ⚠️ CE TÉMOIN A ÉTÉ RETOURNÉ, ET LA DISTINCTION MÉRITE D'ÊTRE GARDÉE. Kanopi avait raison :
   // un acteur SANS moteur d'évaluation n'est PAS une voix de code, et ne compte pas dans le
   // dénombrement des voix à migrer — c'est le cas qu'il a testé avant de donner son chiffre.

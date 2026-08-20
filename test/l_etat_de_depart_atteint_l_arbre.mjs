@@ -89,14 +89,23 @@ const arbreDe = (src) => {
 // fichier porte l ETAT DE DEPART, qui ne bouge pas.
 
 
-// ─── 5. LE TAG RESTE OBLIGATOIRE — `init` est un site ORPHELIN ──────────────────────────────
-// Aucun acteur ne l'entoure, donc aucun langage ne peut s'hériter : un backtick nu n'a pas
-// d'interprète, et l'accepter le ferait partir nulle part.
+// ─── 5. `init` EST UN SITE SANS ACTEUR — SON LANGAGE VIENT DE LA SCÈNE, PUIS DU SOCLE ───────
+// Décision Romain : le langage d'un backtick vient de la place la plus proche qui le nomme, et le
+// socle `core` en porte un. Aucun acteur n'entoure `init` : sa cascade est donc scène, puis socle.
+//
+// ⛔ CE VOLET EXIGEAIT LE REFUS, ET IL A RENDU SERVICE EN ROUGISSANT. Sa raison — « aucun acteur ne
+// l'entoure » — était juste, et c'est elle qui a montré que `init` est un QUATRIÈME site sans
+// acteur, oublié quand les trois autres ont été branchés. Sans lui, un bloc de code y serait parti
+// avec un langage NUL, en silence : le trou aurait changé de place au lieu de se fermer.
 {
   const t = arbreDe(`${TETE}init\n  \`setup()\`\n\n-----\nS -> C4\n`);
-  ok(t.e.length > 0,
-     '5. un backtick SANS tag doit être refusé dans init — aucun acteur ne l\'entoure, donc aucun '
-     + 'langage ne peut s\'hériter');
+  ok(t.e.length === 0, `5. un backtick sans tag doit COMPILER dans init — ${t.e[0]?.message}`);
+  ok((t.ast?.init || [])[0]?.tag === 'js',
+     `5. et porter le langage du SOCLE — reçu ${JSON.stringify((t.ast?.init || [])[0]?.tag)}. Un `
+     + `bloc de code qui part avec un langage NUL ne part nulle part, et ne le dit pas.`);
+  const s = arbreDe(`${TETE}eval.tidal\ninit\n  \`setup()\`\n\n-----\nS -> C4\n`);
+  ok((s.ast?.init || [])[0]?.tag === 'tidal',
+     `5. et la SCÈNE l'emporte sur le socle — reçu ${JSON.stringify((s.ast?.init || [])[0]?.tag)}`);
 }
 // Et un tag inconnu reste refusé, comme partout : la liste des évaluateurs vaut ici aussi.
 {

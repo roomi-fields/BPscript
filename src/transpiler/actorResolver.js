@@ -134,14 +134,23 @@ function octavesHerite(ast, alphabetKey) {
 }
 
 /**
- * L'ACCORDAGE HÉRITÉ — et il vient de L'ALPHABET, jamais du socle @core (Romain, 2026-07-29).
+ * L'ACCORDAGE HÉRITÉ — il se LIT sur l'alphabet actif, qui le déclare.
  *
  * ⚠️ CETTE FONCTION EXISTE PARCE QUE J'AI REFUSÉ DE L'ÉCRIRE HIER, ET C'ÉTAIT LE BON REFLEXE.
  * @core porte `defaults.components.tuning: western_12TET`. Le poser sur une scène sargam ou
  * gamelan est une AFFIRMATION MUSICALE que je ne sais pas prouver — j'ai donc laissé l'axe à vide
  * sur 230 scènes et je l'ai escaladé plutôt que de trancher une question de sens par une
- * compilation. Réponse de Romain : « l'accordage par défaut de chaque alphabet doit être DANS
- * L'ALPHABET, c'est déjà géré, pas besoin d'accordage par défaut dans core ».
+ * compilation. Réponse de Romain, verbatim (courrier du 2026-07-29) : « l'accordage par défaut de
+ * chaque alphabet doit être DANS L'ALPHABET, c'est déjà géré, pas besoin d'accordage par défaut
+ * dans core ».
+ *
+ * ⛔ ET LA CITATION DIT « PAS BESOIN », JAMAIS « JAMAIS ». Le titre de ce bloc a porté pendant trois
+ * semaines « il vient de l'alphabet, JAMAIS du socle @core (Romain) » — un durcissement de MA main,
+ * signé de SON nom et daté de son message. Romain répondait à ma réserve (je refusais de POSER une
+ * valeur musicale) ; il disait que je n'ai pas à m'en servir, pas que l'entrée doit disparaître.
+ * L'entrée `tuning` du socle reste, et cette fonction ne la lit pas : les deux tiennent ensemble.
+ * Une citation exacte sous une phrase qui la durcit se relit comme une décision qui n'a pas été
+ * prise — et c'est la faute la plus chère du dépôt, parce que personne ne rouvre le courrier.
  *
  * Donc je n'ai JAMAIS à poser cette valeur : je la LIS sur l'alphabet actif, qui la déclare
  * (`defaultTuning`). western → western_12TET, sargam → sargam_12TET, arabic → arabic_24TET,

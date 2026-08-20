@@ -142,13 +142,30 @@ function annotateBackticks(ast) {
   // Il est remplacé, pas doublé : le langage vient de l'acteur qui QUALIFIE le bloc par le point
   // (`drums.\`note("c3")\``), là où il qualifie déjà une note (`sitar.Sa`). Un nom de règle
   // redevient une étiquette pour appeler la règle, et rien d'autre.
+  //
+  // ⛔ ET LA CASCADE A TROIS NIVEAUX, LE PLUS PROCHE L'EMPORTE : l'ACTEUR qui qualifie le bloc par
+  // le point, puis la SCÈNE par sa ligne `eval.<moteur>`, puis le SOCLE — `core` porte `js`.
+  // Le tag écrit sur l'occurrence l'emporte sur les trois : il est posé avant, à l'étape 1.
+  //
+  // ⚠️ LE NIVEAU SCÈNE EXISTAIT DÉJÀ DANS L'ARBRE ET UN SEUL LECTEUR L'IGNORAIT — celui-ci.
+  // `eval.tidal` en tête de scène descend dans chaque acteur déclaré ET fabrique l'acteur implicite
+  // qui le porte ; mesuré. Un backtick NU du flux était refusé pendant que l'acteur implicite de sa
+  // propre scène nommait son langage. Ce n'était pas un niveau à construire, c'était un niveau à
+  // consulter.
+  //
+  // Le socle vit en DONNÉE (`core.defaults.components.eval`), jamais en dur : une valeur écrite ici
+  // serait invisible et personne ne pourrait la surcharger.
   const acteurEval = {};
   for (const a of ast.actors || []) if (a.properties && a.properties.eval) acteurEval[a.name] = a.properties.eval;
+  const sceneEval = (ast.directives || []).find((d) => d.name === 'eval' && (d.subkey || d.runtime));
+  const socleEval = loadLib('core')?.defaults?.components?.eval;
+  const parDefaut = (sceneEval && (sceneEval.subkey || sceneEval.runtime)) || socleEval || null;
   const resoudre = (els) => {
     for (const el of els || []) {
       if (!el || typeof el !== 'object') continue;
-      if (isBt(el) && el.payload && el.payload.interp === 'auto' && el.actor && acteurEval[el.actor]) {
-        el.payload.interp = acteurEval[el.actor];
+      if (isBt(el) && el.payload && el.payload.interp === 'auto') {
+        const proche = (el.actor && acteurEval[el.actor]) || parDefaut;
+        if (proche) el.payload.interp = proche;
       }
       if (el.elements) resoudre(el.elements);
       if (el.voices) for (const v of el.voices) resoudre(v);
@@ -156,19 +173,48 @@ function annotateBackticks(ast) {
   };
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) resoudre(rule.rhs);
 
+  // 2bis. LES SITES SANS ACTEUR — le backtick de tête de scène, la définition de code, la courbe.
+  //
+  // ⛔ ILS ÉTAIENT RÉSOLUS AU PARSEUR, PAR UN SECOND MOTEUR DE REFUS. Le parseur exigeait leur tag
+  // parce qu'aucun acteur ne les entoure ; l'aval résolvait les autres. Deux lieux pour une seule
+  // question, et depuis que le socle nomme un langage, le second n'avait plus rien à refuser.
+  // Il est SUPPRIMÉ, pas désactivé : `splitBacktickTag` rend `tag:null` et ne juge plus.
+  //
+  // ⚠️ ET C'EST L'AVAL QUI DOIT TRANCHER, PAS LE PARSEUR : le parseur voit la scène ligne par ligne,
+  // donc une ligne `eval.<moteur>` écrite APRÈS un backtick lui serait invisible, et « le plus
+  // proche l'emporte » deviendrait « le plus haut dans le fichier l'emporte ». Aucun de ces trois
+  // sites n'a d'acteur : leur cascade est scène, puis socle.
+  //
+  // ⚠️ ILS SONT QUATRE, ET J'EN AVAIS BRANCHÉ TROIS. `init` est le quatrième — un garde l'a dit en
+  // rougissant, et il avait raison sur le fond alors que son assertion portait sur l'ancienne
+  // règle : « aucun acteur ne l'entoure ». Retirer le refus du parseur sans brancher ce site-là
+  // aurait laissé partir un bloc de code au langage NUL, en silence. Le trou aurait changé de
+  // place au lieu de se fermer.
+  if (parDefaut) {
+    const poser = (n) => { if (n && typeof n === 'object' && /^Backtick/.test(n.type || '') && !n.tag) n.tag = parDefaut; };
+    for (const b of ast.backticks || []) poser(b);
+    for (const e of ast.init || []) poser(e);
+    for (const d of ast.defs || []) if (d && d.kind === 'code' && !d.tag) d.tag = parDefaut;
+    for (const dec of ast.declarations || []) if (dec && dec.curve && !dec.curve.tag) dec.curve.tag = parDefaut;
+  }
+
   // 3. FAIL-LOUD orphelin (décision CV-curve 2026-07-04 + ajustement [299]) : un backtick
   //    de flux resté `interp:'auto'` n'a NI tag NI eval d'acteur en tête → langage inconnu,
   //    jamais deviné. Erreur claire (non fatale : l'AST reste produit, Kanopi l'affiche).
+  //    Le socle le nomme désormais pour toute scène, donc ce cri ne se déclenche que si la donnée
+  //    de socle est absente — un catalogue amputé, jamais une scène mal écrite.
   const errors = [];
   const scanOrphans = (els) => {
     for (const el of els || []) {
       if (!el || typeof el !== 'object') continue;
       if (isBt(el) && el.payload && el.payload.interp === 'auto') {
         errors.push({
-          message: `Backtick sans langage — il doit être connu, jamais deviné. Deux façons de le `
-                 + `dire : un TAG dans le bloc (\`js: …\`), ou un ACTEUR qui qualifie le bloc par le `
-                 + `point (\`drums.\`…\`\`, avec 'actor drums eval.<moteur>'). Le second porte AUSSI `
-                 + `l'identité de la voix, que le tag seul ne donne pas.`,
+          message: `Backtick sans langage — il doit être connu, jamais deviné. Le langage vient de `
+                 + `la place la plus proche qui le nomme : un TAG dans le bloc (\`js: …\`), un ACTEUR `
+                 + `qui qualifie le bloc par le point ('actor drums eval.<moteur>' puis `
+                 + `\`drums.\`…\`\`), une ligne 'eval.<moteur>' en tête de scène, ou le socle `
+                 + `'core' — qui porte 'js'. Aucun des quatre n'a répondu : le catalogue 'core' `
+                 + `n'expose pas 'defaults.components.eval'.`,
           line: el.line,
         });
       }
