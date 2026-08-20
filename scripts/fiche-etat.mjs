@@ -19,7 +19,19 @@
  *
  * DONC ELLE SE GÉNÈRE. Le corpus, le portillon et le registre disent leurs propres chiffres ; ce
  * script les lit et n'en invente aucun. Il n'écrit rien sur le disque — le script npm redirige sa
- * sortie, et un garde compare l'enregistré au régénéré, comme pour le paquet.
+ * sortie.
+ *
+ * ⛔ ET LE GARDE QUE CET EN-TÊTE ANNONÇAIT N'EXISTAIT PAS. Il disait « un garde compare l'enregistré
+ * au régénéré, comme pour le paquet » ; aucun fichier du dépôt ne lisait `baseline-status.json` à
+ * part ce script. La fiche a donc dérivé cinq jours — 141 gardes annoncés pour 177, six librairies
+ * pour dix — sous une phrase qui affirmait le contraire. Une affirmation dans un commentaire se
+ * relit comme une preuve, et personne ne va vérifier qu'un garde nommé là est branché quelque part.
+ *
+ * LE GARDE EXISTE DEPUIS LE 2026-08-20 — `test/la_fiche_d_etat_dit_le_depot_qu_elle_decrit.mjs` — et
+ * il ne compare PAS l'enregistré au régénéré : régénérer LANCE le portillon, et un garde qui ferait
+ * ça depuis le portillon le relancerait à l'intérieur de lui-même. Il compare donc la fiche aux
+ * SOURCES que ce script lit — le dossier des librairies et le corpus — et vérifie que les deux
+ * champs hors de sa portée, `portillon` et `commit`, sont présents et plausibles.
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
