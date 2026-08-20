@@ -736,7 +736,13 @@ function parse(tokens, opts = {}) {
           // dérivation. Le registre se remplit ICI, à la lecture, pour la même raison que celui
           // des acteurs : un corps de déclaration est lu PENDANT la phase des directives, donc une
           // table remplie à la fin arriverait trop tard.
-          if (dir.varType?.kind === 'type' && dir.varType.type === 'object') {
+          // ⛔ ET LA PROFONDEUR N'EST BORNÉE PAR RIEN. La condition ne nommait qu'`object`, donc un
+          // arbre s'arrêtait à DEUX étages : `object scale (…)` puis `scale interval (…)` passaient,
+          // et `interval ionian (…)` était refusé. Or `interval` EST un nom déclaré par un type —
+          // il dérive au même titre que le premier. Limiter la profondeur depuis le parseur, c'est
+          // décider de la modélisation à la place de qui écrit la librairie : le prototypal pur ne
+          // borne rien, et la forme validée le 2026-08-20 en demande trois étages.
+          if (dir.varType?.kind === 'type') {
             for (const n of dir.names) prototypesDeclares.add(n);
           }
         } else if (dir.type === 'DefDirective') {
