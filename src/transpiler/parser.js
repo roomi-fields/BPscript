@@ -1128,20 +1128,52 @@ function parse(tokens, opts = {}) {
         flagStates[v.names[0]] = mm;
       }
     }
-    const resolveFlag = (flag, value) =>
-      (typeof value === 'string' && flagStates[flag]
-        && Object.prototype.hasOwnProperty.call(flagStates[flag], value))
-        ? flagStates[flag][value] : value;
+    // ⛔ ET UN NOM QUI NE DÉSIGNE RIEN EST REFUSÉ — L'INCOMPLÉTUDE SE REFUSE À L'USAGE.
+    //
+    // ⚠️ CE CRI N'EXISTAIT NI AU TEST NI À LA MUTATION, y compris sur un drapeau COMPLET : mesuré,
+    // `flag s(x:1)` suivi de `[s==a]` passait en silence alors que `a` n'est déclaré nulle part.
+    // Le seul refus de cette famille portait sur la DÉCLARATION nue (`flag s`), qui empêchait le
+    // drapeau VIDE et n'a jamais empêché l'ÉTAT INCONNU. Ce sont deux choses, et une seule était
+    // gardée — celle qui va cesser de l'être, par décision du prototypal pur.
+    //
+    // ⛔ ET LE NOM D'UN AUTRE DRAPEAU RESTE ADMIS. Le commentaire ci-dessus le nommait — « référence
+    // à un autre drapeau, fidèle BP3 » — et le refuser aurait fermé une forme que je ne sais pas
+    // juger. Mesure des deux corpus : 11 usages, TOUS vers un état déclaré, ZÉRO vers un autre
+    // drapeau, ZÉRO vers un inconnu. Le cri ne rattrape donc rien : il empêche ce que personne n'a
+    // encore écrit, et c'est le bon moment pour le poser.
+    // ⛔ ET LE CRI NE VAUT QUE SUR UN DRAPEAU QUI DÉCLARE DES ÉTATS. Un drapeau non déclaré est
+    // LÉGITIME et fidèle à BP3 : `X -> lambda [Num_a=20, Num_b=0]` crée ses drapeaux à l'usage,
+    // sans aucune ligne de déclaration, et `[Num_a>Num_b]` les compare. Ma première écriture criait
+    // dessus et cassait une grammaire ACTIVE du corpus — trouvée par le portillon, pas par ma
+    // mesure : je n'avais compté que les scènes qui PORTENT une déclaration de drapeau, donc
+    // j'avais exclu de mon périmètre exactement les scènes que mon cri allait atteindre.
+    // Là où des états SONT déclarés, l'auteur a dit ce que le drapeau accepte, et un nom hors de
+    // cette liste ne désigne rien.
+    const criFlags = [];
+    const resolveFlag = (flag, value, ou) => {
+      if (typeof value !== 'string') return value;
+      const etats = flagStates[flag];
+      if (etats && Object.prototype.hasOwnProperty.call(etats, value)) return etats[value];
+      if (Object.prototype.hasOwnProperty.call(flagStates, value)) return value;   // un autre drapeau
+      if (!etats) return value;                       // régime BP3 : le drapeau n'est pas déclaré
+      criFlags.push(
+        `${ou} '[${flag}${ou === 'mutation' ? '=' : '=='}${value}]' : '${value}' n'est ni un état `
+        + `déclaré par '${flag}', ni le nom d'un autre drapeau. Les états d'un drapeau se déclarent `
+        + `avec lui — '${flag}(${value}:<entier>)' — et un nom qui ne désigne rien ne se compare à `
+        + `rien.${etats ? ` '${flag}' déclare ${JSON.stringify(Object.keys(etats))}.` : ` '${flag}' `
+        + `ne déclare aucun état : il ne peut servir que de modèle, jamais s'employer.`}`);
+      return value;
+    };
 
     for (const sg of scene.subgrammars) {
       for (const rule of sg.rules) {
         // Gardes + mutations : résoudre les états de drapeau nommés DÉCLARÉS en entier.
         const guards = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
         for (const g of guards) {
-          if (g && g.flag != null && 'value' in g) g.value = resolveFlag(g.flag, g.value);
+          if (g && g.flag != null && 'value' in g) g.value = resolveFlag(g.flag, g.value, 'garde');
         }
         for (const f of rule.flags || []) {
-          if (f && f.flag != null && 'value' in f) f.value = resolveFlag(f.flag, f.value);
+          if (f && f.flag != null && 'value' in f) f.value = resolveFlag(f.flag, f.value, 'mutation');
         }
 
         // Résolution de l'acteur de règle : quand tous les symboles LHS appartiennent
@@ -1165,6 +1197,15 @@ function parse(tokens, opts = {}) {
           };
         }
       }
+    }
+    // ⛔ LES CRIS SORTENT ICI, APRÈS LE BALAYAGE ENTIER — jamais au premier trouvé : un auteur qui
+    // a écrit trois états inconnus doit voir les trois, pas les découvrir un par un en trois
+    // compilations. Le premier porte le refus, les autres le suivent dans le même message.
+    if (criFlags.length) {
+      throw new ParseError(
+        criFlags.length === 1 ? criFlags[0]
+          : `${criFlags.length} usages de drapeau ne désignent rien :\n  · ${criFlags.join('\n  · ')}`,
+        { line: 0, col: 0 });
     }
   }
 
@@ -1930,10 +1971,18 @@ function parse(tokens, opts = {}) {
     // La parenthèse porte ce qui appartient à ce qui la précède : les états appartiennent au
     // drapeau. C'est le même geste que `actor basse(out.midi(ch:1))`, aucun signe nouveau.
     if (mot === 'flag') {
+      // ⛔ LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE — prototypal pur, décision Romain du
+      // 2026-08-20. Un drapeau sans état est un MODÈLE, pas une faute de frappe : il ne peut que
+      // servir de parent, et « l'incomplétude se refuse à l'USAGE, jamais à la déclaration ».
+      //
+      // ⚠️ LE REFUS QUI VIVAIT ICI NE GARDAIT PAS CE QU'ON CROYAIT. Mesuré avant de le retirer :
+      // il empêchait le drapeau VIDE et n'a JAMAIS empêché l'ÉTAT INCONNU — `flag s(x:1)` suivi
+      // de `[s==a]` passait en silence. Le cri qui manquait est posé À L'USAGE, dans
+      // `annotateScene`, et il l'a été AVANT ce retrait : sans cet ordre, la famille entière
+      // serait restée sans aucune garde entre les deux gestes.
       if (!at(T.LPAREN)) {
-        throw new ParseError(`flag ${premier} : un drapeau nomme ses états entre parenthèses — `
-          + `'flag ${premier}(<nom>:<entier>, …)'. La parenthèse porte ce qui appartient à ce `
-          + `qui la précède.`, current());
+        return { type: 'VarDirective', names: [premier],
+                 varType: { kind: 'flag', states: [] }, line: tok.line };
       }
       advance();
       const states = [];
@@ -2021,7 +2070,19 @@ function parse(tokens, opts = {}) {
       const dn = lireDepart(n);
       if (dn !== null) departs.push({ name: n, value: dn });
     }
-    const nu = { type: 'VarDirective', names: noms, varType: null, line: tok.line };
+    // ⛔ ET LE TYPE VOYAGE, MÊME SANS PARENTHÈSE — prototypal pur, décision Romain du 2026-08-20 :
+    // « un nom nu vaut un objet vide, la parenthèse absente vaut parenthèse vide, ET LE TYPE
+    // VOYAGE ».
+    //
+    // ⚠️ SIX TYPES LE PERDAIENT EN SILENCE : control, addresskey, native, destination, object et
+    // symbol sortaient avec `varType: null` dès qu'aucune parenthèse ne suivait — `control x`
+    // compilait, atterrissait dans l'arbre avec son nom, et un consommateur y lisait une variable
+    // SANS NATURE là où l'auteur en avait nommé une. La forme avec corps, elle, le portait : deux
+    // graphies du même mot, une seule qui dit ce qu'elle déclare.
+    // Les conventions ne l'ont jamais perdu, nues ou avec valeur de départ — c'est ce qui rendait
+    // l'écart invisible : la moitié des mots de tête marchait.
+    const type = typesDeclaratifs().has(mot) ? { kind: 'type', type: mot } : null;
+    const nu = { type: 'VarDirective', names: noms, varType: type, line: tok.line };
     return departs.length ? { ...nu, initial: departs } : nu;
   }
 

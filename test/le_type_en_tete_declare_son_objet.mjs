@@ -59,8 +59,13 @@ const FORMES = [
     (n) => n?.names?.[0] === 'porte' && n?.varType?.kind === 'convention' && n.varType.convention === 'logic'],
   ['ramp ramp1', 'un module DU CATALOGUE (`ramp` vit dans lib/mod.json)',
     (n) => n?.names?.[0] === 'ramp1' && n?.varType?.kind === 'module' && n.varType.module === 'ramp'],
-  ['symbol pivot', 'un nom seul, sans type',
-    (n) => JSON.stringify(n?.names) === JSON.stringify(['pivot']) && n?.varType === null],
+  // ⛔ LE TYPE VOYAGE MÊME SANS PARENTHÈSE — prototypal pur, 2026-08-20. Ce volet exigeait
+  // `varType === null` : il CERTIFIAIT la perte. Six types sortaient sans nature dès qu'aucune
+  // parenthèse ne suivait, et un consommateur y lisait une variable anonyme là où l'auteur en
+  // avait nommé une.
+  ['symbol pivot', 'un nom seul — la parenthèse absente vaut parenthèse vide, ET LE TYPE VOYAGE',
+    (n) => JSON.stringify(n?.names) === JSON.stringify(['pivot'])
+           && n?.varType?.kind === 'type' && n.varType.type === 'symbol'],
 ];
 for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
   const r = compile(ligne);
@@ -77,8 +82,9 @@ for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
   const r = compile('symbol z1, z2, z3');
   ok((r.errors || []).length === 0, `1. une liste de noms séparés par des virgules doit compiler — reçu : ${msgs(r).join(' | ')}`);
   const n = vd(r);
-  ok(!!n && JSON.stringify(n.names) === JSON.stringify(['z1', 'z2', 'z3']) && n.varType === null,
-    `1. et porter les TROIS noms dans UNE seule VarDirective, sans type — reçu : ${JSON.stringify(n)}`);
+  ok(!!n && JSON.stringify(n.names) === JSON.stringify(['z1', 'z2', 'z3'])
+     && n.varType?.kind === 'type' && n.varType.type === 'symbol',
+    `1. et porter les TROIS noms dans UNE seule VarDirective, AVEC leur type — reçu : ${JSON.stringify(n)}`);
 }
 
 // ─── 2. LES TROIS REFUS, AVEC LEUR MESSAGE ENTIER ─────────────────────────────────────────────
@@ -86,8 +92,6 @@ for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
 // tête : ce qui était refusé en seconde position l'est en première, et les états d'un drapeau
 // passent du deux-points aux parenthèses.
 const REFUS = [
-  ['flag section', "un drapeau sans ses états — la parenthèse porte ce qui appartient au drapeau",
-    /entre parenthèses/],
   ['zorglub x', "un mot en tête qui ne désigne RIEN de connu",
     /'zorglub' n'est pas un type/],
   ['lpf lpf1', "un module RÉEL mais absent des données (trou de catalogue connu)",
@@ -130,9 +134,12 @@ for (const [ligne, quoi, attendu] of REFUS) {
 // ─── 3. TÉMOINS D'INSTRUMENT — le garde sait MORDRE et sait se TAIRE ──────────────────────────
 // Sans eux, une régression qui rendrait ce fichier muet le laisserait vert par accident.
 {
-  const doitMordre = compile('flag sans_parentheses'); // un drapeau sans ses états — forme fautive
+  // ⛔ LE TÉMOIN A CHANGÉ D'OBJET LE 2026-08-20, PAS DE RÔLE. Un drapeau sans états n'est plus
+  // refusé — c'est un MODÈLE, et l'incomplétude se refuse à l'USAGE, jamais à la déclaration.
+  // Le témoin porte donc sur un mot qui ne désigne rien, qui reste refusé et le restera.
+  const doitMordre = compile('zorglubinvente x');
   ok((doitMordre.errors || []).length > 0,
-    "3. TÉMOIN — un drapeau sans ses états doit être refusé (sinon ce fichier ne prouve rien)");
+    "3. TÉMOIN — un mot en tête qui ne désigne rien doit être refusé (sinon ce fichier ne prouve rien)");
 }
 {
   const doitSeTaire = compile('adsr env1'); // module réellement au catalogue
@@ -140,7 +147,7 @@ for (const [ligne, quoi, attendu] of REFUS) {
     "3. TÉMOIN — un module RÉELLEMENT au catalogue doit compiler (sinon le refus mord à l'aveugle)");
 }
 ok(FORMES.length === 8, `3. les HUIT formes de la référence doivent être éprouvées — ${FORMES.length + 1} (avec la liste de noms)`);
-ok(REFUS.length === 3, `3. les TROIS refus doivent être éprouvés — ${REFUS.length}`);
+ok(REFUS.length === 2, `3. les DEUX refus doivent être éprouvés — ${REFUS.length}`);
 
 if (echecs.length) {
   console.error(`❌ le type en tête porte son objet : ${echecs.length} échec(s)`);
