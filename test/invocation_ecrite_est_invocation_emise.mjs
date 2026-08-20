@@ -87,7 +87,12 @@ for (const nom of nomsBps()) {
     // ne connaît pas la normalisation de ce qu'il mesure accuse le producteur d'un silence qui
     // n'existe pas — et c'est le pire faux positif, parce qu'il ressemble au défaut qu'on chasse.
     const adresse = `${axe}.${m[2].replace(/:.*$/, '')}`;
-    const canonique = axe === 'factory' ? adresse.slice('factory.'.length) : adresse;
+    // ⛔ LA NORMALISATION DU PRÉFIXE DE PROVENANCE EST PARTIE AVEC LUI (2026-08-20). Elle retirait
+    // `factory.` de l'adresse avant comparaison, parce que le parseur confondait le préfixé et le
+    // nu avant émission. Le mot est sorti : une adresse écrite est désormais l'adresse émise, sans
+    // transformation intermédiaire — et un garde qui garderait la normalisation d'une forme morte
+    // la maintiendrait en vie mieux qu'un oubli.
+    const canonique = adresse;
     if ((o.ast?.libRefs || []).includes(canonique)) { emises++; continue; }
     const p = { scene: nom, adresse };
     vues.add(cle(p));

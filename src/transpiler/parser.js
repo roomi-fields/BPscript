@@ -2085,26 +2085,20 @@ function parse(tokens, opts = {}) {
     // verra plus tard. SI, mine SORT ! Maintenant ! » Il ne laisse AUCUNE trace ici — ni branche,
     // ni message dédié, ni renvoi : un mot retiré se refuse comme un mot inventé. Le seul reste
     // est un garde qui vérifie qu'il ne marche plus.
-    if (name === 'factory') {
-      const segs = [];
-      // Un segment recolle les IDENT/INT collés (sans espace) : tirets (`mes-` + `svaras`)
-      // ET entrées NUMÉRIQUES (`12` + `TET` → `12TET`, `22` + `shruti` — les accordages
-      // commencent souvent par un chiffre : 12TET, 22shruti). FIX 2 architecte [394].
-      // Le même lecteur qu'une invocation directe — la copie qui vivait ici a été retirée dans le
-      // mouvement qui l'a rendue commune : deux lecteurs d'un même nom divergent au premier ajout.
-      while (at(T.PERIOD)) { advance(); segs.push(lireNomDEntree(tok)); }
-      if (segs.length < 2) {
-        throw new ParseError(
-          `invocation de librairie malformee '${name}' — attendu ` +
-          `${name}.<chemin-fichier>.<entree> (ex. alphabet.sargam)`,
-          tok
-        );
-      }
-      // Adresse canonique OPAQUE : le sucre `factory.` est NORMALISÉ au nu (nom nu et `factory.`
-      // confondus AVANT émission — contrat bpscript-bpx.md).
-      const address = segs.join('.');
-      return { type: 'LibRef', address, provenance: name, line: tok.line };
-    }
+    // ⛔ `factory` EST SORTI LE 2026-08-20, comme `mine` l'avait été la veille. Il ne laisse AUCUNE
+    // branche ici : un mot retiré se refuse comme un mot inventé, et il tombe donc sur la
+    // résolution ordinaire, qui ne connaît aucune librairie de ce nom.
+    //
+    // ⚠️ CE N'ÉTAIT PAS UN SUCRE : L'INVOCATION PRÉFIXÉE CONTOURNAIT LA RÉSOLUTION. Mesuré avant le
+    // retrait — `tuning.nexistepas` est REFUSÉ (« introuvable dans le catalogue »), et
+    // `factory.tunings.nexistepas` était ACCEPTÉ et voyageait jusqu'à l'aval dans `libRefs`. Le
+    // préfixe ouvrait une seconde porte qui ne vérifiait rien : une entrée inexistante y passait en
+    // silence là où la forme nue crie.
+    //
+    // Coût mesuré avant la frappe : ZÉRO invocation réelle dans les 69 scènes suivies et les 329 de
+    // Kanopi. Les 28 scènes qui portent `libRefs` l'obtiennent par l'invocation DIRECTE
+    // (`test_alphabets.abc`, `settings.test1`), jamais par ce préfixe — le canal reste, sa seconde
+    // porte part.
     // @alphabet.western — dot accessor for subkey within a lib
     if (at(T.PERIOD)) {
       advance();

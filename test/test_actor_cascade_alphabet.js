@@ -42,7 +42,7 @@ console.log('\n=== DÉFAUT @core : aucun alphabet de scène → socle western ==
 
 console.log('\n=== @MINE : hauteur opaque de scène → alphabet ABSENT (Kairos résout), PAS de rejet ===');
 {
-  const r = scene('core\nfactory.ragas.sargam\nactor mavoix out.audio\n-----\nvoice -> sa re\n');
+  const r = scene('core\ntemperaments.12TET\nactor mavoix out.audio\n-----\nvoice -> sa re\n');
   assert('0 erreur (compile, plus de rejet §71)', r.errors.length === 0, r.errors.join(' | '));
   assert('alphabet ABSENT (opaque, loi 35 → aval)', r.alphabet === undefined, String(r.alphabet));
   assert('transport présent (canon audio)', r.transport === 'audio', String(r.transport));

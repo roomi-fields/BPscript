@@ -46,13 +46,20 @@ console.log('\n=== CANON : alphabet.<nom> + out.<canal>(…) ===');
 
 console.log('\n=== §71 : une provenance NON posée sur la ligne d\'acteur → libRef de SCÈNE ===');
 {
-  // ⚠️ CE VOLET S'ÉPROUVAIT SUR `mine.`, SORTI DU LANGAGE LE 2026-08-19. Il migre sur `factory.`,
-  // qui porte le MÊME mécanisme — et l'adresse émise change avec lui : `factory.` est un sucre
-  // NORMALISÉ au nu, là où `mine.` préfixait. Ce que le volet mesure ne bouge pas : une provenance
-  // écrite en tête de scène est une référence de SCÈNE, jamais une clé d'acteur.
-  const ast = parse(tokenize('core\nactor voice out.audio\nfactory.ragas.sargam\n-----\nS -> sa\n'));
+  // ⛔ CE VOLET A MIGRÉ DEUX FOIS, ET LA PREMIÈRE MIGRATION ÉTAIT LA FAUTE. Il s'éprouvait sur
+  // `mine.`, sorti le 2026-08-19 ; il a migré sur `factory.`, sorti le 2026-08-20. Déplacer un
+  // volet d'un mot retiré vers un mot EN SURSIS ne le sauve pas, ça reporte sa chute — et le
+  // commentaire qui l'accompagnait décrivait `factory.` comme un sucre, ce qu'il n'était pas.
+  // Il s'éprouve désormais sur l'invocation DIRECTE, la forme vivante : elle produit le même canal
+  // et elle EXIGE que la librairie existe.
+  // Ce que le volet mesure ne bouge pas : une invocation écrite en tête de scène est une référence
+  // de SCÈNE, jamais une clé d'acteur.
+  // ⚠️ PAR LA PORTE COMPLÈTE, PAS PAR LE PARSEUR SEUL. L'ancienne forme préfixée produisait son
+  // nœud AU PARSEUR, sans résolution — c'est exactement le contournement qui l'a fait sortir.
+  // L'invocation directe EXIGE que la librairie existe : elle se mesure donc là où elle se résout.
+  const ast = compileToBPxAST('core\nactor voice out.audio\ntemperaments.12TET\n-----\nS -> sa\n').ast;
   assert('acteur sortie-seule : properties.alphabet ABSENT', ast.actors[0].properties.alphabet === undefined, JSON.stringify(ast.actors[0].properties.alphabet));
-  assert('factory.ragas.sargam → libRef de scène, adresse NUE', JSON.stringify(ast.libRefs) === '["ragas.sargam"]', JSON.stringify(ast.libRefs));
+  assert('temperaments.12TET → libRef de scène, adresse NUE', JSON.stringify(ast.libRefs) === '["temperaments.12TET"]', JSON.stringify(ast.libRefs));
 }
 
 console.log('\n=== CUTOVER : l\'ancienne forme d\'entité en `:` CRIE désormais ===');

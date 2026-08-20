@@ -123,15 +123,12 @@ appartient à une chose s'initialise dans sa déclaration.
 
 ```ebnf
 library_invocation = "core"
-                   | LIBRARY , "." , entry_name , [ ":" , RUNTIME ]
-                   | provenance , "." , path_seg , "." , path_seg , { "." , path_seg } ;
+                   | LIBRARY , "." , entry_name , [ ":" , RUNTIME ] ;
 
 entry_name = ( letter | digit ) , { letter | digit | "_" | "#" | "-" } ;   (* 12TET, 22shruti *)
 
 LIBRARY    = "alphabet" | "tuning" | "octaves" | "sound" | "homomorphism" | "eval" ;
 RUNTIME    = "audio" | "midi" | "osc" | "dmx" ;
-provenance = "factory" ;
-path_seg   = ( IDENT | INT ) , { IDENT | INT } ;
 
 setting_invocation = [ CATEGORY , "." ] , IDENT , [ ":" , value ] ;
 CATEGORY = "transpo" | "time" | "engine" ;
@@ -155,9 +152,8 @@ deux, la compilation s'arrête et nomme les deux candidats. La résolution est s
 
 Le deux-points affecte une valeur. Sur un alphabet et ses terminaux, c'est le runtime de sortie.
 
-Une référence de **provenance** nomme la provenance, le chemin de fichier et l'entrée — le dernier
-segment est l'entrée, le milieu est le chemin. Un segment recolle des lettres et des chiffres
-collés : `mes-svaras`, `22shruti`. La sortie d'une telle scène passe par un acteur explicite.
+Une invocation nomme sa librairie et son entrée. Un nom d'entrée recolle des lettres et des chiffres
+collés : `22shruti`, `12TET`.
 
 ```ebnf
 kv_pairs = kv_pair , { "," , kv_pair } ;

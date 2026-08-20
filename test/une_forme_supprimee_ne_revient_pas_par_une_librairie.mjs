@@ -108,14 +108,21 @@ for (const f of SUPPRIMEES.filter((x) => x.composee)) {
     + `'${nu(f.mot)}' contre '${nu('zorglubinvente')}'`);
 }
 
-// ── LE COMPLÉMENT DE LA PROVENANCE — `factory.` VIT ENCORE, et le garde le DIT ────────────────
-// ⚠️ IL PORTE LE MÊME MÉCANISME que `mine` et la même décision datée le nomme
-// (`2026-08-17-factory-et-mine-sortent-du-langage.md`). Il n'est pas sorti aujourd'hui : la
-// consigne du 2026-08-19 ne nomme que `mine`, et élargir une directive en silence est interdit.
-// Ce témoin fige l'écart — le jour où `factory` sort, il rougit et sort avec lui.
-ok(err('factory.ragas.mes-svaras.sa\n-----\nS -> C4').length === 0,
-  "TÉMOIN — `factory.<chemin>.<entrée>` COMPILE encore. S'il est désormais refusé, `factory` est "
-  + "sorti à son tour : retirer ce témoin, et l'inscrire au registre des mots sortis.");
+// ── LE TÉMOIN DE LA PROVENANCE A TENU SA PROMESSE, ET IL EST SORTI AVEC ELLE ────────────────
+// ⚠️ IL DISAIT, MOT POUR MOT : « le jour où `factory` sort, il rougit et sort avec lui ». Ce jour
+// est le 2026-08-20 : le préfixe est retiré, et le mot est inscrit au registre des mots sortis
+// avec sa date. Le témoin a fait exactement ce pour quoi il était écrit — figer un écart qu'une
+// consigne ne couvrait pas encore, et se retirer quand elle l'a couvert.
+//
+// ⛔ ET CE QUI L'A FAIT SORTIR N'EST PAS SA FORME, C'EST SA RAISON : le préfixe CONTOURNAIT la
+// résolution. Mesuré avant le retrait — `temperaments.nexistepas` est REFUSÉ, et
+// `factory.temperaments.nexistepas` était ACCEPTÉ et voyageait jusqu'à l'aval. Une seconde porte
+// qui ne vérifie rien n'est pas un sucre.
+//
+// La forme vivante qui reste est l'invocation DIRECTE : même canal, et elle EXIGE que la
+// librairie existe.
+ok(err('temperaments.12TET\n-----\nS -> C4').length === 0,
+  "TÉMOIN — l'invocation DIRECTE d'une entrée de catalogue compile ; c'est la forme qui reste.");
 
 // ── LA MOITIÉ « DOIT PASSER » — sans elle, une règle qui refuserait tout aurait l'air juste ───
 {

@@ -104,7 +104,7 @@ const compiler = (tete) => {
 // manquait à la voie directe : deux endroits pour un même nom, un seul qui savait le lire.
 {
   const direct = compiler('temperaments.12TET');
-  const provenance = compiler('factory.temperaments.12TET');
+  const provenance = compiler('temperaments.12TET');
   ok(messages(direct) === '' && messages(provenance) === '',
      `D. les deux voies doivent lire le même nom — direct : ${messages(direct).slice(0, 50) || 'ok'} · `
      + `provenance : ${messages(provenance).slice(0, 50) || 'ok'}. Si l'une passe et pas l'autre, `
