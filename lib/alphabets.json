@@ -169,7 +169,6 @@
       "##": 4
     },
     "baseNote": "husayni",
-    "baseRegister": 4,
     "terminals": {
       "rast": {},
       "dukah": {},
@@ -224,7 +223,6 @@
     "resolvesPitch": true,
     "alterations": {},
     "baseNote": "nem",
-    "baseRegister": 1,
     "terminals": {
       "nem": {},
       "barang": {},
@@ -243,7 +241,6 @@
     "resolvesPitch": true,
     "alterations": {},
     "baseNote": "nem",
-    "baseRegister": 1,
     "terminals": {
       "nem": {},
       "barang": {},
@@ -284,7 +281,6 @@
     "resolvesPitch": true,
     "alterations": {},
     "baseNote": "C",
-    "baseRegister": 0,
     "terminals": {
       "C": {},
       "Db": {},

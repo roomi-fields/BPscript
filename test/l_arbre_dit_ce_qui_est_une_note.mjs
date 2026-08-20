@@ -280,7 +280,12 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
   // COMPLÈTE — un nom de référence, son registre, et sa fréquence. C'est cet invariant qui manquait
   // à shakuhachi, et c'est lui qui empêchera le prochain alphabet d'entrer sans position.
   const resolvent = entrees.filter((n) => j[n].resolvesPitch);
-  const sansAncre = resolvent.filter((n) => j[n].diapason == null || j[n].baseNote == null || j[n].baseRegister == null);
+  // ⛔ L'ANCRE TIENT EN TROIS CHAMPS QUAND L'ALPHABET DECLARE SES REGISTRES, EN DEUX SINON.
+  // Decision Romain, 2026-08-20 : sans liste de registres, un alphabet n'a pas de RANG — sa note et
+  // son diapason portent l'ancre entierement. Quatre alphabets sont dans ce cas, et ils empruntaient
+  // AVANT les registres occidentaux par le repli d'un consommateur, sans que rien ne le declare.
+  const sansAncre = resolvent.filter((n) => j[n].diapason == null || j[n].baseNote == null
+    || (j[n].octaves != null && j[n].baseRegister == null));
   ok(sansAncre.length === 0,
     "3bis. tout alphabet qui DÉCLARE résoudre une hauteur porte une ANCRE COMPLÈTE (nom de référence, "
     + `registre, fréquence) — sinon il annonce une hauteur sans dire où elle commence : ${sansAncre.join(' ')}`);

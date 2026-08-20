@@ -104,12 +104,23 @@ function fautesDe(nom, a) {
       + `(LANGUAGE.md:830). Absent et présent-à-nul ne sont pas la même chose pour qui lit — deux régimes dans un `
       + `fichier, c'est une donnée qui dit deux choses à la fois.`);
   }
-  const posees = ANCRE.filter((c) => a[c] !== null && a[c] !== undefined);
-  if (posees.length > 0 && posees.length < ANCRE.length)
-    f.push(`${nom} : ANCRE À MOITIÉ POSÉE — ${posees.join(', ')} sans ${ANCRE.filter((c) => !posees.includes(c)).join(', ')}. `
+  // ⛔ L'ANCRE TIENT EN TROIS CHAMPS QUAND L'ALPHABET DÉCLARE SES REGISTRES, EN DEUX SINON.
+  // Décision Romain, 2026-08-20 : un alphabet qui ne déclare aucune liste de registres n'a pas de
+  // RANG de registre — sa note et son diapason portent l'ancre entièrement. `husayni` vaut 440 Hz,
+  // sans cran. Romain a nommé l'incohérence lui-même : « comment peut-il se baser sur une
+  // définition basée sur le registre 4 s'il n'a pas de registres ? »
+  // Avant cette décision, quatre alphabets empruntaient SILENCIEUSEMENT les registres occidentaux
+  // par le repli d'un consommateur, sans que rien ne le déclare ni ne le garantisse.
+  const ancreDe = (x) => (x.octaves ? ANCRE : ANCRE.filter((c) => c !== 'baseRegister'));
+  const ANCRE_ATTENDUE = ancreDe(a);
+  const posees = ANCRE_ATTENDUE.filter((c) => a[c] !== null && a[c] !== undefined);
+  if (posees.length > 0 && posees.length < ANCRE_ATTENDUE.length)
+    f.push(`${nom} : ANCRE À MOITIÉ POSÉE — ${posees.join(', ')} sans `
+         + `${ANCRE_ATTENDUE.filter((c) => !posees.includes(c)).join(', ')}. `
          + `« Le diapason seul ne suffit pas : une frequence sans la note qu'elle designe ne place rien. »`);
-  if (a.resolvesPitch === true && posees.length < ANCRE.length)
-    f.push(`${nom} : déclare RÉSOUDRE une hauteur avec une ancre à ${posees.length}/3 — la résolution se fera sur du vide`);
+  if (a.resolvesPitch === true && posees.length < ANCRE_ATTENDUE.length)
+    f.push(`${nom} : déclare RÉSOUDRE une hauteur avec une ancre à ${posees.length}/`
+         + `${ANCRE_ATTENDUE.length} — la résolution se fera sur du vide`);
   if (a.runtime != null && !SORTIES.includes(a.runtime))
     f.push(`${nom} : sortie '${a.runtime}' hors des quatre — ${SORTIES.join(', ')}`);
   return f;
@@ -134,7 +145,11 @@ for (const [nomTable, table] of TABLES) {
 {
   const tous = alphabets(LIBS.alphabets);
   for (const [nom, a] of tous) {
-    const complete = ANCRE.every((c) => a[c] !== null && a[c] !== undefined);
+    // ⛔ « ENTIÈRE » DÉPEND DE CE QUE L'ALPHABET DÉCLARE. Trois champs quand il nomme une table de
+    // registres, DEUX sinon : sans liste, il n'a pas de rang, et sa note plus son diapason portent
+    // l'ancre à eux seuls (décision Romain, 2026-08-20). Quatre alphabets sont dans ce cas.
+    const attendus = a.octaves ? ANCRE : ANCRE.filter((c) => c !== 'baseRegister');
+    const complete = attendus.every((c) => a[c] !== null && a[c] !== undefined);
     ok(complete === (a.resolvesPitch === true),
        `B. '${nom}' : ancre ${complete ? 'COMPLÈTE' : 'absente'} mais resolvesPitch=${a.resolvesPitch}. `
        + `Les deux se disent la même chose ; l'un sans l'autre est une donnée qui se contredit.`);
@@ -217,22 +232,6 @@ for (const [nomTable, table] of TABLES) {
 }
 
 // ── SOCLE — contre le vert obtenu en ne mesurant plus rien ───────────────────────────────────
-ok(mesures >= 17,
-   `SOCLE : ${mesures} collection(s) mesurée(s), 17 au moins attendues. Sous ce seuil ce garde est `
- + `vert parce qu'il ne regarde plus la donnée, pas parce qu'elle est saine.`);
-ok(Object.keys(PROTOTYPE).length === 12,
-   `SOCLE : le prototype de LANGUAGE.md:860 porte 12 champs, ${Object.keys(PROTOTYPE).length} recopiés. `
- + `S'il en gagne un, il se recopie ici — sinon ce garde certifie un prototype périmé.`);
-
-if (echecs.length) {
-  console.error(`❌ un alphabet tient son prototype : ${echecs.length} échec(s)`);
-  for (const e of echecs) console.error(`   - ${e}`);
-  process.exit(1);
-}
-console.log(`✅ un alphabet tient son prototype — ${mesures} collections aux 12 champs de la référence, `
-          + `ancre entière ou absente jamais à moitié, sortie parmi les quatre, voix et sortie de `
-          + `collection encore inertes. ${passe} vérification(s) passée(s).`);
-
 // ── LE PÉRIMÈTRE GELÉ DU RANG SURVIVANT ─────────────────────────────────────────────────────
 // ⛔ Décision Romain, 2026-08-20 : un alphabet qui ne déclare pas de liste de registres n'a pas de
 // RANG de registre. Quatre le portent encore, et leur sortie est APPARIÉE au retrait du repli d'un
@@ -245,9 +244,8 @@ console.log(`✅ un alphabet tient son prototype — ${mesures} collections aux 
     .filter(([, a]) => a && typeof a === 'object' && typeof a.baseRegister === 'number')
     .map(([n]) => n).sort();
   ok(JSON.stringify(rangSurvivant)
-       === JSON.stringify(['arabic', 'bohlen_pierce', 'gamelan_pelog', 'gamelan_slendro']),
-    `PÉRIMÈTRE GELÉ : les alphabets portant encore un RANG doivent être exactement les quatre sans `
-    + `table de registres — reçu ${JSON.stringify(rangSurvivant)}. Un nom qui entre ici est un `
+       === JSON.stringify([]),
+    `PÉRIMÈTRE GELÉ : AUCUN alphabet ne doit porter un RANG de registre — reçu ${JSON.stringify(rangSurvivant)}. Un nom qui entre ici est un `
     + `alphabet qui a perdu son nom de registre ; un nom qui en sort est le geste apparié, et il se `
     + `dit.`);
   // ⛔ ET AUCUN DES QUATRE NE DÉCLARE DE TABLE — c'est ce qui les met dans cette liste, jamais leur
@@ -270,3 +268,19 @@ console.log(`✅ un alphabet tient son prototype — ${mesures} collections aux 
   }
   ok(nommes === 9, `PÉRIMÈTRE GELÉ : neuf alphabets déclarent une table et nomment leur registre — reçu ${nommes}`);
 }
+
+ok(mesures >= 17,
+   `SOCLE : ${mesures} collection(s) mesurée(s), 17 au moins attendues. Sous ce seuil ce garde est `
+ + `vert parce qu'il ne regarde plus la donnée, pas parce qu'elle est saine.`);
+ok(Object.keys(PROTOTYPE).length === 12,
+   `SOCLE : le prototype de LANGUAGE.md:860 porte 12 champs, ${Object.keys(PROTOTYPE).length} recopiés. `
+ + `S'il en gagne un, il se recopie ici — sinon ce garde certifie un prototype périmé.`);
+
+if (echecs.length) {
+  console.error(`❌ un alphabet tient son prototype : ${echecs.length} échec(s)`);
+  for (const e of echecs) console.error(`   - ${e}`);
+  process.exit(1);
+}
+console.log(`✅ un alphabet tient son prototype — ${mesures} collections aux 12 champs de la référence, `
+          + `ancre entière ou absente jamais à moitié, sortie parmi les quatre, voix et sortie de `
+          + `collection encore inertes. ${passe} vérification(s) passée(s).`);
