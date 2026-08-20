@@ -59,6 +59,16 @@ BP3**. On couvre **a minima ce que fait le natif**, sauf dérogation explicite d
 **L'oracle est le binaire natif** : le WASM est un portage partiel qui ne fait autorité sur rien. Un
 doute se lève dans le **code C de l'original**, jamais par raisonnement ni par ressemblance de noms.
 
+## ⛔ Le prototypal pur fait règle
+
+Toute règle que je pose sur le langage se confronte à ces quatre lignes **avant** d'être écrite.
+
+- **Un nom nu vaut un objet vide** — la parenthèse absente vaut parenthèse vide, **et le type voyage**.
+- **L'incomplétude se refuse à l'USAGE**, jamais à la déclaration.
+- **On ne type pas, on donne un exemplaire** : la valeur par défaut dit ce que le membre attend.
+- **Un membre obligatoire porte son type EN TÊTE** — une valeur n'a qu'une partie :
+  `object range(number min: required, number max: required)`.
+
 ## ⛔ Le langage se définit avec Romain, et par lui seul
 
 La bible du langage est `docs/spec/LANGUAGE.md`, **dans le dépôt BPscript** — elle **est ce que le code doit dire**, et
