@@ -468,6 +468,22 @@ function parse(tokens, opts = {}) {
    */
   const acteursDeclares = new Set();
 
+  /**
+   * LES PROTOTYPES QUE LA SCÈNE DÉCLARE — et dont ses exemplaires dérivent PAR LE TYPE EN TÊTE.
+   *
+   * ⛔ LE PROTOTYPAL PUR PORTE LA DÉRIVATION PAR LE TYPE EN TÊTE, et `extends` a été effacé pour
+   * ça (décision du 2026-08-16, section « ce qui s'efface »). Le mécanisme était tranché et le code
+   * ne le servait pas : `object scale (…)` compilait, `scale ionian (…)` était REFUSÉ.
+   *
+   * ⚠️ LE TÉMOIN QUI L'A MONTRÉ : `control ionian (x:1)` COMPILE. Un type du CATALOGUE en tête
+   * marchait, un nom que la scène venait de déclarer non — la table des types en tête est globale
+   * et mémoïsée, elle ne peut pas connaître une scène. Ce registre-ci est LOCAL, comme celui des
+   * acteurs, et il se remplit à la lecture de chaque déclaration.
+   *
+   * L'ordre reste celui du langage : un prototype se déclare avant d'être dérivé.
+   */
+  const prototypesDeclares = new Set();
+
   // VARIABLES DE TRAVAIL déclarées par `var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
   const nomsVariables = new Set();
@@ -716,6 +732,13 @@ function parse(tokens, opts = {}) {
           // Une variable de travail est un nom que LA SCÈNE possède : elle gagne donc, comme une
           // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
           for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
+          // ⛔ ET UN `object` DEVIENT UN PROTOTYPE DONT ON DÉRIVE — le type en tête porte la
+          // dérivation. Le registre se remplit ICI, à la lecture, pour la même raison que celui
+          // des acteurs : un corps de déclaration est lu PENDANT la phase des directives, donc une
+          // table remplie à la fin arriverait trop tard.
+          if (dir.varType?.kind === 'type' && dir.varType.type === 'object') {
+            for (const n of dir.names) prototypesDeclares.add(n);
+          }
         } else if (dir.type === 'DefDirective') {
           // ⛔ ET LA DEFINITION DEVIENT APPELABLE — l ensemble qui porte la bascule appel/reglage
           // etait DECLARE ET JAMAIS ALIMENTE : son commentaire disait  vide tant que la directive
@@ -1930,7 +1953,11 @@ function parse(tokens, opts = {}) {
     // parti, l'exception restait — et elle envoyait ce mot dans un refus MOINS BON que le refus
     // ordinaire, qui énumère les types acceptés. Un détour nommé se retire avec sa destination.
     const modules = modulesDuCatalogue();
-    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !modules.has(mot)) {
+    // ⛔ ET UN PROTOTYPE DÉCLARÉ PAR LA SCÈNE OUVRE UNE DÉCLARATION. La sortie vivait ICI, en
+    // amont : élargir le seul site de décision plus bas ne suffisait pas — on n'y arrivait jamais.
+    // Deux endroits décident du même fait, et j'en avais corrigé un seul.
+    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !modules.has(mot)
+        && !prototypesDeclares.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
       // `lpf lpf1` tombe dans « n'est déclaré par aucune librairie chargée » et envoie l'auteur
       // chercher une librairie au lieu de lui dire que le mot n'est pas un type. La condition est
@@ -2022,7 +2049,10 @@ function parse(tokens, opts = {}) {
     //
     // ⚠️ UN NOM NU Y ARRIVE DONC AVEC LA VALEUR DES CLÉS SANS ARGUMENT, et l'ORDRE d'écriture est
     // préservé — c'est ce qui fait qu'une seule forme sert la suite et l'ensemble.
-    if (typesDeclaratifs().has(mot) && at(T.LPAREN)) {
+    // ⛔ ET UN PROTOTYPE DÉCLARÉ PAR LA SCÈNE OUVRE UNE DÉCLARATION COMME UN TYPE DU SOCLE — le
+    // type en tête PORTE la dérivation, c'est le prototypal pur. Mesuré avant : zéro nom de
+    // 'scales' croise le vocabulaire, donc ses onze prototypes n'ombragent aucun mot du langage.
+    if ((typesDeclaratifs().has(mot) || prototypesDeclares.has(mot)) && at(T.LPAREN)) {
       const sac = parseRuntimeQualifier();
       return { type: 'VarDirective', names: [premier], varType: { kind: 'type', type: mot },
                settings: sac, line: tok.line };
@@ -2081,7 +2111,8 @@ function parse(tokens, opts = {}) {
     // graphies du même mot, une seule qui dit ce qu'elle déclare.
     // Les conventions ne l'ont jamais perdu, nues ou avec valeur de départ — c'est ce qui rendait
     // l'écart invisible : la moitié des mots de tête marchait.
-    const type = typesDeclaratifs().has(mot) ? { kind: 'type', type: mot } : null;
+    const type = (typesDeclaratifs().has(mot) || prototypesDeclares.has(mot))
+      ? { kind: 'type', type: mot } : null;
     const nu = { type: 'VarDirective', names: noms, varType: type, line: tok.line };
     return departs.length ? { ...nu, initial: departs } : nu;
   }
