@@ -4871,6 +4871,33 @@ function parse(tokens, opts = {}) {
     // équivalent sémantique à `(sound:NAME)` mais notation plus lisible.
     expect(T.LPAREN);
     const pairs = [];
+    /**
+     * ⛔ LA FIN D'UN TERME — ET, AVANT LE DÉLIMITEUR, SEULE LA VIRGULE LE SÉPARE DU SUIVANT.
+     *
+     * Décision Romain, 2026-08-19. Elle était tenue sur la VALEUR (`scope:symbol group` refusé)
+     * et PAS sur le MEMBRE : `scope(symbol group)` passait en silence et rendait deux membres —
+     * la forme interdite survivait sous la parenthèse même qui la remplace. Le membre a été
+     * ouvert le même jour, après le refus, donc le complément de la portée manquait.
+     *
+     * ⚠️ ELLE VIT ICI, ET PAS AU SOMMET DE LA BOUCLE : huit branches terminent un terme, et la
+     * règle porte sur le SÉPARATEUR, pas sur la reprise. Écrite au sommet, elle aurait dû
+     * relire en arrière ce qui vient d'être consommé ; écrite au point de sortie, elle voit
+     * simplement ce qui suit.
+     *
+     * Dans le FLUX rien ne change : l'espace y sépare les termes, et `enDeclaratif` le dit.
+     */
+    const finirTerme = () => {
+      if (at(T.COMMA)) { advance(); return; }
+      if (!enDeclaratif) return;
+      let k = 0;
+      while (peek(k).type === T.NEWLINE || peek(k).type === T.COMMENT) k++;
+      if (peek(k).type === T.RPAREN || peek(k).type === T.EOF) return;
+      throw new ParseError(
+        `deux termes sont separes par une espace : avant le delimiteur, seule la virgule separe — `
+        + `l'espace n'y separe rien, il est de la mise en forme. Ecris `
+        + `'${pairs.map((p) => p.key).join(', ')}, ${peek(k).value ?? ''}'.`,
+        peek(k));
+    };
     while (!at(T.RPAREN) && !atEnd()) {
       // ── LA FORME LONGUE S'ÉCRIT SUR PLUSIEURS LIGNES, PARENTHÈSE OUVRANTE ET FERMANTE ───────
       // Décision Romain du 2026-08-15, et c'est la parenthèse — jamais l'indentation — qui borne
@@ -4912,16 +4939,30 @@ function parse(tokens, opts = {}) {
       // ⛔ ET LE MEMBRE TEXTE SE MARQUE, parce que sa NATURE ne se relit pas dans son texte :
       // `"0"` et `0` s'écrivent pareil une fois la clé posée. Sans cette marque, un registre nommé
       // « 0 » ressortirait en nombre, et la donnée publiée changerait de type sans un mot.
+      //
+      // ⛔ ET UN MEMBRE EST UN MOT, PAS UN JETON. `ratios(100c, 200c)` ne rougissait pas : il
+      // rendait QUATRE membres — `100`, `c`, `200`, `c`. Le tokenizer coupe entre le nombre et la
+      // lettre qui le suit, et ce lecteur prenait UN SEUL jeton là où la VALEUR, elle, recolle ce
+      // qui se touche : deux lecteurs du même sac, deux découpes, et une liste de cents doublait
+      // de longueur sans un signe. Les cents sont 271 valeurs de la donnée d'aujourd'hui.
+      // Le collage s'arrête à l'espace, à la virgule et à la parenthèse — ce qui sépare.
       if (!at(T.IDENT) && (at(T.INT) || at(T.FLOAT) || at(T.STRING)
                            || (at(T.REST) && (peek(1).type === T.INT || peek(1).type === T.FLOAT)
                                && !peek(1).spaceBefore))) {
         const signe = at(T.REST) ? advance().value : '';
         const t = advance();
-        pairs.push({ key: signe + t.value, value: true,
+        let mot = signe + t.value;
+        // Un TEXTE porte son délimiteur : il est complet, rien ne s'y recolle.
+        if (t.type !== T.STRING) {
+          while ((at(T.IDENT) || at(T.INT) || at(T.FLOAT) || at(T.REST)) && !current().spaceBefore) {
+            mot += String(advance().value);
+          }
+        }
+        pairs.push({ key: mot, value: true,
                      ...(t.type === T.STRING ? { texte: true } : {}),
                      ...(subject !== null ? { subject } : {}),
                      line: keyTok.line, col: keyTok.col });
-        if (at(T.COMMA)) advance();
+        finirTerme();
         continue;
       }
       let key = expect(T.IDENT).value;
@@ -4977,7 +5018,7 @@ function parse(tokens, opts = {}) {
       // Le collage est exigé : `range (16, 8000)` séparé par une espace n'appartient pas à `range`.
       if (at(T.LPAREN) && !current().spaceBefore) {
         pairs.push({ key, value: parseRuntimeQualifier(), ...sub, ...pos });
-        if (at(T.COMMA)) advance();
+        finirTerme();
         continue;
       }
       // CONTRÔLEUR NUMÉROTÉ — `cc.98:45` (graphie tranchée par Romain le 2026-07-26).
@@ -5018,7 +5059,7 @@ function parse(tokens, opts = {}) {
         // OPAQUEMENT par BPx (AST_SPEC §« il ne les interprète jamais »), un champ de plus les
         // traverse donc sans rien casser. C'est le runtime de sortie qui sait qu'un CC a un numéro.
         pairs.push({ key, component, value: valeur, ...sub, ...pos });
-        if (at(T.COMMA)) advance();
+        finirTerme();
         continue;
       }
       // `lpf1.cutoff:400` — le PORT d'une instance de module. Le point nomme le composant, le
@@ -5040,7 +5081,7 @@ function parse(tokens, opts = {}) {
         else if (at(T.INT) || at(T.FLOAT)) valeur = Number(advance().value);
         else valeur = expect(T.IDENT).value;
         pairs.push({ key, component: composant, value: valeur, ...sub, ...pos });
-        if (at(T.COMMA)) advance();
+        finirTerme();
         continue;
       }
       // ⚠️ LE POINT SUIVI D'UNE VALEUR NOMME UN COMPOSANT, ET UN COMPOSANT A UN PROPRIÉTAIRE.
@@ -5062,7 +5103,7 @@ function parse(tokens, opts = {}) {
         advance(); // .
         const name = expect(T.IDENT).value;
         pairs.push({ key, value: name, ...sub, ...pos });
-        if (at(T.COMMA)) advance();
+        finirTerme();
         continue;
       }
       // ⚠️ LE REFUS « CE CONTRÔLE EST MOTEUR, IL S'ÉCRIT ENTRE CROCHETS » A ÉTÉ RETIRÉ LE
@@ -5140,7 +5181,7 @@ function parse(tokens, opts = {}) {
               current());
           }
           pairs.push({ key, value, decrement, ...sub, ...pos });
-          if (at(T.COMMA)) advance();
+          finirTerme();
           continue;
         }
         // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
@@ -5148,7 +5189,7 @@ function parse(tokens, opts = {}) {
         // qu'on ait chargé controls ou non — cohérent avec la directive globale et le garde des `[]`.
         if ((libCtx.intervalControls && libCtx.intervalControls.has(key)) || universeIntervalControls().has(key)) {
           pairs.push({ key, value: readIntervalLiteral(key), ...sub, ...pos });
-          if (at(T.COMMA)) advance();
+          finirTerme();
           continue;
         }
         // VALEUR D'UNE PAIRE — la VIRGULE la ferme, et rien d'autre (décision Romain
@@ -5289,7 +5330,7 @@ function parse(tokens, opts = {}) {
         // Bare key (no-arg control like velcont, pitchcont)
         pairs.push({ key, value: true, ...sub, ...pos });
       }
-      if (at(T.COMMA)) advance();
+      finirTerme();
     }
     expect(T.RPAREN);
     return { type: 'SettingBag', pairs };
