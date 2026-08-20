@@ -198,6 +198,12 @@ Elle porte sur les **documents de référence** ; un commentaire de code relève
   un lot**.
 - **Écrire chez un autre : signer, prévenir, ne rien déclarer.** L'écriture est livrée quand son
   propriétaire l'a committée.
+- **Chez un voisin, je rends la MESURE et je m'arrête là.** Qualifier l'effet appartient au
+  propriétaire : lui seul voit les autres chemins, et lui seul peut corriger là où il l'a écrit. Une
+  pièce juste ne fait pas une pièce de la conclusion qui l'accompagne.
+- **Une affirmation fausse sur MON code, je la retire de mon code ; sur celui d'un VOISIN, elle ne vit
+  que dans un courrier et aucun geste ne la rattrape.** Elle voyage, elle s'amplifie, et elle reste
+  vraie pour tout le monde jusqu'à ce que son propriétaire aille mesurer.
 - **La frontière se règle par usage** : qui lit ma **source** est atteint à ma frappe, qui exécute mon
   **paquet publié** l'est à ma publication — un même voisin fait souvent les deux. Je préviens avec
   les sites à changer chez lui, et je **vérifie qu'il a basculé avant de pousser**.
