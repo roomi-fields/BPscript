@@ -1,0 +1,17 @@
+// LES PROTOTYPES DES CATALOGUES.
+//
+// Ce fichier ne déclare AUCUN mot d'invocation : rien de ce qu'il porte n'est adressable par un
+// axe, et une scène ne peut donc pas écrire le nom d'un prototype à la place d'une gamme. C'est
+// ce qui distingue un modèle d'une donnée musicale, et c'est mesuré chez le consommateur — la
+// liste des axes y est fermée, un fichier sans mot d'invocation n'y entre pas.
+//
+// LA LIGNE DE PARTAGE DES GAMMES est la FAÇON DE DIRE LES HAUTEURS : par intervalles exacts, par
+// degrés dans un tempérament, ou par assemblage. Trois manières de définir une échelle.
+// `directional` dérive de `degree` : une échelle dont la montée diffère de la descente EST une
+// échelle à degrés, avec une propriété en plus.
+
+object scale (description)
+scale interval (ratios)
+scale degree (degrees, temperament)
+degree directional (ascending, descending)
+scale composite (compose, junction)

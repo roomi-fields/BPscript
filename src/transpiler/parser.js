@@ -820,6 +820,29 @@ function parse(tokens, opts = {}) {
           initialModifiers = dir.modifiers || null;
         } else {
           scene.directives.push(dir);
+          // ⛔ ET L'INVOCATION APPORTE CE QUE LA LIBRAIRIE DÉCLARE, PROTOTYPES COMPRIS (décision
+          // Romain 2026-08-20). Le registre ne se remplissait qu'à la lecture du fichier COURANT :
+          // `types` en tête ne rendait donc pas `interval` dérivable, et `lib/scales.bpsl` ne
+          // compilait pas. Un mécanisme qui ne faisait que la moitié de son travail — aucun langage
+          // prototypal ne distingue ce qu'un import apporte.
+          //
+          // ⚠️ TOUTE ENTRÉE EST UN PROTOTYPE, et ce n'est pas trop large : en prototypal pur, tout
+          // objet peut servir de modèle. Le parseur le fait déjà pour le fichier courant, où un
+          // exemplaire qui porte des valeurs dérive au même titre qu'un prototype vide.
+          //
+          // La NATURE décide, jamais une liste de noms : une entrée est un OBJET. Les métas de la
+          // librairie sont des chaînes, et le blanc souligné initial reste la marque du commentaire.
+          // ⛔ ET UNE ENTRÉE NE CONFISQUE PAS UN MOT DU LANGAGE. Mesuré, deux collisions : `core`
+          // porte une SECTION nommée `settings`, et mon propre `types` un prototype nommé `scale` —
+          // l'un et l'autre sont des mots réservés. Sans ce refus, `settings` seul en tête de scène
+          // devenait une déclaration typée sans nom, et le portillon l'a attrapé. Le plus local
+          // gagne, et le langage est plus local qu'une librairie.
+          const reserves = new Set(((loadLib('core') || {}).schema || {}).reservedDirectives || []);
+          for (const [nom, valeur] of Object.entries(loadLib(dir.name) || {})) {
+            if (nom.startsWith('_') || !valeur || typeof valeur !== 'object' || Array.isArray(valeur)) continue;
+            if (reserves.has(nom)) continue;
+            prototypesDeclares.add(nom);
+          }
         }
       } else if (atProductionBlock()) {
         // Le bloc `[@…]` en tête de scène est REFUSÉ depuis le 2026-08-10 : il est lu ici pour
