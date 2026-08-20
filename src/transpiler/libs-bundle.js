@@ -89,6 +89,15 @@ const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'descriptio
 function valeurDeCle(v) {
   // Une SUITE arrive typée membre par membre — elle sort telle quelle.
   if (v && v.kind === 'suite') return v.value;
+  // ⛔ ET UN TEXTE DÉLIMITÉ SORT TEL QUEL, PARCE QU'IL EST MARQUÉ. `"4"` et `4` s'écrivent pareil
+  // une fois la clé posée : retyper le premier confond le NOM d'un registre avec son RANG.
+  // Mesuré sur `octaves.western`, qui porte `default:"4"` et ressortait en `4` — indistinguable du
+  // rang qu'on venait de retirer, et pour `bp3` le nombre 4 désigne le registre nommé « 3 ».
+  // ⚠️ ET LA COERCITION RESTE POUR TOUT LE RESTE : les six librairies encore en corps indenté
+  // rendent TOUT en chaîne, donc leurs nombres ont besoin d'elle. La retirer d'un bloc changeait
+  // 582 valeurs publiées — `notes_count`, `range`, `degrees` — au lieu des vingt visées. C'est la
+  // marque qui distingue, jamais le type de ce qui arrive.
+  if (v && v.texte) return v.value;
   const brut = v && v.kind === 'value' ? v.value : (v && v.value);
   const un = (x) => {
     if (typeof x !== 'string') return x;
@@ -193,7 +202,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
               // au maillon suivant. Elle passe donc par un `kind` à elle, et sort verbatim.
               ? { kind: 'suite', value: suite(p.value, entry, d.name, p.key) }
               : { kind: 'value', value: sacEnObjet(p.value) })
-          : { kind: 'value', value: p.value };
+          : { kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) };
       }
       return out;
     };

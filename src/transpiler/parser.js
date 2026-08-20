@@ -5318,6 +5318,15 @@ function parse(tokens, opts = {}) {
           val = texteSeul !== null && jetons === 1 ? texteSeul
             : (/^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut);
         }
+        // ⛔ ET LA NATURE D'UNE VALEUR SE MARQUE, COMME CELLE D'UN MEMBRE. `"4"` et `4` s'écrivent
+        // pareil une fois la clé posée, et un lecteur d'aval qui les retype confond le NOM d'un
+        // registre avec son RANG. Mesuré sur `octaves.western`, qui porte `default:"4"` : la
+        // donnée publiée en rendait `4`, indistinguable du rang qu'on venait de retirer — et pour
+        // `bp3` le nombre 4 désigne le registre nommé « 3 ». Le décalage d'un cran, silencieux,
+        // dans le geste même qui existe pour le supprimer.
+        // La marque, jamais le type JS seul : les librairies en corps indenté rendent TOUT en
+        // chaîne, donc « c'est une chaîne » n'y dit rien de la graphie écrite.
+        const valeurEstUnTexte = texteSeul !== null && jetons === 1;
         // ⛔ UNE VALEUR DONNÉE À UN CONTRÔLE QUI N'EN PREND PAS EST REFUSÉE. Signalé à BPx pendant
         // leur migration : `!(order:0)` compilait et portait `0` jusqu'à l'arbre, alors que la
         // donnée déclare `order` sans aucun argument. Une valeur sans destinataire voyage jusqu'à
@@ -5338,7 +5347,7 @@ function parse(tokens, opts = {}) {
             + `destinataire, sans que rien ne signale qu'elle ne sert à rien.`,
             keyTok);
         }
-        pairs.push({ key, value: val, ...sub, ...pos });
+        pairs.push({ key, value: val, ...(valeurEstUnTexte ? { texte: true } : {}), ...sub, ...pos });
       } else {
         // Bare key (no-arg control like velcont, pitchcont)
         pairs.push({ key, value: true, ...sub, ...pos });

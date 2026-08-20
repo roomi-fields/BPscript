@@ -293,7 +293,7 @@
       11
     ],
     "baseNote": "C",
-    "baseRegister": 4,
+    "baseRegister": "4",
     "diapason": 261.63,
     "_anchor_note": "Ré-ancre exceptionnellement sur la tonique C4=261.63 (le tuning porte sa tonique, comme _scale la déclare — builder.ts:229 lit tuning.diapason/baseNote). Généralité (backlog JUST-ANCRE-DEPUIS-TONIQUE) : dériver l'ancre de la tonique émise (règle :10 = Aj4→A)."
   },

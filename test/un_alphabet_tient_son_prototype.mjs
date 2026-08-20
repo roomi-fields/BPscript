@@ -49,7 +49,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const PROTOTYPE = {
   name: 'string', description: 'string', runtime: 'string', voice: 'string',
   tuning: 'string', octaves: 'string', diapason: 'number',
-  baseNote: 'string', baseRegister: 'number',
+  baseNote: 'string', baseRegister: 'string',
   alterations: 'table', resolvesPitch: 'boolean', terminals: 'table',
 };
 /** Sans lui, ce n'est pas une collection de terminaux — c'est autre chose. */
@@ -74,6 +74,14 @@ function fautesDe(nom, a) {
     if (type === 'table' && (typeof v !== 'object' || Array.isArray(v)))
       f.push(`${nom} : '${cle}' doit être une TABLE, reçu ${Array.isArray(v) ? 'une LISTE' : typeof v}. `
            + `Une liste vide se comporte comme une table vide — elle passe partout et n'est pas du bon type.`);
+    // ⛔ `baseRegister` NOMME SON REGISTRE DEPUIS LE 2026-08-20 — un texte, jamais un rang. QUATRE
+    // collections le portent encore en nombre : arabic, gamelan_pelog, gamelan_slendro,
+    // bohlen_pierce, celles qui ne déclarent AUCUNE table de registres. Romain a tranché qu'un
+    // alphabet sans liste n'a pas de rang du tout, donc le champ y disparaîtra ; sa sortie est
+    // appariée au retrait du repli d'un consommateur et ne peut pas partir seule.
+    // Le périmètre est donc GELÉ ici, et compté plus bas : ce garde n'affirme pas que cet état est
+    // bon, il exige qu'il ne BOUGE PAS sans un mot.
+    if (cle === 'baseRegister' && typeof v === 'number' && !('octaves' in a)) continue;
     if (type !== 'table' && typeof v !== type)
       f.push(`${nom} : '${cle}' doit être ${type}, reçu ${typeof v}`);
   }
@@ -179,7 +187,7 @@ for (const [nomTable, table] of TABLES) {
   // garde applique désormais. Le témoin sain doit obéir à la règle qu'il sert à prouver, sinon il
   // devient un contre-exemple qu'on finit par tolérer.
   const sain = { name: 'x', description: '', runtime: 'audio', tuning: 't', octaves: 'o',
-                 diapason: 440, baseNote: 'A', baseRegister: 4, alterations: {}, resolvesPitch: true,
+                 diapason: 440, baseNote: 'A', baseRegister: '4', alterations: {}, resolvesPitch: true,
                  terminals: { a: {} } };
   ok(fautesDe('témoin', sain).length === 0,
      `E-témoin. Un alphabet SAIN produit des fautes : ${fautesDe('témoin', sain).join(' | ')}. `
@@ -224,3 +232,41 @@ if (echecs.length) {
 console.log(`✅ un alphabet tient son prototype — ${mesures} collections aux 12 champs de la référence, `
           + `ancre entière ou absente jamais à moitié, sortie parmi les quatre, voix et sortie de `
           + `collection encore inertes. ${passe} vérification(s) passée(s).`);
+
+// ── LE PÉRIMÈTRE GELÉ DU RANG SURVIVANT ─────────────────────────────────────────────────────
+// ⛔ Décision Romain, 2026-08-20 : un alphabet qui ne déclare pas de liste de registres n'a pas de
+// RANG de registre. Quatre le portent encore, et leur sortie est APPARIÉE au retrait du repli d'un
+// consommateur — la retirer seule ferait tomber leur note de quatre octaves, sans un cri, parce
+// qu'un repli à 4 prend la place de ce qu'on enlève.
+// Ce volet ne dit pas que c'est bon : il exige que la liste ne bouge pas d'elle-même.
+{
+  const alph = LIBS.alphabets || {};
+  const rangSurvivant = Object.entries(alph)
+    .filter(([, a]) => a && typeof a === 'object' && typeof a.baseRegister === 'number')
+    .map(([n]) => n).sort();
+  ok(JSON.stringify(rangSurvivant)
+       === JSON.stringify(['arabic', 'bohlen_pierce', 'gamelan_pelog', 'gamelan_slendro']),
+    `PÉRIMÈTRE GELÉ : les alphabets portant encore un RANG doivent être exactement les quatre sans `
+    + `table de registres — reçu ${JSON.stringify(rangSurvivant)}. Un nom qui entre ici est un `
+    + `alphabet qui a perdu son nom de registre ; un nom qui en sort est le geste apparié, et il se `
+    + `dit.`);
+  // ⛔ ET AUCUN DES QUATRE NE DÉCLARE DE TABLE — c'est ce qui les met dans cette liste, jamais leur
+  // nom. Sans ce volet, la liste ci-dessus serait une photographie sans raison.
+  for (const n of rangSurvivant) {
+    ok(!('octaves' in (alph[n] || {})),
+      `PÉRIMÈTRE GELÉ : '${n}' porte un rang ET déclare une table — il doit alors NOMMER son `
+      + `registre comme les neuf autres.`);
+  }
+  // ⛔ ET LE COMPLÉMENT : tout alphabet qui DÉCLARE une table nomme son registre, et ce nom existe.
+  let nommes = 0;
+  for (const [n, a] of Object.entries(alph)) {
+    if (!a || typeof a !== 'object' || a.baseRegister === undefined || !a.octaves) continue;
+    nommes++;
+    const t = (LIBS.octaves || {})[a.octaves];
+    ok(typeof a.baseRegister === 'string' && Array.isArray(t?.registers)
+       && t.registers.includes(a.baseRegister),
+      `'${n}' déclare la table '${a.octaves}' : son registre de base doit être un NOM qui y existe — `
+      + `reçu ${JSON.stringify(a.baseRegister)} contre ${JSON.stringify(t?.registers)}`);
+  }
+  ok(nommes === 9, `PÉRIMÈTRE GELÉ : neuf alphabets déclarent une table et nomment leur registre — reçu ${nommes}`);
+}

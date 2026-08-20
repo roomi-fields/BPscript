@@ -115,40 +115,48 @@ ok(ordreNonTrivial >= 1,
   `B-témoin. aucune des ${listes} listes examinées n'a un ordre distinct de son tri alphabétique — `
   + `le volet B ne distinguerait pas un lecteur qui trie d'un lecteur qui préserve.`);
 
-// ── C. LE RANG DÉSIGNE — ce que la décision exigeait, et ce qu'un vert sur la seule présence
-//        des membres ne prouverait pas ────────────────────────────────────────────────────────
-// ⛔ `octaves` ADRESSE SES REGISTRES PAR LEUR RANG : `default` est un INDICE dans la suite. Compter
-// les membres, ou les retrouver tous, ne dit RIEN sur ce que `default` désigne. Le garde lit donc
-// la désignation elle-même, convention par convention.
+// ── C. LE DÉFAUT NOMME SON REGISTRE, ET SON NOM EST DANS LA SUITE ───────────────────────────
+// ⛔ `octaves` ADRESSAIT SES REGISTRES PAR LEUR RANG, et Romain l'a retiré : un nom ne bouge pas
+// quand la liste s'allonge, un rang désigne silencieusement autre chose dès qu'on insère devant.
+// La donnée portait le piège — `bp3` écrivait 5 pour le registre nommé « 4 », `bp3_fr` 5 pour le
+// « 3 » : dans deux tables sur trois, le nombre écrit et le nom visé étaient deux nombres
+// différents, parce que la liste commence un cran plus bas.
+//
+// ⚠️ L'ORDRE RESTE CE QUE CE GARDE ÉPROUVE : la suite construit la table — c'est elle qui dit quel
+// registre est au-dessus de quel autre. Elle ne sert plus à DÉSIGNER, elle sert toujours à ORDONNER.
+// Un membre perdu ou déplacé casse encore la table, et ce volet le voit toujours.
 {
   let designations = 0;
-  let videAuRang = 0;
+  let videNomme = 0;
   for (const [nom, conv] of Object.entries(LIBS.octaves || {})) {
     if (!conv || typeof conv !== 'object' || !Array.isArray(conv.registers)) continue;
     designations++;
     const d = conv.default;
-    ok(Number.isInteger(d) && d >= 0 && d < conv.registers.length,
-      `C. octaves.${nom} : 'default' (${JSON.stringify(d)}) doit être un RANG de la suite de `
-      + `${conv.registers.length} registres`);
-    ok(typeof conv.registers[d] === 'string',
-      `C. octaves.${nom} : le registre désigné par le rang ${d} doit être un TEXTE — reçu `
-      + `${JSON.stringify(conv.registers[d])}`);
-    if (conv.registers[d] === '') videAuRang++;
+    ok(typeof d === 'string',
+      `C. octaves.${nom} : 'default' (${JSON.stringify(d)}) doit NOMMER son registre, jamais `
+      + `l'indexer. Un nombre y serait indistinguable de l'ancien rang.`);
+    ok(conv.registers.includes(d),
+      `C. octaves.${nom} : le nom '${d}' doit EXISTER dans la suite de ${conv.registers.length} `
+      + `registres ${JSON.stringify(conv.registers)}. Un nom introuvable ne crie pas tout seul — `
+      + `une recherche d'indice rend −1, qui est un entier valide et décale d'un cran.`);
+    if (d === '') videNomme++;
   }
   ok(designations >= 10, `C. le garde doit voir les conventions d'octaves — ${designations} vue(s)`);
-  // Les trois désignations que la décision cite ou que la donnée rend fragiles.
-  ok(LIBS.octaves?.saptak?.registers?.[LIBS.octaves.saptak.default] === 'madhya',
-    `C. octaves.saptak : 'default:1' doit désigner 'madhya', le DEUXIÈME des trois — c'est le cas `
-    + `qui a fait trancher l'ordre. Reçu `
-    + `${JSON.stringify(LIBS.octaves?.saptak?.registers?.[LIBS.octaves?.saptak?.default])}`);
-  ok(LIBS.octaves?.western?.registers?.[LIBS.octaves.western.default] === '4',
-    `C. octaves.western : le registre par défaut doit être le TEXTE '4', jamais le nombre 4 — reçu `
-    + `${JSON.stringify(LIBS.octaves?.western?.registers?.[LIBS.octaves?.western?.default])}`);
-  // ⛔ LE MEMBRE VIDE TIENT SA PLACE. Deux conventions désignent par défaut un registre écrit SANS
-  // marqueur ; le retirer de la suite décalerait tous les rangs suivants d'un cran, en silence.
-  ok(videAuRang >= 2,
-    `C. au moins deux conventions doivent désigner par défaut un registre VIDE — il occupe un RANG, `
-    + `et le retirer décalerait tous les suivants. Reçu ${videAuRang}`);
+  // Les désignations que la décision cite, ou que la donnée rendait fragiles.
+  ok(LIBS.octaves?.saptak?.default === 'madhya',
+    `C. octaves.saptak : le défaut doit être 'madhya' — reçu ${JSON.stringify(LIBS.octaves?.saptak?.default)}`);
+  ok(LIBS.octaves?.bp3?.default === '4' && LIBS.octaves?.bp3_fr?.default === '3',
+    `C. bp3 et bp3_fr portaient TOUS DEUX le rang 5 pour deux registres DIFFÉRENTS — '4' et '3'. `
+    + `C'est l'écart exact que le nom supprime. Reçu `
+    + `${JSON.stringify([LIBS.octaves?.bp3?.default, LIBS.octaves?.bp3_fr?.default])}`);
+  ok(LIBS.octaves?.western?.default === '4' && typeof LIBS.octaves?.western?.default === 'string',
+    `C. octaves.western : le défaut doit être le TEXTE '4', jamais le nombre 4 — les deux s'écrivent `
+    + `pareil une fois la clé posée, et le nombre serait lu comme un rang. Reçu `
+    + `${JSON.stringify(LIBS.octaves?.western?.default)}`);
+  // ⛔ LE REGISTRE VIDE SE NOMME PAR LE VIDE. Deux conventions le portent, et il occupe un rang dans
+  // la suite : le retirer décalerait tous les suivants, en silence.
+  ok(videNomme >= 2,
+    `C. au moins deux conventions doivent nommer par défaut le registre VIDE — reçu ${videNomme}`);
 }
 
 console.log(`[ordre] ${listes} liste(s) publiée(s) examinée(s), dont ${ordreNonTrivial} d'ordre non trivial`);

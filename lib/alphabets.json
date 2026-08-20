@@ -14,7 +14,7 @@
       "##": 2
     },
     "baseNote": "A",
-    "baseRegister": 4,
+    "baseRegister": "4",
     "terminals": {
       "C": {},
       "D": {},
@@ -38,7 +38,7 @@
       "tivra": 1
     },
     "baseNote": "sa",
-    "baseRegister": 1,
+    "baseRegister": "madhya",
     "terminals": {
       "sa": {},
       "re": {},
@@ -62,7 +62,7 @@
       "#": 1
     },
     "baseNote": "dha",
-    "baseRegister": 5,
+    "baseRegister": "4",
     "terminals": {
       "sa": {},
       "re": {},
@@ -88,7 +88,7 @@
       "#": 1
     },
     "baseNote": "A",
-    "baseRegister": 5,
+    "baseRegister": "4",
     "terminals": {
       "C": {},
       "D": {},
@@ -114,7 +114,7 @@
       "#": 1
     },
     "baseNote": "la",
-    "baseRegister": 5,
+    "baseRegister": "3",
     "terminals": {
       "do": {},
       "re": {},
@@ -142,7 +142,7 @@
       "##": 2
     },
     "baseNote": "la",
-    "baseRegister": 4,
+    "baseRegister": "4",
     "terminals": {
       "do": {},
       "re": {},
@@ -195,7 +195,7 @@
       "tanini": 9
     },
     "baseNote": "neva",
-    "baseRegister": 0,
+    "baseRegister": "",
     "terminals": {
       "kaba_cargah": {},
       "yegah": {},
@@ -265,7 +265,7 @@
       "kari": 1
     },
     "baseNote": "ro",
-    "baseRegister": 0,
+    "baseRegister": "otsu",
     "terminals": {
       "ro": {},
       "tsu": {},
@@ -406,7 +406,7 @@
       "": 0
     },
     "baseNote": "sa",
-    "baseRegister": 4,
+    "baseRegister": "4",
     "terminals": {
       "sa": {},
       "r1": {},
