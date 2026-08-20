@@ -367,6 +367,15 @@ publié**, à la publication.
 **Le courrier se relit au moment de PUBLIER, pas au réveil** : un préavis reçu entre-temps porte
 peut-être sur ce que je m'apprête à écraser.
 
+**Ce qui déclenche l'annonce est l'ENREGISTREMENT d'un fichier, jamais la nature du geste.** Qui me
+lit vivant est atteint à la frappe : régénérer un bundle, écrire une ligne de code, ou **injecter une
+faute dans un garde puis la retirer** — trois gestes, un seul effet chez lui. Toute écriture dans
+`src/` ou `public/` s'annonce, y compris celle qui rend le contenu identique : le voisin compare des
+empreintes de fichier, et une restauration en porte une neuve.
+
+**Éprouver un garde écrit DEUX FOIS dans le code de production**, et c'est le cas qui échappe : le
+travail se dit « poser un banc », il touche le parseur, et la fenêtre du voisin est réputée fermée.
+
 ## ⛔ Cinq gestes de mesure
 
 - **Éprouver un témoin de compensation avec une valeur NON NULLE** — à zéro il ne distingue pas une soustraction faite d'une oubliée.
