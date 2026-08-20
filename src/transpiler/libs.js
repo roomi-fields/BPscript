@@ -196,7 +196,14 @@ registerAll(BUNDLED_LIBS);
  *
  * ⚠️ UN MOT PEUT DESIGNER PLUSIEURS FICHIERS, et c'est voulu : `alphabets.json` et
  * `test_alphabets.json` declarent tous deux `alphabet`. Aucun nom d'entree n'est porte par les
- * deux — mesure du 2026-08-17, zero collision — donc la recherche les parcourt dans l'ordre.
+ * deux — donc la recherche les parcourt dans l'ordre.
+ *
+ * ⛔ ET CE N'EST PLUS UNE MESURE DATÉE, C'EST UN GARDE :
+ * `test/deux_contributeurs_d_un_espace_ne_portent_pas_le_meme_nom.mjs` refuse qu'une entrée soit
+ * portée par deux contributeurs d'un même mot. Cette ligne disait « mesure du 2026-08-17, zéro
+ * collision » — vrai le 17, vrai aujourd'hui, et rien ne le tenait demain. Or le jour où deux
+ * fichiers porteraient le même nom, cette boucle rendrait LE PREMIER TROUVÉ sans un mot, et rien ne
+ * distinguerait à l'arrivée une entrée unique d'une entrée qui en a écrasé une autre.
  */
 function motsDInvocation() {
   const table = new Map();
