@@ -175,12 +175,19 @@ s'ecrivent `sc:`, `py:`, `tidal:`, `strudel:`, `hydra:`.
 qu'il dit s'il sonne et s'il occupe du temps ; une occurrence
 surcharge ces defauts avec un sac.
 
+**Le langage d'un backtick vient de la place la plus proche qui le nomme**, sur trois niveaux :
+
+- l'**acteur** qui qualifie le backtick par le point le nomme par son `eval.<moteur>` ;
+- la **scene** le nomme par sa ligne `eval.<moteur>`, pour tous ses backticks ;
+- `core` le nomme pour toute scene, et il porte `js`.
+
+Le plus proche l'emporte, et le tag en tete d'un backtick l'emporte sur les trois.
+
 Il prend deux formes :
 
 - **autonome** -- le backtick occupe une position a lui seul et joue son code quand la derivation
   l'atteint. En tete de scene, il prepare le moteur au chargement ; dans le flux d'une regle, il
-  est un terminal de plein droit et joue a son instant. Son tag est requis, ou bien un acteur
-  `eval.<moteur>` le qualifie par le point.
+  est un terminal de plein droit et joue a son instant.
 - **inline** -- le backtick occupe un parametre et rend une valeur, evaluee par l'interpreter du
   symbole qui le porte ; il herite du tag de ce symbole.
 
