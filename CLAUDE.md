@@ -61,13 +61,21 @@ doute se lève dans le **code C de l'original**, jamais par raisonnement ni par 
 
 ## ⛔ Le prototypal pur fait règle
 
-Toute règle que je pose sur le langage se confronte à ces quatre lignes **avant** d'être écrite.
+Toute règle que je pose sur le langage se confronte à ces quatre règles **avant** d'être écrite.
 
 - **Un nom nu vaut un objet vide** — la parenthèse absente vaut parenthèse vide, **et le type voyage**.
 - **L'incomplétude se refuse à l'USAGE**, jamais à la déclaration.
 - **On ne type pas, on donne un exemplaire** : la valeur par défaut dit ce que le membre attend.
-- **Un membre obligatoire porte son type EN TÊTE** — une valeur n'a qu'une partie :
-  `object range(number min: required, number max: required)`.
+- **L'obligation se lit de l'ABSENCE de défaut, la multiplicité de l'EXEMPLAIRE.** Les deux ne vivent
+  pas au même niveau : ce que la valeur EST se dit par l'exemplaire, ce que le membre EXIGE se dit
+  par le silence. Aucun mot ne les porte.
+
+| écriture | ce qu'elle dit |
+| --- | --- |
+| `scope` | obligatoire — rien n'est donné, donc rien n'a de défaut |
+| `scope()` | obligatoire et collection — l'exemplaire est une collection vide |
+| `scope:flow` | optionnel, une valeur |
+| `scope(flow, rule)` | optionnel, collection |
 
 ## ⛔ Le langage se définit avec Romain, et par lui seul
 
