@@ -4892,6 +4892,21 @@ function parse(tokens, opts = {}) {
       let k = 0;
       while (peek(k).type === T.NEWLINE || peek(k).type === T.COMMENT) k++;
       if (peek(k).type === T.RPAREN || peek(k).type === T.EOF) return;
+      // ── ⛔ CE QUI SUIT EST-IL SEPARE PAR UNE ESPACE, OU COLLE ? LE REFUS DOIT LE DIRE JUSTE ────
+      // Ma premiere ecriture accusait TOUJOURS une espace. `ratios(256/243)` n'en porte aucune, et
+      // le refus lui repondait « deux termes sont separes par une espace » en proposant « 256, / » —
+      // une reecriture absurde, et une cause fausse. SEPT signes colles tombaient dedans :
+      // / + ! = * < [. Un message de refus FAIT AUTORITE : l'auteur cherche l'espace qu'on lui
+      // nomme, et il n'y en a pas. Une raison fausse sous une conclusion juste coute plus cher
+      // qu'un refus muet, parce qu'elle envoie chercher ailleurs.
+      // Le collage ne dit RIEN de ce que le signe vaudra : il dit ce que ce lecteur sait lire.
+      if (peek(k).spaceBefore === false && peek(k).type !== T.NEWLINE) {
+        throw new ParseError(
+          `le signe '${peek(k).value ?? peek(k).type}' n'est pas lisible dans un membre : un membre `
+          + `est un nom, un nombre ou un texte entre guillemets. Les membres deja lus sont `
+          + `'${pairs.map((p) => p.key).join(', ')}'.`,
+          peek(k));
+      }
       throw new ParseError(
         `deux termes sont separes par une espace : avant le delimiteur, seule la virgule separe — `
         + `l'espace n'y separe rien, il est de la mise en forme. Ecris `

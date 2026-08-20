@@ -97,6 +97,35 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
     `B-témoin. la virgule doit séparer — reçu ${JSON.stringify(v.cles)} · ${v.erreurs[0] || ''}`);
 }
 
+// ── B-bis. UN REFUS DIT CE QUI EST ÉCRIT — PAS UNE CAUSE QU'IL SUPPOSE ──────────────────────
+// ⛔ MA PREMIÈRE ÉCRITURE DU VOLET B ACCUSAIT TOUJOURS UNE ESPACE. `ratios(256/243)` n'en porte
+// AUCUNE, et le refus lui répondait « deux termes sont separes par une espace », en proposant
+// « 256, / » — une réécriture absurde sous une conclusion juste. SEPT signes collés tombaient
+// dedans : / + ! = * < [.
+//
+// Un message de refus FAIT AUTORITÉ : l'auteur cherche l'espace qu'on lui nomme, et il n'y en a
+// pas. Une raison fausse coûte plus cher qu'un refus muet — elle envoie chercher ailleurs.
+{
+  for (const [ecrit, signe] of [
+    ['def f (r(256/243))', '/'], ['def f (r(a+b))', '+'], ['def f (r(a!b))', '!'],
+    ['def f (r(a=b))', '='], ['def f (r(a*b))', '*'], ['def f (r(a<b))', '<'],
+    ['def f (r(a[b]))', '['],
+  ]) {
+    const r = membres(ecrit);
+    ok(r.erreurs.length >= 1, `B-bis. '${ecrit}' doit être refusé`);
+    const msg = r.erreurs[0] || '';
+    ok(msg.includes(`'${signe}'`),
+      `B-bis. le refus de '${ecrit}' doit NOMMER le signe '${signe}' — reçu : ${msg.slice(0, 130)}`);
+    ok(!/separes par une espace/.test(msg),
+      `B-bis. et NE PAS accuser une espace que la source ne porte pas — '${ecrit}' n'en a aucune. `
+      + `Reçu : ${msg.slice(0, 130)}`);
+  }
+  // ⛔ TÉMOIN NON NUL — le vrai cas d'espace garde son message, sinon la correction l'a mangé.
+  const e = membres('def f (r(a b))');
+  ok(/separes par une espace/.test(e.erreurs[0] || ''),
+    `B-bis-témoin. une VRAIE espace doit garder son message — reçu : ${(e.erreurs[0] || '').slice(0, 120)}`);
+}
+
 // ── C. APRÈS LE DÉLIMITEUR, RIEN NE CHANGE ──────────────────────────────────────────────────
 // Le même lecteur de sac sert les deux mondes. Une correction du déclaratif qui suivrait dans le
 // flux y casserait l'espace, qui y sépare les termes depuis toujours.
@@ -161,7 +190,7 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
   ok(sain.length === 0, 'D-témoin. et n\'accuser NI la liste recollée NI des lettres légitimes');
 }
 
-ok(passe >= 28, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 50, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[membre-mot] ${echecs.length} ÉCHEC(S) :`);
