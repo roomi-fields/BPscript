@@ -6,10 +6,15 @@
  * l'accordage et le transport.
  *
  * ⛔ CE QU'IL TIENT, ET LE DÉFAUT ÉTAIT VIVANT QUAND IL A ÉTÉ ÉCRIT. `western_just_c` portait encore
- * `baseRegister:"4"` — SEUL des vingt-et-un accordages. Un reste de migration, et le pire des restes :
+ * `baseRegister:"4"` — SEUL des dix-neuf accordages. Un reste de migration, et le pire des restes :
  * pas une erreur, une INCOHÉRENCE SILENCIEUSE. Un consommateur qui lit `tuning.baseRegister` avec un
- * repli pour l'absence voyait son repli se déclencher sur vingt accordages et PAS sur le vingt-et-
- * unième — même code, deux comportements, aucun cri. C'est runtime-MIDI qui portait ce repli.
+ * repli pour l'absence voyait son repli se déclencher sur dix-huit accordages et PAS sur le
+ * dix-neuvième — même code, deux comportements, aucun cri. C'est runtime-MIDI qui portait ce repli.
+ *
+ * ⚠️ ET CE COMPTE A ÉTÉ FAUX ICI PENDANT UNE HEURE : j'avais écrit vingt-et-un, qui est le nombre de
+ * CLÉS de `tunings` — `resolvedBy` et `resolves` en font partie et ne sont pas des accordages. Même
+ * piège que 187 contre 185 sur les gammes le matin même, et bp3-frontend l'a payé trois fois dans la
+ * soirée. Un compte de clés n'est pas un compte d'entrées, et rien ne les distingue à l'œil.
  *
  * ⚠️ ET SON RETRAIT ÉTAIT NEUTRE POUR UNE RAISON QU'IL FAUT DIRE : les deux valeurs coïncidaient —
  * `alphabet.western` porte `"4"` lui aussi. Ce n'était pas un champ MORT, c'était un champ REDONDANT.
