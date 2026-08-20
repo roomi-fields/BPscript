@@ -86,6 +86,45 @@ const CLES_LISTES = new Set(['args', 'values', 'scope', 'range', 'registers']);
 // Une convention implicite qui decide a la place de la donnee est le defaut qu'on retire.
 const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section']);
 
+/**
+ * RANGE UNE ENTRÉE ÉCRITE DANS UNE PLACE — et descend tant que la place a des étages.
+ *
+ * `schema(reservedDirectives(a, b))` a deux étages ; `engine(mode(…))` en a un. La descente
+ * s'arrête quand ce qu'elle trouve n'est plus une place mais une ENTRÉE : un objet dont les
+ * membres portent des valeurs, ou une suite de noms nus.
+ */
+function rangerConteneur(ou, nom, val, entry, place) {
+  // Une valeur simple posée dans une place : `version:"1.0"` sous un conteneur.
+  if (!val || val.type !== 'SettingBag') { ou[nom] = valeurDeCle({ kind: 'value', value: val }); return; }
+  const pairs = val.pairs || [];
+  // ⛔ UNE SUITE DE NOMS NUS EST UNE LISTE, PAS UNE PLACE — `reservedDirectives(scale, alphabet, …)`.
+  // Elle se reconnaît à ce qu'AUCUN de ses membres ne porte de valeur, et elle passe par `suite`
+  // pour garder son ORDRE et la NATURE de chaque membre.
+  if (pairs.length && pairs.every((p) => p.value === true)) {
+    ou[nom] = suite(val, entry, place, nom);
+    return;
+  }
+  // Une PLACE ne porte que des sacs ; une ENTRÉE porte au moins une valeur.
+  if (pairs.length && pairs.every((p) => p.value && p.value.type === 'SettingBag')) {
+    const sous = (ou[nom] = ou[nom] || {});
+    for (const p of pairs) rangerConteneur(sous, p.key, p.value, entry, `${place}.${nom}`);
+    return;
+  }
+  const entree = (ou[nom] = {});
+  for (const p of pairs) {
+    if (p.value && p.value.type === 'SettingBag') {
+      // ⚠️ UNE CLÉ-LISTE PASSE PAR `suite`, jamais par l'aplatissement : lui rendrait `args(seed)`
+      // en `{seed:true}` au lieu de `['seed']`, ET perdrait l'ordre — un objet JavaScript réordonne
+      // ses clés entières. Mesuré : 228 valeurs publiées changeaient sans cette distinction.
+      entree[p.key] = CLES_LISTES.has(p.key) ? suite(p.value, entry, nom, p.key) : sacEnObjet(p.value);
+      continue;
+    }
+    let x = valeurDeCle({ kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) });
+    if (CLES_LISTES.has(p.key) && !Array.isArray(x)) x = [x];
+    entree[p.key] = x;
+  }
+}
+
 function valeurDeCle(v) {
   // Une SUITE arrive typée membre par membre — elle sort telle quelle.
   if (v && v.kind === 'suite') return v.value;
@@ -201,7 +240,11 @@ async function collectBps(dir, prefix, compileToBPxAST) {
               // générique retypera le texte « 0 » en nombre, et le geste de `suite` sera défait
               // au maillon suivant. Elle passe donc par un `kind` à elle, et sort verbatim.
               ? { kind: 'suite', value: suite(p.value, entry, d.name, p.key) }
-              : { kind: 'value', value: sacEnObjet(p.value) })
+              // ⛔ ET LE SAC BRUT VOYAGE AVEC : un CONTENEUR se range membre par membre, et
+              //  aplatit sans passer par  — il rendrait  en
+              //  au lieu de , ET IL PERDRAIT L ORDRE, puisqu'un objet
+              // JavaScript réordonne ses clés entières. Mesuré : 228 valeurs publiées changeaient.
+              : { kind: 'value', value: sacEnObjet(p.value), sac: p.value })
           : { kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) };
       }
       return out;
@@ -241,9 +284,31 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         if (cle === 'section') { if (cible === lib) sectionDuFichier = valeurDeCle(v); continue; }
         let val = valeurDeCle(v);
         if (CLES_LISTES.has(cle) && !Array.isArray(val)) val = [val];
+        // ⛔ ET UNE CLÉ QUI PORTE UN OBJET EST UN CONTENEUR — LA SECTION DEVIENT LA PLACE.
+        //
+        // La récursivité par la parenthèse est ratifiée depuis le 2026-08-19 : « un champ dont la
+        // valeur est elle-même un objet s'écrit par la parenthèse ». Le compilateur la lit ; CE
+        // LECTEUR-CI ne la lisait pas. Il exigeait un `def` par entrée, chacune portant un champ
+        // qui NOMMAIT sa section — une lecture PLATE d'une donnée qui a des étages.
+        //
+        // ⚠️ CE QUE ÇA SUPPRIME : `section` comme CHAMP. Une entrée écrite DANS `engine(…)` est
+        // dans engine ; elle n'a plus à le dire. La donnée publiée ne bouge pas d'un caractère —
+        // mesuré avant la frappe : `section` a ZÉRO occurrence dans les 29 librairies publiées,
+        // il n'a jamais voyagé, il ROUTAIT.
+        //
+        // La distinction est étroite et ne devine rien : sur la déclaration DU FICHIER, une clé
+        // hors des champs de fichier qui porte un OBJET est une place. Tout le reste reste refusé.
         if (cible === lib && !CHAMPS_DE_FICHIER.has(cle)) {
+          // Le SAC BRUT, jamais l'objet aplati : l'ordre des suites en dépend.
+          const sac = v && v.sac;
+          if (sac && sac.type === 'SettingBag') {
+            const ou = (lib[cle] = lib[cle] || {});
+            for (const p2 of (sac.pairs || [])) rangerConteneur(ou, p2.key, p2.value, entry, cle);
+            continue;
+          }
           console.error(`[bundle] ⛔ lib/${entry} : '${cle}' n'est pas un champ de FICHIER `
-            + `(${[...CHAMPS_DE_FICHIER].join(', ')}). Un contrôle se déclare par son propre 'def'.`);
+            + `(${[...CHAMPS_DE_FICHIER].join(', ')}), et sa valeur n'est pas un objet. Une entrée `
+            + `se déclare par son propre 'def', ou s'écrit DANS une place — '${cle}(<nom>(…), …)'.`);
           process.exitCode = 1;
           continue;
         }
