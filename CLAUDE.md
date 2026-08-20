@@ -390,6 +390,15 @@ empreintes de fichier, et une restauration en porte une neuve.
 **Éprouver un garde écrit DEUX FOIS dans le code de production**, et c'est le cas qui échappe : le
 travail se dit « poser un banc », il touche le parseur, et la fenêtre du voisin est réputée fermée.
 
+**Pendant la fenêtre d'un voisin, je n'enregistre RIEN — pas « rien sous ses racines ».** Le périmètre
+qu'il relève est le sien : il le dérive de mon manifeste et peut le changer sans me prévenir. Faire
+reposer ma discipline dessus, c'est lui demander de garantir une frontière que je ne tiens pas. La
+seule chose que je contrôle est **ce que j'enregistre**.
+
+**Et je prépare sans écrire** : lire, mesurer, rédiger hors du dépôt, puis tout poser d'un coup à la
+fermeture. Une fenêtre tenue ne coûte rien au chantier quand elle est groupée ; découpée, elle coûte
+les deux.
+
 ## ⛔ Cinq gestes de mesure
 
 - **Éprouver un témoin de compensation avec une valeur NON NULLE** — à zéro il ne distingue pas une soustraction faite d'une oubliée.
