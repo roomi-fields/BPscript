@@ -832,11 +832,16 @@ function parse(tokens, opts = {}) {
           //
           // La NATURE décide, jamais une liste de noms : une entrée est un OBJET. Les métas de la
           // librairie sont des chaînes, et le blanc souligné initial reste la marque du commentaire.
-          // ⛔ ET UNE ENTRÉE NE CONFISQUE PAS UN MOT DU LANGAGE. Mesuré, deux collisions : `core`
-          // porte une SECTION nommée `settings`, et mon propre `types` un prototype nommé `scale` —
-          // l'un et l'autre sont des mots réservés. Sans ce refus, `settings` seul en tête de scène
-          // devenait une déclaration typée sans nom, et le portillon l'a attrapé. Le plus local
+          // ⛔ ET UNE ENTRÉE NE CONFISQUE PAS UN MOT DU LANGAGE. UNE SEULE collision subsiste, et
+          // c'est elle qu'il tient : `core` porte une SECTION nommée `settings`, qui est un mot
+          // réservé. Sans ce refus, `settings` seul en tête de scène devenait une déclaration typée
+          // sans nom — le portillon l'a attrapé sur un garde étranger à ce chantier. Le plus local
           // gagne, et le langage est plus local qu'une librairie.
+          //
+          // ⚠️ IL Y EN AVAIT DEUX. `types` déclarait un prototype nommé `scale`, le mot même qui
+          // invoque les gammes ; Romain l'a renommé `gamut` le jour de sa naissance, donc ce refus
+          // ne couvre plus qu'un site. Il reste écrit parce qu'il garde une FORME — une entrée de
+          // librairie qui porte un mot du langage — et non les deux cas qui l'ont fait naître.
           const reserves = new Set(((loadLib('core') || {}).schema || {}).reservedDirectives || []);
           for (const [nom, valeur] of Object.entries(loadLib(dir.name) || {})) {
             if (nom.startsWith('_') || !valeur || typeof valeur !== 'object' || Array.isArray(valeur)) continue;

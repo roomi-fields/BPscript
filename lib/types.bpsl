@@ -10,8 +10,8 @@
 // `directional` dérive de `degree` : une échelle dont la montée diffère de la descente EST une
 // échelle à degrés, avec une propriété en plus.
 
-object scale (description)
-scale interval (ratios)
-scale degree (degrees, temperament)
+object gamut (description)
+gamut interval (ratios)
+gamut degree (degrees, temperament)
 degree directional (ascending, descending)
-scale composite (compose, junction)
+gamut composite (compose, junction)
