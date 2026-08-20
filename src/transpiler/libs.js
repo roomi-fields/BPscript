@@ -630,7 +630,10 @@ function loadLibsFromDirectives(directives) {
 
   // Fonctions DIGITALES/dispatcher (transpose, rotate, keyxpand…) — toujours disponibles,
   // indépendantes de controls. Source : digital.json (générique — une fonction ajoutée = reconnue).
-  const digitalLib = loadJsonFile('digital');
+  // ⛔ PAR LE MOT QUE LA LIBRAIRIE DÉCLARE, jamais par son nom de fichier. `digital` était le nom du
+  // FICHIER ; `function` est l'AXE qu'il sert, et c'est le mot que la scène écrit. Nommer le fichier
+  // faisait de mon rangement une interface : renommer `digital.json` cassait cette ligne en silence.
+  const digitalLib = loadJsonFile('function');
   ctx.digitalFunctions = new Set(Object.keys((digitalLib && digitalLib.objects) || {}));
 
   // Always load settings (engine defaults)
@@ -1274,7 +1277,8 @@ function describeVocabulary(directives = []) {
   const langLib = loadJsonFile('language') || {};
   // Voix (LANG-SONS-2, lib/voices.json §3) : noms de BASE pour `voice.<nom>` — les clés
   // `nom for:<device>` (spécialisations §5) se replient sur leur nom de base.
-  const voicesLib = loadJsonFile('voices');
+  // Même geste : l'AXE `voice`, pas le fichier `voices`.
+  const voicesLib = loadJsonFile('voice');
   const voiceNames = [...new Set(Object.keys((voicesLib && voicesLib.objects) || {})
     .map((k) => k.replace(/\s+for:\S+$/, '')))];
   return {
