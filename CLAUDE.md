@@ -177,10 +177,6 @@ Elle porte sur les **documents de référence** ; un commentaire de code relève
   formes que le parser produit, dans **toutes** ses sections. Une matrice, pas une liste.
 - **Injecter la faute dans l'accusé puis dans le juge**, et exiger que le garde rougisse.
 - **Une empreinte compare tout**, sauf ce qui est prouvé hors sujet : choisir les champs comparés revient à choisir ce qu'on ne verra pas.
-- **Une absence n'est une preuve que si le périmètre de recherche est établi.** Dire où l'on a cherché,
-  avant de conclure que la chose n'existe pas.
-- **Suspecter l'instrument avant le sujet** quand un chiffre surprend, et le vérifier **avant**
-  d'envoyer la mesure.
 - **Un garde hors du portillon est invisible** : il ne préviendra jamais. Le portillon est
   `npm run verify` — définition unique, appelée par `.githooks/pre-push`. Un garde s'inscrit dans
   `test/run_guards.mjs`, sinon il ne tourne pour personne.
@@ -370,6 +366,11 @@ gardes s'exécutent après lui. Un vert se juge sur le **code de sortie du croch
 - **Suspecter l'instrument avant le sujet** quand un chiffre surprend, et le vérifier **avant**
   d'envoyer la mesure. **Une recherche qui rend zéro se mesure elle-même** — périmètre, **casse**, et
   **nature du fichier** : un fichier classé « data » rend `grep` muet sans le dire.
+- **COMPTER dit ce qui est écrit ; EXERCER dit ce qui se passe.** Ce ne sont pas deux degrés de
+  rigueur, ce sont deux questions. Un catalogue vide et un catalogue mort ont la même empreinte ; un
+  filtre qui ne filtre plus rien a la même forme qu'un filtre qui n'a rien à filtrer. **L'absence ne
+  se distingue de l'inactivité qu'en fabriquant le cas** — la question « qui le lit ? » se tranche en
+  écrivant la forme et en regardant qui crie, jamais en comptant les occurrences.
 
 ## Prévenir un voisin
 
