@@ -46,13 +46,32 @@ const declarantes = toutes.filter((e) => typeof e.valeur.bp3 === 'string');
 verifier(declarantes.length > 0, 'au moins une clé déclare un geste natif (sinon le garde ne mesure rien)');
 
 // ── UNICITÉ : un geste natif, une seule clé ───────────────────────────────────────────────────
+/**
+ * ⛔ UNE PAIRE PARTAGE SON IMAGE, ET C'EST LA VALEUR QUI LES SÉPARE — 2026-08-21.
+ *
+ * `resetnotes` et `letring` visent tous deux `ResetNotes` : l'un à 1, l'autre à 0. Ce n'est pas une
+ * collision, c'est ce que Romain a voulu en donnant une paire à chaque geste dont le défaut est
+ * configurable — une scène doit pouvoir dire le CONTRAIRE de ce qui est réglé.
+ *
+ * CE QUI RESTE UNE COLLISION : deux clés qui visent la même image SANS que leurs valeurs les
+ * distinguent. Là, rien ne dit laquelle écrit, et l'aval choisit à ma place. Deux clés qui portent
+ * la MÊME valeur sur la MÊME image sont donc refusées comme avant.
+ */
 function collisions(liste) {
   const par = new Map();
   for (const e of liste) {
     if (!par.has(e.valeur.bp3)) par.set(e.valeur.bp3, []);
-    par.get(e.valeur.bp3).push(e.chemin);
+    par.get(e.valeur.bp3).push(e);
   }
-  return [...par.entries()].filter(([, l]) => l.length > 1);
+  return [...par.entries()]
+    .filter(([, l]) => {
+      if (l.length <= 1) return false;
+      const valeurs = l.map((e) => e.valeur.bp3value);
+      // départagées si CHACUNE porte une valeur et qu'elles sont toutes distinctes
+      const distinctes = new Set(valeurs.map((v) => JSON.stringify(v)));
+      return valeurs.some((v) => v === undefined) || distinctes.size !== valeurs.length;
+    })
+    .map(([g, l]) => [g, l.map((e) => e.chemin)]);
 }
 verifier(collisions(declarantes).length === 0,
   `aucun geste natif n'est revendiqué deux fois — ${collisions(declarantes).map(([g, l]) => `${g} par ${l.join(' et ')}`).join(' ; ')}`);
@@ -62,14 +81,21 @@ const parNom = new Map(declarantes.map((e) => [e.cle, e.valeur.bp3]));
 verifier(parNom.get('chromashift') === '_transpose', 'chromashift déclare être l\'image de _transpose');
 verifier(parNom.get('transpose') === undefined, 'transpose ne revendique AUCUN geste natif — son nom voisin ne vaut pas équivalence');
 
-// ── FORME : un geste natif s'écrit comme le natif l'écrit ─────────────────────────────────────
-// `lambda` est la seule exception, et le langage la nomme telle quelle : la chaîne vide s'écrit
-// sans souligné des deux côtés.
+// ── FORME : une image native est un NOM ───────────────────────────────────────────────────────
+// ⛔ LA FORME `_` + NOM A ÉTÉ RELÂCHÉE — Romain, 2026-08-21. Ce n'était pas une règle : c'était
+// l'empreinte de la seule table contre laquelle ce garde avait été écrit, celle des mots du FLUX.
+// Le moteur s'écrit à deux endroits, et le second — le fichier de réglages — nomme ses clés sans
+// tiret bas : `EndFadeOut`, `MIDIsyncDelay`, `ResetWeights`. Lier un mot BPScript sans tiret bas à
+// une commande native qui en porte un est résolu depuis toujours (`def chan (bp3:_chan, …)`) ;
+// c'est le même mécanisme dans l'autre sens. LE CHAMP PORTE LE NOM NATIF, QUEL QU'IL SOIT.
+// Ce que le moteur porte RÉELLEMENT se prouve ailleurs, contre ses deux tables — garde
+// `un_controle_dit_sa_graphie_native`, volets 3 et 5. Ici on tient la forme, pas l'existence.
+// `lambda` reste nommée : le langage l'écrit ainsi, la chaîne vide sans souligné des deux côtés.
 for (const e of declarantes) {
   const v = e.valeur.bp3;
   verifier(v.length > 0, `${e.chemin} : le geste natif déclaré n'est pas vide`);
-  verifier(v === 'lambda' || /^_[a-zA-Z][a-zA-Z0-9]*$/.test(v),
-    `${e.chemin} : « ${v} » a la forme d'un contrôle natif`);
+  verifier(v === 'lambda' || /^[_a-zA-Z][a-zA-Z0-9_]*$/.test(v),
+    `${e.chemin} : « ${v} » est un NOM`);
   verifier(!/\s/.test(v), `${e.chemin} : « ${v} » ne porte aucun blanc`);
 }
 
@@ -104,6 +130,23 @@ for (const e of muettes.slice(0, 40)) {
     'la vérification d\'unicité DÉSIGNE la collision quand on injecte une seconde revendication');
   verifier(collisions(avec)[0][0] === '_transpose',
     'et elle nomme le geste revendiqué deux fois');
+
+  // INJECTION 1bis — LE CAS QU'OUVRE LA PAIRE, et sans lui l'assouplissement serait une porte
+  // ouverte. Deux clés visent la même image AVEC LA MÊME VALEUR : rien ne les départage, l'aval
+  // choisit à ma place, et la vérification doit rougir exactement comme avant.
+  const jumeaux = [
+    { chemin: 'x.controls.a', cle: 'a', valeur: { bp3: 'ResetFlags', bp3value: 1 } },
+    { chemin: 'x.controls.b', cle: 'b', valeur: { bp3: 'ResetFlags', bp3value: 1 } },
+  ];
+  verifier(collisions([...declarantes, ...jumeaux]).some(([g]) => g === 'ResetFlags'),
+    'deux clés qui visent la même image AVEC LA MÊME VALEUR restent une collision');
+  // ET LA CONTREPARTIE : les mêmes, valeurs distinctes, passent — c'est une paire.
+  const paire = [
+    { chemin: 'x.controls.a', cle: 'a', valeur: { bp3: 'ResetFlags', bp3value: 1 } },
+    { chemin: 'x.controls.b', cle: 'b', valeur: { bp3: 'ResetFlags', bp3value: 0 } },
+  ];
+  verifier(!collisions([...declarantes, ...paire]).some(([g]) => g === 'ResetFlags'),
+    'et les mêmes, valeurs INVERSES, forment une paire légitime');
 
   // INJECTION 2 — on retire la déclaration d'un geste que des proses nomment : elles doivent
   // rester orphelines, donc la vérification de prose doit rougir.

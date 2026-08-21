@@ -56,6 +56,14 @@ def engine (resolves:engine, resolvedBy:"BPx", name:engine, description:"Les cl�
     mode(args(mode), values(rnd, ord, sub, sub1, lin, tem, poslong), default:ord, description:"Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.", scope(subgrammar)),
     scan(args(direction), values(left, right, rnd), default:rnd, description:"Sens du parcours par regle (left, right, rnd) -- defaut : rnd.", scope(scene, rule)),
     weight(args(value), description:"Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.", scope(rule)),
+    // RESETWEIGHTS · LES POIDS REPARTENT DE LEUR VALEUR ECRITE. Cree le 2026-08-21 sur decision de
+    // Romain (`trois-reglages-natifs-trouvent-leur-domicile`). Il vit ici parce que c est la
+    // GENERATION DE LA STRUCTURE qui le consomme, agnostique au contenu -- aupres de `weight`, dont
+    // il remet la valeur. Sa fonction est mesuree dans le moteur d origine : ScriptUtils.c:1628-1637.
+    // ⚠️ SON CONTRAIRE N EST PAS CREE. Le reglage natif est configurable, donc la regle des paires
+    // de Romain lui en donnerait un ; mais declarer un mot est son arbitrage, jamais une consequence
+    // de ma mesure. La question est reportee, le mot reste seul.
+    resetweights(bp3:ResetWeights, bp3value:1, description:"Les poids des regles repartent de leur valeur ecrite dans la grammaire. Image de ResetWeights au moteur natif.", scope(scene)),
     on_fail(args(strategy), default:skip, description:"Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.", scope(scene, rule)),
     meter(args(signature), description:"Signature rythmique -- (meter:7/8), (meter:4+4/4).", scope(scene, rule)),
     repeat(bp3:_repeat, scope(rule), args(expr), description:"Controlled repetition. expr = K-param or K-param=value."),

@@ -767,7 +767,10 @@ function loadLibsFromDirectives(directives) {
           args: ['value'], range: [0, 127], default: 0,
           description: `User CC${cc.number}`, transportGroup: 'midi', ccNumber: cc.number
         };
-        ctx.controlMap[cc.name] = `_${cc.name}`;
+        // ⛔ ET LE TROISIÈME SITE FABRIQUAIT AUSSI, celui-là sans même consulter une déclaration :
+        // `cc kick 36` posait l'image `_kick`. Un contrôleur que LA SCÈNE nomme n'a par
+        // construction aucune image dans le moteur — le nom vient d'être inventé par qui écrit.
+        // Le mot n'entre donc pas dans la table des images.
         ctx.controlNames.add(cc.name);
         ctx.dispatcherOnlyControls.add(cc.name);
       }
@@ -898,7 +901,13 @@ function loadLibsFromDirectives(directives) {
         // dans `ctx.controls`, la table sur laquelle le vocabulaire du langage est construit.
         if (def.bpscript === false) continue;
         ctx.controls[name] = def;
-        ctx.controlMap[name] = def.bp3 || `_${name}`;
+        // ⛔ AUCUN REPLI QUI FABRIQUE — décision Romain, 2026-08-21. Cette ligne écrivait
+        // `def.bp3 || \`_${name}\`` : un mot sans image déclarée en recevait une INVENTÉE, et
+        // trente des quatre-vingt-treize entrées vivaient ainsi. `_fadeout` ne figure pas dans les
+        // quatre-vingt-trois mots du moteur ; la vraie image de `fadeout` est le réglage
+        // `EndFadeOut`. Un TROU se verrait ; une INVENTION fait autorité.
+        // L'image se déclare ou elle n'existe pas — le mot n'entre alors pas dans cette table.
+        if (typeof def.bp3 === 'string' && def.bp3) ctx.controlMap[name] = def.bp3;
         // Le destinataire se lit sur le FICHIER, jamais sur l'entrée chargée : une invocation à
         // sous-clé (`tuning.just`) rend une entrée du catalogue, qui ne porte pas ce champ.
         // ── LE DESTINATAIRE SE SURCHARGE : le fichier donne le DÉFAUT, l'entrée TRANCHE ───────
@@ -1163,7 +1172,8 @@ function loadLibsFromDirectives(directives) {
       && implementations.every((q) => ctx.implementedInterface[q] === interfaces[0]);
     if (!toutesVersLaMeme) { ctx.ambiguousControls.add(nom); continue; }
     ctx.controls[nom] = ctx.controlsQualified[interfaces[0]];
-    ctx.controlMap[nom] = ctx.controls[nom].bp3 || `_${nom}`;
+    // Même règle qu'au site de déclaration : l'image se déclare, elle ne se fabrique pas.
+    if (typeof ctx.controls[nom].bp3 === 'string' && ctx.controls[nom].bp3) ctx.controlMap[nom] = ctx.controls[nom].bp3;
     const dest = ctx.controlQualifiedResolvedBy[interfaces[0]];
     if (dest) ctx.controlResolvedBy[nom] = dest;
   }

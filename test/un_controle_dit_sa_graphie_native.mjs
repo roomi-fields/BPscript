@@ -82,30 +82,19 @@ const SECTIONS = ['controls', 'engine', 'subgrammar'];
  * EndFadeOut) » — donc vraie, mesurée, et ILLISIBLE pour tout ce qui n'est pas un humain. Le volet 5
  * la confronte au gabarit de réglages publié : une cible inventée rougit.
  */
-const CIBLE_DE_REGLAGE = new Map([
-  // le mot            la clé du fichier de réglages natif      ce que le mot en dit
-  ['fadeout', 'EndFadeOut'],            // la durée, en secondes
-  ['rate', 'SamplingRate'],             // la cadence commune des cinq flux continus
-  // ⚠️ QUATRE PAIRES, ET LES DEUX MOTS D'UNE PAIRE VISENT LA MÊME CLÉ AVEC LA VALEUR INVERSE. Un
-  // champ qui ne porterait que le NOM de la cible ne suffirait donc pas à ces huit-là : `letring`
-  // n'est pas « une autre cible », c'est `ResetNotes` à 0. La cible ET la valeur font le geste.
-  ['resetnotes', 'ResetNotes'],         ['letring', 'ResetNotes'],
-  ['resetcontrols', 'ResetControllers'], ['keepcontrols', 'ResetControllers'],
-  ['strikeagain', 'StrikeAgainDefault'], ['sustain', 'StrikeAgainDefault'],
-]);
-
 /**
- * LE COMPLÉMENT — les contrôles qui n'ont AUCUN geste natif dans le FLUX, nommés un par un.
- * Mesuré le 2026-08-13 contre la table des mots du moteur (83 entrées). Ce sont des contrôles de
- * sortie audio, de dérivation BPScript, ou des gestes que le natif écrit autrement (`cc` passe par
- * `_control`, `panic` par une extinction générale).
+ * LE COMPLÉMENT — les contrôles qui n'ont AUCUNE image dans le moteur, nommés un par un.
+ * Mesuré le 2026-08-13 contre la table des mots du flux (83 entrées), et de nouveau le 2026-08-21
+ * contre le gabarit de réglages (64 clés). Ce sont des contrôles de sortie audio, de dérivation
+ * BPScript, ou des gestes que le natif écrit autrement (`cc` passe par `_control`, `panic` par une
+ * extinction générale).
  *
- * ⚠️ HUIT D'ENTRE EUX VISENT UNE CLÉ DE RÉGLAGE et sont repris de `CIBLE_DE_REGLAGE` ci-dessus : ils
- * restent inscrits ici — le volet 1 juge bien l'absence du champ `bp3`, qui ne porte que le flux —
- * mais ce qu'ils atteignent est désormais écrit.
+ * ⚠️ HUIT L'ONT QUITTÉ LE 2026-08-21 — `fadeout`, `rate`, et les six mots des trois paires de fin et
+ * de relance. Ils déclarent maintenant leur image, qui est une clé de RÉGLAGE. Ils étaient inscrits
+ * ici parce que le garde n'avait été écrit que contre UNE table : il tenait « ce mot n'est pas un
+ * geste du flux », vrai, et il était lu « ce mot n'atteint pas le moteur », faux.
  */
 const SANS_GESTE_NATIF = new Set([
-  ...CIBLE_DE_REGLAGE.keys(),
   'wave', 'attack', 'release', 'detune', 'filter', 'filterQ',   // sortie audio
   'mode', 'scan', 'weight', 'on_fail', 'meter',                 // dérivation BPScript
   'offvel', 'pressure', 'mute', 'unmute', 'panic', 'sync', 'cc', // MIDI, gestes écrits autrement
@@ -220,12 +209,32 @@ for (const nom of interfacesVues) {
      + `parmi ceux qui n'en ont pas — le geste natif ne serait déclaré nulle part`);
 }
 
-// ─── 2. LA GRAPHIE DÉCLARÉE A LA FORME D'UNE GRAPHIE NATIVE ──────────────────────────────────
-// Un champ posé au hasard serait pire que pas de champ : il ferait AUTORITÉ.
+// ─── 2. LA GRAPHIE DÉCLARÉE EST UN NOM, ET LE MOTEUR LA PORTE ────────────────────────────────
+// ⛔ LA FORME `_` + NOM A ÉTÉ RELÂCHÉE — Romain, 2026-08-21. Elle n'était pas une règle du langage :
+// c'était l'empreinte de la SEULE table contre laquelle ce garde avait été écrit. Romain rappelle
+// que lier un mot BPScript sans tiret bas à une commande native qui en porte un est résolu depuis
+// toujours — `def chan (bp3:_chan, …)`. LE CHAMP PORTE LE NOM NATIF, QUEL QU'IL SOIT : `_chan` comme
+// `MIDIsyncDelay`. Il n'y a pas deux espèces de cible, il y a un moteur et deux lieux d'écriture.
+// Ce qui reste tenu ici est ce qui protégeait vraiment : un nom bien formé, jamais du vide ni une
+// phrase. Ce que le moteur porte réellement se prouve aux volets 3 et 5, contre ses deux tables.
 for (const { nom, def, ou } of controles) {
   if (typeof def.bp3 !== 'string') continue;
-  ok(/^_[A-Za-z][A-Za-z0-9]*$/.test(def.bp3),
-     `2. '${nom}' (${ou}) : la graphie native s'écrit '_' suivi d'un nom — reçu '${def.bp3}'`);
+  ok(/^[A-Za-z_][A-Za-z0-9_]*$/.test(def.bp3),
+     `2. '${nom}' (${ou}) : l'image native est un NOM — reçu '${JSON.stringify(def.bp3)}'`);
+}
+
+// ─── 2bis. UNE VALEUR D'IMAGE N'EXISTE QUE POUR UN MOT NU ────────────────────────────────────
+// ⛔ `bp3value` porte ce qu'un mot SANS ARGUMENT écrit chez le natif — `letring` est `ResetNotes` à
+// zéro. Un mot À ARGUMENT n'en a pas : sa valeur native EST son argument, et en déclarer une
+// figerait `fadeout:5` sur un nombre écrit dans la librairie. Les deux ne peuvent pas coexister.
+for (const { nom, def, ou } of controles) {
+  if (def.bp3value === undefined) continue;
+  ok(typeof def.bp3 === 'string' && def.bp3,
+     `2bis. '${nom}' (${ou}) porte une VALEUR d'image sans nommer l'image — une valeur sans cible `
+     + `n'a nulle part où s'écrire`);
+  ok(!Array.isArray(def.args) || def.args.length === 0,
+     `2bis. '${nom}' (${ou}) prend un argument (${(def.args || []).join(', ')}) ET déclare une valeur `
+     + `d'image (${def.bp3value}) — sa valeur native est son ARGUMENT, la figer ici l'écraserait`);
 }
 
 // ─── 3. CONTRE-ÉPREUVE SUR LA TABLE DES MOTS DU MOTEUR ───────────────────────────────────────
@@ -246,9 +255,15 @@ for (const { nom, def, ou } of controles) {
        "3. TÉMOIN : la table doit porter '_pan' et '_mapstep' — sinon c'est l'instrument qui ment");
     ok(!mots.has('_bidon'),
        "3. TÉMOIN : un mot inventé ne doit PAS s'y trouver — sans quoi la table dirait oui à tout");
+    // ⚠️ CE VOLET NE JUGE QUE LE FLUX, et il jugeait tout. Depuis que l'image peut désigner une clé
+    // du FICHIER DE RÉGLAGES, exiger d'elle qu'elle figure dans les mots du flux accuserait les huit
+    // mots qui atteignent le moteur par l'autre porte. Le volet 5 juge celles-là, contre le gabarit.
+    const reglages = new Set(Object.keys(GABARITS['bp3-settings-template'] || {}));
+    ok(reglages.size >= 60, `3. TÉMOIN : le gabarit départage les deux lieux — ${reglages.size} clés`);
     for (const { nom, def } of controles) {
       const natif = mots.has(`_${nom}`);
       if (typeof def.bp3 === 'string') {
+        if (reglages.has(def.bp3)) continue;         // image de RÉGLAGE — jugée au volet 5
         ok(mots.has(def.bp3),
            `3. '${nom}' déclare la graphie '${def.bp3}', absente de la table des mots du moteur — `
            + 'une graphie inventée fait autorité chez tous mes lecteurs');
@@ -267,41 +282,114 @@ for (const { nom, def, ou } of controles) {
   }
 }
 
-// ─── 5. UNE CIBLE DE RÉGLAGE EST UNE CLÉ QUI EXISTE ──────────────────────────────────────────
-// Le volet 3 confronte les gestes du flux à la table des mots du moteur. Les cibles de RÉGLAGE
-// n'y sont pas — elles vivent dans le fichier `-se`, dont je publie le gabarit. Sans ce volet,
-// `CIBLE_DE_REGLAGE` serait une prose de plus : nommer `EndFadOut` d'une lettre en moins ferait
-// autorité chez tous mes lecteurs sans que rien ne rougisse.
+// ─── 5. UNE IMAGE DÉCLARÉE EXISTE DANS L'UN DES DEUX LIEUX D'ÉCRITURE DU MOTEUR ──────────────
+// Le moteur s'écrit à deux endroits : le FLUX, dont les mots vivent dans `StringLists.h` (volet 3),
+// et le FICHIER DE RÉGLAGES, dont je publie le gabarit. Une image déclarée est dans l'un ou dans
+// l'autre. Dans AUCUN des deux, elle est inventée — et une image inventée fait autorité chez tous
+// mes lecteurs, ce qui est pire qu'un champ absent.
+//
+// ⛔ CE VOLET NE TIENT PLUS DE LISTE. Sa première écriture nommait les huit à la main ; la donnée
+// les dit maintenant, et un registre tenu à côté de la donnée ne voit jamais le mot qu'on ajoute.
 {
   const gabarit = GABARITS['bp3-settings-template'] || {};
-  const cles = new Set(Object.keys(gabarit));
+  const reglages = new Set(Object.keys(gabarit));
   // TÉMOINS D'INSTRUMENT, dans les deux sens : un gabarit illisible rendrait « aucune clé » et le
-  // volet accuserait les huit cibles justes.
-  ok(cles.size >= 60, `5. TÉMOIN : le gabarit doit porter au moins 60 clés — lues ${cles.size}`);
-  ok(cles.has('EndFadeOut') && cles.has('SamplingRate'),
+  // volet accuserait des images justes.
+  ok(reglages.size >= 60, `5. TÉMOIN : le gabarit doit porter au moins 60 clés — lues ${reglages.size}`);
+  ok(reglages.has('EndFadeOut') && reglages.has('SamplingRate'),
      "5. TÉMOIN : le gabarit doit porter 'EndFadeOut' et 'SamplingRate' — sinon l'instrument ment");
-  ok(!cles.has('EndFadOut'),
+  ok(!reglages.has('EndFadOut'),
      '5. TÉMOIN : une clé approchante ne doit PAS y être — sans quoi le gabarit dirait oui à tout');
-  ok(CIBLE_DE_REGLAGE.size >= 8,
-     `5. TÉMOIN : ${CIBLE_DE_REGLAGE.size} cible(s) de réglage écrites — sous 8, la table a fondu`);
 
-  const parNom = new Map(controles.map((c) => [c.nom, c]));
-  for (const [nom, cle] of CIBLE_DE_REGLAGE) {
-    ok(cles.has(cle),
-       `5. '${nom}' vise le réglage natif '${cle}', absent du gabarit publié — une clé inventée fait `
-       + 'autorité chez tous mes lecteurs, et le fichier de réglages l\'ignorerait en silence');
-    // ET LE MOT DOIT EXISTER : une cible écrite pour un contrôle retiré est une ligne morte qui
-    // continue d'affirmer quelque chose. Même raison que le registre des retraits assumés.
-    ok(parNom.has(nom),
-       `5. '${nom}' porte une cible de réglage mais n'est plus déclaré dans aucune librairie — `
-       + 'RETIRER la ligne. Un registre qui garde des entrées mortes finit par ne plus rien dire.');
-    // ET IL NE DÉCLARE PAS AUSSI UN GESTE DU FLUX : les deux espèces de cible ne se cumulent pas
-    // sans que quelqu'un ait tranché laquelle gagne, et personne ne l'a tranché.
-    const def = parNom.get(nom) && parNom.get(nom).def;
-    ok(!def || typeof def.bp3 !== 'string',
-       `5. '${nom}' déclare À LA FOIS un geste du flux ('${def && def.bp3}') et une cible de réglage `
-       + `('${cle}') — rien ne dit laquelle l'emporte, et un consommateur choisira pour moi`);
+  // La table des mots du flux, relue ici : le volet 3 ne la partage pas, et le juge doit connaître
+  // LES DEUX lieux pour ne pas accuser une image qui vit dans l'autre.
+  const TABLE = '/home/romi/dev/bp/bp3-engine/source/not_used/StringLists.h';
+  const flux = existsSync(TABLE)
+    ? new Set([...readFileSync(TABLE, 'utf8').matchAll(/"\d+ \d+ (_\w+)"/g)].map((m) => m[1]))
+    : null;
+
+  let declarees = 0, versReglage = 0;
+  for (const { nom, def, ou } of controles) {
+    if (typeof def.bp3 !== 'string' || !def.bp3) continue;
+    declarees++;
+    const estReglage = reglages.has(def.bp3);
+    if (estReglage) versReglage++;
+    // ⚠️ SI LA TABLE DU FLUX EST INATTEIGNABLE, ce volet ne juge que ce qu'il peut : une image
+    // absente du gabarit passe, et le volet 3 le DIT déjà à voix haute. Un garde qui se sauterait
+    // en silence serait un mensonge ; celui-ci se rétrécit en le disant.
+    if (!flux) { ok(true, `5. (table du flux absente) '${nom}' non départagé`); continue; }
+    ok(estReglage || flux.has(def.bp3),
+       `5. '${nom}' (${ou}) déclare l'image '${def.bp3}', qui n'existe NI dans les mots du flux `
+       + `(${flux.size}) NI dans le gabarit de réglages (${reglages.size}) — une image inventée fait `
+       + `autorité chez tous mes lecteurs, et les deux lieux d'écriture l'ignoreraient en silence`);
   }
+  ok(declarees >= 55,
+     `5. TÉMOIN : ${declarees} image(s) déclarée(s) examinée(s) — sous 55, le balayage ne mesure rien`);
+  ok(versReglage >= 8,
+     `5. ${versReglage} image(s) visent une clé de réglage — sous 8, les mots qui atteignent le `
+     + "moteur par le fichier de réglages ont cessé de le dire");
+}
+
+// ─── 6. LA TABLE DES IMAGES NE FABRIQUE RIEN ─────────────────────────────────────────────────
+// ⛔ CE VOLET EXERCE, IL NE COMPTE PAS. Le chargeur retombait sur `_` + le nom quand l'image
+// manquait : trente entrées sur quatre-vingt-treize en recevaient une INVENTÉE, et `_fadeout` ne
+// figure ni dans les mots du flux ni dans le gabarit. Le repli a été retiré le 2026-08-21 sur
+// décision de Romain — un mot sans image déclarée n'entre plus dans la table.
+//
+// UN CATALOGUE VIDE ET UN CATALOGUE MORT ONT LA MÊME EMPREINTE : on charge donc les librairies pour
+// de vrai et on confronte CHAQUE entrée produite à ce que la donnée déclare. Un repli réintroduit à
+// n'importe lequel des trois sites fait apparaître ici une entrée que rien ne déclare.
+{
+  const { loadLibsFromDirectives } = await import('../src/transpiler/libs.js');
+  const dir = (n) => ({ type: 'Directive', name: n, subkey: null });
+  const ctx = loadLibsFromDirectives(
+    ['midi', 'engine', 'expression', 'audio', 'transpo', 'variation', 'time'].map(dir));
+  const table = (ctx && ctx.controlMap) || {};
+  const entrees = Object.entries(table);
+  ok(entrees.length >= 60,
+     `6. TÉMOIN : ${entrees.length} image(s) dans la table chargée — sous 60, le chargement ne rend rien`);
+
+  // Toutes les images que la DONNÉE déclare, où qu'elles vivent dans le bundle.
+  const declarees = new Set();
+  const descendre = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { for (const x of n) descendre(x); return; }
+    if (typeof n.bp3 === 'string' && n.bp3) declarees.add(n.bp3);
+    for (const v of Object.values(n)) descendre(v);
+  };
+  descendre(BUNDLE);
+  ok(declarees.size >= 55, `6. TÉMOIN : ${declarees.size} image(s) déclarée(s) dans la donnée`);
+
+  const fabriquees = entrees.filter(([nom, img]) => !declarees.has(img) || img === `_${nom}` && !declarees.has(img));
+  ok(fabriquees.length === 0,
+     `6. ⛔ ${fabriquees.length} entrée(s) de la table ne viennent d'AUCUNE déclaration : `
+     + `${fabriquees.slice(0, 6).map(([n, v]) => `${n}→${v}`).join(', ')}. Le repli qui fabrique est `
+     + `revenu — un mot sans image déclarée doit être ABSENT de la table, jamais complété. Un trou se `
+     + `verrait ; une invention fait autorité.`);
+
+  // ET LE COMPLÉMENT : les mots légitimement sans image n'y sont pas.
+  for (const nom of ['wave', 'attack', 'panic', 'transpose']) {
+    ok(table[nom] === undefined,
+       `6. '${nom}' n'a aucune image native et ne doit pas figurer dans la table — reçu '${table[nom]}'`);
+  }
+
+  // ⛔ ET LE TROISIÈME SITE NE S'ATTEINT QU'AVEC UNE SCÈNE QUI NOMME UN CONTRÔLEUR. Sans cette
+  // directive, la branche `cc` n'est jamais parcourue et le balayage ci-dessus ne peut rien en
+  // dire — un site jamais atteint et un site correct ont exactement la même empreinte. Un
+  // contrôleur que LA SCÈNE nomme n'a par construction aucune image dans le moteur : le nom vient
+  // d'être inventé par qui écrit, et `_kick` ne veut rien dire pour le natif.
+  const avecCC = loadLibsFromDirectives([
+    dir('midi'),
+    { type: 'Directive', name: 'cc', subkey: null,
+      ccMappings: [{ name: 'zzguardkick', number: 36 }] },
+  ]);
+  ok(avecCC.controlNames.has('zzguardkick'),
+     "6. TÉMOIN : le contrôleur nommé par la scène doit entrer au vocabulaire — sinon la branche "
+     + "n'a pas été parcourue et le cas suivant ne prouve rien");
+  ok(avecCC.controlMap.zzguardkick === undefined,
+     `6. un contrôleur que la SCÈNE nomme n'a aucune image native — reçu `
+     + `'${avecCC.controlMap.zzguardkick}'. Le nom vient d'être inventé par qui écrit ; lui `
+     + `fabriquer une image la fait passer pour une mesure du moteur.`);
 }
 
 // ─── 4. INJECTION DANS LE JUGE — la décision rejouée isolée ──────────────────────────────────
