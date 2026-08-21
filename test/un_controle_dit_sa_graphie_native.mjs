@@ -48,6 +48,8 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
+// La porte des gabarits de réglages natifs — l'inventaire des clés que le fichier `-se` accepte.
+import { GABARITS } from '../src/transpiler/gabarits-data.js';
 
 // Le bundle que TOUS les consommateurs chargent — la seule assiette qui dise le vocabulaire réel.
 const _req = createRequire(import.meta.url);
@@ -63,12 +65,47 @@ const LIB = join(RACINE, 'lib');
 const SECTIONS = ['controls', 'engine', 'subgrammar'];
 
 /**
- * LE COMPLÉMENT — les contrôles qui n'ont AUCUN geste natif, nommés un par un.
+ * ⛔ « AUCUN GESTE NATIF » DISAIT DEUX CHOSES, ET C'EST LE MÊME DÉFAUT QU'IL Y A UN CRAN PLUS HAUT.
+ *
+ * Ce complément a été écrit contre UNE table : les 83 mots du flux de `StringLists.h`. Il tenait
+ * donc « ce mot n'est pas un geste du flux » — vrai pour les trente. Mais il était LU comme « ce mot
+ * n'atteint pas le moteur », et c'est faux pour huit d'entre eux : leur cible est une clé du FICHIER
+ * DE RÉGLAGES, une autre espèce, que le champ `bp3` ne sait pas dire.
+ *
+ * MESURÉ LE 2026-08-21, et c'est bp3-engine qui a ouvert la porte : il a lancé le binaire natif sur
+ * une grammaire native et changé `EndFadeOut` dans le fichier de réglages. LE RÉGLAGE ARRIVE ET
+ * S'ENTEND — 50 messages de contrôle, compte prédit par le code natif et retrouvé à la mesure. Un
+ * mot inscrit ici « sans geste natif » désigne donc une cible qui fonctionne.
+ *
+ * LA DISTINCTION VIT MAINTENANT DANS LA DONNÉE, PAS DANS UNE PROSE. Elle était écrite en commentaire
+ * quelques lignes plus bas — « `rate` et `fadeout` sont des PRÉFÉRENCES du moteur (SamplingRate,
+ * EndFadeOut) » — donc vraie, mesurée, et ILLISIBLE pour tout ce qui n'est pas un humain. Le volet 5
+ * la confronte au gabarit de réglages publié : une cible inventée rougit.
+ */
+const CIBLE_DE_REGLAGE = new Map([
+  // le mot            la clé du fichier de réglages natif      ce que le mot en dit
+  ['fadeout', 'EndFadeOut'],            // la durée, en secondes
+  ['rate', 'SamplingRate'],             // la cadence commune des cinq flux continus
+  // ⚠️ QUATRE PAIRES, ET LES DEUX MOTS D'UNE PAIRE VISENT LA MÊME CLÉ AVEC LA VALEUR INVERSE. Un
+  // champ qui ne porterait que le NOM de la cible ne suffirait donc pas à ces huit-là : `letring`
+  // n'est pas « une autre cible », c'est `ResetNotes` à 0. La cible ET la valeur font le geste.
+  ['resetnotes', 'ResetNotes'],         ['letring', 'ResetNotes'],
+  ['resetcontrols', 'ResetControllers'], ['keepcontrols', 'ResetControllers'],
+  ['strikeagain', 'StrikeAgainDefault'], ['sustain', 'StrikeAgainDefault'],
+]);
+
+/**
+ * LE COMPLÉMENT — les contrôles qui n'ont AUCUN geste natif dans le FLUX, nommés un par un.
  * Mesuré le 2026-08-13 contre la table des mots du moteur (83 entrées). Ce sont des contrôles de
  * sortie audio, de dérivation BPScript, ou des gestes que le natif écrit autrement (`cc` passe par
  * `_control`, `panic` par une extinction générale).
+ *
+ * ⚠️ HUIT D'ENTRE EUX VISENT UNE CLÉ DE RÉGLAGE et sont repris de `CIBLE_DE_REGLAGE` ci-dessus : ils
+ * restent inscrits ici — le volet 1 juge bien l'absence du champ `bp3`, qui ne porte que le flux —
+ * mais ce qu'ils atteignent est désormais écrit.
  */
 const SANS_GESTE_NATIF = new Set([
+  ...CIBLE_DE_REGLAGE.keys(),
   'wave', 'attack', 'release', 'detune', 'filter', 'filterQ',   // sortie audio
   'mode', 'scan', 'weight', 'on_fail', 'meter',                 // dérivation BPScript
   'offvel', 'pressure', 'mute', 'unmute', 'panic', 'sync', 'cc', // MIDI, gestes écrits autrement
@@ -82,16 +119,18 @@ const SANS_GESTE_NATIF = new Set([
   // jamais l'intention, et un nom voisin ne vaut pas équivalence.
   'transpose',
   // ── LES NEUF PRIMITIVES MIDI ENTRÉES LE 2026-08-15, mesurées sur la table AVANT d'être écrites
-  // ici. `rate` et `fadeout` sont des PRÉFÉRENCES du moteur (SamplingRate, EndFadeOut), pas des
-  // gestes du flux ; les sept mots des quatre gestes de fin et de relance non plus. Aucun des neuf
-  // n'apparaît dans les 83 entrées de `StringLists.h` — et leurs deux frères de la même livraison,
-  // `volumecontrol` et `pancontrol`, Y SONT et déclarent donc leur graphie. C'est cette DIFFÉRENCE
-  // à l'intérieur d'un même lot qui prouve que la liste est mesurée et pas décidée en bloc.
-  'rate', 'fadeout',
-  'resetnotes', 'letring', 'strikeagain', 'sustain', 'pedalrelease', 'pedalhold', 'resetcontrols',
-  // `keepcontrols` REJOINT SES SEPT FRERES le 2026-08-15, quand Romain a donne une paire au
-  // quatrieme geste. Mesure refaite sur la table pour lui seul : `_keepcontrols` en est absent.
-  'keepcontrols',
+  // ici. Aucune des neuf n'apparaît dans les 83 entrées de `StringLists.h` — et leurs deux frères de
+  // la même livraison, `volumecontrol` et `pancontrol`, Y SONT et déclarent donc leur graphie. C'est
+  // cette DIFFÉRENCE à l'intérieur d'un même lot qui prouve que la liste est mesurée, pas décidée en
+  // bloc. SEPT D'ENTRE ELLES SONT REMONTÉES DANS `CIBLE_DE_REGLAGE` : elles atteignent le moteur par
+  // le fichier de réglages, et le dire ici « sans geste natif » ne le disait qu'à moitié.
+  //
+  // ⚠️ CES DEUX-CI RESTENT SANS CIBLE ÉCRITE, ET C'EST UNE MESURE, PAS UN OUBLI. Le fichier de
+  // réglages ne porte aucune clé de pédale : `ResetNotes` dit « Send AllNotesOff, PEDALS OFF and
+  // reset pitchbend at the end of item ». La pédale voyage donc DANS une clé qui en porte trois,
+  // et lui attribuer `ResetNotes` ferait de `pedalhold` le contraire de `resetnotes`, ce qu'il
+  // n'est pas. Reporté à Romain, non tranché ici.
+  'pedalrelease', 'pedalhold',
 ]);
 
 /**
@@ -225,6 +264,43 @@ for (const { nom, def, ou } of controles) {
            + 'portée du frontal');
       }
     }
+  }
+}
+
+// ─── 5. UNE CIBLE DE RÉGLAGE EST UNE CLÉ QUI EXISTE ──────────────────────────────────────────
+// Le volet 3 confronte les gestes du flux à la table des mots du moteur. Les cibles de RÉGLAGE
+// n'y sont pas — elles vivent dans le fichier `-se`, dont je publie le gabarit. Sans ce volet,
+// `CIBLE_DE_REGLAGE` serait une prose de plus : nommer `EndFadOut` d'une lettre en moins ferait
+// autorité chez tous mes lecteurs sans que rien ne rougisse.
+{
+  const gabarit = GABARITS['bp3-settings-template'] || {};
+  const cles = new Set(Object.keys(gabarit));
+  // TÉMOINS D'INSTRUMENT, dans les deux sens : un gabarit illisible rendrait « aucune clé » et le
+  // volet accuserait les huit cibles justes.
+  ok(cles.size >= 60, `5. TÉMOIN : le gabarit doit porter au moins 60 clés — lues ${cles.size}`);
+  ok(cles.has('EndFadeOut') && cles.has('SamplingRate'),
+     "5. TÉMOIN : le gabarit doit porter 'EndFadeOut' et 'SamplingRate' — sinon l'instrument ment");
+  ok(!cles.has('EndFadOut'),
+     '5. TÉMOIN : une clé approchante ne doit PAS y être — sans quoi le gabarit dirait oui à tout');
+  ok(CIBLE_DE_REGLAGE.size >= 8,
+     `5. TÉMOIN : ${CIBLE_DE_REGLAGE.size} cible(s) de réglage écrites — sous 8, la table a fondu`);
+
+  const parNom = new Map(controles.map((c) => [c.nom, c]));
+  for (const [nom, cle] of CIBLE_DE_REGLAGE) {
+    ok(cles.has(cle),
+       `5. '${nom}' vise le réglage natif '${cle}', absent du gabarit publié — une clé inventée fait `
+       + 'autorité chez tous mes lecteurs, et le fichier de réglages l\'ignorerait en silence');
+    // ET LE MOT DOIT EXISTER : une cible écrite pour un contrôle retiré est une ligne morte qui
+    // continue d'affirmer quelque chose. Même raison que le registre des retraits assumés.
+    ok(parNom.has(nom),
+       `5. '${nom}' porte une cible de réglage mais n'est plus déclaré dans aucune librairie — `
+       + 'RETIRER la ligne. Un registre qui garde des entrées mortes finit par ne plus rien dire.');
+    // ET IL NE DÉCLARE PAS AUSSI UN GESTE DU FLUX : les deux espèces de cible ne se cumulent pas
+    // sans que quelqu'un ait tranché laquelle gagne, et personne ne l'a tranché.
+    const def = parNom.get(nom) && parNom.get(nom).def;
+    ok(!def || typeof def.bp3 !== 'string',
+       `5. '${nom}' déclare À LA FOIS un geste du flux ('${def && def.bp3}') et une cible de réglage `
+       + `('${cle}') — rien ne dit laquelle l'emporte, et un consommateur choisira pour moi`);
   }
 }
 
