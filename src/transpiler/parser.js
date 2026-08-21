@@ -5079,6 +5079,17 @@ function parse(tokens, opts = {}) {
       // qui se touche : deux lecteurs du même sac, deux découpes, et une liste de cents doublait
       // de longueur sans un signe. Les cents sont 271 valeurs de la donnée d'aujourd'hui.
       // Le collage s'arrête à l'espace, à la virgule et à la parenthèse — ce qui sépare.
+      //
+      // ⛔ ET LA BARRE EN FAIT PARTIE — décision Romain 2026-08-20 : « une énumération contient tous
+      // types d'objets, et un rapport en est un ; la barre passe donc dans un membre, comme elle
+      // passe déjà dans une valeur ». `pythagorean (ratios(1, 256/243, 9/8, 32/27))` est la forme
+      // que la décision écrit.
+      //
+      // ⚠️ CE N'ÉTAIT PAS UNE RÈGLE SUR LES RAPPORTS, c'était le refus de terme du 2026-08-19 qui
+      // voyait la barre comme une fin de terme : `256/243` sortait sur « le signe '/' n'est pas
+      // lisible dans un membre ». Les 2246 rapports du catalogue portaient donc des guillemets
+      // faute d'autre forme — et les cents, eux, passaient déjà nus. Deux notations de la même
+      // famille, dans les mêmes collections, deux sorts opposés.
       if (!at(T.IDENT) && (at(T.INT) || at(T.FLOAT) || at(T.STRING)
                            || (at(T.REST) && (peek(1).type === T.INT || peek(1).type === T.FLOAT)
                                && !peek(1).spaceBefore))) {
@@ -5087,7 +5098,7 @@ function parse(tokens, opts = {}) {
         let mot = signe + t.value;
         // Un TEXTE porte son délimiteur : il est complet, rien ne s'y recolle.
         if (t.type !== T.STRING) {
-          while ((at(T.IDENT) || at(T.INT) || at(T.FLOAT) || at(T.REST)) && !current().spaceBefore) {
+          while ((at(T.IDENT) || at(T.INT) || at(T.FLOAT) || at(T.REST) || at(T.SLASH)) && !current().spaceBefore) {
             mot += String(advance().value);
           }
         }

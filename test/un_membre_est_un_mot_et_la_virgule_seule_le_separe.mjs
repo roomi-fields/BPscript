@@ -107,7 +107,10 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
 // pas. Une raison fausse coûte plus cher qu'un refus muet — elle envoie chercher ailleurs.
 {
   for (const [ecrit, signe] of [
-    ['def f (r(256/243))', '/'], ['def f (r(a+b))', '+'], ['def f (r(a!b))', '!'],
+    // ⛔ LA BARRE A QUITTÉ CETTE LISTE — décision Romain 2026-08-20 : un rapport EST un objet, donc
+    // un membre. Son volet est RETOURNÉ en B-ter. Les six autres signes restent refusés : ce volet
+    // garde la QUALITÉ du refus, et cette qualité vaut toujours pour eux.
+    ['def f (r(a+b))', '+'], ['def f (r(a!b))', '!'],
     ['def f (r(a=b))', '='], ['def f (r(a*b))', '*'], ['def f (r(a<b))', '<'],
     ['def f (r(a[b]))', '['],
   ]) {
@@ -124,6 +127,20 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
   const e = membres('def f (r(a b))');
   ok(/separes par une espace/.test(e.erreurs[0] || ''),
     `B-bis-témoin. une VRAIE espace doit garder son message — reçu : ${(e.erreurs[0] || '').slice(0, 120)}`);
+}
+
+// ── B-ter. ⛔ ET LA BARRE PASSE, ELLE — le volet retourné ─────────────────────────────────────
+// Ce que B-bis gardait pour la barre — « `256/243` est refusé » — était vrai jusqu'au 2026-08-20 et
+// ne l'est plus : « une énumération contient tous types d'objets, et un rapport en est un ». Le
+// RETOURNER plutôt que le supprimer garde le sujet — la barre reste éprouvée, dans l'autre sens.
+{
+  const r = membres('def f (ratios(1, 256/243, 9/8, 32/27))');
+  ok(r.erreurs.length === 0, `B-ter. la forme de la décision doit PASSER — reçu ${JSON.stringify(r.erreurs)}`);
+  ok(JSON.stringify(r.cles) === JSON.stringify(['1', '256/243', '9/8', '32/27']),
+    `B-ter. et rendre QUATRE membres, pas sept — reçu ${JSON.stringify(r.cles)}`);
+  // ⚠️ ET LA RÈGLE DE L'ESPACE TIENT : c'est le COLLAGE qui fait le membre, pas le signe.
+  ok(membres('def f (r(a / b))').erreurs.length >= 1,
+    "B-ter. une barre ESPACÉE reste refusée — l'espace sépare, il ne recolle pas");
 }
 
 // ── C. APRÈS LE DÉLIMITEUR, RIEN NE CHANGE ──────────────────────────────────────────────────
