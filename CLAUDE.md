@@ -282,6 +282,12 @@ préfixe : `BP_AGENT=<nom> ~/dev/bp/hub/tour <commande>`.
 4. `tour send <dest>` porte une **demande** et réveille le destinataire ; `tour note <dest>` porte
    une **information**, lue à la prochaine levée. Le réveil appartient au démon : je dépose, je ne
    pingue personne.
+
+⛔ **TOUT TEXTE QUE J'ÉCRIS PASSE PAR UN FICHIER, jamais par un argument de shell** — `tour send
+--fichier`, `git commit -F`. La règle nommait `tour send` parce que c'est là qu'elle m'avait mordu ;
+elle a laissé passer un **message de commit** amputé de deux accents graves, exécutés par le shell.
+**Sixième fois du même signe.** Une règle écrite après une faute nomme le LIEU, pas la CAUSE : la
+cause est l'outil qui prend du texte en argument, pas le canal qui le transporte.
 5. **Un contrat partagé se propose avant d'être figé**, par `tour`. Le code interne au dépôt reste
    autonome.
 6. **Fin de session** : je mets à jour ma ligne du `TABLEAU.md`, ma fiche projet et — quand mon
