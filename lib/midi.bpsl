@@ -27,7 +27,7 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
-def midi (resolvedBy:runtime-MIDI, name:midi, description:"Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.", section:controls)
+def midi (resolvedBy:"runtime-MIDI", name:midi, description:"Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.", section:controls)
 
 // ═══ LES CLES D ADRESSE ═══
 // OU VA L EVENEMENT, ou D OU VIENT celui qu un point d attente ecoute. Elles vivaient dans
