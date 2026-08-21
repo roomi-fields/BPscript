@@ -236,7 +236,12 @@ const RETARD_REGLES = new Map([
   //     cliquet du dessus). Le refus est maintenant NOMMÉ — il dit l'instance manquante au lieu de
   //     désigner un deux-points. Le compte ne bouge pas, la cause si : sans cette note, un lecteur
   //     croirait la forme toujours refusée.
-  ['S -> {A B C}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
+  //     ⚠️ CAUSE RÉVISÉE UNE TROISIÈME FOIS le 2026-08-21, et c'est le cliquet qui l'a exigée.
+  //     Le refus s'est SCINDÉ EN TROIS : il nomme désormais lequel des deux noms cloche — le
+  //     préfixe, la librairie, ou la place. `lpf1` reste dans la branche générique, qui a gagné
+  //     « ni une librairie invoquée » — donc l'ancien motif ne matchait plus. Le retard ne bouge
+  //     pas d'un cran : c'est le TEXTE du refus qui a changé, pas ce qu'il refuse.
+  ['S -> {A B C}(lpf1.cutoff:4000)', /n'est ni une librairie invoquée, ni un contrôle à composants, ni une instance déclarée/],
   // ⚠️ CAUSES RÉVISÉES LE 2026-08-08 — le chantier « un appel exige une définition déclarée ».
   // Aucune de ces lignes n'est rattrapée ni cassée : elles refusent toujours, pour la MÊME raison
   // de fond, mais le compilateur la NOMME désormais au lieu de buter dessus. Un sac n'est plus
@@ -263,7 +268,9 @@ const RETARD_REGLES = new Map([
   // déclare jamais. Ce volet écarte les refus de résolution : ils ne disent rien de la forme.
   // Une entrée qu'on garderait « au cas où » ferait exactement ce que ce cliquet interdit —
   // compter un retard qui n'existe plus.
-  ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni un contrôle à composants, ni une instance déclarée/],
+  // ⚠️ CAUSE RÉVISÉE le 2026-08-21 avec sa jumelle ci-dessus — le refus a gagné « ni une librairie
+  // invoquée », le retard est inchangé.
+  ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni une librairie invoquée, ni un contrôle à composants, ni une instance déclarée/],
   // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
   //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
   // (d') L'EXEMPLE DES PARAMÈTRES D'INVOCATION — et il est plus abîmé qu'il n'en a l'air.

@@ -5235,11 +5235,40 @@ function parse(tokens, opts = {}) {
       // valeur — puis butait au tour suivant sur « Expected IDENT, got COLON » : un message qui
       // désigne le deux-points alors que le défaut est le NOM, trois jetons plus tôt. Le langage
       // refuse la forme ; c'est le message qui ne disait pas laquelle.
+      // ⛔ ET LE REFUS DOIT DIRE LEQUEL DES DEUX NOMS EST EN CAUSE — le PRÉFIXE ou le CONTRÔLE.
+      // Mesuré le 2026-08-21 : `C4(engine.seed:42)` sortait « 'engine' n'est ni un contrôle à
+      // composants, ni une instance déclarée — déclarer l'instance d'abord ». Les deux moitiés
+      // étaient fausses. `engine` EST une librairie chargée, et la cause réelle est que `seed` est
+      // une directive de SCÈNE : elle s'écrit en tête, jamais dans une parenthèse — `C4(seed:42)`
+      // est refusé aussi, nu. Un auteur qui suit ce message part déclarer une instance `engine`.
+      // Le préfixe n'y était pour rien, et le message accusait le seul nom innocent des deux.
       if (at(T.PERIOD) && peek(1).type === T.IDENT && peek(2).type === T.COLON) {
+        const composant = peek(1).value;
+        // Les mots qui servent de PRÉFIXE — lus sur la table des qualifiés, jamais sur une liste.
+        const prefixesConnus = new Set(
+          Object.keys(libCtx.controlsQualified || {}).map((q) => q.slice(0, q.indexOf('.'))));
+        // ⚠️ L'ORDRE DES DEUX QUESTIONS EST LE GESTE, et ma première écriture les posait à l'envers.
+        // Elle demandait d'abord « le composant est-il une directive de scène ? », et `zorglub.vel`
+        // sortait « 'vel' est une directive de SCÈNE » — faux deux fois : `vel` s'écrit très bien
+        // dans une parenthèse, et le nom fautif était le préfixe. La cause : DIX contrôles portent
+        // `scene` dans leur portée, donc ils sont réservés ET écrivables ici. Un message qui accuse
+        // le mauvais nom vaut moins que pas de message : il envoie chercher là où rien ne cloche.
+        if (prefixesConnus.has(key)) {
+          const estControle = (libCtx.controlNames || new Set()).has(composant);
+          if (!estControle && (libCtx.reservedDirectiveNames || new Set()).has(composant)) {
+            throw new ParseError(
+              `'${key}.${composant}:…' — '${composant}' est une directive de SCÈNE : elle s'écrit en `
+              + `tête, avant le délimiteur, jamais dans une parenthèse. Le préfixe n'y change rien, `
+              + `'${composant}:…' nu y est refusé aussi.`, keyTok);
+          }
+          throw new ParseError(
+            `'${key}.${composant}:…' — la librairie '${key}' ne déclare aucun contrôle `
+            + `'${composant}'. Le préfixe est bon, le contrôle n'est pas chez lui.`, keyTok);
+        }
         throw new ParseError(
-          `'${key}.${peek(1).value}:…' affecte une valeur au composant '${peek(1).value}' de `
-          + `'${key}' — mais '${key}' n'est ni un contrôle à composants, ni une instance déclarée `
-          + `dans cette scène. Déclarer l'instance d'abord : '<module> ${key}'`,
+          `'${key}.${composant}:…' affecte une valeur au composant '${composant}' de `
+          + `'${key}' — mais '${key}' n'est ni une librairie invoquée, ni un contrôle à composants, `
+          + `ni une instance déclarée dans cette scène. Déclarer l'instance d'abord : '<module> ${key}'`,
           keyTok);
       }
       // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
