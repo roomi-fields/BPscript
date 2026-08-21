@@ -57,4 +57,19 @@ if (syntaxeFresh !== syntaxeCommitted) {
   );
   process.exit(1);
 }
-console.log('[bundle:check] ✓ libs-data.js, libs-data.d.ts et syntaxe-data.js à jour vs leurs sources.');
+// ⛔ ET LA PORTE DES GABARITS SE VÉRIFIE PAREIL — posée le 2026-08-21 quand ils ont quitté `lib/`.
+// Troisième artefact dérivé, troisième garde de fraîcheur : bp3-frontend lit la CLÉ
+// `bp3-settings-template` et son témoin compare deux ENSEMBLES, le dossier et le paquet. Un
+// artefact périmé lui montrerait un paquet cohérent avec un dossier qui a bougé — donc vert.
+const gabaritsGen = join(__dirname, 'gabarits-bundle.mjs');
+const gabaritsPath = join(__dirname, 'gabarits-data.js');
+const gabaritsFresh = execFileSync(process.execPath, [gabaritsGen], { encoding: 'utf-8' });
+const gabaritsCommitted = readFileSync(gabaritsPath, 'utf-8');
+if (gabaritsFresh !== gabaritsCommitted) {
+  console.error(
+    '[bundle:check] ✗ src/transpiler/gabarits-data.js est PÉRIMÉ vs gabarits/*.json.\n' +
+    '               Régénère : `npm run bundle:gabarits` (puis commit).',
+  );
+  process.exit(1);
+}
+console.log('[bundle:check] ✓ libs-data.js, libs-data.d.ts, syntaxe-data.js et gabarits-data.js à jour.');
