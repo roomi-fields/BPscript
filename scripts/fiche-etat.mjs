@@ -53,20 +53,44 @@ function corpus() {
     Object.entries(table).sort(([a], [b]) => a.localeCompare(b)).map(([n, g]) => [n, g.status || 'sans statut'])) };
 }
 
-/** Le portillon compte ses propres gardes — on lit son verdict, on ne l'estime pas. */
+/**
+ * Le portillon compte ses propres gardes — on lit son verdict, on ne l'estime pas.
+ *
+ * ⛔ ET IL NE SE COMPTE PAS LUI-MÊME — corrigé le 2026-08-21, BPS-79 devenu bloquant.
+ *
+ * Cette fiche est GÉNÉRÉE en lançant le portillon, qui contient le garde de la fiche, qui lit la
+ * fiche PRÉCÉDENTE. Tant que celle-ci est périmée, ce garde rougit ; la fiche fraîche enregistre
+ * donc « 1 échec », ce qui la fait rougir à son tour. LE POINT FIXE N'EXISTE PAS : j'ai régénéré
+ * deux fois de suite, le compte est resté à 1 les deux fois.
+ *
+ * UN COMPTEUR DÉRIVÉ DE CE QU'IL MESURE NE PEUT PAS S'INCLURE DANS SA PROPRE MESURE. Son échec ne
+ * dit rien de l'état du dépôt — il dit que la fiche est périmée, ce qui est vrai par construction
+ * pendant qu'on la régénère.
+ *
+ * ⚠️ CE N'EST PAS UNE ASSERTION AJUSTÉE À CE QUI SORT, et la différence tient à ceci : le garde de
+ * la fiche n'est PAS retiré du portillon — il continue de mordre au push, sur la fiche commitée.
+ * C'est l'INSTRUMENT qui cesse de se compter, pas la règle qui s'assouplit. Un dépôt réellement
+ * rouge fait toujours une fiche à `echecs > 0`, parce que ses autres gardes, eux, sont comptés.
+ */
+const MOI = 'la_fiche_d_etat_dit_le_depot_qu_elle_decrit.mjs';
 function portillon() {
+  const lire = (sortie) => {
+    const m = sortie.match(/\[gardes\] (\d+) garde\(s\) vert\(s\), (\d+) en échec/);
+    if (!m) return null;
+    // Le garde de CETTE fiche, s'il a échoué, sort du compte — et il sort du dénominateur des
+    // verts aussi, sans quoi les deux nombres ne parleraient plus du même ensemble.
+    const moiEnEchec = new RegExp(`ÉCHEC ${MOI.replace('.', '\\.')}`).test(sortie);
+    const a = sortie.match(/(\d+) assertion\(s\) RÉELLEMENT exécutée\(s\)/);
+    return { verts: Number(m[1]), echecs: Number(m[2]) - (moiEnEchec ? 1 : 0),
+             assertions: a ? Number(a[1]) : null };
+  };
   try {
     const sortie = execFileSync('node', [join(RACINE, 'test/run_guards.mjs')],
       { encoding: 'utf-8', cwd: RACINE, timeout: 900000, maxBuffer: 64 * 1024 * 1024 });
-    const m = sortie.match(/\[gardes\] (\d+) garde\(s\) vert\(s\), (\d+) en échec/);
-    const a = sortie.match(/(\d+) assertion\(s\) RÉELLEMENT exécutée\(s\)/);
-    return m
-      ? { verts: Number(m[1]), echecs: Number(m[2]), assertions: a ? Number(a[1]) : null }
-      : { verts: null, echecs: null, note: 'verdict illisible' };
+    return lire(sortie) || { verts: null, echecs: null, note: 'verdict illisible' };
   } catch (e) {
     const s = (e.stdout || '') + (e.stderr || '');
-    const m = s.match(/\[gardes\] (\d+) garde\(s\) vert\(s\), (\d+) en échec/);
-    return m ? { verts: Number(m[1]), echecs: Number(m[2]) } : { verts: null, echecs: null, note: 'portillon non mesurable' };
+    return lire(s) || { verts: null, echecs: null, note: 'portillon non mesurable' };
   }
 }
 

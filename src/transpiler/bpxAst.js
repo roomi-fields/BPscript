@@ -700,8 +700,19 @@ function deriveAlphabetFromTuning(ast) {
   const alph = dirs.find((d) => d.name === 'alphabet' && d.subkey);
   if (tun && !alph) {
     const a = tuningAlpha(tun.subkey);
+    // ⛔ LE MARQUEUR `_derivedFromTuning` EST SORTI LE 2026-08-21 — Romain : « UN ACCORDAGE SANS
+    // ALPHABET N'A PAS DE SENS. Un accordage se pose nécessairement sur un 12TET, donc sur un
+    // alphabet. » Cette dérivation n'est donc PAS un rattrapage, c'est le comportement normal : un
+    // accordage PORTE son alphabet. Il n'y avait rien à marquer — le champ signalait une exception
+    // qui n'en est pas une.
+    //
+    // ⚠️ ET IL AVAIT FUI DANS L'ARBRE PUBLIÉ. Son souligné annonçait un interne ; il sortait
+    // pourtant jusqu'au consommateur, sur une scène du corpus, sans que la spec le déclare — c'est
+    // le garde `la_spec_declare_les_champs_que_l_arbre_porte` qui l'a fait sortir, le jour où une
+    // migration a fait changer de graphie la seule scène qui le portait.
+    // Mesure avant retrait : ZÉRO lecteur sur les quinze dépôts de la tour. Aucun préavis dû.
     if (a) dirs.push({ type: 'Directive', name: 'alphabet', subkey: a, runtime: null, value: null,
-                       aliases: null, modifiers: null, line: tun.line, _derivedFromTuning: true });
+                       aliases: null, modifiers: null, line: tun.line });
   }
 }
 
