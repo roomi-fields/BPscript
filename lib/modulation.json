@@ -1,4 +1,6 @@
 {
+  "resolves": "modulation",
+  "_resolves_doc": "LE MOT QUI INVOQUE CETTE LIBRAIRIE, ÉCRIT AU LIEU D'ÊTRE DÉDUIT. Sans ce champ le chargeur retombe sur le NOM DU FICHIER, et le préfixe ne résout pas : mesuré avant l'écriture, '(modulation.cutoff:4000)' était REFUSÉ alors que '(cutoff:4000)' compilait. Le mot nu marchait, le mot préfixé non — c'est ce que ce champ répare.",
   "resolvedBy": "runtime-audio",
   "audio": {
     "cutoff": {

@@ -36,6 +36,13 @@ ok(AXES.size > 0, 'la donnée doit déclarer des mots d\'invocation — sans eux
  * on l'ajoute ici avec sa raison, ou on le branche sur son axe.
  */
 const ADMIS = new Map([
+  // ⛔ ET `modulation` EST SORTI LE 2026-08-22, DE LA MÊME FAÇON QUE `core` : ce garde a rougi dans
+  // le geste même qui lui a donné son mot, en disant quoi faire. Il portait « décision ouverte chez
+  // Romain » ; la décision est rendue — la clé `resolves` s'écrit sur les deux fichiers qui la
+  // taisaient encore, `mapping` et `modulation`.
+  // ⚠️ MESURÉ AVANT L'ÉCRITURE, et le champ ne DÉCIDE rien : `modulation` nu compilait déjà, et
+  // `(cutoff:4000)` aussi. Le mot était donc bien celui-là, déduit du nom du fichier — c'est-à-dire
+  // juste par coïncidence, et faux au premier renommage. Le champ le rend lisible.
   // ⛔ `core` EST SORTI D'ICI LE 2026-08-21, ET C'EST CE GARDE QUI L'A EXIGÉ. Il portait « point
   // d'entrée — quelque chose doit nommer le premier fichier ». Le jour où `core.json` a déclaré son
   // mot (`resolves:core`, régularisation des onze), le garde a rougi en disant exactement quoi
@@ -44,7 +51,6 @@ const ADMIS = new Map([
   //
   // ⛔ `language` EST SORTI AVEC LE SCHÉMA DE SYNTAXE, le même jour : il ne se charge plus par le
   // registre des librairies mais par sa propre porte, `syntaxe-data.js`.
-  ['modulation', "ne déclare aucun mot d'invocation — décision ouverte chez Romain"],
 ]);
 
 const source = readFileSync(new URL('../src/transpiler/libs.js', import.meta.url), 'utf8');
@@ -66,6 +72,11 @@ ok(enDur.length === 0,
   + " — brancher sur l'axe que la librairie déclare, ou inscrire le nom dans ADMIS avec sa raison");
 
 // ── LES DEUX RÉPARÉS — nommément, pour que leur retour en arrière se voie ────────────────────────
+// ⚠️ `mapping` ET `modulation` NE SONT PAS ICI, ET C'EST DÉLIBÉRÉ. Ils DÉCLARENT leur axe depuis le
+// 2026-08-22 — c'est ce qui les a sortis d'ADMIS — mais `libs.js` charge encore `modulation` par son
+// NOM DE FICHIER. Les inscrire parmi les réparés affirmerait un branchement qui n'existe pas ; le
+// volet `enDur` ci-dessus les laisse passer parce qu'un axe les porte, ce qui est vrai. Le
+// branchement appartient au chantier des noms de librairies en dur, et il s'y fera.
 for (const [fichier, axe] of [['digital', 'function'], ['voices', 'voice']]) {
   ok(!appels.some((a) => a.nom === fichier), `'${fichier}' ne doit plus être chargé par son nom de fichier — l'axe est '${axe}'`);
   ok(AXES.has(axe), `l'axe '${axe}' doit être déclaré par une librairie — sans lui la réparation ne tient pas`);

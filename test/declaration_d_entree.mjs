@@ -156,10 +156,22 @@ for (const [corps, quoi, mot] of [
 // Cette assertion ne teste donc plus qu'un champ ABSENT, ce qui reste vrai des deux côtés du
 // renommage.
 {
-  const entrees = Object.keys(LIBS.mapping || {}).filter((k) => !k.startsWith('_') && k !== 'domain' && k !== 'resolvedBy');
+  // ⛔ « VIDE DE CONTENU » N'EST PAS « VIDE DE TOUT », et ce volet ne le distinguait pas. Le
+  // 2026-08-22, écrire la clé `resolves` — le MOT qui invoque la librairie — l'a fait rougir : il
+  // comptait une métadonnée comme une table. Ce qu'il existe pour interdire est une TABLE DE
+  // DÉMONSTRATION, qui finirait citée comme référence ; ce qui identifie la librairie elle-même
+  // n'en est pas une, et l'écrire est même ce qui empêche son mot d'être déduit du nom de fichier.
+  const METADONNEES = new Set(['domain', 'resolvedBy', 'resolves', 'name', 'description', 'version']);
+  const entrees = Object.keys(LIBS.mapping || {}).filter((k) => !k.startsWith('_') && !METADONNEES.has(k));
   ok(entrees.length === 0,
-     `4. lib/mapping.json doit rester VIDE de contenu — un contenu de démonstration finirait cité `
+     `4. lib/mapping.json doit rester VIDE de TABLES — un contenu de démonstration finirait cité `
      + `comme référence. Reçu : ${JSON.stringify(entrees)}`);
+  // ET LA CONTREPARTIE : la librairie s'identifie quand même, sinon « vide » deviendrait un prétexte
+  // à ne rien déclarer du tout, et son mot repartirait se déduire du nom du fichier.
+  ok(typeof LIBS.mapping?.resolves === 'string' && LIBS.mapping.resolves,
+     `4. lib/mapping.json déclare le MOT qui l'invoque — sans lui le chargeur retombe sur le nom du `
+     + `fichier, et renommer le fichier changerait le langage sans un mot. Reçu : `
+     + `${JSON.stringify(LIBS.mapping?.resolves)}`);
 }
 
 // ─── 5. L'ADRESSE AU POINT D'USAGE — côté droit IDENTIFIANT ──────────────────────────────────
