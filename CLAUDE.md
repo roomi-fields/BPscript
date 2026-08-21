@@ -283,11 +283,15 @@ préfixe : `BP_AGENT=<nom> ~/dev/bp/hub/tour <commande>`.
    une **information**, lue à la prochaine levée. Le réveil appartient au démon : je dépose, je ne
    pingue personne.
 
-⛔ **TOUT TEXTE QUE J'ÉCRIS PASSE PAR UN FICHIER, jamais par un argument de shell** — `tour send
---fichier`, `git commit -F`. La règle nommait `tour send` parce que c'est là qu'elle m'avait mordu ;
-elle a laissé passer un **message de commit** amputé de deux accents graves, exécutés par le shell.
-**Sixième fois du même signe.** Une règle écrite après une faute nomme le LIEU, pas la CAUSE : la
-cause est l'outil qui prend du texte en argument, pas le canal qui le transporte.
+⛔ **AUCUNE CHAÎNE QUE J'ÉCRIS NE TRAVERSE UN SHELL.** Ni message, ni commentaire, ni argument : ce
+que le shell voit, il l'interprète — accents graves, `$`, guillemets — et il l'ampute **avant que ça
+arrive**, sans erreur. Tout texte passe par un **fichier** ou par l'outil d'écriture.
+
+⚠️ **ET LA RÈGLE SE POSE SUR L'ESPACE, PAS SUR L'OUTIL QUI VIENT DE MORDRE.** Elle nommait `tour
+send`, parce que c'est là qu'elle avait mordu — un **message de commit** est passé au travers,
+amputé de deux accents graves, à la sixième occurrence du même signe. Écrire « et les messages de
+commit » aurait nommé un second lieu ; le lieu suivant serait passé pareil. **Une règle écrite après
+une faute nomme l'endroit où elle s'est produite, jamais l'espace où elle vit.**
 5. **Un contrat partagé se propose avant d'être figé**, par `tour`. Le code interne au dépôt reste
    autonome.
 6. **Fin de session** : je mets à jour ma ligne du `TABLEAU.md`, ma fiche projet et — quand mon
